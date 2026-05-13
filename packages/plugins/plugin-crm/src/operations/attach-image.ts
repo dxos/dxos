@@ -9,7 +9,7 @@ import { Database, Entity, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Organization, Person } from '@dxos/types';
 
-import { AttachImage } from './definitions';
+import { CrmOperation } from '../types';
 
 /**
  * Default image service base URL. Overridable per-invocation via the
@@ -166,7 +166,7 @@ const isAbsoluteHttpUrl = (raw: string): boolean => {
   }
 };
 
-const handler: Operation.WithHandler<typeof AttachImage> = AttachImage.pipe(
+const handler: Operation.WithHandler<typeof CrmOperation.AttachImage> = CrmOperation.AttachImage.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ subject, url, imageServiceUrl }) {
       const serviceUrl = getImageServiceUrl(imageServiceUrl);
@@ -279,7 +279,7 @@ const handler: Operation.WithHandler<typeof AttachImage> = AttachImage.pipe(
           new Error('Subject must be a Person or Organization (image field is only defined on those types)'),
         );
       }
-      Entity.change(target as Entity.Any, (obj) => {
+      Entity.update(target as Entity.Any, (obj) => {
         (obj as { image?: string }).image = uploadedUrl;
       });
 

@@ -8,7 +8,7 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { TimeoutError as ProtocolTimeoutError, trace } from '@dxos/protocols';
+import { TimeoutError as ProtocolTimeoutError } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import { type ReliablePayload } from '@dxos/protocols/proto/dxos/mesh/messaging';
 import { ComplexMap, ComplexSet } from '@dxos/util';
@@ -68,8 +68,7 @@ export class Messenger {
     if (!this._closed) {
       return;
     }
-    const traceId = PublicKey.random().toHex();
-    log.trace('dxos.mesh.messenger.open', trace.begin({ id: traceId }));
+    log('opening messenger');
     this._ctx = new Context({
       onError: (err) => log.catch(err),
     });
@@ -90,7 +89,7 @@ export class Messenger {
     );
 
     this._closed = false;
-    log.trace('dxos.mesh.messenger.open', trace.end({ id: traceId }));
+    log('opened messenger');
   }
 
   async close(): Promise<void> {

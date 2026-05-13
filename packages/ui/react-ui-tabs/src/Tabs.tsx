@@ -132,7 +132,7 @@ type TabsViewportProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 const TabsViewport = ({ classNames, children, ...props }: TabsViewportProps) => {
   const { activePart } = useTabsContext('TabsViewport');
   return (
-    <div role='none' {...props} data-active={activePart} className={mx(classNames)}>
+    <div {...props} data-active={activePart} className={mx(classNames)}>
       {children}
     </div>
   );
@@ -251,7 +251,6 @@ const TabsIconTab = ({ value, classNames, onClick, ...props }: TabsIconTabProps)
 
 type TabsPanelProps = ThemedClassName<TabsPrimitive.TabsContentProps>;
 
-// TODO(burdon): Make slottable.
 const TabsPanel = ({ classNames, children, ...props }: TabsPanelProps) => {
   const { value: contextValue } = useTabsContext('TabsTab');
   return (

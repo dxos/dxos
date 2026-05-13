@@ -15,7 +15,7 @@ export const RootContainer = () => {
   const { pathname } = useLocation();
 
   return (
-    <div role='none' className='dx-container flex'>
+    <div className='dx-container flex'>
       <Sidebar />
       <div className='flex flex-col grow overflow-hidden'>
         <ErrorBoundary key={pathname} name='devtools.root'>

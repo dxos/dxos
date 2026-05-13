@@ -4,8 +4,6 @@
 
 import { AnchoredTo, Thread } from '@dxos/types';
 
-export * as Settings from './Settings';
-
 export interface ThreadModel {
   root: Thread.Thread;
 }

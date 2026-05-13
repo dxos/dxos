@@ -8,14 +8,14 @@ import { meta } from '#meta';
 
 describe('plugin meta', () => {
   test('has correct id', () => {
-    expect(meta.id).toBe('org.dxos.plugin.daily-summary');
+    expect(meta.id).toBe('org.dxos.plugin.dailySummary');
   });
 
   test('has required fields', () => {
     expect(meta.name).toBe('Daily Summary');
     expect(meta.description).toBeTruthy();
     expect(meta.icon).toBe('ph--calendar-check--regular');
-    expect(meta.iconHue).toBe('amber');
+    expect(meta.iconHue).toBe('sky');
     expect(meta.source).toContain('plugin-daily-summary');
   });
 });

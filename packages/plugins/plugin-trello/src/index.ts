@@ -3,4 +3,4 @@
 //
 
 export * from './meta';
-export * from './TrelloPlugin';
+export * from './types';

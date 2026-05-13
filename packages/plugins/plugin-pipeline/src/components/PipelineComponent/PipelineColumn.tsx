@@ -33,7 +33,7 @@ export type PipelineColumnProps = Pick<MosaicTileProps<Pipeline.Column>, 'classN
 // TODO(wittjosiah): Support item DnD reordering (ordering needs to be stored on the view presentation collection).
 export const PipelineColumn = ({ data: column, location, classNames, debug }: PipelineColumnProps) => {
   const { t } = useTranslation(meta.id);
-  const dragHandleRef = useRef<HTMLButtonElement>(null);
+  const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
   // Subscribe to the view target for reactivity.
   const [viewSnapshot] = useObject(column.view);
   const view = column.view.target;
@@ -87,13 +87,13 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
         data={column}
         location={location}
         classNames={classNames}
-        dragHandleRef={dragHandleRef}
+        dragHandle={dragHandle}
       >
         <Panel.Toolbar asChild>
           <Board.Column.Header
             classNames='_opacity-10'
             label={column.name || t('untitled-view.title')}
-            dragHandleRef={dragHandleRef}
+            dragHandleRef={setDragHandle}
           />
         </Panel.Toolbar>
         <Panel.Content asChild>

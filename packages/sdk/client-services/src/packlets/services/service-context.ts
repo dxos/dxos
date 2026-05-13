@@ -22,12 +22,12 @@ import { type RuntimeProvider } from '@dxos/effect';
 import { FeedFactory, FeedStore } from '@dxos/feed-store';
 import { invariant } from '@dxos/invariant';
 import { Keyring } from '@dxos/keyring';
-import { PublicKey, type SpaceId } from '@dxos/keys';
+import { type SpaceId } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { type SignalManager } from '@dxos/messaging';
 import { type SwarmNetworkManager } from '@dxos/network-manager';
-import { InvalidStorageVersionError, STORAGE_VERSION, trace } from '@dxos/protocols';
+import { InvalidStorageVersionError, STORAGE_VERSION } from '@dxos/protocols';
 import { FeedProtocol } from '@dxos/protocols';
 import { Invitation } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
@@ -104,8 +104,6 @@ export class ServiceContext extends Resource {
 
   private _deviceSpaceSync?: CredentialProcessor;
 
-  private readonly _instanceId = PublicKey.random().toHex();
-
   constructor(
     public readonly storage: Storage,
     public readonly level: LevelDB,
@@ -169,6 +167,7 @@ export class ServiceContext extends Resource {
       peerIdProvider: () => this.identityManager.identity?.deviceKey?.toHex(),
       getSpaceKeyByRootDocumentId: (documentId) => this.spaceManager.findSpaceByRootDocumentId(documentId)?.key,
       runtime: this._runtime,
+      useSubduction: this._edgeFeatures?.subductionReplicator,
       syncQueue: async (ctx, request) => {
         return this._feedSyncer?.syncBlocking(ctx, {
           spaceId: request.spaceId as SpaceId,
@@ -229,7 +228,6 @@ export class ServiceContext extends Resource {
     await this._checkStorageVersion();
 
     log('opening...');
-    log.trace('dxos.sdk.service-context.open', trace.begin({ id: this._instanceId }));
 
     log('opening identityManager...');
     await this.identityManager.open(ctx);
@@ -294,7 +292,6 @@ export class ServiceContext extends Resource {
     const loadedInvitations = await this.invitationsManager.loadPersistentInvitations(ctx);
     log('loaded persistent invitations', { count: loadedInvitations.invitations?.length });
 
-    log.trace('dxos.sdk.service-context.open', trace.end({ id: this._instanceId }));
     log('opened');
   }
 

@@ -8,9 +8,9 @@ import React, { useEffect, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { PreviewPlugin } from '@dxos/plugin-preview';
+import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { Filter, Ref, useQuery, useSpaces } from '@dxos/react-client/echo';
@@ -86,7 +86,7 @@ const meta = {
               yield* Effect.promise(() => space.waitUntilReady());
               const board = space.db.add(createBoard());
 
-              Obj.change(board, (board) => {
+              Obj.update(board, (board) => {
                 // Add some sample items
                 Array.from({ length: 10 }).map(() => {
                   const org = createOrg();

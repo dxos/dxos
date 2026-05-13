@@ -144,7 +144,7 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
         {title}
       </h2>
       {/* TODO(wittjosiah): Reconcile with NavTreeItemColumns. */}
-      <div role='none' className='contents dx-app-no-drag'>
+      <div className='contents dx-app-no-drag'>
         {primaryAction?.properties?.disposition === 'list-item-primary' && !primaryAction?.properties?.disabled && (
           <NavTreeItemAction
             testId={primaryAction.properties?.testId}

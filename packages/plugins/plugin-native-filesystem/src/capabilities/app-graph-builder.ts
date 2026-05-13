@@ -10,14 +10,14 @@ import { AppCapabilities, getPersonalSpace, LayoutOperation } from '@dxos/app-to
 import { Operation } from '@dxos/compute';
 import { Filter, Obj } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { SHARED } from '@dxos/plugin-space/types';
+import { SHARED } from '@dxos/plugin-space';
 import { Expando, Text } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
-import { NativeFilesystemOperation } from '#operations';
+import { NativeFilesystemOperation } from '#types';
 import {
   NativeFilesystemCapabilities,
   isFilesystemDirectory,
@@ -176,7 +176,7 @@ export default Capability.makeModule(
                     }),
                   );
 
-                  Obj.change(spacesOrder, (spacesOrder: Record<string, unknown>) => {
+                  Obj.update(spacesOrder, (spacesOrder: Record<string, unknown>) => {
                     spacesOrder.order = nextOrder.map((item) => {
                       if (isFilesystemWorkspace(item)) {
                         return item.id;

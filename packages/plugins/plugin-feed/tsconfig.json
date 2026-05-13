@@ -33,10 +33,7 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/blueprints"
-    },
-    {
-      "path": "../../core/compute"
+      "path": "../../core/compute/compute"
     },
     {
       "path": "../../core/echo/echo"

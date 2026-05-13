@@ -12,7 +12,11 @@ import * as Schema from 'effect/Schema';
 // is a writable store that gets mutated when users toggle settings in the UI.
 export const Settings = Schema.mutable(
   Schema.Struct({
-    showStatusIndicator: Schema.optional(Schema.Boolean),
+    showStatusIndicator: Schema.optional(
+      Schema.Boolean.annotations({
+        title: 'Show status indicator',
+      }),
+    ),
   }),
 );
 

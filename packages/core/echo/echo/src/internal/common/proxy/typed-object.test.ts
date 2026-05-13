@@ -86,7 +86,7 @@ describe('EchoObjectSchema class DSL', () => {
     }
 
     {
-      // Plain object (not a reactive proxy) - doesn't need Obj.change.
+      // Plain object (not a reactive proxy) - doesn't need Obj.update.
       // Note: Schema.Schema.Type generates readonly types, so we cast to mutable for plain objects.
       type Test1 = Types.Mutable<Schema.Schema.Type<typeof schema>>;
 

@@ -172,32 +172,39 @@ const MARKDOWN_EDITOR_CONTENT_NAME = 'MarkdownEditor.Content';
 
 type MarkdownEditorContentProps = Omit<NaturalMarkdownEditorContentProps, 'id' | 'extensions' | 'toolbarState'>;
 
-const MarkdownEditorContent = composable<HTMLDivElement, MarkdownEditorContentProps>(({ ...props }, _forwardedRef) => {
-  const { id, attendableId, compact, viewMode, onFileUpload } = useMarkdownEditorContext(MARKDOWN_EDITOR_CONTENT_NAME);
+const MarkdownEditorContent = composable<HTMLDivElement, MarkdownEditorContentProps>(
+  ({ compact: compactProp, ...props }, _forwardedRef) => {
+    const {
+      id,
+      attendableId,
+      compact = compactProp,
+      viewMode,
+      onFileUpload,
+    } = useMarkdownEditorContext(MARKDOWN_EDITOR_CONTENT_NAME);
+    const { extensions, setController, state } = useEditorContext(MARKDOWN_EDITOR_CONTENT_NAME);
 
-  const { extensions, setController, state } = useEditorContext(MARKDOWN_EDITOR_CONTENT_NAME);
+    const handleRef = useCallback(
+      (view: EditorView | null) => {
+        setController(createEditorController(view));
+      },
+      [setController],
+    );
 
-  const handleRef = useCallback(
-    (view: EditorView | null) => {
-      setController(createEditorController(view));
-    },
-    [setController],
-  );
-
-  return (
-    <NaturalMarkdownEditorContent
-      {...composableProps(props)}
-      id={id}
-      attendableId={attendableId}
-      compact={compact}
-      viewMode={viewMode}
-      toolbarState={state as Atom.Writable<EditorToolbarState>}
-      extensions={extensions}
-      onFileUpload={onFileUpload}
-      ref={handleRef}
-    />
-  );
-});
+    return (
+      <NaturalMarkdownEditorContent
+        {...composableProps(props)}
+        id={id}
+        attendableId={attendableId}
+        compact={compact}
+        viewMode={viewMode}
+        toolbarState={state as Atom.Writable<EditorToolbarState>}
+        extensions={extensions}
+        onFileUpload={onFileUpload}
+        ref={handleRef}
+      />
+    );
+  },
+);
 
 MarkdownEditorContent.displayName = MARKDOWN_EDITOR_CONTENT_NAME;
 

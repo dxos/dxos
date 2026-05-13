@@ -3,4 +3,6 @@
 //
 
 export * from './PluginDetail';
+export * from './PluginFailureBadge';
 export * from './PluginList';
+export * from './RegistrySettings';

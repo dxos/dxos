@@ -34,7 +34,7 @@ const DefaultStory = () => {
     invariant(space, 'TemplateForm story requires at least one space');
     return space.db.add(
       Blueprint.make({
-        key: 'example.com/blueprint/test',
+        key: 'com.example.blueprint.test',
         name: 'Test',
         instructions: Template.make({ source: TEMPLATE }),
       }),
@@ -43,16 +43,12 @@ const DefaultStory = () => {
 
   const handleChange: TemplateChangeCallback = useCallback(
     (mutate) => {
-      Obj.change(blueprint, (blueprint) => mutate(blueprint.instructions));
+      Obj.update(blueprint, (blueprint) => mutate(blueprint.instructions));
     },
     [blueprint],
   );
 
-  return (
-    <div role='none' className='flex w-[40rem] border border-separator overflow-hidden'>
-      <TemplateForm id={blueprint.id} template={blueprint.instructions} onChange={handleChange} />
-    </div>
-  );
+  return <TemplateForm id={blueprint.id} template={blueprint.instructions} onChange={handleChange} />;
 };
 
 const meta = {

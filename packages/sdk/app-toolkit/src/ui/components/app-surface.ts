@@ -80,17 +80,27 @@ export const allOf = <TFilters extends ReadonlyArray<Surface.Filter<any>>>(
 
 /**
  * Filter: matches an ECHO object at the given role token's subject position.
+ *
+ * An optional `predicate` narrows on the rest of the data — most useful for
+ * surfaces that distinguish variants by a flag (e.g. `editable`, `compact`)
+ * without having to hand-roll a fully typed `Surface.Filter`.
  */
 export const object: {
   <TToken extends Surface.RoleToken<{ subject?: any }>, S extends Type.AnyEntity>(
     token: TToken,
     schema: S,
+    predicate?: (data: NonNullable<TokenData<TToken>>) => boolean,
   ): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Schema.Schema.Type<S> }>;
   <TToken extends Surface.RoleToken<{ subject?: any }>, S extends Type.AnyEntity[]>(
     token: TToken,
     schemas: [...S],
+    predicate?: (data: NonNullable<TokenData<TToken>>) => boolean,
   ): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Schema.Schema.Type<S[number]> }>;
-} = (token: Surface.RoleToken<any>, schemaOrSchemas: Type.AnyEntity | Type.AnyEntity[]): Surface.Filter<any> => {
+} = (
+  token: Surface.RoleToken<any>,
+  schemaOrSchemas: Type.AnyEntity | Type.AnyEntity[],
+  predicate?: (data: any) => boolean,
+): Surface.Filter<any> => {
   const schemas = Array.isArray(schemaOrSchemas) ? schemaOrSchemas : [schemaOrSchemas];
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
@@ -107,7 +117,10 @@ export const object: {
     ) {
       return false;
     }
-    return schemas.some((schema) => Obj.instanceOf(schema, subject));
+    if (!schemas.some((schema) => Obj.instanceOf(schema, subject))) {
+      return false;
+    }
+    return predicate ? predicate(data) : true;
   };
   return { bindings: [{ role: token.role, guard }] };
 };
@@ -404,6 +417,8 @@ export type CardData<Subject = unknown, Props extends {} = {}> = {
   projection?: ProjectionModel;
   /** Paths to omit from the card body (caller-defined redundancy; e.g. Kanban hides pivot). Dynamic-schema cards honor this; fixed-shape cards may ignore. */
   ignorePaths?: ReadonlyArray<string>;
+  /** When true, card surfaces should render an editable variant of the subject (full-bleed editor) rather than a read-only preview. Hosts opt in per-cell — e.g. plugin-board passes editable for in-place editing in grid cells. */
+  editable?: boolean;
 } & Props;
 
 /** Component props for card role. */

@@ -60,7 +60,7 @@ export const Todos = () => {
       todoRefs.map(async (ref) => {
         const todo = await ref.load();
         if (todo.completed !== checked) {
-          Obj.change(todo, (todo) => {
+          Obj.update(todo, (todo) => {
             todo.completed = checked;
           });
         }

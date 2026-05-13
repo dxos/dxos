@@ -4,18 +4,13 @@
 
 import { ActivationEvent as ActivationEvent$ } from '@dxos/app-framework';
 
-import { AppCapabilities } from './capabilities';
+import { LAYOUT_CAPABILITY_ID } from './capability-ids';
 
 export namespace AppActivationEvents {
   /**
    * Fired to load settings-related plugins before startup.
    */
   export const SetupSettings = ActivationEvent$.make('org.dxos.app-framework.event.setup-settings');
-
-  /**
-   * Fired to load any newly available metadata.
-   */
-  export const SetupMetadata = ActivationEvent$.make('org.dxos.app-framework.event.setup-metadata');
 
   /**
    * Fired before {@link SetupAppGraph}. Activates modules that contribute the
@@ -58,7 +53,7 @@ export namespace AppActivationEvents {
    */
   export const createStateEvent = (specifier: string) =>
     ActivationEvent$.make('org.dxos.app-framework.event.state', specifier);
-  export const LayoutReady = createStateEvent(AppCapabilities.Layout.identifier);
+  export const LayoutReady = createStateEvent(LAYOUT_CAPABILITY_ID);
 
   /**
    * Fired when a specific settings capability is ready.

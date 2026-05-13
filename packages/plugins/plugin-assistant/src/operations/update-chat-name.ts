@@ -13,9 +13,9 @@ import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { UpdateChatName } from './definitions';
+import { AssistantOperation } from '#types';
 
-const handler: Operation.WithHandler<typeof UpdateChatName> = UpdateChatName.pipe(
+const handler: Operation.WithHandler<typeof AssistantOperation.UpdateChatName> = AssistantOperation.UpdateChatName.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* ({ chat }) {
@@ -48,7 +48,7 @@ const handler: Operation.WithHandler<typeof UpdateChatName> = UpdateChatName.pip
 
         const newName = response.text.replaceAll(/[^a-zA-Z0-9\s]/g, '').trim();
 
-        Obj.change(chat, (chat) => {
+        Obj.update(chat, (chat) => {
           chat.name = newName;
         });
         log.info('chat name updated', { chat, newName: chat.name });

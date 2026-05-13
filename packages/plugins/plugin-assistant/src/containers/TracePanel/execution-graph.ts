@@ -3,15 +3,17 @@
 //
 
 import * as Array from 'effect/Array';
+import * as Either from 'effect/Either';
 import { pipe } from 'effect/Function';
 import * as Order from 'effect/Order';
 import * as Pipeable from 'effect/Pipeable';
 import * as Predicate from 'effect/Predicate';
+import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
-import { AGENT_PROCESS_KEY, AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
+import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
 import { Trace } from '@dxos/compute';
-import { Process } from '@dxos/functions-runtime';
+import { AGENT_PROCESS_KEY, Process } from '@dxos/functions-runtime';
 import { LogLevel, log } from '@dxos/log';
 import { type Commit } from '@dxos/react-ui-components';
 
@@ -138,6 +140,14 @@ export const buildExecutionGraph = ({
 
   for (const event of events) {
     if (Trace.isOfType(AgentRequestBegin, event)) {
+      const result = Schema.validateEither(AgentRequestBegin.schema)(event.data);
+      if (Either.isLeft(result)) {
+        log('invalid trace event', {
+          error: result.left,
+        });
+        continue;
+      }
+
       builder.addCommit({
         id: event.id,
         branch: event.meta.parentPid ?? MAIN_BRANCH,
@@ -155,6 +165,14 @@ export const buildExecutionGraph = ({
         message: 'Agent processing request...',
       });
     } else if (Trace.isOfType(AgentRequestEnd, event)) {
+      const result = Schema.validateEither(AgentRequestEnd.schema)(event.data);
+      if (Either.isLeft(result)) {
+        log('invalid trace event', {
+          error: result.left,
+        });
+        continue;
+      }
+
       builder.addCommit({
         id: event.id,
         branch: event.meta.parentPid ?? MAIN_BRANCH,
@@ -176,6 +194,14 @@ export const buildExecutionGraph = ({
         message: 'Agent completed request',
       });
     } else if (Trace.isOfType(CompleteBlock, event)) {
+      const result = Schema.validateEither(CompleteBlock.schema)(event.data);
+      if (Either.isLeft(result)) {
+        log('invalid trace event', {
+          error: result.left,
+        });
+        continue;
+      }
+
       switch (event.data.block._tag) {
         case 'text': {
           if (event.data.role === 'user') {
@@ -225,6 +251,14 @@ export const buildExecutionGraph = ({
         }
       }
     } else if (Trace.isOfType(Trace.OperationStart, event)) {
+      const result = Schema.validateEither(Trace.OperationStart.schema)(event.data);
+      if (Either.isLeft(result)) {
+        log('invalid trace event', {
+          error: result.left,
+        });
+        continue;
+      }
+
       builder.addCommit({
         id: `${event.id}:${event.data.key}:start`,
         branch: event.meta.parentPid ?? MAIN_BRANCH,
@@ -248,6 +282,14 @@ export const buildExecutionGraph = ({
         message: event.data.name ?? event.data.key,
       });
     } else if (Trace.isOfType(Trace.OperationEnd, event)) {
+      const result = Schema.validateEither(Trace.OperationEnd.schema)(event.data);
+      if (Either.isLeft(result)) {
+        log('invalid trace event', {
+          error: result.left,
+        });
+        continue;
+      }
+
       const children = builder.findCommits(
         CommitSelector.anyTags([
           event.meta.pid && tagPid(event.meta.pid),

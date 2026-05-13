@@ -2,20 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type AppCapabilities } from '@dxos/app-toolkit';
 import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
-import { CreateBot } from '#operations';
+import { DiscordOperation } from '#types';
+import { Discord } from '#types';
 
 // TODO(burdon): Reconcile with assistant-toolkit/blueprints/discord/blueprint.ts.
-const BLUEPRINT_KEY = 'org.dxos.blueprint.discord2';
-
-const operations = [CreateBot];
+const operations = [DiscordOperation.CreateBot];
 
 const make = () =>
   Blueprint.make({
-    key: BLUEPRINT_KEY,
+    key: Discord.BLUEPRINT_KEY,
     name: 'Discord Bot',
     tools: Blueprint.toolDefinitions({ operations }),
     instructions: Template.make({
@@ -27,8 +25,8 @@ const make = () =>
     }),
   });
 
-const blueprint: AppCapabilities.BlueprintDefinition = {
-  key: BLUEPRINT_KEY,
+const blueprint: Blueprint.Definition = {
+  key: Discord.BLUEPRINT_KEY,
   make,
 };
 

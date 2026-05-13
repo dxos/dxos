@@ -35,30 +35,29 @@
   --color-input-surface-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
 
   /** TODO(burdon): current vs active vs selected */
+  /** TODO(burdon): Merge overlay/surface? */
+
   --color-current-surface: light-dark(var(--color-neutral-200), var(--color-neutral-800));
   --color-active-surface: light-dark(var(--color-neutral-200), var(--color-neutral-800));
   --color-active-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
 
-  /** TODO(burdon): Merge overlay/surface? */
-  --color-hover-overlay: light-dark(var(--color-neutral-250), var(--color-neutral-750));
+  /** TODO(burdon): Hover vs. Highlight? */
   --color-hover-surface: light-dark(var(--color-neutral-250), var(--color-neutral-750));
   --color-hover-surface-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
+
+  --color-highlight-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
+  --color-highlight-surface-hover: light-dark(var(--color-neutral-200), var(--color-neutral-800));
+  --color-highlight-surface-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
+
+  --color-selected-surface: light-dark(var(--color-neutral-150), var(--color-neutral-850));
+  --color-selected-surface-hover: light-dark(var(--color-neutral-250), var(--color-neutral-750));
+  --color-selected-surface-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
 
   /* Map attention to focus-surface logic so that elements acting as active attention zones highlight correctly on focus. */
   --color-attention-surface: var(--color-focus-surface);
   --color-attention-contains: oklch(from var(--color-accent-surface) l c h / 0.3);
   --color-focus-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
   --color-neutral-focus-indicator: light-dark(var(--color-neutral-400), var(--color-neutral-600));
-
-  /* Highlight and Selected */
-
-  --color-highlight-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
-  --color-highlight-surface-hover: light-dark(var(--color-neutral-250), var(--color-neutral-750));
-  --color-highlight-surface-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
-
-  --color-selected-surface: light-dark(var(--color-neutral-150), var(--color-neutral-850));
-  --color-selected-surface-hover: light-dark(var(--color-neutral-250), var(--color-neutral-750));
-  --color-selected-surface-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
 
   /* Accent (primary) */
   /* TODO(burdon): Rename primary */
@@ -98,13 +97,12 @@
 
   --color-grid-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
   --color-grid-highlight: oklch(from var(--color-emerald-500) l c h / 0.5);
+  --color-grid-selection-surface: var(--color-blue-500);
   --color-grid-comment: light-dark(var(--color-green-400), var(--color-green-600));
   --color-grid-comment-active: light-dark(
     oklch(from var(--color-green-400) l c h / 0.5),
     oklch(from var(--color-green-600) l c h / 0.5)
   );
-  --color-grid-hover-overlay: oklch(from var(--color-neutral-500) l c h / 0.1);
-  --color-grid-selection-overlay: var(--color-blue-500);
   --color-grid-line: light-dark(var(--color-neutral-200), var(--color-neutral-800));
   --color-grid-focus-indicator: light-dark(var(--color-primary-600), var(--color-primary-600));
 

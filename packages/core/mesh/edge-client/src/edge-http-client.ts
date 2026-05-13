@@ -30,6 +30,7 @@ import {
   type FeedProtocol,
   type GetAccountResponse,
   type GetAgentStatusResponseBody,
+  type GetPluginVersionsResponseBody,
   type GetPluginsResponseBody,
   type GetNotarizationResponseBody,
   type ImportBundleRequest,
@@ -535,6 +536,24 @@ export class EdgeHttpClient {
    */
   public async getRegistryPlugins(ctx: Context, args?: EdgeHttpCallArgs): Promise<GetPluginsResponseBody> {
     return this._call(ctx, new URL('/registry/plugins', this.baseUrl), { ...args, method: 'GET' });
+  }
+
+  /**
+   * Fetches the available release versions for a given plugin repo. `repo` is the
+   * GitHub `owner/name` form; this method takes care of URL-encoding before issuing
+   * the request. Unauthenticated; same surface area as {@link getRegistryPlugins}.
+   *
+   * Versions are returned newest first, suitable for direct rendering in a picker.
+   */
+  public async getRegistryPluginVersions(
+    ctx: Context,
+    repo: string,
+    args?: EdgeHttpCallArgs,
+  ): Promise<GetPluginVersionsResponseBody> {
+    return this._call(ctx, new URL(`/registry/plugins/${encodeURIComponent(repo)}/versions`, this.baseUrl), {
+      ...args,
+      method: 'GET',
+    });
   }
 
   //

@@ -10,7 +10,7 @@ import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown';
 
 import { PresenterSettings } from '#components';
 import { CollectionPresenterContainer, DocumentPresenterContainer, MarkdownSlide } from '#containers';

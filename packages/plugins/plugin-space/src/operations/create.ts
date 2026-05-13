@@ -6,8 +6,8 @@ import { Capability, Plugin } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Collection, Obj, Ref } from '@dxos/echo';
 import { Migrations } from '@dxos/migrations';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
-import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
+import { ClientCapabilities } from '@dxos/plugin-client';
+import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { iconValues } from '@dxos/react-ui-pickers/icons';
 import { hues } from '@dxos/ui-theme';
@@ -29,7 +29,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Create> = SpaceOperat
       yield* Effect.promise(() => space.waitUntilReady());
 
       const collection = Obj.make(Collection.Collection, { objects: [] });
-      Obj.change(space.properties, (obj) => {
+      Obj.update(space.properties, (obj) => {
         obj[Collection.Collection.typename] = Ref.make(collection);
         if (Migrations.versionProperty) {
           obj[Migrations.versionProperty] = Migrations.targetVersion;

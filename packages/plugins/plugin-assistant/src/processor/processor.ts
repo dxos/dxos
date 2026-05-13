@@ -10,32 +10,32 @@ import * as Stream from 'effect/Stream';
 
 import { type AiService, DEFAULT_EDGE_MODEL, type ModelName, type ModelRegistry } from '@dxos/ai';
 import {
-  AiContextService,
-  type AiSession,
+  AiContext,
+  AiSession,
   createSystemPrompt,
   formatSystemPrompt,
-  AgentService,
+  McpServerError,
   PartialBlock,
   ToolExecutionServices,
 } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
-import { type Blueprint } from '@dxos/compute';
-import { Trace, type CredentialsService, type QueueService } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import { type Blueprint, type Credential, Trace, Operation } from '@dxos/compute';
 import { type Database, Feed, Obj, Ref } from '@dxos/echo';
 import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
+import { type QueueService } from '@dxos/functions';
+import { AgentService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
-import type { AutomationCapabilities } from '@dxos/plugin-automation/types';
+import { type AutomationCapabilities } from '@dxos/plugin-automation';
 import { Message } from '@dxos/types';
 
-import { UpdateChatName } from '../operations/definitions';
+import { AssistantOperation } from '#types';
 
 /**
  * @deprecated Services type for the old direct-conversation processor path.
  * Retained for backward compatibility with CLI and update-name.
  */
 export type AiChatServices =
-  | CredentialsService
+  | Credential.CredentialsService
   | Database.Service
   | QueueService
   | AiService.AiService
@@ -64,11 +64,11 @@ const defaultOptions: Partial<AiChatProcessorOptions> = {
   autoUpdateNameChance: 0.1,
 };
 
-export type AiRequestOptions = {};
+export type ProcessorRequestOptions = {};
 
-export type AiRequest = {
+export type ProcessorRequest = {
   message: string;
-  options?: AiRequestOptions;
+  options?: ProcessorRequestOptions;
 };
 
 /**
@@ -91,7 +91,7 @@ export class AiChatProcessor {
   #requestFiber: Fiber.RuntimeFiber<void, unknown> | undefined;
 
   /** Last request (for retries). */
-  #lastRequest: AiRequest | undefined;
+  #lastRequest: ProcessorRequest | undefined;
 
   /** Streaming state. */
   public readonly streaming = Atom.make<boolean>((get) => get(this.#streaming).length > 0);
@@ -105,8 +105,15 @@ export class AiChatProcessor {
   /** Last error. */
   public readonly error = Atom.make<Option.Option<Error>>(Option.none());
 
+  /**
+   * MCP server connection errors observed during the most recent request.
+   * Misconfigured/unreachable servers are dropped from the toolkit so the chat
+   * keeps working; the entries here let the UI display which servers failed.
+   */
+  public readonly mcpErrors = Atom.make<readonly Trace.PayloadType<typeof McpServerError>[]>([]);
+
   constructor(
-    private readonly _conversation: AiSession,
+    private readonly _conversation: AiSession.Session,
     private readonly _runtime: AutomationCapabilities.ComputeRuntime,
     private readonly _feed: Feed.Feed,
     private readonly _options: AiChatProcessorOptions = defaultOptions,
@@ -144,14 +151,14 @@ export class AiChatProcessor {
         const blueprints = this.context.getBlueprints();
         const objects = this.context.getObjects();
         return yield* formatSystemPrompt({ system: this._options.system, blueprints, objects });
-      }).pipe(Effect.provideService(AiContextService, { binder: this.context }), Effect.orDie),
+      }).pipe(Effect.provideService(AiContext.Service, { binder: this.context }), Effect.orDie),
     );
   }
 
   /**
    * Initiates a new request via AgentService.
    */
-  async request(requestProp: AiRequest): Promise<void> {
+  async request(requestProp: ProcessorRequest): Promise<void> {
     if (this.#requestFiber) {
       await this.cancel();
     }
@@ -159,6 +166,7 @@ export class AiChatProcessor {
     try {
       this.#lastRequest = requestProp;
       this.#registry.set(this.error, Option.none());
+      this.#registry.set(this.mcpErrors, []);
       this.#registry.set(this.active, true);
 
       const effect = Effect.gen(this, function* () {
@@ -172,6 +180,8 @@ export class AiChatProcessor {
               for (const event of message.events) {
                 if (Trace.isOfType(PartialBlock, event)) {
                   this.#handleEphemeralMessage(event.data);
+                } else if (Trace.isOfType(McpServerError, event)) {
+                  this.#handleMcpError(event.data);
                 }
               }
             }),
@@ -240,10 +250,17 @@ export class AiChatProcessor {
   }
 
   /**
+   * Clears the recorded MCP server errors (e.g. after the user dismisses the warning banner).
+   */
+  dismissMcpErrors(): void {
+    this.#registry.set(this.mcpErrors, []);
+  }
+
+  /**
    * Update the current chat's name.
    */
   async updateName(chat: Chat.Chat): Promise<void> {
-    unwrapExit(await this._runtime.runPromiseExit(Operation.invoke(UpdateChatName, { chat })));
+    unwrapExit(await this._runtime.runPromiseExit(Operation.invoke(AssistantOperation.UpdateChatName, { chat })));
   }
 
   /**
@@ -287,6 +304,20 @@ export class AiChatProcessor {
   }
 
   /**
+   * Records a per-server MCP failure, deduped by url+protocol so repeat misconfigurations
+   * across turns do not spam the UI.
+   */
+  #handleMcpError(event: Trace.PayloadType<typeof McpServerError>) {
+    log.warn('MCP server error', event);
+    this.#registry.update(this.mcpErrors, (errors) => {
+      if (errors.some((existing) => existing.url === event.url && existing.protocol === event.protocol)) {
+        return errors;
+      }
+      return [...errors, event];
+    });
+  }
+
+  /**
    * Move remaining streaming messages to pending (called when agent completes).
    */
   #flushStreaming() {
@@ -316,6 +347,6 @@ export class AiChatProcessor {
 
     // TODO(dmaretskyi): Operation.schedule didn't work.
     log.info('scheduling chat name update', { hasName: !!chat.name, chance });
-    return Operation.schedule(UpdateChatName, { chat });
+    return Operation.schedule(AssistantOperation.UpdateChatName, { chat });
   }
 }

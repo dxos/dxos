@@ -1,7 +1,6 @@
 {
   "name": "@dxos/log-store-idb",
   "version": "0.8.3",
-  "private": true,
   "description": "IndexedDB-backed log store for @dxos/log.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -32,5 +31,8 @@
   "dependencies": {
     "@dxos/log": "workspace:*"
   },
-  "devDependencies": {}
+  "devDependencies": {},
+  "publishConfig": {
+    "access": "public"
+  }
 }

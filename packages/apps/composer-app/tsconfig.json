@@ -125,19 +125,31 @@
       "path": "../../common/web-context-solid"
     },
     {
-      "path": "../../core/ai"
+      "path": "../../core/compute/ai"
     },
     {
-      "path": "../../core/assistant"
+      "path": "../../core/compute/assistant"
     },
     {
-      "path": "../../core/assistant-toolkit"
+      "path": "../../core/compute/assistant-toolkit"
     },
     {
-      "path": "../../core/compute"
+      "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/conductor"
+      "path": "../../core/compute/conductor"
+    },
+    {
+      "path": "../../core/compute/functions"
+    },
+    {
+      "path": "../../core/compute/functions-runtime"
+    },
+    {
+      "path": "../../core/compute/mcp-client"
+    },
+    {
+      "path": "../../core/compute/operation"
     },
     {
       "path": "../../core/echo/echo"
@@ -174,9 +186,6 @@
     },
     {
       "path": "../../core/halo/keyring"
-    },
-    {
-      "path": "../../core/mcp-client"
     },
     {
       "path": "../../core/mesh/edge-client"
@@ -227,6 +236,9 @@
       "path": "../../plugins/plugin-automation"
     },
     {
+      "path": "../../plugins/plugin-bluesky"
+    },
+    {
       "path": "../../plugins/plugin-board"
     },
     {
@@ -236,13 +248,13 @@
       "path": "../../plugins/plugin-client"
     },
     {
+      "path": "../../plugins/plugin-code"
+    },
+    {
       "path": "../../plugins/plugin-conductor"
     },
     {
       "path": "../../plugins/plugin-crx"
-    },
-    {
-      "path": "../../plugins/plugin-crx-bridge"
     },
     {
       "path": "../../plugins/plugin-daily-summary"
@@ -269,6 +281,15 @@
       "path": "../../plugins/plugin-files"
     },
     {
+      "path": "../../plugins/plugin-gallery"
+    },
+    {
+      "path": "../../plugins/plugin-game"
+    },
+    {
+      "path": "../../plugins/plugin-github"
+    },
+    {
       "path": "../../plugins/plugin-graph"
     },
     {
@@ -285,6 +306,9 @@
     },
     {
       "path": "../../plugins/plugin-kanban"
+    },
+    {
+      "path": "../../plugins/plugin-linear"
     },
     {
       "path": "../../plugins/plugin-map"
@@ -359,13 +383,13 @@
       "path": "../../plugins/plugin-sketch"
     },
     {
+      "path": "../../plugins/plugin-slack"
+    },
+    {
       "path": "../../plugins/plugin-space"
     },
     {
       "path": "../../plugins/plugin-spacetime"
-    },
-    {
-      "path": "../../plugins/plugin-spec"
     },
     {
       "path": "../../plugins/plugin-spotlight"
@@ -528,9 +552,6 @@
     },
     {
       "path": "../../ui/react-ui-pickers"
-    },
-    {
-      "path": "../../ui/react-ui-search"
     },
     {
       "path": "../../ui/react-ui-sfx"

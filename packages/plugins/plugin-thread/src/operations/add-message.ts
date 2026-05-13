@@ -8,14 +8,14 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Obj, Ref, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { ObservabilityOperation } from '@dxos/plugin-observability';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { ThreadCapabilities } from '../types';
-import { AddMessage } from './definitions';
+import { ThreadOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof AddMessage> = AddMessage.pipe(
+const handler: Operation.WithHandler<typeof ThreadOperation.AddMessage> = ThreadOperation.AddMessage.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ anchor, subject, sender, text }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
@@ -30,14 +30,14 @@ const handler: Operation.WithHandler<typeof AddMessage> = AddMessage.pipe(
         sender,
         blocks: [{ _tag: 'text', text }],
       });
-      Obj.change(thread, (thread) => {
+      Obj.update(thread, (thread) => {
         thread.messages.push(Ref.make(message));
       });
 
       const state = registry.get(stateAtom);
       const draft = state.drafts[subjectId]?.find((a: { id: string }) => a.id === anchor.id);
       if (draft) {
-        Obj.change(thread, (thread) => {
+        Obj.update(thread, (thread) => {
           thread.status = 'active';
         });
         registry.set(stateAtom, {

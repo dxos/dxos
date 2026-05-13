@@ -7,11 +7,11 @@ import * as Effect from 'effect/Effect';
 import { sleep } from '@dxos/async';
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
+import { ObservabilityOperation } from '@dxos/plugin-observability';
 
-import { Restore } from './definitions';
+import { ThreadOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof Restore> = Restore.pipe(
+const handler: Operation.WithHandler<typeof ThreadOperation.Restore> = ThreadOperation.Restore.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ thread, anchor }) {
       const db = Obj.getDatabase(thread);

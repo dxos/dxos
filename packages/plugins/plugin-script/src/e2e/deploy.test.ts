@@ -14,7 +14,9 @@ import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
+// TODO(wittjosiah): Re-enable once @dxos/compute.js is available at the R2 dev bucket
+// (https://pub-5745ae82e450484aa28f75fc6a175935.r2.dev/dev/@dxos/compute.js currently 404s).
+describe.skip('Functions deployment', { tags: ['functions-e2e'] }, () => {
   test('deploys FOREX (effect) function and invokes it via EDGE (main)', { timeout: 120_000 }, async () => {
     const config = configPreset({ edge: 'main' });
     await testDeploy(config);

@@ -11,7 +11,7 @@ import { type Chess } from '#types';
 export class ExtendedChessModel extends ChessModel {
   constructor(
     registry: Registry.Registry,
-    readonly object: Chess.Game,
+    readonly object: Chess.State,
   ) {
     super(registry);
   }

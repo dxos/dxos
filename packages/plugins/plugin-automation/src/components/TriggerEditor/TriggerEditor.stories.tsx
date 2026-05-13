@@ -6,10 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
+import { Operation, Trigger } from '@dxos/compute';
 import { Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
-import { Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
 import { random } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { TestSchema, useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -42,7 +41,7 @@ const DefaultStory = (props: Partial<TriggerEditorProps>) => {
     }
 
     const functions = await space.db.query(Filter.type(Operation.PersistentOperation)).run();
-    const fn = functions.find((fn) => fn.name === 'example.com/function/forex');
+    const fn = functions.find((fn) => fn.name === 'com.example.function.forex');
     invariant(fn);
     const trigger = space.db.add(
       Trigger.make({

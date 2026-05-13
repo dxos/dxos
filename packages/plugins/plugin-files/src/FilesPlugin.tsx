@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppCapabilities, AppPlugin } from '@dxos/app-toolkit';
-import { AttentionEvents } from '@dxos/plugin-attention/types';
+import { AttentionEvents } from '@dxos/plugin-attention';
 import { Node } from '@dxos/plugin-graph';
 
 import { AppGraphBuilder, FileSettings, FileState, Markdown, OperationHandler, ReactSurface } from '#capabilities';
@@ -62,3 +62,5 @@ export const FilesPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default FilesPlugin;

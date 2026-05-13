@@ -10,18 +10,17 @@ import * as Option from 'effect/Option';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
-import { Trace } from '@dxos/compute';
-import { Operation, OperationRegistry } from '@dxos/compute';
+import { Trace, Operation, OperationRegistry } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref, Relation, Tag, Type } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { HasSubject, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
+import { InboxOperation } from '../types';
 import { renderMarkdown } from '../util';
-import { ClassifyEmail } from './definitions';
 
-const handler: Operation.WithHandler<typeof ClassifyEmail> = ClassifyEmail.pipe(
+const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = InboxOperation.ClassifyEmail.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* ({ message }) {
@@ -42,7 +41,7 @@ const handler: Operation.WithHandler<typeof ClassifyEmail> = ClassifyEmail.pipe(
         const messageContent = Function.pipe([message], Array.flatMap(renderMarkdown), Array.join('\n\n'));
         const tagList = tags.map((tag) => `- ${tag.label}`).join('\n');
 
-        const result = yield* new AiRequest({
+        const result = yield* new AiRequest.Request({
           observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'classify' })),
         }).run({
           prompt:

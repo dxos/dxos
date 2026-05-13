@@ -5,15 +5,17 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Credential } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
 
 import { GoogleMail } from '../../../apis';
 import { GmailSendMessageInvalidError } from '../../../errors';
 import { GoogleCredentials } from '../../../services/google-credentials';
-import { GmailSend } from '../../definitions';
+import { InboxOperation } from '../../../types';
 
-export default GmailSend.pipe(
+export default InboxOperation.GmailSend.pipe(
   Operation.withHandler(({ userId = 'me', message, integration: integrationRef }) =>
     Effect.gen(function* () {
       log('sending email', { userId, integration: integrationRef.dxn.toString() });

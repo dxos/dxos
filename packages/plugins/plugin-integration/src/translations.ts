@@ -15,7 +15,7 @@ export const translations = [
         'plugin.name': 'Integration',
         'space-panel.name': 'Integrations',
         'integrations-verbose.label': 'Manage integrations',
-        'integrations.description': 'You can manage all the integrations for your space with external services here.',
+        'integrations.description': 'Integrations with external services for this space.',
         'add-token.menu': 'Add Integration',
         'add-custom-token.menu': 'Custom Token',
         'delete-token.menu': 'Delete Token',
@@ -46,6 +46,8 @@ export const translations = [
         'no-available-targets.message': 'No remote targets available.',
         'custom-token-dialog.title': 'Add custom token',
         'custom-token-dialog.description': 'Enter a static access token. No OAuth or sync runs for custom tokens.',
+        'provider-form-dialog.title': 'Connect {{label}}',
+        'provider-form-dialog.no-form.message': 'Provider has no credential form configured.',
       },
       [Integration.Integration.typename]: {
         'typename.label': 'Integration',

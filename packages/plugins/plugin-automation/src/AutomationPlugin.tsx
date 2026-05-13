@@ -4,9 +4,8 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { Trace, Trigger } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
-import { ClientEvents } from '@dxos/plugin-client/types';
+import { Operation, Trace, Trigger } from '@dxos/compute';
+import { ClientEvents } from '@dxos/plugin-client';
 
 import { AppGraphBuilder, ComputeRuntime, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
@@ -26,3 +25,5 @@ export const AutomationPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default AutomationPlugin;

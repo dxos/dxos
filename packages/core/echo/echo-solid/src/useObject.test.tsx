@@ -86,8 +86,8 @@ describe('useObject', () => {
     expect(result).toBe('Test');
     expect(getByTestId('value').textContent).toBe('Test');
 
-    // Update the property via Obj.change.
-    Obj.change(obj, (obj) => {
+    // Update the property via Obj.update.
+    Obj.update(obj, (obj) => {
       obj.name = 'Updated';
     });
 
@@ -118,8 +118,8 @@ describe('useObject', () => {
     expect(valueAccessor?.()?.name).toBe('Test');
     expect(getByTestId('name').textContent).toBe('Test');
 
-    // Update a property via Obj.change.
-    Obj.change(obj, (obj) => {
+    // Update a property via Obj.update.
+    Obj.update(obj, (obj) => {
       obj.name = 'Updated';
     });
 
@@ -149,8 +149,8 @@ describe('useObject', () => {
 
     expect(result).toBe('Test');
 
-    // Update a different property via Obj.change.
-    Obj.change(obj, (obj) => {
+    // Update a different property via Obj.update.
+    Obj.update(obj, (obj) => {
       obj.email = 'newemail@example.com';
     });
 

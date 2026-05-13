@@ -9,8 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { AiService, ToolExecutionService, ToolResolverService } from '@dxos/ai';
-import { Trace } from '@dxos/compute';
-import { Operation, OperationRegistry } from '@dxos/compute';
+import { Trace, Operation, OperationRegistry } from '@dxos/compute';
 import { Collection, Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { CollectionModel } from '@dxos/schema';
@@ -58,7 +57,7 @@ const MarkdownDocument = Schema.Struct({
 type MarkdownDoc = Schema.Schema.Type<typeof MarkdownDocument>;
 
 const makeMarkdownDoc = ({ name, content }: { name: string; content: string }) => {
-  const doc = Obj.make(MarkdownDocument, { name, content: Ref.make(Text.make(content)) });
+  const doc = Obj.make(MarkdownDocument, { name, content: Ref.make(Text.make({ content })) });
   Obj.setParent(doc.content.target!, doc);
   return doc;
 };
@@ -164,14 +163,14 @@ const updateDocContent = Effect.fn(function* (doc: MarkdownDoc, newContent: stri
   if (Ref.isRef(textRef)) {
     const text: Text.Text | undefined = yield* Effect.promise(() => textRef.load());
     if (text) {
-      Obj.change(text, (text) => {
+      Obj.update(text, (text) => {
         text.content = newContent;
       });
       return;
     }
   }
-  Obj.change(doc, (doc) => {
-    doc.content = Ref.make(Text.make(newContent));
+  Obj.update(doc, (doc) => {
+    doc.content = Ref.make(Text.make({ content: newContent }));
   });
 });
 

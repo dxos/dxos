@@ -31,7 +31,6 @@ import {
   COPY_LINK_LABEL,
   CREATE_OBJECT_IN_COLLECTION_LABEL,
   EXPOSE_OBJECT_LABEL,
-  type MetadataResolver,
   REMOVE_FROM_COLLECTION_LABEL,
   createObjectNode,
   getCollectionGraphNodePartials,
@@ -49,9 +48,6 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
   shareableLinkOrigin: string;
 }) {
   const capabilities = yield* Capability.Service;
-
-  const resolve = (get: any) => (typename: string) =>
-    capabilities.getAll(AppCapabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
   return yield* Effect.all([
     // Collections section virtual node under each space.
@@ -71,7 +67,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         }
         const rootCollection = collectionRef?.target;
         const collectionPartials = rootCollection
-          ? getCollectionGraphNodePartials({ collection: rootCollection, db: space.db, resolve: resolve(get) })
+          ? getCollectionGraphNodePartials({ db: space.db, collection: rootCollection })
           : undefined;
 
         return Effect.succeed([
@@ -129,7 +125,6 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
               createObjectNode({
                 db: space.db,
                 object,
-                resolve: resolve(get),
                 navigable: ephemeralState.navigableCollections,
                 parentCollection: collectionRef?.target,
               }),
@@ -166,7 +161,6 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
                 createObjectNode({
                   object,
                   db: space.db,
-                  resolve: resolve(get),
                   navigable: ephemeralState.navigableCollections,
                   parentCollection: collection,
                 }),
@@ -207,7 +201,6 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
           constructObjectActions({
             object,
             nodeId,
-            resolve: resolve(get),
             deletable,
             navigable: ephemeralState.navigableCollections,
             shareableLinkOrigin,
@@ -227,7 +220,6 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
 const constructObjectActions = ({
   object,
   nodeId,
-  resolve,
   deletable = true,
   navigable = false,
   shareableLinkOrigin,
@@ -235,7 +227,6 @@ const constructObjectActions = ({
 }: {
   object: Obj.Unknown;
   nodeId: string;
-  resolve: MetadataResolver;
   shareableLinkOrigin: string;
   deletable?: boolean;
   navigable?: boolean;
@@ -266,7 +257,7 @@ const constructObjectActions = ({
       data: (params?: Node.InvokeProps) =>
         Operation.invoke(SpaceOperation.RenameObject, { object, caller: `${params?.caller}:${params?.parent?.id}` }),
       properties: {
-        label: getDynamicLabel('rename object label', typename, { defaultValue: 'Rename' }),
+        label: getDynamicLabel('rename-object.label', typename, { defaultValue: 'Rename' }),
         icon: 'ph--pencil-simple-line--regular',
         disposition: 'list-item',
         testId: 'spacePlugin.renameObject',
@@ -283,7 +274,7 @@ const constructObjectActions = ({
                   const layout = yield* Capabilities.getAtomValue(AppCapabilities.Layout);
                   const isActive = layout.active.includes(nodeId);
 
-                  Obj.change(parentCollection, (parentCollection) => {
+                  Obj.update(parentCollection, (parentCollection) => {
                     parentCollection.objects.splice(index, 1);
                   });
 

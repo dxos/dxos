@@ -9,12 +9,12 @@ import * as Layer from 'effect/Layer';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { ContextQueueService } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ContextQueueService } from '@dxos/functions';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { PreviewPlugin } from '@dxos/plugin-preview';
+import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { type Queue, useSpaces } from '@dxos/react-client/echo';

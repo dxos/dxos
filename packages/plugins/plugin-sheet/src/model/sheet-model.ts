@@ -122,7 +122,7 @@ export class SheetModel extends Resource {
    */
   protected override async _open(): Promise<void> {
     log('initialize', { id: this.id });
-    Obj.change(this._sheet, (obj) => {
+    Obj.update(this._sheet, (obj) => {
       initialize(obj);
     });
 
@@ -184,7 +184,7 @@ export class SheetModel extends Resource {
 
   insertRows(i: number, n = 1): string[] {
     let idx: string[] = [];
-    Obj.change(this._sheet, (obj) => {
+    Obj.update(this._sheet, (obj) => {
       idx = insertIndices(obj.rows, i, n, MAX_ROWS);
     });
     this.reset();
@@ -193,7 +193,7 @@ export class SheetModel extends Resource {
 
   insertColumns(i: number, n = 1): string[] {
     let idx: string[] = [];
-    Obj.change(this._sheet, (obj) => {
+    Obj.update(this._sheet, (obj) => {
       idx = insertIndices(obj.columns, i, n, MAX_COLS);
     });
     this.reset();
@@ -208,7 +208,7 @@ export class SheetModel extends Resource {
     const values = this.getCellValues(range).flat();
     const index = this._sheet.rows.indexOf(rowIndex);
     this.clear(range);
-    Obj.change(this._sheet, (obj) => {
+    Obj.update(this._sheet, (obj) => {
       obj.rows.splice(index, 1);
       delete obj.rowMeta[rowIndex];
     });
@@ -224,7 +224,7 @@ export class SheetModel extends Resource {
     const values = this.getCellValues(range).flat();
     const index = this._sheet.columns.indexOf(colIndex);
     this.clear(range);
-    Obj.change(this._sheet, (obj) => {
+    Obj.update(this._sheet, (obj) => {
       obj.columns.splice(index, 1);
       delete obj.columnMeta[colIndex];
     });
@@ -233,7 +233,7 @@ export class SheetModel extends Resource {
   }
 
   restoreRow({ index, axisIndex, axisMeta, values }: SheetAction.RestoreAxis): void {
-    Obj.change(this._sheet, (obj) => {
+    Obj.update(this._sheet, (obj) => {
       obj.rows.splice(index, 0, axisIndex);
       values.forEach((value, col) => {
         if (value) {
@@ -249,7 +249,7 @@ export class SheetModel extends Resource {
   }
 
   restoreColumn({ index, axisIndex, axisMeta, values }: SheetAction.RestoreAxis): void {
-    Obj.change(this._sheet, (obj) => {
+    Obj.update(this._sheet, (obj) => {
       obj.columns.splice(index, 0, axisIndex);
       values.forEach((value, row) => {
         if (value) {
@@ -277,7 +277,7 @@ export class SheetModel extends Resource {
     const topLeft = getTopLeft(range);
     const values = this._iterRange(range, () => null);
     this._node.graph.hf.setCellContents(toSimpleCellAddress(this._node.sheetId, topLeft), values);
-    Obj.change(this._sheet, (obj) => {
+    Obj.update(this._sheet, (obj) => {
       this._iterRange(range, (cell) => {
         const idx = addressToIndex(this._sheet, cell);
         delete obj.cells[idx];
@@ -288,7 +288,7 @@ export class SheetModel extends Resource {
   cut(range: CellRange): void {
     invariant(this._node);
     this._node.graph.hf.cut(toModelRange(this._node.sheetId, range));
-    Obj.change(this._sheet, (obj) => {
+    Obj.update(this._sheet, (obj) => {
       this._iterRange(range, (cell) => {
         const idx = addressToIndex(this._sheet, cell);
         delete obj.cells[idx];
@@ -305,7 +305,7 @@ export class SheetModel extends Resource {
     invariant(this._node);
     if (!this._node.graph.hf.isClipboardEmpty()) {
       const changes = this._node.graph.hf.paste(toSimpleCellAddress(this._node.sheetId, cell));
-      Obj.change(this._sheet, (obj) => {
+      Obj.update(this._sheet, (obj) => {
         for (const change of changes) {
           if (change instanceof ExportedCellChange) {
             const { address, newValue } = change;
@@ -404,13 +404,13 @@ export class SheetModel extends Resource {
     // Reallocate if > current bounds.
     let refresh = false;
     if (cell.row >= this._sheet.rows.length) {
-      Obj.change(this._sheet, (obj) => {
+      Obj.update(this._sheet, (obj) => {
         insertIndices(obj.rows, cell.row, 1, MAX_ROWS);
       });
       refresh = true;
     }
     if (cell.col >= this._sheet.columns.length) {
-      Obj.change(this._sheet, (obj) => {
+      Obj.update(this._sheet, (obj) => {
         insertIndices(obj.columns, cell.col, 1, MAX_COLS);
       });
       refresh = true;
@@ -429,7 +429,7 @@ export class SheetModel extends Resource {
     // Insert into sheet.
     const idx = addressToIndex(this._sheet, cell);
     if (value === undefined || value === null) {
-      Obj.change(this._sheet, (obj) => {
+      Obj.update(this._sheet, (obj) => {
         delete obj.cells[idx];
       });
     } else {
@@ -437,7 +437,7 @@ export class SheetModel extends Resource {
         value = this._graph.mapFunctionBindingToId(mapFormulaRefsToIndices(this._sheet, value));
       }
 
-      Obj.change(this._sheet, (obj) => {
+      Obj.update(this._sheet, (obj) => {
         obj.cells[idx] = { value };
       });
     }

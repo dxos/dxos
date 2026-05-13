@@ -4,13 +4,8 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-const Handlers = OperationHandlerSet.lazy(
-  () => import('./create'),
+export const ChessOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./move'),
   () => import('./play'),
   () => import('./print'),
 );
-
-export { Create, Move, Play, Print } from './definitions';
-
-export const ChessHandlers = Handlers;

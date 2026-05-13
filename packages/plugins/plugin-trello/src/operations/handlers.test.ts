@@ -10,8 +10,8 @@ import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 import { InternalError } from '@dxos/errors';
-import { Integration } from '@dxos/plugin-integration/types';
-import { Kanban } from '@dxos/plugin-kanban/types';
+import { Integration } from '@dxos/plugin-integration';
+import { Kanban } from '@dxos/plugin-kanban';
 import { Expando } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
 
@@ -194,9 +194,8 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
     // 2. Selection: record `{ remoteId, name }` for board A. The generic
     // `SetIntegrationTargets` op is covered by its own test; here we just
     // simulate the dialog's effect on `integration.targets`.
-    Obj.change(integration, (integration) => {
-      const m = integration as Obj.Mutable<typeof integration>;
-      m.targets = [{ remoteId: boardA.id, name: boardA.name }];
+    Obj.update(integration, (integration) => {
+      integration.targets = [{ remoteId: boardA.id, name: boardA.name }];
     });
     expect(integration.targets).toHaveLength(1);
     expect(integration.targets[0].object).toBeUndefined();
@@ -237,9 +236,8 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
       .pipe(Effect.provide(layer), runAndForwardErrors);
 
     // Select both boards by recording `{ remoteId, name }` entries.
-    Obj.change(integration, (integration) => {
-      const m = integration as Obj.Mutable<typeof integration>;
-      m.targets = discovered.targets.map((t) => ({ remoteId: t.id, name: t.name }));
+    Obj.update(integration, (integration) => {
+      integration.targets = discovered.targets.map((target) => ({ remoteId: target.id, name: target.name }));
     });
 
     await syncTrelloBoardHandler

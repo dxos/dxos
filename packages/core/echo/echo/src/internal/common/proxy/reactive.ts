@@ -32,7 +32,7 @@ export const subscribe = (obj: unknown, callback: () => void): (() => void) => {
 
 /**
  * Deeply removes readonly modifiers from all properties of T.
- * Inside Obj.change, all properties are fully mutable regardless of schema definition.
+ * Inside Obj.update, all properties are fully mutable regardless of schema definition.
  * Ref types are preserved as-is since they are value-like objects that are replaced, not mutated.
  * Primitive types (including branded primitives) are preserved as-is.
  */

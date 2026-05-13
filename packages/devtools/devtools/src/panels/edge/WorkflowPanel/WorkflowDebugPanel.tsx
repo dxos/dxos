@@ -7,12 +7,12 @@ import type * as Layer from 'effect/Layer';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 
-import { QueueService } from '@dxos/compute';
 import { type ComputeGraph, ComputeNodeContext, ValueBag, type WorkflowLoader } from '@dxos/conductor';
 import { Context } from '@dxos/context';
 import { Database } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { runAndForwardErrors } from '@dxos/effect';
+import { QueueService } from '@dxos/functions';
 import { type RuntimeServices, ServiceContainer } from '@dxos/functions-runtime';
 import { RemoteFunctionExecutionService } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
@@ -156,7 +156,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
   };
 
   return (
-    <div role='none' className={mx('dx-container flex flex-col', props.classNames)}>
+    <div className={mx('dx-container flex flex-col', props.classNames)}>
       <MessageThread ref={scrollerRef} history={history} />
 
       <Toolbar.Root>

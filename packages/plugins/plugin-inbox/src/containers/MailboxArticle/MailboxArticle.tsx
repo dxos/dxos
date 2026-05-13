@@ -13,7 +13,7 @@ import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
 import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
 import { useAtomState } from '@dxos/react-hooks';
-import { ElevationProvider, IconButton, Panel, useTranslation } from '@dxos/react-ui';
+import { ElevationProvider, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { useSelected } from '@dxos/react-ui-attention';
 import { QueryEditor } from '@dxos/react-ui-components';
@@ -23,13 +23,13 @@ import { HasSubject, Message } from '@dxos/types';
 
 import { type MessageStackActionHandler, MessageStack } from '#components';
 import { meta } from '#meta';
-import { InboxOperation } from '#operations';
+import { InboxOperation } from '#types';
 import { InboxCapabilities, type Mailbox } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
 import { getMailboxMessagePath } from '../../paths';
 import { matchesFilter, sortByCreated } from '../../util';
-import { InitializeMailbox } from './InitializeMailbox';
+import { InitializeMailbox, InitializeMailboxAction } from './InitializeMailbox';
 
 export type MailboxArticleProps = AppSurface.ObjectArticleProps<
   Mailbox.Mailbox,
@@ -38,17 +38,17 @@ export type MailboxArticleProps = AppSurface.ObjectArticleProps<
   }
 >;
 
-export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendableId }: MailboxArticleProps) => {
+export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: MailboxArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const settings = useAtomCapability(InboxCapabilities.Settings);
+  // TODO(wittjosiah): Should be `const feed = useObjectValue(mailbox.feed)`.
+  const [mailbox] = useObject(subject);
   const id = attendableId ?? Obj.getDXN(mailbox).toString();
   const currentId = useSelected(id, 'single');
   const db = Obj.getDatabase(mailbox);
   const showItem = useShowItem();
 
-  // TODO(wittjosiah): Should be `const feed = useObjectValue(mailbox.feed)`.
-  useObject(mailbox);
   const feed = mailbox.feed?.target as Feed.Feed | undefined;
 
   const filterEditorRef = useRef<EditorController>(null);
@@ -56,7 +56,7 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
 
   // Menu state.
   const sortDescending = useAtomState(true);
-  const menuActions = useMailboxActions({ db, mailbox, sortDescending: sortDescending.atom });
+  const menuActions = useMailboxActions({ db, mailbox: subject, sortDescending: sortDescending.atom });
 
   // Build message-to-tags map from HasSubject relations incrementally.
   const messageTagsMap = useMessageTagsMap(db, feed);
@@ -177,21 +177,25 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
             state: true,
             variant: 'virtual',
             anchor: filterSaveButtonRef.current,
-            props: { mailbox, filter: action.filter },
+            props: { mailbox: subject, filter: action.filter },
           });
           break;
         }
       }
     },
-    [db, id, mailbox, sortedMessages, invokePromise, showItem],
+    [db, id, mailbox.id, subject, sortedMessages, invokePromise, showItem],
   );
 
   return (
     <Panel.Root>
-      {!isEmpty && (
-        <ElevationProvider elevation='positioned'>
-          <Menu.Root {...menuActions} attendableId={id}>
-            <Panel.Toolbar asChild>
+      <ElevationProvider elevation='positioned'>
+        <Menu.Root {...menuActions} attendableId={id}>
+          <Panel.Toolbar asChild>
+            {isEmpty ? (
+              <Toolbar.Root>
+                <InitializeMailboxAction mailbox={subject} />
+              </Toolbar.Root>
+            ) : (
               <Menu.Toolbar>
                 <QueryEditor
                   classNames='grow min-w-0 ps-1'
@@ -213,16 +217,16 @@ export const MailboxArticle = ({ subject: mailbox, filter: filterProp, attendabl
                   icon='ph--x--regular'
                   iconOnly
                   label={t('mailbox-toolbar-clear-button.label')}
-                  onClick={() => handleClear()}
+                  onClick={handleClear}
                 />
               </Menu.Toolbar>
-            </Panel.Toolbar>
-          </Menu.Root>
-        </ElevationProvider>
-      )}
+            )}
+          </Panel.Toolbar>
+        </Menu.Root>
+      </ElevationProvider>
       <Panel.Content asChild>
         {isEmpty ? (
-          <InitializeMailbox mailbox={mailbox} />
+          <InitializeMailbox mailbox={subject} />
         ) : (
           <MessageStack
             id={id}

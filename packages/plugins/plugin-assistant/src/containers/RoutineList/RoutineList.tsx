@@ -6,13 +6,14 @@ import React from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { DatabaseBlueprint, MarkdownBlueprint, WebSearchBlueprint } from '@dxos/assistant-toolkit';
+import { DatabaseBlueprint, WebSearchBlueprint } from '@dxos/assistant-toolkit';
 import { Routine } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { MarkdownBlueprint } from '@dxos/plugin-markdown';
 import { useQuery } from '@dxos/react-client/echo';
 import { IconButton } from '@dxos/react-ui';
 
-import { AssistantOperation } from '#operations';
+import { AssistantOperation } from '#types';
 
 export type RoutineListProps = AppSurface.ObjectSectionProps<Obj.Unknown>;
 
@@ -25,7 +26,7 @@ export const RoutineList = ({ subject }: RoutineListProps) => {
   }
 
   return (
-    <div role='none' className='flex gap-2'>
+    <div className='flex gap-2'>
       {prompts.map((prompt, i) => (
         <div key={i}>
           <IconButton

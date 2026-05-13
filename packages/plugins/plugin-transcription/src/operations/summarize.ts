@@ -10,21 +10,20 @@ import * as Option from 'effect/Option';
 
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
-import { Trace } from '@dxos/compute';
-import { Operation, OperationRegistry } from '@dxos/compute';
+import { Trace, Operation, OperationRegistry } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
-import { Summarize } from './definitions';
+import { TranscriptOperation } from '../types';
 
 /**
  * Summarize a transcript of a meeting.
  */
-const handler: Operation.WithHandler<typeof Summarize> = Summarize.pipe(
+const handler: Operation.WithHandler<typeof TranscriptOperation.Summarize> = TranscriptOperation.Summarize.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* ({ transcript, notes }) {
-        const result = yield* new AiRequest({
+        const result = yield* new AiRequest.Request({
           observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'summarize' })),
         }).run({
           prompt: `Transcript: ${transcript}\n\nNotes: ${notes}`,

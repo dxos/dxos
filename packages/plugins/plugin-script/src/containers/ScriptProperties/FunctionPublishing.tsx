@@ -83,7 +83,7 @@ export const FunctionPublishing = ({ object }: FunctionPublishingProps) => {
         });
         const gistId = response.data.id;
         if (gistId) {
-          Obj.change(object, (object) => {
+          Obj.update(object, (object) => {
             Obj.getMeta(object).keys.push({ source: 'github.com', id: gistId });
           });
         }
@@ -94,22 +94,22 @@ export const FunctionPublishing = ({ object }: FunctionPublishingProps) => {
   }, [object, githubToken]);
 
   return (
-    <div role='none' className='flex flex-col'>
+    <div className='flex flex-col'>
       <Form.Section label={t('script-publish-settings.label')} description={t('script-publish-settings.description')} />
 
       {!githubToken && (
-        <div role='none' className='flex flex-col py-form-gap'>
+        <div className='flex flex-col py-form-gap'>
           <Message.Root valence='info'>
             <Message.Title>{t('no-github-token.label')}</Message.Title>
           </Message.Root>
-          <div role='none' className='flex pt-form-gap'>
+          <div className='flex pt-form-gap'>
             <Button onClick={handleOpenTokenManager}>{t('open-token-manager.label')}</Button>
           </div>
         </div>
       )}
 
       {githubToken && (
-        <div role='none' className='flex justify-end gap-2'>
+        <div className='flex justify-end gap-2'>
           {gistUrl && <Clipboard.IconButton value={gistUrl} />}
           <Button disabled={publishing} onClick={handlePublish}>
             {t('publish.label')}

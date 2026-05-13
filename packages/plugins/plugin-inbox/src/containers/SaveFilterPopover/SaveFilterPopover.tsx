@@ -19,15 +19,15 @@ export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbo
   const { invokePromise } = useOperationInvoker();
 
   const handleDone = useCallback(() => {
-    Obj.change(mailbox, (mailbox) => {
+    Obj.update(mailbox, (mailbox) => {
       (mailbox.filters ??= []).push({ name, filter });
     });
     void invokePromise(LayoutOperation.UpdatePopover, { state: false, anchorId: '' });
   }, [mailbox, name, filter, invokePromise]);
 
   return (
-    <div role='none' className='p-2 flex gap-2'>
-      <div role='none' className='flex-1'>
+    <div className='p-2 flex gap-2'>
+      <div className='flex-1'>
         <Input.Root>
           <Input.Label srOnly>{t('saved-filter-name.label')}</Input.Label>
           <Input.TextInput

@@ -24,7 +24,7 @@ import {
 import { Filter, Query } from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
-import { DXN, PublicKey } from '@dxos/keys';
+import { DXN, PublicKey, QueueSubspaceTags } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
@@ -199,7 +199,7 @@ describe('Query', () => {
 
     test('filter by foreign keys', async () => {
       const obj = Obj.make(TestSchema.Expando, { value: 100 });
-      Obj.change(obj, (obj) => Obj.getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' }));
+      Obj.update(obj, (obj) => Obj.getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' }));
       db.add(obj);
 
       await db.flush();
@@ -211,7 +211,7 @@ describe('Query', () => {
 
     test('filter by foreign keys without flushing index', async () => {
       const obj = Obj.make(TestSchema.Expando, { value: 100 });
-      Obj.change(obj, (obj) => Obj.getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' }));
+      Obj.update(obj, (obj) => Obj.getMeta(obj).keys.push({ id: 'test-id', source: 'test-source' }));
       db.add(obj);
 
       const objects = await db
@@ -408,7 +408,7 @@ describe('Query', () => {
       }
       const cutoff = secondAfterFlush * 1000;
 
-      Obj.change(obj, (obj: any) => {
+      Obj.update(obj, (obj: any) => {
         obj.value = 999;
       });
       await db.flush();
@@ -727,6 +727,53 @@ describe('Query', () => {
         .run();
       expect(withoutFeeds).toHaveLength(1);
       expect(withoutFeeds[0].title).toBe('Space TypeScript Task');
+    });
+
+    test('Filter.type with includeFeeds preserves trace subspace in queue DXN', async () => {
+      const peer = await builder.createPeer({ types: [TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const traceQueue = queues.create({ subspaceTag: QueueSubspaceTags.TRACE });
+      expect(traceQueue.dxn.toString()).toContain(':trace:');
+
+      const traceTask = Obj.make(TestSchema.Task, { title: 'Trace Task' });
+      await traceQueue.append([traceTask]);
+      await db.flush();
+
+      const results: TestSchema.Task[] = await db
+        .query(Query.select(Filter.type(TestSchema.Task)).from(db, { includeFeeds: true }))
+        .run();
+
+      const traceResult = results.find((obj) => obj.title === 'Trace Task');
+      expect(traceResult).toBeDefined();
+      const dxnString = Obj.getDXN(traceResult!).toString();
+      // The queue DXN should reflect the queue's actual subspace ('trace'), not be hardcoded to 'data'.
+      expect(dxnString.startsWith(traceQueue.dxn.toString())).toBe(true);
+      expect(dxnString).toContain(':trace:');
+      expect(dxnString).not.toContain(':data:');
+    });
+
+    test('Filter.text with includeFeeds preserves trace subspace in queue DXN', async () => {
+      const peer = await builder.createPeer({ types: [TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const traceQueue = queues.create({ subspaceTag: QueueSubspaceTags.TRACE });
+
+      const traceTask = Obj.make(TestSchema.Task, { title: 'Trace TypeScript Task' });
+      await traceQueue.append([traceTask]);
+      await db.flush();
+
+      const results: TestSchema.Task[] = await db
+        .query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).from(db, { includeFeeds: true }))
+        .run();
+
+      const traceResult = results.find((obj) => obj.title === 'Trace TypeScript Task');
+      expect(traceResult).toBeDefined();
+      const dxnString = Obj.getDXN(traceResult!).toString();
+      // FTS path also stamps queueNamespace; should not be hardcoded to 'data'.
+      expect(dxnString.startsWith(traceQueue.dxn.toString())).toBe(true);
+      expect(dxnString).toContain(':trace:');
+      expect(dxnString).not.toContain(':data:');
     });
 
     test('from(all-accessible-spaces) via graph queries type across spaces', async () => {
@@ -1716,7 +1763,7 @@ describe('Query', () => {
       }
 
       // Update the object.
-      Obj.change(obj, (obj) => {
+      Obj.update(obj, (obj) => {
         obj.title = 'Updated Title';
       });
       await db.flush();
@@ -2077,7 +2124,7 @@ describe('Query', () => {
       query.subscribe(() => {
         updateCount++;
       });
-      Obj.change(objects[0], (o: any) => {
+      Obj.update(objects[0], (o: any) => {
         o.title = 'Task 0a';
       });
       await sleep(10);
@@ -2276,7 +2323,7 @@ describe('Query', () => {
       });
       onTestFinished(() => unsub());
 
-      Obj.change(contact, (contact) => {
+      Obj.update(contact, (contact) => {
         contact.name = name;
       });
       db.add(Obj.make(TestSchema.Person, {}));

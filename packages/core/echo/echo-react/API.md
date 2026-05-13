@@ -20,7 +20,7 @@ Subscribe to an Echo object or Ref. Returns a snapshot and an update callback.
 ### Subscribing to an object
 
 ```ts
-const [person, change] = useObject(obj);
+const [person, update] = useObject(obj);
 person.name; // snapshot value -- re-renders on any change
 ```
 
@@ -43,11 +43,11 @@ assignee?.name; // undefined until the Ref loads
 
 ### Updating objects
 
-The change callback wraps `Obj.change` internally.
+The update callback wraps `Obj.update` internally.
 
 ```ts
 // Mutate via callback
-change((obj) => {
+update((obj) => {
   obj.name = 'Alice';
 });
 

@@ -14,7 +14,7 @@ import { type Message as MessageType } from '@dxos/types';
 
 import { Message, type MessageHeaderProps, type ViewMode } from '#components';
 import { useActorContact } from '#hooks';
-import { InboxOperation } from '#operations';
+import { InboxOperation } from '#types';
 import { Mailbox } from '#types';
 
 import { getMailboxMessagePath } from '../../paths';

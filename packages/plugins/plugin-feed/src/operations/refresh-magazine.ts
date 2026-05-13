@@ -8,11 +8,10 @@ import { Operation } from '@dxos/compute';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { type Magazine, Subscription } from '../types';
+import { FeedOperation, type Magazine, Subscription } from '../types';
 import { findStarTag } from '../util';
-import { CurateMagazine, RefreshMagazine, SyncFeed } from './definitions';
 
-export default RefreshMagazine.pipe(
+export default FeedOperation.RefreshMagazine.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ magazine: magazineRef }) {
       const magazine = yield* Effect.promise(() => magazineRef.load());
@@ -39,7 +38,7 @@ export default RefreshMagazine.pipe(
 
       let synced = 0;
       for (const feed of validFeeds) {
-        const result = yield* Effect.either(Operation.invoke(SyncFeed, { feed }));
+        const result = yield* Effect.either(Operation.invoke(FeedOperation.SyncFeed, { feed }));
         if (result._tag === 'Right') {
           synced += 1;
         } else {
@@ -47,7 +46,7 @@ export default RefreshMagazine.pipe(
         }
       }
 
-      const { added } = yield* Operation.invoke(CurateMagazine, { magazine: magazineRef });
+      const { added } = yield* Operation.invoke(FeedOperation.CurateMagazine, { magazine: magazineRef });
 
       const db = Obj.getDatabase(magazine);
       applyPerFeedKeep(magazine, db);
@@ -78,7 +77,7 @@ const publishedTimestamp = (post: Subscription.Post): number => {
  * older-dated feed; per-feed keep gives each feed a fair share. Starred
  * posts and unresolved refs are preserved unconditionally.
  *
- * Lands as a separate `Obj.change` write (not chained inside the
+ * Lands as a separate `Obj.update` write (not chained inside the
  * CurateMagazine operation) — chaining a second `mutable.posts = ...`
  * inside one change block trips ECHO's deep-mapper dedup invariant.
  */
@@ -132,7 +131,7 @@ const applyPerFeedKeep = (magazine: Magazine.Magazine, db: Database.Database | u
   nextRefs.push(...unresolvedRefs);
 
   if (nextRefs.length !== magazine.posts.length) {
-    Obj.change(magazine, (magazine) => {
+    Obj.update(magazine, (magazine) => {
       magazine.posts = nextRefs;
     });
   }

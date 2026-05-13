@@ -14,7 +14,7 @@ import { Event as EventType } from '@dxos/types';
 
 import { Event, type EventHeaderProps } from '#components';
 import { useShadowObject } from '#hooks';
-import { InboxOperation } from '#operations';
+import { InboxOperation } from '#types';
 
 export type EventArticleProps = AppSurface.ArticleProps<EventType.Event, {}, Obj.Unknown>;
 
@@ -30,7 +30,7 @@ export const EventArticle = ({ role, subject, companionTo: calendar }: EventArti
     const event = createShadowEvent();
     const notes = await event.notes?.load();
     if (!notes) {
-      Obj.change(event, (event) => {
+      Obj.update(event, (event) => {
         event.notes = Ref.make(Text.make());
       });
     }

@@ -7,7 +7,7 @@ import React from 'react';
 
 import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { Dialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 

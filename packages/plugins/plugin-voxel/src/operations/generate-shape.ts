@@ -8,16 +8,15 @@ import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 
 import { generateModel } from '../models';
-import { Voxel } from '../types';
-import { GenerateShape } from './definitions';
+import { Voxel, VoxelOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof GenerateShape> = GenerateShape.pipe(
+const handler: Operation.WithHandler<typeof VoxelOperation.GenerateShape> = VoxelOperation.GenerateShape.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ world, shape, origin, hue }) {
       const loaded = (yield* Database.load(world)) as Voxel.World;
       const voxels = generateModel(shape, origin, hue);
       let added = 0;
-      Obj.change(loaded, (loaded) => {
+      Obj.update(loaded, (loaded) => {
         if (!loaded.voxels) {
           loaded.voxels = {};
         }

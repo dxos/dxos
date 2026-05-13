@@ -12,7 +12,7 @@ import { inspectObject } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { ApiError, trace as Trace } from '@dxos/protocols';
+import { ApiError } from '@dxos/protocols';
 import {
   type Contact,
   type Device,
@@ -33,8 +33,6 @@ import { InvitationsProxy } from '../invitations';
 
 @trace.resource()
 export class HaloProxy implements Halo {
-  private readonly _instanceId = PublicKey.random().toHex();
-
   /** Subscriptions for overall lifecycle (reconnected event listener). */
   private readonly _subscriptions = new SubscriptionList();
   /** Subscriptions for RPC streams that need to be re-established on reconnect. */
@@ -53,13 +51,7 @@ export class HaloProxy implements Halo {
 
   private _haloCredentialStream?: Stream<Credential>;
 
-  constructor(
-    private readonly _serviceProvider: ClientServicesProvider,
-    /**
-     * @internal
-     */
-    public _traceParent?: string,
-  ) {}
+  constructor(private readonly _serviceProvider: ClientServicesProvider) {}
 
   [inspect.custom](): string {
     return inspectObject(this);
@@ -113,7 +105,7 @@ export class HaloProxy implements Halo {
    * @internal
    */
   async _open(): Promise<void> {
-    log.trace('dxos.sdk.halo-proxy.open', Trace.begin({ id: this._instanceId, parentId: this._traceParent }));
+    log('opening halo proxy');
     const gotIdentity = this._identityChanged.waitForCount(1);
     // const gotContacts = this._contactsChanged.waitForCount(1);
 
@@ -138,7 +130,7 @@ export class HaloProxy implements Halo {
     await this._setupInvitationProxy();
     this._setupStreams();
 
-    log.trace('dxos.sdk.halo-proxy.open', Trace.end({ id: this._instanceId }));
+    log('opened halo proxy');
     await Promise.all([gotIdentity]);
   }
 

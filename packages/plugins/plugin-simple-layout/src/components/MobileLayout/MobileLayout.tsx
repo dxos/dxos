@@ -56,7 +56,6 @@ const MobileLayoutRoot = forwardRef<HTMLDivElement, MobileLayoutRootProps>(
       <MobileLayoutProvider keyboardOpen={keyboardOpen}>
         <div
           {...props}
-          role='none'
           style={{
             height: 'calc(100vh - var(--kb-height, 0px))',
             transition: `height ${keyboardOpen ? 0 : transition}ms ease-out`,
@@ -95,7 +94,6 @@ const MobileLayoutPanel = forwardRef<HTMLDivElement, MobileLayoutPanelProps>(
     return (
       <div
         {...props}
-        role='none'
         style={{
           paddingTop: safe?.top ? 'env(safe-area-inset-top)' : undefined,
           paddingBottom: safe?.bottom ? `calc((1 - var(--kb-open, 0)) * env(safe-area-inset-bottom))` : undefined,

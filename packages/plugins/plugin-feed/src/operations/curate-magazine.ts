@@ -9,16 +9,9 @@ import { Operation } from '@dxos/compute';
 import { type Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
+import { FeedOperation } from '../types';
 import { type Magazine, Subscription } from '../types';
-import { extractImageUrls, makeSnippet, stripHtml } from '../util';
-import { CurateMagazine } from './definitions';
-
-/**
- * Extracts the bare ECHO object id from a DXN. Robust to DXN form differences
- * — `dxn:echo:@:<id>` (local), `dxn:echo:<spaceId>:<id>` (space-scoped),
- * `dxn:queue:<...>:<id>` (queue-scoped) — by always taking the last part.
- */
-const dxnToObjectId = (dxn: { parts: readonly any[] }): string => String(dxn.parts[dxn.parts.length - 1]);
+import { dxnToObjectId, extractImageUrls, makeSnippet, stripHtml } from '../util';
 
 /**
  * Returns the canonical space.db proxy for a Post by id, if it has been
@@ -112,7 +105,7 @@ export const curateMagazine = async (space: Space, magazine: Magazine.Magazine):
       // trips `addCore`'s `!_objects.has(core.id)` invariant.
       const post = await reuseOrAdd(space.db, queuePost);
 
-      Obj.change(post, (post) => {
+      Obj.update(post, (post) => {
         const mutable = post as Obj.Mutable<typeof post>;
         mutable.snippet = snippet;
         if (imageUrl) {
@@ -126,7 +119,7 @@ export const curateMagazine = async (space: Space, magazine: Magazine.Magazine):
 
   let appended = 0;
   if (added.length > 0) {
-    Obj.change(magazine, (magazine) => {
+    Obj.update(magazine, (magazine) => {
       const mutable = magazine as Obj.Mutable<typeof magazine>;
       const existing = new Set(mutable.posts.map((ref) => dxnToObjectId(ref.dxn)));
       const fresh = added.filter((ref) => !existing.has(dxnToObjectId(ref.dxn)));
@@ -140,7 +133,7 @@ export const curateMagazine = async (space: Space, magazine: Magazine.Magazine):
   return { added: appended };
 };
 
-const handler: Operation.WithHandler<typeof CurateMagazine> = CurateMagazine.pipe(
+const handler: Operation.WithHandler<typeof FeedOperation.CurateMagazine> = FeedOperation.CurateMagazine.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ magazine: magazineRef }) {
       const magazine = yield* Effect.promise(() => magazineRef.load());

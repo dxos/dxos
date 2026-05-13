@@ -114,9 +114,15 @@ export const baseTheme = EditorView.baseTheme({
     overflowAnchor: 'auto',
   },
   '.cm-scroller::-webkit-scrollbar': {
-    width: 'var(--scrollbar-width,8px)',
+    width: 'var(--scrollbar-size,8px)',
+    height: 'var(--scrollbar-size,8px)',
   },
-  '.cm-scroller::-webkit-scrollbar-track': {},
+  '.cm-scroller::-webkit-scrollbar-corner': {
+    background: 'transparent',
+  },
+  '.cm-scroller::-webkit-scrollbar-track': {
+    background: 'transparent',
+  },
   '.cm-scroller::-webkit-scrollbar-thumb': {
     background: 'transparent',
     transition: 'background 0.15s',
@@ -155,7 +161,7 @@ export const baseTheme = EditorView.baseTheme({
    * Height is set to match the corresponding line (which may have wrapped).
    */
   '.cm-gutterElement': {
-    lineHeight: 1.5,
+    lineHeight: '24px',
     fontSize: '12px',
   },
 

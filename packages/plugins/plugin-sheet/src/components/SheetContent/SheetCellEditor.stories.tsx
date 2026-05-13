@@ -39,7 +39,7 @@ const AutomergeStory = ({ value, ...props }: CellEditorProps) => {
     const space = await client.spaces.create();
 
     const sheet = Sheet.make();
-    Obj.change(sheet, (sheet) => {
+    Obj.update(sheet, (sheet) => {
       sheet.name = 'Test';
       sheet.cells[cell] = { value };
     });

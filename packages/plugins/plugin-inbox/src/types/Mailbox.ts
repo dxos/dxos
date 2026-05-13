@@ -4,9 +4,12 @@
 
 import * as Schema from 'effect/Schema';
 
+import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { FeedAnnotation } from '@dxos/schema';
+
+export const BLUEPRINT_KEY = 'org.dxos.blueprint.inbox';
 
 // TODO(burdon): Implement as labels?
 export enum MessageState {
@@ -45,6 +48,7 @@ export const Mailbox = Schema.Struct({
     hue: 'rose',
   }),
   FeedAnnotation.set(true),
+  BlueprintsAnnotation.set([BLUEPRINT_KEY]),
 );
 
 export interface Mailbox extends Schema.Schema.Type<typeof Mailbox> {}

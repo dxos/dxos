@@ -4,7 +4,7 @@
 
 import { Obj, Ref } from '@dxos/echo';
 import { getObjectCore } from '@dxos/echo-db';
-import { type TypedObjectSerializer } from '@dxos/plugin-space/types';
+import { type TypedObjectSerializer } from '@dxos/plugin-space';
 
 import { Sketch } from '#types';
 
@@ -34,7 +34,7 @@ export const serializer: TypedObjectSerializer<Sketch.Sketch> = {
 };
 
 const setCanvasContent = (object: Sketch.Canvas, content: any) => {
-  Obj.change(object, (object) => {
+  Obj.update(object, (object) => {
     object.content = {};
     Object.entries(content).forEach(([key, value]) => {
       object.content[key] = value;

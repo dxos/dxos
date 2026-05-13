@@ -9,7 +9,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { TemplateEditor } from '@dxos/plugin-assistant';
+import { TemplateEditor } from '@dxos/plugin-assistant/components';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { Editor, type EditorViewProps } from '@dxos/react-ui-editor';
@@ -62,7 +62,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
   const handleQueryChange = useCallback<NonNullable<QueryEditorProps['onChange']>>(
     (value: string) => {
       invariant(cell.source?.target);
-      Obj.change(cell.source.target, (obj) => {
+      Obj.update(cell.source.target, (obj) => {
         obj.content = value;
       });
     },

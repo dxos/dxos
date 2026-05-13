@@ -43,7 +43,7 @@ describe('notebook', () => {
     // Replace one of the cells with code that tries to access window/document.
     const sourceTarget = notebook.cells[2].source?.target;
     if (sourceTarget) {
-      Obj.change(sourceTarget, (sourceTarget) => {
+      Obj.update(sourceTarget, (sourceTarget) => {
         sourceTarget.content = 'b = typeof window';
       });
     }
@@ -57,7 +57,7 @@ describe('notebook', () => {
 
     // Test document access.
     if (sourceTarget) {
-      Obj.change(sourceTarget, (sourceTarget) => {
+      Obj.update(sourceTarget, (sourceTarget) => {
         sourceTarget.content = 'b = typeof document';
       });
     }
@@ -69,7 +69,7 @@ describe('notebook', () => {
 
     // Test that safe globals still work.
     if (sourceTarget) {
-      Obj.change(sourceTarget, (sourceTarget) => {
+      Obj.update(sourceTarget, (sourceTarget) => {
         sourceTarget.content = 'b = Math.max(100, 200)';
       });
     }

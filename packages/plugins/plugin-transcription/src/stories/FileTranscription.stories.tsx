@@ -15,9 +15,9 @@ import { MemoryQueue } from '@dxos/echo-db';
 import { createQueueDXN } from '@dxos/echo/internal';
 import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { PreviewPlugin } from '@dxos/plugin-preview';
+import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
@@ -52,8 +52,26 @@ const AudioFile = ({
   const [running, setRunning] = useState(false);
   const actor: Actor.Actor = useMemo(() => ({ name: 'You' }), []);
 
+  // Optional uploaded file overrides the default URL.
+  // The useEffect below revokes the previous URL whenever it changes (and on unmount).
+  const [uploadedUrl, setUploadedUrl] = useState<string>();
+  useEffect(() => {
+    return () => {
+      if (uploadedUrl) {
+        URL.revokeObjectURL(uploadedUrl);
+      }
+    };
+  }, [uploadedUrl]);
+
+  const handleUpload = useCallback((file: File) => {
+    setRunning(false);
+    setUploadedUrl(URL.createObjectURL(file));
+  }, []);
+
+  const sourceUrl = uploadedUrl ?? audioUrl;
+
   // Audio.
-  const { audio, track, stream } = useAudioFile(audioUrl, audioConstraints);
+  const { audio, track, stream } = useAudioFile(sourceUrl, audioConstraints);
 
   // Speaking.
   const isSpeaking = detectSpeaking ? useIsSpeaking(track) : true;
@@ -180,6 +198,7 @@ const AudioFile = ({
       running={running}
       onRunningChange={setRunning}
       audioRef={ref}
+      onUpload={handleUpload}
     />
   );
 };

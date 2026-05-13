@@ -9,7 +9,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { Card } from '@dxos/react-ui';
-import { withLayout } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type Expando } from '@dxos/schema';
 import { type Organization, type Person, type Pipeline, type Task } from '@dxos/types';
 
@@ -24,6 +24,11 @@ const meta = {
   title: 'plugins/plugin-preview/cards/Card',
   render: DefaultStory,
   decorators: [
+    // `Card` and its descendants in `@dxos/react-ui` consume `ThemeContext`
+    // for tx-token resolution; without this the stories trip the surface's
+    // `ErrorBoundary` with "Missing ThemeContext" and the storybook test
+    // assert-no-error fails.
+    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({ plugins: corePlugins() }),

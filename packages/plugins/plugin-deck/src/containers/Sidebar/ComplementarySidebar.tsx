@@ -84,13 +84,12 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
       ]}
     >
       {/* R0 Tabs */}
-      <Tabs.Root orientation='vertical' value={internalValue} classNames='contents'>
+      <Tabs.Root classNames='contents' orientation='vertical' value={internalValue}>
         <div
           data-tauri-drag-region
-          role='none'
           style={iconSize(5)}
           className={mx(
-            'absolute z-20 inset-y-0 end-0 w-(--dx-r0-size)!',
+            'absolute z-1 inset-y-0 end-0 w-(--dx-r0-size)!',
             'py-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] border-s border-subdued-separator',
             'grid grid-cols-1 grid-rows-[1fr_min-content] bg-toolbar-surface dx-contain-layout dx-app-drag',
           )}
@@ -120,14 +119,13 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
           </Tabs.Tablist>
           {!hoistStatusbar && (
             <div
-              role='none'
-              className='grid grid-cols-1 auto-rows-(--dx-rail-item) gap-0.5 overflow-y-auto'
+              className='grid grid-cols-1 auto-rows-(--dx-rail-item) py-0.5 gap-0.5 overflow-y-auto scrollbar-none'
               style={iconSize(4)}
             >
               <Surface.Surface role='status-indicator' />
             </div>
           )}
-          <div role='none' className='hidden lg:grid grid-cols-1 auto-rows-(--dx-rail-action) p-1'>
+          <div className='hidden lg:grid grid-cols-1 auto-rows-(--dx-rail-action) p-1'>
             <ToggleComplementarySidebarButton />
           </div>
         </div>
@@ -140,7 +138,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
               value={getLinkedVariant(companion.id)}
               classNames={[
                 'absolute data-[state="inactive"]:-z-[1] overflow-hidden',
-                'inset-y-0 start-0 w-[calc(100%-var(--dx-r0-size))] lg:w-(--dx-r1-size)',
+                'inset-y-0 start-0 w-full lg:w-(--dx-r1-size)',
               ]}
               {...(state.complementarySidebarState !== 'expanded' && { inert: true })}
             >

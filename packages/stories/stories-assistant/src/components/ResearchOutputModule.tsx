@@ -6,16 +6,16 @@ import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { ResearchGraph } from '@dxos/assistant-toolkit';
 import { Feed, Filter } from '@dxos/echo';
 import { useQuery, useQueue } from '@dxos/react-client/echo';
 import { Card } from '@dxos/react-ui';
 
-import { type ComponentProps } from './types';
+import { ResearchInputQueue } from '../testing';
+import { type ModuleProps } from './types';
 
-export const ResearchOutputModule = ({ space }: ComponentProps) => {
-  const [researchGraph] = useQuery(space.db, Filter.type(ResearchGraph.ResearchGraph));
-  const feed = researchGraph?.queue.target;
+export const ResearchOutputModule = ({ space }: ModuleProps) => {
+  const [researchInput] = useQuery(space.db, Filter.type(ResearchInputQueue));
+  const feed = researchInput?.feed.target;
   const queue = useQueue(feed ? Feed.getQueueDxn(feed) : undefined);
 
   return (

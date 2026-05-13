@@ -51,16 +51,19 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/assistant-toolkit"
+      "path": "../../core/compute/assistant-toolkit"
     },
     {
-      "path": "../../core/compute"
+      "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/compute-hyperformula"
+      "path": "../../core/compute/compute-hyperformula"
     },
     {
-      "path": "../../core/conductor"
+      "path": "../../core/compute/conductor"
+    },
+    {
+      "path": "../../core/compute/operation"
     },
     {
       "path": "../../core/echo/echo"
@@ -117,6 +120,9 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-introspect"
+    },
+    {
       "path": "../../ui/react-ui-mosaic"
     },
     {
@@ -166,6 +172,9 @@
     },
     {
       "path": "../plugin-table"
+    },
+    {
+      "path": "../plugin-testing"
     },
     {
       "path": "../plugin-theme"

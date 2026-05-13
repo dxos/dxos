@@ -40,7 +40,7 @@ export const translations: Resource[] = [
         'delete-object.label': 'Delete routine',
         'object-deleted.label': 'Routine deleted',
       },
-      [Sequence.typename]: {
+      [Sequence.Sequence.typename]: {
         'typename.label': 'Sequence',
         'typename.label_zero': 'Sequences',
         'typename.label_one': 'Sequence',
@@ -108,6 +108,7 @@ export const translations: Resource[] = [
         'assistant-dialog.title': 'Assistant',
         'open-assistant.label': 'Open assistant',
         'reset-blueprints.label': 'Reset blueprints',
+        'import-compute-operations.label': 'Import compute operations',
 
         'no-results.message': 'No results',
 
@@ -129,11 +130,17 @@ export const translations: Resource[] = [
         'context-settings.button': 'Chat settings',
         'microphone.button': 'Click to speak',
         'cancel-processing.button': 'Stop processing',
-        'blueprints-in-context.title': 'Blueprints',
-        'objects-in-context.title': 'Content',
-        'remove-object-in-context.label': 'Remove document',
-        'chat-model.title': 'Models',
-        'mcp-servers.title': 'MCP',
+
+        'options.blueprints.title': 'Skills',
+        'options.mcp.title': 'MCP',
+        'options.chat-model.title': 'Models',
+        'remove-object.label': 'Remove object',
+
+        'chat-view.title': 'View',
+        'chat-view.normal.label': 'Normal',
+        'chat-view.summary.label': 'Summary',
+        'chat-view.thinking.label': 'Thinking',
+        'chat-view.debug.label': 'Debug',
         'mcp-server-add.label': 'Add MCP server',
         'mcp-server-remove.label': 'Remove MCP server',
         'mcp-server-name.label': 'Server name',
@@ -143,24 +150,15 @@ export const translations: Resource[] = [
         'mcp-server-protocol.label': 'Protocol',
         'mcp-server-api-key.label': 'API key',
         'mcp-server-api-key.placeholder': 'API key (optional)',
+        'mcp-server-error.label': 'MCP server unavailable',
 
         'debug.button': 'Debug',
         'online-switch.label': 'Online',
         'run-prompt.label': 'Run prompt',
+        'routine-running.label': 'Running…',
         'typename.label': 'Typename',
         'branch-thread.menu': 'Branch chat',
         'chat-toolbar.title': 'Chat toolbar',
-
-        'settings.default.label': 'Default',
-        'settings.custom-prompts.label': 'Use custom prompts',
-        'settings.custom-prompts.description': 'Allow the assistant to use custom prompts defined in your spaces.',
-        'settings.llm-provider.label': 'LLM provider',
-        'settings.llm-provider.description': 'Select which language model service to use for AI responses.',
-        'settings.edge-llm-model.label': 'Remote language model',
-        'settings.edge-llm-model.description': 'Choose the remote language model used for AI requests.',
-        'settings.ollama-llm-model.label': 'Ollama language model',
-        'settings.ollama-llm-model.description': 'Choose the locally hosted Ollama model for AI requests.',
-        'settings.default-llm-model.label': 'Default language model',
 
         // Trigger status
         'trigger-status-disabled.label': 'Triggers disabled',

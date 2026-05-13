@@ -9,7 +9,7 @@ import { AppCapabilities, LayoutOperation, getCollectionsPath, getSpacePath } fr
 import { Operation } from '@dxos/compute';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { SpaceEvents } from '@dxos/plugin-space';
-import { SpaceCapabilities } from '@dxos/plugin-space/types';
+import { SpaceCapabilities } from '@dxos/plugin-space';
 
 import README_CONTENT from '../content/README.md?raw';
 
@@ -18,8 +18,8 @@ const SPACE_ICON = 'house-line';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const { Obj, Ref } = yield* Effect.tryPromise(() => import('@dxos/echo'));
-    const { ClientCapabilities } = yield* Effect.tryPromise(() => import('@dxos/plugin-client/types'));
-    const { Markdown } = yield* Effect.tryPromise(() => import('@dxos/plugin-markdown/types'));
+    const { ClientCapabilities } = yield* Effect.tryPromise(() => import('@dxos/plugin-client'));
+    const { Markdown } = yield* Effect.tryPromise(() => import('@dxos/plugin-markdown'));
     const { Collection } = yield* Effect.tryPromise(() => import('@dxos/echo'));
 
     const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
@@ -32,7 +32,7 @@ export default Capability.makeModule(
     if (!space) {
       return Capability.contributes(Capabilities.Null, null);
     }
-    Obj.change(space.properties, (obj) => {
+    Obj.update(space.properties, (obj) => {
       obj.icon = SPACE_ICON;
     });
     const defaultSpaceCollection = space.properties[Collection.Collection.typename].target;
@@ -54,10 +54,10 @@ export default Capability.makeModule(
     space.db.add(readme);
 
     const gettingStarted = space.db.add(Obj.make(Collection.Collection, { name: 'Getting Started', objects: [] }));
-    Obj.change(gettingStarted, (gettingStarted) => {
+    Obj.update(gettingStarted, (gettingStarted) => {
       gettingStarted.objects.push(Ref.make(readme));
     });
-    Obj.change(defaultSpaceCollection, (defaultSpaceCollection) => {
+    Obj.update(defaultSpaceCollection, (defaultSpaceCollection) => {
       defaultSpaceCollection.objects.push(Ref.make(gettingStarted));
     });
 

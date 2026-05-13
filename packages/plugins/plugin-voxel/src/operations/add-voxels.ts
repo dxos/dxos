@@ -7,15 +7,14 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 
-import { Voxel } from '../types';
-import { AddVoxels } from './definitions';
+import { Voxel, VoxelOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof AddVoxels> = AddVoxels.pipe(
+const handler: Operation.WithHandler<typeof VoxelOperation.AddVoxels> = VoxelOperation.AddVoxels.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ world, voxels }) {
       const loaded = (yield* Database.load(world)) as Voxel.World;
       let added = 0;
-      Obj.change(loaded, (loaded) => {
+      Obj.update(loaded, (loaded) => {
         if (!loaded.voxels) {
           loaded.voxels = {};
         }

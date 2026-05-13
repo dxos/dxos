@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { Chat, ResearchGraph } from '@dxos/assistant-toolkit';
+import { Chat } from '@dxos/assistant-toolkit';
 import { defineObjectMigration } from '@dxos/client/echo';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { ClientCapabilities } from '@dxos/plugin-client';
 
 const identityTransform = async (from: any) => ({ ...from });
 const noopCallback = async () => {};
@@ -19,13 +19,6 @@ const migrations = [
     transform: identityTransform,
     onMigration: noopCallback,
   }),
-  defineObjectMigration({
-    from: ResearchGraph.LegacyResearchGraph,
-    to: ResearchGraph.ResearchGraphV1,
-    transform: identityTransform,
-    onMigration: noopCallback,
-  }),
-  ...ResearchGraph.migrations,
 ];
 
 export default Capability.makeModule(

@@ -48,14 +48,14 @@ export const BlueprintEditor = ({ object }: BlueprintEditorProps) => {
     try {
       if (existingBlueprint) {
         const text = await existingBlueprint.instructions.source.load();
-        Obj.change(text, (text) => {
+        Obj.update(text, (text) => {
           text.content = instructions;
         });
 
         if (fn?.key) {
           const toolId = ToolId.make(fn.key);
           if (!existingBlueprint.tools?.includes(toolId)) {
-            Obj.change(existingBlueprint, (existingBlueprint) => {
+            Obj.update(existingBlueprint, (existingBlueprint) => {
               existingBlueprint.tools = [...(existingBlueprint.tools ?? []), toolId];
             });
           }
@@ -77,7 +77,7 @@ export const BlueprintEditor = ({ object }: BlueprintEditorProps) => {
   }, [db, existingBlueprint, fn, blueprintKey, object.name, instructions]);
 
   return (
-    <div role='none' className='flex flex-col'>
+    <div className='flex flex-col'>
       <Form.Section label={t('blueprint-editor.label')} description={t('blueprint-editor.description')} />
 
       <Input.Root>
@@ -91,7 +91,7 @@ export const BlueprintEditor = ({ object }: BlueprintEditorProps) => {
         />
       </Input.Root>
 
-      <div role='none' className='pt-2'>
+      <div className='pt-2'>
         <Button disabled={(!existingBlueprint && !fn?.key) || creating} onClick={handleSave}>
           {t(existingBlueprint ? 'update-blueprint.label' : 'create-blueprint.label')}
         </Button>

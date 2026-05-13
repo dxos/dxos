@@ -8,10 +8,10 @@ import * as ManagedRuntime from 'effect/ManagedRuntime';
 
 import { AiSession } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
-import { AssistantTestLayer } from '@dxos/assistant/testing';
 import { Database, Feed } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
+import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 
 import { AiChatProcessor } from './processor';
 
@@ -25,7 +25,7 @@ describe('Chat processor', () => {
         const feed = Feed.make();
         yield* Database.add(feed);
         const runtime = yield* Effect.runtime<Feed.FeedService>();
-        const session = yield* acquireReleaseResource(() => new AiSession({ feed, runtime }));
+        const session = yield* acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
         const managedRuntime = ManagedRuntime.make(
           Effect.runSync(Effect.map(Effect.context<never>(), () => undefined as any)) as any,
         );

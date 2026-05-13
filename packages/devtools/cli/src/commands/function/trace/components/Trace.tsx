@@ -5,10 +5,10 @@
 import * as Option from 'effect/Option';
 import { createEffect, createSignal, onCleanup } from 'solid-js';
 
-import { getUserFunctionIdInMetadata } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { type Queue, type QueueAPI } from '@dxos/echo-db';
+import { getUserFunctionIdInMetadata } from '@dxos/functions';
 import {
   InvocationOutcome,
   type InvocationSpan,

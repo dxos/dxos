@@ -26,6 +26,7 @@ import {
   CollectionSection,
   CreateObjectDialog,
   CreateSpaceDialog,
+  ImportSpaceDialog,
   InlineSyncStatus,
   JoinDialog,
   MembersContainer,
@@ -57,6 +58,7 @@ import {
 import {
   CREATE_OBJECT_DIALOG,
   CREATE_SPACE_DIALOG,
+  IMPORT_SPACE_DIALOG,
   JOIN_DIALOG,
   OBJECT_RENAME_POPOVER,
   SPACE_RENAME_POPOVER,
@@ -192,6 +194,11 @@ export default Capability.makeModule(
         id: CREATE_SPACE_DIALOG,
         filter: AppSurface.component(AppSurface.Dialog, CREATE_SPACE_DIALOG),
         component: () => <CreateSpaceDialog />,
+      }),
+      Surface.create({
+        id: IMPORT_SPACE_DIALOG,
+        filter: AppSurface.component(AppSurface.Dialog, IMPORT_SPACE_DIALOG),
+        component: () => <ImportSpaceDialog />,
       }),
       Surface.create({
         id: CREATE_OBJECT_DIALOG,

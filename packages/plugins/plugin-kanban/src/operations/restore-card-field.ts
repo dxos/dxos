@@ -9,9 +9,9 @@ import { type EchoSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { ProjectionModel, createEchoChangeCallback, getTypenameFromQuery } from '@dxos/schema';
 
-import { RestoreCardField } from './definitions';
+import { KanbanOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof RestoreCardField> = RestoreCardField.pipe(
+const handler: Operation.WithHandler<typeof KanbanOperation.RestoreCardField> = KanbanOperation.RestoreCardField.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ view, field, props, index }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);

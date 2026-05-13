@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 
-import { AddPostToMagazine } from './definitions';
+import { FeedOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof AddPostToMagazine> = AddPostToMagazine.pipe(
+const handler: Operation.WithHandler<typeof FeedOperation.AddPostToMagazine> = FeedOperation.AddPostToMagazine.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ magazine: magazineRef, post: postRef, snippet, imageUrl }) {
       const magazine = yield* Database.load(magazineRef);
@@ -17,7 +17,7 @@ const handler: Operation.WithHandler<typeof AddPostToMagazine> = AddPostToMagazi
 
       const postDxn = Obj.getDXN(post).toString();
 
-      Obj.change(post, (post) => {
+      Obj.update(post, (post) => {
         const mutable = post as Obj.Mutable<typeof post>;
         mutable.snippet = snippet;
         if (imageUrl !== undefined) {
@@ -25,7 +25,7 @@ const handler: Operation.WithHandler<typeof AddPostToMagazine> = AddPostToMagazi
         }
       });
 
-      Obj.change(magazine, (magazine) => {
+      Obj.update(magazine, (magazine) => {
         const mutable = magazine as Obj.Mutable<typeof magazine>;
         const alreadyCurated = mutable.posts.some((ref) => ref.dxn.toString() === postDxn);
         if (!alreadyCurated) {

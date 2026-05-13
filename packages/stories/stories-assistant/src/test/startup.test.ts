@@ -45,9 +45,9 @@ describe('ClientPlugin startup', () => {
       { ClientCapabilities },
     ] = await Promise.all([
       import('@dxos/app-framework'),
-      import('@dxos/plugin-client/cli'),
-      import('@dxos/plugin-graph'),
-      import('@dxos/plugin-client/types'),
+      import('@dxos/plugin-client/plugin'),
+      import('@dxos/plugin-graph/plugin'),
+      import('@dxos/plugin-client'),
     ]);
     mark('dynamic imports', phaseStart);
 
@@ -93,7 +93,7 @@ describe('ClientPlugin startup', () => {
     const pluginLoader = Effect.fn(function* (id: string) {
       const plugin = plugins.find((plugin) => plugin.meta.id === id);
       invariant(plugin, `Plugin not found: ${id}`);
-      return plugin;
+      return { plugin };
     });
 
     const manager = PluginManager.make({

@@ -39,7 +39,7 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/compute"
+      "path": "../../core/compute/compute"
     },
     {
       "path": "../../core/echo/echo"
@@ -52,6 +52,9 @@
     },
     {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/observability"
@@ -79,6 +82,9 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

@@ -3,5 +3,3 @@
 //
 
 export * from './meta';
-
-export * from './TransformerPlugin';

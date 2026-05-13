@@ -219,7 +219,7 @@ describe('curateMagazine', () => {
 
     // Simulate Clear: empty magazine.posts. The Post objects remain in
     // space.db (added during first curate via createRef).
-    Obj.change(magazine, (magazine) => {
+    Obj.update(magazine, (magazine) => {
       const mutable = magazine as Obj.Mutable<typeof magazine>;
       mutable.posts = [];
     });
@@ -261,7 +261,7 @@ describe('curateMagazine', () => {
   });
 
   test('reactivity: subscribers to magazine fire when curate writes posts', async () => {
-    // Proves CurateMagazine's `Obj.change(magazine, ...)` produces a
+    // Proves CurateMagazine's `Obj.update(magazine, ...)` produces a
     // notification that React's `useObject(subject)` would consume to
     // re-render the article. If this test fails, the UI couldn't update
     // even though the underlying data changed.
@@ -304,7 +304,7 @@ describe('curateMagazine', () => {
       notifyCountAfterClear += 1;
     });
 
-    Obj.change(magazine, (magazine) => {
+    Obj.update(magazine, (magazine) => {
       const mutable = magazine as Obj.Mutable<typeof magazine>;
       mutable.posts = [];
     });

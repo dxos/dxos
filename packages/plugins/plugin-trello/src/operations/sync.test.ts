@@ -8,8 +8,8 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
-import { Integration } from '@dxos/plugin-integration/types';
-import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban/types';
+import { Integration } from '@dxos/plugin-integration';
+import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban';
 import { Expando } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
 
@@ -224,7 +224,7 @@ describe('reconcileBoardCards (pull)', () => {
 
     // User edits the description locally.
     const localItem = (kanban.spec.kind === 'items' ? kanban.spec.items[0]?.target : undefined) as Obj.Unknown;
-    Obj.change(localItem, (localItem) => {
+    Obj.update(localItem, (localItem) => {
       (localItem as unknown as Record<string, unknown>).description = 'local edit';
     });
 
@@ -263,7 +263,7 @@ describe('reconcileBoardCards (pull)', () => {
     }).pipe(Effect.provide(layer), runAndForwardErrors);
 
     const localItem = (kanban.spec.kind === 'items' ? kanban.spec.items[0]?.target : undefined) as Obj.Unknown;
-    Obj.change(localItem, (localItem) => {
+    Obj.update(localItem, (localItem) => {
       (localItem as unknown as Record<string, unknown>).description = 'local edit';
     });
 
@@ -387,9 +387,8 @@ describe('pushBoardCards (push)', () => {
     const { db, integration } = await setup();
 
     // Seed a snapshot so we can detect a local divergence on `description` only.
-    Obj.change(integration, (integration) => {
-      const mut = integration as Obj.Mutable<typeof integration>;
-      mut.snapshots = {
+    Obj.update(integration, (integration) => {
+      integration.snapshots = {
         card1: { name: 'Task A', description: 'orig', listName: 'To Do' },
       };
     });
@@ -433,9 +432,8 @@ describe('pushBoardCards (push)', () => {
   test('snapshot-equal item is not pushed (no bouncing)', async ({ expect }) => {
     const { db, integration } = await setup();
 
-    Obj.change(integration, (integration) => {
-      const mut = integration as Obj.Mutable<typeof integration>;
-      mut.snapshots = {
+    Obj.update(integration, (integration) => {
+      integration.snapshots = {
         card1: { name: 'Pulled', description: '', listName: 'To Do' },
       };
     });

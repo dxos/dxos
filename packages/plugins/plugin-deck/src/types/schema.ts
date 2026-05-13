@@ -9,8 +9,6 @@ import { type DeepReadonly } from '@dxos/util';
 
 import { meta } from '#meta';
 
-export * as Settings from './Settings';
-
 export { PLANK_COMPANION_TYPE, DECK_COMPANION_TYPE } from '@dxos/app-toolkit';
 
 export type Part = 'solo' | 'multi' | 'complementary';

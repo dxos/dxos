@@ -5,12 +5,12 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
-import { LayoutOperation } from '@dxos/app-toolkit';
+import { LayoutOperation, mergeDeep, mergeField, readSnapshot, snapshotField, writeSnapshot } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Integration } from '@dxos/plugin-integration/types';
-import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban/types';
+import { Integration } from '@dxos/plugin-integration';
+import { Kanban, UNCATEGORIZED_VALUE } from '@dxos/plugin-kanban';
 import { Expando } from '@dxos/schema';
 
 import { meta } from '#meta';
@@ -18,7 +18,7 @@ import { meta } from '#meta';
 import { TRELLO_PIVOT_FIELD, TRELLO_SOURCE } from '../constants';
 import { IntegrationDatabaseMissingError, formatTrelloSyncFailure } from '../errors';
 import { TrelloApi } from '../services';
-import { SyncTrelloBoard } from './definitions';
+import { TrelloOperation } from '../types';
 
 type TrelloBoard = TrelloApi.TrelloBoard;
 type TrelloCard = TrelloApi.TrelloCard;
@@ -44,88 +44,23 @@ type MappedField = (typeof MAPPED_FIELDS)[number];
 type CardSnapshot = Partial<Record<MappedField, unknown>>;
 
 type BoardSnapshot = {
-  name?: string;
+  name: string;
   /**
    * Canonical column order at last pull (Trello list `pos` order). Display
    * reads this instead of `Object.keys(arrangement.columns)` because ECHO /
    * Automerge does not preserve insertion order across reload — keys come
    * back in canonical (alphabetical) order.
+   *
+   * Fields are required (not `?`) because the snapshot is always written in
+   * one shot at the end of a pull; the "no snapshot yet" state is modeled
+   * by `readSnapshot` returning `undefined`.
    */
-  order?: string[];
-  columns?: Record<string, { ids: string[] }>;
+  order: string[];
+  columns: Record<string, { ids: string[] }>;
 };
 
-/**
- * Per-field three-way merge over `(local, remote, snapshot)`.
- *
- * - No snapshot (first sync of this id): take remote.
- * - Local unchanged, remote unchanged → no-op (return local).
- * - Local unchanged, remote changed → take remote (pull).
- * - Local changed, remote unchanged → keep local (push will write it).
- * - Both changed → **remote wins** (Trello is source of truth; local edit is lost).
- *
- * Equality is `===` for primitives (which is what Trello's mapped fields are).
- * For object/array values use `mergeDeep` instead.
- */
-const mergeField = <T>(
-  local: T,
-  remote: T,
-  snapshot: T | undefined,
-): { value: T; source: 'local' | 'remote' | 'unchanged' } => {
-  if (snapshot === undefined) {
-    return { value: remote, source: local === remote ? 'unchanged' : 'remote' };
-  }
-  const localChanged = local !== snapshot;
-  const remoteChanged = remote !== snapshot;
-  if (!localChanged && !remoteChanged) {
-    return { value: local, source: 'unchanged' };
-  }
-  if (!localChanged && remoteChanged) {
-    return { value: remote, source: 'remote' };
-  }
-  if (localChanged && !remoteChanged) {
-    return { value: local, source: 'local' };
-  }
-  return { value: remote, source: 'remote' };
-};
-
-/** Deep-equal merge for object values (e.g. arrangement). Same policy as `mergeField`. */
-const mergeDeep = <T>(
-  local: T,
-  remote: T,
-  snapshot: T | undefined,
-): { value: T; source: 'local' | 'remote' | 'unchanged' } => {
-  const eq = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
-  if (snapshot === undefined) {
-    return { value: remote, source: eq(local, remote) ? 'unchanged' : 'remote' };
-  }
-  const localChanged = !eq(local, snapshot);
-  const remoteChanged = !eq(remote, snapshot);
-  if (!localChanged && !remoteChanged) {
-    return { value: local, source: 'unchanged' };
-  }
-  if (!localChanged && remoteChanged) {
-    return { value: remote, source: 'remote' };
-  }
-  if (localChanged && !remoteChanged) {
-    return { value: local, source: 'local' };
-  }
-  return { value: remote, source: 'remote' };
-};
-
-/** Mutates `integration.snapshots[foreignId] = snapshot` inside an `Obj.change`. */
-const writeSnapshot = (integration: Integration.Integration, foreignId: string, snapshot: object): void => {
-  Obj.change(integration, (integration) => {
-    const m = integration as Obj.Mutable<typeof integration>;
-    const existing = (m.snapshots ?? {}) as Record<string, unknown>;
-    m.snapshots = { ...existing, [foreignId]: snapshot };
-  });
-};
-
-const readSnapshot = <T extends object>(integration: Integration.Integration, foreignId: string): T | undefined => {
-  const snapshots = (integration.snapshots ?? {}) as Record<string, unknown>;
-  return snapshots[foreignId] as T | undefined;
-};
+// Per-field three-way merge primitives are shared with other integration plugins
+// (Linear, GitHub) and live in `@dxos/app-toolkit`.
 
 /**
  * Pull reconciler with snapshot-driven three-way merge.
@@ -207,24 +142,29 @@ export const reconcileBoardCards: (
       }
 
       if (existing) {
-        const snapshot = readSnapshot<CardSnapshot>(integration, card.id) ?? {};
-        const fields = existing as unknown as Record<string, unknown>;
+        // Trello-managed cards are always Expandos (see the else branch below
+        // for the only create site). Narrowing here lets us index fields
+        // without an `unknown` cast.
+        if (!Obj.instanceOf(Expando.Expando, existing)) {
+          log.warn('trello pull: foreign-keyed local object is not an Expando; skipping', { cardId: card.id });
+          continue;
+        }
+        const snapshot = readSnapshot<CardSnapshot>(integration, card.id);
 
         const merged: Record<MappedField, unknown> = { ...remoteFields };
         const writes: Partial<Record<MappedField, unknown>> = {};
-        for (const k of MAPPED_FIELDS) {
-          const result = mergeField(fields[k], remoteFields[k], snapshot[k]);
-          merged[k] = result.value;
-          if (result.source === 'remote' && fields[k] !== result.value) {
-            writes[k] = result.value;
+        for (const field of MAPPED_FIELDS) {
+          const result = mergeField(existing[field], remoteFields[field], snapshotField(snapshot, field));
+          merged[field] = result.value;
+          if (result.source === 'remote' && existing[field] !== result.value) {
+            writes[field] = result.value;
           }
         }
 
         if (Object.keys(writes).length > 0) {
-          Obj.change(existing, (existing) => {
-            const m = existing as unknown as Record<string, unknown>;
-            for (const [k, v] of Object.entries(writes)) {
-              m[k] = v;
+          Obj.update(existing, (existing) => {
+            for (const [key, value] of Object.entries(writes)) {
+              existing[key] = value;
             }
           });
           updated++;
@@ -263,10 +203,9 @@ export const reconcileBoardCards: (
     }
 
     if (newRefs.length > 0) {
-      Obj.change(kanban, (kanban) => {
-        const m = kanban as Obj.Mutable<typeof kanban>;
-        if (m.spec.kind === 'items') {
-          m.spec.items = [...(m.spec.items as ReadonlyArray<Ref.Ref<Obj.Unknown>>), ...newRefs];
+      Obj.update(kanban, (kanban) => {
+        if (kanban.spec.kind === 'items') {
+          kanban.spec.items = [...(kanban.spec.items as ReadonlyArray<Ref.Ref<Obj.Unknown>>), ...newRefs];
         }
       });
     }
@@ -303,25 +242,31 @@ export const reconcileBoardCards: (
     // Board-level three-way merge: name + arrangement.order + arrangement.columns.
     // Local-wins outputs are left in place but currently NOT pushed back to
     // Trello — board rename and arrangement reorder push aren't implemented yet.
-    const boardSnapshot = readSnapshot<BoardSnapshot>(integration, remoteBoard.id) ?? {};
-    const nameMerge = mergeField<string | undefined>(kanban.name, remoteBoard.name, boardSnapshot.name);
-    const orderMerge = mergeDeep<string[]>([...kanban.arrangement.order], orderedListNames, boardSnapshot.order);
+    const boardSnapshot = readSnapshot<BoardSnapshot>(integration, remoteBoard.id);
+    const nameMerge = mergeField<string | undefined>(
+      kanban.name,
+      remoteBoard.name,
+      snapshotField(boardSnapshot, 'name'),
+    );
+    const orderMerge = mergeDeep<string[]>(
+      [...kanban.arrangement.order],
+      orderedListNames,
+      snapshotField(boardSnapshot, 'order'),
+    );
     const columnsMerge = mergeDeep<Record<string, { ids: string[] }>>(
       kanban.arrangement.columns as Record<string, { ids: string[] }>,
       remoteColumns,
-      boardSnapshot.columns,
+      snapshotField(boardSnapshot, 'columns'),
     );
 
     if (nameMerge.source === 'remote' && kanban.name !== nameMerge.value) {
-      Obj.change(kanban, (kanban) => {
-        const m = kanban as Obj.Mutable<typeof kanban>;
-        m.name = nameMerge.value;
+      Obj.update(kanban, (kanban) => {
+        kanban.name = nameMerge.value;
       });
     }
     if (orderMerge.source === 'remote') {
-      Obj.change(kanban, (kanban) => {
-        const m = kanban as Obj.Mutable<typeof kanban>;
-        m.arrangement.order = orderMerge.value;
+      Obj.update(kanban, (kanban) => {
+        kanban.arrangement.order = orderMerge.value;
       });
     } else if (orderMerge.source === 'local') {
       log.warn('trello pull: local column order diverged from snapshot; push of reorders is not yet implemented', {
@@ -329,15 +274,14 @@ export const reconcileBoardCards: (
       });
     }
     if (columnsMerge.source === 'remote') {
-      Obj.change(kanban, (kanban) => {
-        const m = kanban as Obj.Mutable<typeof kanban>;
-        const prev = m.arrangement.columns as Record<string, { ids: string[]; hidden?: boolean }>;
+      Obj.update(kanban, (kanban) => {
+        const prev = kanban.arrangement.columns as Record<string, { ids: string[]; hidden?: boolean }>;
         const merged = columnsMerge.value as Record<string, { ids: string[]; hidden?: boolean }>;
         // Remote columns are only Trello lists — never include UNCATEGORIZED. mergeDeep(remote-wins)
         // would drop the initial `{ hidden: true }` bucket from findOrCreateKanbanForBoard.
         const uncategorizedIds = merged[UNCATEGORIZED_VALUE]?.ids ?? prev[UNCATEGORIZED_VALUE]?.ids ?? [];
         const uncategorizedHidden = merged[UNCATEGORIZED_VALUE]?.hidden ?? prev[UNCATEGORIZED_VALUE]?.hidden ?? true;
-        m.arrangement.columns = {
+        kanban.arrangement.columns = {
           ...merged,
           [UNCATEGORIZED_VALUE]: { ids: uncategorizedIds, hidden: uncategorizedHidden },
         };
@@ -416,13 +360,16 @@ export const pushBoardCards = Effect.fn('pushBoardCards')(function* <R>(
     if (Obj.isDeleted(target)) {
       continue;
     }
+    // Trello-managed cards are always Expandos; narrowing here lets us
+    // index fields without an `unknown` cast.
+    if (!Obj.instanceOf(Expando.Expando, target)) {
+      continue;
+    }
 
-    const fields = target as unknown as Record<string, unknown>;
-
-    const foreignId = Obj.getMeta(target).keys.find((k) => k.source === TRELLO_SOURCE)?.id;
-    const name = typeof fields.name === 'string' ? fields.name : '';
-    const desc = typeof fields.description === 'string' ? fields.description : '';
-    const localListName = typeof fields.listName === 'string' ? fields.listName : undefined;
+    const foreignId = Obj.getMeta(target).keys.find((key) => key.source === TRELLO_SOURCE)?.id;
+    const name = typeof target.name === 'string' ? target.name : '';
+    const desc = typeof target.description === 'string' ? target.description : '';
+    const localListName = typeof target.listName === 'string' ? target.listName : undefined;
     const listId = localListName ? listIdByName.get(localListName) : undefined;
 
     if (localListName && !listId) {
@@ -442,7 +389,7 @@ export const pushBoardCards = Effect.fn('pushBoardCards')(function* <R>(
       // skip the local FK write so we don't end up with two FK entries on this object.
       const current = Obj.getMeta(target).keys.find((k) => k.source === TRELLO_SOURCE)?.id;
       if (!current) {
-        Obj.change(target, (target) => {
+        Obj.update(target, (target) => {
           Obj.deleteKeys(target, TRELLO_SOURCE);
           Obj.getMeta(target).keys.push({ source: TRELLO_SOURCE, id: result.id });
         });
@@ -552,7 +499,7 @@ export const findOrCreateKanbanForBoard: (board: TrelloBoard) => Effect.Effect<K
  */
 const TARGET_CONCURRENCY = 3;
 
-const handler: Operation.WithHandler<typeof SyncTrelloBoard> = SyncTrelloBoard.pipe(
+const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = TrelloOperation.SyncTrelloBoard.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ integration, kanban: kanbanRef }) {
       // TODO(wittjosiah): the operation should just depend on `Database.Service`
@@ -625,11 +572,10 @@ const handler: Operation.WithHandler<typeof SyncTrelloBoard> = SyncTrelloBoard.p
             if (!localObj) {
               localObj = yield* findOrCreateKanbanForBoard(remoteBoard);
               const materializedRef = Ref.make(localObj);
-              Obj.change(integrationObj, (integrationObj) => {
-                const mutable = integrationObj as Obj.Mutable<typeof integrationObj>;
-                const idx = mutable.targets.findIndex((t) => t.remoteId === foreignId);
+              Obj.update(integrationObj, (integrationObj) => {
+                const idx = integrationObj.targets.findIndex((target) => target.remoteId === foreignId);
                 if (idx >= 0) {
-                  mutable.targets[idx] = { ...mutable.targets[idx], object: materializedRef };
+                  integrationObj.targets[idx] = { ...integrationObj.targets[idx], object: materializedRef };
                 }
               });
             }
@@ -689,14 +635,13 @@ const handler: Operation.WithHandler<typeof SyncTrelloBoard> = SyncTrelloBoard.p
                 // Update the target entry in place with success/failure status.
                 // Match by `remoteId` (stable across runs) with a fallback to
                 // local-object echo id for legacy entries that lack `remoteId`.
-                Obj.change(integrationObj, (integrationObj) => {
-                  const m = integrationObj as Obj.Mutable<typeof integrationObj>;
-                  const idx = m.targets.findIndex((t) => {
-                    if (t.remoteId !== undefined) {
-                      return t.remoteId === boardId;
+                Obj.update(integrationObj, (integrationObj) => {
+                  const idx = integrationObj.targets.findIndex((target) => {
+                    if (target.remoteId !== undefined) {
+                      return target.remoteId === boardId;
                     }
-                    const localId = t.object?.target
-                      ? Obj.getMeta(t.object.target).keys.find((k) => k.source === TRELLO_SOURCE)?.id
+                    const localId = target.object?.target
+                      ? Obj.getMeta(target.object.target).keys.find((key) => key.source === TRELLO_SOURCE)?.id
                       : undefined;
                     return localId === boardId;
                   });
@@ -704,14 +649,14 @@ const handler: Operation.WithHandler<typeof SyncTrelloBoard> = SyncTrelloBoard.p
                     return;
                   }
                   if (result._tag === 'Right') {
-                    m.targets[idx] = {
-                      ...m.targets[idx],
+                    integrationObj.targets[idx] = {
+                      ...integrationObj.targets[idx],
                       lastSyncAt: new Date().toISOString(),
                       lastError: undefined,
                     };
                   } else {
-                    m.targets[idx] = {
-                      ...m.targets[idx],
+                    integrationObj.targets[idx] = {
+                      ...integrationObj.targets[idx],
                       lastError: formatTrelloSyncFailure(result.left),
                     };
                   }

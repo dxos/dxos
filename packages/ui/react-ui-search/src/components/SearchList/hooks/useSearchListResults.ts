@@ -100,5 +100,5 @@ export const useSearchListResults = <T = unknown>({
     }
   }, [items, query, filterFn, fuzzy, extractFn, minScore]);
 
-  return { results, handleSearch };
+  return { results, query, handleSearch };
 };

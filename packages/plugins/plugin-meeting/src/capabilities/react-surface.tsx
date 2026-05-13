@@ -9,7 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Channel } from '@dxos/plugin-thread/types';
+import { Channel } from '@dxos/types';
 
 import { MeetingSettings } from '#components';
 import { MeetingContainer, MeetingsList } from '#containers';

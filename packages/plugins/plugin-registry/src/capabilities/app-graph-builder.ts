@@ -4,27 +4,35 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
+import { Capabilities, Capability, type Registry, Plugin } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { type PluginEntry } from '@dxos/protocols';
 
 import { REGISTRY_ID, REGISTRY_KEY, registryCategoryId, meta } from '#meta';
-import { RegistryCapabilities } from '#types';
 
 import { LOAD_PLUGIN_DIALOG } from '../containers';
 
 /**
- * Turns a community manifest entry into a minimal {@link Plugin.Plugin} so it
+ * Turns a registry catalog entry into a minimal {@link Plugin.Plugin} so it
  * can be attached as the graph node's `data`. The synthesized plugin has no
  * modules and only exists so the article surface can render details for
- * community plugins that haven't been installed yet.
+ * registry plugins that haven't been installed yet.
  */
-const toDisplayPlugin = (entry: PluginEntry): Plugin.Plugin =>
+const toDisplayPlugin = (entry: Registry.Plugin): Plugin.Plugin =>
   ({
     [Plugin.PluginTypeId]: Plugin.PluginTypeId,
-    meta: entry.meta,
+    meta: {
+      id: entry.id,
+      name: entry.name,
+      description: entry.description,
+      homePage: entry.homePage,
+      source: entry.source,
+      screenshots: entry.screenshots,
+      tags: entry.tags,
+      icon: entry.icon,
+      iconHue: entry.iconHue,
+    },
     modules: [],
   }) as Plugin.Plugin;
 
@@ -61,6 +69,7 @@ export default Capability.makeModule(
                 label: ['plugin-registry.label', { ns: meta.id }],
                 icon: 'ph--squares-four--regular',
                 disposition: 'pin-end',
+                position: 'hoist',
                 testId: 'treeView.pluginRegistry',
               },
               nodes: [
@@ -109,14 +118,14 @@ export default Capability.makeModule(
                   },
                 }),
                 Node.make({
-                  id: registryCategoryId('community'),
+                  id: registryCategoryId('registry'),
                   type: 'category',
-                  data: registryCategoryId('community'),
+                  data: registryCategoryId('registry'),
                   properties: {
-                    label: ['community-plugins.label', { ns: meta.id }],
+                    label: ['registry-plugins.label', { ns: meta.id }],
                     icon: 'ph--users-three--regular',
                     key: REGISTRY_KEY,
-                    testId: 'pluginRegistry.community',
+                    testId: 'pluginRegistry.registry',
                   },
                 }),
               ],
@@ -150,7 +159,6 @@ export default Capability.makeModule(
         connector: (_node, get) => {
           const manager = capabilities.get(Capabilities.PluginManager);
           const installedIds = new Set(manager.getPlugins().map((plugin) => plugin.meta.id));
-          const stateAtom = capabilities.getAll(RegistryCapabilities.State).at(0);
 
           const installedNodes = manager.getPlugins().map((plugin) =>
             Node.make({
@@ -165,9 +173,9 @@ export default Capability.makeModule(
             }),
           );
 
-          const communityEntries = stateAtom ? get(stateAtom).entries : [];
-          const communityNodes = communityEntries
-            .filter((entry) => !installedIds.has(entry.meta.id))
+          const registryEntries = get(manager.pluginRegistry.plugins).entries;
+          const registryNodes = registryEntries
+            .filter((entry) => !installedIds.has(entry.id))
             .map((entry) => {
               const plugin = toDisplayPlugin(entry);
               return Node.make({
@@ -182,7 +190,7 @@ export default Capability.makeModule(
               });
             });
 
-          return Effect.succeed([...installedNodes, ...communityNodes]);
+          return Effect.succeed([...installedNodes, ...registryNodes]);
         },
       }),
     ]);

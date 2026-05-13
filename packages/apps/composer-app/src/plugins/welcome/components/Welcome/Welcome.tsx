@@ -183,7 +183,7 @@ export const Welcome = ({
         </h1>
 
         {state === WelcomeState.INIT && (
-          <div role='none' className='flex flex-col gap-6'>
+          <div className='flex flex-col gap-6'>
             {/* Tabs */}
             <div className='flex gap-1 border-b border-neutral-700'>
               <TabButton active={tab === 'login'} onClick={() => setTab('login')}>
@@ -226,7 +226,7 @@ export const Welcome = ({
             )}
 
             {tab === 'signup' && signupStep === 'collect' && signupMode === 'code' && (
-              <div role='none' className='flex flex-col gap-6'>
+              <div className='flex flex-col gap-6'>
                 <div className='flex flex-col gap-2'>
                   <h2 className='text-2xl'>{t('signup-code.title')}</h2>
                   <p className='text-description'>{t('signup-code.description')}</p>
@@ -251,7 +251,7 @@ export const Welcome = ({
             )}
 
             {tab === 'signup' && signupStep === 'collect' && signupMode === 'waitlist' && (
-              <div role='none' className='flex flex-col gap-6'>
+              <div className='flex flex-col gap-6'>
                 <div className='flex flex-col gap-2'>
                   <h2 className='text-2xl'>{t('waitlist.title')}</h2>
                   <p className='text-description'>{t('waitlist.description')}</p>
@@ -273,7 +273,7 @@ export const Welcome = ({
             )}
 
             {tab === 'signup' && signupStep === 'auth' && (
-              <div role='none' className='flex flex-col gap-6'>
+              <div className='flex flex-col gap-6'>
                 <div className='flex flex-col gap-2'>
                   <h2 className='text-2xl'>{t('signup-auth.title')}</h2>
                   <p className='text-description'>{t('signup-auth.description')}</p>
@@ -299,7 +299,7 @@ export const Welcome = ({
         )}
 
         {state === WelcomeState.SPACE_INVITATION && (
-          <div role='none' className='flex flex-col gap-8'>
+          <div className='flex flex-col gap-8'>
             <div className='flex flex-col gap-2'>
               <h1 className='text-2xl'>{t('space-invitation.title')}</h1>
               <p className='text-description'>{t('space-invitation.description')}</p>
@@ -318,7 +318,7 @@ export const Welcome = ({
         )}
 
         {(state === WelcomeState.EMAIL_SENT || state === WelcomeState.LOGIN_SENT) && (
-          <div role='none' className='flex flex-col gap-8'>
+          <div className='flex flex-col gap-8'>
             <div className='flex flex-col gap-2'>
               <h1 className='text-2xl'>{t('check-email.title')}</h1>
               <p className='text-description'>

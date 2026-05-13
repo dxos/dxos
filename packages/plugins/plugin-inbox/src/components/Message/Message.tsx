@@ -142,22 +142,22 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   const { message, sender } = useMessageContext(MESSAGE_HEADER_NAME);
 
   return (
-    <div role='none' className='p-1 flex flex-col gap-2 border-b border-subdued-separator'>
-      <div role='none' className='grid grid-cols-[2rem_1fr] gap-1'>
-        <div role='none' className='flex px-2 pt-1.5 text-subdued'>
+    <div className='p-1 flex flex-col gap-2 border-b border-subdued-separator'>
+      <div className='grid grid-cols-[2rem_1fr] gap-1'>
+        <div className='flex px-2 pt-1.5 text-subdued'>
           <Icon icon='ph--envelope-open--regular' />
         </div>
-        <div role='none' className='flex flex-col gap-1 overflow-hidden'>
+        <div className='flex flex-col gap-1 overflow-hidden'>
           <h2 className='text-lg line-clamp-2'>{message.properties?.subject}</h2>
-          <div role='none' className='whitespace-nowrap text-sm text-description'>
+          <div className='whitespace-nowrap text-sm text-description'>
             {message.created && formatDateTime(new Date(message.created), new Date())}
           </div>
         </div>
       </div>
 
       {/* TODO(burdon): List other To/CC/BCC. */}
-      <div role='none'>
-        <div role='none' className='grid grid-cols-[2rem_1fr] gap-1 items-center'>
+      <div>
+        <div className='grid grid-cols-[2rem_1fr] gap-1 items-center'>
           <UserIconButton
             title={message.sender.name}
             value={sender}
@@ -210,12 +210,7 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
   const { parentRef } = useTextEditor({ initialValue: content, extensions }, [content, extensions]);
 
   return (
-    <div
-      role='none'
-      className={mx('flex overflow-hidden', classNames)}
-      data-popover-collision-boundary={true}
-      ref={parentRef}
-    />
+    <div className={mx('flex overflow-hidden', classNames)} data-popover-collision-boundary={true} ref={parentRef} />
   );
 };
 

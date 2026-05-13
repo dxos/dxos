@@ -21,7 +21,7 @@ import { getSchema } from '../common/types';
 
 /**
  * Set a deeply nested property on an object.
- * Must be called within an Obj.change or Relation.change callback.
+ * Must be called within an Obj.update or Relation.update callback.
  */
 export const setValue = (obj: Mutable<any>, path: readonly (string | number)[], value: any): void => {
   invariant(path.length > 0, 'Path must not be empty');

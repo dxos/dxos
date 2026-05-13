@@ -11,14 +11,14 @@ import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { random } from '@dxos/random';
 
-import { Randomize } from './definitions';
+import { SampleOperation } from '../types';
 
 const STATUSES: string[] = ['active', 'archived', 'draft'];
 
-const handler: Operation.WithHandler<typeof Randomize> = Randomize.pipe(
+const handler: Operation.WithHandler<typeof SampleOperation.Randomize> = SampleOperation.Randomize.pipe(
   Operation.withHandler(({ item }) =>
     Effect.sync(() => {
-      Obj.change(item, (item) => {
+      Obj.update(item, (item) => {
         item.name = random.lorem.words({ min: 2, max: 5 });
         item.description = random.lorem.sentence();
         item.status = random.helpers.arrayElement(STATUSES);

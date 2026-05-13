@@ -24,7 +24,7 @@ import {
   createEchoChangeCallback,
   getTypenameFromQuery,
 } from '@dxos/schema';
-import { mx, osTranslations, subtleHover } from '@dxos/ui-theme';
+import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
@@ -190,7 +190,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     );
 
     return (
-      <div role='none' className={mx(classNames)}>
+      <div className={mx(classNames)}>
         {/* If readonly is set, then the callout is not needed. */}
         {schemaReadonly && !readonly && (
           <Message.Root valence='info' classNames='my-form-padding'>
@@ -275,7 +275,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) => {
       invariant(!readonly);
-      Obj.change(view, (view) => {
+      Obj.update(view, (view) => {
         // NOTE(ZaymonFC): Using arrayMove here causes a race condition with the kanban model.
         const fields = [...view.projection.fields];
         const [moved] = fields.splice(fromIndex, 1);
@@ -329,20 +329,13 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                   classNames={'grid grid-cols-subgrid col-span-5'}
                   aria-expanded={expandedField === field.id}
                 >
-                  <div
-                    role='none'
-                    className={mx(
-                      subtleHover,
-                      'grid grid-cols-subgrid col-span-5',
-                      'rounded-xs cursor-pointer min-h-10',
-                    )}
-                  >
+                  <div className='grid grid-cols-subgrid col-span-5 rounded-xs cursor-pointer min-h-10 dx-hover'>
                     <List.ItemDragHandle disabled={readonly || schemaReadonly} />
                     <List.ItemTitle classNames={hidden && 'text-subdued'} onClick={() => handleToggleField(field)}>
                       {field.path}
                     </List.ItemTitle>
                     <List.ItemIconButton
-                      label={t(hidden ? 'show field label' : 'hide field label')}
+                      label={t(hidden ? 'show-field.label' : 'hide-field.label')}
                       data-testid={hidden ? 'show-field-button' : 'hide-field-button'}
                       icon={hidden ? 'ph--eye-closed--regular' : 'ph--eye--regular'}
                       autoHide={false}
@@ -370,7 +363,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                     )}
                   </div>
                   {expandedField === field.id && !readonly && (
-                    <div role='none' className='col-span-full mt-1 mb-1 border border-separator rounded-md'>
+                    <div className='col-span-full mt-1 mb-1 border border-separator rounded-md'>
                       <FieldEditor
                         readonly={readonly || schemaReadonly}
                         registry={registry}
@@ -385,7 +378,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
             })}
           </div>
           {!readonly && !expandedField && (
-            <div role='none' className='my-form-padding'>
+            <div className='my-form-padding'>
               <IconButton
                 icon='ph--plus--regular'
                 label={t('add-property-button.label')}

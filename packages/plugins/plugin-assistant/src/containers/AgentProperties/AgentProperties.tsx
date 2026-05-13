@@ -14,7 +14,7 @@ import { Operation } from '@dxos/compute';
 import { DXN, Obj, Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { log } from '@dxos/log';
-import { AutomationCapabilities } from '@dxos/plugin-automation/types';
+import { AutomationCapabilities } from '@dxos/plugin-automation';
 import { Filter, useQuery } from '@dxos/react-client/echo';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { FeedAnnotation } from '@dxos/schema';
@@ -86,7 +86,7 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
   // Create/remove agent subscription.
   const handleSubscriptionChange = useCallback(
     (object: Obj.Unknown, checked: boolean) => {
-      Obj.change(agent, (agent) => {
+      Obj.update(agent, (agent) => {
         if (checked) {
           agent.subscriptions.push(Ref.fromDXN(Obj.getDXN(object)));
         } else {
@@ -104,7 +104,7 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
   }
 
   return (
-    <div role='none' className='dx-expander flex flex-col'>
+    <div className='dx-expander flex flex-col'>
       <Input.Root>
         <Input.Label classNames='mt-form-gap'>{t('subscriptions.label')}</Input.Label>
       </Input.Root>

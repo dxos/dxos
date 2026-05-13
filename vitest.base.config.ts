@@ -3,7 +3,7 @@
 //
 
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
-import react from '@vitejs/plugin-react-swc';
+import react from '@vitejs/plugin-react';
 import { playwright } from '@vitest/browser-playwright';
 import path, { join } from 'node:path';
 import pkgUp from 'pkg-up';
@@ -21,9 +21,13 @@ import PluginImportSource from '@dxos/vite-plugin-import-source';
 // build the plugin first, which introduces a moon dep cycle through @dxos/log
 // (vite-plugin-log -> log -> ... -> log:test -> vite-plugin-log).
 import { DxosLogPlugin } from './tools/vite-plugin-log/src/plugin.ts';
+import { TEST_TAGS } from './vitest.tags';
+
+export { TEST_TAGS };
 
 const isDebug = !!process.env.VITEST_DEBUG;
 const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
+const DEBUG_TIMEOUT_MS = 3_600_000;
 
 export type ConfigOptions = {
   dirname: string;
@@ -42,8 +46,13 @@ export const createConfig = (options: ConfigOptions): ViteUserConfig => {
   return {
     test: {
       ...resolveReporterConfig(dirname),
-      // Suppress flaky WebSocket birpc teardown unhandled rejections from storybook test runner.
-      ...(storybook ? { dangerouslyIgnoreUnhandledErrors: true } : {}),
+      tags: TEST_TAGS,
+      // Suppress flaky vitest worker teardown unhandled rejections (e.g.
+      // `EnvironmentTeardownError: Closing rpc while "onUserConsoleLog" was
+      // pending` from node tests, WebSocket birpc errors from the storybook
+      // runner) — these surface as non-zero exits with no actual test
+      // failures and turn the entire job red.
+      dangerouslyIgnoreUnhandledErrors: true,
       projects: [nodeProject, storybookProject, ...browserProjects].filter(
         (project): project is UserWorkspaceConfig => project !== undefined,
       ),
@@ -131,7 +140,7 @@ const createBrowserProject = ({
         '!**/test/**/*.node.test.{ts,tsx}',
       ],
 
-      testTimeout: isDebug ? 3600_000 : 5000,
+      testTimeout: isDebug ? DEBUG_TIMEOUT_MS : 5000,
       isolate: false,
       poolOptions: {
         threads: {
@@ -172,7 +181,7 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
       name: 'node',
       environment,
       retry,
-      testTimeout: timeout,
+      testTimeout: timeout ?? (isDebug ? DEBUG_TIMEOUT_MS : undefined),
       include: [
         '**/src/**/*.test.{ts,tsx}',
         '**/test/**/*.test.{ts,tsx}',
@@ -191,15 +200,7 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
       process.env.VITE_INSPECT ? Inspect() : undefined,
       // Log-meta injection only — no dev file sink (vitest is a test runner, not a dev server).
       DxosLogPlugin({ logToFile: false }),
-      // Add react plugin to enable SWC transforms.
-      react({
-        tsDecorators: true,
-        useAtYourOwnRisk_mutateSwcOptions: (options) => {
-          // Disable syntax lowering. Prevents perfomance loss due to private properties polyfill.
-          options.jsc ??= {};
-          options.jsc.target = 'esnext';
-        },
-      }),
+      react(),
     ],
   });
 

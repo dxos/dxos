@@ -4,7 +4,7 @@
 
 import React, { type MouseEvent, useCallback, useMemo } from 'react';
 
-import { type Plugin } from '@dxos/app-framework';
+import { type Plugin, type PluginManager } from '@dxos/app-framework';
 import {
   Button,
   type ChromaticPalette,
@@ -23,6 +23,8 @@ import { getStyles } from '@dxos/ui-theme';
 import { meta } from '#meta';
 import { type RegistryTagType } from '#types';
 
+import { PluginFailureBadge } from '../PluginFailureBadge';
+
 export type PluginItemProps = {
   plugin: Plugin.Plugin;
   /** Ids of plugins currently installed (loaded into the manager). */
@@ -31,7 +33,7 @@ export type PluginItemProps = {
   installing?: readonly string[];
   enabled?: readonly string[];
   /**
-   * Derived tags (e.g. `community`, `local`) to display alongside the plugin's own meta.tags.
+   * Derived tags (e.g. `registry`, `local`) to display alongside the plugin's own meta.tags.
    * Not persisted to plugin meta; computed per-render by the container.
    */
   extraTags?: readonly string[];
@@ -42,8 +44,22 @@ export type PluginItemProps = {
    * is rendered in place of the enable switch.
    */
   onInstall?: (id: string) => void;
+  /**
+   * When true and plugin is installed, shows an Update button instead of the enable switch.
+   */
+  hasUpdate?: boolean;
+  /** Called when the user clicks the Update button. */
+  onUpdate?: (id: string) => void;
+  /** Ids of plugins whose update is currently in flight. */
+  updating?: readonly string[];
   hasSettings?: (id: string) => boolean;
   onSettings?: (id: string) => void;
+  /**
+   * Failure record for this plugin, if any. When present a warning badge is
+   * rendered next to the plugin name; clicking it opens a popover with the
+   * phase, reason, and error message.
+   */
+  failure?: PluginManager.PluginFailure;
 };
 
 export const PluginItem = ({
@@ -55,8 +71,12 @@ export const PluginItem = ({
   onClick,
   onChange,
   onInstall,
+  hasUpdate,
+  onUpdate,
+  updating,
   hasSettings: hasSettingsProp,
   onSettings,
+  failure,
 }: PluginItemProps) => {
   const { t } = useTranslation(meta.id);
   const { id, name, description, tags, icon = 'ph--circle--regular', iconHue = 'neutral' } = plugin.meta;
@@ -73,7 +93,9 @@ export const PluginItem = ({
   const isEnabled = enabled.includes(id);
   const isInstalled = installed ? installed.includes(id) : true;
   const isInstalling = installing?.includes(id) ?? false;
+  const isUpdating = updating?.includes(id) ?? false;
   const showInstallButton = !!onInstall && !isInstalled;
+  const showUpdateButton = !!onUpdate && isInstalled && !!hasUpdate;
   const inputId = `${id}-input`;
   const labelId = `${id}-label`;
   const descriptionId = `${id}-description`;
@@ -93,6 +115,14 @@ export const PluginItem = ({
       onInstall?.(id);
     },
     [id, onInstall],
+  );
+
+  const handleUpdate = useCallback(
+    (event: MouseEvent) => {
+      event.stopPropagation();
+      onUpdate?.(id);
+    },
+    [id, onUpdate],
   );
 
   const hasSettings = hasSettingsProp?.(id) ?? false;
@@ -119,8 +149,9 @@ export const PluginItem = ({
       </div>
 
       <div className={mx(gridRows)}>
-        <div className='flex items-center overflow-hidden cursor-pointer' onClick={handleClick}>
+        <div className='flex items-center gap-2 overflow-hidden cursor-pointer' onClick={handleClick}>
           <span className='text-lg truncate'>{name ?? id}</span>
+          {failure && <PluginFailureBadge failure={failure} />}
         </div>
 
         <div>
@@ -140,7 +171,7 @@ export const PluginItem = ({
             aria-describedby={descriptionId}
             classNames='cursor-pointer'
             icon='ph--gear--regular'
-            label={t('settings.label')}
+            label={t('plugin-settings.label')}
             iconOnly
             size={4}
             onClick={handleSettings}
@@ -153,7 +184,15 @@ export const PluginItem = ({
 
           <div className='grow' />
           <div className='pe-1'>
-            {showInstallButton ? (
+            {isUpdating ? (
+              <Button aria-describedby={descriptionId} density='fine' variant='primary' disabled>
+                {t('updating.label')}
+              </Button>
+            ) : showUpdateButton ? (
+              <Button aria-describedby={descriptionId} density='fine' variant='primary' onClick={handleUpdate}>
+                {t('update.label')}
+              </Button>
+            ) : showInstallButton ? (
               <Button
                 aria-describedby={descriptionId}
                 density='fine'
@@ -182,6 +221,6 @@ const tagColors: Record<RegistryTagType, ChromaticPalette | NeutralPalette> = {
   popular: 'green',
   featured: 'pink',
   experimental: 'amber',
-  community: 'indigo',
+  registry: 'indigo',
   local: 'neutral',
 };

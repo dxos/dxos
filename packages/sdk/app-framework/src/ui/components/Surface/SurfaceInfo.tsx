@@ -65,7 +65,6 @@ export const SurfaceInfo = forwardRef<HTMLElement, SurfaceInfoProps>(({ children
       {rect &&
         createPortal(
           <div
-            role='none'
             className='z-[100] fixed flex flex-col-reverse scrollbar-none overflow-auto pointer-events-none'
             style={{
               top: rect.top + padding,

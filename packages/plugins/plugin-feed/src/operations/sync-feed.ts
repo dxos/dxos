@@ -13,9 +13,9 @@ import { log } from '@dxos/log';
 
 import { meta } from '#meta';
 
+import { FeedOperation } from '../types';
 import { Subscription } from '../types';
 import { type FeedFetcher, fetchAtproto, fetchRss } from '../util';
-import { SyncFeed } from './definitions';
 
 /** Resolves the appropriate fetcher for the given feed type. */
 const getFetcher = (type: Subscription.FeedType | undefined): FeedFetcher => {
@@ -28,7 +28,7 @@ const getFetcher = (type: Subscription.FeedType | undefined): FeedFetcher => {
   }
 };
 
-const handler: Operation.WithHandler<typeof SyncFeed> = SyncFeed.pipe(
+const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperation.SyncFeed.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ feed: subscriptionFeed }) {
       const url = subscriptionFeed.url;
@@ -83,19 +83,19 @@ const handler: Operation.WithHandler<typeof SyncFeed> = SyncFeed.pipe(
         // Advance cursor to the newest post.
         const newestGuid = posts[0]?.guid;
         if (newestGuid) {
-          Obj.change(subscriptionFeed, (subscriptionFeed) => {
+          Obj.update(subscriptionFeed, (subscriptionFeed) => {
             subscriptionFeed.cursor = newestGuid;
           });
         }
 
         // Update feed metadata from channel if not already set.
         if (feedMeta.name && !subscriptionFeed.name) {
-          Obj.change(subscriptionFeed, (subscriptionFeed) => {
+          Obj.update(subscriptionFeed, (subscriptionFeed) => {
             subscriptionFeed.name = feedMeta.name;
           });
         }
         if (feedMeta.description && !subscriptionFeed.description) {
-          Obj.change(subscriptionFeed, (subscriptionFeed) => {
+          Obj.update(subscriptionFeed, (subscriptionFeed) => {
             subscriptionFeed.description = feedMeta.description;
           });
         }

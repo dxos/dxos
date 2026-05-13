@@ -25,7 +25,7 @@ type DefaultStoryProps = {
 };
 
 const DefaultStory = ({ pgn }: DefaultStoryProps) => {
-  const game = useMemo(() => Chess.make(pgn ? { pgn } : undefined), [pgn]);
+  const state = useMemo(() => Chess.make(pgn ? { pgn } : undefined), [pgn]);
   const [orientation, setOrientation] = useState<Player>('white');
   const [showInfo, setShowInfo] = useState(true);
   const controller = useRef<ChessboardController>(null);
@@ -35,7 +35,7 @@ const DefaultStory = ({ pgn }: DefaultStoryProps) => {
   }, []);
 
   return (
-    <Chessboard.Root game={game} ref={controller}>
+    <Chessboard.Root state={state} ref={controller}>
       <div className='flex h-full w-full gap-4 p-4 overflow-hidden'>
         <Chessboard.Content classNames='grow'>
           <Chessboard.Board classNames='border rounded-xs' orientation={orientation} />

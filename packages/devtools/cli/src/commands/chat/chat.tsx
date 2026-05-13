@@ -19,7 +19,7 @@ import { CommandConfig, Common, withTypes } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { Filter } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Assistant } from '@dxos/plugin-assistant/types';
+import { Assistant } from '@dxos/plugin-assistant';
 
 import { App, render } from '../../components';
 import { theme } from '../../theme';
@@ -99,7 +99,7 @@ export const chat = Command.make(
         metadata: service.metadata,
         registry,
       });
-      const [conversation, setConversation] = createSignal<AiSession | undefined>(undefined);
+      const [conversation, setConversation] = createSignal<AiSession.Session | undefined>(undefined);
 
       if (!client.halo.identity) {
         yield* Console.error('No HALO identity configured. Run `dx halo create --displayName "<name>"` first.');

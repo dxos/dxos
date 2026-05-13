@@ -7,17 +7,16 @@ import React, { useMemo } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Feed, Filter, Obj, Query } from '@dxos/echo';
-import { Mailbox } from '@dxos/plugin-inbox/types';
+import { Mailbox } from '@dxos/plugin-inbox';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { useSelected } from '@dxos/react-ui-attention';
 
-import { type ComponentProps } from './types';
+import { type ModuleProps } from './types';
 
-export const MessageModule = ({ space }: ComponentProps) => {
+export const MessageModule = ({ space }: ModuleProps) => {
   const mailboxes = useQuery(space.db, Filter.type(Mailbox.Mailbox));
-  const mailbox = mailboxes[0];
   // TODO(wittjosiah): Should be `const feed = useObjectValue(mailbox.feed)`.
-  useObject(mailbox);
+  const [mailbox] = useObject(mailboxes[0]);
   const feed = mailbox?.feed?.target as Feed.Feed | undefined;
   const mailboxDxn = mailbox ? Obj.getDXN(mailbox).toString() : undefined;
   const selected = useSelected(mailboxDxn, 'single');
