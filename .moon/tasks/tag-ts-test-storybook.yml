@@ -30,7 +30,7 @@ tasks:
       # connection was closed", which fails entire suites at the file-collection
       # phase (vitest's project-level `retry` only retries individual tests).
       # A whole-task retry reruns vitest from scratch with a fresh chromium.
-      retry_count: 1
+      retryCount: 1
       timeout: 600
 
 inheritedBy:
