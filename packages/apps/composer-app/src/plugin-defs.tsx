@@ -19,7 +19,6 @@ import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { CodePlugin } from '@dxos/plugin-code/plugin';
 import { ConductorPlugin } from '@dxos/plugin-conductor/plugin';
 import { CrxPlugin } from '@dxos/plugin-crx/plugin';
-import { DailySummaryPlugin } from '@dxos/plugin-daily-summary/plugin';
 import { DebugPlugin } from '@dxos/plugin-debug/plugin';
 import { DeckPlugin } from '@dxos/plugin-deck/plugin';
 import { DiscordPlugin } from '@dxos/plugin-discord/plugin';
@@ -219,7 +218,6 @@ export const getPlugins = ({
     }),
     ConductorPlugin(),
     CrxPlugin(),
-    DailySummaryPlugin(),
     DebugPlugin({ logStore }),
     DiscordPlugin(),
     DoctorPlugin(),
