@@ -130,7 +130,9 @@ export class QueueLogger implements SequenceLogger {
   }
 
   private _appendToTraceFeed(items: any[]): Promise<void> {
-    return Effect.runPromise(Feed.append(this._invocationTraceFeed, items).pipe(Effect.provide(this._feedServiceLayer)));
+    return Effect.runPromise(
+      Feed.append(this._invocationTraceFeed, items).pipe(Effect.provide(this._feedServiceLayer)),
+    );
   }
 
   // TODO(burdon): The per-invocation trace event queues address feeds by raw queue DXN
