@@ -4,7 +4,6 @@
 
 import { type CleanupFn } from '@dxos/async';
 import { type Database, Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
-import { type Queue, type QueueImpl } from '@dxos/echo-db';
 import { type Graph, GraphModel } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -44,13 +43,11 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
   private _options?: SpaceGraphModelOptions;
   private _filter?: Filter.Any;
   private _db?: Database.Database;
-  private _queue?: Queue;
   private _schema?: Type.RuntimeType[];
   private _objects?: Entity.Unknown[];
-  private _queueItems?: Entity.Unknown[];
+  private _extraItems?: Entity.Unknown[];
   private _schemaSubscription?: CleanupFn;
   private _objectSubscription?: CleanupFn;
-  private _queueSubscription?: CleanupFn;
   private _timeout?: NodeJS.Timeout;
 
   override get builder() {
@@ -63,10 +60,6 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
 
   get objects(): Entity.Unknown[] {
     return this._objects ?? [];
-  }
-
-  get queue(): Queue | undefined {
-    return this._queue;
   }
 
   isOpen() {
@@ -91,14 +84,26 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
     return this;
   }
 
-  async open(db: Database.Database, queue?: Queue): Promise<this> {
-    log('open', { db, queue });
+  /**
+   * Supplement the DB graph with items sourced externally (e.g. from a Feed).
+   * Callers drive this from a reactive snapshot (such as `useFeedQuery`).
+   */
+  setItems(items: readonly Entity.Unknown[] | undefined): this {
+    this._extraItems = items ? [...items] : undefined;
+    if (this.isOpen()) {
+      this.invalidate();
+    }
+
+    return this;
+  }
+
+  async open(db: Database.Database): Promise<this> {
+    log('open', { db });
     if (this.isOpen()) {
       await this.close();
     }
 
     this._db = db;
-    this._queue = queue;
 
     const schemaaQuery = db.schemaRegistry.query({});
     this._schemaSubscription = schemaaQuery.subscribe(
@@ -141,7 +146,6 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
 
   private _subscribeObjects() {
     this._objectSubscription?.();
-    this._queueSubscription?.();
 
     invariant(this._db);
     this._objectSubscription = this._db.query(Query.select(this._filter ?? defaultFilter)).subscribe(
@@ -152,35 +156,6 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
       },
       { fire: true },
     );
-
-    if (this._queue) {
-      // Cast to QueueImpl to access updated event and getObjectsSync().
-      const queueImpl = this._queue as QueueImpl;
-
-      // Subscribe to queue updates via Event.
-      const unsubscribeUpdated = queueImpl.updated.on(() => {
-        const items = queueImpl.getObjectsSync();
-        if (items) {
-          this._queueItems = [...items];
-        }
-        this.invalidate();
-      });
-
-      // Initialize with current items.
-      const initialItems = queueImpl.getObjectsSync();
-      if (initialItems) {
-        this._queueItems = [...initialItems];
-      }
-
-      const pollingTask = setInterval(() => {
-        void this._queue?.refresh();
-      }, 1000);
-
-      this._queueSubscription = () => {
-        unsubscribeUpdated();
-        clearInterval(pollingTask);
-      };
-    }
   }
 
   private _update() {
@@ -188,7 +163,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
       nodes: this._graph.nodes.length,
       edges: this._graph.edges.length,
       objects: this._objects?.length,
-      queueItems: this._queueItems?.length,
+      extraItems: this._extraItems?.length,
     });
 
     // TOOD(burdon): Merge edges also?
@@ -223,8 +198,8 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
     const objects = [
       // ECHO Graph.
       ...(this._objects ?? []),
-      // ECHO Queue.
-      ...(this._queueItems ?? []),
+      // Externally-supplied items (e.g. Feed contents).
+      ...(this._extraItems ?? []),
     ];
 
     objects.forEach((object) => {
