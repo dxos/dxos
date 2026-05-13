@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import { type Err, Obj, Ref, type Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
-import { LegacyDXN as DXN, LOCAL_SPACE_TAG, type ObjectId, type SpaceId } from '@dxos/keys';
+import { EchoId, type ObjectId, type SpaceId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 /**
@@ -24,7 +24,7 @@ export const createArtifactElement = (id: ObjectId) => `<artifact id=${id} />`;
  * @deprecated Use `Ref.Ref(XXX)` instead.
  */
 export const ArtifactId: Schema.Schema<string> & {
-  toDXN: (reference: ArtifactId, owningSpaceId?: SpaceId) => DXN;
+  toDXN: (reference: ArtifactId, owningSpaceId?: SpaceId) => EchoId.EchoId;
   resolve: <S extends Type.AnyEntity>(
     schema: S,
     ref: ArtifactId,
@@ -44,20 +44,22 @@ export const ArtifactId: Schema.Schema<string> & {
     '01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
   ],
 }) {
-  static toDXN(reference: ArtifactId, owningSpaceId?: SpaceId): DXN {
+  static toDXN(reference: ArtifactId, owningSpaceId?: SpaceId): EchoId.EchoId {
     // Allow @dxn: prefix for compatibility with in-text references.
     if (reference.startsWith('@dxn:')) {
-      return DXN.parse(reference.slice(1));
+      return EchoId.parse(reference.slice(1));
     } else if (reference.startsWith('dxn:')) {
-      return DXN.parse(reference);
+      return EchoId.parse(reference);
     } else if (/^[A-Z0-9]+:[A-Z0-9]+$/.test(reference)) {
       const [spaceId, objectId] = reference.split(':');
       // This is a workaround because the current Filter API doesn't work with fully qualified Echo DXNs.
       // We check if the space ID is the same as the owning space and then use LOCAL_SPACE_TAG for local references.
       // TODO(dmaretskyi): Fix this in the Echo and Filter API to properly handle fully qualified DXNs.
-      return new DXN(DXN.kind.ECHO, [spaceId === owningSpaceId ? LOCAL_SPACE_TAG : spaceId, objectId]);
+      return spaceId === owningSpaceId
+        ? EchoId.fromLocalObjectId(objectId as ObjectId)
+        : EchoId.fromSpaceAndObjectId(spaceId as SpaceId, objectId as ObjectId);
     } else if (/^[A-Z0-9]+$/.test(reference)) {
-      return DXN.fromLocalObjectId(reference);
+      return EchoId.fromLocalObjectId(reference as ObjectId);
     } else {
       throw new Error(`Unable to parse object reference: ${reference}`);
     }
@@ -71,7 +73,7 @@ export const ArtifactId: Schema.Schema<string> & {
     ref: ArtifactId,
   ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Database.Service> {
     const dxn = ArtifactId.toDXN(ref);
-    return Database.resolve(dxn, schema);
+    return Database.resolve(Ref.fromDXN(dxn), schema);
   }
 };
 
@@ -81,8 +83,8 @@ export type ArtifactId = Schema.Schema.Type<typeof ArtifactId>;
  * Schema that decodes ECHO reference object from an LLM-friendly input.
  */
 export const RefFromLLM = Schema.transform(ArtifactId, Ref.Ref(Obj.Unknown), {
-  decode: (fromA, fromI) => EncodedReference.fromDXN(ArtifactId.toDXN(fromA)),
-  encode: (toI, toA) => EncodedReference.toDXN(toI).toString(),
+  decode: (fromA, fromI) => EncodedReference.fromEchoId(ArtifactId.toDXN(fromA)),
+  encode: (toI, toA) => EncodedReference.getURI(toI),
   strict: false,
 }).annotations({
   description: ArtifactId.ast.annotations.description as string,

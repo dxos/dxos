@@ -15,7 +15,7 @@ import {
   type AppCapabilities as AppCaps,
 } from '@dxos/app-toolkit';
 import { Database, Entity, Key } from '@dxos/echo';
-import { LegacyDXN as DXN } from '@dxos/keys';
+import { EchoId } from '@dxos/keys';
 import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings/types';
 
 import { meta } from '../../meta';
@@ -35,7 +35,7 @@ export default Capability.makeModule(
           ];
         }
 
-        const dxn = DXN.tryParse(query.dxn.startsWith('@dxn:') ? query.dxn.slice(1) : query.dxn);
+        const dxn = EchoId.tryParse(query.dxn.startsWith('@dxn:') ? query.dxn.slice(1) : query.dxn);
         if (!dxn) {
           return [];
         }
@@ -73,7 +73,7 @@ export default Capability.makeModule(
         segments.includes(Segments.types) &&
         segments.includes('all')
       ) {
-        return Effect.succeed(Option.some(DXN.fromSpaceAndObjectId(spaceId, objectId as Key.ObjectId)));
+        return Effect.succeed(Option.some(EchoId.fromSpaceAndObjectId(spaceId, objectId as Key.ObjectId)));
       }
       return Effect.succeed(Option.none());
     };

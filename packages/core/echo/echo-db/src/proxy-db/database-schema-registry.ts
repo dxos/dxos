@@ -20,7 +20,7 @@ import {
   makeTypeJsonSchemaAnnotation,
 } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { LegacyDXN as DXN, type ObjectId } from '@dxos/keys';
+import { EchoId, type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { coerceArray, compositeKey } from '@dxos/util';
 
@@ -454,7 +454,10 @@ const getObjectIdFromSchema = (schema: Schema.Schema.AnyNoContext): ObjectId | u
     return undefined;
   }
 
-  const dxn = DXN.parse(echoIdentifier);
-  invariant(dxn.isLocalObjectId());
-  return dxn.parts[1];
+  const echoId = EchoId.tryParse(echoIdentifier);
+  if (!echoId) {
+    return undefined;
+  }
+  invariant(EchoId.isLocal(echoId));
+  return EchoId.getObjectId(echoId);
 };

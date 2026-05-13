@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { DXN, Obj, Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { Filter } from '@dxos/echo';
 import {
   EchoSchema,
@@ -14,8 +14,10 @@ import {
   type TypeAnnotation,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
+  getTypeIdentifierAnnotation,
   getSchemaDXN,
 } from '@dxos/echo/internal';
+import { LegacyDXN } from '@dxos/keys';
 
 import { EchoTestBuilder } from '../testing';
 
@@ -135,14 +137,14 @@ describe('EchoSchema', () => {
   test('getSchemaDXN', async () => {
     const { db } = await setupTest();
     const [schema] = await db.schemaRegistry.register([TestEmpty]);
-    expect(getSchemaDXN(schema)?.asEchoDXN()?.echoId).to.eq(schema.id);
+    expect(LegacyDXN.parse(getSchemaDXN(schema)!.toString()).asEchoDXN()?.echoId).to.eq(schema.id);
   });
 
   test('getSchemaDXN on schema with updated typename', async () => {
     const { db } = await setupTest();
     const [schema] = await db.schemaRegistry.register([TestEmpty]);
     schema.updateTypename('com.example.type.updated');
-    expect(getSchemaDXN(schema)?.asEchoDXN()?.echoId).to.eq(schema.id);
+    expect(LegacyDXN.parse(getSchemaDXN(schema)!.toString()).asEchoDXN()?.echoId).to.eq(schema.id);
   });
 
   test('mutable schema refs', async () => {
@@ -168,7 +170,8 @@ describe('EchoSchema', () => {
     const { db } = await setupTest();
     const [schema] = await db.schemaRegistry.register([TestEmpty]);
     schema.updateTypename('com.example.type.updated');
-    expect(getSchemaDXN(schema)?.kind).to.eq(DXN.kind.ECHO);
+    // Schema DXN for a stored schema encodes the echo identifier (dxn:echo:... format).
+    expect(getTypeIdentifierAnnotation(schema)).to.match(/^dxn:echo:/);
   });
 
   const setupTest = async () => {

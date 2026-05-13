@@ -9,7 +9,8 @@ import { AppCapabilities, companionSegment, getPersonalSpace, LayoutOperation } 
 import { Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Prompt } from '@dxos/blueprints';
 import { Sequence } from '@dxos/conductor';
-import { DXN, Database, Obj, type Ref } from '@dxos/echo';
+import { Database, Obj, type Ref } from '@dxos/echo';
+import { LegacyDXN } from '@dxos/keys';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { Operation, type OperationInvoker } from '@dxos/operation';
@@ -142,7 +143,7 @@ export default Capability.makeModule(
             }
 
             const db = Obj.getDatabase(object);
-            const currentChatDxn = DXN.tryParse(currentChatState);
+            const currentChatDxn = LegacyDXN.tryParse(currentChatState);
             const currentChatRef = currentChatDxn ? db?.makeRef(currentChatDxn) : undefined;
             const currentChat = currentChatRef ? get(AtomObj.make(currentChatRef as Ref.Ref<Obj.Unknown>)) : undefined;
 

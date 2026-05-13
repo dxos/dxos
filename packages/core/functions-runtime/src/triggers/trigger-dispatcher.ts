@@ -20,7 +20,8 @@ import * as Record from 'effect/Record';
 import * as Schedule from 'effect/Schedule';
 import * as Struct from 'effect/Struct';
 
-import { DXN, Entity, Filter, Obj, Query } from '@dxos/echo';
+import { Entity, Filter, Obj, Query } from '@dxos/echo';
+import { EchoId } from '@dxos/keys';
 import { Database } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';
 import { FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
@@ -289,7 +290,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
       const tracer = yield* TracingService;
       const trace = yield* tracer.traceInvocationStart({
-        target: trigger.function?.dxn,
+        target: trigger.function?.dxn?.toString(),
         payload: {
           trigger: {
             id: trigger.id,
@@ -424,7 +425,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                 continue;
               }
               const cursor = Obj.getKeys(trigger, KEY_QUEUE_CURSOR).at(0)?.id;
-              const queue = yield* QueueService.getQueue(DXN.parse(spec.queue));
+              const queue = yield* QueueService.getQueue(EchoId.parse(spec.queue));
 
               const concurrency = Math.min(trigger.concurrency ?? 1, this._maxConcurrency);
 

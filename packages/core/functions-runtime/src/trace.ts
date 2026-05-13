@@ -12,7 +12,7 @@ import { ConsolePrinter } from '@dxos/ai';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { QueueService, TracingService, Trigger } from '@dxos/functions';
-import { LegacyDXN as DXN, ObjectId } from '@dxos/keys';
+import { EchoId, LegacyDXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ErrorCodec, FunctionRuntimeKind, SerializedError } from '@dxos/protocols';
 import { Message } from '@dxos/types';
@@ -263,7 +263,7 @@ export namespace TracingServiceExt {
           write: (event: Obj.Any, traceContext: TracingService.TraceContext) => {
             const specificQueueDXN = traceContext.currentInvocation?.invocationTraceQueue;
             const queue = specificQueueDXN
-              ? queueService.queues.get(DXN.parse(specificQueueDXN))
+              ? queueService.queues.get(EchoId.parse(specificQueueDXN))
               : opts.invocationTraceQueue;
             void queue.append([event]).catch((error) => {
               log.warn('Failed to write trace event to queue', { error });
@@ -280,9 +280,9 @@ export namespace TracingServiceExt {
                 timestamp: now,
                 // TODO(dmaretskyi): Not json-stringifying this makes ECHO fail when one ECHO object becomes embedded in another ECHO object.
                 input: JSON.parse(JSON.stringify(payload.data ?? {})),
-                invocationTraceQueue: Ref.fromDXN(invocationTraceQueue.dxn),
-                invocationTarget: target ? Ref.fromDXN(target) : undefined,
-                trigger: payload.trigger ? Ref.fromDXN(DXN.fromLocalObjectId(payload.trigger.id)) : undefined,
+                invocationTraceQueue: Ref.fromDXN(invocationTraceQueue.dxn as EchoId.EchoId),
+                invocationTarget: target ? Ref.fromDXN(LegacyDXN.parse(target)) : undefined,
+                trigger: payload.trigger ? Ref.fromDXN(EchoId.fromLocalObjectId(payload.trigger.id)) : undefined,
                 chat: payload.chat,
               });
               yield* QueueService.append(opts.invocationTraceQueue, [traceEvent]);

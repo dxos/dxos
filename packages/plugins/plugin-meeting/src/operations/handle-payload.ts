@@ -3,7 +3,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { DXN } from '@dxos/echo';
+import { EchoId } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Filter, Query, parseId } from '@dxos/react-client/echo';
@@ -32,7 +32,7 @@ const handler: Operation.WithHandler<typeof HandlePayload> = HandlePayload.pipe(
       const enabled = !!transcriptionEnabled;
       const { transcriptionManager } = store.state;
       if (space && transcriptDxn) {
-        const queue = space.queues.get<Message.Message>(DXN.parse(transcriptDxn));
+        const queue = space.queues.get<Message.Message>(EchoId.parse(transcriptDxn));
         transcriptionManager?.setQueue(queue);
       }
 

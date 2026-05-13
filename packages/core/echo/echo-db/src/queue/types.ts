@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { type Database, type Entity } from '@dxos/echo';
 import { EntityKind, type TypeAnnotation, TypeAnnotationId } from '@dxos/echo/internal';
-import { type LegacyDXN as DXN, type ObjectId } from '@dxos/keys';
+import { type EchoId, type ObjectId } from '@dxos/keys';
 
 /**
  * @deprecated Migrate to Feed
@@ -14,7 +14,7 @@ import { type LegacyDXN as DXN, type ObjectId } from '@dxos/keys';
  */
 // TODO(dmaretskyi): Remove type parameter -- all queues are untyped, and we use query to enforce type.
 export interface Queue<T extends Entity.Unknown = Entity.Unknown> extends Database.Queryable {
-  readonly dxn: DXN;
+  readonly dxn: EchoId.EchoId;
 
   /**
    * Subscribe to queue updates.

@@ -27,7 +27,7 @@ import { type Queue } from '@dxos/echo-db';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import { mapAst } from '@dxos/effect';
 import { ContextQueueService } from '@dxos/functions';
-import { LegacyDXN as DXN, ObjectId } from '@dxos/keys';
+import { DXN, EchoId, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, isNonNullable, trim } from '@dxos/util';
 
@@ -63,8 +63,8 @@ export const findRelatedSchema = async (db: Database.Database, anchor: Type.AnyE
       }
 
       return (
-        isSchemaAddressableByDxn(anchor, DXN.parse(getTypeAnnotation(schema)!.sourceSchema!)) ||
-        isSchemaAddressableByDxn(anchor, DXN.parse(getTypeAnnotation(schema)!.targetSchema!))
+        isSchemaAddressableByDxn(anchor, getTypeAnnotation(schema)!.sourceSchema!) ||
+        isSchemaAddressableByDxn(anchor, getTypeAnnotation(schema)!.targetSchema!)
       );
     })
     .map(
@@ -77,16 +77,16 @@ export const findRelatedSchema = async (db: Database.Database, anchor: Type.AnyE
 
 /**
  * Non-strict DXN comparison.
- * Returns true if the DXN could be resolved to the schema.
+ * Returns true if the DXN string could be resolved to the schema.
  */
-const isSchemaAddressableByDxn = (schema: Type.AnyEntity, dxn: DXN): boolean => {
-  if (getTypeIdentifierAnnotation(schema) === dxn.toString()) {
+const isSchemaAddressableByDxn = (schema: Type.AnyEntity, dxnStr: string): boolean => {
+  if (getTypeIdentifierAnnotation(schema) === dxnStr) {
     return true;
   }
 
-  const t = dxn.asTypeDXN();
-  if (t) {
-    return t.type === Type.getTypename(schema);
+  const parsed = DXN.tryParse(dxnStr);
+  if (parsed) {
+    return DXN.getNsid(parsed) === Type.getTypename(schema);
   }
 
   return false;
@@ -160,7 +160,7 @@ export const makeGraphWriterHandler = (
   {
     onAppend,
   }: {
-    onAppend?: (object: DXN[]) => void;
+    onAppend?: (object: EchoId.EchoId[]) => void;
   } = {},
 ) => {
   const { schema } = Context.get(
@@ -175,7 +175,7 @@ export const makeGraphWriterHandler = (
       const data = yield* Effect.promise(() => sanitizeObjects(schema, input as any, db, queue));
       yield* Effect.promise(() => queue.append(data as Obj.Unknown[]));
 
-      const dxns = data.map((obj) => Obj.getDXN(obj));
+      const dxns = data.map((obj) => EchoId.parse(Obj.getDXN(obj).toString()));
       onAppend?.(dxns);
       return dxns;
     }),
@@ -191,7 +191,7 @@ export const createExtractionSchema = (types: Type.AnyEntity[]) => {
       types.map(preprocessSchema).map((schema, index) => [
         `objects_${getSanitizedSchemaName(types[index])}`,
         Schema.optional(Schema.Array(schema)).annotations({
-          description: `The objects of type: ${Type.getDXN(types[index])?.asTypeDXN()!.type}. ${SchemaAST.getDescriptionAnnotation(types[index].ast).pipe(Option.getOrElse(() => ''))}`,
+          description: `The objects of type: ${Type.getTypename(types[index])}. ${SchemaAST.getDescriptionAnnotation(types[index].ast).pipe(Option.getOrElse(() => ''))}`,
         }),
       ]),
     ),
@@ -199,9 +199,7 @@ export const createExtractionSchema = (types: Type.AnyEntity[]) => {
 };
 
 export const getSanitizedSchemaName = (schema: Type.AnyEntity) => {
-  return Type.getDXN(schema)!
-    .asTypeDXN()!
-    .type.replaceAll(/[^a-zA-Z0-9]+/g, '_');
+  return (Type.getTypename(schema) ?? Type.getDXN(schema)!).replaceAll(/[^a-zA-Z0-9]+/g, '_');
 };
 
 export const sanitizeObjects = async (
@@ -224,15 +222,15 @@ export const sanitizeObjects = async (
   const existingIds = new Set<ObjectId>();
   const enitties = new Map<ObjectId, Entity.Unknown>();
 
-  const resolveId = (id: string): DXN | undefined => {
+  const resolveId = (id: string): EchoId.EchoId | undefined => {
     if (ObjectId.isValid(id)) {
       existingIds.add(id);
-      return DXN.fromLocalObjectId(id);
+      return EchoId.fromLocalObjectId(id as ObjectId);
     }
 
     const mappedId = idMap.get(id);
     if (mappedId) {
-      return DXN.fromLocalObjectId(mappedId);
+      return EchoId.fromLocalObjectId(mappedId as ObjectId);
     }
 
     return undefined;
@@ -257,7 +255,7 @@ export const sanitizeObjects = async (
 
           if (id) {
             // Link to an existing object.
-            return { '/': id.toString() };
+            return { '/': id };
           } else {
             // Search URIs?
             return { '/': `search:?q=${encodeURIComponent(ref)}` };
@@ -304,7 +302,7 @@ export const sanitizeObjects = async (
   return res.flatMap(({ data, schema }) => {
     let skip = false;
     if (RelationSourceDXNId in data) {
-      const id = (data[RelationSourceDXNId] as DXN).asEchoDXN()?.echoId;
+      const id = EchoId.getObjectId(data[RelationSourceDXNId] as EchoId.EchoId);
       const obj = objects.find((object) => object.id === id) ?? enitties.get(id!);
       if (obj) {
         delete data[RelationSourceDXNId];
@@ -314,7 +312,7 @@ export const sanitizeObjects = async (
       }
     }
     if (RelationTargetDXNId in data) {
-      const id = (data[RelationTargetDXNId] as DXN).asEchoDXN()?.echoId;
+      const id = EchoId.getObjectId(data[RelationTargetDXNId] as EchoId.EchoId);
       const obj = objects.find((object) => object.id === id) ?? enitties.get(id!);
       if (obj) {
         delete data[RelationTargetDXNId];

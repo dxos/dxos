@@ -5,8 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { type Database, Filter, Query } from '@dxos/echo';
-import { ObjectId } from '@dxos/keys';
-import { LegacyDXN as DXN } from '@dxos/keys';
+import { EchoId, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 export const ReferencedQuotes = Schema.Struct({
@@ -50,7 +49,7 @@ export const insertReferences = (text: string, quotes: ReferencedQuotes) => {
 
     // Use a case-insensitive regular expression to replace the quote.
     const regex = new RegExp(quote.quote.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-    text = text.replace(regex, `[${quote.quote}](${DXN.fromLocalObjectId(quote.id).toString()})`);
+    text = text.replace(regex, `[${quote.quote}](${EchoId.fromLocalObjectId(quote.id as ObjectId)})`);
   }
 
   return text;

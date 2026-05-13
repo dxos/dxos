@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { Event } from '@dxos/async';
 import { Entity, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { LegacyDXN as DXN, SpaceId } from '@dxos/keys';
+import { EchoId, LegacyDXN as DXN, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 
 import { type Queue } from '../queue';
@@ -27,15 +27,17 @@ describe('queues', () => {
     await using peer = await builder.createPeer({ types: [TestSchema.Person] });
     const db = await peer.createDatabase();
     const queues = peer.client.constructQueueFactory(db.spaceId);
+    const queue = queues.create();
+    const queueId = EchoId.getObjectId(queue.dxn)!;
     const obj = db.add(
       Obj.make(TestSchema.Expando, {
         // TODO(dmaretskyi): Support Ref.make
-        queue: Ref.fromDXN(queues.create().dxn) as Ref.Ref<Queue>,
+        queue: Ref.fromDXN(DXN.fromQueue('data', db.spaceId, queueId)) as Ref.Ref<Queue>,
       }),
     );
 
     expect(obj.queue.target).toBeDefined();
-    expect(obj.queue.target!.dxn).toBeInstanceOf(DXN);
+    expect(typeof obj.queue.target!.dxn).toBe('string');
     expect(await obj.queue.load()).toBeDefined();
   });
 
@@ -47,7 +49,8 @@ describe('queues', () => {
 
     await queue.append([Obj.make(TestSchema.Person, { name: 'john' })]);
     const obj = queue.objects[0];
-    expect(Entity.getDXN(obj)?.toString()).toEqual(queue.dxn.extend([obj.id]).toString());
+    const queueId = EchoId.getObjectId(queue.dxn)!;
+    expect(Entity.getDXN(obj)?.toString()).toEqual(DXN.fromQueue('data', db.spaceId, queueId, obj.id).toString());
   });
 
   test('create and resolve an object from a queue', async () => {
@@ -62,7 +65,7 @@ describe('queues', () => {
     {
       const resolved = await peer.client.graph
         .createRefResolver({ context: { space: spaceId } })
-        .resolve(DXN.fromQueue('data', spaceId, queue.dxn.asQueueDXN()!.queueId, obj.id));
+        .resolve(DXN.fromQueue('data', spaceId, EchoId.getObjectId(queue.dxn)!, obj.id));
       expect(resolved?.id).toEqual(obj.id);
       expect(resolved?.name).toEqual('john');
       expect(Obj.getSchema(resolved)).toEqual(TestSchema.Person);

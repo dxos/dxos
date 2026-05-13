@@ -6,32 +6,25 @@ import * as Command from '@effect/cli/Command';
 import * as Options from '@effect/cli/Options';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 
 import { CommandConfig, printList } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { type Queue } from '@dxos/client/echo';
-import { LegacyDXN as DXN } from '@dxos/keys';
+import { EchoId } from '@dxos/keys';
 
 import { printQueueObject } from './util';
-
-// TODO(dmaretskyi): Extract
-const DXNSchema = Schema.String.pipe(
-  Schema.transform(Schema.instanceOf(DXN), {
-    decode: (value: string) => DXN.parse(value),
-    encode: (value: DXN) => value.toString(),
-  }),
-);
 
 export const query = Command.make(
   'query',
   {
-    dxn: Options.text('dxn').pipe(Options.withDescription('DXN of the queue.'), Options.withSchema(DXNSchema)),
+    dxn: Options.text('dxn').pipe(Options.withDescription('DXN of the queue.')),
   },
   Effect.fnUntraced(function* ({ dxn }) {
     const { json } = yield* CommandConfig;
     const client = yield* ClientService;
-    const queue = (yield* Effect.promise(() => client.graph.createRefResolver({}).resolve(dxn))) as Queue<any>;
+    const queue = (yield* Effect.promise(() =>
+      client.graph.createRefResolver({}).resolve(EchoId.parse(dxn)),
+    )) as Queue<any>;
     const objects = yield* Effect.promise(() => queue.queryObjects());
 
     if (json) {

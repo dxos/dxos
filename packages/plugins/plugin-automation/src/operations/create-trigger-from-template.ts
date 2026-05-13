@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { Obj, Ref } from '@dxos/echo';
 import { Script, Trigger } from '@dxos/functions';
-import { type LegacyDXN as DXN } from '@dxos/keys';
+import { EchoId } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
 import { SpaceOperation } from '@dxos/plugin-space/operations';
 import { Filter } from '@dxos/react-client/echo';
@@ -48,7 +48,7 @@ const handler: Operation.WithHandler<typeof CreateTriggerFromTemplate> = CreateT
           Obj.change(trigger, (obj) => {
             obj.spec = {
               kind: 'queue',
-              queue: (template.queueDXN as DXN).toString(),
+              queue: EchoId.parse(String(template.queueDXN)),
             };
           });
           break;

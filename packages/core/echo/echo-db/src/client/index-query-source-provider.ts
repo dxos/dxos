@@ -8,7 +8,7 @@ import { Context } from '@dxos/context';
 import { type Entity, type Hypergraph, Obj, type QueryResult } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { LegacyDXN as DXN, type ObjectId, type QueueSubspaceTag, SpaceId } from '@dxos/keys';
+import { EchoId, LegacyDXN as DXN, type ObjectId, type QueueSubspaceTag, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 import {
@@ -225,13 +225,14 @@ export class IndexQuerySource implements QuerySource {
     // For queue items, hydrate using Obj.fromJSON with ref resolver.
     if (result.queueId && result.documentJson) {
       const json = JSON.parse(result.documentJson);
+      const queueEchoId = EchoId.fromSpaceAndObjectId(result.spaceId as SpaceId, result.queueId as ObjectId);
       const queueDxn = DXN.fromQueue(
         (result.queueNamespace ?? 'data') as QueueSubspaceTag,
         result.spaceId as SpaceId,
         result.queueId as ObjectId,
       );
       const refResolver = this._params.graph.createRefResolver({
-        context: { space: result.spaceId as SpaceId, queue: queueDxn },
+        context: { space: result.spaceId as SpaceId, queue: queueEchoId },
       });
       const database = this._params.graph.getDatabase(result.spaceId as SpaceId);
       const object = await Obj.fromJSON(json, {

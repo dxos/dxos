@@ -12,8 +12,8 @@ import { View } from '@dxos/echo';
 import { isInstanceOf } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
 import { FunctionInvocationService, QueueService } from '@dxos/functions';
-import { failedInvariant, invariant } from '@dxos/invariant';
-import { LegacyDXN as DXN, ObjectId } from '@dxos/keys';
+import { invariant } from '@dxos/invariant';
+import { EchoId, ObjectId } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
 import { getTypenameFromQuery } from '@dxos/schema';
 import { Message } from '@dxos/types';
@@ -210,7 +210,8 @@ export const registry: Record<NodeType, Executable> = {
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: id }) =>
       Effect.gen(function* () {
         const { queues } = yield* QueueService;
-        const messages = yield* Effect.promise(() => queues.get(DXN.parse(id)).queryObjects());
+        const echoId = EchoId.isEchoId(id) ? EchoId.parse(id) : EchoId.fromLocalObjectId(id);
+        const messages = yield* Effect.promise(() => queues.get(echoId).queryObjects());
         const decoded = Schema.decodeUnknownSync(Schema.Any)(messages);
         return {
           [DEFAULT_OUTPUT]: decoded,
@@ -225,51 +226,46 @@ export const registry: Record<NodeType, Executable> = {
     exec: synchronizedComputeFunction(({ id, items }) =>
       Effect.gen(function* () {
         items = Array.isArray(items) ? items : [items];
-        const dxn = DXN.parse(id);
-        switch (dxn.kind) {
-          case DXN.kind.QUEUE: {
-            const mappedItems = items.map((item: any) => ({
-              ...item,
-              id: item.id ?? ObjectId.random(),
-            }));
-            const { queues } = yield* QueueService;
-            yield* Effect.promise(() => queues.get(DXN.parse(id)).append(mappedItems));
-            return {};
+        if (EchoId.isEchoId(id)) {
+          const parsed = EchoId.parse(id);
+          const echoId = EchoId.getObjectId(parsed);
+          const spaceId = EchoId.getSpaceId(parsed);
+          const { db } = yield* Database.Service;
+          if (spaceId != null) {
+            invariant(db.spaceId === spaceId, 'Space mismatch');
           }
+          invariant(echoId, 'Object ID missing from EchoId');
 
-          case DXN.kind.ECHO: {
-            const { echoId, spaceId } = dxn.asEchoDXN() ?? failedInvariant();
-            const { db } = yield* Database.Service;
-            if (spaceId != null) {
-              invariant(db.spaceId === spaceId, 'Space mismatch');
+          const [container] = yield* Effect.promise(() => db.query(Filter.id(echoId)).run());
+          if (isInstanceOf(View.View, container)) {
+            const schema = yield* Effect.promise(async () =>
+              db.schemaRegistry
+                .query({
+                  typename: getTypenameFromQuery(container.query.ast),
+                })
+                .first(),
+            );
+
+            for (const item of items) {
+              const { id: _id, '@type': _type, ...rest } = item as any;
+              // TODO(dmaretskyi): Forbid type on create.
+              db.add(Obj.make(schema, rest));
             }
-
-            const [container] = yield* Effect.promise(() => db.query(Filter.id(echoId)).run());
-            if (isInstanceOf(View.View, container)) {
-              const schema = yield* Effect.promise(async () =>
-                db.schemaRegistry
-                  .query({
-                    typename: getTypenameFromQuery(container.query.ast),
-                  })
-                  .first(),
-              );
-
-              for (const item of items) {
-                const { id: _id, '@type': _type, ...rest } = item as any;
-                // TODO(dmaretskyi): Forbid type on create.
-                db.add(Obj.make(schema, rest));
-              }
-              yield* Effect.promise(() => db.flush());
-            } else {
-              throw new Error(`Unsupported ECHO container type: ${Obj.getTypename(container)}`);
-            }
-
-            return {};
+            yield* Effect.promise(() => db.flush());
+          } else {
+            throw new Error(`Unsupported ECHO container type: ${Obj.getTypename(container)}`);
           }
 
-          default: {
-            throw new Error(`Unsupported DXN: ${dxn.toString()}`);
-          }
+          return {};
+        } else {
+          const mappedItems = items.map((item: any) => ({
+            ...item,
+            id: item.id ?? ObjectId.random(),
+          }));
+          const { queues } = yield* QueueService;
+          const queueEchoId = EchoId.fromLocalObjectId(id);
+          yield* Effect.promise(() => queues.get(queueEchoId).append(mappedItems));
+          return {};
         }
       }),
     ),

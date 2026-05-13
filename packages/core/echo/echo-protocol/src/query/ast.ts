@@ -5,7 +5,7 @@
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 
-import { LegacyDXN as DXN, ObjectId } from '@dxos/keys';
+import { EchoId, LegacyDXN as DXN, ObjectId } from '@dxos/keys';
 
 import { ForeignKey } from '../foreign-key';
 
@@ -431,10 +431,11 @@ export const Scope = Schema.Struct({
 
   /**
    * The nested select statemets will select from the given queues.
+   * Accepts either legacy DXN format (`dxn:queue:...`) or EchoId format (`echo://...`).
    *
    * NOTE: Spaces and queues are unioned together if both are specified.
    */
-  queues: Schema.optional(Schema.Array(DXN.Schema)),
+  queues: Schema.optional(Schema.Array(Schema.Union(DXN.Schema, EchoId.Schema))),
 });
 export interface Scope extends Schema.Schema.Type<typeof Scope> {}
 

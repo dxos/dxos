@@ -585,7 +585,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     const typeDXN = EncodedReference.toDXN(typeRef);
-    const staticSchema = target[symbolInternals].database.graph.schemaRegistry.getSchemaByDXN(typeDXN);
+    const staticSchema = target[symbolInternals].database.graph.schemaRegistry.getSchemaByDXN(typeDXN.toString());
     if (staticSchema != null) {
       return staticSchema;
     }

@@ -4,13 +4,13 @@
 
 import { type Queue, Ref, type Space, getSpace } from '@dxos/client/echo';
 import { type Sequence, type SequenceEvent, type SequenceLogger } from '@dxos/conductor';
-import { DXN, Key, Obj } from '@dxos/echo';
+import { Key, Obj } from '@dxos/echo';
 import { InvocationTraceEndEvent, InvocationTraceEventType, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { TraceEvent } from '@dxos/functions-runtime';
 import { InvocationOutcome } from '@dxos/functions-runtime';
 import { type InvocationTraceEvent } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
-import { QueueSubspaceTags } from '@dxos/keys';
+import { LegacyDXN, QueueSubspaceTags } from '@dxos/keys';
 
 export class QueueLogger implements SequenceLogger {
   private _space: Space;
@@ -22,7 +22,7 @@ export class QueueLogger implements SequenceLogger {
     this._space = space;
     let dxn = this._space.properties.invocationTraceQueue?.dxn;
     if (!dxn) {
-      dxn = DXN.fromQueue(QueueSubspaceTags.TRACE, this._space.id, Key.ObjectId.random());
+      dxn = LegacyDXN.fromQueue(QueueSubspaceTags.TRACE, this._space.id, Key.ObjectId.random());
       const newDxn = dxn;
       Obj.change(this._space.properties, (obj) => {
         obj.invocationTraceQueue = Ref.fromDXN(newDxn);
@@ -113,8 +113,8 @@ export class QueueLogger implements SequenceLogger {
     }
   }
 
-  private _getTraceQueueDxn(invocationId: string): DXN {
-    return DXN.fromQueue(QueueSubspaceTags.TRACE, this._space.id, invocationId);
+  private _getTraceQueueDxn(invocationId: string): LegacyDXN {
+    return LegacyDXN.fromQueue(QueueSubspaceTags.TRACE, this._space.id, invocationId);
   }
 
   private _getTraceEventQueue(invocationId: string): Queue<TraceEvent> {

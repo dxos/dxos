@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type DXN } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type MarkdownStreamController } from '@dxos/react-ui-components';
 import { type ContentBlock, type Message } from '@dxos/types';
@@ -24,7 +24,7 @@ export class MessageThreadContext implements Pick<MarkdownStreamController, 'upd
   }
 
   // TODO(burdon): Resolve from hypergraph.
-  getObjectLabel(_id: DXN) {
+  getObjectLabel(_id: DXN.DXN) {
     return 'Object';
   }
 }

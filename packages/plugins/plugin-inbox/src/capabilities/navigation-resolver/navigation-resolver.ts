@@ -7,8 +7,8 @@ import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, getSpaceIdFromPath, getSpacePath, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
-import { Database, Key } from '@dxos/echo';
-import { LegacyDXN as DXN } from '@dxos/keys';
+import { Database, Key, Ref } from '@dxos/echo';
+import { EchoId } from '@dxos/keys';
 import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings/types';
 
 import { meta } from '../../meta';
@@ -30,14 +30,13 @@ export default Capability.makeModule(
           ];
         }
 
-        const dxn = DXN.tryParse(query.dxn.startsWith('@dxn:') ? query.dxn.slice(1) : query.dxn);
+        const dxn = EchoId.tryParse(query.dxn.startsWith('@dxn:') ? query.dxn.slice(1) : query.dxn);
         if (!dxn) {
           return [];
         }
 
-        const { db } = yield* Database.Service;
-        const ref = db.makeRef(dxn);
-        const object = yield* Database.load(ref).pipe(Effect.catchAll(() => Effect.succeed(null)));
+        const ref = Ref.fromDXN(dxn);
+        const object = yield* Database.resolve(ref).pipe(Effect.catchAll(() => Effect.succeed(null)));
         if (!object || !Mailbox.instanceOf(object)) {
           return [];
         }
@@ -58,7 +57,7 @@ export default Capability.makeModule(
       const mailboxesIdx = segments.indexOf(getMailboxesSectionId());
       const mailboxId = mailboxesIdx >= 0 ? segments[mailboxesIdx + 1] : undefined;
       if (spaceId && mailboxId && Key.ObjectId.isValid(mailboxId)) {
-        return Effect.succeed(Option.some(DXN.fromSpaceAndObjectId(spaceId, mailboxId as Key.ObjectId)));
+        return Effect.succeed(Option.some(EchoId.fromSpaceAndObjectId(spaceId, mailboxId as Key.ObjectId)));
       }
       return Effect.succeed(Option.none());
     };

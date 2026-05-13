@@ -9,8 +9,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { CommandConfig, Common, print, spaceLayer, withTypes } from '@dxos/cli-util';
-import { DXN } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
+import { EchoId } from '@dxos/keys';
 import { Trigger } from '@dxos/functions';
 
 import { TriggerId } from './options';
@@ -29,8 +29,8 @@ export const remove = Command.make(
         onNone: () => selectTrigger(),
         onSome: (id) => Effect.succeed(id),
       });
-      const dxn = DXN.fromLocalObjectId(triggerId);
-      const trigger = yield* Database.resolve(dxn, Trigger.Trigger);
+      const dxn = EchoId.fromLocalObjectId(triggerId);
+      const trigger = yield* Database.resolve(Ref.fromDXN(dxn), Trigger.Trigger);
       yield* Database.remove(trigger);
       if (json) {
         yield* Console.log(JSON.stringify({ id: trigger.id, removed: true }, null, 2));

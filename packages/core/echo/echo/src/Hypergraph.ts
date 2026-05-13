@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type LegacyDXN as DXN } from '@dxos/keys';
+import { type EchoId, type LegacyDXN as DXN } from '@dxos/keys';
 
 import type * as Database from './Database';
 import type * as Entity from './Entity';
@@ -25,7 +25,7 @@ export interface RefResolutionContext {
    * Queue that the resolution is happening from.
    * This queue will be searched first, and then the space it belongs to.
    */
-  queue?: DXN;
+  queue?: EchoId.EchoId;
 }
 
 export interface RefResolverOptions {

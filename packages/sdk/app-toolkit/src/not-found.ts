@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Graph, Node } from '@dxos/app-graph';
-import { DXN, Filter, Key, Query } from '@dxos/echo';
+import { Filter, Key, Query } from '@dxos/echo';
+import { EchoId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { expandAttendableId } from '@dxos/react-ui-attention';
 
@@ -21,7 +22,7 @@ export const NOT_FOUND_PATH = `${Node.RootId}/${NOT_FOUND_NODE_ID}`;
  * Callback to check if an object exists on a remote service (e.g., edge).
  * Takes a DXN identifying the object. Returns an Effect resolving to true if the object exists remotely.
  */
-export type RemoteExistenceChecker = (dxn: DXN) => Effect.Effect<boolean>;
+export type RemoteExistenceChecker = (echoId: EchoId.EchoId) => Effect.Effect<boolean>;
 
 /**
  * Expand a qualified graph path by expanding each ancestor prefix.
@@ -73,10 +74,10 @@ export const validateNavigationTarget = (params: {
 
   // Node not found locally. Ask path resolvers to identify the DXN for this path.
   return Effect.gen(function* () {
-    const dxn = yield* Effect.reduce(pathResolvers, Option.none<DXN>(), (acc, resolver) =>
+    const dxn = yield* Effect.reduce(pathResolvers, Option.none<EchoId.EchoId>(), (acc, resolver) =>
       Option.isSome(acc)
         ? Effect.succeed(acc)
-        : resolver(subjectId).pipe(Effect.catchAll(() => Effect.succeed(Option.none<DXN>()))),
+        : resolver(subjectId).pipe(Effect.catchAll(() => Effect.succeed(Option.none<EchoId.EchoId>()))),
     );
 
     if (Option.isNone(dxn)) {
@@ -110,14 +111,15 @@ export const validateNavigationTarget = (params: {
 export const createEdgeExistenceChecker = (
   execQuery: (spaceId: Key.SpaceId, body: { query: string; reactivity: number }) => Promise<{ results?: unknown[] }>,
 ): RemoteExistenceChecker => {
-  return (dxn) => {
-    const echoDxn = dxn.asEchoDXN();
-    if (!echoDxn?.spaceId || !echoDxn.echoId) {
+  return (echoId) => {
+    const spaceId = EchoId.getSpaceId(echoId);
+    const objectId = EchoId.getObjectId(echoId);
+    if (!spaceId || !objectId) {
       return Effect.succeed(false);
     }
-    const queryAst = Query.select(Filter.id(echoDxn.echoId)).from({ spaceIds: [echoDxn.spaceId] }).ast;
+    const queryAst = Query.select(Filter.id(objectId)).from({ spaceIds: [spaceId] }).ast;
     return Effect.tryPromise(() =>
-      execQuery(echoDxn.spaceId!, {
+      execQuery(spaceId, {
         query: JSON.stringify(queryAst),
         reactivity: 0,
       }),

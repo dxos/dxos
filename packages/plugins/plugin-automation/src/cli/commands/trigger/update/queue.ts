@@ -12,7 +12,8 @@ import * as Option from 'effect/Option';
 import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
-import { DXN, Database, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
+import { Database, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
+import { EchoId } from '@dxos/keys';
 import { Trigger } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 
@@ -36,8 +37,8 @@ export const queue = Command.make(
         onNone: () => selectTrigger('queue'),
         onSome: (id) => Effect.succeed(id),
       });
-      const dxn = DXN.fromLocalObjectId(triggerId);
-      const trigger = yield* Database.resolve(dxn, Trigger.Trigger);
+      const dxn = EchoId.fromLocalObjectId(triggerId);
+      const trigger = yield* Database.resolve(Ref.fromDXN(dxn), Trigger.Trigger);
       if (trigger.spec?.kind !== 'queue') {
         return yield* Effect.fail(new Error(`Invalid trigger type: ${trigger.spec?.kind}`));
       }
@@ -110,7 +111,7 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
  * Handles updating the queue DXN for a queue trigger.
  * Prompts for confirmation if queue is not provided, then updates the queue if confirmed.
  */
-const updateQueue = Effect.fn(function* (trigger: Trigger.Trigger, queueOption: Option.Option<DXN>) {
+const updateQueue = Effect.fn(function* (trigger: Trigger.Trigger, queueOption: Option.Option<string>) {
   const currentQueue = trigger.spec?.kind === 'queue' ? trigger.spec.queue : undefined;
   const currentQueueStr = currentQueue
     ? typeof currentQueue === 'string'
@@ -128,11 +129,11 @@ const updateQueue = Effect.fn(function* (trigger: Trigger.Trigger, queueOption: 
   if (shouldChangeQueue) {
     const queueDxn = yield* Option.match(queueOption, {
       onNone: () => selectQueue(),
-      onSome: (dxn) => Effect.succeed(dxn.toString()),
+      onSome: (dxn) => Effect.succeed(dxn),
     });
     Obj.change(trigger, (mutableTrigger) => {
       if (mutableTrigger.spec?.kind === 'queue') {
-        mutableTrigger.spec.queue = queueDxn;
+        mutableTrigger.spec.queue = EchoId.parse(queueDxn);
       }
     });
   }

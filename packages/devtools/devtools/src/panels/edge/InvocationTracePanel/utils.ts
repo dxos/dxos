@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type LegacyDXN as DXN } from '@dxos/keys';
-
 export const formatDuration = (duration: number): string => {
   return `${(duration / 1000).toFixed(2)}`;
 };
@@ -13,12 +11,11 @@ export const formatDuration = (duration: number): string => {
  * @param dxn The DXN to extract the UUID from.
  * @returns The UUID part of the DXN, or undefined if the DXN is undefined or invalid.
  */
-export const getUuidFromDxn = (dxn: DXN | string | undefined): string | undefined => {
+export const getUuidFromDxn = (dxn: string | undefined): string | undefined => {
   if (!dxn) {
     return undefined;
   }
 
-  const dxnString = dxn.toString();
-  const dxnParts = dxnString.split(':');
+  const dxnParts = dxn.split(':');
   return dxnParts.at(-1);
 };

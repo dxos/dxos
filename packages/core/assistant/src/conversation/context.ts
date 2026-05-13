@@ -11,7 +11,8 @@ import * as Schema from 'effect/Schema';
 
 import { Blueprint } from '@dxos/blueprints';
 import { Resource } from '@dxos/context';
-import { DXN, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Obj, Query, Ref, Type } from '@dxos/echo';
+import { LegacyDXN } from '@dxos/keys';
 import { type Queue } from '@dxos/echo-db';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
@@ -263,7 +264,7 @@ export class AiContextBinder extends Resource {
         objects.added.forEach((ref) => context.objects.add(ref));
         objects.removed.forEach((ref) => {
           for (const obj of context.objects) {
-            if (DXN.equalsEchoId(obj.dxn, ref.dxn)) {
+            if (LegacyDXN.equalsEchoId(obj.dxn, ref.dxn)) {
               context.objects.delete(obj);
             }
           }

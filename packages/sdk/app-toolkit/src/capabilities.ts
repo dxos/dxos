@@ -13,7 +13,8 @@ import type { GenericToolkit } from '@dxos/ai';
 import { Capability as Capability$ } from '@dxos/app-framework';
 import type { BuilderExtensions, Graph, GraphBuilder } from '@dxos/app-graph';
 import type { Blueprint } from '@dxos/blueprints';
-import type { Database, DXN, Type } from '@dxos/echo';
+import type { Database, Type } from '@dxos/echo';
+import { EchoId } from '@dxos/keys';
 import type { AnchoredTo } from '@dxos/types';
 import type { FileInfo } from './file';
 import type { NodeSerializer } from './graph';
@@ -177,7 +178,7 @@ export namespace AppCapabilities {
   };
 
   export type NavigationQuery = {
-    dxn?: DXN.String;
+    dxn?: string;
   };
 
   /**
@@ -199,7 +200,7 @@ export namespace AppCapabilities {
    * Used to validate navigation targets against remote services (e.g., edge).
    * @category Capability
    */
-  export type NavigationPathResolver = (qualifiedPath: string) => Effect$.Effect<Option.Option<DXN>>;
+  export type NavigationPathResolver = (qualifiedPath: string) => Effect$.Effect<Option.Option<EchoId.EchoId>>;
 
   export const NavigationPathResolver = Capability$.make<NavigationPathResolver>(
     'org.dxos.app-framework.capability.navigation-path-resolver',

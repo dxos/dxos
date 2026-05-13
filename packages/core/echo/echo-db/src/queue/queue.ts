@@ -12,7 +12,7 @@ import { Filter, Query } from '@dxos/echo';
 import { type ObjectJSON, SelfDXNId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
 import { defineHiddenProperty } from '@dxos/echo/internal';
 import { failedInvariant } from '@dxos/invariant';
-import { type LegacyDXN as DXN, type ObjectId, type SpaceId } from '@dxos/keys';
+import { EchoId, type LegacyDXN as DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 
@@ -137,8 +137,8 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   }
 
   // TODO(burdon): Rename to objects.
-  get dxn() {
-    return this._dxn;
+  get dxn(): EchoId.EchoId {
+    return EchoId.fromSpaceAndObjectId(this._spaceId, this._queueId as any);
   }
 
   /**

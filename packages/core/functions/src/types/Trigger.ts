@@ -7,7 +7,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { Annotation, Obj, QueryAST, Ref, Type } from '@dxos/echo';
 import { OptionsAnnotationId, SystemTypeAnnotation } from '@dxos/echo/internal';
-import { LegacyDXN as DXN } from '@dxos/keys';
+import { EchoId } from '@dxos/keys';
 
 /**
  * Type discriminator for TriggerType.
@@ -30,7 +30,7 @@ export const QueueSpec = Schema.Struct({
   kind: Schema.Literal('queue').annotations(kindLiteralAnnotations),
 
   // TODO(dmaretskyi): Rename to `feed` and change to a reference.
-  queue: DXN.Schema,
+  queue: EchoId.Schema,
 });
 export type QueueSpec = Schema.Schema.Type<typeof QueueSpec>;
 

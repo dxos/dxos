@@ -3,7 +3,7 @@
 //
 
 import { type AnyEntity } from '@dxos/echo/internal';
-import { type LegacyDXN as DXN, type SpaceId } from '@dxos/keys';
+import { EchoId, type SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
 import { type QueryService as QueryServiceProto } from '@dxos/protocols/proto/dxos/echo/query';
 import type { DataService as DataServiceProto } from '@dxos/protocols/proto/dxos/echo/service';
@@ -53,16 +53,15 @@ export class ServiceContainer {
     };
   }
 
-  async queryQueue(queue: DXN): Promise<FeedProtocol.QueryResult> {
-    const parts = queue.asQueueDXN();
-    if (!parts) {
-      throw new Error('Invalid queue DXN');
+  async queryQueue(queue: EchoId.EchoId): Promise<FeedProtocol.QueryResult> {
+    const spaceId = EchoId.getSpaceId(queue);
+    const queueId = EchoId.getObjectId(queue);
+    if (!spaceId || !queueId) {
+      throw new Error('Invalid queue EchoId');
     }
-    const { subspaceTag, spaceId, queueId } = parts;
     const result = await this._queueService.queryQueue(this._executionContext, {
       query: {
         spaceId,
-        queuesNamespace: subspaceTag,
         queueIds: [queueId],
       },
     });
@@ -73,14 +72,15 @@ export class ServiceContainer {
     };
   }
 
-  async insertIntoQueue(queue: DXN, objects: AnyEntity[]): Promise<void> {
-    const parts = queue.asQueueDXN();
-    if (!parts) {
-      throw new Error('Invalid queue DXN');
+  async insertIntoQueue(queue: EchoId.EchoId, objects: AnyEntity[]): Promise<void> {
+    const spaceId = EchoId.getSpaceId(queue);
+    const queueId = EchoId.getObjectId(queue);
+    if (!spaceId || !queueId) {
+      throw new Error('Invalid queue EchoId');
     }
-    const { subspaceTag, spaceId, queueId } = parts;
+    // TODO(dmaretskyi): EchoId does not encode the subspaceTag — defaulting to 'data'.
     await this._queueService.insertIntoQueue(this._executionContext, {
-      subspaceTag,
+      subspaceTag: 'data',
       spaceId,
       queueId,
       objects: objects as FeedProtocol.InsertIntoQueueRequest['objects'],

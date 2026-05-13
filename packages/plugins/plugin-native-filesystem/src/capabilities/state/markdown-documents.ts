@@ -8,8 +8,9 @@ import * as Option from 'effect/Option';
 
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { DXN, Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { updateText } from '@dxos/echo-db';
+import { EchoId, LegacyDXN } from '@dxos/keys';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Text } from '@dxos/schema';
@@ -37,7 +38,7 @@ const RESTORE_YIELD_EVERY_N_FILES = 25;
  * `ref.tryLoad()` because objects in linked documents may not be hydrated until async load.
  */
 const resolveTextObjectFromStoredDxn = async (client: Client, dxnStr: string): Promise<Text.Text | undefined> => {
-  const parsed = DXN.tryParse(dxnStr);
+  const parsed = LegacyDXN.tryParse(dxnStr);
   if (!parsed) {
     return undefined;
   }
@@ -339,7 +340,7 @@ export const createMarkdownDocuments = (
           continue;
         }
 
-        const parsedDxn = DXN.tryParse(dxnStr);
+        const parsedDxn = EchoId.tryParse(dxnStr) ?? LegacyDXN.tryParse(dxnStr);
         if (!parsedDxn) {
           continue;
         }

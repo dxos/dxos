@@ -12,7 +12,7 @@ import { getSchemaDXN } from '@dxos/echo/internal';
 import { type DocHandleProxy, ObjectCore, type RepoProxy, migrateDocument } from '@dxos/echo-db';
 import { type DatabaseDirectory, EncodedReference, type ObjectStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { LegacyDXN as DXN } from '@dxos/keys';
+import { EchoId, type ObjectId } from '@dxos/keys';
 import { type MaybePromise } from '@dxos/util';
 
 /*
@@ -109,7 +109,7 @@ export class MigrationBuilder {
   }
 
   createReference(id: string) {
-    return EncodedReference.fromDXN(DXN.fromLocalObjectId(id));
+    return EncodedReference.fromEchoId(EchoId.fromLocalObjectId(id as ObjectId));
   }
 
   deleteObject(id: string): void {

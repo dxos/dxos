@@ -15,6 +15,7 @@ import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
 import { Database, Filter, JsonSchema, Ref } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
+import { EchoId } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
 
 import { Enabled, Input, Queue } from '../options';
@@ -68,7 +69,7 @@ export const queue = Command.make(
         enabled,
         spec: {
           kind: 'queue',
-          queue: queueDxn,
+          queue: EchoId.parse(queueDxn),
         },
         input,
       });

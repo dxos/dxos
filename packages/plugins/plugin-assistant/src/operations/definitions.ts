@@ -8,7 +8,8 @@ import { Capability } from '@dxos/app-framework';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
 import { SpaceSchema } from '@dxos/client/echo';
-import { Collection, Database, DXN, Obj, Ref } from '@dxos/echo';
+import { Collection, Database, Obj, Ref } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
 
 import { meta } from '../meta';

@@ -4,7 +4,7 @@
 
 import { type Entity } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { type LegacyDXN as DXN } from '@dxos/keys';
+import { EchoId } from '@dxos/keys';
 
 import { type Client } from '../client';
 import { type Space } from '../echo';
@@ -16,24 +16,30 @@ import { type Space } from '../echo';
  */
 export const resolveRef = <T extends Entity.Unknown = Entity.Unknown>(
   client: Client,
-  dxn: DXN,
+  dxn: EchoId.EchoId,
   defaultSpace?: Space,
 ): T | undefined => {
-  const echoDxn = dxn?.asEchoDXN();
-  if (echoDxn) {
-    const space = echoDxn.spaceId ? client.spaces.get(echoDxn.spaceId) : defaultSpace;
+  if (!EchoId.isEchoId(dxn)) {
+    return undefined;
+  }
+
+  const spaceId = EchoId.getSpaceId(dxn);
+  const objectId = EchoId.getObjectId(dxn);
+
+  if (objectId && !EchoId.isLocal(dxn)) {
+    const space = spaceId ? client.spaces.get(spaceId) : defaultSpace;
     if (!space) {
       return undefined;
     }
 
-    return space.db.getObjectById(echoDxn.echoId) as T; // TODO(burdon): Type check?
+    return space.db.getObjectById(objectId) as T;
   }
 
-  const queueDxn = dxn?.asQueueDXN();
-  if (queueDxn) {
-    const { spaceId, objectId } = dxn.asQueueDXN()!;
+  if (objectId && spaceId) {
+    // Queue object lookup: use EchoId to identify the queue.
     invariant(objectId, 'objectId missing');
-    const queue = client.spaces.get(spaceId)?.queues.get<T>(dxn);
+    const queueEchoId = EchoId.fromSpaceAndObjectId(spaceId as any, objectId as any);
+    const queue = client.spaces.get(spaceId)?.queues.get<T>(queueEchoId);
     invariant(queue, 'queue missing');
     return queue.objects.find((object) => object.id === objectId);
   }

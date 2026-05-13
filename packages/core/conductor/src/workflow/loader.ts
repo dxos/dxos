@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import { JsonSchema } from '@dxos/echo';
 import { FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { type LegacyDXN as DXN } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
 
 import { type ComputeResolver, GraphExecutor, compileOrThrow } from '../compiler';
@@ -26,7 +25,7 @@ import { Workflow } from './workflow';
 
 export type WorkflowLoaderProps = {
   nodeResolver: (node: ComputeNode) => Promise<Executable>;
-  graphLoader: (graphId: DXN) => Promise<ComputeGraph>;
+  graphLoader: (graphId: string) => Promise<ComputeGraph>;
 };
 
 /**
@@ -34,14 +33,14 @@ export type WorkflowLoaderProps = {
  */
 export class WorkflowLoader {
   private readonly _nodeResolver: (node: ComputeNode) => Promise<Executable>;
-  private readonly _graphLoader: (graphId: DXN) => Promise<ComputeGraph>;
+  private readonly _graphLoader: (graphId: string) => Promise<ComputeGraph>;
 
   constructor(params: WorkflowLoaderProps) {
     this._nodeResolver = params.nodeResolver;
     this._graphLoader = params.graphLoader;
   }
 
-  public async load(graphDxn: DXN): Promise<Workflow> {
+  public async load(graphDxn: string): Promise<Workflow> {
     const graph = new ComputeGraphModel(await this._graphLoader(graphDxn));
     this._validateWorkflowInOut(graph);
 
@@ -73,7 +72,7 @@ export class WorkflowLoader {
           break;
         default: {
           if (node.subgraph) {
-            const graph = new ComputeGraphModel(await this._graphLoader(node.subgraph.dxn));
+            const graph = new ComputeGraphModel(await this._graphLoader(node.subgraph.dxn.toString()));
             executable = await this._compileGraph(node.type, graph, cache);
           } else if (node.type === 'function' || node.function) {
             executable = await this._loadFunction(node, cache);

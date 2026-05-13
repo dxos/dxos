@@ -7,7 +7,7 @@ import { type EditorState, type Extension, RangeSetBuilder, StateEffect, StateFi
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 import { type SyntaxNode } from '@lezer/common';
 
-import { type Database, DXN, Entity } from '@dxos/echo';
+import { type Database, DXN as LegacyDXN, Entity } from '@dxos/echo';
 
 export type PreviewBlock = {
   link: PreviewLinkRef;
@@ -78,7 +78,7 @@ const resolveLabel = (
   dxnStr: string,
   viewRef: { current: EditorView | undefined },
 ): string | undefined => {
-  const dxn = DXN.tryParse(dxnStr);
+  const dxn = LegacyDXN.tryParse(dxnStr);
   if (!dxn) {
     return;
   }

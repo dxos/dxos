@@ -9,7 +9,7 @@ import { Script, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { InvocationOutcome } from '@dxos/functions-runtime';
 import { type InvocationTraceEvent } from '@dxos/functions-runtime';
 import { createInvocationSpans } from '@dxos/functions-runtime';
-import { type LegacyDXN as DXN } from '@dxos/keys';
+import { type EchoId } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
 import { useQuery, useQueue } from '@dxos/react-client/echo';
 
@@ -22,7 +22,7 @@ export const useFunctionNameResolver = ({ db }: { db?: Database.Database }) => {
   const functions = useQuery(db, Filter.type(Operation.PersistentOperation));
 
   return useCallback(
-    (invocationTargetId: DXN | undefined) => {
+    (invocationTargetId: string | undefined) => {
       if (!invocationTargetId) {
         return undefined;
       }
@@ -52,7 +52,7 @@ export const useInvocationTargetsForScript = (target: Obj.Unknown | undefined) =
   }, [functions, target]);
 };
 
-export const useInvocationSpans = ({ queueDxn, target }: { queueDxn?: DXN; target?: Obj.Unknown }) => {
+export const useInvocationSpans = ({ queueDxn, target }: { queueDxn?: EchoId.EchoId; target?: Obj.Unknown }) => {
   const functionsForScript = useInvocationTargetsForScript(target);
   const invocationsQueue = useQueue<InvocationTraceEvent>(queueDxn, {
     pollInterval: 1000,
@@ -69,7 +69,7 @@ export const useInvocationSpans = ({ queueDxn, target }: { queueDxn?: DXN; targe
         return uuidPart ? functionsForScript?.has(uuidPart) : false;
       });
     } else if (target) {
-      return invocationSpans.filter((span) => span.invocationTarget?.dxn.toString() === Obj.getDXN(target).toString());
+      return invocationSpans.filter((span) => span.invocationTarget?.dxn === Obj.getDXN(target));
     }
     return invocationSpans;
   }, [functionsForScript, target, invocationSpans]);

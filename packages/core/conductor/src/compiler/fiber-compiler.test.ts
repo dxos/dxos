@@ -15,7 +15,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { logCustomEvent } from '@dxos/functions';
 import { CredentialsService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
-import { LegacyDXN as DXN } from '@dxos/keys';
+import { type URI } from '@dxos/keys';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { TestRuntime } from '../testing';
@@ -71,7 +71,7 @@ describe('Graph as a fiber runtime', () => {
         const runtime = new TestRuntime()
           .registerNode('dxn:test:sum', sum)
           .registerGraph('dxn:test:g1', g1())
-          .registerGraph('dxn:test:g2', g2a(DXN.parse('dxn:test:g1')));
+          .registerGraph('dxn:test:g2', g2a('dxn:test:g1' as URI.URI));
 
         const result = yield* runtime
           .runGraph('dxn:test:g2', ValueBag.make({ a: 1, b: 2, c: 3 }))
@@ -92,7 +92,7 @@ describe('Graph as a fiber runtime', () => {
         runtime
           .registerNode('dxn:test:sum', sum)
           .registerGraph('dxn:test:g1', g1())
-          .registerGraph('dxn:test:g2', g2b(runtime.getGraph(DXN.parse('dxn:test:g1')).root));
+          .registerGraph('dxn:test:g2', g2b(runtime.getGraph('dxn:test:g1').root));
 
         const result = yield* runtime
           .runGraph('dxn:test:g2', ValueBag.make({ a: 1, b: 2, c: 3 }))
@@ -183,12 +183,12 @@ const g1 = () => {
   return model;
 };
 
-const g2a = (g1: DXN) => {
+const g2a = (g1: URI.URI) => {
   const model = ComputeGraphModel.create({ id: 'dxn:test:g2' });
   model.builder
     .createNode({ id: 'I', type: NODE_INPUT })
-    .createNode({ id: 'X', type: g1.toString(), subgraph: Ref.fromDXN(g1) })
-    .createNode({ id: 'Y', type: g1.toString(), subgraph: Ref.fromDXN(g1) })
+    .createNode({ id: 'X', type: g1, subgraph: Ref.fromDXN(g1) })
+    .createNode({ id: 'Y', type: g1, subgraph: Ref.fromDXN(g1) })
     .createNode({ id: 'O', type: NODE_OUTPUT })
     .createEdge({ node: 'I', property: 'a' }, { node: 'X', property: 'number1' })
     .createEdge({ node: 'I', property: 'b' }, { node: 'X', property: 'number2' })

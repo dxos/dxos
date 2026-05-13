@@ -4,7 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Obj, Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
+import { EchoId } from '@dxos/keys';
 
 // TODO(wittjosiah): Review this type.
 //   - Should be discriminated union.
@@ -22,7 +23,7 @@ export const EmailEvent = Schema.Struct({
 export type EmailEvent = Schema.Schema.Type<typeof EmailEvent>;
 
 export const QueueEvent = Schema.Struct({
-  queue: DXN.Schema,
+  queue: EchoId.Schema,
   item: Schema.Any,
   cursor: Schema.String,
 });

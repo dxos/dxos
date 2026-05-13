@@ -13,8 +13,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { ComputeEventLogger, CredentialsService, TracingService } from '@dxos/functions';
 import { FunctionInvocationServiceLayerTest, TestDatabaseLayer } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
-import { ObjectId } from '@dxos/keys';
-import { LegacyDXN as DXN } from '@dxos/keys';
+import { EchoId, ObjectId } from '@dxos/keys';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import {
@@ -187,16 +186,16 @@ describe('workflow', () => {
     outputPath: string | null,
     map: { [inputId: string]: Transform },
   ): TestWorkflowGraph => {
-    const graphDxn = DXN.fromLocalObjectId(ObjectId.random());
-    const model = ComputeGraphModel.create({ id: graphDxn.toString() });
-    const compute: [DXN, Transform][] = [];
+    const graphDxn = EchoId.fromLocalObjectId(ObjectId.random());
+    const model = ComputeGraphModel.create({ id: graphDxn });
+    const compute: [EchoId.EchoId, Transform][] = [];
     for (const [inputId, transform] of Object.entries(map)) {
-      const computeNodeDxn = DXN.fromLocalObjectId(ObjectId.random());
+      const computeNodeDxn = EchoId.fromLocalObjectId(ObjectId.random());
       const transformId = ObjectId.random();
       compute.push([computeNodeDxn, transform]);
       addTransform(
         model,
-        { id: transformId, type: computeNodeDxn.toString() },
+        { id: transformId, type: computeNodeDxn },
         { inputId, withOutput: inputId === outputPath },
       );
     }
@@ -204,18 +203,18 @@ describe('workflow', () => {
     return { graphDxn, graph, compute };
   };
 
-  const createSubgraphTransform = (subgraphDxn: DXN): TestWorkflowGraph => {
-    const graphDxn = DXN.fromLocalObjectId(ObjectId.random());
-    const model = ComputeGraphModel.create({ id: graphDxn.toString() });
+  const createSubgraphTransform = (subgraphDxn: EchoId.EchoId): TestWorkflowGraph => {
+    const graphDxn = EchoId.fromLocalObjectId(ObjectId.random());
+    const model = ComputeGraphModel.create({ id: graphDxn });
     const transformId = ObjectId.random();
-    addTransform(model, { id: transformId, type: subgraphDxn.toString(), subgraph: Ref.fromDXN(subgraphDxn) });
+    addTransform(model, { id: transformId, type: subgraphDxn, subgraph: Ref.fromDXN(subgraphDxn) });
     const graph = Obj.make(ComputeGraph, { graph: model.graph });
     return { graphDxn, graph, compute: [] };
   };
 
   const createFunctionTransform = (functionRef: Ref.Ref<any> | null): TestWorkflowGraph => {
-    const graphDxn = DXN.fromLocalObjectId(ObjectId.random());
-    const model = ComputeGraphModel.create({ id: graphDxn.toString() });
+    const graphDxn = EchoId.fromLocalObjectId(ObjectId.random());
+    const model = ComputeGraphModel.create({ id: graphDxn });
     const transformId = ObjectId.random();
     addTransform(model, { id: transformId, type: 'function', function: functionRef ?? undefined });
     const graph = Obj.make(ComputeGraph, { graph: model.graph });
@@ -241,15 +240,15 @@ describe('workflow', () => {
   const createResolver = (...params: TestWorkflowGraph[]): WorkflowLoaderProps => {
     return {
       nodeResolver: async (node: ComputeNode) => {
-        const transform = params.flatMap((v) => v.compute).find((v) => v[0].toString() === node.type)?.[1];
+        const transform = params.flatMap((v) => v.compute).find((v) => v[0] === node.type)?.[1];
         invariant(transform, 'Transform not found.');
         return {
           meta: { input: AnyInput, output: AnyOutput },
           exec: synchronizedComputeFunction(({ input }) => Effect.succeed({ result: transform(input) })),
         } satisfies Executable;
       },
-      graphLoader: async (graphDxn: DXN) => {
-        const result = params.find((v) => v.graphDxn.toString() === graphDxn.toString())?.graph;
+      graphLoader: async (graphDxn: string) => {
+        const result = params.find((v) => v.graphDxn === graphDxn)?.graph;
         invariant(result, 'Graph not found.');
         return result;
       },
@@ -260,7 +259,7 @@ describe('workflow', () => {
 type Transform = (input: any) => any;
 
 type TestWorkflowGraph = {
-  graphDxn: DXN;
+  graphDxn: EchoId.EchoId;
   graph: ComputeGraph;
-  compute: [DXN, Transform][];
+  compute: [EchoId.EchoId, Transform][];
 };

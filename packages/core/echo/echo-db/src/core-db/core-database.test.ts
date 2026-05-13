@@ -10,8 +10,7 @@ import { type Entity, Filter, Obj, Ref } from '@dxos/echo';
 import { Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
-import { ObjectId } from '@dxos/keys';
-import { LegacyDXN as DXN, PublicKey } from '@dxos/keys';
+import { LegacyDXN, ObjectId, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
@@ -355,7 +354,7 @@ describe('CoreDatabase', () => {
       await graph.schemaRegistry.register([TestSchema.Person]);
       const contact = db.add(Obj.make(TestSchema.Person, { name: 'Foo' }));
       await db.coreDatabase.atomicReplaceObject(contact.id, {
-        type: DXN.parse('dxn:type:com.example.type.task:0.1.0'),
+        type: LegacyDXN.parse('dxn:type:com.example.type.task:0.1.0'),
         data: { name: 'Bar' },
       });
 
@@ -415,7 +414,7 @@ const addObjectToDoc = <T extends { id: string }>(
     newDoc.objects[object.id] = {
       data,
       system: {
-        type: { '/': DXN.fromTypenameAndVersion(typename, version).toString() },
+        type: { '/': LegacyDXN.fromTypenameAndVersion(typename, version).toString() },
       },
     };
   });

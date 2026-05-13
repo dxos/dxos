@@ -16,7 +16,7 @@ import { Event } from '@dxos/async';
 import { type CustomInspectFunction, inspectCustom } from '@dxos/debug';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { LegacyDXN as DXN, ObjectId } from '@dxos/keys';
+import { EchoId, LegacyDXN as DXN, LOCAL_SPACE_TAG, ObjectId, type URI } from '@dxos/keys';
 
 import * as Database from '../../Database';
 import { ReferenceAnnotationId, getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation } from '../Annotation';
@@ -111,9 +111,9 @@ export interface RefFn {
   make: <T extends AnyEntity>(object: T) => Ref<T>;
 
   /**
-   * Constructs a reference that points to the object specified by the provided DXN.
+   * Constructs a reference that points to the object specified by the provided DXN or URI.
    */
-  fromDXN: (dxn: DXN) => Ref<any>;
+  fromDXN: (dxn: DXN | URI.URI) => Ref<any>;
 }
 
 /**
@@ -227,7 +227,26 @@ Ref.make = <T extends AnyProperties>(obj: T): Ref<T> => {
   return new RefImpl(dxn, obj);
 };
 
-Ref.fromDXN = (dxn: DXN): Ref<any> => {
+Ref.fromDXN = (dxn: DXN | URI.URI): Ref<any> => {
+  if (typeof dxn === 'string') {
+    // Handle new URI string format (EchoId or DXN string).
+    const legacyDxn = DXN.tryParse(dxn);
+    if (legacyDxn) {
+      return new RefImpl(legacyDxn);
+    }
+    const echoId = EchoId.tryParse(dxn);
+    if (echoId) {
+      const spaceId = EchoId.getSpaceId(echoId);
+      const objectId = EchoId.getObjectId(echoId);
+      if (spaceId && objectId) {
+        return new RefImpl(DXN.fromSpaceAndObjectId(spaceId, objectId));
+      }
+      if (objectId) {
+        return new RefImpl(new DXN(DXN.kind.ECHO, [LOCAL_SPACE_TAG, objectId]));
+      }
+    }
+    throw new Error(`Invalid DXN/URI: ${dxn}`);
+  }
   assertArgument(dxn instanceof DXN, 'dxn', 'Expected DXN');
   return new RefImpl(dxn);
 };

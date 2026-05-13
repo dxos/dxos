@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { LegacyDXN as DXN } from '@dxos/keys';
+import { LegacyDXN as DXN, QueueSubspaceTags, type SpaceId, type ObjectId } from '@dxos/keys';
 
 import type * as Entity from './Entity';
 import type * as Filter from './Filter';
@@ -106,7 +106,7 @@ export const getQueueDxn = (feed: Feed): DXN | undefined => {
   if (!self || !self.spaceId) {
     return undefined;
   }
-  return new DXN(DXN.kind.QUEUE, [feed.namespace ?? 'data', self.spaceId, self.echoId]);
+  return DXN.fromQueue(QueueSubspaceTags.DATA, self.spaceId as SpaceId, self.echoId as ObjectId);
 };
 
 //

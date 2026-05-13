@@ -8,6 +8,7 @@ import { assert, describe, test } from 'vitest';
 import { Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { Trigger, type TriggerEvent } from '@dxos/functions';
+import { EchoId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 describe('jsonata', () => {
@@ -51,9 +52,9 @@ describe('jsonata', () => {
   });
 
   describe('evaluates expression with trigger event', () => {
-    const queueDxn = 'dxn:queue:data:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6';
-    const event: TriggerEvent.TriggerEvent = {
-      queue: queueDxn,
+    const queueEchoId = EchoId.parse('dxn:queue:data:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6');
+    const event: TriggerEvent.QueueEvent = {
+      queue: queueEchoId,
       item: {
         name: 'John',
       },
@@ -64,7 +65,7 @@ describe('jsonata', () => {
     const trigger = Trigger.make({
       spec: {
         kind: 'queue',
-        queue: queueDxn,
+        queue: queueEchoId,
       },
       input: {
         nested: {

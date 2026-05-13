@@ -6,8 +6,6 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { createDefectLogger } from '@dxos/functions';
-import { type LegacyDXN as DXN } from '@dxos/keys';
-
 import { type GraphExecutor, compileOrThrow } from '../compiler';
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import {
@@ -26,7 +24,7 @@ import { pickProperty } from '../util';
 // TODO(burdon): Rename.
 export class Workflow {
   constructor(
-    private readonly _dxn: DXN,
+    private readonly _dxn: string,
     private readonly _graph: ComputeGraphModel,
     private readonly _executor: GraphExecutor,
     private readonly _resolvedNodeById: Map<string, Executable>,
@@ -35,7 +33,7 @@ export class Workflow {
   run(input: ValueBag<any>): ComputeResult<ValueBag<any>> {
     const inputNodes = this._graph.nodes.filter((node) => node.type === NODE_INPUT);
     if (inputNodes.length !== 1) {
-      throw new Error(`Ambiguous workflow(${this._dxn.toString()}) entrypoint, use runFrom(inputNodeId, args) method.`);
+      throw new Error(`Ambiguous workflow(${this._dxn}) entrypoint, use runFrom(inputNodeId, args) method.`);
     }
     return this.runFrom(inputNodes[0].id, input);
   }
@@ -55,7 +53,7 @@ export class Workflow {
     }
 
     if (!inputExists) {
-      throw new Error(`No ${inputNodeId} node exists in workflow ${this._dxn.toString()}.`);
+      throw new Error(`No ${inputNodeId} node exists in workflow ${this._dxn}.`);
     }
 
     const allAffectedNodes = executor.getAllDependantNodes(inputNodeId);
@@ -113,12 +111,12 @@ export class Workflow {
   async asExecutable(): Promise<Executable> {
     const inputNodes = this._graph.nodes.filter((node) => node.type === NODE_INPUT);
     if (inputNodes.length !== 1) {
-      throw new Error(`Workflow(${this._dxn.toString()}) can't be an executable: no unique input node.`);
+      throw new Error(`Workflow(${this._dxn}) can't be an executable: no unique input node.`);
     }
 
     const outputNodes = this._graph.nodes.filter((node) => node.type === NODE_OUTPUT);
     if (outputNodes.length !== 1) {
-      throw new Error(`Workflow(${this._dxn.toString()}) can't be an executable: no unique output node.`);
+      throw new Error(`Workflow(${this._dxn}) can't be an executable: no unique output node.`);
     }
 
     return compileOrThrow({
@@ -138,7 +136,7 @@ export class Workflow {
   private _requireResolved(nodeId: string): Executable<Schema.Schema.AnyNoContext, Schema.Schema.AnyNoContext> {
     const resolved = this._resolvedNodeById.get(nodeId);
     if (!resolved) {
-      throw new Error(`Node ${nodeId} was not resolved in ${this._dxn.toString()}.`);
+      throw new Error(`Node ${nodeId} was not resolved in ${this._dxn}.`);
     }
     return resolved;
   }

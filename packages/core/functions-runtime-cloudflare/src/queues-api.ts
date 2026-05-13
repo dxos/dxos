@@ -3,7 +3,7 @@
 //
 
 import { type AnyEntity } from '@dxos/echo/internal';
-import type { LegacyDXN as DXN, SpaceId } from '@dxos/keys';
+import { type EchoId, type SpaceId } from '@dxos/keys';
 import { type FeedProtocol } from '@dxos/protocols';
 
 import type { ServiceContainer } from './internal';
@@ -14,8 +14,8 @@ import type { ServiceContainer } from './internal';
  * @deprecated
  */
 export interface QueuesAPI {
-  queryQueue(queue: DXN, options?: {}): Promise<FeedProtocol.QueryResult>;
-  insertIntoQueue(queue: DXN, objects: AnyEntity[]): Promise<void>;
+  queryQueue(queue: EchoId.EchoId, options?: {}): Promise<FeedProtocol.QueryResult>;
+  insertIntoQueue(queue: EchoId.EchoId, objects: AnyEntity[]): Promise<void>;
 }
 
 /**
@@ -27,11 +27,11 @@ export class QueuesAPIImpl implements QueuesAPI {
     private readonly _spaceId: SpaceId,
   ) {}
 
-  queryQueue(queue: DXN, options?: {}): Promise<FeedProtocol.QueryResult> {
+  queryQueue(queue: EchoId.EchoId, options?: {}): Promise<FeedProtocol.QueryResult> {
     return this._serviceContainer.queryQueue(queue);
   }
 
-  insertIntoQueue(queue: DXN, objects: AnyEntity[]): Promise<void> {
+  insertIntoQueue(queue: EchoId.EchoId, objects: AnyEntity[]): Promise<void> {
     // TODO(dmaretskyi): Ugly.
     return this._serviceContainer.insertIntoQueue(queue, JSON.parse(JSON.stringify(objects)));
   }

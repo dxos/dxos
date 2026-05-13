@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import { LegacyDXN as DXN } from '@dxos/keys';
-
 /**
  * Patterns for extracting DXN references from tool call params/results.
  *
@@ -28,8 +26,8 @@ const AT_DXN_PATTERN = /@(dxn:[a-zA-Z0-9]+(?::[a-zA-Z0-9@_-]+)+)/g;
 /**
  * Extracts all DXN references from a string.
  */
-export const extractDxnsFromString = (text: string): DXN[] => {
-  const dxns: DXN[] = [];
+export const extractDxnsFromString = (text: string): string[] => {
+  const dxns: string[] = [];
   const seen = new Set<string>();
 
   // Match @dxn: prefixed references.
@@ -37,11 +35,8 @@ export const extractDxnsFromString = (text: string): DXN[] => {
   while ((match = AT_DXN_PATTERN.exec(text)) !== null) {
     const dxnStr = match[1];
     if (!seen.has(dxnStr)) {
-      const dxn = DXN.tryParse(dxnStr);
-      if (dxn) {
-        dxns.push(dxn);
-        seen.add(dxnStr);
-      }
+      dxns.push(dxnStr);
+      seen.add(dxnStr);
     }
   }
 
@@ -49,11 +44,8 @@ export const extractDxnsFromString = (text: string): DXN[] => {
   while ((match = DXN_PATTERN.exec(text)) !== null) {
     const dxnStr = match[0];
     if (!seen.has(dxnStr)) {
-      const dxn = DXN.tryParse(dxnStr);
-      if (dxn) {
-        dxns.push(dxn);
-        seen.add(dxnStr);
-      }
+      dxns.push(dxnStr);
+      seen.add(dxnStr);
     }
   }
 
@@ -64,17 +56,14 @@ export const extractDxnsFromString = (text: string): DXN[] => {
  * Extracts DXN references from a JSON object.
  * Handles IPLD-style references `{ "/": "dxn:..." }` and `{ "@dxn": "dxn:..." }`.
  */
-export const extractDxnsFromObject = (obj: unknown): DXN[] => {
-  const dxns: DXN[] = [];
+export const extractDxnsFromObject = (obj: unknown): string[] => {
+  const dxns: string[] = [];
   const seen = new Set<string>();
 
   const addDxn = (dxnStr: string) => {
     if (!seen.has(dxnStr)) {
-      const dxn = DXN.tryParse(dxnStr);
-      if (dxn) {
-        dxns.push(dxn);
-        seen.add(dxnStr);
-      }
+      dxns.push(dxnStr);
+      seen.add(dxnStr);
     }
   };
 
@@ -93,7 +82,7 @@ export const extractDxnsFromObject = (obj: unknown): DXN[] => {
       // Also extract DXNs from within the string.
       const extracted = extractDxnsFromString(value);
       for (const dxn of extracted) {
-        addDxn(dxn.toString());
+        addDxn(dxn);
       }
       return;
     }
@@ -146,7 +135,7 @@ export const extractDxnsFromObject = (obj: unknown): DXN[] => {
 /**
  * Extracts the first DXN from a tool call input string (JSON).
  */
-export const extractFirstDxnFromToolInput = (input: string): DXN | undefined => {
+export const extractFirstDxnFromToolInput = (input: string): string | undefined => {
   try {
     const parsed = JSON.parse(input);
     const dxns = extractDxnsFromObject(parsed);
@@ -161,7 +150,7 @@ export const extractFirstDxnFromToolInput = (input: string): DXN | undefined => 
 /**
  * Extracts the first DXN from a tool result string (JSON).
  */
-export const extractFirstDxnFromToolResult = (result: string | undefined): DXN | undefined => {
+export const extractFirstDxnFromToolResult = (result: string | undefined): string | undefined => {
   if (!result) {
     return undefined;
   }

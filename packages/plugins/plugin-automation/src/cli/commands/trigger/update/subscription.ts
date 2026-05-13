@@ -13,7 +13,8 @@ import * as Option from 'effect/Option';
 import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
-import { DXN, Database, Filter, JsonSchema, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Filter, JsonSchema, Obj, Query, Ref } from '@dxos/echo';
+import { EchoId, LegacyDXN } from '@dxos/keys';
 import { Trigger } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
 
@@ -40,8 +41,8 @@ export const subscription = Command.make(
         onNone: () => selectTrigger('subscription'),
         onSome: (id) => Effect.succeed(id),
       });
-      const dxn = DXN.fromLocalObjectId(triggerId);
-      const trigger = yield* Database.resolve(dxn, Trigger.Trigger);
+      const dxn = EchoId.fromLocalObjectId(triggerId);
+      const trigger = yield* Database.resolve(Ref.fromDXN(dxn), Trigger.Trigger);
       if (trigger.spec?.kind !== 'subscription') {
         return yield* Effect.fail(new Error(`Invalid trigger type: ${trigger.spec?.kind}`));
       }
@@ -79,7 +80,7 @@ const extractCurrentTypename = (spec: Trigger.SubscriptionSpec | undefined): Opt
         Match.withReturnType<Option.Option<string>>(),
         Match.when({ type: 'object' }, (f) =>
           Option.fromNullable(f.typename).pipe(
-            Option.flatMap((dxn) => Option.fromNullable(DXN.tryParse(dxn))),
+            Option.flatMap((dxn) => Option.fromNullable(LegacyDXN.tryParse(dxn))),
             Option.flatMap((dxn) => Option.fromNullable(dxn.asTypeDXN()?.type)),
           ),
         ),

@@ -3,7 +3,7 @@
 //
 
 import { createSystemPrompt } from '@dxos/assistant';
-import { LegacyDXN as DXN, ObjectId, SpaceId } from '@dxos/keys';
+import { EchoId, ObjectId, SpaceId } from '@dxos/keys';
 import { type Dimension, type Point } from '@dxos/react-ui-canvas';
 import { CanvasGraphModel, createNote, pointMultiply, pointsToRect, rectToPoints } from '@dxos/react-ui-canvas-editor';
 
@@ -236,7 +236,7 @@ export const createGptCircuit = (options: {
     if (options.history) {
       const queue = model.createNode(
         createConstant({
-          value: new DXN(DXN.kind.QUEUE, ['data', SpaceId.random(), ObjectId.random()]).toString(),
+          value: EchoId.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random()),
           ...position({ x: -18, y: 5, width: 8, height: 6 }),
         }),
       );

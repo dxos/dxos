@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import type { Entity } from '@dxos/echo';
 import type { Queue, QueueAPI, QueueFactory } from '@dxos/echo-db';
-import type { LegacyDXN as DXN, QueueSubspaceTag } from '@dxos/keys';
+import { EchoId, type QueueSubspaceTag } from '@dxos/keys';
 
 /**
  * Gives access to all queues.
@@ -54,7 +54,7 @@ export class QueueService extends Context.Tag('@dxos/functions/QueueService')<
    * Gets a queue by its DXN.
    */
   static getQueue = <T extends Entity.Unknown = Entity.Unknown>(
-    dxn: DXN,
+    dxn: EchoId.EchoId,
   ): Effect.Effect<Queue<T>, never, QueueService> => QueueService.pipe(Effect.map(({ queues }) => queues.get<T>(dxn)));
 
   /**

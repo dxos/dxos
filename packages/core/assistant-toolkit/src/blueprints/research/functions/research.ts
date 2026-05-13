@@ -15,7 +15,8 @@ import { AiService, ConsolePrinter } from '@dxos/ai';
 import { GenericToolkit } from '@dxos/ai';
 import { AiSession, GenerationObserver, ToolExecutionServices, createToolkit } from '@dxos/assistant';
 import { Template } from '@dxos/blueprints';
-import { type DXN, Entity, Obj } from '@dxos/echo';
+import { Entity, Obj } from '@dxos/echo';
+import { type LegacyDXN } from '@dxos/keys';
 import { Database } from '@dxos/echo';
 import { FunctionInvocationService, TracingService } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
@@ -62,7 +63,7 @@ export default Research.pipe(
         let toolkit: Toolkit.Any = NativeWebSearch;
         let handlers: Layer.Layer<any, any> = Layer.empty as any;
 
-        const objectDXNs: DXN[] = [];
+        const objectDXNs: LegacyDXN[] = [];
         if (entityExtraction) {
           const GraphWriterToolkit = makeGraphWriterToolkit({ schema: ResearchDataTypes });
           const GraphWriterHandler = makeGraphWriterHandler(GraphWriterToolkit, {

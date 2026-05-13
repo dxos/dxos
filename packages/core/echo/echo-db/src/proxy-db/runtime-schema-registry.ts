@@ -7,8 +7,9 @@ import type * as Types from 'effect/Types';
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
-import { type DXN, type QueryResult, type SchemaRegistry, Type } from '@dxos/echo';
+import { type QueryResult, type SchemaRegistry, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { coerceArray, compositeKey, defaultMap } from '@dxos/util';
 
@@ -98,13 +99,14 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
   }
 
   // TODO(wittjosiah): Not a part of SchemaRegistry interface, remove?
-  getSchemaByDXN(dxn: DXN): Type.AnyEntity | undefined {
-    const components = dxn.asTypeDXN();
-    if (!components) {
+  getSchemaByDXN(rawDxn: string): Type.AnyEntity | undefined {
+    const dxn = DXN.tryParse(rawDxn);
+    if (!dxn) {
       return undefined;
     }
 
-    const { type, version } = components;
+    const type = DXN.getNsid(dxn);
+    const version = DXN.getVersion(dxn);
     const allSchemas = this._registry.get(type) ?? [];
     if (version) {
       return allSchemas.find((s) => Type.getVersion(s) === version);

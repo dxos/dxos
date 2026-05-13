@@ -5,9 +5,8 @@
 import { useEffect, useMemo, useRef } from 'react';
 
 import { type Queue } from '@dxos/client/echo';
-import { raise } from '@dxos/debug';
 import { type Entity } from '@dxos/echo';
-import { type LegacyDXN as DXN } from '@dxos/keys';
+import { EchoId } from '@dxos/keys';
 
 import { useClient } from '../client';
 
@@ -26,20 +25,23 @@ export type UseQueueOptions = {
 // TODO(dmaretskyi): Consider passing the space into the hook to support queue DXNs without space id.
 // TODO(ZaymonFC): If queue is unchanged returned object should be refferentially stable on poll.
 export const useQueue = <T extends Entity.Unknown>(
-  queueDxn?: DXN,
+  queueEchoId?: EchoId.EchoId,
   options: UseQueueOptions = {},
 ): Queue<T> | undefined => {
   const client = useClient();
   const mountedRef = useRef(true);
 
   const queue = useMemo<Queue<T> | undefined>(() => {
-    if (!queueDxn) {
+    if (!queueEchoId) {
       return undefined;
     }
 
-    const { spaceId } = queueDxn.asQueueDXN() ?? raise(new TypeError('Invalid queue DXN'));
-    return client.spaces.get(spaceId)?.queues.get<T>(queueDxn);
-  }, [client, queueDxn?.toString()]);
+    const spaceId = EchoId.getSpaceId(queueEchoId);
+    if (!spaceId) {
+      return undefined;
+    }
+    return client.spaces.get(spaceId)?.queues.get<T>(queueEchoId);
+  }, [client, queueEchoId]);
 
   useEffect(() => {
     void queue?.refresh();

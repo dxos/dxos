@@ -24,7 +24,7 @@ import {
 import { Filter, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
-import { LegacyDXN as DXN, PublicKey } from '@dxos/keys';
+import { EchoId, LegacyDXN as DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';
@@ -532,7 +532,8 @@ describe('Query', () => {
       expect(obj).toBeDefined();
       expect(obj.id).toEqual(task.id);
       expect(obj.title).toEqual('Queue type selector task');
-      expect(Obj.getDXN(obj)?.toString().startsWith(queue.dxn.toString())).toBe(true);
+      const queueId = EchoId.getObjectId(queue.dxn)!;
+      expect(Obj.getDXN(obj)?.toString()).toContain(queueId);
     });
 
     test('query options with 2 spaces and 2 queues', async () => {
@@ -1875,7 +1876,8 @@ describe('Query', () => {
         )
         .first();
       expect(obj).toBeDefined();
-      expect(Obj.getDXN(obj)?.toString().startsWith(queue.dxn.toString())).toBe(true);
+      const objQueueId = EchoId.getObjectId(queue.dxn)!;
+      expect(Obj.getDXN(obj)?.toString()).toContain(objQueueId);
       expect(Obj.getTypename(obj)).toBe(TestSchema.Task.typename);
       expect(Obj.getSchema(obj)).toEqual(TestSchema.Task);
       expect(obj.id).toEqual(task.id);

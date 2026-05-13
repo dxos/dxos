@@ -11,7 +11,7 @@ import { GenericToolkit } from '@dxos/ai';
 import { AiSession, ToolExecutionServices } from '@dxos/assistant';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { FunctionInvocationService } from '@dxos/functions';
-import { type LegacyDXN as DXN } from '@dxos/keys';
+import { type EchoId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { type Actor, LegacyOrganization, Organization, Person } from '@dxos/types';
@@ -30,7 +30,7 @@ export default EntityExtraction.pipe(
         let organization: Organization.Organization | null = null;
 
         if (contact && !contact.organization) {
-          const created: DXN[] = [];
+          const created: EchoId.EchoId[] = [];
           const GraphWriterToolkit = makeGraphWriterToolkit({
             schema: [LegacyOrganization],
           }).pipe();

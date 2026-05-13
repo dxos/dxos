@@ -8,7 +8,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { QueryAST } from '@dxos/echo';
 import { Format, TypeEnum } from '@dxos/echo/internal';
 import { isDiscriminatedUnion, isTupleType, visit } from '@dxos/effect';
-import { LegacyDXN as DXN } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 
 /**
  * Get the base type; e.g., traverse through refinements.
@@ -133,12 +133,12 @@ export const getTypenameFromQuery = (query: QueryAST.Query | undefined): string 
         return;
       }
 
-      const dxn = DXN.tryParse(node.filter.typename)?.asTypeDXN();
+      const dxn = DXN.tryParse(node.filter.typename);
       if (!dxn) {
         return;
       }
 
-      typename = dxn.type;
+      typename = DXN.getNsid(dxn);
     });
 
   return typename;

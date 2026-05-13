@@ -9,7 +9,6 @@ import { raise } from '@dxos/debug';
 import { ComputeEventLogger } from '@dxos/functions';
 import { type FunctionServices } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { LegacyDXN as DXN } from '@dxos/keys';
 
 import { GraphExecutor } from '../compiler';
 import {
@@ -29,7 +28,7 @@ export class TestRuntime {
   private readonly _nodes = new Map<string, Executable>();
 
   private readonly _workflowLoader = new WorkflowLoader({
-    graphLoader: async (graphDxn: DXN) => this.getGraph(graphDxn).root,
+    graphLoader: async (graphDxn: string) => this.getGraph(graphDxn).root,
     nodeResolver: async (node: ComputeNode) => this._nodes.get(node.type!)!,
   });
 
@@ -41,8 +40,8 @@ export class TestRuntime {
     return this._nodes;
   }
 
-  getGraph(graphDxn: DXN): ComputeGraphModel {
-    const graph = this._graphs.get(graphDxn.toString());
+  getGraph(graphDxn: string): ComputeGraphModel {
+    const graph = this._graphs.get(graphDxn);
     invariant(graph, `Graph not found: ${graphDxn}`);
     return graph;
   }
@@ -63,7 +62,7 @@ export class TestRuntime {
     input: ValueBag<any>,
   ): Effect.Effect<ValueBag<T>, ConductorError, FunctionServices | Scope.Scope> {
     return Effect.gen(this, function* () {
-      const program = yield* Effect.promise(() => this._workflowLoader.load(DXN.parse(graphDxn)));
+      const program = yield* Effect.promise(() => this._workflowLoader.load(graphDxn));
       return yield* program.run(input);
     }).pipe(Effect.withSpan('compute-graph'), Effect.provide(ComputeEventLogger.layerFromTracing));
   }
@@ -76,7 +75,7 @@ export class TestRuntime {
     input: ValueBag<any>,
   ): Effect.Effect<Record<string, ValueBag<any>>, ConductorError, FunctionServices | Scope.Scope> {
     return Effect.gen(this, function* () {
-      const workflow = yield* Effect.promise(() => this._workflowLoader.load(DXN.parse(graphDxn)));
+      const workflow = yield* Effect.promise(() => this._workflowLoader.load(graphDxn));
       const executor = new GraphExecutor({
         computeNodeResolver: async (node: ComputeNode) => workflow.getResolvedNode(node.id)!,
       });

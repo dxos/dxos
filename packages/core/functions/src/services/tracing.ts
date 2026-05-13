@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AgentStatus } from '@dxos/ai';
-import { type DXN, Obj, Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
@@ -36,7 +36,7 @@ export class TracingService extends Context.Tag('@dxos/functions/TracingService'
       target,
     }: {
       payload: TracingService.FunctionInvocationPayload;
-      target?: DXN;
+      target?: string;
     }): Effect.Effect<TracingService.InvocationTraceData>;
 
     traceInvocationEnd({
@@ -145,7 +145,7 @@ export namespace TracingService {
    */
   export interface InvocationTraceData {
     invocationId: ObjectId;
-    invocationTraceQueue?: DXN.String;
+    invocationTraceQueue?: string;
   }
 
   /**

@@ -21,7 +21,7 @@ import {
 import { type RuntimeProvider, runAndForwardErrors, unwrapExit } from '@dxos/effect';
 import { EscapedPropPath, type IndexEngine, type ObjectMeta, type ReverseRef } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
-import { LegacyDXN as DXN, type ObjectId, type SpaceId } from '@dxos/keys';
+import { EchoId, LegacyDXN as DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
 import { compositeKey, getDeep, isNonNullable } from '@dxos/util';
@@ -399,7 +399,7 @@ export class QueryExecutor extends Resource {
     workingSet = [...workingSet];
 
     const spaces = (step.scope.spaceIds ?? []) as SpaceId[];
-    const queues = (step.scope.queues ?? []) as DXN.String[];
+    const queues = (step.scope.queues ?? []) as string[];
     const allQueuesFromSpaces = step.scope.allQueuesFromSpaces ?? false;
 
     const trace: ExecutionTrace = {
@@ -438,8 +438,13 @@ export class QueryExecutor extends Resource {
         const items = await Promise.all(
           step.selector.objectIds.map((id) => {
             if (queues.length > 0) {
-              const { spaceId } = DXN.parse(queues[0]).asQueueDXN()!;
-              return this._loadFromDXN(DXN.parse(queues[0]).extend([id]), { sourceSpaceId: spaceId });
+              const spaceId = extractSpaceIdFromQueue(queues[0]);
+              const queueId = extractQueueIds([queues[0]])?.[0];
+              if (spaceId && queueId) {
+                const queueDxn = DXN.fromQueue('data', spaceId, queueId);
+                return this._loadFromDXN(queueDxn.extend([id]), { sourceSpaceId: spaceId });
+              }
+              return null;
             } else if (spaces.length > 0) {
               return this._loadFromDXN(DXN.fromLocalObjectId(id), { sourceSpaceId: spaces[0] });
             } else {
@@ -602,8 +607,9 @@ export class QueryExecutor extends Resource {
               return true;
             }
             if (item.queueId) {
-              return queues.some((dxn) => {
-                const { queueId, spaceId } = DXN.parse(dxn).asQueueDXN()!;
+              return queues.some((queueRef) => {
+                const queueId = extractQueueIds([queueRef])?.[0];
+                const spaceId = extractSpaceIdFromQueue(queueRef);
                 return queueId === item.queueId && spaceId === item.spaceId;
               });
             }
@@ -1411,11 +1417,29 @@ export class QueryExecutor extends Resource {
   }
 }
 
-const extractQueueIds = (queues: readonly DXN.String[]): ObjectId[] | null => {
+const extractSpaceIdFromQueue = (queueRef: string): SpaceId | undefined => {
+  const echoId = EchoId.tryParse(queueRef);
+  if (echoId) {
+    return EchoId.getSpaceId(echoId) as SpaceId | undefined;
+  }
+  return DXN.tryParse(queueRef)?.asQueueDXN()?.spaceId as SpaceId | undefined;
+};
+
+const extractQueueIds = (queues: readonly string[]): ObjectId[] | null => {
   if (queues.length === 0) {
     return null;
   }
-  return queues.map((dxnStr) => DXN.parse(dxnStr).asQueueDXN()?.queueId).filter(Boolean) as ObjectId[];
+  return queues
+    .map((queueRef) => {
+      // Handle EchoId format (echo://spaceId/queueId).
+      const echoId = EchoId.tryParse(queueRef);
+      if (echoId) {
+        return EchoId.getObjectId(echoId) as ObjectId | undefined;
+      }
+      // Handle legacy DXN queue format (dxn:queue:...).
+      return DXN.tryParse(queueRef)?.asQueueDXN()?.queueId;
+    })
+    .filter(Boolean) as ObjectId[];
 };
 
 /**

@@ -5,7 +5,7 @@
 import React, { type ComponentType, type JSX, useMemo, useState } from 'react';
 
 import { Format } from '@dxos/echo/internal';
-import { DXN } from '@dxos/keys';
+import { EchoId } from '@dxos/keys';
 import { useQueue } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { SyntaxHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
@@ -19,7 +19,7 @@ import { PanelContainer, Searchbar } from '../../../components';
 export const QueuesPanel = () => {
   // const { space } = useDevtoolsState();
   const [queueInput, setQueueInput] = useState('');
-  const queueDxn = DXN.tryParse(queueInput);
+  const queueDxn = EchoId.tryParse(queueInput);
   const queue = useQueue<any>(queueDxn);
   const [selected, setSelected] = useState<any>();
   const [selectedVersionObject, setSelectedVersionObject] = useState<any | null>(null);

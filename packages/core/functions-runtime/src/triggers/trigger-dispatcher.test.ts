@@ -327,7 +327,7 @@ describe('TriggerDispatcher', () => {
           enabled: true,
           spec: {
             kind: 'queue',
-            queue: queue.dxn.toString(),
+            queue: queue.dxn,
           },
         });
         yield* Database.add(trigger);
@@ -356,7 +356,7 @@ describe('TriggerDispatcher', () => {
           enabled: true,
           spec: {
             kind: 'queue',
-            queue: queue.dxn.toString(),
+            queue: queue.dxn,
           },
         });
         yield* Database.add(trigger);
@@ -403,7 +403,7 @@ describe('TriggerDispatcher', () => {
           enabled: true,
           spec: {
             kind: 'queue',
-            queue: queue.dxn.toString(),
+            queue: queue.dxn,
           },
           input: {
             instructions: 'Please process the queue item.',
@@ -446,7 +446,7 @@ describe('TriggerDispatcher', () => {
           concurrency: 2,
           spec: {
             kind: 'queue',
-            queue: queue.dxn.toString(),
+            queue: queue.dxn,
           },
         });
         yield* Database.add(trigger);

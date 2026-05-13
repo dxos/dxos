@@ -18,7 +18,7 @@ import {
   formatToType,
 } from '@dxos/echo/internal';
 import { createEchoSchema } from '@dxos/echo/testing';
-import { type LegacyDXN as DXN, PublicKey } from '@dxos/keys';
+import { DXN, PublicKey } from '@dxos/keys';
 
 export type SelectOptionType = typeof SelectOption.Type;
 
@@ -60,15 +60,15 @@ export const createDefaultSchema = () =>
   );
 
 export const getSchema = async (
-  dxn: DXN,
+  dxn: DXN.DXN,
   registry?: SchemaRegistry.SchemaRegistry,
 ): Promise<Type.AnyEntity | undefined> => {
-  const typeDxn = dxn.asTypeDXN();
-  if (!typeDxn) {
+  if (!DXN.isDXN(dxn)) {
     return;
   }
 
-  const { type, version } = typeDxn;
+  const type = DXN.getNsid(dxn);
+  const version = DXN.getVersion(dxn);
   const schema = await registry
     ?.query({ typename: type, version, location: ['database', 'runtime'] })
     .firstOrUndefined();

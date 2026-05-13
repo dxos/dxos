@@ -12,9 +12,9 @@ import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } 
 import { AiSession, GenerationObserver } from '@dxos/assistant';
 import { Database, Filter, Obj, Relation, Tag, Type } from '@dxos/echo';
 import { ContextQueueService, FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
-import { LegacyDXN as DXN } from '@dxos/keys';
+import { LegacyDXN } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { Operation } from '@dxos/operation';
 import { HasSubject, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -26,7 +26,7 @@ const handler: Operation.WithHandler<typeof ClassifyEmail> = ClassifyEmail.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* ({ message }) {
-        if (message['@type'] !== Type.getDXN(Message.Message)!.toString()) {
+        if (message['@type'] !== Type.getDXN(Message.Message)) {
           log.info('not a message object, skipping classification', { message });
           return;
         }
@@ -78,9 +78,9 @@ const handler: Operation.WithHandler<typeof ClassifyEmail> = ClassifyEmail.pipe(
           return yield* Effect.fail(new Error(`Tag not found: ${selectedTagLabel}`));
         }
 
-        log.info('selected tag', { tagId: Obj.getDXN(selectedTag).toString(), tagLabel: selectedTag.label });
+        log.info('selected tag', { tagId: Obj.getDXN(selectedTag), tagLabel: selectedTag.label });
 
-        const messageDXN = DXN.parse(message['@dxn']);
+        const messageDXN = LegacyDXN.parse(message['@dxn']);
         const queueDXNInfo = messageDXN.asQueueDXN();
         log.info('queueDXNInfo', queueDXNInfo);
 
@@ -88,7 +88,7 @@ const handler: Operation.WithHandler<typeof ClassifyEmail> = ClassifyEmail.pipe(
           return yield* Effect.fail(new Error('Message is not in a queue'));
         }
 
-        const queueDXN = DXN.fromQueue(queueDXNInfo.subspaceTag, queueDXNInfo.spaceId, queueDXNInfo.queueId);
+        const queueDXN = LegacyDXN.fromQueue(queueDXNInfo.subspaceTag, queueDXNInfo.spaceId, queueDXNInfo.queueId);
         const queue = yield* QueueService.getQueue(queueDXN);
 
         const relation = Relation.make(HasSubject.HasSubject, {
@@ -104,7 +104,7 @@ const handler: Operation.WithHandler<typeof ClassifyEmail> = ClassifyEmail.pipe(
         yield* Database.flush();
 
         return {
-          tagId: Obj.getDXN(selectedTag).toString(),
+          tagId: Obj.getDXN(selectedTag),
           tagLabel: selectedTag.label,
         };
       },
