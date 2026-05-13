@@ -65,8 +65,6 @@ export const initializeObservability = async (config: Config, isTauri: boolean, 
         serviceName: 'composer',
         serviceVersion: DXOS_VERSION,
         environment: config.values.runtime?.app?.env?.DX_ENVIRONMENT ?? 'unknown',
-        // TODO(burdon): Temp fix due to runtime error.
-        // endpoint: '/api/otel',
         config,
         logs: true,
         metrics: true,
