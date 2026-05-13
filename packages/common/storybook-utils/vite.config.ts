@@ -6,5 +6,4 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   jsx: 'react',
-  test: { node: { environment: 'jsdom' }, storybook: true },
 });

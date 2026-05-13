@@ -451,6 +451,33 @@ const migrate = (pkgRel) => {
   const hasBrowserTests = /\bts-test-browser\b/.test(moonText);
   const hasStorybookTests = /\bts-test-storybook\b/.test(moonText);
 
+  // Packages whose `origin/main:vitest.config.ts` (or the live one, when un-migrated)
+  // wires `setupFiles` or extra `plugins:` keep that vitest.config.ts and let vitest
+  // discover it — vite.config.ts omits its `test:` block so vitest doesn't merge two
+  // sources of truth. The setup files typically register
+  // `@testing-library/jest-dom/vitest` matchers and similar customizations the
+  // generator can't reproduce.
+  let hasCustomVitestConfig = false;
+  for (const src of [
+    () => {
+      try {
+        return execSync(`git show "origin/main:${pkgRel}/vitest.config.ts" 2>/dev/null || true`, {
+          cwd: REPO_ROOT,
+          encoding: 'utf8',
+        });
+      } catch {
+        return '';
+      }
+    },
+    () => (existsSync(vitestConfigPath) ? readFileSync(vitestConfigPath, 'utf8') : ''),
+  ]) {
+    const t = src();
+    if (t && /\bsetupFiles\s*:|\bplugins\s*:\s*\[\s*[A-Za-z@]/.test(t)) {
+      hasCustomVitestConfig = true;
+      break;
+    }
+  }
+
   // Preserve a `happy-dom` / `jsdom` environment if either:
   //   (a) the local vitest.config.ts (still present on un-migrated packages) declared one
   //   (b) the same file existed on origin/main with one declared — needed on re-runs of
@@ -525,14 +552,25 @@ const migrate = (pkgRel) => {
 
   writeFileSync(
     viteConfigPath,
-    buildViteConfig(pkgDir, entryPoints, hasTests, jsx, testEnvOverride, {
+    buildViteConfig(pkgDir, entryPoints, hasTests && !hasCustomVitestConfig, jsx, testEnvOverride, {
       browser: hasBrowserTests,
       storybook: hasStorybookTests,
       assetsAsFiles: hasRawAssetImports,
     }),
   );
 
-  if (existsSync(vitestConfigPath)) {
+  // Keep the local vitest.config.ts for packages with custom setup
+  // (`setupFiles`, extra `plugins:`); restore from main when we'd already deleted it.
+  if (hasCustomVitestConfig) {
+    if (!existsSync(vitestConfigPath)) {
+      try {
+        execSync(`git checkout "origin/main" -- "${pkgRel}/vitest.config.ts"`, {
+          cwd: REPO_ROOT,
+          stdio: 'ignore',
+        });
+      } catch {}
+    }
+  } else if (existsSync(vitestConfigPath)) {
     rmSync(vitestConfigPath);
   }
 
