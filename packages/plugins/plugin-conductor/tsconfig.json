@@ -43,10 +43,10 @@
       "path": "../../core/compute/conductor"
     },
     {
-      "path": "../../core/echo/echo"
+      "path": "../../core/compute/functions"
     },
     {
-      "path": "../../core/functions"
+      "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/mesh/edge-client"
