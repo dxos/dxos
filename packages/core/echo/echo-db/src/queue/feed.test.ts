@@ -196,6 +196,26 @@ describe('Feed', () => {
     }).pipe(Effect.provide(testLayer), runAndForwardErrors);
   });
 
+  test('appendByDxn writes to a queue addressed by DXN', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const queues = peer.client.constructQueueFactory(db.spaceId);
+    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));
+
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make({ name: 'by-dxn' }));
+      const queueDxn = Feed.getQueueDxn(feed);
+      expect(queueDxn).toBeDefined();
+
+      const alice = Obj.make(TestSchema.Person, { name: 'alice' });
+      yield* Feed.appendByDxn(queueDxn!, [alice]);
+
+      const results = yield* Feed.runQuery(feed, Filter.type(TestSchema.Person));
+      expect(results).toHaveLength(1);
+      expect((results[0] as any).name).toBe('alice');
+    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+  });
+
   test('sync flushes the feed without throwing', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
