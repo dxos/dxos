@@ -73,6 +73,18 @@ if (!entry) {
   fail('mcpServers["dxos-introspect"] missing from .mcp.json', `Add the entry to ${SETTINGS}.`);
 }
 ok('found mcpServers["dxos-introspect"] in .mcp.json');
+
+// HTTP-transport entries point at a deployed server — no command/args to validate
+// and no local spawn handshake to run. Exit early with a success indication.
+if (entry.type === 'http') {
+  if (typeof entry.url !== 'string') {
+    fail('http entry has wrong shape (missing url)', JSON.stringify(entry));
+  }
+  ok(`http entry: ${entry.url}`);
+  console.log('\n✅ .mcp.json points at the hosted introspect MCP server.');
+  process.exit(0);
+}
+
 const command = entry.command;
 const rawArgs = entry.args ?? [];
 // Resolve relative paths against the repo root — Claude Code spawns with cwd
