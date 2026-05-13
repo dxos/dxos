@@ -4,7 +4,6 @@
 
 import * as Effect from 'effect/Effect';
 
-import { runInSpace } from '@dxos/app-framework/plugin-runtime';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
@@ -22,12 +21,12 @@ const dispatch = (integration: Integration.Integration) =>
     const db = Obj.getDatabase(integration);
     invariant(db);
     const { ContactsFunctions } = yield* Effect.promise(() => import('./google/people'));
-    yield* runInSpace(
-      db.spaceId,
-      [Database.Service] as const,
-      Operation.invoke(ContactsFunctions.Sync, {
+    yield* Operation.invoke(
+      ContactsFunctions.Sync,
+      {
         integration: Ref.make(integration),
-      }),
+      },
+      { spaceId: db.spaceId },
     );
   });
 

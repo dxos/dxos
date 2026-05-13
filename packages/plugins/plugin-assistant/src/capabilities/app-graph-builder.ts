@@ -7,7 +7,6 @@ import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { runInSpace } from '@dxos/app-framework/plugin-runtime';
 import { AppCapabilities, AppNode, getActiveSpace, getPersonalSpace } from '@dxos/app-toolkit';
 import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation, Routine } from '@dxos/compute';
@@ -48,11 +47,7 @@ export default Capability.makeModule(
                   // TODO(dmaretskyi): This goes away when composer will have unified operation invocations.
                   const db = Obj.getDatabase(chat);
                   invariant(db);
-                  yield* runInSpace(
-                    db.spaceId,
-                    [] as const,
-                    Operation.invoke(AssistantOperation.UpdateChatName, { chat }),
-                  );
+                  yield* Operation.invoke(AssistantOperation.UpdateChatName, { chat }, { spaceId: db.spaceId });
                 }),
               properties: {
                 label: ['chat-update-name.label', { ns: meta.id }],

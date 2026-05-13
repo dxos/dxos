@@ -63,11 +63,15 @@ describe('Agent prompt (composer plugin harness)', () => {
             );
             yield* Database.flush();
 
-            const result = yield* Operation.invoke(AgentPrompt, {
-              prompt: Ref.make(prompt),
-              input: {},
-              chat: Ref.make(chat),
-            });
+            const result = yield* Operation.invoke(
+              AgentPrompt,
+              {
+                prompt: Ref.make(prompt),
+                input: {},
+                chat: Ref.make(chat),
+              },
+              { spaceId: personalSpace.id },
+            );
 
             const messageCountAfter = yield* Feed.runQuery(feed, Filter.type(Message.Message)).pipe(
               Effect.map(Array.length),
