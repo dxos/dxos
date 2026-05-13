@@ -13,7 +13,6 @@ import { Blueprint, Trigger, Operation, OperationHandlerSet } from '@dxos/comput
 import { Collection, Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
-import { QueueService } from '@dxos/functions';
 import { TriggerDispatcher } from '@dxos/functions-runtime';
 import { AssistantTestLayerWithTriggers } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
@@ -173,11 +172,12 @@ describe('Agent', () => {
         );
         yield* Database.flush();
 
-        const inboxQueue = yield* QueueService.createQueue();
+        const inboxFeed = yield* Database.add(Feed.make());
+        const inboxQueueDxn = Feed.getQueueDxn(inboxFeed)!;
         yield* Database.add(
           Trigger.make({
             enabled: true,
-            spec: Trigger.specQueue(inboxQueue.dxn.toString()),
+            spec: Trigger.specQueue(inboxQueueDxn.toString()),
             function: Ref.make(Operation.serialize(AgentWorker)),
             input: {
               agent: Ref.make(agent),
@@ -186,8 +186,8 @@ describe('Agent', () => {
           }),
         );
 
-        yield* QueueService.append(
-          inboxQueue,
+        yield* Feed.append(
+          inboxFeed,
           TEST_MESSAGES.map((message) => Obj.clone(message)),
         );
 
