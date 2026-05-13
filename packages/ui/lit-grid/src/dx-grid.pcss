@@ -19,8 +19,13 @@
 @layer dx-components {
   dx-grid {
     display: contents;
-    --dx-grid-gap: 1px;
-    --dx-plane-gap: 1px;
+    /*
+     * Cells touch edge-to-edge; lines come from each cell's border-right /
+     * border-bottom. Setting either gap to a non-zero value re-introduces the
+     * doubled-line artifact at plane seams.
+     */
+    --dx-grid-gap: 0;
+    --dx-plane-gap: 0;
   }
 
   .dx-grid {
