@@ -59,23 +59,47 @@ Mentions of the word "Queue" in [internal/common/proxy/change-context.ts](packag
 
 ## Remaining phases
 
-### Phase 4 — finish behavioral migration (#6)
+### Phase 4 — behavioral migration (#6) — partially complete
 
-**Add primitives first** (otherwise consumer migrations stall):
+**Primitives landed:**
 
-1. **`Feed.sync({ push, pull })` on `FeedService`** — 5 prod call sites use `Queue.sync` and have no replacement today.
-2. **`useFeedQuery(feed, filter)` React hook** in `@dxos/echo-react` — removes the three Phase 3 stopgap casts ([InvocationTraceContainer.tsx](packages/devtools/devtools/src/panels/edge/InvocationTracePanel/InvocationTraceContainer.tsx), [AgentArticle.tsx](packages/plugins/plugin-assistant/src/containers/AgentArticle/AgentArticle.tsx), [ExecutionGraphModule.tsx](packages/stories/stories-assistant/src/components/ExecutionGraphModule.tsx)) and unblocks the 8 `useQueue` consumers.
-3. **Reactive-subscribe test coverage** in [feed.test.ts](packages/core/echo/echo-db/src/queue/feed.test.ts) — `Feed.query(...)` → `QueryResult.subscribe(...)` is not exercised today.
+1. ✅ **`Feed.sync({ push, pull })` on `FeedService`** + bridge implementation in `echo-db/queue/feed-service.ts` + test.
+2. ✅ **`useFeedQuery(feed, filter)` React hook** in `@dxos/react-client/echo`. Removes the three Phase 3 stopgap casts (InvocationTraceContainer, AgentArticle, ExecutionGraphModule).
+3. ✅ **Reactive-subscribe test coverage** in [feed.test.ts](packages/core/echo/echo-db/src/queue/feed.test.ts) (`fire: true` + appended-item path).
+4. ✅ **`createFeedServiceLayer` re-exported** from `@dxos/client/echo` so plugins don't need a runtime dependency on `@dxos/echo-db`.
 
-**Then migrate consumers** (~13 production files):
+**Consumer migrations landed:**
 
-| Queue method                            | Feed replacement                                     | Prod sites |
-| --------------------------------------- | ---------------------------------------------------- | ---------- |
-| `.append(items)`                        | `Feed.append(feed, items)`                           | 9          |
-| `.delete(ids)`                          | `Feed.remove(feed, items)` (parameter shape differs) | 1          |
-| `.sync(...)`                            | `Feed.sync(feed, ...)` (after primitive lands)       | 5          |
-| `.subscribe(cb)`                        | `Feed.query(...).subscribe(cb)`                      | 4          |
-| `.queryObjects()` / `.getObjectsById()` | `Feed.runQuery` / `Feed.query`                       | 3          |
+| File                                                                                                                       | Pattern                                | Replacement                                                                                              |
+| -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| [plugin-feed/curate-magazine.ts](packages/plugins/plugin-feed/src/operations/curate-magazine.ts)                           | `queue.queryObjects()`                 | `Feed.runQuery` Effect with per-call layer                                                               |
+| [plugin-feed/sync-feed.ts](packages/plugins/plugin-feed/src/operations/sync-feed.ts)                                       | `queue.append(items)`                  | `Feed.append` Effect                                                                                     |
+| [plugin-bluesky/operations/sync.ts](packages/plugins/plugin-bluesky/src/operations/sync.ts)                                | `queue.append(items)`                  | `EchoFeed.append` Effect                                                                                 |
+| [plugin-space/commands/queue/query.ts](packages/plugins/plugin-space/src/commands/queue/query.ts)                          | `queue.queryObjects()`                 | `Feed.unsafeFromQueueDXN` + `Feed.runQuery` Effect                                                       |
+| [plugin-assistant/queue-logger.ts](packages/plugins/plugin-assistant/src/queue-logger.ts)                                  | main `_invocationTraceQueue.append`    | `Feed.append` via `_appendToTraceFeed` helper. Per-invocation trace event queues retained — see below.   |
+| [stories-assistant/ResearchInputModule.tsx](packages/stories/stories-assistant/src/components/ResearchInputModule.tsx)     | `queue?.objects.map(...)`              | `useFeedQuery(feed, Filter.everything())`                                                                |
+| [stories-assistant/ResearchOutputModule.tsx](packages/stories/stories-assistant/src/components/ResearchOutputModule.tsx)   | `queue?.objects.map(...)`              | `useFeedQuery(feed, Filter.everything())`                                                                |
+
+**Verified already Feed-aware (no change needed):**
+
+- [plugin-slack/operations/sync.ts](packages/plugins/plugin-slack/src/operations/sync.ts) — `Feed.append`.
+- [plugin-automation/capabilities/compute-runtime.ts](packages/plugins/plugin-automation/src/capabilities/compute-runtime.ts) — `createFeedServiceLayer`.
+- [plugin-thread/operations/append-channel-message.ts](packages/plugins/plugin-thread/src/operations/append-channel-message.ts) — `Feed.append`.
+- [plugin-assistant/operations/run-prompt-in-new-chat.ts](packages/plugins/plugin-assistant/src/operations/run-prompt-in-new-chat.ts) — `createFeedServiceLayer`.
+
+**Remaining consumers — deferred to Phase 6** (require architectural changes, not mechanical migration):
+
+| File                                                                                                                                       | Why deferred                                                                                                                                                                                                                                                            |
+| ------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [plugin-transcription/transcriber/transcription-manager.ts](packages/plugins/plugin-transcription/src/transcriber/transcription-manager.ts) | Class state `_queue: Queue<Message>` set via `setQueue(queue)`. Caller `plugin-meeting/handle-payload.ts` constructs the queue from a stored DXN string — Feed migration requires a data-model change so `transcriptDxn` becomes a `Ref(Feed.Feed)`.                    |
+| [plugin-transcription/normalization/message-normalizer.ts](packages/plugins/plugin-transcription/src/normalization/message-normalizer.ts)  | Class state uses `queue.objects.filter`, `queue.subscribe`, `queue.append` — full reactive pattern is tied to the `Queue<T>` runtime interface. Rewrite to `Feed.query(...).subscribe(...)` is invasive.                                                                |
+| [plugin-transcription/hooks/useQueueModelAdapter.ts](packages/plugins/plugin-transcription/src/hooks/useQueueModelAdapter.ts)               | Reads `queue.isLoading`, `queue.objects` directly. No 1:1 Feed equivalent — `useFeedQuery` returns objects but doesn't expose loading state.                                                                                                                            |
+| [plugin-assistant/queue-logger.ts](packages/plugins/plugin-assistant/src/queue-logger.ts) (per-invocation trace event queues)              | The per-invocation queues are addressed by raw DXN with no backing `Feed.Feed` object. Migration is blocked on either (a) materializing a Feed per invocation, or (b) a lower-level `FeedService.appendByDxn` primitive.                                                |
+| [plugin-assistant/containers/ChatContainer/ChatContainer.tsx](packages/plugins/plugin-assistant/src/containers/ChatContainer/ChatContainer.tsx) | UI component holds a `Queue` and consumes `queue.objects` deep inside its render tree.                                                                                                                                                                                  |
+| [assistant-toolkit/crud/graph.ts](packages/core/compute/assistant-toolkit/src/crud/graph.ts)                                                | Uses `ContextQueueService` Context.Tag (`{ queue: Queue<T> }`). Migration requires a parallel `ContextFeedService` (or replacement of the existing Tag) plus updating every provider.                                                                                   |
+| [devtools/QueuesPanel.tsx](packages/devtools/devtools/src/panels/echo/QueuesPanel/QueuesPanel.tsx)                                          | DXN-driven debug panel — `useQueue` is the correct entrypoint for a raw queue DXN. `useFeedQuery` requires a persisted `Feed.Feed`.                                                                                                                                     |
+| [devtools/InvocationTracePanel/hooks.ts](packages/devtools/devtools/src/panels/edge/InvocationTracePanel/hooks.ts)                          | DXN-driven polling — same constraint as `QueuesPanel`.                                                                                                                                                                                                                  |
+| Conductor compute nodes ([registry.ts](packages/core/compute/conductor/src/nodes/registry.ts), [gpt.ts](packages/core/compute/conductor/src/nodes/gpt/gpt.ts)) | Use `QueueService` (the low-level `QueueAPI` factory) directly — not the `Queue<T>` interface. Out of scope for Queue→Feed migration; will continue to work after Phase 6.                                                                                              |
 
 ### Phase 5 — implement Feed iteration / retention (#7)
 
