@@ -14,7 +14,7 @@ export {
   type EchoDatabase,
   type ObjectMigration,
   ObjectVersion,
-  Queue,
+  Queue, // TODO(burdon): Remove.
   type Selection,
   type SubscriptionHandle,
 } from '@dxos/echo-db';

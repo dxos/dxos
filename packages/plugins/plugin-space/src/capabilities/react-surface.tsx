@@ -14,7 +14,7 @@ import { AppSurface, useActiveSpace, useTypeOptions } from '@dxos/app-toolkit/ui
 import { Database, Obj } from '@dxos/echo';
 import { Collection } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
-import { type Space, SpaceState, getSpace, isSpace, useSpace, useSpaces } from '@dxos/react-client/echo';
+import { type Space, SpaceState, getSpace, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
@@ -287,9 +287,8 @@ export default Capability.makeModule(
 
           const props = { ...inputProps, type: ast } as any as FormFieldComponentProps;
           const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
-          const space = useSpace(db?.spaceId);
           const annotation = findAnnotation<TypeInputOptions>(schema.ast, TypeInputOptionsAnnotationId)!;
-          const options = useTypeOptions({ space, annotation });
+          const options = useTypeOptions({ db, annotation });
 
           return <SelectField {...props} options={options} />;
         },

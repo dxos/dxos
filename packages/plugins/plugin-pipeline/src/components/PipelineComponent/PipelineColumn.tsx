@@ -10,7 +10,7 @@ import React, { forwardRef, useMemo, useRef, useState } from 'react';
 
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
 import { Annotation, JsonSchema, Obj, Query, Type } from '@dxos/echo';
-import { Filter, getSpace, useObject } from '@dxos/react-client/echo';
+import { Filter, useObject } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
@@ -37,7 +37,7 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
   // Subscribe to the view target for reactivity.
   const [viewSnapshot] = useObject(column.view);
   const view = column.view.target;
-  const space = getSpace(view);
+  const db = view && Obj.getDatabase(view);
   const { Item } = usePipeline(PIPELINE_COLUMN_NAME);
   const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>();
   const query = useMemo(() => {
@@ -51,13 +51,13 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
   }, [JSON.stringify(viewSnapshot?.query.ast)]);
 
   useAsyncEffect(async () => {
-    if (!query || !space?.db) {
+    if (!query || !db) {
       return;
     }
 
-    const schema = await resolveSchemaWithRegistry(space.db.schemaRegistry, query.ast);
+    const schema = await resolveSchemaWithRegistry(db.schemaRegistry, query.ast);
     setSchema(() => schema);
-  }, [space, query]);
+  }, [db, query]);
 
   const projectionModel = useMemo(() => {
     if (!schema || !view) {

@@ -10,9 +10,13 @@ import { type ObjectId, type SpaceId } from '@dxos/keys';
 import { SpaceProxy } from './space-proxy';
 
 /**
- * @deprecated Prefer Obj.getDatabase.
+ * Returns the {@link Space} that owns the given object, or `undefined`.
+ *
+ * Use {@link Obj.getDatabase} when you only need DB/`spaceId` access; this
+ * helper is retained only for callers that need {@link Space} proxy members
+ * (`properties`, `queues`, `members`, `key`, `state`, `listen`, identity).
  */
-// TODO(wittjosiah): Can we remove the need for this?
+// TODO(burdon): Hypergraph.getSpace().
 export const getSpace = (object?: any): Space | undefined => {
   if (!object) {
     return undefined;
