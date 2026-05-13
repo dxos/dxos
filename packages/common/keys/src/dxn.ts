@@ -51,6 +51,13 @@ export type QueueSubspaceTag = (typeof QueueSubspaceTags)[keyof typeof QueueSubs
  * dxn:plugin:org.dxos.agent.plugin.functions
  * ```
  */
+/**
+ * Full DXN regex per spec — new format only: `dxn:<nsid>[:<version>]`.
+ * Does NOT match the legacy `dxn:<kind>:<...>` format (e.g. `dxn:type:...`).
+ */
+const DXN_SPEC_REGEXP =
+  /^dxn:[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)(:\d+\.\d+\.\d+)?$/;
+
 export class DXN {
   // TODO(burdon): Rename to DXN (i.e., DXN.DXN).
   // TODO(dmaretskyi): Should this be a transformation into the DXN type?
@@ -67,6 +74,35 @@ export class DXN {
 
   static hash(dxn: DXN): string {
     return dxn.toString();
+  }
+
+  /**
+   * Returns true if the string is a valid DXN in the new format (`dxn:<nsid>[:<version>]`).
+   * Does not accept the legacy `dxn:<kind>:<...>` format.
+   */
+  static isDXN(s: unknown): s is DXN.String {
+    return typeof s === 'string' && DXN_SPEC_REGEXP.test(s);
+  }
+
+  /**
+   * Returns the NSID portion of a new-format DXN string (the part after `dxn:`).
+   * @example DXN.getNsid('dxn:org.dxos.type.calendar') → 'org.dxos.type.calendar'
+   */
+  static getNsid(dxn: string): string {
+    const match = /^dxn:([^:]+)/.exec(dxn);
+    if (!match) {
+      throw new Error(`Invalid DXN: ${dxn}`);
+    }
+    return match[1];
+  }
+
+  /**
+   * Returns the semver version from a versioned DXN string, or undefined if unversioned.
+   * @example DXN.getVersion('dxn:org.dxos.type.calendar:1.0.0') → '1.0.0'
+   */
+  static getVersion(dxn: string): string | undefined {
+    const match = /^dxn:[^:]+:(\d+\.\d+\.\d+)$/.exec(dxn);
+    return match?.[1];
   }
 
   /**
