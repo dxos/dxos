@@ -163,6 +163,8 @@ export type BrowserOptions = {
   nodeExternal?: boolean;
   injectGlobals?: boolean;
   plugins?: Plugin[];
+  /** Wire the matching vite JSX plugin into the vitest browser project. */
+  jsx?: 'react' | 'solid';
 };
 
 export type TestOptions = {
@@ -217,9 +219,18 @@ const createBrowserProject = ({
   nodeExternal = false,
   injectGlobals = true,
   plugins = [],
+  jsx,
 }: BrowserOptions) =>
   defineProject({
-    plugins: [nodeStdResolvePlugin(), WasmPlugin(), ...plugins],
+    plugins: [
+      nodeStdResolvePlugin(),
+      WasmPlugin(),
+      // Solid packages running browser tests need vite-plugin-solid here so
+      // `*.test.tsx` gets the Solid client transform before the browser harness
+      // loads it.
+      ...(jsx === 'solid' ? [solid()] : []),
+      ...plugins,
+    ],
     optimizeDeps: {
       include: ['buffer/'],
       esbuildOptions: {
@@ -411,7 +422,7 @@ const buildTestConfig = (
     typeof node === 'boolean' ? (outerJsx ? { jsx: outerJsx } : undefined) : { jsx: outerJsx, ...node };
   const nodeProject = node ? createNodeProject(nodeOptions) : undefined;
   const storybookProject = storybook ? createStorybookProject(dirname) : undefined;
-  const browserProjects = normalizeBrowserOptions(browser).map((b) => createBrowserProject(b));
+  const browserProjects = normalizeBrowserOptions(browser).map((b) => createBrowserProject({ jsx: outerJsx, ...b }));
 
   return {
     ...resolveReporterConfig(dirname),
