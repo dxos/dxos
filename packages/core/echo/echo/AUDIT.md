@@ -28,20 +28,17 @@ Mentions of the word "Queue" in [internal/common/proxy/change-context.ts](packag
 
 ### Migration issues
 
-1. **Stale JSDoc — `Database.ts:41`.** `Queryable` comment refers to "Database and Queue"; should say "Database and Feed" (or, more accurately, "Database, Feed, and Hypergraph", all of which extend `Queryable`).
+1. **~~Stale JSDoc — `Database.ts:41`.~~** ✅ **Phase 1.** Updated to "Common interface for Database, Feed, and Hypergraph".
 
-2. **`RefResolutionContext.queue` ([Hypergraph.ts:24–28](packages/core/echo/echo/src/Hypergraph.ts)).** The resolution-context API still uses `queue?: DXN`. After migration the natural shape is either:
-   - rename to `feed?: Feed.Feed` and resolve to a queue DXN internally via `Feed.getQueueDxn`, or
-   - keep the DXN but rename to e.g. `feedScope?: DXN` for naming consistency.
-     This is a breaking API change for any code currently passing a queue DXN here.
+2. **~~`RefResolutionContext.queue` ([Hypergraph.ts:24–28](packages/core/echo/echo/src/Hypergraph.ts)).~~** ✅ **Phase 2.** Renamed field to `feed?: DXN` (still a queue-kinded DXN at the resolver layer). Callers updated in `echo-db/src/hypergraph.ts`, `echo-db/src/queue/queue-factory.ts`, `echo-db/src/client/index-query-source-provider.ts`, and `echo-db/src/testing/queue.test.ts`.
 
-3. **Stale deprecation pointer — `internal/Obj/ids.ts:8`.** `createQueueDXN` is `@deprecated Use db.queues.create()`, but `db.queues` is not part of the new Feed surface. The pointer should redirect to `Feed.make(...)` + `Feed.getQueueDxn(...)` (or the function should be removed entirely once call sites are gone).
+3. **~~Stale deprecation pointer — `internal/Obj/ids.ts:8`.~~** ✅ **Phase 1.** `@deprecated` pointer now references `Feed.make(...)` + `db.add(feed)` + `Feed.getQueueDxn(feed)`.
 
-4. **AST-level "queue" terminology — `Query.ts` + `internal/Query.ts`.** Scope keys `queues` and `allQueuesFromSpaces` (lines 362, 387, 414–426, 554; internal/Query.ts 124–130) and `DXN.kind.QUEUE` (Query.test.ts:576) leak the queue vocabulary into the public AST. The public input is `Feed`, but the wire format reads "queues". Renaming requires:
-   - changing `QueryAST.QueryOptions`/scope schema (likely in `@dxos/echo-protocol` or wherever `QueryAST` is defined),
-   - updating `Query.test.ts` assertions,
-   - coordinating with the index/query backend that consumes this AST.
-     Until then, this is the largest piece of "queue" terminology still surfaced through `@dxos/echo`.
+4. **~~AST-level "queue" terminology — `Query.ts` + `internal/Query.ts`.~~** ✅ **Phase 2.** Renamed in `@dxos/echo-protocol` `Scope` schema:
+   - `queues` → `feeds`
+   - `allQueuesFromSpaces` → `allFeedsFromSpaces`
+
+   Producers and consumers updated across `@dxos/echo`, `@dxos/echo-query`, `@dxos/echo-db`, `@dxos/echo-pipeline`, `@dxos/app-toolkit`, and the relevant UI/plugin call sites (`react-ui-form`, `plugin-pipeline`, `plugin-space`, `plugin-debug`, `assistant-toolkit`). Wire-format breakage was accepted (no backwards-compat shim for serialized ASTs).
 
 5. **`org.dxos.type.queue` vs `org.dxos.type.feed`.** `Queue` registers typename `org.dxos.type.queue` (echo-db `queue/types.ts:88`); `Feed` registers `org.dxos.type.feed` (Feed.ts:47). Existing persisted `Ref(Queue)` fields point at the old typename. The migration helper `Feed.unsafeFromQueueDXN` exists, but a schema-level rewrite pass is needed for stored data and `Ref(Queue) → Ref(Feed.Feed)` typed fields.
 

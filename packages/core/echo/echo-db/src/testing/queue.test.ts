@@ -69,7 +69,7 @@ describe('queues', () => {
 
     {
       const resolved = await peer.client.graph
-        .createRefResolver({ context: { space: spaceId, queue: queue.dxn } })
+        .createRefResolver({ context: { space: spaceId, feed: queue.dxn } })
         .resolve(DXN.fromLocalObjectId(obj.id));
       expect(resolved?.id).toEqual(obj.id);
       expect(resolved?.name).toEqual('john');

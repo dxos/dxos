@@ -359,7 +359,7 @@ class QueryClass implements Any {
         from: {
           _tag: 'scope',
           scope: {
-            ...(options?.includeFeeds ? { allQueuesFromSpaces: true } : {}),
+            ...(options?.includeFeeds ? { allFeedsFromSpaces: true } : {}),
           },
         },
       });
@@ -384,7 +384,7 @@ class QueryClass implements Any {
           _tag: 'scope',
           scope: {
             spaceIds: databases.map((db) => db.spaceId),
-            ...(options?.includeFeeds ? { allQueuesFromSpaces: true } : {}),
+            ...(options?.includeFeeds ? { allFeedsFromSpaces: true } : {}),
           },
         },
       });
@@ -410,8 +410,8 @@ class QueryClass implements Any {
       }
     }
 
-    const feeds = items as Feed.Feed[];
-    const queueDxns = feeds.flatMap((feed) => {
+    const feedItems = items as Feed.Feed[];
+    const feedDxns = feedItems.flatMap((feed) => {
       const dxn = Feed.getQueueDxn(feed);
       return dxn ? [dxn.toString()] : [];
     });
@@ -421,7 +421,7 @@ class QueryClass implements Any {
       from: {
         _tag: 'scope',
         scope: {
-          queues: queueDxns,
+          feeds: feedDxns,
         },
       },
     });
@@ -551,7 +551,7 @@ export const from = (
   return wrapper.from(source as any, options);
 };
 
-const SCOPE_KEYS = new Set(['spaceIds', 'queues', 'allQueuesFromSpaces']);
+const SCOPE_KEYS = new Set(['spaceIds', 'feeds', 'allFeedsFromSpaces']);
 
 /** Detect a raw Scope object (plain object with only Scope-valid keys). */
 const _isScope = (value: unknown): value is QueryAST.Scope => {

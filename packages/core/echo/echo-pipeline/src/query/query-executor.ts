@@ -271,12 +271,12 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
           }
         }
 
-        // Extract queueIds from explicit queue DXNs and derive spaceIds from them.
-        if (step.scope.queues && step.scope.queues.length > 0 && !step.scope.allQueuesFromSpaces) {
+        // Extract queueIds from explicit feed DXNs (queue-kinded) and derive spaceIds from them.
+        if (step.scope.feeds && step.scope.feeds.length > 0 && !step.scope.allFeedsFromSpaces) {
           let parseFailed = false;
           const derivedQueueIds = new Set<ObjectId>();
           const derivedSpaceIds = new Set<SpaceId>();
-          for (const queueDxnStr of step.scope.queues as DXN.String[]) {
+          for (const queueDxnStr of step.scope.feeds as DXN.String[]) {
             try {
               const queueDxn = DXN.parse(queueDxnStr).asQueueDXN();
               if (queueDxn) {
@@ -575,8 +575,8 @@ export class QueryExecutor extends Resource {
     workingSet = [...workingSet];
 
     const spaces = (step.scope.spaceIds ?? []) as SpaceId[];
-    const queues = (step.scope.queues ?? []) as DXN.String[];
-    const allQueuesFromSpaces = step.scope.allQueuesFromSpaces ?? false;
+    const queues = (step.scope.feeds ?? []) as DXN.String[];
+    const allQueuesFromSpaces = step.scope.allFeedsFromSpaces ?? false;
 
     const trace: ExecutionTrace = {
       ...ExecutionTrace.makeEmpty(),
