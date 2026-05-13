@@ -12,6 +12,8 @@ import { type IdbLogStore } from '@dxos/log-store-idb';
 import { Observability, ObservabilityExtension, ObservabilityProvider } from '@dxos/observability';
 import { getHostPlatform } from '@dxos/util';
 
+import { FEEDBACK_LOGS_MAX_SIZE } from './constants';
+
 export const PARAM_PROFILER = 'profiler';
 export const PARAM_SAFE_MODE = 'safe';
 export const PARAM_LOG_LEVEL = 'log';
@@ -75,6 +77,7 @@ export const initializeObservability = async (config: Config, isTauri: boolean, 
         release: DXOS_VERSION,
         environment: config.values.runtime?.app?.env?.DX_ENVIRONMENT ?? 'unknown',
         logStore,
+        feedbackLogMaxSize: FEEDBACK_LOGS_MAX_SIZE,
       }),
     ),
     Observability.addDataProvider(ObservabilityProvider.IPData.provider(config)),

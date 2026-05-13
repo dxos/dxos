@@ -4,8 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Obj } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/internal';
 import { ContextQueueService } from '@dxos/functions';
 import { random } from '@dxos/random';

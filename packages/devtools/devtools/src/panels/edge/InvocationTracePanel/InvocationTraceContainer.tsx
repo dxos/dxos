@@ -14,7 +14,7 @@ import { type InvocationSpan } from '@dxos/functions-runtime';
 import { TraceEvent } from '@dxos/functions-runtime';
 import { DXN } from '@dxos/keys';
 import { type SerializedError } from '@dxos/protocols';
-import { useQuery } from '@dxos/react-client/echo';
+import { type Queue, useFeedQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
@@ -196,8 +196,11 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
 const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
   const [activeTab, setActiveTab] = useState('input');
 
-  const queue = span.invocationTraceQueue?.target;
-  const objects = useQuery(queue, Filter.everything());
+  const feed = span.invocationTraceQueue?.target;
+  const objects = useFeedQuery(feed, Filter.everything());
+  // ExecutionGraphPanel still consumes Queue<Unknown>; runtime resolution returns a Queue instance.
+  // TODO(burdon): Migrate ExecutionGraphPanel to take a Feed.
+  const queue = feed as Queue | undefined;
 
   const contents = Array.head(objects).pipe(
     Option.getOrUndefined,

@@ -5,9 +5,10 @@
 import React from 'react';
 
 import { waitForCondition } from '@dxos/async';
-import { type Space, type SpaceId } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { DeviceType } from '@dxos/client/halo';
 import { Context } from '@dxos/context';
+import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { IconButton, Toolbar } from '@dxos/react-ui';

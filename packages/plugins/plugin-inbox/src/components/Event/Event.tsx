@@ -5,7 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren } from 'react';
 
-import { type Database } from '@dxos/react-client/echo';
+import { type Database } from '@dxos/echo';
 import { Icon, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { type Actor, type Event as EventType } from '@dxos/types';

@@ -7,8 +7,7 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { type Database, type Entity, Obj, Ref, Type } from '@dxos/echo';
-import { Filter, Query } from '@dxos/echo';
+import { type Database, type Entity, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import {
   type AnyProperties,
   GeneratorAnnotationId,

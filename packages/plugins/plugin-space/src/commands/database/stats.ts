@@ -11,8 +11,7 @@ import * as Function from 'effect/Function';
 import * as Record from 'effect/Record';
 
 import { CommandConfig, Common, printList, spaceLayer } from '@dxos/cli-util';
-import { Obj } from '@dxos/echo';
-import { Database, Filter, Query } from '@dxos/echo';
+import { Database, Filter, Obj, Query } from '@dxos/echo';
 
 import { printStats } from './util';
 

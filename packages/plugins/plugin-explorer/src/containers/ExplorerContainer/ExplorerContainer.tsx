@@ -5,10 +5,9 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { type Filter } from '@dxos/echo';
-import { type View } from '@dxos/echo';
+import { type Filter, Obj, type View } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { getSpace, useObject } from '@dxos/react-client/echo';
+import { useObject } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 
@@ -19,9 +18,9 @@ export type ExplorerContainerProps = AppSurface.ObjectArticleProps<View.View>;
 
 export const ExplorerContainer = ({ role, subject, attendableId: _attendableId }: ExplorerContainerProps) => {
   const [view] = useObject(subject);
-  const space = view && getSpace(view);
+  const db = view && Obj.getDatabase(view);
   const [filter, setFilter] = useState<Filter.Any>();
-  const model = useGraphModel(space, filter);
+  const model = useGraphModel(db, filter);
 
   const builder = useMemo(() => new QueryBuilder(), []);
   const handleChange = useCallback<NonNullable<QueryEditorProps['onChange']>>((value) => {
@@ -30,7 +29,7 @@ export const ExplorerContainer = ({ role, subject, attendableId: _attendableId }
 
   const showToolbar = role === 'article';
 
-  if (!space || !model) {
+  if (!db || !model) {
     return null;
   }
 
@@ -39,7 +38,7 @@ export const ExplorerContainer = ({ role, subject, attendableId: _attendableId }
       {showToolbar && (
         <Panel.Toolbar asChild>
           <Toolbar.Root>
-            <QueryEditor db={space.db} onChange={handleChange} />
+            <QueryEditor db={db} onChange={handleChange} />
           </Toolbar.Root>
         </Panel.Toolbar>
       )}

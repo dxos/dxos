@@ -179,7 +179,7 @@ export const generator = () => ({
                 properties: { labels: Filter.contains('investor') },
               }),
             ).from({
-              queues: [queueDxn],
+              feeds: [queueDxn],
             }),
             jsonSchema: JsonSchema.toJsonSchema(Message.Message),
           });

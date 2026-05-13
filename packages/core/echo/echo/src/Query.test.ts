@@ -523,7 +523,7 @@ describe('query api', () => {
           "from": {
             "_tag": "scope",
             "scope": {
-              "allQueuesFromSpaces": true,
+              "allFeedsFromSpaces": true,
             },
           },
           "query": {
@@ -582,7 +582,7 @@ describe('query api', () => {
         from: {
           _tag: 'scope',
           scope: {
-            queues: [expectedQueueDxn.toString()],
+            feeds: [expectedQueueDxn.toString()],
           },
         },
         query: {

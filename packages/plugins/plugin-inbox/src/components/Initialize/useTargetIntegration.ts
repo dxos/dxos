@@ -6,10 +6,9 @@ import { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type Operation } from '@dxos/compute';
-import { Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { Integration } from '@dxos/plugin-integration';
-import { Filter, useQuery } from '@dxos/react-client/echo';
-
+import { useQuery } from '@dxos/react-client/echo';
 /**
  * Find the `Integration` whose `targets` include the given `target` object.
  * Returns the matching integration (or `undefined` if none exists).

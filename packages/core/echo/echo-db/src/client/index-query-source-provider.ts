@@ -243,7 +243,7 @@ export class IndexQuerySource implements QuerySource {
         result.queueId as ObjectId,
       );
       const refResolver = this._params.graph.createRefResolver({
-        context: { space: result.spaceId as SpaceId, queue: queueDxn },
+        context: { space: result.spaceId as SpaceId, feed: queueDxn },
       });
       const database = this._params.graph.getDatabase(result.spaceId as SpaceId);
       let object;

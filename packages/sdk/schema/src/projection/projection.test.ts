@@ -7,8 +7,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Filter, Obj, Query, Type } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import { Filter, Obj, Query, Type, View } from '@dxos/echo';
 import { DatabaseSchemaRegistry, RuntimeSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import {

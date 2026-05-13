@@ -6,8 +6,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
-import { JsonSchema, Obj, Type } from '@dxos/echo';
-import { Filter } from '@dxos/echo';
+import { Filter, JsonSchema, Obj, Type } from '@dxos/echo';
 import { EchoSchema } from '@dxos/echo/internal';
 
 import { EchoTestBuilder } from '../testing';
