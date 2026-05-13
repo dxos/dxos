@@ -49,7 +49,7 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   const db = Obj.getDatabase(mailbox);
   const showItem = useShowItem();
 
-  const feed = mailbox.feed?.target as Feed.Feed | undefined;
+  const feed = mailbox.feed?.target;
 
   const filterEditorRef = useRef<EditorController>(null);
   const filterSaveButtonRef = useRef<HTMLButtonElement>(null);

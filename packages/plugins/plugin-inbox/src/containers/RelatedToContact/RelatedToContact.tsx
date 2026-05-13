@@ -9,7 +9,7 @@ import React, { useCallback } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { type Feed, Filter, Obj, Query } from '@dxos/echo';
+import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Event, Message, type Person } from '@dxos/types';
 
@@ -32,8 +32,8 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
   useObject(mailbox);
   useObject(calendar);
 
-  const mailboxFeed = mailbox?.feed?.target as Feed.Feed | undefined;
-  const calendarFeed = calendar?.feed?.target as Feed.Feed | undefined;
+  const mailboxFeed = mailbox?.feed?.target;
+  const calendarFeed = calendar?.feed?.target;
   // TODO(wittjosiah): Way to structure this query that does not require type assertions?
   const messages: Message.Message[] = useQuery(
     db,
