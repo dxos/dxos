@@ -240,13 +240,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   private _send(message: Message): void {
     const connectionEntry = this._connections.get(message.targetId);
     if (!connectionEntry) {
-      // Peer may have disconnected between scheduling and dispatch (e.g. a
-      // collection-state broadcast scheduled via `queueMicrotask` firing
-      // after teardown). All three callers — `send`, `queryCollectionState`,
-      // `sendCollectionState` — are fire-and-forget; a synchronous throw
-      // here surfaces as an unhandled exception that fails the test run.
-      log('send skipped: connection not found', { targetId: message.targetId, type: message.type });
-      return;
+      throw new Error('Connection not found.');
     }
 
     // TODO(dmaretskyi): Find a way to enforce backpressure on AM-repo.
