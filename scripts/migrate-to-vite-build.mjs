@@ -50,8 +50,12 @@ const parseEntryPoints = (moonYmlText) => {
   return entries;
 };
 
-/** Rewrite moon.yml: swap `ts-build` → `ts-vite-build`, drop the `compile` task block. */
-const rewriteMoonYml = (text) => {
+/**
+ * Rewrite moon.yml: swap `ts-build` → `ts-vite-build`, drop the `compile` task block,
+ * and inject a `build` override that re-declares the dropped compile-task deps
+ * (e.g. `prebuild`, `glsl`, `gen-pieces`) so the new build still waits on them.
+ */
+const rewriteMoonYml = (text, buildExtraDeps = []) => {
   const lines = text.split('\n');
   const out = [];
   let inCompileTask = false;
@@ -103,6 +107,21 @@ const rewriteMoonYml = (text) => {
   }
 
   let result = out.join('\n');
+  if (buildExtraDeps.length > 0) {
+    const buildBlock =
+      `tasks:\n  # Sibling prebuild/codegen tasks the old compile depended on.\n  build:\n    deps:\n` +
+      buildExtraDeps.map((d) => `      - ${d}`).join('\n') +
+      `\n`;
+    // Merge into existing `tasks:` block if present, otherwise append.
+    if (/^tasks:\s*$/m.test(result)) {
+      result = result.replace(
+        /^tasks:\s*$\n/m,
+        (m) => m + `  build:\n    deps:\n` + buildExtraDeps.map((d) => `      - ${d}`).join('\n') + '\n',
+      );
+    } else {
+      result = result.trimEnd() + '\n\n' + buildBlock;
+    }
+  }
   // If `tasks:` has no remaining children, drop it.
   result = result.replace(/^tasks:\s*(?:\n|$)/m, (match, offset, str) => {
     const after = str.slice(offset + match.length);
@@ -123,7 +142,7 @@ const buildEntryRecord = (entryPoints) => {
 };
 
 const buildViteConfig = (pkgDir, entryPoints, hasTests, jsx, testEnvOverride, extras = {}) => {
-  const { browser = false, storybook = false } = extras;
+  const { browser = false, storybook = false, assetsAsFiles = false } = extras;
   const relToRoot = relative(pkgDir, REPO_ROOT) || '.';
   const baseImport = `${relToRoot}/vite.base.config.ts`;
   const entryRecord = buildEntryRecord(entryPoints);
@@ -137,6 +156,9 @@ const buildViteConfig = (pkgDir, entryPoints, hasTests, jsx, testEnvOverride, ex
   }
   if (jsx) {
     optionsBits.push(`  jsx: '${jsx}',`);
+  }
+  if (assetsAsFiles) {
+    optionsBits.push(`  assetsAsFiles: true,`);
   }
   if (hasTests) {
     // JSX packages need a DOM (component rendering); non-JSX packages with explicit
@@ -274,12 +296,53 @@ const migrate = (pkgRel) => {
     return;
   }
 
-  // Skip packages whose moon.yml overrides `compile`'s `command:` (e.g. a custom
-  // `bun ./scripts/build.ts`) — those are bespoke build pipelines that the migration
-  // script can't safely translate.
-  if (/^\s+compile:\s*$\n(?:\s+(?!command:)\S.*\n)*\s+command:/m.test(moonText)) {
+  // Walk lines to extract the body of the `compile:` task without picking up siblings.
+  // Skip packages whose `compile:` declares its own `command:` (a custom build script
+  // we can't translate). Packages whose `compile:` is just `args:` + `deps:` migrate;
+  // siblings like `prebuild` / `glsl` / `e2e` survive the rewrite and the new `build`
+  // gets the same prebuild deps re-attached below.
+  const compileBody = [];
+  let compileIndentChars;
+  {
+    const lines = moonText.split('\n');
+    let inCompile = false;
+    for (const line of lines) {
+      const m = line.match(/^(\s+)compile:\s*$/);
+      if (m && !inCompile) {
+        inCompile = true;
+        compileIndentChars = m[1];
+        continue;
+      }
+      if (inCompile) {
+        const indent = line.match(/^(\s*)/)[1];
+        if (line.trim() === '' || indent.length > compileIndentChars.length) {
+          compileBody.push(line);
+        } else {
+          break;
+        }
+      }
+    }
+  }
+  const compileBodyText = compileBody.join('\n');
+  if (/^\s+command:/m.test(compileBodyText)) {
     console.warn(`SKIP ${pkgRel}: compile task has custom command`);
     return;
+  }
+  // Carry over the compile task's local deps (e.g. `prebuild`, `glsl`).
+  const compileTaskDeps = [];
+  {
+    const depsMatch = compileBodyText.match(/^\s+deps:\s*\n((?:\s+-\s+\S.*\n?)+)/m);
+    if (depsMatch) {
+      for (const line of depsMatch[1].split('\n')) {
+        const m = line.match(/^\s+-\s+(\S+)\s*$/);
+        // Keep package-local task refs only (e.g. `prebuild`, `glsl`). Skip the
+        // workspace-level chain (`^:build`, `~:compile`) since tag-ts-vite-build.yml
+        // already provides those.
+        if (m && !/^[\^~]:/.test(m[1])) {
+          compileTaskDeps.push(m[1]);
+        }
+      }
+    }
   }
 
   // Skip applications (layer: application) — they're consumers, not libraries.
@@ -294,6 +357,7 @@ const migrate = (pkgRel) => {
   // assets from the worker. These packages stay on the esbuild flow until we have a
   // proper worker-externalization strategy.
   const srcDir = resolve(pkgDir, 'src');
+  let hasRawAssetImports = false;
   if (existsSync(srcDir)) {
     const usesWorker = execSync(
       `grep -rEl "new (Shared)?Worker\\(new URL\\(|import\\.meta\\.url.*new URL" "${srcDir}" 2>/dev/null || true`,
@@ -303,17 +367,12 @@ const migrate = (pkgRel) => {
       console.warn(`SKIP ${pkgRel}: uses worker/import.meta.url URL patterns`);
       return;
     }
-    // Skip packages importing raw assets (`?url` / `?raw` / `?inline`). Vite's library
-    // mode inlines them as base64 into the bundle (e.g. plugin-zen pulled 50MB of .m4a
-    // into a single chunk), which then blows past PWA precache limits on the consumer.
-    const importsAssets = execSync(
+    // `?url` / `?raw` / `?inline` asset imports — let the base config emit them as
+    // separate files instead of base64-inlining them into the JS bundle.
+    hasRawAssetImports = !!execSync(
       `grep -rEl "from ['\\\"][^'\\\"]+\\?(url|raw|inline)['\\\"]" "${srcDir}" 2>/dev/null || true`,
       { encoding: 'utf8' },
     ).trim();
-    if (importsAssets) {
-      console.warn(`SKIP ${pkgRel}: imports raw assets via ?url / ?raw / ?inline`);
-      return;
-    }
   }
 
   // Skip packages where the default entry (src/index.ts) doesn't exist and no
@@ -453,7 +512,7 @@ const migrate = (pkgRel) => {
     jsx = 'react';
   }
 
-  const newMoon = rewriteMoonYml(moonText);
+  const newMoon = rewriteMoonYml(moonText, compileTaskDeps);
   writeFileSync(moonPath, newMoon);
 
   rewriteExports(pkgJson, entryPoints);
@@ -482,6 +541,7 @@ const migrate = (pkgRel) => {
     buildViteConfig(pkgDir, entryPoints, hasTests, jsx, testEnvOverride, {
       browser: hasBrowserTests,
       storybook: hasStorybookTests,
+      assetsAsFiles: hasRawAssetImports,
     }),
   );
 

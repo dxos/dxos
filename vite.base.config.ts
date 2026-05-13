@@ -77,6 +77,51 @@ export const DxNodeStdPlugin = (): Plugin => ({
 });
 
 /**
+ * Emits `?url` / `?raw` / `?inline` asset imports as separate files in `dist/lib/assets/`
+ * instead of base64-inlining them into the JS bundle.
+ *
+ * Vite's library mode (`build.lib`) ignores `assetsInlineLimit` for `?url` imports and
+ * always returns a base64 data URI — fine for small icons, ruinous for the 50 MB of
+ * `.m4a` soundscapes in @dxos/plugin-zen. This plugin runs `enforce: 'pre'` so it
+ * intercepts the import before vite's asset handler does. The output is a small JS
+ * module that re-exports the emitted URL via `import.meta.ROLLUP_FILE_URL_*`, which
+ * resolves to the relative path of the emitted asset at consumer-bundling time.
+ */
+export const DxRawAssetsPlugin = (): Plugin => {
+  const ASSET_QUERY = /\?(url|raw|inline)(?:$|&)/;
+  return {
+    name: 'DxRawAssets',
+    enforce: 'pre',
+    async resolveId(id, importer) {
+      if (!ASSET_QUERY.test(id)) {
+        return null;
+      }
+      // Resolve the file relative to its importer so the next `load` can read it.
+      const cleanId = id.replace(/\?.*$/, '');
+      const resolved = await this.resolve(cleanId, importer, { skipSelf: true });
+      if (!resolved) {
+        return null;
+      }
+      return `${resolved.id}${id.slice(cleanId.length)}\0?dx-raw-asset`;
+    },
+    async load(id) {
+      if (!id.endsWith('\0?dx-raw-asset')) {
+        return null;
+      }
+      const filePath = id.slice(0, -'\0?dx-raw-asset'.length).replace(/\?.*$/, '');
+      const fs = await import('node:fs/promises');
+      const path = await import('node:path');
+      const source = await fs.readFile(filePath);
+      const fileName = path.basename(filePath);
+      const refId = this.emitFile({ type: 'asset', name: fileName, source });
+      // `import.meta.ROLLUP_FILE_URL_<refId>` resolves to the relative URL of the
+      // emitted asset at chunk-render time.
+      return `export default import.meta.ROLLUP_FILE_URL_${refId};`;
+    },
+  };
+};
+
+/**
  * Invokes `dx-build` (tsgo wrapper) after the JS bundle is written.
  * Generates per-file `.d.ts` files in `dist/types/src/` — no bundling, no TS2883.
  */
@@ -371,6 +416,12 @@ export interface DxConfigOptions {
   nodeTarget?: boolean;
   /** JSX runtime for `.tsx`/`.jsx` source files. */
   jsx?: 'react' | 'solid';
+  /**
+   * Emit raw-asset imports (`?url` / `?raw` / `?inline`) as separate files instead of
+   * base64-inlining them into the JS bundle. Matches esbuild's `file` loader. Required
+   * for packages that import large binary assets (e.g. plugin-zen's `.m4a` soundscapes).
+   */
+  assetsAsFiles?: boolean;
   /** Vitest configuration; omit for build-only packages. `dirname` is auto-derived from `process.cwd()`. */
   test?: TestOptions;
 }
@@ -383,7 +434,7 @@ export interface DxConfigOptions {
  * - Tests → vitest projects (`node` / `browser` / `storybook`) wired in when `test` is set.
  */
 export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
-  const { entry = 'src/index.ts', outDir = 'dist/lib', nodeTarget = false, jsx, test } = options;
+  const { entry = 'src/index.ts', outDir = 'dist/lib', nodeTarget = false, jsx, assetsAsFiles = false, test } = options;
   // Solid: ssr-aware client transform.
   const jsxPlugin: Plugin[] = jsx === 'react' ? [react()] : jsx === 'solid' ? [solid()] : [];
   return viteDefineConfig({
@@ -396,6 +447,12 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
       outDir,
       sourcemap: true,
       minify: false,
+      // When the package imports `?url` / `?raw` / `?inline` assets, force every asset
+      // to be emitted as a separate file rather than base64-inlined into the bundle
+      // (vite's default in library mode is to inline below ~4 KB, but rolldown's chunker
+      // also lifts larger assets into a shared JS chunk — plugin-zen's 50 MB of .m4a
+      // ended up in a single 64 MB chunk before this).
+      ...(assetsAsFiles ? { assetsInlineLimit: 0 } : {}),
       rollupOptions: {
         // All non-relative, non-absolute imports are external — this covers @dxos/*,
         // effect, react, solid-js, and everything else automatically. Two carve-outs:
@@ -416,11 +473,15 @@ export const defineConfig = (options: DxConfigOptions = {}): UserConfig => {
         },
         output: {
           chunkFileNames: 'chunk-[name].mjs',
+          // Keep emitted assets adjacent to the entry chunks so consumers' bundlers
+          // can resolve them via the same relative path the JS already references.
+          assetFileNames: 'assets/[name]-[hash][extname]',
         },
       },
     },
     plugins: [
       ...(!nodeTarget ? [DxNodeStdPlugin()] : []),
+      ...(assetsAsFiles ? [DxRawAssetsPlugin()] : []),
       ...jsxPlugin,
       DxosLogPlugin({ logToFile: false, transform: { enabled: true } }),
       DxTsgoPlugin(),
