@@ -257,9 +257,6 @@
       "path": "../../plugins/plugin-crx"
     },
     {
-      "path": "../../plugins/plugin-daily-summary"
-    },
-    {
       "path": "../../plugins/plugin-debug"
     },
     {
