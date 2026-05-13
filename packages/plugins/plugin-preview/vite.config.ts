@@ -16,5 +16,5 @@ export default defineConfig({
     PreviewPlugin: 'src/PreviewPlugin.tsx',
   },
   jsx: 'react',
-  test: { node: { environment: 'happy-dom' }, storybook: true },
+  test: { node: true, storybook: true },
 });

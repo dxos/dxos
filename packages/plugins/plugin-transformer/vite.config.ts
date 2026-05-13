@@ -15,5 +15,5 @@ export default defineConfig({
     TransformerPlugin: 'src/TransformerPlugin.tsx',
   },
   jsx: 'react',
-  test: { node: { environment: 'happy-dom' }, storybook: true },
+  test: { node: true, storybook: true },
 });

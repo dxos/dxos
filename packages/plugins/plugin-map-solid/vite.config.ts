@@ -15,5 +15,5 @@ export default defineConfig({
     MapPlugin: 'src/MapPlugin.tsx',
   },
   jsx: 'solid',
-  test: { node: { environment: 'happy-dom' } },
+  test: { node: true },
 });

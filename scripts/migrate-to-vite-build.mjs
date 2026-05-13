@@ -161,10 +161,11 @@ const buildViteConfig = (pkgDir, entryPoints, hasTests, jsx, testEnvOverride, ex
     optionsBits.push(`  assetsAsFiles: true,`);
   }
   if (hasTests) {
-    // JSX packages need a DOM (component rendering); non-JSX packages with explicit
-    // `happy-dom` / `jsdom` setups in their previous vitest.config get the same;
-    // everything else defaults to plain node.
-    const env = testEnvOverride ?? (jsx ? 'happy-dom' : undefined);
+    // Only opt into a DOM-y env when the previous vitest.config (local or origin/main)
+    // explicitly asked for one. JSX packages don't automatically get happy-dom —
+    // libraries like @dxos/introspect render JSX statically and use `import.meta.url`
+    // in tests, which happy-dom turns into an http:// URL and crashes `fileURLToPath`.
+    const env = testEnvOverride;
     const testParts = [];
     testParts.push(env ? `node: { environment: '${env}' }` : `node: true`);
     if (browser) testParts.push(`browser: 'chromium'`);
@@ -459,26 +460,26 @@ const migrate = (pkgRel) => {
   // happy-dom on tests that hit real localhost services — happy-dom's CORS policy
   // blocks those requests.
   let testEnvOverride;
-  const candidates = [vitestConfigPath, viteConfigPath].filter(existsSync);
-  for (const candidate of candidates) {
-    const m = readFileSync(candidate, 'utf8').match(/environment:\s*['"]([^'"]+)['"]/);
+  // origin/main is the authoritative source. We deliberately ignore an existing
+  // local vite.config.ts because earlier passes of this script may have written a
+  // stale env into it (the previous `jsx ? 'happy-dom'` heuristic), and re-reading
+  // it would re-propagate the mistake.
+  try {
+    const fromMain = execSync(`git show "origin/main:${pkgRel}/vitest.config.ts" 2>/dev/null || true`, {
+      cwd: REPO_ROOT,
+      encoding: 'utf8',
+    });
+    const m = fromMain.match(/environment:\s*['"]([^'"]+)['"]/);
     if (m && (m[1] === 'happy-dom' || m[1] === 'jsdom')) {
       testEnvOverride = m[1];
-      break;
     }
-  }
-  if (!testEnvOverride) {
-    // Probe main's vitest.config.ts via `git show`; harmless if the file never existed.
-    try {
-      const fromMain = execSync(`git show "origin/main:${pkgRel}/vitest.config.ts" 2>/dev/null || true`, {
-        cwd: REPO_ROOT,
-        encoding: 'utf8',
-      });
-      const m = fromMain.match(/environment:\s*['"]([^'"]+)['"]/);
-      if (m && (m[1] === 'happy-dom' || m[1] === 'jsdom')) {
-        testEnvOverride = m[1];
-      }
-    } catch {}
+  } catch {}
+  if (!testEnvOverride && existsSync(vitestConfigPath)) {
+    // Un-migrated package — read the live local vitest.config.ts.
+    const m = readFileSync(vitestConfigPath, 'utf8').match(/environment:\s*['"]([^'"]+)['"]/);
+    if (m && (m[1] === 'happy-dom' || m[1] === 'jsdom')) {
+      testEnvOverride = m[1];
+    }
   }
 
   const pkgJson = JSON.parse(readFileSync(pkgJsonPath, 'utf8'));

@@ -25,5 +25,5 @@ export default defineConfig({
   },
   jsx: 'react',
   assetsAsFiles: true,
-  test: { node: { environment: 'happy-dom' }, storybook: true },
+  test: { node: true, storybook: true },
 });

@@ -19,5 +19,5 @@ export default defineConfig({
     types: 'src/types.ts',
   },
   jsx: 'react',
-  test: { node: { environment: 'happy-dom' }, storybook: true },
+  test: { node: true, storybook: true },
 });

@@ -12,5 +12,5 @@ export default defineConfig({
     scheduler: 'src/scheduler.ts',
   },
   jsx: 'react',
-  test: { node: { environment: 'happy-dom' }, storybook: true },
+  test: { node: true, storybook: true },
 });

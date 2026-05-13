@@ -16,5 +16,5 @@ export default defineConfig({
     DailySummaryPlugin: 'src/DailySummaryPlugin.tsx',
   },
   jsx: 'react',
-  test: { node: { environment: 'happy-dom' } },
+  test: { node: true },
 });

@@ -10,5 +10,5 @@ export default defineConfig({
     'components/IconPicker/icons': 'src/components/IconPicker/icons.ts',
   },
   jsx: 'react',
-  test: { node: { environment: 'happy-dom' }, storybook: true },
+  test: { node: true, storybook: true },
 });

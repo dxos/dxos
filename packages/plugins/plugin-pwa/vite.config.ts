@@ -13,5 +13,5 @@ export default defineConfig({
     PwaPlugin: 'src/PwaPlugin.tsx',
   },
   jsx: 'react',
-  test: { node: { environment: 'happy-dom' } },
+  test: { node: true },
 });

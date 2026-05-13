@@ -22,5 +22,5 @@ export default defineConfig({
     types: 'src/types/index.ts',
   },
   jsx: 'react',
-  test: { node: { environment: 'happy-dom' }, browser: 'chromium', storybook: true },
+  test: { node: true, browser: 'chromium', storybook: true },
 });

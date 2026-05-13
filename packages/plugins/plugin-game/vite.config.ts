@@ -18,5 +18,5 @@ export default defineConfig({
     util: 'src/util/index.ts',
   },
   jsx: 'react',
-  test: { node: { environment: 'happy-dom' } },
+  test: { node: true },
 });

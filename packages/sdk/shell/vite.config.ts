@@ -11,5 +11,5 @@ export default defineConfig({
     testing: 'src/testing/index.ts',
   },
   jsx: 'react',
-  test: { node: { environment: 'happy-dom' }, browser: 'chromium', storybook: true },
+  test: { node: true, browser: 'chromium', storybook: true },
 });

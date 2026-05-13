@@ -18,5 +18,5 @@ export default defineConfig({
   },
   jsx: 'react',
   assetsAsFiles: true,
-  test: { node: { environment: 'happy-dom' } },
+  test: { node: true },
 });

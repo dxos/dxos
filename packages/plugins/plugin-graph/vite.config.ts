@@ -14,5 +14,5 @@ export default defineConfig({
     GraphPlugin: 'src/GraphPlugin.ts',
   },
   jsx: 'react',
-  test: { node: { environment: 'happy-dom' } },
+  test: { node: true },
 });
