@@ -52,7 +52,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
       }
 
       const queue = target && DXN.tryParse(target) ? target : undefined;
-      const query = queue ? Query.fromAst(newQuery).from({ queues: [queue] }) : Query.fromAst(newQuery);
+      const query = queue ? Query.fromAst(newQuery).from({ feeds: [queue] }) : Query.fromAst(newQuery);
       Obj.update(view, (view) => {
         view.query.ast = query.ast as Mutable<typeof query.ast>;
       });

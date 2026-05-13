@@ -9,7 +9,7 @@ import { MeterProvider, PeriodicExportingMetricReader } from '@opentelemetry/sdk
 import { log } from '@dxos/log';
 import { type MetricData, TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { type OtelOptions, setDiagLogger } from './otel';
+import { type OtelOptions, resolveOtlpUrl, setDiagLogger } from './otel';
 
 const EXPORT_INTERVAL = 60 * 1000;
 
@@ -24,7 +24,7 @@ export class OtelMetrics {
 
     const grafanaMetricReader = new PeriodicExportingMetricReader({
       exporter: new OTLPMetricExporter({
-        url: this.options.endpoint + '/v1/metrics',
+        url: resolveOtlpUrl(this.options.endpoint + '/v1/metrics'),
         headers: this.options.headers,
       }),
       exportIntervalMillis: EXPORT_INTERVAL,

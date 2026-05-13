@@ -237,7 +237,7 @@ describe('QueryExecutor.matchesHint — queue scope derives spaceId', () => {
       automergeHost: {} as any,
       spaceStateManager: {} as any,
       queryId: 'test',
-      query: Query.select(Filter.type(TestSchema.Task)).from({ queues: [QUEUE_DXN] }).ast,
+      query: Query.select(Filter.type(TestSchema.Task)).from({ feeds: [QUEUE_DXN] }).ast,
       reactivity: 'reactive' as any,
     });
     // Hint carries the space derived from the queue DXN → should match.
@@ -256,7 +256,7 @@ describe('QueryExecutor.matchesHint — queue scope derives spaceId', () => {
       automergeHost: {} as any,
       spaceStateManager: {} as any,
       queryId: 'test',
-      query: Query.select(Filter.type(TestSchema.Task)).from({ queues: [QUEUE_DXN] }).ast,
+      query: Query.select(Filter.type(TestSchema.Task)).from({ feeds: [QUEUE_DXN] }).ast,
       reactivity: 'reactive' as any,
     });
     // Hint constrained to the exact queue → match.

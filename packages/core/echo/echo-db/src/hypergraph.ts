@@ -279,8 +279,8 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
           }
           const { echoId } = dxn.asEchoDXN() ?? failedInvariant();
 
-          if (context.queue) {
-            const { subspaceTag, spaceId, queueId } = context.queue.asQueueDXN() ?? failedInvariant();
+          if (context.feed) {
+            const { subspaceTag, spaceId, queueId } = context.feed.asQueueDXN() ?? failedInvariant();
             const obj = await this._resolveQueueObjectAsync(spaceId, subspaceTag as QueueSubspaceTag, queueId, echoId);
             if (obj) {
               status = 'resolved';

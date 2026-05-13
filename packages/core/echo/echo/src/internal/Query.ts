@@ -121,11 +121,11 @@ export const prettyQuery = (query: QueryAST.Query): string => {
         if (scope.spaceIds !== undefined) {
           parts.push(`spaceIds: [${scope.spaceIds.map((s) => JSON.stringify(s)).join(', ')}]`);
         }
-        if (scope.queues !== undefined) {
-          parts.push(`queues: [${scope.queues.map(String).join(', ')}]`);
+        if (scope.feeds !== undefined) {
+          parts.push(`feeds: [${scope.feeds.map(String).join(', ')}]`);
         }
-        if (scope.allQueuesFromSpaces !== undefined) {
-          parts.push(`allQueuesFromSpaces: ${scope.allQueuesFromSpaces}`);
+        if (scope.allFeedsFromSpaces !== undefined) {
+          parts.push(`allFeedsFromSpaces: ${scope.allFeedsFromSpaces}`);
         }
         return `${prettyQuery(query.query)}.from({ ${parts.join(', ')} })`;
       }

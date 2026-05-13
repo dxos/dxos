@@ -108,7 +108,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
       );
     }
 
-    if ((agent.filterEvents ?? true) && agent.queue) {
+    if ((agent.filterEvents ?? true) && agent.feed) {
       yield* Database.add(
         Trigger.make({
           [Obj.Parent]: agent,
@@ -123,7 +123,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
           },
           function: Ref.make(Operation.serialize(AgentWorker)),
           enabled: triggersEnabled,
-          spec: Trigger.specQueue(agent.queue.dxn.toString()),
+          spec: Trigger.specQueue(agent.feed.dxn.toString()),
           input: {
             agent: Ref.make(agent),
             event: '{{event}}',
