@@ -20,8 +20,8 @@ import {
   AuthStatus,
   CredentialServerExtension,
   DatabaseRoot,
-  type EchoEdgeReplicator,
   type EchoHost,
+  type EdgeAutomergeReplicator,
   type MeshEchoReplicator,
   type MetadataStore,
   type Space,
@@ -113,7 +113,7 @@ export type DataSpaceManagerProps = {
   edgeConnection?: EdgeConnection;
   edgeHttpClient?: EdgeHttpClient;
   meshReplicator?: MeshEchoReplicator;
-  echoEdgeReplicator?: EchoEdgeReplicator;
+  echoEdgeReplicator?: EdgeAutomergeReplicator;
   runtimeProps?: DataSpaceManagerRuntimeProps;
   edgeFeatures?: Runtime.Client.EdgeFeatures;
 };
@@ -155,7 +155,7 @@ export class DataSpaceManager extends Resource {
   private readonly _edgeHttpClient?: EdgeHttpClient = undefined;
   private readonly _edgeFeatures?: Runtime.Client.EdgeFeatures = undefined;
   private readonly _meshReplicator?: MeshEchoReplicator = undefined;
-  private readonly _echoEdgeReplicator?: EchoEdgeReplicator = undefined;
+  private readonly _echoEdgeReplicator?: EdgeAutomergeReplicator = undefined;
   private readonly _runtimeProps?: DataSpaceManagerRuntimeProps = undefined;
 
   constructor(params: DataSpaceManagerProps) {
@@ -577,7 +577,7 @@ export class DataSpaceManager extends Resource {
         // Use lifecycle ctx: the caller ctx from _constructSpace may be disposed by the time postOpen fires.
         await this._echoEdgeReplicator?.connectToSpace(this._ctx, dataSpace.id);
       } else if (this._echoEdgeReplicator) {
-        log('not connecting EchoEdgeReplicator because of EdgeReplicationSetting', { spaceId: dataSpace.id });
+        log('not connecting edge replicator because of EdgeReplicationSetting', { spaceId: dataSpace.id });
       }
     });
     dataSpace.preClose.append(async () => {

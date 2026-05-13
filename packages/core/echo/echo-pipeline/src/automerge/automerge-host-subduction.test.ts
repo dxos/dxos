@@ -9,6 +9,7 @@ import { describe, onTestFinished, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
+import type { CollectionId } from '@dxos/echo-protocol';
 import { PublicKey } from '@dxos/keys';
 import type { LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -156,6 +157,10 @@ describe('AutomergeHost with Subduction', () => {
       await host2.addReplicator(Context.default(), await network.createReplicator());
 
       const collectionId = 'test-collection';
+      const collectionUpdates: CollectionId[] = [];
+      const unsubscribe = host1.collectionStateUpdated.on(({ collectionId }) => {
+        collectionUpdates.push(collectionId);
+      });
       await host1.updateLocalCollectionState(collectionId, documentIds);
       await host2.updateLocalCollectionState(collectionId, documentIds);
 
@@ -164,6 +169,13 @@ describe('AutomergeHost with Subduction', () => {
           .poll(() => host1.getHeads([documentId]), { timeout: 1_000 })
           .toEqual(await host2.getHeads([documentId]));
       }
+
+      // collectionStateUpdated fires whenever host1 observes a `collection-state` from host2
+      // (see {@link CollectionSynchronizer.remoteStateUpdated}). At least one event must
+      // arrive for the heads to have converged via the collection-sync path rather than
+      // raw Subduction byte transport.
+      expect(collectionUpdates).toContain(collectionId as CollectionId);
+      unsubscribe();
     } finally {
       await host1.close();
       await host2.close();
