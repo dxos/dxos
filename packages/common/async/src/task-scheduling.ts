@@ -57,15 +57,25 @@ export class DeferredTask {
   }
 
   /**
-   * Schedule the task to run and wait for it to finish.
+   * Schedule the task to run and wait for it to finish, or for the owning
+   * context to dispose — whichever comes first. Context disposal is a
+   * cooperative cancellation: callers should check `ctx.disposed` themselves
+   * if they need to react (e.g. to exit a retry loop) rather than rely on a
+   * thrown error.
    */
   async runBlocking(): Promise<void> {
     if (this._ctx.disposed) {
-      throw new ContextDisposedError();
+      return;
     }
 
     this.schedule();
-    await this._nextTask.wait();
+
+    let removeDisposeHandler: (() => void) | undefined;
+    await new Promise<void>((resolve) => {
+      removeDisposeHandler = this._ctx.onDispose(() => resolve());
+      void this._nextTask.wait().then(() => resolve());
+    });
+    removeDisposeHandler?.();
   }
 
   /**
