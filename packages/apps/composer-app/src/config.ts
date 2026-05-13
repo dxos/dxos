@@ -65,7 +65,6 @@ export const initializeObservability = async (config: Config, isTauri: boolean, 
         serviceName: 'composer',
         serviceVersion: DXOS_VERSION,
         environment: config.values.runtime?.app?.env?.DX_ENVIRONMENT ?? 'unknown',
-        // Default to the Cloudflare worker reverse-proxy; override with DX_OTEL_ENDPOINT at build time.
         endpoint: '/api/otel',
         config,
         logs: true,
