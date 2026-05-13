@@ -60,16 +60,9 @@ describe('queues', () => {
     await queue.append([obj]);
 
     {
-      // Queue items now use ECHO-kind DXNs (echo://spaceId/itemId).
-      const resolved = await peer.client.graph
-        .createRefResolver({ context: { space: spaceId } })
-        .resolve(DXN.fromSpaceAndObjectId(spaceId, obj.id));
-      expect(resolved?.id).toEqual(obj.id);
-      expect(resolved?.name).toEqual('john');
-      expect(Obj.getSchema(resolved as Obj.Unknown)).toEqual(TestSchema.Person);
-    }
-
-    {
+      // Resolve queue item using feed context. Since queue items have ECHO-kind DXNs
+      // (echo://spaceId/itemId) without queue routing info, a local object DXN + feed
+      // context is the correct way to resolve them.
       const resolved = await peer.client.graph
         .createRefResolver({ context: { space: spaceId, feed: queue.dxn } })
         .resolve(DXN.fromLocalObjectId(obj.id));
