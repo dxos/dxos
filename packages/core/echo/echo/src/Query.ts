@@ -411,9 +411,14 @@ class QueryClass implements Any {
     }
 
     const feedItems = items as Feed.Feed[];
-    const feedDxns = feedItems.flatMap((feed) => {
+    const feedDxns = feedItems.map((feed) => {
       const dxn = Feed.getQueueDxn(feed);
-      return dxn ? [dxn.toString()] : [];
+      if (!dxn) {
+        throw new TypeError(
+          `Query.from() expects persisted Feed objects with a queue DXN; got feed without a space (id=${Obj.getDXN(feed).toString()}).`,
+        );
+      }
+      return dxn.toString();
     });
     return new QueryClass({
       type: 'from',
