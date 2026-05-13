@@ -76,6 +76,16 @@ const PluginImportSource = ({
           return null;
         }
 
+        // Don't apply `source` condition when the importer is already in a
+        // compiled `dist/` tree. Re-resolving its `#*` subpath imports to
+        // source would jump back into TypeScript sources that may not be
+        // browser-safe (e.g. raw `node:path` in `random-access-storage`'s
+        // src). Compiled packages expect the dist→dist resolution chain to
+        // be preserved.
+        if (importer.includes('/dist/')) {
+          return null;
+        }
+
         try {
           const resolved = await resolver.async(importer, source);
 

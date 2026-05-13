@@ -58,14 +58,6 @@ const createStorybookProject = (dirname: string) =>
   defineProject({
     test: {
       name: 'storybook',
-      // Safety net for residual unhandled rejections from the @vitest/browser
-      // <-> chromium teardown layer (e.g. WebSocket cleanup races). We've
-      // already patched the known birpc `toJSON`/Symbol issue (see
-      // `patches/@vitest__browser@4.1.5.patch`), but environment-only
-      // races still surface intermittently under CI parallelism. Leave the
-      // patches in place and keep this flag scoped to the storybook project
-      // so unrelated test projects don't gain blanket error suppression.
-      dangerouslyIgnoreUnhandledErrors: true,
       browser: {
         enabled: true,
         headless: true,
