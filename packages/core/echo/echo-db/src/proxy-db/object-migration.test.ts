@@ -121,27 +121,13 @@ test('migration moves data key/version into meta', async () => {
     name: Schema.String,
   }).pipe(Type.object({ typename: 'com.example.type.registry-entry', version: '0.2.0' }));
 
-  // Capture pre-migration data keyed by object id (the `before` argument to onMigration
-  // currently aliases `object`, so we snapshot the legacy fields during `transform`).
-  const preMigrationData = new Map<string, { key: string; version: string }>();
   const migration = defineObjectMigration({
     from: RegistryEntryV1,
     to: RegistryEntryV2,
-    transform: async (from) => {
-      preMigrationData.set((from as any).id, { key: from.key, version: from.version });
-      return { name: from.name };
-    },
-    onMigration: async ({ object }) => {
-      const captured = preMigrationData.get((object as any).id);
-      if (!captured) {
-        return;
-      }
-      Obj.update(object, (object) => {
-        const meta = Obj.getMeta(object);
-        meta.key = captured.key;
-        meta.version = captured.version;
-      });
-    },
+    transform: async (from) => ({
+      [Obj.Meta]: { key: from.key, version: from.version },
+      name: from.name,
+    }),
   });
 
   const { db, graph } = await builder.createDatabase();

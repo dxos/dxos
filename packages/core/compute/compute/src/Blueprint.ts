@@ -266,37 +266,22 @@ export interface Blueprint_v0_1_0 extends Schema.Schema.Type<typeof Blueprint_v0
  * Migration from {@link Blueprint_v0_1_0} (v0.1.0) to {@link Blueprint} (v0.2.0).
  * Moves `key` from the data section into the object meta.
  */
-// The migration framework currently aliases `before` and `object` in `onMigration`, so we snapshot
-// the legacy `key` during `transform` and read it back keyed by object id.
-const _blueprintMigrationSnapshots = new Map<string, { key: string }>();
-export const migration = Migration.define({
+const _migration = Migration.define({
   from: Blueprint_v0_1_0,
   to: Blueprint,
-  transform: async (from) => {
-    _blueprintMigrationSnapshots.set((from as any).id, { key: from.key });
-    return {
-      name: from.name,
-      description: from.description,
-      instructions: from.instructions,
-      tools: from.tools,
-      agentCanEnable: from.agentCanEnable,
-      mcpServers: from.mcpServers,
-    };
-  },
-  onMigration: async ({ object }) => {
-    const id = (object as any).id;
-    const snapshot = _blueprintMigrationSnapshots.get(id);
-    if (!snapshot) {
-      return;
-    }
-    try {
-      Obj.update(object, (object) => {
-        const meta = Obj.getMeta(object);
-        meta.key = snapshot.key;
-        meta.version ??= '0.1.0';
-      });
-    } finally {
-      _blueprintMigrationSnapshots.delete(id);
-    }
-  },
+  transform: async (from) => ({
+    [Obj.Meta]: { key: from.key, version: '0.1.0' },
+    name: from.name,
+    description: from.description,
+    instructions: from.instructions,
+    tools: from.tools,
+    agentCanEnable: from.agentCanEnable,
+    mcpServers: from.mcpServers,
+  }),
 });
+
+/**
+ * Schema migrations exported by this module.
+ * Exported as an array for extensibility — append future versions here.
+ */
+export const migrations = [_migration];

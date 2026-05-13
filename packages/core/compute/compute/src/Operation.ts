@@ -552,41 +552,24 @@ export interface PersistentOperation_v0_1_0 extends Schema$.Schema.Type<typeof P
  * Migration from {@link PersistentOperation_v0_1_0} (v0.1.0) to {@link PersistentOperation} (v0.2.0).
  * Moves `key` and `version` from the data section into the object meta.
  */
-// The migration framework currently aliases `before` and `object` in `onMigration`, so we snapshot
-// the legacy `key` and `version` during `transform` and read them back keyed by object id.
-const _operationMigrationSnapshots = new Map<string, { key?: string; version: string }>();
-export const migration = Migration.define({
+const _migration = Migration.define({
   from: PersistentOperation_v0_1_0,
   to: PersistentOperation,
-  transform: async (from) => {
-    _operationMigrationSnapshots.set((from as any).id, { key: from.key, version: from.version });
-    return {
-      name: from.name,
-      description: from.description,
-      updated: from.updated,
-      source: from.source as any,
-      inputSchema: from.inputSchema,
-      outputSchema: from.outputSchema,
-      services: from.services,
-      binding: from.binding,
-    };
-  },
-  onMigration: async ({ object }) => {
-    const id = (object as any).id;
-    const snapshot = _operationMigrationSnapshots.get(id);
-    if (!snapshot) {
-      return;
-    }
-    try {
-      Obj.update(object, (object) => {
-        const meta = Obj.getMeta(object);
-        if (snapshot.key !== undefined) {
-          meta.key = snapshot.key;
-        }
-        meta.version = snapshot.version;
-      });
-    } finally {
-      _operationMigrationSnapshots.delete(id);
-    }
-  },
+  transform: async (from) => ({
+    [Obj.Meta]: { key: from.key, version: from.version },
+    name: from.name,
+    description: from.description,
+    updated: from.updated,
+    source: from.source as any,
+    inputSchema: from.inputSchema,
+    outputSchema: from.outputSchema,
+    services: from.services,
+    binding: from.binding,
+  }),
 });
+
+/**
+ * Schema migrations exported by this module.
+ * Exported as an array for extensibility — append future versions here.
+ */
+export const migrations = [_migration];
