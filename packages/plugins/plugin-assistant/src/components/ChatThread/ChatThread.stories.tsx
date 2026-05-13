@@ -10,7 +10,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { createFeedServiceLayer } from '@dxos/client/echo';
-import { Database, Feed, Filter, Obj } from '@dxos/echo';
+import { Database, Feed, Filter } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
