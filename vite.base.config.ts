@@ -185,6 +185,11 @@ const createNodeProject = ({
     esbuild: {
       target: 'esnext',
     },
+    // See `createStorybookProject` for rationale — `source` condition lets `#xxx`
+    // imports resolve to package.json `source` instead of the unbuilt `dist/lib`.
+    resolve: {
+      conditions: ['source', 'node', 'module', 'development', 'default'],
+    },
     server: {
       fs: {
         allow: [new URL('./vitest', import.meta.url).pathname],
@@ -231,6 +236,9 @@ const createBrowserProject = ({
       ...(jsx === 'solid' ? [solid()] : []),
       ...plugins,
     ],
+    resolve: {
+      conditions: ['source', 'browser', 'module', 'development', 'default'],
+    },
     optimizeDeps: {
       include: ['buffer/'],
       esbuildOptions: {
@@ -290,6 +298,14 @@ const createStorybookProject = (dirname: string) =>
         instances: [{ browser: 'chromium' }],
       },
       setupFiles: [new URL('./tools/storybook-react/.storybook/vitest.setup.ts', import.meta.url).pathname],
+    },
+    // Pull the `source` condition into resolution so package.json `imports` entries
+    // (e.g. `#translations`, `#capabilities`) resolve to their `.ts` source instead
+    // of the unbuilt `./dist/lib/<rel>.mjs`. Without this, plugin storybook tests
+    // crash with `Failed to resolve import "#translations"` because `default`
+    // points at a build output that hasn't been produced yet.
+    resolve: {
+      conditions: ['source', 'module', 'browser', 'development', 'default'],
     },
     optimizeDeps: {
       include: ['react', 'react-dom', 'react/jsx-runtime'],
