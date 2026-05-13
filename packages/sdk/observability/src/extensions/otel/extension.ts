@@ -61,9 +61,13 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   const enabledRef = yield* Ref.make(!disabled);
   const tags = new Map<string, string>();
 
-  const endpoint = isNode()
+  const rawEndpoint = isNode()
     ? (process.env.DX_OTEL_ENDPOINT ?? _endpoint ?? buildSecrets.OTEL_ENDPOINT)
     : (config.values.runtime?.app?.env?.DX_OTEL_ENDPOINT ?? _endpoint);
+  // The OTLP exporter (>= 0.203) validates URLs and rejects relative paths.
+  // In the browser/worker, resolve relative endpoints against the current origin
+  // so callers can keep using paths like `/api/otel` for proxied deployments.
+  const endpoint = !isNode() && rawEndpoint?.startsWith('/') ? resolveRelativeEndpoint(rawEndpoint) : rawEndpoint;
   const headers =
     _headers ??
     Match.value(isNode()).pipe(
@@ -246,6 +250,17 @@ const detectProcessType = (): string => {
     return 'shared-worker';
   }
   return 'dedicated-worker';
+};
+
+/**
+ * Resolves a relative OTLP endpoint path against the current global origin.
+ * Workers expose the same `globalThis.location` as the page that spawned them;
+ * if neither is available we fall back to the original path and let the OTLP
+ * exporter surface the configuration error.
+ */
+const resolveRelativeEndpoint = (path: string): string => {
+  const origin = (globalThis as { location?: { origin?: string } }).location?.origin;
+  return origin ? `${origin}${path}` : path;
 };
 
 const parseHeaders = (unparsedHeaders: string): Record<string, string> => {
