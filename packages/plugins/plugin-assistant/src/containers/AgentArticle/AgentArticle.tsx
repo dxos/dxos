@@ -15,7 +15,7 @@ import { Annotation, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { QueueService } from '@dxos/functions';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
-import { type Queue, useQuery } from '@dxos/react-client/echo';
+import { useFeedQuery } from '@dxos/react-client/echo';
 import { Card, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
@@ -82,9 +82,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
     ),
   );
 
-  // Schema field is Ref(Feed.Feed) (typed), but at runtime queue-kinded DXNs resolve to a Queue instance.
-  // TODO(burdon): Replace with a Feed-aware query hook once Feed has React integration.
-  const inputObjects = useQuery(inputFeed as Queue | undefined, Query.select(Filter.everything()));
+  const inputObjects = useFeedQuery(inputFeed, Query.select(Filter.everything()));
 
   return (
     <Panel.Root role={role}>

@@ -14,8 +14,7 @@ import { type InvocationSpan } from '@dxos/functions-runtime';
 import { TraceEvent } from '@dxos/functions-runtime';
 import { DXN } from '@dxos/keys';
 import { type SerializedError } from '@dxos/protocols';
-import { type Queue } from '@dxos/react-client/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { type Queue, useFeedQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
@@ -197,10 +196,11 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
 const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
   const [activeTab, setActiveTab] = useState('input');
 
-  // Schema field is Ref(Feed.Feed) (typed), but at runtime the hypergraph resolves queue-kinded DXNs to a Queue instance.
-  // TODO(burdon): Replace with a Feed-aware query hook once Feed has React integration.
-  const queue = span.invocationTraceQueue?.target as Queue | undefined;
-  const objects = useQuery(queue, Filter.everything());
+  const feed = span.invocationTraceQueue?.target;
+  const objects = useFeedQuery(feed, Filter.everything());
+  // ExecutionGraphPanel still consumes Queue<Unknown>; runtime resolution returns a Queue instance.
+  // TODO(burdon): Migrate ExecutionGraphPanel to take a Feed.
+  const queue = feed as Queue | undefined;
 
   const contents = Array.head(objects).pipe(
     Option.getOrUndefined,
