@@ -6,22 +6,20 @@ import { Registry } from '@effect-atom/atom';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { AiService, OpaqueToolkit } from '@dxos/ai';
+import { OpaqueToolkit } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { ClientService } from '@dxos/client';
-import { Blueprint, Credential, LayerSpec, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
+import { Blueprint, LayerSpec, Operation, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
+import { todo } from '@dxos/debug';
 import { Database, Feed } from '@dxos/echo';
 import { FunctionInvocationService, QueueService } from '@dxos/functions';
-import { AgentService } from '@dxos/functions-runtime';
 import {
-  FeedTraceSink,
-  FunctionImplementationResolver,
-  FunctionInvocationServiceLayerWithLocalLoopbackExecutor,
-  RemoteFunctionExecutionService,
-  TriggerDispatcher,
-  TriggerStateStore,
+    AgentService, FeedTraceSink,
+    FunctionImplementationResolver, RemoteFunctionExecutionService,
+    TriggerDispatcher,
+    TriggerStateStore
 } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -37,37 +35,17 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 // than captured from an outer scope.
 //
 
-/**
- * Composes {@link FunctionInvocationService} with local + remote execution.
- * {@link RemoteFunctionExecutionService} is sourced from the environment (a
- * sibling LayerSpec) so a space-affinity spec can override it without
- * rebuilding `FunctionInvocationService`.
- */
+// TODO(dmaretskyi): Deprecated.
 const FunctionInvocationSpec = LayerSpec.make(
   {
-    affinity: 'application',
-    requires: [
-      Feed.FeedService,
-      QueueService,
-      AiService.AiService,
-      Credential.CredentialsService,
-      Database.Service,
-      RemoteFunctionExecutionService,
-      OperationHandlerSet.OperationHandlerProvider,
-    ],
+    affinity: 'process',
+    requires: [Operation.Service, OperationRegistry.Service],
     provides: [FunctionInvocationService, FunctionImplementationResolver],
   },
   () =>
     Layer.unwrapEffect(
       Effect.gen(function* () {
-        const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
-        const implementationResolverLayer = FunctionImplementationResolver.layerTest({
-          functions: handlerSet,
-        });
-        const functionInvocationLayer = FunctionInvocationServiceLayerWithLocalLoopbackExecutor.pipe(
-          Layer.provide(implementationResolverLayer),
-        );
-        return Layer.mergeAll(functionInvocationLayer, implementationResolverLayer);
+        return todo();
       }),
     ),
 );
@@ -245,7 +223,6 @@ export default Capability.makeModule(
 
     const contributions: Capability.Any[] = [
       Capability.contributes(Capabilities.LayerSpec, FunctionInvocationSpec),
-      Capability.contributes(Capabilities.LayerSpec, RemoteFunctionExecutionSpec),
       Capability.contributes(Capabilities.LayerSpec, OperationHandlerProviderSpec),
       Capability.contributes(Capabilities.LayerSpec, BlueprintRegistrySpec),
       Capability.contributes(Capabilities.LayerSpec, OpaqueToolkitSpec),
@@ -255,13 +232,10 @@ export default Capability.makeModule(
       Capability.contributes(Capabilities.LayerSpec, FeedTraceSinkSpec),
       Capability.contributes(Capabilities.LayerSpec, TriggerDispatcherSpec),
       Capability.contributes(Capabilities.TraceSink, ({ resolver }) => FeedTraceSink.makeRoutingSink({ resolver })),
+      // Edge-mode override is conditional on runtime config, so it stays in the
+      // activation block.
+      Capability.contributes(Capabilities.LayerSpec, client.config.get('runtime.client.edgeFeatures.agents') ? RemoteFunctionExecutionSpec : RemoteFunctionExecutionOverrideSpec),
     ];
-
-    // Edge-mode override is conditional on runtime config, so it stays in the
-    // activation block.
-    if (client.config.get('runtime.client.edgeFeatures.agents')) {
-      contributions.push(Capability.contributes(Capabilities.LayerSpec, RemoteFunctionExecutionOverrideSpec));
-    }
 
     return contributions;
   }),

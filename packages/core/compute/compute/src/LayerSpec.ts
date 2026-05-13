@@ -92,23 +92,3 @@ export const make = <const Opts extends Types.NoExcessProperties<MakeOpts, Opts>
     make: make as any,
   };
 };
-
-///
-
-make(
-  {
-    affinity: 'application',
-    requires: [Database.Service],
-    provides: [CredentialsService],
-  },
-  (context) =>
-    Layer.effectContext(
-      Effect.gen(function* () {
-        const db = yield* Database.Service;
-
-        const impl = {} as any;
-        const ctx = Context.make(CredentialsService, impl);
-        return ctx;
-      }),
-    ),
-);
