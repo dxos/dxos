@@ -3,7 +3,7 @@
 //
 
 import { Client } from '@dxos/client';
-import { Filter } from '@dxos/client/echo';
+import { Filter } from '@dxos/echo';
 
 import { TaskType } from './schema';
 

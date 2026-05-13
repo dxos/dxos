@@ -8,8 +8,7 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Obj } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import { Obj, View } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 

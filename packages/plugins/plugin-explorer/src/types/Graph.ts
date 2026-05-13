@@ -4,8 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Filter, Obj, Query, QueryAST, Ref, Type } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import { Annotation, Filter, Obj, Query, QueryAST, Ref, Type, View } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { ViewAnnotation } from '@dxos/schema';
 

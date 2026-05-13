@@ -7,8 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { Obj, Type } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import { Obj, Type, View } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type DxGrid } from '@dxos/lit-grid';
 import { random } from '@dxos/random';

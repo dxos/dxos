@@ -8,14 +8,14 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Plan, Agent } from '@dxos/assistant-toolkit';
-import { Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { createObjectFactory, TypeSpec } from '@dxos/schema/testing';

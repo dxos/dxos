@@ -4,8 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 

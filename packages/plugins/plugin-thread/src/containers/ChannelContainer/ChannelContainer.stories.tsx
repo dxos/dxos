@@ -9,14 +9,14 @@ import React from 'react';
 import { Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { Feed } from '@dxos/echo';
+import { Feed, Query } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/plugin';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Config } from '@dxos/react-client';
-import { Query, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { Channel, Message, Thread } from '@dxos/types';
 

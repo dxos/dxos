@@ -35,8 +35,7 @@ import {
   TestingPanel,
   WorkflowPanel,
 } from '@dxos/devtools';
-import { Feed, Obj } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
+import { Collection, Feed, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Graph } from '@dxos/plugin-graph';

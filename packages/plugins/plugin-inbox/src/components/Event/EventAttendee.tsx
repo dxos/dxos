@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { type Database } from '@dxos/react-client/echo';
+import { type Database } from '@dxos/echo';
 import { type Actor } from '@dxos/types';
 
 import { useActorContact } from '#hooks';

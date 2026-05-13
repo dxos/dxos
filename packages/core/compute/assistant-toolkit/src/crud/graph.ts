@@ -11,8 +11,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Entity, Filter, Obj, Query, Type } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, Entity, Filter, Obj, Query, Type } from '@dxos/echo';
 import { type Queue } from '@dxos/echo-db';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import {

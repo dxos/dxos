@@ -6,8 +6,7 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Database, type Entity, Filter, type Hypergraph, Query, Ref } from '@dxos/echo';
-import { type AnyProperties, setRefResolver } from '@dxos/echo/internal';
-import { batchEvents } from '@dxos/echo/internal';
+import { batchEvents, type AnyProperties, setRefResolver } from '@dxos/echo/internal';
 import { failedInvariant } from '@dxos/invariant';
 import { DXN, type ObjectId, type QueueSubspaceTag, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -28,7 +27,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   private readonly _databases = new Map<SpaceId, EchoDatabaseImpl>();
   private readonly _queueFactories = new Map<SpaceId, QueueFactory>();
 
-  // TODO(burdon): Comment/rename?
+  // TODO(burdon): Space dependency?
   private readonly _owningObjects = new Map<SpaceId, unknown>();
   private readonly _schemaRegistry = new RuntimeSchemaRegistry();
   private readonly _updateEvent = new Event<ItemsUpdatedEvent>();
@@ -47,7 +46,6 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
    * @param database Database backend.
    * @param owningObject Database owner, usually a space.
    */
-  // TODO(burdon): When is the owner not a space?
   _registerDatabase(
     spaceId: SpaceId,
     /** @deprecated Use spaceId */

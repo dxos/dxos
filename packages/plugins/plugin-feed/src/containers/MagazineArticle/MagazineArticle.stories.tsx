@@ -10,12 +10,12 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { Feed as EchoFeed, Obj, Ref } from '@dxos/echo';
+import { Feed as EchoFeed, Filter, Obj, Ref } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/plugin';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { generateCuratedPost, generateFeed, generateMagazine } from '#testing';

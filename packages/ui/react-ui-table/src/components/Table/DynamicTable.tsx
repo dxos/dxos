@@ -6,8 +6,7 @@ import { RegistryContext } from '@effect-atom/atom-react';
 import type * as Types from 'effect/Types';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type Type } from '@dxos/echo';
-import { type JsonSchema } from '@dxos/echo';
+import { type JsonSchema, type Type } from '@dxos/echo';
 import { type ThemedClassName, useDefaultValue } from '@dxos/react-ui';
 import { type ProjectionModel } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';

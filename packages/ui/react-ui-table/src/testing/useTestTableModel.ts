@@ -5,10 +5,10 @@
 import { RegistryContext } from '@effect-atom/atom-react';
 import { type RefObject, useCallback, useContext, useMemo, useRef } from 'react';
 
-import { type Database, type Type } from '@dxos/echo';
+import { type Database, Filter, type Type } from '@dxos/echo';
 import { isMutable } from '@dxos/echo/internal';
 import { random } from '@dxos/random';
-import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
+import { useQuery, useSchema } from '@dxos/react-client/echo';
 import { useClientStory } from '@dxos/react-client/testing';
 import { useGlobalFilteredObjects } from '@dxos/react-ui-search';
 import { type ProjectionModel, getTypenameFromQuery } from '@dxos/schema';
