@@ -1,147 +1,184 @@
-# Audit: `getSpace` from `@dxos/client/echo`
+# Audit: `@dxos/client/echo` exports
 
 ## Scope
 
-This audit covers every external call site of [`getSpace`](./util.ts) (currently `@deprecated Prefer Obj.getDatabase.`) in the monorepo, plus the one remaining internal use in tests.
+This audit covers every external call site of symbols re-exported by
+[`packages/sdk/client/src/echo/index.ts`](./index.ts), grouped by usage
+theme. `@dxos/react-client/echo` re-exports `@dxos/client/echo` via
+`export *`, so an import from either path is counted against the same
+underlying symbol.
 
-```ts
-// packages/sdk/client/src/echo/util.ts
-export const getSpace = (object?: any): Space | undefined => {
-  if (!object) return undefined;
-  const db = Obj.getDatabase(object);
-  const id = db?.spaceId;
-  if (id && '_getOwningObject' in db.graph) {
-    const owner = (db.graph as { _getOwningObject: (id: SpaceId) => unknown })._getOwningObject(id);
-    if (owner instanceof SpaceProxy) return owner;
-  }
-  return undefined;
-};
-```
+Call-site counts include files under `packages/` and `docs/` (excluding
+`node_modules`, `dist/`, and `docs/legacy/`).
 
-The function reverse-walks an ECHO object to its owning `SpaceProxy` via `db.graph._getOwningObject`. Callers that only consume `space.db` (or `space.id`/`space.db.spaceId`) can be migrated to `Obj.getDatabase(object)` directly; callers that consume any other `Space` surface area must keep depending on `Space`.
+## Current exports
 
-## Verdict
+The barrel currently re-exports symbols from five upstream packages:
 
-`getSpace` **cannot be removed entirely**. ~30 of 44 call sites consume members of `Space` that are not present on `Database` (`properties`, `queues`, `members`, `key`, `state`, `membershipPolicy`, `listen`, identity comparisons) or pass `space` to APIs typed `Space`. The remaining ~14 are mechanical migrations to `Obj.getDatabase`.
+| Upstream                                      | Symbols re-exported                                                                                 |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `@dxos/client-protocol`                       | `isSpace`, `Echo`, `Space`, `SpaceSchema`, `SpaceProperties`                                        |
+| `@dxos/echo-db`                               | `createObject`, `createSubscription`, `ObjectMigration`, `Queue`, `Selection`, `SubscriptionHandle` |
+| `@dxos/protocols/proto/dxos/echo/indexing`    | `IndexKind`                                                                                         |
+| `@dxos/protocols/proto/dxos/echo/filter`      | `QueryOptions`                                                                                      |
+| `@dxos/protocols/proto/dxos/client/services`  | `SpaceMember`, `SpaceState`                                                                         |
+| `@dxos/protocols/proto/dxos/halo/credentials` | `SpaceMember as HaloSpaceMember`                                                                    |
+| `@dxos/protocols/proto/dxos/echo/model/text`  | `TextKind`                                                                                          |
+| `@dxos/protocols/proto/dxos/echo/service`     | `SpaceSyncState`                                                                                    |
+| `./import`                                    | `importSpace`, `ImportSpaceOptions`                                                                 |
+| `./util`                                      | `getSpace`, `getSyncSummary`, `Progress`, `PeerSyncState`, `SpaceSyncStateMap`                      |
 
-## Migration table
+Plus the React-only additions in `@dxos/react-client/echo`:
+`useDatabase`, `useObject`, `useObjects`, `useQuery`, `useQueue`,
+`useMembers`, `useSchema`, `useSpace`, `useSpaces`,
+`useSpaceInvitations`, `useSpaceProperties`, `useSpaceSyncState`,
+`useSubscription`, `useSyncState`.
 
-Sorted by verdict (DB-only first), then by file. `space` refers to the local variable assigned from `getSpace(...)`.
+## Usage by theme
 
-| File:line                                                                                                                                                                                            | Usage of `space`                                                                                                                                     | Verdict     |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| [packages/plugins/plugin-assistant/src/containers/ChatCompanion/ChatCompanion.tsx:42](../../../../plugins/plugin-assistant/src/containers/ChatCompanion/ChatCompanion.tsx#L42)                       | truthy guard `!getSpace(chat)`                                                                                                                       | DB-only     |
-| [packages/plugins/plugin-explorer/src/containers/ExplorerContainer/ExplorerContainer.tsx:22](../../../../plugins/plugin-explorer/src/containers/ExplorerContainer/ExplorerContainer.tsx#L22)         | `space.db` (→ `<QueryEditor db={space.db}/>`, `useGraphModel(space, filter)` reads only `space.db`)                                                  | DB-only     |
-| [packages/plugins/plugin-pipeline/src/components/PipelineComponent/PipelineColumn.tsx:40](../../../../plugins/plugin-pipeline/src/components/PipelineComponent/PipelineColumn.tsx#L40)               | `space.db`, `space.db.schemaRegistry`                                                                                                                | DB-only     |
-| [packages/plugins/plugin-pipeline/src/containers/PipelineProperties/PipelineProperties.tsx:37](../../../../plugins/plugin-pipeline/src/containers/PipelineProperties/PipelineProperties.tsx#L37)     | `space.db`, `space.db.schemaRegistry`, `useQuery(space?.db, ...)`, `useTypeOptions({ space })` (db only)                                             | DB-only     |
-| [packages/plugins/plugin-script/src/blueprints/functions/invoke.ts:22](../../../../plugins/plugin-script/src/blueprints/functions/invoke.ts#L22)                                                     | `space.id` (passed as `{ spaceId: space.id }`)                                                                                                       | DB-only     |
-| [packages/plugins/plugin-script/src/containers/TestContainer/TestContainer.tsx:23](../../../../plugins/plugin-script/src/containers/TestContainer/TestContainer.tsx#L23)                             | `space.id` (passed as `{ spaceId: space?.id }`)                                                                                                      | DB-only     |
-| [packages/plugins/plugin-script/src/hooks/deploy.ts:130](../../../../plugins/plugin-script/src/hooks/deploy.ts#L130)                                                                                 | `space.db` (passed to `useQuery(space?.db, ...)`)                                                                                                    | DB-only     |
-| [packages/plugins/plugin-script/src/util/functions.ts:25](../../../../plugins/plugin-script/src/util/functions.ts#L25)                                                                               | `space.id` (passed as `{ spaceId: space?.id }` to `getInvocationUrl`)                                                                                | DB-only     |
-| [packages/plugins/plugin-sheet/src/capabilities/react-surface.tsx:27](../../../../plugins/plugin-sheet/src/capabilities/react-surface.tsx#L27)                                                       | truthy guard `!!getSpace(data.subject)`                                                                                                              | DB-only     |
-| [packages/plugins/plugin-space/src/capabilities/app-graph-builder/extensions/collections.ts:144](../../../../plugins/plugin-space/src/capabilities/app-graph-builder/extensions/collections.ts#L144) | `space.db` (passed to `createObjectNode({ db: space.db, ... })`)                                                                                     | DB-only     |
-| [packages/plugins/plugin-space/src/capabilities/app-graph-builder/extensions/collections.ts:179](../../../../plugins/plugin-space/src/capabilities/app-graph-builder/extensions/collections.ts#L179) | truthy guard; result packaged as `{ space, object, nodeId }` Option (actions handler doesn't read it)                                                | DB-only     |
-| [packages/plugins/plugin-space/src/operations/restore-objects.ts:21](../../../../plugins/plugin-space/src/operations/restore-objects.ts#L21)                                                         | `space.db.add(obj)`                                                                                                                                  | DB-only     |
-| [packages/sdk/client/src/tests/spaces.test.ts:244](../tests/spaces.test.ts#L244)                                                                                                                     | identity check `expect(getSpace(obj)).to.equal(space)` (test of the function itself)                                                                 | DB-only\*   |
-| [packages/plugins/plugin-assistant/src/capabilities/react-surface.tsx:94](../../../../plugins/plugin-assistant/src/capabilities/react-surface.tsx#L94)                                               | `space.properties.invocationTraceFeed`, `space.db` (→ `<InvocationTraceContainer db={space?.db}/>`)                                                  | Needs Space |
-| [packages/plugins/plugin-assistant/src/containers/ChatContainer/ChatContainer.tsx:30](../../../../plugins/plugin-assistant/src/containers/ChatContainer/ChatContainer.tsx#L30)                       | `space.id`, `space.queues.get(...)`, `space.db`, passed to `useChatProcessor({ space, ... })`                                                        | Needs Space |
-| [packages/plugins/plugin-assistant/src/containers/ChatCompanion/ChatCompanion.tsx:31](../../../../plugins/plugin-assistant/src/containers/ChatCompanion/ChatCompanion.tsx#L31)                       | `space.db`, passed to `useContextBinder(space, ...)` (uses `space.queues`); `<… space={space}/>` prop                                                | Needs Space |
-| [packages/plugins/plugin-assistant/src/queue-logger.ts:20](../../../../plugins/plugin-assistant/src/queue-logger.ts#L20)                                                                             | `space.properties.invocationTraceFeed`, `Obj.update(space.properties, …)`, `space.queues.get(queueDxn)`, `space.id`, stored as `_space: Space` field | Needs Space |
-| [packages/plugins/plugin-automation/src/capabilities/react-surface.tsx:50](../../../../plugins/plugin-automation/src/capabilities/react-surface.tsx#L50)                                             | `<AutomationSettings space={space} .../>`                                                                                                            | Needs Space |
-| [packages/plugins/plugin-code/src/containers/CodeArticle/CodeArticle.tsx:126](../../../../plugins/plugin-code/src/containers/CodeArticle/CodeArticle.tsx#L126)                                       | `createDataExtensions({ ..., messenger: space })`                                                                                                    | Needs Space |
-| [packages/plugins/plugin-code/src/containers/SpecArticle/SpecArticle.tsx:38](../../../../plugins/plugin-code/src/containers/SpecArticle/SpecArticle.tsx#L38)                                         | `createDataExtensions({ ..., messenger: space })`                                                                                                    | Needs Space |
-| [packages/plugins/plugin-feed/src/operations/curate-magazine.ts:140](../../../../plugins/plugin-feed/src/operations/curate-magazine.ts#L140)                                                         | `curateMagazine(space, magazine)` (callee uses `space.queues`)                                                                                       | Needs Space |
-| [packages/plugins/plugin-feed/src/operations/sync-feed.ts:40](../../../../plugins/plugin-feed/src/operations/sync-feed.ts#L40)                                                                       | `space.queues.get(feedDxn)`                                                                                                                          | Needs Space |
-| [packages/plugins/plugin-markdown/src/hooks/useExtensions.tsx:76](../../../../plugins/plugin-markdown/src/hooks/useExtensions.tsx#L76)                                                               | `createDataExtensions({ ..., messenger: space })`                                                                                                    | Needs Space |
-| [packages/plugins/plugin-meeting/src/capabilities/app-graph-builder.ts:51](../../../../plugins/plugin-meeting/src/capabilities/app-graph-builder.ts#L51)                                             | `space.state` (atom-observed), `space.membershipPolicy`, `Operation.invoke(SpaceOperation.GetShareLink, { space, ... })`                             | Needs Space |
-| [packages/plugins/plugin-meeting/src/operations/create.ts:17](../../../../plugins/plugin-meeting/src/operations/create.ts#L17)                                                                       | `Operation.invoke(TranscriptOperation.Create, { space })`                                                                                            | Needs Space |
-| [packages/plugins/plugin-pipeline/src/hooks/usePipelineBoardModel.ts:25](../../../../plugins/plugin-pipeline/src/hooks/usePipelineBoardModel.ts#L25)                                                 | `getQueryTarget(query.ast, space)`; result fed through `isSpace(queryTarget)`                                                                        | Needs Space |
-| [packages/plugins/plugin-script/src/blueprints/functions/deploy.ts:30](../../../../plugins/plugin-script/src/blueprints/functions/deploy.ts#L30)                                                     | `space.key` (passed as `ownerPublicKey: space.key`)                                                                                                  | Needs Space |
-| [packages/plugins/plugin-script/src/capabilities/react-surface.tsx:106](../../../../plugins/plugin-script/src/capabilities/react-surface.tsx#L106)                                                   | `space.properties.invocationTraceFeed`, `space.db` (→ `<InvocationTraceContainer db={space?.db}/>`)                                                  | Needs Space |
-| [packages/plugins/plugin-script/src/containers/DeploymentDialog/DeploymentDialog.tsx:30](../../../../plugins/plugin-script/src/containers/DeploymentDialog/DeploymentDialog.tsx#L30)                 | `useCreateAndDeployScriptTemplates(space, scriptTemplates)`                                                                                          | Needs Space |
-| [packages/plugins/plugin-script/src/containers/ScriptContainer/ScriptContainer.tsx:35](../../../../plugins/plugin-script/src/containers/ScriptContainer/ScriptContainer.tsx#L35)                     | `createDataExtensions({ ..., messenger: space })`                                                                                                    | Needs Space |
-| [packages/plugins/plugin-space/src/capabilities/react-surface.tsx:371](../../../../plugins/plugin-space/src/capabilities/react-surface.tsx#L371)                                                     | `space.properties[Collection.Collection.typename]?.target`; on `isSpace` branch with `data.subject.state.get()`                                      | Needs Space |
-| [packages/plugins/plugin-space/src/containers/MenuFooter/MenuFooter.tsx:18](../../../../plugins/plugin-space/src/containers/MenuFooter/MenuFooter.tsx#L18)                                           | `getSpaceDisplayName(space, { personal: isPersonalSpace(space) })`                                                                                   | Needs Space |
-| [packages/plugins/plugin-space/src/containers/ViewEditor/ViewEditor.tsx:27](../../../../plugins/plugin-space/src/containers/ViewEditor/ViewEditor.tsx#L27)                                           | `space.db.schemaRegistry`, `space.db`, `useTypeOptions({ space, ... })`, `<NaturalViewEditor registry={space.db.schemaRegistry} db={space.db} .../>` | Needs Space |
-| [packages/plugins/plugin-space/src/operations/remove-objects.ts:21](../../../../plugins/plugin-space/src/operations/remove-objects.ts#L21)                                                           | identity check `getSpace(obj) === space`; `space.properties[Collection.Collection.typename]?.target`                                                 | Needs Space |
-| [packages/plugins/plugin-sheet/src/capabilities/markdown.ts:23](../../../../plugins/plugin-sheet/src/capabilities/markdown.ts#L23)                                                                   | `computeGraphRegistry.getOrCreateGraph(space)`                                                                                                       | Needs Space |
-| [packages/plugins/plugin-sheet/src/capabilities/react-surface.tsx:36](../../../../plugins/plugin-sheet/src/capabilities/react-surface.tsx#L36)                                                       | `<SheetContainer space={getSpace(data.subject)!} .../>`                                                                                              | Needs Space |
-| [packages/plugins/plugin-thread/src/capabilities/react-surface.tsx:44](../../../../plugins/plugin-thread/src/capabilities/react-surface.tsx#L44)                                                     | `<ChannelChat channel={channel} space={space} />`                                                                                                    | Needs Space |
-| [packages/plugins/plugin-thread/src/capabilities/react-surface.tsx:56](../../../../plugins/plugin-thread/src/capabilities/react-surface.tsx#L56)                                                     | `<ThreadContainer thread={subject} space={space} />`                                                                                                 | Needs Space |
-| [packages/plugins/plugin-thread/src/components/CommentsPanel/CommentsThread.tsx:52](../../../../plugins/plugin-thread/src/components/CommentsPanel/CommentsThread.tsx#L52)                           | `useStatus(space, ...)` (calls `space.listen(...)`); `useMembers(space.id)`                                                                          | Needs Space |
-| [packages/plugins/plugin-thread/src/containers/ChannelContainer/ChannelContainer.tsx:48](../../../../plugins/plugin-thread/src/containers/ChannelContainer/ChannelContainer.tsx#L48)                 | `<ChannelChat space={space} channel={channel} />`                                                                                                    | Needs Space |
-| [packages/plugins/plugin-transcription/src/capabilities/text-content.ts:20](../../../../plugins/plugin-transcription/src/capabilities/text-content.ts#L20)                                           | `space.members.get()`, `space.queues.get<Message.Message>(queueDxn)`                                                                                 | Needs Space |
-| [packages/plugins/plugin-wnfs/src/capabilities/markdown.ts:29](../../../../plugins/plugin-wnfs/src/capabilities/markdown.ts#L29)                                                                     | `image({ blockstore, instances, space })`                                                                                                            | Needs Space |
-| [packages/plugins/plugin-wnfs/src/containers/FileContainer/FileContainer.tsx:26](../../../../plugins/plugin-wnfs/src/containers/FileContainer/FileContainer.tsx#L26)                                 | `loadWnfs({ blockstore, instances, space })`, `filePath(file.cid.toString(), space)`                                                                 | Needs Space |
+### 1 — Space proxy (270+ call sites)
 
-\* The internal test asserts the behavior of `getSpace` itself; if the function is removed the test goes with it.
+The dominant theme. Code that has (or wants) a `Space` proxy instance.
 
-## Summary of `Space`-specific members still required
+| Symbol                | Files | Notes                                                                                                                                            |
+| --------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Space`               | 132   | The runtime SpaceProxy interface. Most common single export from the barrel.                                                                     |
+| `useSpaces`           | 67    | All spaces hook.                                                                                                                                 |
+| `getSpace`            | 29    | Resolve owning `Space` from an ECHO object. Kept for proxy-only callers (`properties`, `queues`, `members`, `key`, `state`, `listen`, identity). |
+| `SpaceState`          | 19    | Lifecycle state enum (`SPACE_READY`, etc.).                                                                                                      |
+| `isSpace`             | 17    | `SPACE_TAG` brand check.                                                                                                                         |
+| `useSpace`            | 8     | Single space by id/key.                                                                                                                          |
+| `useSpaceInvitations` | 3     | Outbound invitations.                                                                                                                            |
+| `SpaceProperties`     | 3     | Schema for the `space.properties` document.                                                                                                      |
+| `SpaceSchema`         | 3     | Effect schema for the `Space` interface itself.                                                                                                  |
+| `useSpaceProperties`  | 1     | Properties hook.                                                                                                                                 |
 
-| Member                                                                                                             | Sites                                                                                                                                                                                                                                                                                                                                                                     |
-| ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `space.properties` (`.invocationTraceFeed`, collection target, name)                                               | 5 — assistant react-surface, plugin-space react-surface, remove-objects, queue-logger, script react-surface                                                                                                                                                                                                                                                               |
-| `space.queues.get(...)`                                                                                            | 5 — transcription text-content, sync-feed, curate-magazine (callee), queue-logger, ChatContainer                                                                                                                                                                                                                                                                          |
-| Passed as `Space` to a typed consumer (component prop, hook, operation arg, `createDataExtensions({ messenger })`) | 18 — DeploymentDialog, meeting create, curate-magazine, usePipelineBoardModel, MenuFooter, ViewEditor (via useTypeOptions), sheet markdown, sheet react-surface, ChatCompanion, automation react-surface, useExtensions, ScriptContainer, CodeArticle, SpecArticle, two thread react-surface entries, ChannelContainer, CommentsThread, wnfs markdown, wnfs FileContainer |
-| `space.key`                                                                                                        | 1 — script deploy                                                                                                                                                                                                                                                                                                                                                         |
-| `space.state` (atom) + `space.membershipPolicy`                                                                    | 1 — meeting app-graph-builder                                                                                                                                                                                                                                                                                                                                             |
-| `space.members.get()`                                                                                              | 1 — transcription text-content                                                                                                                                                                                                                                                                                                                                            |
-| `space.listen(...)` (via `useStatus`)                                                                              | 1 — CommentsThread                                                                                                                                                                                                                                                                                                                                                        |
-| Identity comparison `getSpace(x) === space`                                                                        | 1 — remove-objects                                                                                                                                                                                                                                                                                                                                                        |
+**Observation:** `Space` itself is the single largest gateway in the barrel. Anything that takes a `Space` argument transitively pulls callers into this theme.
 
-## Recommendation
+### 2 — Object & database access (180+ call sites)
 
-1. **Migrate the 12 non-test DB-only sites (including truthy/identity guards) to `Obj.getDatabase`** (mechanical, low risk):
-   - `const space = getSpace(o); space.db.X` → `const db = Obj.getDatabase(o); db?.X`
-   - `space.id` / `space.db.spaceId` → `db?.spaceId`
-   - `!getSpace(x)` → `!Obj.getDatabase(x)`
-2. **Keep `getSpace` for the remaining ~30 sites** that genuinely need `Space`. The deprecation notice can be tightened to: _"Use `Obj.getDatabase` when you only need DB/spaceId access; this helper is retained only for callers that need `Space` proxy members (properties, queues, members, key, state, listen, identity)."_
-3. **Optional follow-up** — narrow some `Space`-typed consumers to `Database`:
-   - `createDataExtensions({ messenger: space })` (4 sites) — if `messenger` only needs `db`, retype to `Database` and migrate those callers.
-   - `useTypeOptions({ space })`, `useGraphModel(space, ...)`, `getQueryTarget(ast, space)` — same pattern; if only `db`/`schemaRegistry`/`spaceId` is consumed internally, retype.
-     Each of these is a deeper API change to the callee and is out of scope for the mechanical migration above.
+Reactive React hooks that read ECHO objects, including `useQuery` /
+`useObject` / `useDatabase`. These don't need a `Space` instance —
+they take an `EchoDatabase` (often via `space.db`).
 
-## Disposition of other top-level exports from `@dxos/client/echo`
+| Symbol         | Files |
+| -------------- | ----- |
+| `useQuery`     | 126   |
+| `useObject`    | 39    |
+| `useDatabase`  | 13    |
+| `useSchema`    | 10    |
+| `useObjects`   | 1     |
+| `createObject` | 2     |
 
-Each top-level function/helper exported alongside `getSpace` was assessed against four options:
+**Observation:** every hook here ultimately operates on `Database`, not `Space`. This is the boundary that recent migrations exploited (e.g. `useGraphModel(db)`, `useTypeOptions({ db })`).
 
-- **a)** Remove the re-export; have callers import from `@dxos/echo` (or another lower-layer package) directly.
-- **b)** Move the implementation into `@dxos/echo` (a new function, or fold into an existing namespace like `Obj`).
-- **c)** Aggregate under the `Hypergraph` namespace in `@dxos/echo`.
-- **d)** Other — keep as-is, mark for removal, or layer-specific reason given.
+### 3 — Membership (29 call sites)
 
-| Export                                                                                                   | Source                                                                                                                                                   | Verdict          | Rationale                                                                                                                                                                                                                                                                                                                                                                                               |
-| -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `getSpace`                                                                                               | local [util.ts:20](./util.ts#L20)                                                                                                                        | **c**            | Resolves an object → owning `Space` via `db.graph._getOwningObject`. `Hypergraph` already has the registry. User's existing TODO points here: `Hypergraph.getSpace()`.                                                                                                                                                                                                                                  |
-| `isSpace`                                                                                                | re-export of [`@dxos/client-protocol/space.ts:171`](../../../client-protocol/src/space.ts#L171)                                                          | **a (deferred)** | Pure `SPACE_TAG` brand check. Belongs with `Space`/`SpaceSchema`/`SpaceProperties`/`SpaceState`, which are also re-exported here from `@dxos/client-protocol`. Drop as a bundle, not in isolation.                                                                                                                                                                                                      |
-| `parseId`                                                                                                | local [util.ts:42](./util.ts#L42)                                                                                                                        | **b**            | Pure string parser over `SpaceId`/`ObjectId`. Best fit: `@dxos/keys` (next to `SpaceId`/`ObjectId`), or `@dxos/echo` `Key` namespace.                                                                                                                                                                                                                                                                   |
-| `getSyncSummary` + `createEmptyEdgeSyncState` + `Progress` / `PeerSyncState` / `SpaceSyncStateMap` types | local [util.ts:74-91](./util.ts#L74)                                                                                                                     | **b**            | Pure reducer/factory over `SpaceSyncState.PeerState` (from `@dxos/echo-db`). Move next to the types in `@dxos/echo-db` (or a new `EdgeSync` sub-export in `@dxos/echo`).                                                                                                                                                                                                                                |
-| `importSpace`                                                                                            | local [import.ts:15](./import.ts#L15)                                                                                                                    | **b**            | Already takes `EchoDatabase`, not `Space`. Operates entirely on ECHO primitives. Move to `@dxos/echo-db` or expose as `Database.import` in `@dxos/echo`.                                                                                                                                                                                                                                                |
-| `createObject`                                                                                           | re-export of `@dxos/echo-db` [echo-handler.ts:1080](../../../../core/echo/echo-db/src/echo-handler/echo-handler.ts#L1080)                                | **b**            | Wraps a plain object into a reactive ECHO proxy. Natural fit: `Obj.create` in `@dxos/echo` (complements existing `Obj.make`, which constructs from a schema).                                                                                                                                                                                                                                           |
-| `createSubscription`                                                                                     | re-export of `@dxos/echo-db` [subscription.ts:36](../../../../core/echo/echo-db/src/echo-handler/subscription.ts#L36)                                    | **d**            | NOT signature-compatible with `Obj.subscribe`. `createSubscription` is a selection-based API returning a `SubscriptionHandle` with `.update(selection)` / `.selected` / `.unsubscribe()`; `Obj.subscribe(obj, cb)` watches a single object and returns an unsubscribe function. Used by `react-client`'s `useSubscription`. Either keep as-is, or design a unified selection API in `@dxos/echo` first. |
-| `defineObjectMigration`                                                                                  | re-export of `@dxos/echo-db` [object-migration.ts:10](../../../../core/echo/echo-db/src/proxy-db/object-migration.ts#L10) (alias for `Migration.define`) | **a — done**     | Re-export removed; 5 plugin sites + 1 test migrated to `Migration.define` from `@dxos/echo`.                                                                                                                                                                                                                                                                                                            |
-| `getVersion`                                                                                             | re-export of `@dxos/echo-db` [version.ts:23](../../../../core/echo/echo-db/src/echo-handler/version.ts#L23)                                              | **a/b**          | Conflicts with `Obj.version` in `@dxos/echo` ([Obj.ts:851](../../../../core/echo/echo/src/Obj.ts#L851)). Either align the two (rename/dedupe) and re-export from `Obj`, or move the echo-db variant up to `@dxos/echo`.                                                                                                                                                                                 |
-| `compareForeignKeys`                                                                                     | re-export of `@dxos/echo/internal`                                                                                                                       | **a — done**     | Re-export removed; had zero `@dxos/client/echo` callers. Existing internal callers continue via `@dxos/echo/internal`. (Public-API promotion is a separate decision.)                                                                                                                                                                                                                                   |
-| `createQueueDXN`                                                                                         | re-export of `@dxos/echo/internal`                                                                                                                       | **a — done**     | Re-export removed; had zero `@dxos/client/echo` callers. plugin-transcription call sites already import from `@dxos/echo/internal` directly.                                                                                                                                                                                                                                                            |
-| `Queue` (type)                                                                                           | re-export of `@dxos/echo-db` queue interface                                                                                                             | **d**            | User TODO already added: `// TODO(burdon): Remove.`                                                                                                                                                                                                                                                                                                                                                     |
-| `internalDecodeReference`                                                                                | re-export of `@dxos/echo-protocol` `decodeReference` (renamed)                                                                                           | **d**            | Already TODO'd: _"Remove this export."_ Reference codec is `@internal`.                                                                                                                                                                                                                                                                                                                                 |
-| `SPACE_ID_LENGTH`, `OBJECT_ID_LENGTH`, `FQ_ID_LENGTH`                                                    | local [util.ts:38-40](./util.ts#L38)                                                                                                                     | **b**            | Key-format constants. Move to `@dxos/keys` next to `SpaceId`/`ObjectId`. Internal note in `util.ts`: `// TODO(burdon): Don't export.`                                                                                                                                                                                                                                                                   |
-| `Entity`, `Relation`, `Type`, `Database`, `Filter`, `Query`, `Ref`, `RefArray`, `ObjectMeta` types       | re-exports                                                                                                                                               | **a**            | All defined in `@dxos/echo` already; the re-exports exist for client-side ergonomics. Could be dropped if callers import from `@dxos/echo` directly. Lowest priority — most apps use `@dxos/client/echo` as the convenience surface.                                                                                                                                                                    |
+| Symbol            | Files |
+| ----------------- | ----- |
+| `SpaceMember`     | 15    |
+| `useMembers`      | 10    |
+| `HaloSpaceMember` | 4     |
 
-### Summary
+`SpaceMember` and `HaloSpaceMember` are protocol types with identical
+shape but different provenance (client services vs HALO credentials).
+The current convention is to alias the credential-shaped variant.
 
-- **5 candidates for `b` (move to `@dxos/echo`):** `parseId`, `getSyncSummary` + companions, `importSpace`, `createObject`, key-length constants.
-- **`a` — done (3):** `defineObjectMigration`, `compareForeignKeys`, `createQueueDXN`.
-- **`a` — deferred (1):** `isSpace` belongs to the `Space`/`SpaceSchema`/`SpaceProperties`/`SpaceState` bundle and should be dropped together with them.
-- **1 candidate for `c`:** `getSpace` → `Hypergraph.getSpace`. This is the only export that genuinely needs the Hypergraph's owning-object registry; everything else is either pure ECHO or pure key arithmetic.
-- **3 `d` (defer/remove):** `Queue` (TODO'd), `internalDecodeReference` (TODO'd), `createSubscription` (no API parity with `Obj.subscribe`).
-- **1 ambiguous (`getVersion`):** needs reconciliation with existing `Obj.version` before deciding `a` vs `b`.
+### 4 — Queues (20 call sites)
 
-### Recommended sequencing
+| Symbol     | Files |
+| ---------- | ----- |
+| `Queue`    | 12    |
+| `useQueue` | 8     |
 
-1. ~~Cheap wins (`a`): drop `defineObjectMigration`, `compareForeignKeys`, `createQueueDXN` re-exports.~~ **Done in this PR.**
-2. Drop the `Space`/`SpaceSchema`/`SpaceProperties`/`SpaceState`/`isSpace` bundle together (or keep them — pick a position).
-3. Move `parseId` and the key-length constants to `@dxos/keys`.
-4. Resolve `getVersion` vs `Obj.version` overlap before touching call sites.
-5. Design a unified selection-subscription API in `@dxos/echo`, then deprecate `createSubscription`.
-6. Implement `Hypergraph.getSpace` (option **c** for the headline function) and migrate the remaining ~30 `getSpace` sites.
+Queues live on `Space.queues` and are the bridge to edge-side feeds.
+Anything using `useQueue` already has a Space proxy upstream.
+
+### 5 — Sync state (15 call sites)
+
+EDGE sync introspection. Three of the five types are _local_ to this
+package — they don't exist in `@dxos/echo-db`.
+
+| Symbol              | Files | Source                                  |
+| ------------------- | ----- | --------------------------------------- |
+| `SpaceSyncStateMap` | 4     | local `./util`                          |
+| `PeerSyncState`     | 3     | local `./util` (alias of protocol type) |
+| `getSyncSummary`    | 3     | local `./util`                          |
+| `useSyncState`      | 2     | react-client                            |
+| `SpaceSyncState`    | 2     | protocol type                           |
+| `useSpaceSyncState` | 1     | react-client                            |
+
+**Observation:** the `./util` helpers are a small "edge sync summary"
+mini-API. Could be promoted to a dedicated `Sync` namespace.
+
+### 6 — Low-level object lifecycle (5 call sites)
+
+| Symbol               | Files                       |
+| -------------------- | --------------------------- |
+| `createObject`       | 2 (also counted in theme 2) |
+| `ObjectMigration`    | 1                           |
+| `Selection`          | 1                           |
+| `SubscriptionHandle` | 1                           |
+| `createSubscription` | 1                           |
+
+**Observation:** all five symbols are deep echo-db internals. `createSubscription`/`Selection`/`SubscriptionHandle` are a coupled trio (the selection-based subscription API behind `useSubscription`).
+
+### 7 — Import / export (3 call sites)
+
+| Symbol               | Files |
+| -------------------- | ----- |
+| `importSpace`        | 2     |
+| `ImportSpaceOptions` | 1     |
+
+Local helper in `./import`. Takes an `EchoDatabase`, not a `Space`.
+
+### 8 — Indexing / query protocol (1 call site)
+
+| Symbol      | Files |
+| ----------- | ----- |
+| `IndexKind` | 1     |
+
+Protocol enum. Lowest-priority barrel entry by usage.
+
+### 9 — Unused (0 call sites)
+
+These exports have zero call sites and can be dropped immediately.
+
+| Symbol            | Source                                       |
+| ----------------- | -------------------------------------------- |
+| `Echo` (type)     | `@dxos/client-protocol`                      |
+| `QueryOptions`    | `@dxos/protocols/proto/dxos/echo/filter`     |
+| `TextKind`        | `@dxos/protocols/proto/dxos/echo/model/text` |
+| `Progress` (type) | local `./util`                               |
+
+## Themes ranked by leverage
+
+Ordered by how much code would be touched if each theme were
+unbundled into its own entry point or moved to a different package.
+
+1. **Space proxy** — 270+ sites. The barrel exists primarily to serve this theme.
+2. **Object / database access** — 180+ sites. Could be served by `@dxos/echo` directly _if_ the React hooks were re-housed there (currently in `@dxos/echo-react`/`@dxos/react-client`).
+3. **Membership** — 29 sites.
+4. **Queues** — 20 sites.
+5. **Sync state** — 15 sites.
+
+## Recommendations
+
+1. **Drop the 4 unused exports** (`Echo`, `QueryOptions`, `TextKind`, `Progress`) — pure cleanup, no migration needed.
+2. **Promote the local sync helpers** (`getSyncSummary`, `createEmptyEdgeSyncState`, `SpaceSyncStateMap`, `PeerSyncState`) to a `Sync` sub-export of `@dxos/echo-db` or a top-level `@dxos/edge-sync` module — they are pure reductions over a protocol type, with no dependency on `Space`.
+3. **Move `importSpace` to `@dxos/echo-db`** — already takes `EchoDatabase`; the local `./import` file is a thin wrapper.
+4. **Confront the Space-proxy theme directly** — that's where the bulk of remaining churn lives. Options:
+   - Hyperspace namespace: bundle `Space`, `isSpace`, `SpaceSchema`, `SpaceProperties`, `SpaceState`, `getSpace`, `useSpaces`/`useSpace` under a single `Hyperspace` import surface (matches the `// TODO(burdon): Reconcile under Hyperspace` note in `index.ts`).
+   - Split into `@dxos/client/space` (proxy + hooks) + `@dxos/client/echo` (DB-only).
+5. **Reclassify the React hooks bundle** — `useQuery`, `useObject`, `useDatabase`, `useSchema` are not Space-coupled. They could live in a thinner `@dxos/echo-react/db` entry point. This is the lowest-risk place to reduce the barrel.
+
+## Prior work (already merged)
+
+The following migrations have been completed on this branch and are no
+longer in the barrel:
+
+- `getSpace` call sites split into "DB-only" (migrated to `Obj.getDatabase`) vs "Needs Space" (kept).
+- `Filter`, `Query`, `Ref`, `Entity`, `Relation`, `Type`, `Database` re-exports removed; callers migrated to `@dxos/echo`.
+- `SpaceId`, `parseId`, `SPACE_ID_LENGTH`, `OBJECT_ID_LENGTH`, `FQ_ID_LENGTH` removed; `parseId` + the length constants moved into `@dxos/keys`.
+- `defineObjectMigration`, `compareForeignKeys`, `createQueueDXN`, `ObjectMeta`, `RefArray` re-exports removed.
+- Public `Ref.hasObjectId` promoted in `@dxos/echo` so `Ref.*` access continues to work after dropping the alias.

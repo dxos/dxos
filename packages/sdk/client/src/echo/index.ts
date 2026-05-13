@@ -18,7 +18,6 @@ export { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 export { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
 export { SpaceMember, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 export { SpaceMember as HaloSpaceMember } from '@dxos/protocols/proto/dxos/halo/credentials';
-export { TextKind } from '@dxos/protocols/proto/dxos/echo/model/text';
 export { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 
 export { importSpace, type ImportSpaceOptions } from './import';
