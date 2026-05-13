@@ -9,7 +9,7 @@ import { raise } from '@dxos/debug';
 import { ComputeEventLogger } from '@dxos/functions';
 import { type FunctionServices } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { LegacyDXN as DXN } from '@dxos/keys';
 
 import { GraphExecutor } from '../compiler';
 import {

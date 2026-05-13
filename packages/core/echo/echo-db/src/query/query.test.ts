@@ -24,7 +24,7 @@ import {
 import { Filter, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
-import { DXN, PublicKey } from '@dxos/keys';
+import { LegacyDXN as DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { faker } from '@dxos/random';

@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { DXN } from '@dxos/keys';
+import { LegacyDXN as DXN } from '@dxos/keys';
 
 import type * as Entity from './Entity';
 import type * as Filter from './Filter';

@@ -7,7 +7,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { Obj, QueryAST, Type } from '@dxos/echo';
 import { OptionsAnnotationId, SystemTypeAnnotation } from '@dxos/echo/internal';
-import { DXN } from '@dxos/keys';
+import { LegacyDXN as DXN } from '@dxos/keys';
 import { Expando } from '@dxos/schema';
 
 /**

@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import { type Err, Obj, Ref, type Type } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
-import { DXN, LOCAL_SPACE_TAG, type ObjectId, type SpaceId } from '@dxos/keys';
+import { LegacyDXN as DXN, LOCAL_SPACE_TAG, type ObjectId, type SpaceId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 /**

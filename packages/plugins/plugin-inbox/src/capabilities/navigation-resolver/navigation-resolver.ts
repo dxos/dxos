@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, getSpaceIdFromPath, getSpacePath, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
 import { Database, Key } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
+import { LegacyDXN as DXN } from '@dxos/keys';
 import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings/types';
 
 import { meta } from '../../meta';

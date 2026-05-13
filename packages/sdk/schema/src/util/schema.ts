@@ -18,7 +18,7 @@ import {
   formatToType,
 } from '@dxos/echo/internal';
 import { createEchoSchema } from '@dxos/echo/testing';
-import { type DXN, PublicKey } from '@dxos/keys';
+import { type LegacyDXN as DXN, PublicKey } from '@dxos/keys';
 
 export type SelectOptionType = typeof SelectOption.Type;
 

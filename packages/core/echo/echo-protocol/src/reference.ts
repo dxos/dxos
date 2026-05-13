@@ -3,7 +3,7 @@
 //
 
 import { assertArgument } from '@dxos/invariant';
-import { DXN, LOCAL_SPACE_TAG, type PublicKey } from '@dxos/keys';
+import { LegacyDXN as DXN, LOCAL_SPACE_TAG, type PublicKey } from '@dxos/keys';
 import { type ObjectId } from '@dxos/protocols';
 import { type Reference as ReferenceProto } from '@dxos/protocols/proto/dxos/echo/model/document';
 

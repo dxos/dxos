@@ -15,7 +15,7 @@ import {
   type AppCapabilities as AppCaps,
 } from '@dxos/app-toolkit';
 import { Database, Entity, Key } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
+import { LegacyDXN as DXN } from '@dxos/keys';
 import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings/types';
 
 import { meta } from '../../meta';

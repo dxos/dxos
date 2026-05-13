@@ -69,7 +69,7 @@ import {
   isEncodedReference,
 } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, ObjectId } from '@dxos/keys';
+import { LegacyDXN as DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 

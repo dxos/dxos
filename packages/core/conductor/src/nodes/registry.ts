@@ -13,7 +13,7 @@ import { isInstanceOf } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
 import { FunctionInvocationService, QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { DXN, ObjectId } from '@dxos/keys';
+import { LegacyDXN as DXN, ObjectId } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
 import { getTypenameFromQuery } from '@dxos/schema';
 import { Message } from '@dxos/types';

@@ -11,7 +11,7 @@ import { type ClientServicesHost, type DataSpace } from '@dxos/client-services';
 import { exposeModule, importModule } from '@dxos/debug';
 import { Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { PublicKey } from '@dxos/keys';
-import { DXN } from '@dxos/keys';
+import { LegacyDXN as DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type RpcPeer, type RpcPort, createBundledRpcServer } from '@dxos/rpc';
 import { type DiagnosticMetadata, TRACE_PROCESSOR, type TraceProcessor } from '@dxos/tracing';

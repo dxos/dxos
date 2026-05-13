@@ -5,7 +5,7 @@
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 
-import { DXN, ObjectId } from '@dxos/keys';
+import { LegacyDXN as DXN, ObjectId } from '@dxos/keys';
 
 import { ForeignKey } from '../foreign-key';
 

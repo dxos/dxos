@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
 import { QueryAST } from '@dxos/echo-protocol';
-import { DXN, ObjectId, SpaceId } from '@dxos/keys';
+import { LegacyDXN as DXN, ObjectId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import * as Dataset from './Dataset';

@@ -27,7 +27,7 @@ import { type Queue } from '@dxos/echo-db';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import { mapAst } from '@dxos/effect';
 import { ContextQueueService } from '@dxos/functions';
-import { DXN, ObjectId } from '@dxos/keys';
+import { LegacyDXN as DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, isNonNullable, trim } from '@dxos/util';
 

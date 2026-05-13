@@ -21,7 +21,7 @@ import {
 import { TestSchema, prepareAstForCompare } from '@dxos/echo/testing';
 import { Context } from '@dxos/context';
 import { EncodedReference } from '@dxos/echo-protocol';
-import { DXN, PublicKey, SpaceId } from '@dxos/keys';
+import { LegacyDXN as DXN, PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';

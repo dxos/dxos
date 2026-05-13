@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { JsonSchema } from '@dxos/echo';
 import { FunctionInvocationService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { type DXN } from '@dxos/keys';
+import { type LegacyDXN as DXN } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
 
 import { type ComputeResolver, GraphExecutor, compileOrThrow } from '../compiler';

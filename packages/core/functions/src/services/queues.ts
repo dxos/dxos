@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import type { Entity } from '@dxos/echo';
 import type { Queue, QueueAPI, QueueFactory } from '@dxos/echo-db';
-import type { DXN, QueueSubspaceTag } from '@dxos/keys';
+import type { LegacyDXN as DXN, QueueSubspaceTag } from '@dxos/keys';
 
 /**
  * Gives access to all queues.

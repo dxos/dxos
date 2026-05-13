@@ -4,7 +4,7 @@
 
 import { Obj, Ref } from '@dxos/echo';
 import { Graph, GraphModel } from '@dxos/graph';
-import { DXN, ObjectId } from '@dxos/keys';
+import { LegacyDXN as DXN, ObjectId } from '@dxos/keys';
 import { type MakeOptional } from '@dxos/util';
 
 import { type ComputeEdge, ComputeGraph, type ComputeNode, isComputeGraph } from './graph';

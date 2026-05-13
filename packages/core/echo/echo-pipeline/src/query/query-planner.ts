@@ -5,7 +5,7 @@
 import { Order, Query } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import type { DXN } from '@dxos/keys';
+import type { LegacyDXN as DXN } from '@dxos/keys';
 
 import { QueryError } from './errors';
 import { QueryPlan } from './plan';

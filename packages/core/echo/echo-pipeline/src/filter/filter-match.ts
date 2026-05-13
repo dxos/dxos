@@ -4,7 +4,7 @@
 
 import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
 import { EncodedReference, ObjectStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
-import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
+import { LegacyDXN as DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 
 export type MatchedObject = {
   id: ObjectId;

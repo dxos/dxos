@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { type Database, Filter, Query } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
-import { DXN } from '@dxos/keys';
+import { LegacyDXN as DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 export const ReferencedQuotes = Schema.Struct({

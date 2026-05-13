@@ -12,7 +12,7 @@ import { ConsolePrinter } from '@dxos/ai';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { Queue } from '@dxos/echo-db';
 import { QueueService, TracingService, Trigger } from '@dxos/functions';
-import { DXN, ObjectId } from '@dxos/keys';
+import { LegacyDXN as DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ErrorCodec, FunctionRuntimeKind, SerializedError } from '@dxos/protocols';
 import { Message } from '@dxos/types';

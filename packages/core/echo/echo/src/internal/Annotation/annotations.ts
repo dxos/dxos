@@ -10,7 +10,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { raise } from '@dxos/debug';
 import { type JsonPath, getField } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { LegacyDXN as DXN } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
 import { type Mutable } from '../common/proxy';

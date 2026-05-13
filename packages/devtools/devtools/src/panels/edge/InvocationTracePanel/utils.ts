@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type DXN } from '@dxos/keys';
+import { type LegacyDXN as DXN } from '@dxos/keys';
 
 export const formatDuration = (duration: number): string => {
   return `${(duration / 1000).toFixed(2)}`;

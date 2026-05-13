@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { Event } from '@dxos/async';
 import { Entity, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { DXN, SpaceId } from '@dxos/keys';
+import { LegacyDXN as DXN, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 
 import { type Queue } from '../queue';

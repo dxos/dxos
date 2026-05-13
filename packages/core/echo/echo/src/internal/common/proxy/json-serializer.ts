@@ -4,7 +4,7 @@
 
 import { type ObjectMeta } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { LegacyDXN as DXN } from '@dxos/keys';
 import { deepMapValues } from '@dxos/util';
 
 import { Ref } from '../../Ref';

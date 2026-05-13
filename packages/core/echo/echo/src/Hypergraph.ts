@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type DXN } from '@dxos/keys';
+import { type LegacyDXN as DXN } from '@dxos/keys';
 
 import type * as Database from './Database';
 import type * as Entity from './Entity';

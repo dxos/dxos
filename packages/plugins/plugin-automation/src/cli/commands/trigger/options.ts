@@ -5,7 +5,7 @@
 import * as Options from '@effect/cli/Options';
 import * as Schema from 'effect/Schema';
 
-import { DXN } from '@dxos/keys';
+import { LegacyDXN as DXN } from '@dxos/keys';
 
 export const TriggerId = Options.text('id').pipe(Options.withDescription('The id of the trigger.'));
 

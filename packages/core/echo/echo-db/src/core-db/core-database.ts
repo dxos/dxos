@@ -24,7 +24,7 @@ import { batchEvents } from '@dxos/echo/internal';
 import { type DatabaseDirectory, EncodedReference, type ObjectStructure, type SpaceState } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type ObjectId } from '@dxos/keys';
-import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
+import { type LegacyDXN as DXN, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';

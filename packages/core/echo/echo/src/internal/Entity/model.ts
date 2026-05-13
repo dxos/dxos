@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 
 import { type ForeignKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { DXN, ObjectId } from '@dxos/keys';
+import { LegacyDXN as DXN, ObjectId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type * as Database from '../../Database';

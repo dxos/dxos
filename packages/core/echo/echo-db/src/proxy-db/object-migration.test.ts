@@ -9,7 +9,7 @@ import { Obj, Type } from '@dxos/echo';
 import { Filter } from '@dxos/echo';
 import { getSchemaDXN } from '@dxos/echo/internal';
 import { JsonPath } from '@dxos/effect';
-import { DXN } from '@dxos/keys';
+import { LegacyDXN as DXN } from '@dxos/keys';
 
 import { EchoTestBuilder } from '../testing';
 

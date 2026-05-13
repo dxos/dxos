@@ -5,7 +5,7 @@
 import { type Context, Resource } from '@dxos/context';
 import { type Entity, type Hypergraph } from '@dxos/echo';
 import { assertArgument, assertState } from '@dxos/invariant';
-import { DXN, ObjectId, type QueueSubspaceTag, QueueSubspaceTags, type SpaceId } from '@dxos/keys';
+import { LegacyDXN as DXN, ObjectId, type QueueSubspaceTag, QueueSubspaceTags, type SpaceId } from '@dxos/keys';
 import { type FeedProtocol } from '@dxos/protocols';
 
 import { QueueImpl } from './queue';

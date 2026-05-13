@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 import type { Filter as Filter$, Order as Order$, Query as Query$, Ref } from '@dxos/echo';
 import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
-import type { DXN, ObjectId } from '@dxos/keys';
+import type { LegacyDXN as DXN, ObjectId } from '@dxos/keys';
 
 //
 // Light-weight implementation of query execution.

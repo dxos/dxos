@@ -21,7 +21,7 @@ import {
 import { type RuntimeProvider, runAndForwardErrors, unwrapExit } from '@dxos/effect';
 import { EscapedPropPath, type IndexEngine, type ObjectMeta, type ReverseRef } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
-import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
+import { LegacyDXN as DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
 import { compositeKey, getDeep, isNonNullable } from '@dxos/util';

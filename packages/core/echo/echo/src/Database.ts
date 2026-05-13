@@ -13,7 +13,7 @@ import type * as Types from 'effect/Types';
 
 import { promiseWithCauseCapture } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { DXN, type SpaceId } from '@dxos/keys';
+import { LegacyDXN as DXN, type SpaceId } from '@dxos/keys';
 
 import type * as Entity from './Entity';
 import * as Err from './Err';

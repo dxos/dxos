@@ -3,7 +3,7 @@
 //
 
 import { createSystemPrompt } from '@dxos/assistant';
-import { DXN, ObjectId, SpaceId } from '@dxos/keys';
+import { LegacyDXN as DXN, ObjectId, SpaceId } from '@dxos/keys';
 import { type Dimension, type Point } from '@dxos/react-ui-canvas';
 import { CanvasGraphModel, createNote, pointMultiply, pointsToRect, rectToPoints } from '@dxos/react-ui-canvas-editor';
 

@@ -4,7 +4,7 @@
 
 import { type Entity } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { type DXN } from '@dxos/keys';
+import { type LegacyDXN as DXN } from '@dxos/keys';
 
 import { type Client } from '../client';
 import { type Space } from '../echo';

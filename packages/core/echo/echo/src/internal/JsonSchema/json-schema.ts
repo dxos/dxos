@@ -13,7 +13,7 @@ import type * as Types from 'effect/Types';
 import { raise } from '@dxos/debug';
 import { mapAst } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, ObjectId } from '@dxos/keys';
+import { LegacyDXN as DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { clearUndefined, orderKeys, removeProperties } from '@dxos/util';
 

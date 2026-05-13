@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { type Entity } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { DXN, ObjectId, SpaceId } from '@dxos/keys';
+import { LegacyDXN as DXN, ObjectId, SpaceId } from '@dxos/keys';
 
 import { type Queue } from './types';
 

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { DXN } from './dxn';
+import * as DXN from './dxn';
 
 describe('DXN.isDXN', () => {
   test('accepts new-format DXNs', ({ expect }) => {
@@ -29,38 +29,68 @@ describe('DXN.isDXN', () => {
   });
 });
 
+describe('DXN.fromTypename', () => {
+  test('produces unversioned DXN', ({ expect }) => {
+    expect(DXN.fromTypename('org.dxos.type.calendar')).toBe('dxn:org.dxos.type.calendar');
+  });
+});
+
+describe('DXN.fromTypenameAndVersion', () => {
+  test('produces versioned DXN', ({ expect }) => {
+    expect(DXN.fromTypenameAndVersion('org.dxos.type.calendar', '1.0.0')).toBe(
+      'dxn:org.dxos.type.calendar:1.0.0',
+    );
+  });
+});
+
+describe('DXN.parse', () => {
+  test('passes through new format unchanged', ({ expect }) => {
+    expect(DXN.parse('dxn:org.dxos.type.calendar')).toBe('dxn:org.dxos.type.calendar');
+    expect(DXN.parse('dxn:org.dxos.type.calendar:1.0.0')).toBe('dxn:org.dxos.type.calendar:1.0.0');
+  });
+
+  test('normalizes legacy dxn:type:<nsid> to dxn:<nsid>', ({ expect }) => {
+    expect(DXN.parse('dxn:type:org.dxos.type.calendar')).toBe('dxn:org.dxos.type.calendar');
+  });
+
+  test('throws on invalid input', ({ expect }) => {
+    expect(() => DXN.parse('not-a-dxn')).toThrow();
+    expect(() => DXN.parse('dxn:invalid')).toThrow();
+  });
+});
+
 describe('DXN.getNsid', () => {
   test('extracts NSID from new-format DXN', ({ expect }) => {
-    expect(DXN.getNsid('dxn:org.dxos.type.calendar')).toBe('org.dxos.type.calendar');
-    expect(DXN.getNsid('dxn:org.dxos.plugin.markdown')).toBe('org.dxos.plugin.markdown');
+    expect(DXN.getNsid('dxn:org.dxos.type.calendar' as DXN.DXN)).toBe('org.dxos.type.calendar');
+    expect(DXN.getNsid('dxn:org.dxos.plugin.markdown' as DXN.DXN)).toBe('org.dxos.plugin.markdown');
   });
 
   test('extracts NSID from versioned DXN (without version)', ({ expect }) => {
-    expect(DXN.getNsid('dxn:org.dxos.type.calendar:1.0.0')).toBe('org.dxos.type.calendar');
+    expect(DXN.getNsid('dxn:org.dxos.type.calendar:1.0.0' as DXN.DXN)).toBe('org.dxos.type.calendar');
   });
 });
 
 describe('DXN.getVersion', () => {
   test('returns version from versioned DXN', ({ expect }) => {
-    expect(DXN.getVersion('dxn:org.dxos.type.calendar:1.0.0')).toBe('1.0.0');
-    expect(DXN.getVersion('dxn:com.alice.type.contact:2.1.0')).toBe('2.1.0');
+    expect(DXN.getVersion('dxn:org.dxos.type.calendar:1.0.0' as DXN.DXN)).toBe('1.0.0');
+    expect(DXN.getVersion('dxn:com.alice.type.contact:2.1.0' as DXN.DXN)).toBe('2.1.0');
   });
 
   test('returns undefined for unversioned DXN', ({ expect }) => {
-    expect(DXN.getVersion('dxn:org.dxos.type.calendar')).toBeUndefined();
+    expect(DXN.getVersion('dxn:org.dxos.type.calendar' as DXN.DXN)).toBeUndefined();
   });
 });
 
-describe('DXN existing API (backward compat)', () => {
-  test('parse and toString round-trip', ({ expect }) => {
-    const dxn = DXN.parse('dxn:type:org.dxos.type.calendar');
-    expect(dxn.kind).toBe('type');
-    expect(dxn.parts).toEqual(['org.dxos.type.calendar']);
-    expect(dxn.toString()).toBe('dxn:type:org.dxos.type.calendar');
+describe('DXN.equals', () => {
+  test('returns true for identical DXNs', ({ expect }) => {
+    const a = DXN.fromTypename('org.dxos.type.calendar');
+    const b = DXN.fromTypename('org.dxos.type.calendar');
+    expect(DXN.equals(a, b)).toBe(true);
   });
 
-  test('fromTypename', ({ expect }) => {
-    const dxn = DXN.fromTypename('org.dxos.type.calendar');
-    expect(dxn.toString()).toBe('dxn:type:org.dxos.type.calendar');
+  test('returns false for different DXNs', ({ expect }) => {
+    const a = DXN.fromTypename('org.dxos.type.calendar');
+    const b = DXN.fromTypename('org.dxos.type.event');
+    expect(DXN.equals(a, b)).toBe(false);
   });
 });

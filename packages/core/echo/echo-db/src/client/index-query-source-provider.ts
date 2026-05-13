@@ -8,7 +8,7 @@ import { Context } from '@dxos/context';
 import { type Entity, type Hypergraph, Obj, type QueryResult } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { DXN, type ObjectId, type QueueSubspaceTag, SpaceId } from '@dxos/keys';
+import { LegacyDXN as DXN, type ObjectId, type QueueSubspaceTag, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 import {

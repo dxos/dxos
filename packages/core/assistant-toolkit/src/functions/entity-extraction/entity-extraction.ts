@@ -11,7 +11,7 @@ import { GenericToolkit } from '@dxos/ai';
 import { AiSession, ToolExecutionServices } from '@dxos/assistant';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { FunctionInvocationService } from '@dxos/functions';
-import { type DXN } from '@dxos/keys';
+import { type LegacyDXN as DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { type Actor, LegacyOrganization, Organization, Person } from '@dxos/types';

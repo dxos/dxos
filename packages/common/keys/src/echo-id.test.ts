@@ -4,9 +4,9 @@
 
 import { describe, test } from 'vitest';
 
-import { ObjectId } from './object-id';
-import { SpaceId } from './space-id';
-import { EchoId } from './echo-id';
+import * as EchoId from './echo-id';
+import { type ObjectId } from './object-id';
+import { type SpaceId } from './space-id';
 
 const SPACE = 'BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE' as SpaceId;
 const OBJECT = '01J00J9B45YHYSGZQTQMSKMGJ6' as ObjectId;
@@ -95,65 +95,65 @@ describe('EchoId.tryParse', () => {
 
 describe('EchoId.getSpaceId', () => {
   test('returns spaceId from qualified ref', ({ expect }) => {
-    expect(EchoId.getSpaceId(`echo://${SPACE}/${OBJECT}` as EchoId)).toBe(SPACE);
+    expect(EchoId.getSpaceId(`echo://${SPACE}/${OBJECT}` as EchoId.EchoId)).toBe(SPACE);
   });
 
   test('returns spaceId from space-only ref', ({ expect }) => {
-    expect(EchoId.getSpaceId(`echo://${SPACE}` as EchoId)).toBe(SPACE);
+    expect(EchoId.getSpaceId(`echo://${SPACE}` as EchoId.EchoId)).toBe(SPACE);
   });
 
   test('returns undefined for local ref', ({ expect }) => {
-    expect(EchoId.getSpaceId(`echo:/${OBJECT}` as EchoId)).toBeUndefined();
-    expect(EchoId.getSpaceId(`echo:///${OBJECT}` as EchoId)).toBeUndefined();
+    expect(EchoId.getSpaceId(`echo:/${OBJECT}` as EchoId.EchoId)).toBeUndefined();
+    expect(EchoId.getSpaceId(`echo:///${OBJECT}` as EchoId.EchoId)).toBeUndefined();
   });
 });
 
 describe('EchoId.getObjectId', () => {
   test('returns objectId from qualified ref', ({ expect }) => {
-    expect(EchoId.getObjectId(`echo://${SPACE}/${OBJECT}` as EchoId)).toBe(OBJECT);
+    expect(EchoId.getObjectId(`echo://${SPACE}/${OBJECT}` as EchoId.EchoId)).toBe(OBJECT);
   });
 
   test('returns objectId from local ref', ({ expect }) => {
-    expect(EchoId.getObjectId(`echo:/${OBJECT}` as EchoId)).toBe(OBJECT);
-    expect(EchoId.getObjectId(`echo:///${OBJECT}` as EchoId)).toBe(OBJECT);
+    expect(EchoId.getObjectId(`echo:/${OBJECT}` as EchoId.EchoId)).toBe(OBJECT);
+    expect(EchoId.getObjectId(`echo:///${OBJECT}` as EchoId.EchoId)).toBe(OBJECT);
   });
 
   test('returns undefined for space-only ref', ({ expect }) => {
-    expect(EchoId.getObjectId(`echo://${SPACE}` as EchoId)).toBeUndefined();
+    expect(EchoId.getObjectId(`echo://${SPACE}` as EchoId.EchoId)).toBeUndefined();
   });
 });
 
 describe('EchoId.isLocal', () => {
   test('returns true for local refs', ({ expect }) => {
-    expect(EchoId.isLocal(`echo:/${OBJECT}` as EchoId)).toBe(true);
-    expect(EchoId.isLocal(`echo:///${OBJECT}` as EchoId)).toBe(true);
+    expect(EchoId.isLocal(`echo:/${OBJECT}` as EchoId.EchoId)).toBe(true);
+    expect(EchoId.isLocal(`echo:///${OBJECT}` as EchoId.EchoId)).toBe(true);
   });
 
   test('returns false for qualified refs', ({ expect }) => {
-    expect(EchoId.isLocal(`echo://${SPACE}/${OBJECT}` as EchoId)).toBe(false);
-    expect(EchoId.isLocal(`echo://${SPACE}` as EchoId)).toBe(false);
+    expect(EchoId.isLocal(`echo://${SPACE}/${OBJECT}` as EchoId.EchoId)).toBe(false);
+    expect(EchoId.isLocal(`echo://${SPACE}` as EchoId.EchoId)).toBe(false);
   });
 
   test('normalizes legacy local format before checking', ({ expect }) => {
-    expect(EchoId.isLocal(`dxn:echo:@:${OBJECT}` as EchoId)).toBe(true);
+    expect(EchoId.isLocal(`dxn:echo:@:${OBJECT}` as EchoId.EchoId)).toBe(true);
   });
 });
 
 describe('EchoId.equals', () => {
   test('returns true for identical refs', ({ expect }) => {
-    const id = `echo://${SPACE}/${OBJECT}` as EchoId;
+    const id = `echo://${SPACE}/${OBJECT}` as EchoId.EchoId;
     expect(EchoId.equals(id, id)).toBe(true);
   });
 
   test('returns true for equivalent legacy and new format', ({ expect }) => {
-    const legacy = `dxn:echo:@:${OBJECT}` as EchoId;
-    const modern = `echo:/${OBJECT}` as EchoId;
+    const legacy = `dxn:echo:@:${OBJECT}` as EchoId.EchoId;
+    const modern = `echo:/${OBJECT}` as EchoId.EchoId;
     expect(EchoId.equals(legacy, modern)).toBe(true);
   });
 
   test('returns false for different refs', ({ expect }) => {
-    const a = `echo://${SPACE}/${OBJECT}` as EchoId;
-    const b = `echo://${SPACE}/${OBJECT2}` as EchoId;
+    const a = `echo://${SPACE}/${OBJECT}` as EchoId.EchoId;
+    const b = `echo://${SPACE}/${OBJECT2}` as EchoId.EchoId;
     expect(EchoId.equals(a, b)).toBe(false);
   });
 });

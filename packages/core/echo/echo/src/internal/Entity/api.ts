@@ -3,7 +3,7 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import { type DXN } from '@dxos/keys';
+import { type LegacyDXN as DXN } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type { AnyEntity } from '../common/types';

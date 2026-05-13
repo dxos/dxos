@@ -1,382 +1,117 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2025 DXOS.org
 //
 
-import type { InspectOptionsStylized, inspect } from 'node:util';
+// @import-as-namespace
 
 import * as Schema from 'effect/Schema';
 
-import { type DevtoolsFormatter, devtoolsFormatter, inspectCustom } from '@dxos/debug';
-import { assertArgument, invariant } from '@dxos/invariant';
+import type * as URI from './uri';
 
-import { ObjectId } from './object-id';
-import { SpaceId } from './space-id';
-
-/**
- * Tags for ECHO DXNs that should resolve the object ID in the local space.
- */
-// TODO(dmaretskyi): Rebrand this as "unknown location" to specify objects in the same space or queue. Essentially making the DXN it a URI not URL
-// TODO(dmaretskyi): "@" is a separator character in the URI spec.
-export const LOCAL_SPACE_TAG = '@';
-
-export const DXN_ECHO_REGEXP = /@(dxn:[a-zA-Z0-p:@]+)/;
-
-// TODO(burdon): Namespace for.
-export const QueueSubspaceTags = Object.freeze({
-  DATA: 'data',
-  TRACE: 'trace',
-});
-
-export type QueueSubspaceTag = (typeof QueueSubspaceTags)[keyof typeof QueueSubspaceTags];
-
-// TODO(burdon): Refactor.
-// Consider: https://github.com/multiformats/multiaddr
-// dxn:echo:[<space-id>:[<queue-id>:]]<object-id>
-// dxn:echo:[S/<space-id>:[Q/<queue-id>:]]<object-id>
-// dxn:type:org.dxos.markdown.contact
-
-/**
- * DXN unambiguously names a resource like an ECHO object, schema definition, plugin, etc.
- * Each DXN starts with a dxn prefix, followed by a resource kind.
- * Colon Symbol : is used a delimiter between parts.
- * DXNs may contain slashes.
- * '@' in the place of the space id is used to denote that the DXN should be resolved in the local space.
- *
- * @example
- * ```
- * dxn:echo:<space key>:<echo id>
- * dxn:echo:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6
- * dxn:echo:@:01J00J9B45YHYSGZQTQMSKMGJ6
- * dxn:type:org.dxos.type.calendar
- * dxn:plugin:org.dxos.agent.plugin.functions
- * ```
- */
 /**
  * Full DXN regex per spec — new format only: `dxn:<nsid>[:<version>]`.
- * Does NOT match the legacy `dxn:<kind>:<...>` format (e.g. `dxn:type:...`).
+ * Does NOT match legacy `dxn:<kind>:<...>` formats (e.g. `dxn:type:...`).
  */
 const DXN_SPEC_REGEXP =
   /^dxn:[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)(:\d+\.\d+\.\d+)?$/;
 
-export class DXN {
-  // TODO(burdon): Rename to DXN (i.e., DXN.DXN).
-  // TODO(dmaretskyi): Should this be a transformation into the DXN type?
-  static Schema = Schema.NonEmptyString.pipe(
-    Schema.pattern(/^dxn:([^:]+):(?:[^:]+:?)+[^:]$/),
-    // TODO(dmaretskyi): To set the format we need to move the annotation IDs out of the echo-schema package.
-    // FormatAnnotation.set(TypeFormat.DXN),
-    Schema.annotations({
-      title: 'DXN',
-      description: 'DXN URI',
-      examples: ['dxn:type:com.example.type.my-type', 'dxn:echo:@:01J00J9B45YHYSGZQTQMSKMGJ6'],
-    }),
-  );
-
-  static hash(dxn: DXN): string {
-    return dxn.toString();
-  }
-
-  /**
-   * Returns true if the string is a valid DXN in the new format (`dxn:<nsid>[:<version>]`).
-   * Does not accept the legacy `dxn:<kind>:<...>` format.
-   */
-  static isDXN(s: unknown): s is DXN.String {
-    return typeof s === 'string' && DXN_SPEC_REGEXP.test(s);
-  }
-
-  /**
-   * Returns the NSID portion of a new-format DXN string (the part after `dxn:`).
-   * @example DXN.getNsid('dxn:org.dxos.type.calendar') → 'org.dxos.type.calendar'
-   */
-  static getNsid(dxn: string): string {
-    const match = /^dxn:([^:]+)/.exec(dxn);
-    if (!match) {
-      throw new Error(`Invalid DXN: ${dxn}`);
-    }
-    return match[1];
-  }
-
-  /**
-   * Returns the semver version from a versioned DXN string, or undefined if unversioned.
-   * @example DXN.getVersion('dxn:org.dxos.type.calendar:1.0.0') → '1.0.0'
-   */
-  static getVersion(dxn: string): string | undefined {
-    const match = /^dxn:[^:]+:(\d+\.\d+\.\d+)$/.exec(dxn);
-    return match?.[1];
-  }
-
-  /**
-   * Kind constants.
-   */
-  static kind = Object.freeze({
-    /**
-     * dxn:type:<type_name>[:<version>]
-     */
-    TYPE: 'type',
-
-    /**
-     * dxn:echo:<space_id>:<echo_id>
-     * dxn:echo:@:<echo_id>
-     */
-    // TODO(burdon): Rename to OBJECT? (BREAKING CHANGE to update "echo").
-    // TODO(burdon): Add separate Kind for space?
-    ECHO: 'echo',
-
-    /**
-     * The subspace tag enables us to partition queues by usage within the context of a space.
-     * dxn:queue:<subspace_tag>:<space_id>:<queue_id>[:object_id]
-     * dxn:queue:data:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6
-     * dxn:queue:trace:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6
-     */
-    QUEUE: 'queue',
-  });
-
-  /**
-   * Exactly equals.
-   */
-  static equals(a: DXN, b: DXN): boolean {
-    return a.kind === b.kind && a.parts.length === b.parts.length && a.parts.every((part, i) => part === b.parts[i]);
-  }
-
-  static equalsEchoId(a: DXN, b: DXN): boolean {
-    const a1 = a.asEchoDXN();
-    const b1 = b.asEchoDXN();
-    return !!a1 && !!b1 && a1.echoId === b1.echoId;
-  }
-
-  // TODO(burdon): Rename isValid.
-  static isDXNString(dxn: string): boolean {
-    return dxn.startsWith('dxn:');
-  }
-
-  static parse(dxn: string): DXN {
-    if (typeof dxn !== 'string') {
-      throw new Error(`Invalid DXN: ${dxn}`);
-    }
-    const [prefix, kind, ...parts] = dxn.split(':');
-    if (!(prefix === 'dxn')) {
-      throw new Error(`Invalid DXN: ${dxn}`);
-    }
-    if (!(typeof kind === 'string' && kind.length > 0)) {
-      throw new Error(`Invalid DXN: ${dxn}`);
-    }
-    if (!(parts.length > 0)) {
-      throw new Error(`Invalid DXN: ${dxn}`);
-    }
-
-    return new DXN(kind, parts);
-  }
-
-  static tryParse(dxn: string): DXN | undefined {
-    try {
-      return DXN.parse(dxn);
-    } catch {
-      return undefined;
-    }
-  }
-
-  /**
-   * @example `dxn:type:com.example.type.person`
-   */
-  static fromTypename(typename: string): DXN {
-    return new DXN(DXN.kind.TYPE, [typename]);
-  }
-
-  /**
-   * @example `dxn:type:com.example.type.person:0.1.0`
-   */
-  // TODO(dmaretskyi): Consider using @ as the version separator.
-  static fromTypenameAndVersion(typename: string, version: string): DXN {
-    return new DXN(DXN.kind.TYPE, [typename, version]);
-  }
-
-  /**
-   * @example `dxn:echo:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6`
-   */
-  static fromSpaceAndObjectId(spaceId: SpaceId, objectId: ObjectId): DXN {
-    assertArgument(SpaceId.isValid(spaceId), `Invalid space ID: ${spaceId}`);
-    assertArgument(ObjectId.isValid(objectId), 'objectId', `Invalid object ID: ${objectId}`);
-    return new DXN(DXN.kind.ECHO, [spaceId, objectId]);
-  }
-
-  /**
-   * @example `dxn:echo:@:01J00J9B45YHYSGZQTQMSKMGJ6`
-   */
-  static fromLocalObjectId(id: string): DXN {
-    assertArgument(ObjectId.isValid(id), 'id', `Invalid object ID: ${id}`);
-    return new DXN(DXN.kind.ECHO, [LOCAL_SPACE_TAG, id]);
-  }
-
-  static fromQueue(subspaceTag: QueueSubspaceTag, spaceId: SpaceId, queueId: ObjectId, objectId?: ObjectId) {
-    assertArgument(SpaceId.isValid(spaceId), `Invalid space ID: ${spaceId}`);
-    assertArgument(ObjectId.isValid(queueId), 'queueId', `Invalid queue ID: ${queueId}`);
-    assertArgument(!objectId || ObjectId.isValid(objectId), 'objectId', `Invalid object ID: ${objectId}`);
-
-    return new DXN(DXN.kind.QUEUE, [subspaceTag, spaceId, queueId, ...(objectId ? [objectId] : [])]);
-  }
-
-  #kind: string;
-  #parts: string[];
-
-  constructor(kind: string, parts: string[]) {
-    assertArgument(parts.length > 0, 'parts', `Invalid DXN: ${parts}`);
-    assertArgument(
-      parts.every((part) => typeof part === 'string' && part.length > 0 && part.indexOf(':') === -1),
-      'parts',
-      `Invalid DXN: ${parts}`,
-    );
-
-    // Per-type validation.
-    switch (kind) {
-      case DXN.kind.TYPE:
-        if (parts.length > 2) {
-          throw new Error('Invalid DXN.kind.TYPE');
-        }
-        break;
-      case DXN.kind.ECHO:
-        if (parts.length !== 2) {
-          throw new Error('Invalid DXN.kind.ECHO');
-        }
-        break;
-    }
-
-    this.#kind = kind;
-    this.#parts = parts;
-  }
-
-  toString(): DXN.String {
-    return `dxn:${this.#kind}:${this.#parts.join(':')}` as DXN.String;
-  }
-
-  toJSON(): string {
-    return this.toString();
-  }
-
-  /**
-   * Used by Node.js to get textual representation of this object when it's printed with a `console.log` statement.
-   */
-  [inspectCustom](depth: number, options: InspectOptionsStylized, inspectFn: typeof inspect): string {
-    const printControlCode = (code: number) => {
-      return `\x1b[${code}m`;
-    };
-
-    return (
-      printControlCode(inspectFn.colors.blueBright![0]) + this.toString() + printControlCode(inspectFn.colors.reset![0])
-    );
-  }
-
-  get [devtoolsFormatter](): DevtoolsFormatter {
-    return {
-      header: () => {
-        return ['span', { style: 'font-weight: bold;' }, this.toString()];
-      },
-    };
-  }
-
-  get kind() {
-    return this.#kind;
-  }
-
-  get parts() {
-    return this.#parts;
-  }
-
-  // TODO(burdon): Should getters fail?
-  get typename() {
-    invariant(this.#kind === DXN.kind.TYPE);
-    return this.#parts[0];
-  }
-
-  equals(other: DXN): boolean {
-    return DXN.equals(this, other);
-  }
-
-  hasTypenameOf(typename: string): boolean {
-    return this.#kind === DXN.kind.TYPE && this.#parts.length === 1 && this.#parts[0] === typename;
-  }
-
-  isLocalObjectId(): boolean {
-    return this.#kind === DXN.kind.ECHO && this.#parts[0] === LOCAL_SPACE_TAG && this.#parts.length === 2;
-  }
-
-  asTypeDXN(): DXN.TypeDXN | undefined {
-    if (this.kind !== DXN.kind.TYPE) {
-      return undefined;
-    }
-
-    const [type, version] = this.#parts;
-    return {
-      // TODO(wittjosiah): Should be `typename` for consistency.
-      type,
-      version: version as string | undefined,
-    };
-  }
-
-  asEchoDXN(): DXN.EchoDXN | undefined {
-    if (this.kind !== DXN.kind.ECHO) {
-      return undefined;
-    }
-
-    const [spaceId, echoId] = this.#parts;
-    return {
-      spaceId: spaceId === LOCAL_SPACE_TAG ? undefined : (spaceId as SpaceId | undefined),
-      // TODO(burdon): objectId.
-      echoId,
-    };
-  }
-
-  asQueueDXN(): DXN.QueueDXN | undefined {
-    if (this.kind !== DXN.kind.QUEUE) {
-      return undefined;
-    }
-
-    const [subspaceTag, spaceId, queueId, objectId] = this.#parts;
-    if (typeof queueId !== 'string') {
-      return undefined;
-    }
-
-    return {
-      subspaceTag: subspaceTag as QueueSubspaceTag,
-      spaceId: spaceId as SpaceId,
-      queueId,
-      objectId: objectId as string | undefined,
-    };
-  }
-
-  /**
-   * Produces a new DXN with the given parts appended.
-   */
-  extend(parts: string[]): DXN {
-    return new DXN(this.#kind, [...this.#parts, ...parts]);
-  }
-}
+/**
+ * DXN names a resource (type, plugin, capability, etc.).
+ *
+ * Format: `dxn:<nsid>[:<version>]` where NSID is an atproto-style dotted name.
+ *
+ * @example
+ * ```
+ * dxn:org.dxos.type.calendar
+ * dxn:org.dxos.type.calendar:1.0.0
+ * dxn:org.dxos.plugin.markdown
+ * ```
+ */
+export type DXN = string & { readonly __DXN: unique symbol } & URI.URI;
 
 /**
- * API namespace.
+ * Returns true if the value is a valid DXN in the new `dxn:<nsid>[:<version>]` format.
+ * Does not accept the legacy `dxn:<kind>:<...>` format.
  */
-export declare namespace DXN {
-  /**
-   * DXN represented as a javascript string.
-   */
-  // TODO(burdon): Use Effect branded string?
-  // export const String = S.String.pipe(S.brand('DXN'));
-  // export type String = S.To(typoeof String);
-  export type String = string & { __DXNString: never };
+export const isDXN = (s: unknown): s is DXN => typeof s === 'string' && DXN_SPEC_REGEXP.test(s);
 
-  export type TypeDXN = {
-    type: string;
-    version?: string;
-  };
+/**
+ * Creates an unversioned DXN from an NSID.
+ * @example fromTypename('org.dxos.type.calendar') → 'dxn:org.dxos.type.calendar'
+ */
+export const fromTypename = (nsid: string): DXN => `dxn:${nsid}` as DXN;
 
-  export type EchoDXN = {
-    spaceId?: SpaceId;
-    echoId: string; // TODO(dmaretskyi): Rename to `objectId` and use `ObjectId` for the type.
-  };
+/**
+ * Creates a versioned DXN.
+ * @example fromTypenameAndVersion('org.dxos.type.calendar', '1.0.0') → 'dxn:org.dxos.type.calendar:1.0.0'
+ */
+export const fromTypenameAndVersion = (nsid: string, version: string): DXN =>
+  `dxn:${nsid}:${version}` as DXN;
 
-  export type QueueDXN = {
-    subspaceTag: QueueSubspaceTag;
-    spaceId: SpaceId;
-    queueId: string; // TODO(dmaretskyi): ObjectId.
-    objectId?: string; // TODO(dmaretskyi): ObjectId.
-  };
-}
+/**
+ * Parses a DXN string, normalizing legacy `dxn:type:<nsid>` format to the canonical
+ * `dxn:<nsid>` form.
+ */
+export const parse = (s: string): DXN => {
+  // Backward compat: strip legacy `type:` kind segment.
+  const legacyTypeMatch = /^dxn:type:(.+)$/.exec(s);
+  if (legacyTypeMatch) {
+    const normalized = `dxn:${legacyTypeMatch[1]}` as DXN;
+    if (DXN_SPEC_REGEXP.test(normalized)) {
+      return normalized;
+    }
+  }
+  if (isDXN(s)) {
+    return s;
+  }
+  throw new Error(`Invalid DXN: ${s}`);
+};
+
+/**
+ * Like `parse` but returns undefined on failure instead of throwing.
+ */
+export const tryParse = (s: string): DXN | undefined => {
+  try {
+    return parse(s);
+  } catch {
+    return undefined;
+  }
+};
+
+/**
+ * Returns the NSID portion of a DXN (the part after `dxn:` and before optional `:<version>`).
+ * @example getNsid('dxn:org.dxos.type.calendar:1.0.0') → 'org.dxos.type.calendar'
+ */
+export const getNsid = (dxn: DXN): string => {
+  const match = /^dxn:([^:]+)/.exec(dxn);
+  if (!match) {
+    throw new Error(`Invalid DXN: ${dxn}`);
+  }
+  return match[1];
+};
+
+/**
+ * Returns the semver version from a versioned DXN, or undefined if unversioned.
+ * @example getVersion('dxn:org.dxos.type.calendar:1.0.0') → '1.0.0'
+ */
+export const getVersion = (dxn: DXN): string | undefined => {
+  const match = /^dxn:[^:]+:(\d+\.\d+\.\d+)$/.exec(dxn);
+  return match?.[1];
+};
+
+/**
+ * Strict equality of two DXNs.
+ */
+export const equals = (a: DXN, b: DXN): boolean => a === b;
+
+/**
+ * Effect Schema for DXN validation.
+ */
+export const Schema_: Schema.Schema<DXN, string> = Schema.String.pipe(
+  Schema.filter(isDXN, { message: () => 'Invalid DXN' }),
+  Schema.annotations({
+    title: 'DXN',
+    description: 'DXN URI: dxn:<nsid>[:<version>]',
+  }),
+) as Schema.Schema<DXN, string>;
+export { Schema_ as Schema };

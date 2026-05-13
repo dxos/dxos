@@ -7,7 +7,7 @@ import { inspect } from 'util';
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { DXN } from '@dxos/keys';
+import { LegacyDXN as DXN } from '@dxos/keys';
 
 import { Relation } from '../../index';
 import { TestSchema } from '../../testing';

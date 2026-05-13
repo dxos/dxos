@@ -8,7 +8,7 @@ import type * as Schema from 'effect/Schema';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { type DXN } from '@dxos/keys';
+import { type LegacyDXN as DXN } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
 import type * as Entity from './Entity';

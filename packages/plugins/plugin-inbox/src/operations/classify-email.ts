@@ -13,7 +13,7 @@ import { AiSession, GenerationObserver } from '@dxos/assistant';
 import { Database, Filter, Obj, Relation, Tag, Type } from '@dxos/echo';
 import { ContextQueueService, FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
-import { DXN } from '@dxos/keys';
+import { LegacyDXN as DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { HasSubject, Message } from '@dxos/types';
 import { trim } from '@dxos/util';

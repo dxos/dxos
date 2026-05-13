@@ -11,7 +11,7 @@ import { describe, expect, test } from 'vitest';
 import { Filter, Order, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { type QueryAST } from '@dxos/echo-protocol';
-import { DXN, SpaceId } from '@dxos/keys';
+import { LegacyDXN as DXN, SpaceId } from '@dxos/keys';
 
 import { QueryPlanner } from './query-planner';
 

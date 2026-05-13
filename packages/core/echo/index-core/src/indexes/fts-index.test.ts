@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { ATTR_TYPE } from '@dxos/echo/internal';
-import { DXN, ObjectId, SpaceId } from '@dxos/keys';
+import { LegacyDXN as DXN, ObjectId, SpaceId } from '@dxos/keys';
 
 import { FtsIndex } from './fts-index';
 import type { IndexerObject } from './interface';

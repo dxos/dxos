@@ -17,7 +17,7 @@ import {
   brokenAutomergeReplicatorFactory,
   testAutomergeReplicatorFactory,
 } from '@dxos/echo-pipeline/testing';
-import { DXN, type ObjectId, PublicKey } from '@dxos/keys';
+import { LegacyDXN as DXN, type ObjectId, PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
 

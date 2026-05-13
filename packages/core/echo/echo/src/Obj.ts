@@ -12,7 +12,7 @@ import * as Schema from 'effect/Schema';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
-import { type DXN, ObjectId } from '@dxos/keys';
+import { type LegacyDXN as DXN, ObjectId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type * as Database from './Database';

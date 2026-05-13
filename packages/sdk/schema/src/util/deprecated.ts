@@ -8,7 +8,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { QueryAST } from '@dxos/echo';
 import { Format, TypeEnum } from '@dxos/echo/internal';
 import { isDiscriminatedUnion, isTupleType, visit } from '@dxos/effect';
-import { DXN } from '@dxos/keys';
+import { LegacyDXN as DXN } from '@dxos/keys';
 
 /**
  * Get the base type; e.g., traverse through refinements.

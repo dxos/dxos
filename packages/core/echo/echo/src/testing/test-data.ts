@@ -3,7 +3,7 @@
 //
 
 import { DatabaseDirectory, ObjectStructure } from '@dxos/echo-protocol';
-import { DXN, ObjectId, PublicKey } from '@dxos/keys';
+import { LegacyDXN as DXN, ObjectId, PublicKey } from '@dxos/keys';
 
 import { Type } from '../index';
 

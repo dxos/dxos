@@ -11,7 +11,7 @@ import * as Layer from 'effect/Layer';
 import { Context } from '@dxos/context';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { DXN, ObjectId, SpaceId } from '@dxos/keys';
+import { LegacyDXN as DXN, ObjectId, SpaceId } from '@dxos/keys';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { type DataSourceCursor, type IndexDataSource, IndexEngine } from './index-engine';

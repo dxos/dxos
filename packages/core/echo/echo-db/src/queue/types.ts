@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { type Database, type Entity } from '@dxos/echo';
 import { EntityKind, type TypeAnnotation, TypeAnnotationId } from '@dxos/echo/internal';
-import { type DXN, type ObjectId } from '@dxos/keys';
+import { type LegacyDXN as DXN, type ObjectId } from '@dxos/keys';
 
 /**
  * @deprecated Migrate to Feed

@@ -12,7 +12,7 @@ import { Filter, Query } from '@dxos/echo';
 import { type ObjectJSON, SelfDXNId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
 import { defineHiddenProperty } from '@dxos/echo/internal';
 import { failedInvariant } from '@dxos/invariant';
-import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
+import { type LegacyDXN as DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 

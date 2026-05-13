@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { type Queue } from '@dxos/client/echo';
 import { raise } from '@dxos/debug';
 import { type Entity } from '@dxos/echo';
-import { type DXN } from '@dxos/keys';
+import { type LegacyDXN as DXN } from '@dxos/keys';
 
 import { useClient } from '../client';
 

@@ -5,7 +5,7 @@
 // @import-as-namespace
 
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
-import { type DXN } from '@dxos/keys';
+import { type LegacyDXN as DXN } from '@dxos/keys';
 
 export class SchemaNotFoundError extends BaseError.extend('SchemaNotFoundError', 'Schema not found') {
   constructor(schema: string, options?: BaseErrorOptions) {

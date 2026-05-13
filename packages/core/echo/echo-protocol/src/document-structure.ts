@@ -3,7 +3,7 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import type { DXN, ObjectId } from '@dxos/keys';
+import type { LegacyDXN as DXN, ObjectId } from '@dxos/keys';
 import { visitValues } from '@dxos/util';
 
 import { type RawString } from './automerge';

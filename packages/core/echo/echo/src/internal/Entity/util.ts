@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, ObjectId } from '@dxos/keys';
+import { LegacyDXN as DXN, ObjectId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import { type InternalObjectProps, SelfDXNId } from './model';

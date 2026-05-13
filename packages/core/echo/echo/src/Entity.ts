@@ -5,7 +5,7 @@
 // @import-as-namespace
 
 import type { ForeignKey } from '@dxos/echo-protocol';
-import type { DXN, ObjectId } from '@dxos/keys';
+import type { LegacyDXN as DXN, ObjectId } from '@dxos/keys';
 
 import * as internal from './internal';
 import type * as Relation from './Relation';

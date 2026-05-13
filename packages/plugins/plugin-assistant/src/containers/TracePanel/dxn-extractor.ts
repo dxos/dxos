@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { DXN } from '@dxos/keys';
+import { LegacyDXN as DXN } from '@dxos/keys';
 
 /**
  * Patterns for extracting DXN references from tool call params/results.

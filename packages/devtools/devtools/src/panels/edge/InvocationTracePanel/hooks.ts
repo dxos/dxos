@@ -9,7 +9,7 @@ import { Script, getUserFunctionIdInMetadata } from '@dxos/functions';
 import { InvocationOutcome } from '@dxos/functions-runtime';
 import { type InvocationTraceEvent } from '@dxos/functions-runtime';
 import { createInvocationSpans } from '@dxos/functions-runtime';
-import { type DXN } from '@dxos/keys';
+import { type LegacyDXN as DXN } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
 import { useQuery, useQueue } from '@dxos/react-client/echo';
 

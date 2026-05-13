@@ -3,7 +3,7 @@
 //
 
 import { type AnyEntity } from '@dxos/echo/internal';
-import type { DXN, SpaceId } from '@dxos/keys';
+import type { LegacyDXN as DXN, SpaceId } from '@dxos/keys';
 import { type FeedProtocol } from '@dxos/protocols';
 
 import type { ServiceContainer } from './internal';

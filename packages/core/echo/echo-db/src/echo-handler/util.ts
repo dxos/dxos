@@ -4,7 +4,7 @@
 
 import { Obj } from '@dxos/echo';
 import { type ForeignKey } from '@dxos/echo-protocol';
-import { DXN } from '@dxos/keys';
+import { LegacyDXN as DXN } from '@dxos/keys';
 
 /**
  * @deprecated Use `DXN.fromSpaceAndObjectId(spaceId, obj.id)` instead.

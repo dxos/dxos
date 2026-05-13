@@ -33,7 +33,7 @@ import {
   runAndForwardErrors,
 } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { LegacyDXN as DXN } from '@dxos/keys';
 
 import { type ProjectionChangeCallback, ProjectionModel } from '../projection';
 import { createDefaultSchema, getSchema } from '../util';

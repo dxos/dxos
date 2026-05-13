@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { DXN, ObjectId, QueueSubspaceTags, SpaceId } from '@dxos/keys';
+import { LegacyDXN as DXN, ObjectId, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 
 /**
  * @deprecated Use `db.queues.create()`

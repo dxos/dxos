@@ -5,7 +5,7 @@
 import { Filter, Obj, type Query } from '@dxos/echo';
 import { EncodedReference as EncodedRef, type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { LegacyDXN as DXN } from '@dxos/keys';
 import { isNonNullable } from '@dxos/util';
 
 import { type EchoDatabase } from './proxy-db';

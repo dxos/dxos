@@ -9,7 +9,7 @@ import { type Database, type Entity, Filter, type Hypergraph, Query, Ref } from 
 import { type AnyProperties, setRefResolver } from '@dxos/echo/internal';
 import { batchEvents } from '@dxos/echo/internal';
 import { failedInvariant } from '@dxos/invariant';
-import { DXN, type ObjectId, type QueueSubspaceTag, type SpaceId } from '@dxos/keys';
+import { LegacyDXN as DXN, type ObjectId, type QueueSubspaceTag, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { entry } from '@dxos/util';

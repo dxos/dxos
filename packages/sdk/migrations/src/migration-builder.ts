@@ -12,7 +12,7 @@ import { getSchemaDXN } from '@dxos/echo/internal';
 import { type DocHandleProxy, ObjectCore, type RepoProxy, migrateDocument } from '@dxos/echo-db';
 import { type DatabaseDirectory, EncodedReference, type ObjectStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { LegacyDXN as DXN } from '@dxos/keys';
 import { type MaybePromise } from '@dxos/util';
 
 /*
