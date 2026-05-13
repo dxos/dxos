@@ -27,7 +27,7 @@ export const AdditionMethodChooser = (viewStateProps: AdditionMethodChooserProps
   return (
     <>
       <InputLabel>{t('addition-method-chooser.title')}</InputLabel>
-      <div role='none' className='flex flex-col gap-1 grow'>
+      <div className='flex flex-col gap-1 grow'>
         <CompoundButton
           {...sharedButtonProps}
           description={t('create-identity.description')}

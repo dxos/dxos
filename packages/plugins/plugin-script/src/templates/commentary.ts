@@ -15,12 +15,12 @@ import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } 
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { ArtifactId } from '@dxos/assistant';
 import { Trace, Operation, OperationRegistry } from '@dxos/compute';
-import { Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
+import { Collection, Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { log } from '@dxos/log';
-import { Chess } from '@dxos/plugin-chess/types';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { Chess } from '@dxos/plugin-chess';
+import { Game, GameRef, loadGame } from '@dxos/plugin-game';
+import { Markdown } from '@dxos/plugin-markdown';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -32,7 +32,7 @@ const Commentary = Operation.make({
     description: 'Adds commentary about the most recent move to a markdown document associated with the chess game.',
   },
   input: Schema.Struct({
-    game: Ref.Ref(Chess.Game).annotations({
+    game: GameRef(Chess.State).annotations({
       description: 'The chess game to comment on.',
     }),
   }),
@@ -49,7 +49,7 @@ const Commentary = Operation.make({
       description: 'Function did not find anything to comment on.',
     }),
   ),
-  types: [Chess.Game, Markdown.Document, Text.Text, HasSubject.HasSubject, Collection.Collection],
+  types: [Game, Chess.State, Markdown.Document, Text.Text, HasSubject.HasSubject, Collection.Collection],
   services: [AiService.AiService, Database.Service],
 });
 
@@ -57,16 +57,16 @@ export default Commentary.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* ({ game: gameRef }) {
-        // Load the chess game
+        // Load the game and its Chess variant state.
         log.info('load game', { gameRef });
-        const chessGame = yield* Database.load(gameRef);
+        const { game: chessGame, variant: chessState } = yield* loadGame(gameRef, Chess.State);
 
-        // Load the chess position from PGN or FEN
+        // Load the chess position from PGN or FEN.
         const chess = new ChessJS();
-        if (chessGame.pgn) {
-          chess.loadPgn(chessGame.pgn);
-        } else if (chessGame.fen) {
-          chess.load(chessGame.fen);
+        if (chessState.pgn) {
+          chess.loadPgn(chessState.pgn);
+        } else if (chessState.fen) {
+          chess.load(chessState.fen);
         } else {
           log.info('Early return: no pgn or fen');
           return;
@@ -84,7 +84,7 @@ export default Commentary.pipe(
         const moveNotation = lastMove.san;
 
         // Generate AI commentary about the move
-        const result = yield* new AiRequest({
+        const result = yield* new AiRequest.Request({
           observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'chess-commentary' })),
         }).run({
           prompt:

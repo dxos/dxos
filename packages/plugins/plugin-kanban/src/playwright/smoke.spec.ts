@@ -49,7 +49,7 @@ test.describe('Kanban MutableSchema', () => {
     expect(secondLabel).not.toBeNull();
 
     // Drag first item below the second item.
-    await column.item(0).dragTo(column.item(1).locator, { x: 0, y: 200 });
+    await column.item(0).dragTo(column.item(1).locator, { x: 0, y: 200 }, 'bottom');
 
     // Item count should stay the same.
     await expect(column.items()).toHaveCount(countBefore);
@@ -71,8 +71,8 @@ test.describe('Kanban MutableSchema', () => {
     const draggedLabel = await col1.item(0).title().textContent();
     expect(draggedLabel).not.toBeNull();
 
-    // Drop above first item. Kanban cards are taller; use larger negative y so we land in top half.
-    await col1.item(0).dragTo(col2.item(0).locator, { x: 0, y: -30 });
+    // Drop above first item.
+    await col1.item(0).dragTo(col2.item(0).locator, { x: 0, y: -30 }, 'top');
 
     await expect(col1.items()).toHaveCount(col1CountBefore - 1);
     await expect(col2.items()).toHaveCount(col2CountBefore + 1);

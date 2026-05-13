@@ -6,12 +6,13 @@ import { useEffect, useState } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/ui';
-import { type Filter, type Queue, type Space } from '@dxos/client/echo';
+import { type Queue } from '@dxos/client/echo';
+import { type Database, type Filter } from '@dxos/echo';
 import { SpaceGraphModel, type SpaceGraphModelOptions } from '@dxos/schema';
 
 // TODO(burdon): Factor out.
 export const useGraphModel = (
-  space: Space | undefined,
+  db: Database.Database | undefined,
   filter?: Filter.Any | undefined,
   options?: SpaceGraphModelOptions,
   queue?: Queue,
@@ -20,20 +21,20 @@ export const useGraphModel = (
   const [model, setModel] = useState<SpaceGraphModel | undefined>(undefined);
 
   useEffect(() => {
-    if (!space) {
+    if (!db) {
       setModel(undefined);
       return;
     }
 
     const newModel = new SpaceGraphModel(registry);
-    void newModel.open(space.db, queue);
+    void newModel.open(db, queue);
     setModel(newModel);
 
     return () => {
       setModel(undefined);
       void newModel.close();
     };
-  }, [space, registry, queue]);
+  }, [db, registry, queue]);
 
   useEffect(() => {
     model?.setFilter(filter).setOptions(options);

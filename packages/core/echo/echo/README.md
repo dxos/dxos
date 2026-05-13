@@ -53,7 +53,7 @@ import { Type, Obj, Relation, Ref, Query, Filter } from '@dxos/echo';
 ```ts
 Type.getDXN(schema) == DXN.parse('dxn:type:example.com/type/Person:0.1.0');
 Type.getMeta(schema) == { typename: }
-Type.getTypename(schema) === 'example.com/type/Person'
+Type.getTypename(schema) === 'type.example.type.person'
 Type.getVersion(schema) === '0.1.0'
 
 Obj.getDXN(obj) === DXN.parse('dxn:echo:SSSSSSSSSS:XXXXXXXXXXXXX')
@@ -65,7 +65,7 @@ Obj.getTypeDXN(obj) === DXN.parse('dxn:type:example.com/type/Person:0.1.0');
  * @deprecated
  **/
 // TODO(dmaretskyi): Consider keeping it as a shorthand for zType.getTypename(Obj.getSchema(obj)) ?? Obj.getTypeDXN(obj)?.asTypeDXN()?.type`
-Obj.getTypename(obj) === 'example.com/type/Person'
+Obj.getTypename(obj) === 'com.example.type.person'
 ```
 
 ISSUE: Create vs live: Is it fundamentally the same thing?

@@ -55,10 +55,13 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/assistant"
+      "path": "../../core/compute/assistant"
     },
     {
-      "path": "../../core/compute"
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/operation"
     },
     {
       "path": "../../core/echo/echo"
@@ -68,9 +71,6 @@
     },
     {
       "path": "../../core/echo/echo-react"
-    },
-    {
-      "path": "../../core/operation"
     },
     {
       "path": "../../core/protocols"
@@ -83,6 +83,9 @@
     },
     {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/client-protocol"
     },
     {
       "path": "../../sdk/react-client"

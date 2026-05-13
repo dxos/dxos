@@ -12,7 +12,7 @@ import { useAppGraph, type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { useObject, useQuery, useSchema } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import {
@@ -27,10 +27,10 @@ import {
   useProjectionModel,
   useTableModel,
 } from '@dxos/react-ui-table';
+import { type Table } from '@dxos/react-ui-table/types';
 import { getTagFromQuery, getTypenameFromQuery } from '@dxos/schema';
 
 import { meta } from '#meta';
-import { type Table } from '#operations';
 
 export type TableContainerProps = AppSurface.ObjectArticleProps<Table.Table>;
 

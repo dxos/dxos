@@ -17,13 +17,13 @@ import type { Credential } from '@dxos/compute';
 import { Operation, Trace } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Integration } from '@dxos/plugin-integration/types';
+import { Integration } from '@dxos/plugin-integration';
 import { Message } from '@dxos/types';
 
 import { GoogleMail } from '../../../apis';
 import { InboxResolver, GoogleCredentials } from '../../../services';
+import { InboxOperation } from '../../../types';
 import { Mailbox } from '../../../types';
-import { GoogleMailSync } from '../../definitions';
 import { mapMessage } from './mapper';
 
 type DateChunk = {
@@ -136,7 +136,7 @@ const syncSingleMailbox = (input: {
     return newMessagesCount;
   });
 
-export default GoogleMailSync.pipe(
+export default InboxOperation.GoogleMailSync.pipe(
   Operation.withHandler(
     ({
       integration: integrationRef,

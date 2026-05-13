@@ -5,12 +5,12 @@
 import { type Atom } from '@effect-atom/atom-react';
 import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import type { ComponentType } from 'react';
 
 import { Capability } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
 import { type Operation } from '@dxos/compute';
-import { type Database } from '@dxos/echo';
-import { type Collection } from '@dxos/echo';
+import { type Collection, type Database } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
 import { type Label } from '@dxos/ui-types/translations';
 import { type ComplexMap, type Position } from '@dxos/util';
@@ -18,7 +18,7 @@ import { type ComplexMap, type Position } from '@dxos/util';
 import { meta } from '#meta';
 
 import * as Settings from './Settings';
-import { type ObjectViewerProps } from './types';
+import { type CreateObject, type ObjectViewerProps } from './types';
 
 export namespace SpaceCapabilities {
   export const Settings = Capability.make<Atom.Writable<Settings.Settings>>(`${meta.id}.capability.settings`);
@@ -71,4 +71,25 @@ export namespace SpaceCapabilities {
   // TODO(wittjosiah): Replace with migrations, this is not a sustainable solution.
   export type HandleRepair = (params: { space: Space; isDefault: boolean }) => Promise<void>;
   export const Repair = Capability.make<HandleRepair>(`${meta.id}.capability.repair`);
+
+  /** Typed creation entry contributed per typename by plugins that support creating objects. */
+  export type CreateObjectEntry = Readonly<{
+    id: string;
+    createObject: CreateObject;
+    inputSchema?: Schema.Schema.AnyNoContext;
+    /**
+     * Optional custom React panel rendered in place of the default `inputSchema` form.
+     * Lets a plugin own the entire post-typename-selection flow (e.g. multi-stage forms).
+     * `onCreateObject` receives the collected data and triggers the same submit flow.
+     */
+    customPanel?: ComponentType<CreateObjectCustomPanelProps>;
+  }>;
+  export const CreateObjectEntry = Capability.make<CreateObjectEntry>(`${meta.id}.capability.create-object`);
+
+  /** Props passed to a `CreateObjectEntry.customPanel`. */
+  export type CreateObjectCustomPanelProps = {
+    target: Database.Database | Collection.Collection;
+    initialFormValues?: Record<string, any>;
+    onCreateObject: (data: Record<string, any>) => void | Promise<void>;
+  };
 }

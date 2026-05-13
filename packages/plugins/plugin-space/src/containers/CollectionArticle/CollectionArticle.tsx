@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppCapabilities, LayoutOperation, getCollectionObjectPath, getObjectPathFromObject } from '@dxos/app-toolkit';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation, getCollectionObjectPath, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
-import { type Collection } from '@dxos/echo';
+import { Annotation, type Collection, Obj } from '@dxos/echo';
 import { ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
@@ -18,20 +18,11 @@ import { getStyles } from '@dxos/ui-theme';
 import { meta } from '#meta';
 
 /**
- * Hook to resolve metadata (icon, iconHue, etc.) for objects based on their typename.
- */
-const useMetadataResolver = () => {
-  const allMetadata = useCapabilities(AppCapabilities.Metadata);
-  return useCallback((typename: string) => allMetadata.find((m) => m.id === typename)?.metadata ?? {}, [allMetadata]);
-};
-
-/**
  * Article view for collections.
  */
 export const CollectionArticle = ({ subject, attendableId }: AppSurface.ObjectArticleProps<Collection.Collection>) => {
   const { t } = useTranslation(meta.id);
-  const resolveMetadata = useMetadataResolver();
-  const { items, handleSearch } = useCollectionItems(subject, resolveMetadata, attendableId);
+  const { items, handleSearch } = useCollectionItems(subject, attendableId);
 
   return (
     <SearchPanel onSearch={handleSearch}>
@@ -92,16 +83,10 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
   );
 };
 
-type MetadataResolver = (typename: string) => { icon?: string; iconHue?: string };
-
 /**
  * Combined hook to get collection items with search/filter support.
  */
-const useCollectionItems = (
-  collection: Collection.Collection,
-  resolveMetadata: MetadataResolver,
-  attendableId?: string,
-) => {
+const useCollectionItems = (collection: Collection.Collection, attendableId?: string) => {
   const objects = useMemo(
     () => (collection.objects ?? []).map((ref) => ref.target).filter((obj): obj is Obj.Unknown => Obj.isObject(obj)),
     [collection.objects],
@@ -110,19 +95,19 @@ const useCollectionItems = (
   const items = useMemo(
     () =>
       objects.map((obj) => {
-        const typename = Obj.getTypename(obj);
-        const metadata = typename ? resolveMetadata(typename) : {};
+        const schema = Obj.getSchema(obj);
+        const iconAnnotation = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema)) : undefined;
         const targetPath = attendableId ? getCollectionObjectPath(attendableId, obj.id) : getObjectPathFromObject(obj);
 
         return {
           id: Obj.getDXN(obj).toString(),
           object: obj,
           targetPath,
-          icon: metadata.icon ?? 'ph--placeholder--regular',
-          iconHue: metadata.iconHue,
+          icon: iconAnnotation?.icon ?? 'ph--placeholder--regular',
+          iconHue: iconAnnotation?.hue,
         } satisfies ObjectItem;
       }),
-    [objects, resolveMetadata, attendableId],
+    [objects, attendableId],
   );
 
   const { results, handleSearch } = useSearchListResults({

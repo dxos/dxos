@@ -2,8 +2,6 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export * as KanbanOperation from './definitions';
-
 export const KanbanOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./delete-card'),
   () => import('./delete-card-field'),

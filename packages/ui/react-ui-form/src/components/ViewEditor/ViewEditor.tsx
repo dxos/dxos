@@ -9,8 +9,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react';
 
-import { Entity, Feed, Filter, Format, Obj, Query, QueryAST, Ref, type SchemaRegistry } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import { Entity, Feed, Filter, Format, Obj, Query, QueryAST, Ref, type SchemaRegistry, View } from '@dxos/echo';
 import { EchoSchema, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { useObject, useQuery } from '@dxos/react-client/echo';
@@ -24,7 +23,7 @@ import {
   createEchoChangeCallback,
   getTypenameFromQuery,
 } from '@dxos/schema';
-import { mx, osTranslations, subtleHover } from '@dxos/ui-theme';
+import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
@@ -190,7 +189,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     );
 
     return (
-      <div role='none' className={mx(classNames)}>
+      <div className={mx(classNames)}>
         {/* If readonly is set, then the callout is not needed. */}
         {schemaReadonly && !readonly && (
           <Message.Root valence='info' classNames='my-form-padding'>
@@ -329,20 +328,13 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                   classNames={'grid grid-cols-subgrid col-span-5'}
                   aria-expanded={expandedField === field.id}
                 >
-                  <div
-                    role='none'
-                    className={mx(
-                      subtleHover,
-                      'grid grid-cols-subgrid col-span-5',
-                      'rounded-xs cursor-pointer min-h-10',
-                    )}
-                  >
+                  <div className='grid grid-cols-subgrid col-span-5 rounded-xs cursor-pointer min-h-10 dx-hover'>
                     <List.ItemDragHandle disabled={readonly || schemaReadonly} />
                     <List.ItemTitle classNames={hidden && 'text-subdued'} onClick={() => handleToggleField(field)}>
                       {field.path}
                     </List.ItemTitle>
                     <List.ItemIconButton
-                      label={t(hidden ? 'show field label' : 'hide field label')}
+                      label={t(hidden ? 'show-field.label' : 'hide-field.label')}
                       data-testid={hidden ? 'show-field-button' : 'hide-field-button'}
                       icon={hidden ? 'ph--eye-closed--regular' : 'ph--eye--regular'}
                       autoHide={false}
@@ -370,7 +362,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
                     )}
                   </div>
                   {expandedField === field.id && !readonly && (
-                    <div role='none' className='col-span-full mt-1 mb-1 border border-separator rounded-md'>
+                    <div className='col-span-full mt-1 mb-1 border border-separator rounded-md'>
                       <FieldEditor
                         readonly={readonly || schemaReadonly}
                         registry={registry}
@@ -385,7 +377,7 @@ const FieldList = ({ schema, view, registry, readonly, showHeading = false, onDe
             })}
           </div>
           {!readonly && !expandedField && (
-            <div role='none' className='my-form-padding'>
+            <div className='my-form-padding'>
               <IconButton
                 icon='ph--plus--regular'
                 label={t('add-property-button.label')}

@@ -9,17 +9,16 @@ import React from 'react';
 import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents, AppCapabilities } from '@dxos/app-toolkit';
-import { Feed, Obj, Ref } from '@dxos/echo';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { Feed, Obj, Query, Ref } from '@dxos/echo';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { MarkdownPlugin } from '@dxos/plugin-markdown';
-import { MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown/types';
+import { MarkdownCapabilities, MarkdownEvents } from '@dxos/plugin-markdown';
+import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
 import { corePlugins } from '@dxos/plugin-testing';
-import { Channel } from '@dxos/plugin-thread/types';
-import { Query, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
-import { Message, Thread, Transcript } from '@dxos/types';
+import { Channel, Message, Transcript } from '@dxos/types';
 
 import { Meeting } from '#types';
 
@@ -65,16 +64,15 @@ const meta = {
                   created: new Date().toISOString(),
                   participants: [],
                   transcript: Ref.make(Transcript.make(Ref.make(transcriptFeed))),
-                  notes: Ref.make(Text.make('Notes')),
+                  notes: Ref.make(Text.make({ content: 'Notes' })),
                   summary: Ref.make(Text.make()),
-                  thread: Ref.make(Thread.make()),
                 }),
               );
             }),
         }),
         MarkdownPlugin(),
       ],
-      capabilities: [Capability.contributes(AppCapabilities.Schema, [Channel.Channel, Thread.Thread, Message.Message])],
+      capabilities: [Capability.contributes(AppCapabilities.Schema, [Channel.Channel, Message.Message])],
     }),
   ],
 } satisfies Meta<typeof DefaultStory>;

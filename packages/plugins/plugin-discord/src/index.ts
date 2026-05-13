@@ -4,5 +4,4 @@
 
 export * from './blueprints';
 export * from './meta';
-
-export * from './DiscordPlugin';
+export * from './types';

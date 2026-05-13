@@ -5,8 +5,9 @@
 import React, { useEffect } from 'react';
 import { Navigate, Outlet, generatePath, useParams } from 'react-router-dom';
 
+import { parseId } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
-import { parseId, useSpace, useSpaces } from '@dxos/react-client/echo';
+import { useSpace, useSpaces } from '@dxos/react-client/echo';
 
 import { SpaceList } from './SpaceList';
 

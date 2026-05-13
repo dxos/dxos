@@ -15,10 +15,11 @@ import React, { StrictMode, useCallback } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { type Plugin, PluginAssetCache, UrlLoader } from '@dxos/app-framework';
+import { EdgeRegistryPluginProvider, type Plugin, PluginAssetCache, UrlLoader } from '@dxos/app-framework';
 import { Placeholder, type PlaceholderComponentProps, useApp } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Composer } from '@dxos/brand';
+import { EdgeHttpClient } from '@dxos/edge-client';
 import { runAndForwardErrors } from '@dxos/effect';
 import { LogLevel, log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
@@ -88,19 +89,27 @@ if (import.meta.env?.DEV) {
 /**
  * Picks the platform-appropriate offline asset cache for third-party plugins.
  *  - Tauri (desktop + iOS): Rust-backed filesystem cache, served via the `dxos-plugin://` URI scheme.
- *  - Web with a service worker: cache managed by the SW in `./sw.ts`.
- *  - Otherwise (tests, unsupported environments): a no-op cache; plugins still
- *    load but lose their offline guarantee.
+ *  - Web with PWA enabled: cache managed by the SW in `./sw.ts`.
+ *  - Otherwise (PWA disabled, tests, unsupported environments): a no-op cache;
+ *    plugins still load but lose their offline guarantee.
+ *
+ * `isPwa` (not `'serviceWorker' in navigator`) is the SW gate because that
+ * property is `true` in every modern browser whether or not a worker is
+ * actually registered. On non-PWA builds (`DX_PWA=false` → `selfDestroying`
+ * VitePWA, e.g. `labs.composer.space`) there is no active registration, and
+ * the SW-backed cache's first call is `await navigator.serviceWorker.ready`
+ * which resolves only when one exists — hangs forever otherwise, freezing
+ * `Install` indefinitely with no timeout.
  *
  * Each branch dynamic-imports its impl so vite emits per-platform chunks instead
  * of dragging both into the initial bundle.
  */
-const createAssetCache = async (isTauri: boolean): Promise<PluginAssetCache.Cache> => {
+const createAssetCache = async (isPwa: boolean, isTauri: boolean): Promise<PluginAssetCache.Cache> => {
   if (isTauri) {
     const { createTauriAssetCache } = await import('./asset-cache/tauri');
     return createTauriAssetCache();
   }
-  if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+  if (isPwa && typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
     const { createServiceWorkerAssetCache } = await import('./asset-cache/service-worker');
     return createServiceWorkerAssetCache();
   }
@@ -362,6 +371,7 @@ const main = async () => {
 
   profiler?.mark('plugins:start');
 
+  const isPwa = !isFalse(config.values.runtime?.app?.env?.DX_PWA);
   const conf: PluginConfig = {
     appKey: APP_KEY,
     config,
@@ -370,7 +380,7 @@ const main = async () => {
     logStore,
 
     isDev: !['production', 'staging'].includes(config.values.runtime?.app?.env?.DX_ENVIRONMENT),
-    isPwa: !isFalse(config.values.runtime?.app?.env?.DX_PWA),
+    isPwa,
     isTauri,
     isPopover,
     isMobile,
@@ -378,29 +388,35 @@ const main = async () => {
     isStrict: !isFalse(config.values.runtime?.app?.env?.DX_STRICT),
   };
 
-  // `getPlugins` dynamic-imports every plugin chunk in parallel.
-  // Run it concurrently with `UrlLoader.preload` (network-bound) so the two waits overlap.
+  // `getPlugins` is synchronous: each plugin's main entry exposes only
+  // `meta` + a `Plugin.lazy(...)` stub, so building the plugin array doesn't
+  // pull any plugin's body. The plugin manager loads the real plugin
+  // (separate Rollup chunk) on first `enable`. Remote plugin preload is
+  // network-bound — the boot loader's counter follows that until the
+  // plugin manager (post-React mount) takes over with module-activation
+  // progress.
   bootStatus('Loading plugins…');
-  const assetCache = await createAssetCache(isTauri);
-  const [builtinPlugins, remotePluginsResult] = await Promise.all([
-    getPlugins(conf, {
+  const builtinPlugins = getPlugins(conf);
+  const assetCache = await createAssetCache(isPwa, isTauri);
+  const remotePluginsResult = await runAndForwardErrors(
+    UrlLoader.preload({
+      cache: assetCache,
       onPluginLoaded: (loaded, total) => {
         // Pass `range` so the loader updates the existing line in place
-        // ("Loading plugins (12/80)") instead of appending a fresh entry per
-        // plugin tick — keeps the visible log compact and the boot trace
-        // collapses the (i/n) sequence into one transition.
+        // ("Loading plugins (3/12)") instead of appending a fresh entry per
+        // tick — keeps the visible log compact.
         window.__bootLoader?.status({ humanized: 'Loading plugins', range: { index: loaded, total } });
-        // The ring spans two phases — plugin chunks (0 → 50%) and module
-        // activation (50 → 100%, driven from `Placeholder` once React mounts).
-        // Splitting the range keeps it monotonic across the boundary.
+        // The ring spans two phases — remote-plugin preload (0 → 50%) and
+        // module activation (50 → 100%, driven from `Placeholder` once
+        // React mounts). Splitting the range keeps it monotonic across
+        // the boundary.
         window.__bootLoader?.progress((loaded / total) * 0.5);
       },
     }),
-    runAndForwardErrors(UrlLoader.preload({ cache: assetCache })),
-  ]);
+  );
 
   bootStatus('Starting Composer…');
-  // Park the ring at 50% — chunks done, activation about to take over.
+  // Park the ring at 50% — preload done, activation about to take over.
   window.__bootLoader?.progress(0.5);
   const remotePlugins: Plugin.Plugin[] = remotePluginsResult;
   const plugins = [...builtinPlugins, ...remotePlugins];
@@ -409,6 +425,9 @@ const main = async () => {
   const core = getCore(conf);
   const defaults = getDefaults(conf);
   const setupEvents = [AppActivationEvents.SetupSettings];
+
+  const edgeUrl = config.values.runtime?.services?.edge?.url;
+  const pluginRegistryProvider = edgeUrl ? new EdgeRegistryPluginProvider(new EdgeHttpClient(edgeUrl)) : undefined;
 
   profiler?.mark('plugins:end');
   profiler?.measure('plugins-init', 'plugins:start', 'plugins:end');
@@ -451,6 +470,7 @@ const main = async () => {
       placeholder: ComposerPlaceholder,
       pluginLoader,
       onPluginRemove,
+      pluginRegistryProvider,
       plugins,
       core,
       defaults,

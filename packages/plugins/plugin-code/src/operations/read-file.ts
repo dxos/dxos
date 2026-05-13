@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 
-import { ReadFile } from './definitions';
+import { CodeOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof ReadFile> = ReadFile.pipe(
+const handler: Operation.WithHandler<typeof CodeOperation.ReadFile> = CodeOperation.ReadFile.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ project, path }) {
       const code = yield* Database.load(project);

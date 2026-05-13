@@ -37,7 +37,7 @@ import {
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { trim } from '@dxos/util';
 
-import { type ComponentProps } from './types';
+import { type ModuleProps } from './types';
 
 /**
  * Maps DXOS react-ui registry keys to components. Keys use compound names (e.g. Panel.Root) or
@@ -371,7 +371,7 @@ const GenUiMarkupPreview = ({ markup }: { markup: string }) => {
   return <div className='min-h-[120px] overflow-auto'>{rendered}</div>;
 };
 
-export const GenUiModule = ({ space }: ComponentProps) => {
+export const GenUiModule = ({ space }: ModuleProps) => {
   const [input, setInput] = useState('');
   const [markup, setMarkup] = useState('');
   const [generating, setGenerating] = useState(false);

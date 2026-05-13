@@ -145,7 +145,7 @@ const IdentityHeading = ({
           )}
           <Toolbar.IconButton
             icon={isConnected ? 'ph--plugs-connected--regular' : 'ph--plugs--regular'}
-            label={t(isConnected ? 'disconnect label' : 'connect label')}
+            label={t(isConnected ? 'disconnect.label' : 'connect.label')}
             iconOnly
             tooltipSide='bottom'
             classNames={['h-(--dx-rail-action)', !isConnected && 'text-error-text']}

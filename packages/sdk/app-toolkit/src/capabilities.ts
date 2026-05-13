@@ -12,10 +12,11 @@ import type { AiModelResolver as AiModelResolver$, AiService as AiService$ } fro
 import type { OpaqueToolkit } from '@dxos/ai';
 import { Capability as Capability$ } from '@dxos/app-framework';
 import type { BuilderExtensions, Graph, GraphBuilder } from '@dxos/app-graph';
-import type { Blueprint } from '@dxos/compute';
+import type { Blueprint, Operation } from '@dxos/compute';
 import type { Database, DXN, Type } from '@dxos/echo';
 import type { AnchoredTo } from '@dxos/types';
 
+import { LAYOUT_CAPABILITY_ID } from './capability-ids';
 import type { FileInfo } from './file';
 import type { NodeSerializer } from './graph';
 import type { Resource } from './translations';
@@ -48,7 +49,7 @@ export namespace AppCapabilities {
    * Layout capability - provides reactive access to the current layout state.
    * @category Capability
    */
-  export const Layout = Capability$.make<Atom.Atom<Layout>>('org.dxos.app-framework.capability.layout');
+  export const Layout = Capability$.make<Atom.Atom<Layout>>(LAYOUT_CAPABILITY_ID);
 
   /**
    * @category Capability
@@ -102,16 +103,6 @@ export namespace AppCapabilities {
    */
   export const Settings = Capability$.make<Settings>('org.dxos.app-framework.capability.settings');
 
-  export type Metadata = Readonly<{
-    id: string;
-    metadata: Record<string, any>;
-  }>;
-
-  /**
-   * @category Capability
-   */
-  export const Metadata = Capability$.make<Metadata>('org.dxos.app-framework.capability.metadata');
-
   export type Schema = ReadonlyArray<Type.AnyEntity>;
 
   /**
@@ -161,6 +152,31 @@ export namespace AppCapabilities {
    * @category Capability
    */
   export const AnchorSort = Capability$.make<AnchorSort>('org.dxos.app-framework.capability.anchor-sort');
+
+  /** Text content extractor contributed per typename by plugins that support text extraction. */
+  export type TextContent = Readonly<{
+    id: string;
+    getTextContent: (object: any) => Promise<string | undefined>;
+  }>;
+
+  /**
+   * @category Capability
+   */
+  export const TextContent = Capability$.make<TextContent>('org.dxos.app-framework.capability.text-content');
+
+  /** Comment configuration contributed per typename by plugins that support commenting. */
+  export type CommentConfig = Readonly<{
+    id: string;
+    comments: 'anchored' | 'unanchored';
+    selectionMode?: string;
+    getAnchorLabel?: (obj: any, anchor: string) => string | undefined;
+    scrollToAnchor?: Operation.Definition.Any;
+  }>;
+
+  /**
+   * @category Capability
+   */
+  export const CommentConfig = Capability$.make<CommentConfig>('org.dxos.app-framework.capability.comment-config');
 
   export type NavigationTarget = {
     /** Navigation path usable with the Open operation. */

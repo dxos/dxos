@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { type PeerSyncState, type SpaceId, type SpaceSyncStateMap } from '@dxos/react-client/echo';
+import { type SpaceId } from '@dxos/keys';
+import { type PeerSyncState, type SpaceSyncStateMap } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 

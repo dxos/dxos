@@ -5,13 +5,12 @@
 import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
-import { InboxOperation } from '#operations';
-
-const BLUEPRINT_KEY = 'org.dxos.blueprint.inbox';
+import { InboxOperation } from '#types';
+import { Mailbox } from '#types';
 
 const make = () =>
   Blueprint.make({
-    key: BLUEPRINT_KEY,
+    key: Mailbox.BLUEPRINT_KEY,
     name: 'Inbox',
     agentCanEnable: true,
     tools: Blueprint.toolDefinitions({
@@ -56,7 +55,7 @@ const make = () =>
   });
 
 const blueprint: Blueprint.Definition = {
-  key: BLUEPRINT_KEY,
+  key: Mailbox.BLUEPRINT_KEY,
   make,
 };
 

@@ -10,14 +10,14 @@ Moved from `packages/core/echo/echo/API.md` on 2026-03-09.
 ```ts
 const Mailbox = Schema.Struct({
   messages: Ref.Ref(Feed.Feed)
-}).pipe(Type.object({ typename: 'example.com/type/Mailbox', version: '0.1.0' }));
+}).pipe(Type.object({ typename: 'com.example.type.mailbox', version: '0.1.0' }));
 interface Mailbox extends Schema.Schema.Type<typeof Mailbox> {}
 
 typeof mailbox.messages === Feed.Feed;
 
 const Collection = Schema.Struct({
   objects: Schema.Array(Ref.Ref(Obj.Unknown))
-}).pipe(Type.relation({ typename: 'example.com/type/Collection', version: '0.1.0' }));
+}).pipe(Type.relation({ typename: 'com.example.type.collection', version: '0.1.0' }));
 interface Collection extends Schema.Schema.Type<typeof Collection> {}
 
 typeof collection.objects === Obj.Unknown[];
@@ -158,7 +158,7 @@ Functions:
 ```ts
 const Foo = Schema.Struct({
   feed: Ref.Ref(Feed.Feed),
-}).pipe(Type.object({ typename: 'example.com/type/Foo', version: '0.1.0' }));
+}).pipe(Type.object({ typename: 'com.example.type.foo', version: '0.1.0' }));
 
 Query.select(Filter.type(Feed.Feed));
 ```

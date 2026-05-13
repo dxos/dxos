@@ -95,7 +95,7 @@ export const ChatThread = forwardRef<MarkdownStreamController | null, ChatThread
     );
 
     return (
-      <div role='none' data-hue={userHue} className='contents'>
+      <div data-hue={userHue} className='contents'>
         <MarkdownStream
           key={viewType}
           classNames={classNames}

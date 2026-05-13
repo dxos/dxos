@@ -7,15 +7,15 @@ import React from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter } from '@dxos/echo';
-import { useContextBinder } from '@dxos/plugin-assistant';
-import { Assistant } from '@dxos/plugin-assistant/types';
+import { Assistant } from '@dxos/plugin-assistant';
+import { useContextBinder } from '@dxos/plugin-assistant/hooks';
 import { useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 
-import { type ComponentProps } from './types';
+import { type ModuleProps } from './types';
 
-export const ContextModule = ({ space }: ComponentProps) => {
+export const ContextModule = ({ space }: ModuleProps) => {
   const chats = useQuery(space?.db, Filter.type(Assistant.Chat));
   const feedTarget = chats.at(-1)?.feed.target;
   const binder = useContextBinder(space, feedTarget);

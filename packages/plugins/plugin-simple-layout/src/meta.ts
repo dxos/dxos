@@ -13,4 +13,5 @@ export const meta: Plugin.Meta = {
     Provides basic content rendering without sidebars or complex navigation.
   `,
   icon: 'ph--layout--regular',
+  tags: ['system'],
 };

@@ -8,9 +8,10 @@ import React, { useCallback } from 'react';
 
 import * as OperationModule from '@dxos/compute';
 import { Context } from '@dxos/context';
+import { Filter, Query } from '@dxos/echo';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 import { useClient } from '@dxos/react-client';
-import { Filter, Query, type Space, useQuery } from '@dxos/react-client/echo';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { IconButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';

@@ -24,7 +24,7 @@ import {
   TriggerStateStore,
 } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { ClientCapabilities } from '@dxos/plugin-client';
 
 //
 // Capability Module

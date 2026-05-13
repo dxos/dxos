@@ -214,12 +214,8 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
       ({ key, index, style }) => {
         const getBgColor = (date: Date) => date.getMonth() % 2 === 0 && 'bg-modal-surface';
         return (
-          <div key={key} role='none' style={style} className='grid'>
-            <div
-              role='none'
-              className='grid grid-cols-7 bg-input-surface'
-              style={{ gridTemplateColumns: `repeat(7, ${size}px)` }}
-            >
+          <div key={key} style={style} className='grid'>
+            <div className='grid grid-cols-7 bg-input-surface' style={{ gridTemplateColumns: `repeat(7, ${size}px)` }}>
               {Array.from({ length: 7 }).map((_, i) => {
                 const date = getDate(start, index, i, weekStartsOn);
                 const border = isSameDay(date, selected)
@@ -233,7 +229,6 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
                 return (
                   <div
                     key={i}
-                    role='none'
                     className={mx('relative flex justify-center items-center cursor-pointer', getBgColor(date))}
                     onClick={() => handleDaySelect(date)}
                   >
@@ -241,7 +236,7 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
                     {!border && date.getDate() === 1 && (
                       <span className='absolute top-0 text-xs text-description'>{format(date, 'MMM')}</span>
                     )}
-                    {border && <div role='none' className={mx('absolute inset-1 border-2 rounded-full', border)} />}
+                    {border && <div className={mx('absolute inset-1 border-2 rounded-full', border)} />}
                   </div>
                 );
               })}
@@ -261,16 +256,16 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
         ref={forwardedRef}
       >
         {/* Day of week labels */}
-        <div role='none' className='grid w-full grid-cols-7' style={{ width: defaultWidth }}>
+        <div className='grid w-full grid-cols-7' style={{ width: defaultWidth }}>
           {days.map((date, i) => (
-            <div key={i} role='none' className='flex justify-center p-2 text-sm font-thin'>
+            <div key={i} className='flex justify-center p-2 text-sm font-thin'>
               {date}
             </div>
           ))}
         </div>
 
         {/* Grid */}
-        <div role='none' className='flex flex-col h-full w-full justify-center overflow-hidden' ref={containerRef}>
+        <div className='flex flex-col h-full w-full justify-center overflow-hidden' ref={containerRef}>
           <List
             ref={listRef}
             role='none'

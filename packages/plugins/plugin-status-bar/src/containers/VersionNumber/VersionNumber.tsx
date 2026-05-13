@@ -37,7 +37,7 @@ export const VersionNumber = (_props: VersionNumberProps) => {
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content side='top' role='message' classNames='z-[12] max-w-[min(calc(100vw-16px),40ch)]'>
-          <Message.Root valence='info' classNames='rounded-b-none p-4'>
+          <Message.Root valence='info' classNames='p-2 rounded-b-none'>
             <Message.Title>{t('warning.title')}</Message.Title>
             <Message.Content>
               {t('technology-preview.message')}
@@ -48,7 +48,7 @@ export const VersionNumber = (_props: VersionNumberProps) => {
               </Link>
             </Message.Content>
           </Message.Root>
-          <div role='none' className='flex flex-col ps-9 pe-4 py-2 gap-1 space-b-2 text-base-surface-text'>
+          <div className='flex flex-col ps-10 pe-4 py-2 gap-1 space-b-2 text-base-surface-text'>
             {timestamp && (
               <div>
                 <p>

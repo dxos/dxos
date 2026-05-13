@@ -1,8 +1,8 @@
+//
 // Copyright 2025 DXOS.org
+//
 
 import { OperationHandlerSet } from '@dxos/compute';
-
-export * as MeetingOperation from './definitions';
 
 export const MeetingOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./create'),

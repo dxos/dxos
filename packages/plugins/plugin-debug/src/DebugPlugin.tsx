@@ -6,17 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Client } from '@dxos/react-client';
 
 import { AppGraphBuilder, DebugSettings, ReactContext, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-
-export type DebugPluginOptions = {
-  /** Shared persistent log store for capturing and downloading logs. */
-  logStore: IdbLogStore;
-};
+import { type DebugPluginOptions } from '#types';
 
 // TODO(wittjosiah): Factor out DevtoolsPlugin?
 
@@ -53,3 +48,5 @@ const setupDevtools = () => {
     location.pathname = '/';
   };
 };
+
+export default DebugPlugin;

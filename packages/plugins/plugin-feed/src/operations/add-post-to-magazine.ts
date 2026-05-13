@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 
-import { AddPostToMagazine } from './definitions';
+import { FeedOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof AddPostToMagazine> = AddPostToMagazine.pipe(
+const handler: Operation.WithHandler<typeof FeedOperation.AddPostToMagazine> = FeedOperation.AddPostToMagazine.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ magazine: magazineRef, post: postRef, snippet, imageUrl }) {
       const magazine = yield* Database.load(magazineRef);

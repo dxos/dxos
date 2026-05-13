@@ -7,9 +7,9 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/assistant/extraction';
 import { scheduleTaskInterval } from '@dxos/async';
-import { Filter, type Queue } from '@dxos/client/echo';
+import { type Queue } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { type Key, Obj, Ref, Type } from '@dxos/echo';
+import { Filter, type Key, Obj, Ref, Type } from '@dxos/echo';
 import { createQueueDXN } from '@dxos/echo/internal';
 import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';

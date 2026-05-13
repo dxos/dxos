@@ -3,7 +3,7 @@
 //
 
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
-import react from '@vitejs/plugin-react-swc';
+import react from '@vitejs/plugin-react';
 import { playwright } from '@vitest/browser-playwright';
 import path, { join } from 'node:path';
 import pkgUp from 'pkg-up';
@@ -27,6 +27,7 @@ export { TEST_TAGS };
 
 const isDebug = !!process.env.VITEST_DEBUG;
 const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
+const DEBUG_TIMEOUT_MS = 3_600_000;
 
 // Browser/storybook tests transitively import `@anthropic-ai/tokenizer` via
 // `@dxos/ai`, which pulls in `tiktoken/lite` — a WASM bundle whose top-level
@@ -153,7 +154,7 @@ const createBrowserProject = ({
         '!**/test/**/*.node.test.{ts,tsx}',
       ],
 
-      testTimeout: isDebug ? 3600_000 : 5000,
+      testTimeout: isDebug ? DEBUG_TIMEOUT_MS : 5000,
       isolate: false,
       poolOptions: {
         threads: {
@@ -194,7 +195,7 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
       name: 'node',
       environment,
       retry,
-      testTimeout: timeout,
+      testTimeout: timeout ?? (isDebug ? DEBUG_TIMEOUT_MS : undefined),
       include: [
         '**/src/**/*.test.{ts,tsx}',
         '**/test/**/*.test.{ts,tsx}',
@@ -213,15 +214,7 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
       process.env.VITE_INSPECT ? Inspect() : undefined,
       // Log-meta injection only — no dev file sink (vitest is a test runner, not a dev server).
       DxosLogPlugin({ logToFile: false }),
-      // Add react plugin to enable SWC transforms.
-      react({
-        tsDecorators: true,
-        useAtYourOwnRisk_mutateSwcOptions: (options) => {
-          // Disable syntax lowering. Prevents perfomance loss due to private properties polyfill.
-          options.jsc ??= {};
-          options.jsc.target = 'esnext';
-        },
-      }),
+      react(),
     ],
   });
 

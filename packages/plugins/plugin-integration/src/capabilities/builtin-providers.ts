@@ -3,16 +3,38 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
+import { Obj, Ref } from '@dxos/echo';
+import { Format } from '@dxos/echo/internal';
+import { AccessToken } from '@dxos/types';
 
-import { IntegrationProvider, type IntegrationProviderEntry } from '#types';
+import { Integration, IntegrationProvider, type IntegrationProviderEntry } from '#types';
 
 import { CUSTOM_PROVIDER_ID } from '../constants';
 
+/** Default form for manually entered access tokens (custom provider). */
+const CustomTokenForm = Schema.Struct({
+  source: Format.Hostname.annotations({
+    title: 'Source',
+    description: 'The domain name of the service that issued the token.',
+    examples: ['example.com'],
+  }),
+  account: Schema.String.annotations({
+    title: 'Account',
+    description: 'Optional account label associated with the token.',
+  }).pipe(Schema.optional),
+  token: Schema.String.annotations({
+    title: 'Token',
+    description: 'The access token value.',
+  }),
+});
+
 /**
- * Built-in `IntegrationProvider` entries: custom token + stub OAuth presets
- * awaiting dedicated service plugins.
+ * Built-in `IntegrationProvider` entries: just the manual-token provider.
+ * Service-specific providers (Bluesky, Trello, GitHub, …) live in their
+ * own plugins and contribute on `SetupIntegrationProviders`.
  */
 export default Capability.makeModule<IntegrationProviderEntry[]>(
   Effect.fnUntraced(function* () {
@@ -22,37 +44,28 @@ export default Capability.makeModule<IntegrationProviderEntry[]>(
         // The user enters the source in the dialog; we don't know it ahead of time.
         source: '',
         label: 'Custom Token',
-      },
-      // TODO(wittjosiah): Implement github, linear, slack as dedicated plugins instead of presets.
-      /*
-      {
-        id: 'github',
-        source: 'github.com',
-        label: 'GitHub',
-        oauth: {
-          provider: OAuthProvider.GITHUB,
-          scopes: ['repo', 'read:user'],
+        credentialForm: {
+          schema: CustomTokenForm,
+          defaultValues: { source: '', token: '' },
+          onSubmit: ({ values, provider }) =>
+            Effect.sync(() => {
+              const accessToken = Obj.make(AccessToken.AccessToken, {
+                source: values.source,
+                account: values.account,
+                token: values.token,
+              });
+              const integration = Obj.make(Integration.Integration, {
+                name: provider.label ?? values.account ?? values.source,
+                providerId: provider.id,
+                accessToken: Ref.make(accessToken),
+                targets: [],
+              });
+              return { kind: 'complete', accessToken, integration };
+            }),
         },
       },
-      {
-        id: 'linear',
-        source: 'linear.app',
-        label: 'Linear',
-        oauth: {
-          provider: OAuthProvider.LINEAR,
-          scopes: ['read', 'write'],
-        },
-      },
-      {
-        id: 'slack',
-        source: 'slack.com',
-        label: 'Slack',
-        oauth: {
-          provider: OAuthProvider.SLACK,
-          scopes: ['channels:read', 'chat:write', 'users:read'],
-        },
-      },
-      */
+      // GitHub, Linear, and Slack are implemented as dedicated plugins
+      // (`@dxos/plugin-github`, `@dxos/plugin-linear`, `@dxos/plugin-slack`).
     ]);
   }),
 );

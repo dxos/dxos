@@ -15,7 +15,7 @@ import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
 
 import { meta } from '#meta';
-import { FeedOperation } from '#operations';
+import { FeedOperation } from '#types';
 import { type Magazine, Subscription } from '#types';
 
 import { dxnToObjectId, findStarTag, hasMetaTag, useStarTag } from '../../util';
@@ -268,7 +268,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       </Panel.Toolbar>
       <Panel.Content>
         {posts.length === 0 ? (
-          <div role='none' className='flex items-center justify-center h-full text-subdued text-sm'>
+          <div className='flex items-center justify-center h-full text-subdued text-sm'>
             {t('empty-magazine.message')}
           </div>
         ) : (

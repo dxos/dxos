@@ -10,7 +10,7 @@ import { IconButton, Input, ScrollArea, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { mapSchemaToFields } from '@dxos/schema';
 import { automerge, createBasicExtensions, createMarkdownExtensions, createThemeExtensions } from '@dxos/ui-editor';
-import { composable, composableProps, mx, subtleHover } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/ui-theme';
 
 const MAX_RENDERED_COUNT = 80;
 
@@ -65,7 +65,7 @@ export const Item = ({ object, onDelete }: ItemProps<Obj.Any>) => {
     Obj.update(object, (object) => (object[prop] = value));
 
   return (
-    <div className={mx('flex m-1 p-2 border', subtleHover)}>
+    <div className='flex m-1 p-2 border dx-hover'>
       <div className='flex flex-col grow overflow-hidden gap-2'>
         {props.map(({ property, type }) => (
           <div key={property} className='flex'>

@@ -6,8 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DXN, Filter, JsonSchema, Obj, Query, type QueryAST, Tag, Type } from '@dxos/echo';
-import { type View } from '@dxos/echo';
+import { DXN, Filter, JsonSchema, Obj, Query, type QueryAST, Tag, Type, type View } from '@dxos/echo';
 import { type EchoSchema, Format, type Mutable } from '@dxos/echo/internal';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';

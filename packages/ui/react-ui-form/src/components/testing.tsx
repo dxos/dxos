@@ -12,7 +12,7 @@ type TestLayoutProps = PropsWithChildren<{ json?: any }>;
 
 export const TestLayout = ({ children, json }: TestLayoutProps) => {
   return (
-    <div role='none' className='dx-container grid grid-cols-[1fr_1fr] p-4 gap-4'>
+    <div className='dx-container grid grid-cols-[1fr_1fr] p-4 gap-4'>
       <TestPanel>{children}</TestPanel>
       <TestPanel>
         <Syntax.Root data={json}>

@@ -48,7 +48,7 @@ const DefaultStory = ({ source }: TemplateEditorProps & { source: string }) => {
     const space = client.spaces.get()[0];
     return space.db.add(
       Blueprint.make({
-        key: 'example.com/blueprint/test',
+        key: 'com.example.blueprint.test',
         name: 'Test',
         instructions: Template.make({ source }),
       }),

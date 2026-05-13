@@ -13,8 +13,7 @@ import isEqual from 'fast-deep-equal';
 
 import { waitForCondition } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
-import { type Obj, type Type } from '@dxos/echo';
-import { Filter, Query } from '@dxos/echo';
+import { Filter, type Obj, Query, type Type } from '@dxos/echo';
 import { EchoHost } from '@dxos/echo-pipeline';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';

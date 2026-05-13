@@ -5,8 +5,7 @@
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { type Space } from '@dxos/client/echo';
-import { Type } from '@dxos/echo';
+import { type Database, Type } from '@dxos/echo';
 import { EntityKind, SystemTypeAnnotation, createAnnotationHelper, getTypeAnnotation } from '@dxos/echo/internal';
 
 export const TypeInputOptions = Schema.Struct({
@@ -23,15 +22,15 @@ export const TypeInputOptionsAnnotationId = Symbol.for('@dxos/schema/annotation/
 export const TypeInputOptionsAnnotation = createAnnotationHelper<TypeInputOptions>(TypeInputOptionsAnnotationId);
 
 // TODO(wittjosiah): This is too complicated and needs to be simplified.
-export const getTypenames = ({ annotation, space }: { annotation: TypeInputOptions; space?: Space }) => {
+export const getTypenames = ({ annotation, db }: { annotation: TypeInputOptions; db?: Database.Database }) => {
   const includeRuntime = annotation.location.includes('runtime');
   const includeDatabase = annotation.location.includes('database');
   const includeSystemType = annotation.kind.includes('system');
   const includeUserType = annotation.kind.includes('user');
 
   const runtimeTypenames =
-    includeRuntime && space
-      ? space.db.schemaRegistry
+    includeRuntime && db
+      ? db.schemaRegistry
           .query({ location: ['runtime'] })
           .runSync()
           .filter((schema) => {
@@ -51,8 +50,8 @@ export const getTypenames = ({ annotation, space }: { annotation: TypeInputOptio
       : [];
 
   const databaseTypenames =
-    includeDatabase && space
-      ? space.db.schemaRegistry
+    includeDatabase && db
+      ? db.schemaRegistry
           .query({ location: ['database'] })
           .runSync()
           .map((schema) => Type.getTypename(schema))

@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './capabilities';
-export * from './events';
 export * from './schema';
+
+export * as AutomationCapabilities from './AutomationCapabilities';
+export * as AutomationEvents from './AutomationEvents';
+export * as AutomationOperation from './AutomationOperation';

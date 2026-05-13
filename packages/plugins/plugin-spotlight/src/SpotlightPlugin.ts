@@ -31,3 +31,5 @@ export const SpotlightPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default SpotlightPlugin;

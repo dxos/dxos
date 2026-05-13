@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { type Type } from '@dxos/echo';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown';
 import { random } from '@dxos/random';
 import { Client, ClientProvider } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';

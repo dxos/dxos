@@ -7,4 +7,13 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/StorybookPlugin.ts'
+      - '--entryPoint=src/capabilities/index.ts'
+      - '--entryPoint=src/components/index.ts'
+      - '--entryPoint=src/core.ts'
       - '--entryPoint=src/harness.ts'
+      - '--entryPoint=src/meta.ts'
+      - '--entryPoint=src/operations/index.ts'
+      - '--entryPoint=src/plugin.ts'
+      - '--entryPoint=src/types/index.ts'
+      - '--platform=neutral'

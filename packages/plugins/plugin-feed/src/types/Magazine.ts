@@ -6,7 +6,10 @@
 
 import * as Schema from 'effect/Schema';
 
+import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { Annotation, Format, Obj, Ref, Type } from '@dxos/echo';
+
+export const BLUEPRINT_KEY = 'org.dxos.blueprint.magazine';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
 
@@ -52,6 +55,7 @@ export const Magazine = Schema.Struct({
     icon: 'ph--newspaper-clipping--regular',
     hue: 'indigo',
   }),
+  BlueprintsAnnotation.set([BLUEPRINT_KEY]),
 );
 
 export interface Magazine extends Schema.Schema.Type<typeof Magazine> {}
@@ -70,7 +74,7 @@ export const make = (
   Obj.make(Magazine, {
     ...props,
     feeds: props.feeds ?? [],
-    instructions: Ref.make(Text.make(props.instructions ?? '')),
+    instructions: Ref.make(Text.make({ content: props.instructions ?? '' })),
     posts: props.posts ?? [],
   });
 

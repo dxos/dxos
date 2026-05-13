@@ -3,8 +3,6 @@
 //
 
 // Public API exports.
-// Only export what external consumers need: the plugin factory and metadata.
-// Types and operations are available via the `./types` and `./operations` subpath exports.
 
-export { meta } from './meta';
-export { SamplePlugin } from './SamplePlugin';
+export * from './meta';
+export * from './types';

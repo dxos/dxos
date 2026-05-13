@@ -12,6 +12,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/debug"
     },
     {
@@ -45,7 +48,10 @@
       "path": "../../common/web-context-react"
     },
     {
-      "path": "../../core/compute"
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/operation"
     },
     {
       "path": "../../core/compute-runtime"
@@ -60,7 +66,7 @@
       "path": "../../core/functions"
     },
     {
-      "path": "../../core/operation"
+      "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../core/protocols"

@@ -14,12 +14,12 @@ import { corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { AttendableContainer } from '@dxos/react-ui-attention';
-import { withLayout } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { ComputeGraphContext, useComputeGraph } from '#components';
-import { SheetOperation } from '#operations';
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '#testing';
 import { translations } from '#translations';
+import { SheetOperation } from '#types';
 import { Sheet } from '#types';
 
 import RangeList from '../RangeList';
@@ -29,6 +29,7 @@ const meta = {
   title: 'plugins/plugin-sheet/containers/SheetContainer',
   component: SheetContainer,
   decorators: [
+    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withClientProvider({ types: [Sheet.Sheet], createSpace: true }),
     withComputeGraphDecorator(),
@@ -91,7 +92,7 @@ export const Spec = () => {
 
   return (
     <AttendableContainer id={Obj.getDXN(sheet).toString()} classNames='contents'>
-      <div role='none' className='w-full grid grid-cols-[1fr_20rem]'>
+      <div className='w-full grid grid-cols-[1fr_20rem]'>
         <SheetContainer
           role='article'
           space={space}
@@ -100,7 +101,7 @@ export const Spec = () => {
           registry={registry}
           ignoreAttention
         />
-        <div role='none' data-testid='grid.range-list'>
+        <div data-testid='grid.range-list'>
           <RangeList sheet={sheet} />
         </div>
       </div>

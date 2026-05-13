@@ -12,7 +12,7 @@ import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { ServiceResolver } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
-import { Obj } from '@dxos/echo';
+import { Database, Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 import { assistant, type AssistantOptions } from '@dxos/react-ui-editor';
 import { type Message } from '@dxos/types';
@@ -54,9 +54,20 @@ export const EditMessageArticle = ({ role, subject }: EditMessageArticleProps) =
 
   const handleSend = useCallback<NonNullable<EditMessageProps['onSend']>>(
     async (message) => {
-      await runtime.runPromise(Operation.invoke(GmailFunctions.Send, { message }));
+      if (!spaceId) {
+        throw new TypeError('Space not available.');
+      }
+
+      const spaceLayer = ServiceResolver.provide({ space: spaceId }, Database.Service);
+      await runtime.runPromise(
+        Operation.invoke(GmailFunctions.Send, { message }).pipe(Effect.provide(spaceLayer)) as Effect.Effect<
+          unknown,
+          any,
+          any
+        >,
+      );
     },
-    [runtime],
+    [runtime, spaceId],
   );
 
   return (

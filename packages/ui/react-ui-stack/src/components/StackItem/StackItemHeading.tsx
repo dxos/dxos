@@ -53,11 +53,7 @@ export const StackItemHeading = ({
 };
 
 export const StackItemHeadingStickyContent = ({ children }: PropsWithChildren<{}>) => {
-  return (
-    <div role='none' className='sticky top-0 bg-(--sticky-bg) p-1 w-full'>
-      {children}
-    </div>
-  );
+  return <div className='sticky top-0 bg-(--sticky-bg) p-1 w-full'>{children}</div>;
 };
 
 export type StackItemHeadingLabelProps = ThemedClassName<ComponentPropsWithRef<'h1'>> & AttendableId & Related;

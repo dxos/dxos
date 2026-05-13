@@ -2,4 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './SimpleLayoutPlugin';
+export * from './meta';
+export * from './types';

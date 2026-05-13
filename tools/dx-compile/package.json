@@ -16,6 +16,9 @@
     "dx-compile": "cli.js"
   },
   "dependencies": {
+    "@babel/core": "catalog:",
+    "@babel/preset-typescript": "catalog:",
+    "babel-preset-solid": "catalog:",
     "yargs": "catalog:"
   },
   "devDependencies": {

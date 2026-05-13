@@ -8,14 +8,12 @@ import * as Layer from 'effect/Layer';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Filter, Ref } from '@dxos/client/echo';
-import { Database, Feed, JsonSchema, Obj, Query, Tag } from '@dxos/echo';
-import { Collection, View } from '@dxos/echo';
+import { Collection, Database, Feed, Filter, JsonSchema, Obj, Query, Ref, Tag, View } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { InboxPlugin } from '@dxos/plugin-inbox';
-import { PreviewPlugin } from '@dxos/plugin-preview';
+import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
+import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useDatabase, useQuery } from '@dxos/react-client/echo';

@@ -1,5 +1,5 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-export * from './search';
+export type { SearchResult } from './SearchResult';

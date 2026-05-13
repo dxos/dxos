@@ -2,7 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './components';
-export * from './hooks';
-
-export * from './ExplorerPlugin';
+export * from './meta';
+export * from './types';

@@ -4,13 +4,8 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-const Handlers = OperationHandlerSet.lazy(
-  () => import('./create'),
+export const TicTacToeOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./move'),
   () => import('./ai-move'),
   () => import('./print'),
 );
-
-export { Create, MakeMove, AiMove, Print } from './definitions';
-
-export const TicTacToeHandlers = Handlers;

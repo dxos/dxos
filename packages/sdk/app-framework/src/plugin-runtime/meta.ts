@@ -9,4 +9,5 @@ export const meta: Plugin.Meta = {
   name: 'Runtime Plugin',
   description:
     'Provides a managed Effect runtime by composing contributed layers, and hosts a process manager runtime that composes layer specs into a service resolver.',
+  tags: ['system'],
 };

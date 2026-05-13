@@ -14,14 +14,14 @@ import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { QueueService } from '@dxos/functions';
 import { ObjectId } from '@dxos/keys';
-import { AutomationPlugin } from '@dxos/plugin-automation/cli';
-import { ClientPlugin } from '@dxos/plugin-client/cli';
+import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
+import { ClientCapabilities } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 import { Message } from '@dxos/types';
 
-import { AssistantPlugin } from '../cli';
+import { AssistantPlugin } from '#plugin';
 
 ObjectId.dangerouslyDisableRandomness();
 

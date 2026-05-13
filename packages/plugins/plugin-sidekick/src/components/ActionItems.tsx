@@ -2,6 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+// TODO(burdon): Migrate to `RowList` once the multi-select model lands.
+// `RowList` ships with single-selection (`selectedId` /
+// `onSelectChange` paired with `aria-selected` / `dx-selected`). What
+// this component needs is the *multi-select* `completed: boolean` per
+// item (toggled by checkbox) — that explicit-action half is not yet
+// tracked by `RowList`. See `react-ui-list/AUDIT.md` §6 / §11.
+
 import React from 'react';
 
 import { useTranslation } from '@dxos/react-ui';

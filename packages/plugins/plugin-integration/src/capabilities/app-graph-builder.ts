@@ -12,7 +12,7 @@ import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
 import { GraphBuilder, Node } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { SpaceOperation } from '@dxos/plugin-space';
 
 import { meta } from '#meta';
 import { IntegrationProvider, type IntegrationProviderEntry } from '#types';
@@ -24,11 +24,6 @@ const INTEGRATIONS_SECTION_TYPE = `${meta.id}.space-settings`;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const capabilities = yield* Capability.Service;
-
-    const resolve = (typename: string) =>
-      capabilities.getAll(AppCapabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
-
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'integration-actions',
@@ -121,7 +116,6 @@ export default Capability.makeModule(
                 createObjectNode({
                   db: space.db,
                   object: integration,
-                  resolve,
                 }),
               )
               .filter((node): node is NonNullable<typeof node> => node !== null),

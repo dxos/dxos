@@ -48,7 +48,7 @@ export const useChatProcessor = ({
 }: UseChatProcessorProps): AiChatProcessor | undefined => {
   const observableRegistry = useContext(RegistryContext);
 
-  const [session, setSession] = useState<AiSession>();
+  const [session, setSession] = useState<AiSession.Session>();
   useAsyncEffect(async () => {
     if (!space || !chat) {
       return;
@@ -62,7 +62,7 @@ export const useChatProcessor = ({
     const runtime = await runAndForwardErrors(
       Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
     );
-    const session = new AiSession({
+    const session = new AiSession.Session({
       feed: feedTarget,
       runtime,
       registry: observableRegistry as Registry.Registry,

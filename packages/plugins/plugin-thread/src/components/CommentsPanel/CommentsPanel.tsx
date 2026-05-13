@@ -41,19 +41,19 @@ export const CommentsPanel = ({ anchors, currentId, showResolvedThreads, ...prop
 
   if (filteredAnchors.length === 0) {
     return (
-      <div role='none' className='p-form-padding'>
+      <div className='p-form-padding'>
         <Message.Root>
-          <Message.Title>
+          <Message.Content>
             <Trans
               {...{
                 t,
                 i18nKey: 'no-comments.message',
                 components: {
-                  commentIcon: <Icon icon='ph--chat-text--regular' size={4} classNames='w-block' />,
+                  commentIcon: <Icon icon='ph--chat-text--regular' size={4} classNames='dx-icon-inline' />,
                 },
               }}
             />
-          </Message.Title>
+          </Message.Content>
         </Message.Root>
       </div>
     );

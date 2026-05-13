@@ -2,25 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Array from 'effect/Array';
-import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import React, { forwardRef, useCallback, useMemo } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppCapabilities } from '@dxos/app-toolkit';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Chat } from '@dxos/assistant-toolkit';
 import { getSpace } from '@dxos/client/echo';
 import { Blueprint } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { type ChatEvent } from '#components';
 import { useBlueprintRegistry, useContextBinder } from '#hooks';
-import { AssistantOperation } from '#operations';
+import { AssistantOperation } from '#types';
 
 import ChatContainer from '../ChatContainer';
 
@@ -41,7 +39,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
           return;
         }
 
-        if (event.type === 'submit' && !getSpace(chat)) {
+        if (event.type === 'submit' && !Obj.getDatabase(chat)) {
           await invokePromise(SpaceOperation.AddObject, {
             object: chat,
             target: space.db,
@@ -62,24 +60,13 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
       [chat, space, companionTo, invokePromise],
     );
 
-    const metadata = useCapabilities(AppCapabilities.Metadata);
-    const blueprintKeys = useMemo(
-      () =>
-        Function.pipe(
-          metadata,
-          Array.findFirst(
-            (
-              capability,
-            ): capability is {
-              id: string;
-              metadata: { blueprints?: string[] };
-            } => capability.id === Obj.getTypename(companionTo),
-          ),
-          Option.flatMap((c) => Option.fromNullable(c.metadata.blueprints)),
-          Option.getOrElse(() => [] as string[]),
-        ),
-      [metadata, companionTo],
-    );
+    const blueprintKeys = useMemo(() => {
+      const schema = companionTo ? Obj.getSchema(companionTo) : undefined;
+      if (!schema) {
+        return [] as string[];
+      }
+      return Option.getOrElse(() => [] as string[])(BlueprintsAnnotation.get(schema));
+    }, [companionTo]);
     const existingBlueprints = useQuery(space?.db, Filter.type(Blueprint.Blueprint));
     const pluginBlueprints = useMemo(
       () => existingBlueprints.filter((blueprint) => blueprintKeys.includes(blueprint.key)),

@@ -3,6 +3,7 @@
 //
 
 export * from './activation-events';
+export * from './annotations';
 export * from './active-space';
 export * as AppNode from './app-node';
 export * as AppNodeMatcher from './app-node-matcher';
@@ -11,6 +12,7 @@ export * from './collaboration';
 export * from './companion-types';
 export * from './file';
 export * from './graph';
+export * from './integration-sync';
 export * from './object-node';
 export * from './not-found';
 export * from './operations';

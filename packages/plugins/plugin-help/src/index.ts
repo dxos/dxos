@@ -2,8 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export { HelpCapabilities } from './types';
-export * from './components';
 export * from './constants';
-export * from './HelpPlugin';
-export * from './hooks';
+export * from './meta';
+export * from './operations';
+export * from './types';

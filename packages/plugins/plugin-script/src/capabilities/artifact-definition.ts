@@ -14,7 +14,7 @@ import { ArtifactId, createArtifactElement } from '@dxos/assistant';
 import { defineArtifact, ScriptType } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { SpaceAction } from '@dxos/plugin-space/types';
+import { SpaceAction } from '@dxos/plugin-space';
 import { type Space } from '@dxos/react-client/echo';
 
 import { meta } from '#meta';
@@ -159,7 +159,7 @@ export default Capability.makeModule(() =>
           execute: async ({ name, code }, { extensions }) => {
             invariant(extensions?.space, 'No space');
             invariant(extensions?.dispatch, 'No intent dispatcher');
-            const script = Obj.make(ScriptType, { name, source: Ref.make(Text.make(code)) });
+            const script = Obj.make(ScriptType, { name, source: Ref.make(Text.make({ content: code })) });
             extensions.space.db.add(script);
             await extensions.space.db.flush();
 
