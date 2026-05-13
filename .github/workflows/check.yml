@@ -105,14 +105,18 @@ jobs:
           if-no-files-found: ignore
 
   test:
+    strategy:
+      matrix:
+        node-version: ['24.11.1']
     runs-on: depot-ubuntu-24.04-8
     container:
-      image: ghcr.io/dxos/gh-actions:24.11.1
+      image: ghcr.io/dxos/gh-actions:${{ matrix.node-version }}
       credentials:
         username: dxos-bot
         password: ${{ github.token }}
     timeout-minutes: 30
     env:
+      NODE_VERSION: ${{ matrix.node-version }}
       # Opt the test job in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
       # while still excluding the heavier opt-in tag families.
       VITEST_TAGS_FILTER: '!llm && !sync && !sync-e2e && !functions-e2e && !tracing-e2e'
@@ -180,7 +184,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: vitest-report
+          name: vitest-report-${{ matrix.node-version }}
           path: test-results
           retention-days: 7
 
@@ -191,13 +195,13 @@ jobs:
           github.event_name == 'pull_request' &&
           github.event.pull_request.head.repo.full_name == github.repository
         with:
-          name: moon-test-report
+          name: moon-test-report-${{ matrix.node-version }}
           path: .moon/cache/runReport.json
           retention-days: 1
           if-no-files-found: ignore
 
       - uses: codecov/codecov-action@v5
-        if: ${{ env.VITEST_COVERAGE == 'true' }}
+        if: ${{ matrix.node-version == '24.11.1' && env.VITEST_COVERAGE == 'true' }}
         with:
           directory: ./coverage
           fail_ci_if_error: false
@@ -337,7 +341,7 @@ jobs:
         continue-on-error: true
         uses: actions/download-artifact@v5
         with:
-          name: moon-test-report
+          name: moon-test-report-24.11.1
           path: .moon/cache
 
       - uses: 'moonrepo/run-report-action@v1'
