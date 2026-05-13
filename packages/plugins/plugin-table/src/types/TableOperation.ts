@@ -6,11 +6,11 @@
 
 import * as Schema from 'effect/Schema';
 
+import { SpaceSchema } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { TypeInputOptionsAnnotation } from '@dxos/plugin-space';
-import { SpaceSchema } from '@dxos/react-client/echo';
 import { Table } from '@dxos/react-ui-table/types';
 
 import { meta } from '#meta';

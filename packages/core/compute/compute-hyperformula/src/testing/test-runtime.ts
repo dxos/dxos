@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
-import { type SpaceId } from '@dxos/client/echo';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
+import { type SpaceId } from '@dxos/keys';
 
 import { type FunctionsRuntimeProvider } from '../compute-graph-registry';
 

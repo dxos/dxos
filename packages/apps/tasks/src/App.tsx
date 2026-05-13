@@ -15,8 +15,9 @@ import {
 } from 'react-router-dom';
 
 import { Obj } from '@dxos/echo';
+import { parseId } from '@dxos/keys';
 import { ClientProvider, useShell } from '@dxos/react-client';
-import { Filter, Query, parseId, useQuery, useSpace, useSpaces } from '@dxos/react-client/echo';
+import { Filter, Query, useQuery, useSpace, useSpaces } from '@dxos/react-client/echo';
 
 import { getConfig } from './config';
 import { TaskList } from './TaskList';

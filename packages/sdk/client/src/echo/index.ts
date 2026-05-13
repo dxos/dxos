@@ -4,20 +4,18 @@
 
 export { SpaceId } from '@dxos/keys';
 export { isSpace, type Echo, type Space, SpaceSchema, SpaceProperties } from '@dxos/client-protocol';
+// TODO(burdon): Remove re-exports.
 export {
   createObject,
   createSubscription,
-  type EchoDatabase,
+  // type EchoDatabase,
   type ObjectMigration,
-  ObjectVersion,
-  Queue, // TODO(burdon): Remove.
+  // ObjectVersion,
+  Queue,
   type Selection,
   type SubscriptionHandle,
 } from '@dxos/echo-db';
 export { Filter, Query } from '@dxos/echo';
-
-// TODO(dmaretskyi): Remove this export.
-export { decodeReference as internalDecodeReference } from '@dxos/echo-protocol';
 
 export { IndexKind } from '@dxos/protocols/proto/dxos/echo/indexing';
 export { QueryOptions } from '@dxos/protocols/proto/dxos/echo/filter';
@@ -29,12 +27,8 @@ export { type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
 export { importSpace, type ImportSpaceOptions } from './import';
 export {
   createEmptyEdgeSyncState,
-  parseId,
   getSpace,
   getSyncSummary,
-  FQ_ID_LENGTH,
-  OBJECT_ID_LENGTH,
-  SPACE_ID_LENGTH,
   type Progress,
   type PeerSyncState,
   type SpaceSyncStateMap,
