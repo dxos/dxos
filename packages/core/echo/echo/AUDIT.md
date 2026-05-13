@@ -56,3 +56,49 @@ Mentions of the word "Queue" in [internal/common/proxy/change-context.ts](packag
    - **Partial: pulled into Phase 3 by the schema rename.** `qualifier.ts` (assistant-toolkit project blueprint) was migrated from `queueTarget.append(items)` to `Feed.append(feed, items)` (Effect) and its operation now declares `Feed.FeedService` in `services`. Type/runtime mismatch at consumer boundaries (`useQuery`, `ExecutionGraphPanel`) is bridged with narrow casts in `devtools/InvocationTracePanel/InvocationTraceContainer.tsx`, `plugin-assistant/AgentArticle.tsx`, and `stories-assistant/ExecutionGraphModule.tsx` (TODOs flag the Feed-aware React integration that should replace them).
 
 7. **Cursor / retention not yet implemented on Feed.** `Feed.cursor`, `Feed.next`, `Feed.nextOption`, `Feed.setRetention` are stubbed (`Effect.die`/`Effect.void`). Any caller relying on iteration semantics has no working replacement yet.
+
+## Remaining phases
+
+### Phase 4 — finish behavioral migration (#6)
+
+**Add primitives first** (otherwise consumer migrations stall):
+
+1. **`Feed.sync({ push, pull })` on `FeedService`** — 5 prod call sites use `Queue.sync` and have no replacement today.
+2. **`useFeedQuery(feed, filter)` React hook** in `@dxos/echo-react` — removes the three Phase 3 stopgap casts ([InvocationTraceContainer.tsx](packages/devtools/devtools/src/panels/edge/InvocationTracePanel/InvocationTraceContainer.tsx), [AgentArticle.tsx](packages/plugins/plugin-assistant/src/containers/AgentArticle/AgentArticle.tsx), [ExecutionGraphModule.tsx](packages/stories/stories-assistant/src/components/ExecutionGraphModule.tsx)) and unblocks the 8 `useQueue` consumers.
+3. **Reactive-subscribe test coverage** in [feed.test.ts](packages/core/echo/echo-db/src/queue/feed.test.ts) — `Feed.query(...)` → `QueryResult.subscribe(...)` is not exercised today.
+
+**Then migrate consumers** (~13 production files):
+
+| Queue method | Feed replacement | Prod sites |
+| ------------ | ---------------- | ---------- |
+| `.append(items)` | `Feed.append(feed, items)` | 9 |
+| `.delete(ids)` | `Feed.remove(feed, items)` (parameter shape differs) | 1 |
+| `.sync(...)` | `Feed.sync(feed, ...)` (after primitive lands) | 5 |
+| `.subscribe(cb)` | `Feed.query(...).subscribe(cb)` | 4 |
+| `.queryObjects()` / `.getObjectsById()` | `Feed.runQuery` / `Feed.query` | 3 |
+
+### Phase 5 — implement Feed iteration / retention (#7)
+
+- Implement `Feed.cursor`, `Feed.next`, `Feed.nextOption` (currently `Effect.die`).
+- Implement `Feed.setRetention` (currently `Effect.void`); likely requires wire-protocol support on top of `FeedService`/`QueueService`.
+- Add unit tests for both.
+
+### Phase 6 — delete the legacy `Queue<T>` surface
+
+Possible only after Phase 4. Delete:
+
+- `Queue<T>` interface in [echo-db/queue/types.ts](packages/core/echo/echo-db/src/queue/types.ts).
+- `QueueFactory`, `QueueImpl`, `MemoryQueue`, and the legacy `QueueService` in [echo-db/queue/](packages/core/echo/echo-db/src/queue/) — or repurpose them as Feed internals.
+- The legacy `effect-queue-service.ts` bridge layer.
+- The `useQueue` hook in `@dxos/echo-react` (replaced by `useFeedQuery`).
+- All remaining `as Queue` stopgap casts.
+
+### Phase 7 — optional: make `Feed.Feed` directly Queryable
+
+Not currently planned; needs design. Options:
+
+1. `useFeedQuery` hook only (covered by Phase 4 — recommended baseline).
+2. Make `Ref(Feed.Feed).target` return a runtime handle bundling Feed data + Queryable methods.
+3. Merge `Queue<T>` interface into `Feed.Feed` (extends Phase 6 with a richer runtime type).
+
+**Suggested order:** 4 → 6 → 5. Phase 5 (cursor/retention) is functionally orthogonal and can slip; the priority is finishing #6 so `Queue` can be deleted.
