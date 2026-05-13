@@ -182,6 +182,16 @@ export class FeedService extends Context.Tag('@dxos/echo/Feed/FeedService')<
      * event queues) where materializing a `Feed.Feed` per write would be wasteful.
      */
     appendByDxn(queueDxn: DXN, items: Entity.Unknown[]): Promise<void>;
+
+    /**
+     * Queries items in a feed addressed by its underlying queue DXN.
+     * DXN-driven counterpart to `query()` — for debug UIs and other consumers
+     * that hold a raw queue DXN and don't have a materialized `Feed.Feed`.
+     */
+    queryByDxn: {
+      <Q extends Query.Any>(queueDxn: DXN, query: Q): QueryResult.QueryResult<Query.Type<Q>>;
+      <F extends Filter.Any>(queueDxn: DXN, filter: F): QueryResult.QueryResult<Filter.Type<F>>;
+    };
   }
 >() {}
 
@@ -215,7 +225,31 @@ export const notAvailable: Layer.Layer<FeedService> = Layer.succeed(FeedService,
   appendByDxn: () => {
     throw new Error('Feed.FeedService not available');
   },
+  queryByDxn: () => {
+    throw new Error('Feed.FeedService not available');
+  },
 } as Context.Tag.Service<FeedService>);
+
+//
+// Context (per-call) service
+//
+
+/**
+ * Effect service exposing a single `Feed.Feed` as the "current" feed for a call site —
+ * e.g. an agent context feed scoped to the running operation. Use this when an Effect
+ * program needs to know which feed it should operate on without threading it through
+ * every function signature.
+ *
+ * Replaces the legacy `ContextQueueService` from `@dxos/echo-db`.
+ */
+export class ContextFeedService extends Context.Tag('@dxos/echo/Feed/ContextFeedService')<
+  ContextFeedService,
+  {
+    readonly feed: Feed;
+  }
+>() {
+  static layer = (feed: Feed): Layer.Layer<ContextFeedService> => Layer.succeed(ContextFeedService, { feed });
+}
 
 //
 // Operations
@@ -320,6 +354,44 @@ export const appendByDxn = (queueDxn: DXN, items: Entity.Unknown[]): Effect.Effe
     const service = yield* FeedService;
     yield* Effect.promise(() => service.appendByDxn(queueDxn, items));
   });
+
+/**
+ * Creates a reactive query over items in a feed addressed by its underlying queue DXN.
+ * DXN-driven counterpart to `query()` — for debug UIs and other consumers that hold a
+ * raw queue DXN.
+ *
+ * @example
+ * ```ts
+ * const result = yield* Feed.queryByDxn(queueDxn, Filter.everything());
+ * ```
+ */
+export const queryByDxn: {
+  <Q extends Query.Any>(
+    queueDxn: DXN,
+    query: Q,
+  ): Effect.Effect<QueryResult.QueryResult<Query.Type<Q>>, never, FeedService>;
+  <F extends Filter.Any>(
+    queueDxn: DXN,
+    filter: F,
+  ): Effect.Effect<QueryResult.QueryResult<Filter.Type<F>>, never, FeedService>;
+} = (queueDxn: DXN, queryOrFilter: Query.Any | Filter.Any) =>
+  FeedService.pipe(
+    Effect.map((service) => service.queryByDxn(queueDxn, queryOrFilter as any) as QueryResult.QueryResult<any>),
+  );
+
+/**
+ * Executes a feed query addressed by queue DXN once and returns the results.
+ *
+ * @example
+ * ```ts
+ * const items = yield* Feed.runQueryByDxn(queueDxn, Filter.type(Person));
+ * ```
+ */
+export const runQueryByDxn: {
+  <Q extends Query.Any>(queueDxn: DXN, query: Q): Effect.Effect<Query.Type<Q>[], never, FeedService>;
+  <F extends Filter.Any>(queueDxn: DXN, filter: F): Effect.Effect<Filter.Type<F>[], never, FeedService>;
+} = (queueDxn: DXN, queryOrFilter: Query.Any | Filter.Any) =>
+  queryByDxn(queueDxn, queryOrFilter as any).pipe(Effect.flatMap((queryResult) => Effect.promise(() => queryResult.run())));
 
 /**
  * Creates a cursor for iterating over feed items.

@@ -11,8 +11,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Database, Entity, Filter, Obj, Query, Type } from '@dxos/echo';
-import { type Queue } from '@dxos/echo-db';
+import { Database, Entity, Feed, Filter, Obj, Query, Type } from '@dxos/echo';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import {
   ReferenceAnnotationId,
@@ -25,7 +24,6 @@ import {
   getTypeIdentifierAnnotation,
 } from '@dxos/echo/internal';
 import { mapAst } from '@dxos/effect';
-import { ContextQueueService } from '@dxos/functions';
 import { DXN, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, isNonNullable, trim } from '@dxos/util';
@@ -105,7 +103,7 @@ export const LocalSearchToolkit = Toolkit.make(
     },
     success: Schema.Unknown,
     failure: Schema.Never,
-    dependencies: [Database.Service],
+    dependencies: [Database.Service, Feed.FeedService],
   }),
 );
 
@@ -114,11 +112,11 @@ export const LocalSearchHandler = LocalSearchToolkit.toLayer({
     const objects = yield* Database.runQuery(Query.select(Filter.text(query, { type: 'vector' })));
     const results = [...objects];
 
-    const option = yield* Effect.serviceOption(ContextQueueService);
-    if (Option.isSome(option)) {
-      const queueObjects = yield* Effect.promise(() => option.value.queue.queryObjects());
-      // TODO(dmaretskyi): Text search on the queue.
-      results.push(...queueObjects);
+    const feedOption = yield* Effect.serviceOption(Feed.ContextFeedService);
+    if (Option.isSome(feedOption)) {
+      const feedObjects = yield* Feed.runQuery(feedOption.value.feed, Filter.everything());
+      // TODO(dmaretskyi): Text search on the feed.
+      results.push(...feedObjects);
     }
 
     return trim`
@@ -149,7 +147,7 @@ export const makeGraphWriterToolkit = ({ schema }: { schema: Type.AnyEntity[] })
       parameters: createExtractionSchema(schema).fields,
       success: Schema.Unknown,
       failure: Schema.Never,
-      dependencies: [Database.Service, ContextQueueService],
+      dependencies: [Database.Service, Feed.ContextFeedService, Feed.FeedService],
     }).annotateContext(Context.make(GraphWriterSchema, { schema })),
   );
 };
@@ -170,9 +168,9 @@ export const makeGraphWriterHandler = (
   return toolkit.toLayer({
     graph_writer: Effect.fn(function* (input) {
       const { db } = yield* Database.Service;
-      const { queue } = yield* ContextQueueService;
-      const data = yield* Effect.promise(() => sanitizeObjects(schema, input as any, db, queue));
-      yield* Effect.promise(() => queue.append(data as Obj.Unknown[]));
+      const { feed } = yield* Feed.ContextFeedService;
+      const data = yield* sanitizeObjects(schema, input as any, db, feed);
+      yield* Feed.append(feed, data as Obj.Unknown[]);
 
       const dxns = data.map((obj) => Obj.getDXN(obj));
       onAppend?.(dxns);
@@ -203,12 +201,13 @@ export const getSanitizedSchemaName = (schema: Type.AnyEntity) => {
     .type.replaceAll(/[^a-zA-Z0-9]+/g, '_');
 };
 
-export const sanitizeObjects = async (
+export const sanitizeObjects = (
   types: Type.AnyEntity[],
   data: Record<string, readonly unknown[]>,
   db: Database.Database,
-  queue?: Queue,
-): Promise<Obj.Unknown[]> => {
+  feed?: Feed.Feed,
+): Effect.Effect<Obj.Unknown[], never, Feed.FeedService> =>
+  Effect.gen(function* () {
   const entries = types
     .map(
       (type) =>
@@ -289,12 +288,12 @@ export const sanitizeObjects = async (
     .filter((object) => !existingIds.has(object.data.id)); // TODO(dmaretskyi): This dissallows updating existing objects.
 
   // TODO(dmaretskyi): Use ref resolver.
-  const dbObjects = await db.query(Query.select(Filter.id(...existingIds))).run();
-  const queueObjects = (await queue?.getObjectsById([...existingIds])) ?? [];
-  const objects = [...dbObjects, ...queueObjects].filter(isNonNullable);
+  const dbObjects = yield* Effect.promise(() => db.query(Query.select(Filter.id(...existingIds))).run());
+  const feedObjects = feed && existingIds.size > 0 ? yield* Feed.runQuery(feed, Filter.id(...existingIds)) : [];
+  const objects = [...dbObjects, ...feedObjects].filter(isNonNullable);
 
   // TODO(dmaretskyi): Returns everything if IDs are empty!
-  log.info('objects', { dbObjects, queueObjects, existingIds });
+  log.info('objects', { dbObjects, feedObjects, existingIds });
   const missing = Array.from(existingIds).filter((id) => !objects.some((object) => object.id === id));
   if (missing.length > 0) {
     throw new Error(`Object IDs do not point to existing objects: ${missing.join(', ')}`);
@@ -329,7 +328,7 @@ export const sanitizeObjects = async (
     }
     return [];
   });
-};
+  });
 
 const SoftRef = Schema.Struct({
   '/': Schema.String,

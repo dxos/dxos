@@ -4,9 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Database, Obj } from '@dxos/echo';
+import { Database, Feed, Obj } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/internal';
-import { ContextQueueService } from '@dxos/functions';
 import { random } from '@dxos/random';
 import { renderObjectLink, textStream } from '@dxos/react-ui-markdown';
 import { type Actor, type ContentBlock, Message, Organization } from '@dxos/types';
@@ -20,25 +19,23 @@ export const createMessage = (role: Actor.Role, blocks: ContentBlock.Any[]): Mes
   });
 };
 
-export type MessageGenerator = Effect.Effect<void, never, Database.Service | ContextQueueService>;
+export type MessageGenerator = Effect.Effect<void, never, Database.Service | Feed.ContextFeedService | Feed.FeedService>;
 
 export const createMessageGenerator = (): MessageGenerator[] => [
   Effect.gen(function* () {
-    const { queue } = yield* ContextQueueService;
-    yield* Effect.promise(() =>
-      queue.append([
+    const { feed } = yield* Feed.ContextFeedService;
+    yield* Feed.append(feed, [
         createMessage('user', [
           {
             _tag: 'text',
             text: random.lorem.sentence(5),
           },
         ]),
-      ]),
-    );
+    ]);
   }),
 
   Effect.gen(function* () {
-    const { queue } = yield* ContextQueueService;
+    const { feed } = yield* Feed.ContextFeedService;
     const { db } = yield* Database.Service;
     const obj1 = db.add(
       Obj.make(Organization.Organization, {
@@ -50,8 +47,7 @@ export const createMessageGenerator = (): MessageGenerator[] => [
     // const obj2 = db.add(Obj.make(Person.Person, { fullName: 'Alice' }));
     // const obj3 = db.add(Obj.make(Person.Person, { fullName: 'Bob' }));
     // const obj4 = db.add(Obj.make(Person.Person, { fullName: 'Charlie' }));
-    yield* Effect.promise(() =>
-      queue.append([
+    yield* Feed.append(feed, [
         createMessage('assistant', [
           // Inline tag.
           {
@@ -68,19 +64,19 @@ export const createMessageGenerator = (): MessageGenerator[] => [
           //     }) satisfies ContentBlock.Text,
           // ),
         ]),
-      ]),
-    );
+    ]);
   }),
 
   // Streaming text block: appends a pending text block, then mutates `text` in chunks
   // so the syncer renders progressive deltas through the queue (not via the controller).
   Effect.gen(function* () {
-    const { queue } = yield* ContextQueueService;
+    const { feed } = yield* Feed.ContextFeedService;
+    const feedService = yield* Feed.FeedService;
     const message = createMessage('assistant', [{ _tag: 'text', text: '', pending: true }]);
-    yield* Effect.promise(() => queue.append([message]));
+    yield* Feed.append(feed, [message]);
 
     const fullText = [
-      'Streaming a response **word by word** through the queue:',
+      'Streaming a response **word by word** through the feed:',
       random.lorem.paragraph(),
       random.lorem.paragraph(),
     ].join('\n\n');
@@ -91,21 +87,20 @@ export const createMessageGenerator = (): MessageGenerator[] => [
           const block = message.blocks[0] as Mutable<ContentBlock.Text>;
           block.text += chunk;
         });
-        // Queue queries only react to queue-level updates, not in-place object mutations.
-        await queue.append([]);
+        // Feed queries only react to feed-level updates, not in-place object mutations.
+        await feedService.append(feed, []);
       }
       Obj.update(message, (message) => {
         const block = message.blocks[0] as Mutable<ContentBlock.Text>;
         block.pending = false;
       });
-      await queue.append([]);
+      await feedService.append(feed, []);
     });
   }),
 
   Effect.gen(function* () {
-    const { queue } = yield* ContextQueueService;
-    yield* Effect.promise(() =>
-      queue.append([
+    const { feed } = yield* Feed.ContextFeedService;
+    yield* Feed.append(feed, [
         createMessage('assistant', [
           {
             _tag: 'text',
@@ -142,14 +137,12 @@ export const createMessageGenerator = (): MessageGenerator[] => [
               ].join('\n') + '\n',
           },
         ]),
-      ]),
-    );
+    ]);
   }),
 
   Effect.gen(function* () {
-    const { queue } = yield* ContextQueueService;
-    yield* Effect.promise(() =>
-      queue.append([
+    const { feed } = yield* Feed.ContextFeedService;
+    yield* Feed.append(feed, [
         createMessage('assistant', [
           {
             _tag: 'text',
@@ -178,41 +171,35 @@ export const createMessageGenerator = (): MessageGenerator[] => [
             options: ['Option 1', 'Option 2', 'Option 3'],
           },
         ]),
-      ]),
-    );
+    ]);
   }),
 
   Effect.gen(function* () {
-    const { queue } = yield* ContextQueueService;
-    yield* Effect.promise(() =>
-      queue.append([
+    const { feed } = yield* Feed.ContextFeedService;
+    yield* Feed.append(feed, [
         createMessage('assistant', [
           {
             _tag: 'toolkit',
           },
         ]),
-      ]),
-    );
+    ]);
   }),
 
   Effect.gen(function* () {
-    const { queue } = yield* ContextQueueService;
-    yield* Effect.promise(() =>
-      queue.append([
+    const { feed } = yield* Feed.ContextFeedService;
+    yield* Feed.append(feed, [
         createMessage('user', [
           {
             _tag: 'text',
             text: random.lorem.sentence(5),
           },
         ]),
-      ]),
-    );
+    ]);
   }),
 
   Effect.gen(function* () {
-    const { queue } = yield* ContextQueueService;
-    yield* Effect.promise(() =>
-      queue.append([
+    const { feed } = yield* Feed.ContextFeedService;
+    yield* Feed.append(feed, [
         createMessage('assistant', [
           {
             _tag: 'text',
@@ -237,14 +224,12 @@ export const createMessageGenerator = (): MessageGenerator[] => [
             providerExecuted: false,
           },
         ]),
-      ]),
-    );
+    ]);
   }),
 
   Effect.gen(function* () {
-    const { queue } = yield* ContextQueueService;
-    yield* Effect.promise(() =>
-      queue.append([
+    const { feed } = yield* Feed.ContextFeedService;
+    yield* Feed.append(feed, [
         createMessage('assistant', [
           {
             _tag: 'text',
@@ -278,21 +263,18 @@ export const createMessageGenerator = (): MessageGenerator[] => [
                 .join('\n\n') + '\n',
           },
         ]),
-      ]),
-    );
+    ]);
   }),
 
   Effect.gen(function* () {
-    const { queue } = yield* ContextQueueService;
-    yield* Effect.promise(() =>
-      queue.append([
+    const { feed } = yield* Feed.ContextFeedService;
+    yield* Feed.append(feed, [
         createMessage('assistant', [
           {
             _tag: 'text',
             text: random.lorem.paragraph(),
           },
         ]),
-      ]),
-    );
+    ]);
   }),
 ];

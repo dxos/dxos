@@ -2,80 +2,76 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
-import { type Queue } from '@dxos/client/echo';
-import { Database } from '@dxos/echo';
+import { Database, Feed, Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
-import { ContextQueueService } from '@dxos/functions';
-import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 import { type Message } from '@dxos/types';
 
 import { createMessageGenerator } from './test-generator';
 
-class RecordingQueue implements Queue<Message.Message> {
-  readonly dxn = new DXN(DXN.kind.QUEUE, [SpaceId.random(), ObjectId.random()]);
-  readonly #subscribers = new Set<() => void>();
+/**
+ * In-memory FeedService that records appends and emits a change event whenever
+ * `append` is called. Used to verify the streaming-message generator emits
+ * per-chunk updates.
+ */
+const makeRecordingFeedLayer = () => {
+  const items: Message.Message[] = [];
+  const subscribers = new Set<() => void>();
 
-  objects: Message.Message[] = [];
-  isLoading = false;
-  error = null;
+  const feedService: Context.Tag.Service<Feed.FeedService> = {
+    append: async (_feed: Feed.Feed, newItems) => {
+      items.push(...(newItems as Message.Message[]));
+      for (const fn of subscribers) {
+        fn();
+      }
+    },
+    remove: async () => {},
+    query: () =>
+      ({
+        subscribe: () => () => {},
+        results: [],
+        run: async () => [],
+      }) as any,
+    sync: async () => {},
+    appendByDxn: async () => {},
+    queryByDxn: () =>
+      ({
+        subscribe: () => () => {},
+        results: [],
+        run: async () => [],
+      }) as any,
+  };
 
-  declare query: Queue<Message.Message>['query'];
-
-  subscribe(callback: () => void) {
-    this.#subscribers.add(callback);
-    return () => this.#subscribers.delete(callback);
-  }
-
-  async append(objects: Message.Message[]) {
-    this.objects = [...this.objects, ...objects];
-    this.#emit();
-  }
-
-  async delete(ids: string[]) {
-    this.objects = this.objects.filter((object) => !ids.includes(object.id));
-    this.#emit();
-  }
-
-  async sync() {}
-
-  async queryObjects() {
-    return this.objects;
-  }
-
-  async getObjectsById(ids: ObjectId[]) {
-    return ids.map((id) => this.objects.find((object) => object.id === id));
-  }
-
-  async refresh() {}
-
-  #emit() {
-    for (const subscriber of this.#subscribers) {
-      subscriber();
-    }
-  }
-}
+  return {
+    items,
+    onAppend: (cb: () => void) => subscribers.add(cb),
+    layer: Layer.succeed(Feed.FeedService, feedService),
+  };
+};
 
 describe('createMessageGenerator', () => {
   test('streaming message publishes updates for chunk mutations', async ({ expect }) => {
-    const queue = new RecordingQueue();
+    const recording = makeRecordingFeedLayer();
     let updates = 0;
-    queue.subscribe(() => updates++);
+    recording.onAppend(() => updates++);
+
+    const feed = Obj.make(Feed.Feed, { name: 'recording' });
 
     // The streaming step is the third entry (index 2) — earlier indices are the initial
     // user prompt and an assistant message with an Organization link (which requires
     // `Database.Service`, unavailable in this unit-test layer).
     await runAndForwardErrors(
       createMessageGenerator()[2]!.pipe(
-        Effect.provide(Layer.mergeAll(ContextQueueService.layer(queue), Database.notAvailable)),
+        Effect.provide(Layer.mergeAll(Feed.ContextFeedService.layer(feed), recording.layer, Database.notAvailable)),
       ),
     );
 
-    expect(queue.objects).toHaveLength(1);
+    expect(recording.items).toHaveLength(1);
     expect(updates).toBeGreaterThan(1);
-    expect(queue.objects[0].blocks[0]).toMatchObject({ pending: false });
+    expect(recording.items[0].blocks[0]).toMatchObject({ pending: false });
   });
 });

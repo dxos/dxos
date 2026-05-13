@@ -11,7 +11,7 @@ import { InvocationOutcome } from '@dxos/functions-runtime';
 import { type InvocationTraceEvent } from '@dxos/functions-runtime';
 import { createInvocationSpans } from '@dxos/functions-runtime';
 import { type DXN } from '@dxos/keys';
-import { useQuery, useQueue } from '@dxos/react-client/echo';
+import { useFeedQueryByDxn, useQuery } from '@dxos/react-client/echo';
 
 import { getUuidFromDxn } from './utils';
 
@@ -54,10 +54,8 @@ export const useInvocationTargetsForScript = (target: Obj.Unknown | undefined) =
 
 export const useInvocationSpans = ({ queueDxn, target }: { queueDxn?: DXN; target?: Obj.Unknown }) => {
   const functionsForScript = useInvocationTargetsForScript(target);
-  const invocationsQueue = useQueue<InvocationTraceEvent>(queueDxn, {
-    pollInterval: 1000,
-  });
-  const invocationSpans = useMemo(() => createInvocationSpans(invocationsQueue?.objects), [invocationsQueue?.objects]);
+  const events = useFeedQueryByDxn(queueDxn, Filter.everything()) as InvocationTraceEvent[];
+  const invocationSpans = useMemo(() => createInvocationSpans(events), [events]);
   const scopedInvocationSpans = useMemo(() => {
     if (functionsForScript) {
       return invocationSpans.filter((span) => {

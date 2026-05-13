@@ -126,13 +126,42 @@ Mentions of the word "Queue" in [internal/common/proxy/change-context.ts](packag
 
 ### Phase 6 — delete the legacy `Queue<T>` surface
 
-Possible only after Phase 4. Delete:
+In progress (PR #11337 + follow-ups).
+
+**Prerequisite primitives:**
+
+| Primitive | Status | Unblocks |
+| --------- | ------ | -------- |
+| `FeedService.appendByDxn(queueDxn, items)` | ✅ landed in PR #11337 | per-invocation trace queues in `plugin-assistant/queue-logger.ts` |
+| `FeedService.queryByDxn(queueDxn, filter)` + `useFeedQueryByDxn(dxn, filter)` React hook | ⬜ next | DXN-driven debug panels (devtools `QueuesPanel`, `InvocationTracePanel/hooks.ts`) |
+| `ContextFeedService` Context.Tag with `{ feed: Feed.Feed }` (replaces `ContextQueueService`) | ⬜ | `assistant-toolkit/crud/graph.ts` (graph_writer toolkit) |
+| `useFeedQuery` extended with loading state (or parallel `useFeedQueryWithState`) | ⬜ | `plugin-transcription/hooks/useQueueModelAdapter.ts` |
+
+**Consumer migrations after primitives land:**
+
+- ✅ `plugin-assistant/queue-logger.ts` per-invocation queues (PR #11337).
+- ⬜ `plugin-transcription/transcriber/transcription-manager.ts`.
+- ⬜ `plugin-transcription/normalization/message-normalizer.ts`.
+- ⬜ `plugin-transcription/hooks/useQueueModelAdapter.ts`.
+- ⬜ `plugin-assistant/containers/ChatContainer/ChatContainer.tsx`.
+- ⬜ `assistant-toolkit/crud/graph.ts`.
+- ⬜ `devtools/panels/echo/QueuesPanel/QueuesPanel.tsx`.
+- ⬜ `devtools/panels/edge/InvocationTracePanel/hooks.ts`.
+- ⬜ `sdk/client/src/util/helpers.ts`.
+
+**Deletions** (after all consumers migrate):
 
 - `Queue<T>` interface in [echo-db/queue/types.ts](packages/core/echo/echo-db/src/queue/types.ts).
 - `QueueFactory`, `QueueImpl`, `MemoryQueue`, and the legacy `QueueService` in [echo-db/queue/](packages/core/echo/echo-db/src/queue/) — or repurpose them as Feed internals.
-- The legacy `effect-queue-service.ts` bridge layer.
-- The `useQueue` hook in `@dxos/echo-react` (replaced by `useFeedQuery`).
-- All remaining `as Queue` stopgap casts.
+- The legacy `effect-queue-service.ts` bridge layer (and its `ContextQueueService` export).
+- The `useQueue` hook in `@dxos/react-client/echo` (replaced by `useFeedQuery` / `useFeedQueryByDxn`).
+- All remaining `as Queue` stopgap casts (2 known: `InvocationTraceContainer.tsx` line 201 boundary for `ExecutionGraphPanel`, `ExecutionGraphModule.tsx` line 20 boundary for `useExecutionGraph`).
+
+**Downstream API changes:**
+
+- `useExecutionGraph(queue?: Queue)` in `react-ui-components` → accept `Feed.Feed`.
+- `ExecutionGraphPanel` in `devtools` → accept `Feed.Feed`.
+- Re-exports through `@dxos/client/echo` — drop `type Queue` (keep `createFeedServiceLayer`).
 
 ### Phase 7 — optional: make `Feed.Feed` directly Queryable
 

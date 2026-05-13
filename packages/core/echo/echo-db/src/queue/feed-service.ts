@@ -59,4 +59,9 @@ export const createFeedServiceLayer = (queues: QueueAPI) =>
       const queue = queues.get(queueDxn);
       await queue.append(items);
     },
+
+    queryByDxn: (queueDxn: DXN, queryOrFilter: Query.Any | Filter.Any) => {
+      const queue = queues.get(queueDxn) as QueueImpl;
+      return queue.query(queryOrFilter as any);
+    },
   });

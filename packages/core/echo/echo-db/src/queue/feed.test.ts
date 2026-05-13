@@ -216,6 +216,28 @@ describe('Feed', () => {
     }).pipe(Effect.provide(testLayer), runAndForwardErrors);
   });
 
+  test('queryByDxn reads items from a queue addressed by DXN', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const queues = peer.client.constructQueueFactory(db.spaceId);
+    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));
+
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make({ name: 'queryable-by-dxn' }));
+      const queueDxn = Feed.getQueueDxn(feed);
+      expect(queueDxn).toBeDefined();
+
+      yield* Feed.appendByDxn(queueDxn!, [
+        Obj.make(TestSchema.Person, { name: 'alice' }),
+        Obj.make(TestSchema.Person, { name: 'bob' }),
+      ]);
+
+      const results = yield* Feed.runQueryByDxn(queueDxn!, Filter.type(TestSchema.Person));
+      expect(results).toHaveLength(2);
+      expect(results.map((person: any) => person.name).sort()).toEqual(['alice', 'bob']);
+    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+  });
+
   test('sync flushes the feed without throwing', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();

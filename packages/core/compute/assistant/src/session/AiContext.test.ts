@@ -25,6 +25,12 @@ const createMockFeedRuntime = (): Runtime.Runtime<Feed.FeedService> => {
       }) as any,
     sync: async () => {},
     appendByDxn: async () => {},
+    queryByDxn: () =>
+      ({
+        subscribe: () => () => {},
+        results: [],
+        run: async () => [],
+      }) as any,
   };
   const layer = Layer.succeed(Feed.FeedService, mockFeedService);
   return Effect.runSync(Effect.runtime<Feed.FeedService>().pipe(Effect.provide(layer)));
