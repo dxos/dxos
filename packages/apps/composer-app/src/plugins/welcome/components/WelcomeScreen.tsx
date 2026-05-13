@@ -8,8 +8,8 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientOperation } from '@dxos/plugin-client/operations';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { ClientOperation } from '@dxos/plugin-client';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
 import { type InvitationResult } from '@dxos/react-client/invitations';
@@ -182,9 +182,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
           identityKey: resolvedIdentity.identityKey.toHex(),
           code: code.replace(/-/g, '').toUpperCase(),
         });
-        if ('loginToken' in result) {
-          await invokePromise(ClientOperation.RedeemToken, { token: result.loginToken });
-        } else if ('accountId' in result) {
+        if ('accountId' in result) {
           log.info('account created', { accountId: result.accountId });
           void invokePromise(ClientOperation.CreateAgent);
         }

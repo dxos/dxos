@@ -12,7 +12,6 @@
  */
 export type RedeemResult =
   | { accountId: string; emailVerificationSent: boolean }
-  | { loginToken: string }
   | { needsIdentity: true };
 
 /**
@@ -88,15 +87,15 @@ export const redeemAccountInvitation = async ({
 
 /**
  * POST `/account/login` on hub-service. Existing-account email recovery only;
- * never creates new accounts (other than the test-email carve-out). Server
- * inlines `token` for test emails; regular emails are delivered out-of-band
- * and the response is `{}`. The response shape is identical for unknown
- * emails (enumeration-safe).
+ * never creates new accounts (other than the test-email carve-out). Regular
+ * emails are delivered out-of-band and the response is `{}`. The response
+ * shape is identical for unknown emails (enumeration-safe).
  *
- * Test-email carve-out: when a test address has no Account yet, the server
- * returns `{ needsIdentity: true }`. The caller creates a local identity and
- * retries with `identityKey`; the retry creates a fresh test Account and
- * returns `{ admitted: true }` (no token, since there's nothing to recover).
+ * Test-email carve-out: test accounts are never restored. The server always
+ * returns `{ needsIdentity: true }` when no `identityKey` is supplied. The
+ * caller creates a fresh local identity and retries with `identityKey`; the
+ * retry replaces any prior test Account on that email and returns
+ * `{ admitted: true }` (no token, since there's nothing to recover).
  */
 export const login = async ({
   hubUrl,

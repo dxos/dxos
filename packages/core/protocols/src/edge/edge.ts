@@ -17,6 +17,7 @@ export const EDGE_CLIENT_TAG_HEADER = 'X-DXOS-Client-Tag';
 // If we would rename it, we need to be careful to not break composer production.
 export enum EdgeService {
   AUTOMERGE_REPLICATOR = 'automerge-replicator',
+  SUBDUCTION_REPLICATOR = 'subduction-replicator',
   /**
    * Control feed replicator (hypercore append only logs) for the space.
    */
@@ -684,7 +685,6 @@ export const RedeemInvitationCodeRequestSchema = Schema.Struct({
 export type RedeemInvitationCodeRequest = Schema.Schema.Type<typeof RedeemInvitationCodeRequestSchema>;
 export type RedeemInvitationCodeResponse =
   | { accountId: string; emailVerificationSent: boolean }
-  | { loginToken: string }
   | { needsIdentity: true };
 
 export const GetAccountResponseSchema = Schema.Struct({

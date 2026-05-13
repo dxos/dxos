@@ -8,10 +8,10 @@ import { SubscriptionList, type Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientOperation } from '@dxos/plugin-client/operations';
-import { Account } from '@dxos/plugin-client/types';
-import { HelpOperation } from '@dxos/plugin-help/operations';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { ClientOperation } from '@dxos/plugin-client';
+import { Account } from '@dxos/plugin-client';
+import { HelpOperation } from '@dxos/plugin-help';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { type Client } from '@dxos/react-client';
 import { type Credential, DeviceType, type Identity } from '@dxos/react-client/halo';
 import { osTranslations } from '@dxos/ui-theme';
@@ -246,25 +246,14 @@ export class OnboardingManager {
   }
 
   /**
-   * Redeem an invitation code via `/account/invitation-code/redeem`. Probe
-   * first (no identityKey) so the server can return a recovery `loginToken`
-   * if the email already maps to an Account; otherwise create the local
-   * identity and bind it.
+   * Redeem an invitation code via `/account/invitation-code/redeem`. Create a
+   * fresh local identity and bind it. Account restoration is intentionally not
+   * supported on this path -- magic-link login (`/account/login`) handles
+   * recovery for real emails, and test emails are always fresh (no restore).
    */
   private async _redeemAccountInvitation(): Promise<void> {
     invariant(this._email);
     invariant(this._hubUrl, 'hubUrl required for redemption');
-
-    const probe = await this._postRedeem({
-      email: this._email,
-      code: this._accountInvitationCode,
-    });
-    if ('loginToken' in probe) {
-      await this._invokePromise(ClientOperation.RedeemToken, { token: probe.loginToken });
-      removeQueryParamByValue(this._email);
-      this._accountInvitationCode && removeQueryParamByValue(this._accountInvitationCode);
-      return;
-    }
 
     await this._createIdentity();
     invariant(this._identity, 'identity should exist after create');
@@ -274,9 +263,7 @@ export class OnboardingManager {
       identityKey: this._identity.identityKey.toHex(),
       code: this._accountInvitationCode,
     });
-    if ('loginToken' in result) {
-      await this._invokePromise(ClientOperation.RedeemToken, { token: result.loginToken });
-    } else if ('accountId' in result) {
+    if ('accountId' in result) {
       log.info('account redeemed', { accountId: result.accountId });
     }
 
@@ -313,9 +300,7 @@ export class OnboardingManager {
     email: string;
     code?: string;
     identityKey?: string;
-  }): Promise<
-    { accountId: string; emailVerificationSent: boolean } | { loginToken: string } | { needsIdentity: true }
-  > {
+  }): Promise<{ accountId: string; emailVerificationSent: boolean } | { needsIdentity: true }> {
     invariant(this._hubUrl);
     const url = new URL('/account/invitation-code/redeem', this._hubUrl);
     log.info('redeeming account invitation', { url: url.href, hasCode: !!body.code, hasIdentity: !!body.identityKey });
