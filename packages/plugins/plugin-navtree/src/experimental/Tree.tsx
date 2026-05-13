@@ -195,7 +195,7 @@ export const TreeNodeRow = (props: TreeNodeProps & { className?: string }) => {
       className={mx(
         'group w-full items-center cursor-pointer bg-hover-surface',
         // TODO(burdon): Use data-active.
-        selected?.[id] && 'bg-active-surface',
+        selected?.[id] && 'bg-current-surface',
         className,
       )}
       onClick={() => selected && onChangeSelected?.(id, !selected[id])}

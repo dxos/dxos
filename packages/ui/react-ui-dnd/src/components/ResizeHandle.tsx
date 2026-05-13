@@ -150,7 +150,7 @@ export const ResizeHandle = ({
               ? 'justify-center'
               : 'justify-start',
         'before:transition-opacity before:duration-100 before:ease-in-out before:opacity-0 hover:before:opacity-100 focus-visible:before:opacity-100 active:before:opacity-100',
-        'before:absolute before:block before:bg-neutral-focus-indicator',
+        'before:absolute before:block before:bg-focus-ring-subtle',
         classNames,
       )}
     />

@@ -56,7 +56,7 @@
       position: absolute;
       inset: 0;
       pointer-events: none;
-      border: var(--dx-grid-focus-indicator-width) solid var(--color-grid-focus-indicator);
+      border: var(--dx-grid-focus-indicator-width) solid var(--color-focus-ring);
     }
   }
 
@@ -70,11 +70,13 @@
 
   .dx-grid {
     --grid-cell-surface: var(--color-grid-surface);
+    --grid-cell-foreground: var(--color-grid-foreground);
 
     [role='gridcell'],
     [role='columnheader'],
     [role='rowheader'] {
       background: var(--grid-cell-surface);
+      color: var(--grid-cell-foreground);
       cursor: pointer;
       position: relative;
 
@@ -126,6 +128,7 @@
       [role='rowheader'] {
         &[aria-selected] {
           --grid-cell-surface: var(--color-grid-selection-surface);
+          --grid-cell-foreground: var(--color-grid-selection-foreground);
 
           &:focus:not([aria-readonly='true']),
           &:focus-visible,
@@ -179,16 +182,17 @@
             z-index: 1;
 
             background: var(--grid-cell-surface);
+            color: var(--grid-cell-foreground);
           }
 
           &:not([aria-readonly='true']) > .dx-grid__cell__content {
-            border-color: var(--color-grid-focus-indicator);
+            border-color: var(--color-focus-ring);
           }
         }
       }
 
       &:focus-visible > .dx-grid__cell__content {
-        border-color: var(--color-grid-focus-indicator);
+        border-color: var(--color-focus-ring);
       }
     }
   }
@@ -200,7 +204,7 @@
     overflow-wrap: break-word;
 
     background: var(--dx-grid-base, var(--color-base-surface));
-    border: var(--dx-grid-focus-indicator-width) solid var(--color-grid-focus-indicator);
+    border: var(--dx-grid-focus-indicator-width) solid var(--color-focus-ring);
     border-radius: 2px;
 
     --dx-grid-cell-editor-max-block-size: min(12em, 50vh);
@@ -226,7 +230,7 @@
     [role='columnheader'],
     [role='rowheader'] {
       &[data-dx-active]:not([aria-readonly='true']) > .dx-grid__cell__content {
-        border-color: var(--color-grid-focus-indicator);
+        border-color: var(--color-focus-ring);
       }
     }
   }
