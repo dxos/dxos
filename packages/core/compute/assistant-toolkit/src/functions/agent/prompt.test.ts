@@ -7,9 +7,8 @@ import * as Effect from 'effect/Effect';
 
 import { AiContext } from '@dxos/assistant';
 import { Routine, Operation, OperationHandlerSet } from '@dxos/compute';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { QueueService } from '@dxos/functions';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { ObjectId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
@@ -29,9 +28,9 @@ const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
 });
 
-const countQueueMessages = (queue: { queryObjects: () => Promise<Obj.Unknown[]> }) =>
-  Effect.promise(async () => {
-    const items = await queue.queryObjects();
+const countFeedMessages = (feed: Feed.Feed) =>
+  Effect.gen(function* () {
+    const items = yield* Feed.runQuery(feed, Filter.everything());
     return items.filter(Obj.instanceOf(Message.Message)).length;
   });
 
@@ -41,9 +40,7 @@ describe('Agent prompt', () => {
     Effect.fnUntraced(
       function* (_) {
         const feed = yield* Database.add(Feed.make());
-        const queueDxn = Feed.getQueueDxn(feed)!;
-        const queue = yield* QueueService.getQueue<Message.Message | AiContext.Binding>(queueDxn);
-        const messageCountBefore = yield* countQueueMessages(queue);
+        const messageCountBefore = yield* countFeedMessages(feed);
 
         const chat = yield* Database.add(
           Chat.make({
@@ -68,7 +65,7 @@ describe('Agent prompt', () => {
           chat: Ref.make(chat),
         });
 
-        const messageCountAfter = yield* countQueueMessages(queue);
+        const messageCountAfter = yield* countFeedMessages(feed);
 
         expect(messageCountAfter).toBeGreaterThan(messageCountBefore);
         expect(result).toBe('ack');
