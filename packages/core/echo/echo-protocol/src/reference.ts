@@ -3,7 +3,7 @@
 //
 
 import { assertArgument } from '@dxos/invariant';
-import { LegacyDXN as DXN, LOCAL_SPACE_TAG, type PublicKey } from '@dxos/keys';
+import { DXN, EchoId, LegacyDXN, LOCAL_SPACE_TAG, type PublicKey, type URI } from '@dxos/keys';
 import { type ObjectId } from '@dxos/protocols';
 import { type Reference as ReferenceProto } from '@dxos/protocols/proto/dxos/echo/model/document';
 
@@ -19,11 +19,11 @@ export class Reference {
    */
   static TYPE_PROTOCOL = 'protobuf';
 
-  static fromDXN(dxn: DXN): Reference {
+  static fromDXN(dxn: LegacyDXN): Reference {
     switch (dxn.kind) {
-      case DXN.kind.TYPE:
+      case LegacyDXN.kind.TYPE:
         return new Reference(dxn.parts[0], Reference.TYPE_PROTOCOL, 'dxos.org', dxn);
-      case DXN.kind.ECHO:
+      case LegacyDXN.kind.ECHO:
         if (dxn.parts[0] === LOCAL_SPACE_TAG) {
           return new Reference(dxn.parts[1], undefined, undefined, dxn);
         } else {
@@ -68,11 +68,26 @@ export class Reference {
     private readonly _objectId: ObjectId,
     private readonly _protocol?: string,
     private readonly _host?: string,
-    private readonly _dxn?: DXN,
+    private readonly _dxn?: LegacyDXN,
   ) {}
 
-  get dxn(): DXN | undefined {
+  /**
+   * @deprecated Use `uri` instead.
+   */
+  get dxn(): LegacyDXN | undefined {
     return this._dxn;
+  }
+
+  /**
+   * Returns the reference as a URI string.
+   * For type references: `dxn:<nsid>`
+   * For object references: `echo://<space>/<object>` or `echo:/<object>`
+   */
+  get uri(): URI.URI | undefined {
+    if (this._dxn) {
+      return this._dxn.toString() as unknown as URI.URI;
+    }
+    return undefined;
   }
 
   /**
@@ -104,21 +119,21 @@ export class Reference {
   }
 
   // TODO(dmaretskyi): Remove in favor of `reference.dxn`.
-  toDXN(): DXN {
+  toDXN(): LegacyDXN {
     if (this._dxn) {
       return this._dxn;
     }
 
     if (this.protocol === Reference.TYPE_PROTOCOL) {
-      return new DXN(DXN.kind.TYPE, [this.objectId]);
+      return new LegacyDXN(LegacyDXN.kind.TYPE, [this.objectId]);
     } else {
       if (this.host) {
         // Host is assumed to be the space key.
         // The DXN should actually have the space ID.
         // TODO(dmaretskyi): Migrate to space id.
-        return new DXN(DXN.kind.ECHO, [this.host, this.objectId]);
+        return new LegacyDXN(LegacyDXN.kind.ECHO, [this.host, this.objectId]);
       } else {
-        return new DXN(DXN.kind.ECHO, [LOCAL_SPACE_TAG, this.objectId]);
+        return new LegacyDXN(LegacyDXN.kind.ECHO, [LOCAL_SPACE_TAG, this.objectId]);
       }
     }
   }
@@ -158,7 +173,7 @@ export const decodeReference = (value: any) => {
     throw new Error('Automerge bug detected!');
   }
 
-  return Reference.fromDXN(DXN.parse(dxnString));
+  return Reference.fromDXN(LegacyDXN.parse(dxnString));
 };
 
 /**
@@ -173,13 +188,50 @@ export const EncodedReference = Object.freeze({
     assertArgument(isEncodedReference(value), 'value', 'invalid reference');
     return value['/'];
   },
-  toDXN: (value: EncodedReference): DXN => {
-    return DXN.parse(EncodedReference.getReferenceString(value));
+  /**
+   * Returns the URI string stored in the encoded reference (opaque, any scheme).
+   */
+  getURI: (value: EncodedReference): URI.URI => {
+    assertArgument(isEncodedReference(value), 'value', 'invalid reference');
+    return value['/'] as URI.URI;
   },
-  fromDXN: (dxn: DXN): EncodedReference => {
+  /**
+   * @deprecated Use `EncodedReference.toEchoId` for object refs or `EncodedReference.toDXNNew` for type refs.
+   */
+  toDXN: (value: EncodedReference): LegacyDXN => {
+    return LegacyDXN.parse(EncodedReference.getReferenceString(value));
+  },
+  /**
+   * @deprecated Use `EncodedReference.fromEchoId` for object refs or `EncodedReference.fromDXNNew` for type refs.
+   */
+  fromDXN: (dxn: LegacyDXN): EncodedReference => {
     return { '/': dxn.toString() };
   },
+  /**
+   * Parses the encoded reference as an EchoId, normalizing any legacy `dxn:echo:` or `dxn:queue:` formats.
+   */
+  toEchoId: (value: EncodedReference): EchoId.EchoId => {
+    return EchoId.parse(EncodedReference.getReferenceString(value));
+  },
+  /**
+   * Creates an encoded reference from an EchoId.
+   */
+  fromEchoId: (id: EchoId.EchoId): EncodedReference => {
+    return { '/': id };
+  },
+  /**
+   * Parses the encoded reference as a new-format DXN, normalizing any legacy `dxn:type:` prefix.
+   */
+  toDXNNew: (value: EncodedReference): DXN.DXN => {
+    return DXN.parse(EncodedReference.getReferenceString(value));
+  },
+  /**
+   * Creates an encoded reference from a new-format DXN.
+   */
+  fromDXNNew: (dxn: DXN.DXN): EncodedReference => {
+    return { '/': dxn };
+  },
   fromLegacyTypename: (typename: string): EncodedReference => {
-    return { '/': DXN.fromTypename(typename).toString() };
+    return { '/': LegacyDXN.fromTypename(typename).toString() };
   },
 });
