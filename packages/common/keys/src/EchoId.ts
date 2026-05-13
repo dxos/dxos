@@ -37,8 +37,7 @@ export type EchoId = string & { readonly __EchoId: unique symbol } & URI.URI;
  * Returns true if the value is a valid EchoId (new or legacy format).
  */
 export const isEchoId = (s: unknown): s is EchoId =>
-  typeof s === 'string' &&
-  (s.startsWith('echo:') || s.startsWith('dxn:echo:') || s.startsWith('dxn:queue:'));
+  typeof s === 'string' && (s.startsWith('echo:') || s.startsWith('dxn:echo:') || s.startsWith('dxn:queue:'));
 
 /**
  * Parses a string to EchoId, normalizing legacy formats to the canonical `echo:` form.

@@ -255,7 +255,7 @@ The current `dxn:` format with kind segments is retired in favor of `dxn:<nsid>[
 | --------------------------------------- | ---------------------------------- | ----------------------------------------------------- |
 | `dxn:type:org.dxos.type.calendar`       | `dxn:org.dxos.type.calendar`       | Kind segment removed; NSID follows `dxn:` directly    |
 | `dxn:type:org.dxos.type.calendar:1.0.0` | `dxn:org.dxos.type.calendar:1.0.0` | Version remains colon-separated, kind segment removed |
-| `dxn:echo:@:<objectId>`                 | `echo:/<objectId>`                   | EchoId with no authority (current space)              |
-| `dxn:echo:<spaceId>:<objectId>`         | `echo://<spaceId>/<objectId>`        | EchoId with space as authority                        |
-| `dxn:queue:<sub>:<spaceId>:<queueId>`   | `echo://<spaceId>/<queueId>`         | Queues are now feeds, which are objects in spaces     |
-| `{ "/": "dxn:echo:@:..." }`             | `{ "/": "echo:/..." }`               | Encoded references use EchoId                         |
+| `dxn:echo:@:<objectId>`                 | `echo:/<objectId>`                 | EchoId with no authority (current space)              |
+| `dxn:echo:<spaceId>:<objectId>`         | `echo://<spaceId>/<objectId>`      | EchoId with space as authority                        |
+| `dxn:queue:<sub>:<spaceId>:<queueId>`   | `echo://<spaceId>/<queueId>`       | Queues are now feeds, which are objects in spaces     |
+| `{ "/": "dxn:echo:@:..." }`             | `{ "/": "echo:/..." }`             | Encoded references use EchoId                         |

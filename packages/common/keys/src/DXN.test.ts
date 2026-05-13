@@ -37,9 +37,7 @@ describe('DXN.fromTypename', () => {
 
 describe('DXN.fromTypenameAndVersion', () => {
   test('produces versioned DXN', ({ expect }) => {
-    expect(DXN.fromTypenameAndVersion('org.dxos.type.calendar', '1.0.0')).toBe(
-      'dxn:org.dxos.type.calendar:1.0.0',
-    );
+    expect(DXN.fromTypenameAndVersion('org.dxos.type.calendar', '1.0.0')).toBe('dxn:org.dxos.type.calendar:1.0.0');
   });
 });
 
