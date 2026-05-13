@@ -7,7 +7,6 @@ import { pipe } from 'effect/Function';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { runInSpace } from '@dxos/app-framework/plugin-runtime';
 import { AppCapabilities, AppNode, getActiveSpace, getPersonalSpace } from '@dxos/app-toolkit';
 import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Routine, Operation } from '@dxos/compute';
@@ -47,13 +46,11 @@ export default Capability.makeModule(
               data: () =>
                 Effect.gen(function* () {
                   // TODO(dmaretskyi): This goes away when composer will have unified operation invocations.
+                  const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
                   const db = Obj.getDatabase(chat);
                   invariant(db);
-                  yield* runInSpace(
-                    db.spaceId,
-                    [] as const,
-                    Operation.invoke(AssistantOperation.UpdateChatName, { chat }),
-                  );
+                  const runtime = yield* computeRuntime.getRuntime(db.spaceId).runtimeEffect;
+                  yield* Operation.invoke(AssistantOperation.UpdateChatName, { chat }).pipe(Effect.provide(runtime));
                 }),
               properties: {
                 label: ['chat-update-name.label', { ns: meta.id }],

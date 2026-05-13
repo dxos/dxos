@@ -7,12 +7,10 @@ import * as Effect from 'effect/Effect';
 import React, { PropsWithChildren, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { addEventListener } from '@dxos/async';
 import { Process, Trace } from '@dxos/compute';
-import { ProcessManager } from '@dxos/compute-runtime';
 import { Feed, Filter, Query } from '@dxos/echo';
-import { FeedTraceSink } from '@dxos/functions-runtime';
+import { FeedTraceSink, ProcessManager } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { useComputeRuntime } from '@dxos/plugin-automation/hooks';
 import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
@@ -44,8 +42,7 @@ const BaseStory = ({ children, toolbar }: BaseStoryProps) => (
 
 const DefaultStory = () => {
   const [space] = useSpaces();
-  const runtime = useProcessManagerRuntime();
-  const invokeCounterRef = useRef(0);
+  const runtime = useComputeRuntime(space?.id);
 
   const handleStart = useCallback(() => {
     if (!runtime) {

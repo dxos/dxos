@@ -33,7 +33,6 @@
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/compute": "workspace:*",
-    "@dxos/compute-runtime": "workspace:*",
     "@dxos/conductor": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",

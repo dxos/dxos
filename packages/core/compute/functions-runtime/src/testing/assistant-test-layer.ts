@@ -27,15 +27,15 @@ import {
   Trace,
   Trigger,
 } from '@dxos/compute';
-import { ProcessManager } from '@dxos/compute-runtime';
-import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import { Database, DXN, Feed, Tag, Type } from '@dxos/echo';
+import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { acquireReleaseResource } from '@dxos/effect';
 import { type TestContextService } from '@dxos/effect/testing';
 import { configuredCredentialsLayer, QueueService } from '@dxos/functions';
 
 import { AgentService } from '../agent-service';
 import * as FeedTraceSink from '../FeedTraceSink';
+import * as ProcessManager from '../process/ProcessManager';
 import { TriggerDispatcher, TriggerStateStore } from '../triggers';
 
 interface TestLayerOptions {
@@ -181,7 +181,7 @@ export const AssistantTestLayer = ({
         Match.when('noop', () => Layer.mergeAll(Trace.layerNoop, FeedTraceSink.layerNoop)),
         Match.when('console', () => Layer.mergeAll(Trace.layerConsole, FeedTraceSink.layerNoop)),
         Match.when('pretty', () => Layer.mergeAll(TraceSinkPretty(), FeedTraceSink.layerNoop)),
-        Match.when('feed', () => FeedTraceSink.layerLiveWithDirectSink),
+        Match.when('feed', () => FeedTraceSink.layerLive),
         Match.exhaustive,
       ) as Layer.Layer<Trace.TraceSink | FeedTraceSink.FeedTraceSink>,
     ),

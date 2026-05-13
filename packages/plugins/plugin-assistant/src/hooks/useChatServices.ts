@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Capabilities } from '@dxos/app-framework';
+import { useMemo } from 'react';
+
 import { useCapability } from '@dxos/app-framework/ui';
 import { getPersonalSpace } from '@dxos/app-toolkit';
 import { type Key } from '@dxos/echo';
@@ -14,16 +15,12 @@ export type UseChatServicesProps = {
 };
 
 /**
- * Resolves the shared {@link Capabilities.ProcessManagerRuntime} for the given space.
- *
- * The runtime itself is space-agnostic; the returned value can be used to run
- * effects that pipe through {@link ServiceResolver.provide} (or the
- * `useSpaceCallback`/`useSpaceService` hooks) with the resolved {@link Key.SpaceId}.
+ * Resolves the compute runtime for a space.
  */
 export const useChatServices = ({ id }: UseChatServicesProps) => {
   const client = useClient();
   id ??= getPersonalSpace(client)?.id;
 
-  const runtime = useCapability(Capabilities.ProcessManagerRuntime);
-  return id ? runtime : undefined;
+  const runtimeResolver = useCapability(AutomationCapabilities.ComputeRuntime);
+  return useMemo(() => (!id ? undefined : runtimeResolver.getRuntime(id)), [id]);
 };

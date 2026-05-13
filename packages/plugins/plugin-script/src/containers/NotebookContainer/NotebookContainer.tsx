@@ -9,7 +9,6 @@ import * as Exit from 'effect/Exit';
 import type * as Types from 'effect/Types';
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
-import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
 import { Blueprint, Routine } from '@dxos/compute';
@@ -97,9 +96,8 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
   }, [db, notebook, graph]);
 
   const [promptResults, setPromptResults] = useState<Record<string, string>>({});
-  const handleExecPrompts = useSpaceCallback(
+  const handleExecPrompts = useComputeRuntimeCallback(
     db?.spaceId,
-    [] as const,
     Effect.fnUntraced(function* () {
       invariant(graph);
 

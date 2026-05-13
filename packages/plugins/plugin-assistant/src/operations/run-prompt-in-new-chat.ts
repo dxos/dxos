@@ -5,11 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { runInSpace } from '@dxos/app-framework/plugin-runtime';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Blueprint, Operation, Routine, Template } from '@dxos/compute';
+import { Blueprint, Routine, Template, Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';

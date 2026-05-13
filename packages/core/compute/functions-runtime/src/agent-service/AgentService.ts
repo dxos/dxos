@@ -15,6 +15,7 @@ import { type Trace, Blueprint, McpServer } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 
+import * as ProcessManager from '../process/ProcessManager';
 import { AgentProcess } from './agent-process';
 
 export interface Service {

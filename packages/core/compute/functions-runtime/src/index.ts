@@ -6,6 +6,7 @@
 export * as AgentService from './agent-service/AgentService';
 export { AGENT_PROCESS_KEY } from './agent-service/agent-process';
 export * from './executor';
+export * from './process';
 export * from './services';
 export * from './trace';
 export * from './triggers';

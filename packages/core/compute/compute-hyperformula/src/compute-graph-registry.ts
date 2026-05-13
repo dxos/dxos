@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as Effect from 'effect/Effect';
+import type * as ManagedRuntime from 'effect/ManagedRuntime';
 import defaultsDeep from 'lodash.defaultsdeep';
 
 import { type Space, type SpaceId } from '@dxos/client/echo';
@@ -21,16 +21,8 @@ export type ComputeGraphPlugin = {
   translations: FunctionTranslationsPackage;
 };
 
-/**
- * Minimal runtime interface required by the compute graph to execute
- * operations for a given space.
- */
-export interface SpaceComputeRuntime {
-  runPromise<A, E>(effect: Effect.Effect<A, E, Operation.Service>): Promise<A>;
-}
-
 export type FunctionsRuntimeProvider = {
-  getRuntime(spaceId: SpaceId): SpaceComputeRuntime;
+  getRuntime(spaceId: SpaceId): ManagedRuntime.ManagedRuntime<Operation.Service, never>;
 };
 
 export type ComputeGraphOptions = {

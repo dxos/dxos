@@ -51,9 +51,6 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/compute-runtime"
-    },
-    {
       "path": "../../core/compute/ai"
     },
     {
@@ -73,9 +70,6 @@
     },
     {
       "path": "../../core/compute/functions-runtime"
-    },
-    {
-      "path": "../../core/compute/operation"
     },
     {
       "path": "../../core/echo/echo"

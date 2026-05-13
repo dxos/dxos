@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import type * as ManagedRuntime from 'effect/ManagedRuntime';
+
 import { Event } from '@dxos/async';
 import { Filter, type Space } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
@@ -14,7 +16,6 @@ import { isNonNullable } from '@dxos/util';
 import type { Listeners } from '@dxos/vendor-hyperformula';
 import { ExportedCellChange, type HyperFormula } from '@dxos/vendor-hyperformula';
 
-import type { SpaceComputeRuntime } from './compute-graph-registry';
 import { ComputeNode } from './compute-node';
 import {
   EDGE_FUNCTION_NAME,
@@ -67,7 +68,7 @@ export class ComputeGraph extends Resource {
 
   constructor(
     private readonly _hf: HyperFormula,
-    private readonly _runtime: SpaceComputeRuntime,
+    private readonly _runtime: ManagedRuntime.ManagedRuntime<Operation.Service, never>,
     private readonly _space?: Space,
     private readonly _options?: Partial<FunctionContextOptions>,
   ) {

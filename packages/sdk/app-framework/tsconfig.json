@@ -51,9 +51,6 @@
       "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/compute/functions"
-    },
-    {
       "path": "../../core/compute/operation"
     },
     {

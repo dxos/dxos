@@ -76,7 +76,6 @@
     "@dxos/debug": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
-    "@dxos/functions": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-automation": "workspace:*",
     "@dxos/plugin-client": "workspace:*",

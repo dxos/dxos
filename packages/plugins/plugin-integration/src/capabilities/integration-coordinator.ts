@@ -8,7 +8,6 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { createEdgeIdentity } from '@dxos/client/edge';
-import { type Operation } from '@dxos/compute';
 import { Context as DxContext } from '@dxos/context';
 import { type Database, DXN, type Key, Obj, Ref } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
@@ -97,7 +96,7 @@ const openProviderFormDialog = (
   });
 
 const dispatchAccessTokenCreated = (
-  invoker: Operation.OperationService,
+  invoker: OperationInvokerExports.OperationInvoker,
   accessToken: AccessToken.AccessToken,
 ): Effect.Effect<void, never> =>
   invoker
@@ -127,7 +126,7 @@ const runOnTokenCreated = (
 };
 
 const navigateToNewIntegration = (
-  invoker: Operation.OperationService,
+  invoker: OperationInvokerExports.OperationInvoker,
   db: Database.Database,
   integrationId: string,
 ): Effect.Effect<void, never> =>
@@ -139,7 +138,7 @@ const navigateToNewIntegration = (
     .pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('navigate to new integration failed', { error }))));
 
 const openSyncTargetsDialogAfterIntegrationCreated = (
-  invoker: Operation.OperationService,
+  invoker: OperationInvokerExports.OperationInvoker,
   getSyncTargets: NonNullable<IntegrationProviderEntry['getSyncTargets']>,
   persistedIntegration: Integration.Integration,
   existingTarget: Ref.Ref<Obj.Any> | undefined,
@@ -161,7 +160,10 @@ const openSyncTargetsDialogAfterIntegrationCreated = (
     Effect.catchAll((error) => Effect.sync(() => log.warn('open sync-targets dialog after create failed', { error }))),
   );
 
-const finalizePendingEntry = (invoker: Operation.OperationService, entry: Pending): Effect.Effect<void, never> =>
+const finalizePendingEntry = (
+  invoker: OperationInvokerExports.OperationInvoker,
+  entry: Pending,
+): Effect.Effect<void, never> =>
   Effect.gen(function* () {
     const { token, integration, db, provider, existingTarget } = entry;
     const persistedToken = db.add(token);

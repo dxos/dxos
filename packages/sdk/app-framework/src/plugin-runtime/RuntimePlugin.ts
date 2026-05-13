@@ -6,14 +6,14 @@ import { ActivationEvents } from '../common';
 import { Capability, Plugin } from '../core';
 import { meta } from './meta';
 
-const ProcessManagerCapability = Capability.lazy('ProcessManager', () => import('./process-manager-capability'));
+const ManagedRuntimeCapability = Capability.lazy('ManagedRuntime', () => import('./capability'));
 
 export const RuntimePlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesOn: ActivationEvents.Startup,
-    firesBeforeActivation: [ActivationEvents.SetupLayer, ActivationEvents.SetupOperationHandler],
-    firesAfterActivation: [ActivationEvents.ManagedRuntimeReady, ActivationEvents.OperationInvokerReady],
-    activate: ProcessManagerCapability,
+    firesBeforeActivation: [ActivationEvents.SetupLayer],
+    firesAfterActivation: [ActivationEvents.ManagedRuntimeReady],
+    activate: ManagedRuntimeCapability,
   }),
   Plugin.make,
 );

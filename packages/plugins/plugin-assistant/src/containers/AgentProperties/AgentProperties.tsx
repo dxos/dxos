@@ -7,7 +7,7 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
-import { useSpaceCallback } from '@dxos/app-framework/ui';
+import { useCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Agent, SyncTriggers } from '@dxos/assistant-toolkit';
 import { Operation } from '@dxos/compute';
@@ -27,15 +27,8 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
   const { t } = useTranslation(meta.id);
   const db = Obj.getDatabase(agent);
 
-  const spaceId = Obj.getDatabase(agent)?.spaceId;
-
-  const syncTriggers = useSpaceCallback(
-    spaceId,
-    [] as const,
-    () => Operation.invoke(SyncTriggers, { agent: Ref.make(agent) }),
-    [agent],
-  );
-
+  // TODO(burdon): Factor out (separate component from container)?
+  const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
   useEffect(() => {
     if (!db) {
       return;
@@ -43,10 +36,17 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
 
     return Obj.subscribe(agent, () => {
       queueMicrotask(() => {
-        syncTriggers().catch((err) => log.catch(err));
+        const runtime = computeRuntime.getRuntime(db.spaceId);
+        runtime
+          .runPromise(
+            Operation.invoke(SyncTriggers, {
+              agent: Ref.make(agent),
+            }),
+          )
+          .catch((err) => log.catch(err));
       });
     });
-  }, [agent, syncTriggers]);
+  }, [db, agent, computeRuntime]);
 
   // Build a filter matching objects of any schema annotated as a feed.
   const feedFilter = useMemo(() => {

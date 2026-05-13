@@ -30,7 +30,7 @@ export const ChatModule = ({ space }: ModuleProps) => {
   const hasPlan = (plan?.tasks?.length ?? 0) > 0;
 
   const blueprintRegistry = useBlueprintRegistry();
-  const runtime = useProcessManagerRuntime();
+  const runtime = useComputeRuntime(space.id);
   const processor = useChatProcessor({ runtime, space, chat, preset, blueprintRegistry });
 
   const feedTarget = chat?.feed?.target;

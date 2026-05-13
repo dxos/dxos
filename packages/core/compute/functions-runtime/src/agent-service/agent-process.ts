@@ -28,6 +28,10 @@ import { acquireReleaseResource } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
+import { Process } from '../process';
+import * as ProcessManager from '../process/ProcessManager';
+import * as StorageService from '../process/StorageService';
+
 interface AgentProcessOptions {
   systemPrompt?: string;
   model?: ModelName;

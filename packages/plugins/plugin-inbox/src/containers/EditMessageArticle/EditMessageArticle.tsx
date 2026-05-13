@@ -8,9 +8,8 @@ import * as Layer from 'effect/Layer';
 import React, { useCallback, useMemo } from 'react';
 
 import { AiService } from '@dxos/ai';
-import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
+import { useCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { ServiceResolver } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -30,32 +29,29 @@ export type EditMessageArticleProps = AppSurface.ObjectArticleProps<Message.Mess
 
 export const EditMessageArticle = ({ role, subject }: EditMessageArticleProps) => {
   const db = Obj.getDatabase(subject);
-  const runtime = useProcessManagerRuntime();
-  const spaceId = db?.spaceId;
-
+  const computeRuntime = useCapability(AutomationCapabilities.ComputeRuntime);
+  const runtime = db?.spaceId ? computeRuntime.getRuntime(db.spaceId) : undefined;
   const extensions = useMemo(() => {
-    if (!spaceId) {
+    if (!runtime) {
       return [];
     }
 
-    const spaceLayer = ServiceResolver.provide({ space: spaceId }, AiService.AiService);
+    // TODO(burdon): Factor out/configure.
     const generate: AssistantOptions['generate'] = ({ instructions, content }) =>
       runtime.runPromise(
         Effect.gen(function* () {
           const prompt = [instructions, stripQuotedMessage(content)].join('\n\n');
           const response = yield* LanguageModel.generateText({ prompt });
           return response.text;
-        }).pipe(
-          Effect.provide(AiService.model('@anthropic/claude-haiku-4-5').pipe(Layer.orDie)),
-          Effect.provide(spaceLayer),
-        ) as Effect.Effect<string, any, any>,
+        }).pipe(Effect.provide(AiService.model('@anthropic/claude-haiku-4-5').pipe(Layer.orDie))),
       );
 
     return [assistant({ generate }), email()];
-  }, [runtime, spaceId]);
+  }, [runtime]);
 
   const handleSend = useCallback<NonNullable<EditMessageProps['onSend']>>(
     async (message) => {
+      invariant(runtime);
       await runtime.runPromise(Operation.invoke(GmailFunctions.Send, { message }));
     },
     [runtime],

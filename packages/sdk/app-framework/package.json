@@ -88,12 +88,6 @@
       "browser": "./dist/lib/browser/ui/index.mjs",
       "node": "./dist/lib/node-esm/ui/index.mjs",
       "types": "./dist/types/src/ui/index.d.ts"
-    },
-    "./plugin-runtime": {
-      "source": "./src/plugin-runtime/index.ts",
-      "browser": "./dist/lib/browser/plugin-runtime/index.mjs",
-      "node": "./dist/lib/node-esm/plugin-runtime/index.mjs",
-      "types": "./dist/types/src/plugin-runtime/index.d.ts"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -109,7 +103,6 @@
     "@dxos/edge-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
-    "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
@@ -121,11 +114,8 @@
     "@dxos/util": "workspace:*",
     "@dxos/web-context": "workspace:*",
     "@dxos/web-context-react": "workspace:*",
-    "@effect-atom/atom": "catalog:",
     "@effect/cli": "catalog:",
-    "@effect/platform": "catalog:",
-    "cjs-module-lexer": "catalog:",
-    "vite-plugin-css-injected-by-js": "catalog:"
+    "cjs-module-lexer": "catalog:"
   },
   "devDependencies": {
     "@dxos/brand": "workspace:*",

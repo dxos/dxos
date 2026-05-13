@@ -3,7 +3,6 @@ language: typescript
 tags:
   - ts-build
   - ts-test
-  - ts-test-browser
   - ts-test-storybook
   - pack
   - storybook

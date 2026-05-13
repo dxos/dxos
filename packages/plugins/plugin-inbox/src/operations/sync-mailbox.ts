@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
@@ -18,16 +19,18 @@ import { Mailbox, InboxOperation } from '../types';
 
 const syncOne = (integration: Integration.Integration, mailbox: Mailbox.Mailbox) =>
   Effect.gen(function* () {
+    const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
     const db = Obj.getDatabase(mailbox);
     invariant(db);
+    const runtime = computeRuntime.getRuntime(db.spaceId);
     const { GmailFunctions } = yield* Effect.promise(() => import('./google/gmail'));
-    yield* Operation.invoke(
-      GmailFunctions.Sync,
-      {
-        integration: Ref.make(integration),
-        mailbox: Ref.make(mailbox),
-      },
-      { spaceId: db.spaceId },
+    yield* Effect.tryPromise(() =>
+      runtime.runPromise(
+        Operation.invoke(GmailFunctions.Sync, {
+          integration: Ref.make(integration),
+          mailbox: Ref.make(mailbox),
+        }),
+      ),
     ).pipe(
       Effect.catchAll((error) => {
         log.catch(error);
