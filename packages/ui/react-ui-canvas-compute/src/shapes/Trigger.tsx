@@ -9,7 +9,7 @@ import { VoidInput } from '@dxos/conductor';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/internal';
 import { Trigger, TriggerEvent } from '@dxos/functions';
-import { DXN, SpaceId } from '@dxos/keys';
+import { EchoId, ObjectId, SpaceId } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
 import { Select, type SelectRootProps } from '@dxos/react-ui';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
@@ -127,8 +127,8 @@ const createTriggerSpec = (props: { triggerKind?: Trigger.Kind; spaceId?: SpaceI
     case 'email':
       return { kind: 'email' } satisfies Trigger.EmailSpec;
     case 'queue': {
-      const dxn = new DXN(DXN.kind.QUEUE, ['data', props.spaceId ?? SpaceId.random(), Obj.ID.random()]).toString();
-      return { kind: 'queue', queue: dxn } satisfies Trigger.QueueSpec;
+      const queue = EchoId.fromSpaceAndObjectId(props.spaceId ?? SpaceId.random(), ObjectId.random());
+      return { kind: 'queue', queue } satisfies Trigger.QueueSpec;
     }
   }
 };

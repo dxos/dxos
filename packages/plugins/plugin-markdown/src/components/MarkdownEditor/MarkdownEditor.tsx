@@ -11,7 +11,7 @@ import { createPortal } from 'react-dom';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
+import { LegacyDXN as DXN } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 import { type ThemedClassName } from '@dxos/react-ui';
 import {

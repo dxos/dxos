@@ -20,6 +20,7 @@ import { Blueprint, Prompt, Template } from '@dxos/blueprints';
 import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { Reply, Script, Trigger } from '@dxos/functions';
+import { EchoId } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
 import { invariant } from '@dxos/invariant';
 import { AssistantBlueprint, translations } from '@dxos/plugin-assistant';
@@ -708,7 +709,12 @@ export const WithResearchQueue: Story = {
           enabled: true,
           spec: {
             kind: 'queue',
-            queue: researchInputQueue.queue.dxn.toString(),
+            queue: (() => {
+              const echoDxn = researchInputQueue.queue.dxn.asEchoDXN();
+              return echoDxn?.spaceId && echoDxn?.echoId
+                ? EchoId.fromSpaceAndObjectId(echoDxn.spaceId, echoDxn.echoId as any)
+                : (researchInputQueue.queue.dxn.toString() as any);
+            })(),
           },
           input: {
             prompt: Ref.make(researchPrompt),

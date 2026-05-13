@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Obj, Ref, Type } from '@dxos/echo';
-import { type LegacyDXN } from '@dxos/keys';
+import { EchoId, type LegacyDXN } from '@dxos/keys';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { Queue } from '@dxos/echo-db';
 
@@ -50,4 +50,4 @@ const TranscriptHeader = Schema.Struct({
 
 export type TranscriptHeader = Schema.Schema.Type<typeof TranscriptHeader>;
 
-export const make = (queueDxn: LegacyDXN): Transcript => Obj.make(Transcript, { queue: Ref.fromDXN(queueDxn) });
+export const make = (queueDxn: LegacyDXN | EchoId.EchoId): Transcript => Obj.make(Transcript, { queue: Ref.fromDXN(queueDxn) });

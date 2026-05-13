@@ -12,7 +12,7 @@ import * as Option from 'effect/Option';
 import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
-import { Filter } from '@dxos/echo';
+import { Filter, Ref } from '@dxos/echo';
 import { Database } from '@dxos/echo';
 import { EchoId } from '@dxos/keys';
 import { AccessToken } from '@dxos/types';
@@ -33,7 +33,7 @@ export const remove = Command.make(
         onSome: (value) =>
           Effect.gen(function* () {
             const dxn = EchoId.fromLocalObjectId(value);
-            return yield* Database.resolve(dxn, AccessToken.AccessToken);
+            return yield* Database.resolve(Ref.fromDXN(dxn), AccessToken.AccessToken);
           }),
         onNone: () =>
           Effect.gen(function* () {
@@ -55,7 +55,7 @@ export const remove = Command.make(
             }).pipe(Prompt.run);
 
             const dxn = EchoId.fromLocalObjectId(selectedId);
-            return yield* Database.resolve(dxn, AccessToken.AccessToken);
+            return yield* Database.resolve(Ref.fromDXN(dxn), AccessToken.AccessToken);
           }),
       });
       yield* Database.remove(token);

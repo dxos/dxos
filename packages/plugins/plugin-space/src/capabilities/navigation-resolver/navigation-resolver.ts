@@ -41,7 +41,7 @@ export default Capability.makeModule(
         }
 
         const { db } = yield* Database.Service;
-        const ref = db.makeRef(dxn);
+        const ref = db.makeRef(dxn as any);
         const object = yield* Database.load(ref).pipe(Effect.catchAll(() => Effect.succeed(null)));
         if (!object) {
           return [];

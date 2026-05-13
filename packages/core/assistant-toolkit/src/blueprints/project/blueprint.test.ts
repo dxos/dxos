@@ -127,7 +127,7 @@ describe.runIf(TestHelpers.tagEnabled('flaky'))('Project', () => {
             enabled: true,
             spec: {
               kind: 'queue',
-              queue: inboxQueue.dxn.toString(),
+              queue: inboxQueue.dxn,
             },
             function: Ref.make(Operation.serialize(Agent)),
             input: {

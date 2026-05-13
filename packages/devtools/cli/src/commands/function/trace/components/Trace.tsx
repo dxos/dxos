@@ -17,7 +17,7 @@ import {
   InvocationTraceStartEvent,
   createInvocationSpans,
 } from '@dxos/functions-runtime';
-import { type DXN } from '@dxos/keys';
+import { type LegacyDXN as DXN } from '@dxos/keys';
 
 import { type Column, Table } from '../../../../components';
 import { theme } from '../../../../theme';

@@ -35,6 +35,7 @@ export default Capability.makeModule(
           return [];
         }
 
+        const { db } = yield* Database.Service;
         const ref = Ref.fromDXN(dxn);
         const object = yield* Database.resolve(ref).pipe(Effect.catchAll(() => Effect.succeed(null)));
         if (!object || !Mailbox.instanceOf(object)) {

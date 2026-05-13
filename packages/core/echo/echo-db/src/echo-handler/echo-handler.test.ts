@@ -21,7 +21,7 @@ import {
 import { TestSchema, prepareAstForCompare } from '@dxos/echo/testing';
 import { Context } from '@dxos/context';
 import { EncodedReference } from '@dxos/echo-protocol';
-import { LegacyDXN as DXN, PublicKey, SpaceId } from '@dxos/keys';
+import { EchoId, LegacyDXN as DXN, PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';
@@ -906,7 +906,9 @@ describe('Reactive Object with ECHO database', () => {
     const dxn = createQueueDXN(SpaceId.random());
     const obj = Obj.make(TestSchema.Expando, { queue: Ref.fromDXN(dxn) });
     const dbObj = db.add(obj);
-    expect(dbObj.queue.dxn.toString()).to.eq(dxn.toString());
+    // Queue dxn is stored as LegacyDXN internally; verify the objectId matches.
+    const queueId = EchoId.getObjectId(dxn);
+    expect(dbObj.queue.dxn.toString()).to.include(queueId!);
   });
 
   test('Obj.getDXN returns full DXN', async () => {

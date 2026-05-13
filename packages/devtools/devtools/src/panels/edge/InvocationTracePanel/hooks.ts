@@ -64,7 +64,7 @@ export const useInvocationSpans = ({ queueDxn, target }: { queueDxn?: EchoId.Ech
         if (!span.invocationTarget) {
           return false;
         }
-        const targetId = span.invocationTarget.dxn;
+        const targetId = span.invocationTarget.dxn?.toString();
         const uuidPart = getUuidFromDxn(targetId);
         return uuidPart ? functionsForScript?.has(uuidPart) : false;
       });

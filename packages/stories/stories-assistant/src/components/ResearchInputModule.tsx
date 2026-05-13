@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { Entity, Filter } from '@dxos/echo';
+import { EchoId } from '@dxos/keys';
 import { useQuery, useQueue } from '@dxos/react-client/echo';
 import { getHashHue } from '@dxos/ui-theme';
 
@@ -14,7 +15,15 @@ import { type ComponentProps } from './types';
 
 export const ResearchInputModule = ({ space }: ComponentProps) => {
   const [researchInput] = useQuery(space.db, Filter.type(ResearchInputQueue));
-  const queue = useQueue(researchInput?.queue.dxn);
+  const legacyDxn = researchInput?.queue.dxn;
+  const queueEchoId = useMemo(() => {
+    if (!legacyDxn) return undefined;
+    const echoDxn = legacyDxn.asEchoDXN();
+    return echoDxn?.spaceId && echoDxn?.echoId
+      ? EchoId.fromSpaceAndObjectId(echoDxn.spaceId, echoDxn.echoId as any)
+      : undefined;
+  }, [legacyDxn]);
+  const queue = useQueue(queueEchoId);
 
   return (
     <ul className='flex flex-col gap-4 p-4 h-full overflow-y-auto'>

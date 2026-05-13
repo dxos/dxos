@@ -8,7 +8,7 @@ import { AgentPrompt, EntityExtraction, ResearchBlueprint } from '@dxos/assistan
 import { Prompt } from '@dxos/blueprints';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
-import { LegacyDXN } from '@dxos/keys';
+import { EchoId, LegacyDXN } from '@dxos/keys';
 import { Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { Operation } from '@dxos/operation';
@@ -123,8 +123,11 @@ export const generator = () => ({
         invariant(mailbox, 'Mailbox not found');
         const mailboxFeed = await mailbox.feed?.tryLoad();
         invariant(mailboxFeed, 'Mailbox missing feed reference');
-        const queueDxn = Feed.getQueueDxn(mailboxFeed)?.toString();
-        invariant(queueDxn, 'Mailbox feed missing queue DXN key');
+        const feedQueueLegacyDxn = Feed.getQueueDxn(mailboxFeed);
+        invariant(feedQueueLegacyDxn, 'Mailbox feed missing queue DXN key');
+        const feedQueueParsed = feedQueueLegacyDxn.asQueueDXN();
+        invariant(feedQueueParsed, 'Invalid queue DXN');
+        const queueDxn = EchoId.fromSpaceAndObjectId(feedQueueParsed.spaceId, feedQueueParsed.queueId as any);
         const tag = await space.db.query(Filter.type(Tag.Tag, { label: 'Investor' })).first();
         const tagDxn = Obj.getDXN(tag).toString();
 

@@ -7,6 +7,7 @@ import * as Option from 'effect/Option';
 
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { Trigger } from '@dxos/functions';
+import { EchoId } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
 import { FeedAnnotation } from '@dxos/schema';
 
@@ -87,6 +88,13 @@ export const syncProjectTriggers = (project: Project.Project): Effect.Effect<voi
         continue;
       }
 
+      const queueEchoId = (() => {
+        const parsed = queueDxn.asQueueDXN();
+        return parsed ? EchoId.fromSpaceAndObjectId(parsed.spaceId, parsed.queueId as any) : undefined;
+      })();
+      if (!queueEchoId) {
+        continue;
+      }
       yield* Database.add(
         Trigger.make({
           [Obj.Parent]: project,
@@ -99,7 +107,7 @@ export const syncProjectTriggers = (project: Project.Project): Effect.Effect<voi
           enabled: true,
           spec: {
             kind: 'queue',
-            queue: queueDxn.toString(),
+            queue: queueEchoId,
           },
           function: Ref.make(Operation.serialize(project.useQualifyingAgent ? Qualifier : Agent)),
           input: {
@@ -134,7 +142,12 @@ export const syncProjectTriggers = (project: Project.Project): Effect.Effect<voi
             enabled: true,
             spec: {
               kind: 'queue',
-              queue: project.queue.dxn.toString(),
+              queue: (() => {
+                const echoDxn = project.queue.dxn.asEchoDXN();
+                return echoDxn?.spaceId && echoDxn?.echoId
+                  ? EchoId.fromSpaceAndObjectId(echoDxn.spaceId, echoDxn.echoId as any)
+                  : (project.queue.dxn.toString() as any);
+              })(),
             },
             input: {
               project: Ref.make(project),

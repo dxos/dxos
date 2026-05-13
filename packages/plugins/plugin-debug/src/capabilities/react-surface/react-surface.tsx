@@ -37,6 +37,7 @@ import {
   WorkflowPanel,
 } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
+import { EchoId } from '@dxos/keys';
 import { Collection } from '@dxos/echo';
 import { type LogBuffer } from '@dxos/log';
 import { log } from '@dxos/log';
@@ -372,7 +373,15 @@ export default Capability.makeModule(
         filter: (data): data is any => data.subject === Devtools.Edge.Traces,
         component: () => {
           const space = useCurrentSpace();
-          const queueDxn = space?.properties.invocationTraceQueue?.dxn;
+          const legacyDxn = space?.properties.invocationTraceQueue?.dxn;
+          const queueDxn = legacyDxn
+            ? (() => {
+                const echoDxn = legacyDxn.asEchoDXN();
+                return echoDxn?.spaceId && echoDxn?.echoId
+                  ? EchoId.fromSpaceAndObjectId(echoDxn.spaceId, echoDxn.echoId as any)
+                  : undefined;
+              })()
+            : undefined;
           return <InvocationTraceContainer db={space?.db} queueDxn={queueDxn} detailAxis='block' />;
         },
       }),

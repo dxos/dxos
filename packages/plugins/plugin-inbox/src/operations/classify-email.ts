@@ -12,7 +12,7 @@ import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } 
 import { AiSession, GenerationObserver } from '@dxos/assistant';
 import { Database, Filter, Obj, Relation, Tag, Type } from '@dxos/echo';
 import { ContextQueueService, FunctionInvocationService, QueueService, TracingService } from '@dxos/functions';
-import { LegacyDXN } from '@dxos/keys';
+import { EchoId, LegacyDXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Operation } from '@dxos/operation';
 import { HasSubject, Message } from '@dxos/types';
@@ -88,8 +88,8 @@ const handler: Operation.WithHandler<typeof ClassifyEmail> = ClassifyEmail.pipe(
           return yield* Effect.fail(new Error('Message is not in a queue'));
         }
 
-        const queueDXN = LegacyDXN.fromQueue(queueDXNInfo.subspaceTag, queueDXNInfo.spaceId, queueDXNInfo.queueId);
-        const queue = yield* QueueService.getQueue(queueDXN);
+        const queueEchoId = EchoId.fromSpaceAndObjectId(queueDXNInfo.spaceId, queueDXNInfo.queueId as any);
+        const queue = yield* QueueService.getQueue(queueEchoId);
 
         const relation = Relation.make(HasSubject.HasSubject, {
           [Relation.Source]: selectedTag,
@@ -104,7 +104,7 @@ const handler: Operation.WithHandler<typeof ClassifyEmail> = ClassifyEmail.pipe(
         yield* Database.flush();
 
         return {
-          tagId: Obj.getDXN(selectedTag),
+          tagId: Obj.getDXN(selectedTag)?.toString(),
           tagLabel: selectedTag.label,
         };
       },

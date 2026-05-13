@@ -17,7 +17,7 @@ import { QueueService } from '@dxos/functions';
 import { type RuntimeServices, ServiceContainer } from '@dxos/functions-runtime';
 import { RemoteFunctionExecutionService } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { LegacyDXN as DXN } from '@dxos/keys';
 import { LogLevel, log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
@@ -58,7 +58,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
   useAsyncEffect(async () => {
     setInputTemplate('');
     await props.loader
-      .load(DXN.fromLocalObjectId(props.graph.id))
+      .load(DXN.fromLocalObjectId(props.graph.id).toString())
       .then((workflow) => {
         const workflowMeta = workflow.resolveMeta();
         if (workflowMeta.inputs.length) {
@@ -129,7 +129,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
       if (props.mode === WorkflowDebugPanelMode.REMOTE) {
         response = await edgeClient.executeWorkflow(Context.default(), space.id, props.graph.id, requestBody);
       } else {
-        const compiled = await props.loader.load(DXN.fromLocalObjectId(props.graph.id));
+        const compiled = await props.loader.load(DXN.fromLocalObjectId(props.graph.id).toString());
         response = await runAndForwardErrors(
           compiled
             .run(ValueBag.make(requestBody))

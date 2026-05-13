@@ -6,12 +6,12 @@ import React, { useMemo } from 'react';
 
 import { type Space } from '@dxos/client/echo';
 import { Entity } from '@dxos/echo';
-import { type DXN } from '@dxos/keys';
+import { type LegacyDXN } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
 
 export type ObjectLinkProps = {
   space: Space;
-  dxn: DXN;
+  dxn: LegacyDXN;
 };
 
 export const ObjectLink = ({ space, dxn }: ObjectLinkProps) => {

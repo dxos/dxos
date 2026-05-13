@@ -23,7 +23,7 @@ export const query = Command.make(
     const { json } = yield* CommandConfig;
     const client = yield* ClientService;
     const queue = (yield* Effect.promise(() =>
-      client.graph.createRefResolver({}).resolve(EchoId.parse(dxn)),
+      client.graph.createRefResolver({}).resolve(EchoId.parse(dxn) as any),
     )) as Queue<any>;
     const objects = yield* Effect.promise(() => queue.queryObjects());
 

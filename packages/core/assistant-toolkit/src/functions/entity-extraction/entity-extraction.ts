@@ -54,7 +54,7 @@ export default EntityExtraction.pipe(
           if (created.length > 1) {
             throw new Error('Multiple organizations created');
           } else if (created.length === 1) {
-            organization = yield* Database.resolve(created[0], Organization.Organization);
+            organization = yield* Database.resolve(Ref.fromDXN(created[0]), Organization.Organization);
             Obj.change(organization, (org) => {
               const meta = Obj.getMeta(org);
               meta.tags ??= [];

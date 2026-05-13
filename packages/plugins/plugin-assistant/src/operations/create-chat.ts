@@ -24,7 +24,7 @@ const handler: Operation.WithHandler<typeof CreateChat> = CreateChat.pipe(
       const space = client.spaces.get(db.spaceId);
       invariant(space, 'Space not found');
       const queue = space.queues.create();
-      const chat = Chat.make({ name, queue: db.makeRef<any>(queue.dxn) });
+      const chat = Chat.make({ name, queue: db.makeRef<any>(queue.dxn as any) });
       if (addToSpace) {
         space.db.add(chat);
       }

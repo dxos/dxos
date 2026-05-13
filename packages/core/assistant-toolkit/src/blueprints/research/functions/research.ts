@@ -15,8 +15,8 @@ import { AiService, ConsolePrinter } from '@dxos/ai';
 import { GenericToolkit } from '@dxos/ai';
 import { AiSession, GenerationObserver, ToolExecutionServices, createToolkit } from '@dxos/assistant';
 import { Template } from '@dxos/blueprints';
-import { Entity, Obj } from '@dxos/echo';
-import { type LegacyDXN } from '@dxos/keys';
+import { Entity, Obj, Ref } from '@dxos/echo';
+import { EchoId } from '@dxos/keys';
 import { Database } from '@dxos/echo';
 import { FunctionInvocationService, TracingService } from '@dxos/functions';
 import { Operation } from '@dxos/operation';
@@ -63,7 +63,7 @@ export default Research.pipe(
         let toolkit: Toolkit.Any = NativeWebSearch;
         let handlers: Layer.Layer<any, any> = Layer.empty as any;
 
-        const objectDXNs: LegacyDXN[] = [];
+        const objectDXNs: EchoId.EchoId[] = [];
         if (entityExtraction) {
           const GraphWriterToolkit = makeGraphWriterToolkit({ schema: ResearchDataTypes });
           const GraphWriterHandler = makeGraphWriterHandler(GraphWriterToolkit, {
@@ -90,7 +90,7 @@ export default Research.pipe(
           toolkit: finishedToolkit,
         });
 
-        const objects = yield* Effect.forEach(objectDXNs, (dxn) => Database.resolve(dxn)).pipe(
+        const objects = yield* Effect.forEach(objectDXNs, (dxn) => Database.resolve(Ref.fromDXN(dxn))).pipe(
           Effect.map(Array.map((obj) => Entity.toJSON(obj))),
         );
 

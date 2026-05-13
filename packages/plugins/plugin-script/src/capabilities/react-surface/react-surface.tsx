@@ -11,6 +11,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
 import { Script } from '@dxos/functions';
+import { EchoId } from '@dxos/keys';
 import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { type AccessToken } from '@dxos/types';
@@ -111,7 +112,15 @@ export default Capability.makeModule(() =>
           Obj.instanceOf(Script.Script, data.companionTo) && data.subject === 'logs',
         component: ({ data, role }) => {
           const space = getSpace(data.companionTo);
-          const queueDxn = space?.properties.invocationTraceQueue?.dxn;
+          const legacyQueueDxn = space?.properties.invocationTraceQueue?.dxn;
+          const queueDxn = legacyQueueDxn
+            ? (() => {
+                const echoDxn = legacyQueueDxn.asEchoDXN();
+                return echoDxn?.spaceId && echoDxn?.echoId
+                  ? EchoId.fromSpaceAndObjectId(echoDxn.spaceId, echoDxn.echoId as any)
+                  : undefined;
+              })()
+            : undefined;
           return (
             <Panel.Root role={role}>
               <Panel.Content asChild>

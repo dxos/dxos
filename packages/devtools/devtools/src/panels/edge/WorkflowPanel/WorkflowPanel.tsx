@@ -8,7 +8,7 @@ import React, { useMemo, useState } from 'react';
 import { ComputeGraph, ComputeGraphModel, WorkflowLoader } from '@dxos/conductor';
 import { Filter } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
-import { DXN } from '@dxos/keys';
+import { LegacyDXN as DXN } from '@dxos/keys';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
@@ -103,7 +103,7 @@ export const WorkflowPanel = (props: { space?: Space }) => {
 
 const toWorkflow = async (loader: WorkflowLoader, graph: ComputeGraph) => {
   try {
-    const loaded = await loader.load(DXN.fromLocalObjectId(graph.id));
+    const loaded = await loader.load(DXN.fromLocalObjectId(graph.id).toString());
     const mapProps = (ast: SchemaAST.AST) =>
       Object.fromEntries(SchemaAST.getPropertySignatures(ast).map((prop) => [prop.name, prop.type]));
     const workflowMeta = loaded.resolveMeta();
@@ -138,7 +138,7 @@ const toCompactGraph = (graph: ComputeGraph) => {
 const createLoader = (graphs: ComputeGraph[]) =>
   new WorkflowLoader({
     graphLoader: async (graphDxn) => {
-      const graph = graphs.find((g) => DXN.equals(graphDxn, DXN.fromLocalObjectId(g.id)));
+      const graph = graphs.find((g) => graphDxn === DXN.fromLocalObjectId(g.id).toString());
       if (!graph) {
         throw new Error(`Graph not found: ${graphDxn}.`);
       }

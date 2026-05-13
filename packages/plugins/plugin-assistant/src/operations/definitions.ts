@@ -9,7 +9,6 @@ import { Chat } from '@dxos/assistant-toolkit';
 import { Prompt } from '@dxos/blueprints';
 import { SpaceSchema } from '@dxos/client/echo';
 import { Collection, Database, Obj, Ref } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
 import { Operation } from '@dxos/operation';
 
 import { meta } from '../meta';
@@ -96,7 +95,7 @@ export const ResolveNavigationTargets = Operation.make({
   input: Schema.Struct({
     query: Schema.optional(
       Schema.Struct({
-        dxn: DXN.Schema.pipe(Schema.optional),
+        dxn: Schema.String.pipe(Schema.optional),
       }),
     ),
   }),

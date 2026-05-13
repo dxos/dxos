@@ -14,7 +14,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { InvocationOutcome, InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
-import { DXN } from '@dxos/keys';
+import { LegacyDXN as DXN } from '@dxos/keys';
 import { dbg, LogLevel } from '@dxos/log';
 import { useTriggerRuntimeControls } from '@dxos/plugin-automation';
 import { type Space } from '@dxos/react-client/echo';

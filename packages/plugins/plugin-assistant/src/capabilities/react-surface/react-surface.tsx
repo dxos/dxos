@@ -14,6 +14,7 @@ import { getSpace } from '@dxos/client/echo';
 import { Sequence } from '@dxos/conductor';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Obj } from '@dxos/echo';
+import { EchoId } from '@dxos/keys';
 import { Panel } from '@dxos/react-ui';
 import { useActiveSpace } from '@dxos/plugin-space';
 
@@ -99,7 +100,15 @@ export default Capability.makeModule(() =>
           data.subject === 'invocations',
         component: ({ data, role }) => {
           const space = getSpace(data.companionTo);
-          const queueDxn = space?.properties.invocationTraceQueue?.dxn;
+          const legacyQueueDxn = space?.properties.invocationTraceQueue?.dxn;
+          const queueDxn = legacyQueueDxn
+            ? (() => {
+                const echoDxn = legacyQueueDxn.asEchoDXN();
+                return echoDxn?.spaceId && echoDxn?.echoId
+                  ? EchoId.fromSpaceAndObjectId(echoDxn.spaceId, echoDxn.echoId as any)
+                  : undefined;
+              })()
+            : undefined;
           // TODO(wittjosiah): Support invocation filtering for prompts.
           const target = Obj.instanceOf(Prompt.Prompt, data.companionTo) ? undefined : data.companionTo;
           return (
