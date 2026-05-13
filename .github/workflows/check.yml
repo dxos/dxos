@@ -101,6 +101,14 @@ jobs:
         if: ${{ steps.extract_branch.outputs.branch == 'main' }}
         run: moon run :lint :build
 
+      - name: Check module structure (affected)
+        if: ${{ steps.extract_branch.outputs.branch != 'main' }}
+        run: moon run :check-module-structure --affected remote
+
+      - name: Check module structure (all)
+        if: ${{ steps.extract_branch.outputs.branch == 'main' }}
+        run: moon run :check-module-structure
+
       - name: Check for peer dependency issues
         run: pnpm install --resolution-only --no-frozen-lockfile
 
@@ -151,7 +159,6 @@ jobs:
       DX_EDGE_BASE_URL: 'wss://edge-main.dxos.workers.dev/'
       DX_TELEMETRY_TAG: e2e
       DX_PWA: false
-      NODE_OPTIONS: --max-old-space-size=12288
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -235,3 +242,20 @@ jobs:
         with:
           name: ${{ github.job }}
           result: ${{ job.status }}
+
+  report:
+    needs: test
+    if: always() && github.event_name == 'schedule'
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Send test report
+        uses: ./.github/actions/test-report
+        with:
+          name: test-24.11.1
+          result: ${{ needs.test.result }}

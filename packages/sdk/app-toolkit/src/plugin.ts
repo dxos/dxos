@@ -64,29 +64,6 @@ export namespace AppPlugin {
     });
   }
 
-  export type MetadataModuleOptions = Omit<PluginModuleOptions, 'activate'> & {
-    metadata: AppCapabilities.Metadata | AppCapabilities.Metadata[];
-  };
-
-  /**
-   * Creates a module that contributes metadata.
-   */
-  export function addMetadataModule<T = void>(
-    options: MetadataModuleOptions,
-  ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
-    return Plugin$.addModule({
-      id: options.id ?? 'metadata',
-      activatesOn: options.activatesOn ?? AppActivationEvents.SetupMetadata,
-      firesBeforeActivation: options.firesBeforeActivation,
-      firesAfterActivation: options.firesAfterActivation,
-      activate: Effect.fnUntraced(function* () {
-        return (Array.isArray(options.metadata) ? options.metadata : [options.metadata]).map((m) =>
-          Capability$.contributes(AppCapabilities.Metadata, m),
-        );
-      }),
-    });
-  }
-
   export type SettingsModuleOptions = PluginModuleOptions;
 
   /**
@@ -175,6 +152,23 @@ export namespace AppPlugin {
   ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'operation-handler',
+      activatesOn: options.activatesOn ?? ActivationEvents.SetupOperationHandler,
+      firesBeforeActivation: options.firesBeforeActivation,
+      firesAfterActivation: options.firesAfterActivation,
+      activate: options.activate,
+    });
+  }
+
+  export type UndoMappingsModuleOptions = PluginModuleOptions;
+
+  /**
+   * Creates a module that contributes undo operation mappings.
+   */
+  export function addUndoMappingsModule<T = void>(
+    options: UndoMappingsModuleOptions,
+  ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    return Plugin$.addModule({
+      id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'undo-mappings',
       activatesOn: options.activatesOn ?? ActivationEvents.SetupOperationHandler,
       firesBeforeActivation: options.firesBeforeActivation,
       firesAfterActivation: options.firesAfterActivation,
@@ -275,6 +269,57 @@ export namespace AppPlugin {
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'surfaces',
       activatesOn: options.activatesOn ?? ActivationEvents.SetupReactSurface,
+      firesBeforeActivation: options.firesBeforeActivation,
+      firesAfterActivation: options.firesAfterActivation,
+      activate: options.activate,
+    });
+  }
+
+  export type CreateObjectModuleOptions = PluginModuleOptions;
+
+  /**
+   * Creates a module that contributes a create-object capability entry.
+   */
+  export function addCreateObjectModule<T = void>(
+    options: CreateObjectModuleOptions,
+  ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    return Plugin$.addModule({
+      id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'create-object',
+      activatesOn: options.activatesOn ?? AppActivationEvents.SetupSchema,
+      firesBeforeActivation: options.firesBeforeActivation,
+      firesAfterActivation: options.firesAfterActivation,
+      activate: options.activate,
+    });
+  }
+
+  export type CommentConfigModuleOptions = PluginModuleOptions;
+
+  /**
+   * Creates a module that contributes a comment configuration.
+   */
+  export function addCommentConfigModule<T = void>(
+    options: CommentConfigModuleOptions,
+  ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    return Plugin$.addModule({
+      id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'comment-config',
+      activatesOn: options.activatesOn ?? AppActivationEvents.SetupSchema,
+      firesBeforeActivation: options.firesBeforeActivation,
+      firesAfterActivation: options.firesAfterActivation,
+      activate: options.activate,
+    });
+  }
+
+  export type TextContentModuleOptions = PluginModuleOptions;
+
+  /**
+   * Creates a module that contributes a text content extractor.
+   */
+  export function addTextContentModule<T = void>(
+    options: TextContentModuleOptions,
+  ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    return Plugin$.addModule({
+      id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'text-content',
+      activatesOn: options.activatesOn ?? AppActivationEvents.SetupSchema,
       firesBeforeActivation: options.firesBeforeActivation,
       firesAfterActivation: options.firesAfterActivation,
       activate: options.activate,

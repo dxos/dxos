@@ -7,9 +7,9 @@ import React from 'react';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed } from '@dxos/echo';
 
-import { type ComponentProps } from './types';
+import { type ModuleProps } from './types';
 
-export const InvocationsModule = ({ space }: ComponentProps) => {
+export const InvocationsModule = ({ space }: ModuleProps) => {
   const feed = space?.properties.invocationTraceFeed?.target;
   const queueDxn = feed ? Feed.getQueueDxn(feed) : undefined;
   return (

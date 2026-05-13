@@ -21,6 +21,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -30,10 +33,22 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
       "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-space"
     }
   ]
 }

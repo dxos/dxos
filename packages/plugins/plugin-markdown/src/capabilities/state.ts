@@ -9,10 +9,10 @@ import { createKvsStore } from '@dxos/effect';
 import { createEditorStateStore } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
-import { type EditorViewEntry, type EditorViewRegistry, MarkdownCapabilities, MarkdownStateSchema } from '#types';
+import { MarkdownCapabilities } from '#types';
 
-const createEditorViewRegistry = (): EditorViewRegistry => {
-  const views = new Map<string, EditorViewEntry>();
+const createEditorViewRegistry = (): MarkdownCapabilities.EditorViewRegistry => {
+  const views = new Map<string, MarkdownCapabilities.EditorViewEntry>();
   return {
     register: (attendableId, view, documentId) => {
       views.set(attendableId, { view, documentId });
@@ -29,7 +29,7 @@ export default Capability.makeModule(
     // Persisted state using KVS store.
     const stateAtom = createKvsStore({
       key: `${meta.id}.state`,
-      schema: MarkdownStateSchema,
+      schema: MarkdownCapabilities.StateSchema,
       defaultValue: () => ({ viewMode: {} }),
     });
 

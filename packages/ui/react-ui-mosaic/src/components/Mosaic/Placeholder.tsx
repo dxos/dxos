@@ -30,6 +30,11 @@ const MOSAIC_PLACEHOLDER_ORIENTATION_ATTR = 'mosaic-placeholder-orientation';
 // State attribute: data-[mosaic-placeholder-state=active]
 const MOSAIC_PLACEHOLDER_STATE_ATTR = 'mosaic-placeholder-state';
 
+// Location attribute: data-[mosaic-placeholder-location=0.5]. Identifies the
+// placeholder's slot in its container (0.5, 1.5, 2.5, …) so tests can target
+// a specific gap unambiguously without relying on layout-dependent indices.
+const MOSAIC_PLACEHOLDER_LOCATION_ATTR = 'mosaic-placeholder-location';
+
 type MosaicPlaceholderProps<Location = LocationType> = ThemedClassName<
   PropsWithChildren<{
     asChild?: boolean;
@@ -94,6 +99,7 @@ const MosaicPlaceholder = <Location extends LocationType = LocationType>({
       {...{
         [`data-${MOSAIC_PLACEHOLDER_ORIENTATION_ATTR}`]: orientation,
         [`data-${MOSAIC_PLACEHOLDER_STATE_ATTR}`]: data.location === activeLocation ? 'active' : 'idle',
+        [`data-${MOSAIC_PLACEHOLDER_LOCATION_ATTR}`]: String(location),
       }}
       role='none'
       className={mx('relative', classNames)}

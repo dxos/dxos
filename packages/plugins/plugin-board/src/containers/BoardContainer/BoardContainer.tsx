@@ -12,7 +12,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
@@ -166,7 +166,6 @@ export const BoardContainer = ({ role, subject: board, attendableId }: BoardCont
                 <Board.Content>
                   {items?.map((item, index) => (
                     <Board.Cell item={item} key={index} layout={board.layout?.cells[item.id] ?? { x: 0, y: 0 }}>
-                      {/* `editable` opts the cell into the in-place editor variant — surfaces that don't recognize the flag fall back to the read-only card. */}
                       <Surface.Surface type={AppSurface.Card} data={{ subject: item, editable: true }} limit={1} />
                     </Board.Cell>
                   ))}

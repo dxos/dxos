@@ -24,7 +24,7 @@ export const fromPlugins = (plugins: Plugin.Plugin[]) =>
         Effect.sync(() => {
           const plugin = plugins.find((plugin) => plugin.meta.id === id);
           invariant(plugin, `Plugin not found: ${id}`);
-          return plugin;
+          return { plugin };
         });
 
       const manager = PluginManager.make({

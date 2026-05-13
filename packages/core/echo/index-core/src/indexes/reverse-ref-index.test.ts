@@ -38,6 +38,7 @@ describe('ReverseRefIndex', () => {
       const sourceObject: IndexerObject = {
         spaceId,
         queueId: ObjectId.random(),
+        queueNamespace: 'data',
         documentId: null,
         recordId: 1,
         updatedAt: Date.now(),
@@ -72,6 +73,7 @@ describe('ReverseRefIndex', () => {
       const sourceObject: IndexerObject = {
         spaceId,
         queueId: ObjectId.random(),
+        queueNamespace: 'data',
         documentId: null,
         recordId: 1,
         updatedAt: Date.now(),
@@ -114,6 +116,7 @@ describe('ReverseRefIndex', () => {
       const sourceObject: IndexerObject = {
         spaceId,
         queueId: ObjectId.random(),
+        queueNamespace: 'data',
         documentId: null,
         recordId: 1,
         updatedAt: Date.now(),
@@ -154,6 +157,7 @@ describe('ReverseRefIndex', () => {
       const sourceObject: IndexerObject = {
         spaceId,
         queueId,
+        queueNamespace: 'data',
         documentId: null,
         recordId,
         updatedAt: Date.now(),
@@ -173,6 +177,7 @@ describe('ReverseRefIndex', () => {
       const updatedObject: IndexerObject = {
         spaceId,
         queueId,
+        queueNamespace: 'data',
         documentId: null,
         recordId,
         updatedAt: Date.now(),
@@ -206,6 +211,7 @@ describe('ReverseRefIndex', () => {
       const sourceObject: IndexerObject = {
         spaceId,
         queueId: ObjectId.random(),
+        queueNamespace: 'data',
         documentId: null,
         recordId: 1,
         updatedAt: Date.now(),
@@ -238,6 +244,7 @@ describe('ReverseRefIndex', () => {
       const sourceObject: IndexerObject = {
         spaceId,
         queueId: null,
+        queueNamespace: null,
         documentId: 'doc-123',
         recordId: 1,
         updatedAt: Date.now(),

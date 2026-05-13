@@ -11,9 +11,9 @@ import { useQuery, useQueue } from '@dxos/react-client/echo';
 import { Card } from '@dxos/react-ui';
 
 import { ResearchInputQueue } from '../testing';
-import { type ComponentProps } from './types';
+import { type ModuleProps } from './types';
 
-export const ResearchOutputModule = ({ space }: ComponentProps) => {
+export const ResearchOutputModule = ({ space }: ModuleProps) => {
   const [researchInput] = useQuery(space.db, Filter.type(ResearchInputQueue));
   const feed = researchInput?.feed.target;
   const queue = useQueue(feed ? Feed.getQueueDxn(feed) : undefined);

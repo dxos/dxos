@@ -10,7 +10,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { createDocAccessor } from '@dxos/echo-db';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Panel, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Panel, Toolbar, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import {
   createBasicExtensions,
@@ -34,6 +34,19 @@ const languageForPath = (path: string) => {
   return javascript({ typescript: path.endsWith('.ts') || path.endsWith('.tsx') });
 };
 
+// Three-pane layout mirroring `react-ui-introspect`'s `ToolsExplorer`:
+//
+//   ┌───────────┬─────────────────┐
+//   │  Browse   │                 │
+//   │  (files)  │     Output      │
+//   ├───────────┤   (editor)      │
+//   │  Inspect  │                 │
+//   │  (form)   │                 │
+//   └───────────┴─────────────────┘
+//
+// 30rem fixed left column, 1fr right; left split 1:2 vertically. Same
+// `dx-container grid` + `divide-x`/`divide-y separator` idiom as the
+// introspect explorer so the visual rhythm matches across panels.
 export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(({ role, subject: project }, forwardedRef) => {
   const { t } = useTranslation(meta.id);
 
@@ -74,18 +87,26 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(({ role,
 
   return (
     <Panel.Root role={role} ref={forwardedRef}>
-      <Panel.Toolbar />
+      {/* TODO(burdon): Add toolbar actions (cf. SpecArticle's Editor.Toolbar). */}
+      <Panel.Toolbar asChild>
+        <Toolbar.Root></Toolbar.Root>
+      </Panel.Toolbar>
       <Panel.Content asChild>
-        <div role='none' className='grid grid-cols-[16rem_1fr] min-bs-0 bs-full overflow-hidden'>
-          <div role='none' className='border-ie border-separator overflow-auto'>
-            <FileTree
-              files={fileEntries}
-              selectedPath={selectedPath}
-              onSelect={setSelectedPath}
-              emptyMessage={t('view.code.empty.placeholder')}
-            />
+        <div className='dx-container grid grid-cols-[30rem_1fr] divide-x divide-separator' role='none'>
+          <div className='dx-container grid grid-rows-[1fr_2fr] divide-y divide-separator'>
+            <div role='region' aria-label={t('browse-pane.label')} className='dx-container grid overflow-auto'>
+              <FileTree
+                files={fileEntries}
+                selectedPath={selectedPath}
+                onSelect={setSelectedPath}
+                emptyMessage={t('view.code.empty.placeholder')}
+              />
+            </div>
+            <div role='region' aria-label={t('inspect-pane.label')} className='dx-container grid p-2 overflow-auto'>
+              {/* TODO(burdon): Inspector / spec editor for the selected item. */}
+            </div>
           </div>
-          <div role='none' className='min-bs-0 overflow-hidden'>
+          <div role='region' aria-label={t('output-pane.label')} className='dx-container grid min-bs-0 overflow-hidden'>
             {selected ? <FileEditor file={selected} role={role} /> : null}
           </div>
         </div>

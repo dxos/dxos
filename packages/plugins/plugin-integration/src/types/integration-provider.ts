@@ -4,37 +4,40 @@
 
 import type * as HttpClient from '@effect/platform/HttpClient';
 import type * as Effect from 'effect/Effect';
-import type * as Schema from 'effect/Schema';
+import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import type { Operation } from '@dxos/compute';
-import type { Obj, Ref } from '@dxos/echo';
+import { type Database, type Obj, Ref } from '@dxos/echo';
 import type { OAuthProvider } from '@dxos/protocols';
 import type { AccessToken } from '@dxos/types';
 
-import type * as Integration from './Integration';
+import * as Integration from './Integration';
 
 /** Descriptor for one remote target returned by discovery operations. */
-export type RemoteTarget = {
+export const RemoteTarget = Schema.Struct({
   /** Remote identifier (e.g. Trello board id). */
-  id: string;
+  id: Schema.String,
   /** User-readable label. */
-  name: string;
+  name: Schema.String,
   /** Optional secondary line. */
-  description?: string;
+  description: Schema.String.pipe(Schema.optional),
   /** Service-specific extras for display. */
-  metadata?: Record<string, unknown>;
-};
+  metadata: Schema.Record({ key: Schema.String, value: Schema.Unknown }).pipe(Schema.optional),
+});
+export interface RemoteTarget extends Schema.Schema.Type<typeof RemoteTarget> {}
 
 /** Input accepted by every {@link IntegrationProviderEntry.getSyncTargets} operation. */
-export type GetSyncTargetsInput = {
-  integration: Ref.Ref<Integration.Integration>;
-};
+export const GetSyncTargetsInput = Schema.Struct({
+  integration: Ref.Ref(Integration.Integration),
+});
+export interface GetSyncTargetsInput extends Schema.Schema.Type<typeof GetSyncTargetsInput> {}
 
 /** Output returned by {@link IntegrationProviderEntry.getSyncTargets} discovery operations. */
-export type GetSyncTargetsOutput = {
-  targets: readonly RemoteTarget[];
-};
+export const GetSyncTargetsOutput = Schema.Struct({
+  targets: Schema.Array(RemoteTarget),
+});
+export interface GetSyncTargetsOutput extends Schema.Schema.Type<typeof GetSyncTargetsOutput> {}
 
 /** Minimum input for provider {@link IntegrationProviderEntry.sync} operations. */
 export type IntegrationSyncInput = {
@@ -64,6 +67,46 @@ export type OnTokenCreated = (input: {
 export type IntegrationOAuthSpec = {
   provider: OAuthProvider;
   scopes: readonly string[];
+  /**
+   * Use a top-level redirect flow instead of the default popup +
+   * `postMessage`. Required for providers that nullify `window.opener`
+   * (e.g. atproto / bsky.social). Edge redirects to `/redirect/oauth?...`
+   * which a NavigationHandler picks up via persisted localStorage state.
+   */
+  useRedirectFlow?: boolean;
+};
+
+/**
+ * Result of a provider credential form submission.
+ *
+ * `complete` — for non-OAuth flows: the form yields a fully built
+ * `AccessToken` + `Integration` and the coordinator persists them.
+ *
+ * `oauth` — for OAuth flows that need pre-flight input (e.g. atproto
+ * handle): the coordinator opens the auth window and forwards
+ * `loginHint` to Edge.
+ */
+export type CredentialFormResult =
+  | { kind: 'complete'; accessToken: AccessToken.AccessToken; integration: Integration.Integration }
+  | { kind: 'oauth'; loginHint?: string };
+
+/**
+ * Per-provider form rendered by the generic provider-form dialog. One
+ * shape covers both non-OAuth (custom token, IMAP) and OAuth pre-flight
+ * (atproto handle) — the discriminator on `onSubmit`'s result tells the
+ * coordinator which path to take next.
+ */
+export type CredentialForm<Values = any> = {
+  /** Schema rendered by the generic provider-form dialog. */
+  schema: Schema.Schema<Values, any>;
+  /** Optional defaults pre-filled into the form. */
+  defaultValues?: Partial<Values>;
+  /** Build the next step of the integration flow from form values. */
+  onSubmit: (input: {
+    values: Values;
+    provider: IntegrationProviderEntry;
+    db: Database.Database;
+  }) => Effect.Effect<CredentialFormResult>;
 };
 
 /**
@@ -81,6 +124,13 @@ export type IntegrationProviderEntry = {
   sync?: Operation.Definition<IntegrationSyncInput, IntegrationSyncOutput>;
   /** Schema describing per-target rows in `Integration.targets` `.options`. */
   optionsSchema?: Schema.Schema<any, any>;
+  /**
+   * Renders before authentication. Use for non-OAuth credentials (custom
+   * token, IMAP host/port/user/password) or OAuth pre-flight inputs (atproto
+   * handle / DID). The submit result decides what runs next — see
+   * {@link CredentialFormResult}.
+   */
+  credentialForm?: CredentialForm<any>;
   onTokenCreated?: OnTokenCreated;
 };
 

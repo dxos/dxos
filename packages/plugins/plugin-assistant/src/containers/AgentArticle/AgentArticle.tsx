@@ -14,6 +14,7 @@ import { Agent } from '@dxos/assistant-toolkit';
 import { Annotation, Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { QueueService } from '@dxos/functions';
+import { AutomationCapabilities } from '@dxos/plugin-automation';
 import { useQuery } from '@dxos/react-client/echo';
 import { Card, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';

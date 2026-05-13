@@ -6,6 +6,7 @@ import ReactPlugin from '@vitejs/plugin-react';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { esmExternalRequirePlugin } from 'rolldown/plugins';
 import { defineConfig } from 'vite';
 
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
@@ -38,9 +39,37 @@ export default defineConfig({
         '@dxos/react-client/echo',
         '@dxos/react-client/halo',
         '@dxos/react-client/mesh',
-        // TODO(wittjosiah): React still being included.
         'react',
+        'react/jsx-runtime',
+        'react/jsx-dev-runtime',
         'react-dom',
+        'react-dom/client',
+        'scheduler',
+        'use-sync-external-store',
+        /^use-sync-external-store\//,
+      ],
+      plugins: [
+        // Convert literal `require("X")` calls (including those rolldown
+        // emits inside its `__commonJSMin`-wrapped transitive CJS deps —
+        // react-jsx-runtime/cjs, use-sync-external-store, react-dom/cjs)
+        // into ESM imports against the consumer's resolution of these deps.
+        // Each subpath must be listed independently (rolldown/rolldown#8349);
+        // entries must also appear in top-level `external` with
+        // `skipDuplicateCheck: true` to silence the duplicate warning, per
+        // the maintainer-provided working repro at vite8-external-20260216.
+        esmExternalRequirePlugin({
+          external: [
+            'react',
+            'react/jsx-runtime',
+            'react/jsx-dev-runtime',
+            'react-dom',
+            'react-dom/client',
+            'scheduler',
+            'use-sync-external-store',
+            /^use-sync-external-store\//,
+          ],
+          skipDuplicateCheck: true,
+        }),
       ],
     },
   },

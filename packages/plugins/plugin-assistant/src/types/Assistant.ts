@@ -2,9 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Chat as ChatModule } from '@dxos/assistant-toolkit';
+// @import-as-namespace
 
 // Re-export Chat schema for backward compatibility.
+import { Chat as ChatModule } from '@dxos/assistant-toolkit';
 export const Chat = ChatModule.Chat;
 export type Chat = ChatModule.Chat;
 

@@ -17,9 +17,11 @@ const Graph = Capability.lazy('Graph', () => import('./graph'));
 export const GraphPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesOn: ActivationEvents.Startup,
-    firesBeforeActivation: [AppActivationEvents.SetupAppGraph, AppActivationEvents.SetupMetadata],
+    firesBeforeActivation: [AppActivationEvents.SetupAppGraph],
     firesAfterActivation: [AppActivationEvents.AppGraphReady],
     activate: Graph,
   }),
   Plugin.make,
 );
+
+export default GraphPlugin;

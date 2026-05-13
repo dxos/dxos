@@ -43,6 +43,18 @@ export type Options = {
 };
 
 /**
+ * Options for the preload entry point. Adds an optional progress hook so hosts
+ * can drive a boot-loader counter (`Loading plugins (3/12)…`) as remote plugin
+ * manifests resolve. Resolution order is *not* deterministic — each entry races
+ * its own network fetch — so callers should treat `loaded` as a count, not an
+ * index. Failures are still swallowed; `loaded` advances on both success and
+ * recoverable failure so the counter always reaches `total`.
+ */
+export type PreloadOptions = Options & {
+  onPluginLoaded?: (loaded: number, total: number) => void;
+};
+
+/**
  * Persisted record of a remote plugin that has been loaded previously.
  *
  * `url` is the URL of the plugin manifest (`plugin.json`), not the entry module.
@@ -50,6 +62,8 @@ export type Options = {
 export type RemotePluginEntry = {
   id: string;
   url: string;
+  /** Installed version string, e.g. `v1.0.0`. Populated after install from a community catalog entry. */
+  version?: string;
 };
 
 const defaultStorage = (): Storage => ({
@@ -124,6 +138,36 @@ export const getRemoteEntries = (options: Options = {}): readonly RemotePluginEn
   return getPersistedRemotePlugins(storage, key);
 };
 
+/**
+ * Updates the persisted installed version for an already-stored remote plugin entry.
+ * Does nothing if the plugin has not been persisted yet.
+ */
+export const setInstalledVersion = (id: string, version: string, options: Options = {}): void => {
+  const storage = options.storage ?? defaultStorage();
+  const key = options.key ?? DEFAULT_KEY;
+  const entries = getPersistedRemotePlugins(storage, key);
+  const index = entries.findIndex((entry) => entry.id === id);
+  if (index === -1) {
+    return;
+  }
+  entries[index] = { ...entries[index], version };
+  try {
+    storage.set(key, JSON.stringify(entries));
+  } catch (error) {
+    log.warn('failed to update installed version for remote plugin', { id, version, error });
+  }
+};
+
+/**
+ * Returns the installed version string for the given plugin id, or `undefined` if
+ * the plugin was installed without version tracking (legacy install) or is not found.
+ */
+export const getInstalledVersion = (id: string, options: Options = {}): string | undefined => {
+  const storage = options.storage ?? defaultStorage();
+  const key = options.key ?? DEFAULT_KEY;
+  return getPersistedRemotePlugins(storage, key).find((entry) => entry.id === id)?.version;
+};
+
 const normalizePluginExport = (mod: Record<string, unknown>): Plugin.Plugin => {
   const exported = mod.default;
   if (Plugin.isPlugin(exported)) {
@@ -175,17 +219,25 @@ const loadFromManifest = (
         (cause) => new RemotePluginLoadError({ context: { locator: manifestUrl, reason: 'manifest-error' }, cause }),
       ),
     );
-    // Cache the manifest URL alongside its declared assets. Without it, `preload` on a
-    // subsequent reload would fetch the manifest from the network — and fail when the
-    // plugin's host is offline, dropping the plugin from the runtime.
-    const cachedUrls =
-      manifest.assetUrls.indexOf(manifestUrl) === -1 ? [manifestUrl, ...manifest.assetUrls] : manifest.assetUrls;
     const wrapCacheError = Effect.mapError(
       (cause: PluginAssetCache.PluginAssetCacheError) =>
         new RemotePluginLoadError({ context: { locator: manifestUrl, reason: 'cache-error' }, cause }),
     );
-    yield* cache.cache(manifest.id, cachedUrls).pipe(wrapCacheError);
-    const entryUrl = yield* cache.resolve(manifest.id, manifest.entryUrl).pipe(wrapCacheError);
+    // Dev-mode manifests (served by `vite dev` via composerPlugin) skip the offline
+    // cache: chunks resolve on demand through the dev server, the asset list isn't
+    // enumerable up-front, and CSS arrives via runtime <style> injection rather than
+    // static <link> tags.
+    if (!manifest.dev) {
+      // Cache the manifest URL alongside its declared assets. Without it, `preload` on a
+      // subsequent reload would fetch the manifest from the network — and fail when the
+      // plugin's host is offline, dropping the plugin from the runtime.
+      const cachedUrls =
+        manifest.assetUrls.indexOf(manifestUrl) === -1 ? [manifestUrl, ...manifest.assetUrls] : manifest.assetUrls;
+      yield* cache.cache(manifest.id, cachedUrls).pipe(wrapCacheError);
+    }
+    const entryUrl = manifest.dev
+      ? manifest.entryUrl
+      : yield* cache.resolve(manifest.id, manifest.entryUrl).pipe(wrapCacheError);
     const mod = yield* Effect.tryPromise({
       try: () => import(/* @vite-ignore */ entryUrl),
       catch: (cause) =>
@@ -213,7 +265,11 @@ const loadFromManifest = (
     // passes. If we did this earlier and the import or meta checks failed, the
     // `<link>` tags would leak into the host DOM with no plugin to own their
     // teardown — `uninstall` only runs for plugins the manager actually accepted.
-    yield* loadStylesheets(manifest, cache).pipe(wrapCacheError);
+    // In dev mode, Vite injects styles at runtime via the module graph, so static
+    // <link> tags would duplicate (or 404, since CSS chunks aren't pre-built).
+    if (!manifest.dev) {
+      yield* loadStylesheets(manifest, cache).pipe(wrapCacheError);
+    }
     return { plugin, manifest };
   });
 
@@ -222,22 +278,39 @@ const loadFromManifest = (
  * are logged and swallowed — the returned effect always succeeds with whichever
  * plugins loaded cleanly, so a single bad entry can't block the host's startup.
  */
-export const preload = (options: Options = {}): Effect.Effect<Plugin.Plugin[], never> =>
+export const preload = (options: PreloadOptions = {}): Effect.Effect<Plugin.Plugin[], never> =>
   Effect.gen(function* () {
     const storage = options.storage ?? defaultStorage();
     const key = options.key ?? DEFAULT_KEY;
     const cache = options.cache ?? PluginAssetCache.noop();
+    const onPluginLoaded = options.onPluginLoaded;
 
     const entries = getPersistedRemotePlugins(storage, key);
     if (entries.length === 0) {
       return [];
     }
     log.info('preloading remote plugins', { count: entries.length });
+    const total = entries.length;
+    let loaded = 0;
     const results = yield* Effect.all(
       entries.map((entry) =>
         loadFromManifest(entry.url, cache).pipe(
           Effect.tapError((error) => Effect.sync(() => log.warn('failed to preload remote plugin', { entry, error }))),
           Effect.option,
+          // Tick the progress hook on both success and recoverable failure so
+          // the counter monotonically reaches `total`. The host-supplied
+          // callback is best-effort: any synchronous throw flows through
+          // `Effect.try` and gets logged + ignored so a buggy hook can't
+          // derail the preload.
+          Effect.tap(() =>
+            Effect.sync(() => {
+              loaded += 1;
+            }).pipe(
+              Effect.andThen(Effect.try(() => onPluginLoaded?.(loaded, total))),
+              Effect.tapError((error) => Effect.sync(() => log.warn('onPluginLoaded threw', { loaded, total, error }))),
+              Effect.ignore,
+            ),
+          ),
         ),
       ),
       { concurrency: 'unbounded' },
@@ -262,24 +335,31 @@ export const make = (builtinPlugins: Plugin.Plugin[], options: Options = {}) => 
   const key = options.key ?? DEFAULT_KEY;
   const cache = options.cache ?? PluginAssetCache.noop();
 
-  return (locator: string): Effect.Effect<Plugin.Plugin, RemotePluginLoadError> =>
+  return (locator: string): Effect.Effect<{ plugin: Plugin.Plugin; dev?: boolean }, RemotePluginLoadError> =>
     Effect.gen(function* () {
       const builtin = builtinPlugins.find((plugin) => plugin.meta.id === locator);
       if (builtin) {
-        return builtin;
+        return { plugin: builtin };
       }
       if (!isUrl(locator)) {
         return yield* Effect.fail(new RemotePluginLoadError({ context: { locator, reason: 'invalid-locator' } }));
       }
-      const { plugin } = yield* loadFromManifest(locator, cache);
-      const duplicate = builtinPlugins.find((existing) => existing.meta.id === plugin.meta.id);
-      if (duplicate) {
-        return yield* Effect.fail(
-          new RemotePluginLoadError({ context: { locator, reason: 'duplicate-id', id: plugin.meta.id } }),
-        );
+      const { plugin, manifest } = yield* loadFromManifest(locator, cache);
+      // Production manifests can't collide with a builtin id — that would make
+      // the registered plugin permanently inaccessible. Dev manifests are
+      // allowed to collide because the manager shadow primitive handles the
+      // overlap (dev plugin takes the id slot for the session, original is
+      // restored on uninstall or page reload).
+      if (!manifest.dev) {
+        const duplicate = builtinPlugins.find((existing) => existing.meta.id === plugin.meta.id);
+        if (duplicate) {
+          return yield* Effect.fail(
+            new RemotePluginLoadError({ context: { locator, reason: 'duplicate-id', id: plugin.meta.id } }),
+          );
+        }
+        persistRemotePlugin(storage, key, { id: plugin.meta.id, url: locator });
       }
-      persistRemotePlugin(storage, key, { id: plugin.meta.id, url: locator });
-      return plugin;
+      return { plugin, dev: manifest.dev };
     });
 };
 

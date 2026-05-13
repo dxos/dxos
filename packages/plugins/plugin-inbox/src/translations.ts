@@ -47,24 +47,32 @@ export const translations = [
       },
       [meta.id]: {
         'plugin.name': 'Inbox',
-        'empty-mailbox.message': 'Mailbox empty',
-        'empty-calendar.message': 'Calendar empty',
+
         'no-message.message': 'Select a message to view it',
+
         'action-archive.menu': 'Archive',
         'action-delete.menu': 'Delete',
         'action-mark-read.menu': 'Mark as read',
         'message.label': 'Message',
         'event.label': 'Event',
+        'inbox.label': 'Inbox',
+
         'no-integrations.label': 'No integrations configured',
         'manage-integrations-button.label': 'Manage Integrations',
-        'inbox.label': 'Inbox',
 
         'sync-mailbox.label': 'Sync mailbox',
         'sync-mailbox-error.title': 'Failed to sync mailbox',
         'sync-mailbox-success.title': 'Mailbox sync complete',
+        'empty-mailbox.message': 'Mailbox empty',
+
         'sync-calendar.label': 'Sync calendar',
         'sync-calendar-error.title': 'Failed to sync calendar',
         'sync-calendar-success.title': 'Calendar sync complete',
+        'empty-calendar.message': 'Calendar empty',
+
+        'sync-contacts.label': 'Sync contacts',
+        'sync-contacts-error.title': 'Failed to sync contacts',
+        'sync-contacts-success.title': 'Contacts sync complete',
 
         'show-contact.label': 'Show contact',
         'create-contact.label': 'Create contact',

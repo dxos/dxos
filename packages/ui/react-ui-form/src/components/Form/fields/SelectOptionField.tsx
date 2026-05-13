@@ -9,7 +9,7 @@ import { PublicKey } from '@dxos/keys';
 import { type ChromaticPalette, IconButton, Input, Tag, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { HuePicker } from '@dxos/react-ui-pickers';
-import { hues, osTranslations, subtleHover } from '@dxos/ui-theme';
+import { hues, osTranslations } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
@@ -120,7 +120,7 @@ export const SelectOptionField = ({
   return (
     <Input.Root validationValence={status}>
       <FormFieldLabel error={error} readonly={readonly} label={label} />
-      <div role='none'>
+      <div>
         {options && (
           <List.Root
             items={options}
@@ -135,7 +135,7 @@ export const SelectOptionField = ({
                     <List.Item
                       role='button'
                       item={item}
-                      classNames={[subtleHover, 'flex flex-col cursor-pointer rounded-xs']}
+                      classNames='flex flex-col cursor-pointer rounded-xs dx-hover'
                       aria-expanded={selected === item.id}
                     >
                       <div className='flex items-center'>
@@ -147,7 +147,7 @@ export const SelectOptionField = ({
                         <IconButton
                           iconOnly
                           variant='ghost'
-                          label={t(selected === item.id ? 'collapse label' : 'expand label', { ns: osTranslations })}
+                          label={t(selected === item.id ? 'collapse.label' : 'expand.label', { ns: osTranslations })}
                           icon={selected === item.id ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
                           onClick={() => handleClick(item.id)}
                         />

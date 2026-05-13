@@ -3,4 +3,4 @@
 //
 
 export * from './meta';
-export * from './SpacetimePlugin';
+export * from './types';

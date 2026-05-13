@@ -48,7 +48,7 @@ export const RowActionsMenu = ({ model, modals }: RowActionsMenuProps) => {
           {/* Default actions */}
           {model.features.dataEditable !== false && (
             <DropdownMenu.Item data-testid='row-menu-delete' onClick={() => model.deleteRow(state.rowIndex)}>
-              {t(hasSelection ? 'bulk delete row label' : 'delete row label')}
+              {t(hasSelection ? 'bulk-delete-row.label' : 'delete-row.label')}
             </DropdownMenu.Item>
           )}
         </DropdownMenu.Viewport>

@@ -19,7 +19,7 @@ import { AtomQuery } from '@dxos/echo-atom';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
-import { SampleOperation } from '#operations';
+import { SampleOperation } from '#types';
 import { SampleItem } from '#types';
 
 // Section type constant used to identify the "Samples" section node.
@@ -29,10 +29,6 @@ const SAMPLE_SECTION_TYPE = 'sample-section';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
-
-    // Metadata resolver used by `createObjectNode` to look up icons and labels.
-    const resolve = (typename: string) =>
-      capabilities.getAll(AppCapabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
     const extensions = yield* Effect.all([
       // --- Root-level action ---
@@ -102,7 +98,7 @@ export default Capability.makeModule(
           const items = get(AtomQuery.make(space.db, Filter.type(SampleItem.SampleItem)));
           return Effect.succeed(
             items
-              .map((item) => createObjectNode({ db: space.db, object: item, resolve }))
+              .map((item) => createObjectNode({ db: space.db, object: item }))
               .filter((node): node is NonNullable<typeof node> => node !== null),
           );
         },

@@ -5,7 +5,7 @@
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Operation, Trace, Trigger } from '@dxos/compute';
-import { ClientEvents } from '@dxos/plugin-client/types';
+import { ClientEvents } from '@dxos/plugin-client';
 
 import { AppGraphBuilder, LayerSpecs, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
@@ -24,3 +24,5 @@ export const AutomationPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default AutomationPlugin;

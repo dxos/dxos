@@ -9,10 +9,10 @@ import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPU
 import { DXN, Filter, Key, type Type } from '@dxos/echo';
 import { View } from '@dxos/echo';
 import { OperationInvoker } from '@dxos/operation';
-import { Markdown } from '@dxos/plugin-markdown/types';
-import { Sheet } from '@dxos/plugin-sheet/types';
-import { Sketch } from '@dxos/plugin-sketch/types';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { Markdown } from '@dxos/plugin-markdown';
+import { Sheet } from '@dxos/plugin-sheet';
+import { Sketch } from '@dxos/plugin-sketch';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { random } from '@dxos/random';
 import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';

@@ -8,10 +8,10 @@ import { Capabilities } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 
 import { FileCapabilities } from '../types';
+import { FilesOperation } from '../types';
 import { findFile, handleSave } from '../util';
-import { Save } from './definitions';
 
-const handler: Operation.WithHandler<typeof Save> = Save.pipe(
+const handler: Operation.WithHandler<typeof FilesOperation.Save> = FilesOperation.Save.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ id }) {
       const state = yield* Capabilities.getAtomValue(FileCapabilities.State);

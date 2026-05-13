@@ -1,0 +1,49 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import * as Schema from 'effect/Schema';
+
+import * as Operation from '../Operation';
+
+export const Fibonacci = Operation.make({
+  meta: {
+    key: 'org.example.function.fib',
+    name: 'Fibonacci',
+    description: 'Function that calculates a Fibonacci number',
+  },
+  input: Schema.Struct({
+    iterations: Schema.optional(Schema.Number).annotations({
+      description: 'Number of iterations',
+      default: 100_000,
+    }),
+  }),
+  output: Schema.Struct({
+    result: Schema.String,
+  }),
+}).pipe(Operation.intrinsic);
+
+export const Reply = Operation.make({
+  meta: {
+    key: 'org.example.function.reply',
+    name: 'Reply',
+    description: 'Function that echoes the input',
+  },
+  input: Schema.Any,
+  output: Schema.Any,
+}).pipe(Operation.intrinsic);
+
+export const Sleep = Operation.make({
+  meta: {
+    key: 'org.example.function.sleep',
+    name: 'Sleep',
+    description: 'Function that sleeps for a given amount of time',
+  },
+  input: Schema.Struct({
+    duration: Schema.optional(Schema.Number).annotations({
+      description: 'Milliseconds to sleep',
+      default: 100_000,
+    }),
+  }),
+  output: Schema.Void,
+}).pipe(Operation.intrinsic);

@@ -19,7 +19,11 @@ export class TestAdapter extends NetworkAdapter {
       send: (message: Message) => {
         onMessage?.(message);
         if (connectionStateProvider() === 'on') {
-          void sleep(10).then(() => adapter2.receive(message));
+          void sleep(10).then(() => {
+            if (connectionStateProvider() === 'on' && adapter2.peerId) {
+              adapter2.receive(message);
+            }
+          });
         }
       },
     });
@@ -27,7 +31,11 @@ export class TestAdapter extends NetworkAdapter {
       send: (message: Message) => {
         onMessage?.(message);
         if (connectionStateProvider() === 'on') {
-          void sleep(10).then(() => adapter1.receive(message));
+          void sleep(10).then(() => {
+            if (connectionStateProvider() === 'on' && adapter1.peerId) {
+              adapter1.receive(message);
+            }
+          });
         }
       },
     });

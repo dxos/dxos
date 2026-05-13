@@ -3,7 +3,7 @@
 //
 
 import { useComposedRefs } from '@radix-ui/react-compose-refs';
-import React, { type ReactElement, type Ref as ReactRef, forwardRef, useMemo, useRef } from 'react';
+import React, { type ReactElement, type Ref as ReactRef, forwardRef, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Card, Tag, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -21,15 +21,17 @@ const BOARD_ITEM_NAME = 'Board.Item';
 
 type BoardItemProps<TItem extends Obj.Unknown = any> = Pick<
   MosaicTileProps<TItem>,
-  'classNames' | 'location' | 'data' | 'debug'
+  'classNames' | 'location' | 'data' | 'debug' | 'draggable'
 >;
 
 const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
-  ({ classNames, data, location, debug }, forwardedRef) => {
+  ({ classNames, data, location, debug, draggable }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
-    const dragHandleRef = useRef<HTMLButtonElement>(null);
+    // Use state (callback ref) so the dragHandle prop updates when the button mounts.
+    // Refs don't trigger re-renders, so reading `.current` at render time leaves the prop null.
+    const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
 
     const { model } = useBoard(BOARD_ITEM_NAME);
     const column = useBoardColumn();
@@ -58,7 +60,8 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
         <Mosaic.Tile
           ref={rootRef}
           asChild
-          dragHandle={dragHandleRef.current}
+          draggable={draggable}
+          dragHandle={dragHandle}
           id={data.id}
           data={data}
           location={location}
@@ -72,7 +75,7 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
               onClick={(event) => event.currentTarget.focus()}
             >
               <Card.Toolbar>
-                <Card.DragHandle ref={dragHandleRef} testId='mosaicBoard.cardDragHandle' />
+                <Card.DragHandle ref={setDragHandle} testId='mosaicBoard.cardDragHandle' />
                 <Card.Title data-testid='mosaicBoard.cardTitle'>{label}</Card.Title>
                 {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
                 <Menu.Trigger asChild disabled={!items?.length}>
@@ -91,7 +94,7 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
               </Card.Row>
               <Card.Row icon='ph--tag--regular'>
                 {label && (
-                  <div role='none' className='shrink-0 flex gap-1 items-center text-xs'>
+                  <div className='shrink-0 flex gap-1 items-center text-xs'>
                     <Tag palette={getHashStyles(label).hue}>{label}</Tag>
                   </div>
                 )}

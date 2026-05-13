@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { type MarkdownExtensionProvider, MarkdownCapabilities } from '@dxos/plugin-markdown/types';
+import { type MarkdownExtensionProvider, MarkdownCapabilities } from '@dxos/plugin-markdown';
 import { getSpace } from '@dxos/react-client/echo';
 
 import { WnfsCapabilities } from '#types';

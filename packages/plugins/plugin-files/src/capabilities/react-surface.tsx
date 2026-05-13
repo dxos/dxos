@@ -11,7 +11,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import { FilesSettings } from '#components';
 import { ExportStatus, LocalFileContainer } from '#containers';
 import { meta } from '#meta';
-import { FilesOperation } from '#operations';
+import { FilesOperation } from '#types';
 import { FileCapabilities, type Settings, type LocalFile } from '#types';
 
 import { isLocalFile } from '../util';

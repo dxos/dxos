@@ -8,12 +8,12 @@ import { getSpacePath } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
+import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { CollectionModel } from '@dxos/schema';
 
-import { AddMailbox } from './definitions';
+import { InboxOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof AddMailbox> = AddMailbox.pipe(
+const handler: Operation.WithHandler<typeof InboxOperation.AddMailbox> = InboxOperation.AddMailbox.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const target = input.target as any;

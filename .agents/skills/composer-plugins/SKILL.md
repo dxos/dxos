@@ -9,11 +9,23 @@ description: Use when working on files in packages/plugins/, adding new plugins,
 
 Exemplar: `packages/plugins/plugin-chess`. Read its source files to understand every pattern below.
 
+## Discovery
+
+Use the `dxos-introspect` MCP server as the source of truth for plugin metadata — not directory listings.
+A "plugin" is a package whose `src/meta.ts` exports a `Plugin.Meta`, so `ls packages/plugins/` overcounts (e.g. `plugin-spec` is tooling, not a plugin).
+
+- `mcp__dxos-introspect__list_plugins` — enumerate plugins (filter by `id` substring; pass `compact: true` for identifying fields only).
+- `mcp__dxos-introspect__get_package` — package details for a given plugin.
+- `mcp__dxos-introspect__list_surfaces` / `list_capabilities` / `list_operations` / `list_schemas` — drill into a plugin's contributions.
+- `mcp__dxos-introspect__find_symbol` / `get_symbol` / `list_symbols` — locate code by symbol rather than grepping paths.
+
+Reach for these first when answering questions like "how many plugins", "which plugin contributes X surface", or "where is symbol Y defined".
+
 ## Specification
 
 Each plugin MUST have a `PLUGIN.mdl` specification written in the MDL language defined by `plugin-spec` (see `packages/plugins/plugin-spec/docs/` and `src/extension/mdl.grammar` for syntax).
 
-**The `PLUGIN.mdl` IS the design document.** Do not write a separate design doc (e.g., in `docs/superpowers/specs/`). During brainstorming, once the design is approved, write the spec directly as `packages/plugins/plugin-<name>/PLUGIN.mdl`. Use `packages/plugins/plugin-spec/docs/PLUGIN-.template.mdl` as the template and `packages/plugins/plugin-chess/PLUGIN.mdl` as a reference.
+**The `PLUGIN.mdl` IS the design document.** Do not write a separate design doc (e.g., in `agents/superpowers/specs/`). During brainstorming, once the design is approved, write the spec directly as `packages/plugins/plugin-<name>/PLUGIN.mdl`. Use `packages/plugins/plugin-spec/docs/PLUGIN-.template.mdl` as the template and `packages/plugins/plugin-chess/PLUGIN.mdl` as a reference.
 
 The specification is the source of truth for what the plugin does. It must be:
 

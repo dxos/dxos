@@ -9,12 +9,12 @@ import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Integration } from '@dxos/plugin-integration/types';
+import { AutomationCapabilities } from '@dxos/plugin-automation';
+import { Integration } from '@dxos/plugin-integration';
 
 import { meta } from '#meta';
 
-import { Mailbox } from '../types';
-import { SyncMailbox } from './definitions';
+import { Mailbox, InboxOperation } from '../types';
 
 const syncOne = (integration: Integration.Integration, mailbox: Mailbox.Mailbox) =>
   Effect.gen(function* () {
@@ -42,7 +42,7 @@ const syncOne = (integration: Integration.Integration, mailbox: Mailbox.Mailbox)
     );
   });
 
-const handler: Operation.WithHandler<typeof SyncMailbox> = SyncMailbox.pipe(
+const handler: Operation.WithHandler<typeof InboxOperation.SyncMailbox> = InboxOperation.SyncMailbox.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const integrationObj = yield* Database.load(input.integration).pipe(

@@ -14,7 +14,7 @@ import { Event as EventType } from '@dxos/types';
 
 import { Event, type EventHeaderProps } from '#components';
 import { useShadowObject } from '#hooks';
-import { InboxOperation } from '#operations';
+import { InboxOperation } from '#types';
 
 export type EventArticleProps = AppSurface.ArticleProps<EventType.Event, {}, Obj.Unknown>;
 

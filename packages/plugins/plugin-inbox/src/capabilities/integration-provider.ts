@@ -11,15 +11,16 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
 import { withAuthorization } from '@dxos/functions';
-import {
-  IntegrationProvider as IntegrationProviderCapability,
-  type OnTokenCreated,
-} from '@dxos/plugin-integration/types';
+import { IntegrationProvider as IntegrationProviderCapability, type OnTokenCreated } from '@dxos/plugin-integration';
 import { OAuthProvider } from '@dxos/protocols';
 
-import { GMAIL_PROVIDER_ID, GOOGLE_CALENDAR_PROVIDER_ID, GOOGLE_INTEGRATION_SOURCE } from '../constants';
-import { GetGoogleCalendars, SyncCalendar, SyncMailbox } from '../operations/definitions';
-import { CalendarSyncOptions, Mailbox, SyncOptions } from '../types';
+import {
+  GMAIL_PROVIDER_ID,
+  GOOGLE_CALENDAR_PROVIDER_ID,
+  GOOGLE_CONTACTS_PROVIDER_ID,
+  GOOGLE_INTEGRATION_SOURCE,
+} from '../constants';
+import { CalendarSyncOptions, InboxOperation, Mailbox, SyncOptions } from '../types';
 
 const GoogleUserInfo = Schema.Struct({
   email: Schema.optional(Schema.String),
@@ -118,7 +119,7 @@ export default Capability.makeModule(
           ],
         },
         optionsSchema: SyncOptions,
-        sync: SyncMailbox,
+        sync: InboxOperation.SyncMailbox,
         onTokenCreated: gmailOnTokenCreated,
       },
       {
@@ -133,8 +134,23 @@ export default Capability.makeModule(
           ],
         },
         optionsSchema: CalendarSyncOptions,
-        getSyncTargets: GetGoogleCalendars,
-        sync: SyncCalendar,
+        getSyncTargets: InboxOperation.GetGoogleCalendars,
+        sync: InboxOperation.SyncCalendar,
+        onTokenCreated: calendarOnTokenCreated,
+      },
+      {
+        id: GOOGLE_CONTACTS_PROVIDER_ID,
+        source: GOOGLE_INTEGRATION_SOURCE,
+        label: 'Google Contacts',
+        oauth: {
+          provider: OAuthProvider.GOOGLE,
+          scopes: [
+            'https://www.googleapis.com/auth/contacts.readonly',
+            'https://www.googleapis.com/auth/userinfo.email',
+          ],
+        },
+        getSyncTargets: InboxOperation.GetGoogleContactGroups,
+        sync: InboxOperation.SyncContacts,
         onTokenCreated: calendarOnTokenCreated,
       },
     ]);

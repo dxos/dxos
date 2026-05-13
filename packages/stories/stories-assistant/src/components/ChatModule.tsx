@@ -4,22 +4,30 @@
 
 import React from 'react';
 
-import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
-import { Feed, Filter } from '@dxos/echo';
-import { Chat, useBlueprintRegistry, useChatProcessor, useOnline, usePresets } from '@dxos/plugin-assistant';
-import { Assistant } from '@dxos/plugin-assistant/types';
-import { useQuery } from '@dxos/react-client/echo';
+import { Agent } from '@dxos/assistant-toolkit';
+import { Feed, Filter, Obj } from '@dxos/echo';
+import { Assistant } from '@dxos/plugin-assistant';
+import { Chat } from '@dxos/plugin-assistant/components';
+import { useBlueprintRegistry, useChatProcessor, useOnline, usePresets } from '@dxos/plugin-assistant/hooks';
+import { useComputeRuntime } from '@dxos/plugin-automation/hooks';
+import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Panel, Popover, Toolbar } from '@dxos/react-ui';
 
 import { ExecutionGraphModule } from './ExecutionGraphModule';
-import { type ComponentProps } from './types';
+import { type ModuleProps } from './types';
 
-export const ChatModule = ({ space }: ComponentProps) => {
+export const ChatModule = ({ space }: ModuleProps) => {
   const [online, setOnline] = useOnline();
   const { preset, ...chatProps } = usePresets(online);
 
   const chats = useQuery(space.db, Filter.type(Assistant.Chat));
   const chat = chats.at(-1);
+
+  // TODO(burdon): Better way to get the agent?
+  const parent = chat ? Obj.getParent(chat) : undefined;
+  const agent = parent && Obj.instanceOf(Agent.Agent, parent) ? parent : undefined;
+  const [plan] = useObject(agent?.plan.target);
+  const hasPlan = (plan?.tasks?.length ?? 0) > 0;
 
   const blueprintRegistry = useBlueprintRegistry();
   const runtime = useProcessManagerRuntime();
@@ -36,13 +44,11 @@ export const ChatModule = ({ space }: ComponentProps) => {
   return (
     <Chat.Root chat={chat} feed={feed} processor={processor}>
       <Panel.Root className='dx-document'>
-        {/* TODO(burdon): Chat.Toolbar => Menu.Root which doesn't handle slot. Need to audit Root components. */}
-        <Panel.Toolbar>
+        <Panel.Toolbar asChild>
           <Chat.Toolbar />
         </Panel.Toolbar>
         <Panel.Content asChild>
-          {/* TODO(burdon): Remove relative. */}
-          <Chat.Content classNames='relative'>
+          <Chat.Content>
             <Toolbar.Root>
               <Toolbar.Text classNames='text-subdued'>{chat?.name}</Toolbar.Text>
               <Popover.Root>
@@ -58,6 +64,11 @@ export const ChatModule = ({ space }: ComponentProps) => {
               </Popover.Root>
             </Toolbar.Root>
             <Chat.Thread />
+            {hasPlan && (
+              <div className='flex flex-col items-center py-2 overflow-hidden'>
+                <Chat.TaskList classNames='max-h-[120px] border border-separator rounded-sm text-description' />
+              </div>
+            )}
             <Chat.Prompt
               {...chatProps}
               classNames='border-none rounded-none'

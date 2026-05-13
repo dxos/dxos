@@ -28,7 +28,7 @@ export const MarkdownEditorToolbar = composable<HTMLDivElement, MarkdownEditorTo
     }
 
     return (
-      <div role='none' className='contents' ref={forwardedRef}>
+      <div className='contents' ref={forwardedRef}>
         <Editor.Toolbar
           {...rest}
           classNames={className}

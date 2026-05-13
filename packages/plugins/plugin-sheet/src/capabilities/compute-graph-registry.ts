@@ -4,9 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capabilities, Capability } from '@dxos/app-framework';
-import { Operation, ServiceResolver } from '@dxos/compute';
-import { type SpaceId } from '@dxos/keys';
+import { Capability } from '@dxos/app-framework';
+import { AutomationCapabilities } from '@dxos/plugin-automation';
 
 import { SheetCapabilities } from '#types';
 

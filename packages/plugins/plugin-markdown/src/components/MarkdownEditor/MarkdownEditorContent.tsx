@@ -130,7 +130,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
           extensions,
         ].filter(isTruthy),
       }),
-      [id, viewMode, themeMode, extensions],
+      [id, viewMode, themeMode, extensions, compact],
     );
 
     useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => editorView, [editorView]);
@@ -149,7 +149,6 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
       <div
         {...focusAttributes}
         className={mx(editorClassNames(role), classNames)}
-        role='none'
         data-testid='composer.markdownRoot'
         data-popover-collision-boundary={true}
         ref={parentRef}

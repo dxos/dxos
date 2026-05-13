@@ -2,88 +2,48 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ReactNode, useCallback, useState } from 'react';
+import React from 'react';
 
-import { Surface, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
-import { Obj, Ref } from '@dxos/echo';
-import { Integration } from '@dxos/plugin-integration/types';
-import { Filter, useQuery } from '@dxos/react-client/echo';
-import { IconButton, Message, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { useTranslation } from '@dxos/react-ui';
+import { composable } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { InboxOperation } from '#operations';
+import { InboxOperation } from '#types';
 import { type Mailbox } from '#types';
 
+import { Initialize, InitializeAction } from '../../components';
 import { GMAIL_PROVIDER_ID } from '../../constants';
 
 export type InitializeMailboxProps = {
   mailbox: Mailbox.Mailbox;
 };
 
-/**
- * Empty state for the mailbox: guides the user through connecting an integration or syncing.
- */
 export const InitializeMailbox = composable<HTMLDivElement, InitializeMailboxProps>(
   ({ mailbox, ...props }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
-    const { invokePromise } = useOperationInvoker();
-    const pluginManager = usePluginManager();
-    const db = Obj.getDatabase(mailbox);
-    const [syncing, setSyncing] = useState(false);
-
-    const integrations = useQuery(db, Filter.type(Integration.Integration));
-    const mailboxIntegration = integrations.find((integration) =>
-      integration.targets.some((target) => target.object?.dxn.asEchoDXN()?.echoId === mailbox.id),
-    );
-
-    const handleSync = useCallback(async () => {
-      if (!mailboxIntegration) {
-        return;
-      }
-      setSyncing(true);
-      try {
-        await invokePromise(InboxOperation.SyncMailbox, {
-          integration: Ref.make(mailboxIntegration),
-          mailbox: Ref.make(mailbox),
-        });
-      } finally {
-        setSyncing(false);
-      }
-    }, [invokePromise, mailbox, mailboxIntegration]);
-
-    let message: string | undefined;
-    let action: ReactNode;
-    if (mailboxIntegration) {
-      action = (
-        <IconButton
-          disabled={syncing}
-          variant='primary'
-          iconClassNames={syncing ? 'animate-spin' : undefined}
-          icon={syncing ? 'ph--spinner-gap--regular' : 'ph--arrow-clockwise--regular'}
-          label={t('sync-mailbox.label')}
-          onClick={handleSync}
-        />
-      );
-    } else {
-      message = t('no-integrations.label');
-      const data = { providerId: GMAIL_PROVIDER_ID, existingTarget: Ref.make(mailbox) };
-      action = Surface.isAvailable(pluginManager.capabilities, { role: 'integration--auth', data }) ? (
-        <Surface.Surface role='integration--auth' data={data} limit={1} />
-      ) : null;
-    }
-
     return (
-      <div {...composableProps(props, { classNames: 'flex flex-col items-center gap-4 p-8' })} ref={forwardedRef}>
-        {message && (
-          <Message.Root valence='neutral'>
-            <Message.Title>{message}</Message.Title>
-          </Message.Root>
-        )}
-        {action}
-      </div>
+      <Initialize
+        {...props}
+        target={mailbox}
+        noIntegrationMessage={t('no-integrations.label')}
+        emptyMessage={t('empty-mailbox.message')}
+        ref={forwardedRef}
+      />
     );
   },
 );
 
 InitializeMailbox.displayName = 'InitializeMailbox';
+
+export const InitializeMailboxAction = ({ mailbox }: InitializeMailboxProps) => {
+  const { t } = useTranslation(meta.id);
+  return (
+    <InitializeAction
+      target={mailbox}
+      targetKey='mailbox'
+      providerId={GMAIL_PROVIDER_ID}
+      operation={InboxOperation.SyncMailbox}
+      syncLabel={t('sync-mailbox.label')}
+    />
+  );
+};

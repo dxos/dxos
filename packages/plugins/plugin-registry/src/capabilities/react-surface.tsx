@@ -7,12 +7,20 @@ import React, { useMemo } from 'react';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
+import { AppCapabilities } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { CommunityRegistry, LOAD_PLUGIN_DIALOG, LoadPluginDialog, PluginArticle, PluginRegistry } from '#containers';
-import { registryCategoryId } from '#meta';
+import {
+  LOAD_PLUGIN_DIALOG,
+  LoadPluginDialog,
+  PluginArticle,
+  PublicRegistryArticle,
+  RegistryArticle,
+  RegistrySettingsContainer,
+} from '#containers';
+import { meta, registryCategoryId } from '#meta';
 
-import { useAutoTags, useCommunityPlugins, useRemotePluginIds } from '../hooks';
+import { useAutoTags, useRegistryPlugins, useRemotePluginIds } from '../hooks';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -23,20 +31,15 @@ export default Capability.makeModule(() =>
         component: () => {
           const manager = usePluginManager();
           const remoteIds = useRemotePluginIds();
-          const { entries } = useCommunityPlugins();
-          const extraTagsById = useAutoTags(entries);
-          const filtered = useMemo(
+          const core = useMemo(() => manager.getCore(), [manager]);
+          const predicate = useMemo<PluginPredicate>(
             () =>
-              manager
-                .getPlugins()
-                .filter(({ meta }) => !manager.getCore().includes(meta.id))
-                .filter(({ meta }) => !remoteIds.has(meta.id)),
-            [manager, remoteIds],
+              ({ meta }) =>
+                !core.includes(meta.id) && !remoteIds.has(meta.id),
+            [core, remoteIds],
           );
 
-          return (
-            <PluginRegistry id={registryCategoryId('official')} plugins={filtered} extraTagsById={extraTagsById} />
-          );
+          return <FilteredRegistryArticle id={registryCategoryId('official')} filter={predicate} />;
         },
       }),
       Surface.create({
@@ -44,20 +47,16 @@ export default Capability.makeModule(() =>
         filter: AppSurface.literal(AppSurface.Article, registryCategoryId('installed')),
         component: () => {
           const manager = usePluginManager();
-          const { entries } = useCommunityPlugins();
-          const extraTagsById = useAutoTags(entries);
-          const filtered = useMemo(
+          const core = useMemo(() => manager.getCore(), [manager]);
+          const enabled = useMemo(() => manager.getEnabled(), [manager]);
+          const predicate = useMemo<PluginPredicate>(
             () =>
-              manager
-                .getPlugins()
-                .filter(({ meta }) => !manager.getCore().includes(meta.id))
-                .filter(({ meta }) => manager.getEnabled().includes(meta.id)),
-            [manager],
+              ({ meta }) =>
+                !core.includes(meta.id) && enabled.includes(meta.id),
+            [core, enabled],
           );
 
-          return (
-            <PluginRegistry id={registryCategoryId('installed')} plugins={filtered} extraTagsById={extraTagsById} />
-          );
+          return <FilteredRegistryArticle id={registryCategoryId('installed')} filter={predicate} />;
         },
       }),
       Surface.create({
@@ -66,42 +65,35 @@ export default Capability.makeModule(() =>
         component: () => {
           const manager = usePluginManager();
           const remoteIds = useRemotePluginIds();
-          const { entries } = useCommunityPlugins();
-          const extraTagsById = useAutoTags(entries);
-          const filtered = useMemo(
+          const core = useMemo(() => manager.getCore(), [manager]);
+          const predicate = useMemo<PluginPredicate>(
             () =>
-              manager
-                .getPlugins()
-                .filter(({ meta }) => !manager.getCore().includes(meta.id))
-                .filter(({ meta }) => !remoteIds.has(meta.id))
-                .filter(({ meta }) => !meta.tags?.includes('labs')),
-            [manager, remoteIds],
+              ({ meta }) =>
+                !core.includes(meta.id) && !remoteIds.has(meta.id) && !meta.tags?.includes('labs'),
+            [core, remoteIds],
           );
 
-          return (
-            <PluginRegistry id={registryCategoryId('recommended')} plugins={filtered} extraTagsById={extraTagsById} />
-          );
+          return <FilteredRegistryArticle id={registryCategoryId('recommended')} filter={predicate} />;
         },
       }),
       Surface.create({
         id: 'labs',
         filter: AppSurface.literal(AppSurface.Article, registryCategoryId('labs')),
         component: () => {
-          const manager = usePluginManager();
-          const { entries } = useCommunityPlugins();
-          const extraTagsById = useAutoTags(entries);
-          const filtered = useMemo(
-            () => manager.getPlugins().filter(({ meta }) => meta.tags?.includes('labs')),
-            [manager],
+          const predicate = useMemo<PluginPredicate>(
+            () =>
+              ({ meta }) =>
+                meta.tags?.includes('labs') ?? false,
+            [],
           );
 
-          return <PluginRegistry id={registryCategoryId('labs')} plugins={filtered} extraTagsById={extraTagsById} />;
+          return <FilteredRegistryArticle id={registryCategoryId('labs')} filter={predicate} />;
         },
       }),
       Surface.create({
-        id: 'community',
-        filter: AppSurface.literal(AppSurface.Article, registryCategoryId('community')),
-        component: () => <CommunityRegistry id={registryCategoryId('community')} />,
+        id: 'registry',
+        filter: AppSurface.literal(AppSurface.Article, registryCategoryId('registry')),
+        component: () => <PublicRegistryArticle id={registryCategoryId('registry')} />,
       }),
       Surface.create({
         id: 'plugin-details',
@@ -115,6 +107,30 @@ export default Capability.makeModule(() =>
         filter: AppSurface.component(AppSurface.Dialog, LOAD_PLUGIN_DIALOG),
         component: () => <LoadPluginDialog />,
       }),
+      Surface.create({
+        id: 'plugin-settings',
+        role: 'article',
+        filter: (data): data is { subject: AppCapabilities.Settings } =>
+          AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,
+        component: ({ data: { subject } }) => <RegistrySettingsContainer subject={subject} />,
+      }),
     ]),
   ),
 );
+
+type PluginPredicate = (plugin: Plugin.Plugin) => boolean;
+
+/**
+ * Renders the {@link RegistryArticle} surface filtered by an arbitrary
+ * predicate computed against the live plugin list. Centralises the
+ * `usePluginManager` + `useRegistryPlugins` + `useAutoTags` wiring shared
+ * by every category surface.
+ */
+const FilteredRegistryArticle = ({ id, filter }: { id: string; filter: PluginPredicate }) => {
+  const manager = usePluginManager();
+  const { entries } = useRegistryPlugins();
+  const extraTagsById = useAutoTags(entries);
+  const filtered = useMemo(() => manager.getPlugins().filter(filter), [manager, filter]);
+
+  return <RegistryArticle id={id} plugins={filtered} extraTagsById={extraTagsById} />;
+};

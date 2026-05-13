@@ -5,13 +5,12 @@
 import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
-import { InboxOperation } from '#operations';
-
-const BLUEPRINT_KEY = 'org.dxos.blueprint.calendar';
+import { InboxOperation } from '#types';
+import { Calendar } from '#types';
 
 const make = () =>
   Blueprint.make({
-    key: BLUEPRINT_KEY,
+    key: Calendar.BLUEPRINT_KEY,
     name: 'Calendar',
     tools: Blueprint.toolDefinitions({ operations: [InboxOperation.GoogleCalendarSync], tools: [] }),
     instructions: Template.make({
@@ -22,7 +21,7 @@ const make = () =>
   });
 
 const blueprint: Blueprint.Definition = {
-  key: BLUEPRINT_KEY,
+  key: Calendar.BLUEPRINT_KEY,
   make,
 };
 

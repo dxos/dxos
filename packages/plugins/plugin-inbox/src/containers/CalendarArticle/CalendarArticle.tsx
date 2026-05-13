@@ -11,8 +11,7 @@ import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { type Feed, Obj, Query } from '@dxos/echo';
 import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
-import { linkedSegment } from '@dxos/react-ui-attention';
-import { useSelected } from '@dxos/react-ui-attention';
+import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { Event } from '@dxos/types';
 
@@ -20,7 +19,7 @@ import { EventStack, type EventStackActionHandler } from '#components';
 import { meta } from '#meta';
 import { type Calendar } from '#types';
 
-import { NewCalendar } from './NewCalendar';
+import { InitializeCalendar, InitializeCalendarAction } from './InitializeCalendar';
 
 const byDate =
   (direction = -1) =>
@@ -81,7 +80,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
 
   return (
     <div role={role} className='@container dx-container overflow-hidden'>
-      <div role='none' className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] h-full'>
+      <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] h-full'>
         <Panel.Root className='hidden @3xl:block'>
           <NaturalCalendar.Root>
             <Panel.Toolbar asChild>
@@ -95,14 +94,13 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
             </Panel.Content>
           </NaturalCalendar.Root>
         </Panel.Root>
-
         <Panel.Root>
           <Panel.Toolbar asChild>
-            <Toolbar.Root />
+            <Toolbar.Root>{isEmpty && <InitializeCalendarAction calendar={subject} />}</Toolbar.Root>
           </Panel.Toolbar>
           <Panel.Content asChild>
             {isEmpty ? (
-              <NewCalendar calendar={subject} />
+              <InitializeCalendar calendar={subject} />
             ) : (
               <EventStack id={id} events={events} currentId={currentId} onAction={handleAction} />
             )}

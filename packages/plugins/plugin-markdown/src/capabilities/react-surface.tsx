@@ -15,12 +15,12 @@ import {
 } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { AttentionCapabilities } from '@dxos/plugin-attention/types';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Text } from '@dxos/schema';
 import { type EditorViewMode } from '@dxos/ui-editor/types';
 
 import { MarkdownSettings } from '#components';
-import { MarkdownCard, MarkdownEditableCard, MarkdownContainer, type MarkdownContainerProps } from '#containers';
+import { MarkdownCard, EditableMarkdownCard, MarkdownContainer, type MarkdownContainerProps } from '#containers';
 import { meta } from '#meta';
 import { Markdown, MarkdownCapabilities } from '#types';
 
@@ -78,7 +78,7 @@ export default Capability.makeModule(() =>
         id: 'surface.editable',
         position: 'hoist',
         filter: AppSurface.object(AppSurface.Card, [Markdown.Document, Text.Text], (data) => data.editable === true),
-        component: ({ data }) => <MarkdownEditableCard subject={data.subject} />,
+        component: ({ data }) => <EditableMarkdownCard subject={data.subject} />,
       }),
       Surface.create({
         id: 'surface.preview',

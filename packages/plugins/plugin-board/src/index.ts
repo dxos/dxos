@@ -3,5 +3,4 @@
 //
 
 export * from './meta';
-
-export * from './BoardPlugin';
+export * from './types';

@@ -14,18 +14,19 @@ import { ProcessManager } from '@dxos/compute-runtime';
 import { Feed, Filter, Query } from '@dxos/echo';
 import { FeedTraceSink } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
-import { AutomationPlugin } from '@dxos/plugin-automation';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { useComputeRuntime } from '@dxos/plugin-automation/hooks';
+import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
-import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
+import { IconButton, Panel, ScrollContainer, Toolbar } from '@dxos/react-ui';
 import { Timeline } from '@dxos/react-ui-components';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
 
-import { AssistantPlugin } from '../../cli';
 import { buildExecutionGraph } from './execution-graph';
 import { PLAYBACK_INTERVAL_MS, STEP_STORAGE_KEY, SimulatedAgent, useLocalStorageNumber } from './testing';
 import { TracePanel } from './TracePanel';
@@ -191,28 +192,35 @@ const SnapshotStory = () => {
   }, [handleNext, handlePrev, handleTogglePlay, handleReset, handleShowAll]);
 
   return (
-    <BaseStory
-      toolbar={
-        <Toolbar.Root>
-          <IconButton iconOnly icon='ph--skip-back--regular' label='Reset (R)' onClick={handleReset} />
-          <IconButton iconOnly icon='ph--caret-left--regular' label='Step back (← / H)' onClick={handlePrev} />
-          <IconButton
-            iconOnly
-            icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
-            label={playing ? 'Pause (Space)' : 'Play (Space)'}
-            onClick={handleTogglePlay}
-          />
-          <IconButton iconOnly icon='ph--caret-right--regular' label='Step forward (→ / L)' onClick={handleNext} />
-          <IconButton iconOnly icon='ph--skip-forward--regular' label='Show all (E / End)' onClick={handleShowAll} />
-          <Toolbar.Separator />
-          <Toolbar.Text className='text-sm tabular-nums opacity-70'>
-            `${step} / ${total}`
-          </Toolbar.Text>
-        </Toolbar.Root>
-      }
-    >
-      <Timeline branches={branches} commits={commits} showTimestamp />
-    </BaseStory>
+    <ScrollContainer.Root pin>
+      <BaseStory
+        toolbar={
+          <Toolbar.Root>
+            <IconButton iconOnly icon='ph--skip-back--regular' label='Reset (R)' onClick={handleReset} />
+            <IconButton iconOnly icon='ph--caret-left--regular' label='Step back (← / H)' onClick={handlePrev} />
+            <IconButton
+              iconOnly
+              icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
+              label={playing ? 'Pause (Space)' : 'Play (Space)'}
+              onClick={handleTogglePlay}
+            />
+            <IconButton iconOnly icon='ph--caret-right--regular' label='Step forward (→ / L)' onClick={handleNext} />
+            <IconButton iconOnly icon='ph--skip-forward--regular' label='Show all (E / End)' onClick={handleShowAll} />
+            <Toolbar.Text className='text-right text-sm tabular-nums opacity-70'>
+              {step} / {total}
+            </Toolbar.Text>
+          </Toolbar.Root>
+        }
+      >
+        <ScrollContainer.Content thin>
+          <ScrollContainer.Viewport>
+            <Timeline branches={branches} commits={commits} showTimestamp />
+          </ScrollContainer.Viewport>
+          <ScrollContainer.ScrollDownButton />
+          <ScrollContainer.Fade />
+        </ScrollContainer.Content>
+      </BaseStory>
+    </ScrollContainer.Root>
   );
 };
 

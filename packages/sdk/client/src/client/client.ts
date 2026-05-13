@@ -51,20 +51,24 @@ import { ClientRuntime } from './client-runtime';
 export type ClientOptions = {
   /** Client configuration object. */
   config?: Config;
+
   /** Custom services provider. */
   services?: MaybePromise<ClientServicesProvider>;
+
   /** ECHO schema. */
   types?: Type.AnyEntity[];
+
   /** Shell path. */
   shell?: string;
+
+  /** Path to SQLite database file for persistent indexing in Node/Bun. Dervied from config's dataRoot. */
+  sqlitePath?: string;
+
   /** Create client worker. */
   createWorker?: () => SharedWorker;
 
   /** When running in the host mode, a factory to create the worker for OPFS sqlite database. */
   createOpfsWorker?: () => Worker;
-
-  /** Path to SQLite database file for persistent indexing in Node/Bun. Dervied from config's dataRoot. */
-  sqlitePath?: string;
 };
 
 /**

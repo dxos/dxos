@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useMemo } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
-import { useCapabilities, useCapability, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, CollaborationOperation, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Relation } from '@dxos/echo';
@@ -19,7 +19,7 @@ import { AnchoredTo, Thread } from '@dxos/types';
 
 import { CommentsPanel, type CommentsPanelProps } from '#components';
 import { meta } from '#meta';
-import { ThreadOperation } from '#operations';
+import { ThreadOperation } from '#types';
 import { ThreadCapabilities, type ViewState } from '#types';
 
 const initialViewState: ViewState = { showResolvedThreads: false };
@@ -33,7 +33,6 @@ export type ThreadCompanionProps = AppSurface.ObjectArticleProps<
 
 export const ThreadCompanion = ({ attendableId, subject }: ThreadCompanionProps) => {
   const { t } = useTranslation(meta.id);
-  const manager = usePluginManager();
   const { invokePromise } = useOperationInvoker();
   const identity = useIdentity();
   const subjectId = Obj.getDXN(subject).toString();
@@ -66,6 +65,7 @@ export const ThreadCompanion = ({ attendableId, subject }: ThreadCompanionProps)
     [registry, viewStoreAtom, subjectId],
   );
 
+  const commentConfigs = useCapabilities(AppCapabilities.CommentConfig);
   const anchorSorts = useCapabilities(AppCapabilities.AnchorSort);
   const sort = useMemo(
     () => anchorSorts.find(({ key }) => key === Obj.getTypename(subject))?.sort,
@@ -93,14 +93,12 @@ export const ThreadCompanion = ({ attendableId, subject }: ThreadCompanionProps)
         // Scroll plank into view (deck handler).
         void invokePromise(LayoutOperation.ScrollIntoView, { subject: parentId });
 
-        // Scroll within content to anchor (metadata-driven, per typename).
+        // Scroll within content to anchor (comment config per typename).
         if (anchor.anchor && parentId) {
           const typename = Obj.getTypename(subject);
-          const metadata = manager.capabilities
-            .getAll(AppCapabilities.Metadata)
-            .find(({ id }) => id === typename)?.metadata;
-          if (metadata?.scrollToAnchor) {
-            void invokePromise(metadata.scrollToAnchor, {
+          const commentConfig = commentConfigs.find(({ id }) => id === typename);
+          if (commentConfig?.scrollToAnchor) {
+            void invokePromise(commentConfig.scrollToAnchor, {
               subject: parentId,
               cursor: anchor.anchor,
               ref: threadId,
@@ -109,7 +107,7 @@ export const ThreadCompanion = ({ attendableId, subject }: ThreadCompanionProps)
         }
       }
     },
-    [state.current, invokePromise, registry, stateAtom, parentId, subject, manager],
+    [state.current, invokePromise, registry, stateAtom, parentId, subject, commentConfigs],
   );
 
   const handleComment = useCallback(

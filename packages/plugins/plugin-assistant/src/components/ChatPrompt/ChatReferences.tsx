@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import React from 'react';
 
-import { type AiContextBinder } from '@dxos/assistant';
+import { type AiContext } from '@dxos/assistant';
 import { Annotation, type Database, Obj } from '@dxos/echo';
 import { Icon, IconButton, type Label, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { getStyles, mx } from '@dxos/ui-theme';
@@ -14,7 +14,7 @@ import { useContextObjects } from '#hooks';
 import { meta } from '#meta';
 
 export type ChatReferencesProps = ThemedClassName<{
-  context: AiContextBinder;
+  context: AiContext.Binder;
   db: Database.Database;
 }>;
 

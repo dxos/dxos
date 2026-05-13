@@ -16,12 +16,64 @@ import * as Ref from 'effect/Ref';
 
 import { runAndForwardErrors } from '@dxos/effect';
 import { Performance } from '@dxos/effect';
+import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
 import * as ActivationEvent from './activation-event';
 import * as Capability from './capability';
 import * as CapabilityManager from './capability-manager';
 import * as Plugin from './plugin';
+// Imported with a `PluginRegistry` alias because the unrelated `@effect-atom/atom-react`
+// `Registry` is already imported above; from outside this file the namespace is
+// re-exported as `Registry` via `./index.ts`.
+import * as PluginRegistry from './registry';
+
+/**
+ * Tagged error for failures during the constructor-launched core/enabled
+ * `enable()` chain. Surfaces via {@link PluginManager.activate}'s wait on
+ * `_initialization` so a caller blocked on initialization gets a typed
+ * failure (with the original error preserved as `cause`) instead of an
+ * untyped `Error`.
+ */
+export class PluginInitializationError extends BaseError.extend(
+  'PluginInitializationError',
+  'Plugin manager initialization failed',
+) {}
+
+/**
+ * Tagged error raised when a plugin exceeds its configured load or activation
+ * timeout. The plugin manager records the failure on the `failed` atom and
+ * auto-disables the plugin so that one stuck remote does not stall app boot.
+ * `context.id` is the plugin id, `context.phase` is `'load'` or `'activation'`.
+ */
+export class PluginTimeoutError extends BaseError.extend('PluginTimeoutError', 'Plugin operation timed out') {}
+
+/** Phase of the plugin lifecycle in which the failure was observed. */
+export type PluginFailurePhase = 'load' | 'activation';
+
+/** Why the plugin entered a failed state. */
+export type PluginFailureReason = 'timeout' | 'error';
+
+/**
+ * Record of a plugin that failed to load or activate. Surfaced via the
+ * {@link PluginManager.failed} atom so registry / UI consumers can flag
+ * unhealthy plugins (e.g. a remote host that has gone offline) rather than
+ * leaving the app in a half-broken state.
+ */
+export type PluginFailure = {
+  readonly id: string;
+  readonly phase: PluginFailurePhase;
+  readonly reason: PluginFailureReason;
+  readonly error: Error;
+  /** `Date.now()` when the failure was recorded. */
+  readonly timestamp: number;
+};
+
+/** Default deadline for resolving a lazy plugin's dynamic import. */
+const DEFAULT_LOAD_TIMEOUT = Duration.seconds(30);
+
+/** Default deadline for a single module's `activate()` body. */
+const DEFAULT_ACTIVATION_TIMEOUT = Duration.seconds(30);
 
 /**
  * Identifier denoting a Manager.
@@ -29,18 +81,54 @@ import * as Plugin from './plugin';
 export const ManagerTypeId: unique symbol = Symbol.for('@dxos/app-framework/Manager');
 export type ManagerTypeId = typeof ManagerTypeId;
 
+/**
+ * Loader result that carries optional metadata about how the plugin was sourced.
+ *
+ * `dev: true` marks a plugin as session-only and triggers shadow-on-id-collision
+ * inside the manager: if a plugin with the same id is already registered (a
+ * builtin, or a previously-installed plugin from the registry), the dev plugin
+ * temporarily takes over that id slot. The original is restored when the dev
+ * plugin is removed (or on page reload, since dev plugins aren't persisted).
+ */
+export type LoadedPlugin = {
+  plugin: Plugin.Plugin;
+  /** True when the plugin came from a dev source. See type doc for semantics. */
+  dev?: boolean;
+};
+
 export type ManagerOptions = {
-  pluginLoader: (id: string) => Effect.Effect<Plugin.Plugin, Error>;
+  pluginLoader: (id: string) => Effect.Effect<LoadedPlugin, Error>;
   plugins?: Plugin.Plugin[];
   core?: string[];
   enabled?: string[];
   registry?: Registry.Registry;
+  /**
+   * Backend for the plugin registry catalog. When omitted the manager exposes a
+   * no-op `pluginRegistry` (empty list, no versions endpoint). Implementations
+   * live in app-framework alongside the interface (e.g.
+   * `EdgeRegistryPluginProvider`); the host app instantiates one and passes it in.
+   */
+  pluginRegistryProvider?: PluginRegistry.PluginProvider;
   /**
    * Hook called when a plugin is removed via {@link PluginManager.remove}. Used by the
    * host app to clean up persisted state (e.g. evict offline-cached plugin assets).
    * Failures are logged and swallowed; removal still succeeds even if the hook fails.
    */
   onRemove?: (id: string) => Effect.Effect<void, unknown>;
+  /**
+   * Maximum time allowed for a lazy plugin's dynamic `import()` to resolve.
+   * Plugins that exceed this are flagged on the {@link PluginManager.failed}
+   * atom and auto-disabled so a stuck remote host can't stall app boot.
+   * Defaults to 30 seconds; pass `Duration.infinity` to disable.
+   */
+  loadTimeout?: Duration.DurationInput;
+  /**
+   * Maximum time allowed for a single module's `activate()` Effect to settle.
+   * Modules that exceed this fail with {@link PluginTimeoutError}; the owning
+   * plugin is recorded on `failed` and auto-disabled. Defaults to 30 seconds;
+   * pass `Duration.infinity` to disable.
+   */
+  activationTimeout?: Duration.DurationInput;
 };
 
 export type ActivationMessage = {
@@ -59,6 +147,13 @@ export interface PluginManager {
   readonly activation: PubSub.PubSub<ActivationMessage>;
   readonly capabilities: CapabilityManager.CapabilityManager;
   readonly registry: Registry.Registry;
+  /**
+   * Cached registry catalog state plus pass-throughs for `listVersions` /
+   * `getPlugin`. Always present — the host supplies a `pluginRegistryProvider`
+   * via {@link ManagerOptions} for real backends, or it falls back to a no-op
+   * implementation that yields an empty catalog.
+   */
+  readonly pluginRegistry: PluginRegistry.Manager;
 
   readonly plugins: Atom.Atom<readonly Plugin.Plugin[]>;
   readonly core: Atom.Atom<readonly string[]>;
@@ -67,6 +162,19 @@ export interface PluginManager {
   readonly active: Atom.Atom<readonly string[]>;
   readonly eventsFired: Atom.Atom<readonly string[]>;
   readonly pendingReset: Atom.Atom<readonly string[]>;
+  /**
+   * Plugins that failed to load or activate. Subscribers (e.g. the registry
+   * UI) can use this to flag unhealthy entries; a plugin id appears here at
+   * most once with its most recent failure.
+   */
+  readonly failed: Atom.Atom<readonly PluginFailure[]>;
+  /**
+   * Ids of currently-registered plugins that came from a dev source (loaded
+   * via {@link LoadedPlugin} with `dev: true`). Subscribers can use this to
+   * badge dev-overridden plugins or to derive the id of the active dev plugin
+   * for an "uninstall dev plugin" affordance.
+   */
+  readonly devPluginIds: Atom.Atom<readonly string[]>;
 
   getPlugins(): readonly Plugin.Plugin[];
   getCore(): readonly string[];
@@ -75,6 +183,14 @@ export interface PluginManager {
   getActive(): readonly string[];
   getEventsFired(): readonly string[];
   getPendingReset(): readonly string[];
+  getFailed(): readonly PluginFailure[];
+  getDevPluginIds(): readonly string[];
+
+  /**
+   * Clears the failure record for a plugin so it can be retried. Returns
+   * whether a failure record existed and was removed.
+   */
+  clearFailure(id: string): boolean;
 
   /**
    * Loads a plugin via the plugin loader and registers it without enabling it.
@@ -116,6 +232,7 @@ class ManagerImpl implements PluginManager {
   readonly activation = Effect.runSync(PubSub.unbounded<ActivationMessage>());
   readonly capabilities: CapabilityManager.CapabilityManager;
   readonly registry: Registry.Registry;
+  readonly pluginRegistry: PluginRegistry.Manager;
 
   private readonly _pluginsAtom: Atom.Writable<Plugin.Plugin[]>;
   private readonly _coreAtom: Atom.Writable<string[]>;
@@ -124,16 +241,41 @@ class ManagerImpl implements PluginManager {
   private readonly _activeAtom: Atom.Writable<string[]>;
   private readonly _eventsFiredAtom: Atom.Writable<string[]>;
   private readonly _pendingResetAtom: Atom.Writable<string[]>;
+  private readonly _failedAtom: Atom.Writable<PluginFailure[]>;
   private readonly _pluginLoader: ManagerOptions['pluginLoader'];
   private readonly _onRemove: ManagerOptions['onRemove'];
+  private readonly _loadTimeout: Duration.DurationInput;
+  private readonly _activationTimeout: Duration.DurationInput;
   private readonly _capabilities = new Map<string, Capability.Any[]>();
   private readonly _moduleMemoMap = new Map<Plugin.PluginModule['id'], Deferred.Deferred<Capability.Any[], Error>>();
   private readonly _moduleSemaphores = new Map<Plugin.PluginModule['id'], Effect.Semaphore>();
+  // Coalesces concurrent `_resolveLazyPlugin` calls per plugin id. Without
+  // this, two callers entering `enable(id)` before the swap completes would
+  // each invoke `mod.default(options)` and produce distinct module objects,
+  // defeating `_addModule`'s reference-equality dedupe and racing the
+  // `_pluginsAtom` swap.
+  private readonly _resolvingPlugins = new Map<string, Deferred.Deferred<Plugin.Plugin, Plugin.LazyPluginError>>();
+  // Tracks dev-source plugins (loaded via a Vite dev server) keyed by id.
+  // When `shadow` is present, the entry has displaced an existing plugin —
+  // `remove` reinstates it and re-enables iff `wasEnabled`. Entries without a
+  // shadow are dev plugins with no underlying registry/builtin to restore.
+  // The atom mirrors the map's keys for UI subscribers (they don't need the
+  // shadow internals); the two stay in sync via {@link _markDev}/{@link _unmarkDev}.
+  private readonly _devPlugins = new Map<string, { shadow?: { plugin: Plugin.Plugin; wasEnabled: boolean } }>();
+  private readonly _devPluginIdsAtom: Atom.Writable<string[]>;
   private readonly _activatingEvents = Effect.runSync(Ref.make<string[]>([]));
   private readonly _activatingModules = Effect.runSync(Ref.make<string[]>([]));
   private readonly _inFlightFibers = Effect.runSync(Ref.make<Array<Fiber.Fiber<unknown, unknown>>>([]));
   private readonly _shutdownSemaphore = Effect.runSync(Effect.makeSemaphore(1));
   private readonly _shuttingDown = Effect.runSync(Ref.make(false));
+  // Tracks the constructor-launched core/enabled `enable()` calls so that
+  // `activate` can wait for module registration before dispatching events.
+  // Lazy plugins make `enable` asynchronous (a dynamic `import()` happens
+  // inside it), so without this synchronization an `activate` triggered
+  // immediately after `make` could fire on an empty module set. Failures
+  // are wrapped in `PluginInitializationError` so awaiters get a tagged
+  // error rather than the wide `Error` produced by the underlying chain.
+  private readonly _initialization = Effect.runSync(Deferred.make<void, PluginInitializationError>());
 
   constructor({
     pluginLoader,
@@ -141,15 +283,21 @@ class ManagerImpl implements PluginManager {
     core = plugins.map(({ meta }) => meta.id),
     enabled = [],
     registry,
+    pluginRegistryProvider,
     onRemove,
+    loadTimeout = DEFAULT_LOAD_TIMEOUT,
+    activationTimeout = DEFAULT_ACTIVATION_TIMEOUT,
   }: ManagerOptions) {
     this.registry = registry ?? Registry.make();
     this.capabilities = CapabilityManager.make({
       registry: this.registry,
     });
+    this.pluginRegistry = new PluginRegistry.Manager(pluginRegistryProvider, this.registry);
 
     this._pluginLoader = pluginLoader;
     this._onRemove = onRemove;
+    this._loadTimeout = loadTimeout;
+    this._activationTimeout = activationTimeout;
     this._pluginsAtom = Atom.make(plugins).pipe(Atom.keepAlive);
     this._coreAtom = Atom.make(core).pipe(Atom.keepAlive);
     this._enabledAtom = Atom.make(enabled).pipe(Atom.keepAlive);
@@ -157,8 +305,22 @@ class ManagerImpl implements PluginManager {
     this._activeAtom = Atom.make<string[]>([]).pipe(Atom.keepAlive);
     this._eventsFiredAtom = Atom.make<string[]>([]).pipe(Atom.keepAlive);
     this._pendingResetAtom = Atom.make<string[]>([]).pipe(Atom.keepAlive);
+    this._failedAtom = Atom.make<PluginFailure[]>([]).pipe(Atom.keepAlive);
+    this._devPluginIdsAtom = Atom.make<string[]>([]).pipe(Atom.keepAlive);
     plugins.forEach((plugin) => this._addPlugin(plugin));
-    void Effect.all([...core, ...enabled].map((id) => this.enable(id))).pipe(runAndForwardErrors);
+    // Dedupe before mapping to `enable` — `core` and `enabled` may overlap (an
+    // app-supplied plugin can be in both), and concurrent `enable(id)` calls
+    // for the same id are not idempotent (each would re-run the lazy resolve
+    // and double-register modules). `new Set([...])` preserves first-seen
+    // order which matches the natural core-before-enabled precedence.
+    const initialIds = [...new Set([...core, ...enabled])];
+    void Effect.all(initialIds.map((id) => this.enable(id)))
+      .pipe(
+        Effect.mapError((cause) => new PluginInitializationError({ cause })),
+        Effect.tap(() => Deferred.succeed(this._initialization, undefined)),
+        Effect.tapErrorCause((cause) => Deferred.failCause(this._initialization, cause)),
+      )
+      .pipe(runAndForwardErrors);
   }
 
   get plugins(): Atom.Atom<readonly Plugin.Plugin[]> {
@@ -204,6 +366,20 @@ class ManagerImpl implements PluginManager {
     return this._pendingResetAtom;
   }
 
+  /**
+   * Plugins that failed to load or activate.
+   */
+  get failed(): Atom.Atom<readonly PluginFailure[]> {
+    return this._failedAtom;
+  }
+
+  /**
+   * Ids of currently-registered plugins that came from a dev source.
+   */
+  get devPluginIds(): Atom.Atom<readonly string[]> {
+    return this._devPluginIdsAtom;
+  }
+
   getPlugins(): readonly Plugin.Plugin[] {
     return this._get(this._pluginsAtom);
   }
@@ -232,6 +408,48 @@ class ManagerImpl implements PluginManager {
     return this._get(this._pendingResetAtom);
   }
 
+  getFailed(): readonly PluginFailure[] {
+    return this._get(this._failedAtom);
+  }
+
+  getDevPluginIds(): readonly string[] {
+    return this._get(this._devPluginIdsAtom);
+  }
+
+  /**
+   * Marks `id` as dev-sourced. If the plugin displaced an existing one, pass
+   * the shadow snapshot so `remove` can restore it. Repeat calls (e.g. a dev
+   * plugin reload) preserve the original shadow target — restoration always
+   * unwinds back to the real underlying plugin, never an intermediate dev build.
+   */
+  private _markDev(id: string, shadow?: { plugin: Plugin.Plugin; wasEnabled: boolean }): void {
+    if (this._devPlugins.has(id)) {
+      return;
+    }
+    this._devPlugins.set(id, { shadow });
+    this._update(this._devPluginIdsAtom, (ids) => (ids.includes(id) ? ids : [...ids, id]));
+  }
+
+  /** Drops the dev-plugin entry and returns its shadow data (if any) for restoration. */
+  private _unmarkDev(id: string): { plugin: Plugin.Plugin; wasEnabled: boolean } | undefined {
+    const entry = this._devPlugins.get(id);
+    this._devPlugins.delete(id);
+    this._update(this._devPluginIdsAtom, (ids) => ids.filter((existing) => existing !== id));
+    return entry?.shadow;
+  }
+
+  clearFailure(id: string): boolean {
+    const current = this._get(this._failedAtom);
+    if (!current.some((failure) => failure.id === id)) {
+      return false;
+    }
+    this._set(
+      this._failedAtom,
+      current.filter((failure) => failure.id !== id),
+    );
+    return true;
+  }
+
   /**
    * Adds a plugin to the manager via the plugin loader.
    * The plugin is registered but not enabled; call `enable` separately to activate it.
@@ -240,8 +458,31 @@ class ManagerImpl implements PluginManager {
   add(id: string): Effect.Effect<Plugin.Plugin, Error> {
     return Effect.gen(this, function* () {
       log('add plugin', { id });
-      const plugin = yield* this._pluginLoader(id);
-      this._addPlugin(plugin);
+      const { plugin, dev = false } = yield* this._pluginLoader(id);
+      const pluginId = plugin.meta.id;
+      const existing = this._getPlugin(pluginId);
+
+      if (dev && existing && existing !== plugin) {
+        // Shadow path: a plugin with this id is already registered (a builtin,
+        // a registry install, or a previous dev load). Disable it, stash it,
+        // and swap the dev plugin into the same id slot. The dialog will call
+        // `enable(pluginId)` next, which activates the dev plugin's modules.
+        // `_markDev` is a no-op when the id is already tracked, so a dev-plugin
+        // reload (after editing source) keeps the *original* shadow target —
+        // removal restores the real underlying plugin, not an intermediate build.
+        const wasEnabled = this._get(this._enabledAtom).includes(pluginId);
+        if (wasEnabled) {
+          yield* this.disable(pluginId);
+        }
+        this._markDev(pluginId, { plugin: existing, wasEnabled });
+        this._update(this._pluginsAtom, (plugins) => plugins.map((p) => (p.meta.id === pluginId ? plugin : p)));
+      } else {
+        this._addPlugin(plugin);
+        if (dev) {
+          this._markDev(pluginId);
+        }
+      }
+
       return plugin;
     });
   }
@@ -253,10 +494,16 @@ class ManagerImpl implements PluginManager {
   enable(id: string): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
       log('enable plugin', { id });
-      const plugin = this._getPlugin(id);
-      if (!plugin) {
+      const stub = this._getPlugin(id);
+      if (!stub) {
         return false;
       }
+
+      // Clear any prior failure record so a retry starts from a clean slate.
+      // The failure stays on the atom only if this attempt also fails.
+      this.clearFailure(id);
+
+      const plugin = yield* this._resolveLazyPlugin(stub);
 
       this._update(this._enabledAtom, (enabled) => (enabled.includes(id) ? enabled : [...enabled, id]));
 
@@ -276,12 +523,76 @@ class ManagerImpl implements PluginManager {
   }
 
   /**
+   * Resolves a lazy plugin stub (returned by {@link Plugin.lazy}) to its
+   * loaded form and swaps it into `_pluginsAtom`. Returns the input unchanged
+   * when the plugin is already resolved, so callers can `yield*` this
+   * unconditionally. The lazy stub carries `meta` synchronously but its
+   * `modules` list is empty until the loader resolves; the swap ensures
+   * subsequent enable/disable operations see the resolved plugin.
+   *
+   * Concurrent calls for the same id are coalesced via `_resolvingPlugins`:
+   * the first caller starts the resolution, every subsequent caller awaits
+   * the same `Deferred`. On failure we publish a `lazy:<id>` error message
+   * and skip the atom swap so the failure is observable to the activation
+   * subscriber and a retry can be attempted.
+   */
+  private _resolveLazyPlugin(plugin: Plugin.Plugin): Effect.Effect<Plugin.Plugin, Plugin.LazyPluginError> {
+    return Effect.gen(this, function* () {
+      if (!Plugin.isLazy(plugin)) {
+        return plugin;
+      }
+      const id = plugin.meta.id;
+
+      const existing = this._resolvingPlugins.get(id);
+      if (existing) {
+        return yield* Deferred.await(existing);
+      }
+      const deferred = yield* Deferred.make<Plugin.Plugin, Plugin.LazyPluginError>();
+      this._resolvingPlugins.set(id, deferred);
+
+      return yield* Effect.gen(this, function* () {
+        log('resolving lazy plugin', { id });
+        yield* PubSub.publish(this.activation, { event: '', state: 'activating', module: `lazy:${id}` });
+        const resolvedPlugin = yield* Plugin.resolveLazy(plugin).pipe(
+          // Cap how long a remote import can hang. Without this the host can
+          // sit on a pending dynamic `import()` indefinitely if the plugin's
+          // server is unreachable, which stalls every caller awaiting
+          // `enable(id)` and (transitively) the manager's initialization.
+          Effect.timeoutFail({
+            duration: this._loadTimeout,
+            onTimeout: () =>
+              new Plugin.LazyPluginError({
+                context: { id, reason: 'load-failed' },
+                cause: new PluginTimeoutError({ context: { id, phase: 'load' as PluginFailurePhase } }),
+              }),
+          }),
+        );
+        this._update(this._pluginsAtom, (plugins) => plugins.map((p) => (p.meta.id === id ? resolvedPlugin : p)));
+        yield* PubSub.publish(this.activation, { event: '', state: 'activated', module: `lazy:${id}` });
+        return resolvedPlugin;
+      }).pipe(
+        Effect.tapError((error) =>
+          Effect.gen(this, function* () {
+            yield* PubSub.publish(this.activation, { event: '', state: 'error', module: `lazy:${id}`, error });
+            this._recordFailure(id, 'load', error);
+            this._scheduleAutoDisable(id);
+          }),
+        ),
+        Effect.tap((value) => Deferred.succeed(deferred, value)),
+        Effect.tapErrorCause((cause) => Deferred.failCause(deferred, cause)),
+        Effect.ensuring(Effect.sync(() => this._resolvingPlugins.delete(id))),
+      );
+    });
+  }
+
+  /**
    * Removes a plugin from the manager.
    * @param id The id of the plugin.
    */
   remove(id: string): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
       log('remove plugin', { id });
+      const wasDev = this._devPlugins.has(id);
       const disabled = yield* this.disable(id);
       if (!disabled) {
         return false;
@@ -295,6 +606,21 @@ class ManagerImpl implements PluginManager {
             Effect.ignore,
           ),
         );
+      }
+
+      // If a dev plugin was shadowing an existing plugin, reinstate the
+      // original now that the dev plugin is gone. Re-enable only if the
+      // original was enabled at shadow time — preserving the user's intent
+      // for plugins they had explicitly disabled before iterating on a dev
+      // build.
+      if (wasDev) {
+        const shadow = this._unmarkDev(id);
+        if (shadow) {
+          this._addPlugin(shadow.plugin);
+          if (shadow.wasEnabled) {
+            yield* this.enable(id);
+          }
+        }
       }
       return true;
     });
@@ -345,6 +671,12 @@ class ManagerImpl implements PluginManager {
         log('skipping activation during shutdown', { key, ...params });
         return false;
       }
+
+      // Wait for the constructor's core/enabled `enable()` chain — including
+      // any async dynamic imports for lazy plugins — to finish registering
+      // modules. Without this, dispatching to an empty module set is the
+      // observable symptom of the race.
+      yield* Deferred.await(this._initialization);
 
       return yield* Effect.withFiberRuntime<boolean, Error>((fiber) =>
         this._activateEvent(key, params, fiber).pipe(
@@ -463,6 +795,46 @@ class ManagerImpl implements PluginManager {
 
   private _getPlugin(id: string): Plugin.Plugin | undefined {
     return this._get(this._pluginsAtom).find((plugin) => plugin.meta.id === id);
+  }
+
+  private _getPluginIdForModule(moduleId: string): string | undefined {
+    return this._get(this._pluginsAtom).find((plugin) => plugin.modules.some((module) => module.id === moduleId))?.meta
+      .id;
+  }
+
+  /**
+   * Records a failure for a plugin. Latest failure wins so the registry UI
+   * always sees the most recent reason. Walks the `cause` chain when checking
+   * for timeouts: lazy-load timeouts arrive wrapped in `LazyPluginError` (the
+   * timeout is the cause), but the operator-visible reason should still be
+   * `'timeout'`.
+   */
+  private _recordFailure(id: string, phase: PluginFailurePhase, error: Error): void {
+    const reason: PluginFailureReason = isTimeoutCause(error) ? 'timeout' : 'error';
+    const failure: PluginFailure = { id, phase, reason, error, timestamp: Date.now() };
+    log.warn('plugin failed', { id, phase, reason, error: error.message });
+    this._update(this._failedAtom, (current) => [...current.filter((entry) => entry.id !== id), failure]);
+  }
+
+  /**
+   * Fire-and-forget disable of a failed plugin. Forked because a failure can
+   * happen mid-activation chain — yielding a `disable` inline would deadlock
+   * on the shared semaphores. Core plugins are skipped (the host opted into
+   * them being non-removable; the failure record is enough signal).
+   */
+  private _scheduleAutoDisable(id: string): void {
+    if (this._get(this._coreAtom).includes(id)) {
+      return;
+    }
+    if (!this._get(this._enabledAtom).includes(id)) {
+      return;
+    }
+    this._runForkedFiber(
+      this.disable(id).pipe(
+        Effect.tapError((error) => Effect.sync(() => log.warn('auto-disable failed', { id, error }))),
+        Effect.ignore,
+      ),
+    );
   }
 
   private _getActiveModules(): Plugin.PluginModule[] {
@@ -804,13 +1176,22 @@ class ManagerImpl implements PluginManager {
           log('loading module', { module: module.id, parentEvent });
           performance.mark(`module:${module.id}:start`);
           yield* PubSub.publish(this.activation, { event: parentEvent, state: 'activating', module: module.id });
-          const [duration, capabilities] = yield* module
-            .activate()
-            .pipe(
-              Effect.provideService(Capability.Service, this.capabilities),
-              Effect.provideService(Plugin.Service, this),
-              Effect.timed,
-            );
+          const pluginId = this._getPluginIdForModule(module.id);
+          const [duration, capabilities] = yield* module.activate().pipe(
+            Effect.provideService(Capability.Service, this.capabilities),
+            Effect.provideService(Plugin.Service, this),
+            // Cap activation so a single misbehaving module can't hold the
+            // event chain open. On timeout the failure is recorded against
+            // the plugin and surfaced as `PluginTimeoutError`.
+            Effect.timeoutFail({
+              duration: this._activationTimeout,
+              onTimeout: () =>
+                new PluginTimeoutError({
+                  context: { id: pluginId ?? module.id, module: module.id, phase: 'activation' as PluginFailurePhase },
+                }),
+            }),
+            Effect.timed,
+          );
           const normalized = capabilities == null ? [] : Array.isArray(capabilities) ? capabilities : [capabilities];
           const elapsed = Duration.toMillis(duration);
           performance.mark(`module:${module.id}:end`);
@@ -855,7 +1236,13 @@ class ManagerImpl implements PluginManager {
                 stack: error instanceof Error ? error.stack : undefined,
                 isDefect: !Cause.isFailure(cause),
               });
-              return Deferred.fail(deferred, error instanceof Error ? error : new Error(String(error)));
+              const normalizedError = error instanceof Error ? error : new Error(String(error));
+              const pluginId = this._getPluginIdForModule(module.id);
+              if (pluginId !== undefined) {
+                this._recordFailure(pluginId, 'activation', normalizedError);
+                this._scheduleAutoDisable(pluginId);
+              }
+              return Deferred.fail(deferred, normalizedError);
             }),
           ),
         );
@@ -915,6 +1302,22 @@ class ManagerImpl implements PluginManager {
  * Creates a new Plugin Manager instance.
  */
 export const make = (options: ManagerOptions): PluginManager => new ManagerImpl(options);
+
+/**
+ * True when `error` (or anything along its `cause` chain) is a
+ * {@link PluginTimeoutError}. Lazy-load timeouts wrap the timeout inside
+ * `LazyPluginError`, so a shallow check on the outer error misses them.
+ * Bounded depth so a circular chain can't loop forever.
+ */
+const isTimeoutCause = (error: unknown, depth = 0): boolean => {
+  if (depth > 5 || !(error instanceof Error)) {
+    return false;
+  }
+  if (PluginTimeoutError.is(error)) {
+    return true;
+  }
+  return isTimeoutCause((error as Error & { cause?: unknown }).cause, depth + 1);
+};
 
 /**
  * Runs an effect concurrently with another effect.

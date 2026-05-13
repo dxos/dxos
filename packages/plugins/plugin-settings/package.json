@@ -16,27 +16,30 @@
     "#capabilities": "./src/capabilities/index.ts",
     "#meta": "./src/meta.ts",
     "#operations": "./src/operations/index.ts",
+    "#plugin": "./src/SettingsPlugin.ts",
     "#translations": "./src/translations.ts",
     "#types": "./src/types/index.ts"
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs",
-      "types": "./dist/types/src/index.d.ts"
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/lib/neutral/index.mjs"
+    },
+    "./plugin": {
+      "source": "./src/plugin.ts",
+      "types": "./dist/types/src/plugin.d.ts",
+      "default": "./dist/lib/neutral/plugin.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing.ts",
+      "types": "./dist/types/src/testing.d.ts",
+      "default": "./dist/lib/neutral/testing.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
-      "browser": "./dist/lib/browser/translations.mjs",
-      "node": "./dist/lib/node-esm/translations.mjs"
-    },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "browser": "./dist/lib/browser/types/index.mjs",
-      "node": "./dist/lib/node-esm/types/index.mjs"
+      "default": "./dist/lib/neutral/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -52,6 +55,7 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
+    "@dxos/plugin-graph": "workspace:*",
     "@types/react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:"
@@ -59,8 +63,5 @@
   "peerDependencies": {
     "effect": "catalog:",
     "react": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

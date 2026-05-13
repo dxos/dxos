@@ -2,12 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-export { MarkdownCapabilities, MarkdownEvents } from './types';
-
+export * from './blueprints';
 export * from './meta';
+export * from './operations';
+export * from './types';
 export * from './util';
-
-export * from './MarkdownPlugin';
-
-export { MarkdownEditor, MarkdownEditorProvider } from './components';
-export type { MarkdownEditorEditorRootProps } from './components';

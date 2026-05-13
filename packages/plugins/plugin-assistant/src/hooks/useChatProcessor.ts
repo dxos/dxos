@@ -19,6 +19,7 @@ import { runAndForwardErrors } from '@dxos/effect';
 import { QueueService } from '@dxos/functions';
 import { AgentService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
+import { type AutomationCapabilities } from '@dxos/plugin-automation';
 import { type Space } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
@@ -48,7 +49,7 @@ export const useChatProcessor = ({
 }: UseChatProcessorProps): AiChatProcessor | undefined => {
   const observableRegistry = useContext(RegistryContext);
 
-  const [session, setSession] = useState<AiSession>();
+  const [session, setSession] = useState<AiSession.Session>();
   useAsyncEffect(async () => {
     if (!space || !chat) {
       return;
@@ -62,7 +63,7 @@ export const useChatProcessor = ({
     const runtime = await runAndForwardErrors(
       Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
     );
-    const session = new AiSession({
+    const session = new AiSession.Session({
       feed: feedTarget,
       runtime,
       registry: observableRegistry as Registry.Registry,

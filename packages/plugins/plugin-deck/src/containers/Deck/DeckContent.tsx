@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, useCallback, useEffect, useRef } from 'react';
 
-import { AttentionCapabilities } from '@dxos/plugin-attention/types';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Main, useMediaQuery } from '@dxos/react-ui';
 
 import { useBreakpoints, useHoistStatusbar } from '#hooks';

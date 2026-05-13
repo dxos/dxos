@@ -4,9 +4,12 @@
 
 import * as Schema from 'effect/Schema';
 
+import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { FeedAnnotation } from '@dxos/schema';
+
+export const BLUEPRINT_KEY = 'org.dxos.blueprint.calendar';
 
 /** Calendar object schema. */
 export const Calendar = Schema.Struct({
@@ -22,6 +25,7 @@ export const Calendar = Schema.Struct({
     icon: 'ph--calendar--regular',
     hue: 'rose',
   }),
+  BlueprintsAnnotation.set([BLUEPRINT_KEY]),
 );
 
 export interface Calendar extends Schema.Schema.Type<typeof Calendar> {}

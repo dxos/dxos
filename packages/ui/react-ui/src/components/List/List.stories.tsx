@@ -176,7 +176,7 @@ export const Collapsible: Story = {
       <List {...args}>
         {items.map(({ id, text, body }, index) => (
           <ListItem.Root key={id} id={id} collapsible={index !== 2} defaultOpen={index % 2 === 0}>
-            <div role='none' className='grow flex'>
+            <div className='grow flex'>
               {index !== 2 ? <ListItem.OpenTrigger /> : <ListItem.MockOpenTrigger />}
               <ListItem.Heading classNames='grow pt-2'>{text}</ListItem.Heading>
               <ListItem.Endcap>

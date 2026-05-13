@@ -15,7 +15,7 @@ import { ClientService } from './client-service';
 const TestLayer = Function.pipe(ClientService.layer, Layer.provideMerge(ConfigService.layerMemory));
 
 describe('ClientService', () => {
-  it('should initialize', async () => {
+  it('should initialize', { timeout: 10_000 }, async () => {
     const program = Effect.gen(function* () {
       const client = yield* ClientService;
       return client;

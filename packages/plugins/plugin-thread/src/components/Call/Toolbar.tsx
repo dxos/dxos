@@ -19,11 +19,11 @@ import {
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
+import { type Channel } from '@dxos/types';
 import { groupHoverControlItemWithTransition, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { ThreadCapabilities } from '#types';
-import { type Channel } from '#types';
 
 export type ToolbarProps = ThemedClassName<{
   channel?: Channel.Channel;

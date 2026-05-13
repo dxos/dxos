@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './capabilities';
-export * as Channel from './Channel';
 export * from './types';
+
+export * as Settings from './Settings';
+export * as ThreadCapabilities from './ThreadCapabilities';
+export * as ThreadOperation from './ThreadOperation';

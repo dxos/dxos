@@ -7,9 +7,9 @@
 // import { Client } from '@dxos/client';
 // import { type Space } from '@dxos/client/echo';
 // import { TestBuilder } from '@dxos/client/testing';
-// import { Markdown } from '@dxos/plugin-markdown/types';
-// import { DiagramType } from '@dxos/plugin-sketch/types';
-// import { CollectionType, ChannelType, ThreadType } from '@dxos/plugin-space/types';
+// import { Markdown } from '@dxos/plugin-markdown';
+// import { DiagramType } from '@dxos/plugin-sketch';
+// import { CollectionType, ChannelType, ThreadType } from '@dxos/plugin-space';
 // import { TableType } from '@dxos/react-ui-table/types';
 //
 // const testBuilder = new TestBuilder();

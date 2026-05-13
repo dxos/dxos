@@ -9,8 +9,6 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export * as SampleOperation from './definitions';
-
 export const SampleOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./create-sample-item'),
   () => import('./randomize'),

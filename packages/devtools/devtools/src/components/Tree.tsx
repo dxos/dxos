@@ -9,7 +9,7 @@ import { mx } from '@dxos/ui-theme';
 
 export const Tree = ({ classNames, data }: ThemedClassName<{ data?: object }>) => {
   return (
-    <div role='none' className={mx('flex w-full py-2 overflow-auto', classNames)}>
+    <div className={mx('flex w-full py-2 overflow-auto', classNames)}>
       <Node data={data} root />
     </div>
   );

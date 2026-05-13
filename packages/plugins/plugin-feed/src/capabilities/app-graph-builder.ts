@@ -11,22 +11,19 @@ import { AppCapabilities, AppNode, AppNodeMatcher, createObjectNode, getActiveSp
 import { Operation } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
-import { AttentionCapabilities } from '@dxos/plugin-attention/types';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
-import { FeedOperation } from '#operations';
+import { FeedOperation } from '#types';
 import { Magazine, Subscription } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
-
-    const resolve = (typename: string) =>
-      capabilities.getAll(AppCapabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
     const selectionManager = yield* Capability.get(AttentionCapabilities.Selection);
     const selectedId = Atom.family((nodeId: string) =>
@@ -60,7 +57,6 @@ export default Capability.makeModule(
                   createObjectNode({
                     db: space.db,
                     object: feed,
-                    resolve,
                   }),
                 )
                 .filter((node): node is NonNullable<typeof node> => node !== null),
