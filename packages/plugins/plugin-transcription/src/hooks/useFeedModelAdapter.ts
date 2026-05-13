@@ -29,7 +29,7 @@ export const useFeedModelAdapter = <T extends Obj.Unknown>(
     for (const chunk of objects) {
       model.appendChunk(chunk);
     }
-  }, [model]);
+  }, [model, objects]);
 
   // Append new tail items as the array grows.
   useEffect(() => {

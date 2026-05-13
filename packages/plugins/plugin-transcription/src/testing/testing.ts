@@ -166,10 +166,7 @@ export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
 
     const i = setInterval(() => {
       void builder.createMessage(Math.ceil(Math.random() * 3)).then(async (message) => {
-        await Feed.appendByDxn(queueDxn, [Obj.make(Message.Message, message)]).pipe(
-          Effect.provide(feedServiceLayer),
-          runAndForwardErrors,
-        );
+        await Feed.appendByDxn(queueDxn, [message]).pipe(Effect.provide(feedServiceLayer), runAndForwardErrors);
       });
     }, interval);
     return () => clearInterval(i);
@@ -205,10 +202,7 @@ export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscription
       ctx,
       async () => {
         const message = await builder.createMessage();
-        await Feed.appendByDxn(queueDxn, [Obj.make(Message.Message, message)]).pipe(
-          Effect.provide(feedServiceLayer),
-          runAndForwardErrors,
-        );
+        await Feed.appendByDxn(queueDxn, [message]).pipe(Effect.provide(feedServiceLayer), runAndForwardErrors);
       },
       interval,
     );
