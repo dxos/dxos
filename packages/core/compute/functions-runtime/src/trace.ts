@@ -61,7 +61,7 @@ export const InvocationTraceStartEvent = Schema.Struct({
    */
   input: Schema.Unknown,
   /**
-   * Queue for function/workflow invocation events.
+   * Feed for function/workflow invocation events.
    * If missing, events are assumed to be in the same Feed.
    */
   invocationTraceQueue: Schema.optional(Ref.Ref(Feed.Feed)),
