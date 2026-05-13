@@ -73,4 +73,3 @@ export interface Queue<T extends Entity.Unknown = Entity.Unknown> extends Databa
   // TODO(dmaretskyi): Remove.
   refresh(): Promise<void>;
 }
-

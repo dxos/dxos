@@ -24,7 +24,7 @@ export default Qualifier.pipe(
         invariant(Obj.instanceOf(Agent.Agent, agent));
         invariant(agent.chat, 'Agent has no chat.');
 
-        const { id, name, queue } = agent;
+        const { id, name, feed: queue } = agent;
         if (!queue) {
           throw new Error('Agent has no queue.');
         }

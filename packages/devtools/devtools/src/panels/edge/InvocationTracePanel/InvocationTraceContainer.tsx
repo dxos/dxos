@@ -9,12 +9,12 @@ import * as Schema from 'effect/Schema';
 import React, { type FC, useCallback, useMemo, useState } from 'react';
 
 import { type Database, Filter, type Obj } from '@dxos/echo';
-import { type Queue } from '@dxos/react-client/echo';
 import { Format } from '@dxos/echo/internal';
 import { type InvocationSpan } from '@dxos/functions-runtime';
 import { TraceEvent } from '@dxos/functions-runtime';
 import { DXN } from '@dxos/keys';
 import { type SerializedError } from '@dxos/protocols';
+import { type Queue } from '@dxos/react-client/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';

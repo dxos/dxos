@@ -45,7 +45,7 @@ Mentions of the word "Queue" in [internal/common/proxy/change-context.ts](packag
    - `conductor/src/nodes/registry.ts` (`make-queue` node output).
    - `conductor/src/nodes/gpt/gpt.ts` (`conversation` input/output).
    - `functions-runtime/src/trace.ts` (`InvocationTraceStartEvent.invocationTraceQueue` field and `InvocationSpan` type).
-   `Feed.unsafeFromQueueDXN` is the bridge for any persisted `Ref(Queue)` data; we accepted breakage there.
+     `Feed.unsafeFromQueueDXN` is the bridge for any persisted `Ref(Queue)` data; we accepted breakage there.
 
 6. **Behavioral gaps between `Queue` and `Feed`.** Callers using these `Queue` members must be rewritten, not just renamed:
    - `Queue.isLoading` / `Queue.error` / `Queue.objects` — no analogue on `Feed`; consumers must move to `Feed.query(...)` → `QueryResult.subscribe`.

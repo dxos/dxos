@@ -96,7 +96,7 @@ export const Agent = Schema.Struct({
    * Input feed for subscriptions.
    * @deprecated Subscriptions will write directly to the agent.
    */
-  queue: Schema.optional(Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false))),
+  feed: Schema.optional(Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false))),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.agent',
@@ -167,7 +167,7 @@ export const makeInitialized = (
 
     Obj.update(agent, (agent) => {
       agent.chat = Ref.make(chat);
-      agent.queue = Ref.fromDXN(inputQueue.dxn);
+      agent.feed = Ref.fromDXN(inputQueue.dxn);
     });
 
     return agent;
