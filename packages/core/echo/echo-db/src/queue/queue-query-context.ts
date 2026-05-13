@@ -11,6 +11,7 @@ import { Entity, type QueryResult } from '@dxos/echo';
 import { filterMatchObjectJSON } from '@dxos/echo-pipeline/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 import { type QueryContext, isSimpleSelectionQuery } from '../query';
 import { type QueueImpl } from './queue';
@@ -43,11 +44,21 @@ export class QueueQueryContext<T extends Entity.Unknown = Entity.Unknown> implem
     const objects = await Function.pipe(
       await this.#queue.fetchObjectsJSON(),
       Array.filter((obj) => filterMatchObjectJSON(filter, obj)),
-      Array.map(async (obj) => this.#queue.hydrateObject(obj)),
+      Array.map(async (obj) => {
+        try {
+          return await this.#queue.hydrateObject(obj);
+        } catch (err) {
+          // Match the legacy `Queue.queryObjects()` behavior of silently
+          // skipping items that fail to decode (e.g. tombstones from
+          // `Queue.delete()` whose JSON lacks an `@type`).
+          log.verbose('queue object hydration failed; object skipped', { obj, error: err });
+          return undefined;
+        }
+      }),
       (_) => Promise.all(_),
     );
 
-    return objects.map((object) => ({
+    return objects.filter((object): object is Entity.Unknown => object !== undefined).map((object) => ({
       id: object.id,
       result: object as T,
     }));
