@@ -34,15 +34,14 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
 
   const mailboxFeed = mailbox?.feed?.target;
   const calendarFeed = calendar?.feed?.target;
-  // TODO(wittjosiah): Way to structure this query that does not require type assertions?
-  const messages: Message.Message[] = useQuery(
+  const messages = useQuery(
     db,
     mailboxFeed ? Query.select(Filter.type(Message.Message)).from(mailboxFeed) : Query.select(Filter.nothing()),
-  ) as Message.Message[];
-  const events: Event.Event[] = useQuery(
+  );
+  const events = useQuery(
     db,
     calendarFeed ? Query.select(Filter.type(Event.Event)).from(calendarFeed) : Query.select(Filter.nothing()),
-  ) as Event.Event[];
+  );
 
   const relatedMessages = messages
     .filter(

@@ -39,7 +39,7 @@ const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: DefaultStor
     () => (space ? space.db.add(Feed.make({ name: 'chat' })) : undefined),
     [space],
   );
-  const messages = useFeedQuery(feed, Filter.type(Message.Message)) as Message.Message[];
+  const messages = useFeedQuery(feed, Filter.type(Message.Message));
   const [done, setDone] = useState(false);
 
   // Generate messages.

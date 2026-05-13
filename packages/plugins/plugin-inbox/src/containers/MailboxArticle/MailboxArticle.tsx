@@ -72,10 +72,10 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   }, [filterText, builder]);
 
   // Messages.
-  const messages: Message.Message[] = useQuery(
+  const messages = useQuery(
     db,
     feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
-  ) as Message.Message[];
+  );
 
   // Feed/queue queries don't yet support text-search and complex filter combinations,
   // so query Messages by type only and apply the parsed filter client-side.

@@ -21,7 +21,7 @@ export const TranscriptionContainer = ({ role, subject: transcript, attendableId
   const db = Obj.getDatabase(transcript);
   const members = useMembers(db?.spaceId).map((member) => member.identity);
   const feed = transcript.feed.target;
-  const messages = useFeedQuery(feed, Filter.type(Message.Message)) as Message.Message[];
+  const messages = useFeedQuery(feed, Filter.type(Message.Message));
   const model = useFeedModelAdapter(renderByline(members), messages);
 
   return (
