@@ -11,11 +11,12 @@ import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Agent } from '@dxos/assistant-toolkit';
+import { Feed } from '@dxos/echo';
 import { Annotation, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { QueueService } from '@dxos/functions';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
-import { type Queue, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { Card, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
@@ -48,12 +49,12 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
 
     const runtime = computeRuntime.getRuntime(space.spaceId);
     await runtime.runPromise(Agent.resetChatHistory(agent));
-    if (!agent.queue) {
+    if (!agent.feed) {
       await runtime.runPromise(
         Effect.gen(function* () {
           const queue = yield* QueueService.createQueue();
           Obj.update(agent, (agent) => {
-            agent.queue = Ref.fromDXN(queue.dxn);
+            agent.feed = Ref.fromDXN(queue.dxn);
           });
         }),
       );
@@ -74,17 +75,17 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
     ),
   );
 
-  const inputQueue = useAtomValue(
+  const inputFeed = useAtomValue(
     AtomObj.make(agent).pipe((_) =>
       Atom.make((get) =>
-        Option.fromNullable(get(_).queue).pipe(Option.map(AtomRef.make), Option.map(get), Option.getOrUndefined),
+        Option.fromNullable(get(_).feed).pipe(Option.map(AtomRef.make), Option.map(get), Option.getOrUndefined),
       ),
     ),
   );
 
   // Schema field is Ref(Feed.Feed) (typed), but at runtime queue-kinded DXNs resolve to a Queue instance.
   // TODO(burdon): Replace with a Feed-aware query hook once Feed has React integration.
-  const inputObjects = useQuery(inputQueue as Queue | undefined, Query.select(Filter.everything()));
+  const inputObjects = useQuery(inputFeed as Feed.Feed | undefined, Query.select(Filter.everything()));
 
   return (
     <Panel.Root role={role}>

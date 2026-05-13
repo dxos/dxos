@@ -84,7 +84,7 @@ const meta = {
                     name: Obj.getLabel(obj) ?? 'Artifact',
                     data: Ref.make(obj),
                   })),
-                  queue: Ref.fromDXN(inputQueue.dxn),
+                  feed: Ref.fromDXN(inputQueue.dxn),
                   subscriptions: [],
                 }),
               );
