@@ -98,7 +98,7 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
 
       setSchema(() => newSchema);
     },
-    [view, updateView, schema],
+    [db, view, updateView, schema],
   );
 
   const handleColumnValuesChanged = useCallback(
