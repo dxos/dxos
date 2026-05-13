@@ -25,10 +25,12 @@ import { openSubjectsOnActiveDeck } from '../layout';
 import { DeckCapabilities } from '../types';
 import { computeActiveUpdates } from '../util';
 import { updateActiveDeck } from './helpers';
+import { log } from '@dxos/log';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
+      log('LayoutOperation.Open handler start');
       const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
       const attention = yield* Capability.get(AttentionCapabilities.Attention);
 
@@ -79,9 +81,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
               Option.isSome(acc)
                 ? Effect.succeed(acc)
                 : resolver(qualifiedPath).pipe(
-                    Effect.map((opt) => Option.map(opt, (dxn) => dxn.toString())),
-                    Effect.catchAll(() => Effect.succeed(Option.none<string>())),
-                  ),
+                  Effect.map((opt) => Option.map(opt, (dxn) => dxn.toString())),
+                  Effect.catchAll(() => Effect.succeed(Option.none<string>())),
+                ),
             );
 
           // Build DXN → deck item ID map for active items.
@@ -134,9 +136,9 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           deck.solo || !deck.initialized
             ? [...input.subject]
             : openSubjectsOnActiveDeck(deck.active, input.subject, {
-                pivotId: input.pivotId,
-                key: input.key,
-              });
+              pivotId: input.pivotId,
+              key: input.key,
+            });
 
         const { deckUpdates, toAttend: _toAttend } = computeActiveUpdates({ next, deck, attention });
         yield* Capabilities.updateAtomValue(DeckCapabilities.State, (state) => updateActiveDeck(state, deckUpdates));
