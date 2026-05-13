@@ -181,9 +181,6 @@ export class TranscriptionManager extends Resource {
       block = await this._messageEnricher(block);
     }
 
-    await Feed.appendByDxn(this._queueDxn, [block]).pipe(
-      Effect.provide(this._feedServiceLayer),
-      runAndForwardErrors,
-    );
+    await Feed.appendByDxn(this._queueDxn, [block]).pipe(Effect.provide(this._feedServiceLayer), runAndForwardErrors);
   }
 }
