@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { Event } from '@dxos/async';
 import { Entity, Feed, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { EchoId, LegacyDXN as DXN, SpaceId } from '@dxos/keys';
+import { LegacyDXN as DXN, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 
 import { EchoTestBuilder } from './echo-test-builder';
@@ -26,7 +26,6 @@ describe('queues', () => {
     const db = await peer.createDatabase();
     const queues = peer.client.constructQueueFactory(db.spaceId);
     const queue = queues.create();
-    const queueId = EchoId.getObjectId(queue.dxn)!;
     const obj = db.add(
       Obj.make(TestSchema.Expando, {
         // TODO(dmaretskyi): Support Ref.make
@@ -47,8 +46,8 @@ describe('queues', () => {
 
     await queue.append([Obj.make(TestSchema.Person, { name: 'john' })]);
     const obj = queue.objects[0];
-    const queueId = EchoId.getObjectId(queue.dxn)!;
-    expect(Entity.getDXN(obj)?.toString()).toEqual(DXN.fromQueue('data', db.spaceId, queueId, obj.id).toString());
+    // Queue items now receive an ECHO-kind DXN (echo://spaceId/itemId), not a queue DXN.
+    expect(Entity.getDXN(obj)?.toString()).toEqual(DXN.fromSpaceAndObjectId(db.spaceId, obj.id).toString());
   });
 
   test('create and resolve an object from a queue', async () => {
@@ -61,9 +60,10 @@ describe('queues', () => {
     await queue.append([obj]);
 
     {
+      // Queue items now use ECHO-kind DXNs (echo://spaceId/itemId).
       const resolved = await peer.client.graph
         .createRefResolver({ context: { space: spaceId } })
-        .resolve(DXN.fromQueue('data', spaceId, EchoId.getObjectId(queue.dxn)!, obj.id));
+        .resolve(DXN.fromSpaceAndObjectId(spaceId, obj.id));
       expect(resolved?.id).toEqual(obj.id);
       expect(resolved?.name).toEqual('john');
       expect(Obj.getSchema(resolved as Obj.Unknown)).toEqual(TestSchema.Person);

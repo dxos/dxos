@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { DXN, ObjectId } from '@dxos/keys';
+import { DXN, LegacyDXN, ObjectId } from '@dxos/keys';
 import { safeStringify } from '@dxos/util';
 
 import * as Database from './Database';
@@ -14,7 +14,7 @@ import * as Json from './Json';
 const newId = (): string => ObjectId.random();
 
 /** Build a fake encoded ref for a local-space object id. */
-const encodeRef = (id: string): { '/': string } => ({ '/': DXN.fromLocalObjectId(id).toString() });
+const encodeRef = (id: string): { '/': string } => ({ '/': LegacyDXN.fromLocalObjectId(id).toString() });
 
 /** Minimal stub: `createRefReplacer` only touches `db.getObjectById`. */
 const makeStubDb = (objects: Record<string, unknown>): Database.Database => {

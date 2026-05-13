@@ -11,7 +11,7 @@ import { type Database, Entity, Filter, Obj, Query, type Ref } from '@dxos/echo'
 import { type ObjectJSON, ParentId, SelfDXNId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
 import { defineHiddenProperty } from '@dxos/echo/internal';
 import { failedInvariant } from '@dxos/invariant';
-import { EchoId, type LegacyDXN as DXN, type ObjectId, type SpaceId } from '@dxos/keys';
+import { EchoId, LegacyDXN as DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 
@@ -68,7 +68,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
           try {
             return await Obj.fromJSON(obj, {
               refResolver: this._refResolver,
-              dxn: this._dxn.extend([(obj as any).id]),
+              dxn: DXN.fromSpaceAndObjectId(this._spaceId, (obj as any).id),
               database: this._database,
               parent: this._parentEntity,
             });
@@ -110,6 +110,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   private readonly _subspaceTag: string;
   private readonly _spaceId: SpaceId;
   private readonly _queueId: string;
+  private readonly _echoId: EchoId.EchoId;
 
   /**
    * Number of active polling handlers.
@@ -128,13 +129,23 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   constructor(
     private readonly _service: FeedProtocol.QueueService,
     private readonly _refResolver: Ref.Resolver,
-    private readonly _dxn: DXN,
+    echoIdOrDxn: EchoId.EchoId | DXN,
     private readonly _database?: Database.Database,
+    subspaceTag?: string,
   ) {
-    const { subspaceTag, spaceId, queueId } = this._dxn.asQueueDXN() ?? {};
-    this._subspaceTag = subspaceTag ?? failedInvariant();
-    this._spaceId = spaceId ?? failedInvariant();
-    this._queueId = queueId ?? failedInvariant();
+    if (echoIdOrDxn instanceof DXN) {
+      // Legacy: accept a queue-kind DXN for backward compatibility.
+      const parts = echoIdOrDxn.asQueueDXN();
+      this._subspaceTag = parts?.subspaceTag ?? failedInvariant('Missing subspaceTag in DXN');
+      this._spaceId = (parts?.spaceId ?? failedInvariant('Missing spaceId in DXN')) as SpaceId;
+      this._queueId = parts?.queueId ?? failedInvariant('Missing queueId in DXN');
+      this._echoId = EchoId.fromSpaceAndObjectId(this._spaceId, this._queueId as any);
+    } else {
+      this._echoId = echoIdOrDxn;
+      this._spaceId = (EchoId.getSpaceId(echoIdOrDxn) ?? failedInvariant('Missing spaceId in EchoId')) as SpaceId;
+      this._queueId = EchoId.getObjectId(echoIdOrDxn) ?? failedInvariant('Missing queueId in EchoId');
+      this._subspaceTag = subspaceTag ?? 'data';
+    }
   }
 
   /**
@@ -147,14 +158,14 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
 
   toJSON() {
     return {
-      dxn: this._dxn.toString(),
+      dxn: this._echoId,
       objects: this._objects.length,
     };
   }
 
   // TODO(burdon): Rename to objects.
   get dxn(): EchoId.EchoId {
-    return EchoId.fromSpaceAndObjectId(this._spaceId, this._queueId as any);
+    return this._echoId;
   }
 
   /**
@@ -197,7 +208,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
 
     for (const item of items) {
       setRefResolverOnData(item, this._refResolver);
-      defineHiddenProperty(item, SelfDXNId, this._dxn.extend([item.id]));
+      defineHiddenProperty(item, SelfDXNId, DXN.fromSpaceAndObjectId(this._spaceId, item.id as any));
       if (this._parentEntity) {
         defineHiddenProperty(item, ParentId, this._parentEntity);
       }
@@ -258,7 +269,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
 
   private _query(queryOrFilter: Query.Any | Filter.Any) {
     const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
-    const queryWithScope = query.from({ spaceIds: [this._spaceId], feeds: [this._dxn.toString()] });
+    const queryWithScope = query.from({ spaceIds: [this._spaceId], feeds: [this._echoId] });
     return new QueryResultImpl(new QueueQueryContext(this, this._ctx), queryWithScope);
   }
 
@@ -286,7 +297,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
           try {
             const decoded = await Obj.fromJSON(obj, {
               refResolver: this._refResolver,
-              dxn: this._dxn.extend([(obj as any).id]),
+              dxn: DXN.fromSpaceAndObjectId(this._spaceId, (obj as any).id),
               database: this._database,
               parent: this._parentEntity,
             });
@@ -324,7 +335,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   async hydrateObject(obj: ObjectJSON): Promise<Entity.Unknown> {
     const decoded = await Obj.fromJSON(obj, {
       refResolver: this._refResolver,
-      dxn: this._dxn.extend([(obj as any).id]),
+      dxn: DXN.fromSpaceAndObjectId(this._spaceId, (obj as any).id),
       database: this._database,
       parent: this._parentEntity,
     });

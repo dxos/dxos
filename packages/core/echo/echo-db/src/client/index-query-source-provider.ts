@@ -11,7 +11,7 @@ import { Entity, type Hypergraph, Obj, Query, type QueryResult } from '@dxos/ech
 import { type QueryAST } from '@dxos/echo-protocol';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { EchoId, LegacyDXN as DXN, type ObjectId, type QueueSubspaceTag, SpaceId } from '@dxos/keys';
+import { EchoId, LegacyDXN as DXN, type ObjectId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 import {
@@ -238,20 +238,15 @@ export class IndexQuerySource implements QuerySource {
     if (result.queueId && result.documentJson) {
       const json = JSON.parse(result.documentJson);
       const queueEchoId = EchoId.fromSpaceAndObjectId(result.spaceId as SpaceId, result.queueId as ObjectId);
-      const queueDxn = DXN.fromQueue(
-        (result.queueNamespace ?? 'data') as QueueSubspaceTag,
-        result.spaceId as SpaceId,
-        result.queueId as ObjectId,
-      );
       const refResolver = this._params.graph.createRefResolver({
-        context: { space: result.spaceId as SpaceId, feed: queueDxn },
+        context: { space: result.spaceId as SpaceId, feed: queueEchoId },
       });
       const database = this._params.graph.getDatabase(result.spaceId as SpaceId);
       let object;
       try {
         object = await Obj.fromJSON(json, {
           refResolver,
-          dxn: queueDxn.extend([result.id as ObjectId]),
+          dxn: DXN.fromSpaceAndObjectId(result.spaceId as SpaceId, result.id as ObjectId),
           database,
         });
       } catch (err) {

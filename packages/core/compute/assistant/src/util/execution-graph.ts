@@ -511,7 +511,7 @@ const stringifyRef = (ref: Ref.Unknown) => {
     return stringifyObject(ref.target);
   }
 
-  return ref.dxn.asEchoDXN()?.echoId ?? ref.dxn.asQueueDXN()?.objectId ?? '';
+  return ref.dxn.asEchoDXN()?.echoId ?? '';
 };
 
 const stringifyObject = (obj: Obj.Unknown) => {

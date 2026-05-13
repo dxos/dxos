@@ -7,7 +7,8 @@ import * as Schema from 'effect/Schema';
 import { AgentPrompt, WebSearchBlueprint } from '@dxos/assistant-toolkit';
 import { Routine, Trigger, Operation } from '@dxos/compute';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
-import { DXN, Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
+import { Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
+import { EchoId } from '@dxos/keys';
 import { invariant } from '@dxos/invariant';
 import { InboxOperation } from '@dxos/plugin-inbox';
 import { Mailbox } from '@dxos/plugin-inbox';
@@ -587,7 +588,7 @@ export const generator = () => ({
             );
             const queueId = canvasModel.createNode(
               createConstant({
-                value: new DXN(DXN.kind.QUEUE, ['data', space.id, Key.ObjectId.random()]).toString(),
+                value: EchoId.fromSpaceAndObjectId(space.id, Key.ObjectId.random()),
                 ...position({ x: -10, y: 5 }),
               }),
             );
@@ -774,7 +775,7 @@ const setupQueue = (
 ) => {
   const queueId = canvasModel.createNode(
     createConstant({
-      value: new DXN(DXN.kind.QUEUE, ['data', space.id, Key.ObjectId.random()]).toString(),
+      value: EchoId.fromSpaceAndObjectId(space.id, Key.ObjectId.random()),
       ...(args?.idPosition ? rawPosition(args.idPosition) : position({ x: -18, y: 5, width: 8, height: 6 })),
     }),
   );

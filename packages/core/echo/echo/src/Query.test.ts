@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
 import { QueryAST } from '@dxos/echo-protocol';
-import { LegacyDXN as DXN, ObjectId, SpaceId } from '@dxos/keys';
+import { EchoId, LegacyDXN as DXN, ObjectId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import * as Dataset from './Dataset';
@@ -573,7 +573,7 @@ describe('query api', () => {
         { dxn: feedDxn },
       )) as Feed.Feed;
 
-      const expectedQueueDxn = new DXN(DXN.kind.QUEUE, ['data', spaceId, feedId]);
+      const expectedFeedId = EchoId.fromSpaceAndObjectId(spaceId as SpaceId, feedId as ObjectId);
 
       const query = Query.type(TestSchema.Person).from(feed);
       Schema.validateSync(QueryAST.Query)(query.ast);
@@ -582,7 +582,7 @@ describe('query api', () => {
         from: {
           _tag: 'scope',
           scope: {
-            feeds: [expectedQueueDxn.toString()],
+            feeds: [expectedFeedId],
           },
         },
         query: {

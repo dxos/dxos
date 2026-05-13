@@ -14,7 +14,7 @@ import {
   type AppCapabilities as AppCaps,
 } from '@dxos/app-toolkit';
 import { Database, Entity, Key } from '@dxos/echo';
-import { DXN, EchoId } from '@dxos/keys';
+import { EchoId, LegacyDXN } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings';
 
@@ -79,10 +79,11 @@ export default Capability.makeModule(
         return Effect.succeed(Option.none());
       }
 
-      const dxn = DXN.fromSpaceAndObjectId(spaceId, objectId as Key.ObjectId);
+      const dxn = LegacyDXN.fromSpaceAndObjectId(spaceId, objectId as Key.ObjectId);
+      const echoId = EchoId.fromSpaceAndObjectId(spaceId, objectId as Key.ObjectId);
       const ref = space.db.makeRef(dxn);
       return Database.loadOption(ref).pipe(
-        Effect.map((option) => (Option.isSome(option) ? Option.some(dxn) : Option.none<DXN>())),
+        Effect.map((option) => (Option.isSome(option) ? Option.some(echoId) : Option.none<EchoId.EchoId>())),
       );
     };
 

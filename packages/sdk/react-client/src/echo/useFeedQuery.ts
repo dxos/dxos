@@ -5,6 +5,7 @@
 import { useMemo } from 'react';
 
 import { type Entity, Feed, type Filter, type Query } from '@dxos/echo';
+import { EchoId } from '@dxos/keys';
 import { useQuery } from '@dxos/echo-react';
 
 import { useClient } from '../client';
@@ -33,19 +34,18 @@ export const useFeedQuery: {
   ): O[];
 } = (feed: Feed.Feed | undefined, queryOrFilter: Query.Any | Filter.Any): Entity.Any[] => {
   const client = useClient();
-  const dxnString = feed ? Feed.getQueueDxn(feed)?.toString() : undefined;
+  const echoId = feed ? Feed.getQueueDxn(feed) : undefined;
 
   const queue = useMemo(() => {
-    if (!feed) {
+    if (!feed || !echoId) {
       return undefined;
     }
-    const dxn = Feed.getQueueDxn(feed);
-    const parts = dxn?.asQueueDXN();
-    if (!dxn || !parts) {
+    const spaceId = EchoId.getSpaceId(echoId);
+    if (!spaceId) {
       return undefined;
     }
-    return client.spaces.get(parts.spaceId)?.queues.get(dxn);
-  }, [client, dxnString]);
+    return client.spaces.get(spaceId)?.queues.get(echoId);
+  }, [client, echoId]);
 
   return useQuery(queue, queryOrFilter as any);
 };

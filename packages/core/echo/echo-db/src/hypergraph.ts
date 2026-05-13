@@ -8,7 +8,7 @@ import { StackTrace } from '@dxos/debug';
 import { type Database, type Entity, Filter, type Hypergraph, Query, Ref } from '@dxos/echo';
 import { batchEvents, type AnyProperties, setRefResolver } from '@dxos/echo/internal';
 import { failedInvariant } from '@dxos/invariant';
-import { LegacyDXN as DXN, type ObjectId, type QueueSubspaceTag, type SpaceId } from '@dxos/keys';
+import { EchoId, LegacyDXN as DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { entry } from '@dxos/util';
@@ -142,25 +142,6 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     return {
       // TODO(dmaretskyi): Respect `load` flag.
       resolveSync: (dxn: DXN, load: boolean, onLoad?: () => void) => {
-        // TODO(dmaretskyi): Add queue objects.
-        if (dxn.kind === DXN.kind.QUEUE && dxn.asQueueDXN()?.objectId === undefined) {
-          const { spaceId, subspaceTag, queueId } = dxn.asQueueDXN()!;
-          return this._resolveQueueSync(spaceId, subspaceTag as QueueSubspaceTag, queueId);
-        } else if (dxn.kind === DXN.kind.QUEUE && dxn.asQueueDXN()?.objectId !== undefined) {
-          const { spaceId, subspaceTag, queueId, objectId } = dxn.asQueueDXN()!;
-          const queue = this._resolveQueueSync(spaceId, subspaceTag as QueueSubspaceTag, queueId);
-          const object = queue?.objects.find((obj) => obj.id === objectId);
-          if (object) {
-            return middleware(object);
-          } else if (queue && load && onLoad) {
-            queue.refresh().then(
-              () => onLoad(),
-              (err) => log.catch(err),
-            );
-            return undefined;
-          }
-        }
-
         if (dxn.kind !== DXN.kind.ECHO) {
           return undefined; // Unsupported DXN kind.
         }
@@ -279,12 +260,17 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
           }
           const { echoId } = dxn.asEchoDXN() ?? failedInvariant();
 
-          if (context.feed) {
-            const { subspaceTag, spaceId, queueId } = context.feed.asQueueDXN() ?? failedInvariant();
-            const obj = await this._resolveQueueObjectAsync(spaceId, subspaceTag as QueueSubspaceTag, queueId, echoId);
-            if (obj) {
-              status = 'resolved';
-              return obj;
+          const feedEchoId = context.feed ?? context.queue;
+          if (feedEchoId) {
+            const spaceId = EchoId.getSpaceId(feedEchoId) ?? context.space;
+            const queueId = EchoId.getObjectId(feedEchoId);
+            if (spaceId && queueId) {
+              const queueEchoId = EchoId.fromSpaceAndObjectId(spaceId, queueId as ObjectId);
+              const obj = await this._resolveQueueObjectAsync(queueEchoId, echoId);
+              if (obj) {
+                status = 'resolved';
+                return obj;
+              }
             }
           }
 
@@ -300,22 +286,6 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
           }
 
           status = 'missing';
-          return undefined;
-        }
-        case DXN.kind.QUEUE: {
-          const { subspaceTag, spaceId, queueId, objectId } = dxn.asQueueDXN() ?? failedInvariant();
-          if (!objectId) {
-            status = 'error';
-            return this._resolveQueueSync(spaceId, subspaceTag as QueueSubspaceTag, queueId);
-          }
-
-          const obj = await this._resolveQueueObjectAsync(spaceId, subspaceTag as QueueSubspaceTag, queueId, objectId);
-          if (obj) {
-            status = 'resolved';
-            return obj;
-          }
-
-          status = 'missing queue';
           return undefined;
         }
         default: {
@@ -343,25 +313,31 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     return obj;
   }
 
-  private _resolveQueueSync(spaceId: SpaceId, subspaceTag: QueueSubspaceTag, queueId: ObjectId): Queue | undefined {
+  private _resolveQueueSync(queueEchoId: EchoId.EchoId): Queue | undefined {
+    const spaceId = EchoId.getSpaceId(queueEchoId) as SpaceId | undefined;
+    if (!spaceId) {
+      return undefined;
+    }
     const queueFactory = this._queueFactories.get(spaceId);
     if (!queueFactory) {
       return undefined;
     }
-    return queueFactory.get(DXN.fromQueue(subspaceTag, spaceId, queueId));
+    return queueFactory.get(queueEchoId);
   }
 
   private async _resolveQueueObjectAsync(
-    spaceId: SpaceId,
-    subspaceTag: QueueSubspaceTag,
-    queueId: ObjectId,
+    queueEchoId: EchoId.EchoId,
     objectId: ObjectId,
   ): Promise<Entity.Unknown | undefined> {
+    const spaceId = EchoId.getSpaceId(queueEchoId) as SpaceId | undefined;
+    if (!spaceId) {
+      return undefined;
+    }
     const queueFactory = this._queueFactories.get(spaceId);
     if (!queueFactory) {
       return undefined;
     }
-    const queue = queueFactory.get(DXN.fromQueue(subspaceTag, spaceId, queueId));
+    const queue = queueFactory.get(queueEchoId);
     if (!queue) {
       return undefined;
     }

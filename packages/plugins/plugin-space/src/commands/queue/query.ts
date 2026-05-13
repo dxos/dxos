@@ -9,9 +9,8 @@ import * as Effect from 'effect/Effect';
 
 import { CommandConfig, printList } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
-import { createFeedServiceLayer } from '@dxos/client/echo';
-import { Feed, Filter } from '@dxos/echo';
-import { DXN, LegacyDXN, type SpaceId } from '@dxos/keys';
+import { Entity } from '@dxos/echo';
+import { EchoId, type SpaceId } from '@dxos/keys';
 
 import { printQueueObject } from './util';
 
@@ -23,27 +22,29 @@ export const query = Command.make(
   Effect.fnUntraced(function* ({ dxn }) {
     const { json } = yield* CommandConfig;
     const client = yield* ClientService;
-    const parsedDxn = LegacyDXN.tryParse(dxn);
-    const parts = parsedDxn?.asQueueDXN();
-    if (!parts) {
-      yield* Console.error(`Not a queue DXN: ${dxn}`);
+    const echoId = EchoId.tryParse(dxn);
+    if (!echoId) {
+      yield* Console.error(`Not a valid feed identifier: ${dxn}`);
       return;
     }
-    const space = client.spaces.get(parts.spaceId as SpaceId);
+    const spaceId = EchoId.getSpaceId(echoId);
+    if (!spaceId) {
+      yield* Console.error(`Could not determine space from: ${dxn}`);
+      return;
+    }
+    const space = client.spaces.get(spaceId as SpaceId);
     if (!space) {
-      yield* Console.error(`Space not found: ${parts.spaceId}`);
+      yield* Console.error(`Space not found: ${spaceId}`);
       return;
     }
-    const feed = Feed.unsafeFromQueueDXN(parsedDxn!);
-    const objects = yield* Feed.runQuery(feed, Filter.everything()).pipe(
-      Effect.provide(createFeedServiceLayer(space.queues)),
-    );
+    const queue = space.queues.get(echoId);
+    const objects = yield* Effect.promise(() => queue.queryObjects());
 
     if (json) {
       yield* Console.log(JSON.stringify(objects, null, 2));
     } else {
       // TODO(wittjosiah): Interactive table of results.
-      const formatted = objects.map(printQueueObject);
+      const formatted = (objects as Entity.Any[]).map(printQueueObject);
       yield* Console.log(printList(formatted));
     }
   }),

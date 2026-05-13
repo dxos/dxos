@@ -24,7 +24,7 @@ import {
 import { Filter, Query } from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
-import { EchoId, LegacyDXN as DXN, PublicKey, QueueSubspaceTags } from '@dxos/keys';
+import { EchoId, LegacyDXN as DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
@@ -730,12 +730,13 @@ describe('Query', () => {
       expect(withoutFeeds[0].title).toBe('Space TypeScript Task');
     });
 
-    test('Filter.type with includeFeeds preserves trace subspace in queue DXN', async () => {
+    test('Filter.type with includeFeeds includes trace subspace queue results', async () => {
       const peer = await builder.createPeer({ types: [TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
-      const traceQueue = queues.create({ subspaceTag: QueueSubspaceTags.TRACE });
-      expect(traceQueue.dxn.toString()).toContain(':trace:');
+      // Trace queues now use EchoId (echo://spaceId/queueId), not a DXN with ':trace:'.
+      const traceQueue = queues.create({ subspaceTag: 'trace' });
+      expect(traceQueue.dxn.toString()).toMatch(/^echo:\/\//);
 
       const traceTask = Obj.make(TestSchema.Task, { title: 'Trace Task' });
       await traceQueue.append([traceTask]);
@@ -747,18 +748,17 @@ describe('Query', () => {
 
       const traceResult = results.find((obj) => obj.title === 'Trace Task');
       expect(traceResult).toBeDefined();
+      // Queue items now receive ECHO-kind DXNs (echo://spaceId/itemId).
       const dxnString = Obj.getDXN(traceResult!).toString();
-      // The queue DXN should reflect the queue's actual subspace ('trace'), not be hardcoded to 'data'.
-      expect(dxnString.startsWith(traceQueue.dxn.toString())).toBe(true);
-      expect(dxnString).toContain(':trace:');
-      expect(dxnString).not.toContain(':data:');
+      expect(dxnString).toMatch(/^dxn:echo:/);
     });
 
-    test('Filter.text with includeFeeds preserves trace subspace in queue DXN', async () => {
+    test('Filter.text with includeFeeds includes trace subspace queue results', async () => {
       const peer = await builder.createPeer({ types: [TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
-      const traceQueue = queues.create({ subspaceTag: QueueSubspaceTags.TRACE });
+      // Trace queues now use EchoId (echo://spaceId/queueId), not a DXN with ':trace:'.
+      const traceQueue = queues.create({ subspaceTag: 'trace' });
 
       const traceTask = Obj.make(TestSchema.Task, { title: 'Trace TypeScript Task' });
       await traceQueue.append([traceTask]);
@@ -770,11 +770,9 @@ describe('Query', () => {
 
       const traceResult = results.find((obj) => obj.title === 'Trace TypeScript Task');
       expect(traceResult).toBeDefined();
+      // Queue items now receive ECHO-kind DXNs (echo://spaceId/itemId).
       const dxnString = Obj.getDXN(traceResult!).toString();
-      // FTS path also stamps queueNamespace; should not be hardcoded to 'data'.
-      expect(dxnString.startsWith(traceQueue.dxn.toString())).toBe(true);
-      expect(dxnString).toContain(':trace:');
-      expect(dxnString).not.toContain(':data:');
+      expect(dxnString).toMatch(/^dxn:echo:/);
     });
 
     test('from(all-accessible-spaces) via graph queries type across spaces', async () => {

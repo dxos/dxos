@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { LegacyDXN as DXN, QueueSubspaceTags, type SpaceId, type ObjectId } from '@dxos/keys';
+import { EchoId, LegacyDXN as DXN, type SpaceId, type ObjectId } from '@dxos/keys';
 
 import * as Annotation from './Annotation';
 import type * as Entity from './Entity';
@@ -106,17 +106,17 @@ export interface SyncOptions {
 export const make = (props: Obj.MakeProps<typeof Feed> = {}): Feed => Obj.make(Feed, props);
 
 /**
- * Derives the queue DXN from the feed object's DXN.
+ * Derives the EchoId from the feed object.
  * Returns `undefined` when the feed is not stored in a space yet.
  *
  * Used internally by the feed service layer.
  */
-export const getQueueDxn = (feed: Feed): DXN | undefined => {
+export const getQueueDxn = (feed: Feed): EchoId.EchoId | undefined => {
   const self = Obj.getDXN(feed).asEchoDXN();
   if (!self || !self.spaceId) {
     return undefined;
   }
-  return DXN.fromQueue(QueueSubspaceTags.DATA, self.spaceId as SpaceId, self.echoId as ObjectId);
+  return EchoId.fromSpaceAndObjectId(self.spaceId as SpaceId, self.echoId as ObjectId);
 };
 
 /**

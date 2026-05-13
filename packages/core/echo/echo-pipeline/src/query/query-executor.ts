@@ -276,12 +276,15 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
           let parseFailed = false;
           const derivedQueueIds = new Set<ObjectId>();
           const derivedSpaceIds = new Set<SpaceId>();
-          for (const queueDxnStr of step.scope.feeds as DXN.String[]) {
+          for (const feedRef of step.scope.feeds as string[]) {
             try {
-              const queueDxn = DXN.parse(queueDxnStr).asQueueDXN();
-              if (queueDxn) {
-                derivedQueueIds.add(queueDxn.queueId as ObjectId);
-                derivedSpaceIds.add(queueDxn.spaceId as SpaceId);
+              // EchoId.parse handles both `echo://` and legacy `dxn:queue:` formats.
+              const echoId = EchoId.parse(feedRef);
+              const queueId = EchoId.getObjectId(echoId);
+              const spaceId = EchoId.getSpaceId(echoId);
+              if (queueId && spaceId) {
+                derivedQueueIds.add(queueId as ObjectId);
+                derivedSpaceIds.add(spaceId as SpaceId);
               }
             } catch {
               parseFailed = true;
@@ -617,8 +620,7 @@ export class QueryExecutor extends Resource {
               const spaceId = extractSpaceIdFromQueue(queues[0]);
               const queueId = extractQueueIds([queues[0]])?.[0];
               if (spaceId && queueId) {
-                const queueDxn = DXN.fromQueue('data', spaceId, queueId);
-                return this._loadFromDXN(queueDxn.extend([id]), { sourceSpaceId: spaceId });
+                return this._loadQueueItemById(spaceId, queueId, id as ObjectId);
               }
               return null;
             } else if (spaces.length > 0) {
@@ -1603,33 +1605,30 @@ export class QueryExecutor extends Resource {
         };
         break;
       }
-      case DXN.kind.QUEUE: {
-        const queueDxn = dxn.asQueueDXN();
-        if (!queueDxn || !queueDxn.objectId) {
-          log.warn('unable to resolve queue DXN', { dxn });
-          return null;
-        }
-
-        const { spaceId, queueId, objectId } = queueDxn;
-        const meta = await this._runInRuntime(
-          this._indexEngine.lookupByObjectId({
-            objectId,
-            spaceId,
-            queueId,
-          }),
-        );
-        if (!meta) {
-          return null;
-        }
-
-        const snapshotMap = await this._loadQueueSnapshotMap([meta]);
-        return this._loadFromQueue(meta, snapshotMap);
-      }
       default: {
         log.warn('unable to resolve DXN', { dxn });
         return null;
       }
     }
+  }
+
+  /**
+   * Loads a queue item by its object ID from the SQL index.
+   * Used by the IdSelector path when querying within a queue scope.
+   */
+  private async _loadQueueItemById(
+    spaceId: SpaceId,
+    queueId: ObjectId,
+    objectId: ObjectId,
+  ): Promise<QueryItem | null> {
+    const meta = await this._runInRuntime(
+      this._indexEngine.lookupByObjectId({ objectId, spaceId, queueId }),
+    );
+    if (!meta) {
+      return null;
+    }
+    const snapshotMap = await this._loadQueueSnapshotMap([meta]);
+    return this._loadFromQueue(meta, snapshotMap);
   }
 
   private async _getTransitiveDeletionState(item: QueryItem, remainingDepth: number): Promise<boolean> {
@@ -1665,11 +1664,9 @@ export class QueryExecutor extends Resource {
 }
 
 const extractSpaceIdFromQueue = (queueRef: string): SpaceId | undefined => {
+  // EchoId.tryParse handles both `echo://` and legacy `dxn:queue:` formats.
   const echoId = EchoId.tryParse(queueRef);
-  if (echoId) {
-    return EchoId.getSpaceId(echoId) as SpaceId | undefined;
-  }
-  return DXN.tryParse(queueRef)?.asQueueDXN()?.spaceId as SpaceId | undefined;
+  return echoId ? (EchoId.getSpaceId(echoId) as SpaceId | undefined) : undefined;
 };
 
 const extractQueueIds = (queues: readonly string[]): ObjectId[] | null => {
@@ -1678,13 +1675,9 @@ const extractQueueIds = (queues: readonly string[]): ObjectId[] | null => {
   }
   return queues
     .map((queueRef) => {
-      // Handle EchoId format (echo://spaceId/queueId).
+      // EchoId.tryParse handles both `echo://` and legacy `dxn:queue:` formats.
       const echoId = EchoId.tryParse(queueRef);
-      if (echoId) {
-        return EchoId.getObjectId(echoId) as ObjectId | undefined;
-      }
-      // Handle legacy DXN queue format (dxn:queue:...).
-      return DXN.tryParse(queueRef)?.asQueueDXN()?.queueId;
+      return echoId ? (EchoId.getObjectId(echoId) as ObjectId | undefined) : undefined;
     })
     .filter(Boolean) as ObjectId[];
 };

@@ -17,7 +17,7 @@ import {
   getTypeAnnotation,
   unwrapOptional,
 } from '@dxos/echo/internal';
-import { LegacyDXN } from '@dxos/keys';
+import { EchoId, LegacyDXN } from '@dxos/keys';
 import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
@@ -149,13 +149,13 @@ export const getQueryTarget = (query: QueryAST.Query, space?: Space) => {
       }
       const result = Option.fromNullable(from.scope.feeds).pipe(
         Option.flatMap((feeds) => Array.head(feeds)),
-        Option.flatMap((feedDxn) => Option.fromNullable(LegacyDXN.tryParse(String(feedDxn)))),
-        Option.flatMap((parsed) => {
-          const q = parsed.asQueueDXN();
-          if (!q || !Key.ObjectId.isValid(q.queueId)) {
+        Option.flatMap((feedRef) => Option.fromNullable(EchoId.tryParse(String(feedRef)))),
+        Option.flatMap((echoId) => {
+          const queueId = EchoId.getObjectId(echoId);
+          if (!queueId || !Key.ObjectId.isValid(queueId)) {
             return Option.none();
           }
-          return Option.fromNullable(space?.queues.get(parsed));
+          return Option.fromNullable(space?.queues.get(echoId));
         }),
       );
       // Skip query when a requested feed is not found (structurally invalid DXN or valid DXN

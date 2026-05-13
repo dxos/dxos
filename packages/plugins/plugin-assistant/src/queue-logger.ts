@@ -13,7 +13,7 @@ import { InvocationTraceEndEvent, InvocationTraceEventType, InvocationTraceStart
 import { TraceEvent } from '@dxos/functions-runtime';
 import { InvocationOutcome } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
-import { LegacyDXN, QueueSubspaceTags } from '@dxos/keys';
+import { EchoId, type ObjectId, type SpaceId } from '@dxos/keys';
 
 export class QueueLogger implements SequenceLogger {
   private _space: Space;
@@ -53,7 +53,7 @@ export class QueueLogger implements SequenceLogger {
             invocationId: event.invocationId,
             timestamp: Date.now(),
             input: {},
-            invocationTraceQueue: Ref.fromDXN(this._getTraceQueueDxn(event.invocationId)),
+            invocationTraceQueue: Ref.fromDXN(this._getTraceQueueEchoId(event.invocationId)),
             invocationTarget: Ref.make(this.sequence),
           }),
         ]);
@@ -126,8 +126,8 @@ export class QueueLogger implements SequenceLogger {
     }
   }
 
-  private _getTraceQueueDxn(invocationId: string): LegacyDXN {
-    return LegacyDXN.fromQueue(QueueSubspaceTags.TRACE, this._space.id, invocationId);
+  private _getTraceQueueEchoId(invocationId: string): EchoId.EchoId {
+    return EchoId.fromSpaceAndObjectId(this._space.id as SpaceId, invocationId as ObjectId);
   }
 
   private _appendToTraceFeed(items: any[]): Promise<void> {
@@ -142,7 +142,7 @@ export class QueueLogger implements SequenceLogger {
   // (a) materializing a Feed object per invocation, or (b) a lower-level
   // FeedService.appendByDxn primitive. Tracked as Phase 6 work in echo/AUDIT.md.
   private _getTraceEventQueue(invocationId: string): Queue<TraceEvent> {
-    const dxn = this._getTraceQueueDxn(invocationId);
-    return this._space.queues.get(dxn);
+    const echoId = this._getTraceQueueEchoId(invocationId);
+    return this._space.queues.get(echoId);
   }
 }

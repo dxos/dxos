@@ -6,7 +6,7 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { type DXN } from '@dxos/keys';
+import { type LegacyDXN as DXN } from '@dxos/keys';
 
 import type * as Database from './Database';
 import type * as Entity from './Entity';

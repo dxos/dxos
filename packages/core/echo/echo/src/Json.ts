@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { DXN } from '@dxos/keys';
+import { LegacyDXN } from '@dxos/keys';
 
 import * as Database from './Database';
 import * as Obj from './Obj';
@@ -70,7 +70,7 @@ export const createRefReplacer = ({ db, depth = 1 }: CreateRefReplacerOptions): 
 
       let echoId: string | undefined;
       try {
-        echoId = DXN.parse(dxnString).asEchoDXN()?.echoId;
+        echoId = LegacyDXN.parse(dxnString).asEchoDXN()?.echoId;
       } catch {
         return value;
       }

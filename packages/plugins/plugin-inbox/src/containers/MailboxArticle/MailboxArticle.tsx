@@ -281,13 +281,13 @@ const useMessageTagsMap = (
           continue;
         }
 
-        // Try to get message ID from target DXN (queue DXN with objectId).
+        // Try to get message ID from target DXN (echo DXN with objectId).
         const targetDXN = Relation.getTargetDXN(relation);
-        const queueDXNInfo = targetDXN.asQueueDXN();
+        const echoDxnInfo = targetDXN.asEchoDXN();
         let messageId: string | undefined;
 
-        if (queueDXNInfo?.objectId) {
-          messageId = queueDXNInfo.objectId;
+        if (echoDxnInfo?.echoId) {
+          messageId = echoDxnInfo.echoId;
         } else {
           // Fallback: try to resolve target object.
           try {

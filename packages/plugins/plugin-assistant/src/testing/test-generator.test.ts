@@ -10,13 +10,13 @@ import { type Queue } from '@dxos/client/echo';
 import { Database } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { ContextQueueService } from '@dxos/functions';
-import { DXN, ObjectId, SpaceId } from '@dxos/keys';
+import { EchoId, ObjectId, SpaceId } from '@dxos/keys';
 import { type Message } from '@dxos/types';
 
 import { createMessageGenerator } from './test-generator';
 
 class RecordingQueue implements Queue<Message.Message> {
-  readonly dxn = new DXN(DXN.kind.QUEUE, [SpaceId.random(), ObjectId.random()]);
+  readonly dxn: EchoId.EchoId = EchoId.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
   readonly #subscribers = new Set<() => void>();
 
   objects: Message.Message[] = [];
