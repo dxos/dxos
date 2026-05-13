@@ -7,7 +7,6 @@ import { Operation } from '@dxos/compute';
 import { DXN, Filter, Query } from '@dxos/echo';
 import { parseId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { type Message } from '@dxos/types';
 
 import { Meeting, MeetingCapabilities, MeetingOperation } from '../types';
 
@@ -29,9 +28,8 @@ const handler: Operation.WithHandler<typeof MeetingOperation.HandlePayload> = Me
 
       const enabled = !!transcriptionEnabled;
       const { transcriptionManager } = store.state;
-      if (space && transcriptDxn) {
-        const queue = space.queues.get<Message.Message>(DXN.parse(transcriptDxn));
-        transcriptionManager?.setQueue(queue);
+      if (space && transcriptDxn && transcriptionManager) {
+        transcriptionManager.setFeed(space, DXN.parse(transcriptDxn));
       }
 
       if (transcriptionManager) {

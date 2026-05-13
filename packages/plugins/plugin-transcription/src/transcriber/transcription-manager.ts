@@ -3,11 +3,15 @@
 //
 
 import { Atom, type Registry } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { synchronized } from '@dxos/async';
+import { createFeedServiceLayer, type Space } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
-import { Obj } from '@dxos/echo';
-import { type Queue } from '@dxos/echo-db';
+import { Feed, Obj } from '@dxos/echo';
+import { runAndForwardErrors } from '@dxos/effect';
+import { type DXN } from '@dxos/keys';
 import { type EdgeHttpClient } from '@dxos/react-edge-client';
 import { type ContentBlock, Message } from '@dxos/types';
 
@@ -53,7 +57,8 @@ export class TranscriptionManager extends Resource {
   private _identityDid?: string = undefined;
   private _mediaRecorder?: MediaStreamRecorder = undefined;
   private _transcriber?: Transcriber = undefined;
-  private _queue?: Queue<Message.Message> = undefined;
+  private _queueDxn?: DXN = undefined;
+  private _feedServiceLayer?: Layer.Layer<Feed.FeedService> = undefined;
   private _enabledAtom = Atom.make(false);
 
   constructor(options: TranscriptionManagerOptions) {
@@ -71,8 +76,9 @@ export class TranscriptionManager extends Resource {
     return this._registry.get(this._enabledAtom);
   }
 
-  setQueue(queue: Queue<Message.Message>): this {
-    this._queue = queue;
+  setFeed(space: Space, queueDxn: DXN): this {
+    this._queueDxn = queueDxn;
+    this._feedServiceLayer = createFeedServiceLayer(space.queues);
     return this;
   }
 
@@ -161,7 +167,7 @@ export class TranscriptionManager extends Resource {
   }
 
   private async _onSegments(segments: ContentBlock.Transcript[]): Promise<void> {
-    if (!this.isOpen || !this._queue) {
+    if (!this.isOpen || !this._queueDxn || !this._feedServiceLayer) {
       return;
     }
 
@@ -175,6 +181,9 @@ export class TranscriptionManager extends Resource {
       block = await this._messageEnricher(block);
     }
 
-    await this._queue.append([block]);
+    await Feed.appendByDxn(this._queueDxn, [block]).pipe(
+      Effect.provide(this._feedServiceLayer),
+      runAndForwardErrors,
+    );
   }
 }

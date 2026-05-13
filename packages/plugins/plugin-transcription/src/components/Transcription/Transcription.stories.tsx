@@ -8,20 +8,20 @@ import type * as Types from 'effect/Types';
 import React, { type FC, useEffect, useMemo, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Key } from '@dxos/echo';
+import { Filter, Key } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { useMembers, useSpaces } from '@dxos/react-client/echo';
+import { useFeedQueryByDxn, useMembers, useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
-import { type ContentBlock, type Message, Organization, Person } from '@dxos/types';
+import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 
-import { useQueueModelAdapter } from '#hooks';
+import { useFeedModelAdapter } from '#hooks';
 import {
   MessageBuilder,
   TestItem,
@@ -140,8 +140,9 @@ const QueueStory = ({
   const [running, setRunning] = useState(true);
   const [space] = useSpaces();
   const members = useMembers(space?.id).map((member) => member.identity);
-  const queue = useTestTranscriptionQueue(space, queueId, running, 2_000);
-  const model = useQueueModelAdapter(renderByline(members), queue, initialMessages);
+  const queueDxn = useTestTranscriptionQueue(space, queueId, running, 2_000);
+  const messages = useFeedQueryByDxn(queueDxn, Filter.type(Message.Message)) as Message.Message[];
+  const model = useFeedModelAdapter(renderByline(members), messages, initialMessages);
 
   return (
     <TranscriptContainer model={model} running={running} onRunningChange={setRunning} onReset={onReset} {...props} />
@@ -153,8 +154,9 @@ const EntityExtractionQueueStory = () => {
   const [running, setRunning] = useState(true);
   const [space] = useSpaces();
   const members = useMembers(space?.key).map((member) => member.identity);
-  const queue = useTestTranscriptionQueueWithEntityExtraction(space, undefined, running, 2_000);
-  const model = useQueueModelAdapter(renderByline(members), queue, []);
+  const queueDxn = useTestTranscriptionQueueWithEntityExtraction(space, undefined, running, 2_000);
+  const messages = useFeedQueryByDxn(queueDxn, Filter.type(Message.Message)) as Message.Message[];
+  const model = useFeedModelAdapter(renderByline(members), messages, []);
 
   return <TranscriptContainer model={model} running={running} onRunningChange={setRunning} />;
 };

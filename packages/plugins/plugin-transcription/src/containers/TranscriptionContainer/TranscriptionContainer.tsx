@@ -5,13 +5,13 @@
 import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Feed, Obj } from '@dxos/echo';
-import { useMembers, useQueue } from '@dxos/react-client/echo';
+import { Filter, Obj } from '@dxos/echo';
+import { useFeedQuery, useMembers } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
-import { type Message, type Transcript } from '@dxos/types';
+import { Message, type Transcript } from '@dxos/types';
 
 import { Transcription } from '#components';
-import { useQueueModelAdapter } from '#hooks';
+import { useFeedModelAdapter } from '#hooks';
 
 import { renderByline } from '../../util';
 
@@ -21,9 +21,8 @@ export const TranscriptionContainer = ({ role, subject: transcript, attendableId
   const db = Obj.getDatabase(transcript);
   const members = useMembers(db?.spaceId).map((member) => member.identity);
   const feed = transcript.feed.target;
-  const queueDxn = feed ? Feed.getQueueDxn(feed) : undefined;
-  const queue = useQueue<Message.Message>(queueDxn, { pollInterval: 1_000 });
-  const model = useQueueModelAdapter(renderByline(members), queue);
+  const messages = useFeedQuery(feed, Filter.type(Message.Message)) as Message.Message[];
+  const model = useFeedModelAdapter(renderByline(members), messages);
 
   return (
     <Panel.Root role={role}>

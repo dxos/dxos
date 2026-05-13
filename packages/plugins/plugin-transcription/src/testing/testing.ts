@@ -2,19 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { useEffect, useMemo, useState } from 'react';
 
 import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/assistant/extraction';
 import { scheduleTaskInterval } from '@dxos/async';
-import { type Queue } from '@dxos/client/echo';
+import { createFeedServiceLayer, type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { Filter, type Key, Obj, Ref, Type } from '@dxos/echo';
+import { Feed, Filter, type Key, Obj, Ref, Type } from '@dxos/echo';
 import { createQueueDXN } from '@dxos/echo/internal';
-import { IdentityDid } from '@dxos/keys';
+import { runAndForwardErrors } from '@dxos/effect';
+import { type DXN, IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
-import { type Space, useQueue } from '@dxos/react-client/echo';
 import { TestSchema } from '@dxos/schema/testing';
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
@@ -142,7 +143,7 @@ type UseTestTranscriptionQueue = (
   queueId?: Key.ObjectId,
   running?: boolean,
   interval?: number,
-) => Queue<Message.Message> | undefined;
+) => DXN | undefined;
 
 /**
  * Test transcriptionqueue.
@@ -155,23 +156,26 @@ export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
 ) => {
   // TODO(dmaretskyi): Use space.queues.create() instead.
   const queueDxn = useMemo(() => (space ? createQueueDXN(space.id, queueId) : undefined), [space, queueId]);
-  const queue = useQueue<Message.Message>(queueDxn);
   const builder = useMemo(() => new MessageBuilder(space), [space]);
 
   useEffect(() => {
-    if (!queue || !running) {
+    if (!space || !queueDxn || !running) {
       return;
     }
+    const feedServiceLayer = createFeedServiceLayer(space.queues);
 
     const i = setInterval(() => {
       void builder.createMessage(Math.ceil(Math.random() * 3)).then(async (message) => {
-        await queue.append([Obj.make(Message.Message, message)]);
+        await Feed.appendByDxn(queueDxn, [Obj.make(Message.Message, message)]).pipe(
+          Effect.provide(feedServiceLayer),
+          runAndForwardErrors,
+        );
       });
     }, interval);
     return () => clearInterval(i);
-  }, [queue, running, interval]);
+  }, [space, queueDxn, running, interval]);
 
-  return queue;
+  return queueDxn;
 };
 
 /**
@@ -186,24 +190,25 @@ export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscription
 ) => {
   // TODO(dmaretskyi): Use space.queues.create() instead.
   const queueDxn = useMemo(() => (space ? createQueueDXN(space.id, queueId) : undefined), [space, queueId]);
-  const queue = useQueue<Message.Message>(queueDxn);
   const [builder] = useState(() => new EntityExtractionMessageBuilder());
 
   useEffect(() => {
-    if (!queue || !running) {
+    if (!space || !queueDxn || !running) {
       return;
     }
 
-    if (space) {
-      void builder.connect(space);
-    }
+    void builder.connect(space);
 
+    const feedServiceLayer = createFeedServiceLayer(space.queues);
     const ctx = new Context();
     scheduleTaskInterval(
       ctx,
       async () => {
         const message = await builder.createMessage();
-        void queue.append([Obj.make(Message.Message, message)]);
+        await Feed.appendByDxn(queueDxn, [Obj.make(Message.Message, message)]).pipe(
+          Effect.provide(feedServiceLayer),
+          runAndForwardErrors,
+        );
       },
       interval,
     );
@@ -211,7 +216,7 @@ export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscription
     return () => {
       void ctx.dispose();
     };
-  }, [space, queue, running, interval]);
+  }, [space, queueDxn, running, interval]);
 
-  return queue;
+  return queueDxn;
 };
