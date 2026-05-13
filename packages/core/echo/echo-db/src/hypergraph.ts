@@ -224,6 +224,13 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       }
     }
 
+    // Fallback: try to resolve as a queue (Feed object backed by queue service).
+    const queueEchoId = EchoId.fromSpaceAndObjectId(spaceId as SpaceId, objectId as ObjectId);
+    const queue = this._resolveQueueSync(queueEchoId);
+    if (queue) {
+      return queue as unknown as Entity.Any;
+    }
+
     // TODO(dmaretskyi): Consider throwing if space not found.
 
     if (!OBJECT_DIAGNOSTICS.has(objectId)) {
@@ -283,6 +290,14 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
           if (obj) {
             status = 'resolved';
             return obj;
+          }
+
+          // Fallback: try to resolve as a queue (Feed object backed by queue service).
+          const queueEchoId = EchoId.fromSpaceAndObjectId(context.space, echoId as ObjectId);
+          const queue = this._resolveQueueSync(queueEchoId);
+          if (queue) {
+            status = 'resolved';
+            return queue as unknown as Entity.Unknown;
           }
 
           status = 'missing';
