@@ -113,16 +113,26 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
     }
     const startMs = Date.now();
     const result: Chunk[] = [];
-    for await (const [key, value] of this._params.db.iterator<StorageKey, Uint8Array>({
-      gte: keyPrefix,
-      lte: [...keyPrefix, '\uffff'],
-      ...encodingOptions,
-    })) {
-      result.push({
-        key,
-        data: value,
-      });
-      this._params.monitor?.recordBytesLoaded(value.byteLength);
+    try {
+      for await (const [key, value] of this._params.db.iterator<StorageKey, Uint8Array>({
+        gte: keyPrefix,
+        lte: [...keyPrefix, '\uffff'],
+        ...encodingOptions,
+      })) {
+        result.push({
+          key,
+          data: value,
+        });
+        this._params.monitor?.recordBytesLoaded(value.byteLength);
+      }
+    } catch (err: any) {
+      // The DB can be closed concurrently with an in-flight iteration when the
+      // owning Resource is torn down. The iterator then rejects with
+      // `LEVEL_ITERATOR_NOT_OPEN` on its next `.next()` \u2014 treat that as a
+      // graceful early return rather than an unhandled rejection.
+      if (!isLevelDbIteratorNotOpenError(err)) {
+        throw err;
+      }
     }
     this._params.monitor?.recordLoadDuration(Date.now() - startMs);
     return result;
@@ -134,12 +144,18 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
     }
     const batch = this._params.db.batch();
 
-    for await (const [key] of this._params.db.iterator<StorageKey, Uint8Array>({
-      gte: keyPrefix,
-      lte: [...keyPrefix, '\uffff'],
-      ...encodingOptions,
-    })) {
-      batch.del<StorageKey>(key, { ...encodingOptions });
+    try {
+      for await (const [key] of this._params.db.iterator<StorageKey, Uint8Array>({
+        gte: keyPrefix,
+        lte: [...keyPrefix, '\uffff'],
+        ...encodingOptions,
+      })) {
+        batch.del<StorageKey>(key, { ...encodingOptions });
+      }
+    } catch (err: any) {
+      if (!isLevelDbIteratorNotOpenError(err)) {
+        throw err;
+      }
     }
     await batch.write();
   }
@@ -162,3 +178,5 @@ export const encodingOptions = {
 };
 
 const isLevelDbNotFoundError = (err: any): boolean => err.code === 'LEVEL_NOT_FOUND';
+
+const isLevelDbIteratorNotOpenError = (err: any): boolean => err?.code === 'LEVEL_ITERATOR_NOT_OPEN';
