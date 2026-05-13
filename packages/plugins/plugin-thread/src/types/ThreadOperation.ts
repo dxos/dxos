@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
-import { SpaceSchema } from '@dxos/client/echo';
+import { SpaceSchema } from '@dxos/client-protocol';
 import { Operation } from '@dxos/compute';
 import { Database, Key, Obj, Ref } from '@dxos/echo';
 import { Collection } from '@dxos/echo';

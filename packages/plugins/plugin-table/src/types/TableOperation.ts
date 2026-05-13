@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { SpaceSchema } from '@dxos/client/echo';
+import { SpaceSchema } from '@dxos/client-protocol';
 import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { View } from '@dxos/echo';
