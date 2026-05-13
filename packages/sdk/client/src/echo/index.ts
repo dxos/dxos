@@ -4,7 +4,6 @@
 
 export { SpaceId } from '@dxos/keys';
 export { isSpace, type Echo, type Space, SpaceSchema, SpaceProperties } from '@dxos/client-protocol';
-export { type ObjectMeta, Ref, RefArray } from '@dxos/echo/internal'; // TODO(burdon): Remove.
 export {
   createObject,
   createSubscription,
