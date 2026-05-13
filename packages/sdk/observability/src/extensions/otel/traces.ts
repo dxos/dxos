@@ -18,7 +18,7 @@ import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 import { log } from '@dxos/log';
 import { type RemoteSpan, type StartSpanOptions, TRACE_PROCESSOR } from '@dxos/tracing';
 
-import { type OtelOptions } from './otel';
+import { type OtelOptions, resolveOtlpUrl } from './otel';
 import { TagInjectorSpanProcessor } from './span-processors';
 
 export class OtelTraces {
@@ -34,7 +34,7 @@ export class OtelTraces {
         new TagInjectorSpanProcessor(this.options.getTags),
         new BatchSpanProcessor(
           new OTLPTraceExporter({
-            url: this.options.endpoint + '/v1/traces',
+            url: resolveOtlpUrl(this.options.endpoint + '/v1/traces'),
             headers: this.options.headers,
             concurrencyLimit: 10,
           }),

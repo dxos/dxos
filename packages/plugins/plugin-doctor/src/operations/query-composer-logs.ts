@@ -7,14 +7,14 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
 
-import { QueryComposerLogs } from './definitions';
+import { DoctorOperation } from '../types';
 import { HARD_LIMIT_ENTRIES, type LogRecord, type QueryInput, runQuery } from './internal/log-query';
 import { readLogRows } from './internal/log-reader';
 
 // TODO(plugin-doctor): add an AssistantTestLayer end-to-end test that exercises
 // the tool through Operation.invoke once a fake IDB is available in test deps.
 
-export default QueryComposerLogs.pipe(
+export default DoctorOperation.QueryComposerLogs.pipe(
   Operation.withHandler(
     Effect.fn(function* (input) {
       const start = Date.now();

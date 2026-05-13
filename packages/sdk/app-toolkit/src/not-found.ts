@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { Graph, Node } from '@dxos/app-graph';
 import { DXN, Filter, Key, Query } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { expandAttendableId } from '@dxos/react-ui-attention';
+import { expandAttendableId } from '@dxos/react-ui-attention/types';
 
 import { type AppCapabilities } from './capabilities';
 import { isPinnedWorkspace } from './paths';

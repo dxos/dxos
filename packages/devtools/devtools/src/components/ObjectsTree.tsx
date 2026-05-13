@@ -105,11 +105,7 @@ const ObjectsTreeRow = ({
         classNames='grid grid-cols-subgrid col-[tree-row] cursor-pointer hover:bg-hover-surface'
         onClick={() => model.onSelect(node.entity)}
       >
-        <div
-          role='none'
-          className='indent relative grid grid-cols-subgrid col-[tree-row]'
-          style={paddingIndentation(level)}
-        >
+        <div className='indent relative grid grid-cols-subgrid col-[tree-row]' style={paddingIndentation(level)}>
           <Treegrid.Cell indent classNames='flex items-center gap-1 min-w-0'>
             <TreeItemToggle isBranch={hasChildren} open={expanded} onClick={() => setExpanded((prev) => !prev)} />
             {node.type === 'outgoing-relation' && (

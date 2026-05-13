@@ -18,9 +18,9 @@ import { OperationPlugin, type Plugin, RuntimePlugin } from '@dxos/app-framework
 // Use these `/plugin` entrypoints from any storybook `withPluginManager`
 // setup. The single-line `export * from './XPlugin'` re-exports avoid the
 // dynamic-import path entirely — see e.g. `plugin-attention/src/plugin.ts`.
-import { AttentionPlugin } from '@dxos/plugin-attention/plugin';
-import { GraphPlugin } from '@dxos/plugin-graph/plugin';
-import { SettingsPlugin } from '@dxos/plugin-settings/plugin';
+import { AttentionPlugin } from '@dxos/plugin-attention/testing';
+import { GraphPlugin } from '@dxos/plugin-graph/testing';
+import { SettingsPlugin } from '@dxos/plugin-settings/testing';
 import { ThemePlugin } from '@dxos/plugin-theme/plugin';
 import { defaultTx } from '@dxos/ui-theme';
 

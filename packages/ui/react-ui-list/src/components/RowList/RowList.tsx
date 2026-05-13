@@ -162,14 +162,11 @@ const Viewport = composable<HTMLDivElement, ViewportProps>((props, forwardedRef)
   const { thin, padding, centered, children, ...rest } = props as PropsWithChildren<
     ViewportProps & Record<string, unknown>
   >;
-  const composed = composableProps<HTMLDivElement>(rest, { classNames: 'dx-container' });
   return (
     <ScrollArea.Root
+      {...composableProps<HTMLDivElement>(rest, { classNames: 'dx-container' })}
+      {...{ thin, padding, centered }}
       orientation='vertical'
-      thin={thin}
-      padding={padding}
-      centered={centered}
-      {...composed}
       ref={forwardedRef}
     >
       <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
@@ -266,7 +263,7 @@ type RowProps = PropsWithChildren<{
 
 // `dx-selected` pairs with `aria-selected="true"` (set per-option below);
 // see `ui-theme/src/css/components/selected.md`.
-const ROW_BASE = 'dx-hover dx-selected px-3 py-2 cursor-pointer outline-none border-b border-separator last:border-b-0';
+const ROW_BASE = 'dx-hover dx-selected px-3 py-2 cursor-pointer outline-none'; // border-b border-separator last:border-b-0';
 
 const Row = composable<HTMLLIElement, RowProps>((props, forwardedRef) => {
   const { id, disabled, onClick, onFocus, children, ...rest } = props as RowProps & Record<string, unknown>;

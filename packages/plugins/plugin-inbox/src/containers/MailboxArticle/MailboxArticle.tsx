@@ -8,10 +8,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
-import { type Database, type Feed, Obj, Query, Relation, Tag } from '@dxos/echo';
+import { type Database, type Feed, Filter, Obj, Query, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
-import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
+import { useObject, useQuery } from '@dxos/react-client/echo';
 import { useAtomState } from '@dxos/react-hooks';
 import { ElevationProvider, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
@@ -23,7 +23,7 @@ import { HasSubject, Message } from '@dxos/types';
 
 import { type MessageStackActionHandler, MessageStack } from '#components';
 import { meta } from '#meta';
-import { InboxOperation } from '#operations';
+import { InboxOperation } from '#types';
 import { InboxCapabilities, type Mailbox } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';

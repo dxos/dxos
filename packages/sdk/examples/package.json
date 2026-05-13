@@ -15,6 +15,7 @@
   "type": "module",
   "dependencies": {
     "@dxos/echo": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",

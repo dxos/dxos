@@ -46,10 +46,10 @@ export class ReasoningWidget extends WidgetType {
           .attributes({ 'data-trail-container': '' })
           .append(
             Domino.of('div')
-              .classNames('relative z-10 bg-base-surface rounded-sm text-sm text-subdued px-2 py-1')
+              .classNames('relative z-10 bg-base-surface rounded-sm text-sm text-subdued py-1')
               .append(
                 Domino.of('div')
-                  .classNames('max-h-[5lh] overflow-y-auto')
+                  .classNames('px-2 max-h-[5lh] overflow-y-auto dx-scrollbar-thin')
                   .text(this.text)
                   .attributes({ 'data-reasoning-text': '' }),
               ),

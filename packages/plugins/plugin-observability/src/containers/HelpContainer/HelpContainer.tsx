@@ -13,7 +13,7 @@ import { osTranslations } from '@dxos/ui-theme';
 
 import { FeedbackForm } from '#components';
 import { meta } from '#meta';
-import { ObservabilityOperation, type UserFeedback } from '#operations';
+import { ObservabilityOperation } from '#types';
 import { ObservabilityCapabilities } from '#types';
 
 /** Renders the feedback form, disabling it when the feedback survey is unavailable. */
@@ -38,7 +38,7 @@ export const HelpContainer = () => {
   );
 
   const handleSave = useCallback(
-    async (values: UserFeedback) => {
+    async (values: ObservabilityOperation.UserFeedback) => {
       await invokePromise(ObservabilityOperation.CaptureUserFeedback, values);
       await invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
       await invokePromise(LayoutOperation.AddToast, {

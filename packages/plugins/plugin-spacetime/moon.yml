@@ -9,6 +9,12 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
+      - '--entryPoint=src/SpacetimePlugin.tsx'
+      - '--entryPoint=src/capabilities/index.ts'
+      - '--entryPoint=src/components/index.ts'
+      - '--entryPoint=src/containers/index.ts'
+      - '--entryPoint=src/meta.ts'
+      - '--entryPoint=src/plugin.ts'
       - '--entryPoint=src/translations.ts'
       - '--entryPoint=src/types/index.ts'
-      - '--platform=browser'
+      - '--platform=neutral'

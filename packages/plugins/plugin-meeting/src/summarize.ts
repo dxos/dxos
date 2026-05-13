@@ -46,7 +46,7 @@ export const summarizeTranscript: (content: string) => Effect.Effect<
   function* (content) {
     log.info('summarizing meeting', { contentLength: content.length });
 
-    const output = yield* new AiRequest().run({
+    const output = yield* new AiRequest.Request().run({
       system: SUMMARIZE_PROMPT,
       prompt: content,
     });

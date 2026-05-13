@@ -9,8 +9,8 @@ import { Capabilities } from '@dxos/app-framework';
 import { useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities, CollaborationOperation, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Query, Relation } from '@dxos/echo';
-import { Ref, useQuery } from '@dxos/react-client/echo';
+import { Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { getParentId, useAttention } from '@dxos/react-ui-attention';
@@ -19,7 +19,7 @@ import { AnchoredTo, Thread } from '@dxos/types';
 
 import { CommentsPanel, type CommentsPanelProps } from '#components';
 import { meta } from '#meta';
-import { ThreadOperation } from '#operations';
+import { ThreadOperation } from '#types';
 import { ThreadCapabilities, type ViewState } from '#types';
 
 const initialViewState: ViewState = { showResolvedThreads: false };

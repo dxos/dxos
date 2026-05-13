@@ -19,9 +19,9 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
 import { ResearchInputQueue } from '../testing';
-import { type ComponentProps } from './types';
+import { type ModuleProps } from './types';
 
-export const GraphModule = ({ space }: ComponentProps) => {
+export const GraphModule = ({ space }: ModuleProps) => {
   const [filter, setFilter] = useState<Filter.Any>();
   const [open, setOpen] = useState(false);
 
@@ -30,7 +30,7 @@ export const GraphModule = ({ space }: ComponentProps) => {
   const queue = useQueue(feed ? Feed.getQueueDxn(feed) : undefined);
 
   // TODO(burdon): Clean-up API.
-  const model = useGraphModel(space, undefined, undefined, queue);
+  const model = useGraphModel(space.db, undefined, undefined, queue);
   useEffect(() => {
     model?.setFilter(filter ?? Filter.everything());
   }, [model, filter]);
@@ -52,7 +52,6 @@ export const GraphModule = ({ space }: ComponentProps) => {
 
       {open && (
         <div
-          role='none'
           className={mx(
             'flex absolute left-2 right-2 bottom-2 h-[8rem]',
             'overflow-hidden bg-base-surface border border-subdued-separator opacity-80',
@@ -62,7 +61,7 @@ export const GraphModule = ({ space }: ComponentProps) => {
         </div>
       )}
 
-      <div role='none' className='absolute bottom-4 right-4 z-10'>
+      <div className='absolute bottom-4 right-4 z-10'>
         <IconButton
           variant='ghost'
           icon={open ? 'ph--x--regular' : 'ph--arrow-line-up--regular'}
@@ -75,7 +74,7 @@ export const GraphModule = ({ space }: ComponentProps) => {
   );
 };
 
-export const SearchBar = ({ space, onSubmit }: ComponentProps & Pick<ChatEditorProps, 'onSubmit'>) => {
+export const SearchBar = ({ space, onSubmit }: ModuleProps & Pick<ChatEditorProps, 'onSubmit'>) => {
   const { state: flushState, handleFlush } = useFlush(space);
   const editorRef = useRef<EditorController>(null);
 

@@ -14,7 +14,7 @@ import { osTranslations } from '@dxos/ui-theme';
 import { meta } from '#meta';
 import type { RemoteTarget } from '#types';
 
-import { SetIntegrationTargets } from '../../operations/definitions';
+import { IntegrationOperation } from '../../types';
 import { type Integration } from '../../types';
 
 export type SyncTargetsChecklistProps = {
@@ -72,7 +72,7 @@ export const SyncTargetsChecklist = ({ integration, availableTargets, existingTa
       const chosen = availableTargets
         .filter((target) => selected.has(target.id))
         .map((target) => ({ remoteId: target.id, name: target.name }));
-      const result = await invokePromise(SetIntegrationTargets, {
+      const result = await invokePromise(IntegrationOperation.SetIntegrationTargets, {
         integration: Ref.make(integration),
         selected: chosen,
         existingTarget,
@@ -101,7 +101,7 @@ export const SyncTargetsChecklist = ({ integration, availableTargets, existingTa
         <Dialog.Description>{t('sync-targets-dialog.description')}</Dialog.Description>
 
         {availableTargets.length > 0 && (
-          <div role='none' className='flex gap-2 mt-form-gap'>
+          <div className='flex gap-2 mt-form-gap'>
             <Button onClick={selectAll} disabled={submitting}>
               {t('select-all.label')}
             </Button>
@@ -116,16 +116,16 @@ export const SyncTargetsChecklist = ({ integration, availableTargets, existingTa
         ) : (
           <ScrollArea.Root classNames='mt-form-gap max-bs-[24rem]' orientation='vertical'>
             <ScrollArea.Viewport>
-              <div role='none' className='flex flex-col gap-1 pie-2'>
+              <div className='flex flex-col gap-1 pie-2'>
                 {availableTargets.map((target) => (
                   <Input.Root key={target.id}>
-                    <div role='none' className='flex items-start gap-2'>
+                    <div className='flex items-start gap-2'>
                       <Input.Checkbox
                         checked={selected.has(target.id)}
                         onCheckedChange={() => toggle(target.id)}
                         disabled={submitting}
                       />
-                      <div role='none' className='flex flex-col'>
+                      <div className='flex flex-col'>
                         <Input.Label>{target.name}</Input.Label>
                         {target.description && <p className='text-description'>{target.description}</p>}
                       </div>

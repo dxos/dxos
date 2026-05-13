@@ -10,23 +10,23 @@ import { Capabilities } from '@dxos/app-framework';
 import { Surface, useCapabilities, useCapability } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { AiContextBinder } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import { Blueprint } from '@dxos/compute';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
+import { Assistant } from '@dxos/plugin-assistant';
 import { useContextBinder } from '@dxos/plugin-assistant/hooks';
 import { translations } from '@dxos/plugin-assistant/translations';
-import { Assistant } from '@dxos/plugin-assistant/types';
-import { MarkdownPlugin } from '@dxos/plugin-markdown';
+import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { Stack, StackItem } from '@dxos/react-ui-stack';
 import { withLayout, withTheme, Loading } from '@dxos/react-ui/testing';
 import { isNonNullable } from '@dxos/util';
 
-import { ChatModule, type ComponentProps } from '../components';
+import { ChatModule, type ModuleProps } from '../components';
 import { config, getDecorators } from '../testing';
 
 // TODO(burdon): Move into Chat.stories.tsx
@@ -34,7 +34,7 @@ import { config, getDecorators } from '../testing';
 const panelClassNames = 'bg-base-surface rounded-xs border border-separator overflow-hidden';
 
 type DefaultStoryProps = {
-  modules: FC<ComponentProps>[][];
+  modules: FC<ModuleProps>[][];
   blueprints?: string[];
   showContext?: boolean;
 };
@@ -71,11 +71,11 @@ const DefaultStory = ({ modules, showContext, blueprints = [] }: DefaultStoryPro
     const runtime = await runAndForwardErrors(
       Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
     );
-    const binder = new AiContextBinder({ feed: feedTarget, runtime, registry: atomRegistry });
+    const binder = new AiContext.Binder({ feed: feedTarget, runtime, registry: atomRegistry });
     await binder.use((binder) => binder.bind({ blueprints: blueprintObjects.map((blueprint) => Ref.make(blueprint)) }));
   }, [space, blueprints, blueprintsDefinitions]);
 
-  const handleEvent = useCallback<NonNullable<ComponentProps['onEvent']>>((event) => {
+  const handleEvent = useCallback<NonNullable<ModuleProps['onEvent']>>((event) => {
     log.info('event', { event });
   }, []);
 

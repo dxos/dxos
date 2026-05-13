@@ -13,7 +13,7 @@ import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { PostContent } from '#components';
 import { meta } from '#meta';
-import { FeedOperation } from '#operations';
+import { FeedOperation } from '#types';
 import { Subscription } from '#types';
 
 import { ensureStarTag, fetchArticle, hasMetaTag, toggleMetaTag, useStarTag } from '../../util';

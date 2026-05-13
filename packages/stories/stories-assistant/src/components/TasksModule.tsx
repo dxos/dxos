@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Filter, Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown';
 import { useQuery } from '@dxos/react-client/echo';
 import { Toolbar, useThemeContext } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
@@ -18,9 +18,9 @@ import {
   outliner,
 } from '@dxos/ui-editor';
 
-import { type ComponentProps } from './types';
+import { type ModuleProps } from './types';
 
-export const TasksModule = ({ space }: ComponentProps) => {
+export const TasksModule = ({ space }: ModuleProps) => {
   const { themeMode } = useThemeContext();
   const [document] = useQuery(space.db, Filter.type(Markdown.Document));
   if (!document?.content.target) {

@@ -10,14 +10,14 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { AttentionCapabilities } from '@dxos/plugin-attention/types';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { type SelectionManager, type SelectionMode, defaultSelection } from '@dxos/react-ui-attention';
 import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
-import { ThreadOperation } from '#operations';
+import { ThreadOperation } from '#types';
 import { ThreadCapabilities, type ThreadState } from '#types';
 
 import { getAnchor } from '../util';

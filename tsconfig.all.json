@@ -310,6 +310,9 @@
       "path": "packages/plugins/plugin-automation/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-bluesky/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-board/tsconfig.json"
     },
     {
@@ -329,9 +332,6 @@
     },
     {
       "path": "packages/plugins/plugin-crx/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/plugin-daily-summary/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-debug/tsconfig.json"
@@ -715,6 +715,9 @@
       "path": "tools/dx-tools/tsconfig.json"
     },
     {
+      "path": "tools/dx-trace-imports/tsconfig.json"
+    },
+    {
       "path": "tools/lockfile-explorer/tsconfig.json"
     },
     {
@@ -749,6 +752,9 @@
     },
     {
       "path": "vendor/hyperformula/tsconfig.json"
+    },
+    {
+      "path": "vendor/kbn-handlebars/tsconfig.json"
     },
     {
       "path": "vendor/quickjs/tsconfig.json"

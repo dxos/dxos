@@ -9,10 +9,9 @@ import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Cursor, setSelection } from '@dxos/ui-editor';
 
-import { MarkdownCapabilities } from '../types';
-import { ScrollToAnchor } from './definitions';
+import { MarkdownCapabilities, MarkdownOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof ScrollToAnchor> = ScrollToAnchor.pipe(
+const handler: Operation.WithHandler<typeof MarkdownOperation.ScrollToAnchor> = MarkdownOperation.ScrollToAnchor.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ subject, cursor }) {
       const editorViews = yield* Capability.get(MarkdownCapabilities.EditorViews);

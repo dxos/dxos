@@ -15,13 +15,14 @@ import {
 } from '@dxos/app-toolkit';
 import { SubscriptionList } from '@dxos/async';
 import { Filter, Obj } from '@dxos/echo';
+import { SPACE_ID_LENGTH, parseId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { AttentionCapabilities } from '@dxos/plugin-attention/types';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { PublicKey } from '@dxos/react-client';
-import { type Space, SPACE_ID_LENGTH, SpaceState, parseId } from '@dxos/react-client/echo';
+import { type Space, SpaceState } from '@dxos/react-client/echo';
 import { Expando } from '@dxos/schema';
 import { ComplexMap, reduceGroupBy } from '@dxos/util';
 

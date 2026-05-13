@@ -3,6 +3,8 @@
 //
 
 export * from './constants';
-export * as Kanban from './Kanban';
 export * from './schema';
 export type * from './types';
+
+export * as Kanban from './Kanban';
+export * as KanbanOperation from './KanbanOperation';

@@ -5,7 +5,7 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { ContextBinding } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import { Routine, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -25,7 +25,7 @@ const operationHandlerSet = OperationHandlerSet.make(defaultAgentPrompt);
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: operationHandlerSet,
-  types: [Chat.Chat, Message.Message, ContextBinding, Text.Text],
+  types: [Chat.Chat, Message.Message, AiContext.Binding, Text.Text],
   aiServicePreset: 'edge-remote',
 });
 
@@ -42,7 +42,7 @@ describe('Agent prompt', () => {
       function* (_) {
         const feed = yield* Database.add(Feed.make());
         const queueDxn = Feed.getQueueDxn(feed)!;
-        const queue = yield* QueueService.getQueue<Message.Message | ContextBinding>(queueDxn);
+        const queue = yield* QueueService.getQueue<Message.Message | AiContext.Binding>(queueDxn);
         const messageCountBefore = yield* countQueueMessages(queue);
 
         const chat = yield* Database.add(

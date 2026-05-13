@@ -5,7 +5,7 @@
 import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
-import { FeedOperation } from '#operations';
+import { FeedOperation } from '#types';
 import { Magazine } from '#types';
 
 const operations = [

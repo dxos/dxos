@@ -27,6 +27,7 @@ export const Magazine = Schema.Struct({
   /** Feeds to pull content from. */
   feeds: Schema.Array(Ref.Ref(Subscription.Feed)),
   /** Long-form brief describing what content the Magazine should gather. */
+  // TODO(burdon): Change to routine.
   instructions: Ref.Ref(Text.Text).pipe(
     Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
     Schema.annotations({ title: 'Instructions' }),
@@ -74,7 +75,7 @@ export const make = (
   Obj.make(Magazine, {
     ...props,
     feeds: props.feeds ?? [],
-    instructions: Ref.make(Text.make(props.instructions ?? '')),
+    instructions: Ref.make(Text.make({ content: props.instructions ?? '' })),
     posts: props.posts ?? [],
   });
 

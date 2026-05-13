@@ -152,7 +152,7 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
         })}
         ref={forwardedRef}
       >
-        <div role='none' className='relative aspect-video h-full w-full h-auto max-h-full overflow-hidden'>
+        <div className='relative aspect-video h-full w-full h-auto max-h-full overflow-hidden'>
           <div ref={deckDivRef} className='absolute inset-0 reveal'>
             {/* NOTE: Must be in head. */}
             <style>

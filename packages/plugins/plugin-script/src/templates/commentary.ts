@@ -15,13 +15,12 @@ import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } 
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { ArtifactId } from '@dxos/assistant';
 import { Trace, Operation, OperationRegistry } from '@dxos/compute';
-import { Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
+import { Collection, Database, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { log } from '@dxos/log';
-import { Chess } from '@dxos/plugin-chess/types';
-import { Game, GameRef, loadGame } from '@dxos/plugin-game/types';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { Chess } from '@dxos/plugin-chess';
+import { Game, GameRef, loadGame } from '@dxos/plugin-game';
+import { Markdown } from '@dxos/plugin-markdown';
 import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -85,7 +84,7 @@ export default Commentary.pipe(
         const moveNotation = lastMove.san;
 
         // Generate AI commentary about the move
-        const result = yield* new AiRequest({
+        const result = yield* new AiRequest.Request({
           observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'chess-commentary' })),
         }).run({
           prompt:

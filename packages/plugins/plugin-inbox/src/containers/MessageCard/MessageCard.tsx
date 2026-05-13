@@ -33,7 +33,7 @@ export const MessageCard = ({ subject: message }: AppSurface.ObjectCardProps<Mes
       </Card.Row>
       <Card.Row>
         {message.properties?.tags && (
-          <div role='none'>
+          <div>
             {message.properties.tags.map(({ label, hue }: Tag.Tag) => (
               <span className='dx-tag' key={label} data-label={label} data-hue={hue}>
                 {label}

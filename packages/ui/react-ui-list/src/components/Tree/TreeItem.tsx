@@ -326,11 +326,7 @@ const RawTreeItem = <T extends { id: string } = any>({
         onMouseEnter={handleItemHover}
         onContextMenu={handleContextMenu}
       >
-        <div
-          role='none'
-          className='indent relative grid grid-cols-subgrid col-[tree-row]'
-          style={paddingIndentation(level)}
-        >
+        <div className='indent relative grid grid-cols-subgrid col-[tree-row]' style={paddingIndentation(level)}>
           <Treegrid.Cell classNames='flex items-center'>
             <TreeItemToggle isBranch={isBranch} open={open} onClick={handleOpenToggle} />
             <TreeItemHeading

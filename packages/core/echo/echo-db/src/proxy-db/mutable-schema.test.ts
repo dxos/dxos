@@ -5,8 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { DXN, Obj, Type } from '@dxos/echo';
-import { Filter } from '@dxos/echo';
+import { DXN, Filter, Obj, Type } from '@dxos/echo';
 import {
   EchoSchema,
   EntityKind,

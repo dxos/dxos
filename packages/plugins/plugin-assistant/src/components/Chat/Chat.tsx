@@ -7,6 +7,7 @@ import * as Array from 'effect/Array';
 import * as Option from 'effect/Option';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { Agent, Plan } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
 import { Filter, Obj } from '@dxos/echo';
 import { type Queue, useQuery } from '@dxos/react-client/echo';
@@ -24,6 +25,7 @@ import {
   type ChatPromptProps as NaturalChatPromptProps,
 } from '../ChatPrompt';
 import { ChatThread as NaturalChatThread, type ChatThreadProps as NaturalChatThreadProps } from '../ChatThread';
+import { TaskList } from '../TaskList';
 import { ChatContextProvider, type ChatContextValue, type ChatRequestTiming, useChatContext } from './context';
 import { type ChatEvent } from './events';
 
@@ -219,7 +221,7 @@ const ChatThread = ({ viewType, debug: debugProp, ...props }: ChatThreadProps) =
   );
 
   if (!identity) {
-    return null;
+    return <div className='dx-expander' />;
   }
 
   return (
@@ -255,6 +257,30 @@ const ChatPrompt = (props: ChatPromptProps) => {
 ChatPrompt.displayName = CHAT_PROMPT_NAME;
 
 //
+// TaskList
+//
+
+const CHAT_TASK_LIST_NAME = 'Chat.TaskList';
+
+type ChatTaskListProps = {
+  plan?: Plan.Plan;
+};
+
+const ChatTaskList = composable<HTMLDivElement, ChatTaskListProps>(({ plan: planProp, ...props }, forwardedRef) => {
+  const { chat } = useChatContext(CHAT_TASK_LIST_NAME);
+  const parent = chat ? Obj.getParent(chat) : undefined;
+  const agent = parent && Obj.instanceOf(Agent.Agent, parent) ? parent : undefined;
+  const plan = planProp ?? agent?.plan.target;
+  if (!plan) {
+    return null;
+  }
+
+  return <TaskList {...props} plan={plan} ref={forwardedRef} />;
+});
+
+ChatTaskList.displayName = CHAT_TASK_LIST_NAME;
+
+//
 // Chat
 //
 
@@ -265,6 +291,7 @@ export const Chat = {
   Prompt: ChatPrompt,
   Status: ChatStatus,
   Thread: ChatThread,
+  TaskList: ChatTaskList,
 };
 
 export type { ChatRootProps, ChatToolbarProps, ChatContentProps, ChatPromptProps, ChatThreadProps, ChatEvent };

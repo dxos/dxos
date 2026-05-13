@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type Markdown } from '@dxos/plugin-markdown/types';
+import { type Markdown } from '@dxos/plugin-markdown';
 
 import { Panel, Slide } from '#components';
 

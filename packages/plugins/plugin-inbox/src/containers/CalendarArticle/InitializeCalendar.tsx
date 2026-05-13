@@ -8,7 +8,7 @@ import { useTranslation } from '@dxos/react-ui';
 import { composable } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { InboxOperation } from '#operations';
+import { InboxOperation } from '#types';
 import { type Calendar } from '#types';
 
 import { Initialize, InitializeAction } from '../../components';

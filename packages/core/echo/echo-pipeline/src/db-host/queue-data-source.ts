@@ -132,6 +132,7 @@ export class QueueDataSource implements IndexDataSource {
               objects.push({
                 spaceId: cursor.spaceId,
                 queueId: block.feedId ?? failedInvariant(),
+                queueNamespace: cursor.resourceId,
                 documentId: null,
                 recordId: null,
                 data,

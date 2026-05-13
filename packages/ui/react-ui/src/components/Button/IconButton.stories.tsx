@@ -13,7 +13,7 @@ import { IconButton, type IconButtonProps } from './IconButton';
 const DefaultStory = (props: IconButtonProps) => {
   return (
     <Tooltip.Provider>
-      <div role='none' className='flex gap-4'>
+      <div className='flex gap-4'>
         <IconButton {...props} />
         <IconButton iconOnly {...props} />
         <Button>{props.label}</Button>

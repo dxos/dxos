@@ -8,13 +8,13 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Plan, Agent } from '@dxos/assistant-toolkit';
-import { Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { AutomationPlugin } from '@dxos/plugin-automation';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Button } from '@dxos/react-ui';
 import { ObjectProperties } from '@dxos/react-ui-form';
 import { Loading, withLayout } from '@dxos/react-ui/testing';

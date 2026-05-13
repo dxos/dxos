@@ -5,19 +5,18 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AiContextBinder } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import { Chat, DatabaseBlueprint, AgentWizardBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation } from '@dxos/compute';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { AssistantBlueprint } from '#blueprints';
+import { AssistantOperation } from '#types';
 
-import { CreateChat } from './definitions';
-
-const handler: Operation.WithHandler<typeof CreateChat> = CreateChat.pipe(
+const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = AssistantOperation.CreateChat.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ db, name, addToSpace = true }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
@@ -57,9 +56,9 @@ const handler: Operation.WithHandler<typeof CreateChat> = CreateChat.pipe(
 
       const feedServiceLayer = createFeedServiceLayer(space.queues);
       const runtime = yield* Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer));
-      const binder = new AiContextBinder({ feed, runtime, registry });
+      const binder = new AiContext.Binder({ feed, runtime, registry });
       yield* Effect.promise(() =>
-        binder.use((b: AiContextBinder) =>
+        binder.use((b: AiContext.Binder) =>
           b.bind({
             blueprints: [
               Ref.make(defaultAssistantBlueprint!),

@@ -42,7 +42,7 @@ export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) 
             </Card.Root>
 
             {/* TODO(burdon): Only show label if surface exists? */}
-            <div role='none' className='flex flex-col gap-form-gap'>
+            <div className='flex flex-col gap-form-gap'>
               <Input.Root>
                 <Input.Label>{t('related-actions.label')}</Input.Label>
               </Input.Root>

@@ -8,8 +8,7 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import { Obj, View } from '@dxos/echo';
 
 import { MasonryContainer } from '#containers';
 import { Masonry } from '#types';

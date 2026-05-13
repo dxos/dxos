@@ -13,7 +13,7 @@ import { Key } from './Key';
 const Shortcut = ({ binding }: { binding: KeyBinding }) => {
   const { t } = useTranslation(osTranslations);
   return (
-    <div role='none' className='flex items-center gap-2 whitespace-nowrap'>
+    <div className='flex items-center gap-2 whitespace-nowrap'>
       <Key binding={binding.shortcut} />
       <span className='text-sm'>{toLocalizedString(binding.data, t)}</span>
     </div>
@@ -27,7 +27,7 @@ export const ShortcutsHints = ({ onClose }: { onClose?: () => void }) => {
   const hints = bindings.filter((binding) => defaults.includes(binding.shortcut));
 
   return (
-    <div role='none' className='flex overflow-hidden px-2 gap-4'>
+    <div className='flex overflow-hidden px-2 gap-4'>
       {hints.map((binding) => (
         <Shortcut key={binding.shortcut} binding={binding} />
       ))}

@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AiContextService } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import { Blueprint, Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 
@@ -41,7 +41,7 @@ export const EnableBlueprints = Operation.make({
       }),
     ),
   }),
-  services: [Blueprint.RegistryService, Database.Service, AiContextService],
+  services: [Blueprint.RegistryService, Database.Service, AiContext.Service],
 });
 
 export const UpdateBlueprints = Operation.make({

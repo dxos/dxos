@@ -30,6 +30,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
@@ -43,6 +44,8 @@
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/schema": "workspace:*",
+    "@dxos/util": "workspace:*",
     "@effect/platform": "catalog:"
   },
   "publishConfig": {

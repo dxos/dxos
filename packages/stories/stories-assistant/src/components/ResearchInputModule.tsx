@@ -4,21 +4,20 @@
 
 import React from 'react';
 
-import { Entity, Feed, Filter } from '@dxos/echo';
-import { useQuery, useQueue } from '@dxos/react-client/echo';
+import { Entity, Filter } from '@dxos/echo';
+import { useFeedQuery, useQuery } from '@dxos/react-client/echo';
 import { getHashHue } from '@dxos/ui-theme';
 
 import { ResearchInputQueue } from '../testing';
-import { type ComponentProps } from './types';
+import { type ModuleProps } from './types';
 
-export const ResearchInputModule = ({ space }: ComponentProps) => {
+export const ResearchInputModule = ({ space }: ModuleProps) => {
   const [researchInput] = useQuery(space.db, Filter.type(ResearchInputQueue));
-  const feed = researchInput?.feed.target;
-  const queue = useQueue(feed ? Feed.getQueueDxn(feed) : undefined);
+  const objects = useFeedQuery(researchInput?.feed.target, Filter.everything());
 
   return (
     <ul className='flex flex-col gap-4 p-4 h-full overflow-y-auto'>
-      {queue?.objects.map((object) => (
+      {objects.map((object) => (
         <li key={object.id}>
           <DebugCard object={object} />
         </li>

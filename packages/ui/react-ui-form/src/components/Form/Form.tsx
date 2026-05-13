@@ -266,7 +266,6 @@ const FormActions = ({ classNames }: FormActionsProps) => {
 
   return (
     <div
-      role='none'
       className={mx(withColumn.center(), 'grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding', classNames)}
     >
       {onCancel && (
@@ -342,7 +341,7 @@ const FormSubmit = ({ classNames, label, icon, disabled }: FormSubmitProps) => {
   }
 
   return (
-    <div role='none' className={mx('flex w-full pt-form-padding', classNames)}>
+    <div className={mx('flex w-full pt-form-padding', classNames)}>
       <IconButton
         classNames='w-full'
         type='submit'

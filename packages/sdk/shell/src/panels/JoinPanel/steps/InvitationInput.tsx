@@ -65,7 +65,7 @@ export const InvitationInput = (props: InvitationInputProps) => {
 
   return (
     <>
-      <div role='none' className='grow flex flex-col justify-center'>
+      <div className='grow flex flex-col justify-center'>
         <TextInput
           label={<InputLabel>{t('invitation-input.label')}</InputLabel>}
           placeholder={t('invitation-input.placeholder')}

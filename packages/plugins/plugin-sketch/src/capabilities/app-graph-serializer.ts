@@ -6,13 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { Obj } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { Collection, Obj } from '@dxos/echo';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { isSpace } from '@dxos/react-client/echo';
 
-import { SketchOperation } from '#operations';
 import { translations } from '#translations';
+import { SketchOperation } from '#types';
 import { Sketch } from '#types';
 
 export default Capability.makeModule(

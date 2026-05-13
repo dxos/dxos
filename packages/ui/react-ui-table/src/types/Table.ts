@@ -6,8 +6,7 @@ import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Annotation, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import { Annotation, JsonSchema, Obj, Ref, Type, View } from '@dxos/echo';
 import { FormInputAnnotation, type JsonPath, type JsonSchemaType, LabelAnnotation } from '@dxos/echo/internal';
 import { ViewAnnotation } from '@dxos/schema';
 

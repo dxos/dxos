@@ -10,11 +10,11 @@ import { Blueprint, Operation, Routine } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
-import { AutomationCapabilities } from '@dxos/plugin-automation/types';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { SpaceCapabilities } from '@dxos/plugin-space/types';
+import { AutomationCapabilities } from '@dxos/plugin-automation';
+import { SpaceOperation } from '@dxos/plugin-space';
+import { SpaceCapabilities } from '@dxos/plugin-space';
 
-import { AssistantOperation } from '#operations';
+import { AssistantOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -63,10 +63,10 @@ export default Capability.makeModule(
           }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Sequence.typename,
+        id: Sequence.Sequence.typename,
         createObject: (props, options) =>
           Effect.gen(function* () {
-            const object = Obj.make(Sequence, props);
+            const object = Obj.make(Sequence.Sequence, props);
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,

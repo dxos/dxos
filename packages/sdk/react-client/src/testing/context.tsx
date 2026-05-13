@@ -4,8 +4,9 @@
 
 import { createContext, useContext } from 'react';
 
-import { type Space, type SpaceId } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { raise } from '@dxos/debug';
+import { type SpaceId } from '@dxos/keys';
 
 export type ClientStory = {
   index?: number;

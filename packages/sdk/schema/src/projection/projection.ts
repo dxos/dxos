@@ -6,8 +6,7 @@ import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
-import { Format, Obj } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import { Format, Obj, View } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import {
   EchoSchema,

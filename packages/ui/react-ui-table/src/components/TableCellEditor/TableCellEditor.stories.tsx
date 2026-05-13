@@ -5,8 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Obj } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import { Obj, View } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Grid, type GridEditing, defaultRowSize } from '@dxos/react-ui-grid';

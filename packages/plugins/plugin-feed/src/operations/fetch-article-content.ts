@@ -8,10 +8,10 @@ import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
+import { FeedOperation } from '../types';
 import { fetchArticle } from '../util';
-import { FetchArticleContent } from './definitions';
 
-const handler: Operation.WithHandler<typeof FetchArticleContent> = FetchArticleContent.pipe(
+const handler: Operation.WithHandler<typeof FeedOperation.FetchArticleContent> = FeedOperation.FetchArticleContent.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ post: postRef }) {
       const post = yield* Database.load(postRef);

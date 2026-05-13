@@ -35,13 +35,12 @@ import {
   TestingPanel,
   WorkflowPanel,
 } from '@dxos/devtools';
-import { Feed, Obj } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
+import { Collection, Feed, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Graph } from '@dxos/plugin-graph';
-import { ScriptOperation } from '@dxos/plugin-script/operations';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { ScriptOperation } from '@dxos/plugin-script';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { type Space, SpaceState, isSpace } from '@dxos/react-client/echo';
 import { ToolsExplorer } from '@dxos/react-ui-introspect';
 

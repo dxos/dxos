@@ -10,7 +10,7 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 import type { Operation } from '@dxos/compute';
 import { createDocAccessor, getTextInRange } from '@dxos/echo-db';
 
-import { MarkdownOperation } from '#operations';
+import { MarkdownOperation } from '#types';
 import { Markdown } from '#types';
 
 export default Capability.makeModule(

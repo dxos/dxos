@@ -10,8 +10,9 @@ import * as Schema from 'effect/Schema';
 
 import { CommandConfig, printList } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
-import { type Queue } from '@dxos/client/echo';
-import { DXN } from '@dxos/keys';
+import { createFeedServiceLayer } from '@dxos/client/echo';
+import { Feed, Filter } from '@dxos/echo';
+import { DXN, type SpaceId } from '@dxos/keys';
 
 import { printQueueObject } from './util';
 
@@ -31,8 +32,20 @@ export const query = Command.make(
   Effect.fnUntraced(function* ({ dxn }) {
     const { json } = yield* CommandConfig;
     const client = yield* ClientService;
-    const queue = (yield* Effect.promise(() => client.graph.createRefResolver({}).resolve(dxn))) as Queue<any>;
-    const objects = yield* Effect.promise(() => queue.queryObjects());
+    const parts = dxn.asQueueDXN();
+    if (!parts) {
+      yield* Console.error(`Not a queue DXN: ${dxn.toString()}`);
+      return;
+    }
+    const space = client.spaces.get(parts.spaceId as SpaceId);
+    if (!space) {
+      yield* Console.error(`Space not found: ${parts.spaceId}`);
+      return;
+    }
+    const feed = Feed.unsafeFromQueueDXN(dxn);
+    const objects = yield* Feed.runQuery(feed, Filter.everything()).pipe(
+      Effect.provide(createFeedServiceLayer(space.queues)),
+    );
 
     if (json) {
       yield* Console.log(JSON.stringify(objects, null, 2));

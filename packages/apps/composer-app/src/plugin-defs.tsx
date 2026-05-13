@@ -9,71 +9,71 @@ import { APP_DOMAIN } from '@dxos/app-toolkit';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
-import { AssistantPlugin } from '@dxos/plugin-assistant';
-import { AttentionPlugin } from '@dxos/plugin-attention';
-import { AutomationPlugin } from '@dxos/plugin-automation';
-import { BoardPlugin } from '@dxos/plugin-board';
-import { ChessPlugin } from '@dxos/plugin-chess';
-import { ClientPlugin } from '@dxos/plugin-client';
-import { CodePlugin } from '@dxos/plugin-code';
-import { ConductorPlugin } from '@dxos/plugin-conductor';
-import { CrxPlugin } from '@dxos/plugin-crx';
-import { DailySummaryPlugin } from '@dxos/plugin-daily-summary';
-import { DebugPlugin } from '@dxos/plugin-debug';
-import { DeckPlugin } from '@dxos/plugin-deck';
-import { DiscordPlugin } from '@dxos/plugin-discord';
-import { DoctorPlugin } from '@dxos/plugin-doctor';
-import { ExplorerPlugin } from '@dxos/plugin-explorer';
-import { FeedPlugin } from '@dxos/plugin-feed';
-import { GalleryPlugin } from '@dxos/plugin-gallery';
-import { GamePlugin } from '@dxos/plugin-game';
-import { GitHubPlugin } from '@dxos/plugin-github';
-import { GraphPlugin } from '@dxos/plugin-graph';
-import { HelpPlugin } from '@dxos/plugin-help';
-import { InboxPlugin } from '@dxos/plugin-inbox';
-import { IntegrationPlugin } from '@dxos/plugin-integration';
-import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon';
-import { KanbanPlugin } from '@dxos/plugin-kanban';
-import { LinearPlugin } from '@dxos/plugin-linear';
-import { MapPlugin } from '@dxos/plugin-map';
-import { MapPlugin as MapPluginSolid } from '@dxos/plugin-map-solid';
-import { MarkdownPlugin } from '@dxos/plugin-markdown';
-import { MasonryPlugin } from '@dxos/plugin-masonry';
-import { MeetingPlugin } from '@dxos/plugin-meeting';
-import { MermaidPlugin } from '@dxos/plugin-mermaid';
-import { NativePlugin } from '@dxos/plugin-native';
-import { NativeFilesystemPlugin } from '@dxos/plugin-native-filesystem';
-import { NavTreePlugin } from '@dxos/plugin-navtree';
-import { ObservabilityPlugin } from '@dxos/plugin-observability';
-import { OutlinerPlugin } from '@dxos/plugin-outliner';
-import { PipelinePlugin } from '@dxos/plugin-pipeline';
-import { PresenterPlugin } from '@dxos/plugin-presenter';
-import { PreviewPlugin } from '@dxos/plugin-preview';
-import { PwaPlugin } from '@dxos/plugin-pwa';
-import { RegistryPlugin } from '@dxos/plugin-registry';
-import { SamplePlugin } from '@dxos/plugin-sample';
-import { ScriptPlugin } from '@dxos/plugin-script';
-import { SearchPlugin } from '@dxos/plugin-search';
-import { SettingsPlugin } from '@dxos/plugin-settings';
-import { SheetPlugin } from '@dxos/plugin-sheet';
-import { SidekickPlugin } from '@dxos/plugin-sidekick';
-import { SimpleLayoutPlugin } from '@dxos/plugin-simple-layout';
-import { SketchPlugin } from '@dxos/plugin-sketch';
-import { SlackPlugin } from '@dxos/plugin-slack';
-import { SpacePlugin } from '@dxos/plugin-space';
-import { SpacetimePlugin } from '@dxos/plugin-spacetime';
-import { SpotlightPlugin } from '@dxos/plugin-spotlight';
-import { StackPlugin } from '@dxos/plugin-stack';
-import { StatusBarPlugin } from '@dxos/plugin-status-bar';
-import { TablePlugin } from '@dxos/plugin-table';
-import { ThemePlugin } from '@dxos/plugin-theme';
-import { ThreadPlugin } from '@dxos/plugin-thread';
-import { TicTacToePlugin } from '@dxos/plugin-tictactoe';
-import { TranscriptionPlugin } from '@dxos/plugin-transcription';
-import { TrelloPlugin } from '@dxos/plugin-trello';
-import { VoxelPlugin } from '@dxos/plugin-voxel';
-import { WnfsPlugin } from '@dxos/plugin-wnfs';
-import { ZenPlugin } from '@dxos/plugin-zen';
+import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
+import { AttentionPlugin } from '@dxos/plugin-attention/plugin';
+import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
+import { BlueskyPlugin } from '@dxos/plugin-bluesky/plugin';
+import { BoardPlugin } from '@dxos/plugin-board/plugin';
+import { ChessPlugin } from '@dxos/plugin-chess/plugin';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import { CodePlugin } from '@dxos/plugin-code/plugin';
+import { ConductorPlugin } from '@dxos/plugin-conductor/plugin';
+import { CrxPlugin } from '@dxos/plugin-crx/plugin';
+import { DebugPlugin } from '@dxos/plugin-debug/plugin';
+import { DeckPlugin } from '@dxos/plugin-deck/plugin';
+import { DiscordPlugin } from '@dxos/plugin-discord/plugin';
+import { DoctorPlugin } from '@dxos/plugin-doctor/plugin';
+import { ExplorerPlugin } from '@dxos/plugin-explorer/plugin';
+import { FeedPlugin } from '@dxos/plugin-feed/plugin';
+import { GalleryPlugin } from '@dxos/plugin-gallery/plugin';
+import { GamePlugin } from '@dxos/plugin-game/plugin';
+import { GitHubPlugin } from '@dxos/plugin-github/plugin';
+import { GraphPlugin } from '@dxos/plugin-graph/plugin';
+import { HelpPlugin } from '@dxos/plugin-help/plugin';
+import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
+import { IntegrationPlugin } from '@dxos/plugin-integration/plugin';
+import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon/plugin';
+import { KanbanPlugin } from '@dxos/plugin-kanban/plugin';
+import { LinearPlugin } from '@dxos/plugin-linear/plugin';
+import { MapPlugin as MapPluginSolid } from '@dxos/plugin-map-solid/plugin';
+import { MapPlugin } from '@dxos/plugin-map/plugin';
+import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
+import { MasonryPlugin } from '@dxos/plugin-masonry/plugin';
+import { MeetingPlugin } from '@dxos/plugin-meeting/plugin';
+import { MermaidPlugin } from '@dxos/plugin-mermaid/plugin';
+import { NativeFilesystemPlugin } from '@dxos/plugin-native-filesystem/plugin';
+import { NativePlugin } from '@dxos/plugin-native/plugin';
+import { NavTreePlugin } from '@dxos/plugin-navtree/plugin';
+import { ObservabilityPlugin } from '@dxos/plugin-observability/plugin';
+import { OutlinerPlugin } from '@dxos/plugin-outliner/plugin';
+import { PipelinePlugin } from '@dxos/plugin-pipeline/plugin';
+import { PresenterPlugin } from '@dxos/plugin-presenter/plugin';
+import { PreviewPlugin } from '@dxos/plugin-preview/plugin';
+import { PwaPlugin } from '@dxos/plugin-pwa/plugin';
+import { RegistryPlugin } from '@dxos/plugin-registry/plugin';
+import { SamplePlugin } from '@dxos/plugin-sample/plugin';
+import { ScriptPlugin } from '@dxos/plugin-script/plugin';
+import { SearchPlugin } from '@dxos/plugin-search/plugin';
+import { SettingsPlugin } from '@dxos/plugin-settings/plugin';
+import { SheetPlugin } from '@dxos/plugin-sheet/plugin';
+import { SidekickPlugin } from '@dxos/plugin-sidekick/plugin';
+import { SimpleLayoutPlugin } from '@dxos/plugin-simple-layout/plugin';
+import { SketchPlugin } from '@dxos/plugin-sketch/plugin';
+import { SlackPlugin } from '@dxos/plugin-slack/plugin';
+import { SpacePlugin } from '@dxos/plugin-space/plugin';
+import { SpacetimePlugin } from '@dxos/plugin-spacetime/plugin';
+import { SpotlightPlugin } from '@dxos/plugin-spotlight/plugin';
+import { StackPlugin } from '@dxos/plugin-stack/plugin';
+import { StatusBarPlugin } from '@dxos/plugin-status-bar/plugin';
+import { TablePlugin } from '@dxos/plugin-table/plugin';
+import { ThemePlugin } from '@dxos/plugin-theme/plugin';
+import { ThreadPlugin } from '@dxos/plugin-thread/plugin';
+import { TicTacToePlugin } from '@dxos/plugin-tictactoe/plugin';
+import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
+import { TrelloPlugin } from '@dxos/plugin-trello/plugin';
+import { VoxelPlugin } from '@dxos/plugin-voxel/plugin';
+import { WnfsPlugin } from '@dxos/plugin-wnfs/plugin';
+import { ZenPlugin } from '@dxos/plugin-zen/plugin';
 import { isTruthy } from '@dxos/util';
 
 import { steps } from './help';
@@ -115,7 +115,7 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
     AttentionPlugin.meta.id,
     AutomationPlugin.meta.id,
     ClientPlugin.meta.id,
-    CrxPlugin.meta.id,
+    !isTauri && CrxPlugin.meta.id,
     GraphPlugin.meta.id,
     HelpPlugin.meta.id,
     IntegrationPlugin.meta.id,
@@ -197,6 +197,7 @@ export const getPlugins = ({
     AssistantPlugin(),
     AttentionPlugin(),
     AutomationPlugin(),
+    BlueskyPlugin(),
     BoardPlugin(),
     ChessPlugin(),
     ClientPlugin({
@@ -216,8 +217,7 @@ export const getPlugins = ({
         }),
     }),
     ConductorPlugin(),
-    CrxPlugin(),
-    DailySummaryPlugin(),
+    !isTauri && CrxPlugin(),
     DebugPlugin({ logStore }),
     DiscordPlugin(),
     DoctorPlugin(),

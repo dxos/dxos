@@ -7,8 +7,7 @@ import React from 'react';
 
 import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Obj } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import { Obj, View } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { random } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -49,7 +48,7 @@ const meta = {
       createSpace: true,
       onCreateSpace: async ({ space }) => {
         // Configure schema.
-        const typename = 'example.com/SingleSelect';
+        const typename = 'com.example.type.singleSelect';
         const selectOptions = [
           { id: 'one', title: 'One', color: 'emerald' },
           { id: 'two', title: 'Two', color: 'blue' },

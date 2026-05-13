@@ -21,7 +21,6 @@ export type UseQueueOptions = {
  * Polls the given Edge queue.
  * @deprecated Use `useQuery` instead.
  */
-// TODO(dmaretskyi): Move into client package.
 // TODO(dmaretskyi): Consider passing the space into the hook to support queue DXNs without space id.
 export const useQueue = <T extends Entity.Unknown>(
   queueDxn?: DXN,

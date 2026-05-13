@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { PipelinePlugin } from '#plugin';

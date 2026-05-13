@@ -174,6 +174,9 @@ export class CollectionSynchronizer extends Resource {
 
     for (const perCollectionState of this._perCollectionStates.values()) {
       perCollectionState.remoteStates.delete(peerId);
+      perCollectionState.interestedPeers.delete(peerId);
+      perCollectionState.lastQueried.delete(peerId);
+      perCollectionState.lastBroadcast.delete(peerId);
     }
   }
 

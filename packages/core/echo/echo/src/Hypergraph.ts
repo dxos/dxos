@@ -22,10 +22,10 @@ export interface RefResolutionContext {
   space?: Key.SpaceId;
 
   /**
-   * Queue that the resolution is happening from.
-   * This queue will be searched first, and then the space it belongs to.
+   * Feed that the resolution is happening from (as the underlying queue DXN).
+   * This feed will be searched first, and then the space it belongs to.
    */
-  queue?: DXN;
+  feed?: DXN;
 }
 
 export interface RefResolverOptions {

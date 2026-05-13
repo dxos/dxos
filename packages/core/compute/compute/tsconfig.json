@@ -18,6 +18,9 @@
   ],
   "references": [
     {
+      "path": "../../../../vendor/kbn-handlebars"
+    },
+    {
       "path": "../../../common/errors"
     },
     {

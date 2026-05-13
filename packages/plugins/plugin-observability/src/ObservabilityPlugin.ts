@@ -18,8 +18,7 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { ClientReadyEvent, ObservabilityEvents } from '#types';
-import { ObservabilityCapabilities } from '#types';
+import { ObservabilityCapabilities, ObservabilityEvents } from '#types';
 
 export type ObservabilityPluginOptions = {
   namespace: string;
@@ -73,7 +72,7 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
     activatesOn: ActivationEvent.allOf(
       ActivationEvents.OperationInvokerReady,
       ObservabilityEvents.StateReady,
-      ClientReadyEvent,
+      ObservabilityEvents.ClientReadyEvent,
     ),
     activate: () =>
       Effect.gen(function* () {
