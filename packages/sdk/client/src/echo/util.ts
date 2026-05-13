@@ -38,8 +38,6 @@ export const getSpace = (object?: any): Space | undefined => {
 // EDGE Sync State
 //
 
-export type Progress = { count: number; total: number };
-
 export type PeerSyncState = Omit<SpaceSyncState.PeerState, 'peerId'>;
 
 export type SpaceSyncStateMap = Record<SpaceId, PeerSyncState>;
