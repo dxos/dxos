@@ -42,8 +42,7 @@ export const query = Command.make(
       yield* Console.error(`Space not found: ${parts.spaceId}`);
       return;
     }
-    const feed = Feed.unsafeFromQueueDXN(dxn);
-    const objects = yield* Feed.runQuery(feed, Filter.everything()).pipe(
+    const objects = yield* Feed.runQueryByDxn(dxn, Filter.everything()).pipe(
       Effect.provide(createFeedServiceLayer(space.queues)),
     );
 
