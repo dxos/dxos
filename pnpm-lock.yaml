@@ -795,9 +795,6 @@ catalogs:
     '@types/uuid':
       specifier: ^9.0.0
       version: 9.0.7
-    '@types/varint':
-      specifier: 6.0.0
-      version: 6.0.0
     '@types/vscode':
       specifier: ^1.74.0
       version: 1.104.0
@@ -1785,9 +1782,6 @@ catalogs:
     uuid:
       specifier: ^9.0.0
       version: 9.0.1
-    varint:
-      specifier: 6.0.0
-      version: 6.0.0
     versor:
       specifier: ^0.2.0
       version: 0.2.0
@@ -2037,6 +2031,9 @@ importers:
       '@octokit/rest':
         specifier: 'catalog:'
         version: 22.0.1
+      '@oxc-project/runtime':
+        specifier: 'catalog:'
+        version: 0.129.0
       '@phosphor-icons/core':
         specifier: 'catalog:'
         version: 2.1.1
@@ -2136,6 +2133,9 @@ importers:
       '@vitest/utils':
         specifier: 'catalog:'
         version: 4.1.5
+      buffer:
+        specifier: 'catalog:'
+        version: 6.0.3
       chalk:
         specifier: 'catalog:'
         version: 4.1.2
@@ -2310,6 +2310,9 @@ importers:
       vite-plugin-inspect:
         specifier: 'catalog:'
         version: 11.3.3(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+      vite-plugin-solid:
+        specifier: 'catalog:'
+        version: 2.11.12(@testing-library/jest-dom@6.9.1)(solid-js@1.9.11)(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
       vite-plugin-top-level-await:
         specifier: 'catalog:'
         version: 1.6.0(@swc/helpers@0.5.17)(rollup@3.30.0)(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
@@ -6467,12 +6470,6 @@ importers:
       '@types/randombytes':
         specifier: 'catalog:'
         version: 2.0.0
-      '@types/varint':
-        specifier: 'catalog:'
-        version: 6.0.0
-      varint:
-        specifier: 'catalog:'
-        version: 6.0.0
 
   packages/core/mesh/teleport-extension-automerge-replicator:
     dependencies:
@@ -29613,9 +29610,6 @@ packages:
   '@types/uuid@9.0.7':
     resolution: {integrity: sha512-WUtIVRUZ9i5dYXefDEAI7sh9/O7jGvHg7Df/5O/gtH3Yabe5odI3UWopVR1qbPXQtvOxWu3mM4XxlYeZtMWF4g==}
 
-  '@types/varint@6.0.0':
-    resolution: {integrity: sha512-2jBazyxGl4644tvu3VAez8UA/AtrcEetT9HOeAbqZ/vAcRVL/ZDFQjSS7rkWusU5cyONQVUz+nwwrNZdMva4ow==}
-
   '@types/vscode@1.104.0':
     resolution: {integrity: sha512-0KwoU2rZ2ecsTGFxo4K1+f+AErRsYW0fsp6A0zufzGuhyczc2IoKqYqcwXidKXmy2u8YB2GsYsOtiI9Izx3Tig==}
 
@@ -49519,10 +49513,6 @@ snapshots:
   '@types/unist@3.0.3': {}
 
   '@types/uuid@9.0.7': {}
-
-  '@types/varint@6.0.0':
-    dependencies:
-      '@types/node': 22.10.2
 
   '@types/vscode@1.104.0': {}
 

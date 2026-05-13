@@ -19,19 +19,19 @@
         "default": "./src/scheduler.ts"
       },
       "types": "./dist/types/src/scheduler.d.ts",
-      "default": "./dist/lib/neutral/scheduler.mjs"
+      "default": "./dist/lib/scheduler.mjs"
     }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
-      "default": "./dist/lib/neutral/testing/index.mjs"
+      "import": "./dist/lib/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

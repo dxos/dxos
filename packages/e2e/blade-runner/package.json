@@ -17,14 +17,12 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./main": {
       "source": "./src/main.ts",
       "types": "./dist/types/src/main.d.ts",
-      "browser": "./dist/lib/browser/main.mjs",
-      "node": "./dist/lib/node-esm/main.mjs"
+      "import": "./dist/lib/main.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

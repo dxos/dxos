@@ -16,22 +16,20 @@
   "type": "module",
   "exports": {
     ".": {
+      "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/bundle/shell.js"
+      "import": "./dist/lib/index.mjs"
     },
     "./style.css": "./dist/bundle/shell.css",
     "./react": {
+      "source": "./src/react.ts",
       "types": "./dist/types/src/react.d.ts",
-      "browser": "./dist/lib/browser/react.mjs",
-      "node": "./dist/lib/node-esm/react.mjs"
+      "import": "./dist/lib/react.mjs"
     },
     "./testing": {
+      "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": {
-        "require": "./dist/lib/node/testing/index.cjs",
-        "default": "./dist/lib/node-esm/testing/index.mjs"
-      }
+      "import": "./dist/lib/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

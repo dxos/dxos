@@ -19,8 +19,8 @@
         "default": "./src/packlets/locks/node.ts"
       },
       "types": "./dist/types/src/packlets/locks/node.d.ts",
-      "browser": "./dist/lib/browser/packlets/locks/browser.mjs",
-      "default": "./dist/lib/node-esm/packlets/locks/node.mjs"
+      "browser": "./dist/lib/packlets/locks/browser.mjs",
+      "default": "./dist/lib/packlets/locks/node.mjs"
     },
     "#diagnostics-broadcast": {
       "source": {
@@ -28,22 +28,20 @@
         "default": "./src/packlets/diagnostics/diagnostics-broadcast.ts"
       },
       "types": "./dist/types/src/packlets/diagnostics/diagnostics-broadcast.d.ts",
-      "browser": "./dist/lib/browser/packlets/diagnostics/browser-diagnostics-broadcast.mjs",
-      "default": "./dist/lib/node-esm/packlets/diagnostics/diagnostics-broadcast.mjs"
+      "browser": "./dist/lib/packlets/diagnostics/browser-diagnostics-broadcast.mjs",
+      "default": "./dist/lib/packlets/diagnostics/diagnostics-broadcast.mjs"
     }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
-      "browser": "./dist/lib/browser/testing/index.mjs",
-      "node": "./dist/lib/node-esm/testing/index.mjs"
+      "import": "./dist/lib/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

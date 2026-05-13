@@ -16,27 +16,27 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./native": {
       "source": "./src/native/index.ts",
       "types": "./dist/types/src/native/index.d.ts",
-      "default": "./dist/lib/neutral/native/index.mjs"
+      "import": "./dist/lib/native.mjs"
     },
     "./bundler": {
       "source": "./src/bundler/index.ts",
       "types": "./dist/types/src/bundler/index.d.ts",
-      "default": "./dist/lib/neutral/bundler/index.mjs"
+      "import": "./dist/lib/bundler.mjs"
     },
     "./edge": {
       "source": "./src/edge/index.ts",
       "types": "./dist/types/src/edge/index.d.ts",
-      "default": "./dist/lib/neutral/edge/index.mjs"
+      "import": "./dist/lib/edge.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
-      "default": "./dist/lib/neutral/testing/index.mjs"
+      "import": "./dist/lib/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

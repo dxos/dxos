@@ -16,17 +16,16 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./muxer": {
-      "source": "./src/edge-ws-muxer.ts",
       "types": "./dist/types/src/edge-ws-muxer.d.ts",
-      "default": "./dist/lib/neutral/edge-ws-muxer.mjs"
+      "import": "./dist/lib/edge-ws-muxer.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
-      "default": "./dist/lib/neutral/testing/index.mjs"
+      "import": "./dist/lib/testing.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

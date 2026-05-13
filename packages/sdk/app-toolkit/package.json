@@ -19,26 +19,21 @@
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "browser": "./dist/lib/browser/index.mjs",
-      "node": "./dist/lib/node-esm/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./events": {
-      "source": "./src/activation-events.ts",
       "types": "./dist/types/src/activation-events.d.ts",
-      "browser": "./dist/lib/browser/activation-events.mjs",
-      "node": "./dist/lib/node-esm/activation-events.mjs"
+      "import": "./dist/lib/activation-events.mjs"
     },
     "./query": {
       "source": "./src/query.ts",
       "types": "./dist/types/src/query.d.ts",
-      "browser": "./dist/lib/browser/query.mjs",
-      "node": "./dist/lib/node-esm/query.mjs"
+      "import": "./dist/lib/query.mjs"
     },
     "./ui": {
       "source": "./src/ui/index.ts",
       "types": "./dist/types/src/ui/index.d.ts",
-      "browser": "./dist/lib/browser/ui/index.mjs",
-      "node": "./dist/lib/node-esm/ui/index.mjs"
+      "import": "./dist/lib/ui.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

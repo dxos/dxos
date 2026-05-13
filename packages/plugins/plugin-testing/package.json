@@ -16,49 +16,49 @@
     "#capabilities": {
       "source": "./src/capabilities/index.ts",
       "types": "./dist/types/src/capabilities/index.d.ts",
-      "default": "./dist/lib/neutral/capabilities/index.mjs"
+      "default": "./dist/lib/capabilities.mjs"
     },
     "#components": {
       "source": "./src/components/index.ts",
       "types": "./dist/types/src/components/index.d.ts",
-      "default": "./dist/lib/neutral/components/index.mjs"
+      "default": "./dist/lib/components.mjs"
     },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
-      "default": "./dist/lib/neutral/meta.mjs"
+      "default": "./dist/lib/meta.mjs"
     },
     "#operations": {
       "source": "./src/operations/index.ts",
       "types": "./dist/types/src/operations/index.d.ts",
-      "default": "./dist/lib/neutral/operations/index.mjs"
+      "default": "./dist/lib/operations.mjs"
     },
     "#plugin": {
       "source": "./src/StorybookPlugin.ts",
       "types": "./dist/types/src/StorybookPlugin.d.ts",
-      "default": "./dist/lib/neutral/StorybookPlugin.mjs"
+      "default": "./dist/lib/StorybookPlugin.mjs"
     },
     "#types": {
       "source": "./src/types/index.ts",
       "types": "./dist/types/src/types/index.d.ts",
-      "default": "./dist/lib/neutral/types/index.mjs"
+      "default": "./dist/lib/types.mjs"
     }
   },
   "exports": {
     ".": {
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
-      "default": "./dist/lib/neutral/index.mjs"
+      "import": "./dist/lib/index.mjs"
     },
     "./harness": {
       "source": "./src/harness.ts",
       "types": "./dist/types/src/harness.d.ts",
-      "default": "./dist/lib/neutral/harness.mjs"
+      "import": "./dist/lib/harness.mjs"
     },
     "./plugin": {
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
-      "default": "./dist/lib/neutral/plugin.mjs"
+      "import": "./dist/lib/plugin.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
