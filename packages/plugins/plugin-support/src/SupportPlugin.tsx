@@ -3,7 +3,7 @@
 //
 
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { SpaceEvents } from '@dxos/plugin-space';
 
 import {
@@ -14,6 +14,7 @@ import {
   OperationHandler,
   ReactRoot,
   ReactSurface,
+  SupportSettings,
   WelcomeProvisioner,
 } from '#capabilities';
 import { meta } from '#meta';
@@ -43,6 +44,11 @@ export const SupportPlugin = Plugin.define<SupportPluginOptions>(meta).pipe(
     id: 'welcome-provisioner',
     activatesOn: SpaceEvents.PersonalSpaceReady,
     activate: WelcomeProvisioner,
+  }),
+  Plugin.addModule({
+    id: 'settings',
+    activatesOn: AppActivationEvents.SetupSettings,
+    activate: SupportSettings,
   }),
   Plugin.make,
 );

@@ -52,6 +52,13 @@ export const translations = [
           'This is your personal space. Open a ticket from the Support assistant, or start the guided tour to learn the basics.',
         'start-tour.button': 'Start tour',
         'open-chat.button': 'Open Support Chat',
+        // Carousel.
+        'carousel-prev.label': 'Previous',
+        'carousel-next.label': 'Next',
+        'carousel-indicators.label': 'Carousel slides',
+        'carousel-go-to.label': 'Go to slide {{index}}',
+        // Settings.
+        'show-welcome.label': 'Show welcome article on personal space',
       },
     },
   },

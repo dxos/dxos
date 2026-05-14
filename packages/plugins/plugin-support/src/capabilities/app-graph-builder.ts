@@ -12,12 +12,13 @@ import { Filter, Obj } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
 
 import { meta } from '#meta';
-import { HelpCapabilities, HelpOperation, Support } from '#types';
+import { HelpCapabilities, HelpOperation, Support, SupportCapabilities } from '#types';
 
 import { SHORTCUTS_DIALOG } from '../constants';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    const capabilities = yield* Capability.Service;
     const extensions = yield* Effect.all([
       // Root actions: open welcome tour + open shortcuts.
       GraphBuilder.createExtension({
@@ -64,11 +65,17 @@ export default Capability.makeModule(
       // Personal-space-only Welcome virtual node, hoisted to the top of the navtree.
       // Data is the singleton Welcome ECHO object (provisioned by WelcomeProvisioner),
       // so the assistant plugin's companion-chat extension binds automatically.
+      // Gated by the `showWelcome` plugin setting.
       GraphBuilder.createExtension({
         id: 'welcome',
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
           if (!isPersonalSpace(space)) {
+            return Effect.succeed([]);
+          }
+          const settingsAtom = capabilities.get(SupportCapabilities.Settings);
+          const settings = get(settingsAtom);
+          if (!settings.showWelcome) {
             return Effect.succeed([]);
           }
           const welcome = get(AtomQuery.make(space.db, Filter.type(Support.Welcome)))[0] as Obj.Unknown | undefined;

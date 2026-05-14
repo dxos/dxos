@@ -2,14 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { ASSISTANT_COMPANION_VARIANT } from '@dxos/plugin-assistant';
 import { Button, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
+import { Carousel, type CarouselImage } from '#components';
 import { meta } from '#meta';
 import { HelpOperation } from '#types';
 
@@ -17,10 +18,21 @@ export type WelcomeArticleProps = {
   role?: string;
 };
 
-/** Placeholder Welcome surface — hosts the entry point for the joyride tour. */
+/** Welcome surface — hosts the joyride entry point, a plugin showcase carousel, and the support chat shortcut. */
 export const WelcomeArticle = ({ role }: WelcomeArticleProps = {}) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
+  const manager = usePluginManager();
+
+  const images: CarouselImage[] = useMemo(
+    () =>
+      manager
+        .getPlugins()
+        .flatMap((plugin) =>
+          (plugin.meta.screenshots ?? []).map((src) => ({ src, label: plugin.meta.name ?? plugin.meta.id })),
+        ),
+    [manager],
+  );
 
   const handleStartTour = useCallback(() => {
     void invokePromise(HelpOperation.Start);
@@ -41,9 +53,10 @@ export const WelcomeArticle = ({ role }: WelcomeArticleProps = {}) => {
       </Panel.Toolbar>
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport classNames='p-8 flex flex-col items-center gap-4'>
+          <ScrollArea.Viewport classNames='p-8 flex flex-col items-center gap-6'>
             <h1 className='text-2xl font-semibold'>{t('welcome.title')}</h1>
             <p className='max-w-prose text-center text-description'>{t('welcome.description')}</p>
+            {images.length > 0 && <Carousel images={images} />}
             <Button variant='primary' onClick={handleOpenChat}>
               {t('open-chat.button')}
             </Button>
