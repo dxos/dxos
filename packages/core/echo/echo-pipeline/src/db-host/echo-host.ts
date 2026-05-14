@@ -144,11 +144,9 @@ export class EchoHost extends Resource {
     this._dataService = new DataServiceImpl({
       automergeHost: this._automergeHost,
       spaceStateManager: this._spaceStateManager,
-      updateIndexes: async () => {
-        do {
-          await this._updateIndexes.runBlocking();
-        } while (!this._indexesUpToDate);
-      },
+      // Delegate to the public method so the closed-host early-out and
+      // cooperative loop apply uniformly to the RPC handler path.
+      updateIndexes: () => this.updateIndexes(),
     });
 
     trace.diagnostic<EchoStatsDiagnostic>({
@@ -297,10 +295,25 @@ export class EchoHost extends Resource {
 
   /**
    * Perform any pending index updates.
+   *
+   * Bails as a no-op when the host has been closed: a late `db.flush()` RPC
+   * (client still has an open service ref while the host is in/post-teardown)
+   * has nothing to update against. The pre-loop and post-iteration
+   * `_ctx.disposed` checks prevent `runBlocking` from being entered against a
+   * disposed context — which would throw `ContextDisposedError` and escape as
+   * an unhandled rejection at the fire-and-forget originating caller. Other
+   * `Resource` methods in this codebase (e.g. `LevelDBStorageAdapter.load`)
+   * follow the same closed-host early-out pattern.
    */
   async updateIndexes(): Promise<void> {
+    if (this._ctx.disposed) {
+      return;
+    }
     do {
       await this._updateIndexes.runBlocking();
+      if (this._ctx.disposed) {
+        return;
+      }
     } while (!this._indexesUpToDate);
   }
 
