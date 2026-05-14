@@ -11,19 +11,19 @@ import * as Schema from 'effect/Schema';
  */
 export const ImapAccountOptions = Schema.Struct({
   host: Schema.String.annotations({
-    title: 'Host',
+    title: 'IMAP Host',
     description: 'IMAP server hostname (e.g. imap.fastmail.com).',
     examples: ['imap.fastmail.com', 'imap.mail.me.com'],
   }),
   port: Schema.optional(
     Schema.Number.annotations({
-      title: 'Port',
+      title: 'IMAP Port',
       description: 'TCP port. Defaults to 993 for implicit TLS, 143 for STARTTLS.',
     }),
   ),
   secure: Schema.optional(
     Schema.Boolean.annotations({
-      title: 'Implicit TLS',
+      title: 'IMAP Implicit TLS',
       description: 'True for implicit TLS (port 993); false for STARTTLS upgrade on 143.',
     }),
   ),
@@ -32,6 +32,25 @@ export const ImapAccountOptions = Schema.Struct({
       title: 'Folder',
       description: 'IMAP folder to sync. Defaults to INBOX.',
       examples: ['INBOX', 'Archive'],
+    }),
+  ),
+  smtpHost: Schema.optional(
+    Schema.String.annotations({
+      title: 'SMTP Host',
+      description: 'SMTP submission server hostname (e.g. smtp.fastmail.com).',
+      examples: ['smtp.fastmail.com', 'smtp.mail.me.com'],
+    }),
+  ),
+  smtpPort: Schema.optional(
+    Schema.Number.annotations({
+      title: 'SMTP Port',
+      description: '465 for implicit TLS, 587 for STARTTLS. Defaults to 465.',
+    }),
+  ),
+  smtpSecure: Schema.optional(
+    Schema.Boolean.annotations({
+      title: 'SMTP Implicit TLS',
+      description: 'True for implicit TLS (port 465); false for STARTTLS upgrade on 587.',
     }),
   ),
   syncBackDays: Schema.optional(

@@ -133,6 +133,12 @@ export type IntegrationProviderEntry = {
   oauth?: IntegrationOAuthSpec;
   getSyncTargets?: Operation.Definition<GetSyncTargetsInput, GetSyncTargetsOutput>;
   sync?: Operation.Definition<IntegrationSyncInput, IntegrationSyncOutput>;
+  /**
+   * Optional send operation. Used by transports that support outbound messaging
+   * (e.g. Gmail, SMTP). Mirrors `sync` — the dispatcher in `plugin-inbox`
+   * (`SendMessage`) routes by `providerId` to the right entry.
+   */
+  send?: Operation.Definition<{ integration: any; message: any }, { id: string; threadId: string }>;
   /** Schema describing per-target rows in `Integration.targets` `.options`. */
   optionsSchema?: Schema.Schema<any, any>;
   /**

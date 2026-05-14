@@ -32,6 +32,9 @@ import {
 import {
   GetGoogleCalendars,
   GetGoogleContactGroups,
+  GmailSend,
+  SendMessage,
+  SmtpSend,
   SyncCalendar,
   SyncContacts,
   SyncMailbox,
@@ -140,14 +143,26 @@ const imapCredentialForm: CredentialForm<ImapCredentialFormValues> = {
     port: 993,
     secure: true,
     folder: 'INBOX',
+    smtpHost: '',
+    smtpPort: 465,
+    smtpSecure: true,
     syncBackDays: 30,
     username: '',
     password: '',
   },
   onSubmit: ({ values, provider, existingTarget }) =>
     Effect.sync(() => {
-      const accessToken = Obj.make(AccessToken.AccessToken, {
+      // Two AccessTokens disambiguated by `source` prefix. Common case: both
+      // share the same password (Fastmail / Apple / Gmail-with-app-password).
+      // A future UI toggle could allow divergent SMTP passwords.
+      const imapToken = Obj.make(AccessToken.AccessToken, {
         source: `${IMAP_INTEGRATION_SOURCE_PREFIX}:${values.host}`,
+        account: values.username,
+        token: values.password,
+      });
+      const smtpHost = values.smtpHost || values.host;
+      const smtpToken = Obj.make(AccessToken.AccessToken, {
+        source: `smtp:${smtpHost}`,
         account: values.username,
         token: values.password,
       });
@@ -158,7 +173,7 @@ const imapCredentialForm: CredentialForm<ImapCredentialFormValues> = {
       const integration = IntegrationType.make({
         name: values.username || `${provider.label ?? 'IMAP'} (${values.host})`,
         providerId: provider.id,
-        accessTokens: [Ref.make(accessToken)],
+        accessTokens: [Ref.make(imapToken), Ref.make(smtpToken)],
         targets: [
           {
             ...(targetObject ? { object: targetObject } : {}),
@@ -167,13 +182,16 @@ const imapCredentialForm: CredentialForm<ImapCredentialFormValues> = {
               port: values.port,
               secure: values.secure,
               folder: values.folder,
+              smtpHost,
+              smtpPort: values.smtpPort,
+              smtpSecure: values.smtpSecure,
               syncBackDays: values.syncBackDays,
               filter: values.filter,
             } as Record<string, unknown>,
           },
         ],
       });
-      return { kind: 'complete' as const, accessTokens: [accessToken], integration };
+      return { kind: 'complete' as const, accessTokens: [imapToken, smtpToken], integration };
     }),
 };
 
@@ -231,6 +249,7 @@ export default Capability.makeModule(
         },
         optionsSchema: SyncOptions,
         sync: SyncMailbox,
+        send: GmailSend,
         onTokenCreated: gmailOnTokenCreated,
       },
       {
@@ -271,6 +290,7 @@ export default Capability.makeModule(
         credentialForm: imapCredentialForm,
         optionsSchema: ImapAccountOptions,
         sync: SyncMailbox,
+        send: SmtpSend,
         onTokenCreated: imapOnTokenCreated,
       },
     ]);
