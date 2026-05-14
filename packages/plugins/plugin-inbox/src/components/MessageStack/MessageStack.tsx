@@ -220,7 +220,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
   return (
     <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={message.id} data={data} location={location}>
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Card.Root ref={forwardedRef} fullWidth>
+        <Card.Root fullWidth border={false} ref={forwardedRef}>
           <Card.Toolbar>
             <Card.IconBlock>
               <DxAvatar
@@ -293,11 +293,15 @@ const ThreadTile = forwardRef<HTMLDivElement, ThreadTileProps>(({ data, location
   const { hue, from, subject } = getMessageProps(latest, new Date());
   const { setCurrentId, setSelected } = useMosaicContainer('ThreadTile');
 
-  // Click / Enter commit both current and selection on the thread.
+  // Click / Enter commit current + selection using the LATEST message's ID, not
+  // the threadId. The parent's action handler resolves `messageId` against the
+  // flat message list, so passing a threadId would cause an `invariant` to
+  // fire. MessageStack maps the message ID back up to the enclosing thread
+  // when computing `effectiveCurrentId` so the tile still lights up.
   const handleCurrentChange = useCallback(() => {
-    setCurrentId(threadId);
-    setSelected(threadId, true);
-  }, [threadId, setCurrentId, setSelected]);
+    setCurrentId(latest.id);
+    setSelected(latest.id, true);
+  }, [latest.id, setCurrentId, setSelected]);
 
   const handleThreadClick = useCallback(
     (event: MouseEvent) => {
@@ -318,7 +322,7 @@ const ThreadTile = forwardRef<HTMLDivElement, ThreadTileProps>(({ data, location
   return (
     <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={threadId} data={data} location={location}>
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Card.Root ref={forwardedRef} fullWidth border={false} onClick={handleThreadClick}>
+        <Card.Root fullWidth border={false} onClick={handleThreadClick} ref={forwardedRef}>
           <Card.Toolbar>
             <Card.IconBlock>
               <DxAvatar hue={hue} hueVariant='surface' variant='square' size={6} fallback={from} />
