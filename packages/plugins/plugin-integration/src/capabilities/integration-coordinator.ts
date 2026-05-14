@@ -333,8 +333,8 @@ export default Capability.makeModule(
         }
         const primaryToken = entry.tokens[0];
         if (primaryToken) {
-          Obj.update(primaryToken, (token) => {
-            token.token = decoded.accessToken;
+          Obj.update(primaryToken, (primaryToken) => {
+            primaryToken.token = decoded.accessToken;
           });
         }
         yield* finalizePendingEntry(invoker, entry);
@@ -443,8 +443,8 @@ export default Capability.makeModule(
           deletePendingSnapshot(accessTokenId);
           const primary = inMemory.tokens[0];
           if (primary) {
-            Obj.update(primary, (token) => {
-              token.token = accessTokenValue;
+            Obj.update(primary, (primary) => {
+              primary.token = accessTokenValue;
             });
           }
           yield* finalizePendingEntry(invoker, inMemory);

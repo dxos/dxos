@@ -33,7 +33,6 @@ import {
   GetGoogleCalendars,
   GetGoogleContactGroups,
   GmailSend,
-  SendMessage,
   SmtpSend,
   SyncCalendar,
   SyncContacts,
