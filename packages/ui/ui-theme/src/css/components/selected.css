@@ -51,11 +51,15 @@
 
   /*
    * Pairs with `aria-current="true|page|…"`. Use for "you are here" navigation.
+   *
+   * The ring uses the subdued focus indicator (neutral) rather than the
+   * accent blue — `dx-current` marks position, not focus, so a saturated
+   * ring would compete with the actual keyboard focus ring.
    */
   .dx-current {
     @apply dx-ring-pseudo
       aria-[current=true]:bg-current-surface! aria-[current=true]:text-current-foreground!
-      aria-[current=true]:after:ring-active-separator!;
+      aria-[current=true]:after:ring-focus-ring-subtle!;
   }
   .dx-current-row {
     @apply group-aria-[current=true]/row:bg-current-surface! group-aria-[current=true]/row:text-current-foreground!;
