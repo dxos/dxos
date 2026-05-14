@@ -58,6 +58,11 @@ const createStorybookProject = (dirname: string) =>
   defineProject({
     test: {
       name: 'storybook',
+      // The playwright/chromium session occasionally dies mid-run with
+      // "Browser connection was closed while running tests", causing every
+      // subsequent story file to fail to import. Retry once so a transient
+      // browser-side flake doesn't fail the whole job.
+      retry: 1,
       browser: {
         enabled: true,
         headless: true,

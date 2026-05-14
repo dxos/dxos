@@ -186,16 +186,16 @@ const exportFeedData = async (space: DataSpace, echoHost: EchoHost, objects: Obj
       continue;
     }
 
-    const typeDxn = DXN.tryParse(obj[ATTR_TYPE] as string);
-    if (typeDxn?.asTypeDXN()?.type !== FEED_TYPENAME) {
+    const typeDXN = DXN.tryParse(obj[ATTR_TYPE] as string);
+    if (typeDXN?.asTypeDXN()?.type !== FEED_TYPENAME) {
       continue;
     }
 
     const namespace = (obj as any).namespace === 'trace' ? 'trace' : 'data';
-    const queueDxn = new DXN(DXN.kind.QUEUE, [namespace, spaceId, obj.id]);
+    const queueDXN = new DXN(DXN.kind.QUEUE, [namespace, spaceId, obj.id]);
 
     try {
-      const messages = await collectQueueMessages(echoHost, queueDxn);
+      const messages = await collectQueueMessages(echoHost, queueDXN);
       if (messages.length > 0) {
         feeds.push({
           feedObjectId: obj.id,
@@ -211,8 +211,8 @@ const exportFeedData = async (space: DataSpace, echoHost: EchoHost, objects: Obj
   return feeds;
 };
 
-const collectQueueMessages = async (echoHost: EchoHost, queueDxn: DXN): Promise<Obj.JSON[]> => {
-  const parts = queueDxn.asQueueDXN();
+const collectQueueMessages = async (echoHost: EchoHost, queueDXN: DXN): Promise<Obj.JSON[]> => {
+  const parts = queueDXN.asQueueDXN();
   invariant(parts, 'Expected a queue DXN');
 
   const namespace =

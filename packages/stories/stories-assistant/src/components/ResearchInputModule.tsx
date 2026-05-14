@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { Entity, Filter } from '@dxos/echo';
-import { useFeedQuery, useQuery } from '@dxos/react-client/echo';
+import { Entity, Filter, Query } from '@dxos/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { getHashHue } from '@dxos/ui-theme';
 
 import { ResearchInputQueue } from '../testing';
@@ -13,7 +13,11 @@ import { type ModuleProps } from './types';
 
 export const ResearchInputModule = ({ space }: ModuleProps) => {
   const [researchInput] = useQuery(space.db, Filter.type(ResearchInputQueue));
-  const objects = useFeedQuery(researchInput?.feed.target, Filter.everything());
+  const feed = researchInput?.feed.target;
+  const objects = useQuery(
+    space.db,
+    feed ? Query.select(Filter.everything()).from(feed) : Query.select(Filter.nothing()),
+  );
 
   return (
     <ul className='flex flex-col gap-4 p-4 h-full overflow-y-auto'>

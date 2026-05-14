@@ -125,13 +125,13 @@ const updateQueue = Effect.fn(function* (trigger: Trigger.Trigger, queueOption: 
     onSome: () => Effect.succeed(true),
   });
   if (shouldChangeQueue) {
-    const queueDxn = yield* Option.match(queueOption, {
+    const queueDXN = yield* Option.match(queueOption, {
       onNone: () => selectQueue(),
       onSome: (dxn) => Effect.succeed(dxn.toString()),
     });
     Obj.update(trigger, (trigger) => {
       if (trigger.spec?.kind === 'queue') {
-        trigger.spec.queue = queueDxn;
+        trigger.spec.queue = queueDXN;
       }
     });
   }

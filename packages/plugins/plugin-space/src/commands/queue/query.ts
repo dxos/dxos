@@ -10,8 +10,6 @@ import * as Schema from 'effect/Schema';
 
 import { CommandConfig, printList } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
-import { createFeedServiceLayer } from '@dxos/client/echo';
-import { Feed, Filter } from '@dxos/echo';
 import { DXN, type SpaceId } from '@dxos/keys';
 
 import { printQueueObject } from './util';
@@ -42,16 +40,14 @@ export const query = Command.make(
       yield* Console.error(`Space not found: ${parts.spaceId}`);
       return;
     }
-    const feed = Feed.unsafeFromQueueDXN(dxn);
-    const objects = yield* Feed.runQuery(feed, Filter.everything()).pipe(
-      Effect.provide(createFeedServiceLayer(space.queues)),
-    );
+    // CLI works at the raw queue layer to inspect any queue by DXN.
+    const objects = (yield* Effect.promise(() => space.queues.get(dxn).queryObjects())) ?? [];
 
     if (json) {
       yield* Console.log(JSON.stringify(objects, null, 2));
     } else {
       // TODO(wittjosiah): Interactive table of results.
-      const formatted = objects.map(printQueueObject);
+      const formatted = objects.map((obj) => printQueueObject(obj as any));
       yield* Console.log(printList(formatted));
     }
   }),

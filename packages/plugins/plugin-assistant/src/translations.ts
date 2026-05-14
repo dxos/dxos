@@ -174,7 +174,7 @@ export const translations: Resource[] = [
         'project-empty-spec.message': 'Open the Properties companion to configure the agent.',
         'project-empty-spec.description': 'Open the Assistant companion to interact with the agent.',
         'artifacts.label': 'Artifacts',
-        'input-queue.label': 'Inputs',
+        'inputs.label': 'Inputs',
 
         // AgentProperties.
         'instructions.label': 'Instructions',

@@ -44,9 +44,9 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ db, span, onClose }) => {
     return () => clearInterval(interval);
   }, [span]);
 
-  const targetDxn = useMemo(() => span.invocationTarget?.dxn, [span.invocationTarget]);
+  const targetDXN = useMemo(() => span.invocationTarget?.dxn, [span.invocationTarget]);
   const resolver = useFunctionNameResolver({ db });
-  const targetName = useMemo(() => resolver(targetDxn), [targetDxn, resolver]);
+  const targetName = useMemo(() => resolver(targetDXN), [targetDXN, resolver]);
 
   const timestamp = useMemo(() => formatDate(span.timestamp, 'yyyy-MM-dd HH:mm:ss'), [span.timestamp]);
   const outcomeColor = useMemo(() => InvocationColor[span.outcome] ?? 'neutral', [span.outcome]);

@@ -86,8 +86,8 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
           return yield* Effect.fail(new Error('Message is not in a feed'));
         }
 
-        const feedDxn = DXN.fromSpaceAndObjectId(queueDXNInfo.spaceId, queueDXNInfo.queueId);
-        const feed = yield* Database.load(Ref.fromDXN(feedDxn));
+        const feedDXN = DXN.fromSpaceAndObjectId(queueDXNInfo.spaceId, queueDXNInfo.queueId);
+        const feed = yield* Database.load(Ref.fromDXN(feedDXN));
 
         const relation = Relation.make(HasSubject.HasSubject, {
           [Relation.Source]: selectedTag,

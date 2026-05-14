@@ -11,9 +11,6 @@ import { AppActivationEvents } from '@dxos/app-toolkit';
 import { scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
-import { MemoryQueue } from '@dxos/echo-db';
-import { createQueueDXN } from '@dxos/echo/internal';
-import { FunctionExecutor, ServiceContainer } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
@@ -24,10 +21,9 @@ import { TestSchema } from '@dxos/schema/testing';
 import { type Actor, Message, Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
 
-import { useAudioFile, useQueueModelAdapter, useTranscriber } from '#hooks';
+import { useAudioFile, useFeedModelAdapter, useTranscriber } from '#hooks';
 import { TestItem } from '#testing';
 
-import { MessageNormalizer, getActorId } from '../normalization';
 import { type MediaStreamRecorderProps, type TranscriberProps } from '../transcriber';
 import { TranscriptionPlugin } from '../TranscriptionPlugin';
 import { renderByline } from '../util';
@@ -94,15 +90,13 @@ const AudioFile = ({
     }
   }, [audio, running]);
 
-  // Transcriber.
-  // TODO(dmaretskyi): Use space.queues.create() instead.
-  const queueDxn = useMemo(() => createQueueDXN(), []);
-  const queue = useMemo(() => new MemoryQueue<Message.Message>(queueDxn), [queueDxn]);
-
-  const model = useQueueModelAdapter(renderByline([]), queue);
+  // Local-only message buffer for the storybook; production uses a real space-backed Feed.
+  const [messages, setMessages] = useState<Message.Message[]>([]);
+  const model = useFeedModelAdapter(renderByline([]), messages);
   const handleSegments = useCallback<TranscriberProps['onSegments']>(
     async (blocks) => {
-      void queue?.append([
+      setMessages((prev) => [
+        ...prev,
         Obj.make(Message.Message, {
           created: new Date().toISOString(),
           sender: actor,
@@ -110,7 +104,7 @@ const AudioFile = ({
         }),
       ]);
     },
-    [queue],
+    [actor],
   );
 
   const transcriber = useTranscriber({
@@ -120,46 +114,9 @@ const AudioFile = ({
     recorderConfig,
   });
 
-  // Normalize sentences.
-  const normalizer = useMemo(() => {
-    if (!normalizeSentences) {
-      return;
-    }
-    const executor = new FunctionExecutor(
-      new ServiceContainer().setServices({
-        // ai: {
-        //   client: new Edge AiServiceClient({
-        //     endpoint: AI_SERVICE_ENDPOINT.REMOTE,
-        //     defaultGenerationOptions: {
-        //       model: '@anthropic/claude-3-5-sonnet-20241022',
-        //     },
-        //   }),
-        // },
-      }),
-    );
-
-    return new MessageNormalizer({
-      functionExecutor: executor,
-      queue,
-      startingCursor: { actorId: getActorId(actor), timestamp: new Date().toISOString() },
-    });
-  }, [normalizeSentences, queue, actor]);
-
-  useEffect(() => {
-    if (!normalizer) {
-      return;
-    }
-    const ctx = new Context();
-    scheduleTask(ctx, async () => {
-      await normalizer.open();
-      ctx.onDispose(async () => {
-        await normalizer.close();
-      });
-    });
-    return () => {
-      void ctx.dispose();
-    };
-  }, [normalizer]);
+  // TODO(burdon): Sentence normalization moved to require a real space-backed Feed
+  // + FeedService runtime. Re-enable here once the story has access to one.
+  void normalizeSentences;
 
   const manageChunkRecording = () => {
     if (running && isSpeaking && transcriber) {
