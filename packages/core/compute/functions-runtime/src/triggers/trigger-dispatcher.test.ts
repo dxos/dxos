@@ -352,7 +352,7 @@ describe('TriggerDispatcher', () => {
       'should invoke scheduled queue triggers',
       Effect.fnUntraced(function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
-        
+
         const functionObj = Operation.serialize(Reply);
         yield* Database.add(functionObj);
         const trigger = Trigger.make({
@@ -379,7 +379,7 @@ describe('TriggerDispatcher', () => {
       'triggers are invoked one by one',
       Effect.fnUntraced(function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
-        
+
         const functionObj = Operation.serialize(Reply);
         yield* Database.add(functionObj);
         const trigger = Trigger.make({
@@ -424,7 +424,7 @@ describe('TriggerDispatcher', () => {
       'builds input from pattern',
       Effect.fnUntraced(function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
-        
+
         const functionObj = Operation.serialize(Reply);
         yield* Database.add(functionObj);
         const trigger = Trigger.make({
@@ -464,7 +464,7 @@ describe('TriggerDispatcher', () => {
       'respects trigger concurrency without untilExhausted',
       Effect.fnUntraced(function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
-        
+
         const functionObj = Operation.serialize(Reply);
         yield* Database.add(functionObj);
         const trigger = Trigger.make({
