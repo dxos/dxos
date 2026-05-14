@@ -323,6 +323,7 @@ const CarouselIndicators = ({ classNames }: CarouselIndicatorsProps) => {
             iconOnly
             label={t('carousel-go-to.label', { index: i + 1 })}
             onClick={() => setIndex(i)}
+            onFocus={() => setIndex(i)}
             size={3}
             variant='ghost'
           />
