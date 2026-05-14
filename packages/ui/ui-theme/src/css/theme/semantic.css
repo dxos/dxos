@@ -1,23 +1,25 @@
 /**
  * Tokens
+ *
+ * Naming convention: --color-{name}-{part}[-{state}]
+ *   part  : surface | foreground | border | fill | text
+ *   state : hover | active (optional)
+ *
+ * See DESIGN_SYSTEM.md.
  */
 
 @theme {
   /**
-   * Surfaces 
-   *
-   * TODO(burdon): Align suffix with styles.css?
-   * -xxx-surface
-   * -xxx-surface-text
-   *
-   * TODO(burdon): Standardize -name-part (i.e., not surface-text).
+   * Surfaces
    */
 
   --color-base-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
-  --color-base-surface-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
+  --color-base-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-50));
 
   --color-inverse-surface: light-dark(var(--color-neutral-800), var(--color-neutral-200));
-  --color-inverse-surface-text: light-dark(var(--color-neutral-50), var(--color-neutral-950));
+  --color-inverse-foreground: light-dark(var(--color-neutral-50), var(--color-neutral-950));
+
+  --color-focus-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
 
   --color-deck-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
   --color-scrim-surface: light-dark(
@@ -33,88 +35,77 @@
   --color-sidebar-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
   --color-header-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
 
+  /* input */
   --color-input-surface: light-dark(var(--color-neutral-200), var(--color-neutral-800));
-  --color-input-surface-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
+  --color-input-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-50));
 
-  /** TODO(burdon): current vs active vs selected */
-  /** TODO(burdon): Hover vs. Highlight? */
-
-  --color-active-surface: light-dark(var(--color-neutral-200), var(--color-neutral-800));
-  --color-active-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
-
+  /* current (aria-current) */
   --color-current-surface: light-dark(var(--color-neutral-200), var(--color-neutral-800));
+  --color-current-surface-hover: light-dark(var(--color-neutral-300), var(--color-neutral-700));
+  --color-current-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-50));
 
-  --color-hover-surface: light-dark(var(--color-neutral-250), var(--color-neutral-750));
-  --color-hover-surface-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
-
-  --color-highlight-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
-  --color-highlight-surface-hover: light-dark(var(--color-neutral-200), var(--color-neutral-800));
-  --color-highlight-surface-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
-
+  /* selected (aria-selected) */
   --color-selected-surface: light-dark(var(--color-neutral-150), var(--color-neutral-850));
   --color-selected-surface-hover: light-dark(var(--color-neutral-250), var(--color-neutral-750));
-  --color-selected-surface-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
+  --color-selected-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-50));
+
+  /* hover (:hover, data-highlighted) */
+  --color-hover-surface: light-dark(var(--color-neutral-250), var(--color-neutral-750));
+  --color-hover-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-50));
 
   /* Map attention to focus-surface logic so that elements acting as active attention zones highlight correctly on focus. */
   --color-attention-surface: var(--color-focus-surface);
   --color-attention-contains: oklch(from var(--color-accent-surface) l c h / 0.3);
-  --color-focus-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
-  --color-neutral-focus-indicator: light-dark(var(--color-neutral-400), var(--color-neutral-600));
 
   /* Accent (primary) */
-  /* TODO(burdon): Rename primary */
-
   --color-accent-surface: light-dark(var(--color-blue-500), var(--color-blue-700));
   --color-accent-surface-hover: light-dark(var(--color-blue-800), var(--color-blue-800));
-  --color-accent-surface-text: var(--color-blue-100);
+  --color-accent-foreground: var(--color-blue-100);
   --color-accent-text: light-dark(var(--color-blue-600), var(--color-blue-400));
   --color-accent-text-hover: light-dark(var(--color-blue-500), var(--color-blue-500));
-  --color-accent-focus-indicator: light-dark(var(--color-blue-600), var(--color-blue-600));
 
   --color-un-accent: var(--color-neutral-400);
   --color-un-accent-hover: var(--color-neutral-500);
 
-  /* Separator */
+  /* Focus rings (global) */
+  --color-focus-ring: light-dark(var(--color-blue-600), var(--color-blue-600));
+  --color-focus-ring-subtle: light-dark(var(--color-neutral-400), var(--color-neutral-600));
 
+  /* Separator */
   --color-separator: light-dark(var(--color-neutral-200), var(--color-neutral-800));
   --color-subdued-separator: light-dark(var(--color-neutral-150), var(--color-neutral-850));
   --color-primary-separator: light-dark(var(--color-neutral-500), var(--color-neutral-700));
   --color-active-separator: light-dark(var(--color-blue-500), var(--color-blue-500));
 
   /* Scrollbar */
-
   --color-scrollbar-track: light-dark(var(--color-neutral-50), var(--color-neutral-950));
   --color-scrollbar-thumb: light-dark(var(--color-neutral-200), var(--color-neutral-700));
   --color-scrollbar-thumb-active: light-dark(var(--color-neutral-200), var(--color-neutral-600));
   --color-scrollbar-thumb-hover: light-dark(var(--color-neutral-200), var(--color-neutral-600));
 
   /* Sheet */
-
   --color-axis-selected-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
   --color-axis-selected-text: light-dark(var(--color-neutral-100), var(--color-neutral-900));
   --color-axis-surface: light-dark(var(--color-neutral-50), var(--color-neutral-800));
   --color-axis-text: light-dark(var(--color-neutral-800), var(--color-neutral-200));
 
-  /* 
-   * Grid 
+  /*
+   * Grid
    * NOTE: Update main.css when changing grid tokens (and restart dev server).
    */
-
   --color-grid-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
-  --color-grid-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
+  --color-grid-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-50));
+  --color-grid-line: light-dark(var(--color-neutral-200), var(--color-neutral-800));
   --color-grid-highlight: oklch(from var(--color-emerald-500) l c h / 0.5);
   --color-grid-selection-surface: light-dark(var(--color-blue-500), var(--color-blue-400));
-  --color-grid-selection-text: light-dark(var(--color-neutral-50), var(--color-neutral-950));
+  --color-grid-selection-foreground: light-dark(var(--color-neutral-50), var(--color-neutral-950));
   --color-grid-comment: light-dark(var(--color-green-400), var(--color-green-600));
   --color-grid-comment-active: light-dark(
     oklch(from var(--color-green-400) l c h / 0.5),
     oklch(from var(--color-green-600) l c h / 0.5)
   );
-  --color-grid-line: light-dark(var(--color-neutral-200), var(--color-neutral-800));
-  --color-grid-focus-indicator: light-dark(var(--color-primary-600), var(--color-primary-600));
 
   /* Text */
-
   --color-placeholder: light-dark(var(--color-neutral-400), var(--color-neutral-600));
   --color-subdued: light-dark(var(--color-neutral-500), var(--color-neutral-500));
   --color-description: light-dark(var(--color-neutral-600), var(--color-neutral-400));

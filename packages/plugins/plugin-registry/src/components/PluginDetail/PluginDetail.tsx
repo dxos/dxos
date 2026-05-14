@@ -93,7 +93,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
         <ScrollArea.Viewport>
           <div className='dx-document grid grid-cols-[min-content_1fr] gap-4 p-4'>
             <div>
-              <Icon classNames={mx('p-1 rounded-md', styles.fill, styles.surfaceText)} icon={icon} size={14} />
+              <Icon classNames={mx('p-1 rounded-md', styles.fill, styles.foreground)} icon={icon} size={14} />
             </div>
             <div className='flex flex-col gap-6'>
               <div className='grid grid-cols-[1fr_min-content] gap-x-3 w-full pt-1'>

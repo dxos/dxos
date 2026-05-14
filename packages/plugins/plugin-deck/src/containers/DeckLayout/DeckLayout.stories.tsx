@@ -285,7 +285,7 @@ const NavContainer = forwardRef<HTMLDivElement, NavContainerProps>((_props, forw
         {items.map((node) => (
           <ListItem.Root
             key={node.id}
-            classNames={activeSet.has(node.id) ? 'bg-active-surface' : undefined}
+            classNames={activeSet.has(node.id) ? 'bg-current-surface' : undefined}
             onClick={() => void invokePromise(LayoutOperation.Set, { subject: [node.id] })}
           >
             {node.properties.icon && (
