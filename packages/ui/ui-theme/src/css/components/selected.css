@@ -32,25 +32,33 @@
   }
 
   /*
+   * Pairs with `aria-selected`. Use for listbox/option selection (master/detail).
+   * `!` is required: these utilities live in the `dx-components` layer, but
+   * background utilities like `bg-card-surface` live in Tailwind's
+   * `utilities` layer (declared later in the cascade), so without
+   * `!important` the card background would override the state colour.
+   *
+   * NOTE: Declared before `.dx-current` so that when an element has both
+   * `aria-selected="true"` and `aria-current="true"`, `dx-current` wins at
+   * equal specificity (consistent with how `dx-hover` resolves the same
+   * conflict).
+   */
+  .dx-selected {
+    @apply aria-selected:bg-selected-surface! aria-selected:text-selected-foreground!
+      aria-selected:font-semibold aria-selected:tracking-normal
+      transition-[color,font-variation-settings,letter-spacing];
+  }
+
+  /*
    * Pairs with `aria-current="true|page|…"`. Use for "you are here" navigation.
    */
   .dx-current {
     @apply dx-ring-pseudo
-      aria-[current=true]:bg-current-surface aria-[current=true]:text-current-foreground
+      aria-[current=true]:bg-current-surface! aria-[current=true]:text-current-foreground!
       aria-[current=true]:after:ring-active-separator!;
   }
   .dx-current-row {
     @apply group-aria-[current=true]/row:bg-current-surface! group-aria-[current=true]/row:text-current-foreground!;
-  }
-
-  /*
-   * Pairs with `aria-selected`. Use for listbox/option selection (master/detail).
-   */
-  .dx-selected {
-    @apply aria-selected:bg-selected-surface
-      aria-selected:text-selected-foreground hover:aria-selected:text-selected-foreground
-      aria-selected:font-semibold aria-selected:tracking-normal
-      transition-[color,font-variation-settings,letter-spacing];
   }
 
   /*

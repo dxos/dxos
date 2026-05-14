@@ -158,11 +158,15 @@ type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'data' | 'locatio
 const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, location, current }, forwardedRef) => {
   const { message, labels, onAction } = data;
   const { hue, from, date, subject, snippet } = getMessageProps(message, new Date(), { compact: true });
-  const { setCurrentId } = useMosaicContainer('MessageTile');
+  const { setCurrentId, setSelected } = useMosaicContainer('MessageTile');
 
+  // Click / Enter commit both current and selection. Arrow keys only move
+  // focus (Focus.Item's onCurrentChange fires on click/Enter, not on focus
+  // change), so they don't select.
   const handleCurrentChange = useCallback(() => {
     setCurrentId(message.id);
-  }, [message.id, setCurrentId]);
+    setSelected(message.id, true);
+  }, [message.id, setCurrentId, setSelected]);
 
   const handleAvatarClick = useCallback(
     (event: MouseEvent) => {
@@ -269,11 +273,13 @@ const ThreadTile = forwardRef<HTMLDivElement, ThreadTileProps>(({ data, location
   const { threadId, messages, onAction } = data;
   const latest = messages[0];
   const { hue, from, subject } = getMessageProps(latest, new Date());
-  const { setCurrentId } = useMosaicContainer('ThreadTile');
+  const { setCurrentId, setSelected } = useMosaicContainer('ThreadTile');
 
+  // Click / Enter commit both current and selection on the thread.
   const handleCurrentChange = useCallback(() => {
     setCurrentId(threadId);
-  }, [threadId, setCurrentId]);
+    setSelected(threadId, true);
+  }, [threadId, setCurrentId, setSelected]);
 
   const handleThreadClick = useCallback(
     (event: MouseEvent) => {
@@ -293,7 +299,7 @@ const ThreadTile = forwardRef<HTMLDivElement, ThreadTileProps>(({ data, location
 
   return (
     <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={threadId} data={data} location={location}>
-      <Focus.Item asChild current={current}>
+      <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root ref={forwardedRef} fullWidth onClick={handleThreadClick}>
           <Card.Toolbar>
             <Card.IconBlock>
