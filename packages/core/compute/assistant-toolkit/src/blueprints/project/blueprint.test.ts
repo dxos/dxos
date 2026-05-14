@@ -173,11 +173,10 @@ describe('Agent', () => {
         yield* Database.flush();
 
         const inboxFeed = yield* Database.add(Feed.make());
-        const inboxFeedDxn = Feed.getQueueDxn(inboxFeed)!;
         yield* Database.add(
           Trigger.make({
             enabled: true,
-            spec: Trigger.specQueue(inboxFeedDxn.toString()),
+            spec: Trigger.specFeed(inboxFeed),
             function: Ref.make(Operation.serialize(AgentWorker)),
             input: {
               agent: Ref.make(agent),

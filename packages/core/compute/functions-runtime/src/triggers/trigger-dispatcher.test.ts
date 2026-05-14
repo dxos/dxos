@@ -352,13 +352,13 @@ describe('TriggerDispatcher', () => {
       'should invoke scheduled queue triggers',
       Effect.fnUntraced(function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
-        const feedDxn = Feed.getQueueDxn(feed)!;
+        
         const functionObj = Operation.serialize(Reply);
         yield* Database.add(functionObj);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
-          spec: Trigger.specQueue(feedDxn.toString()),
+          spec: Trigger.specFeed(feed),
         });
         yield* Database.add(trigger);
         yield* Feed.append(feed, [
@@ -379,13 +379,13 @@ describe('TriggerDispatcher', () => {
       'triggers are invoked one by one',
       Effect.fnUntraced(function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
-        const feedDxn = Feed.getQueueDxn(feed)!;
+        
         const functionObj = Operation.serialize(Reply);
         yield* Database.add(functionObj);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
-          spec: Trigger.specQueue(feedDxn.toString()),
+          spec: Trigger.specFeed(feed),
         });
         yield* Database.add(trigger);
         yield* Feed.append(feed, [
@@ -424,13 +424,13 @@ describe('TriggerDispatcher', () => {
       'builds input from pattern',
       Effect.fnUntraced(function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
-        const feedDxn = Feed.getQueueDxn(feed)!;
+        
         const functionObj = Operation.serialize(Reply);
         yield* Database.add(functionObj);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
-          spec: Trigger.specQueue(feedDxn.toString()),
+          spec: Trigger.specFeed(feed),
           input: {
             instructions: 'Please process the queue item.',
             input: '{{event.item}}',
@@ -464,14 +464,14 @@ describe('TriggerDispatcher', () => {
       'respects trigger concurrency without untilExhausted',
       Effect.fnUntraced(function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
-        const feedDxn = Feed.getQueueDxn(feed)!;
+        
         const functionObj = Operation.serialize(Reply);
         yield* Database.add(functionObj);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
           concurrency: 2,
-          spec: Trigger.specQueue(feedDxn.toString()),
+          spec: Trigger.specFeed(feed),
         });
         yield* Database.add(trigger);
         yield* Feed.append(feed, [
