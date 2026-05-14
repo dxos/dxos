@@ -13,7 +13,8 @@ import { compositeKey } from '@dxos/util';
 import { useClient } from '../client';
 
 const isEdgePeerId = (peerId: string, spaceId: SpaceId) =>
-  peerId.startsWith(compositeKey(EdgeService.AUTOMERGE_REPLICATOR, spaceId));
+  peerId.startsWith(compositeKey(EdgeService.AUTOMERGE_REPLICATOR, spaceId)) ||
+  peerId.startsWith(compositeKey(EdgeService.SUBDUCTION_REPLICATOR, spaceId));
 
 /**
  * Hook Subscribes to sync state for each space.
@@ -32,6 +33,12 @@ export const useSyncState = (): SpaceSyncStateMap => {
 
         ctx.onDispose(
           space.internal.db.subscribeToSyncState(ctx, ({ peers = [] }) => {
+            // TODO(mykola): Remove after subduction sync-state debugging is done.
+            // eslint-disable-next-line no-console
+            console.log('[useSyncState] unfiltered peers', {
+              spaceId: space.id,
+              peers: peers.map((p) => ({ peerId: p.peerId, matchesEdge: isEdgePeerId(p.peerId, space.id) })),
+            });
             const syncState = peers.find((state) => isEdgePeerId(state.peerId, space.id));
             if (syncState) {
               setSpaceState((spaceState) => ({ ...spaceState, [space.id]: syncState }));
