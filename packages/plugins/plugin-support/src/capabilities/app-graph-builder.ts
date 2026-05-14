@@ -73,9 +73,9 @@ export default Capability.makeModule(
           if (!isPersonalSpace(space)) {
             return Effect.succeed([]);
           }
+          // Settings atom may not be contributed yet on first render — default to "show".
           const settingsAtom = capabilities.get(SupportCapabilities.Settings);
-          const settings = get(settingsAtom);
-          if (!settings.showWelcome) {
+          if (settingsAtom && !get(settingsAtom).showWelcome) {
             return Effect.succeed([]);
           }
           const welcome = get(AtomQuery.make(space.db, Filter.type(Support.Welcome)))[0] as Obj.Unknown | undefined;

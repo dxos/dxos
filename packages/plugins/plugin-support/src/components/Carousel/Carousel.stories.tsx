@@ -32,8 +32,11 @@ const SAMPLE_IMAGES = [
 const meta = {
   title: 'plugins/plugin-support/components/Carousel',
   component: Carousel,
-  decorators: [withTheme(), withLayout({ layout: 'centered' })],
-  parameters: { translations },
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen', classNames: 'flex justify-center' })],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 } satisfies Meta<typeof Carousel>;
 
 export default meta;

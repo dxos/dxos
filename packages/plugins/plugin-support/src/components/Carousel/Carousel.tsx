@@ -56,7 +56,12 @@ export const Carousel = ({ images, intervalMs = 5000, classNames }: CarouselProp
   const current = images[index];
 
   return (
-    <div className={mx('relative flex flex-col items-center gap-2 w-full max-w-xl', classNames)}>
+    <div
+      className={mx(
+        'dx-container relative flex flex-col justify-center items-center gap-2 w-full max-w-xl',
+        classNames,
+      )}
+    >
       <div className='relative w-full aspect-video overflow-hidden rounded-md bg-baseSurface border border-separator'>
         <img
           key={current.src}
