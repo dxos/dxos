@@ -138,9 +138,9 @@ export const Ref: RefFn = <S extends Schema.Schema.Any>(schema: S): RefSchema<Sc
  */
 export interface Ref<T> extends Pipeable.Pipeable {
   /**
-   * Target object DXN.
+   * Target URI (either an `echo:` EchoId for an object reference or a `dxn:` DXN for a type reference).
    */
-  get dxn(): URI.URI;
+  get uri(): URI.URI;
 
   /**
    * Returns true if the reference has a target available (inlined or resolver set).
@@ -219,7 +219,7 @@ Ref.isRef = (obj: any): obj is Ref<any> => {
 };
 
 Ref.hasObjectId = (id: ObjectId) => (ref: Ref<any>) => {
-  const echoId = EchoId.tryParse(ref.dxn);
+  const echoId = EchoId.tryParse(ref.uri);
   return echoId !== undefined && EchoId.isLocal(echoId) && EchoId.getObjectId(echoId) === id;
 };
 
@@ -285,7 +285,7 @@ export const createEchoReferenceSchema = (
         return (value) =>
           Effect.gen(function* () {
             if (Ref.isRef(value)) {
-              return EncodedReference.fromURI((value as Ref<any>).dxn);
+              return EncodedReference.fromURI((value as Ref<any>).uri);
             } else if (EncodedReference.isEncodedReference(value)) {
               return value;
             }
@@ -300,7 +300,7 @@ export const createEchoReferenceSchema = (
             // TODO(dmaretskyi): This branch seems to be taken by Schema.is
             if (Ref.isRef(value)) {
               if (Option.isSome(dbService)) {
-                return dbService.value.db.makeRef(value.dxn);
+                return dbService.value.db.makeRef(value.uri);
               } else {
                 return value;
               }
@@ -387,7 +387,7 @@ export class RefImpl<T> implements Ref<T> {
   /**
    * @inheritdoc
    */
-  get dxn(): URI.URI {
+  get uri(): URI.URI {
     return this.#dxn;
   }
 
@@ -497,7 +497,7 @@ export class RefImpl<T> implements Ref<T> {
 
   /** Effect Equal trait. See {@link Hash.symbol} for rationale. */
   [Equal.symbol](that: Equal.Equal): boolean {
-    return that instanceof RefImpl && this.#dxn.toString() === that.dxn.toString();
+    return that instanceof RefImpl && this.#dxn === that.uri;
   }
 
   /**

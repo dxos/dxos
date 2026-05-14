@@ -21,7 +21,7 @@ export const useActorContact = (db?: Database.Database, actor?: Actor.Actor): Ec
 
   return useMemo(
     () =>
-      actor?.contact ? EchoId.tryParse(actor.contact.dxn) : existingContact ? Obj.getId(existingContact) : undefined,
+      actor?.contact ? EchoId.tryParse(actor.contact.uri) : existingContact ? Obj.getId(existingContact) : undefined,
     [actor?.contact, existingContact],
   );
 };

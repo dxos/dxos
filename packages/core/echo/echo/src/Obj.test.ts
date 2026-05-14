@@ -490,7 +490,7 @@ describe('Obj', () => {
       Obj.update(target, (target) => {
         expect(Obj.updateFrom(target, source)).toBe(true);
       });
-      expect(target.employer?.dxn.toString()).toBe(Ref.make(orgB).dxn.toString());
+      expect(target.employer?.uri.toString()).toBe(Ref.make(orgB).uri.toString());
       expect(target.address?.city).toBe('Portland');
     });
 
@@ -513,7 +513,7 @@ describe('Obj', () => {
       Obj.update(target, (target) => {
         expect(Obj.updateFrom(target, source)).toBe(true);
       });
-      expect(target.tasks?.map((r) => r.dxn.toString())).toEqual(source.tasks?.map((r) => r.dxn.toString()));
+      expect(target.tasks?.map((r) => r.uri)).toEqual(source.tasks?.map((r) => r.uri));
     });
 
     test('respects include option', () => {

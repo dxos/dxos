@@ -30,7 +30,7 @@ export const PostCard = ({ subject }: PostCardProps) => {
   const db = Obj.getDatabase(post);
   const allFeeds = useQuery(db, Filter.type(Subscription.Feed));
   const feedName = useMemo(() => {
-    const dxn = post.feed?.dxn.toString();
+    const dxn = post.feed?.uri;
     if (!dxn) {
       return undefined;
     }

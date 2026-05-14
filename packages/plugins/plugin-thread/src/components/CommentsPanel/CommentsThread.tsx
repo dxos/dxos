@@ -146,7 +146,7 @@ export const CommentsThread = ({
 
       {messages?.map((ref) => (
         <MessagePanel
-          key={ref.dxn.toString()}
+          key={ref.uri}
           editable
           message={ref}
           members={members}

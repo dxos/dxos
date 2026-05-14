@@ -387,7 +387,7 @@ export default Capability.makeModule(
             providerId: provider.id,
             tokenSnapshot: { source: provider.source, account, scopes: oauth.scopes },
             integrationSnapshot: { name: label, providerId: provider.id },
-            ...(existingTarget ? { existingTargetDxn: existingTarget.dxn.toString() } : {}),
+            ...(existingTarget ? { existingTargetDxn: existingTarget.uri } : {}),
           });
         }
 

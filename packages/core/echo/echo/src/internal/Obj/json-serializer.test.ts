@@ -71,7 +71,7 @@ describe('Object JSON serializer', () => {
 
     expect(taskFromJson.id).toBe(task.id);
     expect(taskFromJson.title).toBe('Fix the tests');
-    expect(taskFromJson.assignee!.dxn).toEqual(EchoId.fromLocalObjectId(contact.id));
+    expect(taskFromJson.assignee!.uri).toEqual(EchoId.fromLocalObjectId(contact.id));
     expect(taskFromJson.assignee!.target).toEqual(contact);
     expect(await taskFromJson.assignee!.load()).toEqual(contact);
     expect((taskFromJson as any)[TypeId]).toEqual(getSchemaDXN(TestSchema.Task));

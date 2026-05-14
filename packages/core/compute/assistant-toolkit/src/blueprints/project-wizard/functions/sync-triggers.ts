@@ -93,7 +93,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
           [Obj.Meta]: {
             keys: [
               { source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id },
-              { source: AGENT_TRIGGER_TARGET_EXTENSION_KEY, id: subscription.dxn.toString() },
+              { source: AGENT_TRIGGER_TARGET_EXTENSION_KEY, id: subscription.uri },
             ],
           },
           enabled: triggersEnabled,
@@ -123,7 +123,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
           },
           function: Ref.make(Operation.serialize(AgentWorker)),
           enabled: triggersEnabled,
-          spec: Trigger.specQueue(agent.feed.dxn.toString()),
+          spec: Trigger.specQueue(agent.feed.uri),
           input: {
             agent: Ref.make(agent),
             event: '{{event}}',

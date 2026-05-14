@@ -120,7 +120,7 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
         const status = invocation.outcome;
         // Handle both Ref objects and encoded references.
         const targetDxn: URI.URI | undefined =
-          invocation.invocationTarget?.dxn ??
+          invocation.invocationTarget?.uri ??
           (invocation.invocationTarget && '/' in invocation.invocationTarget
             ? URI.make((invocation.invocationTarget as any)['/'])
             : undefined);
@@ -134,7 +134,7 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
           duration: formatDuration(invocation.duration),
           status,
           queue:
-            invocation.invocationTraceQueue?.dxn?.toString() ??
+            invocation.invocationTraceQueue?.uri ??
             (invocation.invocationTraceQueue && '/' in invocation.invocationTraceQueue
               ? (invocation.invocationTraceQueue as any)['/']
               : 'unknown'),

@@ -71,8 +71,8 @@ export class WorkflowLoader {
           break;
         default: {
           if (node.subgraph) {
-            const graph = new ComputeGraphModel(await this._graphLoader(node.subgraph.dxn));
-            executable = await this._compileGraph(node.subgraph.dxn, graph, cache);
+            const graph = new ComputeGraphModel(await this._graphLoader(node.subgraph.uri));
+            executable = await this._compileGraph(node.subgraph.uri, graph, cache);
           } else if (node.type === 'function' || node.function) {
             executable = await this._loadFunction(node, cache);
           } else if (registry[node.type as NodeType]) {
@@ -125,7 +125,7 @@ export class WorkflowLoader {
       throw new Error(`Function reference missing on node ${node.id}.`);
     }
 
-    const cacheKey = functionRef.dxn.toString();
+    const cacheKey = functionRef.uri;
     const cached = cache.loadedFunctionsMap.get(cacheKey);
     if (cached) {
       return cached;

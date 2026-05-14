@@ -49,7 +49,7 @@ const STREAMING_CONFIG = {
 
 const readMailboxTargetOptions = (integration: Integration.Integration, mailbox: Mailbox.Mailbox) => {
   const match = (integration.targets ?? []).find(
-    (target) => target.object && EchoId.getObjectId(EchoId.tryParse(target.object.dxn)!) === mailbox.id,
+    (target) => target.object && EchoId.getObjectId(EchoId.tryParse(target.object.uri)!) === mailbox.id,
   );
   const raw = match?.options;
   if (!raw || typeof raw !== 'object') {
@@ -90,7 +90,7 @@ const syncSingleMailbox = (input: {
   Effect.gen(function* () {
     const { integration, mailboxRef, userId, defaultLabel, defaultAfter, restrictedMode } = input;
 
-    log('syncing gmail', { mailbox: mailboxRef.dxn.toString(), userId, after: defaultAfter, restrictedMode });
+    log('syncing gmail', { mailbox: mailboxRef.uri, userId, after: defaultAfter, restrictedMode });
     const mailbox = yield* Database.load(mailboxRef);
     const targetOptions = readMailboxTargetOptions(integration, mailbox);
     const after =

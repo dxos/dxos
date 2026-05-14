@@ -357,7 +357,7 @@ export const childOf = (
   const items = Array.isArray(parents) ? parents : [parents];
   const dxns = items.map((item) => {
     if (Ref.isRef(item)) {
-      return item.dxn.toString();
+      return item.uri;
     }
     return internal.getId(item);
   });

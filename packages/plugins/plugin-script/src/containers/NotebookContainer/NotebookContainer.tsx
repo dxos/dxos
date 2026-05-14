@@ -114,7 +114,7 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
           onResult: (result) =>
             setPromptResults((prev) => ({
               ...prev,
-              [prompt.dxn.toString()]: result,
+              [prompt.uri]: result,
             })),
         });
       }

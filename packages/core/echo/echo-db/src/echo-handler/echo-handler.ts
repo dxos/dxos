@@ -328,13 +328,13 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   /**
    * @returns The typename without version for static schema or object id for dynamic schema.
    */
-  private _getTypename(target: ProxyTarget): string | undefined {
+  private _getTypename(target: ProxyTarget): URI.URI | undefined {
     const schema = this.getSchema(target);
     // Special handling for EchoSchema. objectId is persistentSchema objectId, not a typename.
     if (schema && typeof schema === 'object' && SchemaMetaSymbol in schema) {
       return (schema as any)[SchemaMetaSymbol].typename;
     }
-    return getTypeDisplayName(this.getTypeDXN(target));
+    return this.getTypeDXN(target);
   }
 
   private _getParent(target: ProxyTarget): any {
@@ -554,7 +554,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         if (savedTarget) {
           return EncodedReference.fromURI(this.createRef(target, savedTarget));
         } else {
-          return EncodedReference.fromURI(value.dxn as URI.URI);
+          return EncodedReference.fromURI(value.uri);
         }
       } else {
         return recurse(value);
@@ -933,7 +933,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     const obj: Partial<ObjectJSON> = {
       id: target[symbolInternals].core.id,
-      [ATTR_TYPE]: typeRef ? (EncodedReference.getReferenceString(typeRef) as string) : undefined,
+      [ATTR_TYPE]: typeRef ? EncodedReference.getReferenceString(typeRef) : undefined,
       [ATTR_META]: { ...this.getMeta(target) } as ObjectMetaJSON,
     };
 
@@ -943,11 +943,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     const sourceRef = target[symbolInternals].core.getSource();
     if (sourceRef) {
-      obj[ATTR_RELATION_SOURCE] = EncodedReference.getReferenceString(sourceRef) as string;
+      obj[ATTR_RELATION_SOURCE] = EncodedReference.getReferenceString(sourceRef);
     }
     const targetRef = target[symbolInternals].core.getTarget();
     if (targetRef) {
-      obj[ATTR_RELATION_TARGET] = EncodedReference.getReferenceString(targetRef) as string;
+      obj[ATTR_RELATION_TARGET] = EncodedReference.getReferenceString(targetRef);
     }
 
     Object.assign(
@@ -998,7 +998,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
           data = {
             id: target[symbolInternals].core.id,
-            '@type': getTypeDisplayName(typeDXN),
+            '@type': typeDXN,
             '@meta': metaReified,
             ...data,
             '[[Schema]]': this.getSchema(target),
@@ -1048,23 +1048,6 @@ const isEchoObjectField = (value: any) => {
 };
 
 const getNamespace = (target: ProxyTarget): string => target[symbolNamespace];
-
-/**
- * Get a human-readable display name from a type URI (object id or typename).
- */
-const getTypeDisplayName = (typeDXN: URI.URI | undefined): string | undefined => {
-  if (!typeDXN) {
-    return undefined;
-  }
-  const echoId = EchoId.tryParse(typeDXN);
-  if (echoId) {
-    return EchoId.getObjectId(echoId) ?? undefined;
-  }
-  if (DXN.isDXN(typeDXN)) {
-    return DXN.getNsid(DXN.parse(typeDXN));
-  }
-  return undefined;
-};
 
 interface DecodedValueAtPath {
   value: any;
@@ -1331,6 +1314,6 @@ const refToEncodedReference = (target: ProxyTarget, ref: Ref<any>): EncodedRefer
   if (savedTarget) {
     return EncodedReference.fromURI(EchoReactiveHandler.instance.createRef(target, savedTarget));
   } else {
-    return EncodedReference.fromURI(ref.dxn as URI.URI);
+    return EncodedReference.fromURI(ref.uri);
   }
 };

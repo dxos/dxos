@@ -335,7 +335,7 @@ describe('Database Blueprint', () => {
         yield* agent.submitPrompt(`Remove the organization "Remove Context Corp" from the chat context.`);
         yield* agent.waitForCompletion();
         const contextRefs = yield* agent.getContext();
-        const found = contextRefs.find((contextRef) => contextRef.dxn.toString() === dxn);
+        const found = contextRefs.find((contextRef) => contextRef.uri === dxn);
         expect(found).toBeUndefined();
       },
       Effect.provide(TestLayer),

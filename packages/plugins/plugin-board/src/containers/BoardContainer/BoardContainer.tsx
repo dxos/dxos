@@ -102,7 +102,7 @@ export const BoardContainer = ({ role, subject: board, attendableId }: BoardCont
     (id) => {
       // TODO(burdon): Impl. DXN.equals and pass in DXN from `id`.
       const idx = board.items.findIndex((ref) => {
-        const echoId = EchoId.tryParse(ref.dxn);
+        const echoId = EchoId.tryParse(ref.uri);
         return (echoId ? EchoId.getObjectId(echoId) : undefined) === id;
       });
       Obj.update(board, (board) => {

@@ -73,7 +73,7 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
           Atom.make((get) => {
             const agentObj = get(_);
             const selectedSubscriptions: Obj.Unknown[] = subscribedObjects.filter((object) =>
-              agentObj.subscriptions.some((subscription) => subscription.dxn === Obj.getId(object)),
+              agentObj.subscriptions.some((subscription) => subscription.uri === Obj.getId(object)),
             );
 
             return selectedSubscriptions;
@@ -90,7 +90,7 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
         if (checked) {
           agent.subscriptions.push(Ref.fromURI(Obj.getId(object)));
         } else {
-          agent.subscriptions = agent.subscriptions.filter((subscription) => subscription.dxn !== Obj.getId(object));
+          agent.subscriptions = agent.subscriptions.filter((subscription) => subscription.uri !== Obj.getId(object));
         }
       });
     },

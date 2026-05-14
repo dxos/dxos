@@ -183,7 +183,7 @@ describe('curateMagazine', () => {
 
     // Confirm the DXN form mismatch is real (so this test is exercising the
     // condition the fix targets, not a coincidence).
-    const magDxn = magazine.posts[0].dxn.toString();
+    const magDxn = magazine.posts[0].uri;
     const items = (await queue.queryObjects()) ?? [];
     const queueDxn = Obj.getId(items[0] as any);
     expect(magDxn).not.toBe(queueDxn);

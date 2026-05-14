@@ -16,7 +16,7 @@ import { Blueprint } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { Feed, Obj, type QueryResult, Query, Ref, Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
-import { EchoId } from '@dxos/keys';
+import { EchoId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexSet, isNonNullable } from '@dxos/util';
 
@@ -48,18 +48,18 @@ export type BindingProps = Partial<{
 }>;
 
 export class Bindings {
-  readonly blueprints = new ComplexSet<Ref.Ref<Blueprint.Blueprint>>((ref) => ref.dxn.toString());
+  readonly blueprints = new ComplexSet<Ref.Ref<Blueprint.Blueprint>>((ref) => ref.uri);
 
   // TODO(burdon): Some DXNs have the Space prefix so only compare the object ID.
   readonly objects = new ComplexSet<Ref.Ref<Obj.Unknown>>((ref) => {
-    const echoId = EchoId.tryParse(ref.dxn);
+    const echoId = EchoId.tryParse(ref.uri);
     return echoId ? EchoId.getObjectId(echoId) : undefined;
   });
 
-  toJSON() {
+  toJSON(): { blueprints: URI.URI[]; objects: URI.URI[] } {
     return {
-      blueprints: EArray.fromIterable(this.blueprints).map((ref) => ref.dxn.toString()),
-      objects: EArray.fromIterable(this.objects).map((ref) => ref.dxn.toString()),
+      blueprints: EArray.fromIterable(this.blueprints).map((ref) => ref.uri),
+      objects: EArray.fromIterable(this.objects).map((ref) => ref.uri),
     };
   }
 }
@@ -173,7 +173,7 @@ export class Binder extends Resource {
 
     log('_updateBindings', {
       items: items.length,
-      blueprintRefs: [...bindings.blueprints].map((ref) => ({ dxn: ref.dxn.toString(), available: ref.isAvailable })),
+      blueprintRefs: [...bindings.blueprints].map((ref) => ({ dxn: ref.uri, available: ref.isAvailable })),
     });
 
     // Resolve references (loading them first if needed).
@@ -189,8 +189,8 @@ export class Binder extends Resource {
 
     // Filter current state to only items still in the reduced binding set,
     // then merge in newly resolved items. This ensures unbind events are respected.
-    const reducedBlueprintDxns = new Set<string>([...bindings.blueprints].map((ref) => ref.dxn.toString()));
-    const reducedObjectDxns = new Set<string>([...bindings.objects].map((ref) => ref.dxn.toString()));
+    const reducedBlueprintDxns = new Set<string>([...bindings.blueprints].map((ref) => ref.uri));
+    const reducedObjectDxns = new Set<string>([...bindings.objects].map((ref) => ref.uri));
     const filteredBlueprints = currentBlueprints.filter((obj) => {
       const dxn = Obj.getId(obj);
       return dxn != null && reducedBlueprintDxns.has(dxn.toString());
@@ -254,8 +254,8 @@ export class Binder extends Resource {
     }
 
     // Immediately update atom state so removals are reflected before the queue round-trips.
-    const removedBlueprintDxns = (blueprints ?? []).map((ref) => ref.dxn);
-    const removedObjectDxns = (objects ?? []).map((ref) => ref.dxn);
+    const removedBlueprintDxns = (blueprints ?? []).map((ref) => ref.uri);
+    const removedObjectDxns = (objects ?? []).map((ref) => ref.uri);
     if (removedBlueprintDxns.length > 0) {
       const current = this._registry.get(this._blueprints);
       this._registry.set(
@@ -303,7 +303,7 @@ export class Binder extends Resource {
 
     const seen = new Set<string>(current.map((obj) => Obj.getId(obj)));
     for (const ref of refs) {
-      const dxn = ref.dxn;
+      const dxn = ref.uri;
       if (!seen.has(dxn)) {
         seen.add(dxn);
         added.push(ref);
@@ -335,10 +335,10 @@ export class Binder extends Resource {
         objects.removed.forEach((ref) => {
           for (const obj of context.objects) {
             if (
-              obj.dxn === ref.dxn ||
-              (EchoId.tryParse(obj.dxn) &&
-                EchoId.tryParse(ref.dxn) &&
-                EchoId.getObjectId(EchoId.tryParse(obj.dxn)!) === EchoId.getObjectId(EchoId.tryParse(ref.dxn)!))
+              obj.uri === ref.uri ||
+              (EchoId.tryParse(obj.uri) &&
+                EchoId.tryParse(ref.uri) &&
+                EchoId.getObjectId(EchoId.tryParse(obj.uri)!) === EchoId.getObjectId(EchoId.tryParse(ref.uri)!))
             ) {
               context.objects.delete(obj);
             }
@@ -384,7 +384,7 @@ export class Binder extends Resource {
         }
 
         // Fallback to existing object.
-        return target ?? current.find((obj) => Obj.getId(obj as any) === ref.dxn);
+        return target ?? current.find((obj) => Obj.getId(obj as any) === ref.uri);
       })
       .filter(isNonNullable);
   }

@@ -310,9 +310,9 @@ const upsertTask = Effect.fn('upsertTask')(function* (
         existing.assigned = Ref.make(assignedPerson);
       }
       const currentProjectId = existing.project
-        ? EchoId.getObjectId(EchoId.tryParse(existing.project.dxn)!)
+        ? EchoId.getObjectId(EchoId.tryParse(existing.project.uri)!)
         : undefined;
-      const projectId = EchoId.getObjectId(EchoId.tryParse(Ref.make(project).dxn)!);
+      const projectId = EchoId.getObjectId(EchoId.tryParse(Ref.make(project).uri)!);
       if (!existing.project || (currentProjectId && projectId && currentProjectId !== projectId)) {
         existing.project = Ref.make(project);
       }
@@ -517,9 +517,9 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
           return yield* Effect.dieMessage('Integration ref must be preloaded by caller (no database derivable).');
         }
 
-        const integrationId = EchoId.getObjectId(EchoId.tryParse(integration.dxn)!) ?? 'unknown';
+        const integrationId = EchoId.getObjectId(EchoId.tryParse(integration.uri)!) ?? 'unknown';
         const toastIdSuffix = repoRef
-          ? `${integrationId}.${EchoId.getObjectId(EchoId.tryParse(repoRef.dxn)!) ?? 'unknown'}`
+          ? `${integrationId}.${EchoId.getObjectId(EchoId.tryParse(repoRef.uri)!) ?? 'unknown'}`
           : integrationId;
 
         const outcome = yield* Effect.either(
@@ -536,7 +536,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
             const reposById = new Map(allRepos.map((repo) => [String(repo.id), repo]));
 
             // Optional narrow filter to a single Project echo id.
-            const repoFilterId = repoRef ? EchoId.getObjectId(EchoId.tryParse(repoRef.dxn)!) : undefined;
+            const repoFilterId = repoRef ? EchoId.getObjectId(EchoId.tryParse(repoRef.uri)!) : undefined;
 
             // Materialize per-target work: ensure local Project exists, wire
             // `target.object` ref, then later batch-pull each repo's owning org

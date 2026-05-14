@@ -90,7 +90,7 @@ const applyPerFeedKeep = (magazine: Magazine.Magazine, db: Database.Database | u
   for (const feedRef of magazine.feeds) {
     const feed = feedRef.target;
     if (feed) {
-      feedKeepById.set(dxnTailId(feedRef.dxn.toString()), feed.keep ?? Subscription.DEFAULT_KEEP);
+      feedKeepById.set(dxnTailId(feedRef.uri), feed.keep ?? Subscription.DEFAULT_KEEP);
     }
   }
 
@@ -107,7 +107,7 @@ const applyPerFeedKeep = (magazine: Magazine.Magazine, db: Database.Database | u
 
   const byFeedId = new Map<string | undefined, Array<{ ref: Ref.Ref<Subscription.Post>; post: Subscription.Post }>>();
   for (const pair of resolvedPairs) {
-    const feedRefDxn = pair.post.feed?.dxn.toString();
+    const feedRefDxn = pair.post.feed?.uri;
     const feedId = feedRefDxn ? dxnTailId(feedRefDxn) : undefined;
     const arr = byFeedId.get(feedId) ?? [];
     arr.push(pair);

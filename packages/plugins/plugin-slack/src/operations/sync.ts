@@ -266,9 +266,9 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
       const space = client.spaces.get(db.spaceId);
       invariant(space, 'Space not found');
 
-      const integrationId = EchoId.getObjectId(EchoId.tryParse(integration.dxn)!) ?? 'unknown';
+      const integrationId = EchoId.getObjectId(EchoId.tryParse(integration.uri)!) ?? 'unknown';
       const toastIdSuffix = channelRef
-        ? `${integrationId}.${EchoId.getObjectId(EchoId.tryParse(channelRef.dxn)!) ?? 'unknown'}`
+        ? `${integrationId}.${EchoId.getObjectId(EchoId.tryParse(channelRef.uri)!) ?? 'unknown'}`
         : integrationId;
 
       const outcome = yield* Effect.either(
@@ -281,7 +281,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
           const allConversations = yield* SlackApi.fetchConversations();
           const conversationsById = new Map(allConversations.map((c) => [c.id, c]));
 
-          const channelFilterId = channelRef ? EchoId.getObjectId(EchoId.tryParse(channelRef.dxn)!) : undefined;
+          const channelFilterId = channelRef ? EchoId.getObjectId(EchoId.tryParse(channelRef.uri)!) : undefined;
           type TargetEntry = {
             entry: (typeof integrationObj.targets)[number];
             channel: Channel.Channel;
@@ -314,7 +314,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
               });
             }
 
-            const targetEchoId = EchoId.getObjectId(EchoId.tryParse(Ref.make(localObj).dxn)!);
+            const targetEchoId = EchoId.getObjectId(EchoId.tryParse(Ref.make(localObj).uri)!);
             if (channelFilterId && targetEchoId !== channelFilterId) {
               continue;
             }

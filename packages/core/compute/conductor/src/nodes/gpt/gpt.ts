@@ -126,7 +126,7 @@ export const gptNode = defineComputeNode({
     const { queues } = yield* QueueService;
     const historyMessages = conversation
       ? yield* Effect.tryPromise({
-          try: () => queues.get<Message.Message>(EchoId.parse(conversation.dxn.toString())).queryObjects(),
+          try: () => queues.get<Message.Message>(EchoId.parse(conversation.uri)).queryObjects(),
           catch: (e) => e as Error,
         })
       : (history ?? []);
@@ -176,9 +176,7 @@ export const gptNode = defineComputeNode({
       log.info('messages', { messages });
 
       if (conversation) {
-        yield* Effect.promise(() =>
-          queues.get<Message.Message>(EchoId.parse(conversation.dxn.toString())).append([...messages]),
-        );
+        yield* Effect.promise(() => queues.get<Message.Message>(EchoId.parse(conversation.uri)).append([...messages]));
       }
 
       const text = messages

@@ -729,7 +729,7 @@ describe('query api', () => {
 
       expect(filter.ast).toMatchObject({
         type: 'child-of',
-        parents: [parentRef.dxn],
+        parents: [parentRef.uri],
         transitive: false,
       });
       Schema.validateSync(QueryAST.Filter)(filter.ast);

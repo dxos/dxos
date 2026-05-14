@@ -15,7 +15,7 @@ import { hasMetaTag } from '../util';
  */
 export const collectCandidates = (magazine: Magazine.Magazine) =>
   Effect.gen(function* () {
-    const seenPostIds = new Set(magazine.posts.map((ref) => ref.dxn.toString()));
+    const seenPostIds = new Set(magazine.posts.map((ref) => ref.uri));
     const candidates: Array<{ post: Subscription.Post; feed: Subscription.Feed }> = [];
     for (const feedRef of magazine.feeds) {
       const feed = yield* Database.load(feedRef);

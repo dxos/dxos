@@ -90,7 +90,7 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
         const getValue = useCallback(() => {
           const formValue = props.getValue();
           if (Ref.isRef(formValue)) {
-            return formValue.dxn.toString() as string;
+            return formValue.uri as string;
           }
           return undefined;
         }, [props]);

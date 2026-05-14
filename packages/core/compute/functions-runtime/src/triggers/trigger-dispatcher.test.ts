@@ -357,7 +357,7 @@ describe('TriggerDispatcher', () => {
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
-          spec: Trigger.specQueue(queue.dxn.toString()),
+          spec: Trigger.specQueue(queue.dxn),
         });
         yield* Database.add(trigger);
         yield* QueueService.append(queue, [
@@ -383,7 +383,7 @@ describe('TriggerDispatcher', () => {
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
-          spec: Trigger.specQueue(queue.dxn.toString()),
+          spec: Trigger.specQueue(queue.dxn),
         });
         yield* Database.add(trigger);
         yield* QueueService.append(queue, [
@@ -427,7 +427,7 @@ describe('TriggerDispatcher', () => {
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
-          spec: Trigger.specQueue(queue.dxn.toString()),
+          spec: Trigger.specQueue(queue.dxn),
           input: {
             instructions: 'Please process the queue item.',
             input: '{{event.item}}',
@@ -467,7 +467,7 @@ describe('TriggerDispatcher', () => {
           function: Ref.make(functionObj),
           enabled: true,
           concurrency: 2,
-          spec: Trigger.specQueue(queue.dxn.toString()),
+          spec: Trigger.specQueue(queue.dxn),
         });
         yield* Database.add(trigger);
         yield* QueueService.append(queue, [

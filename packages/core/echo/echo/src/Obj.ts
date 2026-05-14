@@ -682,7 +682,7 @@ const valuesEqual = (left: unknown, right: unknown): boolean => {
     return Utils.structuralRegion(() => Equal.equals(left, right));
   }
   if (Ref.isRef(left) && Ref.isRef(right)) {
-    return left.dxn.toString() === right.dxn.toString();
+    return left.uri === right.uri;
   }
   if (Ref.isRef(left) || Ref.isRef(right)) {
     return false;

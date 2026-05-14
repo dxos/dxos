@@ -47,7 +47,7 @@ export default Capability.makeModule(
           const integrations = get(AtomQuery.make(db, Filter.type(Integration.Integration)));
           const integration = integrations.find((integration) =>
             integration.targets.some(
-              (target) => target.object && EchoId.getObjectId(EchoId.tryParse(target.object.dxn)!) === kanban.id,
+              (target) => target.object && EchoId.getObjectId(EchoId.tryParse(target.object.uri)!) === kanban.id,
             ),
           );
           if (!integration) {

@@ -95,6 +95,6 @@ describe('Ref', () => {
 
     const contact = Contact.pipe(Schema.decodeUnknownSync)(contactData);
     expect(Ref.isRef(contact.tasks[0])).toEqual(true);
-    expect(contact.tasks[0].dxn.toString()).toEqual(`dxn:echo:@:${id}`);
+    expect(contact.tasks[0].uri.toString()).toEqual(`dxn:echo:@:${id}`);
   });
 });

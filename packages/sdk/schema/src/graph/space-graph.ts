@@ -292,7 +292,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
             }
 
             newEdges.push({
-              id: `${object.id}-${ref.dxn.toString()}`,
+              id: `${object.id}-${ref.uri}`,
               type: 'ref',
               source: object.id,
               target: ref.target.id,

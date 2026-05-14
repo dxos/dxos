@@ -61,7 +61,7 @@ describe('ObjectProperties — inline create flow', () => {
     // Compare by DXN tail to be agnostic to relative vs absolute Ref form.
     const createdId = (created as any).id as string;
     expect(
-      article.authors[0]?.dxn?.toString().endsWith(`:${createdId}`),
+      article.authors[0]?.uri.endsWith(`:${createdId}`),
       'article.authors[0] should reference the newly-created Author',
     ).toBe(true);
   });
@@ -87,7 +87,7 @@ describe('ObjectProperties — inline create flow', () => {
       expect(notebook.notes ?? [], 'notebook.notes should contain a single Ref').toHaveLength(1);
       const createdId = (created as any).id as string;
       expect(
-        notebook.notes[0]?.dxn?.toString().endsWith(`:${createdId}`),
+        notebook.notes[0]?.uri.endsWith(`:${createdId}`),
         'notebook.notes[0] should reference the newly-created Note',
       ).toBe(true);
 

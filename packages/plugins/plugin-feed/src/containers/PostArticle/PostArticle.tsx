@@ -55,7 +55,7 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
   // the meta line updates as soon as the feed object is loaded into the space.
   const allFeeds = useQuery(db, Filter.type(Subscription.Feed));
   const feedName = useMemo(() => {
-    const dxn = post.feed?.dxn.toString();
+    const dxn = post.feed?.uri;
     if (!dxn) {
       return undefined;
     }

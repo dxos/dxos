@@ -56,7 +56,7 @@ export const Trace = (props: TraceProps) => {
 
   // Target display name (uses getFunctionName).
   const getTargetDisplayName = (span: InvocationSpan): string => {
-    const targetDxn = span.invocationTarget?.dxn;
+    const targetDxn = span.invocationTarget?.uri;
     const name = getFunctionName(targetDxn);
     return name ?? targetDxn?.split(':').pop() ?? '?';
   };

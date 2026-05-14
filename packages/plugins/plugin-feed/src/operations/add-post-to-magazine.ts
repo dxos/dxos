@@ -27,7 +27,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.AddPostToMagazine> = F
 
       Obj.update(magazine, (magazine) => {
         const mutable = magazine as Obj.Mutable<typeof magazine>;
-        const alreadyCurated = mutable.posts.some((ref) => ref.dxn.toString() === postDxn);
+        const alreadyCurated = mutable.posts.some((ref) => ref.uri === postDxn);
         if (!alreadyCurated) {
           mutable.posts = [...mutable.posts, Ref.make(post)];
         }

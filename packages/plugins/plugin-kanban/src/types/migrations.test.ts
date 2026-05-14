@@ -75,7 +75,7 @@ describe('Kanban migration v1 → v2', () => {
     expect(migrated.arrangement.order).toEqual(['todo']);
     expect(migrated.spec.kind).toBe('view');
     if (migrated.spec.kind === 'view') {
-      expect(migrated.spec.view.dxn.toString()).toBe(Ref.make(view).dxn.toString());
+      expect(migrated.spec.view.uri).toBe(Ref.make(view).uri);
     }
     expect(Type.getVersion(Obj.getSchema(migrated)!)).toBe('0.2.0');
   });

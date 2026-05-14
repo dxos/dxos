@@ -41,7 +41,7 @@ type BaseSyncProps<T = unknown> = {
 
 const findIntegrationTargetIdx = (integration: Integration.Integration, calendar: Calendar.Calendar): number =>
   integration.targets?.findIndex((target) => {
-    if (target.object && EchoId.getObjectId(EchoId.tryParse(target.object.dxn)!) === calendar.id) {
+    if (target.object && EchoId.getObjectId(EchoId.tryParse(target.object.uri)!) === calendar.id) {
       return true;
     }
     const fkId = Obj.getMeta(calendar).keys?.find((k) => k.source === GOOGLE_INTEGRATION_SOURCE)?.id;
@@ -200,10 +200,10 @@ export default InboxOperation.GoogleCalendarSync.pipe(
         const integrationObj = yield* Database.load(integrationRef);
         const calendars: Calendar.Calendar[] = [];
         if (calendarRef) {
-          log('syncing google calendar', { calendar: calendarRef.dxn.toString(), ...defaults });
+          log('syncing google calendar', { calendar: calendarRef.uri, ...defaults });
           calendars.push(yield* Database.load(calendarRef));
         } else {
-          log('syncing all calendar targets on integration', { integration: integrationRef.dxn.toString() });
+          log('syncing all calendar targets on integration', { integration: integrationRef.uri });
           for (const target of integrationObj.targets ?? []) {
             const cal = target.object?.target;
             if (Calendar.instanceOf(cal)) {

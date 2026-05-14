@@ -64,11 +64,11 @@ export const useInvocationSpans = ({ queueDxn, target }: { queueDxn?: EchoId.Ech
         if (!span.invocationTarget) {
           return false;
         }
-        const uuidPart = getUuidFromDxn(span.invocationTarget.dxn);
+        const uuidPart = getUuidFromDxn(span.invocationTarget.uri);
         return uuidPart ? functionsForScript?.has(uuidPart) : false;
       });
     } else if (target) {
-      return invocationSpans.filter((span) => span.invocationTarget?.dxn === Obj.getId(target));
+      return invocationSpans.filter((span) => span.invocationTarget?.uri === Obj.getId(target));
     }
     return invocationSpans;
   }, [functionsForScript, target, invocationSpans]);

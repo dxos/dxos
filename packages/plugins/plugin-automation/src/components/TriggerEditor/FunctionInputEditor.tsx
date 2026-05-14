@@ -24,7 +24,7 @@ export const FunctionInputEditor = ({ type, functions, db, getValue, onValueChan
   const selectedFunctionValue = useFormValues(FunctionInputEditor.displayName, ['function' as JsonPath]);
   const selectedFunctionId = useMemo(() => {
     if (Ref.isRef(selectedFunctionValue)) {
-      return selectedFunctionValue.dxn.toString().split('dxn:echo:@:').at(1);
+      return selectedFunctionValue.uri.split('dxn:echo:@:').at(1);
     }
   }, [selectedFunctionValue]);
 
@@ -41,7 +41,7 @@ export const FunctionInputEditor = ({ type, functions, db, getValue, onValueChan
         return false;
       }
 
-      return prevValue.dxn.toString() !== selectedFunctionValue.dxn.toString();
+      return prevValue.uri !== selectedFunctionValue.uri;
     },
     (currValue) => currValue !== undefined,
     () => onValueChange(type, {}),

@@ -111,7 +111,7 @@ export const RefField = (props: RefFieldProps) => {
     const unknownToRefOption = (value: unknown) => {
       const isRef = Ref.isRef(value);
       if (isRef || isRefSnapshot(value)) {
-        const dxnString = isRef ? value.dxn.toString() : value['/'];
+        const dxnString = isRef ? value.uri : value['/'];
         const objectId = dxnToObjectId(dxnString);
         const matchingOption = options.find((option) => dxnToObjectId(option.id) === objectId);
         if (matchingOption) {

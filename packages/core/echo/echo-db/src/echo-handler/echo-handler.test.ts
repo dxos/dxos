@@ -63,7 +63,7 @@ describe('ECHO specific proxy properties with schema', () => {
     );
     const str = inspect(obj, { colors: false });
     expect(str).toMatchInlineSnapshot(
-      `"TypedEchoObject(com.example.type.example) { string: 'bar', id: '01KB0G0HR8BSPH11XJS85BGSWF' }"`,
+      `"TypedEchoObject(dxn:com.example.type.example:0.1.0) { string: 'bar', id: '01KB0G0HR8BSPH11XJS85BGSWF' }"`,
     );
   });
 
@@ -925,7 +925,7 @@ describe('Reactive Object with ECHO database', () => {
     const dbObj = db.add(obj);
     // Queue dxn is stored as LegacyDXN internally; verify the objectId matches.
     const queueId = EchoId.getObjectId(dxn);
-    expect(dbObj.queue.dxn.toString()).to.include(queueId!);
+    expect(dbObj.queue.uri).to.include(queueId!);
   });
 
   test('Obj.getId returns full DXN', async () => {

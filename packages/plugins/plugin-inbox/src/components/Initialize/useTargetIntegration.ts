@@ -21,7 +21,7 @@ export const useTargetIntegration = <T extends Obj.Any>(
   const integrations = useQuery(db, Filter.type(Integration.Integration));
   const integration = integrations.find((candidate) =>
     candidate.targets.some(
-      (entry) => entry.object && EchoId.getObjectId(EchoId.tryParse(entry.object.dxn)!) === target.id,
+      (entry) => entry.object && EchoId.getObjectId(EchoId.tryParse(entry.object.uri)!) === target.id,
     ),
   );
   return { integration };

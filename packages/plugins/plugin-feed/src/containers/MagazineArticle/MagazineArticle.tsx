@@ -64,7 +64,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
 
   // Index feeds by bare object id (last DXN segment) — `Obj.getId(feed)`
   // returns the space-scoped form (`dxn:echo:<spaceId>:<id>`), but
-  // `post.feed.dxn` from a `Ref.make` carries the local-id form
+  // `post.feed.uri` from a `Ref.make` carries the local-id form
   // (`dxn:echo:@:<id>`). String-comparing the two never matches, so the
   // tile's `feedName` lookup silently fails. Indexing by bare id reconciles.
   const feedNamesById = useMemo(() => {
@@ -104,12 +104,12 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   // When the user removes a feed from the magazine via ObjectProperties, prune any
   // curated posts whose source feed is no longer present.
   // Compare by bare object id rather than full DXN — `magazine.feeds[i].dxn` and
-  // `post.feed.dxn` may carry different prefixes (`dxn:echo:@:<id>` vs
+  // `post.feed.uri` may carry different prefixes (`dxn:echo:@:<id>` vs
   // `dxn:echo:<spaceId>:<id>`) depending on how each ref was constructed, so
   // string-comparing the full DXN flags every post as an orphan and wipes the
   // magazine on mount.
   useEffect(() => {
-    const feedIds = new Set(magazine.feeds.map((ref) => dxnToObjectId(ref.dxn)));
+    const feedIds = new Set(magazine.feeds.map((ref) => dxnToObjectId(ref.uri)));
     const orphanIds = new Set<string>();
     for (const postRef of magazine.posts) {
       const post = postRef.target;
@@ -117,8 +117,8 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       if (!feedRef) {
         continue;
       }
-      if (!feedIds.has(dxnToObjectId(feedRef.dxn))) {
-        orphanIds.add(dxnToObjectId(postRef.dxn));
+      if (!feedIds.has(dxnToObjectId(feedRef.uri))) {
+        orphanIds.add(dxnToObjectId(postRef.uri));
       }
     }
     if (orphanIds.size === 0) {
@@ -126,7 +126,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     }
 
     Obj.update(subject, (subject) => {
-      subject.posts = subject.posts.filter((ref) => !orphanIds.has(dxnToObjectId(ref.dxn)));
+      subject.posts = subject.posts.filter((ref) => !orphanIds.has(dxnToObjectId(ref.uri)));
     });
   }, [subject, magazine.feeds, magazine.posts]);
 
@@ -192,7 +192,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const feedFingerprint = useMemo(
     () =>
       magazine.feeds
-        .map((ref) => ref.dxn.toString())
+        .map((ref) => ref.uri)
         .sort()
         .join(),
     [magazine.feeds],
@@ -237,9 +237,9 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const tileItems = useMemo<TileData[]>(
     () =>
       posts.map((post) => {
-        // Match the post's source feed by bare object id; `post.feed.dxn` is local-id form,
+        // Match the post's source feed by bare object id; `post.feed.uri` is local-id form,
         // while `feedNamesById` is keyed by id directly.
-        const feedId = post.feed ? (post.feed.dxn.toString().split(':').pop() ?? '') : '';
+        const feedId = post.feed ? (post.feed.uri.split(':').pop() ?? '') : '';
         return {
           post,
           current: post.id === currentId,
@@ -324,7 +324,7 @@ const useMagazinePosts = (
   view: MagazineView,
   starTag: Tag.Tag | undefined,
 ) => {
-  const postFingerprint = subject.posts.map((ref) => ref.dxn.toString()).join();
+  const postFingerprint = subject.posts.map((ref) => ref.uri).join();
 
   return useMemo<Subscription.Post[]>(() => {
     const seenDxn = new Set<string>();

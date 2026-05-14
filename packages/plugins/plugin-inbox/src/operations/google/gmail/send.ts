@@ -18,7 +18,7 @@ import { InboxOperation } from '../../../types';
 export default InboxOperation.GmailSend.pipe(
   Operation.withHandler(({ userId = 'me', message, integration: integrationRef }) =>
     Effect.gen(function* () {
-      log('sending email', { userId, integration: integrationRef.dxn.toString() });
+      log('sending email', { userId, integration: integrationRef.uri });
 
       const to = message.properties?.to;
       const subject = message.properties?.subject;

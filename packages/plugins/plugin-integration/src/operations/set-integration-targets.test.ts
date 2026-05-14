@@ -103,8 +103,8 @@ describe('SetIntegrationTargets', () => {
     expect(integration.targets[0].cursor).toBe('sentinel');
     expect(integration.targets[0].lastSyncAt).toBe(lastSyncAt);
     expect(
-      integration.targets[0].object && EchoId.getObjectId(EchoId.tryParse(integration.targets[0].object.dxn)!),
-    ).toBe(EchoId.getObjectId(EchoId.tryParse(Ref.make(obj).dxn)!));
+      integration.targets[0].object && EchoId.getObjectId(EchoId.tryParse(integration.targets[0].object.uri)!),
+    ).toBe(EchoId.getObjectId(EchoId.tryParse(Ref.make(obj).uri)!));
   });
 
   test('leaves auto-created targets (no remoteId) untouched on submit', async ({ expect }) => {

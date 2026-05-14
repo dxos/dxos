@@ -61,7 +61,7 @@ const reuseOrAdd = async (db: Database.Database, post: Subscription.Post): Promi
  * previously-curated items the user may want to keep.
  */
 export const curateMagazine = async (space: Space, magazine: Magazine.Magazine): Promise<{ added: number }> => {
-  const seenIds = new Set(magazine.posts.map((ref) => dxnToObjectId(ref.dxn)));
+  const seenIds = new Set(magazine.posts.map((ref) => dxnToObjectId(ref.uri)));
   const added: Ref.Ref<Subscription.Post>[] = [];
 
   const feedServiceLayer = createFeedServiceLayer(space.queues);
@@ -125,8 +125,8 @@ export const curateMagazine = async (space: Space, magazine: Magazine.Magazine):
   if (added.length > 0) {
     Obj.update(magazine, (magazine) => {
       const mutable = magazine as Obj.Mutable<typeof magazine>;
-      const existing = new Set(mutable.posts.map((ref) => dxnToObjectId(ref.dxn)));
-      const fresh = added.filter((ref) => !existing.has(dxnToObjectId(ref.dxn)));
+      const existing = new Set(mutable.posts.map((ref) => dxnToObjectId(ref.uri)));
+      const fresh = added.filter((ref) => !existing.has(dxnToObjectId(ref.uri)));
       if (fresh.length > 0) {
         mutable.posts = [...mutable.posts, ...fresh];
       }

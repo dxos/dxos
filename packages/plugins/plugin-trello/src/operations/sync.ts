@@ -513,9 +513,9 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
         return yield* Effect.fail(new IntegrationDatabaseMissingError());
       }
 
-      const integrationId = EchoId.getObjectId(EchoId.tryParse(integration.dxn)!) ?? 'unknown';
+      const integrationId = EchoId.getObjectId(EchoId.tryParse(integration.uri)!) ?? 'unknown';
       const toastIdSuffix = kanbanRef
-        ? `${integrationId}.${EchoId.getObjectId(EchoId.tryParse(kanbanRef.dxn)!) ?? 'unknown'}`
+        ? `${integrationId}.${EchoId.getObjectId(EchoId.tryParse(kanbanRef.uri)!) ?? 'unknown'}`
         : integrationId;
 
       // Wrap the body in `Effect.either` so we can emit a toast on either path
@@ -543,7 +543,7 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
           // discovery hands off to actual local writes.
           // Stored target refs use the space-relative form (`dxn:echo:@:...`); the
           // input `kanbanRef` may be absolute. Compare by echo id to be tolerant.
-          const kanbanFilterId = kanbanRef ? EchoId.getObjectId(EchoId.tryParse(kanbanRef.dxn)!) : undefined;
+          const kanbanFilterId = kanbanRef ? EchoId.getObjectId(EchoId.tryParse(kanbanRef.uri)!) : undefined;
           const targetEntries: Array<{
             entry: (typeof integrationObj.targets)[number];
             kanban: Kanban.Kanban;
@@ -581,7 +581,7 @@ const handler: Operation.WithHandler<typeof TrelloOperation.SyncTrelloBoard> = T
               });
             }
 
-            const targetEchoId = EchoId.getObjectId(EchoId.tryParse(Ref.make(localObj).dxn)!);
+            const targetEchoId = EchoId.getObjectId(EchoId.tryParse(Ref.make(localObj).uri)!);
             if (kanbanFilterId && targetEchoId !== kanbanFilterId) {
               continue;
             }

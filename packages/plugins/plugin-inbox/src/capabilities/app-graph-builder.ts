@@ -337,7 +337,7 @@ export default Capability.makeModule(
           const integrations = get(AtomQuery.make(db, Filter.type(Integration.Integration)));
           const integration = integrations.find((integration) =>
             integration.targets.some(
-              (target) => target.object && EchoId.getObjectId(EchoId.tryParse(target.object.dxn)!) === mailbox.id,
+              (target) => target.object && EchoId.getObjectId(EchoId.tryParse(target.object.uri)!) === mailbox.id,
             ),
           );
           if (!integration) {
@@ -372,7 +372,7 @@ export default Capability.makeModule(
           const integrations = get(AtomQuery.make(db, Filter.type(Integration.Integration)));
           const integration = integrations.find((integration) =>
             integration.targets.some(
-              (target) => target.object && EchoId.getObjectId(EchoId.tryParse(target.object.dxn)!) === calendar.id,
+              (target) => target.object && EchoId.getObjectId(EchoId.tryParse(target.object.uri)!) === calendar.id,
             ),
           );
           if (!integration) {

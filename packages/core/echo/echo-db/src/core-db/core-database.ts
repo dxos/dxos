@@ -510,7 +510,7 @@ export class CoreDatabase {
 
     const mappedData = deepMapValues(data, (value, recurse) => {
       if (Ref.isRef(value)) {
-        return { '/': value.dxn.toString() };
+        return { '/': value.uri };
       }
       return recurse(value);
     });
