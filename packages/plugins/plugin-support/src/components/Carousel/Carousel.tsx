@@ -14,7 +14,7 @@ import React, {
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { Column, IconButton, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -53,6 +53,11 @@ export type CarouselRootProps = PropsWithChildren<{
   classNames?: string;
 }>;
 
+/**
+ * Wraps the carousel in a `Column.Root` 3-track grid (left gutter / content / right gutter).
+ * `Carousel.Frame` slots Prev/Viewport/Next into those tracks; `Carousel.Indicators` and
+ * `Carousel.Caption` live in the center track so they share the viewport's width.
+ */
 const CarouselRoot = ({ children, count, intervalMs = 5_000, defaultIndex = 0, classNames }: CarouselRootProps) => {
   const [index, setIndexState] = useState(defaultIndex);
   const [autoAdvance, setAutoAdvance] = useState(true);
@@ -94,14 +99,30 @@ const CarouselRoot = ({ children, count, intervalMs = 5_000, defaultIndex = 0, c
 
   return (
     <CarouselContext.Provider value={value}>
-      <div className={mx('dx-container relative flex flex-col items-center gap-2 w-full max-w-xl', classNames)}>
+      <Column.Root gutter='lg' classNames={mx('w-full max-w-xl gap-2', classNames)}>
         {children}
-      </div>
+      </Column.Root>
     </CarouselContext.Provider>
   );
 };
 
 CarouselRoot.displayName = 'Carousel.Root';
+
+//
+// Frame
+//
+
+export type CarouselFrameProps = PropsWithChildren<{ classNames?: string }>;
+
+/**
+ * Bleeds across the full Column.Root grid so Previous / Viewport / Next land
+ * in cols 1 / 2 / 3 respectively via Column.Row's subgrid.
+ */
+const CarouselFrame = ({ children, classNames }: CarouselFrameProps) => {
+  return <Column.Row classNames={mx('items-center', classNames)}>{children}</Column.Row>;
+};
+
+CarouselFrame.displayName = 'Carousel.Frame';
 
 //
 // Viewport
@@ -112,7 +133,10 @@ export type CarouselViewportProps = PropsWithChildren<{ classNames?: string }>;
 const CarouselViewport = ({ children, classNames }: CarouselViewportProps) => {
   return (
     <div
-      className={mx('relative w-full aspect-video overflow-hidden bg-baseSurface border border-separator', classNames)}
+      className={mx(
+        'relative w-full aspect-video overflow-hidden rounded-md bg-baseSurface border border-separator',
+        classNames,
+      )}
     >
       {children}
     </div>
@@ -140,19 +164,6 @@ const CarouselSlide = ({ children, index, classNames }: CarouselSlideProps) => {
 };
 
 CarouselSlide.displayName = 'Carousel.Slide';
-
-//
-// Frame
-//
-
-export type CarouselFrameProps = PropsWithChildren<{ classNames?: string }>;
-
-/** Horizontal flex row that holds Previous + Viewport + Next so the controls sit outside the image. */
-const CarouselFrame = ({ children, classNames }: CarouselFrameProps) => {
-  return <div className={mx('flex items-center gap-2 w-full', classNames)}>{children}</div>;
-};
-
-CarouselFrame.displayName = 'Carousel.Frame';
 
 //
 // Previous / Next
@@ -206,28 +217,37 @@ CarouselNext.displayName = 'Carousel.Next';
 
 export type CarouselIndicatorsProps = { classNames?: string };
 
+/** Tab-strip of slide indicators. Sits in the center column so it matches the viewport's width. */
 const CarouselIndicators = ({ classNames }: CarouselIndicatorsProps) => {
   const { t } = useTranslation(meta.id);
   const { count, index, setIndex } = useCarousel();
   if (count <= 1) {
     return null;
   }
+
   return (
-    <div className={mx('flex items-center', classNames)} role='tablist' aria-label={t('carousel-indicators.label')}>
-      {Array.from({ length: count }).map((_, i) => (
-        <IconButton
-          key={i}
-          role='tab'
-          aria-selected={i === index}
-          icon={i === index ? 'ph--circle--fill' : 'ph--circle--regular'}
-          iconOnly
-          label={t('carousel-go-to.label', { index: i + 1 })}
-          onClick={() => setIndex(i)}
-          size={3}
-          variant='ghost'
-        />
-      ))}
-    </div>
+    <Column.Center>
+      <div
+        className={mx('flex items-center justify-center', classNames)}
+        role='tablist'
+        aria-label={t('carousel-indicators.label')}
+      >
+        {Array.from({ length: count }).map((_, i) => (
+          <IconButton
+            key={i}
+            role='tab'
+            aria-selected={i === index}
+            classNames={i === index ? 'text-primary-500' : 'text-description'}
+            icon={i === index ? 'ph--circle--fill' : 'ph--circle--regular'}
+            iconOnly
+            label={t('carousel-go-to.label', { index: i + 1 })}
+            onClick={() => setIndex(i)}
+            size={3}
+            variant='ghost'
+          />
+        ))}
+      </div>
+    </Column.Center>
   );
 };
 
@@ -243,13 +263,18 @@ export type CarouselCaptionProps = {
   classNames?: string;
 };
 
+/** Caption sized to the viewport's column. */
 const CarouselCaption = ({ children, classNames }: CarouselCaptionProps) => {
   const { index } = useCarousel();
   const content = children(index);
   if (content == null || content === false || content === '') {
     return null;
   }
-  return <p className={mx('flex justify-center text-description', classNames)}>{content}</p>;
+  return (
+    <Column.Center>
+      <p className={mx('text-center text-description', classNames)}>{content}</p>
+    </Column.Center>
+  );
 };
 
 CarouselCaption.displayName = 'Carousel.Caption';
