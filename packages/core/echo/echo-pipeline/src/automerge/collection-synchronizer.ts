@@ -12,6 +12,7 @@ import { type Context, Resource } from '@dxos/context';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { defaultMap } from '@dxos/util';
+
 import { PeerNotFoundError } from './errors';
 
 const MIN_QUERY_INTERVAL = 5_000;

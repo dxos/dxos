@@ -27,13 +27,13 @@ import {
   type ShouldAdvertiseProps,
   type ShouldSyncCollectionProps,
 } from './echo-replicator';
+import { PeerNotFoundError } from './errors';
 import {
   type CollectionQueryMessage,
   type CollectionStateMessage,
   isCollectionQueryMessage,
   isCollectionStateMessage,
 } from './network-protocol';
-import { PeerNotFoundError } from './errors';
 
 export interface NetworkDataMonitor {
   recordPeerConnected(peerId: string): void;
