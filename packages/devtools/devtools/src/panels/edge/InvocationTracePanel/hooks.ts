@@ -10,7 +10,7 @@ import { getUserFunctionIdInMetadata } from '@dxos/functions';
 import { InvocationOutcome } from '@dxos/functions-runtime';
 import { type InvocationTraceEvent } from '@dxos/functions-runtime';
 import { createInvocationSpans } from '@dxos/functions-runtime';
-import { type EchoId } from '@dxos/keys';
+import { type EchoId, type URI } from '@dxos/keys';
 import { useQuery, useQueue } from '@dxos/react-client/echo';
 
 import { getUuidFromDxn } from './utils';
@@ -22,7 +22,7 @@ export const useFunctionNameResolver = ({ db }: { db?: Database.Database }) => {
   const functions = useQuery(db, Filter.type(Operation.PersistentOperation));
 
   return useCallback(
-    (invocationTargetId: string | undefined) => {
+    (invocationTargetId: URI.URI | undefined) => {
       if (!invocationTargetId) {
         return undefined;
       }
@@ -64,8 +64,7 @@ export const useInvocationSpans = ({ queueDxn, target }: { queueDxn?: EchoId.Ech
         if (!span.invocationTarget) {
           return false;
         }
-        const targetId = span.invocationTarget.dxn?.toString();
-        const uuidPart = getUuidFromDxn(targetId);
+        const uuidPart = getUuidFromDxn(span.invocationTarget.dxn);
         return uuidPart ? functionsForScript?.has(uuidPart) : false;
       });
     } else if (target) {

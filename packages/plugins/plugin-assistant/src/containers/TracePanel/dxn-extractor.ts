@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { URI } from '@dxos/keys';
+
 /**
  * Patterns for extracting DXN references from tool call params/results.
  *
@@ -26,8 +28,8 @@ const AT_DXN_PATTERN = /@(dxn:[a-zA-Z0-9]+(?::[a-zA-Z0-9@_-]+)+)/g;
 /**
  * Extracts all DXN references from a string.
  */
-export const extractDxnFromString = (text: string): string[] => {
-  const dxns: string[] = [];
+export const extractDxnFromString = (text: string): URI.URI[] => {
+  const dxns: URI.URI[] = [];
   const seen = new Set<string>();
 
   // Match @dxn: prefixed references.
@@ -35,7 +37,7 @@ export const extractDxnFromString = (text: string): string[] => {
   while ((match = AT_DXN_PATTERN.exec(text)) !== null) {
     const dxnStr = match[1];
     if (!seen.has(dxnStr)) {
-      dxns.push(dxnStr);
+      dxns.push(URI.make(dxnStr));
       seen.add(dxnStr);
     }
   }
@@ -44,7 +46,7 @@ export const extractDxnFromString = (text: string): string[] => {
   while ((match = DXN_PATTERN.exec(text)) !== null) {
     const dxnStr = match[0];
     if (!seen.has(dxnStr)) {
-      dxns.push(dxnStr);
+      dxns.push(URI.make(dxnStr));
       seen.add(dxnStr);
     }
   }
@@ -56,13 +58,13 @@ export const extractDxnFromString = (text: string): string[] => {
  * Extracts DXN references from a JSON object.
  * Handles IPLD-style references `{ "/": "dxn:..." }` and `{ "@dxn": "dxn:..." }`.
  */
-export const extractDxnsFromObject = (obj: unknown): string[] => {
-  const dxns: string[] = [];
+export const extractDxnsFromObject = (obj: unknown): URI.URI[] => {
+  const dxns: URI.URI[] = [];
   const seen = new Set<string>();
 
   const addDxn = (dxnStr: string) => {
     if (!seen.has(dxnStr)) {
-      dxns.push(dxnStr);
+      dxns.push(URI.make(dxnStr));
       seen.add(dxnStr);
     }
   };
@@ -135,7 +137,7 @@ export const extractDxnsFromObject = (obj: unknown): string[] => {
 /**
  * Extracts the first DXN from a tool call input string (JSON).
  */
-export const extractFirstDxnFromToolInput = (input: string): string | undefined => {
+export const extractFirstDxnFromToolInput = (input: string): URI.URI | undefined => {
   try {
     const parsed = JSON.parse(input);
     const dxns = extractDxnsFromObject(parsed);
@@ -150,7 +152,7 @@ export const extractFirstDxnFromToolInput = (input: string): string | undefined 
 /**
  * Extracts the first DXN from a tool result string (JSON).
  */
-export const extractFirstDxnFromToolResult = (result: string | undefined): string | undefined => {
+export const extractFirstDxnFromToolResult = (result: string | undefined): URI.URI | undefined => {
   if (!result) {
     return undefined;
   }

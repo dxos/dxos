@@ -103,34 +103,40 @@ const QueryItem = Object.freeze({
     }
   },
 
-  getParent: (item: QueryItem): string | undefined => {
+  getParent: (item: QueryItem): EchoId.EchoId | undefined => {
+    let raw: string | undefined;
     if (item.doc) {
-      return ObjectStructure.getParent(item.doc)?.['/'] as string | undefined;
+      raw = ObjectStructure.getParent(item.doc)?.['/'];
     } else if (item.data) {
-      return item.data[ATTR_PARENT] as string;
+      raw = item.data[ATTR_PARENT] as string | undefined;
     } else {
       throw new Error('Invalid query item');
     }
+    return raw !== undefined ? EchoId.tryParse(raw) : undefined;
   },
 
-  getRelationSource: (item: QueryItem): string | undefined => {
+  getRelationSource: (item: QueryItem): EchoId.EchoId | undefined => {
+    let raw: string | undefined;
     if (item.doc) {
-      return ObjectStructure.getRelationSource(item.doc)?.['/'] as string | undefined;
+      raw = ObjectStructure.getRelationSource(item.doc)?.['/'];
     } else if (item.data) {
-      return item.data[ATTR_RELATION_SOURCE] as string;
+      raw = item.data[ATTR_RELATION_SOURCE] as string | undefined;
     } else {
       throw new Error('Invalid query item');
     }
+    return raw !== undefined ? EchoId.tryParse(raw) : undefined;
   },
 
-  getRelationTarget: (item: QueryItem): string | undefined => {
+  getRelationTarget: (item: QueryItem): EchoId.EchoId | undefined => {
+    let raw: string | undefined;
     if (item.doc) {
-      return ObjectStructure.getRelationTarget(item.doc)?.['/'] as string | undefined;
+      raw = ObjectStructure.getRelationTarget(item.doc)?.['/'];
     } else if (item.data) {
-      return item.data[ATTR_RELATION_TARGET] as string;
+      raw = item.data[ATTR_RELATION_TARGET] as string | undefined;
     } else {
       throw new Error('Invalid query item');
     }
+    return raw !== undefined ? EchoId.tryParse(raw) : undefined;
   },
 });
 
@@ -952,16 +958,13 @@ export class QueryExecutor extends Resource {
       return false;
     }
 
-    const parentRefs: { dxnStr: URI.URI; objectId: string }[] = [];
+    const parentRefs: { dxnStr: EchoId.EchoId; objectId: string }[] = [];
 
     const directParent = QueryItem.getParent(item);
     if (directParent) {
-      const echoId = EchoId.tryParse(directParent);
-      if (echoId) {
-        const objectId = EchoId.getObjectId(echoId);
-        if (objectId) {
-          parentRefs.push({ dxnStr: echoId, objectId });
-        }
+      const objectId = EchoId.getObjectId(directParent);
+      if (objectId) {
+        parentRefs.push({ dxnStr: directParent, objectId });
       }
     }
 
@@ -1070,7 +1073,7 @@ export class QueryExecutor extends Resource {
                   return null;
                 }
                 return {
-                  ref: dxn as URI.URI,
+                  ref: dxn,
                   spaceId: item.spaceId,
                 };
               })

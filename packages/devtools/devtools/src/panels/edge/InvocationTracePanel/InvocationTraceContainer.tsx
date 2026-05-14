@@ -12,7 +12,7 @@ import { type Database, Filter, type Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { type InvocationSpan } from '@dxos/functions-runtime';
 import { TraceEvent } from '@dxos/functions-runtime';
-import { EchoId } from '@dxos/keys';
+import { EchoId, URI } from '@dxos/keys';
 import { type SerializedError } from '@dxos/protocols';
 import { type Queue, useFeedQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
@@ -119,10 +119,10 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
       return invocationSpans.map((invocation) => {
         const status = invocation.outcome;
         // Handle both Ref objects and encoded references.
-        const targetDxn: string | undefined =
-          invocation.invocationTarget?.dxn.toString() ??
+        const targetDxn: URI.URI | undefined =
+          invocation.invocationTarget?.dxn ??
           (invocation.invocationTarget && '/' in invocation.invocationTarget
-            ? (invocation.invocationTarget as any)['/']
+            ? URI.make((invocation.invocationTarget as any)['/'])
             : undefined);
 
         // TODO(burdon): Use InvocationTraceStartEvent.

@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { raise } from '@dxos/debug';
 import { type EncodedReference, ObjectStructure, isEncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { ObjectId, type URI } from '@dxos/keys';
+import { ObjectId, URI } from '@dxos/keys';
 import { assumeType, deepMapValues, visitValues } from '@dxos/util';
 
 import type * as Database from '../../Database';
@@ -92,8 +92,8 @@ export const objectFromJSON = async (
   assertArgument(typeof jsonData[ATTR_TYPE] === 'string', 'jsonData[ATTR_TYPE]', 'expected object to have a type');
   assertArgument(typeof jsonData.id === 'string', 'jsonData.id', 'expected object to have an id');
 
-  const type = jsonData[ATTR_TYPE] as string;
-  const schema = await refResolver?.resolveSchema(type as URI.URI);
+  const type = URI.make(jsonData[ATTR_TYPE] as string);
+  const schema = await refResolver?.resolveSchema(type);
   invariant(schema === undefined || Schema.isSchema(schema));
   const decodedInput = stripInternalJsonKeys(jsonData);
 
@@ -108,7 +108,7 @@ export const objectFromJSON = async (
   }
 
   invariant(ObjectId.isValid(obj.id), 'Invalid object id');
-  setTypename(obj, type as URI.URI);
+  setTypename(obj, type);
   if (schema) {
     setSchema(obj, schema);
   }
@@ -116,11 +116,11 @@ export const objectFromJSON = async (
   const isRelation =
     typeof jsonData[ATTR_RELATION_SOURCE] === 'string' || typeof jsonData[ATTR_RELATION_TARGET] === 'string';
   if (isRelation) {
-    const sourceDxn = (jsonData[ATTR_RELATION_SOURCE] ?? raise(new TypeError('Missing relation source'))) as string;
-    const targetDxn = (jsonData[ATTR_RELATION_TARGET] ?? raise(new TypeError('Missing relation target'))) as string;
+    const sourceDxn = URI.make(jsonData[ATTR_RELATION_SOURCE] ?? raise(new TypeError('Missing relation source')));
+    const targetDxn = URI.make(jsonData[ATTR_RELATION_TARGET] ?? raise(new TypeError('Missing relation target')));
 
-    const source = (await refResolver?.resolve(sourceDxn as URI.URI)) as AnyEntity | undefined;
-    const target = (await refResolver?.resolve(targetDxn as URI.URI)) as AnyEntity | undefined;
+    const source = (await refResolver?.resolve(sourceDxn)) as AnyEntity | undefined;
+    const target = (await refResolver?.resolve(targetDxn)) as AnyEntity | undefined;
 
     defineHiddenProperty(obj, KindId, EntityKind.Relation);
     defineHiddenProperty(obj, RelationSourceDXNId, sourceDxn);
@@ -142,8 +142,8 @@ export const objectFromJSON = async (
   }
 
   if (jsonData[ATTR_PARENT]) {
-    const parentDxn = jsonData[ATTR_PARENT] as string;
-    const resolvedParent = (await refResolver?.resolve(parentDxn as URI.URI)) as Obj.Unknown | undefined;
+    const parentDxn = URI.make(jsonData[ATTR_PARENT] as string);
+    const resolvedParent = (await refResolver?.resolve(parentDxn)) as Obj.Unknown | undefined;
     defineHiddenProperty(obj, ParentId, resolvedParent);
   } else if (parent) {
     defineHiddenProperty(obj, ParentId, parent);

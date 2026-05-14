@@ -44,7 +44,7 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ db, span, onClose }) => {
     return () => clearInterval(interval);
   }, [span]);
 
-  const targetDxn = useMemo(() => span.invocationTarget?.dxn?.toString(), [span.invocationTarget]);
+  const targetDxn = useMemo(() => span.invocationTarget?.dxn, [span.invocationTarget]);
   const resolver = useFunctionNameResolver({ db });
   const targetName = useMemo(() => resolver(targetDxn), [targetDxn, resolver]);
 
