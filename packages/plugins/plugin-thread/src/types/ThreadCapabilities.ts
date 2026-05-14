@@ -22,8 +22,6 @@ export const CallManager = Capability.make<CallManagerImpl>(`${meta.id}.capabili
 export type CommentConfig = AppCapabilities.CommentConfig;
 export const CommentConfig: Capability.InterfaceDef<AppCapabilities.CommentConfig> = AppCapabilities.CommentConfig;
 
-// TODO(burdon): Better way to define specific extensions for meeting companions.
-// TODO(burdon): This brings in deps from ../calls; how should we manage/minimize explicit type exposure to other plugins?
 // TODO(wittjosiah): These callbacks could be intents once we support broadcast.
 export type CallProperties = {
   onJoin: (state: { channel?: Channel.Channel; roomId?: string }) => Promise<void>;
