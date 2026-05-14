@@ -196,7 +196,7 @@ const CarouselSlide = ({ children, index, classNames }: CarouselSlideProps) => {
     return null;
   }
 
-  return <div className={mx('absolute inset-0 w-full h-full', classNames)}>{children}</div>;
+  return <div className={mx('absolute inset-0 w-full h-full bg-baseSurface', classNames)}>{children}</div>;
 };
 
 CarouselSlide.displayName = 'Carousel.Slide';
@@ -223,7 +223,7 @@ const CarouselMedia = ({ src, alt, classNames }: CarouselMediaProps) => {
         src={src}
         title={alt}
         loading='lazy'
-        className={mx('absolute inset-0 w-full h-full border-none', classNames)}
+        className={mx('absolute inset-0 w-full h-full border-none bg-baseSurface', classNames)}
         allow='accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;'
         allowFullScreen
       />
@@ -235,7 +235,7 @@ const CarouselMedia = ({ src, alt, classNames }: CarouselMediaProps) => {
       src={src}
       alt={alt ?? ''}
       loading='lazy'
-      className={mx('absolute inset-0 w-full h-full object-cover', classNames)}
+      className={mx('absolute inset-0 w-full h-full object-cover bg-baseSurface', classNames)}
     />
   );
 };
