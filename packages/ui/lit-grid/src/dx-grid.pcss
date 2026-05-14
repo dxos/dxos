@@ -176,10 +176,15 @@
         &:focus,
         &:focus-within {
           & > .dx-grid__cell__content {
-            min-block-size: 100%;
-            block-size: min-content;
-            max-block-size: min(12em, 50vh);
-
+            /*
+             * Inline (horizontal) unfurl: cell-content can grow horizontally
+             * to show wider content. Block-size stays clamped to the cell
+             * height so the focus ring aligns with the bottom grid line —
+             * `block-size: min-content` would let cell-content overshoot the
+             * cell when the content's natural height (line-height + padding +
+             * border) exceeds the cell track size by even a fraction of a
+             * pixel, pushing the focus ring's bottom edge below the grid line.
+             */
             min-inline-size: 100%;
             inline-size: min-content;
             max-inline-size: min(60ch, 90vw);
@@ -187,10 +192,6 @@
             overflow: auto;
             scrollbar-width: thin;
             overscroll-behavior: contain;
-
-            white-space: normal;
-            hyphens: auto;
-            overflow-wrap: break-word;
 
             z-index: 1;
 
