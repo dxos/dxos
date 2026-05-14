@@ -111,7 +111,7 @@ class FilterClass implements Filter$.Any {
     }
     return new FilterClass({
       type: 'object',
-      typename: makeTypeDxn(schema),
+      typename: makeTypeDXN(schema),
       ...propsFilterToAst(props ?? {}),
     });
   }
@@ -119,7 +119,7 @@ class FilterClass implements Filter$.Any {
   static typename(typename: string): Filter$.Any {
     return new FilterClass({
       type: 'object',
-      typename: makeTypeDxn(typename),
+      typename: makeTypeDXN(typename),
       props: {},
     });
   }
@@ -451,7 +451,7 @@ class QueryClass implements Query$.Any {
         from: {
           _tag: 'scope',
           scope: {
-            ...(options?.includeFeeds ? { allQueuesFromSpaces: true } : {}),
+            ...(options?.includeFeeds ? { allFeedsFromSpaces: true } : {}),
           },
         },
       });
@@ -598,7 +598,7 @@ const isRef = (obj: any): obj is Ref.Ref<any> => {
   return obj && typeof obj === 'object' && RefTypeId in obj;
 };
 
-const makeTypeDxn = (typename: string) => {
+const makeTypeDXN = (typename: string) => {
   assertArgument(typeof typename === 'string', 'typename');
   assertArgument(!typename.startsWith('dxn:'), 'typename');
   return `dxn:type:${typename}`;
@@ -614,7 +614,7 @@ const isDxnLike = (value: unknown): value is DXN => {
   );
 };
 
-const SCOPE_KEYS = new Set(['spaceIds', 'queues', 'allQueuesFromSpaces']);
+const SCOPE_KEYS = new Set(['spaceIds', 'feeds', 'allFeedsFromSpaces']);
 
 const _isScopeLike = (value: unknown): value is QueryAST.Scope => {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
@@ -728,11 +728,11 @@ const prettyQuery = (query: QueryAST.Query): string => {
         if (scope.spaceIds !== undefined) {
           parts.push(`spaceIds: [${scope.spaceIds.join(', ')}]`);
         }
-        if (scope.queues !== undefined) {
-          parts.push(`queues: [${scope.queues.join(', ')}]`);
+        if (scope.feeds !== undefined) {
+          parts.push(`feeds: [${scope.feeds.join(', ')}]`);
         }
-        if (scope.allQueuesFromSpaces !== undefined) {
-          parts.push(`allQueuesFromSpaces: ${scope.allQueuesFromSpaces}`);
+        if (scope.allFeedsFromSpaces !== undefined) {
+          parts.push(`allFeedsFromSpaces: ${scope.allFeedsFromSpaces}`);
         }
         return `${prettyQuery(query.query)}.from({ ${parts.join(', ')} })`;
       }

@@ -11,11 +11,9 @@ import * as Schema from 'effect/Schema';
 import { AiContext } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/compute';
 import { Annotation, Database, Feed, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
-import { Queue } from '@dxos/echo-db';
 import { type ObjectNotFoundError } from '@dxos/echo/Err';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { acquireReleaseResource } from '@dxos/effect';
-import { QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 
@@ -97,7 +95,7 @@ export const Agent = Schema.Struct({
    * Input feed for subscriptions.
    * @deprecated Subscriptions will write directly to the agent.
    */
-  queue: Schema.optional(Ref.Ref(Queue).pipe(FormInputAnnotation.set(false))),
+  feed: Schema.optional(Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false))),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.agent',
@@ -127,7 +125,7 @@ export const makeInitialized = (
       contextObjects?: Ref.Ref<Obj.Any>[];
     },
   blueprint: Blueprint.Blueprint,
-): Effect.Effect<Agent, never, QueueService | Feed.FeedService | Database.Service> =>
+): Effect.Effect<Agent, never, Feed.FeedService | Database.Service> =>
   Effect.gen(function* () {
     const agent = Obj.make(Agent, {
       ...props,
@@ -164,11 +162,11 @@ export const makeInitialized = (
       }),
     );
 
-    const inputQueue = yield* QueueService.createQueue();
+    const inputFeed = yield* Database.add(Feed.make());
 
     Obj.update(agent, (agent) => {
       agent.chat = Ref.make(chat);
-      agent.queue = Ref.fromDXN(inputQueue.dxn);
+      agent.feed = Ref.make(inputFeed);
     });
 
     return agent;

@@ -48,12 +48,12 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
 
     const runtime = computeRuntime.getRuntime(space.spaceId);
     await runtime.runPromise(Agent.resetChatHistory(agent));
-    if (!agent.queue) {
+    if (!agent.feed) {
       await runtime.runPromise(
         Effect.gen(function* () {
           const queue = yield* QueueService.createQueue();
           Obj.update(agent, (agent) => {
-            agent.queue = Ref.fromDXN(queue.dxn);
+            agent.feed = Ref.fromDXN(queue.dxn);
           });
         }),
       );
@@ -74,15 +74,19 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
     ),
   );
 
-  const inputQueue = useAtomValue(
+  const inputFeed = useAtomValue(
     AtomObj.make(agent).pipe((_) =>
       Atom.make((get) =>
-        Option.fromNullable(get(_).queue).pipe(Option.map(AtomRef.make), Option.map(get), Option.getOrUndefined),
+        Option.fromNullable(get(_).feed).pipe(Option.map(AtomRef.make), Option.map(get), Option.getOrUndefined),
       ),
     ),
   );
 
-  const inputObjects = useQuery(inputQueue, Query.select(Filter.everything()));
+  const db = Obj.getDatabase(agent);
+  const inputObjects = useQuery(
+    db,
+    inputFeed ? Query.select(Filter.everything()).from(inputFeed) : Query.select(Filter.nothing()),
+  );
 
   return (
     <Panel.Root role={role}>
@@ -90,7 +94,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
         <Toolbar.Root>
           <Toolbar.ToggleGroup type='single' value={tab} onValueChange={(value) => value && setTab(value as Tab)}>
             <Toolbar.ToggleGroupIconItem value='artifacts' label={t('artifacts.label')} icon='ph--cube--regular' />
-            <Toolbar.ToggleGroupIconItem value='inputs' label={t('input-queue.label')} icon='ph--queue--regular' />
+            <Toolbar.ToggleGroupIconItem value='inputs' label={t('inputs.label')} icon='ph--queue--regular' />
           </Toolbar.ToggleGroup>
           <Toolbar.Separator />
           <Toolbar.IconButton

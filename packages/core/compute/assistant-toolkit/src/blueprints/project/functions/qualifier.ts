@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { Operation } from '@dxos/compute';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { trim } from '@dxos/util';
 
@@ -24,7 +24,7 @@ export default Qualifier.pipe(
         invariant(Obj.instanceOf(Agent.Agent, agent));
         invariant(agent.chat, 'Agent has no chat.');
 
-        const { id, name, queue } = agent;
+        const { id, name, feed: queue } = agent;
         if (!queue) {
           throw new Error('Agent has no queue.');
         }
@@ -72,13 +72,13 @@ export default Qualifier.pipe(
         const { isRelevant } = value as { isRelevant: boolean };
 
         if (isRelevant) {
-          const queueTarget = yield* Database.load(queue);
+          const feedTarget = yield* Database.load(queue);
           if ('queue' in event && event.item) {
             const obj = event.item;
-            yield* Effect.promise(() => queueTarget.append([obj]));
+            yield* Feed.append(feedTarget, [obj]);
           } else if ('subject' in event && Ref.isRef(event.subject)) {
             const obj = yield* Database.load(event.subject);
-            yield* Effect.promise(() => queueTarget.append([obj]));
+            yield* Feed.append(feedTarget, [obj]);
           } else {
             throw new Error('Invalid event.');
           }

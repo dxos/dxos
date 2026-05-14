@@ -12,7 +12,7 @@ import { composable, composableProps } from '@dxos/ui-theme';
 import { ActorList } from '../Actor';
 import { DateComponent } from '../DateComponent';
 
-export type EventStackAction = { type: 'current'; eventId: string };
+export type EventStackAction = { type: 'current'; eventId: string } | { type: 'select'; eventId: string };
 
 export type EventStackActionHandler = (action: EventStackAction) => void;
 
@@ -24,11 +24,13 @@ export type EventStackProps = {
   id: string;
   events?: Event.Event[];
   currentId?: string;
+  /** IDs of selected events (forwarded to Mosaic so `aria-selected` fires `dx-selected`). */
+  selectedIds?: ReadonlySet<string>;
   onAction?: EventStackActionHandler;
 };
 
 export const EventStack = composable<HTMLDivElement, EventStackProps>(
-  ({ events = [], currentId, onAction, ...props }, forwardedRef) => {
+  ({ events = [], currentId, selectedIds, onAction, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
     const items = useMemo(() => events.map((event) => ({ event, onAction })), [events, onAction]);
 
@@ -37,6 +39,13 @@ export const EventStack = composable<HTMLDivElement, EventStackProps>(
         if (id) {
           onAction?.({ type: 'current', eventId: id });
         }
+      },
+      [onAction],
+    );
+
+    const handleSelectionChange = useCallback(
+      (id: string, _selected: boolean) => {
+        onAction?.({ type: 'select', eventId: id });
       },
       [onAction],
     );
@@ -50,7 +59,14 @@ export const EventStack = composable<HTMLDivElement, EventStackProps>(
 
     return (
       <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
-        <Mosaic.Container asChild withFocus currentId={currentId} onCurrentChange={handleCurrentChange}>
+        <Mosaic.Container
+          asChild
+          withFocus
+          currentId={currentId}
+          onCurrentChange={handleCurrentChange}
+          selectedIds={selectedIds}
+          onSelectionChange={handleSelectionChange}
+        >
           <ScrollArea.Root orientation='vertical' padding centered>
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
@@ -84,16 +100,24 @@ type EventTileProps = Pick<MosaicTileProps<EventTileData>, 'data' | 'location' |
 
 const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, current }, forwardedRef) => {
   const { event } = data;
-  const { setCurrentId } = useMosaicContainer('EventTile');
+  const { setCurrentId, setSelected } = useMosaicContainer('EventTile');
 
+  // Click / Enter commit both current and selection. Arrow keys only move focus.
   const handleCurrentChange = useCallback(() => {
     setCurrentId(event.id);
-  }, [event.id, setCurrentId]);
+    setSelected(event.id, true);
+  }, [event.id, setCurrentId, setSelected]);
 
   return (
-    <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={event.id} data={data} location={location}>
+    <Mosaic.Tile
+      asChild
+      classNames='dx-hover dx-current dx-selected border-b border-subdued-separator'
+      id={event.id}
+      data={data}
+      location={location}
+    >
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Card.Root ref={forwardedRef} fullWidth>
+        <Card.Root fullWidth border={false} ref={forwardedRef}>
           <Card.Content>
             <Card.Row>
               <Card.Text>{event.title}</Card.Text>

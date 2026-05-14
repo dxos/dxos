@@ -222,8 +222,8 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
         className={mx(
           'flex justify-center items-center dx-focus-ring-group-indicator transition-colors rounded-sm',
           pinned
-            ? 'p-2 group-hover/l0item:bg-active-surface'
-            : 'w-(--dx-l0-avatar-size) h-(--dx-l0-avatar-size) bg-active-surface',
+            ? 'p-2 group-hover/l0item:bg-current-surface'
+            : 'w-(--dx-l0-avatar-size) h-(--dx-l0-avatar-size) bg-current-surface',
         )}
       >
         <ItemAvatar item={item} />
@@ -243,7 +243,7 @@ const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
   // Actions.
   if (item.properties.icon) {
     const hue = item.properties.hue ?? null;
-    const hueFgStyle = hue && { style: { color: `var(--color-${hue}-surface-text)` } };
+    const hueFgStyle = hue && { style: { color: `var(--color-${hue}-foreground)` } };
     return <Icon icon={item.properties.icon} size={6} {...hueFgStyle} />;
   }
 

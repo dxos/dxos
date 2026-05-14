@@ -71,9 +71,9 @@ export const generator = () => ({
           );
 
           const tag = space.db.add(Tag.make({ label: 'Investor' }));
-          const tagDxn = Obj.getDXN(tag).toString();
+          const tagDXN = Obj.getDXN(tag).toString();
           Obj.update(doc, (doc) => {
-            Obj.getMeta(doc).tags = [tagDxn];
+            Obj.getMeta(doc).tags = [tagDXN];
           });
 
           // space.db.add(
@@ -85,7 +85,7 @@ export const generator = () => ({
           // );
 
           space.db.add(
-            Obj.make(Person.Person, { [Obj.Meta]: { tags: [tagDxn] }, fullName: 'Rich', organization: Ref.make(org) }),
+            Obj.make(Person.Person, { [Obj.Meta]: { tags: [tagDXN] }, fullName: 'Rich', organization: Ref.make(org) }),
           );
           space.db.add(
             Obj.make(Person.Person, {
@@ -120,15 +120,15 @@ export const generator = () => ({
         invariant(mailbox, 'Mailbox not found');
         const mailboxFeed = await mailbox.feed?.tryLoad();
         invariant(mailboxFeed, 'Mailbox missing feed reference');
-        const queueDxn = Feed.getQueueDxn(mailboxFeed)?.toString();
-        invariant(queueDxn, 'Mailbox feed missing queue DXN key');
+        const feedDXN = Feed.getQueueDxn(mailboxFeed)?.toString();
+        invariant(feedDXN, 'Mailbox feed missing DXN');
         const tag = await space.db.query(Filter.type(Tag.Tag, { label: 'Investor' })).first();
-        const tagDxn = Obj.getDXN(tag).toString();
+        const tagDXN = Obj.getDXN(tag).toString();
 
         const objects = range(n, () => {
-          const contactsQuery = Query.select(Filter.type(Person.Person)).select(Filter.tag(tagDxn));
-          const organizationsQuery = Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagDxn));
-          const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagDxn));
+          const contactsQuery = Query.select(Filter.type(Person.Person)).select(Filter.tag(tagDXN));
+          const organizationsQuery = Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagDXN));
+          const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagDXN));
 
           space.db.add(
             Trigger.make({
@@ -179,7 +179,7 @@ export const generator = () => ({
                 properties: { labels: Filter.contains('investor') },
               }),
             ).from({
-              queues: [queueDxn],
+              feeds: [feedDXN],
             }),
             jsonSchema: JsonSchema.toJsonSchema(Message.Message),
           });

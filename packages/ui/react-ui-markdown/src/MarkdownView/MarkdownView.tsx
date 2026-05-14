@@ -10,7 +10,7 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
-export type MarkdownBlockProps = ThemedClassName<
+export type MarkdownViewProps = ThemedClassName<
   PropsWithChildren<{
     content?: string;
     components?: ReactMarkdownOptions['components'];
@@ -23,7 +23,7 @@ export type MarkdownBlockProps = ThemedClassName<
  * markdown -> remark -> [mdast -> remark plugins] -> [hast -> rehype plugins] -> components -> react elements.
  * Consider using @dxos/react-ui-editor.
  */
-export const MarkdownBlock = ({ classNames, children, components, content = '' }: MarkdownBlockProps) => {
+export const MarkdownView = ({ classNames, children, components, content = '' }: MarkdownViewProps) => {
   return (
     <div className={mx(classNames)}>
       <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml components={{ ...defaultComponents, ...components }}>
@@ -44,6 +44,9 @@ const defaultComponents: ReactMarkdownOptions['components'] = {
   h3: ({ children }) => {
     return <h3 className='pt-1 pb-1 text-accent-text text-base'>{children}</h3>;
   },
+  h4: ({ children }) => {
+    return <h4 className='pt-1 pb-1 uppercase text-base'>{children}</h4>;
+  },
   blockquote: ({ children, ...props }) => (
     <blockquote className='my-2 py-2 ps-4 border-l-4 border-accent-text text-accent-text' {...props}>
       {children}
@@ -63,6 +66,24 @@ const defaultComponents: ReactMarkdownOptions['components'] = {
       {children}
     </a>
   ),
+  // Hide broken images: many markdown sources reference remote URLs that
+  // 404 or are blocked. Drop the element on load failure rather than
+  // leaving the browser's broken-image placeholder.
+  img: ({ src, alt, ...props }) => {
+    if (!src) {
+      return null;
+    }
+    return (
+      <img
+        src={src}
+        alt={alt}
+        onError={(event) => {
+          event.currentTarget.style.display = 'none';
+        }}
+        {...props}
+      />
+    );
+  },
   ol: ({ children, ...props }) => (
     <ol className='pt-1 pb-1 ps-6 leading-tight list-decimal' {...props}>
       {children}
