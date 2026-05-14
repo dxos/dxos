@@ -53,7 +53,7 @@ describe('jsonata', () => {
 
   describe('evaluates expression with trigger event', () => {
     const queueEchoId = EchoId.parse('dxn:queue:data:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6');
-    const event: TriggerEvent.QueueEvent = {
+    const event: TriggerEvent.TriggerEvent = {
       queue: queueEchoId,
       item: {
         name: 'John',
