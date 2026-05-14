@@ -6,6 +6,18 @@ import { type Database, type Entity } from '@dxos/echo';
 import { type EchoId, type ObjectId } from '@dxos/keys';
 
 /**
+ * @deprecated Queues are migrating to feeds (regular ECHO objects).
+ *   Pass a literal `'data'` / `'trace'` to APIs that still accept a subspaceTag.
+ */
+export const QueueSubspaceTags = Object.freeze({
+  DATA: 'data',
+  TRACE: 'trace',
+});
+
+/** @deprecated */
+export type QueueSubspaceTag = (typeof QueueSubspaceTags)[keyof typeof QueueSubspaceTags];
+
+/**
  * @deprecated Migrate to Feed
  * Client-side view onto an EDGE queue.
  */

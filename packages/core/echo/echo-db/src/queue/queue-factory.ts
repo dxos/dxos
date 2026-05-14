@@ -9,7 +9,7 @@ import { EchoId, ObjectId, type SpaceId } from '@dxos/keys';
 import { type FeedProtocol } from '@dxos/protocols';
 
 import { QueueImpl } from './queue';
-import { type Queue } from './types';
+import { type Queue, QueueSubspaceTags } from './types';
 
 export interface QueueAPI {
   get<T extends Entity.Unknown = Entity.Unknown>(echoId: EchoId.EchoId): Queue<T>;
@@ -17,7 +17,7 @@ export interface QueueAPI {
 }
 
 export class QueueFactory extends Resource implements QueueAPI {
-  private readonly _queues = new Map<string, QueueImpl>();
+  private readonly _queues = new Map<EchoId.EchoId, QueueImpl<any>>();
 
   private _service?: FeedProtocol.QueueService = undefined;
 
@@ -37,38 +37,29 @@ export class QueueFactory extends Resource implements QueueAPI {
   }
 
   get<T extends Entity.Unknown>(echoId: EchoId.EchoId): Queue<T> {
-    assertState(this._service, 'Service not set');
     assertArgument(EchoId.isEchoId(echoId), 'echoId', 'must be an EchoId');
-
-    const queue = this._queues.get(echoId);
-    if (queue) {
-      return queue as any as Queue<T>;
-    }
-
-    const database = this._graph.getDatabase(this._spaceId);
-    const newQueue = new QueueImpl<T>(
-      this._service,
-      this._graph.createRefResolver({ context: { space: this._spaceId, feed: echoId } }),
-      echoId,
-      database,
-    );
-    this._queues.set(echoId, newQueue);
-    return newQueue as any as Queue<T>;
+    return this._getOrCreate<T>(echoId);
   }
 
-  create<T extends Entity.Unknown>({ subspaceTag = 'data' }: { subspaceTag?: string } = {}): Queue<T> {
-    const queueId = ObjectId.random();
-    const echoId = EchoId.fromSpaceAndObjectId(this._spaceId, queueId);
-    const database = this._graph.getDatabase(this._spaceId);
+  create<T extends Entity.Unknown>({ subspaceTag = QueueSubspaceTags.DATA }: { subspaceTag?: string } = {}): Queue<T> {
+    const echoId = EchoId.fromSpaceAndObjectId(this._spaceId, ObjectId.random());
+    return this._getOrCreate<T>(echoId, subspaceTag);
+  }
+
+  private _getOrCreate<T extends Entity.Unknown>(echoId: EchoId.EchoId, subspaceTag?: string): Queue<T> {
     assertState(this._service, 'Service not set');
+    const existing = this._queues.get(echoId);
+    if (existing) {
+      return existing as Queue<T>;
+    }
     const newQueue = new QueueImpl<T>(
       this._service,
       this._graph.createRefResolver({ context: { space: this._spaceId, feed: echoId } }),
       echoId,
-      database,
+      this._graph.getDatabase(this._spaceId),
       subspaceTag,
     );
     this._queues.set(echoId, newQueue);
-    return newQueue as any as Queue<T>;
+    return newQueue;
   }
 }
