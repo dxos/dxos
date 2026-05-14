@@ -8,6 +8,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import type { LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -44,6 +45,7 @@ describe('AutomergeHost', () => {
 
     const host2 = await setupAutomergeHost({ level });
     const handle2 = await host2.loadDoc<any>(Context.default(), url);
+    invariant(handle2);
     await handle2.whenReady();
     expect(handle2.doc()!.text).toEqual('Hello world');
     await host2.flush(Context.default());
@@ -66,6 +68,7 @@ describe('AutomergeHost', () => {
 
     // The load should now resolve
     const loadedHandle = await loadPromise;
+    invariant(loadedHandle);
     expect(loadedHandle.doc()).toEqual(createdHandle.doc());
   });
 
@@ -129,17 +132,18 @@ describe('AutomergeHost', () => {
     await host1.addReplicator(Context.default(), await network.createReplicator());
     await host2.addReplicator(Context.default(), await network.createReplicator());
 
-    // (1) fetchFromNetwork=false on a doc not yet on disk: throws unavailable
+    // (1) fetchFromNetwork=false on a doc not yet on disk: returns null immediately
     // without waiting on the network, even though host2 has it.
-    await expect(
-      host1.loadDoc(Context.default(), handle.documentId, { fetchFromNetwork: false, timeout: 1_000 }),
-    ).rejects.toThrow(/unavailable/i);
+    expect(
+      await host1.loadDoc(Context.default(), handle.documentId, { fetchFromNetwork: false, timeout: 1_000 }),
+    ).toBeNull();
 
     // (2) fetchFromNetwork=true: host1 announces, host2 sends bytes, doc syncs.
     const loaded = await host1.loadDoc<{ text: string }>(Context.default(), handle.documentId, {
       fetchFromNetwork: true,
       timeout: 5_000,
     });
+    invariant(loaded);
     expect(loaded.doc()!.text).toEqual('Hello world');
 
     // (3) Now that host1 has the doc on disk, fetchFromNetwork=false succeeds.
@@ -147,6 +151,7 @@ describe('AutomergeHost', () => {
     const localOnly = await host1.loadDoc<{ text: string }>(Context.default(), handle.documentId, {
       fetchFromNetwork: false,
     });
+    invariant(localOnly);
     expect(localOnly.doc()!.text).toEqual('Hello world');
 
     await host1.close();
@@ -193,6 +198,7 @@ describe('AutomergeHost', () => {
     const loaded = await host1.loadDoc<{ text: string }>(Context.default(), documentId, {
       fetchFromNetwork: false,
     });
+    invariant(loaded);
     expect(loaded.doc()!.text).toEqual('Hello world');
 
     // Give any in-flight share-policy debounce a chance to fire.

@@ -320,6 +320,7 @@ export class DataSpaceManager extends Resource {
     if (options.rootUrl) {
       const newRootDocId = documentIdMapping[interpretAsDocumentId(options.rootUrl)] ?? failedInvariant();
       const rootDocHandle = await this._echoHost.loadDoc<DatabaseDirectory>(ctx, newRootDocId);
+      invariant(rootDocHandle, 'Root document must be available after import.');
       DatabaseRoot.mapLinks(rootDocHandle, documentIdMapping);
 
       root = await this._echoHost.openSpaceRoot(ctx, spaceId, `automerge:${newRootDocId}` as AutomergeUrl);

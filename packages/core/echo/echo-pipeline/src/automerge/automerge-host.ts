@@ -370,7 +370,7 @@ export class AutomergeHost extends Resource {
     await this._echoNetworkAdapter.removeReplicator(replicator);
   }
 
-  async loadDoc<T>(ctx: Context, documentId: AnyDocumentId, opts?: LoadDocOptions): Promise<DocHandle<T>> {
+  async loadDoc<T>(ctx: Context, documentId: AnyDocumentId, opts?: LoadDocOptions): Promise<DocHandle<T> | null> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     // Readiness lives on the `DocumentQuery`, not the `DocHandle` — see
     // {@link getHandleState}.
@@ -404,14 +404,21 @@ export class AutomergeHost extends Resource {
       const chunks = await this._storage.loadRange([progress.documentId]);
       const onDisk = chunks.some((chunk) => chunk.data && chunk.data.length > 0);
       if (!onDisk) {
-        throw new Error(`Document ${progress.documentId} is unavailable`);
+        return null;
       }
     }
 
     const readyPromise = progress.whenReady();
-    return opts?.timeout
-      ? await cancelWithContext(ctx, asyncTimeout(readyPromise, opts.timeout))
-      : await cancelWithContext(ctx, readyPromise);
+    try {
+      return opts?.timeout
+        ? await cancelWithContext(ctx, asyncTimeout(readyPromise, opts.timeout))
+        : await cancelWithContext(ctx, readyPromise);
+    } catch (error: any) {
+      if (isDocumentUnavailableError(error) && opts?.fetchFromNetwork === false) {
+        return null;
+      }
+      throw error;
+    }
   }
 
   /**
@@ -498,6 +505,7 @@ export class AutomergeHost extends Resource {
       await Promise.all(
         headsToWait.map(async (entry) => {
           const handle = await this.loadDoc<DatabaseDirectory>(ctx, entry.documentId as DocumentId);
+          invariant(handle, 'Document handle must be available when waiting for heads replication.');
           await waitForHeads(handle, entry.heads!);
         }),
       );
@@ -579,9 +587,9 @@ export class AutomergeHost extends Resource {
    * Authorization policy consulted by the Subduction sedimentree protocol.
    */
   private readonly _subductionPolicy: SubductionPolicy = {
-    authorizeConnect: async (_peerId) => {},
-    authorizeFetch: async (_peerId, _sedimentreeId) => {},
-    authorizePut: async (_requestor, _author, _sedimentreeId) => {},
+    authorizeConnect: async (_peerId) => { },
+    authorizeFetch: async (_peerId, _sedimentreeId) => { },
+    authorizePut: async (_requestor, _author, _sedimentreeId) => { },
     filterAuthorizedFetch: async (_peerId, sedimentreeIds) => sedimentreeIds,
   };
 
@@ -1066,4 +1074,8 @@ const decodeCollectionState = (state: unknown): CollectionState => {
 
 const encodeCollectionState = (state: CollectionState): unknown => {
   return state;
+};
+
+const isDocumentUnavailableError = (error: Error): boolean => {
+  return error.message.includes('unavailable');
 };
