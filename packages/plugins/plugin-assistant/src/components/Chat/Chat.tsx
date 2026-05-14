@@ -12,11 +12,10 @@ import { Event } from '@dxos/async';
 import { type Feed, Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Button } from '@dxos/react-ui';
 import { type MarkdownStreamController } from '@dxos/react-ui-markdown';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/ui-theme';
 
 import { useChatKeymapExtensions, useChatToolbarActions, useDebug } from '#hooks';
 
@@ -285,46 +284,6 @@ const ChatTaskList = composable<HTMLDivElement, ChatTaskListProps>(({ plan: plan
 ChatTaskList.displayName = CHAT_TASK_LIST_NAME;
 
 //
-// Suggestions
-//
-
-const CHAT_SUGGESTIONS_NAME = 'Chat.Suggestions';
-
-type ChatSuggestionsProps = {
-  suggestions: ReadonlyArray<string>;
-  classNames?: string;
-};
-
-/**
- * Renders clickable starter prompts when the thread is empty. Clicking a suggestion submits it as
- * the first user message via the shared `submit` event so it flows through the same path as the
- * prompt input. Returns null once any messages exist or when no suggestions are provided.
- */
-const ChatSuggestions = ({ suggestions, classNames }: ChatSuggestionsProps) => {
-  const { messages, event } = useChatContext(CHAT_SUGGESTIONS_NAME);
-  const handleClick = useCallback(
-    (text: string) => () => {
-      event.emit({ type: 'submit', text });
-    },
-    [event],
-  );
-  if (suggestions.length === 0 || messages.length > 0) {
-    return null;
-  }
-  return (
-    <div className={mx('flex flex-wrap gap-2', classNames)} role='group' aria-label='Suggested prompts'>
-      {suggestions.map((text, i) => (
-        <Button key={i} variant='outline' onClick={handleClick(text)}>
-          {text}
-        </Button>
-      ))}
-    </div>
-  );
-};
-
-ChatSuggestions.displayName = CHAT_SUGGESTIONS_NAME;
-
-//
 // Chat
 //
 
@@ -334,7 +293,6 @@ export const Chat = {
   Content: ChatContent,
   Prompt: ChatPrompt,
   Status: ChatStatus,
-  Suggestions: ChatSuggestions,
   Thread: ChatThread,
   TaskList: ChatTaskList,
 };
