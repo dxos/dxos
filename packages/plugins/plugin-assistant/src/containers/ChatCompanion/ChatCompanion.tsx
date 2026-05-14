@@ -3,7 +3,7 @@
 //
 
 import * as Option from 'effect/Option';
-import React, { forwardRef, useCallback, useMemo } from 'react';
+import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { BlueprintsAnnotation } from '@dxos/app-toolkit';
@@ -19,6 +19,7 @@ import { useAsyncEffect } from '@dxos/react-ui';
 import { type ChatEvent } from '#components';
 import { useBlueprintRegistry, useContextBinder } from '#hooks';
 import { AssistantOperation } from '#types';
+import { parseSuggestions } from '../../util/suggestions';
 
 import ChatContainer from '../ChatContainer';
 
@@ -114,6 +115,25 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
       }
     }, [binder, companionTo, blueprintKeys]);
 
+    // Suggestions come from a `## Suggested starting prompts` section in each blueprint's
+    // instructions markdown. Instructions are stored as Refs in ECHO, so resolve them async and
+    // cache the parsed result. Empty until at least one blueprint resolves; chat falls back to a
+    // plain empty thread, which is fine.
+    const [suggestions, setSuggestions] = useState<ReadonlyArray<string>>([]);
+    useAsyncEffect(async () => {
+      if (pluginBlueprints.length === 0) {
+        setSuggestions([]);
+        return;
+      }
+      const collected = await Promise.all(
+        pluginBlueprints.map(async (blueprint) => {
+          const text = await blueprint.instructions.source.load();
+          return parseSuggestions(text.content);
+        }),
+      );
+      setSuggestions(collected.flat());
+    }, [pluginBlueprints]);
+
     return (
       <ChatContainer
         role={role ?? 'article'}
@@ -121,6 +141,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
         subject={chat}
         attendableId={attendableId}
         companionTo={companionTo}
+        suggestions={suggestions}
         onEvent={handleEvent}
         ref={forwardedRef}
       />

@@ -22,10 +22,12 @@ export type ChatContainerProps = (
 ) & {
   space?: Space;
   companionTo?: Obj.Unknown;
+  /** Starter prompts shown as chips while the thread is empty. */
+  suggestions?: ReadonlyArray<string>;
 } & Pick<ChatRootProps, 'onEvent'>;
 
 export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((props, forwardedRef) => {
-  const { role, attendableId, subject: chat, space: spaceProp, companionTo, onEvent } = props;
+  const { role, attendableId, subject: chat, space: spaceProp, companionTo, suggestions = [], onEvent } = props;
   const parentId = attendableId ? getParentId(attendableId) : undefined;
   const space = spaceProp ?? getSpace(chat);
   const settings = useAtomCapability(AssistantCapabilities.Settings);
@@ -91,6 +93,7 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
               <div className='flex flex-col items-center py-2 overflow-hidden'>
                 <ChatComponent.TaskList classNames='max-h-[120px] border border-separator rounded-sm text-description' />
               </div>
+              <ChatComponent.Suggestions classNames='pb-2' suggestions={suggestions} />
               <ChatComponent.Prompt
                 {...chatProps}
                 outline
