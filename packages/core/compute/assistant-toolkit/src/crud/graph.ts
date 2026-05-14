@@ -174,7 +174,7 @@ export const makeGraphWriterHandler = (
       const data = yield* Effect.promise(() => sanitizeObjects(schema, input as any, db, queue));
       yield* Effect.promise(() => queue.append(data as Obj.Unknown[]));
 
-      const dxns = data.map((obj) => EchoId.parse(Obj.getEchoId(obj)));
+      const dxns = data.map((obj) => EchoId.parse(Obj.getId(obj)));
       onAppend?.(dxns);
       return dxns;
     }),

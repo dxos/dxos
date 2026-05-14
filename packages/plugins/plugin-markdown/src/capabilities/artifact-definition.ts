@@ -72,7 +72,7 @@ export default Capability.makeModule(() =>
             const documentInfo = documents.map((doc) => {
               invariant(Obj.instanceOf(Markdown.Document, doc));
               return {
-                id: Obj.getEchoId(doc),
+                id: Obj.getId(doc),
                 name: doc.name || doc.fallbackName || 'Unnamed Document',
                 // TODO(ZaymonFC): Include updatedAt?
               };
@@ -95,7 +95,7 @@ export default Capability.makeModule(() =>
 
             const { content } = await document.content?.load();
             return ToolResult.Success({
-              id: Obj.getEchoId(document),
+              id: Obj.getId(document),
               name: document.name || document.fallbackName || 'Unnamed Document',
               content,
             });

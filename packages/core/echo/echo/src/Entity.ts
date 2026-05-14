@@ -123,9 +123,9 @@ export type Meta = typeof Meta;
 export type JSON = internal.ObjectJSON;
 
 /**
- * Get the EchoId of an entity (object or relation).
+ * Get the canonical EchoId of an entity (object or relation).
  */
-export const getEchoId = (entity: Unknown | Snapshot): EchoId.EchoId => internal.getEchoId(entity);
+export const getId = (entity: Unknown | Snapshot): EchoId.EchoId => internal.getId(entity);
 
 /**
  * Get the DXN of an entity's type.

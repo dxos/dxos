@@ -459,12 +459,12 @@ export const snapshotOf: {
 
 // TODO(dmaretskyi): Allow returning undefined.
 /**
- * Get the EchoId of the object.
+ * Get the canonical EchoId of the object.
  * Accepts both reactive objects and snapshots.
  */
-export const getEchoId = (entity: Unknown | Snapshot): EchoId.EchoId => {
+export const getId = (entity: Unknown | Snapshot): EchoId.EchoId => {
   assertArgument(!Schema.isSchema(entity), 'obj', 'Object should not be a schema.');
-  return internal.getEchoId(entity);
+  return internal.getId(entity);
 };
 
 /**
@@ -806,7 +806,7 @@ export const toJSON = (entity: Unknown | Snapshot): JSON => objInternal.objectTo
  * The function must be async to support resolving the schema as well as the relation endpoints.
  *
  * @param options.refResolver - Resolver for references. Produces hydrated references that can be resolved.
- * @param options.dxn - Override object DXN. Changes the result of `Obj.getEchoId`.
+ * @param options.dxn - Override object DXN. Changes the result of `Obj.getId`.
  * @param options.database - Database to associate with the object.
  */
 export const fromJSON: (

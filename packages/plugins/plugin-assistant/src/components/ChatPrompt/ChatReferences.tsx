@@ -25,7 +25,7 @@ export const ChatReferences = ({ classNames, context, db }: ChatReferencesProps)
   return (
     <ul className={mx('flex', classNames)}>
       {objects.map((obj) => {
-        const dxn = Obj.getEchoId(obj);
+        const dxn = Obj.getId(obj);
         const typename = Obj.getTypename(obj);
         const label: Label = Obj.getLabel(obj) ?? (typename ? ['object-name.placeholder', { ns: typename }] : obj.id);
         const { icon, hue } = Option.fromNullable(Obj.getSchema(obj)).pipe(

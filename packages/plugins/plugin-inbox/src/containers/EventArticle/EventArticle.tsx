@@ -20,7 +20,7 @@ export type EventArticleProps = AppSurface.ArticleProps<EventType.Event, {}, Obj
 
 export const EventArticle = ({ role, subject, companionTo: calendar }: EventArticleProps) => {
   const { invokePromise } = useOperationInvoker();
-  const id = Obj.getEchoId(subject);
+  const id = Obj.getId(subject);
   const db = Obj.getDatabase(calendar);
   const [shadowedEvent, createShadowEvent] = useShadowObject(db, subject, EventType.Event);
   const notes = shadowedEvent?.notes?.target;

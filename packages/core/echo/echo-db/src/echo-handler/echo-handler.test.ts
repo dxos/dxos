@@ -200,7 +200,7 @@ describe('Reactive Object with ECHO database', () => {
     expect(Entity.isSnapshot(snapshot)).to.be.true;
     expect(Relation.isSnapshot(snapshot)).to.be.false;
     expect(Obj.getSchema(snapshot)).to.eq(TestSchema.Example);
-    expect(Obj.getEchoId(snapshot)).to.eq(Obj.getEchoId(obj));
+    expect(Obj.getId(snapshot)).to.eq(Obj.getId(obj));
   });
 
   test('throws if schema was not annotated as echo object', async () => {
@@ -928,10 +928,10 @@ describe('Reactive Object with ECHO database', () => {
     expect(dbObj.queue.dxn.toString()).to.include(queueId!);
   });
 
-  test('Obj.getEchoId returns full DXN', async () => {
+  test('Obj.getId returns full DXN', async () => {
     const { db } = await builder.createDatabase();
     const obj = db.add(Obj.make(TestSchema.Expando, { string: 'Object 1' }));
-    expect(Obj.getEchoId(obj)).to.match(/^echo:\/\//);
+    expect(Obj.getId(obj)).to.match(/^echo:\/\//);
   });
 
   test('Obj.getDatabase works with both reactive object and snapshot', async () => {

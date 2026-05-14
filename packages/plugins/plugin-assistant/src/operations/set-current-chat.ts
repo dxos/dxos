@@ -13,10 +13,10 @@ import { AssistantCapabilities, AssistantOperation } from '#types';
 const handler: Operation.WithHandler<typeof AssistantOperation.SetCurrentChat> = AssistantOperation.SetCurrentChat.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ companionTo, chat }) {
-      const companionToId = Obj.getEchoId(companionTo);
+      const companionToId = Obj.getId(companionTo);
 
       if (chat) {
-        const chatId = Obj.getEchoId(chat);
+        const chatId = Obj.getId(chat);
         yield* Capabilities.updateAtomValue(AssistantCapabilities.State, (current) => ({
           ...current,
           currentChat: { ...current.currentChat, [companionToId]: chatId },

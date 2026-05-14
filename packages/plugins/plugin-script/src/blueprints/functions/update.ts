@@ -61,7 +61,7 @@ export default Update.pipe(
       }
 
       return {
-        function: Obj.getEchoId(loaded),
+        function: Obj.getId(loaded),
       };
     }),
   ),

@@ -16,7 +16,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.ListCandidatePosts> = 
       const magazine = yield* Database.load(magazineRef);
       const candidates = yield* collectCandidates(magazine);
       return candidates.map(({ post, feed }) => ({
-        postId: Obj.getEchoId(post),
+        postId: Obj.getId(post),
         feedName: feed.name,
         title: post.title,
         description: post.description,

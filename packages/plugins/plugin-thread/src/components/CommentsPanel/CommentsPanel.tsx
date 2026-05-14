@@ -63,7 +63,7 @@ export const CommentsPanel = ({ anchors, currentId, showResolvedThreads, ...prop
     <div>
       {filteredAnchors.map((anchor) => {
         const thread = Relation.getSource(anchor) as Thread.Thread;
-        const threadId = Obj.getEchoId(thread);
+        const threadId = Obj.getId(thread);
         return <CommentsThread key={threadId} anchor={anchor} current={currentId === threadId} {...props} />;
       })}
     </div>

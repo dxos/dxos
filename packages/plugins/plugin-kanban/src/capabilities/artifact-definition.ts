@@ -105,7 +105,7 @@ export default Capability.makeModule(() =>
                 }
 
                 return {
-                  id: Obj.getEchoId(view),
+                  id: Obj.getId(view),
                   name: view.name ?? 'Unnamed Kanban',
                   typename: view.query.typename,
                 };

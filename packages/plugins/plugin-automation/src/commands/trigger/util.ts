@@ -62,7 +62,7 @@ export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger, remot
         'function',
         FormBuilder.make().pipe(
           FormBuilder.set('key', (fn as Operation.PersistentOperation).key),
-          FormBuilder.set('dxn', Obj.getEchoId(fn as Obj.Unknown)),
+          FormBuilder.set('dxn', Obj.getId(fn as Obj.Unknown)),
         ),
       ),
     ),

@@ -117,7 +117,7 @@ export class Session extends Resource {
     OpaqueToolkit.OpaqueToolkitProvider | Operation.Service | OperationRegistry.Service
   > {
     return ToolExecutionServices.pipe(
-      Layer.provide(Operation.withInvocationOptions({ conversation: Obj.getEchoId(this._feed) })),
+      Layer.provide(Operation.withInvocationOptions({ conversation: Obj.getId(this._feed) })),
     );
   }
 
@@ -193,7 +193,7 @@ export class Session extends Resource {
             binder: this.context,
           }),
           Layer.succeed(Service, this),
-          Operation.withInvocationOptions({ conversation: Obj.getEchoId(this._feed) }),
+          Operation.withInvocationOptions({ conversation: Obj.getId(this._feed) }),
         ),
       ),
       Effect.withSpan('AiSession.createRequest'),

@@ -60,7 +60,7 @@ export default Deploy.pipe(
 
       const edgeFunctionId = getUserFunctionIdInMetadata(Obj.getMeta(loaded));
       return {
-        function: Obj.getEchoId(loaded),
+        function: Obj.getId(loaded),
         functionUrl: edgeFunctionId
           ? `${client.config.values.runtime?.services?.edge?.url ?? ''}/functions/${edgeFunctionId}`
           : undefined,

@@ -57,7 +57,7 @@ describe('update', () => {
           edits: [{ oldString: 'Founders', newString: '# Founders' }],
         });
 
-        const updatedDoc = yield* Database.resolve(Obj.getEchoId(doc), Markdown.Document);
+        const updatedDoc = yield* Database.resolve(Obj.getId(doc), Markdown.Document);
         expect(updatedDoc.name).toBe(doc.name);
         const text = yield* Database.load(updatedDoc.content);
         expect(text.content).toBe('# Founders and portfolio of BlueYard.');

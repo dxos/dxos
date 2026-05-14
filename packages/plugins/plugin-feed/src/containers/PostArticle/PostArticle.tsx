@@ -36,7 +36,7 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
   // from re-firing on every render.
   const requestedContentFor = useRef<string | undefined>(undefined);
   useEffect(() => {
-    const postId = Obj.getEchoId(post);
+    const postId = Obj.getId(post);
     console.log('requestedContentFor', requestedContentFor.current, postId);
     if (requestedContentFor.current === postId) {
       return;
@@ -59,7 +59,7 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
     if (!dxn) {
       return undefined;
     }
-    return allFeeds.find((feed) => Obj.getEchoId(feed) === dxn)?.name;
+    return allFeeds.find((feed) => Obj.getId(feed) === dxn)?.name;
   }, [post.feed, allFeeds]);
 
   const archived = Boolean(post.archived);

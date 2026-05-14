@@ -11,10 +11,10 @@ import { type InternalObjectProps, ObjectDatabaseId } from './model';
 import { getObjectEchoId } from './util';
 
 /**
- * Get the EchoId of an entity.
+ * Get the canonical EchoId of an entity.
  * Accepts both reactive entities and snapshots.
  */
-export const getEchoId = (entity: AnyEntity): EchoId.EchoId => {
+export const getId = (entity: AnyEntity): EchoId.EchoId => {
   const echoId = getObjectEchoId(entity);
   invariant(echoId != null, 'Invalid entity.');
   return echoId;

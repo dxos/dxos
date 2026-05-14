@@ -44,7 +44,7 @@ const DefaultStory = () => {
       if (!obj) {
         return;
       }
-      const dxn = Obj.getEchoId(obj);
+      const dxn = Obj.getId(obj);
       if (!dxn) {
         return;
       }

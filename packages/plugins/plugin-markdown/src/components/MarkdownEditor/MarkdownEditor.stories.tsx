@@ -29,7 +29,7 @@ type DefaultStoryProps = Omit<MarkdownEditorProviderProps, 'id' | 'extensions' |
 const DefaultStory = (props: DefaultStoryProps) => {
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Filter.type(Markdown.Document));
-  const id = doc && Obj.getEchoId(doc);
+  const id = doc && Obj.getId(doc);
   if (!id) {
     return <Loading data={{ id }} />;
   }

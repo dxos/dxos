@@ -41,7 +41,7 @@ const DefaultStory = () => {
     return <Loading />;
   }
 
-  const dxn = Obj.getEchoId(organization);
+  const dxn = Obj.getId(organization);
   return (
     <div className='flex flex-col gap-2 p-4'>
       <p>

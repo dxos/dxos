@@ -60,7 +60,7 @@ export default Capability.makeModule(
                 invariant(space);
                 yield* Operation.invoke(SpaceOperation.GetShareLink, {
                   space,
-                  target: Obj.getEchoId(channel),
+                  target: Obj.getId(channel),
                   copyToClipboard: true,
                 });
               }),
@@ -78,7 +78,7 @@ export default Capability.makeModule(
         type: Channel.Channel,
         connector: Effect.fnUntraced(function* (channel, get) {
           const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
-          const channelDxn = Obj.getEchoId(channel);
+          const channelDxn = Obj.getId(channel);
           const joined = get(callManager.joinedAtom);
           const roomId = get(callManager.roomIdAtom);
           if (!joined || roomId !== channelDxn) {
@@ -134,7 +134,7 @@ export default Capability.makeModule(
                 invariant(transcriptQueueDxn, 'Transcript feed has no queue DXN');
                 const transcriptionEnabled = !enabled;
                 callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
-                  meetingId: Obj.getEchoId(meeting),
+                  meetingId: Obj.getId(meeting),
                   transcriptDxn: transcriptQueueDxn.toString(),
                   transcriptionEnabled,
                 });

@@ -19,7 +19,7 @@ const handler: Operation.WithHandler<typeof ThreadOperation.Create> = ThreadOper
     Effect.fnUntraced(function* ({ name, anchor: _anchor, subject }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
       const stateAtom = yield* Capability.get(ThreadCapabilities.State);
-      const subjectId = Obj.getEchoId(subject);
+      const subjectId = Obj.getId(subject);
       const thread = Thread.make({ name });
       const anchor = Relation.make(AnchoredTo.AnchoredTo, {
         [Relation.Source]: thread,
@@ -37,7 +37,7 @@ const handler: Operation.WithHandler<typeof ThreadOperation.Create> = ThreadOper
         },
       });
 
-      yield* Operation.invoke(ThreadOperation.Select, { current: Obj.getEchoId(thread) });
+      yield* Operation.invoke(ThreadOperation.Select, { current: Obj.getId(thread) });
       yield* Operation.invoke(LayoutOperation.UpdateCompanion, {
         subject: linkedSegment('comments'),
       });

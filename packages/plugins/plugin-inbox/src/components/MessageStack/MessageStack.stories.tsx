@@ -48,7 +48,7 @@ const CompanionStory = () => {
   const feed = mailbox?.feed?.target;
 
   // Selected message.
-  const selected = useSelected(feed ? Obj.getEchoId(feed) : undefined, 'single');
+  const selected = useSelected(feed ? Obj.getId(feed) : undefined, 'single');
   const message = useQuery(
     db,
     feed ? Query.select(selected ? Filter.id(selected) : Filter.nothing()).from(feed) : Query.select(Filter.nothing()),
@@ -61,7 +61,7 @@ const CompanionStory = () => {
   );
 
   // NOTE: Attention required for scrolling.
-  const attentionAttrs = useAttentionAttributes(feed ? Obj.getEchoId(feed) : undefined);
+  const attentionAttrs = useAttentionAttributes(feed ? Obj.getId(feed) : undefined);
 
   if (!db || !feed) {
     return <Loading data={{ db: !!db, feed: !!feed }} />;

@@ -137,7 +137,7 @@ export const layer = (opts?: {
               return cached;
             }
 
-            const target = Obj.getEchoId(feed);
+            const target = Obj.getId(feed);
             const executable = AgentProcess({
               systemPrompt: opts?.systemPrompt,
               model: options?.model ?? opts?.model,

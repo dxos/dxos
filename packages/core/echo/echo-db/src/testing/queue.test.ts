@@ -38,7 +38,7 @@ describe('queues', () => {
     expect(await obj.queue.load()).toBeDefined();
   });
 
-  test('Entity.getEchoId on queue objects returns absolute dxn', async () => {
+  test('Entity.getId on queue objects returns absolute dxn', async () => {
     await using peer = await builder.createPeer({ types: [TestSchema.Person] });
     const db = await peer.createDatabase();
     const queues = peer.client.constructQueueFactory(db.spaceId);
@@ -47,7 +47,7 @@ describe('queues', () => {
     await queue.append([Obj.make(TestSchema.Person, { name: 'john' })]);
     const obj = queue.objects[0];
     // Queue items now receive an ECHO-kind DXN (echo://spaceId/itemId), not a queue DXN.
-    expect(Entity.getEchoId(obj)).toEqual(EchoId.fromSpaceAndObjectId(db.spaceId, obj.id));
+    expect(Entity.getId(obj)).toEqual(EchoId.fromSpaceAndObjectId(db.spaceId, obj.id));
   });
 
   test('create and resolve an object from a queue', async () => {

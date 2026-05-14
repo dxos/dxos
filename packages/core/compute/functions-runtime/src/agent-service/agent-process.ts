@@ -306,7 +306,7 @@ const ToolExecutionService = ({
             log('invoking operation', { operationDef, input });
             const fiber = yield* operationInvoker.invokeFiber(operationDef, input, {
               environment: {
-                conversation: Obj.getEchoId(feed),
+                conversation: Obj.getId(feed),
               },
               traceMeta: {
                 conversationId: feed.id,

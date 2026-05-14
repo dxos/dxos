@@ -108,7 +108,7 @@ describe('jsonata', () => {
           "name": event.item.name
         },
         "ref": {
-          "/": "${Obj.getEchoId(obj)}"
+          "/": "${Obj.getId(obj)}"
         },
         "value": "Hello, " & event.item.name & "!"
       }
@@ -123,7 +123,7 @@ describe('jsonata', () => {
           name: event.item.name,
         },
         ref: {
-          '/': Obj.getEchoId(obj),
+          '/': Obj.getId(obj),
         },
         value: 'Hello, John!',
       });
@@ -154,7 +154,7 @@ describe('jsonata', () => {
           name: event.item.name,
         },
         ref: {
-          '/': Obj.getEchoId(obj),
+          '/': Obj.getId(obj),
         },
         value: 'Hello, John!',
       });

@@ -97,7 +97,7 @@ describe('Agent', () => {
         const session = yield* acquireReleaseResource(() => new AiSession.Session({ feed: chatFeed, runtime }));
         yield* Effect.promise(() => session.context.open());
 
-        const documentDxn = Obj.getEchoId(document);
+        const documentDxn = Obj.getId(document);
         yield* session
           .createRequest({
             system: SYSTEM,

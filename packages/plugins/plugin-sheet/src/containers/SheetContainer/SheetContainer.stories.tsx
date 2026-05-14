@@ -68,7 +68,7 @@ export const Default = () => {
   }
 
   return (
-    <AttendableContainer id={Obj.getEchoId(sheet)} classNames='contents'>
+    <AttendableContainer id={Obj.getId(sheet)} classNames='contents'>
       <SheetContainer
         role='article'
         space={space}
@@ -91,7 +91,7 @@ export const Spec = () => {
   }
 
   return (
-    <AttendableContainer id={Obj.getEchoId(sheet)} classNames='contents'>
+    <AttendableContainer id={Obj.getId(sheet)} classNames='contents'>
       <div className='w-full grid grid-cols-[1fr_20rem]'>
         <SheetContainer
           role='article'

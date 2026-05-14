@@ -40,13 +40,13 @@ export const hasMetaTag = (object: Obj.Unknown, tag: Tag.Tag | undefined): boole
   if (!tag) {
     return false;
   }
-  const dxn = Obj.getEchoId(tag);
+  const dxn = Obj.getId(tag);
   return Obj.getMeta(object).tags?.includes(dxn) ?? false;
 };
 
 /** Toggles the supplied tag in the object's meta tags. */
 export const toggleMetaTag = (object: Obj.Unknown, tag: Tag.Tag): void => {
-  const dxn = Obj.getEchoId(tag);
+  const dxn = Obj.getId(tag);
   Obj.update(object, (object) => {
     const meta = Obj.getMeta(object);
     const current = meta.tags ?? [];

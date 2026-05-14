@@ -116,7 +116,7 @@ export const agentTest: {
           systemInstructions: INSTRUCTIONS,
           model,
         },
-        { conversation: Obj.getEchoId(conversationFeed) },
+        { conversation: Obj.getId(conversationFeed) },
       ).pipe(Effect.exit);
 
       if (options.expect === 'failure') {

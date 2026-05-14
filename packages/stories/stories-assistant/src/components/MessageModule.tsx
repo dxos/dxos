@@ -18,7 +18,7 @@ export const MessageModule = ({ space }: ModuleProps) => {
   // TODO(wittjosiah): Should be `const feed = useObjectValue(mailbox.feed)`.
   const [mailbox] = useObject(mailboxes[0]);
   const feed = mailbox?.feed?.target as Feed.Feed | undefined;
-  const mailboxDxn = mailbox ? Obj.getEchoId(mailbox) : undefined;
+  const mailboxDxn = mailbox ? Obj.getId(mailbox) : undefined;
   const selected = useSelected(mailboxDxn, 'single');
   const message = useQuery(
     space.db,

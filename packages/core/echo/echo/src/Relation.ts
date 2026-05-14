@@ -350,10 +350,10 @@ export const setValue: (rel: Mutable<Unknown>, path: readonly (string | number)[
 //
 
 /**
- * Get the EchoId of the relation.
+ * Get the canonical EchoId of the relation.
  * Accepts both reactive relations and snapshots.
  */
-export const getEchoId = (entity: Unknown | Snapshot): EchoId.EchoId => internal.getEchoId(entity);
+export const getId = (entity: Unknown | Snapshot): EchoId.EchoId => internal.getId(entity);
 
 /**
  * @returns The DXN of the relation's type.

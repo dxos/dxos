@@ -74,7 +74,7 @@ const ObjectsTreeRow = ({
   const styles = node.iconHue ? getStyles(node.iconHue) : undefined;
 
   const handleCopyDXN = useCallback(() => {
-    void navigator.clipboard.writeText(Entity.getEchoId(node.entity) ?? '');
+    void navigator.clipboard.writeText(Entity.getId(node.entity) ?? '');
   }, [node.entity]);
   const handleCopyJSON = useCallback(() => {
     void navigator.clipboard.writeText(JSON.stringify(node.entity, null, 2));

@@ -33,11 +33,11 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const layout = useLayout();
-  const id = attendableId ?? Obj.getEchoId(mailbox);
+  const id = attendableId ?? Obj.getId(mailbox);
   const currentId = useSelected(id, 'single');
 
   const db = space.db;
-  const mailboxDxn = Obj.getEchoId(mailbox);
+  const mailboxDxn = Obj.getId(mailbox);
 
   const draftsFilter = useMemo(
     () =>

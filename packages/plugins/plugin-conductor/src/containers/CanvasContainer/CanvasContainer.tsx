@@ -33,7 +33,7 @@ export type CanvasContainerProps = AppSurface.ObjectArticleProps<CanvasBoard.Can
 
 export const CanvasContainer = ({ role, subject, attendableId: _attendableId }: CanvasContainerProps) => {
   const [canvas] = useObject(subject);
-  const id = Obj.getEchoId(canvas);
+  const id = Obj.getId(canvas);
   const graph = useMemo(
     () => CanvasGraphModel.create<ComputeShape>(canvas.layout, (fn) => Obj.update(subject, fn)),
     [subject, canvas.layout],

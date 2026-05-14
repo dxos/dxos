@@ -57,7 +57,7 @@ describe('CRM Blueprint', () => {
           });
           const msg = makeEmailMessage(fixture);
           yield* agent.submitPrompt(
-            `Research the contact from this email and produce a Profile document. Message DXN: ${Obj.getEchoId(msg)}`,
+            `Research the contact from this email and produce a Profile document. Message DXN: ${Obj.getId(msg)}`,
           );
           yield* agent.waitForCompletion();
         },

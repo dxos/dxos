@@ -560,7 +560,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                       // TODO(dmaretskyi): Change type not supported.
                       type: 'unknown',
 
-                      subject: db.makeRef(Obj.getEchoId(object)),
+                      subject: db.makeRef(Obj.getId(object)),
 
                       changedObjectId: object.id,
                     } satisfies TriggerEvent.SubscriptionEvent,

@@ -19,7 +19,7 @@ export type WireframeProps = ThemedClassName<{
 
 // TODO(burdon): Make focusable and attendable with input.
 export const Wireframe = ({ classNames, label, object }: WireframeProps) => {
-  const attentionAttrs = useAttentionAttributes(Obj.getEchoId(object));
+  const attentionAttrs = useAttentionAttributes(Obj.getId(object));
   const { width, height, ref } = useResizeDetector();
 
   return (

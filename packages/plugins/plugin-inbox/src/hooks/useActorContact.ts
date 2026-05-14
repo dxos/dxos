@@ -20,7 +20,7 @@ export const useActorContact = (db?: Database.Database, actor?: Actor.Actor): UR
   );
 
   return useMemo(
-    () => (actor?.contact ? actor.contact.dxn : existingContact ? Obj.getEchoId(existingContact) : undefined),
+    () => (actor?.contact ? actor.contact.dxn : existingContact ? Obj.getId(existingContact) : undefined),
     [actor?.contact, existingContact],
   );
 };

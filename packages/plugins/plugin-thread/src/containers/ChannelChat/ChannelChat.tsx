@@ -33,7 +33,7 @@ export const ChannelChat = composable<HTMLDivElement, ChannelChatProps>(
   ({ space, channel, ...props }, forwardedRef) => {
     const identity = useIdentity()!;
     const members = useMembers(space.id);
-    const id = Obj.getEchoId(channel);
+    const id = Obj.getId(channel);
     const activity = useStatus(space, id);
     const { invokePromise } = useOperationInvoker();
 

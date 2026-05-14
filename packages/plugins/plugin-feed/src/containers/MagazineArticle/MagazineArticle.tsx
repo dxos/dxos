@@ -31,7 +31,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const [magazine] = useObject(subject);
 
   const showItem = useShowItem();
-  const id = attendableId ?? Obj.getEchoId(magazine);
+  const id = attendableId ?? Obj.getId(magazine);
   const currentId = useSelected(id, 'single');
   const [sort, setSort] = useState<MagazineSort>('date');
   const [view, setView] = useState<MagazineView>('default');
@@ -62,7 +62,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   // feed name on each tile without each tile having to subscribe to its own ref.
   const allFeeds = useQuery(db, Filter.type(Subscription.Feed));
 
-  // Index feeds by bare object id (last DXN segment) — `Obj.getEchoId(feed)`
+  // Index feeds by bare object id (last DXN segment) — `Obj.getId(feed)`
   // returns the space-scoped form (`dxn:echo:<spaceId>:<id>`), but
   // `post.feed.dxn` from a `Ref.make` carries the local-id form
   // (`dxn:echo:@:<id>`). String-comparing the two never matches, so the
@@ -139,7 +139,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     }
 
     const tag = findStarTag(db);
-    const tagDxn = tag ? Obj.getEchoId(tag) : undefined;
+    const tagDxn = tag ? Obj.getId(tag) : undefined;
     const next = magazine.posts.filter((ref) => {
       const post = ref.target;
       if (!post || !tagDxn) {
@@ -277,7 +277,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
               <Masonry.Viewport
                 classNames='py-2'
                 items={tileItems}
-                getId={(data) => (data?.post ? Obj.getEchoId(data.post) : '')}
+                getId={(data) => (data?.post ? Obj.getId(data.post) : '')}
               />
             </Masonry.Content>
           </Masonry.Root>
@@ -341,7 +341,7 @@ const useMagazinePosts = (
       // Dedup by DXN, then by link, then by guid. Two different feeds can publish the
       // same article (distinct Post objects, same `link` / `guid`); without secondary
       // dedup the masonry shows them as duplicate tiles.
-      const dxn = Obj.getEchoId(target);
+      const dxn = Obj.getId(target);
       if (
         seenDxn.has(dxn) ||
         (target.link && seenLink.has(target.link)) ||

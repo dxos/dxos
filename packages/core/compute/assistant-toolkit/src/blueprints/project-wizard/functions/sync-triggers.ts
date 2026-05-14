@@ -117,7 +117,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
               { source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id },
               {
                 source: AGENT_TRIGGER_TARGET_EXTENSION_KEY,
-                id: Obj.getEchoId(agent) ?? '',
+                id: Obj.getId(agent) ?? '',
               },
             ],
           },
