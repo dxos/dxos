@@ -16,19 +16,19 @@ import { Carousel } from './Carousel';
 const SAMPLE_IMAGES = [
   {
     src: 'https://dxos.network/plugin-details-chess-dark.png',
-    label: random.lorem.sentences(2),
+    description: random.lorem.sentences(2),
   },
   {
     src: 'https://dxos.network/plugin-details-markdown-dark.png',
-    label: random.lorem.sentences(2),
+    description: random.lorem.sentences(2),
   },
   {
     src: 'https://dxos.network/plugin-details-sheet-dark.png',
-    label: random.lorem.sentences(2),
+    description: random.lorem.sentences(2),
   },
   {
     src: 'https://dxos.network/plugin-details-sketch-dark.png',
-    label: random.lorem.sentences(2),
+    description: random.lorem.sentences(2),
   },
 ];
 

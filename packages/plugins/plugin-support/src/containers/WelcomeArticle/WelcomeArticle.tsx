@@ -29,7 +29,7 @@ export const WelcomeArticle = ({ role }: WelcomeArticleProps = {}) => {
       manager
         .getPlugins()
         .flatMap((plugin) =>
-          (plugin.meta.screenshots ?? []).map((src) => ({ src, label: plugin.meta.name ?? plugin.meta.id })),
+          (plugin.meta.screenshots ?? []).map((src) => ({ src, description: plugin.meta.name ?? plugin.meta.id })),
         ),
     [manager],
   );

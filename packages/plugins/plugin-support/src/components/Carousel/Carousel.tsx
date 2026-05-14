@@ -12,7 +12,7 @@ import { meta } from '#meta';
 export type CarouselImage = {
   src: string;
   alt?: string;
-  label?: string;
+  description?: string;
 };
 
 export type CarouselProps = {
@@ -68,34 +68,30 @@ export const Carousel = ({ images, intervalMs = 5_000, classNames }: CarouselPro
 
   return (
     <div className={mx('dx-container relative flex flex-col items-center gap-4 w-full max-w-xl', classNames)}>
-      <div className='relative w-full aspect-video overflow-hidden rounded-md bg-baseSurface border border-separator'>
+      <div className='grid grid-cols-[auto_1fr_auto] w-full aspect-video overflow-hidden rounded-md bg-baseSurface border border-separator'>
+        <IconButton
+          classNames='absolute left-1 top-1/2 -translate-y-1/2'
+          icon='ph--caret-left--regular'
+          iconOnly
+          label={t('carousel-prev.label')}
+          onClick={handlePrev}
+          variant='ghost'
+        />
         <img
           key={current.src}
           src={current.src}
-          alt={current.alt ?? current.label ?? ''}
+          alt={current.alt ?? current.description ?? ''}
           className='absolute inset-0 w-full h-full object-cover'
           loading='lazy'
         />
-        {count > 1 && (
-          <>
-            <IconButton
-              classNames='absolute left-1 top-1/2 -translate-y-1/2'
-              icon='ph--caret-left--regular'
-              iconOnly
-              label={t('carousel-prev.label')}
-              onClick={handlePrev}
-              variant='ghost'
-            />
-            <IconButton
-              classNames='absolute right-1 top-1/2 -translate-y-1/2'
-              icon='ph--caret-right--regular'
-              iconOnly
-              label={t('carousel-next.label')}
-              onClick={handleNext}
-              variant='ghost'
-            />
-          </>
-        )}
+        <IconButton
+          classNames='absolute right-1 top-1/2 -translate-y-1/2'
+          icon='ph--caret-right--regular'
+          iconOnly
+          label={t('carousel-next.label')}
+          onClick={handleNext}
+          variant='ghost'
+        />
       </div>
       {count > 1 && (
         <div className='flex items-center' role='tablist' aria-label={t('carousel-indicators.label')}>
@@ -103,18 +99,20 @@ export const Carousel = ({ images, intervalMs = 5_000, classNames }: CarouselPro
             <IconButton
               key={i}
               role='tab'
+              size={3}
+              variant='ghost'
+              square
               aria-selected={i === index}
+              classNames={['rounded-full', i === index && 'text-accent-text']}
               icon={i === index ? 'ph--circle--fill' : 'ph--circle--regular'}
               iconOnly
               label={t('carousel-go-to.label', { index: i + 1 })}
               onClick={() => handleSelect(i)}
-              size={3}
-              variant='ghost'
             />
           ))}
         </div>
       )}
-      {current.label && <p className='flex justify-center text-description'>{current.label}</p>}
+      {current.description && <p className='text-center text-description'>{current.description}</p>}
     </div>
   );
 };
