@@ -146,7 +146,7 @@ type UseTestTranscriptionQueue = (
 ) => DXN | undefined;
 
 /**
- * Test transcriptionqueue.
+ * Test transcription feed.
  */
 export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
   space: Space | undefined,
@@ -176,7 +176,7 @@ export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
 };
 
 /**
- * Test transcription queue.
+ * Test transcription feed with entity extraction.
  */
 // TODO(burdon): Reconcile with useTestTranscriptionQueue.
 export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscriptionQueue = (

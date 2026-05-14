@@ -41,7 +41,7 @@ export type TranscriptionManagerOptions = {
   registry: Registry.Registry;
 
   /**
-   * Enrich the message before it is written to the transcription queue.
+   * Enrich the message before it is written to the transcription feed.
    */
   messageEnricher?: TranscriptMessageEnricher;
 };

@@ -162,7 +162,7 @@ const EntityExtractionQueueStory = () => {
 };
 
 /**
- * Wrapper remounts on refresh to reload queue.
+ * Wrapper remounts on refresh to reload feed.
  */
 const QueueStoryWrapper = () => {
   const [queueId] = useState(Key.ObjectId.random());
