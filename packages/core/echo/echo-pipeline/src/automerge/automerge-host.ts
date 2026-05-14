@@ -338,6 +338,14 @@ export class AutomergeHost extends Resource {
   }
 
   protected override async _close(ctx: Context): Promise<void> {
+    // Drain any in-flight `_onHeadsChangedTask` before the `Resource` base
+    // disposes `this._ctx`. Without this, a concurrent `flush()` call (e.g.
+    // from a client `db.flush()` RPC racing with shutdown) hits its
+    // `runBlocking` after the ctx has been disposed and throws
+    // `ContextDisposedError`, which escapes as an unhandled rejection at the
+    // fire-and-forget originating caller.
+    await this._onHeadsChangedTask?.join();
+
     await this._collectionSynchronizer.close(ctx);
     await this._repo.flush().catch((err) => log.warn('failed to flush repo before shutdown', { err }));
     await this._repo.shutdown().catch((err) => log.warn('failed to shutdown repo', { err }));
@@ -678,6 +686,13 @@ export class AutomergeHost extends Resource {
    */
   @trace.span({ showInBrowserTimeline: true, showInRemoteTracing: false })
   async flush(ctx: Context, { documentIds }: FlushRequest = {}): Promise<void> {
+    // Concurrent `db.flush()` RPCs can arrive after the host has begun
+    // teardown. `runBlocking` below would throw `ContextDisposedError` on a
+    // disposed ctx; treat a closed host as a no-op flush instead (nothing to
+    // propagate, the resource is gone).
+    if (!this.isOpen) {
+      return;
+    }
     const loadedDocuments = (documentIds ?? Object.keys(this._repo.handles)).filter(
       (documentId): documentId is DocumentId => getHandleState(this._repo, documentId as DocumentId) === 'ready',
     );
