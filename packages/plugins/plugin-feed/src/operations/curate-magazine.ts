@@ -4,14 +4,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import { getSpace, type Space } from '@dxos/client/echo';
+import { createFeedServiceLayer, getSpace, type Space } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { type Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
+import { FeedOperation } from '../types';
 import { type Magazine, Subscription } from '../types';
 import { dxnToObjectId, extractImageUrls, makeSnippet, stripHtml } from '../util';
-import { CurateMagazine } from './definitions';
 
 /**
  * Returns the canonical space.db proxy for a Post by id, if it has been
@@ -63,19 +64,22 @@ export const curateMagazine = async (space: Space, magazine: Magazine.Magazine):
   const seenIds = new Set(magazine.posts.map((ref) => dxnToObjectId(ref.dxn)));
   const added: Ref.Ref<Subscription.Post>[] = [];
 
+  const feedServiceLayer = createFeedServiceLayer(space.queues);
+
   for (const feedRef of magazine.feeds) {
     const feed = await feedRef.load();
     const echoFeed = feed.feed?.target;
     if (!echoFeed) {
       continue;
     }
-    const feedDxn = Feed.getQueueDxn(echoFeed);
-    if (!feedDxn) {
+    if (!Feed.getQueueDxn(echoFeed)) {
       continue;
     }
 
-    const queue = space.queues.get(feedDxn);
-    const items = (await queue.queryObjects()) ?? [];
+    const items = await Feed.runQuery(echoFeed, Filter.everything()).pipe(
+      Effect.provide(feedServiceLayer),
+      runAndForwardErrors,
+    );
 
     for (const item of items) {
       if (!Obj.instanceOf(Subscription.Post, item)) {
@@ -133,7 +137,7 @@ export const curateMagazine = async (space: Space, magazine: Magazine.Magazine):
   return { added: appended };
 };
 
-const handler: Operation.WithHandler<typeof CurateMagazine> = CurateMagazine.pipe(
+const handler: Operation.WithHandler<typeof FeedOperation.CurateMagazine> = FeedOperation.CurateMagazine.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ magazine: magazineRef }) {
       const magazine = yield* Effect.promise(() => magazineRef.load());

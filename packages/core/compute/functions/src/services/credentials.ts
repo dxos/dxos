@@ -11,8 +11,7 @@ import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
 
 import { Credential } from '@dxos/compute';
-import { Query } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, Query } from '@dxos/echo';
 import { AccessToken } from '@dxos/types';
 
 export class ConfiguredCredentialsService implements Context.Tag.Service<Credential.CredentialsService> {

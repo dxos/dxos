@@ -9,7 +9,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { type Registry, Plugin, UrlLoader } from '@dxos/app-framework';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { runAndForwardErrors } from '@dxos/effect';
-import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
+import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { useTranslation } from '@dxos/react-ui';
 import { composable } from '@dxos/ui-theme';
 

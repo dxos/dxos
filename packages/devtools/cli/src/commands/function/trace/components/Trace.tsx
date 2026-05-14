@@ -25,7 +25,7 @@ import { theme } from '../../../../theme';
 export type TraceProps = {
   db: Database.Database;
   queues: QueueAPI;
-  queueDxn: Option.Option<DXN>;
+  queueDXN: Option.Option<DXN>;
   functionId: Option.Option<string>;
 };
 
@@ -37,7 +37,7 @@ export const Trace = (props: TraceProps) => {
 
   // Set up effects.
   useFunctionQuery(props.db, setFunctions);
-  useTraceQueue(props.queueDxn, props.queues, setTraceQueue);
+  useTraceQueue(props.queueDXN, props.queues, setTraceQueue);
   useInvocationsSubscription(traceQueue, props.functionId, setInvocations, selectedInvocation, setSelectedInvocation);
 
   // Function name resolver (needs access to functions signal).
@@ -46,7 +46,7 @@ export const Trace = (props: TraceProps) => {
       return undefined;
     }
 
-    const uuidPart = getUuidFromDxn(invocationTarget);
+    const uuidPart = getUuidFromDXN(invocationTarget);
     if (!uuidPart) {
       return undefined;
     }
@@ -56,9 +56,9 @@ export const Trace = (props: TraceProps) => {
 
   // Target display name (uses getFunctionName).
   const getTargetDisplayName = (span: InvocationSpan): string => {
-    const targetDxn = span.invocationTarget?.dxn;
-    const name = getFunctionName(targetDxn);
-    return name ?? targetDxn?.toString().split(':').pop() ?? '?';
+    const targetDXN = span.invocationTarget?.dxn;
+    const name = getFunctionName(targetDXN);
+    return name ?? targetDXN?.toString().split(':').pop() ?? '?';
   };
 
   const columns: Column<InvocationSpan>[] = [
@@ -135,7 +135,7 @@ export const Trace = (props: TraceProps) => {
 };
 
 // Helper: Extracts the UUID part from a DXN.
-const getUuidFromDxn = (dxn: DXN | string | undefined): string | undefined => {
+const getUuidFromDXN = (dxn: DXN | string | undefined): string | undefined => {
   if (!dxn) {
     return undefined;
   }
@@ -183,18 +183,18 @@ const useFunctionQuery = (
 
 // Effect: Resolve the queue from the DXN.
 const useTraceQueue = (
-  queueDxn: Option.Option<DXN>,
+  queueDXN: Option.Option<DXN>,
   queues: QueueAPI,
   setTraceQueue: (queue: Queue<InvocationTraceEvent> | undefined) => void,
 ) => {
   createEffect(() => {
-    if (Option.isNone(queueDxn)) {
+    if (Option.isNone(queueDXN)) {
       setTraceQueue(undefined);
       return;
     }
 
     try {
-      const queue = queues.get<InvocationTraceEvent>(queueDxn.value);
+      const queue = queues.get<InvocationTraceEvent>(queueDXN.value);
       setTraceQueue(queue);
     } catch {
       setTraceQueue(undefined);

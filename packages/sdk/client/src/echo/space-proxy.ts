@@ -34,7 +34,7 @@ import {
   todo,
   warnAfterTimeout,
 } from '@dxos/debug';
-import { type Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import {
   type EchoClient,
   type EchoDatabase,
@@ -74,6 +74,31 @@ import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
 
 const EPOCH_CREATION_TIMEOUT = 60_000;
+
+/**
+ * Returns the {@link Space} that owns the given object, or `undefined`.
+ *
+ * Use {@link Obj.getDatabase} when you only need DB/`spaceId` access; this
+ * helper is retained only for callers that need {@link Space} proxy members
+ * (`properties`, `queues`, `members`, `key`, `state`, `listen`, identity).
+ */
+// TODO(burdon): Hypergraph.getSpace().
+export const getSpace = (object?: any): Space | undefined => {
+  if (!object) {
+    return undefined;
+  }
+
+  const db = Obj.getDatabase(object);
+  const id = db?.spaceId;
+  if (id && '_getOwningObject' in db.graph) {
+    const owner = (db.graph as { _getOwningObject: (id: SpaceId) => unknown })._getOwningObject(id);
+    if (owner instanceof SpaceProxy) {
+      return owner;
+    }
+  }
+
+  return undefined;
+};
 
 @trace.resource()
 export class SpaceProxy implements Space, CustomInspectable {

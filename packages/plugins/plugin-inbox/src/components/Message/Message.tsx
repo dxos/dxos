@@ -22,7 +22,7 @@ import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { formatDateTime } from '../../util';
 import { UserIconButton } from '../UserIconButton';
-import { type ViewMode, useMessageActions } from './useToolbar';
+import { type RenderMode, type ViewMode, useMessageActions } from './useToolbar';
 
 //
 // Context
@@ -33,6 +33,8 @@ type MessageContextValue = {
   attendableId?: string;
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
+  renderMode: RenderMode;
+  setRenderMode: (mode: RenderMode) => void;
   message: MessageType.Message;
   sender: DXN | undefined;
   onOpen?: () => void;
@@ -48,12 +50,16 @@ const [MessageContextProvider, useMessageContext] = createContext<MessageContext
 //
 
 type MessageRootProps = PropsWithChildren<
-  Omit<MessageContextValue, 'viewMode' | 'setViewMode'> & { viewMode?: ViewMode }
+  Omit<MessageContextValue, 'viewMode' | 'setViewMode' | 'renderMode' | 'setRenderMode'> & {
+    viewMode?: ViewMode;
+    renderMode?: RenderMode;
+  }
 >;
 
 const MessageRoot = ({
   children,
   viewMode: viewModeProp = 'plain',
+  renderMode: renderModeProp = 'markdown',
   onOpen,
   onReply,
   onReplyAll,
@@ -61,11 +67,14 @@ const MessageRoot = ({
   ...props
 }: MessageRootProps) => {
   const [viewMode, setViewMode] = useState(viewModeProp);
+  const [renderMode, setRenderMode] = useState(renderModeProp);
 
   return (
     <MessageContextProvider
       viewMode={viewMode}
       setViewMode={setViewMode}
+      renderMode={renderMode}
+      setRenderMode={setRenderMode}
       onOpen={onOpen}
       onReply={onReply}
       onReplyAll={onReplyAll}
@@ -86,9 +95,18 @@ MessageRoot.displayName = 'Message.Root';
 const MESSAGE_TOOLBAR_NAME = 'Message.Toolbar';
 
 const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
-  const { attendableId, viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward } =
+  const { attendableId, viewMode, setViewMode, renderMode, setRenderMode, onOpen, onReply, onReplyAll, onForward } =
     useMessageContext(MESSAGE_TOOLBAR_NAME);
-  const menuActions = useMessageActions({ viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward });
+  const menuActions = useMessageActions({
+    viewMode,
+    setViewMode,
+    renderMode,
+    setRenderMode,
+    onOpen,
+    onReply,
+    onReplyAll,
+    onForward,
+  });
 
   return (
     <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
@@ -142,22 +160,22 @@ const MessageHeader = ({ onContactCreate }: MessageHeaderProps) => {
   const { message, sender } = useMessageContext(MESSAGE_HEADER_NAME);
 
   return (
-    <div role='none' className='p-1 flex flex-col gap-2 border-b border-subdued-separator'>
-      <div role='none' className='grid grid-cols-[2rem_1fr] gap-1'>
-        <div role='none' className='flex px-2 pt-1.5 text-subdued'>
+    <div className='p-1 flex flex-col gap-2 border-b border-subdued-separator'>
+      <div className='grid grid-cols-[2rem_1fr] gap-1'>
+        <div className='flex px-2 pt-1.5 text-subdued'>
           <Icon icon='ph--envelope-open--regular' />
         </div>
-        <div role='none' className='flex flex-col gap-1 overflow-hidden'>
+        <div className='flex flex-col gap-1 overflow-hidden'>
           <h2 className='text-lg line-clamp-2'>{message.properties?.subject}</h2>
-          <div role='none' className='whitespace-nowrap text-sm text-description'>
+          <div className='whitespace-nowrap text-sm text-description'>
             {message.created && formatDateTime(new Date(message.created), new Date())}
           </div>
         </div>
       </div>
 
       {/* TODO(burdon): List other To/CC/BCC. */}
-      <div role='none'>
-        <div role='none' className='grid grid-cols-[2rem_1fr] gap-1 items-center'>
+      <div>
+        <div className='grid grid-cols-[2rem_1fr] gap-1 items-center'>
           <UserIconButton
             title={message.sender.name}
             value={sender}
@@ -181,7 +199,7 @@ const MESSAGE_CONTENT_NAME = 'Message.Content';
 type MessageBodyProps = ThemedClassName;
 
 const MessageBody = ({ classNames }: MessageBodyProps) => {
-  const { message, viewMode } = useMessageContext(MESSAGE_CONTENT_NAME);
+  const { message, viewMode, renderMode } = useMessageContext(MESSAGE_CONTENT_NAME);
   const { themeMode } = useThemeContext();
 
   // If we're in plain-only mode or plain view, show the first block.
@@ -196,26 +214,26 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
   }, [message.blocks, viewMode]);
 
   const extensions = useMemo(() => {
-    return [
+    const exts = [
       createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
       createThemeExtensions({ themeMode, slots: compactSlots }),
-      createMarkdownExtensions(),
-      decorateMarkdown({
-        skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
-      }),
-      preview(),
     ];
-  }, [themeMode]);
+    if (renderMode === 'markdown') {
+      exts.push(
+        createMarkdownExtensions(),
+        decorateMarkdown({
+          skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
+        }),
+        preview(),
+      );
+    }
+    return exts;
+  }, [themeMode, renderMode]);
 
   const { parentRef } = useTextEditor({ initialValue: content, extensions }, [content, extensions]);
 
   return (
-    <div
-      role='none'
-      className={mx('flex overflow-hidden', classNames)}
-      data-popover-collision-boundary={true}
-      ref={parentRef}
-    />
+    <div className={mx('flex overflow-hidden', classNames)} data-popover-collision-boundary={true} ref={parentRef} />
   );
 };
 

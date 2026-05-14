@@ -12,7 +12,7 @@ import { type Blueprint } from '@dxos/compute';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { useAtomValue } from '@dxos/effect-atom-solid';
 import { log } from '@dxos/log';
-import { Assistant } from '@dxos/plugin-assistant/types';
+import { Assistant } from '@dxos/plugin-assistant';
 import { isTruthy } from '@dxos/util';
 
 import { AppContext } from '../../../components';
@@ -32,7 +32,7 @@ import { StatusBar } from './StatusBar';
 export type ChatProps = {
   db: Database.Database;
   processor: ChatProcessor;
-  conversation: AiSession;
+  conversation: AiSession.Session;
   model: ModelName;
   verbose?: boolean;
   onChatSelect?: (chat: Assistant.Chat) => void;

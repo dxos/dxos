@@ -7,19 +7,25 @@ import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 
 import { ConsolePrinter } from '@dxos/ai';
-import { AiContextService, type AiSession, type AiSessionRunProps, GenerationObserver } from '@dxos/assistant';
+import { AiContext, AiRequest, AiSession, GenerationObserver } from '@dxos/assistant';
 import type { Blueprint } from '@dxos/compute';
 import { Database, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-export type TestStep = Pick<AiSessionRunProps, 'prompt' | 'system'> & {
+export type TestStep = Pick<AiSession.RunProps, 'prompt' | 'system'> & {
   test?: () => Promise<void>;
 };
 
 /**
  * Runs the prompt steps, calling the test function after each step.
  */
-export const runSteps = Effect.fn(function* (session: AiSession, steps: TestStep[]) {
+export const runSteps: (
+  session: AiSession.Session,
+  steps: TestStep[],
+) => Effect.Effect<void, AiRequest.RunError, AiRequest.RunRequirements> = Effect.fn(function* (
+  session: AiSession.Session,
+  steps: TestStep[],
+) {
   for (const { test, ...props } of steps) {
     yield* session.createRequest({
       ...props,
@@ -38,7 +44,7 @@ export const runSteps = Effect.fn(function* (session: AiSession, steps: TestStep
  */
 // TODO(dmaretskyi): Potentially the agent will auto-bind the blueprints.
 export const addBlueprints = Effect.fnUntraced(function* (blueprints: Blueprint.Definition[]) {
-  yield* AiContextService.bindContext({
+  yield* AiContext.Service.bindContext({
     blueprints: yield* pipe(
       blueprints,
       Arr.map((blueprint) => blueprint.make()),

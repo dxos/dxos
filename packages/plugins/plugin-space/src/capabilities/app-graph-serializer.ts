@@ -7,8 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
-import { Obj } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
+import { Collection, Obj } from '@dxos/echo';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';

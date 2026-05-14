@@ -16,6 +16,7 @@ import type { Blueprint, Operation } from '@dxos/compute';
 import type { Database, DXN, Type } from '@dxos/echo';
 import type { AnchoredTo } from '@dxos/types';
 
+import { LAYOUT_CAPABILITY_ID } from './capability-ids';
 import type { FileInfo } from './file';
 import type { NodeSerializer } from './graph';
 import type { Resource } from './translations';
@@ -48,7 +49,7 @@ export namespace AppCapabilities {
    * Layout capability - provides reactive access to the current layout state.
    * @category Capability
    */
-  export const Layout = Capability$.make<Atom.Atom<Layout>>('org.dxos.app-framework.capability.layout');
+  export const Layout = Capability$.make<Atom.Atom<Layout>>(LAYOUT_CAPABILITY_ID);
 
   /**
    * @category Capability

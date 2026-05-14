@@ -4,9 +4,7 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export const GitHubHandlers = OperationHandlerSet.lazy(
+export const GitHubOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./get-repositories'),
   () => import('./sync'),
 );
-
-export * as GitHubOperation from './definitions';

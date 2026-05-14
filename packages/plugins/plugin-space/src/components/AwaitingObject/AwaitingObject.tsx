@@ -7,9 +7,9 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { useLayout } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { useClient } from '@dxos/react-client';
-import { Filter, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { Button, Icon, Toast, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 

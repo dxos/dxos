@@ -7,9 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 
-import { Open } from './definitions';
+import { MarkdownOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof Open> = Open.pipe(
+const handler: Operation.WithHandler<typeof MarkdownOperation.Open> = MarkdownOperation.Open.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ doc }) {
       const { content } = yield* doc.pipe(

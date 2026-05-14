@@ -1,14 +1,14 @@
 //
+
+import * as Effect from 'effect/Effect';
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-
 import { Operation } from '@dxos/compute';
 
-import { DropAxis } from './definitions';
+import { SheetOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof DropAxis> = DropAxis.pipe(
+const handler: Operation.WithHandler<typeof SheetOperation.DropAxis> = SheetOperation.DropAxis.pipe(
   Operation.withHandler(({ model, axis, axisIndex }) =>
     Effect.sync(() => {
       const undoData = model[axis === 'col' ? 'dropColumn' : 'dropRow'](axisIndex);

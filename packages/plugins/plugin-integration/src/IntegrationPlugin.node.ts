@@ -10,7 +10,7 @@ import { AppGraphBuilder, CreateObject, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 import { Integration } from '#types';
 
-import { integration } from './cli/commands';
+import { integration } from './commands';
 
 export const IntegrationPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({

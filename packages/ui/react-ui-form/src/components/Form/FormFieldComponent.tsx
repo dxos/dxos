@@ -80,7 +80,7 @@ export type FormFieldLabelProps = {
 export const FormFieldLabel = ({ label, error, readonly, asChild }: FormFieldLabelProps) => {
   const Label = readonly || asChild ? 'span' : Input.Label;
   return (
-    <div role='none' className='flex items-center justify-between'>
+    <div className='flex items-center justify-between'>
       <Label className={inputTextLabel}>{label}</Label>
       {error && (
         <Tooltip.Trigger asChild content={error} side='bottom'>
@@ -116,7 +116,7 @@ export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
   const str = String(value ?? '');
 
   return (
-    <div role='none' className='contents'>
+    <div className='contents'>
       <Input.Root validationValence={status}>
         {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} />}
         {layout === 'static' ? <p>{str}</p> : children ? children({ value }) : null}
@@ -159,7 +159,7 @@ export class FormFieldErrorBoundary extends Component<FormFieldErrorBoundaryProp
     if (this.state.error) {
       return (
         <div className='flex gap-2 border border-rose-fill font-mono text-sm'>
-          <span className='bg-rose-fill text-surface-text px-1 font-thin'>ERROR</span>
+          <span className='bg-rose-fill text-base-foreground px-1 font-thin'>ERROR</span>
           {String(this.props.path?.join('.'))}
         </div>
       );

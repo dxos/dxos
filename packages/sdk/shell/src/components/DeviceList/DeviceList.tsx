@@ -24,7 +24,7 @@ export const DeviceList = ({
 }: DeviceListProps & Partial<Pick<AgentFormProps, 'onAgentDestroy'>>) => {
   const { t } = useTranslation(translationKey);
   return (
-    <div role='none' className='p-1'>
+    <div className='p-1'>
       <h2 className={mx('text-description', 'text-center mt-2')}>{t('devices.heading')}</h2>
       {devices.length > 0 && (
         <List>

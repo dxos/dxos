@@ -10,6 +10,7 @@ import { describe, onTestFinished, test } from 'vitest';
 import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import type { CollectionId } from '@dxos/echo-protocol';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import type { LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -45,6 +46,7 @@ describe('AutomergeHost with Subduction', () => {
 
     const host2 = await setupAutomergeHost({ level });
     const handle2 = await host2.loadDoc<any>(Context.default(), url);
+    invariant(handle2);
     await handle2.whenReady();
     expect(handle2.doc()!.text).toEqual('Hello world');
     await host2.flush(Context.default());
@@ -63,6 +65,7 @@ describe('AutomergeHost with Subduction', () => {
     const createdHandle = await host.createDoc(binary, { preserveHistory: true, documentId });
 
     const loadedHandle = await loadPromise;
+    invariant(loadedHandle);
     expect(loadedHandle.doc()).toEqual(createdHandle.doc());
   });
 
@@ -127,6 +130,7 @@ describe('AutomergeHost with Subduction', () => {
       await host2.addReplicator(Context.default(), await network.createReplicator());
 
       const loaded = await host1.loadDoc<{ text: string }>(Context.default(), handle.documentId, { timeout: 1_000 });
+      invariant(loaded);
       expect(loaded.doc()!.text).toEqual('Hello from Subduction');
     } finally {
       await host1.close();

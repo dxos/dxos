@@ -50,7 +50,7 @@ export const FunctionBinding = ({ object }: FunctionBindingProps) => {
   }
 
   return (
-    <div role='none' className='flex flex-col'>
+    <div className='flex flex-col'>
       <Form.Section label={t('remote-function-settings.heading')} />
 
       {functionUrl && (

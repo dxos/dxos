@@ -115,7 +115,7 @@ export const componentRegistry: XmlWidgetRegistry = {
   toolCall: {
     block: true,
     Component: (props) => (
-      <div role='none' className='py-2'>
+      <div className='py-2'>
         <ToolWidget {...props} />
       </div>
     ),

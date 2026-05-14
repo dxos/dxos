@@ -21,7 +21,6 @@ export const SchemaContainer = ({ space }: AppSurface.SpaceArticleProps) => {
     <Settings.Viewport>
       <Settings.Section title={t('schema-verbose.label')} description={t('schema.description')}>
         <div
-          role='none'
           className={mx([
             'grid md:col-span-2 grid-cols-subgrid gap-trim-sm items-center',
             '*:first:mt-0! *:last:mb-0! px-trim-md py-trim-md',
@@ -30,9 +29,7 @@ export const SchemaContainer = ({ space }: AppSurface.SpaceArticleProps) => {
         >
           {schemas.length === 0 && <div className='text-center py-4'>{t('no-schemas-found.message')}</div>}
           {schemas.map((schema) => (
-            <div role='none' key={schema.id}>
-              {schema.typename}
-            </div>
+            <div key={schema.id}>{schema.typename}</div>
           ))}
         </div>
       </Settings.Section>

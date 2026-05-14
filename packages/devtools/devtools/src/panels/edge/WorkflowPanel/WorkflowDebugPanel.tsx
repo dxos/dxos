@@ -156,7 +156,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
   };
 
   return (
-    <div role='none' className={mx('dx-container flex flex-col', props.classNames)}>
+    <div className={mx('dx-container flex flex-col', props.classNames)}>
       <MessageThread ref={scrollerRef} history={history} />
 
       <Toolbar.Root>
@@ -240,7 +240,7 @@ const createLocalExecutionContext = (space: Space): Layer.Layer<RuntimeServices>
         },
       },
       database: Database.makeService(space.db),
-      queues: QueueService.make(space.queues, undefined),
+      queues: QueueService.make(space.queues),
       functionCallService: RemoteFunctionExecutionService.mock(),
     })
     .createLayer();

@@ -24,7 +24,7 @@ export default Capability.makeModule(() =>
         filter: (data): data is { attendableId: string; subject: Sheet.Sheet } =>
           typeof data.attendableId === 'string' &&
           Obj.instanceOf(Sheet.Sheet, data.subject) &&
-          !!getSpace(data.subject),
+          !!Obj.getDatabase(data.subject),
         component: ({ data, role }) => {
           const computeGraphRegistry = useCapability(SheetCapabilities.ComputeGraphRegistry);
 

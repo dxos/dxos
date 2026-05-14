@@ -5,11 +5,16 @@
 import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
-import { AddVoxels, GenerateShape, QueryWorld, RemoveVoxels } from '#operations';
+import { VoxelOperation } from '#types';
 
 const BLUEPRINT_KEY = 'dxos.org/blueprint/voxel';
 
-const operations = [AddVoxels, GenerateShape, QueryWorld, RemoveVoxels];
+const operations = [
+  VoxelOperation.AddVoxels,
+  VoxelOperation.GenerateShape,
+  VoxelOperation.QueryWorld,
+  VoxelOperation.RemoveVoxels,
+];
 
 const make = () =>
   Blueprint.make({

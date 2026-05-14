@@ -104,7 +104,6 @@ export const CommentsThread = ({
       onFocusCapture={handleAttend}
     >
       <div
-        role='none'
         className={mx(
           'col-span-2 grid grid-cols-[var(--dx-rail-size)_1fr_min-content]',
           hoverableControls,
@@ -118,7 +117,7 @@ export const CommentsThread = ({
         ) : (
           <ThreadComponent.Header>{thread.name}</ThreadComponent.Header>
         )}
-        <div role='none' className={buttonGroupClassNames}>
+        <div className={buttonGroupClassNames}>
           {thread.status === 'staged' && <Tag palette='neutral'>{t('draft.button')}</Tag>}
           {onResolve && !(thread?.status === 'staged') && (
             <IconButton
@@ -166,7 +165,7 @@ export const CommentsThread = ({
 
       <ThreadComponent.Status activity={activity}>{t('activity.message')}</ThreadComponent.Status>
 
-      <div role='none' className='h-px -mt-px' ref={threadScrollRef} />
+      <div className='h-px -mt-px' ref={threadScrollRef} />
     </ThreadComponent.Root>
   );
 };

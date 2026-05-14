@@ -5,8 +5,7 @@
 import { Atom, type Registry } from '@effect-atom/atom-react';
 import * as Predicate from 'effect/Predicate';
 
-import { Obj } from '@dxos/echo';
-import { type View } from '@dxos/echo';
+import { Obj, type View } from '@dxos/echo';
 import { Format, TypeEnum, getValue } from '@dxos/echo/internal';
 import { cellClassesForFieldType, formatForDisplay } from '@dxos/react-ui-form';
 import {
@@ -473,8 +472,8 @@ export const cellClassesForRowSelection = (selected: boolean, selectionMode: Sel
 
   switch (selectionMode) {
     case 'single':
-      return ['dx-grid__cell--no-focus-unfurl !bg-current-surface hover:bg-hover-surface cursor-pointer!'];
+      return ['dx-grid__cell--no-focus-unfurl bg-current-surface! hover:bg-hover-surface cursor-pointer!'];
     case 'multiple':
-      return ['!bg-grid-cell-selected'];
+      return ['bg-grid-cell-selected!'];
   }
 };

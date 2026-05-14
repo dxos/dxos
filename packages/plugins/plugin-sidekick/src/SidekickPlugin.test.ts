@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { AppActivationEvents } from '@dxos/app-toolkit';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { SidekickPlugin } from '#plugin';

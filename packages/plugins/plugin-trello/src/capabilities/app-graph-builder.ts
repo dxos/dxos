@@ -11,13 +11,13 @@ import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
 import { GraphBuilder } from '@dxos/plugin-graph';
-import { Integration } from '@dxos/plugin-integration/types';
-import { Kanban } from '@dxos/plugin-kanban/types';
+import { Integration } from '@dxos/plugin-integration';
+import { Kanban } from '@dxos/plugin-kanban';
 
 import { meta } from '#meta';
 
 import { TRELLO_SOURCE } from '../constants';
-import { TrelloOperation } from '../operations';
+import { TrelloOperation } from '../types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

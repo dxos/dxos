@@ -15,7 +15,7 @@ import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Filter, Obj, Query, Type } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { CreateAtom, GraphBuilder, Node } from '@dxos/plugin-graph';
 import { ViewAnnotation } from '@dxos/schema';
 import { createFilename, isNonNullable } from '@dxos/util';

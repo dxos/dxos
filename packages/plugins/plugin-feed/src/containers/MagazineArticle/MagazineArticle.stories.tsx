@@ -10,12 +10,12 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { Feed as EchoFeed, Obj, Ref } from '@dxos/echo';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { Feed as EchoFeed, Filter, Obj, Ref } from '@dxos/echo';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { SpacePlugin } from '@dxos/plugin-space';
+import { SpacePlugin } from '@dxos/plugin-space/plugin';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { generateCuratedPost, generateFeed, generateMagazine } from '#testing';
@@ -129,15 +129,15 @@ const seedSpaceWithQueueItems = ({ client }: { client: Client }) =>
     yield* Effect.promise(() => space.db.flush());
 
     // Push three Posts into the feed's backing queue. CurateMagazine reads
-    // these via `space.queues.get(feedDxn).queryObjects()`. Loading the ref
+    // these via `space.queues.get(feedDXN).queryObjects()`. Loading the ref
     // is necessary post-`db.add` because the inline `savedTarget` from
     // `Ref.make(echoFeed)` is dropped when the ref is encoded for persistence.
     const echoFeed = yield* Effect.promise(() => subscriptionFeed.feed!.load());
-    const feedDxn = EchoFeed.getQueueDxn(echoFeed);
-    if (!feedDxn) {
+    const feedDXN = EchoFeed.getQueueDxn(echoFeed);
+    if (!feedDXN) {
       throw new Error('Backing ECHO feed has no queue DXN — story setup is broken.');
     }
-    const queue = space.queues.get(feedDxn);
+    const queue = space.queues.get(feedDXN);
     const feedRef = Ref.make(subscriptionFeed);
     const posts = [
       Obj.make(Subscription.Post, {

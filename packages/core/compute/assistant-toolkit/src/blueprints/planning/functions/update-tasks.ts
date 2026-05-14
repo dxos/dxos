@@ -3,18 +3,40 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
+import { AiContext } from '@dxos/assistant';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 import { Plan, Agent } from '../../../types';
-import { UpdateTasks } from './definitions';
+import INSTRUCTIONS from './update-tasks.md?raw';
 
+const SimpleTask = Plan.Task.omit('chat');
+
+export const UpdateTasks = Operation.make({
+  meta: {
+    key: 'org.dxos.function.planning.update-tasks', // TODO(burdon): Are hyphens allowed?
+    name: 'Update tasks',
+    description: INSTRUCTIONS,
+  },
+  input: Schema.Struct({
+    tasks: Schema.Array(SimpleTask),
+  }),
+  output: Schema.Any,
+  services: [AiContext.Service, Database.Service],
+});
+
+/**
+ * Updates the planning document (Agent.plan) with the given tasks.
+ */
 export default UpdateTasks.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ tasks: newTasks }) {
       const agent = yield* Agent.getFromChatContext;
+      // TODO(burdon): How to specify requirements/preconditions before calling?
+      // TODO(burdon): How to report non-technical error?
       const plan = yield* Database.load(agent.plan);
 
       Obj.update(plan, (plan) => {
@@ -34,8 +56,8 @@ export default UpdateTasks.pipe(
       });
 
       return trim`
-        Tasks updated. Don't forget to mark tasks as done when you're done with them or update their status to 'in-progress' when you start working on them.
-        Current plan:
+        You must update the task status to 'in-progress' when you start and 'done' when complete.
+        Current plan updated:
         <plan>
           ${Plan.formatPlan(plan)}
         </plan>

@@ -4,7 +4,7 @@
 
 import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { ClientEvents } from '@dxos/plugin-client/types';
+import { ClientEvents } from '@dxos/plugin-client';
 import { AccessToken } from '@dxos/types';
 
 import {

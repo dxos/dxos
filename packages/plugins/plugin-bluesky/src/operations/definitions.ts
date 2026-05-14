@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Ref } from '@dxos/echo';
-import { GetSyncTargetsInput, GetSyncTargetsOutput, Integration } from '@dxos/plugin-integration/types';
+import { GetSyncTargetsInput, GetSyncTargetsOutput, Integration } from '@dxos/plugin-integration';
 
 import { meta } from '#meta';
 

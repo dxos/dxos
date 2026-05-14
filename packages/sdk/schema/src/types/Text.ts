@@ -6,8 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj } from '@dxos/echo';
-import { Type } from '@dxos/echo';
+import { Annotation, Obj, Type } from '@dxos/echo';
 
 export const Text = Schema.Struct({
   name: Schema.optional(Schema.String),

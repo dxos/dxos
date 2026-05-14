@@ -5,8 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { defineObjectMigration } from '@dxos/client/echo';
-import { Filter, JsonSchema, Obj, Query, Ref, Type, View } from '@dxos/echo';
+import { Filter, JsonSchema, Migration, Obj, Query, Ref, Type, View } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { ViewModel } from '@dxos/schema';
 
@@ -35,7 +34,7 @@ describe('Kanban migration v1 → v2', () => {
     await builder.close();
   });
 
-  const migration = defineObjectMigration({
+  const migration = Migration.define({
     from: KanbanV1,
     to: Kanban,
     transform: async (from) => ({

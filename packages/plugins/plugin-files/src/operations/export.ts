@@ -14,9 +14,9 @@ import { byPosition } from '@dxos/util';
 import { meta } from '#meta';
 
 import { FileCapabilities, type FilesState } from '../types';
-import { Export } from './definitions';
+import { FilesOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof Export> = Export.pipe(
+const handler: Operation.WithHandler<typeof FilesOperation.Export> = FilesOperation.Export.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       const { explore } = yield* Capability.get(AppCapabilities.AppGraph);

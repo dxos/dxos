@@ -218,7 +218,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
       <p className='text-description'>{t('qr-code.description', { ns: meta.id })}</p>
       <div role='group' className='grid grid-cols-[1fr_min-content]'>
         <div className='flex justify-center py-4'>
-          <div role='none' className='w-full md:max-w-80 aspect-square relative text-description'>
+          <div className='w-full md:max-w-80 aspect-square relative text-description'>
             <QR
               rounding={100}
               backgroundColor='transparent'

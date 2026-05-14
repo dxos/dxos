@@ -6,7 +6,7 @@ import { Routine } from '@dxos/compute';
 import { Ref } from '@dxos/echo';
 import { createObject } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown';
 import { Text } from '@dxos/schema';
 
 import { Notebook } from '#types';

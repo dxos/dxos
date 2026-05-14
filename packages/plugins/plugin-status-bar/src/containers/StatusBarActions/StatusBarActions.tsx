@@ -20,10 +20,10 @@ export const StatusBarActions = (_props: StatusBarActionsProps) => {
 
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
-      <div role='none' className='h-full flex items-center px-2 gap-2'>
+      <div className='h-full flex items-center px-2 gap-2'>
         <EnvironmentLabel />
         <VersionNumber />
-        <div role='none' className='grow' />
+        <div className='grow' />
         <StatusBar.Button asChild>
           <a href='https://dxos.org/discord' target='_blank' rel='noopener noreferrer'>
             <Icon icon='ph--discord-logo--regular' />

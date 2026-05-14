@@ -12,7 +12,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';

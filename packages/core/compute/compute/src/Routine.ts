@@ -12,47 +12,24 @@ import * as Blueprint from './Blueprint';
 import * as Template from './Template';
 
 /**
- * Executable instructions, which may use Blueprints.
- * May reference additional context.
+ * Prompt-based operation.
+ * May reference blueprints and additional context.
  */
-// TODO(burdon): Name?
 export const Routine = Schema.Struct({
-  /**
-   * Name of the routine.
-   */
   name: Schema.optional(Schema.String),
-
-  /**
-   * Description of the routine's purpose and functionality.
-   * Allows AI agents to execute routines automatically as tools.
-   */
   description: Schema.optional(Schema.String),
-
-  /**
-   * Input schema of the routine.
-   */
-  input: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)),
-
-  /**
-   * Output schema of the routine.
-   */
-  output: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)),
-
-  /**
-   * Natural language instructions for the routine.
-   * These should provide concrete course of action for the AI to follow.
-   */
+  input: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)).annotations({
+    description: 'Input schema',
+  }),
+  output: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)).annotations({
+    description: 'Output schema',
+  }),
   // TODO(burdon): Form editor.
-  instructions: Template.Template.pipe(Annotation.FormInputAnnotation.set(false)),
-
-  /**
-   * Blueprints that the routine may utilize.
-   */
+  instructions: Template.Template.pipe(Annotation.FormInputAnnotation.set(false)).annotations({
+    description: 'Agent instructions',
+  }),
   blueprints: Schema.Array(Ref.Ref(Blueprint.Blueprint)),
-
-  /**
-   * Additional context that the routine may utilize.
-   */
+  // TODO(burdon): Change to map?
   context: Schema.Array(Schema.Any).pipe(Annotation.FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
@@ -68,7 +45,7 @@ export const Routine = Schema.Struct({
 
 export interface Routine extends Schema.Schema.Type<typeof Routine> {}
 
-export const make = (params: {
+export type MakeOptions = {
   name?: string;
   description?: string;
   input?: Schema.Schema.AnyNoContext;
@@ -76,13 +53,23 @@ export const make = (params: {
   instructions?: string;
   blueprints?: Ref.Ref<Blueprint.Blueprint>[];
   context?: any[];
-}): Routine =>
+};
+
+export const make = ({
+  name,
+  description,
+  input,
+  output,
+  instructions,
+  blueprints = [],
+  context = [],
+}: MakeOptions): Routine =>
   Obj.make(Routine, {
-    name: params.name,
-    description: params.description,
-    input: JsonSchema.toJsonSchema(params.input ?? Schema.Void),
-    output: JsonSchema.toJsonSchema(params.output ?? Schema.Void),
-    instructions: Template.make({ source: params.instructions }),
-    blueprints: params.blueprints ?? [],
-    context: params.context ?? [],
+    name,
+    description,
+    input: JsonSchema.toJsonSchema(input ?? Schema.Void),
+    output: JsonSchema.toJsonSchema(output ?? Schema.Void),
+    instructions: Template.make({ source: instructions }),
+    blueprints,
+    context,
   });

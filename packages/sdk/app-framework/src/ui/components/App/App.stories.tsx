@@ -55,11 +55,7 @@ const DefaultStory = ({ plugins }: DefaultStoryProps) => {
     plugins,
     core,
     placeholder: () => {
-      return (
-        <div role='none' className='text-description'>
-          Loading...
-        </div>
-      );
+      return <div className='text-description'>Loading...</div>;
     },
   });
 

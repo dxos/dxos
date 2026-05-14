@@ -7,10 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 
-import { Voxel } from '../types';
-import { RemoveVoxels } from './definitions';
+import { Voxel, VoxelOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof RemoveVoxels> = RemoveVoxels.pipe(
+const handler: Operation.WithHandler<typeof VoxelOperation.RemoveVoxels> = VoxelOperation.RemoveVoxels.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ world, positions }) {
       const loaded = (yield* Database.load(world)) as Voxel.World;

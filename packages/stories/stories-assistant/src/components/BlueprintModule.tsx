@@ -12,9 +12,9 @@ import { useQuery } from '@dxos/react-client/echo';
 import { Toolbar, useTranslation } from '@dxos/react-ui';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
-import { type ComponentProps } from './types';
+import { type ModuleProps } from './types';
 
-export const BlueprintModule = ({ space }: ComponentProps) => {
+export const BlueprintModule = ({ space }: ModuleProps) => {
   const [blueprint] = useQuery(space.db, Filter.type(Blueprint.Blueprint));
   const { t } = useTranslation(meta.id);
 

@@ -8,11 +8,10 @@ import { Operation } from '@dxos/compute';
 import { type Database, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { type Magazine, Subscription } from '../types';
+import { FeedOperation, type Magazine, Subscription } from '../types';
 import { findStarTag } from '../util';
-import { CurateMagazine, RefreshMagazine, SyncFeed } from './definitions';
 
-export default RefreshMagazine.pipe(
+export default FeedOperation.RefreshMagazine.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ magazine: magazineRef }) {
       const magazine = yield* Effect.promise(() => magazineRef.load());
@@ -39,7 +38,7 @@ export default RefreshMagazine.pipe(
 
       let synced = 0;
       for (const feed of validFeeds) {
-        const result = yield* Effect.either(Operation.invoke(SyncFeed, { feed }));
+        const result = yield* Effect.either(Operation.invoke(FeedOperation.SyncFeed, { feed }));
         if (result._tag === 'Right') {
           synced += 1;
         } else {
@@ -47,7 +46,7 @@ export default RefreshMagazine.pipe(
         }
       }
 
-      const { added } = yield* Operation.invoke(CurateMagazine, { magazine: magazineRef });
+      const { added } = yield* Operation.invoke(FeedOperation.CurateMagazine, { magazine: magazineRef });
 
       const db = Obj.getDatabase(magazine);
       applyPerFeedKeep(magazine, db);
@@ -84,8 +83,8 @@ const publishedTimestamp = (post: Subscription.Post): number => {
  */
 const applyPerFeedKeep = (magazine: Magazine.Magazine, db: Database.Database | undefined): void => {
   const tag = db ? findStarTag(db) : undefined;
-  const tagDxn = tag ? Obj.getDXN(tag).toString() : undefined;
-  const isStarred = (post: Subscription.Post) => (tagDxn ? (Obj.getMeta(post).tags?.includes(tagDxn) ?? false) : false);
+  const tagDXN = tag ? Obj.getDXN(tag).toString() : undefined;
+  const isStarred = (post: Subscription.Post) => (tagDXN ? (Obj.getMeta(post).tags?.includes(tagDXN) ?? false) : false);
 
   const feedKeepById = new Map<string, number>();
   for (const feedRef of magazine.feeds) {
@@ -108,8 +107,8 @@ const applyPerFeedKeep = (magazine: Magazine.Magazine, db: Database.Database | u
 
   const byFeedId = new Map<string | undefined, Array<{ ref: Ref.Ref<Subscription.Post>; post: Subscription.Post }>>();
   for (const pair of resolvedPairs) {
-    const feedRefDxn = pair.post.feed?.dxn.toString();
-    const feedId = feedRefDxn ? dxnTailId(feedRefDxn) : undefined;
+    const feedRefDXN = pair.post.feed?.dxn.toString();
+    const feedId = feedRefDXN ? dxnTailId(feedRefDXN) : undefined;
     const arr = byFeedId.get(feedId) ?? [];
     arr.push(pair);
     byFeedId.set(feedId, arr);

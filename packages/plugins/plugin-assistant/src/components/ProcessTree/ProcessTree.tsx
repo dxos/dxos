@@ -79,7 +79,7 @@ export const ProcessTree = composable<HTMLDivElement, ProcessTreeProps>(
                           )}
                         />
                       </Tooltip.Trigger>
-                      <div role='none' className='flex items-center gap-2 text-xs overflow-hidden'>
+                      <div className='flex items-center gap-2 text-xs overflow-hidden'>
                         {/* TODO(burdon): Name is too long (and not informative). */}
                         <span className='truncate text-description select-none'>
                           {process.params.name ?? process.pid.toString()}

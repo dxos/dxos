@@ -67,7 +67,7 @@ const sharedSubduedInputStyles: ComponentFragment<InputStyleProps> = (props) => 
 
 const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => [
   '[[data-drag-autoscroll="active"]_&]:pointer-events-none',
-  'py-0 w-full text-base-surface-text rounded-xs placeholder-placeholder',
+  'py-0 w-full text-base-foreground rounded-xs placeholder-placeholder',
   textInputSurfaceFocus,
   densityDimensions(props.density),
   props.disabled ? staticDisabled : textInputSurfaceHover,
@@ -75,7 +75,7 @@ const sharedDefaultInputStyles: ComponentFragment<InputStyleProps> = (props) => 
 
 const sharedStaticInputStyles: ComponentFragment<InputStyleProps> = (props) => [
   '[[data-drag-autoscroll="active"]_&]:pointer-events-none',
-  'py-0 w-full text-base-surface-text rounded-xs placeholder-placeholder',
+  'py-0 w-full text-base-foreground rounded-xs placeholder-placeholder',
   textInputSurfaceFocus,
   textInputSurfaceHover,
   props.focused && 'bg-attention-surface',
@@ -135,9 +135,9 @@ const inputSegment: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   mx(
     'flex items-center justify-center font-mono',
     props.density === 'fine' ? 'size-10 pointer-fine:size-8 rounded-xs' : 'size-12 rounded-xs',
-    'bg-input-surface text-base-surface-text transition-colors border border-separator',
-    'data-[focused]:bg-attention-surface data-[focused]:border-neutral-focus-indicator',
-    'data-[focused]:ring-2 data-[focused]:ring-offset-0 data-[focused]:ring-neutral-focus-indicator',
+    'bg-input-surface text-base-foreground transition-colors border border-separator',
+    'data-[focused]:bg-attention-surface data-[focused]:border-focus-ring-subtle',
+    'data-[focused]:ring-2 data-[focused]:ring-offset-0 data-[focused]:ring-focus-ring-subtle',
     inputValence(props.validationValence),
     props.disabled && staticDisabled,
     ...etc,

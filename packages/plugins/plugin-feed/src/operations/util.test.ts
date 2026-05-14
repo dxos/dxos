@@ -13,12 +13,12 @@ const makePost = (props: {
   title: string;
   published?: string;
   starred?: boolean;
-  starDxn?: string;
+  starDXN?: string;
 }): Subscription.Post => {
   const post = Obj.make(Subscription.Post, { title: props.title, published: props.published });
-  if (props.starred && props.starDxn) {
+  if (props.starred && props.starDXN) {
     Obj.update(post, (post) => {
-      Obj.getMeta(post).tags = [props.starDxn!];
+      Obj.getMeta(post).tags = [props.starDXN!];
     });
   }
   return post;
@@ -41,9 +41,9 @@ describe('partitionByKeepBound', () => {
 
   test('preserves starred posts beyond the keep bound', () => {
     const starTag = Obj.make(Tag.Tag, { label: Subscription.STAR_TAG });
-    const starDxn = Obj.getDXN(starTag).toString();
+    const starDXN = Obj.getDXN(starTag).toString();
     const posts = [
-      makePost({ title: 'A-old-starred', published: '2026-04-01T00:00:00Z', starred: true, starDxn }),
+      makePost({ title: 'A-old-starred', published: '2026-04-01T00:00:00Z', starred: true, starDXN }),
       makePost({ title: 'B', published: '2026-04-02T00:00:00Z' }),
       makePost({ title: 'C', published: '2026-04-03T00:00:00Z' }),
       makePost({ title: 'D', published: '2026-04-04T00:00:00Z' }),
@@ -69,10 +69,10 @@ describe('partitionByKeepBound', () => {
 
   test('keep bound of 0 drops all non-starred posts', () => {
     const starTag = Obj.make(Tag.Tag, { label: Subscription.STAR_TAG });
-    const starDxn = Obj.getDXN(starTag).toString();
+    const starDXN = Obj.getDXN(starTag).toString();
     const posts = [
       makePost({ title: 'A', published: '2026-04-01T00:00:00Z' }),
-      makePost({ title: 'B-starred', published: '2026-04-02T00:00:00Z', starred: true, starDxn }),
+      makePost({ title: 'B-starred', published: '2026-04-02T00:00:00Z', starred: true, starDXN }),
     ];
     const { kept, dropped } = partitionByKeepBound(posts, 0, starTag);
     expect(kept.map((post) => post.title)).toEqual(['B-starred']);

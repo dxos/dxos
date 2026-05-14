@@ -7,12 +7,12 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { Obj, Ref, Relation } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
+import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { Thread } from '@dxos/types';
 
-import { RestoreMessage } from './definitions';
+import { ThreadOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof RestoreMessage> = RestoreMessage.pipe(
+const handler: Operation.WithHandler<typeof ThreadOperation.RestoreMessage> = ThreadOperation.RestoreMessage.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ anchor, message, messageIndex }) {
       const thread = Relation.getSource(anchor) as Thread.Thread;

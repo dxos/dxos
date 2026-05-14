@@ -9,10 +9,9 @@ import * as Option from 'effect/Option';
 import path from 'node:path';
 
 import { CommandConfig } from '@dxos/cli-util';
-import { Filter, type Space } from '@dxos/client/echo';
+import { type Space } from '@dxos/client/echo';
 import { Script, Operation } from '@dxos/compute';
-import { Database, Obj, Ref, type Type } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
+import { Collection, Database, Filter, Obj, Ref, type Type } from '@dxos/echo';
 import { getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';

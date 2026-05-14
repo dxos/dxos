@@ -12,7 +12,7 @@ import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form, useFormContext } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { OutlineOperation } from '#operations';
+import { OutlineOperation } from '#types';
 
 const QuickEntryForm = Schema.Struct({
   text: Schema.String.pipe(
@@ -51,7 +51,7 @@ const QuickEntryActions = ({ continueRef, formSaveRef }: QuickEntryActionsProps)
   }, [onSave, continueRef]);
 
   return (
-    <div role='none' className='grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding'>
+    <div className='grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding'>
       {onCancel && (
         <IconButton
           icon='ph--x--regular'

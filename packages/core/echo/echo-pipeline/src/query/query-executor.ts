@@ -226,7 +226,7 @@ declare global {
   }
 }
 
-const TRACE_QUERY_EXECUTION = !!import.meta.env.DX_TRACE_QUERY_EXECUTION;
+const TRACE_QUERY_EXECUTION = !!import.meta.env?.DX_TRACE_QUERY_EXECUTION;
 
 const MAX_DEPTH_FOR_DELETION_TRACING = 10;
 const MAX_DEPTH_FOR_CHILD_OF_TRACING = 10;
@@ -271,17 +271,17 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
           }
         }
 
-        // Extract queueIds from explicit queue DXNs and derive spaceIds from them.
-        if (step.scope.queues && step.scope.queues.length > 0 && !step.scope.allQueuesFromSpaces) {
+        // Extract queueIds from explicit feed DXNs (queue-kinded) and derive spaceIds from them.
+        if (step.scope.feeds && step.scope.feeds.length > 0 && !step.scope.allFeedsFromSpaces) {
           let parseFailed = false;
           const derivedQueueIds = new Set<ObjectId>();
           const derivedSpaceIds = new Set<SpaceId>();
-          for (const queueDxnStr of step.scope.queues as DXN.String[]) {
+          for (const queueDxnStr of step.scope.feeds as DXN.String[]) {
             try {
-              const queueDxn = DXN.parse(queueDxnStr).asQueueDXN();
-              if (queueDxn) {
-                derivedQueueIds.add(queueDxn.queueId as ObjectId);
-                derivedSpaceIds.add(queueDxn.spaceId as SpaceId);
+              const queueDXN = DXN.parse(queueDxnStr).asQueueDXN();
+              if (queueDXN) {
+                derivedQueueIds.add(queueDXN.queueId as ObjectId);
+                derivedSpaceIds.add(queueDXN.spaceId as SpaceId);
               }
             } catch {
               parseFailed = true;
@@ -575,8 +575,8 @@ export class QueryExecutor extends Resource {
     workingSet = [...workingSet];
 
     const spaces = (step.scope.spaceIds ?? []) as SpaceId[];
-    const queues = (step.scope.queues ?? []) as DXN.String[];
-    const allQueuesFromSpaces = step.scope.allQueuesFromSpaces ?? false;
+    const queues = (step.scope.feeds ?? []) as DXN.String[];
+    const allQueuesFromSpaces = step.scope.allFeedsFromSpaces ?? false;
 
     const trace: ExecutionTrace = {
       ...ExecutionTrace.makeEmpty(),
@@ -910,9 +910,9 @@ export class QueryExecutor extends Resource {
     const parentObjectIds = new Set<string>();
     for (const parentDxnStr of filter.parents) {
       const dxn = DXN.parse(parentDxnStr);
-      const echoDxn = dxn.asEchoDXN();
-      if (echoDxn) {
-        parentObjectIds.add(echoDxn.echoId);
+      const echoDXN = dxn.asEchoDXN();
+      if (echoDXN) {
+        parentObjectIds.add(echoDXN.echoId);
       }
     }
     const maxDepth = filter.transitive ? MAX_DEPTH_FOR_CHILD_OF_TRACING : 1;
@@ -946,9 +946,9 @@ export class QueryExecutor extends Resource {
 
     const directParent = QueryItem.getParent(item);
     if (directParent) {
-      const echoDxn = DXN.parse(directParent).asEchoDXN();
-      if (echoDxn) {
-        parentRefs.push({ dxnStr: directParent, objectId: echoDxn.echoId });
+      const echoDXN = DXN.parse(directParent).asEchoDXN();
+      if (echoDXN) {
+        parentRefs.push({ dxnStr: directParent, objectId: echoDXN.echoId });
       }
     }
 
@@ -1371,7 +1371,7 @@ export class QueryExecutor extends Resource {
     const anchorDxns = workingSet.map((item) => DXN.fromLocalObjectId(item.objectId).toString());
     const rows: readonly ReverseRef[] = (
       await Promise.all(
-        anchorDxns.map((targetDxn) => this._runInRuntime(this._indexEngine.queryReverseRef({ targetDxn }))),
+        anchorDxns.map((targetDXN) => this._runInRuntime(this._indexEngine.queryReverseRef({ targetDXN }))),
       )
     ).flat();
 
@@ -1509,13 +1509,12 @@ export class QueryExecutor extends Resource {
       return null;
     }
     const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, meta.documentId as DocumentId, {
-      fetchFromNetwork: true,
+      fetchFromNetwork: false,
     });
-    const doc = handle.doc();
-    if (!doc) {
+    if (!handle) {
       return null;
     }
-    const object = DatabaseDirectory.getInlineObject(doc, meta.objectId);
+    const object = DatabaseDirectory.getInlineObject(handle.doc(), meta.objectId);
     if (!object) {
       return null;
     }
@@ -1534,13 +1533,13 @@ export class QueryExecutor extends Resource {
   private async _loadFromDXN(dxn: DXN, { sourceSpaceId }: { sourceSpaceId: SpaceId }): Promise<QueryItem | null> {
     switch (dxn.kind) {
       case DXN.kind.ECHO: {
-        const echoDxn = dxn.asEchoDXN();
-        if (!echoDxn) {
+        const echoDXN = dxn.asEchoDXN();
+        if (!echoDXN) {
           log.warn('unable to resolve DXN', { dxn });
           return null;
         }
 
-        const spaceId = echoDxn.spaceId ?? sourceSpaceId;
+        const spaceId = echoDXN.spaceId ?? sourceSpaceId;
 
         const spaceRoot = this._spaceStateManager.getRootBySpaceId(spaceId);
         if (!spaceRoot) {
@@ -1553,10 +1552,10 @@ export class QueryExecutor extends Resource {
           return null;
         }
 
-        const inlineObject = DatabaseDirectory.getInlineObject(dbDirectory, echoDxn.echoId);
+        const inlineObject = DatabaseDirectory.getInlineObject(dbDirectory, echoDXN.echoId);
         if (inlineObject) {
           return {
-            objectId: echoDxn.echoId,
+            objectId: echoDXN.echoId,
             documentId: spaceRoot.documentId,
             spaceId,
             queueId: null,
@@ -1567,26 +1566,24 @@ export class QueryExecutor extends Resource {
           };
         }
 
-        const link = DatabaseDirectory.getLink(dbDirectory, echoDxn.echoId);
+        const link = DatabaseDirectory.getLink(dbDirectory, echoDXN.echoId);
         if (!link) {
           return null;
         }
 
         const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, link as AutomergeUrl, {
-          fetchFromNetwork: true,
+          fetchFromNetwork: false,
         });
-        const doc = handle.doc();
-        if (!doc) {
+        if (!handle) {
           return null;
         }
-
-        const object = DatabaseDirectory.getInlineObject(doc, echoDxn.echoId);
+        const object = DatabaseDirectory.getInlineObject(handle.doc(), echoDXN.echoId);
         if (!object) {
           return null;
         }
 
         return {
-          objectId: echoDxn.echoId,
+          objectId: echoDXN.echoId,
           documentId: handle.documentId,
           spaceId,
           queueId: null,
@@ -1598,13 +1595,13 @@ export class QueryExecutor extends Resource {
         break;
       }
       case DXN.kind.QUEUE: {
-        const queueDxn = dxn.asQueueDXN();
-        if (!queueDxn || !queueDxn.objectId) {
+        const queueDXN = dxn.asQueueDXN();
+        if (!queueDXN || !queueDXN.objectId) {
           log.warn('unable to resolve queue DXN', { dxn });
           return null;
         }
 
-        const { spaceId, queueId, objectId } = queueDxn;
+        const { spaceId, queueId, objectId } = queueDXN;
         const meta = await this._runInRuntime(
           this._indexEngine.lookupByObjectId({
             objectId,

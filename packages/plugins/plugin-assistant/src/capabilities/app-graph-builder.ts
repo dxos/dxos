@@ -8,20 +8,22 @@ import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, getActiveSpace, getPersonalSpace } from '@dxos/app-toolkit';
-import { Chat } from '@dxos/assistant-toolkit';
+import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Routine, Operation } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { DXN, Database, Filter, Obj, type Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
-import { AutomationCapabilities } from '@dxos/plugin-automation/types';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { AutomationCapabilities } from '@dxos/plugin-automation';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { ASSISTANT_COMPANION_VARIANT, meta } from '#meta';
-import { AssistantOperation } from '#operations';
-import { AssistantCapabilities } from '#types';
+import { AssistantCapabilities, AssistantOperation } from '#types';
+
+/** Operation definitions to seed as `PersistentOperation` records for automation / triggers. */
+const computeOperationsToImport = [AgentPrompt] as const;
 
 /** Match ECHO objects that are NOT chats. */
 const whenNonChatObject = NodeMatcher.whenAll(
@@ -66,6 +68,35 @@ export default Capability.makeModule(
         actions: () =>
           Effect.succeed([
             Node.makeAction({
+              id: 'import-compute-operations',
+              data: Effect.fnUntraced(function* () {
+                const capabilities = yield* Capability.Service;
+                const client = yield* Capability.get(ClientCapabilities.Client);
+                const space = getActiveSpace(client, capabilities) ?? getPersonalSpace(client);
+                if (!space) {
+                  return;
+                }
+                for (const definition of computeOperationsToImport) {
+                  const key = definition.meta.key;
+                  if (!key) {
+                    continue;
+                  }
+                  const existing = yield* Effect.promise(
+                    (): Promise<Operation.PersistentOperation[]> =>
+                      space.db.query(Filter.type(Operation.PersistentOperation, { key })).run(),
+                  );
+                  if (existing.length === 0) {
+                    space.db.add(Operation.serialize(definition));
+                  }
+                }
+                yield* Database.flush();
+              }),
+              properties: {
+                label: ['import-compute-operations.label', { ns: meta.id }],
+                icon: 'ph--download-simple--regular',
+              },
+            }),
+            Node.makeAction({
               id: 'reset-blueprints',
               data: Effect.fnUntraced(function* () {
                 const capabilities = yield* Capability.Service;
@@ -98,16 +129,16 @@ export default Capability.makeModule(
           Effect.gen(function* () {
             const state = get(yield* Capability.get(AssistantCapabilities.State));
             const cache = get(yield* Capability.get(AssistantCapabilities.CompanionChatCache));
-            const objectDxn = Obj.getDXN(object).toString();
+            const objectDXN = Obj.getDXN(object).toString();
 
             // Resolve chat from persisted state or transient cache.
             const chat = pipe(
-              Option.fromNullable(state.currentChat[objectDxn]),
+              Option.fromNullable(state.currentChat[objectDXN]),
               Option.flatMap((dxnStr) => Option.fromNullable(DXN.tryParse(dxnStr))),
               Option.flatMap((dxn) => Option.fromNullable(Obj.getDatabase(object)?.makeRef(dxn))),
               Option.map((ref) => get(AtomObj.make(ref as Ref.Ref<Obj.Unknown>))),
               Option.filter(Obj.isObject),
-              Option.orElse(() => pipe(Option.fromNullable(cache[objectDxn]), Option.filter(Obj.isObject))),
+              Option.orElse(() => pipe(Option.fromNullable(cache[objectDXN]), Option.filter(Obj.isObject))),
               Option.getOrNull,
             );
 
@@ -126,7 +157,7 @@ export default Capability.makeModule(
       GraphBuilder.createExtension({
         id: 'invocations',
         match: NodeMatcher.whenAny(
-          NodeMatcher.whenEchoTypeMatches(Sequence),
+          NodeMatcher.whenEchoTypeMatches(Sequence.Sequence),
           NodeMatcher.whenEchoTypeMatches(Routine.Routine),
         ),
         connector: () =>

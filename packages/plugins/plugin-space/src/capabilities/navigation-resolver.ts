@@ -15,8 +15,8 @@ import {
 } from '@dxos/app-toolkit';
 import { Database, Entity, Key } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
-import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings/types';
+import { ClientCapabilities } from '@dxos/plugin-client';
+import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings';
 
 import { meta } from '#meta';
 

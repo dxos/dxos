@@ -6,8 +6,8 @@ import React, { useCallback, useMemo } from 'react';
 
 import { type Script } from '@dxos/compute';
 import { Context } from '@dxos/context';
+import { Obj } from '@dxos/echo';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
-import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
 import { TestPanel } from '#components';
@@ -20,7 +20,7 @@ export type TestContainerProps = {
 
 export const TestContainer = ({ role, script }: TestContainerProps) => {
   const { client, fn, existingFunctionId } = useDeployDeps({ script });
-  const space = getSpace(script);
+  const spaceId = Obj.getDatabase(script)?.spaceId;
 
   const functionsClient = useMemo(() => FunctionsServiceClient.fromClient(client), [client]);
 
@@ -29,9 +29,9 @@ export const TestContainer = ({ role, script }: TestContainerProps) => {
       if (!fn) {
         throw new Error('Function not deployed');
       }
-      return functionsClient.invoke(Context.default(), fn, input, { spaceId: space?.id });
+      return functionsClient.invoke(Context.default(), fn, input, { spaceId });
     },
-    [fn, functionsClient, space?.id],
+    [fn, functionsClient, spaceId],
   );
 
   return (

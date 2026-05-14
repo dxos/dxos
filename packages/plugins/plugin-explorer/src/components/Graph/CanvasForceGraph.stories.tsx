@@ -8,7 +8,7 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Type, View } from '@dxos/echo';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
@@ -30,7 +30,7 @@ random.seed(1);
 
 const DefaultStory = () => {
   const [space] = useSpaces();
-  const model = useGraphModel(space);
+  const model = useGraphModel(space?.db);
   if (!space || !model) {
     return <Loading data={{ space: !!space, model: !!model }} />;
   }

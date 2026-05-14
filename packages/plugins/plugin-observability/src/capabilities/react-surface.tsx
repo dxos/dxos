@@ -12,7 +12,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { ObservabilitySettings } from '#components';
 import { HelpContainer } from '#containers';
 import { meta } from '#meta';
-import { ObservabilityOperation } from '#operations';
+import { ObservabilityOperation } from '#types';
 import { type Settings } from '#types';
 
 export default Capability.makeModule(() =>

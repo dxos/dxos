@@ -43,4 +43,5 @@ export default GetContext.pipe(
       };
     }) as any,
   ),
+  Operation.opaqueHandler,
 );

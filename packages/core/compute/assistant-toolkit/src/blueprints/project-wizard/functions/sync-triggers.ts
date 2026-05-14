@@ -76,12 +76,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
         feedObj = feedRef ? Option.getOrUndefined(yield* Database.loadOption(feedRef)) : undefined;
       }
 
-      const queueDxn = Option.fromNullable(feedObj).pipe(
-        Option.filter(Obj.instanceOf(Feed.Feed)),
-        Option.map(Feed.getQueueDxn),
-        Option.getOrUndefined,
-      );
-      if (!queueDxn) {
+      if (!feedObj || !Obj.instanceOf(Feed.Feed, feedObj) || !Feed.getQueueDxn(feedObj)) {
         continue;
       }
 
@@ -97,7 +92,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
             ],
           },
           enabled: triggersEnabled,
-          spec: Trigger.specQueue(queueDxn.toString()),
+          spec: Trigger.specFeed(feedObj),
           function: Ref.make(Operation.serialize(filterEvents ? Qualifier : AgentWorker)),
           input: {
             agent: Ref.make(agent),
@@ -108,7 +103,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
       );
     }
 
-    if ((agent.filterEvents ?? true) && agent.queue) {
+    if ((agent.filterEvents ?? true) && agent.feed) {
       yield* Database.add(
         Trigger.make({
           [Obj.Parent]: agent,
@@ -123,7 +118,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
           },
           function: Ref.make(Operation.serialize(AgentWorker)),
           enabled: triggersEnabled,
-          spec: Trigger.specQueue(agent.queue.dxn.toString()),
+          spec: Trigger.specQueue(agent.feed.dxn.toString()),
           input: {
             agent: Ref.make(agent),
             event: '{{event}}',

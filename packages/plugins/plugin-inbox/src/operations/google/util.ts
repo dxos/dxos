@@ -57,8 +57,10 @@ const stripWhitespace = (str: string): string => {
 
 // TODO(burdon): Replace legal disclaimers, etc.
 export const normalizeText = (text: string): string => {
-  const str = isHTML(text) ? stripWhitespace(toMarkdown(text)) : text;
-  return str;
+  // Collapse runs of blank lines for both HTML (after markdown conversion) and
+  // plain-text emails so the rendered message never shows more than one blank
+  // line between paragraphs.
+  return stripWhitespace(isHTML(text) ? toMarkdown(text) : text);
 };
 
 // TODO(burdon): Customizable parser for plaintext.

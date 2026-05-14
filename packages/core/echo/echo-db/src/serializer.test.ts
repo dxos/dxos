@@ -5,8 +5,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { Obj, Query, Ref, Type } from '@dxos/echo';
-import { Filter } from '@dxos/echo';
+import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
