@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { translations as themeTranslations } from '@dxos/plugin-theme/translations';
 import { Dialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
@@ -28,7 +29,7 @@ const meta = {
   decorators: [withTheme(), withPluginManager()],
   parameters: {
     layout: 'fullscreen',
-    translations,
+    translations: [...translations, ...themeTranslations],
   },
 } satisfies Meta<typeof ShortcutsDialogContent>;
 
