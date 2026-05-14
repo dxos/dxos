@@ -1,0 +1,191 @@
+---
+id: org.dxos.plugin.support
+name: SupportPlugin
+version: 0.1.0
+---
+
+In-app support assistant for Composer. Users open a Support ticket from the
+navtree and the AI assistant collaborates on diagnosing the issue, searching
+documentation, and (optionally) filing a follow-up GitHub issue. Tickets are
+ECHO objects so a conversation is local-first, replicable to other devices,
+and reviewable by a human supporter later.
+
+Initial scope is a thin skeleton: a `Ticket` schema, three operations wired
+to a blueprint, and a single article surface. Documentation search and issue
+filing are stubbed — the blueprint exists so the assistant can be exercised
+end-to-end while the integrations land in later phases.
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+
+## Types
+
+```mdl
+type TicketStatus
+  literals: open | in_progress | resolved
+```
+
+```mdl
+type Ticket
+  desc: >
+    A user-reported support ticket. Conversation history is kept by the
+    AI assistant in a separate ECHO conversation; the Ticket itself
+    carries the summary and the resolution status.
+  fields:
+    title: string
+    body?: string                # Initial description of the problem.
+    status: TicketStatus
+    resolution?: string          # Resolution notes written when status -> resolved.
+    tags: string[]               # Free-form tags (e.g. echo, ui, performance).
+```
+
+## Components
+
+```mdl
+component SupportArticle
+  desc: >
+    Article surface bound to a Ticket. Displays title, body, status and
+    resolution. The assistant chat lives in the standard chat companion
+    surface; this article is the persistent record.
+  props:
+    ticket: Ticket
+  slots:
+    toolbar?: ReactNode
+  actions:
+    setTitle(value: string)
+    setBody(value: string)
+    setResolution(value: string)
+    setStatus(status: TicketStatus)
+  layout: |
+    ┌─────────────────────────────────┐
+    │ [toolbar slot] status: open     │
+    ├─────────────────────────────────┤
+    │ Title  [_______________________]│
+    │ Body   [_______________________]│
+    │        [_______________________]│
+    ├─────────────────────────────────┤
+    │ Resolution                      │
+    │        [_______________________]│
+    ├─────────────────────────────────┤
+    │ [Mark in progress] [Resolve]    │
+    └─────────────────────────────────┘
+```
+
+## Operations
+
+```mdl
+op createTicket
+  desc: Creates a new Ticket in the active space.
+  input:
+    title: string
+    body?: string
+  output: Ticket
+  effects: [echo:write]
+```
+
+```mdl
+op resolveTicket
+  desc: Marks a Ticket as resolved with optional resolution notes.
+  input:
+    ticket: Ticket
+    resolution?: string
+  output: Ticket
+  effects: [echo:write]
+```
+
+```mdl
+op searchDocs
+  desc: >
+    Searches Composer / DXOS documentation for the given query and returns
+    a list of excerpts. Stub implementation in the initial phase; later
+    backed by an embedded vector index or a remote search endpoint.
+  input:
+    query: string
+    limit?: number
+  output:
+    results: { title: string, url: string, excerpt: string }[]
+```
+
+## Features
+
+```mdl
+feat F-1: Ticket Lifecycle
+
+  req F-1.1: User can create a Ticket from the AI assistant or directly via the navtree.
+  req F-1.2:
+    when: a Ticket is created
+    then: status === open; resolution unset.
+  req F-1.3:
+    when: assistant or user calls resolveTicket
+    then: status === resolved; resolution recorded (if provided).
+  req F-1.4: Ticket title and body are editable in SupportArticle.
+```
+
+```mdl
+feat F-2: AI Support Assistant
+
+  req F-2.1: A blueprint is registered with key org.dxos.blueprint.support.
+  req F-2.2: Blueprint tools include createTicket, resolveTicket, searchDocs.
+  req F-2.3:
+    when: a Ticket is the active object
+    then: the support blueprint is bound to the chat companion surface.
+  req F-2.4: The assistant is instructed to gather details, search docs, and only resolve when the user confirms.
+```
+
+```mdl
+feat F-3: Documentation Search
+
+  req F-3.1: searchDocs operation is defined with a query input.
+  req F-3.2:
+    when: assistant calls searchDocs
+    then: zero or more {title,url,excerpt} results are returned.
+  req F-3.3: Initial implementation returns a small in-memory set; replaceable without changing the schema.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Create a ticket
+  given: user is in a space
+  when: createTicket invoked with title "Echo sync hung"
+  then:
+    - Ticket created in space
+    - status === open
+    - title === "Echo sync hung"
+```
+
+```mdl
+test T-2: Resolve a ticket
+  given: an open Ticket
+  when: resolveTicket invoked with resolution "Restarted client"
+  then:
+    - status === resolved
+    - resolution === "Restarted client"
+```
+
+```mdl
+test T-3: SupportArticle renders ticket
+  given: a Ticket with title and body
+  when: SupportArticle is rendered
+  then:
+    - title visible and editable
+    - body visible and editable
+    - status indicator reflects ticket.status
+```
+
+```mdl
+test T-4: Resolve button updates status
+  given: SupportArticle is shown for an open Ticket
+  when: user clicks the Resolve button
+  then:
+    - Ticket.status === resolved
+```

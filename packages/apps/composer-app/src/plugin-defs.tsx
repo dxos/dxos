@@ -65,6 +65,7 @@ import { SpacetimePlugin } from '@dxos/plugin-spacetime/plugin';
 import { SpotlightPlugin } from '@dxos/plugin-spotlight/plugin';
 import { StackPlugin } from '@dxos/plugin-stack/plugin';
 import { StatusBarPlugin } from '@dxos/plugin-status-bar/plugin';
+import { SupportPlugin } from '@dxos/plugin-support/plugin';
 import { TablePlugin } from '@dxos/plugin-table/plugin';
 import { ThemePlugin } from '@dxos/plugin-theme/plugin';
 import { ThreadPlugin } from '@dxos/plugin-thread/plugin';
@@ -271,6 +272,7 @@ export const getPlugins = ({
     CodePlugin(),
     StackPlugin(),
     StatusBarPlugin(),
+    SupportPlugin(),
     TablePlugin(),
     ThemePlugin({
       appName: 'Composer',

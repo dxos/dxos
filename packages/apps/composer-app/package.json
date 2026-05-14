@@ -112,6 +112,7 @@
     "@dxos/plugin-spotlight": "workspace:*",
     "@dxos/plugin-stack": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
+    "@dxos/plugin-support": "workspace:*",
     "@dxos/plugin-table": "workspace:*",
     "@dxos/plugin-template": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
