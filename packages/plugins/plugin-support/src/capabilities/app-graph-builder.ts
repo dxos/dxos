@@ -8,11 +8,13 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
 import { AppCapabilities, AppNodeMatcher, LayoutOperation, isPersonalSpace } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
+import { Filter, Obj } from '@dxos/echo';
+import { AtomQuery } from '@dxos/echo-atom';
 
 import { meta } from '#meta';
-import { HelpCapabilities, HelpOperation } from '#types';
+import { HelpCapabilities, HelpOperation, Support } from '#types';
 
-import { SHORTCUTS_DIALOG, WELCOME_ID, WELCOME_TYPE } from '../constants';
+import { SHORTCUTS_DIALOG } from '../constants';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -60,29 +62,35 @@ export default Capability.makeModule(
       }),
 
       // Personal-space-only Welcome virtual node, hoisted to the top of the navtree.
+      // Data is the singleton Welcome ECHO object (provisioned by WelcomeProvisioner),
+      // so the assistant plugin's companion-chat extension binds automatically.
       GraphBuilder.createExtension({
         id: 'welcome',
         match: AppNodeMatcher.whenSpace,
-        connector: (space) =>
-          Effect.succeed(
-            isPersonalSpace(space)
-              ? [
-                  Node.make({
-                    id: WELCOME_ID,
-                    type: WELCOME_TYPE,
-                    data: WELCOME_ID,
-                    properties: {
-                      label: ['welcome-node.label', { ns: meta.id }],
-                      icon: 'ph--lifebuoy--regular',
-                      iconHue: 'rose',
-                      position: 'hoist',
-                      draggable: false,
-                      droppable: false,
-                    },
-                  }),
-                ]
-              : [],
-          ),
+        connector: (space, get) => {
+          if (!isPersonalSpace(space)) {
+            return Effect.succeed([]);
+          }
+          const welcome = get(AtomQuery.make(space.db, Filter.type(Support.Welcome)))[0] as Obj.Unknown | undefined;
+          if (!welcome) {
+            return Effect.succeed([]);
+          }
+          return Effect.succeed([
+            Node.make({
+              id: welcome.id,
+              type: Support.Welcome.typename,
+              data: welcome,
+              properties: {
+                label: ['welcome-node.label', { ns: meta.id }],
+                icon: 'ph--lifebuoy--regular',
+                iconHue: 'rose',
+                position: 'hoist',
+                draggable: false,
+                droppable: false,
+              },
+            }),
+          ]);
+        },
       }),
     ]);
 

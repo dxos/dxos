@@ -4,6 +4,7 @@
 
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
+import { SpaceEvents } from '@dxos/plugin-space';
 
 import {
   AppGraphBuilder,
@@ -13,6 +14,7 @@ import {
   OperationHandler,
   ReactRoot,
   ReactSurface,
+  WelcomeProvisioner,
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
@@ -25,7 +27,7 @@ export const SupportPlugin = Plugin.define<SupportPluginOptions>(meta).pipe(
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [Support.Ticket] }),
+  AppPlugin.addSchemaModule({ schema: [Support.Ticket, Support.Welcome] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
@@ -37,6 +39,11 @@ export const SupportPlugin = Plugin.define<SupportPluginOptions>(meta).pipe(
     activatesOn: ActivationEvents.Startup,
     activate: () => ReactRoot(helpSteps),
   })),
+  Plugin.addModule({
+    id: 'welcome-provisioner',
+    activatesOn: SpaceEvents.PersonalSpaceReady,
+    activate: WelcomeProvisioner,
+  }),
   Plugin.make,
 );
 
