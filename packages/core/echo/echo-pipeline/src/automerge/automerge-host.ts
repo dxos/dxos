@@ -686,10 +686,12 @@ export class AutomergeHost extends Resource {
    */
   @trace.span({ showInBrowserTimeline: true, showInRemoteTracing: false })
   async flush(ctx: Context, { documentIds }: FlushRequest = {}): Promise<void> {
-    // Concurrent `db.flush()` RPCs can arrive after the host has begun
+    // Concurrent `db.flush()` RPCs can arrive while the host is in or past
     // teardown. `runBlocking` below would throw `ContextDisposedError` on a
     // disposed ctx; treat a closed host as a no-op flush instead (nothing to
-    // propagate, the resource is gone).
+    // propagate, the resource is gone). The host can also transition from
+    // open to closed *during* the `_repo.flush()` await — re-check before
+    // reaching `runBlocking`.
     if (!this.isOpen) {
       return;
     }
@@ -697,6 +699,9 @@ export class AutomergeHost extends Resource {
       (documentId): documentId is DocumentId => getHandleState(this._repo, documentId as DocumentId) === 'ready',
     );
     await this._repo.flush(loadedDocuments);
+    if (!this.isOpen) {
+      return;
+    }
 
     // Ensure that document versions have propagated across the system.
     await this._onHeadsChangedTask?.runBlocking();
