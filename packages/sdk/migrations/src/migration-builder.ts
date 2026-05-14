@@ -86,7 +86,7 @@ export class MigrationBuilder {
       objects: {
         [id]: {
           system: {
-            type: EncodedReference.fromDXN(getSchemaDXN(schema)!),
+            type: EncodedReference.fromURI(getSchemaDXN(schema)!),
           },
           data: props,
           meta: {
@@ -197,7 +197,7 @@ export class MigrationBuilder {
     }
 
     core.initNewObject(props);
-    core.setType(EncodedReference.fromDXN(getSchemaDXN(schema)!));
+    core.setType(EncodedReference.fromURI(getSchemaDXN(schema)!));
     const newHandle = this._repo.create<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
       access: {

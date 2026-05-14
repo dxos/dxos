@@ -224,12 +224,12 @@ export const sanitizeObjects = async (
   const resolveId = (id: string): EchoId.EchoId | undefined => {
     if (ObjectId.isValid(id)) {
       existingIds.add(id);
-      return EchoId.fromLocalObjectId(id as ObjectId);
+      return EchoId.fromLocalObjectId(id);
     }
 
     const mappedId = idMap.get(id);
-    if (mappedId) {
-      return EchoId.fromLocalObjectId(mappedId as ObjectId);
+    if (mappedId && ObjectId.isValid(mappedId)) {
+      return EchoId.fromLocalObjectId(mappedId);
     }
 
     return undefined;

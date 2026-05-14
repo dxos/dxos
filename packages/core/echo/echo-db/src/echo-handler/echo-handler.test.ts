@@ -486,7 +486,7 @@ describe('Reactive Object with ECHO database', () => {
       // References serialized as IPLD.
       {
         const obj = JSON.parse(JSON.stringify(obj2));
-        const refUri = EncodedReference.getURI(obj.reference);
+        const refUri = EncodedReference.toURI(obj.reference);
         const refEchoId = EchoId.tryParse(refUri);
         expect(refEchoId ? EchoId.getObjectId(refEchoId) : undefined).to.eq(obj2.reference?.target?.id);
       }
@@ -718,7 +718,7 @@ describe('Reactive Object with ECHO database', () => {
       const { db } = await builder.createDatabase();
       const obj = db.add(Obj.make(TestSchema.Expando, { field: 1 }));
       const typeDXN = getSchemaDXN(TestSchema.Example)!;
-      getObjectCore(obj).setType(EncodedReference.fromDXN(typeDXN));
+      getObjectCore(obj).setType(EncodedReference.fromURI(typeDXN));
       expect(Obj.getTypeDXN(obj)).to.deep.eq(Type.getDXN(TestSchema.Example));
     });
 

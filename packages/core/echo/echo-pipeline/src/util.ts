@@ -16,7 +16,7 @@ export const findInlineObjectOfType = (
     const obj = spaceDoc.objects![id];
     const objType = ObjectStructure.getTypeReference(obj);
     if (objType) {
-      const uri = EncodedReference.getURI(objType);
+      const uri = EncodedReference.toURI(objType);
       // Parse the DXN to extract the typename.
       const parsed = DXN.tryParse(uri);
       if (parsed !== undefined && DXN.getNsid(parsed) === typename) {

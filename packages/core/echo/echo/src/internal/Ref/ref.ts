@@ -284,7 +284,7 @@ export const createEchoReferenceSchema = (
         return (value) =>
           Effect.gen(function* () {
             if (Ref.isRef(value)) {
-              return EncodedReference.fromDXN((value as Ref<any>).dxn);
+              return EncodedReference.fromURI((value as Ref<any>).dxn);
             } else if (EncodedReference.isEncodedReference(value)) {
               return value;
             }
@@ -309,9 +309,9 @@ export const createEchoReferenceSchema = (
               return yield* Effect.fail(new ParseResult.Unexpected(value, 'reference'));
             }
             if (Option.isSome(dbService)) {
-              return dbService.value.db.makeRef(EncodedReference.getURI(value));
+              return dbService.value.db.makeRef(EncodedReference.toURI(value));
             } else {
-              return Ref.fromDXN(EncodedReference.getURI(value));
+              return Ref.fromDXN(EncodedReference.toURI(value));
             }
           });
       },
@@ -543,7 +543,7 @@ const refVariance: Ref<any>[typeof RefTypeId] = {
 };
 
 export const refFromEncodedReference = (encodedReference: EncodedReference, resolver?: RefResolver): Ref<any> => {
-  const dxn = EncodedReference.getURI(encodedReference);
+  const dxn = EncodedReference.toURI(encodedReference);
   const ref = new RefImpl(dxn);
 
   // TODO(dmaretskyi): Handle inline target in the encoded reference.

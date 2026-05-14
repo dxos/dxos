@@ -5,12 +5,12 @@
 import { describe, test } from 'vitest';
 
 import * as EchoId from './EchoId';
-import { type ObjectId } from './object-id';
-import { type SpaceId } from './space-id';
+import { ObjectId } from './object-id';
+import { SpaceId } from './space-id';
 
-const SPACE = 'BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE' as SpaceId;
-const OBJECT = '01J00J9B45YHYSGZQTQMSKMGJ6' as ObjectId;
-const OBJECT2 = '01J00J9B45YHYSGZQTQMSKMGJ7' as ObjectId;
+const SPACE = SpaceId.random();
+const OBJECT = ObjectId.random();
+const OBJECT2 = ObjectId.random();
 
 describe('EchoId.fromSpaceAndObjectId', () => {
   test('produces qualified echo URI', ({ expect }) => {
@@ -95,65 +95,65 @@ describe('EchoId.tryParse', () => {
 
 describe('EchoId.getSpaceId', () => {
   test('returns spaceId from qualified ref', ({ expect }) => {
-    expect(EchoId.getSpaceId(`echo://${SPACE}/${OBJECT}` as EchoId.EchoId)).toBe(SPACE);
+    expect(EchoId.getSpaceId(EchoId.fromSpaceAndObjectId(SPACE, OBJECT))).toBe(SPACE);
   });
 
   test('returns spaceId from space-only ref', ({ expect }) => {
-    expect(EchoId.getSpaceId(`echo://${SPACE}` as EchoId.EchoId)).toBe(SPACE);
+    expect(EchoId.getSpaceId(EchoId.fromSpaceId(SPACE))).toBe(SPACE);
   });
 
   test('returns undefined for local ref', ({ expect }) => {
-    expect(EchoId.getSpaceId(`echo:/${OBJECT}` as EchoId.EchoId)).toBeUndefined();
-    expect(EchoId.getSpaceId(`echo:///${OBJECT}` as EchoId.EchoId)).toBeUndefined();
+    expect(EchoId.getSpaceId(EchoId.fromLocalObjectId(OBJECT))).toBeUndefined();
+    expect(EchoId.getSpaceId(EchoId.parse(`echo:///${OBJECT}`))).toBeUndefined();
   });
 });
 
 describe('EchoId.getObjectId', () => {
   test('returns objectId from qualified ref', ({ expect }) => {
-    expect(EchoId.getObjectId(`echo://${SPACE}/${OBJECT}` as EchoId.EchoId)).toBe(OBJECT);
+    expect(EchoId.getObjectId(EchoId.fromSpaceAndObjectId(SPACE, OBJECT))).toBe(OBJECT);
   });
 
   test('returns objectId from local ref', ({ expect }) => {
-    expect(EchoId.getObjectId(`echo:/${OBJECT}` as EchoId.EchoId)).toBe(OBJECT);
-    expect(EchoId.getObjectId(`echo:///${OBJECT}` as EchoId.EchoId)).toBe(OBJECT);
+    expect(EchoId.getObjectId(EchoId.fromLocalObjectId(OBJECT))).toBe(OBJECT);
+    expect(EchoId.getObjectId(EchoId.parse(`echo:///${OBJECT}`))).toBe(OBJECT);
   });
 
   test('returns undefined for space-only ref', ({ expect }) => {
-    expect(EchoId.getObjectId(`echo://${SPACE}` as EchoId.EchoId)).toBeUndefined();
+    expect(EchoId.getObjectId(EchoId.fromSpaceId(SPACE))).toBeUndefined();
   });
 });
 
 describe('EchoId.isLocal', () => {
   test('returns true for local refs', ({ expect }) => {
-    expect(EchoId.isLocal(`echo:/${OBJECT}` as EchoId.EchoId)).toBe(true);
-    expect(EchoId.isLocal(`echo:///${OBJECT}` as EchoId.EchoId)).toBe(true);
+    expect(EchoId.isLocal(EchoId.fromLocalObjectId(OBJECT))).toBe(true);
+    expect(EchoId.isLocal(EchoId.parse(`echo:///${OBJECT}`))).toBe(true);
   });
 
   test('returns false for qualified refs', ({ expect }) => {
-    expect(EchoId.isLocal(`echo://${SPACE}/${OBJECT}` as EchoId.EchoId)).toBe(false);
-    expect(EchoId.isLocal(`echo://${SPACE}` as EchoId.EchoId)).toBe(false);
+    expect(EchoId.isLocal(EchoId.fromSpaceAndObjectId(SPACE, OBJECT))).toBe(false);
+    expect(EchoId.isLocal(EchoId.fromSpaceId(SPACE))).toBe(false);
   });
 
   test('normalizes legacy local format before checking', ({ expect }) => {
-    expect(EchoId.isLocal(`dxn:echo:@:${OBJECT}` as EchoId.EchoId)).toBe(true);
+    expect(EchoId.isLocal(EchoId.parse(`dxn:echo:@:${OBJECT}`))).toBe(true);
   });
 });
 
 describe('EchoId.equals', () => {
   test('returns true for identical refs', ({ expect }) => {
-    const id = `echo://${SPACE}/${OBJECT}` as EchoId.EchoId;
+    const id = EchoId.fromSpaceAndObjectId(SPACE, OBJECT);
     expect(EchoId.equals(id, id)).toBe(true);
   });
 
   test('returns true for equivalent legacy and new format', ({ expect }) => {
-    const legacy = `dxn:echo:@:${OBJECT}` as EchoId.EchoId;
-    const modern = `echo:/${OBJECT}` as EchoId.EchoId;
+    const legacy = EchoId.parse(`dxn:echo:@:${OBJECT}`);
+    const modern = EchoId.fromLocalObjectId(OBJECT);
     expect(EchoId.equals(legacy, modern)).toBe(true);
   });
 
   test('returns false for different refs', ({ expect }) => {
-    const a = `echo://${SPACE}/${OBJECT}` as EchoId.EchoId;
-    const b = `echo://${SPACE}/${OBJECT2}` as EchoId.EchoId;
+    const a = EchoId.fromSpaceAndObjectId(SPACE, OBJECT);
+    const b = EchoId.fromSpaceAndObjectId(SPACE, OBJECT2);
     expect(EchoId.equals(a, b)).toBe(false);
   });
 });

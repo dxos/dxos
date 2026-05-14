@@ -98,7 +98,7 @@ const isEncodedReferenceJSON = (value: any): boolean =>
 
 export const decodeDXNFromJSON = (encoded?: EncodedReference | string): URI.URI | undefined => {
   if (typeof encoded === 'object' && encoded !== null && '/' in encoded) {
-    return EncodedRef.getURI(encoded);
+    return EncodedRef.toURI(encoded);
   } else if (typeof encoded === 'string') {
     if (DXN.isDXN(encoded) || EchoId.isEchoId(encoded)) {
       return encoded as URI.URI;
@@ -118,8 +118,7 @@ const decodeEncodedReferenceFromJSON = (value: any): EncodedReference | undefine
     return value as EncodedReference;
   } else if (typeof value === 'object' && value !== null && value['@type'] === LEGACY_REFERENCE_TYPE_TAG) {
     // Legacy format: convert to DXN and then to EncodedReference.
-    const dxn = DXN.fromTypename(value.objectId) as URI.URI;
-    return EncodedRef.fromDXN(dxn);
+    return EncodedRef.fromDXN(DXN.fromTypename(value.objectId));
   }
 };
 

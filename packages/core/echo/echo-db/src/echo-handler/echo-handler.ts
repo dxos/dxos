@@ -215,11 +215,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         }
         case RelationSourceDXNId: {
           const sourceRef = target[symbolInternals].core.getSource();
-          return sourceRef ? EncodedReference.getURI(sourceRef) : undefined;
+          return sourceRef ? EncodedReference.toURI(sourceRef) : undefined;
         }
         case RelationTargetDXNId: {
           const targetRef = target[symbolInternals].core.getTarget();
-          return targetRef ? EncodedReference.getURI(targetRef) : undefined;
+          return targetRef ? EncodedReference.toURI(targetRef) : undefined;
         }
         case RelationSourceId: {
           return this._getRelationSource(target);
@@ -339,7 +339,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (parentRef === undefined) {
       return undefined;
     }
-    const parentDXN = EncodedReference.getURI(parentRef);
+    const parentDXN = EncodedReference.toURI(parentRef);
     const database = target[symbolInternals].database;
     if (database) {
       // TODO(dmaretskyi): Put refs into proxy cache.
@@ -362,7 +362,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   private _getRelationSource(target: ProxyTarget): any {
     const sourceRef = target[symbolInternals].core.getSource();
     invariant(sourceRef);
-    const sourceDXN = EncodedReference.getURI(sourceRef);
+    const sourceDXN = EncodedReference.toURI(sourceRef);
     const database = target[symbolInternals].database;
     if (database) {
       // TODO(dmaretskyi): Put refs into proxy cache.
@@ -385,7 +385,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   private _getRelationTarget(target: ProxyTarget): any {
     const targetRef = target[symbolInternals].core.getTarget();
     invariant(targetRef);
-    const targetDXN = EncodedReference.getURI(targetRef);
+    const targetDXN = EncodedReference.toURI(targetRef);
     const database = target[symbolInternals].database;
     if (database) {
       return database.graph
@@ -549,9 +549,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       } else if (Ref.isRef(value)) {
         const savedTarget = getRefSavedTarget(value);
         if (savedTarget) {
-          return EncodedReference.fromDXN(this.createRef(target, savedTarget));
+          return EncodedReference.fromURI(this.createRef(target, savedTarget));
         } else {
-          return EncodedReference.fromDXN(value.dxn as URI.URI);
+          return EncodedReference.fromURI(value.dxn as URI.URI);
         }
       } else {
         return recurse(value);
@@ -585,7 +585,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
 
-    const typeDXN = EncodedReference.getURI(typeRef);
+    const typeDXN = EncodedReference.toURI(typeRef);
     const staticSchema = target[symbolInternals].database.graph.schemaRegistry.getSchemaByDXN(typeDXN.toString());
     if (staticSchema != null) {
       return staticSchema;
@@ -605,7 +605,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
     const typeRef = target[symbolInternals].core.getType();
-    return typeRef ? EncodedReference.getURI(typeRef) : undefined;
+    return typeRef ? EncodedReference.toURI(typeRef) : undefined;
   }
 
   isDeleted(target: any): boolean {
@@ -813,7 +813,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    * Lookup referenced object.
    */
   lookupRef(target: ProxyTarget, encodedRef: EncodedReference): Ref<any> | undefined {
-    const dxn = EncodedReference.getURI(encodedRef);
+    const dxn = EncodedReference.toURI(encodedRef);
     const database = target[symbolInternals].database;
     if (database) {
       // TODO(dmaretskyi): Put refs into proxy cache.
@@ -1257,7 +1257,7 @@ const setSchemaPropertiesOnObjectCore = (
   if (schema != null) {
     const dxn = getSchemaDXN(schema);
     invariant(dxn, 'Schema must be defined via TypedObject.');
-    internals.core.setType(EncodedReference.fromDXN(dxn.toString() as unknown as URI.URI));
+    internals.core.setType(EncodedReference.fromURI(dxn.toString() as unknown as URI.URI));
 
     const kind = getEntityKind(schema);
     invariant(kind);
@@ -1285,8 +1285,8 @@ const setRelationSourceAndTarget = (
       throw new TypeError('target must be an ECHO object');
     }
 
-    core.setSource(EncodedReference.fromDXN(EchoReactiveHandler.instance.createRef(target, sourceRef)));
-    core.setTarget(EncodedReference.fromDXN(EchoReactiveHandler.instance.createRef(target, targetRef)));
+    core.setSource(EncodedReference.fromURI(EchoReactiveHandler.instance.createRef(target, sourceRef)));
+    core.setTarget(EncodedReference.fromURI(EchoReactiveHandler.instance.createRef(target, targetRef)));
   }
 };
 
@@ -1326,8 +1326,8 @@ const linkAllNestedProperties = (target: ProxyTarget): DecodedAutomergePrimaryVa
 const refToEncodedReference = (target: ProxyTarget, ref: Ref<any>): EncodedReference => {
   const savedTarget = getRefSavedTarget(ref);
   if (savedTarget) {
-    return EncodedReference.fromDXN(EchoReactiveHandler.instance.createRef(target, savedTarget));
+    return EncodedReference.fromURI(EchoReactiveHandler.instance.createRef(target, savedTarget));
   } else {
-    return EncodedReference.fromDXN(ref.dxn as URI.URI);
+    return EncodedReference.fromURI(ref.dxn as URI.URI);
   }
 };

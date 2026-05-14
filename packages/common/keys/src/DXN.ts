@@ -106,7 +106,7 @@ export const equals = (a: DXN, b: DXN): boolean => a === b;
 /**
  * Effect Schema for DXN validation.
  */
-export const Schema_: Schema.Schema<DXN, string> = Schema.String.pipe(
+const Schema_: Schema.Schema<DXN, string> = Schema.String.pipe(
   Schema.filter(isDXN, { message: () => 'Invalid DXN' }),
   Schema.annotations({
     title: 'DXN',

@@ -453,7 +453,7 @@ export class ObjectCore {
       const parentRef = this.getParent();
       if (parentRef) {
         // Checks if the reference is pointing to an object in the same space.
-        const parentDXN = EncodedReference.getURI(parentRef);
+        const parentDXN = EncodedReference.toURI(parentRef);
         const parentEchoId = EchoId.tryParse(parentDXN);
         const spaceId = parentEchoId ? EchoId.getSpaceId(parentEchoId) : undefined;
         const parentId = parentEchoId ? EchoId.getObjectId(parentEchoId) : undefined;
@@ -485,7 +485,7 @@ export class ObjectCore {
 
     const typeRef = this.getType();
     if (typeRef) {
-      const typeDXN = EncodedReference.getURI(typeRef);
+      const typeDXN = EncodedReference.toURI(typeRef);
       // Only include ECHO-scheme refs (object refs, not type DXNs) as strong deps.
       if (EchoId.isEchoId(typeDXN)) {
         res.push(typeDXN);
@@ -495,17 +495,17 @@ export class ObjectCore {
     if (this.getKind() === EntityKind.Relation) {
       const sourceRef = this.getSource();
       if (sourceRef) {
-        res.push(EncodedReference.getURI(sourceRef));
+        res.push(EncodedReference.toURI(sourceRef));
       }
       const targetRef = this.getTarget();
       if (targetRef) {
-        res.push(EncodedReference.getURI(targetRef));
+        res.push(EncodedReference.toURI(targetRef));
       }
     }
 
     const parentRef = this.getParent();
     if (parentRef) {
-      res.push(EncodedReference.getURI(parentRef));
+      res.push(EncodedReference.toURI(parentRef));
     }
 
     return res;
@@ -556,5 +556,5 @@ const convertLegacyProtoReference = (value: {
   } else {
     dxn = EchoId.fromLocalObjectId(value.objectId as any);
   }
-  return EncodedReference.fromDXN(dxn);
+  return EncodedReference.fromURI(dxn);
 };

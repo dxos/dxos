@@ -71,7 +71,7 @@ export const makeTypeJsonSchemaAnnotation = (options: {
 
   const obj = {
     // TODO(dmaretskyi): Should this include the version?
-    $id: options.identifier ?? DXN.fromTypename(options.typename) as string,
+    $id: options.identifier ?? DXN.fromTypename(options.typename),
     entityKind: options.kind,
     version: options.version,
     typename: options.typename,

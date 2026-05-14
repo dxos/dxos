@@ -15,7 +15,7 @@ import type * as Types from 'effect/Types';
 
 import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { EchoId, type ObjectId } from '@dxos/keys';
+import { EchoId, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ContentBlock } from '@dxos/types';
 
@@ -595,11 +595,11 @@ const parseObjectBlock = (block: StreamBlock): ContentBlock.Reference | undefine
   }
 
   // <object id="..." />
-  if (typeof block.attributes?.id === 'string') {
+  if (typeof block.attributes?.id === 'string' && ObjectId.isValid(block.attributes.id)) {
     try {
       return {
         _tag: 'reference',
-        reference: Ref.fromDXN(EchoId.fromLocalObjectId(block.attributes.id as ObjectId)),
+        reference: Ref.fromDXN(EchoId.fromLocalObjectId(block.attributes.id)),
       };
     } catch {}
   }

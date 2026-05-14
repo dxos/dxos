@@ -46,10 +46,10 @@ export const getTypeIdentifierAnnotation = (schema: Schema.Schema.All) =>
   )(schema.ast);
 
 /**
- * @returns DXN of the schema.
+ * @returns Identifier URI of the schema.
  *
- * For non-stored schema returns `dxn:type:`.
- * For stored schema returns `dxn:echo:`.
+ * For non-stored schemas this is a `dxn:` type DXN.
+ * For stored schemas this is an `echo:` URI.
  */
 export const getSchemaDXN = (schema: Schema.Schema.All): URI.URI | undefined => {
   assertArgument(Schema.isSchema(schema), 'schema', 'invalid schema');
@@ -64,12 +64,12 @@ export const getSchemaDXN = (schema: Schema.Schema.All): URI.URI | undefined => 
     return undefined;
   }
 
-  return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version) as URI.URI;
+  return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version);
 };
 
 /**
  * @param input schema or a typename string.
- * @return type DXN.
+ * @return identifier URI for the type (DXN for non-stored, EchoId for stored).
  */
 export const getTypeDXNFromSpecifier = (input: Schema.Schema.All | string): URI.URI => {
   if (Schema.isSchema(input)) {
@@ -77,7 +77,7 @@ export const getTypeDXNFromSpecifier = (input: Schema.Schema.All | string): URI.
   } else {
     assertArgument(typeof input === 'string', 'input');
     assertArgument(!input.startsWith('dxn:'), 'input');
-    return DXN.fromTypename(input) as URI.URI;
+    return DXN.fromTypename(input);
   }
 };
 

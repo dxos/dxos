@@ -229,7 +229,7 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
             if (!isEncodedReference(value)) {
               return false;
             }
-            return EncodedReference.toDXN(value) === EncodedReference.toDXN(compareValue);
+            return EncodedReference.toURI(value) === EncodedReference.toURI(compareValue);
           }
           return value === compareValue;
         case 'neq':

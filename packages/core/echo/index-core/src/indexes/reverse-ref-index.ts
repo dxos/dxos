@@ -20,7 +20,7 @@ const extractReferences = (data: Record<string, unknown>): { path: string[]; tar
   const refs: { path: string[]; targetDxn: string }[] = [];
   const visit = (path: string[], value: unknown) => {
     if (isEncodedReference(value)) {
-      const uri = EncodedReference.getURI(value);
+      const uri = EncodedReference.toURI(value);
       const parsedEchoId = EchoId.tryParse(uri);
       const echoId = parsedEchoId ? EchoId.getObjectId(parsedEchoId) : undefined;
       if (!echoId) {

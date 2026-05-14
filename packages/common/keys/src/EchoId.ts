@@ -139,7 +139,7 @@ export const equals = (a: EchoId, b: EchoId): boolean => parse(a) === parse(b);
 /**
  * Effect Schema for EchoId validation.
  */
-export const Schema_: Schema.Schema<EchoId, string> = Schema.String.pipe(
+const Schema_: Schema.Schema<EchoId, string> = Schema.String.pipe(
   Schema.filter(isEchoId, {
     message: () => 'Invalid EchoId: must start with echo:, dxn:echo:, or dxn:queue:',
   }),
