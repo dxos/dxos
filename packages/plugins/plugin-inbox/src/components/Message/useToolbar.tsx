@@ -5,7 +5,7 @@
 import { Atom } from '@effect-atom/atom-react';
 import { useMemo } from 'react';
 
-import { createGapSeparator, createMenuAction, createMenuItemGroup, useMenuActions } from '@dxos/react-ui-menu';
+import { MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 
@@ -41,66 +41,60 @@ export const useMessageActions = ({
 }: UseMessageToolbarActionsProps) => {
   const creator = useMemo(
     () =>
-      Atom.make(() => {
-        // TODO(burdon): Chainable builder pattern.
-        const nodes = [];
-        const edges = [];
-
-        {
-          nodes.push(
-            createMenuItemGroup('root', {
-              label: ['message-toolbar.label', { ns: meta.id }],
-            }),
-          );
-        }
-
-        if (onOpen) {
-          const action = createMenuAction('open', onOpen, {
-            label: ['message-toolbar-open.menu', { ns: meta.id }],
-            icon: 'ph--arrow-square-out--regular',
-          });
-          nodes.push(action);
-          edges.push({ source: 'root', target: action.id, relation: 'child' });
-        }
-
-        const gap = createGapSeparator();
-        nodes.push(gap.nodes[0]);
-        edges.push({ source: 'root', target: gap.nodes[0].id, relation: 'child' });
-
-        // Reply actions.
-        if (onReply) {
-          const action = createMenuAction('reply', onReply, {
-            label: ['message-toolbar-reply.menu', { ns: meta.id }],
-            icon: 'ph--arrow-bend-up-left--regular',
-          });
-          nodes.push(action);
-          edges.push({ source: 'root', target: action.id, relation: 'child' });
-        }
-
-        if (onReplyAll) {
-          const action = createMenuAction('replyAll', onReplyAll, {
-            label: ['message-toolbar-reply-all.menu', { ns: meta.id }],
-            icon: 'ph--arrow-bend-double-up-left--regular',
-          });
-          nodes.push(action);
-          edges.push({ source: 'root', target: action.id, relation: 'child' });
-        }
-
-        if (onForward) {
-          const action = createMenuAction('forward', onForward, {
-            label: ['message-toolbar-forward.menu', { ns: meta.id }],
-            icon: 'ph--arrow-bend-up-right--regular',
-          });
-          nodes.push(action);
-          edges.push({ source: 'root', target: action.id, relation: 'child' });
-        }
-
-        {
-          const action = createMenuAction(
+      Atom.make(() =>
+        MenuBuilder.make()
+          .root({ label: ['message-toolbar.label', { ns: meta.id }] })
+          .subgraph(
+            onOpen &&
+              ((b) =>
+                b.action(
+                  'open',
+                  {
+                    label: ['message-toolbar-open.menu', { ns: meta.id }],
+                    icon: 'ph--arrow-square-out--regular',
+                  },
+                  onOpen,
+                )),
+          )
+          .separator('gap')
+          .subgraph(
+            onReply &&
+              ((b) =>
+                b.action(
+                  'reply',
+                  {
+                    label: ['message-toolbar-reply.menu', { ns: meta.id }],
+                    icon: 'ph--arrow-bend-up-left--regular',
+                  },
+                  onReply,
+                )),
+          )
+          .subgraph(
+            onReplyAll &&
+              ((b) =>
+                b.action(
+                  'replyAll',
+                  {
+                    label: ['message-toolbar-reply-all.menu', { ns: meta.id }],
+                    icon: 'ph--arrow-bend-double-up-left--regular',
+                  },
+                  onReplyAll,
+                )),
+          )
+          .subgraph(
+            onForward &&
+              ((b) =>
+                b.action(
+                  'forward',
+                  {
+                    label: ['message-toolbar-forward.menu', { ns: meta.id }],
+                    icon: 'ph--arrow-bend-up-right--regular',
+                  },
+                  onForward,
+                )),
+          )
+          .action(
             'viewMode',
-            () => {
-              setViewMode(viewMode === 'plain' ? 'enriched' : 'plain');
-            },
             {
               label: [
                 viewMode === 'plain'
@@ -112,18 +106,11 @@ export const useMessageActions = ({
               ],
               icon: viewMode === 'enriched' ? 'ph--article--regular' : 'ph--graph--regular',
             },
-          );
-          nodes.push(action);
-          edges.push({ source: 'root', target: action.id, relation: 'child' });
-        }
-
-        // Render mode toggle: parse the body as markdown vs show it verbatim.
-        {
-          const action = createMenuAction(
+            () => setViewMode(viewMode === 'plain' ? 'enriched' : 'plain'),
+          )
+          // Render mode toggle: parse the body as markdown vs show it verbatim.
+          .action(
             'renderMode',
-            () => {
-              setRenderMode(renderMode === 'markdown' ? 'plain' : 'markdown');
-            },
             {
               label: [
                 renderMode === 'markdown' ? 'message toolbar show plain text' : 'message toolbar show markdown',
@@ -131,13 +118,10 @@ export const useMessageActions = ({
               ],
               icon: renderMode === 'markdown' ? 'ph--text-t--regular' : 'ph--markdown-logo--regular',
             },
-          );
-          nodes.push(action);
-          edges.push({ source: 'root', target: action.id, relation: 'child' });
-        }
-
-        return { nodes, edges };
-      }),
+            () => setRenderMode(renderMode === 'markdown' ? 'plain' : 'markdown'),
+          )
+          .build(),
+      ),
     [viewMode, setViewMode, renderMode, setRenderMode, onOpen, onReply, onReplyAll, onForward],
   );
 
