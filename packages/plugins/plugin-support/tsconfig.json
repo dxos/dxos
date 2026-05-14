@@ -18,6 +18,9 @@
   ],
   "references": [
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -48,6 +51,9 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/observability"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
@@ -57,13 +63,22 @@
       "path": "../../sdk/types"
     },
     {
+      "path": "../../ui/react-primitives/react-hooks"
+    },
+    {
       "path": "../../ui/react-ui"
+    },
+    {
+      "path": "../../ui/react-ui-form"
     },
     {
       "path": "../../ui/ui-theme"
     },
     {
       "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-observability"
     },
     {
       "path": "../plugin-space"

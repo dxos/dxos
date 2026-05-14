@@ -9,7 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { SupportArticle } from '#containers';
+import { FeedbackPanel, SupportArticle } from '#containers';
 import { Support } from '#types';
 
 export default Capability.makeModule(() =>
@@ -24,6 +24,11 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => (
           <SupportArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
+      }),
+      Surface.create({
+        id: 'feedback',
+        role: 'deck-companion--help',
+        component: () => <FeedbackPanel />,
       }),
     ]),
   ),

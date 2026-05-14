@@ -1,5 +1,5 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
@@ -11,7 +11,7 @@ import { translations } from '#translations';
 import { FeedbackForm } from './FeedbackForm';
 
 const meta = {
-  title: 'plugins/plugin-observability/components/FeedbackForm',
+  title: 'plugins/plugin-support/components/FeedbackForm',
   component: FeedbackForm,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {

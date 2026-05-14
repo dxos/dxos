@@ -14581,24 +14581,42 @@ importers:
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/observability':
+        specifier: workspace:*
+        version: link:../../sdk/observability
+      '@dxos/plugin-observability':
+        specifier: workspace:*
+        version: link:../plugin-observability
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../../ui/react-primitives/react-hooks
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/ui-theme
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -14621,9 +14639,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
-      '@dxos/ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/ui-theme
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.7

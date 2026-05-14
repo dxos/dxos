@@ -4,16 +4,26 @@ name: SupportPlugin
 version: 0.1.0
 ---
 
-In-app support assistant for Composer. Users open a Support ticket from the
-navtree and the AI assistant collaborates on diagnosing the issue, searching
-documentation, and (optionally) filing a follow-up GitHub issue. Tickets are
-ECHO objects so a conversation is local-first, replicable to other devices,
-and reviewable by a human supporter later.
+Composer's user-facing assistance plugin. Covers two paths:
 
-Initial scope is a thin skeleton: a `Ticket` schema, four operations wired
-to a blueprint, and a single article surface. Documentation search and issue
-filing are stubbed — the blueprint exists so the assistant can be exercised
-end-to-end while the integrations land in later phases.
+1. **Conversational support** — users open a `Ticket` from the navtree and the AI
+   assistant collaborates on diagnosing the issue, searching documentation, and
+   recording the resolution. Tickets are ECHO objects so a conversation is
+   local-first, replicable to other devices, and reviewable by a human
+   supporter later.
+2. **One-shot feedback** — users send anonymous feedback (with optional debug
+   logs) to the observability backend via the deck `--help` companion. This
+   replaces the same surface previously owned by plugin-observability and
+   keeps the telemetry plugin focused on instrumentation only.
+
+A future iteration will absorb plugin-help (welcome tour, contextual hints,
+keyboard shortcuts) so all user education lives here.
+
+Initial scope is a thin skeleton: a `Ticket` schema, four ticket operations
+wired to a blueprint, a `FeedbackForm` + `captureUserFeedback` operation, and
+two surfaces (`Ticket` article + `--help` companion). Documentation search and
+issue filing are stubbed — the blueprint exists so the assistant can be
+exercised end-to-end while the integrations land in later phases.
 
 ## Extensions
 
@@ -124,6 +134,19 @@ op searchDocs
     results: { title: string, url: string, excerpt: string }[]
 ```
 
+```mdl
+op captureUserFeedback
+  desc: >
+    Sends a one-shot feedback message (with optional debug logs) to the
+    observability backend. Backed by the Observability capability contributed
+    by plugin-observability — plugin-support owns the UI and operation; the
+    actual transport stays in the observability plugin.
+  input:
+    message: string
+    includeLogs?: boolean
+  output: void
+```
+
 ## Features
 
 ```mdl
@@ -164,6 +187,22 @@ feat F-3: Documentation Search
     when: assistant calls searchDocs
     then: zero or more {title,url,excerpt} results are returned.
   req F-3.3: Initial implementation returns a small in-memory set; replaceable without changing the schema.
+```
+
+```mdl
+feat F-4: One-shot Feedback
+
+  req F-4.1: plugin-support contributes the deck `--help` companion surface; it renders a FeedbackForm.
+  req F-4.2:
+    when: user submits the FeedbackForm
+    then: captureUserFeedback runs and forwards to the Observability capability.
+  req F-4.3:
+    when: feedback succeeds
+    then: a confirmation toast is shown and the companion collapses.
+  req F-4.4: When the LogDownloader capability is contributed, a "Download logs" action is offered alongside the form.
+  req F-4.5:
+    when: the Observability capability reports feedback is unavailable
+    then: the submit button is disabled.
 ```
 
 ## Acceptance

@@ -1,5 +1,5 @@
 //
-// Copyright 2024 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 import React from 'react';
@@ -8,15 +8,15 @@ import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form, type FormRootProps, type FormSubmitProps } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { ObservabilityOperation } from '#types';
+import { SupportOperation } from '#types';
 
-export type FeedbackFormProps = Pick<FormRootProps<ObservabilityOperation.UserFeedback>, 'onSave'> &
+export type FeedbackFormProps = Pick<FormRootProps<SupportOperation.UserFeedback>, 'onSave'> &
   Pick<FormSubmitProps, 'disabled'> & {
     /** Optional handler — when supplied a "Download logs" button is rendered below the submit action. */
     onDownloadLogs?: () => void | Promise<void>;
   };
 
-const defaultValues: ObservabilityOperation.UserFeedback = {
+const defaultValues: SupportOperation.UserFeedback = {
   message: '',
   includeLogs: true,
 };
@@ -25,7 +25,7 @@ export const FeedbackForm = ({ onSave, disabled, onDownloadLogs }: FeedbackFormP
   const { t } = useTranslation(meta.id);
 
   return (
-    <Form.Root schema={ObservabilityOperation.UserFeedback} defaultValues={defaultValues} onSave={onSave}>
+    <Form.Root schema={SupportOperation.UserFeedback} defaultValues={defaultValues} onSave={onSave}>
       <Form.Viewport>
         <Form.Content>
           <Form.FieldSet />

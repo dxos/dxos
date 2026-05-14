@@ -6,10 +6,43 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Database, Ref } from '@dxos/echo';
+import { Database, Format, Ref } from '@dxos/echo';
 
 import * as Support from './Support';
+
+// Schema annotations consumed by `react-ui-form`. Strings duplicated in translations.ts
+// — kept inline here to avoid an import cycle (translations -> #types -> SupportOperation).
+export const UserFeedback = Schema.Struct({
+  message: Format.Text.pipe(
+    Schema.nonEmptyString(),
+    Schema.maxLength(4_096),
+    Schema.annotations({
+      title: 'Feedback',
+      description: 'Please enter your feedback, technical issue, or feature request.',
+    }),
+  ),
+  includeLogs: Schema.Boolean.pipe(
+    Schema.annotations({
+      title: 'Include debug logs',
+    }),
+    Schema.optional,
+  ),
+});
+
+export type UserFeedback = Schema.Schema.Type<typeof UserFeedback>;
+
+export const CaptureUserFeedback = Operation.make({
+  meta: {
+    key: 'org.dxos.function.support.capture-feedback',
+    name: 'Capture User Feedback',
+    description: 'Capture one-shot user feedback (sent to the observability backend).',
+  },
+  services: [Capability.Service],
+  input: UserFeedback,
+  output: Schema.Void,
+});
 
 export const CreateTicket = Operation.make({
   meta: {
