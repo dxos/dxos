@@ -30,6 +30,9 @@ export default Capability.makeModule(
       }
       provisioned = true;
       await space.waitUntilReady();
+      // The schema atom subscription that runs `client.addTypes` is async and may not have
+      // completed by SpacesReady — register here so `db.add` doesn't throw "Schema not registered".
+      await client.addTypes([Support.Welcome]);
       const existing = await space.db.query(Filter.type(Support.Welcome)).run();
       log.info('welcome-provisioner: queried', { existingCount: existing.length, spaceId: space.id });
       if (existing.length === 0) {
