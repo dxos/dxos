@@ -129,7 +129,7 @@ const BasicStory = ({ messages: initialMessages = [], ...props }: DefaultStoryPr
 };
 
 /**
- * Queue story mutates queue with model adapter.
+ * Feed story mutates feed with model adapter.
  */
 const QueueStory = ({
   messages: initialMessages = [],
