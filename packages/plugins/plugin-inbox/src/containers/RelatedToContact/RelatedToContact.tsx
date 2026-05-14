@@ -34,14 +34,15 @@ export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) =>
 
   const mailboxFeed = mailbox?.feed?.target;
   const calendarFeed = calendar?.feed?.target;
+  // The conditional query has a union type that loses inference; reassert the element type.
   const messages = useQuery(
     db,
     mailboxFeed ? Query.select(Filter.type(Message.Message)).from(mailboxFeed) : Query.select(Filter.nothing()),
-  );
+  ) as Message.Message[];
   const events = useQuery(
     db,
     calendarFeed ? Query.select(Filter.type(Event.Event)).from(calendarFeed) : Query.select(Filter.nothing()),
-  );
+  ) as Event.Event[];
 
   const relatedMessages = messages
     .filter(
