@@ -19,6 +19,11 @@ type Slide = {
   description: string;
 };
 
+const welcome: Slide = {
+  src: 'https://customer-5rxcjpyab08avpmn.cloudflarestream.com/f58459bcdf3a6f3e93644a4e0f39b22a/iframe?poster=https%3A%2F%2Fcustomer-5rxcjpyab08avpmn.cloudflarestream.com%2Ff58459bcdf3a6f3e93644a4e0f39b22a%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600',
+  description: 'Welcome to DXOS',
+};
+
 export type WelcomeArticleProps = {
   role?: string;
 };
@@ -32,15 +37,16 @@ export const WelcomeArticle = ({ role }: WelcomeArticleProps = {}) => {
   const manager = usePluginManager();
 
   const slides: Slide[] = useMemo(
-    () =>
-      manager
+    () => [
+      welcome,
+      ...manager
         .getPlugins()
         .flatMap((plugin) =>
           (plugin.meta.screenshots ?? []).map((src) => ({ src, description: plugin.meta.name ?? plugin.meta.id })),
         ),
+    ],
     [manager],
   );
-  console.log(slides);
 
   const handleStartTour = useCallback(() => {
     void invokePromise(HelpOperation.Start);

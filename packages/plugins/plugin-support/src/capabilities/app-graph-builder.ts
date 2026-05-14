@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
-import { AppCapabilities, AppNodeMatcher, LayoutOperation, isPersonalSpace } from '@dxos/app-toolkit';
+import { AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation, isPersonalSpace } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
@@ -86,12 +86,17 @@ export default Capability.makeModule(
           if (!welcome) {
             return Effect.succeed([]);
           }
+          // Build a full ECHO object node so the navtree wires up persistence/cache correctly,
+          // then layer in welcome-specific presentation.
+          const baseNode = AppNode.makeObject({ db: space.db, object: welcome });
+          if (!baseNode) {
+            return Effect.succeed([]);
+          }
           return Effect.succeed([
-            Node.make({
-              id: welcome.id,
-              type: Support.Welcome.typename,
-              data: welcome,
+            {
+              ...baseNode,
               properties: {
+                ...baseNode.properties,
                 label: ['welcome-node.label', { ns: meta.id }],
                 icon: 'ph--lifebuoy--regular',
                 iconHue: 'rose',
@@ -99,7 +104,7 @@ export default Capability.makeModule(
                 draggable: false,
                 droppable: false,
               },
-            }),
+            },
           ]);
         },
       }),
