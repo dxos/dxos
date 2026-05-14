@@ -114,13 +114,13 @@ export const createEdgeExistenceChecker = (
   execQuery: (spaceId: Key.SpaceId, body: { query: string; reactivity: number }) => Promise<{ results?: unknown[] }>,
 ): RemoteExistenceChecker => {
   return (dxn) => {
-    const echoDxn = dxn.asEchoDXN();
-    if (!echoDxn?.spaceId || !echoDxn.echoId) {
+    const echoDXN = dxn.asEchoDXN();
+    if (!echoDXN?.spaceId || !echoDXN.echoId) {
       return Effect.succeed(false);
     }
-    const queryAst = Query.select(Filter.id(echoDxn.echoId)).from({ spaceIds: [echoDxn.spaceId] }).ast;
+    const queryAst = Query.select(Filter.id(echoDXN.echoId)).from({ spaceIds: [echoDXN.spaceId] }).ast;
     return Effect.tryPromise(() =>
-      execQuery(echoDxn.spaceId!, {
+      execQuery(echoDXN.spaceId!, {
         query: JSON.stringify(queryAst),
         reactivity: 0,
       }),
