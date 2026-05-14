@@ -49,6 +49,9 @@ export const Ticket = Schema.Struct({
 
 export interface Ticket extends Schema.Schema.Type<typeof Ticket> {}
 
+/**
+ * Creates a Ticket with default lifecycle fields (status: 'open', empty tags).
+ */
 export const make = (props: { title?: string; body?: string } = {}) =>
   Obj.make(Ticket, {
     title: props.title ?? 'New ticket',
@@ -57,4 +60,7 @@ export const make = (props: { title?: string; body?: string } = {}) =>
     tags: [],
   });
 
+/**
+ * Runtime type guard for Ticket ECHO objects.
+ */
 export const instanceOf = (value: unknown): value is Ticket => Obj.instanceOf(Ticket, value);

@@ -16,7 +16,7 @@ export default Capability.makeModule(
       id: Support.Ticket.typename,
       createObject: (props, options) =>
         Effect.gen(function* () {
-          const object = Support.make(props as { title?: string; body?: string });
+          const object = Support.make(props);
           return yield* Operation.invoke(SpaceOperation.AddObject, {
             object,
             target: options.target,

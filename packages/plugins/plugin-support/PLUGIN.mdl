@@ -93,6 +93,15 @@ op createTicket
 ```
 
 ```mdl
+op markInProgress
+  desc: Marks a Ticket as in progress (active investigation).
+  input:
+    ticket: Ticket
+  output: Ticket
+  effects: [echo:write]
+```
+
+```mdl
 op resolveTicket
   desc: Marks a Ticket as resolved with optional resolution notes.
   input:
@@ -125,16 +134,19 @@ feat F-1: Ticket Lifecycle
     when: a Ticket is created
     then: status === open; resolution unset.
   req F-1.3:
+    when: assistant or user calls markInProgress
+    then: status === in_progress.
+  req F-1.4:
     when: assistant or user calls resolveTicket
     then: status === resolved; resolution recorded (if provided).
-  req F-1.4: Ticket title and body are editable in SupportArticle.
+  req F-1.5: Ticket title and body are editable in SupportArticle.
 ```
 
 ```mdl
 feat F-2: AI Support Assistant
 
   req F-2.1: A blueprint is registered with key org.dxos.blueprint.support.
-  req F-2.2: Blueprint tools include createTicket, resolveTicket, searchDocs.
+  req F-2.2: Blueprint tools include createTicket, markInProgress, resolveTicket, searchDocs.
   req F-2.3:
     when: a Ticket is the active object
     then: the support blueprint is bound to the chat companion surface.
@@ -188,4 +200,12 @@ test T-4: Resolve button updates status
   when: user clicks the Resolve button
   then:
     - Ticket.status === resolved
+```
+
+```mdl
+test T-5: Mark in progress
+  given: an open Ticket
+  when: markInProgress invoked (via assistant or UI button)
+  then:
+    - Ticket.status === in_progress
 ```

@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
+import { type Obj } from '@dxos/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -23,11 +24,12 @@ type DefaultStoryProps = {
 const DefaultStory = ({ title, body, status, resolution }: DefaultStoryProps) => {
   const ticket = useMemo(() => {
     const next = Support.make({ title, body });
+    const mutable = next as Obj.Mutable<typeof next>;
     if (status) {
-      (next as any).status = status;
+      mutable.status = status;
     }
     if (resolution) {
-      (next as any).resolution = resolution;
+      mutable.resolution = resolution;
     }
     return next;
   }, [title, body, status, resolution]);

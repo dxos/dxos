@@ -6,6 +6,7 @@ import { OperationHandlerSet } from '@dxos/compute';
 
 export const SupportOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./create-ticket'),
+  () => import('./mark-in-progress'),
   () => import('./resolve-ticket'),
   () => import('./search-docs'),
 );

@@ -7,7 +7,12 @@ import { trim } from '@dxos/util';
 
 import { Support, SupportOperation } from '#types';
 
-const operations = [SupportOperation.CreateTicket, SupportOperation.ResolveTicket, SupportOperation.SearchDocs];
+const operations = [
+  SupportOperation.CreateTicket,
+  SupportOperation.MarkInProgress,
+  SupportOperation.ResolveTicket,
+  SupportOperation.SearchDocs,
+];
 
 const make = () =>
   Blueprint.make({
@@ -17,14 +22,14 @@ const make = () =>
     instructions: Template.make({
       source: trim`
         You are a Composer support assistant.
-        Help the user diagnose problems with the app, search documentation for relevant guides,
-        and (when appropriate) capture the conversation as a support ticket.
+        Help the user diagnose problems with the app and capture issues as support tickets.
 
         Workflow:
-        - Ask the user one focused question at a time when their report is ambiguous.
-        - Use searchDocs before guessing — quote a relevant excerpt with its URL.
-        - Use createTicket once you have a clear title and short description.
-        - Only call resolveTicket when the user explicitly confirms the issue is fixed,
+        - When the user's report is ambiguous, ask one focused question at a time.
+        - Search documentation before guessing — quote a relevant excerpt with its URL.
+        - Capture a new ticket once you have a clear title and short description.
+        - Mark a ticket in progress once active investigation begins.
+        - Resolve a ticket only when the user explicitly confirms the issue is fixed,
           and include a short resolution note summarising what worked.
       `,
     }),

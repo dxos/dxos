@@ -31,6 +31,21 @@ export const CreateTicket = Operation.make({
   services: [Database.Service],
 });
 
+export const MarkInProgress = Operation.make({
+  meta: {
+    key: 'org.dxos.function.support.mark-in-progress',
+    name: 'Mark Support Ticket In Progress',
+    description: 'Marks a support ticket as in progress.',
+  },
+  input: Schema.Struct({
+    ticket: Ref.Ref(Support.Ticket).annotations({
+      description: 'The ticket to mark as in progress.',
+    }),
+  }),
+  output: Support.Ticket,
+  services: [Database.Service],
+});
+
 export const ResolveTicket = Operation.make({
   meta: {
     key: 'org.dxos.function.support.resolve-ticket',
