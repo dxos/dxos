@@ -144,7 +144,11 @@ export class EchoHost extends Resource {
     this._dataService = new DataServiceImpl({
       automergeHost: this._automergeHost,
       spaceStateManager: this._spaceStateManager,
-      updateIndexes: () => this.updateIndexes(),
+      updateIndexes: async () => {
+        do {
+          await this._updateIndexes.runBlocking();
+        } while (!this._indexesUpToDate);
+      },
     });
 
     trace.diagnostic<EchoStatsDiagnostic>({
@@ -282,20 +286,11 @@ export class EchoHost extends Resource {
 
   /**
    * Perform any pending index updates.
-   *
-   * Always runs at least one update cycle so that callers (e.g. a client
-   * `flush()`) observe their just-written changes in subsequent queries.
-   * Exits cooperatively if the host's context disposes mid-loop:
-   * `runBlocking` resolves silently on disposal, and the post-iteration
-   * `_ctx.disposed` check breaks the loop instead of busy-spinning.
    */
   async updateIndexes(): Promise<void> {
-    while (true) {
+    do {
       await this._updateIndexes.runBlocking();
-      if (this._ctx.disposed || this._indexesUpToDate) {
-        return;
-      }
-    }
+    } while (!this._indexesUpToDate);
   }
 
   /**
