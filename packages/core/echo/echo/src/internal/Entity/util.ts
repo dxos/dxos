@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { assertArgument, invariant } from '@dxos/invariant';
-import { LegacyDXN as DXN, ObjectId } from '@dxos/keys';
+import { EchoId, ObjectId, type URI } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import { type InternalObjectProps, SelfDXNId } from './model';
@@ -15,13 +15,13 @@ import { type InternalObjectProps, SelfDXNId } from './model';
  *
  * @internal
  */
-export const getObjectDXN = (object: any): DXN | undefined => {
+export const getObjectDXN = (object: any): URI.URI | undefined => {
   invariant(!Schema.isSchema(object), 'schema not allowed in this function');
   assertArgument(typeof object === 'object' && object != null, 'object', 'expected object');
   assumeType<InternalObjectProps>(object);
 
   if (object[SelfDXNId]) {
-    invariant(object[SelfDXNId] instanceof DXN, 'Invalid object model: invalid self dxn');
+    invariant(typeof object[SelfDXNId] === 'string', 'Invalid object model: invalid self dxn');
     return object[SelfDXNId];
   }
 
@@ -29,5 +29,5 @@ export const getObjectDXN = (object: any): DXN | undefined => {
     throw new TypeError('Object id is not valid.');
   }
 
-  return DXN.fromLocalObjectId(object.id);
+  return EchoId.fromLocalObjectId(object.id);
 };

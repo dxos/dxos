@@ -68,7 +68,7 @@ import {
   symbolIsProxy,
 } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { LegacyDXN as DXN, ObjectId } from '@dxos/keys';
+import { EchoId, LegacyDXN as DXN, ObjectId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
@@ -292,7 +292,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         const objectId = value.id ?? value;
         // TODO(dmaretskyi): Validate object is from the same space.
         invariant(ObjectId.isValid(objectId));
-        target[symbolInternals].core.setParent(EncodedReference.fromDXN(DXN.fromLocalObjectId(objectId)));
+        target[symbolInternals].core.setParent(EncodedReference.fromEchoId(EchoId.fromLocalObjectId(objectId)));
       }
       return true;
     }
@@ -352,7 +352,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         .resolveSync(parentDXN, false);
     } else {
       invariant(target[symbolInternals].linkCache);
-      const echoId = parentDXN.asEchoDXN()?.echoId;
+      const parentEchoId = EchoId.tryParse(parentDXN);
+      const echoId = parentEchoId ? EchoId.getObjectId(parentEchoId) : undefined;
       invariant(echoId);
       return target[symbolInternals].linkCache.get(echoId);
     }
@@ -374,7 +375,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         .resolveSync(sourceDXN, false);
     } else {
       invariant(target[symbolInternals].linkCache);
-      const echoId = sourceDXN.asEchoDXN()?.echoId;
+      const sourceEchoId = EchoId.tryParse(sourceDXN);
+      const echoId = sourceEchoId ? EchoId.getObjectId(sourceEchoId) : undefined;
       invariant(echoId);
       return target[symbolInternals].linkCache.get(echoId);
     }
@@ -395,7 +397,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         .resolveSync(targetDXN, false);
     } else {
       invariant(target[symbolInternals].linkCache);
-      const echoId = targetDXN.asEchoDXN()?.echoId;
+      const targetEchoId = EchoId.tryParse(targetDXN);
+      const echoId = targetEchoId ? EchoId.getObjectId(targetEchoId) : undefined;
       invariant(echoId);
       return target[symbolInternals].linkCache.get(echoId);
     }
@@ -546,9 +549,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       } else if (Ref.isRef(value)) {
         const savedTarget = getRefSavedTarget(value);
         if (savedTarget) {
-          return EncodedReference.fromDXN(this.createRef(target, savedTarget));
+          return EncodedReference.fromDXN(this.createRef(target, savedTarget).toString() as unknown as URI.URI);
         } else {
-          return EncodedReference.fromDXN(value.dxn);
+          return EncodedReference.fromDXN(value.dxn as URI.URI);
         }
       } else {
         return recurse(value);
@@ -590,14 +593,15 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     // TODO(dmaretskyi): Check using dxn.
     // Skip protobuf types as they are runtime registered types.
-    if (typeDXN.kind === DXN.kind.TYPE && typeDXN.parts[0]?.startsWith('protobuf')) {
+    const legacyTypeDXN = DXN.tryParse(typeDXN.toString());
+    if (legacyTypeDXN?.kind === DXN.kind.TYPE && legacyTypeDXN?.parts[0]?.startsWith('protobuf')) {
       return undefined;
     }
 
     return target[symbolInternals].database.schemaRegistry.query({ id: typeDXN.toString() }).runSync()[0];
   }
 
-  getTypeDXN(target: ProxyTarget): DXN | undefined {
+  getTypeDXN(target: ProxyTarget): URI.URI | undefined {
     if (target[symbolNamespace] !== DATA_NAMESPACE) {
       return undefined;
     }
@@ -828,9 +832,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return refImpl;
     } else {
       invariant(target[symbolInternals].linkCache);
-      const echoDXN = dxn.asEchoDXN();
-      invariant(echoDXN, 'Invalid DXN');
-      return new RefImpl(dxn, this._handleStoredSchema(target, target[symbolInternals].linkCache.get(echoDXN.echoId)));
+      const parsedEchoId = EchoId.tryParse(dxn);
+      const objectId = parsedEchoId ? EchoId.getObjectId(parsedEchoId) : undefined;
+      invariant(objectId, 'Invalid DXN');
+      return new RefImpl(dxn, this._handleStoredSchema(target, target[symbolInternals].linkCache.get(objectId)));
     }
   }
 
@@ -1188,7 +1193,7 @@ const initCore = (core: ObjectCore, target: ProxyTarget) => {
   if (parentValue !== undefined) {
     const parentId = parentValue.id ?? parentValue;
     if (ObjectId.isValid(parentId)) {
-      core.setParent(EncodedReference.fromDXN(DXN.fromLocalObjectId(parentId)));
+      core.setParent(EncodedReference.fromEchoId(EchoId.fromLocalObjectId(parentId)));
     }
     delete (target as any)[ParentId];
   }
@@ -1236,7 +1241,7 @@ const setSchemaPropertiesOnObjectCore = (
   if (schema != null) {
     const dxn = getSchemaDXN(schema);
     invariant(dxn, 'Schema must be defined via TypedObject.');
-    internals.core.setType(EncodedReference.fromDXN(dxn));
+    internals.core.setType(EncodedReference.fromDXN(dxn.toString() as unknown as URI.URI));
 
     const kind = getEntityKind(schema);
     invariant(kind);
@@ -1264,8 +1269,8 @@ const setRelationSourceAndTarget = (
       throw new TypeError('target must be an ECHO object');
     }
 
-    core.setSource(EncodedReference.fromDXN(EchoReactiveHandler.instance.createRef(target, sourceRef)));
-    core.setTarget(EncodedReference.fromDXN(EchoReactiveHandler.instance.createRef(target, targetRef)));
+    core.setSource(EncodedReference.fromDXN(EchoReactiveHandler.instance.createRef(target, sourceRef).toString() as unknown as URI.URI));
+    core.setTarget(EncodedReference.fromDXN(EchoReactiveHandler.instance.createRef(target, targetRef).toString() as unknown as URI.URI));
   }
 };
 
@@ -1305,8 +1310,8 @@ const linkAllNestedProperties = (target: ProxyTarget): DecodedAutomergePrimaryVa
 const refToEncodedReference = (target: ProxyTarget, ref: Ref<any>): EncodedReference => {
   const savedTarget = getRefSavedTarget(ref);
   if (savedTarget) {
-    return EncodedReference.fromDXN(EchoReactiveHandler.instance.createRef(target, savedTarget));
+    return EncodedReference.fromDXN(EchoReactiveHandler.instance.createRef(target, savedTarget).toString() as unknown as URI.URI);
   } else {
-    return EncodedReference.fromDXN(ref.dxn);
+    return EncodedReference.fromDXN(ref.dxn as URI.URI);
   }
 };
