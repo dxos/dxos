@@ -22,9 +22,9 @@ import { trace } from '@dxos/tracing';
 import { bufferToArray, compositeKey } from '@dxos/util';
 
 import {
-  type AutomergeReplicator,
   type AutomergeReplicatorConnection,
   type AutomergeReplicatorContext,
+  type EdgeAutomergeReplicator,
   type ShouldAdvertiseProps,
   type ShouldSyncCollectionProps,
   getSpaceIdFromCollectionId,
@@ -56,7 +56,7 @@ export type EchoEdgeSubductionReplicatorProps = {
  * responsibilities. For the classical sync path see {@link EchoEdgeReplicator}.
  */
 @trace.resource()
-export class EchoEdgeSubductionReplicator implements AutomergeReplicator {
+export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
   private readonly _edgeConnection: EdgeConnection;
   private readonly _edgeHttpClient: EdgeHttpClient;
   private readonly _mutex = new Mutex();
