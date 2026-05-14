@@ -13,7 +13,7 @@ export const formatDuration = (duration: number): string => {
  * @param dxn The DXN to extract the UUID from.
  * @returns The UUID part of the DXN, or undefined if the DXN is undefined or invalid.
  */
-export const getUuidFromDxn = (dxn: DXN | string | undefined): string | undefined => {
+export const getUuidFromDXN = (dxn: DXN | string | undefined): string | undefined => {
   if (!dxn) {
     return undefined;
   }

@@ -35,13 +35,13 @@ const matchesAst = (ast: any, message: Message.Message, tags: Tag.Tag[]): boolea
       // For Filter.typename()/Filter.type() it's a fully-qualified DXN string we compare
       // against the message's DXN-qualified typename.
       if (ast.typename) {
-        let messageTypeDxn: string | undefined;
+        let messageTypeDXN: string | undefined;
         try {
-          messageTypeDxn = Obj.getTypeDXN(message).toString();
+          messageTypeDXN = Obj.getTypeDXN(message).toString();
         } catch {
-          messageTypeDxn = undefined;
+          messageTypeDXN = undefined;
         }
-        if (messageTypeDxn !== ast.typename) {
+        if (messageTypeDXN !== ast.typename) {
           return false;
         }
       }

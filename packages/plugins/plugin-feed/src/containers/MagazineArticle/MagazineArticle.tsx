@@ -139,14 +139,14 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     }
 
     const tag = findStarTag(db);
-    const tagDxn = tag ? Obj.getDXN(tag).toString() : undefined;
+    const tagDXN = tag ? Obj.getDXN(tag).toString() : undefined;
     const next = magazine.posts.filter((ref) => {
       const post = ref.target;
-      if (!post || !tagDxn) {
+      if (!post || !tagDXN) {
         return false;
       }
 
-      return Obj.getMeta(post).tags?.includes(tagDxn) ?? false;
+      return Obj.getMeta(post).tags?.includes(tagDXN) ?? false;
     });
 
     if (next.length === magazine.posts.length) {
@@ -327,7 +327,7 @@ const useMagazinePosts = (
   const postFingerprint = subject.posts.map((ref) => ref.dxn.toString()).join();
 
   return useMemo<Subscription.Post[]>(() => {
-    const seenDxn = new Set<string>();
+    const seenDXN = new Set<string>();
     const seenLink = new Set<string>();
     const seenGuid = new Set<string>();
 
@@ -343,14 +343,14 @@ const useMagazinePosts = (
       // dedup the masonry shows them as duplicate tiles.
       const dxn = Obj.getDXN(target).toString();
       if (
-        seenDxn.has(dxn) ||
+        seenDXN.has(dxn) ||
         (target.link && seenLink.has(target.link)) ||
         (target.guid && seenGuid.has(target.guid))
       ) {
         continue;
       }
 
-      seenDxn.add(dxn);
+      seenDXN.add(dxn);
       if (target.link) {
         seenLink.add(target.link);
       }

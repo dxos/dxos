@@ -59,7 +59,7 @@ export default Capability.makeModule(
       let debouncedFn = pendingSaves.get(fileId);
       if (!debouncedFn) {
         debouncedFn = debounce((text: string) => {
-          const currentTarget = filesystemManager.getWriteTargetByDxn(dxn);
+          const currentTarget = filesystemManager.getWriteTargetByDXN(dxn);
           if (currentTarget) {
             void Effect.runFork(saveFile(fileId, currentTarget.path, text));
           }
@@ -72,7 +72,7 @@ export default Capability.makeModule(
     const extensionProvider = () =>
       listener({
         onChange: ({ id, text }) => {
-          const target = filesystemManager.getWriteTargetByDxn(id);
+          const target = filesystemManager.getWriteTargetByDXN(id);
           if (!target) {
             return;
           }

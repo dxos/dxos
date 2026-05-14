@@ -64,9 +64,9 @@ Mentions of the word "Queue" in [internal/common/proxy/change-context.ts](packag
 **Primitives landed:**
 
 1. ✅ **`Feed.sync({ push, pull })` on `FeedService`** + bridge implementation in `echo-db/queue/feed-service.ts` + test.
-2. ✅ **`useFeedQuery(feed, filter)` React hook** in `@dxos/react-client/echo`. Removes the three Phase 3 stopgap casts (InvocationTraceContainer, AgentArticle, ExecutionGraphModule).
-3. ✅ **Reactive-subscribe test coverage** in [feed.test.ts](packages/core/echo/echo-db/src/queue/feed.test.ts) (`fire: true` + appended-item path).
-4. ✅ **`createFeedServiceLayer` re-exported** from `@dxos/client/echo` so plugins don't need a runtime dependency on `@dxos/echo-db`.
+2. ✅ **Reactive-subscribe test coverage** in [feed.test.ts](packages/core/echo/echo-db/src/queue/feed.test.ts) (`fire: true` + appended-item path).
+3. ✅ **`createFeedServiceLayer` re-exported** from `@dxos/client/echo` so plugins don't need a runtime dependency on `@dxos/echo-db`.
+4. ✅ **Reactive query**: prefer `useQuery(db, Query.select(filter).from(feed))` over a `useFeedQuery` shim — the underlying query engine already supports feed scopes via `Query.from(feed)`, so no dedicated React hook is needed. (`useFeedQuery` / `useFeedQueryByDXN` were prototyped and removed per reviewer feedback.)
 
 **Consumer migrations landed:**
 
@@ -126,19 +126,47 @@ Mentions of the word "Queue" in [internal/common/proxy/change-context.ts](packag
 
 ### Phase 6 — delete the legacy `Queue<T>` surface
 
-Possible only after Phase 4. Delete:
+In progress (PR #11337 + follow-ups).
+
+**Consumer migrations:**
+
+- ✅ `plugin-assistant/queue-logger.ts` — main invocation feed migrated; the per-invocation trace event feeds are deprecated (not functional) and the helper is now a no-op pending a tracing data-structure replacement.
+- ✅ `plugin-transcription/transcriber/transcription-manager.ts` (takes `Feed.Feed`; caller resolves from the queue DXN via `space.db.query`).
+- ✅ `plugin-transcription/normalization/message-normalizer.ts`.
+- ✅ `plugin-transcription/hooks/useQueueModelAdapter.ts` (renamed `useFeedModelAdapter`, takes `objects: T[]`).
+- ✅ `plugin-assistant/containers/ChatContainer/ChatContainer.tsx`.
+- ✅ `assistant-toolkit/crud/graph.ts` (uses deprecated `Feed.ContextFeedService` — to be threaded explicitly).
+- ✅ `devtools/panels/echo/QueuesPanel/QueuesPanel.tsx` (stubbed pending Feed-aware replacement).
+- ✅ `devtools/panels/edge/InvocationTracePanel/hooks.ts` (stubbed; trace data deprecated).
+- ✅ `sdk/schema/src/graph/space-graph.ts` (`SpaceGraphModel` decoupled from `Queue`; `setItems()` instead).
+- ✅ `stories-assistant/GraphModule.tsx` (`useQuery(db, Query.from(feed))`).
+- ✅ All `useFeedQuery(feed, filter)` callers → `useQuery(db, Query.select(filter).from(feed))`.
+- ✅ `useQueue`, `useFeedQuery`, `useFeedQueryByDXN` hooks deleted from `@dxos/react-client/echo`.
+- ✅ `Feed.appendByDXN`, `Feed.queryByDXN`, `Feed.runQueryByDXN`, `Feed.unsafeFromDXN` removed.
+- ✅ `Feed.ContextFeedService` marked `@deprecated`.
+
+**Deletions** (after all consumers migrate):
 
 - `Queue<T>` interface in [echo-db/queue/types.ts](packages/core/echo/echo-db/src/queue/types.ts).
-- `QueueFactory`, `QueueImpl`, `MemoryQueue`, and the legacy `QueueService` in [echo-db/queue/](packages/core/echo/echo-db/src/queue/) — or repurpose them as Feed internals.
-- The legacy `effect-queue-service.ts` bridge layer.
-- The `useQueue` hook in `@dxos/echo-react` (replaced by `useFeedQuery`).
-- All remaining `as Queue` stopgap casts.
+- `QueueFactory`, `QueueImpl`, `MemoryQueue`, and the legacy `QueueService` in [echo-db/queue/](packages/core/echo/echo-db/src/queue/) — or repurpose them as Feed internals. (Note: low-level `QueueService` Tag is still used by compute/conductor infrastructure — out of scope for Phase 6 deletion.)
+- The legacy `effect-queue-service.ts` bridge layer (and its `ContextQueueService` export).
+- ✅ The `useQueue` hook in `@dxos/react-client/echo` (callers now use `useQuery(db, Query.from(feed))`).
+- ✅ `useFeedQuery` / `useFeedQueryByDXN` hooks (callers now use `useQuery(db, Query.from(feed))`).
+- ✅ `Feed.appendByDXN` / `queryByDXN` / `runQueryByDXN` / `unsafeFromDXN`.
+- ✅ `type Queue` re-export in `@dxos/client/echo` index.
+- ✅ All remaining `as Queue` stopgap casts (2 known: `InvocationTraceContainer.tsx` line 201 boundary for `ExecutionGraphPanel`, `ExecutionGraphModule.tsx` line 20 boundary for `useExecutionGraph`) — both removed; consumers now pass `objects: readonly Obj.Unknown[]`.
+
+**Downstream API changes:**
+
+- ✅ `useExecutionGraph(queue?: Queue)` in `react-ui-components` → `useExecutionGraph(objects: readonly Obj.Unknown[])`.
+- ✅ `ExecutionGraphPanel` in `devtools` → `ExecutionGraphPanel({ objects })`.
+- Re-exports through `@dxos/client/echo` — drop `type Queue` (keep `createFeedServiceLayer`).
 
 ### Phase 7 — optional: make `Feed.Feed` directly Queryable
 
 Not currently planned; needs design. Options:
 
-1. `useFeedQuery` hook only (covered by Phase 4 — recommended baseline).
+1. Use `useQuery(db, Query.select(filter).from(feed))` — the established baseline, no dedicated React hook required.
 2. Make `Ref(Feed.Feed).target` return a runtime handle bundling Feed data + Queryable methods.
 3. Merge `Queue<T>` interface into `Feed.Feed` (extends Phase 6 with a richer runtime type).
 
