@@ -56,6 +56,17 @@ export const useMessageActions = ({
                   onOpen,
                 )),
           )
+          .action(
+            'renderMode',
+            {
+              label: [
+                renderMode === 'markdown' ? 'message toolbar show plain text' : 'message toolbar show markdown',
+                { ns: meta.id },
+              ],
+              icon: renderMode === 'markdown' ? 'ph--text-t--regular' : 'ph--markdown-logo--regular',
+            },
+            () => setRenderMode(renderMode === 'markdown' ? 'plain' : 'markdown'),
+          )
           .separator('gap')
           .subgraph(
             onReply &&
@@ -107,18 +118,6 @@ export const useMessageActions = ({
               icon: viewMode === 'enriched' ? 'ph--article--regular' : 'ph--graph--regular',
             },
             () => setViewMode(viewMode === 'plain' ? 'enriched' : 'plain'),
-          )
-          // Render mode toggle: parse the body as markdown vs show it verbatim.
-          .action(
-            'renderMode',
-            {
-              label: [
-                renderMode === 'markdown' ? 'message toolbar show plain text' : 'message toolbar show markdown',
-                { ns: meta.id },
-              ],
-              icon: renderMode === 'markdown' ? 'ph--text-t--regular' : 'ph--markdown-logo--regular',
-            },
-            () => setRenderMode(renderMode === 'markdown' ? 'plain' : 'markdown'),
           )
           .build(),
       ),
