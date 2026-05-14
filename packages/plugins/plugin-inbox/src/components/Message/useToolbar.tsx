@@ -126,9 +126,7 @@ export const useMessageActions = ({
             },
             {
               label: [
-                renderMode === 'markdown'
-                  ? 'message toolbar show plain text'
-                  : 'message toolbar show markdown',
+                renderMode === 'markdown' ? 'message toolbar show plain text' : 'message toolbar show markdown',
                 { ns: meta.id },
               ],
               icon: renderMode === 'markdown' ? 'ph--text-t--regular' : 'ph--markdown-logo--regular',
