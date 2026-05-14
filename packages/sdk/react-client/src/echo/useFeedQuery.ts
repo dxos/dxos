@@ -18,7 +18,7 @@ import { useClient } from '../client';
  *
  * @example
  * ```ts
- * const messages = useFeedQuery(span.invocationTraceQueue?.target, Filter.everything());
+ * const messages = useFeedQuery(span.invocationTraceFeed?.target, Filter.everything());
  * ```
  */
 export const useFeedQuery: {

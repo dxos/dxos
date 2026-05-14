@@ -53,7 +53,7 @@ export class QueueLogger implements SequenceLogger {
             invocationId: event.invocationId,
             timestamp: Date.now(),
             input: {},
-            invocationTraceQueue: Ref.fromDXN(this._getTraceQueueDxn(event.invocationId)),
+            invocationTraceFeed: Ref.fromDXN(this._getTraceQueueDxn(event.invocationId)),
             invocationTarget: Ref.make(this.sequence),
           }),
         ]);

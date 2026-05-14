@@ -134,9 +134,9 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
           duration: formatDuration(invocation.duration),
           status,
           queue:
-            invocation.invocationTraceQueue?.dxn?.toString() ??
-            (invocation.invocationTraceQueue && '/' in invocation.invocationTraceQueue
-              ? (invocation.invocationTraceQueue as any)['/']
+            invocation.invocationTraceFeed?.dxn?.toString() ??
+            (invocation.invocationTraceFeed && '/' in invocation.invocationTraceFeed
+              ? (invocation.invocationTraceFeed as any)['/']
               : 'unknown'),
           _original: invocation,
         };
@@ -196,7 +196,7 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
 const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
   const [activeTab, setActiveTab] = useState('input');
 
-  const feed = span.invocationTraceQueue?.target;
+  const feed = span.invocationTraceFeed?.target;
   const objects = useFeedQuery(feed, Filter.everything());
 
   const contents = Array.head(objects).pipe(

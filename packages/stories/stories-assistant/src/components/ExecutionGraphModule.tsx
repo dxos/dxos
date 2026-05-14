@@ -15,7 +15,7 @@ export const ExecutionGraphModule = ({ space, traceFeed }: ModuleProps & { trace
   const invocationsFeed = space.properties?.invocationTraceFeed?.target;
   const invocations = useFeedQuery(invocationsFeed, Filter.type(InvocationTraceStartEvent));
   // Use provided trace feed, or fall back to the per-invocation trace feed from the most recent invocation.
-  const feed = traceFeed ?? invocations?.at(-1)?.invocationTraceQueue?.target;
+  const feed = traceFeed ?? invocations?.at(-1)?.invocationTraceFeed?.target;
   const objects = useFeedQuery(feed, Filter.everything());
   const { branches, commits } = useExecutionGraph(objects);
 
