@@ -12,9 +12,7 @@ import { composable, composableProps } from '@dxos/ui-theme';
 import { ActorList } from '../Actor';
 import { DateComponent } from '../DateComponent';
 
-export type EventStackAction =
-  | { type: 'current'; eventId: string }
-  | { type: 'select'; eventId: string };
+export type EventStackAction = { type: 'current'; eventId: string } | { type: 'select'; eventId: string };
 
 export type EventStackActionHandler = (action: EventStackAction) => void;
 
