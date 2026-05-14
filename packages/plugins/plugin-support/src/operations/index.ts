@@ -10,4 +10,5 @@ export const SupportOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./mark-in-progress'),
   () => import('./resolve-ticket'),
   () => import('./search-docs'),
+  () => import('./start'),
 );

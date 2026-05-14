@@ -22,7 +22,7 @@ const DefaultStory = () => (
 );
 
 const meta = {
-  title: 'plugins/plugin-help/containers/ShortcutsDialogContent',
+  title: 'plugins/plugin-support/containers/ShortcutsDialogContent',
   component: ShortcutsDialogContent,
   render: DefaultStory,
   decorators: [withTheme(), withPluginManager()],

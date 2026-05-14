@@ -63,7 +63,6 @@
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
-    "@dxos/plugin-help": "workspace:*",
     "@dxos/plugin-navtree": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/platform": "catalog:",

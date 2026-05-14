@@ -635,11 +635,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-help/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-inbox/package.json",
           "jsonpath": "$.version"
         },

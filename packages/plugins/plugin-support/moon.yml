@@ -3,7 +3,9 @@ language: typescript
 tags:
   - ts-build
   - ts-test
+  - ts-test-storybook
   - pack
+  - storybook
 tasks:
   compile:
     args:
@@ -13,6 +15,7 @@ tasks:
       - '--entryPoint=src/capabilities/index.ts'
       - '--entryPoint=src/components/index.ts'
       - '--entryPoint=src/containers/index.ts'
+      - '--entryPoint=src/hooks/index.ts'
       - '--entryPoint=src/meta.ts'
       - '--entryPoint=src/operations/index.ts'
       - '--entryPoint=src/plugin.ts'

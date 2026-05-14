@@ -1,5 +1,5 @@
 //
-// Copyright 2025 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 import * as Effect from 'effect/Effect';
@@ -13,6 +13,9 @@ import { meta } from '#meta';
 import { HelpCapabilities, HelpOperation } from '#types';
 
 import { SHORTCUTS_DIALOG } from '../constants';
+
+// TODO: Add a "Start support chat" action that invokes CreateTicket and navigates to the new ticket.
+//   Deferred — needs the navigation operation wired up.
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

@@ -3,3 +3,6 @@
 //
 
 export * from './FeedbackForm';
+export * from './Shortcuts';
+export * from './Tooltip';
+export * from './WelcomeTour';

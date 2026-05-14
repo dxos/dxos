@@ -41,6 +41,10 @@ export const translations = [
         'download-logs.label': 'Download logs',
         'feedback-toast.label': 'Thank you for your feedback!',
         'feedback-toast.description': 'We will review your feedback and get back to you as soon as possible.',
+        // Welcome tour + keyboard shortcuts (absorbed from plugin-help).
+        'open-help-tour.message': 'Show welcome tour',
+        'open-shortcuts.label': 'Show shortcuts',
+        'shortcuts-dialog.title': 'Shortcuts',
       },
     },
   },
