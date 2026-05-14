@@ -11,16 +11,16 @@ import * as Layer from 'effect/Layer';
 import { Context } from '@dxos/context';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { ObjectId, SpaceId } from '@dxos/keys';
+import { ObjectId, SpaceId, URI } from '@dxos/keys';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { type DataSourceCursor, type IndexDataSource, IndexEngine, type IndexingResult } from './index-engine';
 import { type IndexCursor, IndexTracker } from './index-tracker';
 import { FtsIndex, type IndexerObject, ObjectMetaIndex, ReverseRefIndex } from './indexes';
 
-const TYPE_DEFAULT = 'dxn:test.com/type/Type:0.1.0';
-const TYPE_A = 'dxn:test.com/type/TypeA:0.1.0';
-const TYPE_B = 'dxn:test.com/type/TypeB:0.1.0';
+const TYPE_DEFAULT = URI.make('dxn:test.com/type/Type:0.1.0');
+const TYPE_A = URI.make('dxn:test.com/type/TypeA:0.1.0');
+const TYPE_B = URI.make('dxn:test.com/type/TypeB:0.1.0');
 
 const TestLayer = SqlTransaction.layer.pipe(
   Layer.provideMerge(

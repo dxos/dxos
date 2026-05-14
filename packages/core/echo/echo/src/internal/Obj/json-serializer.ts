@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { raise } from '@dxos/debug';
 import { type EncodedReference, ObjectStructure, isEncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { ObjectId, URI } from '@dxos/keys';
+import { EchoId, ObjectId, URI } from '@dxos/keys';
 import { assumeType, deepMapValues, visitValues } from '@dxos/util';
 
 import type * as Database from '../../Database';
@@ -210,13 +210,16 @@ export const setRefResolverOnData = (obj: AnyEntity, refResolver: RefResolver) =
  * Different from {@link objectToJSON} as it takes the internal {@link ObjectStructure} representation directly
  */
 export const objectStructureToJson = (objectId: string, structure: ObjectStructure): Obj.JSON => {
+  const parent = ObjectStructure.getParent(structure)?.['/'];
+  const source = ObjectStructure.getRelationSource(structure)?.['/'];
+  const target = ObjectStructure.getRelationTarget(structure)?.['/'];
   return {
     ...structure.data,
     id: objectId,
-    [ATTR_TYPE]: (ObjectStructure.getTypeReference(structure)?.['/'] ?? '') as string,
+    [ATTR_TYPE]: URI.make(ObjectStructure.getTypeReference(structure)?.['/'] ?? ''),
     [ATTR_DELETED]: ObjectStructure.isDeleted(structure),
-    [ATTR_PARENT]: ObjectStructure.getParent(structure)?.['/'] as string | undefined,
-    [ATTR_RELATION_SOURCE]: ObjectStructure.getRelationSource(structure)?.['/'] as string | undefined,
-    [ATTR_RELATION_TARGET]: ObjectStructure.getRelationTarget(structure)?.['/'] as string | undefined,
+    [ATTR_PARENT]: parent !== undefined ? EchoId.parse(parent) : undefined,
+    [ATTR_RELATION_SOURCE]: source !== undefined ? EchoId.parse(source) : undefined,
+    [ATTR_RELATION_TARGET]: target !== undefined ? EchoId.parse(target) : undefined,
   };
 };

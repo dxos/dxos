@@ -933,7 +933,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     const obj: Partial<ObjectJSON> = {
       id: target[symbolInternals].core.id,
-      [ATTR_TYPE]: typeRef ? EncodedReference.getReferenceString(typeRef) : undefined,
+      [ATTR_TYPE]: typeRef ? EncodedReference.toURI(typeRef) : undefined,
       [ATTR_META]: { ...this.getMeta(target) } as ObjectMetaJSON,
     };
 
@@ -943,11 +943,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     const sourceRef = target[symbolInternals].core.getSource();
     if (sourceRef) {
-      obj[ATTR_RELATION_SOURCE] = EncodedReference.getReferenceString(sourceRef);
+      obj[ATTR_RELATION_SOURCE] = EncodedReference.toEchoId(sourceRef);
     }
     const targetRef = target[symbolInternals].core.getTarget();
     if (targetRef) {
-      obj[ATTR_RELATION_TARGET] = EncodedReference.getReferenceString(targetRef);
+      obj[ATTR_RELATION_TARGET] = EncodedReference.toEchoId(targetRef);
     }
 
     Object.assign(

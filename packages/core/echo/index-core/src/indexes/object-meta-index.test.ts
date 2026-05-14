@@ -9,18 +9,18 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { ATTR_DELETED, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
-import { EchoId, ObjectId, SpaceId } from '@dxos/keys';
+import { EchoId, ObjectId, SpaceId, URI } from '@dxos/keys';
 
 import type { IndexerObject } from './interface';
 import { ObjectMetaIndex } from './object-meta-index';
 
-const TYPE_PERSON = 'dxn:com.example.type.person:0.1.0';
-const TYPE_PERSON_VERSIONLESS = 'dxn:com.example.type.person';
-const TYPE_RELATION = 'dxn:com.example.type.relation:0.1.0';
-const TYPE_RELATION_UPDATED = 'dxn:com.example.type.relation-updated:0.1.0';
-const TYPE_WITH_UNDERSCORE = 'dxn:com.example.type.personextra:0.1.0';
-const TYPE_WITH_UNDERSCORE_VERSIONLESS = 'dxn:com.example.type.personextra';
-const TYPE_UNDERSCORE_FALSE_POSITIVE = 'dxn:com.example.type.personaextra:0.1.0';
+const TYPE_PERSON = URI.make('dxn:com.example.type.person:0.1.0');
+const TYPE_PERSON_VERSIONLESS = URI.make('dxn:com.example.type.person');
+const TYPE_RELATION = URI.make('dxn:com.example.type.relation:0.1.0');
+const TYPE_RELATION_UPDATED = URI.make('dxn:com.example.type.relation-updated:0.1.0');
+const TYPE_WITH_UNDERSCORE = URI.make('dxn:com.example.type.personextra:0.1.0');
+const TYPE_WITH_UNDERSCORE_VERSIONLESS = URI.make('dxn:com.example.type.personextra');
+const TYPE_UNDERSCORE_FALSE_POSITIVE = URI.make('dxn:com.example.type.personaextra:0.1.0');
 
 const TestLayer = Layer.merge(
   SqliteClient.layer({

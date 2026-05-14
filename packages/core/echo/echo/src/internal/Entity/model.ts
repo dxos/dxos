@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 
 import { type ForeignKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { ObjectId } from '@dxos/keys';
+import { type EchoId, ObjectId, type URI } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type * as Database from '../../Database';
@@ -45,17 +45,17 @@ export { ATTR_DELETED, ATTR_SELF_DXN, ObjectDatabaseId, ObjectDeletedId, ObjectV
 // NOTE: Each symbol has a jsdoc describing its purpose.
 export interface InternalObjectProps {
   readonly id: ObjectId;
-  readonly [SelfDXNId]: string;
+  readonly [SelfDXNId]: EchoId.EchoId;
   readonly [KindId]: EntityKind;
   readonly [SchemaId]: Schema.Schema.AnyNoContext;
-  readonly [TypeId]: string;
+  readonly [TypeId]: URI.URI;
   readonly [MetaId]?: ObjectMeta;
   [ParentId]?: InternalObjectProps;
   readonly [ObjectDatabaseId]?: Database.Database;
   readonly [ObjectDeletedId]?: boolean;
   readonly [ObjectVersionId]?: Version;
-  readonly [RelationSourceDXNId]?: string;
-  readonly [RelationTargetDXNId]?: string;
+  readonly [RelationSourceDXNId]?: EchoId.EchoId;
+  readonly [RelationTargetDXNId]?: EchoId.EchoId;
   readonly [RelationSourceId]?: InternalObjectProps;
   readonly [RelationTargetId]?: InternalObjectProps;
 }
@@ -73,13 +73,13 @@ export interface ObjectMetaJSON {
  */
 export interface ObjectJSON {
   id: string;
-  [ATTR_TYPE]: string;
-  [ATTR_SELF_DXN]?: string;
-  [ATTR_PARENT]?: string; // Encoded reference
+  [ATTR_TYPE]: URI.URI;
+  [ATTR_SELF_DXN]?: EchoId.EchoId;
+  [ATTR_PARENT]?: EchoId.EchoId; // Encoded reference
   [ATTR_DELETED]?: boolean;
   [ATTR_META]?: ObjectMetaJSON;
-  [ATTR_RELATION_SOURCE]?: string;
-  [ATTR_RELATION_TARGET]?: string;
+  [ATTR_RELATION_SOURCE]?: EchoId.EchoId;
+  [ATTR_RELATION_TARGET]?: EchoId.EchoId;
 
   /**
    * Application-specific properties.
