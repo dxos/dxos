@@ -24,7 +24,7 @@ import * as Stream from 'effect/Stream';
 import { Process, ServiceResolver, Trace, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { Performance, runAndForwardErrors } from '@dxos/effect';
-import type { SpaceId } from '@dxos/keys';
+import type { EchoId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { OperationInvoker } from '@dxos/operation';
 import type { ObjectId } from '@dxos/protocols';
@@ -102,7 +102,7 @@ export namespace Handle {
  */
 export interface Environment {
   readonly space?: SpaceId;
-  readonly conversation?: string;
+  readonly conversation?: EchoId.EchoId;
 }
 
 /**
@@ -1246,7 +1246,7 @@ export namespace ProcessOperationInvoker {
           traceMeta,
           environment: {
             ...(options?.spaceId !== undefined ? { space: options.spaceId } : {}),
-            ...(options?.conversation !== undefined ? { conversation: options.conversation as string } : {}),
+            ...(options?.conversation !== undefined ? { conversation: options.conversation } : {}),
           },
         });
         const output = yield* fiber.await.pipe(Effect.flatten);

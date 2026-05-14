@@ -415,10 +415,10 @@ export interface InvokeOptions {
    */
   spaceId?: Key.SpaceId;
   /**
-   * DXN string of the conversation feed (queue).
+   * EchoId of the conversation feed (queue).
    * Passed to the process environment so nested operations can resolve AiContext.Service and related services.
    */
-  conversation?: string;
+  conversation?: Key.EchoId.EchoId;
   /**
    * Optional process-runtime tracing metadata (consumed by `@dxos/functions-runtime` when wired).
    */
