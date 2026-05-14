@@ -78,6 +78,7 @@ export default Capability.makeModule(
                 return [plugin.meta, settings];
               })
               .filter(isNonNullable)
+              .sort(([a], [b]) => (a.name ?? a.id).localeCompare(b.name ?? b.id, undefined, { sensitivity: 'base' }))
               .map(([meta, settings]: [Plugin$.Meta, AppCapabilities.Settings]) =>
                 Node.make({
                   id: `${SETTINGS_KEY}:${meta.id.replaceAll('/', ':')}`,
