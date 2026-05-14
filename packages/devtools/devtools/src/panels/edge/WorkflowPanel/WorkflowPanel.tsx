@@ -102,7 +102,7 @@ export const WorkflowPanel = (props: { space?: Space }) => {
 
 const toWorkflow = async (loader: WorkflowLoader, graph: ComputeGraph) => {
   try {
-    const loaded = await loader.load(EchoId.fromLocalObjectId(graph.id) as string);
+    const loaded = await loader.load(EchoId.fromLocalObjectId(graph.id));
     const mapProps = (ast: SchemaAST.AST) =>
       Object.fromEntries(SchemaAST.getPropertySignatures(ast).map((prop) => [prop.name, prop.type]));
     const workflowMeta = loaded.resolveMeta();

@@ -5,6 +5,8 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+import { type URI } from '@dxos/keys';
+
 import { type GraphExecutor, compileOrThrow } from '../compiler';
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import {
@@ -23,7 +25,7 @@ import { createDefectLogger, pickProperty } from '../util';
 // TODO(burdon): Rename.
 export class Workflow {
   constructor(
-    private readonly _dxn: string,
+    private readonly _dxn: URI.URI,
     private readonly _graph: ComputeGraphModel,
     private readonly _executor: GraphExecutor,
     private readonly _resolvedNodeById: Map<string, Executable>,

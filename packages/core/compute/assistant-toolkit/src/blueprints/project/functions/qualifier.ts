@@ -11,6 +11,8 @@ import { AiService } from '@dxos/ai';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import type { EchoId as _EchoId } from '@dxos/keys'; // keep type emit portable — referenced by inferred TriggerEvent.QueueEvent type.
 import { trim } from '@dxos/util';
 
 import { Plan, Agent } from '../../../types';

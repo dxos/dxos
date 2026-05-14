@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { JsonSchema } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { type URI } from '@dxos/keys';
 
 import { type ComputeResolver, GraphExecutor, compileOrThrow } from '../compiler';
 import { NODE_INPUT, NODE_OUTPUT, type NodeType, inputNode, outputNode, registry } from '../nodes';
@@ -23,7 +24,7 @@ import { Workflow } from './workflow';
 
 export type WorkflowLoaderProps = {
   nodeResolver: (node: ComputeNode) => Promise<Executable>;
-  graphLoader: (graphId: string) => Promise<ComputeGraph>;
+  graphLoader: (graphId: URI.URI) => Promise<ComputeGraph>;
 };
 
 /**
@@ -31,14 +32,14 @@ export type WorkflowLoaderProps = {
  */
 export class WorkflowLoader {
   private readonly _nodeResolver: (node: ComputeNode) => Promise<Executable>;
-  private readonly _graphLoader: (graphId: string) => Promise<ComputeGraph>;
+  private readonly _graphLoader: (graphId: URI.URI) => Promise<ComputeGraph>;
 
   constructor(params: WorkflowLoaderProps) {
     this._nodeResolver = params.nodeResolver;
     this._graphLoader = params.graphLoader;
   }
 
-  public async load(graphDxn: string): Promise<Workflow> {
+  public async load(graphDxn: URI.URI): Promise<Workflow> {
     const graph = new ComputeGraphModel(await this._graphLoader(graphDxn));
     this._validateWorkflowInOut(graph);
 
@@ -70,8 +71,8 @@ export class WorkflowLoader {
           break;
         default: {
           if (node.subgraph) {
-            const graph = new ComputeGraphModel(await this._graphLoader(node.subgraph.dxn.toString()));
-            executable = await this._compileGraph(node.type, graph, cache);
+            const graph = new ComputeGraphModel(await this._graphLoader(node.subgraph.dxn));
+            executable = await this._compileGraph(node.subgraph.dxn, graph, cache);
           } else if (node.type === 'function' || node.function) {
             executable = await this._loadFunction(node, cache);
           } else if (registry[node.type as NodeType]) {
@@ -91,7 +92,7 @@ export class WorkflowLoader {
   }
 
   private async _compileGraph(
-    graphDxnStr: string,
+    graphDxnStr: URI.URI,
     graph: ComputeGraphModel,
     cache: CompilationCache,
   ): Promise<Executable> {

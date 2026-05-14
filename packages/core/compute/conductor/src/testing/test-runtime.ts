@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
+import { type URI } from '@dxos/keys';
 
 import { GraphExecutor } from '../compiler';
 import {
@@ -22,12 +23,12 @@ import { WorkflowLoader } from '../workflow';
 
 export class TestRuntime {
   // TODO(burdon): Index by DXN; ComputeGraph instances.
-  private readonly _graphs = new Map<string, ComputeGraphModel>();
+  private readonly _graphs = new Map<URI.URI, ComputeGraphModel>();
 
   private readonly _nodes = new Map<string, Executable>();
 
   private readonly _workflowLoader = new WorkflowLoader({
-    graphLoader: async (graphDxn: string) => this.getGraph(graphDxn).root,
+    graphLoader: async (graphDxn: URI.URI) => this.getGraph(graphDxn).root,
     nodeResolver: async (node: ComputeNode) => this._nodes.get(node.type!)!,
   });
 
@@ -39,14 +40,14 @@ export class TestRuntime {
     return this._nodes;
   }
 
-  getGraph(graphDxn: string): ComputeGraphModel {
+  getGraph(graphDxn: URI.URI): ComputeGraphModel {
     const graph = this._graphs.get(graphDxn);
     invariant(graph, `Graph not found: ${graphDxn}`);
     return graph;
   }
 
   // TODO(burdon): Require DXN to be set on graph.
-  registerGraph(graphDxn: string, graph: ComputeGraphModel): this {
+  registerGraph(graphDxn: URI.URI, graph: ComputeGraphModel): this {
     this._graphs.set(graphDxn, graph);
     return this;
   }
@@ -57,7 +58,7 @@ export class TestRuntime {
   }
 
   runGraph<T extends ValueRecord = any>(
-    graphDxn: string,
+    graphDxn: URI.URI,
     input: ValueBag<any>,
   ): Effect.Effect<ValueBag<T>, ConductorError, Exclude<ComputeRequirements, ComputeNodeContext>> {
     return Effect.gen(this, function* () {
@@ -69,7 +70,7 @@ export class TestRuntime {
   // TODO(dmaretskyi): Support cases where the are no or multiple "input" nodes.
   //  There can be a graph which starts evaluating from constant nodes.
   runFromInput(
-    graphDxn: string,
+    graphDxn: URI.URI,
     inputNodeId: string,
     input: ValueBag<any>,
   ): Effect.Effect<Record<string, ValueBag<any>>, ConductorError, Exclude<ComputeRequirements, ComputeNodeContext>> {
