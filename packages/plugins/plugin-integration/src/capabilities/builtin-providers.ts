@@ -57,10 +57,10 @@ export default Capability.makeModule<IntegrationProviderEntry[]>(
               const integration = Obj.make(Integration.Integration, {
                 name: provider.label ?? values.account ?? values.source,
                 providerId: provider.id,
-                accessToken: Ref.make(accessToken),
+                accessTokens: [Ref.make(accessToken)],
                 targets: [],
               });
-              return { kind: 'complete', accessToken, integration };
+              return { kind: 'complete', accessTokens: [accessToken], integration };
             }),
         },
       },

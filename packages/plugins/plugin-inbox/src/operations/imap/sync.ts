@@ -14,8 +14,7 @@ import { log } from '@dxos/log';
 import { Integration } from '@dxos/plugin-integration/types';
 import { Message } from '@dxos/types';
 
-import { ImapLive } from '../../apis';
-import { Imap, ImapCredentials, InboxResolver } from '../../services';
+import { Imap, ImapUnavailable, InboxResolver } from '../../services';
 import { Mailbox, type ImapAccountOptions } from '../../types';
 import { ImapSync } from '../definitions';
 import { mapMessage } from './mapper';
@@ -89,9 +88,9 @@ export default ImapSync.pipe(
       return { newMessages: total };
     }).pipe(
       Effect.scoped,
-      Effect.provide(
-        Layer.mergeAll(InboxResolver.Live, Layer.provide(ImapLive, ImapCredentials.fromIntegration(integrationRef))),
-      ),
+      // ImapLive is provided by the edge runtime (functions-runtime-cloudflare) when this operation
+      // executes remotely via `meta.deployedId`. Local invocation falls back to ImapUnavailable.
+      Effect.provide(Layer.mergeAll(InboxResolver.Live, ImapUnavailable)),
     ),
   ),
 );
@@ -133,7 +132,7 @@ const syncOneMailbox = (integration: Integration.Integration, mailboxRef: Ref.Re
 
     const envelopes = yield* conn.fetchEnvelopes(uidsToFetch);
 
-    const accessToken = yield* Database.load(integration.accessToken);
+    const accessToken = yield* Database.load(integration.accessTokens[0]);
     const host = (accessToken.source ?? '').startsWith('imap:')
       ? (accessToken.source as string).slice('imap:'.length)
       : (options.host ?? accessToken.source ?? 'imap');

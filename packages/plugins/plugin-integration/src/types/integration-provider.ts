@@ -49,9 +49,13 @@ export type IntegrationSyncInput = {
  */
 export type IntegrationSyncOutput = any;
 
-/** Hook fired after OAuth creates an AccessToken for this integration. */
+/** Hook fired after OAuth (or credential form submission) creates AccessToken(s) for this integration. */
 export type OnTokenCreated = (input: {
-  accessToken: AccessToken.AccessToken;
+  /**
+   * Persisted AccessTokens for this integration. Index 0 is the primary; multi-credential
+   * providers (IMAP+SMTP) receive multiple tokens disambiguated by `source` prefix.
+   */
+  accessTokens: ReadonlyArray<AccessToken.AccessToken>;
   integration: Integration.Integration;
   /**
    * Pre-existing local object the caller wants to wire up as the
@@ -87,7 +91,12 @@ export type IntegrationOAuthSpec = {
  * `loginHint` to Edge.
  */
 export type CredentialFormResult =
-  | { kind: 'complete'; accessToken: AccessToken.AccessToken; integration: Integration.Integration }
+  | {
+      kind: 'complete';
+      /** AccessTokens to persist alongside the integration. Index 0 is the primary. */
+      accessTokens: ReadonlyArray<AccessToken.AccessToken>;
+      integration: Integration.Integration;
+    }
   | { kind: 'oauth'; loginHint?: string };
 
 /**

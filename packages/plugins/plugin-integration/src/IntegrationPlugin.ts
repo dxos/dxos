@@ -12,6 +12,7 @@ import {
   BuiltinProviders,
   Coordinator,
   CreateObject,
+  Migrations,
   OAuthRedirect,
   OperationHandler,
   ReactSurface,
@@ -43,6 +44,10 @@ export const IntegrationPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesOn: ActivationEvents.Startup,
     activate: OAuthRedirect,
+  }),
+  Plugin.addModule({
+    activatesOn: ClientEvents.SetupMigration,
+    activate: Migrations,
   }),
   Plugin.make,
 );

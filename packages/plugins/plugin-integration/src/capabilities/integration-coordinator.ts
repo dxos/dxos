@@ -30,9 +30,14 @@ import { IntegrationProviderNotFoundError, SpaceUnavailableError } from '../erro
 import { IntegrationOperation } from '../operations';
 import { Integration } from '../types';
 
-/** Pending integration awaiting an OAuth callback. */
+/** Pending integration awaiting an OAuth callback or credential-form submit. */
 type Pending = {
-  token: AccessToken.AccessToken;
+  /**
+   * AccessTokens to persist with the integration. Index 0 is the primary —
+   * OAuth flows mutate this entry's `.token` field when the postMessage
+   * callback arrives.
+   */
+  tokens: ReadonlyArray<AccessToken.AccessToken>;
   integration: Integration.Integration;
   db: Database.Database;
   provider: IntegrationProviderEntry;
@@ -112,7 +117,7 @@ const dispatchAccessTokenCreated = (
 const runOnTokenCreated = (
   provider: IntegrationProviderEntry,
   input: {
-    accessToken: AccessToken.AccessToken;
+    accessTokens: ReadonlyArray<AccessToken.AccessToken>;
     integration: Integration.Integration;
     existingTarget?: Ref.Ref<Obj.Any>;
   },
@@ -123,10 +128,10 @@ const runOnTokenCreated = (
   return provider.onTokenCreated(input).pipe(
     Effect.provide(FetchHttpClient.layer),
     Effect.catchAll((error) =>
-      Effect.sync(() => log.warn('onTokenCreated failed', { source: input.accessToken.source, error })),
+      Effect.sync(() => log.warn('onTokenCreated failed', { source: input.accessTokens[0]?.source, error })),
     ),
     Effect.catchAllDefect((defect) =>
-      Effect.sync(() => log.warn('onTokenCreated defect', { source: input.accessToken.source, defect })),
+      Effect.sync(() => log.warn('onTokenCreated defect', { source: input.accessTokens[0]?.source, defect })),
     ),
   );
 };
@@ -171,15 +176,19 @@ const finalizePendingEntry = (
   entry: Pending,
 ): Effect.Effect<void, never> =>
   Effect.gen(function* () {
-    const { token, integration, db, provider, existingTarget } = entry;
-    const persistedToken = db.add(token);
+    const { tokens, integration, db, provider, existingTarget } = entry;
+    const persistedTokens = tokens.map((token) => db.add(token));
     const persistedIntegration = db.add(integration);
-    Obj.setParent(persistedToken, persistedIntegration);
+    for (const persistedToken of persistedTokens) {
+      Obj.setParent(persistedToken, persistedIntegration);
+    }
 
-    yield* dispatchAccessTokenCreated(invoker, persistedToken);
+    for (const persistedToken of persistedTokens) {
+      yield* dispatchAccessTokenCreated(invoker, persistedToken);
+    }
 
     yield* runOnTokenCreated(provider, {
-      accessToken: persistedToken,
+      accessTokens: persistedTokens,
       integration: persistedIntegration,
       existingTarget,
     });
@@ -322,9 +331,12 @@ export default Capability.makeModule(
         if (!entry) {
           return;
         }
-        Obj.update(entry.token, (token) => {
-          token.token = decoded.accessToken;
-        });
+        const primaryToken = entry.tokens[0];
+        if (primaryToken) {
+          Obj.update(primaryToken, (token) => {
+            token.token = decoded.accessToken;
+          });
+        }
         yield* finalizePendingEntry(invoker, entry);
       });
 
@@ -380,11 +392,11 @@ export default Capability.makeModule(
         const integration = Obj.make(Integration.Integration, {
           name: label,
           providerId: provider.id,
-          accessToken: Ref.make(token),
+          accessTokens: [Ref.make(token)],
           targets: [],
         });
 
-        pending.set(token.id, { token, integration, db, provider, existingTarget });
+        pending.set(token.id, { tokens: [token], integration, db, provider, existingTarget });
 
         if (oauth.useRedirectFlow) {
           // Persist a snapshot so the new tab can finalize without sharing memory.
@@ -429,9 +441,12 @@ export default Capability.makeModule(
         const inMemory = takePendingEntry(accessTokenId);
         if (inMemory) {
           deletePendingSnapshot(accessTokenId);
-          Obj.update(inMemory.token, (token) => {
-            token.token = accessTokenValue;
-          });
+          const primary = inMemory.tokens[0];
+          if (primary) {
+            Obj.update(primary, (token) => {
+              token.token = accessTokenValue;
+            });
+          }
           yield* finalizePendingEntry(invoker, inMemory);
           return;
         }
@@ -470,7 +485,7 @@ export default Capability.makeModule(
         const integration = Obj.make(Integration.Integration, {
           name: snapshot.integrationSnapshot.name,
           providerId: snapshot.integrationSnapshot.providerId,
-          accessToken: Ref.make(token),
+          accessTokens: [Ref.make(token)],
           targets: [],
         });
 
@@ -478,7 +493,7 @@ export default Capability.makeModule(
           ? space.db.makeRef<Obj.Any>(DXN.parse(snapshot.existingTargetDxn))
           : undefined;
 
-        yield* finalizePendingEntry(invoker, { token, integration, db: space.db, provider, existingTarget });
+        yield* finalizePendingEntry(invoker, { tokens: [token], integration, db: space.db, provider, existingTarget });
       }).pipe(Effect.mapError(mapCoordinatorError));
 
     const createCustomIntegration: IntegrationCoordinator['createCustomIntegration'] = ({
@@ -500,12 +515,12 @@ export default Capability.makeModule(
         const integration = Obj.make(Integration.Integration, {
           name: name ?? account ?? source,
           providerId: provider.id,
-          accessToken: Ref.make(accessToken),
+          accessTokens: [Ref.make(accessToken)],
           targets: [],
         });
 
         yield* finalizePendingEntry(invoker, {
-          token: accessToken,
+          tokens: [accessToken],
           integration,
           db,
           provider,
@@ -531,7 +546,7 @@ export default Capability.makeModule(
 
         if (result.kind === 'complete') {
           yield* finalizePendingEntry(invoker, {
-            token: result.accessToken,
+            tokens: result.accessTokens,
             integration: result.integration,
             db,
             provider,

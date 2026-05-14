@@ -28,9 +28,10 @@ import { TrelloApi } from '../services';
  * The wrapping Integration itself is auto-created by plugin-integration BEFORE
  * this runs.
  */
-const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
+const onTokenCreated: OnTokenCreated = ({ accessTokens }) =>
   Effect.gen(function* () {
-    if (accessToken.account) {
+    const accessToken = accessTokens[0];
+    if (!accessToken || accessToken.account) {
       return;
     }
     const creds = yield* TrelloApi.credentialsFromAccessToken(accessToken);

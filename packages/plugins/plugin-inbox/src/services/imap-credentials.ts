@@ -72,7 +72,11 @@ export class ImapCredentials extends Context.Tag('@dxos/plugin-inbox/ImapCredent
       ImapCredentials,
       Effect.gen(function* () {
         const integration = yield* Database.load(integrationRef);
-        const accessToken = yield* Database.load(integration.accessToken);
+        const primaryRef = integration.accessTokens[0];
+        if (!primaryRef) {
+          return yield* Effect.fail(new ImapError({ reason: 'auth', message: 'integration has no access tokens' }));
+        }
+        const accessToken = yield* Database.load(primaryRef);
         const options = (integration.targets[0]?.options ?? {}) as Record<string, unknown>;
         log('using integration imap credentials', {
           source: accessToken.source,

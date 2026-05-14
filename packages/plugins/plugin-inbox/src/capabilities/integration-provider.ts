@@ -68,8 +68,12 @@ const getAccountEmail = (accessToken: { token: string; account?: string }) =>
  * Gmail `onTokenCreated`: set account email; ensure one Mailbox (no `getSyncTargets` for mail).
  * Reuses `existingTarget` (`InitializeMailbox`) and applies default name `email ?? 'Inbox'` when unnamed; else creates Mailbox.
  */
-const gmailOnTokenCreated: OnTokenCreated = ({ accessToken, integration, existingTarget }) =>
+const gmailOnTokenCreated: OnTokenCreated = ({ accessTokens, integration, existingTarget }) =>
   Effect.gen(function* () {
+    const accessToken = accessTokens[0];
+    if (!accessToken) {
+      return;
+    }
     const email = yield* getAccountEmail(accessToken);
     if (email) {
       Obj.update(accessToken, (accessToken) => {
@@ -154,7 +158,7 @@ const imapCredentialForm: CredentialForm<ImapCredentialFormValues> = {
       const integration = IntegrationType.make({
         name: values.username || `${provider.label ?? 'IMAP'} (${values.host})`,
         providerId: provider.id,
-        accessToken: Ref.make(accessToken),
+        accessTokens: [Ref.make(accessToken)],
         targets: [
           {
             ...(targetObject ? { object: targetObject } : {}),
@@ -169,11 +173,11 @@ const imapCredentialForm: CredentialForm<ImapCredentialFormValues> = {
           },
         ],
       });
-      return { kind: 'complete' as const, accessToken, integration };
+      return { kind: 'complete' as const, accessTokens: [accessToken], integration };
     }),
 };
 
-const imapOnTokenCreated: OnTokenCreated = ({ integration, existingTarget, accessToken }) =>
+const imapOnTokenCreated: OnTokenCreated = ({ integration, existingTarget, accessTokens }) =>
   Effect.gen(function* () {
     const db = Obj.getDatabase(integration);
     if (!db) {
@@ -186,7 +190,8 @@ const imapOnTokenCreated: OnTokenCreated = ({ integration, existingTarget, acces
     if (integration.targets[0]?.object) {
       return;
     }
-    const mailboxName = accessToken.account || integration.name || 'IMAP';
+    const primaryToken = accessTokens[0];
+    const mailboxName = primaryToken?.account || integration.name || 'IMAP';
     const target = existingTarget ?? Ref.make(db.add(Mailbox.make({ name: mailboxName })));
     Obj.update(integration, (integration) => {
       const next = [...integration.targets];
@@ -195,8 +200,12 @@ const imapOnTokenCreated: OnTokenCreated = ({ integration, existingTarget, acces
     });
   }).pipe(Effect.orDie);
 
-const calendarOnTokenCreated: OnTokenCreated = ({ accessToken }) =>
+const calendarOnTokenCreated: OnTokenCreated = ({ accessTokens }) =>
   Effect.gen(function* () {
+    const accessToken = accessTokens[0];
+    if (!accessToken) {
+      return;
+    }
     const email = yield* getAccountEmail(accessToken);
     if (email) {
       Obj.update(accessToken, (accessToken) => {

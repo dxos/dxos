@@ -27,9 +27,10 @@ import { LinearApi } from '../services';
  * defects from the runner and continues so a failed lookup cannot block the
  * Integration already created.
  */
-const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
+const onTokenCreated: OnTokenCreated = ({ accessTokens }) =>
   Effect.gen(function* () {
-    if (accessToken.account) {
+    const accessToken = accessTokens[0];
+    if (!accessToken || accessToken.account) {
       return;
     }
     const viewer = yield* LinearApi.fetchViewer().pipe(
