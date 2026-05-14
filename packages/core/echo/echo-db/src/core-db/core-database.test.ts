@@ -412,7 +412,7 @@ const addObjectToDoc = <T extends { id: string }>(
     newDoc.objects[object.id] = {
       data,
       system: {
-        type: { '/': `dxn:${typename}:${version}` },
+        type: { '/': DXN.fromTypenameAndVersion(typename, version) },
       },
     };
   });
