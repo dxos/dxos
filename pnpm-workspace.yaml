@@ -757,6 +757,7 @@ patchedDependencies:
   js-clipper@1.0.1: patches/js-clipper@1.0.1.patch
   random-access-idb@1.2.2: patches/random-access-idb@1.2.2.patch
   uuid@8.3.2: patches/uuid@8.3.2.patch
+  vitest@4.1.5: patches/vitest@4.1.5.patch
 
 peerDependencyRules:
   allowedVersions:
