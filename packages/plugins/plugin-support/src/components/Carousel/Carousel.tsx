@@ -25,7 +25,7 @@ export type CarouselProps = {
 /**
  * Cycles through images with optional auto-advance and manual prev/next controls.
  */
-export const Carousel = ({ images, intervalMs = 5000, classNames }: CarouselProps) => {
+export const Carousel = ({ images, intervalMs = 5_000, classNames }: CarouselProps) => {
   const { t } = useTranslation(meta.id);
   const [index, setIndex] = useState(0);
   const count = images.length;
@@ -91,21 +91,20 @@ export const Carousel = ({ images, intervalMs = 5000, classNames }: CarouselProp
           </>
         )}
       </div>
-      {current.label && <div className='text-sm text-description'>{current.label}</div>}
+      {current.label && <div className='flex justify-center text-description'>{current.label}</div>}
       {count > 1 && (
-        <div className='flex items-center gap-1' role='tablist' aria-label={t('carousel-indicators.label')}>
+        <div className='flex items-center' role='tablist' aria-label={t('carousel-indicators.label')}>
           {images.map((_, i) => (
-            <button
+            <IconButton
               key={i}
-              type='button'
               role='tab'
               aria-selected={i === index}
-              aria-label={t('carousel-go-to.label', { index: i + 1 })}
-              className={mx(
-                'h-2 w-2 rounded-full transition-colors',
-                i === index ? 'bg-accentSurface' : 'bg-separator hover:bg-subduedSurface',
-              )}
+              icon={i === index ? 'ph--circle--fill' : 'ph--circle--regular'}
+              iconOnly
+              label={t('carousel-go-to.label', { index: i + 1 })}
               onClick={() => setIndex(i)}
+              size={3}
+              variant='ghost'
             />
           ))}
         </div>
