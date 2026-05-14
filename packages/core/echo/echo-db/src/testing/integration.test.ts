@@ -493,7 +493,7 @@ describe('Integration tests', () => {
           field: Schema.String,
         }).pipe(Type.object({ typename: 'com.example.type.test', version: '0.1.0' }));
         const [stored] = await db.schemaRegistry.register([LocalTestSchema]);
-        schemaDxn = EchoId.fromLocalObjectId(stored.id);
+        schemaDxn = getSchemaDXN(stored)!;
 
         const object = db.add(makeObject(stored, { field: 'test' }));
         expect(Obj.getSchema(object)).to.eq(stored);
