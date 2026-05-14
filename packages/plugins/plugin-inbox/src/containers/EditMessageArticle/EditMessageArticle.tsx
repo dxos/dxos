@@ -16,8 +16,8 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { Integration } from '@dxos/plugin-integration/types';
-import { Panel } from '@dxos/react-ui';
 import { Filter, useQuery } from '@dxos/react-client/echo';
+import { Panel } from '@dxos/react-ui';
 import { assistant, type AssistantOptions } from '@dxos/react-ui-editor';
 import { type Message } from '@dxos/types';
 

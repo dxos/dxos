@@ -26,10 +26,7 @@ export const composeMessage = (input: ComposeInput): { rfc822: string; messageId
   const messageId = `<${randomId()}@${input.from.split('@')[1] ?? 'localhost'}>`;
   const date = new Date().toUTCString().replace(/GMT$/, '+0000');
 
-  const headers: string[] = [
-    `From: ${input.from}`,
-    `To: ${input.to.join(', ')}`,
-  ];
+  const headers: string[] = [`From: ${input.from}`, `To: ${input.to.join(', ')}`];
   if (input.cc && input.cc.length > 0) {
     headers.push(`Cc: ${input.cc.join(', ')}`);
   }

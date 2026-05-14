@@ -8,7 +8,6 @@ import * as Layer from 'effect/Layer';
 import { Imap, ImapError, readPassword } from '../imap';
 import type { ImapBody, ImapConnection, ImapEnvelope } from '../imap';
 import { ImapCredentials } from '../imap-credentials';
-
 import { ImapClient, type RawEnvelope } from './internal/imap-client';
 
 const errorOf =

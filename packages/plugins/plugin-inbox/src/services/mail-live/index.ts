@@ -8,7 +8,6 @@ import { Imap } from '../imap';
 import { ImapCredentials } from '../imap-credentials';
 import { Smtp } from '../smtp';
 import { SmtpCredentials } from '../smtp-credentials';
-
 import { ImapLive } from './imap-live';
 import { SmtpLive } from './smtp-live';
 

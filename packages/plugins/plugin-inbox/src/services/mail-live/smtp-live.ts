@@ -7,7 +7,6 @@ import * as Layer from 'effect/Layer';
 
 import { Smtp, SmtpError, readSmtpPassword } from '../smtp';
 import { SmtpCredentials } from '../smtp-credentials';
-
 import { SmtpClient } from './internal/smtp-client';
 
 const errorOf =
