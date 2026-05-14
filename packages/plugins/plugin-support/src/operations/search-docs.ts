@@ -14,8 +14,7 @@ const handler: Operation.WithHandler<typeof SupportOperation.SearchDocs> = Suppo
       const needle = query.trim().toLowerCase();
       const matches = needle
         ? DOCS_INDEX.filter(
-            ({ title, excerpt }) =>
-              title.toLowerCase().includes(needle) || excerpt.toLowerCase().includes(needle),
+            ({ title, excerpt }) => title.toLowerCase().includes(needle) || excerpt.toLowerCase().includes(needle),
           )
         : DOCS_INDEX;
       return { results: matches.slice(0, limit ?? 5) };

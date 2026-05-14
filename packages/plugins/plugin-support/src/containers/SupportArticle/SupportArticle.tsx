@@ -71,18 +71,12 @@ export const SupportArticle = ({ role, subject: ticket }: SupportArticleProps) =
             <ScrollArea.Viewport>
               <Input.Root>
                 <Input.Label>{t('title.label')}</Input.Label>
-                <Input.TextInput
-                  value={ticket.title ?? ''}
-                  onChange={(event) => handleSetTitle(event.target.value)}
-                />
+                <Input.TextInput value={ticket.title ?? ''} onChange={(event) => handleSetTitle(event.target.value)} />
               </Input.Root>
 
               <Input.Root>
                 <Input.Label>{t('body.label')}</Input.Label>
-                <Input.TextArea
-                  value={ticket.body ?? ''}
-                  onChange={(event) => handleSetBody(event.target.value)}
-                />
+                <Input.TextArea value={ticket.body ?? ''} onChange={(event) => handleSetBody(event.target.value)} />
               </Input.Root>
 
               {status === 'resolved' && (
