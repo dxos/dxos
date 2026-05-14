@@ -2,8 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useArrowNavigationGroup } from '@fluentui/react-tabster';
 import React, {
   createContext,
+  type KeyboardEvent,
   type PropsWithChildren,
   type ReactNode,
   useCallback,
@@ -109,7 +111,7 @@ const CarouselRoot = ({
 
   return (
     <CarouselContext.Provider value={value}>
-      <Column.Root gutter='lg' classNames={mx('w-full max-w-xl h-fit auto-rows-min gap-4', classNames)}>
+      <Column.Root gutter='lg' classNames={mx('dx-document h-fit auto-rows-min gap-4', classNames)}>
         {children}
       </Column.Root>
     </CarouselContext.Provider>
@@ -141,12 +143,36 @@ CarouselFrame.displayName = 'Carousel.Frame';
 export type CarouselViewportProps = PropsWithChildren<{ classNames?: string }>;
 
 const CarouselViewport = ({ children, classNames }: CarouselViewportProps) => {
+  const { t } = useTranslation(meta.id);
+  const { count, next, prev } = useCarousel();
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      if (count <= 1) {
+        return;
+      }
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        prev();
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        next();
+      }
+    },
+    [count, next, prev],
+  );
   return (
     <div
       className={mx(
         'relative w-full aspect-video overflow-hidden rounded-md bg-baseSurface border border-separator',
+        // Subtle focus ring so keyboard users can tell the viewport is focused.
+        'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500',
         classNames,
       )}
+      tabIndex={0}
+      role='region'
+      aria-roledescription='carousel'
+      aria-label={t('carousel-viewport.label')}
+      onKeyDown={handleKeyDown}
     >
       {children}
     </div>
@@ -203,6 +229,7 @@ const CarouselMedia = ({ src, alt, classNames }: CarouselMediaProps) => {
       />
     );
   }
+
   return (
     <img
       src={src}
@@ -273,6 +300,7 @@ export type CarouselIndicatorsProps = { classNames?: string };
 const CarouselIndicators = ({ classNames }: CarouselIndicatorsProps) => {
   const { t } = useTranslation(meta.id);
   const { count, index, setIndex } = useCarousel();
+  const arrowNavigationAttrs = useArrowNavigationGroup({ axis: 'horizontal', memorizeCurrent: true });
   if (count <= 1) {
     return null;
   }
@@ -280,6 +308,7 @@ const CarouselIndicators = ({ classNames }: CarouselIndicatorsProps) => {
   return (
     <Column.Center>
       <div
+        {...arrowNavigationAttrs}
         className={mx('flex items-center justify-center', classNames)}
         role='tablist'
         aria-label={t('carousel-indicators.label')}

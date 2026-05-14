@@ -55,6 +55,7 @@ export const translations = [
         // Carousel.
         'carousel-prev.label': 'Previous',
         'carousel-next.label': 'Next',
+        'carousel-viewport.label': 'Slide viewport (use arrow keys to navigate)',
         'carousel-indicators.label': 'Carousel slides',
         'carousel-go-to.label': 'Go to slide {{index}}',
         // Settings.
