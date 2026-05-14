@@ -35,8 +35,14 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 // than captured from an outer scope.
 //
 
-// TODO(dmaretskyi): Deprecated.
-const FunctionInvocationSpec = LayerSpec.make(
+// TODO(dmaretskyi): Deprecated. Removed from the contribution list because the
+// body is `todo()` (never actually provides a working impl) and the declared
+// `requires: [Operation.Service, ...]` causes process-slice init to fail with
+// `ServiceNotAvailableError` — `Operation.Service` is a per-process builtin,
+// not a layer-graph service, so the LayerStack requirements check rejects it.
+// Leaving the definition for now in case the deprecation path needs a stub.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _FunctionInvocationSpec_Deprecated = LayerSpec.make(
   {
     affinity: 'process',
     requires: [Operation.Service, OperationRegistry.Service],
@@ -222,7 +228,7 @@ export default Capability.makeModule(
     const client = yield* Capability.get(ClientCapabilities.Client);
 
     const contributions: Capability.Any[] = [
-      Capability.contributes(Capabilities.LayerSpec, FunctionInvocationSpec),
+      // FunctionInvocationSpec removed: see _FunctionInvocationSpec_Deprecated above.
       Capability.contributes(Capabilities.LayerSpec, OperationHandlerProviderSpec),
       Capability.contributes(Capabilities.LayerSpec, BlueprintRegistrySpec),
       Capability.contributes(Capabilities.LayerSpec, OpaqueToolkitSpec),
