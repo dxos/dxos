@@ -19,7 +19,7 @@ import {
   makeTypeJsonSchemaAnnotation,
 } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { EchoId, type ObjectId } from '@dxos/keys';
+import { DXN, EchoId, type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { coerceArray, compositeKey } from '@dxos/util';
 
@@ -383,13 +383,17 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
       ...meta,
       jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})),
     });
-    const typeId = `dxn:echo:@:${schemaToStore.id}`;
+    // The schema's $id is the typename DXN — universal across stored and non-stored
+    // schemas. The schema-as-object's storage EchoId is tracked separately on
+    // TypeIdentifierAnnotation for back-references (e.g. registry lookup by object id).
+    const typeDxn = DXN.fromTypenameAndVersion(meta.typename, meta.version);
+    const storageEchoId = `dxn:echo:@:${schemaToStore.id}`;
     schemaToStore.jsonSchema = JsonSchema.toJsonSchema(
       schema.annotations({
         [TypeAnnotationId]: meta,
-        [TypeIdentifierAnnotationId]: typeId,
+        [TypeIdentifierAnnotationId]: storageEchoId,
         [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({
-          identifier: typeId,
+          identifier: typeDxn,
           kind: meta.kind,
           typename: meta.typename,
           version: meta.version,

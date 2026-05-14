@@ -406,14 +406,15 @@ const annotations_toJsonSchemaFields = (annotations: SchemaAST.Annotations): Rec
 };
 
 const decodeTypeIdentifierAnnotation = (schema: JsonSchemaType): string | undefined => {
-  // Limit to dxn:echo: URIs.
+  // New format: $id is the typename DXN; the storage EchoId rides on the annotations namespace
+  // (or echo.type.schemaId for legacy serializations).
+  const schemaId = (schema as any)?.annotations?.schemaId ?? schema?.echo?.type?.schemaId;
+  if (schemaId) {
+    return ObjectId.isValid(schemaId) ? (EchoId.fromLocalObjectId(schemaId) as string) : schemaId;
+  }
+  // Legacy: $id was the EchoId (dxn:echo:...) for stored schemas.
   if (schema.$id && schema.$id.startsWith('dxn:echo:')) {
     return schema.$id;
-  } else if (schema.$id && schema.$id.startsWith('dxn:type:') && schema?.echo?.type?.schemaId) {
-    const id = schema?.echo?.type?.schemaId;
-    if (ObjectId.isValid(id)) {
-      return EchoId.fromLocalObjectId(id) as string;
-    }
   }
   return undefined;
 };
@@ -467,7 +468,9 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): SchemaAST.Annota
   if (typeAnnotation) {
     annotations[TypeAnnotationId] = typeAnnotation;
     annotations[SchemaAST.JSONSchemaAnnotationId] = makeTypeJsonSchemaAnnotation({
-      identifier: typeIdentifier,
+      // $id is the typename DXN — the schema's type identity. The storage EchoId (if any)
+      // is preserved separately on TypeIdentifierAnnotation.
+      identifier: DXN.fromTypenameAndVersion(typeAnnotation.typename, typeAnnotation.version),
       kind: typeAnnotation.kind,
       typename: typeAnnotation.typename,
       version: typeAnnotation.version,

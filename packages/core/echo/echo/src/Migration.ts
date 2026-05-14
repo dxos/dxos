@@ -6,7 +6,7 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { type URI } from '@dxos/keys';
+import { type DXN } from '@dxos/keys';
 
 import type * as Database from './Database';
 import type * as Entity from './Entity';
@@ -50,8 +50,8 @@ type OnMigrateProps<From extends Schema.Schema.AnyNoContext, To extends Schema.S
  * Definition of a migration from one object schema version to another.
  */
 export type ObjectMigration = {
-  fromType: URI.URI;
-  toType: URI.URI;
+  fromType: DXN.DXN;
+  toType: DXN.DXN;
   fromSchema: Schema.Schema.AnyNoContext;
   toSchema: Schema.Schema.AnyNoContext;
   transform: (from: unknown, context: ObjectMigrationContext) => Promise<unknown>;

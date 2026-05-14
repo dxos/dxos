@@ -476,36 +476,40 @@ export class ObjectCore {
   }
 
   /**
-   * DXNs of objects that this object strongly depends on.
-   * Strong references are loaded together with the source object.
-   * Currently this is the schema reference and the source and target for relations.
+   * EchoIds of objects that this object strongly depends on.
+   * Strong references are loaded together with the source object — only ECHO-scheme refs
+   * (object refs) qualify; type DXNs are resolved separately via the schema registry.
+   * Currently this is the schema reference (when stored as an object), source/target for
+   * relations, and the parent ref.
    */
-  getStrongDependencies(): URI.URI[] {
-    const res: URI.URI[] = [];
+  getStrongDependencies(): EchoId.EchoId[] {
+    const res: EchoId.EchoId[] = [];
 
     const typeRef = this.getType();
     if (typeRef) {
-      const typeDXN = EncodedReference.toURI(typeRef);
-      // Only include ECHO-scheme refs (object refs, not type DXNs) as strong deps.
-      if (EchoId.isEchoId(typeDXN)) {
-        res.push(typeDXN);
+      const typeEchoId = EchoId.tryParse(EncodedReference.toURI(typeRef));
+      if (typeEchoId) {
+        res.push(typeEchoId);
       }
     }
 
     if (this.getKind() === EntityKind.Relation) {
       const sourceRef = this.getSource();
       if (sourceRef) {
-        res.push(EncodedReference.toURI(sourceRef));
+        const id = EchoId.tryParse(EncodedReference.toURI(sourceRef));
+        if (id) res.push(id);
       }
       const targetRef = this.getTarget();
       if (targetRef) {
-        res.push(EncodedReference.toURI(targetRef));
+        const id = EchoId.tryParse(EncodedReference.toURI(targetRef));
+        if (id) res.push(id);
       }
     }
 
     const parentRef = this.getParent();
     if (parentRef) {
-      res.push(EncodedReference.toURI(parentRef));
+      const id = EchoId.tryParse(EncodedReference.toURI(parentRef));
+      if (id) res.push(id);
     }
 
     return res;

@@ -46,32 +46,28 @@ export const getTypeIdentifierAnnotation = (schema: Schema.Schema.All) =>
   )(schema.ast);
 
 /**
- * @returns Identifier URI of the schema.
+ * @returns The schema's type DXN (`dxn:<nsid>[:<version>]`).
  *
- * For non-stored schemas this is a `dxn:` type DXN.
- * For stored schemas this is an `echo:` URI.
+ * Derived from the schema's typename + version — universal across stored and non-stored
+ * schemas. The schema-as-object EchoId (for stored schemas) is tracked separately via
+ * `TypeIdentifierAnnotation` / `Obj.getId(persistentSchema)`.
  */
-export const getSchemaDXN = (schema: Schema.Schema.All): URI.URI | undefined => {
+export const getSchemaDXN = (schema: Schema.Schema.All): DXN.DXN | undefined => {
   assertArgument(Schema.isSchema(schema), 'schema', 'invalid schema');
-  const id = getTypeIdentifierAnnotation(schema);
-  if (id) {
-    return id as URI.URI;
-  }
-
-  // TODO(dmaretskyi): Add support for dynamic schema.
   const objectAnnotation = getTypeAnnotation(schema);
-  if (!objectAnnotation) {
-    return undefined;
+  if (objectAnnotation) {
+    return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version);
   }
-
-  return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version);
+  // TODO(dmaretskyi): Add support for dynamic schema.
+  const id = getTypeIdentifierAnnotation(schema);
+  return id ? DXN.tryParse(id) : undefined;
 };
 
 /**
  * @param input schema or a typename string.
- * @return identifier URI for the type (DXN for non-stored, EchoId for stored).
+ * @return type DXN.
  */
-export const getTypeDXNFromSpecifier = (input: Schema.Schema.All | string): URI.URI => {
+export const getTypeDXNFromSpecifier = (input: Schema.Schema.All | string): DXN.DXN => {
   if (Schema.isSchema(input)) {
     return getSchemaDXN(input) ?? raise(new TypeError('Schema has no DXN'));
   } else {

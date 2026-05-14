@@ -538,15 +538,15 @@ describe('Integration tests', () => {
     });
   });
 
-  test('dynamic schema is eagerly loaded with objects', async () => {
+  // After the identifier refactor, object `system.type` is the typename DXN (not the
+  // stored schema's EchoId), so schemas no longer ride along as strong deps. The
+  // expected loading mechanism is now `preloadSchemaOnOpen` / `reactiveSchemaQuery`.
+  test('dynamic schema is loaded with objects (via schema registry preload)', async () => {
     await using peer = await builder.createPeer();
 
     let typeDXN!: URI.URI;
     {
-      await using db = await peer.createDatabase(PublicKey.random(), {
-        reactiveSchemaQuery: false,
-        preloadSchemaOnOpen: false,
-      });
+      await using db = await peer.createDatabase(PublicKey.random());
       const [schema] = await db.schemaRegistry.register([TestSchema.Person]);
       typeDXN = getSchemaDXN(schema)!;
       db.add(makeObject(schema, { name: 'Bob' }));
@@ -555,10 +555,7 @@ describe('Integration tests', () => {
 
     await peer.reload();
     {
-      await using db = await peer.openLastDatabase({
-        reactiveSchemaQuery: false,
-        preloadSchemaOnOpen: false,
-      });
+      await using db = await peer.openLastDatabase();
       const [obj] = await db.query(Query.select(Filter.typeDXN(typeDXN))).run();
       expect(Obj.getSchema(obj)).toBeDefined();
       expect(Type.getTypename(Obj.getSchema(obj)!)).toEqual(TestSchema.Person.typename);

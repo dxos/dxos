@@ -40,7 +40,7 @@ describe('effect-to-json', () => {
       }),
     );
     const jsonSchema = toJsonSchema(Test);
-    expect((jsonSchema as any).$id).toEqual('dxn:com.example.type.test');
+    expect((jsonSchema as any).$id).toEqual('dxn:com.example.type.test:0.1.0');
     expect((jsonSchema as any).version).toEqual('0.1.0');
   });
 
@@ -173,7 +173,7 @@ describe('effect-to-json', () => {
     const jsonSchema = toJsonSchema(TempSchema);
     expect(jsonSchema).to.deep.eq({
       $schema: 'http://json-schema.org/draft-07/schema#',
-      $id: 'dxn:com.example.type.person',
+      $id: 'dxn:com.example.type.person:0.1.0',
 
       entityKind: EntityKind.Object,
       typename: 'com.example.type.person',
@@ -236,7 +236,7 @@ describe('effect-to-json', () => {
     const jsonSchema = toJsonSchema(Contact);
     expect(jsonSchema).toEqual({
       $schema: 'http://json-schema.org/draft-07/schema#',
-      $id: 'dxn:com.example.type.person',
+      $id: 'dxn:com.example.type.person:0.1.0',
 
       entityKind: EntityKind.Object,
       typename: 'com.example.type.person',
@@ -349,7 +349,7 @@ describe('effect-to-json', () => {
     const schema = TestSchema.EmployedBy;
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
-      $id: 'dxn:com.example.type.employed-by',
+      $id: 'dxn:com.example.type.employed-by:0.1.0',
       $schema: 'http://json-schema.org/draft-07/schema#',
       entityKind: 'relation',
       typename: 'com.example.type.employed-by',
@@ -394,7 +394,7 @@ describe('effect-to-json', () => {
 
     const jsonSchema = toJsonSchema(Organization);
     expect(jsonSchema).toEqual({
-      $id: 'dxn:com.example.type.organization',
+      $id: 'dxn:com.example.type.organization:0.1.0',
       $schema: 'http://json-schema.org/draft-07/schema#',
       typename: 'com.example.type.organization',
       version: '0.1.0',
@@ -746,7 +746,7 @@ describe('json-to-effect', () => {
         "additionalProperties": false,
         "properties": {
           "contact": {
-            "$id": "dxn:com.example.type.person",
+            "$id": "dxn:com.example.type.person:0.1.0",
             "additionalProperties": false,
             "entityKind": "object",
             "properties": {

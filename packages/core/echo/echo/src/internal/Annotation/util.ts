@@ -70,8 +70,7 @@ export const makeTypeJsonSchemaAnnotation = (options: {
   assertArgument(!!options.relationTarget === (options.kind === EntityKind.Relation), 'relationTarget');
 
   const obj = {
-    // TODO(dmaretskyi): Should this include the version?
-    $id: options.identifier ?? DXN.fromTypename(options.typename),
+    $id: options.identifier ?? DXN.fromTypenameAndVersion(options.typename, options.version),
     entityKind: options.kind,
     version: options.version,
     typename: options.typename,
