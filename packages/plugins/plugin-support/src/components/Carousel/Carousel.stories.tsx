@@ -27,20 +27,22 @@ type DefaultStoryProps = { slides: Slide[]; intervalMs?: number };
 
 const DefaultStory = ({ slides, intervalMs }: DefaultStoryProps) => (
   <Carousel.Root count={slides.length} intervalMs={intervalMs}>
-    <Carousel.Viewport>
-      {slides.map((slide, i) => (
-        <Carousel.Slide key={slide.src} index={i}>
-          <img
-            src={slide.src}
-            alt={slide.description}
-            className='absolute inset-0 w-full h-full object-cover'
-            loading='lazy'
-          />
-        </Carousel.Slide>
-      ))}
+    <Carousel.Frame>
       <Carousel.Previous />
+      <Carousel.Viewport>
+        {slides.map((slide, i) => (
+          <Carousel.Slide key={slide.src} index={i}>
+            <img
+              src={slide.src}
+              alt={slide.description}
+              className='absolute inset-0 w-full h-full object-cover'
+              loading='lazy'
+            />
+          </Carousel.Slide>
+        ))}
+      </Carousel.Viewport>
       <Carousel.Next />
-    </Carousel.Viewport>
+    </Carousel.Frame>
     <Carousel.Indicators />
     <Carousel.Caption>{(i) => slides[i]?.description}</Carousel.Caption>
   </Carousel.Root>

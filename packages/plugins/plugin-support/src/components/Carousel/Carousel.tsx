@@ -112,10 +112,7 @@ export type CarouselViewportProps = PropsWithChildren<{ classNames?: string }>;
 const CarouselViewport = ({ children, classNames }: CarouselViewportProps) => {
   return (
     <div
-      className={mx(
-        'relative w-full aspect-video overflow-hidden rounded-md bg-baseSurface border border-separator',
-        classNames,
-      )}
+      className={mx('relative w-full aspect-video overflow-hidden bg-baseSurface border border-separator', classNames)}
     >
       {children}
     </div>
@@ -138,10 +135,24 @@ const CarouselSlide = ({ children, index, classNames }: CarouselSlideProps) => {
   if (active !== index) {
     return null;
   }
+
   return <div className={mx('absolute inset-0 w-full h-full', classNames)}>{children}</div>;
 };
 
 CarouselSlide.displayName = 'Carousel.Slide';
+
+//
+// Frame
+//
+
+export type CarouselFrameProps = PropsWithChildren<{ classNames?: string }>;
+
+/** Horizontal flex row that holds Previous + Viewport + Next so the controls sit outside the image. */
+const CarouselFrame = ({ children, classNames }: CarouselFrameProps) => {
+  return <div className={mx('flex items-center gap-2 w-full', classNames)}>{children}</div>;
+};
+
+CarouselFrame.displayName = 'Carousel.Frame';
 
 //
 // Previous / Next
@@ -157,12 +168,12 @@ const CarouselPrevious = ({ classNames }: CarouselButtonProps) => {
   }
   return (
     <IconButton
-      classNames={mx('absolute left-1 top-1/2 -translate-y-1/2', classNames)}
+      classNames={classNames}
+      variant='ghost'
       icon='ph--caret-left--regular'
       iconOnly
       label={t('carousel-prev.label')}
       onClick={prev}
-      variant='ghost'
     />
   );
 };
@@ -177,12 +188,12 @@ const CarouselNext = ({ classNames }: CarouselButtonProps) => {
   }
   return (
     <IconButton
-      classNames={mx('absolute right-1 top-1/2 -translate-y-1/2', classNames)}
+      classNames={classNames}
+      variant='ghost'
       icon='ph--caret-right--regular'
       iconOnly
       label={t('carousel-next.label')}
       onClick={next}
-      variant='ghost'
     />
   );
 };
@@ -249,6 +260,7 @@ CarouselCaption.displayName = 'Carousel.Caption';
 
 export const Carousel = {
   Root: CarouselRoot,
+  Frame: CarouselFrame,
   Viewport: CarouselViewport,
   Slide: CarouselSlide,
   Previous: CarouselPrevious,
