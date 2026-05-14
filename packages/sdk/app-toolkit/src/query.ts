@@ -17,8 +17,8 @@ import {
   getTypeAnnotation,
   unwrapOptional,
 } from '@dxos/echo/internal';
-import { DXN, EchoId, type URI } from '@dxos/keys';
 import { runAndForwardErrors } from '@dxos/effect';
+import { DXN, EchoId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { Person } from '@dxos/types';
@@ -38,7 +38,7 @@ export const evalQuery = (queryString: string): Query.Any => {
 
 export const resolveSchemaWithRegistry = (registry: SchemaRegistry.SchemaRegistry, query: QueryAST.Query) => {
   const resolve = Effect.fn(function* (dxn: string) {
-    const typename = DXN.isDXN(dxn) ? DXN.getNsid(DXN.parse(dxn as URI.URI)) : undefined;
+    const typename = DXN.isDXN(dxn) ? DXN.getNsid(dxn) : undefined;
     if (!typename) {
       return Option.none();
     }

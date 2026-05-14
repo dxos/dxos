@@ -10,7 +10,7 @@ import { raise } from '@dxos/debug';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { type ObjectId, type URI } from '@dxos/keys';
+import { type ObjectId, URI } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type * as Database from './Database';
@@ -212,7 +212,7 @@ export const getSourceDXN = (value: Unknown | Snapshot): URI.URI => {
   assumeType<internal.InternalObjectProps>(value);
   const dxn = (value as internal.InternalObjectProps)[internal.RelationSourceDXNId];
   invariant(typeof dxn === 'string');
-  return dxn as URI.URI;
+  return URI.make(dxn);
 };
 
 /**
@@ -225,7 +225,7 @@ export const getTargetDXN = (value: Unknown | Snapshot): URI.URI => {
   assumeType<internal.InternalObjectProps>(value);
   const dxn = (value as internal.InternalObjectProps)[internal.RelationTargetDXNId];
   invariant(typeof dxn === 'string');
-  return dxn as URI.URI;
+  return URI.make(dxn);
 };
 
 /**

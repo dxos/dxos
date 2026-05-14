@@ -90,9 +90,7 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
         if (checked) {
           agent.subscriptions.push(Ref.fromDXN(Obj.getDXN(object)));
         } else {
-          agent.subscriptions = agent.subscriptions.filter(
-            (subscription) => subscription.dxn !== Obj.getDXN(object),
-          );
+          agent.subscriptions = agent.subscriptions.filter((subscription) => subscription.dxn !== Obj.getDXN(object));
         }
       });
     },

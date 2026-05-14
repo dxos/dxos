@@ -18,7 +18,7 @@ export const importSpace = async (db: EchoDatabase, data: SerializedSpace, optio
   await new Serializer().import(db, data, {
     onObject: async (object) => {
       const typeDXN = decodeDXNFromJSON(object['@type']);
-      const typename = typeDXN && DXN.isDXN(typeDXN) ? DXN.getNsid(DXN.parse(typeDXN)) : undefined;
+      const typename = typeDXN && DXN.isDXN(typeDXN) ? DXN.getNsid(typeDXN) : undefined;
       if (typename && options?.ignoreTypes?.includes(typename)) {
         return false;
       }

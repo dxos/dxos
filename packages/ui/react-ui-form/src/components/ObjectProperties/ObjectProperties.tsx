@@ -8,9 +8,9 @@ import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
 import { Obj, Ref, Tag, Type } from '@dxos/echo';
-import { type URI } from '@dxos/keys';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
+import { type URI } from '@dxos/keys';
 import { HuePicker } from '@dxos/react-ui-pickers';
 import { FactoryAnnotation } from '@dxos/schema';
 import { composable, composableProps } from '@dxos/ui-theme';

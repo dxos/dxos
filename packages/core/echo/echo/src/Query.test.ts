@@ -276,7 +276,7 @@ describe('query api', () => {
             operator: 'eq',
             type: 'compare',
             value: {
-              '/': EchoId.fromLocalObjectId(fred.id as ObjectId),
+              '/': EchoId.fromLocalObjectId(fred.id),
             },
           },
         },

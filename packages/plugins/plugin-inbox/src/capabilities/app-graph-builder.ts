@@ -336,7 +336,9 @@ export default Capability.makeModule(
           }
           const integrations = get(AtomQuery.make(db, Filter.type(Integration.Integration)));
           const integration = integrations.find((integration) =>
-            integration.targets.some((target) => target.object && EchoId.getObjectId(EchoId.tryParse(target.object.dxn)!) === mailbox.id),
+            integration.targets.some(
+              (target) => target.object && EchoId.getObjectId(EchoId.tryParse(target.object.dxn)!) === mailbox.id,
+            ),
           );
           if (!integration) {
             return Effect.succeed([]);
@@ -369,7 +371,9 @@ export default Capability.makeModule(
           }
           const integrations = get(AtomQuery.make(db, Filter.type(Integration.Integration)));
           const integration = integrations.find((integration) =>
-            integration.targets.some((target) => target.object && EchoId.getObjectId(EchoId.tryParse(target.object.dxn)!) === calendar.id),
+            integration.targets.some(
+              (target) => target.object && EchoId.getObjectId(EchoId.tryParse(target.object.dxn)!) === calendar.id,
+            ),
           );
           if (!integration) {
             return Effect.succeed([]);

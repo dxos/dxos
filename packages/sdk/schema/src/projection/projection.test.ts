@@ -187,7 +187,7 @@ describe('ProjectionModel', () => {
       $ref: '/schemas/echo/ref',
       reference: {
         schema: {
-          $ref: 'dxn:type:com.example.type.organization',
+          $ref: 'dxn:com.example.type.organization',
         },
         schemaVersion: '0.1.0',
       },

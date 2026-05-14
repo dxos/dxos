@@ -367,11 +367,7 @@ const refToEffectSchema = (root: any): Schema.Schema.AnyNoContext => {
   invariant(DXN.isDXN(ref), `Expected a type DXN, got: ${ref}`);
   const targetSchemaDXN = DXN.parse(ref);
 
-  return createEchoReferenceSchema(
-    ref,
-    DXN.getNsid(targetSchemaDXN),
-    reference.schemaVersion,
-  );
+  return createEchoReferenceSchema(ref, DXN.getNsid(targetSchemaDXN), reference.schemaVersion);
 };
 
 //

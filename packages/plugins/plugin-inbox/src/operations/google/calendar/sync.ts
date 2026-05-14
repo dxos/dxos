@@ -17,8 +17,8 @@ import * as Stream from 'effect/Stream';
 import type { Credential } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Query, Ref as EchoRef } from '@dxos/echo';
-import { log } from '@dxos/log';
 import { EchoId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { Integration } from '@dxos/plugin-integration';
 import { type Event } from '@dxos/types';
 

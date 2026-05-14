@@ -499,14 +499,10 @@ describe('Query', () => {
       const both = await queue.query(Query.select(Filter.typeDXN('dxn:com.example.type.person'))).run();
       expect(both).toHaveLength(2);
 
-      const v1 = await queue
-        .query(Query.select(Filter.typeDXN('dxn:com.example.type.person:0.1.0')))
-        .run();
+      const v1 = await queue.query(Query.select(Filter.typeDXN('dxn:com.example.type.person:0.1.0'))).run();
       expect(v1).toEqual([contactV1]);
 
-      const v2 = await queue
-        .query(Query.select(Filter.typeDXN('dxn:com.example.type.person:0.2.0')))
-        .run();
+      const v2 = await queue.query(Query.select(Filter.typeDXN('dxn:com.example.type.person:0.2.0'))).run();
       expect(v2).toEqual([contactV2]);
     });
 

@@ -85,7 +85,7 @@ describe('filterMatch', () => {
   });
 
   test('refs', () => {
-    const filter = Filter.type(TestSchema.Expando, { parent: Ref.fromDXN(EchoId.fromLocalObjectId(OBJECT_1.id as ObjectId)) });
+    const filter = Filter.type(TestSchema.Expando, { parent: Ref.fromDXN(EchoId.fromLocalObjectId(OBJECT_1.id)) });
     expect(filterMatchObject(filter.ast, OBJECT_1)).to.be.false;
     expect(filterMatchObject(filter.ast, OBJECT_2)).to.be.false;
     expect(filterMatchObject(filter.ast, OBJECT_3)).to.be.true;
@@ -106,7 +106,7 @@ const OBJECT_1: MatchedObject = {
   id: ObjectId.make('01JVS9YYT5VMVJW0GGTM1YHCCH'),
   spaceId: SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO'),
   doc: ObjectStructure.makeObject({
-    type: `dxn:type:${TestSchema.Expando.typename}:0.1.0`,
+    type: `dxn:${TestSchema.Expando.typename}:0.1.0`,
     data: {
       title: 'test',
       value: 100,
@@ -122,7 +122,7 @@ const OBJECT_2: MatchedObject = {
   id: ObjectId.make('01JT5TD6K9FFJ3VNM5FGMS5C0Q'),
   spaceId: SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO'),
   doc: ObjectStructure.makeObject({
-    type: `dxn:type:${TestSchema.Expando.typename}:0.1.0`,
+    type: `dxn:${TestSchema.Expando.typename}:0.1.0`,
     data: { title: 'test', value: 100, complete: true },
     deleted: true,
   }),
@@ -132,7 +132,7 @@ const OBJECT_3: MatchedObject = {
   id: ObjectId.make('01JT5TD6K9FFJ3VNM5FGMS5C0Q'),
   spaceId: SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO'),
   doc: ObjectStructure.makeObject({
-    type: `dxn:type:${TestSchema.Expando.typename}:0.1.0`,
-    data: { title: 'test', value: 100, complete: true, parent: { '/': EchoId.fromLocalObjectId(OBJECT_1.id as ObjectId) } },
+    type: `dxn:${TestSchema.Expando.typename}:0.1.0`,
+    data: { title: 'test', value: 100, complete: true, parent: { '/': EchoId.fromLocalObjectId(OBJECT_1.id) } },
   }),
 };

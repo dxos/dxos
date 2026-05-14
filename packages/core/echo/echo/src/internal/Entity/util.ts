@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { assertArgument, invariant } from '@dxos/invariant';
-import { EchoId, ObjectId, type URI } from '@dxos/keys';
+import { EchoId, ObjectId, URI } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import { type InternalObjectProps, SelfDXNId } from './model';
@@ -22,7 +22,7 @@ export const getObjectDXN = (object: any): URI.URI | undefined => {
 
   if (object[SelfDXNId]) {
     invariant(typeof object[SelfDXNId] === 'string', 'Invalid object model: invalid self dxn');
-    return object[SelfDXNId] as URI.URI;
+    return URI.make(object[SelfDXNId]);
   }
 
   if (!ObjectId.isValid(object.id)) {

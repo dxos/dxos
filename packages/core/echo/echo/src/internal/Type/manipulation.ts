@@ -85,7 +85,7 @@ export const setTypenameInSchema = (
     } satisfies TypeAnnotation,
     [SchemaAST.JSONSchemaAnnotationId]: {
       ...(schema.ast.annotations[SchemaAST.JSONSchemaAnnotationId] ?? {}),
-      $id: schema.ast.annotations[TypeIdentifierAnnotationId] ?? DXN.fromTypename(typename) as string,
+      $id: schema.ast.annotations[TypeIdentifierAnnotationId] ?? (DXN.fromTypename(typename) as string),
       typename,
     },
   });

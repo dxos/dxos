@@ -251,7 +251,7 @@ class FilterClass implements Filter$.Any {
     return FilterClass._timeRangeFilter('createdAt', range);
   }
 
-  static childOf(parents: unknown | (unknown)[], options?: { transitive?: boolean }): Filter$.Any {
+  static childOf(parents: unknown | unknown[], options?: { transitive?: boolean }): Filter$.Any {
     const items = Array.isArray(parents) ? parents : [parents];
     const dxns = items.map((item) => {
       if (isDxnLike(item)) {

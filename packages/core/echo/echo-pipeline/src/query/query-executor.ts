@@ -624,7 +624,7 @@ export class QueryExecutor extends Resource {
               }
               return null;
             } else if (spaces.length > 0) {
-              return this._loadFromDXN(EchoId.fromLocalObjectId(id) as URI.URI, { sourceSpaceId: spaces[0] });
+              return this._loadFromDXN(EchoId.fromLocalObjectId(id), { sourceSpaceId: spaces[0] });
             } else {
               return null; // Unknown scope.
             }
@@ -765,7 +765,7 @@ export class QueryExecutor extends Resource {
         // Load space items from documents.
         const spaceItems = await Promise.all(
           spaceResults.map(async (result): Promise<QueryItem | null> => {
-            const dxn = EchoId.fromLocalObjectId(result.objectId) as URI.URI;
+            const dxn = EchoId.fromLocalObjectId(result.objectId);
             const item = await this._loadFromDXN(dxn, { sourceSpaceId: result.spaceId as SpaceId });
             if (item) {
               // Override the default rank with the FTS rank.
@@ -960,7 +960,7 @@ export class QueryExecutor extends Resource {
       if (echoId) {
         const objectId = EchoId.getObjectId(echoId);
         if (objectId) {
-          parentRefs.push({ dxnStr: echoId as URI.URI, objectId });
+          parentRefs.push({ dxnStr: echoId, objectId });
         }
       }
     }
@@ -968,7 +968,7 @@ export class QueryExecutor extends Resource {
     if (item.queueId && !directParent) {
       const queueEchoId = EchoId.fromSpaceAndObjectId(item.spaceId, item.queueId);
       parentRefs.push({
-        dxnStr: queueEchoId as URI.URI,
+        dxnStr: queueEchoId,
         objectId: item.queueId,
       });
     }
@@ -1548,7 +1548,7 @@ export class QueryExecutor extends Resource {
       return null;
     }
 
-    const spaceId = (EchoId.getSpaceId(echoId) as SpaceId | undefined) ?? sourceSpaceId;
+    const spaceId = EchoId.getSpaceId(echoId) ?? sourceSpaceId;
 
     const spaceRoot = this._spaceStateManager.getRootBySpaceId(spaceId);
     if (!spaceRoot) {
@@ -1609,14 +1609,8 @@ export class QueryExecutor extends Resource {
    * Loads a queue item by its object ID from the SQL index.
    * Used by the IdSelector path when querying within a queue scope.
    */
-  private async _loadQueueItemById(
-    spaceId: SpaceId,
-    queueId: ObjectId,
-    objectId: ObjectId,
-  ): Promise<QueryItem | null> {
-    const meta = await this._runInRuntime(
-      this._indexEngine.lookupByObjectId({ objectId, spaceId, queueId }),
-    );
+  private async _loadQueueItemById(spaceId: SpaceId, queueId: ObjectId, objectId: ObjectId): Promise<QueryItem | null> {
+    const meta = await this._runInRuntime(this._indexEngine.lookupByObjectId({ objectId, spaceId, queueId }));
     if (!meta) {
       return null;
     }
@@ -1659,7 +1653,7 @@ export class QueryExecutor extends Resource {
 const extractSpaceIdFromQueue = (queueRef: string): SpaceId | undefined => {
   // EchoId.tryParse handles both `echo://` and legacy `dxn:queue:` formats.
   const echoId = EchoId.tryParse(queueRef);
-  return echoId ? (EchoId.getSpaceId(echoId) as SpaceId | undefined) : undefined;
+  return echoId ? EchoId.getSpaceId(echoId) : undefined;
 };
 
 const extractQueueIds = (queues: readonly string[]): ObjectId[] | null => {
@@ -1670,9 +1664,9 @@ const extractQueueIds = (queues: readonly string[]): ObjectId[] | null => {
     .map((queueRef) => {
       // EchoId.tryParse handles both `echo://` and legacy `dxn:queue:` formats.
       const echoId = EchoId.tryParse(queueRef);
-      return echoId ? (EchoId.getObjectId(echoId) as ObjectId | undefined) : undefined;
+      return echoId ? EchoId.getObjectId(echoId) : undefined;
     })
-    .filter(Boolean) as ObjectId[];
+    .filter((id): id is ObjectId => id !== undefined);
 };
 
 /**

@@ -213,7 +213,7 @@ export const resolve: {
 ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service> =>
   Effect.gen(function* () {
     const { db } = yield* Service;
-    const dxn = typeof ref === 'string' ? ref as URI.URI : ref.dxn;
+    const dxn = typeof ref === 'string' ? (ref as URI.URI) : ref.dxn;
     const object = yield* promiseWithCauseCapture(() =>
       db.graph
         .createRefResolver({

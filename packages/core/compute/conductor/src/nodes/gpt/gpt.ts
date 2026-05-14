@@ -176,7 +176,9 @@ export const gptNode = defineComputeNode({
       log.info('messages', { messages });
 
       if (conversation) {
-        yield* Effect.promise(() => queues.get<Message.Message>(EchoId.parse(conversation.dxn.toString())).append([...messages]));
+        yield* Effect.promise(() =>
+          queues.get<Message.Message>(EchoId.parse(conversation.dxn.toString())).append([...messages]),
+        );
       }
 
       const text = messages

@@ -201,11 +201,7 @@ describe('workflow', () => {
       const computeNodeDxn = EchoId.fromLocalObjectId(ObjectId.random());
       const transformId = ObjectId.random();
       compute.push([computeNodeDxn, transform]);
-      addTransform(
-        model,
-        { id: transformId, type: computeNodeDxn },
-        { inputId, withOutput: inputId === outputPath },
-      );
+      addTransform(model, { id: transformId, type: computeNodeDxn }, { inputId, withOutput: inputId === outputPath });
     }
     const graph = Obj.make(ComputeGraph, { graph: model.graph });
     return { graphDxn, graph, compute };

@@ -23,10 +23,10 @@ import * as Struct from 'effect/Struct';
 
 import { Process, Trigger, TriggerEvent, Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
-import { EchoId } from '@dxos/keys';
 import { causeToError } from '@dxos/effect';
 import { QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
+import { EchoId } from '@dxos/keys';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 

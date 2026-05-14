@@ -189,12 +189,8 @@ export class Binder extends Resource {
 
     // Filter current state to only items still in the reduced binding set,
     // then merge in newly resolved items. This ensures unbind events are respected.
-    const reducedBlueprintDxns = new Set<string>(
-      [...bindings.blueprints].map((ref) => ref.dxn.toString()),
-    );
-    const reducedObjectDxns = new Set<string>(
-      [...bindings.objects].map((ref) => ref.dxn.toString()),
-    );
+    const reducedBlueprintDxns = new Set<string>([...bindings.blueprints].map((ref) => ref.dxn.toString()));
+    const reducedObjectDxns = new Set<string>([...bindings.objects].map((ref) => ref.dxn.toString()));
     const filteredBlueprints = currentBlueprints.filter((obj) => {
       const dxn = Obj.getDXN(obj);
       return dxn != null && reducedBlueprintDxns.has(dxn.toString());
@@ -338,7 +334,12 @@ export class Binder extends Resource {
         objects.added.forEach((ref) => context.objects.add(ref));
         objects.removed.forEach((ref) => {
           for (const obj of context.objects) {
-            if (obj.dxn === ref.dxn || (EchoId.tryParse(obj.dxn) && EchoId.tryParse(ref.dxn) && EchoId.getObjectId(EchoId.tryParse(obj.dxn)!) === EchoId.getObjectId(EchoId.tryParse(ref.dxn)!))) {
+            if (
+              obj.dxn === ref.dxn ||
+              (EchoId.tryParse(obj.dxn) &&
+                EchoId.tryParse(ref.dxn) &&
+                EchoId.getObjectId(EchoId.tryParse(obj.dxn)!) === EchoId.getObjectId(EchoId.tryParse(ref.dxn)!))
+            ) {
               context.objects.delete(obj);
             }
           }

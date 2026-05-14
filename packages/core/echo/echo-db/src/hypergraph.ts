@@ -329,7 +329,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   }
 
   private _resolveQueueSync(queueEchoId: EchoId.EchoId): Queue | undefined {
-    const spaceId = EchoId.getSpaceId(queueEchoId) as SpaceId | undefined;
+    const spaceId = EchoId.getSpaceId(queueEchoId);
     if (!spaceId) {
       return undefined;
     }
@@ -344,7 +344,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     queueEchoId: EchoId.EchoId,
     objectId: ObjectId,
   ): Promise<Entity.Unknown | undefined> {
-    const spaceId = EchoId.getSpaceId(queueEchoId) as SpaceId | undefined;
+    const spaceId = EchoId.getSpaceId(queueEchoId);
     if (!spaceId) {
       return undefined;
     }

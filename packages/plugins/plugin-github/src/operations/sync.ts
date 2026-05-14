@@ -9,8 +9,8 @@ import type * as Schema from 'effect/Schema';
 import { LayoutOperation, mergeField, readSnapshot, snapshotField, writeSnapshot } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { log } from '@dxos/log';
 import { EchoId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { Organization, Person, Project, Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -309,7 +309,9 @@ const upsertTask = Effect.fn('upsertTask')(function* (
       if (assignedPerson && !existing.assigned) {
         existing.assigned = Ref.make(assignedPerson);
       }
-      const currentProjectId = existing.project ? EchoId.getObjectId(EchoId.tryParse(existing.project.dxn)!) : undefined;
+      const currentProjectId = existing.project
+        ? EchoId.getObjectId(EchoId.tryParse(existing.project.dxn)!)
+        : undefined;
       const projectId = EchoId.getObjectId(EchoId.tryParse(Ref.make(project).dxn)!);
       if (!existing.project || (currentProjectId && projectId && currentProjectId !== projectId)) {
         existing.project = Ref.make(project);

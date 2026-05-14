@@ -365,7 +365,7 @@ describe('SpaceArchive', () => {
       const objects = [
         {
           id,
-          '@type': 'dxn:type:example.Thing',
+          '@type': 'dxn:example.Thing',
           '@meta': { keys: [] },
           title: 'hello',
         },
@@ -375,7 +375,7 @@ describe('SpaceArchive', () => {
       const structure = directory.objects![id];
       expect(structure).toBeDefined();
       expect(structure.data).toEqual({ title: 'hello' });
-      expect(structure.system?.type).toEqual({ '/': 'dxn:type:example.Thing' });
+      expect(structure.system?.type).toEqual({ '/': 'dxn:example.Thing' });
       expect(structure.system?.kind).toBe('object');
     });
 
@@ -388,7 +388,7 @@ describe('SpaceArchive', () => {
         data: { title: 'hello', count: 42 },
         meta: { keys: [] },
         system: {
-          type: { '/': 'dxn:type:example.Link' },
+          type: { '/': 'dxn:example.Link' },
           kind: 'relation',
           source: { '/': sourceId },
           target: { '/': targetId },
@@ -417,7 +417,7 @@ describe('SpaceArchive', () => {
         timestamp: 1000,
         id,
         '@meta': { keys: [] },
-        '@type': 'dxn:type:example.Message',
+        '@type': 'dxn:example.Message',
       } as any;
 
       const ordered = orderObjJsonFields(message);
@@ -430,7 +430,7 @@ describe('SpaceArchive', () => {
       const obj = {
         data: 1,
         '@custom': 'extension',
-        '@type': 'dxn:type:example.Thing',
+        '@type': 'dxn:example.Thing',
         id,
       } as any;
 
@@ -445,7 +445,7 @@ describe('SpaceArchive', () => {
       const objects = [
         {
           id,
-          '@type': 'dxn:type:example.Link',
+          '@type': 'dxn:example.Link',
           '@meta': { keys: [] },
           '@relationSource': sourceId,
           '@relationTarget': targetId,

@@ -475,7 +475,7 @@ export const getDXN = (entity: Unknown | Snapshot): URI.URI => {
 export const getTypeDXN = (obj: Unknown | Snapshot): URI.URI => {
   const type = internal.getTypeDXN(obj);
   invariant(type != null, 'Corrupted object: missing type.');
-  return type.toString() as unknown as URI.URI;
+  return type;
 };
 
 /**

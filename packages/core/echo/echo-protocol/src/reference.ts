@@ -62,12 +62,12 @@ export class Reference {
    */
   get uri(): URI.URI | undefined {
     if (this._protocol === Reference.TYPE_PROTOCOL) {
-      return DXN.fromTypename(this._objectId) as unknown as URI.URI;
+      return DXN.fromTypename(this._objectId);
     }
     if (this._host) {
-      return EchoId.fromSpaceAndObjectId(this._host as any, this._objectId) as unknown as URI.URI;
+      return EchoId.fromSpaceAndObjectId(this._host as any, this._objectId);
     }
-    return EchoId.fromLocalObjectId(this._objectId) as unknown as URI.URI;
+    return EchoId.fromLocalObjectId(this._objectId);
   }
 
   /**

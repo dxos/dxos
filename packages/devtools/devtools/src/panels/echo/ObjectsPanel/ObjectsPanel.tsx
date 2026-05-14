@@ -6,8 +6,8 @@ import type { State as AmState } from '@automerge/automerge';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Filter, Format, Obj, Query, Type } from '@dxos/echo';
-import { EchoId, type URI } from '@dxos/keys';
 import { checkoutVersion, getEditHistory } from '@dxos/echo-db';
+import { EchoId, type URI } from '@dxos/keys';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';

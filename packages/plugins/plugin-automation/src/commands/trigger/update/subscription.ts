@@ -15,7 +15,7 @@ import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
 import { Operation, Trigger } from '@dxos/compute';
 import { Database, Filter, JsonSchema, Obj, Query, Ref } from '@dxos/echo';
-import { DXN, EchoId, type URI } from '@dxos/keys';
+import { DXN, EchoId } from '@dxos/keys';
 
 import { Deep, Delay, Enabled, Input, TriggerId, Typename } from '../options';
 import { printTrigger, promptForSchemaInput, selectFunction, selectTrigger } from '../util';
@@ -79,7 +79,7 @@ const extractCurrentTypename = (spec: Trigger.SubscriptionSpec | undefined): Opt
         Match.withReturnType<Option.Option<string>>(),
         Match.when({ type: 'object' }, (f) =>
           Option.fromNullable(f.typename).pipe(
-            Option.flatMap((dxn) => Option.fromNullable(DXN.isDXN(dxn) ? DXN.getNsid(DXN.parse(dxn as URI.URI)) : undefined)),
+            Option.flatMap((dxn) => Option.fromNullable(DXN.isDXN(dxn) ? DXN.getNsid(dxn) : undefined)),
           ),
         ),
         Match.orElse(() => Option.none()),
@@ -127,7 +127,8 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
   }
 
   if (!currentFn) {
-    const functionId = (trigger.function ? EchoId.getObjectId(EchoId.tryParse(trigger.function.dxn)!) : undefined) ?? 'unknown';
+    const functionId =
+      (trigger.function ? EchoId.getObjectId(EchoId.tryParse(trigger.function.dxn)!) : undefined) ?? 'unknown';
     return yield* Effect.fail(new Error(`Invalid reference for ${functionId}`));
   }
 

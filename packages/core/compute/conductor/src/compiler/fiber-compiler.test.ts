@@ -15,7 +15,7 @@ import { Feed, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { TestHelpers } from '@dxos/effect/testing';
 import { configuredCredentialsLayer } from '@dxos/functions';
-import { type URI } from '@dxos/keys';
+import { URI } from '@dxos/keys';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { TestRuntime } from '../testing';
@@ -81,7 +81,7 @@ describe('Graph as a fiber runtime', () => {
         const runtime = new TestRuntime()
           .registerNode('dxn:test:sum', sum)
           .registerGraph('dxn:test:g1', g1())
-          .registerGraph('dxn:test:g2', g2a('dxn:test:g1' as URI.URI));
+          .registerGraph('dxn:test:g2', g2a(URI.make('dxn:test:g1')));
 
         const result = yield* runtime
           .runGraph('dxn:test:g2', ValueBag.make({ a: 1, b: 2, c: 3 }))

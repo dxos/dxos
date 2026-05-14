@@ -16,8 +16,8 @@ import * as Stream from 'effect/Stream';
 import type { Credential } from '@dxos/compute';
 import { Operation, Trace } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { log } from '@dxos/log';
 import { EchoId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import { Integration } from '@dxos/plugin-integration';
 import { Message } from '@dxos/types';
 
@@ -48,7 +48,9 @@ const STREAMING_CONFIG = {
 } as const;
 
 const readMailboxTargetOptions = (integration: Integration.Integration, mailbox: Mailbox.Mailbox) => {
-  const match = (integration.targets ?? []).find((target) => target.object && EchoId.getObjectId(EchoId.tryParse(target.object.dxn)!) === mailbox.id);
+  const match = (integration.targets ?? []).find(
+    (target) => target.object && EchoId.getObjectId(EchoId.tryParse(target.object.dxn)!) === mailbox.id,
+  );
   const raw = match?.options;
   if (!raw || typeof raw !== 'object') {
     return { syncBackDays: undefined as undefined | number, filter: undefined as undefined | string };

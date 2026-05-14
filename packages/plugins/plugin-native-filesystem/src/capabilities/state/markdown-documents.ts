@@ -10,8 +10,8 @@ import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { updateText } from '@dxos/echo-db';
-import { EchoId } from '@dxos/keys';
 import { invariant } from '@dxos/invariant';
+import { EchoId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Text } from '@dxos/schema';
 

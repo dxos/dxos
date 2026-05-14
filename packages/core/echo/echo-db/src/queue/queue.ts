@@ -134,7 +134,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     subspaceTag?: string,
   ) {
     this._echoId = echoId;
-    this._spaceId = (EchoId.getSpaceId(echoId) ?? failedInvariant('Missing spaceId in EchoId')) as SpaceId;
+    this._spaceId = EchoId.getSpaceId(echoId) ?? failedInvariant('Missing spaceId in EchoId');
     this._queueId = EchoId.getObjectId(echoId) ?? failedInvariant('Missing queueId in EchoId');
     this._subspaceTag = subspaceTag ?? 'data';
   }

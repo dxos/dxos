@@ -9,8 +9,8 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { EchoId } from '@dxos/keys';
 import { AtomQuery } from '@dxos/echo-atom';
+import { EchoId } from '@dxos/keys';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { Integration } from '@dxos/plugin-integration';
 import { Kanban } from '@dxos/plugin-kanban';
@@ -46,7 +46,9 @@ export default Capability.makeModule(
           }
           const integrations = get(AtomQuery.make(db, Filter.type(Integration.Integration)));
           const integration = integrations.find((integration) =>
-            integration.targets.some((target) => target.object && EchoId.getObjectId(EchoId.tryParse(target.object.dxn)!) === kanban.id),
+            integration.targets.some(
+              (target) => target.object && EchoId.getObjectId(EchoId.tryParse(target.object.dxn)!) === kanban.id,
+            ),
           );
           if (!integration) {
             return Effect.succeed([]);

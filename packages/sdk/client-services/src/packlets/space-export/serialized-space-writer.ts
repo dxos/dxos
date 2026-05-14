@@ -10,7 +10,7 @@ import { type SerializedFeed, type SerializedSpace } from '@dxos/echo-db';
 import { type EchoHost } from '@dxos/echo-pipeline';
 import { type DatabaseDirectory, type ObjectStructure } from '@dxos/echo-protocol';
 import { assertState, invariant } from '@dxos/invariant';
-import { DXN, type IdentityDid, type ObjectId, type SpaceId, type URI } from '@dxos/keys';
+import { DXN, type IdentityDid, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
@@ -187,7 +187,7 @@ const exportFeedData = async (space: DataSpace, echoHost: EchoHost, objects: Obj
     }
 
     const typeStr = obj[ATTR_TYPE] as string;
-    const typeDxnNsid = DXN.isDXN(typeStr) ? DXN.getNsid(DXN.parse(typeStr as URI.URI)) : undefined;
+    const typeDxnNsid = DXN.isDXN(typeStr) ? DXN.getNsid(typeStr) : undefined;
     if (typeDxnNsid !== FEED_TYPENAME) {
       continue;
     }

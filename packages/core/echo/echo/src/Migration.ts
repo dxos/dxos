@@ -82,8 +82,8 @@ export const define = <From extends Schema.Schema.AnyNoContext, To extends Schem
   if (!toTypeDXN) {
     throw new Error('Invalid to schema');
   }
-  const fromType = fromTypeDXN.toString() as unknown as URI.URI;
-  const toType = toTypeDXN.toString() as unknown as URI.URI;
+  const fromType = fromTypeDXN;
+  const toType = toTypeDXN;
 
   return {
     fromType,

@@ -550,7 +550,7 @@ const convertLegacyProtoReference = (value: {
   const TYPE_PROTOCOL = 'protobuf';
   let dxn: URI.URI;
   if (value.protocol === TYPE_PROTOCOL) {
-    dxn = DXN.fromTypename(value.objectId) as URI.URI;
+    dxn = DXN.fromTypename(value.objectId);
   } else if (value.host) {
     dxn = EchoId.fromSpaceAndObjectId(value.host as any, value.objectId as any);
   } else {

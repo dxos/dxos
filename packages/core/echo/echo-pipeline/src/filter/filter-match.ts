@@ -4,7 +4,7 @@
 
 import { EncodedReference, ObjectStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
 import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
-import { DXN, type ObjectId, type SpaceId, type URI } from '@dxos/keys';
+import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
 
 export type MatchedObject = {
   id: ObjectId;
@@ -324,21 +324,15 @@ const compareTypenameStrings = (expectedStr: string, actualStr: string): boolean
     if (!DXN.isDXN(actualStr)) {
       return false;
     }
-    const expectedParsed = DXN.parse(expectedStr as URI.URI);
-    const actualParsed = DXN.parse(actualStr as URI.URI);
-    const expectedNsid = DXN.getNsid(expectedParsed);
-    const actualNsid = DXN.getNsid(actualParsed);
-    const expectedVersion = DXN.getVersion(expectedParsed);
-    const actualVersion = DXN.getVersion(actualParsed);
+    const expectedNsid = DXN.getNsid(expectedStr);
+    const actualNsid = DXN.getNsid(actualStr);
+    const expectedVersion = DXN.getVersion(expectedStr);
+    const actualVersion = DXN.getVersion(actualStr);
 
     if (actualNsid !== expectedNsid) {
       return false;
     }
-    if (
-      expectedVersion !== undefined &&
-      actualVersion !== undefined &&
-      actualVersion !== expectedVersion
-    ) {
+    if (expectedVersion !== undefined && actualVersion !== undefined && actualVersion !== expectedVersion) {
       return false;
     }
   } else {

@@ -101,10 +101,10 @@ export const decodeDXNFromJSON = (encoded?: EncodedReference | string): URI.URI 
     return EncodedRef.toURI(encoded);
   } else if (typeof encoded === 'string') {
     if (DXN.isDXN(encoded) || EchoId.isEchoId(encoded)) {
-      return encoded as URI.URI;
+      return encoded;
     }
     // Treat plain strings as type names.
-    return DXN.fromTypename(encoded) as URI.URI;
+    return DXN.fromTypename(encoded);
   }
 };
 

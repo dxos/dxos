@@ -5,8 +5,8 @@
 import { useMemo } from 'react';
 
 import { type Entity, Feed, type Filter, type Query } from '@dxos/echo';
-import { EchoId } from '@dxos/keys';
 import { useQuery } from '@dxos/echo-react';
+import { EchoId } from '@dxos/keys';
 
 import { useClient } from '../client';
 

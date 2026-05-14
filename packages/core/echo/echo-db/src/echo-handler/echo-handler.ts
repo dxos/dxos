@@ -197,7 +197,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         }
         case SelfDXNId: {
           if (target[symbolInternals].database) {
-            return EchoId.fromSpaceAndObjectId(target[symbolInternals].database.spaceId, target[symbolInternals].core.id);
+            return EchoId.fromSpaceAndObjectId(
+              target[symbolInternals].database.spaceId,
+              target[symbolInternals].core.id,
+            );
           } else {
             return EchoId.fromLocalObjectId(target[symbolInternals].core.id);
           }

@@ -42,6 +42,4 @@ export const Cron = Options.text('cron').pipe(
 // Queue
 //
 
-export const Queue = Options.text('queue').pipe(
-  Options.withDescription('The DXN of the queue for the queue trigger.'),
-);
+export const Queue = Options.text('queue').pipe(Options.withDescription('The DXN of the queue for the queue trigger.'));

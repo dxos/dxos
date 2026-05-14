@@ -352,7 +352,7 @@ describe('CoreDatabase', () => {
       await graph.schemaRegistry.register([TestSchema.Person]);
       const contact = db.add(Obj.make(TestSchema.Person, { name: 'Foo' }));
       await db.coreDatabase.atomicReplaceObject(contact.id, {
-        type: 'dxn:com.example.type.task:0.1.0' as DXN.DXN,
+        type: DXN.fromTypenameAndVersion('com.example.type.task', '0.1.0'),
         data: { name: 'Bar' },
       });
 
