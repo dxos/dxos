@@ -15,6 +15,7 @@ import wasm from 'vite-plugin-wasm';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
+import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 // import { createConfig as createTestConfig } from '../../../vitest.base.config';
 
 // @ts-ignore
@@ -55,6 +56,7 @@ export default defineConfig({
     plugins: () => [sourcemaps(), topLevelAwait(), wasm()],
   },
   plugins: [
+    ShutdownPlugin(),
     sourcemaps(),
 
     // DXOS plugins.

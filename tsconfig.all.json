@@ -367,9 +367,6 @@
       "path": "packages/plugins/plugin-graph/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-help/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-inbox/tsconfig.json"
     },
     {
@@ -473,6 +470,9 @@
     },
     {
       "path": "packages/plugins/plugin-status-bar/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-support/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-table/tsconfig.json"
@@ -743,6 +743,9 @@
     },
     {
       "path": "tools/vite-plugin-log/tsconfig.json"
+    },
+    {
+      "path": "tools/vite-plugin-shutdown/tsconfig.json"
     },
     {
       "path": "tools/x/tsconfig.json"
