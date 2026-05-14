@@ -28,6 +28,7 @@ export type CarouselProps = {
 export const Carousel = ({ images, intervalMs = 5_000, classNames }: CarouselProps) => {
   const { t } = useTranslation(meta.id);
   const [index, setIndex] = useState(0);
+  const [autoAdvance, setAutoAdvance] = useState(true);
   const count = images.length;
 
   // Reset index if images shrink below current.
@@ -37,17 +38,27 @@ export const Carousel = ({ images, intervalMs = 5_000, classNames }: CarouselPro
     }
   }, [count, index]);
 
-  // Auto-advance.
+  // Auto-advance — stops permanently once the user interacts with any control.
   useEffect(() => {
-    if (count <= 1 || intervalMs <= 0) {
+    if (!autoAdvance || count <= 1 || intervalMs <= 0) {
       return;
     }
     const handle = setInterval(() => setIndex((i) => (i + 1) % count), intervalMs);
     return () => clearInterval(handle);
-  }, [count, intervalMs]);
+  }, [autoAdvance, count, intervalMs]);
 
-  const handlePrev = useCallback(() => setIndex((i) => (i - 1 + count) % count), [count]);
-  const handleNext = useCallback(() => setIndex((i) => (i + 1) % count), [count]);
+  const handlePrev = useCallback(() => {
+    setAutoAdvance(false);
+    setIndex((i) => (i - 1 + count) % count);
+  }, [count]);
+  const handleNext = useCallback(() => {
+    setAutoAdvance(false);
+    setIndex((i) => (i + 1) % count);
+  }, [count]);
+  const handleSelect = useCallback((i: number) => {
+    setAutoAdvance(false);
+    setIndex(i);
+  }, []);
 
   if (count === 0) {
     return null;
@@ -56,12 +67,7 @@ export const Carousel = ({ images, intervalMs = 5_000, classNames }: CarouselPro
   const current = images[index];
 
   return (
-    <div
-      className={mx(
-        'dx-container relative flex flex-col justify-center items-center gap-2 w-full max-w-xl',
-        classNames,
-      )}
-    >
+    <div className={mx('dx-container relative flex flex-col items-center gap-4 w-full max-w-xl', classNames)}>
       <div className='relative w-full aspect-video overflow-hidden rounded-md bg-baseSurface border border-separator'>
         <img
           key={current.src}
@@ -91,7 +97,6 @@ export const Carousel = ({ images, intervalMs = 5_000, classNames }: CarouselPro
           </>
         )}
       </div>
-      {current.label && <div className='flex justify-center text-description'>{current.label}</div>}
       {count > 1 && (
         <div className='flex items-center' role='tablist' aria-label={t('carousel-indicators.label')}>
           {images.map((_, i) => (
@@ -102,13 +107,14 @@ export const Carousel = ({ images, intervalMs = 5_000, classNames }: CarouselPro
               icon={i === index ? 'ph--circle--fill' : 'ph--circle--regular'}
               iconOnly
               label={t('carousel-go-to.label', { index: i + 1 })}
-              onClick={() => setIndex(i)}
+              onClick={() => handleSelect(i)}
               size={3}
               variant='ghost'
             />
           ))}
         </div>
       )}
+      {current.label && <p className='flex justify-center text-description'>{current.label}</p>}
     </div>
   );
 };
