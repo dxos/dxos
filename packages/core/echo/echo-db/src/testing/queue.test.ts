@@ -29,7 +29,7 @@ describe('queues', () => {
     const obj = db.add(
       Obj.make(TestSchema.Expando, {
         // TODO(dmaretskyi): Support Ref.make
-        queue: Ref.fromDXN(queues.create().dxn) as Ref.Ref<Feed.Feed>,
+        queue: Ref.fromURI(queues.create().dxn) as Ref.Ref<Feed.Feed>,
       }),
     );
 

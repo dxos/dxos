@@ -99,7 +99,7 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
           (_type: any, dxnString: string) => {
             const dxn = DXN.parse(dxnString);
             if (dxn) {
-              const ref = Ref.fromDXN(dxn);
+              const ref = Ref.fromURI(dxn);
               props.onValueChange(props.type, ref);
             }
           },

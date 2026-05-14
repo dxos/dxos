@@ -921,7 +921,7 @@ describe('Reactive Object with ECHO database', () => {
   test('able to create queue references', async () => {
     const { db } = await builder.createDatabase();
     const dxn = createQueueDXN(SpaceId.random());
-    const obj = Obj.make(TestSchema.Expando, { queue: Ref.fromDXN(dxn) });
+    const obj = Obj.make(TestSchema.Expando, { queue: Ref.fromURI(dxn) });
     const dbObj = db.add(obj);
     // Queue dxn is stored as LegacyDXN internally; verify the objectId matches.
     const queueId = EchoId.getObjectId(dxn);

@@ -78,7 +78,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
           );
           const input: GptInput = {
             prompt: 'I have twice as many oranges as apples. How many oranges do I have?',
-            conversation: Ref.fromDXN(conversation.dxn),
+            conversation: Ref.fromURI(conversation.dxn),
           };
 
           const output = yield* gptNode.exec!(ValueBag.make(input)).pipe(

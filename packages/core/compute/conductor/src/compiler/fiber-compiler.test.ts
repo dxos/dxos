@@ -197,8 +197,8 @@ const g2a = (g1: URI.URI) => {
   const model = ComputeGraphModel.create({ id: 'dxn:test:g2' });
   model.builder
     .createNode({ id: 'I', type: NODE_INPUT })
-    .createNode({ id: 'X', type: g1, subgraph: Ref.fromDXN(g1) })
-    .createNode({ id: 'Y', type: g1, subgraph: Ref.fromDXN(g1) })
+    .createNode({ id: 'X', type: g1, subgraph: Ref.fromURI(g1) })
+    .createNode({ id: 'Y', type: g1, subgraph: Ref.fromURI(g1) })
     .createNode({ id: 'O', type: NODE_OUTPUT })
     .createEdge({ node: 'I', property: 'a' }, { node: 'X', property: 'number1' })
     .createEdge({ node: 'I', property: 'b' }, { node: 'X', property: 'number2' })

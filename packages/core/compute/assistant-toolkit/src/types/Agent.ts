@@ -167,7 +167,7 @@ export const makeInitialized = (
 
     Obj.update(agent, (agent) => {
       agent.chat = Ref.make(chat);
-      agent.feed = Ref.fromDXN(inputQueue.dxn);
+      agent.feed = Ref.fromURI(inputQueue.dxn);
     });
 
     return agent;

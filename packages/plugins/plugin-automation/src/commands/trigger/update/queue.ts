@@ -37,7 +37,7 @@ export const queue = Command.make(
         onSome: (id) => Effect.succeed(id),
       });
       const dxn = EchoId.fromLocalObjectId(triggerId);
-      const trigger = yield* Database.resolve(Ref.fromDXN(dxn), Trigger.Trigger);
+      const trigger = yield* Database.resolve(Ref.fromURI(dxn), Trigger.Trigger);
       if (trigger.spec?.kind !== 'queue') {
         return yield* Effect.fail(new Error(`Invalid trigger type: ${trigger.spec?.kind}`));
       }

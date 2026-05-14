@@ -5,7 +5,7 @@
 // @import-as-namespace
 
 import type { ForeignKey } from '@dxos/echo-protocol';
-import type { EchoId, ObjectId } from '@dxos/keys';
+import type { EchoId, ObjectId, URI } from '@dxos/keys';
 
 import * as internal from './internal';
 import type * as Relation from './Relation';
@@ -130,7 +130,7 @@ export const getEchoId = (entity: Unknown | Snapshot): EchoId.EchoId => internal
 /**
  * Get the DXN of an entity's type.
  */
-export const getTypeDXN = internal.getTypeDXN;
+export const getTypeDXN: (obj: Unknown | Snapshot) => URI.URI | undefined = internal.getTypeDXN;
 
 /**
  * Get the schema of an entity.

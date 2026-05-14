@@ -37,7 +37,7 @@ type Contact = Schema.Schema.Type<typeof Contact>;
 
 describe('Ref', () => {
   test('Schema is', () => {
-    Ref(Contact).pipe(Schema.is)(Ref.fromDXN(EchoId.fromLocalObjectId(ObjectId.random())));
+    Ref(Contact).pipe(Schema.is)(Ref.fromURI(EchoId.fromLocalObjectId(ObjectId.random())));
   });
 
   test('ref ast', () => {

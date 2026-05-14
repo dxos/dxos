@@ -85,7 +85,7 @@ describe('filterMatch', () => {
   });
 
   test('refs', () => {
-    const filter = Filter.type(TestSchema.Expando, { parent: Ref.fromDXN(EchoId.fromLocalObjectId(OBJECT_1.id)) });
+    const filter = Filter.type(TestSchema.Expando, { parent: Ref.fromURI(EchoId.fromLocalObjectId(OBJECT_1.id)) });
     expect(filterMatchObject(filter.ast, OBJECT_1)).to.be.false;
     expect(filterMatchObject(filter.ast, OBJECT_2)).to.be.false;
     expect(filterMatchObject(filter.ast, OBJECT_3)).to.be.true;

@@ -113,9 +113,10 @@ export interface RefFn {
   make: <T extends AnyEntity>(object: T) => Ref<T>;
 
   /**
-   * Constructs a reference that points to the object specified by the provided DXN or URI.
+   * Constructs a reference that points to the object specified by the provided URI
+   * (either an `echo:` EchoId for an object reference or a `dxn:` DXN for a type reference).
    */
-  fromDXN: (dxn: URI.URI) => Ref<any>;
+  fromURI: (uri: URI.URI) => Ref<any>;
 }
 
 /**
@@ -242,9 +243,9 @@ Ref.make = <T extends AnyProperties>(obj: T): Ref<T> => {
   return new RefImpl(dxn, obj);
 };
 
-Ref.fromDXN = (dxn: URI.URI): Ref<any> => {
-  assertArgument(typeof dxn === 'string', 'dxn', 'Expected URI string');
-  return new RefImpl(dxn);
+Ref.fromURI = (uri: URI.URI): Ref<any> => {
+  assertArgument(typeof uri === 'string', 'uri', 'Expected URI string');
+  return new RefImpl(uri);
 };
 
 /**
@@ -311,7 +312,7 @@ export const createEchoReferenceSchema = (
             if (Option.isSome(dbService)) {
               return dbService.value.db.makeRef(EncodedReference.toURI(value));
             } else {
-              return Ref.fromDXN(EncodedReference.toURI(value));
+              return Ref.fromURI(EncodedReference.toURI(value));
             }
           });
       },

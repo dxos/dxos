@@ -114,14 +114,14 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
    *
    * NOTE: The reference may be dangling if the object is not present in the database.
    *
-   * ## Difference from `Ref.fromDXN`
+   * ## Difference from `Ref.fromURI`
    *
-   * `Ref.fromDXN(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
+   * `Ref.fromURI(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
    * `graph.ref(dxn)` is preferable in cases with access to the database.
    *
    */
   makeRef<T extends AnyProperties = any>(dxn: URI.URI): Ref.Ref<T> {
-    const ref = Ref.fromDXN(dxn);
+    const ref = Ref.fromURI(dxn);
     setRefResolver(ref, this.createRefResolver({}));
     return ref;
   }

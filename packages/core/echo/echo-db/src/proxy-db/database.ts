@@ -214,7 +214,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   }
 
   makeRef<T extends AnyProperties = any>(dxn: URI.URI): Ref.Ref<T> {
-    const ref = Ref.fromDXN(dxn);
+    const ref = Ref.fromURI(dxn);
     setRefResolver(ref, this.graph.createRefResolver({ context: { space: this.spaceId } }));
     return ref;
   }

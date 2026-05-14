@@ -32,7 +32,7 @@ export const remove = Command.make(
         onSome: (value) =>
           Effect.gen(function* () {
             const dxn = EchoId.fromLocalObjectId(value);
-            return yield* Database.resolve(Ref.fromDXN(dxn), AccessToken.AccessToken);
+            return yield* Database.resolve(Ref.fromURI(dxn), AccessToken.AccessToken);
           }),
         onNone: () =>
           Effect.gen(function* () {
@@ -54,7 +54,7 @@ export const remove = Command.make(
             }).pipe(Prompt.run);
 
             const dxn = EchoId.fromLocalObjectId(selectedId);
-            return yield* Database.resolve(Ref.fromDXN(dxn), AccessToken.AccessToken);
+            return yield* Database.resolve(Ref.fromURI(dxn), AccessToken.AccessToken);
           }),
       });
       yield* Database.remove(token);

@@ -589,7 +589,7 @@ const parseObjectBlock = (block: StreamBlock): ContentBlock.Reference | undefine
     try {
       return {
         _tag: 'reference',
-        reference: Ref.fromDXN(EchoId.parse(block.attributes.dxn)),
+        reference: Ref.fromURI(EchoId.parse(block.attributes.dxn)),
       };
     } catch {}
   }
@@ -599,7 +599,7 @@ const parseObjectBlock = (block: StreamBlock): ContentBlock.Reference | undefine
     try {
       return {
         _tag: 'reference',
-        reference: Ref.fromDXN(EchoId.fromLocalObjectId(block.attributes.id)),
+        reference: Ref.fromURI(EchoId.fromLocalObjectId(block.attributes.id)),
       };
     } catch {}
   }
@@ -609,7 +609,7 @@ const parseObjectBlock = (block: StreamBlock): ContentBlock.Reference | undefine
     try {
       return {
         _tag: 'reference',
-        reference: Ref.fromDXN(EchoId.parse(block.content[0].content)),
+        reference: Ref.fromURI(EchoId.parse(block.content[0].content)),
       };
     } catch {}
   }
@@ -620,7 +620,7 @@ const parseObjectBlock = (block: StreamBlock): ContentBlock.Reference | undefine
     try {
       return {
         _tag: 'reference',
-        reference: Ref.fromDXN(EchoId.parse(dxnTag.content[0].content)),
+        reference: Ref.fromURI(EchoId.parse(dxnTag.content[0].content)),
       };
     } catch {}
   }

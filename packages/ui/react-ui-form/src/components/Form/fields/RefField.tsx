@@ -152,7 +152,7 @@ export const RefField = (props: RefFieldProps) => {
   const handleUpdate = useCallback(
     (id: string | undefined) => {
       const item = options.find((option) => option.id === id);
-      const ref = item ? Ref.fromDXN(item.id as URI.URI) : undefined;
+      const ref = item ? Ref.fromURI(item.id as URI.URI) : undefined;
       onValueChange(type, ref);
     },
     [options, type, onValueChange],

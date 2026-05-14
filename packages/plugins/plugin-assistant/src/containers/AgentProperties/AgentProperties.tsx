@@ -88,7 +88,7 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
     (object: Obj.Unknown, checked: boolean) => {
       Obj.update(agent, (agent) => {
         if (checked) {
-          agent.subscriptions.push(Ref.fromDXN(Obj.getEchoId(object)));
+          agent.subscriptions.push(Ref.fromURI(Obj.getEchoId(object)));
         } else {
           agent.subscriptions = agent.subscriptions.filter(
             (subscription) => subscription.dxn !== Obj.getEchoId(object),

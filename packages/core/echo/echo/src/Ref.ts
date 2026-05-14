@@ -84,8 +84,8 @@ export const isRef: (value: unknown) => value is Unknown = refInternal.Ref.isRef
 
 export const make = refInternal.Ref.make;
 
-// TODO(dmaretskyi): Consider just allowing `make` to accept DXN.
-export const fromDXN = (dxn: URI.URI): refInternal.Ref<any> => refInternal.Ref.fromDXN(dxn);
+// TODO(dmaretskyi): Consider just allowing `make` to accept URI.
+export const fromURI = (uri: URI.URI): refInternal.Ref<any> => refInternal.Ref.fromURI(uri);
 
 export const hasObjectId = refInternal.Ref.hasObjectId;
 

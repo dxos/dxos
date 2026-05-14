@@ -62,8 +62,8 @@ export interface Hypergraph extends Database.Queryable {
    * Creates a reference to an existing object in the database.
    *
    * NOTE: The reference may be dangling if the object is not present in the database.
-   * NOTE: Difference from `Ref.fromDXN`
-   * `Ref.fromDXN(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
+   * NOTE: Difference from `Ref.fromURI`
+   * `Ref.fromURI(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
    * `db.makeRef(dxn)` is preferable in cases with access to the database.
    */
   makeRef<T extends Entity.Unknown = Entity.Unknown>(dxn: URI.URI): Ref.Ref<T>;

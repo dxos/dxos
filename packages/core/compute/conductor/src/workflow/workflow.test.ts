@@ -211,7 +211,7 @@ describe('workflow', () => {
     const graphDxn = EchoId.fromLocalObjectId(ObjectId.random());
     const model = ComputeGraphModel.create({ id: graphDxn });
     const transformId = ObjectId.random();
-    addTransform(model, { id: transformId, type: subgraphDxn, subgraph: Ref.fromDXN(subgraphDxn) });
+    addTransform(model, { id: transformId, type: subgraphDxn, subgraph: Ref.fromURI(subgraphDxn) });
     const graph = Obj.make(ComputeGraph, { graph: model.graph });
     return { graphDxn, graph, compute: [] };
   };
