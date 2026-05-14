@@ -20,7 +20,8 @@ export type WelcomeArticleProps = {
 
 type Slide = { src: string; description: string };
 
-/** Welcome surface — hosts the joyride entry point, a plugin showcase carousel, and the support chat shortcut. */
+/**
+ * Welcome surface — hosts the joyride entry point, a plugin showcase carousel, and the support chat shortcut. */
 export const WelcomeArticle = ({ role }: WelcomeArticleProps = {}) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();

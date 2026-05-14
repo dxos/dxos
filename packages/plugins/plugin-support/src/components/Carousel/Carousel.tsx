@@ -14,7 +14,7 @@ import React, {
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { Column, IconButton, useTranslation } from '@dxos/react-ui';
+import { Column, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -44,23 +44,33 @@ export const useCarousel = (): CarouselContextValue => {
 // Root
 //
 
-export type CarouselRootProps = PropsWithChildren<{
-  /** Total number of slides; drives auto-advance and indicator counts. */
-  count: number;
-  /** Auto-advance interval in milliseconds. Set 0 to disable. */
-  intervalMs?: number;
-  defaultIndex?: number;
-  classNames?: string;
-}>;
+export type CarouselRootProps = ThemedClassName<
+  PropsWithChildren<{
+    /** Total number of slides; drives auto-advance and indicator counts. */
+    count: number;
+    /** Whether to auto-advance slides on mount. Defaults to `true`. */
+    autorun?: boolean;
+    /** Auto-advance interval in milliseconds. Set 0 to disable. */
+    intervalMs?: number;
+    defaultIndex?: number;
+  }>
+>;
 
 /**
  * Wraps the carousel in a `Column.Root` 3-track grid (left gutter / content / right gutter).
  * `Carousel.Frame` slots Prev/Viewport/Next into those tracks; `Carousel.Indicators` and
  * `Carousel.Caption` live in the center track so they share the viewport's width.
  */
-const CarouselRoot = ({ children, count, intervalMs = 5_000, defaultIndex = 0, classNames }: CarouselRootProps) => {
+const CarouselRoot = ({
+  children,
+  count,
+  autorun = true,
+  intervalMs = 5_000,
+  defaultIndex = 0,
+  classNames,
+}: CarouselRootProps) => {
   const [index, setIndexState] = useState(defaultIndex);
-  const [autoAdvance, setAutoAdvance] = useState(true);
+  const [autoAdvance, setAutoAdvance] = useState(autorun);
 
   // Reset to first slide if the slide count shrinks below the current index.
   useEffect(() => {
