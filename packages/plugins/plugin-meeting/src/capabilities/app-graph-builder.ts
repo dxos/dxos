@@ -78,10 +78,10 @@ export default Capability.makeModule(
         type: Channel.Channel,
         connector: Effect.fnUntraced(function* (channel, get) {
           const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
-          const channelDxn = Obj.getDXN(channel).toString();
+          const channelDXN = Obj.getDXN(channel).toString();
           const joined = get(callManager.joinedAtom);
           const roomId = get(callManager.roomIdAtom);
-          if (!joined || roomId !== channelDxn) {
+          if (!joined || roomId !== channelDXN) {
             return [];
           }
 
@@ -130,12 +130,12 @@ export default Capability.makeModule(
                 const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
                 const transcript = yield* Effect.promise(() => meeting.transcript.load());
                 const transcriptFeed = yield* Effect.promise(() => transcript.feed.load());
-                const transcriptQueueDxn = Feed.getQueueDxn(transcriptFeed);
-                invariant(transcriptQueueDxn, 'Transcript feed has no queue DXN');
+                const transcriptFeedDXN = Feed.getQueueDxn(transcriptFeed);
+                invariant(transcriptFeedDXN, 'Transcript feed has no DXN');
                 const transcriptionEnabled = !enabled;
                 callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
                   meetingId: Obj.getDXN(meeting).toString(),
-                  transcriptDxn: transcriptQueueDxn.toString(),
+                  transcriptDXN: transcriptFeedDXN.toString(),
                   transcriptionEnabled,
                 });
 

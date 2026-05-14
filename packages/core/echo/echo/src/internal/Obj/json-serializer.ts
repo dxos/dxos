@@ -116,15 +116,15 @@ export const objectFromJSON = async (
   const isRelation =
     typeof jsonData[ATTR_RELATION_SOURCE] === 'string' || typeof jsonData[ATTR_RELATION_TARGET] === 'string';
   if (isRelation) {
-    const sourceDxn: DXN = DXN.parse(jsonData[ATTR_RELATION_SOURCE] ?? raise(new TypeError('Missing relation source')));
-    const targetDxn: DXN = DXN.parse(jsonData[ATTR_RELATION_TARGET] ?? raise(new TypeError('Missing relation target')));
+    const sourceDXN: DXN = DXN.parse(jsonData[ATTR_RELATION_SOURCE] ?? raise(new TypeError('Missing relation source')));
+    const targetDXN: DXN = DXN.parse(jsonData[ATTR_RELATION_TARGET] ?? raise(new TypeError('Missing relation target')));
 
-    const source = (await refResolver?.resolve(sourceDxn)) as AnyEntity | undefined;
-    const target = (await refResolver?.resolve(targetDxn)) as AnyEntity | undefined;
+    const source = (await refResolver?.resolve(sourceDXN)) as AnyEntity | undefined;
+    const target = (await refResolver?.resolve(targetDXN)) as AnyEntity | undefined;
 
     defineHiddenProperty(obj, KindId, EntityKind.Relation);
-    defineHiddenProperty(obj, RelationSourceDXNId, sourceDxn);
-    defineHiddenProperty(obj, RelationTargetDXNId, targetDxn);
+    defineHiddenProperty(obj, RelationSourceDXNId, sourceDXN);
+    defineHiddenProperty(obj, RelationTargetDXNId, targetDXN);
     defineHiddenProperty(obj, RelationSourceId, source);
     defineHiddenProperty(obj, RelationTargetId, target);
   } else {
@@ -142,8 +142,8 @@ export const objectFromJSON = async (
   }
 
   if (jsonData[ATTR_PARENT]) {
-    const parentDxn = DXN.parse(jsonData[ATTR_PARENT]);
-    const resolvedParent = (await refResolver?.resolve(parentDxn)) as Obj.Unknown | undefined;
+    const parentDXN = DXN.parse(jsonData[ATTR_PARENT]);
+    const resolvedParent = (await refResolver?.resolve(parentDXN)) as Obj.Unknown | undefined;
     defineHiddenProperty(obj, ParentId, resolvedParent);
   } else if (parent) {
     defineHiddenProperty(obj, ParentId, parent);
@@ -184,7 +184,7 @@ const stripInternalJsonKeys = (jsonData: unknown) => {
     [ATTR_TYPE]: _type,
     [ATTR_META]: _meta,
     [ATTR_DELETED]: _deleted,
-    [ATTR_SELF_DXN]: _selfDxn,
+    [ATTR_SELF_DXN]: _selfDXN,
     [ATTR_RELATION_SOURCE]: _relationSource,
     [ATTR_RELATION_TARGET]: _relationTarget,
     ...props

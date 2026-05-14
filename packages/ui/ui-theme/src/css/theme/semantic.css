@@ -9,6 +9,8 @@
    * TODO(burdon): Align suffix with styles.css?
    * -xxx-surface
    * -xxx-surface-text
+   *
+   * TODO(burdon): Standardize -name-part (i.e., not surface-text).
    */
 
   --color-base-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
@@ -35,13 +37,13 @@
   --color-input-surface-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
 
   /** TODO(burdon): current vs active vs selected */
-  /** TODO(burdon): Merge overlay/surface? */
+  /** TODO(burdon): Hover vs. Highlight? */
 
-  --color-current-surface: light-dark(var(--color-neutral-200), var(--color-neutral-800));
   --color-active-surface: light-dark(var(--color-neutral-200), var(--color-neutral-800));
   --color-active-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
 
-  /** TODO(burdon): Hover vs. Highlight? */
+  --color-current-surface: light-dark(var(--color-neutral-200), var(--color-neutral-800));
+
   --color-hover-surface: light-dark(var(--color-neutral-250), var(--color-neutral-750));
   --color-hover-surface-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
 
@@ -93,11 +95,16 @@
   --color-axis-surface: light-dark(var(--color-neutral-50), var(--color-neutral-800));
   --color-axis-text: light-dark(var(--color-neutral-800), var(--color-neutral-200));
 
-  /* Grid */
+  /* 
+   * Grid 
+   * NOTE: Update main.css when changing grid tokens (and restart dev server).
+   */
 
   --color-grid-surface: light-dark(var(--color-neutral-50), var(--color-neutral-950));
+  --color-grid-text: light-dark(var(--color-neutral-950), var(--color-neutral-50));
   --color-grid-highlight: oklch(from var(--color-emerald-500) l c h / 0.5);
-  --color-grid-selection-surface: var(--color-blue-500);
+  --color-grid-selection-surface: light-dark(var(--color-blue-500), var(--color-blue-400));
+  --color-grid-selection-text: light-dark(var(--color-neutral-50), var(--color-neutral-950));
   --color-grid-comment: light-dark(var(--color-green-400), var(--color-green-600));
   --color-grid-comment-active: light-dark(
     oklch(from var(--color-green-400) l c h / 0.5),

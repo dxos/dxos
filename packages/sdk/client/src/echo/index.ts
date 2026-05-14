@@ -10,7 +10,6 @@ export {
   createObject,
   createSubscription,
   type ObjectMigration,
-  type Queue,
   type Selection,
   type SubscriptionHandle,
 } from '@dxos/echo-db';

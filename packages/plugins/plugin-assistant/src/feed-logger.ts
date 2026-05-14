@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { createFeedServiceLayer, type Queue, type Space, getSpace } from '@dxos/client/echo';
+import { createFeedServiceLayer, type Space, getSpace } from '@dxos/client/echo';
 import { Sequence, type SequenceEvent, type SequenceLogger } from '@dxos/conductor';
 import { DXN, Feed, Obj, Ref } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -15,7 +15,7 @@ import { InvocationOutcome } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { QueueSubspaceTags } from '@dxos/keys';
 
-export class QueueLogger implements SequenceLogger {
+export class FeedLogger implements SequenceLogger {
   private _space: Space;
   private _invocationTraceFeed: Feed.Feed;
   private _feedServiceLayer: Layer.Layer<Feed.FeedService>;
@@ -27,16 +27,15 @@ export class QueueLogger implements SequenceLogger {
     this._feedServiceLayer = createFeedServiceLayer(space.queues);
 
     const existingFeedRef = this._space.properties.invocationTraceFeed;
-
     if (existingFeedRef) {
       // A feed reference exists; ensure its target is loaded. If not, fail loudly
       // rather than silently creating a new feed and orphaning existing traces.
       invariant(existingFeedRef.target, 'invocationTraceFeed reference is not yet loaded');
-      invariant(Feed.getQueueDxn(existingFeedRef.target), 'invocationTraceFeed has no queue DXN');
+      invariant(Feed.getQueueDxn(existingFeedRef.target), 'invocationTraceFeed has no DXN');
       this._invocationTraceFeed = existingFeedRef.target;
     } else {
       const feed = space.db.add(Feed.make({ namespace: 'trace' }));
-      invariant(Feed.getQueueDxn(feed), 'New invocationTraceFeed has no queue DXN');
+      invariant(Feed.getQueueDxn(feed), 'New invocationTraceFeed has no DXN');
       Obj.update(this._space.properties, (obj) => {
         obj.invocationTraceFeed = Ref.make(feed);
       });
@@ -53,7 +52,7 @@ export class QueueLogger implements SequenceLogger {
             invocationId: event.invocationId,
             timestamp: Date.now(),
             input: {},
-            invocationTraceQueue: Ref.fromDXN(this._getTraceQueueDxn(event.invocationId)),
+            invocationTraceFeed: Ref.fromDXN(this._getTraceFeedDXN(event.invocationId)),
             invocationTarget: Ref.make(this.sequence),
           }),
         ]);
@@ -70,7 +69,7 @@ export class QueueLogger implements SequenceLogger {
         break;
       case 'step-start':
       case 'step-complete':
-        void this._getTraceEventQueue(event.invocationId).append([
+        void this._appendTraceEvent(event.invocationId, [
           Obj.make(TraceEvent, {
             outcome: event.type,
             truncated: false,
@@ -88,7 +87,7 @@ export class QueueLogger implements SequenceLogger {
         ]);
         break;
       case 'message':
-        void this._getTraceEventQueue(event.invocationId).append([
+        void this._appendTraceEvent(event.invocationId, [
           Obj.make(TraceEvent, {
             outcome: event.type,
             truncated: false,
@@ -106,7 +105,7 @@ export class QueueLogger implements SequenceLogger {
         ]);
         break;
       case 'block':
-        void this._getTraceEventQueue(event.invocationId).append([
+        void this._appendTraceEvent(event.invocationId, [
           Obj.make(TraceEvent, {
             outcome: event.type,
             truncated: false,
@@ -126,7 +125,7 @@ export class QueueLogger implements SequenceLogger {
     }
   }
 
-  private _getTraceQueueDxn(invocationId: string): DXN {
+  private _getTraceFeedDXN(invocationId: string): DXN {
     return DXN.fromQueue(QueueSubspaceTags.TRACE, this._space.id, invocationId);
   }
 
@@ -137,12 +136,10 @@ export class QueueLogger implements SequenceLogger {
     );
   }
 
-  // TODO(burdon): The per-invocation trace event queues address feeds by raw queue DXN
-  // (no backing Feed.Feed object). Migration to Feed.append is blocked on either
-  // (a) materializing a Feed object per invocation, or (b) a lower-level
-  // FeedService.appendByDxn primitive. Tracked as Phase 6 work in echo/AUDIT.md.
-  private _getTraceEventQueue(invocationId: string): Queue<TraceEvent> {
-    const dxn = this._getTraceQueueDxn(invocationId);
-    return this._space.queues.get(dxn);
-  }
+  /**
+   * Per-invocation trace event feeds are deprecated and no longer functional;
+   * this is a no-op until a replacement tracing data structure lands.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private async _appendTraceEvent(_invocationId: string, _items: TraceEvent[]): Promise<void> {}
 }

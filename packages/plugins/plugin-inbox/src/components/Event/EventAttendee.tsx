@@ -18,12 +18,12 @@ export type EventAttendeeProps = {
 };
 
 export const EventAttendee = ({ attendee, db, onContactCreate }: EventAttendeeProps) => {
-  const contactDxn = useActorContact(db, attendee);
+  const contactDXN = useActorContact(db, attendee);
   const handleContactCreate = useCallback(() => onContactCreate?.(attendee), [attendee]);
 
   return (
     <div className='grid grid-cols-[2rem_1fr] gap-1 items-center'>
-      <UserIconButton title={attendee.name} value={contactDxn} onContactCreate={handleContactCreate} />
+      <UserIconButton title={attendee.name} value={contactDXN} onContactCreate={handleContactCreate} />
       <h3 className='truncate text-primary-text'>{attendee.name || attendee.email}</h3>
     </div>
   );

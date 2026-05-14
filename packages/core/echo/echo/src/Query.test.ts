@@ -563,17 +563,17 @@ describe('query api', () => {
     test('Query.type(...).from(feed) sets queue scope', async () => {
       const spaceId = SpaceId.random();
       const feedId = ObjectId.random();
-      const feedDxn = DXN.parse(`dxn:echo:${spaceId}:${feedId}`);
+      const feedDXN = DXN.parse(`dxn:echo:${spaceId}:${feedId}`);
       const feed = (await Obj.fromJSON(
         {
           '@type': 'dxn:type:org.dxos.type.feed:0.1.0',
           id: feedId,
           name: 'test-feed',
         },
-        { dxn: feedDxn },
+        { dxn: feedDXN },
       )) as Feed.Feed;
 
-      const expectedQueueDxn = new DXN(DXN.kind.QUEUE, ['data', spaceId, feedId]);
+      const expectedQueueDXN = new DXN(DXN.kind.QUEUE, ['data', spaceId, feedId]);
 
       const query = Query.type(TestSchema.Person).from(feed);
       Schema.validateSync(QueryAST.Query)(query.ast);
@@ -582,7 +582,7 @@ describe('query api', () => {
         from: {
           _tag: 'scope',
           scope: {
-            feeds: [expectedQueueDxn.toString()],
+            feeds: [expectedQueueDXN.toString()],
           },
         },
         query: {
@@ -686,13 +686,13 @@ describe('query api', () => {
 
   describe('Filter.childOf', () => {
     test('childOf with Ref', () => {
-      const parentDxn = DXN.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
-      const parentRef = Ref.fromDXN(parentDxn);
+      const parentDXN = DXN.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
+      const parentRef = Ref.fromDXN(parentDXN);
       const filter = Filter.childOf(parentRef);
 
       expect(filter.ast).toMatchObject({
         type: 'child-of',
-        parents: [parentDxn.toString()],
+        parents: [parentDXN.toString()],
         transitive: true,
       });
       Schema.validateSync(QueryAST.Filter)(filter.ast);
@@ -736,15 +736,15 @@ describe('query api', () => {
     });
 
     test('childOf in select query', () => {
-      const parentDxn = DXN.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
-      const parentRef = Ref.fromDXN(parentDxn);
+      const parentDXN = DXN.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
+      const parentRef = Ref.fromDXN(parentDXN);
       const query = Query.select(Filter.childOf(parentRef));
 
       expect(query.ast).toMatchObject({
         type: 'select',
         filter: {
           type: 'child-of',
-          parents: [parentDxn.toString()],
+          parents: [parentDXN.toString()],
           transitive: true,
         },
       });
@@ -752,8 +752,8 @@ describe('query api', () => {
     });
 
     test('childOf combined with type filter', () => {
-      const parentDxn = DXN.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
-      const parentRef = Ref.fromDXN(parentDxn);
+      const parentDXN = DXN.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
+      const parentRef = Ref.fromDXN(parentDXN);
       const query = Query.select(Filter.and(Filter.type(TestSchema.Person), Filter.childOf(parentRef)));
 
       Schema.validateSync(QueryAST.Query)(query.ast);
@@ -763,7 +763,7 @@ describe('query api', () => {
           type: 'and',
           filters: [
             { type: 'object', typename: 'dxn:type:com.example.type.person:0.1.0' },
-            { type: 'child-of', parents: [parentDxn.toString()], transitive: true },
+            { type: 'child-of', parents: [parentDXN.toString()], transitive: true },
           ],
         },
       });
@@ -779,8 +779,8 @@ describe('query api', () => {
 
     test('childOf with mixed objects and Refs', () => {
       const parent = Obj.make(TestSchema.Person, { name: 'Parent' });
-      const refDxn = DXN.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
-      const parentRef = Ref.fromDXN(refDxn);
+      const refDXN = DXN.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
+      const parentRef = Ref.fromDXN(refDXN);
       const filter = Filter.childOf([parent, parentRef]);
 
       expect(filter.ast).toMatchObject({

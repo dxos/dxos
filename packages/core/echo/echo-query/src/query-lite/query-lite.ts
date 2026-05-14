@@ -111,7 +111,7 @@ class FilterClass implements Filter$.Any {
     }
     return new FilterClass({
       type: 'object',
-      typename: makeTypeDxn(schema),
+      typename: makeTypeDXN(schema),
       ...propsFilterToAst(props ?? {}),
     });
   }
@@ -119,7 +119,7 @@ class FilterClass implements Filter$.Any {
   static typename(typename: string): Filter$.Any {
     return new FilterClass({
       type: 'object',
-      typename: makeTypeDxn(typename),
+      typename: makeTypeDXN(typename),
       props: {},
     });
   }
@@ -598,7 +598,7 @@ const isRef = (obj: any): obj is Ref.Ref<any> => {
   return obj && typeof obj === 'object' && RefTypeId in obj;
 };
 
-const makeTypeDxn = (typename: string) => {
+const makeTypeDXN = (typename: string) => {
   assertArgument(typeof typename === 'string', 'typename');
   assertArgument(!typename.startsWith('dxn:'), 'typename');
   return `dxn:type:${typename}`;

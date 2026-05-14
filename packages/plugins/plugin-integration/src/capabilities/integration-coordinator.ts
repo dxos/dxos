@@ -235,7 +235,7 @@ type PendingSnapshot = {
   tokenSnapshot: { source: string; account?: string; scopes: readonly string[] };
   integrationSnapshot: { name: string; providerId: string };
   /** Serialized DXN of the existing target to attach the first new selection to. */
-  existingTargetDxn?: string;
+  existingTargetDXN?: string;
 };
 
 const writePendingSnapshot = (accessTokenId: string, snapshot: PendingSnapshot): void => {
@@ -387,7 +387,7 @@ export default Capability.makeModule(
             providerId: provider.id,
             tokenSnapshot: { source: provider.source, account, scopes: oauth.scopes },
             integrationSnapshot: { name: label, providerId: provider.id },
-            ...(existingTarget ? { existingTargetDxn: existingTarget.dxn.toString() } : {}),
+            ...(existingTarget ? { existingTargetDXN: existingTarget.dxn.toString() } : {}),
           });
         }
 
@@ -468,8 +468,8 @@ export default Capability.makeModule(
           targets: [],
         });
 
-        const existingTarget = snapshot.existingTargetDxn
-          ? space.db.makeRef<Obj.Any>(DXN.parse(snapshot.existingTargetDxn))
+        const existingTarget = snapshot.existingTargetDXN
+          ? space.db.makeRef<Obj.Any>(DXN.parse(snapshot.existingTargetDXN))
           : undefined;
 
         yield* finalizePendingEntry(invoker, { token, integration, db: space.db, provider, existingTarget });

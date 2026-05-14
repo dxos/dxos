@@ -70,11 +70,13 @@
 
   .dx-grid {
     --grid-cell-surface: var(--color-grid-surface);
+    --grid-cell-text: var(--color-grid-text);
 
     [role='gridcell'],
     [role='columnheader'],
     [role='rowheader'] {
       background: var(--grid-cell-surface);
+      color: var(--grid-cell-text);
       cursor: pointer;
       position: relative;
 
@@ -126,6 +128,7 @@
       [role='rowheader'] {
         &[aria-selected] {
           --grid-cell-surface: var(--color-grid-selection-surface);
+          --grid-cell-text: var(--color-grid-selection-text);
 
           &:focus:not([aria-readonly='true']),
           &:focus-visible,
@@ -179,6 +182,7 @@
             z-index: 1;
 
             background: var(--grid-cell-surface);
+            color: var(--grid-cell-text);
           }
 
           &:not([aria-readonly='true']) > .dx-grid__cell__content {
