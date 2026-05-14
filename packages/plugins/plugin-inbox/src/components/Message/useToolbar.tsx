@@ -11,9 +11,18 @@ import { meta } from '#meta';
 
 export type ViewMode = 'plain' | 'enriched' | 'plain-only';
 
+/**
+ * How the selected block's text is rendered.
+ *   - `markdown`: parsed and decorated via the markdown extensions.
+ *   - `plain`:    shown verbatim, no markdown parsing.
+ */
+export type RenderMode = 'markdown' | 'plain';
+
 export type UseMessageToolbarActionsProps = {
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
+  renderMode: RenderMode;
+  setRenderMode: (mode: RenderMode) => void;
   onOpen?: () => void;
   onReply?: () => void;
   onReplyAll?: () => void;
@@ -23,6 +32,8 @@ export type UseMessageToolbarActionsProps = {
 export const useMessageActions = ({
   viewMode,
   setViewMode,
+  renderMode,
+  setRenderMode,
   onOpen,
   onReply,
   onReplyAll,
@@ -106,9 +117,30 @@ export const useMessageActions = ({
           edges.push({ source: 'root', target: action.id, relation: 'child' });
         }
 
+        // Render mode toggle: parse the body as markdown vs show it verbatim.
+        {
+          const action = createMenuAction(
+            'renderMode',
+            () => {
+              setRenderMode(renderMode === 'markdown' ? 'plain' : 'markdown');
+            },
+            {
+              label: [
+                renderMode === 'markdown'
+                  ? 'message toolbar show plain text'
+                  : 'message toolbar show markdown',
+                { ns: meta.id },
+              ],
+              icon: renderMode === 'markdown' ? 'ph--text-t--regular' : 'ph--markdown-logo--regular',
+            },
+          );
+          nodes.push(action);
+          edges.push({ source: 'root', target: action.id, relation: 'child' });
+        }
+
         return { nodes, edges };
       }),
-    [viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward],
+    [viewMode, setViewMode, renderMode, setRenderMode, onOpen, onReply, onReplyAll, onForward],
   );
 
   return useMenuActions(creator);
