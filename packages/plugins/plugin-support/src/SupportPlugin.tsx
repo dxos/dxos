@@ -4,7 +4,7 @@
 
 import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { SpaceEvents } from '@dxos/plugin-space';
+import { ClientEvents } from '@dxos/plugin-client';
 
 import {
   AppGraphBuilder,
@@ -42,7 +42,7 @@ export const SupportPlugin = Plugin.define<SupportPluginOptions>(meta).pipe(
   })),
   Plugin.addModule({
     id: 'welcome-provisioner',
-    activatesOn: SpaceEvents.PersonalSpaceReady,
+    activatesOn: ClientEvents.SpacesReady,
     activate: WelcomeProvisioner,
   }),
   Plugin.addModule({
