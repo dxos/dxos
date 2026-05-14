@@ -11,10 +11,8 @@ import { Operation } from '@dxos/compute';
 
 import { meta } from '#meta';
 
-const HELP_OPERATION = `${meta.id}.operation`;
-
 export const Start = Operation.make({
-  meta: { key: `${HELP_OPERATION}.start`, name: 'Start Help' },
+  meta: { key: `${meta.id}.operation.start-welcome-tour`, name: 'Start welcome tour' },
   services: [Capability.Service],
   input: Schema.Void,
   output: Schema.Void,
