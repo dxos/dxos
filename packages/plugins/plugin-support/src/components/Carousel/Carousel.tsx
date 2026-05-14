@@ -163,7 +163,7 @@ const CarouselViewport = ({ children, classNames }: CarouselViewportProps) => {
   return (
     <div
       className={mx(
-        'relative w-full aspect-video overflow-hidden rounded-md bg-baseSurface border border-separator',
+        'relative w-full aspect-video overflow-hidden rounded-sm bg-baseSurface border border-separator',
         // Subtle focus ring so keyboard users can tell the viewport is focused.
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500',
         classNames,

@@ -42,7 +42,7 @@ const SAMPLE_SLIDES: Slide[] = [
 type DefaultStoryProps = { slides: Slide[]; intervalMs?: number };
 
 const DefaultStory = ({ slides, intervalMs }: DefaultStoryProps) => (
-  <Carousel.Root count={slides.length} intervalMs={intervalMs}>
+  <Carousel.Root classNames='pt-4' count={slides.length} intervalMs={intervalMs}>
     <Carousel.Frame>
       <Carousel.Previous />
       <Carousel.Viewport>
