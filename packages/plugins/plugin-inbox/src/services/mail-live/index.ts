@@ -14,6 +14,15 @@ import { SmtpLive } from './smtp-live';
 export { ImapLive } from './imap-live';
 export { SmtpLive } from './smtp-live';
 
+// Raw transport clients. Exposed so thin edge services (e.g. mail-service) can use
+// them as stateless RPC backends without going through the Effect Layer plumbing.
+export { ImapClient } from './internal/imap-client';
+export type { ImapClientAuth, ImapClientOptions, MailboxState, RawEnvelope } from './internal/imap-client';
+export { SmtpClient } from './internal/smtp-client';
+export type { SmtpClientAuth, SmtpClientOptions, SmtpSendOptions } from './internal/smtp-client';
+export { composeMessage } from './internal/mime';
+export type { ComposeInput } from './internal/mime';
+
 /**
  * Convenience layer that bundles {@link ImapLive} and {@link SmtpLive}.
  * Consumers in the edge compute-intrinsics worker provide this alongside the
