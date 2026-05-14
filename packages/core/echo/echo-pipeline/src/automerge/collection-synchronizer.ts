@@ -12,6 +12,7 @@ import { type Context, Resource } from '@dxos/context';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { defaultMap } from '@dxos/util';
+import { PeerNotFoundError } from './errors';
 
 const MIN_QUERY_INTERVAL = 5_000;
 
@@ -190,7 +191,15 @@ export class CollectionSynchronizer extends Resource {
     const perCollectionState = this._getOrCreatePerCollectionState(collectionId);
 
     if (perCollectionState.localState) {
-      this._sendCollectionState(collectionId, peerId, perCollectionState.localState);
+      try {
+        this._sendCollectionState(collectionId, peerId, perCollectionState.localState);
+      } catch (error) {
+        if (PeerNotFoundError.is(error)) {
+          log('peer not found when sending collection state callback', { error });
+          return;
+        }
+        throw error;
+      }
     }
   }
 
@@ -276,7 +285,15 @@ export class CollectionSynchronizer extends Resource {
       const lastBroadcast = perCollectionState.lastBroadcast.get(peerId) ?? 0;
       if (Date.now() - lastBroadcast > MIN_QUERY_INTERVAL) {
         perCollectionState.lastBroadcast.set(peerId, Date.now());
-        this._sendCollectionState(collectionId, peerId, localState);
+        try {
+          this._sendCollectionState(collectionId, peerId, localState);
+        } catch (error) {
+          if (PeerNotFoundError.is(error)) {
+            log('peer not found when broadcasting collection state', { error });
+            return;
+          }
+          throw error;
+        }
       }
     }
   }
