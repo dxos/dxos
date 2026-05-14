@@ -19,8 +19,8 @@ import { useAsyncEffect } from '@dxos/react-ui';
 import { type ChatEvent } from '#components';
 import { useBlueprintRegistry, useContextBinder } from '#hooks';
 import { AssistantOperation } from '#types';
-import { parseSuggestions } from '../../util/suggestions';
 
+import { parseSuggestions } from '../../util/suggestions';
 import ChatContainer from '../ChatContainer';
 
 export type ChatCompanionProps = AppSurface.ArticleProps<Chat.Chat, {}, Obj.Unknown>;
