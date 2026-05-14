@@ -272,6 +272,17 @@ export class EchoHost extends Resource {
   }
 
   protected override async _close(ctx: Context): Promise<void> {
+    // Drain any in-flight indexer task before the Resource base disposes
+    // `this._ctx`. Without this, an in-flight `DataServiceImpl.updateIndexes`
+    // RPC handler's `do { await runBlocking() } while (!_indexesUpToDate)`
+    // loop can hit a disposed ctx on its next iteration and throw
+    // `ContextDisposedError` — which escapes as an unhandled rejection
+    // because the originating client `flush()` is fire-and-forget at the
+    // test layer. The cooperative `_indexesUpToDate = true` set inside
+    // `_runUpdateIndexes` lets the loop exit cleanly once the current
+    // iteration finishes.
+    await this._updateIndexes?.join();
+
     await this._queryService.close(ctx);
     await this._spaceStateManager.close(ctx);
     await this._automergeHost.close();
@@ -386,6 +397,10 @@ export class EchoHost extends Resource {
 
   private _runUpdateIndexes = async (): Promise<void> => {
     if (this._ctx.disposed || !this.isOpen) {
+      // Signal the `updateIndexes` RPC handler's `do-while` loop to exit
+      // cooperatively. Without this, the loop sees `_indexesUpToDate === false`
+      // and calls `runBlocking` again, which throws on the disposed context.
+      this._indexesUpToDate = true;
       return;
     }
 
@@ -412,6 +427,7 @@ export class EchoHost extends Resource {
         });
       }
       if (this._ctx.disposed || !this.isOpen) {
+        this._indexesUpToDate = true;
         return;
       }
 
@@ -459,6 +475,7 @@ export class EchoHost extends Resource {
       }
     } catch (err) {
       if (this._ctx.disposed || !this.isOpen) {
+        this._indexesUpToDate = true;
         return;
       }
       log.catch(err);
