@@ -77,7 +77,7 @@ export const SearchDocs = Operation.make({
       description: 'Search query.',
     }),
     limit: Schema.optional(
-      Schema.Number.annotations({
+      Schema.Number.pipe(Schema.int(), Schema.positive()).annotations({
         description: 'Maximum number of results to return.',
       }),
     ),
