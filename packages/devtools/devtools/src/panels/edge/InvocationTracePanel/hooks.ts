@@ -52,9 +52,9 @@ export const useInvocationTargetsForScript = (target: Obj.Unknown | undefined) =
   }, [functions, target]);
 };
 
-export const useInvocationSpans = ({ queueDxn, target }: { queueDxn?: DXN; target?: Obj.Unknown }) => {
+export const useInvocationSpans = ({ feedDxn, target }: { feedDxn?: DXN; target?: Obj.Unknown }) => {
   const functionsForScript = useInvocationTargetsForScript(target);
-  const items = useFeedQueryByDxn(queueDxn, Filter.everything());
+  const items = useFeedQueryByDxn(feedDxn, Filter.everything());
   const events = useMemo(
     () =>
       items.filter(

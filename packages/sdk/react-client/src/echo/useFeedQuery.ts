@@ -13,7 +13,6 @@ import { useClient } from '../client';
 /**
  * Reactive query against a `Feed.Feed`.
  *
- * Bridges the Feed schema layer to the queue-shaped underlying storage.
  * Pass a `Feed.Feed` (e.g. resolved from `Ref(Feed.Feed)`) and a query/filter;
  * subscriptions are managed via the same machinery as `useQuery`.
  *
@@ -38,40 +37,40 @@ export const useFeedQuery: {
 };
 
 /**
- * Reactive query against a feed addressed by its underlying queue DXN.
+ * Reactive query against a feed addressed by its DXN.
  *
  * DXN-driven counterpart to `useFeedQuery` — for debug UIs (e.g. devtools) and
- * other consumers that hold a raw queue DXN and don't have a materialized
+ * other consumers that hold a raw feed DXN and don't have a materialized
  * `Feed.Feed` object.
  *
  * @example
  * ```ts
- * const items = useFeedQueryByDxn(queueDxn, Filter.everything());
+ * const items = useFeedQueryByDxn(feedDxn, Filter.everything());
  * ```
  */
 export const useFeedQueryByDxn: {
   <Q extends Query.Any, O extends Entity.Entity<Query.Type<Q>> = Entity.Entity<Query.Type<Q>>>(
-    queueDxn: DXN | undefined,
+    feedDxn: DXN | undefined,
     query: Q,
   ): O[];
 
   <F extends Filter.Any, O extends Entity.Entity<Filter.Type<F>> = Entity.Entity<Filter.Type<F>>>(
-    queueDxn: DXN | undefined,
+    feedDxn: DXN | undefined,
     filter: F,
   ): O[];
-} = (queueDxn: DXN | undefined, queryOrFilter: Query.Any | Filter.Any): Entity.Any[] => {
+} = (feedDxn: DXN | undefined, queryOrFilter: Query.Any | Filter.Any): Entity.Any[] => {
   const client = useClient();
-  const dxnString = queueDxn?.toString();
+  const dxnString = feedDxn?.toString();
 
   const queue = useMemo(() => {
-    if (!queueDxn) {
+    if (!feedDxn) {
       return undefined;
     }
-    const parts = queueDxn.asQueueDXN();
+    const parts = feedDxn.asQueueDXN();
     if (!parts) {
       return undefined;
     }
-    return client.spaces.get(parts.spaceId)?.queues.get(queueDxn);
+    return client.spaces.get(parts.spaceId)?.queues.get(feedDxn);
   }, [client, dxnString]);
 
   return useQuery(queue, queryOrFilter as any);

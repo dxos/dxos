@@ -140,8 +140,8 @@ const QueueStory = ({
   const [running, setRunning] = useState(true);
   const [space] = useSpaces();
   const members = useMembers(space?.id).map((member) => member.identity);
-  const queueDxn = useTestTranscriptionQueue(space, queueId, running, 2_000);
-  const messages = useFeedQueryByDxn(queueDxn, Filter.type(Message.Message));
+  const feedDxn = useTestTranscriptionQueue(space, queueId, running, 2_000);
+  const messages = useFeedQueryByDxn(feedDxn, Filter.type(Message.Message));
   const model = useFeedModelAdapter(renderByline(members), messages, initialMessages);
 
   return (
@@ -154,8 +154,8 @@ const EntityExtractionQueueStory = () => {
   const [running, setRunning] = useState(true);
   const [space] = useSpaces();
   const members = useMembers(space?.key).map((member) => member.identity);
-  const queueDxn = useTestTranscriptionQueueWithEntityExtraction(space, undefined, running, 2_000);
-  const messages = useFeedQueryByDxn(queueDxn, Filter.type(Message.Message));
+  const feedDxn = useTestTranscriptionQueueWithEntityExtraction(space, undefined, running, 2_000);
+  const messages = useFeedQueryByDxn(feedDxn, Filter.type(Message.Message));
   const model = useFeedModelAdapter(renderByline(members), messages, []);
 
   return <TranscriptContainer model={model} running={running} onRunningChange={setRunning} />;

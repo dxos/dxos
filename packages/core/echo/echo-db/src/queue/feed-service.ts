@@ -55,13 +55,13 @@ export const createFeedServiceLayer = (queues: QueueAPI) =>
       await queue.sync(options);
     },
 
-    appendByDxn: async (queueDxn: DXN, items: Entity.Unknown[]): Promise<void> => {
-      const queue = queues.get(queueDxn);
+    appendByDxn: async (feedDxn: DXN, items: Entity.Unknown[]): Promise<void> => {
+      const queue = queues.get(feedDxn);
       await queue.append(items);
     },
 
-    queryByDxn: (queueDxn: DXN, queryOrFilter: Query.Any | Filter.Any) => {
-      const queue = queues.get(queueDxn) as QueueImpl;
+    queryByDxn: (feedDxn: DXN, queryOrFilter: Query.Any | Filter.Any) => {
+      const queue = queues.get(feedDxn) as QueueImpl;
       return queue.query(queryOrFilter as any);
     },
   });

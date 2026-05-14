@@ -9,7 +9,7 @@ import { InvocationTraceContainer, type InvocationTraceContainerProps } from './
 
 export type InvocationTracePanelProps = Pick<
   InvocationTraceContainerProps,
-  'db' | 'queueDxn' | 'target' | 'detailAxis'
+  'db' | 'feedDxn' | 'target' | 'detailAxis'
 >;
 
 export const InvocationTracePanel = ({ detailAxis = 'inline', ...props }: InvocationTracePanelProps) => {

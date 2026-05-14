@@ -32,7 +32,7 @@ import { formatDuration } from './utils';
 
 export type InvocationTraceContainerProps = {
   db?: Database.Database;
-  queueDxn?: DXN;
+  feedDxn?: DXN;
   showSpaceSelector?: boolean;
   target?: Obj.Unknown;
   detailAxis?: 'block' | 'inline';
@@ -45,7 +45,7 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
     {
       classNames,
       db,
-      queueDxn,
+      feedDxn,
       detailAxis = 'inline',
       showSpaceSelector = false,
       target,
@@ -55,7 +55,7 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
     forwardedRef,
   ) => {
     const resolver = useFunctionNameResolver({ db });
-    const hookSpans = useInvocationSpans({ queueDxn, target });
+    const hookSpans = useInvocationSpans({ feedDxn, target });
     const invocationSpans = invocationSpansProp ?? hookSpans;
 
     const [selectedId, setSelectedId] = useState<string>();

@@ -106,7 +106,7 @@ export interface SyncOptions {
 export const make = (props: Obj.MakeProps<typeof Feed> = {}): Feed => Obj.make(Feed, props);
 
 /**
- * Derives the queue DXN from the feed object's DXN.
+ * Derives the feed DXN from the feed object's DXN.
  * Returns `undefined` when the feed is not stored in a space yet.
  *
  * Used internally by the feed service layer.
@@ -177,20 +177,20 @@ export class FeedService extends Context.Tag('@dxos/echo/Feed/FeedService')<
     sync(feed: Feed, options?: SyncOptions): Promise<void>;
 
     /**
-     * Appends items to a feed addressed by its underlying queue DXN, without requiring
-     * a persisted `Feed.Feed` object. Used by ad-hoc / per-invocation feeds (e.g. trace
-     * event queues) where materializing a `Feed.Feed` per write would be wasteful.
+     * Appends items to a feed addressed by its DXN, without requiring a persisted
+     * `Feed.Feed` object. Used by ad-hoc / per-invocation feeds (e.g. trace event
+     * feeds) where materializing a `Feed.Feed` per write would be wasteful.
      */
-    appendByDxn(queueDxn: DXN, items: Entity.Unknown[]): Promise<void>;
+    appendByDxn(feedDxn: DXN, items: Entity.Unknown[]): Promise<void>;
 
     /**
-     * Queries items in a feed addressed by its underlying queue DXN.
+     * Queries items in a feed addressed by its DXN.
      * DXN-driven counterpart to `query()` — for debug UIs and other consumers
-     * that hold a raw queue DXN and don't have a materialized `Feed.Feed`.
+     * that hold a raw feed DXN and don't have a materialized `Feed.Feed`.
      */
     queryByDxn: {
-      <Q extends Query.Any>(queueDxn: DXN, query: Q): QueryResult.QueryResult<Query.Type<Q>>;
-      <F extends Filter.Any>(queueDxn: DXN, filter: F): QueryResult.QueryResult<Filter.Type<F>>;
+      <Q extends Query.Any>(feedDxn: DXN, query: Q): QueryResult.QueryResult<Query.Type<Q>>;
+      <F extends Filter.Any>(feedDxn: DXN, filter: F): QueryResult.QueryResult<Filter.Type<F>>;
     };
   }
 >() {}
@@ -340,58 +340,58 @@ export const sync = (feed: Feed, options?: SyncOptions): Effect.Effect<void, nev
   });
 
 /**
- * Appends items to a feed addressed by its underlying queue DXN.
+ * Appends items to a feed addressed by its DXN.
  * Use when a `Feed.Feed` object hasn't been (or won't be) materialized — e.g. ad-hoc
- * per-invocation trace queues.
+ * per-invocation trace feeds.
  *
  * @example
  * ```ts
- * yield* Feed.appendByDxn(queueDxn, [Obj.make(TraceEvent, { ... })]);
+ * yield* Feed.appendByDxn(feedDxn, [Obj.make(TraceEvent, { ... })]);
  * ```
  */
-export const appendByDxn = (queueDxn: DXN, items: Entity.Unknown[]): Effect.Effect<void, never, FeedService> =>
+export const appendByDxn = (feedDxn: DXN, items: Entity.Unknown[]): Effect.Effect<void, never, FeedService> =>
   Effect.gen(function* () {
     const service = yield* FeedService;
-    yield* Effect.promise(() => service.appendByDxn(queueDxn, items));
+    yield* Effect.promise(() => service.appendByDxn(feedDxn, items));
   });
 
 /**
- * Creates a reactive query over items in a feed addressed by its underlying queue DXN.
+ * Creates a reactive query over items in a feed addressed by its DXN.
  * DXN-driven counterpart to `query()` — for debug UIs and other consumers that hold a
- * raw queue DXN.
+ * raw feed DXN.
  *
  * @example
  * ```ts
- * const result = yield* Feed.queryByDxn(queueDxn, Filter.everything());
+ * const result = yield* Feed.queryByDxn(feedDxn, Filter.everything());
  * ```
  */
 export const queryByDxn: {
   <Q extends Query.Any>(
-    queueDxn: DXN,
+    feedDxn: DXN,
     query: Q,
   ): Effect.Effect<QueryResult.QueryResult<Query.Type<Q>>, never, FeedService>;
   <F extends Filter.Any>(
-    queueDxn: DXN,
+    feedDxn: DXN,
     filter: F,
   ): Effect.Effect<QueryResult.QueryResult<Filter.Type<F>>, never, FeedService>;
-} = (queueDxn: DXN, queryOrFilter: Query.Any | Filter.Any) =>
+} = (feedDxn: DXN, queryOrFilter: Query.Any | Filter.Any) =>
   FeedService.pipe(
-    Effect.map((service) => service.queryByDxn(queueDxn, queryOrFilter as any) as QueryResult.QueryResult<any>),
+    Effect.map((service) => service.queryByDxn(feedDxn, queryOrFilter as any) as QueryResult.QueryResult<any>),
   );
 
 /**
- * Executes a feed query addressed by queue DXN once and returns the results.
+ * Executes a feed query addressed by DXN once and returns the results.
  *
  * @example
  * ```ts
- * const items = yield* Feed.runQueryByDxn(queueDxn, Filter.type(Person));
+ * const items = yield* Feed.runQueryByDxn(feedDxn, Filter.type(Person));
  * ```
  */
 export const runQueryByDxn: {
-  <Q extends Query.Any>(queueDxn: DXN, query: Q): Effect.Effect<Query.Type<Q>[], never, FeedService>;
-  <F extends Filter.Any>(queueDxn: DXN, filter: F): Effect.Effect<Filter.Type<F>[], never, FeedService>;
-} = (queueDxn: DXN, queryOrFilter: Query.Any | Filter.Any) =>
-  queryByDxn(queueDxn, queryOrFilter as any).pipe(
+  <Q extends Query.Any>(feedDxn: DXN, query: Q): Effect.Effect<Query.Type<Q>[], never, FeedService>;
+  <F extends Filter.Any>(feedDxn: DXN, filter: F): Effect.Effect<Filter.Type<F>[], never, FeedService>;
+} = (feedDxn: DXN, queryOrFilter: Query.Any | Filter.Any) =>
+  queryByDxn(feedDxn, queryOrFilter as any).pipe(
     Effect.flatMap((queryResult) => Effect.promise(() => queryResult.run())),
   );
 
@@ -425,13 +425,13 @@ export const nextOption = <T = Obj.Snapshot>(_cursor: Cursor<T>): Effect.Effect<
 
 /**
  * Sets the local retention policy for a feed.
- * Currently stubbed — queues do not yet support retention.
+ * Currently stubbed — feeds do not yet support retention.
  *
  * @example
  * ```ts
  * yield* Feed.setRetention(feed, { count: 1000 });
  * ```
  */
-// TODO(feed): Implement when queue retention is supported.
+// TODO(dmaretskyi): Implement when feed retention is supported.
 export const setRetention = (_feed: Feed, _options: RetentionOptions): Effect.Effect<void, never, FeedService> =>
   Effect.void;
