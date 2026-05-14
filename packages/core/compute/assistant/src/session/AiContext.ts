@@ -14,7 +14,7 @@ import * as Schema from 'effect/Schema';
 
 import { Blueprint } from '@dxos/compute';
 import { Resource } from '@dxos/context';
-import { DXN, Feed, Obj, type QueryResult, Query, Ref, Type } from '@dxos/echo';
+import { Feed, Obj, type QueryResult, Query, Ref, Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 import { EchoId } from '@dxos/keys';
 import { log } from '@dxos/log';

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Feed, Obj } from '@dxos/echo';

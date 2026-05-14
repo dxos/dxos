@@ -7,7 +7,6 @@ import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Database, type Entity, Filter, type Hypergraph, Query, Ref } from '@dxos/echo';
 import { batchEvents, type AnyProperties, setRefResolver } from '@dxos/echo/internal';
-import { failedInvariant } from '@dxos/invariant';
 import { DXN, EchoId, type ObjectId, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';

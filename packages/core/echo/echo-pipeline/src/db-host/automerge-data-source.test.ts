@@ -9,7 +9,7 @@ import { Context } from '@dxos/context';
 import { type DatabaseDirectory, ObjectStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import { runAndForwardErrors } from '@dxos/effect';
 import { type IndexCursor } from '@dxos/index-core';
-import { DXN, SpaceId, type URI } from '@dxos/keys';
+import { DXN, SpaceId } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';

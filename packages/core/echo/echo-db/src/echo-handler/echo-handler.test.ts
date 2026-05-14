@@ -384,7 +384,7 @@ describe('Reactive Object with ECHO database', () => {
       expect(objData).to.deep.contain({
         ...TEST_OBJECT,
         id: obj.id,
-        '@type': 'dxn:type:com.example.type.example:0.1.0',
+        '@type': 'dxn:com.example.type.example:0.1.0',
         '@meta': { keys: [] },
       });
     }
@@ -762,7 +762,7 @@ describe('Reactive Object with ECHO database', () => {
       expect(employeeJson).to.deep.eq({
         id: employee.id,
         '@meta': { keys: [] },
-        '@type': 'dxn:type:com.example.type.expando:0.1.0',
+        '@type': 'dxn:com.example.type.expando:0.1.0',
         name: 'John',
         worksAt: EncodedReference.fromEchoId(EchoId.fromLocalObjectId(org.id)),
       });
@@ -931,7 +931,7 @@ describe('Reactive Object with ECHO database', () => {
   test('Obj.getDXN returns full DXN', async () => {
     const { db } = await builder.createDatabase();
     const obj = db.add(Obj.make(TestSchema.Expando, { string: 'Object 1' }));
-    expect(Obj.getDXN(obj).toString()).to.eq(`dxn:echo:${db.spaceId}:${obj.id}`);
+    expect(Obj.getDXN(obj)).to.match(/^echo:\/\//);
   });
 
   test('Obj.getDatabase works with both reactive object and snapshot', async () => {

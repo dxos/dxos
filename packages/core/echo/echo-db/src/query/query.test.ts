@@ -496,16 +496,16 @@ describe('Query', () => {
       const contactV2 = Obj.make(ContactV2, { name: 'Brian Smith' });
       await queue.append([contactV1, contactV2]);
 
-      const both = await queue.query(Query.select(Filter.typeDXN('dxn:type:com.example.type.person'))).run();
+      const both = await queue.query(Query.select(Filter.typeDXN('dxn:com.example.type.person'))).run();
       expect(both).toHaveLength(2);
 
       const v1 = await queue
-        .query(Query.select(Filter.typeDXN('dxn:type:com.example.type.person:0.1.0')))
+        .query(Query.select(Filter.typeDXN('dxn:com.example.type.person:0.1.0')))
         .run();
       expect(v1).toEqual([contactV1]);
 
       const v2 = await queue
-        .query(Query.select(Filter.typeDXN('dxn:type:com.example.type.person:0.2.0')))
+        .query(Query.select(Filter.typeDXN('dxn:com.example.type.person:0.2.0')))
         .run();
       expect(v2).toEqual([contactV2]);
     });
@@ -748,9 +748,8 @@ describe('Query', () => {
 
       const traceResult = results.find((obj) => obj.title === 'Trace Task');
       expect(traceResult).toBeDefined();
-      // Queue items now receive ECHO-kind DXNs (echo://spaceId/itemId).
       const dxnString = Obj.getDXN(traceResult!).toString();
-      expect(dxnString).toMatch(/^dxn:echo:/);
+      expect(dxnString).toMatch(/^echo:\/\//);
     });
 
     test('Filter.text with includeFeeds includes trace subspace queue results', async () => {
@@ -770,9 +769,8 @@ describe('Query', () => {
 
       const traceResult = results.find((obj) => obj.title === 'Trace TypeScript Task');
       expect(traceResult).toBeDefined();
-      // Queue items now receive ECHO-kind DXNs (echo://spaceId/itemId).
       const dxnString = Obj.getDXN(traceResult!).toString();
-      expect(dxnString).toMatch(/^dxn:echo:/);
+      expect(dxnString).toMatch(/^echo:\/\//);
     });
 
     test('from(all-accessible-spaces) via graph queries type across spaces', async () => {
@@ -1147,10 +1145,10 @@ describe('Query', () => {
         await assertQuery(db, Filter.type(ContactV1), [contactV1]);
         await assertQuery(db, Filter.type(ContactV1), [contactV1]);
         await assertQuery(db, Filter.type(ContactV2), [contactV2]);
-        await assertQuery(db, Filter.typeDXN('dxn:type:com.example.type.person'), [contactV1, contactV2]);
-        await assertQuery(db, Filter.typeDXN('dxn:type:com.example.type.person:0.1.0'), [contactV1]);
-        await assertQuery(db, Filter.typeDXN('dxn:type:com.example.type.person:0.2.0'), [contactV2]);
-        await assertQuery(db, Filter.typeDXN('dxn:type:com.example.type.person:0.2.0'), [contactV2]);
+        await assertQuery(db, Filter.typeDXN('dxn:com.example.type.person'), [contactV1, contactV2]);
+        await assertQuery(db, Filter.typeDXN('dxn:com.example.type.person:0.1.0'), [contactV1]);
+        await assertQuery(db, Filter.typeDXN('dxn:com.example.type.person:0.2.0'), [contactV2]);
+        await assertQuery(db, Filter.typeDXN('dxn:com.example.type.person:0.2.0'), [contactV2]);
       };
 
       await assertQueries(db);

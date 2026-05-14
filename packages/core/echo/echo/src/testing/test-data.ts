@@ -3,7 +3,7 @@
 //
 
 import { DatabaseDirectory, ObjectStructure } from '@dxos/echo-protocol';
-import { EchoId, ObjectId, PublicKey, type URI } from '@dxos/keys';
+import { EchoId, ObjectId, PublicKey } from '@dxos/keys';
 
 import { Type } from '../index';
 import { TestSchema } from './test-schema';
