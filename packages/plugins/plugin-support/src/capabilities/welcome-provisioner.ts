@@ -55,8 +55,6 @@ export default Capability.makeModule(
       }
     });
 
-    return Capability.contributes(Capabilities.Null, null, () =>
-      Effect.sync(() => subscription.unsubscribe()),
-    );
+    return Capability.contributes(Capabilities.Null, null, () => Effect.sync(() => subscription.unsubscribe()));
   }),
 );

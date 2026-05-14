@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Repo } from '@automerge/automerge-repo';
+import { Repo, initSubduction } from '@automerge/automerge-repo';
 import { BroadcastChannelNetworkAdapter } from '@automerge/automerge-repo-network-broadcastchannel';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -60,6 +60,9 @@ const DefaultStory = () => {
 
   useEffect(() => {
     queueMicrotask(async () => {
+      // Subduction-fork `Repo` constructs a `MemorySigner` internally; WASM must be
+      // initialized first or the constructor throws `'set_subduction_logger' of undefined`.
+      await initSubduction();
       const repo1 = new Repo({ network: [new BroadcastChannelNetworkAdapter()] });
       const repo2 = new Repo({ network: [new BroadcastChannelNetworkAdapter()] });
 

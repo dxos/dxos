@@ -227,6 +227,7 @@ export const baseTheme = EditorView.baseTheme({
     textDecorationColor: 'var(--color-separator)',
     textUnderlineOffset: '2px',
     borderRadius: '.125rem',
+    cursor: 'pointer',
   },
   '.cm-link > span': {
     color: 'var(--color-accent-text)',

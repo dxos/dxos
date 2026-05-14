@@ -11,5 +11,6 @@ tasks:
       - '--entryPoint=src/ThemePlugin.ts'
       - '--entryPoint=src/meta.ts'
       - '--entryPoint=src/plugin.ts'
+      - '--entryPoint=src/testing.ts'
       - '--entryPoint=src/translations.ts'
       - '--platform=neutral'
