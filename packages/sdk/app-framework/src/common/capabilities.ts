@@ -28,7 +28,7 @@ import type {
   HistoryTracker as HistoryTracker$,
   UndoMapping as UndoMapping$,
   UndoRegistry as UndoRegistry$,
-} from '../plugin-operation';
+} from '../plugin-process-manager';
 import type { Surface } from '../ui';
 
 /**
@@ -250,7 +250,7 @@ export const OperationInvoker = Capability$.make<OperationInvoker>(
 export type UndoRegistry = UndoRegistry$.UndoRegistry;
 
 /**
- * Undo registry - provided by OperationPlugin.
+ * Undo registry - provided by ProcessManagerPlugin.
  * @category Capability
  */
 export const UndoRegistry = Capability$.make<UndoRegistry>('org.dxos.app-framework.capability.undo-registry');
@@ -258,7 +258,7 @@ export const UndoRegistry = Capability$.make<UndoRegistry>('org.dxos.app-framewo
 export type HistoryTracker = HistoryTracker$.HistoryTracker;
 
 /**
- * History tracker - provided by OperationPlugin.
+ * History tracker - provided by ProcessManagerPlugin.
  * @category Capability
  */
 export const HistoryTracker = Capability$.make<HistoryTracker>('org.dxos.app-framework.capability.history-tracker');

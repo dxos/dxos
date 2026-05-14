@@ -21,7 +21,7 @@ describe('TablePlugin', () => {
       plugins: [ClientPlugin({}), TablePlugin()],
     });
 
-    // After autoStart: OperationHandler auto-cascades from OperationPlugin.
+    // After autoStart: OperationHandler auto-cascades from ProcessManagerPlugin.
     // schema auto-cascades from ClientPlugin.
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([moduleId('OperationHandler'), moduleId('schema')]),

@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
+import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { Dialog } from '@dxos/react-ui';
@@ -30,7 +30,7 @@ const meta = {
   decorators: [
     withTheme(),
     withPluginManager({
-      plugins: [RuntimePlugin(), OperationPlugin(), ClientPlugin({})],
+      plugins: [ProcessManagerPlugin(), ClientPlugin({})],
     }),
   ],
   parameters: {

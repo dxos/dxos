@@ -24,8 +24,9 @@ import { Capability, Plugin } from '../core';
 // Hosts the {@link ProcessManager} runtime for the plugin system.
 //
 // Workflow:
-// 1. Activates {@link ActivationEvents.SetupLayer} so plugins can contribute
-//    {@link Capabilities.LayerSpec} entries.
+// 1. Activates {@link ActivationEvents.SetupProcessManager} so plugins can
+//    contribute {@link Capabilities.LayerSpec} entries and
+//    {@link Capabilities.OperationHandler} sets.
 // 2. Collects all contributed {@link LayerSpec.LayerSpec}s and builds a
 //    {@link LayerStack} whose {@link ServiceResolver} drives process-scoped
 //    service resolution.
@@ -45,8 +46,7 @@ export default Capability.makeModule(
     const pluginManager = yield* Plugin.Service;
     const atomRegistry = yield* Capability.get(Capabilities.AtomRegistry);
 
-    yield* Plugin.activate(ActivationEvents.SetupLayer);
-    yield* Plugin.activate(ActivationEvents.SetupOperationHandler);
+    yield* Plugin.activate(ActivationEvents.SetupProcessManager);
 
     const layerSpecs = yield* Capability.getAll(Capabilities.LayerSpec);
     const handlerSets = yield* Capability.getAll(Capabilities.OperationHandler);

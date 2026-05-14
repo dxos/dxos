@@ -285,7 +285,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
   }),
   Plugin.addModule(({ createAgent, onChatCreated }) => ({
     id: 'com.example.plugin.testing.module.setup',
-    activatesOn: ActivationEvent.allOf(ActivationEvents.ManagedRuntimeReady, ClientEvents.SpacesReady),
+    activatesOn: ActivationEvent.allOf(ActivationEvents.ProcessManagerReady, ClientEvents.SpacesReady),
     activate: Effect.fnUntraced(function* () {
       const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
       const client = yield* Capability.get(ClientCapabilities.Client);
@@ -305,12 +305,9 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
           AgentBlueprint.make(),
         ).pipe(
           Effect.provide(
-            ServiceResolver.provide(
-              { space: space.id },
-              Database.Service,
-              Feed.FeedService,
-              QueueService,
-            ).pipe(Layer.provide(Capability.asLayer(Capabilities.ServiceResolver, ServiceResolver.ServiceResolver))),
+            ServiceResolver.provide({ space: space.id }, Database.Service, Feed.FeedService, QueueService).pipe(
+              Layer.provide(Capability.asLayer(Capabilities.ServiceResolver, ServiceResolver.ServiceResolver)),
+            ),
           ),
         );
         yield* Effect.tryPromise(() => space.db.flush({ indexes: true }));
@@ -334,7 +331,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
   })),
   Plugin.addModule(({ onChatCreated }) => ({
     id: 'com.example.plugin.testing.module.operationHandler',
-    activatesOn: ActivationEvents.SetupOperationHandler,
+    activatesOn: ActivationEvents.SetupProcessManager,
     activate: Effect.fnUntraced(function* () {
       const client = yield* Capability.get(ClientCapabilities.Client);
       return Capability.contributes(

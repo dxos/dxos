@@ -44,7 +44,6 @@ const BaseStory = ({ children, toolbar }: BaseStoryProps) => (
 const DefaultStory = () => {
   const [space] = useSpaces();
   const runtime = useProcessManagerRuntime();
-  const invokeCounterRef = useRef(0);
 
   const handleStart = useCallback(() => {
     if (!runtime) {

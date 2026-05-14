@@ -3,4 +3,4 @@
 //
 
 export * from './history';
-export * from './OperationPlugin';
+export * from './ProcessManagerPlugin';

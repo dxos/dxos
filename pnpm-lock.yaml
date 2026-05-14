@@ -1794,9 +1794,6 @@ catalogs:
     vite-node:
       specifier: ^6.0.0
       version: 6.0.0
-    vite-plugin-css-injected-by-js:
-      specifier: ^5.0.1
-      version: 5.0.1
     vite-plugin-devtools-json:
       specifier: ^0.4.1
       version: 0.4.1
@@ -16080,9 +16077,6 @@ importers:
       cjs-module-lexer:
         specifier: 'catalog:'
         version: 2.2.0
-      vite-plugin-css-injected-by-js:
-        specifier: 'catalog:'
-        version: 5.0.1(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
     devDependencies:
       '@dxos/brand':
         specifier: workspace:*
@@ -39960,11 +39954,6 @@ packages:
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
 
-  vite-plugin-css-injected-by-js@5.0.1:
-    resolution: {integrity: sha512-JSB0jjN4VCKqG7XTUdrwiIl5gA+z2yi/tAl9WHo0X4sdyJ1yrmbLOEjf95TDoDIIuKr4GJIc7lMJG0CT88eEUQ==}
-    peerDependencies:
-      vite: '>=8.0.0'
-
   vite-plugin-devtools-json@0.4.1:
     resolution: {integrity: sha512-pN+QJL+NwZUV+Via8w/Sh6X2pDrVClIMDAXdl7+EteXKB6mcHhsFGGclmxrPx6ZPGKSK5ez5ns64oRpjE5wFCg==}
     peerDependencies:
@@ -62326,10 +62315,6 @@ snapshots:
       - terser
       - tsx
       - yaml
-
-  vite-plugin-css-injected-by-js@5.0.1(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)):
-    dependencies:
-      vite: 8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
   vite-plugin-devtools-json@0.4.1(vite@8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)):
     dependencies:

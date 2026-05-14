@@ -35,7 +35,7 @@ export const SheetPlugin = Plugin.define(meta).pipe(
     activate: SheetState,
   }),
   Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(ClientEvents.ClientReady, ActivationEvents.ManagedRuntimeReady),
+    activatesOn: ActivationEvent.allOf(ClientEvents.ClientReady, ActivationEvents.ProcessManagerReady),
     activate: ComputeGraphRegistry,
   }),
   Plugin.addModule({

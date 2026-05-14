@@ -11,10 +11,10 @@ import {
 } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
+import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { layoutStateAccess } from './state-access';
-import { log } from '@dxos/log';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
   Operation.withHandler(

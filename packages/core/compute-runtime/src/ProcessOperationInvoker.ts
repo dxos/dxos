@@ -120,7 +120,7 @@ export const make = (opts: {
     Effect.gen(function* () {
       const executable = Process.fromOperation(op, opts.handlerSet);
 
-      log.info('spawing process', { opKey: op.meta.key, ...options });
+      log('spawing process', { opKey: op.meta.key, ...options });
       const handle = yield* opts.manager.spawn(executable, {
         ...options,
         parentProcessId: opts.parentProcessId,
@@ -133,9 +133,13 @@ export const make = (opts: {
       // can never race the collector.
       const fiber = yield* fiberFromProcess(handle);
       // TODO(dmaretskyi): Bound `fiberCache` lifetime without breaking attach
-      // of completed processes. We keep cached fibers indefinitely today so
-      // that `attachFiber` can still return the collected exit after the
-      // spawn-side `await` has resolved.
+      // of completed processes (covered by the `attaches to a completed
+      // process` test and relied upon by `agent-process`'s `onChildEvent`).
+      // A naive delete-on-collector-completion observer prunes the entry
+      // before late attachers can read it, and `ProcessHandle.subscribeOutputs`
+      // does not replay a drained queue. Future fix needs either a replayable
+      // exit cache on the handle or coordinated eviction (e.g. ref-count or
+      // TTL).
       fiberCache.set(handle.pid, fiber);
       yield* handle.submitInput(input);
       log('lifecycle: operation input submitted', { opKey: op.meta.key, handle });
@@ -172,7 +176,7 @@ export const make = (opts: {
     const input = args[0] as I;
     const options = args[1] as Operation.InvokeOptions | undefined;
     const traceMeta = options?.tracing as Trace.Meta | undefined;
-    log.info('invoking operation', { opKey: op.meta.key, ...options });
+    log('invoking operation', { opKey: op.meta.key, ...options });
     return Effect.gen(function* () {
       const fiber = yield* invokeFiber(op, input, {
         traceMeta,
@@ -202,7 +206,7 @@ export const make = (opts: {
   ): Effect.Effect<void> => {
     const input = args[0] as I;
     return Effect.gen(function* () {
-      log.info('scheduling operation', { opKey: op.meta.key });
+      log('scheduling operation', { opKey: op.meta.key });
       yield* Ref.update(pendingCount, (count) => count + 1);
       const fiber = yield* invokeFiber(op, input).pipe(
         Effect.ensuring(Ref.update(pendingCount, (count) => count - 1)),
@@ -222,7 +226,7 @@ export const make = (opts: {
     }).pipe(
       Effect.onInterrupt(() =>
         Effect.sync(() => {
-          log.info('operation schedule interrupted', { opKey: op.meta.key });
+          log('operation schedule interrupted', { opKey: op.meta.key });
         }),
       ),
     );

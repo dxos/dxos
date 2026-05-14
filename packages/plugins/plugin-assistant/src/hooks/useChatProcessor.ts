@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { useContext, useMemo, useState } from 'react';
 
-import { AiService } from '@dxos/ai';
+import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { Capabilities } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/ui';
 import { AiSession } from '@dxos/assistant';
@@ -92,6 +92,7 @@ export const useChatProcessor = ({
       AiService.AiService,
       AgentService.AgentService,
       OperationRegistry.Service,
+      OpaqueToolkit.OpaqueToolkitProvider,
     ).pipe(Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)));
 
     log('creating processor', { preset, model: preset?.model, settings });

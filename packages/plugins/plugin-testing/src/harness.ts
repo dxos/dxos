@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationPlugin, type Plugin, RuntimePlugin } from '@dxos/app-framework';
+import { type Plugin, ProcessManagerPlugin } from '@dxos/app-framework';
 import { createTestApp, type TestAppOptions, type TestHarness } from '@dxos/app-framework/testing';
 import { AttentionPlugin } from '@dxos/plugin-attention/plugin';
 import { GraphPlugin } from '@dxos/plugin-graph/plugin';
@@ -26,14 +26,13 @@ export type ComposerTestAppOptions = Omit<TestAppOptions, 'plugins'> & {
 const headlessCorePlugins = (): Plugin.Plugin[] => [
   AttentionPlugin(),
   GraphPlugin(),
-  OperationPlugin(),
-  RuntimePlugin(),
+  ProcessManagerPlugin(),
   SettingsPlugin(),
 ];
 
 /**
  * Creates a TestHarness pre-loaded with the Composer core plugins
- * (Attention, Graph, Operation, Runtime, Settings, optionally Theme).
+ * (Attention, Graph, ProcessManager, Settings, optionally Theme).
  *
  * For a ClientPlugin-backed harness, pass `ClientPlugin({ ... })` via `plugins`.
  */

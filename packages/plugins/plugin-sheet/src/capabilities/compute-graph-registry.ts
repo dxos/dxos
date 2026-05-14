@@ -31,7 +31,7 @@ export default Capability.makeModule(
         getRuntime: (spaceId: SpaceId) => ({
           runPromise: <A, E>(effect: Effect.Effect<A, E, Operation.Service>) =>
             processManagerRuntime.runPromise(
-              effect.pipe(Effect.provide(ServiceResolver.provide({ space: spaceId }, Operation.Service))) as any,
+              effect.pipe(Effect.provide(ServiceResolver.provide({ space: spaceId }, Operation.Service))),
             ),
         }),
       },

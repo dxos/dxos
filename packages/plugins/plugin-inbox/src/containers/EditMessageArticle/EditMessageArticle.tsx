@@ -36,7 +36,6 @@ export const EditMessageArticle = ({ role, subject }: EditMessageArticleProps) =
       return [];
     }
 
-    const spaceLayer = ServiceResolver.provide({ space: spaceId }, AiService.AiService);
     const generate: AssistantOptions['generate'] = ({ instructions, content }) =>
       runtime.runPromise(
         Effect.gen(function* () {
@@ -44,9 +43,13 @@ export const EditMessageArticle = ({ role, subject }: EditMessageArticleProps) =
           const response = yield* LanguageModel.generateText({ prompt });
           return response.text;
         }).pipe(
-          Effect.provide(AiService.model('@anthropic/claude-haiku-4-5').pipe(Layer.orDie)),
-          Effect.provide(spaceLayer),
-        ) as Effect.Effect<string, any, any>,
+          Effect.provide(
+            AiService.model('@anthropic/claude-haiku-4-5').pipe(
+              Layer.orDie,
+              Layer.provide(ServiceResolver.provide({ space: spaceId }, AiService.AiService)),
+            ),
+          ),
+        ),
       );
 
     return [assistant({ generate }), email()];
@@ -58,13 +61,10 @@ export const EditMessageArticle = ({ role, subject }: EditMessageArticleProps) =
         throw new TypeError('Space not available.');
       }
 
-      const spaceLayer = ServiceResolver.provide({ space: spaceId }, Database.Service);
       await runtime.runPromise(
-        Operation.invoke(GmailFunctions.Send, { message }).pipe(Effect.provide(spaceLayer)) as Effect.Effect<
-          unknown,
-          any,
-          any
-        >,
+        Operation.invoke(GmailFunctions.Send, { message }).pipe(
+          Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service)),
+        ),
       );
     },
     [runtime, spaceId],

@@ -21,8 +21,8 @@ describe('GitHubPlugin', () => {
     });
 
     // After autoStart: SetupAppGraph fires (cascading SetupIntegrationProviders via
-    // IntegrationPlugin's AppGraphBuilder), and SetupOperationHandler fires from
-    // OperationPlugin — both reach the GitHubPlugin's modules.
+    // IntegrationPlugin's AppGraphBuilder), and SetupProcessManager fires from
+    // ProcessManagerPlugin — both reach the GitHubPlugin's modules.
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([moduleId('GitHubIntegrationProvider'), moduleId('OperationHandler')]),
     );

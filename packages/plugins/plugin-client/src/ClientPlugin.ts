@@ -49,7 +49,7 @@ export const ClientPlugin = Plugin.define<ClientPluginOptions>(meta).pipe(
   }),
   Plugin.addModule({
     activatesOn: ClientEvents.ClientReady,
-    firesBeforeActivation: [ActivationEvents.SetupLayer],
+    firesBeforeActivation: [ActivationEvents.SetupProcessManager],
     activate: LayerSpecs,
   }),
   Plugin.addModule(

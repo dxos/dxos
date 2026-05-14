@@ -5,11 +5,11 @@
 import React from 'react';
 
 import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
-import { Feed, Filter, Obj } from '@dxos/echo';
-import { useBlueprintRegistry, useChatProcessor, useOnline, usePresets } from '@dxos/plugin-assistant/hooks';
-import { Assistant } from '@dxos/plugin-assistant';
 import { Agent } from '@dxos/assistant-toolkit';
+import { Feed, Filter, Obj } from '@dxos/echo';
+import { Assistant } from '@dxos/plugin-assistant';
 import { Chat } from '@dxos/plugin-assistant/components';
+import { useBlueprintRegistry, useChatProcessor, useOnline, usePresets } from '@dxos/plugin-assistant/hooks';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Panel, Popover, Toolbar } from '@dxos/react-ui';
 

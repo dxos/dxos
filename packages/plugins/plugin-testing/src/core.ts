@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationPlugin, type Plugin, RuntimePlugin } from '@dxos/app-framework';
+import { type Plugin, ProcessManagerPlugin } from '@dxos/app-framework';
 // `/plugin` entrypoints — `@dxos/plugin-attention/plugin`, `/plugin-client/plugin`,
 // `/plugin-graph/plugin`, `/plugin-preview/plugin`, `/plugin-settings/plugin`,
 // `/plugin-space/plugin`, `/plugin-theme/plugin` — re-export the plugin eagerly
@@ -32,8 +32,7 @@ import { defaultTx } from '@dxos/ui-theme';
 export const corePlugins = (): Plugin.Plugin[] => [
   AttentionPlugin(),
   GraphPlugin(),
-  OperationPlugin(),
-  RuntimePlugin(),
+  ProcessManagerPlugin(),
   SettingsPlugin(),
   ThemePlugin({ tx: defaultTx }),
 ];

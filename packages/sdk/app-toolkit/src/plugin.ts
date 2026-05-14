@@ -152,7 +152,7 @@ export namespace AppPlugin {
   ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'operation-handler',
-      activatesOn: options.activatesOn ?? ActivationEvents.SetupOperationHandler,
+      activatesOn: options.activatesOn ?? ActivationEvents.SetupProcessManager,
       firesBeforeActivation: options.firesBeforeActivation,
       firesAfterActivation: options.firesAfterActivation,
       activate: options.activate,
@@ -169,7 +169,7 @@ export namespace AppPlugin {
   ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'undo-mappings',
-      activatesOn: options.activatesOn ?? ActivationEvents.SetupOperationHandler,
+      activatesOn: options.activatesOn ?? ActivationEvents.SetupProcessManager,
       firesBeforeActivation: options.firesBeforeActivation,
       firesAfterActivation: options.firesAfterActivation,
       activate: options.activate,
@@ -220,7 +220,7 @@ export namespace AppPlugin {
   ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'navigation-resolver',
-      activatesOn: options.activatesOn ?? ActivationEvents.OperationInvokerReady,
+      activatesOn: options.activatesOn ?? ActivationEvents.ProcessManagerReady,
       firesBeforeActivation: options.firesBeforeActivation,
       firesAfterActivation: options.firesAfterActivation,
       activate: options.activate,
@@ -242,7 +242,7 @@ export namespace AppPlugin {
         const resolved = options(pluginOptions);
         return {
           id: Capability$.getModuleTag(resolved.activate) ?? resolved.id ?? 'navigation-handler',
-          activatesOn: resolved.activatesOn ?? ActivationEvents.OperationInvokerReady,
+          activatesOn: resolved.activatesOn ?? ActivationEvents.ProcessManagerReady,
           firesBeforeActivation: resolved.firesBeforeActivation,
           firesAfterActivation: resolved.firesAfterActivation,
           activate: resolved.activate,
@@ -251,7 +251,7 @@ export namespace AppPlugin {
     }
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'navigation-handler',
-      activatesOn: options.activatesOn ?? ActivationEvents.OperationInvokerReady,
+      activatesOn: options.activatesOn ?? ActivationEvents.ProcessManagerReady,
       firesBeforeActivation: options.firesBeforeActivation,
       firesAfterActivation: options.firesAfterActivation,
       activate: options.activate,

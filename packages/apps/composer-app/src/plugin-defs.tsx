@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { OperationPlugin, type Plugin, RuntimePlugin } from '@dxos/app-framework';
+import { type Plugin, ProcessManagerPlugin } from '@dxos/app-framework';
 import { APP_DOMAIN } from '@dxos/app-toolkit';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
 import { type IdbLogStore } from '@dxos/log-store-idb';
@@ -122,12 +122,11 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
     IntegrationPlugin.meta.id,
     layoutPluginId,
     isTauri && !isMobile && !isPopover && NativePlugin.meta.id,
-    OperationPlugin.meta.id,
     NavTreePlugin.meta.id,
     ObservabilityPlugin.meta.id,
+    ProcessManagerPlugin.meta.id,
     !isTauri && isPwa && PwaPlugin.meta.id,
     RegistryPlugin.meta.id,
-    RuntimePlugin.meta.id,
     SettingsPlugin.meta.id,
     SpacePlugin.meta.id,
     StatusBarPlugin.meta.id,
@@ -232,7 +231,6 @@ export const getPlugins = ({
     HelpPlugin({ steps }),
     InboxPlugin(),
     IrohBeaconPlugin(),
-    OperationPlugin(),
     KanbanPlugin(),
     layoutPlugin,
     LinearPlugin(),
@@ -254,9 +252,9 @@ export const getPlugins = ({
     PipelinePlugin(),
     PresenterPlugin(),
     PreviewPlugin(),
+    ProcessManagerPlugin(),
     !isTauri && isPwa && PwaPlugin(),
     RegistryPlugin(),
-    RuntimePlugin(),
     isLocal && SamplePlugin(),
     ScriptPlugin(),
     SearchPlugin(),

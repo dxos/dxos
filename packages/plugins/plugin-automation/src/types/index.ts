@@ -4,6 +4,4 @@
 
 export * from './schema';
 
-export * as AutomationCapabilities from './AutomationCapabilities';
-export * as AutomationEvents from './AutomationEvents';
 export * as AutomationOperation from './AutomationOperation';

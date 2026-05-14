@@ -19,7 +19,7 @@ export const AutomationPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     activatesOn: ClientEvents.ClientReady,
-    firesBeforeActivation: [ActivationEvents.SetupLayer],
+    firesBeforeActivation: [ActivationEvents.SetupProcessManager],
     activate: LayerSpecs,
   }),
   Plugin.make,

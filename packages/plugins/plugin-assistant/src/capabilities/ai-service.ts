@@ -34,8 +34,9 @@ export default Capability.makeModule(
     );
 
     return [
-      // Keep the original `AiServiceLayer` contribution for consumers that still read it
-      // directly (e.g. CLI / non-process-manager code paths).
+      // Deprecated: `AppCapabilities.AiServiceLayer` is retained for non-process-manager
+      // call sites (e.g. legacy CLI paths). New consumers should resolve `AiService.AiService`
+      // through the process manager runtime via the `LayerSpec` contribution below.
       Capability.contributes(AppCapabilities.AiServiceLayer, aiServiceLayer),
       Capability.contributes(Capabilities.LayerSpec, aiServiceSpec),
     ];

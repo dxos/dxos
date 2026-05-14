@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
-import { type AiService, DEFAULT_EDGE_MODEL, type ModelName, type ModelRegistry } from '@dxos/ai';
+import { type AiService, DEFAULT_EDGE_MODEL, type ModelName, type ModelRegistry, type OpaqueToolkit } from '@dxos/ai';
 import { Capabilities } from '@dxos/app-framework';
 import {
   AiContext,
@@ -21,7 +21,14 @@ import {
   ToolExecutionServices,
 } from '@dxos/assistant';
 import { type Chat } from '@dxos/assistant-toolkit';
-import { type Blueprint, type Credential, Operation, Trace } from '@dxos/compute';
+import {
+  type Blueprint,
+  type Credential,
+  Operation,
+  type OperationRegistry,
+  type ServiceNotAvailableError,
+  Trace,
+} from '@dxos/compute';
 import { type Database, Feed, Obj, Ref } from '@dxos/echo';
 import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
 import { type QueueService } from '@dxos/functions';
@@ -41,6 +48,21 @@ export type AiChatServices =
   | QueueService
   | AiService.AiService
   | Trace.TraceService;
+
+/**
+ * Space-scoped services materialised by the layer passed into
+ * {@link AiChatProcessor}. Mirrors the tag list that
+ * {@link useChatProcessor} passes to {@link ServiceResolver.provide}.
+ */
+export type SpaceServices =
+  | Database.Service
+  | QueueService
+  | Feed.FeedService
+  | Credential.CredentialsService
+  | AiService.AiService
+  | AgentService.AgentService
+  | OperationRegistry.Service
+  | OpaqueToolkit.OpaqueToolkitProvider;
 
 export type AiChatProcessorOptions = {
   model?: ModelName;
@@ -118,12 +140,14 @@ export class AiChatProcessor {
     private readonly _runtime: Capabilities.ProcessManagerRuntime,
     private readonly _feed: Feed.Feed,
     /**
-     * Pre-built layer that materializes space-scoped services (e.g. from
-     * {@link ServiceResolver.provide}). Provided to every effect run by the
-     * processor so the underlying {@link ProcessManagerRuntime} has access to
-     * space-affinity services.
+     * Pre-built layer that materialises {@link SpaceServices}. Built via
+     * {@link ServiceResolver.provide} with the {@link ServiceResolver} already
+     * supplied (hence `RIn = never`); the {@link ServiceNotAvailableError}
+     * error channel surfaces when a tag is not available for the space.
+     * Provided to every effect run by the processor so the underlying
+     * {@link ProcessManagerRuntime} has access to space-affinity services.
      */
-    private readonly _spaceLayer: Layer.Layer<any, any, never>,
+    private readonly _spaceLayer: Layer.Layer<SpaceServices, ServiceNotAvailableError, never>,
     private readonly _options: AiChatProcessorOptions = defaultOptions,
   ) {
     this.#registry = this._options.observableRegistry ?? Registry.make();
@@ -151,9 +175,7 @@ export class AiChatProcessor {
 
   async getTools(): Promise<Record<string, any>> {
     return this._runtime.runPromise(
-      Effect.provide(this._conversation.getTools(), ToolExecutionServices).pipe(
-        Effect.provide(this._spaceLayer),
-      ) as any,
+      Effect.provide(this._conversation.getTools(), ToolExecutionServices).pipe(Effect.provide(this._spaceLayer)),
     );
   }
 
@@ -167,7 +189,7 @@ export class AiChatProcessor {
         Effect.provideService(AiContext.Service, { binder: this.context }),
         Effect.provide(this._spaceLayer),
         Effect.orDie,
-      ) as any,
+      ),
     );
   }
 
@@ -216,7 +238,7 @@ export class AiChatProcessor {
         yield* this.#maybeUpdateChatName();
       });
 
-      this.#requestFiber = this._runtime.runFork(effect.pipe(Effect.provide(this._spaceLayer)) as any);
+      this.#requestFiber = this._runtime.runFork(effect.pipe(Effect.provide(this._spaceLayer)));
 
       try {
         await this._runtime.runPromise(Fiber.join(this.#requestFiber));
@@ -278,9 +300,7 @@ export class AiChatProcessor {
   async updateName(chat: Chat.Chat): Promise<void> {
     unwrapExit(
       await this._runtime.runPromiseExit(
-        Operation.invoke(AssistantOperation.UpdateChatName, { chat }).pipe(
-          Effect.provide(this._spaceLayer),
-        ) as any,
+        Operation.invoke(AssistantOperation.UpdateChatName, { chat }).pipe(Effect.provide(this._spaceLayer)),
       ),
     );
   }

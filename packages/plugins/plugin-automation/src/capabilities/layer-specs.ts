@@ -16,10 +16,12 @@ import { todo } from '@dxos/debug';
 import { Database, Feed } from '@dxos/echo';
 import { FunctionInvocationService, QueueService } from '@dxos/functions';
 import {
-    AgentService, FeedTraceSink,
-    FunctionImplementationResolver, RemoteFunctionExecutionService,
-    TriggerDispatcher,
-    TriggerStateStore
+  AgentService,
+  FeedTraceSink,
+  FunctionImplementationResolver,
+  RemoteFunctionExecutionService,
+  TriggerDispatcher,
+  TriggerStateStore,
 } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -34,27 +36,6 @@ import { ClientCapabilities } from '@dxos/plugin-client';
 // capability lists, etc.) is resolved via Effect-level requirements rather
 // than captured from an outer scope.
 //
-
-// TODO(dmaretskyi): Deprecated. Removed from the contribution list because the
-// body is `todo()` (never actually provides a working impl) and the declared
-// `requires: [Operation.Service, ...]` causes process-slice init to fail with
-// `ServiceNotAvailableError` — `Operation.Service` is a per-process builtin,
-// not a layer-graph service, so the LayerStack requirements check rejects it.
-// Leaving the definition for now in case the deprecation path needs a stub.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _FunctionInvocationSpec_Deprecated = LayerSpec.make(
-  {
-    affinity: 'process',
-    requires: [Operation.Service, OperationRegistry.Service],
-    provides: [FunctionInvocationService, FunctionImplementationResolver],
-  },
-  () =>
-    Layer.unwrapEffect(
-      Effect.gen(function* () {
-        return todo();
-      }),
-    ),
-);
 
 /**
  * Default application-affinity `RemoteFunctionExecutionService`. Space specs
@@ -228,7 +209,6 @@ export default Capability.makeModule(
     const client = yield* Capability.get(ClientCapabilities.Client);
 
     const contributions: Capability.Any[] = [
-      // FunctionInvocationSpec removed: see _FunctionInvocationSpec_Deprecated above.
       Capability.contributes(Capabilities.LayerSpec, OperationHandlerProviderSpec),
       Capability.contributes(Capabilities.LayerSpec, BlueprintRegistrySpec),
       Capability.contributes(Capabilities.LayerSpec, OpaqueToolkitSpec),
@@ -240,7 +220,12 @@ export default Capability.makeModule(
       Capability.contributes(Capabilities.TraceSink, ({ resolver }) => FeedTraceSink.makeRoutingSink({ resolver })),
       // Edge-mode override is conditional on runtime config, so it stays in the
       // activation block.
-      Capability.contributes(Capabilities.LayerSpec, client.config.get('runtime.client.edgeFeatures.agents') ? RemoteFunctionExecutionSpec : RemoteFunctionExecutionOverrideSpec),
+      Capability.contributes(
+        Capabilities.LayerSpec,
+        client.config.get('runtime.client.edgeFeatures.agents')
+          ? RemoteFunctionExecutionSpec
+          : RemoteFunctionExecutionOverrideSpec,
+      ),
     ];
 
     return contributions;

@@ -49,15 +49,17 @@ const ClientLayerSpec = LayerSpec.make(
 );
 
 /**
- * Space-scoped {@link Database.Service} resolved from the `Client`'s space
- * registry. Fails hard if the context is missing a `space` id or the client
- * cannot resolve it — both indicate a configuration bug in the layer graph.
+ * Space-scoped database/queue/feed services resolved from the `Client`'s space
+ * registry. One spec for all three so the `client.spaces.get` /
+ * `waitUntilReady` round-trip only happens once per space slice. Fails hard if
+ * the context is missing a `space` id or the client cannot resolve it — both
+ * indicate a configuration bug in the layer graph.
  */
 const DatabaseLayerSpec = LayerSpec.make(
   {
     affinity: 'space',
     requires: [ClientService],
-    provides: [Database.Service],
+    provides: [Database.Service, QueueService, Feed.FeedService],
   },
   (context) =>
     Layer.unwrapEffect(
@@ -67,45 +69,7 @@ const DatabaseLayerSpec = LayerSpec.make(
         const space = client.spaces.get(context.space);
         invariant(space, `space not found on client: ${context.space}`);
         yield* Effect.promise(() => space.waitUntilReady());
-        return Database.layer(space.db);
-      }),
-    ),
-);
-
-const QueueServiceLayerSpec = LayerSpec.make(
-  {
-    affinity: 'space',
-    requires: [ClientService],
-    provides: [QueueService],
-  },
-  (context) =>
-    Layer.unwrapEffect(
-      Effect.gen(function* () {
-        invariant(context.space, 'space context required for QueueService layer');
-        const client = yield* ClientService;
-        const space = client.spaces.get(context.space);
-        invariant(space, `space not found on client: ${context.space}`);
-        yield* Effect.promise(() => space.waitUntilReady());
-        return QueueService.layer(space.queues);
-      }),
-    ),
-);
-
-const FeedLayerSpec = LayerSpec.make(
-  {
-    affinity: 'space',
-    requires: [ClientService],
-    provides: [Feed.FeedService],
-  },
-  (context) =>
-    Layer.unwrapEffect(
-      Effect.gen(function* () {
-        invariant(context.space, 'space context required for Feed layer');
-        const client = yield* ClientService;
-        const space = client.spaces.get(context.space);
-        invariant(space, `space not found on client: ${context.space}`);
-        yield* Effect.promise(() => space.waitUntilReady());
-        return createFeedServiceLayer(space.queues);
+        return Layer.mergeAll(Database.layer(space.db), QueueService.layer(space.queues), createFeedServiceLayer(space.queues));
       }),
     ),
 );
@@ -123,8 +87,6 @@ export default Capability.makeModule(() =>
   Effect.succeed([
     Capability.contributes(Capabilities.LayerSpec, ClientLayerSpec),
     Capability.contributes(Capabilities.LayerSpec, DatabaseLayerSpec),
-    Capability.contributes(Capabilities.LayerSpec, QueueServiceLayerSpec),
-    Capability.contributes(Capabilities.LayerSpec, FeedLayerSpec),
     Capability.contributes(Capabilities.LayerSpec, CredentialsLayerSpec),
   ]),
 );
