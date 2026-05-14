@@ -58,6 +58,7 @@ export const translations = [
         'carousel-indicators.label': 'Carousel slides',
         'carousel-go-to.label': 'Go to slide {{index}}',
         // Settings.
+        'settings.title': 'Support settings',
         'show-welcome.label': 'Show welcome article on personal space',
       },
     },

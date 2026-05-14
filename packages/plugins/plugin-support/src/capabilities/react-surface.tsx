@@ -6,9 +6,10 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
+import { SupportSettings } from '#components';
 import {
   FeedbackPanel,
   ShortcutsDialogContent,
@@ -17,7 +18,8 @@ import {
   SupportArticle,
   WelcomeArticle,
 } from '#containers';
-import { Support } from '#types';
+import { meta } from '#meta';
+import { type Settings, Support } from '#types';
 
 import { SHORTCUTS_DIALOG } from '../constants';
 
@@ -58,6 +60,14 @@ export default Capability.makeModule(() =>
         id: SHORTCUTS_DIALOG,
         filter: AppSurface.component(AppSurface.Dialog, SHORTCUTS_DIALOG),
         component: () => <ShortcutsDialogContent />,
+      }),
+      Surface.create({
+        id: 'settings',
+        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        component: ({ data: { subject } }) => {
+          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
+          return <SupportSettings settings={settings} onSettingsChange={updateSettings} />;
+        },
       }),
     ]),
   ),
