@@ -48,7 +48,7 @@ export type CarouselRootProps = ThemedClassName<
   PropsWithChildren<{
     /** Total number of slides; drives auto-advance and indicator counts. */
     count: number;
-    /** Whether to auto-advance slides on mount. Defaults to `true`. */
+    /** Whether to auto-advance slides on mount. Defaults to `false`. */
     autorun?: boolean;
     /** Auto-advance interval in milliseconds. Set 0 to disable. */
     intervalMs?: number;
@@ -62,12 +62,12 @@ export type CarouselRootProps = ThemedClassName<
  * `Carousel.Caption` live in the center track so they share the viewport's width.
  */
 const CarouselRoot = ({
+  classNames,
   children,
   count,
-  autorun = true,
+  autorun = false,
   intervalMs = 5_000,
   defaultIndex = 0,
-  classNames,
 }: CarouselRootProps) => {
   const [index, setIndexState] = useState(defaultIndex);
   const [autoAdvance, setAutoAdvance] = useState(autorun);

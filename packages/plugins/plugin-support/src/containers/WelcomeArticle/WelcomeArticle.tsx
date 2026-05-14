@@ -14,14 +14,18 @@ import { Carousel } from '#components';
 import { meta } from '#meta';
 import { HelpOperation } from '#types';
 
+type Slide = {
+  src: string;
+  description: string;
+};
+
 export type WelcomeArticleProps = {
   role?: string;
 };
 
-type Slide = { src: string; description: string };
-
 /**
- * Welcome surface — hosts the joyride entry point, a plugin showcase carousel, and the support chat shortcut. */
+ * Welcome surface — hosts the joyride entry point, a plugin showcase carousel, and the support chat shortcut.
+ */
 export const WelcomeArticle = ({ role }: WelcomeArticleProps = {}) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
@@ -36,6 +40,7 @@ export const WelcomeArticle = ({ role }: WelcomeArticleProps = {}) => {
         ),
     [manager],
   );
+  console.log(slides);
 
   const handleStartTour = useCallback(() => {
     void invokePromise(HelpOperation.Start);
