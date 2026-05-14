@@ -59,7 +59,7 @@ export class ImapCredentials extends Context.Tag('@dxos/plugin-inbox/ImapCredent
   ImapCredentials,
   {
     /** Returns the full IMAP auth bundle. */
-    readonly get: () => Effect.Effect<ImapAuthValues, ImapError, Credential.CredentialsService>;
+    readonly get: () => Effect.Effect<ImapAuthValues, ImapError>;
   }
 >() {
   /**
@@ -97,18 +97,31 @@ export class ImapCredentials extends Context.Tag('@dxos/plugin-inbox/ImapCredent
    * service (used by agents / legacy paths). Multi-account / per-host
    * configuration is not expressible here; prefer `fromIntegration`.
    */
-  static default = Layer.succeed(ImapCredentials, {
-    get: () =>
-      Effect.gen(function* () {
-        const credential = yield* Credential.CredentialsService.getCredential({ service: 'imap' });
-        if (!credential.apiKey) {
-          return yield* Effect.fail(
-            new ImapError({ reason: 'auth', message: 'IMAP credential is missing the password (apiKey).' }),
-          );
-        }
-        return buildAuth({ token: credential.apiKey, source: 'imap', options: {} });
-      }),
-  });
+  static default = Layer.effect(
+    ImapCredentials,
+    Effect.gen(function* () {
+      const credentialsService = yield* Credential.CredentialsService;
+      return {
+        get: () =>
+          Effect.gen(function* () {
+            const credential = yield* Effect.tryPromise({
+              try: () => credentialsService.getCredential({ service: 'imap' }),
+              catch: (error) =>
+                new ImapError({
+                  reason: 'auth',
+                  message: error instanceof Error ? error.message : String(error),
+                }),
+            });
+            if (!credential.apiKey) {
+              return yield* Effect.fail(
+                new ImapError({ reason: 'auth', message: 'IMAP credential is missing the password (apiKey).' }),
+              );
+            }
+            return buildAuth({ token: credential.apiKey, source: 'imap', options: {} });
+          }),
+      };
+    }),
+  );
 
   /** Convenience accessor — yields the auth bundle. */
   static get = () => Effect.flatMap(ImapCredentials, (service) => service.get());

@@ -52,6 +52,17 @@
       "browser": "./dist/lib/browser/operations/index.mjs",
       "node": "./dist/lib/node-esm/operations/index.mjs"
     },
+    "./services": {
+      "source": "./src/services/index.ts",
+      "types": "./dist/types/src/services/index.d.ts",
+      "browser": "./dist/lib/browser/services/index.mjs",
+      "node": "./dist/lib/node-esm/services/index.mjs"
+    },
+    "./mail-live": {
+      "source": "./src/services/mail-live/index.ts",
+      "types": "./dist/types/src/services/mail-live/index.d.ts",
+      "node": "./dist/lib/node-esm/services/mail-live/index.mjs"
+    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
@@ -137,6 +148,7 @@
     "turndown": "catalog:"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "catalog:",
     "@dxos/config": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
