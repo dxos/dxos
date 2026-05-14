@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ATTR_DELETED, ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
-import { DXN, EchoId, type ObjectId, type SpaceId } from '@dxos/keys';
+import { DXN, EchoId, ObjectId, SpaceId } from '@dxos/keys';
 
 import type { IndexerObject } from './interface';
 import type { Index } from './interface';
@@ -24,11 +24,12 @@ const _escapeLikePrefix = (prefix: string) => {
 
 export const ObjectMeta = Schema.Struct({
   recordId: Schema.Number,
-  objectId: Schema.String,
+  objectId: ObjectId,
+  /** Empty string for non-queue objects. */
   queueId: Schema.String,
   /** Queue subspace namespace (e.g. 'data', 'trace'). Empty string for non-queue objects. */
   queueNamespace: Schema.String,
-  spaceId: Schema.String,
+  spaceId: SpaceId,
   documentId: Schema.String,
   entityKind: Schema.String,
   /** The versioned DXN of the type of the object. */

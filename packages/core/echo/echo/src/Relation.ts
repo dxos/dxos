@@ -10,7 +10,7 @@ import { raise } from '@dxos/debug';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { type EchoId, type ObjectId, URI } from '@dxos/keys';
+import { type DXN, EchoId, type ObjectId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type * as Database from './Database';
@@ -207,12 +207,12 @@ export const isSnapshot = (value: unknown): value is Snapshot => {
  * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
  */
-export const getSourceDXN = (value: Unknown | Snapshot): URI.URI => {
+export const getSourceDXN = (value: Unknown | Snapshot): EchoId.EchoId => {
   assertArgument(isRelation(value), 'Expected a relation');
   assumeType<internal.InternalObjectProps>(value);
   const dxn = (value as internal.InternalObjectProps)[internal.RelationSourceDXNId];
-  invariant(typeof dxn === 'string');
-  return URI.make(dxn);
+  invariant(EchoId.isEchoId(dxn));
+  return dxn;
 };
 
 /**
@@ -220,12 +220,12 @@ export const getSourceDXN = (value: Unknown | Snapshot): URI.URI => {
  * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
  */
-export const getTargetDXN = (value: Unknown | Snapshot): URI.URI => {
+export const getTargetDXN = (value: Unknown | Snapshot): EchoId.EchoId => {
   assertArgument(isRelation(value), 'Expected a relation');
   assumeType<internal.InternalObjectProps>(value);
   const dxn = (value as internal.InternalObjectProps)[internal.RelationTargetDXNId];
-  invariant(typeof dxn === 'string');
-  return URI.make(dxn);
+  invariant(EchoId.isEchoId(dxn));
+  return dxn;
 };
 
 /**
@@ -358,7 +358,7 @@ export const getId = (entity: Unknown | Snapshot): EchoId.EchoId => internal.get
 /**
  * @returns The DXN of the relation's type.
  */
-export const getTypeDXN = internal.getTypeDXN;
+export const getTypeDXN: (obj: internal.AnyProperties) => DXN.DXN | undefined = internal.getTypeDXN;
 
 /**
  * Get the schema of the relation.

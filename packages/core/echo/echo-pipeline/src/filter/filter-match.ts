@@ -22,15 +22,13 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
       // Check typename if specified.
       if (filter.typename !== null) {
         // TODO(dmaretskyi): `system` is missing in some cases.
-        if (!obj.doc.system?.type?.['/']) {
+        const actualDXNStr = obj.doc.system?.type?.['/'];
+        if (!actualDXNStr) {
           // Objects with no type are deprecated.
           return false;
-        } else {
-          const actualDXNStr = obj.doc.system.type['/'] as string;
-          const expectedDXNStr = filter.typename as string;
-          if (!compareTypenameStrings(expectedDXNStr, actualDXNStr)) {
-            return false;
-          }
+        }
+        if (!compareTypenameStrings(filter.typename, actualDXNStr)) {
+          return false;
         }
       }
 
@@ -104,15 +102,13 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
       // Check typename if specified
       if (filter.typename !== null) {
         // TODO(dmaretskyi): `system` is missing in some cases.
-        if (!obj['@type']) {
+        const actualDXNStr = obj['@type'];
+        if (!actualDXNStr) {
           // Objects with no type are deprecated.
           return false;
-        } else {
-          const actualDXNStr = obj['@type'] as string;
-          const expectedDXNStr = filter.typename as string;
-          if (!compareTypenameStrings(expectedDXNStr, actualDXNStr)) {
-            return false;
-          }
+        }
+        if (!compareTypenameStrings(filter.typename, actualDXNStr)) {
+          return false;
         }
       }
 

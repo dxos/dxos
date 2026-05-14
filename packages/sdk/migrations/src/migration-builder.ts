@@ -12,7 +12,7 @@ import { type DocHandleProxy, ObjectCore, type RepoProxy, migrateDocument } from
 import { type DatabaseDirectory, EncodedReference, type ObjectStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import { getSchemaDXN } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { EchoId, type ObjectId } from '@dxos/keys';
+import { EchoId, ObjectId } from '@dxos/keys';
 import { type MaybePromise } from '@dxos/util';
 
 /*
@@ -109,7 +109,8 @@ export class MigrationBuilder {
   }
 
   createReference(id: string) {
-    return EncodedReference.fromEchoId(EchoId.fromLocalObjectId(id as ObjectId));
+    invariant(ObjectId.isValid(id), 'Invalid ObjectId.');
+    return EncodedReference.fromEchoId(EchoId.fromLocalObjectId(id));
   }
 
   deleteObject(id: string): void {

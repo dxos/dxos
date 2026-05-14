@@ -11,7 +11,7 @@ import type * as Types from 'effect/Types';
 
 import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
-import { DXN, ObjectId } from '@dxos/keys';
+import { DXN, EchoId, ObjectId } from '@dxos/keys';
 
 import * as internal from './internal';
 import type * as Obj from './Obj';
@@ -111,7 +111,7 @@ export const type = <S extends Schema.Schema.All>(
       type: 'or',
       filters: typenames.map((typename) => ({
         type: 'object',
-        typename: typename.toString(),
+        typename,
         props: {},
       })),
     });
@@ -120,7 +120,7 @@ export const type = <S extends Schema.Schema.All>(
   const dxn = internal.getTypeDXNFromSpecifier(schema);
   return new FilterClass({
     type: 'object',
-    typename: dxn.toString(),
+    typename: dxn,
     ...propsFilterToAst(props ?? {}),
   });
 };
@@ -132,7 +132,7 @@ export const typename = (typename: string): Any => {
   assertArgument(!typename.startsWith('dxn:'), 'typename', 'Typename must no be qualified');
   return new FilterClass({
     type: 'object',
-    typename: DXN.fromTypename(typename) as string,
+    typename: DXN.fromTypename(typename),
     props: {},
   });
 };
@@ -140,7 +140,7 @@ export const typename = (typename: string): Any => {
 /**
  * Filter by fully qualified type DXN.
  */
-export const typeDXN = (dxn: string): Any => {
+export const typeDXN = (dxn: DXN.DXN): Any => {
   return new FilterClass({
     type: 'object',
     typename: dxn,
@@ -199,7 +199,7 @@ export const foreignKeys = <S extends Schema.Schema.All>(
   const dxn = internal.getTypeDXNFromSpecifier(schema);
   return new FilterClass({
     type: 'object',
-    typename: dxn.toString(),
+    typename: dxn,
     props: {},
     foreignKeys: keys,
   });
@@ -357,7 +357,7 @@ export const childOf = (
   const items = Array.isArray(parents) ? parents : [parents];
   const dxns = items.map((item) => {
     if (Ref.isRef(item)) {
-      return item.uri;
+      return EchoId.parse(item.uri);
     }
     return internal.getId(item);
   });

@@ -222,7 +222,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     }
 
     // Fallback: try to resolve as a queue (Feed object backed by queue service).
-    const queueEchoId = EchoId.fromSpaceAndObjectId(spaceId as SpaceId, objectId as ObjectId);
+    const queueEchoId = EchoId.fromSpaceAndObjectId(spaceId, objectId);
     const queue = this._resolveQueueSync(queueEchoId);
     if (queue) {
       return queue as unknown as Entity.Any;
@@ -274,7 +274,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
           const feedSpaceId = EchoId.getSpaceId(feedEchoId) ?? context.space;
           const queueId = EchoId.getObjectId(feedEchoId);
           if (feedSpaceId && queueId) {
-            const queueEchoId = EchoId.fromSpaceAndObjectId(feedSpaceId, queueId as ObjectId);
+            const queueEchoId = EchoId.fromSpaceAndObjectId(feedSpaceId, queueId);
             const obj = await this._resolveQueueObjectAsync(queueEchoId, echoId);
             if (obj) {
               status = 'resolved';
@@ -295,7 +295,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         }
 
         // Fallback: try to resolve as a queue (Feed object backed by queue service).
-        const queueEchoId = EchoId.fromSpaceAndObjectId(context.space, echoId as ObjectId);
+        const queueEchoId = EchoId.fromSpaceAndObjectId(context.space, echoId);
         const queue = this._resolveQueueSync(queueEchoId);
         if (queue) {
           status = 'resolved';

@@ -7,10 +7,12 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import type { DXN as _DXN } from '@dxos/keys'; // keep type emit portable for ResolveNavigationTargets's inferred DXN.Schema field.
+import type { DXN } from '@dxos/keys';
 
 import { AssistantOperation } from '#types';
+
+// DXN re-export keeps TS declaration emit portable for ResolveNavigationTargets's inferred DXN.Schema field.
+export type { DXN as _DXNReference };
 
 export default AssistantOperation.ResolveNavigationTargets.pipe(
   Operation.withHandler(

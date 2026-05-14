@@ -9,11 +9,12 @@ import { AiContext } from '@dxos/assistant';
 import { Trace, TriggerEvent, Operation, OperationRegistry } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { QueueService } from '@dxos/functions';
-// EchoId import keeps TS declaration emit portable — TriggerEvent.QueueEvent's EchoId.Schema is referenced in inferred types below.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import type { EchoId as _EchoId } from '@dxos/keys';
+import type { EchoId } from '@dxos/keys';
 
 import { Agent } from '../../../types';
+
+// EchoId re-export keeps TS declaration emit portable — TriggerEvent.QueueEvent's EchoId.Schema is referenced in inferred types below.
+export type { EchoId as _EchoIdReference };
 
 export const AgentWorker = Operation.make({
   meta: {

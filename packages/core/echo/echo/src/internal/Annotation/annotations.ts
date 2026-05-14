@@ -10,7 +10,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { raise } from '@dxos/debug';
 import { type JsonPath, getField } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, type URI } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
 import { type Mutable } from '../common/proxy';
@@ -128,13 +128,13 @@ export const TypeAnnotation = Schema.extend(
      * If this is a relation, the schema of the source object.
      * Must be present if entity kind is {@link EntityKind.Relation}.
      */
-    sourceSchema: Schema.optional(Schema.String),
+    sourceSchema: Schema.optional(DXN.Schema),
 
     /**
      * If this is a relation, the schema of the target object.
      * Must be present if entity kind is {@link EntityKind.Relation}.
      */
-    targetSchema: Schema.optional(Schema.String),
+    targetSchema: Schema.optional(DXN.Schema),
   }),
 );
 
@@ -198,8 +198,8 @@ export const getTypename = (obj: AnyProperties): string | undefined => {
  * @internal (use Type.setTypename)
  */
 // TODO(dmaretskyi): Rename setTypeDXN.
-export const setTypename = (obj: any, typename: URI.URI): void => {
-  invariant(typeof typename === 'string', 'Invalid type.');
+export const setTypename = (obj: any, typename: DXN.DXN): void => {
+  invariant(DXN.isDXN(typename), 'Invalid type.');
   Object.defineProperty(obj, TypeId, {
     value: typename,
     writable: false,
@@ -216,7 +216,7 @@ export const setTypename = (obj: any, typename: URI.URI): void => {
  * @internal (use Obj.getTypeDXN)
  */
 // TODO(burdon): Narrow type.
-export const getTypeDXN = (obj: AnyProperties): URI.URI | undefined => {
+export const getTypeDXN = (obj: AnyProperties): DXN.DXN | undefined => {
   if (!obj) {
     return undefined;
   }
@@ -226,8 +226,8 @@ export const getTypeDXN = (obj: AnyProperties): URI.URI | undefined => {
     return undefined;
   }
 
-  invariant(typeof type === 'string', 'Invalid object.');
-  return type as URI.URI;
+  invariant(DXN.isDXN(type), 'Invalid object.');
+  return type;
 };
 
 /**

@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 import type { Filter as Filter$, Order as Order$, Query as Query$, Ref } from '@dxos/echo';
 import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
-import type { ObjectId } from '@dxos/keys';
+import type { DXN, EchoId, ObjectId, URI } from '@dxos/keys';
 
 //
 // Light-weight implementation of query execution.
@@ -124,7 +124,7 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static typeDXN(dxn: string): Filter$.Any {
+  static typeDXN(dxn: DXN.DXN): Filter$.Any {
     return new FilterClass({
       type: 'object',
       typename: dxn,
@@ -163,7 +163,7 @@ class FilterClass implements Filter$.Any {
     assertArgument(!schema.startsWith('dxn:'), 'schema');
     return new FilterClass({
       type: 'object',
-      typename: `dxn:${schema}`,
+      typename: makeTypeDxn(schema),
       props: {},
       foreignKeys: keys,
     });
@@ -255,7 +255,7 @@ class FilterClass implements Filter$.Any {
     const items = Array.isArray(parents) ? parents : [parents];
     const dxns = items.map((item) => {
       if (isDxnLike(item)) {
-        return item.toString();
+        return item.toString() as EchoId.EchoId;
       }
       throw new TypeError('childOf requires DXN values in query-lite');
     });
@@ -486,12 +486,7 @@ class QueryClass implements Query$.Any {
   }
 
   referencedBy(target?: Schema.Schema.All | string, key?: string): Query$.Any {
-    const typename =
-      target !== undefined
-        ? (assertArgument(typeof target === 'string', 'target'),
-          assertArgument(!target.startsWith('dxn:'), 'target'),
-          target)
-        : null;
+    const typename = target !== undefined ? makeTypeDxn(target as string) : null;
     return new QueryClass({
       type: 'incoming-references',
       anchor: this.ast,
@@ -598,13 +593,13 @@ const isRef = (obj: any): obj is Ref.Ref<any> => {
   return obj && typeof obj === 'object' && RefTypeId in obj;
 };
 
-const makeTypeDxn = (typename: string) => {
+const makeTypeDxn = (typename: string): DXN.DXN => {
   assertArgument(typeof typename === 'string', 'typename');
   assertArgument(!typename.startsWith('dxn:'), 'typename');
-  return `dxn:${typename}`;
+  return `dxn:${typename}` as DXN.DXN;
 };
 
-const isDxnLike = (value: unknown): value is string => {
+const isDxnLike = (value: unknown): value is URI.URI => {
   if (typeof value === 'string') {
     return value.startsWith('dxn:') || value.startsWith('echo:');
   }

@@ -3,7 +3,7 @@
 //
 
 import { assertArgument } from '@dxos/invariant';
-import { DXN, EchoId, type PublicKey, URI } from '@dxos/keys';
+import { DXN, EchoId, type PublicKey, SpaceId, URI } from '@dxos/keys';
 import { type ObjectId } from '@dxos/protocols';
 import { type Reference as ReferenceProto } from '@dxos/protocols/proto/dxos/echo/model/document';
 
@@ -64,8 +64,8 @@ export class Reference {
     if (this._protocol === Reference.TYPE_PROTOCOL) {
       return DXN.fromTypename(this._objectId);
     }
-    if (this._host) {
-      return EchoId.fromSpaceAndObjectId(this._host as any, this._objectId);
+    if (this._host && SpaceId.isValid(this._host)) {
+      return EchoId.fromSpaceAndObjectId(this._host, this._objectId);
     }
     return EchoId.fromLocalObjectId(this._objectId);
   }

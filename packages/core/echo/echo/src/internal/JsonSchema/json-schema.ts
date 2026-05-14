@@ -408,9 +408,9 @@ const annotations_toJsonSchemaFields = (annotations: SchemaAST.Annotations): Rec
 const decodeTypeIdentifierAnnotation = (schema: JsonSchemaType): string | undefined => {
   // New format: $id is the typename DXN; the storage EchoId rides on the annotations namespace
   // (or echo.type.schemaId for legacy serializations).
-  const schemaId = (schema as any)?.annotations?.schemaId ?? schema?.echo?.type?.schemaId;
+  const schemaId = schema.annotations?.schemaId ?? schema.echo?.type?.schemaId;
   if (schemaId) {
-    return ObjectId.isValid(schemaId) ? (EchoId.fromLocalObjectId(schemaId) as string) : schemaId;
+    return ObjectId.isValid(schemaId) ? EchoId.fromLocalObjectId(schemaId) : schemaId;
   }
   // Legacy: $id was the EchoId (dxn:echo:...) for stored schemas.
   if (schema.$id && schema.$id.startsWith('dxn:echo:')) {
@@ -431,8 +431,8 @@ const decodeTypeAnnotation = (schema: JsonSchemaType): TypeAnnotation | undefine
     if (annotation.kind === EntityKind.Relation) {
       const source = schema.relationSource?.$ref ?? raise(new Error('Relation source not set'));
       const target = schema.relationTarget?.$ref ?? raise(new Error('Relation target not set'));
-      annotation.sourceSchema = source;
-      annotation.targetSchema = target;
+      annotation.sourceSchema = DXN.parse(source);
+      annotation.targetSchema = DXN.parse(target);
     }
 
     return annotation;

@@ -5,11 +5,11 @@
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 
-import { ObjectId } from '@dxos/keys';
+import { DXN, EchoId, ObjectId } from '@dxos/keys';
 
 import { ForeignKey } from '../foreign-key';
 
-const TypenameSpecifier = Schema.Union(Schema.String, Schema.Null).annotations({
+const TypenameSpecifier = Schema.Union(DXN.Schema, Schema.Null).annotations({
   description: 'DXN or null; null matches any type',
 });
 
@@ -45,7 +45,7 @@ const FilterObject_ = Schema.Struct({
   // NOTE: Make sure to update `FilterStep.isNoop` if you change this.
 });
 export interface FilterObject extends Schema.Schema.Type<typeof FilterObject_> {}
-export const FilterObject: Schema.Schema<FilterObject> = FilterObject_;
+export const FilterObject: Schema.Schema<FilterObject> = FilterObject_ as any;
 
 /**
  * Compare.
@@ -173,13 +173,13 @@ export const FilterOr: Schema.Schema<FilterOr> = FilterOr_;
 const FilterChildOf_ = Schema.Struct({
   type: Schema.Literal('child-of'),
   /** Parent DXNs to match children of. */
-  parents: Schema.Array(Schema.String),
+  parents: Schema.Array(EchoId.Schema),
   /** Whether to match transitively (grandchildren, etc.). Defaults to true. */
   transitive: Schema.Boolean,
 });
 
 export interface FilterChildOf extends Schema.Schema.Type<typeof FilterChildOf_> {}
-export const FilterChildOf: Schema.Schema<FilterChildOf> = FilterChildOf_;
+export const FilterChildOf: Schema.Schema<FilterChildOf> = FilterChildOf_ as any;
 
 /**
  * Union of filters.
@@ -253,7 +253,7 @@ const QueryIncomingReferencesClause_ = Schema.Struct({
 
 export interface QueryIncomingReferencesClause extends Schema.Schema.Type<typeof QueryIncomingReferencesClause_> {}
 export const QueryIncomingReferencesClause: Schema.Schema<QueryIncomingReferencesClause> =
-  QueryIncomingReferencesClause_;
+  QueryIncomingReferencesClause_ as any;
 
 /**
  * Traverse relations connecting to an anchor object.
@@ -399,7 +399,7 @@ export const QueryFromClause_ = Schema.Struct({
   ),
 });
 export interface QueryFromClause extends Schema.Schema.Type<typeof QueryFromClause_> {}
-export const QueryFromClause: Schema.Schema<QueryFromClause> = QueryFromClause_;
+export const QueryFromClause: Schema.Schema<QueryFromClause> = QueryFromClause_ as any;
 
 const Query_ = Schema.Union(
   QuerySelectClause,
@@ -455,7 +455,7 @@ export const Scope = Schema.Struct({
    *
    * NOTE: Spaces and feeds are unioned together if both are specified.
    */
-  feeds: Schema.optional(Schema.Array(Schema.String)),
+  feeds: Schema.optional(Schema.Array(EchoId.Schema)),
 });
 export interface Scope extends Schema.Schema.Type<typeof Scope> {}
 

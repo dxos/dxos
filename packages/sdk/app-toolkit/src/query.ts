@@ -90,7 +90,7 @@ const resolveSchema = (
         Effect.flatMap(
           Option.match({
             onNone: () => Effect.succeed(Option.none()),
-            onSome: (typename) => resolve(DXN.fromTypename(typename) as string),
+            onSome: (typename) => resolve(DXN.fromTypename(typename)),
           }),
         ),
       ),

@@ -8,7 +8,7 @@ import React, { useCallback, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
 import { useTypeOptions } from '@dxos/app-toolkit/ui';
-import { DXN, Filter, JsonSchema, Obj, Query, type QueryAST, Tag, Type, type View } from '@dxos/echo';
+import { EchoId, Filter, JsonSchema, Obj, Query, type QueryAST, Tag, Type, type View } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/internal';
 import { useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
@@ -51,7 +51,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
         return;
       }
 
-      const queue = target && DXN.tryParse(target) ? target : undefined;
+      const queue = target ? EchoId.tryParse(target) : undefined;
       const query = queue ? Query.fromAst(newQuery).from({ feeds: [queue] }) : Query.fromAst(newQuery);
       Obj.update(view, (view) => {
         view.query.ast = query.ast as Mutable<typeof query.ast>;

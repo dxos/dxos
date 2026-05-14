@@ -243,7 +243,7 @@ export const registry: Record<NodeType, Executable> = {
             );
 
             for (const item of items) {
-              const { id: _id, '@type': _type, ...rest } = item as any;
+              const { id: _id, '@type': _type, ...rest } = item;
               // TODO(dmaretskyi): Forbid type on create.
               db.add(Obj.make(schema, rest));
             }

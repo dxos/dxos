@@ -933,7 +933,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     const obj: Partial<ObjectJSON> = {
       id: target[symbolInternals].core.id,
-      [ATTR_TYPE]: typeRef ? EncodedReference.toURI(typeRef) : undefined,
+      [ATTR_TYPE]: typeRef ? EncodedReference.toDXN(typeRef) : undefined,
       [ATTR_META]: { ...this.getMeta(target) } as ObjectMetaJSON,
     };
 
@@ -1243,7 +1243,7 @@ const setSchemaPropertiesOnObjectCore = (
   if (schema != null) {
     const dxn = getSchemaDXN(schema);
     invariant(dxn, 'Schema must be defined via TypedObject.');
-    internals.core.setType(EncodedReference.fromURI(dxn.toString() as unknown as URI.URI));
+    internals.core.setType(EncodedReference.fromURI(dxn));
 
     const kind = getEntityKind(schema);
     invariant(kind);

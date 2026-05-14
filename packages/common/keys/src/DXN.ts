@@ -13,7 +13,7 @@ import type * as URI from './URI';
  * Does NOT match legacy `dxn:<kind>:<...>` formats (e.g. `dxn:type:...`).
  */
 const DXN_SPEC_REGEXP =
-  /^dxn:[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)(:\d+\.\d+\.\d+)?$/;
+  /^dxn:[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9-]{0,62})?)(:\d+\.\d+\.\d+)?$/;
 
 /**
  * DXN names a resource (type, plugin, capability, etc.).

@@ -42,7 +42,7 @@ export const createSchemaReference = (typename: string): Types.DeepMutable<JsonS
     $id: JSON_SCHEMA_ECHO_REF_ID,
     reference: {
       schema: {
-        $ref: DXN.fromTypename(typename) as string,
+        $ref: DXN.fromTypename(typename),
       },
     },
   };
@@ -272,7 +272,7 @@ export const createEchoReferenceSchema = (
   const referenceInfo: JsonSchemaReferenceInfo = {
     schema: {
       // TODO(dmaretskyi): Include version?
-      $ref: echoId ?? (DXN.fromTypename(typename!) as string),
+      $ref: echoId ?? DXN.fromTypename(typename!),
     },
     schemaVersion: version,
   };

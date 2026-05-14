@@ -563,7 +563,7 @@ describe('query api', () => {
     test('Query.type(...).from(feed) sets queue scope', async () => {
       const spaceId = SpaceId.random();
       const feedId = ObjectId.random();
-      const feedDxn = EchoId.fromSpaceAndObjectId(spaceId as SpaceId, feedId as ObjectId);
+      const feedDxn = EchoId.fromSpaceAndObjectId(spaceId, feedId);
       const feed = (await Obj.fromJSON(
         {
           '@type': 'dxn:org.dxos.type.feed:0.1.0',
@@ -573,7 +573,7 @@ describe('query api', () => {
         { dxn: feedDxn },
       )) as Feed.Feed;
 
-      const expectedFeedId = EchoId.fromSpaceAndObjectId(spaceId as SpaceId, feedId as ObjectId);
+      const expectedFeedId = EchoId.fromSpaceAndObjectId(spaceId, feedId);
 
       const query = Query.type(TestSchema.Person).from(feed);
       Schema.validateSync(QueryAST.Query)(query.ast);

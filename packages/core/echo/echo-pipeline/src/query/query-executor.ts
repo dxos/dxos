@@ -21,7 +21,7 @@ import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/e
 import { type RuntimeProvider, runAndForwardErrors, unwrapExit } from '@dxos/effect';
 import { EscapedPropPath, type IndexEngine, type ObjectMeta, type ReverseRef } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
-import { EchoId, type ObjectId, type SpaceId, type URI } from '@dxos/keys';
+import { EchoId, ObjectId, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
 import { compositeKey, getDeep, isNonNullable } from '@dxos/util';
@@ -273,7 +273,9 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
             scopes.spaceIds = new Set();
           }
           for (const spaceId of step.scope.spaceIds) {
-            scopes.spaceIds.add(spaceId as SpaceId);
+            if (SpaceId.isValid(spaceId)) {
+              scopes.spaceIds.add(spaceId);
+            }
           }
         }
 
@@ -282,15 +284,15 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
           let parseFailed = false;
           const derivedQueueIds = new Set<ObjectId>();
           const derivedSpaceIds = new Set<SpaceId>();
-          for (const feedRef of step.scope.feeds as string[]) {
+          for (const feedRef of step.scope.feeds ?? []) {
             try {
               // EchoId.parse handles both `echo://` and legacy `dxn:queue:` formats.
               const echoId = EchoId.parse(feedRef);
               const queueId = EchoId.getObjectId(echoId);
               const spaceId = EchoId.getSpaceId(echoId);
               if (queueId && spaceId) {
-                derivedQueueIds.add(queueId as ObjectId);
-                derivedSpaceIds.add(spaceId as SpaceId);
+                derivedQueueIds.add(queueId);
+                derivedSpaceIds.add(spaceId);
               }
             } catch {
               parseFailed = true;
@@ -583,8 +585,8 @@ export class QueryExecutor extends Resource {
   private async _execSelectStep(step: QueryPlan.SelectStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
     workingSet = [...workingSet];
 
-    const spaces = (step.scope.spaceIds ?? []) as SpaceId[];
-    const queues = (step.scope.feeds ?? []) as string[];
+    const spaces = step.scope.spaceIds?.filter(SpaceId.isValid) ?? [];
+    const queues = step.scope.feeds ?? [];
     const allQueuesFromSpaces = step.scope.allFeedsFromSpaces ?? false;
 
     const trace: ExecutionTrace = {
@@ -622,11 +624,14 @@ export class QueryExecutor extends Resource {
 
         const items = await Promise.all(
           step.selector.objectIds.map((id) => {
+            if (!ObjectId.isValid(id)) {
+              return null;
+            }
             if (queues.length > 0) {
               const spaceId = extractSpaceIdFromQueue(queues[0]);
               const queueId = extractQueueIds([queues[0]])?.[0];
               if (spaceId && queueId) {
-                return this._loadQueueItemById(spaceId, queueId, id as ObjectId);
+                return this._loadQueueItemById(spaceId, queueId, id);
               }
               return null;
             } else if (spaces.length > 0) {
@@ -754,10 +759,13 @@ export class QueryExecutor extends Resource {
               if (!snapshot || typeof snapshot !== 'object') {
                 return null;
               }
+              if (!ObjectId.isValid(result.queueId)) {
+                return null;
+              }
               return {
-                objectId: result.objectId as ObjectId,
-                spaceId: result.spaceId as SpaceId,
-                queueId: result.queueId as ObjectId,
+                objectId: result.objectId,
+                spaceId: result.spaceId,
+                queueId: result.queueId,
                 queueNamespace: result.queueNamespace || null,
                 documentId: null,
                 doc: null,
@@ -772,7 +780,7 @@ export class QueryExecutor extends Resource {
         const spaceItems = await Promise.all(
           spaceResults.map(async (result): Promise<QueryItem | null> => {
             const dxn = EchoId.fromLocalObjectId(result.objectId);
-            const item = await this._loadFromDXN(dxn, { sourceSpaceId: result.spaceId as SpaceId });
+            const item = await this._loadFromDXN(dxn, { sourceSpaceId: result.spaceId });
             if (item) {
               // Override the default rank with the FTS rank.
               item.rank = rankMap.get(result.recordId) ?? 1;
@@ -1017,7 +1025,7 @@ export class QueryExecutor extends Resource {
                   try {
                     return isEncodedReference(ref)
                       ? {
-                          ref: ref['/'] as URI.URI,
+                          ref: EncodedReference.toURI(ref),
                           spaceId: item.spaceId,
                         }
                       : null;
@@ -1128,7 +1136,7 @@ export class QueryExecutor extends Resource {
                   return null;
                 }
                 return {
-                  ref: ref['/'] as URI.URI,
+                  ref: EncodedReference.toURI(ref),
                   spaceId: item.spaceId,
                 };
               })
@@ -1375,7 +1383,7 @@ export class QueryExecutor extends Resource {
     workingSet: QueryItem[],
     property: EscapedPropPath | null,
   ): Promise<readonly ObjectMeta[]> {
-    const anchorDxns = workingSet.map((item) => EchoId.fromLocalObjectId(item.objectId) as string);
+    const anchorDxns = workingSet.map((item) => EchoId.fromLocalObjectId(item.objectId));
     const rows: readonly ReverseRef[] = (
       await Promise.all(
         anchorDxns.map((targetDxn) => this._runInRuntime(this._indexEngine.queryReverseRef({ targetDxn }))),
@@ -1449,7 +1457,7 @@ export class QueryExecutor extends Resource {
     workingSet: QueryItem[],
     endpoint: 'source' | 'target',
   ): Promise<readonly ObjectMeta[]> {
-    const anchorDxns = workingSet.map((item) => EchoId.fromLocalObjectId(item.objectId) as string);
+    const anchorDxns = workingSet.map((item) => EchoId.fromLocalObjectId(item.objectId));
     return await this._runInRuntime(this._indexEngine.queryRelations({ endpoint, anchorDxns }));
   }
 
@@ -1493,11 +1501,14 @@ export class QueryExecutor extends Resource {
     if (!snapshot || typeof snapshot !== 'object') {
       return null;
     }
+    if (!ObjectId.isValid(meta.queueId)) {
+      return null;
+    }
 
     return {
-      objectId: meta.objectId as ObjectId,
-      spaceId: meta.spaceId as SpaceId,
-      queueId: meta.queueId as ObjectId,
+      objectId: meta.objectId,
+      spaceId: meta.spaceId,
+      queueId: meta.queueId,
       queueNamespace: meta.queueNamespace || null,
       documentId: null,
       doc: null,
@@ -1529,7 +1540,7 @@ export class QueryExecutor extends Resource {
     return {
       objectId: meta.objectId,
       documentId: meta.documentId as DocumentId,
-      spaceId: meta.spaceId as SpaceId,
+      spaceId: meta.spaceId,
       queueId: null,
       queueNamespace: null,
       doc: object,
@@ -1635,7 +1646,7 @@ export class QueryExecutor extends Resource {
     // TODO(dmaretskyi): This could be optimized to bail early if any of the dependencies are deleted.
     const strongDepStates = await Promise.all(
       strongDeps.map(async (dxn) => {
-        const dep = await this._loadFromDXN(dxn as URI.URI, { sourceSpaceId: item.spaceId });
+        const dep = await this._loadFromDXN(dxn, { sourceSpaceId: item.spaceId });
         if (!dep) {
           return false;
         }
@@ -1659,7 +1670,7 @@ const extractSpaceIdFromQueue = (queueRef: string): SpaceId | undefined => {
   return echoId ? EchoId.getSpaceId(echoId) : undefined;
 };
 
-const extractQueueIds = (queues: readonly string[]): ObjectId[] | null => {
+const extractQueueIds = (queues: readonly EchoId.EchoId[]): ObjectId[] | null => {
   if (queues.length === 0) {
     return null;
   }

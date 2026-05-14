@@ -38,7 +38,7 @@ export const resolveRef = <T extends Entity.Unknown = Entity.Unknown>(
   if (objectId && spaceId) {
     // Queue object lookup: use EchoId to identify the queue.
     invariant(objectId, 'objectId missing');
-    const queueEchoId = EchoId.fromSpaceAndObjectId(spaceId as any, objectId as any);
+    const queueEchoId = EchoId.fromSpaceAndObjectId(spaceId, objectId);
     const queue = client.spaces.get(spaceId)?.queues.get<T>(queueEchoId);
     invariant(queue, 'queue missing');
     return queue.objects.find((object) => object.id === objectId);

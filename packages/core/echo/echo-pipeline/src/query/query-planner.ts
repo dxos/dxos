@@ -170,7 +170,7 @@ export class QueryPlanner {
               scope: context.scope,
               selector: {
                 _tag: 'TypeSelector',
-                typename: [filter.typename as string],
+                typename: [filter.typename],
                 inverted: false,
               },
             },
@@ -381,7 +381,7 @@ export class QueryPlanner {
               scope: context.scope,
               selector: {
                 _tag: 'TypeSelector',
-                typename: typenames as string[],
+                typename: typenames,
                 inverted: context.selectionInverted,
               },
             },

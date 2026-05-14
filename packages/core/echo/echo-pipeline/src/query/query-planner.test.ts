@@ -11,7 +11,7 @@ import { describe, expect, test } from 'vitest';
 import { Filter, Order, Query } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
-import { SpaceId } from '@dxos/keys';
+import { EchoId, SpaceId } from '@dxos/keys';
 
 import { QueryPlanner } from './query-planner';
 
@@ -1025,7 +1025,7 @@ describe('QueryPlanner', () => {
             "_tag": "SelectStep",
             "scope": {
               "feeds": [
-                "dxn:queue:data:B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO:01JJRA86VK4H1TEB6QQVSWXP0E",
+                "echo://B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO/01JJRA86VK4H1TEB6QQVSWXP0E",
               ],
             },
             "selector": {
@@ -1620,7 +1620,7 @@ describe('QueryPlanner', () => {
 });
 
 const SPACE_ID = SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO'); // Stable id for inline snapshots.
-const QUEUE_DXN = 'dxn:queue:data:B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO:01JJRA86VK4H1TEB6QQVSWXP0E'; // Stable queue DXN for inline snapshots.
+const QUEUE_DXN = EchoId.parse('dxn:queue:data:B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO:01JJRA86VK4H1TEB6QQVSWXP0E'); // Stable queue DXN for inline snapshots.
 
 const withSpaceIdOptions = (query: QueryAST.Query): QueryAST.Query => ({
   type: 'from',

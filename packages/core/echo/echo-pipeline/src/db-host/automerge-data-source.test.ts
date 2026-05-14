@@ -17,9 +17,9 @@ import { openAndClose } from '@dxos/test-utils';
 import { AutomergeHost } from '../automerge';
 import { AutomergeDataSource, headsCodec } from './automerge-data-source';
 
-const TEST_TYPE = DXN.fromTypenameAndVersion('com.example.type.test', '0.1.0') as string;
-const OTHER_TYPE = DXN.fromTypenameAndVersion('com.example.type.other', '0.1.0') as string;
-const PERSON_TYPE = DXN.fromTypenameAndVersion('com.example.type.person', '0.1.0') as string;
+const TEST_TYPE = DXN.fromTypenameAndVersion('com.example.type.test', '0.1.0');
+const OTHER_TYPE = DXN.fromTypenameAndVersion('com.example.type.other', '0.1.0');
+const PERSON_TYPE = DXN.fromTypenameAndVersion('com.example.type.person', '0.1.0');
 
 /**
  * Set up a real AutomergeHost with LevelDB storage.

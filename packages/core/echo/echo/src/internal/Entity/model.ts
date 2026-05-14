@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 
 import { type ForeignKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { type EchoId, ObjectId, type URI } from '@dxos/keys';
+import { DXN, EchoId, ObjectId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type * as Database from '../../Database';
@@ -48,7 +48,7 @@ export interface InternalObjectProps {
   readonly [SelfDXNId]: EchoId.EchoId;
   readonly [KindId]: EntityKind;
   readonly [SchemaId]: Schema.Schema.AnyNoContext;
-  readonly [TypeId]: URI.URI;
+  readonly [TypeId]: DXN.DXN;
   readonly [MetaId]?: ObjectMeta;
   [ParentId]?: InternalObjectProps;
   readonly [ObjectDatabaseId]?: Database.Database;
@@ -72,8 +72,8 @@ export interface ObjectMetaJSON {
  * JSON representation of an object or relation metadata.
  */
 export interface ObjectJSON {
-  id: string;
-  [ATTR_TYPE]: URI.URI;
+  id: ObjectId;
+  [ATTR_TYPE]: DXN.DXN;
   [ATTR_SELF_DXN]?: EchoId.EchoId;
   [ATTR_PARENT]?: EchoId.EchoId; // Encoded reference
   [ATTR_DELETED]?: boolean;
@@ -94,16 +94,16 @@ export function assertObjectModel(obj: unknown): asserts obj is InternalObjectPr
   invariant(typeof obj === 'object' && obj !== null, 'Invalid object model: not an object');
   assumeType<InternalObjectProps>(obj);
   invariant(ObjectId.isValid(obj.id), 'Invalid object model: invalid id');
-  invariant(obj[TypeId] === undefined || typeof obj[TypeId] === 'string', 'Invalid object model: invalid type');
+  invariant(obj[TypeId] === undefined || DXN.isDXN(obj[TypeId]), 'Invalid object model: invalid type');
   invariant(
     obj[KindId] === EntityKind.Object || obj[KindId] === EntityKind.Relation,
     'Invalid object model: invalid entity kind',
   );
 
   if (obj[KindId] === EntityKind.Relation) {
-    invariant(typeof obj[RelationSourceDXNId] === 'string', 'Invalid object model: invalid relation source');
-    invariant(typeof obj[RelationTargetDXNId] === 'string', 'Invalid object model: invalid relation target');
-    invariant(typeof obj[RelationSourceId] !== 'string', 'Invalid object model: source pointer is a DXN');
-    invariant(typeof obj[RelationTargetId] !== 'string', 'Invalid object model: target pointer is a DXN');
+    invariant(EchoId.isEchoId(obj[RelationSourceDXNId]), 'Invalid object model: invalid relation source');
+    invariant(EchoId.isEchoId(obj[RelationTargetDXNId]), 'Invalid object model: invalid relation target');
+    invariant(!EchoId.isEchoId(obj[RelationSourceId]), 'Invalid object model: source pointer is a DXN');
+    invariant(!EchoId.isEchoId(obj[RelationTargetId]), 'Invalid object model: target pointer is a DXN');
   }
 }

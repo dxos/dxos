@@ -497,19 +497,25 @@ export class ObjectCore {
       const sourceRef = this.getSource();
       if (sourceRef) {
         const id = EchoId.tryParse(EncodedReference.toURI(sourceRef));
-        if (id) res.push(id);
+        if (id) {
+          res.push(id);
+        }
       }
       const targetRef = this.getTarget();
       if (targetRef) {
         const id = EchoId.tryParse(EncodedReference.toURI(targetRef));
-        if (id) res.push(id);
+        if (id) {
+          res.push(id);
+        }
       }
     }
 
     const parentRef = this.getParent();
     if (parentRef) {
       const id = EchoId.tryParse(EncodedReference.toURI(parentRef));
-      if (id) res.push(id);
+      if (id) {
+        res.push(id);
+      }
     }
 
     return res;

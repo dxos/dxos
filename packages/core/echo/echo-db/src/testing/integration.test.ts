@@ -16,7 +16,7 @@ import {
 } from '@dxos/echo-pipeline/testing';
 import { Ref, getSchemaDXN, getTypeAnnotation, makeObject } from '@dxos/echo/internal';
 import { TestSchema } from '@dxos/echo/testing';
-import { type ObjectId, PublicKey, type URI } from '@dxos/keys';
+import { type DXN, type ObjectId, PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
 
@@ -484,7 +484,7 @@ describe('Integration tests', () => {
       const [spaceKey] = PublicKey.randomSequence();
       await using peer = await builder.createPeer();
 
-      let rootUrl: string, schemaDxn: string;
+      let rootUrl: string, schemaDxn: DXN.DXN;
       {
         await using db = await peer.createDatabase(spaceKey);
         rootUrl = db.rootUrl!;
@@ -544,7 +544,7 @@ describe('Integration tests', () => {
   test('dynamic schema is loaded with objects (via schema registry preload)', async () => {
     await using peer = await builder.createPeer();
 
-    let typeDXN!: URI.URI;
+    let typeDXN!: DXN.DXN;
     {
       await using db = await peer.createDatabase(PublicKey.random());
       const [schema] = await db.schemaRegistry.register([TestSchema.Person]);

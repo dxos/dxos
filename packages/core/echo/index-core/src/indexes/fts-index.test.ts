@@ -10,14 +10,14 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { ATTR_TYPE } from '@dxos/echo/internal';
-import { ObjectId, SpaceId, URI } from '@dxos/keys';
+import { DXN, ObjectId, SpaceId } from '@dxos/keys';
 
 import { FtsIndex } from './fts-index';
 import type { IndexerObject } from './interface';
 import { ObjectMetaIndex } from './object-meta-index';
 
-const TYPE_PERSON = URI.make('dxn:com.example.type.person:0.1.0');
-const TYPE_DEFAULT = URI.make('dxn:test.com/type/Type:0.1.0');
+const TYPE_PERSON = DXN.parse('dxn:com.example.type.person:0.1.0');
+const TYPE_DEFAULT = DXN.parse('dxn:com.example.type.Type:0.1.0');
 
 const TestLayer = Layer.merge(
   SqliteClient.layer({

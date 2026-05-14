@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { Database, type Err, Obj, Ref, type Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
-import { EchoId, type ObjectId, type SpaceId } from '@dxos/keys';
+import { EchoId, ObjectId, SpaceId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 /**
@@ -49,16 +49,19 @@ export const ArtifactId: Schema.Schema<string> & {
       return EchoId.parse(reference.slice(1));
     } else if (reference.startsWith('dxn:')) {
       return EchoId.parse(reference);
-    } else if (/^[A-Z0-9]+:[A-Z0-9]+$/.test(reference)) {
+    } else if (reference.includes(':')) {
       const [spaceId, objectId] = reference.split(':');
+      if (!SpaceId.isValid(spaceId) || !ObjectId.isValid(objectId)) {
+        throw new Error(`Unable to parse object reference: ${reference}`);
+      }
       // This is a workaround because the current Filter API doesn't work with fully qualified Echo DXNs.
       // We check if the space ID is the same as the owning space and then use LOCAL_SPACE_TAG for local references.
       // TODO(dmaretskyi): Fix this in the Echo and Filter API to properly handle fully qualified DXNs.
       return spaceId === owningSpaceId
-        ? EchoId.fromLocalObjectId(objectId as ObjectId)
-        : EchoId.fromSpaceAndObjectId(spaceId as SpaceId, objectId as ObjectId);
-    } else if (/^[A-Z0-9]+$/.test(reference)) {
-      return EchoId.fromLocalObjectId(reference as ObjectId);
+        ? EchoId.fromLocalObjectId(objectId)
+        : EchoId.fromSpaceAndObjectId(spaceId, objectId);
+    } else if (ObjectId.isValid(reference)) {
+      return EchoId.fromLocalObjectId(reference);
     } else {
       throw new Error(`Unable to parse object reference: ${reference}`);
     }

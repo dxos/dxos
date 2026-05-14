@@ -110,7 +110,7 @@ const meta = {
               );
               yield* Feed.append(messageFeed, messages);
 
-              const messageQueueDxn = Feed.getQueueDxn(messageFeed)!.toString();
+              const messageQueueDxn = Feed.getQueueDxn(messageFeed)!;
               const messageView = ViewModel.make({
                 query: Query.select(Filter.type(Message.Message)).from({
                   feeds: [messageQueueDxn],

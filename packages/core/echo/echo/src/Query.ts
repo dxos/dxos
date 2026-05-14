@@ -255,7 +255,7 @@ class QueryClass implements Any {
       type: 'incoming-references',
       anchor: this.ast,
       property: key ?? null,
-      typename: dxn?.toString() ?? null,
+      typename: dxn ?? null,
     });
   }
 
@@ -418,7 +418,7 @@ class QueryClass implements Any {
           `Query.from() expects persisted Feed objects with a queue DXN; got feed without a space (id=${Obj.getId(feed)}).`,
         );
       }
-      return dxn.toString();
+      return dxn;
     });
     return new QueryClass({
       type: 'from',

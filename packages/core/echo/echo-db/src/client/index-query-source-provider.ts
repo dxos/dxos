@@ -11,7 +11,7 @@ import { Entity, type Hypergraph, Obj, Query, type QueryResult } from '@dxos/ech
 import { type QueryAST } from '@dxos/echo-protocol';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { EchoId, type ObjectId, SpaceId } from '@dxos/keys';
+import { EchoId, ObjectId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 import {
@@ -233,20 +233,22 @@ export class IndexQuerySource implements QuerySource {
     }
 
     invariant(SpaceId.isValid(result.spaceId), 'Invalid spaceId');
+    invariant(ObjectId.isValid(result.id), 'Invalid id');
 
     // For queue items, hydrate using Obj.fromJSON with ref resolver.
     if (result.queueId && result.documentJson) {
+      invariant(ObjectId.isValid(result.queueId), 'Invalid queueId');
       const json = JSON.parse(result.documentJson);
-      const queueEchoId = EchoId.fromSpaceAndObjectId(result.spaceId as SpaceId, result.queueId as ObjectId);
+      const queueEchoId = EchoId.fromSpaceAndObjectId(result.spaceId, result.queueId);
       const refResolver = this._params.graph.createRefResolver({
-        context: { space: result.spaceId as SpaceId, feed: queueEchoId },
+        context: { space: result.spaceId, feed: queueEchoId },
       });
-      const database = this._params.graph.getDatabase(result.spaceId as SpaceId);
+      const database = this._params.graph.getDatabase(result.spaceId);
       let object;
       try {
         object = await Obj.fromJSON(json, {
           refResolver,
-          dxn: EchoId.fromSpaceAndObjectId(result.spaceId as SpaceId, result.id as ObjectId),
+          dxn: EchoId.fromSpaceAndObjectId(result.spaceId, result.id),
           database,
         });
       } catch (err) {

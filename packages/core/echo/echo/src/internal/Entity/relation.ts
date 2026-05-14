@@ -138,11 +138,11 @@ export const EchoRelationSchema = <
   };
 };
 
-const getDXNForRelationSchemaRef = (schema: Schema.Schema.Any): string => {
+const getDXNForRelationSchemaRef = (schema: Schema.Schema.Any): DXN.DXN => {
   assertArgument(Schema.isSchema(schema), 'schema');
   const identifier = getTypeIdentifierAnnotation(schema);
   if (identifier) {
-    return identifier;
+    return DXN.parse(identifier);
   }
 
   const typename = getSchemaTypename(schema);
@@ -150,5 +150,5 @@ const getDXNForRelationSchemaRef = (schema: Schema.Schema.Any): string => {
     throw new Error('Schema must have a typename');
   }
 
-  return DXN.fromTypename(typename) as string;
+  return DXN.fromTypename(typename);
 };

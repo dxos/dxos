@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import { CommandConfig, printList } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { Entity } from '@dxos/echo';
-import { EchoId, type SpaceId } from '@dxos/keys';
+import { EchoId } from '@dxos/keys';
 
 import { printQueueObject } from './util';
 
@@ -32,7 +32,7 @@ export const query = Command.make(
       yield* Console.error(`Could not determine space from: ${dxn}`);
       return;
     }
-    const space = client.spaces.get(spaceId as SpaceId);
+    const space = client.spaces.get(spaceId);
     if (!space) {
       yield* Console.error(`Space not found: ${spaceId}`);
       return;

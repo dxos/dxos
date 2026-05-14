@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { EchoId, type SpaceId, type ObjectId } from '@dxos/keys';
+import { EchoId } from '@dxos/keys';
 
 import * as Annotation from './Annotation';
 import type * as Entity from './Entity';
@@ -122,7 +122,7 @@ export const getQueueDxn = (feed: Feed): EchoId.EchoId | undefined => {
   if (!spaceId || !objectId) {
     return undefined;
   }
-  return EchoId.fromSpaceAndObjectId(spaceId as SpaceId, objectId as ObjectId);
+  return EchoId.fromSpaceAndObjectId(spaceId, objectId);
 };
 
 //

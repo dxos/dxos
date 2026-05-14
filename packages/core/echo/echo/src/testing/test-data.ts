@@ -35,7 +35,7 @@ export const PEOPLE = {
         spaceKey: getSpaceKeyHex(),
         objects: {
           [ObjectId.random()]: ObjectStructure.makeObject({
-            type: Type.getDXN(TestSchema.Person)!.toString(),
+            type: Type.getDXN(TestSchema.Person)!,
             data: {
               name: 'Alice',
             },
@@ -52,7 +52,7 @@ export const PEOPLE = {
         spaceKey: getSpaceKeyHex(),
         objects: {
           [ObjectId.random()]: ObjectStructure.makeObject({
-            type: Type.getDXN(TestSchema.Person)!.toString(),
+            type: Type.getDXN(TestSchema.Person)!,
             data: {
               name: 'Bob',
             },
@@ -71,7 +71,7 @@ export const ORGS = {
         spaceKey: getSpaceKeyHex(),
         objects: {
           [ObjectId.random()]: ObjectStructure.makeObject({
-            type: Type.getDXN(TestSchema.Organization)!.toString(),
+            type: Type.getDXN(TestSchema.Organization)!,
             data: {
               name: 'DXOS',
               founded: '2023',
@@ -89,7 +89,7 @@ export const ORGS = {
         spaceKey: getSpaceKeyHex(),
         objects: {
           [ObjectId.random()]: ObjectStructure.makeObject({
-            type: Type.getDXN(TestSchema.Organization)!.toString(),
+            type: Type.getDXN(TestSchema.Organization)!,
             data: {
               name: 'Cyberdyne Systems',
               founded: '1984',
@@ -109,7 +109,7 @@ export const WORKS_FOR = {
         spaceKey: getSpaceKeyHex(),
         objects: {
           [ObjectId.random()]: ObjectStructure.makeRelation({
-            type: Type.getDXN(TestSchema.EmployedBy)!.toString(),
+            type: Type.getDXN(TestSchema.EmployedBy)!,
             source: { '/': EchoId.fromLocalObjectId(Object.keys(PEOPLE.bob.objects!)[0]).toString() },
             target: { '/': EchoId.fromLocalObjectId(Object.keys(ORGS.cyberdyne.objects!)[0]).toString() },
             data: {
@@ -129,7 +129,7 @@ export const WORKS_FOR = {
         spaceKey: getSpaceKeyHex(),
         objects: {
           [ObjectId.random()]: ObjectStructure.makeRelation({
-            type: Type.getDXN(TestSchema.EmployedBy)!.toString(),
+            type: Type.getDXN(TestSchema.EmployedBy)!,
             source: { '/': EchoId.fromLocalObjectId(Object.keys(PEOPLE.alice.objects!)[0]).toString() },
             target: { '/': EchoId.fromLocalObjectId(Object.keys(ORGS.dxos.objects!)[0]).toString() },
             data: {
@@ -151,7 +151,7 @@ export const TASKS = {
         spaceKey: getSpaceKeyHex(),
         objects: {
           [ObjectId.random()]: ObjectStructure.makeObject({
-            type: Type.getDXN(TestSchema.Task)!.toString(),
+            type: Type.getDXN(TestSchema.Task)!,
             data: {
               title: 'Complete project documentation',
               description: 'Write comprehensive documentation for the new system',
@@ -172,7 +172,7 @@ export const TASKS = {
         spaceKey: getSpaceKeyHex(),
         objects: {
           [ObjectId.random()]: ObjectStructure.makeObject({
-            type: Type.getDXN(TestSchema.Task)!.toString(),
+            type: Type.getDXN(TestSchema.Task)!,
             data: {
               title: 'Run experiments',
               description: 'Conduct series of experiments on the portal device',

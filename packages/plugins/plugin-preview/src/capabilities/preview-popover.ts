@@ -24,7 +24,7 @@ const handlePreviewLookup = async (
   { dxn, label }: PreviewLinkRef,
 ): Promise<PreviewLinkTarget | null> => {
   try {
-    const object = await defaultSpace.db.makeRef(EchoId.parse(dxn) as any).load();
+    const object = await defaultSpace.db.makeRef(EchoId.parse(dxn)).load();
     return { label, object };
   } catch {
     return null;

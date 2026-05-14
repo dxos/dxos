@@ -23,7 +23,7 @@ import { type Database, Ref } from '@dxos/echo';
 import { type DatabaseDirectory, EncodedReference, type ObjectStructure, type SpaceState } from '@dxos/echo-protocol';
 import { batchEvents } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { type DXN, EchoId, type ObjectId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
+import { type DXN, EchoId, type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';

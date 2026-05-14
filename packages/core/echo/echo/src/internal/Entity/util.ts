@@ -22,7 +22,7 @@ export const getObjectEchoId = (object: any): EchoId.EchoId | undefined => {
   assumeType<InternalObjectProps>(object);
 
   if (object[SelfDXNId]) {
-    invariant(typeof object[SelfDXNId] === 'string', 'Invalid object model: invalid self dxn');
+    invariant(EchoId.isEchoId(object[SelfDXNId]), 'Invalid object model: invalid self dxn');
     return EchoId.parse(object[SelfDXNId]);
   }
 

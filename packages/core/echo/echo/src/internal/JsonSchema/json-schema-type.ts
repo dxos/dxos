@@ -53,6 +53,12 @@ export const JsonSchemaEchoAnnotations = Schema.Struct({
   ),
 
   /**
+   * Storage EchoId for this schema (when persisted as an ECHO object).
+   * Mapped from {@link TypeIdentifierAnnotationId}.
+   */
+  schemaId: Schema.optional(Schema.String),
+
+  /**
    * @deprecated
    */
   // TODO(dmaretskyi): We risk old schema not passing validation due to the extra fields. Remove when we are sure this is safe.

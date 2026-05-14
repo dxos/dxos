@@ -9,6 +9,7 @@ import * as Schema from 'effect/Schema';
 import React, { type FC, useCallback, useMemo, useState } from 'react';
 
 import { type Database, Filter, type Obj } from '@dxos/echo';
+import { EncodedReference } from '@dxos/echo-protocol';
 import { Format } from '@dxos/echo/internal';
 import { type InvocationSpan } from '@dxos/functions-runtime';
 import { TraceEvent } from '@dxos/functions-runtime';
@@ -121,8 +122,8 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
         // Handle both Ref objects and encoded references.
         const targetDxn: URI.URI | undefined =
           invocation.invocationTarget?.uri ??
-          (invocation.invocationTarget && '/' in invocation.invocationTarget
-            ? URI.make((invocation.invocationTarget as any)['/'])
+          (EncodedReference.isEncodedReference(invocation.invocationTarget)
+            ? EncodedReference.toURI(invocation.invocationTarget)
             : undefined);
 
         // TODO(burdon): Use InvocationTraceStartEvent.
@@ -135,8 +136,8 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
           status,
           queue:
             invocation.invocationTraceQueue?.uri ??
-            (invocation.invocationTraceQueue && '/' in invocation.invocationTraceQueue
-              ? (invocation.invocationTraceQueue as any)['/']
+            (EncodedReference.isEncodedReference(invocation.invocationTraceQueue)
+              ? EncodedReference.toURI(invocation.invocationTraceQueue)
               : 'unknown'),
           _original: invocation,
         };

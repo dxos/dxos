@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DXN, Filter, JsonSchema, Obj, Query, type QueryAST, Tag, Type, type View } from '@dxos/echo';
+import { EchoId, Filter, JsonSchema, Obj, Query, type QueryAST, Tag, Type, type View } from '@dxos/echo';
 import { type EchoSchema, Format, type Mutable } from '@dxos/echo/internal';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -88,7 +88,7 @@ const DefaultStory = (props: DefaultStoryProps) => {
       }
 
       if (props.mode === 'tag') {
-        const queue = target && DXN.tryParse(target) ? target : undefined;
+        const queue = target ? EchoId.tryParse(target) : undefined;
         const query = queue ? Query.fromAst(newQuery).from({ feeds: [queue] }) : Query.fromAst(newQuery);
         Obj.update(view, (view) => {
           view.query.ast = query.ast as Mutable<typeof query.ast>;

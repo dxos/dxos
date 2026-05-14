@@ -24,7 +24,7 @@ import {
 import { Filter, Query } from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
-import { PublicKey } from '@dxos/keys';
+import { DXN, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
@@ -496,13 +496,13 @@ describe('Query', () => {
       const contactV2 = Obj.make(ContactV2, { name: 'Brian Smith' });
       await queue.append([contactV1, contactV2]);
 
-      const both = await queue.query(Query.select(Filter.typeDXN('dxn:com.example.type.person'))).run();
+      const both = await queue.query(Query.select(Filter.typeDXN(DXN.parse('dxn:com.example.type.person')))).run();
       expect(both).toHaveLength(2);
 
-      const v1 = await queue.query(Query.select(Filter.typeDXN('dxn:com.example.type.person:0.1.0'))).run();
+      const v1 = await queue.query(Query.select(Filter.typeDXN(DXN.parse('dxn:com.example.type.person:0.1.0')))).run();
       expect(v1).toEqual([contactV1]);
 
-      const v2 = await queue.query(Query.select(Filter.typeDXN('dxn:com.example.type.person:0.2.0'))).run();
+      const v2 = await queue.query(Query.select(Filter.typeDXN(DXN.parse('dxn:com.example.type.person:0.2.0')))).run();
       expect(v2).toEqual([contactV2]);
     });
 
@@ -1141,10 +1141,10 @@ describe('Query', () => {
         await assertQuery(db, Filter.type(ContactV1), [contactV1]);
         await assertQuery(db, Filter.type(ContactV1), [contactV1]);
         await assertQuery(db, Filter.type(ContactV2), [contactV2]);
-        await assertQuery(db, Filter.typeDXN('dxn:com.example.type.person'), [contactV1, contactV2]);
-        await assertQuery(db, Filter.typeDXN('dxn:com.example.type.person:0.1.0'), [contactV1]);
-        await assertQuery(db, Filter.typeDXN('dxn:com.example.type.person:0.2.0'), [contactV2]);
-        await assertQuery(db, Filter.typeDXN('dxn:com.example.type.person:0.2.0'), [contactV2]);
+        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:com.example.type.person')), [contactV1, contactV2]);
+        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:com.example.type.person:0.1.0')), [contactV1]);
+        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:com.example.type.person:0.2.0')), [contactV2]);
+        await assertQuery(db, Filter.typeDXN(DXN.parse('dxn:com.example.type.person:0.2.0')), [contactV2]);
       };
 
       await assertQueries(db);

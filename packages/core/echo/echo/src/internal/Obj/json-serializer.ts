@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { raise } from '@dxos/debug';
 import { type EncodedReference, ObjectStructure, isEncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { EchoId, ObjectId, URI } from '@dxos/keys';
+import { DXN, EchoId, ObjectId, type URI } from '@dxos/keys';
 import { assumeType, deepMapValues, visitValues } from '@dxos/util';
 
 import type * as Database from '../../Database';
@@ -92,7 +92,7 @@ export const objectFromJSON = async (
   assertArgument(typeof jsonData[ATTR_TYPE] === 'string', 'jsonData[ATTR_TYPE]', 'expected object to have a type');
   assertArgument(typeof jsonData.id === 'string', 'jsonData.id', 'expected object to have an id');
 
-  const type = URI.make(jsonData[ATTR_TYPE] as string);
+  const type = jsonData[ATTR_TYPE];
   const schema = await refResolver?.resolveSchema(type);
   invariant(schema === undefined || Schema.isSchema(schema));
   const decodedInput = stripInternalJsonKeys(jsonData);
@@ -116,8 +116,8 @@ export const objectFromJSON = async (
   const isRelation =
     typeof jsonData[ATTR_RELATION_SOURCE] === 'string' || typeof jsonData[ATTR_RELATION_TARGET] === 'string';
   if (isRelation) {
-    const sourceDxn = URI.make(jsonData[ATTR_RELATION_SOURCE] ?? raise(new TypeError('Missing relation source')));
-    const targetDxn = URI.make(jsonData[ATTR_RELATION_TARGET] ?? raise(new TypeError('Missing relation target')));
+    const sourceDxn = jsonData[ATTR_RELATION_SOURCE] ?? raise(new TypeError('Missing relation source'));
+    const targetDxn = jsonData[ATTR_RELATION_TARGET] ?? raise(new TypeError('Missing relation target'));
 
     const source = (await refResolver?.resolve(sourceDxn)) as AnyEntity | undefined;
     const target = (await refResolver?.resolve(targetDxn)) as AnyEntity | undefined;
@@ -142,7 +142,7 @@ export const objectFromJSON = async (
   }
 
   if (jsonData[ATTR_PARENT]) {
-    const parentDxn = URI.make(jsonData[ATTR_PARENT] as string);
+    const parentDxn = jsonData[ATTR_PARENT];
     const resolvedParent = (await refResolver?.resolve(parentDxn)) as Obj.Unknown | undefined;
     defineHiddenProperty(obj, ParentId, resolvedParent);
   } else if (parent) {
@@ -209,14 +209,15 @@ export const setRefResolverOnData = (obj: AnyEntity, refResolver: RefResolver) =
  * Convert ObjectStructure to JSON data for indexing.
  * Different from {@link objectToJSON} as it takes the internal {@link ObjectStructure} representation directly
  */
-export const objectStructureToJson = (objectId: string, structure: ObjectStructure): Obj.JSON => {
+export const objectStructureToJson = (objectId: ObjectId, structure: ObjectStructure): Obj.JSON => {
+  const typeRef = ObjectStructure.getTypeReference(structure)?.['/'];
   const parent = ObjectStructure.getParent(structure)?.['/'];
   const source = ObjectStructure.getRelationSource(structure)?.['/'];
   const target = ObjectStructure.getRelationTarget(structure)?.['/'];
   return {
     ...structure.data,
     id: objectId,
-    [ATTR_TYPE]: URI.make(ObjectStructure.getTypeReference(structure)?.['/'] ?? ''),
+    [ATTR_TYPE]: typeRef ? DXN.parse(typeRef) : (undefined as unknown as DXN.DXN),
     [ATTR_DELETED]: ObjectStructure.isDeleted(structure),
     [ATTR_PARENT]: parent !== undefined ? EchoId.parse(parent) : undefined,
     [ATTR_RELATION_SOURCE]: source !== undefined ? EchoId.parse(source) : undefined,

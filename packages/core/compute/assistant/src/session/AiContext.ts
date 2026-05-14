@@ -384,7 +384,7 @@ export class Binder extends Resource {
         }
 
         // Fallback to existing object.
-        return target ?? current.find((obj) => Obj.getId(obj as any) === ref.uri);
+        return target ?? current.find((obj) => Obj.getId(obj) === ref.uri);
       })
       .filter(isNonNullable);
   }

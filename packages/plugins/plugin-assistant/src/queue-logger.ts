@@ -126,8 +126,8 @@ export class QueueLogger implements SequenceLogger {
     }
   }
 
-  private _getTraceQueueEchoId(invocationId: string): EchoId.EchoId {
-    return EchoId.fromSpaceAndObjectId(this._space.id, invocationId as ObjectId);
+  private _getTraceQueueEchoId(invocationId: ObjectId): EchoId.EchoId {
+    return EchoId.fromSpaceAndObjectId(this._space.id, invocationId);
   }
 
   private _appendToTraceFeed(items: any[]): Promise<void> {
@@ -141,7 +141,7 @@ export class QueueLogger implements SequenceLogger {
   // (no backing Feed.Feed object). Migration to Feed.append is blocked on either
   // (a) materializing a Feed object per invocation, or (b) a lower-level
   // FeedService.appendByDxn primitive. Tracked as Phase 6 work in echo/AUDIT.md.
-  private _getTraceEventQueue(invocationId: string): Queue<TraceEvent> {
+  private _getTraceEventQueue(invocationId: ObjectId): Queue<TraceEvent> {
     const echoId = this._getTraceQueueEchoId(invocationId);
     return this._space.queues.get(echoId);
   }

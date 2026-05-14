@@ -4,7 +4,7 @@
 
 import React, { type ComponentType, type JSX, useCallback } from 'react';
 
-import { type URI } from '@dxos/keys';
+import { URI } from '@dxos/keys';
 import { Button, Clipboard, Input } from '@dxos/react-ui';
 import { JsonHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 
@@ -40,7 +40,7 @@ export const ObjectViewer = ({ object, id, onNavigate }: ObjectViewerProps) => {
         node.properties ??= { className: [] };
         node.properties.className.push('underline', 'cursor-pointer');
         node.properties.onClick = () => {
-          onNavigate?.((node.children![0].value as string).slice(1, -1) as URI.URI);
+          onNavigate?.(URI.make((node.children![0].value as string).slice(1, -1)));
         };
       } else {
         node.children?.forEach(addDxnLinks);

@@ -130,7 +130,7 @@ const TargetRow = ({
   const target = integration.targets[targetIndex];
   const obj = target?.object?.target;
   const label = obj
-    ? ((obj as any).name ?? Obj.getId(obj))
+    ? (Obj.getLabel(obj) ?? Obj.getId(obj))
     : (target?.name ?? t('pending-sync.label', { defaultValue: 'Pending first sync…' }));
 
   // Stable default-values reference so Form.Root doesn't reinitialize on

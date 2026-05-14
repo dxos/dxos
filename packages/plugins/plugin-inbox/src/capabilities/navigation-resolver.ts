@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, getSpaceIdFromPath, getSpacePath, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
 import { Database, Filter, Key, Obj, Query } from '@dxos/echo';
-import { EchoId, type URI } from '@dxos/keys';
+import { EchoId, URI } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings';
 import { getLinkedVariant, isLinkedSegment } from '@dxos/react-ui-attention';
@@ -35,7 +35,7 @@ export default Capability.makeModule(
         }
 
         const rawDxn = query.dxn.startsWith('@dxn:') ? query.dxn.slice(1) : query.dxn;
-        const dxnRef = EchoId.tryParse(rawDxn) ?? (rawDxn.startsWith('dxn:') ? (rawDxn as URI.URI) : undefined);
+        const dxnRef = EchoId.tryParse(rawDxn) ?? (rawDxn.startsWith('dxn:') ? URI.make(rawDxn) : undefined);
         if (!dxnRef) {
           return [];
         }
