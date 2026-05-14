@@ -19,6 +19,9 @@
       "path": "../../../tools/vite-plugin-icons"
     },
     {
+      "path": "../../../tools/vite-plugin-shutdown"
+    },
+    {
       "path": "../../common/async"
     },
     {

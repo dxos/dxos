@@ -41,7 +41,7 @@ export const ChannelChat = composable<HTMLDivElement, ChannelChatProps>(
     const messages = useQuery(
       space.db,
       feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
-    ) as Message.Message[];
+    );
 
     const readOnly = Obj.getMeta(channel).keys.length > 0;
 

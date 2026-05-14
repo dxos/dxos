@@ -24,12 +24,6 @@ export class QueueService extends Context.Tag('@dxos/functions/QueueService')<
      * API to access the queues.
      */
     readonly queues: QueueAPI;
-
-    /**
-     * The queue that is used to store the context of the current research.
-     * @deprecated Use `ContextQueueService` instead.
-     */
-    readonly queue: Queue | undefined;
   }
 >() {
   static notAvailable = Layer.succeed(QueueService, {
@@ -41,18 +35,16 @@ export class QueueService extends Context.Tag('@dxos/functions/QueueService')<
         throw new Error('Queues not available');
       },
     },
-    queue: undefined,
   });
 
-  static make = (queues: QueueFactory, queue?: Queue): Context.Tag.Service<QueueService> => {
+  static make = (queues: QueueFactory): Context.Tag.Service<QueueService> => {
     return {
       queues,
-      queue,
     };
   };
 
-  static layer = (queues: QueueFactory, queue?: Queue): Layer.Layer<QueueService> =>
-    Layer.succeed(QueueService, QueueService.make(queues, queue));
+  static layer = (queues: QueueFactory): Layer.Layer<QueueService> =>
+    Layer.succeed(QueueService, QueueService.make(queues));
 
   /**
    * Gets a queue by its DXN.
@@ -71,19 +63,6 @@ export class QueueService extends Context.Tag('@dxos/functions/QueueService')<
 
   static append = <T extends Entity.Unknown = Entity.Unknown>(queue: Queue<T>, objects: T[]): Effect.Effect<void> =>
     Effect.promise(() => queue.append(objects));
-}
-
-/**
- * Gives access to a specific queue passed as a context.
- * @deprecated Use Feed.FeedService instead.
- */
-export class ContextQueueService extends Context.Tag('@dxos/functions/ContextQueueService')<
-  ContextQueueService,
-  {
-    readonly queue: Queue;
-  }
->() {
-  static layer = (queue: Queue) => Layer.succeed(ContextQueueService, { queue });
 }
 
 export const feedServiceFromQueueServiceLayer = Layer.unwrapEffect(

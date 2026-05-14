@@ -19,9 +19,9 @@ import type { FilesystemFile, FilesystemWorkspace, NativeFilesystemState } from 
 
 import { findFileById, readFileContent, updateFileInWorkspace } from '../../util';
 import {
-  getFileXattrDxn,
+  getFileXattrDXN,
   readFileMap,
-  setFileXattrDxn,
+  setFileXattrDXN,
   watchMarkdownFile,
   writeFileMap,
   type FileMapEntry,
@@ -75,7 +75,7 @@ export type MarkdownDocuments = {
   /** Lookup text object by filesystem file id. */
   getByFileId: (fileId: string) => Text.Text | undefined;
   /** Resolve disk write target from Echo DXN string. */
-  getWriteTargetByDxn: (dxn: string) => { path: string; fileId: string } | undefined;
+  getWriteTargetByDXN: (dxn: string) => { path: string; fileId: string } | undefined;
   /** Restore existing objects then create Text for any unmapped markdown files. */
   syncFromDisk: (workspace: FilesystemWorkspace) => Effect.Effect<void>;
   /** Evict all cached documents and file watchers for a workspace. */
@@ -242,12 +242,12 @@ export const createMarkdownDocuments = (
 
     void Effect.runFork(
       Effect.gen(function* () {
-        yield* setFileXattrDxn(file.path, dxn);
+        yield* setFileXattrDXN(file.path, dxn);
 
         const relPath = relativePath(workspace.path, file.path);
         const fileMap = yield* readFileMap(workspace.path);
         const existingIdx = fileMap.files.findIndex((entry) => entry.relativePath === relPath);
-        const newEntry: FileMapEntry = { relativePath: relPath, objectDxn: dxn };
+        const newEntry: FileMapEntry = { relativePath: relPath, objectDXN: dxn };
         if (existingIdx >= 0) {
           fileMap.files[existingIdx] = newEntry;
         } else {
@@ -313,7 +313,7 @@ export const createMarkdownDocuments = (
       }
 
       const fileMap = yield* readFileMap(workspace.path);
-      const fileMapByPath = new Map(fileMap.files.map((entry) => [entry.relativePath, entry.objectDxn]));
+      const fileMapByPath = new Map(fileMap.files.map((entry) => [entry.relativePath, entry.objectDXN]));
       let fileMapDirty = false;
 
       let fileIndex = 0;
@@ -329,7 +329,7 @@ export const createMarkdownDocuments = (
         }
 
         // Try xattr first, fall back to filemap.
-        let dxnStr = yield* getFileXattrDxn(file.path);
+        let dxnStr = yield* getFileXattrDXN(file.path);
 
         if (!dxnStr) {
           const relPath = relativePath(workspace.path, file.path);
@@ -380,7 +380,7 @@ export const createMarkdownDocuments = (
         }
 
         // Ensure xattr is set (may have been restored from filemap only).
-        yield* setFileXattrDxn(file.path, dxnStr);
+        yield* setFileXattrDXN(file.path, dxnStr);
 
         // Keep filemap in sync.
         const relPath = relativePath(workspace.path, file.path);
@@ -393,7 +393,7 @@ export const createMarkdownDocuments = (
 
       if (fileMapDirty) {
         const updatedFileMap = {
-          files: Array.from(fileMapByPath.entries()).map(([rp, dxn]) => ({ relativePath: rp, objectDxn: dxn })),
+          files: Array.from(fileMapByPath.entries()).map(([rp, dxn]) => ({ relativePath: rp, objectDXN: dxn })),
         };
         yield* writeFileMap(workspace.path, updatedFileMap);
       }
@@ -410,7 +410,7 @@ export const createMarkdownDocuments = (
       return documentsByFileId.get(fileId);
     },
 
-    getWriteTargetByDxn: (dxn: string): { path: string; fileId: string } | undefined => {
+    getWriteTargetByDXN: (dxn: string): { path: string; fileId: string } | undefined => {
       return writeTargetByDxn.get(dxn);
     },
 

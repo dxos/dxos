@@ -34,7 +34,7 @@ const provideTestLayers = Effect.provide(AiSession.Service.layerNewFeed().pipe(L
 /**
  * Gets the conversation DXN for passing to Operation.invoke options.
  */
-const getConversationDxn = Effect.gen(function* () {
+const getConversationDXN = Effect.gen(function* () {
   const session = yield* AiSession.Service;
   return Obj.getId(session.feed);
 });
@@ -44,7 +44,7 @@ describe('Blueprint Manager', () => {
     'query-blueprints: returns all registered blueprints',
     Effect.fnUntraced(
       function* (_) {
-        const conversation = yield* getConversationDxn;
+        const conversation = yield* getConversationDXN;
         const result = yield* Operation.invoke(QueryBlueprints, {}, { conversation });
         expect(result).toHaveLength(3);
         const keys = result.map((blueprint: Blueprint.Blueprint) => blueprint.key);
@@ -62,7 +62,7 @@ describe('Blueprint Manager', () => {
     'enable-blueprints: enables blueprints with agentCanEnable=true',
     Effect.fnUntraced(
       function* (_) {
-        const conversation = yield* getConversationDxn;
+        const conversation = yield* getConversationDXN;
         const { enabled, rejected } = yield* Operation.invoke(
           EnableBlueprints,
           { keys: ['org.dxos.blueprint.database'] },
@@ -86,7 +86,7 @@ describe('Blueprint Manager', () => {
     'enable-blueprints: rejects blueprints without agentCanEnable',
     Effect.fnUntraced(
       function* (_) {
-        const conversation = yield* getConversationDxn;
+        const conversation = yield* getConversationDXN;
         const { enabled, rejected } = yield* Operation.invoke(
           EnableBlueprints,
           { keys: ['org.dxos.blueprint.discord'] },
@@ -110,7 +110,7 @@ describe('Blueprint Manager', () => {
     'enable-blueprints: mixed keys enables only allowed ones',
     Effect.fnUntraced(
       function* (_) {
-        const conversation = yield* getConversationDxn;
+        const conversation = yield* getConversationDXN;
         const { enabled, rejected } = yield* Operation.invoke(
           EnableBlueprints,
           {
@@ -135,7 +135,7 @@ describe('Blueprint Manager', () => {
     'enable-blueprints: unknown keys are rejected with reason',
     Effect.fnUntraced(
       function* (_) {
-        const conversation = yield* getConversationDxn;
+        const conversation = yield* getConversationDXN;
         const { enabled, rejected } = yield* Operation.invoke(
           EnableBlueprints,
           { keys: ['org.dxos.blueprint.nonexistent'] },

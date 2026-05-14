@@ -33,7 +33,7 @@ describe('ReverseRefIndex', () => {
       const spaceId = SpaceId.random();
       const sourceObjectId = ObjectId.random();
       const targetObjectId = ObjectId.random();
-      const targetDxn = `dxn:echo:@:${targetObjectId}`;
+      const targetDXN = `dxn:echo:@:${targetObjectId}`;
 
       const sourceObject: IndexerObject = {
         spaceId,
@@ -45,15 +45,15 @@ describe('ReverseRefIndex', () => {
         data: {
           id: sourceObjectId,
           [ATTR_TYPE]: TYPE_PERSON,
-          contact: { '/': targetDxn },
+          contact: { '/': targetDXN },
         },
       };
 
       yield* reverseRefIndex.update([sourceObject]);
 
-      const results = yield* reverseRefIndex.query({ targetDxn });
+      const results = yield* reverseRefIndex.query({ targetDxn: targetDXN });
       expect(results.length).toBe(1);
-      expect(results[0].targetDxn).toBe(targetDxn);
+      expect(results[0].targetDxn).toBe(targetDXN);
       expect(results[0].propPath).toBe('contact');
     }).pipe(Effect.provide(TestLayer)),
   );
@@ -239,7 +239,7 @@ describe('ReverseRefIndex', () => {
       const spaceId = SpaceId.random();
       const sourceObjectId = ObjectId.random();
       const targetObjectId = ObjectId.random();
-      const targetDxn = `dxn:echo:@:${targetObjectId}`;
+      const targetDXN = `dxn:echo:@:${targetObjectId}`;
 
       const sourceObject: IndexerObject = {
         spaceId,
@@ -251,13 +251,13 @@ describe('ReverseRefIndex', () => {
         data: {
           id: sourceObjectId,
           [ATTR_TYPE]: TYPE_EXAMPLE,
-          ref: { '/': targetDxn },
+          ref: { '/': targetDXN },
         },
       };
 
       yield* reverseRefIndex.update([sourceObject]);
 
-      const results = yield* reverseRefIndex.query({ targetDxn });
+      const results = yield* reverseRefIndex.query({ targetDxn: targetDXN });
       expect(results.length).toBe(1);
       expect(results[0].propPath).toBe('ref');
     }).pipe(Effect.provide(TestLayer)),

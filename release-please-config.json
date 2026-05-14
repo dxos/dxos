@@ -635,11 +635,6 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-help/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/plugins/plugin-inbox/package.json",
           "jsonpath": "$.version"
         },
@@ -811,6 +806,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-status-bar/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-support/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -1266,6 +1266,11 @@
         {
           "type": "json",
           "path": "tools/vite-plugin-log/example/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/vite-plugin-shutdown/package.json",
           "jsonpath": "$.version"
         },
         {

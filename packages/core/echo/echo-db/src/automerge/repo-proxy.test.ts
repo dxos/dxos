@@ -11,6 +11,7 @@ import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { AutomergeHost, DataServiceImpl, SpaceStateManager } from '@dxos/echo-pipeline';
 import { TestReplicationNetwork } from '@dxos/echo-pipeline/testing';
+import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
@@ -32,6 +33,7 @@ describe('RepoProxy', () => {
     log.break();
 
     const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), clientHandle.url!);
+    invariant(hostHandle);
     log.break();
     await hostHandle.whenReady();
 
@@ -224,6 +226,7 @@ describe('RepoProxy', () => {
     const handle = clientRepo.create<{ client: number; host: number }>();
     await handle.whenReady();
     const hostHandle = await host.loadDoc<{ client: number; host: number }>(Context.default(), handle.url!);
+    invariant(hostHandle);
 
     const numberOfUpdates = 1000;
     for (let i = 1; i <= numberOfUpdates; i++) {
@@ -263,6 +266,7 @@ describe('RepoProxy', () => {
     expect(cloneHandle.doc()?.text).to.equal(text);
 
     const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), cloneHandle.url!);
+    invariant(hostHandle);
     await hostHandle.whenReady();
     await expect.poll(() => hostHandle.doc()?.text).toEqual(text);
   });
@@ -296,7 +300,11 @@ describe('RepoProxy', () => {
     await Promise.all(handles.map((handle) => handle.whenReady()));
 
     const hostHandles = await Promise.all(
-      handles.map(async (handle) => host.loadDoc<{ text: string }>(Context.default(), handle.url!)),
+      handles.map(async (handle) => {
+        const loaded = await host.loadDoc<{ text: string }>(Context.default(), handle.url!);
+        invariant(loaded);
+        return loaded;
+      }),
     );
 
     for (const handle of hostHandles) {

@@ -1529,11 +1529,10 @@ export class QueryExecutor extends Resource {
     const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, meta.documentId as DocumentId, {
       fetchFromNetwork: false,
     });
-    const doc = handle.doc();
-    if (!doc) {
+    if (!handle) {
       return null;
     }
-    const object = DatabaseDirectory.getInlineObject(doc, meta.objectId);
+    const object = DatabaseDirectory.getInlineObject(handle.doc(), meta.objectId);
     if (!object) {
       return null;
     }
@@ -1597,12 +1596,11 @@ export class QueryExecutor extends Resource {
     const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, link as AutomergeUrl, {
       fetchFromNetwork: false,
     });
-    const doc = handle.doc();
-    if (!doc) {
+    if (!handle) {
       return null;
     }
 
-    const object = DatabaseDirectory.getInlineObject(doc, objectId);
+    const object = DatabaseDirectory.getInlineObject(handle.doc(), objectId);
     if (!object) {
       return null;
     }

@@ -44,9 +44,9 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ db, span, onClose }) => {
     return () => clearInterval(interval);
   }, [span]);
 
-  const targetDxn = useMemo(() => span.invocationTarget?.uri, [span.invocationTarget]);
+  const targetDXN = useMemo(() => span.invocationTarget?.uri, [span.invocationTarget]);
   const resolver = useFunctionNameResolver({ db });
-  const targetName = useMemo(() => resolver(targetDxn), [targetDxn, resolver]);
+  const targetName = useMemo(() => resolver(targetDXN), [targetDXN, resolver]);
 
   const timestamp = useMemo(() => formatDate(span.timestamp, 'yyyy-MM-dd HH:mm:ss'), [span.timestamp]);
   const outcomeColor = useMemo(() => InvocationColor[span.outcome] ?? 'neutral', [span.outcome]);
@@ -67,7 +67,7 @@ export const SpanSummary: FC<SpanSummaryProps> = ({ db, span, onClose }) => {
 
         {span.trigger && (
           <div className='mt-2 text-sm' role='none'>
-            Trigger ID: <span className='font-mono'>{span.trigger.uri.split(':').pop()}</span>
+            Trigger ID: <span className='font-mono'>{span.trigger.uri?.toString().split(':').pop()}</span>
           </div>
         )}
       </div>

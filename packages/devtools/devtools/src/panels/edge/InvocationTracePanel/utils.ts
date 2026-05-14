@@ -9,14 +9,16 @@ export const formatDuration = (duration: number): string => {
 };
 
 /**
- * Extracts the trailing UUID segment from a function-target DXN (`dxn:<nsid>:<uuid>`).
- * Returns undefined if the URI is missing.
+ * Extracts the UUID part from a DXN.
+ * @param dxn The DXN to extract the UUID from.
+ * @returns The UUID part of the DXN, or undefined if the DXN is undefined or invalid.
  */
-export const getUuidFromDxn = (uri: URI.URI | undefined): string | undefined => {
-  if (!uri) {
+export const getUuidFromDXN = (dxn: URI.URI | string | undefined): string | undefined => {
+  if (!dxn) {
     return undefined;
   }
 
-  const parts = uri.split(':');
-  return parts.at(-1);
+  const dxnString = dxn.toString();
+  const dxnParts = dxnString.split(':');
+  return dxnParts.at(-1);
 };

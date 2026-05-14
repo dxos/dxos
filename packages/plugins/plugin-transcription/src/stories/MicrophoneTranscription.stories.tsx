@@ -16,11 +16,9 @@ import {
   processTranscriptMessage,
 } from '@dxos/assistant/extraction';
 import { Filter, type Obj } from '@dxos/echo';
-import { MemoryQueue } from '@dxos/echo-db';
-import { createQueueDXN } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
@@ -30,7 +28,7 @@ import { TestSchema } from '@dxos/schema/testing';
 import { Message, Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
 
-import { useAudioTrack, useQueueModelAdapter, useTranscriber } from '#hooks';
+import { useAudioTrack, useFeedModelAdapter, useTranscriber } from '#hooks';
 import { TestItem } from '#testing';
 
 import { type MediaStreamRecorderProps, type TranscriberProps } from '../transcriber';
@@ -71,11 +69,10 @@ const DefaultStory = ({
   // Speaking.
   const isSpeaking = detectSpeaking ? useIsSpeaking(track) : true;
 
-  // Queue.
-  // TODO(dmaretskyi): Use space.queues.create() instead.
-  const queueDxn = useMemo(() => createQueueDXN(), []);
-  const queue = useMemo(() => new MemoryQueue<Message.Message>(queueDxn), [queueDxn]);
-  const model = useQueueModelAdapter(renderByline([]), queue);
+  // Local-only message buffer for the storybook; production uses a real space-backed Feed.
+  const [messages, setMessages] = useState<Message.Message[]>([]);
+  const appendMessage = useCallback((message: Message.Message) => setMessages((prev) => [...prev, message]), []);
+  const model = useFeedModelAdapter(renderByline([]), messages);
   const [space] = useSpaces();
 
   useEffect(() => {
@@ -123,7 +120,7 @@ const DefaultStory = ({
         blocks,
       });
       if (!space) {
-        void queue.append([message]);
+        appendMessage(message);
         return;
       }
 
@@ -140,12 +137,12 @@ const DefaultStory = ({
             timeout: 30_000,
           },
         });
-        void queue.append([result.message]);
+        appendMessage(result.message);
       } else {
-        void queue.append([message]);
+        appendMessage(message);
       }
     },
-    [queue, space],
+    [appendMessage, space, entityExtraction, extractionFunction, objects],
   );
 
   const transcriber = useTranscriber({

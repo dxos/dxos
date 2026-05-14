@@ -24,6 +24,9 @@
       "path": "../../../tools/vite-plugin-log"
     },
     {
+      "path": "../../../tools/vite-plugin-shutdown"
+    },
+    {
       "path": "../../common/async"
     },
     {

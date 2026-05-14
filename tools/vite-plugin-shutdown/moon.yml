@@ -1,0 +1,4 @@
+layer: library
+language: typescript
+tags:
+  - ts-compile

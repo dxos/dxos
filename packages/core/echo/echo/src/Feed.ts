@@ -174,6 +174,21 @@ export type Service = FeedService;
 export const Service = FeedService;
 
 /**
+ * Effect context service that holds the current feed for a scoped operation.
+ *
+ * @deprecated Prefer threading a `Feed.Feed` explicitly through function signatures
+ * over hiding it behind a context service.
+ */
+export class ContextFeedService extends Context.Tag('@dxos/echo/Feed/ContextFeedService')<
+  ContextFeedService,
+  {
+    readonly feed: Feed;
+  }
+>() {
+  static layer = (feed: Feed): Layer.Layer<ContextFeedService> => Layer.succeed(ContextFeedService, { feed });
+}
+
+/**
  * Layer that provides a Feed service that throws when accessed.
  * Useful as a default layer when no feed service is available.
  */

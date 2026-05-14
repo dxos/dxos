@@ -374,8 +374,8 @@ export const selectQueue = Effect.fn(function* () {
           continue;
         }
 
-        const queueDxn = Feed.getQueueDxn(feedObj);
-        if (!queueDxn) {
+        const queueDXN = Feed.getQueueDxn(feedObj);
+        if (!queueDXN) {
           continue;
         }
 
@@ -384,7 +384,7 @@ export const selectQueue = Effect.fn(function* () {
 
         queueChoices.push({
           title: label,
-          value: queueDxn.toString(),
+          value: queueDXN.toString(),
           description,
         });
       }

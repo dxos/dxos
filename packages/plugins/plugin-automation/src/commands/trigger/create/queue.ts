@@ -42,7 +42,7 @@ export const queue = Command.make(
         return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
       }
 
-      const queueDxn = yield* Option.match(options.queue, {
+      const queueDXN = yield* Option.match(options.queue, {
         onNone: () => selectQueue(),
         onSome: (dxn) => Effect.succeed(dxn.toString()),
       });
@@ -65,7 +65,7 @@ export const queue = Command.make(
       const trigger = Trigger.make({
         function: Ref.make(fn),
         enabled,
-        spec: Trigger.specQueue(queueDxn),
+        spec: Trigger.specQueue(queueDXN),
         input,
       });
 

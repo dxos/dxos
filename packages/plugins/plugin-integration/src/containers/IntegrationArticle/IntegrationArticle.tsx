@@ -175,7 +175,9 @@ const TargetRow = ({
           defaultValues={defaultValues}
           onValuesChanged={handleValuesChanged}
         >
-          <Form.FieldSet />
+          <Form.Content>
+            <Form.FieldSet />
+          </Form.Content>
         </Form.Root>
       )}
     </Settings.Panel>

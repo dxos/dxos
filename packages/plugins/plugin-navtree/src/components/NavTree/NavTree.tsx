@@ -82,10 +82,10 @@ const useTopLevelNavItems = (root?: Node.Node) => {
     ].toSorted((a, b) => byPosition(a.properties, b.properties));
 
     return {
-      topLevelActions,
-      l0Items: topLevelWorkspaces,
       pinnedItems,
+      topLevelActions,
       userAccountItem,
+      l0Items: topLevelWorkspaces,
     };
   }, [rootActions, rootOutboundItems]);
 

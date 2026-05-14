@@ -64,7 +64,7 @@ export class Workflow {
         const executable = this._requireResolved(nodeId);
         const computingOutputs = executable.exec != null;
         const effect = computingOutputs ? executor.computeOutputs(nodeId) : executor.computeInputs(nodeId);
-        return effect.pipe(Effect.withSpan('workflowNode', { attributes: { workflowDxn: this._dxn, nodeId } }));
+        return effect.pipe(Effect.withSpan('workflowNode', { attributes: { workflowDXN: this._dxn, nodeId } }));
       });
 
       const results = yield* Effect.all(tasks);
@@ -74,7 +74,7 @@ export class Workflow {
       return outputNodeIndex >= 0 ? results[outputNodeIndex] : ValueBag.make({});
     })
       .pipe(createDefectLogger())
-      .pipe(Effect.withSpan('workflow', { attributes: { workflowDxn: this._dxn } }));
+      .pipe(Effect.withSpan('workflow', { attributes: { workflowDXN: this._dxn } }));
   }
 
   getResolvedNode(nodeId: string): Executable | undefined {

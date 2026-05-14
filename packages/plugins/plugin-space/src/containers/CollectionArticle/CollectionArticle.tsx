@@ -74,7 +74,7 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
           label={label}
           icon={item.icon}
           iconOnly
-          iconClassNames={styles?.surfaceText}
+          iconClassNames={styles?.foreground}
         />
         <Card.Title>{label}</Card.Title>
         <Card.Menu />

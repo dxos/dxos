@@ -411,7 +411,7 @@ class QueryClass implements Any {
     }
 
     const feedItems = items as Feed.Feed[];
-    const feedDxns = feedItems.map((feed) => {
+    const feedDXNs = feedItems.map((feed) => {
       const dxn = Feed.getQueueDxn(feed);
       if (!dxn) {
         throw new TypeError(
@@ -426,7 +426,7 @@ class QueryClass implements Any {
       from: {
         _tag: 'scope',
         scope: {
-          feeds: feedDxns,
+          feeds: feedDXNs,
         },
       },
     });
