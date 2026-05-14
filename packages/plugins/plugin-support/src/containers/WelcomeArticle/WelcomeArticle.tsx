@@ -5,7 +5,10 @@
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { ASSISTANT_COMPANION_VARIANT } from '@dxos/plugin-assistant';
+import { Button, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { HelpOperation } from '#types';
@@ -23,6 +26,12 @@ export const WelcomeArticle = ({ role }: WelcomeArticleProps = {}) => {
     void invokePromise(HelpOperation.Start);
   }, [invokePromise]);
 
+  const handleOpenChat = useCallback(() => {
+    void invokePromise(LayoutOperation.UpdateCompanion, {
+      subject: linkedSegment(ASSISTANT_COMPANION_VARIANT),
+    });
+  }, [invokePromise]);
+
   return (
     <Panel.Root role={role}>
       <Panel.Toolbar asChild>
@@ -35,6 +44,9 @@ export const WelcomeArticle = ({ role }: WelcomeArticleProps = {}) => {
           <ScrollArea.Viewport classNames='p-8 flex flex-col items-center gap-4'>
             <h1 className='text-2xl font-semibold'>{t('welcome.title')}</h1>
             <p className='max-w-prose text-center text-description'>{t('welcome.description')}</p>
+            <Button variant='primary' onClick={handleOpenChat}>
+              {t('open-chat.button')}
+            </Button>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Content>

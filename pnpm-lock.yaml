@@ -14499,6 +14499,9 @@ importers:
       '@dxos/observability':
         specifier: workspace:*
         version: link:../../sdk/observability
+      '@dxos/plugin-assistant':
+        specifier: workspace:*
+        version: link:../plugin-assistant
       '@dxos/plugin-observability':
         specifier: workspace:*
         version: link:../plugin-observability
@@ -14511,6 +14514,9 @@ importers:
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../../ui/react-primitives/react-hooks
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form

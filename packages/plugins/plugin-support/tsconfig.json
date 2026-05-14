@@ -81,10 +81,16 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-attention"
+    },
+    {
       "path": "../../ui/react-ui-form"
     },
     {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../plugin-assistant"
     },
     {
       "path": "../plugin-client"
