@@ -98,7 +98,7 @@ describe('query api', () => {
       expect(ObjectsReferencingFred.ast).toMatchObject({
         type: 'incoming-references',
         property: null,
-        typename: 'dxn:type:com.example.type.task:0.1.0',
+        typename: 'dxn:com.example.type.task:0.1.0',
       });
     });
 
@@ -150,17 +150,17 @@ describe('query api', () => {
               {
                 "props": {},
                 "type": "object",
-                "typename": "dxn:type:org.dxos.type.feed:0.1.0",
+                "typename": "dxn:org.dxos.type.feed:0.1.0",
               },
               {
                 "props": {},
                 "type": "object",
-                "typename": "dxn:type:org.dxos.type.collection:0.1.0",
+                "typename": "dxn:org.dxos.type.collection:0.1.0",
               },
               {
                 "props": {},
                 "type": "object",
-                "typename": "dxn:type:org.dxos.type.view:0.1.0",
+                "typename": "dxn:org.dxos.type.view:0.1.0",
               },
             ],
             "type": "or",
@@ -177,30 +177,30 @@ describe('query api', () => {
       Schema.validateSync(QueryAST.Query)(AllDatasets.ast);
       log('AllDatasets', { ast: AllDatasets.ast });
       expect(AllDatasets.ast).toMatchInlineSnapshot(`
-        {
-          "filter": {
-            "filters": [
               {
-                "props": {},
-                "type": "object",
-                "typename": "dxn:type:org.dxos.type.feed:0.1.0",
-              },
-              {
-                "props": {},
-                "type": "object",
-                "typename": "dxn:type:org.dxos.type.collection:0.1.0",
-              },
-              {
-                "props": {},
-                "type": "object",
-                "typename": "dxn:type:org.dxos.type.view:0.1.0",
-              },
-            ],
-            "type": "or",
-          },
-          "type": "select",
-        }
-      `);
+                "filter": {
+                  "filters": [
+                    {
+                      "props": {},
+                      "type": "object",
+                      "typename": "dxn:org.dxos.type.feed:0.1.0",
+                    },
+                    {
+                      "props": {},
+                      "type": "object",
+                      "typename": "dxn:org.dxos.type.collection:0.1.0",
+                    },
+                    {
+                      "props": {},
+                      "type": "object",
+                      "typename": "dxn:org.dxos.type.view:0.1.0",
+                    },
+                  ],
+                  "type": "or",
+                },
+                "type": "select",
+              }
+            `);
     });
 
     test('get all people not in orgs', () => {
@@ -230,15 +230,15 @@ describe('query api', () => {
       log('query', { ast: contactFullTextSearch.ast });
       Schema.validateSync(QueryAST.Query)(contactFullTextSearch.ast);
       expect(contactFullTextSearch.ast).toMatchInlineSnapshot(`
-      {
-        "filter": {
-          "searchKind": undefined,
-          "text": "Bill",
-          "type": "text-search",
-        },
-        "type": "select",
-      }
-    `);
+        {
+          "filter": {
+            "searchKind": undefined,
+            "text": "Bill",
+            "type": "text-search",
+          },
+          "type": "select",
+        }
+      `);
     });
 
     test('typed full-text search', () => {
@@ -247,24 +247,24 @@ describe('query api', () => {
       log('query', { ast: contactFullTextSearch.ast });
       Schema.validateSync(QueryAST.Query)(contactFullTextSearch.ast);
       expect(contactFullTextSearch.ast).toMatchInlineSnapshot(`
-      {
-        "filter": {
-          "searchKind": undefined,
-          "text": "Bill",
-          "type": "text-search",
-        },
-        "selection": {
+        {
           "filter": {
-            "id": undefined,
-            "props": {},
-            "type": "object",
-            "typename": "dxn:type:com.example.type.person:0.1.0",
+            "searchKind": undefined,
+            "text": "Bill",
+            "type": "text-search",
           },
-          "type": "select",
-        },
-        "type": "filter",
-      }
-    `);
+          "selection": {
+            "filter": {
+              "id": undefined,
+              "props": {},
+              "type": "object",
+              "typename": "dxn:com.example.type.person:0.1.0",
+            },
+            "type": "select",
+          },
+          "type": "filter",
+        }
+      `);
     });
 
     test('filter by ref', () => {
@@ -281,7 +281,7 @@ describe('query api', () => {
           },
         },
         type: 'object',
-        typename: 'dxn:type:com.example.type.task:0.1.0',
+        typename: 'dxn:com.example.type.task:0.1.0',
       });
       log('tasksByFred', { ast: tasksByFred.ast });
     });
@@ -293,27 +293,27 @@ describe('query api', () => {
 
       Schema.validateSync(QueryAST.Query)(orgsAndPeople.ast);
       expect(orgsAndPeople.ast).toMatchInlineSnapshot(`
-      {
-        "filter": {
-          "filters": [
-            {
-              "id": undefined,
-              "props": {},
-              "type": "object",
-              "typename": "dxn:type:com.example.type.organization:0.1.0",
-            },
-            {
-              "id": undefined,
-              "props": {},
-              "type": "object",
-              "typename": "dxn:type:com.example.type.person:0.1.0",
-            },
-          ],
-          "type": "or",
-        },
-        "type": "select",
-      }
-    `);
+        {
+          "filter": {
+            "filters": [
+              {
+                "id": undefined,
+                "props": {},
+                "type": "object",
+                "typename": "dxn:com.example.type.organization:0.1.0",
+              },
+              {
+                "id": undefined,
+                "props": {},
+                "type": "object",
+                "typename": "dxn:com.example.type.person:0.1.0",
+              },
+            ],
+            "type": "or",
+          },
+          "type": "select",
+        }
+      `);
     });
 
     test('select everything but orgs and people', () => {
@@ -323,30 +323,30 @@ describe('query api', () => {
 
       Schema.validateSync(QueryAST.Query)(everythingButOrgsAndPeople.ast);
       expect(everythingButOrgsAndPeople.ast).toMatchInlineSnapshot(`
-      {
-        "filter": {
+        {
           "filter": {
-            "filters": [
-              {
-                "id": undefined,
-                "props": {},
-                "type": "object",
-                "typename": "dxn:type:com.example.type.organization:0.1.0",
-              },
-              {
-                "id": undefined,
-                "props": {},
-                "type": "object",
-                "typename": "dxn:type:com.example.type.person:0.1.0",
-              },
-            ],
-            "type": "or",
+            "filter": {
+              "filters": [
+                {
+                  "id": undefined,
+                  "props": {},
+                  "type": "object",
+                  "typename": "dxn:com.example.type.organization:0.1.0",
+                },
+                {
+                  "id": undefined,
+                  "props": {},
+                  "type": "object",
+                  "typename": "dxn:com.example.type.person:0.1.0",
+                },
+              ],
+              "type": "or",
+            },
+            "type": "not",
           },
-          "type": "not",
-        },
-        "type": "select",
-      }
-    `);
+          "type": "select",
+        }
+      `);
     });
 
     test('select deleted tasks', () => {
@@ -356,22 +356,22 @@ describe('query api', () => {
 
       Schema.validateSync(QueryAST.Query)(deletedTasks.ast);
       expect(deletedTasks.ast).toMatchInlineSnapshot(`
-      {
-        "options": {
-          "deleted": "only",
-        },
-        "query": {
-          "filter": {
-            "id": undefined,
-            "props": {},
-            "type": "object",
-            "typename": "dxn:type:com.example.type.task:0.1.0",
+        {
+          "options": {
+            "deleted": "only",
           },
-          "type": "select",
-        },
-        "type": "options",
-      }
-    `);
+          "query": {
+            "filter": {
+              "id": undefined,
+              "props": {},
+              "type": "object",
+              "typename": "dxn:com.example.type.task:0.1.0",
+            },
+            "type": "select",
+          },
+          "type": "options",
+        }
+      `);
     });
 
     test('filter by tags', () => {
@@ -388,7 +388,7 @@ describe('query api', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:com.example.type.task:0.1.0",
+              "typename": "dxn:com.example.type.task:0.1.0",
             },
             "type": "select",
           },
@@ -408,7 +408,7 @@ describe('query api', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:com.example.type.task:0.1.0",
+              "typename": "dxn:com.example.type.task:0.1.0",
             },
             "type": "select",
           },
@@ -436,7 +436,7 @@ describe('query api', () => {
                 "id": undefined,
                 "props": {},
                 "type": "object",
-                "typename": "dxn:type:com.example.type.task:0.1.0",
+                "typename": "dxn:com.example.type.task:0.1.0",
               },
               "type": "select",
             },
@@ -463,7 +463,7 @@ describe('query api', () => {
                   "id": undefined,
                   "props": {},
                   "type": "object",
-                  "typename": "dxn:type:com.example.type.person:0.1.0",
+                  "typename": "dxn:com.example.type.person:0.1.0",
                 },
                 "type": "select",
               },
@@ -476,7 +476,7 @@ describe('query api', () => {
                   "id": undefined,
                   "props": {},
                   "type": "object",
-                  "typename": "dxn:type:com.example.type.organization:0.1.0",
+                  "typename": "dxn:com.example.type.organization:0.1.0",
                 },
                 "type": "select",
               },
@@ -503,7 +503,7 @@ describe('query api', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:com.example.type.person:0.1.0",
+              "typename": "dxn:com.example.type.person:0.1.0",
             },
             "type": "select",
           },
@@ -531,7 +531,7 @@ describe('query api', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:com.example.type.person:0.1.0",
+              "typename": "dxn:com.example.type.person:0.1.0",
             },
             "type": "select",
           },
@@ -566,7 +566,7 @@ describe('query api', () => {
       const feedDxn = EchoId.fromSpaceAndObjectId(spaceId as SpaceId, feedId as ObjectId);
       const feed = (await Obj.fromJSON(
         {
-          '@type': 'dxn:type:org.dxos.type.feed:0.1.0',
+          '@type': 'dxn:org.dxos.type.feed:0.1.0',
           id: feedId,
           name: 'test-feed',
         },
@@ -589,7 +589,7 @@ describe('query api', () => {
           type: 'select',
           filter: {
             type: 'object',
-            typename: 'dxn:type:com.example.type.person:0.1.0',
+            typename: 'dxn:com.example.type.person:0.1.0',
           },
         },
       });
@@ -762,7 +762,7 @@ describe('query api', () => {
         filter: {
           type: 'and',
           filters: [
-            { type: 'object', typename: 'dxn:type:com.example.type.person:0.1.0' },
+            { type: 'object', typename: 'dxn:com.example.type.person:0.1.0' },
             { type: 'child-of', parents: [parentDxn], transitive: true },
           ],
         },

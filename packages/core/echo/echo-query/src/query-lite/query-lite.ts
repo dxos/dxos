@@ -163,7 +163,7 @@ class FilterClass implements Filter$.Any {
     assertArgument(!schema.startsWith('dxn:'), 'schema');
     return new FilterClass({
       type: 'object',
-      typename: `dxn:type:${schema}`,
+      typename: `dxn:${schema}`,
       props: {},
       foreignKeys: keys,
     });
@@ -601,7 +601,7 @@ const isRef = (obj: any): obj is Ref.Ref<any> => {
 const makeTypeDxn = (typename: string) => {
   assertArgument(typeof typename === 'string', 'typename');
   assertArgument(!typename.startsWith('dxn:'), 'typename');
-  return `dxn:type:${typename}`;
+  return `dxn:${typename}`;
 };
 
 const isDxnLike = (value: unknown): value is string => {

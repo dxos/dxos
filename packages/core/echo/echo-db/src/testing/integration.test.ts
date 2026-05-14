@@ -16,7 +16,7 @@ import {
 } from '@dxos/echo-pipeline/testing';
 import { Ref, getSchemaDXN, getTypeAnnotation, makeObject } from '@dxos/echo/internal';
 import { TestSchema } from '@dxos/echo/testing';
-import { EchoId, type ObjectId, PublicKey, type URI } from '@dxos/keys';
+import { type ObjectId, PublicKey, type URI } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
 

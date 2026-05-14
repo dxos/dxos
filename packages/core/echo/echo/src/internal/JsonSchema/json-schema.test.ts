@@ -40,7 +40,7 @@ describe('effect-to-json', () => {
       }),
     );
     const jsonSchema = toJsonSchema(Test);
-    expect((jsonSchema as any).$id).toEqual('dxn:type:com.example.type.test');
+    expect((jsonSchema as any).$id).toEqual('dxn:com.example.type.test');
     expect((jsonSchema as any).version).toEqual('0.1.0');
   });
 
@@ -173,7 +173,7 @@ describe('effect-to-json', () => {
     const jsonSchema = toJsonSchema(TempSchema);
     expect(jsonSchema).to.deep.eq({
       $schema: 'http://json-schema.org/draft-07/schema#',
-      $id: 'dxn:type:com.example.type.person',
+      $id: 'dxn:com.example.type.person',
 
       entityKind: EntityKind.Object,
       typename: 'com.example.type.person',
@@ -236,7 +236,7 @@ describe('effect-to-json', () => {
     const jsonSchema = toJsonSchema(Contact);
     expect(jsonSchema).toEqual({
       $schema: 'http://json-schema.org/draft-07/schema#',
-      $id: 'dxn:type:com.example.type.person',
+      $id: 'dxn:com.example.type.person',
 
       entityKind: EntityKind.Object,
       typename: 'com.example.type.person',
@@ -259,7 +259,7 @@ describe('effect-to-json', () => {
               $ref: '/schemas/echo/ref',
               reference: {
                 schema: {
-                  $ref: 'dxn:type:com.example.type.organization',
+                  $ref: 'dxn:com.example.type.organization',
                 },
                 schemaVersion: '0.1.0',
               },
@@ -349,18 +349,18 @@ describe('effect-to-json', () => {
     const schema = TestSchema.EmployedBy;
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
-      $id: 'dxn:type:com.example.type.employed-by',
+      $id: 'dxn:com.example.type.employed-by',
       $schema: 'http://json-schema.org/draft-07/schema#',
       entityKind: 'relation',
       typename: 'com.example.type.employed-by',
       version: '0.1.0',
       relationSource: {
         // TODO(dmaretskyi): Should those point to specific schema version?
-        $ref: 'dxn:type:com.example.type.person',
+        $ref: 'dxn:com.example.type.person',
       },
       relationTarget: {
         // TODO(dmaretskyi): Should those point to specific schema version?
-        $ref: 'dxn:type:com.example.type.organization',
+        $ref: 'dxn:com.example.type.organization',
       },
       type: 'object',
       properties: {
@@ -394,7 +394,7 @@ describe('effect-to-json', () => {
 
     const jsonSchema = toJsonSchema(Organization);
     expect(jsonSchema).toEqual({
-      $id: 'dxn:type:com.example.type.organization',
+      $id: 'dxn:com.example.type.organization',
       $schema: 'http://json-schema.org/draft-07/schema#',
       typename: 'com.example.type.organization',
       version: '0.1.0',
@@ -467,7 +467,7 @@ describe('effect-to-json', () => {
   const expectReferenceAnnotation = (object: JsonSchemaType) => {
     expect(object.reference).to.deep.eq({
       schema: {
-        $ref: 'dxn:type:com.example.type.testNested',
+        $ref: 'dxn:com.example.type.testNested',
       },
       schemaVersion: '0.1.0',
     });
@@ -579,7 +579,7 @@ describe('json-to-effect', () => {
       typename: 'com.example.type.project',
       version: '0.1.0',
     });
-    expect(getTypeIdentifierAnnotation(schema)).to.deep.eq('dxn:echo:@:01JERV1HQCQZDQ4NVCJ42QB38F');
+    expect(getTypeIdentifierAnnotation(schema)).to.deep.eq('echo:/01JERV1HQCQZDQ4NVCJ42QB38F');
   });
 
   test('symbol annotations get compared', () => {
@@ -714,7 +714,7 @@ describe('json-to-effect', () => {
             "$ref": "/schemas/echo/ref",
             "reference": {
               "schema": {
-                "$ref": "dxn:type:com.example.type.person",
+                "$ref": "dxn:com.example.type.person",
               },
               "schemaVersion": "0.1.0",
             },
@@ -746,7 +746,7 @@ describe('json-to-effect', () => {
         "additionalProperties": false,
         "properties": {
           "contact": {
-            "$id": "dxn:type:com.example.type.person",
+            "$id": "dxn:com.example.type.person",
             "additionalProperties": false,
             "entityKind": "object",
             "properties": {
@@ -795,7 +795,7 @@ describe('reference', () => {
       $schema: 'http://json-schema.org/draft-07/schema#',
       reference: {
         schema: {
-          $ref: 'dxn:type:com.example.type.person',
+          $ref: 'dxn:com.example.type.person',
         },
         schemaVersion: '0.1.0',
       },
@@ -813,7 +813,7 @@ describe('reference', () => {
           $ref: '/schemas/echo/ref',
           reference: {
             schema: {
-              $ref: 'dxn:type:com.example.type.person',
+              $ref: 'dxn:com.example.type.person',
             },
             schemaVersion: '0.1.0',
           },
@@ -834,7 +834,7 @@ describe('reference', () => {
           $ref: '/schemas/echo/ref',
           reference: {
             schema: {
-              $ref: 'dxn:type:com.example.type.person',
+              $ref: 'dxn:com.example.type.person',
             },
             schemaVersion: '0.1.0',
           },

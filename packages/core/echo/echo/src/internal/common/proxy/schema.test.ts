@@ -116,7 +116,7 @@ describe('dynamic schema', () => {
 
     // Basic typename update checks.
     expect(registered.typename).toBe(newTypename1);
-    expect(registered.jsonSchema.$id).toBe(`dxn:type:${newTypename1}`);
+    expect(registered.jsonSchema.$id).toBe(`dxn:${newTypename1}`);
     expect(registered.jsonSchema.typename).toBe(newTypename1);
 
     // Version preservation check.
@@ -135,7 +135,7 @@ describe('dynamic schema', () => {
     const newTypename2 = 'com.example.type.person';
     registered.updateTypename(newTypename2);
     expect(registered.typename).toBe(newTypename2);
-    expect(registered.jsonSchema.$id).toBe(`dxn:type:${newTypename2}`);
+    expect(registered.jsonSchema.$id).toBe(`dxn:${newTypename2}`);
     expect(registered.jsonSchema.typename).toBe(newTypename2);
     expect(getTypeAnnotation(registered)).to.deep.contain({
       typename: 'com.example.type.person',

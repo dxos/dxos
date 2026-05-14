@@ -55,7 +55,7 @@ describe('Ref', () => {
     const json = JSON.parse(JSON.stringify(contact));
     expect(json).toEqual({
       id: contact.id,
-      '@type': `dxn:type:${Contact.typename}:${Contact.version}`,
+      '@type': `dxn:${Contact.typename}:${Contact.version}`,
       '@meta': {
         keys: [],
       },
@@ -76,7 +76,7 @@ describe('Ref', () => {
     const json = JSON.parse(JSON.stringify(contact));
     expect(json).toEqual({
       id: contact.id,
-      '@type': `dxn:type:${Contact.typename}:${Contact.version}`,
+      '@type': `dxn:${Contact.typename}:${Contact.version}`,
       '@meta': {
         keys: [],
       },
