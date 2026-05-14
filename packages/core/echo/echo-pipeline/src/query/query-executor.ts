@@ -1000,9 +1000,9 @@ export class QueryExecutor extends Resource {
                   try {
                     return isEncodedReference(ref)
                       ? {
-                        ref: DXN.parse(ref['/']),
-                        spaceId: item.spaceId,
-                      }
+                          ref: DXN.parse(ref['/']),
+                          spaceId: item.spaceId,
+                        }
                       : null;
                   } catch {
                     log.warn('invalid reference', { ref: ref['/'] });
