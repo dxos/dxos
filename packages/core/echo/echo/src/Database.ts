@@ -124,7 +124,7 @@ export interface Database extends Queryable {
    * `Ref.fromURI(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
    * `db.makeRef(dxn)` is preferable in cases with access to the database.
    */
-  makeRef<T extends Entity.Unknown = Entity.Unknown>(dxn: URI.URI): Ref<T>;
+  makeRef<T extends Entity.Unknown = Entity.Unknown>(uri: URI.URI): Ref<T>;
 
   /**
    * Adds object to the database.

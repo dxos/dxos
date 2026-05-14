@@ -589,18 +589,18 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     const typeDXN = EncodedReference.toURI(typeRef);
-    const staticSchema = target[symbolInternals].database.graph.schemaRegistry.getSchemaByDXN(typeDXN.toString());
-    if (staticSchema != null) {
-      return staticSchema;
+    if (DXN.isDXN(typeDXN)) {
+      const staticSchema = target[symbolInternals].database.graph.schemaRegistry.getSchemaByDXN(typeDXN);
+      if (staticSchema != null) {
+        return staticSchema;
+      }
+      // Skip protobuf types as they are runtime registered types.
+      if (DXN.getNsid(typeDXN)?.startsWith('protobuf')) {
+        return undefined;
+      }
     }
 
-    // TODO(dmaretskyi): Check using dxn.
-    // Skip protobuf types as they are runtime registered types.
-    if (DXN.isDXN(typeDXN) && DXN.getNsid(DXN.parse(typeDXN))?.startsWith('protobuf')) {
-      return undefined;
-    }
-
-    return target[symbolInternals].database.schemaRegistry.query({ id: typeDXN.toString() }).runSync()[0];
+    return target[symbolInternals].database.schemaRegistry.query({ id: typeDXN }).runSync()[0];
   }
 
   getTypeDXN(target: ProxyTarget): URI.URI | undefined {

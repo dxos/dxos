@@ -120,8 +120,8 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
    * `graph.ref(dxn)` is preferable in cases with access to the database.
    *
    */
-  makeRef<T extends AnyProperties = any>(dxn: URI.URI): Ref.Ref<T> {
-    const ref = Ref.fromURI(dxn);
+  makeRef<T extends AnyProperties = any>(uri: URI.URI): Ref.Ref<T> {
+    const ref = Ref.fromURI(uri);
     setRefResolver(ref, this.createRefResolver({}));
     return ref;
   }
@@ -168,7 +168,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         let status: string = '';
         try {
           if (DXN.isDXN(dxn)) {
-            const schema = this.schemaRegistry.getSchemaByDXN(dxn as string);
+            const schema = this.schemaRegistry.getSchemaByDXN(dxn);
             status = schema != null ? 'resolved' : 'missing';
             return schema;
           } else if (EchoId.isEchoId(dxn)) {

@@ -17,7 +17,7 @@ import {
 import { EntityKind, type ObjectMeta } from '@dxos/echo/internal';
 import { isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { DXN, EchoId, ObjectId, type URI } from '@dxos/keys';
+import { DXN, EchoId, ObjectId, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { defer, getDeep, setDeep, throwUnhandledError } from '@dxos/util';
 
@@ -552,13 +552,16 @@ const convertLegacyProtoReference = (value: {
   host?: string;
 }): EncodedReference => {
   const TYPE_PROTOCOL = 'protobuf';
-  let dxn: URI.URI;
+  let uri: URI.URI;
   if (value.protocol === TYPE_PROTOCOL) {
-    dxn = DXN.fromTypename(value.objectId);
+    uri = DXN.fromTypename(value.objectId);
   } else if (value.host) {
-    dxn = EchoId.fromSpaceAndObjectId(value.host as any, value.objectId as any);
+    invariant(SpaceId.isValid(value.host), 'Invalid space id');
+    invariant(ObjectId.isValid(value.objectId), 'Invalid object id');
+    uri = EchoId.fromSpaceAndObjectId(value.host, value.objectId);
   } else {
-    dxn = EchoId.fromLocalObjectId(value.objectId as any);
+    invariant(ObjectId.isValid(value.objectId), 'Invalid object id');
+    uri = EchoId.fromLocalObjectId(value.objectId);
   }
-  return EncodedReference.fromURI(dxn);
+  return EncodedReference.fromURI(uri);
 };

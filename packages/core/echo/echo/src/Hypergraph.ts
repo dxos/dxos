@@ -66,7 +66,7 @@ export interface Hypergraph extends Database.Queryable {
    * `Ref.fromURI(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
    * `db.makeRef(dxn)` is preferable in cases with access to the database.
    */
-  makeRef<T extends Entity.Unknown = Entity.Unknown>(dxn: URI.URI): Ref.Ref<T>;
+  makeRef<T extends Entity.Unknown = Entity.Unknown>(uri: URI.URI): Ref.Ref<T>;
 
   /**
    * @param hostDb Host database for reference resolution.

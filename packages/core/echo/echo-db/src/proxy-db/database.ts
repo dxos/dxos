@@ -213,8 +213,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this)) as T;
   }
 
-  makeRef<T extends AnyProperties = any>(dxn: URI.URI): Ref.Ref<T> {
-    const ref = Ref.fromURI(dxn);
+  makeRef<T extends AnyProperties = any>(uri: URI.URI): Ref.Ref<T> {
+    const ref = Ref.fromURI(uri);
     setRefResolver(ref, this.graph.createRefResolver({ context: { space: this.spaceId } }));
     return ref;
   }

@@ -11,7 +11,7 @@ import { type Queue } from './types';
 
 export type MemoryQueueOptions<T extends Entity.Unknown> = {
   spaceId?: SpaceId;
-  queueId?: string;
+  queueId?: ObjectId;
   dxn?: EchoId.EchoId;
   objects?: T[];
 };
@@ -23,7 +23,7 @@ export type MemoryQueueOptions<T extends Entity.Unknown> = {
 export class MemoryQueue<T extends Entity.Unknown> implements Queue<T> {
   static make<T extends Entity.Unknown>({ spaceId, queueId, dxn, objects }: MemoryQueueOptions<T>): MemoryQueue<T> {
     if (!dxn) {
-      dxn = EchoId.fromSpaceAndObjectId(spaceId ?? SpaceId.random(), (queueId ?? ObjectId.random()) as any);
+      dxn = EchoId.fromSpaceAndObjectId(spaceId ?? SpaceId.random(), queueId ?? ObjectId.random());
     } else {
       invariant(spaceId == null && queueId == null);
     }
