@@ -99,7 +99,7 @@ const CarouselRoot = ({ children, count, intervalMs = 5_000, defaultIndex = 0, c
 
   return (
     <CarouselContext.Provider value={value}>
-      <Column.Root gutter='lg' classNames={mx('w-full max-w-xl h-fit auto-rows-min gap-y-0', classNames)}>
+      <Column.Root gutter='lg' classNames={mx('w-full max-w-xl h-fit auto-rows-min gap-4', classNames)}>
         {children}
       </Column.Root>
     </CarouselContext.Provider>
@@ -180,6 +180,7 @@ const CarouselPrevious = ({ classNames }: CarouselButtonProps) => {
   return (
     <IconButton
       classNames={classNames}
+      square
       variant='ghost'
       icon='ph--caret-left--regular'
       iconOnly
@@ -200,6 +201,7 @@ const CarouselNext = ({ classNames }: CarouselButtonProps) => {
   return (
     <IconButton
       classNames={classNames}
+      square
       variant='ghost'
       icon='ph--caret-right--regular'
       iconOnly

@@ -10,6 +10,7 @@ import { AppCapabilities, AppNodeMatcher, LayoutOperation, isPersonalSpace } fro
 import { Operation } from '@dxos/compute';
 import { Filter, Obj } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
+import { log } from '@dxos/log';
 
 import { meta } from '#meta';
 import { HelpCapabilities, HelpOperation, Support, SupportCapabilities } from '#types';
@@ -71,14 +72,17 @@ export default Capability.makeModule(
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
           if (!isPersonalSpace(space)) {
+            log.info('welcome connector: not personal space', { spaceId: space.id });
             return Effect.succeed([]);
           }
           // Settings atom may not be contributed yet on first render — default to "show".
           const settingsAtom = capabilities.get(SupportCapabilities.Settings);
           if (settingsAtom && !get(settingsAtom).showWelcome) {
+            log.info('welcome connector: showWelcome=false');
             return Effect.succeed([]);
           }
           const welcome = get(AtomQuery.make(space.db, Filter.type(Support.Welcome)))[0] as Obj.Unknown | undefined;
+          log.info('welcome connector', { hasWelcome: !!welcome, welcomeId: welcome?.id, spaceId: space.id });
           if (!welcome) {
             return Effect.succeed([]);
           }
