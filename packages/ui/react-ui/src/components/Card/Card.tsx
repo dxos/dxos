@@ -69,10 +69,10 @@ type CardRootProps = {
  * (one `<div>` carrying both the `dx-card` and `dx-column-root` classes
  * instead of the previous outer-card + inner-column pair), so caller-provided
  * HTML attributes — `onClick`, `tabIndex`, `style`, `data-*`, `grid-template-rows`
- * overrides via `classNames` — land directly on the grid container. Slot-parents
- * (`Focus.Item asChild`, `Mosaic.Tile asChild`, etc.) continue to work because
- * `composable()` preserves the COMPOSABLE marker that slottable parents check
- * before warning, and Radix `Slot` merges the parent's props onto the inner
+ * overrides via `classNames` — land directly on the grid container.
+ * Slot-parents (`Focus.Item asChild`, `Mosaic.Tile asChild`, etc.) continue to
+ * work because `composable()` preserves the COMPOSABLE marker that slottable parents
+ * check before warning, and Radix `Slot` merges the parent's props onto the inner
  * `<div>` exactly the way `slottable`'s `Slot`/`Primitive.div` branch did.
  */
 const CardRoot = composable<HTMLDivElement, CardRootProps>(

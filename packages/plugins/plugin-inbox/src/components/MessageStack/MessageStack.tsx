@@ -218,7 +218,13 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
   }, [labels, message.properties?.labels]);
 
   return (
-    <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={message.id} data={data} location={location}>
+    <Mosaic.Tile
+      asChild
+      classNames='dx-hover dx-current dx-selected border-b border-subdued-separator'
+      id={message.id}
+      data={data}
+      location={location}
+    >
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root fullWidth border={false} ref={forwardedRef}>
           <Card.Toolbar>
@@ -320,7 +326,13 @@ const ThreadTile = forwardRef<HTMLDivElement, ThreadTileProps>(({ data, location
   );
 
   return (
-    <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={threadId} data={data} location={location}>
+    <Mosaic.Tile
+      asChild
+      classNames='dx-hover dx-current dx-selected border-b border-subdued-separator'
+      id={threadId}
+      data={data}
+      location={location}
+    >
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root fullWidth border={false} onClick={handleThreadClick} ref={forwardedRef}>
           <Card.Toolbar>
