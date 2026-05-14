@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { Operation, Script, Trigger } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { type LegacyDXN } from '@dxos/keys';
 import { SpaceOperation } from '@dxos/plugin-space';
 
 import { meta } from '#meta';
@@ -46,7 +45,7 @@ const handler: Operation.WithHandler<typeof AutomationOperation.CreateTriggerFro
           }
           case 'queue': {
             Obj.update(trigger, (trigger) => {
-              trigger.spec = Trigger.specQueue((template.queueDXN as LegacyDXN).toString());
+              trigger.spec = Trigger.specQueue(String(template.queueDXN));
             });
             break;
           }

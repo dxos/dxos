@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, getSpaceIdFromPath, getSpacePath, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
 import { Database, Filter, Key, Obj, Query } from '@dxos/echo';
-import { EchoId, LegacyDXN } from '@dxos/keys';
+import { EchoId, type URI } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings';
 import { getLinkedVariant, isLinkedSegment } from '@dxos/react-ui-attention';
@@ -34,13 +34,14 @@ export default Capability.makeModule(
           ];
         }
 
-        const dxn = LegacyDXN.tryParse(query.dxn.startsWith('@dxn:') ? query.dxn.slice(1) : query.dxn);
-        if (!dxn) {
+        const rawDxn = query.dxn.startsWith('@dxn:') ? query.dxn.slice(1) : query.dxn;
+        const dxnRef = EchoId.tryParse(rawDxn) ?? (rawDxn.startsWith('dxn:') ? (rawDxn as URI.URI) : undefined);
+        if (!dxnRef) {
           return [];
         }
 
         const { db } = yield* Database.Service;
-        const ref = db.makeRef(dxn);
+        const ref = db.makeRef(dxnRef);
         const object = yield* Database.load(ref).pipe(Effect.catchAll(() => Effect.succeed(null)));
         if (!object || !Mailbox.instanceOf(object)) {
           return [];
@@ -73,9 +74,8 @@ export default Capability.makeModule(
         return Effect.succeed(Option.none());
       }
 
-      const mailboxDxn = LegacyDXN.fromSpaceAndObjectId(spaceId, mailboxId as Key.ObjectId);
       const mailboxEchoId = EchoId.fromSpaceAndObjectId(spaceId, mailboxId as Key.ObjectId);
-      const mailboxRef = space.db.makeRef(mailboxDxn);
+      const mailboxRef = space.db.makeRef(mailboxEchoId);
 
       const isMessagePath = isLinkedSegment(qualifiedPath);
       const messageId = isMessagePath ? getLinkedVariant(qualifiedPath) : undefined;

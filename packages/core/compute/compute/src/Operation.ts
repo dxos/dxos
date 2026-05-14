@@ -418,7 +418,7 @@ export interface InvokeOptions {
    * DXN string of the conversation feed (queue).
    * Passed to the process environment so nested operations can resolve AiContext.Service and related services.
    */
-  conversation?: DXN.String;
+  conversation?: string;
   /**
    * Optional process-runtime tracing metadata (consumed by `@dxos/functions-runtime` when wired).
    */

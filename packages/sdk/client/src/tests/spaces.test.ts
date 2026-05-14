@@ -12,7 +12,7 @@ import { Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Serializer, getObjectCore } from '@dxos/echo-db';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { TestSchema as TestSchema$ } from '@dxos/echo/testing';
-import { SpaceId } from '@dxos/keys';
+import { DXN, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { range } from '@dxos/util';
@@ -501,7 +501,11 @@ describe('Spaces', () => {
 
     const getTypename = (obj: any) => {
       const typeRef = getObjectCore(obj).getType();
-      return typeRef ? EncodedReference.toDXN(typeRef).asTypeDXN()?.type : undefined;
+      if (!typeRef) {
+        return undefined;
+      }
+      const dxnStr = EncodedReference.getReferenceString(typeRef);
+      return DXN.isDXN(dxnStr) ? DXN.getNsid(DXN.parse(dxnStr)) : undefined;
     };
 
     spaceA.db.query(Filter.everything()).subscribe(

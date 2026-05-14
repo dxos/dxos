@@ -5,14 +5,14 @@
 import { type Context, Resource } from '@dxos/context';
 import { type Entity, type Hypergraph } from '@dxos/echo';
 import { assertArgument, assertState } from '@dxos/invariant';
-import { EchoId, LegacyDXN as DXN, ObjectId, type SpaceId } from '@dxos/keys';
+import { EchoId, ObjectId, type SpaceId } from '@dxos/keys';
 import { type FeedProtocol } from '@dxos/protocols';
 
 import { QueueImpl } from './queue';
 import { type Queue } from './types';
 
 export interface QueueAPI {
-  get<T extends Entity.Unknown = Entity.Unknown>(dxn: EchoId.EchoId | DXN): Queue<T>;
+  get<T extends Entity.Unknown = Entity.Unknown>(echoId: EchoId.EchoId): Queue<T>;
   create<T extends Entity.Unknown = Entity.Unknown>(options?: { subspaceTag?: string }): Queue<T>;
 }
 
@@ -36,20 +36,9 @@ export class QueueFactory extends Resource implements QueueAPI {
     this._service = service;
   }
 
-  get<T extends Entity.Unknown>(dxnOrEchoId: EchoId.EchoId | DXN): Queue<T> {
+  get<T extends Entity.Unknown>(echoId: EchoId.EchoId): Queue<T> {
     assertState(this._service, 'Service not set');
-
-    // Normalize to EchoId.
-    let echoId: EchoId.EchoId;
-    if (dxnOrEchoId instanceof DXN) {
-      // Backward-compat: convert ECHO-kind DXN (dxn:echo:spaceId:objectId) to EchoId.
-      const echoDxn = dxnOrEchoId.asEchoDXN();
-      assertArgument(echoDxn != null && echoDxn.spaceId != null, 'dxnOrEchoId', 'LegacyDXN must be an ECHO-kind DXN with spaceId');
-      echoId = EchoId.fromSpaceAndObjectId(echoDxn.spaceId as any, echoDxn.echoId as any);
-    } else {
-      assertArgument(EchoId.isEchoId(dxnOrEchoId), 'dxnOrEchoId', 'must be an EchoId or LegacyDXN');
-      echoId = dxnOrEchoId;
-    }
+    assertArgument(EchoId.isEchoId(echoId), 'echoId', 'must be an EchoId');
 
     const queue = this._queues.get(echoId);
     if (queue) {

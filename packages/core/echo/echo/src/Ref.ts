@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { LegacyDXN, type URI } from '@dxos/keys';
+import { type URI } from '@dxos/keys';
 
 import type * as Entity from './Entity';
 import * as refInternal from './internal/Ref';
@@ -85,7 +85,7 @@ export const isRef: (value: unknown) => value is Unknown = refInternal.Ref.isRef
 export const make = refInternal.Ref.make;
 
 // TODO(dmaretskyi): Consider just allowing `make` to accept DXN.
-export const fromDXN = (dxn: LegacyDXN | URI.URI): refInternal.Ref<any> => refInternal.Ref.fromDXN(dxn);
+export const fromDXN = (dxn: URI.URI): refInternal.Ref<any> => refInternal.Ref.fromDXN(dxn);
 
 export const hasObjectId = refInternal.Ref.hasObjectId;
 

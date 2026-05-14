@@ -31,7 +31,9 @@ export const JSON_SCHEMA_ECHO_REF_ID = '/schemas/echo/ref';
 export const getSchemaReference = (property: JsonSchemaType): { typename: string } | undefined => {
   const { $id, reference: { schema: { $ref } = {} } = {} } = property;
   if ($id === JSON_SCHEMA_ECHO_REF_ID && $ref) {
-    return { typename: DXN.parse($ref).typename };
+    const parsed = DXN.tryParse($ref);
+    const typename = parsed ? DXN.getNsid(parsed) : undefined;
+    return typename ? { typename } : undefined;
   }
 };
 
@@ -40,7 +42,7 @@ export const createSchemaReference = (typename: string): Types.DeepMutable<JsonS
     $id: JSON_SCHEMA_ECHO_REF_ID,
     reference: {
       schema: {
-        $ref: DXN.fromTypename(typename).toString(),
+        $ref: DXN.fromTypename(typename) as string,
       },
     },
   };
@@ -113,7 +115,7 @@ export interface RefFn {
   /**
    * Constructs a reference that points to the object specified by the provided DXN or URI.
    */
-  fromDXN: (dxn: DXN | URI.URI) => Ref<any>;
+  fromDXN: (dxn: URI.URI) => Ref<any>;
 }
 
 /**
@@ -137,7 +139,7 @@ export interface Ref<T> extends Pipeable.Pipeable {
   /**
    * Target object DXN.
    */
-  get dxn(): DXN;
+  get dxn(): URI.URI;
 
   /**
    * Returns true if the reference has a target available (inlined or resolver set).
@@ -215,7 +217,10 @@ Ref.isRef = (obj: any): obj is Ref<any> => {
   return obj && typeof obj === 'object' && RefTypeId in obj;
 };
 
-Ref.hasObjectId = (id: ObjectId) => (ref: Ref<any>) => ref.dxn.isLocalObjectId() && ref.dxn.parts[1] === id;
+Ref.hasObjectId = (id: ObjectId) => (ref: Ref<any>) => {
+  const echoId = EchoId.tryParse(ref.dxn);
+  return echoId !== undefined && EchoId.isLocal(echoId) && EchoId.getObjectId(echoId) === id;
+};
 
 Ref.isRefSchema = (schema: Schema.Schema<any, any>): schema is RefSchema<any> => {
   return Ref.isRefSchemaAST(schema.ast);
@@ -233,31 +238,12 @@ Ref.make = <T extends AnyProperties>(obj: T): Ref<T> => {
   // TODO(dmaretskyi): Extract to `getObjectDXN` function.
   const id = obj.id;
   invariant(ObjectId.isValid(id), 'Invalid object ID');
-  const dxn = DXN.fromLocalObjectId(id);
+  const dxn = EchoId.fromLocalObjectId(id);
   return new RefImpl(dxn, obj);
 };
 
-Ref.fromDXN = (dxn: DXN | URI.URI): Ref<any> => {
-  if (typeof dxn === 'string') {
-    // Handle new URI string format (EchoId or DXN string).
-    const legacyDxn = DXN.tryParse(dxn);
-    if (legacyDxn) {
-      return new RefImpl(legacyDxn);
-    }
-    const echoId = EchoId.tryParse(dxn);
-    if (echoId) {
-      const spaceId = EchoId.getSpaceId(echoId);
-      const objectId = EchoId.getObjectId(echoId);
-      if (spaceId && objectId) {
-        return new RefImpl(DXN.fromSpaceAndObjectId(spaceId, objectId));
-      }
-      if (objectId) {
-        return new RefImpl(new DXN(DXN.kind.ECHO, [LOCAL_SPACE_TAG, objectId]));
-      }
-    }
-    throw new Error(`Invalid DXN/URI: ${dxn}`);
-  }
-  assertArgument(dxn instanceof DXN, 'dxn', 'Expected DXN');
+Ref.fromDXN = (dxn: URI.URI): Ref<any> => {
+  assertArgument(typeof dxn === 'string', 'dxn', 'Expected URI string');
   return new RefImpl(dxn);
 };
 
@@ -285,7 +271,7 @@ export const createEchoReferenceSchema = (
   const referenceInfo: JsonSchemaReferenceInfo = {
     schema: {
       // TODO(dmaretskyi): Include version?
-      $ref: echoId ?? DXN.fromTypename(typename!).toString(),
+      $ref: echoId ?? DXN.fromTypename(typename!) as string,
     },
     schemaVersion: version,
   };
@@ -323,9 +309,9 @@ export const createEchoReferenceSchema = (
               return yield* Effect.fail(new ParseResult.Unexpected(value, 'reference'));
             }
             if (Option.isSome(dbService)) {
-              return dbService.value.db.makeRef(EncodedReference.toDXN(value));
+              return dbService.value.db.makeRef(EncodedReference.getURI(value));
             } else {
-              return Ref.fromDXN(EncodedReference.toDXN(value));
+              return Ref.fromDXN(EncodedReference.getURI(value));
             }
           });
       },
@@ -363,19 +349,19 @@ export interface RefResolver {
    * @param load If true the resolver should attempt to load the object from disk.
    * @param onLoad Callback to call when the object is loaded.
    */
-  resolveSync(dxn: DXN, load: boolean, onLoad?: () => void): AnyProperties | undefined;
+  resolveSync(dxn: URI.URI, load: boolean, onLoad?: () => void): AnyProperties | undefined;
 
   /**
    * Resolver ref asynchronously.
    */
-  resolve(dxn: DXN): Promise<AnyProperties | undefined>;
+  resolve(dxn: URI.URI): Promise<AnyProperties | undefined>;
 
   // TODO(dmaretskyi): Combine with `resolve`.
-  resolveSchema(dxn: DXN): Promise<Schema.Schema.AnyNoContext | undefined>;
+  resolveSchema(dxn: URI.URI): Promise<Schema.Schema.AnyNoContext | undefined>;
 }
 
 export class RefImpl<T> implements Ref<T> {
-  #dxn: DXN;
+  #dxn: URI.URI;
   #resolver?: RefResolver = undefined;
   #resolved = new Event<void>();
 
@@ -392,7 +378,7 @@ export class RefImpl<T> implements Ref<T> {
     this.#resolved.emit();
   };
 
-  constructor(dxn: DXN, target?: T) {
+  constructor(dxn: URI.URI, target?: T) {
     this.#dxn = dxn;
     this.#target = target;
   }
@@ -400,7 +386,7 @@ export class RefImpl<T> implements Ref<T> {
   /**
    * @inheritdoc
    */
-  get dxn(): DXN {
+  get dxn(): URI.URI {
     return this.#dxn;
   }
 
@@ -469,7 +455,7 @@ export class RefImpl<T> implements Ref<T> {
 
   encode(): EncodedReference {
     return {
-      '/': this.#dxn.toString(),
+      '/': this.#dxn,
       ...(this.#target ? { target: this.#target } : {}),
     };
   }
@@ -557,7 +543,7 @@ const refVariance: Ref<any>[typeof RefTypeId] = {
 };
 
 export const refFromEncodedReference = (encodedReference: EncodedReference, resolver?: RefResolver): Ref<any> => {
-  const dxn = DXN.parse(encodedReference['/']);
+  const dxn = EncodedReference.getURI(encodedReference);
   const ref = new RefImpl(dxn);
 
   // TODO(dmaretskyi): Handle inline target in the encoded reference.
@@ -570,7 +556,7 @@ export const refFromEncodedReference = (encodedReference: EncodedReference, reso
 
 export class StaticRefResolver implements RefResolver {
   public objects = new Map<ObjectId, AnyProperties>();
-  public schemas = new Map<DXN.String, Schema.Schema.AnyNoContext>();
+  public schemas = new Map<string, Schema.Schema.AnyNoContext>();
 
   addObject(obj: AnyProperties): this {
     this.objects.set(obj.id, obj);
@@ -584,8 +570,9 @@ export class StaticRefResolver implements RefResolver {
     return this;
   }
 
-  resolveSync(dxn: DXN, _load: boolean, _onLoad?: () => void): AnyProperties | undefined {
-    const id = dxn?.asEchoDXN()?.echoId;
+  resolveSync(dxn: URI.URI, _load: boolean, _onLoad?: () => void): AnyProperties | undefined {
+    const echoId = EchoId.tryParse(dxn);
+    const id = echoId ? EchoId.getObjectId(echoId) : undefined;
     if (id == null) {
       return undefined;
     }
@@ -593,8 +580,9 @@ export class StaticRefResolver implements RefResolver {
     return this.objects.get(id);
   }
 
-  async resolve(dxn: DXN): Promise<AnyProperties | undefined> {
-    const id = dxn?.asEchoDXN()?.echoId;
+  async resolve(dxn: URI.URI): Promise<AnyProperties | undefined> {
+    const echoId = EchoId.tryParse(dxn);
+    const id = echoId ? EchoId.getObjectId(echoId) : undefined;
     if (id == null) {
       return undefined;
     }
@@ -602,7 +590,7 @@ export class StaticRefResolver implements RefResolver {
     return this.objects.get(id);
   }
 
-  async resolveSchema(dxn: DXN): Promise<Schema.Schema.AnyNoContext | undefined> {
+  async resolveSchema(dxn: URI.URI): Promise<Schema.Schema.AnyNoContext | undefined> {
     return this.schemas.get(dxn.toString());
   }
 }

@@ -14,7 +14,7 @@ import { Trace } from '@dxos/compute';
 import { Filter, Query } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
 import { FeedTraceSink, Process } from '@dxos/functions-runtime';
-import { LegacyDXN as DXN } from '@dxos/keys';
+import { EchoId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useComputeRuntimeService } from '@dxos/plugin-automation/hooks';
 import { type Space } from '@dxos/react-client/echo';
@@ -43,11 +43,13 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
       (commit: Commit | undefined) => {
         setSelectedCommit(commit);
         if (commit?.link) {
-          const dxn = DXN.tryParse(commit.link)?.asEchoDXN();
-          if (dxn?.spaceId && dxn.echoId) {
+          const echoId = EchoId.tryParse(commit.link);
+          const spaceId = echoId ? EchoId.getSpaceId(echoId) : undefined;
+          const objectId = echoId ? EchoId.getObjectId(echoId) : undefined;
+          if (spaceId && objectId) {
             // TODO(dmaretskyi): Navigates, but fails to open.
             void invokePromise(LayoutOperation.Open, {
-              subject: [`${dxn.spaceId}:${dxn.echoId}`],
+              subject: [`${spaceId}:${objectId}`],
             });
           }
         }

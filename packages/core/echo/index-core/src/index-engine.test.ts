@@ -11,16 +11,16 @@ import * as Layer from 'effect/Layer';
 import { Context } from '@dxos/context';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { LegacyDXN as DXN, ObjectId, SpaceId } from '@dxos/keys';
+import { ObjectId, SpaceId } from '@dxos/keys';
 import * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 
 import { type DataSourceCursor, type IndexDataSource, IndexEngine, type IndexingResult } from './index-engine';
 import { type IndexCursor, IndexTracker } from './index-tracker';
 import { FtsIndex, type IndexerObject, ObjectMetaIndex, ReverseRefIndex } from './indexes';
 
-const TYPE_DEFAULT = DXN.parse('dxn:type:test.com/type/Type:0.1.0').toString();
-const TYPE_A = DXN.parse('dxn:type:test.com/type/TypeA:0.1.0').toString();
-const TYPE_B = DXN.parse('dxn:type:test.com/type/TypeB:0.1.0').toString();
+const TYPE_DEFAULT = 'dxn:type:test.com/type/Type:0.1.0';
+const TYPE_A = 'dxn:type:test.com/type/TypeA:0.1.0';
+const TYPE_B = 'dxn:type:test.com/type/TypeB:0.1.0';
 
 const TestLayer = SqlTransaction.layer.pipe(
   Layer.provideMerge(

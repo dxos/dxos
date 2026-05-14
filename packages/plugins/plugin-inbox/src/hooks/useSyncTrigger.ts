@@ -7,7 +7,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { type Client } from '@dxos/client';
 import { Trigger, Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
-import { type Database, DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { type Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 import { useClient } from '@dxos/react-client';
 import { useObject, useQuery } from '@dxos/react-client/echo';
@@ -69,7 +69,7 @@ export const useSyncTrigger = ({
         const mailboxRef = trigger.input?.mailbox;
         const calendarRef = trigger.input?.calendar;
         const ref = mailboxRef ?? calendarRef;
-        return ref?.dxn && DXN.equalsEchoId(ref.dxn, subjectDxn);
+        return ref?.dxn && ref.dxn === subjectDxn;
       }),
     [triggers, subjectDxn],
   );

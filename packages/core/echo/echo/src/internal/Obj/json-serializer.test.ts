@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { LegacyDXN as DXN } from '@dxos/keys';
+import { EchoId } from '@dxos/keys';
 
 import * as Obj from '../../Obj';
 import { TestSchema } from '../../testing';
@@ -39,7 +39,7 @@ describe('Object JSON serializer', () => {
     expect(taskJson.id).toBe(task.id);
     expect(taskJson[ATTR_TYPE]).toEqual(getSchemaDXN(TestSchema.Task)!.toString());
     expect(taskJson.title).toEqual('Fix the tests');
-    expect(taskJson.assignee).toEqual({ '/': DXN.fromLocalObjectId(contact.id).toString() });
+    expect(taskJson.assignee).toEqual({ '/': EchoId.fromLocalObjectId(contact.id) });
 
     const refResolver = new StaticRefResolver()
       .addSchema(TestSchema.Person)
@@ -71,7 +71,7 @@ describe('Object JSON serializer', () => {
 
     expect(taskFromJson.id).toBe(task.id);
     expect(taskFromJson.title).toBe('Fix the tests');
-    expect(taskFromJson.assignee!.dxn).toEqual(DXN.fromLocalObjectId(contact.id));
+    expect(taskFromJson.assignee!.dxn).toEqual(EchoId.fromLocalObjectId(contact.id));
     expect(taskFromJson.assignee!.target).toEqual(contact);
     expect(await taskFromJson.assignee!.load()).toEqual(contact);
     expect((taskFromJson as any)[TypeId]).toEqual(getSchemaDXN(TestSchema.Task));

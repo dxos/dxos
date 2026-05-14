@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 
 import { type ForeignKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { LegacyDXN as DXN, ObjectId } from '@dxos/keys';
+import { ObjectId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type * as Database from '../../Database';
@@ -45,17 +45,17 @@ export { ATTR_DELETED, ATTR_SELF_DXN, ObjectDatabaseId, ObjectDeletedId, ObjectV
 // NOTE: Each symbol has a jsdoc describing its purpose.
 export interface InternalObjectProps {
   readonly id: ObjectId;
-  readonly [SelfDXNId]: DXN;
+  readonly [SelfDXNId]: string;
   readonly [KindId]: EntityKind;
   readonly [SchemaId]: Schema.Schema.AnyNoContext;
-  readonly [TypeId]: DXN;
+  readonly [TypeId]: string;
   readonly [MetaId]?: ObjectMeta;
   [ParentId]?: InternalObjectProps;
   readonly [ObjectDatabaseId]?: Database.Database;
   readonly [ObjectDeletedId]?: boolean;
   readonly [ObjectVersionId]?: Version;
-  readonly [RelationSourceDXNId]?: DXN;
-  readonly [RelationTargetDXNId]?: DXN;
+  readonly [RelationSourceDXNId]?: string;
+  readonly [RelationTargetDXNId]?: string;
   readonly [RelationSourceId]?: InternalObjectProps;
   readonly [RelationTargetId]?: InternalObjectProps;
 }
@@ -73,13 +73,13 @@ export interface ObjectMetaJSON {
  */
 export interface ObjectJSON {
   id: string;
-  [ATTR_TYPE]: DXN.String;
-  [ATTR_SELF_DXN]?: DXN.String;
+  [ATTR_TYPE]: string;
+  [ATTR_SELF_DXN]?: string;
   [ATTR_PARENT]?: string; // Encoded reference
   [ATTR_DELETED]?: boolean;
   [ATTR_META]?: ObjectMetaJSON;
-  [ATTR_RELATION_SOURCE]?: DXN.String;
-  [ATTR_RELATION_TARGET]?: DXN.String;
+  [ATTR_RELATION_SOURCE]?: string;
+  [ATTR_RELATION_TARGET]?: string;
 
   /**
    * Application-specific properties.
@@ -94,16 +94,16 @@ export function assertObjectModel(obj: unknown): asserts obj is InternalObjectPr
   invariant(typeof obj === 'object' && obj !== null, 'Invalid object model: not an object');
   assumeType<InternalObjectProps>(obj);
   invariant(ObjectId.isValid(obj.id), 'Invalid object model: invalid id');
-  invariant(obj[TypeId] === undefined || obj[TypeId] instanceof DXN, 'Invalid object model: invalid type');
+  invariant(obj[TypeId] === undefined || typeof obj[TypeId] === 'string', 'Invalid object model: invalid type');
   invariant(
     obj[KindId] === EntityKind.Object || obj[KindId] === EntityKind.Relation,
     'Invalid object model: invalid entity kind',
   );
 
   if (obj[KindId] === EntityKind.Relation) {
-    invariant(obj[RelationSourceDXNId] instanceof DXN, 'Invalid object model: invalid relation source');
-    invariant(obj[RelationTargetDXNId] instanceof DXN, 'Invalid object model: invalid relation target');
-    invariant(!(obj[RelationSourceId] instanceof DXN), 'Invalid object model: source pointer is a DXN');
-    invariant(!(obj[RelationTargetId] instanceof DXN), 'Invalid object model: target pointer is a DXN');
+    invariant(typeof obj[RelationSourceDXNId] === 'string', 'Invalid object model: invalid relation source');
+    invariant(typeof obj[RelationTargetDXNId] === 'string', 'Invalid object model: invalid relation target');
+    invariant(typeof obj[RelationSourceId] !== 'string', 'Invalid object model: source pointer is a DXN');
+    invariant(typeof obj[RelationTargetId] !== 'string', 'Invalid object model: target pointer is a DXN');
   }
 }

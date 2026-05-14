@@ -10,7 +10,7 @@ import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Obj } from '@dxos/echo';
 import { updateText } from '@dxos/echo-db';
-import { EchoId, LegacyDXN } from '@dxos/keys';
+import { EchoId } from '@dxos/keys';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Text } from '@dxos/schema';
@@ -37,25 +37,26 @@ const RESTORE_YIELD_EVERY_N_FILES = 25;
  * `ref.tryLoad()` because objects in linked documents may not be hydrated until async load.
  */
 const resolveTextObjectFromStoredDxn = async (client: Client, dxnStr: string): Promise<Text.Text | undefined> => {
-  const parsed = LegacyDXN.tryParse(dxnStr);
-  if (!parsed) {
+  const echoId = EchoId.tryParse(dxnStr);
+  if (!echoId) {
     return undefined;
   }
-  const echoDxn = parsed.asEchoDXN();
-  if (!echoDxn) {
+  const spaceId = EchoId.getSpaceId(echoId);
+  const objectId = EchoId.getObjectId(echoId);
+  if (!spaceId || !objectId) {
     return undefined;
   }
-  const owningSpace = echoDxn.spaceId ? client.spaces.get(echoDxn.spaceId) : undefined;
+  const owningSpace = client.spaces.get(spaceId);
   if (!owningSpace) {
     return undefined;
   }
 
-  const byId = owningSpace.db.getObjectById(echoDxn.echoId);
+  const byId = owningSpace.db.getObjectById(objectId);
   if (byId && Obj.instanceOf(Text.Text, byId)) {
     return byId;
   }
 
-  const ref = owningSpace.db.makeRef(parsed);
+  const ref = owningSpace.db.makeRef(echoId);
   const syncTarget = ref.target as Text.Text | undefined;
   if (syncTarget && Obj.instanceOf(Text.Text, syncTarget)) {
     return syncTarget;
@@ -339,7 +340,7 @@ export const createMarkdownDocuments = (
           continue;
         }
 
-        const parsedDxn = EchoId.tryParse(dxnStr) ?? LegacyDXN.tryParse(dxnStr);
+        const parsedDxn = EchoId.tryParse(dxnStr);
         if (!parsedDxn) {
           continue;
         }

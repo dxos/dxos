@@ -14,7 +14,7 @@ import { getObjectDXN } from './util';
  * Get the DXN of an entity.
  * Accepts both reactive entities and snapshots.
  */
-export const getDXN = (entity: AnyEntity): DXN => {
+export const getDXN = (entity: AnyEntity): URI.URI => {
   const dxn = getObjectDXN(entity);
   invariant(dxn != null, 'Invalid entity.');
   return dxn;

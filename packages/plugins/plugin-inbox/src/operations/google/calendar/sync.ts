@@ -18,6 +18,7 @@ import type { Credential } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Query, Ref as EchoRef } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { EchoId } from '@dxos/keys';
 import { Integration } from '@dxos/plugin-integration';
 import { type Event } from '@dxos/types';
 
@@ -40,7 +41,7 @@ type BaseSyncProps<T = unknown> = {
 
 const findIntegrationTargetIdx = (integration: Integration.Integration, calendar: Calendar.Calendar): number =>
   integration.targets?.findIndex((target) => {
-    if (target.object?.dxn?.asEchoDXN()?.echoId === calendar.id) {
+    if (target.object && EchoId.getObjectId(EchoId.tryParse(target.object.dxn)!) === calendar.id) {
       return true;
     }
     const fkId = Obj.getMeta(calendar).keys?.find((k) => k.source === GOOGLE_INTEGRATION_SOURCE)?.id;

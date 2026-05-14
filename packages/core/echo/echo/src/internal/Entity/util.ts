@@ -22,7 +22,7 @@ export const getObjectDXN = (object: any): URI.URI | undefined => {
 
   if (object[SelfDXNId]) {
     invariant(typeof object[SelfDXNId] === 'string', 'Invalid object model: invalid self dxn');
-    return object[SelfDXNId];
+    return object[SelfDXNId] as URI.URI;
   }
 
   if (!ObjectId.isValid(object.id)) {

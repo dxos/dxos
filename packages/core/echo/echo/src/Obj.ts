@@ -14,7 +14,7 @@ import * as Utils from 'effect/Utils';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { type LegacyDXN as DXN, ObjectId } from '@dxos/keys';
+import { ObjectId, type URI } from '@dxos/keys';
 import { assumeType, deepMapValues } from '@dxos/util';
 
 import type * as Database from './Database';
@@ -462,7 +462,7 @@ export const snapshotOf: {
  * Get the DXN of the object.
  * Accepts both reactive objects and snapshots.
  */
-export const getDXN = (entity: Unknown | Snapshot): DXN => {
+export const getDXN = (entity: Unknown | Snapshot): URI.URI => {
   assertArgument(!Schema.isSchema(entity), 'obj', 'Object should not be a schema.');
   return internal.getDXN(entity);
 };
@@ -472,10 +472,10 @@ export const getDXN = (entity: Unknown | Snapshot): DXN => {
  * @example dxn:com.example.type.person:1.0.0
  * @throws If the object is missing its type (corrupted object).
  */
-export const getTypeDXN = (obj: Unknown | Snapshot): DXN => {
+export const getTypeDXN = (obj: Unknown | Snapshot): URI.URI => {
   const type = internal.getTypeDXN(obj);
   invariant(type != null, 'Corrupted object: missing type.');
-  return type;
+  return type.toString() as unknown as URI.URI;
 };
 
 /**
@@ -811,7 +811,7 @@ export const toJSON = (entity: Unknown | Snapshot): JSON => objInternal.objectTo
  */
 export const fromJSON: (
   json: unknown,
-  options?: { refResolver?: Ref.Resolver; dxn?: DXN; database?: Database.Database; parent?: Unknown },
+  options?: { refResolver?: Ref.Resolver; dxn?: URI.URI; database?: Database.Database; parent?: Unknown },
 ) => Promise<Unknown> = objInternal.objectFromJSON as any;
 
 /**

@@ -6,7 +6,7 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
 import { type QueryAST } from '@dxos/echo';
-import { LegacyDXN } from '@dxos/keys';
+import { DXN, type URI } from '@dxos/keys';
 
 // Helper to extract typename from query AST
 export const extractTypename = (query: QueryAST.Query): Option.Option<string> => {
@@ -44,8 +44,7 @@ const extractTypenameFromFilter = (filter: QueryAST.Filter): Option.Option<strin
     Match.withReturnType<Option.Option<string>>(),
     Match.when({ type: 'object' }, (f) =>
       Option.fromNullable(f.typename).pipe(
-        Option.flatMap((dxn) => Option.fromNullable(LegacyDXN.tryParse(dxn))),
-        Option.flatMap((dxn) => Option.fromNullable(dxn.asTypeDXN()?.type)),
+        Option.flatMap((dxn) => Option.fromNullable(DXN.isDXN(dxn) ? DXN.getNsid(DXN.parse(dxn as URI.URI)) : undefined)),
       ),
     ),
     Match.when({ type: 'and' }, (f) =>

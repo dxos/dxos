@@ -5,7 +5,8 @@
 import type { State as AmState } from '@automerge/automerge';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { type DXN, Filter, Format, Obj, Query, Type } from '@dxos/echo';
+import { Filter, Format, Obj, Query, Type } from '@dxos/echo';
+import { EchoId, type URI } from '@dxos/keys';
 import { checkoutVersion, getEditHistory } from '@dxos/echo-db';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
@@ -57,10 +58,11 @@ export const ObjectsPanel = (props: { space?: Space }) => {
   const [selectedVersion, setSelectedVersion] = useState<HistoryRow | null>(null);
   const [selectedVersionObject, setSelectedVersionObject] = useState<any | null>(null);
 
-  const onNavigate = (dxn: DXN) => {
-    if (dxn.isLocalObjectId()) {
-      const [, id] = dxn.parts;
-      const object = items.find((item) => item.id === id);
+  const onNavigate = (dxn: URI.URI) => {
+    const echoId = EchoId.tryParse(dxn);
+    if (echoId && EchoId.isLocal(echoId)) {
+      const id = EchoId.getObjectId(echoId);
+      const object = id ? items.find((item) => item.id === id) : undefined;
       if (object) {
         setSelectedVersionObject(null);
         setSelected(object);

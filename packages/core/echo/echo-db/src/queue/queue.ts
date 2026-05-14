@@ -11,7 +11,7 @@ import { type Database, Entity, Filter, Obj, Query, type Ref } from '@dxos/echo'
 import { type ObjectJSON, ParentId, SelfDXNId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
 import { defineHiddenProperty } from '@dxos/echo/internal';
 import { failedInvariant } from '@dxos/invariant';
-import { EchoId, LegacyDXN as DXN, type ObjectId, type SpaceId } from '@dxos/keys';
+import { EchoId, type ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 
@@ -68,7 +68,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
           try {
             return await Obj.fromJSON(obj, {
               refResolver: this._refResolver,
-              dxn: DXN.fromSpaceAndObjectId(this._spaceId, (obj as any).id),
+              dxn: EchoId.fromSpaceAndObjectId(this._spaceId, (obj as any).id),
               database: this._database,
               parent: this._parentEntity,
             });
@@ -199,7 +199,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
 
     for (const item of items) {
       setRefResolverOnData(item, this._refResolver);
-      defineHiddenProperty(item, SelfDXNId, DXN.fromSpaceAndObjectId(this._spaceId, item.id as any));
+      defineHiddenProperty(item, SelfDXNId, EchoId.fromSpaceAndObjectId(this._spaceId, item.id as any));
       if (this._parentEntity) {
         defineHiddenProperty(item, ParentId, this._parentEntity);
       }
@@ -288,7 +288,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
           try {
             const decoded = await Obj.fromJSON(obj, {
               refResolver: this._refResolver,
-              dxn: DXN.fromSpaceAndObjectId(this._spaceId, (obj as any).id),
+              dxn: EchoId.fromSpaceAndObjectId(this._spaceId, (obj as any).id),
               database: this._database,
               parent: this._parentEntity,
             });
@@ -326,7 +326,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   async hydrateObject(obj: ObjectJSON): Promise<Entity.Unknown> {
     const decoded = await Obj.fromJSON(obj, {
       refResolver: this._refResolver,
-      dxn: DXN.fromSpaceAndObjectId(this._spaceId, (obj as any).id),
+      dxn: EchoId.fromSpaceAndObjectId(this._spaceId, (obj as any).id),
       database: this._database,
       parent: this._parentEntity,
     });

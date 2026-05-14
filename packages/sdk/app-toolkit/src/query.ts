@@ -17,7 +17,7 @@ import {
   getTypeAnnotation,
   unwrapOptional,
 } from '@dxos/echo/internal';
-import { EchoId, LegacyDXN } from '@dxos/keys';
+import { DXN, EchoId, type URI } from '@dxos/keys';
 import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
@@ -38,7 +38,7 @@ export const evalQuery = (queryString: string): Query.Any => {
 
 export const resolveSchemaWithRegistry = (registry: SchemaRegistry.SchemaRegistry, query: QueryAST.Query) => {
   const resolve = Effect.fn(function* (dxn: string) {
-    const typename = LegacyDXN.parse(dxn).asTypeDXN()?.type;
+    const typename = DXN.isDXN(dxn) ? DXN.getNsid(DXN.parse(dxn as URI.URI)) : undefined;
     if (!typename) {
       return Option.none();
     }
@@ -90,7 +90,7 @@ const resolveSchema = (
         Effect.flatMap(
           Option.match({
             onNone: () => Effect.succeed(Option.none()),
-            onSome: (typename) => resolve(LegacyDXN.fromTypename(typename).toString()),
+            onSome: (typename) => resolve(DXN.fromTypename(typename) as string),
           }),
         ),
       ),

@@ -13,7 +13,7 @@ import type * as Types from 'effect/Types';
 import { raise } from '@dxos/debug';
 import { mapAst } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { LegacyDXN as DXN, ObjectId } from '@dxos/keys';
+import { DXN, EchoId, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { clearUndefined, orderKeys, removeProperties } from '@dxos/util';
 
@@ -363,12 +363,13 @@ const refToEffectSchema = (root: any): Schema.Schema.AnyNoContext => {
     throw new Error('Invalid reference field in ref schema');
   }
 
-  const targetSchemaDXN = DXN.parse(reference.schema.$ref);
-  invariant(targetSchemaDXN.kind === DXN.kind.TYPE);
+  const ref = reference.schema.$ref;
+  invariant(DXN.isDXN(ref), `Expected a type DXN, got: ${ref}`);
+  const targetSchemaDXN = DXN.parse(ref);
 
   return createEchoReferenceSchema(
-    targetSchemaDXN.toString(),
-    targetSchemaDXN.kind === DXN.kind.TYPE ? targetSchemaDXN.parts[0] : undefined,
+    ref,
+    DXN.getNsid(targetSchemaDXN),
     reference.schemaVersion,
   );
 };
@@ -415,7 +416,7 @@ const decodeTypeIdentifierAnnotation = (schema: JsonSchemaType): string | undefi
   } else if (schema.$id && schema.$id.startsWith('dxn:type:') && schema?.echo?.type?.schemaId) {
     const id = schema?.echo?.type?.schemaId;
     if (ObjectId.isValid(id)) {
-      return DXN.fromLocalObjectId(id).toString();
+      return EchoId.fromLocalObjectId(id) as string;
     }
   }
   return undefined;
@@ -433,8 +434,8 @@ const decodeTypeAnnotation = (schema: JsonSchemaType): TypeAnnotation | undefine
     if (annotation.kind === EntityKind.Relation) {
       const source = schema.relationSource?.$ref ?? raise(new Error('Relation source not set'));
       const target = schema.relationTarget?.$ref ?? raise(new Error('Relation target not set'));
-      annotation.sourceSchema = DXN.parse(source).toString();
-      annotation.targetSchema = DXN.parse(target).toString();
+      annotation.sourceSchema = source;
+      annotation.targetSchema = target;
     }
 
     return annotation;

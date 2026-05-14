@@ -10,14 +10,14 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { ATTR_TYPE } from '@dxos/echo/internal';
-import { LegacyDXN as DXN, ObjectId, SpaceId } from '@dxos/keys';
+import { ObjectId, SpaceId } from '@dxos/keys';
 
 import { FtsIndex } from './fts-index';
 import type { IndexerObject } from './interface';
 import { ObjectMetaIndex } from './object-meta-index';
 
-const TYPE_PERSON = DXN.parse('dxn:type:com.example.type.person:0.1.0').toString();
-const TYPE_DEFAULT = DXN.parse('dxn:type:test.com/type/Type:0.1.0').toString();
+const TYPE_PERSON = 'dxn:type:com.example.type.person:0.1.0';
+const TYPE_DEFAULT = 'dxn:type:test.com/type/Type:0.1.0';
 
 const TestLayer = Layer.merge(
   SqliteClient.layer({
@@ -107,7 +107,7 @@ describe('FtsIndex', () => {
         updatedAt: Date.now(),
         data: {
           id: objectId,
-          [ATTR_TYPE]: DXN.parse('dxn:type:com.example.type.person:0.1.0').toString(),
+          [ATTR_TYPE]: TYPE_PERSON,
           title: 'Original Title',
         },
       };

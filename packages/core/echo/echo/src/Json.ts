@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { LegacyDXN } from '@dxos/keys';
+import { EchoId } from '@dxos/keys';
 
 import * as Database from './Database';
 import * as Obj from './Obj';
@@ -64,13 +64,14 @@ export const createRefReplacer = ({ db, depth = 1 }: CreateRefReplacerOptions): 
       // an unparseable string would otherwise crash the whole `JSON.stringify`.
       // Treat any parse miss as "leave as-is" rather than propagating.
       const dxnString = value['/'];
-      if (!dxnString.startsWith('dxn:')) {
+      if (!dxnString.startsWith('dxn:') && !dxnString.startsWith('echo:')) {
         return value;
       }
 
       let echoId: string | undefined;
       try {
-        echoId = LegacyDXN.parse(dxnString).asEchoDXN()?.echoId;
+        const parsed = EchoId.tryParse(dxnString);
+        echoId = parsed ? EchoId.getObjectId(parsed) : undefined;
       } catch {
         return value;
       }

@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { invariant } from '@dxos/invariant';
-import { LegacyDXN as DXN } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 
 import { type TypeAnnotation, TypeAnnotationId, TypeIdentifierAnnotationId } from '../Annotation';
 
@@ -85,7 +85,7 @@ export const setTypenameInSchema = (
     } satisfies TypeAnnotation,
     [SchemaAST.JSONSchemaAnnotationId]: {
       ...(schema.ast.annotations[SchemaAST.JSONSchemaAnnotationId] ?? {}),
-      $id: schema.ast.annotations[TypeIdentifierAnnotationId] ?? DXN.fromTypename(typename).toString(),
+      $id: schema.ast.annotations[TypeIdentifierAnnotationId] ?? DXN.fromTypename(typename) as string,
       typename,
     },
   });

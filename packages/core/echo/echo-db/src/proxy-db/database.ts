@@ -11,7 +11,7 @@ import { Database, type Entity, Filter, Obj, Query, QueryAST, Ref } from '@dxos/
 import { type AnyProperties, assertObjectModel, setRefResolver } from '@dxos/echo/internal';
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { LegacyDXN, type PublicKey, type SpaceId } from '@dxos/keys';
+import { type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryService } from '@dxos/protocols/proto/dxos/echo/query';
 import { type DataService, type SpaceSyncState } from '@dxos/protocols/proto/dxos/echo/service';
@@ -213,7 +213,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return defaultMap(this._rootProxies, core, () => initEchoReactiveObjectRootProxy(core, this)) as T;
   }
 
-  makeRef<T extends AnyProperties = any>(dxn: LegacyDXN): Ref.Ref<T> {
+  makeRef<T extends AnyProperties = any>(dxn: URI.URI): Ref.Ref<T> {
     const ref = Ref.fromDXN(dxn);
     setRefResolver(ref, this.graph.createRefResolver({ context: { space: this.spaceId } }));
     return ref;

@@ -11,6 +11,7 @@ import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
+import { EchoId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Channel, ContentBlock, Message } from '@dxos/types';
@@ -265,9 +266,9 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
       const space = client.spaces.get(db.spaceId);
       invariant(space, 'Space not found');
 
-      const integrationId = integration.dxn.asEchoDXN()?.echoId ?? 'unknown';
+      const integrationId = EchoId.getObjectId(EchoId.tryParse(integration.dxn)!) ?? 'unknown';
       const toastIdSuffix = channelRef
-        ? `${integrationId}.${channelRef.dxn.asEchoDXN()?.echoId ?? 'unknown'}`
+        ? `${integrationId}.${EchoId.getObjectId(EchoId.tryParse(channelRef.dxn)!) ?? 'unknown'}`
         : integrationId;
 
       const outcome = yield* Effect.either(
@@ -280,7 +281,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
           const allConversations = yield* SlackApi.fetchConversations();
           const conversationsById = new Map(allConversations.map((c) => [c.id, c]));
 
-          const channelFilterId = channelRef?.dxn.asEchoDXN()?.echoId;
+          const channelFilterId = channelRef ? EchoId.getObjectId(EchoId.tryParse(channelRef.dxn)!) : undefined;
           type TargetEntry = {
             entry: (typeof integrationObj.targets)[number];
             channel: Channel.Channel;
@@ -313,7 +314,7 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
               });
             }
 
-            const targetEchoId = Ref.make(localObj).dxn.asEchoDXN()?.echoId;
+            const targetEchoId = EchoId.getObjectId(EchoId.tryParse(Ref.make(localObj).dxn)!);
             if (channelFilterId && targetEchoId !== channelFilterId) {
               continue;
             }

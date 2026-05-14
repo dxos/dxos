@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ATTR_DELETED, ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
-import { EchoId, type ObjectId, type SpaceId, type URI } from '@dxos/keys';
+import { DXN, EchoId, type ObjectId, type SpaceId, type URI } from '@dxos/keys';
 
 import type { IndexerObject } from './interface';
 import type { Index } from './interface';
@@ -125,11 +125,12 @@ export class ObjectMetaIndex implements Index {
     ): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
-        const parsedType = DXN.tryParse(query.typeDxn)?.asTypeDXN();
+        const parsedDxn = DXN.isDXN(query.typeDxn) ? DXN.parse(query.typeDxn as URI.URI) : undefined;
+        const hasNoVersion = parsedDxn !== undefined && DXN.getVersion(parsedDxn) === undefined;
 
         // SQLite stores booleans as integers, so we need to specify the raw row type.
         const rows =
-          parsedType && parsedType.version === undefined
+          hasNoVersion
             ? yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND (typeDxn = ${
                 query.typeDxn
               } OR typeDxn LIKE ${_escapeLikePrefix(query.typeDxn)} ESCAPE '\\')`
@@ -203,8 +204,9 @@ export class ObjectMetaIndex implements Index {
         const sourceCondition = buildSourceCondition(sql, spaceIds, includeAllQueues, queueIds);
         const typeWhere = sql.or(
           typeDxns.map((typeDxn) => {
-            const parsedType = DXN.tryParse(typeDxn)?.asTypeDXN();
-            return parsedType && parsedType.version === undefined
+            const parsedDxn = DXN.isDXN(typeDxn) ? DXN.parse(typeDxn as URI.URI) : undefined;
+            const hasNoVersion = parsedDxn !== undefined && DXN.getVersion(parsedDxn) === undefined;
+            return hasNoVersion
               ? sql.or([sql`typeDxn = ${typeDxn}`, sql`typeDxn LIKE ${_escapeLikePrefix(typeDxn)} ESCAPE '\\'`])
               : sql`typeDxn = ${typeDxn}`;
           }),
@@ -478,7 +480,8 @@ export class ObjectMetaIndex implements Index {
         }
 
         const sql = yield* SqlClient.SqlClient;
-        const parentDxns = query.parentIds.map((id) => DXN.fromLocalObjectId(id).toString());
+        const parentDzns = query.parentIds.map((id) => EchoId.fromLocalObjectId(id));
+        const parentDxns = parentDzns;
         const rows =
           yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', query.spaceId)} AND (${sql.in('parent', parentDxns)} OR ${sql.in('queueId', query.parentIds)})`;
 

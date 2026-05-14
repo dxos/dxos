@@ -3,7 +3,7 @@
 //
 
 import { LegacySpaceProperties, SpaceProperties } from '@dxos/client-protocol';
-import { Type } from '@dxos/echo';
+import { DXN, Type } from '@dxos/echo';
 import { Filter, type SerializedSpace, Serializer, decodeDXNFromJSON } from '@dxos/echo-db';
 import { type EchoDatabase } from '@dxos/echo-db';
 
@@ -18,7 +18,7 @@ export const importSpace = async (db: EchoDatabase, data: SerializedSpace, optio
   await new Serializer().import(db, data, {
     onObject: async (object) => {
       const typeDXN = decodeDXNFromJSON(object['@type']);
-      const typename = typeDXN?.asTypeDXN()?.type;
+      const typename = typeDXN && DXN.isDXN(typeDXN) ? DXN.getNsid(DXN.parse(typeDXN)) : undefined;
       if (typename && options?.ignoreTypes?.includes(typename)) {
         return false;
       }

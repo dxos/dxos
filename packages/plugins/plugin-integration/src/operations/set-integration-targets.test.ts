@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Database, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { EchoId } from '@dxos/keys';
 import { runAndForwardErrors } from '@dxos/effect';
 import { Expando } from '@dxos/schema';
 import { AccessToken } from '@dxos/types';
@@ -101,7 +102,7 @@ describe('SetIntegrationTargets', () => {
     expect(integration.targets.length).toBe(1);
     expect(integration.targets[0].cursor).toBe('sentinel');
     expect(integration.targets[0].lastSyncAt).toBe(lastSyncAt);
-    expect(integration.targets[0].object?.dxn.asEchoDXN()?.echoId).toBe(Ref.make(obj).dxn.asEchoDXN()?.echoId);
+    expect(integration.targets[0].object && EchoId.getObjectId(EchoId.tryParse(integration.targets[0].object.dxn)!)).toBe(EchoId.getObjectId(EchoId.tryParse(Ref.make(obj).dxn)!));
   });
 
   test('leaves auto-created targets (no remoteId) untouched on submit', async ({ expect }) => {

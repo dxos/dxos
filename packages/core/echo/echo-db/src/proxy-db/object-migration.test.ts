@@ -8,7 +8,7 @@ import { afterEach, beforeEach, expect, test } from 'vitest';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { getSchemaDXN } from '@dxos/echo/internal';
 import { JsonPath } from '@dxos/effect';
-import { LegacyDXN as DXN } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 
 import { EchoTestBuilder } from '../testing';
 import { defineObjectMigration } from './object-migration';
@@ -67,7 +67,7 @@ test('migrate 1 object', async () => {
   expect(objects).to.have.length(1);
 
   expect(getSchemaDXN(Obj.getSchema(objects[0])!)?.toString()).to.eq(
-    DXN.fromTypenameAndVersion('com.example.type.person', '0.2.0').toString(),
+    DXN.fromTypenameAndVersion('com.example.type.person', '0.2.0'),
   );
   expect(Obj.getTypename(objects[0])).to.eq('com.example.type.person');
   expect(Type.getVersion(Obj.getSchema(objects[0])!)).to.eq('0.2.0');

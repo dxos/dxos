@@ -16,6 +16,7 @@ import { Blueprint } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { DXN, Feed, Obj, type QueryResult, Query, Ref, Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
+import { EchoId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexSet, isNonNullable } from '@dxos/util';
 
@@ -50,7 +51,10 @@ export class Bindings {
   readonly blueprints = new ComplexSet<Ref.Ref<Blueprint.Blueprint>>((ref) => ref.dxn.toString());
 
   // TODO(burdon): Some DXNs have the Space prefix so only compare the object ID.
-  readonly objects = new ComplexSet<Ref.Ref<Obj.Unknown>>((ref) => ref.dxn.asEchoDXN()?.echoId);
+  readonly objects = new ComplexSet<Ref.Ref<Obj.Unknown>>((ref) => {
+    const echoId = EchoId.tryParse(ref.dxn);
+    return echoId ? EchoId.getObjectId(echoId) : undefined;
+  });
 
   toJSON() {
     return {
@@ -185,16 +189,20 @@ export class Binder extends Resource {
 
     // Filter current state to only items still in the reduced binding set,
     // then merge in newly resolved items. This ensures unbind events are respected.
-    const reducedBlueprintDxns = new ComplexSet<DXN>(
-      DXN.hash,
-      [...bindings.blueprints].map((ref) => ref.dxn),
+    const reducedBlueprintDxns = new Set<string>(
+      [...bindings.blueprints].map((ref) => ref.dxn.toString()),
     );
-    const reducedObjectDxns = new ComplexSet<DXN>(
-      DXN.hash,
-      [...bindings.objects].map((ref) => ref.dxn),
+    const reducedObjectDxns = new Set<string>(
+      [...bindings.objects].map((ref) => ref.dxn.toString()),
     );
-    const filteredBlueprints = currentBlueprints.filter((obj) => reducedBlueprintDxns.has(Obj.getDXN(obj)));
-    const filteredObjects = currentObjects.filter((obj) => reducedObjectDxns.has(Obj.getDXN(obj)));
+    const filteredBlueprints = currentBlueprints.filter((obj) => {
+      const dxn = Obj.getDXN(obj);
+      return dxn != null && reducedBlueprintDxns.has(dxn.toString());
+    });
+    const filteredObjects = currentObjects.filter((obj) => {
+      const dxn = Obj.getDXN(obj);
+      return dxn != null && reducedObjectDxns.has(dxn.toString());
+    });
     const mergedBlueprints = this._mergeInto(filteredBlueprints, resolvedBlueprints);
     const mergedObjects = this._mergeInto(filteredObjects, resolvedObjects);
 
@@ -256,14 +264,14 @@ export class Binder extends Resource {
       const current = this._registry.get(this._blueprints);
       this._registry.set(
         this._blueprints,
-        current.filter((obj) => !removedBlueprintDxns.some((dxn) => DXN.equalsEchoId(Obj.getDXN(obj), dxn))),
+        current.filter((obj) => !removedBlueprintDxns.some((dxn) => Obj.getDXN(obj)?.toString() === dxn.toString())),
       );
     }
     if (removedObjectDxns.length > 0) {
       const current = this._registry.get(this._objects);
       this._registry.set(
         this._objects,
-        current.filter((obj) => !removedObjectDxns.some((dxn) => DXN.equalsEchoId(Obj.getDXN(obj), dxn))),
+        current.filter((obj) => !removedObjectDxns.some((dxn) => Obj.getDXN(obj)?.toString() === dxn.toString())),
       );
     }
 
@@ -330,7 +338,7 @@ export class Binder extends Resource {
         objects.added.forEach((ref) => context.objects.add(ref));
         objects.removed.forEach((ref) => {
           for (const obj of context.objects) {
-            if (DXN.equalsEchoId(obj.dxn, ref.dxn)) {
+            if (obj.dxn === ref.dxn || (EchoId.tryParse(obj.dxn) && EchoId.tryParse(ref.dxn) && EchoId.getObjectId(EchoId.tryParse(obj.dxn)!) === EchoId.getObjectId(EchoId.tryParse(ref.dxn)!))) {
               context.objects.delete(obj);
             }
           }

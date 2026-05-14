@@ -16,7 +16,7 @@ import {
 } from '@dxos/echo-pipeline/testing';
 import { Ref, getSchemaDXN, getTypeAnnotation, makeObject } from '@dxos/echo/internal';
 import { TestSchema } from '@dxos/echo/testing';
-import { LegacyDXN as DXN, type ObjectId, PublicKey } from '@dxos/keys';
+import { EchoId, type ObjectId, PublicKey, type URI } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
 
@@ -493,7 +493,7 @@ describe('Integration tests', () => {
           field: Schema.String,
         }).pipe(Type.object({ typename: 'com.example.type.test', version: '0.1.0' }));
         const [stored] = await db.schemaRegistry.register([LocalTestSchema]);
-        schemaDxn = DXN.fromLocalObjectId(stored.id).toString();
+        schemaDxn = EchoId.fromLocalObjectId(stored.id);
 
         const object = db.add(makeObject(stored, { field: 'test' }));
         expect(Obj.getSchema(object)).to.eq(stored);
@@ -514,7 +514,7 @@ describe('Integration tests', () => {
       {
         // Can query by stored schema DXN.
         await using db = await peer.openDatabase(spaceKey, rootUrl);
-        const objects = await db.query(Query.select(Filter.typeDXN(DXN.parse(schemaDxn)))).run();
+        const objects = await db.query(Query.select(Filter.typeDXN(schemaDxn))).run();
         expect(objects.length).to.eq(1);
         expect(getTypeAnnotation(Obj.getSchema(objects[0])!)).to.include({
           typename: 'com.example.type.test',
@@ -541,7 +541,7 @@ describe('Integration tests', () => {
   test('dynamic schema is eagerly loaded with objects', async () => {
     await using peer = await builder.createPeer();
 
-    let typeDXN!: DXN;
+    let typeDXN!: URI.URI;
     {
       await using db = await peer.createDatabase(PublicKey.random(), {
         reactiveSchemaQuery: false,

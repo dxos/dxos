@@ -11,7 +11,7 @@ import type * as Types from 'effect/Types';
 
 import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
-import { LegacyDXN as DXN, ObjectId } from '@dxos/keys';
+import { DXN, ObjectId } from '@dxos/keys';
 
 import * as internal from './internal';
 import type * as Obj from './Obj';
@@ -132,7 +132,7 @@ export const typename = (typename: string): Any => {
   assertArgument(!typename.startsWith('dxn:'), 'typename', 'Typename must no be qualified');
   return new FilterClass({
     type: 'object',
-    typename: DXN.fromTypename(typename).toString(),
+    typename: DXN.fromTypename(typename) as string,
     props: {},
   });
 };
@@ -140,10 +140,10 @@ export const typename = (typename: string): Any => {
 /**
  * Filter by fully qualified type DXN.
  */
-export const typeDXN = (dxn: DXN): Any => {
+export const typeDXN = (dxn: string): Any => {
   return new FilterClass({
     type: 'object',
-    typename: dxn.toString(),
+    typename: dxn,
     props: {},
   });
 };
@@ -359,7 +359,7 @@ export const childOf = (
     if (Ref.isRef(item)) {
       return item.dxn.toString();
     }
-    return internal.getDXN(item).toString();
+    return internal.getDXN(item) as string;
   });
   return new FilterClass({
     type: 'child-of',

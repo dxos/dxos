@@ -11,7 +11,7 @@ import { Entity, type Hypergraph, Obj, Query, type QueryResult } from '@dxos/ech
 import { type QueryAST } from '@dxos/echo-protocol';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { EchoId, LegacyDXN as DXN, type ObjectId, SpaceId } from '@dxos/keys';
+import { EchoId, type ObjectId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 import {
@@ -246,7 +246,7 @@ export class IndexQuerySource implements QuerySource {
       try {
         object = await Obj.fromJSON(json, {
           refResolver,
-          dxn: DXN.fromSpaceAndObjectId(result.spaceId as SpaceId, result.id as ObjectId),
+          dxn: EchoId.fromSpaceAndObjectId(result.spaceId as SpaceId, result.id as ObjectId),
           database,
         });
       } catch (err) {

@@ -62,7 +62,7 @@ type SerializedObject<T extends { id: string }> = {
  * Converts object to it's JSON representation.
  */
 export const objectToJSON = <T extends AnyEntity>(obj: T): SerializedObject<T> => {
-  const typename = getTypeDXN(obj)?.toString();
+  const typename = getTypeDXN(obj);
   invariant(typename && typeof typename === 'string');
   return typedJsonSerializer.call(obj);
 };
@@ -85,15 +85,15 @@ export const objectFromJSON = async (
     dxn,
     database,
     parent,
-  }: { refResolver?: RefResolver; dxn?: DXN; database?: Database.Database; parent?: Obj.Unknown } = {},
+  }: { refResolver?: RefResolver; dxn?: URI.URI; database?: Database.Database; parent?: Obj.Unknown } = {},
 ): Promise<AnyEntity> => {
   assumeType<ObjectJSON>(jsonData);
   assertArgument(typeof jsonData === 'object' && jsonData !== null, 'jsonData', 'expect object');
   assertArgument(typeof jsonData[ATTR_TYPE] === 'string', 'jsonData[ATTR_TYPE]', 'expected object to have a type');
   assertArgument(typeof jsonData.id === 'string', 'jsonData.id', 'expected object to have an id');
 
-  const type = DXN.parse(jsonData[ATTR_TYPE]);
-  const schema = await refResolver?.resolveSchema(type);
+  const type = jsonData[ATTR_TYPE] as string;
+  const schema = await refResolver?.resolveSchema(type as URI.URI);
   invariant(schema === undefined || Schema.isSchema(schema));
   const decodedInput = stripInternalJsonKeys(jsonData);
 
@@ -108,7 +108,7 @@ export const objectFromJSON = async (
   }
 
   invariant(ObjectId.isValid(obj.id), 'Invalid object id');
-  setTypename(obj, type);
+  setTypename(obj, type as URI.URI);
   if (schema) {
     setSchema(obj, schema);
   }
@@ -116,11 +116,11 @@ export const objectFromJSON = async (
   const isRelation =
     typeof jsonData[ATTR_RELATION_SOURCE] === 'string' || typeof jsonData[ATTR_RELATION_TARGET] === 'string';
   if (isRelation) {
-    const sourceDxn: DXN = DXN.parse(jsonData[ATTR_RELATION_SOURCE] ?? raise(new TypeError('Missing relation source')));
-    const targetDxn: DXN = DXN.parse(jsonData[ATTR_RELATION_TARGET] ?? raise(new TypeError('Missing relation target')));
+    const sourceDxn = (jsonData[ATTR_RELATION_SOURCE] ?? raise(new TypeError('Missing relation source'))) as string;
+    const targetDxn = (jsonData[ATTR_RELATION_TARGET] ?? raise(new TypeError('Missing relation target'))) as string;
 
-    const source = (await refResolver?.resolve(sourceDxn)) as AnyEntity | undefined;
-    const target = (await refResolver?.resolve(targetDxn)) as AnyEntity | undefined;
+    const source = (await refResolver?.resolve(sourceDxn as URI.URI)) as AnyEntity | undefined;
+    const target = (await refResolver?.resolve(targetDxn as URI.URI)) as AnyEntity | undefined;
 
     defineHiddenProperty(obj, KindId, EntityKind.Relation);
     defineHiddenProperty(obj, RelationSourceDXNId, sourceDxn);
@@ -142,8 +142,8 @@ export const objectFromJSON = async (
   }
 
   if (jsonData[ATTR_PARENT]) {
-    const parentDxn = DXN.parse(jsonData[ATTR_PARENT]);
-    const resolvedParent = (await refResolver?.resolve(parentDxn)) as Obj.Unknown | undefined;
+    const parentDxn = jsonData[ATTR_PARENT] as string;
+    const resolvedParent = (await refResolver?.resolve(parentDxn as URI.URI)) as Obj.Unknown | undefined;
     defineHiddenProperty(obj, ParentId, resolvedParent);
   } else if (parent) {
     defineHiddenProperty(obj, ParentId, parent);
@@ -213,10 +213,10 @@ export const objectStructureToJson = (objectId: string, structure: ObjectStructu
   return {
     ...structure.data,
     id: objectId,
-    [ATTR_TYPE]: (ObjectStructure.getTypeReference(structure)?.['/'] ?? '') as DXN.String,
+    [ATTR_TYPE]: (ObjectStructure.getTypeReference(structure)?.['/'] ?? '') as string,
     [ATTR_DELETED]: ObjectStructure.isDeleted(structure),
-    [ATTR_PARENT]: ObjectStructure.getParent(structure)?.['/'] as DXN.String | undefined,
-    [ATTR_RELATION_SOURCE]: ObjectStructure.getRelationSource(structure)?.['/'] as DXN.String | undefined,
-    [ATTR_RELATION_TARGET]: ObjectStructure.getRelationTarget(structure)?.['/'] as DXN.String | undefined,
+    [ATTR_PARENT]: ObjectStructure.getParent(structure)?.['/'] as string | undefined,
+    [ATTR_RELATION_SOURCE]: ObjectStructure.getRelationSource(structure)?.['/'] as string | undefined,
+    [ATTR_RELATION_TARGET]: ObjectStructure.getRelationTarget(structure)?.['/'] as string | undefined,
   };
 };

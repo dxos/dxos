@@ -10,6 +10,7 @@ import { LayoutOperation, mergeField, readSnapshot, snapshotField, writeSnapshot
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { EchoId } from '@dxos/keys';
 import { Project, Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -251,8 +252,8 @@ export const upsertTask = Effect.fn('upsertTask')(function* (
         existing.estimate = estimateResult.value;
       }
       if (project) {
-        const currentProjectId = existing.project?.dxn.asEchoDXN()?.echoId;
-        const projectId = Ref.make(project).dxn.asEchoDXN()?.echoId;
+        const currentProjectId = existing.project ? EchoId.getObjectId(EchoId.tryParse(existing.project.dxn)!) : undefined;
+        const projectId = EchoId.getObjectId(EchoId.tryParse(Ref.make(project).dxn)!);
         if (!existing.project || (currentProjectId && projectId && currentProjectId !== projectId)) {
           existing.project = Ref.make(project);
         }
@@ -454,9 +455,9 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
         return yield* Effect.dieMessage('Integration ref must be preloaded by caller (no database derivable).');
       }
 
-      const integrationId = integration.dxn.asEchoDXN()?.echoId ?? 'unknown';
+      const integrationId = EchoId.getObjectId(EchoId.tryParse(integration.dxn)!) ?? 'unknown';
       const toastIdSuffix = teamRef
-        ? `${integrationId}.${teamRef.dxn.asEchoDXN()?.echoId ?? 'unknown'}`
+        ? `${integrationId}.${EchoId.getObjectId(EchoId.tryParse(teamRef.dxn)!) ?? 'unknown'}`
         : integrationId;
 
       const outcome = yield* Effect.either(
@@ -472,7 +473,7 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
           // Optional narrow filter to a single target by its local
           // `target.object` echo id. Linear targets don't always have a
           // materialized object until first sync, so this filter is best-effort.
-          const teamFilterEchoId = teamRef?.dxn.asEchoDXN()?.echoId;
+          const teamFilterEchoId = teamRef ? EchoId.getObjectId(EchoId.tryParse(teamRef.dxn)!) : undefined;
 
           type TargetEntry = {
             entry: (typeof integrationObj.targets)[number];
@@ -494,7 +495,7 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
               continue;
             }
             if (teamFilterEchoId) {
-              const targetEchoId = target.object?.dxn.asEchoDXN()?.echoId;
+              const targetEchoId = target.object ? EchoId.getObjectId(EchoId.tryParse(target.object.dxn)!) : undefined;
               if (targetEchoId !== teamFilterEchoId) {
                 continue;
               }

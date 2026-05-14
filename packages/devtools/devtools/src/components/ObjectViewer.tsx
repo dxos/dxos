@@ -4,7 +4,7 @@
 
 import React, { type ComponentType, type JSX, useCallback } from 'react';
 
-import { LegacyDXN } from '@dxos/keys';
+import { type URI } from '@dxos/keys';
 import { Button, Clipboard, Input } from '@dxos/react-ui';
 import { JsonHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 
@@ -15,7 +15,7 @@ export type ObjectViewerProps = {
    * Prefer to use the DXN from the object.
    */
   id?: string;
-  onNavigate?: (dxn: LegacyDXN) => void;
+  onNavigate?: (dxn: URI.URI) => void;
 };
 
 /**
@@ -40,7 +40,7 @@ export const ObjectViewer = ({ object, id, onNavigate }: ObjectViewerProps) => {
         node.properties ??= { className: [] };
         node.properties.className.push('underline', 'cursor-pointer');
         node.properties.onClick = () => {
-          onNavigate?.(LegacyDXN.parse((node.children![0].value as string).slice(1, -1)));
+          onNavigate?.((node.children![0].value as string).slice(1, -1) as URI.URI);
         };
       } else {
         node.children?.forEach(addDxnLinks);

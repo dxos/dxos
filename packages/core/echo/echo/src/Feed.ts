@@ -112,11 +112,17 @@ export const make = (props: Obj.MakeProps<typeof Feed> = {}): Feed => Obj.make(F
  * Used internally by the feed service layer.
  */
 export const getQueueDxn = (feed: Feed): EchoId.EchoId | undefined => {
-  const self = Obj.getDXN(feed).asEchoDXN();
-  if (!self || !self.spaceId) {
+  const dxn = Obj.getDXN(feed);
+  const echoId = EchoId.tryParse(dxn);
+  if (!echoId) {
     return undefined;
   }
-  return EchoId.fromSpaceAndObjectId(self.spaceId as SpaceId, self.echoId as ObjectId);
+  const spaceId = EchoId.getSpaceId(echoId);
+  const objectId = EchoId.getObjectId(echoId);
+  if (!spaceId || !objectId) {
+    return undefined;
+  }
+  return EchoId.fromSpaceAndObjectId(spaceId as SpaceId, objectId as ObjectId);
 };
 
 //

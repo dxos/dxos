@@ -11,7 +11,7 @@ import { useCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Agent, SyncTriggers } from '@dxos/assistant-toolkit';
 import { Operation } from '@dxos/compute';
-import { DXN, Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { log } from '@dxos/log';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
@@ -73,7 +73,7 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
           Atom.make((get) => {
             const agentObj = get(_);
             const selectedSubscriptions: Obj.Unknown[] = subscribedObjects.filter((object) =>
-              agentObj.subscriptions.some((subscription) => DXN.equals(subscription.dxn, Obj.getDXN(object))),
+              agentObj.subscriptions.some((subscription) => subscription.dxn === Obj.getDXN(object)),
             );
 
             return selectedSubscriptions;
@@ -91,7 +91,7 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
           agent.subscriptions.push(Ref.fromDXN(Obj.getDXN(object)));
         } else {
           agent.subscriptions = agent.subscriptions.filter(
-            (subscription) => !DXN.equals(subscription.dxn, Obj.getDXN(object)),
+            (subscription) => subscription.dxn !== Obj.getDXN(object),
           );
         }
       });

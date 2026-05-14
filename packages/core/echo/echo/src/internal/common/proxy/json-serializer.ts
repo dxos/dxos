@@ -4,7 +4,6 @@
 
 import { type ObjectMeta } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { LegacyDXN as DXN } from '@dxos/keys';
 import { deepMapValues } from '@dxos/util';
 
 import { Ref } from '../../Ref';
@@ -48,7 +47,7 @@ export const typedJsonSerializer = function (this: any) {
   };
 
   if (this[TypeId]) {
-    result[ATTR_TYPE] = this[TypeId].toString();
+    result[ATTR_TYPE] = this[TypeId];
   }
 
   if (this[MetaId]) {
@@ -56,18 +55,18 @@ export const typedJsonSerializer = function (this: any) {
   }
 
   if (this[SelfDXNId]) {
-    result[ATTR_SELF_DXN] = this[SelfDXNId].toString();
+    result[ATTR_SELF_DXN] = this[SelfDXNId];
   }
 
   if (this[RelationSourceDXNId]) {
     const sourceDXN = this[RelationSourceDXNId];
-    invariant(sourceDXN instanceof DXN);
-    result[ATTR_RELATION_SOURCE] = sourceDXN.toString();
+    invariant(typeof sourceDXN === 'string');
+    result[ATTR_RELATION_SOURCE] = sourceDXN;
   }
   if (this[RelationTargetDXNId]) {
     const targetDXN = this[RelationTargetDXNId];
-    invariant(targetDXN instanceof DXN);
-    result[ATTR_RELATION_TARGET] = targetDXN.toString();
+    invariant(typeof targetDXN === 'string');
+    result[ATTR_RELATION_TARGET] = targetDXN;
   }
 
   Object.assign(result, serializeData(rest));

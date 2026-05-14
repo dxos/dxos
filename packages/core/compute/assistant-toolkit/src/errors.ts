@@ -3,7 +3,6 @@
 //
 
 import { BaseError } from '@dxos/errors';
-import { LegacyDXN as DXN } from '@dxos/keys';
 
 /**
  * Agent could not execute prompt.
@@ -13,8 +12,8 @@ export class PromptError extends BaseError.extend('PromptError') {
     message: string,
     context: {
       description?: string;
-      prompt?: DXN.String;
-      chat?: DXN.String;
+      prompt?: string;
+      chat?: string;
     },
   ) {
     super({

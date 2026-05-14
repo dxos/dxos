@@ -6,7 +6,7 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { type LegacyDXN as DXN } from '@dxos/keys';
+import { type URI } from '@dxos/keys';
 
 import type * as Database from './Database';
 import type * as Entity from './Entity';
@@ -50,8 +50,8 @@ type OnMigrateProps<From extends Schema.Schema.AnyNoContext, To extends Schema.S
  * Definition of a migration from one object schema version to another.
  */
 export type ObjectMigration = {
-  fromType: DXN;
-  toType: DXN;
+  fromType: URI.URI;
+  toType: URI.URI;
   fromSchema: Schema.Schema.AnyNoContext;
   toSchema: Schema.Schema.AnyNoContext;
   transform: (from: unknown, context: ObjectMigrationContext) => Promise<unknown>;
@@ -74,14 +74,16 @@ export type ObjectMigration = {
 export const define = <From extends Schema.Schema.AnyNoContext, To extends Schema.Schema.AnyNoContext>(
   options: DefineObjectMigrationOptions<From, To>,
 ): ObjectMigration => {
-  const fromType = getSchemaDXN(options.from);
-  if (!fromType) {
+  const fromTypeDXN = getSchemaDXN(options.from);
+  if (!fromTypeDXN) {
     throw new Error('Invalid from schema');
   }
-  const toType = getSchemaDXN(options.to);
-  if (!toType) {
+  const toTypeDXN = getSchemaDXN(options.to);
+  if (!toTypeDXN) {
     throw new Error('Invalid to schema');
   }
+  const fromType = fromTypeDXN.toString() as unknown as URI.URI;
+  const toType = toTypeDXN.toString() as unknown as URI.URI;
 
   return {
     fromType,

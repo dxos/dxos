@@ -23,7 +23,7 @@ import { type Database, Ref } from '@dxos/echo';
 import { type DatabaseDirectory, EncodedReference, type ObjectStructure, type SpaceState } from '@dxos/echo-protocol';
 import { batchEvents } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { LegacyDXN, type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
+import { EchoId, type ObjectId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
@@ -826,9 +826,12 @@ export class CoreDatabase {
       this._scheduleThrottledUpdate([objectId]);
     } else {
       for (const dep of core.getStrongDependencies()) {
-        if (dep.isLocalObjectId()) {
-          const id = dep.parts[1];
-          this._automergeDocLoader.loadObjectDocument(id);
+        const depEchoId = EchoId.tryParse(dep);
+        if (depEchoId && EchoId.isLocal(depEchoId)) {
+          const id = EchoId.getObjectId(depEchoId);
+          if (id) {
+            this._automergeDocLoader.loadObjectDocument(id);
+          }
         }
       }
     }
@@ -877,12 +880,13 @@ export class CoreDatabase {
     });
 
     const deps = core.getStrongDependencies();
-    for (const dxn of deps) {
-      if (!dxn.isLocalObjectId()) {
+    for (const dep of deps) {
+      const depEchoId = EchoId.tryParse(dep);
+      if (!depEchoId || !EchoId.isLocal(depEchoId)) {
         continue;
       }
-      const depObjectId = dxn.parts[1];
-      if (this._objects.has(depObjectId)) {
+      const depObjectId = EchoId.getObjectId(depEchoId);
+      if (!depObjectId || this._objects.has(depObjectId)) {
         continue;
       }
 
@@ -898,10 +902,14 @@ export class CoreDatabase {
 
     seen.add(core.id);
     return deps.every((dep) => {
-      if (!dep.isLocalObjectId()) {
+      const depEchoId = EchoId.tryParse(dep);
+      if (!depEchoId || !EchoId.isLocal(depEchoId)) {
         return true;
       }
-      const depObjectId = dep.parts[1];
+      const depObjectId = EchoId.getObjectId(depEchoId);
+      if (!depObjectId) {
+        return true;
+      }
       const depCore = this._objects.get(depObjectId);
       if (!depCore) {
         return false;
@@ -1035,7 +1043,7 @@ export type AtomicReplaceObjectProps = {
   /**
    * Update object type.
    */
-  type?: LegacyDXN;
+  type?: URI.URI;
 };
 
 const RPC_TIMEOUT = 20_000;

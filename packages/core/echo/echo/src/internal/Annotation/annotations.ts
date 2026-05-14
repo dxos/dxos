@@ -10,7 +10,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { raise } from '@dxos/debug';
 import { type JsonPath, getField } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { DXN, type URI } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
 import { type Mutable } from '../common/proxy';
@@ -51,11 +51,11 @@ export const getTypeIdentifierAnnotation = (schema: Schema.Schema.All) =>
  * For non-stored schema returns `dxn:type:`.
  * For stored schema returns `dxn:echo:`.
  */
-export const getSchemaDXN = (schema: Schema.Schema.All): DXN | undefined => {
+export const getSchemaDXN = (schema: Schema.Schema.All): URI.URI | undefined => {
   assertArgument(Schema.isSchema(schema), 'schema', 'invalid schema');
   const id = getTypeIdentifierAnnotation(schema);
   if (id) {
-    return DXN.parse(id);
+    return id as URI.URI;
   }
 
   // TODO(dmaretskyi): Add support for dynamic schema.
@@ -64,20 +64,20 @@ export const getSchemaDXN = (schema: Schema.Schema.All): DXN | undefined => {
     return undefined;
   }
 
-  return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version);
+  return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version) as URI.URI;
 };
 
 /**
  * @param input schema or a typename string.
  * @return type DXN.
  */
-export const getTypeDXNFromSpecifier = (input: Schema.Schema.All | string): DXN => {
+export const getTypeDXNFromSpecifier = (input: Schema.Schema.All | string): URI.URI => {
   if (Schema.isSchema(input)) {
     return getSchemaDXN(input) ?? raise(new TypeError('Schema has no DXN'));
   } else {
     assertArgument(typeof input === 'string', 'input');
     assertArgument(!input.startsWith('dxn:'), 'input');
-    return DXN.fromTypename(input);
+    return DXN.fromTypename(input) as URI.URI;
   }
 };
 
@@ -132,13 +132,13 @@ export const TypeAnnotation = Schema.extend(
      * If this is a relation, the schema of the source object.
      * Must be present if entity kind is {@link EntityKind.Relation}.
      */
-    sourceSchema: Schema.optional(DXN.Schema),
+    sourceSchema: Schema.optional(Schema.String),
 
     /**
      * If this is a relation, the schema of the target object.
      * Must be present if entity kind is {@link EntityKind.Relation}.
      */
-    targetSchema: Schema.optional(DXN.Schema),
+    targetSchema: Schema.optional(Schema.String),
   }),
 );
 
@@ -187,7 +187,14 @@ export const getTypename = (obj: AnyProperties): string | undefined => {
     return getSchemaTypename(schema);
   } else {
     const type = getTypeDXN(obj);
-    return type?.asTypeDXN()?.type;
+    if (!type) {
+      return undefined;
+    }
+    // Parse the URI string to extract typename.
+    if (DXN.isDXN(type)) {
+      return DXN.getNsid(DXN.parse(type));
+    }
+    return undefined;
   }
 };
 
@@ -195,8 +202,8 @@ export const getTypename = (obj: AnyProperties): string | undefined => {
  * @internal (use Type.setTypename)
  */
 // TODO(dmaretskyi): Rename setTypeDXN.
-export const setTypename = (obj: any, typename: DXN): void => {
-  invariant(typename instanceof DXN, 'Invalid type.');
+export const setTypename = (obj: any, typename: URI.URI): void => {
+  invariant(typeof typename === 'string', 'Invalid type.');
   Object.defineProperty(obj, TypeId, {
     value: typename,
     writable: false,
@@ -213,7 +220,7 @@ export const setTypename = (obj: any, typename: DXN): void => {
  * @internal (use Obj.getTypeDXN)
  */
 // TODO(burdon): Narrow type.
-export const getTypeDXN = (obj: AnyProperties): DXN | undefined => {
+export const getTypeDXN = (obj: AnyProperties): URI.URI | undefined => {
   if (!obj) {
     return undefined;
   }
@@ -223,8 +230,8 @@ export const getTypeDXN = (obj: AnyProperties): DXN | undefined => {
     return undefined;
   }
 
-  invariant(type instanceof DXN, 'Invalid object.');
-  return type;
+  invariant(typeof type === 'string', 'Invalid object.');
+  return type as URI.URI;
 };
 
 /**
@@ -251,7 +258,7 @@ export const isInstanceOf = <Schema extends Schema.Schema.AnyNoContext>(
   }
 
   const type = getTypeDXN(object);
-  if (type && DXN.equals(type, schemaDXN)) {
+  if (type && type === schemaDXN) {
     return true;
   }
 
@@ -260,12 +267,13 @@ export const isInstanceOf = <Schema extends Schema.Schema.AnyNoContext>(
     return false;
   }
 
-  const typeDXN = schemaDXN.asTypeDXN();
-  if (!typeDXN) {
+  if (!DXN.isDXN(schemaDXN)) {
+    // EchoId-based schema DXN — no typename match possible.
     return false;
   }
 
-  return typeDXN.type === typename;
+  const schemaTypename = DXN.getNsid(DXN.parse(schemaDXN));
+  return schemaTypename === typename;
 };
 
 //

@@ -17,7 +17,7 @@ import {
 import { EntityKind, type ObjectMeta } from '@dxos/echo/internal';
 import { isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { LegacyDXN as DXN, ObjectId } from '@dxos/keys';
+import { DXN, EchoId, ObjectId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { defer, getDeep, setDeep, throwUnhandledError } from '@dxos/util';
 
@@ -453,10 +453,11 @@ export class ObjectCore {
       const parentRef = this.getParent();
       if (parentRef) {
         // Checks if the reference is pointing to an object in the same space.
-        const parentDXN = EncodedReference.toDXN(parentRef);
-        const echoDXN = parentDXN.asEchoDXN();
-        if (echoDXN && (echoDXN.spaceId === undefined || echoDXN.spaceId === this.database.spaceId)) {
-          const parentId = echoDXN.echoId;
+        const parentDXN = EncodedReference.getURI(parentRef);
+        const parentEchoId = EchoId.tryParse(parentDXN);
+        const spaceId = parentEchoId ? EchoId.getSpaceId(parentEchoId) : undefined;
+        const parentId = parentEchoId ? EchoId.getObjectId(parentEchoId) : undefined;
+        if (parentId && (spaceId === undefined || spaceId === this.database.spaceId)) {
           // NOTE: We can't use `loadObjectCoreById` here because it might be async and we need a sync check.
           // If the parent is not loaded, we assume it's not deleted for now, or should we assume deleted?
           // Given strong dependencies, the parent SHOULD be loaded if the child is loaded.
@@ -479,13 +480,14 @@ export class ObjectCore {
    * Strong references are loaded together with the source object.
    * Currently this is the schema reference and the source and target for relations.
    */
-  getStrongDependencies(): DXN[] {
-    const res: DXN[] = [];
+  getStrongDependencies(): URI.URI[] {
+    const res: URI.URI[] = [];
 
     const typeRef = this.getType();
     if (typeRef) {
-      const typeDXN = EncodedReference.toDXN(typeRef);
-      if (typeDXN.kind === DXN.kind.ECHO) {
+      const typeDXN = EncodedReference.getURI(typeRef);
+      // Only include ECHO-scheme refs (object refs, not type DXNs) as strong deps.
+      if (EchoId.isEchoId(typeDXN)) {
         res.push(typeDXN);
       }
     }
@@ -493,17 +495,17 @@ export class ObjectCore {
     if (this.getKind() === EntityKind.Relation) {
       const sourceRef = this.getSource();
       if (sourceRef) {
-        res.push(EncodedReference.toDXN(sourceRef));
+        res.push(EncodedReference.getURI(sourceRef));
       }
       const targetRef = this.getTarget();
       if (targetRef) {
-        res.push(EncodedReference.toDXN(targetRef));
+        res.push(EncodedReference.getURI(targetRef));
       }
     }
 
     const parentRef = this.getParent();
     if (parentRef) {
-      res.push(EncodedReference.toDXN(parentRef));
+      res.push(EncodedReference.getURI(parentRef));
     }
 
     return res;
@@ -546,13 +548,13 @@ const convertLegacyProtoReference = (value: {
   host?: string;
 }): EncodedReference => {
   const TYPE_PROTOCOL = 'protobuf';
-  let dxn: DXN;
+  let dxn: URI.URI;
   if (value.protocol === TYPE_PROTOCOL) {
-    dxn = new DXN(DXN.kind.TYPE, [value.objectId]);
+    dxn = DXN.fromTypename(value.objectId) as URI.URI;
   } else if (value.host) {
-    dxn = new DXN(DXN.kind.ECHO, [value.host, value.objectId]);
+    dxn = EchoId.fromSpaceAndObjectId(value.host as any, value.objectId as any);
   } else {
-    dxn = DXN.fromLocalObjectId(value.objectId);
+    dxn = EchoId.fromLocalObjectId(value.objectId as any);
   }
   return EncodedReference.fromDXN(dxn);
 };

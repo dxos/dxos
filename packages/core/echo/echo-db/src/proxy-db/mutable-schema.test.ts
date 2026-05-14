@@ -16,7 +16,7 @@ import {
   getTypeIdentifierAnnotation,
   getSchemaDXN,
 } from '@dxos/echo/internal';
-import { LegacyDXN } from '@dxos/keys';
+import { EchoId } from '@dxos/keys';
 
 import { EchoTestBuilder } from '../testing';
 
@@ -136,14 +136,18 @@ describe('EchoSchema', () => {
   test('getSchemaDXN', async () => {
     const { db } = await setupTest();
     const [schema] = await db.schemaRegistry.register([TestEmpty]);
-    expect(LegacyDXN.parse(getSchemaDXN(schema)!.toString()).asEchoDXN()?.echoId).to.eq(schema.id);
+    const schemaDxn = getSchemaDXN(schema)!;
+    const echoId = EchoId.tryParse(schemaDxn);
+    expect(echoId ? EchoId.getObjectId(echoId) : undefined).to.eq(schema.id);
   });
 
   test('getSchemaDXN on schema with updated typename', async () => {
     const { db } = await setupTest();
     const [schema] = await db.schemaRegistry.register([TestEmpty]);
     schema.updateTypename('com.example.type.updated');
-    expect(LegacyDXN.parse(getSchemaDXN(schema)!.toString()).asEchoDXN()?.echoId).to.eq(schema.id);
+    const schemaDxn = getSchemaDXN(schema)!;
+    const echoId = EchoId.tryParse(schemaDxn);
+    expect(echoId ? EchoId.getObjectId(echoId) : undefined).to.eq(schema.id);
   });
 
   test('mutable schema refs', async () => {

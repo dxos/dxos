@@ -9,6 +9,7 @@ import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { type Database, type Feed, Filter, Obj, Query, Relation, Tag } from '@dxos/echo';
+import { EchoId } from '@dxos/keys';
 import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
 import { useObject, useQuery } from '@dxos/react-client/echo';
@@ -283,11 +284,11 @@ const useMessageTagsMap = (
 
         // Try to get message ID from target DXN (echo DXN with objectId).
         const targetDXN = Relation.getTargetDXN(relation);
-        const echoDxnInfo = targetDXN.asEchoDXN();
+        const targetEchoId = EchoId.tryParse(targetDXN);
         let messageId: string | undefined;
 
-        if (echoDxnInfo?.echoId) {
-          messageId = echoDxnInfo.echoId;
+        if (targetEchoId) {
+          messageId = EchoId.getObjectId(targetEchoId);
         } else {
           // Fallback: try to resolve target object.
           try {

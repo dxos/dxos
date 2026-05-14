@@ -8,7 +8,7 @@ import { StackTrace } from '@dxos/debug';
 import { type Database, type Entity, Filter, type Hypergraph, Query, Ref } from '@dxos/echo';
 import { batchEvents, type AnyProperties, setRefResolver } from '@dxos/echo/internal';
 import { failedInvariant } from '@dxos/invariant';
-import { EchoId, LegacyDXN as DXN, type ObjectId, type SpaceId } from '@dxos/keys';
+import { DXN, EchoId, type ObjectId, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { entry } from '@dxos/util';
@@ -121,7 +121,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
    * `graph.ref(dxn)` is preferable in cases with access to the database.
    *
    */
-  makeRef<T extends AnyProperties = any>(dxn: DXN): Ref.Ref<T> {
+  makeRef<T extends AnyProperties = any>(dxn: URI.URI): Ref.Ref<T> {
     const ref = Ref.fromDXN(dxn);
     setRefResolver(ref, this.createRefResolver({}));
     return ref;
@@ -141,8 +141,8 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
     return {
       // TODO(dmaretskyi): Respect `load` flag.
-      resolveSync: (dxn: DXN, load: boolean, onLoad?: () => void) => {
-        if (dxn.kind !== DXN.kind.ECHO) {
+      resolveSync: (dxn: URI.URI, load: boolean, onLoad?: () => void) => {
+        if (!EchoId.isEchoId(dxn)) {
           return undefined; // Unsupported DXN kind.
         }
 
@@ -168,20 +168,16 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         const beginTime = TRACE_REF_RESOLUTION ? performance.now() : 0;
         let status: string = '';
         try {
-          switch (dxn.kind) {
-            case DXN.kind.TYPE: {
-              const schema = this.schemaRegistry.getSchemaByDXN(dxn.toString());
-              status = schema != null ? 'resolved' : 'missing';
-              return schema;
-            }
-            case DXN.kind.ECHO: {
-              status = 'error';
-              throw new Error('Not implemented: Resolving schema stored in the database');
-            }
-            default: {
-              status = 'unknown dxn';
-              return undefined;
-            }
+          if (DXN.isDXN(dxn)) {
+            const schema = this.schemaRegistry.getSchemaByDXN(dxn as string);
+            status = schema != null ? 'resolved' : 'missing';
+            return schema;
+          } else if (EchoId.isEchoId(dxn)) {
+            status = 'error';
+            throw new Error('Not implemented: Resolving schema stored in the database');
+          } else {
+            status = 'unknown dxn';
+            return undefined;
           }
         } finally {
           if (TRACE_REF_RESOLUTION) {
@@ -202,17 +198,19 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
    * @param onResolve will be weakly referenced.
    */
   private _resolveSync(
-    dxn: DXN,
+    dxn: URI.URI,
     context: Hypergraph.RefResolutionContext,
     onResolve?: (obj: Entity.Any) => void,
   ): Entity.Any | undefined {
-    if (!dxn.asEchoDXN()) {
+    const parsedEchoId = EchoId.tryParse(dxn);
+    if (!parsedEchoId) {
       throw new Error('Unsupported DXN kind');
     }
 
-    const { spaceId = context.space, echoId: objectId } = dxn.asEchoDXN()!;
-    if (spaceId === undefined) {
-      throw new Error(`Unable to determine the Space to resolve the reference: ${dxn.toString()}`);
+    const spaceId = EchoId.getSpaceId(parsedEchoId) ?? context.space;
+    const objectId = EchoId.getObjectId(parsedEchoId);
+    if (spaceId === undefined || objectId === undefined) {
+      throw new Error(`Unable to determine the Space to resolve the reference: ${dxn}`);
     }
 
     const db = this._databases.get(spaceId);
@@ -253,65 +251,68 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   }
 
   private async _resolveAsync(
-    dxn: DXN,
+    dxn: URI.URI,
     context: Hypergraph.RefResolutionContext,
   ): Promise<Entity.Unknown | Queue | undefined> {
     const beginTime = TRACE_REF_RESOLUTION ? performance.now() : 0;
     let status: string = '';
     try {
-      switch (dxn.kind) {
-        case DXN.kind.ECHO: {
-          if (!dxn.isLocalObjectId() && dxn.asEchoDXN()?.spaceId !== context.space) {
-            status = 'error';
-            throw new Error('Cross-space references are not yet supported');
-          }
-          const { echoId } = dxn.asEchoDXN() ?? failedInvariant();
+      const parsedEchoId = EchoId.tryParse(dxn);
+      if (parsedEchoId) {
+        const echoId = EchoId.getObjectId(parsedEchoId);
+        const echoSpaceId = EchoId.getSpaceId(parsedEchoId);
+        if (!echoId) {
+          status = 'error';
+          throw new Error(`Invalid EchoId: ${dxn}`);
+        }
+        if (!EchoId.isLocal(parsedEchoId) && echoSpaceId !== context.space) {
+          status = 'error';
+          throw new Error('Cross-space references are not yet supported');
+        }
 
-          const feedEchoId = context.feed ?? context.queue;
-          if (feedEchoId) {
-            const spaceId = EchoId.getSpaceId(feedEchoId) ?? context.space;
-            const queueId = EchoId.getObjectId(feedEchoId);
-            if (spaceId && queueId) {
-              const queueEchoId = EchoId.fromSpaceAndObjectId(spaceId, queueId as ObjectId);
-              const obj = await this._resolveQueueObjectAsync(queueEchoId, echoId);
-              if (obj) {
-                status = 'resolved';
-                return obj;
-              }
+        const feedEchoId = context.feed ?? context.queue;
+        if (feedEchoId) {
+          const feedSpaceId = EchoId.getSpaceId(feedEchoId) ?? context.space;
+          const queueId = EchoId.getObjectId(feedEchoId);
+          if (feedSpaceId && queueId) {
+            const queueEchoId = EchoId.fromSpaceAndObjectId(feedSpaceId, queueId as ObjectId);
+            const obj = await this._resolveQueueObjectAsync(queueEchoId, echoId);
+            if (obj) {
+              status = 'resolved';
+              return obj;
             }
           }
-
-          if (!context.space) {
-            status = 'error';
-            throw new Error('Resolving context-free references is not supported');
-          }
-
-          const obj = await this._resolveDatabaseObjectAsync(context.space, echoId);
-          if (obj) {
-            status = 'resolved';
-            return obj;
-          }
-
-          // Fallback: try to resolve as a queue (Feed object backed by queue service).
-          const queueEchoId = EchoId.fromSpaceAndObjectId(context.space, echoId as ObjectId);
-          const queue = this._resolveQueueSync(queueEchoId);
-          if (queue) {
-            status = 'resolved';
-            return queue as unknown as Entity.Unknown;
-          }
-
-          status = 'missing';
-          return undefined;
         }
-        default: {
+
+        if (!context.space) {
           status = 'error';
-          throw new Error(`Unsupported DXN kind: ${dxn.kind}`);
+          throw new Error('Resolving context-free references is not supported');
         }
+
+        const obj = await this._resolveDatabaseObjectAsync(context.space, echoId);
+        if (obj) {
+          status = 'resolved';
+          return obj;
+        }
+
+        // Fallback: try to resolve as a queue (Feed object backed by queue service).
+        const queueEchoId = EchoId.fromSpaceAndObjectId(context.space, echoId as ObjectId);
+        const queue = this._resolveQueueSync(queueEchoId);
+        if (queue) {
+          status = 'resolved';
+          return queue as unknown as Entity.Unknown;
+        }
+
+        status = 'missing';
+        return undefined;
+      } else {
+        status = 'error';
+        throw new Error(`Unsupported DXN kind: ${dxn}`);
       }
     } finally {
       if (TRACE_REF_RESOLUTION) {
         log.info('resolve', {
-          dxn: dxn.toString(),
+          dxn,
           status,
           time: performance.now() - beginTime,
         });

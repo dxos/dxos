@@ -9,6 +9,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { EchoId } from '@dxos/keys';
 import { AtomObj } from '@dxos/echo-atom';
 import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
@@ -100,7 +101,10 @@ export const BoardContainer = ({ role, subject: board, attendableId }: BoardCont
   const handleDelete = useCallback<NonNullable<BoardRootProps['onDelete']>>(
     (id) => {
       // TODO(burdon): Impl. DXN.equals and pass in DXN from `id`.
-      const idx = board.items.findIndex((ref) => ref.dxn.asEchoDXN()?.echoId === id);
+      const idx = board.items.findIndex((ref) => {
+        const echoId = EchoId.tryParse(ref.dxn);
+        return (echoId ? EchoId.getObjectId(echoId) : undefined) === id;
+      });
       Obj.update(board, (board) => {
         if (idx !== -1) {
           board.items.splice(idx, 1);

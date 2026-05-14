@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { assertArgument } from '@dxos/invariant';
-import { LegacyDXN as DXN } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 
 import { EntityKind } from '../common/types';
 
@@ -71,7 +71,7 @@ export const makeTypeJsonSchemaAnnotation = (options: {
 
   const obj = {
     // TODO(dmaretskyi): Should this include the version?
-    $id: options.identifier ?? DXN.fromTypename(options.typename).toString(),
+    $id: options.identifier ?? DXN.fromTypename(options.typename) as string,
     entityKind: options.kind,
     version: options.version,
     typename: options.typename,

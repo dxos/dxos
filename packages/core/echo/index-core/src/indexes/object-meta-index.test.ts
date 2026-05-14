@@ -9,18 +9,18 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { ATTR_DELETED, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
-import { LegacyDXN as DXN, ObjectId, SpaceId } from '@dxos/keys';
+import { EchoId, ObjectId, SpaceId } from '@dxos/keys';
 
 import type { IndexerObject } from './interface';
 import { ObjectMetaIndex } from './object-meta-index';
 
-const TYPE_PERSON = DXN.parse('dxn:type:com.example.type.person:0.1.0').toString();
-const TYPE_PERSON_VERSIONLESS = DXN.parse('dxn:type:com.example.type.person').toString();
-const TYPE_RELATION = DXN.parse('dxn:type:com.example.type.relation:0.1.0').toString();
-const TYPE_RELATION_UPDATED = DXN.parse('dxn:type:com.example.type.relation-updated:0.1.0').toString();
-const TYPE_WITH_UNDERSCORE = DXN.parse('dxn:type:com.example.type.person-extra:0.1.0').toString();
-const TYPE_WITH_UNDERSCORE_VERSIONLESS = DXN.parse('dxn:type:com.example.type.person-extra').toString();
-const TYPE_UNDERSCORE_FALSE_POSITIVE = DXN.parse('dxn:type:com.example.type.person-a-extra:0.1.0').toString();
+const TYPE_PERSON = 'dxn:type:com.example.type.person:0.1.0';
+const TYPE_PERSON_VERSIONLESS = 'dxn:type:com.example.type.person';
+const TYPE_RELATION = 'dxn:type:com.example.type.relation:0.1.0';
+const TYPE_RELATION_UPDATED = 'dxn:type:com.example.type.relation-updated:0.1.0';
+const TYPE_WITH_UNDERSCORE = 'dxn:type:com.example.type.person-extra:0.1.0';
+const TYPE_WITH_UNDERSCORE_VERSIONLESS = 'dxn:type:com.example.type.person-extra';
+const TYPE_UNDERSCORE_FALSE_POSITIVE = 'dxn:type:com.example.type.person-a-extra:0.1.0';
 
 const TestLayer = Layer.merge(
   SqliteClient.layer({
@@ -59,7 +59,7 @@ describe('ObjectMetaIndex', () => {
 
       const otherTypeResults = yield* index.query({
         spaceId,
-        typeDxn: DXN.parse('dxn:type:com.example.type.other').toString(),
+        typeDxn: 'dxn:type:com.example.type.other',
       });
       expect(otherTypeResults).toEqual([]);
     }).pipe(Effect.provide(TestLayer)),
@@ -150,8 +150,8 @@ describe('ObjectMetaIndex', () => {
         data: {
           id: objectId2,
           [ATTR_TYPE]: TYPE_RELATION,
-          [ATTR_RELATION_SOURCE]: DXN.parse(`dxn:echo:${spaceId}:${ObjectId.random()}}`).toString(),
-          [ATTR_RELATION_TARGET]: DXN.parse(`dxn:echo:${spaceId}:${ObjectId.random()}}`).toString(),
+          [ATTR_RELATION_SOURCE]: EchoId.fromSpaceAndObjectId(spaceId, ObjectId.random()),
+          [ATTR_RELATION_TARGET]: EchoId.fromSpaceAndObjectId(spaceId, ObjectId.random()),
           [ATTR_DELETED]: false,
         },
       };
@@ -260,8 +260,8 @@ describe('ObjectMetaIndex', () => {
         data: {
           id: relationId,
           [ATTR_TYPE]: TYPE_RELATION,
-          [ATTR_RELATION_SOURCE]: DXN.fromLocalObjectId(objectId1).toString(),
-          [ATTR_RELATION_TARGET]: DXN.fromLocalObjectId(objectId2).toString(),
+          [ATTR_RELATION_SOURCE]: EchoId.fromLocalObjectId(objectId1),
+          [ATTR_RELATION_TARGET]: EchoId.fromLocalObjectId(objectId2),
           [ATTR_DELETED]: false,
         },
       };
@@ -324,13 +324,13 @@ describe('ObjectMetaIndex', () => {
 
       const bySource = yield* index.queryRelations({
         endpoint: 'source',
-        anchorDxns: [DXN.fromLocalObjectId(objectId1).toString()],
+        anchorDxns: [EchoId.fromLocalObjectId(objectId1)],
       });
       expect(bySource.map((_) => _.objectId)).toEqual([relationId]);
 
       const byTarget = yield* index.queryRelations({
         endpoint: 'target',
-        anchorDxns: [DXN.fromLocalObjectId(objectId2).toString()],
+        anchorDxns: [EchoId.fromLocalObjectId(objectId2)],
       });
       expect(byTarget.map((_) => _.objectId)).toEqual([relationId]);
     }).pipe(Effect.provide(TestLayer)),

@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 import type { Filter as Filter$, Order as Order$, Query as Query$, Ref } from '@dxos/echo';
 import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
-import type { LegacyDXN as DXN, ObjectId } from '@dxos/keys';
+import type { ObjectId } from '@dxos/keys';
 
 //
 // Light-weight implementation of query execution.
@@ -124,10 +124,10 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static typeDXN(dxn: DXN): Filter$.Any {
+  static typeDXN(dxn: string): Filter$.Any {
     return new FilterClass({
       type: 'object',
-      typename: dxn.toString(),
+      typename: dxn,
       props: {},
     });
   }
@@ -251,7 +251,7 @@ class FilterClass implements Filter$.Any {
     return FilterClass._timeRangeFilter('createdAt', range);
   }
 
-  static childOf(parents: unknown | DXN | (unknown | DXN)[], options?: { transitive?: boolean }): Filter$.Any {
+  static childOf(parents: unknown | (unknown)[], options?: { transitive?: boolean }): Filter$.Any {
     const items = Array.isArray(parents) ? parents : [parents];
     const dxns = items.map((item) => {
       if (isDxnLike(item)) {
@@ -604,7 +604,10 @@ const makeTypeDxn = (typename: string) => {
   return `dxn:type:${typename}`;
 };
 
-const isDxnLike = (value: unknown): value is DXN => {
+const isDxnLike = (value: unknown): value is string => {
+  if (typeof value === 'string') {
+    return value.startsWith('dxn:') || value.startsWith('echo:');
+  }
   return (
     typeof value === 'object' &&
     value !== null &&

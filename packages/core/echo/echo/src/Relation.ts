@@ -10,7 +10,7 @@ import { raise } from '@dxos/debug';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { LegacyDXN as DXN, type ObjectId } from '@dxos/keys';
+import { type ObjectId, type URI } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type * as Database from './Database';
@@ -207,12 +207,12 @@ export const isSnapshot = (value: unknown): value is Snapshot => {
  * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
  */
-export const getSourceDXN = (value: Unknown | Snapshot): DXN => {
+export const getSourceDXN = (value: Unknown | Snapshot): URI.URI => {
   assertArgument(isRelation(value), 'Expected a relation');
   assumeType<internal.InternalObjectProps>(value);
   const dxn = (value as internal.InternalObjectProps)[internal.RelationSourceDXNId];
-  invariant(dxn instanceof DXN);
-  return dxn;
+  invariant(typeof dxn === 'string');
+  return dxn as URI.URI;
 };
 
 /**
@@ -220,12 +220,12 @@ export const getSourceDXN = (value: Unknown | Snapshot): DXN => {
  * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
  */
-export const getTargetDXN = (value: Unknown | Snapshot): DXN => {
+export const getTargetDXN = (value: Unknown | Snapshot): URI.URI => {
   assertArgument(isRelation(value), 'Expected a relation');
   assumeType<internal.InternalObjectProps>(value);
   const dxn = (value as internal.InternalObjectProps)[internal.RelationTargetDXNId];
-  invariant(dxn instanceof DXN);
-  return dxn;
+  invariant(typeof dxn === 'string');
+  return dxn as URI.URI;
 };
 
 /**
@@ -353,7 +353,7 @@ export const setValue: (rel: Mutable<Unknown>, path: readonly (string | number)[
  * Get the DXN of the relation.
  * Accepts both reactive relations and snapshots.
  */
-export const getDXN = (entity: Unknown | Snapshot): DXN => internal.getDXN(entity);
+export const getDXN = (entity: Unknown | Snapshot): URI.URI => internal.getDXN(entity);
 
 /**
  * @returns The DXN of the relation's type.

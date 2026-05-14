@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { failedInvariant } from '@dxos/invariant';
+import { EchoId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 /**
@@ -38,7 +39,8 @@ export const syncObjects: (
         if (!ref.target) {
           continue;
         }
-        if (Obj.getDXN(ref.target).isLocalObjectId()) {
+        const targetDxn = EchoId.tryParse(Obj.getDXN(ref.target));
+        if (targetDxn && EchoId.isLocal(targetDxn)) {
           // obj not persisted to db.
           const [target] = yield* syncObjects([ref.target], { foreignKeyId });
           (obj as any)[key] = Ref.make(target);

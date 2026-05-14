@@ -110,8 +110,8 @@ export const WORKS_FOR = {
         objects: {
           [ObjectId.random()]: ObjectStructure.makeRelation({
             type: Type.getDXN(TestSchema.EmployedBy)!.toString(),
-            source: { '/': DXN.fromLocalObjectId(Object.keys(PEOPLE.bob.objects!)[0]).toString() },
-            target: { '/': DXN.fromLocalObjectId(Object.keys(ORGS.cyberdyne.objects!)[0]).toString() },
+            source: { '/': EchoId.fromLocalObjectId(Object.keys(PEOPLE.bob.objects!)[0]).toString() },
+            target: { '/': EchoId.fromLocalObjectId(Object.keys(ORGS.cyberdyne.objects!)[0]).toString() },
             data: {
               since: '2020',
               position: 'Engineer',
@@ -130,8 +130,8 @@ export const WORKS_FOR = {
         objects: {
           [ObjectId.random()]: ObjectStructure.makeRelation({
             type: Type.getDXN(TestSchema.EmployedBy)!.toString(),
-            source: { '/': DXN.fromLocalObjectId(Object.keys(PEOPLE.alice.objects!)[0]).toString() },
-            target: { '/': DXN.fromLocalObjectId(Object.keys(ORGS.dxos.objects!)[0]).toString() },
+            source: { '/': EchoId.fromLocalObjectId(Object.keys(PEOPLE.alice.objects!)[0]).toString() },
+            target: { '/': EchoId.fromLocalObjectId(Object.keys(ORGS.dxos.objects!)[0]).toString() },
             data: {
               since: '2018',
               position: 'Research Scientist',
@@ -157,7 +157,7 @@ export const TASKS = {
               description: 'Write comprehensive documentation for the new system',
               status: 'in-progress',
               dueDate: '2023-12-31',
-              assignee: { '/': DXN.fromLocalObjectId(Object.keys(PEOPLE.bob.objects!)[0]).toString() },
+              assignee: { '/': EchoId.fromLocalObjectId(Object.keys(PEOPLE.bob.objects!)[0]).toString() },
             },
           }),
         },
@@ -178,7 +178,7 @@ export const TASKS = {
               description: 'Conduct series of experiments on the portal device',
               status: 'pending',
               dueDate: '2023-11-15',
-              assignee: { '/': DXN.fromLocalObjectId(Object.keys(PEOPLE.alice.objects!)[0]).toString() },
+              assignee: { '/': EchoId.fromLocalObjectId(Object.keys(PEOPLE.alice.objects!)[0]).toString() },
             },
           }),
         },

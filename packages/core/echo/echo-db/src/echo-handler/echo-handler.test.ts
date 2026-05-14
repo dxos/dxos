@@ -19,7 +19,7 @@ import {
   getSchemaDXN,
 } from '@dxos/echo/internal';
 import { TestSchema, prepareAstForCompare } from '@dxos/echo/testing';
-import { EchoId, LegacyDXN as DXN, PublicKey, SpaceId } from '@dxos/keys';
+import { EchoId, PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';
@@ -412,8 +412,8 @@ describe('Reactive Object with ECHO database', () => {
     const objData = Relation.toJSON(manager);
     expect(objData).to.deep.contain({
       id: manager.id,
-      [ATTR_RELATION_SOURCE]: DXN.fromLocalObjectId(alice.id).toString(),
-      [ATTR_RELATION_TARGET]: DXN.fromLocalObjectId(bob.id).toString(),
+      [ATTR_RELATION_SOURCE]: EchoId.fromLocalObjectId(alice.id),
+      [ATTR_RELATION_TARGET]: EchoId.fromLocalObjectId(bob.id),
     });
   });
 
@@ -478,7 +478,7 @@ describe('Reactive Object with ECHO database', () => {
       // Fully serialized before added to db.
       {
         const obj = JSON.parse(JSON.stringify(obj1));
-        expect(obj.reference['/']).to.eq(DXN.fromLocalObjectId(obj1.reference!.target!.id).toString());
+        expect(obj.reference['/']).to.eq(EchoId.fromLocalObjectId(obj1.reference!.target!.id));
       }
 
       const obj2 = db.add(obj1);
@@ -486,7 +486,9 @@ describe('Reactive Object with ECHO database', () => {
       // References serialized as IPLD.
       {
         const obj = JSON.parse(JSON.stringify(obj2));
-        expect(EncodedReference.toDXN(obj.reference).asEchoDXN()?.echoId).to.eq(obj2.reference?.target?.id);
+        const refUri = EncodedReference.getURI(obj.reference);
+        const refEchoId = EchoId.tryParse(refUri);
+        expect(refEchoId ? EchoId.getObjectId(refEchoId) : undefined).to.eq(obj2.reference?.target?.id);
       }
 
       // Load refs.
@@ -762,7 +764,7 @@ describe('Reactive Object with ECHO database', () => {
         '@meta': { keys: [] },
         '@type': 'dxn:type:com.example.type.expando:0.1.0',
         name: 'John',
-        worksAt: EncodedReference.fromDXN(DXN.fromLocalObjectId(org.id)),
+        worksAt: EncodedReference.fromEchoId(EchoId.fromLocalObjectId(org.id)),
       });
     });
 

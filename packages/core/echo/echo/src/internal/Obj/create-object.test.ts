@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { inspect } from 'util';
 import { describe, expect, test } from 'vitest';
 
-import { LegacyDXN as DXN } from '@dxos/keys';
+import { DXN, EchoId } from '@dxos/keys';
 
 import { Relation } from '../../index';
 import { TestSchema } from '../../testing';
@@ -53,7 +53,7 @@ describe('create (static version)', () => {
     const json = JSON.parse(JSON.stringify(contact));
     expect(json).toEqual({
       id: contact.id,
-      '@type': DXN.fromTypenameAndVersion(TestSchema.Person.typename, TestSchema.Person.version).toString(),
+      '@type': DXN.fromTypenameAndVersion(TestSchema.Person.typename, TestSchema.Person.version),
       '@meta': {
         keys: [],
       },
@@ -81,9 +81,9 @@ describe('create (static version)', () => {
     const json = JSON.parse(JSON.stringify(manager));
     expect(json).toEqual({
       id: manager.id,
-      [ATTR_TYPE]: DXN.fromTypenameAndVersion(TestSchema.HasManager.typename, TestSchema.HasManager.version).toString(),
-      [ATTR_RELATION_SOURCE]: DXN.fromLocalObjectId(person1.id).toString(),
-      [ATTR_RELATION_TARGET]: DXN.fromLocalObjectId(person2.id).toString(),
+      [ATTR_TYPE]: DXN.fromTypenameAndVersion(TestSchema.HasManager.typename, TestSchema.HasManager.version),
+      [ATTR_RELATION_SOURCE]: EchoId.fromLocalObjectId(person1.id),
+      [ATTR_RELATION_TARGET]: EchoId.fromLocalObjectId(person2.id),
       [ATTR_META]: {
         keys: [],
       },

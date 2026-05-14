@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { EncodedReference, isEncodedReference } from '@dxos/echo-protocol';
+import { EchoId } from '@dxos/keys';
 
 import { EscapedPropPath } from '../utils';
 import type { Index, IndexerObject } from './interface';
@@ -19,12 +20,13 @@ const extractReferences = (data: Record<string, unknown>): { path: string[]; tar
   const refs: { path: string[]; targetDxn: string }[] = [];
   const visit = (path: string[], value: unknown) => {
     if (isEncodedReference(value)) {
-      const dxn = EncodedReference.toDXN(value);
-      const echoId = dxn.asEchoDXN()?.echoId;
+      const uri = EncodedReference.getURI(value);
+      const parsedEchoId = EchoId.tryParse(uri);
+      const echoId = parsedEchoId ? EchoId.getObjectId(parsedEchoId) : undefined;
       if (!echoId) {
         return; // Skip non-echo references.
       }
-      refs.push({ path, targetDxn: dxn.toString() });
+      refs.push({ path, targetDxn: uri });
     } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       for (const [key, v] of Object.entries(value)) {
         visit([...path, key], v);

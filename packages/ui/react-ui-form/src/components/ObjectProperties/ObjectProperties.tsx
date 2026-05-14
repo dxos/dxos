@@ -7,7 +7,8 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
-import { DXN, Obj, Ref, Tag, Type } from '@dxos/echo';
+import { Obj, Ref, Tag, Type } from '@dxos/echo';
+import { type URI } from '@dxos/keys';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { HuePicker } from '@dxos/react-ui-pickers';
@@ -26,7 +27,7 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
   ({ children, object, ...props }, forwardedRef) => {
     const db = Obj.getDatabase(object);
     const meta = Obj.getMeta(object);
-    const tags = (meta.tags ?? []).map((tag) => db?.makeRef(DXN.parse(tag))).filter(isNonNullable);
+    const tags = (meta.tags ?? []).map((tag) => db?.makeRef(tag as URI.URI)).filter(isNonNullable);
     const values = useMemo(() => ({ tags, ...object }), [object, tags]);
 
     const formSchema = useMemo(() => {

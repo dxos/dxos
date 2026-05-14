@@ -9,7 +9,7 @@ import { type Database, Entity, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useQuery, useSchema as defaultUseSchema } from '@dxos/echo-react';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
 import { findAnnotation } from '@dxos/effect';
-import { DXN } from '@dxos/keys';
+import { type URI } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { ParentLabelAnnotationId } from '@dxos/schema';
@@ -152,7 +152,7 @@ export const RefField = (props: RefFieldProps) => {
   const handleUpdate = useCallback(
     (id: string | undefined) => {
       const item = options.find((option) => option.id === id);
-      const ref = item ? Ref.fromDXN(DXN.parse(item.id)) : undefined;
+      const ref = item ? Ref.fromDXN(item.id as URI.URI) : undefined;
       onValueChange(type, ref);
     },
     [options, type, onValueChange],

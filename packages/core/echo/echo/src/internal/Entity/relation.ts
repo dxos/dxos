@@ -7,7 +7,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { raise } from '@dxos/debug';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { LegacyDXN as DXN } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 
 import {
   type TypeAnnotation,
@@ -150,5 +150,5 @@ const getDXNForRelationSchemaRef = (schema: Schema.Schema.Any): string => {
     throw new Error('Schema must have a typename');
   }
 
-  return DXN.fromTypename(typename).toString();
+  return DXN.fromTypename(typename) as string;
 };

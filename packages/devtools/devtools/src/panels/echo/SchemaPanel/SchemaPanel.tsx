@@ -7,6 +7,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DXN, Entity, Format, JsonSchema, Type } from '@dxos/echo';
+import { type URI } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { DynamicTable, type TableFeatures } from '@dxos/react-ui-table';
@@ -59,15 +60,15 @@ export const SchemaPanel = (props: { space?: Space }) => {
   // NOTE: Always call setSelected with a function: setSelected(() => item) because schema is a class constructor.
   const [selected, setSelected] = useState<Type.AnyEntity>();
 
-  const onNavigate = (dxn: DXN) => {
-    const selectedSchema = schema.find((item) => Type.getDXN(item) && DXN.equals(Type.getDXN(item)!, dxn));
+  const onNavigate = (dxn: URI.URI) => {
+    const selectedSchema = schema.find((item) => Type.getDXN(item) === dxn);
     if (selectedSchema) {
       setSelected(() => selectedSchema);
       return;
     }
 
-    const typeDXN = dxn.asTypeDXN();
-    if (typeDXN && typeDXN.version === undefined) {
+    // If the DXN is a valid new-style DXN without a version, find the latest versioned schema.
+    if (DXN.isDXN(dxn) && DXN.getVersion(dxn) === undefined) {
       const latestSchema = schema.find((item) => Type.getDXN(item)?.toString().startsWith(dxn.toString()));
       if (latestSchema) {
         setSelected(() => latestSchema);

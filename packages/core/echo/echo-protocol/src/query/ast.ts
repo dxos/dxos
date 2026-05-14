@@ -5,11 +5,11 @@
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 
-import { EchoId, LegacyDXN as DXN, ObjectId } from '@dxos/keys';
+import { ObjectId } from '@dxos/keys';
 
 import { ForeignKey } from '../foreign-key';
 
-const TypenameSpecifier = Schema.Union(DXN.Schema, Schema.Null).annotations({
+const TypenameSpecifier = Schema.Union(Schema.String, Schema.Null).annotations({
   description: 'DXN or null; null matches any type',
 });
 
@@ -173,7 +173,7 @@ export const FilterOr: Schema.Schema<FilterOr> = FilterOr_;
 const FilterChildOf_ = Schema.Struct({
   type: Schema.Literal('child-of'),
   /** Parent DXNs to match children of. */
-  parents: Schema.Array(DXN.Schema),
+  parents: Schema.Array(Schema.String),
   /** Whether to match transitively (grandchildren, etc.). Defaults to true. */
   transitive: Schema.Boolean,
 });
@@ -455,7 +455,7 @@ export const Scope = Schema.Struct({
    *
    * NOTE: Spaces and feeds are unioned together if both are specified.
    */
-  feeds: Schema.optional(Schema.Array(Schema.Union(EchoId.Schema, DXN.Schema))),
+  feeds: Schema.optional(Schema.Array(Schema.String)),
 });
 export interface Scope extends Schema.Schema.Type<typeof Scope> {}
 

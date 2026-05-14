@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type LegacyDXN as DXN, type EchoId } from '@dxos/keys';
+import { type EchoId, type URI } from '@dxos/keys';
 
 import type * as Database from './Database';
 import type * as Entity from './Entity';
@@ -66,7 +66,7 @@ export interface Hypergraph extends Database.Queryable {
    * `Ref.fromDXN(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
    * `db.makeRef(dxn)` is preferable in cases with access to the database.
    */
-  makeRef<T extends Entity.Unknown = Entity.Unknown>(dxn: DXN): Ref.Ref<T>;
+  makeRef<T extends Entity.Unknown = Entity.Unknown>(dxn: URI.URI): Ref.Ref<T>;
 
   /**
    * @param hostDb Host database for reference resolution.

@@ -22,7 +22,7 @@ import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
 import { Process, ServiceResolver, Trace, Operation, OperationHandlerSet } from '@dxos/compute';
-import { DXN, Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { Performance, runAndForwardErrors } from '@dxos/effect';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -102,7 +102,7 @@ export namespace Handle {
  */
 export interface Environment {
   readonly space?: SpaceId;
-  readonly conversation?: DXN.String;
+  readonly conversation?: string;
 }
 
 /**
@@ -131,7 +131,7 @@ export interface SpawnOptions {
    * Target object that this process is assigned to.
    */
   // TODO(dmaretskyi): Consider opaques metadata instead of opinionated `target` field.
-  readonly target?: DXN.String;
+  readonly target?: string;
 
   /**
    * Tracing metadata for this invocation.
@@ -166,7 +166,7 @@ export interface ListOptions {
   /**
    * Filter processes by target object ID.
    */
-  readonly target?: DXN.String;
+  readonly target?: string;
 }
 
 /**
@@ -1246,7 +1246,7 @@ export namespace ProcessOperationInvoker {
           traceMeta,
           environment: {
             ...(options?.spaceId !== undefined ? { space: options.spaceId } : {}),
-            ...(options?.conversation !== undefined ? { conversation: options.conversation as DXN.String } : {}),
+            ...(options?.conversation !== undefined ? { conversation: options.conversation as string } : {}),
           },
         });
         const output = yield* fiber.await.pipe(Effect.flatten);

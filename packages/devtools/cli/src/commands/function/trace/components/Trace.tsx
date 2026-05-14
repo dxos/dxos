@@ -17,7 +17,7 @@ import {
   InvocationTraceStartEvent,
   createInvocationSpans,
 } from '@dxos/functions-runtime';
-import { type LegacyDXN as DXN } from '@dxos/keys';
+import { EchoId, type URI } from '@dxos/keys';
 
 import { type Column, Table } from '../../../../components';
 import { theme } from '../../../../theme';
@@ -25,7 +25,7 @@ import { theme } from '../../../../theme';
 export type TraceProps = {
   db: Database.Database;
   queues: QueueAPI;
-  queueDxn: Option.Option<DXN>;
+  queueDxn: Option.Option<EchoId.EchoId>;
   functionId: Option.Option<string>;
 };
 
@@ -41,7 +41,7 @@ export const Trace = (props: TraceProps) => {
   useInvocationsSubscription(traceQueue, props.functionId, setInvocations, selectedInvocation, setSelectedInvocation);
 
   // Function name resolver (needs access to functions signal).
-  const getFunctionName = (invocationTarget: DXN | undefined): string | undefined => {
+  const getFunctionName = (invocationTarget: URI.URI | undefined): string | undefined => {
     if (!invocationTarget) {
       return undefined;
     }
@@ -58,7 +58,7 @@ export const Trace = (props: TraceProps) => {
   const getTargetDisplayName = (span: InvocationSpan): string => {
     const targetDxn = span.invocationTarget?.dxn;
     const name = getFunctionName(targetDxn);
-    return name ?? targetDxn?.toString().split(':').pop() ?? '?';
+    return name ?? targetDxn?.split(':').pop() ?? '?';
   };
 
   const columns: Column<InvocationSpan>[] = [
@@ -135,12 +135,11 @@ export const Trace = (props: TraceProps) => {
 };
 
 // Helper: Extracts the UUID part from a DXN.
-const getUuidFromDxn = (dxn: DXN | string | undefined): string | undefined => {
+const getUuidFromDxn = (dxn: string | undefined): string | undefined => {
   if (!dxn) {
     return undefined;
   }
-  const dxnString = dxn.toString();
-  const dxnParts = dxnString.split(':');
+  const dxnParts = dxn.split(':');
   return dxnParts.at(-1);
 };
 
@@ -183,7 +182,7 @@ const useFunctionQuery = (
 
 // Effect: Resolve the queue from the DXN.
 const useTraceQueue = (
-  queueDxn: Option.Option<DXN>,
+  queueDxn: Option.Option<EchoId.EchoId>,
   queues: QueueAPI,
   setTraceQueue: (queue: Queue<InvocationTraceEvent> | undefined) => void,
 ) => {

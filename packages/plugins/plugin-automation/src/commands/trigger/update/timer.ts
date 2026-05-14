@@ -100,7 +100,7 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
   }
 
   if (!currentFn) {
-    const functionId = trigger.function?.dxn.asEchoDXN()?.echoId ?? 'unknown';
+    const functionId = (trigger.function ? EchoId.getObjectId(EchoId.tryParse(trigger.function.dxn)!) : undefined) ?? 'unknown';
     return yield* Effect.fail(new Error(`Invalid reference for ${functionId}`));
   }
 

@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { LegacyDXN as DXN, ObjectId } from '@dxos/keys';
+import { EchoId, ObjectId } from '@dxos/keys';
 
 import { EchoObjectSchema, getObjectDXN } from '../Entity';
 import { createObject } from '../Obj';
@@ -37,7 +37,7 @@ type Contact = Schema.Schema.Type<typeof Contact>;
 
 describe('Ref', () => {
   test('Schema is', () => {
-    Ref(Contact).pipe(Schema.is)(Ref.fromDXN(DXN.parse(`dxn:echo:@:${ObjectId.random()}`)));
+    Ref(Contact).pipe(Schema.is)(Ref.fromDXN(EchoId.fromLocalObjectId(ObjectId.random())));
   });
 
   test('ref ast', () => {

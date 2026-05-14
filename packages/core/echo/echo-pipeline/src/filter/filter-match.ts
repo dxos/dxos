@@ -4,7 +4,7 @@
 
 import { EncodedReference, ObjectStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
 import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
-import { LegacyDXN as DXN, type ObjectId, type SpaceId } from '@dxos/keys';
+import { DXN, type ObjectId, type SpaceId, type URI } from '@dxos/keys';
 
 export type MatchedObject = {
   id: ObjectId;
@@ -26,9 +26,9 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
           // Objects with no type are deprecated.
           return false;
         } else {
-          const actualDXN = DXN.parse(obj.doc.system.type['/']);
-          const expectedDXN = DXN.parse(filter.typename);
-          if (!compareTypename(expectedDXN, actualDXN)) {
+          const actualDXNStr = obj.doc.system.type['/'] as string;
+          const expectedDXNStr = filter.typename as string;
+          if (!compareTypenameStrings(expectedDXNStr, actualDXNStr)) {
             return false;
           }
         }
@@ -108,9 +108,9 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
           // Objects with no type are deprecated.
           return false;
         } else {
-          const actualDXN = DXN.parse(obj['@type']);
-          const expectedDXN = DXN.parse(filter.typename);
-          if (!compareTypename(expectedDXN, actualDXN)) {
+          const actualDXNStr = obj['@type'] as string;
+          const expectedDXNStr = filter.typename as string;
+          if (!compareTypenameStrings(expectedDXNStr, actualDXNStr)) {
             return false;
           }
         }
@@ -229,7 +229,7 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
             if (!isEncodedReference(value)) {
               return false;
             }
-            return DXN.equals(EncodedReference.toDXN(value), EncodedReference.toDXN(compareValue));
+            return EncodedReference.toDXN(value) === EncodedReference.toDXN(compareValue);
           }
           return value === compareValue;
         case 'neq':
@@ -314,23 +314,36 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
  * dxn:type:com.example.type.task:0.1.0 === dxn:type:com.example.type.task
  *
  */
-const compareTypename = (expectedDXN: DXN, actualDXN: DXN): boolean => {
-  const expectedTypeDXN = expectedDXN.asTypeDXN();
-  if (expectedTypeDXN) {
-    const actualTypeDXN = actualDXN.asTypeDXN();
-    if (!actualTypeDXN) {
+/**
+ * Compare two DXN strings, allowing version-agnostic type DXN comparison:
+ * dxn:type:com.example.type.task       === dxn:type:com.example.type.task:0.1.0
+ * dxn:type:com.example.type.task:0.1.0 === dxn:type:com.example.type.task
+ */
+const compareTypenameStrings = (expectedStr: string, actualStr: string): boolean => {
+  if (DXN.isDXN(expectedStr)) {
+    if (!DXN.isDXN(actualStr)) {
+      return false;
+    }
+    const expectedParsed = DXN.parse(expectedStr as URI.URI);
+    const actualParsed = DXN.parse(actualStr as URI.URI);
+    const expectedNsid = DXN.getNsid(expectedParsed);
+    const actualNsid = DXN.getNsid(actualParsed);
+    const expectedVersion = DXN.getVersion(expectedParsed);
+    const actualVersion = DXN.getVersion(actualParsed);
+
+    if (actualNsid !== expectedNsid) {
       return false;
     }
     if (
-      actualTypeDXN.type !== expectedTypeDXN.type ||
-      (expectedTypeDXN.version !== undefined &&
-        actualTypeDXN.version !== undefined &&
-        actualTypeDXN.version !== expectedTypeDXN.version)
+      expectedVersion !== undefined &&
+      actualVersion !== undefined &&
+      actualVersion !== expectedVersion
     ) {
       return false;
     }
   } else {
-    if (!DXN.equals(actualDXN, expectedDXN)) {
+    // EchoId or other URI type — exact match.
+    if (actualStr !== expectedStr) {
       return false;
     }
   }

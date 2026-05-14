@@ -5,7 +5,7 @@
 // @import-as-namespace
 
 import type { ForeignKey } from '@dxos/echo-protocol';
-import type { LegacyDXN as DXN, ObjectId } from '@dxos/keys';
+import type { ObjectId, URI } from '@dxos/keys';
 
 import * as internal from './internal';
 import type * as Relation from './Relation';
@@ -125,7 +125,7 @@ export type JSON = internal.ObjectJSON;
 /**
  * Get the DXN of an entity (object or relation).
  */
-export const getDXN = (entity: Unknown | Snapshot): DXN => internal.getDXN(entity);
+export const getDXN = (entity: Unknown | Snapshot): URI.URI => internal.getDXN(entity);
 
 /**
  * Get the DXN of an entity's type.

@@ -10,6 +10,7 @@ import { LayoutOperation, mergeField, readSnapshot, snapshotField, writeSnapshot
 import { Operation } from '@dxos/compute';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { EchoId } from '@dxos/keys';
 import { Organization, Person, Project, Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -308,8 +309,8 @@ const upsertTask = Effect.fn('upsertTask')(function* (
       if (assignedPerson && !existing.assigned) {
         existing.assigned = Ref.make(assignedPerson);
       }
-      const currentProjectId = existing.project?.dxn.asEchoDXN()?.echoId;
-      const projectId = Ref.make(project).dxn.asEchoDXN()?.echoId;
+      const currentProjectId = existing.project ? EchoId.getObjectId(EchoId.tryParse(existing.project.dxn)!) : undefined;
+      const projectId = EchoId.getObjectId(EchoId.tryParse(Ref.make(project).dxn)!);
       if (!existing.project || (currentProjectId && projectId && currentProjectId !== projectId)) {
         existing.project = Ref.make(project);
       }
@@ -514,9 +515,9 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
           return yield* Effect.dieMessage('Integration ref must be preloaded by caller (no database derivable).');
         }
 
-        const integrationId = integration.dxn.asEchoDXN()?.echoId ?? 'unknown';
+        const integrationId = EchoId.getObjectId(EchoId.tryParse(integration.dxn)!) ?? 'unknown';
         const toastIdSuffix = repoRef
-          ? `${integrationId}.${repoRef.dxn.asEchoDXN()?.echoId ?? 'unknown'}`
+          ? `${integrationId}.${EchoId.getObjectId(EchoId.tryParse(repoRef.dxn)!) ?? 'unknown'}`
           : integrationId;
 
         const outcome = yield* Effect.either(
@@ -533,7 +534,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.SyncGitHubRepositori
             const reposById = new Map(allRepos.map((repo) => [String(repo.id), repo]));
 
             // Optional narrow filter to a single Project echo id.
-            const repoFilterId = repoRef?.dxn.asEchoDXN()?.echoId;
+            const repoFilterId = repoRef ? EchoId.getObjectId(EchoId.tryParse(repoRef.dxn)!) : undefined;
 
             // Materialize per-target work: ensure local Project exists, wire
             // `target.object` ref, then later batch-pull each repo's owning org
