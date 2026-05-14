@@ -72,7 +72,7 @@ export const createMessageGenerator = (): MessageGenerator[] => [
   }),
 
   // Streaming text block: appends a pending text block, then mutates `text` in chunks
-  // so the syncer renders progressive deltas through the queue (not via the controller).
+  // so the syncer renders progressive deltas through the feed (not via the controller).
   Effect.gen(function* () {
     const { feed } = yield* Feed.ContextFeedService;
     const feedService = yield* Feed.FeedService;

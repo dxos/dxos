@@ -138,7 +138,7 @@ export class TranscriptionManager extends Resource {
       return;
     }
 
-    // Reinitialize transcriber if queue or media stream track has changed.
+    // Reinitialize transcriber if feed or media stream track has changed.
     let needReinit = false;
     if (this._audioStreamTrack !== this._mediaRecorder?.mediaStreamTrack) {
       this._mediaRecorder = new MediaStreamRecorder({
