@@ -18,6 +18,7 @@ import { Support } from '#types';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    log.info('welcome-provisioner: activate');
     const client = yield* Capability.get(ClientCapabilities.Client);
     const space = getPersonalSpace(client);
     if (!space) {
@@ -25,8 +26,9 @@ export default Capability.makeModule(
       return Capability.contributes(Capabilities.Null, null);
     }
 
+    yield* Effect.tryPromise(() => space.waitUntilReady());
     const existing = yield* Effect.tryPromise(() => space.db.query(Filter.type(Support.Welcome)).run());
-    log.info('welcome-provisioner', { existingCount: existing.length, spaceId: space.id });
+    log.info('welcome-provisioner: queried', { existingCount: existing.length, spaceId: space.id });
     if (existing.length === 0) {
       const welcome = space.db.add(Support.makeWelcome());
       log.info('welcome-provisioner: added Welcome', { id: welcome.id });
