@@ -111,7 +111,7 @@ export const make = (props: Obj.MakeProps<typeof Feed> = {}): Feed => Obj.make(F
  *
  * Used internally by the feed service layer.
  */
-export const getQueueDxn = (feed: Feed): DXN | undefined => {
+export const getDXN = (feed: Feed): DXN | undefined => {
   const self = Obj.getDXN(feed).asEchoDXN();
   if (!self || !self.spaceId) {
     return undefined;
@@ -123,16 +123,16 @@ export const getQueueDxn = (feed: Feed): DXN | undefined => {
  * Creates a Feed object from a queue DXN, inferring the feed's id and namespace from the DXN parts.
  *
  * The resulting Feed, when added to the same space as the queue, will have a queue DXN
- * equal to the input (see `Feed.getQueueDxn`). Useful when migrating `Ref(Queue)` fields to
+ * equal to the input (see `Feed.getDXN`). Useful when migrating `Ref(Queue)` fields to
  * `Ref(Feed.Feed)`.
  *
  * @remarks Unsafe because the caller must ensure the queue DXN's space matches the database
  * the feed is added to; the feed id is set from the queue id, bypassing id generation.
  */
-export const unsafeFromQueueDXN = (queueDxn: DXN): Feed => {
-  const parts = queueDxn.asQueueDXN();
+export const unsafeFromDXN = (queueDXN: DXN): Feed => {
+  const parts = queueDXN.asQueueDXN();
   if (!parts) {
-    throw new Error(`Expected a queue DXN, got: ${queueDxn.toString()}`);
+    throw new Error(`Expected a queue DXN, got: ${queueDXN.toString()}`);
   }
   return Obj.make(Feed, {
     id: parts.queueId as ObjectId,
@@ -181,16 +181,16 @@ export class FeedService extends Context.Tag('@dxos/echo/Feed/FeedService')<
      * `Feed.Feed` object. Used by ad-hoc / per-invocation feeds (e.g. trace event
      * feeds) where materializing a `Feed.Feed` per write would be wasteful.
      */
-    appendByDxn(feedDxn: DXN, items: Entity.Unknown[]): Promise<void>;
+    appendByDXN(feedDXN: DXN, items: Entity.Unknown[]): Promise<void>;
 
     /**
      * Queries items in a feed addressed by its DXN.
      * DXN-driven counterpart to `query()` — for debug UIs and other consumers
      * that hold a raw feed DXN and don't have a materialized `Feed.Feed`.
      */
-    queryByDxn: {
-      <Q extends Query.Any>(feedDxn: DXN, query: Q): QueryResult.QueryResult<Query.Type<Q>>;
-      <F extends Filter.Any>(feedDxn: DXN, filter: F): QueryResult.QueryResult<Filter.Type<F>>;
+    queryByDXN: {
+      <Q extends Query.Any>(feedDXN: DXN, query: Q): QueryResult.QueryResult<Query.Type<Q>>;
+      <F extends Filter.Any>(feedDXN: DXN, filter: F): QueryResult.QueryResult<Filter.Type<F>>;
     };
   }
 >() {}
@@ -222,10 +222,10 @@ export const notAvailable: Layer.Layer<FeedService> = Layer.succeed(FeedService,
   sync: () => {
     throw new Error('Feed.FeedService not available');
   },
-  appendByDxn: () => {
+  appendByDXN: () => {
     throw new Error('Feed.FeedService not available');
   },
-  queryByDxn: () => {
+  queryByDXN: () => {
     throw new Error('Feed.FeedService not available');
   },
 } as Context.Tag.Service<FeedService>);
@@ -346,13 +346,13 @@ export const sync = (feed: Feed, options?: SyncOptions): Effect.Effect<void, nev
  *
  * @example
  * ```ts
- * yield* Feed.appendByDxn(feedDxn, [Obj.make(TraceEvent, { ... })]);
+ * yield* Feed.appendByDXN(feedDXN, [Obj.make(TraceEvent, { ... })]);
  * ```
  */
-export const appendByDxn = (feedDxn: DXN, items: Entity.Unknown[]): Effect.Effect<void, never, FeedService> =>
+export const appendByDXN = (feedDXN: DXN, items: Entity.Unknown[]): Effect.Effect<void, never, FeedService> =>
   Effect.gen(function* () {
     const service = yield* FeedService;
-    yield* Effect.promise(() => service.appendByDxn(feedDxn, items));
+    yield* Effect.promise(() => service.appendByDXN(feedDXN, items));
   });
 
 /**
@@ -362,21 +362,21 @@ export const appendByDxn = (feedDxn: DXN, items: Entity.Unknown[]): Effect.Effec
  *
  * @example
  * ```ts
- * const result = yield* Feed.queryByDxn(feedDxn, Filter.everything());
+ * const result = yield* Feed.queryByDXN(feedDXN, Filter.everything());
  * ```
  */
-export const queryByDxn: {
+export const queryByDXN: {
   <Q extends Query.Any>(
-    feedDxn: DXN,
+    feedDXN: DXN,
     query: Q,
   ): Effect.Effect<QueryResult.QueryResult<Query.Type<Q>>, never, FeedService>;
   <F extends Filter.Any>(
-    feedDxn: DXN,
+    feedDXN: DXN,
     filter: F,
   ): Effect.Effect<QueryResult.QueryResult<Filter.Type<F>>, never, FeedService>;
-} = (feedDxn: DXN, queryOrFilter: Query.Any | Filter.Any) =>
+} = (feedDXN: DXN, queryOrFilter: Query.Any | Filter.Any) =>
   FeedService.pipe(
-    Effect.map((service) => service.queryByDxn(feedDxn, queryOrFilter as any) as QueryResult.QueryResult<any>),
+    Effect.map((service) => service.queryByDXN(feedDXN, queryOrFilter as any) as QueryResult.QueryResult<any>),
   );
 
 /**
@@ -384,14 +384,14 @@ export const queryByDxn: {
  *
  * @example
  * ```ts
- * const items = yield* Feed.runQueryByDxn(feedDxn, Filter.type(Person));
+ * const items = yield* Feed.runQueryByDXN(feedDXN, Filter.type(Person));
  * ```
  */
-export const runQueryByDxn: {
-  <Q extends Query.Any>(feedDxn: DXN, query: Q): Effect.Effect<Query.Type<Q>[], never, FeedService>;
-  <F extends Filter.Any>(feedDxn: DXN, filter: F): Effect.Effect<Filter.Type<F>[], never, FeedService>;
-} = (feedDxn: DXN, queryOrFilter: Query.Any | Filter.Any) =>
-  queryByDxn(feedDxn, queryOrFilter as any).pipe(
+export const runQueryByDXN: {
+  <Q extends Query.Any>(feedDXN: DXN, query: Q): Effect.Effect<Query.Type<Q>[], never, FeedService>;
+  <F extends Filter.Any>(feedDXN: DXN, filter: F): Effect.Effect<Filter.Type<F>[], never, FeedService>;
+} = (feedDXN: DXN, queryOrFilter: Query.Any | Filter.Any) =>
+  queryByDXN(feedDXN, queryOrFilter as any).pipe(
     Effect.flatMap((queryResult) => Effect.promise(() => queryResult.run())),
   );
 

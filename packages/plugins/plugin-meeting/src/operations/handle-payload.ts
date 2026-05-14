@@ -12,7 +12,7 @@ import { Meeting, MeetingCapabilities, MeetingOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof MeetingOperation.HandlePayload> = MeetingOperation.HandlePayload.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ meetingId, transcriptDxn, transcriptionEnabled }) {
+    Effect.fnUntraced(function* ({ meetingId, transcriptDXN, transcriptionEnabled }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
       const store = yield* Capability.get(MeetingCapabilities.State);
       const { spaceId, objectId } = meetingId ? parseId(meetingId) : {};
@@ -28,8 +28,8 @@ const handler: Operation.WithHandler<typeof MeetingOperation.HandlePayload> = Me
 
       const enabled = !!transcriptionEnabled;
       const { transcriptionManager } = store.state;
-      if (space && transcriptDxn && transcriptionManager) {
-        transcriptionManager.setFeed(space, DXN.parse(transcriptDxn));
+      if (space && transcriptDXN && transcriptionManager) {
+        transcriptionManager.setFeed(space, DXN.parse(transcriptDXN));
       }
 
       if (transcriptionManager) {

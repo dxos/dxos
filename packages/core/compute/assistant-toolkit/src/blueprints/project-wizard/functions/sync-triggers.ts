@@ -76,7 +76,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
         feedObj = feedRef ? Option.getOrUndefined(yield* Database.loadOption(feedRef)) : undefined;
       }
 
-      if (!feedObj || !Obj.instanceOf(Feed.Feed, feedObj) || !Feed.getQueueDxn(feedObj)) {
+      if (!feedObj || !Obj.instanceOf(Feed.Feed, feedObj) || !Feed.getDXN(feedObj)) {
         continue;
       }
 

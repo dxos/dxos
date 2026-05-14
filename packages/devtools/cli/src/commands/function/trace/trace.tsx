@@ -52,12 +52,12 @@ export const trace = Command.make(
       const properties = objects.at(0);
       invariant(properties, 'SpaceProperties not found');
       const traceFeed = properties.invocationTraceFeed?.target;
-      const queueDxn = traceFeed ? Feed.getQueueDxn(traceFeed) : undefined;
+      const queueDXN = traceFeed ? Feed.getDXN(traceFeed) : undefined;
 
-      if (!queueDxn) {
+      if (!queueDXN) {
         log.info('trace: no invocationTraceFeed found in space properties', { spaceId: db.spaceId });
       } else {
-        log.info('trace: found invocationTraceFeed', { spaceId: db.spaceId, queueDxn });
+        log.info('trace: found invocationTraceFeed', { spaceId: db.spaceId, queueDXN });
       }
 
       // Start trigger runtime in background if enabled
@@ -74,7 +74,7 @@ export const trace = Command.make(
             <Trace
               db={db}
               queues={queues}
-              queueDxn={queueDxn ? Option.some(queueDxn) : Option.none()}
+              queueDXN={queueDXN ? Option.some(queueDXN) : Option.none()}
               functionId={functionId}
             />
           </App>

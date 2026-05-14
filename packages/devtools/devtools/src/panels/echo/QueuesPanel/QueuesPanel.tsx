@@ -7,7 +7,7 @@ import React, { type ComponentType, type JSX, useMemo, useState } from 'react';
 import { Filter } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { DXN } from '@dxos/keys';
-import { useFeedQueryByDxn } from '@dxos/react-client/echo';
+import { useFeedQueryByDXN } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
@@ -20,8 +20,8 @@ import { PanelContainer, Searchbar } from '../../../components';
 export const QueuesPanel = () => {
   // const { space } = useDevtoolsState();
   const [queueInput, setQueueInput] = useState('');
-  const queueDxn = DXN.tryParse(queueInput);
-  const objects = useFeedQueryByDxn(queueDxn, Filter.everything());
+  const queueDXN = DXN.tryParse(queueInput);
+  const objects = useFeedQueryByDXN(queueDXN, Filter.everything());
   const [selected, setSelected] = useState<any>();
   const [selectedVersionObject, setSelectedVersionObject] = useState<any | null>(null);
 

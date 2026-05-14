@@ -37,25 +37,25 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
   const currentId = useSelected(id, 'single');
 
   const db = space.db;
-  const mailboxDxn = Obj.getDXN(mailbox).toString();
+  const mailboxDXN = Obj.getDXN(mailbox).toString();
 
   const draftsFilter = useMemo(
     () =>
       Filter.type(Message.Message, {
         properties: {
-          mailbox: mailboxDxn,
+          mailbox: mailboxDXN,
         },
       }),
-    [mailboxDxn],
+    [mailboxDXN],
   );
 
   const mailboxScopedMessages = useQuery(db, draftsFilter);
   const drafts = useMemo(
     () =>
       [...mailboxScopedMessages]
-        .filter((m) => DraftMessage.belongsTo(m, mailboxDxn))
+        .filter((m) => DraftMessage.belongsTo(m, mailboxDXN))
         .sort(sortByCreated('created', true)),
-    [mailboxDxn, mailboxScopedMessages],
+    [mailboxDXN, mailboxScopedMessages],
   );
 
   const handleAction = useCallback<MessageStackActionHandler>(

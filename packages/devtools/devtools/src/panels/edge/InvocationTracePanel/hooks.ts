@@ -11,9 +11,9 @@ import { InvocationOutcome, InvocationTraceEndEvent, InvocationTraceStartEvent }
 import { type InvocationTraceEvent } from '@dxos/functions-runtime';
 import { createInvocationSpans } from '@dxos/functions-runtime';
 import { type DXN } from '@dxos/keys';
-import { useFeedQueryByDxn, useQuery } from '@dxos/react-client/echo';
+import { useFeedQueryByDXN, useQuery } from '@dxos/react-client/echo';
 
-import { getUuidFromDxn } from './utils';
+import { getUuidFromDXN } from './utils';
 
 /**
  * Maps invocation target identifiers to readable script names.
@@ -26,7 +26,7 @@ export const useFunctionNameResolver = ({ db }: { db?: Database.Database }) => {
       if (!invocationTargetId) {
         return undefined;
       }
-      const uuidPart = getUuidFromDxn(invocationTargetId);
+      const uuidPart = getUuidFromDXN(invocationTargetId);
 
       const matchingFunction = functions.find((fn) => getUserFunctionIdInMetadata(Obj.getMeta(fn)) === uuidPart);
       return matchingFunction?.name;
@@ -52,9 +52,9 @@ export const useInvocationTargetsForScript = (target: Obj.Unknown | undefined) =
   }, [functions, target]);
 };
 
-export const useInvocationSpans = ({ feedDxn, target }: { feedDxn?: DXN; target?: Obj.Unknown }) => {
+export const useInvocationSpans = ({ feedDXN, target }: { feedDXN?: DXN; target?: Obj.Unknown }) => {
   const functionsForScript = useInvocationTargetsForScript(target);
-  const items = useFeedQueryByDxn(feedDxn, Filter.everything());
+  const items = useFeedQueryByDXN(feedDXN, Filter.everything());
   const events = useMemo(
     () =>
       items.filter(
@@ -71,7 +71,7 @@ export const useInvocationSpans = ({ feedDxn, target }: { feedDxn?: DXN; target?
           return false;
         }
         const targetId = span.invocationTarget.dxn;
-        const uuidPart = getUuidFromDxn(targetId);
+        const uuidPart = getUuidFromDXN(targetId);
         return uuidPart ? functionsForScript?.has(uuidPart) : false;
       });
     } else if (target) {

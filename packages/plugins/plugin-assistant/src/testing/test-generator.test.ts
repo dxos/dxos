@@ -37,8 +37,8 @@ const makeRecordingFeedLayer = () => {
         run: async () => [],
       }) as any,
     sync: async () => {},
-    appendByDxn: async () => {},
-    queryByDxn: () =>
+    appendByDXN: async () => {},
+    queryByDXN: () =>
       ({
         subscribe: () => () => {},
         results: [],

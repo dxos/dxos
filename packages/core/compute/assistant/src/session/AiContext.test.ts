@@ -24,8 +24,8 @@ const createMockFeedRuntime = (): Runtime.Runtime<Feed.FeedService> => {
         run: async () => [],
       }) as any,
     sync: async () => {},
-    appendByDxn: async () => {},
-    queryByDxn: () =>
+    appendByDXN: async () => {},
+    queryByDXN: () =>
       ({
         subscribe: () => () => {},
         results: [],

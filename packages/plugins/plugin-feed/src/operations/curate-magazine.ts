@@ -72,7 +72,7 @@ export const curateMagazine = async (space: Space, magazine: Magazine.Magazine):
     if (!echoFeed) {
       continue;
     }
-    if (!Feed.getQueueDxn(echoFeed)) {
+    if (!Feed.getDXN(echoFeed)) {
       continue;
     }
 

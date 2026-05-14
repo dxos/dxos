@@ -90,7 +90,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
         <Toolbar.Root>
           <Toolbar.ToggleGroup type='single' value={tab} onValueChange={(value) => value && setTab(value as Tab)}>
             <Toolbar.ToggleGroupIconItem value='artifacts' label={t('artifacts.label')} icon='ph--cube--regular' />
-            <Toolbar.ToggleGroupIconItem value='inputs' label={t('input-queue.label')} icon='ph--queue--regular' />
+            <Toolbar.ToggleGroupIconItem value='inputs' label={t('inputs.label')} icon='ph--queue--regular' />
           </Toolbar.ToggleGroup>
           <Toolbar.Separator />
           <Toolbar.IconButton

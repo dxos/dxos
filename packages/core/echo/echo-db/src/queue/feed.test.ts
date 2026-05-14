@@ -196,7 +196,7 @@ describe('Feed', () => {
     }).pipe(Effect.provide(testLayer), runAndForwardErrors);
   });
 
-  test('appendByDxn writes to a feed addressed by DXN', async ({ expect }) => {
+  test('appendByDXN writes to a feed addressed by DXN', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
     const queues = peer.client.constructQueueFactory(db.spaceId);
@@ -204,11 +204,11 @@ describe('Feed', () => {
 
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make({ name: 'by-dxn' }));
-      const feedDxn = Feed.getQueueDxn(feed);
-      expect(feedDxn).toBeDefined();
+      const feedDXN = Feed.getDXN(feed);
+      expect(feedDXN).toBeDefined();
 
       const alice = Obj.make(TestSchema.Person, { name: 'alice' });
-      yield* Feed.appendByDxn(feedDxn!, [alice]);
+      yield* Feed.appendByDXN(feedDXN!, [alice]);
 
       const results = yield* Feed.runQuery(feed, Filter.type(TestSchema.Person));
       expect(results).toHaveLength(1);
@@ -216,7 +216,7 @@ describe('Feed', () => {
     }).pipe(Effect.provide(testLayer), runAndForwardErrors);
   });
 
-  test('queryByDxn reads items from a feed addressed by DXN', async ({ expect }) => {
+  test('queryByDXN reads items from a feed addressed by DXN', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
     const db = await peer.createDatabase();
     const queues = peer.client.constructQueueFactory(db.spaceId);
@@ -224,15 +224,15 @@ describe('Feed', () => {
 
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make({ name: 'queryable-by-dxn' }));
-      const feedDxn = Feed.getQueueDxn(feed);
-      expect(feedDxn).toBeDefined();
+      const feedDXN = Feed.getDXN(feed);
+      expect(feedDXN).toBeDefined();
 
-      yield* Feed.appendByDxn(feedDxn!, [
+      yield* Feed.appendByDXN(feedDXN!, [
         Obj.make(TestSchema.Person, { name: 'alice' }),
         Obj.make(TestSchema.Person, { name: 'bob' }),
       ]);
 
-      const results = yield* Feed.runQueryByDxn(feedDxn!, Filter.type(TestSchema.Person));
+      const results = yield* Feed.runQueryByDXN(feedDXN!, Filter.type(TestSchema.Person));
       expect(results).toHaveLength(2);
       expect(results.map((person: any) => person.name).sort()).toEqual(['alice', 'bob']);
     }).pipe(Effect.provide(testLayer), runAndForwardErrors);

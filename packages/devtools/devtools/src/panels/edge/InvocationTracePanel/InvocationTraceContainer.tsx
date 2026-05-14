@@ -32,7 +32,7 @@ import { formatDuration } from './utils';
 
 export type InvocationTraceContainerProps = {
   db?: Database.Database;
-  feedDxn?: DXN;
+  feedDXN?: DXN;
   showSpaceSelector?: boolean;
   target?: Obj.Unknown;
   detailAxis?: 'block' | 'inline';
@@ -45,7 +45,7 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
     {
       classNames,
       db,
-      feedDxn,
+      feedDXN,
       detailAxis = 'inline',
       showSpaceSelector = false,
       target,
@@ -55,7 +55,7 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
     forwardedRef,
   ) => {
     const resolver = useFunctionNameResolver({ db });
-    const hookSpans = useInvocationSpans({ feedDxn, target });
+    const hookSpans = useInvocationSpans({ feedDXN, target });
     const invocationSpans = invocationSpansProp ?? hookSpans;
 
     const [selectedId, setSelectedId] = useState<string>();
@@ -119,7 +119,7 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
       return invocationSpans.map((invocation) => {
         const status = invocation.outcome;
         // Handle both Ref objects and encoded references.
-        const targetDxn =
+        const targetDXN =
           invocation.invocationTarget?.dxn ??
           (invocation.invocationTarget && '/' in invocation.invocationTarget
             ? DXN.parse((invocation.invocationTarget as any)['/'])
@@ -128,7 +128,7 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
         // TODO(burdon): Use InvocationTraceStartEvent.
         return {
           id: invocation.id,
-          target: resolver(targetDxn),
+          target: resolver(targetDXN),
           // TODO(burdon): Change to timestamp?
           time: new Date(invocation.timestamp),
           duration: formatDuration(invocation.duration),

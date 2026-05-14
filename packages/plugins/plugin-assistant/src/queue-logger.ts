@@ -27,16 +27,15 @@ export class QueueLogger implements SequenceLogger {
     this._feedServiceLayer = createFeedServiceLayer(space.queues);
 
     const existingFeedRef = this._space.properties.invocationTraceFeed;
-
     if (existingFeedRef) {
       // A feed reference exists; ensure its target is loaded. If not, fail loudly
       // rather than silently creating a new feed and orphaning existing traces.
       invariant(existingFeedRef.target, 'invocationTraceFeed reference is not yet loaded');
-      invariant(Feed.getQueueDxn(existingFeedRef.target), 'invocationTraceFeed has no DXN');
+      invariant(Feed.getDXN(existingFeedRef.target), 'invocationTraceFeed has no DXN');
       this._invocationTraceFeed = existingFeedRef.target;
     } else {
       const feed = space.db.add(Feed.make({ namespace: 'trace' }));
-      invariant(Feed.getQueueDxn(feed), 'New invocationTraceFeed has no DXN');
+      invariant(Feed.getDXN(feed), 'New invocationTraceFeed has no DXN');
       Obj.update(this._space.properties, (obj) => {
         obj.invocationTraceFeed = Ref.make(feed);
       });
@@ -53,7 +52,7 @@ export class QueueLogger implements SequenceLogger {
             invocationId: event.invocationId,
             timestamp: Date.now(),
             input: {},
-            invocationTraceFeed: Ref.fromDXN(this._getTraceFeedDxn(event.invocationId)),
+            invocationTraceFeed: Ref.fromDXN(this._getTraceFeedDXN(event.invocationId)),
             invocationTarget: Ref.make(this.sequence),
           }),
         ]);
@@ -126,7 +125,7 @@ export class QueueLogger implements SequenceLogger {
     }
   }
 
-  private _getTraceFeedDxn(invocationId: string): DXN {
+  private _getTraceFeedDXN(invocationId: string): DXN {
     return DXN.fromQueue(QueueSubspaceTags.TRACE, this._space.id, invocationId);
   }
 
@@ -142,7 +141,7 @@ export class QueueLogger implements SequenceLogger {
    * (no backing `Feed.Feed` object — these are ad-hoc per-invocation feeds).
    */
   private _appendTraceEvent(invocationId: string, items: TraceEvent[]): Promise<void> {
-    return Feed.appendByDxn(this._getTraceFeedDxn(invocationId), items).pipe(
+    return Feed.appendByDXN(this._getTraceFeedDXN(invocationId), items).pipe(
       Effect.provide(this._feedServiceLayer),
       runAndForwardErrors,
     );

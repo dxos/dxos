@@ -155,24 +155,24 @@ export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
   interval = 1_000,
 ) => {
   // TODO(dmaretskyi): Use space.queues.create() instead.
-  const feedDxn = useMemo(() => (space ? createQueueDXN(space.id, queueId) : undefined), [space, queueId]);
+  const feedDXN = useMemo(() => (space ? createQueueDXN(space.id, queueId) : undefined), [space, queueId]);
   const builder = useMemo(() => new MessageBuilder(space), [space]);
 
   useEffect(() => {
-    if (!space || !feedDxn || !running) {
+    if (!space || !feedDXN || !running) {
       return;
     }
     const feedServiceLayer = createFeedServiceLayer(space.queues);
 
     const i = setInterval(() => {
       void builder.createMessage(Math.ceil(Math.random() * 3)).then(async (message) => {
-        await Feed.appendByDxn(feedDxn, [message]).pipe(Effect.provide(feedServiceLayer), runAndForwardErrors);
+        await Feed.appendByDXN(feedDXN, [message]).pipe(Effect.provide(feedServiceLayer), runAndForwardErrors);
       });
     }, interval);
     return () => clearInterval(i);
-  }, [space, feedDxn, running, interval]);
+  }, [space, feedDXN, running, interval]);
 
-  return feedDxn;
+  return feedDXN;
 };
 
 /**
@@ -186,11 +186,11 @@ export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscription
   interval = 1_000,
 ) => {
   // TODO(dmaretskyi): Use space.queues.create() instead.
-  const feedDxn = useMemo(() => (space ? createQueueDXN(space.id, queueId) : undefined), [space, queueId]);
+  const feedDXN = useMemo(() => (space ? createQueueDXN(space.id, queueId) : undefined), [space, queueId]);
   const [builder] = useState(() => new EntityExtractionMessageBuilder());
 
   useEffect(() => {
-    if (!space || !feedDxn || !running) {
+    if (!space || !feedDXN || !running) {
       return;
     }
 
@@ -202,7 +202,7 @@ export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscription
       ctx,
       async () => {
         const message = await builder.createMessage();
-        await Feed.appendByDxn(feedDxn, [message]).pipe(Effect.provide(feedServiceLayer), runAndForwardErrors);
+        await Feed.appendByDXN(feedDXN, [message]).pipe(Effect.provide(feedServiceLayer), runAndForwardErrors);
       },
       interval,
     );
@@ -210,7 +210,7 @@ export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscription
     return () => {
       void ctx.dispose();
     };
-  }, [space, feedDxn, running, interval]);
+  }, [space, feedDXN, running, interval]);
 
-  return feedDxn;
+  return feedDXN;
 };

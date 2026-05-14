@@ -115,7 +115,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       if (!queueTarget) {
         return undefined;
       }
-      const feed = feeds.find((feed) => Feed.getQueueDxn(feed)?.toString() === queueTarget);
+      const feed = feeds.find((feed) => Feed.getDXN(feed)?.toString() === queueTarget);
       return feed ? Ref.fromDXN(Entity.getDXN(feed)) : undefined;
     }, [queueTarget, feeds]);
 
@@ -160,13 +160,13 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
     const handleUpdate = useCallback(
       (values: any) => {
         const targetValue = values.target;
-        let feedDxn: string | undefined;
+        let feedDXN: string | undefined;
 
         if (Ref.isRef(targetValue)) {
-          const targetDxn = targetValue.dxn.toString();
-          const feed = feeds.find((feed) => Obj.getDXN(feed).toString() === targetDxn);
+          const targetDXN = targetValue.dxn.toString();
+          const feed = feeds.find((feed) => Obj.getDXN(feed).toString() === targetDXN);
           if (feed) {
-            feedDxn = Feed.getQueueDxn(feed)?.toString();
+            feedDXN = Feed.getDXN(feed)?.toString();
           }
         }
 
@@ -175,7 +175,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
           mode === 'schema'
             ? Query.select(Filter.typename(values.query)).ast
             : JSON.parse(JSON.stringify(values.query));
-        onQueryChanged?.(query, feedDxn);
+        onQueryChanged?.(query, feedDXN);
       },
       [onQueryChanged, mode, feeds],
     );

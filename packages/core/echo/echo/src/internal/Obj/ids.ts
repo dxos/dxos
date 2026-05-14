@@ -5,7 +5,7 @@
 import { DXN, ObjectId, QueueSubspaceTags, SpaceId } from '@dxos/keys';
 
 /**
- * @deprecated Use `Feed.make(...)` + `db.add(feed)` then `Feed.getQueueDxn(feed)`.
+ * @deprecated Use `Feed.make(...)` + `db.add(feed)` then `Feed.getDXN(feed)`.
  */
 // TODO(burdon): Move to @dxos/keys.
 export const createQueueDXN = (spaceId = SpaceId.random(), queueId = ObjectId.random()) =>

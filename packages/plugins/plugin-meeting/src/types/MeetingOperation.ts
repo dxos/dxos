@@ -44,7 +44,7 @@ export const HandlePayload = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     meetingId: Schema.optional(Schema.String),
-    transcriptDxn: Schema.optional(Schema.String),
+    transcriptDXN: Schema.optional(Schema.String),
     transcriptionEnabled: Schema.optional(Schema.Boolean),
   }),
   output: Schema.Void,

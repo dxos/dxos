@@ -129,15 +129,15 @@ const seedSpaceWithQueueItems = ({ client }: { client: Client }) =>
     yield* Effect.promise(() => space.db.flush());
 
     // Push three Posts into the feed's backing queue. CurateMagazine reads
-    // these via `space.queues.get(feedDxn).queryObjects()`. Loading the ref
+    // these via `space.queues.get(feedDXN).queryObjects()`. Loading the ref
     // is necessary post-`db.add` because the inline `savedTarget` from
     // `Ref.make(echoFeed)` is dropped when the ref is encoded for persistence.
     const echoFeed = yield* Effect.promise(() => subscriptionFeed.feed!.load());
-    const feedDxn = EchoFeed.getQueueDxn(echoFeed);
-    if (!feedDxn) {
+    const feedDXN = EchoFeed.getDXN(echoFeed);
+    if (!feedDXN) {
       throw new Error('Backing ECHO feed has no queue DXN — story setup is broken.');
     }
-    const queue = space.queues.get(feedDxn);
+    const queue = space.queues.get(feedDXN);
     const feedRef = Ref.make(subscriptionFeed);
     const posts = [
       Obj.make(Subscription.Post, {

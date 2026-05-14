@@ -42,7 +42,7 @@ export const query = Command.make(
       yield* Console.error(`Space not found: ${parts.spaceId}`);
       return;
     }
-    const objects = yield* Feed.runQueryByDxn(dxn, Filter.everything()).pipe(
+    const objects = yield* Feed.runQueryByDXN(dxn, Filter.everything()).pipe(
       Effect.provide(createFeedServiceLayer(space.queues)),
     );
 

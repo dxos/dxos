@@ -20,8 +20,8 @@ export default Capability.makeModule(
         const space = getSpace(transcript);
         const members = space?.members.get().map((member) => member.identity) ?? [];
         const feed = await transcript.feed.load();
-        const feedDxn = Feed.getQueueDxn(feed);
-        const queue = feedDxn ? space?.queues.get<Message.Message>(feedDxn) : undefined;
+        const feedDXN = Feed.getDXN(feed);
+        const queue = feedDXN ? space?.queues.get<Message.Message>(feedDXN) : undefined;
         await queue?.refresh();
         return queue?.objects
           .filter((message) => Obj.instanceOf(Message.Message, message))

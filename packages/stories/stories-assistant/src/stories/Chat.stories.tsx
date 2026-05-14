@@ -325,8 +325,8 @@ export const WithMail: Story = {
     config: config.remote,
     onInit: async ({ space }) => {
       const feed = space.db.add(Mailbox.make({ name: 'Mailbox' }));
-      const feedDxn = Feed.getQueueDxn(feed)!;
-      const queue = space.queues.get<Message.Message>(feedDxn);
+      const feedDXN = Feed.getDXN(feed)!;
+      const queue = space.queues.get<Message.Message>(feedDXN);
       const messages = createTestMailbox();
       await queue.append(messages);
     },
@@ -618,10 +618,10 @@ export const WithTranscription: Story = {
     types: [Transcript.Transcript],
     onInit: async ({ space }) => {
       const feed = space.db.add(Feed.make());
-      const queueDxn = Feed.getQueueDxn(feed);
-      invariant(queueDxn);
+      const queueDXN = Feed.getDXN(feed);
+      invariant(queueDXN);
       const messages = createTestTranscription();
-      await space.queues.get(queueDxn).append(messages);
+      await space.queues.get(queueDXN).append(messages);
       space.db.add(Transcript.make(Ref.make(feed)));
     },
     onChatCreated: async ({ space, binder }) => {
@@ -746,9 +746,9 @@ export const WithResearchQueue: Story = {
       const feed = space.db.add(Feed.make());
       const researchInputQueue = space.db.add(Obj.make(ResearchInputQueue, { feed: Ref.make(feed) }));
       const orgs = organizations.map(({ id: _, ...org }) => Obj.make(Organization.Organization, org));
-      const feedQueueDxn = Feed.getQueueDxn(feed);
-      invariant(feedQueueDxn);
-      await space.queues.get(feedQueueDxn).append(orgs);
+      const feedQueueDXN = Feed.getDXN(feed);
+      invariant(feedQueueDXN);
+      await space.queues.get(feedQueueDXN).append(orgs);
 
       const researchPrompt = space.db.add(
         Routine.make({
@@ -768,7 +768,7 @@ export const WithResearchQueue: Story = {
         Trigger.make({
           function: Ref.make(Operation.serialize(AgentPrompt)),
           enabled: true,
-          spec: Trigger.specQueue(Feed.getQueueDxn(feed)!.toString()),
+          spec: Trigger.specQueue(Feed.getDXN(feed)!.toString()),
           input: {
             prompt: Ref.make(researchPrompt),
             input: '{{event.item}}',
@@ -817,17 +817,17 @@ export const WithProject: Story = {
       const people = await space.db.query(Filter.type(Person.Person)).run();
       const organizations = await space.db.query(Filter.type(Organization.Organization)).run();
       const tag = space.db.add(Tag.make({ label: 'Project' }));
-      const tagDxn = Obj.getDXN(tag).toString();
+      const tagDXN = Obj.getDXN(tag).toString();
 
       people.slice(0, 4).forEach((person) => {
         Obj.update(person, (person) => {
-          Obj.getMeta(person).tags = [tagDxn];
+          Obj.getMeta(person).tags = [tagDXN];
         });
       });
 
       const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox' }));
-      const mailboxDxn = Feed.getQueueDxn(mailbox)!;
-      const queue = space.queues.get<Message.Message>(mailboxDxn);
+      const mailboxDXN = Feed.getDXN(mailbox)!;
+      const queue = space.queues.get<Message.Message>(mailboxDXN);
       const messages = createTestMailbox(people);
       await queue.append(messages);
 
@@ -845,7 +845,7 @@ export const WithProject: Story = {
       );
       [dxosResearch, blueyardResearch].forEach((research) => {
         Obj.update(research, (research) => {
-          Obj.getMeta(research).tags = [tagDxn];
+          Obj.getMeta(research).tags = [tagDXN];
         });
       });
 
@@ -853,7 +853,7 @@ export const WithProject: Story = {
       const blueyard = organizations.find((org) => org.name === 'BlueYard')!;
       [dxos, blueyard].forEach((organization) => {
         Obj.update(organization, (organization) => {
-          Obj.getMeta(organization).tags = [tagDxn];
+          Obj.getMeta(organization).tags = [tagDXN];
         });
       });
 
@@ -873,9 +873,9 @@ export const WithProject: Story = {
       //   }),
       // );
 
-      const contactsQuery = Query.select(Filter.type(Person.Person)).select(Filter.tag(tagDxn));
-      const organizationsQuery = Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagDxn));
-      const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagDxn));
+      const contactsQuery = Query.select(Filter.type(Person.Person)).select(Filter.tag(tagDXN));
+      const organizationsQuery = Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagDXN));
+      const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagDXN));
 
       const researchPrompt = space.db.add(
         Routine.make({
@@ -910,7 +910,7 @@ export const WithProject: Story = {
       space.db.add(researchTrigger);
 
       const mailboxView = ViewModel.make({
-        query: Query.select(Filter.type(Message.Message)).select(Filter.tag(tagDxn)).from(mailbox),
+        query: Query.select(Filter.type(Message.Message)).select(Filter.tag(tagDXN)).from(mailbox),
         jsonSchema: JsonSchema.toJsonSchema(Message.Message),
       });
       const contactsView = ViewModel.make({

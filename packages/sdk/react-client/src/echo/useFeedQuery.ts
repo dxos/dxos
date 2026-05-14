@@ -32,8 +32,8 @@ export const useFeedQuery: {
     filter: F,
   ): O[];
 } = (feed: Feed.Feed | undefined, queryOrFilter: Query.Any | Filter.Any): Entity.Any[] => {
-  const dxn = feed ? Feed.getQueueDxn(feed) : undefined;
-  return useFeedQueryByDxn(dxn, queryOrFilter as any);
+  const dxn = feed ? Feed.getDXN(feed) : undefined;
+  return useFeedQueryByDXN(dxn, queryOrFilter as any);
 };
 
 /**
@@ -45,32 +45,32 @@ export const useFeedQuery: {
  *
  * @example
  * ```ts
- * const items = useFeedQueryByDxn(feedDxn, Filter.everything());
+ * const items = useFeedQueryByDXN(feedDXN, Filter.everything());
  * ```
  */
-export const useFeedQueryByDxn: {
+export const useFeedQueryByDXN: {
   <Q extends Query.Any, O extends Entity.Entity<Query.Type<Q>> = Entity.Entity<Query.Type<Q>>>(
-    feedDxn: DXN | undefined,
+    feedDXN: DXN | undefined,
     query: Q,
   ): O[];
 
   <F extends Filter.Any, O extends Entity.Entity<Filter.Type<F>> = Entity.Entity<Filter.Type<F>>>(
-    feedDxn: DXN | undefined,
+    feedDXN: DXN | undefined,
     filter: F,
   ): O[];
-} = (feedDxn: DXN | undefined, queryOrFilter: Query.Any | Filter.Any): Entity.Any[] => {
+} = (feedDXN: DXN | undefined, queryOrFilter: Query.Any | Filter.Any): Entity.Any[] => {
   const client = useClient();
-  const dxnString = feedDxn?.toString();
+  const dxnString = feedDXN?.toString();
 
   const queue = useMemo(() => {
-    if (!feedDxn) {
+    if (!feedDXN) {
       return undefined;
     }
-    const parts = feedDxn.asQueueDXN();
+    const parts = feedDXN.asQueueDXN();
     if (!parts) {
       return undefined;
     }
-    return client.spaces.get(parts.spaceId)?.queues.get(feedDxn);
+    return client.spaces.get(parts.spaceId)?.queues.get(feedDXN);
   }, [client, dxnString]);
 
   return useQuery(queue, queryOrFilter as any);

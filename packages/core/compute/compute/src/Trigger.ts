@@ -45,16 +45,16 @@ export type QueueSpec = Schema.Schema.Type<typeof QueueSpec>;
 /**
  * Construct a Queue trigger spec from a queue DXN string.
  */
-export const specQueue = (queueDxn: string): QueueSpec => ({
+export const specQueue = (queueDXN: string): QueueSpec => ({
   kind: 'queue',
-  queue: queueDxn,
+  queue: queueDXN,
 });
 
 /**
  * Construct a Queue trigger spec from a Feed object.
  */
 export const specFeed = (feed: Feed.Feed): QueueSpec =>
-  specQueue(Feed.getQueueDxn(feed)?.toString() ?? failedInvariant(new Error('Could not extract DXN from feed')));
+  specQueue(Feed.getDXN(feed)?.toString() ?? failedInvariant(new Error('Could not extract DXN from feed')));
 
 /**
  * Subscription.

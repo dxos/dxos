@@ -57,7 +57,7 @@ export class TranscriptionManager extends Resource {
   private _identityDid?: string = undefined;
   private _mediaRecorder?: MediaStreamRecorder = undefined;
   private _transcriber?: Transcriber = undefined;
-  private _feedDxn?: DXN = undefined;
+  private _feedDXN?: DXN = undefined;
   private _feedServiceLayer?: Layer.Layer<Feed.FeedService> = undefined;
   private _enabledAtom = Atom.make(false);
 
@@ -76,8 +76,8 @@ export class TranscriptionManager extends Resource {
     return this._registry.get(this._enabledAtom);
   }
 
-  setFeed(space: Space, feedDxn: DXN): this {
-    this._feedDxn = feedDxn;
+  setFeed(space: Space, feedDXN: DXN): this {
+    this._feedDXN = feedDXN;
     this._feedServiceLayer = createFeedServiceLayer(space.queues);
     return this;
   }
@@ -167,7 +167,7 @@ export class TranscriptionManager extends Resource {
   }
 
   private async _onSegments(segments: ContentBlock.Transcript[]): Promise<void> {
-    if (!this.isOpen || !this._feedDxn || !this._feedServiceLayer) {
+    if (!this.isOpen || !this._feedDXN || !this._feedServiceLayer) {
       return;
     }
 
@@ -181,6 +181,6 @@ export class TranscriptionManager extends Resource {
       block = await this._messageEnricher(block);
     }
 
-    await Feed.appendByDxn(this._feedDxn, [block]).pipe(Effect.provide(this._feedServiceLayer), runAndForwardErrors);
+    await Feed.appendByDXN(this._feedDXN, [block]).pipe(Effect.provide(this._feedServiceLayer), runAndForwardErrors);
   }
 }

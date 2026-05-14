@@ -32,7 +32,7 @@ export const ObjectMeta = Schema.Struct({
   documentId: Schema.String,
   entityKind: Schema.String,
   /** The versioned DXN of the type of the object. */
-  typeDxn: Schema.String,
+  typeDXN: Schema.String,
   deleted: Schema.Boolean,
   source: Schema.NullOr(Schema.String),
   target: Schema.NullOr(Schema.String),
@@ -90,7 +90,7 @@ export class ObjectMetaIndex implements Index {
       spaceId TEXT NOT NULL,
       documentId TEXT NOT NULL DEFAULT '',
       entityKind TEXT NOT NULL,
-      typeDxn TEXT NOT NULL,
+      typeDXN TEXT NOT NULL,
       deleted INTEGER NOT NULL,
       source TEXT,
       target TEXT,
@@ -112,7 +112,7 @@ export class ObjectMetaIndex implements Index {
     );
 
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_objectId ON objectMeta(spaceId, objectId)`;
-    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_typeDxn ON objectMeta(spaceId, typeDxn)`;
+    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_typeDXN ON objectMeta(spaceId, typeDXN)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_version ON objectMeta(version)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_parent ON objectMeta(spaceId, parent)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_updatedAt ON objectMeta(updatedAt)`;
@@ -121,19 +121,19 @@ export class ObjectMetaIndex implements Index {
 
   query = Effect.fn('ObjectMetaIndex.query')(
     (
-      query: Pick<ObjectMeta, 'spaceId' | 'typeDxn'>,
+      query: Pick<ObjectMeta, 'spaceId' | 'typeDXN'>,
     ): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
-        const parsedType = DXN.tryParse(query.typeDxn)?.asTypeDXN();
+        const parsedType = DXN.tryParse(query.typeDXN)?.asTypeDXN();
 
         // SQLite stores booleans as integers, so we need to specify the raw row type.
         const rows =
           parsedType && parsedType.version === undefined
-            ? yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND (typeDxn = ${
-                query.typeDxn
-              } OR typeDxn LIKE ${_escapeLikePrefix(query.typeDxn)} ESCAPE '\\')`
-            : yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND typeDxn = ${query.typeDxn}`;
+            ? yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND (typeDXN = ${
+                query.typeDXN
+              } OR typeDXN LIKE ${_escapeLikePrefix(query.typeDXN)} ESCAPE '\\')`
+            : yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND typeDXN = ${query.typeDXN}`;
         return rows.map((row) => ({
           ...row,
           deleted: !!row.deleted,
@@ -176,7 +176,7 @@ export class ObjectMetaIndex implements Index {
       queueIds = null,
     }: {
       spaceIds: readonly ObjectMeta['spaceId'][];
-      typeDxns: readonly ObjectMeta['typeDxn'][];
+      typeDxns: readonly ObjectMeta['typeDXN'][];
       inverted?: boolean;
       includeAllQueues?: boolean;
       queueIds?: readonly string[] | null;
@@ -202,11 +202,11 @@ export class ObjectMetaIndex implements Index {
         const sql = yield* SqlClient.SqlClient;
         const sourceCondition = buildSourceCondition(sql, spaceIds, includeAllQueues, queueIds);
         const typeWhere = sql.or(
-          typeDxns.map((typeDxn) => {
-            const parsedType = DXN.tryParse(typeDxn)?.asTypeDXN();
+          typeDxns.map((typeDXN) => {
+            const parsedType = DXN.tryParse(typeDXN)?.asTypeDXN();
             return parsedType && parsedType.version === undefined
-              ? sql.or([sql`typeDxn = ${typeDxn}`, sql`typeDxn LIKE ${_escapeLikePrefix(typeDxn)} ESCAPE '\\'`])
-              : sql`typeDxn = ${typeDxn}`;
+              ? sql.or([sql`typeDXN = ${typeDXN}`, sql`typeDXN LIKE ${_escapeLikePrefix(typeDXN)} ESCAPE '\\'`])
+              : sql`typeDXN = ${typeDXN}`;
           }),
         );
         const rows = inverted
@@ -282,7 +282,7 @@ export class ObjectMetaIndex implements Index {
 
               // Extract metadata.
               const entityKind = castData[ATTR_RELATION_SOURCE] ? 'relation' : 'object';
-              const typeDxn = castData[ATTR_TYPE] ? String(castData[ATTR_TYPE]) : 'type';
+              const typeDXN = castData[ATTR_TYPE] ? String(castData[ATTR_TYPE]) : 'type';
               const deleted = castData[ATTR_DELETED] ? 1 : 0;
               // Relations.
               const source = entityKind === 'relation' ? (castData[ATTR_RELATION_SOURCE] ?? null) : null;
@@ -298,7 +298,7 @@ export class ObjectMetaIndex implements Index {
                     version = ${version},
                     queueNamespace = ${queueNamespace ?? ''},
                     entityKind = ${entityKind},
-                    typeDxn = ${typeDxn},
+                    typeDXN = ${typeDXN},
                     deleted = ${deleted},
                     source = ${source},
                     target = ${target},
@@ -310,11 +310,11 @@ export class ObjectMetaIndex implements Index {
                 yield* sql`
                   INSERT INTO objectMeta (
                     objectId, queueId, queueNamespace, spaceId, documentId,
-                    entityKind, typeDxn, deleted, source, target, parent, version,
+                    entityKind, typeDXN, deleted, source, target, parent, version,
                     createdAt, updatedAt
                   ) VALUES (
                     ${objectId}, ${queueId ?? ''}, ${queueNamespace ?? ''}, ${spaceId}, ${documentId ?? ''},
-                    ${entityKind}, ${typeDxn}, ${deleted},
+                    ${entityKind}, ${typeDXN}, ${deleted},
                     ${source}, ${target}, ${parent}, ${version},
                     ${sourceTimestamp}, ${sourceTimestamp}
                   )
@@ -465,7 +465,7 @@ export class ObjectMetaIndex implements Index {
    * Matches both:
    * - Objects whose `parent` field references one of the given parent ids (standard parent/child hierarchy).
    * - Queue items whose `queueId` equals one of the parent ids (e.g. items inside a Feed, since a feed's queue
-   *   DXN uses the feed's object id as its queue id — see `Feed.getQueueDxn`).
+   *   DXN uses the feed's object id as its queue id — see `Feed.getDXN`).
    */
   queryChildren = Effect.fn('ObjectMetaIndex.queryChildren')(
     (query: {

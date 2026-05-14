@@ -820,8 +820,8 @@ describe('Query', () => {
 
       // Create a feed object - its queue DXN is derived from the feed's own DXN.
       const feed = db.add(Feed.make({ name: 'test-feed' }));
-      const feedDxn = Feed.getQueueDxn(feed)!;
-      const queue = queues.get(feedDxn);
+      const feedDXN = Feed.getDXN(feed)!;
+      const queue = queues.get(feedDXN);
 
       // Add items to the queue and a separate item to the space.
       db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
@@ -843,8 +843,8 @@ describe('Query', () => {
       const queues = peer.client.constructQueueFactory(db.spaceId);
 
       const feed = db.add(Feed.make({ name: 'test-feed' }));
-      const feedDxn = Feed.getQueueDxn(feed)!;
-      const queue = queues.get(feedDxn);
+      const feedDXN = Feed.getDXN(feed)!;
+      const queue = queues.get(feedDXN);
 
       const feedItem = Obj.make(TestSchema.Task, { title: 'Feed Task' });
       const spaceItem = db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
@@ -890,8 +890,8 @@ describe('Query', () => {
       const queues = peer.client.constructQueueFactory(db.spaceId);
 
       const feed = db.add(Feed.make({ name: 'test-feed' }));
-      const feedDxn = Feed.getQueueDxn(feed)!;
-      const queue = queues.get(feedDxn);
+      const feedDXN = Feed.getDXN(feed)!;
+      const queue = queues.get(feedDXN);
 
       db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
       await queue.append([
@@ -1559,8 +1559,8 @@ describe('Query', () => {
       const queues = feedPeer.client.constructQueueFactory(feedDb.spaceId);
 
       const feed = feedDb.add(Feed.make({ name: 'test-feed' }));
-      const feedDxn = Feed.getQueueDxn(feed)!;
-      const queue = queues.get(feedDxn);
+      const feedDXN = Feed.getDXN(feed)!;
+      const queue = queues.get(feedDXN);
 
       // Space-only task (should NOT appear as a child of the feed).
       feedDb.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
@@ -2471,8 +2471,8 @@ describe('Query', () => {
       const feed = db.add(Feed.make({ name: 'test-feed' }));
       await db.flush();
 
-      const feedDxn = Feed.getQueueDxn(feed)!;
-      const queue = queues.get(feedDxn);
+      const feedDXN = Feed.getDXN(feed)!;
+      const queue = queues.get(feedDXN);
       await queue.append([Obj.make(TestSchema.Task, { title: 'Task in feed' })]);
       await db.flush();
 
@@ -2494,8 +2494,8 @@ describe('Query', () => {
       );
       await db.flush();
 
-      const feedDxn = Feed.getQueueDxn(feed)!;
-      const queue = queues.get(feedDxn);
+      const feedDXN = Feed.getDXN(feed)!;
+      const queue = queues.get(feedDXN);
       await queue.append([Obj.make(TestSchema.Task, { title: 'Grandchild task' })]);
       await db.flush();
 
@@ -2517,8 +2517,8 @@ describe('Query', () => {
       );
       await db.flush();
 
-      const feedDxn = Feed.getQueueDxn(feed)!;
-      const queue = queues.get(feedDxn);
+      const feedDXN = Feed.getDXN(feed)!;
+      const queue = queues.get(feedDXN);
       await queue.append([Obj.make(TestSchema.Task, { title: 'Task from feed' })]);
       await db.flush();
 
@@ -2542,10 +2542,10 @@ describe('Query', () => {
       const feed2 = db.add(Feed.make({ name: 'feed-2' }));
       await db.flush();
 
-      const feedDxn1 = Feed.getQueueDxn(feed1)!;
-      const feedDxn2 = Feed.getQueueDxn(feed2)!;
-      const queue1 = queues.get(feedDxn1);
-      const queue2 = queues.get(feedDxn2);
+      const feedDXN1 = Feed.getDXN(feed1)!;
+      const feedDXN2 = Feed.getDXN(feed2)!;
+      const queue1 = queues.get(feedDXN1);
+      const queue2 = queues.get(feedDXN2);
 
       await queue1.append([Obj.make(TestSchema.Task, { title: 'Task in feed 1' })]);
       await queue2.append([Obj.make(TestSchema.Task, { title: 'Task in feed 2' })]);

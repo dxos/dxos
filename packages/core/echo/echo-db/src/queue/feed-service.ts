@@ -18,50 +18,50 @@ import type { QueueAPI } from './queue-factory';
 export const createFeedServiceLayer = (queues: QueueAPI) =>
   Layer.succeed(Feed.FeedService, {
     append: async (feed: Feed.Feed, items: Entity.Unknown[]): Promise<void> => {
-      const feedDxn = Feed.getQueueDxn(feed);
-      if (!feedDxn) {
+      const feedDXN = Feed.getDXN(feed);
+      if (!feedDXN) {
         throw new Error('Unable to append to feed: make sure feed is stored in the database');
       }
-      const queue = queues.get(feedDxn) as QueueImpl;
+      const queue = queues.get(feedDXN) as QueueImpl;
       queue.setParentEntity(feed as Obj.Unknown);
       await queue.append(items);
     },
 
     remove: async (feed: Feed.Feed, ids: string[]): Promise<void> => {
-      const feedDxn = Feed.getQueueDxn(feed);
-      if (!feedDxn) {
+      const feedDXN = Feed.getDXN(feed);
+      if (!feedDXN) {
         throw new Error('Unable to remove from feed: make sure feed is stored in the database');
       }
-      const queue = queues.get(feedDxn);
+      const queue = queues.get(feedDXN);
       await queue.delete(ids);
     },
 
     query: (feed: Feed.Feed, queryOrFilter: Query.Any | Filter.Any) => {
-      const feedDxn = Feed.getQueueDxn(feed);
-      if (!feedDxn) {
+      const feedDXN = Feed.getDXN(feed);
+      if (!feedDXN) {
         throw new Error('Unable to query feed: make sure feed is stored in the database');
       }
-      const queue = queues.get(feedDxn) as QueueImpl;
+      const queue = queues.get(feedDXN) as QueueImpl;
       queue.setParentEntity(feed as Obj.Unknown);
       return queue.query(queryOrFilter as any);
     },
 
     sync: async (feed: Feed.Feed, options?: Feed.SyncOptions): Promise<void> => {
-      const feedDxn = Feed.getQueueDxn(feed);
-      if (!feedDxn) {
+      const feedDXN = Feed.getDXN(feed);
+      if (!feedDXN) {
         throw new Error('Unable to sync feed: make sure feed is stored in the database');
       }
-      const queue = queues.get(feedDxn);
+      const queue = queues.get(feedDXN);
       await queue.sync(options);
     },
 
-    appendByDxn: async (feedDxn: DXN, items: Entity.Unknown[]): Promise<void> => {
-      const queue = queues.get(feedDxn);
+    appendByDXN: async (feedDXN: DXN, items: Entity.Unknown[]): Promise<void> => {
+      const queue = queues.get(feedDXN);
       await queue.append(items);
     },
 
-    queryByDxn: (feedDxn: DXN, queryOrFilter: Query.Any | Filter.Any) => {
-      const queue = queues.get(feedDxn) as QueueImpl;
+    queryByDXN: (feedDXN: DXN, queryOrFilter: Query.Any | Filter.Any) => {
+      const queue = queues.get(feedDXN) as QueueImpl;
       return queue.query(queryOrFilter as any);
     },
   });

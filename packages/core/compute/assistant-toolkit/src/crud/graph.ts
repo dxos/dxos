@@ -60,8 +60,8 @@ export const findRelatedSchema = async (db: Database.Database, anchor: Type.AnyE
       }
 
       return (
-        isSchemaAddressableByDxn(anchor, DXN.parse(getTypeAnnotation(schema)!.sourceSchema!)) ||
-        isSchemaAddressableByDxn(anchor, DXN.parse(getTypeAnnotation(schema)!.targetSchema!))
+        isSchemaAddressableByDXN(anchor, DXN.parse(getTypeAnnotation(schema)!.sourceSchema!)) ||
+        isSchemaAddressableByDXN(anchor, DXN.parse(getTypeAnnotation(schema)!.targetSchema!))
       );
     })
     .map(
@@ -76,7 +76,7 @@ export const findRelatedSchema = async (db: Database.Database, anchor: Type.AnyE
  * Non-strict DXN comparison.
  * Returns true if the DXN could be resolved to the schema.
  */
-const isSchemaAddressableByDxn = (schema: Type.AnyEntity, dxn: DXN): boolean => {
+const isSchemaAddressableByDXN = (schema: Type.AnyEntity, dxn: DXN): boolean => {
   if (getTypeIdentifierAnnotation(schema) === dxn.toString()) {
     return true;
   }
@@ -266,18 +266,18 @@ export const sanitizeObjects = (
         });
 
         if (Entity.getKind(entry.schema) === 'relation') {
-          const sourceDxn = resolveId(data.source);
-          if (!sourceDxn) {
+          const sourceDXN = resolveId(data.source);
+          if (!sourceDXN) {
             log.warn('source not found', { source: data.source });
           }
-          const targetDxn = resolveId(data.target);
-          if (!targetDxn) {
+          const targetDXN = resolveId(data.target);
+          if (!targetDXN) {
             log.warn('target not found', { target: data.target });
           }
           delete data.source;
           delete data.target;
-          data[RelationSourceDXNId] = sourceDxn;
-          data[RelationTargetDXNId] = targetDxn;
+          data[RelationSourceDXNId] = sourceDXN;
+          data[RelationTargetDXNId] = targetDXN;
         }
 
         return {

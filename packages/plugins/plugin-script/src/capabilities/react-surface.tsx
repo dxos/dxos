@@ -105,13 +105,13 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => {
           const space = getSpace(data.companionTo);
           const feed = space?.properties.invocationTraceFeed?.target;
-          const feedDxn = feed ? Feed.getQueueDxn(feed) : undefined;
+          const feedDXN = feed ? Feed.getDXN(feed) : undefined;
           return (
             <Panel.Root role={role}>
               <Panel.Content>
                 <InvocationTraceContainer
                   db={space?.db}
-                  feedDxn={feedDxn}
+                  feedDXN={feedDXN}
                   target={data.companionTo}
                   detailAxis='block'
                 />
