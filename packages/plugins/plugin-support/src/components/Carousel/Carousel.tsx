@@ -166,6 +166,46 @@ const CarouselSlide = ({ children, index, classNames }: CarouselSlideProps) => {
 CarouselSlide.displayName = 'Carousel.Slide';
 
 //
+// Media
+//
+
+export type CarouselMediaProps = {
+  src: string;
+  alt?: string;
+  classNames?: string;
+};
+
+/**
+ * Slide content. Renders an `<iframe>` when the URL contains `iframe` (Cloudflare Stream
+ * embeds use that segment), otherwise an `<img>`. Either fills the parent Slide.
+ */
+const CarouselMedia = ({ src, alt, classNames }: CarouselMediaProps) => {
+  const isIframe = src.includes('iframe');
+  if (isIframe) {
+    return (
+      <iframe
+        src={src}
+        title={alt}
+        loading='lazy'
+        className={mx('absolute inset-0 w-full h-full border-none', classNames)}
+        allow='accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;'
+        allowFullScreen
+      />
+    );
+  }
+  return (
+    <img
+      src={src}
+      alt={alt ?? ''}
+      loading='lazy'
+      className={mx('absolute inset-0 w-full h-full object-cover', classNames)}
+    />
+  );
+};
+
+CarouselMedia.displayName = 'Carousel.Media';
+
+//
 // Previous / Next
 //
 
@@ -290,6 +330,7 @@ export const Carousel = {
   Frame: CarouselFrame,
   Viewport: CarouselViewport,
   Slide: CarouselSlide,
+  Media: CarouselMedia,
   Previous: CarouselPrevious,
   Next: CarouselNext,
   Indicators: CarouselIndicators,

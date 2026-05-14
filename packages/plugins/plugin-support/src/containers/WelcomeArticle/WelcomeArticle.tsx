@@ -68,12 +68,7 @@ export const WelcomeArticle = ({ role }: WelcomeArticleProps = {}) => {
                   <Carousel.Viewport>
                     {slides.map((slide, i) => (
                       <Carousel.Slide key={slide.src} index={i}>
-                        <img
-                          src={slide.src}
-                          alt={slide.description}
-                          className='absolute inset-0 w-full h-full object-cover'
-                          loading='lazy'
-                        />
+                        <Carousel.Media src={slide.src} alt={slide.description} />
                       </Carousel.Slide>
                     ))}
                   </Carousel.Viewport>

@@ -17,10 +17,26 @@ random.seed(0);
 type Slide = { src: string; description: string };
 
 const SAMPLE_SLIDES: Slide[] = [
-  { src: 'https://dxos.network/plugin-details-chess-dark.png', description: random.lorem.sentences(2) },
-  { src: 'https://dxos.network/plugin-details-markdown-dark.png', description: random.lorem.sentences(2) },
-  { src: 'https://dxos.network/plugin-details-sheet-dark.png', description: random.lorem.sentences(2) },
-  { src: 'https://dxos.network/plugin-details-sketch-dark.png', description: random.lorem.sentences(2) },
+  {
+    src: 'https://customer-5rxcjpyab08avpmn.cloudflarestream.com/f58459bcdf3a6f3e93644a4e0f39b22a/iframe?poster=https%3A%2F%2Fcustomer-5rxcjpyab08avpmn.cloudflarestream.com%2Ff58459bcdf3a6f3e93644a4e0f39b22a%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D%26height%3D600',
+    description: random.lorem.sentences(2),
+  },
+  {
+    src: 'https://dxos.network/plugin-details-chess-dark.png',
+    description: random.lorem.sentences(2),
+  },
+  {
+    src: 'https://dxos.network/plugin-details-markdown-dark.png',
+    description: random.lorem.sentences(2),
+  },
+  {
+    src: 'https://dxos.network/plugin-details-sheet-dark.png',
+    description: random.lorem.sentences(2),
+  },
+  {
+    src: 'https://dxos.network/plugin-details-sketch-dark.png',
+    description: random.lorem.sentences(2),
+  },
 ];
 
 type DefaultStoryProps = { slides: Slide[]; intervalMs?: number };
@@ -32,12 +48,7 @@ const DefaultStory = ({ slides, intervalMs }: DefaultStoryProps) => (
       <Carousel.Viewport>
         {slides.map((slide, i) => (
           <Carousel.Slide key={slide.src} index={i}>
-            <img
-              src={slide.src}
-              alt={slide.description}
-              className='absolute inset-0 w-full h-full object-cover'
-              loading='lazy'
-            />
+            <Carousel.Media src={slide.src} alt={slide.description} />
           </Carousel.Slide>
         ))}
       </Carousel.Viewport>
