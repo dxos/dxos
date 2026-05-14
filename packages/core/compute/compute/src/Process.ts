@@ -14,8 +14,8 @@ import * as Scope from 'effect/Scope';
 import type * as Types from 'effect/Types';
 
 import { assertArgument } from '@dxos/invariant';
+import type { EchoId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import type { ObjectId } from '@dxos/protocols';
 
 import * as Operation from './Operation';
 import * as OperationHandlerSet from './OperationHandlerSet';
@@ -140,7 +140,7 @@ export interface Params {
   /**
    * Target object that this process is assigned to.
    */
-  readonly target: ObjectId | null;
+  readonly target: EchoId.EchoId | null;
 }
 
 //

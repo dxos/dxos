@@ -24,7 +24,7 @@ import * as Stream from 'effect/Stream';
 import { Process, ServiceResolver, Trace, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { Performance, runAndForwardErrors } from '@dxos/effect';
-import type { EchoId, SpaceId, URI } from '@dxos/keys';
+import type { EchoId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { OperationInvoker } from '@dxos/operation';
 import type { ObjectId } from '@dxos/protocols';
@@ -131,7 +131,7 @@ export interface SpawnOptions {
    * Target object that this process is assigned to.
    */
   // TODO(dmaretskyi): Consider opaques metadata instead of opinionated `target` field.
-  readonly target?: URI.URI;
+  readonly target?: EchoId.EchoId;
 
   /**
    * Tracing metadata for this invocation.
@@ -166,7 +166,7 @@ export interface ListOptions {
   /**
    * Filter processes by target object ID.
    */
-  readonly target?: URI.URI;
+  readonly target?: EchoId.EchoId;
 }
 
 /**
