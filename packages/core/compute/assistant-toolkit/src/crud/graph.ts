@@ -301,7 +301,7 @@ export const sanitizeObjects = async (
   return res.flatMap(({ data, schema }) => {
     let skip = false;
     if (RelationSourceDXNId in data) {
-      const id = EchoId.getObjectId(data[RelationSourceDXNId] as EchoId.EchoId);
+      const id = EchoId.getObjectId(EchoId.parse(data[RelationSourceDXNId]));
       const obj = objects.find((object) => object.id === id) ?? enitties.get(id!);
       if (obj) {
         delete data[RelationSourceDXNId];
@@ -311,7 +311,7 @@ export const sanitizeObjects = async (
       }
     }
     if (RelationTargetDXNId in data) {
-      const id = EchoId.getObjectId(data[RelationTargetDXNId] as EchoId.EchoId);
+      const id = EchoId.getObjectId(EchoId.parse(data[RelationTargetDXNId]));
       const obj = objects.find((object) => object.id === id) ?? enitties.get(id!);
       if (obj) {
         delete data[RelationTargetDXNId];
