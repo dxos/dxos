@@ -105,11 +105,11 @@ export const writeSerializedSpaceArchive = async (
 
   for (const linkedUrl of databaseRoot.getAllLinkedDocuments()) {
     const handle = await echoHost.loadDoc<DatabaseDirectory>(Context.default(), linkedUrl as AutomergeUrl);
-    const doc = handle.doc();
-    if (!doc) {
-      log.warn('linked document did not load; skipping', { url: linkedUrl });
+    if (!handle) {
+      log.warn('linked document handle not available; skipping', { url: linkedUrl });
       continue;
     }
+    const doc = handle.doc();
     collectObjectsFromDoc(doc, objects);
   }
 

@@ -295,8 +295,10 @@ export class EchoHost extends Resource {
 
   /**
    * Loads the document handle from the repo and waits for it to be ready.
+   *
+   * @returns `null` when the document is not available yet (e.g. storage-only load with no local chunks).
    */
-  async loadDoc<T>(ctx: Context, documentId: AnyDocumentId, opts?: LoadDocOptions): Promise<DocHandle<T>> {
+  async loadDoc<T>(ctx: Context, documentId: AnyDocumentId, opts?: LoadDocOptions): Promise<DocHandle<T> | null> {
     return await this._automergeHost.loadDoc(ctx, documentId, opts);
   }
 
@@ -338,6 +340,7 @@ export class EchoHost extends Resource {
     const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(ctx, automergeUrl, {
       fetchFromNetwork: true,
     });
+    invariant(handle, 'Space root document must load before assignment.');
     const query = this._automergeHost.findWithProgress<DatabaseDirectory>(handle.documentId);
 
     return this._spaceStateManager.assignRootToSpace(spaceId, query);
