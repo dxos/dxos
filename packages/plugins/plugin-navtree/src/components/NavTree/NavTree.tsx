@@ -41,7 +41,6 @@ export const NavTree = forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, tab
         parent={root}
         onItemHover={onItemHover}
       />
-      xxx
       <L1Tabs topLevelItems={topLevelItems} path={path} currentItemId={tab} onBack={onBack} {...props} />
     </Tabs.Root>
   );
@@ -83,10 +82,10 @@ const useTopLevelNavItems = (root?: Node.Node) => {
     ].toSorted((a, b) => byPosition(a.properties, b.properties));
 
     return {
-      topLevelActions,
-      l0Items: topLevelWorkspaces,
       pinnedItems,
+      topLevelActions,
       userAccountItem,
+      l0Items: topLevelWorkspaces,
     };
   }, [rootActions, rootOutboundItems]);
 
