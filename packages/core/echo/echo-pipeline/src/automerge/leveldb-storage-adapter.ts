@@ -30,8 +30,37 @@ export interface StorageCallbacks {
 }
 
 export class LevelDBStorageAdapter extends Resource implements StorageAdapterInterface {
+  /**
+   * In-flight `loadRange` / `removeRange` iterations. Awaited in `_close` so
+   * the adapter doesn't return from close while a `for await` on the sublevel
+   * is still pending — otherwise the kv owner upstream would close the
+   * sublevel and the iterator's next `.next()` would reject with
+   * `LEVEL_ITERATOR_NOT_OPEN`.
+   *
+   * Promises stored here resolve regardless of outcome (the wrapper
+   * `.catch`es) so `Promise.all` won't reject.
+   */
+  readonly #inFlightIterations = new Set<Promise<unknown>>();
+
   constructor(private readonly _params: LevelDBStorageAdapterProps) {
     super();
+  }
+
+  protected override async _close(): Promise<void> {
+    // New `loadRange`/`removeRange` calls already short-circuit on `!isOpen`
+    // (the Resource base flips state before invoking `_close`). Wait for any
+    // iterations that started while we were still open to finish before
+    // returning, so the upstream `kv` owner can safely close the sublevel.
+    if (this.#inFlightIterations.size > 0) {
+      await Promise.all(this.#inFlightIterations);
+    }
+  }
+
+  #trackIteration<T>(work: Promise<T>): Promise<T> {
+    const settled = work.catch(() => undefined);
+    this.#inFlightIterations.add(settled);
+    void settled.finally(() => this.#inFlightIterations.delete(settled));
+    return work;
   }
 
   async load(keyArray: StorageKey): Promise<Uint8Array | undefined> {
@@ -111,6 +140,10 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
     if (!this.isOpen) {
       return [];
     }
+    return this.#trackIteration(this.#doLoadRange(keyPrefix));
+  }
+
+  async #doLoadRange(keyPrefix: StorageKey): Promise<Chunk[]> {
     const startMs = Date.now();
     const result: Chunk[] = [];
     for await (const [key, value] of this._params.db.iterator<StorageKey, Uint8Array>({
@@ -132,6 +165,10 @@ export class LevelDBStorageAdapter extends Resource implements StorageAdapterInt
     if (!this.isOpen) {
       return undefined;
     }
+    await this.#trackIteration(this.#doRemoveRange(keyPrefix));
+  }
+
+  async #doRemoveRange(keyPrefix: StorageKey): Promise<void> {
     const batch = this._params.db.batch();
 
     for await (const [key] of this._params.db.iterator<StorageKey, Uint8Array>({
