@@ -19,7 +19,7 @@ import { log } from '@dxos/log';
 import { Assistant } from '@dxos/plugin-assistant';
 import { useContextBinder } from '@dxos/plugin-assistant/hooks';
 import { translations } from '@dxos/plugin-assistant/translations';
-import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
+import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { Stack, StackItem } from '@dxos/react-ui-stack';

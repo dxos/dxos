@@ -8,6 +8,7 @@ import { defineConfig } from 'vite';
 import WasmPlugin from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
+import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 
 // Aligned with composer-app. These targets support top-level await natively,
 // so no `vite-plugin-top-level-await` polyfill is needed.
@@ -42,6 +43,7 @@ export default defineConfig({
     plugins: () => [WasmPlugin()],
   },
   plugins: [
+    ShutdownPlugin(),
     ConfigPlugin({
       root: __dirname,
     }),

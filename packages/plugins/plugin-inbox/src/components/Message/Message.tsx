@@ -11,6 +11,7 @@ import { useTextEditor } from '@dxos/react-ui-editor';
 import { Menu } from '@dxos/react-ui-menu';
 import { type Actor, type Message as MessageType } from '@dxos/types';
 import {
+  EditorView,
   compactSlots,
   createBasicExtensions,
   createMarkdownExtensions,
@@ -225,6 +226,17 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
           skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
         }),
         preview(),
+        EditorView.domEventHandlers({
+          click: (event) => {
+            const anchor = (event.target as Element | null)?.closest('a.cm-link') as HTMLAnchorElement | null;
+            if (anchor?.href) {
+              event.preventDefault();
+              window.open(anchor.href, '_blank', 'noopener,noreferrer');
+              return true;
+            }
+            return false;
+          },
+        }),
       );
     }
     return exts;

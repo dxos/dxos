@@ -12,7 +12,7 @@ import { Blueprint } from '@dxos/compute';
 import { Script } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { Config } from '@dxos/react-client';

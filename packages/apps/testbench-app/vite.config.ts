@@ -15,6 +15,7 @@ import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import PluginImportSource from '@dxos/vite-plugin-import-source';
 import { DxosLogPlugin } from '@dxos/vite-plugin-log';
+import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config';
 
@@ -119,6 +120,7 @@ export default defineConfig(
         ],
       },
       plugins: [
+        ShutdownPlugin(),
         sourceMaps(),
 
         // Building from dist when creating a prod bundle.
