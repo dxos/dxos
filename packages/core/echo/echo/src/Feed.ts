@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { DXN, type ObjectId } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 
 import * as Annotation from './Annotation';
 import type * as Entity from './Entity';
@@ -119,27 +119,6 @@ export const getDXN = (feed: Feed): DXN | undefined => {
   return new DXN(DXN.kind.QUEUE, [feed.namespace ?? 'data', self.spaceId, self.echoId]);
 };
 
-/**
- * Creates a Feed object from a queue DXN, inferring the feed's id and namespace from the DXN parts.
- *
- * The resulting Feed, when added to the same space as the queue, will have a queue DXN
- * equal to the input (see `Feed.getDXN`). Useful when migrating `Ref(Queue)` fields to
- * `Ref(Feed.Feed)`.
- *
- * @remarks Unsafe because the caller must ensure the queue DXN's space matches the database
- * the feed is added to; the feed id is set from the queue id, bypassing id generation.
- */
-export const unsafeFromDXN = (queueDXN: DXN): Feed => {
-  const parts = queueDXN.asQueueDXN();
-  if (!parts) {
-    throw new Error(`Expected a queue DXN, got: ${queueDXN.toString()}`);
-  }
-  return Obj.make(Feed, {
-    id: parts.queueId as ObjectId,
-    namespace: parts.subspaceTag === 'trace' ? 'trace' : undefined,
-  });
-};
-
 //
 // Service
 //
@@ -175,23 +154,6 @@ export class FeedService extends Context.Tag('@dxos/echo/Feed/FeedService')<
      * Syncs the feed with the server.
      */
     sync(feed: Feed, options?: SyncOptions): Promise<void>;
-
-    /**
-     * Appends items to a feed addressed by its DXN, without requiring a persisted
-     * `Feed.Feed` object. Used by ad-hoc / per-invocation feeds (e.g. trace event
-     * feeds) where materializing a `Feed.Feed` per write would be wasteful.
-     */
-    appendByDXN(feedDXN: DXN, items: Entity.Unknown[]): Promise<void>;
-
-    /**
-     * Queries items in a feed addressed by its DXN.
-     * DXN-driven counterpart to `query()` — for debug UIs and other consumers
-     * that hold a raw feed DXN and don't have a materialized `Feed.Feed`.
-     */
-    queryByDXN: {
-      <Q extends Query.Any>(feedDXN: DXN, query: Q): QueryResult.QueryResult<Query.Type<Q>>;
-      <F extends Filter.Any>(feedDXN: DXN, filter: F): QueryResult.QueryResult<Filter.Type<F>>;
-    };
   }
 >() {}
 
@@ -222,12 +184,6 @@ export const notAvailable: Layer.Layer<FeedService> = Layer.succeed(FeedService,
   sync: () => {
     throw new Error('Feed.FeedService not available');
   },
-  appendByDXN: () => {
-    throw new Error('Feed.FeedService not available');
-  },
-  queryByDXN: () => {
-    throw new Error('Feed.FeedService not available');
-  },
 } as Context.Tag.Service<FeedService>);
 
 //
@@ -235,12 +191,10 @@ export const notAvailable: Layer.Layer<FeedService> = Layer.succeed(FeedService,
 //
 
 /**
- * Effect service exposing a single `Feed.Feed` as the "current" feed for a call site —
- * e.g. an agent context feed scoped to the running operation. Use this when an Effect
- * program needs to know which feed it should operate on without threading it through
- * every function signature.
+ * Effect service exposing a single `Feed.Feed` as the "current" feed for a call site.
  *
- * Replaces the legacy `ContextQueueService` from `@dxos/echo-db`.
+ * @deprecated Prefer threading a `Feed.Feed` explicitly through function signatures
+ * over hiding it behind a context service.
  */
 export class ContextFeedService extends Context.Tag('@dxos/echo/Feed/ContextFeedService')<
   ContextFeedService,
@@ -338,62 +292,6 @@ export const sync = (feed: Feed, options?: SyncOptions): Effect.Effect<void, nev
     const service = yield* FeedService;
     yield* Effect.promise(() => service.sync(feed, options));
   });
-
-/**
- * Appends items to a feed addressed by its DXN.
- * Use when a `Feed.Feed` object hasn't been (or won't be) materialized — e.g. ad-hoc
- * per-invocation trace feeds.
- *
- * @example
- * ```ts
- * yield* Feed.appendByDXN(feedDXN, [Obj.make(TraceEvent, { ... })]);
- * ```
- */
-export const appendByDXN = (feedDXN: DXN, items: Entity.Unknown[]): Effect.Effect<void, never, FeedService> =>
-  Effect.gen(function* () {
-    const service = yield* FeedService;
-    yield* Effect.promise(() => service.appendByDXN(feedDXN, items));
-  });
-
-/**
- * Creates a reactive query over items in a feed addressed by its DXN.
- * DXN-driven counterpart to `query()` — for debug UIs and other consumers that hold a
- * raw feed DXN.
- *
- * @example
- * ```ts
- * const result = yield* Feed.queryByDXN(feedDXN, Filter.everything());
- * ```
- */
-export const queryByDXN: {
-  <Q extends Query.Any>(
-    feedDXN: DXN,
-    query: Q,
-  ): Effect.Effect<QueryResult.QueryResult<Query.Type<Q>>, never, FeedService>;
-  <F extends Filter.Any>(
-    feedDXN: DXN,
-    filter: F,
-  ): Effect.Effect<QueryResult.QueryResult<Filter.Type<F>>, never, FeedService>;
-} = (feedDXN: DXN, queryOrFilter: Query.Any | Filter.Any) =>
-  FeedService.pipe(
-    Effect.map((service) => service.queryByDXN(feedDXN, queryOrFilter as any) as QueryResult.QueryResult<any>),
-  );
-
-/**
- * Executes a feed query addressed by DXN once and returns the results.
- *
- * @example
- * ```ts
- * const items = yield* Feed.runQueryByDXN(feedDXN, Filter.type(Person));
- * ```
- */
-export const runQueryByDXN: {
-  <Q extends Query.Any>(feedDXN: DXN, query: Q): Effect.Effect<Query.Type<Q>[], never, FeedService>;
-  <F extends Filter.Any>(feedDXN: DXN, filter: F): Effect.Effect<Filter.Type<F>[], never, FeedService>;
-} = (feedDXN: DXN, queryOrFilter: Query.Any | Filter.Any) =>
-  queryByDXN(feedDXN, queryOrFilter as any).pipe(
-    Effect.flatMap((queryResult) => Effect.promise(() => queryResult.run())),
-  );
 
 /**
  * Creates a cursor for iterating over feed items.

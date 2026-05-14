@@ -4,10 +4,7 @@
 
 import React, { type ComponentType, type JSX, useMemo, useState } from 'react';
 
-import { Filter } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
-import { DXN } from '@dxos/keys';
-import { useFeedQueryByDXN } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
@@ -19,9 +16,10 @@ import { PanelContainer, Searchbar } from '../../../components';
 
 export const QueuesPanel = () => {
   // const { space } = useDevtoolsState();
-  const [queueInput, setQueueInput] = useState('');
-  const queueDXN = DXN.tryParse(queueInput);
-  const objects = useFeedQueryByDXN(queueDXN, Filter.everything());
+  const [_queueInput, setQueueInput] = useState('');
+  // TODO(dmaretskyi): DXN-driven feed lookup removed; this panel is stubbed
+  // pending a Feed.Feed-aware replacement.
+  const objects: any[] = [];
   const [selected, setSelected] = useState<any>();
   const [selectedVersionObject, setSelectedVersionObject] = useState<any | null>(null);
 

@@ -5,12 +5,12 @@
 import * as Match from 'effect/Match';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Filter } from '@dxos/echo';
+import { Filter, Query } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { useFlush } from '@dxos/plugin-assistant/hooks';
 import { ForceGraph } from '@dxos/plugin-explorer/components';
 import { useGraphModel } from '@dxos/plugin-explorer/hooks';
-import { useFeedQuery, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
@@ -27,7 +27,10 @@ export const GraphModule = ({ space }: ModuleProps) => {
 
   const [researchInput] = useQuery(space.db, Filter.type(ResearchInputQueue));
   const feed = researchInput?.feed.target;
-  const items = useFeedQuery(feed, Filter.everything());
+  const items = useQuery(
+    space.db,
+    feed ? Query.select(Filter.everything()).from(feed) : Query.select(Filter.nothing()),
+  );
 
   const model = useGraphModel(space.db, undefined, undefined, items);
   useEffect(() => {

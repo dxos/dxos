@@ -9,7 +9,7 @@ import type { Obj } from '@dxos/echo';
 import { type ChunkRenderer, SerializationModel } from '../model';
 
 /**
- * Feeds an array of objects (typically from `useFeedQuery`) into a
+ * Feeds an array of objects (typically from `useQuery(db, Query.from(feed))`) into a
  * `SerializationModel`, appending each new tail item as the array grows.
  *
  * @param renderer - chunk renderer.

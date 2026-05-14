@@ -11,7 +11,6 @@ import { createFeedServiceLayer, type Space } from '@dxos/client/echo';
 import { Resource } from '@dxos/context';
 import { Feed, Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
-import { type DXN } from '@dxos/keys';
 import { type EdgeHttpClient } from '@dxos/react-edge-client';
 import { type ContentBlock, Message } from '@dxos/types';
 
@@ -57,7 +56,7 @@ export class TranscriptionManager extends Resource {
   private _identityDid?: string = undefined;
   private _mediaRecorder?: MediaStreamRecorder = undefined;
   private _transcriber?: Transcriber = undefined;
-  private _feedDXN?: DXN = undefined;
+  private _feed?: Feed.Feed = undefined;
   private _feedServiceLayer?: Layer.Layer<Feed.FeedService> = undefined;
   private _enabledAtom = Atom.make(false);
 
@@ -76,8 +75,8 @@ export class TranscriptionManager extends Resource {
     return this._registry.get(this._enabledAtom);
   }
 
-  setFeed(space: Space, feedDXN: DXN): this {
-    this._feedDXN = feedDXN;
+  setFeed(space: Space, feed: Feed.Feed): this {
+    this._feed = feed;
     this._feedServiceLayer = createFeedServiceLayer(space.queues);
     return this;
   }
@@ -167,7 +166,7 @@ export class TranscriptionManager extends Resource {
   }
 
   private async _onSegments(segments: ContentBlock.Transcript[]): Promise<void> {
-    if (!this.isOpen || !this._feedDXN || !this._feedServiceLayer) {
+    if (!this.isOpen || !this._feed || !this._feedServiceLayer) {
       return;
     }
 
@@ -181,6 +180,6 @@ export class TranscriptionManager extends Resource {
       block = await this._messageEnricher(block);
     }
 
-    await Feed.appendByDXN(this._feedDXN, [block]).pipe(Effect.provide(this._feedServiceLayer), runAndForwardErrors);
+    await Feed.append(this._feed, [block]).pipe(Effect.provide(this._feedServiceLayer), runAndForwardErrors);
   }
 }

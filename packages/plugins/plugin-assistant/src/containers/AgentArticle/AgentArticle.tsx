@@ -15,7 +15,7 @@ import { Annotation, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { QueueService } from '@dxos/functions';
 import { AutomationCapabilities } from '@dxos/plugin-automation';
-import { useFeedQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { Card, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
@@ -82,7 +82,11 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
     ),
   );
 
-  const inputObjects = useFeedQuery(inputFeed, Query.select(Filter.everything()));
+  const db = Obj.getDatabase(agent);
+  const inputObjects = useQuery(
+    db,
+    inputFeed ? Query.select(Filter.everything()).from(inputFeed) : Query.select(Filter.nothing()),
+  );
 
   return (
     <Panel.Root role={role}>

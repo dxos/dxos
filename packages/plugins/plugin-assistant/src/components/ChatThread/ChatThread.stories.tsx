@@ -10,14 +10,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { createFeedServiceLayer } from '@dxos/client/echo';
-import { Database, Feed, Filter } from '@dxos/echo';
+import { Database, Feed, Filter, Query } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { useFeedQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { EditorPreviewProvider } from '@dxos/react-ui-editor';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message, Organization, Person } from '@dxos/types';
@@ -39,7 +39,10 @@ const DefaultStory = ({ generator = [], delay = 0, wait, ...props }: DefaultStor
     () => (space ? space.db.add(Feed.make({ name: 'chat' })) : undefined),
     [space],
   );
-  const messages = useFeedQuery(feed, Filter.type(Message.Message));
+  const messages = useQuery(
+    space?.db,
+    feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
+  );
   const [done, setDone] = useState(false);
 
   // Generate messages.

@@ -86,7 +86,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
 
   /**
    * Supplement the DB graph with items sourced externally (e.g. from a Feed).
-   * Callers drive this from a reactive snapshot (such as `useFeedQuery`).
+   * Callers drive this from a reactive snapshot (e.g. `useQuery(db, Query.select(...).from(feed))`).
    */
   setItems(items: readonly Entity.Unknown[] | undefined): this {
     this._extraItems = items ? [...items] : undefined;

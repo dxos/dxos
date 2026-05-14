@@ -2,16 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { Script, Operation } from '@dxos/compute';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { getUserFunctionIdInMetadata } from '@dxos/functions';
-import { InvocationOutcome, InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
-import { type InvocationTraceEvent } from '@dxos/functions-runtime';
-import { createInvocationSpans } from '@dxos/functions-runtime';
+import { type InvocationSpan } from '@dxos/functions-runtime';
 import { type DXN } from '@dxos/keys';
-import { useFeedQueryByDXN, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 
 import { getUuidFromDXN } from './utils';
 
@@ -52,42 +50,7 @@ export const useInvocationTargetsForScript = (target: Obj.Unknown | undefined) =
   }, [functions, target]);
 };
 
-export const useInvocationSpans = ({ feedDXN, target }: { feedDXN?: DXN; target?: Obj.Unknown }) => {
-  const functionsForScript = useInvocationTargetsForScript(target);
-  const items = useFeedQueryByDXN(feedDXN, Filter.everything());
-  const events = useMemo(
-    () =>
-      items.filter(
-        (item): item is InvocationTraceEvent =>
-          Obj.instanceOf(InvocationTraceStartEvent, item) || Obj.instanceOf(InvocationTraceEndEvent, item),
-      ),
-    [items],
-  );
-  const invocationSpans = useMemo(() => createInvocationSpans(events), [events]);
-  const scopedInvocationSpans = useMemo(() => {
-    if (functionsForScript) {
-      return invocationSpans.filter((span) => {
-        if (!span.invocationTarget) {
-          return false;
-        }
-        const targetId = span.invocationTarget.dxn;
-        const uuidPart = getUuidFromDXN(targetId);
-        return uuidPart ? functionsForScript?.has(uuidPart) : false;
-      });
-    } else if (target) {
-      return invocationSpans.filter((span) => span.invocationTarget?.dxn.toString() === Obj.getDXN(target).toString());
-    }
-    return invocationSpans;
-  }, [functionsForScript, target, invocationSpans]);
-
-  // If there are any pending spans, update the current time every second.
-  const [_, update] = useState({});
-  useEffect(() => {
-    if (scopedInvocationSpans.some((span) => span.outcome === InvocationOutcome.PENDING)) {
-      const interval = setInterval(() => update({}), 1_000);
-      return () => clearInterval(interval);
-    }
-  }, [scopedInvocationSpans]);
-
-  return scopedInvocationSpans;
-};
+// TODO(dmaretskyi): Per-invocation trace event feeds are deprecated and no
+// longer functional; this hook returns an empty span list until a replacement
+// tracing data structure lands.
+export const useInvocationSpans = (_args: { feedDXN?: DXN; target?: Obj.Unknown }): InvocationSpan[] => [];

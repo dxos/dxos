@@ -137,13 +137,9 @@ export class FeedLogger implements SequenceLogger {
   }
 
   /**
-   * Appends to the per-invocation trace event feed, addressed by raw DXN
-   * (no backing `Feed.Feed` object — these are ad-hoc per-invocation feeds).
+   * Per-invocation trace event feeds are deprecated and no longer functional;
+   * this is a no-op until a replacement tracing data structure lands.
    */
-  private _appendTraceEvent(invocationId: string, items: TraceEvent[]): Promise<void> {
-    return Feed.appendByDXN(this._getTraceFeedDXN(invocationId), items).pipe(
-      Effect.provide(this._feedServiceLayer),
-      runAndForwardErrors,
-    );
-  }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private async _appendTraceEvent(_invocationId: string, _items: TraceEvent[]): Promise<void> {}
 }

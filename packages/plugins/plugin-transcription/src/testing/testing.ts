@@ -10,10 +10,9 @@ import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/ass
 import { scheduleTaskInterval } from '@dxos/async';
 import { createFeedServiceLayer, type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { Feed, Filter, type Key, Obj, Ref, Type } from '@dxos/echo';
-import { createQueueDXN } from '@dxos/echo/internal';
+import { Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
-import { type DXN, IdentityDid } from '@dxos/keys';
+import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 import { TestSchema } from '@dxos/schema/testing';
@@ -140,39 +139,36 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
 
 type UseTestTranscriptionQueue = (
   space: Space | undefined,
-  queueId?: Key.ObjectId,
   running?: boolean,
   interval?: number,
-) => DXN | undefined;
+) => Feed.Feed | undefined;
 
 /**
  * Test transcription feed.
  */
 export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
   space: Space | undefined,
-  queueId?: Key.ObjectId,
   running = true,
   interval = 1_000,
 ) => {
-  // TODO(dmaretskyi): Use space.queues.create() instead.
-  const feedDXN = useMemo(() => (space ? createQueueDXN(space.id, queueId) : undefined), [space, queueId]);
+  const feed = useMemo(() => (space ? space.db.add(Feed.make({ name: 'transcription' })) : undefined), [space]);
   const builder = useMemo(() => new MessageBuilder(space), [space]);
 
   useEffect(() => {
-    if (!space || !feedDXN || !running) {
+    if (!space || !feed || !running) {
       return;
     }
     const feedServiceLayer = createFeedServiceLayer(space.queues);
 
     const i = setInterval(() => {
       void builder.createMessage(Math.ceil(Math.random() * 3)).then(async (message) => {
-        await Feed.appendByDXN(feedDXN, [message]).pipe(Effect.provide(feedServiceLayer), runAndForwardErrors);
+        await Feed.append(feed, [message]).pipe(Effect.provide(feedServiceLayer), runAndForwardErrors);
       });
     }, interval);
     return () => clearInterval(i);
-  }, [space, feedDXN, running, interval]);
+  }, [space, feed, running, interval]);
 
-  return feedDXN;
+  return feed;
 };
 
 /**
@@ -181,16 +177,14 @@ export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
 // TODO(burdon): Reconcile with useTestTranscriptionQueue.
 export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscriptionQueue = (
   space: Space | undefined,
-  queueId?: Key.ObjectId,
   running = true,
   interval = 1_000,
 ) => {
-  // TODO(dmaretskyi): Use space.queues.create() instead.
-  const feedDXN = useMemo(() => (space ? createQueueDXN(space.id, queueId) : undefined), [space, queueId]);
+  const feed = useMemo(() => (space ? space.db.add(Feed.make({ name: 'transcription' })) : undefined), [space]);
   const [builder] = useState(() => new EntityExtractionMessageBuilder());
 
   useEffect(() => {
-    if (!space || !feedDXN || !running) {
+    if (!space || !feed || !running) {
       return;
     }
 
@@ -202,7 +196,7 @@ export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscription
       ctx,
       async () => {
         const message = await builder.createMessage();
-        await Feed.appendByDXN(feedDXN, [message]).pipe(Effect.provide(feedServiceLayer), runAndForwardErrors);
+        await Feed.append(feed, [message]).pipe(Effect.provide(feedServiceLayer), runAndForwardErrors);
       },
       interval,
     );
@@ -210,7 +204,7 @@ export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscription
     return () => {
       void ctx.dispose();
     };
-  }, [space, feedDXN, running, interval]);
+  }, [space, feed, running, interval]);
 
-  return feedDXN;
+  return feed;
 };

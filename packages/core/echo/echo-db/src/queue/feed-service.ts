@@ -5,7 +5,6 @@
 import * as Layer from 'effect/Layer';
 
 import { type Entity, Feed, type Filter, Obj, type Query } from '@dxos/echo';
-import { type DXN } from '@dxos/keys';
 
 import type { QueueImpl } from './queue';
 import type { QueueAPI } from './queue-factory';
@@ -53,15 +52,5 @@ export const createFeedServiceLayer = (queues: QueueAPI) =>
       }
       const queue = queues.get(feedDXN);
       await queue.sync(options);
-    },
-
-    appendByDXN: async (feedDXN: DXN, items: Entity.Unknown[]): Promise<void> => {
-      const queue = queues.get(feedDXN);
-      await queue.append(items);
-    },
-
-    queryByDXN: (feedDXN: DXN, queryOrFilter: Query.Any | Filter.Any) => {
-      const queue = queues.get(feedDXN) as QueueImpl;
-      return queue.query(queryOrFilter as any);
     },
   });
