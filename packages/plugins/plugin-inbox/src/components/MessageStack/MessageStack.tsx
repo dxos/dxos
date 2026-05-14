@@ -87,6 +87,24 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
       return messages?.map((message) => ({ message, labels, onAction }));
     }, [threadGroups, messages, labels, onAction]);
 
+    // In threaded view, the incoming `currentId` is a message ID (set when a
+    // specific message becomes selected), but the tiles are keyed by thread ID.
+    // Map the message ID up to its enclosing thread so the tile actually lights
+    // up. Without this, `aria-current` is never set on a thread tile and
+    // `dx-current`'s background never appears (especially visible when the
+    // Card has `border={false}` and no default surface).
+    const effectiveCurrentId = useMemo(() => {
+      if (!threadGroups || !currentId) {
+        return currentId;
+      }
+      for (const [threadId, threadMessages] of threadGroups) {
+        if (threadId === currentId || threadMessages.some((message) => message.id === currentId)) {
+          return threadId;
+        }
+      }
+      return currentId;
+    }, [threadGroups, currentId]);
+
     const handleCurrentChange = useCallback(
       (id: string | undefined) => {
         if (id) {
@@ -118,7 +136,7 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
         <Mosaic.Container
           asChild
           withFocus
-          currentId={currentId}
+          currentId={effectiveCurrentId}
           onCurrentChange={handleCurrentChange}
           selectedIds={selectedIds}
           onSelectionChange={handleSelectionChange}
@@ -306,7 +324,7 @@ const ThreadTile = forwardRef<HTMLDivElement, ThreadTileProps>(({ data, location
               <DxAvatar hue={hue} hueVariant='surface' variant='square' size={6} fallback={from} />
             </Card.IconBlock>
             <Card.Title classNames='flex items-center'>
-              <span className='grow truncate font-medium'>*********{subject}</span>
+              <span className='grow truncate font-medium'>{subject}</span>
             </Card.Title>
             <Card.Menu />
           </Card.Toolbar>
