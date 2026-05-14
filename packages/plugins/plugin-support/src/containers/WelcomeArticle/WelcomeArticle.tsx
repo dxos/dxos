@@ -10,7 +10,7 @@ import { ASSISTANT_COMPANION_VARIANT } from '@dxos/plugin-assistant';
 import { Button, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
-import { Carousel, type CarouselImage } from '#components';
+import { Carousel } from '#components';
 import { meta } from '#meta';
 import { HelpOperation } from '#types';
 
@@ -18,13 +18,15 @@ export type WelcomeArticleProps = {
   role?: string;
 };
 
+type Slide = { src: string; description: string };
+
 /** Welcome surface — hosts the joyride entry point, a plugin showcase carousel, and the support chat shortcut. */
 export const WelcomeArticle = ({ role }: WelcomeArticleProps = {}) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const manager = usePluginManager();
 
-  const images: CarouselImage[] = useMemo(
+  const slides: Slide[] = useMemo(
     () =>
       manager
         .getPlugins()
@@ -59,7 +61,26 @@ export const WelcomeArticle = ({ role }: WelcomeArticleProps = {}) => {
             <Button variant='primary' onClick={handleOpenChat}>
               {t('open-chat.button')}
             </Button>
-            {images.length > 0 && <Carousel images={images} />}
+            {slides.length > 0 && (
+              <Carousel.Root count={slides.length}>
+                <Carousel.Viewport>
+                  {slides.map((slide, i) => (
+                    <Carousel.Slide key={slide.src} index={i}>
+                      <img
+                        src={slide.src}
+                        alt={slide.description}
+                        className='absolute inset-0 w-full h-full object-cover'
+                        loading='lazy'
+                      />
+                    </Carousel.Slide>
+                  ))}
+                  <Carousel.Previous />
+                  <Carousel.Next />
+                </Carousel.Viewport>
+                <Carousel.Indicators />
+                <Carousel.Caption>{(i) => slides[i]?.description}</Carousel.Caption>
+              </Carousel.Root>
+            )}
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Content>
