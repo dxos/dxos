@@ -17,7 +17,7 @@ import type { QueueAPI } from './queue-factory';
 export const createFeedServiceLayer = (queues: QueueAPI) =>
   Layer.succeed(Feed.FeedService, {
     append: async (feed: Feed.Feed, items: Entity.Unknown[]): Promise<void> => {
-      const feedDXN = Feed.getDXN(feed);
+      const feedDXN = Feed.getQueueDxn(feed);
       if (!feedDXN) {
         throw new Error('Unable to append to feed: make sure feed is stored in the database');
       }
@@ -27,7 +27,7 @@ export const createFeedServiceLayer = (queues: QueueAPI) =>
     },
 
     remove: async (feed: Feed.Feed, ids: string[]): Promise<void> => {
-      const feedDXN = Feed.getDXN(feed);
+      const feedDXN = Feed.getQueueDxn(feed);
       if (!feedDXN) {
         throw new Error('Unable to remove from feed: make sure feed is stored in the database');
       }
@@ -36,7 +36,7 @@ export const createFeedServiceLayer = (queues: QueueAPI) =>
     },
 
     query: (feed: Feed.Feed, queryOrFilter: Query.Any | Filter.Any) => {
-      const feedDXN = Feed.getDXN(feed);
+      const feedDXN = Feed.getQueueDxn(feed);
       if (!feedDXN) {
         throw new Error('Unable to query feed: make sure feed is stored in the database');
       }
@@ -46,7 +46,7 @@ export const createFeedServiceLayer = (queues: QueueAPI) =>
     },
 
     sync: async (feed: Feed.Feed, options?: Feed.SyncOptions): Promise<void> => {
-      const feedDXN = Feed.getDXN(feed);
+      const feedDXN = Feed.getQueueDxn(feed);
       if (!feedDXN) {
         throw new Error('Unable to sync feed: make sure feed is stored in the database');
       }

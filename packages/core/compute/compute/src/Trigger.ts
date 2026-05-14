@@ -54,7 +54,7 @@ export const specQueue = (queueDXN: string): QueueSpec => ({
  * Construct a Queue trigger spec from a Feed object.
  */
 export const specFeed = (feed: Feed.Feed): QueueSpec =>
-  specQueue(Feed.getDXN(feed)?.toString() ?? failedInvariant(new Error('Could not extract DXN from feed')));
+  specQueue(Feed.getQueueDxn(feed)?.toString() ?? failedInvariant(new Error('Could not extract DXN from feed')));
 
 /**
  * Subscription.

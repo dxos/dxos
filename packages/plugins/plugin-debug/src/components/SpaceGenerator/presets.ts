@@ -120,7 +120,7 @@ export const generator = () => ({
         invariant(mailbox, 'Mailbox not found');
         const mailboxFeed = await mailbox.feed?.tryLoad();
         invariant(mailboxFeed, 'Mailbox missing feed reference');
-        const feedDXN = Feed.getDXN(mailboxFeed)?.toString();
+        const feedDXN = Feed.getQueueDxn(mailboxFeed)?.toString();
         invariant(feedDXN, 'Mailbox feed missing DXN');
         const tag = await space.db.query(Filter.type(Tag.Tag, { label: 'Investor' })).first();
         const tagDXN = Obj.getDXN(tag).toString();

@@ -374,7 +374,7 @@ export const selectQueue = Effect.fn(function* () {
           continue;
         }
 
-        const queueDXN = Feed.getDXN(feedObj);
+        const queueDXN = Feed.getQueueDxn(feedObj);
         if (!queueDXN) {
           continue;
         }

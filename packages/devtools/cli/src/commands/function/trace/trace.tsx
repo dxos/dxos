@@ -52,7 +52,7 @@ export const trace = Command.make(
       const properties = objects.at(0);
       invariant(properties, 'SpaceProperties not found');
       const traceFeed = properties.invocationTraceFeed?.target;
-      const queueDXN = traceFeed ? Feed.getDXN(traceFeed) : undefined;
+      const queueDXN = traceFeed ? Feed.getQueueDxn(traceFeed) : undefined;
 
       if (!queueDXN) {
         log.info('trace: no invocationTraceFeed found in space properties', { spaceId: db.spaceId });

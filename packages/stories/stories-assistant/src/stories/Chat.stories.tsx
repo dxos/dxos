@@ -325,7 +325,7 @@ export const WithMail: Story = {
     config: config.remote,
     onInit: async ({ space }) => {
       const feed = space.db.add(Mailbox.make({ name: 'Mailbox' }));
-      const feedDXN = Feed.getDXN(feed)!;
+      const feedDXN = Feed.getQueueDxn(feed)!;
       const queue = space.queues.get<Message.Message>(feedDXN);
       const messages = createTestMailbox();
       await queue.append(messages);
@@ -618,7 +618,7 @@ export const WithTranscription: Story = {
     types: [Transcript.Transcript],
     onInit: async ({ space }) => {
       const feed = space.db.add(Feed.make());
-      const queueDXN = Feed.getDXN(feed);
+      const queueDXN = Feed.getQueueDxn(feed);
       invariant(queueDXN);
       const messages = createTestTranscription();
       await space.queues.get(queueDXN).append(messages);
@@ -746,7 +746,7 @@ export const WithResearchQueue: Story = {
       const feed = space.db.add(Feed.make());
       const researchInputQueue = space.db.add(Obj.make(ResearchInputQueue, { feed: Ref.make(feed) }));
       const orgs = organizations.map(({ id: _, ...org }) => Obj.make(Organization.Organization, org));
-      const feedQueueDXN = Feed.getDXN(feed);
+      const feedQueueDXN = Feed.getQueueDxn(feed);
       invariant(feedQueueDXN);
       await space.queues.get(feedQueueDXN).append(orgs);
 
@@ -768,7 +768,7 @@ export const WithResearchQueue: Story = {
         Trigger.make({
           function: Ref.make(Operation.serialize(AgentPrompt)),
           enabled: true,
-          spec: Trigger.specQueue(Feed.getDXN(feed)!.toString()),
+          spec: Trigger.specQueue(Feed.getQueueDxn(feed)!.toString()),
           input: {
             prompt: Ref.make(researchPrompt),
             input: '{{event.item}}',
@@ -826,7 +826,7 @@ export const WithProject: Story = {
       });
 
       const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox' }));
-      const mailboxDXN = Feed.getDXN(mailbox)!;
+      const mailboxDXN = Feed.getQueueDxn(mailbox)!;
       const queue = space.queues.get<Message.Message>(mailboxDXN);
       const messages = createTestMailbox(people);
       await queue.append(messages);

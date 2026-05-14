@@ -157,7 +157,7 @@ const getFunctionOptions = (scripts: Script.Script[], functions: Operation.Persi
 
 const getFeedQueueOptions = (feeds: Feed.Feed[]) => {
   return feeds.flatMap((feed) => {
-    const queueDXN = Feed.getDXN(feed);
+    const queueDXN = Feed.getQueueDxn(feed);
     if (!queueDXN) {
       return [];
     }
