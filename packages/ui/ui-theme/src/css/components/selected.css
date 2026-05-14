@@ -8,12 +8,27 @@
 @layer dx-components {
   /*
    * Pure visual affordance, no ARIA pair. Combine with dx-selected or dx-current.
+   *
+   * Picks the hover variant matching the element's underlying state:
+   *   - neither aria-selected nor aria-current → hover-surface
+   *   - aria-selected="true"                   → selected-surface-hover
+   *   - aria-current="true"                    → current-surface-hover (wins if both)
+   *
+   * Higher-specificity rules (attribute selectors) override the plain :hover rule,
+   * and `aria-current` is listed last so it beats `aria-selected` at equal specificity.
    */
   .dx-hover {
-    @apply cursor-pointer hover:bg-current-surface-hover! hover:text-current-foreground!;
+    @apply cursor-pointer
+      hover:bg-hover-surface! hover:text-hover-foreground!
+      hover:aria-selected:bg-selected-surface-hover! hover:aria-selected:text-selected-foreground!
+      hover:aria-[current=true]:bg-current-surface-hover! hover:aria-[current=true]:text-current-foreground!;
   }
   .dx-hover-row {
-    @apply group-hover/row:bg-current-surface-hover! group-hover/row:text-current-foreground!;
+    @apply group-hover/row:bg-hover-surface! group-hover/row:text-hover-foreground!
+      group-hover/row:group-aria-selected/row:bg-selected-surface-hover!
+      group-hover/row:group-aria-selected/row:text-selected-foreground!
+      group-hover/row:group-aria-[current=true]/row:bg-current-surface-hover!
+      group-hover/row:group-aria-[current=true]/row:text-current-foreground!;
   }
 
   /*

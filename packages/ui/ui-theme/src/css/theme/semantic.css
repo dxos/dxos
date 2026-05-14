@@ -40,8 +40,8 @@
   --color-input-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-50));
 
   /* current (aria-current) */
-  --color-current-surface: light-dark(var(--color-neutral-100), var(--color-neutral-900));
-  --color-current-surface-hover: light-dark(var(--color-neutral-200), var(--color-neutral-800));
+  --color-current-surface: light-dark(var(--color-neutral-200), var(--color-neutral-800));
+  --color-current-surface-hover: light-dark(var(--color-neutral-300), var(--color-neutral-700));
   --color-current-foreground: light-dark(var(--color-neutral-950), var(--color-neutral-50));
 
   /* selected (aria-selected) */

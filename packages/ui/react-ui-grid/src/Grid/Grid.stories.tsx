@@ -136,7 +136,7 @@ export const SingleCell: Story = {
     limitColumns: 1,
     limitRows: 1,
     columnDefault: { grid: { size: 200, resizeable: false } },
-    rowDefault: { grid: { size: 40, resizeable: false } },
+    rowDefault: { grid: { size: 32, resizeable: false } },
     initialCells: {
       grid: {
         '0,0': { value: 'Focus me' },

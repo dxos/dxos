@@ -33,6 +33,8 @@ export type MessageStackProps = {
   messages?: Message.Message[];
   labels?: MailboxType.Labels;
   currentId?: string;
+  /** IDs of selected messages (forwarded to Mosaic so `aria-selected` fires `dx-selected`). */
+  selectedIds?: ReadonlySet<string>;
   /**
    * When true, messages are grouped by `threadId` and only the most recent message
    * in each thread is displayed. Messages without a threadId form singleton threads.
@@ -45,7 +47,7 @@ export type MessageStackProps = {
  * Card-based message stack component using mosaic layout.
  */
 export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
-  ({ messages, labels, currentId, threads, onAction, ...props }, forwardedRef) => {
+  ({ messages, labels, currentId, selectedIds, threads, onAction, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
     const threadGroups = useMemo(() => {
@@ -97,6 +99,13 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
       [onAction],
     );
 
+    const handleSelectionChange = useCallback(
+      (id: string, _selected: boolean) => {
+        onAction?.({ type: 'select', messageId: id });
+      },
+      [onAction],
+    );
+
     const handleKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
       if (event.key === 'Enter') {
         event.preventDefault();
@@ -106,7 +115,14 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
 
     return (
       <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
-        <Mosaic.Container asChild withFocus currentId={currentId} onCurrentChange={handleCurrentChange}>
+        <Mosaic.Container
+          asChild
+          withFocus
+          currentId={currentId}
+          onCurrentChange={handleCurrentChange}
+          selectedIds={selectedIds}
+          onSelectionChange={handleSelectionChange}
+        >
           <ScrollArea.Root>
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
