@@ -33,6 +33,8 @@ import { createFeedServiceLayer } from '@dxos/echo-db';
 import { acquireReleaseResource, asyncTaskTaggingLayer } from '@dxos/effect';
 import {
   FunctionInvocationService,
+  ImapUnavailable,
+  SmtpUnavailable,
   feedServiceFromQueueServiceLayer,
   QueueService,
   credentialsLayerFromDatabase,
@@ -310,6 +312,11 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
             Layer.provideMerge(space ? Database.layer(space.db) : Database.notAvailable),
           )
           .pipe(
+            // Mail transports (Imap/Smtp): composer-side is unavailable so handlers
+            // declaring `services: [Imap, Smtp]` fail fast when invoked locally.
+            // Workers-side function bundles wire `MailServicesLive` from
+            // `@dxos/plugin-inbox/mail-live` to make them live.
+            Layer.provideMerge(Layer.mergeAll(ImapUnavailable, SmtpUnavailable)),
             Layer.provideMerge(space ? QueueService.layer(space.queues) : QueueService.notAvailable),
             Layer.provideMerge(space ? createFeedServiceLayer(space.queues) : Feed.notAvailable),
             Layer.provideMerge(isDev ? asyncTaskTaggingLayer() : Layer.empty),

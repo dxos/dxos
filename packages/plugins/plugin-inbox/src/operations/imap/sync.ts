@@ -4,17 +4,18 @@
 
 import { subDays } from 'date-fns';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Credential, Trace } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Imap } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Integration } from '@dxos/plugin-integration/types';
 import { Message } from '@dxos/types';
 
-import { Imap, ImapUnavailable, InboxResolver } from '../../services';
+import { InboxResolver } from '../../services';
+import { resolveImapAuth } from '../../services/imap-credentials';
 import { Mailbox, type ImapAccountOptions } from '../../types';
 import { ImapSync } from '../definitions';
 import { mapMessage } from './mapper';
@@ -60,6 +61,7 @@ export default ImapSync.pipe(
   Operation.withHandler(({ integration: integrationRef, mailbox: mailboxRefOptional }) =>
     Effect.gen(function* () {
       const integration = yield* Database.load(integrationRef);
+      const auth = yield* resolveImapAuth(integrationRef);
 
       // Resolve target mailbox(es): explicit ref wins, otherwise sync every
       // mailbox listed on the Integration (single-mailbox-per-integration
@@ -83,19 +85,24 @@ export default ImapSync.pipe(
 
       let total = 0;
       for (const mailboxRef of mailboxRefs) {
-        total += yield* syncOneMailbox(integration, mailboxRef);
+        total += yield* syncOneMailbox(integration, mailboxRef, auth);
       }
       return { newMessages: total };
     }).pipe(
       Effect.scoped,
-      // ImapLive is provided by the edge runtime (functions-runtime-cloudflare) when this operation
-      // executes remotely via `meta.deployedId`. Local invocation falls back to ImapUnavailable.
-      Effect.provide(Layer.mergeAll(InboxResolver.Live, ImapUnavailable)),
+      // `Imap` is provided by the surrounding runtime: composer-side wires
+      // ImapUnavailable (fails-fast), Workers-side function bundles wire ImapLive.
+      // The handler just needs InboxResolver here.
+      Effect.provide(InboxResolver.Live),
     ),
   ),
 );
 
-const syncOneMailbox = (integration: Integration.Integration, mailboxRef: Ref.Ref<Mailbox.Mailbox>) =>
+const syncOneMailbox = (
+  integration: Integration.Integration,
+  mailboxRef: Ref.Ref<Mailbox.Mailbox>,
+  auth: Parameters<typeof Imap.connect>[0],
+) =>
   Effect.gen(function* () {
     const mailbox = yield* Database.load(mailboxRef);
     const { options, targetIndex } = readTargetOptions(integration, mailbox);
@@ -105,7 +112,7 @@ const syncOneMailbox = (integration: Integration.Integration, mailboxRef: Ref.Re
 
     log('imap sync starting', { mailbox: mailboxRef.dxn.toString(), folder, syncBackDays });
 
-    const conn = yield* Imap.connect();
+    const conn = yield* Imap.connect(auth);
     const box = yield* conn.select(folder, 'read');
     const previousCursor = parseCursor(integration.targets[targetIndex]?.cursor);
 

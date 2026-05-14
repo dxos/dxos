@@ -2,17 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
 
-import { Credential } from '@dxos/compute';
 import { Database, type Ref } from '@dxos/echo';
+import { ImapAuth, ImapError, type ImapAuthValues } from '@dxos/functions';
 import { log } from '@dxos/log';
 import { Integration } from '@dxos/plugin-integration/types';
-
-import { ImapAuth, ImapError, type ImapAuthValues } from './imap';
 
 const DEFAULT_PORT_TLS = 993;
 const DEFAULT_PORT_STARTTLS = 143;
@@ -22,10 +18,9 @@ const booleanOrUndefined = (value: unknown): boolean | undefined => (typeof valu
 const stringOrUndefined = (value: unknown): string | undefined => (typeof value === 'string' ? value : undefined);
 
 /**
- * Builds an `ImapAuth` from credentials and per-target options. The only
- * required credential field is the password (`token`). Hostname can come
- * either from the `host` target option or from `accessToken.source`
- * (formatted as `'imap:<host>'`).
+ * Builds an `ImapAuth` from credentials and per-target options. The only required
+ * credential field is the password (`token`). Hostname comes from either the `host`
+ * target option or the `AccessToken.source` prefix (formatted as `'imap:<host>'`).
  */
 const buildAuth = (input: {
   token: string;
@@ -48,81 +43,47 @@ const buildAuth = (input: {
 };
 
 /**
- * Service for accessing IMAP credentials.
+ * Resolve IMAP auth from an Integration ref. Picks the AccessToken whose `source`
+ * starts with `'imap:'` (falls back to the primary token), then merges per-target
+ * transport options from `targets[0].options`.
  *
- * Mirrors `GoogleCredentials`: the wrapping `Integration` owns the
- * `AccessToken`, and sync ops compose `fromIntegration(ref)` once at the
- * operation boundary. Falls back to the database `Credential` service when
- * no Integration is in scope (legacy / agent paths).
+ * The Workers-side `Imap` service takes auth as input, so handlers call this once
+ * per invocation and pass the result to `Imap.connect(auth)`.
  */
-export class ImapCredentials extends Context.Tag('@dxos/plugin-inbox/ImapCredentials')<
-  ImapCredentials,
-  {
-    /** Returns the full IMAP auth bundle. */
-    readonly get: () => Effect.Effect<ImapAuthValues, ImapError>;
-  }
->() {
-  /**
-   * Layer derived from an Integration ref. Loads `accessToken` (password in
-   * `.token`, username in `.account`, host in `.source`) and merges
-   * per-target options (host, port, secure) from `Integration.targets[0].options`.
-   */
-  static fromIntegration = (integrationRef: Ref.Ref<Integration.Integration>) =>
-    Layer.effect(
-      ImapCredentials,
-      Effect.gen(function* () {
-        const integration = yield* Database.load(integrationRef);
-        const primaryRef = integration.accessTokens[0];
-        if (!primaryRef) {
-          return yield* Effect.fail(new ImapError({ reason: 'auth', message: 'integration has no access tokens' }));
-        }
-        const accessToken = yield* Database.load(primaryRef);
-        const options = (integration.targets[0]?.options ?? {}) as Record<string, unknown>;
-        log('using integration imap credentials', {
-          source: accessToken.source,
-          account: accessToken.account,
-        });
-        const auth = buildAuth({
-          token: accessToken.token ?? '',
-          account: accessToken.account,
-          source: accessToken.source ?? 'imap',
-          options,
-        });
-        return { get: () => Effect.succeed(auth) };
-      }),
-    );
+const toImapError = (error: unknown): ImapError =>
+  error instanceof ImapError
+    ? error
+    : new ImapError({ reason: 'auth', message: error instanceof Error ? error.message : String(error) });
 
-  /**
-   * Default layer that pulls credentials from the database `Credential`
-   * service (used by agents / legacy paths). Multi-account / per-host
-   * configuration is not expressible here; prefer `fromIntegration`.
-   */
-  static default = Layer.effect(
-    ImapCredentials,
-    Effect.gen(function* () {
-      const credentialsService = yield* Credential.CredentialsService;
-      return {
-        get: () =>
-          Effect.gen(function* () {
-            const credential = yield* Effect.tryPromise({
-              try: () => credentialsService.getCredential({ service: 'imap' }),
-              catch: (error) =>
-                new ImapError({
-                  reason: 'auth',
-                  message: error instanceof Error ? error.message : String(error),
-                }),
-            });
-            if (!credential.apiKey) {
-              return yield* Effect.fail(
-                new ImapError({ reason: 'auth', message: 'IMAP credential is missing the password (apiKey).' }),
-              );
-            }
-            return buildAuth({ token: credential.apiKey, source: 'imap', options: {} });
-          }),
-      };
-    }),
-  );
+export const resolveImapAuth = (
+  integrationRef: Ref.Ref<Integration.Integration>,
+): Effect.Effect<ImapAuthValues, ImapError, Database.Service> =>
+  Effect.gen(function* () {
+    const integration = yield* Database.load(integrationRef);
+    if (integration.accessTokens.length === 0) {
+      return yield* Effect.fail(new ImapError({ reason: 'auth', message: 'integration has no access tokens' }));
+    }
+    let token = undefined;
+    for (const ref of integration.accessTokens) {
+      const loaded = yield* Database.load(ref);
+      if (loaded.source.startsWith('imap:')) {
+        token = loaded;
+        break;
+      }
+    }
+    if (!token) {
+      token = yield* Database.load(integration.accessTokens[0]);
+    }
 
-  /** Convenience accessor — yields the auth bundle. */
-  static get = () => Effect.flatMap(ImapCredentials, (service) => service.get());
-}
+    const options = (integration.targets[0]?.options ?? {}) as Record<string, unknown>;
+    log('resolved imap auth from integration', {
+      source: token.source,
+      account: token.account,
+    });
+    return buildAuth({
+      token: token.token ?? '',
+      account: token.account,
+      source: token.source ?? 'imap',
+      options,
+    });
+  }).pipe(Effect.mapError(toImapError));

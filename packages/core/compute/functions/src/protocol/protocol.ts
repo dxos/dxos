@@ -31,7 +31,9 @@ import {
   configuredCredentialsLayer,
   credentialsLayerFromDatabase,
   FunctionInvocationService,
+  ImapUnavailable,
   QueueService,
+  SmtpUnavailable,
 } from '../services';
 import { FunctionsAiHttpClient } from './functions-ai-http-client';
 
@@ -201,6 +203,11 @@ class FunctionContext extends Resource {
       functionInvocationService,
       operationServiceLayer,
       aiLayer,
+      // Mail transports default to unavailable in the protocol-level mock layer; the
+      // actual transports are merged in by the per-runtime build (composer wires
+      // ImapUnavailable/SmtpUnavailable, Workers function bundles wire MailServicesLive).
+      ImapUnavailable,
+      SmtpUnavailable,
       // TODO(dmaretskyi): Forward trace events.
       Trace.writerLayerNoop,
     );

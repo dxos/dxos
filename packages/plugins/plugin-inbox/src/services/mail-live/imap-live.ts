@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Imap, ImapError, readPassword } from '../imap';
-import type { ImapBody, ImapConnection, ImapEnvelope } from '../imap';
-import { ImapCredentials } from '../imap-credentials';
+import { Imap, ImapError, readImapPassword } from '@dxos/functions';
+import type { ImapAuthValues, ImapBody, ImapConnection, ImapEnvelope } from '@dxos/functions';
+
 import { ImapClient, type RawEnvelope } from './internal/imap-client';
 
 const errorOf =
@@ -45,49 +45,40 @@ const parseAddressList = (value: string | undefined): { name?: string; address: 
 };
 
 /**
- * Workers-side IMAP Live layer backed by `cloudflare:sockets`. Resolves
- * credentials eagerly at layer-build time (so the per-connect Effect has no
- * residual service requirements beyond `Scope`). Opens a fresh authenticated
- * session per `Imap.connect()`; LOGOUT fires on scope exit.
+ * Workers-side IMAP `Imap` Live layer. Opens a fresh authenticated session per
+ * `connect(auth)` call; LOGOUT fires on scope exit. Concrete service that can be
+ * dropped into a managed runtime context — function-bundle entry points wire this
+ * via `Layer.provideMerge(ImapLive)`.
  */
-export const ImapLive: Layer.Layer<Imap, ImapError, ImapCredentials> = Layer.scoped(
-  Imap,
-  Effect.gen(function* () {
-    const credentials = yield* ImapCredentials;
-    // Resolve auth once at layer-build so the per-connect Effect has no residual
-    // service requirements beyond Scope.
-    const auth = yield* credentials.get();
-    return Imap.of({
-      connect: () =>
-        Effect.acquireRelease(
-          Effect.gen(function* () {
-            const client = new ImapClient({
-              host: auth.host,
-              port: auth.port,
-              auth: {
-                username: auth.username,
-                password: readPassword(auth),
-              },
-            });
-            yield* Effect.tryPromise({
-              try: () => client.connect(),
-              catch: errorOf('connect'),
-            });
-            yield* Effect.tryPromise({
-              try: () => client.login(),
-              catch: errorOf('auth'),
-            });
-            return wrapConnection(client);
-          }),
-          ({ _client }) =>
-            Effect.tryPromise({
-              try: () => _client.logout(),
-              catch: () => undefined,
-            }).pipe(Effect.ignore),
-        ),
-    });
-  }),
-);
+export const ImapLive: Layer.Layer<Imap> = Layer.succeed(Imap, {
+  connect: (auth: ImapAuthValues) =>
+    Effect.acquireRelease(
+      Effect.gen(function* () {
+        const client = new ImapClient({
+          host: auth.host,
+          port: auth.port,
+          auth: {
+            username: auth.username,
+            password: readImapPassword(auth),
+          },
+        });
+        yield* Effect.tryPromise({
+          try: () => client.connect(),
+          catch: errorOf('connect'),
+        });
+        yield* Effect.tryPromise({
+          try: () => client.login(),
+          catch: errorOf('auth'),
+        });
+        return wrapConnection(client);
+      }),
+      ({ _client }) =>
+        Effect.tryPromise({
+          try: () => _client.logout(),
+          catch: () => undefined,
+        }).pipe(Effect.ignore),
+    ),
+});
 
 type WrappedConnection = ImapConnection & { _client: ImapClient };
 

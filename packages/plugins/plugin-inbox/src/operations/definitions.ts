@@ -8,6 +8,7 @@ import { AiService } from '@dxos/ai';
 import { Capability } from '@dxos/app-framework';
 import { Credential, Operation, Trace } from '@dxos/compute';
 import { Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Imap, Smtp } from '@dxos/functions';
 import { Integration } from '@dxos/plugin-integration/types';
 import { Actor, Message } from '@dxos/types';
 
@@ -141,7 +142,7 @@ export const ImapSync = Operation.make({
   output: Schema.Struct({
     newMessages: Schema.Number,
   }),
-  services: [Database.Service, Feed.FeedService, Credential.CredentialsService, Trace.TraceService],
+  services: [Database.Service, Feed.FeedService, Credential.CredentialsService, Trace.TraceService, Imap],
 });
 
 export const ImapTestConnection = Operation.make({
@@ -170,7 +171,7 @@ export const ImapTestConnection = Operation.make({
       exists: Schema.optional(Schema.Undefined),
     }),
   ),
-  services: [Database.Service, Credential.CredentialsService],
+  services: [Database.Service, Credential.CredentialsService, Imap],
 });
 
 export const GoogleMailSync = Operation.make({
@@ -249,7 +250,7 @@ export const SmtpSend = Operation.make({
     id: Schema.String,
     threadId: Schema.String,
   }),
-  services: [Database.Service, Credential.CredentialsService],
+  services: [Database.Service, Credential.CredentialsService, Smtp],
 });
 
 /**

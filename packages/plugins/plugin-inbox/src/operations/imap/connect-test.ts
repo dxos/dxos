@@ -7,19 +7,26 @@ import * as Effect from 'effect/Effect';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Credential } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
+import { Imap } from '@dxos/functions';
 import { log } from '@dxos/log';
 
-import { Imap, ImapUnavailable } from '../../services';
+import { resolveImapAuth } from '../../services/imap-credentials';
 import { ImapTestConnection } from '../definitions';
 
 /**
  * Connect → SELECT INBOX → logout. Surfaces auth/TLS/protocol errors before
  * a full sync, used by the credential form's "Test connection" button.
+ *
+ * `Imap` is provided by the surrounding managed runtime (composer wires
+ * `ImapUnavailable`, Workers bundles wire `ImapLive`). Declared as a required
+ * service on the operation definition so the OperationInvoker resolves it
+ * from the per-space runtime context.
  */
 export default ImapTestConnection.pipe(
-  Operation.withHandler(({ folder = 'INBOX' }) =>
+  Operation.withHandler(({ integration: integrationRef, folder = 'INBOX' }) =>
     Effect.gen(function* () {
-      const conn = yield* Imap.connect();
+      const auth = yield* resolveImapAuth(integrationRef);
+      const conn = yield* Imap.connect(auth);
       const box = yield* conn.select(folder, 'read');
       log('imap test connection ok', {
         host: box.name,
@@ -34,9 +41,6 @@ export default ImapTestConnection.pipe(
       };
     }).pipe(
       Effect.scoped,
-      // ImapLive is provided by the edge runtime (functions-runtime-cloudflare) when this operation
-      // executes remotely via `meta.deployedId`. Local invocation falls back to ImapUnavailable.
-      Effect.provide(ImapUnavailable),
       Effect.catchTag('ImapError', (error) =>
         Effect.succeed({
           ok: false as const,
