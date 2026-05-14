@@ -69,7 +69,11 @@ const DatabaseLayerSpec = LayerSpec.make(
         const space = client.spaces.get(context.space);
         invariant(space, `space not found on client: ${context.space}`);
         yield* Effect.promise(() => space.waitUntilReady());
-        return Layer.mergeAll(Database.layer(space.db), QueueService.layer(space.queues), createFeedServiceLayer(space.queues));
+        return Layer.mergeAll(
+          Database.layer(space.db),
+          QueueService.layer(space.queues),
+          createFeedServiceLayer(space.queues),
+        );
       }),
     ),
 );

@@ -10,15 +10,13 @@ import { OpaqueToolkit } from '@dxos/ai';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { ClientService } from '@dxos/client';
-import { Blueprint, LayerSpec, Operation, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
+import { Blueprint, LayerSpec, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
-import { todo } from '@dxos/debug';
 import { Database, Feed } from '@dxos/echo';
-import { FunctionInvocationService, QueueService } from '@dxos/functions';
+import { QueueService } from '@dxos/functions';
 import {
   AgentService,
   FeedTraceSink,
-  FunctionImplementationResolver,
   RemoteFunctionExecutionService,
   TriggerDispatcher,
   TriggerStateStore,

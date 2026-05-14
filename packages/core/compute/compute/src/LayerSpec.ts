@@ -3,14 +3,11 @@
 //
 
 import * as Context from 'effect/Context';
-import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Types from 'effect/Types';
 
-import { Database } from '@dxos/echo';
 import { SpaceId, DXN } from '@dxos/keys';
 
-import { CredentialsService } from './Credential';
 import type * as Process from './Process';
 
 // @import-as-namespace

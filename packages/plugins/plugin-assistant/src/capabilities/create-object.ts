@@ -2,11 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
-import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
-import * as Schema from 'effect/Schema';
 
 import { Capability, Capabilities } from '@dxos/app-framework';
 import { Agent, AgentBlueprint, Chat } from '@dxos/assistant-toolkit';

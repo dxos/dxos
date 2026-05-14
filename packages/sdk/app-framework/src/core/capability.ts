@@ -3,9 +3,9 @@
 //
 
 import { type Atom } from '@effect-atom/atom-react';
-import { Layer } from 'effect';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import type * as CapabilityManager from './capability-manager';
 import type * as Plugin from './plugin';
