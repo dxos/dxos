@@ -300,13 +300,13 @@ const ThreadTile = forwardRef<HTMLDivElement, ThreadTileProps>(({ data, location
   return (
     <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={threadId} data={data} location={location}>
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Card.Root ref={forwardedRef} fullWidth onClick={handleThreadClick}>
+        <Card.Root ref={forwardedRef} fullWidth border={false} onClick={handleThreadClick}>
           <Card.Toolbar>
             <Card.IconBlock>
               <DxAvatar hue={hue} hueVariant='surface' variant='square' size={6} fallback={from} />
             </Card.IconBlock>
             <Card.Title classNames='flex items-center'>
-              <span className='grow truncate font-medium'>{subject}</span>
+              <span className='grow truncate font-medium'>*********{subject}</span>
             </Card.Title>
             <Card.Menu />
           </Card.Toolbar>
