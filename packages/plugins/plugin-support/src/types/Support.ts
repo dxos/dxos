@@ -9,6 +9,7 @@ import { Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
 
 export const BLUEPRINT_KEY = 'org.dxos.blueprint.support';
+export const COMPOSER_BLUEPRINT_KEY = 'org.dxos.blueprint.composer';
 
 export const TicketStatus = Schema.Literal('open', 'in_progress', 'resolved');
 export type TicketStatus = Schema.Schema.Type<typeof TicketStatus>;
@@ -79,7 +80,7 @@ export const Welcome = Schema.Struct({}).pipe(
     icon: 'ph--lifebuoy--regular',
     hue: 'rose',
   }),
-  BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  BlueprintsAnnotation.set([COMPOSER_BLUEPRINT_KEY, BLUEPRINT_KEY]),
   // Keep out of the navtree's typed branches — surfaced only via the welcome virtual node.
   SystemTypeAnnotation.set(true),
 );

@@ -9,11 +9,16 @@ import { AppCapabilities } from '@dxos/app-toolkit';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Blueprint } from '@dxos/compute';
 
-import { SupportBlueprint } from '#blueprints';
+import { ComposerBlueprint, SupportBlueprint } from '#blueprints';
 
 const blueprintDefinition = Capability.makeModule<
   [],
   Capability.Capability<typeof AppCapabilities.BlueprintDefinition>[]
->(() => Effect.succeed([Capability.contributes(AppCapabilities.BlueprintDefinition, SupportBlueprint)]));
+>(() =>
+  Effect.succeed([
+    Capability.contributes(AppCapabilities.BlueprintDefinition, SupportBlueprint),
+    Capability.contributes(AppCapabilities.BlueprintDefinition, ComposerBlueprint),
+  ]),
+);
 
 export default blueprintDefinition;
