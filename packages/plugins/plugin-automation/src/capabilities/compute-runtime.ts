@@ -303,6 +303,14 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
                       )
                     : RemoteFunctionExecutionService.layerMock,
                 ),
+                // FunctionInvocationServiceLayer now consults OperationRegistry to auto-route
+                // statically-defined operations to remote execution when a PersistentOperation
+                // record with deployedId exists in the space. OperationRegistry.layer needs the
+                // OperationHandlerProvider for its in-memory fallback, so provide that here too
+                // (the outer chain still provides it for non-FunctionInvocationService consumers).
+                Layer.provideMerge(
+                  OperationRegistry.layer.pipe(Layer.provide(OperationHandlerSet.provide(operationHandlers))),
+                ),
               ),
             ),
             Layer.provideMerge(opaqueToolkitProvider),
