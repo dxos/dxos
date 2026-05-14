@@ -313,7 +313,7 @@ const RawTreeItem = <T extends { id: string } = any>({
         //   https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current#description
         aria-current={current ? ('' as 'page') : undefined}
         classNames={mx(
-          'grid grid-cols-subgrid col-[tree-row] mt-0.5 is-current:bg-active-surface',
+          'grid grid-cols-subgrid col-[tree-row] mt-0.5 is-current:bg-current-surface',
           hoverableControls,
           hoverableFocusedKeyboardControls,
           hoverableFocusedWithinControls,

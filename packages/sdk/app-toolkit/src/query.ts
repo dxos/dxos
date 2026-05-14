@@ -148,7 +148,7 @@ export const getQueryTarget = (query: QueryAST.Query, space?: Space) => {
       }
       const result = Option.fromNullable(from.scope.feeds).pipe(
         Option.flatMap((feeds) => Array.head(feeds)),
-        Option.flatMap((feedDxn) => Option.fromNullable(DXN.tryParse(String(feedDxn)))),
+        Option.flatMap((feedDXN) => Option.fromNullable(DXN.tryParse(String(feedDXN)))),
         Option.flatMap((parsed) => {
           const q = parsed.asQueueDXN();
           if (!q || !Key.ObjectId.isValid(q.queueId)) {

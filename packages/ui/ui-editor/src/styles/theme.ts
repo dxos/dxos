@@ -227,6 +227,7 @@ export const baseTheme = EditorView.baseTheme({
     textDecorationColor: 'var(--color-separator)',
     textUnderlineOffset: '2px',
     borderRadius: '.125rem',
+    cursor: 'pointer',
   },
   '.cm-link > span': {
     color: 'var(--color-accent-text)',
@@ -266,12 +267,12 @@ export const baseTheme = EditorView.baseTheme({
     padding: '4px',
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected]': {
-    background: 'var(--color-active-surface)',
-    color: 'var(--color-base-surface-text)',
+    background: 'var(--color-current-surface)',
+    color: 'var(--color-base-foreground)',
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > completion-section': {
     paddingLeft: '4px !important',
-    color: 'var(--color-base-surface-text)',
+    color: 'var(--color-base-foreground)',
   },
 
   /**
@@ -291,7 +292,7 @@ export const baseTheme = EditorView.baseTheme({
     padding: '0 4px',
   },
   '.cm-completionMatchedText': {
-    color: 'var(--color-base-surface-text)',
+    color: 'var(--color-base-foreground)',
     textDecoration: 'none !important',
   },
 
@@ -327,7 +328,7 @@ export const baseTheme = EditorView.baseTheme({
     backgroundColor: 'var(--color-input-surface)',
   },
   '.cm-panel input:focus, .cm-panel button:focus': {
-    outline: '1px solid var(--color-neutral-focus-indicator)',
+    outline: '1px solid var(--color-focus-ring-subtle)',
   },
   '.cm-panel label': {
     display: 'inline-flex',
@@ -340,7 +341,7 @@ export const baseTheme = EditorView.baseTheme({
     height: '8px',
     marginRight: '6px !important',
     padding: '2px !important',
-    color: 'var(--color-neutral-focus-indicator)',
+    color: 'var(--color-focus-ring-subtle)',
   },
   '.cm-panel button': {
     '&:hover': {

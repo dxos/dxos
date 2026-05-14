@@ -13,10 +13,10 @@ export const resolvedBgColor = (status: Invitation.State) =>
 
 export const resolvedTextColor = (status: Invitation.State) =>
   status === Invitation.State.ERROR
-    ? 'text-error-surface-text'
+    ? 'text-error-foreground'
     : status === Invitation.State.CANCELLED || status === Invitation.State.TIMEOUT
-      ? 'text-warning-surface-text'
-      : 'text-success-surface-text';
+      ? 'text-warning-foreground'
+      : 'text-success-foreground';
 
 export const resolvedStrokeColor = (status: Invitation.State) =>
   status === Invitation.State.ERROR

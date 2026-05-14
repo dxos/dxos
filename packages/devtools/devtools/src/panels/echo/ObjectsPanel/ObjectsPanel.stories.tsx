@@ -160,7 +160,7 @@ export const WithTree: Story = {
       return <div>No space</div>;
     }
     return (
-      <div className='text-base-surface-text'>
+      <div className='text-base-foreground'>
         <ObjectsTree db={space.db} />
       </div>
     );

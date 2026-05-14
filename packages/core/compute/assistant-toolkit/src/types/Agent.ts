@@ -14,7 +14,6 @@ import { Annotation, Database, Feed, Format, Obj, Ref, Relation, Type } from '@d
 import { type ObjectNotFoundError } from '@dxos/echo/Err';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { acquireReleaseResource } from '@dxos/effect';
-import { QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
 
@@ -126,7 +125,7 @@ export const makeInitialized = (
       contextObjects?: Ref.Ref<Obj.Any>[];
     },
   blueprint: Blueprint.Blueprint,
-): Effect.Effect<Agent, never, QueueService | Feed.FeedService | Database.Service> =>
+): Effect.Effect<Agent, never, Feed.FeedService | Database.Service> =>
   Effect.gen(function* () {
     const agent = Obj.make(Agent, {
       ...props,
@@ -163,11 +162,11 @@ export const makeInitialized = (
       }),
     );
 
-    const inputQueue = yield* QueueService.createQueue();
+    const inputFeed = yield* Database.add(Feed.make());
 
     Obj.update(agent, (agent) => {
       agent.chat = Ref.make(chat);
-      agent.feed = Ref.fromDXN(inputQueue.dxn);
+      agent.feed = Ref.make(inputFeed);
     });
 
     return agent;

@@ -29,7 +29,6 @@ import { GalleryPlugin } from '@dxos/plugin-gallery/plugin';
 import { GamePlugin } from '@dxos/plugin-game/plugin';
 import { GitHubPlugin } from '@dxos/plugin-github/plugin';
 import { GraphPlugin } from '@dxos/plugin-graph/plugin';
-import { HelpPlugin } from '@dxos/plugin-help/plugin';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
 import { IntegrationPlugin } from '@dxos/plugin-integration/plugin';
 import { IrohBeaconPlugin } from '@dxos/plugin-iroh-beacon/plugin';
@@ -65,6 +64,7 @@ import { SpacetimePlugin } from '@dxos/plugin-spacetime/plugin';
 import { SpotlightPlugin } from '@dxos/plugin-spotlight/plugin';
 import { StackPlugin } from '@dxos/plugin-stack/plugin';
 import { StatusBarPlugin } from '@dxos/plugin-status-bar/plugin';
+import { SupportPlugin } from '@dxos/plugin-support/plugin';
 import { TablePlugin } from '@dxos/plugin-table/plugin';
 import { ThemePlugin } from '@dxos/plugin-theme/plugin';
 import { ThreadPlugin } from '@dxos/plugin-thread/plugin';
@@ -117,8 +117,8 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
     ClientPlugin.meta.id,
     !isTauri && CrxPlugin.meta.id,
     GraphPlugin.meta.id,
-    HelpPlugin.meta.id,
     IntegrationPlugin.meta.id,
+    SupportPlugin.meta.id,
     layoutPluginId,
     isTauri && !isMobile && !isPopover && NativePlugin.meta.id,
     OperationPlugin.meta.id,
@@ -227,7 +227,6 @@ export const getPlugins = ({
     GamePlugin(),
     GitHubPlugin(),
     GraphPlugin(),
-    HelpPlugin({ steps }),
     InboxPlugin(),
     IrohBeaconPlugin(),
     OperationPlugin(),
@@ -271,6 +270,7 @@ export const getPlugins = ({
     CodePlugin(),
     StackPlugin(),
     StatusBarPlugin(),
+    SupportPlugin({ helpSteps: steps }),
     TablePlugin(),
     ThemePlugin({
       appName: 'Composer',

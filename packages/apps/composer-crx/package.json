@@ -52,6 +52,7 @@
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/vite-plugin-icons": "workspace:*",
+    "@dxos/vite-plugin-shutdown": "workspace:*",
     "@types/chrome": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

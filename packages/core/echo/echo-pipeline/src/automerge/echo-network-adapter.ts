@@ -27,6 +27,7 @@ import {
   type ShouldAdvertiseProps,
   type ShouldSyncCollectionProps,
 } from './echo-replicator';
+import { PeerNotFoundError } from './errors';
 import {
   type CollectionQueryMessage,
   type CollectionStateMessage,
@@ -224,7 +225,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   async pushBundle(ctx: Context, peerId: PeerId, bundle: { documentId: DocumentId; data: Uint8Array; heads: Heads }[]) {
     const connection = this._connections.get(peerId);
     if (!connection) {
-      throw new Error('Connection not found.');
+      throw new PeerNotFoundError({ context: { peerId } });
     }
     return connection.connection.pushBundle!(ctx, bundle);
   }
@@ -232,7 +233,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   async pullBundle(ctx: Context, peerId: PeerId, docHeads: Record<DocumentId, Heads>) {
     const connection = this._connections.get(peerId);
     if (!connection) {
-      throw new Error('Connection not found.');
+      throw new PeerNotFoundError({ context: { peerId } });
     }
     return connection.connection.pullBundle!(ctx, docHeads);
   }
@@ -240,7 +241,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   private _send(message: Message): void {
     const connectionEntry = this._connections.get(message.targetId);
     if (!connectionEntry) {
-      throw new Error('Connection not found.');
+      throw new PeerNotFoundError({ context: { peerId: message.targetId } });
     }
 
     // TODO(dmaretskyi): Find a way to enforce backpressure on AM-repo.
