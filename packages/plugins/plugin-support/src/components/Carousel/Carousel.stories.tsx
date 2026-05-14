@@ -11,10 +11,22 @@ import { translations } from '#translations';
 import { Carousel } from './Carousel';
 
 const SAMPLE_IMAGES = [
-  { src: 'https://dxos.network/plugin-details-chess-dark.png', label: 'Chess' },
-  { src: 'https://dxos.network/plugin-details-markdown-dark.png', label: 'Markdown' },
-  { src: 'https://dxos.network/plugin-details-sheet-dark.png', label: 'Sheet' },
-  { src: 'https://dxos.network/plugin-details-sketch-dark.png', label: 'Sketch' },
+  {
+    src: 'https://dxos.network/plugin-details-chess-dark.png',
+    label: 'Chess',
+  },
+  {
+    src: 'https://dxos.network/plugin-details-markdown-dark.png',
+    label: 'Markdown',
+  },
+  {
+    src: 'https://dxos.network/plugin-details-sheet-dark.png',
+    label: 'Sheet',
+  },
+  {
+    src: 'https://dxos.network/plugin-details-sketch-dark.png',
+    label: 'Sketch',
+  },
 ];
 
 const meta = {

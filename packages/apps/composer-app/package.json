@@ -254,6 +254,7 @@
     "@dxos/vite-plugin-icons": "workspace:*",
     "@dxos/vite-plugin-import-source": "workspace:*",
     "@dxos/vite-plugin-log": "workspace:*",
+    "@dxos/vite-plugin-shutdown": "workspace:*",
     "@dxos/web-context": "workspace:*",
     "@dxos/web-context-react": "workspace:*",
     "@dxos/web-context-solid": "workspace:*",

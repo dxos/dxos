@@ -56,10 +56,10 @@ export const WelcomeArticle = ({ role }: WelcomeArticleProps = {}) => {
           <ScrollArea.Viewport classNames='p-8 flex flex-col items-center gap-6'>
             <h1 className='text-2xl font-semibold'>{t('welcome.title')}</h1>
             <p className='max-w-prose text-center text-description'>{t('welcome.description')}</p>
-            {images.length > 0 && <Carousel images={images} />}
             <Button variant='primary' onClick={handleOpenChat}>
               {t('open-chat.button')}
             </Button>
+            {images.length > 0 && <Carousel images={images} />}
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Content>

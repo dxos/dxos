@@ -745,6 +745,9 @@
       "path": "tools/vite-plugin-log/tsconfig.json"
     },
     {
+      "path": "tools/vite-plugin-shutdown/tsconfig.json"
+    },
+    {
       "path": "tools/x/tsconfig.json"
     },
     {
