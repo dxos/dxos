@@ -20,7 +20,6 @@ import {
 } from '@dxos/plugin-integration/types';
 import { OAuthProvider } from '@dxos/protocols';
 import { AccessToken } from '@dxos/types';
-import { isTauri } from '@dxos/util';
 
 import {
   GMAIL_PROVIDER_ID,
@@ -256,30 +255,15 @@ export default Capability.makeModule(
         sync: SyncContacts,
         onTokenCreated: calendarOnTokenCreated,
       },
-      // IMAP is gated to the native (Tauri) app for now: the in-tree
-      // `node:net` shim only resolves inside the Tauri webview. The plain
-      // web build has no reachable socket transport, so we keep the
-      // provider hidden until either the desktop app is running or a
-      // remote `compute-runtime` target gains `node:net` support.
-      ...(isTauri()
-        ? [
-            {
-              id: IMAP_PROVIDER_ID,
-              source: IMAP_INTEGRATION_SOURCE_PREFIX,
-              label: 'IMAP',
-              // No `oauth` — IMAP uses username + password / app password.
-              credentialForm: imapCredentialForm,
-              optionsSchema: ImapAccountOptions,
-              // Route through SyncMailbox (declares only Capability.Service)
-              // so the app's OperationInvoker can validate it; the handler
-              // then dispatches by `integration.providerId` to ImapFunctions
-              // .Sync via the space-scoped compute runtime where the four
-              // services (Database, Feed, Credential, Trace) are available.
-              sync: SyncMailbox,
-              onTokenCreated: imapOnTokenCreated,
-            },
-          ]
-        : []),
+      {
+        id: IMAP_PROVIDER_ID,
+        source: IMAP_INTEGRATION_SOURCE_PREFIX,
+        label: 'IMAP',
+        credentialForm: imapCredentialForm,
+        optionsSchema: ImapAccountOptions,
+        sync: SyncMailbox,
+        onTokenCreated: imapOnTokenCreated,
+      },
     ]);
   }),
 );

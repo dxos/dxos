@@ -6,7 +6,6 @@ import React from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
 import { composable } from '@dxos/ui-theme';
-import { isTauri } from '@dxos/util';
 
 import { meta } from '#meta';
 import { InboxOperation } from '#operations';
@@ -38,10 +37,6 @@ InitializeMailbox.displayName = 'InitializeMailbox';
 
 export const InitializeMailboxAction = ({ mailbox }: InitializeMailboxProps) => {
   const { t } = useTranslation(meta.id);
-  // IMAP support is gated to the native (Tauri) app for now — the in-tree
-  // `node:net` shim only resolves inside the desktop webview. Web users
-  // continue to see just the Gmail connect button.
-  const showImap = isTauri();
   return (
     <>
       <InitializeAction
@@ -51,15 +46,13 @@ export const InitializeMailboxAction = ({ mailbox }: InitializeMailboxProps) => 
         operation={InboxOperation.SyncMailbox}
         syncLabel={t('sync-mailbox.label')}
       />
-      {showImap && (
-        <InitializeAction
-          target={mailbox}
-          targetKey='mailbox'
-          providerId={IMAP_PROVIDER_ID}
-          operation={InboxOperation.SyncMailbox}
-          syncLabel={t('sync-mailbox.label')}
-        />
-      )}
+      <InitializeAction
+        target={mailbox}
+        targetKey='mailbox'
+        providerId={IMAP_PROVIDER_ID}
+        operation={InboxOperation.SyncMailbox}
+        syncLabel={t('sync-mailbox.label')}
+      />
     </>
   );
 };

@@ -128,7 +128,6 @@
     "@tauri-apps/plugin-deep-link": "catalog:",
     "@tauri-apps/plugin-haptics": "catalog:",
     "@tauri-apps/plugin-os": "catalog:",
-    "@types/readable-stream": "catalog:",
     "date-fns": "catalog:",
     "effect": "catalog:",
     "isomorphic-fetch": "catalog:",
@@ -137,7 +136,6 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-joyride": "catalog:",
-    "readable-stream": "catalog:",
     "solid-js": "catalog:",
     "workbox-precaching": "catalog:",
     "workbox-routing": "catalog:"
