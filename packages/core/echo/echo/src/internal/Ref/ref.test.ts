@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 
 import { EchoId, ObjectId } from '@dxos/keys';
 
-import { EchoObjectSchema, getObjectDXN } from '../Entity';
+import { EchoObjectSchema, getObjectEchoId } from '../Entity';
 import { createObject } from '../Obj';
 import { Ref, getReferenceAst } from './ref';
 
@@ -62,7 +62,7 @@ describe('Ref', () => {
       name: 'John Doe',
       tasks: [
         {
-          '/': getObjectDXN(task as any)!.toString(),
+          '/': getObjectEchoId(task as any)!.toString(),
           target: JSON.parse(JSON.stringify(task)),
         },
       ],
@@ -81,7 +81,7 @@ describe('Ref', () => {
         keys: [],
       },
       name: 'John Doe',
-      tasks: [{ '/': getObjectDXN(task)!.toString() }],
+      tasks: [{ '/': getObjectEchoId(task)!.toString() }],
     });
   });
 

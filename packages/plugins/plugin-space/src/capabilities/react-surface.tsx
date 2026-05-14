@@ -176,8 +176,8 @@ export default Capability.makeModule(
 
           return (
             <ObjectCardStack
-              key={Obj.getDXN(data.companionTo).toString()}
-              objectId={Obj.getDXN(data.companionTo).toString()}
+              key={Obj.getEchoId(data.companionTo)}
+              objectId={Obj.getEchoId(data.companionTo)}
               view={view}
               ref={ref}
             />

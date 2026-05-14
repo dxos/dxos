@@ -93,7 +93,7 @@ export default Capability.makeModule(
 
           // For message paths, verify the message exists in the feed or as a mailbox-scoped draft.
           const mailbox = mailboxOption.value as Mailbox.Mailbox;
-          const mailboxDxnString = Obj.getDXN(mailbox).toString();
+          const mailboxDxnString = Obj.getEchoId(mailbox);
 
           return Effect.tryPromise(async () => {
             // TODO(wittjosiah): This is awkward, clean it up.
@@ -101,7 +101,7 @@ export default Capability.makeModule(
               const feed = await mailbox.feed.load();
               const messages = await space.db.query(Query.select(Filter.id(messageId)).from(feed)).run();
               if (messages.length > 0) {
-                return Option.some(EchoId.parse(Obj.getDXN(messages[0]).toString()));
+                return Option.some(EchoId.parse(Obj.getEchoId(messages[0])));
               }
             }
 
@@ -109,7 +109,7 @@ export default Capability.makeModule(
               | Message.Message
               | undefined;
             if (fromDb && DraftMessage.belongsTo(fromDb, mailboxDxnString)) {
-              return Option.some(EchoId.parse(Obj.getDXN(fromDb).toString()));
+              return Option.some(EchoId.parse(Obj.getEchoId(fromDb)));
             }
 
             return Option.none<EchoId.EchoId>();

@@ -41,7 +41,7 @@ describe('partitionByKeepBound', () => {
 
   test('preserves starred posts beyond the keep bound', () => {
     const starTag = Obj.make(Tag.Tag, { label: Subscription.STAR_TAG });
-    const starDxn = Obj.getDXN(starTag).toString();
+    const starDxn = Obj.getEchoId(starTag);
     const posts = [
       makePost({ title: 'A-old-starred', published: '2026-04-01T00:00:00Z', starred: true, starDxn }),
       makePost({ title: 'B', published: '2026-04-02T00:00:00Z' }),
@@ -69,7 +69,7 @@ describe('partitionByKeepBound', () => {
 
   test('keep bound of 0 drops all non-starred posts', () => {
     const starTag = Obj.make(Tag.Tag, { label: Subscription.STAR_TAG });
-    const starDxn = Obj.getDXN(starTag).toString();
+    const starDxn = Obj.getEchoId(starTag);
     const posts = [
       makePost({ title: 'A', published: '2026-04-01T00:00:00Z' }),
       makePost({ title: 'B-starred', published: '2026-04-02T00:00:00Z', starred: true, starDxn }),

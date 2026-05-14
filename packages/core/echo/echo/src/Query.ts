@@ -415,7 +415,7 @@ class QueryClass implements Any {
       const dxn = Feed.getQueueDxn(feed);
       if (!dxn) {
         throw new TypeError(
-          `Query.from() expects persisted Feed objects with a queue DXN; got feed without a space (id=${Obj.getDXN(feed).toString()}).`,
+          `Query.from() expects persisted Feed objects with a queue DXN; got feed without a space (id=${Obj.getEchoId(feed)}).`,
         );
       }
       return dxn.toString();

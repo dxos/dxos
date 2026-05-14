@@ -50,7 +50,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
       });
 
       return {
-        id: Obj.getDXN(object).toString(),
+        id: Obj.getEchoId(object),
         subject: [subject],
         object,
       };

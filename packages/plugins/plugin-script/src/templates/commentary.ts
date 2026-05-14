@@ -125,10 +125,10 @@ export default Commentary.pipe(
               // TODO(wittjosiah): This is a workaround for getTarget not handling deleted objects.
               try {
                 log.info('relation', {
-                  source: Obj.getDXN(Relation.getTarget(relation)).toString(),
-                  game: Obj.getDXN(chessGame).toString(),
+                  source: Obj.getEchoId(Relation.getTarget(relation)),
+                  game: Obj.getEchoId(chessGame),
                 });
-                return Obj.getDXN(Relation.getTarget(relation)).toString() === Obj.getDXN(chessGame).toString();
+                return Obj.getEchoId(Relation.getTarget(relation)) === Obj.getEchoId(chessGame);
               } catch {
                 return false;
               }
@@ -197,12 +197,12 @@ export default Commentary.pipe(
           });
         }
 
-        log.info('result', { documentId: Obj.getDXN(document).toString(), commentary });
+        log.info('result', { documentId: Obj.getEchoId(document), commentary });
 
         yield* Database.flush();
 
         return {
-          documentId: Obj.getDXN(document).toString(),
+          documentId: Obj.getEchoId(document),
           commentary,
         };
       },

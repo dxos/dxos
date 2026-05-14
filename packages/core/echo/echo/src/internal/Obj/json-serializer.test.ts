@@ -12,7 +12,7 @@ import { getSchemaDXN, getSchemaTypename, getTypeDXN, getTypename } from '../Ann
 import { getMetaChecked } from '../common/api';
 import { makeObject } from '../common/proxy';
 import { ATTR_TYPE, EntityKind, KindId, MetaId, TypeId, getSchema } from '../common/types';
-import { RelationSourceId, RelationTargetId, getObjectDXN } from '../Entity';
+import { RelationSourceId, RelationTargetId, getObjectEchoId } from '../Entity';
 import { Ref, StaticRefResolver } from '../Ref';
 import { createObject } from './create-object';
 import { objectFromJSON, objectToJSON } from './json-serializer';
@@ -66,7 +66,7 @@ describe('Object JSON serializer', () => {
     });
     expect(getTypeDXN(contactFromJson)?.toString()).toBe(getSchemaDXN(TestSchema.Person)!.toString());
     expect(getTypename(contactFromJson)).toBe(getSchemaTypename(TestSchema.Person));
-    expect(getObjectDXN(contactFromJson)?.toString()).toEqual(getObjectDXN(contact)?.toString());
+    expect(getObjectEchoId(contactFromJson)?.toString()).toEqual(getObjectEchoId(contact)?.toString());
     expect(getSchema(contactFromJson)).toEqual(TestSchema.Person);
 
     expect(taskFromJson.id).toBe(task.id);
@@ -91,7 +91,7 @@ describe('Object JSON serializer', () => {
     expect(contactFromJson.name).toBe('Alice');
     expect(getSchema(contactFromJson)).toBeUndefined();
     expect(getTypename(contactFromJson)).toEqual(getSchemaTypename(TestSchema.Person));
-    expect(getObjectDXN(contactFromJson)).toEqual(getObjectDXN(contact));
+    expect(getObjectEchoId(contactFromJson)).toEqual(getObjectEchoId(contact));
     expect(getTypeDXN(contactFromJson)).toEqual(getSchemaDXN(TestSchema.Person));
   });
 

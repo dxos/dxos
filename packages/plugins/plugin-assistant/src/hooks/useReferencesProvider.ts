@@ -36,9 +36,9 @@ export const useReferencesProvider = (space?: Space): ReferencesProvider | undef
             // })
             .filter((object) => stringMatch(query, Obj.getLabel(object as any) ?? ''))
             // TODO(dmaretskyi): `Type.getDXN` (at the point of writing) didn't work here as it was schema-only.
-            .filter((object) => !!Obj.getDXN(object as Obj.Unknown))
+            .filter((object) => !!Obj.getEchoId(object as Obj.Unknown))
             .map((object) => ({
-              uri: Obj.getDXN(object as any).toString(),
+              uri: Obj.getEchoId(object as any),
               label: Obj.getLabel(object as any) ?? '',
             }))
         );

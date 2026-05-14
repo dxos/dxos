@@ -137,7 +137,7 @@ export const layer = (opts?: {
               return cached;
             }
 
-            const target = Obj.getDXN(feed).toString();
+            const target = Obj.getEchoId(feed);
             const executable = AgentProcess({
               systemPrompt: opts?.systemPrompt,
               model: options?.model ?? opts?.model,

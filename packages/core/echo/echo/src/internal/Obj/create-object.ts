@@ -17,7 +17,7 @@ import {
   RelationTargetDXNId,
   RelationTargetId,
   assertObjectModel,
-  getObjectDXN,
+  getObjectEchoId,
 } from '../Entity';
 import { attachedTypedObjectInspector } from './inspect';
 import { attachTypedJsonSerializer } from './json-serializer';
@@ -83,8 +83,8 @@ export const createObject = <S extends Schema.Schema.AnyNoContext>(
 
   // Relation.
   if (kind === EntityKind.Relation) {
-    const sourceDXN = getObjectDXN(props[RelationSourceId]) ?? raise(new Error('Unresolved relation source'));
-    const targetDXN = getObjectDXN(props[RelationTargetId]) ?? raise(new Error('Unresolved relation target'));
+    const sourceDXN = getObjectEchoId(props[RelationSourceId]) ?? raise(new Error('Unresolved relation source'));
+    const targetDXN = getObjectEchoId(props[RelationTargetId]) ?? raise(new Error('Unresolved relation target'));
     defineHiddenProperty(obj, RelationSourceDXNId, sourceDXN);
     defineHiddenProperty(obj, RelationTargetDXNId, targetDXN);
   }

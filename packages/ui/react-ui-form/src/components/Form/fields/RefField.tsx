@@ -27,7 +27,7 @@ const isRefSnapshot = (val: any): val is { '/': string } => {
 
 const defaultGetOptions: NonNullable<RefFieldProps['getOptions']> = (results, { parentLabel } = {}) =>
   results.map((result) => {
-    const id = Entity.getDXN(result).toString();
+    const id = Entity.getEchoId(result);
     const parent = parentLabel ? Obj.getParent(result as Obj.Unknown) : undefined;
     const label = parent ? Entity.getLabel(parent) : Entity.getLabel(result);
     return { id, label: label ?? id };
@@ -102,7 +102,7 @@ export const RefField = (props: RefFieldProps) => {
     // Match form-value Refs against options by the bare object id (last DXN
     // segment), not by full DXN string. Ref.make uses
     // `DXN.fromLocalObjectId(id)` (`dxn:echo:@:<id>`), but
-    // `Entity.getDXN(obj)` on a registered object produces the space-scoped
+    // `Entity.getEchoId(obj)` on a registered object produces the space-scoped
     // form (`dxn:echo:<spaceId>:<id>`). String-comparing the two never
     // matches, so the just-created Ref's option lookup fails and the slot
     // displays as empty even though the underlying form value IS set.

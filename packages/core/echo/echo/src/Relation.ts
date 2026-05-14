@@ -10,7 +10,7 @@ import { raise } from '@dxos/debug';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { type ObjectId, URI } from '@dxos/keys';
+import { type EchoId, type ObjectId, URI } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type * as Database from './Database';
@@ -169,8 +169,8 @@ export const make = <S extends Type.AnyRelation>(
     delete props[internal.MetaId];
   }
 
-  const sourceDXN = internal.getObjectDXN(props[Source]) ?? raise(new Error('Unresolved relation source'));
-  const targetDXN = internal.getObjectDXN(props[Target]) ?? raise(new Error('Unresolved relation target'));
+  const sourceDXN = internal.getObjectEchoId(props[Source]) ?? raise(new Error('Unresolved relation source'));
+  const targetDXN = internal.getObjectEchoId(props[Target]) ?? raise(new Error('Unresolved relation target'));
 
   (props as any)[internal.RelationSourceDXNId] = sourceDXN;
   (props as any)[internal.RelationTargetDXNId] = targetDXN;
@@ -350,10 +350,10 @@ export const setValue: (rel: Mutable<Unknown>, path: readonly (string | number)[
 //
 
 /**
- * Get the DXN of the relation.
+ * Get the EchoId of the relation.
  * Accepts both reactive relations and snapshots.
  */
-export const getDXN = (entity: Unknown | Snapshot): URI.URI => internal.getDXN(entity);
+export const getEchoId = (entity: Unknown | Snapshot): EchoId.EchoId => internal.getEchoId(entity);
 
 /**
  * @returns The DXN of the relation's type.

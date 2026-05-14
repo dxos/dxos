@@ -69,7 +69,7 @@ export const useInvocationSpans = ({ queueDxn, target }: { queueDxn?: EchoId.Ech
         return uuidPart ? functionsForScript?.has(uuidPart) : false;
       });
     } else if (target) {
-      return invocationSpans.filter((span) => span.invocationTarget?.dxn === Obj.getDXN(target));
+      return invocationSpans.filter((span) => span.invocationTarget?.dxn === Obj.getEchoId(target));
     }
     return invocationSpans;
   }, [functionsForScript, target, invocationSpans]);

@@ -815,7 +815,7 @@ export const WithProject: Story = {
       const people = await space.db.query(Filter.type(Person.Person)).run();
       const organizations = await space.db.query(Filter.type(Organization.Organization)).run();
       const tag = space.db.add(Tag.make({ label: 'Project' }));
-      const tagDxn = Obj.getDXN(tag).toString();
+      const tagDxn = Obj.getEchoId(tag);
 
       people.slice(0, 4).forEach((person) => {
         Obj.update(person, (person) => {

@@ -125,7 +125,7 @@ export const createMarkdownDocuments = (
 
   /** Update both forward (fileId→doc) and reverse (dxn→writeTarget) maps. */
   const updateMapsForDocument = (fileId: string, path: string, doc: Text.Text): void => {
-    const dxn = Obj.getDXN(doc).toString();
+    const dxn = Obj.getEchoId(doc);
     documentsByFileId.set(fileId, doc);
     writeTargetByDxn.set(dxn, { path, fileId });
   };
@@ -287,7 +287,7 @@ export const createMarkdownDocuments = (
     indexDocument(file.id, file.path, doc);
     ensureFileWatcher(file);
 
-    const dxn = Obj.getDXN(doc).toString();
+    const dxn = Obj.getEchoId(doc);
     persistFileIdentity(file, workspaceId, dxn);
 
     return doc;
@@ -459,7 +459,7 @@ export const createMarkdownDocuments = (
         const doc = documentsByFileId.get(fileId);
         documentsByFileId.delete(fileId);
         if (doc) {
-          const dxn = Obj.getDXN(doc).toString();
+          const dxn = Obj.getEchoId(doc);
           writeTargetByDxn.delete(dxn);
         }
         // Bump so graph nodes notice the document is gone.

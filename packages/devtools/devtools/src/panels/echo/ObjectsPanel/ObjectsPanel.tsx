@@ -209,7 +209,7 @@ export const ObjectsPanel = (props: { space?: Space }) => {
             {selected ? (
               <ObjectViewer
                 object={selectedVersionObject ?? selected}
-                id={Obj.getDXN(selected)?.toString()}
+                id={Obj.getEchoId(selected)}
                 onNavigate={onNavigate}
               />
             ) : (

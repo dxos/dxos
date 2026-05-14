@@ -528,8 +528,8 @@ describe('Query', () => {
       expect(obj).toBeDefined();
       expect(obj.id).toEqual(task.id);
       expect(obj.title).toEqual('Queue type selector task');
-      expect(Obj.getDXN(obj)?.toString()).toMatch(/^echo:\/\//);
-      expect(Obj.getDXN(obj)?.toString()).toContain(obj.id);
+      expect(Obj.getEchoId(obj)).toMatch(/^echo:\/\//);
+      expect(Obj.getEchoId(obj)).toContain(obj.id);
     });
 
     test('query options with 2 spaces and 2 queues', async () => {
@@ -744,7 +744,7 @@ describe('Query', () => {
 
       const traceResult = results.find((obj) => obj.title === 'Trace Task');
       expect(traceResult).toBeDefined();
-      const dxnString = Obj.getDXN(traceResult!).toString();
+      const dxnString = Obj.getEchoId(traceResult!);
       expect(dxnString).toMatch(/^echo:\/\//);
     });
 
@@ -765,7 +765,7 @@ describe('Query', () => {
 
       const traceResult = results.find((obj) => obj.title === 'Trace TypeScript Task');
       expect(traceResult).toBeDefined();
-      const dxnString = Obj.getDXN(traceResult!).toString();
+      const dxnString = Obj.getEchoId(traceResult!);
       expect(dxnString).toMatch(/^echo:\/\//);
     });
 
@@ -1938,8 +1938,8 @@ describe('Query', () => {
         )
         .first();
       expect(obj).toBeDefined();
-      expect(Obj.getDXN(obj)?.toString()).toMatch(/^echo:\/\//);
-      expect(Obj.getDXN(obj)?.toString()).toContain(obj.id);
+      expect(Obj.getEchoId(obj)).toMatch(/^echo:\/\//);
+      expect(Obj.getEchoId(obj)).toContain(obj.id);
       expect(Obj.getTypename(obj)).toBe(TestSchema.Task.typename);
       expect(Obj.getSchema(obj)).toEqual(TestSchema.Task);
       expect(obj.id).toEqual(task.id);

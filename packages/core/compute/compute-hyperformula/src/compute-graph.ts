@@ -208,7 +208,7 @@ export class ComputeGraph extends Resource {
 
       const fn = this._remoteFunctions.find((fn) => fn.binding === binding);
       if (fn) {
-        const id = Obj.getDXN(fn).toString();
+        const id = Obj.getEchoId(fn);
         return `${id}(${args})`;
       } else {
         return match;
@@ -225,7 +225,7 @@ export class ComputeGraph extends Resource {
       /dxn:([^:]+):([^:(]+):([a-zA-Z0-9]+)\((.*)\)/g,
       (_match, kind, spaceTag, objectId, args) => {
         const dxn = `dxn:${kind}:${spaceTag}:${objectId}`;
-        const fn = this._remoteFunctions.find((fn) => Obj.getDXN(fn).toString() === dxn);
+        const fn = this._remoteFunctions.find((fn) => Obj.getEchoId(fn) === dxn);
         if (fn?.binding) {
           return `${fn.binding}(${args})`;
         } else {

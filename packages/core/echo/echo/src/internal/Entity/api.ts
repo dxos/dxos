@@ -3,21 +3,21 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import { type URI } from '@dxos/keys';
+import { type EchoId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type { AnyEntity } from '../common/types';
 import { type InternalObjectProps, ObjectDatabaseId } from './model';
-import { getObjectDXN } from './util';
+import { getObjectEchoId } from './util';
 
 /**
- * Get the DXN of an entity.
+ * Get the EchoId of an entity.
  * Accepts both reactive entities and snapshots.
  */
-export const getDXN = (entity: AnyEntity): URI.URI => {
-  const dxn = getObjectDXN(entity);
-  invariant(dxn != null, 'Invalid entity.');
-  return dxn;
+export const getEchoId = (entity: AnyEntity): EchoId.EchoId => {
+  const echoId = getObjectEchoId(entity);
+  invariant(echoId != null, 'Invalid entity.');
+  return echoId;
 };
 
 /**

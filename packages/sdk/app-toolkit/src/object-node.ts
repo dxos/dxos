@@ -112,7 +112,7 @@ export const getCollectionGraphNodePartials = ({
   db: Database.Database;
   collection: Collection.Collection;
 }) => {
-  const id = Obj.getDXN(collection).toString();
+  const id = Obj.getEchoId(collection);
   let cached = collectionPartialsCache.get(id);
   if (!cached) {
     cached = buildCollectionPartials(collection, db);
@@ -174,7 +174,7 @@ export const createObjectNode = ({
 
   let onRearrange: ((nextOrder: unknown[]) => void) | undefined;
   if (parentCollection) {
-    const collectionDxn = Obj.getDXN(parentCollection).toString();
+    const collectionDxn = Obj.getEchoId(parentCollection);
     onRearrange = rearrangeCache.get(collectionDxn);
     if (!onRearrange) {
       onRearrange = (nextOrder: unknown[]) => {
@@ -186,7 +186,7 @@ export const createObjectNode = ({
     }
   }
 
-  const objectDxn = Obj.getDXN(object).toString();
+  const objectDxn = Obj.getEchoId(object);
   let blockInstruction = blockInstructionCache.get(objectDxn);
   if (!blockInstruction) {
     blockInstruction = (_source: TreeData, _instruction: Instruction) => false;

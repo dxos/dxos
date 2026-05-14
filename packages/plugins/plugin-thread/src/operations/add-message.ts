@@ -21,7 +21,7 @@ const handler: Operation.WithHandler<typeof ThreadOperation.AddMessage> = Thread
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
       const stateAtom = yield* Capability.get(ThreadCapabilities.State);
       const thread = Relation.getSource(anchor) as Thread.Thread;
-      const subjectId = Obj.getDXN(subject).toString();
+      const subjectId = Obj.getEchoId(subject);
       const db = Obj.getDatabase(subject);
       invariant(db, 'Database not found');
 

@@ -192,11 +192,11 @@ export class Binder extends Resource {
     const reducedBlueprintDxns = new Set<string>([...bindings.blueprints].map((ref) => ref.dxn.toString()));
     const reducedObjectDxns = new Set<string>([...bindings.objects].map((ref) => ref.dxn.toString()));
     const filteredBlueprints = currentBlueprints.filter((obj) => {
-      const dxn = Obj.getDXN(obj);
+      const dxn = Obj.getEchoId(obj);
       return dxn != null && reducedBlueprintDxns.has(dxn.toString());
     });
     const filteredObjects = currentObjects.filter((obj) => {
-      const dxn = Obj.getDXN(obj);
+      const dxn = Obj.getEchoId(obj);
       return dxn != null && reducedObjectDxns.has(dxn.toString());
     });
     const mergedBlueprints = this._mergeInto(filteredBlueprints, resolvedBlueprints);
@@ -260,14 +260,14 @@ export class Binder extends Resource {
       const current = this._registry.get(this._blueprints);
       this._registry.set(
         this._blueprints,
-        current.filter((obj) => !removedBlueprintDxns.some((dxn) => Obj.getDXN(obj)?.toString() === dxn.toString())),
+        current.filter((obj) => !removedBlueprintDxns.some((dxn) => Obj.getEchoId(obj) === dxn)),
       );
     }
     if (removedObjectDxns.length > 0) {
       const current = this._registry.get(this._objects);
       this._registry.set(
         this._objects,
-        current.filter((obj) => !removedObjectDxns.some((dxn) => Obj.getDXN(obj)?.toString() === dxn.toString())),
+        current.filter((obj) => !removedObjectDxns.some((dxn) => Obj.getEchoId(obj) === dxn)),
       );
     }
 
@@ -301,9 +301,9 @@ export class Binder extends Resource {
       return { added, next };
     }
 
-    const seen = new Set(current.map((obj) => Obj.getDXN(obj).toString()));
+    const seen = new Set<string>(current.map((obj) => Obj.getEchoId(obj)));
     for (const ref of refs) {
-      const dxn = ref.dxn.toString();
+      const dxn = ref.dxn;
       if (!seen.has(dxn)) {
         seen.add(dxn);
         added.push(ref);
@@ -354,10 +354,10 @@ export class Binder extends Resource {
    * Merge resolved items into the current set, adding only items not already present (by DXN).
    */
   private _mergeInto<T extends Obj.Unknown>(current: T[], resolved: T[]): T[] {
-    const seen = new Set(current.map((obj) => Obj.getDXN(obj).toString()));
+    const seen = new Set(current.map((obj) => Obj.getEchoId(obj)));
     const merged = [...current];
     for (const obj of resolved) {
-      const dxn = Obj.getDXN(obj).toString();
+      const dxn = Obj.getEchoId(obj);
       if (!seen.has(dxn)) {
         seen.add(dxn);
         merged.push(obj);
@@ -384,7 +384,7 @@ export class Binder extends Resource {
         }
 
         // Fallback to existing object.
-        return target ?? current.find((obj) => Obj.getDXN(obj as any).toString() === ref.dxn.toString());
+        return target ?? current.find((obj) => Obj.getEchoId(obj as any) === ref.dxn);
       })
       .filter(isNonNullable);
   }

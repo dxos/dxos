@@ -72,7 +72,7 @@ export const generator = () => ({
           );
 
           const tag = space.db.add(Tag.make({ label: 'Investor' }));
-          const tagDxn = Obj.getDXN(tag).toString();
+          const tagDxn = Obj.getEchoId(tag);
           Obj.update(doc, (doc) => {
             Obj.getMeta(doc).tags = [tagDxn];
           });
@@ -124,7 +124,7 @@ export const generator = () => ({
         const queueDxn = Feed.getQueueDxn(mailboxFeed);
         invariant(queueDxn, 'Mailbox feed missing queue DXN key');
         const tag = await space.db.query(Filter.type(Tag.Tag, { label: 'Investor' })).first();
-        const tagDxn = Obj.getDXN(tag).toString();
+        const tagDxn = Obj.getEchoId(tag);
 
         const objects = range(n, () => {
           const contactsQuery = Query.select(Filter.type(Person.Person)).select(Filter.tag(tagDxn));

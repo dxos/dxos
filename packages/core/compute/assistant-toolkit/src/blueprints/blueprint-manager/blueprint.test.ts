@@ -36,7 +36,7 @@ const provideTestLayers = Effect.provide(AiSession.Service.layerNewFeed().pipe(L
  */
 const getConversationDxn = Effect.gen(function* () {
   const session = yield* AiSession.Service;
-  return Obj.getDXN(session.feed).toString();
+  return Obj.getEchoId(session.feed);
 });
 
 describe('Blueprint Manager', () => {

@@ -14,7 +14,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.DraftEmail> = InboxOp
     Effect.fn(function* ({ subject, to, body, replyTo, mailbox: mailboxRef }) {
       const replyToMessage = !replyTo ? undefined : yield* Database.load(replyTo);
       const mailbox = yield* Database.load(mailboxRef);
-      const mailboxDxn = Obj.getDXN(mailbox).toString();
+      const mailboxDxn = Obj.getEchoId(mailbox);
 
       const message = yield* Database.add(
         DraftMessage.make({
@@ -34,7 +34,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.DraftEmail> = InboxOp
         }),
       );
       return {
-        newMessageDXN: Obj.getDXN(message).toString(),
+        newMessageDXN: Obj.getEchoId(message),
       };
     }),
   ),

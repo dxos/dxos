@@ -408,7 +408,7 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
                   iconClassNames={styles?.surfaceText}
                   label={Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id}
                   checked={isActive}
-                  onSelect={() => onUpdateObject?.(Obj.getDXN(object), !isActive)}
+                  onSelect={() => onUpdateObject?.(Obj.getEchoId(object), !isActive)}
                 />
               );
             })

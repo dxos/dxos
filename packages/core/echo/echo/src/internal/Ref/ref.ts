@@ -235,7 +235,7 @@ Ref.make = <T extends AnyProperties>(obj: T): Ref<T> => {
     throw new TypeError('Expected: ECHO object.');
   }
 
-  // TODO(dmaretskyi): Extract to `getObjectDXN` function.
+  // TODO(dmaretskyi): Extract to `getObjectEchoId` function.
   const id = obj.id;
   invariant(ObjectId.isValid(id), 'Invalid object ID');
   const dxn = EchoId.fromLocalObjectId(id);

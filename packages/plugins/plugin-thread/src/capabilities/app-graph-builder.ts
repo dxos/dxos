@@ -100,7 +100,7 @@ export default Capability.makeModule(
           // Use derived atoms for efficient subscription.
           const joined = get(callManager.joinedAtom);
           const roomId = get(callManager.roomIdAtom);
-          const isActive = joined && roomId === Obj.getDXN(channel).toString();
+          const isActive = joined && roomId === Obj.getEchoId(channel);
           if (!isActive) {
             return Effect.succeed([]);
           }
@@ -147,7 +147,7 @@ export default Capability.makeModule(
         },
         actions: (matched, get) => {
           const object = matched.data;
-          const objectDxn = Obj.getDXN(object).toString();
+          const objectDxn = Obj.getEchoId(object);
           const stateAtom = capabilities.atom(ThreadCapabilities.State);
           const selectionManager = capabilities.get(AttentionCapabilities.Selection);
           const commentConfig = getCommentConfig(Obj.getTypename(object)!)!;

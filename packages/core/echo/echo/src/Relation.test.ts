@@ -61,8 +61,8 @@ describe('Relation', () => {
       expect(Relation.getTarget(snapshot)).toBeDefined();
 
       // getDXN - works with both.
-      expect(Relation.getDXN(rel)).toBeDefined();
-      expect(Relation.getDXN(snapshot)).toBeDefined();
+      expect(Relation.getEchoId(rel)).toBeDefined();
+      expect(Relation.getEchoId(snapshot)).toBeDefined();
 
       // getTypename - works with both.
       expect(Relation.getTypename(rel)).toBe('com.example.type.has-manager');

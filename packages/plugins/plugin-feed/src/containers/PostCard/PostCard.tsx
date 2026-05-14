@@ -34,7 +34,7 @@ export const PostCard = ({ subject }: PostCardProps) => {
     if (!dxn) {
       return undefined;
     }
-    return allFeeds.find((feed) => Obj.getDXN(feed).toString() === dxn)?.name;
+    return allFeeds.find((feed) => Obj.getEchoId(feed) === dxn)?.name;
   }, [post.feed, allFeeds]);
 
   const published = formatDate(post.published);

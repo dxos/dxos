@@ -73,7 +73,7 @@ const meta = {
 
             yield* Effect.gen(function* () {
               const tag = yield* Database.add(Tag.make({ label: 'important', hue: 'green' }));
-              const tagDxn = Obj.getDXN(tag).toString();
+              const tagDxn = Obj.getEchoId(tag);
 
               // Create a view for Contacts.
               const personView = ViewModel.make({
