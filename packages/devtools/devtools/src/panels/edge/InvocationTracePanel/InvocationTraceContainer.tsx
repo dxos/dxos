@@ -102,8 +102,8 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
             size: 110,
           },
           {
-            name: 'queue',
-            title: 'Queue',
+            name: 'feed',
+            title: 'Feed',
             format: Format.TypeFormat.String,
             // TODO(burdon): Add formatter.
             // formatter: (value: string) => value.split(':').pop(),
@@ -133,7 +133,7 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
           time: new Date(invocation.timestamp),
           duration: formatDuration(invocation.duration),
           status,
-          queue:
+          feed:
             invocation.invocationTraceFeed?.dxn?.toString() ??
             (invocation.invocationTraceFeed && '/' in invocation.invocationTraceFeed
               ? (invocation.invocationTraceFeed as any)['/']
