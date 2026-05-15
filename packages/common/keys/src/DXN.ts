@@ -101,9 +101,12 @@ export const getVersion = (dxn: DXN): string | undefined => {
 /**
  * Effect Schema for DXN validation.
  */
-// Identity-encoded schema so consumers can refine generic schemas without the encode/decode types diverging.
+// Identity-encoded schema (`Schema<DXN, DXN>`) so consumers can refine generic schemas
+// without the encode/decode types diverging. `Schema.filter` produces a refinement with
+// `Encoded = string`; we narrow the encoded form too with `as unknown as` since the runtime
+// representation is identical (a branded string).
 const Schema_: Schema.Schema<DXN, DXN> = Schema.String.pipe(
-  Schema.filter(isDXN, { message: () => 'Invalid DXN' }),
+  Schema.filter((s): s is DXN => isDXN(s), { message: () => 'Invalid DXN' }),
   Schema.annotations({
     title: 'DXN',
     description: 'DXN URI: dxn:<nsid>[:<version>]',

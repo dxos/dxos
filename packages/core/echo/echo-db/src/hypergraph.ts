@@ -200,7 +200,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     uri: URI.URI,
     context: Hypergraph.RefResolutionContext,
     onResolve?: (obj: Entity.Any) => void,
-  ): Entity.Any | undefined {
+  ): Entity.Any | Queue | undefined {
     const parsedEchoId = EchoURI.tryParse(uri);
     if (!parsedEchoId) {
       throw new Error('Unsupported URI kind');
@@ -228,7 +228,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     const queueFactory = this._queueFactories.get(spaceId);
     const queue = queueFactory?.tryGet(queueEchoId);
     if (queue) {
-      return queue as unknown as Entity.Any;
+      return queue;
     }
 
     // TODO(dmaretskyi): Consider throwing if space not found.
@@ -310,7 +310,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         const queue = this._resolveQueueSync(queueEchoId);
         if (queue) {
           status = 'resolved';
-          return queue as unknown as Entity.Unknown;
+          return queue;
         }
 
         status = 'missing';
@@ -346,7 +346,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     for (const queue of queueFactory.knownQueues()) {
       const [obj] = await queue.getObjectsById([objectId]);
       if (obj) {
-        return obj as Entity.Unknown;
+        return obj;
       }
     }
     return undefined;

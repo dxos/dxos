@@ -62,7 +62,7 @@ describe('Ref', () => {
       name: 'John Doe',
       tasks: [
         {
-          '/': getObjectEchoId(task as any)!.toString(),
+          '/': getObjectEchoId(task)!.toString(),
           target: JSON.parse(JSON.stringify(task)),
         },
       ],

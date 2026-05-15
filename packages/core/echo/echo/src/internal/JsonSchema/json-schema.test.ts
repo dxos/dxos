@@ -40,8 +40,8 @@ describe('effect-to-json', () => {
       }),
     );
     const jsonSchema = toJsonSchema(Test);
-    expect((jsonSchema as any).$id).toEqual('dxn:com.example.type.test:0.1.0');
-    expect((jsonSchema as any).version).toEqual('0.1.0');
+    expect(jsonSchema.$id).toEqual('dxn:com.example.type.test:0.1.0');
+    expect(jsonSchema.version).toEqual('0.1.0');
   });
 
   test('property meta annotation', () => {

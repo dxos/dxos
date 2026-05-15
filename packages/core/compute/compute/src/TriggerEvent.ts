@@ -39,7 +39,7 @@ export interface QueueEvent {
   readonly item: any;
   readonly cursor: string;
 }
-export const QueueEvent: Schema.Schema<QueueEvent> = _QueueEvent as any;
+export const QueueEvent: Schema.Schema<QueueEvent> = _QueueEvent;
 
 export const SubscriptionEvent = Schema.Struct({
   /**

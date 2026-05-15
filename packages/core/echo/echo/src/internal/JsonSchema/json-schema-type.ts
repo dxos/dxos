@@ -335,7 +335,7 @@ export const JsonSchemaFields = Object.keys(_JsonSchemaType.fields);
 // TODO(burdon): Reconcile with @effect/Schema/JSONSchema
 export interface JsonSchemaType extends Schema.Schema.Type<typeof _JsonSchemaType> {}
 
-export const JsonSchemaType: Schema.Schema<JsonSchemaType> = _JsonSchemaType as any;
+export const JsonSchemaType: Schema.Schema<JsonSchemaType> = _JsonSchemaType;
 
 // TODO(burdon): Factor out JSON schema utils.
 

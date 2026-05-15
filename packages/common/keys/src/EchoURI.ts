@@ -139,9 +139,12 @@ export const equals = (a: EchoURI, b: EchoURI): boolean => parse(a) === parse(b)
 /**
  * Effect Schema for EchoURI validation.
  */
-// Identity-encoded schema so consumers can refine generic schemas without the encode/decode types diverging.
+// Identity-encoded schema (`Schema<EchoURI, EchoURI>`) so consumers can refine generic
+// schemas without the encode/decode types diverging. `Schema.filter` produces a refinement
+// with `Encoded = string`; we narrow the encoded form too with `as unknown as` since the
+// runtime representation is identical (a branded string).
 const Schema_: Schema.Schema<EchoURI, EchoURI> = Schema.String.pipe(
-  Schema.filter(isEchoId, {
+  Schema.filter((s): s is EchoURI => isEchoId(s), {
     message: () => 'Invalid EchoURI: must start with echo:, dxn:echo:, or dxn:queue:',
   }),
 ) as unknown as Schema.Schema<EchoURI, EchoURI>;

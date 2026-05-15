@@ -412,7 +412,7 @@ const decodeTypeIdentifierAnnotation = (schema: JsonSchemaType): string | undefi
     return schema.$id;
   }
   // Legacy: pre-Phase-6 serializations stored the EchoURI on echo.type.schemaId.
-  const legacySchemaId = (schema as any).echo?.type?.schemaId ?? (schema as any).echo?.schemaId;
+  const legacySchemaId = schema.echo?.type?.schemaId;
   if (legacySchemaId) {
     return ObjectId.isValid(legacySchemaId) ? EchoURI.fromLocalObjectId(legacySchemaId) : legacySchemaId;
   }
