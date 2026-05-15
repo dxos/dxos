@@ -25,7 +25,7 @@ const selectOptions = [
 ];
 
 const MinimalSchema = Schema.Struct({ id: Schema.String }).pipe(
-  Type.object({ typename: 'test/Minimal', version: '0.1.0' }),
+  Type.object({ typename: 'com.example.type.minimal', version: '0.1.0' }),
 );
 
 describe('arrangement utils', () => {

@@ -13,7 +13,7 @@ import { Kanban } from './Kanban';
 import { KanbanV1 } from './Kanban';
 
 const TestCardSchema = Schema.Struct({ id: Schema.String }).pipe(
-  Type.object({ typename: 'com.example/TestCard', version: '0.1.0' }),
+  Type.object({ typename: 'com.example.type.test-card', version: '0.1.0' }),
 );
 
 /**

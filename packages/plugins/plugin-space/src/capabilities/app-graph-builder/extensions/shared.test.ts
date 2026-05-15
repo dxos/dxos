@@ -17,7 +17,7 @@ const TestContact = Schema.Struct({
   name: Schema.String,
 }).pipe(
   Type.object({
-    typename: 'test/Contact',
+    typename: 'com.example.type.contact',
     version: '0.1.0',
   }),
 );
@@ -27,7 +27,7 @@ const TestViewWrapper = Schema.Struct({
   view: Ref.Ref(View.View),
 }).pipe(
   Type.object({
-    typename: 'test/ViewWrapper',
+    typename: 'com.example.type.view-wrapper',
     version: '0.1.0',
   }),
   ViewAnnotation.set(['view']),
