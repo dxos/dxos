@@ -63,6 +63,24 @@ export default Capability.makeModule(
           ]),
       }),
 
+      // Plank companion: contributes a "description" panel for every ECHO
+      // object article. The panel surface (`description-companion` in
+      // react-surface) renders the owning plugin's `meta.description`.
+      GraphBuilder.createExtension({
+        id: 'description-companion',
+        match: NodeMatcher.whenEchoObject,
+        connector: () =>
+          Effect.succeed([
+            AppNode.makeCompanion({
+              id: 'description',
+              label: ['description-companion.label', { ns: meta.id }],
+              icon: 'ph--info--regular',
+              data: 'description',
+              position: 'fallback',
+            }),
+          ]),
+      }),
+
       // Personal-space-only Welcome virtual node, hoisted to the top of the navtree.
       // Data is the singleton Welcome ECHO object (provisioned by WelcomeProvisioner),
       // so the assistant plugin's companion-chat extension binds automatically.
