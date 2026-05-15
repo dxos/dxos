@@ -73,7 +73,7 @@ export interface ObjectMetaJSON {
  */
 export interface ObjectJSON {
   id: ObjectId;
-  [ATTR_TYPE]: DXN.DXN;
+  [ATTR_TYPE]?: DXN.DXN;
   [ATTR_SELF_DXN]?: EchoId.EchoId;
   [ATTR_PARENT]?: EchoId.EchoId; // Encoded reference
   [ATTR_DELETED]?: boolean;

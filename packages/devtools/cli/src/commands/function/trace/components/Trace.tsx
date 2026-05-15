@@ -135,7 +135,7 @@ export const Trace = (props: TraceProps) => {
 };
 
 // Helper: Extracts the UUID part from a DXN.
-const getUuidFromDxn = (dxn: string | undefined): string | undefined => {
+const getUuidFromDxn = (dxn: URI.URI | undefined): string | undefined => {
   if (!dxn) {
     return undefined;
   }

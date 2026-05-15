@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { JsonPath, type JsonProp } from '@dxos/effect';
+import { EchoId } from '@dxos/keys';
 
 import { type Mutable } from '../common/proxy';
 import { EntityKindSchema } from '../common/types';
@@ -56,7 +57,7 @@ export const JsonSchemaEchoAnnotations = Schema.Struct({
    * Storage EchoId for this schema (when persisted as an ECHO object).
    * Mapped from {@link TypeIdentifierAnnotationId}.
    */
-  schemaId: Schema.optional(Schema.String),
+  schemaId: Schema.optional(EchoId.Schema),
 
   /**
    * @deprecated
@@ -341,7 +342,7 @@ export const JsonSchemaFields = Object.keys(_JsonSchemaType.fields);
 // TODO(burdon): Reconcile with @effect/Schema/JSONSchema
 export interface JsonSchemaType extends Schema.Schema.Type<typeof _JsonSchemaType> {}
 
-export const JsonSchemaType: Schema.Schema<JsonSchemaType> = _JsonSchemaType;
+export const JsonSchemaType: Schema.Schema<JsonSchemaType> = _JsonSchemaType as any;
 
 // TODO(burdon): Factor out JSON schema utils.
 

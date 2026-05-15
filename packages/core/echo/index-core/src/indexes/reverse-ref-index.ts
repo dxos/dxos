@@ -16,17 +16,17 @@ import type { Index, IndexerObject } from './interface';
 /**
  * Extracts all outgoing references from an object's data.
  */
-const extractReferences = (data: Record<string, unknown>): { path: string[]; targetDxn: string }[] => {
-  const refs: { path: string[]; targetDxn: string }[] = [];
+const extractReferences = (data: Record<string, unknown>): { path: string[]; targetDxn: EchoId.EchoId }[] => {
+  const refs: { path: string[]; targetDxn: EchoId.EchoId }[] = [];
   const visit = (path: string[], value: unknown) => {
     if (isEncodedReference(value)) {
       const uri = EncodedReference.toURI(value);
       const parsedEchoId = EchoId.tryParse(uri);
       const echoId = parsedEchoId ? EchoId.getObjectId(parsedEchoId) : undefined;
-      if (!echoId) {
+      if (!echoId || !parsedEchoId) {
         return; // Skip non-echo references.
       }
-      refs.push({ path, targetDxn: uri });
+      refs.push({ path, targetDxn: parsedEchoId });
     } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       for (const [key, v] of Object.entries(value)) {
         visit([...path, key], v);
@@ -43,7 +43,7 @@ const extractReferences = (data: Record<string, unknown>): { path: string[]; tar
 
 export const ReverseRef = Schema.Struct({
   recordId: Schema.Number,
-  targetDxn: Schema.String,
+  targetDxn: EchoId.Schema,
   /**
    * Escaped property path within an object.
    *
@@ -58,7 +58,7 @@ export const ReverseRef = Schema.Struct({
 export interface ReverseRef extends Schema.Schema.Type<typeof ReverseRef> {}
 
 export interface ReverseRefQuery {
-  targetDxn: string;
+  targetDxn: EchoId.EchoId;
   // TODO: Add prop filter
 }
 

@@ -6,6 +6,10 @@ import * as Schema from 'effect/Schema';
 
 import { TestSchema } from '@dxos/client/testing';
 import { JsonSchema, Ref } from '@dxos/echo';
+import { type EchoId } from '@dxos/keys';
+
+// EchoId re-export keeps TS declaration emit portable — JsonSchemaType references EchoId.Schema.
+export type { EchoId as _EchoIdReference };
 
 export const functions = [
   {

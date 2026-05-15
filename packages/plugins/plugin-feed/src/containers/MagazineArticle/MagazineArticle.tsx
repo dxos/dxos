@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Ref, type Tag } from '@dxos/echo';
+import { EchoId, Filter, Obj, Ref, type Tag } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
@@ -327,7 +327,7 @@ const useMagazinePosts = (
   const postFingerprint = subject.posts.map((ref) => ref.uri).join();
 
   return useMemo<Subscription.Post[]>(() => {
-    const seenDxn = new Set<string>();
+    const seenDxn = new Set<EchoId.EchoId>();
     const seenLink = new Set<string>();
     const seenGuid = new Set<string>();
 

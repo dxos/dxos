@@ -5,12 +5,13 @@
 import * as Schema from 'effect/Schema';
 
 import { Database } from '@dxos/echo';
+import { EchoId } from '@dxos/keys';
 
 import { meta } from '#meta';
 
 export const TriggerTemplate = Schema.Union(
   Schema.Struct({ type: Schema.Literal('timer'), cron: Schema.String }),
-  Schema.Struct({ type: Schema.Literal('queue'), queueDXN: Schema.Any }),
+  Schema.Struct({ type: Schema.Literal('queue'), queueDXN: EchoId.Schema }),
 );
 
 export namespace AutomationAction {

@@ -557,7 +557,7 @@ export const refFromEncodedReference = (encodedReference: EncodedReference, reso
 
 export class StaticRefResolver implements RefResolver {
   public objects = new Map<ObjectId, AnyProperties>();
-  public schemas = new Map<string, Schema.Schema.AnyNoContext>();
+  public schemas = new Map<DXN.DXN, Schema.Schema.AnyNoContext>();
 
   addObject(obj: AnyProperties): this {
     this.objects.set(obj.id, obj);
@@ -567,7 +567,7 @@ export class StaticRefResolver implements RefResolver {
   addSchema(schema: Schema.Schema.AnyNoContext): this {
     const dxn = getSchemaDXN(schema);
     invariant(dxn, 'Schema has no DXN');
-    this.schemas.set(dxn.toString(), schema);
+    this.schemas.set(dxn, schema);
     return this;
   }
 
@@ -592,6 +592,7 @@ export class StaticRefResolver implements RefResolver {
   }
 
   async resolveSchema(dxn: URI.URI): Promise<Schema.Schema.AnyNoContext | undefined> {
-    return this.schemas.get(dxn.toString());
+    const parsed = DXN.tryParse(dxn);
+    return parsed ? this.schemas.get(parsed) : undefined;
   }
 }

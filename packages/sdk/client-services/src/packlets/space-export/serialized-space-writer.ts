@@ -186,8 +186,8 @@ const exportFeedData = async (space: DataSpace, echoHost: EchoHost, objects: Obj
       continue;
     }
 
-    const typeStr = obj[ATTR_TYPE] as string;
-    const typeDxnNsid = DXN.isDXN(typeStr) ? DXN.getNsid(typeStr) : undefined;
+    const typeDxn = obj[ATTR_TYPE];
+    const typeDxnNsid = DXN.isDXN(typeDxn) ? DXN.getNsid(typeDxn) : undefined;
     if (typeDxnNsid !== FEED_TYPENAME) {
       continue;
     }

@@ -21,7 +21,7 @@ import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/e
 import { type RuntimeProvider, runAndForwardErrors, unwrapExit } from '@dxos/effect';
 import { EscapedPropPath, type IndexEngine, type ObjectMeta, type ReverseRef } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
-import { EchoId, ObjectId, SpaceId, type URI } from '@dxos/keys';
+import { type DXN, EchoId, ObjectId, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
 import { compositeKey, getDeep, isNonNullable } from '@dxos/util';
@@ -108,7 +108,7 @@ const QueryItem = Object.freeze({
     if (item.doc) {
       raw = ObjectStructure.getParent(item.doc)?.['/'];
     } else if (item.data) {
-      raw = item.data[ATTR_PARENT] as string | undefined;
+      raw = item.data[ATTR_PARENT];
     } else {
       throw new Error('Invalid query item');
     }
@@ -120,7 +120,7 @@ const QueryItem = Object.freeze({
     if (item.doc) {
       raw = ObjectStructure.getRelationSource(item.doc)?.['/'];
     } else if (item.data) {
-      raw = item.data[ATTR_RELATION_SOURCE] as string | undefined;
+      raw = item.data[ATTR_RELATION_SOURCE];
     } else {
       throw new Error('Invalid query item');
     }
@@ -132,7 +132,7 @@ const QueryItem = Object.freeze({
     if (item.doc) {
       raw = ObjectStructure.getRelationTarget(item.doc)?.['/'];
     } else if (item.data) {
-      raw = item.data[ATTR_RELATION_TARGET] as string | undefined;
+      raw = item.data[ATTR_RELATION_TARGET];
     } else {
       throw new Error('Invalid query item');
     }
@@ -1369,7 +1369,7 @@ export class QueryExecutor extends Resource {
 
   private async _queryTypesFromSqlIndex(
     spaceIds: readonly SpaceId[],
-    typeDxns: readonly string[],
+    typeDxns: readonly DXN.DXN[],
     inverted: boolean,
     includeAllQueues: boolean,
     queueIds: readonly ObjectId[] | null,

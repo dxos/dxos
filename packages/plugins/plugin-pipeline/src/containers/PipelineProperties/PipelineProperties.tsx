@@ -70,12 +70,12 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
   );
 
   const handleQueryChanged = useCallback(
-    async (newQuery: QueryAST.Query, target?: string) => {
+    async (newQuery: QueryAST.Query, target?: EchoId.EchoId) => {
       if (!view || !db) {
         return;
       }
 
-      const queue = target ? EchoId.tryParse(target) : undefined;
+      const queue = target;
       const query = queue ? Query.fromAst(newQuery).from({ feeds: [queue] }) : Query.fromAst(newQuery);
       updateView((view) => {
         view.query.ast = query.ast as Mutable<typeof query.ast>;

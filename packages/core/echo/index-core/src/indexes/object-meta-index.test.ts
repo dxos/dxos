@@ -59,7 +59,7 @@ describe('ObjectMetaIndex', () => {
 
       const otherTypeResults = yield* index.query({
         spaceId,
-        typeDxn: 'dxn:com.example.type.other',
+        typeDxn: DXN.parse('dxn:com.example.type.other'),
       });
       expect(otherTypeResults).toEqual([]);
     }).pipe(Effect.provide(TestLayer)),

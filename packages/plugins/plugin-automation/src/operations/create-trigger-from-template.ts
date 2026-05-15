@@ -45,7 +45,7 @@ const handler: Operation.WithHandler<typeof AutomationOperation.CreateTriggerFro
           }
           case 'queue': {
             Obj.update(trigger, (trigger) => {
-              trigger.spec = Trigger.specQueue(String(template.queueDXN));
+              trigger.spec = Trigger.specQueue(template.queueDXN);
             });
             break;
           }

@@ -82,13 +82,13 @@ const DefaultStory = (props: DefaultStoryProps) => {
   }, [space]);
 
   const updateViewQuery = useCallback(
-    async (newQuery: QueryAST.Query, target?: string) => {
+    async (newQuery: QueryAST.Query, target?: EchoId.EchoId) => {
       if (!schema || !view || !space) {
         return;
       }
 
       if (props.mode === 'tag') {
-        const queue = target ? EchoId.tryParse(target) : undefined;
+        const queue = target;
         const query = queue ? Query.fromAst(newQuery).from({ feeds: [queue] }) : Query.fromAst(newQuery);
         Obj.update(view, (view) => {
           view.query.ast = query.ast as Mutable<typeof query.ast>;

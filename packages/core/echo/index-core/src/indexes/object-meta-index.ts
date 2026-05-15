@@ -33,12 +33,12 @@ export const ObjectMeta = Schema.Struct({
   documentId: Schema.String,
   entityKind: Schema.String,
   /** The versioned DXN of the type of the object. */
-  typeDxn: Schema.String,
+  typeDxn: DXN.Schema,
   deleted: Schema.Boolean,
-  source: Schema.NullOr(Schema.String),
-  target: Schema.NullOr(Schema.String),
+  source: Schema.NullOr(EchoId.Schema),
+  target: Schema.NullOr(EchoId.Schema),
   /** Parent object id (nullable). */
-  parent: Schema.NullOr(Schema.String),
+  parent: Schema.NullOr(EchoId.Schema),
   /** Monotonically increasing sequence number assigned on insert/update for tracking indexing order. */
   version: Schema.Number,
   /** Unix ms timestamp when the object was first indexed. */

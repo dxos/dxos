@@ -189,15 +189,15 @@ export class Binder extends Resource {
 
     // Filter current state to only items still in the reduced binding set,
     // then merge in newly resolved items. This ensures unbind events are respected.
-    const reducedBlueprintDxns = new Set<string>([...bindings.blueprints].map((ref) => ref.uri));
-    const reducedObjectDxns = new Set<string>([...bindings.objects].map((ref) => ref.uri));
+    const reducedBlueprintDxns = new Set<URI.URI>([...bindings.blueprints].map((ref) => ref.uri));
+    const reducedObjectDxns = new Set<URI.URI>([...bindings.objects].map((ref) => ref.uri));
     const filteredBlueprints = currentBlueprints.filter((obj) => {
       const dxn = Obj.getId(obj);
-      return dxn != null && reducedBlueprintDxns.has(dxn.toString());
+      return dxn != null && reducedBlueprintDxns.has(dxn);
     });
     const filteredObjects = currentObjects.filter((obj) => {
       const dxn = Obj.getId(obj);
-      return dxn != null && reducedObjectDxns.has(dxn.toString());
+      return dxn != null && reducedObjectDxns.has(dxn);
     });
     const mergedBlueprints = this._mergeInto(filteredBlueprints, resolvedBlueprints);
     const mergedObjects = this._mergeInto(filteredObjects, resolvedObjects);
@@ -301,7 +301,7 @@ export class Binder extends Resource {
       return { added, next };
     }
 
-    const seen = new Set<string>(current.map((obj) => Obj.getId(obj)));
+    const seen = new Set<URI.URI>(current.map((obj) => Obj.getId(obj)));
     for (const ref of refs) {
       const dxn = ref.uri;
       if (!seen.has(dxn)) {

@@ -217,7 +217,7 @@ export const objectStructureToJson = (objectId: ObjectId, structure: ObjectStruc
   return {
     ...structure.data,
     id: objectId,
-    [ATTR_TYPE]: typeRef ? DXN.parse(typeRef) : (undefined as unknown as DXN.DXN),
+    [ATTR_TYPE]: typeRef ? DXN.parse(typeRef) : undefined,
     [ATTR_DELETED]: ObjectStructure.isDeleted(structure),
     [ATTR_PARENT]: parent !== undefined ? EchoId.parse(parent) : undefined,
     [ATTR_RELATION_SOURCE]: source !== undefined ? EchoId.parse(source) : undefined,

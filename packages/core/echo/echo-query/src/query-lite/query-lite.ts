@@ -486,7 +486,10 @@ class QueryClass implements Query$.Any {
   }
 
   referencedBy(target?: Schema.Schema.All | string, key?: string): Query$.Any {
-    const typename = target !== undefined ? makeTypeDxn(target as string) : null;
+    if (target !== undefined && typeof target !== 'string') {
+      throw new TypeError('referencedBy requires a typename string in query-lite');
+    }
+    const typename = target !== undefined ? makeTypeDxn(target) : null;
     return new QueryClass({
       type: 'incoming-references',
       anchor: this.ast,

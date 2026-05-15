@@ -9,10 +9,14 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
+import type { EchoId as _EchoId } from '@dxos/keys';
 
 import { meta } from '#meta';
 
 import { TriggerTemplate } from './schema';
+
+// EchoId re-export keeps TS declaration emit portable — referenced by TriggerTemplate's inferred type.
+export type { _EchoId as _EchoIdReference };
 
 const AUTOMATION_OPERATION = `${meta.id}.operation`;
 
