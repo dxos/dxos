@@ -244,6 +244,11 @@ export class EchoClient extends Resource {
       return undefined;
     }
 
-    return db._loadObjectById(objectId, { allowDeleted: true });
+    // `diskOnly: true` so the query pipeline never blocks on the network
+    // for a hydrating object or its strong dependencies. Index hits imply
+    // the object's own doc is on local disk; if a strong-dep doc is not,
+    // the load resolves to `undefined` and the query simply skips this
+    // result instead of stalling. See `LoadObjectOptions.diskOnly`.
+    return db._loadObjectById(objectId, { allowDeleted: true, diskOnly: true });
   }
 }

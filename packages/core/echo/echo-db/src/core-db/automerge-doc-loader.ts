@@ -19,8 +19,28 @@ import { type DocHandleProxy, type RepoProxy } from '../automerge';
 
 type SpaceDocumentLinks = DatabaseDirectory['links'];
 
+/**
+ * Options for {@link AutomergeDocumentLoader.loadObjectDocument}.
+ */
+export interface LoadObjectDocumentOptions {
+  /**
+   * If `true`, do not block on the network for the linked document; wait
+   * only for the worker-side disk probe to settle. If the doc is on disk,
+   * loading proceeds normally and `onObjectDocumentLoaded` fires once the
+   * handle is ready. If the doc is not on disk, `onObjectUnavailable`
+   * fires immediately and `onObjectDocumentLoaded` is not emitted (until
+   * and unless the doc is later delivered from the network and a separate,
+   * non-disk-only load is issued).
+   *
+   * Use this for query-driven dependency loads where waiting on network
+   * latency would stall the query pipeline.
+   */
+  diskOnly?: boolean;
+}
+
 export interface AutomergeDocumentLoader {
   onObjectDocumentLoaded: Event<ObjectDocumentLoaded>;
+  onObjectUnavailable: Event<ObjectUnavailable>;
 
   get hasRootHandle(): boolean;
 
@@ -32,7 +52,7 @@ export interface AutomergeDocumentLoader {
 
   objectPresent(id: ObjectId): boolean;
   loadSpaceRootDocHandle(ctx: Context, spaceState: SpaceState): Promise<void>;
-  loadObjectDocument(objectId: string | string[]): void;
+  loadObjectDocument(objectId: string | string[], opts?: LoadObjectDocumentOptions): void;
   getObjectDocumentId(objectId: string): string | undefined;
   getSpaceRootDocHandle(): DocHandleProxy<DatabaseDirectory>;
   createDocumentForObject(objectId: string): DocHandleProxy<DatabaseDirectory>;
@@ -62,9 +82,10 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
   private readonly _objectDocumentHandles = new Map<string, DocHandleProxy<DatabaseDirectory>>();
   /**
    * If object was requested via loadObjectDocument but root document links weren't updated yet
-   * loading will be triggered in onObjectLinksUpdated callback.
+   * loading will be triggered in onObjectLinksUpdated callback. Value is the load preference
+   * (e.g. `diskOnly`) carried over from the originating `loadObjectDocument` call.
    */
-  private readonly _objectsPendingDocumentLoad = new Set<string>();
+  private readonly _objectsPendingDocumentLoad = new Map<string, LoadObjectDocumentOptions>();
 
   /**
    * Keeps track of objects that are currently being loaded.
@@ -82,6 +103,15 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
   private readonly _pendingDocumentCreations = new Map<string, Promise<void>>();
 
   public readonly onObjectDocumentLoaded = new Event<ObjectDocumentLoaded>();
+  /**
+   * Emitted when a `diskOnly` load attempt determines that the linked
+   * document is not on local storage (handle is now `'requesting'`). The
+   * handle may still eventually become `'ready'` if the network delivers,
+   * but query-driven callers should treat the object as unavailable for
+   * the current attempt and react accordingly (e.g. resolve `loadObjectCoreById`
+   * with `undefined`).
+   */
+  public readonly onObjectUnavailable = new Event<ObjectUnavailable>();
 
   constructor(
     private readonly _repo: RepoProxy,
@@ -131,7 +161,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     );
   }
 
-  public loadObjectDocument(objectIdOrMany: string | string[]): void {
+  public loadObjectDocument(objectIdOrMany: string | string[], opts: LoadObjectDocumentOptions = {}): void {
     const objectIds = Array.isArray(objectIdOrMany) ? objectIdOrMany : [objectIdOrMany];
     let hasUrlsToLoad = false;
     const urlsToLoad: DatabaseDirectory['links'] = {};
@@ -142,7 +172,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
       }
       const documentUrl = this._getLinkedDocumentUrl(objectId);
       if (documentUrl == null) {
-        this._objectsPendingDocumentLoad.add(objectId);
+        this._objectsPendingDocumentLoad.set(objectId, opts);
         log('loading delayed until object links are initialized', { objectId });
       } else {
         urlsToLoad[objectId] = documentUrl;
@@ -150,7 +180,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
       }
     }
     if (hasUrlsToLoad) {
-      this._loadLinkedObjects(urlsToLoad);
+      this._loadLinkedObjects(urlsToLoad, opts);
     }
   }
 
@@ -169,19 +199,39 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     if (!links) {
       return;
     }
-    // Load links that were previously requested and are waiting.
+    // Load links that were previously requested and are waiting. Group by
+    // the load preference (e.g. `diskOnly`) carried over from the original
+    // `loadObjectDocument` call so each batch passes through with its own
+    // options.
     const linksAwaitingLoad = Object.entries(links).filter(([objectId]) =>
       this._objectsPendingDocumentLoad.has(objectId),
     );
-    this._loadLinkedObjects(Object.fromEntries(linksAwaitingLoad));
+    if (linksAwaitingLoad.length > 0) {
+      const groups = new Map<boolean, typeof linksAwaitingLoad>();
+      for (const entry of linksAwaitingLoad) {
+        const opts = this._objectsPendingDocumentLoad.get(entry[0]) ?? {};
+        const key = !!opts.diskOnly;
+        const bucket = groups.get(key) ?? [];
+        bucket.push(entry);
+        groups.set(key, bucket);
+      }
+      for (const [diskOnly, entries] of groups) {
+        this._loadLinkedObjects(Object.fromEntries(entries), { diskOnly });
+      }
+    }
     linksAwaitingLoad.forEach(([objectId]) => this._objectsPendingDocumentLoad.delete(objectId));
 
     // Load newly discovered links that we are not already tracking.
+    // System-driven background prefetch: always `diskOnly: true` so the
+    // disk-probe / `onObjectUnavailable` path can fire. If the doc later
+    // arrives over the network, `onObjectDocumentLoaded` is emitted in
+    // the normal way and any prior "unavailable" mark is cleared by
+    // `CoreDatabase._onObjectDocumentLoaded`.
     const newLinks = Object.entries(links).filter(
       ([objectId]) => !this._objectDocumentHandles.has(objectId) && !this._objectsPendingDocumentLoad.has(objectId),
     );
     if (newLinks.length > 0) {
-      this._loadLinkedObjects(Object.fromEntries(newLinks));
+      this._loadLinkedObjects(Object.fromEntries(newLinks), { diskOnly: true });
     }
   }
 
@@ -243,7 +293,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     return (spaceRootDoc.links ?? {})[objectId]?.toString() as AutomergeUrl;
   }
 
-  private _loadLinkedObjects(links: SpaceDocumentLinks): void {
+  private _loadLinkedObjects(links: SpaceDocumentLinks, opts: LoadObjectDocumentOptions = {}): void {
     if (!links) {
       return;
     }
@@ -266,7 +316,7 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
       const handle = this._repo.find<DatabaseDirectory>(automergeUrl as DocumentId);
       log.debug('document loading triggered', logMeta);
       this._objectDocumentHandles.set(objectId, handle);
-      void this._loadHandleForObject(handle, objectId);
+      void this._loadHandleForObject(handle, objectId, opts);
     }
   }
 
@@ -286,7 +336,11 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
     });
   }
 
-  private async _loadHandleForObject(handle: DocHandleProxy<DatabaseDirectory>, objectId: string): Promise<void> {
+  private async _loadHandleForObject(
+    handle: DocHandleProxy<DatabaseDirectory>,
+    objectId: string,
+    opts: LoadObjectDocumentOptions = {},
+  ): Promise<void> {
     invariant(handle.url, 'Document URL is not available');
     try {
       if (this._currentlyLoadingObjects.has({ url: handle.url, objectId })) {
@@ -294,6 +348,24 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
         return;
       }
       this._currentlyLoadingObjects.add({ url: handle.url, objectId });
+
+      // Disk-only path: wait for the worker to settle the disk probe; if
+      // the doc is not on disk, surface "unavailable" without ever
+      // blocking on the network.
+      if (opts.diskOnly) {
+        const onDisk = await handle.whenSettledOnDisk();
+        if (!onDisk) {
+          this._currentlyLoadingObjects.delete({ url: handle.url, objectId });
+          log('object document unavailable on disk', { objectId, docUrl: handle.url });
+          if (this.onObjectUnavailable.listenerCount() > 0) {
+            this.onObjectUnavailable.emit({ handle, objectId });
+          }
+          return;
+        }
+        // Doc is on disk and the worker is loading the bytes; fall through
+        // to the standard `whenReady` wait, which now resolves quickly.
+      }
+
       await handle.whenReady();
       this._currentlyLoadingObjects.delete({ url: handle.url, objectId });
 
@@ -318,13 +390,18 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
         err,
       });
       if (shouldRetryLoading) {
-        await this._loadHandleForObject(handle, objectId);
+        await this._loadHandleForObject(handle, objectId, opts);
       }
     }
   }
 }
 
 export interface ObjectDocumentLoaded {
+  handle: DocHandleProxy<DatabaseDirectory>;
+  objectId: string;
+}
+
+export interface ObjectUnavailable {
   handle: DocHandleProxy<DatabaseDirectory>;
   objectId: string;
 }

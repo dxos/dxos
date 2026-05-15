@@ -31,12 +31,31 @@ export type DocHandleProxyOptions<T> = {
 };
 
 /**
+ * Settled state of the worker-side disk probe.
+ * `true` means the worker had the doc on disk and the handle is now `'ready'`.
+ * `false` means the worker did not find the doc on disk and is now requesting
+ * it over the network (handle is `'requesting'`).
+ */
+export type DiskSettlement = boolean;
+
+/**
  * A client-side `IDocHandle` implementation.
  * Syncs with a Automerge Repo in shared worker.
  * Inspired by Automerge's `DocHandle`.
+ *
+ * Lifecycle: `'pending' → 'requesting'? → 'ready'`. The handle starts in
+ * `'pending'`. The worker probes its local storage and either delivers the
+ * doc bytes (handle becomes `'ready'`), or notifies the client that the doc
+ * is not on disk and a network fetch has been started (handle becomes
+ * `'requesting'`). It can later transition `'requesting' → 'ready'` if the
+ * network ever delivers the bytes. Disk-only callers wait on
+ * {@link whenSettledOnDisk} to learn the outcome of the disk probe without
+ * blocking on the network.
  */
 export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> implements IDocHandle<T> {
   private readonly _ready = new Trigger();
+  private readonly _settledOnDisk = new Trigger<DiskSettlement>();
+  private _state: 'pending' | 'requesting' | 'ready' = 'pending';
   private _doc?: A.Doc<T> = undefined;
 
   private _lastSentHeads: A.Heads = [];
@@ -90,8 +109,8 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     return this._documentId;
   }
 
-  get state() {
-    return this._ready.state === TriggerState.RESOLVED ? 'ready' : 'pending';
+  get state(): 'pending' | 'requesting' | 'ready' {
+    return this._state;
   }
 
   doc(): A.Doc<T> {
@@ -107,6 +126,18 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
 
   isReady(): boolean {
     return this._ready.state === TriggerState.RESOLVED;
+  }
+
+  /**
+   * Resolves once the worker-side disk probe has settled — i.e. the handle
+   * has transitioned out of `'pending'`. Returns `true` if the doc was on
+   * disk (handle is now `'ready'`), `false` if it was not (handle is now
+   * `'requesting'` while the worker continues to fetch over the network).
+   * Use this for query-driven loads that should not block on network
+   * latency: if it resolves with `false`, treat the doc as unavailable.
+   */
+  async whenSettledOnDisk(): Promise<DiskSettlement> {
+    return this._settledOnDisk.wait();
   }
 
   change(fn: (doc: A.Doc<T>) => void, opts?: A.ChangeOptions<any>): void {
@@ -170,7 +201,31 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    * @internal
    */
   _wakeReady(): void {
+    this._state = 'ready';
     this._ready.wake();
+    // A `'ready'` outcome implies the doc was either on disk or arrived via
+    // the network. Either way the disk probe is settled (`true` because the
+    // handle ends up holding the doc, regardless of the actual source).
+    if (this._settledOnDisk.state !== TriggerState.RESOLVED) {
+      this._settledOnDisk.wake(true);
+    }
+  }
+
+  /**
+   * Mark the handle as `'requesting'`: worker-side disk probe completed and
+   * the doc is not on local disk; the worker is now fetching it over the
+   * network. Settles {@link whenSettledOnDisk} with `false`. No-op if the
+   * handle is already `'ready'` or has already been marked `'requesting'`.
+   * @internal
+   */
+  _markRequesting(): void {
+    if (this._state !== 'pending') {
+      return;
+    }
+    this._state = 'requesting';
+    if (this._settledOnDisk.state !== TriggerState.RESOLVED) {
+      this._settledOnDisk.wake(false);
+    }
   }
 
   /**
@@ -203,7 +258,10 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
    * Update the doc with a foreign mutation from worker.
    * @internal
    */
-  _integrateHostUpdate(mutation: Uint8Array): void {
+  _integrateHostUpdate(mutation: Uint8Array | undefined): void {
+    if (!mutation) {
+      return;
+    }
     invariant(this._doc, 'Doc is deleted, cannot write mutation');
     const before = this._doc;
     const headsBefore = A.getHeads(this._doc);
@@ -213,7 +271,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
       this._lastSentHeads = A.getHeads(this._doc);
     }
 
-    this._ready.wake();
+    this._wakeReady();
 
     this.emit('change', {
       handle: this,
