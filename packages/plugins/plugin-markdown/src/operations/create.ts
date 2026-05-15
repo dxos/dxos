@@ -17,7 +17,7 @@ const handler: Operation.WithHandler<typeof MarkdownOperation.Create> = Markdown
       yield* CollectionModel.add({ object });
 
       return {
-        id: Obj.getId(object),
+        id: Obj.getURI(object),
       };
     }),
   ),

@@ -40,7 +40,7 @@ export const AwaitingObject = ({ id }: { id: string }) => {
   }, [id]);
 
   useEffect(() => {
-    if (objects.findIndex((object) => Obj.getId(object) === id) > -1) {
+    if (objects.findIndex((object) => Obj.getURI(object) === id) > -1) {
       setFound(true);
       if (layout.active.includes(id)) {
         setOpen(false);

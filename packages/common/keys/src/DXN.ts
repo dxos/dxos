@@ -27,13 +27,13 @@ const DXN_SPEC_REGEXP =
  * dxn:org.dxos.plugin.markdown
  * ```
  */
-export type DXN = string & { readonly __DXN: unique symbol } & URI.URI;
+export type DXN = URI.URI & { readonly __DXN: unique symbol };
 
 /**
- * Returns true if the value is a valid DXN in the new `dxn:<nsid>[:<version>]` format.
- * Does not accept the legacy `dxn:<kind>:<...>` format.
+ * Cheap prefix check — does not validate the full DXN grammar (use `parse` for that).
+ * Sufficient for narrowing a URI to a DXN.
  */
-export const isDXN = (s: unknown): s is DXN => typeof s === 'string' && DXN_SPEC_REGEXP.test(s);
+export const isDXN = (s: unknown): s is DXN => typeof s === 'string' && s.startsWith('dxn:');
 
 /**
  * Creates an unversioned DXN from an NSID.
@@ -60,8 +60,8 @@ export const parse = (s: string): DXN => {
       return normalized;
     }
   }
-  if (isDXN(s)) {
-    return s;
+  if (typeof s === 'string' && DXN_SPEC_REGEXP.test(s)) {
+    return s as DXN;
   }
   throw new Error(`Invalid DXN: ${s}`);
 };
@@ -99,18 +99,14 @@ export const getVersion = (dxn: DXN): string | undefined => {
 };
 
 /**
- * Strict equality of two DXNs.
- */
-export const equals = (a: DXN, b: DXN): boolean => a === b;
-
-/**
  * Effect Schema for DXN validation.
  */
-const Schema_: Schema.Schema<DXN, string> = Schema.String.pipe(
+// Identity-encoded schema so consumers can refine generic schemas without the encode/decode types diverging.
+const Schema_: Schema.Schema<DXN, DXN> = Schema.String.pipe(
   Schema.filter(isDXN, { message: () => 'Invalid DXN' }),
   Schema.annotations({
     title: 'DXN',
     description: 'DXN URI: dxn:<nsid>[:<version>]',
   }),
-) as Schema.Schema<DXN, string>;
+) as unknown as Schema.Schema<DXN, DXN>;
 export { Schema_ as Schema };

@@ -60,7 +60,7 @@ export default Capability.makeModule(() =>
                 }
 
                 return {
-                  id: Obj.getId(view),
+                  id: Obj.getURI(view),
                   name: view.name ?? 'Unnamed Map',
                   typename: view.query.typename,
                 };

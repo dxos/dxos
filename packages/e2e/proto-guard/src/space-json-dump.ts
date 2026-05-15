@@ -89,7 +89,7 @@ export class SpacesDumper {
         if (!isEqual(actualIds, expectedIds)) {
           log.warn('object ids mismatch', {
             spaceId: space.id,
-            schema: Type.getDXN(schema)?.toString(),
+            schema: Type.getURI(schema)?.toString(),
             actualIds,
             expectedIds,
           });
@@ -111,7 +111,7 @@ export class SpacesDumper {
 
   static getExpectedObjectsOfType = (expected: SpacesDump, spaceId: SpaceId, schema: Type.AnyEntity) => {
     const objects = expected[spaceId] ?? [];
-    return Record.values(objects).filter((obj) => obj['@type'] === Type.getDXN(schema)?.toString());
+    return Record.values(objects).filter((obj) => obj['@type'] === Type.getURI(schema)?.toString());
   };
 }
 

@@ -11,8 +11,6 @@ import type { DXN } from '@dxos/keys';
 
 import { AssistantOperation } from '#types';
 
-// DXN re-export keeps TS declaration emit portable for ResolveNavigationTargets's inferred DXN.Schema field.
-export type { DXN as _DXNReference };
 
 export default AssistantOperation.ResolveNavigationTargets.pipe(
   Operation.withHandler(

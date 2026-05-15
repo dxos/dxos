@@ -459,10 +459,12 @@ export const snapshotOf: {
 
 // TODO(dmaretskyi): Allow returning undefined.
 /**
- * Get the canonical EchoId of the object.
+ * Get the canonical URI of the object. Returns `URI.URI` (today always an EchoId,
+ * but future entity kinds may surface other URI schemes — narrow with
+ * `EchoId.parse(uri)` or `DXN.parse(uri)` at the point of use).
  * Accepts both reactive objects and snapshots.
  */
-export const getId = (entity: Unknown | Snapshot): EchoId.EchoId => {
+export const getURI = (entity: Unknown | Snapshot): URI.URI => {
   assertArgument(!Schema.isSchema(entity), 'obj', 'Object should not be a schema.');
   return internal.getId(entity);
 };
@@ -806,7 +808,7 @@ export const toJSON = (entity: Unknown | Snapshot): JSON => objInternal.objectTo
  * The function must be async to support resolving the schema as well as the relation endpoints.
  *
  * @param options.refResolver - Resolver for references. Produces hydrated references that can be resolved.
- * @param options.dxn - Override object DXN. Changes the result of `Obj.getId`.
+ * @param options.dxn - Override object DXN. Changes the result of `Obj.getURI`.
  * @param options.database - Database to associate with the object.
  */
 export const fromJSON: (

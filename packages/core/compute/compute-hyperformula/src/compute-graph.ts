@@ -208,7 +208,7 @@ export class ComputeGraph extends Resource {
 
       const fn = this._remoteFunctions.find((fn) => fn.binding === binding);
       if (fn) {
-        const id = Obj.getId(fn);
+        const id = Obj.getURI(fn);
         return `${id}(${args})`;
       } else {
         return match;
@@ -227,7 +227,7 @@ export class ComputeGraph extends Resource {
     const replaceMatch = (echoId: string, args: string) => {
       const parsed = EchoId.tryParse(echoId);
       const canonical = parsed ?? echoId;
-      const fn = this._remoteFunctions.find((fn) => Obj.getId(fn) === canonical);
+      const fn = this._remoteFunctions.find((fn) => Obj.getURI(fn) === canonical);
       if (fn?.binding) {
         return `${fn.binding}(${args})`;
       }

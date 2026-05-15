@@ -45,7 +45,7 @@ const FilterObject_ = Schema.Struct({
   // NOTE: Make sure to update `FilterStep.isNoop` if you change this.
 });
 export interface FilterObject extends Schema.Schema.Type<typeof FilterObject_> {}
-export const FilterObject: Schema.Schema<FilterObject> = FilterObject_ as any;
+export const FilterObject: Schema.Schema<FilterObject> = FilterObject_;
 
 /**
  * Compare.
@@ -179,7 +179,7 @@ const FilterChildOf_ = Schema.Struct({
 });
 
 export interface FilterChildOf extends Schema.Schema.Type<typeof FilterChildOf_> {}
-export const FilterChildOf: Schema.Schema<FilterChildOf> = FilterChildOf_ as any;
+export const FilterChildOf: Schema.Schema<FilterChildOf> = FilterChildOf_;
 
 /**
  * Union of filters.
@@ -253,7 +253,7 @@ const QueryIncomingReferencesClause_ = Schema.Struct({
 
 export interface QueryIncomingReferencesClause extends Schema.Schema.Type<typeof QueryIncomingReferencesClause_> {}
 export const QueryIncomingReferencesClause: Schema.Schema<QueryIncomingReferencesClause> =
-  QueryIncomingReferencesClause_ as any;
+  QueryIncomingReferencesClause_;
 
 /**
  * Traverse relations connecting to an anchor object.
@@ -399,7 +399,7 @@ export const QueryFromClause_ = Schema.Struct({
   ),
 });
 export interface QueryFromClause extends Schema.Schema.Type<typeof QueryFromClause_> {}
-export const QueryFromClause: Schema.Schema<QueryFromClause> = QueryFromClause_ as any;
+export const QueryFromClause: Schema.Schema<QueryFromClause> = QueryFromClause_;
 
 const Query_ = Schema.Union(
   QuerySelectClause,

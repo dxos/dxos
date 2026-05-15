@@ -85,7 +85,7 @@ export type ArtifactId = Schema.Schema.Type<typeof ArtifactId>;
  * Schema that decodes ECHO reference object from an LLM-friendly input.
  */
 export const RefFromLLM = Schema.transform(ArtifactId, Ref.Ref(Obj.Unknown), {
-  decode: (fromA, fromI) => EncodedReference.fromEchoId(ArtifactId.toEchoId(fromA)),
+  decode: (fromA, fromI) => EncodedReference.fromURI(ArtifactId.toEchoId(fromA)),
   encode: (toI, toA) => EncodedReference.toURI(toI),
   strict: false,
 }).annotations({

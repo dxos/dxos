@@ -185,7 +185,7 @@ describe('Database Blueprint', () => {
         const org = yield* Database.add(
           Obj.make(Organization.Organization, { name: 'Detail Corp', description: 'A detailed organization.' }),
         );
-        const dxn = Obj.getId(org);
+        const dxn = Obj.getURI(org);
         yield* agent.submitPrompt(`Load the full details of object ${dxn}. What is its description?`);
         yield* agent.waitForCompletion();
       },
@@ -265,7 +265,7 @@ describe('Database Blueprint', () => {
         yield* agent.waitForCompletion();
         const tags = Obj.getMeta(org).tags ?? [];
         // TODO(dmaretskyi): matcher doesnt work with echo proxies.
-        expect([...tags]).toContain(Obj.getId(tag));
+        expect([...tags]).toContain(Obj.getURI(tag));
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -282,7 +282,7 @@ describe('Database Blueprint', () => {
         });
         const org = yield* Database.add(Obj.make(Organization.Organization, { name: 'Untagged Corp' }));
         const tag = yield* Database.add(Tag.make({ label: 'obsolete' }));
-        const tagDxn = Obj.getId(tag);
+        const tagDxn = Obj.getURI(tag);
         Entity.update(org, (org) => Entity.addTag(org, tagDxn));
         expect(Obj.getMeta(org).tags ?? []).toContain(tagDxn);
         yield* agent.submitPrompt(`Remove tag "obsolete" from the organization "Untagged Corp".`);
@@ -329,9 +329,9 @@ describe('Database Blueprint', () => {
         });
         const org = yield* Database.add(Obj.make(Organization.Organization, { name: 'Remove Context Corp' }));
         const { db } = yield* Database.Service;
-        const ref = db.makeRef(Obj.getId(org)) as Ref.Ref<any>;
+        const ref = db.makeRef(Obj.getURI(org)) as Ref.Ref<any>;
         yield* agent.addContext([ref]);
-        const dxn = Obj.getId(org);
+        const dxn = Obj.getURI(org);
         yield* agent.submitPrompt(`Remove the organization "Remove Context Corp" from the chat context.`);
         yield* agent.waitForCompletion();
         const contextRefs = yield* agent.getContext();
@@ -518,7 +518,7 @@ describe('Database Blueprint', () => {
             includeContent: false,
             limit: 10,
             typename: Organization.Organization.typename,
-            in: [Obj.getId(feed1)],
+            in: [Obj.getURI(feed1)],
           })}`,
         );
         yield* agent.waitForCompletion();

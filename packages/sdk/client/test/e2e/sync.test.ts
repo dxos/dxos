@@ -67,7 +67,7 @@ describe('sync', { timeout: 120_000, retry: 0, tags: ['sync-e2e'] }, async () =>
 
     console.log('\n### Creating object');
     const obj = space.db.add(Obj.make(TestSchema.Expando, { counter: 1 }));
-    const dxn = Obj.getId(obj);
+    const dxn = Obj.getURI(obj);
     await waitForSync(space.db);
 
     for (let i = 0; i < ITERATIONS; i++) {

@@ -121,7 +121,7 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
 }
 
 const getSortKey = (schema: Type.AnyEntity) =>
-  compositeKey(Type.getTypename(schema), Type.getVersion(schema), String(Type.getDXN(schema)));
+  compositeKey(Type.getTypename(schema), Type.getVersion(schema), String(Type.getURI(schema)));
 
 const filterOrderResults = (schemas: Type.AnyEntity[], query: SchemaRegistry.Query) => {
   const filtered = schemas

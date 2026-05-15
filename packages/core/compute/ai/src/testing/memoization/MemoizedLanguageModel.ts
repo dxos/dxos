@@ -34,35 +34,19 @@ const DISABLE_CLOSEST_MATCH_SEARCH = false;
 const TIME_LINE_PATTERN = /The current date and time is [^\n]+/g;
 const TIME_LINE_PLACEHOLDER = 'The current date and time is <memoized-datetime>.';
 
-/** Legacy `dxn:echo:<spaceId>:<objectId>` → canonical `echo://<spaceId>/<objectId>` so memos survive the URI format change. */
-const LEGACY_QUALIFIED_ECHO_PATTERN = /dxn:echo:([A-Z0-9]+):([A-Z0-9]+)\b/g;
-/** Legacy `dxn:echo:@:<objectId>` → canonical `echo:/<objectId>`. */
-const LEGACY_LOCAL_ECHO_PATTERN = /dxn:echo:@:([A-Z0-9]+)\b/g;
-/** Legacy `dxn:queue:<subspace>:<spaceId>:<queueId>:<itemId>` → canonical `echo://<spaceId>/<itemId>`. */
-const LEGACY_QUEUE_ITEM_PATTERN = /dxn:queue:[a-z]+:([A-Z0-9]+):[A-Z0-9]+:([A-Z0-9]+)\b/g;
-/** Legacy `dxn:queue:<subspace>:<spaceId>:<queueId>` → canonical `echo://<spaceId>/<queueId>`. */
-const LEGACY_QUEUE_PATTERN = /dxn:queue:[a-z]+:([A-Z0-9]+):([A-Z0-9]+)\b/g;
-/** Legacy `dxn:type:<nsid>` → canonical `dxn:<nsid>` (Phase 6 dropped the `type:` segment). */
-const LEGACY_TYPE_DXN_PATTERN = /dxn:type:([a-zA-Z0-9.-]+)/g;
 /**
- * Replace deterministic test ULIDs (`01JGFJJZ…`-prefixed) with a placeholder so memos
- * survive small PRNG drifts caused by unrelated test setup changes. The shared
- * prefix is fixed by ObjectId.dangerouslyDisableRandomness, so this only collapses
- * IDs from the test PRNG, not real ULIDs from prod.
+ * NEVER redact ObjectIds, EchoIds, or DXNs in this module. Memoized prompts
+ * must match the exact strings the LLM is asked to reason about — collapsing
+ * ids to a placeholder hides real mismatches and produces false hits. Test
+ * determinism comes from `ObjectId.dangerouslyDisableRandomness()` (test PRNG
+ * with a fixed seed); when memos drift, fix the upstream id generation or
+ * regenerate with `ALLOW_LLM_GENERATION=1`, do not normalize here.
  */
-const TEST_ULID_PATTERN = /01JGFJJZ[0-9A-Z]{18}/g;
 
 const normalizePromptForMemoization = (prompt: unknown): unknown =>
   deepMapValues(prompt, (value, recurse) => {
     if (typeof value === 'string') {
-      return value
-        .replace(TIME_LINE_PATTERN, TIME_LINE_PLACEHOLDER)
-        .replace(LEGACY_QUEUE_ITEM_PATTERN, 'echo://$1/$2')
-        .replace(LEGACY_QUEUE_PATTERN, 'echo://$1/$2')
-        .replace(LEGACY_QUALIFIED_ECHO_PATTERN, 'echo://$1/$2')
-        .replace(LEGACY_LOCAL_ECHO_PATTERN, 'echo:/$1')
-        .replace(LEGACY_TYPE_DXN_PATTERN, 'dxn:$1')
-        .replace(TEST_ULID_PATTERN, '<test-ulid>');
+      return value.replace(TIME_LINE_PATTERN, TIME_LINE_PLACEHOLDER);
     }
     return recurse(value);
   });
@@ -241,12 +225,7 @@ const getConversationFromOptions = (
 
 const converstationMatches = (haystack: MemoziedConversation, needle: MemoziedConversation): boolean => {
   // TODO(dmaretskyi): dequal doesn't work for some reason.
-  // Normalize both `parameters` and `prompt` — tool inputSchemas can embed
-  // legacy `dxn:type:` refs that the same URI normalization needs to strip.
-  if (
-    jsonStableStringify(normalizePromptForMemoization(cloneForMemoNormalization(haystack.parameters))) !==
-    jsonStableStringify(normalizePromptForMemoization(cloneForMemoNormalization(needle.parameters)))
-  ) {
+  if (jsonStableStringify(haystack.parameters) !== jsonStableStringify(needle.parameters)) {
     return false;
   }
 
@@ -376,7 +355,7 @@ const formatMemoizedConversation = (conversation: MemoziedConversation): string 
   return (
     jsonStableStringify(
       {
-        parameters: normalizePromptForMemoization(cloneForMemoNormalization(conversation.parameters)),
+        parameters: conversation.parameters,
         // Promps may contain long encrypted strings, which are not important to see. We sanitize them so that levenstein distance doesn't OOM.
         prompt: deepMapValues(
           normalizePromptForMemoization(cloneForMemoNormalization(conversation.prompt)),

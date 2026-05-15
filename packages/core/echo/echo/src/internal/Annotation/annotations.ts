@@ -50,7 +50,7 @@ export const getTypeIdentifierAnnotation = (schema: Schema.Schema.All) =>
  *
  * Derived from the schema's typename + version — universal across stored and non-stored
  * schemas. The schema-as-object EchoId (for stored schemas) is tracked separately via
- * `TypeIdentifierAnnotation` / `Obj.getId(persistentSchema)`.
+ * `TypeIdentifierAnnotation` / `Obj.getURI(persistentSchema)`.
  */
 export const getSchemaDXN = (schema: Schema.Schema.All): DXN.DXN | undefined => {
   assertArgument(Schema.isSchema(schema), 'schema', 'invalid schema');

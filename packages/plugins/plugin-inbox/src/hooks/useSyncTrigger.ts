@@ -59,7 +59,7 @@ export const useSyncTrigger = ({
   const [pending, setPending] = useState(false);
   const triggers = useQuery(db, Query.select(Filter.type(Trigger.Trigger)).debugLabel('plugin-inbox.useSyncTrigger'));
 
-  const subjectDxn = Obj.getId(subject);
+  const subjectDxn = Obj.getURI(subject);
   const syncTrigger = useMemo(
     () =>
       triggers.find((trigger) => {
@@ -98,7 +98,7 @@ export const useSyncTrigger = ({
         enabled: true,
         spec: Trigger.specTimer('*/5 * * * *'),
         function: Ref.make(fn),
-        input: { [inputKey]: db.makeRef(Obj.getId(subject)), ...extraInput },
+        input: { [inputKey]: db.makeRef(Obj.getURI(subject)), ...extraInput },
       });
 
       db.add(trigger);

@@ -14,7 +14,7 @@ export const TemplatePanel = ({ role, subject: object, attendableId: _attendable
   return (
     <Panel.Root role={role} className='dx-document'>
       <Panel.Content>
-        <span>{Obj.getId(object)}</span>
+        <span>{Obj.getURI(object)}</span>
       </Panel.Content>
     </Panel.Root>
   );

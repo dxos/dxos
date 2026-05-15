@@ -64,7 +64,7 @@ export default Capability.makeModule(
       }
 
       const object = node.data;
-      const companionDxn = Obj.getId(object);
+      const companionDxn = Obj.getURI(object);
       const cache = registry.get(cacheAtom);
       if (cache[companionDxn]) {
         return true;

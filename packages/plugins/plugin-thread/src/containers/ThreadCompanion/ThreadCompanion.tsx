@@ -35,7 +35,7 @@ export const ThreadCompanion = ({ attendableId, subject }: ThreadCompanionProps)
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const identity = useIdentity();
-  const subjectId = Obj.getId(subject);
+  const subjectId = Obj.getURI(subject);
   const parentId = attendableId ? getParentId(attendableId) : undefined;
   const registry = useCapability(Capabilities.AtomRegistry);
 
@@ -85,7 +85,7 @@ export const ThreadCompanion = ({ attendableId, subject }: ThreadCompanionProps)
   const handleAttend = useCallback(
     (anchor: AnchoredTo.AnchoredTo) => {
       const thread = Relation.getSource(anchor) as Thread.Thread;
-      const threadId = Obj.getId(thread);
+      const threadId = Obj.getURI(thread);
 
       if (state.current !== threadId) {
         registry.set(stateAtom, { ...registry.get(stateAtom), current: threadId });
@@ -120,7 +120,7 @@ export const ThreadCompanion = ({ attendableId, subject }: ThreadCompanionProps)
       });
 
       const thread = Relation.getSource(anchor) as Thread.Thread;
-      registry.set(stateAtom, { ...registry.get(stateAtom), current: Obj.getId(thread) });
+      registry.set(stateAtom, { ...registry.get(stateAtom), current: Obj.getURI(thread) });
     },
     [invokePromise, identity, subject, registry, stateAtom],
   );

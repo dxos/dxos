@@ -54,10 +54,10 @@ export const CommentsThread = ({
   const detached = !anchor.anchor;
   const thread = Relation.getSource(anchor) as Thread.Thread;
   const [messages] = useObject(thread, 'messages');
-  const activity = useStatus(space, Obj.getId(thread));
+  const activity = useStatus(space, Obj.getURI(thread));
   const threadScrollRef = useRef<HTMLDivElement | null>(null);
 
-  const textboxMetadata = getMessageMetadata(Obj.getId(thread), identity);
+  const textboxMetadata = getMessageMetadata(Obj.getURI(thread), identity);
 
   // TODO(wittjosiah): This is a hack to reset the editor after a message is sent.
   const [state, setState] = useState({});
@@ -97,7 +97,7 @@ export const CommentsThread = ({
 
   return (
     <ThreadComponent.Root
-      id={Obj.getId(thread)}
+      id={Obj.getURI(thread)}
       classNames='pt-2 border-b border-subdued-separator last:border-none'
       current={current}
       onClickCapture={handleAttend}

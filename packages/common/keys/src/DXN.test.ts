@@ -15,10 +15,12 @@ describe('DXN.isDXN', () => {
     expect(DXN.isDXN('dxn:org.dxos.type.calendarEvent')).toBe(true);
   });
 
-  test('rejects legacy kind-segment DXNs', ({ expect }) => {
-    expect(DXN.isDXN('dxn:type:org.dxos.type.calendar')).toBe(false);
-    expect(DXN.isDXN('dxn:echo:@:01J00J9B45YHYSGZQTQMSKMGJ6')).toBe(false);
-    expect(DXN.isDXN('dxn:queue:data:BA25...:01J00...')).toBe(false);
+  test('accepts legacy kind-segment DXNs (prefix check only)', ({ expect }) => {
+    // `isDXN` is a cheap prefix check; legacy formats start with `dxn:` and pass.
+    // Full grammar validation lives in `parse`.
+    expect(DXN.isDXN('dxn:type:org.dxos.type.calendar')).toBe(true);
+    expect(DXN.isDXN('dxn:echo:@:01J00J9B45YHYSGZQTQMSKMGJ6')).toBe(true);
+    expect(DXN.isDXN('dxn:queue:data:BA25...:01J00...')).toBe(true);
   });
 
   test('rejects non-DXN strings', ({ expect }) => {
@@ -79,16 +81,3 @@ describe('DXN.getVersion', () => {
   });
 });
 
-describe('DXN.equals', () => {
-  test('returns true for identical DXNs', ({ expect }) => {
-    const a = DXN.fromTypename('org.dxos.type.calendar');
-    const b = DXN.fromTypename('org.dxos.type.calendar');
-    expect(DXN.equals(a, b)).toBe(true);
-  });
-
-  test('returns false for different DXNs', ({ expect }) => {
-    const a = DXN.fromTypename('org.dxos.type.calendar');
-    const b = DXN.fromTypename('org.dxos.type.event');
-    expect(DXN.equals(a, b)).toBe(false);
-  });
-});

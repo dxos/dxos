@@ -299,7 +299,7 @@ export class TableModel<T extends TableRow = TableRow> extends Resource {
   }
 
   public get id(): string {
-    return Obj.getId(this._object);
+    return Obj.getURI(this._object);
   }
 
   public get view(): View.View {

@@ -61,7 +61,7 @@ export default Update.pipe(
       }
 
       return {
-        function: Obj.getId(loaded),
+        function: Obj.getURI(loaded),
       };
     }),
   ),

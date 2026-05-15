@@ -24,7 +24,7 @@ import {
   getTypeIdentifierAnnotation,
 } from '@dxos/echo/internal';
 import { mapAst } from '@dxos/effect';
-import { DXN, EchoId, ObjectId } from '@dxos/keys';
+import { DXN, EchoId, ObjectId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, isNonNullable, trim } from '@dxos/util';
 
@@ -157,7 +157,7 @@ export const makeGraphWriterHandler = (
   {
     onAppend,
   }: {
-    onAppend?: (object: EchoId.EchoId[]) => void;
+    onAppend?: (object: URI.URI[]) => void;
   } = {},
 ) => {
   const { schema } = Context.get(
@@ -172,7 +172,7 @@ export const makeGraphWriterHandler = (
       const data = yield* sanitizeObjects(schema, input as any, db, feed);
       yield* Feed.append(feed, data as Obj.Unknown[]);
 
-      const dxns = data.map((obj) => Obj.getId(obj));
+      const dxns = data.map((obj) => Obj.getURI(obj));
       onAppend?.(dxns);
       return dxns;
     }),
@@ -188,7 +188,7 @@ export const createExtractionSchema = (types: Type.AnyEntity[]) => {
       types.map(preprocessSchema).map((schema, index) => [
         `objects_${getSanitizedSchemaName(types[index])}`,
         Schema.optional(Schema.Array(schema)).annotations({
-          description: `The objects of type: ${DXN.getNsid(Type.getDXN(types[index])!)}. ${SchemaAST.getDescriptionAnnotation(types[index].ast).pipe(Option.getOrElse(() => ''))}`,
+          description: `The objects of type: ${DXN.getNsid(DXN.parse(Type.getURI(types[index])!))}. ${SchemaAST.getDescriptionAnnotation(types[index].ast).pipe(Option.getOrElse(() => ''))}`,
         }),
       ]),
     ),
@@ -196,7 +196,7 @@ export const createExtractionSchema = (types: Type.AnyEntity[]) => {
 };
 
 export const getSanitizedSchemaName = (schema: Type.AnyEntity) => {
-  return DXN.getNsid(Type.getDXN(schema)!).replaceAll(/[^a-zA-Z0-9]+/g, '_');
+  return DXN.getNsid(DXN.parse(Type.getURI(schema)!)).replaceAll(/[^a-zA-Z0-9]+/g, '_');
 };
 
 export const sanitizeObjects = (

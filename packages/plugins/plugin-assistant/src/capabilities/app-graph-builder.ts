@@ -129,7 +129,7 @@ export default Capability.makeModule(
           Effect.gen(function* () {
             const state = get(yield* Capability.get(AssistantCapabilities.State));
             const cache = get(yield* Capability.get(AssistantCapabilities.CompanionChatCache));
-            const objectDxn = Obj.getId(object);
+            const objectDxn = Obj.getURI(object);
 
             // Resolve chat from persisted state or transient cache.
             const chat = pipe(

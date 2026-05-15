@@ -50,6 +50,13 @@ export class QueueFactory extends Resource implements QueueAPI {
     return this._queues.get(echoId) as Queue<T> | undefined;
   }
 
+  /**
+   * Iterate queues already instantiated in this space (does not enumerate persisted feed catalog).
+   */
+  knownQueues(): Iterable<Queue<Entity.Unknown>> {
+    return this._queues.values();
+  }
+
   create<T extends Entity.Unknown>({ subspaceTag = QueueSubspaceTags.DATA }: { subspaceTag?: string } = {}): Queue<T> {
     const echoId = EchoId.fromSpaceAndObjectId(this._spaceId, ObjectId.random());
     return this._getOrCreate<T>(echoId, subspaceTag);

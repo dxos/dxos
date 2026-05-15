@@ -100,7 +100,7 @@ const useCollectionItems = (collection: Collection.Collection, attendableId?: st
         const targetPath = attendableId ? getCollectionObjectPath(attendableId, obj.id) : getObjectPathFromObject(obj);
 
         return {
-          id: Obj.getId(obj),
+          id: Obj.getURI(obj),
           object: obj,
           targetPath,
           icon: iconAnnotation?.icon ?? 'ph--placeholder--regular',

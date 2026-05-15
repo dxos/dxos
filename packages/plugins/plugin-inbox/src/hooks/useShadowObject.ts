@@ -18,7 +18,7 @@ export const useShadowObject = <T extends Obj.Unknown>(
   subject: T,
   type: Type.AnyObj,
 ): [T | undefined, () => T] => {
-  const id = Obj.getId(subject);
+  const id = Obj.getURI(subject);
   const objects = useQuery(db, Filter.type(type));
 
   const [target, setTarget] = useState<T | undefined>();

@@ -16,7 +16,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.EnsureCompanionCh
     Operation.withHandler(
       Effect.fnUntraced(function* ({ db, companionTo }) {
         const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
-        const companionDxn = Obj.getId(companionTo);
+        const companionDxn = Obj.getURI(companionTo);
 
         // 1. Look for an existing persisted companion chat in the space.
         const existingChats = yield* Effect.promise(() =>

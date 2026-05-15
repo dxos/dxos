@@ -39,7 +39,7 @@ export const syncObjects: (
         if (!ref.target) {
           continue;
         }
-        const targetDxn = EchoId.tryParse(Obj.getId(ref.target));
+        const targetDxn = EchoId.tryParse(Obj.getURI(ref.target));
         if (targetDxn && EchoId.isLocal(targetDxn)) {
           // obj not persisted to db.
           const [target] = yield* syncObjects([ref.target], { foreignKeyId });
@@ -55,7 +55,7 @@ export const syncObjects: (
       log('sync object', {
         type: Obj.getTypename(obj),
         foreignId,
-        existing: existing ? Obj.getId(existing) : undefined,
+        existing: existing ? Obj.getURI(existing) : undefined,
       });
       if (!existing) {
         yield* Database.add(obj);

@@ -415,10 +415,12 @@ export interface InvokeOptions {
    */
   spaceId?: Key.SpaceId;
   /**
-   * EchoId of the conversation feed (queue).
+   * URI of the conversation feed (queue) — today always an EchoId, but typed as
+   * `URI.URI` to accommodate future entity-kind extensions. Narrow with `EchoId.parse`
+   * at the point of use.
    * Passed to the process environment so nested operations can resolve AiContext.Service and related services.
    */
-  conversation?: Key.EchoId.EchoId;
+  conversation?: Key.URI.URI;
   /**
    * Optional process-runtime tracing metadata (consumed by `@dxos/functions-runtime` when wired).
    */

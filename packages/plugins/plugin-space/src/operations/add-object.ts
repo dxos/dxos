@@ -50,7 +50,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
       });
 
       return {
-        id: Obj.getId(object),
+        id: Obj.getURI(object),
         subject: [subject],
         object,
       };

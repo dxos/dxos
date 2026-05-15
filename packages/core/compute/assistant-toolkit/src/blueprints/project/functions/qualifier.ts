@@ -11,16 +11,12 @@ import { AiService } from '@dxos/ai';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import type { EchoId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 import { Plan, Agent } from '../../../types';
 import { Qualifier } from './definitions';
 
-// EchoId re-export keeps TS declaration emit portable — referenced by inferred TriggerEvent.QueueEvent type.
-export type { EchoId as _EchoIdReference };
-
-export default Qualifier.pipe(
+const handler: Operation.WithHandler<typeof Qualifier> = Qualifier.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* ({ agent: agentRef, event }) {
@@ -92,3 +88,4 @@ export default Qualifier.pipe(
     ),
   ),
 );
+export default handler;

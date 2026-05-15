@@ -388,10 +388,11 @@ const annotations_toJsonSchemaFields = (annotations: SchemaAST.Annotations): Rec
     schemaFields[ECHO_ANNOTATIONS_NS_KEY] = echoAnnotations;
   }
 
+  // For stored schemas the storage URI is the definitive identifier — it overrides
+  // the typename `$id` written above.
   const echoIdentifier = annotations[TypeIdentifierAnnotationId];
   if (echoIdentifier) {
-    schemaFields[ECHO_ANNOTATIONS_NS_KEY] ??= {};
-    schemaFields[ECHO_ANNOTATIONS_NS_KEY].schemaId = echoIdentifier;
+    schemaFields.$id = echoIdentifier;
   }
 
   // Custom (at end).
@@ -406,15 +407,14 @@ const annotations_toJsonSchemaFields = (annotations: SchemaAST.Annotations): Rec
 };
 
 const decodeTypeIdentifierAnnotation = (schema: JsonSchemaType): string | undefined => {
-  // New format: $id is the typename DXN; the storage EchoId rides on the annotations namespace
-  // (or echo.type.schemaId for legacy serializations).
-  const schemaId = schema.annotations?.schemaId ?? schema.echo?.type?.schemaId;
-  if (schemaId) {
-    return ObjectId.isValid(schemaId) ? EchoId.fromLocalObjectId(schemaId) : schemaId;
-  }
-  // Legacy: $id was the EchoId (dxn:echo:...) for stored schemas.
-  if (schema.$id && schema.$id.startsWith('dxn:echo:')) {
+  // For stored schemas `$id` IS the storage URI (echo:/… or legacy dxn:echo:…).
+  if (schema.$id && (schema.$id.startsWith('echo:') || schema.$id.startsWith('dxn:echo:'))) {
     return schema.$id;
+  }
+  // Legacy: pre-Phase-6 serializations stored the EchoId on echo.type.schemaId.
+  const legacySchemaId = (schema as any).echo?.type?.schemaId ?? (schema as any).echo?.schemaId;
+  if (legacySchemaId) {
+    return ObjectId.isValid(legacySchemaId) ? EchoId.fromLocalObjectId(legacySchemaId) : legacySchemaId;
   }
   return undefined;
 };
@@ -469,7 +469,7 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): SchemaAST.Annota
     annotations[TypeAnnotationId] = typeAnnotation;
     annotations[SchemaAST.JSONSchemaAnnotationId] = makeTypeJsonSchemaAnnotation({
       // $id is the typename DXN — the schema's type identity. The storage EchoId (if any)
-      // is preserved separately on TypeIdentifierAnnotation.
+      // is preserved separately on TypeIdentifierAnnotation / echo.schemaId.
       identifier: DXN.fromTypenameAndVersion(typeAnnotation.typename, typeAnnotation.version),
       kind: typeAnnotation.kind,
       typename: typeAnnotation.typename,

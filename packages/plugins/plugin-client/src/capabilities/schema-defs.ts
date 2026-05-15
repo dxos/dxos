@@ -25,7 +25,7 @@ export default Capability.makeModule(
         const seenSchemaDxns = new Set<string>();
         const batch: { schema: Type.AnyEntity; dxnKey: string }[] = [];
         for (const schema of schemas.flat()) {
-          const dxn = Type.getDXN(schema);
+          const dxn = Type.getURI(schema);
           if (!dxn) {
             log.warn('skipping schema without dxn');
             continue;

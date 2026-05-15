@@ -44,7 +44,7 @@ const DefaultStory = () => {
       if (!obj) {
         return;
       }
-      const dxn = Obj.getId(obj);
+      const dxn = Obj.getURI(obj);
       if (!dxn) {
         return;
       }

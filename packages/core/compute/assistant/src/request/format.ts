@@ -57,7 +57,7 @@ export const formatSystemPrompt = ({
       Effect.forEach((object) =>
         Effect.succeed(trim`
           <object>
-            <dxn>${Obj.getId(object)}</dxn>
+            <dxn>${Obj.getURI(object)}</dxn>
             <typename>${Obj.getTypename(object)}</typename>
           </object>
         `),

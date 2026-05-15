@@ -164,7 +164,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
 
         if (Ref.isRef(targetValue)) {
           const feedDxn = targetValue.uri;
-          const feed = feeds.find((feed) => Obj.getId(feed) === feedDxn);
+          const feed = feeds.find((feed) => Obj.getURI(feed) === feedDxn);
           if (feed) {
             queueDxn = Feed.getQueueDxn(feed);
           }

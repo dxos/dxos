@@ -31,7 +31,7 @@ export const useReferencesProvider = (space?: Space): ReferencesProvider | undef
           .filter(Obj.isObject)
           .filter((object) => stringMatch(query, Obj.getLabel(object) ?? ''))
           .map((object) => ({
-            uri: Obj.getId(object),
+            uri: Obj.getURI(object),
             label: Obj.getLabel(object) ?? '',
           }));
       },

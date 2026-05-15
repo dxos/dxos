@@ -15,8 +15,6 @@ import { meta } from '#meta';
 
 import { TriggerTemplate } from './schema';
 
-// EchoId re-export keeps TS declaration emit portable — referenced by TriggerTemplate's inferred type.
-export type { _EchoId as _EchoIdReference };
 
 const AUTOMATION_OPERATION = `${meta.id}.operation`;
 

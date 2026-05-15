@@ -375,7 +375,7 @@ export const pushBoardCards = Effect.fn('pushBoardCards')(function* <R>(
 
     if (localListName && !listId) {
       log.warn('trello push: listName has no matching remote list; card will not move', {
-        cardId: Obj.getId(target),
+        cardId: Obj.getURI(target),
         listName: localListName,
       });
     }

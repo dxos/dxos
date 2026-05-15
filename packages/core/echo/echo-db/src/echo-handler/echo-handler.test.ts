@@ -200,7 +200,7 @@ describe('Reactive Object with ECHO database', () => {
     expect(Entity.isSnapshot(snapshot)).to.be.true;
     expect(Relation.isSnapshot(snapshot)).to.be.false;
     expect(Obj.getSchema(snapshot)).to.eq(TestSchema.Example);
-    expect(Obj.getId(snapshot)).to.eq(Obj.getId(obj));
+    expect(Obj.getURI(snapshot)).to.eq(Obj.getURI(obj));
   });
 
   test('throws if schema was not annotated as echo object', async () => {
@@ -719,7 +719,7 @@ describe('Reactive Object with ECHO database', () => {
       const obj = db.add(Obj.make(TestSchema.Expando, { field: 1 }));
       const typeDXN = getSchemaDXN(TestSchema.Example)!;
       getObjectCore(obj).setType(EncodedReference.fromURI(typeDXN));
-      expect(Obj.getTypeDXN(obj)).to.deep.eq(Type.getDXN(TestSchema.Example));
+      expect(Obj.getTypeDXN(obj)).to.deep.eq(Type.getURI(TestSchema.Example));
     });
 
     test('meta persistence', async () => {
@@ -764,7 +764,7 @@ describe('Reactive Object with ECHO database', () => {
         '@meta': { keys: [] },
         '@type': 'dxn:com.example.type.expando:0.1.0',
         name: 'John',
-        worksAt: EncodedReference.fromEchoId(EchoId.fromLocalObjectId(org.id)),
+        worksAt: EncodedReference.fromURI(EchoId.fromLocalObjectId(org.id)),
       });
     });
 
@@ -928,10 +928,10 @@ describe('Reactive Object with ECHO database', () => {
     expect(dbObj.queue.uri).to.include(queueId!);
   });
 
-  test('Obj.getId returns full DXN', async () => {
+  test('Obj.getURI returns full DXN', async () => {
     const { db } = await builder.createDatabase();
     const obj = db.add(Obj.make(TestSchema.Expando, { string: 'Object 1' }));
-    expect(Obj.getId(obj)).to.match(/^echo:\/\//);
+    expect(Obj.getURI(obj)).to.match(/^echo:\/\//);
   });
 
   test('Obj.getDatabase works with both reactive object and snapshot', async () => {

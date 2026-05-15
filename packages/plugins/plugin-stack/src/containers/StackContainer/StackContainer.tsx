@@ -63,13 +63,13 @@ export const StackContainer = ({ attendableId, subject: collection }: StackConta
     const metadata: StackSectionMetadata = { icon: iconAnnotation?.icon };
     const view = {
       // ...stack.sections[object.id],
-      collapsed: collapsedSections[Obj.getId(object)],
+      collapsed: collapsedSections[Obj.getURI(object)],
       title:
         (object as any)?.title ??
         // TODO(wittjosiah): `getNode` is not reactive.
-        toLocalizedString(Graph.getNode(graph, Obj.getId(object)).pipe(Option.getOrNull)?.properties.label, t),
+        toLocalizedString(Graph.getNode(graph, Obj.getURI(object)).pipe(Option.getOrNull)?.properties.label, t),
     } as StackSectionView;
-    return { id: Obj.getId(object), object, metadata, view } satisfies StackSectionItem;
+    return { id: Obj.getURI(object), object, metadata, view } satisfies StackSectionItem;
   });
 
   const handleDelete = useCallback(
@@ -77,7 +77,7 @@ export const StackContainer = ({ attendableId, subject: collection }: StackConta
       const index = collection.objects
         .map((object) => object.target)
         .filter(isNonNullable)
-        .findIndex((section) => Obj.getId(section) === id);
+        .findIndex((section) => Obj.getURI(section) === id);
       const object = collection.objects[index].target;
       if (Obj.isObject(object)) {
         await invokePromise(SpaceOperation.RemoveObjects, {
@@ -152,7 +152,7 @@ export const StackContainer = ({ attendableId, subject: collection }: StackConta
         <Stack
           orientation='vertical'
           size='intrinsic'
-          id={Obj.getId(collection)}
+          id={Obj.getURI(collection)}
           data-testid='main.stack'
           classNames='overflow-y-auto'
         >

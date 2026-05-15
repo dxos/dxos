@@ -8,7 +8,7 @@ import type * as Schema from 'effect/Schema';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { type DXN } from '@dxos/keys';
+import { type DXN, type URI } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
 import type * as Entity from './Entity';
@@ -212,12 +212,12 @@ export type AnyRef = Schema.Schema<internal.Ref<any>, EncodedReference>;
 //
 
 /**
- * Gets the full DXN of the schema.
- * Will include the version if it's a `type` DXN.
+ * Gets the URI identifying the schema — currently always a DXN, but typed as
+ * `URI.URI` so future stored-schema URIs (echo:/…) can be returned without
+ * breaking callers.
  * @example "dxn:com.example.type.person:0.1.0"
- * @example "dxn:echo:SSSSSSSSSS:XXXXXXXXXXXXX"
  */
-export const getDXN = (schema: AnyEntity): DXN.DXN | undefined => {
+export const getURI = (schema: AnyEntity): URI.URI | undefined => {
   return internal.getSchemaDXN(schema);
 };
 

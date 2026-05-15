@@ -14,7 +14,7 @@ export default TagAdd.pipe(
     Effect.fn(function* ({ tag, obj }) {
       const object = yield* Database.load(obj);
       const tagObj = yield* Database.load(tag);
-      Entity.update(object, (object) => Entity.addTag(object, Obj.getId(tagObj)));
+      Entity.update(object, (object) => Entity.addTag(object, Obj.getURI(tagObj)));
       return Entity.toJSON(object);
     }),
   ),

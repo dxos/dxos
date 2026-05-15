@@ -24,7 +24,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
   Operation.withHandler(
     Effect.fnUntraced(
       function* ({ message }) {
-        if (message['@type'] !== Type.getDXN(Message.Message)) {
+        if (message['@type'] !== Type.getURI(Message.Message)) {
           log.info('not a message object, skipping classification', { message });
           return;
         }
@@ -76,7 +76,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
           return yield* Effect.fail(new Error(`Tag not found: ${selectedTagLabel}`));
         }
 
-        log.info('selected tag', { tagId: Obj.getId(selectedTag), tagLabel: selectedTag.label });
+        log.info('selected tag', { tagId: Obj.getURI(selectedTag), tagLabel: selectedTag.label });
 
         // Find the feed by querying for mailboxes in the database.
         // After the identifier refactor, message DXNs are ECHO-kind (dxn:echo:spaceId:itemId)
@@ -113,7 +113,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
         yield* Database.flush();
 
         return {
-          tagId: Obj.getId(selectedTag),
+          tagId: Obj.getURI(selectedTag),
           tagLabel: selectedTag.label,
         };
       },

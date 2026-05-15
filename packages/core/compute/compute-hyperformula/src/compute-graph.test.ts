@@ -38,7 +38,7 @@ describe('ComputeGraph', () => {
     expect(functions).to.toHaveLength(1);
 
     const id = graph.mapFunctionBindingToId('TEST()');
-    expect(id).to.eq(`${Obj.getId(functionObject)}()`);
+    expect(id).to.eq(`${Obj.getURI(functionObject)}()`);
 
     const restored = graph.mapFunctionBindingFromId(id);
     expect(restored).to.eq('TEST()');

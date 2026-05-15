@@ -41,7 +41,7 @@ const DefaultStory = () => {
     return <Loading />;
   }
 
-  const dxn = Obj.getId(organization);
+  const dxn = Obj.getURI(organization);
   return (
     <div className='flex flex-col gap-2 p-4'>
       <p>

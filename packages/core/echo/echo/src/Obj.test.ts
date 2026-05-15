@@ -42,8 +42,8 @@ describe('Obj', () => {
       const snapshot = Obj.getSnapshot(obj);
 
       // getDXN - works with both.
-      expect(Obj.getId(obj)).toBeDefined();
-      expect(Obj.getId(snapshot)).toBeDefined();
+      expect(Obj.getURI(obj)).toBeDefined();
+      expect(Obj.getURI(snapshot)).toBeDefined();
 
       // getTypename - works with both.
       expect(Obj.getTypename(obj)).toBe('com.example.type.person');

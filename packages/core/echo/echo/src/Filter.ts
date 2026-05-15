@@ -347,7 +347,7 @@ export type ChildOfOptions = {
 /**
  * Filter objects that are children of the specified parent(s).
  * Accepts ECHO objects, Refs, or arrays of either.
- * Refs are resolved to DXNs without loading; objects use {@link Obj.getId}.
+ * Refs are resolved to DXNs without loading; objects use {@link Obj.getURI}.
  * With transitive=true (default), also matches grandchildren and beyond.
  */
 export const childOf = (

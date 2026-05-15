@@ -192,11 +192,11 @@ export class Binder extends Resource {
     const reducedBlueprintDxns = new Set<URI.URI>([...bindings.blueprints].map((ref) => ref.uri));
     const reducedObjectDxns = new Set<URI.URI>([...bindings.objects].map((ref) => ref.uri));
     const filteredBlueprints = currentBlueprints.filter((obj) => {
-      const dxn = Obj.getId(obj);
+      const dxn = Obj.getURI(obj);
       return dxn != null && reducedBlueprintDxns.has(dxn);
     });
     const filteredObjects = currentObjects.filter((obj) => {
-      const dxn = Obj.getId(obj);
+      const dxn = Obj.getURI(obj);
       return dxn != null && reducedObjectDxns.has(dxn);
     });
     const mergedBlueprints = this._mergeInto(filteredBlueprints, resolvedBlueprints);
@@ -260,14 +260,14 @@ export class Binder extends Resource {
       const current = this._registry.get(this._blueprints);
       this._registry.set(
         this._blueprints,
-        current.filter((obj) => !removedBlueprintDxns.some((dxn) => Obj.getId(obj) === dxn)),
+        current.filter((obj) => !removedBlueprintDxns.some((dxn) => Obj.getURI(obj) === dxn)),
       );
     }
     if (removedObjectDxns.length > 0) {
       const current = this._registry.get(this._objects);
       this._registry.set(
         this._objects,
-        current.filter((obj) => !removedObjectDxns.some((dxn) => Obj.getId(obj) === dxn)),
+        current.filter((obj) => !removedObjectDxns.some((dxn) => Obj.getURI(obj) === dxn)),
       );
     }
 
@@ -301,7 +301,7 @@ export class Binder extends Resource {
       return { added, next };
     }
 
-    const seen = new Set<URI.URI>(current.map((obj) => Obj.getId(obj)));
+    const seen = new Set<URI.URI>(current.map((obj) => Obj.getURI(obj)));
     for (const ref of refs) {
       const dxn = ref.uri;
       if (!seen.has(dxn)) {
@@ -354,10 +354,10 @@ export class Binder extends Resource {
    * Merge resolved items into the current set, adding only items not already present (by DXN).
    */
   private _mergeInto<T extends Obj.Unknown>(current: T[], resolved: T[]): T[] {
-    const seen = new Set(current.map((obj) => Obj.getId(obj)));
+    const seen = new Set(current.map((obj) => Obj.getURI(obj)));
     const merged = [...current];
     for (const obj of resolved) {
-      const dxn = Obj.getId(obj);
+      const dxn = Obj.getURI(obj);
       if (!seen.has(dxn)) {
         seen.add(dxn);
         merged.push(obj);
@@ -384,7 +384,7 @@ export class Binder extends Resource {
         }
 
         // Fallback to existing object.
-        return target ?? current.find((obj) => Obj.getId(obj) === ref.uri);
+        return target ?? current.find((obj) => Obj.getURI(obj) === ref.uri);
       })
       .filter(isNonNullable);
   }

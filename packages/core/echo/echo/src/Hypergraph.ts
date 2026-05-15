@@ -26,11 +26,6 @@ export interface RefResolutionContext {
    * This feed will be searched first, and then the space it belongs to.
    */
   feed?: EchoId.EchoId;
-
-  /**
-   * @deprecated Use `feed` (EchoId) instead.
-   */
-  queue?: EchoId.EchoId;
 }
 
 export interface RefResolverOptions {

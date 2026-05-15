@@ -24,12 +24,22 @@ export const EmailEvent = Schema.Struct({
 });
 export type EmailEvent = Schema.Schema.Type<typeof EmailEvent>;
 
-export const QueueEvent = Schema.Struct({
+const _QueueEvent = Schema.Struct({
   queue: EchoId.Schema,
   item: Schema.Any,
   cursor: Schema.String,
 });
-export type QueueEvent = Schema.Schema.Type<typeof QueueEvent>;
+/**
+ * Explicit interface (rather than `Schema.Schema.Type<typeof _QueueEvent>`)
+ * so consumers reference the named type in their declaration emit instead of
+ * expanding `{ queue: EchoId; ... }` and requiring a transitive `EchoId` import.
+ */
+export interface QueueEvent {
+  readonly queue: EchoId.EchoId;
+  readonly item: any;
+  readonly cursor: string;
+}
+export const QueueEvent: Schema.Schema<QueueEvent> = _QueueEvent as any;
 
 export const SubscriptionEvent = Schema.Struct({
   /**

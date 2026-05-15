@@ -295,7 +295,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         const objectId = value.id ?? value;
         // TODO(dmaretskyi): Validate object is from the same space.
         invariant(ObjectId.isValid(objectId));
-        target[symbolInternals].core.setParent(EncodedReference.fromEchoId(EchoId.fromLocalObjectId(objectId)));
+        target[symbolInternals].core.setParent(EncodedReference.fromURI(EchoId.fromLocalObjectId(objectId)));
       }
       return true;
     }
@@ -522,7 +522,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       const typeRef = target[symbolInternals].core.getType();
       if (typeRef) {
         // The object has schema, but we can't access it to validate the value being set.
-        throw new Error(`Schema not found in schema registry: ${EncodedReference.getReferenceString(typeRef)}`);
+        throw new Error(`Schema not found in schema registry: ${EncodedReference.toURI(typeRef)}`);
       }
 
       return value;
@@ -589,9 +589,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     const typeURI = EncodedReference.toURI(typeRef);
-    if (DXN.isDXN(typeURI)) {
-      // Normalize legacy `dxn:type:` prefix so DXN.getNsid extracts the typename, not the literal "type" segment.
-      const typeDXN = DXN.parse(typeURI);
+    // Try to parse as a typename DXN — legacy storage forms like `dxn:echo:@:<id>` and
+    // `dxn:queue:…` look like DXNs by prefix but are not parseable as typename DXNs.
+    const typeDXN = DXN.tryParse(typeURI);
+    if (typeDXN) {
       const staticSchema = target[symbolInternals].database.graph.schemaRegistry.getSchemaByDXN(typeDXN);
       if (staticSchema != null) {
         return staticSchema;
@@ -600,6 +601,13 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       if (DXN.getNsid(typeDXN)?.startsWith('protobuf')) {
         return undefined;
       }
+      // Stored schemas use the storage URI as `$id`, so we can't look them up by typename DXN.
+      // Query by typename + version instead.
+      const typename = DXN.getNsid(typeDXN);
+      const version = DXN.getVersion(typeDXN);
+      return target[symbolInternals].database.schemaRegistry
+        .query({ typename, ...(version ? { version } : {}) })
+        .runSync()[0];
     }
 
     return target[symbolInternals].database.schemaRegistry.query({ id: typeURI }).runSync()[0];
@@ -945,11 +953,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     const sourceRef = target[symbolInternals].core.getSource();
     if (sourceRef) {
-      obj[ATTR_RELATION_SOURCE] = EncodedReference.toEchoId(sourceRef);
+      obj[ATTR_RELATION_SOURCE] = EchoId.parse(EncodedReference.toURI(sourceRef));
     }
     const targetRef = target[symbolInternals].core.getTarget();
     if (targetRef) {
-      obj[ATTR_RELATION_TARGET] = EncodedReference.toEchoId(targetRef);
+      obj[ATTR_RELATION_TARGET] = EchoId.parse(EncodedReference.toURI(targetRef));
     }
 
     Object.assign(
@@ -1197,7 +1205,7 @@ const initCore = (core: ObjectCore, target: ProxyTarget) => {
   if (parentValue !== undefined) {
     const parentId = parentValue.id ?? parentValue;
     if (ObjectId.isValid(parentId)) {
-      core.setParent(EncodedReference.fromEchoId(EchoId.fromLocalObjectId(parentId)));
+      core.setParent(EncodedReference.fromURI(EchoId.fromLocalObjectId(parentId)));
     }
     delete (target as any)[ParentId];
   }

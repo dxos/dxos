@@ -37,7 +37,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.AddMailbox> = InboxOp
       });
 
       return {
-        id: Obj.getId(object),
+        id: Obj.getURI(object),
         subject: [`${getSpacePath(db.spaceId)}/mailboxes/${object.id}/all-mail`],
         object,
       };

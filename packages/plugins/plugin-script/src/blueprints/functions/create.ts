@@ -34,7 +34,7 @@ export default Create.pipe(
       yield* CollectionModel.add({ object: fn });
 
       return {
-        function: Obj.getId(fn),
+        function: Obj.getURI(fn),
       };
     }),
   ),

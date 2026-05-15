@@ -31,7 +31,7 @@ const LEGACY_QUEUE_RE = /^dxn:queue:[^:]+:([^:]+):([^:]+)$/;
  * echo://BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE
  * ```
  */
-export type EchoId = string & { readonly __EchoId: unique symbol } & URI.URI;
+export type EchoId = URI.URI & { readonly __EchoId: unique symbol };
 
 /**
  * Returns true if the value is a valid EchoId (new or legacy format).
@@ -139,9 +139,10 @@ export const equals = (a: EchoId, b: EchoId): boolean => parse(a) === parse(b);
 /**
  * Effect Schema for EchoId validation.
  */
-const Schema_: Schema.Schema<EchoId, string> = Schema.String.pipe(
+// Identity-encoded schema so consumers can refine generic schemas without the encode/decode types diverging.
+const Schema_: Schema.Schema<EchoId, EchoId> = Schema.String.pipe(
   Schema.filter(isEchoId, {
     message: () => 'Invalid EchoId: must start with echo:, dxn:echo:, or dxn:queue:',
   }),
-) as Schema.Schema<EchoId, string>;
+) as unknown as Schema.Schema<EchoId, EchoId>;
 export { Schema_ as Schema };

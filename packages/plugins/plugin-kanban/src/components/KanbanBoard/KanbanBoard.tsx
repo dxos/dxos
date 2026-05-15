@@ -98,7 +98,7 @@ export const KanbanBoardRoot = ({
 
   return (
     <KanbanBoardContext
-      kanbanId={Obj.getId(kanban)}
+      kanbanId={Obj.getURI(kanban)}
       projection={projection}
       columnFieldPath={columnFieldPath}
       pivotFieldId={pivotFieldId}

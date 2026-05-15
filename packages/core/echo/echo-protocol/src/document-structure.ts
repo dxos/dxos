@@ -3,7 +3,7 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import type { DXN, ObjectId } from '@dxos/keys';
+import type { DXN, ObjectId, URI } from '@dxos/keys';
 import { visitValues } from '@dxos/util';
 
 import { type RawString } from './automerge';
@@ -166,7 +166,7 @@ export const ObjectStructure = Object.freeze({
     data,
     keys,
   }: {
-    type: DXN.DXN;
+    type: URI.URI;
     deleted?: boolean;
     keys?: ForeignKey[];
     data?: unknown;
@@ -191,7 +191,7 @@ export const ObjectStructure = Object.freeze({
     keys,
     data,
   }: {
-    type: DXN.DXN;
+    type: URI.URI;
     source: EncodedReference;
     target: EncodedReference;
     deleted?: boolean;

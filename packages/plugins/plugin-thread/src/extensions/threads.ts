@@ -45,7 +45,7 @@ export const threads = (
   }
 
   const { registry, stateAtom } = store;
-  const objectId = Obj.getId(doc);
+  const objectId = Obj.getURI(doc);
   const query = db.query(Query.select(Filter.id(doc.id)).targetOf(AnchoredTo.AnchoredTo));
 
   // Get current anchors by combining query results with store drafts.
@@ -97,7 +97,7 @@ export const threads = (
         getAnchors()
           .filter((anchor) => anchor.anchor)
           .map((anchor) => ({
-            id: Obj.getId(Relation.getSource(anchor)),
+            id: Obj.getURI(Relation.getSource(anchor)),
             cursor: anchor.anchor,
           })),
     ),

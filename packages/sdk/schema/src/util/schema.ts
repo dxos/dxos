@@ -20,8 +20,6 @@ import {
 import { createEchoSchema } from '@dxos/echo/testing';
 import { DXN, type EchoId, PublicKey } from '@dxos/keys';
 
-// EchoId re-export keeps TS declaration emit portable — JsonSchemaType references EchoId.Schema.
-export type { EchoId as _EchoIdReference };
 
 export type SelectOptionType = typeof SelectOption.Type;
 

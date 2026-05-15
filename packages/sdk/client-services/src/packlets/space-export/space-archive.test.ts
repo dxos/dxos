@@ -6,7 +6,7 @@ import type { DocumentId } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
 import { type SerializedSpace } from '@dxos/echo-db';
-import { ObjectId, SpaceId } from '@dxos/keys';
+import { ObjectId, SpaceId, URI } from '@dxos/keys';
 import {
   FEED_ARCHIVE_BLOCKS_PER_CHUNK,
   type FeedArchiveBlock,
@@ -388,11 +388,11 @@ describe('SpaceArchive', () => {
         data: { title: 'hello', count: 42 },
         meta: { keys: [] },
         system: {
-          type: { '/': 'dxn:example.Link' },
+          type: { '/': URI.make('dxn:example.Link') },
           kind: 'relation',
-          source: { '/': sourceId },
-          target: { '/': targetId },
-          parent: { '/': parentId },
+          source: { '/': URI.make(sourceId) },
+          target: { '/': URI.make(targetId) },
+          parent: { '/': URI.make(parentId) },
           deleted: true,
         },
       });

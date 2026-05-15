@@ -15,7 +15,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.AddPostToMagazine> = F
       const magazine = yield* Database.load(magazineRef);
       const post = yield* Database.load(postRef);
 
-      const postDxn = Obj.getId(post);
+      const postDxn = Obj.getURI(post);
 
       Obj.update(post, (post) => {
         const mutable = post as Obj.Mutable<typeof post>;

@@ -11,7 +11,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Scope from 'effect/Scope';
 
-import type { EchoId, SpaceId } from '@dxos/keys';
+import type { EchoId, SpaceId, URI } from '@dxos/keys';
 
 import { ServiceNotAvailableError } from './errors';
 import * as Process from './Process';
@@ -65,9 +65,10 @@ export interface ResolutionContext {
   readonly space?: SpaceId;
 
   /**
-   * EchoId of the conversation feed the process is running in.
+   * URI of the conversation feed the process is running in. Today always an EchoId;
+   * narrow with `EchoId.parse` at the point of use.
    */
-  readonly conversation?: EchoId.EchoId;
+  readonly conversation?: URI.URI;
 
   /**
    * Under which process the process is running.

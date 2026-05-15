@@ -162,7 +162,7 @@ export default Capability.makeModule(
             return Effect.succeed([]);
           }
 
-          const mailboxDxn = Obj.getId(mailbox);
+          const mailboxDxn = Obj.getURI(mailbox);
           const messageId = get(selectedId(node.id));
           const message = messageId
             ? get(AtomQuery.make<Message.Message>(db, Query.select(Filter.id(messageId))))[0]
@@ -267,7 +267,7 @@ export default Capability.makeModule(
             }
 
             const feed = mailbox.feed ? (get(AtomRef.make(mailbox.feed)) as Feed.Feed | undefined) : undefined;
-            const mailboxDxn = Obj.getId(mailbox);
+            const mailboxDxn = Obj.getURI(mailbox);
 
             // TODO(wittjosiah): This is awkward, clean it up.
             let message: Message.Message | undefined;

@@ -23,7 +23,7 @@ export type SketchContainerProps = AppSurface.ObjectArticleProps<
 >;
 
 export const SketchContainer = ({ role, attendableId, subject: sketch, settings }: SketchContainerProps) => {
-  const id = Obj.getId(sketch);
+  const id = Obj.getURI(sketch);
   const { hasAttention } = useAttention(attendableId);
 
   const props = {

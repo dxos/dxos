@@ -527,7 +527,7 @@ describe('findOrCreateKanbanForBoard', () => {
       return yield* findOrCreateKanbanForBoard(board('board1'));
     }).pipe(Effect.provide(testLayer), runAndForwardErrors);
 
-    expect(Obj.getId(first)).toBe(Obj.getId(second));
+    expect(Obj.getURI(first)).toBe(Obj.getURI(second));
   });
 
   test('creates distinct Kanbans for distinct boards', async ({ expect }) => {
@@ -542,7 +542,7 @@ describe('findOrCreateKanbanForBoard', () => {
       return yield* findOrCreateKanbanForBoard(board('boardB', 'B'));
     }).pipe(Effect.provide(testLayer), runAndForwardErrors);
 
-    expect(Obj.getId(a)).not.toBe(Obj.getId(b));
+    expect(Obj.getURI(a)).not.toBe(Obj.getURI(b));
     expect(a.name).toBe('A');
     expect(b.name).toBe('B');
   });

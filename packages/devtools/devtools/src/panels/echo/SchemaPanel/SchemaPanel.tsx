@@ -26,7 +26,7 @@ const textFilter = (text?: string) => {
   const matcher = new RegExp(text, 'i');
   return (item: Type.AnyEntity) => {
     let match = false;
-    match ||= !!Type.getDXN(item)?.toString().match(matcher);
+    match ||= !!Type.getURI(item)?.toString().match(matcher);
     match ||= !!SchemaAST.getTitleAnnotation(item.ast).pipe(Option.getOrUndefined)?.match(matcher);
     match ||= !!SchemaAST.getDescriptionAnnotation(item.ast).pipe(Option.getOrUndefined)?.match(matcher);
     return match;
@@ -61,7 +61,7 @@ export const SchemaPanel = (props: { space?: Space }) => {
   const [selected, setSelected] = useState<Type.AnyEntity>();
 
   const onNavigate = (dxn: URI.URI) => {
-    const selectedSchema = schema.find((item) => Type.getDXN(item) === dxn);
+    const selectedSchema = schema.find((item) => Type.getURI(item) === dxn);
     if (selectedSchema) {
       setSelected(() => selectedSchema);
       return;
@@ -69,7 +69,7 @@ export const SchemaPanel = (props: { space?: Space }) => {
 
     // If the DXN is a valid new-style DXN without a version, find the latest versioned schema.
     if (DXN.isDXN(dxn) && DXN.getVersion(dxn) === undefined) {
-      const latestSchema = schema.find((item) => Type.getDXN(item)?.toString().startsWith(dxn.toString()));
+      const latestSchema = schema.find((item) => Type.getURI(item)?.toString().startsWith(dxn.toString()));
       if (latestSchema) {
         setSelected(() => latestSchema);
       }
@@ -103,7 +103,7 @@ export const SchemaPanel = (props: { space?: Space }) => {
     return schema
       .filter(textFilter(filter))
       .map((item) => ({
-        id: Type.getDXN(item),
+        id: Type.getURI(item),
         typename: Type.getTypename(item) ?? '',
         version: Type.getVersion(item) ?? '',
         kind: Entity.getKind(item),
@@ -157,7 +157,7 @@ export const SchemaPanel = (props: { space?: Space }) => {
             {selected ? (
               <ObjectViewer
                 object={JsonSchema.toJsonSchema(selected)}
-                id={Type.getDXN(selected)?.toString()}
+                id={Type.getURI(selected)?.toString()}
                 onNavigate={onNavigate}
               />
             ) : (

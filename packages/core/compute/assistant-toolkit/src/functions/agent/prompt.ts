@@ -213,7 +213,7 @@ const ToolExecutionService = ({ feed }: ToolExecutionServiceOptions) =>
             log('invoking operation', { operationDef, input });
             const result = yield* operationInvoker
               .invoke(operationDef, input, {
-                conversation: Obj.getId(feed),
+                conversation: Obj.getURI(feed),
               })
               .pipe(Effect.orDie);
             log('result', { result });

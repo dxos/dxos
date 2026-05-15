@@ -40,7 +40,7 @@ export const CollectionPresenterContainer = ({ role, subject: collection }: Coll
             type={AppSurface.Slide}
             data={{
               subject: collection.objects[slide],
-              attendableId: Obj.getId(collection),
+              attendableId: Obj.getURI(collection),
             }}
           />
         </PresenterLayout>

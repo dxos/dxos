@@ -47,7 +47,7 @@ export default InstallFunction.pipe(
       }
 
       return {
-        function: Obj.getId(installed),
+        function: Obj.getURI(installed),
         name: fn.name ?? 'Unnamed function',
         version: fn.version ?? '0.0.0',
       };

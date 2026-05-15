@@ -24,7 +24,7 @@ import * as Stream from 'effect/Stream';
 import { Process, ServiceResolver, Trace, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { Performance, runAndForwardErrors } from '@dxos/effect';
-import type { EchoId, SpaceId } from '@dxos/keys';
+import type { EchoId, SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { OperationInvoker } from '@dxos/operation';
 import type { ObjectId } from '@dxos/protocols';
@@ -102,7 +102,8 @@ export namespace Handle {
  */
 export interface Environment {
   readonly space?: SpaceId;
-  readonly conversation?: EchoId.EchoId;
+  /** URI of the conversation feed. Today always an EchoId; narrow with `EchoId.parse` when needed. */
+  readonly conversation?: URI.URI;
 }
 
 /**
@@ -128,10 +129,10 @@ export interface SpawnOptions {
   readonly name?: string;
 
   /**
-   * Target object that this process is assigned to.
+   * URI of the target this process is assigned to.
    */
   // TODO(dmaretskyi): Consider opaques metadata instead of opinionated `target` field.
-  readonly target?: EchoId.EchoId;
+  readonly target?: URI.URI;
 
   /**
    * Tracing metadata for this invocation.
@@ -164,9 +165,9 @@ export interface ListOptions {
   readonly state?: Process.State;
 
   /**
-   * Filter processes by target object ID.
+   * Filter processes by target URI.
    */
-  readonly target?: EchoId.EchoId;
+  readonly target?: URI.URI;
 }
 
 /**

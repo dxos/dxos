@@ -89,7 +89,7 @@ describe('ComputeGraphRegistry', () => {
 
     // Sanity check: mapping to fully qualified id works as well.
     const bindingId = graph.mapFunctionBindingToId('ADD(2, 3)');
-    expect(bindingId.startsWith(`${Obj.getId(functionObj)}`)).to.be.true;
+    expect(bindingId.startsWith(`${Obj.getURI(functionObj)}`)).to.be.true;
   });
 
   test('adding a function binding updates autocomplete and enables execution', async () => {
