@@ -19,12 +19,9 @@ import { DISABLE_DEPENDENTS_DIALOG } from '#meta';
  * actual disable (wrapping it with observability or any other side effects).
  * When there are no enabled dependents, dispatch runs immediately; otherwise
  * we open the shared {@link DISABLE_DEPENDENTS_DIALOG} surface — its
- * `onConfirm` runs the dispatch and closes the dialog.
- *
- * Display-name resolution for the dialog is delegated to the registered
- * plugin set (`Plugin.Meta.name`). Per-plugin i18n translations only load
- * when a plugin is activated, so `meta.name` is the only label always
- * available regardless of enabled state.
+ * `onConfirm` runs the dispatch and closes the dialog. Display-name
+ * resolution for the dialog body is supplied centrally by the surface
+ * registration.
  */
 export const useDisableConfirmation = (manager: PluginManager.PluginManager, dispatch: (id: string) => void) => {
   const { invokePromise } = useOperationInvoker();
@@ -36,8 +33,6 @@ export const useDisableConfirmation = (manager: PluginManager.PluginManager, dis
         dispatch(pluginId);
         return;
       }
-      const resolveName = (id: string): string =>
-        manager.getPlugins().find((plugin) => plugin.meta.id === id)?.meta.name ?? id;
       void invokePromise(LayoutOperation.UpdateDialog, {
         subject: DISABLE_DEPENDENTS_DIALOG,
         state: true,
@@ -45,7 +40,6 @@ export const useDisableConfirmation = (manager: PluginManager.PluginManager, dis
         props: {
           pluginId,
           dependents: enabledDependents,
-          onResolvePluginName: resolveName,
           onConfirm: () => {
             dispatch(pluginId);
             void invokePromise(LayoutOperation.UpdateDialog, { state: false });
