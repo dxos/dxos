@@ -33,16 +33,21 @@ export const useDisableConfirmation = (manager: PluginManager.PluginManager, dis
         dispatch(pluginId);
         return;
       }
+      // Resolve a plugin id to a display name. A plugin's translations are
+      // registered when its translations module activates — i.e. only when
+      // the plugin is enabled — so for disabled-but-registered plugins we
+      // fall back to the static `meta.name` from `manager.getPlugins()`.
+      const resolveName = (id: string): string =>
+        t('plugin.name', { ns: id, defaultValue: '' }) ||
+        manager.getPlugins().find((plugin) => plugin.meta.id === id)?.meta.name ||
+        id;
       void invokePromise(LayoutOperation.UpdateDialog, {
         subject: DISABLE_DEPENDENTS_DIALOG,
         state: true,
         type: 'alert',
         props: {
-          pluginName: t('plugin.name', { ns: pluginId, defaultValue: pluginId }),
-          dependents: enabledDependents.map((id) => ({
-            id,
-            name: t('plugin.name', { ns: id, defaultValue: id }),
-          })),
+          pluginName: resolveName(pluginId),
+          dependents: enabledDependents.map((id) => ({ id, name: resolveName(id) })),
           onConfirm: () => {
             dispatch(pluginId);
             void invokePromise(LayoutOperation.UpdateDialog, { state: false });

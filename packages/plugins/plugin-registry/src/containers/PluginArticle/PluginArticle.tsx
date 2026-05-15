@@ -50,22 +50,28 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   const hasUpdate =
     isInstalled && !!catalogEntry && !!installedVersionTag && installedVersionTag !== catalogEntry.version;
 
+  // Resolve a plugin id to a display name. A plugin's translations are
+  // registered when its translations module activates — i.e. only when the
+  // plugin is enabled — so for disabled-but-registered plugins we fall back
+  // to the static `meta.name`.
+  const resolveName = useCallback(
+    (id: string): string =>
+      t('plugin.name', { ns: id, defaultValue: '' }) ||
+      plugins.find((candidate) => candidate.meta.id === id)?.meta.name ||
+      id,
+    [plugins, t],
+  );
+
   // Recompute graph slices whenever the plugin list changes, so installs /
   // removals through other surfaces (or this article's own actions) keep the
   // detail view in sync.
   const dependencies = useMemo(
-    () =>
-      manager
-        .getDependencies(pluginId, { transitive: false })
-        .map((id) => ({ id, name: t('plugin.name', { ns: id, defaultValue: id }) })),
-    [manager, pluginId, plugins, t],
+    () => manager.getDependencies(pluginId, { transitive: false }).map((id) => ({ id, name: resolveName(id) })),
+    [manager, pluginId, resolveName],
   );
   const dependents = useMemo(
-    () =>
-      manager
-        .getDependents(pluginId, { transitive: false })
-        .map((id) => ({ id, name: t('plugin.name', { ns: id, defaultValue: id }) })),
-    [manager, pluginId, plugins, t],
+    () => manager.getDependents(pluginId, { transitive: false }).map((id) => ({ id, name: resolveName(id) })),
+    [manager, pluginId, resolveName],
   );
 
   const handleNavigateToPlugin = useCallback(
