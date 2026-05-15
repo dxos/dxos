@@ -154,7 +154,7 @@ export class Binder extends Resource {
       await this._updateBindings(results);
       log('sync complete', {
         blueprints: this._registry.get(this._blueprints).length,
-        blueprintKeys: this._registry.get(this._blueprints).map((bp) => (bp as any).key),
+        blueprintKeys: this._registry.get(this._blueprints).map((bp) => Blueprint.getKey(bp)),
       });
     }
   }
@@ -180,7 +180,7 @@ export class Binder extends Resource {
 
     log('_updateBindings resolved', {
       resolvedBlueprints: resolvedBlueprints.length,
-      resolvedBlueprintKeys: resolvedBlueprints.map((bp) => (bp as any).key),
+      resolvedBlueprintKeys: resolvedBlueprints.map((bp) => Blueprint.getKey(bp)),
     });
 
     // Filter current state to only items still in the reduced binding set,
