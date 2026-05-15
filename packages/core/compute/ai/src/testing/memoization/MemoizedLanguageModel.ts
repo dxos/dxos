@@ -35,7 +35,7 @@ const TIME_LINE_PATTERN = /The current date and time is [^\n]+/g;
 const TIME_LINE_PLACEHOLDER = 'The current date and time is <memoized-datetime>.';
 
 /**
- * NEVER redact ObjectIds, EchoIds, or DXNs in this module. Memoized prompts
+ * NEVER redact ObjectIds, EchoURIs, or DXNs in this module. Memoized prompts
  * must match the exact strings the LLM is asked to reason about — collapsing
  * ids to a placeholder hides real mismatches and produces false hits. Test
  * determinism comes from `ObjectId.dangerouslyDisableRandomness()` (test PRNG

@@ -476,7 +476,7 @@ export class ObjectCore {
   }
 
   /**
-   * EchoIds of objects that this object strongly depends on.
+   * EchoURIs of objects that this object strongly depends on.
    * Strong references are loaded together with the source object — only ECHO-scheme refs
    * (object refs) qualify; type DXNs are resolved separately via the schema registry.
    * Currently this is the schema reference (when stored as an object), source/target for

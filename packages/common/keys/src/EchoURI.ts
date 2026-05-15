@@ -132,7 +132,7 @@ export const isLocal = (id: EchoURI): boolean => {
 };
 
 /**
- * Returns true if the two EchoIds refer to the same object, normalizing both first.
+ * Returns true if the two EchoURIs refer to the same object, normalizing both first.
  */
 export const equals = (a: EchoURI, b: EchoURI): boolean => parse(a) === parse(b);
 

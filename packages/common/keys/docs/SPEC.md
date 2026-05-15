@@ -149,11 +149,11 @@ The space occupies the URI **authority** position (after `//`). When referencing
 - `scheme://authority/path` -- the `//` introduces an authority component.
 - `scheme:/path` -- no authority; the path begins directly after the scheme.
 
-Both are valid, well-defined URI forms. EchoIds use this distinction to differentiate between fully qualified references (where the space is known) and local references (where the space is inferred from context). The `//` is not decorative -- it is the standard signal that an authority is present.
+Both are valid, well-defined URI forms. EchoURIs use this distinction to differentiate between fully qualified references (where the space is known) and local references (where the space is inferred from context). The `//` is not decorative -- it is the standard signal that an authority is present.
 
-The [`file:` URI scheme](https://datatracker.ietf.org/doc/html/rfc8089) establishes the precedent for this approach. `file:///etc/hosts` (empty authority, meaning localhost) and `file:/etc/hosts` (no authority) are treated equivalently by most implementations. EchoIds follow the same convention: `echo:/<objectId>` and `echo:///<objectId>` are both valid local references and are treated identically.
+The [`file:` URI scheme](https://datatracker.ietf.org/doc/html/rfc8089) establishes the precedent for this approach. `file:///etc/hosts` (empty authority, meaning localhost) and `file:/etc/hosts` (no authority) are treated equivalently by most implementations. EchoURIs follow the same convention: `echo:/<objectId>` and `echo:///<objectId>` are both valid local references and are treated identically.
 
-In URI syntax, `//` means "what follows is the authority responsible for this resource." In EchoIds, the space is the authority -- it is the container that owns and manages the objects. When a reference is local (within the same space), there is no authority to name, so it is either absent (`echo:/`) or empty (`echo:///`).
+In URI syntax, `//` means "what follows is the authority responsible for this resource." In EchoURIs, the space is the authority -- it is the container that owns and manages the objects. When a reference is local (within the same space), there is no authority to name, so it is either absent (`echo:/`) or empty (`echo:///`).
 
 This avoids the need for a sentinel value (like `~` or `@`) to represent "current space." Instead, the URI structure itself encodes whether the reference is local or fully qualified -- a distinction that is part of the URI standard rather than a DXOS-specific convention.
 
@@ -225,7 +225,7 @@ DXOS identifiers are inspired by [AT Protocol](https://atproto.com/) identifiers
 | SpaceId  | DID     | Identifies the container/authority for records |
 | EchoURI   | AT URI  | Composed address for a specific record         |
 
-### Why EchoIds have no collection segment
+### Why EchoURIs have no collection segment
 
 An AT URI has three path components: `at://<did>/<collection>/<rkey>`. The collection (an NSID) sits between the repository and the record key. An EchoURI has only two: `echo://<space>/<object-id>`.
 
@@ -233,7 +233,7 @@ The collection is essential in atproto because record keys are scoped to a colle
 
 ECHO takes a different approach. ObjectIds are ULIDs -- globally unique by construction. An ObjectId cannot collide with another ObjectId in the same space or any other space. The uniqueness tuple is simply `(SpaceId, ObjectId)`, and in practice ObjectId alone is sufficient. There is no need for a collection segment to disambiguate.
 
-This means EchoIds are opaque about type. You must resolve an object to discover its schema, unlike an AT URI where the type is visible in the address. This is a deliberate tradeoff: ECHO objects are strongly typed, but their types are versioned and can be migrated over time. Encoding the type in the address would create a coupling between identity and schema that breaks under schema evolution -- an object's address should remain stable even as its type is migrated to a new version.
+This means EchoURIs are opaque about type. You must resolve an object to discover its schema, unlike an AT URI where the type is visible in the address. This is a deliberate tradeoff: ECHO objects are strongly typed, but their types are versioned and can be migrated over time. Encoding the type in the address would create a coupling between identity and schema that breaks under schema evolution -- an object's address should remain stable even as its type is migrated to a new version.
 
 ### Why the authority is a space, not an identity
 
@@ -249,7 +249,7 @@ atproto resolves records through the DID -- you always know whose repo you're ad
 
 ## Migration from current identifiers
 
-The current `dxn:` format with kind segments is retired in favor of `dxn:<nsid>[:<version>]`. Object references move to EchoIds. The following table shows how existing identifier forms map to the new system.
+The current `dxn:` format with kind segments is retired in favor of `dxn:<nsid>[:<version>]`. Object references move to EchoURIs. The following table shows how existing identifier forms map to the new system.
 
 | Current                                 | New                                | Notes                                                 |
 | --------------------------------------- | ---------------------------------- | ----------------------------------------------------- |
