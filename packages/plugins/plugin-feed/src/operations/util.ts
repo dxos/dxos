@@ -25,11 +25,11 @@ export const collectCandidates = (magazine: Magazine.Magazine) =>
       }
       const posts = yield* Database.runQuery(Query.select(Filter.type(Subscription.Post)).from(echoFeed));
       for (const post of posts) {
-        const postDxn = Obj.getURI(post);
-        if (seenPostIds.has(postDxn)) {
+        const postUri = Obj.getURI(post);
+        if (seenPostIds.has(postUri)) {
           continue;
         }
-        seenPostIds.add(postDxn);
+        seenPostIds.add(postUri);
         candidates.push({ post, feed });
       }
     }

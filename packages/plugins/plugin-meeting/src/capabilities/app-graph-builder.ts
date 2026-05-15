@@ -78,10 +78,10 @@ export default Capability.makeModule(
         type: Channel.Channel,
         connector: Effect.fnUntraced(function* (channel, get) {
           const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
-          const channelDxn = Obj.getURI(channel);
+          const channelUri = Obj.getURI(channel);
           const joined = get(callManager.joinedAtom);
           const roomId = get(callManager.roomIdAtom);
-          if (!joined || roomId !== channelDxn) {
+          if (!joined || roomId !== channelUri) {
             return [];
           }
 

@@ -39,8 +39,8 @@ export const syncObjects: (
         if (!ref.target) {
           continue;
         }
-        const targetDxn = EchoURI.tryParse(Obj.getURI(ref.target));
-        if (targetDxn && EchoURI.isLocal(targetDxn)) {
+        const targetUri = EchoURI.tryParse(Obj.getURI(ref.target));
+        if (targetUri && EchoURI.isLocal(targetUri)) {
           // obj not persisted to db.
           const [target] = yield* syncObjects([ref.target], { foreignKeyId });
           (obj as any)[key] = Ref.make(target);

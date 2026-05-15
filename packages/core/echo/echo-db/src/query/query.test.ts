@@ -845,8 +845,8 @@ describe('Query', () => {
 
       const traceResult = results.find((obj) => obj.title === 'Trace Task');
       expect(traceResult).toBeDefined();
-      const dxnString = Obj.getURI(traceResult!);
-      expect(dxnString).toMatch(/^echo:\/\//);
+      const uriString = Obj.getURI(traceResult!);
+      expect(uriString).toMatch(/^echo:\/\//);
     });
 
     test('Filter.text with includeFeeds includes trace subspace queue results', async () => {
@@ -866,8 +866,8 @@ describe('Query', () => {
 
       const traceResult = results.find((obj) => obj.title === 'Trace TypeScript Task');
       expect(traceResult).toBeDefined();
-      const dxnString = Obj.getURI(traceResult!);
-      expect(dxnString).toMatch(/^echo:\/\//);
+      const uriString = Obj.getURI(traceResult!);
+      expect(uriString).toMatch(/^echo:\/\//);
     });
 
     test('from(all-accessible-spaces) via graph queries type across spaces', async () => {

@@ -83,8 +83,8 @@ const publishedTimestamp = (post: Subscription.Post): number => {
  */
 const applyPerFeedKeep = (magazine: Magazine.Magazine, db: Database.Database | undefined): void => {
   const tag = db ? findStarTag(db) : undefined;
-  const tagDxn = tag ? Obj.getURI(tag) : undefined;
-  const isStarred = (post: Subscription.Post) => (tagDxn ? (Obj.getMeta(post).tags?.includes(tagDxn) ?? false) : false);
+  const tagUri = tag ? Obj.getURI(tag) : undefined;
+  const isStarred = (post: Subscription.Post) => (tagUri ? (Obj.getMeta(post).tags?.includes(tagUri) ?? false) : false);
 
   const feedKeepById = new Map<string, number>();
   for (const feedRef of magazine.feeds) {

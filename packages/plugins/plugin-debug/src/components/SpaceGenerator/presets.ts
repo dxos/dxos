@@ -72,9 +72,9 @@ export const generator = () => ({
           );
 
           const tag = space.db.add(Tag.make({ label: 'Investor' }));
-          const tagDxn = Obj.getURI(tag);
+          const tagUri = Obj.getURI(tag);
           Obj.update(doc, (doc) => {
-            Obj.getMeta(doc).tags = [tagDxn];
+            Obj.getMeta(doc).tags = [tagUri];
           });
 
           // space.db.add(
@@ -86,7 +86,7 @@ export const generator = () => ({
           // );
 
           space.db.add(
-            Obj.make(Person.Person, { [Obj.Meta]: { tags: [tagDxn] }, fullName: 'Rich', organization: Ref.make(org) }),
+            Obj.make(Person.Person, { [Obj.Meta]: { tags: [tagUri] }, fullName: 'Rich', organization: Ref.make(org) }),
           );
           space.db.add(
             Obj.make(Person.Person, {
@@ -124,12 +124,12 @@ export const generator = () => ({
         const queueDxn = Feed.getQueueDxn(mailboxFeed);
         invariant(queueDxn, 'Mailbox feed missing queue DXN key');
         const tag = await space.db.query(Filter.type(Tag.Tag, { label: 'Investor' })).first();
-        const tagDxn = Obj.getURI(tag);
+        const tagUri = Obj.getURI(tag);
 
         const objects = range(n, () => {
-          const contactsQuery = Query.select(Filter.type(Person.Person)).select(Filter.tag(tagDxn));
-          const organizationsQuery = Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagDxn));
-          const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagDxn));
+          const contactsQuery = Query.select(Filter.type(Person.Person)).select(Filter.tag(tagUri));
+          const organizationsQuery = Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagUri));
+          const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagUri));
 
           space.db.add(
             Trigger.make({

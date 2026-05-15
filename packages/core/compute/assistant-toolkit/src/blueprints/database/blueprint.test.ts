@@ -185,8 +185,8 @@ describe('Database Blueprint', () => {
         const org = yield* Database.add(
           Obj.make(Organization.Organization, { name: 'Detail Corp', description: 'A detailed organization.' }),
         );
-        const dxn = Obj.getURI(org);
-        yield* agent.submitPrompt(`Load the full details of object ${dxn}. What is its description?`);
+        const uri = Obj.getURI(org);
+        yield* agent.submitPrompt(`Load the full details of object ${uri}. What is its description?`);
         yield* agent.waitForCompletion();
       },
       Effect.provide(TestLayer),
@@ -237,8 +237,8 @@ describe('Database Blueprint', () => {
             role: 'Director',
           }),
         );
-        const relationDxn = Relation.getURI(relation);
-        yield* agent.submitPrompt(`Delete the relation ${relationDxn}.`);
+        const relationUri = Relation.getURI(relation);
+        yield* agent.submitPrompt(`Delete the relation ${relationUri}.`);
         yield* agent.waitForCompletion();
         expect(Relation.isDeleted(relation)).toBe(true);
       },
@@ -282,14 +282,14 @@ describe('Database Blueprint', () => {
         });
         const org = yield* Database.add(Obj.make(Organization.Organization, { name: 'Untagged Corp' }));
         const tag = yield* Database.add(Tag.make({ label: 'obsolete' }));
-        const tagDxn = Obj.getURI(tag);
-        Entity.update(org, (org) => Entity.addTag(org, tagDxn));
-        expect(Obj.getMeta(org).tags ?? []).toContain(tagDxn);
+        const tagUri = Obj.getURI(tag);
+        Entity.update(org, (org) => Entity.addTag(org, tagUri));
+        expect(Obj.getMeta(org).tags ?? []).toContain(tagUri);
         yield* agent.submitPrompt(`Remove tag "obsolete" from the organization "Untagged Corp".`);
         yield* agent.waitForCompletion();
         const tags = Obj.getMeta(org).tags ?? [];
         // TODO(dmaretskyi): matcher doesnt work with echo proxies.
-        expect([...tags]).not.toContain(tagDxn);
+        expect([...tags]).not.toContain(tagUri);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -331,11 +331,11 @@ describe('Database Blueprint', () => {
         const { db } = yield* Database.Service;
         const ref = db.makeRef(Obj.getURI(org)) as Ref.Ref<any>;
         yield* agent.addContext([ref]);
-        const dxn = Obj.getURI(org);
+        const uri = Obj.getURI(org);
         yield* agent.submitPrompt(`Remove the organization "Remove Context Corp" from the chat context.`);
         yield* agent.waitForCompletion();
         const contextRefs = yield* agent.getContext();
-        const found = contextRefs.find((contextRef) => contextRef.uri === dxn);
+        const found = contextRefs.find((contextRef) => contextRef.uri === uri);
         expect(found).toBeUndefined();
       },
       Effect.provide(TestLayer),

@@ -815,11 +815,11 @@ export const WithProject: Story = {
       const people = await space.db.query(Filter.type(Person.Person)).run();
       const organizations = await space.db.query(Filter.type(Organization.Organization)).run();
       const tag = space.db.add(Tag.make({ label: 'Project' }));
-      const tagDxn = Obj.getURI(tag);
+      const tagUri = Obj.getURI(tag);
 
       people.slice(0, 4).forEach((person) => {
         Obj.update(person, (person) => {
-          Obj.getMeta(person).tags = [tagDxn];
+          Obj.getMeta(person).tags = [tagUri];
         });
       });
 
@@ -843,7 +843,7 @@ export const WithProject: Story = {
       );
       [dxosResearch, blueyardResearch].forEach((research) => {
         Obj.update(research, (research) => {
-          Obj.getMeta(research).tags = [tagDxn];
+          Obj.getMeta(research).tags = [tagUri];
         });
       });
 
@@ -851,7 +851,7 @@ export const WithProject: Story = {
       const blueyard = organizations.find((org) => org.name === 'BlueYard')!;
       [dxos, blueyard].forEach((organization) => {
         Obj.update(organization, (organization) => {
-          Obj.getMeta(organization).tags = [tagDxn];
+          Obj.getMeta(organization).tags = [tagUri];
         });
       });
 
@@ -871,9 +871,9 @@ export const WithProject: Story = {
       //   }),
       // );
 
-      const contactsQuery = Query.select(Filter.type(Person.Person)).select(Filter.tag(tagDxn));
-      const organizationsQuery = Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagDxn));
-      const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagDxn));
+      const contactsQuery = Query.select(Filter.type(Person.Person)).select(Filter.tag(tagUri));
+      const organizationsQuery = Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagUri));
+      const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagUri));
 
       const researchPrompt = space.db.add(
         Routine.make({
@@ -908,7 +908,7 @@ export const WithProject: Story = {
       space.db.add(researchTrigger);
 
       const mailboxView = ViewModel.make({
-        query: Query.select(Filter.type(Message.Message)).select(Filter.tag(tagDxn)).from(mailbox),
+        query: Query.select(Filter.type(Message.Message)).select(Filter.tag(tagUri)).from(mailbox),
         jsonSchema: JsonSchema.toJsonSchema(Message.Message),
       });
       const contactsView = ViewModel.make({

@@ -112,8 +112,8 @@ export const make = (props: Obj.MakeProps<typeof Feed> = {}): Feed => Obj.make(F
  * Used internally by the feed service layer.
  */
 export const getQueueDxn = (feed: Feed): EchoURI.EchoURI | undefined => {
-  const dxn = Obj.getURI(feed);
-  const echoId = EchoURI.tryParse(dxn);
+  const uri = Obj.getURI(feed);
+  const echoId = EchoURI.tryParse(uri);
   if (!echoId) {
     return undefined;
   }

@@ -129,16 +129,16 @@ export default Capability.makeModule(
           Effect.gen(function* () {
             const state = get(yield* Capability.get(AssistantCapabilities.State));
             const cache = get(yield* Capability.get(AssistantCapabilities.CompanionChatCache));
-            const objectDxn = Obj.getURI(object);
+            const objectUri = Obj.getURI(object);
 
             // Resolve chat from persisted state or transient cache.
             const chat = pipe(
-              Option.fromNullable(state.currentChat[objectDxn]),
+              Option.fromNullable(state.currentChat[objectUri]),
               Option.flatMap((dxnStr) => Option.fromNullable(DXN.tryParse(dxnStr))),
               Option.flatMap((dxn) => Option.fromNullable(Obj.getDatabase(object)?.makeRef(dxn))),
               Option.map((ref) => get(AtomObj.make(ref as Ref.Ref<Obj.Unknown>))),
               Option.filter(Obj.isObject),
-              Option.orElse(() => pipe(Option.fromNullable(cache[objectDxn]), Option.filter(Obj.isObject))),
+              Option.orElse(() => pipe(Option.fromNullable(cache[objectUri]), Option.filter(Obj.isObject))),
               Option.getOrNull,
             );
 

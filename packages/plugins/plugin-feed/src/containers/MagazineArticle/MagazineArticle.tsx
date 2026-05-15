@@ -63,9 +63,9 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const allFeeds = useQuery(db, Filter.type(Subscription.Feed));
 
   // Index feeds by bare object id (last DXN segment) — `Obj.getURI(feed)`
-  // returns the space-scoped form (`dxn:echo:<spaceId>:<id>`), but
+  // returns the space-scoped form (`uri:echo:<spaceId>:<id>`), but
   // `post.feed.uri` from a `Ref.make` carries the local-id form
-  // (`dxn:echo:@:<id>`). String-comparing the two never matches, so the
+  // (`uri:echo:@:<id>`). String-comparing the two never matches, so the
   // tile's `feedName` lookup silently fails. Indexing by bare id reconciles.
   const feedNamesById = useMemo(() => {
     const map = new Map<string, string>();
@@ -103,9 +103,9 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
 
   // When the user removes a feed from the magazine via ObjectProperties, prune any
   // curated posts whose source feed is no longer present.
-  // Compare by bare object id rather than full DXN — `magazine.feeds[i].dxn` and
-  // `post.feed.uri` may carry different prefixes (`dxn:echo:@:<id>` vs
-  // `dxn:echo:<spaceId>:<id>`) depending on how each ref was constructed, so
+  // Compare by bare object id rather than full DXN — `magazine.feeds[i].uri` and
+  // `post.feed.uri` may carry different prefixes (`uri:echo:@:<id>` vs
+  // `uri:echo:<spaceId>:<id>`) depending on how each ref was constructed, so
   // string-comparing the full DXN flags every post as an orphan and wipes the
   // magazine on mount.
   useEffect(() => {
@@ -139,14 +139,14 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     }
 
     const tag = findStarTag(db);
-    const tagDxn = tag ? Obj.getURI(tag) : undefined;
+    const tagUri = tag ? Obj.getURI(tag) : undefined;
     const next = magazine.posts.filter((ref) => {
       const post = ref.target;
-      if (!post || !tagDxn) {
+      if (!post || !tagUri) {
         return false;
       }
 
-      return Obj.getMeta(post).tags?.includes(tagDxn) ?? false;
+      return Obj.getMeta(post).tags?.includes(tagUri) ?? false;
     });
 
     if (next.length === magazine.posts.length) {
@@ -341,16 +341,16 @@ const useMagazinePosts = (
       // Dedup by DXN, then by link, then by guid. Two different feeds can publish the
       // same article (distinct Post objects, same `link` / `guid`); without secondary
       // dedup the masonry shows them as duplicate tiles.
-      const dxn = Obj.getURI(target);
+      const uri = Obj.getURI(target);
       if (
-        seenDxn.has(dxn) ||
+        seenDxn.has(uri) ||
         (target.link && seenLink.has(target.link)) ||
         (target.guid && seenGuid.has(target.guid))
       ) {
         continue;
       }
 
-      seenDxn.add(dxn);
+      seenDxn.add(uri);
       if (target.link) {
         seenLink.add(target.link);
       }

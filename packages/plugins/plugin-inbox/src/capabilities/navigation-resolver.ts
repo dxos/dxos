@@ -93,7 +93,7 @@ export default Capability.makeModule(
 
           // For message paths, verify the message exists in the feed or as a mailbox-scoped draft.
           const mailbox = mailboxOption.value as Mailbox.Mailbox;
-          const mailboxDxnString = Obj.getURI(mailbox);
+          const mailboxUriString = Obj.getURI(mailbox);
 
           return Effect.tryPromise(async () => {
             // TODO(wittjosiah): This is awkward, clean it up.
@@ -108,7 +108,7 @@ export default Capability.makeModule(
             const fromDb = (await space.db.query(Query.select(Filter.id(messageId))).first()) as
               | Message.Message
               | undefined;
-            if (fromDb && DraftMessage.belongsTo(fromDb, mailboxDxnString)) {
+            if (fromDb && DraftMessage.belongsTo(fromDb, mailboxUriString)) {
               return Option.some(EchoURI.parse(Obj.getURI(fromDb)));
             }
 

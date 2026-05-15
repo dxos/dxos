@@ -173,7 +173,7 @@ export class Binder extends Resource {
 
     log('_updateBindings', {
       items: items.length,
-      blueprintRefs: [...bindings.blueprints].map((ref) => ({ dxn: ref.uri, available: ref.isAvailable })),
+      blueprintRefs: [...bindings.blueprints].map((ref) => ({ uri: ref.uri, available: ref.isAvailable })),
     });
 
     // Resolve references (loading them first if needed).
@@ -192,12 +192,12 @@ export class Binder extends Resource {
     const reducedBlueprintDxns = new Set<URI.URI>([...bindings.blueprints].map((ref) => ref.uri));
     const reducedObjectDxns = new Set<URI.URI>([...bindings.objects].map((ref) => ref.uri));
     const filteredBlueprints = currentBlueprints.filter((obj) => {
-      const dxn = Obj.getURI(obj);
-      return dxn != null && reducedBlueprintDxns.has(dxn);
+      const uri = Obj.getURI(obj);
+      return uri != null && reducedBlueprintDxns.has(uri);
     });
     const filteredObjects = currentObjects.filter((obj) => {
-      const dxn = Obj.getURI(obj);
-      return dxn != null && reducedObjectDxns.has(dxn);
+      const uri = Obj.getURI(obj);
+      return uri != null && reducedObjectDxns.has(uri);
     });
     const mergedBlueprints = this._mergeInto(filteredBlueprints, resolvedBlueprints);
     const mergedObjects = this._mergeInto(filteredObjects, resolvedObjects);
@@ -260,14 +260,14 @@ export class Binder extends Resource {
       const current = this._registry.get(this._blueprints);
       this._registry.set(
         this._blueprints,
-        current.filter((obj) => !removedBlueprintDxns.some((dxn) => Obj.getURI(obj) === dxn)),
+        current.filter((obj) => !removedBlueprintDxns.some((uri) => Obj.getURI(obj) === uri)),
       );
     }
     if (removedObjectDxns.length > 0) {
       const current = this._registry.get(this._objects);
       this._registry.set(
         this._objects,
-        current.filter((obj) => !removedObjectDxns.some((dxn) => Obj.getURI(obj) === dxn)),
+        current.filter((obj) => !removedObjectDxns.some((uri) => Obj.getURI(obj) === uri)),
       );
     }
 
@@ -303,9 +303,9 @@ export class Binder extends Resource {
 
     const seen = new Set<URI.URI>(current.map((obj) => Obj.getURI(obj)));
     for (const ref of refs) {
-      const dxn = ref.uri;
-      if (!seen.has(dxn)) {
-        seen.add(dxn);
+      const uri = ref.uri;
+      if (!seen.has(uri)) {
+        seen.add(uri);
         added.push(ref);
 
         // Only resolve target if available (has target or resolver).
@@ -357,9 +357,9 @@ export class Binder extends Resource {
     const seen = new Set(current.map((obj) => Obj.getURI(obj)));
     const merged = [...current];
     for (const obj of resolved) {
-      const dxn = Obj.getURI(obj);
-      if (!seen.has(dxn)) {
-        seen.add(dxn);
+      const uri = Obj.getURI(obj);
+      if (!seen.has(uri)) {
+        seen.add(uri);
         merged.push(obj);
       }
     }

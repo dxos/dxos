@@ -185,8 +185,8 @@ describe('curateMagazine', () => {
     // condition the fix targets, not a coincidence).
     const magDxn = magazine.posts[0].uri;
     const items = (await queue.queryObjects()) ?? [];
-    const queueDxn = Obj.getURI(items[0] as any);
-    expect(magDxn).not.toBe(queueDxn);
+    const queueUri = Obj.getURI(items[0] as any);
+    expect(magDxn).not.toBe(queueUri);
 
     // Second curate must not throw the addCore invariant and must add 0.
     await expect(curateMagazine(space, magazine)).resolves.toEqual({ added: 0 });

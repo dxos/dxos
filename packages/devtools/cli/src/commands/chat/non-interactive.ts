@@ -77,7 +77,7 @@ export type RunNonInteractiveOptions = {
   blueprints: string[];
   prompt: string;
   model: ModelName;
-  /** When true, emit a JSON array of `{kind, dxn}`; otherwise emit the
+  /** When true, emit a JSON array of `{kind, uri}`; otherwise emit the
    * agent's final assistant reply text. */
   json: boolean;
 };
@@ -145,14 +145,14 @@ export const runNonInteractive = async (options: RunNonInteractiveOptions): Prom
         if (!kind) {
           return undefined;
         }
-        const dxn = live ? Obj.getURI(live) : `dxn:echo:@:${id}`;
-        return { kind, dxn, created };
+        const uri = live ? Obj.getURI(live) : `uri:echo:@:${id}`;
+        return { kind, uri, created };
       })
-      .filter((x): x is { kind: string; dxn: string; created: boolean } => x !== undefined)
+      .filter((x): x is { kind: string; uri: string; created: boolean } => x !== undefined)
       .sort((a, b) => {
         const ai = TRACKED_TYPENAMES.findIndex((t) => t.kind === a.kind);
         const bi = TRACKED_TYPENAMES.findIndex((t) => t.kind === b.kind);
-        return ai === bi ? a.dxn.localeCompare(b.dxn) : ai - bi;
+        return ai === bi ? a.uri.localeCompare(b.uri) : ai - bi;
       });
     // eslint-disable-next-line no-console
     console.log(JSON.stringify(result, null, 2));

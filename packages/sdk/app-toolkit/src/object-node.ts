@@ -174,23 +174,23 @@ export const createObjectNode = ({
 
   let onRearrange: ((nextOrder: unknown[]) => void) | undefined;
   if (parentCollection) {
-    const collectionDxn = Obj.getURI(parentCollection);
-    onRearrange = rearrangeCache.get(collectionDxn);
+    const collectionUri = Obj.getURI(parentCollection);
+    onRearrange = rearrangeCache.get(collectionUri);
     if (!onRearrange) {
       onRearrange = (nextOrder: unknown[]) => {
         Obj.update(parentCollection, (parentCollection) => {
           parentCollection.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
         });
       };
-      rearrangeCache.set(collectionDxn, onRearrange);
+      rearrangeCache.set(collectionUri, onRearrange);
     }
   }
 
-  const objectDxn = Obj.getURI(object);
-  let blockInstruction = blockInstructionCache.get(objectDxn);
+  const objectUri = Obj.getURI(object);
+  let blockInstruction = blockInstructionCache.get(objectUri);
   if (!blockInstruction) {
     blockInstruction = (_source: TreeData, _instruction: Instruction) => false;
-    blockInstructionCache.set(objectDxn, blockInstruction);
+    blockInstructionCache.set(objectUri, blockInstruction);
   }
 
   const canDrop = droppable ? CAN_DROP_OBJECT : undefined;
