@@ -32,7 +32,7 @@ export const ChannelContainer = ({ subject: channel }: ChannelContainerProps) =>
     return (
       <Panel.Root classNames='dx-document'>
         <Panel.Content asChild>
-          <ChannelChat space={space} channel={channel} />
+          <ChannelChat classNames='border' space={space} channel={channel} />
         </Panel.Content>
       </Panel.Root>
     );
