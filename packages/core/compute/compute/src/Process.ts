@@ -14,7 +14,7 @@ import * as Scope from 'effect/Scope';
 import type * as Types from 'effect/Types';
 
 import { assertArgument } from '@dxos/invariant';
-import type { EchoURI, URI } from '@dxos/keys';
+import type { URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import * as Operation from './Operation';

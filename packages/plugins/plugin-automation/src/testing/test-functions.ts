@@ -6,7 +6,6 @@ import * as Schema from 'effect/Schema';
 
 import { TestSchema } from '@dxos/client/testing';
 import { JsonSchema, Ref } from '@dxos/echo';
-import { type EchoURI } from '@dxos/keys';
 
 export const functions = [
   {

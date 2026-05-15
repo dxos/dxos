@@ -9,11 +9,16 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
-import type { EchoURI as _EchoId } from '@dxos/keys';
 
 import { meta } from '#meta';
 
 import { TriggerTemplate } from './schema';
+
+// Value-side `EchoURI` import keeps TS declaration emit portable — `TriggerTemplate`
+// references `EchoURI.Schema` and the inferred `CreateTriggerFromTemplate` type
+// otherwise needs a transitive `@dxos/keys` import that's hard for d.ts emit to surface.
+import { EchoURI as _EchoURIReference } from '@dxos/keys';
+export { _EchoURIReference };
 
 const AUTOMATION_OPERATION = `${meta.id}.operation`;
 

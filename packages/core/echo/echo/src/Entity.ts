@@ -5,7 +5,7 @@
 // @import-as-namespace
 
 import type { ForeignKey } from '@dxos/echo-protocol';
-import type { EchoURI, ObjectId, URI } from '@dxos/keys';
+import type { ObjectId, URI } from '@dxos/keys';
 
 import * as internal from './internal';
 import type * as Relation from './Relation';

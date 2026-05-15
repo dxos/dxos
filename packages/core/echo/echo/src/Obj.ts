@@ -14,7 +14,7 @@ import * as Utils from 'effect/Utils';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { type EchoURI, ObjectId, type URI } from '@dxos/keys';
+import { ObjectId, type URI } from '@dxos/keys';
 import { assumeType, deepMapValues } from '@dxos/util';
 
 import type * as Database from './Database';

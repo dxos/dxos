@@ -24,7 +24,7 @@ import * as Stream from 'effect/Stream';
 import { Process, ServiceResolver, Trace, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { Performance, runAndForwardErrors } from '@dxos/effect';
-import type { EchoURI, SpaceId, URI } from '@dxos/keys';
+import type { SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { OperationInvoker } from '@dxos/operation';
 import type { ObjectId } from '@dxos/protocols';

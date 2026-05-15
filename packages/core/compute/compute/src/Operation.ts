@@ -11,7 +11,7 @@ import * as Pipeable from 'effect/Pipeable';
 import * as Schema$ from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
-import { Annotation, JsonSchema, Migration, Obj, Ref, Type, type DXN, type Key } from '@dxos/echo';
+import { Annotation, JsonSchema, Migration, Obj, Ref, Type, type Key } from '@dxos/echo';
 
 import type { NoHandlerError } from './errors';
 import type { Operation } from './index';
