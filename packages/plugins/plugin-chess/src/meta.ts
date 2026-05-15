@@ -3,6 +3,7 @@
 //
 
 import { type Plugin } from '@dxos/app-framework';
+import { meta as gameMeta } from '@dxos/plugin-game';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
@@ -16,4 +17,5 @@ export const meta: Plugin.Meta = {
   iconHue: 'amber',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-chess',
   screenshots: ['https://dxos.network/plugin-details-chess-dark.png'],
+  dependsOn: [gameMeta.id],
 };

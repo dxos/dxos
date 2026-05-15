@@ -61,6 +61,13 @@ export const translations = [
         'failure-phase-activation.label': 'activation',
         'failure-reason-timeout.label': 'timed out',
         'failure-reason-error.label': 'error',
+        'dependencies.label': 'Requires',
+        'dependents.label': 'Required by',
+        'disable-dependents-dialog.title': 'Disable dependent plugins?',
+        'disable-dependents-dialog.description':
+          'Disabling {{plugin}} will also disable the following plugins that depend on it:',
+        'disable-dependents-dialog.confirm.label': 'Disable',
+        'cancel.label': 'Cancel',
       },
     },
   },

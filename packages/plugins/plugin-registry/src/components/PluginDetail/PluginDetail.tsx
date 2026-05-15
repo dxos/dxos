@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { type Registry, type Plugin, type PluginManager } from '@dxos/app-framework';
-import { Button, Icon, Input, Link, ScrollArea, Select, useTranslation } from '@dxos/react-ui';
+import { type Plugin, type PluginManager, type Registry } from '@dxos/app-framework';
+import { Button, Icon, Input, Link, ScrollArea, Select, Tag, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps, getStyles, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -15,42 +15,68 @@ import { PluginFailureBadge } from '../PluginFailureBadge';
 export type PluginDetailProps = {
   plugin: Plugin.Plugin;
   enabled?: boolean;
+  /** True while an in-flight install is running. Disables the install button. */
+  installing?: boolean;
+  /** True while an in-flight update is running. Disables the update button. */
+  updating?: boolean;
+  /** True when the catalog has a newer version than the one installed. */
+  hasUpdate?: boolean;
+  /** Currently installed version tag (used to mark the matching select option). */
+  installedVersionTag?: string;
+  /** Currently selected version tag in the picker. */
+  selectedVersionTag?: string;
+  /** Available versions of this plugin from the catalog. When non-empty, a version picker is shown. */
+  versions?: readonly Registry.PluginVersion[];
+  /**
+   * Ids of plugins this plugin declares as dependencies (direct only). Rendered
+   * under a "Requires" heading so the user can see what enabling this plugin
+   * will auto-enable.
+   */
+  dependencies?: readonly string[];
+  /**
+   * Ids of plugins that declare this plugin as a dependency (direct only).
+   * Rendered under a "Required by" heading so the user understands the
+   * downstream impact of disabling this plugin.
+   */
+  dependents?: readonly string[];
+  /**
+   * Failure record for this plugin, if any. When present a warning badge is
+   * rendered next to the plugin name in the header.
+   */
+  failure?: PluginManager.PluginFailure;
   onEnabledChange?: (enabled: boolean) => void;
+  /**
+   * When provided, the plugin is not installed and an Install button is shown
+   * in place of the enable Switch.
+   */
+  onInstall?: () => void;
+  /** Called when the user clicks Install on the version picker. */
+  onInstallVersion?: () => void;
+  /**
+   * Called when the user activates a dependency / dependent chip. When
+   * provided, chips are rendered as buttons that fire this handler with the
+   * target plugin id; when omitted, chips are non-interactive labels.
+   */
+  onNavigateToPlugin?: (pluginId: string) => void;
+  /**
+   * Resolves a plugin id to its display name for dependency / dependent
+   * chip labels. The component delegates the lookup to the parent so each
+   * surface can decide how to source names (e.g. `Plugin.Meta.name` from the
+   * registered plugin set). When omitted, chips render the raw id.
+   */
+  onResolvePluginName?: (pluginId: string) => string;
   /**
    * When provided, an Uninstall button is rendered. Leave undefined for core
    * or non-removable plugins.
    */
   onUninstall?: () => void;
   /**
-   * When provided, the plugin is not installed and an Install button is shown
-   * in place of the enable Switch.
-   */
-  onInstall?: () => void;
-  installing?: boolean;
-  /**
    * When provided and the plugin is installed with a newer catalog version available,
    * an Update button is shown in place of the enable Switch.
    */
   onUpdate?: () => void;
-  /** True when the catalog has a newer version than the one installed. */
-  hasUpdate?: boolean;
-  /** True while an in-flight update is running. Forces the Update button disabled state. */
-  updating?: boolean;
-  /** Available versions of this plugin from the catalog. When non-empty, a version picker is shown. */
-  versions?: readonly Registry.PluginVersion[];
-  /** Currently selected version tag in the picker. */
-  selectedVersionTag?: string;
   /** Called when the user selects a different version in the picker. */
   onVersionChange?: (tag: string) => void;
-  /** Called when the user clicks Install on the version picker. */
-  onInstallVersion?: () => void;
-  /** Currently installed version tag (used to mark the matching select option). */
-  installedVersionTag?: string;
-  /**
-   * Failure record for this plugin, if any. When present a warning badge is
-   * rendered next to the plugin name in the header.
-   */
-  failure?: PluginManager.PluginFailure;
 };
 
 export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
@@ -58,19 +84,23 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
     {
       plugin,
       enabled,
-      onEnabledChange,
-      onUninstall,
-      onInstall,
       installing,
-      onUpdate,
-      hasUpdate,
       updating,
-      versions,
-      selectedVersionTag,
-      onVersionChange,
-      onInstallVersion,
+      hasUpdate,
       installedVersionTag,
+      selectedVersionTag,
+      versions,
+      dependencies,
+      dependents,
       failure,
+      onEnabledChange,
+      onInstall,
+      onInstallVersion,
+      onNavigateToPlugin,
+      onResolvePluginName,
+      onUninstall,
+      onUpdate,
+      onVersionChange,
       ...props
     },
     forwardedRef,
@@ -139,6 +169,40 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                   )}
                 </div>
               </div>
+              {((dependencies && dependencies.length > 0) || (dependents && dependents.length > 0)) && (
+                <div className='flex flex-col gap-2'>
+                  {dependencies && dependencies.length > 0 && (
+                    <>
+                      <h2>{t('dependencies.label')}</h2>
+                      <div className='flex flex-wrap gap-1'>
+                        {dependencies.map((depId) => (
+                          <PluginChip
+                            key={depId}
+                            id={depId}
+                            name={onResolvePluginName?.(depId) ?? depId}
+                            onClick={onNavigateToPlugin}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  {dependents && dependents.length > 0 && (
+                    <>
+                      <h2>{t('dependents.label')}</h2>
+                      <div className='flex flex-wrap gap-1'>
+                        {dependents.map((dependentId) => (
+                          <PluginChip
+                            key={dependentId}
+                            id={dependentId}
+                            name={onResolvePluginName?.(dependentId) ?? dependentId}
+                            onClick={onNavigateToPlugin}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
               {versions && versions.length > 0 && (
                 <div className='flex flex-col gap-2'>
                   <h2>{t('versions.label')}</h2>
@@ -194,3 +258,15 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
 );
 
 PluginDetail.displayName = 'PluginDetail';
+
+/**
+ * Renders a single dependency / dependent reference using the shared `Tag`
+ * primitive. When `onClick` is provided the chip fires the handler with the
+ * canonical plugin id; the id is also surfaced via `title` so it stays one
+ * hover away even when the chip shows the friendlier `name`.
+ */
+const PluginChip = ({ id, name, onClick }: { id: string; name: string; onClick?: (pluginId: string) => void }) => (
+  <Tag title={id} onClick={onClick ? () => onClick(id) : undefined}>
+    {name}
+  </Tag>
+);
