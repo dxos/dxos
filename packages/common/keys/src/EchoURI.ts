@@ -36,7 +36,7 @@ export type EchoURI = URI.URI & { readonly __EchoURI: unique symbol };
 /**
  * Returns true if the value is a valid EchoURI (new or legacy format).
  */
-export const isEchoId = (s: unknown): s is EchoURI =>
+export const isEchoURI = (s: unknown): s is EchoURI =>
   typeof s === 'string' && (s.startsWith('echo:') || s.startsWith('dxn:echo:') || s.startsWith('dxn:queue:'));
 
 /**
@@ -144,7 +144,7 @@ export const equals = (a: EchoURI, b: EchoURI): boolean => parse(a) === parse(b)
 // with `Encoded = string`; we narrow the encoded form too with `as unknown as` since the
 // runtime representation is identical (a branded string).
 const Schema_: Schema.Schema<EchoURI, EchoURI> = Schema.String.pipe(
-  Schema.filter((s): s is EchoURI => isEchoId(s), {
+  Schema.filter((s): s is EchoURI => isEchoURI(s), {
     message: () => 'Invalid EchoURI: must start with echo:, dxn:echo:, or dxn:queue:',
   }),
 ) as unknown as Schema.Schema<EchoURI, EchoURI>;

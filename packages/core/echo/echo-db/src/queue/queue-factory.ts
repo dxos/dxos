@@ -37,7 +37,7 @@ export class QueueFactory extends Resource implements QueueAPI {
   }
 
   get<T extends Entity.Unknown>(echoId: EchoURI.EchoURI): Queue<T> {
-    assertArgument(EchoURI.isEchoId(echoId), 'echoId', 'must be an EchoURI');
+    assertArgument(EchoURI.isEchoURI(echoId), 'echoId', 'must be an EchoURI');
     return this._getOrCreate<T>(echoId);
   }
 

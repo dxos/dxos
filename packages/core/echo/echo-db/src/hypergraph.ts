@@ -141,7 +141,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     return {
       // TODO(dmaretskyi): Respect `load` flag.
       resolveSync: (uri: URI.URI, load: boolean, onLoad?: () => void) => {
-        if (!EchoURI.isEchoId(uri)) {
+        if (!EchoURI.isEchoURI(uri)) {
           return undefined; // Unsupported URI kind.
         }
 
@@ -171,7 +171,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
             const schema = this.schemaRegistry.getSchemaByDXN(uri);
             status = schema != null ? 'resolved' : 'missing';
             return schema;
-          } else if (EchoURI.isEchoId(uri)) {
+          } else if (EchoURI.isEchoURI(uri)) {
             status = 'error';
             throw new Error('Not implemented: Resolving schema stored in the database');
           } else {

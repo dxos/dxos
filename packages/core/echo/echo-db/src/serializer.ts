@@ -100,7 +100,7 @@ export const decodeDXNFromJSON = (encoded?: EncodedReference | string): URI.URI 
   if (typeof encoded === 'object' && encoded !== null && '/' in encoded) {
     return EncodedRef.toURI(encoded);
   } else if (typeof encoded === 'string') {
-    if (DXN.isDXN(encoded) || EchoURI.isEchoId(encoded)) {
+    if (DXN.isDXN(encoded) || EchoURI.isEchoURI(encoded)) {
       return encoded;
     }
     // Treat plain strings as type names.

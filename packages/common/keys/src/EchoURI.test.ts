@@ -33,28 +33,28 @@ describe('EchoURI.fromSpaceId', () => {
   });
 });
 
-describe('EchoURI.isEchoId', () => {
+describe('EchoURI.isEchoURI', () => {
   test('accepts new format', ({ expect }) => {
-    expect(EchoURI.isEchoId(`echo://${SPACE}/${OBJECT}`)).toBe(true);
-    expect(EchoURI.isEchoId(`echo:/${OBJECT}`)).toBe(true);
-    expect(EchoURI.isEchoId(`echo:///${OBJECT}`)).toBe(true);
-    expect(EchoURI.isEchoId(`echo://${SPACE}`)).toBe(true);
+    expect(EchoURI.isEchoURI(`echo://${SPACE}/${OBJECT}`)).toBe(true);
+    expect(EchoURI.isEchoURI(`echo:/${OBJECT}`)).toBe(true);
+    expect(EchoURI.isEchoURI(`echo:///${OBJECT}`)).toBe(true);
+    expect(EchoURI.isEchoURI(`echo://${SPACE}`)).toBe(true);
   });
 
   test('accepts legacy dxn:echo: format', ({ expect }) => {
-    expect(EchoURI.isEchoId(`dxn:echo:@:${OBJECT}`)).toBe(true);
-    expect(EchoURI.isEchoId(`dxn:echo:${SPACE}:${OBJECT}`)).toBe(true);
+    expect(EchoURI.isEchoURI(`dxn:echo:@:${OBJECT}`)).toBe(true);
+    expect(EchoURI.isEchoURI(`dxn:echo:${SPACE}:${OBJECT}`)).toBe(true);
   });
 
   test('accepts legacy dxn:queue: format', ({ expect }) => {
-    expect(EchoURI.isEchoId(`dxn:queue:data:${SPACE}:${OBJECT}`)).toBe(true);
+    expect(EchoURI.isEchoURI(`dxn:queue:data:${SPACE}:${OBJECT}`)).toBe(true);
   });
 
   test('rejects non-echo strings', ({ expect }) => {
-    expect(EchoURI.isEchoId('dxn:org.dxos.type.calendar')).toBe(false);
-    expect(EchoURI.isEchoId('https://example.com')).toBe(false);
-    expect(EchoURI.isEchoId('')).toBe(false);
-    expect(EchoURI.isEchoId(42)).toBe(false);
+    expect(EchoURI.isEchoURI('dxn:org.dxos.type.calendar')).toBe(false);
+    expect(EchoURI.isEchoURI('https://example.com')).toBe(false);
+    expect(EchoURI.isEchoURI('')).toBe(false);
+    expect(EchoURI.isEchoURI(42)).toBe(false);
   });
 });
 

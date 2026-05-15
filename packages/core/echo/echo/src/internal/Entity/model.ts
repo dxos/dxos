@@ -112,9 +112,9 @@ export function assertObjectModel(obj: unknown): asserts obj is InternalObjectPr
   );
 
   if (obj[KindId] === EntityKind.Relation) {
-    invariant(EchoURI.isEchoId(obj[RelationSourceDXNId]), 'Invalid object model: invalid relation source');
-    invariant(EchoURI.isEchoId(obj[RelationTargetDXNId]), 'Invalid object model: invalid relation target');
-    invariant(!EchoURI.isEchoId(obj[RelationSourceId]), 'Invalid object model: source pointer is a DXN');
-    invariant(!EchoURI.isEchoId(obj[RelationTargetId]), 'Invalid object model: target pointer is a DXN');
+    invariant(EchoURI.isEchoURI(obj[RelationSourceDXNId]), 'Invalid object model: invalid relation source');
+    invariant(EchoURI.isEchoURI(obj[RelationTargetDXNId]), 'Invalid object model: invalid relation target');
+    invariant(!EchoURI.isEchoURI(obj[RelationSourceId]), 'Invalid object model: source pointer is a DXN');
+    invariant(!EchoURI.isEchoURI(obj[RelationTargetId]), 'Invalid object model: target pointer is a DXN');
   }
 }

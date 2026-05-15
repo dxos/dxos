@@ -61,12 +61,12 @@ export const typedJsonSerializer = function (this: any) {
 
   if (this[RelationSourceDXNId]) {
     const sourceDXN = this[RelationSourceDXNId];
-    invariant(EchoURI.isEchoId(sourceDXN));
+    invariant(EchoURI.isEchoURI(sourceDXN));
     result[ATTR_RELATION_SOURCE] = sourceDXN;
   }
   if (this[RelationTargetDXNId]) {
     const targetDXN = this[RelationTargetDXNId];
-    invariant(EchoURI.isEchoId(targetDXN));
+    invariant(EchoURI.isEchoURI(targetDXN));
     result[ATTR_RELATION_TARGET] = targetDXN;
   }
 

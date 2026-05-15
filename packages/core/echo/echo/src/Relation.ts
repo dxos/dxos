@@ -211,7 +211,7 @@ export const getSourceDXN = (value: Unknown | Snapshot): EchoURI.EchoURI => {
   assertArgument(isRelation(value), 'Expected a relation');
   assumeType<internal.InternalObjectProps>(value);
   const dxn = (value as internal.InternalObjectProps)[internal.RelationSourceDXNId];
-  invariant(EchoURI.isEchoId(dxn));
+  invariant(EchoURI.isEchoURI(dxn));
   return dxn;
 };
 
@@ -224,7 +224,7 @@ export const getTargetDXN = (value: Unknown | Snapshot): EchoURI.EchoURI => {
   assertArgument(isRelation(value), 'Expected a relation');
   assumeType<internal.InternalObjectProps>(value);
   const dxn = (value as internal.InternalObjectProps)[internal.RelationTargetDXNId];
-  invariant(EchoURI.isEchoId(dxn));
+  invariant(EchoURI.isEchoURI(dxn));
   return dxn;
 };
 

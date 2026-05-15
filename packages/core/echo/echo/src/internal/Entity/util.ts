@@ -22,7 +22,7 @@ export const getObjectEchoId = (object: any): EchoURI.EchoURI | undefined => {
   assumeType<InternalObjectProps>(object);
 
   if (object[SelfURIId]) {
-    invariant(EchoURI.isEchoId(object[SelfURIId]), 'Invalid object model: invalid self dxn');
+    invariant(EchoURI.isEchoURI(object[SelfURIId]), 'Invalid object model: invalid self dxn');
     return EchoURI.parse(object[SelfURIId]);
   }
 
