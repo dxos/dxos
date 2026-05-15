@@ -811,8 +811,7 @@ class ManagerImpl implements PluginManager {
    * @param id The id of the plugin.
    * @param opts See {@link PluginManager.disable}.
    */
-  disable(id: string, opts?: { cascade?: boolean }): Effect.Effect<boolean, Error> {
-    const cascade = opts?.cascade !== false;
+  disable(id: string, { cascade = true }: { cascade?: boolean } = {}): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
       log('disable plugin', { id, cascade });
       if (this._get(this._coreAtom).includes(id)) {
