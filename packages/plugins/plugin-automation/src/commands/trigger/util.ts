@@ -61,7 +61,7 @@ export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger, remot
       FormBuilder.nest(
         'function',
         FormBuilder.make().pipe(
-          FormBuilder.set('key', (fn as Operation.PersistentOperation).key),
+          FormBuilder.set('key', Obj.getMeta(fn as Operation.PersistentOperation).key),
           FormBuilder.set('dxn', Obj.getDXN(fn as Obj.Unknown).toString()),
         ),
       ),
@@ -313,7 +313,9 @@ export const selectTrigger = Effect.fn(function* (kind?: Trigger.Kind) {
       Effect.gen(function* () {
         const fn = trigger.function ? yield* Database.load(trigger.function) : undefined;
         const functionName =
-          fn && Obj.instanceOf(Operation.PersistentOperation, fn) ? (fn.name ?? fn.key ?? fn.id) : undefined;
+          fn && Obj.instanceOf(Operation.PersistentOperation, fn)
+            ? (fn.name ?? Obj.getMeta(fn).key ?? fn.id)
+            : undefined;
         const title = functionName ?? trigger.id;
         const description = `${trigger.enabled ? 'enabled' : 'disabled'} - ${trigger.spec?.kind ?? 'unknown'}`;
 

@@ -27,8 +27,8 @@ export default Create.pipe(
       db.add(script);
 
       const fn = Obj.make(Operation.PersistentOperation, {
+        [Obj.Meta]: { version: '0.0.0' },
         name,
-        version: '0.0.0',
         source: Ref.make(script),
       });
       yield* CollectionModel.add({ object: fn });

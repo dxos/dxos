@@ -8,7 +8,7 @@ import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/a
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import { Database, type Entity, Filter, Obj, Query, QueryAST, Ref } from '@dxos/echo';
-import { type AnyProperties, assertObjectModel, setRefResolver } from '@dxos/echo/internal';
+import { type AnyProperties, MetaId, type ObjectMeta, assertObjectModel, setRefResolver } from '@dxos/echo/internal';
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -300,7 +300,16 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
         objects: objects.length,
       });
       for (const object of objects) {
-        const output = await migration.transform(object, { db: this });
+        // Snapshot the pre-migration state so optional `onMigration` callbacks can read legacy fields.
+        // After `atomicReplaceObject` the `object` proxy reflects the new shape, so this snapshot
+        // is the only way for callers to access the original `From` data.
+        const before = JSON.parse(JSON.stringify(object));
+
+        const output = (await migration.transform(object, { db: this })) as any;
+        const metaPatch = output?.[MetaId] as Partial<ObjectMeta> | undefined;
+        if (metaPatch !== undefined && output != null) {
+          delete output[MetaId];
+        }
 
         // TODO(dmaretskyi): Output validation.
         delete (output as any).id;
@@ -308,11 +317,14 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
         await this._coreDatabase.atomicReplaceObject(object.id, {
           data: output,
           type: migration.toType,
+          meta: metaPatch as any,
         });
         const postMigrationType = Obj.getTypeDXN(object);
         invariant(postMigrationType != null && DXN.equals(postMigrationType, migration.toType));
 
-        await migration.onMigration({ before: object, object, db: this });
+        if (migration.onMigration) {
+          await migration.onMigration({ before, object, db: this });
+        }
       }
     }
     await this.flush();
