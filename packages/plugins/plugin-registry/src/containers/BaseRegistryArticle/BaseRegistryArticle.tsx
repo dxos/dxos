@@ -72,7 +72,6 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
     const { invoke, invokePromise } = useOperationInvoker();
     const allSettings = useCapabilities(AppCapabilities.Settings);
     const enabled = useAtomValue(manager.enabled);
-    const disableConfirmation = useDisableConfirmation(manager);
     const [filter, setFilter] = useState('');
 
     const filtered = useMemo(() => {
@@ -98,7 +97,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
       [invoke, manager, source],
     );
 
-    const dispatchDisable = useCallback((pluginId: string) => void dispatchToggle(pluginId, false), [dispatchToggle]);
+    const disableConfirmation = useDisableConfirmation(manager, (id) => void dispatchToggle(id, false));
 
     const handleChange = useCallback(
       (pluginId: string, nextEnabled: boolean) => {
@@ -106,14 +105,9 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
           void dispatchToggle(pluginId, true);
           return;
         }
-        disableConfirmation.requestDisable(pluginId, dispatchDisable);
+        disableConfirmation.requestDisable(pluginId);
       },
-      [dispatchToggle, disableConfirmation, dispatchDisable],
-    );
-
-    const confirmCascadeDisable = useCallback(
-      () => disableConfirmation.confirmDisable(dispatchDisable),
-      [disableConfirmation, dispatchDisable],
+      [dispatchToggle, disableConfirmation],
     );
 
     const handleClick = useCallback(
@@ -189,7 +183,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
             name: t('plugin.name', { ns: dependentId, defaultValue: dependentId }),
           }))}
           onCancel={disableConfirmation.close}
-          onConfirm={confirmCascadeDisable}
+          onConfirm={disableConfirmation.confirmDisable}
         />
       </>
     );

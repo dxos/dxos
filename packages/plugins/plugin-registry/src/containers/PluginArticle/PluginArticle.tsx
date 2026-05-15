@@ -121,7 +121,7 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
           name: t('plugin.name', { ns: id, defaultValue: id }),
         }))}
         onCancel={actions.disableConfirmation.close}
-        onConfirm={actions.disableConfirmation.confirm}
+        onConfirm={actions.disableConfirmation.confirmDisable}
       />
     </>
   );
@@ -297,9 +297,7 @@ const usePluginActions = ({
 }) => {
   const [installing, setInstalling] = useState(false);
   const [updating, setUpdating] = useState(false);
-  const disableConfirmation = useDisableConfirmation(manager);
-
-  const dispatchDisable = useCallback((id: string) => void runAndForwardErrors(manager.disable(id)), [manager]);
+  const disableConfirmation = useDisableConfirmation(manager, (id) => void runAndForwardErrors(manager.disable(id)));
 
   const handleEnableChange = useCallback(
     (enabled: boolean) => {
@@ -307,9 +305,9 @@ const usePluginActions = ({
         void runAndForwardErrors(manager.enable(pluginId));
         return;
       }
-      disableConfirmation.requestDisable(pluginId, dispatchDisable);
+      disableConfirmation.requestDisable(pluginId);
     },
-    [manager, pluginId, disableConfirmation, dispatchDisable],
+    [manager, pluginId, disableConfirmation],
   );
 
   const handleUninstall = useCallback(() => {
@@ -392,10 +390,6 @@ const usePluginActions = ({
     handleInstall,
     handleUpdate,
     handleInstallVersion,
-    disableConfirmation: {
-      state: disableConfirmation.state,
-      close: disableConfirmation.close,
-      confirm: () => disableConfirmation.confirmDisable(dispatchDisable),
-    },
+    disableConfirmation,
   };
 };

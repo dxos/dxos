@@ -18,22 +18,22 @@ const closedState: DisableConfirmationState = { open: false, pluginId: '', depen
  * Cascade-confirmation state machine shared by surfaces that toggle plugins.
  *
  * `PluginManager.disable` cascades to enabled dependents by default; this hook
- * adds the UX safeguard. Surfaces call {@link requestDisable} with a plugin id
- * and a `dispatch` callback that performs the actual disable (allowing each
- * surface to wrap the call with its own observability / side effects). When
- * the target has enabled dependents the prompt opens and the dispatch is
- * deferred until {@link confirmDisable}; otherwise dispatch runs immediately.
+ * adds the UX safeguard. The caller supplies a `dispatch` callback that
+ * performs the actual disable (letting each surface wrap the call with its
+ * own observability / side effects). When the target has enabled dependents
+ * the prompt opens and the dispatch is deferred until {@link confirmDisable};
+ * otherwise dispatch runs immediately from {@link requestDisable}.
  *
  * The returned `state` exposes the dependent ids (not display names) so the
- * caller can resolve them at render time via {@link usePluginName}.
+ * caller can resolve them at render time.
  */
-export const useDisableConfirmation = (manager: PluginManager.PluginManager) => {
+export const useDisableConfirmation = (manager: PluginManager.PluginManager, dispatch: (id: string) => void) => {
   const [state, setState] = useState<DisableConfirmationState>(() => closedState);
 
   const close = useCallback(() => setState(closedState), []);
 
   const requestDisable = useCallback(
-    (pluginId: string, dispatch: (id: string) => void): void => {
+    (pluginId: string): void => {
       const enabledDependents = manager.getDependents(pluginId, { transitive: true, enabledOnly: true });
       if (enabledDependents.length === 0) {
         dispatch(pluginId);
@@ -41,19 +41,16 @@ export const useDisableConfirmation = (manager: PluginManager.PluginManager) => 
       }
       setState({ open: true, pluginId, dependents: enabledDependents });
     },
-    [manager],
+    [manager, dispatch],
   );
 
-  const confirmDisable = useCallback(
-    (dispatch: (id: string) => void): void => {
-      const id = state.pluginId;
-      setState(closedState);
-      if (id) {
-        dispatch(id);
-      }
-    },
-    [state.pluginId],
-  );
+  const confirmDisable = useCallback((): void => {
+    const id = state.pluginId;
+    setState(closedState);
+    if (id) {
+      dispatch(id);
+    }
+  }, [state.pluginId, dispatch]);
 
   return { state, close, requestDisable, confirmDisable };
 };
