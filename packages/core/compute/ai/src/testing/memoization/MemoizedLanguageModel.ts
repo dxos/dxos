@@ -34,10 +34,18 @@ const DISABLE_CLOSEST_MATCH_SEARCH = false;
 const TIME_LINE_PATTERN = /The current date and time is [^\n]+/g;
 const TIME_LINE_PLACEHOLDER = 'The current date and time is <memoized-datetime>.';
 
+/** Legacy `dxn:echo:<spaceId>:<objectId>` → canonical `echo://<spaceId>/<objectId>` so memos survive the URI format change. */
+const LEGACY_QUALIFIED_ECHO_PATTERN = /dxn:echo:([A-Z0-9]+):([A-Z0-9]+)\b/g;
+/** Legacy `dxn:echo:@:<objectId>` → canonical `echo:/<objectId>`. */
+const LEGACY_LOCAL_ECHO_PATTERN = /dxn:echo:@:([A-Z0-9]+)\b/g;
+
 const normalizePromptForMemoization = (prompt: unknown): unknown =>
   deepMapValues(prompt, (value, recurse) => {
     if (typeof value === 'string') {
-      return value.replace(TIME_LINE_PATTERN, TIME_LINE_PLACEHOLDER);
+      return value
+        .replace(TIME_LINE_PATTERN, TIME_LINE_PLACEHOLDER)
+        .replace(LEGACY_QUALIFIED_ECHO_PATTERN, 'echo://$1/$2')
+        .replace(LEGACY_LOCAL_ECHO_PATTERN, 'echo:/$1');
     }
     return recurse(value);
   });
