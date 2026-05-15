@@ -42,6 +42,15 @@ const LEGACY_LOCAL_ECHO_PATTERN = /dxn:echo:@:([A-Z0-9]+)\b/g;
 const LEGACY_QUEUE_ITEM_PATTERN = /dxn:queue:[a-z]+:([A-Z0-9]+):[A-Z0-9]+:([A-Z0-9]+)\b/g;
 /** Legacy `dxn:queue:<subspace>:<spaceId>:<queueId>` → canonical `echo://<spaceId>/<queueId>`. */
 const LEGACY_QUEUE_PATTERN = /dxn:queue:[a-z]+:([A-Z0-9]+):([A-Z0-9]+)\b/g;
+/** Legacy `dxn:type:<nsid>` → canonical `dxn:<nsid>` (Phase 6 dropped the `type:` segment). */
+const LEGACY_TYPE_DXN_PATTERN = /dxn:type:([a-zA-Z0-9.-]+)/g;
+/**
+ * Replace deterministic test ULIDs (`01JGFJJZ…`-prefixed) with a placeholder so memos
+ * survive small PRNG drifts caused by unrelated test setup changes. The shared
+ * prefix is fixed by ObjectId.dangerouslyDisableRandomness, so this only collapses
+ * IDs from the test PRNG, not real ULIDs from prod.
+ */
+const TEST_ULID_PATTERN = /01JGFJJZ[0-9A-Z]{18}/g;
 
 const normalizePromptForMemoization = (prompt: unknown): unknown =>
   deepMapValues(prompt, (value, recurse) => {
@@ -51,7 +60,9 @@ const normalizePromptForMemoization = (prompt: unknown): unknown =>
         .replace(LEGACY_QUEUE_ITEM_PATTERN, 'echo://$1/$2')
         .replace(LEGACY_QUEUE_PATTERN, 'echo://$1/$2')
         .replace(LEGACY_QUALIFIED_ECHO_PATTERN, 'echo://$1/$2')
-        .replace(LEGACY_LOCAL_ECHO_PATTERN, 'echo:/$1');
+        .replace(LEGACY_LOCAL_ECHO_PATTERN, 'echo:/$1')
+        .replace(LEGACY_TYPE_DXN_PATTERN, 'dxn:$1')
+        .replace(TEST_ULID_PATTERN, '<test-ulid>');
     }
     return recurse(value);
   });
@@ -230,7 +241,12 @@ const getConversationFromOptions = (
 
 const converstationMatches = (haystack: MemoziedConversation, needle: MemoziedConversation): boolean => {
   // TODO(dmaretskyi): dequal doesn't work for some reason.
-  if (jsonStableStringify(haystack.parameters) !== jsonStableStringify(needle.parameters)) {
+  // Normalize both `parameters` and `prompt` — tool inputSchemas can embed
+  // legacy `dxn:type:` refs that the same URI normalization needs to strip.
+  if (
+    jsonStableStringify(normalizePromptForMemoization(cloneForMemoNormalization(haystack.parameters))) !==
+    jsonStableStringify(normalizePromptForMemoization(cloneForMemoNormalization(needle.parameters)))
+  ) {
     return false;
   }
 
@@ -360,7 +376,7 @@ const formatMemoizedConversation = (conversation: MemoziedConversation): string 
   return (
     jsonStableStringify(
       {
-        parameters: conversation.parameters,
+        parameters: normalizePromptForMemoization(cloneForMemoNormalization(conversation.parameters)),
         // Promps may contain long encrypted strings, which are not important to see. We sanitize them so that levenstein distance doesn't OOM.
         prompt: deepMapValues(
           normalizePromptForMemoization(cloneForMemoNormalization(conversation.prompt)),
