@@ -441,21 +441,21 @@ export const Scope = Schema.Struct({
   /**
    * The nested select statemets will select from the given spaces.
    *
-   * NOTE: Spaces and queues are unioned together if both are specified.
+   * NOTE: Spaces and feeds are unioned together if both are specified.
    */
   spaceIds: Schema.optional(Schema.Array(Schema.String)),
 
   /**
-   * If true, the nested select statements will select from all queues in the spaces specified by `spaceIds`.
+   * If true, the nested select statements will select from all feeds in the spaces specified by `spaceIds`.
    */
-  allQueuesFromSpaces: Schema.optional(Schema.Boolean),
+  allFeedsFromSpaces: Schema.optional(Schema.Boolean),
 
   /**
-   * The nested select statemets will select from the given queues.
+   * The nested select statemets will select from the given feeds (by underlying queue DXN).
    *
-   * NOTE: Spaces and queues are unioned together if both are specified.
+   * NOTE: Spaces and feeds are unioned together if both are specified.
    */
-  queues: Schema.optional(Schema.Array(DXN.Schema)),
+  feeds: Schema.optional(Schema.Array(DXN.Schema)),
 });
 export interface Scope extends Schema.Schema.Type<typeof Scope> {}
 

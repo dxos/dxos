@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Agent } from '@dxos/assistant-toolkit';
-import { Feed, Filter, Obj } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { Assistant } from '@dxos/plugin-assistant';
 import { Chat } from '@dxos/plugin-assistant/components';
 import { useBlueprintRegistry, useChatProcessor, useOnline, usePresets } from '@dxos/plugin-assistant/hooks';
@@ -34,15 +34,13 @@ export const ChatModule = ({ space }: ModuleProps) => {
   const processor = useChatProcessor({ runtime, space, chat, preset, blueprintRegistry });
 
   const feedTarget = chat?.feed?.target;
-  const feedDxn = feedTarget ? Feed.getQueueDxn(feedTarget) : undefined;
-  const feed = feedDxn ? space.queues.get(feedDxn) : undefined;
 
   if (!chat || !processor) {
     return null;
   }
 
   return (
-    <Chat.Root chat={chat} feed={feed} processor={processor}>
+    <Chat.Root chat={chat} feed={feedTarget} processor={processor}>
       <Panel.Root className='dx-document'>
         <Panel.Toolbar asChild>
           <Chat.Toolbar />

@@ -10,7 +10,9 @@ import { type CredentialProcessor, getCredentialAssertion } from '@dxos/credenti
 import { failUndefined, warnAfterTimeout } from '@dxos/debug';
 import {
   EchoEdgeReplicator,
+  EchoEdgeSubductionReplicator,
   EchoHost,
+  type EdgeAutomergeReplicator,
   MeshEchoReplicator,
   MetadataStore,
   SpaceManager,
@@ -90,7 +92,7 @@ export class ServiceContext extends Resource {
   public readonly invitationsManager: InvitationsManager;
   public readonly echoHost: EchoHost;
   private readonly _meshReplicator?: MeshEchoReplicator = undefined;
-  private readonly _echoEdgeReplicator?: EchoEdgeReplicator = undefined;
+  private readonly _echoEdgeReplicator?: EdgeAutomergeReplicator = undefined;
   private readonly _feedSyncer?: FeedSyncer = undefined;
 
   // Initialized after identity is initialized.
@@ -204,11 +206,18 @@ export class ServiceContext extends Resource {
     if (!this._runtimeProps?.disableP2pReplication) {
       this._meshReplicator = new MeshEchoReplicator();
     }
-    if (this._edgeConnection && this._edgeFeatures?.echoReplicator && this._edgeHttpClient) {
-      this._echoEdgeReplicator = new EchoEdgeReplicator({
-        edgeConnection: this._edgeConnection,
-        edgeHttpClient: this._edgeHttpClient,
-      });
+    if (this._edgeConnection && this._edgeHttpClient) {
+      if (this._edgeFeatures?.subductionReplicator) {
+        this._echoEdgeReplicator = new EchoEdgeSubductionReplicator({
+          edgeConnection: this._edgeConnection,
+          edgeHttpClient: this._edgeHttpClient,
+        });
+      } else if (this._edgeFeatures?.echoReplicator) {
+        this._echoEdgeReplicator = new EchoEdgeReplicator({
+          edgeConnection: this._edgeConnection,
+          edgeHttpClient: this._edgeHttpClient,
+        });
+      }
     }
 
     if (this.echoHost.feedStore && this._edgeConnection) {

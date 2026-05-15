@@ -26,10 +26,8 @@ export const Magazine = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   /** Feeds to pull content from. */
   feeds: Schema.Array(Ref.Ref(Subscription.Feed)),
-  /** Curated Post refs (insertion order; UI displays newest-last reversed). */
-  posts: Schema.Array(Ref.Ref(Subscription.Post)).pipe(FormInputAnnotation.set(false)),
   /** Routine describing what content the Magazine should gather. */
-  routine: Schema.optional(Ref.Ref(Routine.Routine)),
+  routine: Schema.optional(Ref.Ref(Routine.Routine).pipe(Schema.annotations({ title: 'Routine' }))),
   /**
    * Maximum number of (non-starred) curated Posts retained on the magazine after curation.
    * Older posts beyond this bound are dropped; starred posts are preserved regardless.
@@ -37,10 +35,13 @@ export const Magazine = Schema.Struct({
    */
   keep: Schema.Number.pipe(
     Schema.annotations({
+      title: 'Keep',
       description: 'Maximum number of curated items to keep (starred items are always preserved).',
     }),
     Schema.optional,
   ),
+  /** Curated Post refs (insertion order; UI displays newest-last reversed). */
+  posts: Schema.Array(Ref.Ref(Subscription.Post)).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.magazine',

@@ -11,6 +11,7 @@ import { useTextEditor } from '@dxos/react-ui-editor';
 import { Menu } from '@dxos/react-ui-menu';
 import { type Actor, type Message as MessageType } from '@dxos/types';
 import {
+  EditorView,
   compactSlots,
   createBasicExtensions,
   createMarkdownExtensions,
@@ -22,7 +23,7 @@ import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { formatDateTime } from '../../util';
 import { UserIconButton } from '../UserIconButton';
-import { type ViewMode, useMessageActions } from './useToolbar';
+import { type RenderMode, type ViewMode, useMessageActions } from './useToolbar';
 
 //
 // Context
@@ -33,6 +34,8 @@ type MessageContextValue = {
   attendableId?: string;
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
+  renderMode: RenderMode;
+  setRenderMode: (mode: RenderMode) => void;
   message: MessageType.Message;
   sender: DXN | undefined;
   onOpen?: () => void;
@@ -48,12 +51,16 @@ const [MessageContextProvider, useMessageContext] = createContext<MessageContext
 //
 
 type MessageRootProps = PropsWithChildren<
-  Omit<MessageContextValue, 'viewMode' | 'setViewMode'> & { viewMode?: ViewMode }
+  Omit<MessageContextValue, 'viewMode' | 'setViewMode' | 'renderMode' | 'setRenderMode'> & {
+    viewMode?: ViewMode;
+    renderMode?: RenderMode;
+  }
 >;
 
 const MessageRoot = ({
   children,
   viewMode: viewModeProp = 'plain',
+  renderMode: renderModeProp = 'markdown',
   onOpen,
   onReply,
   onReplyAll,
@@ -61,11 +68,14 @@ const MessageRoot = ({
   ...props
 }: MessageRootProps) => {
   const [viewMode, setViewMode] = useState(viewModeProp);
+  const [renderMode, setRenderMode] = useState(renderModeProp);
 
   return (
     <MessageContextProvider
       viewMode={viewMode}
       setViewMode={setViewMode}
+      renderMode={renderMode}
+      setRenderMode={setRenderMode}
       onOpen={onOpen}
       onReply={onReply}
       onReplyAll={onReplyAll}
@@ -86,9 +96,18 @@ MessageRoot.displayName = 'Message.Root';
 const MESSAGE_TOOLBAR_NAME = 'Message.Toolbar';
 
 const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
-  const { attendableId, viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward } =
+  const { attendableId, viewMode, setViewMode, renderMode, setRenderMode, onOpen, onReply, onReplyAll, onForward } =
     useMessageContext(MESSAGE_TOOLBAR_NAME);
-  const menuActions = useMessageActions({ viewMode, setViewMode, onOpen, onReply, onReplyAll, onForward });
+  const menuActions = useMessageActions({
+    viewMode,
+    setViewMode,
+    renderMode,
+    setRenderMode,
+    onOpen,
+    onReply,
+    onReplyAll,
+    onForward,
+  });
 
   return (
     <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
@@ -181,7 +200,7 @@ const MESSAGE_CONTENT_NAME = 'Message.Content';
 type MessageBodyProps = ThemedClassName;
 
 const MessageBody = ({ classNames }: MessageBodyProps) => {
-  const { message, viewMode } = useMessageContext(MESSAGE_CONTENT_NAME);
+  const { message, viewMode, renderMode } = useMessageContext(MESSAGE_CONTENT_NAME);
   const { themeMode } = useThemeContext();
 
   // If we're in plain-only mode or plain view, show the first block.
@@ -196,16 +215,32 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
   }, [message.blocks, viewMode]);
 
   const extensions = useMemo(() => {
-    return [
+    const exts = [
       createBasicExtensions({ readOnly: true, lineWrapping: true, search: true }),
       createThemeExtensions({ themeMode, slots: compactSlots }),
-      createMarkdownExtensions(),
-      decorateMarkdown({
-        skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
-      }),
-      preview(),
     ];
-  }, [themeMode]);
+    if (renderMode === 'markdown') {
+      exts.push(
+        createMarkdownExtensions(),
+        decorateMarkdown({
+          skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
+        }),
+        preview(),
+        EditorView.domEventHandlers({
+          click: (event) => {
+            const anchor = (event.target as Element | null)?.closest('a.cm-link') as HTMLAnchorElement | null;
+            if (anchor?.href) {
+              event.preventDefault();
+              window.open(anchor.href, '_blank', 'noopener,noreferrer');
+              return true;
+            }
+            return false;
+          },
+        }),
+      );
+    }
+    return exts;
+  }, [themeMode, renderMode]);
 
   const { parentRef } = useTextEditor({ initialValue: content, extensions }, [content, extensions]);
 

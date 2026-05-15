@@ -88,13 +88,14 @@ const L1PanelContent = ({ path, item, onBack }: Pick<L1PanelProps, 'open' | 'pat
       <ScrollArea.Root thin orientation='vertical'>
         <ScrollArea.Viewport>
           <Tree
+            classNames='pt-[2px]'
             model={navTreeContext.model}
             id={item.id}
             rootId={item.id}
             path={path}
             levelOffset={5}
-            gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
             draggable
+            gridTemplateColumns='[tree-row-start] 1fr min-content min-content min-content [tree-row-end]'
             renderColumns={NavTreeItemColumns}
             blockInstruction={navTreeContext.blockInstruction}
             canDrop={navTreeContext.canDrop}

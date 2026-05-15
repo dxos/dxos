@@ -48,9 +48,9 @@ describe('curateMagazine', () => {
 
     const echoFeed = subscriptionFeed.feed?.target;
     invariant(echoFeed, 'Backing ECHO feed should be present.');
-    const feedDxn = EchoFeed.getQueueDxn(echoFeed);
-    invariant(feedDxn, 'Feed should have a queue DXN.');
-    const queue = queues.get(feedDxn);
+    const feedDXN = EchoFeed.getQueueDxn(echoFeed);
+    invariant(feedDXN, 'Feed should have a queue DXN.');
+    const queue = queues.get(feedDXN);
     const space = { db, queues } as unknown as Space;
 
     return { db, magazine, subscriptionFeed, queue, space };
@@ -183,10 +183,10 @@ describe('curateMagazine', () => {
 
     // Confirm the DXN form mismatch is real (so this test is exercising the
     // condition the fix targets, not a coincidence).
-    const magDxn = magazine.posts[0].dxn.toString();
+    const magDXN = magazine.posts[0].dxn.toString();
     const items = (await queue.queryObjects()) ?? [];
-    const queueDxn = Obj.getDXN(items[0] as any).toString();
-    expect(magDxn).not.toBe(queueDxn);
+    const queueDXN = Obj.getDXN(items[0] as any).toString();
+    expect(magDXN).not.toBe(queueDXN);
 
     // Second curate must not throw the addCore invariant and must add 0.
     await expect(curateMagazine(space, magazine)).resolves.toEqual({ added: 0 });

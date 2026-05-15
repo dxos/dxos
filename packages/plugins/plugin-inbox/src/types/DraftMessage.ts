@@ -21,5 +21,5 @@ export const instanceOf = (value: unknown): value is Message.Message =>
   DXN.isDXNString(value.properties.mailbox);
 
 /** Whether a draft message is scoped to the given mailbox (by DXN string on properties). */
-export const belongsTo = (message: Message.Message, mailboxDxn: string): boolean =>
-  instanceOf(message) && message.properties?.mailbox === mailboxDxn;
+export const belongsTo = (message: Message.Message, mailboxDXN: string): boolean =>
+  instanceOf(message) && message.properties?.mailbox === mailboxDXN;

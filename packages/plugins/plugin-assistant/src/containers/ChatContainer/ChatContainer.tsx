@@ -8,7 +8,7 @@ import { Capabilities } from '@dxos/app-framework';
 import { useAtomCapability, useCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Space, getSpace } from '@dxos/client/echo';
-import { Feed, type Obj } from '@dxos/echo';
+import { type Obj } from '@dxos/echo';
 import { Panel } from '@dxos/react-ui';
 import { getParentId } from '@dxos/react-ui-attention';
 
@@ -63,7 +63,6 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
   }, [processor, attendableId, registry, stateAtom]);
 
   const feedTarget = chat?.feed.target;
-  const queue = space && feedTarget ? space.queues.get(Feed.getQueueDxn(feedTarget)!) : undefined;
   const view = (chat?.view as Assistant.ChatView | undefined) ?? settings.chatView;
 
   if (!processor) {
@@ -71,7 +70,7 @@ export const ChatContainer = forwardRef<HTMLDivElement, ChatContainerProps>((pro
   }
 
   return (
-    <ChatComponent.Root db={space?.db} chat={chat} feed={queue} processor={processor} onEvent={onEvent}>
+    <ChatComponent.Root db={space?.db} chat={chat} feed={feedTarget} processor={processor} onEvent={onEvent}>
       <Panel.Root role={role} ref={forwardedRef}>
         <Panel.Toolbar className='bg-toolbar-surface'>
           <ChatComponent.Toolbar classNames='dx-document' attendableId={attendableId} companionTo={companionTo} />

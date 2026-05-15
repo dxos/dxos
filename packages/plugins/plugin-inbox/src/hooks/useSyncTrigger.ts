@@ -59,7 +59,7 @@ export const useSyncTrigger = ({
   const [pending, setPending] = useState(false);
   const triggers = useQuery(db, Query.select(Filter.type(Trigger.Trigger)).debugLabel('plugin-inbox.useSyncTrigger'));
 
-  const subjectDxn = Obj.getDXN(subject);
+  const subjectDXN = Obj.getDXN(subject);
   const syncTrigger = useMemo(
     () =>
       triggers.find((trigger) => {
@@ -69,9 +69,9 @@ export const useSyncTrigger = ({
         const mailboxRef = trigger.input?.mailbox;
         const calendarRef = trigger.input?.calendar;
         const ref = mailboxRef ?? calendarRef;
-        return ref?.dxn && DXN.equalsEchoId(ref.dxn, subjectDxn);
+        return ref?.dxn && DXN.equalsEchoId(ref.dxn, subjectDXN);
       }),
-    [triggers, subjectDxn],
+    [triggers, subjectDXN],
   );
 
   const [syncEnabled, setSyncEnabled] = useObject(syncTrigger, 'enabled');

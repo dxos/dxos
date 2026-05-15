@@ -10,8 +10,7 @@ import * as Schema from 'effect/Schema';
 
 import { CommandConfig, printList } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
-import { type Queue } from '@dxos/client/echo';
-import { DXN } from '@dxos/keys';
+import { DXN, type SpaceId } from '@dxos/keys';
 
 import { printQueueObject } from './util';
 
@@ -31,14 +30,24 @@ export const query = Command.make(
   Effect.fnUntraced(function* ({ dxn }) {
     const { json } = yield* CommandConfig;
     const client = yield* ClientService;
-    const queue = (yield* Effect.promise(() => client.graph.createRefResolver({}).resolve(dxn))) as Queue<any>;
-    const objects = yield* Effect.promise(() => queue.queryObjects());
+    const parts = dxn.asQueueDXN();
+    if (!parts) {
+      yield* Console.error(`Not a queue DXN: ${dxn.toString()}`);
+      return;
+    }
+    const space = client.spaces.get(parts.spaceId as SpaceId);
+    if (!space) {
+      yield* Console.error(`Space not found: ${parts.spaceId}`);
+      return;
+    }
+    // CLI works at the raw queue layer to inspect any queue by DXN.
+    const objects = (yield* Effect.promise(() => space.queues.get(dxn).queryObjects())) ?? [];
 
     if (json) {
       yield* Console.log(JSON.stringify(objects, null, 2));
     } else {
       // TODO(wittjosiah): Interactive table of results.
-      const formatted = objects.map(printQueueObject);
+      const formatted = objects.map((obj) => printQueueObject(obj as any));
       yield* Console.log(printList(formatted));
     }
   }),

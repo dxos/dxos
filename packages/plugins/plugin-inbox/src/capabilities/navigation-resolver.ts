@@ -73,8 +73,8 @@ export default Capability.makeModule(
         return Effect.succeed(Option.none());
       }
 
-      const mailboxDxn = DXN.fromSpaceAndObjectId(spaceId, mailboxId as Key.ObjectId);
-      const mailboxRef = space.db.makeRef(mailboxDxn);
+      const mailboxDXN = DXN.fromSpaceAndObjectId(spaceId, mailboxId as Key.ObjectId);
+      const mailboxRef = space.db.makeRef(mailboxDXN);
 
       const isMessagePath = isLinkedSegment(qualifiedPath);
       const messageId = isMessagePath ? getLinkedVariant(qualifiedPath) : undefined;
@@ -87,7 +87,7 @@ export default Capability.makeModule(
 
           // For non-message paths, the mailbox existing is sufficient.
           if (!messageId || !Key.ObjectId.isValid(messageId)) {
-            return Effect.succeed(Option.some(mailboxDxn));
+            return Effect.succeed(Option.some(mailboxDXN));
           }
 
           // For message paths, verify the message exists in the feed or as a mailbox-scoped draft.

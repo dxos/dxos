@@ -102,6 +102,51 @@ describe('CollectionSynchronizer', () => {
     expect(sentStates.every((m) => m.state === STATE_1)).to.equal(true);
   });
 
+  test('does not send to a peer after onConnectionClosed', async ({ expect }) => {
+    // Regression: `onConnectionClosed` must remove the peer from `interestedPeers`,
+    // otherwise the next `_broadcastLocalState` calls `sendCollectionState` for a
+    // now-stale peerId and the real network adapter throws "Connection not found.".
+    const peerId1 = 'peer1' as PeerId;
+    const peerId2 = 'peer2' as PeerId;
+    const collectionId = 'collection-test';
+
+    const connected = new Set<PeerId>([peerId1, peerId2]);
+    const sentTo: PeerId[] = [];
+    const peer = await new CollectionSynchronizer({
+      queryCollectionState: () => {},
+      sendCollectionState: (_collectionId, peerId) => {
+        if (!connected.has(peerId)) {
+          throw new Error('Connection not found.');
+        }
+        sentTo.push(peerId);
+      },
+      shouldSyncCollection: () => true,
+    }).open();
+    onTestFinished(async () => {
+      await peer.close();
+    });
+
+    // Activate the collection before any peer connects so the connect-time
+    // microtask adds peers to `interestedPeers` without ever calling
+    // `_broadcastLocalState` (so `lastBroadcast` stays unset for them).
+    peer.setLocalCollectionState(collectionId, STATE_1);
+    await sleep(10);
+
+    peer.onConnectionOpen(peerId1);
+    peer.onConnectionOpen(peerId2);
+    await sleep(10);
+
+    connected.delete(peerId2);
+    peer.onConnectionClosed(peerId2);
+
+    // Without the fix, peer2 is still in `interestedPeers` with no `lastBroadcast`
+    // entry, so the broadcast gate passes and `sendCollectionState` throws.
+    peer.setLocalCollectionState(collectionId, STATE_2);
+    await sleep(10);
+
+    expect(sentTo).to.deep.equal([peerId1]);
+  });
+
   test('diff collection state', ({ expect }) => {
     const diff = diffCollectionState(STATE_1, STATE_2);
 

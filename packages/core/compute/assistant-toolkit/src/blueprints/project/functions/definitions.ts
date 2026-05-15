@@ -47,7 +47,7 @@ export const Qualifier = Operation.make({
     event: TriggerEvent.TriggerEvent,
   }),
   output: Schema.Void,
-  services: [AiService.AiService, Database.Service],
+  services: [AiService.AiService, Database.Service, Feed.FeedService],
 }).pipe(Operation.intrinsic);
 
 export const GetContext = Operation.make({
