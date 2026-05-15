@@ -6,14 +6,9 @@ import { useEffect, useState } from 'react';
 
 import { type PeerSyncState, type Space, type SpaceSyncStateMap } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { type SpaceId } from '@dxos/keys';
-import { EdgeService } from '@dxos/protocols';
-import { compositeKey } from '@dxos/util';
+import { isEdgePeerId } from '@dxos/echo-protocol';
 
 import { useClient } from '../client';
-
-const isEdgePeerId = (peerId: string, spaceId: SpaceId) =>
-  peerId.startsWith(compositeKey(EdgeService.AUTOMERGE_REPLICATOR, spaceId));
 
 /**
  * Hook Subscribes to sync state for each space.
@@ -32,7 +27,7 @@ export const useSyncState = (): SpaceSyncStateMap => {
 
         ctx.onDispose(
           space.internal.db.subscribeToSyncState(ctx, ({ peers = [] }) => {
-            const syncState = peers.find((state) => isEdgePeerId(state.peerId, space.id));
+            const syncState = peers.find((state) => isEdgePeerId(space.id, state.peerId));
             if (syncState) {
               setSpaceState((spaceState) => ({ ...spaceState, [space.id]: syncState }));
             }
@@ -64,7 +59,7 @@ export const useSpaceSyncState = (space: Space): PeerSyncState | undefined => {
   useEffect(() => {
     const ctx = new Context();
     space.internal.db.subscribeToSyncState(ctx, ({ peers = [] }) => {
-      const syncState = peers.find((state) => isEdgePeerId(state.peerId, space.id));
+      const syncState = peers.find((state) => isEdgePeerId(space.id, state.peerId));
       if (syncState) {
         setSpaceState(syncState);
       }

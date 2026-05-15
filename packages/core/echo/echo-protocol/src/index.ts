@@ -4,6 +4,7 @@
 
 export type * from './collection-sync';
 export * from './document-structure';
+export * from './edge-peer';
 export * from './echo-feed-codec';
 export * from './foreign-key';
 export * from './query';

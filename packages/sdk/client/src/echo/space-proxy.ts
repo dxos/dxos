@@ -43,10 +43,11 @@ import {
   type QueueFactory,
   type SpaceSyncState,
 } from '@dxos/echo-db';
+import { isEdgePeerId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { EdgeService, decodeError } from '@dxos/protocols';
+import { decodeError } from '@dxos/protocols';
 import {
   type Contact,
   CreateEpochRequest,
@@ -68,7 +69,6 @@ import {
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
-import { compositeKey } from '@dxos/util';
 
 import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
@@ -804,7 +804,3 @@ const shouldMembersUpdate = (prev: SpaceMember[] | undefined, next: SpaceMember[
 
   return !isEqualWith(prev, next, loadashEqualityFn);
 };
-
-const isEdgePeerId = (spaceId: SpaceId, peerId: string) =>
-  peerId.startsWith(compositeKey(EdgeService.AUTOMERGE_REPLICATOR, spaceId)) ||
-  peerId.startsWith(compositeKey(EdgeService.SUBDUCTION_REPLICATOR, spaceId));
