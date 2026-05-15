@@ -10,17 +10,12 @@ import { type Plugin, type PluginManager, type Registry, UrlLoader } from '@dxos
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
+import { useTranslation } from '@dxos/react-ui';
 
 import { DisableDependentsAlert, PluginDetail } from '#components';
 import { getPluginPath } from '#meta';
 
-import {
-  useDisableConfirmation,
-  usePluginName,
-  useRegistryPluginProvider,
-  useRegistryPlugins,
-  useRemotePluginIds,
-} from '../../hooks';
+import { useDisableConfirmation, useRegistryPluginProvider, useRegistryPlugins, useRemotePluginIds } from '../../hooks';
 
 // TODO(burdon): Convert to ECHO type.
 export type PluginArticleProps = { subject: Plugin.Plugin };
@@ -32,7 +27,9 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   const remotePluginIds = useRemotePluginIds();
   const provider = useRegistryPluginProvider();
   const { invokePromise } = useOperationInvoker();
-  const resolveName = usePluginName();
+  // Resolve a plugin id to its display name via the plugin's own i18n
+  // namespace; falls back to the id when no translation is registered.
+  const { t } = useTranslation();
 
   const { catalogEntry, moduleUrl, repo } = useCatalogEntry(pluginId);
   const { installedVersionTag, syncInstalledVersion } = useInstalledVersionTag(pluginId, plugins);
@@ -57,12 +54,18 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   // removals through other surfaces (or this article's own actions) keep the
   // detail view in sync.
   const dependencies = useMemo(
-    () => manager.getDependencies(pluginId, { transitive: false }).map((id) => ({ id, name: resolveName(id) })),
-    [manager, pluginId, plugins, resolveName],
+    () =>
+      manager
+        .getDependencies(pluginId, { transitive: false })
+        .map((id) => ({ id, name: t('plugin.name', { ns: id, defaultValue: id }) })),
+    [manager, pluginId, plugins, t],
   );
   const dependents = useMemo(
-    () => manager.getDependents(pluginId, { transitive: false }).map((id) => ({ id, name: resolveName(id) })),
-    [manager, pluginId, plugins, resolveName],
+    () =>
+      manager
+        .getDependents(pluginId, { transitive: false })
+        .map((id) => ({ id, name: t('plugin.name', { ns: id, defaultValue: id }) })),
+    [manager, pluginId, plugins, t],
   );
 
   const handleNavigateToPlugin = useCallback(
@@ -109,8 +112,14 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
       />
       <DisableDependentsAlert
         open={actions.disableConfirmation.state.open}
-        pluginName={resolveName(actions.disableConfirmation.state.pluginId)}
-        dependents={actions.disableConfirmation.state.dependents.map((id) => ({ id, name: resolveName(id) }))}
+        pluginName={t('plugin.name', {
+          ns: actions.disableConfirmation.state.pluginId,
+          defaultValue: actions.disableConfirmation.state.pluginId,
+        })}
+        dependents={actions.disableConfirmation.state.dependents.map((id) => ({
+          id,
+          name: t('plugin.name', { ns: id, defaultValue: id }),
+        }))}
         onCancel={actions.disableConfirmation.close}
         onConfirm={actions.disableConfirmation.confirm}
       />

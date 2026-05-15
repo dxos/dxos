@@ -17,7 +17,7 @@ import { composable, composableProps } from '@dxos/ui-theme';
 import { DisableDependentsAlert, PluginList, type PluginListProps } from '#components';
 import { getPluginPath, meta } from '#meta';
 
-import { useDisableConfirmation, usePluginName } from '../../hooks';
+import { useDisableConfirmation } from '../../hooks';
 
 const matchesFilter = (plugin: Plugin.Plugin, query: string) => {
   const haystack = `${plugin.meta.name ?? ''} ${plugin.meta.id}`.toLowerCase();
@@ -72,7 +72,6 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
     const { invoke, invokePromise } = useOperationInvoker();
     const allSettings = useCapabilities(AppCapabilities.Settings);
     const enabled = useAtomValue(manager.enabled);
-    const resolveName = usePluginName();
     const disableConfirmation = useDisableConfirmation(manager);
     const [filter, setFilter] = useState('');
 
@@ -181,10 +180,13 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
         </Panel.Root>
         <DisableDependentsAlert
           open={disableConfirmation.state.open}
-          pluginName={resolveName(disableConfirmation.state.pluginId)}
+          pluginName={t('plugin.name', {
+            ns: disableConfirmation.state.pluginId,
+            defaultValue: disableConfirmation.state.pluginId,
+          })}
           dependents={disableConfirmation.state.dependents.map((dependentId) => ({
             id: dependentId,
-            name: resolveName(dependentId),
+            name: t('plugin.name', { ns: dependentId, defaultValue: dependentId }),
           }))}
           onCancel={disableConfirmation.close}
           onConfirm={confirmCascadeDisable}
