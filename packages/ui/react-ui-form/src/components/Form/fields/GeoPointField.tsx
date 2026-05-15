@@ -63,7 +63,7 @@ export const GeoPointField = ({
       {layout === 'static' ? (
         <LatLng {...value} />
       ) : (
-        <div role='none' className='grid grid-cols-2 gap-form-gap'>
+        <div className='grid grid-cols-2 gap-form-gap'>
           <div>
             <Input.Root>
               {layout !== 'inline' && <Input.Label>{t('latitude.label')}</Input.Label>}

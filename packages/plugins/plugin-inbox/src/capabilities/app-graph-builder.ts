@@ -12,16 +12,16 @@ import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { type Feed, Filter, Key, Obj, Query, Ref } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
-import { AttentionCapabilities } from '@dxos/plugin-attention/types';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { Integration } from '@dxos/plugin-integration/types';
+import { Integration } from '@dxos/plugin-integration';
 import { getLinkedVariant, isLinkedSegment, linkedSegment } from '@dxos/react-ui-attention';
 import { type Event, Message } from '@dxos/types';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
-import { InboxOperation } from '#operations';
+import { InboxOperation } from '#types';
 import { Calendar, DraftMessage, Mailbox } from '#types';
 
 import {
@@ -161,12 +161,12 @@ export default Capability.makeModule(
             return Effect.succeed([]);
           }
 
-          const mailboxDxn = Obj.getDXN(mailbox).toString();
+          const mailboxDXN = Obj.getDXN(mailbox).toString();
           const messageId = get(selectedId(node.id));
           const message = messageId
             ? get(AtomQuery.make<Message.Message>(db, Query.select(Filter.id(messageId))))[0]
             : undefined;
-          const draft = message && DraftMessage.belongsTo(message, mailboxDxn) ? message : undefined;
+          const draft = message && DraftMessage.belongsTo(message, mailboxDXN) ? message : undefined;
           return Effect.succeed([
             AppNode.makeCompanion({
               id: linkedSegment('message'),
@@ -266,7 +266,7 @@ export default Capability.makeModule(
             }
 
             const feed = mailbox.feed ? (get(AtomRef.make(mailbox.feed)) as Feed.Feed | undefined) : undefined;
-            const mailboxDxn = Obj.getDXN(mailbox).toString();
+            const mailboxDXN = Obj.getDXN(mailbox).toString();
 
             // TODO(wittjosiah): This is awkward, clean it up.
             let message: Message.Message | undefined;
@@ -277,7 +277,7 @@ export default Capability.makeModule(
             }
             if (!message) {
               const fromDb = get(AtomQuery.make<Message.Message>(space.db, Query.select(Filter.id(messageId))))[0];
-              if (fromDb && DraftMessage.belongsTo(fromDb, mailboxDxn)) {
+              if (fromDb && DraftMessage.belongsTo(fromDb, mailboxDXN)) {
                 message = fromDb;
               }
             }

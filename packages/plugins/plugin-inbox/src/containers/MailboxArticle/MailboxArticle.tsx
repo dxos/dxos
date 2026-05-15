@@ -8,10 +8,10 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
-import { type Database, type Feed, Obj, Query, Relation, Tag } from '@dxos/echo';
+import { type Database, type Feed, Filter, Obj, Query, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
-import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
+import { useObject, useQuery } from '@dxos/react-client/echo';
 import { useAtomState } from '@dxos/react-hooks';
 import { ElevationProvider, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
@@ -23,7 +23,7 @@ import { HasSubject, Message } from '@dxos/types';
 
 import { type MessageStackActionHandler, MessageStack } from '#components';
 import { meta } from '#meta';
-import { InboxOperation } from '#operations';
+import { InboxOperation } from '#types';
 import { InboxCapabilities, type Mailbox } from '#types';
 
 import { POPOVER_SAVE_FILTER } from '../../constants';
@@ -49,7 +49,7 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   const db = Obj.getDatabase(mailbox);
   const showItem = useShowItem();
 
-  const feed = mailbox.feed?.target as Feed.Feed | undefined;
+  const feed = mailbox.feed?.target;
 
   const filterEditorRef = useRef<EditorController>(null);
   const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
@@ -72,10 +72,10 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   }, [filterText, builder]);
 
   // Messages.
-  const messages: Message.Message[] = useQuery(
+  const messages = useQuery(
     db,
     feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
-  ) as Message.Message[];
+  );
 
   // Feed/queue queries don't yet support text-search and complex filter combinations,
   // so query Messages by type only and apply the parsed filter client-side.

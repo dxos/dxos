@@ -11,9 +11,9 @@ import { ScriptCapabilities } from '@dxos/plugin-script';
 import { ScriptContainer as ScriptContainerComponent } from '@dxos/plugin-script/containers';
 import { useQuery } from '@dxos/react-client/echo';
 
-import { type ComponentProps } from './types';
+import { type ModuleProps } from './types';
 
-export const ScriptModule = ({ space }: ComponentProps) => {
+export const ScriptModule = ({ space }: ModuleProps) => {
   const [script] = useQuery(space.db, Filter.type(Script.Script));
   const compiler = useCapability(ScriptCapabilities.Compiler);
   const settings = useAtomCapability(ScriptCapabilities.Settings);

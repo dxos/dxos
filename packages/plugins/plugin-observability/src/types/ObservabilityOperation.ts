@@ -1,0 +1,41 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+// @import-as-namespace
+
+import * as Schema from 'effect/Schema';
+
+import { Capability } from '@dxos/app-framework';
+import { Operation } from '@dxos/compute';
+
+import { meta } from '#meta';
+
+const OBSERVABILITY_OPERATION = `${meta.id}.operation`;
+
+export const Toggle = Operation.make({
+  meta: {
+    key: `${OBSERVABILITY_OPERATION}.toggle`,
+    name: 'Toggle Observability',
+    description: 'Toggle observability on or off.',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    state: Schema.optional(Schema.Boolean),
+  }),
+  output: Schema.Boolean,
+});
+
+export const SendEvent = Operation.make({
+  meta: {
+    key: `${OBSERVABILITY_OPERATION}.send-event`,
+    name: 'Send Event',
+    description: 'Send an observability event.',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    name: Schema.String.annotations({ description: 'The name of the event.' }),
+    properties: Schema.optional(Schema.Any).annotations({ description: 'Event properties.' }),
+  }),
+  output: Schema.Void,
+});

@@ -22,6 +22,10 @@ import { invariant } from '@dxos/invariant';
  *
  * Intended use cases include caches of schemas, operations, blueprints, routines, plugins,
  * etc., sourced from 3rd-party plugins, local code, or local space objects.
+ *
+ * Scope: a Registry is independent of any ECHO space or Hypergraph — it is a process-local,
+ * in-memory cache. Wire one per space (e.g. as a Layer scoped to the space's Effect runtime)
+ * or share a single instance across spaces depending on the use case.
  */
 export interface Registry {
   /**
@@ -31,15 +35,10 @@ export interface Registry {
   readonly local: readonly Obj.Unknown[];
 
   /**
-   * Add or replace an object in the local registry.
-   * If an object with the same id already exists, it is replaced.
+   * Add or replace one or more objects in the local registry.
+   * Existing entries with the same id are replaced.
    */
-  add(object: Obj.Unknown): void;
-
-  /**
-   * Add or replace many objects in the local registry.
-   */
-  addMany(objects: readonly Obj.Unknown[]): void;
+  add(objects: readonly Obj.Unknown[]): void;
 
   /**
    * Remove an object by id from the local registry.
@@ -133,9 +132,7 @@ class RegistryImpl implements Registry {
   constructor(options: Options) {
     this.#upstream = options.upstream;
     if (options.initial) {
-      for (const object of options.initial) {
-        this.#put(object);
-      }
+      this.add(options.initial);
     }
   }
 
@@ -143,11 +140,7 @@ class RegistryImpl implements Registry {
     return Array.from(this.#objects.values());
   }
 
-  add(object: Obj.Unknown): void {
-    this.#put(object);
-  }
-
-  addMany(objects: readonly Obj.Unknown[]): void {
+  add(objects: readonly Obj.Unknown[]): void {
     for (const object of objects) {
       this.#put(object);
     }
@@ -207,10 +200,13 @@ const getId = (object: Obj.Unknown): string => {
  * Server-side concerns such as `from`, `order`, traversal, and text/timestamp filters are not supported.
  */
 class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
-  constructor(
-    private readonly _registry: Registry,
-    private readonly _query: Query.Query<T>,
-  ) {}
+  readonly #registry: Registry;
+  readonly #query: Query.Query<T>;
+
+  constructor(registry: Registry, query: Query.Query<T>) {
+    this.#registry = registry;
+    this.#query = query;
+  }
 
   get entries(): QueryResult.Entry<T>[] {
     return this.runSyncEntries();
@@ -233,7 +229,7 @@ class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
   }
 
   runSyncEntries(): QueryResult.Entry<T>[] {
-    const matches = executeQuery(this._registry, this._query.ast);
+    const matches = executeQuery(this.#registry, this.#query.ast);
     return matches.map(
       (object): QueryResult.Entry<T> => ({
         id: getId(object),
@@ -272,7 +268,7 @@ const executeQuery = (registry: Registry, ast: QueryAST.Query): Obj.Unknown[] =>
       return inner.slice(0, ast.limit);
     }
     default:
-      throw new Error(`Query clause '${ast.type}' is not supported by the in-memory registry.`);
+      throw new Error(`Query clause not supported: ${(ast as { type: string }).type}`);
   }
 };
 

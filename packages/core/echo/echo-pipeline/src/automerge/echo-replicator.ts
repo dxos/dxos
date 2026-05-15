@@ -22,6 +22,15 @@ export interface AutomergeReplicator {
   disconnect(): Promise<void>;
 }
 
+/**
+ * Replicator with explicit per-space wiring (used by edge replicators that maintain one logical
+ * connection per `SpaceId`). `DataSpaceManager` drives these lifecycle hooks on space open/close.
+ */
+export interface EdgeAutomergeReplicator extends AutomergeReplicator {
+  connectToSpace(ctx: Context, spaceId: SpaceId): Promise<void>;
+  disconnectFromSpace(spaceId: SpaceId): Promise<void>;
+}
+
 export interface AutomergeReplicatorContext {
   /**
    * Our own peer id.

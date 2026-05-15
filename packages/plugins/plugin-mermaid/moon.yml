@@ -10,4 +10,7 @@ tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
-      - '--platform=browser'
+      - '--entryPoint=src/MermaidPlugin.tsx'
+      - '--entryPoint=src/meta.ts'
+      - '--entryPoint=src/plugin.ts'
+      - '--platform=neutral'

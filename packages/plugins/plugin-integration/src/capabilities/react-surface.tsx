@@ -17,7 +17,7 @@ import { IntegrationAuthButton } from '#components';
 import { CustomTokenDialog, IntegrationArticle, SyncTargetsChecklist } from '#containers';
 import { Integration, IntegrationProvider, IntegrationProviderAnnotationId } from '#types';
 
-import { CUSTOM_TOKEN_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
+import { PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG } from '../constants';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -58,7 +58,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'custom-token-dialog',
-        filter: AppSurface.component<ComponentProps<typeof CustomTokenDialog>>(AppSurface.Dialog, CUSTOM_TOKEN_DIALOG),
+        filter: AppSurface.component<ComponentProps<typeof CustomTokenDialog>>(AppSurface.Dialog, PROVIDER_FORM_DIALOG),
         component: ({ data }) => <CustomTokenDialog {...data.props} />,
       }),
       Surface.create({

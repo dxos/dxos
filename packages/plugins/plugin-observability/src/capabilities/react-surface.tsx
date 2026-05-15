@@ -10,9 +10,8 @@ import { Surface, useOperationInvoker, useSettingsState } from '@dxos/app-framew
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { ObservabilitySettings } from '#components';
-import { HelpContainer } from '#containers';
 import { meta } from '#meta';
-import { ObservabilityOperation } from '#operations';
+import { ObservabilityOperation } from '#types';
 import { type Settings } from '#types';
 
 export default Capability.makeModule(() =>
@@ -30,11 +29,6 @@ export default Capability.makeModule(() =>
           };
           return <ObservabilitySettings settings={settings} onSettingsChange={handleSettingsChange} />;
         },
-      }),
-      Surface.create({
-        id: 'help',
-        role: 'deck-companion--help',
-        component: () => <HelpContainer />,
       }),
     ]),
   ),

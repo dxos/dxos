@@ -7,9 +7,9 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
-import { Obj } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { random } from '@dxos/random';
-import { Filter, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -76,7 +76,7 @@ const DefaultStory = () => {
   );
 
   return (
-    <div role='none' className='w-96'>
+    <div className='w-96'>
       <ObjectPicker.Root open={isOpen} onOpenChange={setIsOpen}>
         <ObjectPicker.Trigger asChild>
           <Button variant='primary' data-testid='trigger' classNames='w-full'>

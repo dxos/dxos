@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { type AiContextBinder } from '@dxos/assistant';
+import { type AiContext } from '@dxos/assistant';
 import { Blueprint } from '@dxos/compute';
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
@@ -44,7 +44,7 @@ export const useBlueprints = ({
 /**
  * Create reactive map of active blueprints (by key).
  */
-export const useActiveBlueprints = ({ context }: { context?: AiContextBinder }) => {
+export const useActiveBlueprints = ({ context }: { context?: AiContext.Binder }) => {
   const [active, setActive] = useState<Map<string, Blueprint.Blueprint>>(new Map());
 
   useEffect(() => {
@@ -81,7 +81,7 @@ export const useBlueprintHandlers = ({
   blueprintRegistry,
 }: {
   db: Database.Database;
-  context?: AiContextBinder;
+  context?: AiContext.Binder;
   blueprintRegistry?: Blueprint.Registry;
 }) => {
   const onUpdateBlueprint = useCallback(

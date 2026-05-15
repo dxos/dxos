@@ -9,7 +9,7 @@ import { isSpace, type Space } from '@dxos/client/echo';
 
 /**
  * Canonical app-graph node type for `Space` data nodes. Mirrors
- * `SPACE_TYPE` in `@dxos/plugin-space/types` — kept here so app-toolkit
+ * `SPACE_TYPE` in `@dxos/plugin-space` — kept here so app-toolkit
  * matchers don't have to depend on plugin-space.
  */
 const SPACE_NODE_TYPE = 'org.dxos.type.space';

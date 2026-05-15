@@ -13,7 +13,7 @@ import { composable, composableProps } from '@dxos/ui-theme';
 
 import { Chat } from '#components';
 import { useStatus } from '#hooks';
-import { ThreadOperation } from '#operations';
+import { ThreadOperation } from '#types';
 
 export type ChannelChatProps = {
   space: Space;
@@ -41,7 +41,7 @@ export const ChannelChat = composable<HTMLDivElement, ChannelChatProps>(
     const messages = useQuery(
       space.db,
       feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
-    ) as Message.Message[];
+    );
 
     const readOnly = Obj.getMeta(channel).keys.length > 0;
 

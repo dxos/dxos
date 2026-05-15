@@ -45,9 +45,9 @@ export type QueueSpec = Schema.Schema.Type<typeof QueueSpec>;
 /**
  * Construct a Queue trigger spec from a queue DXN string.
  */
-export const specQueue = (queueDxn: string): QueueSpec => ({
+export const specQueue = (queueDXN: string): QueueSpec => ({
   kind: 'queue',
-  queue: queueDxn,
+  queue: queueDXN,
 });
 
 /**

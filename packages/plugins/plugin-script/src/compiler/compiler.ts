@@ -24,6 +24,10 @@ const CDN_TS_VERSION = '5.6.3';
 const defaultOptions: ts.CompilerOptions = {
   lib: ['DOM', 'es2022'],
   target: ts.ScriptTarget.ES2022,
+  // Override `@typescript/vfs`'s default of `NodeJs` (== deprecated `node10`).
+  // TypeScript 6 throws on that as a `getCompilerOptionsDiagnostics()` error,
+  // which surfaces as an unhandled rejection inside the storybook task.
+  moduleResolution: ts.ModuleResolutionKind.Bundler,
 };
 
 export class Compiler {

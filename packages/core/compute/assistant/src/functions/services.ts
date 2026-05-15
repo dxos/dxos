@@ -19,7 +19,7 @@ import { todo } from '@dxos/debug';
 import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
-import { RefFromLLM } from '../types';
+import { RefFromLLM } from '../util';
 
 export const makeToolResolverFromOperations = <R = never>({
   toolkit: extraToolkit = OpaqueToolkit.empty,

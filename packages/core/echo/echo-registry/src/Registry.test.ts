@@ -24,7 +24,7 @@ describe('Registry', () => {
     const a = makeObj({ key: 'org.example.type.a', version: '1.0.0', value: 1 });
     const b = makeObj({ key: 'org.example.type.b', version: '2.0.0', value: 2 });
 
-    registry.addMany([a, b]);
+    registry.add([a, b]);
     expect(registry.list()).toHaveLength(2);
     expect(registry.get(a.id)).toBe(a);
 

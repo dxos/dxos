@@ -7,8 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { Operation } from '@dxos/compute';
 import { testFunctionPlugins } from '@dxos/compute-hyperformula/testing';
-import { Filter } from '@dxos/echo';
-import { Obj } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Input, Toolbar } from '@dxos/react-ui';

@@ -21,7 +21,7 @@ export const CardContainer = ({ children, role, icon = 'ph--arrow-line-down--reg
   switch (role) {
     case 'popover':
       return (
-        <div role='none' className='flex justify-center'>
+        <div className='flex justify-center'>
           <PopoverCardContainer icon={icon}>{children}</PopoverCardContainer>
         </div>
       );
@@ -80,14 +80,11 @@ export const IntrinsicCardContainer = ({
 
   return (
     <div
-      role='none'
       className='relative p-2 grid overflow-hidden border-2 border-dashed border-green-500 rounded-lg'
       style={sizeStyle(size, 'horizontal')}
       {...resizeAttributes}
     >
-      <div role='none' className='dx-container flex flex-col'>
-        {children}
-      </div>
+      <div className='dx-container flex flex-col'>{children}</div>
       <ResizeHandle
         side='inline-end'
         fallbackSize={DEFAULT_BLOCK_SIZE}

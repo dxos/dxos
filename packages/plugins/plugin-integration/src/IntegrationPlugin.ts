@@ -4,7 +4,7 @@
 
 import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { ClientEvents } from '@dxos/plugin-client/types';
+import { ClientEvents } from '@dxos/plugin-client';
 import { AccessToken } from '@dxos/types';
 
 import {
@@ -12,6 +12,7 @@ import {
   BuiltinProviders,
   Coordinator,
   CreateObject,
+  OAuthRedirect,
   OperationHandler,
   ReactSurface,
 } from '#capabilities';
@@ -38,6 +39,10 @@ export const IntegrationPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     activatesOn: ActivationEvent.allOf(ClientEvents.ClientReady, ActivationEvents.OperationInvokerReady),
     activate: Coordinator,
+  }),
+  Plugin.addModule({
+    activatesOn: ActivationEvents.Startup,
+    activate: OAuthRedirect,
   }),
   Plugin.make,
 );

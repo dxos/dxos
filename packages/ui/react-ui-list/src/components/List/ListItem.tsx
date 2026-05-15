@@ -273,9 +273,7 @@ export const ListItemDragPreview = <T extends ListItemRecord>({
 };
 
 export const ListItemWrapper = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => (
-  <div role='none' className={mx('flex w-full gap-2', classNames)}>
-    {children}
-  </div>
+  <div className={mx('flex w-full gap-2', classNames)}>{children}</div>
 );
 
 export const ListItemTitle = ({
@@ -283,7 +281,7 @@ export const ListItemTitle = ({
   children,
   ...props
 }: ThemedClassName<PropsWithChildren<ComponentProps<'div'>>>) => (
-  <div role='none' className={mx('flex grow items-center truncate', classNames)} {...props}>
+  <div className={mx('flex grow items-center truncate', classNames)} {...props}>
     {children}
   </div>
 );

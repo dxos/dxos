@@ -24,7 +24,7 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
       // Check typename if specified.
       if (filter.typename !== null) {
         // TODO(dmaretskyi): `system` is missing in some cases.
-        if (!obj.doc.system?.type?.['/']) {
+        if (!obj.doc?.system?.type?.['/']) {
           // Objects with no type are deprecated.
           return false;
         } else {

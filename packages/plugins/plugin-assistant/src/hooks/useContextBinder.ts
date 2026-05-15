@@ -6,7 +6,7 @@ import { type Registry, RegistryContext } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import { useContext, useState } from 'react';
 
-import { AiContextBinder } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import { Feed } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -16,9 +16,9 @@ import { useAsyncEffect } from '@dxos/react-ui';
 export const useContextBinder = (
   space: Space | undefined,
   feed: Feed.Feed | undefined,
-): AiContextBinder | undefined => {
+): AiContext.Binder | undefined => {
   const registry = useContext(RegistryContext) as Registry.Registry;
-  const [binder, setBinder] = useState<AiContextBinder>();
+  const [binder, setBinder] = useState<AiContext.Binder>();
 
   useAsyncEffect(async () => {
     setBinder(undefined);
@@ -30,7 +30,7 @@ export const useContextBinder = (
     const runtime = await runAndForwardErrors(
       Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
     );
-    const binder = new AiContextBinder({ feed, runtime, registry });
+    const binder = new AiContext.Binder({ feed, runtime, registry });
     await binder.open();
     setBinder(binder);
 

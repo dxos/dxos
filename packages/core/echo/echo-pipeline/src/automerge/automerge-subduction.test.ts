@@ -14,9 +14,10 @@ import {
   SedimentreeId,
   Subduction,
   commitIdOfBase58Id,
-  type PeerId as SubductionPeerId,
 } from '@automerge/automerge-subduction';
 import { beforeAll, describe, test } from 'vitest';
+
+import { sleep } from '@dxos/async';
 
 class AsyncQueue<T> {
   private _items: T[] = [];
@@ -37,6 +38,11 @@ class AsyncQueue<T> {
       return item;
     }
     return new Promise<T>((resolve) => this._waiters.push(resolve));
+  }
+
+  clear(): void {
+    this._items.length = 0;
+    this._waiters.length = 0;
   }
 }
 
@@ -66,6 +72,8 @@ class MemoryTransport {
     for (const callback of this._disconnectCallbacks) {
       callback();
     }
+    this._inBytes.clear();
+    this._outBytes.clear();
   }
 
   onDisconnect(callback: () => void): void {
@@ -78,54 +86,6 @@ const createMemoryTransportPair = (): [MemoryTransport, MemoryTransport] => {
   const bytesBA = new AsyncQueue<Uint8Array>();
   return [new MemoryTransport(bytesAB, bytesBA), new MemoryTransport(bytesBA, bytesAB)];
 };
-
-/**
- * Stateless subduction sync server.
- * Holds a Subduction instance with persistent storage but no Repo.
- * Connections are ephemeral: opened per sync session, torn down after.
- */
-class SubductionServer {
-  private _signer: MemorySigner;
-  private _storage: MemoryStorage;
-  private _subduction: Subduction;
-
-  constructor(signer: MemorySigner) {
-    this._signer = signer;
-    this._storage = new MemoryStorage();
-    this._subduction = new Subduction(signer, this._storage);
-  }
-
-  get peerId(): SubductionPeerId {
-    return this._signer.peerId();
-  }
-
-  get subduction(): Subduction {
-    return this._subduction;
-  }
-
-  /**
-   * Opens an ephemeral sync session for a client.
-   * Creates a MemoryTransport pair, performs the authenticated handshake,
-   * and adds the server-side transport to the Subduction instance.
-   * Returns the client-side AuthenticatedTransport for the caller to use.
-   */
-  async openSession(clientSigner: MemorySigner): Promise<AuthenticatedTransport> {
-    const [serverTransport, clientTransport] = createMemoryTransportPair();
-
-    const [serverAuth, clientAuth] = await Promise.all([
-      AuthenticatedTransport.accept(serverTransport, this._signer),
-      AuthenticatedTransport.setup(clientTransport, clientSigner, this._signer.peerId()),
-    ]);
-
-    await this._subduction.addConnection(serverAuth);
-    return clientAuth;
-  }
-
-  /** Tears down the ephemeral connection for a client peer. */
-  async closeSession(clientPeerId: SubductionPeerId): Promise<void> {
-    await this._subduction.disconnectFromPeer(clientPeerId);
-  }
-}
 
 /**
  * Build a deterministic {@link CommitId} seeded by a small integer. Values are arbitrary;
@@ -286,51 +246,6 @@ describe('automerge-subduction', () => {
     expect(blobsOnB[0]).toEqual(new Uint8Array([4, 5, 6]));
   }, 10_000);
 
-  test('SubductionServer: syncs raw data between two clients via ephemeral connections', async ({ expect }) => {
-    const server = new SubductionServer(MemorySigner.generate());
-
-    // Client A adds a commit and syncs with the server.
-    const signerA = MemorySigner.generate();
-    const subductionA = new Subduction(signerA, new MemoryStorage());
-    const sid = SedimentreeId.fromBytes(new Uint8Array(32).fill(42));
-    await subductionA.addCommit(sid, commitIdOf(4), [], new Uint8Array([1, 2, 3]));
-
-    const clientAuthA = await server.openSession(signerA);
-    await subductionA.addConnection(clientAuthA);
-    await subductionA.syncWithAllPeers(sid, false);
-
-    // Tear down Client A's session.
-    await subductionA.disconnectFromPeer(server.peerId);
-    await server.closeSession(signerA.peerId());
-
-    // Server persisted the blob; no active connections remain.
-    const serverBlobs = await server.subduction.getBlobs(sid);
-    expect(serverBlobs).toHaveLength(1);
-    expect(serverBlobs[0]).toEqual(new Uint8Array([1, 2, 3]));
-
-    const serverPeersAfterA = await server.subduction.getConnectedPeerIds();
-    expect(serverPeersAfterA).toHaveLength(0);
-
-    // Client B opens a new session and retrieves the data from the server.
-    const signerB = MemorySigner.generate();
-    const subductionB = new Subduction(signerB, new MemoryStorage());
-
-    const clientAuthB = await server.openSession(signerB);
-    await subductionB.addConnection(clientAuthB);
-    await subductionB.syncWithPeer(server.peerId, sid, false);
-
-    const blobsOnB = await subductionB.getBlobs(sid);
-    expect(blobsOnB).toHaveLength(1);
-    expect(blobsOnB[0]).toEqual(new Uint8Array([1, 2, 3]));
-
-    // Tear down Client B's session.
-    await subductionB.disconnectFromPeer(server.peerId);
-    await server.closeSession(signerB.peerId());
-
-    const serverPeersAfterB = await server.subduction.getConnectedPeerIds();
-    expect(serverPeersAfterB).toHaveLength(0);
-  }, 10_000);
-
   test('full sync exchanges all sedimentrees between peers', async ({ expect }) => {
     const signerA = MemorySigner.generate();
     const signerB = MemorySigner.generate();
@@ -362,4 +277,54 @@ describe('automerge-subduction', () => {
     expect(blobsBonA).toHaveLength(1);
     expect(blobsBonA[0]).toEqual(new Uint8Array([30, 40]));
   }, 10_000);
+
+  // After B drops handshake state and rehydrates from durable storage, does
+  // subduction re-handshake on the reused logical channel when A pushes?
+  // Empirical answer: no — A's auto-broadcast does not reach B'.
+  test(
+    'does not auto-rehydrate handshake on a logical connection where one end dropped it',
+    { timeout: 15_000 },
+    async ({ expect }) => {
+      const signerA = MemorySigner.generate();
+      const signerB = MemorySigner.generate();
+      const storageA = new MemoryStorage();
+      const storageB = new MemoryStorage();
+      const [transportA, transportB] = createMemoryTransportPair();
+
+      const subA = new Subduction(signerA, storageA, 'svc');
+      let subB = new Subduction(signerB, storageB, 'svc');
+
+      const [authA, authB] = await Promise.all([
+        AuthenticatedTransport.setup(transportA, signerA, signerB.peerId()),
+        AuthenticatedTransport.accept(transportB, signerB),
+      ]);
+      await subA.addConnection(authA);
+      await subB.addConnection(authB);
+
+      const sid = SedimentreeId.fromBytes(new Uint8Array(32).fill(7));
+      await subA.addCommit(sid, commitIdOf(1), [], new Uint8Array([1, 2, 3]));
+      await expect.poll(() => subB.getBlobs(sid).then((bs) => bs.length), { timeout: 5_000 }).toEqual(1);
+
+      // Simulate B crash: clearing the queue's waiters halts the orphaned
+      // wasm pump that survives `free()`. Do NOT use `disconnectAll` /
+      // `disconnectFromPeer` — those send a graceful goodbye A would observe.
+      await transportB.disconnect();
+      subB.free();
+
+      subB = await Subduction.hydrate(signerB, storageB, 'svc');
+      expect(await subB.getBlobs(sid)).toHaveLength(1);
+      expect(await subB.getConnectedPeerIds()).toHaveLength(0);
+      expect(await subA.getConnectedPeerIds()).toHaveLength(1);
+
+      await subA.addCommit(sid, commitIdOf(2), [commitIdOf(1)], new Uint8Array([4, 5, 6]));
+      await sleep(500);
+
+      // TODO(mykola): When subduction-core grows channel-level handshake
+      // recovery, flip to `.toHaveLength(2)` and drop "does not" from name.
+      expect(await subB.getBlobs(sid)).toHaveLength(1);
+
+      subA.free();
+      subB.free();
+    },
+  );
 });

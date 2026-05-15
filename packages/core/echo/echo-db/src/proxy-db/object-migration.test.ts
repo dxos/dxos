@@ -5,8 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, expect, test } from 'vitest';
 
-import { Obj, Type } from '@dxos/echo';
-import { Filter } from '@dxos/echo';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { getSchemaDXN } from '@dxos/echo/internal';
 import { JsonPath } from '@dxos/effect';
 import { DXN } from '@dxos/keys';

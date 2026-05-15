@@ -78,14 +78,10 @@ export const ArrayField = ({
         <FormFieldLabel readonly={readonly} label={label} asChild />
       )}
 
-      <div role='none' className='flex flex-col gap-form-gap'>
+      <div className='flex flex-col gap-form-gap'>
         {values?.map((_, index) => {
           return (
-            <div
-              role='none'
-              key={index}
-              className='grid grid-cols-[1fr_min-content] gap-form-gap last:mb-form-gap items-center'
-            >
+            <div key={index} className='grid grid-cols-[1fr_min-content] gap-form-gap last:mb-form-gap items-center'>
               <FormField
                 autoFocus={index === values.length - 1}
                 type={elementType}
@@ -96,9 +92,9 @@ export const ArrayField = ({
               />
 
               {!readonly && layout !== 'static' && (
-                <div role='none' className='flex flex-col h-full justify-end'>
+                <div className='flex flex-col h-full justify-end'>
                   {/* NOTE: Aligns with center of last field if multi-field object. */}
-                  <div role='none' className='flex items-center h-[2rem]'>
+                  <div className='flex items-center h-[2rem]'>
                     <IconButton
                       icon='ph--x--regular'
                       iconOnly

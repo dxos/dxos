@@ -82,7 +82,7 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
           <Toolbar.Button>Test</Toolbar.Button>
         </Toolbar.Root>
 
-        <div className={mx(container, 'm-2 bg-active-surface')}>
+        <div className={mx(container, 'm-2 bg-current-surface')}>
           <Input.Root>
             <Input.Label>Level 1 (group)</Input.Label>
           </Input.Root>

@@ -7,15 +7,12 @@ import * as Layer from 'effect/Layer';
 
 import { Capability } from '@dxos/app-framework';
 import { Obj } from '@dxos/echo';
-import {
-  IntegrationProvider as IntegrationProviderCapability,
-  type OnTokenCreated,
-} from '@dxos/plugin-integration/types';
+import { IntegrationProvider as IntegrationProviderCapability, type OnTokenCreated } from '@dxos/plugin-integration';
 import { OAuthProvider } from '@dxos/protocols';
 
 import { SLACK_SCOPES, SLACK_SOURCE } from '../constants';
-import { SlackOperation } from '../operations';
 import { SlackApi } from '../services';
+import { SlackOperation } from '../types';
 
 /**
  * Service-specific token-created hook for Slack.

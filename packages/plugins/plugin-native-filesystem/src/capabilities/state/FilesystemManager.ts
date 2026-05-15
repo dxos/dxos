@@ -42,7 +42,7 @@ export interface FilesystemManager {
   /** Lookup text object by filesystem file id. */
   getByFileId(fileId: string): Text.Text | undefined;
   /** Resolve disk write target from Echo DXN string. */
-  getWriteTargetByDxn(dxn: string): { path: string; fileId: string } | undefined;
+  getWriteTargetByDXN(dxn: string): { path: string; fileId: string } | undefined;
   /** Start directory watcher, ensure mirror space, and sync markdown for a workspace. */
   activateWorkspace(workspace: FilesystemWorkspace): Effect.Effect<void>;
   /** Stop directory watcher and evict all cached markdown documents for a workspace. */
@@ -80,8 +80,8 @@ class FilesystemManagerImpl implements FilesystemManager {
     return this._markdownDocuments.getByFileId(fileId);
   }
 
-  getWriteTargetByDxn(dxn: string): { path: string; fileId: string } | undefined {
-    return this._markdownDocuments.getWriteTargetByDxn(dxn);
+  getWriteTargetByDXN(dxn: string): { path: string; fileId: string } | undefined {
+    return this._markdownDocuments.getWriteTargetByDXN(dxn);
   }
 
   activateWorkspace(workspace: FilesystemWorkspace): Effect.Effect<void> {

@@ -5,7 +5,7 @@ import * as Effect from 'effect/Effect';
 import { Capability, Plugin } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
+import { ObservabilityOperation } from '@dxos/plugin-observability';
 
 import { SpaceEvents, SpaceCapabilities } from '../types';
 import { SpaceOperation } from './definitions';

@@ -70,8 +70,8 @@ export const ObjectViewer = ({ object, id, onNavigate }: ObjectViewerProps) => {
         <Clipboard.Provider>
           <div className='flex flex-col'>
             <Input.Root>
-              <div role='none' className='flex flex-col gap-1'>
-                <div role='none' className='flex gap-1'>
+              <div className='flex flex-col gap-1'>
+                <div className='flex gap-1'>
                   <Input.TextInput disabled value={id} />
                   <Clipboard.IconButton value={id} />
                   <Button value={id} onClick={handleCopy}>

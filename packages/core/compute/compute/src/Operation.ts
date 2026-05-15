@@ -167,6 +167,21 @@ export const make = <const P extends Types.NoExcessProperties<Props<any, any>, P
 };
 
 /**
+ * Marks an operation as intrinsic — provided directly by the DXOS platform runtime rather than
+ * deployed as a user function. The `intrinsic:<key>` deployedId routes invocations to the
+ * built-in implementation registered with the runtime.
+ */
+export const intrinsic = <const O extends Operation.Definition.Any>(op: O): O => {
+  return {
+    ...op,
+    meta: {
+      ...op.meta,
+      deployedId: `intrinsic:${op.meta.key}`,
+    },
+  };
+};
+
+/**
  * Attaches a handler to an Operation definition.
  * The handler may use any services declared in the operation, plus Operation.Service (always available).
  * Dual API: can be called directly or used in a pipe.
@@ -320,6 +335,8 @@ export const PersistentOperation = Schema$.Struct({
 );
 export interface PersistentOperation extends Schema$.Schema.Type<typeof PersistentOperation> {}
 
+const FUNCTION_META_KEY = 'org.dxos.service.function';
+
 /**
  * Get the registry key for a persistent operation record (from the object meta).
  */
@@ -338,6 +355,7 @@ export const serialize = (operation: Definition.Any): PersistentOperation => {
     [Obj.Meta]: {
       key: operation.meta.key,
       version: operation.meta.version ?? '0.0.0',
+      keys: operation.meta.deployedId ? [{ source: FUNCTION_META_KEY, id: operation.meta.deployedId }] : [],
     },
     name: operation.meta.name ?? '',
     description: operation.meta.description,
@@ -355,7 +373,7 @@ export const serialize = (operation: Definition.Any): PersistentOperation => {
 export const deserialize = (record: PersistentOperation): Definition.Any => {
   const meta = Obj.getMeta(record);
   // Extract deployed function ID from ECHO meta keys (matches FUNCTIONS_META_KEY in @dxos/functions).
-  const deployedId = meta.keys.find((key) => key.source === 'org.dxos.service.function')?.id;
+  const deployedId = meta.keys.find((key) => key.source === FUNCTION_META_KEY)?.id;
   return make({
     input: record.inputSchema ? JsonSchema.toEffectSchema(record.inputSchema) : Schema$.Unknown,
     output: record.outputSchema ? JsonSchema.toEffectSchema(record.outputSchema) : Schema$.Unknown,
@@ -405,7 +423,7 @@ export interface InvokeOptions {
   spaceId?: Key.SpaceId;
   /**
    * DXN string of the conversation feed (queue).
-   * Passed to the process environment so nested operations can resolve AiContextService and related services.
+   * Passed to the process environment so nested operations can resolve AiContext.Service and related services.
    */
   conversation?: DXN.String;
   /**

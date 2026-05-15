@@ -41,7 +41,7 @@ const DefaultStory = (props: Partial<TriggerEditorProps>) => {
     }
 
     const functions = await space.db.query(Filter.type(Operation.PersistentOperation)).run();
-    const fn = functions.find((fn) => fn.name === 'example.com/function/forex');
+    const fn = functions.find((fn) => fn.name === 'com.example.function.forex');
     invariant(fn);
     const trigger = space.db.add(
       Trigger.make({

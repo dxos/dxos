@@ -9,8 +9,7 @@ import Redis from 'ioredis';
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Obj, Type } from '@dxos/echo';
-import { Filter } from '@dxos/echo';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { type EchoDatabaseImpl, type QueryResult, createDocAccessor } from '@dxos/echo-db';
 import { EchoTestPeer } from '@dxos/echo-db/testing';
 import { TestReplicator, TestReplicatorConnection } from '@dxos/echo-pipeline/testing';

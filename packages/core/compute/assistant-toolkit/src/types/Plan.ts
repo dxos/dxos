@@ -37,6 +37,7 @@ export const Task = Schema.Struct({
    */
   chat: Schema.optional(Ref.Ref(Chat.Chat)),
 });
+
 export interface Task extends Schema.Schema.Type<typeof Task> {}
 
 /**

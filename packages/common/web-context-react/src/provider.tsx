@@ -225,7 +225,7 @@ export const ContextProtocolProvider = <T extends UnknownContext>({
 
   return (
     <ContextRequestHandlerContext.Provider value={handleRequest}>
-      <div role='none' className='contents' ref={containerRef}>
+      <div className='contents' ref={containerRef}>
         {children}
       </div>
     </ContextRequestHandlerContext.Provider>

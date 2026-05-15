@@ -12,13 +12,13 @@ import { Chat } from '@dxos/assistant-toolkit';
 import { getSpace } from '@dxos/client/echo';
 import { Blueprint } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { type ChatEvent } from '#components';
 import { useBlueprintRegistry, useContextBinder } from '#hooks';
-import { AssistantOperation } from '#operations';
+import { AssistantOperation } from '#types';
 
 import ChatContainer from '../ChatContainer';
 
@@ -39,7 +39,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
           return;
         }
 
-        if (event.type === 'submit' && !getSpace(chat)) {
+        if (event.type === 'submit' && !Obj.getDatabase(chat)) {
           await invokePromise(SpaceOperation.AddObject, {
             object: chat,
             target: space.db,

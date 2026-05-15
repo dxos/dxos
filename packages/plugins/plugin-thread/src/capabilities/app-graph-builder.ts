@@ -10,14 +10,14 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { AttentionCapabilities } from '@dxos/plugin-attention/types';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { type SelectionManager, type SelectionMode, defaultSelection } from '@dxos/react-ui-attention';
 import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
-import { ThreadOperation } from '#operations';
+import { ThreadOperation } from '#types';
 import { ThreadCapabilities, type ThreadState } from '#types';
 
 import { getAnchor } from '../util';
@@ -147,7 +147,7 @@ export default Capability.makeModule(
         },
         actions: (matched, get) => {
           const object = matched.data;
-          const objectDxn = Obj.getDXN(object).toString();
+          const objectDXN = Obj.getDXN(object).toString();
           const stateAtom = capabilities.atom(ThreadCapabilities.State);
           const selectionManager = capabilities.get(AttentionCapabilities.Selection);
           const commentConfig = getCommentConfig(Obj.getTypename(object)!)!;
@@ -156,7 +156,7 @@ export default Capability.makeModule(
             commentDisabledFamily({
               stateAtom,
               selectionManager,
-              objectId: objectDxn,
+              objectId: objectDXN,
               commentsType: commentConfig.comments,
               selectionMode: commentConfig.selectionMode as SelectionMode | undefined,
             }),
@@ -167,7 +167,7 @@ export default Capability.makeModule(
               id: 'comment',
               data: Effect.fnUntraced(function* () {
                 const config = getCommentConfig(Obj.getTypename(object)!)!;
-                const selection = selectionManager.getSelection(objectDxn);
+                const selection = selectionManager.getSelection(objectDXN);
                 const anchor =
                   (config.comments === 'anchored' ? getAnchor(selection) : undefined) ?? Date.now().toString();
                 const name = config.getAnchorLabel?.(object, anchor);

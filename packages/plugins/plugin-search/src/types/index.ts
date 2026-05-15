@@ -3,3 +3,5 @@
 //
 
 export type * from './search';
+
+export * as SearchOperation from './SearchOperation';

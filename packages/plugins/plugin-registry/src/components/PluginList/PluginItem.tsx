@@ -141,7 +141,7 @@ export const PluginItem = ({
     >
       <div className={mx(gridRows, 'justify-center rounded-l-md', styles.surface)}>
         <Icon
-          classNames={mx('row-start-2 cursor-pointer', styles.surfaceText)}
+          classNames={mx('row-start-2 cursor-pointer', styles.foreground)}
           icon={icon}
           size={14}
           onClick={handleClick}

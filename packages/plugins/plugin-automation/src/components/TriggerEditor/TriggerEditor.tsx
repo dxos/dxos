@@ -6,8 +6,8 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Operation, Script, Trigger } from '@dxos/compute';
 import { ComputeGraph } from '@dxos/conductor';
-import { DXN, type Database, Entity, Feed, Obj, type Query } from '@dxos/echo';
-import { Filter, Ref, useQuery } from '@dxos/react-client/echo';
+import { type Database, DXN, Entity, Feed, Filter, Obj, type Query, Ref } from '@dxos/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import {
@@ -157,12 +157,12 @@ const getFunctionOptions = (scripts: Script.Script[], functions: Operation.Persi
 
 const getFeedQueueOptions = (feeds: Feed.Feed[]) => {
   return feeds.flatMap((feed) => {
-    const queueDxn = Feed.getQueueDxn(feed);
-    if (!queueDxn) {
+    const queueDXN = Feed.getQueueDxn(feed);
+    if (!queueDXN) {
       return [];
     }
     const parent = Obj.getParent(feed);
     const label = parent ? Entity.getLabel(parent) : Entity.getLabel(feed);
-    return [{ label: label ?? feed.id, value: queueDxn.toString() }];
+    return [{ label: label ?? feed.id, value: queueDXN.toString() }];
   });
 };

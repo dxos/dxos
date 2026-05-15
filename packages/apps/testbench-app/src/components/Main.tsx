@@ -7,10 +7,10 @@ import type * as Schema from 'effect/Schema';
 import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Devtools, StatsPanel, useStats } from '@dxos/devtools';
-import { Obj, Type } from '@dxos/echo';
+import { Obj, Query, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type PublicKey, useClient } from '@dxos/react-client';
-import { Query, type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect, useFileDownload } from '@dxos/react-ui';
 
 import { Document, Item } from '../data';

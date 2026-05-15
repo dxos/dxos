@@ -8,8 +8,8 @@ import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
-import { Chess } from '@dxos/plugin-chess/types';
-import { GameRef, Game, loadGame } from '@dxos/plugin-game/types';
+import { Chess } from '@dxos/plugin-chess';
+import { GameRef, Game, loadGame } from '@dxos/plugin-game';
 
 const ChessBot = Operation.make({
   meta: {

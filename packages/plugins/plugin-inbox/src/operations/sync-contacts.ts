@@ -10,13 +10,13 @@ import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { AutomationCapabilities } from '@dxos/plugin-automation/types';
-import { Integration } from '@dxos/plugin-integration/types';
+import { AutomationCapabilities } from '@dxos/plugin-automation';
+import { Integration } from '@dxos/plugin-integration';
 
 import { meta } from '#meta';
 
 import { IntegrationDatabaseMissingError } from '../errors';
-import { SyncContacts } from './definitions';
+import { InboxOperation } from '../types';
 
 const dispatch = (integration: Integration.Integration) =>
   Effect.gen(function* () {
@@ -34,7 +34,7 @@ const dispatch = (integration: Integration.Integration) =>
     );
   });
 
-const handler: Operation.WithHandler<typeof SyncContacts> = SyncContacts.pipe(
+const handler: Operation.WithHandler<typeof InboxOperation.SyncContacts> = InboxOperation.SyncContacts.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const target = input.integration.target;

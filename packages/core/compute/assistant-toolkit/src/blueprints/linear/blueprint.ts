@@ -29,7 +29,7 @@ const make = () =>
     name: 'Linear',
     description: 'Syncs Linear workspaces.',
     instructions: {
-      source: Ref.make(Text.make(instructions)),
+      source: Ref.make(Text.make({ content: instructions })),
     },
     tools: Blueprint.toolDefinitions({ operations: [SyncIssues] }),
   });

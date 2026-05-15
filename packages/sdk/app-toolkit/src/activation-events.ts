@@ -4,7 +4,7 @@
 
 import { ActivationEvent as ActivationEvent$ } from '@dxos/app-framework';
 
-import { AppCapabilities } from './capabilities';
+import { LAYOUT_CAPABILITY_ID } from './capability-ids';
 
 export namespace AppActivationEvents {
   /**
@@ -53,7 +53,7 @@ export namespace AppActivationEvents {
    */
   export const createStateEvent = (specifier: string) =>
     ActivationEvent$.make('org.dxos.app-framework.event.state', specifier);
-  export const LayoutReady = createStateEvent(AppCapabilities.Layout.identifier);
+  export const LayoutReady = createStateEvent(LAYOUT_CAPABILITY_ID);
 
   /**
    * Fired when a specific settings capability is ready.

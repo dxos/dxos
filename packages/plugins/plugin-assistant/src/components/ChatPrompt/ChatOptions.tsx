@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import React, { type JSX, useCallback, useMemo, useState } from 'react';
 
-import { type AiContextBinder } from '@dxos/assistant';
+import { type AiContext } from '@dxos/assistant';
 import { type Chat as ChatModule, McpServer } from '@dxos/assistant-toolkit';
 import { type Blueprint } from '@dxos/compute';
 import { Annotation, type Database, Filter, Obj, Type } from '@dxos/echo';
@@ -28,7 +28,7 @@ const styles = {
 export type ChatOptionsProps = {
   chat?: ChatModule.Chat;
   db: Database.Database;
-  context: AiContextBinder;
+  context: AiContext.Binder;
   blueprintRegistry?: Blueprint.Registry;
   presets?: { id: string; label: string }[];
   preset?: string;
@@ -50,7 +50,7 @@ export const ChatOptions = ({
   const { t } = useTranslation(meta.id);
 
   return (
-    <div role='none' className='flex'>
+    <div className='flex'>
       <Popover.Root>
         <Popover.Trigger asChild>
           <IconButton variant='ghost' icon='ph--plus--regular' iconOnly label={t('context-objects.button')} />
@@ -230,7 +230,7 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
       {adding ? (
         <McpServerForm onSubmit={handleAdd} onCancel={() => setAdding(false)} />
       ) : (
-        <div role='none'>
+        <div>
           <IconButton
             variant='ghost'
             icon='ph--plus--regular'
@@ -334,7 +334,7 @@ const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
           onChange={(event) => setApiKey(event.target.value)}
         />
       </Input.Root>
-      <div role='none' className='flex gap-2'>
+      <div className='flex gap-2'>
         <IconButton
           variant='ghost'
           icon='ph--check--regular'
@@ -406,7 +406,7 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
                   key={object.id}
                   value={object.id}
                   icon={icon}
-                  iconClassNames={styles?.surfaceText}
+                  iconClassNames={styles?.foreground}
                   label={Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id}
                   checked={isActive}
                   onSelect={() => onUpdateObject?.(Obj.getDXN(object), !isActive)}
@@ -419,7 +419,7 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
         </SearchList.Viewport>
       </SearchList.Content>
 
-      <div role='none' className={mx('flex flex-col', styles.toolbar)}>
+      <div className={mx('flex flex-col', styles.toolbar)}>
         <Select.Root value={typename === ANY ? undefined : typename} onValueChange={setTypename}>
           <Select.TriggerButton placeholder={t('type-filter.placeholder')} />
           <Select.Portal>

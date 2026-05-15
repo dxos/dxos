@@ -9,8 +9,8 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, getSpaceIdFromPath, getSpacePath, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
 import { Database, Filter, Key, Obj, Query } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
-import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings/types';
+import { ClientCapabilities } from '@dxos/plugin-client';
+import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings';
 import { getLinkedVariant, isLinkedSegment } from '@dxos/react-ui-attention';
 import { Message } from '@dxos/types';
 
@@ -73,8 +73,8 @@ export default Capability.makeModule(
         return Effect.succeed(Option.none());
       }
 
-      const mailboxDxn = DXN.fromSpaceAndObjectId(spaceId, mailboxId as Key.ObjectId);
-      const mailboxRef = space.db.makeRef(mailboxDxn);
+      const mailboxDXN = DXN.fromSpaceAndObjectId(spaceId, mailboxId as Key.ObjectId);
+      const mailboxRef = space.db.makeRef(mailboxDXN);
 
       const isMessagePath = isLinkedSegment(qualifiedPath);
       const messageId = isMessagePath ? getLinkedVariant(qualifiedPath) : undefined;
@@ -87,7 +87,7 @@ export default Capability.makeModule(
 
           // For non-message paths, the mailbox existing is sufficient.
           if (!messageId || !Key.ObjectId.isValid(messageId)) {
-            return Effect.succeed(Option.some(mailboxDxn));
+            return Effect.succeed(Option.some(mailboxDXN));
           }
 
           // For message paths, verify the message exists in the feed or as a mailbox-scoped draft.

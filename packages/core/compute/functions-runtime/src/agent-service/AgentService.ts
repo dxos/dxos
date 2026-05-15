@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
 import { ModelName } from '@dxos/ai';
-import { AiContextBinder } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import { type Trace, Blueprint, McpServer } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
@@ -91,7 +91,7 @@ export const createSession: (
 
   const feed = yield* Database.add(Feed.make());
   const runtime = yield* Effect.runtime<Feed.FeedService>();
-  const binder = yield* acquireReleaseResource(() => new AiContextBinder({ feed, runtime }));
+  const binder = yield* acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
 
   yield* Effect.promise(() =>
     binder.bind({
@@ -175,7 +175,7 @@ const makeSession = (process: ProcessManager.Handle<string, void>, feed: Feed.Fe
   addContext: (context: Ref.Ref<Obj.Unknown>[]) =>
     Effect.gen(function* () {
       const runtime = yield* Effect.runtime<Feed.FeedService>();
-      const binder = yield* acquireReleaseResource(() => new AiContextBinder({ feed, runtime }));
+      const binder = yield* acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
       yield* Effect.promise(() =>
         binder.bind({
           blueprints: [],
@@ -186,7 +186,7 @@ const makeSession = (process: ProcessManager.Handle<string, void>, feed: Feed.Fe
   getContext: () =>
     Effect.gen(function* () {
       const runtime = yield* Effect.runtime<Feed.FeedService>();
-      const binder = yield* acquireReleaseResource(() => new AiContextBinder({ feed, runtime }));
+      const binder = yield* acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
       return binder.getObjects().map((object) => Ref.make(object));
     }).pipe(Effect.scoped),
 });

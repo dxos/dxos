@@ -11,8 +11,7 @@ import { Operation } from '@dxos/compute';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
-import { FilesOperation } from '#operations';
-import { FileCapabilities } from '#types';
+import { FileCapabilities, FilesOperation } from '#types';
 
 import { isLocalDirectory, isLocalEntity, isLocalFile } from '../util';
 

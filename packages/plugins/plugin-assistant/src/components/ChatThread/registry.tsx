@@ -115,7 +115,7 @@ export const componentRegistry: XmlWidgetRegistry = {
   toolCall: {
     block: true,
     Component: (props) => (
-      <div role='none' className='py-2'>
+      <div className='py-2'>
         <ToolWidget {...props} />
       </div>
     ),
@@ -163,7 +163,7 @@ export function createBlockRenderer(viewType: Assistant.ChatView | undefined): B
       // markdown block. A single newline lets CommonMark absorb a following `<prompt>` (an
       // HTML type-7 tag, which can't interrupt an open paragraph) into the previous
       // paragraph, rendering the prompt bubble inline next to the prior assistant text.
-      return (str += '\n\n');
+      return (str += '\n');
     }
     return str;
   };
@@ -197,7 +197,7 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
         if (block.disposition === 'synthetic') {
           return renderXMLBlock('synthetic', { content: block.text, pending: block.pending });
         } else {
-          return `<prompt>${block.text}</prompt>`;
+          return `\n<prompt>${block.text}</prompt>`;
         }
       } else {
         const text = block.text.trim();

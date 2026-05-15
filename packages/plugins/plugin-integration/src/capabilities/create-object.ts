@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Database, Obj } from '@dxos/echo';
-import { SpaceCapabilities } from '@dxos/plugin-space/types';
+import { SpaceCapabilities } from '@dxos/plugin-space';
 
 import { CreateIntegrationForm, Integration, IntegrationCoordinator } from '#types';
 

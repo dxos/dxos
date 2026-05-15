@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown';
 import { Organization, Person } from '@dxos/types';
 
 import { type Clip } from '#types';
