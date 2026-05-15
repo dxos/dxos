@@ -29,7 +29,7 @@ export class MockFilesystemManager implements FilesystemManager.FilesystemManage
     return this._documents.get(fileId);
   }
 
-  getWriteTargetByDxn(_dxn: string): { path: string; fileId: string } | undefined {
+  getWriteTargetByDXN(_dxn: string): { path: string; fileId: string } | undefined {
     return undefined;
   }
 
@@ -54,7 +54,7 @@ export class MockFilesystemManager implements FilesystemManager.FilesystemManage
       if ('children' in entry) {
         this._seedMarkdownFiles(entry.children);
       } else if (entry.type === 'markdown') {
-        this._documents.set(entry.id, Text.make(entry.text ?? ''));
+        this._documents.set(entry.id, Text.make({ content: entry.text ?? '' }));
       }
     }
   }

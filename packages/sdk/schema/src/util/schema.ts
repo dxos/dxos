@@ -63,12 +63,12 @@ export const getSchema = async (
   dxn: DXN,
   registry?: SchemaRegistry.SchemaRegistry,
 ): Promise<Type.AnyEntity | undefined> => {
-  const typeDxn = dxn.asTypeDXN();
-  if (!typeDxn) {
+  const typeDXN = dxn.asTypeDXN();
+  if (!typeDXN) {
     return;
   }
 
-  const { type, version } = typeDxn;
+  const { type, version } = typeDXN;
   const schema = await registry
     ?.query({ typename: type, version, location: ['database', 'runtime'] })
     .firstOrUndefined();

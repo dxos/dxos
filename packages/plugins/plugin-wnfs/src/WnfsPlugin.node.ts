@@ -12,7 +12,7 @@ import { WnfsFile } from '#types';
 export const WnfsPlugin = Plugin.define(meta).pipe(
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [WnfsFile.File] }),
+  AppPlugin.addSchemaModule({ schema: [WnfsFile.WnfsFile] }),
   Plugin.make,
 );
 

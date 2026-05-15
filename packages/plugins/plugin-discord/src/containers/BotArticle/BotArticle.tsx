@@ -48,7 +48,7 @@ export const BotArticle = ({ role, subject: bot }: BotArticleProps) => {
             <ScrollArea.Viewport>
               <Input.Root>
                 <Input.Label>{t('bot-token.label')}</Input.Label>
-                <div role='none' className='flex items-center gap-2'>
+                <div className='flex items-center gap-2'>
                   <Input.TextInput
                     type={tokenVisible ? 'text' : 'password'}
                     value={bot.token ?? ''}
@@ -63,7 +63,7 @@ export const BotArticle = ({ role, subject: bot }: BotArticleProps) => {
               {bot.inviteUrl && (
                 <Input.Root>
                   <Input.Label>{t('invite-url.label')}</Input.Label>
-                  <div role='none' className='flex items-center gap-2'>
+                  <div className='flex items-center gap-2'>
                     <Input.TextInput disabled value={bot.inviteUrl} />
                     <Clipboard.IconButton value={bot.inviteUrl} />
                   </div>

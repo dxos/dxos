@@ -32,7 +32,7 @@ const WorksAt = Schema.Struct({
   role: Schema.optional(Schema.String),
 }).pipe(
   Type.relation({
-    typename: 'example.com/story/WorksAt',
+    typename: 'com.example.story.worksAt',
     version: '0.1.0',
     source: TestSchema.Person,
     target: TestSchema.Organization,
@@ -160,7 +160,7 @@ export const WithTree: Story = {
       return <div>No space</div>;
     }
     return (
-      <div className='text-base-surface-text'>
+      <div className='text-base-foreground'>
         <ObjectsTree db={space.db} />
       </div>
     );

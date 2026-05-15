@@ -25,6 +25,12 @@ export type ExtensionsOptions = {
    * this extension only consumes the buffered logs (via `export()`).
    */
   logStore?: IdbLogStore;
+  /**
+   * Maximum byte size passed to `logStore.export()` when uploading feedback logs.
+   * Should match the upload limit enforced by the server receiving the logs.
+   * When omitted the full store is exported without trimming.
+   */
+  feedbackLogMaxSize?: number;
 };
 
 /** Upload serialized logs to the feedback-logs endpoint. Returns the R2 key on success. */
@@ -54,6 +60,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   environment,
   posthog: posthogConfig,
   logStore,
+  feedbackLogMaxSize,
 }) {
   if (typeof window === 'undefined') {
     log('PostHog is being stubbed because it is running in a worker.');
@@ -158,7 +165,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
 
             let debugLogDumpKey: string | null = null;
             if (form.includeLogs !== false && logStore !== undefined) {
-              const ndjson = await logStore.export();
+              const ndjson = await logStore.export({ maxSize: feedbackLogMaxSize });
               if (ndjson.length > 0) {
                 debugLogDumpKey = (await uploadLogs(ndjson)) ?? 'failed';
               }

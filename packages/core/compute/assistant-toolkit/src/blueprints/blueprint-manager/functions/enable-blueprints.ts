@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { AiContextService } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import { Blueprint, Operation } from '@dxos/compute';
 import { Ref } from '@dxos/echo';
 
@@ -32,7 +32,7 @@ export default EnableBlueprints.pipe(
       }
 
       if (enabled.length > 0) {
-        yield* AiContextService.bindContext({
+        yield* AiContext.Service.bindContext({
           blueprints: enabled.map(Ref.make),
         });
       }

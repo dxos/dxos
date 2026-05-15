@@ -103,8 +103,8 @@ export default Capability.makeModule(() =>
         filter: AppSurface.subject(AppSurface.Section, Obj.isObject),
         component: ({ data }) => {
           return (
-            <div role='none' className='flex w-full justify-center'>
-              <div role='none' className='py-2 dx-card-min-width dx-card-max-width'>
+            <div className='flex w-full justify-center'>
+              <div className='py-2 dx-card-min-width dx-card-max-width'>
                 <Card.Root>
                   <Surface.Surface type={AppSurface.Card} data={data} limit={1} />
                 </Card.Root>

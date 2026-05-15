@@ -514,11 +514,11 @@ describe('AutomergeRepo with Subduction', () => {
         await waitForSubductionSave();
 
         await expect
-          .poll(async () => (await client.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: 5_000 })
+          .poll(async () => (await client.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: 10_000 })
           .toEqual('connect/accept');
       });
 
-      test('accept/connect syncs', async () => {
+      test('accept/connect syncs', { timeout: 15_000 }, async () => {
         const { repos, adapters } = await createHostClientRepoTopology({
           roles: { host: 'accept', client: 'connect' },
         });
@@ -531,8 +531,13 @@ describe('AutomergeRepo with Subduction', () => {
         });
         await waitForSubductionSave();
 
+        // Bumped from 5_000 to 10_000: on a loaded CI box, the underlying
+        // subduction `RequestId` round-trip can hit its own internal timeout
+        // (~5s) and only the retry succeeds, which pushes us past the poll
+        // window. Local runs land in ~200-300 ms; CI was occasionally flaking
+        // at exactly 5005 ms.
         await expect
-          .poll(async () => (await client.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: 5_000 })
+          .poll(async () => (await client.find<{ text?: string }>(handle.url)).doc()?.text, { timeout: 10_000 })
           .toEqual('accept/connect');
       });
 

@@ -1,40 +1,48 @@
 contacts:
-  - email: success@vouch.us
+  - email: friendly@example.test
     body: |
-      Frank Rodriguez (he/him)
-      Client Manager, Horizon
-      844.488.6728
+      Quinn Hartwell (he/him)
+      Client Manager, Beacon
+      555.012.3456
 
-  - email: ymaline@citrincooperman.com
+  - email: tkessler@acmeadvisors.test
     body: |
-      CITRIN COOPERMAN
+      ACME ADVISORS
 
-      Yaakov Maline
+      Theodore Kessler
       Director
 
-      212.832.0400 | 212.331.7472 (Direct) | 212.371.1159 (Fax)
-      50 Rockefeller Plaza, New York, NY 10020 ymaline@citrincooperman.com <mailto:ymaline@citrincooperman.com>
+      555.010.0100 | 555.010.0200 (Direct) | 555.010.0300 (Fax)
+      100 Example Plaza, Springfield, NY 10001 tkessler@acmeadvisors.test <mailto:tkessler@acmeadvisors.test>
 
-  - email: mahern@kirkconsult.com
+  - email: hpenrose@lumenpartners.test
     body: |
       Thanks,
-      Madeline
+      Harriet
 
-      Madeline Ahern
-      mahern@kirkconsult.com
-      (510) 393-7703
+      Harriet Penrose
+      hpenrose@lumenpartners.test
+      (555) 010-0400
 
-  - email: mscheriff@kirkconsult.com
+  - email: bostrow@lumenpartners.test
     body: |
-      Morgan Scheriff
-      Kirk Consulting LLC
-      (631) 387-1655
+      Beatrice Ostrow
+      Lumen Partners LLC
+      (555) 010-0500
 
-  - email: patrick@dispersion.xyz
+  - email: soren@drift.test
     body: |
-      Patrick Chang
+      Soren Beckwith
       Founder, Managing Partner
-      Dispersion Capital
-      patrick@dispersion.xyz
-      calendly.com/patrickchang
-      dispersion.xyz
+      Drift Capital
+      soren@drift.test
+      calendly.com/sorenbeckwith
+      drift.test
+
+  - email: hello@mercury.test
+    body: |
+      * * *
+
+      Sent with care from
+      Mercury Technologies, Inc.
+      660 Mission Street, San Francisco, CA 94105

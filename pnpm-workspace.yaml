@@ -31,6 +31,7 @@ catalog:
   '@automerge/automerge-repo-storage-indexeddb': 2.6.0-subduction.17
   '@automerge/automerge-subduction': 0.11.0
   '@babel/core': ^7.18.13
+  '@babel/preset-typescript': ^7.27.1
   '@babel/runtime': ^7.9.6
   '@babylonjs/core': ^7.52.5
   '@babylonjs/loaders': ^7.54.3
@@ -59,12 +60,13 @@ catalog:
   '@codemirror/search': ^6.5.11
   '@codemirror/state': ^6.5.2
   '@codemirror/theme-one-dark': ^6.1.3
-  '@codemirror/view': ^6.38.4
+  '@codemirror/view': ^6.38.5
   '@crxjs/vite-plugin': ^2.4.0
   '@dnd-kit/core': ^6.0.5
   '@dnd-kit/modifiers': ^6.0.0
   '@dnd-kit/sortable': ^7.0.1
   '@dnd-kit/utilities': ^3.2.0
+  '@dxos/client': ^0.8.3
   '@dxos/echo': ^0.8.3
   '@dxos/wa-sqlite': ^0.2.1
   '@effect-atom/atom': ^0.5.1
@@ -162,10 +164,12 @@ catalog:
   '@radix-ui/react-context-menu': 2.2.6
   '@radix-ui/react-dialog': 1.1.6
   '@radix-ui/react-dismissable-layer': 1.1.5
+  '@radix-ui/react-dropdown-menu': ^2.1.16
   '@radix-ui/react-focus-guards': 1.1.1
   '@radix-ui/react-focus-scope': 1.1.2
   '@radix-ui/react-id': 1.1.0
   '@radix-ui/react-menu': 2.1.6
+  '@radix-ui/react-popover': ^1.1.15
   '@radix-ui/react-popper': 1.2.2
   '@radix-ui/react-portal': 1.1.4
   '@radix-ui/react-presence': 1.1.2
@@ -332,6 +336,7 @@ catalog:
   base-x: ~3.0.11
   base32-decode: ^1.0.0
   base32-encode: ^2.0.0
+  babel-preset-solid: ^1.9.9
   bind-event-listener: ^3.0.0
   bip39: ^3.1.0
   blockstore-core: ^5.0.1
@@ -460,6 +465,7 @@ catalog:
   jsonpointer: ^5.0.1
   jszip: ^3.10.1
   jwt-decode: ^4.0.0
+  kbn-handlebars: ^1.0.0
   keyborg: ^2.5.0
   knip: ^5.64.3
   koffi: ^2.8.0
@@ -747,9 +753,11 @@ overrides:
 
 patchedDependencies:
   '@automerge/automerge-subduction@0.11.0': patches/@automerge__automerge-subduction@0.11.0.patch
+  '@vitest/browser@4.1.5': patches/@vitest__browser@4.1.5.patch
   js-clipper@1.0.1: patches/js-clipper@1.0.1.patch
   random-access-idb@1.2.2: patches/random-access-idb@1.2.2.patch
   uuid@8.3.2: patches/uuid@8.3.2.patch
+  vitest@4.1.5: patches/vitest@4.1.5.patch
 
 peerDependencyRules:
   allowedVersions:

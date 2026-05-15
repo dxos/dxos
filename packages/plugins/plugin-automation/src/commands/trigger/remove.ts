@@ -10,8 +10,7 @@ import * as Option from 'effect/Option';
 
 import { CommandConfig, Common, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Trigger } from '@dxos/compute';
-import { DXN } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, DXN } from '@dxos/echo';
 
 import { TriggerId } from './options';
 import { printTriggerRemoved, selectTrigger } from './util';

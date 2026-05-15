@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { ActivationEvents, OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
 import { createTestApp } from '@dxos/app-framework/testing';
-import { GraphPlugin } from '@dxos/plugin-graph';
+import { GraphPlugin } from '@dxos/plugin-graph/plugin';
 
 import { AttentionPlugin } from '#plugin';
 

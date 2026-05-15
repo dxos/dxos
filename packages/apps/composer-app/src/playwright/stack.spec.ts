@@ -4,7 +4,7 @@
 
 import { expect, test } from '@playwright/test';
 // TODO(wittjosiah): Importing this causes tests to fail.
-// import { StackPlugin } from '@dxos/plugin-stack';
+// import { StackPlugin } from '@dxos/plugin-stack/plugin';
 
 import { AppManager } from './app-manager';
 import { Markdown, Stack, StackPlugin } from './plugins';

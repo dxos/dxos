@@ -16,10 +16,10 @@ import {
 import { Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
-import { AttentionCapabilities } from '@dxos/plugin-attention/types';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';
-import { ObservabilityOperation } from '@dxos/plugin-observability/operations';
+import { ObservabilityOperation } from '@dxos/plugin-observability';
 
 import { openSubjectsOnActiveDeck } from '../layout';
 import { DeckCapabilities } from '../types';
@@ -74,7 +74,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
         const deck = yield* DeckCapabilities.getDeck();
         const active = !deck.solo && deck.initialized ? deck.active : [];
         if (active.length > 0 && input.subject.length > 0) {
-          const resolveDxn = (qualifiedPath: string) =>
+          const resolveDXN = (qualifiedPath: string) =>
             Effect.reduce(pathResolvers, Option.none<string>(), (acc, resolver) =>
               Option.isSome(acc)
                 ? Effect.succeed(acc)
@@ -88,7 +88,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           const deckDxnMap = new Map<string, string>();
           yield* Effect.all(
             active.map((deckId) =>
-              resolveDxn(deckId).pipe(
+              resolveDXN(deckId).pipe(
                 Effect.map((opt) => {
                   if (Option.isSome(opt)) {
                     deckDxnMap.set(opt.value, deckId);
@@ -103,7 +103,7 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperat
           if (deckDxnMap.size > 0) {
             const remapped = yield* Effect.all(
               input.subject.map((subjectId) =>
-                resolveDxn(subjectId).pipe(
+                resolveDXN(subjectId).pipe(
                   Effect.map((opt) => {
                     if (Option.isSome(opt)) {
                       const existing = deckDxnMap.get(opt.value);

@@ -5,8 +5,7 @@
 import { useEffect, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
-import { getBlobUrl, getPathFromUrl, loadWnfs } from '@dxos/plugin-wnfs/helpers';
-import { WnfsCapabilities } from '@dxos/plugin-wnfs/types';
+import { WnfsCapabilities, getBlobUrl, getPathFromUrl, loadWnfs } from '@dxos/plugin-wnfs';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 

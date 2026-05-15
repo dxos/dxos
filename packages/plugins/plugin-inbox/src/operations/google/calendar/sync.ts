@@ -18,15 +18,15 @@ import type { Credential } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Query, Ref as EchoRef } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { Integration } from '@dxos/plugin-integration/types';
+import { Integration } from '@dxos/plugin-integration';
 import { type Event } from '@dxos/types';
 
 import { GoogleCalendar } from '../../../apis';
 import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
 import { CalendarForeignKeyWrongTypeError } from '../../../errors';
 import { InboxResolver, GoogleCredentials } from '../../../services';
+import { InboxOperation } from '../../../types';
 import { Calendar } from '../../../types';
-import { GoogleCalendarSync } from '../../definitions';
 import { mapEvent } from './mapper';
 
 type BaseSyncProps<T = unknown> = {
@@ -184,7 +184,7 @@ const syncOneCalendar = (
     return queueEvents.length;
   });
 
-export default GoogleCalendarSync.pipe(
+export default InboxOperation.GoogleCalendarSync.pipe(
   Operation.withHandler(
     ({
       integration: integrationRef,

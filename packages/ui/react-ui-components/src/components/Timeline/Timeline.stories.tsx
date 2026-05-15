@@ -3,15 +3,14 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 import { AgentStatus } from '@dxos/ai';
 import { Obj } from '@dxos/echo';
 import { LogLevel, log } from '@dxos/log';
 import { random } from '@dxos/random';
-import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Button, Panel, Toolbar, useAsyncEffect, useInterval } from '@dxos/react-ui';
+import { Button, Panel, ScrollContainer, Toolbar, useAsyncEffect, useInterval } from '@dxos/react-ui';
 import { type ScrollController } from '@dxos/react-ui';
 import { useExecutionGraph } from '@dxos/react-ui-components';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -250,27 +249,25 @@ export const ExecutionGraph: Story = {
   decorators: [withClientProvider({ createIdentity: true })],
   render: () => {
     const slice = 0;
-    const [space] = useSpaces();
-    const queue = useMemo(() => space?.queues.create(), [space]);
+    const [items, setItems] = useState<Obj.Unknown[]>([]);
     useAsyncEffect(async () => {
-      const objects = await Promise.all(research.map((obj) => Obj.fromJSON(obj)));
+      const objects = (await Promise.all(research.map((obj) => Obj.fromJSON(obj)))) as Obj.Unknown[];
       if (slice > 0) {
-        await queue?.append(objects.slice(0, slice));
+        setItems(objects.slice(0, slice));
         return;
       }
 
       let i = 0;
-      const interval = setInterval(async () => {
-        const obj = objects[i];
-        await queue?.append([obj]);
+      const interval = setInterval(() => {
+        setItems((prev) => [...prev, objects[i]]);
         if (++i >= objects.length) {
           clearInterval(interval);
         }
       }, 1000);
 
       return () => clearInterval(interval);
-    }, [queue]);
-    const { branches, commits } = useExecutionGraph(queue);
+    }, []);
+    const { branches, commits } = useExecutionGraph(items);
     log.info('execution graph', { branches, commits });
     return <Timeline branches={branches} commits={commits} showTimestamp />;
   },
@@ -332,8 +329,15 @@ export const Streaming: Story = {
             <Button onClick={() => scrollerRef.current?.scrollToBottom()}>Bottom</Button>
           </Toolbar.Root>
         </Panel.Toolbar>
-        <Panel.Content>
-          <Timeline ref={scrollerRef} branches={branches} commits={commits} showTimestamp />
+        <Panel.Content asChild>
+          <ScrollContainer.Root pin ref={scrollerRef}>
+            <ScrollContainer.Content thin>
+              <ScrollContainer.Viewport>
+                <Timeline branches={branches} commits={commits} showTimestamp />
+              </ScrollContainer.Viewport>
+              <ScrollContainer.ScrollDownButton />
+            </ScrollContainer.Content>
+          </ScrollContainer.Root>
         </Panel.Content>
       </Panel.Root>
     );

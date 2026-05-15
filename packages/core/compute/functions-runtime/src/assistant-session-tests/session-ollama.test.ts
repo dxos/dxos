@@ -40,12 +40,12 @@ const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(CalculatorLayer),
 );
 
-describe('AiRequest (ollama gpt-oss:20b)', () => {
+describe('AiRequest.Request (ollama gpt-oss:20b)', () => {
   it.effect(
     'calculator tool-call loop',
     Effect.fn(
       function* ({ expect }) {
-        const request = new AiRequest();
+        const request = new AiRequest.Request();
         const toolkit = yield* OpaqueToolkit.fromContext(CalculatorToolkit);
 
         const messages = yield* request.run({

@@ -46,7 +46,7 @@ const DefaultStory = (props: Omit<ListRootProps<TestItemType>, 'items'>) => {
       {({ items }) => (
         <>
           <div className='flex flex-col w-full'>
-            <div role='none' className={grid}>
+            <div className={grid}>
               <div />
               <div className='flex items-center text-sm'>Items</div>
             </div>
@@ -61,7 +61,7 @@ const DefaultStory = (props: Omit<ListRootProps<TestItemType>, 'items'>) => {
               ))}
             </div>
 
-            <div role='none' className={grid}>
+            <div className={grid}>
               <div />
               <div className='flex items-center text-sm'>{items?.length} Items</div>
             </div>

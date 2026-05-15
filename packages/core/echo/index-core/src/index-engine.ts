@@ -164,7 +164,7 @@ export class IndexEngine {
   }
 
   queryType(
-    query: Pick<ObjectMeta, 'spaceId' | 'typeDxn'>,
+    query: Pick<ObjectMeta, 'spaceId' | 'typeDXN'>,
   ): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> {
     return this.#objectMetaIndex.query(query);
   }
@@ -181,7 +181,7 @@ export class IndexEngine {
 
   queryTypes(query: {
     spaceIds: readonly SpaceId[];
-    typeDxns: readonly ObjectMeta['typeDxn'][];
+    typeDxns: readonly ObjectMeta['typeDXN'][];
     inverted?: boolean;
     includeAllQueues?: boolean;
     queueIds?: readonly string[] | null;

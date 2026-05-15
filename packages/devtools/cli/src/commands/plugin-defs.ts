@@ -4,16 +4,16 @@
 
 import { OperationPlugin, type Plugin, RuntimePlugin } from '@dxos/app-framework';
 import { type Config } from '@dxos/client';
-import { AutomationPlugin } from '@dxos/plugin-automation';
-import { ChessPlugin } from '@dxos/plugin-chess';
-import { ClientPlugin } from '@dxos/plugin-client';
-import { InboxPlugin } from '@dxos/plugin-inbox';
-import { IntegrationPlugin } from '@dxos/plugin-integration';
-import { MarkdownPlugin } from '@dxos/plugin-markdown';
-import { ObservabilityPlugin } from '@dxos/plugin-observability';
-import { RegistryPlugin } from '@dxos/plugin-registry';
-import { SamplePlugin } from '@dxos/plugin-sample';
-import { SpacePlugin } from '@dxos/plugin-space';
+import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
+import { ChessPlugin } from '@dxos/plugin-chess/plugin';
+import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
+import { IntegrationPlugin } from '@dxos/plugin-integration/plugin';
+import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
+import { ObservabilityPlugin } from '@dxos/plugin-observability/plugin';
+import { RegistryPlugin } from '@dxos/plugin-registry/plugin';
+import { SamplePlugin } from '@dxos/plugin-sample/plugin';
+import { SpacePlugin } from '@dxos/plugin-space/plugin';
 
 export type PluginConfig = {
   config?: Config;

@@ -1,14 +1,14 @@
 //
+
+import * as Effect from 'effect/Effect';
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-
 import { Operation } from '@dxos/compute';
 
-import { InsertAxis } from './definitions';
+import { SheetOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof InsertAxis> = InsertAxis.pipe(
+const handler: Operation.WithHandler<typeof SheetOperation.InsertAxis> = SheetOperation.InsertAxis.pipe(
   Operation.withHandler(({ model, axis, index, count }) =>
     Effect.sync(() => {
       model[axis === 'col' ? 'insertColumns' : 'insertRows'](index, count);

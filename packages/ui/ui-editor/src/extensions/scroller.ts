@@ -128,7 +128,7 @@ export const scroller = ({ overScroll = 0 }: ScrollerOptions = {}) => {
   return [
     scrollPlugin,
 
-    // Listen for effect.s
+    // Listen for effect.
     EditorView.updateListener.of((update) => {
       update.transactions.forEach((transaction) => {
         try {

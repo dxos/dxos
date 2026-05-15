@@ -52,7 +52,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
   }, [object, triggers]);
   const tags = useQuery(space.db, Filter.type(Tag.Tag));
   const types = useTypeOptions({
-    space,
+    db: space.db,
     annotation: {
       location: ['database', 'runtime'],
       kind: ['user'],

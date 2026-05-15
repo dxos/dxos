@@ -16,8 +16,7 @@ import { CommandConfig, Common, flushAndSync, print, spaceLayer } from '@dxos/cl
 import { SpaceProperties } from '@dxos/client/echo';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Operation } from '@dxos/compute';
-import { Database, Filter, Obj, Type } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
+import { Collection, Database, Filter, Obj, Type } from '@dxos/echo';
 import { EntityKind, getTypeAnnotation } from '@dxos/echo/internal';
 
 import { SpaceCapabilities } from '#types';

@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "info@dxos.org",
   "sideEffects": true,
   "type": "module",
@@ -16,6 +16,9 @@
     "dx-compile": "cli.js"
   },
   "dependencies": {
+    "@babel/core": "catalog:",
+    "@babel/preset-typescript": "catalog:",
+    "babel-preset-solid": "catalog:",
     "yargs": "catalog:"
   },
   "devDependencies": {

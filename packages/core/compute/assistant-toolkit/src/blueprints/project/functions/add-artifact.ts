@@ -27,4 +27,5 @@ export default AddArtifact.pipe(
       });
     }) as any,
   ),
+  Operation.opaqueHandler,
 );

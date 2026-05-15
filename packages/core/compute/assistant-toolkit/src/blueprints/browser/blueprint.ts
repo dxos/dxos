@@ -21,7 +21,7 @@ const make = () =>
     description: 'Access to a real isolated browser.',
     agentCanEnable: true,
     instructions: {
-      source: Ref.make(Text.make(instructions)),
+      source: Ref.make(Text.make({ content: instructions })),
     },
     mcpServers: [
       {

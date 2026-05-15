@@ -71,8 +71,8 @@ export const Matrix = ({
   );
 
   return (
-    <div role='none' className={mx('grid place-items-center shrink-0', classNames)}>
-      <div role='none' style={{ width: size, height: size }} className='relative'>
+    <div className={mx('grid place-items-center shrink-0', classNames)}>
+      <div style={{ width: size, height: size }} className='relative'>
         <AnimatePresence>
           {positions.map((variant, i) => (
             <Dot

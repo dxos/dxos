@@ -10,7 +10,7 @@ import { Database, Obj } from '@dxos/echo';
 
 import { IntegrationDatabaseMissingError } from '../errors';
 import { TrelloApi } from '../services';
-import { GetTrelloBoards } from './definitions';
+import { TrelloOperation } from '../types';
 
 /**
  * Discovery only — list Trello boards reachable from the integration's token
@@ -18,7 +18,7 @@ import { GetTrelloBoards } from './definitions';
  * created here. Materialization happens lazily in `SyncTrelloBoard` on first
  * sync of a target.
  */
-const handler: Operation.WithHandler<typeof GetTrelloBoards> = GetTrelloBoards.pipe(
+const handler: Operation.WithHandler<typeof TrelloOperation.GetTrelloBoards> = TrelloOperation.GetTrelloBoards.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ integration }) {
       // TODO(wittjosiah): the operation should just depend on `Database.Service` and

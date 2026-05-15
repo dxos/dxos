@@ -8,13 +8,12 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { type FC, useCallback, useMemo, useState } from 'react';
 
-import { type Database, Filter, type Obj } from '@dxos/echo';
+import { type Database, type Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { type InvocationSpan } from '@dxos/functions-runtime';
 import { TraceEvent } from '@dxos/functions-runtime';
 import { DXN } from '@dxos/keys';
 import { type SerializedError } from '@dxos/protocols';
-import { useQuery } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
@@ -32,7 +31,7 @@ import { formatDuration } from './utils';
 
 export type InvocationTraceContainerProps = {
   db?: Database.Database;
-  queueDxn?: DXN;
+  feedDXN?: DXN;
   showSpaceSelector?: boolean;
   target?: Obj.Unknown;
   detailAxis?: 'block' | 'inline';
@@ -45,7 +44,7 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
     {
       classNames,
       db,
-      queueDxn,
+      feedDXN,
       detailAxis = 'inline',
       showSpaceSelector = false,
       target,
@@ -55,7 +54,7 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
     forwardedRef,
   ) => {
     const resolver = useFunctionNameResolver({ db });
-    const hookSpans = useInvocationSpans({ queueDxn, target });
+    const hookSpans = useInvocationSpans({ feedDXN, target });
     const invocationSpans = invocationSpansProp ?? hookSpans;
 
     const [selectedId, setSelectedId] = useState<string>();
@@ -102,8 +101,8 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
             size: 110,
           },
           {
-            name: 'queue',
-            title: 'Queue',
+            name: 'feed',
+            title: 'Feed',
             format: Format.TypeFormat.String,
             // TODO(burdon): Add formatter.
             // formatter: (value: string) => value.split(':').pop(),
@@ -119,7 +118,7 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
       return invocationSpans.map((invocation) => {
         const status = invocation.outcome;
         // Handle both Ref objects and encoded references.
-        const targetDxn =
+        const targetDXN =
           invocation.invocationTarget?.dxn ??
           (invocation.invocationTarget && '/' in invocation.invocationTarget
             ? DXN.parse((invocation.invocationTarget as any)['/'])
@@ -128,15 +127,15 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
         // TODO(burdon): Use InvocationTraceStartEvent.
         return {
           id: invocation.id,
-          target: resolver(targetDxn),
+          target: resolver(targetDXN),
           // TODO(burdon): Change to timestamp?
           time: new Date(invocation.timestamp),
           duration: formatDuration(invocation.duration),
           status,
-          queue:
-            invocation.invocationTraceQueue?.dxn?.toString() ??
-            (invocation.invocationTraceQueue && '/' in invocation.invocationTraceQueue
-              ? (invocation.invocationTraceQueue as any)['/']
+          feed:
+            invocation.invocationTraceFeed?.dxn?.toString() ??
+            (invocation.invocationTraceFeed && '/' in invocation.invocationTraceFeed
+              ? (invocation.invocationTraceFeed as any)['/']
               : 'unknown'),
           _original: invocation,
         };
@@ -196,8 +195,10 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
 const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
   const [activeTab, setActiveTab] = useState('input');
 
-  const queue = span.invocationTraceQueue?.target;
-  const objects = useQuery(queue, Filter.everything());
+  // TODO(dmaretskyi): Per-invocation trace event feeds are deprecated; the
+  // log/exception/execution-graph panels render an empty snapshot until a
+  // replacement tracing data structure lands.
+  const objects: TraceEvent[] = [];
 
   const contents = Array.head(objects).pipe(
     Option.getOrUndefined,
@@ -250,7 +251,7 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
         )}
         {contents === 'execution-graph' && (
           <Tabs.Panel value='execution-graph'>
-            <ExecutionGraphPanel queue={queue} />
+            <ExecutionGraphPanel objects={objects} />
           </Tabs.Panel>
         )}
       </Tabs.Root>

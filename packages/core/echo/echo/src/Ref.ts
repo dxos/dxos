@@ -85,6 +85,8 @@ export const make = refInternal.Ref.make;
 // TODO(dmaretskyi): Consider just allowing `make` to accept DXN.
 export const fromDXN = refInternal.Ref.fromDXN;
 
+export const hasObjectId = refInternal.Ref.hasObjectId;
+
 // TODO(wittjosiah): Factor out?
 export const isRefType = (ast: SchemaAST.AST): boolean => {
   return SchemaAST.getAnnotation<JsonSchema.JsonSchema>(ast, SchemaAST.JSONSchemaAnnotationId).pipe(

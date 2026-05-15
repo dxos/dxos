@@ -28,7 +28,7 @@ export class TestRuntime {
   private readonly _nodes = new Map<string, Executable>();
 
   private readonly _workflowLoader = new WorkflowLoader({
-    graphLoader: async (graphDxn: DXN) => this.getGraph(graphDxn).root,
+    graphLoader: async (graphDXN: DXN) => this.getGraph(graphDXN).root,
     nodeResolver: async (node: ComputeNode) => this._nodes.get(node.type!)!,
   });
 
@@ -40,15 +40,15 @@ export class TestRuntime {
     return this._nodes;
   }
 
-  getGraph(graphDxn: DXN): ComputeGraphModel {
-    const graph = this._graphs.get(graphDxn.toString());
-    invariant(graph, `Graph not found: ${graphDxn}`);
+  getGraph(graphDXN: DXN): ComputeGraphModel {
+    const graph = this._graphs.get(graphDXN.toString());
+    invariant(graph, `Graph not found: ${graphDXN}`);
     return graph;
   }
 
   // TODO(burdon): Require DXN to be set on graph.
-  registerGraph(graphDxn: string, graph: ComputeGraphModel): this {
-    this._graphs.set(graphDxn, graph);
+  registerGraph(graphDXN: string, graph: ComputeGraphModel): this {
+    this._graphs.set(graphDXN, graph);
     return this;
   }
 
@@ -58,11 +58,11 @@ export class TestRuntime {
   }
 
   runGraph<T extends ValueRecord = any>(
-    graphDxn: string,
+    graphDXN: string,
     input: ValueBag<any>,
   ): Effect.Effect<ValueBag<T>, ConductorError, Exclude<ComputeRequirements, ComputeNodeContext>> {
     return Effect.gen(this, function* () {
-      const program = yield* Effect.promise(() => this._workflowLoader.load(DXN.parse(graphDxn)));
+      const program = yield* Effect.promise(() => this._workflowLoader.load(DXN.parse(graphDXN)));
       return yield* program.run(input);
     }).pipe(Effect.withSpan('compute-graph'), Effect.provide(ComputeNodeContext.layerNoop));
   }
@@ -70,17 +70,17 @@ export class TestRuntime {
   // TODO(dmaretskyi): Support cases where the are no or multiple "input" nodes.
   //  There can be a graph which starts evaluating from constant nodes.
   runFromInput(
-    graphDxn: string,
+    graphDXN: string,
     inputNodeId: string,
     input: ValueBag<any>,
   ): Effect.Effect<Record<string, ValueBag<any>>, ConductorError, Exclude<ComputeRequirements, ComputeNodeContext>> {
     return Effect.gen(this, function* () {
-      const workflow = yield* Effect.promise(() => this._workflowLoader.load(DXN.parse(graphDxn)));
+      const workflow = yield* Effect.promise(() => this._workflowLoader.load(DXN.parse(graphDXN)));
       const executor = new GraphExecutor({
         computeNodeResolver: async (node: ComputeNode) => workflow.getResolvedNode(node.id)!,
       });
 
-      const graph = this._graphs.get(graphDxn) ?? raise(new Error(`Graph not found: ${graphDxn}`));
+      const graph = this._graphs.get(graphDXN) ?? raise(new Error(`Graph not found: ${graphDXN}`));
       yield* Effect.promise(() => executor.load(graph));
 
       executor.setOutputs(inputNodeId, Effect.succeed(input));

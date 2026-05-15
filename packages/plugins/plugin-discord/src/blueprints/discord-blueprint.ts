@@ -5,11 +5,11 @@
 import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
-import { CreateBot } from '#operations';
+import { DiscordOperation } from '#types';
 import { Discord } from '#types';
 
 // TODO(burdon): Reconcile with assistant-toolkit/blueprints/discord/blueprint.ts.
-const operations = [CreateBot];
+const operations = [DiscordOperation.CreateBot];
 
 const make = () =>
   Blueprint.make({

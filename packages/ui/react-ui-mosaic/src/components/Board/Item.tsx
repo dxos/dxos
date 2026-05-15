@@ -94,7 +94,7 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
               </Card.Row>
               <Card.Row icon='ph--tag--regular'>
                 {label && (
-                  <div role='none' className='shrink-0 flex gap-1 items-center text-xs'>
+                  <div className='shrink-0 flex gap-1 items-center text-xs'>
                     <Tag palette={getHashStyles(label).hue}>{label}</Tag>
                   </div>
                 )}

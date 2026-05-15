@@ -6,6 +6,7 @@ import { type ComponentType, lazy } from 'react';
 
 export * from './Chat';
 export * from './ProcessTree';
+export * from './TaskList';
 export * from './TemplateEditor';
 export * from './Toolbox';
 

@@ -6,8 +6,7 @@ import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-
 import * as Option from 'effect/Option';
 
 import { Node } from '@dxos/app-graph';
-import { Collection, type Database, Obj, Ref } from '@dxos/echo';
-import { Annotation } from '@dxos/echo';
+import { Annotation, Collection, type Database, Obj, Ref } from '@dxos/echo';
 import { type TreeData } from '@dxos/react-ui-list';
 
 import { GraphPropsAnnotation } from './annotations';
@@ -175,23 +174,23 @@ export const createObjectNode = ({
 
   let onRearrange: ((nextOrder: unknown[]) => void) | undefined;
   if (parentCollection) {
-    const collectionDxn = Obj.getDXN(parentCollection).toString();
-    onRearrange = rearrangeCache.get(collectionDxn);
+    const collectionDXN = Obj.getDXN(parentCollection).toString();
+    onRearrange = rearrangeCache.get(collectionDXN);
     if (!onRearrange) {
       onRearrange = (nextOrder: unknown[]) => {
         Obj.update(parentCollection, (parentCollection) => {
           parentCollection.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
         });
       };
-      rearrangeCache.set(collectionDxn, onRearrange);
+      rearrangeCache.set(collectionDXN, onRearrange);
     }
   }
 
-  const objectDxn = Obj.getDXN(object).toString();
-  let blockInstruction = blockInstructionCache.get(objectDxn);
+  const objectDXN = Obj.getDXN(object).toString();
+  let blockInstruction = blockInstructionCache.get(objectDXN);
   if (!blockInstruction) {
     blockInstruction = (_source: TreeData, _instruction: Instruction) => false;
-    blockInstructionCache.set(objectDxn, blockInstruction);
+    blockInstructionCache.set(objectDXN, blockInstruction);
   }
 
   const canDrop = droppable ? CAN_DROP_OBJECT : undefined;

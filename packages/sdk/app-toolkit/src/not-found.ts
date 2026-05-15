@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { Graph, Node } from '@dxos/app-graph';
 import { DXN, Filter, Key, Query } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { expandAttendableId } from '@dxos/react-ui-attention';
+import { expandAttendableId } from '@dxos/react-ui-attention/types';
 
 import { type AppCapabilities } from './capabilities';
 import { isPinnedWorkspace } from './paths';
@@ -114,13 +114,13 @@ export const createEdgeExistenceChecker = (
   execQuery: (spaceId: Key.SpaceId, body: { query: string; reactivity: number }) => Promise<{ results?: unknown[] }>,
 ): RemoteExistenceChecker => {
   return (dxn) => {
-    const echoDxn = dxn.asEchoDXN();
-    if (!echoDxn?.spaceId || !echoDxn.echoId) {
+    const echoDXN = dxn.asEchoDXN();
+    if (!echoDXN?.spaceId || !echoDXN.echoId) {
       return Effect.succeed(false);
     }
-    const queryAst = Query.select(Filter.id(echoDxn.echoId)).from({ spaceIds: [echoDxn.spaceId] }).ast;
+    const queryAst = Query.select(Filter.id(echoDXN.echoId)).from({ spaceIds: [echoDXN.spaceId] }).ast;
     return Effect.tryPromise(() =>
-      execQuery(echoDxn.spaceId!, {
+      execQuery(echoDXN.spaceId!, {
         query: JSON.stringify(queryAst),
         reactivity: 0,
       }),

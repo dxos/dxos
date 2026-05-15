@@ -25,7 +25,7 @@ import { hoverableControls, hoverableFocusedWithinControls, mainPaddingTransitio
 
 import { useBreakpoints, useCompanions, useDeckState, useHoistStatusbar, useSelectedCompanion } from '#hooks';
 import { meta } from '#meta';
-import { DeckOperation } from '#operations';
+import { DeckOperation } from '#types';
 import { getMode } from '#types';
 
 import { layoutAppliesTopbar } from '../../util';
@@ -105,11 +105,7 @@ export const DeckContentEmpty = () => {
   const layoutMode = getMode(deck);
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
   return (
-    <div
-      role='none'
-      className='grid place-items-center p-8 relative bg-deck-surface'
-      data-testid='layoutPlugin.firstRunMessage'
-    >
+    <div className='grid place-items-center p-8 relative bg-deck-surface' data-testid='layoutPlugin.firstRunMessage'>
       <Surface.Surface role='keyshortcuts' />
       {!topbar && <ToggleSidebarButton />}
     </div>
@@ -149,7 +145,7 @@ export const DeckSoloMode = () => {
   }, [fullscreen, onLayoutChange]);
 
   return (
-    <div role='none' className='relative overflow-hidden bg-deck-surface'>
+    <div className='relative overflow-hidden bg-deck-surface'>
       <DeckSidebarToggles topbar={topbar} fullscreen={fullscreen} />
       {fullscreen && <ExitFullscreenButton onExit={() => onLayoutChange({ mode: 'solo--fullscreen' })} />}
       <StackContext.Provider
@@ -233,7 +229,7 @@ export const DeckMultiMode = () => {
   }, [active, lastPlankCompanions.length]);
 
   return (
-    <div role='none' className='relative bg-deck-surface overflow-hidden'>
+    <div className='relative bg-deck-surface overflow-hidden'>
       <DeckSidebarToggles topbar={topbar} fullscreen={fullscreen} />
       <Stack
         classNames={[
@@ -281,7 +277,6 @@ const ExitFullscreenButton = ({ onExit }: { onExit: () => void }) => {
   const { t } = useTranslation(meta.id);
   return (
     <div
-      role='none'
       className={mx(
         'fixed top-2 right-2 z-[1]',
         hoverableControls,
