@@ -1140,7 +1140,7 @@ class ManagerImpl implements PluginManager {
         .map((plugin) => plugin.meta.id);
       for (const parentId of parents) {
         visit(parentId);
-        if (!result.includes(parentId)) {
+        if (parentId !== id && !result.includes(parentId)) {
           result.push(parentId);
         }
       }
