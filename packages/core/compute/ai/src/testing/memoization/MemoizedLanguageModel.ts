@@ -38,12 +38,18 @@ const TIME_LINE_PLACEHOLDER = 'The current date and time is <memoized-datetime>.
 const LEGACY_QUALIFIED_ECHO_PATTERN = /dxn:echo:([A-Z0-9]+):([A-Z0-9]+)\b/g;
 /** Legacy `dxn:echo:@:<objectId>` → canonical `echo:/<objectId>`. */
 const LEGACY_LOCAL_ECHO_PATTERN = /dxn:echo:@:([A-Z0-9]+)\b/g;
+/** Legacy `dxn:queue:<subspace>:<spaceId>:<queueId>:<itemId>` → canonical `echo://<spaceId>/<itemId>`. */
+const LEGACY_QUEUE_ITEM_PATTERN = /dxn:queue:[a-z]+:([A-Z0-9]+):[A-Z0-9]+:([A-Z0-9]+)\b/g;
+/** Legacy `dxn:queue:<subspace>:<spaceId>:<queueId>` → canonical `echo://<spaceId>/<queueId>`. */
+const LEGACY_QUEUE_PATTERN = /dxn:queue:[a-z]+:([A-Z0-9]+):([A-Z0-9]+)\b/g;
 
 const normalizePromptForMemoization = (prompt: unknown): unknown =>
   deepMapValues(prompt, (value, recurse) => {
     if (typeof value === 'string') {
       return value
         .replace(TIME_LINE_PATTERN, TIME_LINE_PLACEHOLDER)
+        .replace(LEGACY_QUEUE_ITEM_PATTERN, 'echo://$1/$2')
+        .replace(LEGACY_QUEUE_PATTERN, 'echo://$1/$2')
         .replace(LEGACY_QUALIFIED_ECHO_PATTERN, 'echo://$1/$2')
         .replace(LEGACY_LOCAL_ECHO_PATTERN, 'echo:/$1');
     }
