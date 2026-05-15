@@ -37,9 +37,9 @@ describe('DXN.fromNsid', () => {
   });
 });
 
-describe('DXN.fromTypenameAndVersion', () => {
+describe('DXN.fromNsidAndVersion', () => {
   test('produces versioned DXN', ({ expect }) => {
-    expect(DXN.fromTypenameAndVersion('org.dxos.type.calendar', '1.0.0')).toBe('dxn:org.dxos.type.calendar:1.0.0');
+    expect(DXN.fromNsidAndVersion('org.dxos.type.calendar', '1.0.0')).toBe('dxn:org.dxos.type.calendar:1.0.0');
   });
 });
 
@@ -66,14 +66,14 @@ describe('DXN.getNsid', () => {
   });
 
   test('extracts NSID from versioned DXN (without version)', ({ expect }) => {
-    expect(DXN.getNsid(DXN.fromTypenameAndVersion('org.dxos.type.calendar', '1.0.0'))).toBe('org.dxos.type.calendar');
+    expect(DXN.getNsid(DXN.fromNsidAndVersion('org.dxos.type.calendar', '1.0.0'))).toBe('org.dxos.type.calendar');
   });
 });
 
 describe('DXN.getVersion', () => {
   test('returns version from versioned DXN', ({ expect }) => {
-    expect(DXN.getVersion(DXN.fromTypenameAndVersion('org.dxos.type.calendar', '1.0.0'))).toBe('1.0.0');
-    expect(DXN.getVersion(DXN.fromTypenameAndVersion('com.alice.type.contact', '2.1.0'))).toBe('2.1.0');
+    expect(DXN.getVersion(DXN.fromNsidAndVersion('org.dxos.type.calendar', '1.0.0'))).toBe('1.0.0');
+    expect(DXN.getVersion(DXN.fromNsidAndVersion('com.alice.type.contact', '2.1.0'))).toBe('2.1.0');
   });
 
   test('returns undefined for unversioned DXN', ({ expect }) => {

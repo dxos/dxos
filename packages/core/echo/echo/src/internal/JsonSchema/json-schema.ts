@@ -470,7 +470,7 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): SchemaAST.Annota
     annotations[SchemaAST.JSONSchemaAnnotationId] = makeTypeJsonSchemaAnnotation({
       // $id is the typename DXN — the schema's type identity. The storage EchoURI (if any)
       // is preserved separately on TypeIdentifierAnnotation / echo.schemaId.
-      identifier: DXN.fromTypenameAndVersion(typeAnnotation.typename, typeAnnotation.version),
+      identifier: DXN.fromNsidAndVersion(typeAnnotation.typename, typeAnnotation.version),
       kind: typeAnnotation.kind,
       typename: typeAnnotation.typename,
       version: typeAnnotation.version,

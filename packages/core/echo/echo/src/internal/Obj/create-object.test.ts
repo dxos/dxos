@@ -53,7 +53,7 @@ describe('create (static version)', () => {
     const json = JSON.parse(JSON.stringify(contact));
     expect(json).toEqual({
       id: contact.id,
-      '@type': DXN.fromTypenameAndVersion(TestSchema.Person.typename, TestSchema.Person.version),
+      '@type': DXN.fromNsidAndVersion(TestSchema.Person.typename, TestSchema.Person.version),
       '@meta': {
         keys: [],
       },
@@ -81,7 +81,7 @@ describe('create (static version)', () => {
     const json = JSON.parse(JSON.stringify(manager));
     expect(json).toEqual({
       id: manager.id,
-      [ATTR_TYPE]: DXN.fromTypenameAndVersion(TestSchema.HasManager.typename, TestSchema.HasManager.version),
+      [ATTR_TYPE]: DXN.fromNsidAndVersion(TestSchema.HasManager.typename, TestSchema.HasManager.version),
       [ATTR_RELATION_SOURCE]: EchoURI.fromLocalObjectId(person1.id),
       [ATTR_RELATION_TARGET]: EchoURI.fromLocalObjectId(person2.id),
       [ATTR_META]: {

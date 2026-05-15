@@ -67,7 +67,7 @@ test('migrate 1 object', async () => {
   expect(objects).to.have.length(1);
 
   expect(getSchemaDXN(Obj.getSchema(objects[0])!)?.toString()).to.eq(
-    DXN.fromTypenameAndVersion('com.example.type.person', '0.2.0'),
+    DXN.fromNsidAndVersion('com.example.type.person', '0.2.0'),
   );
   expect(Obj.getTypename(objects[0])).to.eq('com.example.type.person');
   expect(Type.getVersion(Obj.getSchema(objects[0])!)).to.eq('0.2.0');

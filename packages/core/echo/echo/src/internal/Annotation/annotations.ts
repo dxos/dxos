@@ -56,7 +56,7 @@ export const getSchemaDXN = (schema: Schema.Schema.All): DXN.DXN | undefined => 
   assertArgument(Schema.isSchema(schema), 'schema', 'invalid schema');
   const objectAnnotation = getTypeAnnotation(schema);
   if (objectAnnotation) {
-    return DXN.fromTypenameAndVersion(objectAnnotation.typename, objectAnnotation.version);
+    return DXN.fromNsidAndVersion(objectAnnotation.typename, objectAnnotation.version);
   }
   // TODO(dmaretskyi): Add support for dynamic schema.
   const id = getTypeIdentifierAnnotation(schema);

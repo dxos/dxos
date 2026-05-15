@@ -43,9 +43,9 @@ export const fromNsid = (nsid: string): DXN => `dxn:${nsid}` as DXN;
 
 /**
  * Creates a versioned DXN.
- * @example fromTypenameAndVersion('org.dxos.type.calendar', '1.0.0') → 'dxn:org.dxos.type.calendar:1.0.0'
+ * @example fromNsidAndVersion('org.dxos.type.calendar', '1.0.0') → 'dxn:org.dxos.type.calendar:1.0.0'
  */
-export const fromTypenameAndVersion = (nsid: string, version: string): DXN => `dxn:${nsid}:${version}` as DXN;
+export const fromNsidAndVersion = (nsid: string, version: string): DXN => `dxn:${nsid}:${version}` as DXN;
 
 /**
  * Parses a DXN string, normalizing legacy `dxn:type:<nsid>` format to the canonical
