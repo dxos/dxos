@@ -115,7 +115,17 @@ export const make = (opts: {
   const invokeFiber = <I, O>(
     op: Operation.Definition<I, O>,
     input: I,
-    options?: Pick<ProcessManager.SpawnOptions, 'traceMeta' | 'environment'>,
+    options?: Pick<ProcessManager.SpawnOptions, 'traceMeta' | 'environment'> & {
+      /**
+       * If true, do NOT link the spawned process to the current process as a
+       * child. Used by {@link schedule} so that fire-and-forget operations
+       * don't show up in the parent's child set and don't deliver
+       * `requestChildEvent` notifications to a parent that isn't awaiting
+       * them. `invoke` keeps the default (linked) behaviour so the parent's
+       * `onChildEvent` can observe results.
+       */
+      readonly detached?: boolean;
+    },
   ): Effect.Effect<OperationFiber<O>> =>
     Effect.gen(function* () {
       const executable = Process.fromOperation(op, opts.handlerSet);
@@ -123,7 +133,7 @@ export const make = (opts: {
       log('spawing process', { opKey: op.meta.key, ...options });
       const handle = yield* opts.manager.spawn(executable, {
         ...options,
-        parentProcessId: opts.parentProcessId,
+        parentProcessId: options?.detached ? undefined : opts.parentProcessId,
         name: op.meta.name ? `${op.meta.name} (${op.meta.key})` : op.meta.key,
       });
       log('lifecycle: operation process spawned', { opKey: op.meta.key, handle });
@@ -217,7 +227,13 @@ export const make = (opts: {
     return Effect.gen(function* () {
       log('scheduling operation', { opKey: op.meta.key });
       yield* Ref.update(pendingCount, (count) => count + 1);
-      const fiber = yield* invokeFiber(op, input).pipe(
+      // Scheduled operations are explicitly detached from the current process
+      // — that's the whole point of `schedule` over `invoke`. Spawning without
+      // a parentProcessId means the new process doesn't appear in the
+      // spawning process's child set, doesn't deliver `requestChildEvent`
+      // notifications, and the parent's terminal state isn't perturbed by
+      // late child exits.
+      const fiber = yield* invokeFiber(op, input, { detached: true }).pipe(
         Effect.ensuring(Ref.update(pendingCount, (count) => count - 1)),
         Effect.tapErrorCause((cause) =>
           Effect.sync(() => {
