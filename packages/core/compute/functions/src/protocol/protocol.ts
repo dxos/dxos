@@ -345,7 +345,7 @@ const makeOperationRegistryLayer = (
     resolve: (key: string) =>
       Effect.gen(function* () {
         const records = yield* Effect.tryPromise(() => functionsService.query({ spaceId })).pipe(Effect.orDie);
-        const match = (records as Operation.PersistentOperation[]).find((record) => record.key === key);
+        const match = (records as Operation.PersistentOperation[]).find((record) => Operation.getKey(record) === key);
         return match ? Option.some(Operation.deserialize(match)) : Option.none();
       }),
   });
