@@ -7,7 +7,6 @@ import { useCallback } from 'react';
 import { type PluginManager } from '@dxos/app-framework';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { useTranslation } from '@dxos/react-ui';
 
 import { DISABLE_DEPENDENTS_DIALOG } from '#meta';
 
@@ -21,10 +20,14 @@ import { DISABLE_DEPENDENTS_DIALOG } from '#meta';
  * When there are no enabled dependents, dispatch runs immediately; otherwise
  * we open the shared {@link DISABLE_DEPENDENTS_DIALOG} surface — its
  * `onConfirm` runs the dispatch and closes the dialog.
+ *
+ * Display-name resolution for the dialog is delegated to the registered
+ * plugin set (`Plugin.Meta.name`). Per-plugin i18n translations only load
+ * when a plugin is activated, so `meta.name` is the only label always
+ * available regardless of enabled state.
  */
 export const useDisableConfirmation = (manager: PluginManager.PluginManager, dispatch: (id: string) => void) => {
   const { invokePromise } = useOperationInvoker();
-  const { t } = useTranslation();
 
   return useCallback(
     (pluginId: string): void => {
@@ -33,21 +36,16 @@ export const useDisableConfirmation = (manager: PluginManager.PluginManager, dis
         dispatch(pluginId);
         return;
       }
-      // Resolve a plugin id to a display name. A plugin's translations are
-      // registered when its translations module activates — i.e. only when
-      // the plugin is enabled — so for disabled-but-registered plugins we
-      // fall back to the static `meta.name` from `manager.getPlugins()`.
       const resolveName = (id: string): string =>
-        t('plugin.name', { ns: id, defaultValue: '' }) ||
-        manager.getPlugins().find((plugin) => plugin.meta.id === id)?.meta.name ||
-        id;
+        manager.getPlugins().find((plugin) => plugin.meta.id === id)?.meta.name ?? id;
       void invokePromise(LayoutOperation.UpdateDialog, {
         subject: DISABLE_DEPENDENTS_DIALOG,
         state: true,
         type: 'alert',
         props: {
-          pluginName: resolveName(pluginId),
-          dependents: enabledDependents.map((id) => ({ id, name: resolveName(id) })),
+          pluginId,
+          dependents: enabledDependents,
+          onResolvePluginName: resolveName,
           onConfirm: () => {
             dispatch(pluginId);
             void invokePromise(LayoutOperation.UpdateDialog, { state: false });
@@ -55,6 +53,6 @@ export const useDisableConfirmation = (manager: PluginManager.PluginManager, dis
         },
       });
     },
-    [manager, dispatch, invokePromise, t],
+    [manager, dispatch, invokePromise],
   );
 };

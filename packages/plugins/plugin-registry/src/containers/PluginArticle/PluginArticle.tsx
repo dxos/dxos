@@ -10,7 +10,6 @@ import { type Plugin, type PluginManager, type Registry, UrlLoader } from '@dxos
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
-import { useTranslation } from '@dxos/react-ui';
 
 import { PluginDetail } from '#components';
 import { getPluginPath } from '#meta';
@@ -27,9 +26,6 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   const remotePluginIds = useRemotePluginIds();
   const provider = useRegistryPluginProvider();
   const { invokePromise } = useOperationInvoker();
-  // Resolve a plugin id to its display name via the plugin's own i18n
-  // namespace; falls back to the id when no translation is registered.
-  const { t } = useTranslation();
 
   const { catalogEntry, moduleUrl, repo } = useCatalogEntry(pluginId);
   const { installedVersionTag, syncInstalledVersion } = useInstalledVersionTag(pluginId, plugins);
@@ -50,28 +46,24 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   const hasUpdate =
     isInstalled && !!catalogEntry && !!installedVersionTag && installedVersionTag !== catalogEntry.version;
 
-  // Resolve a plugin id to a display name. A plugin's translations are
-  // registered when its translations module activates — i.e. only when the
-  // plugin is enabled — so for disabled-but-registered plugins we fall back
-  // to the static `meta.name`.
-  const resolveName = useCallback(
-    (id: string): string =>
-      t('plugin.name', { ns: id, defaultValue: '' }) ||
-      plugins.find((candidate) => candidate.meta.id === id)?.meta.name ||
-      id,
-    [plugins, t],
-  );
-
   // Recompute graph slices whenever the plugin list changes, so installs /
   // removals through other surfaces (or this article's own actions) keep the
   // detail view in sync.
   const dependencies = useMemo(
-    () => manager.getDependencies(pluginId, { transitive: false }).map((id) => ({ id, name: resolveName(id) })),
-    [manager, pluginId, resolveName],
+    () => manager.getDependencies(pluginId, { transitive: false }),
+    [manager, pluginId, plugins],
   );
   const dependents = useMemo(
-    () => manager.getDependents(pluginId, { transitive: false }).map((id) => ({ id, name: resolveName(id) })),
-    [manager, pluginId, resolveName],
+    () => manager.getDependents(pluginId, { transitive: false }),
+    [manager, pluginId, plugins],
+  );
+
+  // Resolves a plugin id to its display name. A plugin's translations are
+  // only loaded when it is activated, so the always-available `meta.name`
+  // from the registered plugin set is the right source for chip labels.
+  const handleResolvePluginName = useCallback(
+    (id: string): string => plugins.find((candidate) => candidate.meta.id === id)?.meta.name ?? id,
+    [plugins],
   );
 
   const handleNavigateToPlugin = useCallback(
@@ -111,6 +103,7 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
       onInstall={!isInstalled && moduleUrl ? actions.handleInstall : undefined}
       onInstallVersion={pickerVersions.length > 0 ? actions.handleInstallVersion : undefined}
       onNavigateToPlugin={handleNavigateToPlugin}
+      onResolvePluginName={handleResolvePluginName}
       onUninstall={canUninstall ? actions.handleUninstall : undefined}
       onUpdate={hasUpdate ? actions.handleUpdate : undefined}
       onVersionChange={setSelectedVersionTag}

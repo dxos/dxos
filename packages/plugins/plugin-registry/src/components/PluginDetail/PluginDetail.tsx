@@ -12,8 +12,6 @@ import { meta } from '#meta';
 
 import { PluginFailureBadge } from '../PluginFailureBadge';
 
-type Related = { id: string; name: string };
-
 export type PluginDetailProps = {
   plugin: Plugin.Plugin;
   enabled?: boolean;
@@ -30,17 +28,17 @@ export type PluginDetailProps = {
   /** Available versions of this plugin from the catalog. When non-empty, a version picker is shown. */
   versions?: readonly Registry.PluginVersion[];
   /**
-   * Plugins this plugin declares as dependencies (direct only). Rendered under
-   * a "Requires" heading so the user can see what enabling this plugin will
-   * auto-enable.
+   * Ids of plugins this plugin declares as dependencies (direct only). Rendered
+   * under a "Requires" heading so the user can see what enabling this plugin
+   * will auto-enable.
    */
-  dependencies?: readonly Related[];
+  dependencies?: readonly string[];
   /**
-   * Plugins that declare this plugin as a dependency (direct only). Rendered
-   * under a "Required by" heading so the user understands the downstream
-   * impact of disabling this plugin.
+   * Ids of plugins that declare this plugin as a dependency (direct only).
+   * Rendered under a "Required by" heading so the user understands the
+   * downstream impact of disabling this plugin.
    */
-  dependents?: readonly Related[];
+  dependents?: readonly string[];
   /**
    * Failure record for this plugin, if any. When present a warning badge is
    * rendered next to the plugin name in the header.
@@ -60,6 +58,13 @@ export type PluginDetailProps = {
    * target plugin id; when omitted, chips are non-interactive labels.
    */
   onNavigateToPlugin?: (pluginId: string) => void;
+  /**
+   * Resolves a plugin id to its display name for dependency / dependent
+   * chip labels. The component delegates the lookup to the parent so each
+   * surface can decide how to source names (e.g. `Plugin.Meta.name` from the
+   * registered plugin set). When omitted, chips render the raw id.
+   */
+  onResolvePluginName?: (pluginId: string) => string;
   /**
    * When provided, an Uninstall button is rendered. Leave undefined for core
    * or non-removable plugins.
@@ -92,6 +97,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
       onInstall,
       onInstallVersion,
       onNavigateToPlugin,
+      onResolvePluginName,
       onUninstall,
       onUpdate,
       onVersionChange,
@@ -169,8 +175,13 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                     <>
                       <h2>{t('dependencies.label')}</h2>
                       <div className='flex flex-wrap gap-1'>
-                        {dependencies.map((dep) => (
-                          <PluginChip key={dep.id} related={dep} onClick={onNavigateToPlugin} />
+                        {dependencies.map((depId) => (
+                          <PluginChip
+                            key={depId}
+                            id={depId}
+                            name={onResolvePluginName?.(depId) ?? depId}
+                            onClick={onNavigateToPlugin}
+                          />
                         ))}
                       </div>
                     </>
@@ -179,8 +190,13 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                     <>
                       <h2>{t('dependents.label')}</h2>
                       <div className='flex flex-wrap gap-1'>
-                        {dependents.map((dependent) => (
-                          <PluginChip key={dependent.id} related={dependent} onClick={onNavigateToPlugin} />
+                        {dependents.map((dependentId) => (
+                          <PluginChip
+                            key={dependentId}
+                            id={dependentId}
+                            name={onResolvePluginName?.(dependentId) ?? dependentId}
+                            onClick={onNavigateToPlugin}
+                          />
                         ))}
                       </div>
                     </>
@@ -249,8 +265,8 @@ PluginDetail.displayName = 'PluginDetail';
  * canonical plugin id; the id is also surfaced via `title` so it stays one
  * hover away even when the chip shows the friendlier `name`.
  */
-const PluginChip = ({ related, onClick }: { related: Related; onClick?: (pluginId: string) => void }) => (
-  <Tag title={related.id} onClick={onClick ? () => onClick(related.id) : undefined}>
-    {related.name}
+const PluginChip = ({ id, name, onClick }: { id: string; name: string; onClick?: (pluginId: string) => void }) => (
+  <Tag title={id} onClick={onClick ? () => onClick(id) : undefined}>
+    {name}
   </Tag>
 );
