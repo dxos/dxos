@@ -85,7 +85,7 @@ type Story = StoryObj<typeof meta>;
 
 /**
  * Default Magazine ObjectProperties — exercises the auto-generated form,
- * including the markdown editor for `instructions` and the Feeds picker.
+ * including the Routine picker and the Feeds picker.
  *
  * Manual flow:
  *  1. Open the Feeds combobox.

@@ -7,18 +7,18 @@
 import * as Schema from 'effect/Schema';
 
 import { BlueprintsAnnotation } from '@dxos/app-toolkit';
-import { Annotation, Format, Obj, Ref, Type } from '@dxos/echo';
+import { Routine } from '@dxos/compute';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 
 export const BLUEPRINT_KEY = 'org.dxos.blueprint.magazine';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
-import { Text } from '@dxos/schema';
 
 import * as Subscription from './Subscription';
 
 /**
  * An agent-curated collection of articles drawn from one or more Feeds.
- * The user describes what content the Magazine should gather via a long-form
- * instructions Text. A curation flow reads the instructions, selects matching
+ * The user points the Magazine at a Routine that describes what content to
+ * gather. A curation flow reads the Routine's instructions, selects matching
  * Posts, enriches them with snippet and hero image, and appends their refs here.
  */
 export const Magazine = Schema.Struct({
@@ -26,11 +26,10 @@ export const Magazine = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   /** Feeds to pull content from. */
   feeds: Schema.Array(Ref.Ref(Subscription.Feed)),
-  /** Long-form brief describing what content the Magazine should gather. */
-  instructions: Ref.Ref(Text.Text).pipe(
-    Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
-    Schema.annotations({ title: 'Instructions' }),
-  ),
+  /** Curated Post refs (insertion order; UI displays newest-last reversed). */
+  posts: Schema.Array(Ref.Ref(Subscription.Post)).pipe(FormInputAnnotation.set(false)),
+  /** Routine describing what content the Magazine should gather. */
+  routine: Schema.optional(Ref.Ref(Routine.Routine)),
   /**
    * Maximum number of (non-starred) curated Posts retained on the magazine after curation.
    * Older posts beyond this bound are dropped; starred posts are preserved regardless.
@@ -38,13 +37,10 @@ export const Magazine = Schema.Struct({
    */
   keep: Schema.Number.pipe(
     Schema.annotations({
-      title: 'Keep',
       description: 'Maximum number of curated items to keep (starred items are always preserved).',
     }),
     Schema.optional,
   ),
-  /** Curated Post refs (insertion order; UI displays newest-last reversed). */
-  posts: Schema.Array(Ref.Ref(Subscription.Post)).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.magazine',
@@ -63,10 +59,9 @@ export interface Magazine extends Schema.Schema.Type<typeof Magazine> {}
 /** Checks if a value is a Magazine object. */
 export const instanceOf = (value: unknown): value is Magazine => Obj.instanceOf(Magazine, value);
 
-/** Creates a Magazine with an empty instructions Text object. */
+/** Creates a Magazine. */
 export const make = (
-  props: Omit<Obj.MakeProps<typeof Magazine>, 'instructions' | 'feeds' | 'posts'> & {
-    instructions?: string;
+  props: Omit<Obj.MakeProps<typeof Magazine>, 'feeds' | 'posts'> & {
     feeds?: Ref.Ref<Subscription.Feed>[];
     posts?: Ref.Ref<Subscription.Post>[];
   } = {},
@@ -74,7 +69,6 @@ export const make = (
   Obj.make(Magazine, {
     ...props,
     feeds: props.feeds ?? [],
-    instructions: Ref.make(Text.make({ content: props.instructions ?? '' })),
     posts: props.posts ?? [],
   });
 
@@ -83,12 +77,6 @@ export const CreateMagazineSchema = Schema.Struct({
   name: Schema.optional(
     Schema.String.annotations({
       title: 'Name',
-    }),
-  ),
-  instructions: Schema.optional(
-    Schema.String.annotations({
-      title: 'Instructions',
-      description: 'Describe what content the Magazine should gather.',
     }),
   ),
 });
