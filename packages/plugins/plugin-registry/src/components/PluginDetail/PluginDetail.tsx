@@ -245,20 +245,12 @@ PluginDetail.displayName = 'PluginDetail';
 
 /**
  * Renders a single dependency / dependent reference using the shared `Tag`
- * primitive. When `onClick` is provided the chip becomes an interactive
- * button (via Radix's `asChild` slot) that fires the handler with the
- * canonical plugin id. The id is also surfaced via `title` so it stays one
+ * primitive. When `onClick` is provided the chip fires the handler with the
+ * canonical plugin id; the id is also surfaced via `title` so it stays one
  * hover away even when the chip shows the friendlier `name`.
  */
-const PluginChip = ({ related, onClick }: { related: Related; onClick?: (pluginId: string) => void }) => {
-  if (onClick) {
-    return (
-      <Tag asChild>
-        <button type='button' title={related.id} onClick={() => onClick(related.id)}>
-          {related.name}
-        </button>
-      </Tag>
-    );
-  }
-  return <Tag title={related.id}>{related.name}</Tag>;
-};
+const PluginChip = ({ related, onClick }: { related: Related; onClick?: (pluginId: string) => void }) => (
+  <Tag title={related.id} onClick={onClick ? () => onClick(related.id) : undefined}>
+    {related.name}
+  </Tag>
+);
