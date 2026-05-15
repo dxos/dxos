@@ -321,9 +321,11 @@ export class CoreDatabase {
     objectId: string,
     { timeout, returnWithUnsatisfiedDeps, diskOnly }: LoadObjectOptions = {},
   ): Promise<ObjectCore | undefined> {
-    // Object's own doc is known unavailable on disk: short-circuit with
-    // `undefined`. (Only diskOnly callers ever populate `_unavailableObjects`
-    // for the object itself, but we honor it for any caller.)
+    // Object's own doc was previously determined unavailable on disk by a
+    // (system-driven or explicit) `diskOnly` probe. Short-circuit with
+    // `undefined` so query-driven callers don't hang. The mark is cleared
+    // by `_onObjectDocumentLoaded` if the doc later arrives over the
+    // network, which lets a fresh call succeed.
     if (this._unavailableObjects.has(objectId)) {
       return undefined;
     }
@@ -996,10 +998,11 @@ export class CoreDatabase {
 
   /**
    * Returns true when every strong dep is either loaded (== `_areDepsSatisfied`)
-   * OR has been determined unavailable on disk via a `diskOnly` probe.
-   * Used by `loadObjectCoreById({ diskOnly: true })` so it can resolve
-   * (with `undefined`) instead of waiting forever when a dep doc is
-   * unreachable.
+   * OR has been determined unavailable on disk. Used by `loadObjectCoreById`
+   * so it can resolve (with `undefined`) instead of waiting forever when a
+   * recursive dep doc is unreachable. Recursive strong-dep loads always
+   * use `diskOnly: true`, so deps surface as unavailable promptly even for
+   * non-`diskOnly` top-level callers.
    */
   private _areDepsResolved(core: ObjectCore, seen?: Set<ObjectId>): boolean {
     seen ??= new Set<ObjectId>();

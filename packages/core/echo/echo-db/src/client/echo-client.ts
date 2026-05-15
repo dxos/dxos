@@ -244,11 +244,13 @@ export class EchoClient extends Resource {
       return undefined;
     }
 
-    // `diskOnly: true` so the query pipeline never blocks on the network
-    // for a hydrating object or its strong dependencies. Index hits imply
-    // the object's own doc is on local disk; if a strong-dep doc is not,
-    // the load resolves to `undefined` and the query simply skips this
-    // result instead of stalling. See `LoadObjectOptions.diskOnly`.
-    return db._loadObjectById(objectId, { allowDeleted: true, diskOnly: true });
+    // The object's own doc is loaded via the normal path (which may wait
+    // on the network — important for refs/queries that resolve objects
+    // currently being replicated from another peer). The non-stalling
+    // contract is provided by `CoreDatabase`: recursive strong-dep loads
+    // always run with `diskOnly: true` (see `_onObjectDocumentLoaded`),
+    // and `_areDepsResolved` lets `loadObjectCoreById` resolve with
+    // `undefined` when a dep is unreachable instead of hanging.
+    return db._loadObjectById(objectId, { allowDeleted: true });
   }
 }

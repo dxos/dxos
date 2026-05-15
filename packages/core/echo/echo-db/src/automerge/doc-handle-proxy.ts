@@ -31,6 +31,17 @@ export type DocHandleProxyOptions<T> = {
 };
 
 /**
+ * Lifecycle of {@link DocHandleProxy}.
+ *
+ * - `'pending'`  — handle just created; the worker has not yet reported the
+ *                  outcome of the local-storage probe.
+ * - `'requesting'` — worker confirmed the doc is **not** on disk and is
+ *                    currently fetching it over the network.
+ * - `'ready'`    — doc bytes are loaded and the handle is usable.
+ */
+export type DocHandleProxyState = 'pending' | 'requesting' | 'ready';
+
+/**
  * Settled state of the worker-side disk probe.
  * `true` means the worker had the doc on disk and the handle is now `'ready'`.
  * `false` means the worker did not find the doc on disk and is now requesting
@@ -55,7 +66,7 @@ export type DiskSettlement = boolean;
 export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> implements IDocHandle<T> {
   private readonly _ready = new Trigger();
   private readonly _settledOnDisk = new Trigger<DiskSettlement>();
-  private _state: 'pending' | 'requesting' | 'ready' = 'pending';
+  private _state: DocHandleProxyState = 'pending';
   private _doc?: A.Doc<T> = undefined;
 
   private _lastSentHeads: A.Heads = [];
@@ -109,7 +120,7 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     return this._documentId;
   }
 
-  get state(): 'pending' | 'requesting' | 'ready' {
+  get state(): DocHandleProxyState {
     return this._state;
   }
 
