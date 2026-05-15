@@ -168,4 +168,67 @@ describe('Query pipeline strong-dependency stalls', () => {
     const resolved = await asyncTimeout(db.coreDatabase.loadObjectCoreById(mainObjectId), 1000);
     expect(resolved).toBeUndefined();
   });
+
+  // Same scenario but with a 3-deep strong-dep chain (`A → B → C`, C
+  // unreachable). Verifies that `_onObjectUnavailable` walks transitive
+  // dependents so a waiter for the root resolves promptly instead of
+  // staying parked because only `C → B` is in the index at unavailable
+  // time. Regression check for the BFS in `_onObjectUnavailable`.
+  test('loadObjectCoreById resolves to undefined when a transitive strong-dep document is unreachable', async () => {
+    const testBuilder = new EchoTestBuilder();
+    await openAndClose(testBuilder);
+    const { peer, db } = await testBuilder.createDatabase();
+
+    const aId = ObjectId.random();
+    const bId = ObjectId.random();
+    const cId = ObjectId.random();
+
+    // A depends on B (via system.type); B depends on C (same).
+    const aHandle = await peer.host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceKey: db.spaceKey.toHex() },
+      objects: {
+        [aId]: {
+          meta: { keys: [] },
+          data: { title: 'A' },
+          system: { kind: 'object', type: { '/': DXN.fromLocalObjectId(bId).toString() } },
+        },
+      },
+    });
+    const bHandle = await peer.host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceKey: db.spaceKey.toHex() },
+      objects: {
+        [bId]: {
+          meta: { keys: [] },
+          data: { title: 'B' },
+          system: { kind: 'object', type: { '/': DXN.fromLocalObjectId(cId).toString() } },
+        },
+      },
+    });
+
+    const sourceBuilder = new EchoTestBuilder();
+    await openAndClose(sourceBuilder);
+    const sourcePeer = await sourceBuilder.createPeer();
+    const orphanCHandle = await sourcePeer.host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceKey: db.spaceKey.toHex() },
+      objects: {
+        [cId]: { meta: { keys: [] }, data: { title: 'C' }, system: { kind: 'object' } },
+      },
+    });
+
+    const spaceRootHandle = db.coreDatabase._automergeDocLoader.getSpaceRootDocHandle();
+    spaceRootHandle.change((newDoc: DatabaseDirectory) => {
+      newDoc.links ??= {};
+      newDoc.links[aId] = new A.RawString(aHandle.url);
+      newDoc.links[bId] = new A.RawString(bHandle.url);
+      newDoc.links[cId] = new A.RawString(orphanCHandle.url);
+    });
+
+    await sleep(200);
+
+    const resolved = await asyncTimeout(db.coreDatabase.loadObjectCoreById(aId), 1000);
+    expect(resolved).toBeUndefined();
+  });
 });

@@ -360,6 +360,23 @@ export class AutomergeDocumentLoaderImpl implements AutomergeDocumentLoader {
           if (this.onObjectUnavailable.listenerCount() > 0) {
             this.onObjectUnavailable.emit({ handle, objectId });
           }
+          // The handle stays attached to the repo: the worker continues
+          // to fetch over the network. Background-wait for that so we can
+          // surface a normal `onObjectDocumentLoaded` event if/when the
+          // bytes do arrive — that path clears `_unavailableObjects` in
+          // CoreDatabase and unblocks any subsequent loads.
+          handle
+            .whenReady()
+            .then(() => {
+              if (this._objectDocumentHandles.get(objectId) !== handle) {
+                return;
+              }
+              if (this.onObjectDocumentLoaded.listenerCount() === 0) {
+                return;
+              }
+              this.onObjectDocumentLoaded.emit({ handle, objectId });
+            })
+            .catch((err) => log.verbose('background network wait failed', { objectId, err }));
           return;
         }
         // Doc is on disk and the worker is loading the bytes; fall through

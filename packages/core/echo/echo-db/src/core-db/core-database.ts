@@ -329,7 +329,11 @@ export class CoreDatabase {
     if (this._unavailableObjects.has(objectId)) {
       return undefined;
     }
-    const cachedCore = this.getObjectCoreById(objectId);
+    // `load: false` so we don't trigger an implicit (non-`diskOnly`)
+    // load via `getObjectCoreById`'s default behavior; the explicit
+    // `loadObjectDocument(..., { diskOnly })` below carries the
+    // caller's preference end-to-end.
+    const cachedCore = this.getObjectCoreById(objectId, { load: false });
     if (cachedCore && this._isCoreResolved(cachedCore, returnWithUnsatisfiedDeps)) {
       return this._coreOrUndefined(cachedCore, returnWithUnsatisfiedDeps);
     }
@@ -338,7 +342,7 @@ export class CoreDatabase {
       if (this._unavailableObjects.has(objectId)) {
         return true;
       }
-      const core = this.getObjectCoreById(objectId);
+      const core = this.getObjectCoreById(objectId, { load: false });
       return core != null && this._isCoreResolved(core, returnWithUnsatisfiedDeps);
     };
 
@@ -352,7 +356,7 @@ export class CoreDatabase {
     if (this._unavailableObjects.has(objectId)) {
       return undefined;
     }
-    const finalCore = this.getObjectCoreById(objectId);
+    const finalCore = this.getObjectCoreById(objectId, { load: false });
     if (!finalCore) {
       return undefined;
     }
@@ -1033,13 +1037,22 @@ export class CoreDatabase {
       return;
     }
     this._unavailableObjects.add(objectId);
-    // Wake any `loadObjectCoreById({ diskOnly: true })` waiting on this
-    // object directly OR on any dependent that needs it. The dependents
-    // index is populated when a parent materializes (see
-    // `_createObjectInDocument`), so it will catch parents whose deps are
-    // unsatisfied at the moment the dep is determined unavailable.
-    const dependents = this._strongDepsIndex.get(objectId) ?? [];
-    this._scheduleThrottledUpdate([objectId, ...dependents]);
+    // Walk transitive dependents (`A → B → C`, C unavailable wakes B
+    // and A) so any `loadObjectCoreById` waiter higher up in the chain
+    // re-evaluates `_areDepsResolved` and resolves with `undefined`
+    // instead of hanging. Mirrors the BFS in `_onObjectDocumentLoaded`.
+    const toWake = new Set<ObjectId>([objectId]);
+    const queue: ObjectId[] = [objectId];
+    while (queue.length > 0) {
+      const id = queue.shift()!;
+      for (const dep of this._strongDepsIndex.get(id) ?? []) {
+        if (!toWake.has(dep)) {
+          toWake.add(dep);
+          queue.push(dep);
+        }
+      }
+    }
+    this._scheduleThrottledUpdate([...toWake]);
   }
 
   private _rebindObjects(docHandle: DocHandleProxy<DatabaseDirectory>, objectIds: string[]): void {
