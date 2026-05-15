@@ -12,11 +12,11 @@ export type Id = string & { readonly __id: unique symbol };
 
 /**
  * Tagged template literal that constructs a well-formed, dot-delimited id string.
- * Must match `/^[a-z][a-zA-Z0-9]*(?:\.[a-z][a-zA-Z0-9]*){2,}$/` (at least three parts).
  * Throws if the resulting string is not well-formed.
  *
- * Follows the AT Protocol NSID convention (https://atproto.com/specs/nsid),
- * with the additional constraint that all parts must be fully lowercase.
+ * Follows the AT Protocol NSID convention (https://atproto.com/specs/nsid).
+ * Reference regex: `/^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/`
+ * This implementation is stricter: all parts must be fully lowercase and contain no hyphens.
  *
  * @example
  *   id`org.dxos.plugin.deck` // 'org.dxos.plugin.deck'
