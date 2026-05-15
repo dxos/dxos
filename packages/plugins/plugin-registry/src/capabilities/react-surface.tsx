@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { type ComponentProps, useCallback, useMemo } from 'react';
+import React, { type ComponentProps, useMemo } from 'react';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
@@ -114,18 +114,7 @@ export default Capability.makeModule(() =>
           AppSurface.Dialog,
           DISABLE_DEPENDENTS_DIALOG,
         ),
-        component: ({ data }) => {
-          const manager = usePluginManager();
-          // Resolve plugin display names from the registered plugin set rather
-          // than i18n: per-plugin translations only load on activation, so
-          // `Plugin.Meta.name` is the only label always available regardless of
-          // enabled state.
-          const handleResolvePluginName = useCallback(
-            (id: string) => manager.getPlugins().find((plugin) => plugin.meta.id === id)?.meta.name ?? id,
-            [manager],
-          );
-          return <DisableDependentsAlert {...data.props} onResolvePluginName={handleResolvePluginName} />;
-        },
+        component: ({ data }) => <DisableDependentsAlert {...data.props} />,
       }),
       Surface.create({
         id: 'plugin-settings',
