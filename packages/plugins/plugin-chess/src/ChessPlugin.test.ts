@@ -7,7 +7,6 @@ import { describe, test } from 'vitest';
 import { ActivationEvents } from '@dxos/app-framework';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
-import { GamePlugin } from '@dxos/plugin-game/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { ChessPlugin } from '#plugin';
@@ -20,7 +19,7 @@ const moduleId = (name: string) => `${meta.id}.module.${name}`;
 describe('ChessPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await createComposerTestApp({
-      plugins: [ClientPlugin({}), GamePlugin(), ChessPlugin()],
+      plugins: [ClientPlugin({}), ChessPlugin()],
     });
 
     // Modules expected to be active after a normal startup (headless/node variant).
@@ -36,14 +35,14 @@ describe('ChessPlugin', () => {
   });
 
   test('invokes the Print operation via the invoker capability', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [GamePlugin(), ChessPlugin()] });
+    await using harness = await createComposerTestApp({ plugins: [ChessPlugin()] });
     const result = await harness.invoke(ChessOperation.Print, {});
     // Empty input returns empty ASCII (handler swallows errors for malformed FEN).
     expect(typeof result.ascii).toBe('string');
   });
 
   test('Print renders a PGN to ASCII board', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [GamePlugin(), ChessPlugin()] });
+    await using harness = await createComposerTestApp({ plugins: [ChessPlugin()] });
     const { ascii } = await harness.invoke(ChessOperation.Print, { pgn: '1. e4 e5' });
     expect(ascii).toContain('a  b  c  d  e  f  g  h');
   });
