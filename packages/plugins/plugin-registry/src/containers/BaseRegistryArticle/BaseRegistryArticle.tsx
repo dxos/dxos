@@ -14,8 +14,10 @@ import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { DisableDependentsAlert, PluginList, type PluginListProps, type PluginRef } from '#components';
+import { DisableDependentsAlert, PluginList, type PluginListProps } from '#components';
 import { getPluginPath, meta } from '#meta';
+
+import { useDisableConfirmation, usePluginName } from '../../hooks';
 
 const matchesFilter = (plugin: Plugin.Plugin, query: string) => {
   const haystack = `${plugin.meta.name ?? ''} ${plugin.meta.id}`.toLowerCase();
@@ -70,30 +72,14 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
     const { invoke, invokePromise } = useOperationInvoker();
     const allSettings = useCapabilities(AppCapabilities.Settings);
     const enabled = useAtomValue(manager.enabled);
+    const resolveName = usePluginName();
+    const disableConfirmation = useDisableConfirmation(manager);
     const [filter, setFilter] = useState('');
 
     const filtered = useMemo(() => {
       const query = filter.trim().toLowerCase();
       return query.length === 0 ? plugins : plugins.filter((plugin) => matchesFilter(plugin, query));
     }, [plugins, filter]);
-
-    // Confirmation state for cascading disable. Open when the user toggles
-    // off a plugin that has currently-enabled dependents; carries the target
-    // id, its display name (for the prompt copy), and the list of dependents
-    // shown in the dialog body. Mirrors the equivalent flow in
-    // `PluginArticle` so the policy is consistent regardless of where the
-    // user toggles from.
-    const [cascadePrompt, setCascadePrompt] = useState<{
-      open: boolean;
-      pluginId: string;
-      pluginName: string;
-      dependents: readonly PluginRef[];
-    }>(() => ({ open: false, pluginId: '', pluginName: '', dependents: [] }));
-
-    const closeCascadePrompt = useCallback(
-      () => setCascadePrompt({ open: false, pluginId: '', pluginName: '', dependents: [] }),
-      [],
-    );
 
     const dispatchToggle = useCallback(
       (pluginId: string, nextEnabled: boolean) =>
@@ -113,48 +99,23 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
       [invoke, manager, source],
     );
 
-    // Resolve a plugin id to a {id, name} pair. Each plugin registers its
-    // translations under its own id as the i18n namespace and exposes
-    // `plugin.name` as the human-readable label; we look that up first and
-    // fall back to the registered plugin's `meta.name`, then the id.
-    const resolvePluginRef = useCallback(
-      (id: string): PluginRef => {
-        const translated = t('plugin.name', { ns: id, defaultValue: '' });
-        if (translated) {
-          return { id, name: translated };
-        }
-        const candidate = plugins.find((plugin) => plugin.meta.id === id);
-        return { id, name: candidate?.meta.name ?? id };
-      },
-      [t, plugins],
-    );
+    const dispatchDisable = useCallback((pluginId: string) => void dispatchToggle(pluginId, false), [dispatchToggle]);
 
     const handleChange = useCallback(
       (pluginId: string, nextEnabled: boolean) => {
         if (nextEnabled) {
-          return dispatchToggle(pluginId, true);
+          void dispatchToggle(pluginId, true);
+          return;
         }
-        const enabledDependents = manager.getDependents(pluginId, { transitive: true, enabledOnly: true });
-        if (enabledDependents.length === 0) {
-          return dispatchToggle(pluginId, false);
-        }
-        setCascadePrompt({
-          open: true,
-          pluginId,
-          pluginName: resolvePluginRef(pluginId).name,
-          dependents: enabledDependents.map(resolvePluginRef),
-        });
+        disableConfirmation.requestDisable(pluginId, dispatchDisable);
       },
-      [dispatchToggle, manager, resolvePluginRef],
+      [dispatchToggle, disableConfirmation, dispatchDisable],
     );
 
-    const confirmCascadeDisable = useCallback(() => {
-      const pluginId = cascadePrompt.pluginId;
-      closeCascadePrompt();
-      if (pluginId) {
-        void dispatchToggle(pluginId, false);
-      }
-    }, [cascadePrompt.pluginId, closeCascadePrompt, dispatchToggle]);
+    const confirmCascadeDisable = useCallback(
+      () => disableConfirmation.confirmDisable(dispatchDisable),
+      [disableConfirmation, dispatchDisable],
+    );
 
     const handleClick = useCallback(
       (pluginId: string) =>
@@ -219,10 +180,13 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
           </Panel.Content>
         </Panel.Root>
         <DisableDependentsAlert
-          open={cascadePrompt.open}
-          pluginName={cascadePrompt.pluginName}
-          dependents={cascadePrompt.dependents}
-          onCancel={closeCascadePrompt}
+          open={disableConfirmation.state.open}
+          pluginName={resolveName(disableConfirmation.state.pluginId)}
+          dependents={disableConfirmation.state.dependents.map((dependentId) => ({
+            id: dependentId,
+            name: resolveName(dependentId),
+          }))}
+          onCancel={disableConfirmation.close}
           onConfirm={confirmCascadeDisable}
         />
       </>

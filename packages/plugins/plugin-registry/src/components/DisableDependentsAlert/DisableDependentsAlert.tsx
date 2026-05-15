@@ -8,12 +8,12 @@ import { AlertDialog, Button, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
-import type { PluginRef } from '../PluginDetail/PluginDetail';
+type Dependent = { id: string; name: string };
 
 export type DisableDependentsAlertProps = {
   open: boolean;
   pluginName: string;
-  dependents: readonly PluginRef[];
+  dependents: readonly Dependent[];
   onCancel: () => void;
   onConfirm: () => void;
 };

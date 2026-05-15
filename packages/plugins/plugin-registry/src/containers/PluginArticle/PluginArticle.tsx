@@ -10,12 +10,17 @@ import { type Plugin, type PluginManager, type Registry, UrlLoader } from '@dxos
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
-import { useTranslation } from '@dxos/react-ui';
 
-import { DisableDependentsAlert, PluginDetail, type PluginRef } from '#components';
+import { DisableDependentsAlert, PluginDetail } from '#components';
 import { getPluginPath } from '#meta';
 
-import { useRegistryPluginProvider, useRegistryPlugins, useRemotePluginIds } from '../../hooks';
+import {
+  useDisableConfirmation,
+  usePluginName,
+  useRegistryPluginProvider,
+  useRegistryPlugins,
+  useRemotePluginIds,
+} from '../../hooks';
 
 // TODO(burdon): Convert to ECHO type.
 export type PluginArticleProps = { subject: Plugin.Plugin };
@@ -27,8 +32,7 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   const remotePluginIds = useRemotePluginIds();
   const provider = useRegistryPluginProvider();
   const { invokePromise } = useOperationInvoker();
-  const { entries: catalogEntries } = useRegistryPlugins();
-  const { t } = useTranslation();
+  const resolveName = usePluginName();
 
   const { catalogEntry, moduleUrl, repo } = useCatalogEntry(pluginId);
   const { installedVersionTag, syncInstalledVersion } = useInstalledVersionTag(pluginId, plugins);
@@ -49,37 +53,16 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   const hasUpdate =
     isInstalled && !!catalogEntry && !!installedVersionTag && installedVersionTag !== catalogEntry.version;
 
-  // Resolve a plugin id to a {id, name} pair. Each plugin registers its
-  // translations under its own id as the i18n namespace and conventionally
-  // exposes `plugin.name` as the human-readable label, so we look that up
-  // first. Falls back to the registered plugin's `meta.name`, then the
-  // registry catalog entry's name, then the id itself.
-  const resolvePluginRef = useCallback(
-    (id: string): PluginRef => {
-      const translated = t('plugin.name', { ns: id, defaultValue: '' });
-      if (translated) {
-        return { id, name: translated };
-      }
-      const registered = plugins.find((candidate) => candidate.meta.id === id);
-      if (registered) {
-        return { id, name: registered.meta.name };
-      }
-      const catalog = catalogEntries.find((entry) => entry.id === id);
-      return { id, name: catalog?.name ?? id };
-    },
-    [t, plugins, catalogEntries],
-  );
-
-  // Recompute graph slices whenever the plugin list or catalog changes, so
-  // installs / removals through other surfaces (or this article's own
-  // actions) keep the detail view in sync.
+  // Recompute graph slices whenever the plugin list changes, so installs /
+  // removals through other surfaces (or this article's own actions) keep the
+  // detail view in sync.
   const dependencies = useMemo(
-    () => manager.getDependencies(pluginId, { transitive: false }).map(resolvePluginRef),
-    [manager, pluginId, resolvePluginRef],
+    () => manager.getDependencies(pluginId, { transitive: false }).map((id) => ({ id, name: resolveName(id) })),
+    [manager, pluginId, plugins, resolveName],
   );
   const dependents = useMemo(
-    () => manager.getDependents(pluginId, { transitive: false }).map(resolvePluginRef),
-    [manager, pluginId, resolvePluginRef],
+    () => manager.getDependents(pluginId, { transitive: false }).map((id) => ({ id, name: resolveName(id) })),
+    [manager, pluginId, plugins, resolveName],
   );
 
   const handleNavigateToPlugin = useCallback(
@@ -100,7 +83,6 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
     pickerVersions,
     selectedVersionTag,
     syncInstalledVersion,
-    resolvePluginRef,
   });
 
   return (
@@ -108,29 +90,29 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
       <PluginDetail
         plugin={plugin}
         enabled={enabled}
-        onEnabledChange={actions.handleEnableChange}
-        onInstall={!isInstalled && moduleUrl ? actions.handleInstall : undefined}
         installing={actions.installing}
-        onUpdate={hasUpdate ? actions.handleUpdate : undefined}
-        hasUpdate={hasUpdate}
         updating={actions.updating}
-        onUninstall={canUninstall ? actions.handleUninstall : undefined}
-        versions={pickerVersions}
-        selectedVersionTag={selectedVersionTag}
-        onVersionChange={setSelectedVersionTag}
-        onInstallVersion={pickerVersions.length > 0 ? actions.handleInstallVersion : undefined}
+        hasUpdate={hasUpdate}
         installedVersionTag={installedVersionTag}
-        failure={failure}
+        selectedVersionTag={selectedVersionTag}
+        versions={pickerVersions}
         dependencies={dependencies}
         dependents={dependents}
+        failure={failure}
+        onEnabledChange={actions.handleEnableChange}
+        onInstall={!isInstalled && moduleUrl ? actions.handleInstall : undefined}
+        onInstallVersion={pickerVersions.length > 0 ? actions.handleInstallVersion : undefined}
         onNavigateToPlugin={handleNavigateToPlugin}
+        onUninstall={canUninstall ? actions.handleUninstall : undefined}
+        onUpdate={hasUpdate ? actions.handleUpdate : undefined}
+        onVersionChange={setSelectedVersionTag}
       />
       <DisableDependentsAlert
-        open={actions.cascadePrompt.open}
-        pluginName={plugin.meta.name}
-        dependents={actions.cascadePrompt.dependents}
-        onCancel={actions.cascadePrompt.cancel}
-        onConfirm={actions.cascadePrompt.confirm}
+        open={actions.disableConfirmation.state.open}
+        pluginName={resolveName(actions.disableConfirmation.state.pluginId)}
+        dependents={actions.disableConfirmation.state.dependents.map((id) => ({ id, name: resolveName(id) }))}
+        onCancel={actions.disableConfirmation.close}
+        onConfirm={actions.disableConfirmation.confirm}
       />
     </>
   );
@@ -278,7 +260,7 @@ const useVersionPicker = ({
 };
 
 /**
- * The five user-facing actions the article exposes — enable/disable, uninstall,
+ * The user-facing actions the article exposes — enable/disable, uninstall,
  * install (latest), update (to latest catalog version), and install-from-picker —
  * plus the `installing`/`updating` flags they drive. Each handler ends with a
  * `syncInstalledVersion()` call inside its `Effect.ensuring` so the cached
@@ -294,7 +276,6 @@ const usePluginActions = ({
   pickerVersions,
   selectedVersionTag,
   syncInstalledVersion,
-  resolvePluginRef,
 }: {
   manager: PluginManager.PluginManager;
   pluginId: string;
@@ -304,25 +285,12 @@ const usePluginActions = ({
   pickerVersions: readonly Registry.PluginVersion[];
   selectedVersionTag: string | undefined;
   syncInstalledVersion: () => void;
-  resolvePluginRef: (id: string) => PluginRef;
 }) => {
   const [installing, setInstalling] = useState(false);
   const [updating, setUpdating] = useState(false);
-  // Confirmation state for cascading disable. The dialog is open whenever the
-  // user toggled "off" on a plugin that has currently-enabled dependents; the
-  // body lists the dependents (resolved to display names) that would be
-  // disabled alongside the target.
-  const [cascadePrompt, setCascadePrompt] = useState<{ open: boolean; dependents: readonly PluginRef[] }>(() => ({
-    open: false,
-    dependents: [],
-  }));
+  const disableConfirmation = useDisableConfirmation(manager);
 
-  const closeCascadePrompt = useCallback(() => setCascadePrompt({ open: false, dependents: [] }), []);
-
-  const confirmCascadeDisable = useCallback(() => {
-    closeCascadePrompt();
-    void runAndForwardErrors(manager.disable(pluginId));
-  }, [closeCascadePrompt, manager, pluginId]);
+  const dispatchDisable = useCallback((id: string) => void runAndForwardErrors(manager.disable(id)), [manager]);
 
   const handleEnableChange = useCallback(
     (enabled: boolean) => {
@@ -330,14 +298,9 @@ const usePluginActions = ({
         void runAndForwardErrors(manager.enable(pluginId));
         return;
       }
-      const enabledDependents = manager.getDependents(pluginId, { transitive: true, enabledOnly: true });
-      if (enabledDependents.length > 0) {
-        setCascadePrompt({ open: true, dependents: enabledDependents.map(resolvePluginRef) });
-        return;
-      }
-      void runAndForwardErrors(manager.disable(pluginId));
+      disableConfirmation.requestDisable(pluginId, dispatchDisable);
     },
-    [manager, pluginId, resolvePluginRef],
+    [manager, pluginId, disableConfirmation, dispatchDisable],
   );
 
   const handleUninstall = useCallback(() => {
@@ -420,11 +383,10 @@ const usePluginActions = ({
     handleInstall,
     handleUpdate,
     handleInstallVersion,
-    cascadePrompt: {
-      open: cascadePrompt.open,
-      dependents: cascadePrompt.dependents,
-      cancel: closeCascadePrompt,
-      confirm: confirmCascadeDisable,
+    disableConfirmation: {
+      state: disableConfirmation.state,
+      close: disableConfirmation.close,
+      confirm: () => disableConfirmation.confirmDisable(dispatchDisable),
     },
   };
 };
