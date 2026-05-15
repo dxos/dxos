@@ -106,6 +106,44 @@ type TrackInfo
     trackId?: string
 ```
 
+```mdl
+type SessionId
+  desc: Opaque identifier for a Cloudflare Calls SFU session.
+  fields:
+    value: string
+```
+
+```mdl
+type TrackId
+  desc: Identifier for a media track within the SFU.
+  fields:
+    value: string
+```
+
+```mdl
+type LocalTrack
+  desc: A media track produced by the local device and pushed to the SFU.
+  fields:
+    id: TrackId
+    kind: "audio" | "video" | "screenshare"
+    label: string
+```
+
+```mdl
+type RemoteTrack
+  desc: A media track received from a remote participant via the SFU.
+  fields:
+    id: TrackId
+    kind: "audio" | "video" | "screenshare"
+    participantId: string
+```
+
+```mdl
+type SpeakingHandle
+  desc: Opaque token returned by SpeakingMonitor.watch(); passed back to stop().
+  fields: {}
+```
+
 ## Capabilities
 
 ```mdl
@@ -565,6 +603,16 @@ test T-8: SpeakingMonitor signal
   then:
     - CallState.self.isSpeaking === true
     - Extension.onMediaStateUpdated is invoked with isSpeaking === true
+```
+
+```mdl
+test T-9: Devtools surface displays call diagnostics
+  given: CallState.joined === true and the devtools panel is open
+  when: user views the CallDebugPanel in the devtools-overview surface
+  then:
+    - CallState is displayed (joined, users, audio tracks)
+    - MediaState is displayed (audio, video, screenshare info)
+    - WebRTC stats from @peermetrics/webrtc-stats are visible
 ```
 
 ---
