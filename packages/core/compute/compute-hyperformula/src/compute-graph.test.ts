@@ -55,7 +55,7 @@ describe('ComputeGraph', () => {
     await trigger.wait();
 
     const stored = graph.mapFunctionBindingToId('=FOREX(C6,C7)');
-    expect(stored).to.include('dxn:echo:');
+    expect(stored).to.include('echo://');
     expect(stored).not.to.include('FOREX');
 
     const restored = graph.mapFunctionBindingFromId(stored);

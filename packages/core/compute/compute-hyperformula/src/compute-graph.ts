@@ -10,7 +10,7 @@ import { Operation } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { Filter, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { EchoId, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 import type { Listeners } from '@dxos/vendor-hyperformula';
@@ -218,20 +218,27 @@ export class ComputeGraph extends Resource {
 
   /**
    * Map from fully qualified ECHO DXN to binding (from store).
-   * E.g., dxn:echo:spaceId:objectId() => HELLO()
+   * E.g., echo://spaceId/objectId() => HELLO()
+   *
+   * Also accepts the legacy `dxn:echo:spaceId:objectId(...)` form so cells
+   * persisted before Phase 6 continue to resolve.
    */
   mapFunctionBindingFromId(formula: string): string | undefined {
-    const binding = formula.replace(
-      /dxn:([^:]+):([^:(]+):([a-zA-Z0-9]+)\((.*)\)/g,
-      (_match, kind, spaceTag, objectId, args) => {
-        const dxn = `dxn:${kind}:${spaceTag}:${objectId}`;
-        const fn = this._remoteFunctions.find((fn) => Obj.getId(fn) === dxn);
-        if (fn?.binding) {
-          return `${fn.binding}(${args})`;
-        } else {
-          return UNKNOWN_BINDING;
-        }
-      },
+    const replaceMatch = (echoId: string, args: string) => {
+      const parsed = EchoId.tryParse(echoId);
+      const canonical = parsed ?? echoId;
+      const fn = this._remoteFunctions.find((fn) => Obj.getId(fn) === canonical);
+      if (fn?.binding) {
+        return `${fn.binding}(${args})`;
+      }
+      return UNKNOWN_BINDING;
+    };
+
+    let binding = formula.replace(/echo:\/\/([^/(]+)\/([a-zA-Z0-9]+)\((.*)\)/g, (_match, spaceId, objectId, args) =>
+      replaceMatch(`echo://${spaceId}/${objectId}`, args),
+    );
+    binding = binding.replace(/dxn:echo:([^:(]+):([a-zA-Z0-9]+)\((.*)\)/g, (_match, spaceId, objectId, args) =>
+      replaceMatch(`dxn:echo:${spaceId}:${objectId}`, args),
     );
 
     if (binding.startsWith(`=${UNKNOWN_BINDING}`)) {
