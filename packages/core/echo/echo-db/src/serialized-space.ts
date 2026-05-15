@@ -10,8 +10,10 @@ import { type Obj } from '@dxos/echo';
 export type SerializedFeed = {
   /** ID of the Feed ECHO object this data belongs to. */
   feedObjectId: string;
+
   /** Feed namespace ('data' | 'trace'). */
   namespace: string;
+
   /** Queue messages as JSON. */
   messages: Obj.JSON[];
 };
