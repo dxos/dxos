@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 
 import * as OperationModule from '@dxos/compute';
 import { Context } from '@dxos/context';
-import { Filter, Query } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 import { useClient } from '@dxos/react-client';
 import { type Space, useQuery } from '@dxos/react-client/echo';
@@ -34,11 +34,12 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
   const dbFunctions = useQuery(space.db, Filter.type(OperationModule.Operation.PersistentOperation));
 
   const state = (func: OperationModule.Operation.PersistentOperation) => {
-    const dbFunction = dbFunctions.find((f) => f.key === func.key);
+    const funcKey = Obj.getMeta(func).key;
+    const dbFunction = dbFunctions.find((f) => Obj.getMeta(f).key === funcKey);
     if (!dbFunction) {
       return 'import';
     }
-    if (dbFunction.version === func.version && dbFunction.updated === func.updated) {
+    if (Obj.getMeta(dbFunction).version === Obj.getMeta(func).version && dbFunction.updated === func.updated) {
       return 'none';
     }
     return 'update';
@@ -53,9 +54,12 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
 
   const hanleImportOrUpdate = useCallback(
     async (func: OperationModule.Operation.PersistentOperation) => {
-      const functions = await space.db
-        .query(Query.type(OperationModule.Operation.PersistentOperation, { key: func.key }))
-        .run();
+      const funcKey = Obj.getMeta(func).key;
+      const functions = funcKey
+        ? await space.db
+            .query(Filter.and(Filter.type(OperationModule.Operation.PersistentOperation), Filter.key(funcKey)))
+            .run()
+        : [];
       const [existingFunc] = functions;
       if (!existingFunc) {
         space.db.add(func);
@@ -84,10 +88,10 @@ export const FunctionsRegistry = ({ space }: FunctionsRegistryProps) => {
                 >
                   <div className='flex flex-col truncate'>
                     <List.ItemTitle classNames='truncate'>{func.name}</List.ItemTitle>
-                    <div className='text-xs text-description truncate'>{func.key}</div>
+                    <div className='text-xs text-description truncate'>{Obj.getMeta(func).key}</div>
                   </div>
                   <div className='flex flex-col truncate'>
-                    <div className='text-xs text-description truncate'>{func.version}</div>
+                    <div className='text-xs text-description truncate'>{Obj.getMeta(func).version}</div>
                     <div className='text-xs text-description truncate'>
                       {func.updated ? `Uploaded ${new Date(func.updated).toLocaleString()}` : ''}
                     </div>

@@ -42,6 +42,17 @@ const FilterObject_ = Schema.Struct({
    */
   foreignKeys: Schema.optional(Schema.Array(ForeignKey)),
 
+  /**
+   * Match objects whose meta `key` equals this fully-qualified registry key (FQN format).
+   */
+  metaKey: Schema.optional(Schema.String),
+
+  /**
+   * Semver range matched against the object's meta `version`.
+   * Only consulted when {@link metaKey} is set. Objects with no `version` do not satisfy a version-constrained filter.
+   */
+  metaVersion: Schema.optional(Schema.String),
+
   // NOTE: Make sure to update `FilterStep.isNoop` if you change this.
 });
 export interface FilterObject extends Schema.Schema.Type<typeof FilterObject_> {}

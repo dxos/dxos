@@ -63,19 +63,19 @@ export default Capability.makeModule(
           ]),
       }),
 
-      // Plank companion: contributes a "description" panel for every ECHO
-      // object article. The panel surface (`description-companion` in
-      // react-surface) renders the owning plugin's `meta.description`.
+      // Plank companion: contributes a "Help" panel for every ECHO object
+      // article. The panel surface (`help-companion` in react-surface)
+      // renders the owning plugin's `meta.description`.
       GraphBuilder.createExtension({
-        id: 'description-companion',
+        id: 'help-companion',
         match: NodeMatcher.whenEchoObject,
         connector: () =>
           Effect.succeed([
             AppNode.makeCompanion({
-              id: 'description',
-              label: ['description-companion.label', { ns: meta.id }],
+              id: 'help',
+              label: ['help-companion.label', { ns: meta.id }],
               icon: 'ph--info--regular',
-              data: 'description',
+              data: 'help',
               position: 'fallback',
             }),
           ]),

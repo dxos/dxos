@@ -47,7 +47,7 @@ describe('Blueprint Manager', () => {
         const conversation = yield* getConversationDXN;
         const result = yield* Operation.invoke(QueryBlueprints, {}, { conversation });
         expect(result).toHaveLength(3);
-        const keys = result.map((blueprint: Blueprint.Blueprint) => blueprint.key);
+        const keys = result.map((blueprint: Blueprint.Blueprint) => Obj.getMeta(blueprint).key);
         expect(keys).toContain('org.dxos.blueprint.database');
         expect(keys).toContain('org.dxos.blueprint.memory');
         expect(keys).toContain('org.dxos.blueprint.discord');
@@ -69,12 +69,14 @@ describe('Blueprint Manager', () => {
           { conversation },
         );
         expect(enabled).toHaveLength(1);
-        expect(enabled[0].key).toBe('org.dxos.blueprint.database');
+        expect(Obj.getMeta(enabled[0]).key).toBe('org.dxos.blueprint.database');
         expect(rejected).toHaveLength(0);
 
         const { binder } = yield* AiContext.Service;
         const bound = binder.getBlueprints();
-        expect(bound.some((bp: Blueprint.Blueprint) => bp.key === 'org.dxos.blueprint.database')).toBe(true);
+        expect(bound.some((bp: Blueprint.Blueprint) => Obj.getMeta(bp).key === 'org.dxos.blueprint.database')).toBe(
+          true,
+        );
       },
       provideTestLayers,
       TestHelpers.provideTestContext,
@@ -98,7 +100,9 @@ describe('Blueprint Manager', () => {
 
         const { binder } = yield* AiContext.Service;
         const bound = binder.getBlueprints();
-        expect(bound.some((bp: Blueprint.Blueprint) => bp.key === 'org.dxos.blueprint.discord')).toBe(false);
+        expect(bound.some((bp: Blueprint.Blueprint) => Obj.getMeta(bp).key === 'org.dxos.blueprint.discord')).toBe(
+          false,
+        );
       },
       provideTestLayers,
       TestHelpers.provideTestContext,
@@ -119,7 +123,7 @@ describe('Blueprint Manager', () => {
           { conversation },
         );
         expect(enabled).toHaveLength(2);
-        const enabledKeys = enabled.map((bp: Blueprint.Blueprint) => bp.key);
+        const enabledKeys = enabled.map((bp: Blueprint.Blueprint) => Obj.getMeta(bp).key);
         expect(enabledKeys).toContain('org.dxos.blueprint.database');
         expect(enabledKeys).toContain('org.dxos.blueprint.memory');
         expect(rejected).toHaveLength(1);

@@ -46,14 +46,14 @@ export const importCommand = Command.make(
 
       // We take the last deployment under a given key.
       // TODO(dmaretskyi): Should we make the keys unique?
-      const fn = fns.findLast((fn) => fn.key === selectedKey);
+      const fn = fns.findLast((fn) => Obj.getMeta(fn).key === selectedKey);
       if (!fn) {
         return yield* Effect.fail(new Error(`Function not found: ${selectedKey}`));
       }
 
       // Query database for existing functions with the same key
       const existingFunctions = yield* Database.runQuery(
-        Filter.type(Operation.PersistentOperation, { key: selectedKey }),
+        Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(selectedKey)),
       );
 
       let updatedFunctions: Operation.PersistentOperation[];

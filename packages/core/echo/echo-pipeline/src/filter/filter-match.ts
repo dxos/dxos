@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as semver from 'semver';
+
 import { EncodedReference, ObjectStructure, type QueryAST, isEncodedReference } from '@dxos/echo-protocol';
 import { ATTR_META, type ObjectJSON } from '@dxos/echo/internal';
 import { DXN, type ObjectId, type SpaceId } from '@dxos/keys';
@@ -22,7 +24,7 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
       // Check typename if specified.
       if (filter.typename !== null) {
         // TODO(dmaretskyi): `system` is missing in some cases.
-        if (!obj.doc.system?.type?.['/']) {
+        if (!obj.doc?.system?.type?.['/']) {
           // Objects with no type are deprecated.
           return false;
         } else {
@@ -57,6 +59,14 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
         if (!hasMatchingKey) {
           return false;
         }
+      }
+
+      // Check registry meta key / version if specified.
+      if (
+        filter.metaKey !== undefined &&
+        !matchMetaKey(filter.metaKey, filter.metaVersion, obj.doc.meta.key, obj.doc.meta.version)
+      ) {
+        return false;
       }
 
       return true;
@@ -95,6 +105,33 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
     default:
       return false;
   }
+};
+
+/**
+ * Matches a meta `key` / `version` constraint against an object's meta `key` and `version`.
+ * - `key` must match exactly.
+ * - If `versionRange` is set, the object's `version` must satisfy it (semver).
+ *   Objects without a `version` or with an invalid `version` do not match a version-constrained filter.
+ */
+const matchMetaKey = (
+  key: string,
+  versionRange: string | undefined,
+  objKey: string | undefined,
+  objVersion: string | undefined,
+): boolean => {
+  if (objKey !== key) {
+    return false;
+  }
+  if (versionRange === undefined) {
+    return true;
+  }
+  if (objVersion === undefined || semver.valid(objVersion) === null) {
+    return false;
+  }
+  if (semver.validRange(versionRange) === null) {
+    return false;
+  }
+  return semver.satisfies(objVersion, versionRange, { includePrerelease: true });
 };
 
 // TODO(burdon): Reconcile with filterMatchObject.
@@ -143,6 +180,14 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
         if (!hasMatchingKey) {
           return false;
         }
+      }
+
+      // Check registry meta key / version if specified.
+      if (
+        filter.metaKey !== undefined &&
+        !matchMetaKey(filter.metaKey, filter.metaVersion, obj[ATTR_META]?.key, obj[ATTR_META]?.version)
+      ) {
+        return false;
       }
 
       return true;

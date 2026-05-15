@@ -32,8 +32,8 @@ export const translations = [
         'mark-in-progress.button': 'Mark in progress',
         'resolve.button': 'Resolve',
         'reopen.button': 'Reopen',
-        // Description companion (plank-companion--description surface).
-        'description-companion.label': 'Description',
+        // Help companion (plank-companion--help surface, shows owning plugin's meta.description).
+        'help-companion.label': 'Help',
         // Feedback (deck-companion--help surface).
         'help.label': 'Feedback & Support',
         'feedback-textarea.label': 'Feedback',

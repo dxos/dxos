@@ -10,6 +10,8 @@ import { type ThemedClassName } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
+import { MarkdownMedia } from './Media';
+
 export type MarkdownViewProps = ThemedClassName<
   PropsWithChildren<{
     content?: string;
@@ -69,20 +71,15 @@ const defaultComponents: ReactMarkdownOptions['components'] = {
   // Hide broken images: many markdown sources reference remote URLs that
   // 404 or are blocked. Drop the element on load failure rather than
   // leaving the browser's broken-image placeholder.
-  img: ({ src, alt, ...props }) => {
+  //
+  // Iframe-style URLs (e.g. Cloudflare Stream embeds the author included via
+  // standard `![alt](src)` syntax) are swapped to `<iframe>` by
+  // {@link MarkdownMedia}, so embeds in the source document render inline.
+  img: ({ src, alt }) => {
     if (!src) {
       return null;
     }
-    return (
-      <img
-        src={src}
-        alt={alt}
-        onError={(event) => {
-          event.currentTarget.style.display = 'none';
-        }}
-        {...props}
-      />
-    );
+    return <MarkdownMedia src={src} alt={alt} iframeClassNames='aspect-video w-full' />;
   },
   ol: ({ children, ...props }) => (
     <ol className='pt-1 pb-1 ps-6 leading-tight list-decimal' {...props}>

@@ -139,6 +139,16 @@ class FilterClass implements Filter$.Any {
     });
   }
 
+  static key(key: string, options?: Filter$.KeyFilterOptions): Filter$.Any {
+    return new FilterClass({
+      type: 'object',
+      typename: null,
+      props: {},
+      metaKey: key,
+      metaVersion: options?.version,
+    });
+  }
+
   static props<T>(props: Filter$.Props<T>): Filter$.Filter<T> {
     return new FilterClass({
       type: 'object',
