@@ -35,8 +35,12 @@
       "default": "./dist/lib/neutral/meta.mjs"
     },
     "#plugin": {
-      "source": "./src/GamePlugin.tsx",
+      "source": {
+        "node": "./src/GamePlugin.node.tsx",
+        "default": "./src/GamePlugin.tsx"
+      },
       "types": "./dist/types/src/GamePlugin.d.ts",
+      "node": "./dist/lib/neutral/GamePlugin.node.mjs",
       "default": "./dist/lib/neutral/GamePlugin.mjs"
     },
     "#translations": {
