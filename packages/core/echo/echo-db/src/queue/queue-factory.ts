@@ -41,6 +41,15 @@ export class QueueFactory extends Resource implements QueueAPI {
     return this._getOrCreate<T>(echoId);
   }
 
+  /**
+   * Returns an existing Queue for the given id, without creating one. Used by
+   * the ref resolver to distinguish ECHO objects from queues when both share the
+   * same `echo:` URI form post-Phase 6.
+   */
+  tryGet<T extends Entity.Unknown>(echoId: EchoId.EchoId): Queue<T> | undefined {
+    return this._queues.get(echoId) as Queue<T> | undefined;
+  }
+
   create<T extends Entity.Unknown>({ subspaceTag = QueueSubspaceTags.DATA }: { subspaceTag?: string } = {}): Queue<T> {
     const echoId = EchoId.fromSpaceAndObjectId(this._spaceId, ObjectId.random());
     return this._getOrCreate<T>(echoId, subspaceTag);

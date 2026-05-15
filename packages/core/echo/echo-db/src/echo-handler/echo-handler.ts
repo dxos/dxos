@@ -588,8 +588,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
 
-    const typeDXN = EncodedReference.toURI(typeRef);
-    if (DXN.isDXN(typeDXN)) {
+    const typeURI = EncodedReference.toURI(typeRef);
+    if (DXN.isDXN(typeURI)) {
+      // Normalize legacy `dxn:type:` prefix so DXN.getNsid extracts the typename, not the literal "type" segment.
+      const typeDXN = DXN.parse(typeURI);
       const staticSchema = target[symbolInternals].database.graph.schemaRegistry.getSchemaByDXN(typeDXN);
       if (staticSchema != null) {
         return staticSchema;
@@ -600,7 +602,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
     }
 
-    return target[symbolInternals].database.schemaRegistry.query({ id: typeDXN }).runSync()[0];
+    return target[symbolInternals].database.schemaRegistry.query({ id: typeURI }).runSync()[0];
   }
 
   getTypeDXN(target: ProxyTarget): URI.URI | undefined {

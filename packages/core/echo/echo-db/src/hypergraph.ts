@@ -222,8 +222,11 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     }
 
     // Fallback: try to resolve as a queue (Feed object backed by queue service).
+    // Only resolve if a queue with this id has been explicitly created — otherwise
+    // QueueFactory.get would manufacture a phantom queue for every unknown ECHO ref.
     const queueEchoId = EchoId.fromSpaceAndObjectId(spaceId, objectId);
-    const queue = this._resolveQueueSync(queueEchoId);
+    const queueFactory = this._queueFactories.get(spaceId);
+    const queue = queueFactory?.tryGet(queueEchoId);
     if (queue) {
       return queue as unknown as Entity.Any;
     }
