@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type Registry, type Plugin, type PluginManager } from '@dxos/app-framework';
-import { Button, Icon, Input, Link, ScrollArea, Select, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, Input, Link, ScrollArea, Select, Tag, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps, getStyles, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -249,28 +249,21 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
 PluginDetail.displayName = 'PluginDetail';
 
 /**
- * Renders a single dependency / dependent reference as either a clickable
- * button (when `onClick` is provided) or a passive label. The plugin id is
- * surfaced via `title` so the canonical id stays one hover away even when the
- * chip shows the friendlier `name`.
+ * Renders a single dependency / dependent reference using the shared
+ * `Tag` primitive. When `onClick` is provided the chip becomes an
+ * interactive button (via Radix's `asChild` slot) that fires the handler
+ * with the canonical plugin id. The id is also surfaced via `title` so it
+ * stays one hover away even when the chip shows the friendlier `name`.
  */
 const PluginChip = ({ pluginRef, onClick }: { pluginRef: PluginRef; onClick?: (pluginId: string) => void }) => {
-  const baseClass = 'rounded-md px-2 py-0.5 text-xs bg-modalSurface text-description';
   if (onClick) {
     return (
-      <button
-        type='button'
-        title={pluginRef.id}
-        className={mx(baseClass, 'hover:underline focus-visible:underline cursor-pointer')}
-        onClick={() => onClick(pluginRef.id)}
-      >
-        {pluginRef.name}
-      </button>
+      <Tag asChild>
+        <button type='button' title={pluginRef.id} onClick={() => onClick(pluginRef.id)}>
+          {pluginRef.name}
+        </button>
+      </Tag>
     );
   }
-  return (
-    <span title={pluginRef.id} className={baseClass}>
-      {pluginRef.name}
-    </span>
-  );
+  return <Tag title={pluginRef.id}>{pluginRef.name}</Tag>;
 };
