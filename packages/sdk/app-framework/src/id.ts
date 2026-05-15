@@ -2,8 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-const PART = /^[a-z][a-zA-Z0-9]*$/;
-const ID = /^[a-z][a-zA-Z0-9]*(?:\.[a-z][a-zA-Z0-9]*){2,}$/;
+// Name segment: starts with alpha, alphanumeric only (no hyphens), max 63 chars.
+const PART = /^[a-zA-Z][a-zA-Z0-9]{0,62}$/;
+
+// Full NSID: authority segments (hyphens allowed) + dot + name segment (no hyphens).
+// Reference: https://atproto.com/specs/nsid
+const ID =
+  /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/;
 
 /**
  * Branded string type for well-formed ids.
@@ -14,9 +19,8 @@ export type Id = string & { readonly __id: unique symbol };
  * Tagged template literal that constructs a well-formed, dot-delimited id string.
  * Throws if the resulting string is not well-formed.
  *
- * Follows the AT Protocol NSID convention (https://atproto.com/specs/nsid).
- * Reference regex: `/^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/`
- * This implementation is stricter: all parts must be fully lowercase and contain no hyphens.
+ * Follows the AT Protocol NSID convention (https://atproto.com/specs/nsid):
+ * `/^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/`
  *
  * @example
  *   id`org.dxos.plugin.deck` // 'org.dxos.plugin.deck'
@@ -25,18 +29,20 @@ export type Id = string & { readonly __id: unique symbol };
 export function id(strings: TemplateStringsArray, ...values: unknown[]): Id {
   const raw = strings.reduce((out, str, i) => out + str + (i < values.length ? String(values[i]) : ''), '');
   if (!ID.test(raw)) {
-    throw new Error(`Invalid id (must have at least three dot-delimited lowercase parts): ${JSON.stringify(raw)}`);
+    throw new Error(`Invalid id (expected AT Protocol NSID): ${JSON.stringify(raw)}`);
   }
 
   return raw as Id;
 }
 
 /**
- * Returns true if the given string matches `/^[a-z][a-zA-Z0-9]*(?:\.[a-z][a-zA-Z0-9]*){2,}$/`.
+ * Returns true if the given string is a well-formed NSID.
+ * Reference: https://atproto.com/specs/nsid
  */
 export const isWellFormedId = (value: string): boolean => ID.test(value);
 
 /**
- * Returns true if the given string matches `/^[a-z][a-zA-Z0-9]*$/` (a single id part, no dots).
+ * Returns true if the given string is a well-formed NSID name segment:
+ * `/^[a-zA-Z][a-zA-Z0-9]{0,62}$/` (starts with alpha, alphanumeric only, no dots or hyphens).
  */
 export const isWellFormedIdPart = (value: string): boolean => PART.test(value);
