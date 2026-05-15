@@ -69,7 +69,11 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
     }, [companionTo]);
     const existingBlueprints = useQuery(space?.db, Filter.type(Blueprint.Blueprint));
     const pluginBlueprints = useMemo(
-      () => existingBlueprints.filter((blueprint) => blueprintKeys.includes(blueprint.key)),
+      () =>
+        existingBlueprints.filter((blueprint) => {
+          const key = Obj.getMeta(blueprint).key;
+          return key !== undefined && blueprintKeys.includes(key);
+        }),
       [existingBlueprints, blueprintKeys],
     );
 
@@ -82,7 +86,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
       // NOTE: This must be run instead of using the useQuery result to avoid duplicates.
       const existingBlueprints = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
       for (const key of blueprintKeys) {
-        const existingBlueprint = existingBlueprints.find((blueprint) => blueprint.key === key);
+        const existingBlueprint = existingBlueprints.find((blueprint) => Obj.getMeta(blueprint).key === key);
         if (existingBlueprint) {
           continue;
         }
