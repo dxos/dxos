@@ -80,4 +80,3 @@ describe('DXN.getVersion', () => {
     expect(DXN.getVersion(DXN.fromNsid('org.dxos.type.calendar'))).toBeUndefined();
   });
 });
-

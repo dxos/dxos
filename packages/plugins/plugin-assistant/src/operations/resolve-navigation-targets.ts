@@ -11,7 +11,6 @@ import type { DXN } from '@dxos/keys';
 
 import { AssistantOperation } from '#types';
 
-
 export default AssistantOperation.ResolveNavigationTargets.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ query }) {

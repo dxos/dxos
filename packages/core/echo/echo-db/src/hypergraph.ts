@@ -335,10 +335,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
    * for an object with the given id. Does not enumerate the on-disk feed catalog — only
    * queues that have been instantiated.
    */
-  private async _resolveObjectInKnownQueues(
-    spaceId: SpaceId,
-    objectId: ObjectId,
-  ): Promise<Entity.Unknown | undefined> {
+  private async _resolveObjectInKnownQueues(spaceId: SpaceId, objectId: ObjectId): Promise<Entity.Unknown | undefined> {
     const queueFactory = this._queueFactories.get(spaceId);
     if (!queueFactory) {
       return undefined;

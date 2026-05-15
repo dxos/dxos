@@ -497,7 +497,9 @@ const handler: Operation.WithHandler<typeof LinearOperation.SyncLinearTeams> = L
               continue;
             }
             if (teamFilterEchoId) {
-              const targetEchoId = target.object ? EchoURI.getObjectId(EchoURI.tryParse(target.object.uri)!) : undefined;
+              const targetEchoId = target.object
+                ? EchoURI.getObjectId(EchoURI.tryParse(target.object.uri)!)
+                : undefined;
               if (targetEchoId !== teamFilterEchoId) {
                 continue;
               }

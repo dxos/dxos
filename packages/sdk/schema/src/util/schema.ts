@@ -20,7 +20,6 @@ import {
 import { createEchoSchema } from '@dxos/echo/testing';
 import { DXN, type EchoURI, PublicKey } from '@dxos/keys';
 
-
 export type SelectOptionType = typeof SelectOption.Type;
 
 // TODO(ZaymonFC): Keep this in sync with the schema in `schema-tools.ts`.

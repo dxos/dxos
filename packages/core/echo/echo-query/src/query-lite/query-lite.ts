@@ -7,7 +7,9 @@ import type * as Schema from 'effect/Schema';
 import type { Filter as Filter$, Order as Order$, Query as Query$, Ref } from '@dxos/echo';
 import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
-import { DXN, EchoURI, type ObjectId, type URI } from '@dxos/keys';
+// `DXN`/`EchoURI` are type-only imports to keep the `query-lite` bundle free of
+// `effect/Schema` (which pulls runtime helpers QuickJS can't parse — e.g. private class fields).
+import type { DXN, EchoURI, ObjectId, URI } from '@dxos/keys';
 
 //
 // Light-weight implementation of query execution.
@@ -265,7 +267,9 @@ class FilterClass implements Filter$.Any {
     const items = Array.isArray(parents) ? parents : [parents];
     const dxns = items.map((item) => {
       if (isDxnLike(item)) {
-        return EchoURI.parse(item.toString());
+        // Inline normalization (rather than `EchoURI.parse`) to keep the `@dxos/keys` value-side
+        // import out of this bundle — see comment on the import above.
+        return item.toString() as EchoURI.EchoURI;
       }
       throw new TypeError('childOf requires DXN values in query-lite');
     });
@@ -609,7 +613,8 @@ const isRef = (obj: any): obj is Ref.Ref<any> => {
 const makeTypeDxn = (typename: string): DXN.DXN => {
   assertArgument(typeof typename === 'string', 'typename');
   assertArgument(!typename.startsWith('dxn:'), 'typename');
-  return DXN.fromNsid(typename);
+  // Inline template (rather than `DXN.fromNsid`) to keep the value-side `@dxos/keys` import out of this bundle.
+  return `dxn:${typename}` as DXN.DXN;
 };
 
 const isDxnLike = (value: unknown): value is URI.URI => {

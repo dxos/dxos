@@ -9,7 +9,19 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import React, { forwardRef, useCallback, useContext, useImperativeHandle, useMemo, useState } from 'react';
 
-import { EchoURI, Entity, Feed, Filter, Format, Obj, Query, QueryAST, Ref, type SchemaRegistry, View } from '@dxos/echo';
+import {
+  EchoURI,
+  Entity,
+  Feed,
+  Filter,
+  Format,
+  Obj,
+  Query,
+  QueryAST,
+  Ref,
+  type SchemaRegistry,
+  View,
+} from '@dxos/echo';
 import { EchoSchema, type JsonProp, isMutable, toJsonSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { useObject, useQuery } from '@dxos/react-client/echo';

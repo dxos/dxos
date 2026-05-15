@@ -15,7 +15,6 @@ import { meta } from '#meta';
 
 import { TriggerTemplate } from './schema';
 
-
 const AUTOMATION_OPERATION = `${meta.id}.operation`;
 
 export const CreateTriggerFromTemplate = Operation.make({
