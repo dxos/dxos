@@ -29,6 +29,11 @@ import { Carousel } from '#components';
 // requiring callers to thread the rest.
 export type SupportCompanionProps = Pick<AppSurface.ArticleProps<'help', {}, Obj.Any>, 'companionTo'>;
 
+/**
+ * Plank companion panel showing help for any open ECHO article. Resolves the
+ * article's typename to the plugin that registered its schema and renders that
+ * plugin's `meta.description` (Markdown) and `meta.screenshots` (Carousel).
+ */
 export const SupportCompanion = ({ companionTo }: SupportCompanionProps) => {
   const manager = usePluginManager();
   const schemasByModule = useAtomValue(manager.capabilities.atomByModule(AppCapabilities.Schema));
