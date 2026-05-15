@@ -20,7 +20,7 @@ import {
   Trace,
 } from '@dxos/compute';
 import { LifecycleState, Resource } from '@dxos/context';
-import { Database, Feed, JsonSchema, Ref, type Type } from '@dxos/echo';
+import { Database, Feed, JsonSchema, Obj, Ref, type Type } from '@dxos/echo';
 import { createFeedServiceLayer, EchoClient, type EchoDatabaseImpl, type QueueFactory } from '@dxos/echo-db';
 import { refFromEncodedReference } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
@@ -345,7 +345,7 @@ const makeOperationRegistryLayer = (
     resolve: (key: string) =>
       Effect.gen(function* () {
         const records = yield* Effect.tryPromise(() => functionsService.query({ spaceId })).pipe(Effect.orDie);
-        const match = (records as Operation.PersistentOperation[]).find((record) => record.key === key);
+        const match = (records as Operation.PersistentOperation[]).find((record) => Obj.getMeta(record).key === key);
         return match ? Option.some(Operation.deserialize(match)) : Option.none();
       }),
   });
