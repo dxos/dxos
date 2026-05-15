@@ -20,7 +20,13 @@ import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { type Database, Ref } from '@dxos/echo';
-import { type DatabaseDirectory, EncodedReference, type ObjectStructure, type SpaceState } from '@dxos/echo-protocol';
+import {
+  type DatabaseDirectory,
+  EncodedReference,
+  type ObjectMeta,
+  type ObjectStructure,
+  type SpaceState,
+} from '@dxos/echo-protocol';
 import { batchEvents } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { type DXN, EchoURI, type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -503,7 +509,7 @@ export class CoreDatabase {
    * Any concurrent changes made by other peers will be overwritten.
    */
   async atomicReplaceObject(id: ObjectId, params: AtomicReplaceObjectProps): Promise<void> {
-    const { data, type } = params;
+    const { data, type, meta } = params;
 
     const core = await this.loadObjectCoreById(id);
     invariant(core);
@@ -527,6 +533,10 @@ export class CoreDatabase {
 
     if (type !== undefined) {
       newStruct.system!.type = EncodedReference.fromURI(type);
+    }
+
+    if (meta !== undefined) {
+      newStruct.meta = { ...existingStruct.meta, ...meta };
     }
 
     core.setDecoded([], newStruct);
@@ -1042,6 +1052,12 @@ export type AtomicReplaceObjectProps = {
    * Update object type.
    */
   type?: DXN.DXN;
+
+  /**
+   * Optional partial meta patch — merged into the existing object meta.
+   * Fields explicitly set to `undefined` overwrite the previous value with `undefined`.
+   */
+  meta?: Partial<ObjectMeta>;
 };
 
 const RPC_TIMEOUT = 20_000;

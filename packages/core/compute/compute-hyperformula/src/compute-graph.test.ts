@@ -31,7 +31,7 @@ describe('ComputeGraph', () => {
     const trigger = new Trigger();
     graph.update.once(() => trigger.wake());
     const functionObject = space.db.add(
-      Obj.make(Operation.PersistentOperation, { name: 'test', version: '0.0.1', binding: 'TEST' }),
+      Obj.make(Operation.PersistentOperation, { [Obj.Meta]: { version: '0.0.1' }, name: 'test', binding: 'TEST' }),
     );
     await trigger.wait();
     const functions = graph.getFunctions({ echo: true });
@@ -51,7 +51,13 @@ describe('ComputeGraph', () => {
 
     const trigger = new Trigger();
     graph.update.once(() => trigger.wake());
-    space.db.add(Obj.make(Operation.PersistentOperation, { name: 'forex', version: '0.0.1', binding: 'FOREX' }));
+    space.db.add(
+      Obj.make(Operation.PersistentOperation, {
+        [Obj.Meta]: { version: '0.0.1' },
+        name: 'forex',
+        binding: 'FOREX',
+      }),
+    );
     await trigger.wait();
 
     const stored = graph.mapFunctionBindingToId('=FOREX(C6,C7)');

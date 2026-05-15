@@ -144,7 +144,8 @@ export namespace QueryPlan {
             step.filter.typename === null &&
             (step.filter.id === undefined || step.filter.id.length === 0) &&
             (step.filter.props === undefined || Object.keys(step.filter.props).length === 0) &&
-            (step.filter.foreignKeys === undefined || step.filter.foreignKeys.length === 0)
+            (step.filter.foreignKeys === undefined || step.filter.foreignKeys.length === 0) &&
+            step.filter.metaKey === undefined
           );
         }
         default:

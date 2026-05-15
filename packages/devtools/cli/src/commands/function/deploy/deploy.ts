@@ -116,8 +116,8 @@ export const deploy = Command.make(
       yield* Console.log(JSON.stringify(func, null, 2));
     } else {
       yield* Console.log('Function uploaded successfully!');
-      yield* Console.log(`Key: ${func.key}`);
-      yield* Console.log(`Version: ${func.version}`);
+      yield* Console.log(`Key: ${Obj.getMeta(func).key}`);
+      yield* Console.log(`Version: ${Obj.getMeta(func).version}`);
       yield* Console.log(`Function ID: ${Obj.getKeys(functionObject, FUNCTIONS_META_KEY).at(0)?.id}`);
     }
 

@@ -771,6 +771,9 @@ catalogs:
     '@types/seedrandom':
       specifier: ^3.0.5
       version: 3.0.5
+    '@types/semver':
+      specifier: ^7.7.1
+      version: 7.7.1
     '@types/sharedworker':
       specifier: ^0.0.111
       version: 0.0.111
@@ -1636,8 +1639,8 @@ catalogs:
       specifier: ^3.0.5
       version: 3.0.5
     semver:
-      specifier: ^7.5.4
-      version: 7.7.3
+      specifier: ^7.7.3
+      version: 7.7.4
     serve:
       specifier: ^14.2.5
       version: 14.2.5
@@ -2270,7 +2273,7 @@ importers:
         version: 0.6.3(@types/node@22.10.2)(rollup@3.30.0)
       semver:
         specifier: 'catalog:'
-        version: 7.7.3
+        version: 7.7.4
       serve:
         specifier: 'catalog:'
         version: 14.2.5
@@ -5867,10 +5870,16 @@ importers:
       level-transcoder:
         specifier: 'catalog:'
         version: 1.0.1
+      semver:
+        specifier: 'catalog:'
+        version: 7.7.4
     devDependencies:
       '@dxos/test-utils':
         specifier: workspace:*
         version: link:../../../common/test-utils
+      '@types/semver':
+        specifier: 'catalog:'
+        version: 7.7.1
       fast-check:
         specifier: 'catalog:'
         version: 3.23.2
@@ -5987,6 +5996,40 @@ importers:
       react-dom:
         specifier: ~19.2.3
         version: 19.2.3(react@19.2.3)
+
+  packages/core/echo/echo-registry:
+    dependencies:
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../../common/async
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo
+      '@dxos/echo-pipeline':
+        specifier: workspace:*
+        version: link:../echo-pipeline
+      '@dxos/echo-protocol':
+        specifier: workspace:*
+        version: link:../echo-protocol
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../../common/keys
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../../common/util
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
+    devDependencies:
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
+      '@dxos/test-utils':
+        specifier: workspace:*
+        version: link:../../../common/test-utils
 
   packages/core/echo/echo-solid:
     dependencies:
@@ -29543,6 +29586,9 @@ packages:
   '@types/seedrandom@3.0.5':
     resolution: {integrity: sha512-kopEpYpFQvQdYsZkZVwht/0THHmTFFYXDaqV/lM45eweJ8kcGVDgZHs0RVTolSq55UPZNmjhKc9r7UvLu/mQQg==}
 
+  '@types/semver@7.7.1':
+    resolution: {integrity: sha512-FmgJfu+MOcQ370SD0ev7EI8TlCAfKYU+B4m5T3yXc1CiRN94g/SZPtsCkk506aUDtlMnFZvasDwHHUcZUEaYuA==}
+
   '@types/send@0.17.6':
     resolution: {integrity: sha512-Uqt8rPBE8SY0RK8JB1EzVOIZ32uqy8HwdxCnoCOsYrvnswqmFZ/k+9Ikidlk/ImhsdvBsloHbAlewb2IEBV/Og==}
 
@@ -49435,6 +49481,8 @@ snapshots:
 
   '@types/seedrandom@3.0.5': {}
 
+  '@types/semver@7.7.1': {}
+
   '@types/send@0.17.6':
     dependencies:
       '@types/mime': 1.3.5
@@ -49949,7 +49997,7 @@ snapshots:
       parse-semver: 1.1.1
       read: 1.0.7
       secretlint: 10.2.2
-      semver: 7.7.3
+      semver: 7.7.4
       tmp: 0.2.5
       typed-rest-client: 1.8.11
       url-join: 4.0.1
@@ -52949,7 +52997,7 @@ snapshots:
       require-package-name: 2.0.1
       resolve: 1.22.10
       resolve-from: 5.0.0
-      semver: 7.7.3
+      semver: 7.7.4
       yargs: 16.2.0
     transitivePeerDependencies:
       - supports-color
@@ -53522,7 +53570,7 @@ snapshots:
       eslint-import-context: 0.1.9(unrs-resolver@1.11.1)
       is-glob: 4.0.3
       minimatch: 10.2.5
-      semver: 7.7.3
+      semver: 7.7.4
       stable-hash-x: 0.2.0
       unrs-resolver: 1.11.1
     transitivePeerDependencies:
@@ -57838,7 +57886,7 @@ snapshots:
     dependencies:
       growly: 1.3.0
       is-wsl: 2.2.0
-      semver: 7.7.3
+      semver: 7.7.4
       shellwords: 0.1.1
       uuid: 8.3.2(patch_hash=7640c94f10973b5716c23b71230b101075a889088080f5eb7b433aa225fc32c9)
       which: 2.0.2
@@ -60321,7 +60369,7 @@ snapshots:
       detect-libc: 2.1.2
       node-addon-api: 6.1.0
       prebuild-install: 7.1.3
-      semver: 7.7.3
+      semver: 7.7.4
       simple-get: 4.0.1
       tar-fs: 3.1.1
       tunnel-agent: 0.6.0
@@ -61563,7 +61611,7 @@ snapshots:
       obug: 2.1.1
       rolldown: 1.0.0-beta.52(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
       rolldown-plugin-dts: 0.18.3(@typescript/native-preview@7.0.0-dev.20260421.2)(oxc-resolver@11.9.0)(rolldown@1.0.0-beta.52(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0))(typescript@6.0.3)
-      semver: 7.7.3
+      semver: 7.7.4
       tinyexec: 1.0.2
       tinyglobby: 0.2.15
       tree-kill: 1.2.2

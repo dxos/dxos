@@ -10,19 +10,31 @@ import { type DXN } from '@dxos/keys';
 
 import type * as Database from './Database';
 import type * as Entity from './Entity';
-import { getSchemaDXN } from './internal';
+import { MetaId, type ObjectMeta, getSchemaDXN } from './internal';
+
+/**
+ * Result returned by a migration's `transform` callback.
+ * The data shape matches the target schema; the optional `[Obj.Meta]` symbol key lets the
+ * transform update the object's meta (e.g. `key` / `version`) atomically with the data swap.
+ */
+export type TransformResult<To extends Schema.Schema.AnyNoContext> = Omit<
+  Schema.Schema.Type<To>,
+  'id' | Entity.KindId
+> & {
+  [MetaId]?: Partial<ObjectMeta>;
+};
 
 type DefineObjectMigrationOptions<From extends Schema.Schema.AnyNoContext, To extends Schema.Schema.AnyNoContext> = {
   from: From;
   to: To;
   /**
    * Pure function that converts the old object data to the new object data.
+   *
+   * The returned object may include an optional `[Obj.Meta]` entry to update the object's meta
+   * (e.g. registry `key` / `version`) atomically with the data swap.
    */
   // TODO(dmaretskyi): `id` should not be a part of the schema.
-  transform: (
-    from: Schema.Schema.Type<From>,
-    context: ObjectMigrationContext,
-  ) => Promise<Omit<Schema.Schema.Type<To>, 'id' | Entity.KindId>>;
+  transform: (from: Schema.Schema.Type<From>, context: ObjectMigrationContext) => Promise<TransformResult<To>>;
 
   /**
    * Callback that is called after the object is migrated. Called for every object that is migrated.
@@ -30,7 +42,7 @@ type DefineObjectMigrationOptions<From extends Schema.Schema.AnyNoContext, To ex
    * NOTE: Database mutations performed in this callback are not guaranteed to be idempotent.
    *       If multiple peers run the migration separately, the effects may be applied multiple times.
    */
-  onMigration: (params: OnMigrateProps<From, To>) => Promise<void>;
+  onMigration?: (params: OnMigrateProps<From, To>) => Promise<void>;
 };
 
 /**
@@ -55,7 +67,7 @@ export type ObjectMigration = {
   fromSchema: Schema.Schema.AnyNoContext;
   toSchema: Schema.Schema.AnyNoContext;
   transform: (from: unknown, context: ObjectMigrationContext) => Promise<unknown>;
-  onMigration: (params: OnMigrateProps<any, any>) => Promise<void>;
+  onMigration?: (params: OnMigrateProps<any, any>) => Promise<void>;
 };
 
 /**

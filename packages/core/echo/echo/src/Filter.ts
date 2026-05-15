@@ -159,6 +159,37 @@ export const tag = (tag: string): Any => {
 };
 
 /**
+ * Options for {@link key} filter.
+ */
+export type KeyFilterOptions = {
+  /**
+   * Optional semver range expression (e.g. `^1.2.3`, `~2.0.0`, `>=1.0.0 <2.0.0`).
+   * Matches the object's meta `version` field against the range.
+   * If omitted, matches any version (including objects with no version).
+   */
+  version?: string;
+};
+
+/**
+ * Filter by registry key stored in object meta.
+ *
+ * @example
+ * ```ts
+ * Filter.key('org.example.type.foo');
+ * Filter.key('org.example.type.foo', { version: '^1.2.3' });
+ * ```
+ */
+export const key = (key: string, options?: KeyFilterOptions): Any => {
+  return new FilterClass({
+    type: 'object',
+    typename: null,
+    props: {},
+    metaKey: key,
+    metaVersion: options?.version,
+  });
+};
+
+/**
  * Filter by properties.
  */
 export const props = <T>(props: Props<T>): Filter<T> => {

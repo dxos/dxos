@@ -39,7 +39,13 @@ const meta = {
       types: [Operation.PersistentOperation, Trigger.Trigger],
       onCreateSpace: ({ space }) => {
         for (const fn of functions) {
-          space.db.add(Obj.make(Operation.PersistentOperation, { ...fn, version: fn.version ?? '0.1.0' }));
+          const { key, version, ...data } = fn;
+          space.db.add(
+            Obj.make(Operation.PersistentOperation, {
+              [Obj.Meta]: { key, version: version ?? '0.1.0' },
+              ...data,
+            }),
+          );
         }
       },
     }),

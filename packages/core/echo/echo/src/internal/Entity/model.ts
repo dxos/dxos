@@ -75,6 +75,8 @@ export interface InternalObjectProps {
 export interface ObjectMetaJSON {
   keys: ForeignKey[];
   tags?: string[];
+  key?: string;
+  version?: string;
 }
 
 /**

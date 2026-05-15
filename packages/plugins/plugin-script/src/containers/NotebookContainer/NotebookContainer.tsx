@@ -163,7 +163,10 @@ export const NotebookContainer = ({ role, subject: notebook, attendableId, env }
           if (db) {
             const objects = await db.query(Query.select(Filter.type(Blueprint.Blueprint))).run();
             const blueprints = objects
-              .filter((blueprint) => INCLUDE_BLUEPRINTS.includes(blueprint.key))
+              .filter((blueprint) => {
+                const key = Obj.getMeta(blueprint).key;
+                return key !== undefined && INCLUDE_BLUEPRINTS.includes(key);
+              })
               .map((blueprint) => Ref.make(blueprint));
             cell.prompt = Ref.make(Routine.make({ instructions: '', blueprints }));
           }
