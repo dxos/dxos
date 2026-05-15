@@ -197,7 +197,16 @@ export const make = (opts: {
       });
 
       return output;
-    });
+    }).pipe(
+      Effect.tapErrorCause((cause) =>
+        Effect.sync(() => {
+          if (Cause.isInterruptedOnly(cause)) {
+            return;
+          }
+          log.error('operation invocation failed', { opKey: op.meta.key, cause: Cause.pretty(cause) });
+        }),
+      ),
+    );
   };
 
   const schedule: OperationInvoker.OperationInvoker['schedule'] = <I, O>(
@@ -210,18 +219,21 @@ export const make = (opts: {
       yield* Ref.update(pendingCount, (count) => count + 1);
       const fiber = yield* invokeFiber(op, input).pipe(
         Effect.ensuring(Ref.update(pendingCount, (count) => count - 1)),
+        Effect.tapErrorCause((cause) =>
+          Effect.sync(() => {
+            if (Cause.isInterruptedOnly(cause)) {
+              log.warn('scheduled operation interrupted', { opKey: op.meta.key });
+            } else {
+              log.error('scheduled operation failed', { opKey: op.meta.key, cause: Cause.pretty(cause) });
+            }
+          }),
+        ),
         Effect.ignore,
         Effect.forkDaemon,
       );
       pendingFibers.add(fiber);
-      fiber.addObserver((exit) => {
+      fiber.addObserver(() => {
         pendingFibers.delete(fiber);
-
-        if (Exit.isInterrupted(exit)) {
-          log.warn('scheduled operation interrupted', { opKey: op.meta.key });
-        } else if (Exit.isFailure(exit)) {
-          log.error('operation schedule failed', { opKey: op.meta.key, cause: Cause.pretty(exit.cause) });
-        }
       });
     }).pipe(
       Effect.onInterrupt(() =>

@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -13,6 +14,7 @@ import type * as Scope from 'effect/Scope';
 
 import { ServiceNotAvailableError, ServiceResolver, type LayerSpec } from '@dxos/compute';
 import { assertArgument } from '@dxos/invariant';
+import { log } from '@dxos/log';
 
 import { LayerDependencyCycleError } from './errors';
 
@@ -105,7 +107,29 @@ export class LayerStack {
         const requirements = resolveAffinity
           ? this.#resolveServices(resolveAffinity, context, newSlice.requires)
           : Context.empty();
-        yield* newSlice.init(requirements as Context.Context<unknown>);
+        yield* newSlice.init(requirements as Context.Context<unknown>).pipe(
+          Effect.tapErrorCause((cause) =>
+            Effect.sync(() => {
+              const failure = Cause.failureOption(cause);
+              const missingKey =
+                Option.isSome(failure) && failure.value._tag === 'ServiceNotAvailable'
+                  ? (failure.value.context as { service?: string }).service
+                  : undefined;
+              const offendingLayers = missingKey
+                ? newSlice.layers
+                    .filter((l) => l.requires.some((r) => r.key === missingKey))
+                    .map((l) => ({ provides: l.provides.map((p) => p.key), requires: l.requires.map((r) => r.key) }))
+                : undefined;
+              log.error('LayerStack slice init failed', {
+                affinity,
+                context,
+                missingKey,
+                offendingLayers,
+                cause: Cause.pretty(cause),
+              });
+            }),
+          ),
+        );
         this.#slices.push(newSlice);
         slice = newSlice;
       }
@@ -282,6 +306,10 @@ class Slice {
 
   get requires(): Context.Tag<any, any>[] {
     return this.#requires;
+  }
+
+  get layers(): readonly LayerSpec.LayerSpec[] {
+    return this.#layers;
   }
 
   get services(): Context.Context<unknown> {

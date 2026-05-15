@@ -23,7 +23,6 @@ import { DXN } from '@dxos/echo';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { ServiceNotAvailableError } from './errors';
 import { type ProcessIdGenerator, UUIDProcessIdGenerator } from './process-id';
 import { ProcessManagerService } from './process-manager-service';
 import { createProcessTraceService } from './process-trace';
@@ -414,14 +413,6 @@ export class ProcessManagerImpl implements Manager {
         serviceCtx = yield* ServiceResolver.resolveAll(externalServices, resolutionContext).pipe(
           Effect.provideService(ServiceResolver.ServiceResolver, this.#serviceResolver),
           Effect.provideService(Scope.Scope, scope),
-          Effect.catchTag('ServiceNotAvailable', (err) =>
-            Effect.die(
-              new ServiceNotAvailableError({
-                message: err.message,
-                context: { ...err.context, process: definition.key, processName: params.name },
-              }),
-            ),
-          ),
           Effect.orDie,
         );
       }
