@@ -120,23 +120,43 @@ export class SpacesDumper {
  * (`dxn:echo:<space>:<id>` → `echo://<space>/<id>`). Compared semantically via
  * `EchoURI.parse` (which normalizes both forms).
  */
-const ECHO_ID_FIELDS = new Set(['@dxn', '@parent', '@source', '@target']);
+const ECHO_ID_FIELDS = new Set(['@uri', '@dxn', '@parent', '@source', '@target']);
+
+/**
+ * The self-URI attribute was renamed `@dxn` → `@uri` mid-PR. Snapshots predating the
+ * rename use `@dxn`; current output uses `@uri`. Treat the two keys as aliases.
+ */
+const SELF_URI_ALIASES = new Set(['@uri', '@dxn']);
+const aliasedValue = (record: Record<string, any>, key: string): any => {
+  if (key in record) {
+    return record[key];
+  }
+  if (SELF_URI_ALIASES.has(key)) {
+    for (const alias of SELF_URI_ALIASES) {
+      if (alias !== key && alias in record) {
+        return record[alias];
+      }
+    }
+  }
+  return undefined;
+};
 
 export const equals = (actual: Record<string, any>, expected: Record<string, any>): boolean => {
   for (const [key, value] of Object.entries(expected)) {
     if (key === '@timestamp') {
       continue;
     }
-    if (ECHO_ID_FIELDS.has(key) && typeof value === 'string' && typeof actual[key] === 'string') {
+    const actualValue = aliasedValue(actual, key);
+    if (ECHO_ID_FIELDS.has(key) && typeof value === 'string' && typeof actualValue === 'string') {
       // Normalize both via EchoURI.parse so legacy `dxn:echo:` and new `echo://` formats compare equal.
-      if (EchoURI.parse(value) !== EchoURI.parse(actual[key])) {
-        log.warn('value mismatch', { key, expected: value, actual: actual[key] });
+      if (EchoURI.parse(value) !== EchoURI.parse(actualValue)) {
+        log.warn('value mismatch', { key, expected: value, actual: actualValue });
         return false;
       }
       continue;
     }
-    if (!isEqual(value, actual[key])) {
-      log.warn('value mismatch', { key, expected: value, actual: actual[key] });
+    if (!isEqual(value, actualValue)) {
+      log.warn('value mismatch', { key, expected: value, actual: actualValue });
       return false;
     }
   }

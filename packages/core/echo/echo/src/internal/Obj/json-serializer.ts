@@ -30,14 +30,15 @@ import {
   ATTR_DELETED,
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
-  ATTR_SELF_DXN,
+  ATTR_SELF_URI,
+  ATTR_SELF_URI_LEGACY,
   ObjectDatabaseId,
   type ObjectJSON,
   RelationSourceDXNId,
   RelationSourceId,
   RelationTargetDXNId,
   RelationTargetId,
-  SelfDXNId,
+  SelfURIId,
   assertObjectModel,
 } from '../Entity';
 import { Ref, type RefResolver, refFromEncodedReference, setRefResolver } from '../Ref';
@@ -150,7 +151,7 @@ export const objectFromJSON = async (
   }
 
   if (dxn) {
-    defineHiddenProperty(obj, SelfDXNId, dxn);
+    defineHiddenProperty(obj, SelfURIId, dxn);
   }
 
   if (database) {
@@ -161,7 +162,8 @@ export const objectFromJSON = async (
   invariant((obj as any)[ATTR_TYPE] === undefined, 'Invalid object model');
   invariant((obj as any)[ATTR_META] === undefined, 'Invalid object model');
   invariant((obj as any)[ATTR_DELETED] === undefined, 'Invalid object model');
-  invariant((obj as any)[ATTR_SELF_DXN] === undefined, 'Invalid object model');
+  invariant((obj as any)[ATTR_SELF_URI] === undefined, 'Invalid object model');
+  invariant((obj as any)[ATTR_SELF_URI_LEGACY] === undefined, 'Invalid object model');
   invariant((obj as any)[ATTR_RELATION_SOURCE] === undefined, 'Invalid object model');
   invariant((obj as any)[ATTR_RELATION_TARGET] === undefined, 'Invalid object model');
   return obj;
@@ -184,7 +186,8 @@ const stripInternalJsonKeys = (jsonData: unknown) => {
     [ATTR_TYPE]: _type,
     [ATTR_META]: _meta,
     [ATTR_DELETED]: _deleted,
-    [ATTR_SELF_DXN]: _selfDxn,
+    [ATTR_SELF_URI]: _selfUri,
+    [ATTR_SELF_URI_LEGACY]: _legacySelfUri,
     [ATTR_RELATION_SOURCE]: _relationSource,
     [ATTR_RELATION_TARGET]: _relationTarget,
     ...props

@@ -8,11 +8,11 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { EchoURI, ObjectId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
-import { type InternalObjectProps, SelfDXNId } from './model';
+import { type InternalObjectProps, SelfURIId } from './model';
 
 /**
  * Returns the EchoURI of an object.
- * Normalizes any legacy `dxn:echo:` / `dxn:queue:` form stored in `SelfDXNId`.
+ * Normalizes any legacy `dxn:echo:` / `dxn:queue:` form stored in `SelfURIId`.
  *
  * @internal
  */
@@ -21,9 +21,9 @@ export const getObjectEchoId = (object: any): EchoURI.EchoURI | undefined => {
   assertArgument(typeof object === 'object' && object != null, 'object', 'expected object');
   assumeType<InternalObjectProps>(object);
 
-  if (object[SelfDXNId]) {
-    invariant(EchoURI.isEchoId(object[SelfDXNId]), 'Invalid object model: invalid self dxn');
-    return EchoURI.parse(object[SelfDXNId]);
+  if (object[SelfURIId]) {
+    invariant(EchoURI.isEchoId(object[SelfURIId]), 'Invalid object model: invalid self dxn');
+    return EchoURI.parse(object[SelfURIId]);
   }
 
   if (!ObjectId.isValid(object.id)) {

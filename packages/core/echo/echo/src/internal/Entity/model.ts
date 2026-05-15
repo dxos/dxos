@@ -17,7 +17,8 @@ import {
   ATTR_DELETED,
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
-  ATTR_SELF_DXN,
+  ATTR_SELF_URI,
+  ATTR_SELF_URI_LEGACY,
   EntityKind,
   KindId,
   type MetaId,
@@ -31,12 +32,20 @@ import {
   RelationTargetDXNId,
   RelationTargetId,
   type SchemaId,
-  SelfDXNId,
+  SelfURIId,
   TypeId,
   type Version,
 } from '../common/types';
 
-export { ATTR_DELETED, ATTR_SELF_DXN, ObjectDatabaseId, ObjectDeletedId, ObjectVersionId, SelfDXNId };
+export {
+  ATTR_DELETED,
+  ATTR_SELF_URI,
+  ATTR_SELF_URI_LEGACY,
+  ObjectDatabaseId,
+  ObjectDeletedId,
+  ObjectVersionId,
+  SelfURIId,
+};
 
 /**
  * Internal runtime representation of an object.
@@ -45,7 +54,7 @@ export { ATTR_DELETED, ATTR_SELF_DXN, ObjectDatabaseId, ObjectDeletedId, ObjectV
 // NOTE: Each symbol has a jsdoc describing its purpose.
 export interface InternalObjectProps {
   readonly id: ObjectId;
-  readonly [SelfDXNId]: EchoURI.EchoURI;
+  readonly [SelfURIId]: EchoURI.EchoURI;
   readonly [KindId]: EntityKind;
   readonly [SchemaId]: Schema.Schema.AnyNoContext;
   readonly [TypeId]: URI.URI;
@@ -74,7 +83,7 @@ export interface ObjectMetaJSON {
 export interface ObjectJSON {
   id: ObjectId;
   [ATTR_TYPE]?: URI.URI;
-  [ATTR_SELF_DXN]?: EchoURI.EchoURI;
+  [ATTR_SELF_URI]?: EchoURI.EchoURI;
   [ATTR_PARENT]?: EchoURI.EchoURI; // Encoded reference
   [ATTR_DELETED]?: boolean;
   [ATTR_META]?: ObjectMetaJSON;

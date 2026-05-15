@@ -15,7 +15,7 @@ import {
   RelationTargetDXNId,
   RelationTargetId,
   SchemaId,
-  SelfDXNId,
+  SelfURIId,
   SnapshotKindId,
   TypeId,
 } from '../common/types';
@@ -83,7 +83,7 @@ export const getSnapshot = <T extends object>(obj: T): T => {
   // Type introspection symbols.
   copySymbolProperty(source, snapshot, TypeId);
   copySymbolProperty(source, snapshot, SchemaId);
-  copySymbolProperty(source, snapshot, SelfDXNId);
+  copySymbolProperty(source, snapshot, SelfURIId);
 
   // Database reference (required for Obj.getDatabase to work on snapshots).
   copySymbolProperty(source, snapshot, ObjectDatabaseId);

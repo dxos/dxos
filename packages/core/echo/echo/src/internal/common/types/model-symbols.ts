@@ -9,14 +9,19 @@
  */
 
 /**
- * Property name for self DXN when object is serialized to JSON.
+ * Property name for the object's own URI when serialized to JSON.
  */
-export const ATTR_SELF_DXN = '@dxn';
+export const ATTR_SELF_URI = '@uri';
 
 /**
- * DXN to the object itself.
+ * @deprecated Legacy JSON property name accepted on read for backward compat.
  */
-export const SelfDXNId = Symbol.for('@dxos/echo/DXN');
+export const ATTR_SELF_URI_LEGACY = '@dxn';
+
+/**
+ * Symbol carrying the object's own URI on live entities.
+ */
+export const SelfURIId = Symbol.for('@dxos/echo/URI');
 
 /**
  * Property name for deleted when object is serialized to JSON.

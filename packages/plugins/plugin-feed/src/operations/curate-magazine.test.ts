@@ -165,7 +165,7 @@ describe('curateMagazine', () => {
     // The bug behind the user-reported `addCore` invariant violation: when a
     // Post is added to magazine.posts via `Ref.make`, the persisted ref's DXN
     // is in local-id form (`dxn:echo:@:<id>`), but a Post read fresh from the
-    // queue via `queue.queryObjects()` carries a queue-scoped `SelfDXNId`
+    // queue via `queue.queryObjects()` carries a queue-scoped `SelfURIId`
     // (`dxn:queue:<spaceId>:<queueId>:<id>`). String-comparing the two forms
     // makes dedup fail, so subsequent curates re-process the post — call
     // `Ref.make` on the fresh queue proxy (with a fresh `core`) — and ECHO's

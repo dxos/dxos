@@ -107,12 +107,10 @@ export const extractDxnsFromObject = (obj: unknown): URI.URI[] => {
         }
       }
 
-      // Check for @dxn key: { "@dxn": "dxn:..." }
-      if ('@dxn' in record && typeof record['@dxn'] === 'string') {
-        const dxnStr = record['@dxn'];
-        if (typeof dxnStr === 'string' && dxnStr.startsWith('dxn:')) {
-          addDxn(dxnStr);
-        }
+      // Check for @uri key (new) or @dxn key (legacy): { "@uri": "echo://…" } / { "@dxn": "dxn:…" }
+      const selfUri = (record as any)['@uri'] ?? (record as any)['@dxn'];
+      if (typeof selfUri === 'string' && (selfUri.startsWith('dxn:') || selfUri.startsWith('echo:'))) {
+        addDxn(selfUri);
       }
 
       // Check for reference blocks: { _tag: 'reference', reference: { dxn: ... } }

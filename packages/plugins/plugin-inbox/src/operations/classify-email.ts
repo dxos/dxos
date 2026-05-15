@@ -81,7 +81,8 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
         // Find the feed by querying for mailboxes in the database.
         // After the identifier refactor, message DXNs are ECHO-kind (dxn:echo:spaceId:itemId)
         // and no longer embed the queue/feed ID. We locate the feed via the mailbox object.
-        const messageEchoId = EchoURI.tryParse(message['@dxn']);
+        // Accept new `@uri` and legacy `@dxn` field name for backward compat with old snapshots.
+        const messageEchoId = EchoURI.tryParse((message as any)['@uri'] ?? (message as any)['@dxn']);
         if (!messageEchoId) {
           return yield* Effect.fail(new Error('Message does not have a valid DXN'));
         }

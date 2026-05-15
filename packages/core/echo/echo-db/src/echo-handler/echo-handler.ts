@@ -47,7 +47,7 @@ import {
   SchemaId,
   SchemaMetaSymbol,
   SchemaValidator,
-  SelfDXNId,
+  SelfURIId,
   TypeId,
   assertObjectModel,
   createProxy,
@@ -156,7 +156,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (isRootDataObject(target)) {
       switch (p) {
         case 'id':
-        case SelfDXNId:
+        case SelfURIId:
         case Entity.KindId:
         case ParentId:
         case ChangeId:
@@ -195,7 +195,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         case 'id': {
           return target[symbolInternals].core.id;
         }
-        case SelfDXNId: {
+        case SelfURIId: {
           if (target[symbolInternals].database) {
             return EchoURI.fromSpaceAndObjectId(
               target[symbolInternals].database.spaceId,

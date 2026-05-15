@@ -12,12 +12,12 @@ import {
   ATTR_META,
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
-  ATTR_SELF_DXN,
+  ATTR_SELF_URI,
   ATTR_TYPE,
   MetaId,
   RelationSourceDXNId,
   RelationTargetDXNId,
-  SelfDXNId,
+  SelfURIId,
   TypeId,
 } from '../types';
 
@@ -55,8 +55,8 @@ export const typedJsonSerializer = function (this: any) {
     result[ATTR_META] = serializeMeta(this[MetaId]);
   }
 
-  if (this[SelfDXNId]) {
-    result[ATTR_SELF_DXN] = this[SelfDXNId];
+  if (this[SelfURIId]) {
+    result[ATTR_SELF_URI] = this[SelfURIId];
   }
 
   if (this[RelationSourceDXNId]) {

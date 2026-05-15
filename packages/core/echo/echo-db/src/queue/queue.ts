@@ -8,7 +8,7 @@ import { DeferredTask } from '@dxos/async';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Database, Entity, Filter, Obj, Query, type Ref } from '@dxos/echo';
-import { type ObjectJSON, ParentId, SelfDXNId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
+import { type ObjectJSON, ParentId, SelfURIId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
 import { defineHiddenProperty } from '@dxos/echo/internal';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EchoURI, ObjectId, type SpaceId } from '@dxos/keys';
@@ -203,7 +203,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
 
     for (const item of items) {
       setRefResolverOnData(item, this._refResolver);
-      defineHiddenProperty(item, SelfDXNId, EchoURI.fromSpaceAndObjectId(this._spaceId, item.id));
+      defineHiddenProperty(item, SelfURIId, EchoURI.fromSpaceAndObjectId(this._spaceId, item.id));
       if (this._parentEntity) {
         defineHiddenProperty(item, ParentId, this._parentEntity);
       }
