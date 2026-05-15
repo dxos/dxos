@@ -7,7 +7,7 @@ import { Writable } from 'streamx';
 
 import { Event, Trigger, latch } from '@dxos/async';
 import { inspectObject } from '@dxos/debug';
-import type { ReadStreamOptions } from '@dxos/hypercore';
+import { type ReadStreamOptions } from '@dxos/hypercore';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
