@@ -96,12 +96,12 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
     );
 
     const dispatchToggle = useCallback(
-      (pluginId: string, nextEnabled: boolean, opts?: { cascade?: boolean }) =>
+      (pluginId: string, nextEnabled: boolean) =>
         Effect.gen(function* () {
           if (nextEnabled) {
             yield* manager.enable(pluginId);
           } else {
-            yield* manager.disable(pluginId, opts);
+            yield* manager.disable(pluginId);
           }
           yield* invoke(ObservabilityOperation.SendEvent, {
             name: 'plugins.toggle',
@@ -152,7 +152,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
       const pluginId = cascadePrompt.pluginId;
       closeCascadePrompt();
       if (pluginId) {
-        void dispatchToggle(pluginId, false, { cascade: true });
+        void dispatchToggle(pluginId, false);
       }
     }, [cascadePrompt.pluginId, closeCascadePrompt, dispatchToggle]);
 

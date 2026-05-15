@@ -1747,23 +1747,7 @@ describe('PluginManager', () => {
       }),
     );
 
-    it.effect('disable without options refuses when enabled dependents exist', () =>
-      Effect.gen(function* () {
-        const a = makePlugin('a');
-        const b = makePlugin('b', ['a']);
-        const manager = PluginManager.make({ plugins: [a, b], core: [], pluginLoader });
-
-        yield* manager.enable('b');
-        assert.deepStrictEqual(manager.getEnabled(), ['a', 'b']);
-
-        const exit = yield* Effect.exit(manager.disable('a'));
-        assert.isTrue(Exit.isFailure(exit));
-        // `a` stays enabled when the disable is refused.
-        assert.deepStrictEqual(manager.getEnabled(), ['a', 'b']);
-      }),
-    );
-
-    it.effect('disable with cascade tears down dependents before the target', () =>
+    it.effect('disable cascades to transitive dependents by default', () =>
       Effect.gen(function* () {
         const a = makePlugin('a');
         const b = makePlugin('b', ['a']);
@@ -1773,13 +1757,14 @@ describe('PluginManager', () => {
         yield* manager.enable('c');
         assert.deepStrictEqual(manager.getEnabled(), ['a', 'b', 'c']);
 
-        const ok = yield* manager.disable('a', { cascade: true });
+        const ok = yield* manager.disable('a');
         assert.isTrue(ok);
+        // Cascade tears down `c` (leaf) and `b` before `a`.
         assert.deepStrictEqual(manager.getEnabled(), []);
       }),
     );
 
-    it.effect('disable with cascade refuses when a transitive dependent is core', () =>
+    it.effect('default disable refuses when a transitive dependent is core', () =>
       Effect.gen(function* () {
         const lib = makePlugin('lib');
         const coreClient = makePlugin('coreClient', ['lib']);
@@ -1790,7 +1775,7 @@ describe('PluginManager', () => {
           pluginLoader,
         });
 
-        const exit = yield* Effect.exit(manager.disable('lib', { cascade: true }));
+        const exit = yield* Effect.exit(manager.disable('lib'));
         assert.isTrue(Exit.isFailure(exit));
         // No state mutation when cascade is refused for a core dependent.
         assert.isTrue(manager.getEnabled().includes('lib'));
@@ -1798,14 +1783,14 @@ describe('PluginManager', () => {
       }),
     );
 
-    it.effect('disable with ignoreDependents disables only the target', () =>
+    it.effect('disable with cascade: false disables only the target', () =>
       Effect.gen(function* () {
         const a = makePlugin('a');
         const b = makePlugin('b', ['a']);
         const manager = PluginManager.make({ plugins: [a, b], core: [], pluginLoader });
 
         yield* manager.enable('b');
-        const ok = yield* manager.disable('a', { ignoreDependents: true });
+        const ok = yield* manager.disable('a', { cascade: false });
         assert.isTrue(ok);
         // `b` is left enabled-but-broken (no `a` to satisfy its declared dep).
         assert.deepStrictEqual(manager.getEnabled(), ['b']);

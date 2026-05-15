@@ -17,7 +17,6 @@ import * as Ref from 'effect/Ref';
 import { runAndForwardErrors } from '@dxos/effect';
 import { Performance } from '@dxos/effect';
 import { BaseError } from '@dxos/errors';
-import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import * as ActivationEvent from './activation-event';
@@ -215,21 +214,25 @@ export interface PluginManager {
   /**
    * Removes a plugin from the manager (disables then unregisters).
    *
-   * Honors the same dependent-handling options as {@link disable}.
+   * Honors the same cascade option as {@link disable}.
    */
-  remove(id: string, opts?: { cascade?: boolean; ignoreDependents?: boolean }): Effect.Effect<boolean, Error>;
+  remove(id: string, opts?: { cascade?: boolean }): Effect.Effect<boolean, Error>;
 
   /**
    * Disables a plugin.
    *
-   * By default, refuses to disable a plugin that has currently-enabled dependents
-   * — the resulting {@link Plugin.PluginDependencyError} carries the dependent
-   * ids so the caller can decide. Pass `cascade: true` to disable the transitive
-   * dependents first; pass `ignoreDependents: true` (mutually exclusive with
-   * `cascade`) to disable only the named plugin and leave its dependents in a
-   * broken state.
+   * By default, cascades to currently-enabled dependents (transitively, leaves
+   * first) so disabling a depended-upon plugin never leaves its dependents
+   * stranded. Pass `cascade: false` to disable only the named plugin and leave
+   * its dependents enabled-but-broken — VS Code-style disable parity for
+   * callers that want the escape hatch (e.g. when swapping in an alternative
+   * implementation that satisfies the dependents' needs in its own way).
+   *
+   * Fails with {@link Plugin.PluginDependencyError} (`reason: 'core-dependent'`)
+   * when cascading would require disabling a core plugin; UI flows should
+   * surface their own confirmation before calling `disable` with the default.
    */
-  disable(id: string, opts?: { cascade?: boolean; ignoreDependents?: boolean }): Effect.Effect<boolean, Error>;
+  disable(id: string, opts?: { cascade?: boolean }): Effect.Effect<boolean, Error>;
 
   /**
    * Returns the plugin ids that the given plugin declares as dependencies.
@@ -766,7 +769,7 @@ class ManagerImpl implements PluginManager {
    * @param id The id of the plugin.
    * @param opts See {@link PluginManager.remove}.
    */
-  remove(id: string, opts?: { cascade?: boolean; ignoreDependents?: boolean }): Effect.Effect<boolean, Error> {
+  remove(id: string, opts?: { cascade?: boolean }): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {
       log('remove plugin', { id });
       const wasDev = this._devPlugins.has(id);
@@ -808,13 +811,10 @@ class ManagerImpl implements PluginManager {
    * @param id The id of the plugin.
    * @param opts See {@link PluginManager.disable}.
    */
-  disable(id: string, opts?: { cascade?: boolean; ignoreDependents?: boolean }): Effect.Effect<boolean, Error> {
-    invariant(
-      !(opts?.cascade && opts?.ignoreDependents),
-      `disable(${id}): \`cascade\` and \`ignoreDependents\` are mutually exclusive.`,
-    );
+  disable(id: string, opts?: { cascade?: boolean }): Effect.Effect<boolean, Error> {
+    const cascade = opts?.cascade !== false;
     return Effect.gen(this, function* () {
-      log('disable plugin', { id, ...opts });
+      log('disable plugin', { id, cascade });
       if (this._get(this._coreAtom).includes(id)) {
         return false;
       }
@@ -824,16 +824,9 @@ class ManagerImpl implements PluginManager {
         return false;
       }
 
-      if (!opts?.ignoreDependents) {
+      if (cascade) {
         const enabledDependents = this._collectDependents(id, { transitive: true, enabledOnly: true });
         if (enabledDependents.length > 0) {
-          if (!opts?.cascade) {
-            return yield* Effect.fail(
-              new Plugin.PluginDependencyError({
-                context: { id, reason: 'has-dependents', dependents: enabledDependents },
-              }),
-            );
-          }
           const coreDependent = enabledDependents.find((dependentId) =>
             this._get(this._coreAtom).includes(dependentId),
           );
@@ -860,8 +853,8 @@ class ManagerImpl implements PluginManager {
 
   /**
    * Disables a single plugin without consulting its dependents. Used by
-   * {@link disable} after the dependents check has been performed (or skipped
-   * via `ignoreDependents`).
+   * {@link disable} after the dependents pass has run (or been skipped via
+   * `cascade: false`).
    */
   private _disableOne(id: string): Effect.Effect<boolean, Error> {
     return Effect.gen(this, function* () {

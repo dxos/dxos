@@ -321,7 +321,7 @@ const usePluginActions = ({
 
   const confirmCascadeDisable = useCallback(() => {
     closeCascadePrompt();
-    void runAndForwardErrors(manager.disable(pluginId, { cascade: true }));
+    void runAndForwardErrors(manager.disable(pluginId));
   }, [closeCascadePrompt, manager, pluginId]);
 
   const handleEnableChange = useCallback(

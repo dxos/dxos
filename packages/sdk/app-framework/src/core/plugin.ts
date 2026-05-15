@@ -452,8 +452,6 @@ export class LazyPluginError extends BaseError.extend('LazyPluginError', 'Failed
  *  - `'install-failed'` — dep was found in the catalog but `add()` failed.
  *    `cause` carries the original error.
  *  - `'cycle'` — closure walk detected a cycle. `context.path` is the cycle path.
- *  - `'has-dependents'` — disable refused because enabled plugins depend on this one.
- *    `context.dependents` lists them.
  *  - `'core-dependent'` — cascade-disable would have to disable a core plugin.
  *    `context.coreDependent` is the blocking id.
  */
