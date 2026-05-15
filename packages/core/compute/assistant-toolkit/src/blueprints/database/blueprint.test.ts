@@ -237,7 +237,7 @@ describe('Database Blueprint', () => {
             role: 'Director',
           }),
         );
-        const relationDxn = Relation.getId(relation);
+        const relationDxn = Relation.getURI(relation);
         yield* agent.submitPrompt(`Delete the relation ${relationDxn}.`);
         yield* agent.waitForCompletion();
         expect(Relation.isDeleted(relation)).toBe(true);

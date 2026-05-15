@@ -350,10 +350,11 @@ export const setValue: (rel: Mutable<Unknown>, path: readonly (string | number)[
 //
 
 /**
- * Get the canonical EchoURI of the relation.
- * Accepts both reactive relations and snapshots.
+ * Get the canonical URI of the relation. Returns `URI.URI` — today always an EchoURI,
+ * but future entity kinds may surface other URI schemes; narrow with `EchoURI.parse(uri)`
+ * or `DXN.parse(uri)` at the point of use. Accepts both reactive relations and snapshots.
  */
-export const getId = (entity: Unknown | Snapshot): EchoURI.EchoURI => internal.getId(entity);
+export const getURI = (entity: Unknown | Snapshot): URI.URI => internal.getId(entity);
 
 /**
  * @returns The DXN of the relation's type.

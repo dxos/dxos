@@ -123,9 +123,11 @@ export type Meta = typeof Meta;
 export type JSON = internal.ObjectJSON;
 
 /**
- * Get the canonical EchoURI of an entity (object or relation).
+ * Get the canonical URI of an entity (object or relation). Returns `URI.URI` —
+ * today always an EchoURI, but future entity kinds may surface other URI schemes;
+ * narrow with `EchoURI.parse(uri)` or `DXN.parse(uri)` at the point of use.
  */
-export const getId = (entity: Unknown | Snapshot): EchoURI.EchoURI => internal.getId(entity);
+export const getURI = (entity: Unknown | Snapshot): URI.URI => internal.getId(entity);
 
 /**
  * Get the DXN of an entity's type.

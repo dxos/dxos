@@ -128,7 +128,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
         return undefined;
       }
       const feed = feeds.find((feed) => Feed.getQueueDxn(feed)?.toString() === queueTarget);
-      return feed ? Ref.fromURI(Entity.getId(feed)) : undefined;
+      return feed ? Ref.fromURI(Entity.getURI(feed)) : undefined;
     }, [queueTarget, feeds]);
 
     const viewSchema = useMemo(() => {

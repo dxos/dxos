@@ -151,7 +151,7 @@ export const FormCellEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
       results
         .map((obj) => {
           return {
-            id: Entity.getId(obj),
+            id: Entity.getURI(obj),
             label: getValue(obj, fieldProjection.field.referencePath!) || obj.id.toString(),
           };
         })
