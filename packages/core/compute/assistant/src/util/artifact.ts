@@ -23,7 +23,7 @@ export const createArtifactElement = (id: ObjectId) => `<artifact id=${id} />`;
  */
 // TODO(burdon): Rename RefFromLLM?
 export const ArtifactId: Schema.Schema<string> & {
-  toEchoId: (reference: ArtifactId, owningSpaceId?: SpaceId) => EchoURI.EchoURI;
+  toEchoURI: (reference: ArtifactId, owningSpaceId?: SpaceId) => EchoURI.EchoURI;
   resolve: <S extends Type.AnyEntity>(
     schema: S,
     ref: ArtifactId,
@@ -43,7 +43,7 @@ export const ArtifactId: Schema.Schema<string> & {
     '01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
   ],
 }) {
-  static toEchoId(reference: ArtifactId, owningSpaceId?: SpaceId): EchoURI.EchoURI {
+  static toEchoURI(reference: ArtifactId, owningSpaceId?: SpaceId): EchoURI.EchoURI {
     // Allow @dxn: prefix for compatibility with in-text references.
     if (reference.startsWith('@dxn:')) {
       return EchoURI.parse(reference.slice(1));
@@ -74,8 +74,8 @@ export const ArtifactId: Schema.Schema<string> & {
     schema: S,
     ref: ArtifactId,
   ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Database.Service> {
-    const echoId = ArtifactId.toEchoId(ref);
-    return Database.resolve(Ref.fromURI(echoId), schema);
+    const uri = ArtifactId.toEchoURI(ref);
+    return Database.resolve(Ref.fromURI(uri), schema);
   }
 };
 
@@ -85,7 +85,7 @@ export type ArtifactId = Schema.Schema.Type<typeof ArtifactId>;
  * Schema that decodes ECHO reference object from an LLM-friendly input.
  */
 export const RefFromLLM = Schema.transform(ArtifactId, Ref.Ref(Obj.Unknown), {
-  decode: (fromA, fromI) => EncodedReference.fromURI(ArtifactId.toEchoId(fromA)),
+  decode: (fromA, fromI) => EncodedReference.fromURI(ArtifactId.toEchoURI(fromA)),
   encode: (toI, toA) => EncodedReference.toURI(toI),
   strict: false,
 }).annotations({

@@ -233,7 +233,7 @@ describe('Database', () => {
     expect(task.id).to.exist;
     expect(() => getObjectCore(task)).to.throw();
     expect(Obj.getSchema(task)?.ast).to.eq(TestSchema.Task.ast);
-    expect(Obj.getTypeDXN(task)?.toString()).to.eq('dxn:com.example.type.task:0.1.0');
+    expect(Obj.getTypeURI(task)?.toString()).to.eq('dxn:com.example.type.task:0.1.0');
     expect(Obj.getTypename(task)).to.eq('com.example.type.task');
 
     db.add(task);

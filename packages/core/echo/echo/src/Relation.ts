@@ -169,8 +169,8 @@ export const make = <S extends Type.AnyRelation>(
     delete props[internal.MetaId];
   }
 
-  const sourceDXN = internal.getObjectEchoId(props[Source]) ?? raise(new Error('Unresolved relation source'));
-  const targetDXN = internal.getObjectEchoId(props[Target]) ?? raise(new Error('Unresolved relation target'));
+  const sourceDXN = internal.getObjectEchoUri(props[Source]) ?? raise(new Error('Unresolved relation source'));
+  const targetDXN = internal.getObjectEchoUri(props[Target]) ?? raise(new Error('Unresolved relation target'));
 
   (props as any)[internal.RelationSourceDXNId] = sourceDXN;
   (props as any)[internal.RelationTargetDXNId] = targetDXN;
@@ -354,12 +354,12 @@ export const setValue: (rel: Mutable<Unknown>, path: readonly (string | number)[
  * but future entity kinds may surface other URI schemes; narrow with `EchoURI.parse(uri)`
  * or `DXN.parse(uri)` at the point of use. Accepts both reactive relations and snapshots.
  */
-export const getURI = (entity: Unknown | Snapshot): URI.URI => internal.getId(entity);
+export const getURI = (entity: Unknown | Snapshot): URI.URI => internal.getUri(entity);
 
 /**
  * @returns The DXN of the relation's type.
  */
-export const getTypeDXN: (obj: internal.AnyProperties) => URI.URI | undefined = internal.getTypeDXN;
+export const getTypeURI: (obj: internal.AnyProperties) => URI.URI | undefined = internal.getTypeURI;
 
 /**
  * Get the schema of the relation.

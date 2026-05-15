@@ -37,7 +37,7 @@ const matchesAst = (ast: any, message: Message.Message, tags: Tag.Tag[]): boolea
       if (ast.typename) {
         let messageTypeDXN: string | undefined;
         try {
-          messageTypeDXN = Obj.getTypeDXN(message).toString();
+          messageTypeDXN = Obj.getTypeURI(message).toString();
         } catch {
           messageTypeDXN = undefined;
         }

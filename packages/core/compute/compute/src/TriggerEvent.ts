@@ -33,6 +33,11 @@ const _QueueEvent = Schema.Struct({
  * Explicit interface (rather than `Schema.Schema.Type<typeof _QueueEvent>`)
  * so consumers reference the named type in their declaration emit instead of
  * expanding `{ queue: EchoURI; ... }` and requiring a transitive `EchoURI` import.
+ *
+ * The original `DXN.Schema` resolved to `Schema<DXN, string>`, so inferred output
+ * types collapsed to plain `string` and didn't drag the brand into emit. `EchoURI.Schema`
+ * is identity-encoded (`Schema<EchoURI, EchoURI>`) so the brand survives — and downstream
+ * packages need the explicit interface to keep `EchoURI` out of their `.d.ts` output.
  */
 export interface QueueEvent {
   readonly queue: EchoURI.EchoURI;

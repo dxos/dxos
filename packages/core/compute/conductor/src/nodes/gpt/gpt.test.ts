@@ -78,7 +78,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
           );
           const input: GptInput = {
             prompt: 'I have twice as many oranges as apples. How many oranges do I have?',
-            conversation: Ref.fromURI(conversation.dxn),
+            conversation: Ref.fromURI(conversation.uri),
           };
 
           const output = yield* gptNode.exec!(ValueBag.make(input)).pipe(
@@ -91,7 +91,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
           expect(output.text.length).toBeGreaterThan(10);
 
           const conversationMessages = yield* Effect.promise(() =>
-            queues.get<Message.Message>(conversation.dxn).queryObjects(),
+            queues.get<Message.Message>(conversation.uri).queryObjects(),
           );
           log.info('conversationMessages', { conversationMessages });
           expect(conversationMessages.at(-1)?.sender.role).toEqual('assistant');

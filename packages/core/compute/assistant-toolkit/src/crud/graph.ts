@@ -15,9 +15,7 @@ import { Database, Entity, Feed, Filter, Obj, Query, Type } from '@dxos/echo';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import {
   ReferenceAnnotationId,
-  RelationSourceDXNId,
   RelationSourceId,
-  RelationTargetDXNId,
   RelationTargetId,
   createObject,
   getTypeAnnotation,
@@ -263,24 +261,26 @@ export const sanitizeObjects = (
           return recurse(value);
         });
 
+        let sourceUri: EchoURI.EchoURI | undefined;
+        let targetUri: EchoURI.EchoURI | undefined;
         if (Entity.getKind(entry.schema) === 'relation') {
-          const sourceDXN = resolveId(data.source);
-          if (!sourceDXN) {
+          sourceUri = resolveId(data.source);
+          if (!sourceUri) {
             log.warn('source not found', { source: data.source });
           }
-          const targetDXN = resolveId(data.target);
-          if (!targetDXN) {
+          targetUri = resolveId(data.target);
+          if (!targetUri) {
             log.warn('target not found', { target: data.target });
           }
           delete data.source;
           delete data.target;
-          data[RelationSourceDXNId] = sourceDXN;
-          data[RelationTargetDXNId] = targetDXN;
         }
 
         return {
           data,
           schema: entry.schema,
+          sourceUri,
+          targetUri,
         };
       })
       .filter((object) => !existingIds.has(object.data.id)); // TODO(dmaretskyi): This dissallows updating existing objects.
@@ -297,23 +297,21 @@ export const sanitizeObjects = (
       throw new Error(`Object IDs do not point to existing objects: ${missing.join(', ')}`);
     }
 
-    return res.flatMap(({ data, schema }) => {
+    return res.flatMap(({ data, schema, sourceUri, targetUri }) => {
       let skip = false;
-      if (RelationSourceDXNId in data) {
-        const id = EchoURI.getObjectId(data[RelationSourceDXNId] as EchoURI.EchoURI);
-        const obj = objects.find((object) => object.id === id) ?? enitties.get(id!);
+      if (sourceUri) {
+        const id = EchoURI.getObjectId(sourceUri);
+        const obj = objects.find((object) => object.id === id) ?? (id ? enitties.get(id) : undefined);
         if (obj) {
-          delete data[RelationSourceDXNId];
           data[RelationSourceId] = obj;
         } else {
           skip = true;
         }
       }
-      if (RelationTargetDXNId in data) {
-        const id = EchoURI.getObjectId(data[RelationTargetDXNId] as EchoURI.EchoURI);
-        const obj = objects.find((object) => object.id === id) ?? enitties.get(id!);
+      if (targetUri) {
+        const id = EchoURI.getObjectId(targetUri);
+        const obj = objects.find((object) => object.id === id) ?? (id ? enitties.get(id) : undefined);
         if (obj) {
-          delete data[RelationTargetDXNId];
           data[RelationTargetId] = obj;
         } else {
           skip = true;

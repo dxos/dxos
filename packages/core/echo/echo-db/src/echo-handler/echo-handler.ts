@@ -231,7 +231,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           return this._getRelationTarget(target);
         }
         case TypeId:
-          return this.getTypeDXN(target);
+          return this.getTypeURI(target);
         case MetaId:
           return this.getMeta(target);
         case ObjectDeletedId:
@@ -334,7 +334,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (schema && typeof schema === 'object' && SchemaMetaSymbol in schema) {
       return (schema as any)[SchemaMetaSymbol].typename;
     }
-    return this.getTypeDXN(target);
+    return this.getTypeURI(target);
   }
 
   private _getParent(target: ProxyTarget): any {
@@ -613,7 +613,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return target[symbolInternals].database.schemaRegistry.query({ id: typeURI }).runSync()[0];
   }
 
-  getTypeDXN(target: ProxyTarget): URI.URI | undefined {
+  getTypeURI(target: ProxyTarget): URI.URI | undefined {
     if (target[symbolNamespace] !== DATA_NAMESPACE) {
       return undefined;
     }
@@ -1004,7 +1004,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
             [EventId]: new Event(),
           };
           const metaReified = this._getReified(metaTarget);
-          const typeDXN = this.getTypeDXN(target);
+          const typeDXN = this.getTypeURI(target);
 
           data = {
             id: target[symbolInternals].core.id,

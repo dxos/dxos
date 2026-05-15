@@ -12,7 +12,7 @@ import { assumeType, deepMapValues, visitValues } from '@dxos/util';
 
 import type * as Database from '../../Database';
 import type * as Obj from '../../Obj';
-import { getTypeDXN, setTypename } from '../Annotation';
+import { getTypeURI, setTypename } from '../Annotation';
 import { attachTypedJsonSerializer, defineHiddenProperty, typedJsonSerializer } from '../common/proxy';
 import {
   ATTR_META,
@@ -63,7 +63,7 @@ type SerializedObject<T extends { id: string }> = {
  * Converts object to it's JSON representation.
  */
 export const objectToJSON = <T extends AnyEntity>(obj: T): SerializedObject<T> => {
-  const typename = getTypeDXN(obj);
+  const typename = getTypeURI(obj);
   invariant(typename && typeof typename === 'string');
   return typedJsonSerializer.call(obj);
 };
@@ -76,17 +76,17 @@ export const objectToJSON = <T extends AnyEntity>(obj: T): SerializedObject<T> =
  *
  * @param jsonData - JSON representation of the object.
  * @param options.refResolver - Resolver for references.
- * @param options.dxn - Override object DXN.
+ * @param options.uri - Override object URI.
  * @param options.database - Database to associate with the object.
  */
 export const objectFromJSON = async (
   jsonData: unknown,
   {
     refResolver,
-    dxn,
+    uri,
     database,
     parent,
-  }: { refResolver?: RefResolver; dxn?: URI.URI; database?: Database.Database; parent?: Obj.Unknown } = {},
+  }: { refResolver?: RefResolver; uri?: URI.URI; database?: Database.Database; parent?: Obj.Unknown } = {},
 ): Promise<AnyEntity> => {
   assumeType<ObjectJSON>(jsonData);
   assertArgument(typeof jsonData === 'object' && jsonData !== null, 'jsonData', 'expect object');
@@ -150,8 +150,8 @@ export const objectFromJSON = async (
     defineHiddenProperty(obj, ParentId, parent);
   }
 
-  if (dxn) {
-    defineHiddenProperty(obj, SelfURIId, dxn);
+  if (uri) {
+    defineHiddenProperty(obj, SelfURIId, uri);
   }
 
   if (database) {

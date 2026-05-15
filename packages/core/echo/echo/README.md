@@ -59,12 +59,12 @@ Type.getVersion(schema) === '0.1.0'
 Obj.getDXN(obj) === DXN.parse('dxn:echo:SSSSSSSSSS:XXXXXXXXXXXXX')
 
 // We need this for objects that have typename defined, but their schema can't be resolved (Obj.getSchema(obj) === undefined)
-Obj.getTypeDXN(obj) === DXN.parse('dxn:type:example.com/type/Person:0.1.0');
+Obj.getTypeURI(obj) === DXN.parse('dxn:type:example.com/type/Person:0.1.0');
 
 /**
  * @deprecated
  **/
-// TODO(dmaretskyi): Consider keeping it as a shorthand for zType.getTypename(Obj.getSchema(obj)) ?? Obj.getTypeDXN(obj)?.asTypeDXN()?.type`
+// TODO(dmaretskyi): Consider keeping it as a shorthand for zType.getTypename(Obj.getSchema(obj)) ?? Obj.getTypeURI(obj)?.asTypeDXN()?.type`
 Obj.getTypename(obj) === 'com.example.type.person'
 ```
 

@@ -180,7 +180,7 @@ export class IndexQuerySource implements QuerySource {
           if (resultsWithNoSchema.length > 0) {
             log.warn('unable to resolve schema for queried objects', {
               count: resultsWithNoSchema.length,
-              types: Array.dedupe(results.map((_) => _.result && Entity.getTypeDXN(_.result)?.toString())),
+              types: Array.dedupe(results.map((_) => _.result && Entity.getTypeURI(_.result)?.toString())),
             });
           }
 
@@ -248,7 +248,7 @@ export class IndexQuerySource implements QuerySource {
       try {
         object = await Obj.fromJSON(json, {
           refResolver,
-          dxn: EchoURI.fromSpaceAndObjectId(result.spaceId, result.id),
+          uri: EchoURI.fromSpaceAndObjectId(result.spaceId, result.id),
           database,
         });
       } catch (err) {

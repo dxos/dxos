@@ -16,7 +16,7 @@ import { type InternalObjectProps, SelfURIId } from './model';
  *
  * @internal
  */
-export const getObjectEchoId = (object: any): EchoURI.EchoURI | undefined => {
+export const getObjectEchoUri = (object: any): EchoURI.EchoURI | undefined => {
   invariant(!Schema.isSchema(object), 'schema not allowed in this function');
   assertArgument(typeof object === 'object' && object != null, 'object', 'expected object');
   assumeType<InternalObjectProps>(object);

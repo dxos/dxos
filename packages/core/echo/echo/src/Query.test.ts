@@ -570,7 +570,7 @@ describe('query api', () => {
           id: feedId,
           name: 'test-feed',
         },
-        { dxn: feedDxn },
+        { uri: feedDxn },
       )) as Feed.Feed;
 
       const expectedFeedId = EchoURI.fromSpaceAndObjectId(spaceId, feedId);

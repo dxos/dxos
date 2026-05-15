@@ -8,11 +8,11 @@ import { EchoURI } from '@dxos/keys';
 
 import * as Obj from '../../Obj';
 import { TestSchema } from '../../testing';
-import { getSchemaDXN, getSchemaTypename, getTypeDXN, getTypename } from '../Annotation';
+import { getSchemaDXN, getSchemaTypename, getTypeURI, getTypename } from '../Annotation';
 import { getMetaChecked } from '../common/api';
 import { makeObject } from '../common/proxy';
 import { ATTR_TYPE, EntityKind, KindId, MetaId, TypeId, getSchema } from '../common/types';
-import { RelationSourceId, RelationTargetId, getObjectEchoId } from '../Entity';
+import { RelationSourceId, RelationTargetId, getObjectEchoUri } from '../Entity';
 import { Ref, StaticRefResolver } from '../Ref';
 import { createObject } from './create-object';
 import { objectFromJSON, objectToJSON } from './json-serializer';
@@ -64,9 +64,9 @@ describe('Object JSON serializer', () => {
         },
       ],
     });
-    expect(getTypeDXN(contactFromJson)?.toString()).toBe(getSchemaDXN(TestSchema.Person)!.toString());
+    expect(getTypeURI(contactFromJson)?.toString()).toBe(getSchemaDXN(TestSchema.Person)!.toString());
     expect(getTypename(contactFromJson)).toBe(getSchemaTypename(TestSchema.Person));
-    expect(getObjectEchoId(contactFromJson)?.toString()).toEqual(getObjectEchoId(contact)?.toString());
+    expect(getObjectEchoUri(contactFromJson)?.toString()).toEqual(getObjectEchoUri(contact)?.toString());
     expect(getSchema(contactFromJson)).toEqual(TestSchema.Person);
 
     expect(taskFromJson.id).toBe(task.id);
@@ -91,8 +91,8 @@ describe('Object JSON serializer', () => {
     expect(contactFromJson.name).toBe('Alice');
     expect(getSchema(contactFromJson)).toBeUndefined();
     expect(getTypename(contactFromJson)).toEqual(getSchemaTypename(TestSchema.Person));
-    expect(getObjectEchoId(contactFromJson)).toEqual(getObjectEchoId(contact));
-    expect(getTypeDXN(contactFromJson)).toEqual(getSchemaDXN(TestSchema.Person));
+    expect(getObjectEchoUri(contactFromJson)).toEqual(getObjectEchoUri(contact));
+    expect(getTypeURI(contactFromJson)).toEqual(getSchemaDXN(TestSchema.Person));
   });
 
   test('deserializes expando without leaking internal json keys', async () => {

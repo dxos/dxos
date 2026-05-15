@@ -58,9 +58,28 @@ export const getSchemaDXN = (schema: Schema.Schema.All): DXN.DXN | undefined => 
   if (objectAnnotation) {
     return DXN.fromNsidAndVersion(objectAnnotation.typename, objectAnnotation.version);
   }
-  // TODO(dmaretskyi): Add support for dynamic schema.
   const id = getTypeIdentifierAnnotation(schema);
   return id ? DXN.tryParse(id) : undefined;
+};
+
+/**
+ * @returns The schema's type identifier URI used as the object's `ATTR_TYPE`.
+ *
+ * For stored schemas returns the schema-as-object EchoURI so loaded objects ride along
+ * with their schema as a strong dependency. Falls back to the typename DXN for
+ * non-stored schemas.
+ */
+export const getSchemaTypeURI = (schema: Schema.Schema.All): URI.URI | undefined => {
+  assertArgument(Schema.isSchema(schema), 'schema', 'invalid schema');
+  const id = getTypeIdentifierAnnotation(schema);
+  if (id) {
+    return URI.make(id);
+  }
+  const objectAnnotation = getTypeAnnotation(schema);
+  if (objectAnnotation) {
+    return DXN.fromNsidAndVersion(objectAnnotation.typename, objectAnnotation.version);
+  }
+  return undefined;
 };
 
 /**
@@ -182,7 +201,7 @@ export const getTypename = (obj: AnyProperties): string | undefined => {
     // Try to extract typename from DXN.
     return getSchemaTypename(schema);
   } else {
-    const type = getTypeDXN(obj);
+    const type = getTypeURI(obj);
     if (!type) {
       return undefined;
     }
@@ -214,10 +233,10 @@ export const setTypename = (obj: any, typename: URI.URI): void => {
  * @example `dxn:com.example.type.person:1.0.0`
  * @example `echo:/01KKKG2FHWCMTR0BY00GJSVT1X` (stored schema)
  *
- * @internal (use Obj.getTypeDXN)
+ * @internal (use Obj.getTypeURI)
  */
 // TODO(burdon): Narrow type.
-export const getTypeDXN = (obj: AnyProperties): URI.URI | undefined => {
+export const getTypeURI = (obj: AnyProperties): URI.URI | undefined => {
   if (!obj) {
     return undefined;
   }
@@ -254,7 +273,7 @@ export const isInstanceOf = <Schema extends Schema.Schema.AnyNoContext>(
     throw new Error('Schema must have an object annotation.');
   }
 
-  const type = getTypeDXN(object);
+  const type = getTypeURI(object);
   if (type && type === schemaDXN) {
     return true;
   }

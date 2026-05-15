@@ -12,7 +12,7 @@ import { type Queue } from './types';
 export type MemoryQueueOptions<T extends Entity.Unknown> = {
   spaceId?: SpaceId;
   queueId?: ObjectId;
-  dxn?: EchoURI.EchoURI;
+  uri?: EchoURI.EchoURI;
   objects?: T[];
 };
 
@@ -21,14 +21,14 @@ export type MemoryQueueOptions<T extends Entity.Unknown> = {
  * @deprecated Use the actual queue with a mock service.
  */
 export class MemoryQueue<T extends Entity.Unknown> implements Queue<T> {
-  static make<T extends Entity.Unknown>({ spaceId, queueId, dxn, objects }: MemoryQueueOptions<T>): MemoryQueue<T> {
-    if (!dxn) {
-      dxn = EchoURI.fromSpaceAndObjectId(spaceId ?? SpaceId.random(), queueId ?? ObjectId.random());
+  static make<T extends Entity.Unknown>({ spaceId, queueId, uri, objects }: MemoryQueueOptions<T>): MemoryQueue<T> {
+    if (!uri) {
+      uri = EchoURI.fromSpaceAndObjectId(spaceId ?? SpaceId.random(), queueId ?? ObjectId.random());
     } else {
       invariant(spaceId == null && queueId == null);
     }
 
-    const queue = new MemoryQueue<T>(dxn);
+    const queue = new MemoryQueue<T>(uri);
     if (objects?.length) {
       void queue.append(objects);
     }
@@ -40,17 +40,17 @@ export class MemoryQueue<T extends Entity.Unknown> implements Queue<T> {
 
   private _objects: T[] = [];
 
-  constructor(private readonly _dxn: EchoURI.EchoURI) {}
+  constructor(private readonly _uri: EchoURI.EchoURI) {}
 
   toJSON() {
     return {
-      dxn: this._dxn,
+      uri: this._uri,
       objects: this._objects.length,
     };
   }
 
-  get dxn(): EchoURI.EchoURI {
-    return this._dxn;
+  get uri(): EchoURI.EchoURI {
+    return this._uri;
   }
 
   subscribe(callback: () => void): () => void {

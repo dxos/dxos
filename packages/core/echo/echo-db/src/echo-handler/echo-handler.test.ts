@@ -14,12 +14,11 @@ import {
   ATTR_RELATION_TARGET,
   EchoObjectSchema,
   type RefSchema,
-  createQueueDXN,
   foreignKey,
   getSchemaDXN,
 } from '@dxos/echo/internal';
 import { TestSchema, prepareAstForCompare } from '@dxos/echo/testing';
-import { EchoURI, PublicKey, SpaceId } from '@dxos/keys';
+import { EchoURI, ObjectId, PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';
@@ -719,7 +718,7 @@ describe('Reactive Object with ECHO database', () => {
       const obj = db.add(Obj.make(TestSchema.Expando, { field: 1 }));
       const typeDXN = getSchemaDXN(TestSchema.Example)!;
       getObjectCore(obj).setType(EncodedReference.fromURI(typeDXN));
-      expect(Obj.getTypeDXN(obj)).to.deep.eq(Type.getURI(TestSchema.Example));
+      expect(Obj.getTypeURI(obj)).to.deep.eq(Type.getURI(TestSchema.Example));
     });
 
     test('meta persistence', async () => {
@@ -920,11 +919,10 @@ describe('Reactive Object with ECHO database', () => {
 
   test('able to create queue references', async () => {
     const { db } = await builder.createDatabase();
-    const dxn = createQueueDXN(SpaceId.random());
-    const obj = Obj.make(TestSchema.Expando, { queue: Ref.fromURI(dxn) });
+    const uri = EchoURI.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
+    const obj = Obj.make(TestSchema.Expando, { queue: Ref.fromURI(uri) });
     const dbObj = db.add(obj);
-    // Queue dxn is stored as LegacyDXN internally; verify the objectId matches.
-    const queueId = EchoURI.getObjectId(dxn);
+    const queueId = EchoURI.getObjectId(uri);
     expect(dbObj.queue.uri).to.include(queueId!);
   });
 

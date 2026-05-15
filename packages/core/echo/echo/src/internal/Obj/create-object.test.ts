@@ -10,7 +10,7 @@ import { DXN, EchoURI } from '@dxos/keys';
 
 import { Relation } from '../../index';
 import { TestSchema } from '../../testing';
-import { getSchemaDXN, getTypeDXN, isInstanceOf } from '../Annotation';
+import { getSchemaDXN, getTypeURI, isInstanceOf } from '../Annotation';
 import { ATTR_META, ATTR_TYPE, getSchema } from '../common/types';
 import { ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '../Entity';
 import { createObject } from './create-object';
@@ -40,7 +40,7 @@ describe('create (static version)', () => {
     expect(contact.name).toBe('Bot');
     expect(contact.email).toBe('bot@example.com');
     expect((contact as any)['@type']).toBeUndefined();
-    expect(getTypeDXN(contact)?.toString()).toBe(getSchemaDXN(TestSchema.Person)!.toString());
+    expect(getTypeURI(contact)?.toString()).toBe(getSchemaDXN(TestSchema.Person)!.toString());
     expect(isInstanceOf(TestSchema.Person, contact)).toBe(true);
   });
 

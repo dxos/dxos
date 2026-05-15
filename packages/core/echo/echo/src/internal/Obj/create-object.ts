@@ -8,7 +8,7 @@ import { raise } from '@dxos/debug';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 
-import { getSchemaDXN, getTypeAnnotation, setTypename } from '../Annotation';
+import { getSchemaTypeURI, getTypeAnnotation, setTypename } from '../Annotation';
 import { defineHiddenProperty } from '../common/proxy';
 import { EntityKind, KindId, MetaId, setSchema } from '../common/types';
 import {
@@ -17,7 +17,7 @@ import {
   RelationTargetDXNId,
   RelationTargetId,
   assertObjectModel,
-  getObjectEchoId,
+  getObjectEchoUri,
 } from '../Entity';
 import { attachedTypedObjectInspector } from './inspect';
 import { attachTypedJsonSerializer } from './json-serializer';
@@ -77,14 +77,14 @@ export const createObject = <S extends Schema.Schema.AnyNoContext>(
   defineHiddenProperty(obj, KindId, kind);
   defineHiddenProperty(obj, MetaId, { keys: [] });
   setSchema(obj, schema);
-  setTypename(obj, getSchemaDXN(schema) ?? failedInvariant('Missing schema DXN'));
+  setTypename(obj, getSchemaTypeURI(schema) ?? failedInvariant('Missing schema URI'));
   attachTypedJsonSerializer(obj);
   attachedTypedObjectInspector(obj);
 
   // Relation.
   if (kind === EntityKind.Relation) {
-    const sourceDXN = getObjectEchoId(props[RelationSourceId]) ?? raise(new Error('Unresolved relation source'));
-    const targetDXN = getObjectEchoId(props[RelationTargetId]) ?? raise(new Error('Unresolved relation target'));
+    const sourceDXN = getObjectEchoUri(props[RelationSourceId]) ?? raise(new Error('Unresolved relation source'));
+    const targetDXN = getObjectEchoUri(props[RelationTargetId]) ?? raise(new Error('Unresolved relation target'));
     defineHiddenProperty(obj, RelationSourceDXNId, sourceDXN);
     defineHiddenProperty(obj, RelationTargetDXNId, targetDXN);
   }

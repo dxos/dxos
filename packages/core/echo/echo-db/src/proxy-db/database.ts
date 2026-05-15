@@ -319,7 +319,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
           type: migration.toType,
           meta: metaPatch as any,
         });
-        const postMigrationType = Obj.getTypeDXN(object);
+        const postMigrationType = Obj.getTypeURI(object);
         invariant(postMigrationType != null && postMigrationType.toString() === migration.toType.toString());
 
         if (migration.onMigration) {

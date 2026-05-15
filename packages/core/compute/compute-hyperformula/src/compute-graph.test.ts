@@ -73,7 +73,9 @@ describe('ComputeGraph', () => {
     const graph = testBuilder.registry.createGraph(space);
     await graph.open();
 
-    const result = graph.mapFunctionBindingFromId('=dxn:echo:@:01ABCDEF01ABCDEF01ABCDEF01(A1,B1)');
+    const result = graph.mapFunctionBindingFromId(
+      '=echo://BM3FSHFOMJCHCG5QW7JTVKGYABD2GAA7G/01ABCDEF01ABCDEF01ABCDEF01(A1,B1)',
+    );
     expect(result).to.be.undefined;
   });
 

@@ -90,7 +90,7 @@ export default Capability.makeModule(() =>
           }),
           execute: async ({ id }, { extensions }) => {
             invariant(extensions?.space, 'No space');
-            const document = await extensions.space.db.query(Filter.id(ArtifactId.toEchoId(id).toString())).first();
+            const document = await extensions.space.db.query(Filter.id(ArtifactId.toEchoURI(id).toString())).first();
             assertArgument(Obj.instanceOf(Markdown.Document, document), 'document', 'Invalid type');
 
             const { content } = await document.content?.load();

@@ -72,7 +72,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
           try {
             return await Obj.fromJSON(obj, {
               refResolver: this._refResolver,
-              dxn: EchoURI.fromSpaceAndObjectId(this._spaceId, obj.id),
+              uri: EchoURI.fromSpaceAndObjectId(this._spaceId, obj.id),
               database: this._database,
               parent: this._parentEntity,
             });
@@ -153,13 +153,13 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
 
   toJSON() {
     return {
-      dxn: this._echoId,
+      uri: this._echoId,
       objects: this._objects.length,
     };
   }
 
   // TODO(burdon): Rename to objects.
-  get dxn(): EchoURI.EchoURI {
+  get uri(): EchoURI.EchoURI {
     return this._echoId;
   }
 
@@ -293,7 +293,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
           try {
             const decoded = await Obj.fromJSON(obj, {
               refResolver: this._refResolver,
-              dxn: EchoURI.fromSpaceAndObjectId(this._spaceId, obj.id),
+              uri: EchoURI.fromSpaceAndObjectId(this._spaceId, obj.id),
               database: this._database,
               parent: this._parentEntity,
             });
@@ -332,7 +332,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     invariant(ObjectId.isValid(obj.id), 'object missing valid id');
     const decoded = await Obj.fromJSON(obj, {
       refResolver: this._refResolver,
-      dxn: EchoURI.fromSpaceAndObjectId(this._spaceId, obj.id),
+      uri: EchoURI.fromSpaceAndObjectId(this._spaceId, obj.id),
       database: this._database,
       parent: this._parentEntity,
     });

@@ -9,7 +9,7 @@ import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 // `DXN`/`EchoURI` are type-only imports to keep the `query-lite` bundle free of
 // `effect/Schema` (which pulls runtime helpers QuickJS can't parse — e.g. private class fields).
-import type { DXN, EchoURI, ObjectId, URI } from '@dxos/keys';
+import type { DXN, EchoURI, ObjectId } from '@dxos/keys';
 
 //
 // Light-weight implementation of query execution.
@@ -266,12 +266,10 @@ class FilterClass implements Filter$.Any {
   static childOf(parents: unknown | unknown[], options?: { transitive?: boolean }): Filter$.Any {
     const items = Array.isArray(parents) ? parents : [parents];
     const dxns = items.map((item) => {
-      if (isDxnLike(item)) {
-        // Inline normalization (rather than `EchoURI.parse`) to keep the `@dxos/keys` value-side
-        // import out of this bundle — see comment on the import above.
+      if (isEchoUriLike(item)) {
         return item.toString() as EchoURI.EchoURI;
       }
-      throw new TypeError('childOf requires DXN values in query-lite');
+      throw new TypeError('childOf requires EchoURI values in query-lite');
     });
     return new FilterClass({
       type: 'child-of',
@@ -617,9 +615,9 @@ const makeTypeDxn = (typename: string): DXN.DXN => {
   return `dxn:${typename}` as DXN.DXN;
 };
 
-const isDxnLike = (value: unknown): value is URI.URI => {
+const isDxnLike = (value: unknown): value is DXN.DXN => {
   if (typeof value === 'string') {
-    return value.startsWith('dxn:') || value.startsWith('echo:');
+    return value.startsWith('dxn:');
   }
   return (
     typeof value === 'object' &&
@@ -627,6 +625,19 @@ const isDxnLike = (value: unknown): value is URI.URI => {
     'toString' in value &&
     typeof value.toString === 'function' &&
     value.toString().startsWith('dxn:')
+  );
+};
+
+const isEchoUriLike = (value: unknown): value is EchoURI.EchoURI => {
+  if (typeof value === 'string') {
+    return value.startsWith('echo:') || value.startsWith('dxn:echo:') || value.startsWith('dxn:queue:');
+  }
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'toString' in value &&
+    typeof value.toString === 'function' &&
+    isEchoUriLike(value.toString())
   );
 };
 

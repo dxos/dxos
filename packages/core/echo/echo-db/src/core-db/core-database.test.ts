@@ -357,7 +357,7 @@ describe('CoreDatabase', () => {
       });
 
       expect(contact.name).to.eq('Bar');
-      expect(Obj.getTypeDXN(contact)?.toString()).to.eq('dxn:com.example.type.task:0.1.0');
+      expect(Obj.getTypeURI(contact)?.toString()).to.eq('dxn:com.example.type.task:0.1.0');
     });
   });
 });

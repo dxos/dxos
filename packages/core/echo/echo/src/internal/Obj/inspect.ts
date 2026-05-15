@@ -6,7 +6,7 @@ import type { InspectOptionsStylized, inspect as inspectFn } from 'node:util';
 
 import { type CustomInspectFunction, inspectCustom } from '@dxos/debug';
 
-import { getTypeDXN } from '../Annotation';
+import { getTypeURI } from '../Annotation';
 import { ATTR_META, ATTR_TYPE, type AnyEntity, MetaId } from '../common/types';
 
 /*
@@ -37,7 +37,7 @@ const typedObjectInspectFunction: CustomInspectFunction<AnyEntity> = function (
   return inspect(
     {
       id,
-      [ATTR_TYPE]: getTypeDXN(this),
+      [ATTR_TYPE]: getTypeURI(this),
       ...props,
       [ATTR_META]: (this as any)[MetaId], // TODO(dmaretskyi): Couldn't use getMeta since that throw's if the object has no meta.
     },

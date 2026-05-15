@@ -621,7 +621,7 @@ describe('Query', () => {
       const obj: TestSchema.Task = await db
         .query(
           Query.select(Filter.type(TestSchema.Task, { title: 'Queue type selector task' })).from({
-            feeds: [queue.dxn],
+            feeds: [queue.uri],
           }),
         )
         .first();
@@ -681,7 +681,7 @@ describe('Query', () => {
           .query(
             Query.select(Filter.type(TestSchema.Task)).from({
               spaceIds: bothSpaces,
-              feeds: [queue1.dxn],
+              feeds: [queue1.uri],
             }),
           )
           .run();
@@ -695,7 +695,7 @@ describe('Query', () => {
           .query(
             Query.select(Filter.type(TestSchema.Task)).from({
               spaceIds: bothSpaces,
-              feeds: [queue2.dxn],
+              feeds: [queue2.uri],
             }),
           )
           .run();
@@ -709,7 +709,7 @@ describe('Query', () => {
           .query(
             Query.select(Filter.type(TestSchema.Task)).from({
               spaceIds: bothSpaces,
-              feeds: [queue1.dxn, queue2.dxn],
+              feeds: [queue1.uri, queue2.uri],
             }),
           )
           .run();
@@ -833,7 +833,7 @@ describe('Query', () => {
       const queues = peer.client.constructQueueFactory(db.spaceId);
       // Trace queues now use EchoURI (echo://spaceId/queueId), not a DXN with ':trace:'.
       const traceQueue = queues.create({ subspaceTag: 'trace' });
-      expect(traceQueue.dxn).toMatch(/^echo:\/\//);
+      expect(traceQueue.uri).toMatch(/^echo:\/\//);
 
       const traceTask = Obj.make(TestSchema.Task, { title: 'Trace Task' });
       await traceQueue.append([traceTask]);
@@ -1958,7 +1958,7 @@ describe('Query', () => {
         const objects = await db
           .query(
             Query.select(Filter.text('TypeScript', { type: 'full-text' })).from({
-              feeds: [queue.dxn],
+              feeds: [queue.uri],
             }),
           )
           .run();
@@ -1969,7 +1969,7 @@ describe('Query', () => {
       // Search for React.
       {
         const objects = await db
-          .query(Query.select(Filter.text('React', { type: 'full-text' })).from({ feeds: [queue.dxn] }))
+          .query(Query.select(Filter.text('React', { type: 'full-text' })).from({ feeds: [queue.uri] }))
           .run();
         expect(objects).toHaveLength(1);
         expect((objects[0] as TestSchema.Task).title).toEqual('Getting Started with React');
@@ -1980,7 +1980,7 @@ describe('Query', () => {
         const objects = await db
           .query(
             Query.select(Filter.text('JavaScript', { type: 'full-text' })).from({
-              feeds: [queue.dxn],
+              feeds: [queue.uri],
             }),
           )
           .run();
@@ -2034,7 +2034,7 @@ describe('Query', () => {
       const obj: TestSchema.Task = await db
         .query(
           Query.select(Filter.text('TypeScript', { type: 'full-text' })).from({
-            feeds: [queue.dxn],
+            feeds: [queue.uri],
           }),
         )
         .first();

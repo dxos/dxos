@@ -140,7 +140,7 @@ export const registry: Record<NodeType, Executable> = {
         const { queues } = yield* QueueService;
         const queue = queues.create();
         return {
-          [DEFAULT_OUTPUT]: Ref.fromURI(queue.dxn),
+          [DEFAULT_OUTPUT]: Ref.fromURI(queue.uri),
         };
       }),
     ),

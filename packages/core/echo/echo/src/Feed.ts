@@ -106,24 +106,11 @@ export interface SyncOptions {
 export const make = (props: Obj.MakeProps<typeof Feed> = {}): Feed => Obj.make(Feed, props);
 
 /**
- * Derives the EchoURI from the feed object.
- * Returns `undefined` when the feed is not stored in a space yet.
+ * Returns the feed object's EchoURI when the feed is stored in a space.
  *
  * Used internally by the feed service layer.
  */
-export const getQueueDxn = (feed: Feed): EchoURI.EchoURI | undefined => {
-  const uri = Obj.getURI(feed);
-  const echoId = EchoURI.tryParse(uri);
-  if (!echoId) {
-    return undefined;
-  }
-  const spaceId = EchoURI.getSpaceId(echoId);
-  const objectId = EchoURI.getObjectId(echoId);
-  if (!spaceId || !objectId) {
-    return undefined;
-  }
-  return EchoURI.fromSpaceAndObjectId(spaceId, objectId);
-};
+export const getQueueDxn = (feed: Feed): EchoURI.EchoURI | undefined => EchoURI.tryParse(Obj.getURI(feed));
 
 //
 // Service

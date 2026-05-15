@@ -390,7 +390,7 @@ export const childOf = (
     if (Ref.isRef(item)) {
       return EchoURI.parse(item.uri);
     }
-    return internal.getId(item);
+    return internal.getUri(item);
   });
   return new FilterClass({
     type: 'child-of',

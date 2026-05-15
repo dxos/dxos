@@ -127,12 +127,12 @@ export type JSON = internal.ObjectJSON;
  * today always an EchoURI, but future entity kinds may surface other URI schemes;
  * narrow with `EchoURI.parse(uri)` or `DXN.parse(uri)` at the point of use.
  */
-export const getURI = (entity: Unknown | Snapshot): URI.URI => internal.getId(entity);
+export const getURI = (entity: Unknown | Snapshot): URI.URI => internal.getUri(entity);
 
 /**
  * Get the DXN of an entity's type.
  */
-export const getTypeDXN: (obj: Unknown | Snapshot) => URI.URI | undefined = internal.getTypeDXN;
+export const getTypeURI: (obj: Unknown | Snapshot) => URI.URI | undefined = internal.getTypeURI;
 
 /**
  * Get the schema of an entity.

@@ -23,7 +23,7 @@ export type QueueSubspaceTag = (typeof QueueSubspaceTags)[keyof typeof QueueSubs
  */
 // TODO(dmaretskyi): Remove type parameter -- all queues are untyped, and we use query to enforce type.
 export interface Queue<T extends Entity.Unknown = Entity.Unknown> extends Database.Queryable {
-  readonly dxn: EchoURI.EchoURI;
+  readonly uri: EchoURI.EchoURI;
 
   /**
    * Subscribe to queue updates.

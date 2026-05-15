@@ -219,8 +219,8 @@ Ref.isRef = (obj: any): obj is Ref<any> => {
 };
 
 Ref.hasObjectId = (id: ObjectId) => (ref: Ref<any>) => {
-  const echoId = EchoURI.tryParse(ref.uri);
-  return echoId !== undefined && EchoURI.isLocal(echoId) && EchoURI.getObjectId(echoId) === id;
+  const uri = EchoURI.tryParse(ref.uri);
+  return uri !== undefined && EchoURI.isLocal(uri) && EchoURI.getObjectId(uri) === id;
 };
 
 Ref.isRefSchema = (schema: Schema.Schema<any, any>): schema is RefSchema<any> => {
@@ -236,11 +236,11 @@ Ref.make = <T extends AnyProperties>(obj: T): Ref<T> => {
     throw new TypeError('Expected: ECHO object.');
   }
 
-  // TODO(dmaretskyi): Extract to `getObjectEchoId` function.
+  // TODO(dmaretskyi): Extract to `getObjectEchoUri` function.
   const id = obj.id;
   invariant(ObjectId.isValid(id), 'Invalid object ID');
-  const dxn = EchoURI.fromLocalObjectId(id);
-  return new RefImpl(dxn, obj);
+  const uri = EchoURI.fromLocalObjectId(id);
+  return new RefImpl(uri, obj);
 };
 
 Ref.fromURI = (uri: URI.URI): Ref<any> => {
@@ -346,23 +346,23 @@ export interface RefResolver {
   /**
    * Resolve ref synchronously from the objects in the working set.
    *
-   * @param dxn
+   * @param uri
    * @param load If true the resolver should attempt to load the object from disk.
    * @param onLoad Callback to call when the object is loaded.
    */
-  resolveSync(dxn: URI.URI, load: boolean, onLoad?: () => void): AnyProperties | undefined;
+  resolveSync(uri: URI.URI, load: boolean, onLoad?: () => void): AnyProperties | undefined;
 
   /**
    * Resolver ref asynchronously.
    */
-  resolve(dxn: URI.URI): Promise<AnyProperties | undefined>;
+  resolve(uri: URI.URI): Promise<AnyProperties | undefined>;
 
   // TODO(dmaretskyi): Combine with `resolve`.
-  resolveSchema(dxn: URI.URI): Promise<Schema.Schema.AnyNoContext | undefined>;
+  resolveSchema(uri: URI.URI): Promise<Schema.Schema.AnyNoContext | undefined>;
 }
 
 export class RefImpl<T> implements Ref<T> {
-  #dxn: URI.URI;
+  #uri: URI.URI;
   #resolver?: RefResolver = undefined;
   #resolved = new Event<void>();
 
@@ -379,8 +379,8 @@ export class RefImpl<T> implements Ref<T> {
     this.#resolved.emit();
   };
 
-  constructor(dxn: URI.URI, target?: T) {
-    this.#dxn = dxn;
+  constructor(uri: URI.URI, target?: T) {
+    this.#uri = uri;
     this.#target = target;
   }
 
@@ -388,7 +388,7 @@ export class RefImpl<T> implements Ref<T> {
    * @inheritdoc
    */
   get uri(): URI.URI {
-    return this.#dxn;
+    return this.#uri;
   }
 
   /**
@@ -407,7 +407,7 @@ export class RefImpl<T> implements Ref<T> {
     }
 
     invariant(this.#resolver, 'Resolver is not set');
-    return this.#resolver.resolveSync(this.#dxn, true, this.#resolverCallback) as T | undefined;
+    return this.#resolver.resolveSync(this.#uri, true, this.#resolverCallback) as T | undefined;
   }
 
   /**
@@ -418,7 +418,7 @@ export class RefImpl<T> implements Ref<T> {
       return this.#target;
     }
     invariant(this.#resolver, 'Resolver is not set');
-    const obj = await this.#resolver.resolve(this.#dxn);
+    const obj = await this.#resolver.resolve(this.#uri);
     if (obj == null) {
       throw new Error('Object not found');
     }
@@ -433,7 +433,7 @@ export class RefImpl<T> implements Ref<T> {
       return this.#target;
     }
     invariant(this.#resolver, 'Resolver is not set');
-    return (await this.#resolver.resolve(this.#dxn)) as T | undefined;
+    return (await this.#resolver.resolve(this.#uri)) as T | undefined;
   }
 
   /**
@@ -449,14 +449,14 @@ export class RefImpl<T> implements Ref<T> {
    * Clones the reference object.
    */
   noInline(): RefImpl<T> {
-    const ref = new RefImpl<T>(this.#dxn, undefined);
+    const ref = new RefImpl<T>(this.#uri, undefined);
     ref.#resolver = this.#resolver;
     return ref;
   }
 
   encode(): EncodedReference {
     return {
-      '/': this.#dxn,
+      '/': this.#uri,
       ...(this.#target ? { target: this.#target } : {}),
     };
   }
@@ -476,7 +476,7 @@ export class RefImpl<T> implements Ref<T> {
       return `Ref(${this.#target.toString()})`;
     }
 
-    return `Ref(${this.#dxn.toString()})`;
+    return `Ref(${this.#uri.toString()})`;
   }
 
   [inspectCustom]: CustomInspectFunction = (depth, options, inspect) => {
@@ -492,12 +492,12 @@ export class RefImpl<T> implements Ref<T> {
    * so without this, each access would create a separate cache entry.
    */
   [Hash.symbol](): number {
-    return Hash.hash(this.#dxn.toString());
+    return Hash.hash(this.#uri.toString());
   }
 
   /** Effect Equal trait. See {@link Hash.symbol} for rationale. */
   [Equal.symbol](that: Equal.Equal): boolean {
-    return that instanceof RefImpl && this.#dxn === that.uri;
+    return that instanceof RefImpl && this.#uri === that.uri;
   }
 
   /**
@@ -544,8 +544,8 @@ const refVariance: Ref<any>[typeof RefTypeId] = {
 };
 
 export const refFromEncodedReference = (encodedReference: EncodedReference, resolver?: RefResolver): Ref<any> => {
-  const dxn = EncodedReference.toURI(encodedReference);
-  const ref = new RefImpl(dxn);
+  const uri = EncodedReference.toURI(encodedReference);
+  const ref = new RefImpl(uri);
 
   // TODO(dmaretskyi): Handle inline target in the encoded reference.
 
@@ -571,9 +571,9 @@ export class StaticRefResolver implements RefResolver {
     return this;
   }
 
-  resolveSync(dxn: URI.URI, _load: boolean, _onLoad?: () => void): AnyProperties | undefined {
-    const echoId = EchoURI.tryParse(dxn);
-    const id = echoId ? EchoURI.getObjectId(echoId) : undefined;
+  resolveSync(uri: URI.URI, _load: boolean, _onLoad?: () => void): AnyProperties | undefined {
+    const echoUri = EchoURI.tryParse(uri);
+    const id = echoUri ? EchoURI.getObjectId(echoUri) : undefined;
     if (id == null) {
       return undefined;
     }
@@ -581,9 +581,9 @@ export class StaticRefResolver implements RefResolver {
     return this.objects.get(id);
   }
 
-  async resolve(dxn: URI.URI): Promise<AnyProperties | undefined> {
-    const echoId = EchoURI.tryParse(dxn);
-    const id = echoId ? EchoURI.getObjectId(echoId) : undefined;
+  async resolve(uri: URI.URI): Promise<AnyProperties | undefined> {
+    const echoUri = EchoURI.tryParse(uri);
+    const id = echoUri ? EchoURI.getObjectId(echoUri) : undefined;
     if (id == null) {
       return undefined;
     }
@@ -591,8 +591,8 @@ export class StaticRefResolver implements RefResolver {
     return this.objects.get(id);
   }
 
-  async resolveSchema(dxn: URI.URI): Promise<Schema.Schema.AnyNoContext | undefined> {
-    const parsed = DXN.tryParse(dxn);
+  async resolveSchema(uri: URI.URI): Promise<Schema.Schema.AnyNoContext | undefined> {
+    const parsed = DXN.tryParse(uri);
     return parsed ? this.schemas.get(parsed) : undefined;
   }
 }

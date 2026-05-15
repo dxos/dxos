@@ -29,12 +29,12 @@ describe('queues', () => {
     const obj = db.add(
       Obj.make(TestSchema.Expando, {
         // TODO(dmaretskyi): Support Ref.make
-        queue: Ref.fromURI(queues.create().dxn) as Ref.Ref<Feed.Feed>,
+        queue: Ref.fromURI(queues.create().uri) as Ref.Ref<Feed.Feed>,
       }),
     );
 
     expect(obj.queue.target).toBeDefined();
-    expect(typeof obj.queue.target!.dxn).toBe('string');
+    expect(typeof obj.queue.target!.uri).toBe('string');
     expect(await obj.queue.load()).toBeDefined();
   });
 
@@ -64,7 +64,7 @@ describe('queues', () => {
       // (echo://spaceId/itemId) without queue routing info, a local object DXN + feed
       // context is the correct way to resolve them.
       const resolved = await peer.client.graph
-        .createRefResolver({ context: { space: spaceId, feed: queue.dxn } })
+        .createRefResolver({ context: { space: spaceId, feed: queue.uri } })
         .resolve(EchoURI.fromLocalObjectId(obj.id));
       expect(resolved?.id).toEqual(obj.id);
       expect(resolved?.name).toEqual('john');
@@ -371,7 +371,7 @@ describe('queues', () => {
       await peer.reload();
 
       const queues2 = peer.client.constructQueueFactory(spaceId);
-      const objects2 = await queues2.get(queue.dxn).query(Filter.everything()).run();
+      const objects2 = await queues2.get(queue.uri).query(Filter.everything()).run();
 
       expect(objects2).toHaveLength(1);
       expect(objects2[0].name).toEqual('john');

@@ -53,7 +53,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
         Effect.gen(function* () {
           const queue = yield* QueueService.createQueue();
           Obj.update(agent, (agent) => {
-            agent.feed = Ref.fromURI(queue.dxn);
+            agent.feed = Ref.fromURI(queue.uri);
           });
         }),
       );

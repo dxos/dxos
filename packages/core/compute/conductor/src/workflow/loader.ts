@@ -39,14 +39,14 @@ export class WorkflowLoader {
     this._graphLoader = params.graphLoader;
   }
 
-  public async load(graphDxn: URI.URI): Promise<Workflow> {
-    const graph = new ComputeGraphModel(await this._graphLoader(graphDxn));
+  public async load(graphUri: URI.URI): Promise<Workflow> {
+    const graph = new ComputeGraphModel(await this._graphLoader(graphUri));
     this._validateWorkflowInOut(graph);
 
     const { resolver, resolvedNodes } = this._createComputeResolver();
     const executor = new GraphExecutor({ computeNodeResolver: resolver });
     await executor.load(graph);
-    return new Workflow(graphDxn, graph, executor, resolvedNodes);
+    return new Workflow(graphUri, graph, executor, resolvedNodes);
   }
 
   private _createComputeResolver(cache: CompilationCache = newCompilationCache()): {
@@ -92,19 +92,19 @@ export class WorkflowLoader {
   }
 
   private async _compileGraph(
-    graphDxnStr: URI.URI,
+    graphUriStr: URI.URI,
     graph: ComputeGraphModel,
     cache: CompilationCache,
   ): Promise<Executable> {
-    const compiled = cache.compiledGraphMap.get(graphDxnStr);
+    const compiled = cache.compiledGraphMap.get(graphUriStr);
     if (compiled) {
       return compiled;
     }
 
-    if (cache.compilationInProgress.has(graphDxnStr)) {
-      throw new Error(`Circular dependency found at ${graphDxnStr}.`);
+    if (cache.compilationInProgress.has(graphUriStr)) {
+      throw new Error(`Circular dependency found at ${graphUriStr}.`);
     }
-    cache.compilationInProgress.add(graphDxnStr);
+    cache.compilationInProgress.add(graphUriStr);
 
     const { inputNodeId, outputNodeId } = this._resolveSubgraphInOut(graph);
     const { resolver: computeResolver } = this._createComputeResolver(cache);
@@ -115,7 +115,7 @@ export class WorkflowLoader {
       computeResolver,
     });
 
-    cache.compiledGraphMap.set(graphDxnStr, executable);
+    cache.compiledGraphMap.set(graphUriStr, executable);
     return executable;
   }
 

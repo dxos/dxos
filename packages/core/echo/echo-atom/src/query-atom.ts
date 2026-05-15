@@ -68,9 +68,9 @@ const getQueryableIdentifier = (queryable: Database.Queryable): string => {
   if (Database.isDatabase(queryable)) {
     return queryable.spaceId;
   }
-  // Queue or similar: use dxn if it's a URI (EchoURI or DXN).
-  if ('dxn' in queryable && Key.URI.isURI(queryable.dxn)) {
-    return queryable.dxn;
+  // Queue or similar: use uri if it's a URI (EchoURI or DXN).
+  if ('uri' in queryable && Key.URI.isURI(queryable.uri)) {
+    return queryable.uri;
   }
   // Fallback: use id if it's a string.
   if ('id' in queryable && typeof queryable.id === 'string') {
