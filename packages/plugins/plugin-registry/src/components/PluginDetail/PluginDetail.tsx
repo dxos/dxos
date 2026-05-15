@@ -51,7 +51,33 @@ export type PluginDetailProps = {
    * rendered next to the plugin name in the header.
    */
   failure?: PluginManager.PluginFailure;
+  /**
+   * Plugins this plugin declares as dependencies (direct only). Rendered
+   * under a "Requires" heading so the user can see what enabling this plugin
+   * will auto-enable.
+   */
+  dependencies?: readonly PluginRef[];
+  /**
+   * Plugins that declare this plugin as a dependency (direct only).
+   * Rendered under a "Required by" heading so the user understands the
+   * downstream impact of disabling this plugin.
+   */
+  dependents?: readonly PluginRef[];
+  /**
+   * Called when the user activates a dependency / dependent chip. When
+   * provided, chips are rendered as buttons that fire this handler with the
+   * target plugin id; when omitted, chips are non-interactive labels.
+   */
+  onNavigateToPlugin?: (pluginId: string) => void;
 };
+
+/**
+ * Resolved {id, name} pair for a related plugin. `name` is the human-readable
+ * display string (from `Plugin.Meta.name` or the registry catalog entry); `id`
+ * is the canonical plugin id used for navigation and as a fallback when no
+ * name is available.
+ */
+export type PluginRef = { id: string; name: string };
 
 export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
   (
@@ -71,6 +97,9 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
       onInstallVersion,
       installedVersionTag,
       failure,
+      dependencies,
+      dependents,
+      onNavigateToPlugin,
       ...props
     },
     forwardedRef,
@@ -139,6 +168,30 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                   )}
                 </div>
               </div>
+              {((dependencies && dependencies.length > 0) || (dependents && dependents.length > 0)) && (
+                <div className='flex flex-col gap-2'>
+                  {dependencies && dependencies.length > 0 && (
+                    <>
+                      <h2>{t('dependencies.label')}</h2>
+                      <div className='flex flex-wrap gap-1'>
+                        {dependencies.map((dep) => (
+                          <PluginChip key={dep.id} pluginRef={dep} onClick={onNavigateToPlugin} />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  {dependents && dependents.length > 0 && (
+                    <>
+                      <h2>{t('dependents.label')}</h2>
+                      <div className='flex flex-wrap gap-1'>
+                        {dependents.map((dependent) => (
+                          <PluginChip key={dependent.id} pluginRef={dependent} onClick={onNavigateToPlugin} />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
               {versions && versions.length > 0 && (
                 <div className='flex flex-col gap-2'>
                   <h2>{t('versions.label')}</h2>
@@ -194,3 +247,30 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
 );
 
 PluginDetail.displayName = 'PluginDetail';
+
+/**
+ * Renders a single dependency / dependent reference as either a clickable
+ * button (when `onClick` is provided) or a passive label. The plugin id is
+ * surfaced via `title` so the canonical id stays one hover away even when the
+ * chip shows the friendlier `name`.
+ */
+const PluginChip = ({ pluginRef, onClick }: { pluginRef: PluginRef; onClick?: (pluginId: string) => void }) => {
+  const baseClass = 'rounded-md px-2 py-0.5 text-xs bg-modalSurface text-description';
+  if (onClick) {
+    return (
+      <button
+        type='button'
+        title={pluginRef.id}
+        className={mx(baseClass, 'hover:underline focus-visible:underline cursor-pointer')}
+        onClick={() => onClick(pluginRef.id)}
+      >
+        {pluginRef.name}
+      </button>
+    );
+  }
+  return (
+    <span title={pluginRef.id} className={baseClass}>
+      {pluginRef.name}
+    </span>
+  );
+};

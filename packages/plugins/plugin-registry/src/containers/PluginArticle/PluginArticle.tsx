@@ -7,10 +7,13 @@ import * as Effect from 'effect/Effect';
 import React, { type Dispatch, type SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type Plugin, type PluginManager, type Registry, UrlLoader } from '@dxos/app-framework';
-import { usePluginManager } from '@dxos/app-framework/ui';
+import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
+import { useTranslation } from '@dxos/react-ui';
 
-import { PluginDetail } from '#components';
+import { DisableDependentsAlert, PluginDetail, type PluginRef } from '#components';
+import { getPluginPath } from '#meta';
 
 import { useRegistryPluginProvider, useRegistryPlugins, useRemotePluginIds } from '../../hooks';
 
@@ -23,6 +26,9 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   const plugins = useAtomValue(manager.plugins);
   const remotePluginIds = useRemotePluginIds();
   const provider = useRegistryPluginProvider();
+  const { invokePromise } = useOperationInvoker();
+  const { entries: catalogEntries } = useRegistryPlugins();
+  const { t } = useTranslation();
 
   const { catalogEntry, moduleUrl, repo } = useCatalogEntry(pluginId);
   const { installedVersionTag, syncInstalledVersion } = useInstalledVersionTag(pluginId, plugins);
@@ -43,6 +49,48 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   const hasUpdate =
     isInstalled && !!catalogEntry && !!installedVersionTag && installedVersionTag !== catalogEntry.version;
 
+  // Resolve a plugin id to a {id, name} pair. Each plugin registers its
+  // translations under its own id as the i18n namespace and conventionally
+  // exposes `plugin.name` as the human-readable label, so we look that up
+  // first. Falls back to the registered plugin's `meta.name`, then the
+  // registry catalog entry's name, then the id itself.
+  const resolvePluginRef = useCallback(
+    (id: string): PluginRef => {
+      const translated = t('plugin.name', { ns: id, defaultValue: '' });
+      if (translated) {
+        return { id, name: translated };
+      }
+      const registered = plugins.find((candidate) => candidate.meta.id === id);
+      if (registered) {
+        return { id, name: registered.meta.name };
+      }
+      const catalog = catalogEntries.find((entry) => entry.id === id);
+      return { id, name: catalog?.name ?? id };
+    },
+    [t, plugins, catalogEntries],
+  );
+
+  // Recompute graph slices whenever the plugin list or catalog changes, so
+  // installs / removals through other surfaces (or this article's own
+  // actions) keep the detail view in sync.
+  const dependencies = useMemo(
+    () => manager.getDependencies(pluginId, { transitive: false }).map(resolvePluginRef),
+    [manager, pluginId, resolvePluginRef],
+  );
+  const dependents = useMemo(
+    () => manager.getDependents(pluginId, { transitive: false }).map(resolvePluginRef),
+    [manager, pluginId, resolvePluginRef],
+  );
+
+  const handleNavigateToPlugin = useCallback(
+    (targetId: string) => {
+      void invokePromise(LayoutOperation.Open, {
+        subject: [getPluginPath(targetId)],
+      });
+    },
+    [invokePromise],
+  );
+
   const actions = usePluginActions({
     manager,
     pluginId,
@@ -52,26 +100,39 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
     pickerVersions,
     selectedVersionTag,
     syncInstalledVersion,
+    resolvePluginRef,
   });
 
   return (
-    <PluginDetail
-      plugin={plugin}
-      enabled={enabled}
-      onEnabledChange={actions.handleEnableChange}
-      onInstall={!isInstalled && moduleUrl ? actions.handleInstall : undefined}
-      installing={actions.installing}
-      onUpdate={hasUpdate ? actions.handleUpdate : undefined}
-      hasUpdate={hasUpdate}
-      updating={actions.updating}
-      onUninstall={canUninstall ? actions.handleUninstall : undefined}
-      versions={pickerVersions}
-      selectedVersionTag={selectedVersionTag}
-      onVersionChange={setSelectedVersionTag}
-      onInstallVersion={pickerVersions.length > 0 ? actions.handleInstallVersion : undefined}
-      installedVersionTag={installedVersionTag}
-      failure={failure}
-    />
+    <>
+      <PluginDetail
+        plugin={plugin}
+        enabled={enabled}
+        onEnabledChange={actions.handleEnableChange}
+        onInstall={!isInstalled && moduleUrl ? actions.handleInstall : undefined}
+        installing={actions.installing}
+        onUpdate={hasUpdate ? actions.handleUpdate : undefined}
+        hasUpdate={hasUpdate}
+        updating={actions.updating}
+        onUninstall={canUninstall ? actions.handleUninstall : undefined}
+        versions={pickerVersions}
+        selectedVersionTag={selectedVersionTag}
+        onVersionChange={setSelectedVersionTag}
+        onInstallVersion={pickerVersions.length > 0 ? actions.handleInstallVersion : undefined}
+        installedVersionTag={installedVersionTag}
+        failure={failure}
+        dependencies={dependencies}
+        dependents={dependents}
+        onNavigateToPlugin={handleNavigateToPlugin}
+      />
+      <DisableDependentsAlert
+        open={actions.cascadePrompt.open}
+        pluginName={plugin.meta.name}
+        dependents={actions.cascadePrompt.dependents}
+        onCancel={actions.cascadePrompt.cancel}
+        onConfirm={actions.cascadePrompt.confirm}
+      />
+    </>
   );
 };
 
@@ -233,6 +294,7 @@ const usePluginActions = ({
   pickerVersions,
   selectedVersionTag,
   syncInstalledVersion,
+  resolvePluginRef,
 }: {
   manager: PluginManager.PluginManager;
   pluginId: string;
@@ -242,14 +304,40 @@ const usePluginActions = ({
   pickerVersions: readonly Registry.PluginVersion[];
   selectedVersionTag: string | undefined;
   syncInstalledVersion: () => void;
+  resolvePluginRef: (id: string) => PluginRef;
 }) => {
   const [installing, setInstalling] = useState(false);
   const [updating, setUpdating] = useState(false);
+  // Confirmation state for cascading disable. The dialog is open whenever the
+  // user toggled "off" on a plugin that has currently-enabled dependents; the
+  // body lists the dependents (resolved to display names) that would be
+  // disabled alongside the target.
+  const [cascadePrompt, setCascadePrompt] = useState<{ open: boolean; dependents: readonly PluginRef[] }>(() => ({
+    open: false,
+    dependents: [],
+  }));
+
+  const closeCascadePrompt = useCallback(() => setCascadePrompt({ open: false, dependents: [] }), []);
+
+  const confirmCascadeDisable = useCallback(() => {
+    closeCascadePrompt();
+    void runAndForwardErrors(manager.disable(pluginId, { cascade: true }));
+  }, [closeCascadePrompt, manager, pluginId]);
 
   const handleEnableChange = useCallback(
-    (enabled: boolean) =>
-      enabled ? runAndForwardErrors(manager.enable(pluginId)) : runAndForwardErrors(manager.disable(pluginId)),
-    [manager, pluginId],
+    (enabled: boolean) => {
+      if (enabled) {
+        void runAndForwardErrors(manager.enable(pluginId));
+        return;
+      }
+      const enabledDependents = manager.getDependents(pluginId, { transitive: true, enabledOnly: true });
+      if (enabledDependents.length > 0) {
+        setCascadePrompt({ open: true, dependents: enabledDependents.map(resolvePluginRef) });
+        return;
+      }
+      void runAndForwardErrors(manager.disable(pluginId));
+    },
+    [manager, pluginId, resolvePluginRef],
   );
 
   const handleUninstall = useCallback(() => {
@@ -332,5 +420,11 @@ const usePluginActions = ({
     handleInstall,
     handleUpdate,
     handleInstallVersion,
+    cascadePrompt: {
+      open: cascadePrompt.open,
+      dependents: cascadePrompt.dependents,
+      cancel: closeCascadePrompt,
+      confirm: confirmCascadeDisable,
+    },
   };
 };

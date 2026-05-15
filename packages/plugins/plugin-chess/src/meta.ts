@@ -16,4 +16,5 @@ export const meta: Plugin.Meta = {
   iconHue: 'amber',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-chess',
   screenshots: ['https://dxos.network/plugin-details-chess-dark.png'],
+  dependsOn: ['org.dxos.plugin.game'],
 };

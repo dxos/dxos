@@ -14,7 +14,7 @@ import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { PluginList, type PluginListProps } from '#components';
+import { DisableDependentsAlert, PluginList, type PluginListProps, type PluginRef } from '#components';
 import { getPluginPath, meta } from '#meta';
 
 const matchesFilter = (plugin: Plugin.Plugin, query: string) => {
@@ -77,13 +77,31 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
       return query.length === 0 ? plugins : plugins.filter((plugin) => matchesFilter(plugin, query));
     }, [plugins, filter]);
 
-    const handleChange = useCallback(
-      (pluginId: string, nextEnabled: boolean) =>
+    // Confirmation state for cascading disable. Open when the user toggles
+    // off a plugin that has currently-enabled dependents; carries the target
+    // id, its display name (for the prompt copy), and the list of dependents
+    // shown in the dialog body. Mirrors the equivalent flow in
+    // `PluginArticle` so the policy is consistent regardless of where the
+    // user toggles from.
+    const [cascadePrompt, setCascadePrompt] = useState<{
+      open: boolean;
+      pluginId: string;
+      pluginName: string;
+      dependents: readonly PluginRef[];
+    }>(() => ({ open: false, pluginId: '', pluginName: '', dependents: [] }));
+
+    const closeCascadePrompt = useCallback(
+      () => setCascadePrompt({ open: false, pluginId: '', pluginName: '', dependents: [] }),
+      [],
+    );
+
+    const dispatchToggle = useCallback(
+      (pluginId: string, nextEnabled: boolean, opts?: { cascade?: boolean }) =>
         Effect.gen(function* () {
           if (nextEnabled) {
             yield* manager.enable(pluginId);
           } else {
-            yield* manager.disable(pluginId);
+            yield* manager.disable(pluginId, opts);
           }
           yield* invoke(ObservabilityOperation.SendEvent, {
             name: 'plugins.toggle',
@@ -94,6 +112,49 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
         }).pipe(runAndForwardErrors),
       [invoke, manager, source],
     );
+
+    // Resolve a plugin id to a {id, name} pair. Each plugin registers its
+    // translations under its own id as the i18n namespace and exposes
+    // `plugin.name` as the human-readable label; we look that up first and
+    // fall back to the registered plugin's `meta.name`, then the id.
+    const resolvePluginRef = useCallback(
+      (id: string): PluginRef => {
+        const translated = t('plugin.name', { ns: id, defaultValue: '' });
+        if (translated) {
+          return { id, name: translated };
+        }
+        const candidate = plugins.find((plugin) => plugin.meta.id === id);
+        return { id, name: candidate?.meta.name ?? id };
+      },
+      [t, plugins],
+    );
+
+    const handleChange = useCallback(
+      (pluginId: string, nextEnabled: boolean) => {
+        if (nextEnabled) {
+          return dispatchToggle(pluginId, true);
+        }
+        const enabledDependents = manager.getDependents(pluginId, { transitive: true, enabledOnly: true });
+        if (enabledDependents.length === 0) {
+          return dispatchToggle(pluginId, false);
+        }
+        setCascadePrompt({
+          open: true,
+          pluginId,
+          pluginName: resolvePluginRef(pluginId).name,
+          dependents: enabledDependents.map(resolvePluginRef),
+        });
+      },
+      [dispatchToggle, manager, resolvePluginRef],
+    );
+
+    const confirmCascadeDisable = useCallback(() => {
+      const pluginId = cascadePrompt.pluginId;
+      closeCascadePrompt();
+      if (pluginId) {
+        void dispatchToggle(pluginId, false, { cascade: true });
+      }
+    }, [cascadePrompt.pluginId, closeCascadePrompt, dispatchToggle]);
 
     const handleClick = useCallback(
       (pluginId: string) =>
@@ -116,46 +177,55 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
     );
 
     return (
-      <Panel.Root {...composableProps(props)} ref={forwardedRef}>
-        <Panel.Toolbar asChild>
-          <Toolbar.Root>
-            <Input.Root>
-              <Input.Label srOnly>{t('filter.label')}</Input.Label>
-              <Input.TextInput
-                placeholder={t('filter.placeholder')}
-                value={filter}
-                onChange={(event) => setFilter(event.target.value)}
-              />
-            </Input.Root>
-          </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <ScrollArea.Root orientation='vertical'>
-            <ScrollArea.Viewport>
-              {filtered.length > 0 ? (
-                <PluginList
-                  plugins={filtered}
-                  enabled={enabled}
-                  installed={installed}
-                  installing={installing}
-                  updating={updating}
-                  updateAvailableIds={updateAvailableIds}
-                  extraTagsById={extraTagsById}
-                  failuresById={failuresById}
-                  onClick={handleClick}
-                  onChange={handleChange}
-                  onInstall={onInstall}
-                  onUpdate={onUpdate}
-                  hasSettings={hasSettings}
-                  onSettings={handleSettings}
+      <>
+        <Panel.Root {...composableProps(props)} ref={forwardedRef}>
+          <Panel.Toolbar asChild>
+            <Toolbar.Root>
+              <Input.Root>
+                <Input.Label srOnly>{t('filter.label')}</Input.Label>
+                <Input.TextInput
+                  placeholder={t('filter.placeholder')}
+                  value={filter}
+                  onChange={(event) => setFilter(event.target.value)}
                 />
-              ) : (
-                empty
-              )}
-            </ScrollArea.Viewport>
-          </ScrollArea.Root>
-        </Panel.Content>
-      </Panel.Root>
+              </Input.Root>
+            </Toolbar.Root>
+          </Panel.Toolbar>
+          <Panel.Content asChild>
+            <ScrollArea.Root orientation='vertical'>
+              <ScrollArea.Viewport>
+                {filtered.length > 0 ? (
+                  <PluginList
+                    plugins={filtered}
+                    enabled={enabled}
+                    installed={installed}
+                    installing={installing}
+                    updating={updating}
+                    updateAvailableIds={updateAvailableIds}
+                    extraTagsById={extraTagsById}
+                    failuresById={failuresById}
+                    onClick={handleClick}
+                    onChange={handleChange}
+                    onInstall={onInstall}
+                    onUpdate={onUpdate}
+                    hasSettings={hasSettings}
+                    onSettings={handleSettings}
+                  />
+                ) : (
+                  empty
+                )}
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          </Panel.Content>
+        </Panel.Root>
+        <DisableDependentsAlert
+          open={cascadePrompt.open}
+          pluginName={cascadePrompt.pluginName}
+          dependents={cascadePrompt.dependents}
+          onCancel={closeCascadePrompt}
+          onConfirm={confirmCascadeDisable}
+        />
+      </>
     );
   },
 );

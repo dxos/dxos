@@ -15,4 +15,5 @@ export const meta: Plugin.Meta = {
   icon: 'ph--hash-straight--regular',
   iconHue: 'cyan',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-tictactoe',
+  dependsOn: ['org.dxos.plugin.game'],
 };
