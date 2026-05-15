@@ -2,4 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-export {};
+import { type ComponentType, lazy } from 'react';
+
+export const CallDebugPanel: ComponentType<any> = lazy(() => import('./CallDebugPanel'));
+export const CallSidebar: ComponentType<any> = lazy(() => import('./CallSidebar'));

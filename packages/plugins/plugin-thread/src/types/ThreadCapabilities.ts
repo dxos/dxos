@@ -8,29 +8,16 @@ import { type Atom } from '@effect-atom/atom-react';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { type Channel } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { type CallManager as CallManagerImpl, type CallState, type MediaState } from '../calls';
 import { type ThreadState, type ViewStore } from '../types';
 
 export const Settings = Capability.make<Atom.Writable<import('./Settings').Settings>>(`${meta.id}.capability.settings`);
-export const CallManager = Capability.make<CallManagerImpl>(`${meta.id}.capability.call-manager`);
 
 /** Comment configuration contributed per typename by plugins that support commenting. */
 export type CommentConfig = AppCapabilities.CommentConfig;
 export const CommentConfig: Capability.InterfaceDef<AppCapabilities.CommentConfig> = AppCapabilities.CommentConfig;
-
-// TODO(wittjosiah): These callbacks could be intents once we support broadcast.
-export type CallProperties = {
-  onJoin: (state: { channel?: Channel.Channel; roomId?: string }) => Promise<void>;
-  onLeave: (roomId?: string) => Promise<void>;
-  onCallStateUpdated: (callState: CallState) => Promise<void>;
-  onMediaStateUpdated: ([mediaState, isSpeaking]: [MediaState, boolean]) => Promise<void>;
-};
-
-export const CallExtension = Capability.make<CallProperties>(`${meta.id}.capability.call-extension`);
 
 /** Thread state (drafts, toolbar state, current selection). */
 export const State = Capability.make<Atom.Writable<ThreadState>>(`${meta.id}.capability.state`);

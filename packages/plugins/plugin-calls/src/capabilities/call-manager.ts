@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
-import { ThreadCapabilities } from '#types';
+import { CallsCapabilities } from '#types';
 
 import { CallManager } from '../calls';
 
@@ -18,7 +18,7 @@ export default Capability.makeModule(
     const callManager = new CallManager(client, registry);
     yield* Effect.tryPromise(() => callManager.open());
 
-    return Capability.contributes(ThreadCapabilities.CallManager, callManager, () =>
+    return Capability.contributes(CallsCapabilities.Manager, callManager, () =>
       Effect.sync(() => {
         void callManager.close();
       }),

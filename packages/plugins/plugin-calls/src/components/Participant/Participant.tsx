@@ -7,7 +7,7 @@ import React, { memo, useMemo } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 
-import { ThreadCapabilities } from '#types';
+import { CallsCapabilities } from '#types';
 
 import { type EncodedTrackName, type UserState } from '../../calls';
 import { VideoObject } from '../Media';
@@ -16,7 +16,7 @@ import { ResponsiveGridItem, type ResponsiveGridItemProps } from '../ResponsiveG
 export const SCREENSHARE_SUFFIX = '_screenshare';
 
 export const Participant = memo(({ item: user, debug, ...props }: ResponsiveGridItemProps<UserState>) => {
-  const call = useCapability(ThreadCapabilities.CallManager);
+  const call = useCapability(CallsCapabilities.Manager);
   const self = useAtomValue(call.selfAtom);
   const media = useAtomValue(call.mediaAtom);
   const isSelf: boolean = self.id !== undefined && user.id !== undefined && user.id.startsWith(self.id);

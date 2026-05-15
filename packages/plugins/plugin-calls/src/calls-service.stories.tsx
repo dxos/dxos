@@ -21,7 +21,7 @@ import { useBlackCanvasStreamTrack, useInaudibleAudioStreamTrack, useVideoStream
 
 import { CALLS_URL, CallsServicePeer, type TrackObject } from './calls';
 
-// TODO(burdon): THIS IS TOO COMPLEX FOR A TEST SETUP.
+// TODO(burdon): Simplify test setup.
 const pushAndPullTrack = (mediaStreamTrack?: MediaStreamTrack) => {
   const config = useConfig();
   const callsConfig = {

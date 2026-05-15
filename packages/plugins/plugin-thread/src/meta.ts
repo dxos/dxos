@@ -5,7 +5,6 @@
 import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
-// TODO(wittjosiah): Needs screenshots.
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.thread',
   name: 'Threads',

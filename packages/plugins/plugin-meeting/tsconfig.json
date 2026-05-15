@@ -140,6 +140,9 @@
       "path": "../plugin-attention"
     },
     {
+      "path": "../plugin-calls"
+    },
+    {
       "path": "../plugin-client"
     },
     {
@@ -159,9 +162,6 @@
     },
     {
       "path": "../plugin-theme"
-    },
-    {
-      "path": "../plugin-thread"
     },
     {
       "path": "../plugin-transcription"

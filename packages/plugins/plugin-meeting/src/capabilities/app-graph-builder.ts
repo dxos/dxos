@@ -14,7 +14,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
 import { SpaceOperation } from '@dxos/plugin-space';
-import { ThreadCapabilities } from '@dxos/plugin-thread';
+import { CallsCapabilities } from '@dxos/plugin-calls';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { SpaceState, getSpace } from '@dxos/react-client/echo';
 import { linkedSegment } from '@dxos/react-ui-attention';
@@ -77,7 +77,7 @@ export default Capability.makeModule(
         id: 'call-companion',
         type: Channel.Channel,
         connector: Effect.fnUntraced(function* (channel, get) {
-          const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
+          const callManager = yield* Capability.get(CallsCapabilities.Manager);
           const channelDXN = Obj.getDXN(channel).toString();
           const joined = get(callManager.joinedAtom);
           const roomId = get(callManager.roomIdAtom);
@@ -127,7 +127,7 @@ export default Capability.makeModule(
                   meeting = addResult.object as Meeting.Meeting;
                 }
 
-                const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
+                const callManager = yield* Capability.get(CallsCapabilities.Manager);
                 const transcript = yield* Effect.promise(() => meeting.transcript.load());
                 const transcriptFeed = yield* Effect.promise(() => transcript.feed.load());
                 const transcriptFeedDXN = Feed.getQueueDxn(transcriptFeed);

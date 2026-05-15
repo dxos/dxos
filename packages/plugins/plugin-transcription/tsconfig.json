@@ -138,6 +138,9 @@
       "path": "../../ui/ui-theme"
     },
     {
+      "path": "../plugin-calls"
+    },
+    {
       "path": "../plugin-client"
     },
     {
@@ -160,9 +163,6 @@
     },
     {
       "path": "../plugin-theme"
-    },
-    {
-      "path": "../plugin-thread"
     }
   ]
 }

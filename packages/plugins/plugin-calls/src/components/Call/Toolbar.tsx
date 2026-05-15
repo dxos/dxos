@@ -23,7 +23,7 @@ import { type Channel } from '@dxos/types';
 import { groupHoverControlItemWithTransition, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { ThreadCapabilities } from '#types';
+import { CallsCapabilities } from '#types';
 
 export type ToolbarProps = ThemedClassName<{
   channel?: Channel.Channel;
@@ -46,7 +46,7 @@ export const Toolbar = ({
   const { t } = useTranslation(meta.id);
   const { graph } = useAppGraph();
   const runAction = useActionRunner();
-  const call = useCapability(ThreadCapabilities.CallManager);
+  const call = useCapability(CallsCapabilities.Manager);
   const media = useAtomValue(call.mediaAtom);
   const joined = useAtomValue(call.joinedAtom);
   const raisedHand = useAtomValue(call.raisedHandAtom);

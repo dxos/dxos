@@ -9,7 +9,7 @@ import { useCapability } from '@dxos/app-framework/ui';
 import { type ThemedClassName } from '@dxos/react-ui';
 
 import { useDebugMode } from '#hooks';
-import { ThreadCapabilities } from '#types';
+import { CallsCapabilities } from '#types';
 
 import { AudioStream } from '../Media';
 import { ParticipantGrid } from '../Participant';
@@ -34,7 +34,7 @@ CallRoot.displayName = 'CallRoot';
 type CallAudioProps = {};
 
 const CallAudio = (_props: CallAudioProps) => {
-  const call = useCapability(ThreadCapabilities.CallManager);
+  const call = useCapability(CallsCapabilities.Manager);
   const audioTracksToPlay = useAtomValue(call.audioTracksToPlayAtom);
 
   return <AudioStream tracks={audioTracksToPlay} />;
@@ -52,7 +52,7 @@ type CallGridProps = {
 
 const CallGrid = ({ fullscreen }: CallGridProps) => {
   const debug = useDebugMode();
-  const call = useCapability(ThreadCapabilities.CallManager);
+  const call = useCapability(CallsCapabilities.Manager);
   const self = useAtomValue(call.selfAtom);
   const users = useAtomValue(call.usersAtom);
 
