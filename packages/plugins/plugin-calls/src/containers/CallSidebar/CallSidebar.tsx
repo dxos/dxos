@@ -10,8 +10,9 @@ import { log } from '@dxos/log';
 import { Panel } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-sfx';
 
-import { Call } from '../../components/Call';
 import { CallsCapabilities } from '#types';
+
+import { Call } from '../../components/Call';
 
 export const CallSidebar = () => {
   const call = useCapability(CallsCapabilities.Manager);

@@ -7,8 +7,9 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 
-import { Call } from '../components/Call';
 import { meta } from '#meta';
+
+import { Call } from '../components/Call';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
