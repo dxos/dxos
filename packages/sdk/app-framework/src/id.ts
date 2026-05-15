@@ -16,6 +16,9 @@ export type Id = string & { readonly __id: unique symbol };
  * Each part must start with a lowercase letter followed by alphanumeric characters.
  * Throws if the resulting string is not well-formed.
  *
+ * Follows the AT Protocol NSID convention (https://atproto.com/specs/nsid),
+ * with the additional constraint that all parts must be fully lowercase.
+ *
  * @example
  *   id`org.dxos.plugin.deck` // 'org.dxos.plugin.deck'
  *   id`${ns}.${plugin}.deck` // joins interpolated values
