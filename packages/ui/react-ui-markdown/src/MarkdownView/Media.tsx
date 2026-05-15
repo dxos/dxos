@@ -13,6 +13,15 @@ import { mx } from '@dxos/ui-theme';
  */
 export const isEmbedUrl = (src: string): boolean => src.includes('iframe');
 
+/**
+ * Default iframe sandbox flags for embedded media. `allow-scripts` and
+ * `allow-same-origin` are required for typical embed players (Cloudflare
+ * Stream, YouTube, etc.) to load and play; `allow-presentation` enables
+ * picture-in-picture / fullscreen handoff. Callers rendering untrusted markup
+ * can tighten this further by passing an explicit `sandbox` prop.
+ */
+export const DEFAULT_IFRAME_SANDBOX = 'allow-scripts allow-same-origin allow-presentation';
+
 export type MarkdownMediaProps = {
   src: string;
   /** Accessible label / iframe title. */
@@ -23,6 +32,8 @@ export type MarkdownMediaProps = {
   imgClassNames?: string;
   /** Additional classes applied only when rendering `<iframe>`. */
   iframeClassNames?: string;
+  /** Override the default iframe sandbox flags. */
+  sandbox?: string;
 };
 
 /**
@@ -34,14 +45,23 @@ export type MarkdownMediaProps = {
  * Shared by `MarkdownView`'s `img` component override and `Carousel.Media`
  * so both surfaces handle iframe URLs identically.
  */
-export const MarkdownMedia = ({ src, alt, classNames, imgClassNames, iframeClassNames }: MarkdownMediaProps) => {
+export const MarkdownMedia = ({
+  src,
+  alt,
+  classNames,
+  imgClassNames,
+  iframeClassNames,
+  sandbox = DEFAULT_IFRAME_SANDBOX,
+}: MarkdownMediaProps) => {
   if (isEmbedUrl(src)) {
     return (
       <iframe
         src={src}
-        title={alt}
+        title={alt ?? 'Embedded media'}
         loading='lazy'
         className={mx('border-none', classNames, iframeClassNames)}
+        sandbox={sandbox}
+        referrerPolicy='no-referrer'
         allow='accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;'
         allowFullScreen
       />

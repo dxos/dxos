@@ -22,10 +22,12 @@ import { MarkdownView } from '@dxos/react-ui-markdown';
 
 import { Carousel } from '#components';
 
-// `ArticleProps<Subject, Props, CompanionTo>` — `subject` is the literal
-// `'help'` string flowing in from `AppNode.makeCompanion({ data: 'help' })`,
-// `companionTo` is the parent article's ECHO object.
-export type SupportCompanionProps = AppSurface.ArticleProps<'help', {}, Obj.Any>;
+// The surface registration constrains incoming data to
+// `AppSurface.ArticleProps<'help', {}, Obj.Any>` (companion node with
+// `data: 'help'`, parent article is an ECHO object) but this component only
+// consumes `companionTo`, so we pick it off the article shape rather than
+// requiring callers to thread the rest.
+export type SupportCompanionProps = Pick<AppSurface.ArticleProps<'help', {}, Obj.Any>, 'companionTo'>;
 
 export const SupportCompanion = ({ companionTo }: SupportCompanionProps) => {
   const manager = usePluginManager();

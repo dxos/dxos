@@ -83,7 +83,9 @@ export default Capability.makeModule(
                   }
                   const existing = yield* Effect.promise(
                     (): Promise<Operation.PersistentOperation[]> =>
-                      space.db.query(Filter.type(Operation.PersistentOperation, { key })).run(),
+                      space.db
+                        .query(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(key)))
+                        .run(),
                   );
                   if (existing.length === 0) {
                     space.db.add(Operation.serialize(definition));
