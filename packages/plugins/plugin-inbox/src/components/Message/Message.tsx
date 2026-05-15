@@ -5,7 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useMemo, useState } from 'react';
 
-import { type EchoId } from '@dxos/keys';
+import { type EchoURI } from '@dxos/keys';
 import { Icon, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { Menu } from '@dxos/react-ui-menu';
@@ -37,7 +37,7 @@ type MessageContextValue = {
   renderMode: RenderMode;
   setRenderMode: (mode: RenderMode) => void;
   message: MessageType.Message;
-  sender: EchoId.EchoId | undefined;
+  sender: EchoURI.EchoURI | undefined;
   onOpen?: () => void;
   onReply?: () => void;
   onReplyAll?: () => void;

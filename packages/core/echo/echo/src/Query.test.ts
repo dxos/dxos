@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
 import { QueryAST } from '@dxos/echo-protocol';
-import { EchoId, ObjectId, SpaceId } from '@dxos/keys';
+import { EchoURI, ObjectId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import * as Dataset from './Dataset';
@@ -276,7 +276,7 @@ describe('query api', () => {
             operator: 'eq',
             type: 'compare',
             value: {
-              '/': EchoId.fromLocalObjectId(fred.id),
+              '/': EchoURI.fromLocalObjectId(fred.id),
             },
           },
         },
@@ -563,7 +563,7 @@ describe('query api', () => {
     test('Query.type(...).from(feed) sets queue scope', async () => {
       const spaceId = SpaceId.random();
       const feedId = ObjectId.random();
-      const feedDxn = EchoId.fromSpaceAndObjectId(spaceId, feedId);
+      const feedDxn = EchoURI.fromSpaceAndObjectId(spaceId, feedId);
       const feed = (await Obj.fromJSON(
         {
           '@type': 'dxn:org.dxos.type.feed:0.1.0',
@@ -573,7 +573,7 @@ describe('query api', () => {
         { dxn: feedDxn },
       )) as Feed.Feed;
 
-      const expectedFeedId = EchoId.fromSpaceAndObjectId(spaceId, feedId);
+      const expectedFeedId = EchoURI.fromSpaceAndObjectId(spaceId, feedId);
 
       const query = Query.type(TestSchema.Person).from(feed);
       Schema.validateSync(QueryAST.Query)(query.ast);
@@ -686,7 +686,7 @@ describe('query api', () => {
 
   describe('Filter.childOf', () => {
     test('childOf with Ref', () => {
-      const parentDxn = EchoId.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
+      const parentDxn = EchoURI.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
       const parentRef = Ref.fromURI(parentDxn);
       const filter = Filter.childOf(parentRef);
 
@@ -711,8 +711,8 @@ describe('query api', () => {
     });
 
     test('childOf with array of Refs', () => {
-      const dxn1 = EchoId.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
-      const dxn2 = EchoId.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
+      const dxn1 = EchoURI.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
+      const dxn2 = EchoURI.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
       const filter = Filter.childOf([Ref.fromURI(dxn1), Ref.fromURI(dxn2)]);
 
       expect(filter.ast).toMatchObject({
@@ -724,7 +724,7 @@ describe('query api', () => {
     });
 
     test('childOf with transitive=false', () => {
-      const parentRef = Ref.fromURI(EchoId.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random()));
+      const parentRef = Ref.fromURI(EchoURI.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random()));
       const filter = Filter.childOf(parentRef, { transitive: false });
 
       expect(filter.ast).toMatchObject({
@@ -736,7 +736,7 @@ describe('query api', () => {
     });
 
     test('childOf in select query', () => {
-      const parentDxn = EchoId.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
+      const parentDxn = EchoURI.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
       const parentRef = Ref.fromURI(parentDxn);
       const query = Query.select(Filter.childOf(parentRef));
 
@@ -752,7 +752,7 @@ describe('query api', () => {
     });
 
     test('childOf combined with type filter', () => {
-      const parentDxn = EchoId.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
+      const parentDxn = EchoURI.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
       const parentRef = Ref.fromURI(parentDxn);
       const query = Query.select(Filter.and(Filter.type(TestSchema.Person), Filter.childOf(parentRef)));
 
@@ -770,7 +770,7 @@ describe('query api', () => {
     });
 
     test('childOf pretty-prints correctly', () => {
-      const parentRef = Ref.fromURI(EchoId.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random()));
+      const parentRef = Ref.fromURI(EchoURI.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random()));
       const filter = Filter.childOf(parentRef);
       const pretty = Filter.pretty(filter);
       expect(pretty).toContain('Filter.childOf');
@@ -779,7 +779,7 @@ describe('query api', () => {
 
     test('childOf with mixed objects and Refs', () => {
       const parent = Obj.make(TestSchema.Person, { name: 'Parent' });
-      const refDxn = EchoId.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
+      const refDxn = EchoURI.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
       const parentRef = Ref.fromURI(refDxn);
       const filter = Filter.childOf([parent, parentRef]);
 

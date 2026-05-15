@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { inspect } from 'util';
 import { describe, expect, test } from 'vitest';
 
-import { DXN, EchoId } from '@dxos/keys';
+import { DXN, EchoURI } from '@dxos/keys';
 
 import { Relation } from '../../index';
 import { TestSchema } from '../../testing';
@@ -82,8 +82,8 @@ describe('create (static version)', () => {
     expect(json).toEqual({
       id: manager.id,
       [ATTR_TYPE]: DXN.fromTypenameAndVersion(TestSchema.HasManager.typename, TestSchema.HasManager.version),
-      [ATTR_RELATION_SOURCE]: EchoId.fromLocalObjectId(person1.id),
-      [ATTR_RELATION_TARGET]: EchoId.fromLocalObjectId(person2.id),
+      [ATTR_RELATION_SOURCE]: EchoURI.fromLocalObjectId(person1.id),
+      [ATTR_RELATION_TARGET]: EchoURI.fromLocalObjectId(person2.id),
       [ATTR_META]: {
         keys: [],
       },

@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { EncodedReference, isEncodedReference } from '@dxos/echo-protocol';
-import { EchoId } from '@dxos/keys';
+import { EchoURI } from '@dxos/keys';
 
 import { EscapedPropPath } from '../utils';
 import type { Index, IndexerObject } from './interface';
@@ -16,13 +16,13 @@ import type { Index, IndexerObject } from './interface';
 /**
  * Extracts all outgoing references from an object's data.
  */
-const extractReferences = (data: Record<string, unknown>): { path: string[]; targetDxn: EchoId.EchoId }[] => {
-  const refs: { path: string[]; targetDxn: EchoId.EchoId }[] = [];
+const extractReferences = (data: Record<string, unknown>): { path: string[]; targetDxn: EchoURI.EchoURI }[] => {
+  const refs: { path: string[]; targetDxn: EchoURI.EchoURI }[] = [];
   const visit = (path: string[], value: unknown) => {
     if (isEncodedReference(value)) {
       const uri = EncodedReference.toURI(value);
-      const parsedEchoId = EchoId.tryParse(uri);
-      const echoId = parsedEchoId ? EchoId.getObjectId(parsedEchoId) : undefined;
+      const parsedEchoId = EchoURI.tryParse(uri);
+      const echoId = parsedEchoId ? EchoURI.getObjectId(parsedEchoId) : undefined;
       if (!echoId || !parsedEchoId) {
         return; // Skip non-echo references.
       }
@@ -43,7 +43,7 @@ const extractReferences = (data: Record<string, unknown>): { path: string[]; tar
 
 export const ReverseRef = Schema.Struct({
   recordId: Schema.Number,
-  targetDxn: EchoId.Schema,
+  targetDxn: EchoURI.Schema,
   /**
    * Escaped property path within an object.
    *
@@ -58,7 +58,7 @@ export const ReverseRef = Schema.Struct({
 export interface ReverseRef extends Schema.Schema.Type<typeof ReverseRef> {}
 
 export interface ReverseRefQuery {
-  targetDxn: EchoId.EchoId;
+  targetDxn: EchoURI.EchoURI;
   // TODO: Add prop filter
 }
 

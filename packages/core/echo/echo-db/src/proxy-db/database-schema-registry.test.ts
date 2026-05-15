@@ -50,7 +50,7 @@ describe('schema registry', () => {
     const { registry } = await setupTest();
     const [echoSchema] = await registry.register([Contact]);
     expect(registry.hasSchema(echoSchema)).to.be.true;
-    // For stored schemas `$id` is the storage URI (the schema-as-object's EchoId).
+    // For stored schemas `$id` is the storage URI (the schema-as-object's EchoURI).
     expect(echoSchema.jsonSchema.$id).toEqual(`dxn:echo:@:${echoSchema.id}`);
   });
 

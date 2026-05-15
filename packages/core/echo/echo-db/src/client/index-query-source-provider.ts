@@ -11,7 +11,7 @@ import { Entity, type Hypergraph, Obj, Query, type QueryResult } from '@dxos/ech
 import { type QueryAST } from '@dxos/echo-protocol';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { EchoId, ObjectId, SpaceId } from '@dxos/keys';
+import { EchoURI, ObjectId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 import {
@@ -239,7 +239,7 @@ export class IndexQuerySource implements QuerySource {
     if (result.queueId && result.documentJson) {
       invariant(ObjectId.isValid(result.queueId), 'Invalid queueId');
       const json = JSON.parse(result.documentJson);
-      const queueEchoId = EchoId.fromSpaceAndObjectId(result.spaceId, result.queueId);
+      const queueEchoId = EchoURI.fromSpaceAndObjectId(result.spaceId, result.queueId);
       const refResolver = this._params.graph.createRefResolver({
         context: { space: result.spaceId, feed: queueEchoId },
       });
@@ -248,7 +248,7 @@ export class IndexQuerySource implements QuerySource {
       try {
         object = await Obj.fromJSON(json, {
           refResolver,
-          dxn: EchoId.fromSpaceAndObjectId(result.spaceId, result.id),
+          dxn: EchoURI.fromSpaceAndObjectId(result.spaceId, result.id),
           database,
         });
       } catch (err) {

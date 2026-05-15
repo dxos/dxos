@@ -3,7 +3,7 @@
 //
 
 export * as DXN from './DXN';
-export * as EchoId from './EchoId';
+export * as EchoURI from './EchoURI';
 export * as URI from './URI';
 
 export * from './identity-did';

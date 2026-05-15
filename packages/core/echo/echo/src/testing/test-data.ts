@@ -3,7 +3,7 @@
 //
 
 import { DatabaseDirectory, ObjectStructure } from '@dxos/echo-protocol';
-import { EchoId, ObjectId, PublicKey } from '@dxos/keys';
+import { EchoURI, ObjectId, PublicKey } from '@dxos/keys';
 
 import { Type } from '../index';
 import { TestSchema } from './test-schema';
@@ -110,8 +110,8 @@ export const WORKS_FOR = {
         objects: {
           [ObjectId.random()]: ObjectStructure.makeRelation({
             type: Type.getURI(TestSchema.EmployedBy)!,
-            source: { '/': EchoId.fromLocalObjectId(Object.keys(PEOPLE.bob.objects!)[0]) },
-            target: { '/': EchoId.fromLocalObjectId(Object.keys(ORGS.cyberdyne.objects!)[0]) },
+            source: { '/': EchoURI.fromLocalObjectId(Object.keys(PEOPLE.bob.objects!)[0]) },
+            target: { '/': EchoURI.fromLocalObjectId(Object.keys(ORGS.cyberdyne.objects!)[0]) },
             data: {
               since: '2020',
               position: 'Engineer',
@@ -130,8 +130,8 @@ export const WORKS_FOR = {
         objects: {
           [ObjectId.random()]: ObjectStructure.makeRelation({
             type: Type.getURI(TestSchema.EmployedBy)!,
-            source: { '/': EchoId.fromLocalObjectId(Object.keys(PEOPLE.alice.objects!)[0]) },
-            target: { '/': EchoId.fromLocalObjectId(Object.keys(ORGS.dxos.objects!)[0]) },
+            source: { '/': EchoURI.fromLocalObjectId(Object.keys(PEOPLE.alice.objects!)[0]) },
+            target: { '/': EchoURI.fromLocalObjectId(Object.keys(ORGS.dxos.objects!)[0]) },
             data: {
               since: '2018',
               position: 'Research Scientist',
@@ -157,7 +157,7 @@ export const TASKS = {
               description: 'Write comprehensive documentation for the new system',
               status: 'in-progress',
               dueDate: '2023-12-31',
-              assignee: { '/': EchoId.fromLocalObjectId(Object.keys(PEOPLE.bob.objects!)[0]) },
+              assignee: { '/': EchoURI.fromLocalObjectId(Object.keys(PEOPLE.bob.objects!)[0]) },
             },
           }),
         },
@@ -178,7 +178,7 @@ export const TASKS = {
               description: 'Conduct series of experiments on the portal device',
               status: 'pending',
               dueDate: '2023-11-15',
-              assignee: { '/': EchoId.fromLocalObjectId(Object.keys(PEOPLE.alice.objects!)[0]) },
+              assignee: { '/': EchoURI.fromLocalObjectId(Object.keys(PEOPLE.alice.objects!)[0]) },
             },
           }),
         },

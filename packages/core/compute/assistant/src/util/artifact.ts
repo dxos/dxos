@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { Database, type Err, Obj, Ref, type Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
-import { EchoId, ObjectId, SpaceId } from '@dxos/keys';
+import { EchoURI, ObjectId, SpaceId } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 /**
@@ -23,7 +23,7 @@ export const createArtifactElement = (id: ObjectId) => `<artifact id=${id} />`;
  */
 // TODO(burdon): Rename RefFromLLM?
 export const ArtifactId: Schema.Schema<string> & {
-  toEchoId: (reference: ArtifactId, owningSpaceId?: SpaceId) => EchoId.EchoId;
+  toEchoId: (reference: ArtifactId, owningSpaceId?: SpaceId) => EchoURI.EchoURI;
   resolve: <S extends Type.AnyEntity>(
     schema: S,
     ref: ArtifactId,
@@ -43,12 +43,12 @@ export const ArtifactId: Schema.Schema<string> & {
     '01KG7R1ZXWFMWQ4DA1Q6TN1DG4',
   ],
 }) {
-  static toEchoId(reference: ArtifactId, owningSpaceId?: SpaceId): EchoId.EchoId {
+  static toEchoId(reference: ArtifactId, owningSpaceId?: SpaceId): EchoURI.EchoURI {
     // Allow @dxn: prefix for compatibility with in-text references.
     if (reference.startsWith('@dxn:')) {
-      return EchoId.parse(reference.slice(1));
+      return EchoURI.parse(reference.slice(1));
     } else if (reference.startsWith('dxn:')) {
-      return EchoId.parse(reference);
+      return EchoURI.parse(reference);
     } else if (reference.includes(':')) {
       const [spaceId, objectId] = reference.split(':');
       if (!SpaceId.isValid(spaceId) || !ObjectId.isValid(objectId)) {
@@ -58,10 +58,10 @@ export const ArtifactId: Schema.Schema<string> & {
       // We check if the space ID is the same as the owning space and then use LOCAL_SPACE_TAG for local references.
       // TODO(dmaretskyi): Fix this in the Echo and Filter API to properly handle fully qualified DXNs.
       return spaceId === owningSpaceId
-        ? EchoId.fromLocalObjectId(objectId)
-        : EchoId.fromSpaceAndObjectId(spaceId, objectId);
+        ? EchoURI.fromLocalObjectId(objectId)
+        : EchoURI.fromSpaceAndObjectId(spaceId, objectId);
     } else if (ObjectId.isValid(reference)) {
-      return EchoId.fromLocalObjectId(reference);
+      return EchoURI.fromLocalObjectId(reference);
     } else {
       throw new Error(`Unable to parse object reference: ${reference}`);
     }

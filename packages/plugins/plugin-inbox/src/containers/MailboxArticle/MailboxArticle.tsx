@@ -11,7 +11,7 @@ import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { type Database, type Feed, Filter, Obj, Query, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
-import { EchoId } from '@dxos/keys';
+import { EchoURI } from '@dxos/keys';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { useAtomState } from '@dxos/react-hooks';
 import { ElevationProvider, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -284,11 +284,11 @@ const useMessageTagsMap = (
 
         // Try to get message ID from target DXN (echo DXN with objectId).
         const targetDXN = Relation.getTargetDXN(relation);
-        const targetEchoId = EchoId.tryParse(targetDXN);
+        const targetEchoId = EchoURI.tryParse(targetDXN);
         let messageId: string | undefined;
 
         if (targetEchoId) {
-          messageId = EchoId.getObjectId(targetEchoId);
+          messageId = EchoURI.getObjectId(targetEchoId);
         } else {
           // Fallback: try to resolve target object.
           try {

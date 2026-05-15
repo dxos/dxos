@@ -3,7 +3,7 @@
 //
 
 import { type AnyEntity } from '@dxos/echo/internal';
-import { EchoId, type SpaceId } from '@dxos/keys';
+import { EchoURI, type SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
 import { type QueryService as QueryServiceProto } from '@dxos/protocols/proto/dxos/echo/query';
 import type { DataService as DataServiceProto } from '@dxos/protocols/proto/dxos/echo/service';
@@ -53,11 +53,11 @@ export class ServiceContainer {
     };
   }
 
-  async queryQueue(queue: EchoId.EchoId): Promise<FeedProtocol.QueryResult> {
-    const spaceId = EchoId.getSpaceId(queue);
-    const queueId = EchoId.getObjectId(queue);
+  async queryQueue(queue: EchoURI.EchoURI): Promise<FeedProtocol.QueryResult> {
+    const spaceId = EchoURI.getSpaceId(queue);
+    const queueId = EchoURI.getObjectId(queue);
     if (!spaceId || !queueId) {
-      throw new Error('Invalid queue EchoId');
+      throw new Error('Invalid queue EchoURI');
     }
     const result = await this._queueService.queryQueue(this._executionContext, {
       query: {
@@ -72,13 +72,13 @@ export class ServiceContainer {
     };
   }
 
-  async insertIntoQueue(queue: EchoId.EchoId, objects: AnyEntity[]): Promise<void> {
-    const spaceId = EchoId.getSpaceId(queue);
-    const queueId = EchoId.getObjectId(queue);
+  async insertIntoQueue(queue: EchoURI.EchoURI, objects: AnyEntity[]): Promise<void> {
+    const spaceId = EchoURI.getSpaceId(queue);
+    const queueId = EchoURI.getObjectId(queue);
     if (!spaceId || !queueId) {
-      throw new Error('Invalid queue EchoId');
+      throw new Error('Invalid queue EchoURI');
     }
-    // TODO(dmaretskyi): EchoId does not encode the subspaceTag — defaulting to 'data'.
+    // TODO(dmaretskyi): EchoURI does not encode the subspaceTag — defaulting to 'data'.
     await this._queueService.insertIntoQueue(this._executionContext, {
       subspaceTag: 'data',
       spaceId,

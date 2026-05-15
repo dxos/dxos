@@ -8,7 +8,7 @@ import { assert, describe, test } from 'vitest';
 import { Trigger, TriggerEvent } from '@dxos/compute';
 import { Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { EchoId } from '@dxos/keys';
+import { EchoURI } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
 describe('jsonata', () => {
@@ -52,7 +52,7 @@ describe('jsonata', () => {
   });
 
   describe('evaluates expression with trigger event', () => {
-    const queueEchoId = EchoId.parse('dxn:queue:data:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6');
+    const queueEchoId = EchoURI.parse('dxn:queue:data:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6');
     const event: TriggerEvent.TriggerEvent = {
       queue: queueEchoId,
       item: {

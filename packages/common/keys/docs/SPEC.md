@@ -1,6 +1,6 @@
 # DXOS Identifiers
 
-This document specifies the identifier types used in the DXOS ecosystem: **DXN**, **EchoId**, **SpaceId**, and **ObjectId**.
+This document specifies the identifier types used in the DXOS ecosystem: **DXN**, **EchoURI**, **SpaceId**, and **ObjectId**.
 
 ## Overview
 
@@ -9,9 +9,9 @@ This document specifies the identifier types used in the DXOS ecosystem: **DXN**
 | DXN        | Names a type, plugin, or other resource       | `dxn:` scheme + NSID + optional version | `dxn:org.dxos.type.calendar`            |
 | SpaceId    | Identifies a space                            | Multibase base-32 encoded key hash      | `BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE`     |
 | ObjectId   | Identifies an object within a space           | ULID                                    | `01J00J9B45YHYSGZQTQMSKMGJ6`            |
-| EchoId     | Addresses an object (or space) for resolution | URI with `echo:` scheme                 | `echo://BA25QRC2...CKE/01J00J9B...MGJ6` |
+| EchoURI     | Addresses an object (or space) for resolution | URI with `echo:` scheme                 | `echo://BA25QRC2...CKE/01J00J9B...MGJ6` |
 
-DXN and EchoId are two URI schemes used in DXOS. A DXN names a resource abstractly (a schema definition, a plugin, a blueprint, a published operation, a capability). An EchoId addresses a specific object within a space. The two can refer to the same underlying entity -- a blueprint or dynamic schema stored in a space has both a DXN (its published name) and an EchoId (its location as an object) -- but they remain distinct in use: a DXN identifies the named resource, an EchoId identifies a particular stored object. Reference fields throughout DXOS accept any URI. DXOS natively resolves URIs whose scheme it recognizes (`dxn:`, `echo:`); URIs with other schemes (e.g. [`did:`](https://www.w3.org/TR/did-core/), [`at://`](https://atproto.com/specs/at-uri-scheme), [`cid:`](https://github.com/multiformats/cid)) are stored opaquely today and may gain native resolution over time.
+DXN and EchoURI are two URI schemes used in DXOS. A DXN names a resource abstractly (a schema definition, a plugin, a blueprint, a published operation, a capability). An EchoURI addresses a specific object within a space. The two can refer to the same underlying entity -- a blueprint or dynamic schema stored in a space has both a DXN (its published name) and an EchoURI (its location as an object) -- but they remain distinct in use: a DXN identifies the named resource, an EchoURI identifies a particular stored object. Reference fields throughout DXOS accept any URI. DXOS natively resolves URIs whose scheme it recognizes (`dxn:`, `echo:`); URIs with other schemes (e.g. [`did:`](https://www.w3.org/TR/did-core/), [`at://`](https://atproto.com/specs/at-uri-scheme), [`cid:`](https://github.com/multiformats/cid)) are stored opaquely today and may gain native resolution over time.
 
 ## DXN (DXOS Name)
 
@@ -92,7 +92,7 @@ Full DXN (with scheme and optional version):
 
 ### Non-use cases
 
-- Addressing specific objects in spaces (use EchoId).
+- Addressing specific objects in spaces (use EchoURI).
 - Identifying spaces or identities (use SpaceId, IdentityDid).
 
 ## SpaceId
@@ -120,13 +120,13 @@ A unique identifier for an object within a space. Follows the [ULID](https://git
 - Lexicographically sortable by creation time.
 - Globally unique by construction (timestamp + randomness).
 
-## EchoId
+## EchoURI
 
-An EchoId addresses a specific object within a space, or a space itself. It uses the `echo:` scheme with standard URI structure, where the space serves as the URI authority and the object is the path.
+An EchoURI addresses a specific object within a space, or a space itself. It uses the `echo:` scheme with standard URI structure, where the space serves as the URI authority and the object is the path.
 
 ### Format
 
-An EchoId has two forms: one with an explicit space (authority present) and one for the current space (no authority).
+An EchoURI has two forms: one with an explicit space (authority present) and one for the current space (no authority).
 
 ```
 echo://<space>/<object-id>    -- fully qualified reference (authority = space)
@@ -180,7 +180,7 @@ Reference to a space itself, with no object.
 ### Grammar
 
 ```abnf
-EchoId        = qualified-ref / local-ref / space-ref
+EchoURI        = qualified-ref / local-ref / space-ref
 
 qualified-ref = "echo://" space-id "/" object-id
 space-ref     = "echo://" space-id
@@ -206,7 +206,7 @@ The authority slot is designed to accommodate other identifier forms in the futu
 
 ### Encoded references
 
-When storing a reference to an ECHO object within a document (e.g., in an [Automerge](https://automerge.org/) CRDT), the EchoId is used as the reference string in an [IPLD](https://ipld.io/)-style encoding:
+When storing a reference to an ECHO object within a document (e.g., in an [Automerge](https://automerge.org/) CRDT), the EchoURI is used as the reference string in an [IPLD](https://ipld.io/)-style encoding:
 
 ```json
 { "/": "echo:/01J00J9B45YHYSGZQTQMSKMGJ6" }
@@ -223,11 +223,11 @@ DXOS identifiers are inspired by [AT Protocol](https://atproto.com/) identifiers
 | DXN      | NSID    | Names a type, schema, or resource              |
 | ObjectId | TID     | Identifies a record                            |
 | SpaceId  | DID     | Identifies the container/authority for records |
-| EchoId   | AT URI  | Composed address for a specific record         |
+| EchoURI   | AT URI  | Composed address for a specific record         |
 
 ### Why EchoIds have no collection segment
 
-An AT URI has three path components: `at://<did>/<collection>/<rkey>`. The collection (an NSID) sits between the repository and the record key. An EchoId has only two: `echo://<space>/<object-id>`.
+An AT URI has three path components: `at://<did>/<collection>/<rkey>`. The collection (an NSID) sits between the repository and the record key. An EchoURI has only two: `echo://<space>/<object-id>`.
 
 The collection is essential in atproto because record keys are scoped to a collection. The same rkey can exist under multiple collections in the same repo, so `(DID, collection, rkey)` is the uniqueness tuple. The collection also serves as an inline type declaration -- you know the schema of a record from the URI alone, enabling routing, validation, and access control decisions without fetching the record.
 
@@ -237,7 +237,7 @@ This means EchoIds are opaque about type. You must resolve an object to discover
 
 ### Why the authority is a space, not an identity
 
-An AT URI begins with a DID (the repo owner's identity). An EchoId uses a SpaceId as its authority.
+An AT URI begins with a DID (the repo owner's identity). An EchoURI uses a SpaceId as its authority.
 
 In atproto, repositories are single-owner. The DID in the URI identifies both the storage location and the authority responsible for the data. Identity and storage are fused.
 
@@ -255,7 +255,7 @@ The current `dxn:` format with kind segments is retired in favor of `dxn:<nsid>[
 | --------------------------------------- | ---------------------------------- | ----------------------------------------------------- |
 | `dxn:type:org.dxos.type.calendar`       | `dxn:org.dxos.type.calendar`       | Kind segment removed; NSID follows `dxn:` directly    |
 | `dxn:type:org.dxos.type.calendar:1.0.0` | `dxn:org.dxos.type.calendar:1.0.0` | Version remains colon-separated, kind segment removed |
-| `dxn:echo:@:<objectId>`                 | `echo:/<objectId>`                 | EchoId with no authority (current space)              |
-| `dxn:echo:<spaceId>:<objectId>`         | `echo://<spaceId>/<objectId>`      | EchoId with space as authority                        |
+| `dxn:echo:@:<objectId>`                 | `echo:/<objectId>`                 | EchoURI with no authority (current space)              |
+| `dxn:echo:<spaceId>:<objectId>`         | `echo://<spaceId>/<objectId>`      | EchoURI with space as authority                        |
 | `dxn:queue:<sub>:<spaceId>:<queueId>`   | `echo://<spaceId>/<queueId>`       | Queues are now feeds, which are objects in spaces     |
-| `{ "/": "dxn:echo:@:..." }`             | `{ "/": "echo:/..." }`             | Encoded references use EchoId                         |
+| `{ "/": "dxn:echo:@:..." }`             | `{ "/": "echo:/..." }`             | Encoded references use EchoURI                         |

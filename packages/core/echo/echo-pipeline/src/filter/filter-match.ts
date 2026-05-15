@@ -332,7 +332,7 @@ const compareTypenameStrings = (expectedStr: string, actualStr: string): boolean
       return false;
     }
   } else {
-    // EchoId or other URI type — exact match.
+    // EchoURI or other URI type — exact match.
     if (actualStr !== expectedStr) {
       return false;
     }

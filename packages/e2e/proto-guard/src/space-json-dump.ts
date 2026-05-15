@@ -10,7 +10,7 @@ import path from 'node:path';
 import { type Client } from '@dxos/client';
 import { Filter, type Obj, Type } from '@dxos/echo';
 import { Serializer } from '@dxos/echo-db';
-import { EchoId, type SpaceId } from '@dxos/keys';
+import { EchoURI, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 export type SpacesDump = {
@@ -116,9 +116,9 @@ export class SpacesDumper {
 }
 
 /**
- * EchoId fields whose wire format changed between snapshots and current output
+ * EchoURI fields whose wire format changed between snapshots and current output
  * (`dxn:echo:<space>:<id>` → `echo://<space>/<id>`). Compared semantically via
- * `EchoId.parse` (which normalizes both forms).
+ * `EchoURI.parse` (which normalizes both forms).
  */
 const ECHO_ID_FIELDS = new Set(['@dxn', '@parent', '@source', '@target']);
 
@@ -128,8 +128,8 @@ export const equals = (actual: Record<string, any>, expected: Record<string, any
       continue;
     }
     if (ECHO_ID_FIELDS.has(key) && typeof value === 'string' && typeof actual[key] === 'string') {
-      // Normalize both via EchoId.parse so legacy `dxn:echo:` and new `echo://` formats compare equal.
-      if (EchoId.parse(value) !== EchoId.parse(actual[key])) {
+      // Normalize both via EchoURI.parse so legacy `dxn:echo:` and new `echo://` formats compare equal.
+      if (EchoURI.parse(value) !== EchoURI.parse(actual[key])) {
         log.warn('value mismatch', { key, expected: value, actual: actual[key] });
         return false;
       }

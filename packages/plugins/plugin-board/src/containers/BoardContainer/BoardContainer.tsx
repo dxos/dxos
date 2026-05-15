@@ -12,7 +12,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
-import { EchoId } from '@dxos/keys';
+import { EchoURI } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
@@ -102,8 +102,8 @@ export const BoardContainer = ({ role, subject: board, attendableId }: BoardCont
     (id) => {
       // TODO(burdon): Impl. DXN.equals and pass in DXN from `id`.
       const idx = board.items.findIndex((ref) => {
-        const echoId = EchoId.tryParse(ref.uri);
-        return (echoId ? EchoId.getObjectId(echoId) : undefined) === id;
+        const echoId = EchoURI.tryParse(ref.uri);
+        return (echoId ? EchoURI.getObjectId(echoId) : undefined) === id;
       });
       Obj.update(board, (board) => {
         if (idx !== -1) {

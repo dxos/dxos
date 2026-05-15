@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Ref } from '@dxos/echo';
-import { EchoId } from '@dxos/keys';
+import { EchoURI } from '@dxos/keys';
 
 // TODO(wittjosiah): Review this type.
 //   - Should be discriminated union.
@@ -25,17 +25,17 @@ export const EmailEvent = Schema.Struct({
 export type EmailEvent = Schema.Schema.Type<typeof EmailEvent>;
 
 const _QueueEvent = Schema.Struct({
-  queue: EchoId.Schema,
+  queue: EchoURI.Schema,
   item: Schema.Any,
   cursor: Schema.String,
 });
 /**
  * Explicit interface (rather than `Schema.Schema.Type<typeof _QueueEvent>`)
  * so consumers reference the named type in their declaration emit instead of
- * expanding `{ queue: EchoId; ... }` and requiring a transitive `EchoId` import.
+ * expanding `{ queue: EchoURI; ... }` and requiring a transitive `EchoURI` import.
  */
 export interface QueueEvent {
-  readonly queue: EchoId.EchoId;
+  readonly queue: EchoURI.EchoURI;
   readonly item: any;
   readonly cursor: string;
 }

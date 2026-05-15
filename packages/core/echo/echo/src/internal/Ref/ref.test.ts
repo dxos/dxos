@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { EchoId, ObjectId } from '@dxos/keys';
+import { EchoURI, ObjectId } from '@dxos/keys';
 
 import { EchoObjectSchema, getObjectEchoId } from '../Entity';
 import { createObject } from '../Obj';
@@ -37,7 +37,7 @@ type Contact = Schema.Schema.Type<typeof Contact>;
 
 describe('Ref', () => {
   test('Schema is', () => {
-    Ref(Contact).pipe(Schema.is)(Ref.fromURI(EchoId.fromLocalObjectId(ObjectId.random())));
+    Ref(Contact).pipe(Schema.is)(Ref.fromURI(EchoURI.fromLocalObjectId(ObjectId.random())));
   });
 
   test('ref ast', () => {

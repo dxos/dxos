@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { EchoId } from '@dxos/keys';
+import { EchoURI } from '@dxos/keys';
 
 import * as Annotation from './Annotation';
 import type * as Entity from './Entity';
@@ -106,23 +106,23 @@ export interface SyncOptions {
 export const make = (props: Obj.MakeProps<typeof Feed> = {}): Feed => Obj.make(Feed, props);
 
 /**
- * Derives the EchoId from the feed object.
+ * Derives the EchoURI from the feed object.
  * Returns `undefined` when the feed is not stored in a space yet.
  *
  * Used internally by the feed service layer.
  */
-export const getQueueDxn = (feed: Feed): EchoId.EchoId | undefined => {
+export const getQueueDxn = (feed: Feed): EchoURI.EchoURI | undefined => {
   const dxn = Obj.getURI(feed);
-  const echoId = EchoId.tryParse(dxn);
+  const echoId = EchoURI.tryParse(dxn);
   if (!echoId) {
     return undefined;
   }
-  const spaceId = EchoId.getSpaceId(echoId);
-  const objectId = EchoId.getObjectId(echoId);
+  const spaceId = EchoURI.getSpaceId(echoId);
+  const objectId = EchoURI.getObjectId(echoId);
   if (!spaceId || !objectId) {
     return undefined;
   }
-  return EchoId.fromSpaceAndObjectId(spaceId, objectId);
+  return EchoURI.fromSpaceAndObjectId(spaceId, objectId);
 };
 
 //

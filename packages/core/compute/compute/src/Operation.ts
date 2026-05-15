@@ -415,8 +415,8 @@ export interface InvokeOptions {
    */
   spaceId?: Key.SpaceId;
   /**
-   * URI of the conversation feed (queue) — today always an EchoId, but typed as
-   * `URI.URI` to accommodate future entity-kind extensions. Narrow with `EchoId.parse`
+   * URI of the conversation feed (queue) — today always an EchoURI, but typed as
+   * `URI.URI` to accommodate future entity-kind extensions. Narrow with `EchoURI.parse`
    * at the point of use.
    * Passed to the process environment so nested operations can resolve AiContext.Service and related services.
    */

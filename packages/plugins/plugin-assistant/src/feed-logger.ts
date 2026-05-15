@@ -14,7 +14,7 @@ import { InvocationTraceEndEvent, InvocationTraceEventType, InvocationTraceStart
 import { TraceEvent } from '@dxos/functions-runtime';
 import { InvocationOutcome } from '@dxos/functions-runtime';
 import { invariant } from '@dxos/invariant';
-import { EchoId, type ObjectId } from '@dxos/keys';
+import { EchoURI, type ObjectId } from '@dxos/keys';
 
 export class QueueLogger implements SequenceLogger {
   private _space: Space;
@@ -127,8 +127,8 @@ export class QueueLogger implements SequenceLogger {
     }
   }
 
-  private _getTraceQueueEchoId(invocationId: ObjectId): EchoId.EchoId {
-    return EchoId.fromSpaceAndObjectId(this._space.id, invocationId);
+  private _getTraceQueueEchoId(invocationId: ObjectId): EchoURI.EchoURI {
+    return EchoURI.fromSpaceAndObjectId(this._space.id, invocationId);
   }
 
   private _appendToTraceFeed(items: any[]): Promise<void> {

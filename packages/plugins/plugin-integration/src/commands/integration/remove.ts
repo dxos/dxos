@@ -13,7 +13,7 @@ import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
 import { Database, Filter, Ref } from '@dxos/echo';
-import { EchoId } from '@dxos/keys';
+import { EchoURI } from '@dxos/keys';
 import { AccessToken } from '@dxos/types';
 
 import { printTokenRemoved } from './util';
@@ -31,7 +31,7 @@ export const remove = Command.make(
       const token = yield* Option.match(id, {
         onSome: (value) =>
           Effect.gen(function* () {
-            const dxn = EchoId.fromLocalObjectId(value);
+            const dxn = EchoURI.fromLocalObjectId(value);
             return yield* Database.resolve(Ref.fromURI(dxn), AccessToken.AccessToken);
           }),
         onNone: () =>
@@ -53,7 +53,7 @@ export const remove = Command.make(
               choices,
             }).pipe(Prompt.run);
 
-            const dxn = EchoId.fromLocalObjectId(selectedId);
+            const dxn = EchoURI.fromLocalObjectId(selectedId);
             return yield* Database.resolve(Ref.fromURI(dxn), AccessToken.AccessToken);
           }),
       });

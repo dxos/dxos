@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
 import { useTypeOptions } from '@dxos/app-toolkit/ui';
-import { EchoId, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
+import { EchoURI, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
 import { type JsonPath, type Mutable } from '@dxos/echo/internal';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
@@ -70,7 +70,7 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
   );
 
   const handleQueryChanged = useCallback(
-    async (newQuery: QueryAST.Query, target?: EchoId.EchoId) => {
+    async (newQuery: QueryAST.Query, target?: EchoURI.EchoURI) => {
       if (!view || !db) {
         return;
       }

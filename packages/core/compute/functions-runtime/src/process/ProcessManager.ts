@@ -24,7 +24,7 @@ import * as Stream from 'effect/Stream';
 import { Process, ServiceResolver, Trace, Operation, OperationHandlerSet } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { Performance, runAndForwardErrors } from '@dxos/effect';
-import type { EchoId, SpaceId, URI } from '@dxos/keys';
+import type { EchoURI, SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { OperationInvoker } from '@dxos/operation';
 import type { ObjectId } from '@dxos/protocols';
@@ -102,7 +102,7 @@ export namespace Handle {
  */
 export interface Environment {
   readonly space?: SpaceId;
-  /** URI of the conversation feed. Today always an EchoId; narrow with `EchoId.parse` when needed. */
+  /** URI of the conversation feed. Today always an EchoURI; narrow with `EchoURI.parse` when needed. */
   readonly conversation?: URI.URI;
 }
 

@@ -68,7 +68,7 @@ import {
   symbolIsProxy,
 } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, EchoId, ObjectId, type URI } from '@dxos/keys';
+import { DXN, EchoURI, ObjectId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
@@ -197,12 +197,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         }
         case SelfDXNId: {
           if (target[symbolInternals].database) {
-            return EchoId.fromSpaceAndObjectId(
+            return EchoURI.fromSpaceAndObjectId(
               target[symbolInternals].database.spaceId,
               target[symbolInternals].core.id,
             );
           } else {
-            return EchoId.fromLocalObjectId(target[symbolInternals].core.id);
+            return EchoURI.fromLocalObjectId(target[symbolInternals].core.id);
           }
         }
         case Entity.KindId: {
@@ -295,7 +295,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         const objectId = value.id ?? value;
         // TODO(dmaretskyi): Validate object is from the same space.
         invariant(ObjectId.isValid(objectId));
-        target[symbolInternals].core.setParent(EncodedReference.fromURI(EchoId.fromLocalObjectId(objectId)));
+        target[symbolInternals].core.setParent(EncodedReference.fromURI(EchoURI.fromLocalObjectId(objectId)));
       }
       return true;
     }
@@ -355,8 +355,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         .resolveSync(parentDXN, false);
     } else {
       invariant(target[symbolInternals].linkCache);
-      const parentEchoId = EchoId.tryParse(parentDXN);
-      const echoId = parentEchoId ? EchoId.getObjectId(parentEchoId) : undefined;
+      const parentEchoId = EchoURI.tryParse(parentDXN);
+      const echoId = parentEchoId ? EchoURI.getObjectId(parentEchoId) : undefined;
       invariant(echoId);
       return target[symbolInternals].linkCache.get(echoId);
     }
@@ -378,8 +378,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         .resolveSync(sourceDXN, false);
     } else {
       invariant(target[symbolInternals].linkCache);
-      const sourceEchoId = EchoId.tryParse(sourceDXN);
-      const echoId = sourceEchoId ? EchoId.getObjectId(sourceEchoId) : undefined;
+      const sourceEchoId = EchoURI.tryParse(sourceDXN);
+      const echoId = sourceEchoId ? EchoURI.getObjectId(sourceEchoId) : undefined;
       invariant(echoId);
       return target[symbolInternals].linkCache.get(echoId);
     }
@@ -400,8 +400,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         .resolveSync(targetDXN, false);
     } else {
       invariant(target[symbolInternals].linkCache);
-      const targetEchoId = EchoId.tryParse(targetDXN);
-      const echoId = targetEchoId ? EchoId.getObjectId(targetEchoId) : undefined;
+      const targetEchoId = EchoURI.tryParse(targetDXN);
+      const echoId = targetEchoId ? EchoURI.getObjectId(targetEchoId) : undefined;
       invariant(echoId);
       return target[symbolInternals].linkCache.get(echoId);
     }
@@ -803,7 +803,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       // TODO(dmaretskyi): Add better validation.
       invariant(otherObjId != null);
       target[symbolInternals].linkCache.set(otherObjId, otherEchoObj as Entity.Unknown);
-      return EchoId.fromLocalObjectId(otherObjId);
+      return EchoURI.fromLocalObjectId(otherObjId);
     }
 
     // TODO(burdon): Remote?
@@ -811,15 +811,15 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (!foreignDatabase) {
       database.add(otherEchoObj);
       // TODO(dmaretskyi): Is this right.
-      return EchoId.fromLocalObjectId(otherObjId);
+      return EchoURI.fromLocalObjectId(otherObjId);
     }
 
     // Note: If the object is in a different database, return a reference to a foreign database.
     if (foreignDatabase !== database) {
-      return EchoId.fromSpaceAndObjectId(foreignDatabase.spaceId, otherObjId);
+      return EchoURI.fromSpaceAndObjectId(foreignDatabase.spaceId, otherObjId);
     }
 
-    return EchoId.fromLocalObjectId(otherObjId);
+    return EchoURI.fromLocalObjectId(otherObjId);
   }
 
   /**
@@ -844,8 +844,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return refImpl;
     } else {
       invariant(target[symbolInternals].linkCache);
-      const parsedEchoId = EchoId.tryParse(dxn);
-      const objectId = parsedEchoId ? EchoId.getObjectId(parsedEchoId) : undefined;
+      const parsedEchoId = EchoURI.tryParse(dxn);
+      const objectId = parsedEchoId ? EchoURI.getObjectId(parsedEchoId) : undefined;
       invariant(objectId, 'Invalid DXN');
       return new RefImpl(dxn, this._handleStoredSchema(target, target[symbolInternals].linkCache.get(objectId)));
     }
@@ -953,11 +953,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     const sourceRef = target[symbolInternals].core.getSource();
     if (sourceRef) {
-      obj[ATTR_RELATION_SOURCE] = EchoId.parse(EncodedReference.toURI(sourceRef));
+      obj[ATTR_RELATION_SOURCE] = EchoURI.parse(EncodedReference.toURI(sourceRef));
     }
     const targetRef = target[symbolInternals].core.getTarget();
     if (targetRef) {
-      obj[ATTR_RELATION_TARGET] = EchoId.parse(EncodedReference.toURI(targetRef));
+      obj[ATTR_RELATION_TARGET] = EchoURI.parse(EncodedReference.toURI(targetRef));
     }
 
     Object.assign(
@@ -1205,7 +1205,7 @@ const initCore = (core: ObjectCore, target: ProxyTarget) => {
   if (parentValue !== undefined) {
     const parentId = parentValue.id ?? parentValue;
     if (ObjectId.isValid(parentId)) {
-      core.setParent(EncodedReference.fromURI(EchoId.fromLocalObjectId(parentId)));
+      core.setParent(EncodedReference.fromURI(EchoURI.fromLocalObjectId(parentId)));
     }
     delete (target as any)[ParentId];
   }

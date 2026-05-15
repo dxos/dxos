@@ -16,7 +16,7 @@ import { Blueprint } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { Feed, Obj, type QueryResult, Query, Ref, Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
-import { EchoId, type URI } from '@dxos/keys';
+import { EchoURI, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexSet, isNonNullable } from '@dxos/util';
 
@@ -52,8 +52,8 @@ export class Bindings {
 
   // TODO(burdon): Some DXNs have the Space prefix so only compare the object ID.
   readonly objects = new ComplexSet<Ref.Ref<Obj.Unknown>>((ref) => {
-    const echoId = EchoId.tryParse(ref.uri);
-    return echoId ? EchoId.getObjectId(echoId) : undefined;
+    const echoId = EchoURI.tryParse(ref.uri);
+    return echoId ? EchoURI.getObjectId(echoId) : undefined;
   });
 
   toJSON(): { blueprints: URI.URI[]; objects: URI.URI[] } {
@@ -336,9 +336,9 @@ export class Binder extends Resource {
           for (const obj of context.objects) {
             if (
               obj.uri === ref.uri ||
-              (EchoId.tryParse(obj.uri) &&
-                EchoId.tryParse(ref.uri) &&
-                EchoId.getObjectId(EchoId.tryParse(obj.uri)!) === EchoId.getObjectId(EchoId.tryParse(ref.uri)!))
+              (EchoURI.tryParse(obj.uri) &&
+                EchoURI.tryParse(ref.uri) &&
+                EchoURI.getObjectId(EchoURI.tryParse(obj.uri)!) === EchoURI.getObjectId(EchoURI.tryParse(ref.uri)!))
             ) {
               context.objects.delete(obj);
             }

@@ -49,7 +49,7 @@ export const getTypeIdentifierAnnotation = (schema: Schema.Schema.All) =>
  * @returns The schema's type DXN (`dxn:<nsid>[:<version>]`).
  *
  * Derived from the schema's typename + version — universal across stored and non-stored
- * schemas. The schema-as-object EchoId (for stored schemas) is tracked separately via
+ * schemas. The schema-as-object EchoURI (for stored schemas) is tracked separately via
  * `TypeIdentifierAnnotation` / `Obj.getURI(persistentSchema)`.
  */
 export const getSchemaDXN = (schema: Schema.Schema.All): DXN.DXN | undefined => {
@@ -265,7 +265,7 @@ export const isInstanceOf = <Schema extends Schema.Schema.AnyNoContext>(
   }
 
   if (!DXN.isDXN(schemaDXN)) {
-    // EchoId-based schema DXN — no typename match possible.
+    // EchoURI-based schema DXN — no typename match possible.
     return false;
   }
 

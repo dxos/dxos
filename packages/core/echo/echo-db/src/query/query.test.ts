@@ -730,7 +730,7 @@ describe('Query', () => {
       const peer = await builder.createPeer({ types: [TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
-      // Trace queues now use EchoId (echo://spaceId/queueId), not a DXN with ':trace:'.
+      // Trace queues now use EchoURI (echo://spaceId/queueId), not a DXN with ':trace:'.
       const traceQueue = queues.create({ subspaceTag: 'trace' });
       expect(traceQueue.dxn).toMatch(/^echo:\/\//);
 
@@ -752,7 +752,7 @@ describe('Query', () => {
       const peer = await builder.createPeer({ types: [TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
-      // Trace queues now use EchoId (echo://spaceId/queueId), not a DXN with ':trace:'.
+      // Trace queues now use EchoURI (echo://spaceId/queueId), not a DXN with ':trace:'.
       const traceQueue = queues.create({ subspaceTag: 'trace' });
 
       const traceTask = Obj.make(TestSchema.Task, { title: 'Trace TypeScript Task' });

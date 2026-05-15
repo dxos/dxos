@@ -5,14 +5,14 @@
 import { Event } from '@dxos/async';
 import { type Entity } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { EchoId, ObjectId, SpaceId } from '@dxos/keys';
+import { EchoURI, ObjectId, SpaceId } from '@dxos/keys';
 
 import { type Queue } from './types';
 
 export type MemoryQueueOptions<T extends Entity.Unknown> = {
   spaceId?: SpaceId;
   queueId?: ObjectId;
-  dxn?: EchoId.EchoId;
+  dxn?: EchoURI.EchoURI;
   objects?: T[];
 };
 
@@ -23,7 +23,7 @@ export type MemoryQueueOptions<T extends Entity.Unknown> = {
 export class MemoryQueue<T extends Entity.Unknown> implements Queue<T> {
   static make<T extends Entity.Unknown>({ spaceId, queueId, dxn, objects }: MemoryQueueOptions<T>): MemoryQueue<T> {
     if (!dxn) {
-      dxn = EchoId.fromSpaceAndObjectId(spaceId ?? SpaceId.random(), queueId ?? ObjectId.random());
+      dxn = EchoURI.fromSpaceAndObjectId(spaceId ?? SpaceId.random(), queueId ?? ObjectId.random());
     } else {
       invariant(spaceId == null && queueId == null);
     }
@@ -40,7 +40,7 @@ export class MemoryQueue<T extends Entity.Unknown> implements Queue<T> {
 
   private _objects: T[] = [];
 
-  constructor(private readonly _dxn: EchoId.EchoId) {}
+  constructor(private readonly _dxn: EchoURI.EchoURI) {}
 
   toJSON() {
     return {
@@ -49,7 +49,7 @@ export class MemoryQueue<T extends Entity.Unknown> implements Queue<T> {
     };
   }
 
-  get dxn(): EchoId.EchoId {
+  get dxn(): EchoURI.EchoURI {
     return this._dxn;
   }
 

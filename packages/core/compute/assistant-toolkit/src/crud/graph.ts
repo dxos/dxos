@@ -24,7 +24,7 @@ import {
   getTypeIdentifierAnnotation,
 } from '@dxos/echo/internal';
 import { mapAst } from '@dxos/effect';
-import { DXN, EchoId, ObjectId, type URI } from '@dxos/keys';
+import { DXN, EchoURI, ObjectId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, isNonNullable, trim } from '@dxos/util';
 
@@ -220,15 +220,15 @@ export const sanitizeObjects = (
     const existingIds = new Set<ObjectId>();
     const enitties = new Map<ObjectId, Entity.Unknown>();
 
-    const resolveId = (id: string): EchoId.EchoId | undefined => {
+    const resolveId = (id: string): EchoURI.EchoURI | undefined => {
       if (ObjectId.isValid(id)) {
         existingIds.add(id);
-        return EchoId.fromLocalObjectId(id);
+        return EchoURI.fromLocalObjectId(id);
       }
 
       const mappedId = idMap.get(id);
       if (mappedId && ObjectId.isValid(mappedId)) {
-        return EchoId.fromLocalObjectId(mappedId);
+        return EchoURI.fromLocalObjectId(mappedId);
       }
 
       return undefined;
@@ -300,7 +300,7 @@ export const sanitizeObjects = (
     return res.flatMap(({ data, schema }) => {
       let skip = false;
       if (RelationSourceDXNId in data) {
-        const id = EchoId.getObjectId(data[RelationSourceDXNId] as EchoId.EchoId);
+        const id = EchoURI.getObjectId(data[RelationSourceDXNId] as EchoURI.EchoURI);
         const obj = objects.find((object) => object.id === id) ?? enitties.get(id!);
         if (obj) {
           delete data[RelationSourceDXNId];
@@ -310,7 +310,7 @@ export const sanitizeObjects = (
         }
       }
       if (RelationTargetDXNId in data) {
-        const id = EchoId.getObjectId(data[RelationTargetDXNId] as EchoId.EchoId);
+        const id = EchoURI.getObjectId(data[RelationTargetDXNId] as EchoURI.EchoURI);
         const obj = objects.find((object) => object.id === id) ?? enitties.get(id!);
         if (obj) {
           delete data[RelationTargetDXNId];

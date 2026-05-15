@@ -4,14 +4,14 @@
 
 import { Obj } from '@dxos/echo';
 import { type ForeignKey } from '@dxos/echo-protocol';
-import { EchoId } from '@dxos/keys';
+import { EchoURI } from '@dxos/keys';
 
 /**
- * @deprecated Use `EchoId.fromSpaceAndObjectId(spaceId, obj.id)` instead.
+ * @deprecated Use `EchoURI.fromSpaceAndObjectId(spaceId, obj.id)` instead.
  */
-export const getDXNWithSpaceKey = (obj: Obj.Any): EchoId.EchoId | undefined => {
+export const getDXNWithSpaceKey = (obj: Obj.Any): EchoURI.EchoURI | undefined => {
   const db = Obj.getDatabase(obj);
-  return db && EchoId.fromSpaceAndObjectId(db.spaceId, obj.id);
+  return db && EchoURI.fromSpaceAndObjectId(db.spaceId, obj.id);
 };
 
 // TODO(burdon): Factor out.

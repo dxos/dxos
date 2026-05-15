@@ -21,7 +21,7 @@ import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/e
 import { type RuntimeProvider, runAndForwardErrors, unwrapExit } from '@dxos/effect';
 import { EscapedPropPath, type IndexEngine, type ObjectMeta, type ReverseRef } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
-import { type DXN, EchoId, ObjectId, SpaceId, type URI } from '@dxos/keys';
+import { type DXN, EchoURI, ObjectId, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
 import { compositeKey, getDeep, isNonNullable } from '@dxos/util';
@@ -103,7 +103,7 @@ const QueryItem = Object.freeze({
     }
   },
 
-  getParent: (item: QueryItem): EchoId.EchoId | undefined => {
+  getParent: (item: QueryItem): EchoURI.EchoURI | undefined => {
     let raw: string | undefined;
     if (item.doc) {
       raw = ObjectStructure.getParent(item.doc)?.['/'];
@@ -112,10 +112,10 @@ const QueryItem = Object.freeze({
     } else {
       throw new Error('Invalid query item');
     }
-    return raw !== undefined ? EchoId.tryParse(raw) : undefined;
+    return raw !== undefined ? EchoURI.tryParse(raw) : undefined;
   },
 
-  getRelationSource: (item: QueryItem): EchoId.EchoId | undefined => {
+  getRelationSource: (item: QueryItem): EchoURI.EchoURI | undefined => {
     let raw: string | undefined;
     if (item.doc) {
       raw = ObjectStructure.getRelationSource(item.doc)?.['/'];
@@ -124,10 +124,10 @@ const QueryItem = Object.freeze({
     } else {
       throw new Error('Invalid query item');
     }
-    return raw !== undefined ? EchoId.tryParse(raw) : undefined;
+    return raw !== undefined ? EchoURI.tryParse(raw) : undefined;
   },
 
-  getRelationTarget: (item: QueryItem): EchoId.EchoId | undefined => {
+  getRelationTarget: (item: QueryItem): EchoURI.EchoURI | undefined => {
     let raw: string | undefined;
     if (item.doc) {
       raw = ObjectStructure.getRelationTarget(item.doc)?.['/'];
@@ -136,7 +136,7 @@ const QueryItem = Object.freeze({
     } else {
       throw new Error('Invalid query item');
     }
-    return raw !== undefined ? EchoId.tryParse(raw) : undefined;
+    return raw !== undefined ? EchoURI.tryParse(raw) : undefined;
   },
 });
 
@@ -286,10 +286,10 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
           const derivedSpaceIds = new Set<SpaceId>();
           for (const feedRef of step.scope.feeds ?? []) {
             try {
-              // EchoId.parse handles both `echo://` and legacy `dxn:queue:` formats.
-              const echoId = EchoId.parse(feedRef);
-              const queueId = EchoId.getObjectId(echoId);
-              const spaceId = EchoId.getSpaceId(echoId);
+              // EchoURI.parse handles both `echo://` and legacy `dxn:queue:` formats.
+              const echoId = EchoURI.parse(feedRef);
+              const queueId = EchoURI.getObjectId(echoId);
+              const spaceId = EchoURI.getSpaceId(echoId);
               if (queueId && spaceId) {
                 derivedQueueIds.add(queueId);
                 derivedSpaceIds.add(spaceId);
@@ -635,7 +635,7 @@ export class QueryExecutor extends Resource {
               }
               return null;
             } else if (spaces.length > 0) {
-              return this._loadFromDXN(EchoId.fromLocalObjectId(id), { sourceSpaceId: spaces[0] });
+              return this._loadFromDXN(EchoURI.fromLocalObjectId(id), { sourceSpaceId: spaces[0] });
             } else {
               return null; // Unknown scope.
             }
@@ -779,7 +779,7 @@ export class QueryExecutor extends Resource {
         // Load space items from documents.
         const spaceItems = await Promise.all(
           spaceResults.map(async (result): Promise<QueryItem | null> => {
-            const dxn = EchoId.fromLocalObjectId(result.objectId);
+            const dxn = EchoURI.fromLocalObjectId(result.objectId);
             const item = await this._loadFromDXN(dxn, { sourceSpaceId: result.spaceId });
             if (item) {
               // Override the default rank with the FTS rank.
@@ -931,9 +931,9 @@ export class QueryExecutor extends Resource {
   ): Promise<StepExecutionResult> {
     const parentObjectIds = new Set<string>();
     for (const parentDxnStr of filter.parents) {
-      const echoId = EchoId.tryParse(parentDxnStr);
+      const echoId = EchoURI.tryParse(parentDxnStr);
       if (echoId) {
-        const objectId = EchoId.getObjectId(echoId);
+        const objectId = EchoURI.getObjectId(echoId);
         if (objectId) {
           parentObjectIds.add(objectId);
         }
@@ -966,18 +966,18 @@ export class QueryExecutor extends Resource {
       return false;
     }
 
-    const parentRefs: { dxnStr: EchoId.EchoId; objectId: string }[] = [];
+    const parentRefs: { dxnStr: EchoURI.EchoURI; objectId: string }[] = [];
 
     const directParent = QueryItem.getParent(item);
     if (directParent) {
-      const objectId = EchoId.getObjectId(directParent);
+      const objectId = EchoURI.getObjectId(directParent);
       if (objectId) {
         parentRefs.push({ dxnStr: directParent, objectId });
       }
     }
 
     if (item.queueId && !directParent) {
-      const queueEchoId = EchoId.fromSpaceAndObjectId(item.spaceId, item.queueId);
+      const queueEchoId = EchoURI.fromSpaceAndObjectId(item.spaceId, item.queueId);
       parentRefs.push({
         dxnStr: queueEchoId,
         objectId: item.queueId,
@@ -1383,7 +1383,7 @@ export class QueryExecutor extends Resource {
     workingSet: QueryItem[],
     property: EscapedPropPath | null,
   ): Promise<readonly ObjectMeta[]> {
-    const anchorDxns = workingSet.map((item) => EchoId.fromLocalObjectId(item.objectId));
+    const anchorDxns = workingSet.map((item) => EchoURI.fromLocalObjectId(item.objectId));
     const rows: readonly ReverseRef[] = (
       await Promise.all(
         anchorDxns.map((targetDxn) => this._runInRuntime(this._indexEngine.queryReverseRef({ targetDxn }))),
@@ -1457,7 +1457,7 @@ export class QueryExecutor extends Resource {
     workingSet: QueryItem[],
     endpoint: 'source' | 'target',
   ): Promise<readonly ObjectMeta[]> {
-    const anchorDxns = workingSet.map((item) => EchoId.fromLocalObjectId(item.objectId));
+    const anchorDxns = workingSet.map((item) => EchoURI.fromLocalObjectId(item.objectId));
     return await this._runInRuntime(this._indexEngine.queryRelations({ endpoint, anchorDxns }));
   }
 
@@ -1549,19 +1549,19 @@ export class QueryExecutor extends Resource {
   }
 
   private async _loadFromDXN(dxn: URI.URI, { sourceSpaceId }: { sourceSpaceId: SpaceId }): Promise<QueryItem | null> {
-    const echoId = EchoId.tryParse(dxn);
+    const echoId = EchoURI.tryParse(dxn);
     if (!echoId) {
       log.warn('unable to resolve DXN', { dxn });
       return null;
     }
 
-    const objectId = EchoId.getObjectId(echoId);
+    const objectId = EchoURI.getObjectId(echoId);
     if (!objectId) {
       log.warn('unable to resolve DXN', { dxn });
       return null;
     }
 
-    const spaceId = EchoId.getSpaceId(echoId) ?? sourceSpaceId;
+    const spaceId = EchoURI.getSpaceId(echoId) ?? sourceSpaceId;
 
     const spaceRoot = this._spaceStateManager.getRootBySpaceId(spaceId);
     if (!spaceRoot) {
@@ -1663,20 +1663,20 @@ export class QueryExecutor extends Resource {
 }
 
 const extractSpaceIdFromQueue = (queueRef: string): SpaceId | undefined => {
-  // EchoId.tryParse handles both `echo://` and legacy `dxn:queue:` formats.
-  const echoId = EchoId.tryParse(queueRef);
-  return echoId ? EchoId.getSpaceId(echoId) : undefined;
+  // EchoURI.tryParse handles both `echo://` and legacy `dxn:queue:` formats.
+  const echoId = EchoURI.tryParse(queueRef);
+  return echoId ? EchoURI.getSpaceId(echoId) : undefined;
 };
 
-const extractQueueIds = (queues: readonly EchoId.EchoId[]): ObjectId[] | null => {
+const extractQueueIds = (queues: readonly EchoURI.EchoURI[]): ObjectId[] | null => {
   if (queues.length === 0) {
     return null;
   }
   return queues
     .map((queueRef) => {
-      // EchoId.tryParse handles both `echo://` and legacy `dxn:queue:` formats.
-      const echoId = EchoId.tryParse(queueRef);
-      return echoId ? EchoId.getObjectId(echoId) : undefined;
+      // EchoURI.tryParse handles both `echo://` and legacy `dxn:queue:` formats.
+      const echoId = EchoURI.tryParse(queueRef);
+      return echoId ? EchoURI.getObjectId(echoId) : undefined;
     })
     .filter((id): id is ObjectId => id !== undefined);
 };

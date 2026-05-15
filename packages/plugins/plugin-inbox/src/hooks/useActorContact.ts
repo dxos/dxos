@@ -5,12 +5,12 @@
 import { useMemo } from 'react';
 
 import { type Database, Filter, Obj } from '@dxos/echo';
-import { EchoId } from '@dxos/keys';
+import { EchoURI } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 import { type Actor, Person } from '@dxos/types';
 
 // TODO(burdon): Factor out lazy update pattern.
-export const useActorContact = (db?: Database.Database, actor?: Actor.Actor): EchoId.EchoId | undefined => {
+export const useActorContact = (db?: Database.Database, actor?: Actor.Actor): EchoURI.EchoURI | undefined => {
   // Don't bother querying the space if there is already a reference to the contact.
   const isLinked = !!actor?.contact;
   const contacts = useQuery(isLinked ? undefined : db, Filter.type(Person.Person));
@@ -22,9 +22,9 @@ export const useActorContact = (db?: Database.Database, actor?: Actor.Actor): Ec
   return useMemo(
     () =>
       actor?.contact
-        ? EchoId.tryParse(actor.contact.uri)
+        ? EchoURI.tryParse(actor.contact.uri)
         : existingContact
-          ? EchoId.parse(Obj.getURI(existingContact))
+          ? EchoURI.parse(Obj.getURI(existingContact))
           : undefined,
     [actor?.contact, existingContact],
   );

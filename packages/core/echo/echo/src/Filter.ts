@@ -11,7 +11,7 @@ import type * as Types from 'effect/Types';
 
 import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
-import { DXN, EchoId, ObjectId } from '@dxos/keys';
+import { DXN, EchoURI, ObjectId } from '@dxos/keys';
 
 import * as internal from './internal';
 import type * as Obj from './Obj';
@@ -357,7 +357,7 @@ export const childOf = (
   const items = Array.isArray(parents) ? parents : [parents];
   const dxns = items.map((item) => {
     if (Ref.isRef(item)) {
-      return EchoId.parse(item.uri);
+      return EchoURI.parse(item.uri);
     }
     return internal.getId(item);
   });

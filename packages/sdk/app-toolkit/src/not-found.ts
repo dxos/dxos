@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 
 import { Graph, Node } from '@dxos/app-graph';
 import { Filter, Key, Query } from '@dxos/echo';
-import { EchoId } from '@dxos/keys';
+import { EchoURI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { expandAttendableId } from '@dxos/react-ui-attention/types';
 
@@ -22,7 +22,7 @@ export const NOT_FOUND_PATH = `${Node.RootId}/${NOT_FOUND_NODE_ID}`;
  * Callback to check if an object exists on a remote service (e.g., edge).
  * Takes a DXN identifying the object. Returns an Effect resolving to true if the object exists remotely.
  */
-export type RemoteExistenceChecker = (echoId: EchoId.EchoId) => Effect.Effect<boolean>;
+export type RemoteExistenceChecker = (echoId: EchoURI.EchoURI) => Effect.Effect<boolean>;
 
 /**
  * Expand a qualified graph path by expanding each ancestor prefix.
@@ -75,13 +75,13 @@ export const validateNavigationTarget = (params: {
 
   // Node not found locally. Ask path resolvers to identify the DXN for this path.
   return Effect.gen(function* () {
-    const dxn = yield* Effect.reduce(pathResolvers, Option.none<EchoId.EchoId>(), (acc, resolver) =>
+    const dxn = yield* Effect.reduce(pathResolvers, Option.none<EchoURI.EchoURI>(), (acc, resolver) =>
       Option.isSome(acc)
         ? Effect.succeed(acc)
         : resolver(subjectId).pipe(
             Effect.catchAll((error) => {
               log.warn('path resolver failed', { subjectId, error });
-              return Effect.succeed(Option.none<EchoId.EchoId>());
+              return Effect.succeed(Option.none<EchoURI.EchoURI>());
             }),
           ),
     );
@@ -115,8 +115,8 @@ export const createEdgeExistenceChecker = (
   execQuery: (spaceId: Key.SpaceId, body: { query: string; reactivity: number }) => Promise<{ results?: unknown[] }>,
 ): RemoteExistenceChecker => {
   return (echoId) => {
-    const spaceId = EchoId.getSpaceId(echoId);
-    const objectId = EchoId.getObjectId(echoId);
+    const spaceId = EchoURI.getSpaceId(echoId);
+    const objectId = EchoURI.getObjectId(echoId);
     if (!spaceId || !objectId) {
       return Effect.succeed(false);
     }

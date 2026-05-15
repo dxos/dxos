@@ -18,7 +18,7 @@ import {
   unwrapOptional,
 } from '@dxos/echo/internal';
 import { runAndForwardErrors } from '@dxos/effect';
-import { DXN, EchoId } from '@dxos/keys';
+import { DXN, EchoURI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { Person } from '@dxos/types';
@@ -149,9 +149,9 @@ export const getQueryTarget = (query: QueryAST.Query, space?: Space) => {
       }
       const result = Option.fromNullable(from.scope.feeds).pipe(
         Option.flatMap((feeds) => Array.head(feeds)),
-        Option.flatMap((feedRef) => Option.fromNullable(EchoId.tryParse(String(feedRef)))),
+        Option.flatMap((feedRef) => Option.fromNullable(EchoURI.tryParse(String(feedRef)))),
         Option.flatMap((echoId) => {
-          const queueId = EchoId.getObjectId(echoId);
+          const queueId = EchoURI.getObjectId(echoId);
           if (!queueId || !Key.ObjectId.isValid(queueId)) {
             return Option.none();
           }

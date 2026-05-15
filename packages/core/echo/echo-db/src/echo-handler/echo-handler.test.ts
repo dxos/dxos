@@ -19,7 +19,7 @@ import {
   getSchemaDXN,
 } from '@dxos/echo/internal';
 import { TestSchema, prepareAstForCompare } from '@dxos/echo/testing';
-import { EchoId, PublicKey, SpaceId } from '@dxos/keys';
+import { EchoURI, PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';
@@ -412,8 +412,8 @@ describe('Reactive Object with ECHO database', () => {
     const objData = Relation.toJSON(manager);
     expect(objData).to.deep.contain({
       id: manager.id,
-      [ATTR_RELATION_SOURCE]: EchoId.fromLocalObjectId(alice.id),
-      [ATTR_RELATION_TARGET]: EchoId.fromLocalObjectId(bob.id),
+      [ATTR_RELATION_SOURCE]: EchoURI.fromLocalObjectId(alice.id),
+      [ATTR_RELATION_TARGET]: EchoURI.fromLocalObjectId(bob.id),
     });
   });
 
@@ -478,7 +478,7 @@ describe('Reactive Object with ECHO database', () => {
       // Fully serialized before added to db.
       {
         const obj = JSON.parse(JSON.stringify(obj1));
-        expect(obj.reference['/']).to.eq(EchoId.fromLocalObjectId(obj1.reference!.target!.id));
+        expect(obj.reference['/']).to.eq(EchoURI.fromLocalObjectId(obj1.reference!.target!.id));
       }
 
       const obj2 = db.add(obj1);
@@ -487,8 +487,8 @@ describe('Reactive Object with ECHO database', () => {
       {
         const obj = JSON.parse(JSON.stringify(obj2));
         const refUri = EncodedReference.toURI(obj.reference);
-        const refEchoId = EchoId.tryParse(refUri);
-        expect(refEchoId ? EchoId.getObjectId(refEchoId) : undefined).to.eq(obj2.reference?.target?.id);
+        const refEchoId = EchoURI.tryParse(refUri);
+        expect(refEchoId ? EchoURI.getObjectId(refEchoId) : undefined).to.eq(obj2.reference?.target?.id);
       }
 
       // Load refs.
@@ -764,7 +764,7 @@ describe('Reactive Object with ECHO database', () => {
         '@meta': { keys: [] },
         '@type': 'dxn:com.example.type.expando:0.1.0',
         name: 'John',
-        worksAt: EncodedReference.fromURI(EchoId.fromLocalObjectId(org.id)),
+        worksAt: EncodedReference.fromURI(EchoURI.fromLocalObjectId(org.id)),
       });
     });
 
@@ -924,7 +924,7 @@ describe('Reactive Object with ECHO database', () => {
     const obj = Obj.make(TestSchema.Expando, { queue: Ref.fromURI(dxn) });
     const dbObj = db.add(obj);
     // Queue dxn is stored as LegacyDXN internally; verify the objectId matches.
-    const queueId = EchoId.getObjectId(dxn);
+    const queueId = EchoURI.getObjectId(dxn);
     expect(dbObj.queue.uri).to.include(queueId!);
   });
 

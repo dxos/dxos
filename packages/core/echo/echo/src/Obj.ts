@@ -14,7 +14,7 @@ import * as Utils from 'effect/Utils';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { type EchoId, ObjectId, type URI } from '@dxos/keys';
+import { type EchoURI, ObjectId, type URI } from '@dxos/keys';
 import { assumeType, deepMapValues } from '@dxos/util';
 
 import type * as Database from './Database';
@@ -459,9 +459,9 @@ export const snapshotOf: {
 
 // TODO(dmaretskyi): Allow returning undefined.
 /**
- * Get the canonical URI of the object. Returns `URI.URI` (today always an EchoId,
+ * Get the canonical URI of the object. Returns `URI.URI` (today always an EchoURI,
  * but future entity kinds may surface other URI schemes — narrow with
- * `EchoId.parse(uri)` or `DXN.parse(uri)` at the point of use).
+ * `EchoURI.parse(uri)` or `DXN.parse(uri)` at the point of use).
  * Accepts both reactive objects and snapshots.
  */
 export const getURI = (entity: Unknown | Snapshot): URI.URI => {

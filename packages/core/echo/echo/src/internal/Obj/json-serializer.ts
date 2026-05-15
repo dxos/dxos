@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { raise } from '@dxos/debug';
 import { type EncodedReference, ObjectStructure, isEncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { EchoId, ObjectId, URI } from '@dxos/keys';
+import { EchoURI, ObjectId, URI } from '@dxos/keys';
 import { assumeType, deepMapValues, visitValues } from '@dxos/util';
 
 import type * as Database from '../../Database';
@@ -219,8 +219,8 @@ export const objectStructureToJson = (objectId: ObjectId, structure: ObjectStruc
     id: objectId,
     [ATTR_TYPE]: typeRef ? URI.make(typeRef) : undefined,
     [ATTR_DELETED]: ObjectStructure.isDeleted(structure),
-    [ATTR_PARENT]: parent !== undefined ? EchoId.parse(parent) : undefined,
-    [ATTR_RELATION_SOURCE]: source !== undefined ? EchoId.parse(source) : undefined,
-    [ATTR_RELATION_TARGET]: target !== undefined ? EchoId.parse(target) : undefined,
+    [ATTR_PARENT]: parent !== undefined ? EchoURI.parse(parent) : undefined,
+    [ATTR_RELATION_SOURCE]: source !== undefined ? EchoURI.parse(source) : undefined,
+    [ATTR_RELATION_TARGET]: target !== undefined ? EchoURI.parse(target) : undefined,
   };
 };

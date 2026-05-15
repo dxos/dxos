@@ -11,7 +11,7 @@ import { Database, Feed, Filter, Obj, Ref, View } from '@dxos/echo';
 import { isInstanceOf } from '@dxos/echo/internal';
 import { QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { EchoId, ObjectId } from '@dxos/keys';
+import { EchoURI, ObjectId } from '@dxos/keys';
 import { getTypenameFromQuery } from '@dxos/schema';
 import { Message } from '@dxos/types';
 import { safeParseJson } from '@dxos/util';
@@ -206,7 +206,7 @@ export const registry: Record<NodeType, Executable> = {
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: id }) =>
       Effect.gen(function* () {
         const { queues } = yield* QueueService;
-        const echoId = EchoId.isEchoId(id) ? EchoId.parse(id) : EchoId.fromLocalObjectId(id);
+        const echoId = EchoURI.isEchoId(id) ? EchoURI.parse(id) : EchoURI.fromLocalObjectId(id);
         const messages = yield* Effect.promise(() => queues.get(echoId).queryObjects());
         const decoded = Schema.decodeUnknownSync(Schema.Any)(messages);
         return {
@@ -222,15 +222,15 @@ export const registry: Record<NodeType, Executable> = {
     exec: synchronizedComputeFunction(({ id, items }) =>
       Effect.gen(function* () {
         items = Array.isArray(items) ? items : [items];
-        if (EchoId.isEchoId(id)) {
-          const parsed = EchoId.parse(id);
-          const echoId = EchoId.getObjectId(parsed);
-          const spaceId = EchoId.getSpaceId(parsed);
+        if (EchoURI.isEchoId(id)) {
+          const parsed = EchoURI.parse(id);
+          const echoId = EchoURI.getObjectId(parsed);
+          const spaceId = EchoURI.getSpaceId(parsed);
           const { db } = yield* Database.Service;
           if (spaceId != null) {
             invariant(db.spaceId === spaceId, 'Space mismatch');
           }
-          invariant(echoId, 'Object ID missing from EchoId');
+          invariant(echoId, 'Object ID missing from EchoURI');
 
           const [container] = yield* Effect.promise(() => db.query(Filter.id(echoId)).run());
           if (isInstanceOf(View.View, container)) {
@@ -259,7 +259,7 @@ export const registry: Record<NodeType, Executable> = {
             id: item.id ?? ObjectId.random(),
           }));
           const { queues } = yield* QueueService;
-          const queueEchoId = EchoId.fromLocalObjectId(id);
+          const queueEchoId = EchoURI.fromLocalObjectId(id);
           yield* Effect.promise(() => queues.get(queueEchoId).append(mappedItems));
           return {};
         }

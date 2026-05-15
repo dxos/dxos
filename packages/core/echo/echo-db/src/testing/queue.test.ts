@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { Event } from '@dxos/async';
 import { Entity, Feed, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { EchoId, SpaceId } from '@dxos/keys';
+import { EchoURI, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 
 import { EchoTestBuilder } from './echo-test-builder';
@@ -47,7 +47,7 @@ describe('queues', () => {
     await queue.append([Obj.make(TestSchema.Person, { name: 'john' })]);
     const obj = queue.objects[0];
     // Queue items now receive an ECHO-kind DXN (echo://spaceId/itemId), not a queue DXN.
-    expect(Entity.getId(obj)).toEqual(EchoId.fromSpaceAndObjectId(db.spaceId, obj.id));
+    expect(Entity.getId(obj)).toEqual(EchoURI.fromSpaceAndObjectId(db.spaceId, obj.id));
   });
 
   test('create and resolve an object from a queue', async () => {
@@ -65,7 +65,7 @@ describe('queues', () => {
       // context is the correct way to resolve them.
       const resolved = await peer.client.graph
         .createRefResolver({ context: { space: spaceId, feed: queue.dxn } })
-        .resolve(EchoId.fromLocalObjectId(obj.id));
+        .resolve(EchoURI.fromLocalObjectId(obj.id));
       expect(resolved?.id).toEqual(obj.id);
       expect(resolved?.name).toEqual('john');
       expect(Obj.getSchema(resolved as Obj.Unknown)).toEqual(TestSchema.Person);

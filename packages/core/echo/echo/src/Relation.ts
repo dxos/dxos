@@ -10,7 +10,7 @@ import { raise } from '@dxos/debug';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { EchoId, type ObjectId, type URI } from '@dxos/keys';
+import { EchoURI, type ObjectId, type URI } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type * as Database from './Database';
@@ -207,11 +207,11 @@ export const isSnapshot = (value: unknown): value is Snapshot => {
  * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
  */
-export const getSourceDXN = (value: Unknown | Snapshot): EchoId.EchoId => {
+export const getSourceDXN = (value: Unknown | Snapshot): EchoURI.EchoURI => {
   assertArgument(isRelation(value), 'Expected a relation');
   assumeType<internal.InternalObjectProps>(value);
   const dxn = (value as internal.InternalObjectProps)[internal.RelationSourceDXNId];
-  invariant(EchoId.isEchoId(dxn));
+  invariant(EchoURI.isEchoId(dxn));
   return dxn;
 };
 
@@ -220,11 +220,11 @@ export const getSourceDXN = (value: Unknown | Snapshot): EchoId.EchoId => {
  * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
  */
-export const getTargetDXN = (value: Unknown | Snapshot): EchoId.EchoId => {
+export const getTargetDXN = (value: Unknown | Snapshot): EchoURI.EchoURI => {
   assertArgument(isRelation(value), 'Expected a relation');
   assumeType<internal.InternalObjectProps>(value);
   const dxn = (value as internal.InternalObjectProps)[internal.RelationTargetDXNId];
-  invariant(EchoId.isEchoId(dxn));
+  invariant(EchoURI.isEchoId(dxn));
   return dxn;
 };
 
@@ -350,10 +350,10 @@ export const setValue: (rel: Mutable<Unknown>, path: readonly (string | number)[
 //
 
 /**
- * Get the canonical EchoId of the relation.
+ * Get the canonical EchoURI of the relation.
  * Accepts both reactive relations and snapshots.
  */
-export const getId = (entity: Unknown | Snapshot): EchoId.EchoId => internal.getId(entity);
+export const getId = (entity: Unknown | Snapshot): EchoURI.EchoURI => internal.getId(entity);
 
 /**
  * @returns The DXN of the relation's type.

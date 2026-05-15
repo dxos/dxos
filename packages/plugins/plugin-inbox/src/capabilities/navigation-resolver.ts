@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, getSpaceIdFromPath, getSpacePath, type AppCapabilities as AppCaps } from '@dxos/app-toolkit';
 import { Database, Filter, Key, Obj, Query } from '@dxos/echo';
-import { EchoId, URI } from '@dxos/keys';
+import { EchoURI, URI } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings';
 import { getLinkedVariant, isLinkedSegment } from '@dxos/react-ui-attention';
@@ -35,7 +35,7 @@ export default Capability.makeModule(
         }
 
         const rawDxn = query.dxn.startsWith('@dxn:') ? query.dxn.slice(1) : query.dxn;
-        const dxnRef = EchoId.tryParse(rawDxn) ?? (rawDxn.startsWith('dxn:') ? URI.make(rawDxn) : undefined);
+        const dxnRef = EchoURI.tryParse(rawDxn) ?? (rawDxn.startsWith('dxn:') ? URI.make(rawDxn) : undefined);
         if (!dxnRef) {
           return [];
         }
@@ -74,7 +74,7 @@ export default Capability.makeModule(
         return Effect.succeed(Option.none());
       }
 
-      const mailboxEchoId = EchoId.fromSpaceAndObjectId(spaceId, mailboxId as Key.ObjectId);
+      const mailboxEchoId = EchoURI.fromSpaceAndObjectId(spaceId, mailboxId as Key.ObjectId);
       const mailboxRef = space.db.makeRef(mailboxEchoId);
 
       const isMessagePath = isLinkedSegment(qualifiedPath);
@@ -83,7 +83,7 @@ export default Capability.makeModule(
       return Database.loadOption(mailboxRef).pipe(
         Effect.flatMap((mailboxOption) => {
           if (Option.isNone(mailboxOption) || !Mailbox.instanceOf(mailboxOption.value)) {
-            return Effect.succeed(Option.none<EchoId.EchoId>());
+            return Effect.succeed(Option.none<EchoURI.EchoURI>());
           }
 
           // For non-message paths, the mailbox existing is sufficient.
@@ -101,7 +101,7 @@ export default Capability.makeModule(
               const feed = await mailbox.feed.load();
               const messages = await space.db.query(Query.select(Filter.id(messageId)).from(feed)).run();
               if (messages.length > 0) {
-                return Option.some(EchoId.parse(Obj.getURI(messages[0])));
+                return Option.some(EchoURI.parse(Obj.getURI(messages[0])));
               }
             }
 
@@ -109,11 +109,11 @@ export default Capability.makeModule(
               | Message.Message
               | undefined;
             if (fromDb && DraftMessage.belongsTo(fromDb, mailboxDxnString)) {
-              return Option.some(EchoId.parse(Obj.getURI(fromDb)));
+              return Option.some(EchoURI.parse(Obj.getURI(fromDb)));
             }
 
-            return Option.none<EchoId.EchoId>();
-          }).pipe(Effect.catchAll(() => Effect.succeed(Option.none<EchoId.EchoId>())));
+            return Option.none<EchoURI.EchoURI>();
+          }).pipe(Effect.catchAll(() => Effect.succeed(Option.none<EchoURI.EchoURI>())));
         }),
       );
     };

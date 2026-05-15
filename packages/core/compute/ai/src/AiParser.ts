@@ -15,7 +15,7 @@ import type * as Types from 'effect/Types';
 
 import { Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { EchoId, ObjectId } from '@dxos/keys';
+import { EchoURI, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ContentBlock } from '@dxos/types';
 
@@ -589,7 +589,7 @@ const parseObjectBlock = (block: StreamBlock): ContentBlock.Reference | undefine
     try {
       return {
         _tag: 'reference',
-        reference: Ref.fromURI(EchoId.parse(block.attributes.dxn)),
+        reference: Ref.fromURI(EchoURI.parse(block.attributes.dxn)),
       };
     } catch {}
   }
@@ -599,7 +599,7 @@ const parseObjectBlock = (block: StreamBlock): ContentBlock.Reference | undefine
     try {
       return {
         _tag: 'reference',
-        reference: Ref.fromURI(EchoId.fromLocalObjectId(block.attributes.id)),
+        reference: Ref.fromURI(EchoURI.fromLocalObjectId(block.attributes.id)),
       };
     } catch {}
   }
@@ -609,7 +609,7 @@ const parseObjectBlock = (block: StreamBlock): ContentBlock.Reference | undefine
     try {
       return {
         _tag: 'reference',
-        reference: Ref.fromURI(EchoId.parse(block.content[0].content)),
+        reference: Ref.fromURI(EchoURI.parse(block.content[0].content)),
       };
     } catch {}
   }
@@ -620,7 +620,7 @@ const parseObjectBlock = (block: StreamBlock): ContentBlock.Reference | undefine
     try {
       return {
         _tag: 'reference',
-        reference: Ref.fromURI(EchoId.parse(dxnTag.content[0].content)),
+        reference: Ref.fromURI(EchoURI.parse(dxnTag.content[0].content)),
       };
     } catch {}
   }

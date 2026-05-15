@@ -4,7 +4,7 @@
 
 import { type ObjectMeta } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { EchoId } from '@dxos/keys';
+import { EchoURI } from '@dxos/keys';
 import { deepMapValues } from '@dxos/util';
 
 import { Ref } from '../../Ref';
@@ -61,12 +61,12 @@ export const typedJsonSerializer = function (this: any) {
 
   if (this[RelationSourceDXNId]) {
     const sourceDXN = this[RelationSourceDXNId];
-    invariant(EchoId.isEchoId(sourceDXN));
+    invariant(EchoURI.isEchoId(sourceDXN));
     result[ATTR_RELATION_SOURCE] = sourceDXN;
   }
   if (this[RelationTargetDXNId]) {
     const targetDXN = this[RelationTargetDXNId];
-    invariant(EchoId.isEchoId(targetDXN));
+    invariant(EchoURI.isEchoId(targetDXN));
     result[ATTR_RELATION_TARGET] = targetDXN;
   }
 

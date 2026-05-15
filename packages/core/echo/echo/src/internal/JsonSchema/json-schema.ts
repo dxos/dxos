@@ -13,7 +13,7 @@ import type * as Types from 'effect/Types';
 import { raise } from '@dxos/debug';
 import { mapAst } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, EchoId, ObjectId } from '@dxos/keys';
+import { DXN, EchoURI, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { clearUndefined, orderKeys, removeProperties } from '@dxos/util';
 
@@ -411,10 +411,10 @@ const decodeTypeIdentifierAnnotation = (schema: JsonSchemaType): string | undefi
   if (schema.$id && (schema.$id.startsWith('echo:') || schema.$id.startsWith('dxn:echo:'))) {
     return schema.$id;
   }
-  // Legacy: pre-Phase-6 serializations stored the EchoId on echo.type.schemaId.
+  // Legacy: pre-Phase-6 serializations stored the EchoURI on echo.type.schemaId.
   const legacySchemaId = (schema as any).echo?.type?.schemaId ?? (schema as any).echo?.schemaId;
   if (legacySchemaId) {
-    return ObjectId.isValid(legacySchemaId) ? EchoId.fromLocalObjectId(legacySchemaId) : legacySchemaId;
+    return ObjectId.isValid(legacySchemaId) ? EchoURI.fromLocalObjectId(legacySchemaId) : legacySchemaId;
   }
   return undefined;
 };
@@ -468,7 +468,7 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): SchemaAST.Annota
   if (typeAnnotation) {
     annotations[TypeAnnotationId] = typeAnnotation;
     annotations[SchemaAST.JSONSchemaAnnotationId] = makeTypeJsonSchemaAnnotation({
-      // $id is the typename DXN — the schema's type identity. The storage EchoId (if any)
+      // $id is the typename DXN — the schema's type identity. The storage EchoURI (if any)
       // is preserved separately on TypeIdentifierAnnotation / echo.schemaId.
       identifier: DXN.fromTypenameAndVersion(typeAnnotation.typename, typeAnnotation.version),
       kind: typeAnnotation.kind,

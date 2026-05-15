@@ -8,7 +8,7 @@ import React, { useCallback, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
 import { useTypeOptions } from '@dxos/app-toolkit/ui';
-import { EchoId, Filter, JsonSchema, Obj, Query, type QueryAST, Tag, Type, type View } from '@dxos/echo';
+import { EchoURI, Filter, JsonSchema, Obj, Query, type QueryAST, Tag, Type, type View } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/internal';
 import { useClient } from '@dxos/react-client';
 import { useQuery } from '@dxos/react-client/echo';
@@ -46,7 +46,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
   }, [client, db, view, schema]);
 
   const handleQueryChanged = useCallback(
-    async (newQuery: QueryAST.Query, target?: EchoId.EchoId) => {
+    async (newQuery: QueryAST.Query, target?: EchoURI.EchoURI) => {
       if (!view || !db) {
         return;
       }

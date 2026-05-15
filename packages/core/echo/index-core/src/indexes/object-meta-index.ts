@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ATTR_DELETED, ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
-import { DXN, EchoId, ObjectId, SpaceId } from '@dxos/keys';
+import { DXN, EchoURI, ObjectId, SpaceId } from '@dxos/keys';
 
 import type { IndexerObject } from './interface';
 import type { Index } from './interface';
@@ -35,10 +35,10 @@ export const ObjectMeta = Schema.Struct({
   /** The versioned DXN of the type of the object. */
   typeDxn: DXN.Schema,
   deleted: Schema.Boolean,
-  source: Schema.NullOr(EchoId.Schema),
-  target: Schema.NullOr(EchoId.Schema),
+  source: Schema.NullOr(EchoURI.Schema),
+  target: Schema.NullOr(EchoURI.Schema),
   /** Parent object id (nullable). */
-  parent: Schema.NullOr(EchoId.Schema),
+  parent: Schema.NullOr(EchoURI.Schema),
   /** Monotonically increasing sequence number assigned on insert/update for tracking indexing order. */
   version: Schema.Number,
   /** Unix ms timestamp when the object was first indexed. */
@@ -480,7 +480,7 @@ export class ObjectMetaIndex implements Index {
         }
 
         const sql = yield* SqlClient.SqlClient;
-        const parentDzns = query.parentIds.map((id) => EchoId.fromLocalObjectId(id));
+        const parentDzns = query.parentIds.map((id) => EchoURI.fromLocalObjectId(id));
         const parentDxns = parentDzns;
         const rows =
           yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', query.spaceId)} AND (${sql.in('parent', parentDxns)} OR ${sql.in('queueId', query.parentIds)})`;

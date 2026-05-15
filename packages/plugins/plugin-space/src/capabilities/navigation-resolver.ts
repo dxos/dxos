@@ -14,7 +14,7 @@ import {
   type AppCapabilities as AppCaps,
 } from '@dxos/app-toolkit';
 import { Database, Entity, Key } from '@dxos/echo';
-import { EchoId } from '@dxos/keys';
+import { EchoURI } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { SETTINGS_ID, SETTINGS_KEY } from '@dxos/plugin-settings';
 
@@ -35,7 +35,7 @@ export default Capability.makeModule(
           ];
         }
 
-        const dxn = EchoId.tryParse(query.dxn.startsWith('@dxn:') ? query.dxn.slice(1) : query.dxn);
+        const dxn = EchoURI.tryParse(query.dxn.startsWith('@dxn:') ? query.dxn.slice(1) : query.dxn);
         if (!dxn) {
           return [];
         }
@@ -79,10 +79,10 @@ export default Capability.makeModule(
         return Effect.succeed(Option.none());
       }
 
-      const echoId = EchoId.fromSpaceAndObjectId(spaceId, objectId as Key.ObjectId);
+      const echoId = EchoURI.fromSpaceAndObjectId(spaceId, objectId as Key.ObjectId);
       const ref = space.db.makeRef(echoId);
       return Database.loadOption(ref).pipe(
-        Effect.map((option) => (Option.isSome(option) ? Option.some(echoId) : Option.none<EchoId.EchoId>())),
+        Effect.map((option) => (Option.isSome(option) ? Option.some(echoId) : Option.none<EchoURI.EchoURI>())),
       );
     };
 

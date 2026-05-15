@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import { CommandConfig, printList } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
 import { Entity } from '@dxos/echo';
-import { EchoId } from '@dxos/keys';
+import { EchoURI } from '@dxos/keys';
 
 import { printQueueObject } from './util';
 
@@ -22,12 +22,12 @@ export const query = Command.make(
   Effect.fnUntraced(function* ({ dxn }) {
     const { json } = yield* CommandConfig;
     const client = yield* ClientService;
-    const echoId = EchoId.tryParse(dxn);
+    const echoId = EchoURI.tryParse(dxn);
     if (!echoId) {
       yield* Console.error(`Not a valid feed identifier: ${dxn}`);
       return;
     }
-    const spaceId = EchoId.getSpaceId(echoId);
+    const spaceId = EchoURI.getSpaceId(echoId);
     if (!spaceId) {
       yield* Console.error(`Could not determine space from: ${dxn}`);
       return;

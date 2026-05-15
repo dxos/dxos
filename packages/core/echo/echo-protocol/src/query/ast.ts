@@ -5,7 +5,7 @@
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 
-import { DXN, EchoId, ObjectId } from '@dxos/keys';
+import { DXN, EchoURI, ObjectId } from '@dxos/keys';
 
 import { ForeignKey } from '../foreign-key';
 
@@ -173,7 +173,7 @@ export const FilterOr: Schema.Schema<FilterOr> = FilterOr_;
 const FilterChildOf_ = Schema.Struct({
   type: Schema.Literal('child-of'),
   /** Parent DXNs to match children of. */
-  parents: Schema.Array(EchoId.Schema),
+  parents: Schema.Array(EchoURI.Schema),
   /** Whether to match transitively (grandchildren, etc.). Defaults to true. */
   transitive: Schema.Boolean,
 });
@@ -451,11 +451,11 @@ export const Scope = Schema.Struct({
   allFeedsFromSpaces: Schema.optional(Schema.Boolean),
 
   /**
-   * The nested select statemets will select from the given feeds (by EchoId or legacy DXN).
+   * The nested select statemets will select from the given feeds (by EchoURI or legacy DXN).
    *
    * NOTE: Spaces and feeds are unioned together if both are specified.
    */
-  feeds: Schema.optional(Schema.Array(EchoId.Schema)),
+  feeds: Schema.optional(Schema.Array(EchoURI.Schema)),
 });
 export interface Scope extends Schema.Schema.Type<typeof Scope> {}
 

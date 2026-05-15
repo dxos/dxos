@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 import type { Filter as Filter$, Order as Order$, Query as Query$, Ref } from '@dxos/echo';
 import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
-import type { DXN, EchoId, ObjectId, URI } from '@dxos/keys';
+import type { DXN, EchoURI, ObjectId, URI } from '@dxos/keys';
 
 //
 // Light-weight implementation of query execution.
@@ -255,7 +255,7 @@ class FilterClass implements Filter$.Any {
     const items = Array.isArray(parents) ? parents : [parents];
     const dxns = items.map((item) => {
       if (isDxnLike(item)) {
-        return item.toString() as EchoId.EchoId;
+        return item.toString() as EchoURI.EchoURI;
       }
       throw new TypeError('childOf requires DXN values in query-lite');
     });

@@ -17,7 +17,7 @@ import {
   InvocationTraceStartEvent,
   createInvocationSpans,
 } from '@dxos/functions-runtime';
-import { EchoId, type URI } from '@dxos/keys';
+import { EchoURI, type URI } from '@dxos/keys';
 
 import { type Column, Table } from '../../../../components';
 import { theme } from '../../../../theme';
@@ -25,7 +25,7 @@ import { theme } from '../../../../theme';
 export type TraceProps = {
   db: Database.Database;
   queues: QueueAPI;
-  queueDxn: Option.Option<EchoId.EchoId>;
+  queueDxn: Option.Option<EchoURI.EchoURI>;
   functionId: Option.Option<string>;
 };
 
@@ -182,7 +182,7 @@ const useFunctionQuery = (
 
 // Effect: Resolve the queue from the DXN.
 const useTraceQueue = (
-  queueDxn: Option.Option<EchoId.EchoId>,
+  queueDxn: Option.Option<EchoURI.EchoURI>,
   queues: QueueAPI,
   setTraceQueue: (queue: Queue<InvocationTraceEvent> | undefined) => void,
 ) => {

@@ -539,7 +539,7 @@ describe('Integration tests', () => {
   });
 
   // After the identifier refactor, object `system.type` is the typename DXN (not the
-  // stored schema's EchoId), so schemas no longer ride along as strong deps. The
+  // stored schema's EchoURI), so schemas no longer ride along as strong deps. The
   // expected loading mechanism is now `preloadSchemaOnOpen` / `reactiveSchemaQuery`.
   test('dynamic schema is loaded with objects (via schema registry preload)', async () => {
     await using peer = await builder.createPeer();

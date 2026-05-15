@@ -5,7 +5,7 @@
 import { Filter, Obj, type Query } from '@dxos/echo';
 import { EncodedReference as EncodedRef, type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { DXN, EchoId, type URI } from '@dxos/keys';
+import { DXN, EchoURI, type URI } from '@dxos/keys';
 import { isNonNullable } from '@dxos/util';
 
 import { type EchoDatabase } from './proxy-db';
@@ -100,7 +100,7 @@ export const decodeDXNFromJSON = (encoded?: EncodedReference | string): URI.URI 
   if (typeof encoded === 'object' && encoded !== null && '/' in encoded) {
     return EncodedRef.toURI(encoded);
   } else if (typeof encoded === 'string') {
-    if (DXN.isDXN(encoded) || EchoId.isEchoId(encoded)) {
+    if (DXN.isDXN(encoded) || EchoURI.isEchoId(encoded)) {
       return encoded;
     }
     // Treat plain strings as type names.

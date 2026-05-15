@@ -17,7 +17,7 @@ import { Operation, OperationRegistry, Trace } from '@dxos/compute';
 import { Database, Feed, Ref } from '@dxos/echo';
 import { QueueService } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
-import { EchoId } from '@dxos/keys';
+import { EchoURI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
@@ -126,7 +126,7 @@ export const gptNode = defineComputeNode({
     const { queues } = yield* QueueService;
     const historyMessages = conversation
       ? yield* Effect.tryPromise({
-          try: () => queues.get<Message.Message>(EchoId.parse(conversation.uri)).queryObjects(),
+          try: () => queues.get<Message.Message>(EchoURI.parse(conversation.uri)).queryObjects(),
           catch: (e) => e as Error,
         })
       : (history ?? []);
@@ -176,7 +176,7 @@ export const gptNode = defineComputeNode({
       log.info('messages', { messages });
 
       if (conversation) {
-        yield* Effect.promise(() => queues.get<Message.Message>(EchoId.parse(conversation.uri)).append([...messages]));
+        yield* Effect.promise(() => queues.get<Message.Message>(EchoURI.parse(conversation.uri)).append([...messages]));
       }
 
       const text = messages

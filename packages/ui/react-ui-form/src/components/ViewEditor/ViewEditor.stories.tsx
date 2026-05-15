@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { EchoId, Filter, JsonSchema, Obj, Query, type QueryAST, Tag, Type, type View } from '@dxos/echo';
+import { EchoURI, Filter, JsonSchema, Obj, Query, type QueryAST, Tag, Type, type View } from '@dxos/echo';
 import { type EchoSchema, Format, type Mutable } from '@dxos/echo/internal';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -82,7 +82,7 @@ const DefaultStory = (props: DefaultStoryProps) => {
   }, [space]);
 
   const updateViewQuery = useCallback(
-    async (newQuery: QueryAST.Query, target?: EchoId.EchoId) => {
+    async (newQuery: QueryAST.Query, target?: EchoURI.EchoURI) => {
       if (!schema || !view || !space) {
         return;
       }

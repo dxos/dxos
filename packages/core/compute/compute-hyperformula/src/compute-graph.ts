@@ -10,7 +10,7 @@ import { Operation } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { Filter, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { EchoId, PublicKey } from '@dxos/keys';
+import { EchoURI, PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 import type { Listeners } from '@dxos/vendor-hyperformula';
@@ -225,7 +225,7 @@ export class ComputeGraph extends Resource {
    */
   mapFunctionBindingFromId(formula: string): string | undefined {
     const replaceMatch = (echoId: string, args: string) => {
-      const parsed = EchoId.tryParse(echoId);
+      const parsed = EchoURI.tryParse(echoId);
       const canonical = parsed ?? echoId;
       const fn = this._remoteFunctions.find((fn) => Obj.getURI(fn) === canonical);
       if (fn?.binding) {

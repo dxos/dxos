@@ -8,7 +8,7 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, WidgetType } fr
 import { type SyntaxNode } from '@lezer/common';
 
 import { type Database, Entity } from '@dxos/echo';
-import { EchoId, URI } from '@dxos/keys';
+import { EchoURI, URI } from '@dxos/keys';
 
 export type PreviewBlock = {
   link: PreviewLinkRef;
@@ -79,7 +79,7 @@ const resolveLabel = (
   dxnStr: string,
   viewRef: { current: EditorView | undefined },
 ): string | undefined => {
-  const echoId = EchoId.tryParse(dxnStr);
+  const echoId = EchoURI.tryParse(dxnStr);
   const dxnRef = echoId ?? (dxnStr.startsWith('dxn:') ? URI.make(dxnStr) : undefined);
   if (!dxnRef) {
     return;

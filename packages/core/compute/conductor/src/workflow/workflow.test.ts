@@ -14,7 +14,7 @@ import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { TestHelpers } from '@dxos/effect/testing';
 import { configuredCredentialsLayer } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { EchoId, ObjectId } from '@dxos/keys';
+import { EchoURI, ObjectId } from '@dxos/keys';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import {
@@ -194,11 +194,11 @@ describe('workflow', () => {
     outputPath: string | null,
     map: { [inputId: string]: Transform },
   ): TestWorkflowGraph => {
-    const graphDxn = EchoId.fromLocalObjectId(ObjectId.random());
+    const graphDxn = EchoURI.fromLocalObjectId(ObjectId.random());
     const model = ComputeGraphModel.create({ id: graphDxn });
-    const compute: [EchoId.EchoId, Transform][] = [];
+    const compute: [EchoURI.EchoURI, Transform][] = [];
     for (const [inputId, transform] of Object.entries(map)) {
-      const computeNodeDxn = EchoId.fromLocalObjectId(ObjectId.random());
+      const computeNodeDxn = EchoURI.fromLocalObjectId(ObjectId.random());
       const transformId = ObjectId.random();
       compute.push([computeNodeDxn, transform]);
       addTransform(model, { id: transformId, type: computeNodeDxn }, { inputId, withOutput: inputId === outputPath });
@@ -207,8 +207,8 @@ describe('workflow', () => {
     return { graphDxn, graph, compute };
   };
 
-  const createSubgraphTransform = (subgraphDxn: EchoId.EchoId): TestWorkflowGraph => {
-    const graphDxn = EchoId.fromLocalObjectId(ObjectId.random());
+  const createSubgraphTransform = (subgraphDxn: EchoURI.EchoURI): TestWorkflowGraph => {
+    const graphDxn = EchoURI.fromLocalObjectId(ObjectId.random());
     const model = ComputeGraphModel.create({ id: graphDxn });
     const transformId = ObjectId.random();
     addTransform(model, { id: transformId, type: subgraphDxn, subgraph: Ref.fromURI(subgraphDxn) });
@@ -217,7 +217,7 @@ describe('workflow', () => {
   };
 
   const createFunctionTransform = (functionRef: Ref.Ref<any> | null): TestWorkflowGraph => {
-    const graphDxn = EchoId.fromLocalObjectId(ObjectId.random());
+    const graphDxn = EchoURI.fromLocalObjectId(ObjectId.random());
     const model = ComputeGraphModel.create({ id: graphDxn });
     const transformId = ObjectId.random();
     addTransform(model, { id: transformId, type: 'function', function: functionRef ?? undefined });
@@ -263,7 +263,7 @@ describe('workflow', () => {
 type Transform = (input: any) => any;
 
 type TestWorkflowGraph = {
-  graphDxn: EchoId.EchoId;
+  graphDxn: EchoURI.EchoURI;
   graph: ComputeGraph;
-  compute: [EchoId.EchoId, Transform][];
+  compute: [EchoURI.EchoURI, Transform][];
 };

@@ -6,13 +6,13 @@
 
 /**
  * Branded string type for any URI.
- * Base type for more specific URI schemes like DXN and EchoId.
+ * Base type for more specific URI schemes like DXN and EchoURI.
  */
 export type URI = string & { readonly __URI: unique symbol };
 
 /**
  * Brand a string as an opaque URI without validating the scheme.
- * For typed construction prefer `DXN.fromTypename`, `EchoId.fromSpaceAndObjectId`, etc.
+ * For typed construction prefer `DXN.fromTypename`, `EchoURI.fromSpaceAndObjectId`, etc.
  */
 export const make = (uri: string): URI => uri as URI;
 

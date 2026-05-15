@@ -19,7 +19,7 @@ import {
   makeTypeJsonSchemaAnnotation,
 } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { DXN, EchoId, type ObjectId } from '@dxos/keys';
+import { DXN, EchoURI, type ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { coerceArray, compositeKey } from '@dxos/util';
 
@@ -384,7 +384,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
       jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})),
     });
     // The schema's $id is the typename DXN — universal across stored and non-stored
-    // schemas. The schema-as-object's storage EchoId is tracked separately on
+    // schemas. The schema-as-object's storage EchoURI is tracked separately on
     // TypeIdentifierAnnotation for back-references (e.g. registry lookup by object id).
     const typeDxn = DXN.fromTypenameAndVersion(meta.typename, meta.version);
     const storageEchoId = `dxn:echo:@:${schemaToStore.id}`;
@@ -456,10 +456,10 @@ const getObjectIdFromSchema = (schema: Schema.Schema.AnyNoContext): ObjectId | u
     return undefined;
   }
 
-  const echoId = EchoId.tryParse(echoIdentifier);
+  const echoId = EchoURI.tryParse(echoIdentifier);
   if (!echoId) {
     return undefined;
   }
-  invariant(EchoId.isLocal(echoId));
-  return EchoId.getObjectId(echoId);
+  invariant(EchoURI.isLocal(echoId));
+  return EchoURI.getObjectId(echoId);
 };

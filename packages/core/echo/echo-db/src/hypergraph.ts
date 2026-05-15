@@ -7,7 +7,7 @@ import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Database, type Entity, Filter, type Hypergraph, Query, Ref } from '@dxos/echo';
 import { batchEvents, type AnyProperties, setRefResolver } from '@dxos/echo/internal';
-import { DXN, EchoId, type ObjectId, type SpaceId, type URI } from '@dxos/keys';
+import { DXN, EchoURI, type ObjectId, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { entry } from '@dxos/util';
@@ -141,7 +141,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     return {
       // TODO(dmaretskyi): Respect `load` flag.
       resolveSync: (uri: URI.URI, load: boolean, onLoad?: () => void) => {
-        if (!EchoId.isEchoId(uri)) {
+        if (!EchoURI.isEchoId(uri)) {
           return undefined; // Unsupported URI kind.
         }
 
@@ -171,7 +171,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
             const schema = this.schemaRegistry.getSchemaByDXN(uri);
             status = schema != null ? 'resolved' : 'missing';
             return schema;
-          } else if (EchoId.isEchoId(uri)) {
+          } else if (EchoURI.isEchoId(uri)) {
             status = 'error';
             throw new Error('Not implemented: Resolving schema stored in the database');
           } else {
@@ -201,13 +201,13 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     context: Hypergraph.RefResolutionContext,
     onResolve?: (obj: Entity.Any) => void,
   ): Entity.Any | undefined {
-    const parsedEchoId = EchoId.tryParse(uri);
+    const parsedEchoId = EchoURI.tryParse(uri);
     if (!parsedEchoId) {
       throw new Error('Unsupported URI kind');
     }
 
-    const spaceId = EchoId.getSpaceId(parsedEchoId) ?? context.space;
-    const objectId = EchoId.getObjectId(parsedEchoId);
+    const spaceId = EchoURI.getSpaceId(parsedEchoId) ?? context.space;
+    const objectId = EchoURI.getObjectId(parsedEchoId);
     if (spaceId === undefined || objectId === undefined) {
       throw new Error(`Unable to determine the Space to resolve the reference: ${uri}`);
     }
@@ -224,7 +224,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     // Fallback: try to resolve as a queue (Feed object backed by queue service).
     // Only resolve if a queue with this id has been explicitly created — otherwise
     // QueueFactory.get would manufacture a phantom queue for every unknown ECHO ref.
-    const queueEchoId = EchoId.fromSpaceAndObjectId(spaceId, objectId);
+    const queueEchoId = EchoURI.fromSpaceAndObjectId(spaceId, objectId);
     const queueFactory = this._queueFactories.get(spaceId);
     const queue = queueFactory?.tryGet(queueEchoId);
     if (queue) {
@@ -259,25 +259,25 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     const beginTime = TRACE_REF_RESOLUTION ? performance.now() : 0;
     let status: string = '';
     try {
-      const parsedEchoId = EchoId.tryParse(uri);
+      const parsedEchoId = EchoURI.tryParse(uri);
       if (parsedEchoId) {
-        const echoId = EchoId.getObjectId(parsedEchoId);
-        const echoSpaceId = EchoId.getSpaceId(parsedEchoId);
+        const echoId = EchoURI.getObjectId(parsedEchoId);
+        const echoSpaceId = EchoURI.getSpaceId(parsedEchoId);
         if (!echoId) {
           status = 'error';
-          throw new Error(`Invalid EchoId: ${uri}`);
+          throw new Error(`Invalid EchoURI: ${uri}`);
         }
-        if (!EchoId.isLocal(parsedEchoId) && echoSpaceId !== context.space) {
+        if (!EchoURI.isLocal(parsedEchoId) && echoSpaceId !== context.space) {
           status = 'error';
           throw new Error('Cross-space references are not yet supported');
         }
 
         const feedEchoId = context.feed;
         if (feedEchoId) {
-          const feedSpaceId = EchoId.getSpaceId(feedEchoId) ?? context.space;
-          const queueId = EchoId.getObjectId(feedEchoId);
+          const feedSpaceId = EchoURI.getSpaceId(feedEchoId) ?? context.space;
+          const queueId = EchoURI.getObjectId(feedEchoId);
           if (feedSpaceId && queueId) {
-            const queueEchoId = EchoId.fromSpaceAndObjectId(feedSpaceId, queueId);
+            const queueEchoId = EchoURI.fromSpaceAndObjectId(feedSpaceId, queueId);
             const obj = await this._resolveQueueObjectAsync(queueEchoId, echoId);
             if (obj) {
               status = 'resolved';
@@ -306,7 +306,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         }
 
         // (3) Fallback: caller may be addressing a queue itself by URI.
-        const queueEchoId = EchoId.fromSpaceAndObjectId(context.space, echoId);
+        const queueEchoId = EchoURI.fromSpaceAndObjectId(context.space, echoId);
         const queue = this._resolveQueueSync(queueEchoId);
         if (queue) {
           status = 'resolved';
@@ -361,8 +361,8 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     return obj;
   }
 
-  private _resolveQueueSync(queueEchoId: EchoId.EchoId): Queue | undefined {
-    const spaceId = EchoId.getSpaceId(queueEchoId);
+  private _resolveQueueSync(queueEchoId: EchoURI.EchoURI): Queue | undefined {
+    const spaceId = EchoURI.getSpaceId(queueEchoId);
     if (!spaceId) {
       return undefined;
     }
@@ -374,10 +374,10 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   }
 
   private async _resolveQueueObjectAsync(
-    queueEchoId: EchoId.EchoId,
+    queueEchoId: EchoURI.EchoURI,
     objectId: ObjectId,
   ): Promise<Entity.Unknown | undefined> {
-    const spaceId = EchoId.getSpaceId(queueEchoId);
+    const spaceId = EchoURI.getSpaceId(queueEchoId);
     if (!spaceId) {
       return undefined;
     }

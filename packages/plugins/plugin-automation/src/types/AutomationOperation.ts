@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
-import type { EchoId as _EchoId } from '@dxos/keys';
+import type { EchoURI as _EchoId } from '@dxos/keys';
 
 import { meta } from '#meta';
 

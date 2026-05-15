@@ -10,7 +10,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { Annotation, Feed, Obj, QueryAST, Ref, Type, type Query } from '@dxos/echo';
 import { OptionsAnnotationId, SystemTypeAnnotation } from '@dxos/echo/internal';
 import { failedInvariant } from '@dxos/invariant';
-import { EchoId } from '@dxos/keys';
+import { EchoURI } from '@dxos/keys';
 
 /**
  * Type discriminator for TriggerType.
@@ -38,16 +38,16 @@ export const QueueSpec = Schema.Struct({
   kind: Schema.Literal('queue').annotations(kindLiteralAnnotations),
 
   // TODO(dmaretskyi): Rename to `feed` and change to a reference.
-  queue: EchoId.Schema,
+  queue: EchoURI.Schema,
 });
 export type QueueSpec = Schema.Schema.Type<typeof QueueSpec>;
 
 /**
- * Construct a Queue trigger spec from a queue EchoId or legacy DXN string.
+ * Construct a Queue trigger spec from a queue EchoURI or legacy DXN string.
  */
 export const specQueue = (queueDxn: string): QueueSpec => ({
   kind: 'queue',
-  queue: EchoId.parse(queueDxn),
+  queue: EchoURI.parse(queueDxn),
 });
 
 /**
@@ -55,7 +55,7 @@ export const specQueue = (queueDxn: string): QueueSpec => ({
  */
 export const specFeed = (feed: Feed.Feed): QueueSpec => ({
   kind: 'queue',
-  queue: Feed.getQueueDxn(feed) ?? failedInvariant(new Error('Could not extract EchoId from feed')),
+  queue: Feed.getQueueDxn(feed) ?? failedInvariant(new Error('Could not extract EchoURI from feed')),
 });
 
 /**

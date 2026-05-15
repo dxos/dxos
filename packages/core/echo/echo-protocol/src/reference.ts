@@ -22,7 +22,7 @@ export const EncodedReference = Object.freeze({
   isEncodedReference,
   /**
    * Returns the opaque URI stored in the encoded reference (any scheme: `echo:` or `dxn:`).
-   * Consumers can narrow with `EchoId.isEchoId(uri)` / `DXN.isDXN(uri)`.
+   * Consumers can narrow with `EchoURI.isEchoId(uri)` / `DXN.isDXN(uri)`.
    */
   toURI: (value: EncodedReference): URI.URI => {
     assertArgument(isEncodedReference(value), 'value', 'invalid reference');

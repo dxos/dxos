@@ -23,7 +23,7 @@ import { type Database, Ref } from '@dxos/echo';
 import { type DatabaseDirectory, EncodedReference, type ObjectStructure, type SpaceState } from '@dxos/echo-protocol';
 import { batchEvents } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { type DXN, EchoId, type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
+import { type DXN, EchoURI, type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
@@ -826,10 +826,10 @@ export class CoreDatabase {
       this._scheduleThrottledUpdate([objectId]);
     } else {
       for (const dep of core.getStrongDependencies()) {
-        if (!EchoId.isLocal(dep)) {
+        if (!EchoURI.isLocal(dep)) {
           continue;
         }
-        const id = EchoId.getObjectId(dep);
+        const id = EchoURI.getObjectId(dep);
         if (id) {
           this._automergeDocLoader.loadObjectDocument(id);
         }
@@ -881,10 +881,10 @@ export class CoreDatabase {
 
     const deps = core.getStrongDependencies();
     for (const dep of deps) {
-      if (!EchoId.isLocal(dep)) {
+      if (!EchoURI.isLocal(dep)) {
         continue;
       }
-      const depObjectId = EchoId.getObjectId(dep);
+      const depObjectId = EchoURI.getObjectId(dep);
       if (!depObjectId || this._objects.has(depObjectId)) {
         continue;
       }
@@ -901,10 +901,10 @@ export class CoreDatabase {
 
     seen.add(core.id);
     return deps.every((dep) => {
-      if (!EchoId.isLocal(dep)) {
+      if (!EchoURI.isLocal(dep)) {
         return true;
       }
-      const depObjectId = EchoId.getObjectId(dep);
+      const depObjectId = EchoURI.getObjectId(dep);
       if (!depObjectId) {
         return true;
       }

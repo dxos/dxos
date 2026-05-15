@@ -3,7 +3,7 @@
 //
 
 import { type Database, type Entity } from '@dxos/echo';
-import { type EchoId, type ObjectId } from '@dxos/keys';
+import { type EchoURI, type ObjectId } from '@dxos/keys';
 
 /**
  * @deprecated Queues are migrating to feeds (regular ECHO objects).
@@ -23,7 +23,7 @@ export type QueueSubspaceTag = (typeof QueueSubspaceTags)[keyof typeof QueueSubs
  */
 // TODO(dmaretskyi): Remove type parameter -- all queues are untyped, and we use query to enforce type.
 export interface Queue<T extends Entity.Unknown = Entity.Unknown> extends Database.Queryable {
-  readonly dxn: EchoId.EchoId;
+  readonly dxn: EchoURI.EchoURI;
 
   /**
    * Subscribe to queue updates.

@@ -12,7 +12,7 @@ import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { type Feed, Filter, Key, Obj, Query, Ref } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
-import { EchoId } from '@dxos/keys';
+import { EchoURI } from '@dxos/keys';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
@@ -337,7 +337,7 @@ export default Capability.makeModule(
           const integrations = get(AtomQuery.make(db, Filter.type(Integration.Integration)));
           const integration = integrations.find((integration) =>
             integration.targets.some(
-              (target) => target.object && EchoId.getObjectId(EchoId.tryParse(target.object.uri)!) === mailbox.id,
+              (target) => target.object && EchoURI.getObjectId(EchoURI.tryParse(target.object.uri)!) === mailbox.id,
             ),
           );
           if (!integration) {
@@ -372,7 +372,7 @@ export default Capability.makeModule(
           const integrations = get(AtomQuery.make(db, Filter.type(Integration.Integration)));
           const integration = integrations.find((integration) =>
             integration.targets.some(
-              (target) => target.object && EchoId.getObjectId(EchoId.tryParse(target.object.uri)!) === calendar.id,
+              (target) => target.object && EchoURI.getObjectId(EchoURI.tryParse(target.object.uri)!) === calendar.id,
             ),
           );
           if (!integration) {

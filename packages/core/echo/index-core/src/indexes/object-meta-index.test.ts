@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { ATTR_DELETED, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
-import { DXN, EchoId, ObjectId, SpaceId } from '@dxos/keys';
+import { DXN, EchoURI, ObjectId, SpaceId } from '@dxos/keys';
 
 import type { IndexerObject } from './interface';
 import { ObjectMetaIndex } from './object-meta-index';
@@ -150,8 +150,8 @@ describe('ObjectMetaIndex', () => {
         data: {
           id: objectId2,
           [ATTR_TYPE]: TYPE_RELATION,
-          [ATTR_RELATION_SOURCE]: EchoId.fromSpaceAndObjectId(spaceId, ObjectId.random()),
-          [ATTR_RELATION_TARGET]: EchoId.fromSpaceAndObjectId(spaceId, ObjectId.random()),
+          [ATTR_RELATION_SOURCE]: EchoURI.fromSpaceAndObjectId(spaceId, ObjectId.random()),
+          [ATTR_RELATION_TARGET]: EchoURI.fromSpaceAndObjectId(spaceId, ObjectId.random()),
           [ATTR_DELETED]: false,
         },
       };
@@ -260,8 +260,8 @@ describe('ObjectMetaIndex', () => {
         data: {
           id: relationId,
           [ATTR_TYPE]: TYPE_RELATION,
-          [ATTR_RELATION_SOURCE]: EchoId.fromLocalObjectId(objectId1),
-          [ATTR_RELATION_TARGET]: EchoId.fromLocalObjectId(objectId2),
+          [ATTR_RELATION_SOURCE]: EchoURI.fromLocalObjectId(objectId1),
+          [ATTR_RELATION_TARGET]: EchoURI.fromLocalObjectId(objectId2),
           [ATTR_DELETED]: false,
         },
       };
@@ -324,13 +324,13 @@ describe('ObjectMetaIndex', () => {
 
       const bySource = yield* index.queryRelations({
         endpoint: 'source',
-        anchorDxns: [EchoId.fromLocalObjectId(objectId1)],
+        anchorDxns: [EchoURI.fromLocalObjectId(objectId1)],
       });
       expect(bySource.map((_) => _.objectId)).toEqual([relationId]);
 
       const byTarget = yield* index.queryRelations({
         endpoint: 'target',
-        anchorDxns: [EchoId.fromLocalObjectId(objectId2)],
+        anchorDxns: [EchoURI.fromLocalObjectId(objectId2)],
       });
       expect(byTarget.map((_) => _.objectId)).toEqual([relationId]);
     }).pipe(Effect.provide(TestLayer)),

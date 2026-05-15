@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 
 import { type ForeignKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { EchoId, ObjectId, type URI } from '@dxos/keys';
+import { EchoURI, ObjectId, type URI } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type * as Database from '../../Database';
@@ -45,7 +45,7 @@ export { ATTR_DELETED, ATTR_SELF_DXN, ObjectDatabaseId, ObjectDeletedId, ObjectV
 // NOTE: Each symbol has a jsdoc describing its purpose.
 export interface InternalObjectProps {
   readonly id: ObjectId;
-  readonly [SelfDXNId]: EchoId.EchoId;
+  readonly [SelfDXNId]: EchoURI.EchoURI;
   readonly [KindId]: EntityKind;
   readonly [SchemaId]: Schema.Schema.AnyNoContext;
   readonly [TypeId]: URI.URI;
@@ -54,8 +54,8 @@ export interface InternalObjectProps {
   readonly [ObjectDatabaseId]?: Database.Database;
   readonly [ObjectDeletedId]?: boolean;
   readonly [ObjectVersionId]?: Version;
-  readonly [RelationSourceDXNId]?: EchoId.EchoId;
-  readonly [RelationTargetDXNId]?: EchoId.EchoId;
+  readonly [RelationSourceDXNId]?: EchoURI.EchoURI;
+  readonly [RelationTargetDXNId]?: EchoURI.EchoURI;
   readonly [RelationSourceId]?: InternalObjectProps;
   readonly [RelationTargetId]?: InternalObjectProps;
 }
@@ -74,12 +74,12 @@ export interface ObjectMetaJSON {
 export interface ObjectJSON {
   id: ObjectId;
   [ATTR_TYPE]?: URI.URI;
-  [ATTR_SELF_DXN]?: EchoId.EchoId;
-  [ATTR_PARENT]?: EchoId.EchoId; // Encoded reference
+  [ATTR_SELF_DXN]?: EchoURI.EchoURI;
+  [ATTR_PARENT]?: EchoURI.EchoURI; // Encoded reference
   [ATTR_DELETED]?: boolean;
   [ATTR_META]?: ObjectMetaJSON;
-  [ATTR_RELATION_SOURCE]?: EchoId.EchoId;
-  [ATTR_RELATION_TARGET]?: EchoId.EchoId;
+  [ATTR_RELATION_SOURCE]?: EchoURI.EchoURI;
+  [ATTR_RELATION_TARGET]?: EchoURI.EchoURI;
 
   /**
    * Application-specific properties.
@@ -101,9 +101,9 @@ export function assertObjectModel(obj: unknown): asserts obj is InternalObjectPr
   );
 
   if (obj[KindId] === EntityKind.Relation) {
-    invariant(EchoId.isEchoId(obj[RelationSourceDXNId]), 'Invalid object model: invalid relation source');
-    invariant(EchoId.isEchoId(obj[RelationTargetDXNId]), 'Invalid object model: invalid relation target');
-    invariant(!EchoId.isEchoId(obj[RelationSourceId]), 'Invalid object model: source pointer is a DXN');
-    invariant(!EchoId.isEchoId(obj[RelationTargetId]), 'Invalid object model: target pointer is a DXN');
+    invariant(EchoURI.isEchoId(obj[RelationSourceDXNId]), 'Invalid object model: invalid relation source');
+    invariant(EchoURI.isEchoId(obj[RelationTargetDXNId]), 'Invalid object model: invalid relation target');
+    invariant(!EchoURI.isEchoId(obj[RelationSourceId]), 'Invalid object model: source pointer is a DXN');
+    invariant(!EchoURI.isEchoId(obj[RelationTargetId]), 'Invalid object model: target pointer is a DXN');
   }
 }

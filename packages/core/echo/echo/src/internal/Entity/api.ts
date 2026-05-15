@@ -3,7 +3,7 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import { type EchoId } from '@dxos/keys';
+import { type EchoURI } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type { AnyEntity } from '../common/types';
@@ -11,10 +11,10 @@ import { type InternalObjectProps, ObjectDatabaseId } from './model';
 import { getObjectEchoId } from './util';
 
 /**
- * Get the canonical EchoId of an entity.
+ * Get the canonical EchoURI of an entity.
  * Accepts both reactive entities and snapshots.
  */
-export const getId = (entity: AnyEntity): EchoId.EchoId => {
+export const getId = (entity: AnyEntity): EchoURI.EchoURI => {
   const echoId = getObjectEchoId(entity);
   invariant(echoId != null, 'Invalid entity.');
   return echoId;

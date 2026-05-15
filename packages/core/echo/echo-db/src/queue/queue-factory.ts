@@ -5,19 +5,19 @@
 import { type Context, Resource } from '@dxos/context';
 import { type Entity, type Hypergraph } from '@dxos/echo';
 import { assertArgument, assertState } from '@dxos/invariant';
-import { EchoId, ObjectId, type SpaceId } from '@dxos/keys';
+import { EchoURI, ObjectId, type SpaceId } from '@dxos/keys';
 import { type FeedProtocol } from '@dxos/protocols';
 
 import { QueueImpl } from './queue';
 import { type Queue, QueueSubspaceTags } from './types';
 
 export interface QueueAPI {
-  get<T extends Entity.Unknown = Entity.Unknown>(echoId: EchoId.EchoId): Queue<T>;
+  get<T extends Entity.Unknown = Entity.Unknown>(echoId: EchoURI.EchoURI): Queue<T>;
   create<T extends Entity.Unknown = Entity.Unknown>(options?: { subspaceTag?: string }): Queue<T>;
 }
 
 export class QueueFactory extends Resource implements QueueAPI {
-  private readonly _queues = new Map<EchoId.EchoId, QueueImpl<any>>();
+  private readonly _queues = new Map<EchoURI.EchoURI, QueueImpl<any>>();
 
   private _service?: FeedProtocol.QueueService = undefined;
 
@@ -36,8 +36,8 @@ export class QueueFactory extends Resource implements QueueAPI {
     this._service = service;
   }
 
-  get<T extends Entity.Unknown>(echoId: EchoId.EchoId): Queue<T> {
-    assertArgument(EchoId.isEchoId(echoId), 'echoId', 'must be an EchoId');
+  get<T extends Entity.Unknown>(echoId: EchoURI.EchoURI): Queue<T> {
+    assertArgument(EchoURI.isEchoId(echoId), 'echoId', 'must be an EchoURI');
     return this._getOrCreate<T>(echoId);
   }
 
@@ -46,7 +46,7 @@ export class QueueFactory extends Resource implements QueueAPI {
    * the ref resolver to distinguish ECHO objects from queues when both share the
    * same `echo:` URI form post-Phase 6.
    */
-  tryGet<T extends Entity.Unknown>(echoId: EchoId.EchoId): Queue<T> | undefined {
+  tryGet<T extends Entity.Unknown>(echoId: EchoURI.EchoURI): Queue<T> | undefined {
     return this._queues.get(echoId) as Queue<T> | undefined;
   }
 
@@ -58,11 +58,11 @@ export class QueueFactory extends Resource implements QueueAPI {
   }
 
   create<T extends Entity.Unknown>({ subspaceTag = QueueSubspaceTags.DATA }: { subspaceTag?: string } = {}): Queue<T> {
-    const echoId = EchoId.fromSpaceAndObjectId(this._spaceId, ObjectId.random());
+    const echoId = EchoURI.fromSpaceAndObjectId(this._spaceId, ObjectId.random());
     return this._getOrCreate<T>(echoId, subspaceTag);
   }
 
-  private _getOrCreate<T extends Entity.Unknown>(echoId: EchoId.EchoId, subspaceTag?: string): Queue<T> {
+  private _getOrCreate<T extends Entity.Unknown>(echoId: EchoURI.EchoURI, subspaceTag?: string): Queue<T> {
     assertState(this._service, 'Service not set');
     const existing = this._queues.get(echoId);
     if (existing) {

@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Filter, Query } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { EchoId, ObjectId, SpaceId } from '@dxos/keys';
+import { EchoURI, ObjectId, SpaceId } from '@dxos/keys';
 
 import { QueryExecutor } from '../query/query-executor';
 import { type InvalidationHint, hintFromIndexingResult, mergeHints } from './invalidation-hint';
@@ -27,7 +27,7 @@ const PERSON_DXN = 'dxn:com.example.type.person:0.1.0';
 const ORG_DXN = 'dxn:com.example.type.organization:0.1.0';
 
 // Stable queue DXN mirroring query-planner.test.ts.
-const QUEUE_DXN = EchoId.parse('dxn:queue:data:B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO:01JJRA86VK4H1TEB6QQVSWXP0E');
+const QUEUE_DXN = EchoURI.parse('dxn:queue:data:B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO:01JJRA86VK4H1TEB6QQVSWXP0E');
 const QUEUE_SPACE_ID = SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO');
 const QUEUE_ID = ObjectId.make('01JJRA86VK4H1TEB6QQVSWXP0E');
 

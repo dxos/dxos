@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { type Entity } from '@dxos/echo';
-import { EchoId } from '@dxos/keys';
+import { EchoURI } from '@dxos/keys';
 
 import { createFeedServiceLayer } from './queue/feed-service';
 import { type QueueAPI, type QueueFactory } from './queue/queue-factory';
@@ -50,7 +50,7 @@ export class QueueService extends Context.Tag('@dxos/functions/QueueService')<
    * Gets a queue by its DXN.
    */
   static getQueue = <T extends Entity.Unknown = Entity.Unknown>(
-    dxn: EchoId.EchoId,
+    dxn: EchoURI.EchoURI,
   ): Effect.Effect<Queue<T>, never, QueueService> => QueueService.pipe(Effect.map(({ queues }) => queues.get<T>(dxn)));
 
   /**

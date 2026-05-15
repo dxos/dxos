@@ -26,7 +26,7 @@ import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { causeToError } from '@dxos/effect';
 import { QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
-import { EchoId } from '@dxos/keys';
+import { EchoURI } from '@dxos/keys';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -458,7 +458,7 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
                 continue;
               }
               const cursor = Obj.getKeys(trigger, KEY_QUEUE_CURSOR).at(0)?.id;
-              const queue = yield* QueueService.getQueue(EchoId.parse(spec.queue));
+              const queue = yield* QueueService.getQueue(EchoURI.parse(spec.queue));
 
               const concurrency = Math.min(trigger.concurrency ?? 1, this._maxConcurrency);
 

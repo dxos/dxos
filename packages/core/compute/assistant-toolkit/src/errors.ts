@@ -3,7 +3,7 @@
 //
 
 import { BaseError } from '@dxos/errors';
-import { type EchoId } from '@dxos/keys';
+import { type EchoURI } from '@dxos/keys';
 
 /**
  * Agent could not execute prompt.
@@ -13,8 +13,8 @@ export class PromptError extends BaseError.extend('PromptError') {
     message: string,
     context: {
       description?: string;
-      prompt?: EchoId.EchoId;
-      chat?: EchoId.EchoId;
+      prompt?: EchoURI.EchoURI;
+      chat?: EchoURI.EchoURI;
     },
   ) {
     super({

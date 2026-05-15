@@ -12,7 +12,7 @@ import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } 
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { Trace, Operation, OperationRegistry } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Relation, Tag, Type } from '@dxos/echo';
-import { EchoId } from '@dxos/keys';
+import { EchoURI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { HasSubject, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -81,7 +81,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
         // Find the feed by querying for mailboxes in the database.
         // After the identifier refactor, message DXNs are ECHO-kind (dxn:echo:spaceId:itemId)
         // and no longer embed the queue/feed ID. We locate the feed via the mailbox object.
-        const messageEchoId = EchoId.tryParse(message['@dxn']);
+        const messageEchoId = EchoURI.tryParse(message['@dxn']);
         if (!messageEchoId) {
           return yield* Effect.fail(new Error('Message does not have a valid DXN'));
         }

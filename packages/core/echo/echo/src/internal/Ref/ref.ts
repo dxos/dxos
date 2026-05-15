@@ -16,7 +16,7 @@ import { Event } from '@dxos/async';
 import { type CustomInspectFunction, inspectCustom } from '@dxos/debug';
 import { EncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, EchoId, ObjectId, type URI } from '@dxos/keys';
+import { DXN, EchoURI, ObjectId, type URI } from '@dxos/keys';
 
 import * as Database from '../../Database';
 import { ReferenceAnnotationId, getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation } from '../Annotation';
@@ -114,7 +114,7 @@ export interface RefFn {
 
   /**
    * Constructs a reference that points to the object specified by the provided URI
-   * (either an `echo:` EchoId for an object reference or a `dxn:` DXN for a type reference).
+   * (either an `echo:` EchoURI for an object reference or a `dxn:` DXN for a type reference).
    */
   fromURI: (uri: URI.URI) => Ref<any>;
 }
@@ -138,7 +138,7 @@ export const Ref: RefFn = <S extends Schema.Schema.Any>(schema: S): RefSchema<Sc
  */
 export interface Ref<T> extends Pipeable.Pipeable {
   /**
-   * Target URI (either an `echo:` EchoId for an object reference or a `dxn:` DXN for a type reference).
+   * Target URI (either an `echo:` EchoURI for an object reference or a `dxn:` DXN for a type reference).
    */
   get uri(): URI.URI;
 
@@ -219,8 +219,8 @@ Ref.isRef = (obj: any): obj is Ref<any> => {
 };
 
 Ref.hasObjectId = (id: ObjectId) => (ref: Ref<any>) => {
-  const echoId = EchoId.tryParse(ref.uri);
-  return echoId !== undefined && EchoId.isLocal(echoId) && EchoId.getObjectId(echoId) === id;
+  const echoId = EchoURI.tryParse(ref.uri);
+  return echoId !== undefined && EchoURI.isLocal(echoId) && EchoURI.getObjectId(echoId) === id;
 };
 
 Ref.isRefSchema = (schema: Schema.Schema<any, any>): schema is RefSchema<any> => {
@@ -239,7 +239,7 @@ Ref.make = <T extends AnyProperties>(obj: T): Ref<T> => {
   // TODO(dmaretskyi): Extract to `getObjectEchoId` function.
   const id = obj.id;
   invariant(ObjectId.isValid(id), 'Invalid object ID');
-  const dxn = EchoId.fromLocalObjectId(id);
+  const dxn = EchoURI.fromLocalObjectId(id);
   return new RefImpl(dxn, obj);
 };
 
@@ -572,8 +572,8 @@ export class StaticRefResolver implements RefResolver {
   }
 
   resolveSync(dxn: URI.URI, _load: boolean, _onLoad?: () => void): AnyProperties | undefined {
-    const echoId = EchoId.tryParse(dxn);
-    const id = echoId ? EchoId.getObjectId(echoId) : undefined;
+    const echoId = EchoURI.tryParse(dxn);
+    const id = echoId ? EchoURI.getObjectId(echoId) : undefined;
     if (id == null) {
       return undefined;
     }
@@ -582,8 +582,8 @@ export class StaticRefResolver implements RefResolver {
   }
 
   async resolve(dxn: URI.URI): Promise<AnyProperties | undefined> {
-    const echoId = EchoId.tryParse(dxn);
-    const id = echoId ? EchoId.getObjectId(echoId) : undefined;
+    const echoId = EchoURI.tryParse(dxn);
+    const id = echoId ? EchoURI.getObjectId(echoId) : undefined;
     if (id == null) {
       return undefined;
     }

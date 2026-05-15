@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { ATTR_TYPE } from '@dxos/echo/internal';
-import { DXN, EchoId, ObjectId, SpaceId } from '@dxos/keys';
+import { DXN, EchoURI, ObjectId, SpaceId } from '@dxos/keys';
 
 import type { IndexerObject } from './interface';
 import { ReverseRefIndex } from './reverse-ref-index';
@@ -33,7 +33,7 @@ describe('ReverseRefIndex', () => {
       const spaceId = SpaceId.random();
       const sourceObjectId = ObjectId.random();
       const targetObjectId = ObjectId.random();
-      const targetDXN = EchoId.parse(`dxn:echo:@:${targetObjectId}`);
+      const targetDXN = EchoURI.parse(`dxn:echo:@:${targetObjectId}`);
 
       const sourceObject: IndexerObject = {
         spaceId,
@@ -67,8 +67,8 @@ describe('ReverseRefIndex', () => {
       const sourceObjectId = ObjectId.random();
       const targetObjectId1 = ObjectId.random();
       const targetObjectId2 = ObjectId.random();
-      const targetDxn1 = EchoId.parse(`dxn:echo:@:${targetObjectId1}`);
-      const targetDxn2 = EchoId.parse(`dxn:echo:@:${targetObjectId2}`);
+      const targetDxn1 = EchoURI.parse(`dxn:echo:@:${targetObjectId1}`);
+      const targetDxn2 = EchoURI.parse(`dxn:echo:@:${targetObjectId2}`);
 
       const sourceObject: IndexerObject = {
         spaceId,
@@ -110,8 +110,8 @@ describe('ReverseRefIndex', () => {
       const sourceObjectId = ObjectId.random();
       const targetObjectId1 = ObjectId.random();
       const targetObjectId2 = ObjectId.random();
-      const targetDxn1 = EchoId.parse(`dxn:echo:@:${targetObjectId1}`);
-      const targetDxn2 = EchoId.parse(`dxn:echo:@:${targetObjectId2}`);
+      const targetDxn1 = EchoURI.parse(`dxn:echo:@:${targetObjectId1}`);
+      const targetDxn2 = EchoURI.parse(`dxn:echo:@:${targetObjectId2}`);
 
       const sourceObject: IndexerObject = {
         spaceId,
@@ -149,8 +149,8 @@ describe('ReverseRefIndex', () => {
       const sourceObjectId = ObjectId.random();
       const targetObjectId1 = ObjectId.random();
       const targetObjectId2 = ObjectId.random();
-      const targetDxn1 = EchoId.parse(`dxn:echo:@:${targetObjectId1}`);
-      const targetDxn2 = EchoId.parse(`dxn:echo:@:${targetObjectId2}`);
+      const targetDxn1 = EchoURI.parse(`dxn:echo:@:${targetObjectId1}`);
+      const targetDxn2 = EchoURI.parse(`dxn:echo:@:${targetObjectId2}`);
       const recordId = 1;
 
       // Initial object with reference to target1.
@@ -226,7 +226,7 @@ describe('ReverseRefIndex', () => {
       yield* reverseRefIndex.update([sourceObject]);
 
       // Should not throw and no results for random DXN.
-      const results = yield* reverseRefIndex.query({ targetDxn: EchoId.fromLocalObjectId(ObjectId.random()) });
+      const results = yield* reverseRefIndex.query({ targetDxn: EchoURI.fromLocalObjectId(ObjectId.random()) });
       expect(results.length).toBe(0);
     }).pipe(Effect.provide(TestLayer)),
   );
@@ -239,7 +239,7 @@ describe('ReverseRefIndex', () => {
       const spaceId = SpaceId.random();
       const sourceObjectId = ObjectId.random();
       const targetObjectId = ObjectId.random();
-      const targetDXN = EchoId.parse(`dxn:echo:@:${targetObjectId}`);
+      const targetDXN = EchoURI.parse(`dxn:echo:@:${targetObjectId}`);
 
       const sourceObject: IndexerObject = {
         spaceId,

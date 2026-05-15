@@ -17,7 +17,7 @@ import {
 import { EntityKind, type ObjectMeta } from '@dxos/echo/internal';
 import { isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { DXN, EchoId, ObjectId, SpaceId, type URI } from '@dxos/keys';
+import { DXN, EchoURI, ObjectId, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { defer, getDeep, setDeep, throwUnhandledError } from '@dxos/util';
 
@@ -454,9 +454,9 @@ export class ObjectCore {
       if (parentRef) {
         // Checks if the reference is pointing to an object in the same space.
         const parentDXN = EncodedReference.toURI(parentRef);
-        const parentEchoId = EchoId.tryParse(parentDXN);
-        const spaceId = parentEchoId ? EchoId.getSpaceId(parentEchoId) : undefined;
-        const parentId = parentEchoId ? EchoId.getObjectId(parentEchoId) : undefined;
+        const parentEchoId = EchoURI.tryParse(parentDXN);
+        const spaceId = parentEchoId ? EchoURI.getSpaceId(parentEchoId) : undefined;
+        const parentId = parentEchoId ? EchoURI.getObjectId(parentEchoId) : undefined;
         if (parentId && (spaceId === undefined || spaceId === this.database.spaceId)) {
           // NOTE: We can't use `loadObjectCoreById` here because it might be async and we need a sync check.
           // If the parent is not loaded, we assume it's not deleted for now, or should we assume deleted?
@@ -482,12 +482,12 @@ export class ObjectCore {
    * Currently this is the schema reference (when stored as an object), source/target for
    * relations, and the parent ref.
    */
-  getStrongDependencies(): EchoId.EchoId[] {
-    const res: EchoId.EchoId[] = [];
+  getStrongDependencies(): EchoURI.EchoURI[] {
+    const res: EchoURI.EchoURI[] = [];
 
     const typeRef = this.getType();
     if (typeRef) {
-      const typeEchoId = EchoId.tryParse(EncodedReference.toURI(typeRef));
+      const typeEchoId = EchoURI.tryParse(EncodedReference.toURI(typeRef));
       if (typeEchoId) {
         res.push(typeEchoId);
       }
@@ -496,14 +496,14 @@ export class ObjectCore {
     if (this.getKind() === EntityKind.Relation) {
       const sourceRef = this.getSource();
       if (sourceRef) {
-        const id = EchoId.tryParse(EncodedReference.toURI(sourceRef));
+        const id = EchoURI.tryParse(EncodedReference.toURI(sourceRef));
         if (id) {
           res.push(id);
         }
       }
       const targetRef = this.getTarget();
       if (targetRef) {
-        const id = EchoId.tryParse(EncodedReference.toURI(targetRef));
+        const id = EchoURI.tryParse(EncodedReference.toURI(targetRef));
         if (id) {
           res.push(id);
         }
@@ -512,7 +512,7 @@ export class ObjectCore {
 
     const parentRef = this.getParent();
     if (parentRef) {
-      const id = EchoId.tryParse(EncodedReference.toURI(parentRef));
+      const id = EchoURI.tryParse(EncodedReference.toURI(parentRef));
       if (id) {
         res.push(id);
       }
@@ -564,10 +564,10 @@ const convertLegacyProtoReference = (value: {
   } else if (value.host) {
     invariant(SpaceId.isValid(value.host), 'Invalid space id');
     invariant(ObjectId.isValid(value.objectId), 'Invalid object id');
-    uri = EchoId.fromSpaceAndObjectId(value.host, value.objectId);
+    uri = EchoURI.fromSpaceAndObjectId(value.host, value.objectId);
   } else {
     invariant(ObjectId.isValid(value.objectId), 'Invalid object id');
-    uri = EchoId.fromLocalObjectId(value.objectId);
+    uri = EchoURI.fromLocalObjectId(value.objectId);
   }
   return EncodedReference.fromURI(uri);
 };
