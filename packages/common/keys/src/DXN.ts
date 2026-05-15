@@ -37,9 +37,9 @@ export const isDXN = (s: unknown): s is DXN => typeof s === 'string' && s.starts
 
 /**
  * Creates an unversioned DXN from an NSID.
- * @example fromTypename('org.dxos.type.calendar') → 'dxn:org.dxos.type.calendar'
+ * @example fromNsid('org.dxos.type.calendar') → 'dxn:org.dxos.type.calendar'
  */
-export const fromTypename = (nsid: string): DXN => `dxn:${nsid}` as DXN;
+export const fromNsid = (nsid: string): DXN => `dxn:${nsid}` as DXN;
 
 /**
  * Creates a versioned DXN.

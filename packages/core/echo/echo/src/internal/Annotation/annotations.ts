@@ -73,7 +73,7 @@ export const getTypeDXNFromSpecifier = (input: Schema.Schema.All | string): DXN.
   } else {
     assertArgument(typeof input === 'string', 'input');
     assertArgument(!input.startsWith('dxn:'), 'input');
-    return DXN.fromTypename(input);
+    return DXN.fromNsid(input);
   }
 };
 

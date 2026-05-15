@@ -599,7 +599,7 @@ const isRef = (obj: any): obj is Ref.Ref<any> => {
 const makeTypeDxn = (typename: string): DXN.DXN => {
   assertArgument(typeof typename === 'string', 'typename');
   assertArgument(!typename.startsWith('dxn:'), 'typename');
-  return DXN.fromTypename(typename);
+  return DXN.fromNsid(typename);
 };
 
 const isDxnLike = (value: unknown): value is URI.URI => {

@@ -31,9 +31,9 @@ describe('DXN.isDXN', () => {
   });
 });
 
-describe('DXN.fromTypename', () => {
+describe('DXN.fromNsid', () => {
   test('produces unversioned DXN', ({ expect }) => {
-    expect(DXN.fromTypename('org.dxos.type.calendar')).toBe('dxn:org.dxos.type.calendar');
+    expect(DXN.fromNsid('org.dxos.type.calendar')).toBe('dxn:org.dxos.type.calendar');
   });
 });
 
@@ -61,8 +61,8 @@ describe('DXN.parse', () => {
 
 describe('DXN.getNsid', () => {
   test('extracts NSID from new-format DXN', ({ expect }) => {
-    expect(DXN.getNsid(DXN.fromTypename('org.dxos.type.calendar'))).toBe('org.dxos.type.calendar');
-    expect(DXN.getNsid(DXN.fromTypename('org.dxos.plugin.markdown'))).toBe('org.dxos.plugin.markdown');
+    expect(DXN.getNsid(DXN.fromNsid('org.dxos.type.calendar'))).toBe('org.dxos.type.calendar');
+    expect(DXN.getNsid(DXN.fromNsid('org.dxos.plugin.markdown'))).toBe('org.dxos.plugin.markdown');
   });
 
   test('extracts NSID from versioned DXN (without version)', ({ expect }) => {
@@ -77,7 +77,7 @@ describe('DXN.getVersion', () => {
   });
 
   test('returns undefined for unversioned DXN', ({ expect }) => {
-    expect(DXN.getVersion(DXN.fromTypename('org.dxos.type.calendar'))).toBeUndefined();
+    expect(DXN.getVersion(DXN.fromNsid('org.dxos.type.calendar'))).toBeUndefined();
   });
 });
 

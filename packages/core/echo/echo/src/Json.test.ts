@@ -93,7 +93,7 @@ describe('createRefReplacer', () => {
 
   test('leaves non-echo dxns untouched (e.g. type DXN)', () => {
     // Type DXNs share the `dxn:` prefix but `asEchoDXN()` returns undefined.
-    const typeRef = { '/': DXN.fromTypename('com.example.Thing') };
+    const typeRef = { '/': DXN.fromNsid('com.example.Thing') };
     const replacer = Json.createRefReplacer({ db: makeStubDb({}) });
     expect(stringifyWith(replacer, { ref: typeRef })).toEqual({ ref: typeRef });
   });

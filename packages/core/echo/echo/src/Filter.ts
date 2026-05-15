@@ -132,7 +132,7 @@ export const typename = (typename: string): Any => {
   assertArgument(!typename.startsWith('dxn:'), 'typename', 'Typename must no be qualified');
   return new FilterClass({
     type: 'object',
-    typename: DXN.fromTypename(typename),
+    typename: DXN.fromNsid(typename),
     props: {},
   });
 };

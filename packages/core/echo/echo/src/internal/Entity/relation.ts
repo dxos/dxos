@@ -150,5 +150,5 @@ const getDXNForRelationSchemaRef = (schema: Schema.Schema.Any): DXN.DXN => {
     throw new Error('Schema must have a typename');
   }
 
-  return DXN.fromTypename(typename);
+  return DXN.fromNsid(typename);
 };
