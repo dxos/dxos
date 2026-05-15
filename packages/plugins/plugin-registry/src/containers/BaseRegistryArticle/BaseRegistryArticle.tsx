@@ -14,7 +14,7 @@ import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { DisableDependentsAlert, PluginList, type PluginListProps } from '#components';
+import { PluginList, type PluginListProps } from '#components';
 import { getPluginPath, meta } from '#meta';
 
 import { useDisableConfirmation } from '../../hooks';
@@ -97,7 +97,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
       [invoke, manager, source],
     );
 
-    const disableConfirmation = useDisableConfirmation(manager, (id) => void dispatchToggle(id, false));
+    const requestDisable = useDisableConfirmation(manager, (id) => void dispatchToggle(id, false));
 
     const handleChange = useCallback(
       (pluginId: string, nextEnabled: boolean) => {
@@ -105,9 +105,9 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
           void dispatchToggle(pluginId, true);
           return;
         }
-        disableConfirmation.requestDisable(pluginId);
+        requestDisable(pluginId);
       },
-      [dispatchToggle, disableConfirmation],
+      [dispatchToggle, requestDisable],
     );
 
     const handleClick = useCallback(
@@ -131,61 +131,46 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
     );
 
     return (
-      <>
-        <Panel.Root {...composableProps(props)} ref={forwardedRef}>
-          <Panel.Toolbar asChild>
-            <Toolbar.Root>
-              <Input.Root>
-                <Input.Label srOnly>{t('filter.label')}</Input.Label>
-                <Input.TextInput
-                  placeholder={t('filter.placeholder')}
-                  value={filter}
-                  onChange={(event) => setFilter(event.target.value)}
+      <Panel.Root {...composableProps(props)} ref={forwardedRef}>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <Input.Root>
+              <Input.Label srOnly>{t('filter.label')}</Input.Label>
+              <Input.TextInput
+                placeholder={t('filter.placeholder')}
+                value={filter}
+                onChange={(event) => setFilter(event.target.value)}
+              />
+            </Input.Root>
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <ScrollArea.Root orientation='vertical'>
+            <ScrollArea.Viewport>
+              {filtered.length > 0 ? (
+                <PluginList
+                  plugins={filtered}
+                  enabled={enabled}
+                  installed={installed}
+                  installing={installing}
+                  updating={updating}
+                  updateAvailableIds={updateAvailableIds}
+                  extraTagsById={extraTagsById}
+                  failuresById={failuresById}
+                  onClick={handleClick}
+                  onChange={handleChange}
+                  onInstall={onInstall}
+                  onUpdate={onUpdate}
+                  hasSettings={hasSettings}
+                  onSettings={handleSettings}
                 />
-              </Input.Root>
-            </Toolbar.Root>
-          </Panel.Toolbar>
-          <Panel.Content asChild>
-            <ScrollArea.Root orientation='vertical'>
-              <ScrollArea.Viewport>
-                {filtered.length > 0 ? (
-                  <PluginList
-                    plugins={filtered}
-                    enabled={enabled}
-                    installed={installed}
-                    installing={installing}
-                    updating={updating}
-                    updateAvailableIds={updateAvailableIds}
-                    extraTagsById={extraTagsById}
-                    failuresById={failuresById}
-                    onClick={handleClick}
-                    onChange={handleChange}
-                    onInstall={onInstall}
-                    onUpdate={onUpdate}
-                    hasSettings={hasSettings}
-                    onSettings={handleSettings}
-                  />
-                ) : (
-                  empty
-                )}
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
-          </Panel.Content>
-        </Panel.Root>
-        <DisableDependentsAlert
-          open={disableConfirmation.state.open}
-          pluginName={t('plugin.name', {
-            ns: disableConfirmation.state.pluginId,
-            defaultValue: disableConfirmation.state.pluginId,
-          })}
-          dependents={disableConfirmation.state.dependents.map((dependentId) => ({
-            id: dependentId,
-            name: t('plugin.name', { ns: dependentId, defaultValue: dependentId }),
-          }))}
-          onCancel={disableConfirmation.close}
-          onConfirm={disableConfirmation.confirmDisable}
-        />
-      </>
+              ) : (
+                empty
+              )}
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Panel.Content>
+      </Panel.Root>
     );
   },
 );

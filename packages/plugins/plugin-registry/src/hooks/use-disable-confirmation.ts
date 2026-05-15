@@ -2,55 +2,54 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 
 import { type PluginManager } from '@dxos/app-framework';
+import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
+import { useTranslation } from '@dxos/react-ui';
 
-export type DisableConfirmationState = {
-  open: boolean;
-  pluginId: string;
-  dependents: readonly string[];
-};
-
-const closedState: DisableConfirmationState = { open: false, pluginId: '', dependents: [] };
+import { DISABLE_DEPENDENTS_DIALOG } from '#meta';
 
 /**
- * Cascade-confirmation state machine shared by surfaces that toggle plugins.
+ * Returns `requestDisable(pluginId)` that gates `manager.disable` on a
+ * confirmation prompt when the target has currently-enabled dependents.
  *
- * `PluginManager.disable` cascades to enabled dependents by default; this hook
- * adds the UX safeguard. The caller supplies a `dispatch` callback that
- * performs the actual disable (letting each surface wrap the call with its
- * own observability / side effects). When the target has enabled dependents
- * the prompt opens and the dispatch is deferred until {@link confirmDisable};
- * otherwise dispatch runs immediately from {@link requestDisable}.
- *
- * The returned `state` exposes the dependent ids (not display names) so the
- * caller can resolve them at render time.
+ * `PluginManager.disable` cascades by default; this hook is the UX safeguard
+ * around that. The caller supplies a `dispatch` callback that performs the
+ * actual disable (wrapping it with observability or any other side effects).
+ * When there are no enabled dependents, dispatch runs immediately; otherwise
+ * we open the shared {@link DISABLE_DEPENDENTS_DIALOG} surface — its
+ * `onConfirm` runs the dispatch and closes the dialog.
  */
 export const useDisableConfirmation = (manager: PluginManager.PluginManager, dispatch: (id: string) => void) => {
-  const [state, setState] = useState<DisableConfirmationState>(() => closedState);
+  const { invokePromise } = useOperationInvoker();
+  const { t } = useTranslation();
 
-  const close = useCallback(() => setState(closedState), []);
-
-  const requestDisable = useCallback(
+  return useCallback(
     (pluginId: string): void => {
       const enabledDependents = manager.getDependents(pluginId, { transitive: true, enabledOnly: true });
       if (enabledDependents.length === 0) {
         dispatch(pluginId);
         return;
       }
-      setState({ open: true, pluginId, dependents: enabledDependents });
+      void invokePromise(LayoutOperation.UpdateDialog, {
+        subject: DISABLE_DEPENDENTS_DIALOG,
+        state: true,
+        type: 'alert',
+        props: {
+          pluginName: t('plugin.name', { ns: pluginId, defaultValue: pluginId }),
+          dependents: enabledDependents.map((id) => ({
+            id,
+            name: t('plugin.name', { ns: id, defaultValue: id }),
+          })),
+          onConfirm: () => {
+            dispatch(pluginId);
+            void invokePromise(LayoutOperation.UpdateDialog, { state: false });
+          },
+        },
+      });
     },
-    [manager, dispatch],
+    [manager, dispatch, invokePromise, t],
   );
-
-  const confirmDisable = useCallback((): void => {
-    const id = state.pluginId;
-    setState(closedState);
-    if (id) {
-      dispatch(id);
-    }
-  }, [state.pluginId, dispatch]);
-
-  return { state, close, requestDisable, confirmDisable };
 };

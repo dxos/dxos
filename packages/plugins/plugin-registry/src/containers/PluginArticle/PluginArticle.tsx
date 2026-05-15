@@ -12,7 +12,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
 import { useTranslation } from '@dxos/react-ui';
 
-import { DisableDependentsAlert, PluginDetail } from '#components';
+import { PluginDetail } from '#components';
 import { getPluginPath } from '#meta';
 
 import { useDisableConfirmation, useRegistryPluginProvider, useRegistryPlugins, useRemotePluginIds } from '../../hooks';
@@ -89,41 +89,26 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   });
 
   return (
-    <>
-      <PluginDetail
-        plugin={plugin}
-        enabled={enabled}
-        installing={actions.installing}
-        updating={actions.updating}
-        hasUpdate={hasUpdate}
-        installedVersionTag={installedVersionTag}
-        selectedVersionTag={selectedVersionTag}
-        versions={pickerVersions}
-        dependencies={dependencies}
-        dependents={dependents}
-        failure={failure}
-        onEnabledChange={actions.handleEnableChange}
-        onInstall={!isInstalled && moduleUrl ? actions.handleInstall : undefined}
-        onInstallVersion={pickerVersions.length > 0 ? actions.handleInstallVersion : undefined}
-        onNavigateToPlugin={handleNavigateToPlugin}
-        onUninstall={canUninstall ? actions.handleUninstall : undefined}
-        onUpdate={hasUpdate ? actions.handleUpdate : undefined}
-        onVersionChange={setSelectedVersionTag}
-      />
-      <DisableDependentsAlert
-        open={actions.disableConfirmation.state.open}
-        pluginName={t('plugin.name', {
-          ns: actions.disableConfirmation.state.pluginId,
-          defaultValue: actions.disableConfirmation.state.pluginId,
-        })}
-        dependents={actions.disableConfirmation.state.dependents.map((id) => ({
-          id,
-          name: t('plugin.name', { ns: id, defaultValue: id }),
-        }))}
-        onCancel={actions.disableConfirmation.close}
-        onConfirm={actions.disableConfirmation.confirmDisable}
-      />
-    </>
+    <PluginDetail
+      plugin={plugin}
+      enabled={enabled}
+      installing={actions.installing}
+      updating={actions.updating}
+      hasUpdate={hasUpdate}
+      installedVersionTag={installedVersionTag}
+      selectedVersionTag={selectedVersionTag}
+      versions={pickerVersions}
+      dependencies={dependencies}
+      dependents={dependents}
+      failure={failure}
+      onEnabledChange={actions.handleEnableChange}
+      onInstall={!isInstalled && moduleUrl ? actions.handleInstall : undefined}
+      onInstallVersion={pickerVersions.length > 0 ? actions.handleInstallVersion : undefined}
+      onNavigateToPlugin={handleNavigateToPlugin}
+      onUninstall={canUninstall ? actions.handleUninstall : undefined}
+      onUpdate={hasUpdate ? actions.handleUpdate : undefined}
+      onVersionChange={setSelectedVersionTag}
+    />
   );
 };
 
@@ -297,7 +282,7 @@ const usePluginActions = ({
 }) => {
   const [installing, setInstalling] = useState(false);
   const [updating, setUpdating] = useState(false);
-  const disableConfirmation = useDisableConfirmation(manager, (id) => void runAndForwardErrors(manager.disable(id)));
+  const requestDisable = useDisableConfirmation(manager, (id) => void runAndForwardErrors(manager.disable(id)));
 
   const handleEnableChange = useCallback(
     (enabled: boolean) => {
@@ -305,9 +290,9 @@ const usePluginActions = ({
         void runAndForwardErrors(manager.enable(pluginId));
         return;
       }
-      disableConfirmation.requestDisable(pluginId);
+      requestDisable(pluginId);
     },
-    [manager, pluginId, disableConfirmation],
+    [manager, pluginId, requestDisable],
   );
 
   const handleUninstall = useCallback(() => {
@@ -390,6 +375,5 @@ const usePluginActions = ({
     handleInstall,
     handleUpdate,
     handleInstallVersion,
-    disableConfirmation,
   };
 };
