@@ -19,23 +19,19 @@ export const CallSidebar = () => {
   const _roomId = useAtomValue(call.roomIdAtom);
   const leaveSound = useSoundEffect('LeaveCall');
 
-  const handleLeave = useCallback(async () => {
-    try {
-      void leaveSound.play();
-    } catch (err) {
-      log.catch(err);
-    } finally {
-      void call.turnAudioOff();
-      void call.turnVideoOff();
-      void call.turnScreenshareOff();
-      void call.leave();
-    }
+  const handleLeave = useCallback(() => {
+    leaveSound.play().catch((err) => log.catch(err));
+    void call.turnAudioOff();
+    void call.turnVideoOff();
+    void call.turnScreenshareOff();
+    void call.leave();
   }, [call, leaveSound]);
 
   return (
     <Panel.Root>
       <Panel.Content>
         <Call.Root>
+          <Call.Audio />
           <Call.Grid />
           <Call.Toolbar onLeave={handleLeave} />
         </Call.Root>

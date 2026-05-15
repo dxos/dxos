@@ -48,7 +48,11 @@ export default Capability.makeModule(
         id: 'channel-chat-companion',
         type: Channel.Channel,
         connector: (channel, get) => {
-          const callManager = capabilities.get(CallsCapabilities.Manager);
+          const callManagerAtom = capabilities.atom(CallsCapabilities.Manager);
+          const [callManager] = get(callManagerAtom);
+          if (!callManager) {
+            return Effect.succeed([]);
+          }
           // Use derived atoms for efficient subscription.
           const joined = get(callManager.joinedAtom);
           const roomId = get(callManager.roomIdAtom);
