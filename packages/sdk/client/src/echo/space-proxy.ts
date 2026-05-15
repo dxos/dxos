@@ -742,7 +742,7 @@ export class SpaceProxy implements Space, CustomInspectable {
       );
 
       const checkSyncState = (syncState: SpaceSyncState) => {
-        const edgePeer = syncState.peers?.find((state) => isEdgePeerId(this.id, state.peerId));
+        const edgePeer = syncState.peers?.find((state) => isEdgePeerId(state.peerId, this.id));
         if (opts?.onProgress) {
           opts.onProgress(edgePeer);
         }

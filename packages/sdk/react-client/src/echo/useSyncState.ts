@@ -27,7 +27,7 @@ export const useSyncState = (): SpaceSyncStateMap => {
 
         ctx.onDispose(
           space.internal.db.subscribeToSyncState(ctx, ({ peers = [] }) => {
-            const syncState = peers.find((state) => isEdgePeerId(space.id, state.peerId));
+            const syncState = peers.find((state) => isEdgePeerId(state.peerId, space.id));
             if (syncState) {
               setSpaceState((spaceState) => ({ ...spaceState, [space.id]: syncState }));
             }
@@ -59,7 +59,7 @@ export const useSpaceSyncState = (space: Space): PeerSyncState | undefined => {
   useEffect(() => {
     const ctx = new Context();
     space.internal.db.subscribeToSyncState(ctx, ({ peers = [] }) => {
-      const syncState = peers.find((state) => isEdgePeerId(space.id, state.peerId));
+      const syncState = peers.find((state) => isEdgePeerId(state.peerId, space.id));
       if (syncState) {
         setSpaceState(syncState);
       }

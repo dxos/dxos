@@ -159,7 +159,7 @@ const waitForSync = async (db: Database.Database, timeout = 60_000) => {
 
       let lastStatus = '';
       const handleSyncState = (spaceSyncState: SpaceSyncState) => {
-        const syncState = spaceSyncState.peers?.find((state) => isEdgePeerId(db.spaceId, state.peerId));
+        const syncState = spaceSyncState.peers?.find((state) => isEdgePeerId(state.peerId, db.spaceId));
         const status = syncState
           ? `unsynced=${syncState.unsyncedDocumentCount} missingRemote=${syncState.missingOnRemote} missingLocal=${syncState.missingOnLocal} different=${syncState.differentDocuments}`
           : 'no connection to edge';
