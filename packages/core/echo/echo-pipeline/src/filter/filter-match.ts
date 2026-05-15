@@ -316,18 +316,18 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
  * dxn:type:com.example.type.task:0.1.0 === dxn:type:com.example.type.task
  */
 const compareTypenameStrings = (expectedStr: string, actualStr: string): boolean => {
-  if (DXN.isDXN(expectedStr)) {
-    if (!DXN.isDXN(actualStr)) {
+  // Normalize via DXN.tryParse to handle the legacy `dxn:type:<nsid>` form alongside `dxn:<nsid>`.
+  const expectedDxn = DXN.tryParse(expectedStr);
+  const actualDxn = DXN.tryParse(actualStr);
+  if (expectedDxn !== undefined) {
+    if (actualDxn === undefined) {
       return false;
     }
-    const expectedNsid = DXN.getNsid(expectedStr);
-    const actualNsid = DXN.getNsid(actualStr);
-    const expectedVersion = DXN.getVersion(expectedStr);
-    const actualVersion = DXN.getVersion(actualStr);
-
-    if (actualNsid !== expectedNsid) {
+    if (DXN.getNsid(actualDxn) !== DXN.getNsid(expectedDxn)) {
       return false;
     }
+    const expectedVersion = DXN.getVersion(expectedDxn);
+    const actualVersion = DXN.getVersion(actualDxn);
     if (expectedVersion !== undefined && actualVersion !== undefined && actualVersion !== expectedVersion) {
       return false;
     }

@@ -603,12 +603,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return target[symbolInternals].database.schemaRegistry.query({ id: typeDXN }).runSync()[0];
   }
 
-  getTypeDXN(target: ProxyTarget): DXN.DXN | undefined {
+  getTypeDXN(target: ProxyTarget): URI.URI | undefined {
     if (target[symbolNamespace] !== DATA_NAMESPACE) {
       return undefined;
     }
     const typeRef = target[symbolInternals].core.getType();
-    return typeRef ? EncodedReference.toDXN(typeRef) : undefined;
+    return typeRef ? EncodedReference.toURI(typeRef) : undefined;
   }
 
   isDeleted(target: any): boolean {
@@ -933,7 +933,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     const obj: Partial<ObjectJSON> = {
       id: target[symbolInternals].core.id,
-      [ATTR_TYPE]: typeRef ? EncodedReference.toDXN(typeRef) : undefined,
+      [ATTR_TYPE]: typeRef ? EncodedReference.toURI(typeRef) : undefined,
       [ATTR_META]: { ...this.getMeta(target) } as ObjectMetaJSON,
     };
 

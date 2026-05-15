@@ -10,7 +10,7 @@ import { raise } from '@dxos/debug';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { type DXN, EchoId, type ObjectId } from '@dxos/keys';
+import { EchoId, type ObjectId, type URI } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type * as Database from './Database';
@@ -358,7 +358,7 @@ export const getId = (entity: Unknown | Snapshot): EchoId.EchoId => internal.get
 /**
  * @returns The DXN of the relation's type.
  */
-export const getTypeDXN: (obj: internal.AnyProperties) => DXN.DXN | undefined = internal.getTypeDXN;
+export const getTypeDXN: (obj: internal.AnyProperties) => URI.URI | undefined = internal.getTypeDXN;
 
 /**
  * Get the schema of the relation.

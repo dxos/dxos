@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 
 import { type ForeignKey } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { DXN, EchoId, ObjectId } from '@dxos/keys';
+import { EchoId, ObjectId, type URI } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type * as Database from '../../Database';
@@ -48,7 +48,7 @@ export interface InternalObjectProps {
   readonly [SelfDXNId]: EchoId.EchoId;
   readonly [KindId]: EntityKind;
   readonly [SchemaId]: Schema.Schema.AnyNoContext;
-  readonly [TypeId]: DXN.DXN;
+  readonly [TypeId]: URI.URI;
   readonly [MetaId]?: ObjectMeta;
   [ParentId]?: InternalObjectProps;
   readonly [ObjectDatabaseId]?: Database.Database;
@@ -73,7 +73,7 @@ export interface ObjectMetaJSON {
  */
 export interface ObjectJSON {
   id: ObjectId;
-  [ATTR_TYPE]?: DXN.DXN;
+  [ATTR_TYPE]?: URI.URI;
   [ATTR_SELF_DXN]?: EchoId.EchoId;
   [ATTR_PARENT]?: EchoId.EchoId; // Encoded reference
   [ATTR_DELETED]?: boolean;
@@ -94,7 +94,7 @@ export function assertObjectModel(obj: unknown): asserts obj is InternalObjectPr
   invariant(typeof obj === 'object' && obj !== null, 'Invalid object model: not an object');
   assumeType<InternalObjectProps>(obj);
   invariant(ObjectId.isValid(obj.id), 'Invalid object model: invalid id');
-  invariant(obj[TypeId] === undefined || DXN.isDXN(obj[TypeId]), 'Invalid object model: invalid type');
+  invariant(obj[TypeId] === undefined || typeof obj[TypeId] === 'string', 'Invalid object model: invalid type');
   invariant(
     obj[KindId] === EntityKind.Object || obj[KindId] === EntityKind.Relation,
     'Invalid object model: invalid entity kind',

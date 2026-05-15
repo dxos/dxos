@@ -10,7 +10,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { raise } from '@dxos/debug';
 import { type JsonPath, getField } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN } from '@dxos/keys';
+import { DXN, URI } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
 import { type Mutable } from '../common/proxy';
@@ -198,8 +198,8 @@ export const getTypename = (obj: AnyProperties): string | undefined => {
  * @internal (use Type.setTypename)
  */
 // TODO(dmaretskyi): Rename setTypeDXN.
-export const setTypename = (obj: any, typename: DXN.DXN): void => {
-  invariant(DXN.isDXN(typename), 'Invalid type.');
+export const setTypename = (obj: any, typename: URI.URI): void => {
+  invariant(typeof typename === 'string', 'Invalid type.');
   Object.defineProperty(obj, TypeId, {
     value: typename,
     writable: false,
@@ -209,14 +209,15 @@ export const setTypename = (obj: any, typename: DXN.DXN): void => {
 };
 
 /**
- * @returns Object type as {@link DXN}.
+ * @returns Object type URI — either a typename {@link DXN} or an `echo:` reference to a stored Schema object.
  * @returns undefined if the object doesn't have a type.
  * @example `dxn:com.example.type.person:1.0.0`
+ * @example `echo:/01KKKG2FHWCMTR0BY00GJSVT1X` (stored schema)
  *
  * @internal (use Obj.getTypeDXN)
  */
 // TODO(burdon): Narrow type.
-export const getTypeDXN = (obj: AnyProperties): DXN.DXN | undefined => {
+export const getTypeDXN = (obj: AnyProperties): URI.URI | undefined => {
   if (!obj) {
     return undefined;
   }
@@ -226,7 +227,7 @@ export const getTypeDXN = (obj: AnyProperties): DXN.DXN | undefined => {
     return undefined;
   }
 
-  invariant(DXN.isDXN(type), 'Invalid object.');
+  invariant(URI.isURI(type), 'Invalid object.');
   return type;
 };
 

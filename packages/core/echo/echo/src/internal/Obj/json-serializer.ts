@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { raise } from '@dxos/debug';
 import { type EncodedReference, ObjectStructure, isEncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, EchoId, ObjectId, type URI } from '@dxos/keys';
+import { EchoId, ObjectId, URI } from '@dxos/keys';
 import { assumeType, deepMapValues, visitValues } from '@dxos/util';
 
 import type * as Database from '../../Database';
@@ -92,7 +92,7 @@ export const objectFromJSON = async (
   assertArgument(typeof jsonData[ATTR_TYPE] === 'string', 'jsonData[ATTR_TYPE]', 'expected object to have a type');
   assertArgument(typeof jsonData.id === 'string', 'jsonData.id', 'expected object to have an id');
 
-  const type = jsonData[ATTR_TYPE];
+  const type = URI.make(jsonData[ATTR_TYPE]);
   const schema = await refResolver?.resolveSchema(type);
   invariant(schema === undefined || Schema.isSchema(schema));
   const decodedInput = stripInternalJsonKeys(jsonData);
@@ -217,7 +217,7 @@ export const objectStructureToJson = (objectId: ObjectId, structure: ObjectStruc
   return {
     ...structure.data,
     id: objectId,
-    [ATTR_TYPE]: typeRef ? DXN.parse(typeRef) : undefined,
+    [ATTR_TYPE]: typeRef ? URI.make(typeRef) : undefined,
     [ATTR_DELETED]: ObjectStructure.isDeleted(structure),
     [ATTR_PARENT]: parent !== undefined ? EchoId.parse(parent) : undefined,
     [ATTR_RELATION_SOURCE]: source !== undefined ? EchoId.parse(source) : undefined,
