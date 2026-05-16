@@ -64,13 +64,13 @@ top-level `test(...)` call.
  */
 ```
 
-| Field        | Required | Meaning                                                                |
-| ------------ | -------- | ---------------------------------------------------------------------- |
-| `<slug>`     | yes      | Globally unique [NSID](https://atproto.com/specs/nsid).                |
-| `applies`    | yes      | One-line applicability — when to reach for this.                       |
-| `instead-of` | no       | Anti-pattern this replaces. Prose plus optional `{@link}`.             |
-| `uses`       | no       | Comma-separated `{@link}` references to the key symbols.               |
-| `related`    | no       | NSID slugs of related idioms.                                          |
+| Field        | Required | Meaning                                                    |
+| ------------ | -------- | ---------------------------------------------------------- |
+| `<slug>`     | yes      | Globally unique [NSID](https://atproto.com/specs/nsid).    |
+| `applies`    | yes      | One-line applicability — when to reach for this.           |
+| `instead-of` | no       | Anti-pattern this replaces. Prose plus optional `{@link}`. |
+| `uses`       | no       | Comma-separated `{@link}` references to the key symbols.   |
+| `related`    | no       | NSID slugs of related idioms.                              |
 
 The leading JSDoc paragraph (above the `@idiom` line) is the **summary**: a
 two-to-four sentence rationale. If the host symbol's own JSDoc already explains

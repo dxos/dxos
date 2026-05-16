@@ -5,6 +5,7 @@
 import React, { forwardRef, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { mdl, mdlBlockDescription } from '@dxos/deus/extension';
 import { createDocAccessor } from '@dxos/echo-db';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -20,8 +21,6 @@ import {
   editorClassNames,
 } from '@dxos/ui-editor';
 import { isTruthy } from '@dxos/util';
-
-import { mdl, mdlBlockDescription } from '@dxos/deus/extension';
 
 import { Spec } from '#types';
 

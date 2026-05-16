@@ -2,10 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import { glob } from 'glob';
 import { readFile } from 'node:fs/promises';
 import { relative } from 'node:path';
-
-import { glob } from 'glob';
 
 import { isWellFormedId } from '@dxos/util';
 
@@ -159,11 +158,7 @@ const detectHost = (
   const testMatch = tail.match(TEST_RE);
   const file = relative(rootPath, absPath);
 
-  const kind: IdiomHost['kind'] = file.endsWith('.stories.tsx')
-    ? 'story'
-    : file.includes('.test.')
-      ? 'test'
-      : 'symbol';
+  const kind: IdiomHost['kind'] = file.endsWith('.stories.tsx') ? 'story' : file.includes('.test.') ? 'test' : 'symbol';
 
   const symbol = exportMatch?.[1] ?? testMatch?.[1];
   return { file, line: jsdocStartLine, symbol, kind };
