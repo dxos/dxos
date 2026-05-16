@@ -21,6 +21,6 @@ export const Track = Schema.Struct({
   /** Default visible pitch ceiling; defaults to 84 (C6). */
   maxPitch: Schema.optional(Schema.Number),
   muted: Schema.optional(Schema.Boolean),
-});
+}).pipe(Schema.mutable);
 
 export interface Track extends Schema.Schema.Type<typeof Track> {}

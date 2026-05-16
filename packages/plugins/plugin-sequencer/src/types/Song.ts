@@ -15,13 +15,13 @@ import { Track } from './Track';
  * plus playback metadata. This is the typed root object registered with ECHO.
  */
 export const Song = Schema.Struct({
-  name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
-  /** Tempo in BPM. */
-  tempo: Schema.Number.annotations({ title: 'Tempo (BPM)' }),
-  /** Time signature, e.g. '4/4'. */
-  timeSignature: Schema.optional(Schema.String.annotations({ title: 'Time signature' })),
-  tracks: Schema.Array(Track),
-  sequences: Schema.Array(Sequence),
+  name: Schema.optional(Schema.String),
+  tempo: Schema.Number.annotations({ title: 'Tempo', description: 'Beats per minute.' }),
+  timeSignature: Schema.optional(
+    Schema.String.annotations({ title: 'Time signature', examples: ['4/4', '3/4', '6/8'] }),
+  ),
+  tracks: Schema.mutable(Schema.Array(Track)),
+  sequences: Schema.mutable(Schema.Array(Sequence)),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.song',

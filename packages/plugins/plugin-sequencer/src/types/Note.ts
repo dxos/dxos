@@ -17,6 +17,6 @@ export const Note = Schema.Struct({
   duration: Schema.Number,
   /** Velocity 0.0..1.0; defaults to 0.8. */
   velocity: Schema.optional(Schema.Number),
-});
+}).pipe(Schema.mutable);
 
 export interface Note extends Schema.Schema.Type<typeof Note> {}

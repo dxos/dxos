@@ -18,7 +18,7 @@ export const Sequence = Schema.Struct({
   name: Schema.optional(Schema.String),
   /** Length in beats. */
   length: Schema.Number,
-  notes: Schema.Array(Note),
-});
+  notes: Schema.mutable(Schema.Array(Note)),
+}).pipe(Schema.mutable);
 
 export interface Sequence extends Schema.Schema.Type<typeof Sequence> {}

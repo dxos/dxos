@@ -39,11 +39,22 @@ export const attachPointerHandlers = <T>(
     return { x: event.clientX - rect.left, y: event.clientY - rect.top };
   };
 
+  // setPointerCapture throws for synthetic / untrusted PointerEvents (e.g. those
+  // dispatched by tests). Capture is a best-effort UX nicety — never let it abort
+  // the click path.
+  const tryCapture = (pointerId: number) => {
+    try {
+      element.setPointerCapture(pointerId);
+    } catch {
+      // Ignore — drag tracking still works without capture.
+    }
+  };
+
   const onPointerDown = (event: PointerEvent) => {
     // Middle-mouse or space-held pan: pan tool regardless of `tool` atom.
     if (event.button === 1 || (event.button === 0 && event.altKey)) {
       drag = { kind: 'pan', lastX: event.clientX, lastY: event.clientY };
-      element.setPointerCapture(event.pointerId);
+      tryCapture(event.pointerId);
       event.preventDefault();
       return;
     }
@@ -60,7 +71,7 @@ export const attachPointerHandlers = <T>(
     }
 
     const tool = registry.get(atoms.tool) as Tool;
-    element.setPointerCapture(event.pointerId);
+    tryCapture(event.pointerId);
 
     switch (tool) {
       case 'toggle':

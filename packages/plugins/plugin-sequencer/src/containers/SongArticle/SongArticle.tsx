@@ -111,13 +111,15 @@ const applyLeadSheetToSong = (mutable: MutableSong, document: LeadSheetDocument)
   const sorted = [...document.tracks].sort((a, b) => a.index - b.index);
   const existingByIndex = new Map(mutable.tracks.map((track, i) => [i + 1, track]));
 
-  const nextTracks: Track.Track[] = [];
-  const nextSequences: MutableSong['sequences'] = [];
+  // Clear in place; ECHO array mutations stick to the same proxy reference.
+  mutable.tracks.splice(0, mutable.tracks.length);
+  mutable.sequences.splice(0, mutable.sequences.length);
+
   sorted.forEach((entry, slot) => {
     const previous = existingByIndex.get(entry.index);
     const trackId = previous?.id ?? newId();
     const color = previous?.color ?? TRACK_COLORS_FALLBACK[slot % TRACK_COLORS_FALLBACK.length];
-    nextTracks.push({
+    mutable.tracks.push({
       id: trackId,
       name: entry.name,
       color,
@@ -126,7 +128,7 @@ const applyLeadSheetToSong = (mutable: MutableSong, document: LeadSheetDocument)
       maxPitch: previous?.maxPitch,
       muted: previous?.muted,
     });
-    nextSequences.push({
+    mutable.sequences.push({
       id: newId(),
       trackId,
       name: entry.name,
@@ -134,8 +136,6 @@ const applyLeadSheetToSong = (mutable: MutableSong, document: LeadSheetDocument)
       notes: entry.notes.map((note) => ({ ...note })),
     });
   });
-  mutable.tracks = nextTracks;
-  mutable.sequences = nextSequences;
 };
 
 /**
@@ -169,7 +169,7 @@ export const SongArticle = ({ role, subject, attendableId: _attendableId }: Song
     }
     Obj.update(subject, (subject) => {
       const mutable = subject as unknown as MutableSong;
-      mutable.sequences = [...mutable.sequences, newSequence(activeTrack.id)];
+      mutable.sequences.push(newSequence(activeTrack.id));
     });
   }, [subject, activeTrack, activeSequence]);
 
@@ -177,8 +177,8 @@ export const SongArticle = ({ role, subject, attendableId: _attendableId }: Song
     Obj.update(subject, (subject) => {
       const mutable = subject as unknown as MutableSong;
       const track = newTrack(mutable.tracks.length);
-      mutable.tracks = [...mutable.tracks, track];
-      mutable.sequences = [...mutable.sequences, newSequence(track.id)];
+      mutable.tracks.push(track);
+      mutable.sequences.push(newSequence(track.id));
     });
   }, [subject]);
 
@@ -186,8 +186,16 @@ export const SongArticle = ({ role, subject, attendableId: _attendableId }: Song
     (trackId: string) => {
       Obj.update(subject, (subject) => {
         const mutable = subject as unknown as MutableSong;
-        mutable.tracks = mutable.tracks.filter((track) => track.id !== trackId);
-        mutable.sequences = mutable.sequences.filter((sequence) => sequence.trackId !== trackId);
+        for (let i = mutable.tracks.length - 1; i >= 0; i--) {
+          if (mutable.tracks[i].id === trackId) {
+            mutable.tracks.splice(i, 1);
+          }
+        }
+        for (let i = mutable.sequences.length - 1; i >= 0; i--) {
+          if (mutable.sequences[i].trackId === trackId) {
+            mutable.sequences.splice(i, 1);
+          }
+        }
       });
     },
     [subject],
@@ -197,7 +205,10 @@ export const SongArticle = ({ role, subject, attendableId: _attendableId }: Song
     (trackId: string, muted: boolean) => {
       Obj.update(subject, (subject) => {
         const mutable = subject as unknown as MutableSong;
-        mutable.tracks = mutable.tracks.map((track) => (track.id === trackId ? { ...track, muted } : track));
+        const track = mutable.tracks.find((track) => track.id === trackId);
+        if (track) {
+          track.muted = muted;
+        }
       });
     },
     [subject],
@@ -268,19 +279,18 @@ export const SongArticle = ({ role, subject, attendableId: _attendableId }: Song
       const sequenceId = activeSequence.id;
       Obj.update(subject, (subject) => {
         const mutable = subject as unknown as MutableSong;
-        mutable.sequences = mutable.sequences.map((sequence) => {
-          if (sequence.id !== sequenceId) {
-            return sequence;
-          }
-          const current = toNoteArray(sequence.notes);
-          const existing = current.find(
-            (note) => note.pitch === pitch && Math.abs(note.startTime - startTime) < 1e-6,
-          );
-          const notes = existing
-            ? current.filter((note) => note !== existing)
-            : [...current, { pitch, startTime, duration: beatsPerCell, velocity: 0.8 } satisfies Note.Note];
-          return { ...sequence, notes };
-        });
+        const sequence = mutable.sequences.find((seq) => seq.id === sequenceId);
+        if (!sequence) {
+          return;
+        }
+        const existingIndex = sequence.notes.findIndex(
+          (note) => note.pitch === pitch && Math.abs(note.startTime - startTime) < 1e-6,
+        );
+        if (existingIndex >= 0) {
+          sequence.notes.splice(existingIndex, 1);
+        } else {
+          sequence.notes.push({ pitch, startTime, duration: beatsPerCell, velocity: 0.8 });
+        }
       });
     },
     [subject, activeSequence, beatsPerCell],
