@@ -115,6 +115,7 @@
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-markdown": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

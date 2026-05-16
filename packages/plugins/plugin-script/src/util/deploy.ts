@@ -55,7 +55,7 @@ export const deployScript = async ({
     const newFunction = await functionsServiceClient.deploy(Context.default(), {
       // TODO(dmaretskyi): Space key or identity key.
       ownerPublicKey: space.key,
-      version: fn ? incrementSemverPatch(fn.version) : '0.0.1',
+      version: fn ? incrementSemverPatch(Obj.getMeta(fn).version ?? '0.0.0') : '0.0.1',
       functionId: existingFunctionId,
       entryPoint: buildResult.entryPoint,
       assets: buildResult.assets,

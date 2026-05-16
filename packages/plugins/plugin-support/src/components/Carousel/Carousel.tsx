@@ -16,7 +16,8 @@ import React, {
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { Column, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Column, ColumnRootProps, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { MarkdownMedia } from '@dxos/react-ui-markdown';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -47,15 +48,17 @@ export const useCarousel = (): CarouselContextValue => {
 //
 
 export type CarouselRootProps = ThemedClassName<
-  PropsWithChildren<{
-    /** Total number of slides; drives auto-advance and indicator counts. */
-    count: number;
-    /** Whether to auto-advance slides on mount. Defaults to `false`. */
-    autorun?: boolean;
-    /** Auto-advance interval in milliseconds. Set 0 to disable. */
-    intervalMs?: number;
-    defaultIndex?: number;
-  }>
+  PropsWithChildren<
+    {
+      /** Total number of slides; drives auto-advance and indicator counts. */
+      count: number;
+      /** Whether to auto-advance slides on mount. Defaults to `false`. */
+      autorun?: boolean;
+      /** Auto-advance interval in milliseconds. Set 0 to disable. */
+      intervalMs?: number;
+      defaultIndex?: number;
+    } & Pick<ColumnRootProps, 'gutter'>
+  >
 >;
 
 /**
@@ -70,6 +73,7 @@ const CarouselRoot = ({
   autorun = false,
   intervalMs = 5_000,
   defaultIndex = 0,
+  gutter = 'lg',
 }: CarouselRootProps) => {
   const [index, setIndexState] = useState(defaultIndex);
   const [autoAdvance, setAutoAdvance] = useState(autorun);
@@ -111,7 +115,7 @@ const CarouselRoot = ({
 
   return (
     <CarouselContext.Provider value={value}>
-      <Column.Root gutter='lg' classNames={mx('dx-document h-fit auto-rows-min gap-4', classNames)}>
+      <Column.Root {...{ gutter }} classNames={mx('dx-document h-fit auto-rows-min gap-4', classNames)}>
         {children}
       </Column.Root>
     </CarouselContext.Provider>
@@ -212,33 +216,18 @@ export type CarouselMediaProps = {
 };
 
 /**
- * Slide content. Renders an `<iframe>` when the URL contains `iframe` (Cloudflare Stream
- * embeds use that segment), otherwise an `<img>`. Either fills the parent Slide.
+ * Slide content. Delegates iframe-vs-img selection to {@link MarkdownMedia} so
+ * carousels and markdown bodies render embedded media identically. Either
+ * variant fills the parent Slide.
  */
-const CarouselMedia = ({ src, alt, classNames }: CarouselMediaProps) => {
-  const isIframe = src.includes('iframe');
-  if (isIframe) {
-    return (
-      <iframe
-        src={src}
-        title={alt}
-        loading='lazy'
-        className={mx('absolute inset-0 w-full h-full border-none bg-baseSurface', classNames)}
-        allow='accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;'
-        allowFullScreen
-      />
-    );
-  }
-
-  return (
-    <img
-      src={src}
-      alt={alt ?? ''}
-      loading='lazy'
-      className={mx('absolute inset-0 w-full h-full object-cover bg-baseSurface', classNames)}
-    />
-  );
-};
+const CarouselMedia = ({ src, alt, classNames }: CarouselMediaProps) => (
+  <MarkdownMedia
+    src={src}
+    alt={alt}
+    classNames={mx('absolute inset-0 w-full h-full bg-baseSurface', classNames)}
+    imgClassNames='object-cover'
+  />
+);
 
 CarouselMedia.displayName = 'Carousel.Media';
 
@@ -252,8 +241,9 @@ const CarouselPrevious = ({ classNames }: CarouselButtonProps) => {
   const { t } = useTranslation(meta.id);
   const { count, prev } = useCarousel();
   if (count <= 1) {
-    return null;
+    return <div />;
   }
+
   return (
     <IconButton
       classNames={classNames}
@@ -273,8 +263,9 @@ const CarouselNext = ({ classNames }: CarouselButtonProps) => {
   const { t } = useTranslation(meta.id);
   const { count, next } = useCarousel();
   if (count <= 1) {
-    return null;
+    return <div />;
   }
+
   return (
     <IconButton
       classNames={classNames}

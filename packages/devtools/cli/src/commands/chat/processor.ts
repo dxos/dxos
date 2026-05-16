@@ -90,7 +90,7 @@ export class ChatProcessor {
     // Add blueprints to space.
     const blueprints = blueprintIds
       .map((key) => {
-        const existing = spaceBlueprints.find((blueprint) => blueprint.key === key);
+        const existing = spaceBlueprints.find((blueprint) => Obj.getMeta(blueprint).key === key);
         if (existing) {
           // TODO(wittjosiah): Stop doing this.
           //   Currently doing this to ensure blueprints are always up-to-date from the registry.

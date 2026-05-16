@@ -377,6 +377,7 @@ export class SpacesServiceImpl implements SpacesService {
       if (feed.messages.length === 0) {
         continue;
       }
+
       const namespace =
         feed.namespace === 'trace' ? FeedProtocol.WellKnownNamespaces.trace : FeedProtocol.WellKnownNamespaces.data;
       try {

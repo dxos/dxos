@@ -142,15 +142,16 @@ const BlueprintsPanel = ({
       <SearchList.Content classNames='flex flex-col'>
         <SearchList.Viewport>
           {results.map((blueprint) => {
-            const isActive = activeBlueprints.has(blueprint.key);
+            const blueprintKey = Obj.getMeta(blueprint).key ?? blueprint.id;
+            const isActive = activeBlueprints.has(blueprintKey);
             return (
               <SearchList.Item
                 classNames='flex items-center overflow-hidden'
-                key={blueprint.key}
-                value={blueprint.key}
+                key={blueprintKey}
+                value={blueprintKey}
                 label={blueprint.name}
                 checked={isActive}
-                onSelect={() => onUpdateBlueprint?.(blueprint.key, !isActive)}
+                onSelect={() => onUpdateBlueprint?.(blueprintKey, !isActive)}
               />
             );
           })}
