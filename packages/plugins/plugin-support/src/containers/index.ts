@@ -9,4 +9,5 @@ export const ShortcutsDialogContent: ComponentType<any> = lazy(() => import('./S
 export const ShortcutsHints: ComponentType<any> = lazy(() => import('./ShortcutsHints'));
 export const ShortcutsList: ComponentType<any> = lazy(() => import('./ShortcutsList'));
 export const SupportArticle: ComponentType<any> = lazy(() => import('./SupportArticle'));
+export const SupportCompanion: ComponentType<any> = lazy(() => import('./SupportCompanion'));
 export const WelcomeArticle: ComponentType<any> = lazy(() => import('./WelcomeArticle'));

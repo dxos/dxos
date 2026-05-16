@@ -62,14 +62,12 @@ export const generateCuratedPost = (props: { imageUrl?: string; read?: boolean }
 export const generateMagazine = (
   props: Partial<{
     name: string;
-    instructions: string;
     feeds: Subscription.Feed[];
     posts: Subscription.Post[];
   }> = {},
 ): Magazine.Magazine =>
   Magazine.make({
     name: props.name ?? random.company.name() + ' Reading List',
-    instructions: props.instructions ?? 'Surface articles about distributed systems and local-first software.',
     feeds: (props.feeds ?? []).map((feed) => Ref.make(feed)),
     posts: (props.posts ?? []).map((post) => Ref.make(post)),
   });

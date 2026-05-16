@@ -16,6 +16,7 @@ import {
   ShortcutsHints,
   ShortcutsList,
   SupportArticle,
+  SupportCompanion,
   WelcomeArticle,
 } from '#containers';
 import { meta } from '#meta';
@@ -45,6 +46,18 @@ export default Capability.makeModule(() =>
         id: 'feedback',
         role: 'deck-companion--help',
         component: () => <FeedbackPanel />,
+      }),
+      // Generic plank companion: shows the description from the plugin that
+      // owns the open article's typename. Matches any article via
+      // `companion(Article)` with no schema filter; the resolver inside the
+      // panel maps `companionTo` → owning plugin → `meta.description`.
+      Surface.create({
+        id: 'help-companion',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'help'),
+          AppSurface.companion(AppSurface.Article),
+        ),
+        component: ({ data }) => <SupportCompanion companionTo={data.companionTo} />,
       }),
       Surface.create({
         id: 'hints',

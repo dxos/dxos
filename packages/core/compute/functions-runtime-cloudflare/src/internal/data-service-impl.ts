@@ -131,7 +131,7 @@ export class DataServiceImpl implements DataServiceProto {
   }
 
   async updateIndexes(): Promise<void> {
-    log.error('updateIndexes is not available in EDGE env.');
+    log.verbose('updateIndexes called, but it is a no-op in EDGE env.');
     // No-op.
   }
 

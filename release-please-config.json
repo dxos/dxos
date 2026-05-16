@@ -375,6 +375,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/echo/echo-registry/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/echo/echo-solid/package.json",
           "jsonpath": "$.version"
         },
@@ -546,6 +551,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-board/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-calls/package.json",
           "jsonpath": "$.version"
         },
         {

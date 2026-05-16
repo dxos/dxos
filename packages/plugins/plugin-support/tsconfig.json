@@ -90,6 +90,9 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-markdown"
+    },
+    {
       "path": "../../ui/ui-theme"
     },
     {

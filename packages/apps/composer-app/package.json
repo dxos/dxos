@@ -9,7 +9,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
@@ -60,6 +60,7 @@
     "@dxos/plugin-automation": "workspace:*",
     "@dxos/plugin-bluesky": "workspace:*",
     "@dxos/plugin-board": "workspace:*",
+    "@dxos/plugin-calls": "workspace:*",
     "@dxos/plugin-chess": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-code": "workspace:*",

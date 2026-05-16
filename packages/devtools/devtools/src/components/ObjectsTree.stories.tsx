@@ -97,8 +97,8 @@ const meta = {
         const functions = Array.from({ length: 3 }, (_, index) =>
           space.db.add(
             Obj.make(Operation.PersistentOperation, {
+              [Obj.Meta]: { version: '0.1.0' },
               name: `function-${index}`,
-              version: '0.1.0',
               description: random.lorem.sentence(),
             }),
           ),

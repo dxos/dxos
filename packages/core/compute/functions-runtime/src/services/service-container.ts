@@ -28,6 +28,7 @@ const SERVICES = {
   functionCallService: RemoteFunctionExecutionService,
   operationService: Operation.Service,
   operationRegistryService: OperationRegistry.Service,
+  /** @deprecated Use feeds instead. */
   queues: QueueService,
   feeds: Feed.FeedService,
 } as const satisfies Record<string, Context.TagClass<any, string, any>>;
