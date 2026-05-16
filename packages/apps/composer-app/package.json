@@ -102,6 +102,7 @@
     "@dxos/plugin-sample": "workspace:*",
     "@dxos/plugin-script": "workspace:*",
     "@dxos/plugin-search": "workspace:*",
+    "@dxos/plugin-sequence": "workspace:*",
     "@dxos/plugin-settings": "workspace:*",
     "@dxos/plugin-sheet": "workspace:*",
     "@dxos/plugin-sidekick": "workspace:*",
