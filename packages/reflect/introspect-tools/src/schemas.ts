@@ -167,6 +167,24 @@ export const ListOperationsInput = PluginIdFilter;
 export const ListSchemasInput = PluginIdFilter;
 
 //
+// Idioms
+//
+
+const IdiomHostKindEnum = Schema.Literal('story', 'test', 'symbol');
+
+export const ListIdiomsInput = Schema.Struct({
+  slug: Schema.optional(Schema.String).annotations({
+    title: 'Slug filter',
+    description: 'Substring of the idiom slug (case-insensitive). Omit to list every idiom.',
+  }),
+  hostKind: Schema.optional(IdiomHostKindEnum).annotations({
+    title: 'Host kind',
+    description: 'Filter idioms by their host site: `symbol` (production code), `story`, or `test`.',
+  }),
+  ...ListOptionsInput.fields,
+});
+
+//
 // Inferred TypeScript types — handy for downstream consumers.
 //
 
@@ -180,3 +198,4 @@ export type ListSurfacesArgs = typeof ListSurfacesInput.Type;
 export type ListCapabilitiesArgs = typeof ListCapabilitiesInput.Type;
 export type ListOperationsArgs = typeof ListOperationsInput.Type;
 export type ListSchemasArgs = typeof ListSchemasInput.Type;
+export type ListIdiomsArgs = typeof ListIdiomsInput.Type;

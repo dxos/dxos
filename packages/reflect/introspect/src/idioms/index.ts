@@ -3,4 +3,4 @@
 //
 
 export { scanIdioms, type ScanIdiomsOptions } from './scan';
-export type { Idiom, IdiomHost } from './types';
+export type { Idiom, IdiomHost, IdiomHostKind } from './types';

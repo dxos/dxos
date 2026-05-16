@@ -23,6 +23,10 @@ export {
 } from './refs';
 export type {
   Capability,
+  Idiom,
+  IdiomFilter,
+  IdiomHost,
+  IdiomHostKind,
   Operation,
   Package,
   PackageDetail,

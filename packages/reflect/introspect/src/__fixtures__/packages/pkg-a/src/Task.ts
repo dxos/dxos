@@ -37,6 +37,11 @@ export interface Task extends Schema.Schema.Type<typeof Task> {}
 
 /**
  * Task factory — mirrors the make/Obj.make pattern used by real plugins.
+ *
+ * @idiom com.example.idiom.taskFactory
+ * applies: when constructing a Task with default `done: false`
+ * instead-of: hand-rolling `{ done: false, ...props }`
+ * uses: {@link Task}
  */
 export const make = (props: { title: string; description?: string; done?: boolean }) =>
   Obj.make(Task, { done: false, ...props });
