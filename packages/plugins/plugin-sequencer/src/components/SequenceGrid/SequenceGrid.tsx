@@ -105,9 +105,12 @@ export const SequenceGrid = ({
   );
 
   // Project notes into the CellGrid cell map.
+  // ECHO can briefly hand us a snapshot where `notes` is undefined when a sequence has
+  // just been created — coalesce to an empty array so the iteration is safe.
+  const notes = sequence.notes ?? [];
   useEffect(() => {
     const cells = new Map<string, Cell<{ color: string; velocity: number }>>();
-    for (const note of sequence.notes) {
+    for (const note of notes) {
       if (note.pitch < minPitch || note.pitch > maxPitch) {
         continue;
       }
@@ -122,7 +125,7 @@ export const SequenceGrid = ({
       });
     }
     registry.set(atoms.cells, cells);
-  }, [registry, atoms.cells, sequence.notes, minPitch, maxPitch, beatsPerCell, trackColor]);
+  }, [registry, atoms.cells, notes, minPitch, maxPitch, beatsPerCell, trackColor]);
 
   // Mirror playhead (beats → column units, accounting for beatsPerCell).
   useEffect(() => {

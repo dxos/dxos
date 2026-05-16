@@ -80,7 +80,7 @@ const songToLeadSheet = (song: Song.Song): LeadSheetDocument => ({
       index: index + 1,
       name: track.name,
       instrument: track.instrument,
-      notes: sequence ? sequence.notes.map((note) => ({ ...note })) : [],
+      notes: sequence ? (sequence.notes ?? []).map((note) => ({ ...note })) : [],
       length: sequence?.length ?? 16,
     };
   }),
@@ -262,12 +262,13 @@ export const SongArticle = ({ role, subject, attendableId: _attendableId }: Song
           if (sequence.id !== sequenceId) {
             return sequence;
           }
-          const existing = sequence.notes.find(
+          const current = sequence.notes ?? [];
+          const existing = current.find(
             (note) => note.pitch === pitch && Math.abs(note.startTime - startTime) < 1e-6,
           );
           const notes = existing
-            ? sequence.notes.filter((note) => note !== existing)
-            : [...sequence.notes, { pitch, startTime, duration: beatsPerCell, velocity: 0.8 } satisfies Note.Note];
+            ? current.filter((note) => note !== existing)
+            : [...current, { pitch, startTime, duration: beatsPerCell, velocity: 0.8 } satisfies Note.Note];
           return { ...sequence, notes };
         });
       });

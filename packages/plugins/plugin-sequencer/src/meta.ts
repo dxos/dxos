@@ -7,7 +7,7 @@ import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.sequencer',
-  name: 'Sequence',
+  name: 'Sequencer',
   description: trim`
     Music sequencer / step-grid editor. A Song owns a set of tracks and per-track
     Sequence objects whose Notes are edited on a 2D piano-roll style grid (pitch
