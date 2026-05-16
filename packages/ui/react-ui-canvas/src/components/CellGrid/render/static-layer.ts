@@ -60,11 +60,13 @@ export const drawCells = <T>({
   const w = cellWidth(viewport);
   const h = viewport.cellHeight;
 
-  // Row bands.
+  // Row bands. Paint odd rows so the stripe pattern matches the TrackHeader's
+  // label backgrounds (which darken odd row indices) — keeps the frozen left
+  // column and the cell area visually in lockstep.
   if (style.rowBand) {
     ctx.fillStyle = style.rowBand;
     for (let row = range.minRow; row <= Math.min(range.maxRow, rows.length - 1); row++) {
-      if (row % 2 !== 0) {
+      if (row % 2 === 0) {
         continue;
       }
       const y = headers.top + row * h - viewport.scrollY;
