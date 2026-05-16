@@ -142,6 +142,9 @@
       "path": "../plugin-attention"
     },
     {
+      "path": "../plugin-calls"
+    },
+    {
       "path": "../plugin-client"
     },
     {

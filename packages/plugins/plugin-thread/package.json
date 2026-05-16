@@ -119,6 +119,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
+    "@dxos/plugin-calls": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
@@ -148,13 +149,7 @@
     "@effect-atom/atom-react": "catalog:",
     "@effect/ai": "catalog:",
     "@effect/experimental": "catalog:",
-    "@peermetrics/webrtc-stats": "catalog:",
-    "date-fns": "catalog:",
-    "extendable-media-recorder": "catalog:",
-    "extendable-media-recorder-wav-encoder": "catalog:",
-    "md5-hex": "catalog:",
-    "react-resize-detector": "catalog:",
-    "wavefile": "catalog:"
+    "date-fns": "catalog:"
   },
   "devDependencies": {
     "@dxos/plugin-testing": "workspace:*",

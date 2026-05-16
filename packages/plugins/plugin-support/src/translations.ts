@@ -53,7 +53,7 @@ export const translations = [
         'welcome.description':
           'This is your personal space. Open a ticket from the Support assistant, or start the guided tour to learn the basics.',
         'start-tour.button': 'Start tour',
-        'open-chat.button': 'Open Support Chat',
+        'open-assistant.button': 'Open Assistant',
         // Carousel.
         'carousel-prev.label': 'Previous',
         'carousel-next.label': 'Next',

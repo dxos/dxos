@@ -10,7 +10,7 @@ import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { ThreadCapabilities } from '#types';
+import { CallsCapabilities } from '#types';
 
 import { Toolbar, type ToolbarProps } from '../Call';
 import { VideoObject } from '../Media';
@@ -41,7 +41,7 @@ type LobbyPreviewProps = {};
 
 const LobbyPreview = (_props: LobbyPreviewProps) => {
   const { t } = useTranslation(meta.id);
-  const call = useCapability(ThreadCapabilities.CallManager);
+  const call = useCapability(CallsCapabilities.Manager);
   const media = useAtomValue(call.mediaAtom);
   const [classNames, setClassNames] = useState('');
   useEffect(() => {
@@ -90,7 +90,7 @@ type LobbyToolbarProps = ThemedClassName<
 >;
 
 const LobbyToolbar = ({ roomId, ...props }: LobbyToolbarProps) => {
-  const call = useCapability(ThreadCapabilities.CallManager);
+  const call = useCapability(CallsCapabilities.Manager);
   const [count, setCount] = useState<number>(0);
 
   // TODO(wittjosiah): Leaving the room doesn't remove you from the swarm.

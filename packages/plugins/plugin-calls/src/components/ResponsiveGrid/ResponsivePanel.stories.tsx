@@ -37,7 +37,7 @@ export const Video: Story = {
   args: {
     children: (
       <video
-        src='https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4'
+        src='https://customer-5rxcjpyab08avpmn.cloudflarestream.com/f58459bcdf3a6f3e93644a4e0f39b22a/downloads/default.mp4'
         playsInline
         autoPlay
         muted

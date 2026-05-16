@@ -39,11 +39,12 @@ export const WelcomeArticle = ({ role }: WelcomeArticleProps = {}) => {
   const slides: Slide[] = useMemo(
     () => [
       welcome,
-      ...manager
-        .getPlugins()
-        .flatMap((plugin) =>
-          (plugin.meta.screenshots ?? []).map((src) => ({ src, description: plugin.meta.name ?? plugin.meta.id })),
-        ),
+      ...manager.getPlugins().flatMap((plugin) =>
+        (plugin.meta.screenshots ?? []).map((src) => ({
+          src,
+          description: plugin.meta.description ?? plugin.meta.name ?? plugin.meta.id,
+        })),
+      ),
     ],
     [manager],
   );
@@ -71,7 +72,7 @@ export const WelcomeArticle = ({ role }: WelcomeArticleProps = {}) => {
             <h1 className='text-2xl font-semibold'>{t('welcome.title')}</h1>
             <p className='max-w-prose text-center text-description'>{t('welcome.description')}</p>
             <Button variant='primary' onClick={handleOpenChat}>
-              {t('open-chat.button')}
+              {t('open-assistant.button')}
             </Button>
             {slides.length > 0 && (
               <Carousel.Root count={slides.length}>

@@ -17,7 +17,7 @@ import { Operation, Trigger } from '@dxos/compute';
 import { Database, Filter, JsonSchema, Ref } from '@dxos/echo';
 
 import { Enabled, Input, Queue } from '../options';
-import { printTrigger, promptForSchemaInput, selectFunction, selectQueue } from '../util';
+import { printTrigger, promptForSchemaInput, selectFunction, selectFeed } from '../util';
 
 export const queue = Command.make(
   'queue',
@@ -43,7 +43,7 @@ export const queue = Command.make(
       }
 
       const queueDXN = yield* Option.match(options.queue, {
-        onNone: () => selectQueue(),
+        onNone: () => selectFeed(),
         onSome: (dxn) => Effect.succeed(dxn.toString()),
       });
 
