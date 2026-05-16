@@ -13453,6 +13453,9 @@ importers:
       '@dxos/react-ui-canvas':
         specifier: workspace:*
         version: link:../../ui/react-ui-canvas
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util

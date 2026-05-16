@@ -2,13 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Atom } from '@effect-atom/atom-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
-import { Button, Icon, Input, Panel, Toolbar } from '@dxos/react-ui';
+import { Button, Icon, Input, Panel } from '@dxos/react-ui';
 import { type ToggleMode } from '@dxos/react-ui-canvas';
+import { Menu, MenuBuilder, useMenuActions, type ActionGraphProps } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
 import { SequenceGrid, TrackList } from '#components';
@@ -155,7 +157,7 @@ const applyLeadSheetToSong = (mutable: MutableSong, document: LeadSheetDocument)
  * Article surface for a Song. Composes a TrackList (left) with the active Sequence's
  * piano-roll grid (right) and a toolbar with playback + tempo controls.
  */
-export const SongArticle = ({ role, subject, attendableId: _attendableId }: SongArticleProps) => {
+export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) => {
   const [snapshot] = useObject(subject);
   const song = snapshot as unknown as Song.Song;
 
@@ -339,41 +341,70 @@ export const SongArticle = ({ role, subject, attendableId: _attendableId }: Song
     return () => cancelAnimationFrame(raf);
   }, [isPlaying, activeSequence, song.tempo]);
 
+  // Toolbar actions composed via the MenuBuilder / Menu.Root idiom
+  // (org.dxos.react-ui-menu.toolbarMenu). useMemo deps cover every value the
+  // menu's invoke handlers close over so the actions stay in sync.
+  const togglePlay = useCallback(() => setIsPlaying((current) => !current), []);
+  const actionsAtom = useMemo(
+    () =>
+      Atom.make(
+        (): ActionGraphProps =>
+          MenuBuilder.make()
+            .action(
+              'play',
+              {
+                label: isPlaying ? 'Stop' : 'Play',
+                icon: isPlaying ? 'ph--pause--regular' : 'ph--play--regular',
+                iconOnly: true,
+                disposition: 'toolbar',
+              },
+              togglePlay,
+            )
+            .separator()
+            .action(
+              'import',
+              {
+                label: 'Import lead sheet',
+                icon: 'ph--upload-simple--regular',
+                iconOnly: true,
+                disposition: 'toolbar',
+              },
+              handleImport,
+            )
+            .action(
+              'export',
+              {
+                label: 'Export lead sheet',
+                icon: 'ph--download-simple--regular',
+                iconOnly: true,
+                disposition: 'toolbar',
+              },
+              handleExport,
+            )
+            .build(),
+      ),
+    [isPlaying, togglePlay, handleImport, handleExport],
+  );
+  const menuActions = useMenuActions(actionsAtom);
+
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root>
-          <Toolbar.IconButton
-            icon={isPlaying ? 'ph--pause--regular' : 'ph--play--regular'}
-            label={isPlaying ? 'Stop' : 'Play'}
-            onClick={() => setIsPlaying((current) => !current)}
-          />
-          <Toolbar.Separator />
-          <Input.Root>
-            <Input.Label classNames='text-xs mr-1'>BPM</Input.Label>
-            <Input.TextInput
-              type='number'
-              min={1}
-              value={song.tempo}
-              onChange={(event) => handleTempoChange(Number(event.target.value))}
-              classNames='w-16'
-            />
-          </Input.Root>
-          <Toolbar.Separator />
-          <Toolbar.IconButton
-            icon='ph--upload-simple--regular'
-            iconOnly
-            label='Import lead sheet'
-            onClick={handleImport}
-          />
-          <Toolbar.IconButton
-            icon='ph--download-simple--regular'
-            iconOnly
-            label='Export lead sheet'
-            onClick={handleExport}
-          />
-        </Toolbar.Root>
-      </Panel.Toolbar>
+      <Menu.Root {...menuActions} attendableId={attendableId}>
+        <Panel.Toolbar asChild>
+          <Menu.Toolbar>
+            <Input.Root>
+              <Input.Label classNames='text-xs mr-1'>BPM</Input.Label>
+              <Input.TextInput
+                type='number'
+                min={1}
+                value={song.tempo}
+                onChange={(event) => handleTempoChange(Number(event.target.value))}
+                classNames='w-16'
+              />
+            </Input.Root>
+          </Menu.Toolbar>
+        </Panel.Toolbar>
+      </Menu.Root>
       <Panel.Content>
         <div className='flex h-full min-h-0'>
           <div className='w-48 shrink-0 border-r border-neutral-200 dark:border-neutral-800'>

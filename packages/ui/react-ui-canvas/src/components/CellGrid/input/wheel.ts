@@ -26,9 +26,8 @@ export const attachWheelHandlers = <T>(
   { registry, atoms, headers }: WheelControllerOptions<T>,
 ): (() => void) => {
   const onWheel = (event: WheelEvent) => {
-    event.preventDefault();
-
     if (event.ctrlKey || event.metaKey) {
+      event.preventDefault();
       // Zoom around cursor x.
       const rect = element.getBoundingClientRect();
       const x = event.clientX - rect.left;
@@ -49,11 +48,19 @@ export const attachWheelHandlers = <T>(
 
     const dx = event.shiftKey ? event.deltaY : event.deltaX;
     const dy = event.shiftKey ? 0 : event.deltaY;
-    registry.update(atoms.viewport, (current) => ({
-      ...current,
-      scrollX: Math.max(0, current.scrollX + dx),
-      scrollY: Math.max(0, current.scrollY + dy),
-    }));
+    const current = registry.get(atoms.viewport);
+    const nextScrollX = Math.max(0, current.scrollX + dx);
+    const nextScrollY = Math.max(0, current.scrollY + dy);
+
+    // Only consume the wheel event if we're actually scrolling within the grid.
+    // When the user wheels up at the top (scrollY === 0 && dy < 0) or wheels left
+    // at the left edge, let the event bubble to the parent so the page or
+    // enclosing container can scroll instead of swallowing the gesture.
+    if (nextScrollX === current.scrollX && nextScrollY === current.scrollY) {
+      return;
+    }
+    event.preventDefault();
+    registry.set(atoms.viewport, { ...current, scrollX: nextScrollX, scrollY: nextScrollY });
   };
 
   element.addEventListener('wheel', onWheel, { passive: false });

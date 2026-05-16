@@ -20,8 +20,8 @@ export const Song = Schema.Struct({
   timeSignature: Schema.optional(
     Schema.String.annotations({ title: 'Time signature', examples: ['4/4', '3/4', '6/8'] }),
   ),
-  tracks: Schema.mutable(Schema.Array(Track)),
-  sequences: Schema.mutable(Schema.Array(Sequence)),
+  tracks: Schema.mutable(Schema.Array(Track)).pipe(Annotation.FormInputAnnotation.set(false)),
+  sequences: Schema.mutable(Schema.Array(Sequence)).pipe(Annotation.FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.song',
