@@ -238,13 +238,14 @@ export const CellGrid = <T,>({
   return (
     <div ref={containerRef} className={mx('relative w-full h-full overflow-hidden bg-baseSurface', classNames)}>
       {/*
-        Canvases are nudged up 1 CSS pixel so the row gridlines (drawn at the TOP of
-        each row) sit on top of the TrackHeader's bottom-divider box-shadow (drawn at
-        the BOTTOM of each row, 1px inside the box). Without this nudge the canvas
-        gridline lands 1px below the label divider, which reads as misalignment.
+        Canvases are nudged up + left 1 CSS pixel so the gridlines (drawn at the TOP
+        and LEFT edges of each cell) sit on top of the frozen header dividers — the
+        TrackHeader's right border and bottom-row box-shadow, which both render 1px
+        inside the box. Without this offset the canvas gridlines land 1px down/right
+        of the header dividers and the columns read as misaligned.
       */}
-      <canvas ref={staticCanvasRef} className='absolute inset-0 pointer-events-none' style={{ top: -1 }} />
-      <canvas ref={overlayCanvasRef} className='absolute inset-0 pointer-events-none' style={{ top: -1 }} />
+      <canvas ref={staticCanvasRef} className='absolute inset-0 pointer-events-none' style={{ top: -1, left: -1 }} />
+      <canvas ref={overlayCanvasRef} className='absolute inset-0 pointer-events-none' style={{ top: -1, left: -1 }} />
       <div
         ref={overlayInputRef}
         className='absolute inset-0 touch-none'
