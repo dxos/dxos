@@ -131,6 +131,9 @@
       "path": "../../plugins/plugin-transcription"
     },
     {
+      "path": "../../reflect/introspect"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {

@@ -3,16 +3,20 @@
 //
 
 /**
- * Background `warnAfterTimeout` chatter that we don't want bleeding into
- * normal CLI output. The pattern matches a stable prefix only — a future
- * rewording of the message past "more" (e.g. "than" → "then" typo fix)
- * won't silently break suppression.
+ * Background chatter we don't want bleeding into normal CLI output. The
+ * pattern matches a stable prefix only — a future rewording past the
+ * captured text won't silently break suppression.
  *
- * Source of these warnings: `warnAfterTimeout` in @dxos/debug, fired e.g.
- * during eager space initialisation in ClientPlugin when there's prior
- * data on disk that takes >5s to load.
+ * Sources:
+ *  - `warnAfterTimeout` in @dxos/debug, fired e.g. during eager space
+ *    initialisation in ClientPlugin when there's prior data on disk that
+ *    takes >5s to load.
+ *  - Node's `TimeoutNegativeWarning` (and the follow-up "Timeout duration
+ *    was set to 1." continuation line), fired by automerge-repo's throttle
+ *    helper when it computes a negative setTimeout delay.
  */
-const TIMEOUT_WARNING_PREFIX_RE = /^Action `[^`]+` is taking more/;
+const TIMEOUT_WARNING_PREFIX_RE =
+  /^(?:Action `[^`]+` is taking more|TimeoutNegativeWarning:|Timeout duration was set to)/;
 
 /**
  * Pure state machine that decides whether a stderr chunk should be dropped.
@@ -67,6 +71,14 @@ export const filterStderrBuffer = (buffer: string): string => {
 };
 
 /**
+ * Process warnings (those routed through `process.emitWarning` instead of
+ * `console.warn`) whose `name` we want to swallow. Bun emits these via a
+ * channel that bypasses both `console.warn` and `process.stderr.write`, so
+ * the byte-stream filter alone can't catch them.
+ */
+const SWALLOWED_WARNING_NAMES = new Set(['TimeoutNegativeWarning']);
+
+/**
  * Wrap BOTH `console.warn`/`console.error` (where `warnAfterTimeout` from
  * @dxos/debug actually writes) AND `process.stderr.write` (defence in depth
  * for callers that bypass console). In Bun, `console.warn` writes to fd 2
@@ -75,6 +87,10 @@ export const filterStderrBuffer = (buffer: string): string => {
  * traffic in bun. See stderr-filter.console.test.ts for the regression
  * guard.
  *
+ * Also replaces any default `'warning'` listener so that warnings emitted via
+ * `process.emitWarning` (e.g. Bun's `TimeoutNegativeWarning` raised by
+ * automerge-repo's throttle helper) can be filtered by name.
+ *
  * The returned restore lambda re-installs the originals so callers (e.g.
  * tests, REPL exit) can revert.
  */
@@ -82,6 +98,20 @@ export const installStderrFilter = (): (() => void) => {
   const originalWarn = console.warn.bind(console);
   const originalError = console.error.bind(console);
   const originalWrite = process.stderr.write.bind(process.stderr);
+
+  // Replace any default `'warning'` listener (Node's prints to stderr) with
+  // one that drops the names we don't want.
+  const originalWarningListeners = process.listeners('warning');
+  process.removeAllListeners('warning');
+  const warningListener = (warning: Error) => {
+    if (SWALLOWED_WARNING_NAMES.has(warning.name)) {
+      return;
+    }
+    for (const listener of originalWarningListeners) {
+      (listener as (w: Error) => void)(warning);
+    }
+  };
+  process.on('warning', warningListener);
 
   // The same suppression state machine drives every channel — they all dump
   // to fd 2, so a warning fired through one and stack frames fired through
@@ -126,5 +156,9 @@ export const installStderrFilter = (): (() => void) => {
     console.warn = originalWarn;
     console.error = originalError;
     (process.stderr as any).write = originalWrite;
+    process.removeListener('warning', warningListener);
+    for (const listener of originalWarningListeners) {
+      process.on('warning', listener as (w: Error) => void);
+    }
   };
 };
