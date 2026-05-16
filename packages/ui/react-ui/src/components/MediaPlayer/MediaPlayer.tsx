@@ -4,8 +4,9 @@
 
 import React from 'react';
 
-import { type ThemedClassName } from '../../util';
 import { mx } from '@dxos/ui-theme';
+
+import { type ThemedClassName } from '../../util';
 
 export type MediaKind = 'video' | 'audio';
 

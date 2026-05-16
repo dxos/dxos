@@ -161,8 +161,9 @@ export class HeyGenProvider implements GenerationProvider {
     };
     return (body.data?.voices ?? [])
       .filter(isFavorite)
-      .filter((entry): entry is { voice_id: string; name?: string; language?: string; gender?: string } =>
-        typeof entry.voice_id === 'string',
+      .filter(
+        (entry): entry is { voice_id: string; name?: string; language?: string; gender?: string } =>
+          typeof entry.voice_id === 'string',
       )
       .map((entry) => {
         const suffix = [entry.language, entry.gender].filter(Boolean).join(', ');
