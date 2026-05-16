@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
-import { Button, Icon, Input, Panel } from '@dxos/react-ui';
+import { Button, Dialog, Icon, Input, Panel } from '@dxos/react-ui';
 import { type ToggleMode } from '@dxos/react-ui-canvas';
 import { Menu, MenuBuilder, useMenuActions, type ActionGraphProps } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
@@ -164,6 +164,7 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playhead, setPlayhead] = useState<number | null>(null);
+  const [leadSheetDialog, setLeadSheetDialog] = useState<{ mode: 'import' | 'export'; text: string } | null>(null);
 
   // Auto-select the first track when one becomes available.
   useEffect(() => {
@@ -249,45 +250,42 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
 
   const beatsPerBar = parseTimeSignature(song.timeSignature);
 
-  const handleExport = useCallback(async () => {
+  const handleExport = useCallback(() => {
     const document = songToLeadSheet(song);
     const text = formatLeadSheet(document, { beatsPerBar });
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      // Clipboard API unavailable (e.g. insecure context); fall back to console + alert.
-      // eslint-disable-next-line no-console
-      console.log(text);
-      window.alert('Lead sheet copied to console (clipboard unavailable):\n\n' + text);
-    }
+    setLeadSheetDialog({ mode: 'export', text });
   }, [song, beatsPerBar]);
 
   const handleImport = useCallback(async () => {
-    let text: string;
+    let initial = '';
     try {
-      text = await navigator.clipboard.readText();
+      initial = await navigator.clipboard.readText();
     } catch {
-      const fallback = window.prompt('Paste lead sheet:');
-      if (fallback === null) {
-        return;
+      // Clipboard read can fail in insecure contexts or without focus; that's fine,
+      // the dialog still opens with an empty textarea for the user to paste into.
+    }
+    setLeadSheetDialog({ mode: 'import', text: initial });
+  }, []);
+
+  const handleImportApply = useCallback(
+    (text: string): string | null => {
+      if (!text.trim()) {
+        return 'Lead sheet is empty.';
       }
-      text = fallback;
-    }
-    if (!text.trim()) {
-      return;
-    }
-    let document: LeadSheetDocument;
-    try {
-      document = parseLeadSheet(text, { beatsPerBar });
-    } catch (error) {
-      window.alert(`Lead-sheet parse error: ${(error as Error).message}`);
-      return;
-    }
-    Obj.update(subject, (subject) => {
-      const mutable = subject as unknown as MutableSong;
-      applyLeadSheetToSong(mutable, document);
-    });
-  }, [subject, beatsPerBar]);
+      let document: LeadSheetDocument;
+      try {
+        document = parseLeadSheet(text, { beatsPerBar });
+      } catch (error) {
+        return (error as Error).message;
+      }
+      Obj.update(subject, (subject) => {
+        const mutable = subject as unknown as MutableSong;
+        applyLeadSheetToSong(mutable, document);
+      });
+      return null;
+    },
+    [subject, beatsPerBar],
+  );
 
   const beatsPerCell = 0.25;
 
@@ -438,7 +436,97 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
           </div>
         </div>
       </Panel.Content>
+      {leadSheetDialog && (
+        <LeadSheetDialog
+          mode={leadSheetDialog.mode}
+          initialText={leadSheetDialog.text}
+          onApply={handleImportApply}
+          onClose={() => setLeadSheetDialog(null)}
+        />
+      )}
     </Panel.Root>
+  );
+};
+
+type LeadSheetDialogProps = {
+  mode: 'import' | 'export';
+  initialText: string;
+  onApply: (text: string) => string | null;
+  onClose: () => void;
+};
+
+const LeadSheetDialog = ({ mode, initialText, onApply, onClose }: LeadSheetDialogProps) => {
+  const [text, setText] = useState(initialText);
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+    } catch {
+      setError('Clipboard unavailable — select all and copy manually.');
+    }
+  }, [text]);
+
+  const handleConfirm = useCallback(() => {
+    if (mode === 'import') {
+      const message = onApply(text);
+      if (message) {
+        setError(message);
+        return;
+      }
+    }
+    onClose();
+  }, [mode, text, onApply, onClose]);
+
+  return (
+    <Dialog.Root defaultOpen modal onOpenChange={(open) => !open && onClose()}>
+      <Dialog.Overlay>
+        <Dialog.Content size='lg'>
+          <Dialog.Header>
+            <Dialog.Title>{mode === 'export' ? 'Export lead sheet' : 'Import lead sheet'}</Dialog.Title>
+            <Dialog.Close asChild>
+              <Dialog.CloseIconButton />
+            </Dialog.Close>
+          </Dialog.Header>
+          <Dialog.Body>
+            <textarea
+              autoFocus
+              value={text}
+              readOnly={mode === 'export'}
+              spellCheck={false}
+              onChange={(event) => {
+                setText(event.target.value);
+                setError(null);
+              }}
+              className={mx(
+                'w-full min-h-[16rem] font-mono text-xs p-2 rounded bg-input',
+                'border border-neutral-300 dark:border-neutral-700 focus:outline-none focus:border-primary-500',
+              )}
+              placeholder={mode === 'import' ? 'Paste lead-sheet text here…' : ''}
+            />
+            {error && <div className='text-xs text-red-500 mt-2'>{error}</div>}
+            {copied && <div className='text-xs text-green-500 mt-2'>Copied to clipboard.</div>}
+          </Dialog.Body>
+          <Dialog.ActionBar>
+            {mode === 'export' && (
+              <Button onClick={handleCopy} variant='primary'>
+                Copy to clipboard
+              </Button>
+            )}
+            {mode === 'import' && (
+              <Button onClick={handleConfirm} variant='primary'>
+                Import
+              </Button>
+            )}
+            <Dialog.Close asChild>
+              <Button>Close</Button>
+            </Dialog.Close>
+          </Dialog.ActionBar>
+        </Dialog.Content>
+      </Dialog.Overlay>
+    </Dialog.Root>
   );
 };
 
