@@ -59,7 +59,9 @@ export const WithAudio: Story = {
   args: {
     type: 'audio',
     prompt: 'A 30-second jazz piano piece in the key of D minor.',
-    urls: ['https://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3'],
+    urls: [
+      'https://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3',
+    ],
   },
 };
 export const MultipleUrls: Story = {
