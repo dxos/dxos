@@ -86,9 +86,11 @@ export const GenerationArticle = ({ role, subject, attendableId }: GenerationArt
   const busy = state.status === 'busy';
   const hasMedia = Boolean(generation.url);
   // Run is disabled while busy OR until we have enough to attempt a generation.
-  // Without an apiKey HeyGen always 400s, so surface that as disabled rather than
-  // letting the user fire a request that's guaranteed to fail.
-  const canGenerate = !busy && Boolean(apiKey);
+  // Without an apiKey HeyGen always 400s, and an empty prompt produces nothing
+  // useful, so surface both as disabled rather than letting the user fire a
+  // request that's guaranteed to fail.
+  const hasPrompt = Boolean(generation.prompt.target?.content?.trim());
+  const canGenerate = !busy && Boolean(apiKey) && hasPrompt;
 
   const actionsAtom = useMemo(
     () =>
@@ -129,10 +131,8 @@ export const GenerationArticle = ({ role, subject, attendableId }: GenerationArt
           <Menu.Toolbar />
         </Menu.Root>
       </Panel.Toolbar>
-      <Panel.Content classNames='grid grid-rows-[1fr_auto]'>
-        {generation.prompt.target && (
-          <PromptEditor id={generation.prompt.dxn.toString()} text={generation.prompt.target} />
-        )}
+      <Panel.Content classNames='dx-container border grid grid-rows-[1fr_8rem]'>
+        <PromptEditor id={generation.prompt.dxn.toString()} text={generation.prompt.target} />
         {generation.url && <MediaPlayer src={generation.url} kind={generation.type} />}
       </Panel.Content>
       {state.status === 'error' && (

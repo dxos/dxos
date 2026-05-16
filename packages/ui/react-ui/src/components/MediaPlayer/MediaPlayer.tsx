@@ -78,9 +78,10 @@ export const MediaPlayer = ({
       />
     );
   }
+
   return (
     <video
-      className={className}
+      className={mx('w-full aspect-video', className)}
       src={src}
       controls={controls}
       autoPlay={autoPlay}

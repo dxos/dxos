@@ -29,9 +29,9 @@ const DEFAULT_DIMENSION = { width: 1280, height: 720 };
 /** Cap on how many favourites we surface in the picker — HeyGen accounts can carry hundreds. */
 const MAX_LISTED = 50;
 
-/** HeyGen has shifted naming between API versions; check every plausible favourite flag. */
+/** HeyGen has shifted naming between API versions; treat as favourite if any known flag is true. */
 const isFavorite = (entry: { is_favorite?: boolean; liked?: boolean; favorite?: boolean }): boolean =>
-  Boolean(entry.is_favorite ?? entry.liked ?? entry.favorite);
+  Boolean(entry.is_favorite || entry.liked || entry.favorite);
 
 export type HeyGenProviderOptions = {
   /** Output dimensions; defaults to 1280×720. */
@@ -234,15 +234,19 @@ export class HeyGenProvider implements GenerationProvider {
         throw new ProviderFailureError(body.data?.error?.message ?? 'HeyGen job failed.');
       }
       await new Promise<void>((resolve, reject) => {
-        const timer = setTimeout(resolve, this.#pollIntervalMs);
-        options.signal?.addEventListener(
-          'abort',
-          () => {
-            clearTimeout(timer);
-            reject(options.signal!.reason);
-          },
-          { once: true },
-        );
+        // Register a named abort handler so we can remove it when the timer fires
+        // — `{ once: true }` only auto-removes after an abort event, so without
+        // explicit cleanup listeners would pile up on the (long-lived) signal across
+        // every poll iteration.
+        const onAbort = () => {
+          clearTimeout(timer);
+          reject(options.signal?.reason);
+        };
+        const timer = setTimeout(() => {
+          options.signal?.removeEventListener('abort', onAbort);
+          resolve();
+        }, this.#pollIntervalMs);
+        options.signal?.addEventListener('abort', onAbort, { once: true });
       });
     }
     throw new ProviderFailureError('HeyGen job timed out.');

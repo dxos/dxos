@@ -113,7 +113,7 @@ export const GenerationProperties = ({ subject }: GenerationPropertiesProps) => 
         value={generation.avatarId}
         options={avatars}
         placeholder={placeholder ?? t('properties.select-avatar.placeholder')}
-        disabled={status !== 'ready' || avatars.length === 0}
+        disabled={status !== 'ready' || (avatars.length === 0 && !generation.avatarId)}
         onValueChange={handleAvatarChange}
       />
       <PropertySelect
@@ -121,7 +121,7 @@ export const GenerationProperties = ({ subject }: GenerationPropertiesProps) => 
         value={generation.voiceId}
         options={voices}
         placeholder={placeholder ?? t('properties.select-voice.placeholder')}
-        disabled={status !== 'ready' || voices.length === 0}
+        disabled={status !== 'ready' || (voices.length === 0 && !generation.voiceId)}
         onValueChange={handleVoiceChange}
       />
     </>

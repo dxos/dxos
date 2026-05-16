@@ -8,12 +8,21 @@ import { MediaPlayer, detectMediaKind } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 /**
- * Heuristic match for embed URLs that should render as `MediaPlayer` (native
- * `<video>` / `<audio>`) instead of `<img>`. URLs ending in a recognised media
- * extension (mp4, mp3, …) qualify; legacy embed URLs containing the literal
- * `iframe` segment (Cloudflare Stream, oEmbed-style players) also qualify.
+ * Heuristic match for URLs that should render as `MediaPlayer` (native
+ * `<video>` / `<audio>`) instead of `<img>` — i.e. URLs ending in a recognised
+ * media extension (mp4, mp3, …).
+ *
+ * NB: legacy embed URLs (Cloudflare Stream etc. — paths containing `iframe`)
+ * serve an HTML player page, **not** a media stream, so they cannot be loaded
+ * via `<video>`. Those are detected by {@link isLegacyIframeUrl} and rendered
+ * via `<iframe>` below.
  */
-export const isEmbedUrl = (src: string): boolean => detectMediaKind(src) !== undefined || src.includes('iframe');
+export const isEmbedUrl = (src: string): boolean => detectMediaKind(src) !== undefined;
+
+const isLegacyIframeUrl = (src: string): boolean => src.includes('iframe');
+
+/** iframe sandbox flags compatible with typical oEmbed-style players. */
+const DEFAULT_IFRAME_SANDBOX = 'allow-scripts allow-same-origin allow-presentation';
 
 export type MarkdownMediaProps = {
   src: string;
@@ -23,15 +32,16 @@ export type MarkdownMediaProps = {
   classNames?: string;
   /** Additional classes applied only when rendering `<img>`. */
   imgClassNames?: string;
-  /** Additional classes applied only when rendering `MediaPlayer`. */
+  /** Additional classes applied only when rendering `MediaPlayer` or `<iframe>`. */
   mediaClassNames?: string;
 };
 
 /**
- * Render media referenced from markdown or a slide source. Returns a native
- * `MediaPlayer` (`<video>` / `<audio>`) when the URL looks like a playable
- * media source; otherwise an `<img>` that hides itself on load failure
- * (broken images are common in feeds and the placeholder is uglier than nothing).
+ * Render media referenced from markdown or a slide source.
+ * - Direct media URLs (mp4, mp3, …) → native `MediaPlayer`.
+ * - Legacy `iframe`-style embed URLs (Cloudflare Stream, oEmbed players) → `<iframe>`.
+ * - Everything else → `<img>` that hides itself on load failure (broken images
+ *   are common in feeds and the placeholder is uglier than nothing).
  *
  * Shared by `MarkdownView`'s `img` component override and `Carousel.Media`
  * so both surfaces handle media URLs identically.
@@ -39,6 +49,21 @@ export type MarkdownMediaProps = {
 export const MarkdownMedia = ({ src, alt, classNames, imgClassNames, mediaClassNames }: MarkdownMediaProps) => {
   if (isEmbedUrl(src)) {
     return <MediaPlayer src={src} alt={alt} classNames={mx(classNames, mediaClassNames)} />;
+  }
+
+  if (isLegacyIframeUrl(src)) {
+    return (
+      <iframe
+        src={src}
+        title={alt ?? 'Embedded media'}
+        loading='lazy'
+        className={mx('border-none', classNames, mediaClassNames)}
+        sandbox={DEFAULT_IFRAME_SANDBOX}
+        referrerPolicy='no-referrer'
+        allow='accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;'
+        allowFullScreen
+      />
+    );
   }
 
   return (

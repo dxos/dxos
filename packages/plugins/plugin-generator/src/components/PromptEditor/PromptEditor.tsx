@@ -14,13 +14,14 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
+  documentSlots,
 } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
 
 export type PromptEditorProps = {
   id: string;
-  text: Text.Text;
+  text?: Text.Text;
   placeholder?: string;
 };
 
@@ -34,22 +35,29 @@ export const PromptEditor = ({ id, text, placeholder }: PromptEditorProps) => {
   const { t } = useTranslation(meta.id);
   const { themeMode } = useThemeContext();
   const extensions = useMemo(
-    () => [
-      createDataExtensions({
-        id,
-        text: createDocAccessor(text, ['content']),
-      }),
-      createBasicExtensions({
-        bracketMatching: false,
-        lineWrapping: true,
-        placeholder: placeholder ?? t('prompt.placeholder'),
-      }),
-      createThemeExtensions({ themeMode }),
-      createMarkdownExtensions(),
-      decorateMarkdown(),
-    ],
+    () =>
+      text
+        ? [
+            createDataExtensions({
+              id,
+              text: createDocAccessor(text, ['content']),
+            }),
+            createBasicExtensions({
+              bracketMatching: false,
+              lineWrapping: true,
+              placeholder: placeholder ?? t('prompt.placeholder'),
+            }),
+            createThemeExtensions({ themeMode, slots: documentSlots }),
+            createMarkdownExtensions(),
+            decorateMarkdown(),
+          ]
+        : [],
     [id, text, placeholder, t, themeMode],
   );
+
+  if (extensions.length === 0) {
+    return null;
+  }
 
   return (
     <Editor.Root extensions={extensions}>
