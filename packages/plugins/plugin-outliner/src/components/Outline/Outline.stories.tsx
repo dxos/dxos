@@ -19,7 +19,7 @@ const OutlineStory = () => {
   const [space] = useSpaces();
   const text = useMemo(() => {
     if (space) {
-      return space.db.add(Text.make('- [x] Initial content'));
+      return space.db.add(Text.make({ content: '- [x] Initial content' }));
     }
     return undefined;
   }, [space]);

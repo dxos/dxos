@@ -56,13 +56,13 @@ describe('reducers', () => {
       ];
 
       syncer.update(messages);
-      expect(doc.content).toEqual('<prompt>Hello</prompt>\n\nHi there!\n\n');
+      expect(doc.content).toEqual('\n<prompt>Hello</prompt>\nHi there!\n');
 
       Obj.update(messages[1], (obj) => {
         obj.blocks.push({ _tag: 'text', text: 'How can I help?' });
       });
       syncer.update(messages);
-      expect(doc.content).toEqual('<prompt>Hello</prompt>\n\nHi there!\n\nHow can I help?\n\n');
+      expect(doc.content).toEqual('\n<prompt>Hello</prompt>\nHi there!\nHow can I help?\n');
     }),
   );
 
@@ -78,7 +78,7 @@ describe('reducers', () => {
       ];
 
       syncer.update(messages);
-      expect(doc.content).toEqual('<prompt>Hello</prompt>\n\nHi there!');
+      expect(doc.content).toEqual('\n<prompt>Hello</prompt>\nHi there!');
 
       Obj.update(messages[1], (obj) => {
         const block = obj.blocks[0] as Mutable<ContentBlock.Text>;
@@ -91,7 +91,7 @@ describe('reducers', () => {
         obj.blocks.push({ _tag: 'text', text: 'How can I help?' });
       });
       syncer.update(messages);
-      expect(doc.content).toEqual('<prompt>Hello</prompt>\n\nHi there! How are you?\n\nHow can I help?\n\n');
+      expect(doc.content).toEqual('\n<prompt>Hello</prompt>\nHi there! How are you?\nHow can I help?\n');
     }),
   );
 

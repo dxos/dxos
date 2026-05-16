@@ -8,7 +8,6 @@ import * as Order from 'effect/Order';
 import { type DID } from 'iso-did/types';
 
 import { type Client } from '@dxos/client';
-import { type SpaceId } from '@dxos/client/echo';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
@@ -16,7 +15,7 @@ import { Obj } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { FUNCTIONS_META_KEY, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey } from '@dxos/keys';
+import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 import { safeParseJson } from '@dxos/util';
@@ -87,9 +86,11 @@ export const getDeployedFunctions = async (
       return [];
     }
     const fn = Obj.make(Operation.PersistentOperation, {
-      key: versionMeta.key,
+      [Obj.Meta]: {
+        key: versionMeta.key,
+        version: latest?.version ?? '0.0.0',
+      },
       name: versionMeta.name ?? versionMeta.key ?? record.id,
-      version: latest?.version ?? '0.0.0',
       updated: record?.updated !== undefined ? new Date(record.updated).toISOString() : undefined,
       description: versionMeta.description,
       inputSchema: versionMeta.inputSchema,
@@ -103,10 +104,10 @@ export const getDeployedFunctions = async (
   if (dedupe) {
     return Function$.pipe(
       functions,
-      Array.filter((_) => _.key !== undefined),
+      Array.filter((_) => Obj.getMeta(_).key !== undefined),
       Array.sort(Order.reverse(Order.mapInput(Order.string, (_: Operation.PersistentOperation) => _.updated ?? ''))),
-      Array.dedupeWith((self, that) => self.key === that.key),
-      Array.sort(Order.mapInput(Order.string, (_: Operation.PersistentOperation) => _.key ?? '')),
+      Array.dedupeWith((self, that) => Obj.getMeta(self).key === Obj.getMeta(that).key),
+      Array.sort(Order.mapInput(Order.string, (_: Operation.PersistentOperation) => Obj.getMeta(_).key ?? '')),
     );
   } else {
     return functions;

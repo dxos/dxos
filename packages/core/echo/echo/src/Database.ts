@@ -38,7 +38,7 @@ export interface QueryFn {
 }
 
 /**
- * Common interface for Database and Queue.
+ * Common interface for Database, Feed, and Hypergraph.
  */
 export interface Queryable {
   query: QueryFn;

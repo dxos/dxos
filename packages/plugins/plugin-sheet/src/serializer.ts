@@ -4,7 +4,7 @@
 
 import { Obj } from '@dxos/echo';
 import { getObjectCore } from '@dxos/echo-db';
-import { type TypedObjectSerializer } from '@dxos/plugin-space/types';
+import { type TypedObjectSerializer } from '@dxos/plugin-space';
 
 import { Sheet } from '#types';
 

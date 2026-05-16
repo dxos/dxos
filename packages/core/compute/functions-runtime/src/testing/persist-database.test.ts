@@ -5,8 +5,7 @@
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
-import { Filter, Obj, Query } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { TestDatabaseLayer, testStoragePath } from '@dxos/echo-db/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import { Person } from '@dxos/types';

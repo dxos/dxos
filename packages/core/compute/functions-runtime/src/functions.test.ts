@@ -72,7 +72,7 @@ describe('Research', () => {
           }),
         );
         yield* Database.flush();
-        yield* new AiRequest({ observer: GenerationObserver.fromPrinter(new ConsolePrinter()) }).run({
+        yield* new AiRequest.Request({ observer: GenerationObserver.fromPrinter(new ConsolePrinter()) }).run({
           prompt: `What is the name of the organization? ${org.id}`,
           toolkit: yield* createToolkit({
             blueprints: [blueprint],

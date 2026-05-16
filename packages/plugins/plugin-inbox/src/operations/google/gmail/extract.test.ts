@@ -17,14 +17,15 @@ describe('sig parser', () => {
     expect(data).toBeDefined();
     expect(data.contacts).toBeDefined();
     expect(Array.isArray(data.contacts)).toBe(true);
-    expect(data.contacts.length).toBe(5);
+    expect(data.contacts.length).toBe(6);
 
     const expectedResults = [
-      { email: 'success@vouch.us', name: 'Frank Rodriguez', company: undefined },
-      { email: 'ymaline@citrincooperman.com', name: 'Yaakov Maline', company: 'CITRIN COOPERMAN' },
-      { email: 'mahern@kirkconsult.com', name: 'Madeline Ahern', company: undefined },
-      { email: 'mscheriff@kirkconsult.com', name: 'Morgan Scheriff', company: 'Kirk Consulting LLC' },
-      { email: 'patrick@dispersion.xyz', name: 'Patrick Chang', company: 'Dispersion Capital' },
+      { email: 'friendly@example.test', name: 'Quinn Hartwell', company: undefined },
+      { email: 'tkessler@acmeadvisors.test', name: 'Theodore Kessler', company: 'ACME ADVISORS' },
+      { email: 'hpenrose@lumenpartners.test', name: 'Harriet Penrose', company: undefined },
+      { email: 'bostrow@lumenpartners.test', name: 'Beatrice Ostrow', company: 'Lumen Partners LLC' },
+      { email: 'soren@drift.test', name: 'Soren Beckwith', company: 'Drift Capital' },
+      { email: 'hello@mercury.test', name: undefined, company: 'Mercury Technologies, Inc.' },
     ];
 
     data.contacts.forEach((contact, index) => {

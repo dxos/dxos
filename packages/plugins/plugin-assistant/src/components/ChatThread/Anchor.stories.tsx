@@ -9,9 +9,9 @@ import React from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Database, Filter, Obj } from '@dxos/echo';
 import { DxAnchor } from '@dxos/lit-ui/react';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { PreviewPlugin } from '@dxos/plugin-preview';
+import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
@@ -43,7 +43,7 @@ const DefaultStory = () => {
 
   const dxn = Obj.getDXN(organization).toString();
   return (
-    <div role='none' className='flex flex-col gap-2 p-4'>
+    <div className='flex flex-col gap-2 p-4'>
       <p>
         Click{' '}
         <DxAnchor className='dx-tag--anchor' dxn={dxn}>

@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
-import { AiContextService } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import { Trace, TriggerEvent, Operation, OperationRegistry } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { QueueService } from '@dxos/functions';
@@ -33,7 +33,7 @@ export const AgentWorker = Operation.make({
     Trace.TraceService,
     OpaqueToolkit.OpaqueToolkitProvider,
   ],
-});
+}).pipe(Operation.intrinsic);
 
 export const Qualifier = Operation.make({
   meta: {
@@ -47,8 +47,8 @@ export const Qualifier = Operation.make({
     event: TriggerEvent.TriggerEvent,
   }),
   output: Schema.Void,
-  services: [AiService.AiService, Database.Service],
-});
+  services: [AiService.AiService, Database.Service, Feed.FeedService],
+}).pipe(Operation.intrinsic);
 
 export const GetContext = Operation.make({
   meta: {
@@ -70,8 +70,8 @@ export const GetContext = Operation.make({
       }),
     ),
   }),
-  services: [AiContextService, Database.Service],
-});
+  services: [AiContext.Service, Database.Service],
+}).pipe(Operation.intrinsic);
 
 export const AddArtifact = Operation.make({
   meta: {
@@ -88,5 +88,5 @@ export const AddArtifact = Operation.make({
     }),
   }),
   output: Schema.Void,
-  services: [AiContextService, Database.Service],
-});
+  services: [AiContext.Service, Database.Service],
+}).pipe(Operation.intrinsic);

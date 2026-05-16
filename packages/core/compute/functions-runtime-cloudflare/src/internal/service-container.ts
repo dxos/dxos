@@ -6,7 +6,7 @@ import { type AnyEntity } from '@dxos/echo/internal';
 import { type DXN, type SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv, type FeedProtocol } from '@dxos/protocols';
 import { type QueryService as QueryServiceProto } from '@dxos/protocols/proto/dxos/echo/query';
-import type { DataService as DataServiceProto } from '@dxos/protocols/proto/dxos/echo/service';
+import { type DataService as DataServiceProto } from '@dxos/protocols/proto/dxos/echo/service';
 
 import { DataServiceImpl } from './data-service-impl';
 import { QueryServiceImpl } from './query-service-impl';
@@ -58,6 +58,7 @@ export class ServiceContainer {
     if (!parts) {
       throw new Error('Invalid queue DXN');
     }
+
     const { subspaceTag, spaceId, queueId } = parts;
     const result = await this._queueService.queryQueue(this._executionContext, {
       query: {
@@ -66,6 +67,7 @@ export class ServiceContainer {
         queueIds: [queueId],
       },
     });
+
     return {
       objects: structuredClone(result.objects),
       nextCursor: result.nextCursor ?? null,
@@ -78,6 +80,7 @@ export class ServiceContainer {
     if (!parts) {
       throw new Error('Invalid queue DXN');
     }
+
     const { subspaceTag, spaceId, queueId } = parts;
     await this._queueService.insertIntoQueue(this._executionContext, {
       subspaceTag,

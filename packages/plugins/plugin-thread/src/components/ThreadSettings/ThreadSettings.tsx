@@ -13,7 +13,6 @@ import { type Settings } from '#types';
 
 export type ThreadSettingsProps = AppSurface.SettingsArticleProps<Settings.Settings>;
 
-// TODO(burdon): Settings.
 export const ThreadSettings = ({ settings: _settings }: ThreadSettingsProps) => {
   const { t: _t } = useTranslation(meta.id);
   return <SettingsForm.Viewport></SettingsForm.Viewport>;

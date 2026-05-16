@@ -40,8 +40,8 @@ export class QueueFactory extends Resource implements QueueAPI {
     assertArgument(dxn instanceof DXN, 'dxn', 'dxn must be a DXN');
     assertState(this._service, 'Service not set');
 
-    const stringDxn = dxn.toString();
-    const queue = this._queues.get(stringDxn);
+    const stringDXN = dxn.toString();
+    const queue = this._queues.get(stringDXN);
     if (queue) {
       return queue as any as Queue<T>;
     }
@@ -49,11 +49,11 @@ export class QueueFactory extends Resource implements QueueAPI {
     const database = this._graph.getDatabase(this._spaceId);
     const newQueue = new QueueImpl<T>(
       this._service,
-      this._graph.createRefResolver({ context: { space: this._spaceId, queue: dxn } }),
+      this._graph.createRefResolver({ context: { space: this._spaceId, feed: dxn } }),
       dxn,
       database,
     );
-    this._queues.set(stringDxn, newQueue);
+    this._queues.set(stringDXN, newQueue);
     return newQueue as any as Queue<T>;
   }
 

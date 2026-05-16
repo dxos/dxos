@@ -9,7 +9,7 @@
 # Fetch on a dev machine:
 #   moon run introspect-mcp:fetch-cache
 #
-# See packages/core/compute/introspect-mcp/README.md for details.
+# See packages/reflect/introspect-mcp/README.md for details.
 
 name: Introspect Cache
 

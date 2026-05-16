@@ -12,7 +12,7 @@ import { Button, Panel, toLocalizedString, useTranslation } from '@dxos/react-ui
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { FilesOperation } from '#operations';
+import { FilesOperation } from '#types';
 import { type LocalEntity, type LocalFile } from '#types';
 
 export type LocalFileContainerProps = {
@@ -52,7 +52,7 @@ const PermissionsGate = ({ entity }: { entity: LocalEntity }) => {
   return (
     <Panel.Root>
       <Panel.Content asChild>
-        <div role='none' className='overflow-auto p-8 grid place-items-center'>
+        <div className='overflow-auto p-8 grid place-items-center'>
           <p role='alert' className={mx(descriptionMessage, 'break-words rounded-md p-8')}>
             {t('missing-file-permissions.message')}
             {action && node && Node.isAction(action) && (

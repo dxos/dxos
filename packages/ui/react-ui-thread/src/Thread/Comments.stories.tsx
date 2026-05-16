@@ -349,7 +349,7 @@ const DefaultStory = ({ text, autoCreate }: DefaultStoryProps) => {
 
   return (
     <main className='fixed inset-0 grid grid-cols-[1fr_24rem]'>
-      <div role='none' className='max-h-full overflow-y-auto p-4'>
+      <div className='max-h-full overflow-y-auto p-4'>
         <Editor
           initialValue={item.content}
           selected={selected}
@@ -361,7 +361,7 @@ const DefaultStory = ({ text, autoCreate }: DefaultStoryProps) => {
         />
       </div>
 
-      <div role='none' className='max-h-full overflow-y-auto p-4'>
+      <div className='max-h-full overflow-y-auto p-4'>
         <Sidebar
           threads={visibleThreads}
           selected={selected}

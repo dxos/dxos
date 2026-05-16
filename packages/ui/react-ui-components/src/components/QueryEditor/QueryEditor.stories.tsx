@@ -40,7 +40,7 @@ const meta = {
     );
 
     return (
-      <div role='none' className='flex flex-col gap-2'>
+      <div className='flex flex-col gap-2'>
         <QueryEditor
           {...args}
           classNames='p-2 border border-subdued-separator rounded-xs'

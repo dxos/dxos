@@ -129,7 +129,7 @@ export const ChatPrompt = ({
     >
       <ChatMcpErrors processor={processor} />
 
-      <div role='none' className='flex p-2 gap-2'>
+      <div className='flex p-2 gap-2'>
         <ChatStatusIndicator classNames='p-1' preset={preset} error={error} processing={streaming} />
         <ChatEditor
           ref={editorRef}
@@ -143,7 +143,7 @@ export const ChatPrompt = ({
       </div>
 
       {db && settings && (
-        <div role='none' className='flex items-center overflow-hidden p-1.5'>
+        <div className='flex items-center overflow-hidden p-1.5'>
           <ChatOptions
             chat={chat}
             db={db}
@@ -154,7 +154,7 @@ export const ChatPrompt = ({
             onPresetChange={onPresetChange}
           />
 
-          <div role='none' className='flex h-8 grow overflow-x-auto scrollbar-none'>
+          <div className='flex h-8 grow overflow-x-auto scrollbar-none'>
             <ChatReferences db={db} context={processor.context} />
           </div>
 

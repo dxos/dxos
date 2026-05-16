@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "info@dxos.org",
   "sideEffects": false,
   "type": "module",
@@ -81,10 +81,12 @@
     "crc-32": "catalog:",
     "effect": "catalog:",
     "fast-deep-equal": "catalog:",
-    "level-transcoder": "catalog:"
+    "level-transcoder": "catalog:",
+    "semver": "catalog:"
   },
   "devDependencies": {
     "@dxos/test-utils": "workspace:*",
+    "@types/semver": "catalog:",
     "fast-check": "catalog:",
     "get-port-please": "catalog:"
   },

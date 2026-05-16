@@ -33,8 +33,8 @@
   --boot-loader-mark-size: min(300px, 62.5vmin);
   --boot-loader-dot-size: 6px;
   --boot-loader-line-thickness: 1px;
-  --boot-loader-line-feather: 2px;
-  --boot-loader-status-gap: 24px;
+  --boot-loader-line-feather: 1px;
+  --boot-loader-status-gap: 32px;
 
   position: fixed;
   inset: 0;
@@ -150,7 +150,7 @@
   height: 100%;
   border-radius: 50%;
   background: rgba(127, 127, 127, 0.18);
-  opacity: 0.2;
+  opacity: 0.3;
   /*
    * Feather the inner edge so the thin line gets soft anti-aliased edges
    * instead of a hard pixel cutoff (which can look stair-stepped on
@@ -186,7 +186,7 @@
   border-radius: 50%;
   background: conic-gradient(currentcolor calc(var(--boot-loader-bar-progress, 0) * 1%), transparent 0);
   transform: scaleX(-1);
-  opacity: 0.9;
+  opacity: 0.5;
 }
 
 /*
@@ -205,7 +205,7 @@
   margin: calc(var(--boot-loader-dot-size) / -2) 0 0 calc(var(--boot-loader-dot-size) / -2);
   border-radius: 50%;
   background: currentcolor;
-  opacity: 0;
+  opacity: 0.5;
   /*
    * Orbit radius = `disc/2 - line/2` so the dot's centre lands on the solid
    * line's centre rather than on the disc's outer edge (the line lives in
@@ -223,17 +223,18 @@
  * coincide with the start of the arc.
  */
 #boot-loader-disc[data-progress-active] #boot-loader-dot {
-  opacity: 0.9;
+  opacity: 0.5;
 }
 
 #boot-loader-status {
   position: absolute;
   top: 50%;
-  left: 50%;
+  left: 0;
+  right: 0;
   /* 
    * Sit just below the centered disc — half the disc plus the configured gap.
    */
-  transform: translate(-50%, calc(var(--boot-loader-disc-size) / 2 + var(--boot-loader-status-gap)));
+  transform: translate(0, calc(var(--boot-loader-disc-size) / 2 + var(--boot-loader-status-gap)));
   /*
    * Slightly de-emphasised vs body text so the brand mark + ring stay the
    * dominant focus, but high enough to remain legible on both light and dark
@@ -257,6 +258,7 @@
   justify-content: flex-end;
   height: 4.5em;
   line-height: 1.5;
+  min-width: 30rem;
   letter-spacing: 0.01em;
   /* 
    * Fixed-width digits so the `(i/n)` counter on range-bearing status
@@ -266,6 +268,21 @@
   font-variant-numeric: tabular-nums;
   text-align: center;
   overflow: hidden;
+}
+
+#boot-loader-status-fade {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 32px;
+  background: linear-gradient(to bottom, var(--boot-loader-bg-light, #fafafa), transparent);
+  z-index: 1;
+}
+@media (prefers-color-scheme: dark) {
+  #boot-loader-status-fade {
+    background: linear-gradient(to bottom, var(--boot-loader-bg-dark, #0a0a0a), transparent);
+  }
 }
 
 /*

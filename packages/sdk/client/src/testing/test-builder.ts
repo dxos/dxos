@@ -13,9 +13,7 @@ import { ClientServicesHost, type ServiceContextRuntimeProps } from '@dxos/clien
 import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { raise } from '@dxos/debug';
-import { Filter } from '@dxos/echo';
-import { Obj } from '@dxos/echo';
-import { type Database } from '@dxos/echo';
+import { type Database, Filter, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';

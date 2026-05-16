@@ -9,7 +9,7 @@ import { Database, Entity, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Organization, Person } from '@dxos/types';
 
-import { AttachImage } from './definitions';
+import { CrmOperation } from '../types';
 
 /**
  * Default image service base URL. Overridable per-invocation via the
@@ -166,7 +166,7 @@ const isAbsoluteHttpUrl = (raw: string): boolean => {
   }
 };
 
-const handler: Operation.WithHandler<typeof AttachImage> = AttachImage.pipe(
+const handler: Operation.WithHandler<typeof CrmOperation.AttachImage> = CrmOperation.AttachImage.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ subject, url, imageServiceUrl }) {
       const serviceUrl = getImageServiceUrl(imageServiceUrl);

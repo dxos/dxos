@@ -119,6 +119,7 @@ describe('IndexEngine', () => {
         spaceId,
         documentId: 'doc-1',
         queueId: null,
+        queueNamespace: null,
         recordId: null,
         updatedAt: Date.now(),
         data: {
@@ -136,7 +137,7 @@ describe('IndexEngine', () => {
       expect(updated).toBe(2);
 
       // Verify using the SAME index instance.
-      const results1 = yield* metaIndex.query({ spaceId: spaceId.toString(), typeDxn: TYPE_DEFAULT });
+      const results1 = yield* metaIndex.query({ spaceId: spaceId.toString(), typeDXN: TYPE_DEFAULT });
       expect(results1).toHaveLength(1);
       expect(results1[0].objectId).toBe(obj1.data.id);
       expect(results1[0].version).toBeGreaterThan(0);
@@ -156,6 +157,7 @@ describe('IndexEngine', () => {
         spaceId,
         documentId: obj1.documentId,
         queueId: null,
+        queueNamespace: null,
         recordId: null,
         updatedAt: Date.now(),
         data: { id: obj1.data.id, [ATTR_TYPE]: obj1.data[ATTR_TYPE], title: 'Hello World' },
@@ -167,7 +169,7 @@ describe('IndexEngine', () => {
       expect(updated2).toBe(2);
 
       // Verify update.
-      const results2 = yield* metaIndex.query({ spaceId: spaceId.toString(), typeDxn: TYPE_DEFAULT });
+      const results2 = yield* metaIndex.query({ spaceId: spaceId.toString(), typeDXN: TYPE_DEFAULT });
       expect(results2).toHaveLength(1);
       expect(results2[0].objectId).toBe(obj1Updated.data.id);
       expect(results2[0].version).toBeGreaterThan(results1[0].version);
@@ -195,6 +197,7 @@ describe('IndexEngine', () => {
         {
           spaceId,
           queueId: null,
+          queueNamespace: null,
           documentId: 'd1',
           recordId: null,
           updatedAt: Date.now(),
@@ -207,6 +210,7 @@ describe('IndexEngine', () => {
         {
           spaceId,
           queueId: null,
+          queueNamespace: null,
           documentId: 'd2',
           recordId: null,
           updatedAt: Date.now(),
@@ -219,6 +223,7 @@ describe('IndexEngine', () => {
         {
           spaceId,
           queueId: null,
+          queueNamespace: null,
           documentId: 'd3',
           recordId: null,
           updatedAt: Date.now(),
@@ -234,10 +239,10 @@ describe('IndexEngine', () => {
 
       yield* engine.update(Context.default(), dataSource, { spaceId: null });
 
-      const resultsA = yield* metaIndex.query({ spaceId: spaceId.toString(), typeDxn: TYPE_A });
+      const resultsA = yield* metaIndex.query({ spaceId: spaceId.toString(), typeDXN: TYPE_A });
       expect(resultsA).toHaveLength(2);
 
-      const resultsB = yield* metaIndex.query({ spaceId: spaceId.toString(), typeDxn: TYPE_B });
+      const resultsB = yield* metaIndex.query({ spaceId: spaceId.toString(), typeDXN: TYPE_B });
       expect(resultsB).toHaveLength(1);
 
       const ftsResults = yield* ftsIndex.query({
@@ -269,6 +274,7 @@ describe('IndexEngine', () => {
         {
           spaceId,
           queueId: null,
+          queueNamespace: null,
           documentId: 'doc-done-test',
           recordId: null,
           updatedAt: Date.now(),
@@ -305,6 +311,7 @@ describe('IndexEngine', () => {
         spaceId: spaceId1,
         documentId: 'doc-result-1',
         queueId: null,
+        queueNamespace: null,
         recordId: null,
         updatedAt: Date.now(),
         data: { id: id1, [ATTR_TYPE]: TYPE_A, title: 'Doc in space1' },
@@ -313,6 +320,7 @@ describe('IndexEngine', () => {
         spaceId: spaceId2,
         documentId: 'doc-result-2',
         queueId: null,
+        queueNamespace: null,
         recordId: null,
         updatedAt: Date.now(),
         data: { id: id2, [ATTR_TYPE]: TYPE_B, title: 'Doc in space2' },
@@ -355,6 +363,7 @@ describe('IndexEngine', () => {
         spaceId,
         documentId: 'doc-deleted',
         queueId: null,
+        queueNamespace: null,
         recordId: null,
         updatedAt: Date.now(),
         data: {

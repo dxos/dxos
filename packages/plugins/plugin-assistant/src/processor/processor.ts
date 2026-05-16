@@ -10,8 +10,8 @@ import * as Stream from 'effect/Stream';
 
 import { type AiService, DEFAULT_EDGE_MODEL, type ModelName, type ModelRegistry } from '@dxos/ai';
 import {
-  AiContextService,
-  type AiSession,
+  AiContext,
+  AiSession,
   createSystemPrompt,
   formatSystemPrompt,
   McpServerError,
@@ -25,10 +25,10 @@ import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
 import { type QueueService } from '@dxos/functions';
 import { AgentService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
-import type { AutomationCapabilities } from '@dxos/plugin-automation/types';
+import { type AutomationCapabilities } from '@dxos/plugin-automation';
 import { Message } from '@dxos/types';
 
-import { UpdateChatName } from '../operations/definitions';
+import { AssistantOperation } from '#types';
 
 /**
  * @deprecated Services type for the old direct-conversation processor path.
@@ -64,11 +64,11 @@ const defaultOptions: Partial<AiChatProcessorOptions> = {
   autoUpdateNameChance: 0.1,
 };
 
-export type AiRequestOptions = {};
+export type ProcessorRequestOptions = {};
 
-export type AiRequest = {
+export type ProcessorRequest = {
   message: string;
-  options?: AiRequestOptions;
+  options?: ProcessorRequestOptions;
 };
 
 /**
@@ -91,7 +91,7 @@ export class AiChatProcessor {
   #requestFiber: Fiber.RuntimeFiber<void, unknown> | undefined;
 
   /** Last request (for retries). */
-  #lastRequest: AiRequest | undefined;
+  #lastRequest: ProcessorRequest | undefined;
 
   /** Streaming state. */
   public readonly streaming = Atom.make<boolean>((get) => get(this.#streaming).length > 0);
@@ -113,7 +113,7 @@ export class AiChatProcessor {
   public readonly mcpErrors = Atom.make<readonly Trace.PayloadType<typeof McpServerError>[]>([]);
 
   constructor(
-    private readonly _conversation: AiSession,
+    private readonly _conversation: AiSession.Session,
     private readonly _runtime: AutomationCapabilities.ComputeRuntime,
     private readonly _feed: Feed.Feed,
     private readonly _options: AiChatProcessorOptions = defaultOptions,
@@ -151,14 +151,14 @@ export class AiChatProcessor {
         const blueprints = this.context.getBlueprints();
         const objects = this.context.getObjects();
         return yield* formatSystemPrompt({ system: this._options.system, blueprints, objects });
-      }).pipe(Effect.provideService(AiContextService, { binder: this.context }), Effect.orDie),
+      }).pipe(Effect.provideService(AiContext.Service, { binder: this.context }), Effect.orDie),
     );
   }
 
   /**
    * Initiates a new request via AgentService.
    */
-  async request(requestProp: AiRequest): Promise<void> {
+  async request(requestProp: ProcessorRequest): Promise<void> {
     if (this.#requestFiber) {
       await this.cancel();
     }
@@ -260,7 +260,7 @@ export class AiChatProcessor {
    * Update the current chat's name.
    */
   async updateName(chat: Chat.Chat): Promise<void> {
-    unwrapExit(await this._runtime.runPromiseExit(Operation.invoke(UpdateChatName, { chat })));
+    unwrapExit(await this._runtime.runPromiseExit(Operation.invoke(AssistantOperation.UpdateChatName, { chat })));
   }
 
   /**
@@ -347,6 +347,6 @@ export class AiChatProcessor {
 
     // TODO(dmaretskyi): Operation.schedule didn't work.
     log.info('scheduling chat name update', { hasName: !!chat.name, chance });
-    return Operation.schedule(UpdateChatName, { chat });
+    return Operation.schedule(AssistantOperation.UpdateChatName, { chat });
   }
 }

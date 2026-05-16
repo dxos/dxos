@@ -29,7 +29,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     plugin: Plugin.define({
-      id: 'example.com/plugin/test-plugin',
+      id: 'com.example.plugin.test',
       name: 'Test Plugin',
       description: random.lorem.paragraphs(2),
       icon: 'ph--bug--regular',

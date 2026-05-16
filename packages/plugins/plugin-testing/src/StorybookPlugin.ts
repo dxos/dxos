@@ -10,10 +10,10 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { OperationHandler, State } from '#capabilities';
 import { Layout } from '#components';
 import { meta } from '#meta';
-import { type LayoutStateProps } from '#types';
+import { StorybookCapabilities } from '#types';
 
 export type StorybookPluginOptions = {
-  initialState?: Partial<LayoutStateProps>;
+  initialState?: Partial<StorybookCapabilities.LayoutStateProps>;
 };
 
 export const StorybookPlugin = Plugin.define<StorybookPluginOptions>(meta).pipe(

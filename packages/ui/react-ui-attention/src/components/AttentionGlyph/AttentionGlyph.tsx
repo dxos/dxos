@@ -12,11 +12,11 @@ const attentionGlyphStyles = mx(
   'inline-block rounded-xs w-3 h-3 bg-transparent text-accent-text transition-colors',
   '[[data-contains-attended=true]_&]:bg-attention-contains',
   '[[data-attention=true]_&]:bg-accent-surface',
-  '[[data-attention=true]_&]:text-accent-surface-text',
+  '[[data-attention=true]_&]:text-accent-foreground',
   '[[aria-current][data-attention=true]_&]:bg-accent-surface',
-  '[[aria-current][data-attention=true]_&]:text-accent-surface-text',
+  '[[aria-current][data-attention=true]_&]:text-accent-foreground',
   '[[aria-selected="true"][data-attention=true]_&]:bg-accent-surface',
-  '[[aria-selected="true"][data-attention=true]_&]:text-accent-surface-text',
+  '[[aria-selected="true"][data-attention=true]_&]:text-accent-foreground',
 );
 
 const presenceIconStyles = mx('w-3 h-3');
@@ -94,7 +94,7 @@ export const AttentionGlyph = forwardRef<HTMLSpanElement, AttentionGlyphProps>(
     ) : null;
 
     return (
-      <div role='none' className='flex group' data-attention={attended} data-contains-attended={containsAttended}>
+      <div className='flex group' data-attention={attended} data-contains-attended={containsAttended}>
         <span role='none' {...props} className={mx(attentionGlyphStyles, classNames)} ref={forwardedRef}>
           {icon}
         </span>

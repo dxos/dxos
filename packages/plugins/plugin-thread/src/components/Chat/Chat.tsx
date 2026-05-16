@@ -202,7 +202,7 @@ const ThreadLayout = React.forwardRef<HTMLDivElement, LayoutProps & Pick<ThreadR
       <ThreadComponent.Root {...props} id={id} current={current} ref={ref}>
         <ScrollArea.Root classNames='col-span-2' orientation='vertical'>
           <ScrollArea.Viewport ref={sentinelRef}>
-            <div role='none' className={mx(threadLayout, 'place-self-end')}>
+            <div className={mx(threadLayout, 'place-self-end')}>
               {messages.map((message) => (
                 <MessagePanel key={message.id} message={message} members={members} />
               ))}

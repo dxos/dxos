@@ -7,27 +7,24 @@ import * as Effect from 'effect/Effect';
 import { Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { ClientEvents } from '@dxos/plugin-client/types';
-import { MarkdownEvents } from '@dxos/plugin-markdown/types';
-import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space/types';
+import { MarkdownEvents } from '@dxos/plugin-markdown';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
 import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
 import { AnchoredTo, Channel, Message, Thread } from '@dxos/types';
 
 import {
   AppGraphBuilder,
   BlueprintDefinition,
-  CallManager,
   CreateObject,
   Markdown,
   OperationHandler,
   UndoMappings,
-  ReactRoot,
   ReactSurface,
   ThreadState,
 } from '#capabilities';
 import { meta } from '#meta';
-import { ThreadOperation } from '#operations';
 import { translations } from '#translations';
+import { ThreadOperation } from '#types';
 
 // TODO(Zan): Every instance of `cursor` should be replaced with `anchor`.
 //  NOTE(burdon): Review/discuss CursorConverter semantics.
@@ -41,17 +38,11 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addUndoMappingsModule({ activate: UndoMappings }),
-  AppPlugin.addReactRootModule({ activate: ReactRoot }),
   AppPlugin.addSchemaModule({
     schema: [AnchoredTo.AnchoredTo, Channel.Channel, Message.Message, Thread.Thread],
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations: [...translations, ...threadTranslations] }),
-  Plugin.addModule({
-    id: 'call-manager',
-    activatesOn: ClientEvents.ClientReady,
-    activate: CallManager,
-  }),
   // TODO(wittjosiah): Currently not used but leaving because there will likely be settings for threads again.
   // Plugin.addModule({
   //   id: 'settings',

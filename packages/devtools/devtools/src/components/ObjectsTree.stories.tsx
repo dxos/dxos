@@ -31,7 +31,7 @@ const WorksAt = Schema.Struct({
   role: Schema.optional(Schema.String),
 }).pipe(
   Type.relation({
-    typename: 'example.com/story/WorksAt',
+    typename: 'com.example.story.worksAt',
     version: '0.1.0',
     source: TestSchema.Person,
     target: TestSchema.Organization,
@@ -97,8 +97,8 @@ const meta = {
         const functions = Array.from({ length: 3 }, (_, index) =>
           space.db.add(
             Obj.make(Operation.PersistentOperation, {
+              [Obj.Meta]: { version: '0.1.0' },
               name: `function-${index}`,
-              version: '0.1.0',
               description: random.lorem.sentence(),
             }),
           ),
@@ -162,7 +162,7 @@ export const WithTree: Story = {
       return <div>No space</div>;
     }
     return (
-      <div className='text-base-surface-text'>
+      <div className='text-base-foreground'>
         <ObjectsTree db={space.db} />
       </div>
     );

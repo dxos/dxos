@@ -11,12 +11,7 @@ import * as Layer from 'effect/Layer';
 import * as Runtime from 'effect/Runtime';
 
 import { AiService, type ModelName, OpaqueToolkit } from '@dxos/ai';
-import {
-  AiSession,
-  type AiRequestRunError,
-  type AiRequestRunRequirements,
-  ToolExecutionServices,
-} from '@dxos/assistant';
+import { AiRequest, AiSession, ToolExecutionServices } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
 import { type OperationHandlerSet, Blueprint } from '@dxos/compute';
@@ -67,7 +62,7 @@ export class ChatProcessor {
   }
 
   async execute(
-    request: Effect.Effect<Message.Message[], AiRequestRunError, AiRequestRunRequirements>,
+    request: Effect.Effect<Message.Message[], AiRequest.RunError, AiRequest.RunRequirements>,
     model: ModelName,
   ) {
     const fiber = request.pipe(
@@ -95,7 +90,7 @@ export class ChatProcessor {
     // Add blueprints to space.
     const blueprints = blueprintIds
       .map((key) => {
-        const existing = spaceBlueprints.find((blueprint) => blueprint.key === key);
+        const existing = spaceBlueprints.find((blueprint) => Obj.getMeta(blueprint).key === key);
         if (existing) {
           // TODO(wittjosiah): Stop doing this.
           //   Currently doing this to ensure blueprints are always up-to-date from the registry.
@@ -123,7 +118,7 @@ export class ChatProcessor {
     const runtime = await runAndForwardErrors(
       Effect.runtime<Feed.FeedService>().pipe(Effect.provide(feedServiceLayer)),
     );
-    const session = new AiSession({ feed, runtime, registry: this._registry });
+    const session = new AiSession.Session({ feed, runtime, registry: this._registry });
     await session.open();
 
     // Bind blueprints.

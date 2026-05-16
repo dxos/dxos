@@ -10,9 +10,9 @@ import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
 import { type MaybePromise, byPosition } from '@dxos/util';
 
-import { Import } from './definitions';
+import { FilesOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof Import> = Import.pipe(
+const handler: Operation.WithHandler<typeof FilesOperation.Import> = FilesOperation.Import.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ rootDir: rootDirInput }) {
       const rootDir =

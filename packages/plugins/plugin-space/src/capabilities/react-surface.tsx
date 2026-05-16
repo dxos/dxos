@@ -11,10 +11,9 @@ import React, { type ComponentProps, useCallback } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace, useTypeOptions } from '@dxos/app-toolkit/ui';
-import { Database, Obj } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
+import { Collection, Database, Obj } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
-import { type Space, SpaceState, getSpace, isSpace, useSpace, useSpaces } from '@dxos/react-client/echo';
+import { type Space, SpaceState, getSpace, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
@@ -26,6 +25,7 @@ import {
   CollectionSection,
   CreateObjectDialog,
   CreateSpaceDialog,
+  ImportSpaceDialog,
   InlineSyncStatus,
   JoinDialog,
   MembersContainer,
@@ -57,6 +57,7 @@ import {
 import {
   CREATE_OBJECT_DIALOG,
   CREATE_SPACE_DIALOG,
+  IMPORT_SPACE_DIALOG,
   JOIN_DIALOG,
   OBJECT_RENAME_POPOVER,
   SPACE_RENAME_POPOVER,
@@ -194,6 +195,11 @@ export default Capability.makeModule(
         component: () => <CreateSpaceDialog />,
       }),
       Surface.create({
+        id: IMPORT_SPACE_DIALOG,
+        filter: AppSurface.component(AppSurface.Dialog, IMPORT_SPACE_DIALOG),
+        component: () => <ImportSpaceDialog />,
+      }),
+      Surface.create({
         id: CREATE_OBJECT_DIALOG,
         filter: AppSurface.component<ComponentProps<typeof CreateObjectDialog>>(
           AppSurface.Dialog,
@@ -280,9 +286,8 @@ export default Capability.makeModule(
 
           const props = { ...inputProps, type: ast } as any as FormFieldComponentProps;
           const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
-          const space = useSpace(db?.spaceId);
           const annotation = findAnnotation<TypeInputOptions>(schema.ast, TypeInputOptionsAnnotationId)!;
-          const options = useTypeOptions({ space, annotation });
+          const options = useTypeOptions({ db, annotation });
 
           return <SelectField {...props} options={options} />;
         },

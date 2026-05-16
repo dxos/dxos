@@ -85,6 +85,9 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/client-protocol"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
@@ -137,6 +140,9 @@
     },
     {
       "path": "../plugin-attention"
+    },
+    {
+      "path": "../plugin-calls"
     },
     {
       "path": "../plugin-client"

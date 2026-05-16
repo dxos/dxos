@@ -19,7 +19,7 @@ import { AtomQuery } from '@dxos/echo-atom';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
-import { SampleOperation } from '#operations';
+import { SampleOperation } from '#types';
 import { SampleItem } from '#types';
 
 // Section type constant used to identify the "Samples" section node.

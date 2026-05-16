@@ -37,7 +37,7 @@ const make = () =>
     description: 'Query and manipulate objects in the ECHO database.',
     agentCanEnable: true,
     instructions: {
-      source: Ref.make(Text.make(instructions)),
+      source: Ref.make(Text.make({ content: instructions })),
     },
     tools: Blueprint.toolDefinitions({
       operations: [

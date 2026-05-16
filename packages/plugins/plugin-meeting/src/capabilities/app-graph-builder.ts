@@ -12,16 +12,16 @@ import { Feed, Obj, Type } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { CallsCapabilities } from '@dxos/plugin-calls';
 import { CreateAtom, GraphBuilder } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { ThreadCapabilities } from '@dxos/plugin-thread/types';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { SpaceState, getSpace } from '@dxos/react-client/echo';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
-import { MeetingOperation } from '#operations';
+import { MeetingOperation } from '#types';
 import { Meeting, MeetingCapabilities } from '#types';
 
 /**
@@ -77,11 +77,11 @@ export default Capability.makeModule(
         id: 'call-companion',
         type: Channel.Channel,
         connector: Effect.fnUntraced(function* (channel, get) {
-          const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
-          const channelDxn = Obj.getDXN(channel).toString();
+          const callManager = yield* Capability.get(CallsCapabilities.Manager);
+          const channelDXN = Obj.getDXN(channel).toString();
           const joined = get(callManager.joinedAtom);
           const roomId = get(callManager.roomIdAtom);
-          if (!joined || roomId !== channelDxn) {
+          if (!joined || roomId !== channelDXN) {
             return [];
           }
 
@@ -127,15 +127,15 @@ export default Capability.makeModule(
                   meeting = addResult.object as Meeting.Meeting;
                 }
 
-                const callManager = yield* Capability.get(ThreadCapabilities.CallManager);
+                const callManager = yield* Capability.get(CallsCapabilities.Manager);
                 const transcript = yield* Effect.promise(() => meeting.transcript.load());
                 const transcriptFeed = yield* Effect.promise(() => transcript.feed.load());
-                const transcriptQueueDxn = Feed.getQueueDxn(transcriptFeed);
-                invariant(transcriptQueueDxn, 'Transcript feed has no queue DXN');
+                const transcriptFeedDXN = Feed.getQueueDxn(transcriptFeed);
+                invariant(transcriptFeedDXN, 'Transcript feed has no DXN');
                 const transcriptionEnabled = !enabled;
                 callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
                   meetingId: Obj.getDXN(meeting).toString(),
-                  transcriptDxn: transcriptQueueDxn.toString(),
+                  transcriptDXN: transcriptFeedDXN.toString(),
                   transcriptionEnabled,
                 });
 

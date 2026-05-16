@@ -196,6 +196,6 @@ type Story = StoryObj<typeof meta>;
  *
  * Paste a URL → the storybook-react vite middleware proxies the fetch via
  * `/api/rss?url=` to bypass browser CORS → the HTML is run through
- * `extractArticle` → the result is rendered with `MarkdownBlock`.
+ * `extractArticle` → the result is rendered with `MarkdownView`.
  */
 export const Default: Story = {};

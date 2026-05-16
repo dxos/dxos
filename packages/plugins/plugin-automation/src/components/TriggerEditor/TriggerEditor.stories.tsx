@@ -41,7 +41,7 @@ const DefaultStory = (props: Partial<TriggerEditorProps>) => {
     }
 
     const functions = await space.db.query(Filter.type(Operation.PersistentOperation)).run();
-    const fn = functions.find((fn) => fn.name === 'example.com/function/forex');
+    const fn = functions.find((fn) => fn.name === 'com.example.function.forex');
     invariant(fn);
     const trigger = space.db.add(
       Trigger.make({
@@ -91,7 +91,13 @@ const meta = {
 
         // Functions.
         functions.forEach((fn) => {
-          space.db.add(Obj.make(Operation.PersistentOperation, { ...fn, version: fn.version ?? '0.1.0' }));
+          const { key, version, ...data } = fn;
+          space.db.add(
+            Obj.make(Operation.PersistentOperation, {
+              [Obj.Meta]: { key, version: version ?? '0.1.0' },
+              ...data,
+            }),
+          );
         });
 
         // Objects.

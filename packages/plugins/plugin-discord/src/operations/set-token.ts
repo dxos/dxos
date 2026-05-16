@@ -7,10 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 
-import { type Discord } from '../types';
-import { SetToken } from './definitions';
+import { type Discord, DiscordOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof SetToken> = SetToken.pipe(
+const handler: Operation.WithHandler<typeof DiscordOperation.SetToken> = DiscordOperation.SetToken.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ bot, token }) {
       const obj = (yield* Database.load(bot)) as Discord.Bot;

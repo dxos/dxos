@@ -237,27 +237,27 @@ export class IndexQuerySource implements QuerySource {
     // For queue items, hydrate using Obj.fromJSON with ref resolver.
     if (result.queueId && result.documentJson) {
       const json = JSON.parse(result.documentJson);
-      const queueDxn = DXN.fromQueue(
+      const queueDXN = DXN.fromQueue(
         (result.queueNamespace ?? 'data') as QueueSubspaceTag,
         result.spaceId as SpaceId,
         result.queueId as ObjectId,
       );
       const refResolver = this._params.graph.createRefResolver({
-        context: { space: result.spaceId as SpaceId, queue: queueDxn },
+        context: { space: result.spaceId as SpaceId, feed: queueDXN },
       });
       const database = this._params.graph.getDatabase(result.spaceId as SpaceId);
       let object;
       try {
         object = await Obj.fromJSON(json, {
           refResolver,
-          dxn: queueDxn.extend([result.id as ObjectId]),
+          dxn: queueDXN.extend([result.id as ObjectId]),
           database,
         });
       } catch (err) {
-        const typeDxn = typeof json[ATTR_TYPE] === 'string' ? json[ATTR_TYPE] : '<unknown>';
-        if (!emittedSchemaValidationWarnings.has(typeDxn)) {
-          emittedSchemaValidationWarnings.add(typeDxn);
-          log.warn('object failed schema validation', { type: typeDxn, error: err });
+        const typeDXN = typeof json[ATTR_TYPE] === 'string' ? json[ATTR_TYPE] : '<unknown>';
+        if (!emittedSchemaValidationWarnings.has(typeDXN)) {
+          emittedSchemaValidationWarnings.add(typeDXN);
+          log.warn('object failed schema validation', { type: typeDXN, error: err });
         }
         return null;
       }

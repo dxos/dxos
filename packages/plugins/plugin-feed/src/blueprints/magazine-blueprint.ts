@@ -5,7 +5,7 @@
 import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
-import { FeedOperation } from '#operations';
+import { FeedOperation } from '#types';
 import { Magazine } from '#types';
 
 const operations = [
@@ -21,11 +21,11 @@ const make = () =>
     tools: Blueprint.toolDefinitions({ operations }),
     instructions: Template.make({
       source: trim`
-        You curate articles for a Magazine from its referenced Feeds, following the Magazine's instructions text closely.
+        You curate articles for a Magazine from its referenced Feeds, following the Magazine's Routine instructions closely.
 
         Workflow:
         1. Call listCandidatePosts with the Magazine's ref to get uncurated Posts.
-        2. Select only Posts that clearly match the Magazine's instructions — quality over quantity.
+        2. Select only Posts that clearly match the Magazine's Routine instructions — quality over quantity.
         3. For each selected Post, call fetchArticleContent to get its text and image URLs.
         4. Produce a concise snippet of ~200 characters summarizing the article.
         5. Choose the best image URL (prefer og:image).

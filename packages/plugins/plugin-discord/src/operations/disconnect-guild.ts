@@ -7,10 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 
-import { type Discord } from '../types';
-import { DisconnectGuild } from './definitions';
+import { type Discord, DiscordOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof DisconnectGuild> = DisconnectGuild.pipe(
+const handler: Operation.WithHandler<typeof DiscordOperation.DisconnectGuild> = DiscordOperation.DisconnectGuild.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ bot }) {
       const obj = (yield* Database.load(bot)) as Discord.Bot;

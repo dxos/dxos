@@ -9,13 +9,13 @@ import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
 import { useTypeOptions } from '@dxos/app-toolkit/ui';
 import { DXN, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
 import { type JsonPath, type Mutable } from '@dxos/echo/internal';
-import { getSpace, useObject, useQuery } from '@dxos/react-client/echo';
+import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, type ThemedClassName, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form, ViewEditor } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';
 import { type ProjectionModel, ViewModel } from '@dxos/schema';
 import { Pipeline } from '@dxos/types';
-import { mx, osTranslations, subtleHover } from '@dxos/ui-theme';
+import { mx, osTranslations } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -34,7 +34,7 @@ export type PipelinePropertiesProps = ThemedClassName<{
  */
 export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesProps) => {
   const { t } = useTranslation(meta.id);
-  const space = getSpace(pipeline);
+  const db = Obj.getDatabase(pipeline);
   const [expandedId, setExpandedId] = useState<string>();
   const [columns, updateColumns] = useObject(pipeline, 'columns');
   const column = useMemo(
@@ -44,9 +44,9 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
   const [view, updateView] = useObject(column?.view);
   const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>(() => Schema.Struct({}));
   const projectionRef = useRef<ProjectionModel>(null);
-  const tags = useQuery(space?.db, Filter.type(Tag.Tag));
+  const tags = useQuery(db, Filter.type(Tag.Tag));
   const types = useTypeOptions({
-    space,
+    db,
     annotation: {
       location: ['database', 'runtime'],
       kind: ['user'],
@@ -54,15 +54,15 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
   });
 
   useAsyncEffect(async () => {
-    if (!view?.query || !space) {
+    if (!view?.query || !db) {
       return;
     }
 
-    const foundSchema = await resolveSchemaWithRegistry(space.db.schemaRegistry, view.query.ast);
+    const foundSchema = await resolveSchemaWithRegistry(db.schemaRegistry, view.query.ast);
     if (foundSchema && foundSchema !== schema) {
       setSchema(() => foundSchema);
     }
-  }, [space, view, schema]);
+  }, [db, view, schema]);
 
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) =>
@@ -74,16 +74,16 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
 
   const handleQueryChanged = useCallback(
     async (newQuery: QueryAST.Query, target?: string) => {
-      if (!view || !space) {
+      if (!view || !db) {
         return;
       }
 
       const queue = target && DXN.tryParse(target) ? target : undefined;
-      const query = queue ? Query.fromAst(newQuery).from({ queues: [queue] }) : Query.fromAst(newQuery);
+      const query = queue ? Query.fromAst(newQuery).from({ feeds: [queue] }) : Query.fromAst(newQuery);
       updateView((view) => {
         view.query.ast = query.ast as Mutable<typeof query.ast>;
       });
-      const newSchema = await resolveSchemaWithRegistry(space.db.schemaRegistry, query.ast);
+      const newSchema = await resolveSchemaWithRegistry(db.schemaRegistry, query.ast);
       if (!newSchema) {
         return;
       }
@@ -98,7 +98,7 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
 
       setSchema(() => newSchema);
     },
-    [view, updateView, schema],
+    [db, view, updateView, schema],
   );
 
   const handleColumnValuesChanged = useCallback(
@@ -134,20 +134,20 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
       updateColumns((columns) => {
         columns.splice(index, 1);
       });
-      space?.db.remove(viewToRemove);
+      db?.remove(viewToRemove);
     },
-    [expandedId, columns, updateColumns, space],
+    [expandedId, columns, updateColumns, db],
   );
 
   const handleAdd = useCallback(() => {
-    if (!space) {
+    if (!db) {
       return;
     }
     const newView = ViewModel.make({
       query: Query.select(Filter.nothing()),
       jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})),
     });
-    space.db.add(newView);
+    db.add(newView);
     updateColumns((columns) => {
       columns.push({
         name: '',
@@ -157,10 +157,10 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
       });
     });
     setExpandedId(newView.id);
-  }, [space, updateColumns]);
+  }, [db, updateColumns]);
 
   return (
-    <div role='none' className={mx('py-form-padding overflow-y-auto', classNames)}>
+    <div className={mx('py-form-padding overflow-y-auto', classNames)}>
       <h2 className='text-sm text-description py-1'>{t('views.label')}</h2>
 
       <List.Root<Pipeline.Column>
@@ -179,7 +179,7 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
                   classNames={listItemGrid}
                   aria-expanded={expandedId === column.view.dxn.toString()}
                 >
-                  <div role='none' className={mx(subtleHover, listItemGrid, 'rounded-xs cursor-pointer min-h-10')}>
+                  <div className={mx(listItemGrid, 'dx-hover rounded-xs cursor-pointer min-h-10')}>
                     <List.ItemDragHandle />
                     <List.ItemTitle onClick={() => handleToggleField(column)}>
                       {column.name || t('untitled-view.title')}
@@ -203,7 +203,7 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
                     />
                   </div>
                   {expandedId === column.view.dxn.toString() && column?.view.target && (
-                    <div role='none' className='col-span-5 my-2 border border-separator rounded-md'>
+                    <div className='col-span-5 my-2 border border-separator rounded-md'>
                       <Form.Root
                         schema={ColumnFormSchema}
                         values={column}
@@ -219,8 +219,8 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
                         readonly
                         schema={schema}
                         view={column.view.target}
-                        registry={space?.db.schemaRegistry}
-                        db={space?.db}
+                        registry={db?.schemaRegistry}
+                        db={db}
                         tags={tags}
                         types={types}
                         onQueryChanged={handleQueryChanged}
@@ -234,7 +234,7 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
         )}
       </List.Root>
 
-      <div role='none' className='my-form-padding'>
+      <div className='my-form-padding'>
         <IconButton icon='ph--plus--regular' label={t('add-view.label')} onClick={handleAdd} classNames='w-full' />
       </div>
     </div>

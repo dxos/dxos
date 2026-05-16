@@ -6,8 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj } from '@dxos/echo';
-import { Type } from '@dxos/echo';
+import { Annotation, Obj, Type } from '@dxos/echo';
 
 export const Text = Schema.Struct({
   name: Schema.optional(Schema.String),
@@ -27,7 +26,7 @@ export const Text = Schema.Struct({
 
 export interface Text extends Schema.Schema.Type<typeof Text> {}
 
-export const make = (propsOrContent: Partial<{ id: string; name: string; content: string }> | string = {}) => {
-  const props = typeof propsOrContent === 'string' ? { content: propsOrContent } : propsOrContent;
-  return Obj.make(Text, { id: props.id, name: props.name, content: props.content ?? '' });
-};
+export type MakeProps = Partial<{ id: string; name: string; content: string }>;
+
+export const make = (props: MakeProps = {}) =>
+  Obj.make(Text, { id: props.id, name: props.name, content: props.content ?? '' });

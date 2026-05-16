@@ -25,7 +25,7 @@ export const useContainerDebug = (debug?: boolean): UseContainerDebug => {
     }
 
     return [
-      ({ classNames }) => <div role='none' className={mx('overflow-hidden', classNames)} ref={debugRef} />,
+      ({ classNames }) => <div className={mx('overflow-hidden', classNames)} ref={debugRef} />,
       () => debugRef.current && createPortal(<ContainerInfo />, debugRef.current),
     ];
   }, [debug, debugRef]);

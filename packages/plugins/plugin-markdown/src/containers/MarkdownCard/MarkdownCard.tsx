@@ -37,7 +37,6 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
             )}
           </MarkdownEditorProvider>
           <div
-            role='none'
             className={mx(
               'z-10 absolute bottom-0 inset-x-0 h-12 w-full',
               'bg-gradient-to-b from-transparent to-(--surface-bg) pointer-events-none',

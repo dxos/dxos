@@ -51,9 +51,9 @@ describe('jsonata', () => {
   });
 
   describe('evaluates expression with trigger event', () => {
-    const queueDxn = 'dxn:queue:data:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6';
+    const queueDXN = 'dxn:queue:data:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6';
     const event: TriggerEvent.TriggerEvent = {
-      queue: queueDxn,
+      queue: queueDXN,
       item: {
         name: 'John',
       },
@@ -62,7 +62,7 @@ describe('jsonata', () => {
 
     const obj = Obj.make(TestSchema.Expando, { id: '01KD35WMWTEEE1WQQPYEGD1X2B', name: 'DXOS' });
     const trigger = Trigger.make({
-      spec: Trigger.specQueue(queueDxn),
+      spec: Trigger.specQueue(queueDXN),
       input: {
         nested: {
           value: 'nested',

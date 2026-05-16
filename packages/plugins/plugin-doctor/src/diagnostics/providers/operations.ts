@@ -3,10 +3,9 @@
 //
 
 import { AiService } from '@dxos/ai';
-import { AiContextService, AiSessionService } from '@dxos/assistant';
+import { AiContext, AiSession } from '@dxos/assistant';
 import { Blueprint, Credential, Operation, StorageService, Trace } from '@dxos/compute';
-import { Database, Feed } from '@dxos/echo';
-import { Filter } from '@dxos/echo';
+import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { FunctionInvocationService, QueueService } from '@dxos/functions';
 
 import { meta } from '#meta';
@@ -22,9 +21,9 @@ import { type DiagnosticIssue, type DiagnosticProvider } from '../types';
  */
 export const KNOWN_SERVICES: ReadonlySet<string> = new Set(
   [
-    AiContextService,
+    AiContext.Service,
     AiService.AiService,
-    AiSessionService,
+    AiSession.Service,
     Blueprint.RegistryService,
     Credential.CredentialsService,
     Database.Service,
@@ -60,12 +59,13 @@ export const operationsServicesDiagnostic: DiagnosticProvider = {
         const services = operation.services ?? [];
         const unknownServices = services.filter((service: string) => !KNOWN_SERVICES.has(service));
         if (unknownServices.length > 0) {
-          const label = operation.name || operation.key || operation.id;
+          const operationKey = Obj.getMeta(operation).key;
+          const label = operation.name || operationKey || operation.id;
           issues.push({
             id: `${space.id}:${operation.id}:unknown-services`,
             severity: 'error',
             message: `Operation "${label}" requests unknown service(s): ${unknownServices.join(', ')}.`,
-            subjectLabel: operation.key ?? operation.id,
+            subjectLabel: operationKey ?? operation.id,
             spaceId: space.id,
           });
         }

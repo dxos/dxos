@@ -7,12 +7,14 @@ import * as Effect from 'effect/Effect';
 import React, { type Dispatch, type SetStateAction, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type Plugin, type PluginManager, type Registry, UrlLoader } from '@dxos/app-framework';
-import { usePluginManager } from '@dxos/app-framework/ui';
+import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { LayoutOperation } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
 
 import { PluginDetail } from '#components';
+import { getPluginPath } from '#meta';
 
-import { useRegistryPluginProvider, useRegistryPlugins, useRemotePluginIds } from '../../hooks';
+import { useDisableConfirmation, useRegistryPluginProvider, useRegistryPlugins, useRemotePluginIds } from '../../hooks';
 
 // TODO(burdon): Convert to ECHO type.
 export type PluginArticleProps = { subject: Plugin.Plugin };
@@ -23,6 +25,7 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   const plugins = useAtomValue(manager.plugins);
   const remotePluginIds = useRemotePluginIds();
   const provider = useRegistryPluginProvider();
+  const { invokePromise } = useOperationInvoker();
 
   const { catalogEntry, moduleUrl, repo } = useCatalogEntry(pluginId);
   const { installedVersionTag, syncInstalledVersion } = useInstalledVersionTag(pluginId, plugins);
@@ -43,6 +46,35 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
   const hasUpdate =
     isInstalled && !!catalogEntry && !!installedVersionTag && installedVersionTag !== catalogEntry.version;
 
+  // Recompute graph slices whenever the plugin list changes, so installs /
+  // removals through other surfaces (or this article's own actions) keep the
+  // detail view in sync.
+  const dependencies = useMemo(
+    () => manager.getDependencies(pluginId, { transitive: false }),
+    [manager, pluginId, plugins],
+  );
+  const dependents = useMemo(
+    () => manager.getDependents(pluginId, { transitive: false }),
+    [manager, pluginId, plugins],
+  );
+
+  // Resolves a plugin id to its display name. A plugin's translations are
+  // only loaded when it is activated, so the always-available `meta.name`
+  // from the registered plugin set is the right source for chip labels.
+  const handleResolvePluginName = useCallback(
+    (id: string): string => plugins.find((candidate) => candidate.meta.id === id)?.meta.name ?? id,
+    [plugins],
+  );
+
+  const handleNavigateToPlugin = useCallback(
+    (targetId: string) => {
+      void invokePromise(LayoutOperation.Open, {
+        subject: [getPluginPath(targetId)],
+      });
+    },
+    [invokePromise],
+  );
+
   const actions = usePluginActions({
     manager,
     pluginId,
@@ -58,19 +90,23 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
     <PluginDetail
       plugin={plugin}
       enabled={enabled}
+      installing={actions.installing}
+      updating={actions.updating}
+      hasUpdate={hasUpdate}
+      installedVersionTag={installedVersionTag}
+      selectedVersionTag={selectedVersionTag}
+      versions={pickerVersions}
+      dependencies={dependencies}
+      dependents={dependents}
+      failure={failure}
       onEnabledChange={actions.handleEnableChange}
       onInstall={!isInstalled && moduleUrl ? actions.handleInstall : undefined}
-      installing={actions.installing}
-      onUpdate={hasUpdate ? actions.handleUpdate : undefined}
-      hasUpdate={hasUpdate}
-      updating={actions.updating}
-      onUninstall={canUninstall ? actions.handleUninstall : undefined}
-      versions={pickerVersions}
-      selectedVersionTag={selectedVersionTag}
-      onVersionChange={setSelectedVersionTag}
       onInstallVersion={pickerVersions.length > 0 ? actions.handleInstallVersion : undefined}
-      installedVersionTag={installedVersionTag}
-      failure={failure}
+      onNavigateToPlugin={handleNavigateToPlugin}
+      onResolvePluginName={handleResolvePluginName}
+      onUninstall={canUninstall ? actions.handleUninstall : undefined}
+      onUpdate={hasUpdate ? actions.handleUpdate : undefined}
+      onVersionChange={setSelectedVersionTag}
     />
   );
 };
@@ -217,7 +253,7 @@ const useVersionPicker = ({
 };
 
 /**
- * The five user-facing actions the article exposes — enable/disable, uninstall,
+ * The user-facing actions the article exposes — enable/disable, uninstall,
  * install (latest), update (to latest catalog version), and install-from-picker —
  * plus the `installing`/`updating` flags they drive. Each handler ends with a
  * `syncInstalledVersion()` call inside its `Effect.ensuring` so the cached
@@ -245,11 +281,17 @@ const usePluginActions = ({
 }) => {
   const [installing, setInstalling] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const requestDisable = useDisableConfirmation(manager, (id) => void runAndForwardErrors(manager.disable(id)));
 
   const handleEnableChange = useCallback(
-    (enabled: boolean) =>
-      enabled ? runAndForwardErrors(manager.enable(pluginId)) : runAndForwardErrors(manager.disable(pluginId)),
-    [manager, pluginId],
+    (enabled: boolean) => {
+      if (enabled) {
+        void runAndForwardErrors(manager.enable(pluginId));
+        return;
+      }
+      requestDisable(pluginId);
+    },
+    [manager, pluginId, requestDisable],
   );
 
   const handleUninstall = useCallback(() => {

@@ -4,8 +4,6 @@
 
 import { OperationHandlerSet } from '@dxos/compute';
 
-export * as ScriptOperation from './definitions';
-
 export const ScriptOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./access-token-created'),
   () => import('./create-script'),

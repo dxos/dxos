@@ -8,16 +8,14 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Schema from 'effect/Schema';
 
-import { AiContextBinder, AiContextService } from '@dxos/assistant';
+import { AiContext } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/compute';
 import { Annotation, Database, Feed, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
-import { Queue } from '@dxos/echo-db';
 import { type ObjectNotFoundError } from '@dxos/echo/Err';
-import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation } from '@dxos/echo/internal';
 import { acquireReleaseResource } from '@dxos/effect';
-import { QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { QueueAnnotation, Text } from '@dxos/schema';
+import { Text } from '@dxos/schema';
 
 import * as Chat from './Chat';
 import * as Plan from './Plan';
@@ -65,23 +63,28 @@ export const Agent = Schema.Struct({
   ).pipe(FormInputAnnotation.set(false)),
 
   /**
-   * Input feed for subscriptions.
-   */
-  // TODO(burdon): Rename to Feed?
-  // NOTE: Named `queue` to conform to subscribable schema (see QueueAnnotation).
-  queue: Schema.optional(Ref.Ref(Queue).pipe(FormInputAnnotation.set(false))),
-
-  /**
    * References to objects with a canonical queue property.
    * Schema must have the QueueAnnotation.
    */
+  // Change to trigger.
   // TODO(dmaretskyi): Turn into an array of objects when form-data
   subscriptions: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(FormInputAnnotation.set(false)),
+
+  /**
+   * Cron expression for a timer trigger that invokes the agent worker on a schedule.
+   * The timer trigger bypasses the qualifier and goes straight to the agent worker.
+   */
+  // Change to trigger.
+  cron: Schema.optional(Schema.String).annotations({
+    title: 'Cron',
+    description: 'Cron expression for a timer trigger that invokes the agent on a schedule.',
+  }),
 
   /**
    * Allow the agent to filter events.
    * Related events will be added to the input queue of the agent.
    * It is recommended to enable this.
+   * @deprecated
    */
   filterEvents: Schema.optional(Schema.Boolean).annotations({
     title: 'Filter events',
@@ -89,20 +92,16 @@ export const Agent = Schema.Struct({
   }),
 
   /**
-   * Cron expression for a timer trigger that invokes the agent worker on a schedule.
-   * The timer trigger bypasses the qualifier and goes straight to the agent worker.
+   * Input feed for subscriptions.
+   * @deprecated Subscriptions will write directly to the agent.
    */
-  cron: Schema.optional(Schema.String).annotations({
-    title: 'Cron',
-    description: 'Cron expression for a timer trigger that invokes the agent on a schedule.',
-  }),
+  feed: Schema.optional(Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false))),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.agent',
     version: '0.1.0',
   }),
-  LabelAnnotation.set(['name']),
-  QueueAnnotation.set(true),
+  Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--drone--regular',
     hue: 'sky',
@@ -126,11 +125,11 @@ export const makeInitialized = (
       contextObjects?: Ref.Ref<Obj.Any>[];
     },
   blueprint: Blueprint.Blueprint,
-): Effect.Effect<Agent, never, QueueService | Feed.FeedService | Database.Service> =>
+): Effect.Effect<Agent, never, Feed.FeedService | Database.Service> =>
   Effect.gen(function* () {
     const agent = Obj.make(Agent, {
       ...props,
-      instructions: Ref.make(Text.make(props.instructions)),
+      instructions: Ref.make(Text.make({ content: props.instructions })),
       plan: Ref.make(Plan.makePlan({ tasks: [] })),
       artifacts: props.artifacts ?? [],
       subscriptions: props.subscriptions ?? [],
@@ -140,7 +139,7 @@ export const makeInitialized = (
     yield* Database.add(agent);
     const feed = yield* Database.add(Feed.make());
     const runtime = yield* Effect.runtime<Feed.FeedService>();
-    const contextBinder = new AiContextBinder({ feed, runtime });
+    const contextBinder = new AiContext.Binder({ feed, runtime });
     // TODO(dmaretskyi): Blueprint registry.
     const agentBlueprint = yield* Database.add(Obj.clone(blueprint, { deep: true }));
     yield* Effect.promise(() =>
@@ -163,11 +162,11 @@ export const makeInitialized = (
       }),
     );
 
-    const inputQueue = yield* QueueService.createQueue();
+    const inputFeed = yield* Database.add(Feed.make());
 
     Obj.update(agent, (agent) => {
       agent.chat = Ref.make(chat);
-      agent.queue = Ref.fromDXN(inputQueue.dxn);
+      agent.feed = Ref.make(inputFeed);
     });
 
     return agent;
@@ -193,7 +192,7 @@ export const resetChatHistory = (
     const runtime = yield* Effect.runtime<Feed.FeedService>();
     const existingContextBinder = yield* acquireReleaseResource(
       () =>
-        new AiContextBinder({
+        new AiContext.Binder({
           feed: existingFeed,
           runtime,
         }),
@@ -202,7 +201,7 @@ export const resetChatHistory = (
     const objects = existingContextBinder.getObjects().map((object) => Ref.make(object));
 
     const feed = yield* Database.add(Feed.make());
-    const contextBinder = new AiContextBinder({ feed, runtime });
+    const contextBinder = new AiContext.Binder({ feed, runtime });
     yield* Effect.promise(() =>
       contextBinder.bind({
         blueprints,
@@ -228,8 +227,8 @@ export const resetChatHistory = (
     );
   }).pipe(Effect.scoped);
 
-export const getFromChatContext: Effect.Effect<Agent, Error, AiContextService> = Effect.gen(function* () {
-  const agents = yield* Function.pipe(AiContextService.findObjects(Agent));
+export const getFromChatContext: Effect.Effect<Agent, Error, AiContext.Service> = Effect.gen(function* () {
+  const agents = yield* Function.pipe(AiContext.Service.findObjects(Agent));
   if (agents.length !== 1) {
     return yield* Effect.fail(new Error(`There should be exactly one agent in context. Got: ${agents.length}`));
   }
