@@ -163,7 +163,7 @@ export const defineCapability = /* ... */;
 ## Discovery
 
 Idioms are harvested by a scanner exposed as `scanIdioms()` from
-`@dxos/introspect/idioms`, and invoked by the `dx reflect idioms` CLI command.
+`@dxos/introspect/idioms`, and invoked by the `dx reflect idiom list` CLI command.
 
 ### POC behavior (this PR)
 

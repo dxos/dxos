@@ -10,7 +10,7 @@ import * as Effect from 'effect/Effect';
 import { CommandConfig } from '@dxos/cli-util';
 import { scanIdioms } from '@dxos/introspect/idioms';
 
-import { findMonorepoRoot } from './util';
+import { findMonorepoRoot } from '../util';
 
 const handler = Effect.fn(function* ({ root }: { root: string }) {
   const { json } = yield* CommandConfig;
@@ -47,8 +47,8 @@ const handler = Effect.fn(function* ({ root }: { root: string }) {
   yield* Console.log(`\n${idioms.length} idiom${idioms.length === 1 ? '' : 's'}.`);
 });
 
-export const idioms = Command.make(
-  'idioms',
+export const list = Command.make(
+  'list',
   {
     root: Options.text('root').pipe(
       Options.withDescription('Monorepo root (defaults to nearest pnpm-workspace.yaml ancestor of cwd).'),

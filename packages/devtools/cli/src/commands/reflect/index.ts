@@ -4,9 +4,9 @@
 
 import * as Command from '@effect/cli/Command';
 
-import { idioms } from './idioms';
+import { idiom } from './idiom';
 
 export const reflect = Command.make('reflect').pipe(
   Command.withDescription('Reflective tooling over the monorepo (idioms, introspect).'),
-  Command.withSubcommands([idioms]),
+  Command.withSubcommands([idiom]),
 );
