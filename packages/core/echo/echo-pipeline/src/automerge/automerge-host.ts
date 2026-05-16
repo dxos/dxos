@@ -124,6 +124,13 @@ const BUNDLE_SYNC_THRESHOLD = 50;
 const OPTIMIZED_SHARE_POLICY = true;
 
 /**
+ * Wall-clock cap for `_repo.flush()` and `_repo.shutdown()` during host
+ * teardown. See the comment in {@link AutomergeHost._close} for why this
+ * exists; in healthy cases both calls finish in well under 100ms.
+ */
+const CLOSE_TIMEOUT = 2_000;
+
+/**
  * Abstracts over the AutomergeRepo.
  *
  * Runs Subduction as the document byte transport ({@link Repo.subductionAdapters}), while
@@ -297,18 +304,21 @@ export class AutomergeHost extends Resource {
       ((e: PeerDisconnectedPayload) => !updatingAuthScope && this._onPeerDisconnected(e.peerId)) as any,
     );
 
-    this._collectionSynchronizer.remoteStateUpdated.on(this._ctx, ({ collectionId, peerId, newDocsAppeared }) => {
-      this._onRemoteCollectionStateUpdated(collectionId, peerId);
-      this.collectionStateUpdated.emit({ collectionId: collectionId as CollectionId });
-      if (!this._useSubduction && newDocsAppeared) {
-        updatingAuthScope = true;
-        try {
-          this._echoNetworkAdapter.onConnectionAuthScopeChanged(peerId);
-        } finally {
-          updatingAuthScope = false;
+    this._collectionSynchronizer.peerCollectionStateUpdated.on(
+      this._ctx,
+      ({ collectionId, peerId, newDocsAppeared }) => {
+        this._onRemoteCollectionStateUpdated(collectionId, peerId);
+        this.collectionStateUpdated.emit({ collectionId: collectionId as CollectionId });
+        if (!this._useSubduction && newDocsAppeared) {
+          updatingAuthScope = true;
+          try {
+            this._echoNetworkAdapter.onConnectionAuthScopeChanged(peerId);
+          } finally {
+            updatingAuthScope = false;
+          }
         }
-      }
-    });
+      },
+    );
 
     this._syncTask = new DeferredTask(this._ctx, async () => {
       const collectionToSync = Array.from(this._collectionsToSync.values());
@@ -347,8 +357,28 @@ export class AutomergeHost extends Resource {
     await this._onHeadsChangedTask?.join();
 
     await this._collectionSynchronizer.close(ctx);
-    await this._repo.flush().catch((err) => log.warn('failed to flush repo before shutdown', { err }));
-    await this._repo.shutdown().catch((err) => log.warn('failed to shutdown repo', { err }));
+
+    // `_repo.shutdown()` quiesces Subduction (stops reconnect loops, pumps
+    // throttled saves, awaits in-flight saves and storage writes, then
+    // disconnects Wasm transports) and runs a best-effort `flush()`
+    // internally. We don't call `_repo.flush()` separately because, in
+    // concurrent-close scenarios, both `flush()` and `shutdown()` await
+    // `entry.saveSettled` and there's no point paying that wall-clock cost
+    // twice (see {@link CLOSE_TIMEOUT}).
+    //
+    // The wall-clock timeout exists because: in Subduction mode, the
+    // throttled save kicked off when this peer received commits from a
+    // remote peer can still be pending when both peers close concurrently.
+    // `await Promise.all(saveSettled)` then sits inside an in-flight
+    // `subduction.addBatch(...)` Wasm call that's mid-push to the remote
+    // peer. The remote peer is itself in `subductionSource.shutdown()` and
+    // has stopped responding to those frames; the addBatch never returns.
+    // Local commits are already on disk (the storage bridge persists
+    // synchronously before notifying peers), so timing out here only loses
+    // the never-going-to-be-delivered push to the closing peer.
+    await asyncTimeout(this._repo.shutdown(), CLOSE_TIMEOUT).catch((err) =>
+      log.warn('failed to shutdown repo', { err }),
+    );
     await this._storage.close?.();
     await this._echoNetworkAdapter.close();
     this._syncTask = undefined;

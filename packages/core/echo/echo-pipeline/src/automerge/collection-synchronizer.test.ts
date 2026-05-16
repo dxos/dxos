@@ -56,8 +56,8 @@ describe('CollectionSynchronizer', () => {
     peer2.onConnectionOpen(peerId1);
 
     const updated = Promise.all([
-      peer1.remoteStateUpdated.waitFor((ev) => ev.collectionId === collectionId && ev.peerId === peerId2),
-      peer2.remoteStateUpdated.waitFor((ev) => ev.collectionId === collectionId && ev.peerId === peerId1),
+      peer1.peerCollectionStateUpdated.waitFor((ev) => ev.collectionId === collectionId && ev.peerId === peerId2),
+      peer2.peerCollectionStateUpdated.waitFor((ev) => ev.collectionId === collectionId && ev.peerId === peerId1),
     ]);
 
     peer1.setLocalCollectionState(collectionId, STATE_1);

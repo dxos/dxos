@@ -9,6 +9,7 @@ import * as Record from 'effect/Record';
 
 import { Event, asyncReturn, scheduleTask, scheduleTaskInterval } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
+import { isEdgePeerId } from '@dxos/echo-protocol';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { defaultMap } from '@dxos/util';
@@ -42,7 +43,11 @@ export class CollectionSynchronizer extends Resource {
 
   private readonly _connectedPeers = new Set<PeerId>();
 
-  public readonly remoteStateUpdated = new Event<{ collectionId: string; peerId: PeerId; newDocsAppeared: boolean }>();
+  public readonly peerCollectionStateUpdated = new Event<{
+    collectionId: string;
+    peerId: PeerId;
+    newDocsAppeared: boolean;
+  }>();
 
   constructor(params: CollectionSynchronizerProps) {
     super();
@@ -211,6 +216,10 @@ export class CollectionSynchronizer extends Resource {
     log('onRemoteStateReceived', { collectionId, peerId, state });
     validateCollectionState(state);
     const perCollectionState = this._getOrCreatePerCollectionState(collectionId);
+    const previousRemoteState = perCollectionState.remoteStates.get(peerId);
+    if (previousRemoteState && isCollectionStateEqual(previousRemoteState, state)) {
+      return;
+    }
     perCollectionState.remoteStates.set(peerId, state);
     this._diffCollectionState(collectionId, peerId);
   }
@@ -246,14 +255,12 @@ export class CollectionSynchronizer extends Resource {
       missingOnRemote: diff.missingOnRemote,
       different: diff.different,
     });
-    if (diff.missingOnLocal.length > 0 || diff.different.length > 0 || diff.missingOnRemote.length > 0) {
-      log('emit remote state update');
-      this.remoteStateUpdated.emit({
-        peerId,
-        collectionId,
-        newDocsAppeared: diff.missingOnLocal.length > 0,
-      });
-    }
+    log('emit peer collection state update');
+    this.peerCollectionStateUpdated.emit({
+      peerId,
+      collectionId,
+      newDocsAppeared: diff.missingOnLocal.length > 0,
+    });
   }
 
   private _getOrCreatePerCollectionState(collectionId: string): PerCollectionState {
@@ -282,7 +289,13 @@ export class CollectionSynchronizer extends Resource {
     if (!localState) {
       return;
     }
+    // Edge replicators are pull-only from our perspective: the edge is the source of truth and
+    // already holds every doc in the space, so proactively pushing our heads on every local
+    // change is wasted work. The edge can still pull our state via `onCollectionStateQueried`.
     for (const peerId of perCollectionState.interestedPeers) {
+      if (isEdgePeerId(peerId)) {
+        continue;
+      }
       const lastBroadcast = perCollectionState.lastBroadcast.get(peerId) ?? 0;
       if (Date.now() - lastBroadcast > MIN_QUERY_INTERVAL) {
         perCollectionState.lastBroadcast.set(peerId, Date.now());
@@ -329,6 +342,11 @@ export type CollectionStateDiff = {
   missingOnRemote: DocumentId[];
   missingOnLocal: DocumentId[];
   different: DocumentId[];
+};
+
+export const isCollectionStateEqual = (local: CollectionState, remote: CollectionState): boolean => {
+  const diff = diffCollectionState(local, remote);
+  return diff.different.length === 0 && diff.missingOnLocal.length === 0 && diff.missingOnRemote.length === 0;
 };
 
 export const diffCollectionState = (local: CollectionState, remote: CollectionState): CollectionStateDiff => {

@@ -139,6 +139,62 @@ describe('AutomergeHost with Subduction', () => {
     }
   });
 
+  // Sequential close (one host fully shut down before the other starts)
+  // exercises the same teardown path as the existing
+  // `loads remote document over replication network` test and is included as a
+  // baseline for the concurrent-close case below.
+  test('sequential close after sync does not hang', { timeout: 5_000 }, async ({ expect }) => {
+    const level1 = await createLevel();
+    const host1 = await setupAutomergeHost({ level: level1 });
+
+    const level2 = await createLevel();
+    const host2 = await setupAutomergeHost({ level: level2 });
+    const handle = await host2.createDoc({ text: 'Hello from Subduction' });
+    await host2.flush(Context.default());
+    await waitForSubductionSave();
+
+    const network = await new TestReplicationNetwork().open();
+    await host1.addReplicator(Context.default(), await network.createReplicator());
+    await host2.addReplicator(Context.default(), await network.createReplicator());
+
+    const loaded = await host1.loadDoc<{ text: string }>(Context.default(), handle.documentId, { timeout: 1_000 });
+    invariant(loaded);
+    expect(loaded.doc()!.text).toEqual('Hello from Subduction');
+
+    await host1.close();
+    await host2.close();
+    await network.close();
+  });
+
+  // Reproduces a hang during teardown observed in client-level invitation tests:
+  // when two hosts have synced over the mesh-style replicator and then close
+  // concurrently, one side's `_close` (specifically `_repo.flush()`) never
+  // returns. The first close to arrive tears down its side of the connection
+  // (cancels readers / aborts writers); the second host then enters `_close`
+  // and gets stuck draining subduction state that depends on the now-dead
+  // peer.
+  test('concurrent close after sync does not hang', { timeout: 30_000 }, async ({ expect }) => {
+    const level1 = await createLevel();
+    const host1 = await setupAutomergeHost({ level: level1 });
+
+    const level2 = await createLevel();
+    const host2 = await setupAutomergeHost({ level: level2 });
+    const handle = await host2.createDoc({ text: 'Hello from Subduction' });
+    await host2.flush(Context.default());
+    await waitForSubductionSave();
+
+    const network = await new TestReplicationNetwork().open();
+    await host1.addReplicator(Context.default(), await network.createReplicator());
+    await host2.addReplicator(Context.default(), await network.createReplicator());
+
+    const loaded = await host1.loadDoc<{ text: string }>(Context.default(), handle.documentId, { timeout: 1_000 });
+    invariant(loaded);
+    expect(loaded.doc()!.text).toEqual('Hello from Subduction');
+
+    await Promise.all([host1.close(), host2.close()]);
+    await network.close();
+  });
+
   test('collection synchronization', { timeout: 5_000 }, async ({ expect }) => {
     const NUM_DOCUMENTS = 10;
 
@@ -175,7 +231,7 @@ describe('AutomergeHost with Subduction', () => {
       }
 
       // collectionStateUpdated fires whenever host1 observes a `collection-state` from host2
-      // (see {@link CollectionSynchronizer.remoteStateUpdated}). At least one event must
+      // (see {@link CollectionSynchronizer.peerCollectionStateUpdated}). At least one event must
       // arrive for the heads to have converged via the collection-sync path rather than
       // raw Subduction byte transport.
       expect(collectionUpdates).toContain(collectionId as CollectionId);
@@ -257,7 +313,9 @@ const setupAutomergeHost = async ({ level }: { level: LevelDB }) => {
   });
   await host.open();
   onTestFinished(async () => {
-    await host.close();
+    if (host.isOpen) {
+      await host.close();
+    }
   });
   return host;
 };
