@@ -358,6 +358,9 @@
       "path": "packages/plugins/plugin-game/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-generator/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-github/tsconfig.json"
     },
     {

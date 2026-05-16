@@ -72,14 +72,14 @@ const defaultComponents: ReactMarkdownOptions['components'] = {
   // 404 or are blocked. Drop the element on load failure rather than
   // leaving the browser's broken-image placeholder.
   //
-  // Iframe-style URLs (e.g. Cloudflare Stream embeds the author included via
-  // standard `![alt](src)` syntax) are swapped to `<iframe>` by
-  // {@link MarkdownMedia}, so embeds in the source document render inline.
+  // Media URLs (mp4/mp3/etc. or legacy `iframe`-style embeds) are swapped to a
+  // native `<video>` / `<audio>` `MediaPlayer` by {@link MarkdownMedia} so
+  // playable media in the source document renders inline.
   img: ({ src, alt }) => {
     if (!src) {
       return null;
     }
-    return <MarkdownMedia src={src} alt={alt} iframeClassNames='aspect-video w-full' />;
+    return <MarkdownMedia src={src} alt={alt} mediaClassNames='aspect-video w-full' />;
   },
   ol: ({ children, ...props }) => (
     <ol className='pt-1 pb-1 ps-6 leading-tight list-decimal' {...props}>

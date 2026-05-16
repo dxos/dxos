@@ -290,6 +290,9 @@
       "path": "../../plugins/plugin-game"
     },
     {
+      "path": "../../plugins/plugin-generator"
+    },
+    {
       "path": "../../plugins/plugin-github"
     },
     {

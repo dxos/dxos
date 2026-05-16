@@ -161,7 +161,7 @@ const ToolbarToggleGroupItem = forwardRef<HTMLButtonElement, ToolbarToggleGroupI
 type ToolbarToggleGroupIconItemProps = Omit<ToggleGroupItemPrimitiveProps, 'className'> & IconButtonProps;
 
 const ToolbarToggleGroupIconItem = forwardRef<HTMLButtonElement, ToolbarToggleGroupIconItemProps>(
-  ({ variant, density, elevation, classNames, icon, label, iconOnly, ...props }, forwardedRef) => {
+  ({ variant, density, elevation, classNames, icon, label, iconOnly, iconClassNames, ...props }, forwardedRef) => {
     return (
       <ToolbarPrimitive.ToolbarToggleItem {...props} asChild>
         <IconButton
@@ -173,6 +173,7 @@ const ToolbarToggleGroupIconItem = forwardRef<HTMLButtonElement, ToolbarToggleGr
             icon,
             label,
             iconOnly,
+            iconClassNames,
           }}
           ref={forwardedRef}
         />

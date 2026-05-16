@@ -54,12 +54,6 @@ export const translations = [
           'This is your personal space. Open a ticket from the Support assistant, or start the guided tour to learn the basics.',
         'start-tour.button': 'Start tour',
         'open-assistant.button': 'Open Assistant',
-        // Carousel.
-        'carousel-prev.label': 'Previous',
-        'carousel-next.label': 'Next',
-        'carousel-viewport.label': 'Slide viewport (use arrow keys to navigate)',
-        'carousel-indicators.label': 'Carousel slides',
-        'carousel-go-to.label': 'Go to slide {{index}}',
         // Settings.
         'settings.title': 'Support settings',
         'show-welcome.label': 'Show welcome article on personal space',

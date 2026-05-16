@@ -38,7 +38,7 @@ export const LoggingPanel = ({ maxLines = 100, ...props }: CustomPanelProps<{ ma
 
   return (
     <Panel {...props} icon='ph--list--regular' title={'Logging'} maxHeight={0}>
-      <Toolbar.Root classNames='gap-2'>
+      <Toolbar.Root>
         <Input.Root>
           <Input.TextInput placeholder='Filter' value={text} onChange={(ev) => setText(ev.target.value)} />
         </Input.Root>
