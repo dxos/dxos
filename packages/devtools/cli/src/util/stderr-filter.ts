@@ -71,6 +71,14 @@ export const filterStderrBuffer = (buffer: string): string => {
 };
 
 /**
+ * Process warnings (those routed through `process.emitWarning` instead of
+ * `console.warn`) whose `name` we want to swallow. Bun emits these via a
+ * channel that bypasses both `console.warn` and `process.stderr.write`, so
+ * the byte-stream filter alone can't catch them.
+ */
+const SWALLOWED_WARNING_NAMES = new Set(['TimeoutNegativeWarning']);
+
+/**
  * Wrap BOTH `console.warn`/`console.error` (where `warnAfterTimeout` from
  * @dxos/debug actually writes) AND `process.stderr.write` (defence in depth
  * for callers that bypass console). In Bun, `console.warn` writes to fd 2
@@ -79,17 +87,13 @@ export const filterStderrBuffer = (buffer: string): string => {
  * traffic in bun. See stderr-filter.console.test.ts for the regression
  * guard.
  *
+ * Also replaces any default `'warning'` listener so that warnings emitted via
+ * `process.emitWarning` (e.g. Bun's `TimeoutNegativeWarning` raised by
+ * automerge-repo's throttle helper) can be filtered by name.
+ *
  * The returned restore lambda re-installs the originals so callers (e.g.
  * tests, REPL exit) can revert.
  */
-/**
- * Process warnings (those routed through `process.emitWarning` instead of
- * `console.warn`) whose `name` we want to swallow. Bun emits these via a
- * channel that bypasses both `console.warn` and `process.stderr.write`, so
- * the byte-stream filter alone can't catch them.
- */
-const SWALLOWED_WARNING_NAMES = new Set(['TimeoutNegativeWarning']);
-
 export const installStderrFilter = (): (() => void) => {
   const originalWarn = console.warn.bind(console);
   const originalError = console.error.bind(console);

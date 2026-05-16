@@ -15,7 +15,11 @@ export const findMonorepoRoot = async (start: string): Promise<string> => {
     try {
       await access(join(current, 'pnpm-workspace.yaml'));
       return current;
-    } catch {
+    } catch (error) {
+      const errno = error as NodeJS.ErrnoException;
+      if (errno.code && errno.code !== 'ENOENT') {
+        throw error;
+      }
       const parent = dirname(current);
       if (parent === current) {
         throw new Error(`No pnpm-workspace.yaml found above ${start}`);
