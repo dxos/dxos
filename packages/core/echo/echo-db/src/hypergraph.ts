@@ -367,7 +367,10 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     if (!queueFactory) {
       return undefined;
     }
-    return queueFactory.get(queueEchoId);
+    // Use `tryGet` rather than `get` so we don't manufacture a phantom queue for a URI
+    // that just happens to share an ECHO object id — we only resolve to a queue when one
+    // has been explicitly created (e.g. by a prior Feed.append/query for that feed).
+    return queueFactory.tryGet(queueEchoId);
   }
 
   private async _resolveQueueObjectAsync(

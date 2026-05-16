@@ -21,7 +21,7 @@ export const createFeedServiceLayer = (queues: QueueAPI) =>
       if (!feedDXN) {
         throw new Error('Unable to append to feed: make sure feed is stored in the database');
       }
-      const queue = queues.get(feedDXN) as QueueImpl;
+      const queue = queues.get(feedDXN, { subspaceTag: feed.namespace }) as QueueImpl;
       queue.setParentEntity(feed as Obj.Unknown);
       await queue.append(items);
     },
@@ -31,7 +31,7 @@ export const createFeedServiceLayer = (queues: QueueAPI) =>
       if (!feedDXN) {
         throw new Error('Unable to remove from feed: make sure feed is stored in the database');
       }
-      const queue = queues.get(feedDXN);
+      const queue = queues.get(feedDXN, { subspaceTag: feed.namespace });
       await queue.delete(ids);
     },
 
@@ -40,7 +40,7 @@ export const createFeedServiceLayer = (queues: QueueAPI) =>
       if (!feedDXN) {
         throw new Error('Unable to query feed: make sure feed is stored in the database');
       }
-      const queue = queues.get(feedDXN) as QueueImpl;
+      const queue = queues.get(feedDXN, { subspaceTag: feed.namespace }) as QueueImpl;
       queue.setParentEntity(feed as Obj.Unknown);
       return queue.query(queryOrFilter as any);
     },
@@ -50,7 +50,7 @@ export const createFeedServiceLayer = (queues: QueueAPI) =>
       if (!feedDXN) {
         throw new Error('Unable to sync feed: make sure feed is stored in the database');
       }
-      const queue = queues.get(feedDXN);
+      const queue = queues.get(feedDXN, { subspaceTag: feed.namespace });
       await queue.sync(options);
     },
   });

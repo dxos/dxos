@@ -44,24 +44,23 @@ export const ArtifactId: Schema.Schema<string> & {
   ],
 }) {
   static toEchoURI(reference: ArtifactId, owningSpaceId?: SpaceId): EchoURI.EchoURI {
-    // Allow @dxn: prefix for compatibility with in-text references.
-    if (reference.startsWith('@dxn:')) {
-      return EchoURI.parse(reference.slice(1));
-    } else if (reference.startsWith('dxn:')) {
-      return EchoURI.parse(reference);
-    } else if (reference.includes(':')) {
-      const [spaceId, objectId] = reference.split(':');
+    // Allow @ prefix for compatibility with in-text references.
+    const stripped = reference.startsWith('@') ? reference.slice(1) : reference;
+    if (stripped.startsWith('echo:') || stripped.startsWith('dxn:')) {
+      return EchoURI.parse(stripped);
+    } else if (stripped.includes(':')) {
+      const [spaceId, objectId] = stripped.split(':');
       if (!SpaceId.isValid(spaceId) || !ObjectId.isValid(objectId)) {
         throw new Error(`Unable to parse object reference: ${reference}`);
       }
-      // This is a workaround because the current Filter API doesn't work with fully qualified Echo DXNs.
+      // This is a workaround because the current Filter API doesn't work with fully qualified Echo URIs.
       // We check if the space ID is the same as the owning space and then use LOCAL_SPACE_TAG for local references.
-      // TODO(dmaretskyi): Fix this in the Echo and Filter API to properly handle fully qualified DXNs.
+      // TODO(dmaretskyi): Fix this in the Echo and Filter API to properly handle fully qualified URIs.
       return spaceId === owningSpaceId
         ? EchoURI.fromLocalObjectId(objectId)
         : EchoURI.fromSpaceAndObjectId(spaceId, objectId);
-    } else if (ObjectId.isValid(reference)) {
-      return EchoURI.fromLocalObjectId(reference);
+    } else if (ObjectId.isValid(stripped)) {
+      return EchoURI.fromLocalObjectId(stripped);
     } else {
       throw new Error(`Unable to parse object reference: ${reference}`);
     }

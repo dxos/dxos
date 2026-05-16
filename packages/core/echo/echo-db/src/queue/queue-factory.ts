@@ -12,7 +12,7 @@ import { QueueImpl } from './queue';
 import { type Queue, QueueSubspaceTags } from './types';
 
 export interface QueueAPI {
-  get<T extends Entity.Unknown = Entity.Unknown>(echoId: EchoURI.EchoURI): Queue<T>;
+  get<T extends Entity.Unknown = Entity.Unknown>(echoId: EchoURI.EchoURI, options?: { subspaceTag?: string }): Queue<T>;
   create<T extends Entity.Unknown = Entity.Unknown>(options?: { subspaceTag?: string }): Queue<T>;
 }
 
@@ -36,9 +36,9 @@ export class QueueFactory extends Resource implements QueueAPI {
     this._service = service;
   }
 
-  get<T extends Entity.Unknown>(echoId: EchoURI.EchoURI): Queue<T> {
+  get<T extends Entity.Unknown>(echoId: EchoURI.EchoURI, { subspaceTag }: { subspaceTag?: string } = {}): Queue<T> {
     assertArgument(EchoURI.isEchoURI(echoId), 'echoId', 'must be an EchoURI');
-    return this._getOrCreate<T>(echoId);
+    return this._getOrCreate<T>(echoId, subspaceTag);
   }
 
   /**
