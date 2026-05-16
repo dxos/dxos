@@ -25,5 +25,12 @@ export const createProvider = (id: Generation.ProviderId, options: CreateProvide
       return new HeyGenProvider(options.heygen);
     case 'gemini':
       return new GeminiProvider(options.gemini);
+    default: {
+      // Defensive: TypeScript enforces exhaustiveness, but a malformed runtime
+      // value (e.g. stale persisted data after a schema change) would otherwise
+      // fall through and return `undefined`.
+      const exhaustiveId: never = id;
+      throw new Error(`Unsupported provider id: ${String(exhaustiveId)}`);
+    }
   }
 };

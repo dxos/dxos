@@ -35,6 +35,9 @@ export const DEFAULT_PROVIDER: ProviderId = 'heygen';
  * once `provider.awaitResult` returns a `url`; resuming on remount means a
  * crash or navigation away mid-job won't strand the user — the next mount
  * sees the stored id and continues polling.
+ * `jobProvider` is snapshotted from `provider` when the job is enqueued so the
+ * polling loop always talks to the backend that owns `jobId` even if the user
+ * switches `provider` in the gear pane mid-flight.
  */
 export const Generation = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
@@ -57,6 +60,7 @@ export const Generation = Schema.Struct({
     Schema.Array(Schema.String).annotations({ title: 'URLs' }).pipe(FormInputAnnotation.set(false)),
   ),
   jobId: Schema.optional(Schema.String.annotations({ title: 'Job ID' }).pipe(FormInputAnnotation.set(false))),
+  jobProvider: Schema.optional(ProviderId.annotations({ title: 'Job Provider' }).pipe(FormInputAnnotation.set(false))),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.generation',
