@@ -105,7 +105,7 @@ const RegistryWrapper = ({ children }: { children: React.ReactNode }) => {
 };
 
 const meta: Meta<typeof DefaultStory> = {
-  title: 'plugins/plugin-sequence/SequenceGrid',
+  title: 'plugins/plugin-sequencer/SequenceGrid',
   component: DefaultStory,
   render: (args) => (
     <RegistryWrapper>

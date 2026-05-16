@@ -6,4 +6,4 @@ import { Plugin } from '@dxos/app-framework';
 
 import { meta } from './meta';
 
-export const SequencePlugin = Plugin.lazy(meta, () => import('#plugin'));
+export const SequencerPlugin = Plugin.lazy(meta, () => import('#plugin'));

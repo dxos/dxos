@@ -17,7 +17,7 @@ export const translations = [
         'typename.label_other': 'Songs',
       },
       [meta.id]: {
-        'plugin.name': 'Sequence',
+        'plugin.name': 'Sequencer',
         'add-track.label': 'Add track',
         'remove-track.label': 'Remove track',
         'play.label': 'Play',

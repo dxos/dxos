@@ -755,7 +755,7 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-sequence/package.json",
+          "path": "packages/plugins/plugin-sequencer/package.json",
           "jsonpath": "$.version"
         },
         {

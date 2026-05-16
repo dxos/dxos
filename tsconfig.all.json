@@ -439,7 +439,7 @@
       "path": "packages/plugins/plugin-search/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-sequence/tsconfig.json"
+      "path": "packages/plugins/plugin-sequencer/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-settings/tsconfig.json"

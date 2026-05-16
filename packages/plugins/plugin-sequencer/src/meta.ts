@@ -6,7 +6,7 @@ import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
-  id: 'org.dxos.plugin.sequence',
+  id: 'org.dxos.plugin.sequencer',
   name: 'Sequence',
   description: trim`
     Music sequencer / step-grid editor. A Song owns a set of tracks and per-track
@@ -15,5 +15,5 @@ export const meta: Plugin.Meta = {
   `,
   icon: 'ph--music-notes--regular',
   iconHue: 'fuchsia',
-  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-sequence',
+  source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-sequencer',
 };

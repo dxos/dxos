@@ -62,7 +62,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'plugins/plugin-sequence/containers/SongArticle',
+  title: 'plugins/plugin-sequencer/containers/SongArticle',
   component: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withClientProvider({ createIdentity: true })],
   parameters: {

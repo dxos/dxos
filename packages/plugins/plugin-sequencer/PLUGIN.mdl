@@ -1,6 +1,6 @@
 ---
-id: org.dxos.plugin.sequence
-name: SequencePlugin
+id: org.dxos.plugin.sequencer
+name: SequencerPlugin
 version: 0.1.0
 ---
 

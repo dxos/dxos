@@ -1,4 +1,4 @@
-# @dxos/plugin-sequence
+# @dxos/plugin-sequencer
 
 Music sequencer plugin for DXOS Composer. Defines a `Song` containing `Track`
 metadata and per-track `Sequence` objects whose `Note`s are edited on a 2D

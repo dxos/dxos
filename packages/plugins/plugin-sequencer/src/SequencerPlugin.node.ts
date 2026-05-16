@@ -8,9 +8,9 @@ import { AppPlugin } from '@dxos/app-toolkit';
 import { meta } from '#meta';
 import { Song } from '#types';
 
-export const SequencePlugin = Plugin.define(meta).pipe(
+export const SequencerPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSchemaModule({ schema: [Song.Song] }),
   Plugin.make,
 );
 
-export default SequencePlugin;
+export default SequencerPlugin;

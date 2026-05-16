@@ -5,16 +5,17 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { ReactSurface } from '#capabilities';
+import { CreateObject, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { Song } from '#types';
 
-export const SequencePlugin = Plugin.define(meta).pipe(
+export const SequencerPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addSchemaModule({ schema: [Song.Song] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,
 );
 
-export default SequencePlugin;
+export default SequencerPlugin;

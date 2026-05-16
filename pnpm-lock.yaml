@@ -2644,9 +2644,9 @@ importers:
       '@dxos/plugin-search':
         specifier: workspace:*
         version: link:../../plugins/plugin-search
-      '@dxos/plugin-sequence':
+      '@dxos/plugin-sequencer':
         specifier: workspace:*
-        version: link:../../plugins/plugin-sequence
+        version: link:../../plugins/plugin-sequencer
       '@dxos/plugin-settings':
         specifier: workspace:*
         version: link:../../plugins/plugin-settings
@@ -13421,7 +13421,7 @@ importers:
         specifier: '>=8.0.0'
         version: 8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
-  packages/plugins/plugin-sequence:
+  packages/plugins/plugin-sequencer:
     dependencies:
       '@dxos/app-framework':
         specifier: workspace:*
@@ -13429,6 +13429,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute/compute
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -13441,6 +13444,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../plugin-space
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
