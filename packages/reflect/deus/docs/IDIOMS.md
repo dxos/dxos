@@ -162,37 +162,36 @@ export const defineCapability = /* ... */;
 
 ## Discovery
 
-Idioms are harvested by a build-time scanner:
+Idioms are harvested by a scanner exposed as `scanIdioms()` from
+`@dxos/introspect/idioms`, and invoked by the `dx deus idioms` CLI command.
 
-```bash
-moon run introspect:idioms
-```
+### POC behavior (this PR)
 
-The scanner:
+The current POC is regex-based — it does **not** use the ts-morph indexer:
 
-1. Walks the monorepo via the existing ts-morph pipeline used by
-   `@dxos/introspect`.
-2. Locates JSDoc nodes containing `@idiom` on exported symbols and top-level
-   `test(...)` calls.
+1. Walks `packages/**/src/**/*.{ts,tsx}` via `glob`.
+2. Locates JSDoc blocks containing `@idiom <nsid>` on stories, tests, and
+   exported symbols.
 3. Parses the indented key:value body.
-4. Resolves `{@link}` and `uses:` / `instead-of:` references against the
-   symbol graph.
-5. Captures source location and an excerpt of the host artifact.
-6. Emits `packages/reflect/introspect/dist/idioms.json`.
+4. Captures source location, a best-effort symbol/test name, and a host kind
+   (`story` / `test` / `symbol`).
+5. Throws if the slug fails NSID validation or if `applies:` is missing.
 
-### Validation
+`{@link}` and `uses:` references are captured verbatim — they are not yet
+resolved against the symbol graph.
 
-The scanner fails (non-zero exit, CI gate) on:
+### Planned (not yet implemented)
 
-- Duplicate slugs.
-- Unresolved `{@link}` references.
-- Missing required fields (`applies`).
-- A host artifact that does not compile.
+The follow-on, ts-morph-based implementation will additionally:
 
-Warnings (logged, not fatal):
-
-- An idiom with no `uses:` or `instead-of:` references.
-- An idiom whose summary is empty _and_ whose host has no JSDoc body.
+- Resolve `{@link}` / `uses:` / `instead-of:` refs against the introspect
+  symbol graph.
+- Emit `packages/reflect/introspect/dist/idioms.json` for downstream
+  consumers and the MCP server.
+- Add a CI gate that fails on duplicate slugs, unresolved refs, or host
+  artifacts that do not compile.
+- Emit warnings for idioms with no `uses:` / `instead-of:` references, or
+  whose summary is empty _and_ whose host has no JSDoc body.
 
 ## MCP surface
 

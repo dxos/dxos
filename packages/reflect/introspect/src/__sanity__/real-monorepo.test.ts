@@ -14,8 +14,8 @@ import { createIntrospector } from '../introspector';
 
 const REAL = process.env.INTROSPECT_REAL === '1';
 const __dirname = dirname(fileURLToPath(import.meta.url));
-// packages/reflect/introspect/src/__sanity__ -> repo root is 4 levels up.
-const MONOREPO_ROOT = join(__dirname, '..', '..', '..', '..');
+// packages/reflect/introspect/src/__sanity__ -> repo root is 5 levels up.
+const MONOREPO_ROOT = join(__dirname, '..', '..', '..', '..', '..');
 
 describe.skipIf(!REAL)('real monorepo', () => {
   test('discovers a reasonable number of packages and well-known symbols', async ({ expect }) => {

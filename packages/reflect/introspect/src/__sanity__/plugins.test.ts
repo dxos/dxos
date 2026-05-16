@@ -14,7 +14,7 @@ import { createIntrospector } from '../introspector';
 
 const REAL = process.env.INTROSPECT_REAL === '1';
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const MONOREPO_ROOT = join(__dirname, '..', '..', '..', '..');
+const MONOREPO_ROOT = join(__dirname, '..', '..', '..', '..', '..');
 
 const PLUGIN_ID = 'org.dxos.plugin.code';
 

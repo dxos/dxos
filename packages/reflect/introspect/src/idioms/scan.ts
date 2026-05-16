@@ -74,6 +74,10 @@ const parseFile = (content: string, absPath: string, rootPath: string): Idiom[] 
     const summary = extractSummary(body);
     const fields = extractIdiomBody(body);
 
+    if (!fields.applies) {
+      throw new Error(`Idiom ${JSON.stringify(slug)} is missing the required \`applies:\` field.`);
+    }
+
     const host = detectHost(content, startIdx + match[0].length, absPath, rootPath, line);
 
     out.push({
@@ -122,7 +126,7 @@ const extractIdiomBody = (body: string): Record<string, string> => {
     if (line.startsWith('@')) {
       break;
     }
-    const kv = line.match(/^\s+([a-z][a-z-]*):\s*(.*)$/);
+    const kv = line.match(/^\s*([a-z][a-z-]*):\s*(.*)$/);
     if (kv) {
       current = kv[1];
       fields[current] = kv[2];

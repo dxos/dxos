@@ -12,7 +12,7 @@ exist, and a tool for reading what *does* exist.
 
 ## How they fit together
 
-```
+```text
         .mdl spec  ──read──▶  agent  ──writes──▶  TypeScript
                                 ▲                       │
                                 │                       │

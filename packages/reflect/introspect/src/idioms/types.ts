@@ -19,7 +19,7 @@ export type Idiom = {
   /** Leading JSDoc paragraph (rationale). */
   summary?: string;
   /** Applicability (required field per IDIOMS.md). */
-  applies?: string;
+  applies: string;
   /** Anti-pattern this replaces. */
   insteadOf?: string;
   /** Raw {@link …} targets named under `uses:`. */
