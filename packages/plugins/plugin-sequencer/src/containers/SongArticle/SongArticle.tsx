@@ -60,6 +60,16 @@ const findSequenceForTrack = (song: Song.Song, trackId: string | null): Sequence
   return song.sequences.find((sequence) => sequence.trackId === trackId);
 };
 
+const toNoteArray = (value: unknown): ReadonlyArray<Note.Note> => {
+  if (value == null) {
+    return [];
+  }
+  if (Array.isArray(value)) {
+    return value as ReadonlyArray<Note.Note>;
+  }
+  return Array.from(value as ArrayLike<Note.Note>);
+};
+
 const parseTimeSignature = (input: string | undefined): number => {
   if (!input) {
     return 4;
@@ -80,7 +90,7 @@ const songToLeadSheet = (song: Song.Song): LeadSheetDocument => ({
       index: index + 1,
       name: track.name,
       instrument: track.instrument,
-      notes: sequence ? (sequence.notes ?? []).map((note) => ({ ...note })) : [],
+      notes: sequence ? toNoteArray(sequence.notes).map((note) => ({ ...note })) : [],
       length: sequence?.length ?? 16,
     };
   }),
@@ -262,7 +272,7 @@ export const SongArticle = ({ role, subject, attendableId: _attendableId }: Song
           if (sequence.id !== sequenceId) {
             return sequence;
           }
-          const current = sequence.notes ?? [];
+          const current = toNoteArray(sequence.notes);
           const existing = current.find(
             (note) => note.pitch === pitch && Math.abs(note.startTime - startTime) < 1e-6,
           );

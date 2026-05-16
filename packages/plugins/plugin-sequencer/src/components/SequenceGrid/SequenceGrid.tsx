@@ -17,7 +17,7 @@ import {
 } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/ui-theme';
 
-import type { Sequence, Track } from '#types';
+import type { Note, Sequence, Track } from '#types';
 
 export type SequenceGridProps = {
   sequence: Sequence.Sequence;
@@ -105,9 +105,18 @@ export const SequenceGrid = ({
   );
 
   // Project notes into the CellGrid cell map.
-  // ECHO can briefly hand us a snapshot where `notes` is undefined when a sequence has
-  // just been created — coalesce to an empty array so the iteration is safe.
-  const notes = sequence.notes ?? [];
+  // ECHO can hand back a snapshot where `notes` is either undefined or an array-like
+  // Automerge proxy without Symbol.iterator. Normalize through Array.from so iteration
+  // is robust to both.
+  const notes = useMemo<ReadonlyArray<Note.Note>>(
+    () =>
+      sequence.notes == null
+        ? []
+        : Array.isArray(sequence.notes)
+          ? (sequence.notes as ReadonlyArray<Note.Note>)
+          : Array.from(sequence.notes as ArrayLike<Note.Note>),
+    [sequence.notes],
+  );
   useEffect(() => {
     const cells = new Map<string, Cell<{ color: string; velocity: number }>>();
     for (const note of notes) {
