@@ -14,7 +14,7 @@ export type IdiomHost = {
 };
 
 export type Idiom = {
-  /** Globally unique kebab-case slug. */
+  /** Globally unique AT Protocol NSID (https://atproto.com/specs/nsid). */
   slug: string;
   /** Leading JSDoc paragraph (rationale). */
   summary?: string;
