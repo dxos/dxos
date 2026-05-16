@@ -161,4 +161,27 @@ describe('introspector against fixture monorepo', { timeout: 30_000 }, () => {
     expect(introspector.getSymbol('@fixture/pkg-missing#thing')).toBeNull();
     expect(introspector.getSymbol('not-a-ref')).toBeNull();
   });
+
+  test('listIdioms returns idioms catalogued in fixtures', ({ expect }) => {
+    const all = introspector.listIdioms();
+    const taskFactory = all.find((idiom) => idiom.slug === 'com.example.idiom.taskFactory');
+    expect(taskFactory).toBeDefined();
+    expect(taskFactory!.applies).toContain('Task');
+    expect(taskFactory!.host.kind).toBe('symbol');
+    expect(taskFactory!.host.symbol).toBe('make');
+    expect(taskFactory!.host.file).toContain('pkg-a/src/Task.ts');
+    expect(taskFactory!.uses).toEqual(['{@link Task}']);
+  });
+
+  test('listIdioms filters by slug substring (case-insensitive)', ({ expect }) => {
+    const matches = introspector.listIdioms({ slug: 'TASKFACTORY' });
+    expect(matches.map((idiom) => idiom.slug)).toContain('com.example.idiom.taskFactory');
+    expect(introspector.listIdioms({ slug: 'no-such-slug' })).toEqual([]);
+  });
+
+  test('listIdioms filters by host kind', ({ expect }) => {
+    const symbols = introspector.listIdioms({ hostKind: 'symbol' });
+    expect(symbols.every((idiom) => idiom.host.kind === 'symbol')).toBe(true);
+    expect(introspector.listIdioms({ hostKind: 'test' })).toEqual([]);
+  });
 });

@@ -21,6 +21,7 @@ import {
   GetPackageInput,
   GetSymbolInput,
   ListCapabilitiesInput,
+  ListIdiomsInput,
   ListOperationsInput,
   ListPackagesInput,
   ListPluginsInput,
@@ -153,6 +154,18 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
       Filter by \`id\` (plugin id, e.g. "org.dxos.plugin.markdown") to scope to a single plugin's schemas.
     `,
     inputSchema: ListSchemasInput,
+  },
+  list_idioms: {
+    title: 'List idioms',
+    description: trim`
+      List idioms catalogued across the monorepo. An *idiom* is a JSDoc-tagged
+      reference example (\`@idiom <slug>\`) that pins the canonical way to use a
+      symbol — applicability, anti-pattern, and links to related idioms. Use this
+      to discover how a feature is meant to be used, or to find a worked example
+      before writing new code. Filter by \`slug\` substring or by \`hostKind\`
+      (\`symbol\`, \`story\`, \`test\`).
+    `,
+    inputSchema: ListIdiomsInput,
   },
 };
 

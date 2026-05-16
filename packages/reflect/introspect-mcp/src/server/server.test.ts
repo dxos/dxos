@@ -70,6 +70,7 @@ describe('introspect-mcp server', () => {
       'get_package',
       'get_symbol',
       'list_capabilities',
+      'list_idioms',
       'list_operations',
       'list_packages',
       'list_plugins',
