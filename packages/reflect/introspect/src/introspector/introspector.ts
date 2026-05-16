@@ -347,7 +347,7 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
 
   const listIdioms = (filter?: IdiomFilter): Idiom[] => {
     assertReady();
-    let result = idioms;
+    let result = [...idioms];
     if (filter?.slug) {
       const needle = filter.slug.toLowerCase();
       result = result.filter((idiom) => idiom.slug.toLowerCase().includes(needle));
