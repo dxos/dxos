@@ -8,10 +8,12 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { Button, Icon, Input, Panel, Toolbar } from '@dxos/react-ui';
+import { type ToggleMode } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/ui-theme';
 
 import { SequenceGrid, TrackList } from '#components';
 import type { Note, Sequence, Song, Track } from '#types';
+
 import { formatLeadSheet, parseLeadSheet, type LeadSheetDocument } from '../../util/lead-sheet';
 
 export type SongArticleProps = AppSurface.ObjectArticleProps<Song.Song>;
@@ -30,18 +32,22 @@ type MutableSong = {
   }[];
 };
 
-const TRACK_COLORS = [
-  '#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#a855f7', '#ec4899',
-];
+const TRACK_COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#a855f7', '#ec4899'];
 
 const newId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+
+// Default visible pitch range: C1 (MIDI 24) through C5 (MIDI 72) inclusive.
+// Spans 5 octaves of C (C1..C5) — a comfortable piano-roll range that covers
+// bass through lead in standard tunings.
+const DEFAULT_MIN_PITCH = 24;
+const DEFAULT_MAX_PITCH = 72;
 
 const newTrack = (index: number): Track.Track => ({
   id: newId(),
   name: `Track ${index + 1}`,
   color: TRACK_COLORS[index % TRACK_COLORS.length],
-  minPitch: 48,
-  maxPitch: 84,
+  minPitch: DEFAULT_MIN_PITCH,
+  maxPitch: DEFAULT_MAX_PITCH,
 });
 
 type MutableSequence = MutableSong['sequences'][number];
@@ -104,7 +110,14 @@ const songToLeadSheet = (song: Song.Song): LeadSheetDocument => ({
  */
 const applyLeadSheetToSong = (mutable: MutableSong, document: LeadSheetDocument): void => {
   const TRACK_COLORS_FALLBACK = [
-    '#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#a855f7', '#ec4899',
+    '#ef4444',
+    '#f97316',
+    '#eab308',
+    '#22c55e',
+    '#06b6d4',
+    '#3b82f6',
+    '#a855f7',
+    '#ec4899',
   ];
   const newId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -174,12 +187,17 @@ export const SongArticle = ({ role, subject, attendableId: _attendableId }: Song
   }, [subject, activeTrack, activeSequence]);
 
   const handleAddTrack = useCallback(() => {
+    let createdTrackId: string | null = null;
     Obj.update(subject, (subject) => {
       const mutable = subject as unknown as MutableSong;
       const track = newTrack(mutable.tracks.length);
+      createdTrackId = track.id;
       mutable.tracks.push(track);
       mutable.sequences.push(newSequence(track.id));
     });
+    if (createdTrackId) {
+      setSelectedTrackId(createdTrackId);
+    }
   }, [subject]);
 
   const handleRemoveTrack = useCallback(
@@ -272,7 +290,7 @@ export const SongArticle = ({ role, subject, attendableId: _attendableId }: Song
   const beatsPerCell = 0.25;
 
   const handleToggleNote = useCallback(
-    (pitch: number, startTime: number) => {
+    (pitch: number, startTime: number, mode: ToggleMode) => {
       if (!activeSequence) {
         return;
       }
@@ -286,9 +304,12 @@ export const SongArticle = ({ role, subject, attendableId: _attendableId }: Song
         const existingIndex = sequence.notes.findIndex(
           (note) => note.pitch === pitch && Math.abs(note.startTime - startTime) < 1e-6,
         );
-        if (existingIndex >= 0) {
+        const exists = existingIndex >= 0;
+        const shouldRemove = mode === 'unset' || (mode === 'toggle' && exists);
+        const shouldAdd = mode === 'set' || (mode === 'toggle' && !exists);
+        if (shouldRemove && exists) {
           sequence.notes.splice(existingIndex, 1);
-        } else {
+        } else if (shouldAdd && !exists) {
           sequence.notes.push({ pitch, startTime, duration: beatsPerCell, velocity: 0.8 });
         }
       });
@@ -341,11 +362,13 @@ export const SongArticle = ({ role, subject, attendableId: _attendableId }: Song
           <Toolbar.Separator />
           <Toolbar.IconButton
             icon='ph--upload-simple--regular'
+            iconOnly
             label='Import lead sheet'
             onClick={handleImport}
           />
           <Toolbar.IconButton
             icon='ph--download-simple--regular'
+            iconOnly
             label='Export lead sheet'
             onClick={handleExport}
           />

@@ -11,6 +11,7 @@ import {
   type CellCoord,
   type RenderCell,
   type Row,
+  type ToggleMode,
   createCellGridAtoms,
   toggleCell,
   cellKey,
@@ -30,8 +31,12 @@ export type SequenceGridProps = {
   beatsPerCell?: number;
   /** Playhead in beats from sequence start, or null when stopped. */
   playhead?: number | null;
-  /** Called when the user toggles a cell. The caller is responsible for mutating the sequence. */
-  onToggleNote?: (pitch: number, startTime: number) => void;
+  /**
+   * Called when the user toggles a cell. The caller is responsible for mutating the sequence.
+   * `mode` reflects the gesture: a single click reports `toggle`; a drag reports `set` or
+   * `unset` for every cell crossed (chosen by the cell under the initial pointerdown).
+   */
+  onToggleNote?: (pitch: number, startTime: number, mode: ToggleMode) => void;
   classNames?: string;
 };
 
@@ -141,20 +146,21 @@ export const SequenceGrid = ({
     registry.set(atoms.playhead, playhead === null ? null : playhead / beatsPerCell);
   }, [registry, atoms.playhead, playhead, beatsPerCell]);
 
-  const handleToggle = (coord: CellCoord) => {
+  const handleToggle = (coord: CellCoord, mode: ToggleMode) => {
     const pitch = maxPitch - coord.row;
     const startTime = coord.col * beatsPerCell;
     if (onToggleNote) {
-      onToggleNote(pitch, startTime);
+      onToggleNote(pitch, startTime, mode);
       return;
     }
     // Default: write directly to the cells atom (preview mode).
-    toggleCell(registry, atoms, coord, ({ col, row }) => ({
-      col,
-      row,
-      length: 1,
-      data: { color: trackColor, velocity: 0.8 },
-    }));
+    toggleCell(
+      registry,
+      atoms,
+      coord,
+      ({ col, row }) => ({ col, row, length: 1, data: { color: trackColor, velocity: 0.8 } }),
+      mode,
+    );
   };
 
   // Style the row bands so black-key rows are darker (piano-roll feel).
@@ -164,17 +170,21 @@ export const SequenceGrid = ({
     };
   }, [maxPitch]);
 
+  // Stable prop identities so CellGrid's effects don't tear down on every render.
+  const cellGridHeaders = useMemo(() => ({ left: 56, top: 22 }), []);
+  const cellGridStaticStyle = useMemo(
+    () => ({ gridLine: 'rgba(128,128,128,0.25)', rowBand: 'rgba(128,128,128,0.08)' }),
+    [],
+  );
+
   return (
     <div className={mx('relative w-full h-full', classNames)}>
       <CellGrid
         atoms={atoms as any}
         rows={rows}
         renderCell={renderNoteCell}
-        headers={{ left: 56, top: 22 }}
-        staticStyle={{
-          gridLine: 'rgba(128,128,128,0.25)',
-          rowBand: 'rgba(128,128,128,0.08)',
-        }}
+        headers={cellGridHeaders}
+        staticStyle={cellGridStaticStyle}
         onCellToggle={handleToggle}
       />
       {/*

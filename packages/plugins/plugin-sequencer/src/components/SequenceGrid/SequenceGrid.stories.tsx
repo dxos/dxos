@@ -18,8 +18,8 @@ const sampleTrack: Track.Track = {
   id: 'track-1',
   name: 'Lead Synth',
   color: '#3b82f6',
-  minPitch: 48,
-  maxPitch: 84,
+  minPitch: 24,
+  maxPitch: 72,
 };
 
 const sampleNotes = (): Note.Note[] => {
@@ -74,15 +74,24 @@ const DefaultStory = ({ playback }: StoryProps) => {
     };
   }, [playback]);
 
-  const handleToggleNote = (pitch: number, startTime: number) => {
+  const handleToggleNote = (pitch: number, startTime: number, mode: 'set' | 'unset' | 'toggle') => {
     setSequence((current) => {
       const existing = current.notes.find(
         (note) => note.pitch === pitch && Math.abs(note.startTime - startTime) < 1e-6,
       );
-      const notes = existing
-        ? current.notes.filter((note) => note !== existing)
-        : [...current.notes, { pitch, startTime, duration: BEATS_PER_CELL, velocity: 0.8 }];
-      return { ...current, notes };
+      const exists = existing !== undefined;
+      const shouldRemove = mode === 'unset' || (mode === 'toggle' && exists);
+      const shouldAdd = mode === 'set' || (mode === 'toggle' && !exists);
+      if (shouldRemove && exists) {
+        return { ...current, notes: current.notes.filter((note) => note !== existing) };
+      }
+      if (shouldAdd && !exists) {
+        return {
+          ...current,
+          notes: [...current.notes, { pitch, startTime, duration: BEATS_PER_CELL, velocity: 0.8 }],
+        };
+      }
+      return current;
     });
   };
 

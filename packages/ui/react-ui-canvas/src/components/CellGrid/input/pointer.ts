@@ -8,13 +8,21 @@ import type { CellGridAtoms } from '../state/atoms';
 import type { Cell, CellCoord, Headers, SelectionRange, Tool } from '../state/types';
 import { cellKey, hitTestCell } from '../state/viewport';
 
+/**
+ * 'set' / 'unset' are idempotent — the receiver must add or remove the cell
+ * regardless of current state. 'toggle' flips it. Drag operations always pick
+ * a fixed mode (set or unset) based on the cell under the initial pointerdown
+ * so the user paints a uniform stroke instead of flipping each cell.
+ */
+export type ToggleMode = 'set' | 'unset' | 'toggle';
+
 export type PointerHandlers = {
-  onCellToggle?: (coord: CellCoord) => void;
+  onCellToggle?: (coord: CellCoord, mode: ToggleMode) => void;
   onSelectionCommit?: (range: SelectionRange) => void;
 };
 
 type DragState =
-  | { kind: 'toggle'; row: number; touched: Set<number> }
+  | { kind: 'toggle'; mode: 'set' | 'unset'; touched: Set<string> }
   | { kind: 'select'; origin: CellCoord }
   | { kind: 'pan'; lastX: number; lastY: number };
 
@@ -76,9 +84,14 @@ export const attachPointerHandlers = <T>(
     switch (tool) {
       case 'toggle':
       case 'resize': {
-        // Toggle on first cell; subsequent drag toggles additional cells in the same row.
-        handlers.onCellToggle?.(coord);
-        drag = { kind: 'toggle', row: coord.row, touched: new Set([coord.col]) };
+        // Inspect the cells atom under the pointer to decide whether the gesture
+        // is a paint (set) or an erase (unset). Subsequent drag movements apply the
+        // same operation idempotently to every cell the cursor crosses.
+        const cells = registry.get(atoms.cells) as ReadonlyMap<string, unknown>;
+        const key = cellKey(coord.col, coord.row);
+        const mode: 'set' | 'unset' = cells.has(key) ? 'unset' : 'set';
+        handlers.onCellToggle?.(coord, mode);
+        drag = { kind: 'toggle', mode, touched: new Set([key]) };
         break;
       }
       case 'select': {
@@ -113,9 +126,12 @@ export const attachPointerHandlers = <T>(
     }
 
     if (drag.kind === 'toggle') {
-      if (coord.row === drag.row && !drag.touched.has(coord.col)) {
-        drag.touched.add(coord.col);
-        handlers.onCellToggle?.(coord);
+      // Apply the drag's chosen mode to every cell the cursor enters, across rows,
+      // de-duplicating per cell so we don't fire the same coord twice.
+      const key = cellKey(coord.col, coord.row);
+      if (!drag.touched.has(key)) {
+        drag.touched.add(key);
+        handlers.onCellToggle?.(coord, drag.mode);
       }
     } else if (drag.kind === 'select') {
       registry.set(atoms.selection, {
@@ -154,21 +170,23 @@ export const attachPointerHandlers = <T>(
 };
 
 /**
- * Utility for consumers: toggle membership of a cell in the cells atom.
+ * Utility for consumers: toggle, set, or unset membership of a cell in the cells atom.
  */
 export const toggleCell = <T>(
   registry: Registry.Registry,
   atoms: CellGridAtoms<T>,
   coord: CellCoord,
   factory: (coord: CellCoord) => Cell<T>,
+  mode: ToggleMode = 'toggle',
 ): void => {
   registry.update(atoms.cells, (current) => {
     const next = new Map(current);
     const key = cellKey(coord.col, coord.row);
-    if (next.has(key)) {
-      next.delete(key);
-    } else {
+    const exists = next.has(key);
+    if (mode === 'set' || (mode === 'toggle' && !exists)) {
       next.set(key, factory(coord));
+    } else if (mode === 'unset' || (mode === 'toggle' && exists)) {
+      next.delete(key);
     }
     return next;
   });

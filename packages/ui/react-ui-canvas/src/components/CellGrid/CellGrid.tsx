@@ -208,7 +208,12 @@ export const CellGrid = <T,>({
     };
   }, [overlayCtx, width, height, registry, atoms.selection, atoms.playhead, atoms.viewport, headers, overlayStyle]);
 
-  // Input wiring.
+  // Input wiring. Keep the callbacks in a ref so the listener attachment is stable
+  // across consumer re-renders — otherwise an in-progress drag is torn down when
+  // the parent's onCellToggle identity changes (e.g. after the very mutation we
+  // just triggered), and subsequent pointermove events see drag === null.
+  const callbacksRef = useRef<PointerHandlers>({ onCellToggle, onSelectionCommit });
+  callbacksRef.current = { onCellToggle, onSelectionCommit };
   useEffect(() => {
     const element = overlayInputRef.current;
     if (!element) {
@@ -218,14 +223,17 @@ export const CellGrid = <T,>({
       registry,
       atoms,
       headers,
-      handlers: { onCellToggle, onSelectionCommit },
+      handlers: {
+        onCellToggle: (coord, mode) => callbacksRef.current.onCellToggle?.(coord, mode),
+        onSelectionCommit: (range) => callbacksRef.current.onSelectionCommit?.(range),
+      },
     });
     const detachWheel = attachWheelHandlers(element, { registry, atoms, headers });
     return () => {
       detachPointer();
       detachWheel();
     };
-  }, [registry, atoms, headers, onCellToggle, onSelectionCommit]);
+  }, [registry, atoms, headers]);
 
   return (
     <div ref={containerRef} className={mx('relative w-full h-full overflow-hidden bg-baseSurface', classNames)}>
