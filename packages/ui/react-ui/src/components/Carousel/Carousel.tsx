@@ -121,7 +121,7 @@ const CarouselRoot = ({
       {/* TODO(burdon): Move to ui-theme. */}
       <div
         className={mx(
-          'grid grid-cols-[min-content_1fr_min-content] grid-rows-[minmax(0,1fr)_auto] gap-4 items-center',
+          'w-full grid grid-cols-[min-content_1fr_min-content] grid-rows-[minmax(0,1fr)_auto] gap-4 items-center',
           classNames,
         )}
       >

@@ -155,7 +155,7 @@ export const GenerationArticle = ({ role, subject, attendableId }: GenerationArt
           </Carousel.Root>
         )}
       </Panel.Content>
-      {status === 'error' && message && (
+      {(status === 'error' || Boolean(enqueueError)) && message && (
         <Panel.Statusbar asChild>
           <Toolbar.Root>
             <Toolbar.Text classNames='text-error-text'>{message}</Toolbar.Text>
