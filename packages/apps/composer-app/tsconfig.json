@@ -371,6 +371,9 @@
       "path": "../../plugins/plugin-search"
     },
     {
+      "path": "../../plugins/plugin-sequence"
+    },
+    {
       "path": "../../plugins/plugin-settings"
     },
     {

@@ -2644,6 +2644,9 @@ importers:
       '@dxos/plugin-search':
         specifier: workspace:*
         version: link:../../plugins/plugin-search
+      '@dxos/plugin-sequence':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-sequence
       '@dxos/plugin-settings':
         specifier: workspace:*
         version: link:../../plugins/plugin-settings

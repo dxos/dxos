@@ -12,6 +12,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { SequenceGrid, TrackList } from '#components';
 import type { Note, Sequence, Song, Track } from '#types';
+import { formatLeadSheet, parseLeadSheet, type LeadSheetDocument } from '../../util/lead-sheet';
 
 export type SongArticleProps = AppSurface.ObjectArticleProps<Song.Song>;
 
@@ -57,6 +58,74 @@ const findSequenceForTrack = (song: Song.Song, trackId: string | null): Sequence
     return undefined;
   }
   return song.sequences.find((sequence) => sequence.trackId === trackId);
+};
+
+const parseTimeSignature = (input: string | undefined): number => {
+  if (!input) {
+    return 4;
+  }
+  const match = /^(\d+)\s*\/\s*\d+$/.exec(input.trim());
+  return match ? Number(match[1]) : 4;
+};
+
+/**
+ * Project a Song into the LeadSheetDocument shape. Each track becomes one section;
+ * notes come from the first sequence associated with that track (multi-sequence
+ * export is out of scope for v1).
+ */
+const songToLeadSheet = (song: Song.Song): LeadSheetDocument => ({
+  tracks: song.tracks.map((track, index) => {
+    const sequence = song.sequences.find((seq) => seq.trackId === track.id);
+    return {
+      index: index + 1,
+      name: track.name,
+      instrument: track.instrument,
+      notes: sequence ? sequence.notes.map((note) => ({ ...note })) : [],
+      length: sequence?.length ?? 16,
+    };
+  }),
+});
+
+/**
+ * Replace a Song's tracks/sequences with the contents of a LeadSheetDocument.
+ * Tracks are matched by 1-based index — existing tracks at that index are reused
+ * (preserving color/instrument/id) and new tracks fill missing slots. Tracks not
+ * referenced by the document are removed.
+ */
+const applyLeadSheetToSong = (mutable: MutableSong, document: LeadSheetDocument): void => {
+  const TRACK_COLORS_FALLBACK = [
+    '#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#a855f7', '#ec4899',
+  ];
+  const newId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+
+  const sorted = [...document.tracks].sort((a, b) => a.index - b.index);
+  const existingByIndex = new Map(mutable.tracks.map((track, i) => [i + 1, track]));
+
+  const nextTracks: Track.Track[] = [];
+  const nextSequences: MutableSong['sequences'] = [];
+  sorted.forEach((entry, slot) => {
+    const previous = existingByIndex.get(entry.index);
+    const trackId = previous?.id ?? newId();
+    const color = previous?.color ?? TRACK_COLORS_FALLBACK[slot % TRACK_COLORS_FALLBACK.length];
+    nextTracks.push({
+      id: trackId,
+      name: entry.name,
+      color,
+      instrument: entry.instrument ?? previous?.instrument,
+      minPitch: previous?.minPitch,
+      maxPitch: previous?.maxPitch,
+      muted: previous?.muted,
+    });
+    nextSequences.push({
+      id: newId(),
+      trackId,
+      name: entry.name,
+      length: entry.length,
+      notes: entry.notes.map((note) => ({ ...note })),
+    });
+  });
+  mutable.tracks = nextTracks;
+  mutable.sequences = nextSequences;
 };
 
 /**
@@ -137,6 +206,48 @@ export const SongArticle = ({ role, subject, attendableId: _attendableId }: Song
     [subject],
   );
 
+  const beatsPerBar = parseTimeSignature(song.timeSignature);
+
+  const handleExport = useCallback(async () => {
+    const document = songToLeadSheet(song);
+    const text = formatLeadSheet(document, { beatsPerBar });
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // Clipboard API unavailable (e.g. insecure context); fall back to console + alert.
+      // eslint-disable-next-line no-console
+      console.log(text);
+      window.alert('Lead sheet copied to console (clipboard unavailable):\n\n' + text);
+    }
+  }, [song, beatsPerBar]);
+
+  const handleImport = useCallback(async () => {
+    let text: string;
+    try {
+      text = await navigator.clipboard.readText();
+    } catch {
+      const fallback = window.prompt('Paste lead sheet:');
+      if (fallback === null) {
+        return;
+      }
+      text = fallback;
+    }
+    if (!text.trim()) {
+      return;
+    }
+    let document: LeadSheetDocument;
+    try {
+      document = parseLeadSheet(text, { beatsPerBar });
+    } catch (error) {
+      window.alert(`Lead-sheet parse error: ${(error as Error).message}`);
+      return;
+    }
+    Obj.update(subject, (subject) => {
+      const mutable = subject as unknown as MutableSong;
+      applyLeadSheetToSong(mutable, document);
+    });
+  }, [subject, beatsPerBar]);
+
   const beatsPerCell = 0.25;
 
   const handleToggleNote = useCallback(
@@ -206,6 +317,17 @@ export const SongArticle = ({ role, subject, attendableId: _attendableId }: Song
               classNames='w-16'
             />
           </Input.Root>
+          <Toolbar.Separator />
+          <Toolbar.IconButton
+            icon='ph--upload-simple--regular'
+            label='Import lead sheet'
+            onClick={handleImport}
+          />
+          <Toolbar.IconButton
+            icon='ph--download-simple--regular'
+            label='Export lead sheet'
+            onClick={handleExport}
+          />
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>
