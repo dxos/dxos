@@ -332,11 +332,11 @@ catalog:
   assert: ^2.0.0
   astro: ^6.0.8
   autoprefixer: ^10.5.0
+  babel-preset-solid: ^1.9.9
   babylonjs-gltf2interface: ^7.0.0
   base-x: ~3.0.11
   base32-decode: ^1.0.0
   base32-encode: ^2.0.0
-  babel-preset-solid: ^1.9.9
   bind-event-listener: ^3.0.0
   bip39: ^3.1.0
   blockstore-core: ^5.0.1
@@ -752,6 +752,7 @@ overrides:
   ws: '>=8.17.1'
 
 patchedDependencies:
+  '@automerge/automerge-repo@2.6.0-subduction.17': patches/@automerge__automerge-repo@2.6.0-subduction.17.patch
   '@automerge/automerge-subduction@0.11.0': patches/@automerge__automerge-subduction@0.11.0.patch
   '@vitest/browser@4.1.5': patches/@vitest__browser@4.1.5.patch
   js-clipper@1.0.1: patches/js-clipper@1.0.1.patch

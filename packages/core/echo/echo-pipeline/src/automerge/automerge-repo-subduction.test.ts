@@ -31,7 +31,7 @@ import {
 } from '@automerge/automerge-repo';
 import { beforeAll, describe, expect, onTestFinished, test } from 'vitest';
 
-import { Trigger, sleep } from '@dxos/async';
+import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { randomBytes } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -492,6 +492,63 @@ describe('AutomergeRepo with Subduction', () => {
       await reconnectAdapters(adapters);
       await waitForQueryState(progress, ['ready'], { timeout: 10_000 });
     });
+
+    // Regression test for the concurrent-shutdown stall in
+    // `@automerge/automerge-repo@2.6.0-subduction.17` fixed by
+    // `patches/@automerge__automerge-repo@2.6.0-subduction.17.patch`.
+    // Without the patch, `Promise.all([repoA.shutdown(), repoB.shutdown()])`
+    // takes ~30s (the Rust-side per-request timeout); with it, single-digit ms.
+    test(
+      'concurrent shutdown completes quickly when both peers have in-flight pushes',
+      { timeout: 15_000 },
+      async () => {
+        const adapters = TestAdapter.createPair() as [TestAdapter, TestAdapter];
+        const repoA = createRepo(
+          {
+            peerId: 'A' as PeerId,
+            network: [],
+            subductionAdapters: [{ adapter: adapters[0], serviceName: SUBDUCTION_SERVICE_NAME, role: 'connect' }],
+          },
+          { registerCleanup: false },
+        );
+        const repoB = createRepo(
+          {
+            peerId: 'B' as PeerId,
+            network: [],
+            subductionAdapters: [{ adapter: adapters[1], serviceName: SUBDUCTION_SERVICE_NAME, role: 'connect' }],
+          },
+          { registerCleanup: false },
+        );
+
+        // Belt-and-braces cleanup: bound shutdown so a regression
+        // doesn't hang the runner for ~30s.
+        onTestFinished(async () => {
+          disconnectAdapters([adapters]);
+          await Promise.all([
+            asyncTimeout(repoA.shutdown(), 2_000).catch(() => {}),
+            asyncTimeout(repoB.shutdown(), 2_000).catch(() => {}),
+          ]);
+        });
+
+        await connectAdapters([adapters]);
+
+        // Get a doc onto both sides so each peer has a running entry.
+        const handle = repoA.create<{ text?: string }>();
+        handle.change((doc: any) => {
+          doc.text = 'initial';
+        });
+        await waitForSubductionSave();
+        await findInStates(repoB, handle.url, FIND_STATES);
+
+        // Pending throttled save at the moment of shutdown — required
+        // to put an `addBatch` in flight when both sides hit step 4.
+        handle.change((doc: any) => {
+          doc.text = 'pre-close write';
+        });
+
+        await asyncTimeout(Promise.all([repoA.shutdown(), repoB.shutdown()]), 1_500);
+      },
+    );
   });
 
   // The contract block below tests subduction-specific behavior described in

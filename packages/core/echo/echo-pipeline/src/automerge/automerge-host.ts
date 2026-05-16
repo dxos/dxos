@@ -124,9 +124,9 @@ const BUNDLE_SYNC_THRESHOLD = 50;
 const OPTIMIZED_SHARE_POLICY = true;
 
 /**
- * Wall-clock cap for `_repo.flush()` and `_repo.shutdown()` during host
- * teardown. See the comment in {@link AutomergeHost._close} for why this
- * exists; in healthy cases both calls finish in well under 100ms.
+ * Wall-clock cap for `_repo.shutdown()` during host teardown. Healthy
+ * shutdowns finish in single-digit ms; see the comment in
+ * {@link AutomergeHost._close} for why the cap is still here.
  */
 const CLOSE_TIMEOUT = 2_000;
 
@@ -358,24 +358,14 @@ export class AutomergeHost extends Resource {
 
     await this._collectionSynchronizer.close(ctx);
 
-    // `_repo.shutdown()` quiesces Subduction (stops reconnect loops, pumps
-    // throttled saves, awaits in-flight saves and storage writes, then
-    // disconnects Wasm transports) and runs a best-effort `flush()`
-    // internally. We don't call `_repo.flush()` separately because, in
-    // concurrent-close scenarios, both `flush()` and `shutdown()` await
-    // `entry.saveSettled` and there's no point paying that wall-clock cost
-    // twice (see {@link CLOSE_TIMEOUT}).
-    //
-    // The wall-clock timeout exists because: in Subduction mode, the
-    // throttled save kicked off when this peer received commits from a
-    // remote peer can still be pending when both peers close concurrently.
-    // `await Promise.all(saveSettled)` then sits inside an in-flight
-    // `subduction.addBatch(...)` Wasm call that's mid-push to the remote
-    // peer. The remote peer is itself in `subductionSource.shutdown()` and
-    // has stopped responding to those frames; the addBatch never returns.
-    // Local commits are already on disk (the storage bridge persists
-    // synchronously before notifying peers), so timing out here only loses
-    // the never-going-to-be-delivered push to the closing peer.
+    // `_repo.shutdown()` quiesces Subduction and runs a best-effort
+    // `flush()` internally. The cap covers a Rust-side bug:
+    // `subduction_core` doesn't reject pending `RequestId`s on
+    // disconnect, so an in-flight `addBatch(...)` to a now-gone peer
+    // waits the full per-request timeout (~30s). Capping drops only
+    // never-going-to-be-delivered pushes; local commits are already
+    // durable. Reproducer: `collection synchronization is
+    // bidirectional` in `automerge-host-subduction.test.ts`.
     await asyncTimeout(this._repo.shutdown(), CLOSE_TIMEOUT).catch((err) =>
       log.warn('failed to shutdown repo', { err }),
     );

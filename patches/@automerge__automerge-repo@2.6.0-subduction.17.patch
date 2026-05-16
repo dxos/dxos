@@ -1,0 +1,90 @@
+diff --git a/dist/subduction/network.js b/dist/subduction/network.js
+index a949ac4a0597102eb01eb3efed606095a4939fcf..ed32c8f869e4754cb7920d8f5f5c45dcc286bf9f 100644
+--- a/dist/subduction/network.js
++++ b/dist/subduction/network.js
+@@ -84,7 +84,7 @@ export class NetworkAdapterTransport {
+         // Otherwise enqueue for recv().
+         const waiter = this.#messageWaiters.shift();
+         if (waiter) {
+-            waiter(payload);
++            waiter.resolve(payload);
+         }
+         else {
+             this.#messageQueue.push(payload);
+@@ -109,6 +109,17 @@ export class NetworkAdapterTransport {
+         this.#adapter.off("message", this.#handleMessage);
+         this.#adapter.off("peer-disconnected", this.#handlePeerDisconnected);
+         this.#disconnected = true;
++        // Reject any pending recvBytes waiters so in-flight Wasm-side
++        // requests (e.g. an `addBatch` awaiting an ack) fail fast instead
++        // of sitting until the Rust-side per-request timeout
++        // (`subduction_core/src/connection/managed.rs:278`, ~30s).
++        const err = new Error("Connection is disconnected");
++        for (const waiter of this.#messageWaiters) {
++            try {
++                waiter.reject(err);
++            } catch {}
++        }
++        this.#messageWaiters.length = 0;
+         if (fireDisconnectCallback && this.#disconnectCallback) {
+             this.#disconnectCallback();
+         }
+@@ -144,7 +155,7 @@ export class NetworkAdapterTransport {
+                 reject(new Error("Connection is disconnected"));
+                 return;
+             }
+-            this.#messageWaiters.push(resolve);
++            this.#messageWaiters.push({ resolve, reject });
+         });
+     }
+     /**
+diff --git a/dist/subduction/source.js b/dist/subduction/source.js
+index cc2d6af8848629f48631b3c5cd3b48054e3d27e9..02462503bb4e95d717dfef75532caef738bc23fb 100644
+--- a/dist/subduction/source.js
++++ b/dist/subduction/source.js
+@@ -707,11 +707,28 @@ export class SubductionSource {
+         for (const entry of this.#entries.values()) {
+             entry.flushSave.flush();
+         }
+-        // 4. Wait for all in-flight #save() calls to complete
+-        await Promise.all(Array.from(this.#entries.values()).map(e => e.saveSettled));
+-        // 5. Wait for SubductionStorageBridge writes to land on disk
+-        await this.#storage.awaitSettled();
+-        // 6. Disconnect all Wasm-side transports gracefully.
++        // 4. Disconnect Wasm-side transports BEFORE awaiting `saveSettled`.
++        //    Without this, an in-flight `subduction.addBatch(...)` (kicked
++        //    off by step 3) whose remote peer is also shutting down sits
++        //    until the Rust-side per-request timeout
++        //    (`subduction_core/src/connection/managed.rs:278`, ~30s),
++        //    because the remote peer's `disconnectAll` does not propagate
++        //    back through the live local transport. Tearing down our own
++        //    transport first synchronously rejects the local request, so
++        //    `saveSettled` resolves immediately.
++        //
++        //    The trade-off: a push that was already in flight at the moment
++        //    of `shutdown()` may not be delivered. Local commits are
++        //    already on disk (the storage bridge persists synchronously
++        //    before notifying peers), so this only loses the
++        //    never-going-to-be-delivered remote push. This matches what
++        //    "shutdown" semantically means.
++        //
++        //    See the test
++        //    `concurrent shutdown does not hang when both peers have
++        //    in-flight pushes` in
++        //    `packages/core/echo/echo-pipeline/src/automerge/automerge-repo-subduction.test.ts`.
++        //
+         //    If hydration failed, this.#subduction is a rejected promise —
+         //    treat that as a no-op (nothing to disconnect).
+         let subduction = null;
+@@ -728,6 +745,11 @@ export class SubductionSource {
+         catch (e) {
+             this.#log("error disconnecting subduction transports: %O", e);
+         }
++        // 5. Wait for all in-flight #save() calls to complete (they
++        //    settle quickly now that the transport is gone).
++        await Promise.all(Array.from(this.#entries.values()).map(e => e.saveSettled));
++        // 6. Wait for SubductionStorageBridge writes to land on disk.
++        await this.#storage.awaitSettled();
+     }
+     // ── Ephemeral messaging ──────────────────────────────────────────────
+     /** Publish an ephemeral payload to subduction peers for the given document. */
