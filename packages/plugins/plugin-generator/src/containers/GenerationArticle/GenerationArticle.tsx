@@ -15,8 +15,8 @@ import { type ActionGraphProps, Menu, MenuBuilder, useMenuActions } from '@dxos/
 
 import { PromptEditor } from '#components';
 import { meta } from '#meta';
-import { HeyGenProvider, type GenerationProvider, MissingApiKeyError } from '#services';
-import { type Generation, GeneratorCapabilities } from '#types';
+import { createProvider, type GenerationProvider, MissingApiKeyError } from '#services';
+import { Generation, GeneratorCapabilities } from '#types';
 
 type Status = 'idle' | 'busy' | 'error';
 
@@ -26,8 +26,9 @@ export const GenerationArticle = ({ role, subject, attendableId }: GenerationArt
   const { t } = useTranslation(meta.id);
   const [generation] = useObject(subject);
   const settings = useAtomCapability(GeneratorCapabilities.Settings);
-  const apiKey = settings?.apiKey;
-  const provider = useGenerationProvider();
+  const providerId = Generation.getProvider(generation);
+  const apiKey = settings?.providers?.[providerId]?.apiKey;
+  const provider = useGenerationProvider(providerId);
   const { status, error } = useGenerationProgress(subject, provider, apiKey);
   const urls = generation.urls ?? [];
 
@@ -220,5 +221,6 @@ const useGenerationProgress = (
   return { status, error };
 };
 
-/** Resolves the active GenerationProvider. The default is the HeyGen adapter. */
-const useGenerationProvider = (): GenerationProvider => useMemo(() => new HeyGenProvider(), []);
+/** Resolves the active GenerationProvider for the given provider id. */
+const useGenerationProvider = (providerId: Generation.ProviderId): GenerationProvider =>
+  useMemo(() => createProvider(providerId), [providerId]);

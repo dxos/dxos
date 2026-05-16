@@ -173,7 +173,7 @@ export class HeyGenProvider implements GenerationProvider {
         voice_id: input.voiceId,
         script: input.prompt,
         // TODO(burdon): Make configurable via props.
-        // fit: 'contain',
+        fit: 'cover',
         aspect_ratio: '16:9',
         resolution: '1080p',
         remove_background: true,
