@@ -30,11 +30,14 @@ export const defaultViewport = (options: CellGridAtomsOptions = {}): Viewport =>
 /**
  * Create a fresh set of atoms backing a CellGrid instance. Consumers may pass any of these as props
  * or substitute their own (e.g., a cells atom backed by ECHO).
+ *
+ * Atoms are marked keepAlive so they preserve state across transient unsubscribe windows (e.g. React
+ * Strict Mode mount-unmount-remount). Consumers are responsible for the atoms' lifetime.
  */
 export const createCellGridAtoms = <T = unknown>(options: CellGridAtomsOptions = {}): CellGridAtoms<T> => ({
-  cells: Atom.make<ReadonlyMap<string, Cell<T>>>(new Map()),
-  viewport: Atom.make<Viewport>(defaultViewport(options)),
-  selection: Atom.make<Selection>({ range: null }),
-  playhead: Atom.make<number | null>(null),
-  tool: Atom.make<Tool>('toggle'),
+  cells: Atom.keepAlive(Atom.make<ReadonlyMap<string, Cell<T>>>(new Map())),
+  viewport: Atom.keepAlive(Atom.make<Viewport>(defaultViewport(options))),
+  selection: Atom.keepAlive(Atom.make<Selection>({ range: null })),
+  playhead: Atom.keepAlive(Atom.make<number | null>(null)),
+  tool: Atom.keepAlive(Atom.make<Tool>('toggle')),
 });

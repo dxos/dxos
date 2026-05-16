@@ -29,8 +29,8 @@ export type CellGridProps<T = unknown> = ThemedClassName<
 const defaultHeaders: Headers = { left: 80, top: 24 };
 
 const defaultStaticStyle: StaticLayerStyle = {
-  gridLine: 'rgba(0,0,0,0.08)',
-  rowBand: 'rgba(0,0,0,0.02)',
+  gridLine: 'rgba(128,128,128,0.25)',
+  rowBand: 'rgba(128,128,128,0.06)',
 };
 
 const defaultOverlayStyle: OverlayStyle = {
