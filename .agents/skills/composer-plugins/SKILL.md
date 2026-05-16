@@ -27,6 +27,7 @@ Reach for these first when answering questions like "how many plugins", "which p
 **Required.** Before writing or refactoring any container, capability, operation, blueprint, or schema, call `mcp__dxos-introspect__list_idioms` and scan for a slug that matches what you're about to build. An idiom is a JSDoc-tagged pinning of the canonical way to do one thing — when one exists, it is the answer, and you should `get_symbol` on the host artifact and follow the pattern rather than reinventing it.
 
 Typical triggers:
+
 - Building a toolbar → look for `org.dxos.react-ui-menu.*` idioms.
 - Wiring `useObject` / mutating ECHO subjects → look for ECHO idioms.
 - Writing a surface filter, operation handler, blueprint, or container scaffold → search by the feature word first.
