@@ -6,7 +6,7 @@ import * as Command from '@effect/cli/Command';
 
 import { idioms } from './idioms';
 
-export const deus = Command.make('deus').pipe(
-  Command.withDescription('Deus modeling-language tools (idioms, dialects).'),
+export const reflect = Command.make('reflect').pipe(
+  Command.withDescription('Reflective tooling over the monorepo (idioms, introspect).'),
   Command.withSubcommands([idioms]),
 );

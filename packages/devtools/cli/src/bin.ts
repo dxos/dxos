@@ -24,7 +24,7 @@ import { DEFAULT_PROFILE } from '@dxos/client-protocol';
 import { LogLevel, levels, log } from '@dxos/log';
 import { loadEnabledPlugins } from '@dxos/plugin-registry';
 
-import { admin, chat, debug, deus, dx, fn, hub, repl, reset } from './commands';
+import { admin, chat, debug, dx, fn, hub, reflect, repl, reset } from './commands';
 import { getCore, getDefaults, getPlugins } from './commands/plugin-defs';
 import { setDispatcher } from './dispatcher';
 import { installStderrFilter } from './util';
@@ -91,8 +91,8 @@ const program = Effect.gen(function* () {
       // TODO(burdon): Admin-only. Where should these commands live?
       admin,
       debug,
-      deus,
       hub,
+      reflect,
     ],
     plugins: getPlugins({ config }),
     core: getCore(),
