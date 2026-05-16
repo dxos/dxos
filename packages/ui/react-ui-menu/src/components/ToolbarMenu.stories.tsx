@@ -69,6 +69,18 @@ export const Toolbar: Story = {
   },
 };
 
+/**
+ * Reactive toolbar driven by an atom-backed actions hook.
+ *
+ * Defining actions inside a hook lets them subscribe to reactive state
+ * (echo, atoms, settings) without re-rendering the toolbar shell.
+ * The menu structure is data, not JSX.
+ *
+ * @idiom org.dxos.react-ui-menu.toolbarMenu
+ *   applies: Toolbars whose entries depend on reactive state
+ *   instead-of: Hand-wired children inside a bespoke `Toolbar.Root`
+ *   uses: {@link useMenuActions}, {@link Menu.Root}, {@link Menu.Toolbar}
+ */
 export const UseMenuActionsToolbar: Story = {
   render: () => {
     useMutateActions(createNestedActions);

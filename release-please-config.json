@@ -310,21 +310,6 @@
         },
         {
           "type": "json",
-          "path": "packages/core/compute/introspect/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/compute/introspect-mcp/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/compute/introspect-tools/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/compute/mcp-client/package.json",
           "jsonpath": "$.version"
         },
@@ -881,6 +866,26 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-zen/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/reflect/deus/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/reflect/introspect/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/reflect/introspect-mcp/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/reflect/introspect-tools/package.json",
           "jsonpath": "$.version"
         },
         {

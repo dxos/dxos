@@ -5,6 +5,7 @@
 export * from './admin';
 export * from './chat';
 export * from './debug';
+export * from './deus';
 export * from './dx';
 export * from './function';
 export * from './hub';
