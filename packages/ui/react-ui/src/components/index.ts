@@ -10,6 +10,7 @@ export * from './Avatars';
 export * from './Breadcrumb';
 export * from './Button';
 export * from './Card';
+export * from './Carousel';
 export * from './Clipboard';
 export * from './Dialog';
 export * from './ErrorFallback';

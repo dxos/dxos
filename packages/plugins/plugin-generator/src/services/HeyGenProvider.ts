@@ -17,25 +17,34 @@ import {
   UnsupportedKindError,
 } from './GenerationProvider';
 
-const GENERATE_URL = 'https://api.heygen.com/v2/video/generate';
-const STATUS_URL = 'https://api.heygen.com/v1/video_status.get';
-const AVATARS_URL = 'https://api.heygen.com/v2/avatars';
-const VOICES_URL = 'https://api.heygen.com/v2/voices';
+const V3_BASE_URL = 'https://api.heygen.com/v3';
+
+const LIMIT = 50;
+
+/**
+ * v3 create-video endpoint with a flat body (no `video_inputs` wrapper) and a
+ * top-level `fit` field. We send `fit: 'cover'` so HeyGen crops/scales the
+ * avatar to fill the output frame rather than letterboxing.
+ * https://developers.heygen.com/reference/create-video#body-one-of-0-fit-one-of-0
+ */
+const GENERATE_URL = `${V3_BASE_URL}/videos`;
+// v3 status check: `GET /v3/videos/{video_id}` — REST style instead of v2's
+// `video_status.get?video_id=...` query param.
+// https://developers.heygen.com/commands#video-status
+const STATUS_URL = `${V3_BASE_URL}/videos`;
+
+// v3 list endpoints with server-side ownership/type filters. See:
+// https://developers.heygen.com/commands#filter-flags-for-avatar-list
+// `ownership=private` (avatars) / `type=private` (voices) restrict the response to
+// user-owned entries, so we don't need to do any client-side filtering.
+
+const AVATARS_URL = `${V3_BASE_URL}/avatars?ownership=private&limit=${LIMIT}`;
+const VOICES_URL = `${V3_BASE_URL}/voices?type=private&limit=${LIMIT}`;
 
 const DEFAULT_POLL_INTERVAL_MS = 5_000;
 const DEFAULT_TIMEOUT_MS = 5 * 60_000;
-const DEFAULT_DIMENSION = { width: 1280, height: 720 };
-
-/** Cap on how many favourites we surface in the picker — HeyGen accounts can carry hundreds. */
-const MAX_LISTED = 50;
-
-/** HeyGen has shifted naming between API versions; treat as favourite if any known flag is true. */
-const isFavorite = (entry: { is_favorite?: boolean; liked?: boolean; favorite?: boolean }): boolean =>
-  Boolean(entry.is_favorite || entry.liked || entry.favorite);
 
 export type HeyGenProviderOptions = {
-  /** Output dimensions; defaults to 1280×720. */
-  dimension?: { width: number; height: number };
   pollIntervalMs?: number;
   timeoutMs?: number;
   fetch?: typeof globalThis.fetch;
@@ -54,13 +63,11 @@ export type HeyGenProviderOptions = {
  */
 export class HeyGenProvider implements GenerationProvider {
   readonly id = 'heygen';
-  readonly #dimension: { width: number; height: number };
   readonly #pollIntervalMs: number;
   readonly #timeoutMs: number;
   readonly #fetch: typeof globalThis.fetch;
 
   constructor(options: HeyGenProviderOptions = {}) {
-    this.#dimension = options.dimension ?? DEFAULT_DIMENSION;
     this.#pollIntervalMs = options.pollIntervalMs ?? DEFAULT_POLL_INTERVAL_MS;
     this.#timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     this.#fetch = options.fetch ?? globalThis.fetch.bind(globalThis);
@@ -70,7 +77,7 @@ export class HeyGenProvider implements GenerationProvider {
     return kind === 'video';
   }
 
-  async generate(input: GenerateInput, options: ProviderCallOptions): Promise<GenerateResult> {
+  async enqueue(input: GenerateInput, options: ProviderCallOptions): Promise<{ jobId: string }> {
     if (!options.apiKey) {
       throw new MissingApiKeyError();
     }
@@ -84,14 +91,27 @@ export class HeyGenProvider implements GenerationProvider {
       throw new ProviderFailureError('Set a Voice ID on the generation (HeyGen requires one).');
     }
 
-    const videoId = await this.#enqueue(input, options);
-    return { url: await this.#poll(videoId, options) };
+    return { jobId: await this.#postGenerate(input, options) };
+  }
+
+  async awaitResult(jobId: string, options: ProviderCallOptions): Promise<GenerateResult> {
+    if (!options.apiKey) {
+      throw new MissingApiKeyError();
+    }
+
+    return { url: await this.#poll(jobId, options) };
+  }
+
+  async generate(input: GenerateInput, options: ProviderCallOptions): Promise<GenerateResult> {
+    const { jobId } = await this.enqueue(input, options);
+    return this.awaitResult(jobId, options);
   }
 
   async listAvatars(options: ProviderCallOptions): Promise<GenerationOption[]> {
     if (!options.apiKey) {
       throw new MissingApiKeyError();
     }
+
     const response = await this.#fetch(AVATARS_URL, {
       method: 'GET',
       headers: { 'X-Api-Key': options.apiKey },
@@ -100,44 +120,23 @@ export class HeyGenProvider implements GenerationProvider {
     if (!response.ok) {
       throw new ProviderFailureError(`HeyGen listAvatars failed: ${response.status} ${await readErrorBody(response)}`);
     }
+
+    // v3 returns `{ data: [...] }` (flat array, not `{ data: { avatars: [...] } }`)
+    // and already restricts via `ownership=private`; trust the server and just map.
+    // Some endpoints use `avatar_id` instead of `id` — coalesce defensively.
     const body = (await response.json()) as {
-      data?: {
-        avatars?: Array<{
-          avatar_id?: string;
-          avatar_name?: string;
-          is_favorite?: boolean;
-          liked?: boolean;
-          favorite?: boolean;
-        }>;
-        talking_photos?: Array<{
-          talking_photo_id?: string;
-          talking_photo_name?: string;
-          is_favorite?: boolean;
-          liked?: boolean;
-          favorite?: boolean;
-        }>;
-      };
+      data?: Array<{ id?: string; avatar_id?: string; name?: string }>;
     };
-    // Surface only favourited entries (per request) and cap at MAX_LISTED so the
-    // picker stays usable even on accounts with many favourites.
-    const avatars = (body.data?.avatars ?? [])
-      .filter(isFavorite)
-      .filter((entry): entry is { avatar_id: string; avatar_name?: string } => typeof entry.avatar_id === 'string')
-      .map((entry) => ({ id: entry.avatar_id, name: entry.avatar_name ?? entry.avatar_id }));
-    const talkingPhotos = (body.data?.talking_photos ?? [])
-      .filter(isFavorite)
-      .filter(
-        (entry): entry is { talking_photo_id: string; talking_photo_name?: string } =>
-          typeof entry.talking_photo_id === 'string',
-      )
-      .map((entry) => ({ id: entry.talking_photo_id, name: entry.talking_photo_name ?? entry.talking_photo_id }));
-    return [...avatars, ...talkingPhotos].slice(0, MAX_LISTED);
+    return (body.data ?? [])
+      .map((entry) => ({ id: entry.id ?? entry.avatar_id, name: entry.name }))
+      .filter((entry): entry is GenerationOption => typeof entry.id === 'string' && typeof entry.name === 'string');
   }
 
   async listVoices(options: ProviderCallOptions): Promise<GenerationOption[]> {
     if (!options.apiKey) {
       throw new MissingApiKeyError();
     }
+
     const response = await this.#fetch(VOICES_URL, {
       method: 'GET',
       headers: { 'X-Api-Key': options.apiKey },
@@ -146,34 +145,22 @@ export class HeyGenProvider implements GenerationProvider {
     if (!response.ok) {
       throw new ProviderFailureError(`HeyGen listVoices failed: ${response.status} ${await readErrorBody(response)}`);
     }
+
+    // v3 returns `{ data: [...] }` (flat array, same shape as /v3/avatars) and
+    // already restricts via `type=private`; trust the server and just map. v3
+    // voices still expose `voice_id` (rather than `id`), so coalesce defensively.
     const body = (await response.json()) as {
-      data?: {
-        voices?: Array<{
-          voice_id?: string;
-          name?: string;
-          language?: string;
-          gender?: string;
-          is_favorite?: boolean;
-          liked?: boolean;
-          favorite?: boolean;
-        }>;
-      };
+      data?: Array<{ id?: string; voice_id?: string; name?: string }>;
     };
-    return (body.data?.voices ?? [])
-      .filter(isFavorite)
-      .filter(
-        (entry): entry is { voice_id: string; name?: string; language?: string; gender?: string } =>
-          typeof entry.voice_id === 'string',
-      )
-      .map((entry) => {
-        const suffix = [entry.language, entry.gender].filter(Boolean).join(', ');
-        const label = entry.name ?? entry.voice_id;
-        return { id: entry.voice_id, name: suffix ? `${label} (${suffix})` : label };
-      })
-      .slice(0, MAX_LISTED);
+    return (body.data ?? [])
+      .map((entry) => ({ id: entry.id ?? entry.voice_id, name: entry.name }))
+      .filter((entry): entry is GenerationOption => typeof entry.id === 'string' && typeof entry.name === 'string');
   }
 
-  async #enqueue(input: GenerateInput, options: ProviderCallOptions): Promise<string> {
+  /**
+   * https://developers.heygen.com/reference/create-video#body-one-of-0-fit-one-of-0
+   */
+  async #postGenerate(input: GenerateInput, options: ProviderCallOptions): Promise<string> {
     const response = await this.#fetch(GENERATE_URL, {
       method: 'POST',
       headers: {
@@ -181,21 +168,19 @@ export class HeyGenProvider implements GenerationProvider {
         'X-Api-Key': options.apiKey,
       },
       body: JSON.stringify({
-        video_inputs: [
-          {
-            character: {
-              type: 'avatar',
-              avatar_id: input.avatarId,
-              avatar_style: 'normal',
-            },
-            voice: {
-              type: 'text',
-              input_text: input.prompt,
-              voice_id: input.voiceId,
-            },
-          },
-        ],
-        dimension: this.#dimension,
+        type: 'avatar',
+        avatar_id: input.avatarId,
+        voice_id: input.voiceId,
+        script: input.prompt,
+        // TODO(burdon): Make configurable via props.
+        fit: 'contain',
+        aspect_ratio: '16:9',
+        resolution: '1080p',
+        remove_background: true,
+        background: {
+          type: 'color',
+          value: '#0A0A0A',
+        },
       }),
       signal: options.signal,
     });
@@ -215,7 +200,9 @@ export class HeyGenProvider implements GenerationProvider {
   async #poll(videoId: string, options: ProviderCallOptions): Promise<string> {
     const deadline = Date.now() + this.#timeoutMs;
     while (Date.now() < deadline) {
-      const response = await this.#fetch(`${STATUS_URL}?video_id=${encodeURIComponent(videoId)}`, {
+      // v3: `GET /v3/videos/{video_id}`. The `url`/`video_url` field is populated
+      // once `status === 'completed'`.
+      const response = await this.#fetch(`${STATUS_URL}/${encodeURIComponent(videoId)}`, {
         method: 'GET',
         headers: { 'X-Api-Key': options.apiKey },
         signal: options.signal,
@@ -223,16 +210,20 @@ export class HeyGenProvider implements GenerationProvider {
       if (!response.ok) {
         throw new ProviderFailureError(`HeyGen status failed: ${response.status} ${await readErrorBody(response)}`);
       }
+
+      // Field-name coalesce: v2 used `video_url`, v3 may use `url`.
       const body = (await response.json()) as {
-        data?: { status?: string; video_url?: string; error?: { message?: string } };
+        data?: { status?: string; url?: string; video_url?: string; error?: { message?: string } };
       };
       const status = body.data?.status;
-      if (status === 'completed' && body.data?.video_url) {
-        return body.data.video_url;
+      const url = body.data?.url ?? body.data?.video_url;
+      if (status === 'completed' && url) {
+        return url;
       }
       if (status === 'failed') {
         throw new ProviderFailureError(body.data?.error?.message ?? 'HeyGen job failed.');
       }
+
       await new Promise<void>((resolve, reject) => {
         // Register a named abort handler so we can remove it when the timer fires
         // — `{ once: true }` only auto-removes after an abort event, so without
@@ -249,6 +240,7 @@ export class HeyGenProvider implements GenerationProvider {
         options.signal?.addEventListener('abort', onAbort, { once: true });
       });
     }
+
     throw new ProviderFailureError('HeyGen job timed out.');
   }
 }
@@ -260,6 +252,7 @@ const readErrorBody = async (response: Response): Promise<string> => {
     if (!text) {
       return response.statusText;
     }
+
     try {
       const json = JSON.parse(text);
       const message = json?.error?.message ?? json?.message ?? json?.error;

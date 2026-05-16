@@ -55,13 +55,5 @@ export const PromptEditor = ({ id, text, placeholder }: PromptEditorProps) => {
     [id, text, placeholder, t, themeMode],
   );
 
-  if (extensions.length === 0) {
-    return null;
-  }
-
-  return (
-    <Editor.Root extensions={extensions}>
-      <Editor.View id={id} />
-    </Editor.Root>
-  );
+  return <Editor.Root extensions={extensions}>{extensions.length > 0 && <Editor.View id={id} />}</Editor.Root>;
 };

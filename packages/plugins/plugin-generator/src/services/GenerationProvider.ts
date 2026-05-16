@@ -41,13 +41,24 @@ export type ProviderCallOptions = {
  * to a single uniform shape so the plugin's article surface and settings do
  * not depend on any particular vendor.
  *
+ * Generation is intentionally split into `enqueue` (submit, returns a job id)
+ * and `awaitResult` (poll an existing job to completion). Callers persist
+ * the `jobId` between the two so a long-running job survives navigation /
+ * remount — the next mount can resume polling instead of starting over.
+ *
+ * `generate` is the convenience composition of the two for fire-and-forget callers.
+ *
  * Providers that don't model "avatars" or "voices" return an empty array.
  */
 export interface GenerationProvider {
   readonly id: string;
   /** Returns true if the provider can produce media of the given kind. */
   supports(kind: Generation.Kind): boolean;
-  /** Enqueues a generation job, awaits completion, and returns the artefact URL. */
+  /** Submit a generation job. Returns the provider-specific id the caller should persist. */
+  enqueue(input: GenerateInput, options: ProviderCallOptions): Promise<{ jobId: string }>;
+  /** Poll an existing job until it reaches a terminal state and returns its artefact. */
+  awaitResult(jobId: string, options: ProviderCallOptions): Promise<GenerateResult>;
+  /** Convenience: `enqueue` immediately followed by `awaitResult`. */
   generate(input: GenerateInput, options: ProviderCallOptions): Promise<GenerateResult>;
   /** Lists avatars available to the caller. Empty when the provider has no concept of avatars. */
   listAvatars(options: ProviderCallOptions): Promise<GenerationOption[]>;

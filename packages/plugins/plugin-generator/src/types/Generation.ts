@@ -17,9 +17,16 @@ export type Kind = Schema.Schema.Type<typeof Kind>;
 /**
  * AI media generation artefact.
  * `prompt` is a ref to a markdown Text document the user edits inline.
- * `url` is populated by the active GenerationProvider on success.
+ * `urls` is a most-recent-first list of every completed generation for this
+ * object — each successful `awaitResult` prepends. The article renders them
+ * as a carousel so prior renders remain accessible.
  * `avatarId` / `voiceId` are provider-agnostic identifiers a GenerationProvider
  * may use when the underlying service supports them.
+ * `jobId` holds the provider's in-flight job identifier between enqueue and
+ * completion. It is set by the article after `provider.enqueue` and cleared
+ * once `provider.awaitResult` returns a `url`; resuming on remount means a
+ * crash or navigation away mid-job won't strand the user — the next mount
+ * sees the stored id and continues polling.
  */
 export const Generation = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
@@ -37,7 +44,10 @@ export const Generation = Schema.Struct({
     }).pipe(FormInputAnnotation.set(false)),
   ),
   prompt: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
-  url: Schema.optional(Schema.String.annotations({ title: 'URL' }).pipe(FormInputAnnotation.set(false))),
+  urls: Schema.optional(
+    Schema.Array(Schema.String).annotations({ title: 'URLs' }).pipe(FormInputAnnotation.set(false)),
+  ),
+  jobId: Schema.optional(Schema.String.annotations({ title: 'Job ID' }).pipe(FormInputAnnotation.set(false))),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.generation',

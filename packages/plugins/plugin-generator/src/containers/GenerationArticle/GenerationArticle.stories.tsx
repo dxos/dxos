@@ -16,20 +16,20 @@ import { GenerationArticle } from './GenerationArticle';
 
 type DefaultStoryProps = {
   prompt?: string;
-  url?: string;
+  urls?: string[];
   type?: Generation.Kind;
 };
 
-const DefaultStory = ({ prompt, url, type }: DefaultStoryProps) => {
+const DefaultStory = ({ prompt, urls, type }: DefaultStoryProps) => {
   const subject = useMemo(() => {
     const generation = Generation.make({ name: 'Story generation', type, prompt });
-    if (url) {
+    if (urls?.length) {
       Obj.update(generation, (generation) => {
-        generation.url = url;
+        generation.urls = urls;
       });
     }
     return generation;
-  }, [prompt, url, type]);
+  }, [prompt, urls, type]);
   return <GenerationArticle role='article' subject={subject} attendableId='story' />;
 };
 
@@ -52,13 +52,24 @@ export const WithVideo: Story = {
   args: {
     type: 'video',
     prompt: 'A short scene of waves crashing against a rocky shore at sunset.',
-    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+    urls: ['https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'],
   },
 };
 export const WithAudio: Story = {
   args: {
     type: 'audio',
     prompt: 'A 30-second jazz piano piece in the key of D minor.',
-    url: 'https://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3',
+    urls: ['https://commondatastorage.googleapis.com/codeskulptor-demos/DDR_assets/Kangaroo_MusiQue_-_The_Neverwritten_Role_Playing_Game.mp3'],
+  },
+};
+export const MultipleUrls: Story = {
+  args: {
+    type: 'video',
+    prompt: 'Multiple takes of the same prompt.',
+    urls: [
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+    ],
   },
 };

@@ -52,9 +52,9 @@ export const detectMediaKind = (src: string): MediaKind | undefined => {
  * kind from the URL extension (and falls back to 'video' for ambiguous URLs).
  */
 export const MediaPlayer = ({
+  classNames,
   src,
   kind,
-  classNames,
   controls = true,
   autoPlay = false,
   loop = false,
@@ -63,11 +63,11 @@ export const MediaPlayer = ({
   crossOrigin = 'anonymous',
 }: MediaPlayerProps) => {
   const resolved = kind ?? detectMediaKind(src) ?? 'video';
-  const className = mx('w-full', classNames);
   if (resolved === 'audio') {
     return (
+      // TODO(burdon): Move to ui-theme.
       <audio
-        className={className}
+        className={mx('w-full', classNames)}
         src={src}
         controls={controls}
         autoPlay={autoPlay}
@@ -80,15 +80,18 @@ export const MediaPlayer = ({
   }
 
   return (
-    <video
-      className={mx('w-full aspect-video', className)}
-      src={src}
-      controls={controls}
-      autoPlay={autoPlay}
-      loop={loop}
-      muted={muted}
-      crossOrigin={crossOrigin}
-      aria-label={alt}
-    />
+    // TODO(burdon): Move to ui-theme.
+    <div className={mx('dx-container flex items-center justify-center', classNames)}>
+      <video
+        className='aspect-video max-w-full max-h-full'
+        src={src}
+        controls={controls}
+        autoPlay={autoPlay}
+        loop={loop}
+        muted={muted}
+        crossOrigin={crossOrigin}
+        aria-label={alt}
+      />
+    </div>
   );
 };
