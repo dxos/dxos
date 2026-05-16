@@ -755,6 +755,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-sequence/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-settings/package.json",
           "jsonpath": "$.version"
         },
