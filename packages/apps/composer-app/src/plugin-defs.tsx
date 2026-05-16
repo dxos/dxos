@@ -28,6 +28,7 @@ import { ExplorerPlugin } from '@dxos/plugin-explorer/plugin';
 import { FeedPlugin } from '@dxos/plugin-feed/plugin';
 import { GalleryPlugin } from '@dxos/plugin-gallery/plugin';
 import { GamePlugin } from '@dxos/plugin-game/plugin';
+import { GeneratorPlugin } from '@dxos/plugin-generator/plugin';
 import { GitHubPlugin } from '@dxos/plugin-github/plugin';
 import { GraphPlugin } from '@dxos/plugin-graph/plugin';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
@@ -228,6 +229,7 @@ export const getPlugins = ({
     FeedPlugin(),
     GalleryPlugin(),
     GamePlugin(),
+    GeneratorPlugin(),
     GitHubPlugin(),
     GraphPlugin(),
     InboxPlugin(),

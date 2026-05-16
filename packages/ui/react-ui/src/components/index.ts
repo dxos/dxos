@@ -20,6 +20,7 @@ export * from './Input';
 export * from './Link';
 export * from './List';
 export * from './Main';
+export * from './MediaPlayer';
 export * from './Menu';
 export * from './Message';
 export * from './Popover';
