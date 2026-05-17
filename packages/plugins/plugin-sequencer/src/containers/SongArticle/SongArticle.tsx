@@ -13,6 +13,7 @@ import { type ToggleMode } from '@dxos/react-ui-canvas';
 import { Menu, MenuBuilder, useMenuActions, type ActionGraphProps } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
+import { SongPlayer } from '../../audio';
 import { SequenceGrid, TrackList } from '#components';
 import type { Note, Sequence, Song, Track } from '#types';
 
@@ -24,7 +25,7 @@ type MutableSong = {
   name?: string;
   tempo: number;
   timeSignature?: string;
-  tracks: Track.Track[];
+  tracks: (Track.Track & { patches?: Track.Track['patches'] })[];
   sequences: {
     id: string;
     trackId: string;
@@ -50,7 +51,29 @@ const newTrack = (index: number): Track.Track => ({
   color: TRACK_COLORS[index % TRACK_COLORS.length],
   minPitch: DEFAULT_MIN_PITCH,
   maxPitch: DEFAULT_MAX_PITCH,
+  patches: [
+    {
+      kind: 'synth',
+      minPitch: DEFAULT_MIN_PITCH,
+      maxPitch: DEFAULT_MAX_PITCH,
+      oscillator: index % 2 === 0 ? 'sine' : 'triangle',
+    },
+  ],
 });
+
+// Standard kit mapping shared with the lead-sheet importer.
+const DRUM_KIT_PATCHES: Track.Track['patches'] = [
+  { kind: 'drum', pitch: 36, drum: 'kick' },
+  { kind: 'drum', pitch: 38, drum: 'snare' },
+  { kind: 'drum', pitch: 39, drum: 'clap' },
+  { kind: 'drum', pitch: 41, drum: 'tomLo' },
+  { kind: 'drum', pitch: 42, drum: 'hat' },
+  { kind: 'drum', pitch: 46, drum: 'openhat' },
+  { kind: 'drum', pitch: 47, drum: 'tomMid' },
+  { kind: 'drum', pitch: 49, drum: 'crash' },
+  { kind: 'drum', pitch: 50, drum: 'tomHi' },
+  { kind: 'drum', pitch: 51, drum: 'ride' },
+];
 
 type MutableSequence = MutableSong['sequences'][number];
 
@@ -134,14 +157,28 @@ const applyLeadSheetToSong = (mutable: MutableSong, document: LeadSheetDocument)
     const previous = existingByIndex.get(entry.index);
     const trackId = previous?.id ?? newId();
     const color = previous?.color ?? TRACK_COLORS_FALLBACK[slot % TRACK_COLORS_FALLBACK.length];
+    const instrument = entry.instrument ?? previous?.instrument;
+    const patches = previous?.patches
+      ? Array.from(previous.patches)
+      : instrument === 'drums'
+        ? DRUM_KIT_PATCHES.map((patch) => ({ ...patch }))
+        : [
+            {
+              kind: 'synth' as const,
+              minPitch: previous?.minPitch ?? DEFAULT_MIN_PITCH,
+              maxPitch: previous?.maxPitch ?? DEFAULT_MAX_PITCH,
+              oscillator: 'sine' as const,
+            },
+          ];
     mutable.tracks.push({
       id: trackId,
       name: entry.name,
       color,
-      instrument: entry.instrument ?? previous?.instrument,
+      instrument,
       minPitch: previous?.minPitch,
       maxPitch: previous?.maxPitch,
       muted: previous?.muted,
+      patches,
     });
     mutable.sequences.push({
       id: newId(),
@@ -317,16 +354,33 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
     [subject, activeSequence, beatsPerCell],
   );
 
-  // Playhead animation loop: advance in beats relative to wall-clock time + tempo.
-  const startedAtRef = useRef<number | null>(null);
+  // Tone.js audio playback. The SongPlayer is rebuilt whenever the Song structure
+  // changes; play/stop is driven by isPlaying. The playhead animation runs in
+  // parallel via rAF — visually accurate within a few ms of the audio.
+  const playerRef = useRef<SongPlayer | null>(null);
+  if (playerRef.current === null) {
+    playerRef.current = new SongPlayer();
+  }
+
   useEffect(() => {
+    const player = playerRef.current!;
+    return () => player.dispose();
+  }, []);
+
+  useEffect(() => {
+    const player = playerRef.current!;
+    player.load(song as Song.Song);
+  }, [song]);
+
+  useEffect(() => {
+    const player = playerRef.current!;
     if (!isPlaying || !activeSequence) {
-      startedAtRef.current = null;
+      player.stop();
       setPlayhead(null);
       return;
     }
+    void player.play();
     const startedAt = performance.now();
-    startedAtRef.current = startedAt;
     const beatsPerSecond = song.tempo / 60;
     let raf = 0;
     const tick = (now: number) => {
@@ -336,7 +390,10 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      player.stop();
+    };
   }, [isPlaying, activeSequence, song.tempo]);
 
   // Toolbar actions composed via the MenuBuilder / Menu.Root idiom

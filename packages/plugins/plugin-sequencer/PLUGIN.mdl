@@ -9,6 +9,12 @@ tracks and per-track `Sequence` objects whose `Note`s are edited on a 2D grid
 (pitch on the y-axis, time on the x-axis). Backed by the canvas-based
 `react-ui-canvas` `CellGrid` component.
 
+## Notes (Phase 2)
+
+- Edit sequences
+- Arrange sequences
+- Sound engine
+
 ## Extensions
 
 The following extension dialects are used in this document.
@@ -100,15 +106,15 @@ component SequenceGrid
     onNoteToggle(pitch: int, beat: number)
     onNoteResize(noteId: string, duration: number)
   layout: |
-    ┌──────┬─────────────────────┐
-    │ time ruler (beats)         │
-    ├──────┼─────────────────────┤
-    │ pitch│                     │
-    │ labels                     │
-    │ (C5) │   note cells        │
-    │ (B4) │                     │
-    │ ...  │                     │
-    └──────┴─────────────────────┘
+    ┌────────┬─────────────────────┐
+    │        │ time ruler (beats)  │
+    ├────────┼─────────────────────┤
+    │ pitch  │                     │
+    │ labels │                     │
+    │ (C5)   │   note cells        │
+    │ (B4)   │                     │
+    │ ...    │                     │
+    └────────┴─────────────────────┘
 ```
 
 ```mdl

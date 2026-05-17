@@ -95,7 +95,8 @@
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "tone": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

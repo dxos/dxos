@@ -45,7 +45,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-sfx/sounds',
+  title: 'plugins/plugin-sequencer/sounds',
   render: DefaultStory,
   decorators: [withTheme()],
   parameters: {

@@ -13465,6 +13465,9 @@ importers:
       effect:
         specifier: 3.20.0
         version: 3.20.0
+      tone:
+        specifier: 'catalog:'
+        version: 15.1.22
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -20750,9 +20753,6 @@ importers:
       three:
         specifier: 'catalog:'
         version: 0.178.0
-      tone:
-        specifier: 'catalog:'
-        version: 15.1.22
     devDependencies:
       '@dxos/brand':
         specifier: workspace:*
