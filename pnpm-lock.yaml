@@ -1096,8 +1096,8 @@ catalogs:
       specifier: ^2.1.4
       version: 2.1.4
     esbuild-plugin-glsl:
-      specifier: ^1.4.0
-      version: 1.4.0
+      specifier: ^1.4.1
+      version: 1.4.1
     esbuild-plugin-inline-image:
       specifier: ^0.0.9
       version: 0.0.9
@@ -1111,11 +1111,11 @@ catalogs:
       specifier: ^0.0.1
       version: 0.0.1
     esbuild-style-plugin:
-      specifier: ^1.6.1
-      version: 1.6.1
+      specifier: ^1.6.3
+      version: 1.6.3
     esbuild-wasm:
-      specifier: ^0.16.14
-      version: 0.16.17
+      specifier: ^0.28.0
+      version: 0.28.0
     eventemitter3:
       specifier: ^5.0.1
       version: 5.0.1
@@ -2168,7 +2168,7 @@ importers:
         version: 0.28.0
       esbuild-plugin-glsl:
         specifier: 'catalog:'
-        version: 1.4.0(esbuild@0.28.0)
+        version: 1.4.1(esbuild@0.28.0)
       esbuild-plugin-raw:
         specifier: 'catalog:'
         version: 0.3.0(esbuild@0.28.0)
@@ -5212,7 +5212,7 @@ importers:
         version: 0.28.0
       esbuild-wasm:
         specifier: 'catalog:'
-        version: 0.16.17
+        version: 0.28.0
       i18next:
         specifier: 'catalog:'
         version: 21.10.0
@@ -13222,7 +13222,7 @@ importers:
         version: 3.6.0
       esbuild-wasm:
         specifier: 'catalog:'
-        version: 0.16.17
+        version: 0.28.0
       prettier:
         specifier: 'catalog:'
         version: 3.6.2
@@ -14368,7 +14368,7 @@ importers:
         version: 3.20.0
       manifold-3d:
         specifier: 'catalog:'
-        version: 3.4.1(esbuild-wasm@0.16.17)
+        version: 3.4.1(esbuild-wasm@0.28.0)
     devDependencies:
       '@dxos/plugin-client':
         specifier: workspace:*
@@ -21568,7 +21568,7 @@ importers:
         version: 10.5.0(postcss@8.5.12)
       esbuild-style-plugin:
         specifier: 'catalog:'
-        version: 1.6.1
+        version: 1.6.3
       globby:
         specifier: 'catalog:'
         version: 14.1.0
@@ -33042,8 +33042,8 @@ packages:
   esast-util-from-js@2.0.1:
     resolution: {integrity: sha512-8Ja+rNJ0Lt56Pcf3TAmpBZjmx8ZcK5Ts4cAzIOjsjevg9oSXJnl6SUQ2EevU8tv3h6ZLWmoKL5H4fgWvdvfETw==}
 
-  esbuild-plugin-glsl@1.4.0:
-    resolution: {integrity: sha512-8rWi34P9CKhNyzS3VSMw0F58NlIXf7u7n08c1Xtgce4dMR9uWgkuHXdZxTKsY/4YeLwVrGc22tA6SG4600v8Yw==}
+  esbuild-plugin-glsl@1.4.1:
+    resolution: {integrity: sha512-rpL7wD0tv4puwlg4InVwhYZhHNBxrSlawiXYER0p/nSilcRmcGs9RDR+LvklHHPTCWcFsWHEKCxN3NNw5ZIFQw==}
     engines: {node: '>= 18'}
     peerDependencies:
       esbuild: '>=0.28.0'
@@ -33063,12 +33063,12 @@ packages:
   esbuild-plugin-yaml@0.0.1:
     resolution: {integrity: sha512-s3jqOeeCd+dUuUsuBqLRgN2SeQjPF2ppIglvV3B//txgQpTDThGvxu6sqiOUOJ0NOzegitmpWCXoCONdRbUS7w==}
 
-  esbuild-style-plugin@1.6.1:
-    resolution: {integrity: sha512-t5ZtQyGKNiM8DLedz+iwFH0LPWLnMmaEQ2RnnP1ppFHq35najxqJHAhUVVSbTFm5cR2ZumGdBMqnmuKBRBMvDw==}
+  esbuild-style-plugin@1.6.3:
+    resolution: {integrity: sha512-XPEKf4FjLjEVLv/dJH4UxDzXCrFHYpD93DBO8B+izdZARW5b7nNKQbnKv3J+7VDWJbgCU+hzfgIh2AuIZzlmXQ==}
 
-  esbuild-wasm@0.16.17:
-    resolution: {integrity: sha512-Tn7NuMqRcM+T/qCOxbQRq0qrwWl1sUWp6ARfJRakE8Bepew6zata4qrKgH2YqovNC5e/2fcTa7o+VL/FAOZC1Q==}
-    engines: {node: '>=12'}
+  esbuild-wasm@0.28.0:
+    resolution: {integrity: sha512-5TRVKExcEmeMkccIZMzUq+Az6X2RoMAJyfl6SMMO1dMVhmvt0I2mx7gAb6zYi42n4d1ETcatFXazGKzA+aW7fg==}
+    engines: {node: '>=18'}
     hasBin: true
 
   esbuild@0.28.0:
@@ -34330,9 +34330,6 @@ packages:
   iconv-lite@0.7.0:
     resolution: {integrity: sha512-cf6L2Ds3h57VVmkZe+Pn+5APsT7FpqJtEhhieDCvrE2MK5Qk9MyffgQyuxQTm6BChfeZNtcOLHp9IcWRVcIcBQ==}
     engines: {node: '>=0.10.0'}
-
-  icss-replace-symbols@1.1.0:
-    resolution: {integrity: sha512-chIaY3Vh2mh2Q3RGXttaDIzeiPvaVXJ+C4DAh/w3c37SKZ/U6PGMmuicR2EQQp9bKG8zLMCl7I+PtIoOOPp8Gg==}
 
   icss-utils@5.1.0:
     resolution: {integrity: sha512-soFhflCVWLfRNOPU3iv5Z9VUdT44xFRbzjLsEzSr5AQmgqPMTHdU3PMT1Cf1ssx8fLNJDA1juftYl+PUcv3MqA==}
@@ -37152,20 +37149,20 @@ packages:
     peerDependencies:
       postcss: ^8.5.12
 
-  postcss-modules-extract-imports@3.0.0:
-    resolution: {integrity: sha512-bdHleFnP3kZ4NYDhuGlVK+CMrQ/pqUm8bx/oGL93K6gVwiclvX5x0n76fYMKuIGKzlABOy13zsvqjb0f92TEXw==}
+  postcss-modules-extract-imports@3.1.0:
+    resolution: {integrity: sha512-k3kNe0aNFQDAZGbin48pL2VNidTF0w4/eASDsxlyspobzU3wZQLOGj7L9gfRe0Jo9/4uud09DsjFNH7winGv8Q==}
     engines: {node: ^10 || ^12 || >= 14}
     peerDependencies:
       postcss: ^8.5.12
 
-  postcss-modules-local-by-default@4.0.0:
-    resolution: {integrity: sha512-sT7ihtmGSF9yhm6ggikHdV0hlziDTX7oFoXtuVWeDd3hHObNkcHRo9V3yg7vCAY7cONyxJC/XXCmmiHHcvX7bQ==}
+  postcss-modules-local-by-default@4.2.0:
+    resolution: {integrity: sha512-5kcJm/zk+GJDSfw+V/42fJ5fhjL5YbFDl8nVdXkJPLLW+Vf9mTD5Xe0wqIaDnLuL2U6cDNpTr+UQ+v2HWIBhzw==}
     engines: {node: ^10 || ^12 || >= 14}
     peerDependencies:
       postcss: ^8.5.12
 
-  postcss-modules-scope@3.0.0:
-    resolution: {integrity: sha512-hncihwFA2yPath8oZ15PZqvWGkWf+XUfQgUGamS4LqoP1anQLOsOJw0vr7J7IwLpoY9fatA2qiGUGmuZL0Iqlg==}
+  postcss-modules-scope@3.2.1:
+    resolution: {integrity: sha512-m9jZstCVaqGjTAuny8MdgE88scJnCiQSlSrOWcTQgM2t32UBe+MUmFSO5t7VMSfAf/FJKImAxBav8ooCHJXCJA==}
     engines: {node: ^10 || ^12 || >= 14}
     peerDependencies:
       postcss: ^8.5.12
@@ -37176,8 +37173,8 @@ packages:
     peerDependencies:
       postcss: ^8.5.12
 
-  postcss-modules@4.3.1:
-    resolution: {integrity: sha512-ItUhSUxBBdNamkT3KzIZwYNNRFKmkJrofvC2nWab3CPKhYBQ1f27XXh1PAPE27Psx58jeelPsxWB/+og+KEH0Q==}
+  postcss-modules@6.0.1:
+    resolution: {integrity: sha512-zyo2sAkVvuZFFy0gc2+4O+xar5dYlaVy/ebO24KT0ftk/iJevSNyPyQellsBLlnccwh7f6V6Y4GvuKRYToNgpQ==}
     peerDependencies:
       postcss: ^8.5.12
 
@@ -53699,7 +53696,7 @@ snapshots:
       esast-util-from-estree: 2.0.0
       vfile-message: 4.0.2
 
-  esbuild-plugin-glsl@1.4.0(esbuild@0.28.0):
+  esbuild-plugin-glsl@1.4.1(esbuild@0.28.0):
     dependencies:
       esbuild: 0.28.0
 
@@ -53716,16 +53713,16 @@ snapshots:
       fs-extra: 9.1.0
       js-yaml: 4.1.1
 
-  esbuild-style-plugin@1.6.1:
+  esbuild-style-plugin@1.6.3:
     dependencies:
       '@types/less': 3.0.3
       '@types/sass': 1.43.1
       '@types/stylus': 0.48.38
       glob: 13.0.3
       postcss: 8.5.12
-      postcss-modules: 4.3.1(postcss@8.5.12)
+      postcss-modules: 6.0.1(postcss@8.5.12)
 
-  esbuild-wasm@0.16.17: {}
+  esbuild-wasm@0.28.0: {}
 
   esbuild@0.28.0:
     optionalDependencies:
@@ -55476,8 +55473,6 @@ snapshots:
     dependencies:
       safer-buffer: 2.1.2
 
-  icss-replace-symbols@1.1.0: {}
-
   icss-utils@5.1.0(postcss@8.5.12):
     dependencies:
       postcss: 8.5.12
@@ -56852,7 +56847,7 @@ snapshots:
     dependencies:
       semver: 7.7.4
 
-  manifold-3d@3.4.1(esbuild-wasm@0.16.17):
+  manifold-3d@3.4.1(esbuild-wasm@0.28.0):
     dependencies:
       '@gltf-transform/core': 4.3.0
       '@gltf-transform/extensions': 4.3.0
@@ -56862,7 +56857,7 @@ snapshots:
       '@jscadui/3mf-export': 0.5.0
       commander: 13.1.0
       convert-source-map: 2.0.0
-      esbuild-wasm: 0.16.17
+      esbuild-wasm: 0.28.0
       fast-xml-parser: 5.7.1
       fflate: 0.8.2
       magic-string: 0.30.21
@@ -58830,36 +58825,36 @@ snapshots:
       read-cache: 1.0.0
       resolve: 1.22.10
 
-  postcss-modules-extract-imports@3.0.0(postcss@8.5.12):
+  postcss-modules-extract-imports@3.1.0(postcss@8.5.12):
     dependencies:
       postcss: 8.5.12
 
-  postcss-modules-local-by-default@4.0.0(postcss@8.5.12):
+  postcss-modules-local-by-default@4.2.0(postcss@8.5.12):
     dependencies:
       icss-utils: 5.1.0(postcss@8.5.12)
       postcss: 8.5.12
-      postcss-selector-parser: 6.0.11
+      postcss-selector-parser: 7.1.1
       postcss-value-parser: 4.2.0
 
-  postcss-modules-scope@3.0.0(postcss@8.5.12):
+  postcss-modules-scope@3.2.1(postcss@8.5.12):
     dependencies:
       postcss: 8.5.12
-      postcss-selector-parser: 6.0.11
+      postcss-selector-parser: 7.1.1
 
   postcss-modules-values@4.0.0(postcss@8.5.12):
     dependencies:
       icss-utils: 5.1.0(postcss@8.5.12)
       postcss: 8.5.12
 
-  postcss-modules@4.3.1(postcss@8.5.12):
+  postcss-modules@6.0.1(postcss@8.5.12):
     dependencies:
       generic-names: 4.0.0
-      icss-replace-symbols: 1.1.0
+      icss-utils: 5.1.0(postcss@8.5.12)
       lodash.camelcase: 4.3.0
       postcss: 8.5.12
-      postcss-modules-extract-imports: 3.0.0(postcss@8.5.12)
-      postcss-modules-local-by-default: 4.0.0(postcss@8.5.12)
-      postcss-modules-scope: 3.0.0(postcss@8.5.12)
+      postcss-modules-extract-imports: 3.1.0(postcss@8.5.12)
+      postcss-modules-local-by-default: 4.2.0(postcss@8.5.12)
+      postcss-modules-scope: 3.2.1(postcss@8.5.12)
       postcss-modules-values: 4.0.0(postcss@8.5.12)
       string-hash: 1.1.3
 
