@@ -32,88 +32,85 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
   const chats = useQuery(db, query);
 
   // Stable references in deps avoid circular reference issues.
-  return useMenuBuilder(
-    () => {
-      const builder = MenuBuilder.make()
-        .root({
-          label: ['chat-toolbar.title', { ns: meta.id }],
-        })
-        .action(
-          'new',
-          {
-            label: ['new-thread.button', { ns: meta.id }],
-            icon: 'ph--plus--regular',
-            type: 'new',
-            disabled: !companionTo,
-          },
-          () => {
-            invariant(companionTo);
-            return invoke(AssistantOperation.SetCurrentChat, {
-              companionTo,
-              chat: undefined,
-            }).pipe(runAndForwardErrors);
-          },
-        )
-        .action(
-          'rename',
-          {
-            label: ['rename-thread.button', { ns: meta.id }],
-            icon: 'ph--magic-wand--regular',
-            type: 'rename',
-            disabled: !chat,
-          },
-          () =>
-            Effect.gen(function* () {
-              invariant(chat);
-              yield* invoke(AssistantOperation.UpdateChatName, { chat });
-            }).pipe(runAndForwardErrors),
-        )
-        .action(
-          'branch',
-          {
-            label: ['branch-thread.menu', { ns: meta.id }],
-            icon: 'ph--git-branch--regular',
-            type: 'branch',
-            disabled: true,
-          },
-          () => {},
-        );
+  return useMenuBuilder(() => {
+    const builder = MenuBuilder.make()
+      .root({
+        label: ['chat-toolbar.title', { ns: meta.id }],
+      })
+      .action(
+        'new',
+        {
+          label: ['new-thread.button', { ns: meta.id }],
+          icon: 'ph--plus--regular',
+          type: 'new',
+          disabled: !companionTo,
+        },
+        () => {
+          invariant(companionTo);
+          return invoke(AssistantOperation.SetCurrentChat, {
+            companionTo,
+            chat: undefined,
+          }).pipe(runAndForwardErrors);
+        },
+      )
+      .action(
+        'rename',
+        {
+          label: ['rename-thread.button', { ns: meta.id }],
+          icon: 'ph--magic-wand--regular',
+          type: 'rename',
+          disabled: !chat,
+        },
+        () =>
+          Effect.gen(function* () {
+            invariant(chat);
+            yield* invoke(AssistantOperation.UpdateChatName, { chat });
+          }).pipe(runAndForwardErrors),
+      )
+      .action(
+        'branch',
+        {
+          label: ['branch-thread.menu', { ns: meta.id }],
+          icon: 'ph--git-branch--regular',
+          type: 'branch',
+          disabled: true,
+        },
+        () => {},
+      );
 
-      if (chats.length > 0) {
-        builder.group(
-          'chats',
-          {
-            label: ['chat-history.label', { ns: meta.id }],
-            icon: 'ph--clock-counter-clockwise--regular',
-            selectCardinality: 'single',
-            variant: 'dropdownMenu',
-          },
-          (builder) => {
-            chats
-              // TODO(wittjosiah): This should be the default sort order.
-              .toSorted((a, b) => a.id.localeCompare(b.id))
-              .forEach((chat) => {
-                builder.action(
-                  chat.id,
-                  {
-                    label: Obj.getLabel(chat) ?? ['object-name.placeholder', { ns: Chat.Chat.typename }],
-                  },
-                  () =>
-                    Effect.gen(function* () {
-                      invariant(companionTo);
-                      yield* invoke(AssistantOperation.SetCurrentChat, {
-                        companionTo,
-                        chat,
-                      });
-                    }).pipe(runAndForwardErrors),
-                );
-              });
-          },
-        );
-      }
+    if (chats.length > 0) {
+      builder.group(
+        'chats',
+        {
+          label: ['chat-history.label', { ns: meta.id }],
+          icon: 'ph--clock-counter-clockwise--regular',
+          selectCardinality: 'single',
+          variant: 'dropdownMenu',
+        },
+        (builder) => {
+          chats
+            // TODO(wittjosiah): This should be the default sort order.
+            .toSorted((a, b) => a.id.localeCompare(b.id))
+            .forEach((chat) => {
+              builder.action(
+                chat.id,
+                {
+                  label: Obj.getLabel(chat) ?? ['object-name.placeholder', { ns: Chat.Chat.typename }],
+                },
+                () =>
+                  Effect.gen(function* () {
+                    invariant(companionTo);
+                    yield* invoke(AssistantOperation.SetCurrentChat, {
+                      companionTo,
+                      chat,
+                    });
+                  }).pipe(runAndForwardErrors),
+              );
+            });
+        },
+      );
+    }
 
-      return builder.build();
-    },
-    [chats.length, db?.spaceId, companionTo?.id, chat?.id, invoke],
-  );
+    return builder.build();
+  }, [chats.length, db?.spaceId, companionTo?.id, chat?.id, invoke]);
 };

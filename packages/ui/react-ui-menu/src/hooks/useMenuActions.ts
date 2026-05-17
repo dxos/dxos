@@ -51,10 +51,7 @@ export const useMenuActions = (props: Atom.Atom<ActionGraphProps>): MenuActions 
  * it through `useMenuActions`. Saves the `useMemo(() => Atom.make(...), deps)` boilerplate when
  * the action graph is composed from local state (e.g. a toolbar driven by component state).
  */
-export const useMenuBuilder = (
-  build: (get: Atom.Context) => ActionGraphProps,
-  deps: DependencyList,
-): MenuActions => {
+export const useMenuBuilder = (build: (get: Atom.Context) => ActionGraphProps, deps: DependencyList): MenuActions => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const atom = useMemo(() => Atom.make(build), deps);
   return useMenuActions(atom);

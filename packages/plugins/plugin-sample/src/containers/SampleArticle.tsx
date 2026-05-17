@@ -15,13 +15,7 @@ import { Obj } from '@dxos/echo';
 import { type Node, useActionRunner } from '@dxos/plugin-graph';
 import { useObject } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
-import {
-  type ActionExecutor,
-  type ActionGraphProps,
-  Menu,
-  MenuBuilder,
-  useMenuBuilder,
-} from '@dxos/react-ui-menu';
+import { type ActionExecutor, type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { SampleItemView } from '#components';
 import { meta } from '#meta';

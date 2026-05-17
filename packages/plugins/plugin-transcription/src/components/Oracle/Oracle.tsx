@@ -2,12 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import '@dxos/react-ui-graph/styles/graph.css';
-
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { type PropsWithChildren, createContext, useContext, useMemo } from 'react';
 
+import '@dxos/react-ui-graph/styles/graph.css';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { TextBlock } from '@dxos/react-ui-components';
 import { SVG } from '@dxos/react-ui-graph';
