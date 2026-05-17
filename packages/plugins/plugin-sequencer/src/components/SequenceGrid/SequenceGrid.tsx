@@ -49,6 +49,12 @@ export type SequenceGridProps = {
    * `unset` for every cell crossed (chosen by the cell under the initial pointerdown).
    */
   onToggleNote?: (pitch: number, startTime: number, mode: ToggleMode) => void;
+  /**
+   * Other tracks to paint underneath the active sequence in a subdued color.
+   * Cells from these tracks are non-interactive — toggle gestures always target
+   * the active sequence.
+   */
+  overlayTracks?: Array<{ sequence: Sequence.Sequence; track: Track.Track }>;
   classNames?: string;
 };
 
@@ -66,11 +72,19 @@ const isBlackKey = (pitch: number): boolean => {
   return offset === 1 || offset === 3 || offset === 6 || offset === 8 || offset === 10;
 };
 
-const renderNoteCell: RenderCell<{ color: string; velocity: number }> = ({ ctx, x, y, w, h, cell }) => {
+const renderNoteCell: RenderCell<{ color: string; velocity: number; subdued?: boolean }> = ({
+  ctx,
+  x,
+  y,
+  w,
+  h,
+  cell,
+}) => {
   const inset = 1;
   const radius = 3;
   ctx.fillStyle = cell.data?.color ?? '#3b82f6';
-  ctx.globalAlpha = 0.35 + (cell.data?.velocity ?? 0.8) * 0.65;
+  const baseAlpha = 0.35 + (cell.data?.velocity ?? 0.8) * 0.65;
+  ctx.globalAlpha = cell.data?.subdued ? baseAlpha * 0.35 : baseAlpha;
   const rx = Math.min(radius, w / 2, h / 2);
   ctx.beginPath();
   ctx.moveTo(x + inset + rx, y + inset);
@@ -102,6 +116,7 @@ export const SequenceGrid = ({
   loopEnd,
   onLoopChange,
   onToggleNote,
+  overlayTracks,
   classNames,
 }: SequenceGridProps) => {
   const registry = useContext(RegistryContext);
@@ -115,7 +130,7 @@ export const SequenceGrid = ({
   const trackColor = track.color ?? '#3b82f6';
 
   const atoms = useMemo(
-    () => createCellGridAtoms<{ color: string; velocity: number }>({ cellWidth: 28, cellHeight: 18 }),
+    () => createCellGridAtoms<{ color: string; velocity: number; subdued?: boolean }>({ cellWidth: 28, cellHeight: 18 }),
     [],
   );
 
@@ -142,8 +157,51 @@ export const SequenceGrid = ({
           : Array.from(sequence.notes as ArrayLike<Note.Note>),
     [sequence.notes],
   );
+  // Pre-flatten overlayTracks notes via a stable identity so the effect doesn't
+  // rebuild the cell map on every render when overlayTracks is an inline array.
+  const overlayCellInputs = useMemo(() => {
+    if (!overlayTracks || overlayTracks.length === 0) {
+      return [];
+    }
+    const inputs: Array<{ pitch: number; startTime: number; duration: number; velocity: number; color: string }> = [];
+    for (const entry of overlayTracks) {
+      const overlayNotes =
+        entry.sequence.notes == null
+          ? []
+          : Array.isArray(entry.sequence.notes)
+            ? (entry.sequence.notes as ReadonlyArray<Note.Note>)
+            : Array.from(entry.sequence.notes as ArrayLike<Note.Note>);
+      const color = entry.track.color ?? '#3b82f6';
+      for (const note of overlayNotes) {
+        inputs.push({
+          pitch: note.pitch,
+          startTime: note.startTime,
+          duration: note.duration,
+          velocity: note.velocity ?? 0.8,
+          color,
+        });
+      }
+    }
+    return inputs;
+  }, [overlayTracks]);
+
   useEffect(() => {
-    const cells = new Map<string, Cell<{ color: string; velocity: number }>>();
+    const cells = new Map<string, Cell<{ color: string; velocity: number; subdued?: boolean }>>();
+    // Paint overlay tracks first so the active sequence visibly wins on collisions.
+    for (const note of overlayCellInputs) {
+      if (note.pitch < minPitch || note.pitch > maxPitch) {
+        continue;
+      }
+      const row = maxPitch - note.pitch;
+      const col = Math.round(note.startTime / beatsPerCell);
+      const length = Math.max(1, Math.round(note.duration / beatsPerCell));
+      cells.set(cellKey(col, row), {
+        col,
+        row,
+        length,
+        data: { color: note.color, velocity: note.velocity, subdued: true },
+      });
+    }
     for (const note of notes) {
       if (note.pitch < minPitch || note.pitch > maxPitch) {
         continue;
@@ -159,7 +217,7 @@ export const SequenceGrid = ({
       });
     }
     registry.set(atoms.cells, cells);
-  }, [registry, atoms.cells, notes, minPitch, maxPitch, beatsPerCell, trackColor]);
+  }, [registry, atoms.cells, notes, overlayCellInputs, minPitch, maxPitch, beatsPerCell, trackColor]);
 
   // Mirror playhead (beats → column units, accounting for beatsPerCell).
   useEffect(() => {

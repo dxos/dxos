@@ -206,6 +206,7 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playhead, setPlayhead] = useState<number | null>(null);
+  const [showAllTracks, setShowAllTracks] = useState(false);
 
   // Auto-select the first track when one becomes available.
   useEffect(() => {
@@ -433,6 +434,7 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
   // (org.dxos.react-ui-menu.toolbarMenu). useMemo deps cover every value the
   // menu's invoke handlers close over so the actions stay in sync.
   const togglePlay = useCallback(() => setIsPlaying((current) => !current), []);
+  const toggleShowAllTracks = useCallback(() => setShowAllTracks((current) => !current), []);
   const actionsAtom = useMemo(
     () =>
       Atom.make(
@@ -447,6 +449,16 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
                 disposition: 'toolbar',
               },
               togglePlay,
+            )
+            .action(
+              'show-all-tracks',
+              {
+                label: showAllTracks ? 'Show active track only' : 'Show all tracks',
+                icon: showAllTracks ? 'ph--stack--regular' : 'ph--stack-simple--regular',
+                iconOnly: true,
+                disposition: 'toolbar',
+              },
+              toggleShowAllTracks,
             )
             .separator()
             .action(
@@ -471,7 +483,7 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
             )
             .build(),
       ),
-    [isPlaying, togglePlay, handleImport, handleExport],
+    [isPlaying, togglePlay, showAllTracks, toggleShowAllTracks, handleImport, handleExport],
   );
   const menuActions = useMenuActions(actionsAtom);
 
@@ -516,6 +528,17 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
                 loopEnd={song.loopEnd}
                 onLoopChange={handleLoopChange}
                 onToggleNote={handleToggleNote}
+                overlayTracks={
+                  showAllTracks
+                    ? song.tracks
+                        .filter((track) => track.id !== activeTrack.id)
+                        .map((track) => {
+                          const sequence = song.sequences.find((seq) => seq.trackId === track.id);
+                          return sequence ? { track, sequence } : null;
+                        })
+                        .filter((entry): entry is { track: Track.Track; sequence: Sequence.Sequence } => entry !== null)
+                    : undefined
+                }
               />
             ) : (
               <div className={mx('absolute inset-0 flex items-center justify-center text-neutral-500 text-sm')}>
