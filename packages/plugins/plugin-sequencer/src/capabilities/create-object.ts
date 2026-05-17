@@ -8,15 +8,15 @@ import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 
-import { Song } from '#types';
+import { Score } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-      id: Song.Song.typename,
-      createObject: (props: Partial<Parameters<typeof Song.make>[0]> | undefined, options) =>
+      id: Score.Score.typename,
+      createObject: (props: Partial<Parameters<typeof Score.make>[0]> | undefined, options) =>
         Effect.gen(function* () {
-          const object = Song.make(props ?? {});
+          const object = Score.make(props ?? {});
           return yield* Operation.invoke(SpaceOperation.AddObject, {
             object,
             target: options.target,

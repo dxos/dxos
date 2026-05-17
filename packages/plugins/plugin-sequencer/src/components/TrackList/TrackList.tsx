@@ -21,7 +21,7 @@ export type TrackListProps = {
 
 /**
  * Vertical list of tracks with mute toggle, selection state, and add/remove actions.
- * Pure presentation; the container wires actions back to the Song schema.
+ * Pure presentation; the container wires actions back to the Score schema.
  */
 export const TrackList = ({
   tracks,

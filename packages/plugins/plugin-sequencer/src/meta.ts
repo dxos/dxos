@@ -9,7 +9,7 @@ export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.sequencer',
   name: 'Sequencer',
   description: trim`
-    Music sequencer / step-grid editor. A Song owns a set of tracks and per-track
+    Music sequencer / step-grid editor. A Score owns a set of tracks and per-track
     Sequence objects whose Notes are edited on a 2D piano-roll style grid (pitch
     on the y-axis, time on the x-axis).
   `,

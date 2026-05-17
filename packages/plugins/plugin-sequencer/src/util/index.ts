@@ -3,3 +3,4 @@
 //
 
 export * from './lead-sheet';
+export * from './score-leadsheet';

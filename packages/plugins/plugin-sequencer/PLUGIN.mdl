@@ -4,7 +4,7 @@ name: SequencerPlugin
 version: 0.1.0
 ---
 
-A music sequencer / step-grid editor for `DXOS` Composer. A `Song` owns a set of
+A music sequencer / step-grid editor for `DXOS` Composer. A `Score` owns a set of
 tracks and per-track `Sequence` objects whose `Note`s are edited on a 2D grid
 (pitch on the y-axis, time on the x-axis). Backed by the canvas-based
 `react-ui-canvas` `CellGrid` component.
@@ -69,7 +69,7 @@ type Sequence
 ```
 
 ```mdl
-type Song
+type Score
   desc: |
     Top-level container. Owns the track roster and a collection of sequences,
     plus playback metadata.
@@ -122,11 +122,11 @@ component SequenceGrid
 ```mdl
 component TrackList
   desc: |
-    Vertical list of tracks in a Song with mute/instrument controls and
+    Vertical list of tracks in a Score with mute/instrument controls and
     selection state. Selecting a track in the list focuses its sequence(s)
     in the SequenceGrid pane.
   props:
-    song: Song
+    score: Score
     selectedTrackId?: string
   emits:
     onSelectTrack(trackId: string)
@@ -136,12 +136,12 @@ component TrackList
 ```
 
 ```mdl
-component SongArticle
+component ScoreArticle
   desc: |
-    Top-level article surface for a Song. Composes TrackList on the left with
+    Top-level article surface for a Score. Composes TrackList on the left with
     the active Sequence's SequenceGrid on the right.
   props:
-    song: Song
+    score: Score
   state:
     selectedTrackId?: string
     selectedSequenceId?: string
@@ -162,10 +162,10 @@ component SongArticle
 ## Features
 
 ```mdl
-feat F-1: Create Song
+feat F-1: Create Score
 
-  req F-1.1: User can create a new Song from the navtree.
-  req F-1.2: New Song has tempo=120, no tracks, no sequences.
+  req F-1.1: User can create a new Score from the navtree.
+  req F-1.2: New Score has tempo=120, no tracks, no sequences.
 ```
 
 ```mdl
@@ -173,7 +173,7 @@ feat F-2: Manage Tracks
 
   req F-2.1:
     when: user adds a track
-    then: new Track appended to Song.tracks with a unique id and default name
+    then: new Track appended to Score.tracks with a unique id and default name
 
   req F-2.2:
     when: user removes a track
@@ -209,11 +209,11 @@ feat F-4: Playback
 
   req F-4.1:
     when: user presses play
-    then: playhead advances at Song.tempo BPM across the active Sequence
+    then: playhead advances at Score.tempo BPM across the active Sequence
 
   req F-4.2:
     when: playhead reaches end of Sequence.length
-    then: playhead loops to 0 (v1: no song-level transport across sequences)
+    then: playhead loops to 0 (v1: no score-level transport across sequences)
 
   req F-4.3:
     when: user presses stop
@@ -236,17 +236,17 @@ feat F-5: Sequence Selection
 ## Acceptance
 
 ```mdl
-test T-1: New Song defaults
-  given: a new Song is created
+test T-1: New Score defaults
+  given: a new Score is created
   then:
-    - Song.tempo === 120
-    - Song.tracks.length === 0
-    - Song.sequences.length === 0
+    - Score.tempo === 120
+    - Score.tracks.length === 0
+    - Score.sequences.length === 0
 ```
 
 ```mdl
 test T-2: Add and remove note
-  given: a Song with one track and one (empty) Sequence
+  given: a Score with one track and one (empty) Sequence
   when: user toggles cell (pitch=60, startTime=0)
   then: Sequence.notes.length === 1 AND Sequence.notes[0].pitch === 60
   when: user toggles the same cell again
@@ -255,14 +255,14 @@ test T-2: Add and remove note
 
 ```mdl
 test T-3: Remove track cascades sequences
-  given: a Song with a track t1 and 2 sequences referencing t1
+  given: a Score with a track t1 and 2 sequences referencing t1
   when: user removes track t1
-  then: Song.tracks does not contain t1 AND no Sequences reference t1
+  then: Score.tracks does not contain t1 AND no Sequences reference t1
 ```
 
 ```mdl
 test T-4: Playhead loops
-  given: a playing Song with active Sequence.length = 4 beats
+  given: a playing Score with active Sequence.length = 4 beats
   when: time advances past 4 beats
   then: playhead position resets to 0 (mod 4)
 ```

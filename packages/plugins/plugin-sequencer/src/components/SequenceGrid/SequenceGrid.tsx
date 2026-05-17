@@ -37,8 +37,8 @@ export type SequenceGridProps = {
   /**
    * Playback loop range in beats. When set, the timeline shows draggable
    * start/end markers and shades the area outside the range. The range applies
-   * to every track simultaneously; callers should write it back to Song.loopStart
-   * / Song.loopEnd via `onLoopChange`.
+   * to every track simultaneously; callers should write it back to Score.loopStart
+   * / Score.loopEnd via `onLoopChange`.
    */
   loopStart?: number;
   loopEnd?: number;
@@ -266,7 +266,7 @@ export const SequenceGrid = ({
   const resolvedLoopEnd = loopEnd ?? sequence.length;
   const resolvedLoopStart = loopStart ?? 0;
   // Loop range is allowed to extend beyond the current sequence length — the
-  // SongArticle grows sequences to match on commit. Cap at a generous maximum
+  // ScoreArticle grows sequences to match on commit. Cap at a generous maximum
   // (256 beats = 64 bars at 4/4) so dragging stays bounded.
   const loopMaxBeats = Math.max(sequence.length, 256);
 

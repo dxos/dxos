@@ -5,16 +5,16 @@
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { Song } from '#types';
+import { Score } from '#types';
 
 export const translations = [
   {
     'en-US': {
-      [Song.Song.typename]: {
-        'typename.label': 'Song',
-        'typename.label_zero': 'Songs',
-        'typename.label_one': 'Song',
-        'typename.label_other': 'Songs',
+      [Score.Score.typename]: {
+        'typename.label': 'Score',
+        'typename.label_zero': 'Scores',
+        'typename.label_one': 'Score',
+        'typename.label_other': 'Scores',
       },
       [meta.id]: {
         'plugin.name': 'Sequencer',

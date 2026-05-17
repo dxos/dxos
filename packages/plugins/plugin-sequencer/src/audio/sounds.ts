@@ -4,6 +4,12 @@
 
 import * as Tone from 'tone';
 
+/**
+ * Experimental sound engine.
+ * https://tonejs.github.io
+ * https://tonejs.github.io/docs/r13/AudioNode
+ */
+
 export interface Sound {
   start: () => Promise<void>;
   stop: () => Promise<void>;
@@ -21,7 +27,7 @@ export type DrumVoice = {
 
 /**
  * Factory for a single drum-kit voice keyed by name. Returns a tiny object with
- * `trigger(time, velocity)` and `dispose()`. Used by SongPlayer to back drum patches.
+ * `trigger(time, velocity)` and `dispose()`. Used by ScorePlayer to back drum patches.
  */
 export const createDrum = (name: DrumName, options: DrumOptions = {}): DrumVoice => {
   switch (name) {
@@ -46,76 +52,6 @@ export const createDrum = (name: DrumName, options: DrumOptions = {}): DrumVoice
       return createTomVoice({ ...options, frequency: 220 });
   }
 };
-
-/**
- * https://tonejs.github.io
- * https://tonejs.github.io/docs/r13/AudioNode
- */
-// TODO(burdon): Collaborative drum machine?
-export const createPattern = (): Sound => {
-  const kick = createKick();
-  const snare = createSnare();
-
-  const kickPattern = new Tone.Sequence(
-    (time, hit) => hit && kick.trigger(time),
-    [
-      ['C4', null, null, null],
-      ['C4', null, null, null],
-      ['C4', 'C4', 'C4', 'C4'],
-      ['C4', 'C4', 'C4', 'C4'],
-      ['C4', null, null, null],
-      ['C4', null, null, null],
-      ['C4', null, null, null],
-      ['C4', null, null, null],
-    ].flat(),
-    '16n',
-  );
-
-  const snarePattern = new Tone.Sequence(
-    (time, hit) => hit && snare.trigger(time),
-    [
-      [null, null, null, null],
-      ['C4', null, null, null],
-      [null, null, null, null],
-      ['C4', null, null, null],
-      [null, null, null, null],
-      ['C4', null, null, null],
-      [null, null, null, null],
-      ['C4', null, null, null],
-    ].flat(),
-    '16n',
-  );
-  snarePattern.humanize = '128n';
-
-  return {
-    start: async () => {
-      await Tone.start();
-
-      kickPattern.start(0);
-      snarePattern.start(0);
-
-      Tone.getTransport().bpm.value = 130;
-      Tone.getTransport().start();
-    },
-    stop: async () => {
-      kickPattern.stop();
-      snarePattern.stop();
-
-      Tone.getTransport().stop();
-    },
-  };
-};
-
-function createKick(): KickRef {
-  return createKickVoice();
-}
-
-function createSnare(): SnareRef {
-  return createSnareVoice();
-}
-
-type KickRef = { trigger: (time?: number | string) => void };
-type SnareRef = { trigger: (time?: number | string) => void };
 
 function createKickVoice(options: DrumOptions = {}): DrumVoice {
   const osc = new Tone.Oscillator({ type: 'sine' });

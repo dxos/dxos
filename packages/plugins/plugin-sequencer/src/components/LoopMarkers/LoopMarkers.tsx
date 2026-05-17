@@ -42,7 +42,7 @@ const AUTOSCROLL_SPEED_PX_PER_FRAME = 12;
 /**
  * Two draggable handles on top of the timeline marking the playback loop range,
  * plus a translucent shaded overlay outside the loop. The range applies to every
- * track in the Song.
+ * track in the Score.
  */
 export const LoopMarkers = ({
   loopStart,

@@ -6,10 +6,10 @@ import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
 import { meta } from '#meta';
-import { Song } from '#types';
+import { Score } from '#types';
 
 export const SequencerPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addSchemaModule({ schema: [Song.Song] }),
+  AppPlugin.addSchemaModule({ schema: [Score.Score] }),
   Plugin.make,
 );
 

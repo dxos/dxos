@@ -4,17 +4,20 @@
 
 import * as Schema from 'effect/Schema';
 
+import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { Annotation, Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
 import { Sequence } from './Sequence';
 import { Track } from './Track';
 
+export const BLUEPRINT_KEY = 'org.dxos.blueprint.sequencer';
+
 /**
- * Top-level Song. Owns the track roster and a collection of sequences,
+ * Top-level Score. Owns the track roster and a collection of sequences,
  * plus playback metadata. This is the typed root object registered with ECHO.
  */
-export const Song = Schema.Struct({
+export const Score = Schema.Struct({
   name: Schema.optional(Schema.String),
   tempo: Schema.Number.annotations({ title: 'Tempo', description: 'Beats per minute.' }),
   timeSignature: Schema.optional(
@@ -30,7 +33,7 @@ export const Song = Schema.Struct({
   loopEnd: Schema.optional(Schema.Number),
 }).pipe(
   Type.object({
-    typename: 'org.dxos.type.song',
+    typename: 'dxos.org/type/Score',
     version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),
@@ -38,12 +41,13 @@ export const Song = Schema.Struct({
     icon: 'ph--music-notes--regular',
     hue: 'fuchsia',
   }),
+  BlueprintsAnnotation.set([BLUEPRINT_KEY]),
 );
 
-export interface Song extends Schema.Schema.Type<typeof Song> {}
+export interface Score extends Schema.Schema.Type<typeof Score> {}
 
-export const make = (props?: Partial<Obj.MakeProps<typeof Song>>): Song => {
-  return Obj.make(Song, {
+export const make = (props?: Partial<Obj.MakeProps<typeof Score>>): Score => {
+  return Obj.make(Score, {
     name: props?.name,
     tempo: props?.tempo ?? 120,
     timeSignature: props?.timeSignature ?? '4/4',

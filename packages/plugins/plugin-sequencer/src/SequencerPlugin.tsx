@@ -5,14 +5,16 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 
-import { CreateObject, ReactSurface } from '#capabilities';
+import { BlueprintDefinition, CreateObject, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Song } from '#types';
+import { Score } from '#types';
 
 export const SequencerPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addSchemaModule({ schema: [Song.Song] }),
+  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
+  AppPlugin.addSchemaModule({ schema: [Score.Score] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,

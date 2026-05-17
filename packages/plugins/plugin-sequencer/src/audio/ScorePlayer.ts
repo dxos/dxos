@@ -4,14 +4,14 @@
 
 import * as Tone from 'tone';
 
-import type { Note, Patch, Song, Track } from '../types';
+import type { Note, Patch, Score, Track } from '../types';
 import { createDrum } from './sounds';
 
 /**
- * Builds and runs a Tone.js transport for a Song.
+ * Builds and runs a Tone.js transport for a Score.
  *
  * Architecture:
- * - The Song's tracks each get a Tone.Part holding their first sequence's notes.
+ * - The Score's tracks each get a Tone.Part holding their first sequence's notes.
  * - Each Part's callback resolves the note to a patch on the track and triggers
  *   the corresponding sound generator (synth, drum, or sample).
  * - The Transport handles global tempo and starts/stops all parts together.
@@ -154,10 +154,10 @@ type ScheduledTrack = {
 };
 
 /**
- * Builds Tone.Parts for each Track of a Song and controls the global transport.
- * Call `load` to (re)build with a new Song, then `play()` / `stop()`.
+ * Builds Tone.Parts for each Track of a Score and controls the global transport.
+ * Call `load` to (re)build with a new Score, then `play()` / `stop()`.
  */
-export class SongPlayer {
+export class ScorePlayer {
   #scheduled: ScheduledTrack[] = [];
   #started = false;
   #loopBeats = 16;
@@ -169,18 +169,18 @@ export class SongPlayer {
   }
 
   /**
-   * Rebuild Tone Parts from the given Song. Disposes any previously scheduled
+   * Rebuild Tone Parts from the given Score. Disposes any previously scheduled
    * tracks. The transport is stopped if running; call `play()` afterwards.
    */
-  load(song: Song.Song): void {
+  load(score: Score.Score): void {
     this.dispose();
-    this.setTempo(song.tempo);
+    this.setTempo(score.tempo);
 
-    const trackById = new Map(song.tracks.map((track) => [track.id, track]));
+    const trackById = new Map(score.tracks.map((track) => [track.id, track]));
     const transport = Tone.getTransport();
 
     let maxLength = 0;
-    for (const sequence of song.sequences) {
+    for (const sequence of score.sequences) {
       const track = trackById.get(sequence.trackId);
       if (!track || track.muted) {
         continue;
@@ -189,7 +189,7 @@ export class SongPlayer {
       const voices = buildTrackVoices(track);
       type Event = { time: number; pitch: number; duration: number; velocity: number };
       const events: Event[] = (sequence.notes ?? []).map((note: Note.Note) => ({
-        time: beatsToSeconds(note.startTime, song.tempo),
+        time: beatsToSeconds(note.startTime, score.tempo),
         pitch: note.pitch,
         duration: note.duration,
         velocity: note.velocity ?? 0.8,
@@ -199,26 +199,26 @@ export class SongPlayer {
         voice.trigger(time, value.pitch, value.duration, value.velocity);
       }, events);
       // Parts must NOT loop independently — the global Transport drives the loop
-      // between Song.loopStart..loopEnd so every track stays phase-locked.
+      // between Score.loopStart..loopEnd so every track stays phase-locked.
       part.loop = false;
       this.#scheduled.push({ trackId: track.id, voices, part });
     }
 
-    // Resolve the song-level loop range with defaults. The loop is allowed to
+    // Resolve the score-level loop range with defaults. The loop is allowed to
     // extend past the longest sequence — extra time becomes silent tail that
     // gives loops "breathing room" or a pickup bar. We only enforce that the
     // range is non-empty and starts at or after 0.
     const fullLength = Math.max(1, maxLength);
-    const requestedStart = Number.isFinite(song.loopStart) ? Math.max(0, song.loopStart as number) : 0;
-    const requestedEnd = Number.isFinite(song.loopEnd) ? (song.loopEnd as number) : fullLength;
+    const requestedStart = Number.isFinite(score.loopStart) ? Math.max(0, score.loopStart as number) : 0;
+    const requestedEnd = Number.isFinite(score.loopEnd) ? (score.loopEnd as number) : fullLength;
     const loopStartBeats = Math.max(0, requestedStart);
     const loopEndBeats = Math.max(loopStartBeats + 0.0625, requestedEnd);
     this.#loopStartBeats = loopStartBeats;
     this.#loopEndBeats = loopEndBeats;
     this.#loopBeats = fullLength;
     transport.loop = true;
-    transport.loopStart = beatsToSeconds(loopStartBeats, song.tempo);
-    transport.loopEnd = beatsToSeconds(loopEndBeats, song.tempo);
+    transport.loopStart = beatsToSeconds(loopStartBeats, score.tempo);
+    transport.loopEnd = beatsToSeconds(loopEndBeats, score.tempo);
   }
 
   /** Currently configured loop range in beats — `null` before `load()` runs. */

@@ -14,28 +14,13 @@ import { Menu, MenuBuilder, useMenuActions, type ActionGraphProps } from '@dxos/
 import { mx } from '@dxos/ui-theme';
 
 import { SequenceGrid, TrackList } from '#components';
-import type { Note, Sequence, Song, Track } from '#types';
+import type { Sequence, Score, Track } from '#types';
 
-import { SongPlayer } from '../../audio';
+import { ScorePlayer } from '../../audio';
 import { formatLeadSheet, parseLeadSheet, type LeadSheetDocument } from '../../util/lead-sheet';
+import { applyLeadSheetToScore, scoreToLeadSheet, type MutableScore } from '../../util/score-leadsheet';
 
-export type SongArticleProps = AppSurface.ObjectArticleProps<Song.Song>;
-
-type MutableSong = {
-  name?: string;
-  tempo: number;
-  timeSignature?: string;
-  loopStart?: number;
-  loopEnd?: number;
-  tracks: (Track.Track & { patches?: Track.Track['patches'] })[];
-  sequences: {
-    id: string;
-    trackId: string;
-    name?: string;
-    length: number;
-    notes: Note.Note[];
-  }[];
-};
+export type ScoreArticleProps = AppSurface.ObjectArticleProps<Score.Score>;
 
 const TRACK_COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#a855f7', '#ec4899'];
 
@@ -62,21 +47,7 @@ const newTrack = (index: number): Track.Track => ({
   ],
 });
 
-// Standard kit mapping shared with the lead-sheet importer.
-const DRUM_KIT_PATCHES: Track.Track['patches'] = [
-  { kind: 'drum', pitch: 36, drum: 'kick' },
-  { kind: 'drum', pitch: 38, drum: 'snare' },
-  { kind: 'drum', pitch: 39, drum: 'clap' },
-  { kind: 'drum', pitch: 41, drum: 'tomLo' },
-  { kind: 'drum', pitch: 42, drum: 'hat' },
-  { kind: 'drum', pitch: 46, drum: 'openhat' },
-  { kind: 'drum', pitch: 47, drum: 'tomMid' },
-  { kind: 'drum', pitch: 49, drum: 'crash' },
-  { kind: 'drum', pitch: 50, drum: 'tomHi' },
-  { kind: 'drum', pitch: 51, drum: 'ride' },
-];
-
-type MutableSequence = MutableSong['sequences'][number];
+type MutableSequence = MutableScore['sequences'][number];
 
 const newSequence = (trackId: string): MutableSequence => ({
   id: newId(),
@@ -85,21 +56,11 @@ const newSequence = (trackId: string): MutableSequence => ({
   notes: [],
 });
 
-const findSequenceForTrack = (song: Song.Song, trackId: string | null): Sequence.Sequence | undefined => {
+const findSequenceForTrack = (score: Score.Score, trackId: string | null): Sequence.Sequence | undefined => {
   if (!trackId) {
     return undefined;
   }
-  return song.sequences.find((sequence) => sequence.trackId === trackId);
-};
-
-const toNoteArray = (value: unknown): ReadonlyArray<Note.Note> => {
-  if (value == null) {
-    return [];
-  }
-  if (Array.isArray(value)) {
-    return value as ReadonlyArray<Note.Note>;
-  }
-  return Array.from(value as ArrayLike<Note.Note>);
+  return score.sequences.find((sequence) => sequence.trackId === trackId);
 };
 
 const parseTimeSignature = (input: string | undefined): number => {
@@ -114,93 +75,12 @@ const parseTimeSignature = (input: string | undefined): number => {
 };
 
 /**
- * Project a Song into the LeadSheetDocument shape. Each track becomes one section;
- * notes come from the first sequence associated with that track (multi-sequence
- * export is out of scope for v1).
- */
-const songToLeadSheet = (song: Song.Song): LeadSheetDocument => ({
-  tracks: song.tracks.map((track, index) => {
-    const sequence = song.sequences.find((seq) => seq.trackId === track.id);
-    return {
-      index: index + 1,
-      name: track.name,
-      instrument: track.instrument,
-      notes: sequence ? toNoteArray(sequence.notes).map((note) => ({ ...note })) : [],
-      length: sequence?.length ?? 16,
-    };
-  }),
-});
-
-/**
- * Replace a Song's tracks/sequences with the contents of a LeadSheetDocument.
- * Tracks are matched by 1-based index — existing tracks at that index are reused
- * (preserving color/instrument/id) and new tracks fill missing slots. Tracks not
- * referenced by the document are removed.
- */
-const applyLeadSheetToSong = (mutable: MutableSong, document: LeadSheetDocument): void => {
-  const TRACK_COLORS_FALLBACK = [
-    '#ef4444',
-    '#f97316',
-    '#eab308',
-    '#22c55e',
-    '#06b6d4',
-    '#3b82f6',
-    '#a855f7',
-    '#ec4899',
-  ];
-  const newId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-
-  const sorted = [...document.tracks].sort((a, b) => a.index - b.index);
-  const existingByIndex = new Map(mutable.tracks.map((track, i) => [i + 1, track]));
-
-  // Clear in place; ECHO array mutations stick to the same proxy reference.
-  mutable.tracks.splice(0, mutable.tracks.length);
-  mutable.sequences.splice(0, mutable.sequences.length);
-
-  sorted.forEach((entry, slot) => {
-    const previous = existingByIndex.get(entry.index);
-    const trackId = previous?.id ?? newId();
-    const color = previous?.color ?? TRACK_COLORS_FALLBACK[slot % TRACK_COLORS_FALLBACK.length];
-    const instrument = entry.instrument ?? previous?.instrument;
-    const patches = previous?.patches
-      ? Array.from(previous.patches)
-      : instrument === 'drums'
-        ? DRUM_KIT_PATCHES.map((patch) => ({ ...patch }))
-        : [
-            {
-              kind: 'synth' as const,
-              minPitch: previous?.minPitch ?? DEFAULT_MIN_PITCH,
-              maxPitch: previous?.maxPitch ?? DEFAULT_MAX_PITCH,
-              oscillator: 'sine' as const,
-            },
-          ];
-    mutable.tracks.push({
-      id: trackId,
-      name: entry.name,
-      color,
-      instrument,
-      minPitch: previous?.minPitch,
-      maxPitch: previous?.maxPitch,
-      muted: previous?.muted,
-      patches,
-    });
-    mutable.sequences.push({
-      id: newId(),
-      trackId,
-      name: entry.name,
-      length: entry.length,
-      notes: entry.notes.map((note) => ({ ...note })),
-    });
-  });
-};
-
-/**
- * Article surface for a Song. Composes a TrackList (left) with the active Sequence's
+ * Article surface for a Score. Composes a TrackList (left) with the active Sequence's
  * piano-roll grid (right) and a toolbar with playback + tempo controls.
  */
-export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) => {
+export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps) => {
   const [snapshot] = useObject(subject);
-  const song = snapshot as unknown as Song.Song;
+  const score = snapshot as unknown as Score.Score;
 
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -209,15 +89,15 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
 
   // Auto-select the first track when one becomes available.
   useEffect(() => {
-    if (!selectedTrackId && song.tracks.length > 0) {
-      setSelectedTrackId(song.tracks[0].id);
-    } else if (selectedTrackId && !song.tracks.some((track) => track.id === selectedTrackId)) {
-      setSelectedTrackId(song.tracks[0]?.id ?? null);
+    if (!selectedTrackId && score.tracks.length > 0) {
+      setSelectedTrackId(score.tracks[0].id);
+    } else if (selectedTrackId && !score.tracks.some((track) => track.id === selectedTrackId)) {
+      setSelectedTrackId(score.tracks[0]?.id ?? null);
     }
-  }, [selectedTrackId, song.tracks]);
+  }, [selectedTrackId, score.tracks]);
 
-  const activeTrack = song.tracks.find((track) => track.id === selectedTrackId) ?? null;
-  const activeSequence = findSequenceForTrack(song, selectedTrackId) ?? null;
+  const activeTrack = score.tracks.find((track) => track.id === selectedTrackId) ?? null;
+  const activeSequence = findSequenceForTrack(score, selectedTrackId) ?? null;
 
   // Ensure a sequence exists for the selected track.
   useEffect(() => {
@@ -225,7 +105,7 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
       return;
     }
     Obj.update(subject, (subject) => {
-      const mutable = subject as unknown as MutableSong;
+      const mutable = subject as unknown as MutableScore;
       mutable.sequences.push(newSequence(activeTrack.id));
     });
   }, [subject, activeTrack, activeSequence]);
@@ -233,7 +113,7 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
   const handleAddTrack = useCallback(() => {
     let createdTrackId: string | null = null;
     Obj.update(subject, (subject) => {
-      const mutable = subject as unknown as MutableSong;
+      const mutable = subject as unknown as MutableScore;
       const track = newTrack(mutable.tracks.length);
       createdTrackId = track.id;
       mutable.tracks.push(track);
@@ -247,7 +127,7 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
   const handleRemoveTrack = useCallback(
     (trackId: string) => {
       Obj.update(subject, (subject) => {
-        const mutable = subject as unknown as MutableSong;
+        const mutable = subject as unknown as MutableScore;
         for (let i = mutable.tracks.length - 1; i >= 0; i--) {
           if (mutable.tracks[i].id === trackId) {
             mutable.tracks.splice(i, 1);
@@ -266,7 +146,7 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
   const handleMuteTrack = useCallback(
     (trackId: string, muted: boolean) => {
       Obj.update(subject, (subject) => {
-        const mutable = subject as unknown as MutableSong;
+        const mutable = subject as unknown as MutableScore;
         const track = mutable.tracks.find((track) => track.id === trackId);
         if (track) {
           track.muted = muted;
@@ -282,7 +162,7 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
         return;
       }
       Obj.update(subject, (subject) => {
-        const mutable = subject as unknown as MutableSong;
+        const mutable = subject as unknown as MutableScore;
         mutable.tempo = next;
       });
     },
@@ -292,7 +172,7 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
   const handleLoopChange = useCallback(
     (loopStart: number, loopEnd: number) => {
       Obj.update(subject, (subject) => {
-        const mutable = subject as unknown as MutableSong & { loopStart?: number; loopEnd?: number };
+        const mutable = subject as unknown as MutableScore & { loopStart?: number; loopEnd?: number };
         mutable.loopStart = loopStart;
         mutable.loopEnd = loopEnd;
       });
@@ -300,12 +180,12 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
     [subject],
   );
 
-  const beatsPerBar = parseTimeSignature(song.timeSignature);
+  const beatsPerBar = parseTimeSignature(score.timeSignature);
 
   const handleExport = useCallback(() => {
-    const document = songToLeadSheet(song);
+    const document = scoreToLeadSheet(score);
     const text = formatLeadSheet(document, { beatsPerBar });
-    const filename = `${(song.name ?? 'song').replace(/[^a-z0-9-_]+/gi, '_').slice(0, 60) || 'song'}.txt`;
+    const filename = `${(score.name ?? 'score').replace(/[^a-z0-9-_]+/gi, '_').slice(0, 60) || 'score'}.txt`;
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const anchor = window.document.createElement('a');
@@ -316,7 +196,7 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
     anchor.click();
     window.document.body.removeChild(anchor);
     URL.revokeObjectURL(url);
-  }, [song, beatsPerBar]);
+  }, [score, beatsPerBar]);
 
   const handleImport = useCallback(() => {
     const input = window.document.createElement('input');
@@ -342,8 +222,8 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
         return;
       }
       Obj.update(subject, (subject) => {
-        const mutable = subject as unknown as MutableSong;
-        applyLeadSheetToSong(mutable, document);
+        const mutable = subject as unknown as MutableScore;
+        applyLeadSheetToScore(mutable, document);
       });
     });
     window.document.body.appendChild(input);
@@ -359,7 +239,7 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
       }
       const sequenceId = activeSequence.id;
       Obj.update(subject, (subject) => {
-        const mutable = subject as unknown as MutableSong;
+        const mutable = subject as unknown as MutableScore;
         const sequence = mutable.sequences.find((seq) => seq.id === sequenceId);
         if (!sequence) {
           return;
@@ -380,12 +260,12 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
     [subject, activeSequence, beatsPerCell],
   );
 
-  // Tone.js audio playback. The SongPlayer is rebuilt whenever the Song structure
+  // Tone.js audio playback. The ScorePlayer is rebuilt whenever the Score structure
   // changes; play/stop is driven by isPlaying. The playhead animation runs in
   // parallel via rAF — visually accurate within a few ms of the audio.
-  const playerRef = useRef<SongPlayer | null>(null);
+  const playerRef = useRef<ScorePlayer | null>(null);
   if (playerRef.current === null) {
-    playerRef.current = new SongPlayer();
+    playerRef.current = new ScorePlayer();
   }
 
   useEffect(() => {
@@ -395,8 +275,8 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
 
   useEffect(() => {
     const player = playerRef.current!;
-    player.load(song as Song.Song);
-  }, [song]);
+    player.load(score as Score.Score);
+  }, [score]);
 
   useEffect(() => {
     const player = playerRef.current!;
@@ -407,13 +287,13 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
     }
     void player.play();
     const startedAt = performance.now();
-    const beatsPerSecond = song.tempo / 60;
-    // Match the SongPlayer's effective loop range so the visual playhead loops
+    const beatsPerSecond = score.tempo / 60;
+    // Match the ScorePlayer's effective loop range so the visual playhead loops
     // in lockstep with the audio (start → end → wrap → start). Trust the
-    // song-level loopStart/loopEnd directly; the loop is allowed to extend
+    // score-level loopStart/loopEnd directly; the loop is allowed to extend
     // past activeSequence.length.
-    const loopStartBeats = Math.max(0, song.loopStart ?? 0);
-    const loopEndBeats = Math.max(loopStartBeats + 0.0625, song.loopEnd ?? activeSequence.length);
+    const loopStartBeats = Math.max(0, score.loopStart ?? 0);
+    const loopEndBeats = Math.max(loopStartBeats + 0.0625, score.loopEnd ?? activeSequence.length);
     const loopSpan = loopEndBeats - loopStartBeats;
     let raf = 0;
     const tick = (now: number) => {
@@ -427,7 +307,7 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
       cancelAnimationFrame(raf);
       player.stop();
     };
-  }, [isPlaying, activeSequence, song.tempo, song.loopStart, song.loopEnd]);
+  }, [isPlaying, activeSequence, score.tempo, score.loopStart, score.loopEnd]);
 
   // Toolbar actions composed via the MenuBuilder / Menu.Root idiom
   // (org.dxos.react-ui-menu.toolbarMenu). useMemo deps cover every value the
@@ -496,7 +376,7 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
               <Input.TextInput
                 type='number'
                 min={1}
-                value={song.tempo}
+                value={score.tempo}
                 onChange={(event) => handleTempoChange(Number(event.target.value))}
                 classNames='w-16'
               />
@@ -508,7 +388,7 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
         <div className='flex h-full min-h-0'>
           <div className='w-48 shrink-0 border-r border-neutral-200 dark:border-neutral-800'>
             <TrackList
-              tracks={song.tracks}
+              tracks={score.tracks}
               selectedTrackId={selectedTrackId}
               onSelect={setSelectedTrackId}
               onMute={handleMuteTrack}
@@ -523,16 +403,16 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
                 track={activeTrack}
                 beatsPerCell={beatsPerCell}
                 playhead={playhead}
-                loopStart={song.loopStart}
-                loopEnd={song.loopEnd}
+                loopStart={score.loopStart}
+                loopEnd={score.loopEnd}
                 onLoopChange={handleLoopChange}
                 onToggleNote={handleToggleNote}
                 overlayTracks={
                   showAllTracks
-                    ? song.tracks
+                    ? score.tracks
                         .filter((track) => track.id !== activeTrack.id)
                         .map((track) => {
-                          const sequence = song.sequences.find((seq) => seq.trackId === track.id);
+                          const sequence = score.sequences.find((seq) => seq.trackId === track.id);
                           return sequence ? { track, sequence } : null;
                         })
                         .filter((entry): entry is { track: Track.Track; sequence: Sequence.Sequence } => entry !== null)
@@ -555,4 +435,4 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
   );
 };
 
-export default SongArticle;
+export default ScoreArticle;

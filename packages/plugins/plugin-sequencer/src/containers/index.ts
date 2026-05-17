@@ -4,4 +4,4 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export const SongArticle: ComponentType<any> = lazy(() => import('./SongArticle'));
+export const ScoreArticle: ComponentType<any> = lazy(() => import('./ScoreArticle'));

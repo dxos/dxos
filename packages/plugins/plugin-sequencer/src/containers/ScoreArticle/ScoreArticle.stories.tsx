@@ -5,23 +5,28 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
+import { Obj } from '@dxos/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { Note, Sequence, Song, Track } from '#types';
+import { Note, Sequence, Score, Track } from '#types';
 
-import { SongArticle } from './SongArticle';
+import { applyLeadSheetToScore, type MutableScore } from '../../util';
+import { parseLeadSheet } from '../../util/lead-sheet';
+import { ScoreArticle } from './ScoreArticle';
+import SCORE from './testing/ode_to_joy.txt?raw';
 
 const trackColors = ['#ef4444', '#f97316', '#3b82f6', '#22c55e'];
 
-const buildSampleSong = (): Song.Song => {
+const buildSampleScore = (): Score.Score => {
   const tracks: Track.Track[] = [
     { id: 't1', name: 'Lead', color: trackColors[0], minPitch: 21, maxPitch: 108 },
     { id: 't2', name: 'Bass', color: trackColors[1], minPitch: 21, maxPitch: 108 },
     { id: 't3', name: 'Pad', color: trackColors[2], minPitch: 21, maxPitch: 108 },
     { id: 't4', name: 'Drums', color: trackColors[3], minPitch: 21, maxPitch: 108 },
   ];
+
   const sequences: Sequence.Sequence[] = [
     {
       id: 's1',
@@ -54,16 +59,31 @@ const buildSampleSong = (): Song.Song => {
     { id: 's3', trackId: 't3', name: 'Pad', length: 16, notes: [] },
     { id: 's4', trackId: 't4', name: 'Drums', length: 16, notes: [] },
   ];
-  return Song.make({ name: 'Demo song', tempo: 120, tracks, sequences });
+
+  return Score.make({ name: 'Demo score', tempo: 120, tracks, sequences });
 };
 
 const DefaultStory = () => {
-  const song = useMemo(() => buildSampleSong(), []);
-  return <SongArticle role='article' attendableId='story-song' subject={song} />;
+  const score = useMemo(() => buildSampleScore(), []);
+  return <ScoreArticle role='article' attendableId='story-score' subject={score} />;
+};
+
+const buildOdeToJoyScore = (): Score.Score => {
+  const score = Score.make({ name: 'Ode to Joy', tempo: 120, timeSignature: '4/4' });
+  const document = parseLeadSheet(SCORE, { beatsPerBar: 4 });
+  Obj.update(score, (score) => {
+    applyLeadSheetToScore(score as unknown as MutableScore, document);
+  });
+  return score;
+};
+
+const OdeToJoyStory = () => {
+  const score = useMemo(() => buildOdeToJoyScore(), []);
+  return <ScoreArticle role='article' attendableId='story-ode-to-joy' subject={score} />;
 };
 
 const meta = {
-  title: 'plugins/plugin-sequencer/containers/SongArticle',
+  title: 'plugins/plugin-sequencer/containers/ScoreArticle',
   component: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withClientProvider({ createIdentity: true })],
   parameters: {
@@ -77,3 +97,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const OdeToJoy: Story = {
+  render: () => <OdeToJoyStory />,
+};
