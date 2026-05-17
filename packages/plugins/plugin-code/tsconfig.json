@@ -39,6 +39,9 @@
       "path": "../../core/echo/echo-db"
     },
     {
+      "path": "../../reflect/deus"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {

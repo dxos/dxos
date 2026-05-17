@@ -89,7 +89,7 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(({ role,
     <Panel.Root role={role} ref={forwardedRef}>
       {/* TODO(burdon): Add toolbar actions (cf. SpecArticle's Editor.Toolbar). */}
       <Panel.Toolbar asChild>
-        <Toolbar.Root></Toolbar.Root>
+        <Toolbar.Root />
       </Panel.Toolbar>
       <Panel.Content asChild>
         <div className='dx-container grid grid-cols-[30rem_1fr] divide-x divide-separator' role='none'>
