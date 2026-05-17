@@ -82,13 +82,15 @@ export const generateConnectedOrgs = async (
  * Organizations are deterministically bucketed into `SECTORS` so the demo has visible groups.
  */
 export const buildOrgHierarchy = (organizations: Obj.Any[], sectors: readonly string[] = SECTORS): TreeNode => {
+  // Avoid modulo-by-zero / missing-bucket crashes when the caller passes an empty sectors list.
+  const activeSectors = sectors.length > 0 ? sectors : ['Uncategorized'];
   const buckets = new Map<string, TreeNode[]>();
-  for (const sector of sectors) {
+  for (const sector of activeSectors) {
     buckets.set(sector, []);
   }
   for (let i = 0; i < organizations.length; i++) {
     const org = organizations[i] as any;
-    const sector = sectors[i % sectors.length];
+    const sector = activeSectors[i % activeSectors.length];
     buckets.get(sector)!.push({
       id: org.id,
       label: org.name ?? org.id.slice(0, 6),
@@ -98,7 +100,7 @@ export const buildOrgHierarchy = (organizations: Obj.Any[], sectors: readonly st
   return {
     id: 'root',
     label: 'Organizations',
-    children: sectors.map((sector) => ({
+    children: activeSectors.map((sector) => ({
       id: `sector:${sector}`,
       label: sector,
       children: buckets.get(sector) ?? [],
@@ -141,6 +143,9 @@ export const generate = async (
   await createObjects(spec);
 
   const contacts: Obj.Any[] = await space.db.query(Query.type(Person.Person)).run();
+  if (contacts.length < 2 || relations.count <= 0) {
+    return;
+  }
   for (const _ of range(relations.count)) {
     const source = pick(contacts);
     const target = pick(contacts);

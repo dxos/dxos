@@ -20,7 +20,7 @@ export type TreeComponentProps = ThemedClassName<{
   slots?: TreeLayoutSlots;
   initialCollapsed?: Iterable<string>;
   onNodeClick?: (node: TreeNode) => void;
-  onNodeHover?: (node: TreeNode | null) => void;
+  onNodeHover?: (node: TreeNode | null, event?: MouseEvent) => void;
 }>;
 
 /**
@@ -62,6 +62,7 @@ export const Tree = ({
             slots={slots}
             initialCollapsed={initialCollapsed}
             onNodeClick={onNodeClick}
+            onNodeHover={onNodeHover}
           />
         );
       case 'edge':

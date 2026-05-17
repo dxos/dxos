@@ -34,10 +34,11 @@ export type RadialTreeProps = ThemedClassName<{
   /** Notified when the user clicks a node. */
   onNodeClick?: (node: TreeNode) => void;
   /**
-   * Notified on pointerenter for nodes. Used to wire previews (dispatch `DxAnchorActivate`).
-   * The event target is the hovered circle — dispatch from it so the preview anchors there.
+   * Notified on pointerenter (and `null` on pointerleave) for nodes. Used to wire previews
+   * (dispatch `DxAnchorActivate`). The event target on enter is the hovered circle — dispatch
+   * from it so the preview anchors there.
    */
-  onNodeHover?: (node: TreeNode, event: MouseEvent) => void;
+  onNodeHover?: (node: TreeNode | null, event?: MouseEvent) => void;
 }>;
 
 /**
@@ -82,8 +83,8 @@ export const RadialTree = ({
     }
   };
 
-  const handleHoverRef = useRef<(node: TreeNode, event: MouseEvent) => void>(() => {});
-  handleHoverRef.current = (node: TreeNode, event: MouseEvent) => onNodeHover?.(node, event);
+  const handleHoverRef = useRef<(node: TreeNode | null, event?: MouseEvent) => void>(() => {});
+  handleHoverRef.current = (node: TreeNode | null, event?: MouseEvent) => onNodeHover?.(node, event);
 
   const root = useMemo(() => buildHierarchy(data, collapsed), [data, collapsed]);
 
@@ -128,7 +129,7 @@ type RenderOptions = {
   collapsed: Set<string>;
   cluster: boolean;
   onNodeClick: (node: TreeNode) => void;
-  onNodeHover: (node: TreeNode, event: MouseEvent) => void;
+  onNodeHover: (node: TreeNode | null, event?: MouseEvent) => void;
 };
 
 const renderRadialTree = (svgElement: SVGSVGElement, root: any, options: RenderOptions) => {
@@ -192,7 +193,8 @@ const renderRadialTree = (svgElement: SVGSVGElement, root: any, options: RenderO
   nodeEnter
     .append('circle')
     .attr('r', r)
-    .on('pointerenter', (event: MouseEvent, d: any) => onNodeHover(d.data, event));
+    .on('pointerenter', (event: MouseEvent, d: any) => onNodeHover(d.data, event))
+    .on('pointerleave', (event: MouseEvent) => onNodeHover(null, event));
 
   nodeEnter
     .append('text')

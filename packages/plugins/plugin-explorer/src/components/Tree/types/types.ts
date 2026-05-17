@@ -31,13 +31,14 @@ export const treeTypeToTreeNode = (
     return undefined;
   }
   if (visited.has(rootId)) {
-    return { id: rootId, label: labelOf(node) };
+    return { id: rootId, label: labelOf(node), data: node.data };
   }
   visited.add(rootId);
 
   return {
     id: rootId,
     label: labelOf(node),
+    data: node.data,
     children: node.children
       .map((childId) => treeTypeToTreeNode(tree, childId, visited))
       .filter((c): c is TreeNode => Boolean(c)),

@@ -142,8 +142,9 @@ const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
  * Read from the model's reactive graph atom so the hierarchy is rebuilt as objects/relations stream in.
  */
 const HierarchyVisualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
-  useAtomValue(model.graphAtom);
-  const { tree, edges } = useMemo(() => spaceGraphToHierarchy(model), [model, model.graph]);
+  // Capture the atom snapshot so the memo's dep list explicitly tracks each push from the atom.
+  const graphSnapshot = useAtomValue(model.graphAtom);
+  const { tree, edges } = useMemo(() => spaceGraphToHierarchy(model), [model, graphSnapshot]);
   if (variant === 'cluster') {
     return <RadialTree data={tree} cluster onNodeHover={onNodeHover} />;
   }

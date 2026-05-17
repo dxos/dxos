@@ -141,15 +141,17 @@ type RenderOptions = {
 
 const renderBundling = (svgElement: SVGSVGElement, root: BundleHierarchy, options: RenderOptions) => {
   const { radius, tension, label, slots, onNodeHover } = options;
+  const svg = select(svgElement);
 
-  // Degenerate root (no descendants yet): treat as a no-op rather than emit a single "leaf" for the root itself.
+  // Degenerate root (no descendants yet): clear any previously rendered bundle so a stale
+  // graph doesn't linger after the hierarchy empties out, then no-op.
   if (!root.children?.length) {
+    svg.selectAll('g.dx-bundle-root').remove();
     return;
   }
 
   cluster<TreeNode>().size([2 * Math.PI, radius])(root);
 
-  const svg = select(svgElement);
   const g = svg.selectAll<SVGGElement, null>('g.dx-bundle-root').data([null]).join('g').classed('dx-bundle-root', true);
 
   const linksLayer = g
