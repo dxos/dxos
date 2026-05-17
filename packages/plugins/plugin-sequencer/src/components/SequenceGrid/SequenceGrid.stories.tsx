@@ -20,7 +20,7 @@ const sampleTrack: Track.Track = {
   name: 'Lead Synth',
   color: '#3b82f6',
   minPitch: 24,
-  maxPitch: 72,
+  maxPitch: 108,
 };
 
 const sampleNotes = (): Note.Note[] => {

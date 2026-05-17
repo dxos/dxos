@@ -17,10 +17,10 @@ const trackColors = ['#ef4444', '#f97316', '#3b82f6', '#22c55e'];
 
 const buildSampleSong = (): Song.Song => {
   const tracks: Track.Track[] = [
-    { id: 't1', name: 'Lead', color: trackColors[0], minPitch: 24, maxPitch: 72 },
-    { id: 't2', name: 'Bass', color: trackColors[1], minPitch: 24, maxPitch: 72 },
-    { id: 't3', name: 'Pad', color: trackColors[2], minPitch: 24, maxPitch: 72 },
-    { id: 't4', name: 'Drums', color: trackColors[3], minPitch: 24, maxPitch: 72 },
+    { id: 't1', name: 'Lead', color: trackColors[0], minPitch: 24, maxPitch: 108 },
+    { id: 't2', name: 'Bass', color: trackColors[1], minPitch: 24, maxPitch: 108 },
+    { id: 't3', name: 'Pad', color: trackColors[2], minPitch: 24, maxPitch: 108 },
+    { id: 't4', name: 'Drums', color: trackColors[3], minPitch: 24, maxPitch: 108 },
   ];
   const sequences: Sequence.Sequence[] = [
     {

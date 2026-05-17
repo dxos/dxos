@@ -122,7 +122,7 @@ const buildTrackVoices = (track: Track.Track): TrackVoices => {
   const fallbackPatch: Patch.SynthPatch = {
     kind: 'synth',
     minPitch: track.minPitch ?? 24,
-    maxPitch: track.maxPitch ?? 84,
+    maxPitch: track.maxPitch ?? 108,
     oscillator: 'sine',
   };
   return { patches, voices, fallback: createVoiceForPatch(fallbackPatch) };
