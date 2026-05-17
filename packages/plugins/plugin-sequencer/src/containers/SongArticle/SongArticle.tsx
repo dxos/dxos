@@ -295,6 +295,14 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
         const mutable = subject as unknown as MutableSong & { loopStart?: number; loopEnd?: number };
         mutable.loopStart = loopStart;
         mutable.loopEnd = loopEnd;
+        // Grow every sequence to fit the new loop end. Sequences are the unit
+        // that bounds playback in SongPlayer, so without this the loop would
+        // be clamped back down to the previous sequence length.
+        for (const sequence of mutable.sequences) {
+          if (sequence.length < loopEnd) {
+            sequence.length = loopEnd;
+          }
+        }
       });
     },
     [subject],

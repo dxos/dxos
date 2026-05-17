@@ -205,6 +205,10 @@ export const SequenceGrid = ({
   const pixelsPerBeat = pixelsPerCell / beatsPerCell;
   const resolvedLoopEnd = loopEnd ?? sequence.length;
   const resolvedLoopStart = loopStart ?? 0;
+  // Loop range is allowed to extend beyond the current sequence length — the
+  // SongArticle grows sequences to match on commit. Cap at a generous maximum
+  // (256 beats = 64 bars at 4/4) so dragging stays bounded.
+  const loopMaxBeats = Math.max(sequence.length, 256);
 
   return (
     <div ref={paneRef} className={mx('relative w-full h-full', classNames)}>
@@ -220,7 +224,7 @@ export const SequenceGrid = ({
         <LoopMarkers
           loopStart={resolvedLoopStart}
           loopEnd={resolvedLoopEnd}
-          maxBeats={sequence.length}
+          maxBeats={loopMaxBeats}
           step={beatsPerCell}
           pixelsPerBeat={pixelsPerBeat}
           scrollX={viewport.scrollX}
