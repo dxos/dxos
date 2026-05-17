@@ -18,9 +18,7 @@ const BEATS_PER_CELL = 0.25;
 const sampleTrack: Track.Track = {
   id: 'track-1',
   name: 'Lead Synth',
-  color: '#3b82f6',
-  minPitch: 21,
-  maxPitch: 108,
+  hue: 'blue',
 };
 
 const sampleNotes = (): Note.Note[] => {

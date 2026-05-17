@@ -18,13 +18,17 @@ export const Track = Schema.Struct({
   /** Stable identifier referenced by Sequence.trackId. */
   id: Schema.String,
   name: Schema.String,
-  /** Hex color string for UI tinting (e.g. '#3b82f6'). */
-  color: Schema.optional(Schema.String),
+  /**
+   * Design-system color name (a `ChromaticPalette` value from `@dxos/ui-theme`
+   * — e.g. `'red'`, `'sky'`, `'fuchsia'`). Resolved to a concrete hex by the
+   * renderer via `hueToHex`.
+   */
+  hue: Schema.optional(Schema.String),
   /** Opaque instrument identifier (e.g. 'drums', 'piano'); informational only. */
   instrument: Schema.optional(Schema.String),
-  /** Default visible pitch floor; defaults to 36 (C2). */
+  /** Visible pitch floor, MIDI number. If omitted, the editor falls back to A0 (21). */
   minPitch: Schema.optional(Schema.Number),
-  /** Default visible pitch ceiling; defaults to 84 (C6). */
+  /** Visible pitch ceiling, MIDI number. If omitted, the editor falls back to C8 (108). */
   maxPitch: Schema.optional(Schema.Number),
   muted: Schema.optional(Schema.Boolean),
   /** Sound patches mapping pitch ranges to synth / drum / sample generators. */

@@ -17,26 +17,24 @@ import { SequenceGrid, TrackList } from '#components';
 import type { Sequence, Score, Track } from '#types';
 
 import { ScorePlayer } from '../../audio';
+import { hueAtIndex } from '../../util/hue';
 import { formatLeadSheet, parseLeadSheet, type LeadSheetDocument } from '../../util/lead-sheet';
 import { applyLeadSheetToScore, scoreToLeadSheet, type MutableScore } from '../../util/score-leadsheet';
 
 export type ScoreArticleProps = AppSurface.ObjectArticleProps<Score.Score>;
 
-const TRACK_COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#a855f7', '#ec4899'];
-
 const newId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
-// Default visible pitch range: A0 (MIDI 21) through C8 (MIDI 108) inclusive —
-// the full 88-key piano range.
+// Default fallback pitch range for sound generators that need a definite
+// span — the schema leaves track.minPitch / track.maxPitch optional, and the
+// editor falls back to A0..C8 (full 88-key piano) when they're missing.
 const DEFAULT_MIN_PITCH = 21;
 const DEFAULT_MAX_PITCH = 108;
 
 const newTrack = (index: number): Track.Track => ({
   id: newId(),
   name: `Track ${index + 1}`,
-  color: TRACK_COLORS[index % TRACK_COLORS.length],
-  minPitch: DEFAULT_MIN_PITCH,
-  maxPitch: DEFAULT_MAX_PITCH,
+  hue: hueAtIndex(index),
   patches: [
     {
       kind: 'synth',

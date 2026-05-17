@@ -26,10 +26,10 @@ export type MutableScore = {
   }[];
 };
 
+import { hueAtIndex } from './hue';
+
 const DEFAULT_MIN_PITCH = 21;
 const DEFAULT_MAX_PITCH = 108;
-
-const TRACK_COLORS_FALLBACK = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3b82f6', '#a855f7', '#ec4899'];
 
 // Standard drum kit pitch→drum mapping. Mirrors the kit used by the audio
 // engine so imported drum tracks make sound out of the box.
@@ -92,7 +92,7 @@ export const applyLeadSheetToScore = (mutable: MutableScore, document: LeadSheet
   sorted.forEach((entry, slot) => {
     const previous = existingByIndex.get(entry.index);
     const trackId = previous?.id ?? newId();
-    const color = previous?.color ?? TRACK_COLORS_FALLBACK[slot % TRACK_COLORS_FALLBACK.length];
+    const hue = previous?.hue ?? hueAtIndex(slot);
     const instrument = entry.instrument ?? previous?.instrument;
     const patches = previous?.patches
       ? Array.from(previous.patches)
@@ -109,7 +109,7 @@ export const applyLeadSheetToScore = (mutable: MutableScore, document: LeadSheet
     mutable.tracks.push({
       id: trackId,
       name: entry.name,
-      color,
+      hue,
       instrument,
       minPitch: previous?.minPitch,
       maxPitch: previous?.maxPitch,

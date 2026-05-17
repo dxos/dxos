@@ -9,6 +9,8 @@ import { mx } from '@dxos/ui-theme';
 
 import type { Track } from '#types';
 
+import { hueToHex } from '../../util/hue';
+
 export type TrackListProps = {
   tracks: ReadonlyArray<Track.Track>;
   selectedTrackId?: string | null;
@@ -63,7 +65,7 @@ export const TrackList = ({
           >
             <span
               className='inline-block w-3 h-3 rounded-sm shrink-0 border border-black/20'
-              style={{ backgroundColor: track.color ?? '#3b82f6' }}
+              style={{ backgroundColor: hueToHex(track.hue) }}
               aria-hidden
             />
             <span className='flex-1 truncate'>{track.name}</span>

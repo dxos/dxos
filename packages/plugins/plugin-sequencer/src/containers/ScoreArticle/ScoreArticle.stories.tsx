@@ -17,14 +17,12 @@ import { parseLeadSheet } from '../../util/lead-sheet';
 import { ScoreArticle } from './ScoreArticle';
 import SCORE from './testing/ode_to_joy.txt?raw';
 
-const trackColors = ['#ef4444', '#f97316', '#3b82f6', '#22c55e'];
-
 const buildSampleScore = (): Score.Score => {
   const tracks: Track.Track[] = [
-    { id: 't1', name: 'Lead', color: trackColors[0], minPitch: 21, maxPitch: 108 },
-    { id: 't2', name: 'Bass', color: trackColors[1], minPitch: 21, maxPitch: 108 },
-    { id: 't3', name: 'Pad', color: trackColors[2], minPitch: 21, maxPitch: 108 },
-    { id: 't4', name: 'Drums', color: trackColors[3], minPitch: 21, maxPitch: 108 },
+    { id: 't1', name: 'Lead', hue: 'red' },
+    { id: 't2', name: 'Bass', hue: 'orange' },
+    { id: 't3', name: 'Pad', hue: 'blue' },
+    { id: 't4', name: 'Drums', hue: 'green' },
   ];
 
   const sequences: Sequence.Sequence[] = [
