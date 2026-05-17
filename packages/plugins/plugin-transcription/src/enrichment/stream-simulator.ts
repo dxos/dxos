@@ -61,6 +61,18 @@ export const simulateStream = (
   const gapSeconds = options.gapSeconds ?? 0.5;
   const batchSeconds = options.batchSeconds ?? 0;
 
+  // Guard against divide-by-zero / NaN / negative inputs — `wordsPerSecond` divides into a
+  // duration below, and the other knobs feed into offsets that must be finite.
+  if (!Number.isFinite(wordsPerSecond) || wordsPerSecond <= 0) {
+    throw new Error(`simulateStream: wordsPerSecond must be a finite number > 0 (got ${wordsPerSecond}).`);
+  }
+  if (!Number.isFinite(gapSeconds) || gapSeconds < 0) {
+    throw new Error(`simulateStream: gapSeconds must be a finite number >= 0 (got ${gapSeconds}).`);
+  }
+  if (!Number.isFinite(batchSeconds) || batchSeconds < 0) {
+    throw new Error(`simulateStream: batchSeconds must be a finite number >= 0 (got ${batchSeconds}).`);
+  }
+
   const conversationStart = Date.UTC(2024, 0, 1, 12, 0, 0); // deterministic, ignored by callers
   let cursorMs = 0;
   const batches: SimulatedBatch[] = [];
