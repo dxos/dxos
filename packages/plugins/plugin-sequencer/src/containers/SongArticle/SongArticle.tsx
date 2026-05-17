@@ -295,14 +295,6 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
         const mutable = subject as unknown as MutableSong & { loopStart?: number; loopEnd?: number };
         mutable.loopStart = loopStart;
         mutable.loopEnd = loopEnd;
-        // Grow every sequence to fit the new loop end. Sequences are the unit
-        // that bounds playback in SongPlayer, so without this the loop would
-        // be clamped back down to the previous sequence length.
-        for (const sequence of mutable.sequences) {
-          if (sequence.length < loopEnd) {
-            sequence.length = loopEnd;
-          }
-        }
       });
     },
     [subject],
@@ -417,10 +409,12 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
     const startedAt = performance.now();
     const beatsPerSecond = song.tempo / 60;
     // Match the SongPlayer's effective loop range so the visual playhead loops
-    // in lockstep with the audio (start → end → wrap → start).
+    // in lockstep with the audio (start → end → wrap → start). Trust the
+    // song-level loopStart/loopEnd directly; the loop is allowed to extend
+    // past activeSequence.length.
     const loopStartBeats = Math.max(0, song.loopStart ?? 0);
-    const loopEndBeats = Math.min(activeSequence.length, song.loopEnd ?? activeSequence.length);
-    const loopSpan = Math.max(0.0625, loopEndBeats - loopStartBeats);
+    const loopEndBeats = Math.max(loopStartBeats + 0.0625, song.loopEnd ?? activeSequence.length);
+    const loopSpan = loopEndBeats - loopStartBeats;
     let raf = 0;
     const tick = (now: number) => {
       const elapsedSeconds = (now - startedAt) / 1000;

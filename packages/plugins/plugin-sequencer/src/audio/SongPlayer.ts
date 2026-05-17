@@ -204,12 +204,15 @@ export class SongPlayer {
       this.#scheduled.push({ trackId: track.id, voices, part });
     }
 
-    // Resolve the song-level loop range with defaults + clamping.
+    // Resolve the song-level loop range with defaults. The loop is allowed to
+    // extend past the longest sequence — extra time becomes silent tail that
+    // gives loops "breathing room" or a pickup bar. We only enforce that the
+    // range is non-empty and starts at or after 0.
     const fullLength = Math.max(1, maxLength);
     const requestedStart = Number.isFinite(song.loopStart) ? Math.max(0, song.loopStart as number) : 0;
     const requestedEnd = Number.isFinite(song.loopEnd) ? (song.loopEnd as number) : fullLength;
-    const loopStartBeats = Math.min(requestedStart, fullLength);
-    const loopEndBeats = Math.max(loopStartBeats + 0.0625, Math.min(requestedEnd, fullLength));
+    const loopStartBeats = Math.max(0, requestedStart);
+    const loopEndBeats = Math.max(loopStartBeats + 0.0625, requestedEnd);
     this.#loopStartBeats = loopStartBeats;
     this.#loopEndBeats = loopEndBeats;
     this.#loopBeats = fullLength;
