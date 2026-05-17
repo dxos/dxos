@@ -3,5 +3,3 @@
 //
 
 export * from './LoopMarkers';
-export * from './SequenceGrid';
-export * from './TrackList';

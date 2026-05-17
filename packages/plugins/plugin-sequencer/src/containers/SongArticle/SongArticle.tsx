@@ -25,6 +25,8 @@ type MutableSong = {
   name?: string;
   tempo: number;
   timeSignature?: string;
+  loopStart?: number;
+  loopEnd?: number;
   tracks: (Track.Track & { patches?: Track.Track['patches'] })[];
   sequences: {
     id: string;
@@ -287,6 +289,17 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
     [subject],
   );
 
+  const handleLoopChange = useCallback(
+    (loopStart: number, loopEnd: number) => {
+      Obj.update(subject, (subject) => {
+        const mutable = subject as unknown as MutableSong & { loopStart?: number; loopEnd?: number };
+        mutable.loopStart = loopStart;
+        mutable.loopEnd = loopEnd;
+      });
+    },
+    [subject],
+  );
+
   const beatsPerBar = parseTimeSignature(song.timeSignature);
 
   const handleExport = useCallback(() => {
@@ -395,10 +408,15 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
     void player.play();
     const startedAt = performance.now();
     const beatsPerSecond = song.tempo / 60;
+    // Match the SongPlayer's effective loop range so the visual playhead loops
+    // in lockstep with the audio (start → end → wrap → start).
+    const loopStartBeats = Math.max(0, song.loopStart ?? 0);
+    const loopEndBeats = Math.min(activeSequence.length, song.loopEnd ?? activeSequence.length);
+    const loopSpan = Math.max(0.0625, loopEndBeats - loopStartBeats);
     let raf = 0;
     const tick = (now: number) => {
       const elapsedSeconds = (now - startedAt) / 1000;
-      const beats = (elapsedSeconds * beatsPerSecond) % activeSequence.length;
+      const beats = loopStartBeats + ((elapsedSeconds * beatsPerSecond) % loopSpan);
       setPlayhead(beats);
       raf = requestAnimationFrame(tick);
     };
@@ -407,7 +425,7 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
       cancelAnimationFrame(raf);
       player.stop();
     };
-  }, [isPlaying, activeSequence, song.tempo]);
+  }, [isPlaying, activeSequence, song.tempo, song.loopStart, song.loopEnd]);
 
   // Toolbar actions composed via the MenuBuilder / Menu.Root idiom
   // (org.dxos.react-ui-menu.toolbarMenu). useMemo deps cover every value the
@@ -492,6 +510,9 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
                 track={activeTrack}
                 beatsPerCell={beatsPerCell}
                 playhead={playhead}
+                loopStart={song.loopStart}
+                loopEnd={song.loopEnd}
+                onLoopChange={handleLoopChange}
                 onToggleNote={handleToggleNote}
               />
             ) : (

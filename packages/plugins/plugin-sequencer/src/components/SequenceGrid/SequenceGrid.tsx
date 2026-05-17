@@ -2,8 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
+import { RegistryContext, useAtomValue } from '@effect-atom/atom-react';
 import React, { useContext, useEffect, useMemo } from 'react';
+import { useResizeDetector } from 'react-resize-detector';
 
 import {
   CellGrid,
@@ -18,6 +19,8 @@ import {
 } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/ui-theme';
 
+import { LoopMarkers } from '../LoopMarkers';
+
 import type { Note, Sequence, Track } from '#types';
 
 export type SequenceGridProps = {
@@ -31,6 +34,15 @@ export type SequenceGridProps = {
   beatsPerCell?: number;
   /** Playhead in beats from sequence start, or null when stopped. */
   playhead?: number | null;
+  /**
+   * Playback loop range in beats. When set, the timeline shows draggable
+   * start/end markers and shades the area outside the range. The range applies
+   * to every track simultaneously; callers should write it back to Song.loopStart
+   * / Song.loopEnd via `onLoopChange`.
+   */
+  loopStart?: number;
+  loopEnd?: number;
+  onLoopChange?: (loopStart: number, loopEnd: number) => void;
   /**
    * Called when the user toggles a cell. The caller is responsible for mutating the sequence.
    * `mode` reflects the gesture: a single click reports `toggle`; a drag reports `set` or
@@ -86,6 +98,9 @@ export const SequenceGrid = ({
   maxPitch: maxPitchProp,
   beatsPerCell = 0.25,
   playhead = null,
+  loopStart,
+  loopEnd,
+  onLoopChange,
   onToggleNote,
   classNames,
 }: SequenceGridProps) => {
@@ -182,8 +197,17 @@ export const SequenceGrid = ({
     [],
   );
 
+  // Loop-marker projection — read viewport (scrollX, cellWidth, zoomX) reactively
+  // and measure the container so the overlay sizes track the grid pane.
+  const viewport = useAtomValue(atoms.viewport);
+  const { ref: paneRef, width: paneWidth = 0, height: paneHeight = 0 } = useResizeDetector<HTMLDivElement>();
+  const pixelsPerCell = viewport.baseCellWidth * viewport.zoomX;
+  const pixelsPerBeat = pixelsPerCell / beatsPerCell;
+  const resolvedLoopEnd = loopEnd ?? sequence.length;
+  const resolvedLoopStart = loopStart ?? 0;
+
   return (
-    <div className={mx('relative w-full h-full', classNames)}>
+    <div ref={paneRef} className={mx('relative w-full h-full', classNames)}>
       <CellGrid
         atoms={atoms as any}
         rows={rows}
@@ -192,6 +216,20 @@ export const SequenceGrid = ({
         staticStyle={cellGridStaticStyle}
         onCellToggle={handleToggle}
       />
+      {onLoopChange && paneWidth > 0 && (
+        <LoopMarkers
+          loopStart={resolvedLoopStart}
+          loopEnd={resolvedLoopEnd}
+          maxBeats={sequence.length}
+          step={beatsPerCell}
+          pixelsPerBeat={pixelsPerBeat}
+          scrollX={viewport.scrollX}
+          headerLeft={cellGridHeaders.left}
+          headerTop={cellGridHeaders.top}
+          paneHeight={paneHeight}
+          onChange={onLoopChange}
+        />
+      )}
       {/*
         rowBandRenderer is reserved for a future pass where the static layer can paint
         black-key rows differently. The current CellGrid only supports a single row-band

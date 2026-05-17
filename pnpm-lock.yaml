@@ -13465,6 +13465,9 @@ importers:
       effect:
         specifier: 3.20.0
         version: 3.20.0
+      react-resize-detector:
+        specifier: 'catalog:'
+        version: 11.0.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       tone:
         specifier: 'catalog:'
         version: 15.1.22

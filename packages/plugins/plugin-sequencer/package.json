@@ -96,6 +96,7 @@
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
     "effect": "catalog:",
+    "react-resize-detector": "catalog:",
     "tone": "catalog:"
   },
   "devDependencies": {

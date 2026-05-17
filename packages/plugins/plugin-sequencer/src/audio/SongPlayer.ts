@@ -162,6 +162,8 @@ export class SongPlayer {
   #scheduled: ScheduledTrack[] = [];
   #started = false;
   #loopBeats = 16;
+  #loopStartBeats = 0;
+  #loopEndBeats = 0;
 
   setTempo(bpm: number): void {
     Tone.getTransport().bpm.value = bpm;
@@ -197,15 +199,32 @@ export class SongPlayer {
         const voice = findVoice(voices, value.pitch);
         voice.trigger(time, value.pitch, value.duration, value.velocity);
       }, events);
-      part.loop = true;
-      part.loopEnd = beatsToSeconds(sequence.length, song.tempo);
+      // Parts must NOT loop independently — the global Transport drives the loop
+      // between Song.loopStart..loopEnd so every track stays phase-locked.
+      part.loop = false;
       this.#scheduled.push({ trackId: track.id, voices, part });
     }
 
-    this.#loopBeats = Math.max(1, maxLength);
+    // Resolve the song-level loop range with defaults + clamping.
+    const fullLength = Math.max(1, maxLength);
+    const requestedStart = Number.isFinite(song.loopStart) ? Math.max(0, song.loopStart as number) : 0;
+    const requestedEnd = Number.isFinite(song.loopEnd) ? (song.loopEnd as number) : fullLength;
+    const loopStartBeats = Math.min(requestedStart, fullLength);
+    const loopEndBeats = Math.max(loopStartBeats + 0.0625, Math.min(requestedEnd, fullLength));
+    this.#loopStartBeats = loopStartBeats;
+    this.#loopEndBeats = loopEndBeats;
+    this.#loopBeats = fullLength;
     transport.loop = true;
-    transport.loopStart = 0;
-    transport.loopEnd = beatsToSeconds(this.#loopBeats, song.tempo);
+    transport.loopStart = beatsToSeconds(loopStartBeats, song.tempo);
+    transport.loopEnd = beatsToSeconds(loopEndBeats, song.tempo);
+  }
+
+  /** Currently configured loop range in beats — `null` before `load()` runs. */
+  get loopRange(): { start: number; end: number } | null {
+    if (this.#loopEndBeats === 0) {
+      return null;
+    }
+    return { start: this.#loopStartBeats, end: this.#loopEndBeats };
   }
 
   async play(): Promise<void> {
@@ -214,7 +233,10 @@ export class SongPlayer {
     for (const { part } of this.#scheduled) {
       part.start(0);
     }
-    transport.start();
+    // Start the transport AT loopStart so playback always begins inside the
+    // configured loop range — otherwise events at beats 0..loopStart would
+    // fire once on initial play, then never again.
+    transport.start('+0', transport.loopStart);
     this.#started = true;
   }
 

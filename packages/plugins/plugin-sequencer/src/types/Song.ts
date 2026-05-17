@@ -22,6 +22,12 @@ export const Song = Schema.Struct({
   ),
   tracks: Schema.mutable(Schema.Array(Track)).pipe(Annotation.FormInputAnnotation.set(false)),
   sequences: Schema.mutable(Schema.Array(Sequence)).pipe(Annotation.FormInputAnnotation.set(false)),
+  /**
+   * Playback loop range in beats. When set, playback loops between [loopStart, loopEnd)
+   * for every track simultaneously. When unset, falls back to [0, longest-sequence-length).
+   */
+  loopStart: Schema.optional(Schema.Number),
+  loopEnd: Schema.optional(Schema.Number),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.song',
