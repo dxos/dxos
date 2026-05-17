@@ -14,7 +14,7 @@ import { type Collection, Database, JsonSchema, Obj } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 
-import { KanbanContainer, KanbanSettings } from '#containers';
+import { KanbanArticle, KanbanSettings } from '#containers';
 import { Kanban, PivotColumnAnnotationId } from '#types';
 
 export default Capability.makeModule(() =>
@@ -27,7 +27,7 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Article, Kanban.Kanban),
           AppSurface.object(AppSurface.Section, Kanban.Kanban),
         ),
-        component: ({ data, role }) => <KanbanContainer role={role} subject={data.subject} />,
+        component: ({ data, role }) => <KanbanArticle role={role} subject={data.subject} />,
       }),
       Surface.create({
         id: 'object-properties',

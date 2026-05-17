@@ -8,7 +8,7 @@ export const AgentArticle: ComponentType<any> = lazy(() => import('./AgentArticl
 export const AgentProperties: ComponentType<any> = lazy(() => import('./AgentProperties'));
 export const BlueprintArticle: ComponentType<any> = lazy(() => import('./BlueprintArticle'));
 export const ChatCompanion: ComponentType<any> = lazy(() => import('./ChatCompanion'));
-export const ChatContainer: ComponentType<any> = lazy(() => import('./ChatContainer'));
+export const ChatArticle: ComponentType<any> = lazy(() => import('./ChatArticle'));
 export const ChatDialog: ComponentType<any> = lazy(() => import('./ChatDialog'));
 export const PlanArticle: ComponentType<any> = lazy(() => import('./PlanArticle'));
 export const RoutineArticle: ComponentType<any> = lazy(() => import('./RoutineArticle'));

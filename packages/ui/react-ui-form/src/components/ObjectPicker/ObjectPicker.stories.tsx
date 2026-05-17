@@ -48,7 +48,7 @@ const DefaultStory = () => {
     }
   }, [space]);
 
-  // Get all objects in the space (similar to BoardContainer)
+  // Get all objects in the space (similar to BoardArticle)
   const allObjects = useQuery(space?.db, Filter.everything());
 
   // Map objects to options format expected by ObjectPicker

@@ -4,9 +4,9 @@
 
 import { type ForwardRefExoticComponent, lazy } from 'react';
 
-import { type TableContainerProps } from './TableContainer';
+import { type TableArticleProps } from './TableArticle';
 
-export type { TableContainerProps };
+export type { TableArticleProps };
 
 export const TableCard = lazy(() => import('./TableCard'));
-export const TableContainer: ForwardRefExoticComponent<TableContainerProps> = lazy(() => import('./TableContainer'));
+export const TableArticle: ForwardRefExoticComponent<TableArticleProps> = lazy(() => import('./TableArticle'));
