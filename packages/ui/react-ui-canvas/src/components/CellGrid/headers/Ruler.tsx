@@ -22,6 +22,9 @@ export type RulerProps = {
  * Frozen top ruler. Ticks reflect the current viewport scroll and zoom.
  */
 export const Ruler = ({ viewport, headers, width, majorEvery = 4, classNames }: RulerProps) => {
+  // Clamp to >= 1 — a zero or negative `majorEvery` makes `col % majorEvery`
+  // NaN / always-zero and breaks major-tick detection.
+  const safeMajorEvery = Math.max(1, Math.floor(majorEvery));
   const ticks = useMemo(() => {
     const w = cellWidth(viewport);
     if (w < 1 || width <= headers.left) {
@@ -35,11 +38,11 @@ export const Ruler = ({ viewport, headers, width, majorEvery = 4, classNames }: 
       result.push({
         col,
         x: headers.left + col * w - viewport.scrollX,
-        major: col % majorEvery === 0,
+        major: col % safeMajorEvery === 0,
       });
     }
     return result;
-  }, [viewport, headers.left, width, majorEvery]);
+  }, [viewport, headers.left, width, safeMajorEvery]);
 
   return (
     <div

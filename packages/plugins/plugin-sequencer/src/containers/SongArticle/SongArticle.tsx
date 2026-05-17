@@ -106,7 +106,10 @@ const parseTimeSignature = (input: string | undefined): number => {
     return 4;
   }
   const match = /^(\d+)\s*\/\s*\d+$/.exec(input.trim());
-  return match ? Number(match[1]) : 4;
+  const beats = match ? Number(match[1]) : NaN;
+  // Reject zero / negative / non-integer / non-finite — beatsPerBar=0 would break
+  // every downstream position computation.
+  return Number.isFinite(beats) && beats >= 1 ? Math.floor(beats) : 4;
 };
 
 /**

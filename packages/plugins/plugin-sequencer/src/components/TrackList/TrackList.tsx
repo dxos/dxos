@@ -33,17 +33,32 @@ export const TrackList = ({
   classNames,
 }: TrackListProps) => {
   return (
-    <div className={mx('flex flex-col gap-1 p-2 overflow-y-auto', classNames)}>
+    <div
+      className={mx('flex flex-col gap-1 p-2 overflow-y-auto', classNames)}
+      role='listbox'
+      aria-label='Tracks'
+      aria-activedescendant={selectedTrackId ? `track-${selectedTrackId}` : undefined}
+    >
       {tracks.map((track) => {
         const selected = track.id === selectedTrackId;
         return (
           <div
             key={track.id}
+            id={`track-${track.id}`}
+            role='option'
+            aria-selected={selected}
+            tabIndex={selected ? 0 : -1}
             className={mx(
               'flex items-center gap-2 px-2 py-1 rounded cursor-pointer text-sm',
               selected ? 'bg-primary-500/15 text-primary-foreground' : 'hover:bg-neutral-500/10',
             )}
             onClick={() => onSelect?.(track.id)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                onSelect?.(track.id);
+              }
+            }}
             data-selected={selected}
           >
             <span

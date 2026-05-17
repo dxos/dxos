@@ -90,8 +90,13 @@ export const SequenceGrid = ({
   classNames,
 }: SequenceGridProps) => {
   const registry = useContext(RegistryContext);
-  const minPitch = minPitchProp ?? track.minPitch ?? 36;
-  const maxPitch = maxPitchProp ?? track.maxPitch ?? 84;
+  // Resolve pitch bounds with a fallback, then swap-and-clamp so a misconfigured
+  // track (or a prop typo) can never produce a negative row count and crash
+  // `Array.from({ length: maxPitch - minPitch + 1 })`.
+  const rawMin = minPitchProp ?? track.minPitch ?? 36;
+  const rawMax = maxPitchProp ?? track.maxPitch ?? 84;
+  const minPitch = Math.min(rawMin, rawMax);
+  const maxPitch = Math.max(rawMin, rawMax);
   const trackColor = track.color ?? '#3b82f6';
 
   const atoms = useMemo(

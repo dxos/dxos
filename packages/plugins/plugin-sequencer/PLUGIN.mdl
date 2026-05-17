@@ -100,11 +100,13 @@ component SequenceGrid
     toolbar?: ReactNode
   actions:
     addNote(note: Note)
-    removeNote(noteId: string)
-    updateNote(noteId: string, patch: Partial<Note>)
+    # Notes are identified by their (pitch, startTime) coordinates — `Note` has
+    # no stable id field, matching the toggle-grid model.
+    removeNote(pitch: int, startTime: number)
+    updateNote(pitch: int, startTime: number, patch: Partial<Note>)
   emits:
-    onNoteToggle(pitch: int, beat: number)
-    onNoteResize(noteId: string, duration: number)
+    onNoteToggle(pitch: int, beat: number, mode: 'set' | 'unset' | 'toggle')
+    onNoteResize(pitch: int, startTime: number, duration: number)
   layout: |
     ┌────────┬─────────────────────┐
     │        │ time ruler (beats)  │

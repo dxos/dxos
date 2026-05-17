@@ -31,7 +31,7 @@ export const TrackHeader = ({ viewport, headers, rows, height, classNames }: Tra
         'absolute left-0 border-r border-neutral-200 dark:border-neutral-700 select-none overflow-hidden',
         classNames,
       )}
-      style={{ top: headers.top, width: headers.left, height: height - headers.top }}
+      style={{ top: headers.top, width: headers.left, height: Math.max(0, height - headers.top) }}
     >
       <div style={{ transform: `translateY(${-viewport.scrollY}px)` }}>
         {rows.map((row, index) => (

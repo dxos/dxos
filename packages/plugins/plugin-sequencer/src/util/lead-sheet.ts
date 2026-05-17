@@ -213,8 +213,16 @@ const stripTrailingComment = (line: string): string => line.replace(/\s+#.*$/, '
  * may contain section headers (`[index:name]`); content before the first header
  * is assigned to an implicit track at index 1 named `Track 1`.
  */
+/** Coerce a user-supplied beatsPerBar to a positive finite integer; fall back to 4. */
+const normalizeBeatsPerBar = (value: number | undefined): number => {
+  if (value === undefined || !Number.isFinite(value) || value < 1) {
+    return 4;
+  }
+  return Math.floor(value);
+};
+
 export const parseLeadSheet = (input: string, options: LeadSheetOptions = {}): LeadSheetDocument => {
-  const beatsPerBar = options.beatsPerBar ?? 4;
+  const beatsPerBar = normalizeBeatsPerBar(options.beatsPerBar);
   const defaultDuration = options.defaultDurationBeats ?? 0.25; // 1/16 default for unsuffixed events.
 
   type Builder = LeadSheetTrack & { lastEnd: number; sawDrum: boolean };
@@ -271,12 +279,16 @@ export const parseLeadSheet = (input: string, options: LeadSheetOptions = {}): L
 
 const formatEvent = (note: Note, asDrum: boolean): string => {
   const denom = beatsToDenominator(note.duration);
+  // Suffix is always a DENOMINATOR (whole-note over n). When the duration doesn't
+  // map cleanly onto a power-of-two denom, emit the literal `4 / duration` so
+  // `parseEvent`'s `duration = 4 / denom` formula round-trips.
+  const fallbackDenom = note.duration > 0 ? (4 / note.duration).toFixed(4) : '0';
   if (asDrum) {
     const name = DRUM_CANONICAL[note.pitch] ?? formatPitch(note.pitch);
-    return denom !== null ? `${name}/${denom}` : `${name}/${(note.duration / 4).toFixed(4)}`;
+    return denom !== null ? `${name}/${denom}` : `${name}/${fallbackDenom}`;
   }
   const pitch = formatPitch(note.pitch);
-  return denom !== null ? `${pitch}/${denom}` : `${pitch}/${(note.duration / 4).toFixed(4)}`;
+  return denom !== null ? `${pitch}/${denom}` : `${pitch}/${fallbackDenom}`;
 };
 
 /**
@@ -284,7 +296,7 @@ const formatEvent = (note: Note, asDrum: boolean): string => {
  * given order; notes are grouped by startTime so chords land on one line.
  */
 export const formatLeadSheet = (document: LeadSheetDocument, options: LeadSheetOptions = {}): string => {
-  const beatsPerBar = options.beatsPerBar ?? 4;
+  const beatsPerBar = normalizeBeatsPerBar(options.beatsPerBar);
   const blocks: string[] = [];
   for (const track of document.tracks) {
     const lines: string[] = [`[${track.index}:${track.name}]`];

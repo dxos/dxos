@@ -140,6 +140,12 @@ export const attachPointerHandlers = <T>(
     }
   };
 
+  const releaseCapture = (event: PointerEvent) => {
+    if (element.hasPointerCapture(event.pointerId)) {
+      element.releasePointerCapture(event.pointerId);
+    }
+  };
+
   const onPointerUp = (event: PointerEvent) => {
     if (!drag) {
       return;
@@ -151,21 +157,28 @@ export const attachPointerHandlers = <T>(
       }
     }
     drag = null;
-    if (element.hasPointerCapture(event.pointerId)) {
-      element.releasePointerCapture(event.pointerId);
-    }
+    releaseCapture(event);
+  };
+
+  // pointercancel signals an interrupted gesture (system gesture, palm rejection,
+  // capture lost). Per the Pointer Events spec this should clean up local state
+  // ONLY and not be treated as a successful completion — so we never commit a
+  // selection from cancel.
+  const onPointerCancel = (event: PointerEvent) => {
+    drag = null;
+    releaseCapture(event);
   };
 
   element.addEventListener('pointerdown', onPointerDown);
   element.addEventListener('pointermove', onPointerMove);
   element.addEventListener('pointerup', onPointerUp);
-  element.addEventListener('pointercancel', onPointerUp);
+  element.addEventListener('pointercancel', onPointerCancel);
 
   return () => {
     element.removeEventListener('pointerdown', onPointerDown);
     element.removeEventListener('pointermove', onPointerMove);
     element.removeEventListener('pointerup', onPointerUp);
-    element.removeEventListener('pointercancel', onPointerUp);
+    element.removeEventListener('pointercancel', onPointerCancel);
   };
 };
 

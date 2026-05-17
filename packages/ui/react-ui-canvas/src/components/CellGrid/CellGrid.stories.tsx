@@ -74,6 +74,16 @@ const roundedRect = (
   ctx.closePath();
 };
 
+// Deterministic 0..1 random — Linear Congruential Generator. Used in story
+// seeding so the same args produce the same grid every render.
+const makeLcg = (seed: number) => {
+  let state = seed >>> 0;
+  return () => {
+    state = (state * 1664525 + 1013904223) >>> 0;
+    return state / 0xffffffff;
+  };
+};
+
 type Variant = 'sequencer' | 'data-viz';
 
 type StoryProps = Pick<CellGridProps, 'headers'> & {
@@ -100,22 +110,24 @@ const DefaultStory = ({ variant, tool, numCols, numRows, cellWidth, cellHeight, 
     registry.set(atoms.tool, tool);
   }, [registry, atoms.tool, tool]);
 
-  // Seed with sample data.
+  // Seed with sample data. Use a deterministic LCG instead of Math.random so
+  // story renders are stable across runs (helpful for visual review / snapshots).
   useEffect(() => {
     const next = new Map<string, Cell<SequencerData | { magnitude: number }>>();
+    const lcg = makeLcg(0xC0FFEE);
     if (variant === 'sequencer') {
       for (let row = 0; row < numRows; row++) {
         for (let col = 0; col < numCols; col += row + 2) {
           if (col % (row + 1) === 0) {
-            next.set(`${col},${row}`, { col, row, length: 1, data: { velocity: 0.5 + Math.random() * 0.5 } });
+            next.set(`${col},${row}`, { col, row, length: 1, data: { velocity: 0.5 + lcg() * 0.5 } });
           }
         }
       }
     } else {
       for (let row = 0; row < numRows; row++) {
         for (let col = 0; col < numCols; col++) {
-          if (Math.random() < 0.35) {
-            next.set(`${col},${row}`, { col, row, length: 1, data: { magnitude: Math.random() } });
+          if (lcg() < 0.35) {
+            next.set(`${col},${row}`, { col, row, length: 1, data: { magnitude: lcg() } });
           }
         }
       }
@@ -153,7 +165,7 @@ const DefaultStory = ({ variant, tool, numCols, numRows, cellWidth, cellHeight, 
       col,
       row,
       length: 1,
-      data: variant === 'sequencer' ? { velocity: 0.8 } : { magnitude: Math.random() },
+      data: variant === 'sequencer' ? { velocity: 0.8 } : { magnitude: 0.7 },
     }));
   };
 
@@ -187,7 +199,8 @@ const meta: Meta<typeof DefaultStory> = {
   parameters: { layout: 'fullscreen' },
   argTypes: {
     variant: { control: { type: 'inline-radio' }, options: ['sequencer', 'data-viz'] },
-    tool: { control: { type: 'inline-radio' }, options: ['toggle', 'select', 'resize'] },
+    // 'resize' is deferred (PR description "Deferred / out of v1") — hide from controls.
+    tool: { control: { type: 'inline-radio' }, options: ['toggle', 'select'] },
     numCols: { control: { type: 'number', min: 16, max: 1024, step: 16 } },
     numRows: { control: { type: 'number', min: 1, max: 64, step: 1 } },
     cellWidth: { control: { type: 'number', min: 8, max: 64, step: 1 } },
