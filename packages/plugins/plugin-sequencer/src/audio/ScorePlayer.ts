@@ -33,7 +33,7 @@ const midiToFrequency = (pitch: number): number => 440 * Math.pow(2, (pitch - 69
 
 const beatsToSeconds = (beats: number, bpm: number): number => (beats / bpm) * 60;
 
-const createSynthVoice = (patch: Patch.SynthPatch): Voice => {
+const createSynthVoice = (patch: Patch.SynthPatch, master: Tone.Gain): Voice => {
   const synth = new Tone.PolySynth(Tone.Synth, {
     oscillator: { type: patch.oscillator ?? 'sine' },
     envelope: {
@@ -43,7 +43,7 @@ const createSynthVoice = (patch: Patch.SynthPatch): Voice => {
       release: patch.envelope?.release ?? 0.2,
     },
   });
-  const gain = new Tone.Gain(patch.gain ?? 0.2).toDestination();
+  const gain = new Tone.Gain(patch.gain ?? 0.2).connect(master);
   synth.connect(gain);
   return {
     dispose: () => {
@@ -58,19 +58,22 @@ const createSynthVoice = (patch: Patch.SynthPatch): Voice => {
   };
 };
 
-const createDrumVoice = (patch: Patch.DrumPatch): Voice => {
-  const drum = createDrum(patch.drum, { gain: patch.gain });
+const createDrumVoice = (patch: Patch.DrumPatch, master: Tone.Gain): Voice => {
+  // createDrum currently routes the drum's gain to Tone.Destination internally;
+  // bring it back into our master bus via a no-op pass-through gain so the
+  // analyzer tap sees drum hits too.
+  const drum = createDrum(patch.drum, { gain: patch.gain, destination: master });
   return {
     dispose: drum.dispose,
     trigger: (time, _pitch, _duration, velocity) => drum.trigger(time, velocity),
   };
 };
 
-const createSampleVoice = (patch: Patch.SamplePatch): Voice => {
+const createSampleVoice = (patch: Patch.SamplePatch, master: Tone.Gain): Voice => {
   const sampler = new Tone.Sampler({
     urls: { [Tone.Frequency(patch.basePitch ?? 60, 'midi').toNote()]: patch.sampleUrl },
   });
-  const gain = new Tone.Gain(patch.gain ?? 0.6).toDestination();
+  const gain = new Tone.Gain(patch.gain ?? 0.6).connect(master);
   sampler.connect(gain);
   return {
     dispose: () => {
@@ -96,14 +99,14 @@ const patchCovers = (patch: AnyPatch, pitch: number): boolean => {
   }
 };
 
-const createVoiceForPatch = (patch: AnyPatch): Voice => {
+const createVoiceForPatch = (patch: AnyPatch, master: Tone.Gain): Voice => {
   switch (patch.kind) {
     case 'synth':
-      return createSynthVoice(patch);
+      return createSynthVoice(patch, master);
     case 'drum':
-      return createDrumVoice(patch);
+      return createDrumVoice(patch, master);
     case 'sample':
-      return createSampleVoice(patch);
+      return createSampleVoice(patch, master);
   }
 };
 
@@ -113,11 +116,11 @@ type TrackVoices = {
   fallback: Voice;
 };
 
-const buildTrackVoices = (track: Track.Track): TrackVoices => {
+const buildTrackVoices = (track: Track.Track, master: Tone.Gain): TrackVoices => {
   const patches = Array.from(track.patches ?? []) as AnyPatch[];
   const voices = new Map<AnyPatch, Voice>();
   for (const patch of patches) {
-    voices.set(patch, createVoiceForPatch(patch));
+    voices.set(patch, createVoiceForPatch(patch, master));
   }
   const fallbackPatch: Patch.SynthPatch = {
     kind: 'synth',
@@ -125,7 +128,7 @@ const buildTrackVoices = (track: Track.Track): TrackVoices => {
     maxPitch: track.maxPitch ?? 108,
     oscillator: 'sine',
   };
-  return { patches, voices, fallback: createVoiceForPatch(fallbackPatch) };
+  return { patches, voices, fallback: createVoiceForPatch(fallbackPatch, master) };
 };
 
 const findVoice = (trackVoices: TrackVoices, pitch: number): Voice => {
@@ -159,10 +162,23 @@ type ScheduledTrack = {
  */
 export class ScorePlayer {
   #scheduled: ScheduledTrack[] = [];
+  #master?: Tone.Gain;
   #started = false;
   #loopBeats = 16;
   #loopStartBeats = 0;
   #loopEndBeats = 0;
+
+  /**
+   * Master bus output as a raw `AudioNode`, suitable for an `Oscilloscope`
+   * (or any other `AnalyserNode`-based meter) `source` prop. Returns
+   * `undefined` until `load()` has been called.
+   */
+  get outputNode(): AudioNode | undefined {
+    // Tone.Gain wraps a native GainNode internally; `.input` returns that
+    // GainNode in Tone v15. Casting through `unknown` since Tone's typing
+    // exposes it as an InputNode (Tone | AudioNode union).
+    return this.#master ? ((this.#master as unknown as { input: AudioNode }).input ?? undefined) : undefined;
+  }
 
   setTempo(bpm: number): void {
     Tone.getTransport().bpm.value = bpm;
@@ -176,6 +192,10 @@ export class ScorePlayer {
     this.dispose();
     this.setTempo(score.tempo);
 
+    // Master bus: every voice connects here, and the master connects to the
+    // speakers. This gives us a single tap point for the oscilloscope.
+    this.#master = new Tone.Gain(1).toDestination();
+
     const trackById = new Map(score.tracks.map((track) => [track.id, track]));
     const transport = Tone.getTransport();
 
@@ -186,7 +206,7 @@ export class ScorePlayer {
         continue;
       }
       maxLength = Math.max(maxLength, sequence.length);
-      const voices = buildTrackVoices(track);
+      const voices = buildTrackVoices(track, this.#master);
       type Event = { time: number; pitch: number; duration: number; velocity: number };
       const events: Event[] = (sequence.notes ?? []).map((note: Note.Note) => ({
         time: beatsToSeconds(note.startTime, score.tempo),
@@ -279,5 +299,7 @@ export class ScorePlayer {
       disposeTrackVoices(entry.voices);
     }
     this.#scheduled = [];
+    this.#master?.dispose();
+    this.#master = undefined;
   }
 }

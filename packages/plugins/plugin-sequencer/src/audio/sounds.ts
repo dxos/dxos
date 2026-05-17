@@ -17,7 +17,24 @@ export interface Sound {
 
 export type DrumName = 'kick' | 'snare' | 'hat' | 'openhat' | 'clap' | 'crash' | 'ride' | 'tomLo' | 'tomMid' | 'tomHi';
 
-export type DrumOptions = { gain?: number };
+export type DrumOptions = {
+  gain?: number;
+  /**
+   * Tone node to route the drum's gain stage into. When omitted the drum
+   * connects directly to `Tone.Destination` (the speakers). Provide a master
+   * bus here to let an analyzer / oscilloscope tap drum hits as well.
+   */
+  destination?: Tone.ToneAudioNode;
+};
+
+const connectGain = (gain: Tone.Gain, destination?: Tone.ToneAudioNode): Tone.Gain => {
+  if (destination) {
+    gain.connect(destination);
+  } else {
+    gain.toDestination();
+  }
+  return gain;
+};
 
 export type DrumVoice = {
   /** `time` is a Tone scheduling time — pass the value Tone hands the Sequence callback. */
@@ -55,7 +72,7 @@ export const createDrum = (name: DrumName, options: DrumOptions = {}): DrumVoice
 
 function createKickVoice(options: DrumOptions = {}): DrumVoice {
   const osc = new Tone.Oscillator({ type: 'sine' });
-  const gain = new Tone.Gain(options.gain ?? 1).toDestination();
+  const gain = connectGain(new Tone.Gain(options.gain ?? 1), options.destination);
   const env = new Tone.AmplitudeEnvelope({
     attack: 0.0001,
     decay: 0.16,
@@ -97,7 +114,7 @@ function createSnareVoice(options: DrumOptions = {}): DrumVoice {
   const tone = new Tone.Oscillator('200hz', 'triangle');
   const toneEnv = new Tone.AmplitudeEnvelope({ attack: 0.001, decay: 0.12, sustain: 0, release: 0.05 });
   tone.connect(toneEnv);
-  const bus = new Tone.Gain(options.gain ?? 1).toDestination();
+  const bus = connectGain(new Tone.Gain(options.gain ?? 1), options.destination);
   noiseFilter.connect(bus);
   toneEnv.connect(bus);
   tone.start();
@@ -125,7 +142,7 @@ function createHatVoice(options: HatOptions = {}): DrumVoice {
     envelope: { attack: 0.001, decay, sustain: 0, release: decay / 2 },
   });
   const filter = new Tone.Filter({ type: 'highpass', frequency: 8000, rolloff: -24 });
-  const gain = new Tone.Gain(options.gain ?? 0.4).toDestination();
+  const gain = connectGain(new Tone.Gain(options.gain ?? 0.4), options.destination);
   noise.connect(filter);
   filter.connect(gain);
   return {
@@ -144,7 +161,7 @@ function createClapVoice(options: DrumOptions = {}): DrumVoice {
     envelope: { attack: 0.001, decay: 0.14, sustain: 0, release: 0.08 },
   });
   const filter = new Tone.Filter({ type: 'bandpass', frequency: 1200, Q: 1.5 });
-  const gain = new Tone.Gain(options.gain ?? 0.6).toDestination();
+  const gain = connectGain(new Tone.Gain(options.gain ?? 0.6), options.destination);
   noise.connect(filter);
   filter.connect(gain);
   return {
@@ -165,7 +182,7 @@ function createCymbalVoice(options: CymbalOptions = {}): DrumVoice {
     envelope: { attack: 0.001, decay: options.sustain ?? 0.5, sustain: 0, release: 0.5 },
   });
   const filter = new Tone.Filter({ type: 'highpass', frequency: 6000, rolloff: -24 });
-  const gain = new Tone.Gain(options.gain ?? 0.3).toDestination();
+  const gain = connectGain(new Tone.Gain(options.gain ?? 0.3), options.destination);
   noise.connect(filter);
   filter.connect(gain);
   return {
@@ -191,7 +208,7 @@ function createTomVoice(options: TomOptions): DrumVoice {
     baseFrequency: options.frequency,
     octaves: 1.5,
   });
-  const gain = new Tone.Gain(options.gain ?? 0.8).toDestination();
+  const gain = connectGain(new Tone.Gain(options.gain ?? 0.8), options.destination);
   osc.connect(env);
   env.connect(gain);
   pitchEnv.connect(osc.frequency);

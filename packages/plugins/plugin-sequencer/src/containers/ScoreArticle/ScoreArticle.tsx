@@ -268,6 +268,11 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
     playerRef.current = new ScorePlayer();
   }
 
+  // The ScorePlayer only allocates its master gain on `load()`, so the
+  // `outputNode` lives in state and is refreshed whenever the score is
+  // (re)loaded. The Oscilloscope downstream reads this directly.
+  const [audioOutputNode, setAudioOutputNode] = useState<AudioNode | undefined>(undefined);
+
   useEffect(() => {
     const player = playerRef.current!;
     return () => player.dispose();
@@ -276,6 +281,7 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
   useEffect(() => {
     const player = playerRef.current!;
     player.load(score as Score.Score);
+    setAudioOutputNode(player.outputNode);
   }, [score]);
 
   useEffect(() => {
@@ -396,10 +402,10 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
               onRemove={handleRemoveTrack}
             />
             <Oscilloscope
-              classNames='h-[400px] border-green-500'
+              classNames='aspect-square border-green-500'
               mode='waveform'
               active={isPlaying}
-              // source={playerRef.current?.outputNode}
+              source={audioOutputNode}
             />
           </div>
           <div className='flex-1 min-w-0 relative'>
