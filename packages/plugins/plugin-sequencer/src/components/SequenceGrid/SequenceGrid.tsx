@@ -131,7 +131,8 @@ export const SequenceGrid = ({
   const trackColor = track.color ?? '#3b82f6';
 
   const atoms = useMemo(
-    () => createCellGridAtoms<{ color: string; velocity: number; subdued?: boolean }>({ cellWidth: 28, cellHeight: 18 }),
+    () =>
+      createCellGridAtoms<{ color: string; velocity: number; subdued?: boolean }>({ cellWidth: 28, cellHeight: 18 }),
     [],
   );
 
