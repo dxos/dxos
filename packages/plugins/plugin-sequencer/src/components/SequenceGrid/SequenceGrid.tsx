@@ -21,7 +21,7 @@ import { mx } from '@dxos/ui-theme';
 
 import type { Note, Sequence, Track } from '#types';
 
-import { hueToHex } from '../../util/hue';
+import { hueFor, hueToHex } from '../../util/hue';
 import { LoopMarkers } from '../LoopMarkers';
 
 export type SequenceGridProps = {
@@ -129,7 +129,7 @@ export const SequenceGrid = ({
   const rawMax = maxPitchProp ?? track.maxPitch ?? 108;
   const minPitch = Math.min(rawMin, rawMax);
   const maxPitch = Math.max(rawMin, rawMax);
-  const trackColor = hueToHex(track.hue);
+  const trackColor = hueToHex(hueFor(track));
 
   const atoms = useMemo(
     () =>
@@ -174,7 +174,7 @@ export const SequenceGrid = ({
           : Array.isArray(entry.sequence.notes)
             ? (entry.sequence.notes as ReadonlyArray<Note.Note>)
             : Array.from(entry.sequence.notes as ArrayLike<Note.Note>);
-      const color = hueToHex(entry.track.hue);
+      const color = hueToHex(hueFor(entry.track));
       for (const note of overlayNotes) {
         inputs.push({
           pitch: note.pitch,

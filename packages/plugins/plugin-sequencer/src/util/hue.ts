@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { hues } from '@dxos/ui-theme';
+import { getHashHue, hues } from '@dxos/ui-theme';
 
 // Tailwind v3 -500 shades for each ChromaticPalette value. The grid canvas
 // renders via `ctx.fillStyle` and so needs a hex; the design-system class
@@ -51,3 +51,20 @@ export const hueAtIndex = (index: number): string => {
 };
 
 export const ALL_HUES = hues;
+
+/**
+ * Resolve the visible hue for a track: prefer the track's explicit
+ * `hue`, falling back to a stable hash of its `id` so a track without
+ * a configured color gets a deterministic random-looking color that
+ * doesn't change across renders.
+ */
+export const hueFor = (track: { id?: string; hue?: string } | undefined): string => {
+  if (track?.hue) {
+    return track.hue;
+  }
+  const hashed = getHashHue(track?.id);
+  // `getHashHue` can return 'neutral' when given an undefined id — that
+  // isn't a ChromaticPalette value, so fall back to the first hue in
+  // that edge case rather than rendering neutral grey.
+  return hashed === 'neutral' ? hues[0] : hashed;
+};

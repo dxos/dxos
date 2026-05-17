@@ -26,8 +26,6 @@ export type MutableScore = {
   }[];
 };
 
-import { hueAtIndex } from './hue';
-
 const DEFAULT_MIN_PITCH = 21;
 const DEFAULT_MAX_PITCH = 108;
 
@@ -92,7 +90,9 @@ export const applyLeadSheetToScore = (mutable: MutableScore, document: LeadSheet
   sorted.forEach((entry, slot) => {
     const previous = existingByIndex.get(entry.index);
     const trackId = previous?.id ?? newId();
-    const hue = previous?.hue ?? hueAtIndex(slot);
+    // Preserve an existing track's hue if any; otherwise leave it unset so
+    // consumers fall back to the deterministic id-hash via `hueFor(track)`.
+    const hue = previous?.hue;
     const instrument = entry.instrument ?? previous?.instrument;
     const patches = previous?.patches
       ? Array.from(previous.patches)

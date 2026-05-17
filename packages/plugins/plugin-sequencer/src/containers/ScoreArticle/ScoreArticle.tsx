@@ -17,7 +17,6 @@ import { SequenceGrid, TrackList } from '#components';
 import type { Sequence, Score, Track } from '#types';
 
 import { ScorePlayer } from '../../audio';
-import { hueAtIndex } from '../../util/hue';
 import { formatLeadSheet, parseLeadSheet, type LeadSheetDocument } from '../../util/lead-sheet';
 import { applyLeadSheetToScore, scoreToLeadSheet, type MutableScore } from '../../util/score-leadsheet';
 
@@ -34,7 +33,9 @@ const DEFAULT_MAX_PITCH = 108;
 const newTrack = (index: number): Track.Track => ({
   id: newId(),
   name: `Track ${index + 1}`,
-  hue: hueAtIndex(index),
+  // `hue` is intentionally left unset — TrackList / SequenceGrid resolve it
+  // via `hueFor(track)`, which hashes the track id into a stable color when
+  // no explicit hue is set.
   patches: [
     {
       kind: 'synth',

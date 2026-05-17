@@ -17,15 +17,19 @@ import { parseLeadSheet } from '../../util/lead-sheet';
 import { ScoreArticle } from './ScoreArticle';
 import SCORE from './testing/ode_to_joy.txt?raw';
 
-const buildSampleScore = (): Score.Score => {
-  const tracks: Track.Track[] = [
-    { id: 't1', name: 'Lead', hue: 'red' },
-    { id: 't2', name: 'Bass', hue: 'orange' },
-    { id: 't3', name: 'Pad', hue: 'blue' },
-    { id: 't4', name: 'Drums', hue: 'green' },
-  ];
+type Pattern = {
+  tracks: Track.Track[];
+  sequences: Sequence.Sequence[];
+};
 
-  const sequences: Sequence.Sequence[] = [
+const SAMPLE_PATTERN: Pattern = {
+  tracks: [
+    { id: 't1', name: 'Lead' },
+    { id: 't2', name: 'Bass' },
+    { id: 't3', name: 'Pad' },
+    { id: 't4', name: 'Drums' },
+  ],
+  sequences: [
     {
       id: 's1',
       trackId: 't1',
@@ -56,28 +60,32 @@ const buildSampleScore = (): Score.Score => {
     },
     { id: 's3', trackId: 't3', name: 'Pad', length: 16, notes: [] },
     { id: 's4', trackId: 't4', name: 'Drums', length: 16, notes: [] },
-  ];
-
-  return Score.make({ name: 'Demo score', tempo: 120, tracks, sequences });
+  ],
 };
 
-const DefaultStory = () => {
-  const score = useMemo(() => buildSampleScore(), []);
+type StoryArgs = {
+  /** Lead-sheet text — when set, parsed and applied via applyLeadSheetToScore. */
+  text?: string;
+  /** Plain pattern (tracks + sequences) used when `text` is not provided. */
+  pattern?: Pattern;
+};
+
+const buildScore = ({ text, pattern }: StoryArgs): Score.Score => {
+  if (text) {
+    const score = Score.make({ name: 'Score', tempo: 120, timeSignature: '4/4' });
+    const document = parseLeadSheet(text, { beatsPerBar: 4 });
+    Obj.update(score, (subject) => {
+      applyLeadSheetToScore(subject as unknown as MutableScore, document);
+    });
+    return score;
+  }
+  const { tracks = [], sequences = [] } = pattern ?? {};
+  return Score.make({ name: 'Score', tempo: 120, tracks, sequences });
+};
+
+const DefaultStory = (args: StoryArgs) => {
+  const score = useMemo(() => buildScore(args), [args]);
   return <ScoreArticle role='article' attendableId='story-score' subject={score} />;
-};
-
-const buildOdeToJoyScore = (): Score.Score => {
-  const score = Score.make({ name: 'Ode to Joy', tempo: 120, timeSignature: '4/4' });
-  const document = parseLeadSheet(SCORE, { beatsPerBar: 4 });
-  Obj.update(score, (score) => {
-    applyLeadSheetToScore(score as unknown as MutableScore, document);
-  });
-  return score;
-};
-
-const OdeToJoyStory = () => {
-  const score = useMemo(() => buildOdeToJoyScore(), []);
-  return <ScoreArticle role='article' attendableId='story-ode-to-joy' subject={score} />;
 };
 
 const meta = {
@@ -94,8 +102,14 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  args: {
+    pattern: SAMPLE_PATTERN,
+  },
+};
 
 export const OdeToJoy: Story = {
-  render: () => <OdeToJoyStory />,
+  args: {
+    text: SCORE,
+  },
 };
