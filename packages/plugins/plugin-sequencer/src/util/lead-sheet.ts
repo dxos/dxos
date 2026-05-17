@@ -17,9 +17,14 @@
 // Section headers (`[1:Piano]`) switch the active track. The index is 1-based;
 // the name is free-form text.
 //
-// Each note line starts with a `bar.beat[.frac]` position (1-indexed) and is
-// followed by one or more event tokens, all triggered at that position.
-// Multiple events on one line form a chord.
+// Each note line is one or more `<position> <event>+` groups, separated by
+// whitespace. Positions look like `bar.beat[.frac]` (1-indexed); each event
+// after a position is triggered at that beat (forming a chord when there's
+// more than one). A second position on the same line opens a new group:
+//
+//   1.1 F#5/4   1.2 A5/4   1.3 C#6/2
+//
+// is equivalent to three separate single-position lines.
 //
 // Event syntax:
 //
@@ -206,6 +211,11 @@ const parseEvent = (token: string, defaultDurationBeats: number): Event => {
 
 const sectionHeaderRe = /^\[(\d+):([^\]]+)\]\s*$/;
 
+// A position is `<bar>.<beat>[.<frac>]` where each segment is digits. This is
+// distinct from any event token (pitches always start with a letter; drums are
+// alphabetic). Used by the line parser to find new beat groups within a line.
+const positionTokenRe = /^\d+\.\d+(?:\.\d+)?$/;
+
 const stripTrailingComment = (line: string): string => line.replace(/\s+#.*$/, '');
 
 /**
@@ -257,14 +267,36 @@ export const parseLeadSheet = (input: string, options: LeadSheetOptions = {}): L
     if (tokens.length < 2) {
       throw new Error(`Line ${index + 1}: expected position + at least one event, got "${rawLine}"`);
     }
-    const [positionToken, ...eventTokens] = tokens;
-    const startTime = parsePosition(positionToken, beatsPerBar);
+    // A line is a sequence of `<position> <event>+` groups — every position
+    // token (matching positionTokenRe) starts a new group whose events apply
+    // at that beat. This lets a single line carry several beats, e.g.
+    //   1.1 F#5/4   1.2 A5/4   1.3 C#6/2
+    // The first token must be a position; subsequent positions reset the
+    // active beat for the events that follow.
+    if (!positionTokenRe.test(tokens[0])) {
+      throw new Error(`Line ${index + 1}: expected position to lead, got "${tokens[0]}"`);
+    }
     const track = ensureCurrent();
-    for (const token of eventTokens) {
+    let startTime = 0;
+    let groupHadEvent = false;
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i];
+      if (positionTokenRe.test(token)) {
+        if (i > 0 && !groupHadEvent) {
+          throw new Error(`Line ${index + 1}: position "${tokens[i - 1]}" had no events`);
+        }
+        startTime = parsePosition(token, beatsPerBar);
+        groupHadEvent = false;
+        continue;
+      }
       const event = parseEvent(token, defaultDuration);
       track.notes.push({ pitch: event.pitch, startTime, duration: event.duration });
       track.lastEnd = Math.max(track.lastEnd, startTime + event.duration);
       track.sawDrum = track.sawDrum || event.isDrum;
+      groupHadEvent = true;
+    }
+    if (!groupHadEvent) {
+      throw new Error(`Line ${index + 1}: position "${tokens[tokens.length - 1]}" had no events`);
     }
   });
 

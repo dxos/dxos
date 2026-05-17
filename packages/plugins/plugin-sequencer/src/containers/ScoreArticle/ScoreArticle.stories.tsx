@@ -15,8 +15,8 @@ import { Note, Sequence, Score, Track } from '#types';
 import { applyLeadSheetToScore, type MutableScore } from '../../util';
 import { parseLeadSheet } from '../../util/lead-sheet';
 import { ScoreArticle } from './ScoreArticle';
-import SCORE from './testing/ode_to_joy.txt?raw';
-
+import CHILDREN from './testing/children.txt?raw';
+import ODE_TO_JOY from './testing/ode_to_joy.txt?raw';
 type Pattern = {
   tracks: Track.Track[];
   sequences: Sequence.Sequence[];
@@ -122,6 +122,12 @@ export const Default: Story = {
 
 export const OdeToJoy: Story = {
   args: {
-    text: SCORE,
+    text: ODE_TO_JOY,
+  },
+};
+
+export const Children: Story = {
+  args: {
+    text: CHILDREN,
   },
 };

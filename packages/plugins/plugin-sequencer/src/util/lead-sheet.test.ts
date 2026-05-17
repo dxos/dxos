@@ -111,6 +111,21 @@ describe('parseLeadSheet', () => {
     const doc = parseLeadSheet('[1:T]\n1.1 C4/4\n1.4 C4/4');
     expect(doc.tracks[0].length).toBe(4);
   });
+
+  test('multiple position groups on one line', ({ expect }) => {
+    // The Children riff sheet packs whole bars onto a single line:
+    //   1.1 F#5/4   1.2 A5/4   1.3 C#6/2
+    const doc = parseLeadSheet('[1:Lead]\n1.1 F#5/4   1.2 A5/4   1.3 C#6/2');
+    expect(doc.tracks[0].notes).toEqual([
+      { pitch: 78, startTime: 0, duration: 1 },
+      { pitch: 81, startTime: 1, duration: 1 },
+      { pitch: 85, startTime: 2, duration: 2 },
+    ]);
+  });
+
+  test('rejects a position with no events', ({ expect }) => {
+    expect(() => parseLeadSheet('[1:T]\n1.1 C4/4 1.2')).toThrow();
+  });
 });
 
 describe('formatLeadSheet', () => {
