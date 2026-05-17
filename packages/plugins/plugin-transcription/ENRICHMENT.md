@@ -14,12 +14,12 @@ this document is the contract for restoring them on top of `@effect/ai` / `Langu
    boundaries — without waiting for the speaker to finish.
 2. **Reference linking**: link mentions of existing ECHO objects (Person, Organization, …) in the
    transcript to their canonical `Ref<T>`s.
-3. **Candidate identification**: surface nouns / proper nouns that *aren't* yet in the space, so the
+3. **Candidate identification**: surface nouns / proper nouns that _aren't_ yet in the space, so the
    user can act on them (create object, research, link to existing).
 4. **Cumulative summary**: maintain a single, periodically-updated summary of the conversation that
    reflects newly transcribed content and newly extracted references.
-5. **Referent resolution**: resolve deictic / anaphoric references like *"I"* (→ the speaker),
-   *"there"*, *"them"*, *"the meeting"* (→ entities established earlier in the conversation) into
+5. **Referent resolution**: resolve deictic / anaphoric references like _"I"_ (→ the speaker),
+   _"there"_, _"them"_, _"the meeting"_ (→ entities established earlier in the conversation) into
    their concrete referents inside the summary.
 
 ## Architecture
@@ -136,9 +136,9 @@ key inputs that make resolution work:
 
 - **Speaker identity**: every `Message.Message` written by `TranscriptionManager` already carries
   `sender.identityDid`. The hook resolves `did → display name` via `space.members` and includes
-  the mapping in the prompt. *"I"* resolves to the speaker of the block containing the pronoun.
+  the mapping in the prompt. _"I"_ resolves to the speaker of the block containing the pronoun.
 - **Prior summary as conversational memory**: places, events, and people named earlier in the
-  conversation are in `previousSummary`. The LLM resolves *"there"* against this memory.
+  conversation are in `previousSummary`. The LLM resolves _"there"_ against this memory.
 - **Reference and candidate context**: references and candidates from Pass A are echoed into the
   prompt so the LLM can prefer those over inventing new entities.
 
@@ -154,7 +154,7 @@ The `resolvedReferents` field surfaces the bindings the LLM made. Two uses:
 Spoken (split across two utterances):
 
 > Rich: "I'm going to go there next week."
-> *(two minutes earlier)* Anna: "We should do another offsite in London this spring."
+> _(two minutes earlier)_ Anna: "We should do another offsite in London this spring."
 
 Summary text should read approximately:
 
@@ -225,11 +225,11 @@ Follow-up PRs:
 
 ## Defaults
 
-| Knob | Default | Notes |
-|---|---|---|
-| Model | `@anthropic/claude-haiku-4-5` | Same as `update-chat-name` / `qualifier`. |
-| Pass A window | 8 transcript blocks | Approximately 30 s at default Whisper config. |
-| Pass A concurrency | Latest-wins (interrupt in-flight) | One fiber per article. |
-| Pass B silence threshold | 5 000 ms | Re-arms on next speech edge. |
-| Pass B min interval | 60 000 ms | Lower bound on summary cadence. |
-| Pass B concurrency | Skip-if-busy | Avoids piling up cumulative calls. |
+| Knob                     | Default                           | Notes                                         |
+| ------------------------ | --------------------------------- | --------------------------------------------- |
+| Model                    | `@anthropic/claude-haiku-4-5`     | Same as `update-chat-name` / `qualifier`.     |
+| Pass A window            | 8 transcript blocks               | Approximately 30 s at default Whisper config. |
+| Pass A concurrency       | Latest-wins (interrupt in-flight) | One fiber per article.                        |
+| Pass B silence threshold | 5 000 ms                          | Re-arms on next speech edge.                  |
+| Pass B min interval      | 60 000 ms                         | Lower bound on summary cadence.               |
+| Pass B concurrency       | Skip-if-busy                      | Avoids piling up cumulative calls.            |
