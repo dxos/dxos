@@ -78,6 +78,7 @@ const DefaultStory = ({
     if (!audio) {
       return;
     }
+
     if (running) {
       void audio.play();
     } else {

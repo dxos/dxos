@@ -23,7 +23,6 @@ const DefaultStory = ({ keywords }: DefaultStoryProps) => {
   const [running, setRunning] = useState(false);
   const [matchingWords, setMatchingWords] = useState<Word[]>(keywords.map((word) => ({ text: word, matched: false })));
 
-  const [transcript, setTranscript] = useState('');
   const recognition = useMemo(() => {
     // TODO(mykola): Fix types
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -65,7 +64,6 @@ const DefaultStory = ({ keywords }: DefaultStoryProps) => {
       });
 
       setMatchingWords(updatedWords);
-      setTranscript(transcript);
     };
 
     // TODO(mykola): Fix types.

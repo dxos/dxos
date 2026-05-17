@@ -58,6 +58,7 @@ const DefaultStory = ({
     if (!space || !entityExtraction) {
       return {};
     }
+
     let extractionFunction: ExtractionFunction | undefined;
     let objects: Promise<Obj.Unknown[]> | undefined;
     if (entityExtraction === 'ner') {
@@ -78,6 +79,7 @@ const DefaultStory = ({
         created: new Date().toISOString(),
         blocks,
       });
+
       if (entityExtraction && space) {
         invariant(extractionFunction, 'extractionFunction is required');
         const result = await processTranscriptMessage({
