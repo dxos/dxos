@@ -80,8 +80,8 @@ export const ForceGraph = composable<HTMLDivElement, ForceGraphProps>(
           {grid && <SVG.Grid axis />}
           <SVG.Zoom extent={[1 / 2, 2]}>
             <SVG.Graph<SpaceGraphNode, SpaceGraphEdge>
-              drag={drag}
               ref={graph}
+              drag={drag}
               model={model}
               projector={projector}
               labels={{
