@@ -10,6 +10,7 @@ import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { Button, Icon, Input, Panel } from '@dxos/react-ui';
 import { type ToggleMode } from '@dxos/react-ui-canvas';
+import { Oscilloscope } from '@dxos/react-ui-components';
 import { Menu, MenuBuilder, useMenuActions, type ActionGraphProps } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
@@ -393,6 +394,12 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
               onMute={handleMuteTrack}
               onAdd={handleAddTrack}
               onRemove={handleRemoveTrack}
+            />
+            <Oscilloscope
+              classNames='h-[400px] border-green-500'
+              mode='waveform'
+              active={isPlaying}
+              // source={playerRef.current?.outputNode}
             />
           </div>
           <div className='flex-1 min-w-0 relative'>
