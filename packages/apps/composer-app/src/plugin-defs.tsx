@@ -55,6 +55,7 @@ import { RegistryPlugin } from '@dxos/plugin-registry/plugin';
 import { SamplePlugin } from '@dxos/plugin-sample/plugin';
 import { ScriptPlugin } from '@dxos/plugin-script/plugin';
 import { SearchPlugin } from '@dxos/plugin-search/plugin';
+import { SequencerPlugin } from '@dxos/plugin-sequencer/plugin';
 import { SettingsPlugin } from '@dxos/plugin-settings/plugin';
 import { SheetPlugin } from '@dxos/plugin-sheet/plugin';
 import { SidekickPlugin } from '@dxos/plugin-sidekick/plugin';
@@ -149,6 +150,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     MasonryPlugin.meta.id,
     PreviewPlugin.meta.id,
     SearchPlugin.meta.id,
+    SequencerPlugin.meta.id,
     SheetPlugin.meta.id,
     SketchPlugin.meta.id,
     TablePlugin.meta.id,
@@ -262,6 +264,7 @@ export const getPlugins = ({
     isLocal && SamplePlugin(),
     ScriptPlugin(),
     SearchPlugin(),
+    SequencerPlugin(),
     (isDev || isLabs) && SidekickPlugin(),
     SettingsPlugin(),
     SheetPlugin(),

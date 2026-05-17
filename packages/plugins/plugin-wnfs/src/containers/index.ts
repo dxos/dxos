@@ -4,4 +4,4 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export const FileContainer: ComponentType<any> = lazy(() => import('./FileContainer'));
+export const FileArticle: ComponentType<any> = lazy(() => import('./FileArticle'));

@@ -47,8 +47,7 @@
     "motion": "catalog:",
     "ogl": "catalog:",
     "react-resize-detector": "catalog:",
-    "three": "catalog:",
-    "tone": "catalog:"
+    "three": "catalog:"
   },
   "devDependencies": {
     "@dxos/brand": "workspace:*",
