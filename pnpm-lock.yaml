@@ -13456,6 +13456,9 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
+      '@dxos/react-ui-sfx':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-sfx
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
