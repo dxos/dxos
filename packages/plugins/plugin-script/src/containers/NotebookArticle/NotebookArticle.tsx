@@ -38,10 +38,7 @@ const INCLUDE_BLUEPRINTS = [
 
 // TODO(burdon): Support calling named deployed functions (as with sheet).
 
-export type NotebookArticleProps = AppSurface.ObjectArticleProps<
-  Notebook.Notebook,
-  Pick<TypescriptEditorProps, 'env'>
->;
+export type NotebookArticleProps = AppSurface.ObjectArticleProps<Notebook.Notebook, Pick<TypescriptEditorProps, 'env'>>;
 
 export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: NotebookArticleProps) => {
   const { t } = useTranslation(meta.id);
