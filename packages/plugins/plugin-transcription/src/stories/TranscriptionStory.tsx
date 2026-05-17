@@ -11,6 +11,7 @@ import React, {
   type ReactNode,
   type RefObject,
   type SetStateAction,
+  useCallback,
   useRef,
 } from 'react';
 
@@ -29,25 +30,29 @@ import { type SerializationModel } from '../model';
  * @param toolbarSlot - Extra content rendered after the upload button inside the toolbar.
  */
 export const TranscriptionStory: FC<{
+  audioRef?: RefObject<HTMLAudioElement | null>;
   model: SerializationModel<Message.Message>;
   disabled?: boolean;
   running: boolean;
-  onRunningChange: Dispatch<SetStateAction<boolean>>;
-  audioRef?: RefObject<HTMLAudioElement | null>;
-  onUpload?: (file: File) => void;
   uploadAccept?: string;
   toolbarSlot?: ReactNode;
+  onRunningChange: Dispatch<SetStateAction<boolean>>;
+  onUpload?: (file: File) => void;
 }> = ({ model, running, onRunningChange, audioRef, disabled, onUpload, uploadAccept = 'audio/*', toolbarSlot }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file && onUpload) {
-      onUpload(file);
-    }
-    // Reset so the same file can be re-selected.
-    event.target.value = '';
-  };
+  const handleFileChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (file && onUpload) {
+        onUpload(file);
+      }
+
+      // Reset so the same file can be re-selected.
+      event.target.value = '';
+    },
+    [onUpload],
+  );
 
   return (
     <>

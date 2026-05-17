@@ -17,14 +17,12 @@ import {
 } from '@dxos/assistant/extraction';
 import { Filter, type Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { IndexKind, useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
-import { TestSchema } from '@dxos/schema/testing';
 import { Message, Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
 
@@ -75,16 +73,9 @@ const DefaultStory = ({
   const model = useFeedModelAdapter(renderByline([]), messages);
   const [space] = useSpaces();
 
-  useEffect(() => {
-    if (!space) {
-      log.warn('no space');
-    }
-  }, [space]);
-
   // Entity extraction.
   const { extractionFunction, objects } = useMemo(() => {
     if (!space) {
-      log.warn('no space');
       return {};
     }
 
@@ -97,15 +88,7 @@ const DefaultStory = ({
       extractionFunction = extractionNerFunction;
     } else if (entityExtraction === 'llm') {
       extractionFunction = extractionAnthropicFunction;
-      objects = space.db
-        .query(
-          Filter.or(
-            Filter.type(Person.Person),
-            Filter.type(Organization.Organization),
-            Filter.type(TestSchema.DocumentType),
-          ),
-        )
-        .run();
+      objects = space.db.query(Filter.or(Filter.type(Person.Person), Filter.type(Organization.Organization))).run();
     }
 
     return { extractionFunction, objects };
@@ -119,6 +102,7 @@ const DefaultStory = ({
         created: new Date().toISOString(),
         blocks,
       });
+
       if (!space) {
         appendMessage(message);
         return;
@@ -151,6 +135,7 @@ const DefaultStory = ({
     transcriberConfig,
     recorderConfig,
   });
+
   const [isOpen, setIsOpen] = useState(false);
   useEffect(() => {
     void transcriber?.open().then(() => setIsOpen(true));
@@ -159,7 +144,6 @@ const DefaultStory = ({
     };
   }, [transcriber]);
 
-  // Manage transcription state.
   useEffect(() => {
     if (running && transcriber?.isOpen && isSpeaking) {
       transcriber?.startChunksRecording();
@@ -172,7 +156,7 @@ const DefaultStory = ({
 };
 
 const meta = {
-  title: 'plugins/plugin-transcription/stories/MicrophoneTranscription',
+  title: 'plugins/plugin-transcription/stories/LiveTranscription',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
@@ -181,7 +165,7 @@ const meta = {
         ...corePlugins(),
         StorybookPlugin({}),
         ClientPlugin({
-          types: [TestItem, Person.Person, Organization.Organization, TestSchema.DocumentType],
+          types: [TestItem, Person.Person, Organization.Organization],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);

@@ -8,6 +8,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { createFeedServiceLayer } from '@dxos/client/echo';
 import { Feed, Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
+import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Message, type Transcript } from '@dxos/types';
@@ -58,11 +59,22 @@ export const useTranscriptionRecording = (transcript: Transcript.Transcript): Tr
       return;
     }
     let cancelled = false;
-    void transcriber.open().then(() => {
-      if (!cancelled && recording) {
-        transcriber.startChunksRecording();
-      }
-    });
+    // If `open()` rejects (e.g. mic permission denied, device init failure) we must
+    // clear `recording` — otherwise the toolbar button reports "stop" forever while
+    // nothing is actually being captured.
+    void transcriber.open().then(
+      () => {
+        if (!cancelled && recording) {
+          transcriber.startChunksRecording();
+        }
+      },
+      (err) => {
+        if (!cancelled) {
+          log.catch(err);
+          setRecording(false);
+        }
+      },
+    );
     return () => {
       cancelled = true;
       transcriber.stopChunksRecording();

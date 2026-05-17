@@ -38,16 +38,16 @@ const DefaultStory = ({ keywords }: DefaultStoryProps) => {
     recognition.interimResults = true;
     recognition.lang = 'en-US';
     recognition.maxAlternatives = 1;
-    // Add this line to enable punctuation
+    // Add this line to enable punctuation.
     recognition.grammars = new SpeechGrammarList();
 
-    // TODO(mykola): Fix types
+    // TODO(mykola): Fix types.
     recognition.onresult = (event: any) => {
       log.info('recognition result', { event });
       const current = event.resultIndex;
       const transcript = event.results[current][0].transcript;
 
-      // Remove punctuation and normalize whitespace for comparison
+      // Remove punctuation and normalize whitespace for comparison.
       const normalizeText = (text: string) =>
         text
           .toLowerCase()
@@ -57,7 +57,7 @@ const DefaultStory = ({ keywords }: DefaultStoryProps) => {
 
       const normalizedTranscript = normalizeText(transcript);
 
-      // Check each keyword and update matching words
+      // Check each keyword and update matching words.
       const updatedWords = matchingWords.map((word) => {
         const normalizedKeyword = normalizeText(word.text);
         const matched = normalizedTranscript.includes(normalizedKeyword);
@@ -68,7 +68,7 @@ const DefaultStory = ({ keywords }: DefaultStoryProps) => {
       setTranscript(transcript);
     };
 
-    // TODO(mykola): Fix types
+    // TODO(mykola): Fix types.
     recognition.onerror = (event: any) => {
       log.error('Speech recognition error:', { error: event.error });
       setRunning(false);

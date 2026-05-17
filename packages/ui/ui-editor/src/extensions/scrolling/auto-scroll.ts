@@ -168,7 +168,9 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
             requestAnimationFrame(() => {
               const { scrollTop, scrollHeight, clientHeight } = view.scrollDOM;
               const delta = scrollHeight - scrollTop - clientHeight;
-              const pinned = delta === 0;
+              // Sub-pixel tolerance: fractional scroll positions can leave delta at e.g. 0.5
+              // even when the user is visually at the bottom.
+              const pinned = Math.abs(delta) <= 1;
               setPinned(pinned);
               if (!pinned) {
                 view.dispatch({ effects: crawlerActiveEffect.of(false) });

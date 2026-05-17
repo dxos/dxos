@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
@@ -17,8 +17,7 @@ import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
-import { TestSchema } from '@dxos/schema/testing';
-import { type Actor, Message, Organization, Person } from '@dxos/types';
+import { Message, Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
 
 import { useAudioFile, useFeedModelAdapter, useTranscriber } from '#hooks';
@@ -30,23 +29,34 @@ import { renderByline } from '../util';
 import { TranscriptionStory } from './TranscriptionStory';
 import { useIsSpeaking } from './useIsSpeaking';
 
-const AudioFile = ({
-  detectSpeaking,
-  audioUrl,
-  normalizeSentences,
-  transcriberConfig,
-  recorderConfig,
-  audioConstraints,
-}: {
+const DEFAULT_TRANSCRIBER_CONFIG = {
+  transcribeAfterChunksAmount: 100,
+  prefixBufferChunksAmount: 50,
+  normalizeSentences: true,
+};
+
+const DEFAULT_RECORDER_CONFIG = {
+  interval: 200,
+};
+
+type DefaultStoryProps = {
   detectSpeaking?: boolean;
   normalizeSentences?: boolean;
   audioUrl: string;
   transcriberConfig?: TranscriberProps['config'];
   recorderConfig?: MediaStreamRecorderProps['config'];
   audioConstraints?: MediaTrackConstraints;
-}) => {
+};
+
+const DefaultStory = ({
+  detectSpeaking,
+  audioUrl,
+  normalizeSentences,
+  transcriberConfig = DEFAULT_TRANSCRIBER_CONFIG,
+  recorderConfig = DEFAULT_RECORDER_CONFIG,
+  audioConstraints,
+}: DefaultStoryProps) => {
   const [running, setRunning] = useState(false);
-  const actor: Actor.Actor = useMemo(() => ({ name: 'You' }), []);
 
   // Optional uploaded file overrides the default URL.
   // The useEffect below revokes the previous URL whenever it changes (and on unmount).
@@ -93,19 +103,16 @@ const AudioFile = ({
   // Local-only message buffer for the storybook; production uses a real space-backed Feed.
   const [messages, setMessages] = useState<Message.Message[]>([]);
   const model = useFeedModelAdapter(renderByline([]), messages);
-  const handleSegments = useCallback<TranscriberProps['onSegments']>(
-    async (blocks) => {
-      setMessages((prev) => [
-        ...prev,
-        Obj.make(Message.Message, {
-          created: new Date().toISOString(),
-          sender: actor,
-          blocks,
-        }),
-      ]);
-    },
-    [actor],
-  );
+  const handleSegments = useCallback<TranscriberProps['onSegments']>(async (blocks) => {
+    setMessages((prev) => [
+      ...prev,
+      Obj.make(Message.Message, {
+        created: new Date().toISOString(),
+        sender: {},
+        blocks,
+      }),
+    ]);
+  }, []);
 
   const transcriber = useTranscriber({
     audioStreamTrack: track,
@@ -114,8 +121,8 @@ const AudioFile = ({
     recorderConfig,
   });
 
-  // TODO(burdon): Sentence normalization moved to require a real space-backed Feed
-  // + FeedService runtime. Re-enable here once the story has access to one.
+  // TODO(burdon): Sentence normalization moved to require a real space-backed Feed + FeedService runtime.
+  //  Re-enable here once the story has access to one.
   void normalizeSentences;
 
   const manageChunkRecording = () => {
@@ -162,6 +169,7 @@ const AudioFile = ({
 
 const meta = {
   title: 'plugins/plugin-transcription/stories/FileTranscription',
+  render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
     withPluginManager({
@@ -169,7 +177,7 @@ const meta = {
         ...corePlugins(),
         StorybookPlugin({}),
         ClientPlugin({
-          types: [TestItem, Person.Person, Organization.Organization, TestSchema.DocumentType],
+          types: [TestItem, Person.Person, Organization.Organization],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               const { personalSpace } = yield* initializeIdentity(client);
@@ -183,44 +191,28 @@ const meta = {
       fireEvents: [AppActivationEvents.SetupAppGraph],
     }),
   ],
-} satisfies Meta;
+} satisfies Meta<DefaultStoryProps>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const TRANSCRIBER_CONFIG = {
-  transcribeAfterChunksAmount: 100,
-  prefixBufferChunksAmount: 50,
-  normalizeSentences: true,
-};
-
-const RECORDER_CONFIG = {
-  interval: 200,
-};
-
-export const Default: StoryObj<typeof AudioFile> = {
-  render: AudioFile,
+export const Default: Story = {
   args: {
     detectSpeaking: true,
     // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
     audioUrl: 'https://dxos.network/audio-london.m4a',
     // textUrl: 'https://dxos.network/audio-london.txt',
-    transcriberConfig: TRANSCRIBER_CONFIG,
-    recorderConfig: RECORDER_CONFIG,
   },
 };
 
 // TODO(mykola): Fix sentence normalization.
 // export const WithSentenceNormalization: StoryObj<typeof AudioFile> = {
-//   render: AudioFile,
 //   args: {
 //     detectSpeaking: true,
 //     normalizeSentences: true,
 //     // https://learnenglish.britishcouncil.org/general-english/audio-zone/living-london
 //     audioUrl: 'https://dxos.network/audio-london.m4a',
 //     // textUrl: 'https://dxos.network/audio-london.txt',
-//     transcriberConfig: TRANSCRIBER_CONFIG,
-//     recorderConfig: RECORDER_CONFIG,
 //   },
 // };

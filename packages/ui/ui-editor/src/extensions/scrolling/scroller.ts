@@ -23,7 +23,5 @@ export type ScrollerOptions = CrawlerOptions &
  * Composite scroll extension for streaming editor views (chat threads, transcripts, logs).
  */
 export const scroller = ({ overScroll, scrollOnResize, autoScroll = true }: ScrollerOptions = {}): Extension[] => {
-  return [crawler({ overScroll }), (autoScroll || scrollOnResize) && autoScrollExtension({ scrollOnResize })].filter(
-    isTruthy,
-  );
+  return [crawler({ overScroll }), autoScroll && autoScrollExtension({ scrollOnResize })].filter(isTruthy);
 };

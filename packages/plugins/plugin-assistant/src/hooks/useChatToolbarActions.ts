@@ -31,6 +31,10 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
   // TODO(wittjosiah): Query in react vs query in atom?
   const chats = useQuery(db, query);
 
+  // Stable projection of chat identity + label so the menu rebuilds when a chat is renamed
+  // (same count, same ids → without this the history labels go stale).
+  const chatsVersion = chats.map((chat) => `${chat.id}:${Obj.getLabel(chat) ?? ''}`).join('|');
+
   // Stable references in deps avoid circular reference issues.
   return useMenuBuilder(() => {
     const builder = MenuBuilder.make()
@@ -112,5 +116,5 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
     }
 
     return builder.build();
-  }, [chats.length, db?.spaceId, companionTo?.id, chat?.id, invoke]);
+  }, [chatsVersion, db?.spaceId, companionTo?.id, chat?.id, invoke]);
 };

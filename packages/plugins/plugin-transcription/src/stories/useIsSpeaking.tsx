@@ -16,6 +16,7 @@ export const useIsSpeaking = (track?: MediaStreamTrack) => {
     if (!track) {
       return;
     }
+
     return new SpeakingMonitor(track);
   }, [track]);
 

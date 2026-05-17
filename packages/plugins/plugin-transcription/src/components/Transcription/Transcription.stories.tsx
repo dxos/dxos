@@ -17,7 +17,6 @@ import { useMembers, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout } from '@dxos/react-ui/testing';
-import { TestSchema } from '@dxos/schema/testing';
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 
 import { useFeedModelAdapter } from '#hooks';
@@ -159,14 +158,7 @@ const meta = {
         ...corePlugins(),
         StorybookPlugin({}),
         ClientPlugin({
-          types: [
-            TestItem,
-            TestSchema.DocumentType,
-            Person.Person,
-            Organization.Organization,
-            Feed.Feed,
-            Message.Message,
-          ],
+          types: [TestItem, Person.Person, Organization.Organization, Feed.Feed, Message.Message],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
