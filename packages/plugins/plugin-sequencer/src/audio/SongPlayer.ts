@@ -219,12 +219,28 @@ export class SongPlayer {
   }
 
   stop(): void {
-    const transport = Tone.getTransport();
-    transport.stop();
-    for (const { part } of this.#scheduled) {
-      part.stop();
+    if (!this.#started) {
+      return;
     }
     this.#started = false;
+    // Tone's internal `now()` can return a value just below zero (e.g.
+    // -3.7e-13) when the AudioContext was only briefly started, and the
+    // schedule cancel-time setter validates `value >= 0` and throws
+    // RangeError. Pass an explicit clamped time and additionally swallow
+    // the rare race so a stop after a transient play never bubbles up.
+    const time = Math.max(0, Tone.now());
+    try {
+      Tone.getTransport().stop(time);
+    } catch {
+      /* see comment above */
+    }
+    for (const { part } of this.#scheduled) {
+      try {
+        part.stop(time);
+      } catch {
+        /* see comment above */
+      }
+    }
   }
 
   /** True if play() has been called since the last stop()/dispose(). */
