@@ -4,14 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import {
-  formatLeadSheet,
-  formatPitch,
-  formatPosition,
-  parseLeadSheet,
-  parsePitch,
-  parsePosition,
-} from './lead-sheet';
+import { formatLeadSheet, formatPitch, formatPosition, parseLeadSheet, parsePitch, parsePosition } from './lead-sheet';
 
 describe('parsePitch', () => {
   test('middle C and sharps/flats', ({ expect }) => {

@@ -57,7 +57,9 @@ export const Ruler = ({ viewport, headers, width, majorEvery = 4, classNames }: 
           key={col}
           className={mx(
             'absolute top-0 bottom-0 text-[10px] text-neutral-500 dark:text-neutral-400',
-            major ? 'border-l border-neutral-400 dark:border-neutral-500' : 'border-l border-neutral-200 dark:border-neutral-700',
+            major
+              ? 'border-l border-neutral-400 dark:border-neutral-500'
+              : 'border-l border-neutral-200 dark:border-neutral-700',
           )}
           style={{ transform: `translateX(${x}px)` }}
         >

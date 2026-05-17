@@ -96,7 +96,9 @@ export const attachPointerHandlers = <T>(
       }
       case 'select': {
         drag = { kind: 'select', origin: coord };
-        registry.set(atoms.selection, { range: { col0: coord.col, row0: coord.row, col1: coord.col, row1: coord.row } });
+        registry.set(atoms.selection, {
+          range: { col0: coord.col, row0: coord.row, col1: coord.col, row1: coord.row },
+        });
         break;
       }
     }

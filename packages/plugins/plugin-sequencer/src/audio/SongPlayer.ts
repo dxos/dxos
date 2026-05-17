@@ -5,7 +5,6 @@
 import * as Tone from 'tone';
 
 import type { Note, Patch, Song, Track } from '../types';
-
 import { createDrum } from './sounds';
 
 /**

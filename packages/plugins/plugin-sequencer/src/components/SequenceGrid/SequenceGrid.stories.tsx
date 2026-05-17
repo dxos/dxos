@@ -8,8 +8,9 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { SequenceGrid } from './SequenceGrid';
 import type { Note, Sequence, Track } from '#types';
+
+import { SequenceGrid } from './SequenceGrid';
 
 const SEQUENCE_LENGTH = 16; // beats
 const BEATS_PER_CELL = 0.25;

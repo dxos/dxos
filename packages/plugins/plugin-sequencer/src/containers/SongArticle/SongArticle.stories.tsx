@@ -8,9 +8,10 @@ import React, { useMemo } from 'react';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { SongArticle } from './SongArticle';
 import { translations } from '#translations';
 import { Note, Sequence, Song, Track } from '#types';
+
+import { SongArticle } from './SongArticle';
 
 const trackColors = ['#ef4444', '#f97316', '#3b82f6', '#22c55e'];
 

@@ -114,7 +114,12 @@ export const LoopMarkers = ({
       {startX > gridLeft && (
         <div
           className='absolute bg-black/30 dark:bg-black/40'
-          style={{ top: headerTop, left: gridLeft, width: Math.max(0, startX - gridLeft), height: Math.max(0, paneHeight - headerTop) }}
+          style={{
+            top: headerTop,
+            left: gridLeft,
+            width: Math.max(0, startX - gridLeft),
+            height: Math.max(0, paneHeight - headerTop),
+          }}
         />
       )}
       <div

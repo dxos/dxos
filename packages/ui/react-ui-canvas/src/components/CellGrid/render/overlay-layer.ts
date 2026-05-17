@@ -22,15 +22,7 @@ export type DrawOverlayOptions = {
   style: OverlayStyle;
 };
 
-export const drawOverlay = ({
-  ctx,
-  size,
-  viewport,
-  headers,
-  selection,
-  playhead,
-  style,
-}: DrawOverlayOptions): void => {
+export const drawOverlay = ({ ctx, size, viewport, headers, selection, playhead, style }: DrawOverlayOptions): void => {
   ctx.clearRect(0, 0, size.width, size.height);
 
   ctx.save();

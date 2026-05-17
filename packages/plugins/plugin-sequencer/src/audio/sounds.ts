@@ -9,17 +9,7 @@ export interface Sound {
   stop: () => Promise<void>;
 }
 
-export type DrumName =
-  | 'kick'
-  | 'snare'
-  | 'hat'
-  | 'openhat'
-  | 'clap'
-  | 'crash'
-  | 'ride'
-  | 'tomLo'
-  | 'tomMid'
-  | 'tomHi';
+export type DrumName = 'kick' | 'snare' | 'hat' | 'openhat' | 'clap' | 'crash' | 'ride' | 'tomLo' | 'tomMid' | 'tomHi';
 
 export type DrumOptions = { gain?: number };
 

@@ -52,14 +52,7 @@ const renderDataVizCell: RenderCell<{ magnitude: number }> = ({ ctx, x, y, w, h,
   ctx.globalAlpha = 1;
 };
 
-const roundedRect = (
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  r: number,
-): void => {
+const roundedRect = (ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number): void => {
   const radius = Math.min(r, w / 2, h / 2);
   ctx.beginPath();
   ctx.moveTo(x + radius, y);
@@ -99,9 +92,16 @@ type StoryProps = Pick<CellGridProps, 'headers'> & {
 const DefaultStory = ({ variant, tool, numCols, numRows, cellWidth, cellHeight, playback, headers }: StoryProps) => {
   const registry = useContext(RegistryContext);
 
-  const atoms = useMemo(() => createCellGridAtoms<SequencerData | { magnitude: number }>({ cellWidth, cellHeight }), [cellWidth, cellHeight]);
+  const atoms = useMemo(
+    () => createCellGridAtoms<SequencerData | { magnitude: number }>({ cellWidth, cellHeight }),
+    [cellWidth, cellHeight],
+  );
   const rows: Row[] = useMemo(
-    () => Array.from({ length: numRows }, (_, index) => ({ id: `r${index}`, label: variant === 'sequencer' ? `Track ${index + 1}` : `Series ${index + 1}` })),
+    () =>
+      Array.from({ length: numRows }, (_, index) => ({
+        id: `r${index}`,
+        label: variant === 'sequencer' ? `Track ${index + 1}` : `Series ${index + 1}`,
+      })),
     [numRows, variant],
   );
 
@@ -114,7 +114,7 @@ const DefaultStory = ({ variant, tool, numCols, numRows, cellWidth, cellHeight, 
   // story renders are stable across runs (helpful for visual review / snapshots).
   useEffect(() => {
     const next = new Map<string, Cell<SequencerData | { magnitude: number }>>();
-    const lcg = makeLcg(0xC0FFEE);
+    const lcg = makeLcg(0xc0ffee);
     if (variant === 'sequencer') {
       for (let row = 0; row < numRows; row++) {
         for (let col = 0; col < numCols; col += row + 2) {

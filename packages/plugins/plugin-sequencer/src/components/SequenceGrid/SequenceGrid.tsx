@@ -19,9 +19,9 @@ import {
 } from '@dxos/react-ui-canvas';
 import { mx } from '@dxos/ui-theme';
 
-import { LoopMarkers } from '../LoopMarkers';
-
 import type { Note, Sequence, Track } from '#types';
+
+import { LoopMarkers } from '../LoopMarkers';
 
 export type SequenceGridProps = {
   sequence: Sequence.Sequence;

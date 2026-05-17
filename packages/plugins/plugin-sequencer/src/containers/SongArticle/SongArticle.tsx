@@ -13,10 +13,10 @@ import { type ToggleMode } from '@dxos/react-ui-canvas';
 import { Menu, MenuBuilder, useMenuActions, type ActionGraphProps } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
 
-import { SongPlayer } from '../../audio';
 import { SequenceGrid, TrackList } from '#components';
 import type { Note, Sequence, Song, Track } from '#types';
 
+import { SongPlayer } from '../../audio';
 import { formatLeadSheet, parseLeadSheet, type LeadSheetDocument } from '../../util/lead-sheet';
 
 export type SongArticleProps = AppSurface.ObjectArticleProps<Song.Song>;
