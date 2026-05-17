@@ -2,13 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-import '@dxos-theme';
-
 import React, {
   type ChangeEvent,
   type Dispatch,
-  type FC,
-  type ReactNode,
   type RefObject,
   type SetStateAction,
   useCallback,
@@ -21,24 +17,32 @@ import { type Message } from '@dxos/types';
 import { Transcription } from '../components';
 import { type SerializationModel } from '../model';
 
+export type TranscriptionStoryProps = {
+  audioRef?: RefObject<HTMLAudioElement | null>;
+  model: SerializationModel<Message.Message>;
+  running: boolean;
+  disabled?: boolean;
+  uploadAccept?: string;
+  onRunningChange: Dispatch<SetStateAction<boolean>>;
+  onUpload?: (file: File) => void;
+};
+
 /**
  * Story wrapper that renders a transcript with playback controls, an optional audio file
  * upload affordance, and a toolbar slot for additional controls.
  *
  * @param onUpload - Callback fired when the user picks a local audio file via the upload button.
  * @param uploadAccept - HTML `accept` filter for the hidden file input. Defaults to `audio/*`.
- * @param toolbarSlot - Extra content rendered after the upload button inside the toolbar.
  */
-export const TranscriptionStory: FC<{
-  audioRef?: RefObject<HTMLAudioElement | null>;
-  model: SerializationModel<Message.Message>;
-  disabled?: boolean;
-  running: boolean;
-  uploadAccept?: string;
-  toolbarSlot?: ReactNode;
-  onRunningChange: Dispatch<SetStateAction<boolean>>;
-  onUpload?: (file: File) => void;
-}> = ({ model, running, onRunningChange, audioRef, disabled, onUpload, uploadAccept = 'audio/*', toolbarSlot }) => {
+export const TranscriptionStory = ({
+  audioRef,
+  model,
+  running,
+  disabled,
+  uploadAccept = 'audio/*',
+  onRunningChange,
+  onUpload,
+}: TranscriptionStoryProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = useCallback(
@@ -84,7 +88,6 @@ export const TranscriptionStory: FC<{
             />
           </>
         )}
-        {toolbarSlot}
       </Toolbar.Root>
       <ScrollContainer.Root pin>
         <ScrollContainer.Content>

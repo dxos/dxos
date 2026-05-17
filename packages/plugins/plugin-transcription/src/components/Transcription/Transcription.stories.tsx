@@ -58,14 +58,28 @@ const LocalStory = ({ seed = 0, onReset, ...props }: InnerProps & { seed?: numbe
   const [ready, setReady] = useState(seed === 0);
 
   useEffect(() => {
+    // Reset on every seed change so Storybook controls don't leave stale messages from a prior run.
+    let cancelled = false;
+    setInitialMessages([]);
+    setReady(seed === 0);
+
     if (seed === 0) {
-      return;
+      return () => {
+        cancelled = true;
+      };
     }
 
     void Promise.all(Array.from({ length: seed }, () => builder.createMessage())).then((messages) => {
+      if (cancelled) {
+        return;
+      }
       setInitialMessages(messages);
       setReady(true);
     });
+
+    return () => {
+      cancelled = true;
+    };
   }, [seed, builder]);
 
   const model = useMemo(

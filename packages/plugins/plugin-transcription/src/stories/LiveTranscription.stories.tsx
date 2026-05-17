@@ -3,11 +3,8 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Effect from 'effect/Effect';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
-import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppActivationEvents } from '@dxos/app-toolkit';
 import {
   type ExtractionFunction,
   extractionAnthropicFunction,
@@ -17,84 +14,63 @@ import {
 } from '@dxos/assistant/extraction';
 import { Filter, type Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { ClientPlugin } from '@dxos/plugin-client/testing';
-import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { IndexKind, useSpaces } from '@dxos/react-client/echo';
-import { withLayout } from '@dxos/react-ui/testing';
+import { useSpaces } from '@dxos/react-client/echo';
 import { Message, Organization, Person } from '@dxos/types';
-import { seedTestData } from '@dxos/types/testing';
 
-import { useAudioTrack, useFeedModelAdapter, useTranscriber } from '#hooks';
-import { TestItem } from '#testing';
+import { useAudioTrack } from '#hooks';
 
 import { type MediaStreamRecorderProps, type TranscriberProps } from '../transcriber';
-import { TranscriptionPlugin } from '../TranscriptionPlugin';
-import { renderByline } from '../util';
+import { useIsSpeaking, createStoryDecorators, useStoryMessageModel, useStoryTranscriber } from './common';
 import { TranscriptionStory } from './TranscriptionStory';
-import { useIsSpeaking } from './useIsSpeaking';
 
-const TRANSCRIBER_CONFIG = {
+const DEFAULT_TRANSCRIBER_CONFIG = {
   transcribeAfterChunksAmount: 50,
   prefixBufferChunksAmount: 10,
 };
 
-const RECORDER_CONFIG = {
+const DEFAULT_RECORDER_CONFIG = {
   interval: 200,
 };
 
 type DefaultStoryProps = {
   detectSpeaking?: boolean;
-  transcriberConfig: TranscriberProps['config'];
-  recorderConfig: MediaStreamRecorderProps['config'];
+  transcriberConfig?: TranscriberProps['config'];
+  recorderConfig?: MediaStreamRecorderProps['config'];
   audioConstraints?: MediaTrackConstraints;
-  entityExtraction: 'none' | 'ner' | 'llm';
+  entityExtraction?: 'ner' | 'llm';
 };
 
 const DefaultStory = ({
   detectSpeaking,
-  entityExtraction = 'none',
-  transcriberConfig,
-  recorderConfig,
+  entityExtraction,
+  transcriberConfig = DEFAULT_TRANSCRIBER_CONFIG,
+  recorderConfig = DEFAULT_RECORDER_CONFIG,
   audioConstraints,
 }: DefaultStoryProps) => {
   const [running, setRunning] = useState(false);
-
-  // Audio.
   const track = useAudioTrack(running, audioConstraints);
-
-  // Speaking.
   const isSpeaking = detectSpeaking ? useIsSpeaking(track) : true;
-
-  // Local-only message buffer for the storybook; production uses a real space-backed Feed.
-  const [messages, setMessages] = useState<Message.Message[]>([]);
-  const appendMessage = useCallback((message: Message.Message) => setMessages((prev) => [...prev, message]), []);
-  const model = useFeedModelAdapter(renderByline([]), messages);
+  const { model, appendMessage } = useStoryMessageModel();
   const [space] = useSpaces();
 
-  // Entity extraction.
+  // Resolve the entity-extraction function + nearby objects once per `entityExtraction` toggle.
   const { extractionFunction, objects } = useMemo(() => {
-    if (!space) {
+    if (!space || !entityExtraction) {
       return {};
     }
-
     let extractionFunction: ExtractionFunction | undefined;
     let objects: Promise<Obj.Unknown[]> | undefined;
-
     if (entityExtraction === 'ner') {
-      // Init model loading. Takes time.
-      void getNer();
+      void getNer(); // Init model loading. Takes time.
       extractionFunction = extractionNerFunction;
     } else if (entityExtraction === 'llm') {
       extractionFunction = extractionAnthropicFunction;
       objects = space.db.query(Filter.or(Filter.type(Person.Person), Filter.type(Organization.Organization))).run();
     }
-
     return { extractionFunction, objects };
   }, [entityExtraction, space]);
 
-  // Transcriber.
+  // Build a Message from each transcribed batch; optionally enrich via entity extraction.
   const handleSegments = useCallback<TranscriberProps['onSegments']>(
     async (blocks) => {
       const message = Message.make({
@@ -102,24 +78,12 @@ const DefaultStory = ({
         created: new Date().toISOString(),
         blocks,
       });
-
-      if (!space) {
-        appendMessage(message);
-        return;
-      }
-
-      if (entityExtraction !== 'none') {
+      if (entityExtraction && space) {
         invariant(extractionFunction, 'extractionFunction is required');
         const result = await processTranscriptMessage({
           function: extractionFunction,
-          input: {
-            message,
-            objects: await objects,
-          },
-          options: {
-            fallbackToRaw: true,
-            timeout: 30_000,
-          },
+          input: { message, objects: await objects },
+          options: { fallbackToRaw: true, timeout: 30_000 },
         });
         appendMessage(result.message);
       } else {
@@ -129,28 +93,14 @@ const DefaultStory = ({
     [appendMessage, space, entityExtraction, extractionFunction, objects],
   );
 
-  const transcriber = useTranscriber({
+  useStoryTranscriber({
     audioStreamTrack: track,
-    onSegments: handleSegments,
+    running,
+    isSpeaking,
     transcriberConfig,
     recorderConfig,
+    onSegments: handleSegments,
   });
-
-  const [isOpen, setIsOpen] = useState(false);
-  useEffect(() => {
-    void transcriber?.open().then(() => setIsOpen(true));
-    return () => {
-      void transcriber?.close().then(() => setIsOpen(false));
-    };
-  }, [transcriber]);
-
-  useEffect(() => {
-    if (running && transcriber?.isOpen && isSpeaking) {
-      transcriber?.startChunksRecording();
-    } else if (!running || !isSpeaking) {
-      transcriber?.stopChunksRecording();
-    }
-  }, [transcriber, running, isOpen, isSpeaking]);
 
   return <TranscriptionStory model={model} running={running} onRunningChange={setRunning} />;
 };
@@ -158,42 +108,7 @@ const DefaultStory = ({
 const meta = {
   title: 'plugins/plugin-transcription/stories/LiveTranscription',
   render: DefaultStory,
-  decorators: [
-    withLayout({ layout: 'column' }),
-    withPluginManager({
-      plugins: [
-        ...corePlugins(),
-        StorybookPlugin({}),
-        ClientPlugin({
-          types: [TestItem, Person.Person, Organization.Organization],
-          onClientInitialized: ({ client }) =>
-            Effect.gen(function* () {
-              const { personalSpace } = yield* initializeIdentity(client);
-              // TODO(mykola): Make API easier to use.
-              // TODO(mykola): Delete after enabling vector indexing by default.
-              // Enable vector indexing.
-              yield* Effect.promise(() =>
-                client.services.services.QueryService!.setConfig({
-                  enabled: true,
-                  indexes: [
-                    //
-                    { kind: IndexKind.Kind.SCHEMA_MATCH },
-                    { kind: IndexKind.Kind.GRAPH },
-                    { kind: IndexKind.Kind.VECTOR },
-                  ],
-                }),
-              );
-              yield* Effect.promise(() => client.services.services.QueryService!.reindex());
-              yield* Effect.promise(() => seedTestData(personalSpace));
-            }),
-        }),
-
-        PreviewPlugin(),
-        TranscriptionPlugin(),
-      ],
-      fireEvents: [AppActivationEvents.SetupAppGraph],
-    }),
-  ],
+  decorators: createStoryDecorators({ enableVectorIndex: true }),
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -203,9 +118,6 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     detectSpeaking: false,
-    entityExtraction: 'none',
-    transcriberConfig: TRANSCRIBER_CONFIG,
-    recorderConfig: RECORDER_CONFIG,
     audioConstraints: {
       echoCancellation: false,
       noiseSuppression: false,
@@ -214,28 +126,9 @@ export const Default: Story = {
   },
 };
 
-// NOTE: We are running out of free quota on hugging face entity extraction.
-// TODO(mykola): Fix hugging face quota issues.
-// export const EntityExtraction: Story = {
-//   args: {
-//     detectSpeaking: true,
-//     entityExtraction: 'ner',
-//     transcriberConfig: TRANSCRIBER_CONFIG,
-//     recorderConfig: RECORDER_CONFIG,
-//     audioConstraints: {
-//       echoCancellation: true,
-//       noiseSuppression: true,
-//       autoGainControl: true,
-//     },
-//   },
-// };
-
 export const SpeechDetection: Story = {
   args: {
     detectSpeaking: true,
-    entityExtraction: 'none',
-    transcriberConfig: TRANSCRIBER_CONFIG,
-    recorderConfig: RECORDER_CONFIG,
     audioConstraints: {
       echoCancellation: true,
       noiseSuppression: true,
@@ -243,3 +136,16 @@ export const SpeechDetection: Story = {
     },
   },
 };
+
+// TODO(mykola): Fix hugging face quota issues.
+// export const EntityExtraction: Story = {
+//   args: {
+//     detectSpeaking: true,
+//     entityExtraction: 'ner',
+//     audioConstraints: {
+//       echoCancellation: true,
+//       noiseSuppression: true,
+//       autoGainControl: true,
+//     },
+//   },
+// };
