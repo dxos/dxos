@@ -33,7 +33,7 @@ export const Score = Schema.Struct({
   loopEnd: Schema.optional(Schema.Number),
 }).pipe(
   Type.object({
-    typename: 'dxos.org/type/Score',
+    typename: 'org.dxos.type.score',
     version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),
