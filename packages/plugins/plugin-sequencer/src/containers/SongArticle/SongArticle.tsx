@@ -306,7 +306,7 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
   const handleExport = useCallback(() => {
     const document = songToLeadSheet(song);
     const text = formatLeadSheet(document, { beatsPerBar });
-    const filename = `${(song.name ?? 'song').replace(/[^a-z0-9-_]+/gi, '_').slice(0, 60) || 'song'}.lead`;
+    const filename = `${(song.name ?? 'song').replace(/[^a-z0-9-_]+/gi, '_').slice(0, 60) || 'song'}.txt`;
     const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const anchor = window.document.createElement('a');
@@ -322,7 +322,7 @@ export const SongArticle = ({ role, subject, attendableId }: SongArticleProps) =
   const handleImport = useCallback(() => {
     const input = window.document.createElement('input');
     input.type = 'file';
-    input.accept = '.lead,.txt,text/plain';
+    input.accept = '.txt,text/plain';
     input.style.display = 'none';
     input.addEventListener('change', async () => {
       const file = input.files?.[0];
