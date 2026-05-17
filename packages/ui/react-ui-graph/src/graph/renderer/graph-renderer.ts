@@ -59,6 +59,12 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
   GraphRendererOptions<NodeData, EdgeData>
 > {
   override render(layout: GraphLayout<NodeData, EdgeData>) {
+    // The SVG group ref is unset between mount cycles and before the container has sized;
+    // skip the render rather than throw — the projector will emit again on the next tick.
+    if (!this.root) {
+      return;
+    }
+
     log('render', layout);
 
     const root = select(this.root);
@@ -208,6 +214,9 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
    * @param node
    */
   fireBullet(node: GraphLayoutNode<NodeData>) {
+    if (!this.root) {
+      return;
+    }
     select(this.root).selectAll('g.dx-edges').selectAll('path').call(createBullets(this.root, node.id));
   }
 }
