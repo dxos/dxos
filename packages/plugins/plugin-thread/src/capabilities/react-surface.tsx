@@ -12,7 +12,7 @@ import { getSpace } from '@dxos/react-client/echo';
 import { Channel, Thread } from '@dxos/types';
 
 import { ThreadSettings } from '#components';
-import { ChannelChat, ChannelContainer, ThreadCompanion, ThreadContainer } from '#containers';
+import { ChannelChat, ChannelArticle, ThreadCompanion, ThreadContainer } from '#containers';
 import { meta } from '#meta';
 import { type Settings } from '#types';
 
@@ -23,7 +23,7 @@ export default Capability.makeModule(() =>
         id: 'channel',
         filter: AppSurface.object(AppSurface.Article, Channel.Channel),
         component: ({ data: { subject, attendableId }, role }) => (
-          <ChannelContainer role={role} subject={subject} attendableId={attendableId} />
+          <ChannelArticle role={role} subject={subject} attendableId={attendableId} />
         ),
       }),
       Surface.create({

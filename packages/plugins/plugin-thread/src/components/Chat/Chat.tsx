@@ -68,7 +68,7 @@ export type ChatOrientation = 'top' | 'bottom';
  * Owns its own UI state (textbox content, scroll position, editor extensions) but
  * does not load data or invoke operations — the caller passes messages and an
  * `onSend` callback. Used by both `ThreadContainer` (AutoMerge `Thread`) and
- * `ChannelContainer`'s feed-backed channel chat.
+ * `ChannelArticle`'s feed-backed channel chat.
  */
 export const Chat = composable<HTMLDivElement, ChatProps>(
   (

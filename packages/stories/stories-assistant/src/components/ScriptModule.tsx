@@ -8,7 +8,7 @@ import { useAtomCapability, useCapability } from '@dxos/app-framework/ui';
 import { Script } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
 import { ScriptCapabilities } from '@dxos/plugin-script';
-import { ScriptContainer as ScriptContainerComponent } from '@dxos/plugin-script/containers';
+import { ScriptArticle } from '@dxos/plugin-script/containers';
 import { useQuery } from '@dxos/react-client/echo';
 
 import { type ModuleProps } from './types';
@@ -23,7 +23,7 @@ export const ScriptModule = ({ space }: ModuleProps) => {
 
   return (
     <div className='flex w-full h-[70vh] min-h-[20rem] overflow-auto'>
-      <ScriptContainerComponent role='section' subject={script} settings={settings} env={compiler.environment} />
+      <ScriptArticle role='section' subject={script} settings={settings} env={compiler.environment} />
     </div>
   );
 };
