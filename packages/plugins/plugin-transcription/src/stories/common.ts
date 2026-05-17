@@ -9,7 +9,7 @@
 
 import { type Decorator } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
@@ -135,19 +135,26 @@ export const useStoryTranscriber = ({
   });
 
   // Open the transcriber when it becomes available; close on teardown.
+  // `tokenRef` is a per-effect identity so a late `close()` completion from a stale
+  // transcriber instance can't clobber `isOpen` after a newer instance has opened.
   const [isOpen, setIsOpen] = useState(false);
+  const tokenRef = useRef<symbol | null>(null);
   useEffect(() => {
     if (!transcriber) {
       return;
     }
-    let cancelled = false;
+    const token = Symbol();
+    tokenRef.current = token;
     void transcriber.open().then(
-      () => !cancelled && setIsOpen(true),
-      () => !cancelled && setIsOpen(false),
+      () => tokenRef.current === token && setIsOpen(true),
+      () => tokenRef.current === token && setIsOpen(false),
     );
     return () => {
-      cancelled = true;
-      void transcriber.close().then(() => setIsOpen(false));
+      void transcriber.close().then(() => {
+        if (tokenRef.current === token) {
+          setIsOpen(false);
+        }
+      });
     };
   }, [transcriber]);
 
