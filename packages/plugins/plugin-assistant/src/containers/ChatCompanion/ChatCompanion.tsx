@@ -20,7 +20,7 @@ import { type ChatEvent } from '#components';
 import { useBlueprintRegistry, useContextBinder } from '#hooks';
 import { AssistantOperation } from '#types';
 
-import ChatContainer from '../ChatContainer';
+import ChatArticle from '../ChatArticle';
 
 export type ChatCompanionProps = AppSurface.ArticleProps<Chat.Chat, {}, Obj.Unknown>;
 
@@ -119,7 +119,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
     }, [binder, companionTo, blueprintKeys]);
 
     return (
-      <ChatContainer
+      <ChatArticle
         role={role ?? 'article'}
         space={space}
         subject={chat}

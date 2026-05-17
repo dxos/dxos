@@ -9,7 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { BoardContainer } from '#containers';
+import { BoardArticle } from '#containers';
 import { Board } from '#types';
 
 export default Capability.makeModule(() =>
@@ -23,7 +23,7 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Section, Board.Board),
         ),
         component: ({ role, data }) => (
-          <BoardContainer role={role} subject={data.subject} attendableId={data.attendableId} />
+          <BoardArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
     ]),

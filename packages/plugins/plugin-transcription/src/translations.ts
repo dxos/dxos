@@ -17,6 +17,9 @@ export const translations = [
         'bookmark.button': 'Bookmark',
         'scroll-to-end.label': 'Scroll to latest',
 
+        'start-recording.label': 'Start recording',
+        'stop-recording.label': 'Stop recording',
+
         'settings.entity-extraction.label': 'Entity extraction',
       },
     },
