@@ -26,7 +26,7 @@ this document is the contract for restoring them on top of `@effect/ai` / `Langu
 
 Three concurrent passes, each running off the same ECHO feed populated by the Whisper pipeline:
 
-```
+```text
                  ┌─── Pass A — Enrichment ─────────────────────────────────────┐
 Whisper batch ──►│ trigger: every new batch                                    │
                  │ window:  last 8 transcript blocks (≈30s)                    │
