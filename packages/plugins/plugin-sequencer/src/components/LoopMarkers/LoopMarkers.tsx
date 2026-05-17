@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
@@ -19,17 +19,25 @@ export type LoopMarkersProps = {
   pixelsPerBeat: number;
   /** Horizontal scroll offset of the grid, in pixels. */
   scrollX: number;
+  /** Called when the user drags near the right/left edge while the handle is past
+   * the visible viewport. Implementations should mutate viewport.scrollX. */
+  onScrollX?: (deltaPx: number) => void;
   /** Left header width (the frozen pitch-label column). */
   headerLeft: number;
   /** Height of the top ruler, in pixels — used to size the drag handles. */
   headerTop: number;
   /** Total height of the grid pane (for the shaded "outside loop" overlay). */
   paneHeight: number;
+  /** Pane width, used for auto-scroll edge detection during drag. */
+  paneWidth: number;
   /** Called when the user drags either handle. */
   onChange: (loopStart: number, loopEnd: number) => void;
 };
 
 const HANDLE_WIDTH = 8;
+// Distance from the pane edge at which auto-scroll kicks in while dragging.
+const AUTOSCROLL_EDGE_PX = 32;
+const AUTOSCROLL_SPEED_PX_PER_FRAME = 12;
 
 /**
  * Two draggable handles on top of the timeline marking the playback loop range,
@@ -43,12 +51,24 @@ export const LoopMarkers = ({
   step = 0.25,
   pixelsPerBeat,
   scrollX,
+  onScrollX,
   headerLeft,
   headerTop,
   paneHeight,
+  paneWidth,
   onChange,
 }: LoopMarkersProps) => {
-  const dragStateRef = useRef<{ which: 'start' | 'end'; initialClientX: number; initialBeats: number } | null>(null);
+  // The container ref lets us translate pointer client coordinates into pane-local x
+  // even after the pointer leaves the handle (window-level move listener).
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const [draggingWhich, setDraggingWhich] = useState<'start' | 'end' | null>(null);
+
+  // Mirror the latest loop values into refs so the window listener — set up once
+  // per drag — always reads current values without re-binding.
+  const loopStartRef = useRef(loopStart);
+  const loopEndRef = useRef(loopEnd);
+  loopStartRef.current = loopStart;
+  loopEndRef.current = loopEnd;
 
   const beatsToX = useCallback(
     (beats: number) => headerLeft + beats * pixelsPerBeat - scrollX,
@@ -59,57 +79,94 @@ export const LoopMarkers = ({
     (which: 'start' | 'end') => (event: React.PointerEvent<HTMLDivElement>) => {
       event.preventDefault();
       event.stopPropagation();
-      try {
-        event.currentTarget.setPointerCapture(event.pointerId);
-      } catch {
-        // setPointerCapture throws for synthetic events; drag still works via window-level listeners.
-      }
-      dragStateRef.current = {
-        which,
-        initialClientX: event.clientX,
-        initialBeats: which === 'start' ? loopStart : loopEnd,
-      };
+      setDraggingWhich(which);
     },
-    [loopStart, loopEnd],
+    [],
   );
 
-  const handlePointerMove = useCallback(
-    (event: React.PointerEvent<HTMLDivElement>) => {
-      const state = dragStateRef.current;
-      if (!state) {
-        return;
-      }
-      const deltaPx = event.clientX - state.initialClientX;
-      const deltaBeats = deltaPx / pixelsPerBeat;
-      const stepped = Math.round((state.initialBeats + deltaBeats) / step) * step;
-      const clamped = Math.max(0, Math.min(maxBeats, stepped));
-      if (state.which === 'start') {
-        onChange(Math.min(clamped, loopEnd - step), loopEnd);
-      } else {
-        onChange(loopStart, Math.max(clamped, loopStart + step));
-      }
-    },
-    [pixelsPerBeat, step, maxBeats, loopStart, loopEnd, onChange],
-  );
-
-  const handlePointerUp = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
-    dragStateRef.current = null;
-    try {
-      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-        event.currentTarget.releasePointerCapture(event.pointerId);
-      }
-    } catch {
-      // Best-effort; safe to ignore.
+  // Window-level drag: once a handle is grabbed, listen for pointermove/up on the
+  // window so the drag continues even when the pointer leaves the (potentially
+  // off-screen) handle. Also auto-scroll the grid when dragging near the right
+  // edge so the user can reach loop positions beyond the visible viewport.
+  useEffect(() => {
+    if (!draggingWhich) {
+      return;
     }
-  }, []);
+    const root = rootRef.current;
+    if (!root) {
+      return;
+    }
+    let autoScrollRaf = 0;
+    let autoScrollDx = 0;
+
+    const tickAutoScroll = () => {
+      if (autoScrollDx !== 0 && onScrollX) {
+        onScrollX(autoScrollDx);
+      }
+      autoScrollRaf = requestAnimationFrame(tickAutoScroll);
+    };
+
+    const applyAtClientX = (clientX: number) => {
+      const rect = root.getBoundingClientRect();
+      // Translate to a pane-local pixel position, then to beats — this is more
+      // robust than tracking pointerdown deltas because it survives auto-scroll
+      // mutating scrollX mid-drag.
+      const localX = clientX - rect.left;
+      const beats = (localX - headerLeft + scrollX) / pixelsPerBeat;
+      const stepped = Math.round(beats / step) * step;
+      const clamped = Math.max(0, Math.min(maxBeats, stepped));
+      if (draggingWhich === 'start') {
+        onChange(Math.min(clamped, loopEndRef.current - step), loopEndRef.current);
+      } else {
+        onChange(loopStartRef.current, Math.max(clamped, loopStartRef.current + step));
+      }
+    };
+
+    const onMove = (event: PointerEvent) => {
+      event.preventDefault();
+      applyAtClientX(event.clientX);
+
+      // Auto-scroll when the pointer is near the right/left edge of the pane.
+      const rect = root.getBoundingClientRect();
+      const distFromRight = rect.right - event.clientX;
+      const distFromLeft = event.clientX - (rect.left + headerLeft);
+      if (distFromRight < AUTOSCROLL_EDGE_PX) {
+        autoScrollDx = AUTOSCROLL_SPEED_PX_PER_FRAME;
+      } else if (distFromLeft < AUTOSCROLL_EDGE_PX && distFromLeft > -AUTOSCROLL_EDGE_PX) {
+        autoScrollDx = -AUTOSCROLL_SPEED_PX_PER_FRAME;
+      } else {
+        autoScrollDx = 0;
+      }
+    };
+
+    const onUp = () => {
+      setDraggingWhich(null);
+    };
+
+    window.addEventListener('pointermove', onMove, { passive: false });
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+    autoScrollRaf = requestAnimationFrame(tickAutoScroll);
+
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+      cancelAnimationFrame(autoScrollRaf);
+    };
+  }, [draggingWhich, headerLeft, pixelsPerBeat, scrollX, step, maxBeats, onChange, onScrollX]);
 
   const startX = beatsToX(loopStart);
   const endX = beatsToX(loopEnd);
   const gridLeft = headerLeft;
   const gridWidth = Math.max(0, endX - startX);
 
+  // paneWidth is currently unused but accepted so callers can pass it without
+  // a prop-warning; future enhancements may use it for edge-distance computations.
+  void paneWidth;
+
   return (
-    <div className='absolute inset-0 pointer-events-none' aria-hidden>
+    <div ref={rootRef} className='absolute inset-0 pointer-events-none' aria-hidden>
       {/* Shaded overlay outside the loop range — only over the cell area, not the headers. */}
       {startX > gridLeft && (
         <div
@@ -145,9 +202,6 @@ export const LoopMarkers = ({
         )}
         style={{ left: startX - HANDLE_WIDTH / 2, width: HANDLE_WIDTH, height: headerTop }}
         onPointerDown={handlePointerDown('start')}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
         role='slider'
         aria-label='Loop start'
         aria-valuemin={0}
@@ -161,9 +215,6 @@ export const LoopMarkers = ({
         )}
         style={{ left: endX - HANDLE_WIDTH / 2, width: HANDLE_WIDTH, height: headerTop }}
         onPointerDown={handlePointerDown('end')}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
         role='slider'
         aria-label='Loop end'
         aria-valuemin={0}

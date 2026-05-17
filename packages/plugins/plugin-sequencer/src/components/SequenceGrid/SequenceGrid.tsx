@@ -228,9 +228,14 @@ export const SequenceGrid = ({
           step={beatsPerCell}
           pixelsPerBeat={pixelsPerBeat}
           scrollX={viewport.scrollX}
+          onScrollX={(deltaPx) => {
+            const current = registry.get(atoms.viewport);
+            registry.set(atoms.viewport, { ...current, scrollX: Math.max(0, current.scrollX + deltaPx) });
+          }}
           headerLeft={cellGridHeaders.left}
           headerTop={cellGridHeaders.top}
           paneHeight={paneHeight}
+          paneWidth={paneWidth}
           onChange={onLoopChange}
         />
       )}
