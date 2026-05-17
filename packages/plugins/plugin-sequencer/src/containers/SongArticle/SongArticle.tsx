@@ -41,10 +41,9 @@ const TRACK_COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#06b6d4', '#3
 
 const newId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
-// Default visible pitch range: C1 (MIDI 24) through C8 (MIDI 108) inclusive.
-// Spans 7 octaves of C (C1..C8) — covers the full range of an 88-key piano
-// (A0..C8) minus the bottom three keys, comfortably fitting bass through lead.
-const DEFAULT_MIN_PITCH = 24;
+// Default visible pitch range: A0 (MIDI 21) through C8 (MIDI 108) inclusive —
+// the full 88-key piano range.
+const DEFAULT_MIN_PITCH = 21;
 const DEFAULT_MAX_PITCH = 108;
 
 const newTrack = (index: number): Track.Track => ({

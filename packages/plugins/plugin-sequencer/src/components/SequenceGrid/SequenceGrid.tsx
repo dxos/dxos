@@ -122,9 +122,9 @@ export const SequenceGrid = ({
   const registry = useContext(RegistryContext);
   // Resolve pitch bounds with a fallback, then swap-and-clamp so a misconfigured
   // track (or a prop typo) can never produce a negative row count and crash
-  // `Array.from({ length: maxPitch - minPitch + 1 })`. Default span covers
-  // 7 octaves (C1..C8) so the visible pitch range matches a near-full piano.
-  const rawMin = minPitchProp ?? track.minPitch ?? 24;
+  // `Array.from({ length: maxPitch - minPitch + 1 })`. Default span covers the
+  // full 88-key piano (A0..C8 = MIDI 21..108).
+  const rawMin = minPitchProp ?? track.minPitch ?? 21;
   const rawMax = maxPitchProp ?? track.maxPitch ?? 108;
   const minPitch = Math.min(rawMin, rawMax);
   const maxPitch = Math.max(rawMin, rawMax);

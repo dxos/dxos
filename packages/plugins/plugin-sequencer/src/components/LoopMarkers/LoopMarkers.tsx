@@ -156,10 +156,13 @@ export const LoopMarkers = ({
     };
   }, [draggingWhich, headerLeft, pixelsPerBeat, scrollX, step, maxBeats, onChange, onScrollX]);
 
-  const startX = beatsToX(loopStart);
-  const endX = beatsToX(loopEnd);
-  const gridLeft = headerLeft;
-  const gridWidth = Math.max(0, endX - startX);
+  // Positions inside the clip container are pane-x minus headerLeft, since the
+  // clip container starts at left: headerLeft. This keeps every marker visual
+  // confined to the cell area — nothing can bleed left of the frozen pitch-
+  // label column or into the TrackList pane to its left.
+  const cellAreaStartX = beatsToX(loopStart) - headerLeft;
+  const cellAreaEndX = beatsToX(loopEnd) - headerLeft;
+  const gridWidth = Math.max(0, cellAreaEndX - cellAreaStartX);
 
   // paneWidth is currently unused but accepted so callers can pass it without
   // a prop-warning; future enhancements may use it for edge-distance computations.
@@ -167,70 +170,82 @@ export const LoopMarkers = ({
 
   return (
     <div ref={rootRef} className='absolute inset-0 pointer-events-none' aria-hidden>
-      {/* Shaded overlay outside the loop range — only over the cell area, not the headers. */}
-      {startX > gridLeft && (
+      {/* Single clip container so markers cannot bleed into the frozen pitch-
+          label column (left of headerLeft) or, beyond that, the TrackList. */}
+      <div
+        className='absolute pointer-events-none overflow-hidden'
+        style={{ top: 0, left: headerLeft, right: 0, bottom: 0 }}
+      >
+        {/* Shaded overlay outside the loop range — only over the cell area, not the headers. */}
+        {cellAreaStartX > 0 && (
+          <div
+            className='absolute bg-black/30 dark:bg-black/40'
+            style={{
+              top: headerTop,
+              left: 0,
+              width: cellAreaStartX,
+              height: Math.max(0, paneHeight - headerTop),
+            }}
+          />
+        )}
         <div
           className='absolute bg-black/30 dark:bg-black/40'
           style={{
             top: headerTop,
-            left: gridLeft,
-            width: Math.max(0, startX - gridLeft),
+            left: Math.max(0, cellAreaEndX),
+            right: 0,
             height: Math.max(0, paneHeight - headerTop),
           }}
         />
-      )}
-      <div
-        className='absolute bg-black/30 dark:bg-black/40'
-        style={{ top: headerTop, left: endX, right: 0, height: Math.max(0, paneHeight - headerTop) }}
-      />
-      {/* Subtle highlight on the in-range cell area. */}
-      <div
-        className='absolute border-y border-primary-500/40'
-        style={{
-          top: headerTop,
-          left: startX,
-          width: gridWidth,
-          height: Math.max(0, paneHeight - headerTop),
-        }}
-      />
+        {/* Subtle highlight on the in-range cell area. */}
+        <div
+          className='absolute border-y border-primary-500/40'
+          style={{
+            top: headerTop,
+            left: cellAreaStartX,
+            width: gridWidth,
+            height: Math.max(0, paneHeight - headerTop),
+          }}
+        />
 
-      {/* Draggable handles in the ruler row. */}
-      <div
-        className={mx(
-          'absolute top-0 pointer-events-auto cursor-ew-resize',
-          'bg-primary-500 hover:bg-primary-400 active:bg-primary-300',
-        )}
-        style={{ left: startX - HANDLE_WIDTH / 2, width: HANDLE_WIDTH, height: headerTop }}
-        onPointerDown={handlePointerDown('start')}
-        role='slider'
-        aria-label='Loop start'
-        aria-valuemin={0}
-        aria-valuemax={maxBeats}
-        aria-valuenow={loopStart}
-      />
-      <div
-        className={mx(
-          'absolute top-0 pointer-events-auto cursor-ew-resize',
-          'bg-primary-500 hover:bg-primary-400 active:bg-primary-300',
-        )}
-        style={{ left: endX - HANDLE_WIDTH / 2, width: HANDLE_WIDTH, height: headerTop }}
-        onPointerDown={handlePointerDown('end')}
-        role='slider'
-        aria-label='Loop end'
-        aria-valuemin={0}
-        aria-valuemax={maxBeats}
-        aria-valuenow={loopEnd}
-      />
+        {/* Draggable handles in the ruler row. */}
+        <div
+          className={mx(
+            'absolute top-0 pointer-events-auto cursor-ew-resize',
+            'bg-primary-500 hover:bg-primary-400 active:bg-primary-300',
+          )}
+          style={{ left: cellAreaStartX - HANDLE_WIDTH / 2, width: HANDLE_WIDTH, height: headerTop }}
+          onPointerDown={handlePointerDown('start')}
+          role='slider'
+          aria-label='Loop start'
+          aria-valuemin={0}
+          aria-valuemax={maxBeats}
+          aria-valuenow={loopStart}
+        />
+        <div
+          className={mx(
+            'absolute top-0 pointer-events-auto cursor-ew-resize',
+            'bg-primary-500 hover:bg-primary-400 active:bg-primary-300',
+          )}
+          style={{ left: cellAreaEndX - HANDLE_WIDTH / 2, width: HANDLE_WIDTH, height: headerTop }}
+          onPointerDown={handlePointerDown('end')}
+          role='slider'
+          aria-label='Loop end'
+          aria-valuemin={0}
+          aria-valuemax={maxBeats}
+          aria-valuenow={loopEnd}
+        />
 
-      {/* Faint vertical guide lines extending from the handles into the cell area. */}
-      <div
-        className='absolute pointer-events-none bg-primary-500/40'
-        style={{ left: startX, top: headerTop, width: 1, height: Math.max(0, paneHeight - headerTop) }}
-      />
-      <div
-        className='absolute pointer-events-none bg-primary-500/40'
-        style={{ left: endX, top: headerTop, width: 1, height: Math.max(0, paneHeight - headerTop) }}
-      />
+        {/* Faint vertical guide lines extending from the handles into the cell area. */}
+        <div
+          className='absolute pointer-events-none bg-primary-500/40'
+          style={{ left: cellAreaStartX, top: headerTop, width: 1, height: Math.max(0, paneHeight - headerTop) }}
+        />
+        <div
+          className='absolute pointer-events-none bg-primary-500/40'
+          style={{ left: cellAreaEndX, top: headerTop, width: 1, height: Math.max(0, paneHeight - headerTop) }}
+        />
+      </div>
     </div>
   );
 };

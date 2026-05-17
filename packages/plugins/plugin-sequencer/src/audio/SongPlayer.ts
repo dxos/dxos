@@ -121,7 +121,7 @@ const buildTrackVoices = (track: Track.Track): TrackVoices => {
   }
   const fallbackPatch: Patch.SynthPatch = {
     kind: 'synth',
-    minPitch: track.minPitch ?? 24,
+    minPitch: track.minPitch ?? 21,
     maxPitch: track.maxPitch ?? 108,
     oscillator: 'sine',
   };
