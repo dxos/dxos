@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useAtomCapability } from '@dxos/app-framework/ui';
@@ -11,7 +10,7 @@ import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useObject } from '@dxos/react-client/echo';
 import { Carousel, MediaPlayer, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
-import { type ActionGraphProps, Menu, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
+import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { PromptEditor } from '#components';
 import { meta } from '#meta';
@@ -86,38 +85,34 @@ export const GenerationArticle = ({ role, subject, attendableId }: GenerationArt
   // request that's guaranteed to fail.
   const canGenerate = !busy && Boolean(apiKey) && hasPrompt;
 
-  const actionsAtom = useMemo(
+  const menuActions = useMenuBuilder(
     () =>
-      Atom.make(
-        (): ActionGraphProps =>
-          MenuBuilder.make()
-            .action(
-              'generate',
-              {
-                label: [busy ? 'generating.label' : 'generate.label', { ns: meta.id }],
-                icon: busy ? 'ph--spinner-gap--regular' : 'ph--play--regular',
-                iconOnly: true,
-                iconClassNames: busy ? 'animate-spin' : undefined,
-                disabled: !canGenerate,
-              },
-              handleGenerate,
-            )
-            .action(
-              'delete',
-              {
-                label: ['delete-media.label', { ns: meta.id }],
-                icon: 'ph--trash--regular',
-                iconOnly: true,
-                disabled: !hasMedia || busy,
-                hidden: !hasMedia,
-              },
-              handleDelete,
-            )
-            .build(),
-      ),
+      MenuBuilder.make()
+        .action(
+          'generate',
+          {
+            label: [busy ? 'generating.label' : 'generate.label', { ns: meta.id }],
+            icon: busy ? 'ph--spinner-gap--regular' : 'ph--play--regular',
+            iconOnly: true,
+            iconClassNames: busy ? 'animate-spin' : undefined,
+            disabled: !canGenerate,
+          },
+          handleGenerate,
+        )
+        .action(
+          'delete',
+          {
+            label: ['delete-media.label', { ns: meta.id }],
+            icon: 'ph--trash--regular',
+            iconOnly: true,
+            disabled: !hasMedia || busy,
+            hidden: !hasMedia,
+          },
+          handleDelete,
+        )
+        .build(),
     [busy, canGenerate, hasMedia, handleGenerate, handleDelete],
   );
-  const menuActions = useMenuActions(actionsAtom);
 
   return (
     <Panel.Root role={role}>

@@ -12,15 +12,15 @@ import { EditorView, ViewPlugin } from '@codemirror/view';
  */
 const scrollPastEndPlugin = ViewPlugin.fromClass(
   class {
-    height = 1000;
-    attrs: { style: string } | null = { style: 'padding-bottom: 1000px' };
+    _height = 1_000;
+    _attrs: { style: string } | null = { style: `padding-bottom: ${this._height}px` };
 
     update({ view }: { view: EditorView }) {
       const lastLineBlock = view.lineBlockAt(view.state.doc.length);
       const height = view.dom.clientHeight - lastLineBlock.height - view.documentPadding.top - 0.5;
-      if (height >= 0 && height !== this.height) {
-        this.height = height;
-        this.attrs = { style: `padding-bottom: ${height}px` };
+      if (height >= 0 && height !== this._height) {
+        this._height = height;
+        this._attrs = { style: `padding-bottom: ${height}px` };
       }
     }
   },
@@ -28,5 +28,5 @@ const scrollPastEndPlugin = ViewPlugin.fromClass(
 
 export const scrollPastEnd = (): Extension => [
   scrollPastEndPlugin,
-  EditorView.contentAttributes.of((view) => view.plugin(scrollPastEndPlugin)?.attrs ?? null),
+  EditorView.contentAttributes.of((view) => view.plugin(scrollPastEndPlugin)?._attrs ?? null),
 ];

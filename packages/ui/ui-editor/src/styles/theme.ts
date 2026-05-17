@@ -108,7 +108,7 @@ export const baseTheme = EditorView.baseTheme({
    * Scroller
    */
   '.cm-scroller': {
-    // Browser scroll-anchoring: see comment in `scroller.ts`. `auto` lets the browser pin a
+    // Browser scroll-anchoring: see comment in `scrolling/crawler.ts`. `auto` lets the browser pin a
     // stable element near the viewport top so widget resizes (e.g. tool-block TogglePanel
     // open/close) don't jump the user's view.
     overflowAnchor: 'auto',

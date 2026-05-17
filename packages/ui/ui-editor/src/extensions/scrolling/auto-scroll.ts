@@ -9,7 +9,7 @@ import { addEventListener, combine, throttle } from '@dxos/async';
 import { Domino } from '@dxos/ui';
 import { getSize } from '@dxos/ui-theme';
 
-import { scrollerCrawlEffect, scrollerLineEffect } from './scroller';
+import { crawlerActiveEffect, crawlerLineEffect } from './crawler';
 
 /** Enable or disable autoscroll. */
 export const autoScrollEffect = StateEffect.define<boolean>();
@@ -54,11 +54,11 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
             if (enabled) {
               setPinned(true);
               view.dispatch({
-                effects: scrollerCrawlEffect.of(true),
+                effects: crawlerActiveEffect.of(true),
               });
             } else {
               view.dispatch({
-                effects: scrollerCrawlEffect.of(false),
+                effects: crawlerActiveEffect.of(false),
               });
             }
           }
@@ -96,7 +96,7 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
           const delta = scrollHeight - scrollTop - clientHeight;
           if (delta > 0) {
             setPinned(true);
-            view.dispatch({ effects: scrollerCrawlEffect.of(true) });
+            view.dispatch({ effects: crawlerActiveEffect.of(true) });
           } else if (delta < -1) {
             setPinned(false);
           }
@@ -133,7 +133,7 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
                   }
 
                   view.scrollDOM.scrollTo({ top: view.scrollDOM.scrollHeight, behavior: 'instant' });
-                  view.dispatch({ effects: scrollerCrawlEffect.of(false) });
+                  view.dispatch({ effects: crawlerActiveEffect.of(false) });
                 });
               }, 50);
 
@@ -161,20 +161,30 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
       class {
         private readonly cleanup: () => void;
         constructor(view: EditorView) {
-          this.cleanup = createUserScrollDetector(
-            view.scrollDOM,
-            throttle(() => {
-              requestAnimationFrame(() => {
-                const { scrollTop, scrollHeight, clientHeight } = view.scrollDOM;
-                const delta = scrollHeight - scrollTop - clientHeight;
-                const pinned = delta === 0;
-                setPinned(pinned);
-                if (!pinned) {
-                  view.dispatch({ effects: scrollerCrawlEffect.of(false) });
-                }
-              });
-            }, 500),
-          );
+          // Re-pin check is throttled so the listener doesn't thrash while scrolling, but
+          // unpinning must be immediate — otherwise content arriving during the throttle
+          // window re-applies the crawl effect and yanks the viewport back to the bottom.
+          const onUserScroll = throttle(() => {
+            requestAnimationFrame(() => {
+              const { scrollTop, scrollHeight, clientHeight } = view.scrollDOM;
+              const delta = scrollHeight - scrollTop - clientHeight;
+              // Sub-pixel tolerance: fractional scroll positions can leave delta at e.g. 0.5
+              // even when the user is visually at the bottom.
+              const pinned = Math.abs(delta) <= 1;
+              setPinned(pinned);
+              if (!pinned) {
+                view.dispatch({ effects: crawlerActiveEffect.of(false) });
+              }
+            });
+          }, 500);
+
+          this.cleanup = createUserScrollDetector(view.scrollDOM, () => {
+            if (isPinned) {
+              setPinned(false);
+              view.dispatch({ effects: crawlerActiveEffect.of(false) });
+            }
+            onUserScroll();
+          });
         }
         destroy() {
           this.cleanup();
@@ -196,7 +206,7 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
             .on('click', () => {
               setPinned(true);
               view.dispatch({
-                effects: scrollerLineEffect.of({ line: -1, position: 'end', behavior: 'smooth' }),
+                effects: crawlerLineEffect.of({ line: -1, position: 'end', behavior: 'smooth' }),
               });
             });
 
