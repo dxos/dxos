@@ -198,16 +198,16 @@ catalog:
   '@rollup/plugin-swc': ^0.4.0
   '@solid-primitives/utils': ^6.3.2
   '@solidjs/testing-library': ^0.8.10
-  '@storybook/addon-docs': ^10.3.6
-  '@storybook/addon-links': ^10.3.6
-  '@storybook/addon-themes': ^10.3.6
-  '@storybook/addon-vitest': ^10.3.6
-  '@storybook/builder-vite': ^10.3.6
-  '@storybook/html-vite': ^10.3.6
-  '@storybook/icons': ^2.0.1
+  '@storybook/addon-docs': ^10.4.0
+  '@storybook/addon-links': ^10.4.0
+  '@storybook/addon-themes': ^10.4.0
+  '@storybook/addon-vitest': ^10.4.0
+  '@storybook/builder-vite': ^10.4.0
+  '@storybook/html-vite': ^10.4.0
+  '@storybook/icons': ^2.0.2
   '@storybook/mdx2-csf': ^1.1.0
-  '@storybook/react-vite': ^10.3.6
-  '@storybook/web-components-vite': ^10.3.6
+  '@storybook/react-vite': ^10.4.0
+  '@storybook/web-components-vite': ^10.4.0
   '@svgr/cli': ^8.1.0
   '@swc/core': 1.13.5
   '@swc/types': ^0.1.25
@@ -306,17 +306,17 @@ catalog:
   '@valtown/codemirror-continue': ^2.3.1
   '@valtown/codemirror-ts': ^2.3.1
   '@virtuoso.dev/masonry': ^1.4.2
-  '@vitejs/plugin-react': ^6.0.1
-  '@vitejs/plugin-react-swc': ^4.3.0
-  '@vitest/browser': ^4.1.5
-  '@vitest/browser-playwright': ^4.1.5
-  '@vitest/coverage-v8': ^4.1.5
-  '@vitest/expect': ^4.1.5
-  '@vitest/runner': ^4.1.5
-  '@vitest/snapshot': ^4.1.5
-  '@vitest/spy': ^4.1.5
-  '@vitest/ui': ^4.1.5
-  '@vitest/utils': ^4.1.5
+  '@vitejs/plugin-react': ^6.0.2
+  '@vitejs/plugin-react-swc': ^4.3.1
+  '@vitest/browser': ^4.1.6
+  '@vitest/browser-playwright': ^4.1.6
+  '@vitest/coverage-v8': ^4.1.6
+  '@vitest/expect': ^4.1.6
+  '@vitest/runner': ^4.1.6
+  '@vitest/snapshot': ^4.1.6
+  '@vitest/spy': ^4.1.6
+  '@vitest/ui': ^4.1.6
+  '@vitest/utils': ^4.1.6
   '@vscode/vsce': ^3.7.1
   '@xenova/transformers': ^2.17.2
   '@xstate/react': ^3.2.1
@@ -597,7 +597,7 @@ catalog:
   sort-package-json: ^1.57.0
   stage-js: 1.0.0-alpha.17
   starlight-links-validator: ^0.20.1
-  storybook: ^10.3.6
+  storybook: ^10.4.0
   storybook-solidjs-vite: ^10.0.12
   streamx: ^2.12.5
   style-mod: ^4.1.0
@@ -639,7 +639,7 @@ catalog:
   uuid: ^9.0.0
   varint: 6.0.0
   versor: ^0.2.0
-  vite: ^8.0.10
+  vite: ^8.0.13
   vite-node: ^6.0.0
   vite-plugin-css-injected-by-js: ^5.0.1
   vite-plugin-devtools-json: ^0.4.1
@@ -651,7 +651,7 @@ catalog:
   vite-plugin-turbosnap: ^1.0.3
   vite-plugin-wasm: ^3.6.0
   vite-tsconfig-paths: ^6.1.1
-  vitest: 4.1.5
+  vitest: 4.1.6
   wait-on: ^8.0.3
   wavefile: ^11.0.0
   web-tree-sitter: ^0.25.10
@@ -754,11 +754,11 @@ overrides:
 
 patchedDependencies:
   '@automerge/automerge-subduction@0.11.0': patches/@automerge__automerge-subduction@0.11.0.patch
-  '@vitest/browser@4.1.5': patches/@vitest__browser@4.1.5.patch
+  '@vitest/browser@4.1.6': patches/@vitest__browser@4.1.6.patch
   js-clipper@1.0.1: patches/js-clipper@1.0.1.patch
   random-access-idb@1.2.2: patches/random-access-idb@1.2.2.patch
   uuid@8.3.2: patches/uuid@8.3.2.patch
-  vitest@4.1.5: patches/vitest@4.1.5.patch
+  vitest@4.1.6: patches/vitest@4.1.6.patch
 
 peerDependencyRules:
   allowedVersions:
