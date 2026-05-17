@@ -58,8 +58,20 @@ const SAMPLE_PATTERN: Pattern = {
         }),
       ),
     },
-    { id: 's3', trackId: 't3', name: 'Pad', length: 16, notes: [] },
-    { id: 's4', trackId: 't4', name: 'Drums', length: 16, notes: [] },
+    {
+      id: 's3',
+      trackId: 't3',
+      name: 'Pad',
+      length: 16,
+      notes: [],
+    },
+    {
+      id: 's4',
+      trackId: 't4',
+      name: 'Drums',
+      length: 16,
+      notes: [],
+    },
   ],
 };
 
@@ -74,8 +86,8 @@ const buildScore = ({ text, pattern }: StoryArgs): Score.Score => {
   if (text) {
     const score = Score.make({ name: 'Score', tempo: 120, timeSignature: '4/4' });
     const document = parseLeadSheet(text, { beatsPerBar: 4 });
-    Obj.update(score, (subject) => {
-      applyLeadSheetToScore(subject as unknown as MutableScore, document);
+    Obj.update(score, (score) => {
+      applyLeadSheetToScore(score as unknown as MutableScore, document);
     });
     return score;
   }

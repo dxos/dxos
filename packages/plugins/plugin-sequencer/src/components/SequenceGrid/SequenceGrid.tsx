@@ -3,7 +3,7 @@
 //
 
 import { RegistryContext, useAtomValue } from '@effect-atom/atom-react';
-import React, { useContext, useEffect, useMemo } from 'react';
+import React, { useContext, useEffect, useMemo, useRef } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import {
@@ -262,6 +262,30 @@ export const SequenceGrid = ({
   // and measure the container so the overlay sizes track the grid pane.
   const viewport = useAtomValue(atoms.viewport);
   const { ref: paneRef, width: paneWidth = 0, height: paneHeight = 0 } = useResizeDetector<HTMLDivElement>();
+
+  // Whenever the visible pane changes height, re-center the vertical scroll
+  // so the middle pitch of the configured range sits in the middle of the
+  // viewport. Skips the initial 0-height transition and any tick where the
+  // height hasn't actually moved, so we don't fight user-driven scrolling.
+  const totalRows = maxPitch - minPitch + 1;
+  const prevPaneHeightRef = useRef(0);
+  useEffect(() => {
+    if (paneHeight <= 0) {
+      return;
+    }
+    if (paneHeight === prevPaneHeightRef.current) {
+      return;
+    }
+    prevPaneHeightRef.current = paneHeight;
+    const gridHeight = totalRows * viewport.cellHeight;
+    const visibleHeight = Math.max(0, paneHeight - cellGridHeaders.top);
+    const centeredScrollY = Math.max(0, gridHeight / 2 - visibleHeight / 2);
+    registry.set(atoms.viewport, { ...viewport, scrollY: centeredScrollY });
+    // viewport is intentionally omitted from the dep list — we want this to
+    // fire only on paneHeight changes, not every viewport tick (which would
+    // re-center after the user scrolls).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paneHeight, totalRows, cellGridHeaders.top, registry, atoms.viewport]);
   const pixelsPerCell = viewport.baseCellWidth * viewport.zoomX;
   const pixelsPerBeat = pixelsPerCell / beatsPerCell;
   const resolvedLoopEnd = loopEnd ?? sequence.length;
