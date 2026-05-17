@@ -99,7 +99,7 @@ const DefaultStory = ({ keywords }: DefaultStoryProps) => {
       </Panel.Toolbar>
 
       <Panel.Content>
-        <div className='p-4 grid grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] gap-2'>
+        <div className='p-2 grid grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] gap-2'>
           {matchingWords.map((word, index) => (
             <span
               key={index}
@@ -118,7 +118,7 @@ const DefaultStory = ({ keywords }: DefaultStoryProps) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-transcription/components/KeyWordDetection',
+  title: 'plugins/plugin-transcription/stories/KeyWordDetection',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
 } satisfies Meta<typeof DefaultStory>;

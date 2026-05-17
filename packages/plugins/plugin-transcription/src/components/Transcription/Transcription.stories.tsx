@@ -5,28 +5,23 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import type * as Types from 'effect/Types';
-import React, { type FC, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Filter, Key, Query } from '@dxos/echo';
+import { Feed, Filter, Obj, Query } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useMembers, useQuery, useSpaces } from '@dxos/react-client/echo';
-import { IconButton, Toolbar } from '@dxos/react-ui';
+import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout } from '@dxos/react-ui/testing';
 import { TestSchema } from '@dxos/schema/testing';
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 
 import { useFeedModelAdapter } from '#hooks';
-import {
-  MessageBuilder,
-  TestItem,
-  useTestTranscriptionQueue,
-  useTestTranscriptionQueueWithEntityExtraction,
-} from '#testing';
+import { MessageBuilder, TestItem, useTestTranscriptionQueue } from '#testing';
 import { translations } from '#translations';
 
 import { SerializationModel } from '../../model';
@@ -35,56 +30,55 @@ import { Transcription, type TranscriptionProps } from './Transcription';
 
 random.seed(1);
 
-/**
- * Story wrapper with test controls.
- */
-const TranscriptContainer: FC<
-  TranscriptionProps & {
-    running: boolean;
-    onRunningChange: (running: boolean) => void;
-    onReset?: () => void;
-  }
-> = ({ model, running, onRunningChange, onReset }) => {
-  return (
-    <div className='grid grid-rows-[1fr_40px] grow divide-y divide-separator'>
-      <Transcription model={model} />
-      <div className='grid grid-cols-[1fr_16rem] overflow-hidden'>
-        <div className='flex items-center'>
-          <JsonHighlighter data={model.toJSON()} indent={0} classNames='text-sm' />
-        </div>
-        <Toolbar.Root classNames='justify-end'>
-          <IconButton
-            icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
-            label={running ? 'Pause' : 'Start'}
-            onClick={() => onRunningChange(!running)}
-          />
-          {onReset && <IconButton icon='ph--x--regular' label='Reset' onClick={onReset} />}
-        </Toolbar.Root>
-      </div>
-    </div>
+type Source = 'local' | 'feed';
+
+type DefaultStoryProps = {
+  /** Where transcript messages come from. */
+  source?: Source;
+  /** Number of synthetic messages to pre-populate (local source only). */
+  seed?: number;
+};
+
+const DefaultStory = ({ source = 'local', seed = 0, ...props }: DefaultStoryProps) => {
+  const [resetKey, setResetKey] = useState(0);
+  const handleReset = useCallback(() => setResetKey((value) => value + 1), []);
+  return source === 'feed' ? (
+    <FeedStory key={resetKey} onReset={handleReset} {...props} />
+  ) : (
+    <LocalStory key={resetKey} seed={seed} onReset={handleReset} {...props} />
   );
 };
 
-type DefaultStoryProps = { messages?: Message.Message[] } & Pick<
-  TranscriptionProps,
-  'ignoreAttention' | 'attendableId'
->;
+type InnerProps = {
+  onReset: () => void;
+};
 
-/**
- * Basic story mutates array of messages.
- */
-const BasicStory = ({ messages: initialMessages = [], ...props }: DefaultStoryProps) => {
-  const [reset, setReset] = useState({});
+const LocalStory = ({ seed = 0, onReset, ...props }: InnerProps & { seed?: number }) => {
   const builder = useMemo(() => new MessageBuilder(), []);
+  const [initialMessages, setInitialMessages] = useState<Message.Message[]>([]);
+  const [ready, setReady] = useState(seed === 0);
+
+  useEffect(() => {
+    if (seed === 0) {
+      return;
+    }
+
+    void Promise.all(Array.from({ length: seed }, () => builder.createMessage())).then((messages) => {
+      setInitialMessages(messages);
+      setReady(true);
+    });
+  }, [seed, builder]);
+
   const model = useMemo(
     () => new SerializationModel<Message.Message>(renderByline([]), initialMessages),
-    [initialMessages, reset],
+    [initialMessages],
   );
+
   const [running, setRunning] = useState(true);
-  // Use mutable type for local message building (not ECHO-managed).
   const [currentMessage, setCurrentMessage] = useState<Types.Mutable<Message.Message> | null>(null);
+
   useEffect(() => {
-    if (!running) {
+    if (!ready || !running) {
       return;
     }
 
@@ -96,45 +90,25 @@ const BasicStory = ({ messages: initialMessages = [], ...props }: DefaultStoryPr
       return;
     }
 
-    const i = setInterval(() => {
-      if (currentMessage?.blocks.length && currentMessage.blocks.length >= 3) {
+    const id = setInterval(() => {
+      if (currentMessage.blocks.length >= 3) {
         setCurrentMessage(null);
-        clearInterval(i);
+        clearInterval(id);
         return;
       }
-
-      (currentMessage.blocks as ContentBlock.Any[]).push(builder.createBlock());
+      Obj.update(currentMessage, (currentMessage) => {
+        (currentMessage.blocks as ContentBlock.Any[]).push(builder.createBlock());
+      });
       model.updateChunk(currentMessage);
     }, 3_000);
 
-    return () => clearInterval(i);
-  }, [model, currentMessage, running]);
+    return () => clearInterval(id);
+  }, [ready, running, currentMessage, model, builder]);
 
-  const handleReset = () => {
-    setCurrentMessage(null);
-    setRunning(false);
-    setReset({});
-  };
-
-  return (
-    <TranscriptContainer
-      model={model}
-      running={running}
-      onRunningChange={setRunning}
-      onReset={handleReset}
-      {...props}
-    />
-  );
+  return <Shell model={model} running={running} onRunningChange={setRunning} onReset={onReset} {...props} />;
 };
 
-/**
- * Feed story mutates feed with model adapter.
- */
-const QueueStory = ({
-  messages: initialMessages = [],
-  onReset,
-  ...props
-}: DefaultStoryProps & { onReset: () => void }) => {
+const FeedStory = ({ onReset, ...props }: InnerProps) => {
   const [running, setRunning] = useState(true);
   const [space] = useSpaces();
   const members = useMembers(space?.id).map((member) => member.identity);
@@ -143,42 +117,41 @@ const QueueStory = ({
     space?.db,
     feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
   );
-  const model = useFeedModelAdapter(renderByline(members), messages, initialMessages);
-
-  return (
-    <TranscriptContainer model={model} running={running} onRunningChange={setRunning} onReset={onReset} {...props} />
-  );
-};
-
-// TODO(burdon): Reconcile with QueueStory.
-const EntityExtractionQueueStory = () => {
-  const [running, setRunning] = useState(true);
-  const [space] = useSpaces();
-  const members = useMembers(space?.key).map((member) => member.identity);
-  const feed = useTestTranscriptionQueueWithEntityExtraction(space, running, 2_000);
-  const messages = useQuery(
-    space?.db,
-    feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
-  );
   const model = useFeedModelAdapter(renderByline(members), messages, []);
 
-  return <TranscriptContainer model={model} running={running} onRunningChange={setRunning} />;
+  return <Shell model={model} running={running} onRunningChange={setRunning} onReset={onReset} {...props} />;
 };
 
-/**
- * Wrapper remounts on refresh to reload feed.
- */
-const QueueStoryWrapper = () => {
-  const [key, setKey] = useState(Key.ObjectId.random().toString());
-  const handleReset = () => {
-    setKey(Key.ObjectId.random().toString());
-  };
-
-  return <QueueStory key={key} onReset={handleReset} />;
+type ShellProps = TranscriptionProps & {
+  running: boolean;
+  onRunningChange: (running: boolean) => void;
+  onReset: () => void;
 };
+
+const Shell = ({ model, running, onRunningChange, onReset, ...props }: ShellProps) => (
+  <Panel.Root>
+    <Panel.Toolbar asChild>
+      <Toolbar.Root classNames='justify-end'>
+        <IconButton
+          icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
+          label={running ? 'Pause' : 'Start'}
+          onClick={() => onRunningChange(!running)}
+        />
+        <IconButton icon='ph--x--regular' label='Reset' onClick={onReset} />
+      </Toolbar.Root>
+    </Panel.Toolbar>
+    <Panel.Content className='dx-document'>
+      <Transcription model={model} {...props} />
+    </Panel.Content>
+    <Panel.Statusbar className='flex items-center justify-center'>
+      <JsonHighlighter data={model.toJSON()} indent={0} classNames='text-sm' />
+    </Panel.Statusbar>
+  </Panel.Root>
+);
 
 const meta = {
   title: 'plugins/plugin-transcription/components/Transcription',
+  render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
@@ -186,13 +159,19 @@ const meta = {
         ...corePlugins(),
         StorybookPlugin({}),
         ClientPlugin({
-          types: [TestItem, TestSchema.DocumentType, Person.Person, Organization.Organization],
+          types: [
+            TestItem,
+            TestSchema.DocumentType,
+            Person.Person,
+            Organization.Organization,
+            Feed.Feed,
+            Message.Message,
+          ],
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
             }),
         }),
-
         PreviewPlugin(),
       ],
     }),
@@ -201,52 +180,28 @@ const meta = {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 
-const DefaultStory = (props: DefaultStoryProps) => {
-  const [messages, setMessages] = useState<Message.Message[]>([]);
-  useEffect(() => {
-    void Promise.all(Array.from({ length: 10 }, () => MessageBuilder.singleton.createMessage())).then(setMessages);
-  }, []);
-  if (messages.length === 0) {
-    return <div>Loading messages...</div>;
-  }
-  return <BasicStory {...props} messages={messages} />;
-};
+type Story = StoryObj<typeof meta>;
 
-export const Default: StoryObj<typeof DefaultStory> = {
-  render: DefaultStory,
+export const Default: Story = {
   args: {
-    ignoreAttention: true,
-    attendableId: 'story',
+    source: 'local',
+    seed: 10,
   },
 };
 
-export const Empty: StoryObj<typeof BasicStory> = {
-  render: BasicStory,
+export const Empty: Story = {
   args: {
-    ignoreAttention: true,
-    attendableId: 'story',
+    source: 'local',
+    seed: 0,
   },
 };
 
-export const WithQueue: StoryObj<typeof QueueStoryWrapper> = {
-  render: QueueStoryWrapper,
+export const WithQueue: Story = {
   args: {
-    ignoreAttention: true,
-    attendableId: 'story',
+    source: 'feed',
   },
 };
-
-// NOTE: We are running out of free quota on hugging face entity extraction.
-// TODO(mykola): Fix AI service in entity extraction function.
-// TODO(mykola): Fix hugging face quota issues.
-// export const WithEntityExtractionQueue: StoryObj<typeof EntityExtractionQueueStory> = {
-//   render: EntityExtractionQueueStory,
-//   args: {
-//     ignoreAttention: true,
-//     attendableId: 'story',
-//   },
-// };

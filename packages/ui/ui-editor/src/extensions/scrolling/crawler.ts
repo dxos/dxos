@@ -40,10 +40,10 @@ export type ScrollToProps = {
 };
 
 /** Scroll to a specific line. */
-export const scrollerLineEffect = StateEffect.define<ScrollToProps>();
+export const crawlerLineEffect = StateEffect.define<ScrollToProps>();
 
 /** Start/stop crawling the end of the document. */
-export const scrollerCrawlEffect = StateEffect.define<boolean>();
+export const crawlerActiveEffect = StateEffect.define<boolean>();
 
 /**
  * Helper function to scroll to a specific line.
@@ -51,22 +51,29 @@ export const scrollerCrawlEffect = StateEffect.define<boolean>();
  */
 export const scrollToLine = (view: EditorView, options: ScrollToProps) => {
   view.dispatch({
-    effects: scrollerLineEffect.of(options),
+    effects: crawlerLineEffect.of(options),
   });
 };
 
-export type ScrollerOptions = {
+export type CrawlerOptions = {
   /** Threshold in px to trigger scroll from bottom. */
   overScroll?: number;
 };
 
 /**
- * Extension that provides smooth scrolling to specific lines in the editor.
+ * Imperative scroll-control primitive for streaming editor views.
+ *
+ * Owns the scroll-related effects (`crawlerLineEffect`, `crawlerActiveEffect`), the spring
+ * crawler that follows the bottom of the document, and the `.cm-scroller` theme (overflow,
+ * scrollbar styling, and the `::after` overscroll spacer).
+ *
+ * Use directly for jump-to-line navigation, or pair with `autoScroll` for a pin-to-bottom
+ * streaming policy. The composite `streamScroll` bundles both for the common case.
  */
-export const scroller = ({ overScroll = 0 }: ScrollerOptions = {}) => {
+export const crawler = ({ overScroll = 0 }: CrawlerOptions = {}) => {
   // ViewPlugin to manage scroll animations.
-  const scrollPlugin = ViewPlugin.fromClass(
-    class ScrollerPlugin {
+  const crawlerPlugin = ViewPlugin.fromClass(
+    class CrawlerPlugin {
       private readonly crawler: ReturnType<typeof createCrawler>;
       constructor(private readonly view: EditorView) {
         this.crawler = createCrawler(this.view);
@@ -126,18 +133,18 @@ export const scroller = ({ overScroll = 0 }: ScrollerOptions = {}) => {
   );
 
   return [
-    scrollPlugin,
+    crawlerPlugin,
 
     // Listen for effect.
     EditorView.updateListener.of((update) => {
       update.transactions.forEach((transaction) => {
         try {
-          const plugin = update.view.plugin(scrollPlugin);
+          const plugin = update.view.plugin(crawlerPlugin);
           if (plugin) {
             for (const effect of transaction.effects) {
-              if (effect.is(scrollerCrawlEffect)) {
+              if (effect.is(crawlerActiveEffect)) {
                 plugin.crawl(effect.value);
-              } else if (effect.is(scrollerLineEffect)) {
+              } else if (effect.is(crawlerLineEffect)) {
                 plugin.scroll(effect.value);
               }
             }

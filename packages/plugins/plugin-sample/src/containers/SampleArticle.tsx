@@ -8,8 +8,7 @@
 // The `role` prop is forwarded to Panel.Root so the layout system can adapt
 // (e.g., articles vs sections have different chrome).
 
-import { Atom } from '@effect-atom/atom-react';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
@@ -21,7 +20,7 @@ import {
   type ActionGraphProps,
   Menu,
   MenuBuilder,
-  useMenuActions as useMenuActionsFromAtom,
+  useMenuBuilder,
 } from '@dxos/react-ui-menu';
 
 import { SampleItemView } from '#components';
@@ -92,26 +91,23 @@ export default SampleArticle;
  */
 const useMenuActions = (
   attendableId: string,
-): { actions: ReturnType<typeof useMenuActionsFromAtom>; onAction: ActionExecutor } => {
+): { actions: ReturnType<typeof useMenuBuilder>; onAction: ActionExecutor } => {
   const { graph } = useAppGraph();
   const runAction = useActionRunner();
 
-  const actionsAtom = useMemo(
-    () =>
-      Atom.make((get): ActionGraphProps => {
-        const actions = get(graph.actions(attendableId));
-        const toolbarActions = actions.filter((action) => action.properties.disposition === 'toolbar');
-        return MenuBuilder.make()
-          .subgraph({
-            nodes: toolbarActions as ActionGraphProps['nodes'],
-            edges: toolbarActions.map((node) => ({ source: 'root', target: node.id, relation: 'child' })),
-          })
-          .build();
-      }),
+  const menuActions = useMenuBuilder(
+    (get): ActionGraphProps => {
+      const actions = get(graph.actions(attendableId));
+      const toolbarActions = actions.filter((action) => action.properties.disposition === 'toolbar');
+      return MenuBuilder.make()
+        .subgraph({
+          nodes: toolbarActions as ActionGraphProps['nodes'],
+          edges: toolbarActions.map((node) => ({ source: 'root', target: node.id, relation: 'child' })),
+        })
+        .build();
+    },
     [graph, attendableId],
   );
-
-  const menuActions = useMenuActionsFromAtom(actionsAtom);
 
   const onAction: ActionExecutor = useCallback(
     (action) => {

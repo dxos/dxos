@@ -150,18 +150,18 @@ const AudioFile = ({
 
   return (
     <TranscriptionStory
+      audioRef={ref}
       disabled={!stream}
       model={model}
       running={running}
       onRunningChange={setRunning}
-      audioRef={ref}
       onUpload={handleUpload}
     />
   );
 };
 
 const meta = {
-  title: 'plugins/plugin-transcription/components/FileTranscription',
+  title: 'plugins/plugin-transcription/stories/FileTranscription',
   decorators: [
     withLayout({ layout: 'column' }),
     withPluginManager({

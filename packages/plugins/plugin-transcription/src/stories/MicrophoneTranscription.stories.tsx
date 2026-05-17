@@ -172,7 +172,7 @@ const DefaultStory = ({
 };
 
 const meta = {
-  title: 'plugins/plugin-transcription/components/MicrophoneTranscription',
+  title: 'plugins/plugin-transcription/stories/MicrophoneTranscription',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'column' }),
