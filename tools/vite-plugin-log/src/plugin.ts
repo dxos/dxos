@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { RolldownMagicString, type Plugin as RolldownPlugin } from 'rolldown';
 import { parseSync, type ConfigEnv, type IndexHtmlTransformContext, type Plugin, type UserConfig } from 'vite';
 
+import { VITE_PLUGIN_LOG_SINK_PATH } from './constants.ts';
 import {
   DEFAULT_LOG_META_TRANSFORM_SPEC,
   type DxosLogPluginOptions,
@@ -24,12 +25,6 @@ export const VITE_PLUGIN_LOG_RUNTIME_ID = '/@dxos-plugin-log/runtime';
  * doesn't reference `import.meta.hot` (which would pull in the main-thread HMR client).
  */
 export const VITE_PLUGIN_LOG_RUNTIME_WORKER_ID = '/@dxos-plugin-log/runtime-worker';
-
-/**
- * Dev server endpoint that accepts POSTed NDJSON log chunks. Used by the runtime in contexts
- * without HMR (notably dedicated workers). Must mirror `SINK_URL` in `runtime.ts`.
- */
-export const VITE_PLUGIN_LOG_SINK_PATH = '/@dxos-plugin-log/sink';
 
 /** Standalone Rolldown meta plugin id (see {@link rolldownLogMetaPlugin}). */
 export const ROLLDOWN_LOG_META_PLUGIN_NAME = 'dxos:rolldown-log-meta';

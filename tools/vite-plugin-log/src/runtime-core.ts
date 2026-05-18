@@ -12,16 +12,12 @@ import {
   shouldLog,
 } from '@dxos/log';
 
+import { VITE_PLUGIN_LOG_SINK_PATH } from './constants.ts';
+
 const MAX_CONTEXT_LENGTH = 500;
 
 /** Coalesce sends to one macrotask; adjust if needed. */
 const FLUSH_DEBOUNCE_MS = 16;
-
-/**
- * HTTP sink endpoint served by `configureServer` in `plugin.ts`. Workers (and any other context
- * without HMR) POST log chunks here. Must mirror `VITE_PLUGIN_LOG_SINK_PATH` in `plugin.ts`.
- */
-export const SINK_URL = '/@dxos-plugin-log/sink';
 
 /**
  * Injected by vite-plugin-log via `config.define`; when absent (_e.g._ prebundled artifact),
@@ -78,7 +74,7 @@ export type Transport = (chunk: string) => void;
 /** Default transport: POST to the dev server sink endpoint. Works in any fetch-capable realm. */
 export const httpTransport: Transport = (chunk) => {
   // `keepalive: true` lets the request finish if the worker is torn down mid-flush.
-  void fetch(SINK_URL, {
+  void fetch(VITE_PLUGIN_LOG_SINK_PATH, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: chunk,
