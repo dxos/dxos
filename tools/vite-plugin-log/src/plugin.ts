@@ -20,12 +20,6 @@ import { transform } from './transform.ts';
 /** Virtual module id resolved to the client runtime (uses the app's @dxos/log). */
 export const VITE_PLUGIN_LOG_RUNTIME_ID = '/@dxos-plugin-log/runtime';
 
-/**
- * Virtual module id for the worker variant of the runtime. Distinct from the page runtime so it
- * doesn't reference `import.meta.hot` (which would pull in the main-thread HMR client).
- */
-export const VITE_PLUGIN_LOG_RUNTIME_WORKER_ID = '/@dxos-plugin-log/runtime-worker';
-
 /** Standalone Rolldown meta plugin id (see {@link rolldownLogMetaPlugin}). */
 export const ROLLDOWN_LOG_META_PLUGIN_NAME = 'dxos:rolldown-log-meta';
 
@@ -110,12 +104,8 @@ export function DxosLogPlugin(options: DxosLogPluginOptions = {}): Plugin {
   // Prefer the compiled artifact (`dist/.../runtime.js`); fall back to `runtime.ts` so the plugin
   // works when imported directly from `src/` (e.g. by the example app or local dev).
   const runtimeDir = path.dirname(fileURLToPath(import.meta.url));
-  const resolveRuntime = (baseName: string): string => {
-    const jsPath = path.join(runtimeDir, `${baseName}.js`);
-    return fs.existsSync(jsPath) ? jsPath : path.join(runtimeDir, `${baseName}.ts`);
-  };
-  const runtimeAbsPath = resolveRuntime('runtime');
-  const runtimeWorkerAbsPath = resolveRuntime('runtime-worker');
+  const runtimeJsPath = path.join(runtimeDir, 'runtime.js');
+  const runtimeAbsPath = fs.existsSync(runtimeJsPath) ? runtimeJsPath : path.join(runtimeDir, 'runtime.ts');
 
   const plugin: Plugin & RolldownPlugin = {
     name: PLUGIN_NAME,
@@ -145,9 +135,6 @@ export function DxosLogPlugin(options: DxosLogPluginOptions = {}): Plugin {
         if (id === VITE_PLUGIN_LOG_RUNTIME_ID) {
           return runtimeAbsPath;
         }
-        if (id === VITE_PLUGIN_LOG_RUNTIME_WORKER_ID) {
-          return runtimeWorkerAbsPath;
-        }
         return undefined;
       },
 
@@ -172,18 +159,7 @@ export function DxosLogPlugin(options: DxosLogPluginOptions = {}): Plugin {
           });
         };
 
-        server.ws.on('dxos-plugin:log', (data: unknown) => {
-          if (data == null || typeof data !== 'object') {
-            return;
-          }
-          const chunk = (data as { chunk?: unknown }).chunk;
-          if (typeof chunk !== 'string' || chunk.length === 0) {
-            return;
-          }
-          appendChunk(chunk);
-        });
-
-        // HTTP sink for contexts that can't use the HMR websocket (dedicated workers).
+        // HTTP sink: page and worker runtimes both POST NDJSON chunks here.
         // Cap accepted payload so a runaway log loop can't OOM the dev server.
         const MAX_SINK_BODY_BYTES = 4 * 1024 * 1024;
         server.middlewares.use(VITE_PLUGIN_LOG_SINK_PATH, (req, res, next) => {
@@ -289,7 +265,7 @@ export function DxosLogPlugin(options: DxosLogPluginOptions = {}): Plugin {
           transform(ms, program, metaOptions!.filename ?? id, { specs: metaOptions!.to_transform });
         }
         if (doWorkerInject) {
-          ms.prepend(`import ${JSON.stringify(VITE_PLUGIN_LOG_RUNTIME_WORKER_ID)};\n`);
+          ms.prepend(`import ${JSON.stringify(VITE_PLUGIN_LOG_RUNTIME_ID)};\n`);
         }
         return { code: ms.toString() };
       },
