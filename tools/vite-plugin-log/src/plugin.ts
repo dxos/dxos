@@ -184,17 +184,33 @@ export function DxosLogPlugin(options: DxosLogPluginOptions = {}): Plugin {
         });
 
         // HTTP sink for contexts that can't use the HMR websocket (dedicated workers).
+        // Cap accepted payload so a runaway log loop can't OOM the dev server.
+        const MAX_SINK_BODY_BYTES = 4 * 1024 * 1024;
         server.middlewares.use(VITE_PLUGIN_LOG_SINK_PATH, (req, res, next) => {
           if (req.method !== 'POST') {
             next();
             return;
           }
           let body = '';
+          let oversized = false;
           req.setEncoding('utf8');
           req.on('data', (chunk) => {
+            if (oversized) {
+              return;
+            }
+            if (body.length + chunk.length > MAX_SINK_BODY_BYTES) {
+              oversized = true;
+              res.statusCode = 413;
+              res.end();
+              req.destroy();
+              return;
+            }
             body += chunk;
           });
           req.on('end', () => {
+            if (oversized) {
+              return;
+            }
             if (body.length > 0) {
               appendChunk(body);
             }
@@ -202,8 +218,10 @@ export function DxosLogPlugin(options: DxosLogPluginOptions = {}): Plugin {
             res.end();
           });
           req.on('error', () => {
-            res.statusCode = 400;
-            res.end();
+            if (!res.writableEnded) {
+              res.statusCode = 400;
+              res.end();
+            }
           });
         });
       },
