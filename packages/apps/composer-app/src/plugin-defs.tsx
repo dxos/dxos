@@ -14,6 +14,7 @@ import { AttentionPlugin } from '@dxos/plugin-attention/plugin';
 import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { BlueskyPlugin } from '@dxos/plugin-bluesky/plugin';
 import { BoardPlugin } from '@dxos/plugin-board/plugin';
+import { CallsPlugin } from '@dxos/plugin-calls/plugin';
 import { ChessPlugin } from '@dxos/plugin-chess/plugin';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
 import { CodePlugin } from '@dxos/plugin-code/plugin';
@@ -27,6 +28,7 @@ import { ExplorerPlugin } from '@dxos/plugin-explorer/plugin';
 import { FeedPlugin } from '@dxos/plugin-feed/plugin';
 import { GalleryPlugin } from '@dxos/plugin-gallery/plugin';
 import { GamePlugin } from '@dxos/plugin-game/plugin';
+import { GeneratorPlugin } from '@dxos/plugin-generator/plugin';
 import { GitHubPlugin } from '@dxos/plugin-github/plugin';
 import { GraphPlugin } from '@dxos/plugin-graph/plugin';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
@@ -53,6 +55,7 @@ import { RegistryPlugin } from '@dxos/plugin-registry/plugin';
 import { SamplePlugin } from '@dxos/plugin-sample/plugin';
 import { ScriptPlugin } from '@dxos/plugin-script/plugin';
 import { SearchPlugin } from '@dxos/plugin-search/plugin';
+import { SequencerPlugin } from '@dxos/plugin-sequencer/plugin';
 import { SettingsPlugin } from '@dxos/plugin-settings/plugin';
 import { SheetPlugin } from '@dxos/plugin-sheet/plugin';
 import { SidekickPlugin } from '@dxos/plugin-sidekick/plugin';
@@ -147,6 +150,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     MasonryPlugin.meta.id,
     PreviewPlugin.meta.id,
     SearchPlugin.meta.id,
+    SequencerPlugin.meta.id,
     SheetPlugin.meta.id,
     SketchPlugin.meta.id,
     TablePlugin.meta.id,
@@ -161,6 +165,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
 
     // Labs
     (isDev || isLabs) && [
+      CallsPlugin.meta.id,
       CodePlugin.meta.id,
       FeedPlugin.meta.id,
       GalleryPlugin.meta.id,
@@ -199,6 +204,7 @@ export const getPlugins = ({
     AutomationPlugin(),
     BlueskyPlugin(),
     BoardPlugin(),
+    CallsPlugin(),
     ChessPlugin(),
     ClientPlugin({
       config,
@@ -225,6 +231,7 @@ export const getPlugins = ({
     FeedPlugin(),
     GalleryPlugin(),
     GamePlugin(),
+    GeneratorPlugin(),
     GitHubPlugin(),
     GraphPlugin(),
     InboxPlugin(),
@@ -257,6 +264,7 @@ export const getPlugins = ({
     isLocal && SamplePlugin(),
     ScriptPlugin(),
     SearchPlugin(),
+    SequencerPlugin(),
     (isDev || isLabs) && SidekickPlugin(),
     SettingsPlugin(),
     SheetPlugin(),

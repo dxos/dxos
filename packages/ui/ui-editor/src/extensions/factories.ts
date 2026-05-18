@@ -33,7 +33,7 @@ import { baseTheme, createFontTheme, editorGutter } from '../styles';
 import { automerge } from './automerge';
 import { SpaceAwarenessProvider, awareness } from './awareness';
 import { focus } from './focus';
-import { scrollPastEnd } from './scroll-past-end';
+import { scrollPastEnd } from './scrolling';
 
 //
 // Basic

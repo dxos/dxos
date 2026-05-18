@@ -10,10 +10,13 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { type ContentBlock } from '@dxos/types';
 
-import { TRANSCRIPTION_URL } from '#types';
-
 import { mergeFloat64Arrays } from '../util';
 import { type AudioChunk, type AudioRecorder } from './audio-recorder';
+
+/**
+ * Endpoint to the calls service.
+ */
+const DEFAULT_TRANSCRIPTION_URL = 'https://calls-service.dxos.workers.dev';
 
 export type WhisperWord = {
   word: string;
@@ -96,7 +99,7 @@ export type TranscriberProps = {
  */
 export class Transcriber extends Resource {
   private _audioChunks: AudioChunk[] = [];
-  private _lastUsedTimestamp = 0;
+  private _lastTimestamp = 0;
 
   private readonly _openTrigger = new Trigger({ autoReset: true });
 
@@ -217,7 +220,8 @@ export class Transcriber extends Resource {
     if (this._transcribeFn) {
       segments = await this._transcribeFn(audio);
     } else {
-      const endpoint = this._config.endpoint ?? TRANSCRIPTION_URL;
+      // TODO(burdon): Create separate endpoint?
+      const endpoint = this._config.endpoint ?? DEFAULT_TRANSCRIPTION_URL;
       const response = await fetch(`${endpoint}/transcribe`, {
         method: 'POST',
         body: JSON.stringify({ audio }),
@@ -238,15 +242,15 @@ export class Transcriber extends Resource {
     }
 
     log.info('transcription response', { segments: segments.length });
-
     return segments as WhisperSegment[];
   }
 
   private _alignSegments(segments: WhisperSegment[], originalChunks: AudioChunk[]): ContentBlock.Transcript[] {
-    const result = alignWhisperSegments(segments, originalChunks, this._lastUsedTimestamp);
-    if (result.lastUsedTimestamp !== undefined) {
-      this._lastUsedTimestamp = result.lastUsedTimestamp;
+    const result = alignWhisperSegments(segments, originalChunks, this._lastTimestamp);
+    if (result.lastTimestamp !== undefined) {
+      this._lastTimestamp = result.lastTimestamp;
     }
+
     return result.transcripts;
   }
 }
@@ -257,14 +261,14 @@ export class Transcriber extends Resource {
  *
  * @param segments - Raw segments returned by the Whisper service for `originalChunks`.
  * @param originalChunks - Chunks fed into the transcription request (used for the zero timestamp).
- * @param lastUsedTimestamp - Most recent absolute timestamp already emitted; segments whose end
+ * @param lastTimestamp - Most recent absolute timestamp already emitted; segments whose end
  *   falls strictly before this point are deduped out, as are individual words whose start does.
  */
 export const alignWhisperSegments = (
   segments: WhisperSegment[],
   originalChunks: AudioChunk[],
-  lastUsedTimestamp: number,
-): { transcripts: ContentBlock.Transcript[]; lastUsedTimestamp?: number } => {
+  lastTimestamp: number,
+): { transcripts: ContentBlock.Transcript[]; lastTimestamp?: number } => {
   if (originalChunks.length === 0) {
     return { transcripts: [] };
   }
@@ -272,9 +276,9 @@ export const alignWhisperSegments = (
   const zeroTimestamp = originalChunks[0].timestamp;
 
   const filteredSegments = segments
-    .filter((segment) => zeroTimestamp + segment.end * 1_000 >= lastUsedTimestamp)
+    .filter((segment) => zeroTimestamp + segment.end * 1_000 >= lastTimestamp)
     .map((segment) => {
-      const words = segment.words.filter((word) => zeroTimestamp + word.start * 1_000 >= lastUsedTimestamp);
+      const words = segment.words.filter((word) => zeroTimestamp + word.start * 1_000 >= lastTimestamp);
       return {
         ...segment,
         words,
@@ -289,11 +293,11 @@ export const alignWhisperSegments = (
   }
 
   return {
+    lastTimestamp: zeroTimestamp + filteredSegments.at(-1)!.end * 1_000,
     transcripts: filteredSegments.map((segment) => ({
       _tag: 'transcript',
       started: new Date(zeroTimestamp + segment.start * 1_000).toISOString(),
       text: segment.text.trim(),
     })),
-    lastUsedTimestamp: zeroTimestamp + filteredSegments.at(-1)!.end * 1_000,
   };
 };

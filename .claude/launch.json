@@ -10,8 +10,8 @@
     {
       "name": "composer-app",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@dxos/composer-app", "exec", "vite", "dev"],
-      "port": 5173,
+      "runtimeArgs": ["--filter", "@dxos/composer-app", "exec", "vite", "dev", "--port", "5180", "--strictPort"],
+      "port": 5180,
       "autoPort": true
     },
     {

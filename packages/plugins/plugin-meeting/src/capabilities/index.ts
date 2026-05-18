@@ -5,7 +5,7 @@
 import { Capability } from '@dxos/app-framework';
 import { OperationHandlerSet } from '@dxos/compute';
 // eslint-disable-next-line unused-imports/no-unused-imports
-import type { ThreadCapabilities } from '@dxos/plugin-thread';
+import type { CallsCapabilities } from '@dxos/plugin-calls';
 
 export const AppGraphBuilder = Capability.lazy('AppGraphBuilder', () => import('./app-graph-builder'));
 export const CallExtension = Capability.lazy('CallExtension', () => import('./call-extension'));

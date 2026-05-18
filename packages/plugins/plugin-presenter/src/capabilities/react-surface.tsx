@@ -12,7 +12,7 @@ import { Collection, Obj } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown';
 
 import { PresenterSettings } from '#components';
-import { CollectionPresenterContainer, DocumentPresenterContainer, MarkdownSlide } from '#containers';
+import { CollectionPresenterArticle, DocumentPresenterContainer, MarkdownSlide } from '#containers';
 import { meta } from '#meta';
 import { type Settings } from '#types';
 
@@ -47,7 +47,7 @@ export default Capability.makeModule(() =>
             data.subject.type === meta.id &&
             Obj.instanceOf(Collection.Collection, data.subject.object),
         ),
-        component: ({ role, data }) => <CollectionPresenterContainer role={role} subject={data.subject.object} />,
+        component: ({ role, data }) => <CollectionPresenterArticle role={role} subject={data.subject.object} />,
       }),
       Surface.create({
         id: 'slide',

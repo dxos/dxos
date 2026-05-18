@@ -245,6 +245,9 @@
       "path": "../../plugins/plugin-board"
     },
     {
+      "path": "../../plugins/plugin-calls"
+    },
+    {
       "path": "../../plugins/plugin-chess"
     },
     {
@@ -285,6 +288,9 @@
     },
     {
       "path": "../../plugins/plugin-game"
+    },
+    {
+      "path": "../../plugins/plugin-generator"
     },
     {
       "path": "../../plugins/plugin-github"
@@ -363,6 +369,9 @@
     },
     {
       "path": "../../plugins/plugin-search"
+    },
+    {
+      "path": "../../plugins/plugin-sequencer"
     },
     {
       "path": "../../plugins/plugin-settings"
