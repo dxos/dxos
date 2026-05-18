@@ -4,7 +4,13 @@
 
 import { getHeads } from '@automerge/automerge';
 import * as Automerge from '@automerge/automerge';
-import { type DocumentId, type Heads, generateAutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
+import {
+  type DocumentId,
+  type Heads,
+  type SubductionPeerBinding,
+  generateAutomergeUrl,
+  parseAutomergeUrl,
+} from '@automerge/automerge-repo';
 import { describe, onTestFinished, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
@@ -14,11 +20,13 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import type { LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
+import { TestBuilder as TeleportBuilder, TestPeer as TeleportPeer } from '@dxos/teleport/testing';
 import { openAndClose } from '@dxos/test-utils';
 import { range } from '@dxos/util';
 
 import { TestReplicationNetwork } from '../testing';
 import { AutomergeHost } from './automerge-host';
+import { MeshEchoReplicator } from './mesh-echo-replicator';
 
 describe('AutomergeHost with Subduction', () => {
   test('can create documents', async ({ expect }) => {
@@ -243,6 +251,177 @@ describe('AutomergeHost with Subduction', () => {
     }
   });
 
+  describe('subductionPolicy gates host-to-host replication', () => {
+    // Two hosts where the holder advertises the doc; the fetcher should receive it.
+    // Mirrors the "loads remote document over replication network" baseline but
+    // explicitly exercises `_subductionPolicy.authorizeFetch` via the per-connection
+    // `shouldAdvertise` predicate.
+    test('authorized holder allows fetcher', { timeout: 5_000 }, async ({ expect }) => {
+      const host1 = await setupAutomergeHost({ level: await createLevel() });
+      const host2 = await setupAutomergeHost({ level: await createLevel() });
+      const handle = await host2.createDoc({ text: 'authorized' });
+      await host2.flush(Context.default());
+      await waitForSubductionSave();
+
+      const network = await new TestReplicationNetwork().open();
+      try {
+        await host1.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
+        await host2.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
+
+        const loaded = await host1.loadDoc<{ text: string }>(Context.default(), handle.documentId, { timeout: 1_000 });
+        invariant(loaded);
+        expect(loaded.doc()!.text).toEqual('authorized');
+      } finally {
+        await host1.close();
+        await host2.close();
+        await network.close();
+      }
+    });
+
+    // Holder's `shouldAdvertise` returns false → `_subductionPolicy.authorizeFetch`
+    // on the holder rejects the fetcher's request → fetcher's query never reaches
+    // `'ready'` and the local doc stays empty.
+    test('unauthorized holder blocks fetcher (authorizeFetch denial)', { timeout: 5_000 }, async ({ expect }) => {
+      const host1 = await setupAutomergeHost({ level: await createLevel() });
+      const host2 = await setupAutomergeHost({ level: await createLevel() });
+      const handle = await host2.createDoc({ text: 'should-not-fetch' });
+      await host2.flush(Context.default());
+      await waitForSubductionSave();
+
+      const network = await new TestReplicationNetwork().open();
+      try {
+        await host1.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
+        // host2 (holder) refuses to advertise.
+        await host2.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => false }));
+
+        // Don't await `loadDoc` (it would hang). Probe via findWithProgress and assert no transition to 'ready'.
+        const progress = host1.findWithProgress<{ text: string }>(handle.documentId);
+        await sleep(POLICY_NEGATIVE_DELAY_MS);
+        expect(progress.peek().state).to.not.equal('ready');
+        expect(progress.handle.doc()?.text).to.be.undefined;
+      } finally {
+        await host1.close();
+        await host2.close();
+        await network.close();
+      }
+    });
+
+    // Flip the holder's `shouldAdvertise` from false to true and kick `shareConfigChanged()`
+    // via the host (e.g. by calling `createDoc` which now schedules the task in both modes).
+    // Per SKILL doc, `shareConfigChanged()` is the documented recovery hatch for
+    // `authorizeFetch`-denied entries.
+    test(
+      'shareConfigChanged() recovers after authorizeFetch denial flips to allow',
+      { timeout: 5_000 },
+      async ({ expect }) => {
+        const host1 = await setupAutomergeHost({ level: await createLevel() });
+        const host2 = await setupAutomergeHost({ level: await createLevel() });
+        const handle = await host2.createDoc({ text: 'recover-me' });
+        await host2.flush(Context.default());
+        await waitForSubductionSave();
+
+        const network = await new TestReplicationNetwork().open();
+        try {
+          const host1Replicator = await network.createReplicator({ shouldAdvertise: () => true });
+          const host2Replicator = await network.createReplicator({ shouldAdvertise: () => false });
+          await host1.addReplicator(Context.default(), host1Replicator);
+          await host2.addReplicator(Context.default(), host2Replicator);
+
+          const progress = host1.findWithProgress<{ text: string }>(handle.documentId);
+          await sleep(POLICY_NEGATIVE_DELAY_MS);
+          expect(progress.peek().state).to.not.equal('ready');
+
+          // Flip the holder to allow, then drive a no-op commit on the holder.
+          // Creating a fresh doc on host2 schedules `_sharePolicyChangedTask`, which
+          // calls `_repo.shareConfigChanged()` on host2 — the documented recovery
+          // hatch for `authorizeFetch`-denied entries.
+          host2Replicator.shouldAdvertise = () => true;
+          await host2.createDoc({ kick: true });
+
+          await expect.poll(() => progress.peek().state, { timeout: 5_000 }).toEqual('ready');
+          expect(progress.handle.doc()?.text).toEqual('recover-me');
+        } finally {
+          await host1.close();
+          await host2.close();
+          await network.close();
+        }
+      },
+    );
+
+    // The author/writer's `shouldAdvertise` is the only gate on the SENDER side.
+    // The RECEIVER's `_subductionPolicy.authorizePut` consults `shouldAdvertise` on the
+    // *receiver's* connection — so if the receiver refuses, no bytes should land.
+    // This exercises the inbound (`authorizePut`) path.
+    test('receiver denies authorizePut → inbound writes dropped', { timeout: 5_000 }, async ({ expect }) => {
+      const host1 = await setupAutomergeHost({ level: await createLevel() });
+      const host2 = await setupAutomergeHost({ level: await createLevel() });
+      const handle = await host2.createDoc({ text: 'inbound-denied' });
+      await host2.flush(Context.default());
+      await waitForSubductionSave();
+
+      const network = await new TestReplicationNetwork().open();
+      try {
+        // host1 (receiver) denies; host2 (sender) is permissive.
+        await host1.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => false }));
+        await host2.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
+
+        const progress = host1.findWithProgress<{ text: string }>(handle.documentId);
+        await sleep(POLICY_NEGATIVE_DELAY_MS);
+        expect(progress.handle.doc()?.text).to.be.undefined;
+      } finally {
+        await host1.close();
+        await host2.close();
+        await network.close();
+      }
+    });
+
+    // Regression test for the patched `Repo.on('subduction-peer-bound', ...)` event
+    // (mirrors upstream automerge/automerge-repo#635). Subduction's discovery handshake
+    // produces a verified peer id on the responder side; in our test topology (both
+    // hosts use `role: 'connect'`) at least one side observes the binding. We assert
+    // the binding fields rather than count of events: the responder's binding must
+    // carry the connector's repo PeerId and a distinct subduction PeerId.
+    test('subduction-peer-bound event surfaces verified peer ids', { timeout: 5_000 }, async ({ expect }) => {
+      const host1 = await setupAutomergeHost({ level: await createLevel() });
+      const host2 = await setupAutomergeHost({ level: await createLevel() });
+      // The Subduction handshake only triggers when there is data to sync. Create a
+      // doc on host2 before connecting so the adapter-connect flow runs end-to-end.
+      await host2.createDoc({ text: 'binding-fixture' });
+      await host2.flush(Context.default());
+      await waitForSubductionSave();
+
+      const bindings: Array<{ side: 'host1' | 'host2'; binding: SubductionPeerBinding }> = [];
+      ((host1 as any)._repo as any).on('subduction-peer-bound', (b: SubductionPeerBinding) =>
+        bindings.push({ side: 'host1', binding: b }),
+      );
+      ((host2 as any)._repo as any).on('subduction-peer-bound', (b: SubductionPeerBinding) =>
+        bindings.push({ side: 'host2', binding: b }),
+      );
+
+      const network = await new TestReplicationNetwork().open();
+      try {
+        await host1.addReplicator(Context.default(), await network.createReplicator());
+        await host2.addReplicator(Context.default(), await network.createReplicator());
+
+        await expect.poll(() => bindings.length, { timeout: 3_000 }).toBeGreaterThan(0);
+
+        for (const { side, binding } of bindings) {
+          invariant('repoPeerId' in binding, 'expected adapter binding');
+          // repoPeerId on side X should match the OTHER host's repo peerId.
+          const expectedRemote = side === 'host1' ? host2.peerId : host1.peerId;
+          expect(binding.repoPeerId).toEqual(expectedRemote);
+          // The subduction PeerId is the verified signer Ed25519 pubkey hex — disjoint
+          // from the repo PeerId (which is the `host-<random>` label).
+          expect(binding.subductionPeerId.toString()).not.toEqual(binding.repoPeerId);
+        }
+      } finally {
+        await host1.close();
+        await host2.close();
+        await network.close();
+      }
+    });
+  });
+
   test('collection synchronization is bidirectional', { timeout: 10_000 }, async ({ expect }) => {
     const host1DocumentIds: DocumentId[] = [];
     const host2DocumentIds: DocumentId[] = [];
@@ -294,6 +473,175 @@ describe('AutomergeHost with Subduction', () => {
       await network.close();
     }
   });
+
+  // End-to-end policy gating using the real DXOS replication stack:
+  // `MeshEchoReplicator` over `TeleportBuilder`. The mesh replicator is the
+  // production wiring for peer-to-peer DXOS connections; it gates per-space
+  // via `authorizeDevice(spaceKey, deviceKey)`.
+  describe('subductionPolicy + MeshEchoReplicator', () => {
+    // Two hosts in the same space, both authorized → doc replicates.
+    test('authorized peers in same space replicate', { timeout: 5_000 }, async ({ expect }) => {
+      const spaceKey = PublicKey.random();
+      const teleportBuilder = new TeleportBuilder();
+      onTestFinished(() => teleportBuilder.destroy());
+
+      const host1 = await setupMeshAutomergeHost({ level: await createLevel(), spaceKey, teleportBuilder });
+      const host2 = await setupMeshAutomergeHost({ level: await createLevel(), spaceKey, teleportBuilder });
+
+      const handle = await host2.host.createDoc({ text: 'mesh-authorized' });
+      await host2.host.flush(Context.default());
+      await waitForSubductionSave();
+
+      await connectMeshPeers(teleportBuilder, host1, host2, spaceKey, /* authorized */ true);
+
+      await expect
+        .poll(
+          async () =>
+            (
+              await host1.host.loadDoc<{ text: string }>(Context.default(), handle.documentId, { timeout: 1_000 })
+            )?.doc()?.text,
+          { timeout: 3_000 },
+        )
+        .toEqual('mesh-authorized');
+    });
+
+    // Two hosts in the same space, but neither side `authorizeDevice`s the other.
+    // `MeshReplicatorConnection.shouldAdvertise` consults `_authorizedDevices`, which
+    // is empty → `_subductionPolicy.authorizeFetch` rejects on the holder → fetcher
+    // never reaches `'ready'`.
+    test('unauthorized peers cannot fetch (authorizeFetch denial)', { timeout: 5_000 }, async ({ expect }) => {
+      const spaceKey = PublicKey.random();
+      const teleportBuilder = new TeleportBuilder();
+      onTestFinished(() => teleportBuilder.destroy());
+
+      const host1 = await setupMeshAutomergeHost({ level: await createLevel(), spaceKey, teleportBuilder });
+      const host2 = await setupMeshAutomergeHost({ level: await createLevel(), spaceKey, teleportBuilder });
+
+      const handle = await host2.host.createDoc({ text: 'mesh-denied' });
+      await host2.host.flush(Context.default());
+      await waitForSubductionSave();
+
+      await connectMeshPeers(teleportBuilder, host1, host2, spaceKey, /* authorized */ false);
+
+      const progress = host1.host.findWithProgress<{ text: string }>(handle.documentId);
+      await sleep(POLICY_NEGATIVE_DELAY_MS);
+      expect(progress.peek().state).to.not.equal('ready');
+      expect(progress.handle.doc()?.text).to.be.undefined;
+    });
+
+    // Start unauthorized; the holder's `_subductionPolicy.authorizeFetch` rejects.
+    // Then authorize the device on the holder and drive a fresh commit (which schedules
+    // `_sharePolicyChangedTask` → `_repo.shareConfigChanged()` on the holder — the
+    // documented recovery hatch). The denied entry on the fetcher should clear and
+    // the doc syncs.
+    test('authorizeDevice after denial recovers replication', { timeout: 10_000 }, async ({ expect }) => {
+      const spaceKey = PublicKey.random();
+      const teleportBuilder = new TeleportBuilder();
+      onTestFinished(() => teleportBuilder.destroy());
+
+      const host1 = await setupMeshAutomergeHost({ level: await createLevel(), spaceKey, teleportBuilder });
+      const host2 = await setupMeshAutomergeHost({ level: await createLevel(), spaceKey, teleportBuilder });
+
+      const handle = await host2.host.createDoc({ text: 'mesh-recover' });
+      await host2.host.flush(Context.default());
+      await waitForSubductionSave();
+
+      await connectMeshPeers(teleportBuilder, host1, host2, spaceKey, /* authorized */ false);
+
+      // Probe but don't wait on `findWithProgress` (the subduction fork transitions
+      // to `'unavailable'` when no peer serves the doc, which is sticky).
+      await sleep(POLICY_NEGATIVE_DELAY_MS);
+      const initial = host1.host.findWithProgress<{ text: string }>(handle.documentId).peek();
+      expect(initial.state).to.not.equal('ready');
+
+      // `authorizeDevice` re-emits `peer-disconnected` + `peer-candidate` through the
+      // EchoNetworkAdapter, which under subduction triggers a fresh handshake — that
+      // clears the stuck "all-failed" fetch entry and rebinds the subduction PeerId.
+      // Driving a no-op commit on the holder kicks `_sharePolicyChangedTask` →
+      // `shareConfigChanged()` for belt-and-suspenders recovery on the fetcher.
+      await host1.meshReplicator.authorizeDevice(spaceKey, host2.teleport.peerId);
+      await host2.meshReplicator.authorizeDevice(spaceKey, host1.teleport.peerId);
+      await host2.host.createDoc({ kick: true });
+
+      // Re-probe via a fresh load: the previous `DocumentQuery` may already have
+      // entered `'unavailable'`, which is a terminal state in this fork.
+      await expect
+        .poll(
+          async () =>
+            (await host1.host.loadDoc<{ text: string }>(Context.default(), handle.documentId, { timeout: 500 }))?.doc()
+              ?.text,
+          { timeout: 5_000 },
+        )
+        .toEqual('mesh-recover');
+    });
+
+    // Per-space authorization scoping: a device authorized for space A must not be
+    // able to fetch documents that belong to space B, even on the same connection.
+    // Verifies that `_subductionPolicy.authorizeFetch` resolves the doc's
+    // `spaceKey` via `getContainingSpaceForDocument` → `_getSpaceKeyByRootDocumentId`
+    // and that `MeshReplicatorConnection.shouldAdvertise` rejects when the device
+    // is not in `_authorizedDevices[spaceB]`.
+    test('device authorized for space A cannot fetch space B docs', { timeout: 5_000 }, async ({ expect }) => {
+      const spaceA = PublicKey.random();
+      const spaceB = PublicKey.random();
+      const teleportBuilder = new TeleportBuilder();
+      onTestFinished(() => teleportBuilder.destroy());
+
+      // host2 owns two docs; we'll allocate the document ids up front so we can
+      // wire the per-doc space lookup before either host opens.
+      const spaceADocId = parseAutomergeUrl(generateAutomergeUrl()).documentId;
+      const spaceBDocId = parseAutomergeUrl(generateAutomergeUrl()).documentId;
+      const spaceLookup = (documentId: string): PublicKey | undefined =>
+        documentId === spaceADocId ? spaceA : documentId === spaceBDocId ? spaceB : undefined;
+
+      const host1 = await setupMeshAutomergeHost({
+        level: await createLevel(),
+        spaceLookup,
+        teleportBuilder,
+      });
+      const host2 = await setupMeshAutomergeHost({
+        level: await createLevel(),
+        spaceLookup,
+        teleportBuilder,
+      });
+
+      await host2.host.createDoc(Automerge.from({ text: 'space-A-doc' }), {
+        documentId: spaceADocId,
+        preserveHistory: true,
+      });
+      await host2.host.createDoc(Automerge.from({ text: 'space-B-doc' }), {
+        documentId: spaceBDocId,
+        preserveHistory: true,
+      });
+      await host2.host.flush(Context.default());
+      await waitForSubductionSave();
+
+      // Authorize the device pair only for space A on both sides.
+      await host1.meshReplicator.authorizeDevice(spaceA, host2.teleport.peerId);
+      await host2.meshReplicator.authorizeDevice(spaceA, host1.teleport.peerId);
+
+      const [connection1, connection2] = await teleportBuilder.connect(host1.teleport, host2.teleport);
+      connection1.teleport.addExtension('automerge', host1.meshReplicator.createExtension());
+      connection2.teleport.addExtension('automerge', host2.meshReplicator.createExtension());
+
+      // Space A doc replicates.
+      await expect
+        .poll(
+          async () =>
+            (await host1.host.loadDoc<{ text: string }>(Context.default(), spaceADocId, { timeout: 1_000 }))?.doc()
+              ?.text,
+          { timeout: 3_000 },
+        )
+        .toEqual('space-A-doc');
+
+      // Space B doc does NOT — host2's `_subductionPolicy.authorizeFetch` resolves
+      // its space → spaceB, finds no authorized devices for spaceB, rejects.
+      const progress = host1.host.findWithProgress<{ text: string }>(spaceBDocId);
+      await sleep(POLICY_NEGATIVE_DELAY_MS);
+      expect(progress.peek().state).to.not.equal('ready');
+      expect(progress.handle.doc()?.text).to.be.undefined;
+    });
+  });
 });
 
 const createLevel = async (tmpPath?: string) => {
@@ -305,6 +653,13 @@ const createLevel = async (tmpPath?: string) => {
 const waitForSubductionSave = async () => {
   await sleep(150);
 };
+
+/**
+ * Wait long enough that a permissive policy would have completed the sync round, so
+ * a stable not-ready / empty assertion proves the policy denial held. Tuned for the
+ * happy-path subduction sync observed locally (~200–300 ms) plus margin.
+ */
+const POLICY_NEGATIVE_DELAY_MS = 500;
 
 const setupAutomergeHost = async ({ level }: { level: LevelDB }) => {
   const host = new AutomergeHost({
@@ -318,4 +673,76 @@ const setupAutomergeHost = async ({ level }: { level: LevelDB }) => {
     }
   });
   return host;
+};
+
+type MeshTestPeer = {
+  host: AutomergeHost;
+  meshReplicator: MeshEchoReplicator;
+  teleport: TeleportPeer;
+};
+
+/**
+ * Spin up an `AutomergeHost` whose subduction transport carries a
+ * `MeshEchoReplicator`, the production p2p wiring. The host's
+ * `getSpaceKeyByRootDocumentId` is stubbed to return the test space key for any
+ * document id, so `_subductionPolicy.authorizeFetch` → `MeshReplicatorConnection.shouldAdvertise`
+ * resolves the space lookup without depending on actual `DatabaseDirectory` docs.
+ */
+const setupMeshAutomergeHost = async ({
+  level,
+  spaceKey,
+  spaceLookup,
+  teleportBuilder,
+}: {
+  level: LevelDB;
+  /** Single-space mode: every doc reports this space. */
+  spaceKey?: PublicKey;
+  /** Multi-space mode: per-doc lookup; takes precedence over `spaceKey`. */
+  spaceLookup?: (documentId: string) => PublicKey | undefined;
+  teleportBuilder: TeleportBuilder;
+}): Promise<MeshTestPeer> => {
+  invariant(spaceKey || spaceLookup, 'either spaceKey or spaceLookup is required');
+  const host = new AutomergeHost({
+    db: level,
+    useSubduction: true,
+    // Bypass DatabaseDirectory lookup: route every doc through a synthetic
+    // `documentId → spaceKey` map so `MeshReplicatorConnection.shouldAdvertise`
+    // can look up `_authorizedDevices[space]` without depending on
+    // `DatabaseDirectory`-shaped contents.
+    getSpaceKeyByRootDocumentId: spaceLookup ?? (() => spaceKey),
+  });
+  await host.open();
+  onTestFinished(async () => {
+    if (host.isOpen) {
+      await host.close();
+    }
+  });
+
+  const meshReplicator = new MeshEchoReplicator();
+  await host.addReplicator(Context.default(), meshReplicator);
+
+  const teleport = teleportBuilder.createPeer({ factory: () => new TeleportPeer() });
+  return { host, meshReplicator, teleport };
+};
+
+/**
+ * Bring up a teleport connection between two `MeshTestPeer`s and (optionally)
+ * `authorizeDevice` each side for the given `spaceKey`. Returns when the
+ * automerge extension has been wired into both teleport endpoints.
+ */
+const connectMeshPeers = async (
+  builder: TeleportBuilder,
+  peer1: MeshTestPeer,
+  peer2: MeshTestPeer,
+  spaceKey: PublicKey,
+  authorized: boolean,
+) => {
+  if (authorized) {
+    await peer1.meshReplicator.authorizeDevice(spaceKey, peer2.teleport.peerId);
+    await peer2.meshReplicator.authorizeDevice(spaceKey, peer1.teleport.peerId);
+  }
+
+  const [connection1, connection2] = await builder.connect(peer1.teleport, peer2.teleport);
+  connection1.teleport.addExtension('automerge', peer1.meshReplicator.createExtension());
+  connection2.teleport.addExtension('automerge', peer2.meshReplicator.createExtension());
 };

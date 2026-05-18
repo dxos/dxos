@@ -23,11 +23,14 @@ import {
   Repo,
   type StorageAdapterInterface,
   type StorageKey,
+  type SubductionPeerBinding,
+  type SubductionPeerId,
   type SubductionPolicy,
   interpretAsDocumentId,
   initSubduction,
 } from '@automerge/automerge-repo';
-import { type MemorySigner } from '@automerge/automerge-subduction';
+import { type MemorySigner, type SedimentreeId } from '@automerge/automerge-subduction';
+import bs58check from 'bs58check';
 
 import { DeferredTask, Event, asyncTimeout } from '@dxos/async';
 import { Context, type Lifecycle, Resource, cancelWithContext } from '@dxos/context';
@@ -203,6 +206,14 @@ export class AutomergeHost extends Resource {
   private _signer: MemorySigner | undefined = undefined;
   private readonly _useSubduction: boolean;
 
+  /**
+   * Maps subduction-level Ed25519 PeerId (hex) → automerge-repo PeerId for connected adapter
+   * peers, populated from `Repo`'s `subduction-peer-bound` event (upstream automerge/automerge-repo#635).
+   * Used by `_subductionPolicy` to translate from subduction identity (as seen by policy hooks)
+   * to the repo identity that `_echoNetworkAdapter.shouldAdvertise` is keyed by.
+   */
+  private readonly _subductionPeerIdHexToRepoPeerId = new Map<string, PeerId>();
+
   constructor({
     db,
     dataMonitor,
@@ -230,9 +241,10 @@ export class AutomergeHost extends Resource {
     });
     this._echoNetworkAdapter.documentRequested.on(({ peerId, documentId }) => {
       defaultMap(this._documentsRequested, peerId, () => new Set()).add(documentId);
-      if (!this._useSubduction) {
-        this._sharePolicyChangedTask!.schedule();
-      }
+      // `shareConfigChanged()` is the documented recovery hatch for both classical sync
+      // (sharePolicy reconsideration) and subduction (`authorizeFetch` denied entries
+      // retried). Fire in both modes.
+      this._sharePolicyChangedTask!.schedule();
     });
     this._headsStore = new HeadsStore({ db: db.sublevel('heads') });
     this._peerIdProvider = peerIdProvider;
@@ -279,6 +291,15 @@ export class AutomergeHost extends Resource {
             role: 'connect',
           },
         ],
+      });
+
+      // Capture subduction-PeerId ↔ repo-PeerId binding. Adapter-source bindings
+      // carry both; websocket-source bindings have no repoPeerId and are unused here
+      // (DXOS does not configure `subductionWebsocketEndpoints`).
+      Event.wrap<SubductionPeerBinding>(this._repo as any, 'subduction-peer-bound').on(this._ctx, (binding) => {
+        if ('repoPeerId' in binding) {
+          this._subductionPeerIdHexToRepoPeerId.set(binding.subductionPeerId.toString(), binding.repoPeerId);
+        }
       });
     } else {
       // Classical automerge-repo wiring: the EchoNetworkAdapter is registered as a
@@ -414,11 +435,15 @@ export class AutomergeHost extends Resource {
     if (opts?.fetchFromNetwork !== false) {
       // Network branch: announce that we want the doc, then fall through
       // to `whenReady()` and wait for any source (storage or network) to
-      // deliver it.
+      // deliver it. `_documentsToRequest` is the classical-sync outbound-announce
+      // optimization (see `_shareConfig.announce`); subduction has its own
+      // batch-sync fingerprint exchange and doesn't need it. But kicking
+      // `shareConfigChanged()` is useful for both: classical recomputes the
+      // shared-doc set, subduction retries `authorizeFetch`-denied entries.
       if (!this._useSubduction) {
         this._documentsToRequest.add(progress.documentId);
-        this._sharePolicyChangedTask!.schedule();
       }
+      this._sharePolicyChangedTask!.schedule();
     } else {
       // Note: This is a Hack.
       // Storage-only branch. The subduction fork's `DocumentQuery` merged
@@ -479,9 +504,7 @@ export class AutomergeHost extends Resource {
       if (initialValue instanceof Uint8Array) {
         const handle = this._repo.import<T>(initialValue, { docId: opts?.documentId });
         this._createdDocuments.add(handle.documentId);
-        if (!this._useSubduction) {
-          this._sharePolicyChangedTask!.schedule();
-        }
+        this._sharePolicyChangedTask!.schedule();
         return handle;
       }
 
@@ -492,9 +515,7 @@ export class AutomergeHost extends Resource {
       // TODO(dmaretskyi): There's a more efficient way.
       const handle = this._repo.import<T>(save(initialValue as Doc<T>), { docId: opts?.documentId });
       this._createdDocuments.add(handle.documentId);
-      if (!this._useSubduction) {
-        this._sharePolicyChangedTask!.schedule();
-      }
+      this._sharePolicyChangedTask!.schedule();
       return handle;
     } else {
       if (initialValue instanceof Uint8Array) {
@@ -506,9 +527,7 @@ export class AutomergeHost extends Resource {
       }
       const handle = await this._repo.create2<T>(initialValue);
       this._createdDocuments.add(handle.documentId);
-      if (!this._useSubduction) {
-        this._sharePolicyChangedTask!.schedule();
-      }
+      this._sharePolicyChangedTask!.schedule();
       return handle;
     }
   }
@@ -613,13 +632,69 @@ export class AutomergeHost extends Resource {
 
   /**
    * Authorization policy consulted by the Subduction sedimentree protocol.
+   *
+   * Mirrors {@link _shareConfig.announce} (used by the classical sync path): both
+   * outbound serving (`authorizeFetch`) and inbound writes (`authorizePut`) are
+   * gated through the same per-connection `shouldAdvertise` predicate exposed by
+   * `_echoNetworkAdapter`. Subduction policy hooks receive subduction-level
+   * Ed25519 `PeerId`s; we translate to repo `PeerId` via the binding captured
+   * from the `subduction-peer-bound` event.
+   *
+   * NOTE: `authorizePut` recovery limitation — flipping a denial → allow does NOT
+   * recover stuck entries via `shareConfigChanged()` (per `.claude/skills/subduction/SKILL.md`).
+   * Callers that revoke-then-restore authorization must drive a fresh holder
+   * commit on each affected doc.
    */
   private readonly _subductionPolicy: SubductionPolicy = {
-    authorizeConnect: async (_peerId) => {},
-    authorizeFetch: async (_peerId, _sedimentreeId) => {},
-    authorizePut: async (_requestor, _author, _sedimentreeId) => {},
-    filterAuthorizedFetch: async (_peerId, sedimentreeIds) => sedimentreeIds,
+    authorizeConnect: async (_subductionPeerId) => {
+      // No per-peer kill-switch; gating is per-document via the hooks below.
+    },
+    authorizeFetch: async (subductionPeerId, sedimentreeId) => {
+      if (!(await this._shouldShareDocumentWithSubductionPeer(subductionPeerId, sedimentreeId))) {
+        throw new Error('authorizeFetch denied by client share policy');
+      }
+    },
+    authorizePut: async (requestor, _author, sedimentreeId) => {
+      if (!(await this._shouldShareDocumentWithSubductionPeer(requestor, sedimentreeId))) {
+        throw new Error('authorizePut denied by client share policy');
+      }
+    },
+    filterAuthorizedFetch: async (subductionPeerId, sedimentreeIds) => {
+      const allowed: SedimentreeId[] = [];
+      for (const sid of sedimentreeIds) {
+        if (await this._shouldShareDocumentWithSubductionPeer(subductionPeerId, sid)) {
+          allowed.push(sid);
+        }
+      }
+      return allowed;
+    },
   };
+
+  /**
+   * Shared predicate for the subduction policy hooks. Looks up the repo peer id for
+   * the given subduction peer id (populated on handshake via `subduction-peer-bound`),
+   * then delegates to `_echoNetworkAdapter.shouldAdvertise`, which in turn consults
+   * the per-connection `shouldAdvertise` (MeshReplicatorConnection or
+   * EdgeSubductionReplicatorConnection).
+   *
+   * Default-allow when the binding isn't known yet: `acceptTransport` /
+   * `connectTransport` resolves (and emits the binding event) before any sedimentree
+   * sync round runs, so this should only fire in narrow races. A warn log surfaces
+   * the race if it ever happens.
+   */
+  private async _shouldShareDocumentWithSubductionPeer(
+    subductionPeerId: SubductionPeerId,
+    sedimentreeId: SedimentreeId,
+  ): Promise<boolean> {
+    const subductionPeerIdHex = subductionPeerId.toString();
+    const repoPeerId = this._subductionPeerIdHexToRepoPeerId.get(subductionPeerIdHex);
+    if (!repoPeerId) {
+      log.warn('subductionPolicy: no repo-peer binding yet; allowing', { subductionPeerIdHex });
+      return true;
+    }
+    const documentId = sedimentreeIdToDocumentId(sedimentreeId);
+    return this._echoNetworkAdapter.shouldAdvertise(repoPeerId, { documentId });
+  }
 
   private async _beforeSave({ path, batch }: BeforeSaveProps): Promise<void> {
     const handle = this._repo.handles[path[0] as DocumentId];
@@ -932,9 +1007,7 @@ export class AutomergeHost extends Resource {
       this._documentsToSync.add(documentId);
       this._repo.findWithProgress(documentId as DocumentId);
     }
-    if (!this._useSubduction) {
-      this._sharePolicyChangedTask!.schedule();
-    }
+    this._sharePolicyChangedTask!.schedule();
   }
 
   // TODO(mykola): Add retries of batches https://gist.github.com/mykola-vrmchk/fde270259e9209fcbf1331e5abbf12cf
@@ -1119,3 +1192,14 @@ const encodeCollectionState = (state: CollectionState): unknown => {
 const isDocumentUnavailableError = (error: Error): boolean => {
   return error.message.includes('unavailable');
 };
+
+/**
+ * Convert a 32-byte `SedimentreeId` back to its base58check-encoded `DocumentId`.
+ *
+ * The Repo's `toSedimentreeId` (in `@automerge/automerge-repo/src/subduction/helpers.ts`)
+ * zero-pads a 16-byte binary `DocumentId` to 32 bytes; reversing it is just a truncate
+ * and a base58check encode. Keep in lock-step with that helper. Mirrors the equivalent
+ * conversion on the edge in `subduction-automerge-replicator.ts`.
+ */
+const sedimentreeIdToDocumentId = (sedimentreeId: SedimentreeId): DocumentId =>
+  bs58check.encode(sedimentreeId.toBytes().slice(0, 16)) as DocumentId;
