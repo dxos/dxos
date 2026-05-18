@@ -168,13 +168,15 @@ export function DxosLogPlugin(options: DxosLogPluginOptions = {}): Plugin {
             return;
           }
           let body = '';
+          let bodyBytes = 0;
           let oversized = false;
           req.setEncoding('utf8');
           req.on('data', (chunk) => {
             if (oversized) {
               return;
             }
-            if (body.length + chunk.length > MAX_SINK_BODY_BYTES) {
+            bodyBytes += Buffer.byteLength(chunk, 'utf8');
+            if (bodyBytes > MAX_SINK_BODY_BYTES) {
               oversized = true;
               res.statusCode = 413;
               res.end();
@@ -240,16 +242,16 @@ export function DxosLogPlugin(options: DxosLogPluginOptions = {}): Plugin {
     plugin.transform = {
       order: 'pre' as const,
       filter: {
-        id: {
-          exclude: excludeId,
-        },
+        // `excludeId` is intentionally NOT applied at the hook level: worker entries from
+        // `node_modules` or virtual modules still need the runtime import. The meta-transform
+        // branch re-applies it below to preserve the perf win for non-worker calls.
         moduleType: {
           include: ['js', 'jsx', 'ts', 'tsx'],
         },
       },
       handler(code, id, meta) {
         const isWorkerEntry = WORKER_ENTRY_ID_RE.test(id);
-        const doMetaTransform = metaOptions !== undefined;
+        const doMetaTransform = metaOptions !== undefined && !excludeId.test(id);
         // Worker injection only matters when the dev sink is reachable (serve mode + log enabled).
         const doWorkerInject = isWorkerEntry && isServe && log?.enabled === true;
         if (!doMetaTransform && !doWorkerInject) {
