@@ -535,12 +535,16 @@ describe('AutomergeRepo with Subduction', () => {
         await connectAdapters([adapters]);
 
         // Get a doc onto both sides so each peer has a running entry.
+        // Wait for `'ready'` (NOT `FIND_STATES` which permits `'loading'`)
+        // so repoB has actually replicated the doc before the next mutation
+        // — otherwise the symmetric in-flight push state this test relies on
+        // is not reliably set up.
         const handle = repoA.create<{ text?: string }>();
         handle.change((doc: any) => {
           doc.text = 'initial';
         });
         await waitForSubductionSave();
-        await findInStates(repoB, handle.url, FIND_STATES);
+        await findInStates(repoB, handle.url, ['ready']);
 
         // Pending throttled save at the moment of shutdown — required
         // to put an `addBatch` in flight when both sides hit step 4.
@@ -1500,17 +1504,23 @@ describe('AutomergeRepo with Subduction', () => {
         await connectAdapters(pushAdapters);
         const pushHandle = pushHost.create<{ text?: string }>({ text: 'pushed' });
         await waitForSubductionSave();
+        // Assert the host-side hook fired BEFORE the client issues any
+        // explicit `find` — proves it was the proactive broadcast (not a
+        // later fetch) that consulted `authorizeFetch`.
+        // Empirical: >= 1 (observed 2 locally). Don't pin an exact
+        // count — the bridge may batch or invoke twice per broadcast
+        // (once at connect-time-sync, once per `#save`).
+        expect(pushCounters.authorizeFetch).to.be.greaterThan(0);
         await expect
           .poll(async () => (await pushClient.find<{ text?: string }>(pushHandle.url)).doc()?.text, {
             timeout: 5_000,
           })
           .toEqual('pushed');
-        // Empirical: >= 1 (observed 2 locally). Don't pin an exact
-        // count — the bridge may batch or invoke twice per broadcast
-        // (once at connect-time-sync, once per `#save`).
-        expect(pushCounters.authorizeFetch).to.be.greaterThan(0);
 
-        // Half 2: explicit fetch (doc-before-connect pattern). Hook
+        // Half 2: explicit fetch (doc-before-connect pattern). Pre-issue
+        // the client's fetch BEFORE peers learn about each other so the
+        // eventual `reconnectAdapters` drives an explicit fetch flow
+        // (rather than collapsing into the proactive-push path). Hook
         // still fires; pin > 0.
         const { policy: fetchPolicy, counters: fetchCounters } = createCountingPolicy();
         const { repos: fetchRepos, adapters: fetchAdapters } = await createHostClientRepoTopology({
@@ -1520,12 +1530,9 @@ describe('AutomergeRepo with Subduction', () => {
         await connectAdapters(fetchAdapters, { noEmitPeerCandidate: true });
         const fetchHandle = fetchHost.create<{ text?: string }>({ text: 'fetched' });
         await waitForSubductionSave();
+        const fetchProgress = fetchClient.findWithProgress<{ text?: string }>(fetchHandle.url);
         await reconnectAdapters(fetchAdapters);
-        await expect
-          .poll(async () => (await fetchClient.find<{ text?: string }>(fetchHandle.url)).doc()?.text, {
-            timeout: 10_000,
-          })
-          .toEqual('fetched');
+        await waitForQueryState(fetchProgress, ['ready'], { timeout: 10_000 });
         expect(fetchCounters.authorizeFetch).to.be.greaterThan(0);
       });
 
