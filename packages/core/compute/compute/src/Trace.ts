@@ -99,8 +99,32 @@ export const Meta = Schema.Struct({
    * ID of the tool call that created the current process.
    */
   toolCallId: Schema.optional(Schema.String),
+
+  /**
+   * Extensible name informing which runtime executed the code that produced the event.
+   */
+  runtimeName: Schema.optional(Schema.String),
 });
 export interface Meta extends Schema.Schema.Type<typeof Meta> { }
+
+/**
+ * Extensible name informing which runtime executed the code that produced the event.
+ */
+export const RuntimeName = Schema.String.pipe(Schema.brand('@dxos/compute/Trace/RuntimeName'));
+export type RuntimeName = Schema.Schema.Type<typeof RuntimeName>;
+
+/**
+ * Common runtime names.
+ */
+export const CommonRuntimeName = {
+  webApp: RuntimeName.make('browser'),
+  cli: RuntimeName.make('cli'),
+  desktopApp: RuntimeName.make('desktop-app'),
+  mobileApp: RuntimeName.make('mobile-app'),
+  edgeIntrinsic: RuntimeName.make('edge-intrinsic'),
+  edgeWorkerLoader: RuntimeName.make('edge-worker-loader'),
+  edgeWorkerForPlatforms: RuntimeName.make('edge-worker-for-platforms'),
+}
 
 /**
  * Envelope for a set of events.
