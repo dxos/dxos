@@ -451,6 +451,24 @@ export class AutomergeHost extends Resource {
   }
 
   /**
+   * Probe local storage to determine whether the document has any persisted
+   * chunks. Does not request the document from the network and does not
+   * touch the in-memory `Repo`. Returns `true` iff at least one non-empty
+   * chunk exists on disk for the document.
+   *
+   * Intended for query-driven (disk-only) loads that need to know quickly
+   * whether a document is locally available without waiting on network
+   * latency. See `DocumentsSynchronizer.addDocuments` and the `requesting`
+   * transition in `DocHandleProxy`.
+   */
+  async hasDocOnDisk(id: AnyDocumentId): Promise<boolean> {
+    invariant(this.isOpen, 'AutomergeHost is not open');
+    const documentId = interpretAsDocumentId(id);
+    const chunks = await this._storage.loadRange([documentId]);
+    return chunks.some((chunk) => chunk.data != null && chunk.data.length > 0);
+  }
+
+  /**
    * Create new persisted document.
    */
   async createDoc<T>(initialValue?: T | Doc<T> | Uint8Array, opts?: CreateDocOptions): Promise<DocHandle<T>> {
