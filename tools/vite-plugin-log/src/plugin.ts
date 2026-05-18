@@ -19,10 +19,28 @@ import { transform } from './transform.ts';
 /** Virtual module id resolved to the client runtime (uses the app's @dxos/log). */
 export const VITE_PLUGIN_LOG_RUNTIME_ID = '/@dxos-plugin-log/runtime';
 
+/**
+ * Virtual module id for the worker variant of the runtime. Distinct from the page runtime so it
+ * doesn't reference `import.meta.hot` (which would pull in the main-thread HMR client).
+ */
+export const VITE_PLUGIN_LOG_RUNTIME_WORKER_ID = '/@dxos-plugin-log/runtime-worker';
+
+/**
+ * Dev server endpoint that accepts POSTed NDJSON log chunks. Used by the runtime in contexts
+ * without HMR (notably dedicated workers). Must mirror `SINK_URL` in `runtime.ts`.
+ */
+export const VITE_PLUGIN_LOG_SINK_PATH = '/@dxos-plugin-log/sink';
+
 /** Standalone Rolldown meta plugin id (see {@link rolldownLogMetaPlugin}). */
 export const ROLLDOWN_LOG_META_PLUGIN_NAME = 'dxos:rolldown-log-meta';
 
 const PLUGIN_NAME = 'dxos:vite-plugin-log';
+
+/**
+ * Matches Vite's worker entry ids. `?worker_file` is appended to the inner entry of `new Worker(new URL(...))`
+ * and `import './w?worker'`; `?sharedworker_file` covers the shared-worker variant.
+ */
+const WORKER_ENTRY_ID_RE = /[?&](?:worker_file|sharedworker_file)(?:[&=]|$)/;
 
 // The literal `\0` matches the null-byte prefix Rollup/Vite use for virtual module IDs
 // (e.g. `\0commonjsHelpers.js`). The lint rule rejects control chars in regexes by default,
@@ -94,7 +112,15 @@ export function DxosLogPlugin(options: DxosLogPluginOptions = {}): Plugin {
   const tr = resolveTransform(options);
 
   const logFilename = log?.filename ?? 'app.log';
-  const runtimeAbsPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'runtime.js');
+  // Prefer the compiled artifact (`dist/.../runtime.js`); fall back to `runtime.ts` so the plugin
+  // works when imported directly from `src/` (e.g. by the example app or local dev).
+  const runtimeDir = path.dirname(fileURLToPath(import.meta.url));
+  const resolveRuntime = (baseName: string): string => {
+    const jsPath = path.join(runtimeDir, `${baseName}.js`);
+    return fs.existsSync(jsPath) ? jsPath : path.join(runtimeDir, `${baseName}.ts`);
+  };
+  const runtimeAbsPath = resolveRuntime('runtime');
+  const runtimeWorkerAbsPath = resolveRuntime('runtime-worker');
 
   const plugin: Plugin & RolldownPlugin = {
     name: PLUGIN_NAME,
@@ -124,6 +150,9 @@ export function DxosLogPlugin(options: DxosLogPluginOptions = {}): Plugin {
         if (id === VITE_PLUGIN_LOG_RUNTIME_ID) {
           return runtimeAbsPath;
         }
+        if (id === VITE_PLUGIN_LOG_RUNTIME_WORKER_ID) {
+          return runtimeWorkerAbsPath;
+        }
         return undefined;
       },
 
@@ -139,6 +168,15 @@ export function DxosLogPlugin(options: DxosLogPluginOptions = {}): Plugin {
           return;
         }
 
+        const appendChunk = (chunk: string): void => {
+          // Async append so a high-volume sender doesn't block the dev server event loop.
+          fs.appendFile(logPath, chunk, 'utf8', (err) => {
+            if (err) {
+              server.config.logger.error(`[${PLUGIN_NAME}] append failed: ${String(err)}`, { timestamp: true });
+            }
+          });
+        };
+
         server.ws.on('dxos-plugin:log', (data: unknown) => {
           if (data == null || typeof data !== 'object') {
             return;
@@ -147,11 +185,30 @@ export function DxosLogPlugin(options: DxosLogPluginOptions = {}): Plugin {
           if (typeof chunk !== 'string' || chunk.length === 0) {
             return;
           }
-          // Async append so a high-volume HMR doesn't block the websocket event loop.
-          fs.appendFile(logPath, chunk, 'utf8', (err) => {
-            if (err) {
-              server.config.logger.error(`[${PLUGIN_NAME}] append failed: ${String(err)}`, { timestamp: true });
+          appendChunk(chunk);
+        });
+
+        // HTTP sink for contexts that can't use the HMR websocket (dedicated workers).
+        server.middlewares.use(VITE_PLUGIN_LOG_SINK_PATH, (req, res, next) => {
+          if (req.method !== 'POST') {
+            next();
+            return;
+          }
+          let body = '';
+          req.setEncoding('utf8');
+          req.on('data', (chunk) => {
+            body += chunk;
+          });
+          req.on('end', () => {
+            if (body.length > 0) {
+              appendChunk(body);
             }
+            res.statusCode = 204;
+            res.end();
+          });
+          req.on('error', () => {
+            res.statusCode = 400;
+            res.end();
           });
         });
       },
@@ -174,28 +231,53 @@ export function DxosLogPlugin(options: DxosLogPluginOptions = {}): Plugin {
     });
   }
 
-  if (tr) {
-    const metaOptions: LogMetaTransformOptions = {
-      to_transform: tr.spec,
-      filename: tr.filename,
-      excludeId: tr.excludeId,
-    };
+  if (tr || log?.enabled) {
+    const metaOptions: LogMetaTransformOptions | undefined = tr
+      ? {
+          to_transform: tr.spec,
+          filename: tr.filename,
+          excludeId: tr.excludeId,
+        }
+      : undefined;
+    const excludeId = tr?.excludeId ?? LOG_META_EXCLUDE_ID_DEFAULT;
+    let isServe = false;
+
+    Object.assign(plugin, {
+      configResolved(resolved: { command: 'serve' | 'build' }) {
+        isServe = resolved.command === 'serve';
+      },
+    });
+
     plugin.transform = {
       order: 'pre' as const,
       filter: {
         id: {
-          exclude: tr.excludeId ?? LOG_META_EXCLUDE_ID_DEFAULT,
+          exclude: excludeId,
         },
         moduleType: {
           include: ['js', 'jsx', 'ts', 'tsx'],
         },
       },
       handler(code, id, meta) {
+        const isWorkerEntry = WORKER_ENTRY_ID_RE.test(id);
+        const doMetaTransform = metaOptions !== undefined;
+        // Worker injection only matters when the dev sink is reachable (serve mode + log enabled).
+        const doWorkerInject = isWorkerEntry && isServe && log?.enabled === true;
+        if (!doMetaTransform && !doWorkerInject) {
+          return null;
+        }
+
         const ms = meta.magicString ?? new RolldownMagicString(code);
-        const program =
-          meta.ast ??
-          parseSync(id, code, { astType: 'ts', lang: meta.moduleType as 'ts' | 'tsx' | 'js' | 'jsx' | 'dts' }).program;
-        transform(ms, program, metaOptions.filename ?? id, { specs: metaOptions.to_transform });
+        if (doMetaTransform) {
+          const program =
+            meta.ast ??
+            parseSync(id, code, { astType: 'ts', lang: meta.moduleType as 'ts' | 'tsx' | 'js' | 'jsx' | 'dts' })
+              .program;
+          transform(ms, program, metaOptions!.filename ?? id, { specs: metaOptions!.to_transform });
+        }
+        if (doWorkerInject) {
+          ms.prepend(`import ${JSON.stringify(VITE_PLUGIN_LOG_RUNTIME_WORKER_ID)};\n`);
+        }
         return { code: ms.toString() };
       },
     } satisfies RolldownPlugin['transform'] as any;
