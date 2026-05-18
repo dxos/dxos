@@ -323,10 +323,13 @@ export class CoreDatabase {
   ): Promise<ObjectCore | undefined> {
     // Object's own doc was previously determined unavailable on disk by a
     // (system-driven or explicit) `diskOnly` probe. Short-circuit with
-    // `undefined` so query-driven callers don't hang. The mark is cleared
-    // by `_onObjectDocumentLoaded` if the doc later arrives over the
-    // network, which lets a fresh call succeed.
-    if (this._unavailableObjects.has(objectId)) {
+    // `undefined` only for `diskOnly` callers so they don't hang waiting
+    // for a doc that isn't on disk; non-`diskOnly` callers must still be
+    // allowed to wait for the network. The mark is cleared by
+    // `_onObjectDocumentLoaded` if the doc later arrives over the network
+    // (the loader's fire-and-forget continuation will wake any in-flight
+    // wait), which lets a fresh `diskOnly` call succeed too.
+    if (diskOnly && this._unavailableObjects.has(objectId)) {
       return undefined;
     }
     // `load: false` so we don't trigger an implicit (non-`diskOnly`)
@@ -339,7 +342,7 @@ export class CoreDatabase {
     }
 
     const isReady = () => {
-      if (this._unavailableObjects.has(objectId)) {
+      if (diskOnly && this._unavailableObjects.has(objectId)) {
         return true;
       }
       const core = this.getObjectCoreById(objectId, { load: false });
@@ -353,7 +356,7 @@ export class CoreDatabase {
 
     await (timeout ? asyncTimeout(waitForUpdate, timeout) : waitForUpdate);
 
-    if (this._unavailableObjects.has(objectId)) {
+    if (diskOnly && this._unavailableObjects.has(objectId)) {
       return undefined;
     }
     const finalCore = this.getObjectCoreById(objectId, { load: false });
