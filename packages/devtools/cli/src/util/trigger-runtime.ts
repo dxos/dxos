@@ -86,7 +86,7 @@ export const triggerRuntimeLayer = ({
       // Add trigger-specific services on top
       // Note: Tool services use the merged toolkit, matching how ChatProcessor.execute() does it
       return TriggerDispatcher.layer({ timeControl: 'natural', livePollInterval }).pipe(
-        Layer.provide(ProcessManager.layer()),
+        Layer.provide(ProcessManager.layer({ runtimeName: Trace.CommonRuntimeName.local })),
         Layer.provide(ServiceResolver.layerRequirements(Database.Service, OpaqueToolkit.OpaqueToolkitProvider)),
         Layer.provide(Registry.layer),
         Layer.provideMerge(triggerStateStoreLayer),
