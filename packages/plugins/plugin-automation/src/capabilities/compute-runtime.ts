@@ -25,6 +25,7 @@ import {
   OperationHandlerSet,
   OperationRegistry,
   ServiceNotAvailableError,
+  Trace,
 } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { Database, DXN, Feed, Filter, Obj } from '@dxos/echo';
@@ -201,7 +202,7 @@ class ComputeRuntimeProviderImpl extends Resource implements AutomationCapabilit
               }),
             ),
             Layer.provideMerge(ProcessManager.ProcessOperationInvoker.layer),
-            Layer.provideMerge(ProcessManager.layer()),
+            Layer.provideMerge(ProcessManager.layer({ runtimeName: Trace.CommonRuntimeName.local })),
             // TODO(dmaretskyi): Duped in assistant testing layer.
             Layer.provideMerge(
               // TODO(dmaretskyi): Refactor to be able to merge resovler layers, also consider service mesh achitecture.
