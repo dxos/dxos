@@ -225,9 +225,7 @@ describe('buildExecutionGraph (span-tree based)', () => {
     const { commits, branches } = buildExecutionGraph({
       traceMessages: [
         // Agent begin.
-        makeMessage({ pid: 'agent-1' }, [
-          { type: AgentRequestBegin.key, timestamp: 1, data: {} },
-        ]),
+        makeMessage({ pid: 'agent-1' }, [{ type: AgentRequestBegin.key, timestamp: 1, data: {} }]),
         // User message inside the agent.
         makeMessage({ pid: 'agent-1' }, [
           {
@@ -299,9 +297,7 @@ describe('buildExecutionGraph (span-tree based)', () => {
   test('orders sub-spans chronologically under their parent', ({ expect }) => {
     const { commits } = buildExecutionGraph({
       traceMessages: [
-        makeMessage({ pid: 'agent-1' }, [
-          { type: AgentRequestBegin.key, timestamp: 1, data: {} },
-        ]),
+        makeMessage({ pid: 'agent-1' }, [{ type: AgentRequestBegin.key, timestamp: 1, data: {} }]),
         makeMessage({ pid: 'op-1', parentPid: 'agent-1' }, [
           { type: Trace.OperationStart.key, timestamp: 2, data: { key: 'a', name: 'A' } },
           {

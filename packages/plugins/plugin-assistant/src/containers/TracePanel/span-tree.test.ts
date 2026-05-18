@@ -105,18 +105,14 @@ describe('buildSpanTree', () => {
   });
 
   test('non-boundary event without an open span lands on root', ({ expect }) => {
-    const tree = buildSpanTree([
-      makeMessage({ pid: 'orphan-pid' }, [{ type: 'note', timestamp: 1 }]),
-    ]);
+    const tree = buildSpanTree([makeMessage({ pid: 'orphan-pid' }, [{ type: 'note', timestamp: 1 }])]);
     expect(tree.children).toEqual([]);
     expect(tree.events).toHaveLength(1);
     expect(tree.events[0].type).toBe('note');
   });
 
   test('end event without a matching begin attaches to root', ({ expect }) => {
-    const tree = buildSpanTree([
-      makeMessage({ pid: 'op-1' }, [{ ...opEnd('reply', 'Reply'), timestamp: 1 }]),
-    ]);
+    const tree = buildSpanTree([makeMessage({ pid: 'op-1' }, [{ ...opEnd('reply', 'Reply'), timestamp: 1 }])]);
     expect(tree.children).toEqual([]);
     expect(tree.events).toHaveLength(1);
   });
