@@ -24,7 +24,7 @@ export interface TraceWriter {
  * Service that writes events to the trace.
  * Exposed to processes and operations to record events to the trace.
  */
-export class TraceService extends Context.Tag('@dxos/functions/TraceService')<TraceService, TraceWriter>() {}
+export class TraceService extends Context.Tag('@dxos/functions/TraceService')<TraceService, TraceWriter>() { }
 
 /**
  * Writes an event to the trace.
@@ -67,7 +67,7 @@ export const Event = Schema.Struct({
   type: Schema.String,
   data: Schema.Unknown, // Type-specific payload;
 });
-export interface Event extends Schema.Schema.Type<typeof Event> {}
+export interface Event extends Schema.Schema.Type<typeof Event> { }
 
 /**
  * Checks if an event is of a given type.
@@ -100,7 +100,7 @@ export const Meta = Schema.Struct({
    */
   toolCallId: Schema.optional(Schema.String),
 });
-export interface Meta extends Schema.Schema.Type<typeof Meta> {}
+export interface Meta extends Schema.Schema.Type<typeof Meta> { }
 
 /**
  * Envelope for a set of events.
@@ -111,7 +111,7 @@ export const MessageData = Schema.Struct({
   isEphemeral: Schema.Boolean,
   events: Schema.Array(Event),
 });
-export interface MessageData extends Schema.Schema.Type<typeof MessageData> {}
+export interface MessageData extends Schema.Schema.Type<typeof MessageData> { }
 
 export const Message = MessageData.pipe(
   Type.object({
@@ -123,7 +123,28 @@ export const Message = MessageData.pipe(
     hue: 'rose',
   }),
 );
-export interface Message extends Schema.Schema.Type<typeof Message> {}
+export interface Message extends Schema.Schema.Type<typeof Message> { }
+
+/**
+ * Flattened representation of a signle event in a trace message.
+ * Events are stored in batched messages for efficiency, but flat representation is more convenient for consumption.
+ */
+export interface FlatEvent extends Event {
+  readonly meta: Meta;
+  readonly isEphemeral: boolean;
+}
+
+/**
+ * Flattens a trace message into a list of flat events.
+ */
+export const flatten = (message: Message): FlatEvent[] => {
+  return message.events.map((event) => ({
+    ...event,
+    meta: message.meta,
+    isEphemeral: message.isEphemeral,
+  }));
+};
+
 
 /**
  * Sink for complete trace messages.
@@ -137,16 +158,16 @@ export interface Sink {
  * The Process Manager forwards trace messages to it.
  */
 // TODO(dmaretskyi): Consider moving sink to the Process Manager.
-export class TraceSink extends Context.Tag('@dxos/functions/TraceSink')<TraceSink, Sink>() {}
+export class TraceSink extends Context.Tag('@dxos/functions/TraceSink')<TraceSink, Sink>() { }
 
 export const noopWriter: TraceWriter = {
-  write: () => {},
+  write: () => { },
 };
 
 export const writerLayerNoop: Layer.Layer<TraceService> = Layer.succeed(TraceService, noopWriter);
 
 export const layerNoop: Layer.Layer<TraceSink> = Layer.succeed(TraceSink, {
-  write: () => {},
+  write: () => { },
 });
 
 export const layerConsole: Layer.Layer<TraceSink> = Layer.succeed(TraceSink, {
