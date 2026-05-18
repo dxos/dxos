@@ -207,7 +207,7 @@ describe('Trace timeline', () => {
                   "
                   ●     [function] Run Routine
                   ├──●  [user] Research the given topic, or object.
-                  ●──┤  [function] Run Routine - Success
+                  ◆──╯  [function] Run Routine - Success
                   "
                 `);
         },

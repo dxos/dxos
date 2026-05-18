@@ -5,9 +5,7 @@
 import * as Array from 'effect/Array';
 import * as Either from 'effect/Either';
 import { pipe } from 'effect/Function';
-import * as Order from 'effect/Order';
 import * as Pipeable from 'effect/Pipeable';
-import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
@@ -16,6 +14,8 @@ import { Trace } from '@dxos/compute';
 import { AGENT_PROCESS_KEY, Process } from '@dxos/functions-runtime';
 import { LogLevel, log } from '@dxos/log';
 import { type Commit } from '@dxos/react-ui-components';
+
+import { ROOT_SPAN_ID, type Span, buildSpanTree, walkSpanTree } from './span-tree';
 
 /**
  * Branch name for top-level operation invocations.
@@ -35,49 +35,21 @@ const ICONS = {
     icon: 'ph--user--regular',
     level: LogLevel.VERBOSE,
   },
-  assistantMessage: {
-    icon: 'ph--drone--regular',
-    level: LogLevel.VERBOSE,
-  },
   statusMessage: {
     icon: 'ph--info--regular',
     level: LogLevel.VERBOSE,
-  },
-  toolCall: {
-    icon: 'ph--wrench--regular',
-    level: LogLevel.VERBOSE,
-  },
-  toolResult: {
-    icon: 'ph--wrench--regular',
-    level: LogLevel.INFO,
-  },
-  toolResultError: {
-    icon: 'ph--wrench--regular',
-    level: LogLevel.ERROR,
-  },
-  toolResultSuccess: {
-    icon: 'ph--wrench--regular',
-    level: LogLevel.INFO,
-  },
-  runningAgent: {
-    icon: 'ph--spinner-gap--regular',
-    level: LogLevel.INFO,
   },
   operationStart: {
     icon: 'ph--function--regular',
     level: LogLevel.VERBOSE,
   },
-  operationEnd: {
+  operationEndSuccess: {
     icon: 'ph--function--regular',
     level: LogLevel.INFO,
   },
   operationEndError: {
     icon: 'ph--function--regular',
     level: LogLevel.ERROR,
-  },
-  operationEndSuccess: {
-    icon: 'ph--function--regular',
-    level: LogLevel.INFO,
   },
   agentRequestRunning: {
     icon: 'ph--spinner-gap--regular',
@@ -89,26 +61,6 @@ const ICONS = {
   },
 } as const;
 
-const tagPid = (pid: string) => `pid:${pid}`;
-const tagParentPid = (parentPid: string) => `parent-pid:${parentPid}`;
-const tagConversation = (conversationId: string) => `conversation:${conversationId}`;
-const tagOperationBegin = (pid: string) => `operation-begin:${pid}`;
-const tagStartMarker = (pid: string) => `start-marker:${pid}`;
-
-const getTags = (meta: Trace.Meta) => {
-  const tags: string[] = [];
-  if (meta.pid) {
-    tags.push(tagPid(meta.pid));
-  }
-  if (meta.parentPid) {
-    tags.push(tagParentPid(meta.parentPid));
-  }
-  if (meta.conversationId) {
-    tags.push(tagConversation(meta.conversationId));
-  }
-  return tags;
-};
-
 export interface BuildExecutionGraphParams {
   traceMessages: Trace.Message[];
   activeProcesses?: readonly Process.Info[];
@@ -117,6 +69,13 @@ export interface BuildExecutionGraphParams {
 
 /**
  * Builds a Timeline-compatible execution graph from trace messages and active processes.
+ *
+ * The conversion runs in two stages:
+ *   1. `buildSpanTree` converts the flat list of trace messages into a hierarchical
+ *      tree of spans grouped by process id (pid). See `./span-tree.ts`.
+ *   2. `spanTreeToCommits` walks the tree and emits one commit per event, using the
+ *      tree structure to decide which branch each commit belongs to and how to wire parents.
+ *
  * Pure function — no signals or atoms.
  */
 export const buildExecutionGraph = ({
@@ -124,223 +83,272 @@ export const buildExecutionGraph = ({
   activeProcesses = [],
   eventLimit = 500,
 }: BuildExecutionGraphParams): { branches: string[]; commits: Commit[] } => {
-  const builder = new GraphBuilder();
+  const spanTree = buildSpanTree(traceMessages, { eventLimit });
+  const built = spanTreeToCommits(spanTree, activeProcesses);
+  log('trace execution graph', {
+    traceMessages: traceMessages.length,
+    commits: built.commits.length,
+    branches: built.branches.length,
+    activeProcesses: activeProcesses.length,
+  });
+  return built;
+};
 
-  const events = traceMessages
-    .flatMap((message) =>
-      message.events.map((event: Trace.Event, index) => ({
-        ...event,
-        meta: message.meta,
-        id: 'id' in event ? (event as any).id : `${message.id}:${index}`,
-      })),
-    )
-    .slice(-eventLimit);
+/**
+ * Visual representation of a single trace event — icon, log level, message string.
+ * `undefined` indicates that the event should not produce a commit.
+ */
+interface EventPresentation {
+  icon: string;
+  level: LogLevel;
+  message: string;
+  idSuffix?: string;
+}
 
-  builder.addBranch(MAIN_BRANCH);
-
-  for (const event of events) {
-    if (Trace.isOfType(AgentRequestBegin, event)) {
-      const result = Schema.validateEither(AgentRequestBegin.schema)(event.data);
-      if (Either.isLeft(result)) {
-        log('invalid trace event', {
-          error: result.left,
-        });
-        continue;
-      }
-
-      builder.addCommit({
-        id: event.id,
-        branch: event.meta.parentPid ?? MAIN_BRANCH,
-        parents: builder.computeParents(
-          CommitSelector.branch(event.meta.parentPid ?? MAIN_BRANCH).pipe(
-            CommitSelector.compose(CommitSelector.last()),
-          ),
-        ),
-        tags: [...getTags(event.meta), event.meta.pid && tagStartMarker(event.meta.pid)].filter(
-          Predicate.isNotNullable,
-        ),
-        timestamp: new Date(event.timestamp),
-        icon: ICONS.agentRequestBegin.icon,
-        level: ICONS.agentRequestBegin.level,
-        message: 'Agent processing request...',
-      });
-    } else if (Trace.isOfType(AgentRequestEnd, event)) {
-      const result = Schema.validateEither(AgentRequestEnd.schema)(event.data);
-      if (Either.isLeft(result)) {
-        log('invalid trace event', {
-          error: result.left,
-        });
-        continue;
-      }
-
-      builder.addCommit({
-        id: event.id,
-        branch: event.meta.parentPid ?? MAIN_BRANCH,
-        parents: builder.computeParents(
-          CommitSelector.unionAll(
-            CommitSelector.branch(event.meta.parentPid ?? MAIN_BRANCH).pipe(
-              CommitSelector.orElse(CommitSelector.tag(event.meta.pid && tagPid(event.meta.pid))),
-              CommitSelector.compose(CommitSelector.last()),
-            ),
-            CommitSelector.tag(event.meta.pid && tagPid(event.meta.pid)).pipe(
-              CommitSelector.compose(CommitSelector.last()),
-            ),
-          ),
-        ),
-        tags: getTags(event.meta),
-        timestamp: new Date(event.timestamp),
-        icon: ICONS.agentRequestEnd.icon,
-        level: ICONS.agentRequestEnd.level,
-        message: 'Agent completed request',
-      });
-    } else if (Trace.isOfType(CompleteBlock, event)) {
-      const result = Schema.validateEither(CompleteBlock.schema)(event.data);
-      if (Either.isLeft(result)) {
-        log('invalid trace event', {
-          error: result.left,
-        });
-        continue;
-      }
-
-      switch (event.data.block._tag) {
-        case 'text': {
-          if (event.data.role === 'user') {
-            builder.addCommit({
-              id: event.id,
-              branch: event.meta.pid ?? MAIN_BRANCH,
-              parents: builder.computeParents(
-                CommitSelector.branch(event.meta.pid ?? MAIN_BRANCH).pipe(
-                  CommitSelector.compose(CommitSelector.last()),
-                  CommitSelector.orElse(
-                    CommitSelector.tag(event.meta.pid && tagStartMarker(event.meta.pid)).pipe(
-                      CommitSelector.compose(CommitSelector.last()),
-                    ),
-                  ),
-                ),
-              ),
-              tags: getTags(event.meta),
-              timestamp: new Date(event.timestamp),
+const presentEvent = (event: Trace.FlatEvent): EventPresentation | undefined => {
+  if (Trace.isOfType(AgentRequestBegin, event)) {
+    if (Either.isLeft(Schema.validateEither(AgentRequestBegin.schema)(event.data))) {
+      log('invalid trace event', { type: event.type });
+      return undefined;
+    }
+    return {
+      icon: ICONS.agentRequestBegin.icon,
+      level: ICONS.agentRequestBegin.level,
+      message: 'Agent processing request...',
+    };
+  }
+  if (Trace.isOfType(AgentRequestEnd, event)) {
+    if (Either.isLeft(Schema.validateEither(AgentRequestEnd.schema)(event.data))) {
+      log('invalid trace event', { type: event.type });
+      return undefined;
+    }
+    return {
+      icon: ICONS.agentRequestEnd.icon,
+      level: ICONS.agentRequestEnd.level,
+      message: 'Agent completed request',
+    };
+  }
+  if (Trace.isOfType(CompleteBlock, event)) {
+    if (Either.isLeft(Schema.validateEither(CompleteBlock.schema)(event.data))) {
+      log('invalid trace event', { type: event.type });
+      return undefined;
+    }
+    switch (event.data.block._tag) {
+      case 'text':
+        return event.data.role === 'user'
+          ? {
               icon: ICONS.userMessage.icon,
               level: ICONS.userMessage.level,
               message: trimText(event.data.block.text),
-            });
-          }
-          break;
-        }
-        case 'status': {
-          builder.addCommit({
-            id: event.id,
-            branch: event.meta.pid ?? MAIN_BRANCH,
-            parents: builder.computeParents(
-              CommitSelector.branch(event.meta.pid ?? MAIN_BRANCH).pipe(
-                CommitSelector.compose(CommitSelector.last()),
-                CommitSelector.orElse(
-                  CommitSelector.tag(event.meta.pid && tagPid(event.meta.pid)).pipe(
-                    CommitSelector.compose(CommitSelector.last()),
-                  ),
-                ),
-              ),
-            ),
-            tags: getTags(event.meta),
-            timestamp: new Date(event.timestamp),
-            icon: ICONS.statusMessage.icon,
-            level: ICONS.statusMessage.level,
-            message: trimText(event.data.block.statusText),
-          });
-          break;
-        }
-      }
-    } else if (Trace.isOfType(Trace.OperationStart, event)) {
-      const result = Schema.validateEither(Trace.OperationStart.schema)(event.data);
-      if (Either.isLeft(result)) {
-        log('invalid trace event', {
-          error: result.left,
-        });
-        continue;
-      }
+            }
+          : undefined;
+      case 'status':
+        return {
+          icon: ICONS.statusMessage.icon,
+          level: ICONS.statusMessage.level,
+          message: trimText(event.data.block.statusText),
+        };
+      default:
+        return undefined;
+    }
+  }
+  if (Trace.isOfType(Trace.OperationStart, event)) {
+    if (Either.isLeft(Schema.validateEither(Trace.OperationStart.schema)(event.data))) {
+      log('invalid trace event', { type: event.type });
+      return undefined;
+    }
+    return {
+      icon: ICONS.operationStart.icon,
+      level: ICONS.operationStart.level,
+      message: event.data.name ?? event.data.key,
+      idSuffix: `${event.data.key}:start`,
+    };
+  }
+  if (Trace.isOfType(Trace.OperationEnd, event)) {
+    if (Either.isLeft(Schema.validateEither(Trace.OperationEnd.schema)(event.data))) {
+      log('invalid trace event', { type: event.type });
+      return undefined;
+    }
+    const success = event.data.outcome === 'success';
+    return {
+      icon: success ? ICONS.operationEndSuccess.icon : ICONS.operationEndError.icon,
+      level: success ? ICONS.operationEndSuccess.level : ICONS.operationEndError.level,
+      message: `${event.data.name ?? event.data.key} - ${success ? 'Success' : 'Error'}`,
+      idSuffix: `${event.data.key}:end`,
+    };
+  }
+  return undefined;
+};
 
-      builder.addCommit({
-        id: `${event.id}:${event.data.key}:start`,
-        branch: event.meta.parentPid ?? MAIN_BRANCH,
-        parents: builder.computeParents(
-          CommitSelector.branch(event.meta.parentPid ?? MAIN_BRANCH).pipe(
-            CommitSelector.andAlso(CommitSelector.tag(event.meta.parentPid && tagStartMarker(event.meta.parentPid))),
-            CommitSelector.compose(CommitSelector.orderByTimestamp()),
-            CommitSelector.compose(CommitSelector.last()),
-            CommitSelector.orElse(CommitSelector.branch(event.meta.parentPid)),
-            CommitSelector.compose(CommitSelector.last()),
+/**
+ * A span is "collapsible" when it would otherwise render as an empty fork-and-merge:
+ * exactly two events (its own begin and end), no child sub-spans, and a real parent span
+ * to fold into. In that case we emit a single commit for the end event on the parent branch.
+ *
+ * Top-level spans (parent is the synthetic root) are not collapsed: the existing UI shows
+ * both their start and end commits on the main branch.
+ */
+const isCollapsibleSpan = (span: Span, parent: Span | null): boolean => {
+  if (span.id === ROOT_SPAN_ID) {
+    return false;
+  }
+  if (span.events.length !== 2) {
+    return false;
+  }
+  if (span.children.length > 0) {
+    return false;
+  }
+  return parent !== null && parent.id !== ROOT_SPAN_ID;
+};
+
+/**
+ * Converts a span tree into a flat list of commits + branches suitable for `Timeline` rendering.
+ *
+ * For every span the algorithm:
+ *  - emits the **first** event as a "begin" commit on the parent span's branch (fork);
+ *  - emits **middle** events as commits on the span's own branch;
+ *  - emits the **last** event as an "end" commit on the parent span's branch with two parents
+ *    (the begin commit and the last commit on the span's own branch — a merge).
+ *
+ * Collapsible spans (`isCollapsibleSpan`) emit only the end commit on the parent branch with
+ * a single parent — a tidier rendering for sub-operations that have no inner detail.
+ *
+ * Events are processed in global chronological order so that sub-operations of a span interleave
+ * naturally with the span's own middle events.
+ */
+const spanTreeToCommits = (
+  root: Span,
+  activeProcesses: readonly Process.Info[],
+): { branches: string[]; commits: Commit[] } => {
+  const builder = new GraphBuilder();
+  builder.addBranch(MAIN_BRANCH);
+
+  // Build a child → parent lookup using the tree's own structure (already correctly parented
+  // when the tree was constructed, including sequential spans of the same process).
+  const parentBySpan = new Map<Span, Span | null>();
+  parentBySpan.set(root, null);
+  const indexParents = (span: Span): void => {
+    for (const child of span.children) {
+      parentBySpan.set(child, span);
+      indexParents(child);
+    }
+  };
+  indexParents(root);
+
+  const findParentSpan = (span: Span): Span | null => parentBySpan.get(span) ?? null;
+
+  // The branch name for a span is its pid — multiple sequential spans of the same process
+  // (e.g. successive agent requests in one session) share a branch so they reuse a single lane.
+  const branchOf = (span: Span | null): string => {
+    if (!span || span.id === ROOT_SPAN_ID) {
+      return MAIN_BRANCH;
+    }
+    return span.meta.pid ?? span.id;
+  };
+
+  // Flatten the tree into a chronological stream, recording each event's position within its span
+  // so we can detect begin/end events.
+  interface EventCursor {
+    span: Span;
+    event: Trace.FlatEvent;
+    eventIndex: number;
+    globalIndex: number;
+  }
+  const stream: EventCursor[] = [];
+  walkSpanTree(root, (span) => {
+    span.events.forEach((event, eventIndex) => {
+      stream.push({ span, event, eventIndex, globalIndex: stream.length });
+    });
+  });
+  stream.sort((a, b) => a.event.timestamp - b.event.timestamp || a.globalIndex - b.globalIndex);
+
+  // Track the id of the begin commit for each non-collapsible span so the end commit can merge into it.
+  const beginCommitIdBySpan = new Map<string, string>();
+
+  for (const { span, event, eventIndex, globalIndex } of stream) {
+    const presentation = presentEvent(event);
+    if (!presentation) {
+      continue;
+    }
+
+    const isFirst = eventIndex === 0;
+    const isLast = eventIndex === span.events.length - 1;
+    const parentSpan = findParentSpan(span);
+    const collapsible = isCollapsibleSpan(span, parentSpan);
+
+    // Collapsed spans: skip the begin event entirely; only the end event renders.
+    if (collapsible && isFirst) {
+      continue;
+    }
+
+    const parentBranch = branchOf(parentSpan);
+    const ownBranch = branchOf(span);
+
+    let branch: string;
+    let parents: string[];
+
+    if (span.id === ROOT_SPAN_ID) {
+      // Root-level events (no pid) attach sequentially to main.
+      branch = MAIN_BRANCH;
+      parents = builder.computeParents(
+        CommitSelector.branch(MAIN_BRANCH).pipe(CommitSelector.compose(CommitSelector.last())),
+      );
+    } else if (collapsible) {
+      // Only the end event reaches here for collapsible spans.
+      branch = parentBranch;
+      parents = builder.computeParents(
+        CommitSelector.branch(parentBranch).pipe(CommitSelector.compose(CommitSelector.last())),
+      );
+    } else if (isFirst) {
+      // Begin commit: fork off the parent branch.
+      branch = parentBranch;
+      parents = builder.computeParents(
+        CommitSelector.branch(parentBranch).pipe(CommitSelector.compose(CommitSelector.last())),
+      );
+    } else if (isLast) {
+      // End commit: merge from the span's own branch back into the parent branch.
+      branch = parentBranch;
+      const beginId = beginCommitIdBySpan.get(span.id);
+      parents = builder.computeParents(
+        CommitSelector.unionAll(
+          beginId
+            ? CommitSelector.id(beginId)
+            : CommitSelector.branch(parentBranch).pipe(CommitSelector.compose(CommitSelector.last())),
+          CommitSelector.branch(ownBranch).pipe(CommitSelector.compose(CommitSelector.last())),
+        ),
+      );
+    } else {
+      // Middle event: continue the span's own branch.
+      branch = ownBranch;
+      parents = builder.computeParents(
+        CommitSelector.branch(ownBranch).pipe(
+          CommitSelector.compose(CommitSelector.last()),
+          CommitSelector.orElse(
+            CommitSelector.branch(parentBranch).pipe(CommitSelector.compose(CommitSelector.last())),
           ),
         ),
-        tags: [
-          ...getTags(event.meta),
-          tagOperationBegin(`${event.meta.pid ?? 'unknown'}:${event.data.key}`),
-          event.meta.pid && tagStartMarker(event.meta.pid),
-        ].filter(Predicate.isNotNullable),
-        timestamp: new Date(event.timestamp),
-        icon: ICONS.operationStart.icon,
-        level: ICONS.operationStart.level,
-        message: event.data.name ?? event.data.key,
-      });
-    } else if (Trace.isOfType(Trace.OperationEnd, event)) {
-      const result = Schema.validateEither(Trace.OperationEnd.schema)(event.data);
-      if (Either.isLeft(result)) {
-        log('invalid trace event', {
-          error: result.left,
-        });
-        continue;
-      }
+      );
+    }
 
-      const children = builder.findCommits(
-        CommitSelector.anyTags([
-          event.meta.pid && tagPid(event.meta.pid),
-          event.meta.pid && tagParentPid(event.meta.pid),
-        ]),
-      );
-      builder.addCommit(
-        {
-          id: `${event.id}:${event.data.key}:end`,
-          branch: event.meta.parentPid ?? MAIN_BRANCH,
-          parents: builder.computeParents(
-            CommitSelector.branch(event.meta.parentPid ?? MAIN_BRANCH).pipe(
-              CommitSelector.compose(
-                CommitSelector.not(
-                  CommitSelector.tag(tagOperationBegin(`${event.meta.pid ?? 'unknown'}:${event.data.key}`)),
-                ),
-              ),
-              CommitSelector.orElse(CommitSelector.tag(event.meta.parentPid && tagStartMarker(event.meta.parentPid))),
-              CommitSelector.compose(CommitSelector.last()),
-              CommitSelector.andAlso(
-                CommitSelector.anyTags([
-                  event.meta.pid && tagPid(event.meta.pid),
-                  event.meta.pid && tagParentPid(event.meta.pid),
-                ]).pipe(
-                  CommitSelector.compose(
-                    CommitSelector.not(
-                      CommitSelector.tag(tagOperationBegin(`${event.meta.pid ?? 'unknown'}:${event.data.key}`)),
-                    ),
-                  ),
-                  CommitSelector.compose(CommitSelector.last()),
-                ),
-              ),
-            ),
-          ),
-          tags: getTags(event.meta),
-          timestamp: new Date(event.timestamp),
-          icon: event.data.outcome === 'success' ? ICONS.operationEndSuccess.icon : ICONS.operationEndError.icon,
-          level: event.data.outcome === 'success' ? ICONS.operationEndSuccess.level : ICONS.operationEndError.level,
-          message: `${event.data.name ?? event.data.key} - ${event.data.outcome === 'success' ? 'Success' : 'Error'}`,
-        },
-        {
-          replace:
-            // TODO(dmaretskyi): Deduping events in subbranches brekas graph.
-            !event.meta.parentPid || children.length > 1 // 1 is the operation begin commit.
-              ? undefined
-              : CommitSelector.tag(tagOperationBegin(`${event.meta.pid ?? 'unknown'}:${event.data.key}`)),
-        },
-      );
+    const commitId = formatCommitId(span, globalIndex, presentation.idSuffix);
+    const commit: Commit = {
+      id: commitId,
+      branch,
+      parents,
+      timestamp: new Date(event.timestamp),
+      icon: presentation.icon,
+      level: presentation.level,
+      message: presentation.message,
+    };
+    builder.addCommit(commit);
+
+    // Record begin commit so the end can merge into it.
+    if (isFirst && !collapsible && span.id !== ROOT_SPAN_ID) {
+      beginCommitIdBySpan.set(span.id, commitId);
     }
   }
 
+  // Append "running" indicators for processes that are still active.
   for (const process of activeProcesses) {
     if (
       process.key === AGENT_PROCESS_KEY &&
@@ -373,16 +381,15 @@ export const buildExecutionGraph = ({
     }
   }
 
-  const built = builder.build();
-  log('trace execution graph', {
-    traceMessages: traceMessages.length,
-    flatEvents: events.length,
-    commits: built.commits.length,
-    branches: built.branches.length,
-    activeProcesses: activeProcesses.length,
-  });
-  return built;
+  return builder.build();
 };
+
+const formatCommitId = (span: Span, globalIndex: number, suffix?: string): string => {
+  const base = `${span.id}:${globalIndex}`;
+  return suffix ? `${base}:${suffix}` : base;
+};
+
+const trimText = (text: string) => text.slice(0, 100).trim().split('\n')[0];
 
 type Falsy = false | null | undefined;
 
@@ -521,9 +528,6 @@ export const CommitSelector = {
       }
       return [];
     }),
-
-  orderByTimestamp: (): CommitSelector =>
-    CommitSelector.make(Array.sortWith((a) => a.timestamp?.getTime() ?? 0, Order.number)),
 };
 
 class GraphBuilder {
@@ -538,48 +542,9 @@ class GraphBuilder {
     return this.#branches.has(branch);
   }
 
-  addCommit(
-    commit: Commit,
-    opts?: {
-      ifMissing?: CommitSelector;
-      /**
-       * Replace in-place the last commit that matches the selector.
-       */
-      replace?: CommitSelector;
-    },
-  ) {
-    if (opts?.ifMissing) {
-      if (this.findCommits(opts.ifMissing).length > 0) {
-        return;
-      }
-    }
+  addCommit(commit: Commit) {
     this.addBranch(commit.branch);
-    if (opts?.replace) {
-      const matches = this.findCommits(opts.replace);
-      if (matches.length > 0) {
-        const replaced = matches.at(-1)!;
-        this.#commits.splice(this.#commits.indexOf(replaced), 1);
-        // Update parents to point to the new commit.
-        for (const existingCommit of this.#commits) {
-          if (existingCommit.parents) {
-            for (let i = 0; i < existingCommit.parents.length; i++) {
-              if (existingCommit.parents[i] === replaced.id) {
-                existingCommit.parents[i] = commit.id;
-              }
-            }
-          }
-        }
-        this.#commits.push(commit);
-        return;
-      }
-    }
     this.#commits.push(commit);
-  }
-
-  removeCommit(selector: CommitSelector) {
-    for (const commit of this.findCommits(selector)) {
-      this.#commits.splice(this.#commits.indexOf(commit), 1);
-    }
   }
 
   /**
@@ -617,5 +582,3 @@ class GraphBuilder {
     };
   }
 }
-
-const trimText = (text: string) => text.slice(0, 100).trim().split('\n')[0];

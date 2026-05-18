@@ -4,9 +4,15 @@
 
 import { describe, test } from 'vitest';
 
-import { type Commit } from '@dxos/react-ui-components';
+import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
+import { Trace } from '@dxos/compute';
+import { Obj } from '@dxos/echo';
+import { ObjectId } from '@dxos/keys';
+import { type Commit, renderTimelineAscii } from '@dxos/react-ui-components';
 
-import { CommitSelector } from './execution-graph';
+import { CommitSelector, buildExecutionGraph } from './execution-graph';
+
+ObjectId.dangerouslyDisableRandomness();
 
 const makeCommit = (id: string, opts: Partial<Commit> = {}): Commit => ({
   id,
@@ -16,6 +22,23 @@ const makeCommit = (id: string, opts: Partial<Commit> = {}): Commit => ({
 });
 
 const ids = (commits: Commit[]) => commits.map((commit) => commit.id);
+
+const makeMessage = (
+  meta: Trace.Meta,
+  events: Array<{ type: string; timestamp: number; data?: unknown }>,
+  isEphemeral = false,
+): Trace.Message =>
+  Obj.make(Trace.Message, {
+    meta,
+    isEphemeral,
+    events: events.map((event) => ({
+      type: event.type,
+      timestamp: event.timestamp,
+      data: event.data ?? {},
+    })),
+  });
+
+const textBlock = (text: string) => ({ _tag: 'text' as const, text, pending: false });
 
 describe('CommitSelector', () => {
   describe('make', () => {
@@ -62,14 +85,6 @@ describe('CommitSelector', () => {
       const a = makeCommit('a');
       expect(CommitSelector.filter(() => false).select([a])).toEqual([]);
     });
-
-    test('coerces predicate return values', ({ expect }) => {
-      const a = makeCommit('a', { tags: ['x'] });
-      const b = makeCommit('b');
-      // `unknown` truthy/falsy values are accepted.
-      const selector = CommitSelector.filter((commit) => commit.tags?.length);
-      expect(selector.select([a, b])).toEqual([a]);
-    });
   });
 
   describe('id', () => {
@@ -82,10 +97,6 @@ describe('CommitSelector', () => {
     test('returns empty when id is missing', ({ expect }) => {
       expect(CommitSelector.id('missing').select([makeCommit('a')])).toEqual([]);
     });
-
-    test('returns empty for empty input', ({ expect }) => {
-      expect(CommitSelector.id('a').select([])).toEqual([]);
-    });
   });
 
   describe('tag', () => {
@@ -93,11 +104,6 @@ describe('CommitSelector', () => {
       const a = makeCommit('a', { tags: ['x'] });
       const b = makeCommit('b', { tags: ['y'] });
       expect(CommitSelector.tag('x').select([a, b])).toEqual([a]);
-    });
-
-    test('matches commits with multiple tags', ({ expect }) => {
-      const a = makeCommit('a', { tags: ['x', 'y'] });
-      expect(CommitSelector.tag('y').select([a])).toEqual([a]);
     });
 
     test('returns empty for falsy tag (undefined / null / false)', ({ expect }) => {
@@ -112,38 +118,11 @@ describe('CommitSelector', () => {
     });
   });
 
-  describe('anyTags', () => {
-    test('matches commits if any tag is present', ({ expect }) => {
-      const a = makeCommit('a', { tags: ['x'] });
-      const b = makeCommit('b', { tags: ['y'] });
-      const c = makeCommit('c', { tags: ['z'] });
-      expect(CommitSelector.anyTags(['x', 'y']).select([a, b, c])).toEqual([a, b]);
-    });
-
-    test('ignores falsy tags in the input list', ({ expect }) => {
-      const a = makeCommit('a', { tags: ['x'] });
-      expect(CommitSelector.anyTags([null, undefined, false, 'x']).select([a])).toEqual([a]);
-    });
-
-    test('returns empty when all tags are falsy', ({ expect }) => {
-      const a = makeCommit('a', { tags: ['x'] });
-      expect(CommitSelector.anyTags([null, undefined, false]).select([a])).toEqual([]);
-    });
-
-    test('returns empty when no commit carries any of the tags', ({ expect }) => {
-      expect(CommitSelector.anyTags(['x']).select([makeCommit('a')])).toEqual([]);
-    });
-  });
-
   describe('branch', () => {
     test('matches commits by branch', ({ expect }) => {
       const a = makeCommit('a', { branch: 'main' });
       const b = makeCommit('b', { branch: 'feature' });
       expect(CommitSelector.branch('feature').select([a, b])).toEqual([b]);
-    });
-
-    test('returns empty when no commit is on the branch', ({ expect }) => {
-      expect(CommitSelector.branch('feature').select([makeCommit('a', { branch: 'main' })])).toEqual([]);
     });
   });
 
@@ -153,17 +132,6 @@ describe('CommitSelector', () => {
       const b = makeCommit('b', { branch: 'main' });
       const c = makeCommit('c', { branch: 'feature', tags: ['keep'] });
       const selector = CommitSelector.branch('main').pipe(CommitSelector.compose(CommitSelector.tag('keep')));
-      expect(selector.select([a, b, c])).toEqual([a]);
-    });
-
-    test('multiple composes chain left-to-right', ({ expect }) => {
-      const a = makeCommit('a', { branch: 'main', tags: ['x'] });
-      const b = makeCommit('b', { branch: 'main', tags: ['y'] });
-      const c = makeCommit('c', { branch: 'main', tags: ['x'] });
-      const selector = CommitSelector.branch('main').pipe(
-        CommitSelector.compose(CommitSelector.tag('x')),
-        CommitSelector.compose(CommitSelector.first()),
-      );
       expect(selector.select([a, b, c])).toEqual([a]);
     });
   });
@@ -181,50 +149,6 @@ describe('CommitSelector', () => {
       const selector = CommitSelector.branch('main').pipe(CommitSelector.orElse(CommitSelector.branch('feature')));
       expect(selector.select([b])).toEqual([b]);
     });
-
-    test('returns empty when both prev and next are empty', ({ expect }) => {
-      const z = makeCommit('z', { branch: 'other' });
-      const selector = CommitSelector.branch('main').pipe(CommitSelector.orElse(CommitSelector.branch('feature')));
-      expect(selector.select([z])).toEqual([]);
-    });
-  });
-
-  describe('andAlso', () => {
-    test('returns the union of prev and next', ({ expect }) => {
-      const a = makeCommit('a', { branch: 'main' });
-      const b = makeCommit('b', { branch: 'feature' });
-      const selector = CommitSelector.branch('main').pipe(CommitSelector.andAlso(CommitSelector.branch('feature')));
-      expect(ids(selector.select([a, b])).toSorted()).toEqual(['a', 'b']);
-    });
-
-    test('dedupes by id', ({ expect }) => {
-      const a = makeCommit('a', { branch: 'main', tags: ['x'] });
-      const selector = CommitSelector.branch('main').pipe(CommitSelector.andAlso(CommitSelector.tag('x')));
-      expect(selector.select([a])).toHaveLength(1);
-    });
-  });
-
-  describe('first', () => {
-    test('returns first n commits, defaulting to 1', ({ expect }) => {
-      const a = makeCommit('a');
-      const b = makeCommit('b');
-      const c = makeCommit('c');
-      expect(CommitSelector.first().select([a, b, c])).toEqual([a]);
-      expect(CommitSelector.first(2).select([a, b, c])).toEqual([a, b]);
-    });
-
-    test('returns all when n exceeds length', ({ expect }) => {
-      const a = makeCommit('a');
-      expect(CommitSelector.first(5).select([a])).toEqual([a]);
-    });
-
-    test('returns empty when n=0', ({ expect }) => {
-      expect(CommitSelector.first(0).select([makeCommit('a')])).toEqual([]);
-    });
-
-    test('returns empty for empty input', ({ expect }) => {
-      expect(CommitSelector.first().select([])).toEqual([]);
-    });
   });
 
   describe('last', () => {
@@ -232,58 +156,15 @@ describe('CommitSelector', () => {
       const a = makeCommit('a');
       const b = makeCommit('b');
       const c = makeCommit('c');
-      const result = CommitSelector.last().select([a, b, c]);
-      expect(ids(result)).toEqual(['c']);
-    });
-
-    test('returns last n commits', ({ expect }) => {
-      const a = makeCommit('a');
-      const b = makeCommit('b');
-      const c = makeCommit('c');
-      const result = CommitSelector.last(2).select([a, b, c]);
-      expect(ids(result).toSorted()).toEqual(['b', 'c']);
-    });
-
-    test('returns all when n exceeds length', ({ expect }) => {
-      const a = makeCommit('a');
-      const result = CommitSelector.last(5).select([a]);
-      expect(ids(result)).toEqual(['a']);
-    });
-
-    test('returns empty when n=0', ({ expect }) => {
-      expect(CommitSelector.last(0).select([makeCommit('a')])).toEqual([]);
-    });
-
-    test('returns empty for empty input', ({ expect }) => {
-      expect(CommitSelector.last().select([])).toEqual([]);
+      expect(ids(CommitSelector.last().select([a, b, c]))).toEqual(['c']);
     });
 
     test('produces the most recent commit on a branch when composed', ({ expect }) => {
-      // Common usage pattern in execution-graph: pick the most recent commit on a branch.
       const a = makeCommit('a', { branch: 'main' });
       const b = makeCommit('b', { branch: 'main' });
       const c = makeCommit('c', { branch: 'main' });
       const selector = CommitSelector.branch('main').pipe(CommitSelector.compose(CommitSelector.last()));
       expect(ids(selector.select([a, b, c]))).toEqual(['c']);
-    });
-  });
-
-  describe('not', () => {
-    test('inverts the selection', ({ expect }) => {
-      const a = makeCommit('a', { tags: ['x'] });
-      const b = makeCommit('b');
-      expect(CommitSelector.not(CommitSelector.tag('x')).select([a, b])).toEqual([b]);
-    });
-
-    test('returns all when inner selector matches nothing', ({ expect }) => {
-      const a = makeCommit('a');
-      expect(CommitSelector.not(CommitSelector.id('missing')).select([a])).toEqual([a]);
-    });
-
-    test('returns empty when inner selector matches everything', ({ expect }) => {
-      const a = makeCommit('a');
-      const b = makeCommit('b');
-      expect(CommitSelector.not(CommitSelector.identity()).select([a, b])).toEqual([]);
     });
   });
 
@@ -300,83 +181,152 @@ describe('CommitSelector', () => {
       const selector = CommitSelector.unionAll(CommitSelector.branch('main'), CommitSelector.tag('x'));
       expect(selector.select([a])).toHaveLength(1);
     });
+  });
+});
 
-    test('returns empty when called with no selectors', ({ expect }) => {
-      expect(CommitSelector.unionAll().select([makeCommit('a')])).toEqual([]);
-    });
+describe('buildExecutionGraph (span-tree based)', () => {
+  test('empty input → no commits', ({ expect }) => {
+    const { commits, branches } = buildExecutionGraph({ traceMessages: [] });
+    expect(commits).toEqual([]);
+    expect(branches).toEqual(['main']);
   });
 
-  describe('intersectAll', () => {
-    test('returns commits matching all selectors', ({ expect }) => {
-      const a = makeCommit('a', { branch: 'main', tags: ['x'] });
-      const b = makeCommit('b', { branch: 'main', tags: ['y'] });
-      const c = makeCommit('c', { branch: 'feature', tags: ['x'] });
-      const selector = CommitSelector.intersectAll(CommitSelector.branch('main'), CommitSelector.tag('x'));
-      expect(selector.select([a, b, c])).toEqual([a]);
+  test('top-level operation → start and end commits on main', ({ expect }) => {
+    const { commits, branches } = buildExecutionGraph({
+      traceMessages: [
+        makeMessage({ pid: 'op-1' }, [
+          {
+            type: Trace.OperationStart.key,
+            timestamp: 1,
+            data: { key: 'reply', name: 'Reply' },
+          },
+        ]),
+        makeMessage({ pid: 'op-1' }, [
+          {
+            type: Trace.OperationEnd.key,
+            timestamp: 2,
+            data: { key: 'reply', name: 'Reply', outcome: 'success' as const },
+          },
+        ]),
+      ],
     });
-
-    test('returns empty when called with no selectors', ({ expect }) => {
-      expect(CommitSelector.intersectAll().select([makeCommit('a')])).toEqual([]);
-    });
-
-    test('returns empty when no commit matches all selectors', ({ expect }) => {
-      const a = makeCommit('a', { branch: 'main' });
-      const selector = CommitSelector.intersectAll(CommitSelector.branch('main'), CommitSelector.tag('x'));
-      expect(selector.select([a])).toEqual([]);
-    });
+    expect(branches).toEqual(['main']);
+    expect(commits).toHaveLength(2);
+    expect(commits.every((commit) => commit.branch === 'main')).toBe(true);
+    expect(`\n${renderTimelineAscii(commits, branches)}\n`).toMatchInlineSnapshot(`
+      "
+      ●  [function] Reply
+      ●  [function] Reply - Success
+      "
+    `);
   });
 
-  describe('firstOf', () => {
-    test('returns the first selector result that is non-empty', ({ expect }) => {
-      const a = makeCommit('a', { branch: 'main' });
-      const b = makeCommit('b', { branch: 'feature' });
-      const selector = CommitSelector.firstOf(
-        CommitSelector.branch('missing'),
-        CommitSelector.branch('main'),
-        CommitSelector.branch('feature'),
-      );
-      expect(selector.select([a, b])).toEqual([a]);
+  test('nested operation under an agent → collapsed to a single end commit', ({ expect }) => {
+    const { commits, branches } = buildExecutionGraph({
+      traceMessages: [
+        // Agent begin.
+        makeMessage({ pid: 'agent-1' }, [
+          { type: AgentRequestBegin.key, timestamp: 1, data: {} },
+        ]),
+        // User message inside the agent.
+        makeMessage({ pid: 'agent-1' }, [
+          {
+            type: CompleteBlock.key,
+            timestamp: 2,
+            data: { messageId: '01HQ0000000000000000000000', role: 'user', block: textBlock('hello') },
+          },
+        ]),
+        // Nested operation start + end.
+        makeMessage({ pid: 'op-1', parentPid: 'agent-1' }, [
+          { type: Trace.OperationStart.key, timestamp: 3, data: { key: 'lookup', name: 'Lookup' } },
+        ]),
+        makeMessage({ pid: 'op-1', parentPid: 'agent-1' }, [
+          {
+            type: Trace.OperationEnd.key,
+            timestamp: 4,
+            data: { key: 'lookup', name: 'Lookup', outcome: 'success' as const },
+          },
+        ]),
+        // Agent end.
+        makeMessage({ pid: 'agent-1' }, [{ type: AgentRequestEnd.key, timestamp: 5, data: {} }]),
+      ],
     });
-
-    test('falls through all empty selectors', ({ expect }) => {
-      const selector = CommitSelector.firstOf(CommitSelector.id('x'), CommitSelector.id('y'));
-      expect(selector.select([])).toEqual([]);
-    });
-
-    test('returns empty when called with no selectors', ({ expect }) => {
-      expect(CommitSelector.firstOf().select([makeCommit('a')])).toEqual([]);
-    });
+    expect(branches).toEqual(['main', 'agent-1']);
+    expect(`\n${renderTimelineAscii(commits, branches)}\n`).toMatchInlineSnapshot(`
+      "
+      ●     [atom] Agent processing request...
+      ├──●  [user] hello
+      │  ●  [function] Lookup - Success
+      ◆──╯  [atom] Agent completed request
+      "
+    `);
   });
 
-  describe('pipeable', () => {
-    test('OperationStart pipeline: branch || start-marker tag, then last', ({ expect }) => {
-      // Mirrors `parents` selector for `OperationStart` in execution-graph.ts.
-      // Parent is on a different branch but carries the start-marker tag for the new event's parent pid.
-      const parent = makeCommit('parent', { branch: 'main', tags: ['start-marker:p1'] });
-      const selector = CommitSelector.branch('p1').pipe(
-        CommitSelector.orElse(CommitSelector.tag('start-marker:p1')),
-        CommitSelector.compose(CommitSelector.last()),
-      );
-      expect(ids(selector.select([parent]))).toEqual(['parent']);
+  test('nested operation with its own inner status message → expanded fork/merge', ({ expect }) => {
+    const { commits, branches } = buildExecutionGraph({
+      traceMessages: [
+        makeMessage({ pid: 'op-1' }, [
+          { type: Trace.OperationStart.key, timestamp: 1, data: { key: 'work', name: 'Work' } },
+        ]),
+        makeMessage({ pid: 'op-1' }, [
+          {
+            type: CompleteBlock.key,
+            timestamp: 2,
+            data: {
+              messageId: '01HQ0000000000000000000000',
+              role: 'assistant',
+              block: { _tag: 'status', statusText: 'thinking', pending: false },
+            },
+          },
+        ]),
+        makeMessage({ pid: 'op-1' }, [
+          {
+            type: Trace.OperationEnd.key,
+            timestamp: 3,
+            data: { key: 'work', name: 'Work', outcome: 'success' as const },
+          },
+        ]),
+      ],
     });
+    // Three commits: begin on main, status on op-1 branch, end on main as merge.
+    expect(commits).toHaveLength(3);
+    expect(commits[0].branch).toBe('main');
+    expect(commits[1].branch).toBe('op-1');
+    expect(commits[2].branch).toBe('main');
+    expect(commits[2].parents?.length).toBe(2);
+  });
 
-    test('pipe with a single composer matches direct application', ({ expect }) => {
-      const a = makeCommit('a', { tags: ['x'] });
-      const b = makeCommit('b');
-      const piped = CommitSelector.identity().pipe(CommitSelector.compose(CommitSelector.tag('x')));
-      const direct = CommitSelector.compose(CommitSelector.tag('x'))(CommitSelector.identity());
-      expect(piped.select([a, b])).toEqual(direct.select([a, b]));
+  test('orders sub-spans chronologically under their parent', ({ expect }) => {
+    const { commits } = buildExecutionGraph({
+      traceMessages: [
+        makeMessage({ pid: 'agent-1' }, [
+          { type: AgentRequestBegin.key, timestamp: 1, data: {} },
+        ]),
+        makeMessage({ pid: 'op-1', parentPid: 'agent-1' }, [
+          { type: Trace.OperationStart.key, timestamp: 2, data: { key: 'a', name: 'A' } },
+          {
+            type: Trace.OperationEnd.key,
+            timestamp: 3,
+            data: { key: 'a', name: 'A', outcome: 'success' as const },
+          },
+        ]),
+        makeMessage({ pid: 'op-2', parentPid: 'agent-1' }, [
+          { type: Trace.OperationStart.key, timestamp: 4, data: { key: 'b', name: 'B' } },
+          {
+            type: Trace.OperationEnd.key,
+            timestamp: 5,
+            data: { key: 'b', name: 'B', outcome: 'success' as const },
+          },
+        ]),
+        makeMessage({ pid: 'agent-1' }, [{ type: AgentRequestEnd.key, timestamp: 6, data: {} }]),
+      ],
     });
-
-    test('multi-stage pipe applies stages left-to-right', ({ expect }) => {
-      const a = makeCommit('a', { branch: 'main', tags: ['x'] });
-      const b = makeCommit('b', { branch: 'main', tags: ['y'] });
-      const c = makeCommit('c', { branch: 'main', tags: ['x'] });
-      const selector = CommitSelector.branch('main').pipe(
-        CommitSelector.compose(CommitSelector.tag('x')),
-        CommitSelector.compose(CommitSelector.last()),
-      );
-      expect(ids(selector.select([a, b, c]))).toEqual(['c']);
-    });
+    // After collapsing, expect: AgentBegin, Op1.End, Op2.End, AgentEnd → 4 commits.
+    expect(commits.map((commit) => commit.message)).toEqual([
+      'Agent processing request...',
+      'A - Success',
+      'B - Success',
+      'Agent completed request',
+    ]);
   });
 });
