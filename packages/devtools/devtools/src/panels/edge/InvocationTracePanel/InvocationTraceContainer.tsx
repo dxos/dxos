@@ -169,6 +169,7 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
       [],
     );
 
+    // TODO(burdon): Use Panel.Root
     return (
       <div {...composableProps(props, { classNames: ['h-full', classNames] })} ref={forwardedRef}>
         <PanelContainer

@@ -14,7 +14,7 @@ import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps } from '@dxos/react-ui-form';
 
 import { FileInput } from '#components';
-import { FileContainer } from '#containers';
+import { FileArticle } from '#containers';
 import { WnfsAction, WnfsFile } from '#types';
 
 export default Capability.makeModule(() =>
@@ -28,7 +28,7 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Section, WnfsFile.WnfsFile),
           AppSurface.object(AppSurface.Slide, WnfsFile.WnfsFile),
         ),
-        component: ({ data, role }) => <FileContainer role={role} subject={data.subject} />,
+        component: ({ data, role }) => <FileArticle role={role} subject={data.subject} />,
       }),
       Surface.create({
         id: 'create-form',

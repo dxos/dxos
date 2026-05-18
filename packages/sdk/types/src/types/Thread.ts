@@ -17,6 +17,9 @@ export const ThreadStatus = Schema.Union(
   Schema.Literal('resolved'),
 );
 
+/**
+ * ECHO-backed message thread.
+ */
 export const Thread = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   status: ThreadStatus.pipe(Schema.optional),
@@ -26,7 +29,6 @@ export const Thread = Schema.Struct({
     typename: 'org.dxos.type.thread',
     version: '0.1.0',
   }),
-  // TODO(wittjosiah): Remove.
   SystemTypeAnnotation.set(true),
 );
 

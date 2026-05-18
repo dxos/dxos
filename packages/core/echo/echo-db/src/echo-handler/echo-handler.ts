@@ -1159,7 +1159,8 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
   }
 };
 
-const metaNotEmpty = (meta: ObjectMeta) => meta.keys.length > 0 || (meta.tags && meta.tags.length > 0);
+const metaNotEmpty = (meta: ObjectMeta) =>
+  meta.keys.length > 0 || (meta.tags && meta.tags.length > 0) || meta.key !== undefined || meta.version !== undefined;
 
 /**
  * @internal

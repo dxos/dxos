@@ -21,7 +21,7 @@ import { AssistantSettings } from '#components';
 import {
   BlueprintArticle,
   ChatCompanion,
-  ChatContainer,
+  ChatArticle,
   ChatDialog,
   AgentArticle,
   AgentProperties,
@@ -53,7 +53,7 @@ export default Capability.makeModule(() =>
           Obj.instanceOf(Chat.Chat, data.subject) &&
           data.variant !== ASSISTANT_COMPANION_VARIANT,
         component: ({ data, role, ref }) => {
-          return <ChatContainer role={role} subject={data.subject} attendableId={data.attendableId} ref={ref} />;
+          return <ChatArticle role={role} subject={data.subject} attendableId={data.attendableId} ref={ref} />;
         },
       }),
       Surface.create({

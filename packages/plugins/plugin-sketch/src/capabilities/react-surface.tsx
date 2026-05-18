@@ -10,7 +10,7 @@ import { Surface, useAtomCapability, useSettingsState } from '@dxos/app-framewor
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { SketchSettings } from '#components';
-import { SketchContainer } from '#containers';
+import { SketchArticle } from '#containers';
 import { meta } from '#meta';
 import { Sketch, SketchCapabilities, type Settings } from '#types';
 
@@ -25,7 +25,7 @@ export default Capability.makeModule(() =>
           typeof data.attendableId === 'string' && Sketch.isSketch(data.subject, Sketch.TLDRAW_SCHEMA),
         component: ({ data: { subject, attendableId }, role }) => {
           const settings = useAtomCapability(SketchCapabilities.Settings);
-          return <SketchContainer role={role} attendableId={attendableId} subject={subject} settings={settings} />;
+          return <SketchArticle role={role} attendableId={attendableId} subject={subject} settings={settings} />;
         },
       }),
       Surface.create({

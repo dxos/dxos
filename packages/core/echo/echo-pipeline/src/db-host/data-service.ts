@@ -135,6 +135,16 @@ export class DataServiceImpl implements DataService {
     await this._updateIndexes();
   }
 
+  /**
+   * Test affordance: pause/resume flushing of document updates on every
+   * active subscription. See `DocumentsSynchronizer.setSendUpdatesPaused`.
+   */
+  setAllSubscriptionsSendUpdatesPaused(paused: boolean): void {
+    for (const synchronizer of this._subscriptions.values()) {
+      synchronizer.setSendUpdatesPaused(paused);
+    }
+  }
+
   subscribeSpaceSyncState(request: GetSpaceSyncStateRequest): Stream<SpaceSyncState> {
     return new Stream<SpaceSyncState>(({ ctx, next, ready }) => {
       const spaceId = request.spaceId;

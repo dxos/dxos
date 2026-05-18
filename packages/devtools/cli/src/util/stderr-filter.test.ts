@@ -18,6 +18,18 @@ const WARNING_FIXTURE = `Action \`Finding properties for a space\` is taking mor
     at processTicksAndRejections (native)
 `;
 
+/**
+ * Node's TimeoutNegativeWarning fired by automerge-repo's throttle helper
+ * when it computes a negative setTimeout delay. Two non-indented header
+ * lines followed by an indented stack trace.
+ */
+const TIMEOUT_NEGATIVE_FIXTURE = `TimeoutNegativeWarning: -37 is a negative number.
+Timeout duration was set to 1.
+      at throttled (/abs/path/.../automerge-repo/dist/helpers/throttle.js:36:19)
+      at emit (/abs/path/.../eventemitter3/index.js:202:33)
+      at #emitChanges (/abs/path/.../automerge-repo/dist/DocHandle.js:50:18)
+`;
+
 describe('decideStderrChunk', () => {
   test('drops the warning prefix line', ({ expect }) => {
     const r = decideStderrChunk(
@@ -82,5 +94,20 @@ describe('filterStderrBuffer', () => {
     const buffer = 'normal log\nanother normal log\n';
     const out = filterStderrBuffer(buffer);
     expect(out).toBe(buffer);
+  });
+
+  test('strips a TimeoutNegativeWarning + its continuation + stack', ({ expect }) => {
+    const out = filterStderrBuffer(TIMEOUT_NEGATIVE_FIXTURE);
+    expect(out).toBe('');
+  });
+
+  test('preserves surrounding stderr around a TimeoutNegativeWarning', ({ expect }) => {
+    const buffer = `before\n${TIMEOUT_NEGATIVE_FIXTURE}after\n`;
+    const out = filterStderrBuffer(buffer);
+    expect(out).toContain('before\n');
+    expect(out).toContain('after\n');
+    expect(out).not.toContain('TimeoutNegativeWarning');
+    expect(out).not.toContain('Timeout duration was set to');
+    expect(out).not.toContain('throttled');
   });
 });

@@ -20,7 +20,13 @@ import { Stream } from '@dxos/codec-protobuf/stream';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { type Database, Ref } from '@dxos/echo';
-import { type DatabaseDirectory, EncodedReference, type ObjectStructure, type SpaceState } from '@dxos/echo-protocol';
+import {
+  type DatabaseDirectory,
+  EncodedReference,
+  type ObjectMeta,
+  type ObjectStructure,
+  type SpaceState,
+} from '@dxos/echo-protocol';
 import { batchEvents } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { type ObjectId } from '@dxos/keys';
@@ -39,6 +45,7 @@ import {
   AutomergeDocumentLoaderImpl,
   type DocumentChanges,
   type ObjectDocumentLoaded,
+  type ObjectUnavailable,
 } from './automerge-doc-loader';
 import { ObjectCore } from './object-core';
 import { getInlineAndLinkChanges } from './util';
@@ -92,6 +99,15 @@ export class CoreDatabase {
    * When we load an object that doesn't have it's strong deps resolved, we wait for the deps to be loaded first.
    */
   private readonly _strongDepsIndex = new Map<string, ObjectId[]>();
+
+  /**
+   * Object ids whose backing document was determined to be not on local disk
+   * via a `diskOnly` load probe. Used by `loadObjectCoreById` to bail out
+   * of the wait without resolving when the doc would otherwise require
+   * network delivery — turning previously infinite stalls into a fast
+   * `undefined` return.
+   */
+  private readonly _unavailableObjects = new Set<ObjectId>();
 
   readonly _updateEvent = new Event<ItemsUpdatedEvent>();
 
@@ -170,6 +186,7 @@ export class CoreDatabase {
     await this._repoProxy.open();
     this._ctx.onDispose(() => this._unsubscribeFromHandles());
     this._automergeDocLoader.onObjectDocumentLoaded.on(this._ctx, this._onObjectDocumentLoaded.bind(this));
+    this._automergeDocLoader.onObjectUnavailable.on(this._ctx, this._onObjectUnavailable.bind(this));
 
     try {
       await this._automergeDocLoader.loadSpaceRootDocHandle(ctx, spaceState);
@@ -288,8 +305,10 @@ export class CoreDatabase {
     }
 
     const objCore = this._objects.get(id);
-    if (load && !objCore) {
-      this._automergeDocLoader.loadObjectDocument(id);
+    if (!objCore) {
+      if (load) {
+        this._automergeDocLoader.loadObjectDocument(id);
+      }
       return undefined;
     }
 
@@ -300,22 +319,75 @@ export class CoreDatabase {
   // TODO(Mykola): Reconcile with `getObjectById`.
   async loadObjectCoreById(
     objectId: string,
-    { timeout, returnWithUnsatisfiedDeps }: LoadObjectOptions = {},
+    { timeout, returnWithUnsatisfiedDeps, diskOnly }: LoadObjectOptions = {},
   ): Promise<ObjectCore | undefined> {
-    const core = this.getObjectCoreById(objectId);
-    if (core && (returnWithUnsatisfiedDeps || this._areDepsSatisfied(core))) {
+    // Object's own doc was previously determined unavailable on disk by a
+    // (system-driven or explicit) `diskOnly` probe. Short-circuit with
+    // `undefined` only for `diskOnly` callers so they don't hang waiting
+    // for a doc that isn't on disk; non-`diskOnly` callers must still be
+    // allowed to wait for the network. The mark is cleared by
+    // `_onObjectDocumentLoaded` if the doc later arrives over the network
+    // (the loader's fire-and-forget continuation will wake any in-flight
+    // wait), which lets a fresh `diskOnly` call succeed too.
+    if (diskOnly && this._unavailableObjects.has(objectId)) {
+      return undefined;
+    }
+    // `load: false` so we don't trigger an implicit (non-`diskOnly`)
+    // load via `getObjectCoreById`'s default behavior; the explicit
+    // `loadObjectDocument(..., { diskOnly })` below carries the
+    // caller's preference end-to-end.
+    const cachedCore = this.getObjectCoreById(objectId, { load: false });
+    if (cachedCore && this._isCoreResolved(cachedCore, returnWithUnsatisfiedDeps)) {
+      return this._coreOrUndefined(cachedCore, returnWithUnsatisfiedDeps);
+    }
+
+    const isReady = () => {
+      if (diskOnly && this._unavailableObjects.has(objectId)) {
+        return true;
+      }
+      const core = this.getObjectCoreById(objectId, { load: false });
+      return core != null && this._isCoreResolved(core, returnWithUnsatisfiedDeps);
+    };
+
+    const waitForUpdate = this._updateEvent.waitFor(
+      (event) => event.itemsUpdated.some(({ id }) => id === objectId) && isReady(),
+    );
+    this._automergeDocLoader.loadObjectDocument(objectId, { diskOnly });
+
+    await (timeout ? asyncTimeout(waitForUpdate, timeout) : waitForUpdate);
+
+    if (diskOnly && this._unavailableObjects.has(objectId)) {
+      return undefined;
+    }
+    const finalCore = this.getObjectCoreById(objectId, { load: false });
+    if (!finalCore) {
+      return undefined;
+    }
+    return this._coreOrUndefined(finalCore, returnWithUnsatisfiedDeps);
+  }
+
+  /**
+   * A core is "resolved" for the purposes of `loadObjectCoreById` when its
+   * deps are either fully satisfied OR every unsatisfied dep is known
+   * unavailable. Either way, there is no further progress to wait for.
+   */
+  private _isCoreResolved(core: ObjectCore, returnWithUnsatisfiedDeps?: boolean): boolean {
+    if (returnWithUnsatisfiedDeps || this._areDepsSatisfied(core)) {
+      return true;
+    }
+    return this._areDepsResolved(core);
+  }
+
+  /**
+   * Apply the `returnWithUnsatisfiedDeps` contract: by default callers
+   * only receive a core when all strong deps loaded; otherwise return
+   * `undefined`. With the flag set, return the core regardless.
+   */
+  private _coreOrUndefined(core: ObjectCore, returnWithUnsatisfiedDeps?: boolean): ObjectCore | undefined {
+    if (returnWithUnsatisfiedDeps || this._areDepsSatisfied(core)) {
       return core;
     }
-    const isReady = () => {
-      const core = this.getObjectCoreById(objectId);
-      return core ? returnWithUnsatisfiedDeps || this._areDepsSatisfied(core) : false;
-    };
-    const waitForUpdate = this._updateEvent
-      .waitFor((event) => event.itemsUpdated.some(({ id }) => id === objectId) && isReady())
-      .then(() => this.getObjectCoreById(objectId));
-    this._automergeDocLoader.loadObjectDocument(objectId);
-
-    return timeout ? asyncTimeout(waitForUpdate, timeout) : waitForUpdate;
+    return undefined;
   }
 
   async batchLoadObjectCores(
@@ -504,7 +576,7 @@ export class CoreDatabase {
    * Any concurrent changes made by other peers will be overwritten.
    */
   async atomicReplaceObject(id: ObjectId, params: AtomicReplaceObjectProps): Promise<void> {
-    const { data, type } = params;
+    const { data, type, meta } = params;
 
     const core = await this.loadObjectCoreById(id);
     invariant(core);
@@ -528,6 +600,10 @@ export class CoreDatabase {
 
     if (type !== undefined) {
       newStruct.system!.type = EncodedReference.fromDXN(type);
+    }
+
+    if (meta !== undefined) {
+      newStruct.meta = { ...existingStruct.meta, ...meta };
     }
 
     core.setDecoded([], newStruct);
@@ -816,20 +892,33 @@ export class CoreDatabase {
   private _onObjectDocumentLoaded({ handle, objectId }: ObjectDocumentLoaded): void {
     handle.on('change', this._onDocumentUpdate);
 
+    // The dep was previously marked unavailable but its bytes have now
+    // arrived (e.g. a peer eventually delivered them); clear the mark so
+    // any new `loadObjectCoreById` waiters for this object — or for its
+    // dependents — see a fresh resolution.
+    if (this._unavailableObjects.delete(objectId)) {
+      this._scheduleThrottledUpdate([objectId, ...(this._strongDepsIndex.get(objectId) ?? [])]);
+    }
+
     // Skip objects that were already materialized locally.
     if (this._objects.has(objectId)) {
-      log.verbose('object already exists, skipping creation', { objectId });
       return;
     }
 
     const core = this._createObjectInDocument(handle, objectId);
-    if (this._areDepsSatisfied(core)) {
+    const depsSatisfied = this._areDepsSatisfied(core);
+    if (depsSatisfied) {
       this._scheduleThrottledUpdate([objectId]);
     } else {
+      // Recursive strong-dep loads always use `diskOnly: true`. Deps are
+      // a system-internal hydration step, not a user-driven request: we
+      // surface a clear "unavailable" signal instead of blocking on the
+      // network. Callers that explicitly want network-backed dep loading
+      // can issue per-dep requests themselves.
       for (const dep of core.getStrongDependencies()) {
         if (dep.isLocalObjectId()) {
           const id = dep.parts[1];
-          this._automergeDocLoader.loadObjectDocument(id);
+          this._automergeDocLoader.loadObjectDocument(id, { diskOnly: true });
         }
       }
     }
@@ -912,6 +1001,61 @@ export class CoreDatabase {
       }
       return this._areDepsSatisfied(depCore, seen);
     });
+  }
+
+  /**
+   * Returns true when every strong dep is either loaded (== `_areDepsSatisfied`)
+   * OR has been determined unavailable on disk. Used by `loadObjectCoreById`
+   * so it can resolve (with `undefined`) instead of waiting forever when a
+   * recursive dep doc is unreachable. Recursive strong-dep loads always
+   * use `diskOnly: true`, so deps surface as unavailable promptly even for
+   * non-`diskOnly` top-level callers.
+   */
+  private _areDepsResolved(core: ObjectCore, seen?: Set<ObjectId>): boolean {
+    seen ??= new Set<ObjectId>();
+    const deps = core.getStrongDependencies();
+
+    seen.add(core.id);
+    return deps.every((dep) => {
+      if (!dep.isLocalObjectId()) {
+        return true;
+      }
+      const depObjectId = dep.parts[1];
+      if (this._unavailableObjects.has(depObjectId)) {
+        return true;
+      }
+      const depCore = this._objects.get(depObjectId);
+      if (!depCore) {
+        return false;
+      }
+      if (seen.has(depCore.id)) {
+        return true;
+      }
+      return this._areDepsResolved(depCore, seen);
+    });
+  }
+
+  private _onObjectUnavailable({ objectId }: ObjectUnavailable): void {
+    if (this._unavailableObjects.has(objectId)) {
+      return;
+    }
+    this._unavailableObjects.add(objectId);
+    // Walk transitive dependents (`A → B → C`, C unavailable wakes B
+    // and A) so any `loadObjectCoreById` waiter higher up in the chain
+    // re-evaluates `_areDepsResolved` and resolves with `undefined`
+    // instead of hanging. Mirrors the BFS in `_onObjectDocumentLoaded`.
+    const toWake = new Set<ObjectId>([objectId]);
+    const queue: ObjectId[] = [objectId];
+    while (queue.length > 0) {
+      const id = queue.shift()!;
+      for (const dep of this._strongDepsIndex.get(id) ?? []) {
+        if (!toWake.has(dep)) {
+          toWake.add(dep);
+          queue.push(dep);
+        }
+      }
+    }
+    this._scheduleThrottledUpdate([...toWake]);
   }
 
   private _rebindObjects(docHandle: DocHandleProxy<DatabaseDirectory>, objectIds: string[]): void {
@@ -1003,6 +1147,19 @@ export type LoadObjectOptions = {
    * @default false
    */
   allowDeleted?: boolean;
+
+  /**
+   * Resolve as soon as the worker-side disk probe settles instead of
+   * waiting for the network. If the document for the requested object —
+   * or any of its strong dependencies — is not on local storage, the call
+   * returns `undefined` (or, with `returnWithUnsatisfiedDeps: true`, the
+   * partial core) instead of stalling. Recursive strong-dep loads inherit
+   * this preference. Used by query-driven loads where waiting on network
+   * latency would stall the query pipeline.
+   *
+   * @default false
+   */
+  diskOnly?: boolean;
 };
 
 enum CoreDatabaseState {
@@ -1037,6 +1194,12 @@ export type AtomicReplaceObjectProps = {
    * Update object type.
    */
   type?: DXN;
+
+  /**
+   * Optional partial meta patch — merged into the existing object meta.
+   * Fields explicitly set to `undefined` overwrite the previous value with `undefined`.
+   */
+  meta?: Partial<ObjectMeta>;
 };
 
 const RPC_TIMEOUT = 20_000;

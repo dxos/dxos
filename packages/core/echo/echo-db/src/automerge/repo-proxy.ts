@@ -316,14 +316,24 @@ export class RepoProxy extends Resource {
     }
 
     for (const update of updates) {
-      const { documentId, mutation } = update;
+      const { documentId, mutation, requesting } = update;
       const handle = this._handles[documentId];
       if (!handle) {
         log.warn('Received update for unknown document', { documentId });
         continue;
       }
 
-      handle._integrateHostUpdate(mutation);
+      // Disk-probe-negative signal from the worker. Mutually exclusive with
+      // `mutation` in practice — the worker sends a transition-only update
+      // first (`requesting: true`, no bytes) and then a regular mutation
+      // update once the network delivers.
+      if (requesting) {
+        handle._markRequesting();
+      }
+
+      if (mutation) {
+        handle._integrateHostUpdate(mutation);
+      }
     }
   }
 

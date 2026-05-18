@@ -1,0 +1,268 @@
+---
+id: org.dxos.plugin.sequencer
+name: SequencerPlugin
+version: 0.1.0
+---
+
+A music sequencer / step-grid editor for `DXOS` Composer. A `Score` owns a set of
+tracks and per-track `Sequence` objects whose `Note`s are edited on a 2D grid
+(pitch on the y-axis, time on the x-axis). Backed by the canvas-based
+`react-ui-canvas` `CellGrid` component.
+
+## Notes (Phase 2)
+
+- Edit sequences
+- Arrange sequences
+- Sound engine
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+| `component` | `org.dxos.mdl.component@1.0`   |
+
+## Types
+
+```mdl
+type Note
+  desc: |
+    A single note in a sequence. Time fields are in beats relative to the start
+    of the sequence; sub-beat values are valid (e.g. 0.25 = 16th note at 4/4).
+  fields:
+    pitch: int               # MIDI pitch number (0..127); 60 = middle C
+    startTime: number        # in beats from start of the sequence
+    duration: number         # in beats
+    velocity?: number        # 0.0..1.0; defaults to 0.8
+    data?: object            # opaque per-note metadata (added by patches, plugins, etc.)
+```
+
+```mdl
+type Track
+  desc: |
+    Track metadata. A track owns its instrument/patch assignment and visual
+    identity; sequences reference the track they belong to.
+  fields:
+    id: string
+    name: string
+    color?: string           # hex string for UI tinting
+    instrument?: string      # opaque patch identifier (e.g. 'sf2:piano')
+    minPitch?: int           # default scroll range floor; defaults to 36 (C2)
+    maxPitch?: int           # default scroll range ceiling; defaults to 84 (C6)
+    muted?: boolean
+```
+
+```mdl
+type Sequence
+  desc: |
+    An ordered collection of notes associated with a single track. The sequence
+    has a fixed length (in beats); notes outside that range are clipped.
+  fields:
+    trackId: string          # Track.id this sequence belongs to
+    name?: string
+    length: number           # length in beats
+    notes: Note[]
+```
+
+```mdl
+type Score
+  desc: |
+    Top-level container. Owns the track roster and a collection of sequences,
+    plus playback metadata.
+  fields:
+    name?: string
+    tempo: number            # BPM; defaults to 120
+    timeSignature?: string   # e.g. '4/4'
+    tracks: Track[]
+    sequences: Sequence[]
+```
+
+## Components
+
+```mdl
+component SequenceGrid
+  desc: |
+    2D grid editor for a single Sequence. Y-axis = pitch (high pitches on top,
+    matching standard piano-roll convention); x-axis = time in beats.
+    Renders via @dxos/react-ui-canvas CellGrid.
+  props:
+    sequence: Sequence
+    track: Track
+    minPitch?: int           # visible pitch floor; defaults to Track.minPitch
+    maxPitch?: int           # visible pitch ceiling; defaults to Track.maxPitch
+    beatsPerCell?: number    # x-axis resolution; defaults to 0.25 (16th notes)
+    playhead?: number        # current play position in beats, or null
+  slots:
+    toolbar?: ReactNode
+  actions:
+    addNote(note: Note)
+    # Notes are identified by their (pitch, startTime) coordinates — `Note` has
+    # no stable id field, matching the toggle-grid model.
+    removeNote(pitch: int, startTime: number)
+    updateNote(pitch: int, startTime: number, patch: Partial<Note>)
+  emits:
+    onNoteToggle(pitch: int, beat: number, mode: 'set' | 'unset' | 'toggle')
+    onNoteResize(pitch: int, startTime: number, duration: number)
+  layout: |
+    ┌────────┬─────────────────────┐
+    │        │ time ruler (beats)  │
+    ├────────┼─────────────────────┤
+    │ pitch  │                     │
+    │ labels │                     │
+    │ (C5)   │   note cells        │
+    │ (B4)   │                     │
+    │ ...    │                     │
+    └────────┴─────────────────────┘
+```
+
+```mdl
+component TrackList
+  desc: |
+    Vertical list of tracks in a Score with mute/instrument controls and
+    selection state. Selecting a track in the list focuses its sequence(s)
+    in the SequenceGrid pane.
+  props:
+    score: Score
+    selectedTrackId?: string
+  emits:
+    onSelectTrack(trackId: string)
+    onMuteTrack(trackId: string, muted: boolean)
+    onAddTrack()
+    onRemoveTrack(trackId: string)
+```
+
+```mdl
+component ScoreArticle
+  desc: |
+    Top-level article surface for a Score. Composes TrackList on the left with
+    the active Sequence's SequenceGrid on the right.
+  props:
+    score: Score
+  state:
+    selectedTrackId?: string
+    selectedSequenceId?: string
+    playhead?: number        # in beats; null when stopped
+  slots:
+    toolbar?: ReactNode
+  layout: |
+    ┌──────────────────────────────────┐
+    │ [toolbar: tempo, play/stop]      │
+    ├──────────┬───────────────────────┤
+    │          │                       │
+    │ Track    │   SequenceGrid        │
+    │ List     │   (selected)          │
+    │          │                       │
+    └──────────┴───────────────────────┘
+```
+
+## Features
+
+```mdl
+feat F-1: Create Score
+
+  req F-1.1: User can create a new Score from the navtree.
+  req F-1.2: New Score has tempo=120, no tracks, no sequences.
+```
+
+```mdl
+feat F-2: Manage Tracks
+
+  req F-2.1:
+    when: user adds a track
+    then: new Track appended to Score.tracks with a unique id and default name
+
+  req F-2.2:
+    when: user removes a track
+    then: Track removed AND all Sequences referencing trackId are removed
+
+  req F-2.3:
+    when: user mutes a track
+    then: Track.muted toggled; playback skips notes from muted tracks
+```
+
+```mdl
+feat F-3: Edit Sequence Notes
+
+  req F-3.1:
+    when: user clicks an empty cell in SequenceGrid
+    then: new Note added at (pitch, startTime); duration = beatsPerCell
+
+  req F-3.2:
+    when: user clicks a cell containing a note
+    then: that Note removed from the Sequence
+
+  req F-3.3:
+    when: user drags across empty cells in the same row
+    then: Notes are added at each cell along the drag (paint mode)
+
+  req F-3.4:
+    when: SequenceGrid is scrolled or zoomed
+    then: pitch labels (y-axis) and beat ruler (x-axis) stay frozen / visible
+```
+
+```mdl
+feat F-4: Playback
+
+  req F-4.1:
+    when: user presses play
+    then: playhead advances at Score.tempo BPM across the active Sequence
+
+  req F-4.2:
+    when: playhead reaches end of Sequence.length
+    then: playhead loops to 0 (v1: no score-level transport across sequences)
+
+  req F-4.3:
+    when: user presses stop
+    then: playhead returns to null; SequenceGrid removes playhead overlay
+```
+
+```mdl
+feat F-5: Sequence Selection
+
+  req F-5.1:
+    when: user clicks a track in TrackList
+    then: first Sequence for that track is shown in the SequenceGrid; if no
+          Sequence exists for that track, a new empty one is created
+
+  req F-5.2:
+    when: selected track changes
+    then: SequenceGrid re-renders with the new sequence's notes
+```
+
+## Acceptance
+
+```mdl
+test T-1: New Score defaults
+  given: a new Score is created
+  then:
+    - Score.tempo === 120
+    - Score.tracks.length === 0
+    - Score.sequences.length === 0
+```
+
+```mdl
+test T-2: Add and remove note
+  given: a Score with one track and one (empty) Sequence
+  when: user toggles cell (pitch=60, startTime=0)
+  then: Sequence.notes.length === 1 AND Sequence.notes[0].pitch === 60
+  when: user toggles the same cell again
+  then: Sequence.notes.length === 0
+```
+
+```mdl
+test T-3: Remove track cascades sequences
+  given: a Score with a track t1 and 2 sequences referencing t1
+  when: user removes track t1
+  then: Score.tracks does not contain t1 AND no Sequences reference t1
+```
+
+```mdl
+test T-4: Playhead loops
+  given: a playing Score with active Sequence.length = 4 beats
+  when: time advances past 4 beats
+  then: playhead position resets to 0 (mod 4)
+```
