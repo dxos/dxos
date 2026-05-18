@@ -127,6 +127,14 @@ export const CommonRuntimeName = {
 }
 
 /**
+ * Checks if a runtime is an edge runtime.
+ */
+export const isEdgeRuntime = (name: RuntimeName): boolean =>
+  name === CommonRuntimeName.edgeIntrinsic ||
+  name === CommonRuntimeName.edgeWorkerLoader ||
+  name === CommonRuntimeName.edgeWorkerForPlatforms;
+
+/**
  * Envelope for a set of events.
  */
 export const MessageData = Schema.Struct({
