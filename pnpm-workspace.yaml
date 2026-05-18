@@ -209,8 +209,8 @@ catalog:
   '@storybook/react-vite': ^10.4.0
   '@storybook/web-components-vite': ^10.4.0
   '@svgr/cli': ^8.1.0
-  '@swc/core': 1.13.5
-  '@swc/types': ^0.1.25
+  '@swc/core': 1.15.33
+  '@swc/types': ^0.1.26
   '@tailwindcss/forms': ^0.5.9
   '@tailwindcss/oxide': ^4.2.0
   '@tailwindcss/postcss': ^4.2.0
@@ -476,7 +476,7 @@ catalog:
   level-transcoder: ^1.0.1
   lib0: ^0.2.65
   linkedom: ^0.18.5
-  lit: ^3.3.3
+  lit: ^3.3.1
   localforage: ^1.10.0
   lodash.debounce: ^4.0.8
   lodash.defaultsdeep: ^4.6.1
@@ -779,7 +779,7 @@ trustPolicyExclude:
   - rollup@3.30.0
   - mermaid@10.9.4
   - undici-types@6.20.0
-  - '@swc/core@1.13.5'
+  - '@swc/core@1.15.33'
   - semver
   - semver@6.3.1
   - semver@5.7.2
