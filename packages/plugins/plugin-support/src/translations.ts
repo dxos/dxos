@@ -57,6 +57,15 @@ export const translations = [
         // Settings.
         'settings.title': 'Support settings',
         'show-welcome.label': 'Show welcome article on personal space',
+        // Help menu (status-indicator surface; right-rail ? dropdown).
+        'help-menu.label': 'Help & resources',
+        'docs.label': 'Documentation',
+        'contact-us.label': 'Contact us',
+        'shortcuts.label': 'Keyboard shortcuts',
+        'discord.label': 'Discord',
+        'github.label': 'GitHub',
+        'download-apps.label': 'Download apps',
+        'about.label': 'About Composer',
       },
     },
   },

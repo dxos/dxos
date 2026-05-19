@@ -17,8 +17,6 @@ export const translations = [
         'released.message': 'This version was released {{released}}.',
         'see-release.label': 'See release on GitHub',
         'powered-by-dxos.message': 'Powered by <dxos>DXOS</dxos>',
-        'discord.label': 'Discord',
-        'github.label': 'GitHub',
         'feedback.label': 'Feedback',
       },
     },
