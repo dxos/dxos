@@ -53,7 +53,7 @@ export const CreateObjectDialog = ({
 
   const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
   // TODO(wittjosiah): Support database schemas.
-  const schemas = db ? db.graph.registry.listTypes().filter((t) => !(t instanceof Type.RuntimeType)) : undefined;
+  const schemas = db ? db.graph.registry.types.filter((t) => !(t instanceof Type.RuntimeType)) : undefined;
 
   const createObjectEntries = useCapabilities(SpaceCapabilities.CreateObjectEntry);
 

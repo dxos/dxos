@@ -45,12 +45,12 @@ export const useSchema = (
 
     // Set initial value immediately.
     setSchema(
-      () => resolvedDb.graph.registry.listTypes().find((t) => Type.getTypename(t) === resolvedTypename) as T | undefined,
+      () => resolvedDb.graph.registry.types.find((t) => Type.getTypename(t) === resolvedTypename) as T | undefined,
     );
 
     const unsubscribe = resolvedDb.graph.registry.changed.on(() => {
       setSchema(
-        () => resolvedDb.graph.registry.listTypes().find((t) => Type.getTypename(t) === resolvedTypename) as T | undefined,
+        () => resolvedDb.graph.registry.types.find((t) => Type.getTypename(t) === resolvedTypename) as T | undefined,
       );
     });
 

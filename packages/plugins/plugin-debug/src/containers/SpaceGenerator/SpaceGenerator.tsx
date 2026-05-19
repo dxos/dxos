@@ -52,7 +52,7 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
 
     // Query space to get info.
     const updateInfo = useCallback(async () => {
-      const allSchema = [...space.db.graph.registry.listTypes()];
+      const allSchema = [...space.db.graph.registry.types];
       const echoSchema = allSchema.filter((t) => t instanceof Type.RuntimeType);
       const staticSchema = allSchema.filter((t) => !(t instanceof Type.RuntimeType));
 

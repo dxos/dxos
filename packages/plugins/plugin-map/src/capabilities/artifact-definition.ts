@@ -95,7 +95,7 @@ export default Capability.makeModule(() =>
 
             // Validate schema if provided.
             if (typename) {
-              const schema = extensions.space.db.graph.registry.listTypes().find(
+              const schema = extensions.space.db.graph.registry.types.find(
                 (t) => Type.getTypename(t) === typename,
               );
               if (!schema) {

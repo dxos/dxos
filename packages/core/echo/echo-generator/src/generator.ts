@@ -6,6 +6,7 @@ import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { EchoSchema, getTypeAnnotation } from '@dxos/echo/internal';
 import { isProxy } from '@dxos/echo/internal';
+import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 import { entries, range } from '@dxos/util';
@@ -110,7 +111,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
 
   private async _maybeRegisterSchema(typename: string, schema: Type.AnyObj): Promise<Type.AnyObj> {
     if (schema instanceof EchoSchema) {
-      const types = this._space.internal.db.graph.registry.listTypes();
+      const types = await runAndForwardErrors(this._space.internal.db.graph.registry.listTypes());
       const existingSchema = types.find(
         (t) => t instanceof Type.RuntimeType && Type.getTypename(t) === typename,
       ) as Type.RuntimeType | undefined;
@@ -120,7 +121,8 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
       const [registeredSchema] = await this._space.internal.db.register([schema]);
       return registeredSchema;
     } else {
-      const existingSchema = [...this._space.internal.db.graph.registry.listTypes()].find(
+      const allTypes = await runAndForwardErrors(this._space.internal.db.graph.registry.listTypes());
+      const existingSchema = [...allTypes].find(
         (s) => Type.getTypename(s) === typename,
       );
       if (existingSchema != null) {

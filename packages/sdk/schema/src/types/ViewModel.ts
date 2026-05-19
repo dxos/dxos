@@ -234,8 +234,8 @@ export const makeFromDatabase = async ({
     createInitial = 0;
   }
 
-  const types = db.graph.registry.listTypes();
-  const schema = types.find((t) => Type.getTypename(t) === typename);
+  const allTypes = await runAndForwardErrors(db.graph.registry.listTypes());
+  const schema = allTypes.find((t) => Type.getTypename(t) === typename);
   const jsonSchema = schema && JsonSchema.toJsonSchema(schema);
   invariant(jsonSchema, `Schema not found: ${typename}`);
   // `schema` is a `Type.Type` entity (type-kind brand). The kind it *describes*

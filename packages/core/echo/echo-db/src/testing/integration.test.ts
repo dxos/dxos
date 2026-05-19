@@ -528,7 +528,7 @@ describe('Integration tests', () => {
       {
         // Can query by stored schema ref.
         await using db = await peer.openDatabase(spaceKey, rootUrl);
-        const schema = db.graph.registry.listTypes().find((t) => Type.getTypename(t) === 'com.example.type.test') as Type.RuntimeType;
+        const schema = db.graph.registry.types.find((t) => Type.getTypename(t) === 'com.example.type.test') as Type.RuntimeType;
 
         const objects = await db.query(Filter.type(schema!)).run();
         expect(objects.length).to.eq(1);

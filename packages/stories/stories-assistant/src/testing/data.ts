@@ -4,6 +4,7 @@
 
 import { type Space } from '@dxos/client/echo';
 import { type Entity, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { Employer, HasConnection, Message, Organization, Person } from '@dxos/types';
 
@@ -104,7 +105,7 @@ export const addTestData = async (space: Space): Promise<void> => {
   const objectMap = new Map<string, any>();
 
   for (const [typename, objects] of Object.entries(testObjects)) {
-    const types = space.internal.db.graph.registry.listTypes();
+    const types = await runAndForwardErrors(space.internal.db.graph.registry.listTypes());
     const schema = types.find((s) => Type.getTypename(s) === typename);
     invariant(schema, `Schema not found: ${typename}`);
     invariant(Type.isObject(schema), `Schema is not an object schema: ${typename}`);
@@ -115,7 +116,7 @@ export const addTestData = async (space: Space): Promise<void> => {
   }
 
   for (const [typename, relationships] of Object.entries(testRelationships)) {
-    const types = space.internal.db.graph.registry.listTypes();
+    const types = await runAndForwardErrors(space.internal.db.graph.registry.listTypes());
     const schema = types.find((s) => Type.getTypename(s) === typename);
     invariant(schema, `Schema not found: ${typename}`);
     invariant(Type.isRelation(schema), `Schema is not a relation schema: ${typename}`);

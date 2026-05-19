@@ -18,12 +18,12 @@ export const useSchema = (db?: Database.Database, typename?: string): Type.Type 
       };
     }
 
-    let currentSchema = db.graph.registry.listTypes().find((t) => Type.getTypename(t) === typename) as T | undefined;
+    let currentSchema = db.graph.registry.types.find((t) => Type.getTypename(t) === typename) as T | undefined;
 
     return {
       subscribe: (onStoreChange: () => void) => {
         const unsubscribe = db.graph.registry.changed.on(() => {
-          currentSchema = db.graph.registry.listTypes().find((t) => Type.getTypename(t) === typename) as T | undefined;
+          currentSchema = db.graph.registry.types.find((t) => Type.getTypename(t) === typename) as T | undefined;
           onStoreChange();
         });
 

@@ -119,7 +119,7 @@ describe('Registry', () => {
     const registry = Registry.make();
     registry.addTypes([Type.PersistentType]);
     expect(registry.list()).toHaveLength(0);
-    expect(registry.listTypes()).toHaveLength(1);
+    expect(registry.types).toHaveLength(1);
   });
 
   test('changed fires on add/remove/clear/addTypes', ({ expect }) => {

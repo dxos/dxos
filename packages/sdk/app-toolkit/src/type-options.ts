@@ -30,7 +30,7 @@ export const getTypenames = ({ annotation, db }: { annotation: TypeInputOptions;
 
   const runtimeTypenames =
     includeRuntime && db
-      ? db.graph.registry.listTypes()
+      ? db.graph.registry.types
           .filter((t) => !(t instanceof Type.RuntimeType))
           .filter((schema) => {
             const relation = getTypeAnnotation(schema)?.kind === EntityKind.Relation;
@@ -50,7 +50,7 @@ export const getTypenames = ({ annotation, db }: { annotation: TypeInputOptions;
 
   const databaseTypenames =
     includeDatabase && db
-      ? db.graph.registry.listTypes().filter((t) => t instanceof Type.RuntimeType).map((schema) => Type.getTypename(schema))
+      ? db.graph.registry.types.filter((t) => t instanceof Type.RuntimeType).map((schema) => Type.getTypename(schema))
       : [];
 
   return Array.from(new Set<string>([...runtimeTypenames, ...databaseTypenames])).sort();

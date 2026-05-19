@@ -91,10 +91,19 @@ export interface Registry {
   getTypeByDXN(dxn: string): Type.AnyEntity | undefined;
 
   /**
-   * List all locally-registered schema types.
+   * All locally-registered schema types as a synchronous snapshot.
+   * Suitable for synchronous contexts such as React hooks and atoms.
+   * Subscribe to {@link changed} to react to updates.
    * Does not include upstream types.
    */
-  listTypes(): readonly Type.AnyEntity[];
+  readonly types: readonly Type.AnyEntity[];
+
+  /**
+   * List all locally-registered schema types as an Effect.
+   * Use {@link types} in synchronous contexts; prefer this in Effect generators (yield*) and async functions.
+   * Does not include upstream types.
+   */
+  listTypes(): Effect.Effect<readonly Type.AnyEntity[]>;
 
   /**
    * Signal that a registered type has changed without adding or removing types.
@@ -241,9 +250,13 @@ class RegistryImpl implements Registry {
     return this.#upstream?.getTypeByDXN(dxn);
   }
 
-  listTypes(): readonly Type.AnyEntity[] {
+  get types(): readonly Type.AnyEntity[] {
     // De-duplicate: multiple keys can point to the same type instance (e.g. typename DXN + identifier DXN).
     return Array.from(new Set(this.#types.values()));
+  }
+
+  listTypes(): Effect.Effect<readonly Type.AnyEntity[]> {
+    return Effect.sync(() => this.types);
   }
 
   touch(): void {

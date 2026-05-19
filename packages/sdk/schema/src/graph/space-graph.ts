@@ -106,9 +106,9 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
 
     this._db = db;
 
-    this._schema = [...db.graph.registry.listTypes()] as Type.RuntimeType[];
+    this._schema = [...db.graph.registry.types] as Type.RuntimeType[];
     this._schemaSubscription = db.graph.registry.changed.on(() => {
-      this._schema = [...db.graph.registry.listTypes()] as Type.RuntimeType[];
+      this._schema = [...db.graph.registry.types] as Type.RuntimeType[];
     });
 
     this._subscribeObjects();

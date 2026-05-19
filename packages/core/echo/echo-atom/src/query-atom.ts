@@ -37,10 +37,10 @@ export const fromQuery = <T>(queryResult: QueryResult.QueryResult<T>): Atom.Atom
 export const fromRegistryTypes = (registry: Registry.Registry): Atom.Atom<Type.AnyEntity[]> =>
   Atom.make((get) => {
     const unsubscribe = registry.changed.on(() => {
-      get.setSelf([...registry.listTypes()]);
+      get.setSelf([...registry.types]);
     });
     get.addFinalizer(unsubscribe);
-    return [...registry.listTypes()];
+    return [...registry.types];
   });
 
 // Registry: key → Queryable (WeakRef with auto-cleanup when GC'd).

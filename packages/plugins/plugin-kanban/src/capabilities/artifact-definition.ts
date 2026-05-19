@@ -64,7 +64,7 @@ export default Capability.makeModule(() =>
             invariant(extensions?.invoke, 'No operation invoker');
 
             // Validate schema exists first
-            const schema = extensions.space.db.graph.registry.listTypes().find(
+            const schema = extensions.space.db.graph.registry.types.find(
               (t) => Type.getTypename(t) === typename,
             );
             if (!schema) {
@@ -134,7 +134,7 @@ export default Capability.makeModule(() =>
             invariant(Obj.instanceOf(Kanban.Kanban, kanban));
 
             const typename = view.query.typename;
-            const schema = space.db.graph.registry.listTypes().find(
+            const schema = space.db.graph.registry.types.find(
               (t) => Type.getTypename(t) === typename,
             );
             invariant(schema);

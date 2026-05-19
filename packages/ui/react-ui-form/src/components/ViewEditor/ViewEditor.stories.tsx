@@ -87,7 +87,7 @@ const DefaultStory = (props: DefaultStoryProps) => {
         });
 
         const typename = getTypenameFromQuery(query.ast);
-        const newSchema = space.db.graph.registry.listTypes().find((t) => Type.getTypename(t) === typename) as
+        const newSchema = space.db.graph.registry.types.find((t) => Type.getTypename(t) === typename) as
           | EchoSchema
           | undefined;
         if (!newSchema) {

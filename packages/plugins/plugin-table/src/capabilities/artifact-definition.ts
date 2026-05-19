@@ -70,7 +70,7 @@ export default Capability.makeModule(() =>
             invariant(extensions?.invoke, 'No operation invoker');
 
             // Validate schema exists first.
-            const schema = extensions.space.db.graph.registry.listTypes().find(
+            const schema = extensions.space.db.graph.registry.types.find(
               (t) => Type.getTypename(t) === typename,
             );
             if (!schema) {
@@ -140,7 +140,7 @@ export default Capability.makeModule(() =>
             invariant(Obj.instanceOf(TableView, table));
 
             const typename = view.query.typename;
-            const schema = space.db.graph.registry.listTypes().find(
+            const schema = space.db.graph.registry.types.find(
               (t) => Type.getTypename(t) === typename,
             );
             return ToolResult.Success(schema);
@@ -169,7 +169,7 @@ export default Capability.makeModule(() =>
             invariant(Obj.instanceOf(TableView, table));
 
             const typename = view.query.typename;
-            const schema = space.db.graph.registry.listTypes().find(
+            const schema = space.db.graph.registry.types.find(
               (t) => Type.getTypename(t) === typename,
             );
             const { objects: rows } = await space.db.query(Filter.type(schema)).run();
@@ -198,7 +198,7 @@ export default Capability.makeModule(() =>
               .first()) as View.View;
             // Get schema for validation.
             const typename = view.query.typename;
-            const schema = space.db.graph.registry.listTypes().find(
+            const schema = space.db.graph.registry.types.find(
               (t) => Type.getTypename(t) === typename,
             );
 

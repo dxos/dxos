@@ -39,7 +39,7 @@ export const createGenerator = <S extends Type.AnyObj>(
     // Find or create table and view.
     const views = await space.db.query(Filter.type(View.View)).run();
     const view = await findViewByTypename(views, typename);
-    const staticSchema = client ? client.graph.registry.listTypes().find((s) => Type.getTypename(s) === typename) : undefined;
+    const staticSchema = client ? client.graph.registry.types.find((s) => Type.getTypename(s) === typename) : undefined;
     if (!view && !staticSchema) {
       await invokePromise(SpaceOperation.AddSchema, { db: space.db, schema, show: false });
     }
