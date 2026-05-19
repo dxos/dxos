@@ -4,7 +4,6 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export const HelpMenu: ComponentType<any> = lazy(() => import('./HelpMenu'));
 export const StatusBarActions: ComponentType<any> = lazy(() => import('./StatusBarActions'));
 export const StatusBarPanel: ComponentType<any> = lazy(() => import('./StatusBarPanel'));
 export const VersionNumber: ComponentType<any> = lazy(() => import('./VersionNumber'));

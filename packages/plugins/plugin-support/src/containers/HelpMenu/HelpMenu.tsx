@@ -6,21 +6,19 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
+import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { DropdownMenu, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { isTauri } from '@dxos/util';
 
-import { StatusBar } from '#components';
 import { meta } from '#meta';
 
-// Mirrors plugin-support's SHORTCUTS_DIALOG constant; inlined to avoid a dep cycle
-// (plugin-support transitively depends on plugin-status-bar).
-const SHORTCUTS_DIALOG = 'org.dxos.plugin.support.ShortcutsDialog';
+import { SHORTCUTS_DIALOG } from '../../constants';
 
 // Mirrors the welcome plugin's ABOUT_DIALOG constant (composer-app/src/plugins/welcome);
 // inlined because composer-app is not a workspace dependency.
 const ABOUT_DIALOG = 'org.dxos.plugin.welcome.component.about-dialog';
 
-const DOCS_URL = 'https://docs.dxos.org/composer';
+const DOCS_URL = 'https://docs.dxos.org/composer/introduction/';
 const CONTACT_URL = 'mailto:hello@dxos.org';
 const DISCORD_URL = 'https://dxos.org/discord';
 const GITHUB_URL = 'https://github.com/dxos/dxos';

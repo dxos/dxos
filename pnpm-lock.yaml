@@ -14803,6 +14803,9 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/plugin-status-bar':
+        specifier: workspace:*
+        version: link:../plugin-status-bar
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
