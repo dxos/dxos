@@ -273,9 +273,7 @@ const spanTreeToCommits = (
       branches.push(MAIN_BRANCH);
     }
     return CommitSelector.firstOf(
-      ...branches.map((branch) =>
-        CommitSelector.branch(branch).pipe(CommitSelector.compose(CommitSelector.last())),
-      ),
+      ...branches.map((branch) => CommitSelector.branch(branch).pipe(CommitSelector.compose(CommitSelector.last()))),
     );
   };
 
