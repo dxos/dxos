@@ -9,7 +9,6 @@ import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { type Observability } from '@dxos/observability';
 
 import {
-  AppGraphBuilder,
   ClientReady,
   ObservabilitySettings,
   ObservabilityState,
@@ -31,7 +30,6 @@ export type ObservabilityPluginOptions = {
 };
 
 export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule(({ observability }) => ({

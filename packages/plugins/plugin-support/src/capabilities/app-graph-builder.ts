@@ -11,6 +11,7 @@ import { Operation } from '@dxos/compute';
 import { Filter, Obj } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
 import { log } from '@dxos/log';
+import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { HelpCapabilities, HelpOperation, Support, SupportCapabilities } from '#types';
@@ -77,6 +78,41 @@ export default Capability.makeModule(
               icon: 'ph--info--regular',
               data: 'help',
               position: 'fallback',
+            }),
+          ]),
+      }),
+
+      // Deck companion: feedback / help tab in the complementary sidebar (R1).
+      // Renders the FeedbackPanel via the `deck-companion--help` surface.
+      GraphBuilder.createExtension({
+        id: 'help',
+        match: NodeMatcher.whenRoot,
+        connector: () =>
+          Effect.succeed([
+            AppNode.makeDeckCompanion({
+              id: linkedSegment('help'),
+              label: ['help.label', { ns: meta.id }],
+              icon: 'ph--question--regular',
+              data: null,
+              position: 'hoist',
+              joyride: 'welcome/feedback',
+            }),
+          ]),
+      }),
+
+      // Deck companion: Discord community tab in the complementary sidebar (R1).
+      // Renders the Discord widget iframe via the `deck-companion--discord` surface.
+      GraphBuilder.createExtension({
+        id: 'discord',
+        match: NodeMatcher.whenRoot,
+        connector: () =>
+          Effect.succeed([
+            AppNode.makeDeckCompanion({
+              id: linkedSegment('discord'),
+              label: ['discord.label', { ns: meta.id }],
+              icon: 'ph--discord-logo--regular',
+              data: null,
+              position: 'hoist',
             }),
           ]),
       }),

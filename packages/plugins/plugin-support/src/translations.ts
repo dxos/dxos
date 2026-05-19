@@ -36,6 +36,8 @@ export const translations = [
         'help-companion.label': 'Help',
         // Feedback (deck-companion--help surface).
         'help.label': 'Feedback & Support',
+        // Discord (deck-companion--discord surface).
+        'discord.label': 'Discord',
         'feedback-textarea.label': 'Feedback',
         'feedback-textarea.placeholder': 'Please enter your feedback, technical issue, or feature request.',
         'include-debug-logs.label': 'Include debug logs',

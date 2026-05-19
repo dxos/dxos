@@ -11,6 +11,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { SupportSettings } from '#components';
 import {
+  DiscordPanel,
   FeedbackPanel,
   ShortcutsDialogContent,
   ShortcutsHints,
@@ -46,6 +47,11 @@ export default Capability.makeModule(() =>
         id: 'feedback',
         role: 'deck-companion--help',
         component: () => <FeedbackPanel />,
+      }),
+      Surface.create({
+        id: 'discord',
+        role: 'deck-companion--discord',
+        component: () => <DiscordPanel />,
       }),
       // Generic plank companion: shows the description from the plugin that
       // owns the open article's typename. Matches any article via
