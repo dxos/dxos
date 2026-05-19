@@ -188,11 +188,11 @@ const presentEvent = (event: Trace.FlatEvent): EventPresentation | undefined => 
 
 /**
  * A span is "collapsible" when it would otherwise render as an empty fork-and-merge:
- * exactly two events (its own begin and end), no child sub-spans, and a real parent span
- * to fold into. In that case we emit a single commit for the end event on the parent branch.
+ * exactly two events (its own begin and end) and no child sub-spans. In that case we
+ * emit a single commit for the end event on the parent branch.
  *
- * Top-level spans (parent is the synthetic root) are not collapsed: the existing UI shows
- * both their start and end commits on the main branch.
+ * Both nested spans and top-level spans (whose parent is the synthetic root) are eligible:
+ * a span with no inner activity is collapsed regardless of where it sits in the tree.
  */
 const isCollapsibleSpan = (span: Span, parent: Span | null): boolean => {
   if (span.id === ROOT_SPAN_ID) {
@@ -204,7 +204,7 @@ const isCollapsibleSpan = (span: Span, parent: Span | null): boolean => {
   if (span.children.length > 0) {
     return false;
   }
-  return parent !== null && parent.id !== ROOT_SPAN_ID;
+  return parent !== null;
 };
 
 /**
@@ -250,6 +250,33 @@ const spanTreeToCommits = (
       return MAIN_BRANCH;
     }
     return span.meta.pid ?? span.id;
+  };
+
+  // Selector that returns the most recent commit walking up the ancestor chain of `span`,
+  // starting from `span`'s own branch and falling back through parent branches up to main.
+  // Used when a commit emitted on a parent/ancestor branch needs to attach to something
+  // that hasn't been written to yet (e.g. the first child sub-span begins before any
+  // middle event has landed on the parent branch).
+  const lastInAncestorChain = (span: Span | null): CommitSelector => {
+    const branches: string[] = [];
+    const seen = new Set<string>();
+    let current = span;
+    while (current) {
+      const branch = branchOf(current);
+      if (!seen.has(branch)) {
+        seen.add(branch);
+        branches.push(branch);
+      }
+      current = findParentSpan(current);
+    }
+    if (!seen.has(MAIN_BRANCH)) {
+      branches.push(MAIN_BRANCH);
+    }
+    return CommitSelector.firstOf(
+      ...branches.map((branch) =>
+        CommitSelector.branch(branch).pipe(CommitSelector.compose(CommitSelector.last())),
+      ),
+    );
   };
 
   // Flatten the tree into a chronological stream, recording each event's position within its span
@@ -301,25 +328,22 @@ const spanTreeToCommits = (
       );
     } else if (collapsible) {
       // Only the end event reaches here for collapsible spans.
+      // Walk the ancestor chain so the commit attaches to the most recent ancestor
+      // even when the immediate parent branch has not received a commit yet.
       branch = parentBranch;
-      parents = builder.computeParents(
-        CommitSelector.branch(parentBranch).pipe(CommitSelector.compose(CommitSelector.last())),
-      );
+      parents = builder.computeParents(lastInAncestorChain(parentSpan));
     } else if (isFirst) {
       // Begin commit: fork off the parent branch.
+      // Walk the ancestor chain to find the most recent ancestor commit to fork from.
       branch = parentBranch;
-      parents = builder.computeParents(
-        CommitSelector.branch(parentBranch).pipe(CommitSelector.compose(CommitSelector.last())),
-      );
+      parents = builder.computeParents(lastInAncestorChain(parentSpan));
     } else if (isLast) {
       // End commit: merge from the span's own branch back into the parent branch.
       branch = parentBranch;
       const beginId = beginCommitIdBySpan.get(span.id);
       parents = builder.computeParents(
         CommitSelector.unionAll(
-          beginId
-            ? CommitSelector.id(beginId)
-            : CommitSelector.branch(parentBranch).pipe(CommitSelector.compose(CommitSelector.last())),
+          beginId ? CommitSelector.id(beginId) : lastInAncestorChain(parentSpan),
           CommitSelector.branch(ownBranch).pipe(CommitSelector.compose(CommitSelector.last())),
         ),
       );
@@ -329,9 +353,7 @@ const spanTreeToCommits = (
       parents = builder.computeParents(
         CommitSelector.branch(ownBranch).pipe(
           CommitSelector.compose(CommitSelector.last()),
-          CommitSelector.orElse(
-            CommitSelector.branch(parentBranch).pipe(CommitSelector.compose(CommitSelector.last())),
-          ),
+          CommitSelector.orElse(lastInAncestorChain(parentSpan)),
         ),
       );
     }

@@ -191,7 +191,7 @@ describe('buildExecutionGraph (span-tree based)', () => {
     expect(branches).toEqual(['main']);
   });
 
-  test('top-level operation → start and end commits on main', ({ expect }) => {
+  test('top-level operation with no inner events → collapsed to single end commit on main', ({ expect }) => {
     const { commits, branches } = buildExecutionGraph({
       traceMessages: [
         makeMessage({ pid: 'op-1' }, [
@@ -211,11 +211,10 @@ describe('buildExecutionGraph (span-tree based)', () => {
       ],
     });
     expect(branches).toEqual(['main']);
-    expect(commits).toHaveLength(2);
-    expect(commits.every((commit) => commit.branch === 'main')).toBe(true);
+    expect(commits).toHaveLength(1);
+    expect(commits[0].branch).toBe('main');
     expect(`\n${renderTimelineAscii(commits, branches)}\n`).toMatchInlineSnapshot(`
       "
-      ●  [function] Reply
       ●  [function] Reply - Success
       "
     `);
