@@ -273,8 +273,7 @@ export class CollectionSynchronizer extends Resource {
     const localState = perCollectionState.localState ?? { documents: {} };
     const diff = diffCollectionState(localState, remoteState);
     // #region DEBUG
-    const hasAnyDiff =
-      diff.different.length > 0 || diff.missingOnLocal.length > 0 || diff.missingOnRemote.length > 0;
+    const hasAnyDiff = diff.different.length > 0 || diff.missingOnLocal.length > 0 || diff.missingOnRemote.length > 0;
     if (hasAnyDiff) {
       const sp = collectionId.split(':')[1]?.slice(0, 8);
       log.info('[DEBUG H4b] diff overview', {
