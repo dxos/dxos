@@ -24,6 +24,33 @@ const BOT_PERMISSIONS = String((1 << 10) | (1 << 11) | (1 << 16));
 const BOT_SCOPES = ['bot', 'applications.commands'];
 
 /**
+ * Discord snowflake epoch — 2015-01-01 00:00:00 UTC in milliseconds. All
+ * Discord snowflakes (message ids, channel ids, ...) encode the time of
+ * creation as `(unix_ms - DISCORD_EPOCH_MS) << 22`. We use this to construct
+ * an "after" snowflake from a wall-clock cutoff so we can ask Discord for
+ * "messages since N days ago" without first knowing any message id.
+ */
+export const DISCORD_EPOCH_MS = 1_420_070_400_000;
+
+/**
+ * Construct a Discord snowflake that sorts equal to the given wall-clock
+ * timestamp. Used as the `after` parameter on `/channels/{id}/messages` to
+ * start the initial sync at a bounded lookback rather than walking the full
+ * channel history (which would generate hundreds of requests and burn through
+ * the bot's rate limit on busy channels).
+ *
+ * BigInt because the result exceeds `Number.MAX_SAFE_INTEGER` for any
+ * timestamp in the post-2015 epoch.
+ */
+export const snowflakeForTimestamp = (timestampMs: number): string => {
+  const adjusted = Math.max(0, timestampMs - DISCORD_EPOCH_MS);
+  return (BigInt(Math.floor(adjusted)) << 22n).toString();
+};
+
+/** Default lookback window for the first sync of a channel when the user hasn't set `daysOfHistory`. */
+export const DEFAULT_DAYS_OF_HISTORY = 7;
+
+/**
  * Builds the Discord OAuth invite URL for adding the bot to a guild.
  *
  * Kept exported because Discord (unlike Slack/Trello) requires a manual

@@ -20,7 +20,7 @@ import { AccessToken } from '@dxos/types';
 import { DISCORD_PROVIDER_ID, DISCORD_SOURCE } from '../constants';
 import { DiscordApiError } from '../errors';
 import { DiscordApi, makeEdgeProxyHttpClientLayer } from '../services';
-import { DiscordOperation } from '../types';
+import { DiscordOperation, DiscordTargetOptions } from '../types';
 
 /**
  * Manual-credential form. Discord doesn't have an `OAuthProvider` enum entry
@@ -132,6 +132,7 @@ export default Capability.makeModule(
         source: DISCORD_SOURCE,
         label: 'Discord',
         credentialForm,
+        optionsSchema: DiscordTargetOptions,
         getSyncTargets: DiscordOperation.GetDiscordChannels,
         sync: DiscordOperation.SyncDiscordChannel,
         onTokenCreated,

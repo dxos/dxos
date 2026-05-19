@@ -17,10 +17,39 @@ import { Channel, ContentBlock, Message } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { DISCORD_SOURCE } from '../constants';
+import { DEFAULT_DAYS_OF_HISTORY, DISCORD_SOURCE, snowflakeForTimestamp } from '../constants';
 import { IntegrationDatabaseMissingError, formatDiscordSyncFailure } from '../errors';
 import { DiscordApi, makeEdgeProxyHttpClientLayer } from '../services';
 import { DiscordOperation } from '../types';
+
+/**
+ * Hard cap on `daysOfHistory` to keep a misconfigured (or fat-fingered) value
+ * from kicking off a 10-year backfill that thrashes the rate limit. ~3 years
+ * is enough for any realistic "I want context" scenario.
+ */
+const MAX_DAYS_OF_HISTORY = 365 * 3;
+
+/**
+ * Compute the initial sync cursor for a Discord channel.
+ *
+ * - If we already have a `cursor` (newest message id from the previous sync),
+ *   use it verbatim — every subsequent sync is incremental.
+ * - On first sync, derive a snowflake from "now minus N days" where N comes
+ *   from the user-provided `daysOfHistory` option (clamped to a sane range,
+ *   default 7).
+ *
+ * The user can sync more history by re-creating the target with a larger
+ * `daysOfHistory` value, since the option is only consulted while `cursor`
+ * is unset.
+ */
+const computeInitialCursor = (cursor: string | undefined, options: { daysOfHistory?: number } | undefined): string => {
+  if (cursor) {
+    return cursor;
+  }
+  const raw = options?.daysOfHistory;
+  const days = typeof raw === 'number' && raw > 0 ? Math.min(raw, MAX_DAYS_OF_HISTORY) : DEFAULT_DAYS_OF_HISTORY;
+  return snowflakeForTimestamp(Date.now() - days * 24 * 60 * 60 * 1000);
+};
 
 type DiscordChannel = DiscordApi.DiscordChannel;
 type DiscordMessage = DiscordApi.DiscordMessage;
@@ -245,8 +274,9 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
               Effect.gen(function* () {
                 const result = yield* Effect.either(
                   Effect.gen(function* () {
-                    const cursor = integrationObj.targets.find((entry) => entry.remoteId === discordChannelId)?.cursor;
-                    const messages = yield* DiscordApi.fetchHistory(discordChannelId, { after: cursor });
+                    const targetEntry = integrationObj.targets.find((entry) => entry.remoteId === discordChannelId);
+                    const after = computeInitialCursor(targetEntry?.cursor, targetEntry?.options as { daysOfHistory?: number } | undefined);
+                    const messages = yield* DiscordApi.fetchHistory(discordChannelId, { after });
                     if (messages.length === 0) {
                       return { added: 0 };
                     }
