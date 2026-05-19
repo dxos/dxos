@@ -210,7 +210,8 @@ export type Meta = {
   iconHue?: string;
 
   /**
-   * URL of the plugin's MDL spec (typically a `PLUGIN.mdl` file on GitHub).
+   * URL of the plugin's MDL spec, typically the published `PLUGIN.mdl` on the
+   * unpkg CDN (e.g. `https://unpkg.com/<pkg>@<version>/PLUGIN.mdl`).
    * Rendered as a "Specification" link in the plugin detail view.
    */
   spec?: string;
