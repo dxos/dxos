@@ -241,7 +241,8 @@ export const registry: Record<NodeType, Executable> = {
           const [container] = yield* Effect.promise(() => db.query(Filter.id(echoId)).run());
           if (isInstanceOf(View.View, container)) {
             const schemaTypename = getTypenameFromQuery(container.query.ast);
-            const schema = db.graph.registry.types.find((t) => Type.getTypename(t) === schemaTypename);
+            const types = yield* db.graph.registry.listTypes();
+            const schema = types.find((t) => Type.getTypename(t) === schemaTypename);
             invariant(schema, `Schema not found: ${schemaTypename}`);
 
             for (const item of items) {

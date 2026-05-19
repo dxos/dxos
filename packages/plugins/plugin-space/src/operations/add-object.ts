@@ -36,7 +36,8 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
         },
       });
 
-      const [runtimeSchema] = (yield* db.graph.registry.listTypes()).filter(
+      const types = yield* db.graph.registry.listTypes();
+      const [runtimeSchema] = types.filter(
         (t) => !(t instanceof Type.RuntimeType) && Type.getTypename(t) === typename,
       );
       const echoViewPath =

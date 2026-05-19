@@ -42,7 +42,8 @@ export const resolveSchemaWithRegistry = (db: Database.Database, query: QueryAST
       return Option.none<Type.AnyEntity>();
     }
 
-    const schema = (yield* db.graph.registry.listTypes()).find((t) => Type.getTypename(t) === typename);
+    const types = yield* db.graph.registry.listTypes();
+    const schema = types.find((t) => Type.getTypename(t) === typename);
     return Option.fromNullable(schema);
   });
 
