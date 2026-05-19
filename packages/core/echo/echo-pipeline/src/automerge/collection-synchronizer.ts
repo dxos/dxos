@@ -82,7 +82,7 @@ export class CollectionSynchronizer extends Resource {
   setLocalCollectionState(collectionId: string, state: CollectionState): void {
     this._activeCollections.add(collectionId);
 
-    log.info('setLocalCollectionState', { collectionId, state });
+    log('setLocalCollectionState', { collectionId, state });
     const perCollectionState = this._getOrCreatePerCollectionState(collectionId);
     perCollectionState.localState = state;
 
@@ -213,7 +213,7 @@ export class CollectionSynchronizer extends Resource {
    * Callback when a peer sends the state of a collection.
    */
   onRemoteStateReceived(collectionId: string, peerId: PeerId, state: CollectionState): void {
-    log.info('onRemoteStateReceived', { collectionId, peerId, state });
+    log('onRemoteStateReceived', { collectionId, peerId, state });
     validateCollectionState(state);
     const perCollectionState = this._getOrCreatePerCollectionState(collectionId);
     const previousRemoteState = perCollectionState.remoteStates.get(peerId);
