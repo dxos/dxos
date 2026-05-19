@@ -35,6 +35,18 @@ describe('DiscordPlugin', () => {
   // mismatched op key, or stale dev-server bundle). We pass a dangling ref so
   // the handler is reached but bails out — anything other than
   // `NoHandlerError` confirms the lookup succeeded.
+  //
+  // Note: this test sets up the harness with DiscordPlugin in the initial
+  // plugins list, so the OperationHandler module activates *before*
+  // ProcessManager snapshots the merged set. It does NOT exercise the
+  // production scenario where a user enables Discord from the registry mid-
+  // session: in that case the contribution lands in the OperationHandler
+  // capability registry but ProcessManager's frozen merged set never sees
+  // it, and `Operation.invoke` returns `NoHandlerError` until the page is
+  // reloaded.
+  // TODO(wittjosiah): make `ProcessManagerCapability` subscribe to
+  // `Capability.atom(Capabilities.OperationHandler)` and rebuild the merged
+  // set on change so post-startup plugin enablement Just Works.
   test('GetDiscordChannels handler is reachable through the merged OperationHandlerSet', async ({ expect }) => {
     await using harness = await createComposerTestApp({
       plugins: [ClientPlugin({}), IntegrationPlugin(), DiscordPlugin()],
