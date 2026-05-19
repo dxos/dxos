@@ -178,11 +178,11 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
         <Toolbar.Root classNames='bg-modal-surface border-b border-subdued-separator'>
           <IconButton
             label={toLocalizedString(companion.properties.label, t)}
+            size={5}
             icon={companion.properties.icon}
             iconOnly
             tooltipSide='left'
             data-value={getLinkedVariant(companion.id)}
-            classNames='h-10 w-10'
             variant='default'
           />
           <div role='none' className='px-1'>

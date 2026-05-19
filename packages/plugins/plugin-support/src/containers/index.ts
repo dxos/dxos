@@ -4,7 +4,9 @@
 
 import { type ComponentType, lazy } from 'react';
 
+export const DiscordPanel: ComponentType<any> = lazy(() => import('./DiscordPanel'));
 export const FeedbackPanel: ComponentType<any> = lazy(() => import('./FeedbackPanel'));
+export const GithubPanel: ComponentType<any> = lazy(() => import('./GithubPanel'));
 export const HelpMenu: ComponentType<any> = lazy(() => import('./HelpMenu'));
 export const ShortcutsDialogContent: ComponentType<any> = lazy(() => import('./ShortcutsDialogContent'));
 export const ShortcutsHints: ComponentType<any> = lazy(() => import('./ShortcutsHints'));

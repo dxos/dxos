@@ -11,7 +11,9 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { SupportSettings } from '#components';
 import {
+  DiscordPanel,
   FeedbackPanel,
+  GithubPanel,
   HelpMenu,
   ShortcutsDialogContent,
   ShortcutsHints,
@@ -47,6 +49,16 @@ export default Capability.makeModule(() =>
         id: 'feedback',
         role: 'deck-companion--help',
         component: () => <FeedbackPanel />,
+      }),
+      Surface.create({
+        id: 'discord',
+        role: 'deck-companion--discord',
+        component: () => <DiscordPanel />,
+      }),
+      Surface.create({
+        id: 'github',
+        role: 'deck-companion--github',
+        component: () => <GithubPanel />,
       }),
       Surface.create({
         id: 'help-menu',
