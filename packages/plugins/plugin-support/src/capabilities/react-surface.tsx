@@ -25,7 +25,7 @@ import {
 import { meta } from '#meta';
 import { type Settings, Support } from '#types';
 
-import { SHORTCUTS_DIALOG } from '../constants';
+import { SHORTCUTS_DIALOG, WELCOME_NODE_ID } from '../constants';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -42,7 +42,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'welcome-article',
-        filter: AppSurface.object(AppSurface.Article, Support.Welcome),
+        filter: AppSurface.literal(AppSurface.Article, WELCOME_NODE_ID),
         component: ({ role }) => <WelcomeArticle role={role} />,
       }),
       Surface.create({

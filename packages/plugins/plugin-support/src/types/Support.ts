@@ -6,10 +6,9 @@ import * as Schema from 'effect/Schema';
 
 import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { Annotation, Obj, Type } from '@dxos/echo';
-import { FormInputAnnotation, LabelAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
+import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
 export const BLUEPRINT_KEY = 'org.dxos.blueprint.support';
-export const COMPOSER_BLUEPRINT_KEY = 'org.dxos.blueprint.composer';
 
 export const TicketStatus = Schema.Literal('open', 'in_progress', 'resolved');
 export type TicketStatus = Schema.Schema.Type<typeof TicketStatus>;
@@ -65,26 +64,3 @@ export const make = (props: { title?: string; body?: string } = {}) =>
  * Runtime type guard for Ticket ECHO objects.
  */
 export const instanceOf = (value: unknown): value is Ticket => Obj.instanceOf(Ticket, value);
-
-/**
- * Singleton anchor for the Welcome surface. Lives in the personal space; backs
- * the welcome virtual node so the assistant chat companion (which binds to ECHO
- * objects) attaches automatically.
- */
-export const Welcome = Schema.Struct({}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.support.welcome',
-    version: '0.1.0',
-  }),
-  Annotation.IconAnnotation.set({
-    icon: 'ph--lifebuoy--regular',
-    hue: 'rose',
-  }),
-  BlueprintsAnnotation.set([COMPOSER_BLUEPRINT_KEY, BLUEPRINT_KEY]),
-  // Keep out of the navtree's typed branches — surfaced only via the welcome virtual node.
-  SystemTypeAnnotation.set(true),
-);
-
-export interface Welcome extends Schema.Schema.Type<typeof Welcome> {}
-
-export const makeWelcome = (): Welcome => Obj.make(Welcome, {});

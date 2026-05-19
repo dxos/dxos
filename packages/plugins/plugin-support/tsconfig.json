@@ -66,6 +66,9 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/client-protocol"
+    },
+    {
       "path": "../../sdk/observability"
     },
     {
