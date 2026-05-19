@@ -11,20 +11,7 @@ import { meta } from '#meta';
 
 const DXOS_GUILD_ID = '837138313172353095';
 
-const DEFAULT_TEAM = new Set<string>([
-  'Rich',
-  'Josiah',
-  'Brad Jones',
-  'Brent Keller',
-  'Brooke Zelenka',
-  'Dev Doshi',
-  'Maxwell Brown',
-  'Ted Han',
-  'Zaymonoid',
-  'willm',
-  'Mykola',
-  'Dmytro',
-]);
+const DEFAULT_TEAM = new Set<string>(['Rich', 'Josiah', 'Mykola', 'Dmytro']);
 
 type WidgetMember = {
   id: string;
@@ -72,9 +59,12 @@ const Root = ({ guildId = DXOS_GUILD_ID, teamMembers, children }: DiscordWidgetR
     const controller = new AbortController();
     void (async () => {
       try {
-        const response = await fetch(`https://discord.com/api/guilds/${guildId}/widget.json`, {
-          signal: controller.signal,
-        });
+        // Discord's CDN caches the widget response without `Vary: Origin`, so a single
+        // ACAO value gets served to every caller for ~5 minutes. Pin the cache key to
+        // the current origin so each origin gets its own (correct) cached response.
+        const url = new URL(`https://discord.com/api/guilds/${guildId}/widget.json`);
+        url.searchParams.set('_origin', window.location.origin);
+        const response = await fetch(url.toString(), { signal: controller.signal });
         if (!response.ok) {
           setUnavailable(true);
           return;
