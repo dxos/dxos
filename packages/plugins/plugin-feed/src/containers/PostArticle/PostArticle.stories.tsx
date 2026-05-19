@@ -60,7 +60,7 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Subscription.Feed, Subscription.Post, Tag.Tag, Text.Text],
+      types: [Subscription.Subscription, Subscription.Post, Tag.Tag, Text.Text],
       onCreateSpace: async ({ space }) => {
         space.db.add(
           Subscription.makePost({

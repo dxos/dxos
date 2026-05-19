@@ -23,7 +23,7 @@ export type SubscriptionStackActionHandler = (action: SubscriptionStackAction) =
 
 export type SubscriptionStackProps = {
   id?: string;
-  feeds?: Subscription.Feed[];
+  feeds?: Subscription.Subscription[];
   currentId?: string;
   onAction?: SubscriptionStackActionHandler;
 };
@@ -87,12 +87,18 @@ SubscriptionStack.displayName = 'SubscriptionStack';
 //
 
 const icons: Record<Subscription.FeedType, { icon: string; className?: string }> = {
-  atproto: { icon: 'ph--butterfly--regular', className: 'text-sky-500' },
-  rss: { icon: 'ph--rss--regular', className: 'text-green-500' },
+  atproto: {
+    icon: 'ph--butterfly--regular',
+    className: 'text-sky-500',
+  },
+  rss: {
+    icon: 'ph--rss--regular',
+    className: 'text-green-500',
+  },
 };
 
 type SubscriptionTileData = {
-  feed: Subscription.Feed;
+  feed: Subscription.Subscription;
   onAction?: SubscriptionStackActionHandler;
 };
 
