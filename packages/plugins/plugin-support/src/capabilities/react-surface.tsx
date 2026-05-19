@@ -13,6 +13,7 @@ import { SupportSettings } from '#components';
 import {
   DiscordPanel,
   FeedbackPanel,
+  GithubPanel,
   HelpMenu,
   ShortcutsDialogContent,
   ShortcutsHints,
@@ -53,6 +54,11 @@ export default Capability.makeModule(() =>
         id: 'discord',
         role: 'deck-companion--discord',
         component: () => <DiscordPanel />,
+      }),
+      Surface.create({
+        id: 'github',
+        role: 'deck-companion--github',
+        component: () => <GithubPanel />,
       }),
       Surface.create({
         id: 'help-menu',

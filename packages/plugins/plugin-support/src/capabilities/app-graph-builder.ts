@@ -117,6 +117,23 @@ export default Capability.makeModule(
           ]),
       }),
 
+      // Deck companion: GitHub recent PRs tab in the complementary sidebar (R1).
+      // Renders the GithubPanel via the `deck-companion--github` surface.
+      GraphBuilder.createExtension({
+        id: 'github',
+        match: NodeMatcher.whenRoot,
+        connector: () =>
+          Effect.succeed([
+            AppNode.makeDeckCompanion({
+              id: linkedSegment('github'),
+              label: ['github.label', { ns: meta.id }],
+              icon: 'ph--github-logo--regular',
+              data: null,
+              position: 'hoist',
+            }),
+          ]),
+      }),
+
       // Personal-space-only Welcome virtual node, hoisted to the top of the navtree.
       // Data is the singleton Welcome ECHO object (provisioned by WelcomeProvisioner),
       // so the assistant plugin's companion-chat extension binds automatically.
