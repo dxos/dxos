@@ -13,7 +13,6 @@ import { Capabilities, Capability, type PromiseIntentDispatcher } from '@dxos/ap
 import { createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/compute';
 import { Filter, Obj, Query, Type, View } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { type Space } from '@dxos/react-client/echo';
@@ -65,7 +64,7 @@ export default Capability.makeModule(() =>
             invariant(extensions?.invoke, 'No operation invoker');
 
             // Validate schema exists first
-            const schema = (await runAndForwardErrors(extensions.space.db.graph.registry.listTypes())).find(
+            const schema = extensions.space.db.graph.registry.listTypes().find(
               (t) => Type.getTypename(t) === typename,
             );
             if (!schema) {
@@ -135,7 +134,7 @@ export default Capability.makeModule(() =>
             invariant(Obj.instanceOf(Kanban.Kanban, kanban));
 
             const typename = view.query.typename;
-            const schema = (await runAndForwardErrors(space.db.graph.registry.listTypes())).find(
+            const schema = space.db.graph.registry.listTypes().find(
               (t) => Type.getTypename(t) === typename,
             );
             invariant(schema);

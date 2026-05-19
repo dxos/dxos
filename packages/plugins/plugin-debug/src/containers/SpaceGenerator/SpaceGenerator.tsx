@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
@@ -53,7 +52,7 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
 
     // Query space to get info.
     const updateInfo = useCallback(async () => {
-      const allSchema = [...Effect.runSync(space.db.graph.registry.listTypes())];
+      const allSchema = [...space.db.graph.registry.listTypes()];
       const echoSchema = allSchema.filter((t) => t instanceof Type.RuntimeType);
       const staticSchema = allSchema.filter((t) => !(t instanceof Type.RuntimeType));
 

@@ -3,7 +3,6 @@
 //
 
 import { type Database, type Tag, Type } from '@dxos/echo';
-import { runSyncAndForwardErrors } from '@dxos/effect';
 import { QueryDSL } from '@dxos/echo-query';
 import { type GetMenuContext } from '@dxos/react-ui-editor';
 
@@ -28,7 +27,7 @@ export const completions = ({ db, tags }: CompletionOptions) => {
         }
 
         if (range) {
-          const schema = db ? [...runSyncAndForwardErrors(db.graph.registry.listTypes())] : [];
+          const schema = db ? [...db.graph.registry.listTypes()] : [];
           return schema.map((schema) => Type.getTypename(schema));
         }
 

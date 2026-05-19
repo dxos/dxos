@@ -4,7 +4,6 @@
 
 import { type CleanupFn } from '@dxos/async';
 import { type Database, Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
-import { runSyncAndForwardErrors } from '@dxos/effect';
 import { type Graph, GraphModel } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
 import { EchoURI } from '@dxos/keys';
@@ -107,9 +106,9 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
 
     this._db = db;
 
-    this._schema = [...runSyncAndForwardErrors(db.graph.registry.listTypes())] as Type.RuntimeType[];
+    this._schema = [...db.graph.registry.listTypes()] as Type.RuntimeType[];
     this._schemaSubscription = db.graph.registry.changed.on(() => {
-      this._schema = [...runSyncAndForwardErrors(db.graph.registry.listTypes())] as Type.RuntimeType[];
+      this._schema = [...db.graph.registry.listTypes()] as Type.RuntimeType[];
     });
 
     this._subscribeObjects();

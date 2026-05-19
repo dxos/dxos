@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { afterEach, assert, beforeEach, describe, expect, test } from 'vitest';
 
@@ -529,7 +528,7 @@ describe('Integration tests', () => {
       {
         // Can query by stored schema ref.
         await using db = await peer.openDatabase(spaceKey, rootUrl);
-        const schema = Effect.runSync(db.graph.registry.listTypes()).find((t) => Type.getTypename(t) === 'com.example.type.test') as Type.RuntimeType;
+        const schema = db.graph.registry.listTypes().find((t) => Type.getTypename(t) === 'com.example.type.test') as Type.RuntimeType;
 
         const objects = await db.query(Filter.type(schema!)).run();
         expect(objects.length).to.eq(1);

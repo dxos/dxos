@@ -4,8 +4,6 @@
 
 import { describe } from 'vitest';
 
-import { runSyncAndForwardErrors } from '@dxos/effect';
-
 import { Obj, Type } from '@dxos/echo';
 import { type TestSchema } from '@dxos/echo/testing';
 
@@ -43,7 +41,7 @@ describe('Echo reactive proxy', () => {
       createObjectFn: async (props = {}) => {
         const object = Obj.make(schema, props as any) as TestSchema.Example;
         if (
-          runSyncAndForwardErrors(db.graph.registry.getTypeByDXN('dxn:type:' + Type.getTypename(schema) + ':' + Type.getVersion(schema))) ===
+          db.graph.registry.getTypeByDXN('dxn:type:' + Type.getTypename(schema) + ':' + Type.getVersion(schema)) ===
           undefined
         ) {
           db.graph.registry.addTypes([schema]);

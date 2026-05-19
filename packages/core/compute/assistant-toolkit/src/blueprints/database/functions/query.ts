@@ -21,7 +21,7 @@ export default Query.pipe(
         );
         if (typename !== undefined) {
           const { db } = yield* Database.Service;
-          const schema = (yield* db.graph.registry.listTypes()).find((t) => Type.getTypename(t) === typename);
+          const schema = db.graph.registry.listTypes().find((t) => Type.getTypename(t) === typename);
           if (!schema) {
             return yield* Effect.fail(new Error(`Schema ${typename} not found`));
           }
@@ -29,7 +29,7 @@ export default Query.pipe(
         }
       } else if (typename) {
         const { db } = yield* Database.Service;
-        const schema = (yield* db.graph.registry.listTypes()).find((t) => Type.getTypename(t) === typename);
+        const schema = db.graph.registry.listTypes().find((t) => Type.getTypename(t) === typename);
         if (!schema) {
           return yield* Effect.fail(new Error(`Schema ${typename} not found`));
         }

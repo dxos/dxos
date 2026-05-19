@@ -20,7 +20,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RestoreField> = Space
       invariant(db);
       const typename = getTypenameFromQuery(view.query.ast);
       invariant(typename);
-      const schema = (yield* db.graph.registry.listTypes()).find((t) => Type.getTypename(t) === typename);
+      const schema = db.graph.registry.listTypes().find((t) => Type.getTypename(t) === typename);
       invariant(schema);
 
       const projection = new ProjectionModel({

@@ -11,7 +11,6 @@ import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/a
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import { Database, type Entity, Filter, JsonSchema, Obj, Query, QueryAST, Ref, type SchemaRegistry, Type } from '@dxos/echo';
-import { runSyncAndForwardErrors } from '@dxos/effect';
 import {
   type AnyProperties,
   MetaId,
@@ -251,12 +250,12 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   _getOrRegisterPersistentSchema(schema: PersistentSchema): Type.RuntimeType {
     const identifierDXN = `dxn:echo:@:${schema.id}`;
-    const existing = runSyncAndForwardErrors(this.graph.registry.getTypeByDXN(identifierDXN));
+    const existing = this.graph.registry.getTypeByDXN(identifierDXN);
     if (existing instanceof Type.RuntimeType) {
       return existing;
     }
     this._registerPersistentSchema(schema);
-    return runSyncAndForwardErrors(this.graph.registry.getTypeByDXN(identifierDXN)) as Type.RuntimeType;
+    return this.graph.registry.getTypeByDXN(identifierDXN) as Type.RuntimeType;
   }
 
   private _registerPersistentSchema(schema: PersistentSchema): void {
@@ -302,7 +301,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
     const persistentSchema = this.add(schemaToStore);
     this._registerPersistentSchema(persistentSchema);
-    const result = runSyncAndForwardErrors(this.graph.registry.getTypeByDXN(typeId)) as Type.RuntimeType;
+    const result = this.graph.registry.getTypeByDXN(typeId) as Type.RuntimeType;
     invariant(result instanceof Type.RuntimeType);
     result._rebuild();
     return result;
@@ -381,8 +380,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
         const identifierDXN = Type.getDXN(schema as any);
         const inRegistry =
           typename && version
-            ? runSyncAndForwardErrors(this.graph.registry.getTypeByDXN(`dxn:type:${typename}:${version}`)) !== undefined ||
-              (identifierDXN != null && runSyncAndForwardErrors(this.graph.registry.getTypeByDXN(identifierDXN.toString())) !== undefined)
+            ? this.graph.registry.getTypeByDXN(`dxn:type:${typename}:${version}`) !== undefined ||
+              (identifierDXN != null && this.graph.registry.getTypeByDXN(identifierDXN.toString()) !== undefined)
             : false;
         if (!inRegistry) {
           throw createSchemaNotRegisteredError(schema);

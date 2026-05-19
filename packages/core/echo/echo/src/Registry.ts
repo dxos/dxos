@@ -88,13 +88,13 @@ export interface Registry {
    * Look up a registered schema type by its DXN string.
    * Falls back to the upstream registry if not found locally.
    */
-  getTypeByDXN(dxn: string): Effect.Effect<Type.AnyEntity | undefined>;
+  getTypeByDXN(dxn: string): Type.AnyEntity | undefined;
 
   /**
    * List all locally-registered schema types.
    * Does not include upstream types.
    */
-  listTypes(): Effect.Effect<readonly Type.AnyEntity[]>;
+  listTypes(): readonly Type.AnyEntity[];
 
   /**
    * Signal that a registered type has changed without adding or removing types.
@@ -233,17 +233,17 @@ class RegistryImpl implements Registry {
     this.#changed.emit();
   }
 
-  getTypeByDXN(dxn: string): Effect.Effect<Type.AnyEntity | undefined> {
+  getTypeByDXN(dxn: string): Type.AnyEntity | undefined {
     const local = this.#types.get(normalizeDXN(dxn));
     if (local != null) {
-      return Effect.succeed(local);
+      return local;
     }
-    return this.#upstream?.getTypeByDXN(dxn) ?? Effect.succeed(undefined);
+    return this.#upstream?.getTypeByDXN(dxn);
   }
 
-  listTypes(): Effect.Effect<readonly Type.AnyEntity[]> {
+  listTypes(): readonly Type.AnyEntity[] {
     // De-duplicate: multiple keys can point to the same type instance (e.g. typename DXN + identifier DXN).
-    return Effect.succeed(Array.from(new Set(this.#types.values())));
+    return Array.from(new Set(this.#types.values()));
   }
 
   touch(): void {

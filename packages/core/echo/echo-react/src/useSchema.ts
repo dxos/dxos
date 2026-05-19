@@ -5,7 +5,6 @@
 import { useMemo, useSyncExternalStore } from 'react';
 
 import { type Database, Type } from '@dxos/echo';
-import { runSyncAndForwardErrors } from '@dxos/effect';
 
 /**
  * Subscribe to and retrieve schema changes from a space's schema registry.
@@ -19,12 +18,12 @@ export const useSchema = (db?: Database.Database, typename?: string): Type.Type 
       };
     }
 
-    let currentSchema = runSyncAndForwardErrors(db.graph.registry.listTypes()).find((t) => Type.getTypename(t) === typename) as T | undefined;
+    let currentSchema = db.graph.registry.listTypes().find((t) => Type.getTypename(t) === typename) as T | undefined;
 
     return {
       subscribe: (onStoreChange: () => void) => {
         const unsubscribe = db.graph.registry.changed.on(() => {
-          currentSchema = runSyncAndForwardErrors(db.graph.registry.listTypes()).find((t) => Type.getTypename(t) === typename) as T | undefined;
+          currentSchema = db.graph.registry.listTypes().find((t) => Type.getTypename(t) === typename) as T | undefined;
           onStoreChange();
         });
 

@@ -9,7 +9,6 @@ import { type InspectOptionsStylized } from 'node:util';
 import { Event } from '@dxos/async';
 import { type DevtoolsFormatter, devtoolsFormatter, inspectCustom } from '@dxos/debug';
 import { Entity, Obj } from '@dxos/echo';
-import { runSyncAndForwardErrors } from '@dxos/effect';
 import {
   DATA_NAMESPACE,
   EncodedReference,
@@ -687,7 +686,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     const database = target[symbolInternals].database;
-    const fromRegistry = runSyncAndForwardErrors(database.graph.registry.getTypeByDXN(typeDXN.toString()));
+    const fromRegistry = database.graph.registry.getTypeByDXN(typeDXN.toString());
     if (fromRegistry != null) {
       return fromRegistry;
     }

@@ -9,7 +9,6 @@ import path from 'node:path';
 
 import { type Client } from '@dxos/client';
 import { Filter, type Obj, Type } from '@dxos/echo';
-import { runAndForwardErrors } from '@dxos/effect';
 import { Serializer } from '@dxos/echo-db';
 import { DXN, EchoURI, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -81,7 +80,7 @@ export class SpacesDumper {
    */
   static checkIfSpacesMatchExpectedDataUsingQuery = async (client: Client, expected: SpacesDump): Promise<boolean> => {
     for (const space of client.spaces.get()) {
-      const schemas = [...(await runAndForwardErrors(space.db.graph.registry.listTypes()))];
+      const schemas = [...space.db.graph.registry.listTypes()];
       for (const schema of schemas) {
         const objects = await space.db.query(Filter.type(schema)).run();
         const expectedObjects = SpacesDumper.getExpectedObjectsOfType(expected, space.id, schema);

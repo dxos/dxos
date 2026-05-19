@@ -2,7 +2,6 @@
 // Copyright 2020 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
@@ -42,9 +41,9 @@ const useSchemaQuery = (space?: Space): Type.AnyEntity[] => {
       return;
     }
 
-    setSchema([...Effect.runSync(space.db.graph.registry.listTypes())]);
+    setSchema([...space.db.graph.registry.listTypes()]);
     return space.db.graph.registry.changed.on(() => {
-      setSchema([...Effect.runSync(space.db.graph.registry.listTypes())]);
+      setSchema([...space.db.graph.registry.listTypes()]);
     });
   }, [space]);
 

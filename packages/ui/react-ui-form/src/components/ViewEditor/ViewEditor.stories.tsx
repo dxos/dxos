@@ -3,7 +3,6 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -88,7 +87,7 @@ const DefaultStory = (props: DefaultStoryProps) => {
         });
 
         const typename = getTypenameFromQuery(query.ast);
-        const newSchema = Effect.runSync(space.db.graph.registry.listTypes()).find((t) => Type.getTypename(t) === typename) as
+        const newSchema = space.db.graph.registry.listTypes().find((t) => Type.getTypename(t) === typename) as
           | EchoSchema
           | undefined;
         if (!newSchema) {

@@ -16,7 +16,7 @@ export default ObjectCreate.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ typename, data }) {
       const { db } = yield* Database.Service;
-      const foundSchema = (yield* db.graph.registry.listTypes()).find((t) => Type.getTypename(t) === typename);
+      const foundSchema = db.graph.registry.listTypes().find((t) => Type.getTypename(t) === typename);
       invariant(foundSchema, `Schema not found: ${typename}`);
       invariant(Type.isObjectSchema(foundSchema), 'Schema is not an object schema');
       const schema = foundSchema;
