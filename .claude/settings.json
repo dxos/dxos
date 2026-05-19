@@ -8,10 +8,8 @@
   },
   "permissions": {
     "allow": [
-      "mcp__Trunk__fix-flaky-test",
       "mcp__Trunk__search-test",
       "mcp__Trunk__investigate-ci-failure",
-      "mcp__Trunk__setup-trunk-uploads",
       "mcp__Trunk__detect-frameworks"
     ]
   }
