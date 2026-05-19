@@ -71,8 +71,8 @@ export default Capability.makeModule(() =>
             invariant(extensions?.invoke, 'No operation invoker');
 
             // Validate schema exists first.
-            const schema = await runAndForwardErrors(extensions.space.db.graph.registry.listTypes()).then((types) =>
-              types.find((t) => Type.getTypename(t) === typename),
+            const schema = (await runAndForwardErrors(extensions.space.db.graph.registry.listTypes())).find(
+              (t) => Type.getTypename(t) === typename,
             );
             if (!schema) {
               return ToolResult.Error(`Schema not found: ${typename}`);
@@ -141,8 +141,8 @@ export default Capability.makeModule(() =>
             invariant(Obj.instanceOf(TableView, table));
 
             const typename = view.query.typename;
-            const schema = await runAndForwardErrors(space.db.graph.registry.listTypes()).then((types) =>
-              types.find((t) => Type.getTypename(t) === typename),
+            const schema = (await runAndForwardErrors(space.db.graph.registry.listTypes())).find(
+              (t) => Type.getTypename(t) === typename,
             );
             return ToolResult.Success(schema);
           },
@@ -170,8 +170,8 @@ export default Capability.makeModule(() =>
             invariant(Obj.instanceOf(TableView, table));
 
             const typename = view.query.typename;
-            const schema = await runAndForwardErrors(space.db.graph.registry.listTypes()).then((types) =>
-              types.find((t) => Type.getTypename(t) === typename),
+            const schema = (await runAndForwardErrors(space.db.graph.registry.listTypes())).find(
+              (t) => Type.getTypename(t) === typename,
             );
             const { objects: rows } = await space.db.query(Filter.type(schema)).run();
             return ToolResult.Success(rows);
@@ -199,8 +199,8 @@ export default Capability.makeModule(() =>
               .first()) as View.View;
             // Get schema for validation.
             const typename = view.query.typename;
-            const schema = await runAndForwardErrors(space.db.graph.registry.listTypes()).then((types) =>
-              types.find((t) => Type.getTypename(t) === typename),
+            const schema = (await runAndForwardErrors(space.db.graph.registry.listTypes())).find(
+              (t) => Type.getTypename(t) === typename,
             );
 
             const table = await view.presentation.load();

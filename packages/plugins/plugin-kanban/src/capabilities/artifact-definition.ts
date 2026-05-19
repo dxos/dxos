@@ -65,8 +65,8 @@ export default Capability.makeModule(() =>
             invariant(extensions?.invoke, 'No operation invoker');
 
             // Validate schema exists first
-            const schema = await runAndForwardErrors(extensions.space.db.graph.registry.listTypes()).then((types) =>
-              types.find((t) => Type.getTypename(t) === typename),
+            const schema = (await runAndForwardErrors(extensions.space.db.graph.registry.listTypes())).find(
+              (t) => Type.getTypename(t) === typename,
             );
             if (!schema) {
               return ToolResult.Error(`Schema not found: ${typename}`);
@@ -135,8 +135,8 @@ export default Capability.makeModule(() =>
             invariant(Obj.instanceOf(Kanban.Kanban, kanban));
 
             const typename = view.query.typename;
-            const schema = await runAndForwardErrors(space.db.graph.registry.listTypes()).then((types) =>
-              types.find((t) => Type.getTypename(t) === typename),
+            const schema = (await runAndForwardErrors(space.db.graph.registry.listTypes())).find(
+              (t) => Type.getTypename(t) === typename,
             );
             invariant(schema);
 
