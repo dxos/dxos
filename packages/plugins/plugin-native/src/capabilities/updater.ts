@@ -186,9 +186,7 @@ export default Capability.makeModule(
 
     return [
       ...baseContributions,
-      Capability.contributes(Capabilities.Null, null, () =>
-        Effect.sync(() => Effect.runSync(Fiber.interrupt(fiber))),
-      ),
+      Capability.contributes(Capabilities.Null, null, () => Effect.sync(() => Effect.runSync(Fiber.interrupt(fiber)))),
     ];
   }),
 );

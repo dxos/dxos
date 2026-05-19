@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-
 export type StatusBarActionsProps = {};
 
 // Reserved slot for the main bottom bar; currently empty. Plugins can contribute
