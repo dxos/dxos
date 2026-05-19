@@ -1031,9 +1031,7 @@ describe('QueryPlanner', () => {
   });
 
   test('select items from a specific feed', () => {
-    const query = Query.select(Filter.type(TestSchema.Task)).from([
-      { _tag: 'feed', feedUri: QUEUE_DXN },
-    ]);
+    const query = Query.select(Filter.type(TestSchema.Task)).from([{ _tag: 'feed', feedUri: QUEUE_DXN }]);
 
     const plan = planner.createPlan(query.ast);
     expect(plan).toMatchInlineSnapshot(`
@@ -1446,9 +1444,7 @@ describe('QueryPlanner', () => {
   });
 
   test('from specific feed via feeds scope', () => {
-    const query = Query.select(Filter.type(TestSchema.Task)).from([
-      { _tag: 'feed', feedUri: QUEUE_DXN },
-    ]);
+    const query = Query.select(Filter.type(TestSchema.Task)).from([{ _tag: 'feed', feedUri: QUEUE_DXN }]);
 
     const plan = planner.createPlan(query.ast);
     expect(plan.steps[0]).toMatchObject({

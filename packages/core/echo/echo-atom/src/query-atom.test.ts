@@ -255,4 +255,3 @@ describe('AtomQuery with queues', () => {
     expect(results[0].name).toEqual('jane');
   });
 });
-

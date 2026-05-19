@@ -121,9 +121,7 @@ export const getRegistryScopeForQuery = (query: QueryAST.Query): RegistryQuerySc
     return { included: false, locations: new Set() };
   }
 
-  const registryScopes = clause.from.scopes.filter(
-    (s): s is QueryAST.RegistryScope => s._tag === 'registry',
-  );
+  const registryScopes = clause.from.scopes.filter((s): s is QueryAST.RegistryScope => s._tag === 'registry');
   if (registryScopes.length === 0) {
     return { included: false, locations: new Set() };
   }

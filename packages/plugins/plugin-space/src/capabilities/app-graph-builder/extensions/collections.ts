@@ -176,7 +176,10 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     GraphBuilder.createExtension({
       id: 'object-actions',
       match: (node) => {
-        return node.data != null && Obj.getDatabase(node.data) && Obj.isObject(node.data) && Obj.getTypename(node.data) === node.type
+        return node.data != null &&
+          Obj.getDatabase(node.data) &&
+          Obj.isObject(node.data) &&
+          Obj.getTypename(node.data) === node.type
           ? Option.some({ object: node.data, nodeId: node.id })
           : Option.none();
       },

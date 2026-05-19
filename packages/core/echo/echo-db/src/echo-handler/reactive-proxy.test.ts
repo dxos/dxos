@@ -40,7 +40,10 @@ describe('Echo reactive proxy', () => {
       },
       createObjectFn: async (props = {}) => {
         const object = Obj.make(schema, props as any) as TestSchema.Example;
-        if (db.graph.registry.getTypeByDXN('dxn:type:' + Type.getTypename(schema) + ':' + Type.getVersion(schema)) === undefined) {
+        if (
+          db.graph.registry.getTypeByDXN('dxn:type:' + Type.getTypename(schema) + ':' + Type.getVersion(schema)) ===
+          undefined
+        ) {
           db.graph.registry.addTypes([schema]);
         }
 
