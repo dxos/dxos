@@ -75,6 +75,8 @@ export interface Registry {
   //
 
   // TODO(wittjosiah): Can these be integrated into the object registry?
+  // TODO(wittjosiah): The types API (addTypes, getTypeByDXN, types) should be made async using Effect
+  //   to align with how the objects Query API works. Do not use Promise/async.
 
   /**
    * Register static TypeScript schema types.
