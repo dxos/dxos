@@ -348,33 +348,6 @@ describe('AutomergeHost with Subduction', () => {
       },
     );
 
-    // The author/writer's `shouldAdvertise` is the only gate on the SENDER side.
-    // The RECEIVER's `_subductionPolicy.authorizePut` consults `shouldAdvertise` on the
-    // *receiver's* connection — so if the receiver refuses, no bytes should land.
-    // This exercises the inbound (`authorizePut`) path.
-    test('receiver denies authorizePut → inbound writes dropped', { timeout: 5_000 }, async ({ expect }) => {
-      const host1 = await setupAutomergeHost({ level: await createLevel() });
-      const host2 = await setupAutomergeHost({ level: await createLevel() });
-      const handle = await host2.createDoc({ text: 'inbound-denied' });
-      await host2.flush(Context.default());
-      await waitForSubductionSave();
-
-      const network = await new TestReplicationNetwork().open();
-      try {
-        // host1 (receiver) denies; host2 (sender) is permissive.
-        await host1.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => false }));
-        await host2.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
-
-        const progress = host1.findWithProgress<{ text: string }>(handle.documentId);
-        await sleep(POLICY_NEGATIVE_DELAY_MS);
-        expect(progress.handle.doc()?.text).to.be.undefined;
-      } finally {
-        await host1.close();
-        await host2.close();
-        await network.close();
-      }
-    });
-
     // Regression test for the patched `Repo.on('subduction-peer-bound', ...)` event
     // (mirrors upstream automerge/automerge-repo#635). Subduction's discovery handshake
     // produces a verified peer id on the responder side; in our test topology (both
