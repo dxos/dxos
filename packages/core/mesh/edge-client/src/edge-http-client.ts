@@ -481,6 +481,58 @@ export class EdgeHttpClient {
   }
 
   //
+  // Integration proxy.
+  //
+
+  /**
+   * Fetch through the edge proxy, used by integration plugins (Discord, Slack, ...)
+   * to call third-party REST APIs that don't set permissive CORS headers.
+   *
+   * Rewrites `https://discord.com/api/v10/users/@me` into
+   * `${baseUrl}/proxy/discord.com/api/v10/users/@me`, attaches the cached
+   * verifiable-presentation `Authorization` header (refreshing on 401 with
+   * the configured EdgeIdentity), and returns the raw upstream `Response`.
+   *
+   * `init.headers.Authorization` (caller-supplied) is preserved by prefixing
+   * with `X-Cors-Proxy-Authorization`, since the proxy strips
+   * `Authorization` on forwarding to avoid leaking the DXOS presentation
+   * upstream — the prefix carries the upstream's bot token / token through.
+   */
+  public async proxyFetch(target: URL, init: RequestInit = {}): Promise<Response> {
+    const proxyUrl = new URL(`/proxy/${target.host}${target.pathname}${target.search}`, this.baseUrl);
+    if (target.protocol === 'http:') {
+      proxyUrl.searchParams.set('scheme', 'http');
+    }
+
+    const headers = remapAuthorizationForProxy(new Headers(init.headers ?? undefined));
+
+    let handledAuth = false;
+    while (true) {
+      if (!this._authHeader) {
+        const authResponse = await fetch(new URL('/auth', this.baseUrl));
+        if (authResponse.status === 401) {
+          this._authHeader = await this._handleUnauthorized(authResponse);
+        }
+      }
+      const requestHeaders = new Headers(headers);
+      if (this._authHeader) {
+        requestHeaders.set('Authorization', this._authHeader);
+      }
+      if (this._clientTag) {
+        requestHeaders.set(EDGE_CLIENT_TAG_HEADER, this._clientTag);
+      }
+
+      const response = await fetch(proxyUrl, { ...init, headers: requestHeaders });
+      if (response.status === 401 && !handledAuth) {
+        this._authHeader = await this._handleUnauthorized(response);
+        handledAuth = true;
+        continue;
+      }
+      return response;
+    }
+  }
+
+  //
   // Internal
   //
 
@@ -659,3 +711,20 @@ const getFileMimeType = (filename: string) =>
     : filename.endsWith('.wasm')
       ? 'application/wasm'
       : 'application/octet-stream';
+
+/**
+ * Move any caller-supplied `Authorization` header to `X-Cors-Proxy-Authorization`
+ * so it survives the proxy hop. The edge proxy strips the top-level
+ * `Authorization` (it carries the DXOS presentation, never to be leaked
+ * upstream) and applies any `x-cors-proxy-*` override prefix as the actual
+ * upstream header — which is exactly the channel we want for forwarding bot
+ * tokens, OAuth tokens, etc.
+ */
+const remapAuthorizationForProxy = (headers: Headers): Headers => {
+  const callerAuth = headers.get('Authorization');
+  if (callerAuth !== null) {
+    headers.delete('Authorization');
+    headers.set('X-Cors-Proxy-Authorization', callerAuth);
+  }
+  return headers;
+};

@@ -4,6 +4,7 @@
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import { Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -18,7 +19,7 @@ import { meta } from '#meta';
 
 import { DISCORD_SOURCE } from '../constants';
 import { IntegrationDatabaseMissingError, formatDiscordSyncFailure } from '../errors';
-import { DiscordApi } from '../services';
+import { DiscordApi, makeEdgeProxyHttpClientLayer } from '../services';
 import { DiscordOperation } from '../types';
 
 type DiscordChannel = DiscordApi.DiscordChannel;
@@ -329,6 +330,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
           Effect.provide(Database.layer(db)),
           Effect.provide(createFeedServiceLayer(space.queues)),
           Effect.provide(DiscordApi.DiscordCredentials.fromIntegration(integration)),
+          Effect.provide(FetchHttpClient.layer.pipe(Layer.provide(makeEdgeProxyHttpClientLayer(client.edge.http)))),
         ),
       );
 
@@ -353,7 +355,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
         );
         return yield* Effect.fail(outcome.left);
       }
-    }, Effect.provide(FetchHttpClient.layer)),
+    }),
   ),
 );
 
