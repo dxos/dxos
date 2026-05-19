@@ -258,7 +258,6 @@
   justify-content: flex-end;
   height: 4.5em;
   line-height: 1.5;
-  min-width: 30rem;
   letter-spacing: 0.01em;
   /* 
    * Fixed-width digits so the `(i/n)` counter on range-bearing status

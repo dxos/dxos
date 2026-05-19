@@ -25,7 +25,7 @@ export const Magazine = Schema.Struct({
   /** User-facing title of the magazine. */
   name: Schema.String.pipe(Schema.optional),
   /** Feeds to pull content from. */
-  feeds: Schema.Array(Ref.Ref(Subscription.Feed)),
+  feeds: Schema.Array(Ref.Ref(Subscription.Subscription)),
   /** Routine describing what content the Magazine should gather. */
   routine: Schema.optional(Ref.Ref(Routine.Routine).pipe(Schema.annotations({ title: 'Routine' }))),
   /**
@@ -63,7 +63,7 @@ export const instanceOf = (value: unknown): value is Magazine => Obj.instanceOf(
 /** Creates a Magazine. */
 export const make = (
   props: Omit<Obj.MakeProps<typeof Magazine>, 'feeds' | 'posts'> & {
-    feeds?: Ref.Ref<Subscription.Feed>[];
+    feeds?: Ref.Ref<Subscription.Subscription>[];
     posts?: Ref.Ref<Subscription.Post>[];
   } = {},
 ): Magazine =>

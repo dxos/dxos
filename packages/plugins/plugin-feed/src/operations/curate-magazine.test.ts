@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { type Space } from '@dxos/client/echo';
-import { Feed as EchoFeed, Obj, Ref, Tag } from '@dxos/echo';
+import { Feed, Obj, Ref, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
@@ -39,16 +39,18 @@ describe('curateMagazine', () => {
 
   const setup = async () => {
     const { db, queues } = await builder.createDatabase({
-      types: [EchoFeed.Feed, Subscription.Feed, Subscription.Post, Magazine.Magazine, Tag.Tag, Text.Text],
+      types: [Feed.Feed, Subscription.Subscription, Subscription.Post, Magazine.Magazine, Tag.Tag, Text.Text],
     });
 
-    const subscriptionFeed = db.add(Subscription.makeFeed({ name: 'test feed', url: 'https://example.com/rss' }));
+    const subscriptionFeed = db.add(
+      Subscription.makeSubscription({ name: 'test feed', url: 'https://example.com/rss' }),
+    );
     const magazine = db.add(Magazine.make({ feeds: [Ref.make(subscriptionFeed)] }));
     await db.flush();
 
     const echoFeed = subscriptionFeed.feed?.target;
     invariant(echoFeed, 'Backing ECHO feed should be present.');
-    const feedDXN = EchoFeed.getQueueDxn(echoFeed);
+    const feedDXN = Feed.getQueueDxn(echoFeed);
     invariant(feedDXN, 'Feed should have a queue DXN.');
     const queue = queues.get(feedDXN);
     const space = { db, queues } as unknown as Space;

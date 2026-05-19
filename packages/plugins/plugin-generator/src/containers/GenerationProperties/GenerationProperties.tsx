@@ -139,8 +139,6 @@ export const GenerationProperties = ({ subject }: GenerationPropertiesProps) => 
   );
 };
 
-export default GenerationProperties;
-
 /**
  * Build option entries for a `SelectField`. Includes the current value as a
  * synthetic option when it isn't in the fetched set so a previously-set id

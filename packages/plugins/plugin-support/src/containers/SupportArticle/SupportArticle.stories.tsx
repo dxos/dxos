@@ -37,13 +37,18 @@ const DefaultStory = ({ title, body, status, resolution }: DefaultStoryProps) =>
     }
     return next;
   }, [title, body, status, resolution]);
+
   return <SupportArticle role='article' attendableId='story' subject={ticket} />;
 };
 
 const meta = {
   title: 'plugins/plugin-support/containers/SupportArticle',
   component: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withClientProvider({ createIdentity: true })],
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'fullscreen', classNames: 'dx-document' }),
+    withClientProvider({ createIdentity: true }),
+  ],
   parameters: {
     layout: 'fullscreen',
     translations,

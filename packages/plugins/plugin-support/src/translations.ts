@@ -51,7 +51,7 @@ export const translations = [
         'welcome-node.label': 'Welcome',
         'welcome.title': 'Welcome to Composer',
         'welcome.description':
-          'This is your personal space. Open a ticket from the Support assistant, or start the guided tour to learn the basics.',
+          'This is your personal space. Open a ticket from the Support assistant, or start the guided tour to learn how to get started.',
         'start-tour.button': 'Start tour',
         'open-assistant.button': 'Open Assistant',
         // Settings.

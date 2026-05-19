@@ -16,12 +16,12 @@ const ensureSidebar: Step['before'] = async (capabilities: CapabilityManager.Cap
 const base: Partial<Step> = {
   disableBeacon: true,
   disableOverlay: true,
+  offset: 0,
   styles: {
     options: {
       arrowColor: 'var(--color-accent-surface)',
     },
   },
-  offset: 0,
 };
 
 // TODO(burdon): Move text to translation object.
@@ -62,7 +62,15 @@ export const steps: Step[] = [
     before: ensureSidebar,
     target: '[data-testid="treeView.pluginRegistry"]',
     title: 'Plugins',
-    content: 'Add plugins.',
+    content: 'Enable plugins.',
+  },
+  // TODO(burdon): Open companion.
+  {
+    ...base,
+    before: ensureSidebar,
+    target: '[data-testid="plankHeading.companion"]',
+    title: 'Companions',
+    content: 'View companion surfaces.',
   },
   {
     ...base,
