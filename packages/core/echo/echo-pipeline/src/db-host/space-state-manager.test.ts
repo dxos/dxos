@@ -6,7 +6,6 @@ import { type DocumentId } from '@automerge/automerge-repo';
 import { describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
-import { Context } from '@dxos/context';
 import { DatabaseDirectory } from '@dxos/echo-protocol';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
