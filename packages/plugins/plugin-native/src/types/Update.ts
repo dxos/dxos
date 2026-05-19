@@ -3,7 +3,6 @@
 //
 
 import { type Atom } from '@effect-atom/atom-react';
-import type * as Effect from 'effect/Effect';
 
 // @import-as-namespace
 
@@ -19,7 +18,7 @@ export type Status =
 
 export type Manager = {
   status: Atom.Writable<Status>;
-  check: () => Effect.Effect<void>;
-  install: () => Effect.Effect<void>;
-  relaunch: () => Effect.Effect<void>;
+  check: () => Promise<void>;
+  install: () => Promise<void>;
+  relaunch: () => Promise<void>;
 };

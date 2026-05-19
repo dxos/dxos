@@ -131,21 +131,21 @@ export default Capability.makeModule(
 
     const manager: Update.Manager = {
       status: statusAtom,
-      check: () =>
-        Effect.promise(async () => {
-          if (!enabled) {
-            return;
-          }
-          await doCheck();
-        }),
-      install: () =>
-        Effect.promise(async () => {
-          if (!enabled) {
-            return;
-          }
-          await doInstall();
-        }),
-      relaunch: () => Effect.promise(() => relaunch()),
+      check: async () => {
+        if (!enabled) {
+          return;
+        }
+        await doCheck();
+      },
+      install: async () => {
+        if (!enabled) {
+          return;
+        }
+        await doInstall();
+      },
+      relaunch: async () => {
+        await relaunch();
+      },
     };
 
     const managerContribution = Capability.contributes(NativeCapabilities.UpdateManager, manager);
