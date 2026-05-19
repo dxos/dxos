@@ -422,6 +422,118 @@ describe('AutomergeHost with Subduction', () => {
     });
   });
 
+  // Characterization of `_subductionPolicy` recovery behavior introduced by
+  // PR 11351 — relevant to the production sync-divergence investigation.
+  //
+  // Setup: both hosts have the same documents with DIVERGENT commits (each
+  // side has one local commit the other lacks), mirroring production state
+  // where the sync diagnostic reports `differentDocuments: N` and
+  // `localDocumentCount === remoteDocumentCount`.
+  //
+  // FINDING: with `AutomergeHost.useSubduction: true`, even when one side's
+  // policy denies BOTH `authorizeFetch` and `authorizePut` during the
+  // initial subduction sync round (confirmed via subduction_core WARNs
+  // `policy denied: authorizePut denied by client share policy`), flipping
+  // the policy to allow recovers replication within ~5 seconds WITHOUT any
+  // external nudge (no fresh commit, no explicit `shareConfigChanged()`
+  // call from the test). The recovery is driven by `AutomergeHost`'s
+  // automatic `_sharePolicyChangedTask` firing on `documentRequested`
+  // events from subduction's heal-retry attempts.
+  //
+  // This contradicts the raw-Repo F1 test in
+  // `automerge-repo-subduction.test.ts` ("authorizePut deny → allow needs
+  // a fresh holder commit to recover"), suggesting that the
+  // `AutomergeHost` wrapper papers over the raw bridge's recovery gap.
+  //
+  // Implication for the production sync bug: a transient policy denial
+  // during initial sync does NOT explain a persistent multi-second
+  // divergence under `AutomergeHost`. The production bug must have a
+  // different root cause.
+  describe('initial-sync policy denial: recovery characterization', () => {
+    const NUM_DOCUMENTS = 5;
+
+    const createDivergentDocs = async (host1: AutomergeHost, host2: AutomergeHost): Promise<DocumentId[]> => {
+      const documentIds: DocumentId[] = [];
+      for (const i of range(NUM_DOCUMENTS)) {
+        const initial = Automerge.from({ docIndex: i, version: 0 });
+        const binary = Automerge.save(initial);
+        const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
+        const h1 = await host1.createDoc(binary, { documentId, preserveHistory: true });
+        const h2 = await host2.createDoc(binary, { documentId, preserveHistory: true });
+        h1.change((doc: any) => {
+          doc.fromHost1 = true;
+        });
+        h2.change((doc: any) => {
+          doc.fromHost2 = true;
+        });
+        documentIds.push(documentId);
+      }
+      await host1.flush(Context.default());
+      await host2.flush(Context.default());
+      await waitForSubductionSave();
+      return documentIds;
+    };
+
+    const allConverged = async (host1: AutomergeHost, host2: AutomergeHost, ids: DocumentId[]) => {
+      for (const id of ids) {
+        const h1 = [...((await host1.getHeads([id]))[0] ?? [])].sort();
+        const h2 = [...((await host2.getHeads([id]))[0] ?? [])].sort();
+        if (h1.length !== h2.length || h1.some((h, i) => h !== h2[i])) {
+          return false;
+        }
+      }
+      return true;
+    };
+
+    test(
+      'deny→allow flip auto-recovers via AutomergeHost machinery (no manual kick)',
+      { timeout: 15_000 },
+      async ({ expect }) => {
+        const host1 = await setupAutomergeHost({ level: await createLevel() });
+        const host2 = await setupAutomergeHost({ level: await createLevel() });
+        const documentIds = await createDivergentDocs(host1, host2);
+
+        const network = await new TestReplicationNetwork().open();
+        try {
+          let allowOnHost1 = false;
+          const host1Replicator = await network.createReplicator({ shouldAdvertise: () => allowOnHost1 });
+          await host1.addReplicator(Context.default(), host1Replicator);
+          await host2.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
+
+          // Hold deny long enough for subduction to attempt + log denials.
+          await sleep(3_000);
+          expect(await allConverged(host1, host2, documentIds)).toBe(false);
+
+          allowOnHost1 = true;
+
+          await expect.poll(() => allConverged(host1, host2, documentIds), { timeout: 5_000 }).toBe(true);
+        } finally {
+          await host1.close();
+          await host2.close();
+          await network.close();
+        }
+      },
+    );
+
+    test('control: docs converge when policy never denies', { timeout: 15_000 }, async ({ expect }) => {
+      const host1 = await setupAutomergeHost({ level: await createLevel() });
+      const host2 = await setupAutomergeHost({ level: await createLevel() });
+      const documentIds = await createDivergentDocs(host1, host2);
+
+      const network = await new TestReplicationNetwork().open();
+      try {
+        await host1.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
+        await host2.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
+
+        await expect.poll(() => allConverged(host1, host2, documentIds), { timeout: 5_000 }).toBe(true);
+      } finally {
+        await host1.close();
+        await host2.close();
+        await network.close();
+      }
+    });
+  });
+
   test('collection synchronization is bidirectional', { timeout: 10_000 }, async ({ expect }) => {
     const host1DocumentIds: DocumentId[] = [];
     const host2DocumentIds: DocumentId[] = [];

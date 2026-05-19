@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+import { type DocumentId } from '@automerge/automerge-repo';
 import type * as SqlClient from '@effect/sql/SqlClient';
 
 import { Mutex, Trigger } from '@dxos/async';
@@ -167,7 +168,26 @@ export class ServiceContext extends Resource {
     this.echoHost = new EchoHost({
       kv: this.level,
       peerIdProvider: () => this.identityManager.identity?.deviceKey?.toHex(),
-      getSpaceKeyByRootDocumentId: (documentId) => this.spaceManager.findSpaceByRootDocumentId(documentId)?.key,
+      // Resolves (document → spaceKey) for the subduction policy. Uses the
+      // SpaceStateManager's reverse index (populated synchronously at
+      // root-assignment time and updated as the space's linked-doc list
+      // grows) instead of the old credential-scan path, which was racy
+      // during initial sync: the Epoch credential carrying `automergeRoot`
+      // is processed asynchronously and may arrive after subduction has
+      // already attempted to fetch the root, causing `authorizeFetch`
+      // denials whose stuck entries don't auto-recover.
+      getSpaceKeyByRootDocumentId: (documentId) => {
+        const spaceId = this.echoHost.findSpaceIdByDocumentId(documentId as DocumentId);
+        if (!spaceId) {
+          return undefined;
+        }
+        for (const space of this.spaceManager.spaces.values()) {
+          if (space.id === spaceId) {
+            return space.key;
+          }
+        }
+        return undefined;
+      },
       runtime: this._runtime,
       useSubduction: this._edgeFeatures?.subductionReplicator,
       syncQueue: async (ctx, request) => {

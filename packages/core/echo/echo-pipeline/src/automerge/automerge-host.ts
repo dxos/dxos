@@ -290,6 +290,12 @@ export class AutomergeHost extends Resource {
       Event.wrap<SubductionPeerBinding>(this._repo as any, 'subduction-peer-bound').on(this._ctx, (binding) => {
         if ('repoPeerId' in binding) {
           this._subductionPeerIdHexToRepoPeerId.set(binding.subductionPeerId.toString(), binding.repoPeerId);
+          // #region DEBUG
+          log.info('[DEBUG POLICY] peer binding', {
+            sub: binding.subductionPeerId.toString().slice(0, 12),
+            repo: binding.repoPeerId.slice(0, 24),
+          });
+          // #endregion DEBUG
         }
       });
     } else {
@@ -650,12 +656,28 @@ export class AutomergeHost extends Resource {
       // Per-document gating below; no per-peer kill-switch.
     },
     authorizeFetch: async (subductionPeerId, sedimentreeId) => {
-      if (!(await this._shouldShareDocumentWithSubductionPeer(subductionPeerId, sedimentreeId))) {
+      const allow = await this._shouldShareDocumentWithSubductionPeer(subductionPeerId, sedimentreeId);
+      // #region DEBUG
+      log.info('[DEBUG POLICY] authorizeFetch', {
+        decision: allow ? 'ALLOW' : 'DENY',
+        doc: sedimentreeIdToDocumentId(sedimentreeId).slice(0, 8),
+        peer: subductionPeerId.toString().slice(0, 12),
+      });
+      // #endregion DEBUG
+      if (!allow) {
         throw new Error('authorizeFetch denied by client share policy');
       }
     },
     authorizePut: async (requestor, _author, sedimentreeId) => {
-      if (!(await this._shouldShareDocumentWithSubductionPeer(requestor, sedimentreeId))) {
+      const allow = await this._shouldShareDocumentWithSubductionPeer(requestor, sedimentreeId);
+      // #region DEBUG
+      log.info('[DEBUG POLICY] authorizePut', {
+        decision: allow ? 'ALLOW' : 'DENY',
+        doc: sedimentreeIdToDocumentId(sedimentreeId).slice(0, 8),
+        peer: requestor.toString().slice(0, 12),
+      });
+      // #endregion DEBUG
+      if (!allow) {
         throw new Error('authorizePut denied by client share policy');
       }
     },
@@ -682,7 +704,14 @@ export class AutomergeHost extends Resource {
     const subductionPeerIdHex = subductionPeerId.toString();
     const repoPeerId = this._subductionPeerIdHexToRepoPeerId.get(subductionPeerIdHex);
     if (!repoPeerId) {
-      log.warn('subductionPolicy: no repo-peer binding yet; allowing', { subductionPeerIdHex });
+      // #region DEBUG
+      const documentId = sedimentreeIdToDocumentId(sedimentreeId);
+      log.warn('[DEBUG POLICY] no repo-peer binding yet; allowing', {
+        doc: documentId.slice(0, 8),
+        sub: subductionPeerIdHex.slice(0, 12),
+        bindingsKnown: this._subductionPeerIdHexToRepoPeerId.size,
+      });
+      // #endregion DEBUG
       return true;
     }
     const documentId = sedimentreeIdToDocumentId(sedimentreeId);

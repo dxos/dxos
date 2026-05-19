@@ -194,6 +194,15 @@ export class EchoHost extends Resource {
     return this._spaceStateManager.spaceIds;
   }
 
+  /**
+   * Resolve the space that contains the given automerge document. Available
+   * synchronously as soon as the space's root has been assigned (no Epoch
+   * credential round-trip required).
+   */
+  findSpaceIdByDocumentId(documentId: DocumentId): SpaceId | undefined {
+    return this._spaceStateManager.findSpaceIdByDocumentId(documentId);
+  }
+
   get queryService(): QueryServiceImpl {
     return this._queryService;
   }

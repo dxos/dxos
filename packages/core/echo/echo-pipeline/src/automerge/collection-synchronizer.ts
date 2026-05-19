@@ -82,7 +82,31 @@ export class CollectionSynchronizer extends Resource {
   setLocalCollectionState(collectionId: string, state: CollectionState): void {
     this._activeCollections.add(collectionId);
 
-    log('setLocalCollectionState', { collectionId, state });
+    log.info('setLocalCollectionState', { collectionId, state });
+    // #region DEBUG
+    {
+      const entries = Object.entries(state.documents);
+      const totalKeys = entries.length;
+      const withHeads = entries.filter(([, h]) => h.length > 0).length;
+      const empty = totalKeys - withHeads;
+      const prevState = this._perCollectionStates.get(collectionId)?.localState;
+      const prevKeys = prevState ? Object.keys(prevState.documents) : [];
+      const newKeys = entries.map(([k]) => k);
+      const added = newKeys.filter((k) => !prevKeys.includes(k));
+      const removed = prevKeys.filter((k) => !newKeys.includes(k));
+      log.info('[DEBUG H1] setLocal summary', {
+        sp: collectionId.split(':')[1]?.slice(0, 8),
+        totalKeys,
+        withHeads,
+        empty,
+        prevKeys: prevKeys.length,
+        added: added.slice(0, 5),
+        addedCount: added.length,
+        removed: removed.slice(0, 5),
+        removedCount: removed.length,
+      });
+    }
+    // #endregion DEBUG
     const perCollectionState = this._getOrCreatePerCollectionState(collectionId);
     perCollectionState.localState = state;
 
@@ -213,7 +237,21 @@ export class CollectionSynchronizer extends Resource {
    * Callback when a peer sends the state of a collection.
    */
   onRemoteStateReceived(collectionId: string, peerId: PeerId, state: CollectionState): void {
-    log('onRemoteStateReceived', { collectionId, peerId, state });
+    log.info('onRemoteStateReceived', { collectionId, peerId, state });
+    // #region DEBUG
+    {
+      const entries = Object.entries(state.documents);
+      const totalKeys = entries.length;
+      const withHeads = entries.filter(([, h]) => h.length > 0).length;
+      log.info('[DEBUG H2] onRemote summary', {
+        sp: collectionId.split(':')[1]?.slice(0, 8),
+        peerSuffix: peerId.slice(-12),
+        totalKeys,
+        withHeads,
+        empty: totalKeys - withHeads,
+      });
+    }
+    // #endregion DEBUG
     validateCollectionState(state);
     const perCollectionState = this._getOrCreatePerCollectionState(collectionId);
     const previousRemoteState = perCollectionState.remoteStates.get(peerId);
@@ -234,6 +272,77 @@ export class CollectionSynchronizer extends Resource {
     log('diffCollectionState', { collectionId, peerId });
     const localState = perCollectionState.localState ?? { documents: {} };
     const diff = diffCollectionState(localState, remoteState);
+    // #region DEBUG
+    const hasAnyDiff =
+      diff.different.length > 0 || diff.missingOnLocal.length > 0 || diff.missingOnRemote.length > 0;
+    if (hasAnyDiff) {
+      const sp = collectionId.split(':')[1]?.slice(0, 8);
+      log.info('[DEBUG H4b] diff overview', {
+        sp,
+        different: diff.different.length,
+        missingOnLocal: diff.missingOnLocal.length,
+        missingOnRemote: diff.missingOnRemote.length,
+        missingOnLocalSamples: diff.missingOnLocal.slice(0, 3).map((d) => d.slice(0, 8)),
+        missingOnRemoteSamples: diff.missingOnRemote.slice(0, 3).map((d) => d.slice(0, 8)),
+      });
+    }
+    if (diff.different.length > 0) {
+      const sp = collectionId.split(':')[1]?.slice(0, 8);
+      let bothMultiHead = 0;
+      let bothSingleHead = 0;
+      let mixedLen = 0;
+      let lenMismatch = 0;
+      let setEqualButArrayNot = 0;
+      let setActuallyDifferent = 0;
+      for (const docId of diff.different) {
+        const local = localState.documents[docId] ?? [];
+        const remote = remoteState.documents[docId] ?? [];
+        if (local.length > 1 && remote.length > 1) {
+          bothMultiHead++;
+        } else if (local.length === 1 && remote.length === 1) {
+          bothSingleHead++;
+        } else {
+          mixedLen++;
+        }
+        if (local.length !== remote.length) {
+          lenMismatch++;
+          continue;
+        }
+        const ls = [...local].sort();
+        const rs = [...remote].sort();
+        const setEq = ls.every((h, i) => h === rs[i]);
+        if (setEq && !A.equals(local, remote)) {
+          setEqualButArrayNot++;
+        } else if (!setEq) {
+          setActuallyDifferent++;
+        }
+      }
+      log.info('[DEBUG H4] diff buckets', {
+        sp,
+        diff: diff.different.length,
+        bothSingleHead,
+        bothMultiHead,
+        mixedLen,
+        lenMismatch,
+        setEqualButArrayNot,
+        setActuallyDifferent,
+      });
+      for (const docId of diff.different.slice(0, 3)) {
+        const local = localState.documents[docId] ?? [];
+        const remote = remoteState.documents[docId] ?? [];
+        log.info('[DEBUG H5] diff sample', {
+          sp,
+          doc: docId.slice(0, 8),
+          lLen: local.length,
+          rLen: remote.length,
+          lHead0: local[0]?.slice(0, 12),
+          rHead0: remote[0]?.slice(0, 12),
+          lHead1: local[1]?.slice(0, 12),
+          rHead1: remote[1]?.slice(0, 12),
+        });
+      }
+    }
+    // #endregion DEBUG
     const spanId = getSpanId(peerId);
     if (diff.different.length === 0) {
       trace.spanEnd(spanId);
