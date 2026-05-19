@@ -49,10 +49,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/TranscriptionPlugin.workerd.ts",
         "node": "./src/TranscriptionPlugin.node.ts",
         "default": "./src/TranscriptionPlugin.tsx"
       },
       "types": "./dist/types/src/TranscriptionPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/TranscriptionPlugin.workerd.mjs",
       "node": "./dist/lib/neutral/TranscriptionPlugin.node.mjs",
       "default": "./dist/lib/neutral/TranscriptionPlugin.mjs"
     },

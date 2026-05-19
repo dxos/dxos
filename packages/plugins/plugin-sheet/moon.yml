@@ -13,6 +13,7 @@ tasks:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/SheetPlugin.tsx'
       - '--entryPoint=src/SheetPlugin.node.ts'
+      - '--entryPoint=src/SheetPlugin.workerd.ts'
       - '--entryPoint=src/capabilities/index.ts'
       - '--entryPoint=src/components/index.ts'
       - '--entryPoint=src/containers/index.ts'

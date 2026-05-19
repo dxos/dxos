@@ -35,10 +35,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/PresenterPlugin.workerd.ts",
         "node": "./src/PresenterPlugin.node.ts",
         "default": "./src/PresenterPlugin.tsx"
       },
       "types": "./dist/types/src/PresenterPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/PresenterPlugin.workerd.mjs",
       "node": "./dist/lib/neutral/PresenterPlugin.node.mjs",
       "default": "./dist/lib/neutral/PresenterPlugin.mjs"
     },

@@ -45,10 +45,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/ChessPlugin.workerd.ts",
         "node": "./src/ChessPlugin.node.ts",
         "default": "./src/ChessPlugin.tsx"
       },
       "types": "./dist/types/src/ChessPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/ChessPlugin.workerd.mjs",
       "node": "./dist/lib/neutral/ChessPlugin.node.mjs",
       "default": "./dist/lib/neutral/ChessPlugin.mjs"
     },
