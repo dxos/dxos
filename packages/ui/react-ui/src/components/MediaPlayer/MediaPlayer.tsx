@@ -47,7 +47,13 @@ export const detectMediaKind = (src: string): MediaKind | undefined => {
  */
 export const isEmbedUrl = (src: string): boolean => detectMediaKind(src) !== undefined;
 
-const isLegacyIframeUrl = (src: string): boolean => src.includes('iframe');
+/** Match URLs whose pathname has an `/iframe` segment (e.g. Cloudflare Stream embeds). */
+const LEGACY_IFRAME_PATH_PATTERN = /\/iframe(?:[/?#]|$)/i;
+
+const isLegacyIframeUrl = (src: string): boolean => {
+  const pathAndQuery = src.split('#', 1)[0]!;
+  return LEGACY_IFRAME_PATH_PATTERN.test(pathAndQuery);
+};
 
 export type MediaPlayerProps = ThemedClassName<{
   src: string;
@@ -105,18 +111,16 @@ export const MediaPlayer = ({
     }
 
     return (
-      <div className={mx('dx-container flex items-center justify-center', classNames, mediaClassNames)}>
-        <video
-          className='aspect-video max-w-full max-h-full'
-          src={src}
-          controls={controls}
-          autoPlay={autoPlay}
-          loop={loop}
-          muted={muted}
-          crossOrigin={crossOrigin}
-          aria-label={alt}
-        />
-      </div>
+      <video
+        className={mx('aspect-video max-w-full max-h-full', classNames, mediaClassNames)}
+        src={src}
+        controls={controls}
+        autoPlay={autoPlay}
+        loop={loop}
+        muted={muted}
+        crossOrigin={crossOrigin}
+        aria-label={alt}
+      />
     );
   }
 
