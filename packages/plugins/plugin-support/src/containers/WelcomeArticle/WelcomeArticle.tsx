@@ -7,9 +7,8 @@ import React, { useCallback, useMemo } from 'react';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { ASSISTANT_COMPANION_VARIANT } from '@dxos/plugin-assistant';
-import { Button, Carousel, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, Carousel, MediaPlayer, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
-import { MarkdownMedia } from '@dxos/react-ui-markdown';
 
 import { meta } from '#meta';
 import { HelpOperation } from '#types';
@@ -69,18 +68,21 @@ export const WelcomeArticle = ({ role }: WelcomeArticleProps = {}) => {
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='p-8 flex flex-col items-center gap-6'>
-            <h1 className='text-2xl font-semibold'>{t('welcome.title')}</h1>
-            <p className='max-w-prose text-center text-description'>{t('welcome.description')}</p>
-            <Button variant='primary' onClick={handleOpenChat}>
-              {t('open-assistant.button')}
-            </Button>
+            <>
+              <h1 className='text-2xl font-semibold'>{t('welcome.title')}</h1>
+              <p className='max-w-prose text-center text-description'>{t('welcome.description')}</p>
+              <Button variant='primary' onClick={handleOpenChat}>
+                {t('open-assistant.button')}
+              </Button>
+            </>
+
             {slides.length > 0 && (
-              <Carousel.Root count={slides.length}>
+              <Carousel.Root classNames='max-w-[50rem]' count={slides.length}>
                 <Carousel.Previous />
                 <Carousel.Viewport>
                   {slides.map((slide, i) => (
                     <Carousel.Slide key={slide.src} index={i}>
-                      <MarkdownMedia
+                      <MediaPlayer
                         src={slide.src}
                         alt={slide.description}
                         classNames='absolute inset-0 w-full h-full bg-baseSurface'
