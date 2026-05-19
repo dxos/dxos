@@ -17,8 +17,8 @@ import { usePluginManager } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
-import { Carousel, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
-import { MarkdownMedia, MarkdownView } from '@dxos/react-ui-markdown';
+import { Carousel, MediaPlayer, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import { MarkdownView } from '@dxos/react-ui-markdown';
 
 // The surface registration constrains incoming data to
 // `AppSurface.ArticleProps<'help', {}, Obj.Any>` (companion node with
@@ -75,7 +75,7 @@ export const SupportCompanion = ({ companionTo }: SupportCompanionProps) => {
                 <Carousel.Viewport>
                   {screenshots.map((src, index) => (
                     <Carousel.Slide key={src} index={index}>
-                      <MarkdownMedia
+                      <MediaPlayer
                         src={src}
                         classNames='absolute inset-0 w-full h-full bg-baseSurface'
                         imgClassNames='object-cover'

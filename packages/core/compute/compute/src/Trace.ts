@@ -77,6 +77,25 @@ export const isOfType = <T, E extends Event>(eventType: EventType<T>, event: E):
 };
 
 /**
+ * Extensible name informing which runtime executed the code that produced the event.
+ */
+export const RuntimeName = Schema.String.pipe(Schema.brand('@dxos/compute/Trace/RuntimeName'));
+export type RuntimeName = Schema.Schema.Type<typeof RuntimeName>;
+
+/**
+ * Common runtime names.
+ */
+export const CommonRuntimeName = {
+  /**
+   * Web app / CLI / Desktop app / Mobile app.
+   */
+  local: RuntimeName.make('local'),
+  edgeIntrinsic: RuntimeName.make('edge-intrinsic'),
+  edgeWorkerLoader: RuntimeName.make('edge-worker-loader'),
+  edgeWorkerForPlatforms: RuntimeName.make('edge-worker-for-platforms'),
+};
+
+/**
  * Metadata on the context of a trace message.
  */
 // TODO(dmaretskyi): Expand on this: conversation id, tool call id, etc.
@@ -99,8 +118,21 @@ export const Meta = Schema.Struct({
    * ID of the tool call that created the current process.
    */
   toolCallId: Schema.optional(Schema.String),
+
+  /**
+   * Extensible name informing which runtime executed the code that produced the event.
+   */
+  runtimeName: Schema.optional(RuntimeName),
 });
 export interface Meta extends Schema.Schema.Type<typeof Meta> {}
+
+/**
+ * Checks if a runtime is an edge runtime.
+ */
+export const isEdgeRuntime = (name: RuntimeName): boolean =>
+  name === CommonRuntimeName.edgeIntrinsic ||
+  name === CommonRuntimeName.edgeWorkerLoader ||
+  name === CommonRuntimeName.edgeWorkerForPlatforms;
 
 /**
  * Envelope for a set of events.
@@ -124,6 +156,26 @@ export const Message = MessageData.pipe(
   }),
 );
 export interface Message extends Schema.Schema.Type<typeof Message> {}
+
+/**
+ * Flattened representation of a signle event in a trace message.
+ * Events are stored in batched messages for efficiency, but flat representation is more convenient for consumption.
+ */
+export interface FlatEvent extends Event {
+  readonly meta: Meta;
+  readonly isEphemeral: boolean;
+}
+
+/**
+ * Flattens a trace message into a list of flat events.
+ */
+export const flatten = (message: Message): FlatEvent[] => {
+  return message.events.map((event) => ({
+    ...event,
+    meta: message.meta,
+    isEphemeral: message.isEphemeral,
+  }));
+};
 
 /**
  * Sink for complete trace messages.

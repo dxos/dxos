@@ -15,7 +15,7 @@ import { meta } from '#meta';
 import { FeedOperation } from '#types';
 import { Subscription } from '#types';
 
-export type FeedArticleProps = AppSurface.ObjectArticleProps<Subscription.Feed>;
+export type FeedArticleProps = AppSurface.ObjectArticleProps<Subscription.Subscription>;
 
 export const FeedArticle = ({ role, subject }: FeedArticleProps) => {
   const { t } = useTranslation(meta.id);

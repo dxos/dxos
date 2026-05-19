@@ -50,7 +50,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
         const newPosts = cursor ? posts.filter((post) => post.guid !== cursor) : posts;
 
         // Append new posts to the ECHO feed.
-        // NOTE: The `Subscription.Feed.keep` bound is currently NOT enforced
+        // NOTE: The `Subscription.Subscription.keep` bound is currently NOT enforced
         // here via `Feed.remove()`. Doing so wipes the underlying queue's
         // `_objectCache` for the deleted posts, but those same Post objects
         // persist in `space.db` (they were added there when first curated
@@ -68,7 +68,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
           const feedRef = Ref.make(subscriptionFeed);
           const postObjects = newPosts.map((post) =>
             Obj.make(Subscription.Post, {
-              feed: feedRef,
+              source: feedRef,
               title: post.title,
               link: post.link,
               description: post.description,

@@ -145,7 +145,7 @@ const syncTarget = ({
     const feedRef = Ref.make(subscriptionFeed);
     const postObjects = collected.map((item) => {
       const input = BlueskyApi.toSubscriptionPostInput(item);
-      return Subscription.makePost({ feed: feedRef, ...input });
+      return Subscription.makePost({ source: feedRef, ...input });
     });
     yield* EchoFeed.append(echoFeed, postObjects).pipe(Effect.provide(createFeedServiceLayer(space.queues)));
 
@@ -202,7 +202,7 @@ const resolveOrCreateLocalFeed = ({
     if (existing && Subscription.instanceOf(existing)) {
       return existing;
     }
-    const newFeed = Subscription.makeFeed({
+    const newFeed = Subscription.makeSubscription({
       name,
       url: remoteIdToFeedUrl(remoteId),
       type: 'atproto',

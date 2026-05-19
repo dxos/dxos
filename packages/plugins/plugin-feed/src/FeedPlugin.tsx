@@ -20,7 +20,7 @@ export const FeedPlugin = Plugin.define(meta).pipe(
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSchemaModule({
-    schema: [Subscription.Feed, Subscription.Post, Magazine.Magazine],
+    schema: [Subscription.Subscription, Subscription.Post, Magazine.Magazine],
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

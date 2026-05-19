@@ -5,7 +5,7 @@
 import { type Atom, useAtomValue } from '@effect-atom/atom-react';
 import React, { Fragment } from 'react';
 
-import { IconButton, Popover, Toolbar, useTranslation } from '@dxos/react-ui';
+import { DensityProvider, IconButton, Popover, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type ActionExecutor, type ActionGraphProps, Menu, useMenuActions } from '@dxos/react-ui-menu';
 import { composable, composableProps, osTranslations } from '@dxos/ui-theme';
 
@@ -48,45 +48,47 @@ export const AppBar = composable<HTMLDivElement, AppBarProps>(
     const AnchorRoot = popoverAnchorId ? Popover.Anchor : Fragment;
 
     return (
-      <Toolbar.Root
-        {...composableProps(props, {
-          role: 'banner',
-          classNames: 'grid grid-cols-[var(--dx-rail-size)_1fr_var(--dx-rail-size)] items-center dx-density-fine',
-        })}
-        ref={forwardedRef}
-      >
-        {keyboardOpen ? (
-          <IconButton variant='ghost' icon='ph--x--regular' iconOnly label={t('done.label')} />
-        ) : showBackButton ? (
-          <IconButton
-            variant='ghost'
-            icon='ph--caret-left--regular'
-            iconOnly
-            label={t('back.label')}
-            onClick={onBack}
-          />
-        ) : (
-          <div />
-        )}
-        <h1 className='text-center truncate font-thin uppercase'>{displayTitle}</h1>
-        {hasActions ? (
-          <AnchorRoot>
-            <Menu.Root {...menuActions} caller={meta.id} onAction={onAction}>
-              <Menu.Trigger asChild>
-                <IconButton
-                  variant='ghost'
-                  icon='ph--dots-three-vertical--regular'
-                  iconOnly
-                  label={t('actions-menu.label')}
-                />
-              </Menu.Trigger>
-              <Menu.Content />
-            </Menu.Root>
-          </AnchorRoot>
-        ) : (
-          <span />
-        )}
-      </Toolbar.Root>
+      <DensityProvider density='fine'>
+        <Toolbar.Root
+          {...composableProps(props, {
+            role: 'banner',
+            classNames: 'grid grid-cols-[var(--dx-rail-size)_1fr_var(--dx-rail-size)] items-center dx-density-fine',
+          })}
+          ref={forwardedRef}
+        >
+          {keyboardOpen ? (
+            <IconButton variant='ghost' icon='ph--x--regular' iconOnly label={t('done.label')} />
+          ) : showBackButton ? (
+            <IconButton
+              variant='ghost'
+              icon='ph--caret-left--regular'
+              iconOnly
+              label={t('back.label')}
+              onClick={onBack}
+            />
+          ) : (
+            <div />
+          )}
+          <h1 className='text-center truncate font-thin uppercase'>{displayTitle}</h1>
+          {hasActions ? (
+            <AnchorRoot>
+              <Menu.Root {...menuActions} caller={meta.id} onAction={onAction}>
+                <Menu.Trigger asChild>
+                  <IconButton
+                    variant='ghost'
+                    icon='ph--dots-three-vertical--regular'
+                    iconOnly
+                    label={t('actions-menu.label')}
+                  />
+                </Menu.Trigger>
+                <Menu.Content />
+              </Menu.Root>
+            </AnchorRoot>
+          ) : (
+            <span />
+          )}
+        </Toolbar.Root>
+      </DensityProvider>
     );
   },
 );

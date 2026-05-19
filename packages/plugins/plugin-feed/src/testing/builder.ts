@@ -33,8 +33,8 @@ export const generatePosts = (count: number): Subscription.Post[] => {
 /** Generates a random subscription feed. */
 export const generateFeed = (
   props: Partial<{ name: string; url: string; description: string }> = {},
-): Subscription.Feed =>
-  Subscription.makeFeed({
+): Subscription.Subscription =>
+  Subscription.makeSubscription({
     name: props.name ?? random.company.name() + ' Blog',
     url: props.url ?? random.internet.url(),
     description: props.description ?? random.lorem.sentence(),
@@ -62,7 +62,7 @@ export const generateCuratedPost = (props: { imageUrl?: string; read?: boolean }
 export const generateMagazine = (
   props: Partial<{
     name: string;
-    feeds: Subscription.Feed[];
+    feeds: Subscription.Subscription[];
     posts: Subscription.Post[];
   }> = {},
 ): Magazine.Magazine =>

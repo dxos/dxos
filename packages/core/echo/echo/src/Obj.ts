@@ -664,6 +664,7 @@ export const setParent = (entity: Unknown, parent: Any | undefined) => {
   assumeType<internal.InternalObjectProps>(entity);
   assumeType<internal.InternalObjectProps | undefined>(parent);
   entity[internal.ParentId] = parent;
+  return entity;
 };
 
 interface UpdateFromOptions<T> {
