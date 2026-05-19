@@ -37,14 +37,25 @@ const safeCheck = async (): Promise<Updater.Update | null> => {
 const safeDownloadAndInstall = async (
   update: Updater.Update,
   onEvent: (event: Updater.DownloadEvent) => void,
-): Promise<boolean> => {
+): Promise<{ ok: true } | { ok: false; error: string }> => {
   try {
     await update.downloadAndInstall(onEvent);
-    return true;
+    return { ok: true };
   } catch (error) {
     log.error('failed to download and install update', { error });
-    return false;
+    return { ok: false, error: formatError(error) };
   }
+};
+
+/** Extract a user-readable error string from whatever the Tauri updater threw. */
+const formatError = (error: unknown): string => {
+  if (typeof error === 'string') {
+    return error;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
 };
 
 export default Capability.makeModule(
@@ -106,12 +117,12 @@ export default Capability.makeModule(
         }),
         Match.exhaustive,
       );
-      const ok = await safeDownloadAndInstall(update, onEvent);
-      if (ok) {
+      const result = await safeDownloadAndInstall(update, onEvent);
+      if (result.ok) {
         registry.set(statusAtom, { kind: 'ready' });
         return true;
       }
-      registry.set(statusAtom, { kind: 'failed', error: 'install-failed' });
+      registry.set(statusAtom, { kind: 'failed', error: result.error });
       return false;
     };
 
