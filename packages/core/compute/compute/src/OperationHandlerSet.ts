@@ -81,8 +81,19 @@ export const reactive = (
   registry.subscribe(atom, () => {
     cached = null;
   });
-  const getHandlers = () =>
-    (cached ??= Promise.all(registry.get(atom).map((set) => set.getHandlers())).then((all) => all.flat()));
+  const getHandlers = () => {
+    if (!cached) {
+      // Reset cached on rejection so a transient failure doesn't permanently
+      // poison subsequent calls.
+      cached = Promise.all(registry.get(atom).map((set) => set.getHandlers()))
+        .then((all) => all.flat())
+        .catch((error) => {
+          cached = null;
+          throw error;
+        });
+    }
+    return cached;
+  };
   return {
     [TypeId]: TypeId,
     getHandlers,

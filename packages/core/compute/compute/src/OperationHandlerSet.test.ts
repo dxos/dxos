@@ -52,6 +52,30 @@ describe('OperationHandlerSet.reactive', () => {
     expect(resolveCount).toBe(1);
   });
 
+  test('retries after a rejection rather than caching the failure', async ({ expect }) => {
+    const registry = Registry.make();
+    let callCount = 0;
+    const flakySet: OperationHandlerSet.OperationHandlerSet = {
+      [OperationHandlerSet.TypeId]: OperationHandlerSet.TypeId,
+      getHandlers: () => {
+        callCount++;
+        if (callCount === 1) {
+          return Promise.reject(new Error('transient'));
+        }
+        return Promise.resolve([makeHandler('a', 'A')]);
+      },
+      handlers: Effect.succeed([]),
+    };
+    const atom = Atom.make<readonly OperationHandlerSet.OperationHandlerSet[]>([flakySet]).pipe(Atom.keepAlive);
+    registry.mount(atom);
+
+    const reactive = OperationHandlerSet.reactive(registry, atom);
+    await expect(reactive.getHandlers()).rejects.toThrow('transient');
+    const retried = await reactive.getHandlers();
+    expect(retried.map((handler) => handler.meta.key)).toEqual(['a']);
+    expect(callCount).toBe(2);
+  });
+
   test('invalidates and re-resolves when the atom changes', async ({ expect }) => {
     const registry = Registry.make();
     const setA = OperationHandlerSet.make(makeHandler('a', 'A'));
@@ -68,5 +92,4 @@ describe('OperationHandlerSet.reactive', () => {
     registry.set(atom, []);
     expect(await reactive.getHandlers()).toEqual([]);
   });
-
 });
