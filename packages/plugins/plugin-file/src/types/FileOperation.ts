@@ -6,6 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { Database } from '@dxos/echo';
 
@@ -18,6 +19,7 @@ const FILE_OPERATION = `${meta.id}.operation`;
 
 export const Create = Operation.make({
   meta: { key: `${FILE_OPERATION}.create`, name: 'Create File' },
+  services: [Capability.Service],
   input: Schema.extend(FileAction.CreateFileSchema, Schema.Struct({ db: Database.Database })),
   output: Schema.Struct({
     object: FileType.FileType,

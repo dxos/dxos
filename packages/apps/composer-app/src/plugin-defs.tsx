@@ -120,6 +120,7 @@ export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): 
     AutomationPlugin.meta.id,
     ClientPlugin.meta.id,
     !isTauri && CrxPlugin.meta.id,
+    FilePlugin.meta.id,
     GraphPlugin.meta.id,
     IntegrationPlugin.meta.id,
     SupportPlugin.meta.id,
@@ -156,7 +157,6 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     SketchPlugin.meta.id,
     TablePlugin.meta.id,
     ThreadPlugin.meta.id,
-    FilePlugin.meta.id,
 
     // Dev
     isDev && DebugPlugin.meta.id,

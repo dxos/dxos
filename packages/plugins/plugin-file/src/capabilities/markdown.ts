@@ -8,10 +8,14 @@ import { Capability } from '@dxos/app-framework';
 import { type MarkdownExtensionProvider, MarkdownCapabilities } from '@dxos/plugin-markdown';
 import { getSpace } from '@dxos/react-client/echo';
 
+import { FileCapabilities } from '#types';
+
 import { image } from '../extensions';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    const capabilities = yield* Capability.Service;
+
     const provider: MarkdownExtensionProvider = ({ document, viewMode }) => {
       if (viewMode === 'source') {
         return undefined;
@@ -19,7 +23,11 @@ export default Capability.makeModule(
 
       if (document) {
         const space = getSpace(document);
-        return space ? [image({ space })] : undefined;
+        if (!space) {
+          return undefined;
+        }
+        const resolvers = capabilities.getAll(FileCapabilities.UrlResolver);
+        return [image({ space, resolvers })];
       }
 
       return undefined;

@@ -16,12 +16,13 @@ import { focusField } from '@dxos/ui-editor';
 import { defaultTx } from '@dxos/ui-theme';
 import { type MaybePromise } from '@dxos/util';
 
-import { FileType } from '#types';
+import { FileCapabilities, FileType } from '#types';
 
 const WAIT_UNTIL_LOADER = 1500;
 
 export type ImageOptions = {
   space: Space;
+  resolvers: readonly FileCapabilities.UrlResolver[];
 };
 
 /**
@@ -78,7 +79,7 @@ const buildDecorations = ({
   to,
   blobUrlCache,
   preload,
-  options: { space },
+  options: { space, resolvers },
 }: {
   state: EditorState;
   from: number;
@@ -130,8 +131,20 @@ const buildDecorations = ({
         if (!matched || !Obj.instanceOf(FileType.FileType, matched)) {
           return undefined;
         }
-        const blob = new Blob([matched.data as BlobPart], { type: matched.type });
-        const url = URL.createObjectURL(blob);
+
+        let url: string | undefined;
+        const { data } = matched;
+        if (data._tag === 'inline') {
+          url = URL.createObjectURL(new Blob([data.bytes as BlobPart], { type: matched.type }));
+        } else if (/^(?:https?|data|blob):/i.test(data.url)) {
+          url = data.url;
+        } else {
+          const resolver = resolvers.find((r) => r.test(data.url));
+          url = await resolver?.resolve(data.url, matched, space);
+        }
+        if (!url) {
+          return undefined;
+        }
         blobUrlCache[cacheKey] = url;
         preload(url);
         return url;

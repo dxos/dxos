@@ -20,9 +20,12 @@ export default Capability.makeModule(
       const program = Effect.gen(function* () {
         const { object } = yield* invoke(FileOperation.Create, { db, file });
         yield* invoke(SpaceOperation.AddObject, { target: db, object });
+        const external = object.data._tag === 'external' ? object.data : undefined;
         return {
           name: object.name ?? file.name,
           type: object.type,
+          ...(external?.url ? { url: external.url } : {}),
+          ...(external?.cid ? { cid: external.cid } : {}),
         };
       });
 

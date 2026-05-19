@@ -8,14 +8,15 @@ import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps } from '@dxos/react-ui-form';
 
-import { FileInput } from '#components';
+import { FileInput, FileSettings } from '#components';
 import { FileArticle } from '#containers';
-import { FileAction, FileType } from '#types';
+import { meta } from '#meta';
+import { FileAction, FileType, type Settings } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -52,6 +53,14 @@ export default Capability.makeModule(() =>
           );
 
           return <FileInput schema={schema} onChange={handleChange} />;
+        },
+      }),
+      Surface.create({
+        id: 'plugin-settings',
+        filter: AppSurface.settings(AppSurface.Article, meta.id),
+        component: ({ data: { subject } }) => {
+          const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
+          return <FileSettings settings={settings} onSettingsChange={updateSettings} />;
         },
       }),
     ]),

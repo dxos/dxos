@@ -9,11 +9,36 @@ import * as Schema from 'effect/Schema';
 import { Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 
+/**
+ * Discriminated `data` field on {@link FileType}: either the bytes live on
+ * the object itself (`inline`) or they live somewhere else and we hold a URL
+ * (`external`, optionally with a content hash for IPFS/WNFS-style backends).
+ */
+export const FileDataSchema = Schema.Union(
+  Schema.TaggedStruct('inline', {
+    bytes: Schema.Uint8ArrayFromSelf,
+  }),
+  Schema.TaggedStruct('external', {
+    url: Schema.String,
+    cid: Schema.optional(Schema.String),
+  }),
+);
+
+export type FileData = Schema.Schema.Type<typeof FileDataSchema>;
+
+export const inlineData = (bytes: Uint8Array): FileData => ({ _tag: 'inline', bytes });
+
+export const externalData = (url: string, cid?: string): FileData => ({
+  _tag: 'external',
+  url,
+  ...(cid ? { cid } : {}),
+});
+
 export const FileType = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   type: Schema.String.pipe(FormInputAnnotation.set(false)),
   size: Schema.Number.pipe(FormInputAnnotation.set(false)),
-  data: Schema.Uint8ArrayFromSelf.pipe(FormInputAnnotation.set(false)),
+  data: FileDataSchema.pipe(FormInputAnnotation.set(false)),
   timestamp: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.object({
