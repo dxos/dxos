@@ -16,4 +16,6 @@ export const meta: Plugin.Meta = {
   icon: 'ph--music-notes--regular',
   iconHue: 'fuchsia',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-sequencer',
+  version: '0.8.3',
+  spec: 'https://unpkg.com/@dxos/plugin-sequencer@0.8.3/PLUGIN.mdl',
 };

@@ -16,4 +16,6 @@ export const meta: Plugin.Meta = {
   iconHue: 'indigo',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-discord',
   tags: ['labs'],
+  version: '0.8.3',
+  spec: 'https://unpkg.com/@dxos/plugin-discord@0.8.3/PLUGIN.mdl',
 };

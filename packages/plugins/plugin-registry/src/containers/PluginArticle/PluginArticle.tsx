@@ -16,7 +16,6 @@ import { getPluginPath } from '#meta';
 
 import { useDisableConfirmation, useRegistryPluginProvider, useRegistryPlugins, useRemotePluginIds } from '../../hooks';
 
-// TODO(burdon): Convert to ECHO type.
 export type PluginArticleProps = { subject: Plugin.Plugin };
 
 export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
