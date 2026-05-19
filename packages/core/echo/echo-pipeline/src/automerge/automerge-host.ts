@@ -638,12 +638,19 @@ export class AutomergeHost extends Resource {
   };
 
   /**
-   * Subduction sedimentree authorization policy. Mirrors {@link _shareConfig.announce}:
-   * both `authorizeFetch` (outbound) and `authorizePut` (inbound) gate via the same
+   * Subduction sedimentree authorization policy. Mirrors {@link _shareConfig.announce}
+   * on the OUTBOUND side (`authorizeFetch`, `filterAuthorizedFetch`) via the same
    * per-connection `shouldAdvertise` predicate on `_echoNetworkAdapter`.
    *
-   * `authorizePut` deny → allow does NOT auto-recover stuck entries; callers must drive
-   * a fresh holder commit on each affected doc (see .claude/skills/subduction/SKILL.md).
+   * `authorizePut` is intentionally allow-all to mirror classical sync (`useSubduction:
+   * false`), which has no inbound gate. Gating inbound here creates a bootstrapping
+   * deadlock during invitations: the joining peer's `_getContainingSpaceForDocument`
+   * cannot resolve the space-root doc until it's loaded, which can't happen if the
+   * inbound write is denied — and subduction `authorizePut` denials are sticky on the
+   * receiver (see .claude/skills/subduction/SKILL.md), so the entry never recovers.
+   * Inbound trust here is bounded by `authorizeFetch` on the sender side (peers can't
+   * push docs we wouldn't have served them) and by the sedimentree's internal
+   * cryptographic structure.
    */
   private readonly _subductionPolicy: SubductionPolicy = {
     authorizeConnect: async (_subductionPeerId) => {
@@ -655,11 +662,8 @@ export class AutomergeHost extends Resource {
         throw new Error('authorizeFetch denied by client share policy');
       }
     },
-    authorizePut: async (requestor, _author, sedimentreeId) => {
-      const allow = await this._shouldShareDocumentWithSubductionPeer(requestor, sedimentreeId);
-      if (!allow) {
-        throw new Error('authorizePut denied by client share policy');
-      }
+    authorizePut: async (_requestor, _author, _sedimentreeId) => {
+      // Intentionally permissive — see class-level comment above.
     },
     filterAuthorizedFetch: async (subductionPeerId, sedimentreeIds) => {
       const allowed: SedimentreeId[] = [];
