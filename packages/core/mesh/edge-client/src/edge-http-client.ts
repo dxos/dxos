@@ -69,6 +69,12 @@ const DEFAULT_RETRY_JITTER = 500;
 const DEFAULT_MAX_RETRIES_COUNT = 3;
 const WARNING_BODY_SIZE = 10 * 1024 * 1024; // 10MB
 
+// TEMPORARY: legacy standalone CORS proxy used by `proxyFetch` until the
+// authenticated `/proxy/*` route on the main edge worker ships
+// (https://github.com/dxos/edge/pull/576). Delete this constant when the
+// commented-out authenticated branch in `proxyFetch` is restored.
+const LEGACY_CORS_PROXY_URL = 'https://cors-proxy.dxos.workers.dev';
+
 export type RetryConfig = {
   /**
    * A number of call retries, not counting the initial request.
@@ -485,51 +491,68 @@ export class EdgeHttpClient {
   //
 
   /**
-   * Fetch through the edge proxy, used by integration plugins (Discord, Slack, ...)
+   * Fetch through the edge proxy, used by integration plugins (Discord, ...)
    * to call third-party REST APIs that don't set permissive CORS headers.
    *
-   * Rewrites `https://discord.com/api/v10/users/@me` into
-   * `${baseUrl}/proxy/discord.com/api/v10/users/@me`, attaches the cached
-   * verifiable-presentation `Authorization` header (refreshing on 401 with
-   * the configured EdgeIdentity), and returns the raw upstream `Response`.
-   *
    * `init.headers.Authorization` (caller-supplied) is preserved by prefixing
-   * with `X-Cors-Proxy-Authorization`, since the proxy strips
-   * `Authorization` on forwarding to avoid leaking the DXOS presentation
-   * upstream — the prefix carries the upstream's bot token / token through.
+   * with `X-Cors-Proxy-Authorization`, since the proxy strips `Authorization`
+   * on forwarding to avoid leaking the DXOS presentation upstream — the
+   * prefix carries the upstream's bot token / token through.
+   *
+   * TEMPORARY: routed through the legacy standalone proxy at
+   * `cors-proxy.dxos.workers.dev` (open, unauthenticated, path
+   * `/<host>/<path>`) so that integration plugins can be tested before the
+   * authenticated `/proxy/*` route on the main edge worker ships
+   * (https://github.com/dxos/edge/pull/576). When that PR deploys, restore
+   * the commented-out block below — it rewrites the target under
+   * `${this.baseUrl}/proxy/...` and signs the request with the cached
+   * verifiable presentation. The header-remap and `x-cors-proxy-*` override
+   * conventions are unchanged between the two paths.
    */
   public async proxyFetch(target: URL, init: RequestInit = {}): Promise<Response> {
-    const proxyUrl = new URL(`/proxy/${target.host}${target.pathname}${target.search}`, this.baseUrl);
+    const proxyUrl = new URL(`/${target.host}${target.pathname}${target.search}`, LEGACY_CORS_PROXY_URL);
     if (target.protocol === 'http:') {
       proxyUrl.searchParams.set('scheme', 'http');
     }
 
-    const headers = remapAuthorizationForProxy(new Headers(init.headers ?? undefined));
-
-    let handledAuth = false;
-    while (true) {
-      if (!this._authHeader) {
-        const authResponse = await fetch(new URL('/auth', this.baseUrl));
-        if (authResponse.status === 401) {
-          this._authHeader = await this._handleUnauthorized(authResponse);
-        }
-      }
-      const requestHeaders = new Headers(headers);
-      if (this._authHeader) {
-        requestHeaders.set('Authorization', this._authHeader);
-      }
-      if (this._clientTag) {
-        requestHeaders.set(EDGE_CLIENT_TAG_HEADER, this._clientTag);
-      }
-
-      const response = await fetch(proxyUrl, { ...init, headers: requestHeaders });
-      if (response.status === 401 && !handledAuth) {
-        this._authHeader = await this._handleUnauthorized(response);
-        handledAuth = true;
-        continue;
-      }
-      return response;
+    const requestHeaders = remapAuthorizationForProxy(new Headers(init.headers ?? undefined));
+    if (this._clientTag) {
+      requestHeaders.set(EDGE_CLIENT_TAG_HEADER, this._clientTag);
     }
+
+    return fetch(proxyUrl, { ...init, headers: requestHeaders });
+
+    //
+    // Restore once the authenticated route on the main edge worker is deployed:
+    //
+    // const proxyUrl = new URL(`/proxy/${target.host}${target.pathname}${target.search}`, this.baseUrl);
+    // if (target.protocol === 'http:') {
+    //   proxyUrl.searchParams.set('scheme', 'http');
+    // }
+    // const headers = remapAuthorizationForProxy(new Headers(init.headers ?? undefined));
+    // let handledAuth = false;
+    // while (true) {
+    //   if (!this._authHeader) {
+    //     const authResponse = await fetch(new URL('/auth', this.baseUrl));
+    //     if (authResponse.status === 401) {
+    //       this._authHeader = await this._handleUnauthorized(authResponse);
+    //     }
+    //   }
+    //   const requestHeaders = new Headers(headers);
+    //   if (this._authHeader) {
+    //     requestHeaders.set('Authorization', this._authHeader);
+    //   }
+    //   if (this._clientTag) {
+    //     requestHeaders.set(EDGE_CLIENT_TAG_HEADER, this._clientTag);
+    //   }
+    //   const response = await fetch(proxyUrl, { ...init, headers: requestHeaders });
+    //   if (response.status === 401 && !handledAuth) {
+    //     this._authHeader = await this._handleUnauthorized(response);
+    //     handledAuth = true;
+    //     continue;
+    //   }
+    //   return response;
+    // }
   }
 
   //
