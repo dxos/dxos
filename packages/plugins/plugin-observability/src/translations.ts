@@ -11,6 +11,7 @@ export const translations = [
     'en-US': {
       [meta.id]: {
         'plugin.name': 'Telemetry',
+        'help.label': 'Feedback',
         'settings.title': 'Telemetry settings',
         'observability-toast.label': 'Privacy Notice',
         'observability-toast.description':

@@ -8,7 +8,7 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 
-import { StatusBarActions, StatusBarPanel, VersionNumber } from '#containers';
+import { HelpMenu, StatusBarActions, StatusBarPanel, VersionNumber } from '#containers';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -22,6 +22,11 @@ export default Capability.makeModule(() =>
         id: 'status-bar--r1-footer',
         role: 'status-bar--r1-footer',
         component: () => <StatusBarActions />,
+      }),
+      Surface.create({
+        id: 'help-menu',
+        role: 'status-indicator',
+        component: () => <HelpMenu />,
       }),
       Surface.create({
         id: 'version-info',

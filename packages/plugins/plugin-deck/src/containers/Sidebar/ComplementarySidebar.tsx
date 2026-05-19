@@ -198,6 +198,7 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
           placeholder={<PlankLoading />}
         />
       </Panel.Content>
+      {/* TODO(wittjosiah): Remove this status bar from the complementary sidebar. */}
       {!hoistStatusbar && (
         <Panel.Statusbar size='sm'>
           <Surface.Surface role='status-bar--r1-footer' limit={1} />
