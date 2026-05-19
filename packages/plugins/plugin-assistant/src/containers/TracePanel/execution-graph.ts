@@ -78,11 +78,17 @@ export interface BuildExecutionGraphParams {
  *
  * Pure function — no signals or atoms.
  */
+export type ExecutionGraph = {
+  branches: string[];
+  commits: Commit[];
+  spanTree: Span;
+};
+
 export const buildExecutionGraph = ({
   traceMessages,
   activeProcesses = [],
   eventLimit = 500,
-}: BuildExecutionGraphParams): { branches: string[]; commits: Commit[] } => {
+}: BuildExecutionGraphParams): ExecutionGraph => {
   const spanTree = buildSpanTree(traceMessages, { eventLimit });
   const built = spanTreeToCommits(spanTree, activeProcesses);
   log('trace execution graph', {
@@ -91,7 +97,7 @@ export const buildExecutionGraph = ({
     branches: built.branches.length,
     activeProcesses: activeProcesses.length,
   });
-  return built;
+  return { ...built, spanTree };
 };
 
 /**
