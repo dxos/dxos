@@ -5,6 +5,7 @@
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Transcript } from '@dxos/types';
+
 import { OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 

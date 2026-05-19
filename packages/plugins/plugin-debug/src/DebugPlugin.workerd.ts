@@ -3,6 +3,7 @@
 //
 
 import { Plugin } from '@dxos/app-framework';
+
 import { meta } from '#meta';
 import { type DebugPluginOptions } from '#types';
 

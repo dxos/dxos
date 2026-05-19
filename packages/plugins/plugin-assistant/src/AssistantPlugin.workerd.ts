@@ -11,6 +11,7 @@ import { Sequence } from '@dxos/conductor';
 import { Feed } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message } from '@dxos/types';
+
 import { OperationHandler } from '#capabilities';
 import { meta } from '#meta';
 

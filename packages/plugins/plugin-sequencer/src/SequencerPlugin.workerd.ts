@@ -4,6 +4,7 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
+
 import { meta } from '#meta';
 import { Score } from '#types';
 
