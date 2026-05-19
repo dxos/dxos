@@ -1,0 +1,13 @@
+diff --git a/dist/subduction/source.js b/dist/subduction/source.js
+index cc2d6af8848629f48631b3c5cd3b48054e3d27e9..f0cb5dfd217d493b8d03c17e4a77a0530a1ae782 100644
+--- a/dist/subduction/source.js
++++ b/dist/subduction/source.js
+@@ -267,7 +267,7 @@ export class SubductionSource {
+                         entry.syncInFlight = true;
+                         void this.#doSync(entry);
+                     }
+-                    else if (entry.handle.heads().length === 0 &&
++                    else if (false &&
+                         !this.#anyConnectionManagerConnecting()) {
+                         // All connections settled and sync failed — give up.
+                         this.#log("marking as unavailable");
