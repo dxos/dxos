@@ -52,6 +52,8 @@ export const translations = [
         'open-about.label': 'About Composer',
         'version.label': 'Version {{version}}',
         'published.label': 'Published {{timestamp}}',
+        'environment.label': 'Environment: {{environment}}',
+        'technology-preview.message': 'Composer is currently in beta.',
         'powered-by-dxos.message': 'Powered by <dxos>DXOS</dxos>',
         'close.label': 'Close',
       },
