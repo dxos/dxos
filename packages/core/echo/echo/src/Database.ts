@@ -98,10 +98,12 @@ export interface Database extends Queryable {
   get graph(): Hypergraph.Hypergraph;
 
   /**
-   * Register one or more schemas into the database.
-   * Creates a PersistentSchema ECHO object for each and adds it to the space.
+   * Schema registry for persisting schemas in this database.
+   * Use register() to create PersistentSchema ECHO objects that replicate to other clients.
    */
-  register(inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.RuntimeType[]>;
+  readonly schemaRegistry: {
+    register(inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.RuntimeType[]>;
+  };
 
   toJSON(): object;
 
@@ -328,6 +330,6 @@ export const registerSchema = (
   input: SchemaRegistry.RegisterSchemaInput[],
 ): Effect.Effect<Type.Type[], never, Service> =>
   Service.pipe(
-    Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.register(input))),
+    Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.schemaRegistry.register(input))),
     Effect.withSpan('Database.registerSchema'),
   );

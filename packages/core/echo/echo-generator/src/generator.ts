@@ -118,7 +118,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
       if (existingSchema != null) {
         return existingSchema;
       }
-      const [registeredSchema] = await this._space.internal.db.register([schema]);
+      const [registeredSchema] = await this._space.internal.db.schemaRegistry.register([schema]);
       return registeredSchema;
     } else {
       const allTypes = await runAndForwardErrors(this._space.internal.db.graph.registry.listTypes());

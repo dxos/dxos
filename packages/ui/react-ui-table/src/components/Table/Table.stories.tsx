@@ -324,7 +324,7 @@ export const Tags: Meta<DefaultStoryProps> = {
             config: { options: selectOptions },
           },
         ]);
-        const [storedSchema] = await space.db.register([schema]);
+        const [storedSchema] = await space.db.schemaRegistry.register([schema]);
 
         // Initialize table.
         const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: space.db, typename });

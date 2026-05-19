@@ -214,35 +214,33 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     await this._coreDatabase.close();
   }
 
-  /**
-   * Register one or more schemas into the database.
-   * Creates a PersistentSchema ECHO object for each and adds it to the space.
-   */
-  async register(inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.RuntimeType[]> {
-    const results: Type.RuntimeType[] = [];
-    for (const input of inputs) {
-      if (Schema.isSchema(input)) {
-        results.push(this._addPersistentSchema(input));
-      } else if (typeof input === 'object' && 'typename' in input && 'version' in input && 'jsonSchema' in input) {
-        const schema = this._addPersistentSchema(
-          JsonSchema.toEffectSchema({
-            ...input.jsonSchema,
-            typename: input.typename,
-            version: input.version,
-          }),
-        );
-        results.push(schema);
-        if (input.name) {
-          Obj.update(schema.persistentSchema, (ps) => {
-            ps.name = input.name;
-          });
+  readonly schemaRegistry = {
+    register: async (inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.RuntimeType[]> => {
+      const results: Type.RuntimeType[] = [];
+      for (const input of inputs) {
+        if (Schema.isSchema(input)) {
+          results.push(this._addPersistentSchema(input));
+        } else if (typeof input === 'object' && 'typename' in input && 'version' in input && 'jsonSchema' in input) {
+          const schema = this._addPersistentSchema(
+            JsonSchema.toEffectSchema({
+              ...input.jsonSchema,
+              typename: input.typename,
+              version: input.version,
+            }),
+          );
+          results.push(schema);
+          if (input.name) {
+            Obj.update(schema.persistentSchema, (ps) => {
+              ps.name = input.name;
+            });
+          }
+        } else {
+          throw new TypeError('Invalid schema');
         }
-      } else {
-        throw new TypeError('Invalid schema');
       }
-    }
-    return results;
-  }
+      return results;
+    },
+  };
 
   /**
    * @internal

@@ -48,7 +48,7 @@ describe('EchoSchema', () => {
       field: Schema.String,
     }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
 
-    const [schema] = await db.register([GeneratedSchema]);
+    const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
     Obj.update(instanceWithSchemaRef, (instanceWithSchemaRef) => {
       instanceWithSchemaRef.schema = Ref.make(schema);
     });
@@ -149,8 +149,8 @@ describe('EchoSchema', () => {
       org: Schema.optional(Ref(OrgSchema)),
     }).pipe(Type.makeObject(DXN.make('com.example.type.contact', '0.1.0')));
 
-    const [orgSchema] = await db.register([OrgSchema]);
-    const [contactSchema] = await db.register([ContactSchema]);
+    const [orgSchema] = await db.schemaRegistry.register([OrgSchema]);
+    const [contactSchema] = await db.schemaRegistry.register([ContactSchema]);
     const org = db.add(Obj.make(orgSchema, { name: 'DXOS' }));
     const contact = db.add(Obj.make(contactSchema, { name: 'Bot', org: Ref.make(org) }));
     expect(contact.org?.target?.id).to.eq(org.id);
