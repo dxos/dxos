@@ -96,10 +96,13 @@ export interface Database extends Queryable {
 
   get spaceId(): SpaceId;
 
-  // TODO(burdon): Can we move this into graph?
-  get schemaRegistry(): SchemaRegistry.SchemaRegistry;
-
   get graph(): Hypergraph.Hypergraph;
+
+  /**
+   * Register one or more schemas into the database.
+   * Creates a PersistentSchema ECHO object for each and adds it to the space.
+   */
+  register(inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.RuntimeType[]>;
 
   toJSON(): object;
 
@@ -321,34 +324,11 @@ export const runQueryFirst: {
 
 /**
  * Persists schemas in the database so they replicate to other clients.
- * @see {@link SchemaRegistry.SchemaRegistry.register}
  */
 export const registerSchema = (
   input: SchemaRegistry.RegisterSchemaInput[],
 ): Effect.Effect<Type.Type[], never, Service> =>
   Service.pipe(
-    Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.schemaRegistry.register(input))),
+    Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.register(input))),
     Effect.withSpan('Database.registerSchema'),
-  );
-
-/**
- * Creates a schema query result that can be subscribed to.
- */
-// TODO(dmaretskyi): Change API to `yield* Database.querySchema(...).first` and `yield* Database.querySchema(...).schema`.
-export const schemaQuery = <Q extends Types.NoExcessProperties<SchemaRegistry.Query, Q>>(
-  schemaQueryOptions?: Q & SchemaRegistry.Query,
-): Effect.Effect<QueryResult.QueryResult<Type.Type>, never, Service> =>
-  Service.pipe(
-    Effect.map(({ db }) => db.schemaRegistry.query(schemaQueryOptions)),
-    Effect.withSpan('Database.schemaQuery'),
-  );
-
-/**
- * Executes a schema query once and returns the results.
- */
-export const runSchemaQuery = <Q extends Types.NoExcessProperties<SchemaRegistry.Query, Q>>(
-  schemaQueryOptions?: Q & SchemaRegistry.Query,
-): Effect.Effect<Type.Type[], never, Service> =>
-  schemaQuery(schemaQueryOptions).pipe(
-    Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())),
   );

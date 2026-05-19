@@ -17,7 +17,9 @@ const handler: Operation.WithHandler<typeof TableOperation.AddRow> = TableOperat
       invariant(db);
       const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
       invariant(typename);
-      const schema = yield* Effect.promise(() => db.schemaRegistry.query({ typename }).firstOrUndefined());
+      const schema = yield* Effect.promise(() =>
+        Promise.resolve(db.graph.registry.types.find((t) => Type.getTypename(t) === typename)),
+      );
       invariant(schema);
       const object = Obj.make(Type.assertObject(schema), data);
       yield* Operation.invoke(SpaceOperation.AddObject, { target: db, object, hidden: true });

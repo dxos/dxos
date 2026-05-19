@@ -226,7 +226,7 @@ export const makeFromDatabase = async ({
   ...props
 }: MakeFromDatabaseProps): Promise<{ jsonSchema: JsonSchemaType; view: View.View }> => {
   if (!typename) {
-    const [schema] = await db.schemaRegistry.register([createDefaultSchema()]);
+    const [schema] = await db.register([createDefaultSchema()]);
     // `register` returns a persisted `Type.Type` entity; its typename lives in the
     // type metadata, so read it via `Type.getTypename` rather than a `.typename` prop.
     typename = Type.getTypename(schema);
@@ -234,8 +234,8 @@ export const makeFromDatabase = async ({
     createInitial = 0;
   }
 
-  const schema = await db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).firstOrUndefined();
-  const jsonSchema = schema && schema.jsonSchema;
+  const schema = db.graph.registry.types.find((t) => Type.getTypename(t) === typename);
+  const jsonSchema = schema && JsonSchema.toJsonSchema(schema);
   invariant(jsonSchema, `Schema not found: ${typename}`);
   // `schema` is a `Type.Type` entity (type-kind brand). The kind it *describes*
   // lives in the `TypeAnnotation` on the rebuilt Effect Schema — read it via

@@ -17,7 +17,7 @@ export default SchemaList.pipe(
   Operation.withHandler(
     Effect.fn(function* () {
       const { db } = yield* Database.Service;
-      const schema = yield* Effect.promise(() => db.schemaRegistry.query({ location: ['database', 'runtime'] }).run());
+      const schema = yield* Effect.promise(() => Promise.resolve([...db.graph.registry.types]));
       return schema
         .filter((type) => !excludedTypenames.includes(Type.getTypename(type)))
         .map((type) => ({

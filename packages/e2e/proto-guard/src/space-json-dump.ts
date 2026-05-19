@@ -80,7 +80,7 @@ export class SpacesDumper {
    */
   static checkIfSpacesMatchExpectedDataUsingQuery = async (client: Client, expected: SpacesDump): Promise<boolean> => {
     for (const space of client.spaces.get()) {
-      const schemas = await space.db.schemaRegistry.query({ location: ['database', 'runtime'] }).run();
+      const schemas = [...space.db.graph.registry.types];
       for (const schema of schemas) {
         const objects = await space.db.query(Filter.type(schema)).run();
         const expectedObjects = SpacesDumper.getExpectedObjectsOfType(expected, space.id, schema);

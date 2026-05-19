@@ -90,9 +90,9 @@ describe('Generator', () => {
     const createObjects = createObjectFactory(db, generator);
 
     // Register mutable schema.
-    const [organization] = await db.schemaRegistry.register([Organization.Organization]);
-    const [person] = await db.schemaRegistry.register([Person.Person]);
-    const [project] = await db.schemaRegistry.register([Pipeline.Pipeline]);
+    const [organization] = await db.register([Organization.Organization]);
+    const [person] = await db.register([Person.Person]);
+    const [project] = await db.register([Pipeline.Pipeline]);
 
     const spec: TypeSpec[] = [
       { type: organization, count: 5 },
@@ -113,7 +113,7 @@ describe('Generator', () => {
 
   test('generate message from stored schema', async ({ expect }) => {
     const { db } = await builder.createDatabase();
-    const [type] = await db.schemaRegistry.register([Message.Message]);
+    const [type] = await db.register([Message.Message]);
     invariant(Type.isObject(type), 'expected object type');
     const objectGenerator = createGenerator(generator, type, { force: true });
     const object = objectGenerator.createObject();

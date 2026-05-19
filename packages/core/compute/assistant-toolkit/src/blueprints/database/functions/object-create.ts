@@ -16,10 +16,12 @@ export default ObjectCreate.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ typename, data }) {
       const { db } = yield* Database.Service;
-      const schema = yield* Effect.promise(() =>
-        db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).first(),
+      const foundSchema = yield* Effect.promise(() =>
+        Promise.resolve(db.graph.registry.types.find((t) => Type.getTypename(t) === typename)),
       );
-      invariant(Type.isObject(schema), 'Schema is not an object schema');
+      invariant(foundSchema, `Schema not found: ${typename}`);
+      invariant(Type.isObjectSchema(foundSchema), 'Schema is not an object schema');
+      const schema = foundSchema;
 
       const object = db.add(
         Obj.make(

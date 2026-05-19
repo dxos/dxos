@@ -2436,7 +2436,7 @@ describe('Query', () => {
     });
 
     test('query mutable schema objects', async () => {
-      const [schema] = await db.schemaRegistry.register([TestSchema.Person]);
+      const [schema] = await db.register([TestSchema.Person]);
       const contact = db.add(Obj.make(schema, {}));
 
       // NOTE: Must use `Filter.type` with the stored Type.Type entity since matching is done by the object id of the schema entity.

@@ -9,8 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { CommandConfig, Common, getSpace, printList, spaceIdWithDefault } from '@dxos/cli-util';
-import { ClientService } from '@dxos/client';
-import { type Key, Type } from '@dxos/echo';
+import { type Key } from '@dxos/echo';
 import { getTypeAnnotation } from '@dxos/echo/internal';
 
 import { createTypenameFilter, mapSchemas, printSchemas } from './util';
@@ -23,31 +22,22 @@ export const handler = Effect.fn(function* ({
   typename: Option.Option<string>;
 }) {
   const { json } = yield* CommandConfig;
-  const client = yield* ClientService;
 
   const resolvedSpaceId = yield* spaceIdWithDefault(spaceId as Option.Option<Key.SpaceId>);
   const space = yield* getSpace(resolvedSpaceId);
 
-  const echoSchema = yield* Effect.tryPromise(() => space.db.schemaRegistry.query().run());
-  const runtimeSchema = [...space.internal.db.graph.registry.types];
+  const allSchemas = [...space.db.graph.registry.types];
 
-  const schemas = [
-    // Skip persisted drafts without a typename — they can't be listed by name.
-    ...echoSchema
-      .map((schema) => {
-        const meta = Type.getMeta(schema);
-        return meta.key != null ? { id: schema.id, typename: meta.key, version: meta.version ?? '' } : undefined;
-      })
-      .filter((entry): entry is { id: string; typename: string; version: string } => entry != null),
-    ...runtimeSchema.map((type) => {
-      const schema = Type.getSchema(type as Type.AnyEntity);
-      const schemaAnnotation = getTypeAnnotation(schema)!;
+  const schemas = allSchemas
+    .map((schema) => {
+      const schemaAnnotation = getTypeAnnotation(schema);
       return {
-        typename: schemaAnnotation.typename,
-        version: schemaAnnotation.version,
+        id: (schema as any).id,
+        typename: schemaAnnotation?.typename ?? '',
+        version: schemaAnnotation?.version ?? '',
       };
-    }),
-  ].filter(createTypenameFilter(Option.getOrUndefined(typename)));
+    })
+    .filter(createTypenameFilter(Option.getOrUndefined(typename)));
 
   if (json) {
     yield* Console.log(JSON.stringify(mapSchemas(schemas), null, 2));

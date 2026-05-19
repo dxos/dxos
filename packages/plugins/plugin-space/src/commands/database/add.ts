@@ -17,7 +17,7 @@ import { SpaceProperties } from '@dxos/client/echo';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Operation } from '@dxos/compute';
 import { Collection, Database, Filter, Obj, Type } from '@dxos/echo';
-import { EntityKind, getTypeAnnotation } from '@dxos/echo/internal';
+import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 
 import { SpaceCapabilities } from '#types';
 
@@ -83,18 +83,11 @@ export const add = Command.make(
 const selectTypename = Effect.fn(function* (
   resolve: (typename: string) => SpaceCapabilities.CreateObjectEntry | undefined,
 ) {
-  const schemas = yield* Database.runSchemaQuery({
-    location: ['database', 'runtime'],
-    includeSystem: false,
-  }).pipe(
-    Effect.map((schemas) =>
-      schemas.filter((type) => {
-        const schema = Type.getSchema(type);
-        return getTypeAnnotation(schema)?.kind !== EntityKind.Relation;
-      }),
-    ),
-    Effect.map((schemas) => schemas.filter((schema) => !!resolve(Type.getTypename(schema)))),
-  );
+  const { db } = yield* Database.Service;
+  const schemas = db.graph.registry.types
+    .filter((schema) => !SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false)))
+    .filter((schema) => getTypeAnnotation(schema)?.kind !== EntityKind.Relation)
+    .filter((schema) => !!resolve(Type.getTypename(schema)));
 
   const choices = schemas.map((schema) => ({
     // TODO(wittjosiah): Translations.

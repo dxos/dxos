@@ -96,7 +96,7 @@ const StoryViewEditor = ({
 
   return (
     <ViewEditor
-      registry={db?.schemaRegistry}
+      registry={undefined}
       schema={schema}
       view={view}
       onQueryChanged={handleQueryChanged}
@@ -178,7 +178,7 @@ const meta = {
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
-        const [schema] = await space.db.schemaRegistry.register([Example]);
+        const [schema] = await space.db.register([Example]);
         const { view, jsonSchema } = await ViewModel.makeFromDatabase({
           db: space.db,
           typename: Type.getTypename(schema),
@@ -324,7 +324,7 @@ export const Tags: Meta<DefaultStoryProps> = {
             config: { options: selectOptions },
           },
         ]);
-        const [storedSchema] = await space.db.schemaRegistry.register([schema]);
+        const [storedSchema] = await space.db.register([schema]);
 
         // Initialize table.
         const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: space.db, typename });

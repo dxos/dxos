@@ -17,13 +17,11 @@ const handler: Operation.WithHandler<typeof KanbanOperation.DeleteCardField> = K
       const db = Obj.getDatabase(view);
       invariant(db, 'Database not found');
       const schema = yield* Effect.promise(() =>
-        db.schemaRegistry
-          .query({
-            typename: getTypenameFromQuery(view.query.ast)!,
-            location: ['database', 'runtime'],
-          })
-          .first(),
+        Promise.resolve(
+          db.graph.registry.types.find((t) => Type.getTypename(t) === getTypenameFromQuery(view.query.ast)),
+        ),
       );
+      invariant(schema, 'Schema not found');
 
       invariant(Type.isType(schema), 'expected stored Type.Type for card schema');
       const projection = new ProjectionModel({

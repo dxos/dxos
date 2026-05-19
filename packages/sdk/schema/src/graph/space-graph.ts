@@ -106,11 +106,10 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
 
     this._db = db;
 
-    const schemaaQuery = db.schemaRegistry.query({});
-    this._schemaSubscription = schemaaQuery.subscribe(
-      ({ results }: { results: Type.AnyEntity[] }) => (this._schema = results),
-      { fire: true },
-    );
+    this._schema = [...db.graph.registry.types] as Type.RuntimeType[];
+    this._schemaSubscription = db.graph.registry.changed.on(() => {
+      this._schema = [...db.graph.registry.types] as Type.RuntimeType[];
+    });
 
     this._subscribeObjects();
 

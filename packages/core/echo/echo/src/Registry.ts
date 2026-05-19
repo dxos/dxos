@@ -79,6 +79,7 @@ export interface Registry {
   /**
    * Register static TypeScript schema types.
    * Existing entries with the same DXN are replaced.
+   * Also indexes by identifier DXN (TypeIdentifierAnnotationId) if present.
    * Fires {@link changed}.
    */
   addTypes(types: readonly Type.AnyEntity[]): void;
@@ -94,6 +95,13 @@ export interface Registry {
    * Does not include upstream types.
    */
   readonly types: readonly Type.AnyEntity[];
+
+  /**
+   * Signal that a registered type has changed without adding or removing types.
+   * Fires {@link changed}.
+   * Used when a PersistentSchema-backed type is invalidated.
+   */
+  touch(): void;
 }
 
 /**
@@ -211,8 +219,16 @@ class RegistryImpl implements Registry {
 
   addTypes(types: readonly Type.AnyEntity[]): void {
     for (const schema of types) {
-      const dxn = getTypeDXN(schema);
-      this.#types.set(dxn, schema);
+      const identifierDXN = Type.getDXN(schema);
+      if (identifierDXN != null) {
+        // Schema has an identifier DXN (e.g. dxn:echo:@:objectId for PersistentSchema-backed RuntimeTypes).
+        // Index ONLY by identifier DXN to avoid overwriting static schemas that share the same typename/version.
+        this.#types.set(identifierDXN.toString(), schema);
+      } else {
+        // Static schema (no identifier DXN): index by typename DXN.
+        const dxn = getTypeDXN(schema);
+        this.#types.set(dxn, schema);
+      }
     }
     this.#changed.emit();
   }
@@ -222,7 +238,12 @@ class RegistryImpl implements Registry {
   }
 
   get types(): readonly Type.AnyEntity[] {
-    return Array.from(this.#types.values());
+    // De-duplicate: multiple keys can point to the same type instance (e.g. typename DXN + identifier DXN).
+    return Array.from(new Set(this.#types.values()));
+  }
+
+  touch(): void {
+    this.#changed.emit();
   }
 
   #put(object: Obj.Unknown): void {

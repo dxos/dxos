@@ -12,7 +12,7 @@ import { ToolResult, createTool } from '@dxos/ai';
 import { Capabilities, Capability, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/compute';
-import { Filter, Obj, View } from '@dxos/echo';
+import { Filter, Obj, Type, View } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { type Space } from '@dxos/react-client/echo';
@@ -95,7 +95,9 @@ export default Capability.makeModule(() =>
 
             // Validate schema if provided.
             if (typename) {
-              const schema = await extensions.space.db.schemaRegistry.query({ typename }).firstOrUndefined();
+              const schema = await Promise.resolve(
+                extensions.space.db.graph.registry.types.find((t) => Type.getTypename(t) === typename),
+              );
               if (!schema) {
                 return ToolResult.Error(`Schema not found: ${typename}`);
               }

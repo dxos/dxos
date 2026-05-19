@@ -492,7 +492,7 @@ describe('Integration tests', () => {
         const LocalTestSchema = Schema.Struct({
           field: Schema.String,
         }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
-        const [stored] = await db.schemaRegistry.register([LocalTestSchema]);
+        const [stored] = await db.register([LocalTestSchema]);
         schemaDxn = Type.getURI(stored)!;
 
         const object = db.add(Obj.make(stored, { field: 'test' }));
@@ -528,7 +528,7 @@ describe('Integration tests', () => {
       {
         // Can query by stored schema ref.
         await using db = await peer.openDatabase(spaceKey, rootUrl);
-        const schema = db.schemaRegistry.getSchema('com.example.type.test');
+        const schema = db.graph.registry.types.find((t) => Type.getTypename(t) === 'com.example.type.test') as Type.RuntimeType;
 
         const objects = await db.query(Filter.type(schema!)).run();
         expect(objects.length).to.eq(1);
@@ -549,7 +549,7 @@ describe('Integration tests', () => {
         reactiveSchemaQuery: false,
         preloadSchemaOnOpen: false,
       });
-      const [schema] = await db.schemaRegistry.register([TestSchema.Person]);
+      const [schema] = await db.register([TestSchema.Person]);
       typeURI = Type.getURI(schema)!;
       db.add(Obj.make(schema, { name: 'Bob' }));
       await db.flush();

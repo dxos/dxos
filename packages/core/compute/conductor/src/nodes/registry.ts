@@ -240,18 +240,14 @@ export const registry: Record<NodeType, Executable> = {
 
           const [container] = yield* Effect.promise(() => db.query(Filter.id(echoId)).run());
           if (isInstanceOf(View.View, container)) {
-            const schema = yield* Effect.promise(async () =>
-              db.schemaRegistry
-                .query({
-                  typename: getTypenameFromQuery(container.query.ast),
-                })
-                .first(),
-            );
+            const schemaTypename = getTypenameFromQuery(container.query.ast);
+            const schema = db.graph.registry.types.find((t) => Type.getTypename(t) === schemaTypename);
+            invariant(schema, `Schema not found: ${schemaTypename}`);
 
             for (const item of items) {
               const { id: _id, '@type': _type, ...rest } = item as any;
               // TODO(dmaretskyi): Forbid type on create.
-              db.add(Obj.make(Type.assertObject(schema), rest));
+              db.add(Obj.make(schema as any, rest));
             }
             yield* Effect.promise(() => db.flush());
           } else {

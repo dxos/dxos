@@ -116,7 +116,7 @@ const meta = {
         if (spec) {
           if (registerSchema) {
             // Replace all schema in the spec with the registered schema.
-            const registeredSchema = await space.db.schemaRegistry.register([
+            const registeredSchema = await space.db.register([
               ...new Set(spec.map((schema: any) => schema.type)),
             ] as Type.AnyEntity[]);
 

@@ -44,17 +44,16 @@ export const MasonryContainer = ({
       setCardSchema(() => staticSchema);
     }
     if (!staticSchema && typename && db) {
-      const query = db.schemaRegistry.query({ typename });
-      const unsubscribe = query.subscribe(
-        () => {
-          const [schema] = query.results;
-          if (schema) {
-            setCardSchema(schema);
-          }
-        },
-        { fire: true },
-      );
-      return unsubscribe;
+      const schema = db.graph.registry.types.find((t) => Type.getTypename(t) === typename);
+      if (schema) {
+        setCardSchema(() => schema);
+      }
+      return db.graph.registry.changed.on(() => {
+        const updated = db.graph.registry.types.find((t) => Type.getTypename(t) === typename);
+        if (updated) {
+          setCardSchema(() => updated);
+        }
+      });
     }
   }, [schemas, typename, db]);
 

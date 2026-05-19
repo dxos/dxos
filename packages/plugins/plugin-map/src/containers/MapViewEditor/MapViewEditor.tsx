@@ -33,14 +33,10 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
       return;
     }
 
-    const unsubscribe = db.schemaRegistry.query().subscribe(
-      (query) => {
-        const schemata = query.results;
-        setAllSchemata(schemata);
-      },
-      { fire: true },
-    );
-    return () => unsubscribe();
+    setAllSchemata([...db.graph.registry.types]);
+    return db.graph.registry.changed.on(() => {
+      setAllSchemata([...db.graph.registry.types]);
+    });
   }, [db]);
 
   const schemaOptions = useMemo(() => {

@@ -60,10 +60,9 @@ describe('Database Blueprint', () => {
           'Add a new schema called "Project" with typename "com.example.type.project" and fields: name (string), description (string), and status (string).',
         );
         yield* agent.waitForCompletion();
-        const schemas = yield* Database.runSchemaQuery({
-          typename: 'com.example.type.project',
-          location: ['database', 'runtime'],
-        });
+        const schemas = yield* Database.Service.pipe(
+          Effect.map(({ db }) => db.graph.registry.types.filter((t) => Type.getTypename(t) === 'com.example.type.project')),
+        );
         expect(schemas.length).toBeGreaterThanOrEqual(1);
       },
       Effect.provide(TestLayer),

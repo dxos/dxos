@@ -14,10 +14,12 @@ export default RelationCreate.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ typename, source, target, properties }) {
       const { db } = yield* Database.Service;
-      const schema = yield* Effect.promise(() =>
-        db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).first(),
+      const foundSchema = yield* Effect.promise(() =>
+        Promise.resolve(db.graph.registry.types.find((t) => Type.getTypename(t) === typename)),
       );
-      invariant(Type.isRelation(schema), 'Schema is not a relation schema');
+      invariant(foundSchema, `Schema not found: ${typename}`);
+      invariant(Type.isRelationSchema(foundSchema), 'Schema is not a relation schema');
+      const schema = foundSchema;
 
       const sourceObj = yield* Database.load(source);
       const targetObj = yield* Database.load(target);

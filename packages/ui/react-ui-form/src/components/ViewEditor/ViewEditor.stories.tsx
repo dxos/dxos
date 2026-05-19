@@ -59,7 +59,7 @@ const DefaultStory = (props: DefaultStoryProps) => {
         completed: Schema.Boolean,
       }).pipe(Type.makeObject(DXN.make('com.example.type.alternate', '0.1.0')));
 
-      const [testSchema] = await space.db.schemaRegistry.register([TestSchema, AlternateSchema]);
+      const [testSchema] = await space.db.register([TestSchema, AlternateSchema]);
       const view = ViewModel.make({
         name: 'Test',
         query: Query.select(Filter.type(TestSchema)),
@@ -87,14 +87,16 @@ const DefaultStory = (props: DefaultStoryProps) => {
         });
 
         const typename = getTypenameFromQuery(query.ast);
-        const [newSchema] = await space.db.schemaRegistry.query({ typename }).run();
+        const newSchema = space.db.graph.registry.types.find((t) => Type.getTypename(t) === typename) as
+          | EchoSchema
+          | undefined;
         if (!newSchema) {
           return;
         }
 
         const newView = ViewModel.make({
           query,
-          jsonSchema: newSchema.jsonSchema,
+          jsonSchema: JsonSchema.toJsonSchema(newSchema),
         });
         Obj.update(view, (view) => {
           view.projection = Obj.getSnapshot(newView).projection as Mutable<typeof view.projection>;
@@ -144,7 +146,7 @@ const DefaultStory = (props: DefaultStoryProps) => {
         ref={projectionRef}
         schema={schema}
         view={view}
-        registry={space?.db.schemaRegistry}
+        registry={undefined}
         mode={props.mode}
         readonly={props.readonly}
         types={types}

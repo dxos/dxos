@@ -70,7 +70,7 @@ const meta = {
             config: { options: selectOptions },
           },
         ]);
-        const [storedSchema] = await space.db.schemaRegistry.register([schema]);
+        const [storedSchema] = await space.db.register([schema]);
 
         // Initialize table.
         const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: space.db, typename });

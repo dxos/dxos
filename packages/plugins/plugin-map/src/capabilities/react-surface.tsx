@@ -10,7 +10,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { type Collection, Database, Obj } from '@dxos/echo';
+import { type Collection, Database, JsonSchema, Obj, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
@@ -82,8 +82,8 @@ export default Capability.makeModule(() =>
           const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
           const { typename } = useFormValues('MapForm');
 
-          const [schema] = db?.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).runSync() ?? [];
-          const jsonSchema = schema && schema.jsonSchema;
+          const schema = typename ? db?.graph.registry.types.find((t) => Type.getTypename(t) === typename) : undefined;
+          const jsonSchema = schema && JsonSchema.toJsonSchema(schema);
 
           const coordinateProperties = useMemo(() => {
             if (!jsonSchema?.properties) {
@@ -92,7 +92,7 @@ export default Capability.makeModule(() =>
 
             // Look for properties that use the LatLng format enum
             const properties = Object.entries(jsonSchema.properties).reduce<string[]>((acc, [key, value]) => {
-              if (typeof value === 'object' && value?.format === Format.TypeFormat.GeoPoint) {
+              if (typeof value === 'object' && (value as { format?: string })?.format === Format.TypeFormat.GeoPoint) {
                 acc.push(key);
               }
               return acc;

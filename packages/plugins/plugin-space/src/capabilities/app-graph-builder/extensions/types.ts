@@ -77,9 +77,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
         return node.type === TYPES_SECTION_TYPE && space ? Option.some(space) : Option.none();
       },
       connector: (space, get) => {
-        const allSchemas = get(
-          AtomQuery.fromQuery(space.db.schemaRegistry.query({ location: ['database', 'runtime'] })),
-        );
+        const allSchemas = get(AtomQuery.fromRegistryTypes(space.db.graph.registry));
 
         const userSchemas = allSchemas.filter((type) => {
           if (Type.isRelation(type)) {

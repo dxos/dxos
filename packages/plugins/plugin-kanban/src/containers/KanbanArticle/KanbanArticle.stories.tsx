@@ -128,7 +128,7 @@ const DefaultComponent = () => {
       <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
       <div className='flex flex-col h-full overflow-hidden border-l border-separator'>
         <ViewEditor
-          registry={space?.db.schemaRegistry}
+          registry={undefined}
           schema={schema}
           view={view}
           onQueryChanged={handleUpdateQuery}
@@ -250,7 +250,7 @@ export const MutableSchema: Story = {
     withKanbanPlugins({
       onSpaceCreated: async (space) => {
         // Register schema in the database to make it mutable (stored Type.Type).
-        const [schema] = await space.db.schemaRegistry.register([Organization.Organization]);
+        const [schema] = await space.db.register([Organization.Organization]);
 
         const { view } = await ViewModel.makeFromDatabase({
           db: space.db,

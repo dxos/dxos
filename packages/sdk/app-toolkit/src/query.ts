@@ -9,7 +9,7 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Filter, Key, Query, type QueryAST, type SchemaRegistry, Type } from '@dxos/echo';
+import { type Database, Filter, Key, Query, type QueryAST, Type } from '@dxos/echo';
 import {
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
@@ -35,16 +35,15 @@ export const evalQuery = (queryString: string): Query.Any => {
   }
 };
 
-export const resolveSchemaWithRegistry = (registry: SchemaRegistry.SchemaRegistry, query: QueryAST.Query) => {
+export const resolveSchemaWithRegistry = (db: Database.Database, query: QueryAST.Query) => {
   const resolve = Effect.fn(function* (dxn: string) {
     const typename = DXN.isDXN(dxn) ? DXN.getName(dxn) : undefined;
     if (!typename) {
       return Option.none<Type.AnyEntity>();
     }
 
-    const query = registry.query({ typename, location: ['database', 'runtime'] });
-    const types = yield* Effect.promise(() => query.run());
-    return Array.head(types) as Option.Option<Type.AnyEntity>;
+    const schema = db.graph.registry.types.find((t) => Type.getTypename(t) === typename);
+    return Option.fromNullable(schema);
   });
 
   return resolveType(query, resolve).pipe(

@@ -55,7 +55,7 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
       return;
     }
 
-    const foundType = await resolveSchemaWithRegistry(db.schemaRegistry, view.query.ast);
+    const foundType = await resolveSchemaWithRegistry(db, view.query.ast);
     if (foundType && foundType !== type) {
       setType(() => foundType);
     }
@@ -82,7 +82,7 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
       updateView((view) => {
         view.query.ast = query.ast as Mutable<typeof query.ast>;
       });
-      const newType = await resolveSchemaWithRegistry(db.schemaRegistry, query.ast);
+      const newType = await resolveSchemaWithRegistry(db, query.ast);
       if (!newType) {
         return;
       }
@@ -213,7 +213,7 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
                           readonly
                           schema={type}
                           view={column.view.target}
-                          registry={db?.schemaRegistry}
+                          registry={undefined}
                           db={db}
                           tags={tags}
                           types={types}

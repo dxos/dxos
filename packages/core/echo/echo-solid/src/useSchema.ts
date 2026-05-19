@@ -4,7 +4,7 @@
 
 import { type Accessor, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
 
-import { type Database, type Type } from '@dxos/echo';
+import { type Database, Type } from '@dxos/echo';
 
 type MaybeAccessor<T> = T | Accessor<T>;
 
@@ -19,38 +19,40 @@ type MaybeAccessor<T> = T | Accessor<T>;
 export const useSchema = (
   db?: MaybeAccessor<Database.Database | undefined>,
   typename?: MaybeAccessor<string | undefined>,
-): Accessor<Type.Type | undefined> => {
-  // Derive the schema query reactively
-  const query = createMemo(() => {
+): Accessor<T | undefined> => {
+  // Derive resolved values reactively.
+  const resolved = createMemo(() => {
     const resolvedDb = typeof db === 'function' ? db() : db;
     const resolvedTypename = typeof typename === 'function' ? typename() : typename;
     if (!resolvedTypename || !resolvedDb) {
       return undefined;
     }
-    return resolvedDb.schemaRegistry.query({ typename: resolvedTypename, location: ['database', 'runtime'] });
+    return { db: resolvedDb, typename: resolvedTypename };
   });
 
-  // Store the current schema in a signal
-  const [schema, setSchema] = createSignal<Type.Type | undefined>(undefined);
+  // Store the current schema in a signal.
+  const [schema, setSchema] = createSignal<T | undefined>(undefined);
 
-  // Subscribe to query changes
+  // Subscribe to registry changes.
   createEffect(() => {
-    const q = query();
-    if (!q) {
-      // Keep previous value during transitions to prevent flickering
+    const r = resolved();
+    if (!r) {
+      // Keep previous value during transitions to prevent flickering.
       return;
     }
 
-    // Subscribe to updates with immediate fire to get initial result and track changes
-    // The subscription will automatically start the reactive query
-    const unsubscribe = q.subscribe(
-      () => {
-        // Access results inside the callback to ensure query is running
-        const results = q.results;
-        setSchema(() => results[0]);
-      },
-      { fire: true },
+    const { db: resolvedDb, typename: resolvedTypename } = r;
+
+    // Set initial value immediately.
+    setSchema(
+      () => resolvedDb.graph.registry.types.find((t) => Type.getTypename(t) === resolvedTypename) as T | undefined,
     );
+
+    const unsubscribe = resolvedDb.graph.registry.changed.on(() => {
+      setSchema(
+        () => resolvedDb.graph.registry.types.find((t) => Type.getTypename(t) === resolvedTypename) as T | undefined,
+      );
+    });
 
     onCleanup(unsubscribe);
   });
