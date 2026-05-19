@@ -13,11 +13,17 @@ const SYMBOL_PATTERN = /^([a-z0-9]+)--([a-z0-9-]+)--(bold|duotone|fill|light|reg
 export type IconRegistry = {
   hasIcon(name: string): boolean;
   requestIcon(name: string): void;
+  /**
+   * Subscribe to changes — fires whenever a new symbol becomes available (static sprite
+   * finished ingesting, or a runtime fetch resolved). Returns an unsubscribe function.
+   */
+  subscribe(listener: () => void): () => void;
 };
 
 const NoopRegistry: IconRegistry = {
   hasIcon: () => false,
   requestIcon: () => {},
+  subscribe: () => () => {},
 };
 
 const IconRegistryContext = createContext<IconRegistry>(NoopRegistry);
@@ -157,13 +163,19 @@ const resolveDynamic = async (state: RegistryState, name: string): Promise<void>
 
 const createRegistry = (): RegistryHandle => {
   const defs = createDefsContainer();
+  const listeners = new Set<() => void>();
+  const notify = () => {
+    for (const listener of listeners) {
+      listener();
+    }
+  };
   const state: RegistryState = {
     defs,
     loaded: new Set<string>(),
     inflight: new Map<string, Promise<void>>(),
     staticReady: undefined as unknown as Promise<void>,
   };
-  state.staticReady = loadStaticSprite(state);
+  state.staticReady = loadStaticSprite(state).then(notify);
 
   const registry: IconRegistry = {
     hasIcon: (name) => state.loaded.has(name),
@@ -171,16 +183,25 @@ const createRegistry = (): RegistryHandle => {
       if (state.loaded.has(name) || state.inflight.has(name)) {
         return;
       }
-      const promise = resolveDynamic(state, name).finally(() => {
-        state.inflight.delete(name);
-      });
+      const promise = resolveDynamic(state, name)
+        .then(notify)
+        .finally(() => {
+          state.inflight.delete(name);
+        });
       state.inflight.set(name, promise);
+    },
+    subscribe: (listener) => {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
     },
   };
 
   return {
     registry,
     dispose: () => {
+      listeners.clear();
       defs.remove();
     },
   };
