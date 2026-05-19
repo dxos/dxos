@@ -49,10 +49,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/AutomationPlugin.workerd.ts",
         "node": "./src/AutomationPlugin.node.ts",
         "default": "./src/AutomationPlugin.tsx"
       },
       "types": "./dist/types/src/AutomationPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/AutomationPlugin.workerd.mjs",
       "node": "./dist/lib/neutral/AutomationPlugin.node.mjs",
       "default": "./dist/lib/neutral/AutomationPlugin.mjs"
     },

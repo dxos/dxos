@@ -35,10 +35,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/ObservabilityPlugin.workerd.ts",
         "node": "./src/ObservabilityPlugin.node.ts",
         "default": "./src/ObservabilityPlugin.ts"
       },
       "types": "./dist/types/src/ObservabilityPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/ObservabilityPlugin.workerd.mjs",
       "node": "./dist/lib/neutral/ObservabilityPlugin.node.mjs",
       "default": "./dist/lib/neutral/ObservabilityPlugin.mjs"
     },

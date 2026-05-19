@@ -54,10 +54,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/InboxPlugin.workerd.ts",
         "node": "./src/InboxPlugin.node.ts",
         "default": "./src/InboxPlugin.tsx"
       },
       "types": "./dist/types/src/InboxPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/InboxPlugin.workerd.mjs",
       "node": "./dist/lib/neutral/InboxPlugin.node.mjs",
       "default": "./dist/lib/neutral/InboxPlugin.mjs"
     },

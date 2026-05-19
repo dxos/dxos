@@ -45,10 +45,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/ClientPlugin.workerd.ts",
         "node": "./src/ClientPlugin.node.ts",
         "default": "./src/ClientPlugin.ts"
       },
       "types": "./dist/types/src/ClientPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/ClientPlugin.workerd.mjs",
       "node": "./dist/lib/neutral/ClientPlugin.node.mjs",
       "default": "./dist/lib/neutral/ClientPlugin.mjs"
     },
