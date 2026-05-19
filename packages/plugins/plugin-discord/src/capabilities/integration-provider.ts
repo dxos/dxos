@@ -53,8 +53,9 @@ const DiscordTokenForm = Schema.Struct({
  * integration-coordinator's effect provides `Capability.Service` ambiently —
  * TS just can't see that through the public type.
  *
- * TODO(plugin-integration): widen `CredentialForm.onSubmit` and
- * `OnTokenCreated` to permit `Capability.Service` in R so the cast can go away.
+ * TODO(wittjosiah): widen `CredentialForm.onSubmit` and `OnTokenCreated` in
+ * `@dxos/plugin-integration` to permit `Capability.Service` in R so the cast
+ * can go away.
  */
 const proxyHttpClientLayer = (): Effect.Effect<Layer.Layer<HttpClient.HttpClient>, Error, Capability.Service> =>
   Effect.gen(function* () {
