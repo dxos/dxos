@@ -128,7 +128,7 @@ const buildDecorations = ({
       const cacheKey = urlText;
       const blobUrlPromise = (async () => {
         const matched = await space.db.query(Filter.id(echoId!)).first();
-        if (!matched || !Obj.instanceOf(FileType.FileType, matched)) {
+        if (!matched || !Obj.instanceOf(FileType.File, matched)) {
           return undefined;
         }
 

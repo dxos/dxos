@@ -12,7 +12,7 @@ import { FileType } from '#types';
 export const FilePlugin = Plugin.define(meta).pipe(
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [FileType.FileType] }),
+  AppPlugin.addSchemaModule({ schema: [FileType.File] }),
   Plugin.make,
 );
 

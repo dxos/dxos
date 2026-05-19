@@ -9,16 +9,17 @@ import { type Atom } from '@effect-atom/atom-react';
 import { Capability } from '@dxos/app-framework';
 import { type Database } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
+// eslint-disable-next-line @dxos/rules/import-as-namespace
+import { File as FileType } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import * as FileType from './FileType';
 import * as Settings from './Settings';
 
 /**
  * A file storage backend. Each backend ingests a File from the user and
- * returns the metadata + the {@link FileData} to attach to a
- * {@link FileType} object.
+ * returns the metadata + the {@link FileType.FileData} to attach to a
+ * {@link FileType.File} object.
  */
 export type Backend = {
   /** Stable backend id (e.g. 'inline', 'wnfs'). Used as the settings key. */
@@ -48,7 +49,7 @@ export const Backend = Capability.make<Backend>(`${meta.id}.capability.backend`)
 export type UrlResolver = {
   readonly id: string;
   readonly test: (url: string) => boolean;
-  readonly resolve: (url: string, file: FileType.FileType, space?: Space) => Promise<string | undefined>;
+  readonly resolve: (url: string, file: FileType.File, space?: Space) => Promise<string | undefined>;
 };
 
 export const UrlResolver = Capability.make<UrlResolver>(`${meta.id}.capability.url-resolver`);

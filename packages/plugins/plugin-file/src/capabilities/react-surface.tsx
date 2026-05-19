@@ -24,9 +24,9 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'article',
         filter: AppSurface.oneOf(
-          AppSurface.object(AppSurface.Article, FileType.FileType),
-          AppSurface.object(AppSurface.Section, FileType.FileType),
-          AppSurface.object(AppSurface.Slide, FileType.FileType),
+          AppSurface.object(AppSurface.Article, FileType.File),
+          AppSurface.object(AppSurface.Section, FileType.File),
+          AppSurface.object(AppSurface.Slide, FileType.File),
         ),
         component: ({ data, role }) => <FileArticle role={role} subject={data.subject} />,
       }),

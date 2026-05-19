@@ -12,7 +12,7 @@ import { Panel } from '@dxos/react-ui';
 import { FilePreview } from '#components';
 import { FileCapabilities, FileType } from '#types';
 
-export type FileArticleProps = AppSurface.ObjectArticleProps<FileType.FileType>;
+export type FileArticleProps = AppSurface.ObjectArticleProps<FileType.File>;
 
 export const FileArticle = ({ role, subject: file }: FileArticleProps) => {
   const resolvers = useCapabilities(FileCapabilities.UrlResolver);

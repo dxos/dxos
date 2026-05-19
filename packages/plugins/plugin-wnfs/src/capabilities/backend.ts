@@ -7,7 +7,9 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { FileCapabilities, FileType } from '@dxos/plugin-file/types';
+import { FileCapabilities } from '@dxos/plugin-file/types';
+// eslint-disable-next-line @dxos/rules/import-as-namespace
+import { File as FileType } from '@dxos/types';
 
 import { WnfsCapabilities } from '#types';
 

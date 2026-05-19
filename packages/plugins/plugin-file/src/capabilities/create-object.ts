@@ -13,7 +13,7 @@ import { FileAction, FileOperation, FileType } from '#types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-      id: FileType.FileType.typename,
+      id: FileType.File.typename,
       inputSchema: FileAction.CreateFileSchema,
       createObject: (props, options) =>
         Effect.gen(function* () {

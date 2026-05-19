@@ -10,8 +10,8 @@ import { Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 
 /**
- * Discriminated `data` field on {@link FileType}: either the bytes live on
- * the object itself (`inline`) or they live somewhere else and we hold a URL
+ * Discriminated `data` field on {@link File}: either the bytes live on the
+ * object itself (`inline`) or they live somewhere else and we hold a URL
  * (`external`, optionally with a content hash for IPFS/WNFS-style backends).
  */
 export const FileDataSchema = Schema.Union(
@@ -34,7 +34,11 @@ export const externalData = (url: string, cid?: string): FileData => ({
   ...(cid ? { cid } : {}),
 });
 
-export const FileType = Schema.Struct({
+/**
+ * Canonical file type. Storage is backend-agnostic — the `data` field
+ * discriminates between inline bytes and an external URL reference.
+ */
+export const File = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   type: Schema.String.pipe(FormInputAnnotation.set(false)),
   size: Schema.Number.pipe(FormInputAnnotation.set(false)),
@@ -51,6 +55,6 @@ export const FileType = Schema.Struct({
   }),
 );
 
-export type FileType = Schema.Schema.Type<typeof FileType>;
+export interface File extends Schema.Schema.Type<typeof File> {}
 
-export const make = (props: Obj.MakeProps<typeof FileType>) => Obj.make(FileType, props);
+export const make = (props: Obj.MakeProps<typeof File>): File => Obj.make(File, props);

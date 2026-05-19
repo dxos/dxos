@@ -10,7 +10,7 @@ import { FileType } from '#types';
 export const translations = [
   {
     'en-US': {
-      [FileType.FileType.typename]: {
+      [FileType.File.typename]: {
         'typename.label': 'File',
         'typename.label_zero': 'Files',
         'typename.label_one': 'File',
