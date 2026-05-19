@@ -162,38 +162,54 @@ const STATUS_RING: Record<WidgetMember['status'], string> = {
   dnd: 'bg-rose-500',
 };
 
-const sortMembers = (members: WidgetMember[], team: ReadonlySet<string>): WidgetMember[] => {
+const MemberRow = ({ member }: { member: WidgetMember }) => (
+  <li className='flex items-center gap-2 px-2 py-1 rounded'>
+    <div className='relative shrink-0'>
+      <img src={member.avatar_url} alt='' className='w-6 h-6 rounded-full' />
+      <span
+        className={mx(
+          'absolute -bottom-0.5 -end-0.5 size-2 rounded-full ring-2 ring-base-surface',
+          STATUS_RING[member.status] ?? 'bg-neutral-400',
+        )}
+      />
+    </div>
+    <span className='text-sm truncate'>{member.username}</span>
+  </li>
+);
+
+const partitionMembers = (
+  members: WidgetMember[],
+  team: ReadonlySet<string>,
+): { teamMembers: WidgetMember[]; otherMembers: WidgetMember[] } => {
   const collator = new Intl.Collator(undefined, { sensitivity: 'base' });
-  return [...members].sort((left, right) => {
-    const leftIsTeam = team.has(left.username);
-    const rightIsTeam = team.has(right.username);
-    if (leftIsTeam !== rightIsTeam) {
-      return leftIsTeam ? -1 : 1;
-    }
-    return collator.compare(left.username, right.username);
-  });
+  const sorted = [...members].sort((left, right) => collator.compare(left.username, right.username));
+  const teamMembers: WidgetMember[] = [];
+  const otherMembers: WidgetMember[] = [];
+  for (const member of sorted) {
+    (team.has(member.username) ? teamMembers : otherMembers).push(member);
+  }
+  return { teamMembers, otherMembers };
 };
 
 const Content = () => {
   const { data, team } = useWidgetContext();
-  const members = useMemo(() => (data ? sortMembers(data.members, team) : []), [data, team]);
+  const { teamMembers, otherMembers } = useMemo(
+    () => (data ? partitionMembers(data.members, team) : { teamMembers: [], otherMembers: [] }),
+    [data, team],
+  );
+  const hasSeparator = teamMembers.length > 0 && otherMembers.length > 0;
   return (
     <ScrollArea.Root orientation='vertical'>
       <ScrollArea.Viewport>
         <ul className='flex flex-col p-1'>
-          {members.map((member) => (
-            <li key={`${member.id}-${member.username}`} className='flex items-center gap-2 px-2 py-1 rounded'>
-              <div className='relative shrink-0'>
-                <img src={member.avatar_url} alt='' className='w-6 h-6 rounded-full' />
-                <span
-                  className={mx(
-                    'absolute -bottom-0.5 -end-0.5 size-2 rounded-full ring-2 ring-base-surface',
-                    STATUS_RING[member.status] ?? 'bg-neutral-400',
-                  )}
-                />
-              </div>
-              <span className='text-sm truncate'>{member.username}</span>
-            </li>
+          {teamMembers.map((member) => (
+            <MemberRow key={`${member.id}-${member.username}`} member={member} />
+          ))}
+          {hasSeparator && (
+            <li role='separator' aria-hidden='true' className='my-1 border-t border-subdued-separator' />
+          )}
+          {otherMembers.map((member) => (
+            <MemberRow key={`${member.id}-${member.username}`} member={member} />
           ))}
         </ul>
       </ScrollArea.Viewport>
