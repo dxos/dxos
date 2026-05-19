@@ -69,7 +69,7 @@ export default Capability.makeModule(
                 label: ['plugin-registry.label', { ns: meta.id }],
                 icon: 'ph--squares-four--regular',
                 disposition: 'pin-end',
-                position: 'hoist',
+                position: 'fallback',
                 testId: 'treeView.pluginRegistry',
               },
               nodes: [

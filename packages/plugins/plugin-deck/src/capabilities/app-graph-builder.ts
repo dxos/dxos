@@ -112,7 +112,7 @@ export default Capability.makeModule(
                   macos: "meta+'",
                 },
                 disposition: 'pin-end',
-                position: 'fallback',
+                position: 'hoist',
                 l0Breakpoint: 'lg',
               },
             };

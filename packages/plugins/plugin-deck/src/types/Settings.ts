@@ -20,12 +20,6 @@ export const Settings = Schema.Struct({
       description: 'Render each plank inside its own isolated container.',
     }),
   ),
-  enableStatusbar: Schema.optional(
-    Schema.Boolean.annotations({
-      title: 'Show status bar',
-      description: 'Display a status bar at the bottom of the application.',
-    }),
-  ),
   showHints: Schema.optional(
     Schema.Boolean.annotations({
       title: 'Show hints',

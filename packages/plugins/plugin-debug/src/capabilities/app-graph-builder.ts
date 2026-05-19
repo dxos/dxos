@@ -40,7 +40,6 @@ export default Capability.makeModule(
                   label: ['devtools.label', { ns: meta.id }],
                   icon: 'ph--hammer--regular',
                   disposition: 'pin-end',
-                  position: 'fallback',
                 },
                 nodes: [
                   Node.make({

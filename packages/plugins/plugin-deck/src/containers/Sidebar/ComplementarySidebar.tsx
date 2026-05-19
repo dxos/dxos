@@ -11,7 +11,7 @@ import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { iconSize, mx } from '@dxos/ui-theme';
 
-import { type DeckCompanion, useBreakpoints, useDeckCompanions, useDeckState, useHoistStatusbar } from '#hooks';
+import { type DeckCompanion, useBreakpoints, useDeckCompanions, useDeckState } from '#hooks';
 import { meta } from '#meta';
 import { getMode } from '#types';
 
@@ -32,7 +32,6 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
   const layoutMode = getMode(deck);
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
-  const hoistStatusbar = useHoistStatusbar(breakpoint, layoutMode);
 
   const companions = useDeckCompanions();
   const activeCompanion = companions.find((companion) => getLinkedVariant(companion.id) === current);
@@ -78,10 +77,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
   return (
     <Main.ComplementarySidebar
       label={label}
-      classNames={[
-        topbar && 'top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]',
-        hoistStatusbar && 'bottom-(--dx-statusbar-size)',
-      ]}
+      classNames={[topbar && 'top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]']}
     >
       {/* R0 Tabs */}
       <Tabs.Root classNames='contents' orientation='vertical' value={internalValue}>
@@ -117,14 +113,12 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
               </Tabs.Tab>
             ))}
           </Tabs.Tablist>
-          {!hoistStatusbar && (
-            <div
-              className='grid grid-cols-1 auto-rows-(--dx-rail-item) py-0.5 gap-0.5 overflow-y-auto scrollbar-none'
-              style={iconSize(4)}
-            >
-              <Surface.Surface role='status-indicator' />
-            </div>
-          )}
+          <div
+            className='grid grid-cols-1 auto-rows-(--dx-rail-item) py-0.5 gap-0.5 overflow-y-auto scrollbar-none'
+            style={iconSize(4)}
+          >
+            <Surface.Surface role='status-indicator' reverse />
+          </div>
           <div className='hidden lg:grid grid-cols-1 auto-rows-(--dx-rail-action) p-1'>
             <ToggleComplementarySidebarButton />
           </div>
@@ -142,12 +136,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
               ]}
               {...(state.complementarySidebarState !== 'expanded' && { inert: true })}
             >
-              <ComplementarySidebarPanel
-                companion={companion}
-                activeId={activeId}
-                data={data}
-                hoistStatusbar={hoistStatusbar}
-              />
+              <ComplementarySidebarPanel companion={companion} activeId={activeId} data={data} />
             </Tabs.Panel>
           ))}
       </Tabs.Root>
@@ -162,10 +151,9 @@ type ComplementarySidebarPanelProps = {
     id: string;
     subject: any;
   };
-  hoistStatusbar: boolean;
 };
 
-const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }: ComplementarySidebarPanelProps) => {
+const ComplementarySidebarPanel = ({ companion, activeId, data }: ComplementarySidebarPanelProps) => {
   const { t } = useTranslation(meta.id);
 
   if (getLinkedVariant(companion.id) !== activeId && !data) {
@@ -198,12 +186,6 @@ const ComplementarySidebarPanel = ({ companion, activeId, data, hoistStatusbar }
           placeholder={<PlankLoading />}
         />
       </Panel.Content>
-      {/* TODO(wittjosiah): Remove this status bar from the complementary sidebar. */}
-      {!hoistStatusbar && (
-        <Panel.Statusbar size='sm'>
-          <Surface.Surface role='status-bar--r1-footer' limit={1} />
-        </Panel.Statusbar>
-      )}
     </Panel.Root>
   );
 };

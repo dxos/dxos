@@ -63,6 +63,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'help-menu',
         role: 'status-indicator',
+        position: 'hoist',
         component: () => <HelpMenu />,
       }),
       // Generic plank companion: shows the description from the plugin that
