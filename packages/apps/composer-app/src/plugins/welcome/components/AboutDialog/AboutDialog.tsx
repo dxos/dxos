@@ -19,6 +19,15 @@ const ENV_LABELS: Record<string, string> = {
 
 const REPO = 'https://github.com/dxos/dxos';
 
+/** Safe `new URL(...)` — returns the parsed URL or undefined when the input is malformed. */
+const parseUrl = (url: string): URL | undefined => {
+  try {
+    return new URL(url);
+  } catch {
+    return undefined;
+  }
+};
+
 export const ABOUT_DIALOG = `${meta.id}.component.about-dialog`;
 
 export const AboutDialog = () => {
@@ -28,14 +37,15 @@ export const AboutDialog = () => {
 
   // Show edge environment when not in production, so internal builds advertise which cluster they're on.
   const edgeUrl = config.values.runtime?.services?.edge?.url;
-  const envKey = edgeUrl ? new URL(edgeUrl).host.split('.')[0] : undefined;
+  const envKey = edgeUrl ? parseUrl(edgeUrl)?.host.split('.')[0] : undefined;
   const edgeEnv = envKey ? ENV_LABELS[envKey] : undefined;
   const showEnv = !!edgeEnv && edgeEnv !== 'Production';
 
+  // Fall back to repo root when build metadata is missing so we never produce broken
+  // links like `/releases/tag/vundefined` or `/commit/undefined`.
+  const isProd = config.values.runtime?.app?.env?.DX_ENVIRONMENT === 'production';
   const releaseUrl =
-    config.values.runtime?.app?.env?.DX_ENVIRONMENT === 'production'
-      ? `${REPO}/releases/tag/v${version}`
-      : `${REPO}/commit/${commitHash}`;
+    isProd && version ? `${REPO}/releases/tag/v${version}` : commitHash ? `${REPO}/commit/${commitHash}` : REPO;
 
   return (
     <Dialog.Content size='sm'>
@@ -54,7 +64,7 @@ export const AboutDialog = () => {
           <Message.Title classNames='font-normal text-sm'>{t('technology-preview.message')}</Message.Title>
         </Message.Root>
         <Column.Center classNames='flex flex-col text-sm'>
-          <div className='flex items-center'>{t('version.label', { version })}</div>
+          <div className='flex items-center'>{t('version.label', { version: version ?? 'unknown' })}</div>
           {timestamp && (
             <div className='flex items-center gap-1'>
               <Link href={releaseUrl} target='_blank' rel='noopener noreferrer' variant='neutral'>

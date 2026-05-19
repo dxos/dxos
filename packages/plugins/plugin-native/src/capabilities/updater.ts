@@ -23,13 +23,13 @@ import { TAURI_LOCALHOST_PORT } from '../constants';
 
 const SUPPORTS_OTA = ['linux', 'macos', 'windows'];
 
-/** Safe wrapper around Updater.check(). */
-const safeCheck = async (): Promise<Updater.Update | null> => {
+/** Safe wrapper around Updater.check(). Distinguishes "no update" (ok with null update) from a thrown error. */
+const safeCheck = async (): Promise<{ ok: true; update: Updater.Update | null } | { ok: false; error: string }> => {
   try {
-    return await Updater.check();
+    return { ok: true, update: await Updater.check() };
   } catch (error) {
     log.error('failed to check for updates', { error });
-    return null;
+    return { ok: false, error: formatError(error) };
   }
 };
 
@@ -79,7 +79,13 @@ export default Capability.makeModule(
     const doCheck = async (): Promise<Updater.Update | null> => {
       registry.set(statusAtom, { kind: 'checking' });
       log.info('checking for updates');
-      const update = await safeCheck();
+      const result = await safeCheck();
+      if (!result.ok) {
+        pendingUpdate = null;
+        registry.set(statusAtom, { kind: 'failed', error: result.error });
+        return null;
+      }
+      const update = result.update;
       if (!update?.available) {
         pendingUpdate = null;
         registry.set(statusAtom, { kind: 'up-to-date', checkedAt: Date.now() });
@@ -180,7 +186,9 @@ export default Capability.makeModule(
 
     return [
       managerContribution,
-      Capability.contributes(Capabilities.Null, null, () => Effect.sync(() => Effect.runSync(Fiber.interrupt(fiber)))),
+      // Return the interruption effect directly; Fiber.interrupt is async and would throw
+      // AsyncFiberException if wrapped in Effect.runSync.
+      Capability.contributes(Capabilities.Null, null, () => Fiber.interrupt(fiber)),
     ];
   }),
 );
