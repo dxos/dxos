@@ -3,7 +3,6 @@
 //
 
 import { RegistryContext } from '@effect-atom/atom-react';
-import * as Array from 'effect/Array';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
