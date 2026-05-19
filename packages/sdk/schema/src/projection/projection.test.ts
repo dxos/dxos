@@ -2,12 +2,12 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Registry } from '@effect-atom/atom-react';
+import { Registry as AtomRegistry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Filter, Obj, Query, Registry as EchoRegistry, Type, View } from '@dxos/echo';
+import { Filter, Obj, Query, Registry, Type, View } from '@dxos/echo';
 import { DatabaseSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import {
@@ -35,11 +35,11 @@ const getFieldId = (projection: View.Projection, path: string): string => {
 
 describe('ProjectionModel', () => {
   let builder: EchoTestBuilder;
-  let atomRegistry: Registry.Registry;
+  let atomRegistry: AtomRegistry.Registry;
 
   beforeEach(async () => {
     builder = await new EchoTestBuilder().open();
-    atomRegistry = Registry.make();
+    atomRegistry = AtomRegistry.make();
   });
 
   afterEach(async () => {
@@ -136,7 +136,7 @@ describe('ProjectionModel', () => {
   });
 
   test('gets and updates references', async ({ expect }) => {
-    const registry = EchoRegistry.make();
+    const registry = Registry.make();
     registry.addTypes([TestSchema.Organization]);
 
     const typename = 'com.example.type.person';
