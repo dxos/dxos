@@ -205,11 +205,11 @@ describe('Reactive Object with ECHO database', () => {
     expect(Obj.getURI(snapshot)).to.eq(Obj.getURI(obj));
   });
 
-  test('does not throw if schema was not annotated as echo object (addTypes does not validate)', async () => {
+  test('throws if schema was not annotated as echo object', async () => {
     const NonEchoSchema = Schema.Struct({ field: Schema.String });
     const { graph } = await builder.createDatabase();
-    // addTypes does not perform runtime validation for TypeAnnotationId annotation.
-    expect(() => graph.registry.addTypes([NonEchoSchema as any])).not.toThrow();
+    // addTypes throws for schemas without TypeAnnotationId annotation (no typename/version).
+    expect(() => graph.registry.addTypes([NonEchoSchema as any])).to.throw();
   });
 
   test('throws if schema was not registered in Hypergraph', async () => {
