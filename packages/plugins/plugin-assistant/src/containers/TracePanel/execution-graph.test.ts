@@ -293,6 +293,66 @@ describe('buildExecutionGraph (span-tree based)', () => {
     expect(commits[2].parents?.length).toBe(2);
   });
 
+  test('pending span with user message → user lands on own branch, not parent', ({ expect }) => {
+    const { commits, branches } = buildExecutionGraph({
+      traceMessages: [
+        // Agent has begun and emitted a user message, but has NOT yet completed.
+        makeMessage({ pid: 'agent-1' }, [{ type: AgentRequestBegin.key, timestamp: 1, data: {} }]),
+        makeMessage({ pid: 'agent-1' }, [
+          {
+            type: CompleteBlock.key,
+            timestamp: 2,
+            data: { messageId: '01HQ0000000000000000000000', role: 'user', block: textBlock('hello') },
+          },
+        ]),
+      ],
+    });
+    // Two commits: AgentBegin on main (fork), user "hello" on agent-1 branch (middle).
+    // No end commit yet — the span is pending.
+    expect(commits).toHaveLength(2);
+    expect(commits[0].branch).toBe('main');
+    expect(commits[0].message).toBe('Agent processing request...');
+    expect(commits[1].branch).toBe('agent-1');
+    expect(commits[1].message).toBe('hello');
+    expect(`\n${renderTimelineAscii(commits, branches)}\n`).toMatchInlineSnapshot(`
+      "
+      ●     [atom] Agent processing request...
+      ├──●  [user] hello
+      "
+    `);
+  });
+
+  test('pending span with collapsed sub-span then user message → user on own branch', ({ expect }) => {
+    const { commits, branches } = buildExecutionGraph({
+      traceMessages: [
+        makeMessage({ pid: 'agent-1' }, [{ type: AgentRequestBegin.key, timestamp: 1, data: {} }]),
+        // Sub-span completes (will be collapsed).
+        makeMessage({ pid: 'op-1', parentPid: 'agent-1' }, [
+          { type: Trace.OperationStart.key, timestamp: 2, data: { key: 'lookup', name: 'Lookup' } },
+          {
+            type: Trace.OperationEnd.key,
+            timestamp: 3,
+            data: { key: 'lookup', name: 'Lookup', outcome: 'success' as const },
+          },
+        ]),
+        // User message arrives after the sub-span; agent is still pending.
+        makeMessage({ pid: 'agent-1' }, [
+          {
+            type: CompleteBlock.key,
+            timestamp: 4,
+            data: { messageId: '01HQ0000000000000000000001', role: 'user', block: textBlock('hello') },
+          },
+        ]),
+      ],
+    });
+    // AgentBegin on main, Lookup-Success on agent branch, user "hello" on agent branch.
+    expect(commits).toHaveLength(3);
+    expect(commits[0].branch).toBe('main');
+    expect(commits[1].branch).toBe('agent-1');
+    expect(commits[2].branch).toBe('agent-1');
+    expect(commits[2].message).toBe('hello');
+  });
+
   test('orders sub-spans chronologically under their parent', ({ expect }) => {
     const { commits } = buildExecutionGraph({
       traceMessages: [

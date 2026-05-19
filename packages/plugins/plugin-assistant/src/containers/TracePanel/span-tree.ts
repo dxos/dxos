@@ -44,8 +44,11 @@ export interface Span {
   readonly children: Span[];
 }
 
-const BEGIN_EVENT_TYPES = new Set<string>([Trace.OperationStart.key, AgentRequestBegin.key]);
-const END_EVENT_TYPES = new Set<string>([Trace.OperationEnd.key, AgentRequestEnd.key]);
+export const BEGIN_EVENT_TYPES = new Set<string>([Trace.OperationStart.key, AgentRequestBegin.key]);
+export const END_EVENT_TYPES = new Set<string>([Trace.OperationEnd.key, AgentRequestEnd.key]);
+
+export const isSpanBeginEvent = (event: Trace.FlatEvent): boolean => BEGIN_EVENT_TYPES.has(event.type);
+export const isSpanEndEvent = (event: Trace.FlatEvent): boolean => END_EVENT_TYPES.has(event.type);
 
 const computeMeta = (rawMeta: Trace.Meta): SpanMeta => ({
   pid: rawMeta.pid,

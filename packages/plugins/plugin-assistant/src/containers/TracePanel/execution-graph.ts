@@ -15,7 +15,7 @@ import { AGENT_PROCESS_KEY, Process } from '@dxos/functions-runtime';
 import { LogLevel, log } from '@dxos/log';
 import { type Commit } from '@dxos/react-ui-components';
 
-import { ROOT_SPAN_ID, type Span, buildSpanTree, walkSpanTree } from './span-tree';
+import { ROOT_SPAN_ID, type Span, buildSpanTree, isSpanBeginEvent, isSpanEndEvent, walkSpanTree } from './span-tree';
 
 /**
  * Branch name for top-level operation invocations.
@@ -188,11 +188,16 @@ const presentEvent = (event: Trace.FlatEvent): EventPresentation | undefined => 
 
 /**
  * A span is "collapsible" when it would otherwise render as an empty fork-and-merge:
- * exactly two events (its own begin and end) and no child sub-spans. In that case we
- * emit a single commit for the end event on the parent branch.
+ * exactly two events that form a begin/end pair and no child sub-spans. In that case
+ * we emit a single commit for the end event on the parent branch.
  *
- * Both nested spans and top-level spans (whose parent is the synthetic root) are eligible:
- * a span with no inner activity is collapsed regardless of where it sits in the tree.
+ * A *pending* span (one whose end event has not yet been recorded) is never collapsed:
+ * its trailing events should keep rendering as middle commits on the span's own branch
+ * — never as a fake "end" commit on the parent branch.
+ *
+ * Both nested spans and top-level spans (whose parent is the synthetic root) are eligible
+ * once they have completed: a span with no inner activity is collapsed regardless of where
+ * it sits in the tree.
  */
 const isCollapsibleSpan = (span: Span, parent: Span | null): boolean => {
   if (span.id === ROOT_SPAN_ID) {
@@ -202,6 +207,11 @@ const isCollapsibleSpan = (span: Span, parent: Span | null): boolean => {
     return false;
   }
   if (span.children.length > 0) {
+    return false;
+  }
+  const firstEvent = span.events[0];
+  const lastEvent = span.events[span.events.length - 1];
+  if (!isSpanBeginEvent(firstEvent) || !isSpanEndEvent(lastEvent)) {
     return false;
   }
   return parent !== null;
@@ -296,19 +306,23 @@ const spanTreeToCommits = (
   // Track the id of the begin commit for each non-collapsible span so the end commit can merge into it.
   const beginCommitIdBySpan = new Map<string, string>();
 
-  for (const { span, event, eventIndex, globalIndex } of stream) {
+  for (const { span, event, globalIndex } of stream) {
     const presentation = presentEvent(event);
     if (!presentation) {
       continue;
     }
 
-    const isFirst = eventIndex === 0;
-    const isLast = eventIndex === span.events.length - 1;
+    // Classify based on event TYPE, not array index. A pending span's trailing
+    // middle event (e.g. a user message awaiting an agent response) must not be
+    // mistaken for the span's end event — otherwise it would render on the
+    // parent branch instead of the span's own branch.
+    const isBeginEvent = isSpanBeginEvent(event);
+    const isEndEvent = isSpanEndEvent(event);
     const parentSpan = findParentSpan(span);
     const collapsible = isCollapsibleSpan(span, parentSpan);
 
     // Collapsed spans: skip the begin event entirely; only the end event renders.
-    if (collapsible && isFirst) {
+    if (collapsible && isBeginEvent) {
       continue;
     }
 
@@ -330,12 +344,12 @@ const spanTreeToCommits = (
       // even when the immediate parent branch has not received a commit yet.
       branch = parentBranch;
       parents = builder.computeParents(lastInAncestorChain(parentSpan));
-    } else if (isFirst) {
+    } else if (isBeginEvent) {
       // Begin commit: fork off the parent branch.
       // Walk the ancestor chain to find the most recent ancestor commit to fork from.
       branch = parentBranch;
       parents = builder.computeParents(lastInAncestorChain(parentSpan));
-    } else if (isLast) {
+    } else if (isEndEvent) {
       // End commit: merge from the span's own branch back into the parent branch.
       branch = parentBranch;
       const beginId = beginCommitIdBySpan.get(span.id);
@@ -368,8 +382,8 @@ const spanTreeToCommits = (
     };
     builder.addCommit(commit);
 
-    // Record begin commit so the end can merge into it.
-    if (isFirst && !collapsible && span.id !== ROOT_SPAN_ID) {
+    // Record begin commit so a later end event can merge into it.
+    if (isBeginEvent && !collapsible && span.id !== ROOT_SPAN_ID) {
       beginCommitIdBySpan.set(span.id, commitId);
     }
   }
