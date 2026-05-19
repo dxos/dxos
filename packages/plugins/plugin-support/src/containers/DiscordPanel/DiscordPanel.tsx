@@ -15,7 +15,6 @@ export const DiscordPanel = () => {
       title='DXOS Discord'
       src={`https://discord.com/widget?id=${DXOS_GUILD_ID}&theme=${themeMode}`}
       className='block is-full bs-full border-0'
-      allowTransparency
       sandbox='allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts'
     />
   );
