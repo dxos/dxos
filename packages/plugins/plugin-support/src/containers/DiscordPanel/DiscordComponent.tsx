@@ -19,10 +19,12 @@ export type DiscordChannel = {
   id: string;
 };
 
+const WELCOME_CHANNEL_ID = '837139872460046376';
+
 const DEFAULT_CHANNELS: ReadonlyArray<DiscordChannel> = [
   {
-    name: 'welcome',
-    id: '837139872460046376',
+    name: 'announcements',
+    id: '837383109527470140',
   },
   {
     name: 'general',
@@ -31,6 +33,10 @@ const DEFAULT_CHANNELS: ReadonlyArray<DiscordChannel> = [
   {
     name: 'work-in-progress',
     id: '1275086707342970922',
+  },
+  {
+    name: 'help',
+    id: '1080292583588237342',
   },
 ];
 
@@ -83,6 +89,8 @@ const Root = ({ guildId = DXOS_GUILD_ID, teamMembers, channels, children }: Disc
 
   useEffect(() => {
     const controller = new AbortController();
+    setData(null);
+    setUnavailable(false);
     void (async () => {
       try {
         // Discord's CDN caches the widget response without `Vary: Origin`, so a single
@@ -92,14 +100,17 @@ const Root = ({ guildId = DXOS_GUILD_ID, teamMembers, channels, children }: Disc
         url.searchParams.set('_origin', window.location.origin);
         const response = await fetch(url.toString(), { signal: controller.signal });
         if (!response.ok) {
+          setData(null);
           setUnavailable(true);
           return;
         }
         setData(await response.json());
+        setUnavailable(false);
       } catch {
         if (controller.signal.aborted) {
           return;
         }
+        setData(null);
         setUnavailable(true);
       }
     })();
@@ -115,10 +126,18 @@ const Root = ({ guildId = DXOS_GUILD_ID, teamMembers, channels, children }: Disc
 
 const Header = () => {
   const { t } = useTranslation(meta.id);
-  const { data, unavailable } = useWidgetContext();
+  const { data, unavailable, guildId } = useWidgetContext();
+
   return (
-    <header className='flex items-center justify-between gap-1 px-2 py-1 bg-modal-surface border-b border-subdued-separator'>
-      <DXOSHorizontalType className='h-8 w-auto fill-current' />
+    <header className='flex items-center justify-between gap-1 px-2 bg-modal-surface'>
+      <a
+        href={`https://discord.com/channels/${guildId}/${WELCOME_CHANNEL_ID}`}
+        target='_blank'
+        rel='noopener noreferrer'
+      >
+        <DXOSHorizontalType className='h-10 w-auto fill-current' />
+      </a>
+
       <div className='text-xs text-description'>
         {unavailable
           ? t('discord-unavailable.message')
@@ -135,6 +154,7 @@ const Channels = () => {
   if (channels.length === 0) {
     return null;
   }
+
   return (
     <nav className='border-b border-subdued-separator'>
       <ul className='flex flex-col p-1'>
@@ -144,7 +164,7 @@ const Channels = () => {
               href={`https://discord.com/channels/${guildId}/${channel.id}`}
               target='_blank'
               rel='noopener noreferrer'
-              className='flex items-center gap-1 px-2 py-1 rounded text-sm hover:bg-hover-surface'
+              className='flex items-center gap-1 px-2 py-1 rounded-sm text-sm hover:bg-hover-surface'
             >
               <span className='text-description'>#</span>
               <span className='truncate'>{channel.name}</span>
