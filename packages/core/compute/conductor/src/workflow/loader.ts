@@ -39,14 +39,14 @@ export class WorkflowLoader {
     this._graphLoader = params.graphLoader;
   }
 
-  public async load(graphDxn: DXN): Promise<Workflow> {
-    const graph = new ComputeGraphModel(await this._graphLoader(graphDxn));
+  public async load(graphDXN: DXN): Promise<Workflow> {
+    const graph = new ComputeGraphModel(await this._graphLoader(graphDXN));
     this._validateWorkflowInOut(graph);
 
     const { resolver, resolvedNodes } = this._createComputeResolver();
     const executor = new GraphExecutor({ computeNodeResolver: resolver });
     await executor.load(graph);
-    return new Workflow(graphDxn, graph, executor, resolvedNodes);
+    return new Workflow(graphDXN, graph, executor, resolvedNodes);
   }
 
   private _createComputeResolver(cache: CompilationCache = newCompilationCache()): {

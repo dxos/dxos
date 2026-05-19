@@ -8,7 +8,7 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Type, View } from '@dxos/echo';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
@@ -21,8 +21,8 @@ import { HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
 import { useGraphModel } from '#hooks';
 import { Graph } from '#types';
 
+import { generate } from '../Tree/testing';
 import { CanvasForceGraph } from './CanvasForceGraph';
-import { generate } from './testing';
 
 const generator = random as any as ValueGenerator;
 

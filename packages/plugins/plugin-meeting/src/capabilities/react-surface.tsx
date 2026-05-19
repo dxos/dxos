@@ -12,7 +12,7 @@ import { Obj } from '@dxos/echo';
 import { Channel } from '@dxos/types';
 
 import { MeetingSettings } from '#components';
-import { MeetingContainer, MeetingsList } from '#containers';
+import { MeetingArticle, MeetingsList } from '#containers';
 import { meta } from '#meta';
 import { Meeting, Settings } from '#types';
 
@@ -31,7 +31,7 @@ export default Capability.makeModule(() =>
         id: 'meeting',
         filter: AppSurface.object(AppSurface.Article, Meeting.Meeting),
         component: ({ role, data }) => (
-          <MeetingContainer role={role} subject={data.subject} attendableId={data.attendableId} />
+          <MeetingArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({
@@ -44,7 +44,7 @@ export default Capability.makeModule(() =>
           return data.subject === 'meeting' ? (
             <MeetingsList companionTo={data.companionTo} />
           ) : (
-            <MeetingContainer role={role} subject={data.subject} />
+            <MeetingArticle role={role} subject={data.subject} />
           );
         },
       }),

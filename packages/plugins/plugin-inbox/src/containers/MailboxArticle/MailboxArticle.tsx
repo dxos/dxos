@@ -18,7 +18,7 @@ import { linkedSegment } from '@dxos/react-ui-attention';
 import { useSelected } from '@dxos/react-ui-attention';
 import { QueryEditor } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
-import { Menu, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
+import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { HasSubject, Message } from '@dxos/types';
 
 import { type MessageStackActionHandler, MessageStack } from '#components';
@@ -49,7 +49,7 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   const db = Obj.getDatabase(mailbox);
   const showItem = useShowItem();
 
-  const feed = mailbox.feed?.target as Feed.Feed | undefined;
+  const feed = mailbox.feed?.target;
 
   const filterEditorRef = useRef<EditorController>(null);
   const filterSaveButtonRef = useRef<HTMLButtonElement>(null);
@@ -72,10 +72,10 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   }, [filterText, builder]);
 
   // Messages.
-  const messages: Message.Message[] = useQuery(
+  const messages = useQuery(
     db,
     feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
-  ) as Message.Message[];
+  );
 
   // Feed/queue queries don't yet support text-search and complex filter combinations,
   // so query Messages by type only and apply the parsed filter client-side.
@@ -330,35 +330,31 @@ const useMailboxActions = ({ db, mailbox, sortDescending }: UseMailboxActionsPro
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
 
-  const menu = useMemo(
-    () =>
-      Atom.make((context) => {
-        return MenuBuilder.make()
-          .root({
-            label: t('mailbox-toolbar.title'),
-          })
-          .action(
-            'sortAscending',
-            {
-              type: 'sortDescending',
-              icon: context.get(sortDescending) ? 'ph--sort-descending--regular' : 'ph--sort-ascending--regular',
-              label: t('mailbox-toolbar-sort.menu'),
-            },
-            () => context.set(sortDescending, !context.get(sortDescending)),
-          )
-          .action(
-            'composeEmail',
-            {
-              type: 'composeEmail',
-              icon: 'ph--paper-plane-right--regular',
-              label: t('compose-email.label'),
-            },
-            () => db && invokePromise(InboxOperation.DraftEmailAndOpen, { db, mailbox }),
-          )
-          .build();
-      }),
-    [sortDescending, invokePromise, db, mailbox],
+  return useMenuBuilder(
+    (context) =>
+      MenuBuilder.make()
+        .root({
+          label: t('mailbox-toolbar.title'),
+        })
+        .action(
+          'sortAscending',
+          {
+            type: 'sortDescending',
+            icon: context.get(sortDescending) ? 'ph--sort-descending--regular' : 'ph--sort-ascending--regular',
+            label: t('mailbox-toolbar-sort.menu'),
+          },
+          () => context.set(sortDescending, !context.get(sortDescending)),
+        )
+        .action(
+          'composeEmail',
+          {
+            type: 'composeEmail',
+            icon: 'ph--paper-plane-right--regular',
+            label: t('compose-email.label'),
+          },
+          () => db && invokePromise(InboxOperation.DraftEmailAndOpen, { db, mailbox }),
+        )
+        .build(),
+    [t, sortDescending, invokePromise, db, mailbox],
   );
-
-  return useMenuActions(menu);
 };

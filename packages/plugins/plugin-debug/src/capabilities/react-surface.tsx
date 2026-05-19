@@ -397,8 +397,8 @@ export default Capability.makeModule(
           }
 
           const feed = space.properties.invocationTraceFeed?.target;
-          const queueDxn = feed ? Feed.getQueueDxn(feed) : undefined;
-          return <InvocationTraceContainer db={space.db} queueDxn={queueDxn} detailAxis='block' />;
+          const feedDXN = feed ? Feed.getQueueDxn(feed) : undefined;
+          return <InvocationTraceContainer db={space.db} feedDXN={feedDXN} detailAxis='block' />;
         },
       }),
       Surface.create({

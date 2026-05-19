@@ -43,12 +43,44 @@ export class DocumentsSynchronizer extends Resource {
   private readonly _pendingUpdates = new Set<DocumentId>();
 
   /**
+   * Documents whose on-disk probe completed negative and that need a
+   * mutation-less `requesting: true` transition update sent to the client.
+   * Cleared per-flush in `_checkAndSendUpdates`.
+   */
+  private readonly _pendingRequesting = new Set<DocumentId>();
+
+  /**
    * Job that schedules if there are pending updates.
    */
   private _sendUpdatesJob?: UpdateScheduler = undefined;
 
+  /**
+   * Test affordance: when true, `_checkAndSendUpdates` is a no-op so no
+   * document state is flushed to the client. `addDocuments` still loads
+   * documents on the worker side and accumulates `_pendingUpdates`, which
+   * flush automatically on resume. From the client's perspective every
+   * `RepoProxy.find()` made while paused returns a handle that stays
+   * `pending` until resume — used to deterministically reproduce
+   * worker-side hangs in query-pipeline tests.
+   */
+  #sendUpdatesPaused = false;
+
   constructor(private readonly _params: DocumentsSynchronizerProps) {
     super();
+  }
+
+  /**
+   * Test affordance: pause/resume flushing of document updates to the client.
+   * See `#sendUpdatesPaused` for details. Idempotent.
+   */
+  setSendUpdatesPaused(paused: boolean): void {
+    if (this.#sendUpdatesPaused === paused) {
+      return;
+    }
+    this.#sendUpdatesPaused = paused;
+    if (!paused) {
+      this._sendUpdatesJob?.trigger();
+    }
   }
 
   async addDocuments(documentIds: DocumentId[]): Promise<void> {
@@ -66,6 +98,10 @@ export class DocumentsSynchronizer extends Resource {
                 this._startSync(docQuery);
                 this._pendingUpdates.add(docQuery.documentId);
                 this._sendUpdatesJob!.trigger();
+                // Background disk probe so the client can distinguish
+                // "not on disk, waiting for network" from "still loading".
+                // Fire-and-forget; the result feeds `_pendingRequesting`.
+                this._scheduleDiskProbe(docQuery.documentId);
               } catch (err) {
                 log.warn('failed to load document', { err });
                 throw err;
@@ -79,11 +115,43 @@ export class DocumentsSynchronizer extends Resource {
     );
   }
 
+  /**
+   * Probe local storage for the document; if not present, enqueue a
+   * `requesting: true` transition update so the client moves the handle
+   * from `'pending'` to `'requesting'` and disk-only callers can give up
+   * without waiting on the network. If the doc became `ready` before the
+   * probe completes (e.g. delivered concurrently by network/peer), no
+   * transition update is sent.
+   */
+  private _scheduleDiskProbe(documentId: DocumentId): void {
+    void Promise.resolve().then(async () => {
+      try {
+        const onDisk = await this._params.automergeHost.hasDocOnDisk(documentId);
+        if (onDisk) {
+          // Doc is on disk; the existing `heads-changed` flow will deliver
+          // a normal mutation update once the load completes.
+          return;
+        }
+        // Skip the transition signal if the doc has since become `ready`
+        // via the network/peer race.
+        const syncState = this._syncStates.get(documentId);
+        if (!syncState || syncState.docQuery.peek().state === 'ready') {
+          return;
+        }
+        this._pendingRequesting.add(documentId);
+        this._sendUpdatesJob?.trigger();
+      } catch (err) {
+        log.warn('disk probe failed', { documentId, err });
+      }
+    });
+  }
+
   removeDocuments(documentIds: DocumentId[]): void {
     for (const documentId of documentIds) {
       this._syncStates.get(documentId)?.clearSubscriptions?.();
       this._syncStates.delete(documentId);
       this._pendingUpdates.delete(documentId);
+      this._pendingRequesting.delete(documentId);
     }
   }
 
@@ -100,6 +168,13 @@ export class DocumentsSynchronizer extends Resource {
 
   async update(ctx: Context, updates: DocumentUpdate[]): Promise<void> {
     for (const { documentId, mutation } of updates) {
+      // Inbound (client -> worker) updates are always mutation-bearing; the
+      // `mutation`-less variant is only used for worker -> client transition
+      // signals (e.g. `requesting`). Defensive skip here to satisfy the
+      // optional proto field.
+      if (!mutation) {
+        continue;
+      }
       await this._writeMutation(documentId as DocumentId, mutation);
     }
     // TODO(mykola): This should not be required.
@@ -130,6 +205,9 @@ export class DocumentsSynchronizer extends Resource {
   }
 
   private async _checkAndSendUpdates(): Promise<void> {
+    if (this.#sendUpdatesPaused) {
+      return;
+    }
     const updates: DocumentUpdate[] = [];
 
     const docsWithPendingUpdates = Array.from(this._pendingUpdates);
@@ -142,6 +220,23 @@ export class DocumentsSynchronizer extends Resource {
           documentId,
           mutation: update,
         });
+      }
+    }
+
+    // Mutation-less transition updates: tell the client `requesting: true`
+    // for any documents whose disk probe completed negative. Skip docs that
+    // are already being delivered as a real mutation in this same batch
+    // (those go directly to `ready` on the client and a subsequent
+    // `requesting` would be ignored anyway).
+    const docsRequesting = Array.from(this._pendingRequesting);
+    this._pendingRequesting.clear();
+    if (docsRequesting.length > 0) {
+      const docsBeingFlushed = new Set(updates.map((update) => update.documentId));
+      for (const documentId of docsRequesting) {
+        if (docsBeingFlushed.has(documentId)) {
+          continue;
+        }
+        updates.push({ documentId, requesting: true });
       }
     }
 

@@ -112,7 +112,9 @@ export default Capability.makeModule(
       Layer.succeed(Trace.TraceSink, mergedTraceSink),
     );
 
-    const processManagerLayer = ProcessManager.layer().pipe(Layer.provide(baseLayer));
+    const processManagerLayer = ProcessManager.layer({ runtimeName: Trace.CommonRuntimeName.local }).pipe(
+      Layer.provide(baseLayer),
+    );
     const operationInvokerLayer = ProcessManager.ProcessOperationInvoker.layer.pipe(
       Layer.provide(Layer.mergeAll(processManagerLayer, baseLayer)),
     );

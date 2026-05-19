@@ -80,7 +80,7 @@ export default Capability.makeModule(
                   }
                   const existing = yield* Effect.promise(
                     (): Promise<Operation.PersistentOperation[]> =>
-                      space.db.query(Filter.type(Operation.PersistentOperation, { key })).run(),
+                      space.db.query(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(key))).run(),
                   );
                   if (existing.length === 0) {
                     space.db.add(Operation.serialize(definition));
@@ -126,16 +126,16 @@ export default Capability.makeModule(
           Effect.gen(function* () {
             const state = get(yield* Capability.get(AssistantCapabilities.State));
             const cache = get(yield* Capability.get(AssistantCapabilities.CompanionChatCache));
-            const objectDxn = Obj.getDXN(object).toString();
+            const objectDXN = Obj.getDXN(object).toString();
 
             // Resolve chat from persisted state or transient cache.
             const chat = pipe(
-              Option.fromNullable(state.currentChat[objectDxn]),
+              Option.fromNullable(state.currentChat[objectDXN]),
               Option.flatMap((dxnStr) => Option.fromNullable(DXN.tryParse(dxnStr))),
               Option.flatMap((dxn) => Option.fromNullable(Obj.getDatabase(object)?.makeRef(dxn))),
               Option.map((ref) => get(AtomObj.make(ref as Ref.Ref<Obj.Unknown>))),
               Option.filter(Obj.isObject),
-              Option.orElse(() => pipe(Option.fromNullable(cache[objectDxn]), Option.filter(Obj.isObject))),
+              Option.orElse(() => pipe(Option.fromNullable(cache[objectDXN]), Option.filter(Obj.isObject))),
               Option.getOrNull,
             );
 

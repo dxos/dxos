@@ -53,14 +53,15 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
   // Reactive lookup of the source feed name. `post.feed?.target?.name` only renders
   // synchronously when the ref is already resolved; querying feeds via useQuery means
   // the meta line updates as soon as the feed object is loaded into the space.
-  const allFeeds = useQuery(db, Filter.type(Subscription.Feed));
+  const allFeeds = useQuery(db, Filter.type(Subscription.Subscription));
   const feedName = useMemo(() => {
-    const dxn = post.feed?.dxn.toString();
+    const dxn = post.source?.dxn.toString();
     if (!dxn) {
       return undefined;
     }
+
     return allFeeds.find((feed) => Obj.getDXN(feed).toString() === dxn)?.name;
-  }, [post.feed, allFeeds]);
+  }, [post.source, allFeeds]);
 
   const archived = Boolean(post.archived);
   const starred = hasMetaTag(subject, starTag);
@@ -89,6 +90,7 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
     if (!db) {
       return;
     }
+
     // Always go through ensureStarTag so we hit the same canonical tag — the closure
     // value of `starTag` may be stale (e.g. undefined on first click before the
     // useQuery has populated).
@@ -104,6 +106,7 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
     if (!post.link || refreshing) {
       return;
     }
+
     setRefreshing(true);
     try {
       const corsProxy = typeof window !== 'undefined' ? '/api/rss?url=' : undefined;

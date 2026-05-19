@@ -55,12 +55,6 @@ export const createConfig = (options: ConfigOptions): ViteUserConfig => {
     test: {
       ...resolveReporterConfig(dirname),
       tags: TEST_TAGS,
-      // Suppress flaky vitest worker teardown unhandled rejections (e.g.
-      // `EnvironmentTeardownError: Closing rpc while "onUserConsoleLog" was
-      // pending` from node tests, WebSocket birpc errors from the storybook
-      // runner) — these surface as non-zero exits with no actual test
-      // failures and turn the entire job red.
-      dangerouslyIgnoreUnhandledErrors: true,
       projects: [nodeProject, storybookProject, ...browserProjects].filter(
         (project): project is UserWorkspaceConfig => project !== undefined,
       ),
@@ -72,6 +66,11 @@ const createStorybookProject = (dirname: string) =>
   defineProject({
     test: {
       name: 'storybook',
+      // The playwright/chromium session occasionally dies mid-run with
+      // "Browser connection was closed while running tests", causing every
+      // subsequent story file to fail to import. Retry once so a transient
+      // browser-side flake doesn't fail the whole job.
+      retry: 1,
       browser: {
         enabled: true,
         headless: true,

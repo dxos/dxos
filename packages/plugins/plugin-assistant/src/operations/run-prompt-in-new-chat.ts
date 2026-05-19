@@ -45,9 +45,10 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInNewCha
 
                 if (blueprints && blueprints.length > 0) {
                   const allBlueprints = await db.query(Filter.type(Blueprint.Blueprint)).run();
-                  const matchedBlueprints = allBlueprints.filter(
-                    (blueprint) => blueprint.key && blueprints.includes(blueprint.key),
-                  );
+                  const matchedBlueprints = allBlueprints.filter((blueprint) => {
+                    const blueprintKey = Obj.getMeta(blueprint).key;
+                    return blueprintKey !== undefined && blueprints.includes(blueprintKey);
+                  });
                   if (matchedBlueprints.length > 0) {
                     bindingProps.blueprints = matchedBlueprints.map((blueprint) => Ref.make(blueprint));
                   }

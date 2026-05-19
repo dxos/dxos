@@ -33,6 +33,9 @@
       "path": "../../common/display-name"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -114,7 +117,13 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-graph"
+    },
+    {
       "path": "../../ui/react-ui-grid"
+    },
+    {
+      "path": "../../ui/react-ui-menu"
     },
     {
       "path": "../../ui/react-ui-mosaic"
@@ -133,6 +142,12 @@
     },
     {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../../ui/ui-types"
+    },
+    {
+      "path": "../plugin-calls"
     },
     {
       "path": "../plugin-client"
@@ -157,9 +172,6 @@
     },
     {
       "path": "../plugin-theme"
-    },
-    {
-      "path": "../plugin-thread"
     }
   ]
 }

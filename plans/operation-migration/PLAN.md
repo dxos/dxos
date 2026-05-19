@@ -28,7 +28,7 @@ Migrate all `defineFunction` / `Function` / `FunctionDefinition` usages from `@d
 
 #### 2. `FunctionDefinition.Input<>` type usage → `Operation.Definition.Input<>`
 
-- `packages/plugins/plugin-script/src/containers/NotebookContainer/NotebookContainer.tsx:237`
+- `packages/plugins/plugin-script/src/containers/NotebookArticle/NotebookArticle.tsx:237`
 - `packages/plugins/plugin-assistant/src/containers/PromptArticle/PromptArticle.tsx:27`
 
 #### 3. Stale `type FunctionDefinition` imports (unused or need replacement)

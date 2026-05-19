@@ -84,6 +84,10 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
   }
   // Headers are optional when using a proxy that injects auth server-side.
   const resolvedHeaders = headers ?? {};
+  // OTLP HTTP exporters require an absolute URL. Resolve relative paths using the current origin.
+  // globalThis.location is defined in all browser contexts (main thread, dedicated/service workers).
+  const resolvedEndpoint =
+    !isNode() && endpoint.startsWith('/') ? `${globalThis.location.origin}${endpoint}` : endpoint;
 
   // Matches edge's `ctx.tag` span attribute (stamped by the edge log middleware
   // when it reads the `X-DXOS-Client-Tag` header, see
@@ -115,7 +119,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
 
   const logs = logsEnabled
     ? new OtelLogs({
-        endpoint,
+        endpoint: resolvedEndpoint,
         headers: resolvedHeaders,
         resource,
         getTags: () => Object.fromEntries(tags),
@@ -125,7 +129,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
 
   const metrics = metricsEnabled
     ? new OtelMetrics({
-        endpoint,
+        endpoint: resolvedEndpoint,
         headers: resolvedHeaders,
         resource,
         getTags: () => Object.fromEntries(tags),
@@ -134,7 +138,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
 
   const traces = tracesEnabled
     ? new OtelTraces({
-        endpoint,
+        endpoint: resolvedEndpoint,
         headers: resolvedHeaders,
         resource,
         getTags: () => Object.fromEntries(tags),

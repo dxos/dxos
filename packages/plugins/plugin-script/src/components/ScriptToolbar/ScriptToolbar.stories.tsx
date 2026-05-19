@@ -9,7 +9,7 @@ import React, { useMemo } from 'react';
 import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Script } from '@dxos/compute';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type ScriptToolbarState, type ScriptToolbarStateStore } from '#hooks';

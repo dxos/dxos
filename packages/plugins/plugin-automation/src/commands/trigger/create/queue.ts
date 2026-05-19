@@ -17,7 +17,7 @@ import { Operation, Trigger } from '@dxos/compute';
 import { Database, Filter, JsonSchema, Ref } from '@dxos/echo';
 
 import { Enabled, Input, Queue } from '../options';
-import { printTrigger, promptForSchemaInput, selectFunction, selectQueue } from '../util';
+import { printTrigger, promptForSchemaInput, selectFunction, selectFeed } from '../util';
 
 export const queue = Command.make(
   'queue',
@@ -42,8 +42,8 @@ export const queue = Command.make(
         return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
       }
 
-      const queueDxn = yield* Option.match(options.queue, {
-        onNone: () => selectQueue(),
+      const queueDXN = yield* Option.match(options.queue, {
+        onNone: () => selectFeed(),
         onSome: (dxn) => Effect.succeed(dxn.toString()),
       });
 
@@ -65,7 +65,7 @@ export const queue = Command.make(
       const trigger = Trigger.make({
         function: Ref.make(fn),
         enabled,
-        spec: Trigger.specQueue(queueDxn),
+        spec: Trigger.specQueue(queueDXN),
         input,
       });
 

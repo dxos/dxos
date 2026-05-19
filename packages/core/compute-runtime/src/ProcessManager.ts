@@ -202,6 +202,13 @@ export interface ProcessManagerImplOpts {
   serviceResolver?: ServiceResolver.ServiceResolver;
   handlerSet?: OperationHandlerSet.OperationHandlerSet;
   idGenerator?: ProcessIdGenerator;
+
+  /**
+   * Runtime name to stamp on trace messages emitted by processes spawned by this manager.
+   * Identifies which runtime (local app, edge intrinsic, edge worker, ...) executed the code.
+   * Per-spawn `SpawnOptions.traceMeta.runtimeName` takes precedence over this default.
+   */
+  runtimeName?: Trace.RuntimeName;
 }
 
 export class ProcessManagerImpl implements Manager {
@@ -212,6 +219,7 @@ export class ProcessManagerImpl implements Manager {
   readonly #serviceResolver: ServiceResolver.ServiceResolver;
   readonly #handlerSet: OperationHandlerSet.OperationHandlerSet | undefined;
   readonly #traceSink: Trace.Sink;
+  readonly #runtimeName: Trace.RuntimeName | undefined;
 
   readonly #processTreeAtom: Atom.Writable<readonly Process.Info[]>;
   readonly #monitor: Process.Monitor;
@@ -223,6 +231,7 @@ export class ProcessManagerImpl implements Manager {
     this.#serviceResolver = opts.serviceResolver ?? ServiceResolver.empty;
     this.#handlerSet = opts.handlerSet;
     this.#traceSink = opts.traceSink;
+    this.#runtimeName = opts.runtimeName;
     this.#processTreeAtom = Atom.make<readonly Process.Info[]>([]);
     this.#registry.mount(this.#processTreeAtom);
     this.#monitor = {
@@ -381,6 +390,7 @@ export class ProcessManagerImpl implements Manager {
             parentPid: options?.parentProcessId,
             processName: params.name ?? undefined,
             traceMeta: options?.traceMeta,
+            runtimeName: this.#runtimeName,
             space: environment.space,
             sink: this.#traceSink,
             onEphemeral: (message) => handleRef?.pushEphemeral(message),
@@ -524,6 +534,11 @@ export class ProcessManagerImpl implements Manager {
  */
 export const layer = (opts?: {
   idGenerator?: ProcessIdGenerator;
+  /**
+   * Runtime name stamped on every trace message emitted by processes spawned by this manager.
+   * See {@link Trace.CommonRuntimeName} for well-known values.
+   */
+  runtimeName?: Trace.RuntimeName;
 }): Layer.Layer<
   ProcessManagerService | Process.ProcessMonitorService,
   never,
@@ -549,6 +564,7 @@ export const layer = (opts?: {
         serviceResolver,
         handlerSet,
         idGenerator: opts?.idGenerator,
+        runtimeName: opts?.runtimeName,
       });
 
       yield* Effect.addFinalizer(() => manager.shutdown());

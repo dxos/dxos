@@ -111,10 +111,10 @@ export class FunctionsServiceClient {
       return Obj.make(Operation.PersistentOperation, {
         [Obj.Meta]: {
           keys: [{ source: FUNCTIONS_META_KEY, id: response.functionId }],
+          key: response.meta.key,
+          version: response.version,
         },
-        key: response.meta.key,
         name: response.meta.name ?? 'Unnamed function',
-        version: response.version,
         description: response.meta.description,
         inputSchema: response.meta.inputSchema,
         outputSchema: response.meta.outputSchema,
@@ -140,10 +140,10 @@ export class FunctionsServiceClient {
         const fn = Obj.make(Operation.PersistentOperation, {
           [Obj.Meta]: {
             keys: [{ source: FUNCTIONS_META_KEY, id: record.id }],
+            key: versionMeta.key,
+            version: latest?.version ?? '0.0.0',
           },
-          key: versionMeta.key,
           name: versionMeta.name ?? versionMeta.key ?? record.id,
-          version: latest?.version ?? '0.0.0',
           updated: record?.updated !== undefined ? new Date(record.updated).toISOString() : undefined,
           description: versionMeta.description,
           inputSchema: versionMeta.inputSchema,

@@ -20,6 +20,12 @@ export interface ProcessTraceServiceOptions {
   readonly processName?: string;
   /** Additional meta copied onto every {@link Trace.Message}. */
   readonly traceMeta?: Trace.Meta;
+  /**
+   * Runtime name stamped on the {@link Trace.Message.meta}. Identifies which runtime
+   * (local app, edge intrinsic, edge worker, ...) executed the code. Overridden by
+   * `traceMeta.runtimeName` if present.
+   */
+  readonly runtimeName?: Trace.RuntimeName;
   /** Space scope for persistence routing. */
   readonly space?: SpaceId;
   /** Shared, durable sink for non-ephemeral events. */
@@ -51,6 +57,7 @@ export const createProcessTraceService = (
       const detachedData = detachData(data);
       const message = Obj.make(Trace.Message, {
         meta: {
+          runtimeName: opts.runtimeName,
           ...(opts.traceMeta ?? {}),
           pid: opts.pid,
           parentPid: opts.parentPid,

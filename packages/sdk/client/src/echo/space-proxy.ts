@@ -806,4 +806,5 @@ const shouldMembersUpdate = (prev: SpaceMember[] | undefined, next: SpaceMember[
 };
 
 const isEdgePeerId = (spaceId: SpaceId, peerId: string) =>
-  peerId.startsWith(compositeKey(EdgeService.AUTOMERGE_REPLICATOR, spaceId));
+  peerId.startsWith(compositeKey(EdgeService.AUTOMERGE_REPLICATOR, spaceId)) ||
+  peerId.startsWith(compositeKey(EdgeService.SUBDUCTION_REPLICATOR, spaceId));

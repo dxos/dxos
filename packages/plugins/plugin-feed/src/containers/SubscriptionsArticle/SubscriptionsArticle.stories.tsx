@@ -10,9 +10,9 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { Filter } from '@dxos/echo';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { SpacePlugin } from '@dxos/plugin-space/plugin';
+import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
@@ -27,7 +27,7 @@ import { SubscriptionsArticle } from './SubscriptionsArticle';
 const DefaultStory = () => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const feeds = useQuery(space?.db, Filter.type(Subscription.Feed));
+  const feeds = useQuery(space?.db, Filter.type(Subscription.Subscription));
   if (!space || feeds.length === 0) {
     return <Loading />;
   }
@@ -44,7 +44,7 @@ const meta: Meta<typeof DefaultStory> = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Subscription.Feed, Subscription.Post],
+          types: [Subscription.Subscription, Subscription.Post],
           onClientInitialized: ({ client }: { client: Client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
@@ -52,7 +52,7 @@ const meta: Meta<typeof DefaultStory> = {
               yield* Effect.promise(() => space.waitUntilReady());
               Array.from({ length: 5 }).forEach(() => {
                 space.db.add(
-                  Subscription.makeFeed({
+                  Subscription.makeSubscription({
                     name: random.company.name() + ' Blog',
                     url: random.internet.url(),
                     description: random.lorem.sentence(),

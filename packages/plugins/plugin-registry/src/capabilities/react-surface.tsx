@@ -3,13 +3,14 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { useMemo } from 'react';
+import React, { type ComponentProps, useMemo } from 'react';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { Surface, usePluginManager } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
+import { DisableDependentsAlert } from '#components';
 import {
   LOAD_PLUGIN_DIALOG,
   LoadPluginDialog,
@@ -18,7 +19,7 @@ import {
   RegistryArticle,
   RegistrySettingsContainer,
 } from '#containers';
-import { meta, registryCategoryId } from '#meta';
+import { DISABLE_DEPENDENTS_DIALOG, meta, registryCategoryId } from '#meta';
 
 import { useAutoTags, useRegistryPlugins, useRemotePluginIds } from '../hooks';
 
@@ -106,6 +107,14 @@ export default Capability.makeModule(() =>
         id: LOAD_PLUGIN_DIALOG,
         filter: AppSurface.component(AppSurface.Dialog, LOAD_PLUGIN_DIALOG),
         component: () => <LoadPluginDialog />,
+      }),
+      Surface.create({
+        id: DISABLE_DEPENDENTS_DIALOG,
+        filter: AppSurface.component<ComponentProps<typeof DisableDependentsAlert>>(
+          AppSurface.Dialog,
+          DISABLE_DEPENDENTS_DIALOG,
+        ),
+        component: ({ data }) => <DisableDependentsAlert {...data.props} />,
       }),
       Surface.create({
         id: 'plugin-settings',

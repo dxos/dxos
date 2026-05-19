@@ -16,7 +16,7 @@ import { hasMetaTag } from '../util';
 export const collectCandidates = (magazine: Magazine.Magazine) =>
   Effect.gen(function* () {
     const seenPostIds = new Set(magazine.posts.map((ref) => ref.dxn.toString()));
-    const candidates: Array<{ post: Subscription.Post; feed: Subscription.Feed }> = [];
+    const candidates: Array<{ post: Subscription.Post; feed: Subscription.Subscription }> = [];
     for (const feedRef of magazine.feeds) {
       const feed = yield* Database.load(feedRef);
       const echoFeed = feed.feed?.target;
@@ -25,11 +25,11 @@ export const collectCandidates = (magazine: Magazine.Magazine) =>
       }
       const posts = yield* Database.runQuery(Query.select(Filter.type(Subscription.Post)).from(echoFeed));
       for (const post of posts) {
-        const postDxn = Obj.getDXN(post).toString();
-        if (seenPostIds.has(postDxn)) {
+        const postDXN = Obj.getDXN(post).toString();
+        if (seenPostIds.has(postDXN)) {
           continue;
         }
-        seenPostIds.add(postDxn);
+        seenPostIds.add(postDXN);
         candidates.push({ post, feed });
       }
     }

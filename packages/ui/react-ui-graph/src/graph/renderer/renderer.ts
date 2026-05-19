@@ -4,8 +4,6 @@
 
 import { type RefObject } from 'react';
 
-import { invariant } from '@dxos/invariant';
-
 import { type SVGContext } from '../../hooks';
 import { type IdAccessor, defaultIdAccessor } from '../types';
 
@@ -36,8 +34,12 @@ export abstract class Renderer<LAYOUT, OPTIONS extends RendererOptions> {
     return this._context;
   }
 
-  get root(): SVGGElement {
-    invariant(this._root.current, 'SVG root is not initialized');
+  /**
+   * Returns the SVG group root if mounted.
+   * The ref may be null between mount/unmount cycles or before the SVG container has sized.
+   * Callers should treat null as "skip this render" rather than as an error.
+   */
+  get root(): SVGGElement | null {
     return this._root.current;
   }
 

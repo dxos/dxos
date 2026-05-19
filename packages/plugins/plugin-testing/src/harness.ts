@@ -4,9 +4,9 @@
 
 import { type Plugin, ProcessManagerPlugin } from '@dxos/app-framework';
 import { createTestApp, type TestAppOptions, type TestHarness } from '@dxos/app-framework/testing';
-import { AttentionPlugin } from '@dxos/plugin-attention/plugin';
-import { GraphPlugin } from '@dxos/plugin-graph/plugin';
-import { SettingsPlugin } from '@dxos/plugin-settings/plugin';
+import { AttentionPlugin } from '@dxos/plugin-attention/testing';
+import { GraphPlugin } from '@dxos/plugin-graph/testing';
+import { SettingsPlugin } from '@dxos/plugin-settings/testing';
 
 export type ComposerTestAppOptions = Omit<TestAppOptions, 'plugins'> & {
   /** Plugins to register in addition to the Composer core plugins. */
@@ -40,7 +40,7 @@ export const createComposerTestApp = async (opts: ComposerTestAppOptions = {}): 
   const { plugins = [], theme = false, ...rest } = opts;
   const core = headlessCorePlugins();
   if (theme) {
-    const { ThemePlugin } = await import('@dxos/plugin-theme/plugin');
+    const { ThemePlugin } = await import('@dxos/plugin-theme/testing');
     const { defaultTx } = await import('@dxos/ui-theme');
     core.push(ThemePlugin({ tx: defaultTx }));
   }

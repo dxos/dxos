@@ -21,7 +21,7 @@ export const translations = [
         'debug.label': 'Debug',
         'generate-objects.label': 'Generate Objects',
         'debug-app-graph.label': 'App Graph',
-        'debug-tools-explorer.label': 'Tools Explorer',
+        'debug-tools-explorer.label': 'SDK Explorer',
 
         'settings.wireframe.label': 'Show wireframes.',
         'settings.wireframe.description': 'Overlay wireframe outlines on UI components for debugging layout.',

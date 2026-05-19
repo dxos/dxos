@@ -9,7 +9,7 @@ export type FetchOptions = {
 };
 
 export type FetchResult = {
-  feed: Subscription.Feed;
+  feed: Subscription.Subscription;
   posts: Subscription.Post[];
 };
 

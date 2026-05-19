@@ -10,7 +10,7 @@
 
   /* Base styles */
   .dx-button {
-    @apply shrink-0 inline-flex select-none items-center justify-center overflow-hidden min-h-[2.5rem] px-3;
+    @apply shrink-0 inline-flex select-none items-center justify-center overflow-hidden min-h-[2rem] px-3;
     @apply font-medium transition-colors duration-100 ease-linear bg-input-surface;
     &[aria-pressed='true'],
     &[aria-checked='true'] {
@@ -53,7 +53,7 @@
 
       /* Variants */
       &[data-variant='primary'] {
-        @apply text-accent-surface-text bg-accent-surface;
+        @apply text-accent-foreground bg-accent-surface;
         &:hover,
         &[aria-pressed='true'],
         &[aria-checked='true'] &[data-state='open'] {
@@ -61,7 +61,7 @@
         }
       }
       &[data-variant='destructive'] {
-        @apply text-accent-surface-text bg-rose-fill;
+        @apply text-accent-foreground bg-rose-fill;
         &:hover,
         &[aria-pressed='true'],
         &[aria-checked='true'] &[data-state='open'] {

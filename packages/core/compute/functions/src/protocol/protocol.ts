@@ -121,6 +121,18 @@ export const wrapFunctionHandler = (
           );
         }
 
+        // Flush in-memory ECHO writes before the function scope closes.
+        // Writes performed by `db.add` / `db.remove` are buffered in the in-memory
+        // `EchoDatabaseImpl` and only pushed across the `DataService` binding when
+        // `db.flush({ disk })` is called. `FunctionContext._close` (invoked by the
+        // `await using` above) calls `db.close()` but does NOT flush, so mutations
+        // performed by handlers that declare `Database.Service` (e.g. `object-create`,
+        // `object-update`, `relation-create`) would be silently dropped before reaching
+        // the edge `AutomergeReplicator`. Flushing here closes that hole.
+        if (serviceTags.includes(Database.Service.key) && funcContext.db) {
+          await funcContext.db.flush({ disk: true, indexes: false });
+        }
+
         if (func.output && !SchemaAST.isAnyKeyword(func.output.ast)) {
           try {
             Schema.validateSync(func.output, { onExcessProperty: 'error' })(result);
@@ -345,7 +357,7 @@ const makeOperationRegistryLayer = (
     resolve: (key: string) =>
       Effect.gen(function* () {
         const records = yield* Effect.tryPromise(() => functionsService.query({ spaceId })).pipe(Effect.orDie);
-        const match = (records as Operation.PersistentOperation[]).find((record) => record.key === key);
+        const match = (records as Operation.PersistentOperation[]).find((record) => Operation.getKey(record) === key);
         return match ? Option.some(Operation.deserialize(match)) : Option.none();
       }),
   });
