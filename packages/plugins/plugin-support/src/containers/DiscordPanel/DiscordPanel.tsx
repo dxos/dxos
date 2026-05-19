@@ -14,7 +14,7 @@ export const DiscordPanel = () => {
     <iframe
       title='DXOS Discord'
       src={`https://discord.com/widget?id=${DXOS_GUILD_ID}&theme=${themeMode}`}
-      className='block is-full bs-full border-0'
+      className='block h-full is-full bs-full border-0 rounded-none'
       sandbox='allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts'
     />
   );
