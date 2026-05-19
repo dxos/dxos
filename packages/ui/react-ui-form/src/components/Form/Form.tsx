@@ -301,7 +301,7 @@ FormActions.displayName = FORM_ACTIONS_NAME;
 
 const FORM_SECTION_NAME = 'Form.Section';
 
-type FormSectionProps = ThemedClassName<{ label: string; description?: string }>;
+type FormSectionProps = ThemedClassName<{ label?: string; description?: string }>;
 
 const FormSection = composable<HTMLDivElement, FormSectionProps>(
   ({ children, label, description, ...props }, forwardedRef) => {
@@ -310,7 +310,7 @@ const FormSection = composable<HTMLDivElement, FormSectionProps>(
         {...composableProps(props, { classNames: 'flex flex-col pt-form-section-gap first:pt-0' })}
         ref={forwardedRef}
       >
-        <h2 className='text-lg'>{label}</h2>
+        {label && <h2 className='text-lg'>{label}</h2>}
         {description && <p className='text-description'>{description}</p>}
         {children}
       </div>
