@@ -231,7 +231,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
         const objects = self._db.query(Filter.type(Type.Type)).runSync();
 
         const results = filterOrderResults([
-          ...[...self._db.graph.registry.types].map((schema) => {
+          ...self._db.graph.registry.types.map((schema) => {
             return {
               source: 'runtime',
               schema,
@@ -250,7 +250,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
         const objects = await self._db.query(Filter.type(Type.Type)).run();
 
         return filterOrderResults([
-          ...[...self._db.graph.registry.types].map((schema) => {
+          ...self._db.graph.registry.types.map((schema) => {
             return {
               source: 'runtime',
               schema,
