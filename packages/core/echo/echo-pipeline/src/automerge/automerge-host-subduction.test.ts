@@ -348,14 +348,32 @@ describe('AutomergeHost with Subduction', () => {
       },
     );
 
-    // Note: there is intentionally NO inbound `authorizePut` test here. The DXOS host
-    // policy makes `authorizePut` allow-all to mirror classical sync, which has no
-    // inbound gate. Gating inbound deadlocks the invitation bootstrap (joining peer
-    // can't resolve the space root until it loads, and it can't load if the inbound
-    // write is denied) and the subduction characterization tests confirm `authorizePut`
-    // denials are sticky on the receiver (see `.claude/skills/subduction/SKILL.md`).
-    // Outbound gating via `authorizeFetch` above is what enforces share-policy on
-    // peer-to-peer subduction traffic.
+    // The author/writer's `shouldAdvertise` is the only gate on the SENDER side.
+    // The RECEIVER's `_subductionPolicy.authorizePut` consults `shouldAdvertise` on the
+    // *receiver's* connection — so if the receiver refuses, no bytes should land.
+    // This exercises the inbound (`authorizePut`) path.
+    test('receiver denies authorizePut → inbound writes dropped', { timeout: 5_000 }, async ({ expect }) => {
+      const host1 = await setupAutomergeHost({ level: await createLevel() });
+      const host2 = await setupAutomergeHost({ level: await createLevel() });
+      const handle = await host2.createDoc({ text: 'inbound-denied' });
+      await host2.flush(Context.default());
+      await waitForSubductionSave();
+
+      const network = await new TestReplicationNetwork().open();
+      try {
+        // host1 (receiver) denies; host2 (sender) is permissive.
+        await host1.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => false }));
+        await host2.addReplicator(Context.default(), await network.createReplicator({ shouldAdvertise: () => true }));
+
+        const progress = host1.findWithProgress<{ text: string }>(handle.documentId);
+        await sleep(POLICY_NEGATIVE_DELAY_MS);
+        expect(progress.handle.doc()?.text).to.be.undefined;
+      } finally {
+        await host1.close();
+        await host2.close();
+        await network.close();
+      }
+    });
 
     // Regression test for the patched `Repo.on('subduction-peer-bound', ...)` event
     // (mirrors upstream automerge/automerge-repo#635). Subduction's discovery handshake

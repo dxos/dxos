@@ -233,7 +233,7 @@ export class CollectionSynchronizer extends Resource {
 
     log('diffCollectionState', { collectionId, peerId });
     const localState = perCollectionState.localState ?? { documents: {} };
-    const diff = diffCollectionState(localState, remoteState);
+    const diff = diffCollectionStateForPeer(localState, remoteState, { isEdgePeer: isEdgePeerId(peerId) });
     const spanId = getSpanId(peerId);
     if (diff.different.length === 0) {
       trace.spanEnd(spanId);
@@ -362,6 +362,36 @@ export const isCollectionStateEqual = (local: CollectionState, remote: Collectio
 export const withoutEmptyHeads = (state: CollectionState): CollectionState => ({
   documents: Record.filter(state.documents, (heads) => heads.length > 0),
 });
+
+/**
+ * Restrict a remote {@link CollectionState} to the document keys present in `local`.
+ *
+ * Used when diffing against an edge peer: edge subduction storage retains every
+ * sedimentree id it has ever seen (old roots, partial creations, cross-space
+ * fingerprint leaks), so a raw symmetric diff would surface those as
+ * `missingOnLocal` forever. The local root's `links` are authoritative for
+ * "what docs are in this space"; intersecting the remote view with the local
+ * key set drops the noise without changing wire format.
+ */
+export const subsetRemoteToLocal = (local: CollectionState, remote: CollectionState): CollectionState => ({
+  documents: Record.filter(remote.documents, (_heads, documentId) => documentId in local.documents),
+});
+
+/**
+ * Peer-aware wrapper around {@link diffCollectionState}.
+ *
+ * For mesh peers the diff is symmetric (every doc on either side participates).
+ * For edge peers we first intersect the remote state with the local key set —
+ * see {@link subsetRemoteToLocal} for why.
+ */
+export const diffCollectionStateForPeer = (
+  local: CollectionState,
+  remote: CollectionState,
+  { isEdgePeer }: { isEdgePeer: boolean },
+): CollectionStateDiff => {
+  const effectiveRemote = isEdgePeer ? subsetRemoteToLocal(local, remote) : remote;
+  return diffCollectionState(local, effectiveRemote);
+};
 
 export const diffCollectionState = (local: CollectionState, remote: CollectionState): CollectionStateDiff => {
   const localDocuments = Record.filter(local.documents, (heads) => heads.length > 0);

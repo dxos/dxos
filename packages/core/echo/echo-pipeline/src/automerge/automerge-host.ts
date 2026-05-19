@@ -34,7 +34,7 @@ import bs58check from 'bs58check';
 
 import { DeferredTask, Event, asyncTimeout } from '@dxos/async';
 import { Context, type Lifecycle, Resource, cancelWithContext } from '@dxos/context';
-import { type CollectionId, DatabaseDirectory } from '@dxos/echo-protocol';
+import { type CollectionId, DatabaseDirectory, isEdgePeerId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
@@ -44,7 +44,12 @@ import { type DocHeadsList, type FlushRequest } from '@dxos/protocols/proto/dxos
 import { trace } from '@dxos/tracing';
 import { ComplexSet, bufferToArray, defaultMap, isNonNullable, range } from '@dxos/util';
 
-import { type CollectionState, CollectionSynchronizer, diffCollectionState } from './collection-synchronizer';
+import {
+  type CollectionState,
+  CollectionSynchronizer,
+  diffCollectionStateForPeer,
+  subsetRemoteToLocal,
+} from './collection-synchronizer';
 import { type EchoDataMonitor } from './echo-data-monitor';
 import { EchoNetworkAdapter, isEchoPeerMetadata } from './echo-network-adapter';
 import { type AutomergeReplicator, type RemoteDocumentExistenceCheckProps } from './echo-replicator';
@@ -638,19 +643,12 @@ export class AutomergeHost extends Resource {
   };
 
   /**
-   * Subduction sedimentree authorization policy. Mirrors {@link _shareConfig.announce}
-   * on the OUTBOUND side (`authorizeFetch`, `filterAuthorizedFetch`) via the same
+   * Subduction sedimentree authorization policy. Mirrors {@link _shareConfig.announce}:
+   * both `authorizeFetch` (outbound) and `authorizePut` (inbound) gate via the same
    * per-connection `shouldAdvertise` predicate on `_echoNetworkAdapter`.
    *
-   * `authorizePut` is intentionally allow-all to mirror classical sync (`useSubduction:
-   * false`), which has no inbound gate. Gating inbound here creates a bootstrapping
-   * deadlock during invitations: the joining peer's `_getContainingSpaceForDocument`
-   * cannot resolve the space-root doc until it's loaded, which can't happen if the
-   * inbound write is denied — and subduction `authorizePut` denials are sticky on the
-   * receiver (see .claude/skills/subduction/SKILL.md), so the entry never recovers.
-   * Inbound trust here is bounded by `authorizeFetch` on the sender side (peers can't
-   * push docs we wouldn't have served them) and by the sedimentree's internal
-   * cryptographic structure.
+   * `authorizePut` deny → allow does NOT auto-recover stuck entries; callers must drive
+   * a fresh holder commit on each affected doc (see .claude/skills/subduction/SKILL.md).
    */
   private readonly _subductionPolicy: SubductionPolicy = {
     authorizeConnect: async (_subductionPeerId) => {
@@ -662,8 +660,11 @@ export class AutomergeHost extends Resource {
         throw new Error('authorizeFetch denied by client share policy');
       }
     },
-    authorizePut: async (_requestor, _author, _sedimentreeId) => {
-      // Intentionally permissive — see class-level comment above.
+    authorizePut: async (requestor, _author, sedimentreeId) => {
+      const allow = await this._shouldShareDocumentWithSubductionPeer(requestor, sedimentreeId);
+      if (!allow) {
+        throw new Error('authorizePut denied by client share policy');
+      }
     },
     filterAuthorizedFetch: async (subductionPeerId, sedimentreeIds) => {
       const allowed: SedimentreeId[] = [];
@@ -874,15 +875,21 @@ export class AutomergeHost extends Resource {
     }
 
     for (const [peerId, state] of remoteState) {
-      const diff = diffCollectionState(localState, state);
+      const isEdgePeer = isEdgePeerId(peerId);
+      // For edge peers, intersect the remote view with the local key set so
+      // edge orphans (sedimentrees the edge still knows about but the local
+      // root no longer references) don't inflate counts or appear unsynced.
+      const effectiveRemote = isEdgePeer ? subsetRemoteToLocal(localState, state) : state;
+      const diff = diffCollectionStateForPeer(localState, state, { isEdgePeer });
       result.peers!.push({
         peerId,
         missingOnRemote: diff.missingOnRemote.length,
         missingOnLocal: diff.missingOnLocal.length,
         differentDocuments: diff.different.length,
         localDocumentCount: Object.entries(localState.documents).filter(([_, heads]) => heads.length > 0).length,
-        remoteDocumentCount: Object.entries(state.documents).filter(([_, heads]) => heads.length > 0).length,
-        totalDocumentCount: new Set([...Object.keys(localState.documents), ...Object.keys(state.documents)]).size,
+        remoteDocumentCount: Object.entries(effectiveRemote.documents).filter(([_, heads]) => heads.length > 0).length,
+        totalDocumentCount: new Set([...Object.keys(localState.documents), ...Object.keys(effectiveRemote.documents)])
+          .size,
         unsyncedDocumentCount: new Set([...diff.missingOnLocal, ...diff.missingOnRemote, ...diff.different]).size,
       });
     }
@@ -952,7 +959,9 @@ export class AutomergeHost extends Resource {
       return;
     }
 
-    const { different, missingOnLocal, missingOnRemote } = diffCollectionState(localState, remoteState);
+    const { different, missingOnLocal, missingOnRemote } = diffCollectionStateForPeer(localState, remoteState, {
+      isEdgePeer: isEdgePeerId(peerId),
+    });
 
     if (different.length === 0 && missingOnLocal.length === 0 && missingOnRemote.length === 0) {
       return;

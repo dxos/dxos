@@ -44,9 +44,7 @@ describe('Spaces/invitations (subduction)', () => {
     }
   });
 
-  // Same rationale as the mirror in `spaces-invitations.test.ts`: delegated tests
-  // brush against the default 5s testTimeout under suite load. Bumped per-describe.
-  describe('delegated', { timeout: 15_000 }, () => {
+  describe('delegated', () => {
     test('single-use', async ({ expect }) => {
       const clients = await createInitializedClients(3);
       const [alice, bob, fred] = clients;
