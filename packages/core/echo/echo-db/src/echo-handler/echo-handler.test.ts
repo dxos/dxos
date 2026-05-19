@@ -205,12 +205,11 @@ describe('Reactive Object with ECHO database', () => {
     expect(Obj.getURI(snapshot)).to.eq(Obj.getURI(obj));
   });
 
-  test('throws if schema was not annotated as echo object', async () => {
+  test('does not throw if schema was not annotated as echo object (addTypes does not validate)', async () => {
     const NonEchoSchema = Schema.Struct({ field: Schema.String });
     const { graph } = await builder.createDatabase();
-    // Runtime validation throws for schemas without TypeAnnotationId annotation.
-    // Use type assertion to test runtime behavior with invalid input.
-    await expect(graph.schemaRegistry.register([NonEchoSchema as any])).rejects.toThrow();
+    // addTypes does not perform runtime validation for TypeAnnotationId annotation.
+    expect(() => graph.registry.addTypes([NonEchoSchema as any])).not.toThrow();
   });
 
   test('throws if schema was not registered in Hypergraph', async () => {
@@ -235,7 +234,7 @@ describe('Reactive Object with ECHO database', () => {
     }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
 
     const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([TestSchema]);
+    graph.registry.addTypes([TestSchema]);
     const objectHost = db.add(Obj.make(TestSchema, { field: [] }));
     const object = db.add(Obj.make(TestSchema, { field: 'foo' }));
     Obj.update(objectHost, (objectHost) => {
@@ -265,7 +264,7 @@ describe('Reactive Object with ECHO database', () => {
     await openAndClose(builder);
     const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
     const root = await peer.host.createSpaceRoot(Context.default(), spaceKey);
-    await peer.client.graph.schemaRegistry.register([TestSchema.Example]);
+    peer.client.graph.registry.addTypes([TestSchema.Example]);
 
     let id: string;
     {
@@ -279,7 +278,7 @@ describe('Reactive Object with ECHO database', () => {
     // Create a new DB instance to simulate a restart
     {
       const peer = await builder.createPeer({ kv: createTestLevel(tmpPath) });
-      await peer.client.graph.schemaRegistry.register([TestSchema.Example]);
+      peer.client.graph.registry.addTypes([TestSchema.Example]);
       const db = await peer.openDatabase(spaceKey, root.url);
 
       const obj = (await db.query(Query.select(Filter.id(id))).first()) as TestSchema.Example;
@@ -302,7 +301,7 @@ describe('Reactive Object with ECHO database', () => {
 
     let id: string;
     {
-      await peer.client.graph.schemaRegistry.register([TestSchema.Example]);
+      peer.client.graph.registry.addTypes([TestSchema.Example]);
       const db = await peer.openDatabase(spaceKey, root.url);
 
       const obj = db.add(Obj.make(TestSchema.Example, { string: 'foo' }));
@@ -321,8 +320,8 @@ describe('Reactive Object with ECHO database', () => {
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
 
-      await peer.client.graph.schemaRegistry.register([TestSchema.Example]);
-      expect(Obj.getType(obj)).to.eq(TestSchema.Example);
+      peer.client.graph.registry.addTypes([TestSchema.Example]);
+      expect(Obj.getSchema(obj)).to.eq(TestSchema.Example);
     }
   });
 
@@ -337,7 +336,7 @@ describe('Reactive Object with ECHO database', () => {
   describe('queries', () => {
     test('filter by schema or typename', async () => {
       const { db, graph } = await builder.createDatabase();
-      await graph.schemaRegistry.register([TestSchema.Example]);
+      graph.registry.addTypes([TestSchema.Example]);
 
       db.add(Obj.make(TestSchema.Example, { string: 'foo' }));
 
@@ -354,7 +353,7 @@ describe('Reactive Object with ECHO database', () => {
 
     test('does not return deleted objects', async () => {
       const { db, graph } = await builder.createDatabase();
-      await graph.schemaRegistry.register([TestSchema.Example]);
+      graph.registry.addTypes([TestSchema.Example]);
       const obj = db.add(Obj.make(TestSchema.Example, { string: 'foo' }));
       const query = db.query(Filter.type(TestSchema.Example));
 
@@ -366,7 +365,7 @@ describe('Reactive Object with ECHO database', () => {
 
     test('deleted objects are returned when re-added', async () => {
       const { db, graph } = await builder.createDatabase();
-      await graph.schemaRegistry.register([TestSchema.Example]);
+      graph.registry.addTypes([TestSchema.Example]);
       const obj = db.add(Obj.make(TestSchema.Example, { string: 'foo' }));
       db.remove(obj);
       const query = await db.query(Filter.type(TestSchema.Example));
@@ -379,7 +378,7 @@ describe('Reactive Object with ECHO database', () => {
 
   test('calling toJSON on an object', async () => {
     const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([TestSchema.Example]);
+    graph.registry.addTypes([TestSchema.Example]);
     const objects = [db.add(Obj.make(TestSchema.Example, TEST_OBJECT))];
     for (const obj of objects) {
       const objData: any = (obj as any).toJSON();
@@ -394,7 +393,7 @@ describe('Reactive Object with ECHO database', () => {
 
   test('calling Object.toJSON on an object', async () => {
     const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([TestSchema.Example]);
+    graph.registry.addTypes([TestSchema.Example]);
     const obj = db.add(Obj.make(TestSchema.Example, TEST_OBJECT));
     const objData: any = Obj.toJSON(obj as any);
     expect(objData).to.deep.contain({ ...TEST_OBJECT, id: obj.id });
@@ -402,7 +401,7 @@ describe('Reactive Object with ECHO database', () => {
 
   test('relation toJSON', async () => {
     const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([TestSchema.Person, TestSchema.HasManager]);
+    graph.registry.addTypes([TestSchema.Person, TestSchema.HasManager]);
     const alice = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
     const bob = db.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
     const manager = db.add(
@@ -449,7 +448,7 @@ describe('Reactive Object with ECHO database', () => {
 
     test('references', async () => {
       const { db, graph } = await builder.createDatabase();
-      await graph.schemaRegistry.register([Organization, Contact]);
+      graph.registry.addTypes([Organization, Contact]);
 
       const orgName = 'DXOS';
       const org = db.add(Obj.make(Organization, { name: orgName }));
@@ -461,7 +460,7 @@ describe('Reactive Object with ECHO database', () => {
 
     test('serialized references', async () => {
       const { db, graph } = await builder.createDatabase();
-      await graph.schemaRegistry.register([TestSchema.Example]);
+      graph.registry.addTypes([TestSchema.Example]);
 
       const obj1 = Obj.make(TestSchema.Example, {
         reference: Ref.make(Obj.make(TestSchema.Example, { string: 'test' })),
@@ -503,7 +502,7 @@ describe('Reactive Object with ECHO database', () => {
 
     test('adding object with nested objects to DB', async () => {
       const { db, graph } = await builder.createDatabase();
-      await graph.schemaRegistry.register([Organization, Contact]);
+      graph.registry.addTypes([Organization, Contact]);
 
       const person = db.add(
         Obj.make(Contact, {
@@ -518,7 +517,7 @@ describe('Reactive Object with ECHO database', () => {
 
     test('Obj.clone(deep) then add: top-level Ref on echo object loads (sanity)', async () => {
       const { db, graph } = await builder.createDatabase();
-      await graph.schemaRegistry.register([Organization, Contact]);
+      graph.registry.addTypes([Organization, Contact]);
 
       const original = Obj.make(Contact, {
         name: 'John',
@@ -534,7 +533,7 @@ describe('Reactive Object with ECHO database', () => {
 
     test('adding objects with nested arrays to DB', async () => {
       const { db, graph } = await builder.createDatabase();
-      await graph.schemaRegistry.register([Organization, Contact]);
+      graph.registry.addTypes([Organization, Contact]);
 
       const dxos = Obj.make(Organization, { name: 'DXOS' });
       const braneframe = Obj.make(Organization, { name: 'Braneframe' });
@@ -571,7 +570,7 @@ describe('Reactive Object with ECHO database', () => {
       const testBuilder = new EchoTestBuilder();
       await openAndClose(testBuilder);
       const { db } = await testBuilder.createDatabase();
-      await db.graph.schemaRegistry.register([TestSchema.Person, TestSchema.Task]);
+      db.graph.registry.addTypes([TestSchema.Person, TestSchema.Task]);
 
       const contact = Obj.make(TestSchema.Person, {
         name: 'Contact',
@@ -597,7 +596,7 @@ describe('Reactive Object with ECHO database', () => {
 
     test('reference properties in expando objects', async () => {
       const { db, graph } = await builder.createDatabase();
-      await graph.schemaRegistry.register([Organization, Contact]);
+      graph.registry.addTypes([Organization, Contact]);
 
       const dxos = db.add(Obj.make(Organization, { name: 'DXOS' }));
       const braneframe = db.add(Obj.make(Organization, { name: 'Braneframe' }));
@@ -684,7 +683,7 @@ describe('Reactive Object with ECHO database', () => {
 
       const key = foreignKey('example.com', '123');
       const { db, graph } = await builder.createDatabase();
-      await graph.schemaRegistry.register([TestType, NestedType]);
+      graph.registry.addTypes([TestType, NestedType]);
       const obj = db.add(Obj.make(TestType, { objects: [] }));
       const objectWithMeta = Obj.make(NestedType, { [Obj.Meta]: { keys: [key] }, field: 42 });
       Obj.update(obj, (obj) => {
@@ -698,7 +697,7 @@ describe('Reactive Object with ECHO database', () => {
         field: Schema.Number,
       }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
       const { db, graph } = await builder.createDatabase();
-      await graph.schemaRegistry.register([TestType]);
+      graph.registry.addTypes([TestType]);
       const obj = db.add(Obj.make(TestType, { [Obj.Meta]: { keys: [foreignKey('example.com', '123')] }, field: 1 }));
       Obj.update(obj, (obj) => {
         Obj.getMeta(obj).keys.push(foreignKey('example.com', '456'));
@@ -900,7 +899,7 @@ describe('Reactive Object with ECHO database', () => {
 
   test('typed object is linked with the database on assignment to another db-linked object', async () => {
     const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([TestSchema.Example]);
+    graph.registry.addTypes([TestSchema.Example]);
 
     const obj = db.add(Obj.make(TestSchema.Example, { string: 'Object 1' }));
     const another = Obj.make(TestSchema.Example, { string: 'Object 2' });

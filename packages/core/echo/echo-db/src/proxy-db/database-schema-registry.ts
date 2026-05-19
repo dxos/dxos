@@ -230,8 +230,8 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
       getResultsSync() {
         const objects = self._db.query(Filter.type(Type.Type)).runSync();
 
-        return filterOrderResults([
-          ...self._db.graph.schemaRegistry.schemas.map((schema) => {
+        const results = filterOrderResults([
+          ...[...self._db.graph.registry.types].map((schema) => {
             return {
               source: 'runtime',
               schema,
@@ -244,12 +244,13 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
             } as const;
           }),
         ]);
+        return results;
       },
       async getResults() {
         const objects = await self._db.query(Filter.type(Type.Type)).run();
 
         return filterOrderResults([
-          ...self._db.graph.schemaRegistry.schemas.map((schema) => {
+          ...[...self._db.graph.registry.types].map((schema) => {
             return {
               source: 'runtime',
               schema,
@@ -270,7 +271,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
         const unsubscribeDatabase = self._subscribe(() => {
           changes.emit();
         });
-        const unsubscribeRuntime = self._db.graph.schemaRegistry.schemaChanges.on(() => {
+        const unsubscribeRuntime = self._db.graph.registry.changed.on(() => {
           changes.emit();
         });
         unsubscribe = () => {

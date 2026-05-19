@@ -255,10 +255,16 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
     if (!isEchoObject(obj)) {
-      const type = Obj.getType(obj as unknown as Obj.Unknown);
-      if (type != null) {
-        if (!this.schemaRegistry.hasSchema(type) && !this.graph.schemaRegistry.hasSchema(type)) {
-          throw createSchemaNotRegisteredError(Type.getSchema(type));
+      const schema = Obj.getSchema(obj as unknown as Obj.Unknown);
+      if (schema != null) {
+        const typename = Type.getTypename(schema as any);
+        const version = Type.getVersion(schema as any);
+        const inRegistry =
+          typename && version
+            ? this.graph.registry.getTypeByDXN(`dxn:type:${typename}:${version}`) !== undefined
+            : false;
+        if (!this.schemaRegistry.hasSchema(schema) && !inRegistry) {
+          throw createSchemaNotRegisteredError(schema);
         }
       }
 

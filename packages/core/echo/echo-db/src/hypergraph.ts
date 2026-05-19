@@ -13,7 +13,7 @@ import { trace } from '@dxos/tracing';
 import { entry } from '@dxos/util';
 
 import { type ItemsUpdatedEvent } from './core-db';
-import { type EchoDatabaseImpl, RuntimeSchemaRegistry } from './proxy-db';
+import { type EchoDatabaseImpl } from './proxy-db';
 import {
   GraphQueryContext,
   type QueryContext,
@@ -35,27 +35,20 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
   // TODO(burdon): Space dependency?
   private readonly _owningObjects = new Map<SpaceId, unknown>();
-  private readonly _registry: Registry.Registry = (() => {
-    const r = Registry.make();
-    // Seed the default PersistentType so schema resolution always works.
-    r.addTypes([Type.PersistentType]);
-    return r;
-  })();
+  private readonly _registry: Registry.Registry;
   private readonly _updateEvent = new Event<ItemsUpdatedEvent>();
   private readonly _resolveEvents = new Map<SpaceId, Map<string, Event<Entity.Any>>>();
   private readonly _queryContexts = new Set<GraphQueryContext>();
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
 
+  constructor() {
+    this._registry = Registry.make();
+    this._registry.addTypes([Type.PersistentType]);
+  }
+
   get registry(): Registry.Registry {
     return this._registry;
   }
-
-  /** @deprecated Use {@link registry} instead. */
-  get schemaRegistry(): RuntimeSchemaRegistry {
-    return this._schemaRegistryShim;
-  }
-
-  private readonly _schemaRegistryShim = new RuntimeSchemaRegistry(this._registry);
 
   /**
    * Register a database.

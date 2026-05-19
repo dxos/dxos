@@ -148,7 +148,7 @@ describe('useQuery', () => {
 
   test('accepts Filter directly', async () => {
     // Register schema first
-    await db.graph.schemaRegistry.register([TestSchema.Person]);
+    db.graph.registry.addTypes([TestSchema.Person]);
 
     const obj = Obj.make(TestSchema.Person, { name: 'Test', username: 'test', email: 'test@example.com' });
     db.add(obj);
@@ -233,7 +233,7 @@ describe('useQuery', () => {
 
   test('accepts reactive query accessor', async () => {
     // Register schema first
-    await db.graph.schemaRegistry.register([TestSchema.Person]);
+    db.graph.registry.addTypes([TestSchema.Person]);
 
     const obj1 = Obj.make(TestSchema.Expando, { name: 'Test1' });
     const obj2 = Obj.make(TestSchema.Person, { name: 'Test2', username: 'test', email: 'test@example.com' });

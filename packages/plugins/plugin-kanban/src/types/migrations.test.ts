@@ -47,7 +47,7 @@ describe('Kanban migration v1 → v2', () => {
 
   test('migrates a v1 Kanban into the v2 view-variant shape', async ({ expect }) => {
     const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([KanbanV1, Kanban, View.View]);
+    graph.registry.addTypes([KanbanV1, Kanban, View.View]);
 
     // Build a real View object so the v1 Kanban has a valid ref to migrate.
     const view = ViewModel.make({

@@ -31,7 +31,7 @@ describe('AtomRef - Basic Functionality', () => {
   });
 
   test('AtomRef.make returns target when ref is loaded', async () => {
-    await db.graph.schemaRegistry.register([TestSchema.Person]);
+    db.graph.registry.addTypes([TestSchema.Person]);
 
     const targetObj = Obj.make(TestSchema.Person, { name: 'Target', username: 'target', email: 'target@example.com' });
     db.add(targetObj);
@@ -46,7 +46,7 @@ describe('AtomRef - Basic Functionality', () => {
   });
 
   test('AtomRef.make does not subscribe to target changes (use AtomObj for reactive snapshots)', async () => {
-    await db.graph.schemaRegistry.register([TestSchema.Person]);
+    db.graph.registry.addTypes([TestSchema.Person]);
 
     const targetObj = Obj.make(TestSchema.Person, { name: 'Target', username: 'target', email: 'target@example.com' });
     db.add(targetObj);
@@ -120,7 +120,7 @@ describe('AtomRef - Referential Equality', () => {
   });
 
   test('AtomRef.make returns same atom instance for same ref', async () => {
-    await db.graph.schemaRegistry.register([TestSchema.Person]);
+    db.graph.registry.addTypes([TestSchema.Person]);
 
     const targetObj = Obj.make(TestSchema.Person, { name: 'Target', username: 'target', email: 'target@example.com' });
     db.add(targetObj);
@@ -136,7 +136,7 @@ describe('AtomRef - Referential Equality', () => {
   });
 
   test('AtomRef.make returns different atom instances for different refs', async () => {
-    await db.graph.schemaRegistry.register([TestSchema.Person]);
+    db.graph.registry.addTypes([TestSchema.Person]);
 
     const targetObj1 = Obj.make(TestSchema.Person, {
       name: 'Target1',
@@ -163,7 +163,7 @@ describe('AtomRef - Referential Equality', () => {
   });
 
   test('AtomRef.make returns same atom for refs created separately to same target', async () => {
-    await db.graph.schemaRegistry.register([TestSchema.Person]);
+    db.graph.registry.addTypes([TestSchema.Person]);
 
     const targetObj = Obj.make(TestSchema.Person, { name: 'Target', username: 'target', email: 'target@example.com' });
     db.add(targetObj);
@@ -188,7 +188,7 @@ describe('AtomRef - Referential Equality', () => {
   });
 
   test('cached ref atoms return same instance after multiple retrievals', async () => {
-    await db.graph.schemaRegistry.register([TestSchema.Person]);
+    db.graph.registry.addTypes([TestSchema.Person]);
 
     const targetObj = Obj.make(TestSchema.Person, { name: 'Target', username: 'target', email: 'target@example.com' });
     db.add(targetObj);

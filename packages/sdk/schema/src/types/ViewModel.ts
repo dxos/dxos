@@ -20,7 +20,7 @@ import {
   Obj,
   Query,
   Ref,
-  type SchemaRegistry,
+  type Registry,
   Type,
   View,
 } from '@dxos/echo';
@@ -125,7 +125,7 @@ export const make = ({ query, queryRaw, jsonSchema, overrideSchema, fields, pivo
 };
 
 export type MakeWithReferencesProps = MakeProps & {
-  registry?: SchemaRegistry.SchemaRegistry;
+  registry?: Registry.Registry;
 };
 
 /**
@@ -268,7 +268,7 @@ export const makeFromDatabase = async ({
       ...props,
       query: Query.select(Filter.typename(typename)),
       jsonSchema,
-      registry: db.schemaRegistry,
+      registry: db.graph.registry,
     }),
   };
 };

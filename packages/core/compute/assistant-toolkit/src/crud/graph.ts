@@ -47,7 +47,7 @@ export type RelatedSchema = {
  */
 export const findRelatedSchema = async (db: Database.Database, anchor: Type.AnyEntity): Promise<RelatedSchema[]> => {
   // TODO(dmaretskyi): Query stored schemas.
-  const allSchemas = await db.graph.schemaRegistry.query().run();
+  const allSchemas = [...db.graph.registry.types];
 
   // TODO(dmaretskyi): Also do references.
   return allSchemas

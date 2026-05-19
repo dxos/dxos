@@ -148,7 +148,7 @@ export class Client {
     // TODO(wittjosiah): This is ill-advised.
     //   However, it seems to work okay for now since the runtime registry operates synchronously despite the interface.
     //   Moving this to `initialize` causes issues with re-initialization.
-    void this._echoClient.graph.schemaRegistry.register([SpaceProperties]);
+    this._echoClient.graph.registry.addTypes([SpaceProperties]);
     if (this._options.types) {
       void this.addTypes(this._options.types);
     }
@@ -264,10 +264,7 @@ export class Client {
     //   throw new ApiError('Client not open.');
     // }
 
-    const exists = types.filter((type) => !this._echoClient.graph.schemaRegistry.hasSchema(type));
-    if (exists.length > 0) {
-      await this._echoClient.graph.schemaRegistry.register(exists);
-    }
+    this._echoClient.graph.registry.addTypes(types);
   }
 
   /**

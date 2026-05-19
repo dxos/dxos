@@ -73,7 +73,7 @@ describe('Generator', () => {
     const createObjects = createObjectFactory(db, generator);
 
     // Register static schema.
-    await db.graph.schemaRegistry.register([Organization.Organization, Pipeline.Pipeline, Person.Person]);
+    db.graph.registry.addTypes([Organization.Organization, Pipeline.Pipeline, Person.Person]);
 
     const spec: TypeSpec[] = [
       { type: Organization.Organization, count: 5 },

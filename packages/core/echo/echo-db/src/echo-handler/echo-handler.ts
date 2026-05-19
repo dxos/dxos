@@ -679,20 +679,20 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const typeURI = EncodedReference.toURI(typeRef);
     // Try to parse as a typename DXN — legacy storage forms like `dxn:echo:@:<id>` and
     // `dxn:queue:…` look like DXNs by prefix but are not parseable as typename DXNs.
-    const typeDxn = DXN.tryMake(typeURI);
-    if (typeDxn) {
-      const staticType = target[symbolInternals].database.graph.schemaRegistry.getSchemaByDXN(typeDxn);
+    const typeDXN = DXN.tryMake(typeURI);
+    if (typeDXN) {
+      const staticType = target[symbolInternals].database.graph.registry.getTypeByDXN(typeDXN.toString());
       if (staticType != null) {
         return Type.getSchema(staticType);
       }
       // Skip protobuf types as they are runtime registered types.
-      if (DXN.getName(typeDxn)?.startsWith('protobuf')) {
+      if (DXN.getName(typeDXN)?.startsWith('protobuf')) {
         return undefined;
       }
       // Stored schemas use the storage URI as `$id`, so we can't look them up by typename DXN.
       // Query by typename + version instead.
-      const typename = DXN.getName(typeDxn);
-      const version = DXN.getVersion(typeDxn);
+      const typename = DXN.getName(typeDXN);
+      const version = DXN.getVersion(typeDXN);
       const type = target[symbolInternals].database.schemaRegistry
         .query({ typename, ...(version ? { version } : {}) })
         .runSync()[0];

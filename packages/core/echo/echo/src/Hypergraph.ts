@@ -10,7 +10,6 @@ import type * as internal from './internal';
 import type * as Key from './Key';
 import type * as Ref from './Ref';
 import type * as Registry from './Registry';
-import type * as SchemaRegistry from './SchemaRegistry';
 
 /**
  * Resolution context.
@@ -53,11 +52,6 @@ export interface Hypergraph extends Database.Queryable {
    * Queries that include no explicit from() clause will fan out to this registry automatically.
    */
   get registry(): Registry.Registry;
-
-  /**
-   * @deprecated Use `registry.addTypes()` / `registry.getTypeByDXN()` instead.
-   */
-  get schemaRegistry(): SchemaRegistry.SchemaRegistry;
 
   /**
    * Query objects.

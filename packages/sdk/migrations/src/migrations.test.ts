@@ -79,7 +79,7 @@ describe.skip('Migrations', () => {
     Obj.update(space.properties, (obj) => {
       obj['test.version'] = '1970-01-02';
     });
-    await space.db.graph.schemaRegistry.register([TestSchema.Expando]);
+    space.db.graph.registry.addTypes([TestSchema.Expando]);
     space.db.add(Obj.make(TestSchema.Expando, { namespace: 'test', count: 5 }));
     await space.db.flush();
     await Migrations.migrate(space);

@@ -165,7 +165,7 @@ describe('EchoSchema', () => {
 
   const setupTest = async () => {
     const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([TestWithRefs]);
+    graph.registry.addTypes([TestWithRefs]);
     return { db };
   };
 });

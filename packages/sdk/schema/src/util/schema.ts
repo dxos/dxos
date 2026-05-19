@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type SchemaRegistry, Type } from '@dxos/echo';
+import { Obj, type Registry, Type } from '@dxos/echo';
 import {
   EchoObjectSchema,
   Format,
@@ -55,8 +55,8 @@ export const createDefaultSchema = () =>
   }).pipe(Type.makeObject(DXN.make(`com.example.type.example${PublicKey.random().truncate()}`, '0.1.0')));
 
 export const getSchema = async (
-  dxn: DXN.DXN,
-  registry?: SchemaRegistry.SchemaRegistry,
+  dxn: DXN,
+  registry?: Registry.Registry,
 ): Promise<Type.AnyEntity | undefined> => {
   if (!DXN.isDXN(dxn)) {
     return;
@@ -64,10 +64,10 @@ export const getSchema = async (
 
   const type = DXN.getName(dxn);
   const version = DXN.getVersion(dxn);
-  const schema = await registry
-    ?.query({ typename: type, version, location: ['database', 'runtime'] })
-    .firstOrUndefined();
-  return schema;
+  if (!type || !version) {
+    return;
+  }
+  return registry?.getTypeByDXN(`dxn:type:${type}:${version}`);
 };
 
 // TODO(burdon): Factor out.

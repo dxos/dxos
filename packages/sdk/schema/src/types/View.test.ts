@@ -5,8 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, assert, beforeEach, describe, test } from 'vitest';
 
-import { Filter, JsonSchema, Obj, Query, Ref, Type } from '@dxos/echo';
-import { RuntimeSchemaRegistry } from '@dxos/echo-db';
+import { Filter, JsonSchema, Obj, Query, Ref, Registry, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { Format, TypeEnum } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
@@ -29,8 +28,8 @@ describe('Projection', () => {
   test('create view from schema', async ({ expect }) => {
     const schema = TestSchema.Person;
     const jsonSchema = JsonSchema.toJsonSchema(schema);
-    const registry = new RuntimeSchemaRegistry();
-    await registry.register([TestSchema.Person, TestSchema.Organization]);
+    const registry = Registry.make();
+    registry.addTypes([TestSchema.Person, TestSchema.Organization]);
 
     const view = await ViewModel.makeWithReferences({
       query: Query.select(Filter.type(schema)),

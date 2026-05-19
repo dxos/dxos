@@ -34,7 +34,7 @@ describe('reconcileBoardCards (pull)', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([
+    graph.registry.addTypes([
       AccessToken.AccessToken,
       Integration.Integration,
       Kanban.Kanban,
@@ -328,7 +328,7 @@ describe('pushBoardCards (push)', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([
+    graph.registry.addTypes([
       AccessToken.AccessToken,
       Integration.Integration,
       Kanban.Kanban,
@@ -485,7 +485,7 @@ describe('findOrCreateKanbanForBoard', () => {
 
   const setup = async () => {
     const { db, graph } = await builder.createDatabase();
-    await graph.schemaRegistry.register([Kanban.Kanban, Expando.Expando]);
+    graph.registry.addTypes([Kanban.Kanban, Expando.Expando]);
     return { db };
   };
 

@@ -30,7 +30,7 @@ describe('Serializer', () => {
     test('export typed object', async () => {
       const serializer = new Serializer();
       const { db, graph } = await builder.createDatabase();
-      await graph.schemaRegistry.register([TestSchema.Task]);
+      graph.registry.addTypes([TestSchema.Task]);
 
       const task = db.add(Obj.make(TestSchema.Task, { title: 'Testing' }));
       const data = serializer.exportObject(task);
@@ -201,7 +201,7 @@ describe('Serializer', () => {
 
       {
         const { db, graph } = await builder.createDatabase();
-        await graph.schemaRegistry.register([TestSchema.Person]);
+        graph.registry.addTypes([TestSchema.Person]);
         const contact = Obj.make(TestSchema.Person, { name });
         db.add(contact);
         await db.flush();
@@ -213,7 +213,7 @@ describe('Serializer', () => {
 
       {
         const { db, graph } = await builder.createDatabase();
-        await graph.schemaRegistry.register([TestSchema.Person]);
+        graph.registry.addTypes([TestSchema.Person]);
 
         await new Serializer().import(db, data);
         expect(await db.query(Query.select(Filter.everything())).run()).to.have.length(1);

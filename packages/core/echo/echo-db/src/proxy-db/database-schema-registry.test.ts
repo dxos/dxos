@@ -132,7 +132,7 @@ describe('schema registry', () => {
 
   test('query both database and runtime schemas', async () => {
     const { registry, db } = await setupTest();
-    await db.graph.schemaRegistry.register([Organization]);
+    db.graph.registry.addTypes([Organization]);
 
     const [echoSchema] = await registry.register([Contact]);
     const retrieved = await registry.query({ location: ['database', 'runtime'] }).run();
@@ -146,7 +146,7 @@ describe('schema registry', () => {
 
   test('query only runtime schemas', async () => {
     const { registry, db } = await setupTest();
-    await db.graph.schemaRegistry.register([Organization]);
+    db.graph.registry.addTypes([Organization]);
 
     const [echoSchema] = await registry.register([Contact]);
     const retrieved = await registry.query({ location: ['runtime'] }).run();
@@ -156,7 +156,7 @@ describe('schema registry', () => {
 
   test('query only database schemas', async () => {
     const { registry, db } = await setupTest();
-    await db.graph.schemaRegistry.register([Organization]);
+    db.graph.registry.addTypes([Organization]);
 
     const [echoSchema] = await registry.register([Contact]);
     const retrieved = await registry.query({ location: ['database'] }).run();
@@ -179,7 +179,7 @@ describe('schema registry', () => {
     await sleep(10);
 
     // Register a runtime schema after the query is already subscribed.
-    await db.graph.schemaRegistry.register([Organization]);
+    db.graph.registry.addTypes([Organization]);
 
     expect(updateCount).toBeGreaterThan(0);
     expect(latestResults.map(Type.getTypename)).toContain('com.example.type.organization');

@@ -4,7 +4,7 @@
 
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { isProxy } from '@dxos/echo/internal';
+import { EchoSchema, getTypeAnnotation, isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 import { entries, range } from '@dxos/util';
@@ -116,11 +116,13 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
       const [registeredSchema] = await this._space.internal.db.schemaRegistry.register([schema]);
       return registeredSchema;
     } else {
-      const existingSchema = this._space.internal.db.graph.schemaRegistry.getSchema(typename);
+      const existingSchema = [...this._space.internal.db.graph.registry.types].find(
+        (s) => Type.getTypename(s) === typename,
+      );
       if (existingSchema != null) {
         return existingSchema;
       }
-      await this._space.internal.db.graph.schemaRegistry.register([schema]);
+      this._space.internal.db.graph.registry.addTypes([schema]);
       return schema;
     }
   }
