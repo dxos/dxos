@@ -139,6 +139,9 @@
       "path": "packages/common/web-context-solid/tsconfig.json"
     },
     {
+      "path": "packages/core/compute-runtime/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/ai/tsconfig.json"
     },
     {

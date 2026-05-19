@@ -2,14 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
+import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Operation, Trace, Trigger } from '@dxos/compute';
 import { ClientEvents } from '@dxos/plugin-client';
 
-import { AppGraphBuilder, ComputeRuntime, OperationHandler } from '#capabilities';
+import { AppGraphBuilder, LayerSpecs, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
-import { AutomationEvents } from '#types';
 
 import { trigger } from './commands';
 
@@ -20,8 +19,8 @@ export const AutomationPlugin = Plugin.define(meta).pipe(
   AppPlugin.addSchemaModule({ schema: [Operation.PersistentOperation, Trigger.Trigger, Trace.Message] }),
   Plugin.addModule({
     activatesOn: ClientEvents.ClientReady,
-    firesAfterActivation: [AutomationEvents.ComputeRuntimeReady],
-    activate: ComputeRuntime,
+    firesBeforeActivation: [ActivationEvents.SetupProcessManager],
+    activate: LayerSpecs,
   }),
   Plugin.make,
 );

@@ -27,7 +27,7 @@ export const FilesPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'state',
     activatesOn: ActivationEvent.allOf(
-      ActivationEvents.OperationInvokerReady,
+      ActivationEvents.ProcessManagerReady,
       SettingsReady,
       AttentionEvents.AttentionReady,
     ),

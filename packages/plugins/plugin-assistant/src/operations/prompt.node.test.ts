@@ -7,11 +7,10 @@ import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
-import { Routine, Operation } from '@dxos/compute';
+import { Operation, Routine, ServiceResolver } from '@dxos/compute';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { ObjectId } from '@dxos/keys';
-import { AutomationCapabilities } from '@dxos/plugin-automation';
 import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
@@ -35,11 +34,8 @@ describe('Agent prompt (composer plugin harness)', () => {
       });
 
       const { personalSpace } = await runAndForwardErrors(initializeIdentity(harness.get(ClientCapabilities.Client)));
-      const computeProvider = await harness.waitForCapability(AutomationCapabilities.ComputeRuntime, {
-        timeout: 30_000,
-      });
 
-      await computeProvider.getRuntime(personalSpace.id).runPromise(
+      await harness.runPromise(
         Effect.gen(function* () {
           const feed = yield* Database.add(Feed.make());
 
@@ -58,11 +54,15 @@ describe('Agent prompt (composer plugin harness)', () => {
           );
           yield* Database.flush();
 
-          const result = yield* Operation.invoke(AgentPrompt, {
-            prompt: Ref.make(prompt),
-            input: {},
-            chat: Ref.make(chat),
-          });
+          const result = yield* Operation.invoke(
+            AgentPrompt,
+            {
+              prompt: Ref.make(prompt),
+              input: {},
+              chat: Ref.make(chat),
+            },
+            { spaceId: personalSpace.id },
+          );
 
           const messageCountAfter = yield* Feed.runQuery(feed, Filter.type(Message.Message)).pipe(
             Effect.map(Array.length),
@@ -70,7 +70,10 @@ describe('Agent prompt (composer plugin harness)', () => {
 
           expect(messageCountAfter).toBeGreaterThan(messageCountBefore);
           expect(result).toBe('ack');
-        }),
+        }).pipe(
+          Effect.provide(ServiceResolver.provide({ space: personalSpace.id }, Database.Service, Feed.FeedService)),
+        ),
+        { timeout: 30_000 },
       );
     },
   );

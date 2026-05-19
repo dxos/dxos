@@ -8,12 +8,11 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { Blueprint, Routine, Template, Operation } from '@dxos/compute';
+import { Blueprint, Operation, Routine, Template } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { AutomationCapabilities } from '@dxos/plugin-automation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Text } from '@dxos/schema';
 
@@ -72,14 +71,15 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInNewCha
                   )
                 : prompt;
             yield* Database.flush();
-            const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
-            const runtime = yield* computeRuntime.getRuntime(db.spaceId).runtimeEffect;
-            yield* Operation.invoke(AgentPrompt, {
-              prompt: promptRef,
-              input: {},
-              chat: Ref.make(chat),
-            }).pipe(
-              Effect.provide(runtime),
+            yield* Operation.invoke(
+              AgentPrompt,
+              {
+                prompt: promptRef,
+                input: {},
+                chat: Ref.make(chat),
+              },
+              { spaceId: db.spaceId },
+            ).pipe(
               Effect.catchAll((error) => {
                 log.catch(error);
                 return Effect.void;

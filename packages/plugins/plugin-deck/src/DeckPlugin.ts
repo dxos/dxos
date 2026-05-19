@@ -38,7 +38,7 @@ export const DeckPlugin = Plugin.define(meta).pipe(
     activate: DeckSettings,
   }),
   Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(DeckEvents.SettingsReady, ActivationEvents.OperationInvokerReady),
+    activatesOn: ActivationEvent.allOf(DeckEvents.SettingsReady, ActivationEvents.ProcessManagerReady),
     activate: CheckAppScheme,
   }),
   Plugin.addModule({
@@ -58,7 +58,7 @@ export const DeckPlugin = Plugin.define(meta).pipe(
   //   activate: Tools,
   // }),
   Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(ActivationEvents.OperationInvokerReady, DeckEvents.StateReady),
+    activatesOn: ActivationEvent.allOf(ActivationEvents.ProcessManagerReady, DeckEvents.StateReady),
     activate: UrlHandler,
   }),
   Plugin.make,

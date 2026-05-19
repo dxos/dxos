@@ -19,7 +19,7 @@ describe('ObservabilityPlugin', () => {
       plugins: [ObservabilityPlugin({} as any)],
     });
 
-    // OperationHandler fires automatically (OperationPlugin fires SetupOperationHandler during Startup).
+    // OperationHandler fires automatically (ProcessManagerPlugin fires SetupProcessManager during Startup).
     expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
   });
 });

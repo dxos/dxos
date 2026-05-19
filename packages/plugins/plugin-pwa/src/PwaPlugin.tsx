@@ -16,7 +16,7 @@ export const PwaPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     id: 'register-pwa',
-    activatesOn: ActivationEvents.OperationInvokerReady,
+    activatesOn: ActivationEvents.ProcessManagerReady,
     activate: Effect.fnUntraced(function* () {
       const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
 

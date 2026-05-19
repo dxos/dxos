@@ -29,7 +29,7 @@ describe('ThreadPlugin', () => {
     await harness.fire(AppActivationEvents.SetupArtifactDefinition);
     expect(harness.manager.getActive()).toContain(moduleId('BlueprintDefinition'));
 
-    // Operation handlers auto-cascade from OperationPlugin.
+    // Operation handlers auto-cascade from ProcessManagerPlugin.
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([moduleId('OperationHandler'), moduleId('UndoMappings')]),
     );
