@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
-import React, { type ReactNode, useState } from 'react';
-
 import { useAtomValue } from '@effect-atom/atom-react';
+import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
+import * as Match from 'effect/Match';
+import React, { type ReactNode, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
@@ -17,6 +17,16 @@ import { NativeCapabilities, type Settings, type Update } from '#types';
 
 export type NativeSettingsProps = AppSurface.SettingsArticleProps<Settings.Settings>;
 
+type Pending = null | 'check' | 'install' | 'relaunch';
+
+type UpdateActions = {
+  onCheck: () => Promise<void>;
+  onInstall: () => Promise<void>;
+  onRelaunch: () => Promise<void>;
+};
+
+type UpdateRow = { description: string; button: ReactNode };
+
 export const NativeSettings = (_props: NativeSettingsProps) => {
   const { t } = useTranslation(meta.id);
   const manager = useCapability(NativeCapabilities.UpdateManager);
@@ -25,9 +35,9 @@ export const NativeSettings = (_props: NativeSettingsProps) => {
   // UI-level pending flag. The status atom can flip between `checking` and `up-to-date` faster
   // than the user can perceive, so we also gate the button on the click handler's lifetime to
   // guarantee no duplicate triggers and a visible busy state.
-  const [pending, setPending] = useState<null | 'check' | 'install' | 'relaunch'>(null);
+  const [pending, setPending] = useState<Pending>(null);
 
-  const runAction = (kind: 'check' | 'install' | 'relaunch', action: () => Promise<void>) => async () => {
+  const runAction = (kind: Exclude<Pending, null>, action: () => Promise<void>) => async () => {
     setPending(kind);
     try {
       await action();
@@ -53,18 +63,12 @@ export const NativeSettings = (_props: NativeSettingsProps) => {
   );
 };
 
-type UpdateActions = {
-  onCheck: () => Promise<void>;
-  onInstall: () => Promise<void>;
-  onRelaunch: () => Promise<void>;
-};
-
 const renderUpdateRow = (
   status: Update.Status,
-  pending: null | 'check' | 'install' | 'relaunch',
+  pending: Pending,
   t: (key: string, options?: Record<string, unknown>) => string,
   { onCheck, onInstall, onRelaunch }: UpdateActions,
-): { description: string; button: ReactNode } => {
+): UpdateRow => {
   const isChecking = pending === 'check' || status.kind === 'checking';
   const isInstalling = pending === 'install' || status.kind === 'downloading';
 
@@ -74,60 +78,55 @@ const renderUpdateRow = (
     </Button>
   );
 
-  switch (status.kind) {
-    case 'unsupported':
-      return {
-        description: t('settings.updates.unsupported.message'),
-        button: checkButton(true),
-      };
-    case 'idle':
-      return {
-        description: isChecking ? t('settings.updates.checking.message') : t('settings.updates.idle.message'),
-        button: checkButton(),
-      };
-    case 'checking':
-      return {
-        description: t('settings.updates.checking.message'),
-        button: checkButton(),
-      };
-    case 'up-to-date':
-      return {
-        description: isChecking
-          ? t('settings.updates.checking.message')
-          : t('settings.updates.up-to-date.message', {
-              checkedAt: formatDistanceToNow(new Date(status.checkedAt), { addSuffix: true }),
-            }),
-        button: checkButton(),
-      };
-    case 'available':
-      return {
-        description: t('settings.updates.available.message', { version: status.version }),
-        button: (
-          <Button variant='primary' disabled={isInstalling} onClick={() => void onInstall()}>
-            {isInstalling ? t('settings.updates.downloading.label') : t('settings.updates.update-now.label')}
-          </Button>
-        ),
-      };
-    case 'downloading': {
-      const percent = status.contentLength > 0 ? Math.round((status.downloaded / status.contentLength) * 100) : 0;
+  return Match.value(status).pipe(
+    Match.withReturnType<UpdateRow>(),
+    Match.when({ kind: 'unsupported' }, () => ({
+      description: t('settings.updates.unsupported.message'),
+      button: checkButton(true),
+    })),
+    Match.when({ kind: 'idle' }, () => ({
+      description: isChecking ? t('settings.updates.checking.message') : t('settings.updates.idle.message'),
+      button: checkButton(),
+    })),
+    Match.when({ kind: 'checking' }, () => ({
+      description: t('settings.updates.checking.message'),
+      button: checkButton(),
+    })),
+    Match.when({ kind: 'up-to-date' }, (s) => ({
+      description: isChecking
+        ? t('settings.updates.checking.message')
+        : t('settings.updates.up-to-date.message', {
+            checkedAt: formatDistanceToNow(new Date(s.checkedAt), { addSuffix: true }),
+          }),
+      button: checkButton(),
+    })),
+    Match.when({ kind: 'available' }, (s) => ({
+      description: t('settings.updates.available.message', { version: s.version }),
+      button: (
+        <Button variant='primary' disabled={isInstalling} onClick={() => void onInstall()}>
+          {isInstalling ? t('settings.updates.downloading.label') : t('settings.updates.update-now.label')}
+        </Button>
+      ),
+    })),
+    Match.when({ kind: 'downloading' }, (s) => {
+      const percent = s.contentLength > 0 ? Math.round((s.downloaded / s.contentLength) * 100) : 0;
       return {
         description: t('settings.updates.downloading.message', { percent }),
         button: <Button disabled>{t('settings.updates.downloading.label')}</Button>,
       };
-    }
-    case 'ready':
-      return {
-        description: t('settings.updates.ready.message'),
-        button: (
-          <Button variant='primary' disabled={pending === 'relaunch'} onClick={() => void onRelaunch()}>
-            {t('settings.updates.relaunch.label')}
-          </Button>
-        ),
-      };
-    case 'failed':
-      return {
-        description: t('settings.updates.failed.message', { error: status.error }),
-        button: checkButton(),
-      };
-  }
+    }),
+    Match.when({ kind: 'ready' }, () => ({
+      description: t('settings.updates.ready.message'),
+      button: (
+        <Button variant='primary' disabled={pending === 'relaunch'} onClick={() => void onRelaunch()}>
+          {t('settings.updates.relaunch.label')}
+        </Button>
+      ),
+    })),
+    Match.when({ kind: 'failed' }, (s) => ({
+      description: t('settings.updates.failed.message', { error: s.error }),
+      button: checkButton(),
+    })),
+    Match.exhaustive,
+  );
 };

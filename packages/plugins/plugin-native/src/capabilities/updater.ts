@@ -63,9 +63,6 @@ export default Capability.makeModule(
     const platform = type();
     const isDevServer = window.location.port !== TAURI_LOCALHOST_PORT;
     const enabled = SUPPORTS_OTA.includes(platform) && !isDevServer;
-    if (!enabled) {
-      log.info('updater disabled', { platform, port: window.location.port });
-    }
 
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
     const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
@@ -148,6 +145,7 @@ export default Capability.makeModule(
     const managerContribution = Capability.contributes(NativeCapabilities.UpdateManager, manager);
 
     if (!enabled) {
+      log.info('updater disabled', { platform, port: window.location.port });
       return [managerContribution];
     }
 
