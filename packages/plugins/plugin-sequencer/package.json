@@ -36,10 +36,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/SequencerPlugin.workerd.ts",
         "node": "./src/SequencerPlugin.node.ts",
         "default": "./src/SequencerPlugin.tsx"
       },
       "types": "./dist/types/src/SequencerPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/SequencerPlugin.workerd.mjs",
       "node": "./dist/lib/neutral/SequencerPlugin.node.mjs",
       "default": "./dist/lib/neutral/SequencerPlugin.mjs"
     },

@@ -27,7 +27,7 @@ import { SubscriptionsArticle } from './SubscriptionsArticle';
 const DefaultStory = () => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const feeds = useQuery(space?.db, Filter.type(Subscription.Feed));
+  const feeds = useQuery(space?.db, Filter.type(Subscription.Subscription));
   if (!space || feeds.length === 0) {
     return <Loading />;
   }
@@ -44,7 +44,7 @@ const meta: Meta<typeof DefaultStory> = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Subscription.Feed, Subscription.Post],
+          types: [Subscription.Subscription, Subscription.Post],
           onClientInitialized: ({ client }: { client: Client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
@@ -52,7 +52,7 @@ const meta: Meta<typeof DefaultStory> = {
               yield* Effect.promise(() => space.waitUntilReady());
               Array.from({ length: 5 }).forEach(() => {
                 space.db.add(
-                  Subscription.makeFeed({
+                  Subscription.makeSubscription({
                     name: random.company.name() + ' Blog',
                     url: random.internet.url(),
                     description: random.lorem.sentence(),

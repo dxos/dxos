@@ -109,6 +109,7 @@ export const translations: Resource[] = [
         'open-assistant.label': 'Open assistant',
         'reset-blueprints.label': 'Reset blueprints',
         'import-compute-operations.label': 'Import compute operations',
+        'toggle-trace-panel-debug.label': 'Toggle trace panel debug view',
 
         'no-results.message': 'No results',
 

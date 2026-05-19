@@ -3,4 +3,3 @@
 //
 
 export * from './MarkdownView';
-export * from './Media';

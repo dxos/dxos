@@ -401,12 +401,9 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
               onAdd={handleAddTrack}
               onRemove={handleRemoveTrack}
             />
-            <Oscilloscope
-              classNames='aspect-square border-green-500'
-              mode='waveform'
-              active={isPlaying}
-              source={audioOutputNode}
-            />
+            <div className='grid p-2 aspect-square'>
+              <Oscilloscope classNames='border-green-500' mode='waveform' active={isPlaying} source={audioOutputNode} />
+            </div>
           </div>
           <div className='flex-1 min-w-0 relative'>
             {activeTrack && activeSequence ? (

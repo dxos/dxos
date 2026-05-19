@@ -1148,12 +1148,24 @@ export class AutomergeHost extends Resource {
       let newState: CollectionState | undefined;
 
       for (const [documentId, heads] of docHeads) {
-        if (documentId in state.documents) {
-          if (!newState) {
-            newState = structuredClone(state);
-          }
-          newState.documents[documentId] = heads;
+        const current = state.documents[documentId];
+        // Collection membership is owned by `updateLocalCollectionState` (driven by
+        // `SpaceStateManager.spaceDocumentListUpdated`). `_afterSave` fires for every
+        // chunk written — including the space root, system docs, and transiently-fetched
+        // docs that haven't been admitted to any collection — so we only refresh heads
+        // for documents the membership path has already registered. Adding new keys
+        // here would leak non-collection docs into the broadcast state and race with
+        // the authoritative rebuild in `updateLocalCollectionState`.
+        if (current === undefined) {
+          continue;
         }
+        if (headsEquals(current, heads)) {
+          continue;
+        }
+        if (!newState) {
+          newState = structuredClone(state);
+        }
+        newState.documents[documentId] = heads;
       }
 
       if (newState) {

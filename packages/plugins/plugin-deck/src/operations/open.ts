@@ -16,6 +16,7 @@ import {
 import { Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
+import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';
@@ -29,6 +30,7 @@ import { updateActiveDeck } from './helpers';
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
+      log('LayoutOperation.Open handler start');
       const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
       const attention = yield* Capability.get(AttentionCapabilities.Attention);
 

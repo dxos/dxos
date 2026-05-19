@@ -61,6 +61,15 @@ export interface TestHarness {
   /** Invokes an operation through the `Capabilities.OperationInvoker` capability. */
   invoke<I, O>(op: Operation.Definition<I, O>, ...args: void extends I ? [input?: I] : [input: I]): Promise<O>;
 
+  /**
+   * Waits for `Capabilities.ProcessManagerRuntime` and runs the given effect on it.
+   * Convenience around `waitForCapability(ProcessManagerRuntime).runPromise(effect)`.
+   */
+  runPromise<A, E>(
+    effect: Effect.Effect<A, E, Capabilities.ProcessManagerRuntimeServices>,
+    options?: { readonly timeout?: number; readonly signal?: AbortSignal },
+  ): Promise<A>;
+
   enable(id: string): Promise<boolean>;
   disable(id: string): Promise<boolean>;
 
@@ -207,6 +216,14 @@ class TestHarnessImpl implements TestHarness {
       throw result.error;
     }
     return result.data as O;
+  }
+
+  async runPromise<A, E>(
+    effect: Effect.Effect<A, E, Capabilities.ProcessManagerRuntimeServices>,
+    options?: { readonly timeout?: number; readonly signal?: AbortSignal },
+  ): Promise<A> {
+    const runtime = await this.waitForCapability(Capabilities.ProcessManagerRuntime, { timeout: options?.timeout });
+    return runtime.runPromise(effect, options?.signal ? { signal: options.signal } : undefined);
   }
 
   enable(id: string): Promise<boolean> {

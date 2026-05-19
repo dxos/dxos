@@ -71,6 +71,12 @@ export const Settings = Schema.mutable(
       }),
     ),
     modelDefaults: Schema.optional(ModelDefaults),
+    tracePanelDebug: Schema.optional(
+      Schema.Boolean.annotations({
+        title: 'Trace panel debug',
+        description: 'Show the raw span tree as JSON in the trace panel instead of the commit graph.',
+      }),
+    ),
   }),
 );
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}

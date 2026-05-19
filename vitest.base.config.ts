@@ -29,6 +29,14 @@ const isDebug = !!process.env.VITEST_DEBUG;
 const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
 const DEBUG_TIMEOUT_MS = 3_600_000;
 
+// Browser/storybook tests transitively import `@anthropic-ai/tokenizer` via
+// `@dxos/ai`, which pulls in `tiktoken/lite` — a WASM bundle whose top-level
+// `await` cannot be rewrapped by esbuild's dep pre-bundler. Composer-app's
+// vite.config.ts aliases it to an empty stub for the same reason. None of
+// the browser tests actually tokenize, so the alias is safe.
+const TIKTOKEN_STUB = new URL('./vitest/tiktoken-stub.mjs', import.meta.url).pathname;
+const TIKTOKEN_ALIAS = { 'tiktoken/lite': TIKTOKEN_STUB };
+
 export type ConfigOptions = {
   dirname: string;
   node?: boolean | NodeOptions;
@@ -71,6 +79,9 @@ const createStorybookProject = (dirname: string) =>
       },
       setupFiles: [new URL('./tools/storybook-react/.storybook/vitest.setup.ts', import.meta.url).pathname],
     },
+    resolve: {
+      alias: { ...TIKTOKEN_ALIAS },
+    },
     optimizeDeps: {
       include: ['react', 'react-dom', 'react/jsx-runtime'],
     },
@@ -107,6 +118,9 @@ const createBrowserProject = ({
       ...plugins,
       // Inspect()
     ],
+    resolve: {
+      alias: { ...TIKTOKEN_ALIAS },
+    },
     optimizeDeps: {
       include: ['buffer/'],
       esbuildOptions: {

@@ -20,7 +20,7 @@ describe('SpacePlugin', () => {
     });
 
     // After autoStart: CreateObject, schema, OperationHandler all auto-cascade.
-    // UndoMappings auto-cascades on SetupOperationHandler.
+    // UndoMappings auto-cascades on SetupProcessManager.
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([
         moduleId('CreateObject'),

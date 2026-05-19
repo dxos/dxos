@@ -267,8 +267,7 @@ const CarouselIndicators = ({ classNames }: CarouselIndicatorsProps) => {
   }
 
   return (
-    // TODO(burdon): Move to ui-theme.
-    <div className='col-start-2'>
+    <div className='col-start-2 overflow-hidden'>
       <div
         {...arrowNavigationAttrs}
         className={mx('flex items-center justify-center', classNames)}
@@ -280,7 +279,6 @@ const CarouselIndicators = ({ classNames }: CarouselIndicatorsProps) => {
             key={i}
             role='tab'
             aria-selected={i === index}
-            // TODO(burdon): Move to ui-theme.
             classNames={i === index ? 'text-primary-500' : 'text-description'}
             icon={i === index ? 'ph--circle--fill' : 'ph--circle--regular'}
             iconOnly

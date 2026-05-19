@@ -54,10 +54,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/ScriptPlugin.workerd.ts",
         "node": "./src/ScriptPlugin.node.ts",
         "default": "./src/ScriptPlugin.tsx"
       },
       "types": "./dist/types/src/ScriptPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/ScriptPlugin.workerd.mjs",
       "node": "./dist/lib/neutral/ScriptPlugin.node.mjs",
       "default": "./dist/lib/neutral/ScriptPlugin.mjs"
     },

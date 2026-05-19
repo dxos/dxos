@@ -40,10 +40,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/FilesPlugin.workerd.ts",
         "node": "./src/FilesPlugin.node.ts",
         "default": "./src/FilesPlugin.tsx"
       },
       "types": "./dist/types/src/FilesPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/FilesPlugin.workerd.mjs",
       "node": "./dist/lib/neutral/FilesPlugin.node.mjs",
       "default": "./dist/lib/neutral/FilesPlugin.mjs"
     },

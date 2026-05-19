@@ -4,7 +4,7 @@
 
 import { beforeEach, describe, test, vi } from 'vitest';
 
-import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
+import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { createTestApp } from '@dxos/app-framework/testing';
 
 import { ThemePlugin } from '#plugin';
@@ -35,7 +35,7 @@ describe('ThemePlugin', () => {
     // Use createTestApp directly to avoid a circular dep with plugin-testing.
     // jsdom environment (see vitest.config.ts) required for React + ThemeProvider rendering.
     await using harness = await createTestApp({
-      plugins: [OperationPlugin(), RuntimePlugin(), ThemePlugin({})],
+      plugins: [ProcessManagerPlugin(), ThemePlugin({})],
     });
 
     // ReactContext activates on Startup; fires SetupTranslations before it activates.

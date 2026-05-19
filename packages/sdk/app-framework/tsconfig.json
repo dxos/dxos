@@ -48,7 +48,13 @@
       "path": "../../common/web-context-react"
     },
     {
+      "path": "../../core/compute-runtime"
+    },
+    {
       "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/functions"
     },
     {
       "path": "../../core/compute/operation"

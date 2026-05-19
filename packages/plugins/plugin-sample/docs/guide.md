@@ -23,15 +23,15 @@ Every plugin has two critical files:
 
 The plugin definition chains these registration helpers:
 
-| Helper                      | What it registers                                  | Activation event        |
-| --------------------------- | -------------------------------------------------- | ----------------------- |
-| `addOperationHandlerModule` | Operation handlers                                 | `SetupOperationHandler` |
-| `addSurfaceModule`          | React surface contributions                        | `SetupReactSurface`     |
-| `addAppGraphModule`         | Graph extensions (actions, connectors, companions) | `SetupAppGraph`         |
-| `addMetadataModule`         | Type metadata (icon, createObject factory)         | `SetupMetadata`         |
-| `addSchemaModule`           | ECHO schemas                                       | `SetupSchema`           |
-| `addSettingsModule`         | Plugin settings                                    | `SetupSettings`         |
-| `addTranslationsModule`     | i18n translations                                  | `SetupTranslations`     |
+| Helper                      | What it registers                                  | Activation event      |
+| --------------------------- | -------------------------------------------------- | --------------------- |
+| `addOperationHandlerModule` | Operation handlers                                 | `SetupProcessManager` |
+| `addSurfaceModule`          | React surface contributions                        | `SetupReactSurface`   |
+| `addAppGraphModule`         | Graph extensions (actions, connectors, companions) | `SetupAppGraph`       |
+| `addMetadataModule`         | Type metadata (icon, createObject factory)         | `SetupMetadata`       |
+| `addSchemaModule`           | ECHO schemas                                       | `SetupSchema`         |
+| `addSettingsModule`         | Plugin settings                                    | `SetupSettings`       |
+| `addTranslationsModule`     | i18n translations                                  | `SetupTranslations`   |
 
 ## Operations
 

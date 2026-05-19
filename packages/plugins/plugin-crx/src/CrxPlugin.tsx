@@ -15,7 +15,7 @@ export const CrxPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     id: 'install-crx-bridge',
-    activatesOn: ActivationEvents.OperationInvokerReady,
+    activatesOn: ActivationEvents.ProcessManagerReady,
     activate: InstallClipListener,
   }),
   Plugin.make,

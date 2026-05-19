@@ -37,7 +37,7 @@ export const IntegrationPlugin = Plugin.define(meta).pipe(
     activate: BuiltinProviders,
   }),
   Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(ClientEvents.ClientReady, ActivationEvents.OperationInvokerReady),
+    activatesOn: ActivationEvent.allOf(ClientEvents.ClientReady, ActivationEvents.ProcessManagerReady),
     activate: Coordinator,
   }),
   Plugin.addModule({

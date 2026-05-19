@@ -29,7 +29,7 @@ describe('AssistantPlugin', () => {
     await harness.fire(AppActivationEvents.SetupArtifactDefinition);
     expect(harness.manager.getActive()).toContain(moduleId('BlueprintDefinition'));
 
-    // OperationHandler auto-cascades from OperationPlugin.
+    // OperationHandler auto-cascades from ProcessManagerPlugin.
     expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
   });
 });

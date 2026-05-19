@@ -2,13 +2,18 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+import type * as Exit from 'effect/Exit';
 import React, { Fragment, useEffect, useMemo, useRef } from 'react';
 
+import { AiService } from '@dxos/ai';
+import { Capabilities } from '@dxos/app-framework';
 import { useCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { Credential, Operation, OperationRegistry, ServiceResolver } from '@dxos/compute';
 import { ComputeGraphModel } from '@dxos/conductor';
-import { Obj } from '@dxos/echo';
-import { AutomationCapabilities } from '@dxos/plugin-automation';
+import { Database, Feed, Obj } from '@dxos/echo';
+import { QueueService } from '@dxos/functions';
 import { useObject } from '@dxos/react-client/echo';
 import { Flex, type FlexProps } from '@dxos/react-ui';
 import {
@@ -81,16 +86,33 @@ const Container = (props: FlexProps) => <Flex {...props} classNames='aspect-squa
 
 const useGraphController = (canvas: CanvasBoard.CanvasBoard) => {
   const db = Obj.getDatabase(canvas);
-  const runtime = useCapability(AutomationCapabilities.ComputeRuntime);
+  const processManagerRuntime = useCapability(Capabilities.ProcessManagerRuntime);
   const [computeGraph] = useObject(canvas.computeGraph);
   const controller = useMemo(() => {
     if (!canvas.computeGraph?.target || !db) {
       return null;
     }
+    const spaceId = db.spaceId;
     const model = new ComputeGraphModel(canvas.computeGraph?.target);
-    const controller = new ComputeGraphController(runtime.getRuntime(db.spaceId), model);
+    const spaceLayer = ServiceResolver.provide(
+      { space: spaceId },
+      AiService.AiService,
+      Database.Service,
+      Feed.FeedService,
+      QueueService,
+      Credential.CredentialsService,
+      Operation.Service,
+      OperationRegistry.Service,
+    );
+    const computeGraphRuntime = {
+      runPromiseExit: <A, E>(effect: Effect.Effect<A, E, any>): Promise<Exit.Exit<A, E>> =>
+        processManagerRuntime.runPromiseExit(effect.pipe(Effect.provide(spaceLayer)) as any) as Promise<
+          Exit.Exit<A, E>
+        >,
+    };
+    const controller = new ComputeGraphController(computeGraphRuntime, model);
     return controller;
-  }, [computeGraph, db]);
+  }, [computeGraph, db, processManagerRuntime]);
 
   useEffect(() => {
     if (!controller) {
