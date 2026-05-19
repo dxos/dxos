@@ -4,11 +4,13 @@
 
 import { useAtomValue } from '@effect-atom/atom-react';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
+import type * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import React, { type ReactNode, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { runAndForwardErrors } from '@dxos/effect';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
 
@@ -37,10 +39,10 @@ export const NativeSettings = (_props: NativeSettingsProps) => {
   // guarantee no duplicate triggers and a visible busy state.
   const [pending, setPending] = useState<Pending>(null);
 
-  const runAction = (kind: Exclude<Pending, null>, action: () => Promise<void>) => async () => {
+  const runAction = (kind: Exclude<Pending, null>, action: () => Effect.Effect<void>) => async () => {
     setPending(kind);
     try {
-      await action();
+      await runAndForwardErrors(action());
     } finally {
       setPending(null);
     }
