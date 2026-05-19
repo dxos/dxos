@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import { type Accessor, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
 
 import { type Database, Type } from '@dxos/echo';
+import { runSyncAndForwardErrors } from '@dxos/effect';
 
 type MaybeAccessor<T> = T | Accessor<T>;
 
@@ -46,12 +46,12 @@ export const useSchema = (
 
     // Set initial value immediately.
     setSchema(
-      () => Effect.runSync(resolvedDb.graph.registry.listTypes()).find((t) => Type.getTypename(t) === resolvedTypename) as T | undefined,
+      () => runSyncAndForwardErrors(resolvedDb.graph.registry.listTypes()).find((t) => Type.getTypename(t) === resolvedTypename) as T | undefined,
     );
 
     const unsubscribe = resolvedDb.graph.registry.changed.on(() => {
       setSchema(
-        () => Effect.runSync(resolvedDb.graph.registry.listTypes()).find((t) => Type.getTypename(t) === resolvedTypename) as T | undefined,
+        () => runSyncAndForwardErrors(resolvedDb.graph.registry.listTypes()).find((t) => Type.getTypename(t) === resolvedTypename) as T | undefined,
       );
     });
 

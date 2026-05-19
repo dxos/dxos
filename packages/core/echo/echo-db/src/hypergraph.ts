@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
+import { runSyncAndForwardErrors } from '@dxos/effect';
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
@@ -183,7 +183,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         try {
           switch (dxn.kind) {
             case DXN.kind.TYPE: {
-              const schema = Effect.runSync(this._registry.getTypeByDXN(dxn.toString()));
+              const schema = runSyncAndForwardErrors(this._registry.getTypeByDXN(dxn.toString()));
               status = schema != null ? 'resolved' : 'missing';
               return schema;
             }

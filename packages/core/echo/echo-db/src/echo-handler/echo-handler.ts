@@ -3,13 +3,13 @@
 //
 
 import * as A from '@automerge/automerge';
-import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { type InspectOptionsStylized } from 'node:util';
 
 import { Event } from '@dxos/async';
 import { type DevtoolsFormatter, devtoolsFormatter, inspectCustom } from '@dxos/debug';
-import { Entity, Obj, Type } from '@dxos/echo';
+import { Entity, Obj } from '@dxos/echo';
+import { runSyncAndForwardErrors } from '@dxos/effect';
 import {
   DATA_NAMESPACE,
   EncodedReference,
@@ -687,7 +687,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     }
 
     const database = target[symbolInternals].database;
-    const fromRegistry = Effect.runSync(database.graph.registry.getTypeByDXN(typeDXN.toString()));
+    const fromRegistry = runSyncAndForwardErrors(database.graph.registry.getTypeByDXN(typeDXN.toString()));
     if (fromRegistry != null) {
       return fromRegistry;
     }

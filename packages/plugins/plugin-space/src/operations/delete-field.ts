@@ -20,9 +20,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.DeleteField> = SpaceO
       invariant(db);
       const typename = getTypenameFromQuery(view.query.ast);
       invariant(typename);
-      const schema = yield* Effect.promise(() =>
-        Promise.resolve(Effect.runSync(db.graph.registry.listTypes()).find((t) => Type.getTypename(t) === typename)),
-      );
+      const schema = (yield* db.graph.registry.listTypes()).find((t) => Type.getTypename(t) === typename);
       invariant(schema);
 
       const projection = new ProjectionModel({

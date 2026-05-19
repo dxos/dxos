@@ -183,6 +183,18 @@ export const unwrapExit = <A>(exit: Exit.Exit<A, any>): A => {
 };
 
 /**
+ * Runs the embedded effect synchronously and throws any failures and defects as errors.
+ *
+ * To be used in place of `Effect.runSync`.
+ *
+ * @throws AggregateError if there are multiple errors.
+ */
+export const runSyncAndForwardErrors = <A, E>(effect: Effect.Effect<A, E, never>): A => {
+  const exit = Effect.runSyncExit(effect);
+  return unwrapExit(exit);
+};
+
+/**
  * Runs the embedded effect asynchronously and throws any failures and defects as errors.
  * Inserts effect spans as stack frames.
  * The error will have stack frames of where the effect was run (if stack trace limit allows).

@@ -5,6 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, type Registry, Type } from '@dxos/echo';
+import { runAndForwardErrors } from '@dxos/effect';
 import {
   EchoObjectSchema,
   Format,
@@ -64,10 +65,10 @@ export const getSchema = async (
 
   const type = DXN.getName(dxn);
   const version = DXN.getVersion(dxn);
-  if (!type || !version) {
+  if (!type || !version || !registry) {
     return;
   }
-  return registry?.getTypeByDXN(`dxn:type:${type}:${version}`);
+  return runAndForwardErrors(registry.getTypeByDXN(`dxn:type:${type}:${version}`));
 };
 
 // TODO(burdon): Factor out.

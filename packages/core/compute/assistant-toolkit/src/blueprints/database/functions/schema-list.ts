@@ -17,7 +17,7 @@ export default SchemaList.pipe(
   Operation.withHandler(
     Effect.fn(function* () {
       const { db } = yield* Database.Service;
-      const schema = yield* Effect.promise(() => Promise.resolve([...Effect.runSync(db.graph.registry.listTypes())]));
+      const schema = [...(yield* db.graph.registry.listTypes())];
       return schema
         .filter((type) => !excludedTypenames.includes(Type.getTypename(type)))
         .map((type) => ({

@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { useCallback, useMemo } from 'react';
 
 import { Annotation, type Database, Filter, Obj, Query, Type } from '@dxos/echo';
+import { runSyncAndForwardErrors } from '@dxos/effect';
 import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
 import { type Label, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type EditorMenuGroup, type EditorMenuItem } from '@dxos/react-ui-editor';
@@ -20,7 +20,7 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
   const filter = useMemo(
     () =>
       Filter.or(
-        ...(db ? Effect.runSync(db.graph.registry.listTypes()) : [])
+        ...(db ? runSyncAndForwardErrors(db.graph.registry.listTypes()) : [])
           .filter((schema) => getTypeAnnotation(schema)?.kind !== EntityKind.Relation)
           .filter((schema) => !SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false)))
           .map((schema) => Filter.typename(Type.getTypename(schema))),

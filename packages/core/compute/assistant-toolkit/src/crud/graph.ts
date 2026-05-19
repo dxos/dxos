@@ -13,6 +13,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { Database, Entity, Feed, Filter, Obj, Query, Type } from '@dxos/echo';
 import { isEncodedReference } from '@dxos/echo-protocol';
+import { runAndForwardErrors } from '@dxos/effect';
 import {
   ReferenceAnnotationId,
   RelationSourceId,
@@ -47,7 +48,7 @@ export type RelatedSchema = {
  */
 export const findRelatedSchema = async (db: Database.Database, anchor: Type.AnyEntity): Promise<RelatedSchema[]> => {
   // TODO(dmaretskyi): Query stored schemas.
-  const allSchemas = [...Effect.runSync(db.graph.registry.listTypes())];
+  const allSchemas = [...(await runAndForwardErrors(db.graph.registry.listTypes()))];
 
   // TODO(dmaretskyi): Also do references.
   return allSchemas
