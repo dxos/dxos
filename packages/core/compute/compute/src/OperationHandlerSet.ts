@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import { type Atom, type Registry } from '@effect-atom/atom';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -64,6 +65,28 @@ export const async = (
     [TypeId]: TypeId,
     getHandlers,
     handlers: Effect.promise(getHandlersCached),
+  };
+};
+
+/**
+ * Builds a set backed by an atom of contributed sets. The merged result is
+ * cached and invalidated whenever the atom changes, so most accesses are
+ * cheap but newly registered handlers are picked up.
+ */
+export const reactive = (
+  registry: Registry.Registry,
+  atom: Atom.Atom<readonly OperationHandlerSet[]>,
+): OperationHandlerSet => {
+  let cached: Promise<Operation.WithHandler<Operation.Definition.Any>[]> | null = null;
+  registry.subscribe(atom, () => {
+    cached = null;
+  });
+  const getHandlers = () =>
+    (cached ??= Promise.all(registry.get(atom).map((set) => set.getHandlers())).then((all) => all.flat()));
+  return {
+    [TypeId]: TypeId,
+    getHandlers,
+    handlers: Effect.promise(getHandlers),
   };
 };
 
