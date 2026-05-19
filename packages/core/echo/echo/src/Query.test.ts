@@ -496,7 +496,7 @@ describe('query api', () => {
         {
           "from": {
             "_tag": "scope",
-            "scope": {},
+            "scopes": [],
           },
           "query": {
             "filter": {
@@ -522,9 +522,7 @@ describe('query api', () => {
         {
           "from": {
             "_tag": "scope",
-            "scope": {
-              "allFeedsFromSpaces": true,
-            },
+            "scopes": [],
           },
           "query": {
             "filter": {
@@ -549,7 +547,7 @@ describe('query api', () => {
       Schema.validateSync(QueryAST.Query)(query.ast);
       expect(query.ast).toMatchObject({
         type: 'from',
-        from: { _tag: 'scope', scope: {} },
+        from: { _tag: 'scope', scopes: [] },
         query: {
           type: 'limit',
           limit: 10,
@@ -573,7 +571,7 @@ describe('query api', () => {
         { uri: feedDxn },
       )) as Feed.Feed;
 
-      const expectedFeedId = EchoURI.make({ spaceId: spaceId, objectId: feedId });
+      const expectedQueueDXN = Feed.getQueueDxn(feed);
 
       const query = Query.type(TestSchema.Person).from(feed);
       Schema.validateSync(QueryAST.Query)(query.ast);
@@ -581,9 +579,7 @@ describe('query api', () => {
         type: 'from',
         from: {
           _tag: 'scope',
-          scope: {
-            feeds: [expectedFeedId],
-          },
+          scopes: [{ _tag: 'feed', feedUri: expectedQueueDXN?.toString() }],
         },
         query: {
           type: 'select',

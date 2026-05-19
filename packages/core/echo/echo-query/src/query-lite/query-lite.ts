@@ -268,10 +268,10 @@ class FilterClass implements Filter$.Any {
   static childOf(parents: unknown | unknown[], options?: { transitive?: boolean }): Filter$.Any {
     const items = Array.isArray(parents) ? parents : [parents];
     const dxns = items.map((item) => {
-      if (isEchoUriLike(item)) {
-        return item.toString() as EchoURI.EchoURI;
+      if (isDxnLike(item)) {
+        return item.toString();
       }
-      throw new TypeError('childOf requires EchoURI values in query-lite');
+      throw new TypeError('childOf requires DXN values in query-lite');
     });
     return new FilterClass({
       type: 'child-of',
@@ -466,17 +466,12 @@ class QueryClass implements Query$.Any {
     return wrapper.from(source, options);
   }
 
-  from(arg: any, options?: { includeFeeds?: boolean }): Query$.Any {
+  from(arg: any, _options?: { includeFeeds?: boolean }): Query$.Any {
     if (arg === 'all-accessible-spaces') {
       return new QueryClass({
         type: 'from',
         query: this.ast,
-        from: {
-          _tag: 'scope',
-          scope: {
-            ...(options?.includeFeeds ? { allFeedsFromSpaces: true } : {}),
-          },
-        },
+        from: { _tag: 'scope', scopes: [] },
       });
     }
 
@@ -484,7 +479,7 @@ class QueryClass implements Query$.Any {
       return new QueryClass({
         type: 'from',
         query: this.ast,
-        from: { _tag: 'scope', scope: arg },
+        from: { _tag: 'scope', scopes: Array.isArray(arg) ? arg : [arg] },
       });
     }
 
@@ -655,26 +650,23 @@ const isDxnLike = (value: unknown): value is DXN.DXN => {
   );
 };
 
-const isEchoUriLike = (value: unknown): value is EchoURI.EchoURI => {
-  if (typeof value === 'string') {
-    return value.startsWith('echo:') || value.startsWith('dxn:echo:') || value.startsWith('dxn:queue:');
+const SCOPE_TAGS = new Set(['space', 'feed', 'registry']);
+
+const _isScopeLike = (value: unknown): value is QueryAST.Scope | QueryAST.Scope[] => {
+  if (Array.isArray(value)) {
+    return value.every((item) => _isSingleScopeLike(item));
   }
+  return _isSingleScopeLike(value);
+};
+
+const _isSingleScopeLike = (value: unknown): value is QueryAST.Scope => {
   return (
     typeof value === 'object' &&
     value !== null &&
-    'toString' in value &&
-    typeof value.toString === 'function' &&
-    isEchoUriLike(value.toString())
+    !Array.isArray(value) &&
+    '_tag' in value &&
+    SCOPE_TAGS.has((value as Record<string, unknown>)['_tag'] as string)
   );
-};
-
-const SCOPE_KEYS = new Set(['spaceIds', 'feeds', 'allFeedsFromSpaces']);
-
-const _isScopeLike = (value: unknown): value is QueryAST.Scope => {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-    return false;
-  }
-  return Object.keys(value).every((key) => SCOPE_KEYS.has(key));
 };
 
 const prettyFilter = (filter: QueryAST.Filter): string => {
@@ -777,18 +769,21 @@ const prettyQuery = (query: QueryAST.Query): string => {
     }
     case 'from': {
       if (query.from._tag === 'scope') {
-        const scope = query.from.scope;
-        const parts: string[] = [];
-        if (scope.spaceIds !== undefined) {
-          parts.push(`spaceIds: [${scope.spaceIds.join(', ')}]`);
+        if (query.from.scopes.length === 0) {
+          return `${prettyQuery(query.query)}.from('all-accessible-spaces')`;
         }
-        if (scope.feeds !== undefined) {
-          parts.push(`feeds: [${scope.feeds.join(', ')}]`);
-        }
-        if (scope.allFeedsFromSpaces !== undefined) {
-          parts.push(`allFeedsFromSpaces: ${scope.allFeedsFromSpaces}`);
-        }
-        return `${prettyQuery(query.query)}.from({ ${parts.join(', ')} })`;
+        const scopeStrs = query.from.scopes.map((scope) => {
+          if (scope._tag === 'space') {
+            return scope.includeAllFeeds
+              ? `{ space: ${JSON.stringify(scope.spaceId)}, includeAllFeeds: true }`
+              : `{ space: ${JSON.stringify(scope.spaceId)} }`;
+          }
+          if (scope._tag === 'feed') {
+            return `{ feed: ${String(scope.feedUri)} }`;
+          }
+          return `{ registry: ${JSON.stringify(scope.location)} }`;
+        });
+        return `${prettyQuery(query.query)}.from([${scopeStrs.join(', ')}])`;
       }
       return `${prettyQuery(query.query)}.from(${prettyQuery(query.from.query)})`;
     }

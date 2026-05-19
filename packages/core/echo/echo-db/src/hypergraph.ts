@@ -6,6 +6,7 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Database, type Entity, Filter, type Hypergraph, Query, Ref, Type } from '@dxos/echo';
+import { Registry } from '@dxos/echo-registry';
 import { batchEvents, type AnyProperties, setRefResolver } from '@dxos/echo/internal';
 import { DXN, EchoURI, type ObjectId, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -14,7 +15,14 @@ import { entry } from '@dxos/util';
 
 import { type ItemsUpdatedEvent } from './core-db';
 import { type EchoDatabaseImpl, RuntimeSchemaRegistry } from './proxy-db';
-import { GraphQueryContext, type QueryContext, QueryResultImpl, type QuerySource, SpaceQuerySource } from './query';
+import {
+  GraphQueryContext,
+  type QueryContext,
+  QueryResultImpl,
+  type QuerySource,
+  RegistryQuerySource,
+  SpaceQuerySource,
+} from './query';
 import type { Queue, QueueFactory } from './queue';
 
 const TRACE_REF_RESOLUTION = false;
@@ -28,15 +36,27 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
   // TODO(burdon): Space dependency?
   private readonly _owningObjects = new Map<SpaceId, unknown>();
-  private readonly _schemaRegistry = new RuntimeSchemaRegistry();
+  private readonly _registry: Registry.Registry = (() => {
+    const r = Registry.make();
+    // Seed the default PersistentType so schema resolution always works.
+    r.addTypes([Type.PersistentType]);
+    return r;
+  })();
   private readonly _updateEvent = new Event<ItemsUpdatedEvent>();
   private readonly _resolveEvents = new Map<SpaceId, Map<string, Event<Entity.Any>>>();
   private readonly _queryContexts = new Set<GraphQueryContext>();
   private readonly _querySourceProviders: QuerySourceProvider[] = [];
 
-  get schemaRegistry(): RuntimeSchemaRegistry {
-    return this._schemaRegistry;
+  get registry(): Registry.Registry {
+    return this._registry;
   }
+
+  /** @deprecated Use {@link registry} instead. */
+  get schemaRegistry(): RuntimeSchemaRegistry {
+    return this._schemaRegistryShim;
+  }
+
+  private readonly _schemaRegistryShim = new RuntimeSchemaRegistry(this._registry);
 
   /**
    * Register a database.
@@ -168,9 +188,9 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         let status: string = '';
         try {
           if (DXN.isDXN(uri)) {
-            const typeEntity = this.schemaRegistry.getSchemaByDXN(uri);
+            const typeEntity = this._registry.getTypeByDXN(String(uri));
             status = typeEntity != null ? 'resolved' : 'missing';
-            return typeEntity != null ? Type.getSchema(typeEntity) : undefined;
+            return typeEntity;
           } else if (EchoURI.isEchoURI(uri)) {
             status = 'error';
             throw new Error('Not implemented: Resolving schema stored in the database');
@@ -462,6 +482,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     for (const database of this._databases.values()) {
       context.addQuerySource(new SpaceQuerySource(database));
     }
+    context.addQuerySource(new RegistryQuerySource(this._registry));
     for (const provider of this._querySourceProviders) {
       context.addQuerySource(provider.create());
     }

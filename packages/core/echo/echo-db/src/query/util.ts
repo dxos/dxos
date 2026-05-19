@@ -13,9 +13,9 @@ export const getTargetSpacesForQuery = (query: QueryAST.Query): SpaceId[] => {
 
   const visitor = (node: QueryAST.Query) => {
     if (node.type === 'from' && node.from._tag === 'scope') {
-      if (node.from.scope.spaceIds) {
-        for (const spaceId of node.from.scope.spaceIds) {
-          spaces.add(SpaceId.make(spaceId));
+      for (const scope of node.from.scopes) {
+        if (scope._tag === 'space') {
+          spaces.add(SpaceId.make(scope.spaceId));
         }
       }
     }
@@ -74,7 +74,8 @@ export const isSimpleSelectionQuery = (
       if (!maybeFilter) {
         return null;
       }
-      const hasQueues = (query.from._tag === 'scope' && query.from.scope.feeds !== undefined) || maybeFilter.hasQueues;
+      const hasQueues =
+        (query.from._tag === 'scope' && query.from.scopes.some((s) => s._tag === 'feed')) || maybeFilter.hasQueues;
       return {
         filter: maybeFilter.filter,
         options: maybeFilter.options,
@@ -91,4 +92,44 @@ export const isSimpleSelectionQuery = (
       return null;
     }
   }
+};
+
+export type RegistryQueryScope = { included: boolean; locations: ReadonlySet<'local' | 'remote'> };
+
+/**
+ * Determines whether a query targets the in-process or remote registry.
+ *
+ * - No `from` clause → include local registry by default.
+ * - `from` clause with no registry scope entries → excluded.
+ * - `from` clause with registry scope entries → include the listed locations.
+ */
+export const getRegistryScopeForQuery = (query: QueryAST.Query): RegistryQueryScope => {
+  let fromNode: QueryAST.QueryFromClause | null = null;
+
+  QueryAST.visit(query, (node) => {
+    if (node.type === 'from') {
+      fromNode = node;
+    }
+  });
+
+  if (fromNode === null) {
+    return { included: true, locations: new Set(['local']) };
+  }
+
+  const clause = fromNode as QueryAST.QueryFromClause;
+  if (clause.from._tag !== 'scope') {
+    return { included: false, locations: new Set() };
+  }
+
+  const registryScopes = clause.from.scopes.filter(
+    (s): s is QueryAST.RegistryScope => s._tag === 'registry',
+  );
+  if (registryScopes.length === 0) {
+    return { included: false, locations: new Set() };
+  }
+
+  return {
+    included: true,
+    locations: new Set(registryScopes.map((s) => s.location)),
+  };
 };

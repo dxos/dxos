@@ -203,7 +203,7 @@ export interface Query<T> {
   /**
    * Query from a raw scope specification.
    */
-  'from'(scope: QueryAST.Scope): Query<T>;
+  'from'(scope: QueryAST.Scope | QueryAST.Scope[]): Query<T>;
 
   /**
    * Add options to a query.
@@ -337,6 +337,7 @@ class QueryClass implements Any {
       | View.View
       | Any
       | QueryAST.Scope
+      | QueryAST.Scope[]
       | 'all-accessible-spaces',
     options?: { includeFeeds?: boolean },
   ): Any {
@@ -358,20 +359,23 @@ class QueryClass implements Any {
       return new QueryClass({
         type: 'from',
         query: this.ast,
-        from: {
-          _tag: 'scope',
-          scope: {
-            ...(options?.includeFeeds ? { allFeedsFromSpaces: true } : {}),
-          },
-        },
+        from: { _tag: 'scope', scopes: [] },
       });
     }
 
-    if (_isScope(arg)) {
+    // Raw scope(s): tagged union objects with _tag 'space' | 'feed' | 'registry'.
+    if (Array.isArray(arg) && arg.every(_isRawScope)) {
       return new QueryClass({
         type: 'from',
         query: this.ast,
-        from: { _tag: 'scope', scope: arg },
+        from: { _tag: 'scope', scopes: arg as QueryAST.Scope[] },
+      });
+    }
+    if (_isRawScope(arg)) {
+      return new QueryClass({
+        type: 'from',
+        query: this.ast,
+        from: { _tag: 'scope', scopes: [arg] },
       });
     }
 
@@ -384,10 +388,11 @@ class QueryClass implements Any {
         query: this.ast,
         from: {
           _tag: 'scope',
-          scope: {
-            spaceIds: databases.map((db) => db.spaceId),
-            ...(options?.includeFeeds ? { allFeedsFromSpaces: true } : {}),
-          },
+          scopes: databases.map((db) => ({
+            _tag: 'space' as const,
+            spaceId: db.spaceId,
+            ...(options?.includeFeeds ? { includeAllFeeds: true } : {}),
+          })),
         },
       });
     }
@@ -413,24 +418,19 @@ class QueryClass implements Any {
     }
 
     const feedItems = items as Feed.Feed[];
-    const feedUris = feedItems.map((feed) => {
-      const uri = Feed.getQueueUri(feed);
-      if (!uri) {
+    const feedScopes = feedItems.map((feed) => {
+      const dxn = Feed.getQueueDxn(feed);
+      if (!dxn) {
         throw new TypeError(
           `Query.from() expects persisted Feed objects with a queue URI; got feed without a space (id=${Obj.getURI(feed)}).`,
         );
       }
-      return uri;
+      return { _tag: 'feed' as const, feedUri: String(dxn) };
     });
     return new QueryClass({
       type: 'from',
       query: this.ast,
-      from: {
-        _tag: 'scope',
-        scope: {
-          feeds: feedUris,
-        },
-      },
+      from: { _tag: 'scope', scopes: feedScopes },
     });
   }
 
@@ -553,6 +553,7 @@ export const from = (
     | Feed.Feed[]
     | Any
     | QueryAST.Scope
+    | QueryAST.Scope[]
     | 'all-accessible-spaces',
   options?: { includeFeeds?: boolean },
 ): Any => {
@@ -564,14 +565,17 @@ export const from = (
   return wrapper.from(source as any, options);
 };
 
-const SCOPE_KEYS = new Set(['spaceIds', 'feeds', 'allFeedsFromSpaces']);
+const SCOPE_TAGS = new Set<string>(['space', 'feed', 'registry']);
 
-/** Detect a raw Scope object (plain object with only Scope-valid keys). */
-const _isScope = (value: unknown): value is QueryAST.Scope => {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-    return false;
-  }
-  return Object.keys(value).every((key) => SCOPE_KEYS.has(key));
+/** Detect a raw Scope tagged-union object. */
+const _isRawScope = (value: unknown): value is QueryAST.Scope => {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value) &&
+    '_tag' in value &&
+    SCOPE_TAGS.has((value as Record<string, unknown>)['_tag'] as string)
+  );
 };
 
 /**

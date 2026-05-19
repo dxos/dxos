@@ -106,7 +106,7 @@ export class QueryPlanner {
 
   private _generateFromClause(query: QueryAST.QueryFromClause, context: GenerationContext): QueryPlan.Plan {
     if (query.from._tag === 'scope') {
-      return this._generate(query.query, { ...context, scope: query.from.scope });
+      return this._generate(query.query, { ...context, scope: query.from.scopes });
     }
 
     // Subquery from: flatten by rewriting the outer query's leaf select into a filter on the subquery.
@@ -873,7 +873,7 @@ type GenerationContext = {
   /**
    * The scope to select from (space IDs, queues, etc.).
    */
-  scope: QueryAST.Scope;
+  scope: readonly QueryAST.Scope[];
 
   /**
    * How to handle deleted objects.
@@ -888,7 +888,7 @@ type GenerationContext = {
 
 const DEFAULT_CONTEXT: GenerationContext = {
   originalQuery: null,
-  scope: {},
+  scope: [],
   deletedHandling: 'exclude',
   selectionInverted: false,
 };

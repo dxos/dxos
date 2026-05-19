@@ -146,21 +146,23 @@ export const getQueryTarget = (query: QueryAST.Query, space?: Space) => {
       if (from._tag !== 'scope') {
         return space?.db;
       }
-      const result = Option.fromNullable(from.scope.feeds).pipe(
-        Option.flatMap((feeds) => Array.head(feeds)),
-        Option.flatMap((feedRef) => Option.fromNullable(EchoURI.tryParse(String(feedRef)))),
-        Option.flatMap((echoUri) => {
-          const queueId = EchoURI.getObjectId(echoUri);
-          if (!queueId || !Key.ObjectId.isValid(queueId)) {
+      const feedScopes = from._tag === 'scope' ? from.scopes.filter((s) => s._tag === 'feed') : [];
+      const result = Option.fromNullable(feedScopes[0]).pipe(
+        Option.map((s) => s.feedUri),
+        Option.flatMap((feedUri) => Option.fromNullable(DXN.tryParse(String(feedUri)))),
+        Option.flatMap((parsed) => {
+          const q = parsed.asQueueDXN();
+          if (!q || !Key.ObjectId.isValid(q.queueId)) {
             return Option.none();
           }
+          const echoUri = EchoURI.make({ spaceId: q.spaceId as Key.SpaceId, objectId: q.queueId as Key.ObjectId });
           return Option.fromNullable(space?.queues.get(echoUri));
         }),
       );
       // Skip query when a requested feed is not found (structurally invalid DXN or valid DXN
       // referencing a feed not present in space.queues, e.g. not yet synced) to avoid 400 errors.
       // TODO(wittjosiah): Can we handle this upstream?
-      if (from.scope.feeds?.length && Option.isNone(result)) {
+      if (feedScopes.length > 0 && Option.isNone(result)) {
         return undefined;
       }
       return Option.getOrElse(result, () => space?.db);

@@ -120,7 +120,7 @@ export const createEdgeExistenceChecker = (
     if (!spaceId || !objectId) {
       return Effect.succeed(false);
     }
-    const queryAst = Query.select(Filter.id(objectId)).from({ spaceIds: [spaceId] }).ast;
+    const queryAst = Query.select(Filter.id(objectId)).from([{ _tag: 'space' as const, spaceId }]).ast;
     return Effect.tryPromise(() =>
       execQuery(spaceId, {
         query: JSON.stringify(queryAst),

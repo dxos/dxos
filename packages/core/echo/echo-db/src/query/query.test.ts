@@ -24,7 +24,7 @@ import {
 import { Filter, Query } from '@dxos/echo';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
-import { DXN, PublicKey } from '@dxos/keys';
+import { DXN, EchoURI, PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
@@ -620,9 +620,9 @@ describe('Query', () => {
 
       const obj: TestSchema.Task = await db
         .query(
-          Query.select(Filter.type(TestSchema.Task, { title: 'Queue type selector task' })).from({
-            feeds: [queue.uri],
-          }),
+          Query.select(Filter.type(TestSchema.Task, { title: 'Queue type selector task' })).from([
+            { _tag: 'feed' as const, feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue.uri)}:${EchoURI.getObjectId(queue.uri)}` },
+          ]),
         )
         .first();
 
@@ -679,10 +679,10 @@ describe('Query', () => {
         // Specific queue → space objects + only that queue's objects.
         const results = await graph
           .query(
-            Query.select(Filter.type(TestSchema.Task)).from({
-              spaceIds: bothSpaces,
-              feeds: [queue1.uri],
-            }),
+            Query.select(Filter.type(TestSchema.Task)).from([
+              ...bothSpaces.map((spaceId) => ({ _tag: 'space' as const, spaceId })),
+              { _tag: 'feed' as const, feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue1.uri)}:${EchoURI.getObjectId(queue1.uri)}` },
+            ]),
           )
           .run();
         const titles = results.map((r: TestSchema.Task) => r.title).sort();
@@ -693,10 +693,10 @@ describe('Query', () => {
         // Other specific queue → space objects + only that queue's objects.
         const results = await graph
           .query(
-            Query.select(Filter.type(TestSchema.Task)).from({
-              spaceIds: bothSpaces,
-              feeds: [queue2.uri],
-            }),
+            Query.select(Filter.type(TestSchema.Task)).from([
+              ...bothSpaces.map((spaceId) => ({ _tag: 'space' as const, spaceId })),
+              { _tag: 'feed' as const, feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue2.uri)}:${EchoURI.getObjectId(queue2.uri)}` },
+            ]),
           )
           .run();
         const titles = results.map((r: TestSchema.Task) => r.title).sort();
@@ -707,10 +707,11 @@ describe('Query', () => {
         // Both queues explicitly → same as allFeedsFromSpaces.
         const results = await graph
           .query(
-            Query.select(Filter.type(TestSchema.Task)).from({
-              spaceIds: bothSpaces,
-              feeds: [queue1.uri, queue2.uri],
-            }),
+            Query.select(Filter.type(TestSchema.Task)).from([
+              ...bothSpaces.map((spaceId) => ({ _tag: 'space' as const, spaceId })),
+              { _tag: 'feed' as const, feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue1.uri)}:${EchoURI.getObjectId(queue1.uri)}` },
+              { _tag: 'feed' as const, feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue2.uri)}:${EchoURI.getObjectId(queue2.uri)}` },
+            ]),
           )
           .run();
         const titles = results.map((r: TestSchema.Task) => r.title).sort();
@@ -967,14 +968,17 @@ describe('Query', () => {
       expect(results).toHaveLength(0);
     });
 
-    test('from({ feeds: [] }) returns empty results', async () => {
+    test('from a non-existent feed scope returns empty results', async () => {
       const peer = await builder.createPeer({ types: [TestSchema.Task] });
       const db = await peer.createDatabase();
 
       db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
       await db.flush({ indexes: true });
 
-      const results = await db.query(Query.select(Filter.type(TestSchema.Task)).from({ feeds: [] })).run();
+      const nonExistentFeed = 'dxn:queue:data:AAAAAAAAAAAAAAAAAAAAAAAAAAAA:00000000000000000000000000';
+      const results = await db
+        .query(Query.select(Filter.type(TestSchema.Task)).from([{ _tag: 'feed' as const, feedUri: nonExistentFeed }]))
+        .run();
       expect(results).toHaveLength(0);
     });
 
@@ -1957,9 +1961,9 @@ describe('Query', () => {
       {
         const objects = await db
           .query(
-            Query.select(Filter.text('TypeScript', { type: 'full-text' })).from({
-              feeds: [queue.uri],
-            }),
+            Query.select(Filter.text('TypeScript', { type: 'full-text' })).from([
+              { _tag: 'feed' as const, feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue.uri)}:${EchoURI.getObjectId(queue.uri)}` },
+            ]),
           )
           .run();
         expect(objects).toHaveLength(1);
@@ -1969,7 +1973,11 @@ describe('Query', () => {
       // Search for React.
       {
         const objects = await db
-          .query(Query.select(Filter.text('React', { type: 'full-text' })).from({ feeds: [queue.uri] }))
+          .query(
+            Query.select(Filter.text('React', { type: 'full-text' })).from([
+              { _tag: 'feed' as const, feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue.uri)}:${EchoURI.getObjectId(queue.uri)}` },
+            ]),
+          )
           .run();
         expect(objects).toHaveLength(1);
         expect((objects[0] as TestSchema.Task).title).toEqual('Getting Started with React');
@@ -1979,9 +1987,9 @@ describe('Query', () => {
       {
         const objects = await db
           .query(
-            Query.select(Filter.text('JavaScript', { type: 'full-text' })).from({
-              feeds: [queue.uri],
-            }),
+            Query.select(Filter.text('JavaScript', { type: 'full-text' })).from([
+              { _tag: 'feed' as const, feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue.uri)}:${EchoURI.getObjectId(queue.uri)}` },
+            ]),
           )
           .run();
         expect(objects).toHaveLength(0);
@@ -2033,9 +2041,9 @@ describe('Query', () => {
 
       const obj: TestSchema.Task = await db
         .query(
-          Query.select(Filter.text('TypeScript', { type: 'full-text' })).from({
-            feeds: [queue.uri],
-          }),
+          Query.select(Filter.text('TypeScript', { type: 'full-text' })).from([
+            { _tag: 'feed' as const, feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue.uri)}:${EchoURI.getObjectId(queue.uri)}` },
+          ]),
         )
         .first();
       expect(obj).toBeDefined();

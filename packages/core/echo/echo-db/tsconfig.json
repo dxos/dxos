@@ -76,6 +76,9 @@
       "path": "../echo-protocol"
     },
     {
+      "path": "../echo-registry"
+    },
+    {
       "path": "../feed"
     }
   ]

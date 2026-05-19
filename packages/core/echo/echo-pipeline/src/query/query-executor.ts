@@ -21,7 +21,7 @@ import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/e
 import { type RuntimeProvider, runAndForwardErrors, unwrapExit } from '@dxos/effect';
 import { EscapedPropPath, type IndexEngine, type ObjectMeta, type ReverseRef } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
-import { EchoURI, ObjectId, SpaceId, type URI } from '@dxos/keys';
+import { DXN, EchoURI, ObjectId, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
 import { compositeKey, getDeep, isNonNullable } from '@dxos/util';
@@ -267,32 +267,30 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
   for (const step of plan.steps) {
     switch (step._tag) {
       case 'SelectStep': {
-        // Extract spaceIds from scope.
-        if (step.scope.spaceIds && step.scope.spaceIds.length > 0) {
+        // Extract spaceIds from space-scoped entries.
+        const spaceScopes = step.scope.filter((s): s is QueryAST.SpaceScope => s._tag === 'space');
+        if (spaceScopes.length > 0) {
           if (!scopes.spaceIds) {
             scopes.spaceIds = new Set();
           }
-          for (const spaceId of step.scope.spaceIds) {
-            if (SpaceId.isValid(spaceId)) {
-              scopes.spaceIds.add(spaceId);
-            }
+          for (const s of spaceScopes) {
+            scopes.spaceIds.add(s.spaceId as SpaceId);
           }
         }
 
-        // Extract queueIds from explicit feed DXNs (queue-kinded) and derive spaceIds from them.
-        if (step.scope.feeds && step.scope.feeds.length > 0 && !step.scope.allFeedsFromSpaces) {
+        // Extract queueIds from feed-scoped entries and derive spaceIds from them.
+        const feedScopesForExtract = step.scope.filter((s): s is QueryAST.FeedScope => s._tag === 'feed');
+        const hasIncludeAllFeeds = spaceScopes.some((s) => s.includeAllFeeds === true);
+        if (feedScopesForExtract.length > 0 && !hasIncludeAllFeeds) {
           let parseFailed = false;
           const derivedQueueIds = new Set<ObjectId>();
           const derivedSpaceIds = new Set<SpaceId>();
-          for (const feedRef of step.scope.feeds ?? []) {
+          for (const feedEntry of feedScopesForExtract) {
             try {
-              // EchoURI.parse handles both `echo://` and legacy `dxn:queue:` formats.
-              const echoUri = EchoURI.parse(feedRef);
-              const queueId = EchoURI.getObjectId(echoUri);
-              const spaceId = EchoURI.getSpaceId(echoUri);
-              if (queueId && spaceId) {
-                derivedQueueIds.add(queueId);
-                derivedSpaceIds.add(spaceId);
+              const queueDXN = DXN.parse(String(feedEntry.feedUri)).asQueueDXN();
+              if (queueDXN) {
+                derivedQueueIds.add(queueDXN.queueId as ObjectId);
+                derivedSpaceIds.add(queueDXN.spaceId as SpaceId);
               }
             } catch {
               parseFailed = true;
@@ -585,9 +583,12 @@ export class QueryExecutor extends Resource {
   private async _execSelectStep(step: QueryPlan.SelectStep, workingSet: QueryItem[]): Promise<StepExecutionResult> {
     workingSet = [...workingSet];
 
-    const spaces = step.scope.spaceIds?.filter(SpaceId.isValid) ?? [];
-    const queues = step.scope.feeds ?? [];
-    const allQueuesFromSpaces = step.scope.allFeedsFromSpaces ?? false;
+    const execSpaceScopes = step.scope.filter((s): s is QueryAST.SpaceScope => s._tag === 'space');
+    const spaces = execSpaceScopes.map((s) => s.spaceId as SpaceId);
+    const queues = step.scope
+      .filter((s): s is QueryAST.FeedScope => s._tag === 'feed')
+      .map((s) => String(s.feedUri) as DXN.String);
+    const allQueuesFromSpaces = execSpaceScopes.some((s) => s.includeAllFeeds === true);
 
     const trace: ExecutionTrace = {
       ...ExecutionTrace.makeEmpty(),
@@ -1662,23 +1663,25 @@ export class QueryExecutor extends Resource {
   }
 }
 
-const extractSpaceIdFromQueue = (queueRef: string): SpaceId | undefined => {
-  // EchoURI.tryParse handles both `echo://` and legacy `dxn:queue:` formats.
-  const echoUri = EchoURI.tryParse(queueRef);
-  return echoUri ? EchoURI.getSpaceId(echoUri) : undefined;
+const extractSpaceIdFromQueue = (dxnStr: string): SpaceId | undefined => {
+  try {
+    return DXN.parse(dxnStr).asQueueDXN()?.spaceId as SpaceId | undefined;
+  } catch {
+    return undefined;
+  }
 };
 
-const extractQueueIds = (queues: readonly EchoURI.EchoURI[]): ObjectId[] | null => {
+const extractQueueIds = (queues: readonly DXN.String[]): ObjectId[] | null => {
   if (queues.length === 0) {
     return null;
   }
-  return queues
-    .map((queueRef) => {
-      // EchoURI.tryParse handles both `echo://` and legacy `dxn:queue:` formats.
-      const echoUri = EchoURI.tryParse(queueRef);
-      return echoUri ? EchoURI.getObjectId(echoUri) : undefined;
-    })
-    .filter((id): id is ObjectId => id !== undefined);
+  return queues.map((dxnStr) => {
+    try {
+      return DXN.parse(dxnStr).asQueueDXN()?.queueId as ObjectId | undefined;
+    } catch {
+      return undefined;
+    }
+  }).filter((id): id is ObjectId => id !== undefined);
 };
 
 /**

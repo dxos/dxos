@@ -31,7 +31,7 @@ const QUEUE_DXN = EchoURI.parse('dxn:queue:data:B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5P
 const QUEUE_SPACE_ID = SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO');
 const QUEUE_ID = ObjectId.make('01JJRA86VK4H1TEB6QQVSWXP0E');
 
-const withSpace = (q: any): any => (q as any).from({ spaceIds: [SPACE_ID] });
+const withSpace = (q: any): any => (q as any).from([{ _tag: 'space' as const, spaceId: SPACE_ID }]);
 
 /**
  * Creates a QueryExecutor with no real dependencies — only the query is used
@@ -237,7 +237,7 @@ describe('QueryExecutor.matchesHint — queue scope derives spaceId', () => {
       automergeHost: {} as any,
       spaceStateManager: {} as any,
       queryId: 'test',
-      query: Query.select(Filter.type(TestSchema.Task)).from({ feeds: [QUEUE_DXN] }).ast,
+      query: Query.select(Filter.type(TestSchema.Task)).from([{ _tag: 'feed' as const, feedUri: QUEUE_DXN }]).ast,
       reactivity: 'reactive' as any,
     });
     // Hint carries the space derived from the queue DXN → should match.
@@ -256,7 +256,7 @@ describe('QueryExecutor.matchesHint — queue scope derives spaceId', () => {
       automergeHost: {} as any,
       spaceStateManager: {} as any,
       queryId: 'test',
-      query: Query.select(Filter.type(TestSchema.Task)).from({ feeds: [QUEUE_DXN] }).ast,
+      query: Query.select(Filter.type(TestSchema.Task)).from([{ _tag: 'feed' as const, feedUri: QUEUE_DXN }]).ast,
       reactivity: 'reactive' as any,
     });
     // Hint constrained to the exact queue → match.

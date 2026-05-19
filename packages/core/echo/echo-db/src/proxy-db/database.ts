@@ -229,7 +229,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     query = Filter.is(query) ? Query.select(query) : query;
 
     if (!isQueryScoped(query.ast)) {
-      query = query.from({ spaceIds: [this.spaceId] });
+      query = query.from(this);
     }
 
     return this._coreDatabase.graph.query(query);
