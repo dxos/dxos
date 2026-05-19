@@ -34,6 +34,7 @@ export const TrackList = ({
   onRemove,
   classNames,
 }: TrackListProps) => {
+  // TODO(burdon): Reuse list.
   return (
     <div
       className={mx('flex flex-col gap-1 p-2 overflow-y-auto', classNames)}
@@ -50,10 +51,7 @@ export const TrackList = ({
             role='option'
             aria-selected={selected}
             tabIndex={selected ? 0 : -1}
-            className={mx(
-              'flex items-center gap-2 px-2 py-1 rounded cursor-pointer text-sm',
-              selected ? 'bg-primary-500/15 text-primary-foreground' : 'hover:bg-neutral-500/10',
-            )}
+            className='flex items-center gap-2 px-2 py-1 rounded-sm cursor-pointer text-sm dx-selected dx-hover'
             onClick={() => onSelect?.(track.id)}
             onKeyDown={(event) => {
               if (event.key === 'Enter' || event.key === ' ') {
@@ -86,7 +84,7 @@ export const TrackList = ({
             {onRemove && (
               <button
                 type='button'
-                className='p-1 rounded text-xs text-neutral-500 hover:text-red-500'
+                className='p-1 rounded text-xs text-neutral-500'
                 onClick={(event) => {
                   event.stopPropagation();
                   onRemove(track.id);

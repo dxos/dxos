@@ -10,7 +10,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { Feed as EchoFeed, Filter, Obj, Ref } from '@dxos/echo';
+import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
@@ -50,7 +50,7 @@ const seedSpace =
         posts.push(space.db.add(generateCuratedPost({ read: i < readCount })));
       }
 
-      const feeds: Subscription.Feed[] = [];
+      const feeds: Subscription.Subscription[] = [];
       for (let i = 0; i < options.feedCount; i++) {
         feeds.push(space.db.add(generateFeed()));
       }
@@ -70,7 +70,7 @@ const buildMeta = (options: {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Subscription.Feed, Subscription.Post, Magazine.Magazine],
+          types: [Subscription.Subscription, Subscription.Post, Magazine.Magazine],
           onClientInitialized: seedSpace(options),
         }),
         SpacePlugin({}),
@@ -121,7 +121,7 @@ const seedSpaceWithQueueItems = ({ client }: { client: Client }) =>
     // CurateMagazine still iterates `magazine.feeds` and reads the backing
     // queue, which is what we want to exercise.
     const subscriptionFeed = space.db.add(
-      Subscription.makeFeed({
+      Subscription.makeSubscription({
         name: 'Curate Test Feed',
         type: 'rss',
       }),
@@ -133,7 +133,7 @@ const seedSpaceWithQueueItems = ({ client }: { client: Client }) =>
     // is necessary post-`db.add` because the inline `savedTarget` from
     // `Ref.make(echoFeed)` is dropped when the ref is encoded for persistence.
     const echoFeed = yield* Effect.promise(() => subscriptionFeed.feed!.load());
-    const feedDXN = EchoFeed.getQueueDxn(echoFeed);
+    const feedDXN = Feed.getQueueDxn(echoFeed);
     if (!feedDXN) {
       throw new Error('Backing ECHO feed has no queue DXN — story setup is broken.');
     }
@@ -141,7 +141,7 @@ const seedSpaceWithQueueItems = ({ client }: { client: Client }) =>
     const feedRef = Ref.make(subscriptionFeed);
     const posts = [
       Obj.make(Subscription.Post, {
-        feed: feedRef,
+        source: feedRef,
         title: 'Distributed systems are hard',
         description: 'A long-form discussion of consistency, availability, and partition tolerance.',
         author: 'Test Author',
@@ -150,7 +150,7 @@ const seedSpaceWithQueueItems = ({ client }: { client: Client }) =>
         link: 'https://example.com/post-a',
       }),
       Obj.make(Subscription.Post, {
-        feed: feedRef,
+        source: feedRef,
         title: 'Local-first is the future',
         description: 'How CRDTs and last-writer-wins reconcile collaborative state across peers.',
         author: 'Test Author',
@@ -159,7 +159,7 @@ const seedSpaceWithQueueItems = ({ client }: { client: Client }) =>
         link: 'https://example.com/post-b',
       }),
       Obj.make(Subscription.Post, {
-        feed: feedRef,
+        source: feedRef,
         title: 'P2P discovery patterns',
         description: 'Comparing rendezvous, DHT-based, and broadcast strategies for peer discovery.',
         author: 'Test Author',
@@ -186,7 +186,7 @@ export const CurateFlow: Story = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [EchoFeed.Feed, Subscription.Feed, Subscription.Post, Magazine.Magazine],
+          types: [Feed.Feed, Subscription.Subscription, Subscription.Post, Magazine.Magazine],
           onClientInitialized: seedSpaceWithQueueItems,
         }),
         SpacePlugin({}),
@@ -229,8 +229,7 @@ export const CurateFlow: Story = {
     // Give the operation enough time to run.
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    // The previously-shown tiles must still be present; nothing should have
-    // crashed the plank.
+    // The previously-shown tiles must still be present; nothing should have crashed the plank.
     await expect(await canvas.findByText('Distributed systems are hard')).toBeVisible();
     await expect(await canvas.findByText('Local-first is the future')).toBeVisible();
     await expect(await canvas.findByText('P2P discovery patterns')).toBeVisible();

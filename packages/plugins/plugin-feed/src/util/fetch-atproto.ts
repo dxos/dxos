@@ -51,7 +51,7 @@ export const fetchAtproto: FeedFetcher = async (url: string, options?: FetchOpti
 
   const authorName = feedItems[0]?.post.author.displayName ?? feedItems[0]?.post.author.handle ?? actor;
 
-  const feed = Subscription.makeFeed({
+  const feed = Subscription.makeSubscription({
     name: authorName,
     url,
     description: `Bluesky posts from @${feedItems[0]?.post.author.handle ?? actor}`,
