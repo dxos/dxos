@@ -12,6 +12,7 @@ import { DXN, Filter, Obj, Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { useQuery } from '@dxos/react-client/echo';
 import { Input, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form';
 import { FeedAnnotation } from '@dxos/schema';
 
 import { meta } from '#meta';
@@ -80,7 +81,7 @@ export const AgentProperties = ({ agent }: AgentPropertiesProps) => {
   }
 
   return (
-    <div className='dx-expander flex flex-col'>
+    <Form.Section>
       <Input.Root>
         <Input.Label classNames='mt-form-gap'>{t('subscriptions.label')}</Input.Label>
       </Input.Root>
@@ -98,6 +99,6 @@ export const AgentProperties = ({ agent }: AgentPropertiesProps) => {
           </div>
         </Input.Root>
       ))}
-    </div>
+    </Form.Section>
   );
 };

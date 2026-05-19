@@ -202,3 +202,22 @@ export const IdiomSchema = Schema.Struct({
   host: IdiomHostSchema,
 });
 export type Idiom = typeof IdiomSchema.Type;
+
+//
+// Sidecar file format
+//
+
+/**
+ * Shape of the `plugins.json` sidecar stored in R2 / written by the cache
+ * upload script. Uses plain mutable arrays so callers can work with standard
+ * JSON.parse output without readonly friction.
+ */
+export type PluginsFile = {
+  version: 1;
+  plugins: Plugin[];
+  surfaces: Surface[];
+  capabilities: Capability[];
+  operations: Operation[];
+  schemas: SchemaContribution[];
+  idioms?: Idiom[];
+};
