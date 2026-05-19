@@ -5,8 +5,6 @@
 import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
-import specContent from '../PLUGIN.mdl?raw';
-
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.sequencer',
   name: 'Sequencer',
@@ -18,6 +16,6 @@ export const meta: Plugin.Meta = {
   icon: 'ph--music-notes--regular',
   iconHue: 'fuchsia',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-sequencer',
-  spec: 'https://github.com/dxos/dxos/blob/main/packages/plugins/plugin-sequencer/PLUGIN.mdl',
-  specContent,
+  version: '0.8.3',
+  spec: 'https://unpkg.com/@dxos/plugin-sequencer@0.8.3/PLUGIN.mdl',
 };

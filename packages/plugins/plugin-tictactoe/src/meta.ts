@@ -6,8 +6,6 @@ import { type Plugin } from '@dxos/app-framework';
 import { meta as gameMeta } from '@dxos/plugin-game';
 import { trim } from '@dxos/util';
 
-import specContent from '../PLUGIN.mdl?raw';
-
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.tictactoe',
   name: 'Tic-Tac-Toe',
@@ -19,6 +17,6 @@ export const meta: Plugin.Meta = {
   iconHue: 'cyan',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-tictactoe',
   dependsOn: [gameMeta.id],
-  spec: 'https://github.com/dxos/dxos/blob/main/packages/plugins/plugin-tictactoe/PLUGIN.mdl',
-  specContent,
+  version: '0.8.3',
+  spec: 'https://unpkg.com/@dxos/plugin-tictactoe@0.8.3/PLUGIN.mdl',
 };

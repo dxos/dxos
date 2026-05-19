@@ -12,7 +12,7 @@ import { LayoutOperation } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
 
 import { PluginDetail } from '#components';
-import { getPluginPath, getPluginSpecPath } from '#meta';
+import { getPluginPath } from '#meta';
 
 import { useDisableConfirmation, useRegistryPluginProvider, useRegistryPlugins, useRemotePluginIds } from '../../hooks';
 
@@ -74,12 +74,6 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
     [invokePromise],
   );
 
-  const handleNavigateToSpec = useCallback(() => {
-    void invokePromise(LayoutOperation.Open, {
-      subject: [getPluginSpecPath(pluginId)],
-    });
-  }, [invokePromise, pluginId]);
-
   const actions = usePluginActions({
     manager,
     pluginId,
@@ -108,7 +102,6 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
       onInstall={!isInstalled && moduleUrl ? actions.handleInstall : undefined}
       onInstallVersion={pickerVersions.length > 0 ? actions.handleInstallVersion : undefined}
       onNavigateToPlugin={handleNavigateToPlugin}
-      onNavigateToSpec={plugin.meta.specContent ? handleNavigateToSpec : undefined}
       onResolvePluginName={handleResolvePluginName}
       onUninstall={canUninstall ? actions.handleUninstall : undefined}
       onUpdate={hasUpdate ? actions.handleUpdate : undefined}

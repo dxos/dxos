@@ -72,9 +72,6 @@
       "path": "../../ui/ui-theme"
     },
     {
-      "path": "../plugin-code"
-    },
-    {
       "path": "../plugin-graph"
     },
     {

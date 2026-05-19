@@ -5,8 +5,6 @@
 import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
-import specContent from '../PLUGIN.mdl?raw';
-
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.sidekick',
   name: 'Sidekick',
@@ -17,6 +15,6 @@ export const meta: Plugin.Meta = {
   icon: 'ph--brain--regular',
   iconHue: 'violet',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-sidekick',
-  spec: 'https://github.com/dxos/dxos/blob/main/packages/plugins/plugin-sidekick/PLUGIN.mdl',
-  specContent,
+  version: '0.8.3',
+  spec: 'https://unpkg.com/@dxos/plugin-sidekick@0.8.3/PLUGIN.mdl',
 };

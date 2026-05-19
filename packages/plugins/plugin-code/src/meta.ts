@@ -5,8 +5,6 @@
 import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
-import specContent from '../PLUGIN.mdl?raw';
-
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.code',
   name: 'Code',
@@ -17,6 +15,6 @@ export const meta: Plugin.Meta = {
   icon: 'ph--code--regular',
   iconHue: 'indigo',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-code',
-  spec: 'https://github.com/dxos/dxos/blob/main/packages/plugins/plugin-code/PLUGIN.mdl',
-  specContent,
+  version: '0.1.0',
+  spec: 'https://unpkg.com/@dxos/plugin-code@0.1.0/PLUGIN.mdl',
 };

@@ -9,7 +9,7 @@ import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-t
 import { Operation } from '@dxos/compute';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
-import { PLUGIN_SPEC_NODE_TYPE, REGISTRY_ID, REGISTRY_KEY, registryCategoryId, meta } from '#meta';
+import { REGISTRY_ID, REGISTRY_KEY, registryCategoryId, meta } from '#meta';
 
 import { LOAD_PLUGIN_DIALOG } from '../containers';
 
@@ -152,31 +152,6 @@ export default Capability.makeModule(
               },
             },
           ]),
-      }),
-      GraphBuilder.createExtension({
-        id: 'plugin-spec',
-        match: NodeMatcher.whenNodeType('org.dxos.plugin'),
-        connector: (node) => {
-          const plugin = node.data as Plugin.Plugin;
-          if (!plugin?.meta?.specContent) {
-            return Effect.succeed([]);
-          }
-          return Effect.succeed([
-            Node.make({
-              id: 'spec',
-              type: PLUGIN_SPEC_NODE_TYPE,
-              data: {
-                pluginId: plugin.meta.id,
-                name: plugin.meta.name,
-                content: plugin.meta.specContent,
-              },
-              properties: {
-                label: ['plugin-spec.label', { ns: meta.id }],
-                icon: 'ph--file-text--regular',
-              },
-            }),
-          ]);
-        },
       }),
       GraphBuilder.createExtension({
         id: 'plugins',

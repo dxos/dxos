@@ -61,13 +61,6 @@ export type PluginDetailProps = {
    */
   onNavigateToPlugin?: (pluginId: string) => void;
   /**
-   * When provided, a "Specification" link is rendered alongside the other
-   * resource links — opening the plugin's bundled `PLUGIN.mdl` in a
-   * read-only spec viewer surface. Left undefined when the plugin's meta
-   * has no `spec` content.
-   */
-  onNavigateToSpec?: () => void;
-  /**
    * Resolves a plugin id to its display name for dependency / dependent
    * chip labels. The component delegates the lookup to the parent so each
    * surface can decide how to source names (e.g. `Plugin.Meta.name` from the
@@ -108,7 +101,6 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
       onInstall,
       onInstallVersion,
       onNavigateToPlugin,
-      onNavigateToSpec,
       onResolvePluginName,
       onUninstall,
       onUpdate,
@@ -181,22 +173,12 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                     </Link>
                   )}
 
-                  {spec &&
-                    (onNavigateToSpec ? (
-                      <button
-                        type='button'
-                        onClick={onNavigateToSpec}
-                        className='text-sm text-description hover:underline cursor-pointer'
-                      >
-                        {t('spec.label')}
-                        <Icon icon='ph--file-text--bold' size={3} classNames='inline-block leading-none mx-1' />
-                      </button>
-                    ) : (
-                      <Link href={spec} target='_blank' rel='noreferrer' classNames='text-sm text-description'>
-                        {t('spec.label')}
-                        <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mx-1' />
-                      </Link>
-                    ))}
+                  {spec && (
+                    <Link href={spec} target='_blank' rel='noreferrer' classNames='text-sm text-description'>
+                      {t('spec.label')}
+                      <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mx-1' />
+                    </Link>
+                  )}
                 </div>
               </div>
               {((dependencies && dependencies.length > 0) || (dependents && dependents.length > 0)) && (

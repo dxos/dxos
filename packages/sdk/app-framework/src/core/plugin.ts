@@ -163,6 +163,12 @@ export type Meta = {
   name: string;
 
   /**
+   * Semver version string of the plugin, typically the publishing package's
+   * `package.json` version.
+   */
+  version?: string;
+
+  /**
    * Short description of plugin functionality.
    */
   description?: string;
@@ -208,14 +214,6 @@ export type Meta = {
    * Rendered as a "Specification" link in the plugin detail view.
    */
   spec?: string;
-
-  /**
-   * MDL spec content (inlined from the plugin's `PLUGIN.mdl` file at build time).
-   *
-   * When present, the registry surface exposes a virtual node that renders the
-   * spec via the plugin-code editor in read-only mode.
-   */
-  specContent?: string;
 
   /**
    * IDs of plugins this plugin functionally depends on.

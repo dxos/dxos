@@ -12931,9 +12931,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/plugin-code':
-        specifier: workspace:*
-        version: link:../plugin-code
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
