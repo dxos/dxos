@@ -21,8 +21,8 @@ describe('LinearPlugin', () => {
     });
 
     // After autoStart: SetupAppGraph fires (cascading SetupIntegrationProviders via
-    // IntegrationPlugin's AppGraphBuilder), and SetupOperationHandler fires from
-    // OperationPlugin — both reach the LinearPlugin's modules.
+    // IntegrationPlugin's AppGraphBuilder), and SetupProcessManager fires from
+    // ProcessManagerPlugin — both reach the LinearPlugin's modules.
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([moduleId('LinearIntegrationProvider'), moduleId('OperationHandler')]),
     );

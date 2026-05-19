@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 
-import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
+import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as shellTranslations } from '@dxos/shell/react';
@@ -30,8 +30,7 @@ const meta = {
               yield* initializeIdentity(client);
             }),
         }),
-        OperationPlugin(),
-        RuntimePlugin(),
+        ProcessManagerPlugin(),
       ],
     }),
   ],

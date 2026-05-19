@@ -367,19 +367,19 @@ describe('AutomergeRepo', () => {
         doc.text = 'Hello world';
       });
 
-      // Without peer candidates, the client has no source for this doc → unavailable.
+      // Without peer candidates, the patched subduction source keeps the
+      // query pending (`'loading'`) instead of driving it to
+      // `'unavailable'` — it will retry on the next connection-state
+      // change.
       const progress = client.findWithProgress(docA.url);
-      await waitForQueryState(progress, ['unavailable'], { timeout: 1_000 });
-      expect(progress.peek().state).to.equal('unavailable');
+      await expect.poll(() => progress.peek().state, { timeout: 500, interval: 50 }).toEqual('loading');
 
       adapter1.peerCandidate(adapter2.peerId!);
       await sleep(100);
       adapter2.peerCandidate(adapter1.peerId!);
 
-      // Reconnecting cycles the peers and should re-trigger sync; the doc
-      // becomes available. Can't use `progress.whenReady()` here because
-      // the query is already in `'unavailable'` and `whenReady` rejects
-      // immediately for that state.
+      // Reconnecting cycles the peers and re-triggers sync; the doc
+      // becomes available.
       await reconnectAdapters(adapters);
       await waitForQueryState(progress, ['ready'], { timeout: 1_000 });
     });

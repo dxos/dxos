@@ -9,12 +9,11 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, getActiveSpace, getPersonalSpace } from '@dxos/app-toolkit';
 import { AgentPrompt, Chat } from '@dxos/assistant-toolkit';
-import { Blueprint, Routine, Operation } from '@dxos/compute';
+import { Blueprint, Operation, Routine } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { DXN, Database, Filter, Obj, type Ref } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
-import { AutomationCapabilities } from '@dxos/plugin-automation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { linkedSegment } from '@dxos/react-ui-attention';
@@ -46,11 +45,9 @@ export default Capability.makeModule(
               data: () =>
                 Effect.gen(function* () {
                   // TODO(dmaretskyi): This goes away when composer will have unified operation invocations.
-                  const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
                   const db = Obj.getDatabase(chat);
                   invariant(db);
-                  const runtime = yield* computeRuntime.getRuntime(db.spaceId).runtimeEffect;
-                  yield* Operation.invoke(AssistantOperation.UpdateChatName, { chat }).pipe(Effect.provide(runtime));
+                  yield* Operation.invoke(AssistantOperation.UpdateChatName, { chat }, { spaceId: db.spaceId });
                 }),
               properties: {
                 label: ['chat-update-name.label', { ns: meta.id }],
@@ -94,6 +91,14 @@ export default Capability.makeModule(
               properties: {
                 label: ['import-compute-operations.label', { ns: meta.id }],
                 icon: 'ph--download-simple--regular',
+              },
+            }),
+            Node.makeAction({
+              id: AssistantOperation.ToggleTracePanelDebug.meta.key,
+              data: () => Operation.invoke(AssistantOperation.ToggleTracePanelDebug, {}),
+              properties: {
+                label: ['toggle-trace-panel-debug.label', { ns: meta.id }],
+                icon: 'ph--brackets-curly--regular',
               },
             }),
             Node.makeAction({

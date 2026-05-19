@@ -40,10 +40,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/SheetPlugin.workerd.ts",
         "node": "./src/SheetPlugin.node.ts",
         "default": "./src/SheetPlugin.tsx"
       },
       "types": "./dist/types/src/SheetPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/SheetPlugin.workerd.mjs",
       "node": "./dist/lib/neutral/SheetPlugin.node.mjs",
       "default": "./dist/lib/neutral/SheetPlugin.mjs"
     },

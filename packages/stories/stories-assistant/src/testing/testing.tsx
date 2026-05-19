@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import React, { type FC, ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
@@ -20,19 +21,16 @@ import { AppActivationEvents, AppCapabilities, LayoutOperation, getSpacePath } f
 import { AiContext } from '@dxos/assistant';
 import { Agent, AgentBlueprint, AgentHandlers, PlanningBlueprint, PlanningHandlers } from '@dxos/assistant-toolkit';
 import { type Space } from '@dxos/client/echo';
-import { Blueprint, Routine } from '@dxos/compute';
-import { Trigger } from '@dxos/compute';
-import { Operation, OperationHandlerSet } from '@dxos/compute';
+import { Blueprint, Routine, Trigger, Operation, OperationHandlerSet, ServiceResolver } from '@dxos/compute';
 import { ExampleHandlers } from '@dxos/compute/testing';
-import { Feed, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
+import { QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Assistant, AssistantOperation } from '@dxos/plugin-assistant';
 import { AssistantPlugin } from '@dxos/plugin-assistant/plugin';
-import { AutomationCapabilities, AutomationEvents } from '@dxos/plugin-automation';
 import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
 import { ClientCapabilities, ClientEvents, type ClientPluginOptions } from '@dxos/plugin-client';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
@@ -287,11 +285,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
   }),
   Plugin.addModule(({ createAgent, onChatCreated }) => ({
     id: 'com.example.plugin.testing.module.setup',
-    activatesOn: ActivationEvent.allOf(
-      ActivationEvents.OperationInvokerReady,
-      ClientEvents.SpacesReady,
-      AutomationEvents.ComputeRuntimeReady,
-    ),
+    activatesOn: ActivationEvent.allOf(ActivationEvents.ProcessManagerReady, ClientEvents.SpacesReady),
     activate: Effect.fnUntraced(function* () {
       const { invoke } = yield* Capability.get(Capabilities.OperationInvoker);
       const client = yield* Capability.get(ClientCapabilities.Client);
@@ -309,7 +303,13 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
             instructions: agentOptions.instructions ?? '',
           },
           AgentBlueprint.make(),
-        ).pipe(withComputeRuntime(space.id));
+        ).pipe(
+          Effect.provide(
+            ServiceResolver.provide({ space: space.id }, Database.Service, Feed.FeedService, QueueService).pipe(
+              Layer.provide(Capability.asLayer(Capabilities.ServiceResolver, ServiceResolver.ServiceResolver)),
+            ),
+          ),
+        );
         yield* Effect.tryPromise(() => space.db.flush({ indexes: true }));
 
         if (onChatCreated) {
@@ -331,7 +331,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
   })),
   Plugin.addModule(({ onChatCreated }) => ({
     id: 'com.example.plugin.testing.module.operationHandler',
-    activatesOn: ActivationEvents.SetupOperationHandler,
+    activatesOn: ActivationEvents.SetupProcessManager,
     activate: Effect.fnUntraced(function* () {
       const client = yield* Capability.get(ClientCapabilities.Client);
       return Capability.contributes(
@@ -374,14 +374,3 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
   })),
   Plugin.make,
 );
-
-const withComputeRuntime =
-  (spaceId: SpaceId) =>
-  <A, E, R>(
-    effect: Effect.Effect<A, E, R>,
-  ): Effect.Effect<A, E, Exclude<R, AutomationCapabilities.ComputeServices> | Capability.Service> =>
-    Effect.gen(function* () {
-      const provider = yield* Capability.get(AutomationCapabilities.ComputeRuntime).pipe(Effect.orDie);
-      const runtime = yield* provider.getRuntime(spaceId).runtimeEffect;
-      return yield* effect.pipe(Effect.provide(runtime));
-    });

@@ -641,7 +641,6 @@ catalog:
   versor: ^0.2.0
   vite: ^8.0.13
   vite-node: ^6.0.0
-  vite-plugin-css-injected-by-js: ^5.0.1
   vite-plugin-devtools-json: ^0.4.1
   vite-plugin-glslify: ^2.3.0
   vite-plugin-inspect: ^11.3.3
@@ -753,6 +752,7 @@ overrides:
   ws: '>=8.17.1'
 
 patchedDependencies:
+  '@automerge/automerge-repo@2.6.0-subduction.17': patches/@automerge__automerge-repo@2.6.0-subduction.17.patch
   '@automerge/automerge-subduction@0.12.1': patches/@automerge__automerge-subduction@0.12.1.patch
   '@vitest/browser@4.1.6': patches/@vitest__browser@4.1.6.patch
   js-clipper@1.0.1: patches/js-clipper@1.0.1.patch

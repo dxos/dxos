@@ -40,10 +40,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/TablePlugin.workerd.ts",
         "node": "./src/TablePlugin.node.ts",
         "default": "./src/TablePlugin.tsx"
       },
       "types": "./dist/types/src/TablePlugin.d.ts",
+      "workerd": "./dist/lib/neutral/TablePlugin.workerd.mjs",
       "node": "./dist/lib/neutral/TablePlugin.node.mjs",
       "default": "./dist/lib/neutral/TablePlugin.mjs"
     },

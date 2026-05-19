@@ -50,10 +50,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/ThreadPlugin.workerd.ts",
         "node": "./src/ThreadPlugin.node.ts",
         "default": "./src/ThreadPlugin.tsx"
       },
       "types": "./dist/types/src/ThreadPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/ThreadPlugin.workerd.mjs",
       "node": "./dist/lib/neutral/ThreadPlugin.node.mjs",
       "default": "./dist/lib/neutral/ThreadPlugin.mjs"
     },

@@ -45,10 +45,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/SamplePlugin.workerd.ts",
         "node": "./src/SamplePlugin.node.ts",
         "default": "./src/SamplePlugin.ts"
       },
       "types": "./dist/types/src/SamplePlugin.d.ts",
+      "workerd": "./dist/lib/neutral/SamplePlugin.workerd.mjs",
       "node": "./dist/lib/neutral/SamplePlugin.node.mjs",
       "default": "./dist/lib/neutral/SamplePlugin.mjs"
     },
