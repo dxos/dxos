@@ -31,7 +31,7 @@ const QUEUE_DXN = EchoURI.parse('dxn:queue:data:B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5P
 const QUEUE_SPACE_ID = SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO');
 const QUEUE_ID = ObjectId.make('01JJRA86VK4H1TEB6QQVSWXP0E');
 
-const withSpace = (q: any): any => (q as any).from([{ _tag: 'space' as const, spaceId: SPACE_ID }]);
+const withSpace = (q: Query.Any): Query.Any => q.from([{ _tag: 'space' as const, spaceId: SPACE_ID }]);
 
 /**
  * Creates a QueryExecutor with no real dependencies — only the query is used

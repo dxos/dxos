@@ -244,11 +244,12 @@ export const registry: Record<NodeType, Executable> = {
             const types = yield* db.graph.registry.listTypes();
             const schema = types.find((t) => Type.getTypename(t) === schemaTypename);
             invariant(schema, `Schema not found: ${schemaTypename}`);
+            invariant(Type.isObjectSchema(schema), `Schema is not an object schema: ${schemaTypename}`);
 
             for (const item of items) {
               const { id: _id, '@type': _type, ...rest } = item as any;
               // TODO(dmaretskyi): Forbid type on create.
-              db.add(Obj.make(schema as any, rest));
+              db.add(Obj.make(schema, rest));
             }
             yield* Effect.promise(() => db.flush());
           } else {

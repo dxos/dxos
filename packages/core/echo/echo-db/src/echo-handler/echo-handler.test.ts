@@ -209,7 +209,7 @@ describe('Reactive Object with ECHO database', () => {
     const NonEchoSchema = Schema.Struct({ field: Schema.String });
     const { graph } = await builder.createDatabase();
     // addTypes throws for schemas without TypeAnnotationId annotation (no typename/version).
-    expect(() => graph.registry.addTypes([NonEchoSchema as any])).to.throw();
+    expect(() => graph.registry.addTypes([NonEchoSchema as unknown as Type.AnyEntity])).to.throw();
   });
 
   test('throws if schema was not registered in Hypergraph', async () => {

@@ -4,7 +4,7 @@
 
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Registry, type QueryResult } from '@dxos/echo';
+import { Entity, Registry, type QueryResult } from '@dxos/echo';
 import { filterMatchObjectJSON } from '@dxos/echo-pipeline/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
 
@@ -88,7 +88,7 @@ export class RegistryQuerySource implements QuerySource {
   #match(filter: QueryAST.Filter): QueryResult.EntityEntry[] {
     return this.#registry
       .list()
-      .filter((object) => filterMatchObjectJSON(filter, object as any))
+      .filter((object) => filterMatchObjectJSON(filter, Entity.toJSON(object)))
       .map((object) => ({
         id: (object as { id: string }).id,
         result: object,

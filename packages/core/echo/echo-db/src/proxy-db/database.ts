@@ -451,9 +451,9 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     if (!isEchoObject(obj)) {
       const schema = Obj.getSchema(obj as unknown as Obj.Unknown);
       if (schema != null) {
-        const typename = Type.getTypename(schema as any);
-        const version = Type.getVersion(schema as any);
-        const identifierDXN = Type.getDXN(schema as any);
+        const typename = Type.getTypename(schema);
+        const version = Type.getVersion(schema);
+        const identifierDXN = Type.getDXN(schema);
         const inRegistry =
           typename && version
             ? this.graph.registry.getTypeByDXN(`dxn:type:${typename}:${version}`) !== undefined ||

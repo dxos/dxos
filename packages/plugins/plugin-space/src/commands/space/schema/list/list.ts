@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { CommandConfig, Common, getSpace, printList, spaceIdWithDefault } from '@dxos/cli-util';
-import { type Key } from '@dxos/echo';
+import { type Key, Type } from '@dxos/echo';
 import { getTypeAnnotation } from '@dxos/echo/internal';
 
 import { createTypenameFilter, mapSchemas, printSchemas } from './util';
@@ -33,7 +33,7 @@ export const handler = Effect.fn(function* ({
     .map((schema) => {
       const schemaAnnotation = getTypeAnnotation(schema);
       return {
-        id: (schema as any).id,
+        id: Type.getDXN(schema)?.toString(),
         typename: schemaAnnotation?.typename ?? '',
         version: schemaAnnotation?.version ?? '',
       };
