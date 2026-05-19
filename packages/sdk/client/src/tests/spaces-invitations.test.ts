@@ -37,7 +37,10 @@ describe('Spaces/invitations', () => {
     }
   });
 
-  describe('delegated', () => {
+  // The delegated tests spin up 3-4 clients and run two sequential invitations each.
+  // They complete in ~1s on dev machines but routinely brush against vitest's 5s default
+  // under CI worker contention — bump per-describe to avoid spurious timeout flakes.
+  describe('delegated', { timeout: 15_000 }, () => {
     test('single-use', async ({ expect }) => {
       const clients = await createInitializedClients(3);
       const [alice, bob, fred] = clients;
