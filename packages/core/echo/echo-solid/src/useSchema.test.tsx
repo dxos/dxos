@@ -66,7 +66,7 @@ describe('useSchema', () => {
 
   test('returns schema when it exists', async () => {
     // Register a schema to the database
-    const [registeredSchema] = await db.schemaRegistry.register([TestSchema.Person]);
+    const [registeredSchema] = await db.registry.register([TestSchema.Person]);
     await db.flush({ indexes: true });
 
     let schemaAccessor: (() => any) | undefined;
@@ -95,10 +95,8 @@ describe('useSchema', () => {
 
   test.skip('updates when schema is added', async () => {
     // TODO: This test is skipped because runtime schema registry is not reactive to newly registered schemas.
-    // The query reads from db.graph.schemaRegistry.schemas (runtime registry), but when a schema is registered
-    // via db.schemaRegistry.register(), it's added to the database registry, not the runtime registry.
-    // The runtime registry query subscription doesn't fire when schemas are registered.
-    // See: packages/core/echo/echo-db/src/proxy-db/runtime-schema-registry.ts:57
+    // The query reads from db.graph.registry.types (shared registry), but when a schema is registered
+    // via db.registry.register(), the runtime registry query subscription doesn't fire reactively.
     let schemaAccessor: (() => any) | undefined;
     const typename = 'com.example.type.person';
 
@@ -119,11 +117,11 @@ describe('useSchema', () => {
     });
 
     // Register the schema
-    const [registeredSchema] = await db.schemaRegistry.register([TestSchema.Person]);
+    const [registeredSchema] = await db.registry.register([TestSchema.Person]);
     await db.flush({ indexes: true });
 
     // The schema registry query should pick up the new schema
-    // It reads from db.graph.schemaRegistry.schemas which should include the newly registered schema
+    // db.graph.registry.types should include the newly registered schema
     await waitFor(() => {
       expect(getByTestId('typename').textContent).toBe(Type.getTypename(registeredSchema)!);
     });
@@ -135,7 +133,7 @@ describe('useSchema', () => {
   });
 
   test('accepts reactive database accessor', async () => {
-    const [registeredSchema] = await db.schemaRegistry.register([TestSchema.Person]);
+    const [registeredSchema] = await db.registry.register([TestSchema.Person]);
 
     let schemaAccessor: (() => any) | undefined;
     let dbAccessor: any = db;
@@ -169,7 +167,7 @@ describe('useSchema', () => {
   });
 
   test('accepts reactive typename accessor', async () => {
-    const [registeredSchema] = await db.schemaRegistry.register([TestSchema.Person]);
+    const [registeredSchema] = await db.registry.register([TestSchema.Person]);
 
     let schemaAccessor: (() => any) | undefined;
     let typename: string | undefined = Type.getTypename(registeredSchema)!;

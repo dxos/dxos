@@ -12,6 +12,7 @@ import { Event, type ReadOnlyEvent } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 
 import type * as Obj from './Obj';
+import type * as SchemaRegistry from './SchemaRegistry';
 import * as Type from './Type';
 
 /**
@@ -111,6 +112,15 @@ export interface Registry {
    * Used when a PersistentSchema-backed type is invalidated.
    */
   touch(): void;
+
+  /**
+   * Persist schemas in the backing database so they replicate to other clients.
+   * Creates a PersistentSchema ECHO object for each input and adds it to the space.
+   *
+   * Requires the registry to be bound to a database.
+   * Throws if called on a registry without a database backing (e.g. the hypergraph-level registry).
+   */
+  register(inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.RuntimeType[]>;
 }
 
 /**
@@ -261,6 +271,10 @@ class RegistryImpl implements Registry {
 
   touch(): void {
     this.#changed.emit();
+  }
+
+  register(_inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.RuntimeType[]> {
+    throw new Error('Registry is not bound to a database. Use db.registry.register() instead.');
   }
 
   #put(object: Obj.Unknown): void {

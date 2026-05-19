@@ -431,7 +431,7 @@ export const WithMap: Story = {
         import('@dxos/react-ui-table/types'),
         import('@dxos/plugin-map/testing'),
       ]);
-      const [schema] = await space.db.schemaRegistry.register([createLocationSchema()]);
+      const [schema] = await space.db.registry.register([createLocationSchema()]);
       const { view: tableView, jsonSchema } = await ViewModel.makeFromDatabase({
         db: space.db,
         typename: Type.getTypename(schema),

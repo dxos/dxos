@@ -10,7 +10,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { Database, type Entity, Filter, JsonSchema, Obj, Query, QueryAST, Ref, type SchemaRegistry, Type } from '@dxos/echo';
+import { Database, type Entity, Filter, JsonSchema, Obj, Query, QueryAST, Ref, type Registry, type SchemaRegistry, Type } from '@dxos/echo';
 import {
   type AnyProperties,
   MetaId,
@@ -44,6 +44,76 @@ import {
 } from '../echo-handler';
 import { type HypergraphImpl } from '../hypergraph';
 import { type ObjectMigration } from './object-migration';
+
+/**
+ * Per-database registry that wraps the shared hypergraph registry.
+ * Delegates all type-lookup operations to the shared registry and provides
+ * register() for persisting new schemas as PersistentSchema ECHO objects.
+ */
+class EchoDatabaseRegistry implements Registry.Registry {
+  readonly #db: EchoDatabaseImpl;
+
+  constructor(db: EchoDatabaseImpl) {
+    this.#db = db;
+  }
+
+  /** Lazily resolved so construction doesn't race with graph initialisation. */
+  get #delegate(): Registry.Registry {
+    return this.#db.graph.registry;
+  }
+
+  get changed() {
+    return this.#delegate.changed;
+  }
+
+  get local(): readonly Obj.Unknown[] {
+    return this.#delegate.local;
+  }
+
+  add(objects: readonly Obj.Unknown[]): void {
+    return this.#delegate.add(objects);
+  }
+
+  remove(id: string): boolean {
+    return this.#delegate.remove(id);
+  }
+
+  clear(): void {
+    return this.#delegate.clear();
+  }
+
+  get(id: string): Obj.Unknown | undefined {
+    return this.#delegate.get(id);
+  }
+
+  list(): Obj.Unknown[] {
+    return this.#delegate.list();
+  }
+
+  addTypes(types: readonly Type.AnyEntity[]): void {
+    return this.#delegate.addTypes(types);
+  }
+
+  getTypeByDXN(dxn: string): Type.AnyEntity | undefined {
+    return this.#delegate.getTypeByDXN(dxn);
+  }
+
+  get types(): readonly Type.AnyEntity[] {
+    return this.#delegate.types;
+  }
+
+  listTypes() {
+    return this.#delegate.listTypes();
+  }
+
+  touch(): void {
+    return this.#delegate.touch();
+  }
+
+  register(inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.RuntimeType[]> {
+    return this.#db._registerSchemas(inputs);
+  }
+}
 
 // TODO(burdon): Remove and progressively push methods to Database.Database.
 export interface EchoDatabase extends Database.Database {
@@ -144,6 +214,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
   private readonly _reactiveSchemaQuery: boolean;
   private readonly _preloadSchemaOnOpen: boolean;
   private readonly _registeredPersistentSchemaIds = new Set<string>();
+  private readonly _dbRegistry: EchoDatabaseRegistry;
 
   constructor(params: EchoDatabaseProps) {
     super();
@@ -160,6 +231,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     });
 
     this.saveStateChanged = this._coreDatabase.saveStateChanged;
+    this._dbRegistry = new EchoDatabaseRegistry(this);
   }
 
   [inspect.custom]() {
@@ -189,6 +261,10 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     return this._coreDatabase.graph;
   }
 
+  get registry(): Registry.Registry {
+    return this._dbRegistry;
+  }
+
   @synchronized
   protected override async _open(): Promise<void> {
     if (this._rootUrl !== undefined) {
@@ -214,33 +290,35 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
     await this._coreDatabase.close();
   }
 
-  readonly schemaRegistry = {
-    register: async (inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.RuntimeType[]> => {
-      const results: Type.RuntimeType[] = [];
-      for (const input of inputs) {
-        if (Schema.isSchema(input)) {
-          results.push(this._addPersistentSchema(input));
-        } else if (typeof input === 'object' && 'typename' in input && 'version' in input && 'jsonSchema' in input) {
-          const schema = this._addPersistentSchema(
-            JsonSchema.toEffectSchema({
-              ...input.jsonSchema,
-              typename: input.typename,
-              version: input.version,
-            }),
-          );
-          results.push(schema);
-          if (input.name) {
-            Obj.update(schema.persistentSchema, (ps) => {
-              ps.name = input.name;
-            });
-          }
-        } else {
-          throw new TypeError('Invalid schema');
+  /**
+   * @internal
+   * Called by EchoDatabaseRegistry.register().
+   */
+  async _registerSchemas(inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.RuntimeType[]> {
+    const results: Type.RuntimeType[] = [];
+    for (const input of inputs) {
+      if (Schema.isSchema(input)) {
+        results.push(this._addPersistentSchema(input));
+      } else if (typeof input === 'object' && 'typename' in input && 'version' in input && 'jsonSchema' in input) {
+        const schema = this._addPersistentSchema(
+          JsonSchema.toEffectSchema({
+            ...input.jsonSchema,
+            typename: input.typename,
+            version: input.version,
+          }),
+        );
+        results.push(schema);
+        if (input.name) {
+          Obj.update(schema.persistentSchema, (ps) => {
+            ps.name = input.name;
+          });
         }
+      } else {
+        throw new TypeError('Invalid schema');
       }
-      return results;
-    },
-  };
+    }
+    return results;
+  }
 
   /**
    * @internal

@@ -175,7 +175,7 @@ test('chained migrations', async () => {
 // TODO(wittjosiah): Strip down to minimal example. Key thing this is testing is arrays.
 // test('view migration', async () => {
 //   const { db, graph } = await builder.createDatabase();
-//   graph.schemaRegistry.register([ViewTypeV1, ViewTypeV2]);
+//   graph.registry.register([ViewTypeV1, ViewTypeV2]);
 
 //   db.add(
 //     Obj.make(ViewTypeV1, {

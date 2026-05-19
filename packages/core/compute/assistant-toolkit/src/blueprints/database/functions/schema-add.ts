@@ -14,7 +14,7 @@ export default SchemaAdd.pipe(
     Effect.fn(function* ({ name, typename, jsonSchema }) {
       const { db } = yield* Database.Service;
       yield* Effect.promise(() =>
-        db.schemaRegistry.register([
+        db.registry.register([
           {
             typename,
             version: '0.1.0',

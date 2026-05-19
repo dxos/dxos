@@ -24,6 +24,7 @@ import type { Ref } from './internal/Ref/ref';
 import type * as Obj from './Obj';
 import type * as Query from './Query';
 import type * as QueryResult from './QueryResult';
+import type * as Registry from './Registry';
 import type * as SchemaRegistry from './SchemaRegistry';
 import type * as Type from './Type';
 
@@ -98,12 +99,11 @@ export interface Database extends Queryable {
   get graph(): Hypergraph.Hypergraph;
 
   /**
-   * Schema registry for persisting schemas in this database.
-   * Use register() to create PersistentSchema ECHO objects that replicate to other clients.
+   * Registry for this database.
+   * Delegates type lookups to the shared hypergraph registry and provides register() for
+   * persisting schemas as PersistentSchema ECHO objects that replicate to other clients.
    */
-  readonly schemaRegistry: {
-    register(inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.RuntimeType[]>;
-  };
+  readonly registry: Registry.Registry;
 
   toJSON(): object;
 
@@ -330,6 +330,6 @@ export const registerSchema = (
   input: SchemaRegistry.RegisterSchemaInput[],
 ): Effect.Effect<Type.Type[], never, Service> =>
   Service.pipe(
-    Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.schemaRegistry.register(input))),
+    Effect.flatMap(({ db }) => promiseWithCauseCapture(() => db.registry.register(input))),
     Effect.withSpan('Database.registerSchema'),
   );

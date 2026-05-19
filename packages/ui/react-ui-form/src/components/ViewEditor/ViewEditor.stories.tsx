@@ -59,7 +59,7 @@ const DefaultStory = (props: DefaultStoryProps) => {
         completed: Schema.Boolean,
       }).pipe(Type.makeObject(DXN.make('com.example.type.alternate', '0.1.0')));
 
-      const [testSchema] = await space.db.schemaRegistry.register([TestSchema, AlternateSchema]);
+      const [testSchema] = await space.db.registry.register([TestSchema, AlternateSchema]);
       const view = ViewModel.make({
         name: 'Test',
         query: Query.select(Filter.type(TestSchema)),
