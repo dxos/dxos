@@ -104,7 +104,7 @@ export const addTestData = async (space: Space): Promise<void> => {
   const objectMap = new Map<string, any>();
 
   for (const [typename, objects] of Object.entries(testObjects)) {
-    const schema = space.internal.db.graph.schemaRegistry.getSchema(typename);
+    const schema = space.internal.db.graph.registry.types.find((s) => Type.getTypename(s) === typename);
     invariant(schema, `Schema not found: ${typename}`);
     invariant(Type.isObject(schema), `Schema is not an object schema: ${typename}`);
     for (const { id, ...data } of objects) {
@@ -114,7 +114,7 @@ export const addTestData = async (space: Space): Promise<void> => {
   }
 
   for (const [typename, relationships] of Object.entries(testRelationships)) {
-    const schema = space.internal.db.graph.schemaRegistry.getSchema(typename);
+    const schema = space.internal.db.graph.registry.types.find((s) => Type.getTypename(s) === typename);
     invariant(schema, `Schema not found: ${typename}`);
     invariant(Type.isRelation(schema), `Schema is not a relation schema: ${typename}`);
 

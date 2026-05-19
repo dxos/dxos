@@ -125,7 +125,7 @@ const meta = {
               type: registeredSchema.find((s) => Type.getTypename(s) === Type.getTypename(schema.type)),
             }));
           } else {
-            await space.db.graph.schemaRegistry.register(types);
+            space.db.graph.registry.addTypes(types);
           }
 
           const createObjects = createObjectFactory(space.db, generator);

@@ -28,8 +28,8 @@ export const handler = Effect.fn(function* ({
   const resolvedSpaceId = yield* spaceIdWithDefault(spaceId as Option.Option<Key.SpaceId>);
   const space = yield* getSpace(resolvedSpaceId);
 
-  const echoSchema = (yield* Effect.tryPromise(() => space.db.schemaRegistry.query().run())) as Type.Type[];
-  const runtimeSchema = space.internal.db.graph.schemaRegistry.schemas;
+  const echoSchema = yield* Effect.tryPromise(() => space.db.schemaRegistry.query().run());
+  const runtimeSchema = [...space.internal.db.graph.registry.types];
 
   const schemas = [
     // Skip persisted drafts without a typename — they can't be listed by name.

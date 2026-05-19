@@ -123,7 +123,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
       connector: ({ space, schema }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
         const schemas = client
-          ? get(AtomQuery.fromQuery(client.graph.schemaRegistry.query({ location: ['runtime'] })))
+          ? get(AtomQuery.fromRegistryTypes(client.graph.registry))
           : [];
 
         const typename = Type.getTypename(schema);
@@ -176,7 +176,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
       connector: ({ space, typename }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
         const schemas = client
-          ? get(AtomQuery.fromQuery(client.graph.schemaRegistry.query({ location: ['runtime'] })))
+          ? get(AtomQuery.fromRegistryTypes(client.graph.registry))
           : [];
         const viewIndex = buildViewIndex(get, space, schemas);
         const objects = get(AtomQuery.make(space.db, Filter.typename(typename))).filter(
@@ -213,7 +213,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
       actions: ({ space, schema }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
         const schemas = client
-          ? get(AtomQuery.fromQuery(client.graph.schemaRegistry.query({ location: ['runtime'] })))
+          ? get(AtomQuery.fromRegistryTypes(client.graph.registry))
           : [];
 
         const targetTypename = Type.getTypename(schema);

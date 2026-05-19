@@ -23,7 +23,7 @@ export default defineFunction({
     data: { documentAmount = 1, textSize = 10, mutationAmount = 0, waitAfterCreation = 10_000 },
     context: { space },
   }: any) => {
-    await space.db.graph.schemaRegistry.register([Expando]);
+    space.db.graph.registry.addTypes([Expando]);
     const result: Record<string, any> = {};
     const objects: Expando[] = [];
 
