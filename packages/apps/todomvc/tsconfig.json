@@ -22,7 +22,13 @@
   ],
   "references": [
     {
+      "path": "../../../tools/vite-plugin-shutdown"
+    },
+    {
       "path": "../../common/async"
+    },
+    {
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/log"

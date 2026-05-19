@@ -135,7 +135,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
 
   return (
     <Toast.Provider>
-      <div role='none' className='fixed inset-0 flex overflow-hidden'>
+      <div className='fixed inset-0 flex overflow-hidden'>
         <Mosaic.Root>
           <Popover.Root open={open}>
             <Main.Root

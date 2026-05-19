@@ -48,11 +48,7 @@ const Row = ({ items = 50 }: { items?: number }) => (
 );
 
 const Container = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => {
-  return (
-    <div role='none' className={mx('border border-separator rounded-md overflow-hidden', classNames)}>
-      {children}
-    </div>
-  );
+  return <div className={mx('border border-separator rounded-md overflow-hidden', classNames)}>{children}</div>;
 };
 
 export const Vertical = {

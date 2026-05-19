@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { type Space } from '@dxos/client/echo';
-import { Feed as EchoFeed, Obj, Ref, Tag } from '@dxos/echo';
+import { Feed, Obj, Ref, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
@@ -39,18 +39,20 @@ describe('curateMagazine', () => {
 
   const setup = async () => {
     const { db, queues } = await builder.createDatabase({
-      types: [EchoFeed.Feed, Subscription.Feed, Subscription.Post, Magazine.Magazine, Tag.Tag, Text.Text],
+      types: [Feed.Feed, Subscription.Subscription, Subscription.Post, Magazine.Magazine, Tag.Tag, Text.Text],
     });
 
-    const subscriptionFeed = db.add(Subscription.makeFeed({ name: 'test feed', url: 'https://example.com/rss' }));
+    const subscriptionFeed = db.add(
+      Subscription.makeSubscription({ name: 'test feed', url: 'https://example.com/rss' }),
+    );
     const magazine = db.add(Magazine.make({ feeds: [Ref.make(subscriptionFeed)] }));
     await db.flush();
 
     const echoFeed = subscriptionFeed.feed?.target;
     invariant(echoFeed, 'Backing ECHO feed should be present.');
-    const feedDxn = EchoFeed.getQueueDxn(echoFeed);
-    invariant(feedDxn, 'Feed should have a queue DXN.');
-    const queue = queues.get(feedDxn);
+    const feedDXN = Feed.getQueueDxn(echoFeed);
+    invariant(feedDXN, 'Feed should have a queue DXN.');
+    const queue = queues.get(feedDXN);
     const space = { db, queues } as unknown as Space;
 
     return { db, magazine, subscriptionFeed, queue, space };
@@ -183,10 +185,10 @@ describe('curateMagazine', () => {
 
     // Confirm the DXN form mismatch is real (so this test is exercising the
     // condition the fix targets, not a coincidence).
-    const magDxn = magazine.posts[0].dxn.toString();
+    const magDXN = magazine.posts[0].dxn.toString();
     const items = (await queue.queryObjects()) ?? [];
-    const queueDxn = Obj.getDXN(items[0] as any).toString();
-    expect(magDxn).not.toBe(queueDxn);
+    const queueDXN = Obj.getDXN(items[0] as any).toString();
+    expect(magDXN).not.toBe(queueDXN);
 
     // Second curate must not throw the addCore invariant and must add 0.
     await expect(curateMagazine(space, magazine)).resolves.toEqual({ added: 0 });

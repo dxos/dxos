@@ -70,7 +70,7 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
   Plugin.addModule(({ namespace, observability }) => ({
     id: Capability.getModuleTag(ClientReady),
     activatesOn: ActivationEvent.allOf(
-      ActivationEvents.OperationInvokerReady,
+      ActivationEvents.ProcessManagerReady,
       ObservabilityEvents.StateReady,
       ObservabilityEvents.ClientReadyEvent,
     ),

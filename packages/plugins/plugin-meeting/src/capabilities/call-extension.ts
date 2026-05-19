@@ -10,8 +10,8 @@ import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/ass
 import { Filter, type Obj, Query, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
+import { type CallState, type MediaState, CallsCapabilities } from '@dxos/plugin-calls';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { type CallState, type MediaState, ThreadCapabilities } from '@dxos/plugin-thread';
 import { TranscriptionCapabilities } from '@dxos/plugin-transcription';
 import { type buf } from '@dxos/protocols/buf';
 import { type MeetingPayloadSchema } from '@dxos/protocols/buf/dxos/edge/calls_pb';
@@ -32,7 +32,7 @@ export default Capability.makeModule(
 
     const store = capabilities.get(MeetingCapabilities.State);
 
-    return Capability.contributes(ThreadCapabilities.CallExtension, {
+    return Capability.contributes(CallsCapabilities.Extension, {
       onJoin: async ({ channel }: { channel?: Channel.Channel }) => {
         const client = capabilities.get(ClientCapabilities.Client);
         const identity = client.halo.identity.get();

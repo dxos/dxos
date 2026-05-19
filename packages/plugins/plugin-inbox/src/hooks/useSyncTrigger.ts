@@ -7,10 +7,10 @@ import { useCallback, useMemo, useState } from 'react';
 import { type Client } from '@dxos/client';
 import { Trigger, Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
-import { DXN, type Database, Filter, Obj, Ref } from '@dxos/echo';
+import { type Database, DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 import { useClient } from '@dxos/react-client';
-import { Query, useObject, useQuery } from '@dxos/react-client/echo';
+import { useObject, useQuery } from '@dxos/react-client/echo';
 
 import { Calendar } from '#types';
 
@@ -24,12 +24,14 @@ const ensureFunction = async (
   functionKey: string,
 ): Promise<Operation.PersistentOperation | undefined> => {
   const deployed = await getDeployedFunctions(Context.default(), client, true);
-  const match = deployed.find((fn) => fn.key === functionKey);
+  const match = deployed.find((fn) => Obj.getMeta(fn).key === functionKey);
   if (!match) {
     return undefined;
   }
 
-  const existing = await db.query(Query.type(Operation.PersistentOperation, { key: functionKey })).run();
+  const existing = await db
+    .query(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(functionKey)))
+    .run();
   const [existingFunc] = existing;
   if (existingFunc) {
     Operation.setFrom(existingFunc, match);
@@ -59,7 +61,7 @@ export const useSyncTrigger = ({
   const [pending, setPending] = useState(false);
   const triggers = useQuery(db, Query.select(Filter.type(Trigger.Trigger)).debugLabel('plugin-inbox.useSyncTrigger'));
 
-  const subjectDxn = Obj.getDXN(subject);
+  const subjectDXN = Obj.getDXN(subject);
   const syncTrigger = useMemo(
     () =>
       triggers.find((trigger) => {
@@ -69,9 +71,9 @@ export const useSyncTrigger = ({
         const mailboxRef = trigger.input?.mailbox;
         const calendarRef = trigger.input?.calendar;
         const ref = mailboxRef ?? calendarRef;
-        return ref?.dxn && DXN.equalsEchoId(ref.dxn, subjectDxn);
+        return ref?.dxn && DXN.equalsEchoId(ref.dxn, subjectDXN);
       }),
-    [triggers, subjectDxn],
+    [triggers, subjectDXN],
   );
 
   const [syncEnabled, setSyncEnabled] = useObject(syncTrigger, 'enabled');

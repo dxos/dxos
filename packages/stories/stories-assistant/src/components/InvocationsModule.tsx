@@ -7,14 +7,14 @@ import React from 'react';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed } from '@dxos/echo';
 
-import { type ComponentProps } from './types';
+import { type ModuleProps } from './types';
 
-export const InvocationsModule = ({ space }: ComponentProps) => {
+export const InvocationsModule = ({ space }: ModuleProps) => {
   const feed = space?.properties.invocationTraceFeed?.target;
-  const queueDxn = feed ? Feed.getQueueDxn(feed) : undefined;
+  const feedDXN = feed ? Feed.getQueueDxn(feed) : undefined;
   return (
     <div className='flex h-full min-h-[20rem] items-center justify-center'>
-      <InvocationTraceContainer db={space?.db} queueDxn={queueDxn} detailAxis='block' />
+      <InvocationTraceContainer db={space?.db} feedDXN={feedDXN} detailAxis='block' />
     </div>
   );
 };

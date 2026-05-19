@@ -77,6 +77,25 @@ export const isOfType = <T, E extends Event>(eventType: EventType<T>, event: E):
 };
 
 /**
+ * Extensible name informing which runtime executed the code that produced the event.
+ */
+export const RuntimeName = Schema.String.pipe(Schema.brand('@dxos/compute/Trace/RuntimeName'));
+export type RuntimeName = Schema.Schema.Type<typeof RuntimeName>;
+
+/**
+ * Common runtime names.
+ */
+export const CommonRuntimeName = {
+  /**
+   * Web app / CLI / Desktop app / Mobile app.
+   */
+  local: RuntimeName.make('local'),
+  edgeIntrinsic: RuntimeName.make('edge-intrinsic'),
+  edgeWorkerLoader: RuntimeName.make('edge-worker-loader'),
+  edgeWorkerForPlatforms: RuntimeName.make('edge-worker-for-platforms'),
+};
+
+/**
  * Metadata on the context of a trace message.
  */
 // TODO(dmaretskyi): Expand on this: conversation id, tool call id, etc.
@@ -84,6 +103,12 @@ export const Meta = Schema.Struct({
   pid: Schema.optional(Schema.String), // NOTE: Not Process.ID to avoid circular dependency.
   parentPid: Schema.optional(Schema.String),
   processName: Schema.optional(Schema.String),
+
+  /**
+   * Space the message was produced in.
+   * Stored as a string to avoid circular dependency on `@dxos/keys`.
+   */
+  space: Schema.optional(Schema.String),
 
   /**
    * ID of the conversation feed object if present.
@@ -99,8 +124,21 @@ export const Meta = Schema.Struct({
    * ID of the tool call that created the current process.
    */
   toolCallId: Schema.optional(Schema.String),
+
+  /**
+   * Extensible name informing which runtime executed the code that produced the event.
+   */
+  runtimeName: Schema.optional(RuntimeName),
 });
 export interface Meta extends Schema.Schema.Type<typeof Meta> {}
+
+/**
+ * Checks if a runtime is an edge runtime.
+ */
+export const isEdgeRuntime = (name: RuntimeName): boolean =>
+  name === CommonRuntimeName.edgeIntrinsic ||
+  name === CommonRuntimeName.edgeWorkerLoader ||
+  name === CommonRuntimeName.edgeWorkerForPlatforms;
 
 /**
  * Envelope for a set of events.
@@ -126,6 +164,26 @@ export const Message = MessageData.pipe(
 export interface Message extends Schema.Schema.Type<typeof Message> {}
 
 /**
+ * Flattened representation of a signle event in a trace message.
+ * Events are stored in batched messages for efficiency, but flat representation is more convenient for consumption.
+ */
+export interface FlatEvent extends Event {
+  readonly meta: Meta;
+  readonly isEphemeral: boolean;
+}
+
+/**
+ * Flattens a trace message into a list of flat events.
+ */
+export const flatten = (message: Message): FlatEvent[] => {
+  return message.events.map((event) => ({
+    ...event,
+    meta: message.meta,
+    isEphemeral: message.isEphemeral,
+  }));
+};
+
+/**
  * Sink for complete trace messages.
  */
 export interface Sink {
@@ -145,15 +203,45 @@ export const noopWriter: TraceWriter = {
 
 export const writerLayerNoop: Layer.Layer<TraceService> = Layer.succeed(TraceService, noopWriter);
 
-export const layerNoop: Layer.Layer<TraceSink> = Layer.succeed(TraceSink, {
+export const noopSink: Sink = {
   write: () => {},
-});
+};
+
+export const layerNoop: Layer.Layer<TraceSink> = Layer.succeed(TraceSink, noopSink);
 
 export const layerConsole: Layer.Layer<TraceSink> = Layer.succeed(TraceSink, {
   write: (message) => {
     console.log(message);
   },
 });
+
+/**
+ * Merge a set of sinks into a single sink.
+ *
+ * Each message is forwarded to every sink in order. Failures in one sink do not
+ * prevent downstream sinks from receiving the message.
+ */
+export const mergeSinks = (sinks: readonly Sink[]): Sink => {
+  if (sinks.length === 0) {
+    return noopSink;
+  }
+  // Intentionally no singleton fast path: the guarded wrapper is the
+  // contract of `mergeSinks`, so a throwing sink is always caught and
+  // logged regardless of how many sinks were passed in.
+  return {
+    write: (message) => {
+      for (const sink of sinks) {
+        try {
+          sink.write(message);
+        } catch (err) {
+          // Intentional: do not let one sink break the chain.
+          // eslint-disable-next-line no-console
+          console.error('[trace] sink.write threw', err);
+        }
+      }
+    },
+  };
+};
 
 export const testTraceService = (opts: { meta?: Meta } = {}): Layer.Layer<TraceService, never, TraceSink> =>
   Layer.effect(
@@ -211,6 +299,41 @@ export const OperationEnd = EventType('operation.end', {
     error: Schema.optional(Schema.String),
   }),
   isEphemeral: false,
+});
+
+/**
+ * Operation input. Emitted as an ephemeral event alongside {@link OperationStart}
+ * so subscribers (such as the undo/redo history tracker) can observe the raw
+ * input payload without persisting it to long-lived sinks.
+ */
+export const OperationInput = EventType('operation.input', {
+  schema: Schema.Struct({
+    /** Operation key. */
+    key: Schema.String,
+    /** Human-readable operation name. */
+    name: Schema.optional(Schema.String),
+    /** Raw operation input. Shape determined by the operation definition. */
+    input: Schema.Unknown,
+  }),
+  isEphemeral: true,
+});
+
+/**
+ * Operation output. Emitted as an ephemeral event just before
+ * {@link OperationEnd} for successful invocations so subscribers (such as the
+ * undo/redo history tracker) can observe the raw output payload without
+ * persisting it to long-lived sinks.
+ */
+export const OperationOutput = EventType('operation.output', {
+  schema: Schema.Struct({
+    /** Operation key. */
+    key: Schema.String,
+    /** Human-readable operation name. */
+    name: Schema.optional(Schema.String),
+    /** Raw operation output. Shape determined by the operation definition. */
+    output: Schema.Unknown,
+  }),
+  isEphemeral: true,
 });
 
 /**

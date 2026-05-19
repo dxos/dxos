@@ -10,13 +10,13 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Feed, Obj, Query } from '@dxos/echo';
+import { Feed, Filter, Obj, Query } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { Filter, useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useAttentionAttributes, useSelected } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
@@ -68,7 +68,7 @@ const CompanionStory = () => {
   }
 
   return (
-    <div role='none' {...attentionAttrs} className='grid grid-cols-[1fr_1fr]'>
+    <div {...attentionAttrs} className='grid grid-cols-[1fr_1fr]'>
       <Surface.Surface type={AppSurface.Article} data={mailboxData} />
       <Surface.Surface type={AppSurface.Article} data={companionData} />
     </div>

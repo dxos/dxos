@@ -23,14 +23,13 @@ import {
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
 import { McpServer, Operation, OperationRegistry, Trace } from '@dxos/compute';
+import { Process } from '@dxos/compute';
+import { ProcessManager } from '@dxos/compute-runtime';
+import * as StorageService from '@dxos/compute/StorageService';
 import { Database, DXN, Feed, Obj } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
-
-import { Process } from '../process';
-import * as ProcessManager from '../process/ProcessManager';
-import * as StorageService from '../process/StorageService';
 
 interface AgentProcessOptions {
   systemPrompt?: string;
@@ -77,13 +76,13 @@ export const AgentProcess = (options: AgentProcessOptions) =>
     },
     (ctx) =>
       Effect.gen(function* () {
-        const feedDxn = ctx.params.target;
-        if (feedDxn == null) {
+        const feedDXN = ctx.params.target;
+        if (feedDXN == null) {
           return yield* Effect.die(new Error('Agent executable requires spawn options.target set to a queue DXN.'));
         }
-        const feed = yield* Database.resolve(DXN.parse(feedDxn), Feed.Feed).pipe(Effect.orDie);
+        const feed = yield* Database.resolve(DXN.parse(feedDXN), Feed.Feed).pipe(Effect.orDie);
         const runtime = yield* Effect.runtime<Feed.FeedService>();
-        const session = yield* acquireReleaseResource(() => new AiSession({ feed, runtime }));
+        const session = yield* acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
         let inputQueue: AgentEvent[] = [...(yield* AgentEventsKey.get)];
         const storageService = yield* StorageService.StorageService;
         const toolCallManager = new ToolCallManager(storageService);

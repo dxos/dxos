@@ -6,8 +6,7 @@ import type * as Schema from 'effect/Schema';
 
 import { addressToA1Notation } from '@dxos/compute-hyperformula';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
-import { DXN, Filter, Key, type Type } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import { DXN, Filter, Key, type Type, View } from '@dxos/echo';
 import { OperationInvoker } from '@dxos/operation';
 import { Markdown } from '@dxos/plugin-markdown';
 import { Sheet } from '@dxos/plugin-sheet';

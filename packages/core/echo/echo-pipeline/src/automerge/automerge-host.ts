@@ -80,8 +80,16 @@ export type LoadDocOptions = {
   timeout?: number;
 
   /**
-   * If true, the document will be fetched from the network if it is not found in the local storage.
-   * Setting this to false does not guarantee that the document will not be fetched from the network.
+   * Controls whether `loadDoc` is allowed to wait on the network.
+   *
+   * - `true` / unset (default): announce that we want the doc and wait
+   *   until any source (storage OR network) delivers it.
+   * - `false`: probe local storage only. If chunks for the doc exist
+   *   on disk, wait for storage to populate the handle; otherwise
+   *   throw `'unavailable'` immediately without ever consulting the
+   *   network. Note that this does not guarantee that the document
+   *   will not be fetched from the network — an inbound peer announce
+   *   can still deliver bytes — but the host will never request it.
    */
   fetchFromNetwork?: boolean;
 };
@@ -330,6 +338,14 @@ export class AutomergeHost extends Resource {
   }
 
   protected override async _close(ctx: Context): Promise<void> {
+    // Drain any in-flight `_onHeadsChangedTask` before the `Resource` base
+    // disposes `this._ctx`. Without this, a concurrent `flush()` call (e.g.
+    // from a client `db.flush()` RPC racing with shutdown) hits its
+    // `runBlocking` after the ctx has been disposed and throws
+    // `ContextDisposedError`, which escapes as an unhandled rejection at the
+    // fire-and-forget originating caller.
+    await this._onHeadsChangedTask?.join();
+
     await this._collectionSynchronizer.close(ctx);
     await this._repo.flush().catch((err) => log.warn('failed to flush repo before shutdown', { err }));
     await this._repo.shutdown().catch((err) => log.warn('failed to shutdown repo', { err }));
@@ -362,23 +378,55 @@ export class AutomergeHost extends Resource {
     await this._echoNetworkAdapter.removeReplicator(replicator);
   }
 
-  async loadDoc<T>(ctx: Context, documentId: AnyDocumentId, opts?: LoadDocOptions): Promise<DocHandle<T>> {
+  async loadDoc<T>(ctx: Context, documentId: AnyDocumentId, opts?: LoadDocOptions): Promise<DocHandle<T> | null> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     // Readiness lives on the `DocumentQuery`, not the `DocHandle` — see
     // {@link getHandleState}.
     const progress = this._repo.findWithProgress<T>(documentId as DocumentId);
-    const state = progress.peek();
-    if (state.state === 'ready') {
-      return state.handle;
+    const initial = progress.peek();
+    if (initial.state === 'ready') {
+      return initial.handle;
     }
-    if (!this._useSubduction) {
-      this._documentsToRequest.add(progress.documentId);
-      this._sharePolicyChangedTask!.schedule();
+
+    // Default: when `fetchFromNetwork` is unset, behave as if it were
+    // `true` — wait on any source. Only an explicit `false` activates
+    // the storage-only branch.
+    if (opts?.fetchFromNetwork !== false) {
+      // Network branch: announce that we want the doc, then fall through
+      // to `whenReady()` and wait for any source (storage or network) to
+      // deliver it.
+      if (!this._useSubduction) {
+        this._documentsToRequest.add(progress.documentId);
+        this._sharePolicyChangedTask!.schedule();
+      }
+    } else {
+      // Note: This is a Hack.
+      // Storage-only branch. The subduction fork's `DocumentQuery` merged
+      // storage/network into a single `'loading'` state, so we can't tell
+      // them apart via `progress.peek()`. Workaround: probe storage
+      // directly and throw `'unavailable'` if nothing is on disk, without
+      // ever scheduling a network announce. See `fetchFromNetwork` JSDoc
+      // for the residual inbound-announce race.
+      // TODO(mykola): replace with per-source state inspection once the
+      // patched fork exposes it on `DocumentProgress`.
+      const chunks = await this._storage.loadRange([progress.documentId]);
+      const onDisk = chunks.some((chunk) => chunk.data && chunk.data.length > 0);
+      if (!onDisk) {
+        return null;
+      }
     }
+
     const readyPromise = progress.whenReady();
-    return opts?.timeout
-      ? await cancelWithContext(ctx, asyncTimeout(readyPromise, opts.timeout))
-      : await cancelWithContext(ctx, readyPromise);
+    try {
+      return opts?.timeout
+        ? await cancelWithContext(ctx, asyncTimeout(readyPromise, opts.timeout))
+        : await cancelWithContext(ctx, readyPromise);
+    } catch (error: any) {
+      if (isDocumentUnavailableError(error) && opts?.fetchFromNetwork === false) {
+        return null;
+      }
+      throw error;
+    }
   }
 
   /**
@@ -400,6 +448,24 @@ export class AutomergeHost extends Resource {
 
     const chunks = await this._storage.loadRange([documentId]);
     return bufferToArray(Buffer.concat(chunks.map((c) => c.data!)));
+  }
+
+  /**
+   * Probe local storage to determine whether the document has any persisted
+   * chunks. Does not request the document from the network and does not
+   * touch the in-memory `Repo`. Returns `true` iff at least one non-empty
+   * chunk exists on disk for the document.
+   *
+   * Intended for query-driven (disk-only) loads that need to know quickly
+   * whether a document is locally available without waiting on network
+   * latency. See `DocumentsSynchronizer.addDocuments` and the `requesting`
+   * transition in `DocHandleProxy`.
+   */
+  async hasDocOnDisk(id: AnyDocumentId): Promise<boolean> {
+    invariant(this.isOpen, 'AutomergeHost is not open');
+    const documentId = interpretAsDocumentId(id);
+    const chunks = await this._storage.loadRange([documentId]);
+    return chunks.some((chunk) => chunk.data != null && chunk.data.length > 0);
   }
 
   /**
@@ -465,6 +531,7 @@ export class AutomergeHost extends Resource {
       await Promise.all(
         headsToWait.map(async (entry) => {
           const handle = await this.loadDoc<DatabaseDirectory>(ctx, entry.documentId as DocumentId);
+          invariant(handle, 'Document handle must be available when waiting for heads replication.');
           await waitForHeads(handle, entry.heads!);
         }),
       );
@@ -645,10 +712,22 @@ export class AutomergeHost extends Resource {
    */
   @trace.span({ showInBrowserTimeline: true, showInRemoteTracing: false })
   async flush(ctx: Context, { documentIds }: FlushRequest = {}): Promise<void> {
+    // Concurrent `db.flush()` RPCs can arrive while the host is in or past
+    // teardown. `runBlocking` below would throw `ContextDisposedError` on a
+    // disposed ctx; treat a closed host as a no-op flush instead (nothing to
+    // propagate, the resource is gone). The host can also transition from
+    // open to closed *during* the `_repo.flush()` await — re-check before
+    // reaching `runBlocking`.
+    if (!this.isOpen) {
+      return;
+    }
     const loadedDocuments = (documentIds ?? Object.keys(this._repo.handles)).filter(
       (documentId): documentId is DocumentId => getHandleState(this._repo, documentId as DocumentId) === 'ready',
     );
     await this._repo.flush(loadedDocuments);
+    if (!this.isOpen) {
+      return;
+    }
 
     // Ensure that document versions have propagated across the system.
     await this._onHeadsChangedTask?.runBlocking();
@@ -971,12 +1050,24 @@ export class AutomergeHost extends Resource {
       let newState: CollectionState | undefined;
 
       for (const [documentId, heads] of docHeads) {
-        if (documentId in state.documents) {
-          if (!newState) {
-            newState = structuredClone(state);
-          }
-          newState.documents[documentId] = heads;
+        const current = state.documents[documentId];
+        // Collection membership is owned by `updateLocalCollectionState` (driven by
+        // `SpaceStateManager.spaceDocumentListUpdated`). `_afterSave` fires for every
+        // chunk written — including the space root, system docs, and transiently-fetched
+        // docs that haven't been admitted to any collection — so we only refresh heads
+        // for documents the membership path has already registered. Adding new keys
+        // here would leak non-collection docs into the broadcast state and race with
+        // the authoritative rebuild in `updateLocalCollectionState`.
+        if (current === undefined) {
+          continue;
         }
+        if (headsEquals(current, heads)) {
+          continue;
+        }
+        if (!newState) {
+          newState = structuredClone(state);
+        }
+        newState.documents[documentId] = heads;
       }
 
       if (newState) {
@@ -1033,4 +1124,8 @@ const decodeCollectionState = (state: unknown): CollectionState => {
 
 const encodeCollectionState = (state: CollectionState): unknown => {
   return state;
+};
+
+const isDocumentUnavailableError = (error: Error): boolean => {
+  return error.message.includes('unavailable');
 };

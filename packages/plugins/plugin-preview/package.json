@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
@@ -25,10 +25,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/PreviewPlugin.workerd.ts",
         "node": "./src/PreviewPlugin.node.ts",
         "default": "./src/PreviewPlugin.tsx"
       },
       "types": "./dist/types/src/PreviewPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/PreviewPlugin.workerd.mjs",
       "node": "./dist/lib/neutral/PreviewPlugin.node.mjs",
       "default": "./dist/lib/neutral/PreviewPlugin.mjs"
     },

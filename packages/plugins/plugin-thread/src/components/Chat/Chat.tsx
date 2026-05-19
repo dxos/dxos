@@ -68,7 +68,7 @@ export type ChatOrientation = 'top' | 'bottom';
  * Owns its own UI state (textbox content, scroll position, editor extensions) but
  * does not load data or invoke operations — the caller passes messages and an
  * `onSend` callback. Used by both `ThreadContainer` (AutoMerge `Thread`) and
- * `ChannelContainer`'s feed-backed channel chat.
+ * `ChannelArticle`'s feed-backed channel chat.
  */
 export const Chat = composable<HTMLDivElement, ChatProps>(
   (
@@ -202,7 +202,7 @@ const ThreadLayout = React.forwardRef<HTMLDivElement, LayoutProps & Pick<ThreadR
       <ThreadComponent.Root {...props} id={id} current={current} ref={ref}>
         <ScrollArea.Root classNames='col-span-2' orientation='vertical'>
           <ScrollArea.Viewport ref={sentinelRef}>
-            <div role='none' className={mx(threadLayout, 'place-self-end')}>
+            <div className={mx(threadLayout, 'place-self-end')}>
               {messages.map((message) => (
                 <MessagePanel key={message.id} message={message} members={members} />
               ))}

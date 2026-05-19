@@ -41,7 +41,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
         const messageContent = Function.pipe([message], Array.flatMap(renderMarkdown), Array.join('\n\n'));
         const tagList = tags.map((tag) => `- ${tag.label}`).join('\n');
 
-        const result = yield* new AiRequest({
+        const result = yield* new AiRequest.Request({
           observer: GenerationObserver.fromPrinter(new ConsolePrinter({ tag: 'classify' })),
         }).run({
           prompt:
@@ -86,8 +86,8 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
           return yield* Effect.fail(new Error('Message is not in a feed'));
         }
 
-        const feedDxn = DXN.fromSpaceAndObjectId(queueDXNInfo.spaceId, queueDXNInfo.queueId);
-        const feed = yield* Database.load(Ref.fromDXN(feedDxn));
+        const feedDXN = DXN.fromSpaceAndObjectId(queueDXNInfo.spaceId, queueDXNInfo.queueId);
+        const feed = yield* Database.load(Ref.fromDXN(feedDXN));
 
         const relation = Relation.make(HasSubject.HasSubject, {
           [Relation.Source]: selectedTag,

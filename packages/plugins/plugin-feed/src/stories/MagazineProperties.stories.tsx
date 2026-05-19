@@ -44,7 +44,7 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Magazine.Magazine, Subscription.Feed, Subscription.Post, Tag.Tag, Text.Text],
+      types: [Magazine.Magazine, Subscription.Subscription, Subscription.Post, Tag.Tag, Text.Text],
       onCreateSpace: async ({ space }) => {
         // Pre-seed a couple of feeds so the Feeds combobox has options to pick from,
         // exercising both "select existing" and "create new" flows.
@@ -85,7 +85,7 @@ type Story = StoryObj<typeof meta>;
 
 /**
  * Default Magazine ObjectProperties — exercises the auto-generated form,
- * including the markdown editor for `instructions` and the Feeds picker.
+ * including the Routine picker and the Feeds picker.
  *
  * Manual flow:
  *  1. Open the Feeds combobox.
@@ -106,7 +106,7 @@ export const Default: Story = {};
  *  4. Click the "Create new" item, switching the picker to the inline form.
  *  5. Fill `name` and `url`, then click Save.
  *
- * Final assertion: the create form is gone. (`Subscription.Feed`'s required
+ * Final assertion: the create form is gone. (`Subscription.Subscription`'s required
  * backing-feed ref is supplied by `FactoryAnnotation` → `makeFeed`, hidden
  * fields are stripped by `omitHiddenFormFields`, and `RefField` writes the
  * new ref into the slot via `onValueChange` before dismissing the popover.)
@@ -196,9 +196,9 @@ export const CreateFeed: Story = {
     // reported "feed created but not linked" symptom).
     const space = (globalThis as any).__feedTestSpace;
     const newFeed = (await waitFor('new Feed appears in space.db', async () => {
-      const allFeeds = await space.db.query(Filter.type(Subscription.Feed)).run();
-      return allFeeds.find((feed: Subscription.Feed) => feed.name === 'My Brand New Blog');
-    })) as Subscription.Feed;
+      const allFeeds = await space.db.query(Filter.type(Subscription.Subscription)).run();
+      return allFeeds.find((feed: Subscription.Subscription) => feed.name === 'My Brand New Blog');
+    })) as Subscription.Subscription;
 
     // Second: the magazine.feeds array must contain a Ref to that new Feed.
     const magazine = (globalThis as any).__feedTestMagazine as Magazine.Magazine | undefined;

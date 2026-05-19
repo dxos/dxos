@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-observability",
   "version": "0.8.3",
-  "private": true,
   "description": "DXOS app framework plugin for hooking up app observability",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -9,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
@@ -24,11 +23,6 @@
       "types": "./dist/types/src/components/index.d.ts",
       "default": "./dist/lib/neutral/components/index.mjs"
     },
-    "#containers": {
-      "source": "./src/containers/index.ts",
-      "types": "./dist/types/src/containers/index.d.ts",
-      "default": "./dist/lib/neutral/containers/index.mjs"
-    },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
@@ -41,10 +35,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/ObservabilityPlugin.workerd.ts",
         "node": "./src/ObservabilityPlugin.node.ts",
         "default": "./src/ObservabilityPlugin.ts"
       },
       "types": "./dist/types/src/ObservabilityPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/ObservabilityPlugin.workerd.mjs",
       "node": "./dist/lib/neutral/ObservabilityPlugin.node.mjs",
       "default": "./dist/lib/neutral/ObservabilityPlugin.mjs"
     },
@@ -64,11 +60,6 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "default": "./dist/lib/neutral/index.mjs"
-    },
-    "./components": {
-      "source": "./src/components/index.ts",
-      "types": "./dist/types/src/components/index.d.ts",
-      "default": "./dist/lib/neutral/components/index.mjs"
     },
     "./plugin": {
       "source": "./src/plugin.ts",

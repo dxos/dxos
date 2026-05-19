@@ -14,12 +14,12 @@ export const NativePlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     id: 'spotlight-listener',
-    activatesOn: ActivationEvents.OperationInvokerReady,
+    activatesOn: ActivationEvents.ProcessManagerReady,
     activate: SpotlightListener,
   }),
   Plugin.addModule({
     id: 'updater',
-    activatesOn: ActivationEvents.OperationInvokerReady,
+    activatesOn: ActivationEvents.ProcessManagerReady,
     activate: Updater,
   }),
   Plugin.addModule({

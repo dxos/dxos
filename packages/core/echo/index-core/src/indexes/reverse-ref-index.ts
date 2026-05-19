@@ -15,8 +15,8 @@ import type { Index, IndexerObject } from './interface';
 /**
  * Extracts all outgoing references from an object's data.
  */
-const extractReferences = (data: Record<string, unknown>): { path: string[]; targetDxn: string }[] => {
-  const refs: { path: string[]; targetDxn: string }[] = [];
+const extractReferences = (data: Record<string, unknown>): { path: string[]; targetDXN: string }[] => {
+  const refs: { path: string[]; targetDXN: string }[] = [];
   const visit = (path: string[], value: unknown) => {
     if (isEncodedReference(value)) {
       const dxn = EncodedReference.toDXN(value);
@@ -24,7 +24,7 @@ const extractReferences = (data: Record<string, unknown>): { path: string[]; tar
       if (!echoId) {
         return; // Skip non-echo references.
       }
-      refs.push({ path, targetDxn: dxn.toString() });
+      refs.push({ path, targetDXN: dxn.toString() });
     } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       for (const [key, v] of Object.entries(value)) {
         visit([...path, key], v);
@@ -41,7 +41,7 @@ const extractReferences = (data: Record<string, unknown>): { path: string[]; tar
 
 export const ReverseRef = Schema.Struct({
   recordId: Schema.Number,
-  targetDxn: Schema.String,
+  targetDXN: Schema.String,
   /**
    * Escaped property path within an object.
    *
@@ -56,7 +56,7 @@ export const ReverseRef = Schema.Struct({
 export interface ReverseRef extends Schema.Schema.Type<typeof ReverseRef> {}
 
 export interface ReverseRefQuery {
-  targetDxn: string;
+  targetDXN: string;
   // TODO: Add prop filter
 }
 
@@ -70,23 +70,23 @@ export class ReverseRefIndex implements Index {
 
     yield* sql`CREATE TABLE IF NOT EXISTS reverseRef (
       recordId INTEGER NOT NULL,
-      targetDxn TEXT NOT NULL,
+      targetDXN TEXT NOT NULL,
       propPath TEXT NOT NULL,
-      PRIMARY KEY (recordId, targetDxn, propPath)
+      PRIMARY KEY (recordId, targetDXN, propPath)
     )`;
 
-    yield* sql`CREATE INDEX IF NOT EXISTS idx_reverse_ref_target ON reverseRef(targetDxn)`;
+    yield* sql`CREATE INDEX IF NOT EXISTS idx_reverse_ref_target ON reverseRef(targetDXN)`;
   });
 
   /**
    * Query all references pointing to a target DXN.
    */
   query = Effect.fn('ReverseRefIndex.query')(
-    ({ targetDxn }: ReverseRefQuery): Effect.Effect<readonly ReverseRef[], SqlError.SqlError, SqlClient.SqlClient> =>
+    ({ targetDXN }: ReverseRefQuery): Effect.Effect<readonly ReverseRef[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
         // TODO(mykola): Join objectMeta table here.
-        const rows = yield* sql`SELECT * FROM reverseRef WHERE targetDxn = ${targetDxn}`;
+        const rows = yield* sql`SELECT * FROM reverseRef WHERE targetDXN = ${targetDXN}`;
         return rows as ReverseRef[];
       }),
   );
@@ -115,7 +115,7 @@ export class ReverseRefIndex implements Index {
               yield* Effect.forEach(
                 refs,
                 (ref) =>
-                  sql`INSERT INTO reverseRef (recordId, targetDxn, propPath) VALUES (${recordId}, ${ref.targetDxn}, ${EscapedPropPath.escape(ref.path)})`,
+                  sql`INSERT INTO reverseRef (recordId, targetDXN, propPath) VALUES (${recordId}, ${ref.targetDXN}, ${EscapedPropPath.escape(ref.path)})`,
                 { discard: true },
               );
             }),

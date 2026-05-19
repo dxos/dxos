@@ -332,7 +332,7 @@ export const Timeline = composable<HTMLDivElement, TimelineProps>(
                 style={{ height: `${options.lineHeight}px` }}
                 onClick={handleClick}
               >
-                <div role='none' className='px-1'>
+                <div className='px-1'>
                   <LineVector
                     branchLane={branchLane}
                     laneCount={laneCount}
@@ -350,7 +350,6 @@ export const Timeline = composable<HTMLDivElement, TimelineProps>(
                 )}
                 {showIcon && <CommitIcon commit={commit} />}
                 <div
-                  role='none'
                   className={mx(
                     'text-sm truncate cursor-pointer text-subdued font-thin dx-current-row dx-hover-row',
                     hasLink && 'underline decoration-dotted underline-offset-2',

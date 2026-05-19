@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
-import { Database, Query } from '@dxos/echo';
+import { Database, Filter, Query } from '@dxos/echo';
 
 import * as Operation from './Operation';
 import * as OperationHandlerSet from './OperationHandlerSet';
@@ -37,7 +37,7 @@ export const layer: Layer.Layer<Service, never, Database.Service | OperationHand
       const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
       return {
         resolve: (key: string) =>
-          Database.runQueryFirst(Query.type(Operation.PersistentOperation, { key }))
+          Database.runQueryFirst(Query.select(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(key))))
             .pipe(
               Effect.flatten,
               Effect.map(Operation.deserialize),

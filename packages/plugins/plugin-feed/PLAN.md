@@ -15,24 +15,24 @@
 
 - [x] Create the base structure for the plugin.
 - [x] Create a new echo Schemas for `Feed` and `Post` under the `Subscription` namespace.
-- [x] Create a SubscriptionStack component based off of EventStack; this will be used to display the list of subscribed feeds (i.e., `Subscription.Feed` objects).
+- [x] Create a SubscriptionStack component based off of EventStack; this will be used to display the list of subscribed feeds (i.e., `Subscription.Subscription` objects).
 - [x] Create a PostStack component based off of EventRecordStack; this will be used to display the entries for a given feed (i.e., `Subscription.Post` objects).
 - [x] Create a FeedArticle container that instantiates a PostStack and is passed a `Subcription.Feed` object (bound to a `react-surface` definition).
-- [x] Create a testing utility that can read a given RSS feed and create a `Subscription.Feed` object and `Subscription.Post` objects.
+- [x] Create a testing utility that can read a given RSS feed and create a `Subscription.Subscription` object and `Subscription.Post` objects.
 - [x] Create a storybook for FeedArticle that uses the testing utility.
 - [x] Configure the plugin with `composer-app`.
 
 ## Phase 2 (Sync feeds)
 
-- [x] Create SubscriptionArticle which should show a stack of `Subscription.Feed` objects from an ECHO query.
+- [x] Create SubscriptionArticle which should show a stack of `Subscription.Subscription` objects from an ECHO query.
   - [x] Each SubscriptionTile component should have a menu option to delete the feed.
   - [x] The SubscriptionArticle Toolbar should have a button to create a new feed.
     - [x] This should open a dialog to enter the feed URL via a simple `Form` (react-ui-form).
-    - [x] On Save create a new `Subscription.Feed`; or Cancel.
+    - [x] On Save create a new `Subscription.Subscription`; or Cancel.
 - [x] When selecting a feed, display the FeedArticle as a companion (similar to plugin-inbox MailboxArticle/MessageArticle).
 - [x] Create a storybook for SubscriptionArticle.
 - [x] Create a sync operation to fetch and sync posts for a given feed.
-  - [x] Write the posts to the `Subscription.Feed`'s ECHO Feed.
+  - [x] Write the posts to the `Subscription.Subscription`'s ECHO Feed.
 - [x] Create `CreateFeedSchema` with `inputSchema` metadata for the framework's built-in create dialog.
 - [x] Create app-graph-builder with feed listing under spaces, companion resolution, and sync action.
 - [x] Register `OperationHandler` capability with `FeedOperationHandlerSet`.
@@ -50,9 +50,9 @@
 ### Namespace Disambiguation
 
 - The `Subscription` namespace (`src/types/Subscription.ts`) disambiguates from the infrastructure `Feed` in `@dxos/echo`.
-- `Subscription.Feed` = application-level RSS subscription (typename: `org.dxos.type.subscription.feed`).
+- `Subscription.Subscription` = application-level RSS subscription (typename: `org.dxos.type.Subscription.Subscription`).
 - `Subscription.Post` = individual feed entry (typename: `org.dxos.type.subscription.post`).
-- Each `Subscription.Feed` has a backing `Feed.Feed` (ECHO feed) referenced via `Ref.Ref`.
+- Each `Subscription.Subscription` has a backing `Feed.Feed` (ECHO feed) referenced via `Ref.Ref`.
 
 ### SyncFeed Operation
 
@@ -83,13 +83,13 @@
 - `FeedFetcher` is a type alias: `(url: string, options?) => Promise<FetchResult>`.
 - `fetchRss` handles RSS and Atom XML feeds via `fast-xml-parser`.
 - `fetchAtproto` handles AT Protocol feeds via the public XRPC API (`public.api.bsky.app`).
-- The sync operation dispatches based on `Subscription.Feed.type` field.
+- The sync operation dispatches based on `Subscription.Subscription.type` field.
 - AT Protocol posts map: `record.text` → description, `post.uri` → guid, `post.author.displayName` → author, `record.createdAt` → published, embedded links → link.
 
 ## Phase 2.5 (AT Protocol / Bluesky)
 
 - [x] Abstract fetcher into `FeedFetcher` type with `fetchRss` and `fetchAtproto` implementations.
-- [x] Add `type` field (`'rss' | 'atproto'`) to `Subscription.Feed` schema.
+- [x] Add `type` field (`'rss' | 'atproto'`) to `Subscription.Subscription` schema.
 - [x] Implement `fetchAtproto` using public XRPC `app.bsky.feed.getAuthorFeed` endpoint.
 - [x] Update `sync-feed.ts` to dispatch to correct fetcher based on feed type.
 - [x] Create unit tests for both `fetchRss` and `fetchAtproto`.
@@ -112,7 +112,7 @@ Phase 3 adds authenticated AT Protocol support using the `@atproto/api` SDK.
 ### 3.2 — DID Resolution and Identity
 
 - [ ] Resolve handles → DIDs via `com.atproto.identity.resolveHandle`.
-- [ ] Cache DID ↔ handle mappings on `Subscription.Feed` to avoid repeated lookups.
+- [ ] Cache DID ↔ handle mappings on `Subscription.Subscription` to avoid repeated lookups.
 - [ ] Support both `did:plc` and `did:web` methods.
 
 ### 3.3 — Rich Post Content
@@ -132,7 +132,7 @@ Phase 3 adds authenticated AT Protocol support using the `@atproto/api` SDK.
 ### 3.5 — Cursor-based Pagination
 
 - [ ] Use AT Protocol cursor from paginated XRPC responses for incremental sync.
-- [ ] Store cursor in `Subscription.Feed.cursor` (already supports opaque strings).
+- [ ] Store cursor in `Subscription.Subscription.cursor` (already supports opaque strings).
 - [ ] Handle cursor invalidation gracefully (full re-fetch on stale cursor).
 
 ### 3.6 — Write Operations (Future)

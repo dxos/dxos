@@ -189,14 +189,14 @@ export const RefField = (props: RefFieldProps) => {
           <ObjectPicker.Root open={open} onOpenChange={setOpen}>
             <ObjectPicker.Trigger asChild classNames='p-0'>
               {item ? (
-                <div role='none' className='flex gap-form-gap w-full'>
+                <div className='flex gap-form-gap w-full'>
                   <Input.Root key={item.id}>
                     <Input.TextInput value={item.label} readOnly classNames='w-full' />
                   </Input.Root>
                 </div>
               ) : (
                 <Button classNames='w-full text-start gap-form-gap'>
-                  <div role='none' className='grow overflow-hidden'>
+                  <div className='grow overflow-hidden'>
                     <span className='truncate text-description'>{placeholder ?? t('ref-field.placeholder')}</span>
                   </div>
                   <Icon size={3} icon='ph--caret-down--bold' />

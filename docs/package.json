@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "info@dxos.org",
   "type": "module",
   "scripts": {
@@ -23,6 +23,7 @@
     "@astrojs/rss": "catalog:",
     "@astrojs/starlight": "catalog:",
     "@bryanguffey/astro-standard-site": "catalog:",
+    "@dxos/keys": "workspace:*",
     "astro": "catalog:",
     "sharp": "catalog:",
     "starlight-links-validator": "catalog:"

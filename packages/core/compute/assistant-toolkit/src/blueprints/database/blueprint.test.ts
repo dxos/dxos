@@ -237,8 +237,8 @@ describe('Database Blueprint', () => {
             role: 'Director',
           }),
         );
-        const relationDxn = Relation.getDXN(relation).toString();
-        yield* agent.submitPrompt(`Delete the relation ${relationDxn}.`);
+        const relationDXN = Relation.getDXN(relation).toString();
+        yield* agent.submitPrompt(`Delete the relation ${relationDXN}.`);
         yield* agent.waitForCompletion();
         expect(Relation.isDeleted(relation)).toBe(true);
       },
@@ -282,14 +282,14 @@ describe('Database Blueprint', () => {
         });
         const org = yield* Database.add(Obj.make(Organization.Organization, { name: 'Untagged Corp' }));
         const tag = yield* Database.add(Tag.make({ label: 'obsolete' }));
-        const tagDxn = Obj.getDXN(tag).toString();
-        Entity.update(org, (org) => Entity.addTag(org, tagDxn));
-        expect(Obj.getMeta(org).tags ?? []).toContain(tagDxn);
+        const tagDXN = Obj.getDXN(tag).toString();
+        Entity.update(org, (org) => Entity.addTag(org, tagDXN));
+        expect(Obj.getMeta(org).tags ?? []).toContain(tagDXN);
         yield* agent.submitPrompt(`Remove tag "obsolete" from the organization "Untagged Corp".`);
         yield* agent.waitForCompletion();
         const tags = Obj.getMeta(org).tags ?? [];
         // TODO(dmaretskyi): matcher doesnt work with echo proxies.
-        expect([...tags]).not.toContain(tagDxn);
+        expect([...tags]).not.toContain(tagDXN);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

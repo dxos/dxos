@@ -20,13 +20,18 @@ const TestLayer = AssistantTestLayer({
 });
 
 const TestLayerWithCredentials = Layer.mergeAll(
-  credentialsLayerConfig([{ service: 'discord.com', apiKey: Config.redacted('DISCORD_TOKEN') }]),
+  credentialsLayerConfig([
+    {
+      service: 'discord.com',
+      apiKey: Config.redacted('DISCORD_TOKEN'),
+    },
+  ]),
   FetchHttpClient.layer,
 ).pipe(Layer.provideMerge(TestLayer));
 
 const DXOS_SERVER_ID = '837138313172353095';
 
-describe('Feed', { timeout: 600_000 }, () => {
+describe.skipIf(!process.env.DISCORD_TOKEN)('Feed', { timeout: 600_000 }, () => {
   it.effect(
     'fetch discord messages',
     Effect.fnUntraced(

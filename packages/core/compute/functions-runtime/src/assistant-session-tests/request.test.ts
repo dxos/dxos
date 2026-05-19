@@ -76,12 +76,12 @@ const TestLayer = Layer.empty.pipe(
   Layer.provideMerge(toolkitLayer),
 );
 
-describe('AiRequest', () => {
+describe('AiRequest.Request', () => {
   it.effect(
     'no tools',
     Effect.fnUntraced(
       function* (_) {
-        const request = new AiRequest();
+        const request = new AiRequest.Request();
         const response = yield* request.run({
           prompt: 'Hello world!',
           history: [],
@@ -97,7 +97,7 @@ describe('AiRequest', () => {
     'calculator',
     Effect.fnUntraced(
       function* (_) {
-        const request = new AiRequest();
+        const request = new AiRequest.Request();
         const toolkit = yield* OpaqueToolkit.fromContext(TestToolkit);
         const response = yield* request.run({
           toolkit,
@@ -115,7 +115,7 @@ describe('AiRequest', () => {
     'tool schema error',
     Effect.fnUntraced(
       function* (_) {
-        const request = new AiRequest();
+        const request = new AiRequest.Request();
         const toolkit = yield* OpaqueToolkit.fromContext(TestToolkit);
         const response = yield* request.run({
           toolkit,
@@ -134,7 +134,7 @@ describe('AiRequest', () => {
     'summarization',
     Effect.fnUntraced(
       function* (_) {
-        const request = new AiRequest({ summarizationThreshold: 0 }); // Force summarization.
+        const request = new AiRequest.Request({ summarizationThreshold: 0 }); // Force summarization.
         const response = yield* request.run({
           prompt: 'What did we talk about?',
           history: [

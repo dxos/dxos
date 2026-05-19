@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { type AiContextBinder } from '@dxos/assistant';
+import { type AiContext } from '@dxos/assistant';
 import { Blueprint } from '@dxos/compute';
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/react-client/echo';
@@ -35,7 +35,7 @@ export const useBlueprints = ({
   const staticBlueprints = useMemo(() => blueprintRegistry?.query() ?? [], [blueprintRegistry]);
   const spaceBlueprints = useQuery(db, Filter.type(Blueprint.Blueprint));
   return useMemo(() => {
-    const blueprints = distinctBy([...staticBlueprints, ...spaceBlueprints], (b) => b.key);
+    const blueprints = distinctBy([...staticBlueprints, ...spaceBlueprints], (b) => Obj.getMeta(b).key);
     blueprints.sort(({ name: a }, { name: b }) => a.localeCompare(b));
     return blueprints;
   }, [staticBlueprints, spaceBlueprints]);
@@ -44,7 +44,7 @@ export const useBlueprints = ({
 /**
  * Create reactive map of active blueprints (by key).
  */
-export const useActiveBlueprints = ({ context }: { context?: AiContextBinder }) => {
+export const useActiveBlueprints = ({ context }: { context?: AiContext.Binder }) => {
   const [active, setActive] = useState<Map<string, Blueprint.Blueprint>>(new Map());
 
   useEffect(() => {
@@ -55,7 +55,13 @@ export const useActiveBlueprints = ({ context }: { context?: AiContextBinder }) 
 
     const updateActive = () => {
       const blueprints = context.getBlueprints();
-      setActive(new Map(blueprints.map((blueprint) => [blueprint.key, blueprint])));
+      setActive(
+        new Map(
+          blueprints
+            .map((blueprint) => [Obj.getMeta(blueprint).key, blueprint] as const)
+            .filter((entry): entry is readonly [string, Blueprint.Blueprint] => entry[0] !== undefined),
+        ),
+      );
     };
 
     // Set initial value.
@@ -75,7 +81,7 @@ export const useBlueprintHandlers = ({
   blueprintRegistry,
 }: {
   db: Database.Database;
-  context?: AiContextBinder;
+  context?: AiContext.Binder;
   blueprintRegistry?: Blueprint.Registry;
 }) => {
   const onUpdateBlueprint = useCallback(
@@ -86,7 +92,7 @@ export const useBlueprintHandlers = ({
 
       // Find existing cloned blueprint.
       const objects = await db.query(Filter.type(Blueprint.Blueprint)).run();
-      let storedBlueprint = objects.find((blueprint) => blueprint.key === key);
+      let storedBlueprint = objects.find((blueprint) => Obj.getMeta(blueprint).key === key);
       if (checked) {
         if (!storedBlueprint) {
           const blueprint = blueprintRegistry.getByKey(key);

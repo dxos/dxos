@@ -4,12 +4,12 @@
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { type ComputeGraph, ComputeGraphModel, type ComputeNode } from '../types';
-import type { Sequence } from './sequence';
+import type * as Sequence from './Sequence';
 
 /**
  * Compile a sequence into a compute graph.
  */
-export const compileSequence = async (sequence: Sequence): Promise<ComputeGraph> => {
+export const compileSequence = async (sequence: Sequence.Sequence): Promise<ComputeGraph> => {
   const model = ComputeGraphModel.create();
 
   const inputNode = model.createNode({

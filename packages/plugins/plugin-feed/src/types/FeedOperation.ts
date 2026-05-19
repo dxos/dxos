@@ -26,7 +26,7 @@ export const SyncFeed = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    feed: Subscription.Feed,
+    feed: Subscription.Subscription,
   }),
   output: Schema.Void,
 });

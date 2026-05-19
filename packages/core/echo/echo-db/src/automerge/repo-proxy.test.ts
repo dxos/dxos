@@ -11,6 +11,7 @@ import { Trigger, asyncTimeout, latch, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { AutomergeHost, DataServiceImpl, SpaceStateManager } from '@dxos/echo-pipeline';
 import { TestReplicationNetwork } from '@dxos/echo-pipeline/testing';
+import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { log } from '@dxos/log';
@@ -32,6 +33,7 @@ describe('RepoProxy', () => {
     log.break();
 
     const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), clientHandle.url!);
+    invariant(hostHandle);
     log.break();
     await hostHandle.whenReady();
 
@@ -149,6 +151,68 @@ describe('RepoProxy', () => {
     }
   });
 
+  // Asserts the `pending → requesting → ready` state machine: when a doc is
+  // not on disk and is not reachable via the network, the worker-side disk
+  // probe still settles and notifies the client, transitioning the handle
+  // from `pending` to `requesting`. `whenReady()` continues to wait
+  // (no source ever delivers), but `whenSettledOnDisk()` resolves with
+  // `false` so disk-only callers can give up without relying on timeouts.
+  test('handle transitions to requesting when document is not on disk and not replicated', async () => {
+    // Mint a real, valid documentId on a fully isolated host. This host is
+    // never connected to the test peer's network, so the document is
+    // unreachable from the test peer.
+    const sourcePeer = await setup();
+    const sourceHandle = await sourcePeer.host.createDoc<{ text: string }>({ text: 'unreachable' });
+    const unreachableUrl = sourceHandle.url;
+
+    // Test peer: separate kv store (no chunks for `unreachableUrl` on disk),
+    // no replication network configured.
+    const { dataService } = await setup();
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+
+    const handle = clientRepo.find<{ text: string }>(unreachableUrl);
+    expect(handle.state).toEqual('pending');
+    expect(handle.isReady()).toBe(false);
+
+    // The worker-side disk probe settles negative; the handle should report
+    // `requesting` once the synchronizer flushes the transition update.
+    const settledOnDisk = await asyncTimeout(handle.whenSettledOnDisk(), 1000);
+    expect(settledOnDisk).toBe(false);
+    expect(handle.state).toEqual('requesting');
+    expect(handle.isReady()).toBe(false);
+
+    // `whenReady()` must NOT resolve — there is no source for the doc on
+    // disk or on the network.
+    let readyResolved = false;
+    void handle.whenReady().then(() => {
+      readyResolved = true;
+    });
+    await sleep(300);
+
+    expect(readyResolved).toBe(false);
+    expect(handle.state).toEqual('requesting');
+    expect(handle.isReady()).toBe(false);
+  });
+
+  // Sanity check for the `'ready'` arm of the state machine: when the doc
+  // IS on local disk (i.e. created on the same worker), the handle settles
+  // straight to `'ready'` and `whenSettledOnDisk()` resolves with `true`.
+  test('handle settles to ready directly when document is on disk', async () => {
+    const { host, dataService } = await setup();
+    const sourceHandle = await host.createDoc<{ text: string }>({ text: 'on-disk' });
+
+    const [clientRepo] = createProxyRepos(dataService);
+    await openAndClose(clientRepo);
+
+    const handle = clientRepo.find<{ text: string }>(sourceHandle.url);
+    const settledOnDisk = await asyncTimeout(handle.whenSettledOnDisk(), 1000);
+    expect(settledOnDisk).toBe(true);
+    await asyncTimeout(handle.whenReady(), 1000);
+    expect(handle.state).toEqual('ready');
+    expect(handle.doc()?.text).toEqual('on-disk');
+  });
+
   test('new document persists without `flush`', async () => {
     const path = createTmpPath();
     let url: AutomergeUrl;
@@ -224,6 +288,7 @@ describe('RepoProxy', () => {
     const handle = clientRepo.create<{ client: number; host: number }>();
     await handle.whenReady();
     const hostHandle = await host.loadDoc<{ client: number; host: number }>(Context.default(), handle.url!);
+    invariant(hostHandle);
 
     const numberOfUpdates = 1000;
     for (let i = 1; i <= numberOfUpdates; i++) {
@@ -263,6 +328,7 @@ describe('RepoProxy', () => {
     expect(cloneHandle.doc()?.text).to.equal(text);
 
     const hostHandle = await host.loadDoc<{ text: string }>(Context.default(), cloneHandle.url!);
+    invariant(hostHandle);
     await hostHandle.whenReady();
     await expect.poll(() => hostHandle.doc()?.text).toEqual(text);
   });
@@ -296,7 +362,11 @@ describe('RepoProxy', () => {
     await Promise.all(handles.map((handle) => handle.whenReady()));
 
     const hostHandles = await Promise.all(
-      handles.map(async (handle) => host.loadDoc<{ text: string }>(Context.default(), handle.url!)),
+      handles.map(async (handle) => {
+        const loaded = await host.loadDoc<{ text: string }>(Context.default(), handle.url!);
+        invariant(loaded);
+        return loaded;
+      }),
     );
 
     for (const handle of hostHandles) {

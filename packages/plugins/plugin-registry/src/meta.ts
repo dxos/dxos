@@ -28,3 +28,6 @@ export const meta: Plugin.Meta = {
   icon: 'ph--squares-four--regular',
   tags: ['system'],
 };
+
+/** Cascade-disable confirmation dialog surface id. */
+export const DISABLE_DEPENDENTS_DIALOG = `${meta.id}.disable-dependents-dialog`;

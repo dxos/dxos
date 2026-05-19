@@ -132,7 +132,7 @@ type TabsViewportProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 const TabsViewport = ({ classNames, children, ...props }: TabsViewportProps) => {
   const { activePart } = useTabsContext('TabsViewport');
   return (
-    <div role='none' {...props} data-active={activePart} className={mx(classNames)}>
+    <div {...props} data-active={activePart} className={mx(classNames)}>
       {children}
     </div>
   );

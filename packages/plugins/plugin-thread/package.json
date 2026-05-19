@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-thread",
   "version": "0.8.3",
-  "private": true,
   "description": "DXOS Threads Surface plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -9,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
@@ -51,10 +50,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/ThreadPlugin.workerd.ts",
         "node": "./src/ThreadPlugin.node.ts",
         "default": "./src/ThreadPlugin.tsx"
       },
       "types": "./dist/types/src/ThreadPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/ThreadPlugin.workerd.mjs",
       "node": "./dist/lib/neutral/ThreadPlugin.node.mjs",
       "default": "./dist/lib/neutral/ThreadPlugin.mjs"
     },
@@ -104,6 +105,7 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
     "@dxos/async": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -119,6 +121,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
+    "@dxos/plugin-calls": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
@@ -148,13 +151,7 @@
     "@effect-atom/atom-react": "catalog:",
     "@effect/ai": "catalog:",
     "@effect/experimental": "catalog:",
-    "@peermetrics/webrtc-stats": "catalog:",
-    "date-fns": "catalog:",
-    "extendable-media-recorder": "catalog:",
-    "extendable-media-recorder-wav-encoder": "catalog:",
-    "md5-hex": "catalog:",
-    "react-resize-detector": "catalog:",
-    "wavefile": "catalog:"
+    "date-fns": "catalog:"
   },
   "devDependencies": {
     "@dxos/plugin-testing": "workspace:*",

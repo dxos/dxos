@@ -19,7 +19,7 @@ export type EditableMarkdownCardProps = { subject: Markdown.Document | Text.Text
  * Full-bleed editable variant of {@link MarkdownCard}. Activated by the host
  * passing `editable: true` on the card surface data (e.g. plugin-board cells).
  * Renders a plain editor (no app-graph toolbar / file upload / link queries)
- * so it stays self-contained inside the card; the regular MarkdownContainer
+ * so it stays self-contained inside the card; the regular MarkdownArticle
  * remains the canonical surface for full article views.
  */
 export const EditableMarkdownCard = ({ subject }: EditableMarkdownCardProps) => {

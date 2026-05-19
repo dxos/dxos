@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
@@ -50,10 +50,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/KanbanPlugin.workerd.ts",
         "node": "./src/KanbanPlugin.node.ts",
         "default": "./src/KanbanPlugin.tsx"
       },
       "types": "./dist/types/src/KanbanPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/KanbanPlugin.workerd.mjs",
       "node": "./dist/lib/neutral/KanbanPlugin.node.mjs",
       "default": "./dist/lib/neutral/KanbanPlugin.mjs"
     },

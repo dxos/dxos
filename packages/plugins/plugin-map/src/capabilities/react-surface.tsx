@@ -10,14 +10,13 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Database, JsonSchema, Obj } from '@dxos/echo';
-import { type Collection } from '@dxos/echo';
+import { type Collection, Database, JsonSchema, Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
 
-import { MapContainer, MapViewEditor } from '#containers';
+import { MapArticle, MapViewEditor } from '#containers';
 import { LocationAnnotationId, Map, MapCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
@@ -41,7 +40,7 @@ export default Capability.makeModule(() =>
           }, []);
 
           return (
-            <MapContainer
+            <MapArticle
               role={role}
               subject={data.subject}
               type={state.type}

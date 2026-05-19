@@ -8,8 +8,7 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
 import { CommandConfig, Common, printList, spaceLayer, withTypes } from '@dxos/cli-util';
-import { Filter } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, Filter } from '@dxos/echo';
 import { AccessToken } from '@dxos/types';
 
 import { printToken } from './util';

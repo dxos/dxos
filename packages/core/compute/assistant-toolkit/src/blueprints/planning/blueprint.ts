@@ -12,7 +12,7 @@ const make = () =>
   Blueprint.make({
     key: BLUEPRINT_KEY,
     name: 'Planning',
-    description: 'Plans and tracks complex tasks with artifact management.',
+    description: 'Plans and tracks complex tasks using artifacts.',
     tools: Blueprint.toolDefinitions({ operations: [UpdateTasks] }),
   });
 

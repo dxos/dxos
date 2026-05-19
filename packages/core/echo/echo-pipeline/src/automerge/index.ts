@@ -10,3 +10,4 @@ export type * from './echo-replicator';
 export { diffCollectionState } from './collection-synchronizer';
 export * from './space-collection';
 export * from './echo-data-monitor';
+export * from './errors';

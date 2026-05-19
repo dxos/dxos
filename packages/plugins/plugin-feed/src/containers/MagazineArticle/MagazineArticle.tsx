@@ -58,9 +58,9 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     }
   }, [state, subject, invokePromise, t]);
 
-  // Reactive query of every Subscription.Feed in the space — used to render the source
+  // Reactive query of every Subscription.Subscription in the space — used to render the source
   // feed name on each tile without each tile having to subscribe to its own ref.
-  const allFeeds = useQuery(db, Filter.type(Subscription.Feed));
+  const allFeeds = useQuery(db, Filter.type(Subscription.Subscription));
 
   // Index feeds by bare object id (last DXN segment) — `Obj.getDXN(feed)`
   // returns the space-scoped form (`dxn:echo:<spaceId>:<id>`), but
@@ -94,7 +94,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
         continue;
       }
 
-      const feedRef = ref.target.feed;
+      const feedRef = ref.target.source;
       if (feedRef && !feedRef.target) {
         void feedRef.load().catch((err) => log.catch(err));
       }
@@ -113,7 +113,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     const orphanIds = new Set<string>();
     for (const postRef of magazine.posts) {
       const post = postRef.target;
-      const feedRef = post?.feed;
+      const feedRef = post?.source;
       if (!feedRef) {
         continue;
       }
@@ -139,14 +139,14 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     }
 
     const tag = findStarTag(db);
-    const tagDxn = tag ? Obj.getDXN(tag).toString() : undefined;
+    const tagDXN = tag ? Obj.getDXN(tag).toString() : undefined;
     const next = magazine.posts.filter((ref) => {
       const post = ref.target;
-      if (!post || !tagDxn) {
+      if (!post || !tagDXN) {
         return false;
       }
 
-      return Obj.getMeta(post).tags?.includes(tagDxn) ?? false;
+      return Obj.getMeta(post).tags?.includes(tagDXN) ?? false;
     });
 
     if (next.length === magazine.posts.length) {
@@ -239,7 +239,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       posts.map((post) => {
         // Match the post's source feed by bare object id; `post.feed.dxn` is local-id form,
         // while `feedNamesById` is keyed by id directly.
-        const feedId = post.feed ? (post.feed.dxn.toString().split(':').pop() ?? '') : '';
+        const feedId = post.source ? (post.source.dxn.toString().split(':').pop() ?? '') : '';
         return {
           post,
           current: post.id === currentId,
@@ -268,7 +268,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       </Panel.Toolbar>
       <Panel.Content>
         {posts.length === 0 ? (
-          <div role='none' className='flex items-center justify-center h-full text-subdued text-sm'>
+          <div className='flex items-center justify-center h-full text-subdued text-sm'>
             {t('empty-magazine.message')}
           </div>
         ) : (
@@ -327,7 +327,7 @@ const useMagazinePosts = (
   const postFingerprint = subject.posts.map((ref) => ref.dxn.toString()).join();
 
   return useMemo<Subscription.Post[]>(() => {
-    const seenDxn = new Set<string>();
+    const seenDXN = new Set<string>();
     const seenLink = new Set<string>();
     const seenGuid = new Set<string>();
 
@@ -343,14 +343,14 @@ const useMagazinePosts = (
       // dedup the masonry shows them as duplicate tiles.
       const dxn = Obj.getDXN(target).toString();
       if (
-        seenDxn.has(dxn) ||
+        seenDXN.has(dxn) ||
         (target.link && seenLink.has(target.link)) ||
         (target.guid && seenGuid.has(target.guid))
       ) {
         continue;
       }
 
-      seenDxn.add(dxn);
+      seenDXN.add(dxn);
       if (target.link) {
         seenLink.add(target.link);
       }

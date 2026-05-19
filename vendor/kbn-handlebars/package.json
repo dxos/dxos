@@ -1,14 +1,13 @@
 {
   "name": "@dxos/vendor-kbn-handlebars",
   "version": "0.8.3",
-  "private": true,
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
   "repository": {
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "info@dxos.org",
   "type": "module",
   "exports": {

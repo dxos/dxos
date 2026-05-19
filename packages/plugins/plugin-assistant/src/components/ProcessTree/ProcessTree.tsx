@@ -6,7 +6,7 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import React from 'react';
 
-import { Process } from '@dxos/functions-runtime';
+import { Process } from '@dxos/compute';
 import { Icon, IconButton, ScrollArea, Tooltip, Treegrid } from '@dxos/react-ui';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 import { Unit } from '@dxos/util';
@@ -79,7 +79,7 @@ export const ProcessTree = composable<HTMLDivElement, ProcessTreeProps>(
                           )}
                         />
                       </Tooltip.Trigger>
-                      <div role='none' className='flex items-center gap-2 text-xs overflow-hidden'>
+                      <div className='flex items-center gap-2 text-xs overflow-hidden'>
                         {/* TODO(burdon): Name is too long (and not informative). */}
                         <span className='truncate text-description select-none'>
                           {process.params.name ?? process.pid.toString()}

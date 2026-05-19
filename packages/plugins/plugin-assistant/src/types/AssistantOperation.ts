@@ -126,3 +126,16 @@ export const BlueprintForm = Schema.Struct({
   name: Schema.String,
   description: Schema.optional(Schema.String),
 });
+
+export const ToggleTracePanelDebug = Operation.make({
+  meta: {
+    key: `${ASSISTANT_OPERATION}.toggle-trace-panel-debug`,
+    name: 'Toggle trace panel debug',
+    description: 'Toggle trace panel between commit graph and raw span tree JSON.',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    state: Schema.optional(Schema.Boolean),
+  }),
+  output: Schema.Boolean,
+});

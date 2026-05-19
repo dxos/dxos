@@ -102,7 +102,7 @@ const NavBranchTile: MosaicStackTileComponent<Node.Node> = (props) => {
       fullWidth
       tabIndex={-1} // TODO(burdon): Use Mosaic.Focus.
       data-selected={isSelected}
-      classNames={mx('dx-focus-ring cursor-pointer', isSelected && 'bg-hover-overlay')}
+      classNames={mx('dx-focus-ring cursor-pointer', isSelected && 'bg-selected-surface')}
       onClick={handleSelect}
     >
       <Card.Toolbar>

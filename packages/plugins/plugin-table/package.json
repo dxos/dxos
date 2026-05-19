@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
@@ -40,10 +40,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/TablePlugin.workerd.ts",
         "node": "./src/TablePlugin.node.ts",
         "default": "./src/TablePlugin.tsx"
       },
       "types": "./dist/types/src/TablePlugin.d.ts",
+      "workerd": "./dist/lib/neutral/TablePlugin.workerd.mjs",
       "node": "./dist/lib/neutral/TablePlugin.node.mjs",
       "default": "./dist/lib/neutral/TablePlugin.mjs"
     },
@@ -69,6 +71,11 @@
       "types": "./dist/types/src/plugin.d.ts",
       "default": "./dist/lib/neutral/plugin.mjs"
     },
+    "./testing": {
+      "source": "./src/testing.ts",
+      "types": "./dist/types/src/testing.d.ts",
+      "default": "./dist/lib/neutral/testing.mjs"
+    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
@@ -85,6 +92,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
+    "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",

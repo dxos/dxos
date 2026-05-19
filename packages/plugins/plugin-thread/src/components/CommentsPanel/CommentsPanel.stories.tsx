@@ -6,11 +6,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
+import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Query, Relation } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { random } from '@dxos/random';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
@@ -71,8 +71,7 @@ const meta = {
     //  Currently this is required due to useOnEditAnalytics.
     withPluginManager({
       plugins: [
-        OperationPlugin(),
-        RuntimePlugin(),
+        ProcessManagerPlugin(),
         ClientPlugin({
           types: [Message.Message, Thread.Thread, AnchoredTo.AnchoredTo],
           onClientInitialized: ({ client }) =>

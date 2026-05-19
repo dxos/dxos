@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-wnfs",
   "version": "0.8.3",
-  "private": true,
   "description": "WNFS file management plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -9,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "type": "module",
   "imports": {
@@ -45,10 +44,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/WnfsPlugin.workerd.ts",
         "node": "./src/WnfsPlugin.node.ts",
         "default": "./src/WnfsPlugin.tsx"
       },
       "types": "./dist/types/src/WnfsPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/WnfsPlugin.workerd.mjs",
       "node": "./dist/lib/neutral/WnfsPlugin.node.mjs",
       "default": "./dist/lib/neutral/WnfsPlugin.mjs"
     },

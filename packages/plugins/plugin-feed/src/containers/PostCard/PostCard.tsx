@@ -28,14 +28,14 @@ export const PostCard = ({ subject }: PostCardProps) => {
   // resolves synchronously when the ref is already loaded; querying via useQuery means
   // the meta line lights up as soon as the feed lands in the space.
   const db = Obj.getDatabase(post);
-  const allFeeds = useQuery(db, Filter.type(Subscription.Feed));
+  const allFeeds = useQuery(db, Filter.type(Subscription.Subscription));
   const feedName = useMemo(() => {
-    const dxn = post.feed?.dxn.toString();
+    const dxn = post.source?.dxn.toString();
     if (!dxn) {
       return undefined;
     }
     return allFeeds.find((feed) => Obj.getDXN(feed).toString() === dxn)?.name;
-  }, [post.feed, allFeeds]);
+  }, [post.source, allFeeds]);
 
   const published = formatDate(post.published);
 

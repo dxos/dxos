@@ -100,7 +100,7 @@ export default AgentPrompt.pipe(
         });
 
         const runtime = yield* Effect.runtime<Feed.FeedService>();
-        const session = yield* acquireReleaseResource(() => new AiSession({ feed, runtime }));
+        const session = yield* acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
 
         yield* Effect.promise(() =>
           session.context.bind({

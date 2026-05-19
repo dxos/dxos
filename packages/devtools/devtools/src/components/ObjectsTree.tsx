@@ -105,11 +105,7 @@ const ObjectsTreeRow = ({
         classNames='grid grid-cols-subgrid col-[tree-row] cursor-pointer hover:bg-hover-surface'
         onClick={() => model.onSelect(node.entity)}
       >
-        <div
-          role='none'
-          className='indent relative grid grid-cols-subgrid col-[tree-row]'
-          style={paddingIndentation(level)}
-        >
+        <div className='indent relative grid grid-cols-subgrid col-[tree-row]' style={paddingIndentation(level)}>
           <Treegrid.Cell indent classNames='flex items-center gap-1 min-w-0'>
             <TreeItemToggle isBranch={hasChildren} open={expanded} onClick={() => setExpanded((prev) => !prev)} />
             {node.type === 'outgoing-relation' && (
@@ -118,7 +114,7 @@ const ObjectsTreeRow = ({
             {node.type === 'incoming-relation' && (
               <Icon icon='ph--arrow-left--regular' classNames='shrink-0 w-4 h-4 opacity-70' />
             )}
-            <Icon icon={node.icon} classNames={['shrink-0 w-4 h-4', styles?.surfaceText]} />
+            <Icon icon={node.icon} classNames={['shrink-0 w-4 h-4', styles?.foreground]} />
             <span className={node.deleted ? 'line-through opacity-60' : 'truncate'}>{node.label}</span>
           </Treegrid.Cell>
           <Treegrid.Cell classNames='contents'>

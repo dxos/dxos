@@ -26,7 +26,7 @@ export const RoutineList = ({ subject }: RoutineListProps) => {
   }
 
   return (
-    <div role='none' className='flex gap-2'>
+    <div className='flex gap-2'>
       {prompts.map((prompt, i) => (
         <div key={i}>
           <IconButton

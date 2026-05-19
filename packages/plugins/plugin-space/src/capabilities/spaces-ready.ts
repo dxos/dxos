@@ -15,13 +15,14 @@ import {
 } from '@dxos/app-toolkit';
 import { SubscriptionList } from '@dxos/async';
 import { Filter, Obj } from '@dxos/echo';
+import { SPACE_ID_LENGTH, parseId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph } from '@dxos/plugin-graph';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { PublicKey } from '@dxos/react-client';
-import { type Space, SPACE_ID_LENGTH, SpaceState, parseId } from '@dxos/react-client/echo';
+import { type Space, SpaceState } from '@dxos/react-client/echo';
 import { Expando } from '@dxos/schema';
 import { ComplexMap, reduceGroupBy } from '@dxos/util';
 
@@ -91,14 +92,13 @@ export default Capability.makeModule(
     if (resolved) {
       void initializePersonalSpace(resolved.space, resolved);
     } else {
-      subscriptions.add(
-        client.spaces.subscribe(() => {
-          const resolved = resolvePersonalSpace(client);
-          if (resolved) {
-            void initializePersonalSpace(resolved.space, resolved);
-          }
-        }).unsubscribe,
-      );
+      const personalSpaceSub = client.spaces.subscribe(() => {
+        const resolved = resolvePersonalSpace(client);
+        if (resolved) {
+          void initializePersonalSpace(resolved.space, resolved);
+        }
+      });
+      subscriptions.add(() => personalSpaceSub.unsubscribe());
     }
 
     //
@@ -142,39 +142,38 @@ export default Capability.makeModule(
     subscriptions.add(() => lastActiveCleanup?.());
 
     // Cache space names.
-    subscriptions.add(
-      client.spaces.subscribe(async (spaces) => {
-        // TODO(wittjosiah): Remove. This is a hack to be able to migrate the personal space properties.
-        const personalSpaceForMigration = resolvePersonalSpace(client);
-        if (
-          personalSpaceForMigration?.space &&
-          personalSpaceForMigration.space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION
-        ) {
-          await personalSpaceForMigration.space.internal.migrate();
-        }
+    const spaceNamesSub = client.spaces.subscribe(async (spaces) => {
+      // TODO(wittjosiah): Remove. This is a hack to be able to migrate the personal space properties.
+      const personalSpaceForMigration = resolvePersonalSpace(client);
+      if (
+        personalSpaceForMigration?.space &&
+        personalSpaceForMigration.space.state.get() === SpaceState.SPACE_REQUIRES_MIGRATION
+      ) {
+        await personalSpaceForMigration.space.internal.migrate();
+      }
 
-        spaces
-          .filter((space) => space.state.get() === SpaceState.SPACE_READY)
-          .forEach((space) => {
-            const updateSpaceName = () => {
-              const name = space.properties.name;
-              if (!name) {
-                registry.update(stateAtom, (current) => {
-                  const { [space.id]: _, ...rest } = current.spaceNames;
-                  return { ...current, spaceNames: rest };
-                });
-              } else {
-                registry.update(stateAtom, (current) => ({
-                  ...current,
-                  spaceNames: { ...current.spaceNames, [space.id]: name },
-                }));
-              }
-            };
-            updateSpaceName();
-            subscriptions.add(Obj.subscribe(space.properties, updateSpaceName));
-          });
-      }).unsubscribe,
-    );
+      spaces
+        .filter((space) => space.state.get() === SpaceState.SPACE_READY)
+        .forEach((space) => {
+          const updateSpaceName = () => {
+            const name = space.properties.name;
+            if (!name) {
+              registry.update(stateAtom, (current) => {
+                const { [space.id]: _, ...rest } = current.spaceNames;
+                return { ...current, spaceNames: rest };
+              });
+            } else {
+              registry.update(stateAtom, (current) => ({
+                ...current,
+                spaceNames: { ...current.spaceNames, [space.id]: name },
+              }));
+            }
+          };
+          updateSpaceName();
+          subscriptions.add(Obj.subscribe(space.properties, updateSpaceName));
+        });
+    });
+    subscriptions.add(() => spaceNamesSub.unsubscribe());
 
     // Broadcast active node to other peers in the space - subscribe to both layout and attention.
     let broadcastCleanup: (() => void) | undefined;
@@ -256,56 +255,55 @@ export default Capability.makeModule(
     subscriptions.add(() => broadcastCleanup?.());
 
     // Listen for active nodes from other peers in the space.
-    subscriptions.add(
-      client.spaces.subscribe((spaces) => {
-        spaceSubscriptions.clear();
-        spaces.forEach((space) => {
-          spaceSubscriptions.add(
-            space.listen('viewing', (message) => {
-              const { added, removed, attended } = message.payload;
+    const viewingSub = client.spaces.subscribe((spaces) => {
+      spaceSubscriptions.clear();
+      spaces.forEach((space) => {
+        spaceSubscriptions.add(
+          space.listen('viewing', (message) => {
+            const { added, removed, attended } = message.payload;
 
-              const identityKey = PublicKey.safeFrom(message.payload.identityKey);
-              const currentIdentity = client.halo.identity.get();
-              if (
-                identityKey &&
-                !currentIdentity?.identityKey.equals(identityKey) &&
-                Array.isArray(added) &&
-                Array.isArray(removed)
-              ) {
-                // TODO(wittjosiah): Stop using (Complex)Map inside reactive object.
-                registry.update(ephemeralAtom, (ephemeral) => {
-                  added.forEach((id) => {
-                    if (typeof id === 'string') {
-                      if (!(id in ephemeral.viewersByObject)) {
-                        ephemeral.viewersByObject[id] = new ComplexMap(PublicKey.hash);
-                      }
-                      ephemeral.viewersByObject[id]!.set(identityKey, {
-                        lastSeen: Date.now(),
-                        currentlyAttended: new Set(attended).has(id),
-                      });
-                      if (!ephemeral.viewersByIdentity.has(identityKey)) {
-                        ephemeral.viewersByIdentity.set(identityKey, new Set());
-                      }
-                      ephemeral.viewersByIdentity.get(identityKey)!.add(id);
+            const identityKey = PublicKey.safeFrom(message.payload.identityKey);
+            const currentIdentity = client.halo.identity.get();
+            if (
+              identityKey &&
+              !currentIdentity?.identityKey.equals(identityKey) &&
+              Array.isArray(added) &&
+              Array.isArray(removed)
+            ) {
+              // TODO(wittjosiah): Stop using (Complex)Map inside reactive object.
+              registry.update(ephemeralAtom, (ephemeral) => {
+                added.forEach((id) => {
+                  if (typeof id === 'string') {
+                    if (!(id in ephemeral.viewersByObject)) {
+                      ephemeral.viewersByObject[id] = new ComplexMap(PublicKey.hash);
                     }
-                  });
-
-                  removed.forEach((id) => {
-                    if (typeof id === 'string') {
-                      ephemeral.viewersByObject[id]?.delete(identityKey);
-                      ephemeral.viewersByIdentity.get(identityKey)?.delete(id);
-                      // It's okay for these to be empty sets/maps, reduces churn.
+                    ephemeral.viewersByObject[id]!.set(identityKey, {
+                      lastSeen: Date.now(),
+                      currentlyAttended: new Set(attended).has(id),
+                    });
+                    if (!ephemeral.viewersByIdentity.has(identityKey)) {
+                      ephemeral.viewersByIdentity.set(identityKey, new Set());
                     }
-                  });
-
-                  return { ...ephemeral };
+                    ephemeral.viewersByIdentity.get(identityKey)!.add(id);
+                  }
                 });
-              }
-            }),
-          );
-        });
-      }).unsubscribe,
-    );
+
+                removed.forEach((id) => {
+                  if (typeof id === 'string') {
+                    ephemeral.viewersByObject[id]?.delete(identityKey);
+                    ephemeral.viewersByIdentity.get(identityKey)?.delete(id);
+                    // It's okay for these to be empty sets/maps, reduces churn.
+                  }
+                });
+
+                return { ...ephemeral };
+              });
+            }
+          }),
+        );
+      });
+    });
+    subscriptions.add(() => viewingSub.unsubscribe());
 
     // Enable edge replication for all spaces.
     try {

@@ -13,15 +13,14 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { Operation, OperationHandlerSet, ServiceResolver, Trace, Trigger } from '@dxos/compute';
+import { ProcessManager } from '@dxos/compute-runtime';
 import { ExampleHandlers, Reply } from '@dxos/compute/testing';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
-import { Database } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-db/testing';
-import { credentialsLayerConfig, QueueService } from '@dxos/functions';
+import { credentialsLayerConfig } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { Person, Task } from '@dxos/types';
 
-import * as ProcessManager from '../process/ProcessManager';
 import { TriggerDispatcher } from './trigger-dispatcher';
 import { TriggerStateStore } from './trigger-state-store';
 
@@ -352,16 +351,17 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'should invoke scheduled queue triggers',
       Effect.fnUntraced(function* ({ expect }) {
-        const queue = yield* QueueService.createQueue();
+        const feed = yield* Database.add(Feed.make());
+
         const functionObj = Operation.serialize(Reply);
         yield* Database.add(functionObj);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
-          spec: Trigger.specQueue(queue.dxn.toString()),
+          spec: Trigger.specFeed(feed),
         });
         yield* Database.add(trigger);
-        yield* QueueService.append(queue, [
+        yield* Feed.append(feed, [
           Obj.make(Person.Person, {
             fullName: 'John Doe',
           }),
@@ -378,16 +378,17 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'triggers are invoked one by one',
       Effect.fnUntraced(function* ({ expect }) {
-        const queue = yield* QueueService.createQueue();
+        const feed = yield* Database.add(Feed.make());
+
         const functionObj = Operation.serialize(Reply);
         yield* Database.add(functionObj);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
-          spec: Trigger.specQueue(queue.dxn.toString()),
+          spec: Trigger.specFeed(feed),
         });
         yield* Database.add(trigger);
-        yield* QueueService.append(queue, [
+        yield* Feed.append(feed, [
           Obj.make(Person.Person, {
             fullName: 'John Doe',
           }),
@@ -422,13 +423,14 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'builds input from pattern',
       Effect.fnUntraced(function* ({ expect }) {
-        const queue = yield* QueueService.createQueue();
+        const feed = yield* Database.add(Feed.make());
+
         const functionObj = Operation.serialize(Reply);
         yield* Database.add(functionObj);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
-          spec: Trigger.specQueue(queue.dxn.toString()),
+          spec: Trigger.specFeed(feed),
           input: {
             instructions: 'Please process the queue item.',
             input: '{{event.item}}',
@@ -439,7 +441,7 @@ describe('TriggerDispatcher', () => {
         const person = Obj.make(Person.Person, {
           fullName: 'John Doe',
         });
-        yield* QueueService.append(queue, [person]);
+        yield* Feed.append(feed, [person]);
 
         const dispatcher = yield* TriggerDispatcher;
         const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'] });
@@ -461,17 +463,18 @@ describe('TriggerDispatcher', () => {
     it.effect(
       'respects trigger concurrency without untilExhausted',
       Effect.fnUntraced(function* ({ expect }) {
-        const queue = yield* QueueService.createQueue();
+        const feed = yield* Database.add(Feed.make());
+
         const functionObj = Operation.serialize(Reply);
         yield* Database.add(functionObj);
         const trigger = Trigger.make({
           function: Ref.make(functionObj),
           enabled: true,
           concurrency: 2,
-          spec: Trigger.specQueue(queue.dxn.toString()),
+          spec: Trigger.specFeed(feed),
         });
         yield* Database.add(trigger);
-        yield* QueueService.append(queue, [
+        yield* Feed.append(feed, [
           Obj.make(Person.Person, { fullName: 'Alice' }),
           Obj.make(Person.Person, { fullName: 'Bob' }),
           Obj.make(Person.Person, { fullName: 'Charlie' }),

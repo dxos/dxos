@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-deck",
   "version": "0.8.3",
-  "private": true,
   "description": "DXOS Surface plugin for the main application layout.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -9,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
@@ -46,10 +45,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/DeckPlugin.workerd.ts",
         "node": "./src/DeckPlugin.node.ts",
         "default": "./src/DeckPlugin.ts"
       },
       "types": "./dist/types/src/DeckPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/DeckPlugin.workerd.mjs",
       "node": "./dist/lib/neutral/DeckPlugin.node.mjs",
       "default": "./dist/lib/neutral/DeckPlugin.mjs"
     },

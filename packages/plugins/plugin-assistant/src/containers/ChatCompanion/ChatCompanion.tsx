@@ -20,7 +20,7 @@ import { type ChatEvent } from '#components';
 import { useBlueprintRegistry, useContextBinder } from '#hooks';
 import { AssistantOperation } from '#types';
 
-import ChatContainer from '../ChatContainer';
+import ChatArticle from '../ChatArticle';
 
 export type ChatCompanionProps = AppSurface.ArticleProps<Chat.Chat, {}, Obj.Unknown>;
 
@@ -39,7 +39,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
           return;
         }
 
-        if (event.type === 'submit' && !getSpace(chat)) {
+        if (event.type === 'submit' && !Obj.getDatabase(chat)) {
           await invokePromise(SpaceOperation.AddObject, {
             object: chat,
             target: space.db,
@@ -69,7 +69,11 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
     }, [companionTo]);
     const existingBlueprints = useQuery(space?.db, Filter.type(Blueprint.Blueprint));
     const pluginBlueprints = useMemo(
-      () => existingBlueprints.filter((blueprint) => blueprintKeys.includes(blueprint.key)),
+      () =>
+        existingBlueprints.filter((blueprint) => {
+          const key = Obj.getMeta(blueprint).key;
+          return key !== undefined && blueprintKeys.includes(key);
+        }),
       [existingBlueprints, blueprintKeys],
     );
 
@@ -82,7 +86,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
       // NOTE: This must be run instead of using the useQuery result to avoid duplicates.
       const existingBlueprints = await space.db.query(Filter.type(Blueprint.Blueprint)).run();
       for (const key of blueprintKeys) {
-        const existingBlueprint = existingBlueprints.find((blueprint) => blueprint.key === key);
+        const existingBlueprint = existingBlueprints.find((blueprint) => Obj.getMeta(blueprint).key === key);
         if (existingBlueprint) {
           continue;
         }
@@ -115,7 +119,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
     }, [binder, companionTo, blueprintKeys]);
 
     return (
-      <ChatContainer
+      <ChatArticle
         role={role ?? 'article'}
         space={space}
         subject={chat}

@@ -76,6 +76,17 @@ const PluginImportSource = ({
           return null;
         }
 
+        // Don't re-route `#*` subpath imports to source when the importer
+        // is already in a compiled `dist/` tree. Compiled packages expect
+        // their own subpath imports to stay on the dist→dist chain;
+        // jumping back to source would pull in TypeScript that may not be
+        // browser-safe (e.g. raw `node:path` in `random-access-storage`'s
+        // src). Non-subpath `@dxos/*` imports from dist are unaffected —
+        // they still benefit from source resolution.
+        if (source.startsWith('#') && importer.includes('/dist/')) {
+          return null;
+        }
+
         try {
           const resolved = await resolver.async(importer, source);
 

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { MemoizedAiService } from '@dxos/ai/testing';
-import { AiContextService, AiSessionService } from '@dxos/assistant';
+import { AiContext, AiSession } from '@dxos/assistant';
 import { Blueprint, Operation } from '@dxos/compute';
 import { Database, DXN, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -29,13 +29,13 @@ const TestLayer = AssistantTestLayer({
   tracing: 'pretty',
 });
 
-const provideTestLayers = Effect.provide(AiSessionService.layerNewFeed().pipe(Layer.provideMerge(TestLayer)));
+const provideTestLayers = Effect.provide(AiSession.Service.layerNewFeed().pipe(Layer.provideMerge(TestLayer)));
 
 /**
  * Gets the conversation DXN for passing to Operation.invoke options.
  */
-const getConversationDxn = Effect.gen(function* () {
-  const session = yield* AiSessionService;
+const getConversationDXN = Effect.gen(function* () {
+  const session = yield* AiSession.Service;
   return Obj.getDXN(session.feed).toString() as DXN.String;
 });
 
@@ -44,10 +44,10 @@ describe('Blueprint Manager', () => {
     'query-blueprints: returns all registered blueprints',
     Effect.fnUntraced(
       function* (_) {
-        const conversation = yield* getConversationDxn;
+        const conversation = yield* getConversationDXN;
         const result = yield* Operation.invoke(QueryBlueprints, {}, { conversation });
         expect(result).toHaveLength(3);
-        const keys = result.map((blueprint: Blueprint.Blueprint) => blueprint.key);
+        const keys = result.map((blueprint: Blueprint.Blueprint) => Obj.getMeta(blueprint).key);
         expect(keys).toContain('org.dxos.blueprint.database');
         expect(keys).toContain('org.dxos.blueprint.memory');
         expect(keys).toContain('org.dxos.blueprint.discord');
@@ -62,19 +62,21 @@ describe('Blueprint Manager', () => {
     'enable-blueprints: enables blueprints with agentCanEnable=true',
     Effect.fnUntraced(
       function* (_) {
-        const conversation = yield* getConversationDxn;
+        const conversation = yield* getConversationDXN;
         const { enabled, rejected } = yield* Operation.invoke(
           EnableBlueprints,
           { keys: ['org.dxos.blueprint.database'] },
           { conversation },
         );
         expect(enabled).toHaveLength(1);
-        expect(enabled[0].key).toBe('org.dxos.blueprint.database');
+        expect(Obj.getMeta(enabled[0]).key).toBe('org.dxos.blueprint.database');
         expect(rejected).toHaveLength(0);
 
-        const { binder } = yield* AiContextService;
+        const { binder } = yield* AiContext.Service;
         const bound = binder.getBlueprints();
-        expect(bound.some((bp: Blueprint.Blueprint) => bp.key === 'org.dxos.blueprint.database')).toBe(true);
+        expect(bound.some((bp: Blueprint.Blueprint) => Obj.getMeta(bp).key === 'org.dxos.blueprint.database')).toBe(
+          true,
+        );
       },
       provideTestLayers,
       TestHelpers.provideTestContext,
@@ -86,7 +88,7 @@ describe('Blueprint Manager', () => {
     'enable-blueprints: rejects blueprints without agentCanEnable',
     Effect.fnUntraced(
       function* (_) {
-        const conversation = yield* getConversationDxn;
+        const conversation = yield* getConversationDXN;
         const { enabled, rejected } = yield* Operation.invoke(
           EnableBlueprints,
           { keys: ['org.dxos.blueprint.discord'] },
@@ -96,9 +98,11 @@ describe('Blueprint Manager', () => {
         expect(rejected).toHaveLength(1);
         expect(rejected[0].key).toBe('org.dxos.blueprint.discord');
 
-        const { binder } = yield* AiContextService;
+        const { binder } = yield* AiContext.Service;
         const bound = binder.getBlueprints();
-        expect(bound.some((bp: Blueprint.Blueprint) => bp.key === 'org.dxos.blueprint.discord')).toBe(false);
+        expect(bound.some((bp: Blueprint.Blueprint) => Obj.getMeta(bp).key === 'org.dxos.blueprint.discord')).toBe(
+          false,
+        );
       },
       provideTestLayers,
       TestHelpers.provideTestContext,
@@ -110,7 +114,7 @@ describe('Blueprint Manager', () => {
     'enable-blueprints: mixed keys enables only allowed ones',
     Effect.fnUntraced(
       function* (_) {
-        const conversation = yield* getConversationDxn;
+        const conversation = yield* getConversationDXN;
         const { enabled, rejected } = yield* Operation.invoke(
           EnableBlueprints,
           {
@@ -119,7 +123,7 @@ describe('Blueprint Manager', () => {
           { conversation },
         );
         expect(enabled).toHaveLength(2);
-        const enabledKeys = enabled.map((bp: Blueprint.Blueprint) => bp.key);
+        const enabledKeys = enabled.map((bp: Blueprint.Blueprint) => Obj.getMeta(bp).key);
         expect(enabledKeys).toContain('org.dxos.blueprint.database');
         expect(enabledKeys).toContain('org.dxos.blueprint.memory');
         expect(rejected).toHaveLength(1);
@@ -135,7 +139,7 @@ describe('Blueprint Manager', () => {
     'enable-blueprints: unknown keys are rejected with reason',
     Effect.fnUntraced(
       function* (_) {
-        const conversation = yield* getConversationDxn;
+        const conversation = yield* getConversationDXN;
         const { enabled, rejected } = yield* Operation.invoke(
           EnableBlueprints,
           { keys: ['org.dxos.blueprint.nonexistent'] },
@@ -168,7 +172,7 @@ describe('Blueprint Manager', () => {
         yield* Database.flush();
         expect(stored.name).toBe('___TEST_MUTATED_BLUEPRINT_NAME___');
 
-        const session = yield* AiSessionService;
+        const session = yield* AiSession.Service;
         yield* Effect.promise(() => session.context.open());
         yield* Effect.promise(() =>
           session.context.bind({

@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-space",
   "version": "0.8.3",
-  "private": true,
   "description": "DXOS Surface plugin for DXOS ECHO Spaces",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -9,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
@@ -51,10 +50,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/SpacePlugin.workerd.ts",
         "node": "./src/SpacePlugin.node.ts",
         "default": "./src/SpacePlugin.ts"
       },
       "types": "./dist/types/src/SpacePlugin.d.ts",
+      "workerd": "./dist/lib/neutral/SpacePlugin.workerd.mjs",
       "node": "./dist/lib/neutral/SpacePlugin.node.mjs",
       "default": "./dist/lib/neutral/SpacePlugin.mjs"
     },

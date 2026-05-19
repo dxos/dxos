@@ -29,13 +29,13 @@ export type TreeProps<T extends { id: string } = any> = {
   >;
 
 export const Tree = <T extends { id: string } = any>({
+  classNames,
   model,
   rootId,
   path,
   id,
   draggable = false,
   gridTemplateColumns = '[tree-row-start] 1fr min-content [tree-row-end]',
-  classNames,
   levelOffset,
   renderColumns,
   blockInstruction,

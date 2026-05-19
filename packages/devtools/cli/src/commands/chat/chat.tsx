@@ -99,7 +99,7 @@ export const chat = Command.make(
         metadata: service.metadata,
         registry,
       });
-      const [conversation, setConversation] = createSignal<AiSession | undefined>(undefined);
+      const [conversation, setConversation] = createSignal<AiSession.Session | undefined>(undefined);
 
       if (!client.halo.identity) {
         yield* Console.error('No HALO identity configured. Run `dx halo create --displayName "<name>"` first.');

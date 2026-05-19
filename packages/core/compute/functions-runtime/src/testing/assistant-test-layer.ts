@@ -13,7 +13,7 @@ import * as Match from 'effect/Match';
 
 import { AiService, ConsolePrinter, OpaqueToolkit, type ModelName } from '@dxos/ai';
 import { TestAiService } from '@dxos/ai/testing';
-import { AiContextBinder, AiContextService, AiSession, AiSessionService, CompleteBlock } from '@dxos/assistant';
+import { AiContext, AiSession, CompleteBlock } from '@dxos/assistant';
 import {
   Blueprint,
   Credential,
@@ -27,15 +27,15 @@ import {
   Trace,
   Trigger,
 } from '@dxos/compute';
+import { ProcessManager } from '@dxos/compute-runtime';
+import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import { Database, DXN, Feed, Tag, Type } from '@dxos/echo';
-import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { acquireReleaseResource } from '@dxos/effect';
-import type { TestContextService } from '@dxos/effect/testing';
+import { type TestContextService } from '@dxos/effect/testing';
 import { configuredCredentialsLayer, QueueService } from '@dxos/functions';
 
 import { AgentService } from '../agent-service';
 import * as FeedTraceSink from '../FeedTraceSink';
-import * as ProcessManager from '../process/ProcessManager';
 import { TriggerDispatcher, TriggerStateStore } from '../triggers';
 
 interface TestLayerOptions {
@@ -128,16 +128,16 @@ export const AssistantTestLayer = ({
             Effect.map(Layer.succeedContext),
           );
           return ServiceResolver.compose(
-            ServiceResolver.succeed(AiContextService, (context) =>
+            ServiceResolver.succeed(AiContext.Service, (context) =>
               Effect.gen(function* () {
                 if (!context.conversation) {
-                  return yield* Effect.fail(new ServiceNotAvailableError(AiContextService.key));
+                  return yield* Effect.fail(new ServiceNotAvailableError(AiContext.Service.key));
                 }
                 const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
                 const runtime = yield* Effect.runtime<Feed.FeedService>();
                 const binder = yield* acquireReleaseResource(
                   () =>
-                    new AiContextBinder({
+                    new AiContext.Binder({
                       feed,
                       runtime,
                     }),
@@ -145,16 +145,16 @@ export const AssistantTestLayer = ({
                 return { binder };
               }).pipe(Effect.provide(services)),
             ),
-            ServiceResolver.succeed(AiSessionService, (context) =>
+            ServiceResolver.succeed(AiSession.Service, (context) =>
               Effect.gen(function* () {
                 if (!context.conversation) {
-                  return yield* Effect.fail(new ServiceNotAvailableError(AiSessionService.key));
+                  return yield* Effect.fail(new ServiceNotAvailableError(AiSession.Service.key));
                 }
                 const feed = yield* Database.resolve(DXN.parse(context.conversation), Feed.Feed).pipe(Effect.orDie);
                 const runtime = yield* Effect.runtime<Feed.FeedService>();
                 const session = yield* acquireReleaseResource(
                   () =>
-                    new AiSession({
+                    new AiSession.Session({
                       feed,
                       runtime,
                     }),
@@ -181,7 +181,7 @@ export const AssistantTestLayer = ({
         Match.when('noop', () => Layer.mergeAll(Trace.layerNoop, FeedTraceSink.layerNoop)),
         Match.when('console', () => Layer.mergeAll(Trace.layerConsole, FeedTraceSink.layerNoop)),
         Match.when('pretty', () => Layer.mergeAll(TraceSinkPretty(), FeedTraceSink.layerNoop)),
-        Match.when('feed', () => FeedTraceSink.layerLive),
+        Match.when('feed', () => FeedTraceSink.layerLiveWithDirectSink),
         Match.exhaustive,
       ) as Layer.Layer<Trace.TraceSink | FeedTraceSink.FeedTraceSink>,
     ),

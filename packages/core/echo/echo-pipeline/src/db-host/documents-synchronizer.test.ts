@@ -7,6 +7,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger, asyncTimeout, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
 import { openAndClose } from '@dxos/test-utils';
@@ -157,9 +158,10 @@ describe('DocumentsSynchronizer', () => {
         await openAndClose(host);
 
         const handle = await host.loadDoc<{ text: string }>(Context.default(), documentId);
+        invariant(handle);
         await handle.whenReady();
 
-        expect(handle.doc()?.text).to.equal(text);
+        expect(handle.doc().text).to.equal(text);
 
         await kv.close();
         await host.close();

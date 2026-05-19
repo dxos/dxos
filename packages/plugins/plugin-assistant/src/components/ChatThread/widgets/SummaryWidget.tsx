@@ -20,9 +20,7 @@ export const SummaryWidget = ({ children }: XmlWidgetProps<MessageThreadContext>
     <TogglePanel.Root classNames={styles.border}>
       <TogglePanel.Header classNames='text-sm bg-group-surface'>{t('summary.label')}</TogglePanel.Header>
       <TogglePanel.Content>
-        <div role='none' className='p-1 text-sm text-subdued'>
-          {children}
-        </div>
+        <div className='p-1 text-sm text-subdued'>{children}</div>
       </TogglePanel.Content>
     </TogglePanel.Root>
   );

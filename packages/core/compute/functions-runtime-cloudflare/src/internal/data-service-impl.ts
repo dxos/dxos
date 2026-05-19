@@ -97,6 +97,11 @@ export class DataServiceImpl implements DataServiceProto {
     // TODO(dmaretskyi): Batch.
     try {
       for (const update of updates ?? []) {
+        // Mutation-less updates (e.g. `requesting: true` transition signals from the worker) carry no
+        // bytes to apply; this runtime only forwards real document writes.
+        if (!update.mutation) {
+          continue;
+        }
         await this._dataService.changeDocument(this._executionContext, sub.spaceId, update.documentId, update.mutation);
       }
     } catch (error) {
@@ -131,7 +136,7 @@ export class DataServiceImpl implements DataServiceProto {
   }
 
   async updateIndexes(): Promise<void> {
-    log.error('updateIndexes is not available in EDGE env.');
+    log.verbose('updateIndexes called, but it is a no-op in EDGE env.');
     // No-op.
   }
 

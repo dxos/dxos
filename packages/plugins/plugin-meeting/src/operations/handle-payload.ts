@@ -4,16 +4,15 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { DXN } from '@dxos/echo';
+import { Feed, Filter, Obj, Query } from '@dxos/echo';
+import { DXN, parseId } from '@dxos/keys';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { Filter, Query, parseId } from '@dxos/react-client/echo';
-import { type Message } from '@dxos/types';
 
 import { Meeting, MeetingCapabilities, MeetingOperation } from '../types';
 
 const handler: Operation.WithHandler<typeof MeetingOperation.HandlePayload> = MeetingOperation.HandlePayload.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ meetingId, transcriptDxn, transcriptionEnabled }) {
+    Effect.fnUntraced(function* ({ meetingId, transcriptDXN, transcriptionEnabled }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
       const store = yield* Capability.get(MeetingCapabilities.State);
       const { spaceId, objectId } = meetingId ? parseId(meetingId) : {};
@@ -29,9 +28,16 @@ const handler: Operation.WithHandler<typeof MeetingOperation.HandlePayload> = Me
 
       const enabled = !!transcriptionEnabled;
       const { transcriptionManager } = store.state;
-      if (space && transcriptDxn) {
-        const queue = space.queues.get<Message.Message>(DXN.parse(transcriptDxn));
-        transcriptionManager?.setQueue(queue);
+      if (space && transcriptDXN && transcriptionManager) {
+        // Resolve the feed object from its queue DXN. (Queue DXN parts: subspaceTag,
+        // spaceId, feedId — the feedId equals the Feed.Feed object id.)
+        const queueDXN = DXN.parse(transcriptDXN).asQueueDXN();
+        const feed = queueDXN
+          ? yield* Effect.promise(() => space.db.query(Query.select(Filter.id(queueDXN.queueId))).first())
+          : undefined;
+        if (feed && Obj.instanceOf(Feed.Feed, feed)) {
+          transcriptionManager.setFeed(space, feed);
+        }
       }
 
       if (transcriptionManager) {

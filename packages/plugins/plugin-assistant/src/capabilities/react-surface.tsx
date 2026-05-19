@@ -8,7 +8,7 @@ import React, { type ComponentProps, useEffect } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
-import { Chat, Agent } from '@dxos/assistant-toolkit';
+import { Chat, Agent, Plan } from '@dxos/assistant-toolkit';
 import { getSpace } from '@dxos/client/echo';
 import { Blueprint, Routine } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
@@ -21,10 +21,11 @@ import { AssistantSettings } from '#components';
 import {
   BlueprintArticle,
   ChatCompanion,
-  ChatContainer,
+  ChatArticle,
   ChatDialog,
   AgentArticle,
   AgentProperties,
+  PlanArticle,
   RoutineArticle,
   RoutineList,
   TracePanel,
@@ -52,7 +53,7 @@ export default Capability.makeModule(() =>
           Obj.instanceOf(Chat.Chat, data.subject) &&
           data.variant !== ASSISTANT_COMPANION_VARIANT,
         component: ({ data, role, ref }) => {
-          return <ChatContainer role={role} subject={data.subject} attendableId={data.attendableId} ref={ref} />;
+          return <ChatArticle role={role} subject={data.subject} attendableId={data.attendableId} ref={ref} />;
         },
       }),
       Surface.create({
@@ -87,20 +88,20 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'companion-invocations',
         role: 'article',
-        filter: (data): data is { companionTo: Sequence } =>
-          (Obj.instanceOf(Sequence, data.companionTo) || Obj.instanceOf(Routine.Routine, data.companionTo)) &&
+        filter: (data): data is { companionTo: Sequence.Sequence } =>
+          (Obj.instanceOf(Sequence.Sequence, data.companionTo) || Obj.instanceOf(Routine.Routine, data.companionTo)) &&
           data.subject === 'invocations',
         component: ({ data, role }) => {
           const space = getSpace(data.companionTo);
           const feed = space?.properties.invocationTraceFeed?.target;
-          const queueDxn = feed ? Feed.getQueueDxn(feed) : undefined;
+          const feedDXN = feed ? Feed.getQueueDxn(feed) : undefined;
           // TODO(wittjosiah): Support invocation filtering for prompts.
           const target = Obj.instanceOf(Routine.Routine, data.companionTo) ? undefined : data.companionTo;
 
           return (
             <Panel.Root role={role} className='dx-document'>
               <Panel.Content asChild>
-                <InvocationTraceContainer db={space?.db} queueDxn={queueDxn} target={target} detailAxis='block' />
+                <InvocationTraceContainer db={space?.db} feedDXN={feedDXN} target={target} detailAxis='block' />
               </Panel.Content>
             </Panel.Root>
           );
@@ -118,6 +119,13 @@ export default Capability.makeModule(() =>
         filter: AppSurface.object(AppSurface.Article, Routine.Routine),
         component: ({ data, role }) => (
           <RoutineArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
+      }),
+      Surface.create({
+        id: 'plan',
+        filter: AppSurface.object(AppSurface.Article, Plan.Plan),
+        component: ({ data, role }) => (
+          <PlanArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
       Surface.create({

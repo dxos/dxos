@@ -56,10 +56,10 @@ const ThreadHeader = forwardRef<HTMLParagraphElement, ThreadHeaderProps>(
   ({ children, detached, ...props }, forwardedRef) => {
     return (
       <>
-        <div role='none' className='flex items-center justify-center text-description'>
+        <div className='flex items-center justify-center text-description'>
           <Icon icon='ph--caret-double-right--regular' />
         </div>
-        <div role='none' className='flex items-center overflow-hidden'>
+        <div className='flex items-center overflow-hidden'>
           <p
             role='heading'
             data-testid='thread.heading'

@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import { Credential, FunctionError, FunctionNotFoundError, Operation, OperationHandlerSet, Trace } from '@dxos/compute';
-import { Database, Feed, Query } from '@dxos/echo';
+import { Database, Feed, Filter, Query } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { FunctionInvocationService, type FunctionServices, QueueService } from '@dxos/functions';
 import { log } from '@dxos/log';
@@ -68,7 +68,9 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
         resolveFunction: (key: string) =>
           Effect.gen(function* () {
             // Try to resolve operation from database.
-            const [dbRecord] = yield* Database.runQuery(Query.type(Operation.PersistentOperation, { key }));
+            const [dbRecord] = yield* Database.runQuery(
+              Query.select(Filter.and(Filter.type(Operation.PersistentOperation), Filter.key(key))),
+            );
             const operationDef = dbRecord ? Operation.deserialize(dbRecord) : null;
             if (operationDef) {
               return operationDef;
@@ -177,6 +179,9 @@ const invokeOperation = (
     return data;
   }).pipe(Effect.withSpan('invokeOperation', { attributes: { name: operationDef.meta.name } }));
 
+/**
+ * @deprecated
+ */
 export class FunctionImplementationResolver extends Context.Tag('@dxos/functions/FunctionImplementationResolver')<
   FunctionImplementationResolver,
   {

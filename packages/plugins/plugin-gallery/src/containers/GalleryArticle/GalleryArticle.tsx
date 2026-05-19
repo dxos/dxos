@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
@@ -13,7 +12,7 @@ import { DeckCapabilities, DeckOperation } from '@dxos/plugin-deck';
 import { useObject } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
-import { type ActionGraphProps, Menu, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
+import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { GalleryImage, Lightbox, type LightboxTileProps } from '#components';
 import { meta } from '#meta';
@@ -76,39 +75,34 @@ export const GalleryArticle = ({ role, attendableId, subject }: GalleryArticlePr
     await invokePromise(LayoutOperation.Open, { subject: [showId], workspace: getSpacePath(db.spaceId) });
   }, [subject, invokePromise]);
 
-  const actionsAtom = useMemo(
+  const menuActions = useMenuBuilder(
     () =>
-      Atom.make(
-        (): ActionGraphProps =>
-          MenuBuilder.make()
-            .action(
-              'add',
-              {
-                label: ['add-image.label', { ns: meta.id }],
-                icon: 'ph--plus--regular',
-                disabled: !canUpload,
-                disposition: 'toolbar',
-                testId: 'gallery.toolbar.add',
-              },
-              () => openFilePicker(),
-            )
-            .action(
-              'show',
-              {
-                label: ['show.label', { ns: meta.id }],
-                icon: 'ph--play--regular',
-                disabled: !deckState,
-                disposition: 'toolbar',
-                testId: 'gallery.toolbar.show',
-              },
-              () => void handleShow(),
-            )
-            .build(),
-      ),
+      MenuBuilder.make()
+        .action(
+          'add',
+          {
+            label: ['add-image.label', { ns: meta.id }],
+            icon: 'ph--plus--regular',
+            disabled: !canUpload,
+            disposition: 'toolbar',
+            testId: 'gallery.toolbar.add',
+          },
+          () => openFilePicker(),
+        )
+        .action(
+          'show',
+          {
+            label: ['show.label', { ns: meta.id }],
+            icon: 'ph--play--regular',
+            disabled: !deckState,
+            disposition: 'toolbar',
+            testId: 'gallery.toolbar.show',
+          },
+          () => void handleShow(),
+        )
+        .build(),
     [canUpload, deckState, openFilePicker, handleShow],
   );
-
-  const menuActions = useMenuActions(actionsAtom);
 
   return (
     <Lightbox.Root gallery={gallery} onDelete={handleDelete} Tile={ResolvingTile}>

@@ -16,7 +16,7 @@ import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
 import { ScriptPluginSettings } from '#components';
-import { DeploymentDialog, NotebookContainer, ScriptContainer, ScriptProperties, TestContainer } from '#containers';
+import { DeploymentDialog, NotebookArticle, ScriptArticle, ScriptProperties, TestContainer } from '#containers';
 import { useCompiler } from '#hooks';
 import { meta } from '#meta';
 import { Notebook, ScriptCapabilities, type Settings } from '#types';
@@ -58,7 +58,7 @@ export default Capability.makeModule(() =>
           const compiler = useCompiler();
           const settings = useAtomCapability(ScriptCapabilities.Settings);
           return (
-            <ScriptContainer
+            <ScriptArticle
               role={role}
               subject={data.subject}
               attendableId={data.attendableId}
@@ -74,7 +74,7 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => {
           const compiler = useCompiler();
           return (
-            <NotebookContainer
+            <NotebookArticle
               role={role}
               subject={data.subject}
               attendableId={data.attendableId}
@@ -105,13 +105,13 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => {
           const space = getSpace(data.companionTo);
           const feed = space?.properties.invocationTraceFeed?.target;
-          const queueDxn = feed ? Feed.getQueueDxn(feed) : undefined;
+          const feedDXN = feed ? Feed.getQueueDxn(feed) : undefined;
           return (
             <Panel.Root role={role}>
               <Panel.Content>
                 <InvocationTraceContainer
                   db={space?.db}
-                  queueDxn={queueDxn}
+                  feedDXN={feedDXN}
                   target={data.companionTo}
                   detailAxis='block'
                 />

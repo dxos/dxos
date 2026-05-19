@@ -8,8 +8,8 @@ import React, { useCallback } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
-import { type Feed, Obj, Query } from '@dxos/echo';
-import { Filter, useObject, useQuery } from '@dxos/react-client/echo';
+import { Filter, Obj, Query } from '@dxos/echo';
+import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
@@ -38,7 +38,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   const currentId = useSelected(id, 'single');
   const db = Obj.getDatabase(calendar);
 
-  const feed = calendar.feed?.target as Feed.Feed | undefined;
+  const feed = calendar.feed?.target;
   const events = useQuery(
     db,
     feed ? Query.select(Filter.type(Event.Event)).from(feed) : Query.select(Filter.nothing()),
@@ -80,7 +80,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
 
   return (
     <div role={role} className='@container dx-container overflow-hidden'>
-      <div role='none' className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] h-full'>
+      <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] h-full'>
         <Panel.Root className='hidden @3xl:block'>
           <NaturalCalendar.Root>
             <Panel.Toolbar asChild>

@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-map",
   "version": "0.8.3",
-  "private": true,
   "description": "Map plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -9,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
@@ -46,10 +45,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/MapPlugin.workerd.ts",
         "node": "./src/MapPlugin.node.ts",
         "default": "./src/MapPlugin.tsx"
       },
       "types": "./dist/types/src/MapPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/MapPlugin.workerd.mjs",
       "node": "./dist/lib/neutral/MapPlugin.node.mjs",
       "default": "./dist/lib/neutral/MapPlugin.mjs"
     },

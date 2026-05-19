@@ -136,10 +136,10 @@ const toCompactGraph = (graph: ComputeGraph) => {
 
 const createLoader = (graphs: ComputeGraph[]) =>
   new WorkflowLoader({
-    graphLoader: async (graphDxn) => {
-      const graph = graphs.find((g) => DXN.equals(graphDxn, DXN.fromLocalObjectId(g.id)));
+    graphLoader: async (graphDXN) => {
+      const graph = graphs.find((g) => DXN.equals(graphDXN, DXN.fromLocalObjectId(g.id)));
       if (!graph) {
-        throw new Error(`Graph not found: ${graphDxn}.`);
+        throw new Error(`Graph not found: ${graphDXN}.`);
       }
       return graph;
     },

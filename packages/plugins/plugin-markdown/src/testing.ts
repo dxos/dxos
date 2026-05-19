@@ -6,9 +6,14 @@ import * as Toolkit from '@effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 
 import { SpaceProperties } from '@dxos/client-protocol';
-import { Obj, Ref } from '@dxos/echo';
-import { Database } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
+import { Collection, Database, Obj, Ref } from '@dxos/echo';
+
+// Eager re-export of `MarkdownPlugin`. See `@dxos/plugin-testing/src/core.ts`
+// for the rationale. Uses the `#plugin` subpath so the node-only build is
+// re-exported in test environments, avoiding the browser-only `MarkdownPlugin.tsx`
+// which references React-surface capabilities that are intentionally omitted
+// from `capabilities/node.ts`.
+export * from '#plugin';
 
 // TODO(wittjosiah): Factor out.
 export const WithProperties = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | Database.Service> =>

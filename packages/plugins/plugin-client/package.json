@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-client",
   "version": "0.8.3",
-  "private": true,
   "description": "DXOS Surface plugin for DXOS Client",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -9,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
@@ -46,10 +45,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/ClientPlugin.workerd.ts",
         "node": "./src/ClientPlugin.node.ts",
         "default": "./src/ClientPlugin.ts"
       },
       "types": "./dist/types/src/ClientPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/ClientPlugin.workerd.mjs",
       "node": "./dist/lib/neutral/ClientPlugin.node.mjs",
       "default": "./dist/lib/neutral/ClientPlugin.mjs"
     },
@@ -108,7 +109,9 @@
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-db": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/functions": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",

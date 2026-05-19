@@ -34,7 +34,7 @@ export const GalleryImage = ({ image, url, classNames, onDelete }: GalleryImageP
   return (
     <Card.Root classNames={mx('group relative', classNames)}>
       {/* col-span-full so the image spans Card.Root's grid (icon|title|menu). */}
-      <div role='none' className='col-span-full'>
+      <div className='col-span-full'>
         {url ? (
           <img
             src={url}

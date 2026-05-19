@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-navtree",
   "version": "0.8.3",
-  "private": true,
   "description": "DXOS Surface plugin for a tree view visualization of the graph.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -9,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
@@ -46,10 +45,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/NavTreePlugin.workerd.ts",
         "node": "./src/NavTreePlugin.node.ts",
         "default": "./src/NavTreePlugin.tsx"
       },
       "types": "./dist/types/src/NavTreePlugin.d.ts",
+      "workerd": "./dist/lib/neutral/NavTreePlugin.workerd.mjs",
       "node": "./dist/lib/neutral/NavTreePlugin.node.mjs",
       "default": "./dist/lib/neutral/NavTreePlugin.mjs"
     },
