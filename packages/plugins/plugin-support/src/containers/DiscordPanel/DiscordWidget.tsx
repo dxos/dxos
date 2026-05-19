@@ -13,6 +13,17 @@ const DXOS_GUILD_ID = '837138313172353095';
 
 const DEFAULT_TEAM = new Set<string>(['Rich', 'Josiah', 'Mykola', 'Dmytro']);
 
+export type DiscordChannel = {
+  name: string;
+  id: string;
+};
+
+const DEFAULT_CHANNELS: ReadonlyArray<DiscordChannel> = [
+  { name: 'welcome', id: '837139872460046376' },
+  { name: 'general', id: '837138313172353098' },
+  { name: 'work-in-progress', id: '1275086707342970922' },
+];
+
 type WidgetMember = {
   id: string;
   username: string;
@@ -30,7 +41,9 @@ type WidgetData = {
 type WidgetContextValue = {
   data: WidgetData | null;
   unavailable: boolean;
+  guildId: string;
   team: ReadonlySet<string>;
+  channels: ReadonlyArray<DiscordChannel>;
 };
 
 const WidgetContext = createContext<WidgetContextValue | null>(null);
@@ -47,13 +60,16 @@ export type DiscordWidgetRootProps = {
   guildId?: string;
   /** Usernames that should sort to the top of the member list. */
   teamMembers?: Iterable<string>;
+  /** Channels rendered by `DiscordWidget.Channels`. */
+  channels?: ReadonlyArray<DiscordChannel>;
   children?: ReactNode;
 };
 
-const Root = ({ guildId = DXOS_GUILD_ID, teamMembers, children }: DiscordWidgetRootProps) => {
+const Root = ({ guildId = DXOS_GUILD_ID, teamMembers, channels, children }: DiscordWidgetRootProps) => {
   const [data, setData] = useState<WidgetData | null>(null);
   const [unavailable, setUnavailable] = useState(false);
   const team = useMemo(() => (teamMembers ? new Set(teamMembers) : DEFAULT_TEAM), [teamMembers]);
+  const resolvedChannels = useMemo(() => channels ?? DEFAULT_CHANNELS, [channels]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -80,7 +96,11 @@ const Root = ({ guildId = DXOS_GUILD_ID, teamMembers, children }: DiscordWidgetR
     return () => controller.abort();
   }, [guildId]);
 
-  return <WidgetContext.Provider value={{ data, unavailable, team }}>{children}</WidgetContext.Provider>;
+  return (
+    <WidgetContext.Provider value={{ data, unavailable, guildId, team, channels: resolvedChannels }}>
+      {children}
+    </WidgetContext.Provider>
+  );
 };
 
 const Header = () => {
@@ -97,6 +117,32 @@ const Header = () => {
             : t('discord-loading.message')}
       </div>
     </header>
+  );
+};
+
+const Channels = () => {
+  const { guildId, channels } = useWidgetContext();
+  if (channels.length === 0) {
+    return null;
+  }
+  return (
+    <nav className='border-b border-subdued-separator'>
+      <ul className='flex flex-col p-1'>
+        {channels.map((channel) => (
+          <li key={channel.id}>
+            <a
+              href={`https://discord.com/channels/${guildId}/${channel.id}`}
+              target='_blank'
+              rel='noopener noreferrer'
+              className='flex items-center gap-1 px-2 py-1 rounded text-sm hover:bg-hover-surface'
+            >
+              <span className='text-description'>#</span>
+              <span className='truncate'>{channel.name}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
   );
 };
 
@@ -151,16 +197,16 @@ const StatusBar = () => {
   if (!data?.instant_invite) {
     return null;
   }
-  const handleClick = () => {
-    window.open(data.instant_invite!, '_blank', 'noopener,noreferrer');
-  };
+
   return (
     <IconButton
       icon='ph--discord-logo--regular'
       label={t('join-discord.button')}
       variant='primary'
       classNames='w-full'
-      onClick={handleClick}
+      onClick={() => {
+        window.open(data.instant_invite!, '_blank', 'noopener,noreferrer');
+      }}
     />
   );
 };
@@ -168,6 +214,7 @@ const StatusBar = () => {
 export const DiscordWidget = {
   Root,
   Header,
+  Channels,
   Content,
   StatusBar,
 };

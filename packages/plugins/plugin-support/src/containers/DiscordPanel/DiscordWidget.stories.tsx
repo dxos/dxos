@@ -13,8 +13,9 @@ import { DiscordWidget } from './DiscordWidget';
 
 const DefaultStory = () => (
   <DiscordWidget.Root>
-    <div className='grid grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden bs-full is-full'>
+    <div className='grid grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden bs-full is-full'>
       <DiscordWidget.Header />
+      <DiscordWidget.Channels />
       <DiscordWidget.Content />
       <DiscordWidget.StatusBar />
     </div>
