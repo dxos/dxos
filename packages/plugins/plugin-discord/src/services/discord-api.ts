@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as PlatformHeaders from '@effect/platform/Headers';
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientError from '@effect/platform/HttpClientError';
 import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
@@ -141,7 +142,10 @@ const shouldRetry = (
     return false;
   }
   if (DiscordApiError.is(error)) {
-    return false;
+    // 429 — we already slept for `Retry-After` in `runRequest`; retry now.
+    // Any other body-level Discord error (auth revoked, missing scope,
+    // channel not found) won't recover on retry.
+    return (error.context as { status?: number }).status === 429;
   }
   if (Cause.isTimeoutException(error)) {
     return true;
@@ -167,6 +171,32 @@ const shouldRetry = (
  *    `{ code, message }` body so callers get a stable, user-facing failure mode.
  *  - 15s timeout, exponential jittered retry up to 3 attempts on transient failures only.
  */
+/**
+ * Parse Discord's rate-limit hint from response headers.
+ *
+ * Discord returns one of two headers on a 429 (and on near-limit 200s):
+ *  - `Retry-After`: seconds (possibly fractional) the client must wait before retrying.
+ *  - `X-RateLimit-Reset-After`: same shape, set on every rate-limited route response.
+ *
+ * Both are in seconds with optional fractional component. We add a small ceiling
+ * (1s minimum, 30s cap) to absorb skew and to refuse to wait absurdly long on
+ * a misconfigured upstream — Discord normally returns sub-second to ~5-second
+ * windows for the routes we use, so a 30s cap still lets the genuine values
+ * through unchanged.
+ */
+const parseRetryAfterMillis = (headers: PlatformHeaders.Headers): number => {
+  const headerValue = (name: string): string | undefined => {
+    const option = PlatformHeaders.get(headers, name);
+    return option._tag === 'Some' ? option.value : undefined;
+  };
+  const raw = headerValue('retry-after') ?? headerValue('x-ratelimit-reset-after');
+  const seconds = raw ? Number.parseFloat(raw) : Number.NaN;
+  if (!Number.isFinite(seconds) || seconds <= 0) {
+    return 1000;
+  }
+  return Math.min(Math.max(seconds * 1000, 1000), 30_000);
+};
+
 const runRequest = <T>(
   request: HttpClientRequest.HttpClientRequest,
   schema: Schema.Schema<T>,
@@ -178,6 +208,23 @@ const runRequest = <T>(
       Effect.flatMap((res): Effect.Effect<T, ParseResult.ParseError | DiscordApiError | HttpClientError.HttpClientError> => {
         if (res.status >= 200 && res.status < 300) {
           return Effect.flatMap(res.json, Schema.decodeUnknown(schema));
+        }
+        // On 429, honor Discord's `Retry-After` (or `X-RateLimit-Reset-After`)
+        // before bubbling a retryable error. Generic exponential backoff
+        // either over-waits or under-waits — the upstream tells us exactly
+        // what window to respect, so we use it. The error still surfaces as
+        // a DiscordApiError so `shouldRetry` triggers another attempt.
+        if (res.status === 429) {
+          const delayMillis = parseRetryAfterMillis(res.headers);
+          return Effect.sleep(`${delayMillis} millis`).pipe(
+            Effect.flatMap(() =>
+              Effect.fail(
+                new DiscordApiError({
+                  context: { status: 429, code: undefined, message: `rate limited; waited ${delayMillis}ms` },
+                }),
+              ),
+            ),
+          );
         }
         const errorBody = res.json.pipe(
           Effect.flatMap(Schema.decodeUnknown(DiscordErrorBodySchema)),
@@ -195,9 +242,12 @@ const runRequest = <T>(
           ),
         );
       }),
-      Effect.timeout('15 seconds'),
+      Effect.timeout('30 seconds'),
+      // Retries are mostly to recover from transient transport errors and
+      // 5xx. 429 already had its mandatory wait above; this just gives it a
+      // second pass through the same path. Cap at 5 attempts.
       Effect.retry({
-        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(3))),
+        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.compose(Schedule.recurs(5))),
         while: shouldRetry,
       }),
       Effect.scoped,
