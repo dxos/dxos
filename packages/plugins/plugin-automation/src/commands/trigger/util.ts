@@ -351,7 +351,7 @@ export const selectTrigger = Effect.fn(function* (kind?: Trigger.Kind) {
 export const selectFeed = Effect.fn(function* () {
   // Query schema registry for schemas with FeedAnnotation.
   const { db } = yield* Database.Service;
-  const schemas = db.graph.registry.types;
+  const schemas = Effect.runSync(db.graph.registry.listTypes());
 
   // Filter schemas that have FeedAnnotation.
   const feedSchemas = schemas.filter((type) => {

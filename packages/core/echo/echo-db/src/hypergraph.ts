@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
@@ -179,16 +181,20 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         const beginTime = TRACE_REF_RESOLUTION ? performance.now() : 0;
         let status: string = '';
         try {
-          if (DXN.isDXN(uri)) {
-            const typeEntity = this._registry.getTypeByDXN(String(uri));
-            status = typeEntity != null ? 'resolved' : 'missing';
-            return typeEntity;
-          } else if (EchoURI.isEchoURI(uri)) {
-            status = 'error';
-            throw new Error('Not implemented: Resolving schema stored in the database');
-          } else {
-            status = 'unknown URI';
-            return undefined;
+          switch (dxn.kind) {
+            case DXN.kind.TYPE: {
+              const schema = Effect.runSync(this._registry.getTypeByDXN(dxn.toString()));
+              status = schema != null ? 'resolved' : 'missing';
+              return schema;
+            }
+            case DXN.kind.ECHO: {
+              status = 'error';
+              throw new Error('Not implemented: Resolving schema stored in the database');
+            }
+            default: {
+              status = 'unknown dxn';
+              return undefined;
+            }
           }
         } finally {
           if (TRACE_REF_RESOLUTION) {

@@ -71,7 +71,7 @@ export default Capability.makeModule(() =>
 
             // Validate schema exists first.
             const schema = await Promise.resolve(
-              extensions.space.db.graph.registry.types.find((t) => Type.getTypename(t) === typename),
+              Effect.runSync(extensions.space.db.graph.registry.listTypes()).find((t) => Type.getTypename(t) === typename),
             );
             if (!schema) {
               return ToolResult.Error(`Schema not found: ${typename}`);
@@ -141,7 +141,7 @@ export default Capability.makeModule(() =>
 
             const typename = view.query.typename;
             const schema = await Promise.resolve(
-              space.db.graph.registry.types.find((t) => Type.getTypename(t) === typename),
+              Effect.runSync(space.db.graph.registry.listTypes()).find((t) => Type.getTypename(t) === typename),
             );
             return ToolResult.Success(schema);
           },
@@ -170,7 +170,7 @@ export default Capability.makeModule(() =>
 
             const typename = view.query.typename;
             const schema = await Promise.resolve(
-              space.db.graph.registry.types.find((t) => Type.getTypename(t) === typename),
+              Effect.runSync(space.db.graph.registry.listTypes()).find((t) => Type.getTypename(t) === typename),
             );
             const { objects: rows } = await space.db.query(Filter.type(schema)).run();
             return ToolResult.Success(rows);
@@ -199,7 +199,7 @@ export default Capability.makeModule(() =>
             // Get schema for validation.
             const typename = view.query.typename;
             const schema = await Promise.resolve(
-              space.db.graph.registry.types.find((t) => Type.getTypename(t) === typename),
+              Effect.runSync(space.db.graph.registry.listTypes()).find((t) => Type.getTypename(t) === typename),
             );
 
             const table = await view.presentation.load();

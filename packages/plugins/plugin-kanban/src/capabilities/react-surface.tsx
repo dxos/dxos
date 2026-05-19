@@ -63,7 +63,7 @@ export default Capability.makeModule(() =>
 
           const { typename } = useFormValues('KanbanForm');
           const [selectedSchema] = useMemo(
-            () => db.graph.registry.types.filter((t) => Type.getTypename(t) === typename),
+            () => Effect.runSync(db.graph.registry.listTypes()).filter((t) => Type.getTypename(t) === typename),
             [db, typename],
           );
           const singleSelectColumns = useMemo(() => {

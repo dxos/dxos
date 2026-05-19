@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import React, { useEffect, useMemo, useState } from 'react';
@@ -44,12 +45,12 @@ export const MasonryContainer = ({
       setCardSchema(() => staticSchema);
     }
     if (!staticSchema && typename && db) {
-      const schema = db.graph.registry.types.find((t) => Type.getTypename(t) === typename);
+      const schema = Effect.runSync(db.graph.registry.listTypes()).find((t) => Type.getTypename(t) === typename);
       if (schema) {
         setCardSchema(() => schema);
       }
       return db.graph.registry.changed.on(() => {
-        const updated = db.graph.registry.types.find((t) => Type.getTypename(t) === typename);
+        const updated = Effect.runSync(db.graph.registry.listTypes()).find((t) => Type.getTypename(t) === typename);
         if (updated) {
           setCardSchema(() => updated);
         }

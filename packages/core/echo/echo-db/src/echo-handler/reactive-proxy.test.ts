@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { describe } from 'vitest';
 
 import { Obj, Type } from '@dxos/echo';
@@ -41,7 +42,7 @@ describe('Echo reactive proxy', () => {
       createObjectFn: async (props = {}) => {
         const object = Obj.make(schema, props as any) as TestSchema.Example;
         if (
-          db.graph.registry.getTypeByDXN('dxn:type:' + Type.getTypename(schema) + ':' + Type.getVersion(schema)) ===
+          Effect.runSync(db.graph.registry.getTypeByDXN('dxn:type:' + Type.getTypename(schema) + ':' + Type.getVersion(schema))) ===
           undefined
         ) {
           db.graph.registry.addTypes([schema]);

@@ -75,8 +75,6 @@ export interface Registry {
   //
 
   // TODO(wittjosiah): Can these be integrated into the object registry?
-  // TODO(wittjosiah): The types API (addTypes, getTypeByDXN, types) should be made async using Effect
-  //   to align with how the objects Query API works. Do not use Promise/async.
 
   /**
    * Register static TypeScript schema types.
@@ -90,13 +88,13 @@ export interface Registry {
    * Look up a registered schema type by its DXN string.
    * Falls back to the upstream registry if not found locally.
    */
-  getTypeByDXN(dxn: string): Type.AnyEntity | undefined;
+  getTypeByDXN(dxn: string): Effect.Effect<Type.AnyEntity | undefined>;
 
   /**
-   * All locally-registered schema types.
+   * List all locally-registered schema types.
    * Does not include upstream types.
    */
-  readonly types: readonly Type.AnyEntity[];
+  listTypes(): Effect.Effect<readonly Type.AnyEntity[]>;
 
   /**
    * Signal that a registered type has changed without adding or removing types.
@@ -235,13 +233,17 @@ class RegistryImpl implements Registry {
     this.#changed.emit();
   }
 
-  getTypeByDXN(dxn: string): Type.AnyEntity | undefined {
-    return this.#types.get(normalizeDXN(dxn)) ?? this.#upstream?.getTypeByDXN(dxn);
+  getTypeByDXN(dxn: string): Effect.Effect<Type.AnyEntity | undefined> {
+    const local = this.#types.get(normalizeDXN(dxn));
+    if (local != null) {
+      return Effect.succeed(local);
+    }
+    return this.#upstream?.getTypeByDXN(dxn) ?? Effect.succeed(undefined);
   }
 
-  get types(): readonly Type.AnyEntity[] {
+  listTypes(): Effect.Effect<readonly Type.AnyEntity[]> {
     // De-duplicate: multiple keys can point to the same type instance (e.g. typename DXN + identifier DXN).
-    return Array.from(new Set(this.#types.values()));
+    return Effect.succeed(Array.from(new Set(this.#types.values())));
   }
 
   touch(): void {

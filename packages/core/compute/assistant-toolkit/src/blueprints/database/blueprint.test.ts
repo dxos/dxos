@@ -61,7 +61,7 @@ describe('Database Blueprint', () => {
         );
         yield* agent.waitForCompletion();
         const schemas = yield* Database.Service.pipe(
-          Effect.map(({ db }) => db.graph.registry.types.filter((t) => Type.getTypename(t) === 'com.example.type.project')),
+          Effect.map(({ db }) => Effect.runSync(db.graph.registry.listTypes()).filter((t) => Type.getTypename(t) === 'com.example.type.project')),
         );
         expect(schemas.length).toBeGreaterThanOrEqual(1);
       },

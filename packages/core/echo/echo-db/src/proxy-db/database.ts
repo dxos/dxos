@@ -4,6 +4,7 @@
 
 import { inspect } from 'node:util';
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
@@ -250,12 +251,12 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
    */
   _getOrRegisterPersistentSchema(schema: PersistentSchema): Type.RuntimeType {
     const identifierDXN = `dxn:echo:@:${schema.id}`;
-    const existing = this.graph.registry.getTypeByDXN(identifierDXN);
+    const existing = Effect.runSync(this.graph.registry.getTypeByDXN(identifierDXN));
     if (existing instanceof Type.RuntimeType) {
       return existing;
     }
     this._registerPersistentSchema(schema);
-    return this.graph.registry.getTypeByDXN(identifierDXN) as Type.RuntimeType;
+    return Effect.runSync(this.graph.registry.getTypeByDXN(identifierDXN)) as Type.RuntimeType;
   }
 
   private _registerPersistentSchema(schema: PersistentSchema): void {
@@ -301,7 +302,7 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
 
     const persistentSchema = this.add(schemaToStore);
     this._registerPersistentSchema(persistentSchema);
-    const result = this.graph.registry.getTypeByDXN(typeId) as Type.RuntimeType;
+    const result = Effect.runSync(this.graph.registry.getTypeByDXN(typeId)) as Type.RuntimeType;
     invariant(result instanceof Type.RuntimeType);
     result._rebuild();
     return result;
@@ -380,8 +381,8 @@ export class EchoDatabaseImpl extends Resource implements EchoDatabase {
         const identifierDXN = Type.getDXN(schema as any);
         const inRegistry =
           typename && version
-            ? this.graph.registry.getTypeByDXN(`dxn:type:${typename}:${version}`) !== undefined ||
-              (identifierDXN != null && this.graph.registry.getTypeByDXN(identifierDXN.toString()) !== undefined)
+            ? Effect.runSync(this.graph.registry.getTypeByDXN(`dxn:type:${typename}:${version}`)) !== undefined ||
+              (identifierDXN != null && Effect.runSync(this.graph.registry.getTypeByDXN(identifierDXN.toString())) !== undefined)
             : false;
         if (!inRegistry) {
           throw createSchemaNotRegisteredError(schema);

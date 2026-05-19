@@ -18,7 +18,7 @@ const handler: Operation.WithHandler<typeof KanbanOperation.DeleteCardField> = K
       invariant(db, 'Database not found');
       const schema = yield* Effect.promise(() =>
         Promise.resolve(
-          db.graph.registry.types.find((t) => Type.getTypename(t) === getTypenameFromQuery(view.query.ast)),
+          Effect.runSync(db.graph.registry.listTypes()).find((t) => Type.getTypename(t) === getTypenameFromQuery(view.query.ast)),
         ),
       );
       invariant(schema, 'Schema not found');

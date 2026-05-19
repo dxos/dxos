@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
@@ -30,7 +31,7 @@ export const getTypenames = ({ annotation, db }: { annotation: TypeInputOptions;
 
   const runtimeTypenames =
     includeRuntime && db
-      ? db.graph.registry.types
+      ? Effect.runSync(db.graph.registry.listTypes())
           .filter((t) => !(t instanceof Type.RuntimeType))
           .filter((schema) => {
             const relation = getTypeAnnotation(schema)?.kind === EntityKind.Relation;
@@ -50,7 +51,7 @@ export const getTypenames = ({ annotation, db }: { annotation: TypeInputOptions;
 
   const databaseTypenames =
     includeDatabase && db
-      ? db.graph.registry.types.filter((t) => t instanceof Type.RuntimeType).map((schema) => Type.getTypename(schema))
+      ? Effect.runSync(db.graph.registry.listTypes()).filter((t) => t instanceof Type.RuntimeType).map((schema) => Type.getTypename(schema))
       : [];
 
   return Array.from(new Set<string>([...runtimeTypenames, ...databaseTypenames])).sort();

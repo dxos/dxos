@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { useMemo, useSyncExternalStore } from 'react';
 
 import { type Database, Type } from '@dxos/echo';
@@ -18,12 +19,12 @@ export const useSchema = (db?: Database.Database, typename?: string): Type.Type 
       };
     }
 
-    let currentSchema = db.graph.registry.types.find((t) => Type.getTypename(t) === typename) as T | undefined;
+    let currentSchema = Effect.runSync(db.graph.registry.listTypes()).find((t) => Type.getTypename(t) === typename) as T | undefined;
 
     return {
       subscribe: (onStoreChange: () => void) => {
         const unsubscribe = db.graph.registry.changed.on(() => {
-          currentSchema = db.graph.registry.types.find((t) => Type.getTypename(t) === typename) as T | undefined;
+          currentSchema = Effect.runSync(db.graph.registry.listTypes()).find((t) => Type.getTypename(t) === typename) as T | undefined;
           onStoreChange();
         });
 

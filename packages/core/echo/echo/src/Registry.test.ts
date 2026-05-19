@@ -108,18 +108,18 @@ describe('Registry', () => {
     registry.addTypes([schema]);
 
     // Exact DXN lookup.
-    expect(registry.getTypeByDXN(`dxn:type:${typename}:${version}`)).toBe(schema);
+    expect(Effect.runSync(registry.getTypeByDXN(`dxn:type:${typename}:${version}`))).toBe(schema);
     // Short-form lookup (without dxn: prefix).
-    expect(registry.getTypeByDXN(`${typename}:${version}`)).toBe(schema);
+    expect(Effect.runSync(registry.getTypeByDXN(`${typename}:${version}`))).toBe(schema);
     // Missing DXN.
-    expect(registry.getTypeByDXN('dxn:type:org.example.Bar:1.0.0')).toBeUndefined();
+    expect(Effect.runSync(registry.getTypeByDXN('dxn:type:org.example.Bar:1.0.0'))).toBeUndefined();
   });
 
   test('types are not surfaced in list()', ({ expect }) => {
     const registry = Registry.make();
     registry.addTypes([Type.PersistentType]);
     expect(registry.list()).toHaveLength(0);
-    expect(registry.types).toHaveLength(1);
+    expect(Effect.runSync(registry.listTypes())).toHaveLength(1);
   });
 
   test('changed fires on add/remove/clear/addTypes', ({ expect }) => {

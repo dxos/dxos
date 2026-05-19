@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
 import { type Database, type Tag, Type } from '@dxos/echo';
 import { QueryDSL } from '@dxos/echo-query';
 import { type GetMenuContext } from '@dxos/react-ui-editor';
@@ -27,7 +29,7 @@ export const completions = ({ db, tags }: CompletionOptions) => {
         }
 
         if (range) {
-          const schema = db ? [...db.graph.registry.types] : [];
+          const schema = db ? [...Effect.runSync(db.graph.registry.listTypes())] : [];
           return schema.map((schema) => Type.getTypename(schema));
         }
 

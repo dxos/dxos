@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { useCallback, useMemo } from 'react';
 
@@ -19,7 +20,7 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
   const filter = useMemo(
     () =>
       Filter.or(
-        ...(db?.graph.registry.types ?? [])
+        ...(db ? Effect.runSync(db.graph.registry.listTypes()) : [])
           .filter((schema) => getTypeAnnotation(schema)?.kind !== EntityKind.Relation)
           .filter((schema) => !SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false)))
           .map((schema) => Filter.typename(Type.getTypename(schema))),

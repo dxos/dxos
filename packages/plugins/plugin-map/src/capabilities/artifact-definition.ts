@@ -96,7 +96,7 @@ export default Capability.makeModule(() =>
             // Validate schema if provided.
             if (typename) {
               const schema = await Promise.resolve(
-                extensions.space.db.graph.registry.types.find((t) => Type.getTypename(t) === typename),
+                Effect.runSync(extensions.space.db.graph.registry.listTypes()).find((t) => Type.getTypename(t) === typename),
               );
               if (!schema) {
                 return ToolResult.Error(`Schema not found: ${typename}`);

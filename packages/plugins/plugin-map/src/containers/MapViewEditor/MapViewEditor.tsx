@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -33,9 +34,9 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
       return;
     }
 
-    setAllSchemata([...db.graph.registry.types]);
+    setAllSchemata([...Effect.runSync(db.graph.registry.listTypes())]);
     return db.graph.registry.changed.on(() => {
-      setAllSchemata([...db.graph.registry.types]);
+      setAllSchemata([...Effect.runSync(db.graph.registry.listTypes())]);
     });
   }, [db]);
 

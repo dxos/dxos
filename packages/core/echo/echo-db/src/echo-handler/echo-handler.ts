@@ -3,6 +3,7 @@
 //
 
 import * as A from '@automerge/automerge';
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { type InspectOptionsStylized } from 'node:util';
 
@@ -685,8 +686,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
 
-    // Try static registry first (covers dxn:type:... and dxn:echo:@:... forms).
-    const fromRegistry = database.graph.registry.getTypeByDXN(typeURI);
+    const database = target[symbolInternals].database;
+    const fromRegistry = Effect.runSync(database.graph.registry.getTypeByDXN(typeDXN.toString()));
     if (fromRegistry != null) {
       return fromRegistry;
     }

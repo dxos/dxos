@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { useEffect, useState } from 'react';
 
@@ -11,7 +12,7 @@ import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/
 const getFilteredTypes = (db: Database.Database): Type.AnyEntity[] =>
   Array.from(
     new Set(
-      db.graph.registry.types
+      Effect.runSync(db.graph.registry.listTypes())
         .filter((schema) => getTypeAnnotation(schema)?.kind !== EntityKind.Relation)
         .filter((schema) => !SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false))),
     ),

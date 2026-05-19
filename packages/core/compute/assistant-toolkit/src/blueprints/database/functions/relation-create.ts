@@ -15,7 +15,7 @@ export default RelationCreate.pipe(
     Effect.fn(function* ({ typename, source, target, properties }) {
       const { db } = yield* Database.Service;
       const foundSchema = yield* Effect.promise(() =>
-        Promise.resolve(db.graph.registry.types.find((t) => Type.getTypename(t) === typename)),
+        Promise.resolve(Effect.runSync(db.graph.registry.listTypes()).find((t) => Type.getTypename(t) === typename)),
       );
       invariant(foundSchema, `Schema not found: ${typename}`);
       invariant(Type.isRelationSchema(foundSchema), 'Schema is not a relation schema');

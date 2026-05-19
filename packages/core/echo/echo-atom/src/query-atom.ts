@@ -3,6 +3,7 @@
 //
 
 import { Atom } from '@effect-atom/atom';
+import * as Effect from 'effect/Effect';
 
 import { Database, type Entity, type Filter, Key, Query, type QueryResult, Registry, type Type } from '@dxos/echo';
 import { WeakDictionary } from '@dxos/util';
@@ -37,10 +38,10 @@ export const fromQuery = <T>(queryResult: QueryResult.QueryResult<T>): Atom.Atom
 export const fromRegistryTypes = (registry: Registry.Registry): Atom.Atom<Type.AnyEntity[]> =>
   Atom.make((get) => {
     const unsubscribe = registry.changed.on(() => {
-      get.setSelf([...registry.types]);
+      get.setSelf([...Effect.runSync(registry.listTypes())]);
     });
     get.addFinalizer(unsubscribe);
-    return [...registry.types];
+    return [...Effect.runSync(registry.listTypes())];
   });
 
 // Registry: key → Queryable (WeakRef with auto-cleanup when GC'd).

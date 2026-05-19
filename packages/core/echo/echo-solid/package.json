@@ -29,7 +29,8 @@
     "@dxos/echo-atom": "workspace:*",
     "@dxos/effect-atom-solid": "workspace:*",
     "@effect-atom/atom": "catalog:",
-    "@solid-primitives/utils": "catalog:"
+    "@solid-primitives/utils": "catalog:",
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-db": "workspace:*",

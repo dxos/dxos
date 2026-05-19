@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { type Accessor, createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
 
 import { type Database, Type } from '@dxos/echo';
@@ -45,12 +46,12 @@ export const useSchema = (
 
     // Set initial value immediately.
     setSchema(
-      () => resolvedDb.graph.registry.types.find((t) => Type.getTypename(t) === resolvedTypename) as T | undefined,
+      () => Effect.runSync(resolvedDb.graph.registry.listTypes()).find((t) => Type.getTypename(t) === resolvedTypename) as T | undefined,
     );
 
     const unsubscribe = resolvedDb.graph.registry.changed.on(() => {
       setSchema(
-        () => resolvedDb.graph.registry.types.find((t) => Type.getTypename(t) === resolvedTypename) as T | undefined,
+        () => Effect.runSync(resolvedDb.graph.registry.listTypes()).find((t) => Type.getTypename(t) === resolvedTypename) as T | undefined,
       );
     });
 

@@ -26,7 +26,7 @@ export const handler = Effect.fn(function* ({
   const resolvedSpaceId = yield* spaceIdWithDefault(spaceId as Option.Option<Key.SpaceId>);
   const space = yield* getSpace(resolvedSpaceId);
 
-  const allSchemas = [...space.db.graph.registry.types];
+  const allSchemas = [...Effect.runSync(space.db.graph.registry.listTypes())];
 
   const schemas = allSchemas
     .map((schema) => {
