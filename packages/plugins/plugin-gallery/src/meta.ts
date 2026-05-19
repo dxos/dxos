@@ -5,6 +5,8 @@
 import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
+import specContent from '../PLUGIN.mdl?raw';
+
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.gallery',
   name: 'Gallery',
@@ -15,4 +17,6 @@ export const meta: Plugin.Meta = {
   icon: 'ph--images--regular',
   iconHue: 'rose',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-gallery',
+  spec: 'https://github.com/dxos/dxos/blob/main/packages/plugins/plugin-gallery/PLUGIN.mdl',
+  specContent,
 };

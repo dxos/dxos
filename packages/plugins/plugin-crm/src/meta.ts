@@ -5,6 +5,8 @@
 import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
+import specContent from '../PLUGIN.mdl?raw';
+
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.crm',
   name: 'CRM',
@@ -16,4 +18,6 @@ export const meta: Plugin.Meta = {
   iconHue: 'emerald',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-crm',
   tags: ['labs'],
+  spec: 'https://github.com/dxos/dxos/blob/main/packages/plugins/plugin-crm/PLUGIN.mdl',
+  specContent,
 };

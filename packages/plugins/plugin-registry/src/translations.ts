@@ -63,6 +63,8 @@ export const translations = [
         'failure-reason-error.label': 'error',
         'dependencies.label': 'Requires',
         'dependents.label': 'Required by',
+        'plugin-spec.label': 'Specification',
+        'spec.label': 'Specification',
         'disable-dependents-dialog.title': 'Disable dependent plugins?',
         'disable-dependents-dialog.description':
           'Disabling {{plugin}} will also disable the following plugins that depend on it:',

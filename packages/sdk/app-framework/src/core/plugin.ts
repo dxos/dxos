@@ -170,6 +170,7 @@ export type Meta = {
   /**
    * Name of the author or organization that created the plugin.
    */
+  // TODO(burdon): DID or domain name?
   author?: string;
 
   /**
@@ -201,6 +202,20 @@ export type Meta = {
    * Icon hue (ChromaticPalette).
    */
   iconHue?: string;
+
+  /**
+   * URL of the plugin's MDL spec (typically a `PLUGIN.mdl` file on GitHub).
+   * Rendered as a "Specification" link in the plugin detail view.
+   */
+  spec?: string;
+
+  /**
+   * MDL spec content (inlined from the plugin's `PLUGIN.mdl` file at build time).
+   *
+   * When present, the registry surface exposes a virtual node that renders the
+   * spec via the plugin-code editor in read-only mode.
+   */
+  specContent?: string;
 
   /**
    * IDs of plugins this plugin functionally depends on.

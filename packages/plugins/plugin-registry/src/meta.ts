@@ -18,6 +18,25 @@ export const registryCategoryId = (category: string): string => `${REGISTRY_KEY}
 /** Qualified graph path to a specific plugin node. */
 export const getPluginPath = (pluginId: string): string => `root/${REGISTRY_ID}/${pluginId}`;
 
+/** Qualified graph path to a plugin's spec (MDL) viewer node. */
+export const getPluginSpecPath = (pluginId: string): string => `root/${REGISTRY_ID}/${pluginId}/spec`;
+
+/** Node `type` string for the virtual plugin-spec viewer. */
+export const PLUGIN_SPEC_NODE_TYPE = 'org.dxos.plugin.spec';
+
+/** Subject shape for the plugin-spec surface. */
+export type PluginSpecSubject = {
+  pluginId: string;
+  name: string;
+  content: string;
+};
+
+export const isPluginSpecSubject = (value: unknown): value is PluginSpecSubject =>
+  typeof value === 'object' &&
+  value !== null &&
+  typeof (value as PluginSpecSubject).pluginId === 'string' &&
+  typeof (value as PluginSpecSubject).content === 'string';
+
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.registry',
   name: 'Plugins',

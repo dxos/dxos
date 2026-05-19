@@ -5,6 +5,8 @@
 import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
+import specContent from '../docs/PLUGIN.mdl?raw';
+
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.spacetime',
   name: 'Spacetime',
@@ -15,4 +17,6 @@ export const meta: Plugin.Meta = {
   icon: 'ph--cube--regular',
   iconHue: 'teal',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-spacetime',
+  spec: 'https://github.com/dxos/dxos/blob/main/packages/plugins/plugin-spacetime/docs/PLUGIN.mdl',
+  specContent,
 };

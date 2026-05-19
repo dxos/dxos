@@ -5,6 +5,8 @@
 import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
+import specContent from '../PLUGIN.mdl?raw';
+
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.support',
   name: 'Support',
@@ -17,4 +19,6 @@ export const meta: Plugin.Meta = {
   iconHue: 'rose',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-support',
   tags: ['system'],
+  spec: 'https://github.com/dxos/dxos/blob/main/packages/plugins/plugin-support/PLUGIN.mdl',
+  specContent,
 };

@@ -15,11 +15,12 @@ import {
   LOAD_PLUGIN_DIALOG,
   LoadPluginDialog,
   PluginArticle,
+  PluginSpecArticle,
   PublicRegistryArticle,
   RegistryArticle,
   RegistrySettingsContainer,
 } from '#containers';
-import { DISABLE_DEPENDENTS_DIALOG, meta, registryCategoryId } from '#meta';
+import { DISABLE_DEPENDENTS_DIALOG, isPluginSpecSubject, meta, registryCategoryId } from '#meta';
 
 import { useAutoTags, useRegistryPlugins, useRemotePluginIds } from '../hooks';
 
@@ -102,6 +103,13 @@ export default Capability.makeModule(() =>
         component: ({ data: { subject } }) => {
           return <PluginArticle subject={subject} />;
         },
+      }),
+      Surface.create({
+        id: 'plugin-spec',
+        filter: AppSurface.subject(AppSurface.Article, isPluginSpecSubject),
+        component: ({ data: { subject, attendableId } }) => (
+          <PluginSpecArticle subject={subject} attendableId={attendableId} />
+        ),
       }),
       Surface.create({
         id: LOAD_PLUGIN_DIALOG,

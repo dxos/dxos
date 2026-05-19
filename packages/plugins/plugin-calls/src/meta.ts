@@ -5,6 +5,8 @@
 import { type Plugin } from '@dxos/app-framework';
 import { trim } from '@dxos/util';
 
+import specContent from '../PLUGIN.mdl?raw';
+
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.calls',
   name: 'Calls',
@@ -15,4 +17,6 @@ export const meta: Plugin.Meta = {
   icon: 'ph--video-conference--regular',
   iconHue: 'cyan',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-calls',
+  spec: 'https://github.com/dxos/dxos/blob/main/packages/plugins/plugin-calls/PLUGIN.mdl',
+  specContent,
 };

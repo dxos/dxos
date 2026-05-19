@@ -6,6 +6,8 @@ import { type Plugin } from '@dxos/app-framework';
 import { meta as gameMeta } from '@dxos/plugin-game';
 import { trim } from '@dxos/util';
 
+import specContent from '../PLUGIN.mdl?raw';
+
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.chess',
   name: 'Chess',
@@ -18,4 +20,6 @@ export const meta: Plugin.Meta = {
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-chess',
   screenshots: ['https://dxos.network/plugin-details-chess-dark.png'],
   dependsOn: [gameMeta.id],
+  spec: 'https://github.com/dxos/dxos/blob/main/packages/plugins/plugin-chess/PLUGIN.mdl',
+  specContent,
 };

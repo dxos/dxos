@@ -50,7 +50,9 @@ export type PluginDetailProps = {
    * in place of the enable Switch.
    */
   onInstall?: () => void;
-  /** Called when the user clicks Install on the version picker. */
+  /**
+   * Called when the user clicks Install on the version picker.
+   */
   onInstallVersion?: () => void;
   /**
    * Called when the user activates a dependency / dependent chip. When
@@ -58,6 +60,13 @@ export type PluginDetailProps = {
    * target plugin id; when omitted, chips are non-interactive labels.
    */
   onNavigateToPlugin?: (pluginId: string) => void;
+  /**
+   * When provided, a "Specification" link is rendered alongside the other
+   * resource links — opening the plugin's bundled `PLUGIN.mdl` in a
+   * read-only spec viewer surface. Left undefined when the plugin's meta
+   * has no `spec` content.
+   */
+  onNavigateToSpec?: () => void;
   /**
    * Resolves a plugin id to its display name for dependency / dependent
    * chip labels. The component delegates the lookup to the parent so each
@@ -75,7 +84,9 @@ export type PluginDetailProps = {
    * an Update button is shown in place of the enable Switch.
    */
   onUpdate?: () => void;
-  /** Called when the user selects a different version in the picker. */
+  /**
+   * Called when the user selects a different version in the picker.
+   */
   onVersionChange?: (tag: string) => void;
 };
 
@@ -97,6 +108,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
       onInstall,
       onInstallVersion,
       onNavigateToPlugin,
+      onNavigateToSpec,
       onResolvePluginName,
       onUninstall,
       onUpdate,
@@ -112,6 +124,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
       description,
       homePage,
       source,
+      spec,
       screenshots,
       icon = 'ph--circle--regular',
       iconHue = 'neutral',
@@ -167,6 +180,23 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                       <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mx-1' />
                     </Link>
                   )}
+
+                  {spec &&
+                    (onNavigateToSpec ? (
+                      <button
+                        type='button'
+                        onClick={onNavigateToSpec}
+                        className='text-sm text-description hover:underline cursor-pointer'
+                      >
+                        {t('spec.label')}
+                        <Icon icon='ph--file-text--bold' size={3} classNames='inline-block leading-none mx-1' />
+                      </button>
+                    ) : (
+                      <Link href={spec} target='_blank' rel='noreferrer' classNames='text-sm text-description'>
+                        {t('spec.label')}
+                        <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mx-1' />
+                      </Link>
+                    ))}
                 </div>
               </div>
               {((dependencies && dependencies.length > 0) || (dependents && dependents.length > 0)) && (
