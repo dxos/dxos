@@ -375,17 +375,29 @@ export class AutomergeHost extends Resource {
 
     await this._collectionSynchronizer.close(ctx);
 
-    // `_repo.shutdown()` quiesces Subduction and runs a best-effort
-    // `flush()` internally. The cap covers a Rust-side bug:
-    // `subduction_core` doesn't reject pending `RequestId`s on
-    // disconnect, so an in-flight `addBatch(...)` to a now-gone peer
-    // waits the full per-request timeout (~30s). Capping drops only
-    // never-going-to-be-delivered pushes; local commits are already
-    // durable. Reproducer: `collection synchronization is
-    // bidirectional` in `automerge-host-subduction.test.ts`.
-    await asyncTimeout(this._repo.shutdown(), CLOSE_TIMEOUT).catch((err) =>
-      log.warn('failed to shutdown repo', { err }),
-    );
+    // In subduction mode `_repo.shutdown()` can stall for ~30s on a
+    // Rust-side bug: `subduction_core` doesn't reject pending
+    // `RequestId`s on disconnect, so an in-flight `addBatch(...)` to a
+    // now-gone peer waits the full per-request timeout. Capping drops
+    // only never-going-to-be-delivered pushes; local commits are
+    // already durable in the subduction storage bridge. Reproducer:
+    // `collection synchronization is bidirectional` in
+    // `automerge-host-subduction.test.ts`.
+    //
+    // Classical mode doesn't hit that bug. It does need the explicit
+    // `flush()` (saves docs to local storage) and the full
+    // `shutdown()` to drain pending sync messages, otherwise a peer
+    // about to forward our last writes to a third party can miss the
+    // space-root doc (reproducer: `delegated > single-use` in
+    // `spaces-invitations.test.ts`).
+    if (this._useSubduction) {
+      await asyncTimeout(this._repo.shutdown(), CLOSE_TIMEOUT).catch((err) =>
+        log.warn('failed to shutdown repo', { err }),
+      );
+    } else {
+      await this._repo.flush().catch((err) => log.warn('failed to flush repo before shutdown', { err }));
+      await this._repo.shutdown().catch((err) => log.warn('failed to shutdown repo', { err }));
+    }
     await this._storage.close?.();
     await this._echoNetworkAdapter.close();
     this._syncTask = undefined;
