@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { DXN, Key, Ref } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/plugin';
-import { type Integration, IntegrationPlugin } from '@dxos/plugin-integration/plugin';
+import { IntegrationPlugin } from '@dxos/plugin-integration/plugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
 
 import { DiscordPlugin } from '#plugin';
@@ -40,7 +40,7 @@ describe('DiscordPlugin', () => {
       plugins: [ClientPlugin({}), IntegrationPlugin(), DiscordPlugin()],
     });
 
-    const danglingRef = Ref.fromDXN<Integration.Integration>(DXN.parse(`dxn:echo:@:${Key.ObjectId.random()}`));
+    const danglingRef = Ref.fromDXN(DXN.parse(`dxn:echo:@:${Key.ObjectId.random()}`));
     let caught: unknown;
     try {
       await harness.invoke(DiscordOperation.GetDiscordChannels, { integration: danglingRef });

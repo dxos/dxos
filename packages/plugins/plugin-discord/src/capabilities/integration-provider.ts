@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
@@ -17,6 +18,7 @@ import {
 import { AccessToken } from '@dxos/types';
 
 import { DISCORD_PROVIDER_ID, DISCORD_SOURCE } from '../constants';
+import { DiscordApiError } from '../errors';
 import { DiscordApi } from '../services';
 import { DiscordOperation } from '../types';
 
@@ -31,18 +33,51 @@ import { DiscordOperation } from '../types';
 const DiscordTokenForm = Schema.Struct({
   token: Schema.String.annotations({
     title: 'Bot Token',
-    description: 'Discord bot token from the application "Bot" page in the developer portal.',
+    description:
+      'Bot token from your application\'s "Bot" page in the Discord developer portal. ' +
+      'NOT the Application ID, Public Key, or OAuth2 Client Secret.',
   }),
 });
+
+/**
+ * Validate the pasted token against `GET /users/@me` before letting the
+ * coordinator persist the Integration.
+ *
+ * Doing this here (rather than waiting for first sync) means a wrong token —
+ * pasted Application ID, expired token, regenerated token — fails the form
+ * with a clear message instead of silently creating an Integration that 401s
+ * on every later operation.
+ *
+ * As a bonus we already have the bot's identity, so we populate
+ * `accessToken.account` inline and skip the `onTokenCreated` round-trip.
+ */
+const validateToken = (token: string) =>
+  DiscordApi.fetchSelf().pipe(
+    Effect.provide(Layer.succeed(DiscordApi.DiscordCredentials, { token })),
+    Effect.provide(FetchHttpClient.layer),
+    Effect.mapError((error) => {
+      if (DiscordApiError.is(error) && (error.context as { status?: number }).status === 401) {
+        return new Error('Discord rejected the token (401). Reset the bot token in the developer portal and paste it again.');
+      }
+      return error instanceof Error ? error : new Error(String(error));
+    }),
+  );
 
 const credentialForm: CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>> = {
   schema: DiscordTokenForm,
   defaultValues: { token: '' },
   onSubmit: ({ values, provider }) =>
-    Effect.sync(() => {
+    Effect.gen(function* () {
+      const token = values.token.trim();
+      if (token.length === 0) {
+        return yield* Effect.fail(new Error('Bot token is required.'));
+      }
+      const self = yield* validateToken(token);
+      const account = self.global_name && self.global_name.length > 0 ? self.global_name : self.username;
       const accessToken = Obj.make(AccessToken.AccessToken, {
         source: DISCORD_SOURCE,
-        token: values.token.trim(),
+        account,
+        token,
       });
       const integration = Obj.make(Integration.Integration, {
         name: provider.label ?? 'Discord',
@@ -50,8 +85,8 @@ const credentialForm: CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>
         accessToken: Ref.make(accessToken),
         targets: [],
       });
-      return { kind: 'complete', accessToken, integration };
-    }),
+      return { kind: 'complete' as const, accessToken, integration };
+    }).pipe(Effect.orDie),
 };
 
 /**
