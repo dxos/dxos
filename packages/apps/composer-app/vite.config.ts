@@ -403,10 +403,6 @@ export default defineConfig((env) => ({
       contentPaths: [
         path.join(rootDir, '/{packages,tools}/**/dist/**/*.{mjs,html}'),
         path.join(rootDir, '/{packages,tools}/**/src/**/*.{ts,tsx,js,jsx,css,md,html}'),
-        // Plugins shipped via npm: scan their built dist so statically-referenced
-        // icons get baked into the host sprite. Runtime-loaded plugins still rely
-        // on the runtime resolver in @dxos/react-ui's IconRegistry.
-        path.join(rootDir, '/node_modules/**/plugin-*/dist/**/*.{mjs,js}'),
       ],
       // verbose: true,
     }),
