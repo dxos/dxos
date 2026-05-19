@@ -9,11 +9,8 @@ import type * as Entity from './Entity';
 import type * as internal from './internal';
 import type * as Key from './Key';
 import type * as Ref from './Ref';
-import type { ReadOnlyEvent } from '@dxos/async';
-
-import type * as Obj from './Obj';
+import type * as Registry from './Registry';
 import type * as SchemaRegistry from './SchemaRegistry';
-import type * as Type from './Type';
 
 /**
  * Resolution context.
@@ -47,30 +44,6 @@ export interface RefResolverOptions {
 }
 
 /**
- * Minimal interface for the in-process object registry exposed on {@link Hypergraph}.
- * Structurally compatible with `@dxos/echo-registry`'s `Registry.Registry` — defined
- * here to avoid a circular dependency between `@dxos/echo` and `@dxos/echo-registry`.
- */
-export interface HypergraphRegistry {
-  readonly changed: ReadOnlyEvent<void>;
-  readonly local: readonly Obj.Unknown[];
-  add(objects: readonly Obj.Unknown[]): void;
-  remove(id: string): boolean;
-  clear(): void;
-  get(id: string): Obj.Unknown | undefined;
-  list(): Obj.Unknown[];
-
-  /** Register static TypeScript schema types (no ECHO id required). */
-  addTypes(types: readonly Type.AnyEntity[]): void;
-
-  /** Look up a registered schema type by DXN string. */
-  getTypeByDXN(dxn: string): Type.AnyEntity | undefined;
-
-  /** All locally-registered schema types. */
-  readonly types: readonly Type.AnyEntity[];
-}
-
-/**
  * Manages cross-space database interactions.
  */
 export interface Hypergraph extends Database.Queryable {
@@ -79,7 +52,7 @@ export interface Hypergraph extends Database.Queryable {
    * Populated at startup via `registry.add(objects)` / `registry.addTypes(schemas)`.
    * Queries that include no explicit from() clause will fan out to this registry automatically.
    */
-  get registry(): HypergraphRegistry;
+  get registry(): Registry.Registry;
 
   /**
    * @deprecated Use `registry.addTypes()` / `registry.getTypeByDXN()` instead.

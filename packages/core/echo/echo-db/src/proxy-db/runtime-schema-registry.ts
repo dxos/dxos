@@ -2,14 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
-import { type QueryResult, type SchemaRegistry, Type } from '@dxos/echo';
-import { Registry } from '@dxos/echo-registry';
+import { type QueryResult, Registry, type SchemaRegistry, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { DXN, type URI } from '@dxos/keys';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { coerceArray, compositeKey } from '@dxos/util';
 
@@ -70,21 +70,6 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
     return [];
   }
 
-  private _add(schema: Type.AnyEntity): void {
-    const uri = Type.getURI(schema) ?? raise(new TypeError('Schema has no URI'));
-    if (this._registry.has(uri)) {
-      const typename = Type.getTypename(schema);
-      const version = Type.getVersion(schema);
-      throw new Error(`Schema version already registered: ${typename}:${version}`);
-    }
-    this._registry.set(uri, schema);
-
-    const typename = Type.getTypename(schema) ?? raise(new TypeError('Schema has no typename'));
-    invariant(typename, 'Not a valid ECHO schema');
-    const versions = defaultMap(this._byTypename, typename, () => [] as Type.AnyEntity[]);
-    versions.push(schema);
-  }
-
   query<Q extends Types.NoExcessProperties<SchemaRegistry.Query, Q>>(
     query?: Q & SchemaRegistry.Query,
   ): QueryResult.QueryResult<Type.Type> {
@@ -139,11 +124,6 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
         .filter((s) => Type.getTypename(s) === type)
         .sort((a, b) => (Type.getVersion(a) ?? '0.0.0').localeCompare(Type.getVersion(b) ?? '0.0.0'))[0];
     }
-    // No version specified — return the earliest known version for backwards compatibility.
-    const type = DXN.getName(dxn);
-    const allSchemas = this._byTypename.get(type) ?? [];
-    // TODO(dmaretskyi): Probably not correct to compare lexicographically, but it's good enough for now.
-    return allSchemas.sort((a, b) => (Type.getVersion(a) ?? '0.0.0').localeCompare(Type.getVersion(b) ?? '0.0.0'))[0];
   }
 
   /**

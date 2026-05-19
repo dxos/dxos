@@ -5,8 +5,7 @@
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { type Database, type Entity, Filter, type Hypergraph, Query, Ref, Type } from '@dxos/echo';
-import { Registry } from '@dxos/echo-registry';
+import { type Database, type Entity, Filter, type Hypergraph, Query, Ref, Registry, Type } from '@dxos/echo';
 import { batchEvents, type AnyProperties, setRefResolver } from '@dxos/echo/internal';
 import { DXN, EchoURI, type ObjectId, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';

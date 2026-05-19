@@ -6,11 +6,12 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
-import { Filter, Obj, Query } from '@dxos/echo';
-import { TestSchema } from '@dxos/echo/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 
-import { Registry } from './index';
+import * as Obj from './Obj';
+import * as Registry from './Registry';
+import * as Type from './Type';
+import { TestSchema } from './testing';
 
 const makeObj = (props: { key?: string; version?: string; value: number }) =>
   Obj.make(TestSchema.Expando, {
@@ -34,21 +35,6 @@ describe('Registry', () => {
     expect(registry.list()).toHaveLength(1);
   });
 
-  test('query by key', ({ expect }) => {
-    const a = makeObj({ key: 'org.example.type.foo', version: '1.2.0', value: 1 });
-    const b = makeObj({ key: 'org.example.type.foo', version: '2.0.0', value: 2 });
-    const c = makeObj({ key: 'org.example.type.bar', version: '1.0.0', value: 3 });
-
-    const registry = Registry.make({ initial: [a, b, c] });
-
-    const fooResults = registry.query(Query.select(Filter.key('org.example.type.foo'))).runSync();
-    expect(fooResults.map((o) => (o as any).value).sort()).toEqual([1, 2]);
-
-    const fooV1 = registry.query(Query.select(Filter.key('org.example.type.foo', { version: '^1.0.0' }))).runSync();
-    expect(fooV1).toHaveLength(1);
-    expect((fooV1[0] as any).value).toBe(1);
-  });
-
   test('upstream delegation', ({ expect }) => {
     const upstreamObj = makeObj({ key: 'org.example.type.foo', version: '1.0.0', value: 100 });
     const localObj = makeObj({ key: 'org.example.type.bar', version: '1.0.0', value: 200 });
@@ -64,10 +50,6 @@ describe('Registry', () => {
         .map((o) => (o as any).value)
         .sort(),
     ).toEqual([100, 200]);
-
-    const allFoo = local.query(Query.select(Filter.key('org.example.type.foo'))).runSync();
-    expect(allFoo).toHaveLength(1);
-    expect((allFoo[0] as any).value).toBe(100);
   });
 
   test('local overrides upstream by id', ({ expect }) => {
@@ -83,14 +65,6 @@ describe('Registry', () => {
 
     expect((local.get(original.id) as any).value).toBe(999);
     expect(local.list()).toHaveLength(1);
-  });
-
-  test('limit clause', ({ expect }) => {
-    const objects = [1, 2, 3, 4].map((value) => makeObj({ key: 'org.example.type.foo', version: '1.0.0', value }));
-    const registry = Registry.make({ initial: objects });
-
-    const limited = registry.query(Query.select(Filter.key('org.example.type.foo')).limit(2)).runSync();
-    expect(limited).toHaveLength(2);
   });
 
   test('Effect layer provides registry', async ({ expect }) => {
@@ -122,5 +96,45 @@ describe('Registry', () => {
 
     const result = await runAndForwardErrors(program.pipe(Effect.provide(stack)));
     expect(result.sort()).toEqual([1, 2]);
+  });
+
+  test('addTypes and getTypeByDXN', ({ expect }) => {
+    const registry = Registry.make();
+    // PersistentType is a valid AnyEntity with typename 'dxos.org.echo.schema' and version '0.1.0'.
+    const schema = Type.PersistentType;
+    const typename = Type.getTypename(schema);
+    const version = Type.getVersion(schema);
+
+    registry.addTypes([schema]);
+
+    // Exact DXN lookup.
+    expect(registry.getTypeByDXN(`dxn:type:${typename}:${version}`)).toBe(schema);
+    // Short-form lookup (without dxn: prefix).
+    expect(registry.getTypeByDXN(`${typename}:${version}`)).toBe(schema);
+    // Missing DXN.
+    expect(registry.getTypeByDXN('dxn:type:org.example.Bar:1.0.0')).toBeUndefined();
+  });
+
+  test('types are not surfaced in list()', ({ expect }) => {
+    const registry = Registry.make();
+    registry.addTypes([Type.PersistentType]);
+    expect(registry.list()).toHaveLength(0);
+    expect(registry.types).toHaveLength(1);
+  });
+
+  test('changed fires on add/remove/clear/addTypes', ({ expect }) => {
+    const registry = Registry.make();
+    let count = 0;
+    registry.changed.on(() => count++);
+
+    const obj = makeObj({ value: 1 });
+    registry.add([obj]);
+    expect(count).toBe(1);
+    registry.remove(obj.id);
+    expect(count).toBe(2);
+    registry.clear();
+    expect(count).toBe(3);
+    registry.addTypes([Type.PersistentType]);
+    expect(count).toBe(4);
   });
 });

@@ -23,6 +23,7 @@ export * as Order from './Order';
 export * as Query from './Query';
 export * as QueryResult from './QueryResult';
 export * as Ref from './Ref';
+export * as Registry from './Registry';
 export * as Relation from './Relation';
 export * as SchemaRegistry from './SchemaRegistry';
 export * as Tag from './Tag';

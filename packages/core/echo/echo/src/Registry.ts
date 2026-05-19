@@ -9,10 +9,10 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { Event, type ReadOnlyEvent } from '@dxos/async';
-import { Entity, type Obj, type Query, type QueryResult, Type } from '@dxos/echo';
-import { filterMatchObjectJSON } from '@dxos/echo-pipeline/filter';
-import { type QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
+
+import type * as Obj from './Obj';
+import * as Type from './Type';
 
 /**
  * Composable, in-memory registry of keyed ECHO objects.
@@ -70,18 +70,12 @@ export interface Registry {
    */
   list(): Obj.Unknown[];
 
-  /**
-   * Run an ECHO query against the registry.
-   * Local objects are matched first; upstream results fill in the rest.
-   */
-  query<T>(query: Query.Query<T>): QueryResult.QueryResult<T>;
-
   // ---------------------------------------------------------------------------
   // Static schema types (Type.AnyEntity)
   //
   // Schema types are TypeScript class definitions annotated with ECHO metadata.
   // They are keyed by their DXN ("dxn:type:<typename>:<version>") rather than
-  // an object id and are NOT surfaced through list() or query() — they exist
+  // an object id and are NOT surfaced through list() — they exist
   // solely for schema-resolution lookups (replacing RuntimeSchemaRegistry).
   // ---------------------------------------------------------------------------
 
@@ -130,7 +124,7 @@ export const make = (options: Options = {}): Registry => new RegistryImpl(option
  * Effect Context tag for {@link Registry}.
  * Use this to inject a registry into Effect-based code.
  */
-export class Service extends Context.Tag('@dxos/echo-registry/Service')<Service, Registry>() {}
+export class Service extends Context.Tag('@dxos/echo/Registry/Service')<Service, Registry>() {}
 
 /**
  * Build an Effect Layer providing a {@link Registry} with the given options.
@@ -218,10 +212,6 @@ class RegistryImpl implements Registry {
     return Array.from(out.values());
   }
 
-  query<T>(query: Query.Query<T>): QueryResult.QueryResult<T> {
-    return new RegistryQueryResult<T>(this, query);
-  }
-
   addTypes(types: readonly Type.AnyEntity[]): void {
     for (const schema of types) {
       const dxn = getTypeDXN(schema);
@@ -279,93 +269,4 @@ const normalizeDXN = (dxn: string): string => {
   const typename = dxn.slice(0, lastColon);
   const version = dxn.slice(lastColon + 1);
   return `dxn:type:${typename}:${version}`;
-};
-
-/**
- * Executes a {@link Query.Query} against a {@link Registry}.
- *
- * Only AST nodes that can be evaluated locally against an in-memory object collection are supported:
- * - `select` clauses applied to plain {@link QueryAST.Filter} nodes (object, key, tag, props, etc.).
- * - Boolean combinators (`and`, `or`, `not`).
- * - `limit` clauses.
- *
- * Server-side concerns such as `from`, `order`, traversal, and text/timestamp filters are not supported.
- */
-class RegistryQueryResult<T> implements QueryResult.QueryResult<T> {
-  readonly #registry: Registry;
-  readonly #query: Query.Query<T>;
-
-  constructor(registry: Registry, query: Query.Query<T>) {
-    this.#registry = registry;
-    this.#query = query;
-  }
-
-  get entries(): QueryResult.Entry<T>[] {
-    return this.runSyncEntries();
-  }
-
-  get results(): T[] {
-    return this.runSync();
-  }
-
-  run(): Promise<T[]> {
-    return Promise.resolve(this.runSync());
-  }
-
-  runEntries(): Promise<QueryResult.Entry<T>[]> {
-    return Promise.resolve(this.runSyncEntries());
-  }
-
-  runSync(): T[] {
-    return this.runSyncEntries().map((entry) => entry.result!);
-  }
-
-  runSyncEntries(): QueryResult.Entry<T>[] {
-    const matches = executeQuery(this.#registry, this.#query.ast);
-    return matches.map(
-      (object): QueryResult.Entry<T> => ({
-        id: getId(object),
-        result: object as unknown as T,
-        resolution: { source: 'local', time: 0 },
-      }),
-    );
-  }
-
-  async first(): Promise<T> {
-    const results = this.runSync();
-    invariant(results.length > 0, 'No results');
-    return results[0];
-  }
-
-  async firstOrUndefined(): Promise<T | undefined> {
-    return this.runSync()[0];
-  }
-
-  subscribe(callback?: (query: QueryResult.QueryResult<T>) => void): () => void {
-    if (!callback) {
-      return () => {};
-    }
-    return this.#registry.changed.on(() => callback(this));
-  }
-}
-
-const executeQuery = (registry: Registry, ast: QueryAST.Query): Obj.Unknown[] => {
-  switch (ast.type) {
-    case 'select':
-      return registry.list().filter((object) => matchFilter(ast.filter, object));
-    case 'filter': {
-      const selection = executeQuery(registry, ast.selection);
-      return selection.filter((object) => matchFilter(ast.filter, object));
-    }
-    case 'limit': {
-      const inner = executeQuery(registry, ast.query);
-      return inner.slice(0, ast.limit);
-    }
-    default:
-      throw new Error(`Query clause not supported: ${(ast as { type: string }).type}`);
-  }
-};
-
-const matchFilter = (filter: QueryAST.Filter, object: Obj.Unknown): boolean => {
-  return filterMatchObjectJSON(filter, Entity.toJSON(object) as any);
 };
