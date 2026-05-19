@@ -213,9 +213,22 @@ const discordRequest = <T>(
     return yield* runRequest(build(creds), schema);
   });
 
+/**
+ * Discord's REST docs say a valid bot User-Agent is required and the format is
+ * `DiscordBot ($url, $versionNumber)`. Without it, requests to guild-scoped
+ * endpoints intermittently 403 with the unhelpful `40333 internal network
+ * error` code (other endpoints like `/users/@me/guilds` are more permissive,
+ * which is why the bot identity / guild-list calls succeed without it but the
+ * `/guilds/{id}/channels` lookup fails). Set it via the proxy's override
+ * prefix because browsers refuse to let JS set `User-Agent` directly.
+ */
+const USER_AGENT_OVERRIDE_HEADER = 'X-Cors-Proxy-User-Agent';
+const DISCORD_BOT_USER_AGENT = 'DiscordBot (https://dxos.org, 0.1.0)';
+
 const authedGet = (creds: DiscordCredentialsValue, path: string, params: Record<string, string | number> = {}) =>
   HttpClientRequest.get(`${DISCORD_API_BASE}${path}`).pipe(
     HttpClientRequest.setHeader('Authorization', `Bot ${creds.token}`),
+    HttpClientRequest.setHeader(USER_AGENT_OVERRIDE_HEADER, DISCORD_BOT_USER_AGENT),
     HttpClientRequest.setUrlParams(Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)]))),
   );
 
