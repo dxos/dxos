@@ -423,6 +423,9 @@ export default defineConfig((env) => ({
  * referenced (e.g. icons used only by runtime-loaded plugins).
  *
  * In dev: middleware streams from node_modules. In build: assets are copied into the output dir.
+ *
+ * TODO(wittjosiah): Roll this into @dxos/vite-plugin-icons so other apps (tasks-app,
+ *   testbench-app, composer-crx) get the same behavior without duplicating the plugin.
  */
 function phosphorAssetsPlugin({ assetsDir }: { assetsDir: string }): PluginOption {
   let outDir: string | undefined;
