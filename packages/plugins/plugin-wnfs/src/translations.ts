@@ -11,18 +11,18 @@ export const translations = [
   {
     'en-US': {
       [WnfsFile.WnfsFile.typename]: {
-        'typename.label': 'File',
-        'typename.label_zero': 'Files',
-        'typename.label_one': 'File',
-        'typename.label_other': 'Files',
-        'object-name.placeholder': 'New file',
-        'add-object.label': 'Add file',
-        'rename-object.label': 'Rename file',
-        'delete-object.label': 'Delete file',
-        'object-deleted.label': 'File deleted',
+        'typename.label': 'WNFS File',
+        'typename.label_zero': 'WNFS Files',
+        'typename.label_one': 'WNFS File',
+        'typename.label_other': 'WNFS Files',
+        'object-name.placeholder': 'New WNFS file',
+        'add-object.label': 'Add WNFS file',
+        'rename-object.label': 'Rename WNFS file',
+        'delete-object.label': 'Delete WNFS file',
+        'object-deleted.label': 'WNFS file deleted',
       },
       [meta.id]: {
-        'plugin.name': 'Files',
+        'plugin.name': 'WNFS',
         'file-input.placeholder': 'Drop a file here, or click to select a file',
       },
     },

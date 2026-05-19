@@ -26,6 +26,7 @@ import { DiscordPlugin } from '@dxos/plugin-discord/plugin';
 import { DoctorPlugin } from '@dxos/plugin-doctor/plugin';
 import { ExplorerPlugin } from '@dxos/plugin-explorer/plugin';
 import { FeedPlugin } from '@dxos/plugin-feed/plugin';
+import { FilePlugin } from '@dxos/plugin-file/plugin';
 import { GalleryPlugin } from '@dxos/plugin-gallery/plugin';
 import { GamePlugin } from '@dxos/plugin-game/plugin';
 import { GeneratorPlugin } from '@dxos/plugin-generator/plugin';
@@ -155,7 +156,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     SketchPlugin.meta.id,
     TablePlugin.meta.id,
     ThreadPlugin.meta.id,
-    WnfsPlugin.meta.id,
+    FilePlugin.meta.id,
 
     // Dev
     isDev && DebugPlugin.meta.id,
@@ -292,6 +293,7 @@ export const getPlugins = ({
     TrelloPlugin(),
     VoxelPlugin(),
     WelcomePlugin(),
+    FilePlugin(),
     WnfsPlugin(),
     ZenPlugin(),
   ]

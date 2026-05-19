@@ -76,7 +76,7 @@ asChild` cleanly.
   `AppCapabilities.FileUploader` capability + a hidden `<input type="file">`,
   returns `{ open, enabled, input }`. Drop-in for any container offering an
   "Add file" affordance. (Currently lives in `plugin-gallery/src/hooks/`;
-  candidate to promote to `app-toolkit` or a new `plugin-files-ui`.)
+  candidate to promote to `app-toolkit` or a `plugin-file-ui` helper package.)
 - `useImageUrl(url, type?)` — resolves `wnfs://` URLs to blob URLs via
   `WnfsCapabilities.Blockstore` / `Instances`; passes `http(s)://` through.
   Depends on `@dxos/plugin-wnfs/helpers` (added as a public export).

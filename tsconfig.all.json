@@ -349,7 +349,7 @@
       "path": "packages/plugins/plugin-feed/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-files/tsconfig.json"
+      "path": "packages/plugins/plugin-file/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-gallery/tsconfig.json"
