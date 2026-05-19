@@ -6,6 +6,7 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
@@ -191,7 +192,22 @@ export class Registry {
   }
 }
 
-export class RegistryService extends Context.Tag('@dxos/blueprints/RegistryService')<RegistryService, Registry>() {}
+export class RegistryService extends Context.Tag('@dxos/blueprints/RegistryService')<RegistryService, Registry>() {
+  static notAvailable = Layer.succeed(RegistryService, {
+    get blueprints(): Blueprint[] {
+      throw new Error('Blueprint registry not available');
+    },
+    getByKey(_key: string): Blueprint | undefined {
+      throw new Error('Blueprint registry not available');
+    },
+    query(): Blueprint[] {
+      throw new Error('Blueprint registry not available');
+    },
+    updateBlueprints() {
+      throw new Error('Blueprint registry not available');
+    },
+  } as unknown as Registry);
+}
 
 /**
  * Resolves a blueprint from the registry.
