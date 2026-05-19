@@ -78,6 +78,9 @@
       "path": "../../sdk/types"
     },
     {
+      "path": "../../ui/brand"
+    },
+    {
       "path": "../../ui/react-primitives/react-hooks"
     },
     {

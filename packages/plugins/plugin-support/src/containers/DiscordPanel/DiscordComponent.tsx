@@ -4,6 +4,7 @@
 
 import React, { type ReactNode, createContext, useContext, useEffect, useMemo, useState } from 'react';
 
+import { DXOSHorizontalType } from '@dxos/brand';
 import { IconButton, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
@@ -116,8 +117,8 @@ const Header = () => {
   const { t } = useTranslation(meta.id);
   const { data, unavailable } = useWidgetContext();
   return (
-    <header className='flex flex-col gap-0.5 px-4 py-3 bg-modal-surface border-b border-subdued-separator'>
-      <div className='text-sm font-medium truncate'>{data?.name ?? t('discord.label')}</div>
+    <header className='flex items-center justify-between gap-1 px-2 py-1 bg-modal-surface border-b border-subdued-separator'>
+      <DXOSHorizontalType className='h-8 w-auto fill-current' />
       <div className='text-xs text-description'>
         {unavailable
           ? t('discord-unavailable.message')
