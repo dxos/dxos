@@ -16,7 +16,7 @@ import { type FormFieldComponentProps } from '@dxos/react-ui-form';
 import { FileInput, FileSettings } from '#components';
 import { FileArticle } from '#containers';
 import { meta } from '#meta';
-import { FileAction, FileType, type Settings } from '#types';
+import { FileAction, File, type Settings } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -24,9 +24,9 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'article',
         filter: AppSurface.oneOf(
-          AppSurface.object(AppSurface.Article, FileType.File),
-          AppSurface.object(AppSurface.Section, FileType.File),
-          AppSurface.object(AppSurface.Slide, FileType.File),
+          AppSurface.object(AppSurface.Article, File.File),
+          AppSurface.object(AppSurface.Section, File.File),
+          AppSurface.object(AppSurface.Slide, File.File),
         ),
         component: ({ data, role }) => <FileArticle role={role} subject={data.subject} />,
       }),

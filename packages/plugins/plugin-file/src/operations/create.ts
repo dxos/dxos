@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 
-import { FileCapabilities, FileOperation, FileType, MAX_FILE_SIZE, Settings } from '../types';
+import { FileCapabilities, FileOperation, File, MAX_FILE_SIZE, Settings } from '../types';
 
 export class UnsupportedFileTypeError extends Error {
   constructor(public readonly type: string) {
@@ -65,7 +65,7 @@ const handler: Operation.WithHandler<typeof FileOperation.Create> = FileOperatio
       const backend = yield* resolveActiveBackend;
       const info = yield* Effect.promise(() => backend.upload(file, db));
       return {
-        object: FileType.make({
+        object: File.make({
           name: info.name,
           type: info.type,
           size: info.size,

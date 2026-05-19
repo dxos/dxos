@@ -5,12 +5,12 @@
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
-import { FileType } from '#types';
+import { File } from '#types';
 
 export const translations = [
   {
     'en-US': {
-      [FileType.File.typename]: {
+      [File.File.typename]: {
         'typename.label': 'File',
         'typename.label_zero': 'Files',
         'typename.label_one': 'File',

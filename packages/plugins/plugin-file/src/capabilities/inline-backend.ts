@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 
-import { FileCapabilities, FileType, MAX_FILE_SIZE, Settings, isAcceptedMimeType } from '#types';
+import { File, FileCapabilities, MAX_FILE_SIZE, Settings, isAcceptedMimeType } from '#types';
 
 import { FileTooLargeError, UnsupportedFileTypeError } from '../operations/create';
 
@@ -30,7 +30,7 @@ export const inlineBackend: FileCapabilities.Backend = {
       name: file.name,
       type: file.type,
       size: bytes.byteLength,
-      data: FileType.inlineData(bytes),
+      data: File.inlineData(bytes),
     };
   },
 };

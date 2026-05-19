@@ -8,8 +8,7 @@ import { Capability } from '@dxos/app-framework';
 import { invariant } from '@dxos/invariant';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { FileCapabilities } from '@dxos/plugin-file/types';
-// eslint-disable-next-line @dxos/rules/import-as-namespace
-import { File as FileType } from '@dxos/types';
+import { File } from '@dxos/types';
 
 import { WnfsCapabilities } from '#types';
 
@@ -37,7 +36,7 @@ export default Capability.makeModule(
           name: info.name,
           type: info.type,
           size: bytes.byteLength,
-          data: FileType.externalData(info.url, info.cid),
+          data: File.externalData(info.url, info.cid),
         };
       },
     });

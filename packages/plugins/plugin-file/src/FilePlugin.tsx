@@ -18,12 +18,12 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { FileType } from '#types';
+import { File } from '#types';
 
 export const FilePlugin = Plugin.define(meta).pipe(
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [FileType.File] }),
+  AppPlugin.addSchemaModule({ schema: [File.File] }),
   AppPlugin.addSettingsModule({ activate: Settings }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),

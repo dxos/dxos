@@ -16,7 +16,7 @@ import { focusField } from '@dxos/ui-editor';
 import { defaultTx } from '@dxos/ui-theme';
 import { type MaybePromise } from '@dxos/util';
 
-import { FileCapabilities, FileType } from '#types';
+import { FileCapabilities, File } from '#types';
 
 const WAIT_UNTIL_LOADER = 1500;
 
@@ -26,7 +26,7 @@ export type ImageOptions = {
 };
 
 /**
- * Decorate `![](dxn:echo:...)` references that resolve to FileType objects with inline image previews.
+ * Decorate `![](dxn:echo:...)` references that resolve to File objects with inline image previews.
  */
 export const image = (options: ImageOptions): Extension[] => {
   const blobUrlCache: Record<string, string> = {};
@@ -128,7 +128,7 @@ const buildDecorations = ({
       const cacheKey = urlText;
       const blobUrlPromise = (async () => {
         const matched = await space.db.query(Filter.id(echoId!)).first();
-        if (!matched || !Obj.instanceOf(FileType.File, matched)) {
+        if (!matched || !Obj.instanceOf(File.File, matched)) {
           return undefined;
         }
 

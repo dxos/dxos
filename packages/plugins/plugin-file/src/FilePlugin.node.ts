@@ -7,12 +7,12 @@ import { AppPlugin } from '@dxos/app-toolkit';
 
 import { CreateObject, OperationHandler } from '#capabilities';
 import { meta } from '#meta';
-import { FileType } from '#types';
+import { File } from '#types';
 
 export const FilePlugin = Plugin.define(meta).pipe(
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [FileType.File] }),
+  AppPlugin.addSchemaModule({ schema: [File.File] }),
   Plugin.make,
 );
 

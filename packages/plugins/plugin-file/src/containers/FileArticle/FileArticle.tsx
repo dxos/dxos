@@ -10,9 +10,9 @@ import { getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
 import { FilePreview } from '#components';
-import { FileCapabilities, FileType } from '#types';
+import { FileCapabilities, File } from '#types';
 
-export type FileArticleProps = AppSurface.ObjectArticleProps<FileType.File>;
+export type FileArticleProps = AppSurface.ObjectArticleProps<File.File>;
 
 export const FileArticle = ({ role, subject: file }: FileArticleProps) => {
   const resolvers = useCapabilities(FileCapabilities.UrlResolver);
