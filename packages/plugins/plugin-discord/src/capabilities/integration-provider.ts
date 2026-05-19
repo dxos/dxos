@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as HttpClient from '@effect/platform/HttpClient';
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -10,7 +9,6 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
-import { ClientCapabilities } from '@dxos/plugin-client';
 import {
   type CredentialForm,
   Integration,
@@ -42,28 +40,6 @@ const DiscordTokenForm = Schema.Struct({
 });
 
 /**
- * Build a layer that supplies an HttpClient routed through the authenticated
- * edge proxy. Resolves the EdgeHttpClient at call time so module activation
- * doesn't block waiting for the Client capability to be contributed
- * (`Capability.waitFor` at module-init time deadlocks the test harness).
- *
- * The cast smooths a real type-level wrinkle: `CredentialForm.onSubmit` and
- * `OnTokenCreated` declare `R = never` / `R = HttpClient.HttpClient`
- * respectively, but our effect needs `Capability.Service`. At runtime the
- * integration-coordinator's effect provides `Capability.Service` ambiently —
- * TS just can't see that through the public type.
- *
- * TODO(wittjosiah): widen `CredentialForm.onSubmit` and `OnTokenCreated` in
- * `@dxos/plugin-integration` to permit `Capability.Service` in R so the cast
- * can go away.
- */
-const proxyHttpClientLayer = (): Effect.Effect<Layer.Layer<HttpClient.HttpClient>, Error, Capability.Service> =>
-  Effect.gen(function* () {
-    const client = yield* Capability.get(ClientCapabilities.Client);
-    return FetchHttpClient.layer.pipe(Layer.provide(makeEdgeProxyHttpClientLayer(client.edge.http)));
-  });
-
-/**
  * Validate the pasted token against `GET /users/@me` before letting the
  * coordinator persist the Integration.
  *
@@ -78,21 +54,18 @@ const proxyHttpClientLayer = (): Effect.Effect<Layer.Layer<HttpClient.HttpClient
  * browser calls.
  */
 const validateToken = (token: string) =>
-  Effect.gen(function* () {
-    const httpClientLayer = yield* proxyHttpClientLayer();
-    return yield* DiscordApi.fetchSelf().pipe(
-      Effect.provide(Layer.succeed(DiscordApi.DiscordCredentials, { token })),
-      Effect.provide(httpClientLayer),
-      Effect.mapError((error) => {
-        if (DiscordApiError.is(error) && (error.context as { status?: number }).status === 401) {
-          return new Error(
-            'Discord rejected the token (401). Reset the bot token in the developer portal and paste it again.',
-          );
-        }
-        return error instanceof Error ? error : new Error(String(error));
-      }),
-    );
-  });
+  DiscordApi.fetchSelf().pipe(
+    Effect.provide(Layer.succeed(DiscordApi.DiscordCredentials, { token })),
+    Effect.provide(FetchHttpClient.layer.pipe(Layer.provide(makeEdgeProxyHttpClientLayer()))),
+    Effect.mapError((error) => {
+      if (DiscordApiError.is(error) && (error.context as { status?: number }).status === 401) {
+        return new Error(
+          'Discord rejected the token (401). Reset the bot token in the developer portal and paste it again.',
+        );
+      }
+      return error instanceof Error ? error : new Error(String(error));
+    }),
+  );
 
 const credentialForm: CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>> = {
   schema: DiscordTokenForm,
@@ -117,7 +90,7 @@ const credentialForm: CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>
         targets: [],
       });
       return { kind: 'complete' as const, accessToken, integration };
-    }).pipe(Effect.orDie) as ReturnType<CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>>['onSubmit']>,
+    }).pipe(Effect.orDie),
 };
 
 /**
@@ -133,20 +106,19 @@ const credentialForm: CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>
  * browser calls.
  */
 const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
-  (Effect.gen(function* () {
+  Effect.gen(function* () {
     if (accessToken.account) {
       return;
     }
-    const httpClientLayer = yield* proxyHttpClientLayer();
     const self = yield* DiscordApi.fetchSelf().pipe(
       Effect.provide(Layer.succeed(DiscordApi.DiscordCredentials, { token: accessToken.token })),
-      Effect.provide(httpClientLayer),
+      Effect.provide(FetchHttpClient.layer.pipe(Layer.provide(makeEdgeProxyHttpClientLayer()))),
     );
     Obj.update(accessToken, (accessToken) => {
       const display = self.global_name && self.global_name.length > 0 ? self.global_name : self.username;
       accessToken.account = display;
     });
-  }).pipe(Effect.orDie) as unknown as ReturnType<OnTokenCreated>);
+  }).pipe(Effect.orDie);
 
 /**
  * Contributes a single `IntegrationProvider` entry that wires Discord's two

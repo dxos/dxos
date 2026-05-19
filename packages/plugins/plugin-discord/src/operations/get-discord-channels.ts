@@ -6,10 +6,8 @@ import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
-import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { DiscordApi, makeEdgeProxyHttpClientLayer } from '../services';
 import { DiscordOperation } from '../types';
@@ -27,7 +25,6 @@ import { DiscordOperation } from '../types';
 const handler: Operation.WithHandler<typeof DiscordOperation.GetDiscordChannels> = DiscordOperation.GetDiscordChannels.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ integration }) {
-      const client = yield* Capability.get(ClientCapabilities.Client);
       return yield* Effect.gen(function* () {
         const guilds = yield* DiscordApi.fetchGuilds();
         const perGuild = yield* Effect.forEach(
@@ -60,7 +57,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.GetDiscordChannels>
         return { targets: perGuild.flat() };
       }).pipe(
         Effect.provide(DiscordApi.DiscordCredentials.fromIntegration(integration)),
-        Effect.provide(FetchHttpClient.layer.pipe(Layer.provide(makeEdgeProxyHttpClientLayer(client.edge.http)))),
+        Effect.provide(FetchHttpClient.layer.pipe(Layer.provide(makeEdgeProxyHttpClientLayer()))),
       );
     }),
   ),

@@ -510,17 +510,7 @@ export class EdgeHttpClient {
    * conventions are unchanged between the two paths.
    */
   public async proxyFetch(target: URL, init: RequestInit = {}): Promise<Response> {
-    const proxyUrl = new URL(`/${target.host}${target.pathname}${target.search}`, LEGACY_CORS_PROXY_URL);
-    if (target.protocol === 'http:') {
-      proxyUrl.searchParams.set('scheme', 'http');
-    }
-
-    const requestHeaders = remapAuthorizationForProxy(new Headers(init.headers ?? undefined));
-    if (this._clientTag) {
-      requestHeaders.set(EDGE_CLIENT_TAG_HEADER, this._clientTag);
-    }
-
-    return fetch(proxyUrl, { ...init, headers: requestHeaders });
+    return proxyFetchLegacy(target, init, this._clientTag);
 
     //
     // Restore once the authenticated route on the main edge worker is deployed:
@@ -750,4 +740,29 @@ const remapAuthorizationForProxy = (headers: Headers): Headers => {
     headers.set('X-Cors-Proxy-Authorization', callerAuth);
   }
   return headers;
+};
+
+/**
+ * Fetch through the legacy standalone open proxy at `cors-proxy.dxos.workers.dev`.
+ *
+ * No DXOS auth, no `EdgeHttpClient` instance required — pure URL rewrite +
+ * header remap + `fetch`. Used by integration plugins from contexts that
+ * don't have an `EdgeHttpClient` in scope (e.g. plugin-integration's
+ * `credentialForm.onSubmit` and `onTokenCreated`, which run inside the
+ * coordinator's runtime that does not provide `Capability.Service`).
+ *
+ * TEMPORARY — see `LEGACY_CORS_PROXY_URL`. When the authenticated `/proxy/*`
+ * route on edge ships (https://github.com/dxos/edge/pull/576), delete this
+ * function and route everything through `EdgeHttpClient.proxyFetch` again.
+ */
+export const proxyFetchLegacy = (target: URL, init: RequestInit = {}, clientTag?: string): Promise<Response> => {
+  const proxyUrl = new URL(`/${target.host}${target.pathname}${target.search}`, LEGACY_CORS_PROXY_URL);
+  if (target.protocol === 'http:') {
+    proxyUrl.searchParams.set('scheme', 'http');
+  }
+  const requestHeaders = remapAuthorizationForProxy(new Headers(init.headers ?? undefined));
+  if (clientTag) {
+    requestHeaders.set(EDGE_CLIENT_TAG_HEADER, clientTag);
+  }
+  return fetch(proxyUrl, { ...init, headers: requestHeaders });
 };

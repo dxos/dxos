@@ -330,7 +330,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
           Effect.provide(Database.layer(db)),
           Effect.provide(createFeedServiceLayer(space.queues)),
           Effect.provide(DiscordApi.DiscordCredentials.fromIntegration(integration)),
-          Effect.provide(FetchHttpClient.layer.pipe(Layer.provide(makeEdgeProxyHttpClientLayer(client.edge.http)))),
+          Effect.provide(FetchHttpClient.layer.pipe(Layer.provide(makeEdgeProxyHttpClientLayer()))),
         ),
       );
 
