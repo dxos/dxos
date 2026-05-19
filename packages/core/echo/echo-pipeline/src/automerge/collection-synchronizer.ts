@@ -198,7 +198,7 @@ export class CollectionSynchronizer extends Resource {
 
     if (perCollectionState.localState) {
       try {
-        this._sendCollectionState(collectionId, peerId, perCollectionState.localState);
+        this._sendCollectionState(collectionId, peerId, withoutEmptyHeads(perCollectionState.localState));
       } catch (error) {
         if (PeerNotFoundError.is(error)) {
           log('peer not found when sending collection state callback', { error });
@@ -300,7 +300,7 @@ export class CollectionSynchronizer extends Resource {
       if (Date.now() - lastBroadcast > MIN_QUERY_INTERVAL) {
         perCollectionState.lastBroadcast.set(peerId, Date.now());
         try {
-          this._sendCollectionState(collectionId, peerId, localState);
+          this._sendCollectionState(collectionId, peerId, withoutEmptyHeads(localState));
         } catch (error) {
           if (PeerNotFoundError.is(error)) {
             log('peer not found when broadcasting collection state', { error });
@@ -348,6 +348,20 @@ export const isCollectionStateEqual = (local: CollectionState, remote: Collectio
   const diff = diffCollectionState(local, remote);
   return diff.different.length === 0 && diff.missingOnLocal.length === 0 && diff.missingOnRemote.length === 0;
 };
+
+/**
+ * Strip entries whose heads array is empty before sending a CollectionState
+ * over the wire. Empty-heads entries are inert (they don't participate in the
+ * diff thanks to `Record.filter` in {@link diffCollectionState}) but they
+ * inflate the on-wire payload AND end up advertised as "I know about this
+ * document with no commits" to the receiver — leaking sedimentree ids that
+ * leaked into the local store from other spaces via the subduction
+ * fingerprint exchange. Filtering at the send site is the cheapest place to
+ * keep collection-state semantics aligned with `diffCollectionState`.
+ */
+export const withoutEmptyHeads = (state: CollectionState): CollectionState => ({
+  documents: Record.filter(state.documents, (heads) => heads.length > 0),
+});
 
 export const diffCollectionState = (local: CollectionState, remote: CollectionState): CollectionStateDiff => {
   const localDocuments = Record.filter(local.documents, (heads) => heads.length > 0);
