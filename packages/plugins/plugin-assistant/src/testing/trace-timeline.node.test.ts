@@ -204,10 +204,10 @@ describe('Trace timeline', () => {
           const graph = renderTimelineAscii(commits, branches);
           expect(`\n${graph}\n`).toMatchInlineSnapshot(`
                 "
-                  ●     [function] Run Routine
-                  ├──●  [user] Research the given topic, or object.
-                  ●──┤  [function] Run Routine - Success
-                  "
+                ●     [function] Run Routine
+                ├──●  [user] Research the given topic, or object.
+                ●──┤  [function] Run Routine - Success
+                "
               `);
         },
         Effect.provide(TestLayer),
