@@ -9,7 +9,12 @@ import { describe, onTestFinished, test } from 'vitest';
 import { sleep } from '@dxos/async';
 import { range } from '@dxos/util';
 
-import { type CollectionState, CollectionSynchronizer, diffCollectionState } from './collection-synchronizer';
+import {
+  type CollectionState,
+  CollectionSynchronizer,
+  diffCollectionState,
+  withoutEmptyHeads,
+} from './collection-synchronizer';
 
 describe('CollectionSynchronizer', () => {
   test('sync two peers', async ({ expect }) => {
@@ -99,7 +104,12 @@ describe('CollectionSynchronizer', () => {
     await sleep(10);
 
     expect(sentStates.map((m) => m.peerId).sort()).to.deep.equal([peerId1, peerId2].sort());
-    expect(sentStates.every((m) => m.state === STATE_1)).to.equal(true);
+    // `_broadcastLocalState` wraps in `withoutEmptyHeads`, so compare against the
+    // wire form (deep-equal — not strict-equal — because the wrapper allocates).
+    const expectedWire = withoutEmptyHeads(STATE_1);
+    for (const sent of sentStates) {
+      expect(sent.state).to.deep.equal(expectedWire);
+    }
   });
 
   test('does not send to a peer after onConnectionClosed', async ({ expect }) => {
