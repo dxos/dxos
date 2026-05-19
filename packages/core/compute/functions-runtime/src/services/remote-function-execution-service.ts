@@ -29,14 +29,20 @@ export class RemoteFunctionExecutionService extends Context.Tag('@dxos/functions
    * @returns
    */
   static fromClient(client: Client, spaceId?: SpaceId): Layer.Layer<RemoteFunctionExecutionService> {
-    const edgeClient = createEdgeClient(client);
+    // Defer `createEdgeClient` until a function is actually called: the edge
+    // client requires an identity, which may not exist when this layer is
+    // first materialised (e.g. at app boot, before the create-identity
+    // operation has run). Eager construction here used to silently fail the
+    // entire LayerStack application slice with `Identity not available`.
+    let cachedEdgeClient: ReturnType<typeof createEdgeClient> | undefined;
+    const getEdgeClient = () => (cachedEdgeClient ??= createEdgeClient(client));
     return Layer.succeed(RemoteFunctionExecutionService, {
       callFunction: <I, O>(ctx: DxosContext, deployedFunctionId: string, input: I): Effect.Effect<O> =>
         Effect.gen(function* () {
           // TODO(dmaretskyi): Reconcile with `invokeFunction`.
           const cleanedId = deployedFunctionId.replace(/^\//, '');
           return yield* Effect.promise(() =>
-            edgeClient.invokeFunction(ctx, { functionId: cleanedId, spaceId }, input),
+            getEdgeClient().invokeFunction(ctx, { functionId: cleanedId, spaceId }, input),
           ).pipe(
             Effect.mapError(FunctionError.wrap()),
             Effect.orDie, // TODO(dmaretskyi): Checked error.
@@ -52,7 +58,9 @@ export class RemoteFunctionExecutionService extends Context.Tag('@dxos/functions
       RemoteFunctionExecutionService,
       Effect.gen(function* () {
         const client = yield* ClientService;
-        const edgeClient = createEdgeClient(client);
+        // See `fromClient` — defer until `callFunction` is invoked.
+        let cachedEdgeClient: ReturnType<typeof createEdgeClient> | undefined;
+        const getEdgeClient = () => (cachedEdgeClient ??= createEdgeClient(client));
         const spaceId = spaceId$.pipe(Option.getOrUndefined);
 
         return {
@@ -61,7 +69,7 @@ export class RemoteFunctionExecutionService extends Context.Tag('@dxos/functions
               // TODO(dmaretskyi): Reconcile with `invokeFunction`.
               const cleanedId = deployedFunctionId.replace(/^\//, '');
               return yield* Effect.promise(() =>
-                edgeClient.invokeFunction(ctx, { functionId: cleanedId, spaceId }, input),
+                getEdgeClient().invokeFunction(ctx, { functionId: cleanedId, spaceId }, input),
               ).pipe(
                 Effect.mapError(FunctionError.wrap()),
                 Effect.orDie, // TODO(dmaretskyi): Checked error.

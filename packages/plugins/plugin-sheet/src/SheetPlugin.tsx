@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ActivationEvent, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { AutomationEvents } from '@dxos/plugin-automation';
 import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
 
@@ -36,7 +35,7 @@ export const SheetPlugin = Plugin.define(meta).pipe(
     activate: SheetState,
   }),
   Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(ClientEvents.ClientReady, AutomationEvents.ComputeRuntimeReady),
+    activatesOn: ActivationEvent.allOf(ClientEvents.ClientReady, ActivationEvents.ProcessManagerReady),
     activate: ComputeGraphRegistry,
   }),
   Plugin.addModule({

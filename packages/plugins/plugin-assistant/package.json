@@ -50,10 +50,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/AssistantPlugin.workerd.ts",
         "node": "./src/AssistantPlugin.node.ts",
         "default": "./src/AssistantPlugin.tsx"
       },
       "types": "./dist/types/src/AssistantPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/AssistantPlugin.workerd.mjs",
       "node": "./dist/lib/neutral/AssistantPlugin.node.mjs",
       "default": "./dist/lib/neutral/AssistantPlugin.mjs"
     },
@@ -125,6 +127,7 @@
     "@dxos/async": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
     "@dxos/conductor": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
@@ -144,6 +147,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/operation": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-automation": "workspace:*",
     "@dxos/plugin-client": "workspace:*",

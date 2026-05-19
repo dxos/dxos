@@ -9,9 +9,10 @@ import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
+import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { useTypeOptions } from '@dxos/app-toolkit/ui';
 import { type ComputeEnvironment } from '@dxos/client-protocol';
-import { Operation, Script, Trigger, TriggerEvent } from '@dxos/compute';
+import { Operation, Script, ServiceResolver, Trigger, TriggerEvent } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { Filter, Obj, Query, Tag } from '@dxos/echo';
 import { KEY_QUEUE_CURSOR, TriggerDispatcher } from '@dxos/functions-runtime';
@@ -26,7 +27,6 @@ import { Pipeline } from '@dxos/types';
 import { ghostHover, mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { useComputeRuntime } from '#hooks';
 import { meta } from '#meta';
 
 import { TriggerEditor, type TriggerEditorProps } from '../TriggerEditor';
@@ -44,7 +44,7 @@ export type AutomationPanelProps = {
 export const AutomationPanel = ({ space, object, initialTrigger, onDone }: AutomationPanelProps) => {
   const { t } = useTranslation(meta.id);
   const client = useClient();
-  const computeRuntime = useComputeRuntime(space.id);
+  const processManagerRuntime = useProcessManagerRuntime();
   const [properties] = useObject(space.properties);
   const computeEnvironment = properties.computeEnvironment ?? 'local';
   const functionsServiceClient = useMemo(() => FunctionsServiceClient.fromClient(client), [client]);
@@ -109,20 +109,15 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
     }
 
     if (computeEnvironment === 'local') {
-      if (!computeRuntime) {
-        log.warn('force run trigger skipped: compute runtime not available', { spaceId: space.id });
-        return;
-      }
-
       try {
-        await computeRuntime.runPromise(
+        await processManagerRuntime.runPromise(
           Effect.gen(function* () {
             const dispatcher = yield* TriggerDispatcher;
             yield* dispatcher.invokeTrigger({
               trigger,
               event: { tick: Date.now() } satisfies TriggerEvent.TimerEvent,
             });
-          }),
+          }).pipe(Effect.provide(ServiceResolver.provide({ space: space.id }, TriggerDispatcher))),
         );
       } catch (error) {
         log.catch(error);

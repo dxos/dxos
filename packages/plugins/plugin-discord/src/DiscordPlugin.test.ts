@@ -21,7 +21,7 @@ describe('DiscordPlugin', () => {
     });
 
     // After autoStart: SetupAppGraph fires (cascading SetupIntegrationProviders via
-    // IntegrationPlugin's AppGraphBuilder), and SetupOperationHandler fires from
+    // IntegrationPlugin's AppGraphBuilder), and SetupProcessManager fires from
     // OperationPlugin — both reach the DiscordPlugin's modules.
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([moduleId('DiscordIntegrationProvider'), moduleId('OperationHandler')]),

@@ -25,7 +25,7 @@ export const SamplePlugin = Plugin.define(meta).pipe(
   // `createObject` is the factory called when users create this type via the UI.
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
 
-  // Registers operation handlers. Activates during `SetupOperationHandler` event.
+  // Registers operation handlers. Activates during `SetupProcessManager` event.
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
 
   // Registers ECHO schemas so the framework knows about this type.

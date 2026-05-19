@@ -8,13 +8,13 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { createEdgeIdentity } from '@dxos/client/edge';
+import { type Operation } from '@dxos/compute';
 import { Context as DxContext } from '@dxos/context';
 import { type Database, DXN, type Key, Obj, Ref } from '@dxos/echo';
 import { EdgeHttpClient } from '@dxos/edge-client';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { OperationInvoker as OperationInvokerExports } from '@dxos/operation';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { AccessToken } from '@dxos/types';
 
@@ -80,7 +80,7 @@ const resolveProvider = (
   });
 
 const openProviderFormDialog = (
-  invoker: OperationInvokerExports.OperationInvoker,
+  invoker: Operation.OperationService,
   input: { db: Database.Database; spaceId: Key.SpaceId; provider: IntegrationProviderEntry },
 ) =>
   invoker.invoke(LayoutOperation.UpdateDialog, {
@@ -96,7 +96,7 @@ const openProviderFormDialog = (
   });
 
 const dispatchAccessTokenCreated = (
-  invoker: OperationInvokerExports.OperationInvoker,
+  invoker: Operation.OperationService,
   accessToken: AccessToken.AccessToken,
 ): Effect.Effect<void, never> =>
   invoker
@@ -126,7 +126,7 @@ const runOnTokenCreated = (
 };
 
 const navigateToNewIntegration = (
-  invoker: OperationInvokerExports.OperationInvoker,
+  invoker: Operation.OperationService,
   db: Database.Database,
   integrationId: string,
 ): Effect.Effect<void, never> =>
@@ -138,7 +138,7 @@ const navigateToNewIntegration = (
     .pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('navigate to new integration failed', { error }))));
 
 const openSyncTargetsDialogAfterIntegrationCreated = (
-  invoker: OperationInvokerExports.OperationInvoker,
+  invoker: Operation.OperationService,
   getSyncTargets: NonNullable<IntegrationProviderEntry['getSyncTargets']>,
   persistedIntegration: Integration.Integration,
   existingTarget: Ref.Ref<Obj.Any> | undefined,
@@ -160,10 +160,7 @@ const openSyncTargetsDialogAfterIntegrationCreated = (
     Effect.catchAll((error) => Effect.sync(() => log.warn('open sync-targets dialog after create failed', { error }))),
   );
 
-const finalizePendingEntry = (
-  invoker: OperationInvokerExports.OperationInvoker,
-  entry: Pending,
-): Effect.Effect<void, never> =>
+const finalizePendingEntry = (invoker: Operation.OperationService, entry: Pending): Effect.Effect<void, never> =>
   Effect.gen(function* () {
     const { token, integration, db, provider, existingTarget } = entry;
     const persistedToken = db.add(token);

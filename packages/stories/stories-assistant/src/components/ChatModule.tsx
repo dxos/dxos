@@ -4,12 +4,12 @@
 
 import React from 'react';
 
+import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { Agent } from '@dxos/assistant-toolkit';
 import { Filter, Obj } from '@dxos/echo';
 import { Assistant } from '@dxos/plugin-assistant';
 import { Chat } from '@dxos/plugin-assistant/components';
 import { useBlueprintRegistry, useChatProcessor, useOnline, usePresets } from '@dxos/plugin-assistant/hooks';
-import { useComputeRuntime } from '@dxos/plugin-automation/hooks';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Panel, Popover, Toolbar } from '@dxos/react-ui';
 
@@ -30,7 +30,7 @@ export const ChatModule = ({ space }: ModuleProps) => {
   const hasPlan = (plan?.tasks?.length ?? 0) > 0;
 
   const blueprintRegistry = useBlueprintRegistry();
-  const runtime = useComputeRuntime(space.id);
+  const runtime = useProcessManagerRuntime();
   const processor = useChatProcessor({ runtime, space, chat, preset, blueprintRegistry });
 
   const feedTarget = chat?.feed?.target;

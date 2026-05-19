@@ -110,7 +110,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.addModule({
     activatesOn: ActivationEvent.allOf(
-      ActivationEvents.OperationInvokerReady,
+      ActivationEvents.ProcessManagerReady,
       AppActivationEvents.AppGraphReady,
       DeckEvents.StateReady,
     ),
