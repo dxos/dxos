@@ -54,10 +54,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/MarkdownPlugin.workerd.ts",
         "node": "./src/MarkdownPlugin.node.ts",
         "default": "./src/MarkdownPlugin.tsx"
       },
       "types": "./dist/types/src/MarkdownPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/MarkdownPlugin.workerd.mjs",
       "node": "./dist/lib/neutral/MarkdownPlugin.node.mjs",
       "default": "./dist/lib/neutral/MarkdownPlugin.mjs"
     },

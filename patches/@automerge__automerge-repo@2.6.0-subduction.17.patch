@@ -1,5 +1,5 @@
 diff --git a/dist/Repo.d.ts b/dist/Repo.d.ts
-index 723469f..6e343f4 100644
+index 723469fdcab0c10166b3e23885526b8c405f0b4d..6e343f49d9aed25645b702bd6cb33ad5f9bfdb05 100644
 --- a/dist/Repo.d.ts
 +++ b/dist/Repo.d.ts
 @@ -271,5 +271,7 @@ export interface RepoEvents {
@@ -12,7 +12,7 @@ index 723469f..6e343f4 100644
  //# sourceMappingURL=Repo.d.ts.map
 \ No newline at end of file
 diff --git a/dist/Repo.js b/dist/Repo.js
-index d6726e6..0ba494d 100644
+index d6726e6eca4e6d2cfae6a6f7e63a45ef4d8f538c..0ba494d66a1843cf318aad9fcb7d05189f84f8b9 100644
 --- a/dist/Repo.js
 +++ b/dist/Repo.js
 @@ -124,6 +124,17 @@ export class Repo extends EventEmitter {
@@ -34,7 +34,7 @@ index d6726e6..0ba494d 100644
          this.#subductionSource = subductionSource;
          this.#sources.push(subductionSource);
 diff --git a/dist/index.d.ts b/dist/index.d.ts
-index 0f5f6da..e96d538 100644
+index 0f5f6da97266bb49384768751676b0c3eefa20ba..e96d5382d18be4128a1deb0b838bdc84917fd18d 100644
 --- a/dist/index.d.ts
 +++ b/dist/index.d.ts
 @@ -45,8 +45,8 @@ export type { DeleteDocumentPayload, DocumentPayload, RepoConfig, RepoEvents, Sh
@@ -49,10 +49,10 @@ index 0f5f6da..e96d538 100644
  export type { NetworkSubsystemEvents, PeerPayload, } from "./network/NetworkSubsystem.js";
  export type { DocumentUnavailableMessage, EphemeralMessage, Message, RepoMessage, RequestMessage, SyncMessage, } from "./network/messages.js";
 diff --git a/dist/subduction/AdapterConnections.d.ts b/dist/subduction/AdapterConnections.d.ts
-index 1cdd94c..2e6a35b 100644
+index 1cdd94c3443bd0be41a149059d271bac61d0e3a7..2e6a35b849fee72beb5906048c81608c4459b414 100644
 --- a/dist/subduction/AdapterConnections.d.ts
 +++ b/dist/subduction/AdapterConnections.d.ts
-@@ -1,14 +1,21 @@
+@@ -1,10 +1,17 @@
 -import { Subduction } from "@automerge/automerge-subduction/slim";
 +import { PeerId as SubductionPeerId, Subduction } from "@automerge/automerge-subduction/slim";
  import { NetworkAdapterInterface } from "../network/NetworkAdapterInterface.js";
@@ -72,14 +72,8 @@ index 1cdd94c..2e6a35b 100644
      isConnecting(): boolean;
      generation(): number;
      onChange(callback: () => void): void;
-     shutdown(): void;
-     addAdapter(adapter: NetworkAdapterInterface, serviceName: string, role: "connect" | "accept"): void;
- }
--//# sourceMappingURL=AdapterConnections.d.ts.map
-\ No newline at end of file
-+//# sourceMappingURL=AdapterConnections.d.ts.map
 diff --git a/dist/subduction/AdapterConnections.js b/dist/subduction/AdapterConnections.js
-index 87a75d5..cb979d3 100644
+index 87a75d5b1983df0800519afca8921a410460b2b1..cb979d3c1c03329a0629860ef8f2be98c9eccf5b 100644
 --- a/dist/subduction/AdapterConnections.js
 +++ b/dist/subduction/AdapterConnections.js
 @@ -1,15 +1,19 @@
@@ -156,10 +150,10 @@ index 87a75d5..cb979d3 100644
      }
  }
 diff --git a/dist/subduction/SubductionConnections.d.ts b/dist/subduction/SubductionConnections.d.ts
-index 4bfff03..86b85fd 100644
+index 4bfff03372c0f8faf56bff71a1d488ca48f13a45..86b85fdf3dd18a39d95fa30913f86329b44c1250 100644
 --- a/dist/subduction/SubductionConnections.d.ts
 +++ b/dist/subduction/SubductionConnections.d.ts
-@@ -1,13 +1,17 @@
+@@ -1,9 +1,13 @@
 -import { Subduction } from "@automerge/automerge-subduction/slim";
 +import { PeerId as SubductionPeerId, Subduction } from "@automerge/automerge-subduction/slim";
  import { ConnectionManager } from "./ConnectionManager.js";
@@ -175,14 +169,8 @@ index 4bfff03..86b85fd 100644
      isConnecting(): boolean;
      generation(): number;
      onChange(callback: () => void): void;
-     manageConnection(url: string): Promise<void>;
-     shutdown(): void;
- }
--//# sourceMappingURL=SubductionConnections.d.ts.map
-\ No newline at end of file
-+//# sourceMappingURL=SubductionConnections.d.ts.map
 diff --git a/dist/subduction/SubductionConnections.js b/dist/subduction/SubductionConnections.js
-index aa1028c..9ebb6d8 100644
+index aa1028cde47b5f0d36d7a96d855d1eda5f5ee884..9ebb6d8b63456f135a08f02ecea77a2f7acda1cb 100644
 --- a/dist/subduction/SubductionConnections.js
 +++ b/dist/subduction/SubductionConnections.js
 @@ -7,11 +7,13 @@ export class SubductionConnections {
@@ -233,7 +221,7 @@ index aa1028c..9ebb6d8 100644
              clearTimeout(timer);
              resolve();
 diff --git a/dist/subduction/network.js b/dist/subduction/network.js
-index a949ac4..ed32c8f 100644
+index a949ac4a0597102eb01eb3efed606095a4939fcf..ed32c8f869e4754cb7920d8f5f5c45dcc286bf9f 100644
 --- a/dist/subduction/network.js
 +++ b/dist/subduction/network.js
 @@ -84,7 +84,7 @@ export class NetworkAdapterTransport {
@@ -273,7 +261,7 @@ index a949ac4..ed32c8f 100644
      }
      /**
 diff --git a/dist/subduction/source.d.ts b/dist/subduction/source.d.ts
-index e95a936..4908f2c 100644
+index e95a93608115e5eb88ad3831beb3e24189469c6b..4908f2c0becc704de73ce7342e36275549caed81 100644
 --- a/dist/subduction/source.d.ts
 +++ b/dist/subduction/source.d.ts
 @@ -1,4 +1,4 @@
@@ -328,7 +316,7 @@ index e95a936..4908f2c 100644
      detach(documentId: DocumentId): void;
      shareConfigChanged(): void;
 diff --git a/dist/subduction/source.js b/dist/subduction/source.js
-index cc2d6af..b6409c9 100644
+index cc2d6af8848629f48631b3c5cd3b48054e3d27e9..d871aa456ff379bba7b5a27ee1ed5ad1e75e7b8e 100644
 --- a/dist/subduction/source.js
 +++ b/dist/subduction/source.js
 @@ -38,7 +38,7 @@ export class SubductionSource {
@@ -366,6 +354,15 @@ index cc2d6af..b6409c9 100644
          for (const { adapter, serviceName, role } of adapters) {
              adapterConnections.addAdapter(adapter, serviceName, role ?? "connect");
          }
+@@ -267,7 +278,7 @@ export class SubductionSource {
+                         entry.syncInFlight = true;
+                         void this.#doSync(entry);
+                     }
+-                    else if (entry.handle.heads().length === 0 &&
++                    else if (false &&
+                         !this.#anyConnectionManagerConnecting()) {
+                         // All connections settled and sync failed — give up.
+                         this.#log("marking as unavailable");
 @@ -707,11 +718,28 @@ export class SubductionSource {
          for (const entry of this.#entries.values()) {
              entry.flushSave.flush();

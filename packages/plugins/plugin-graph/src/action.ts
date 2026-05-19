@@ -9,7 +9,6 @@ import { Capability, type CapabilityManager } from '@dxos/app-framework';
 import { type Node } from '@dxos/app-graph';
 import { Operation } from '@dxos/compute';
 import { runAndForwardErrors } from '@dxos/effect';
-import { OperationInvoker } from '@dxos/operation';
 
 /**
  * Run an action with required layers: Operation.Service, Capability.Service, and captured context.
@@ -19,7 +18,7 @@ import { OperationInvoker } from '@dxos/operation';
  * @param params Parameters to pass to the action.
  */
 export const runAction = async (
-  invoker: OperationInvoker.OperationInvoker,
+  invoker: Operation.OperationService,
   capabilityManager: CapabilityManager.CapabilityManager,
   action: Node.Action,
   params: Node.InvokeProps = {},

@@ -25,7 +25,7 @@ describe('SpotlightPlugin', () => {
     );
 
     // OperationHandler fires lazily when an operation is invoked.
-    await harness.fire(ActivationEvents.SetupOperationHandler);
+    await harness.fire(ActivationEvents.SetupProcessManager);
     expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
   });
 });

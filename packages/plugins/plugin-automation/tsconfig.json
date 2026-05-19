@@ -18,6 +18,9 @@
       "path": "../../common/context"
     },
     {
+      "path": "../../common/debug"
+    },
+    {
       "path": "../../common/effect"
     },
     {
@@ -37,6 +40,9 @@
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute-runtime"
     },
     {
       "path": "../../core/compute/ai"
