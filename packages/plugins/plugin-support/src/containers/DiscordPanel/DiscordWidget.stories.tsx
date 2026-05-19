@@ -3,6 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -10,15 +11,23 @@ import { translations } from '#translations';
 
 import { DiscordWidget } from './DiscordWidget';
 
+const DefaultStory = () => (
+  <DiscordWidget.Root>
+    <DiscordWidget.Header />
+    <DiscordWidget.Members />
+    <DiscordWidget.Join />
+  </DiscordWidget.Root>
+);
+
 const meta = {
   title: 'plugins/plugin-support/containers/DiscordWidget',
-  component: DiscordWidget,
+  component: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof DiscordWidget>;
+} satisfies Meta<typeof DefaultStory>;
 
 export default meta;
 

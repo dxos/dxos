@@ -6,4 +6,10 @@ import React from 'react';
 
 import { DiscordWidget } from './DiscordWidget';
 
-export const DiscordPanel = () => <DiscordWidget />;
+export const DiscordPanel = () => (
+  <DiscordWidget.Root>
+    <DiscordWidget.Header />
+    <DiscordWidget.Members />
+    <DiscordWidget.Join />
+  </DiscordWidget.Root>
+);

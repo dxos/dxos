@@ -13,7 +13,7 @@ import { DiscordPanel } from './DiscordPanel';
 const meta = {
   title: 'plugins/plugin-support/containers/DiscordPanel',
   component: DiscordPanel,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-(--dx-r1-size)' })],
   parameters: {
     layout: 'fullscreen',
     translations,
