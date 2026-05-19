@@ -36,7 +36,7 @@ describe('SpaceStateManager.findSpaceIdByDocumentId', () => {
     const spaceKey = PublicKey.random();
 
     const rootHandle = await host.createDoc(DatabaseDirectory.make({ spaceKey: spaceKey.toHex() }));
-    const query = host.findWithProgress(rootHandle.documentId);
+    const query = host.findWithProgress<DatabaseDirectory>(rootHandle.documentId);
     await manager.assignRootToSpace(spaceId, query);
 
     // The reverse index MUST be populated by the time `assignRootToSpace`
@@ -65,7 +65,7 @@ describe('SpaceStateManager.findSpaceIdByDocumentId', () => {
         },
       }),
     );
-    const query = host.findWithProgress(rootHandle.documentId);
+    const query = host.findWithProgress<DatabaseDirectory>(rootHandle.documentId);
     await manager.assignRootToSpace(spaceId, query);
 
     expect(manager.findSpaceIdByDocumentId(rootHandle.documentId)).toEqual(spaceId);
@@ -79,7 +79,7 @@ describe('SpaceStateManager.findSpaceIdByDocumentId', () => {
     const spaceKey = PublicKey.random();
 
     const rootHandle = await host.createDoc(DatabaseDirectory.make({ spaceKey: spaceKey.toHex() }));
-    const query = host.findWithProgress(rootHandle.documentId);
+    const query = host.findWithProgress<DatabaseDirectory>(rootHandle.documentId);
     await manager.assignRootToSpace(spaceId, query);
 
     // No links yet; only the root is attributed.
@@ -102,7 +102,7 @@ describe('SpaceStateManager.findSpaceIdByDocumentId', () => {
     const spaceKey = PublicKey.random();
 
     const rootHandle = await host.createDoc(DatabaseDirectory.make({ spaceKey: spaceKey.toHex() }));
-    const query = host.findWithProgress(rootHandle.documentId);
+    const query = host.findWithProgress<DatabaseDirectory>(rootHandle.documentId);
     await manager.assignRootToSpace(spaceId, query);
 
     const orphan = await host.createDoc({ foo: 1 });
