@@ -126,33 +126,29 @@ export default Capability.makeModule(
       return false;
     };
 
-    const checkForUpdates = async () => {
-      if (!enabled) {
-        return;
-      }
-      await doCheck();
+    const manager: Update.Manager = {
+      status: statusAtom,
+      check: async () => {
+        if (!enabled) {
+          return;
+        }
+        await doCheck();
+      },
+      install: async () => {
+        if (!enabled) {
+          return;
+        }
+        await doInstall();
+      },
+      relaunch: async () => {
+        await relaunch();
+      },
     };
 
-    const installUpdate = async () => {
-      if (!enabled) {
-        return;
-      }
-      await doInstall();
-    };
-
-    const relaunchApp = async () => {
-      await relaunch();
-    };
-
-    const baseContributions = [
-      Capability.contributes(NativeCapabilities.UpdateStatus, statusAtom),
-      Capability.contributes(NativeCapabilities.CheckForUpdates, checkForUpdates),
-      Capability.contributes(NativeCapabilities.InstallUpdate, installUpdate),
-      Capability.contributes(NativeCapabilities.RelaunchApp, relaunchApp),
-    ];
+    const managerContribution = Capability.contributes(NativeCapabilities.UpdateManager, manager);
 
     if (!enabled) {
-      return baseContributions;
+      return [managerContribution];
     }
 
     // Background flow: periodic check + auto-install + toast when ready.
@@ -185,7 +181,7 @@ export default Capability.makeModule(
     log.info('updater module initialized, update check scheduled');
 
     return [
-      ...baseContributions,
+      managerContribution,
       Capability.contributes(Capabilities.Null, null, () => Effect.sync(() => Effect.runSync(Fiber.interrupt(fiber)))),
     ];
   }),

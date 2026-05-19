@@ -5,7 +5,9 @@
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import React, { type ReactNode, useState } from 'react';
 
-import { useAtomCapability, useCapability } from '@dxos/app-framework/ui';
+import { useAtomValue } from '@effect-atom/atom-react';
+
+import { useCapability } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { Settings as SettingsForm } from '@dxos/react-ui-form';
@@ -17,10 +19,8 @@ export type NativeSettingsProps = AppSurface.SettingsArticleProps<Settings.Setti
 
 export const NativeSettings = (_props: NativeSettingsProps) => {
   const { t } = useTranslation(meta.id);
-  const status = useAtomCapability(NativeCapabilities.UpdateStatus);
-  const checkForUpdates = useCapability(NativeCapabilities.CheckForUpdates);
-  const installUpdate = useCapability(NativeCapabilities.InstallUpdate);
-  const relaunchApp = useCapability(NativeCapabilities.RelaunchApp);
+  const manager = useCapability(NativeCapabilities.UpdateManager);
+  const status = useAtomValue(manager.status);
 
   // UI-level pending flag. The status atom can flip between `checking` and `up-to-date` faster
   // than the user can perceive, so we also gate the button on the click handler's lifetime to
@@ -37,9 +37,9 @@ export const NativeSettings = (_props: NativeSettingsProps) => {
   };
 
   const { description, button } = renderUpdateRow(status, pending, t, {
-    onCheck: runAction('check', checkForUpdates),
-    onInstall: runAction('install', installUpdate),
-    onRelaunch: runAction('relaunch', relaunchApp),
+    onCheck: runAction('check', manager.check),
+    onInstall: runAction('install', manager.install),
+    onRelaunch: runAction('relaunch', manager.relaunch),
   });
 
   return (
