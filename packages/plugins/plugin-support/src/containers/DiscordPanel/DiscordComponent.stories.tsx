@@ -25,7 +25,7 @@ const DefaultStory = () => (
 const meta = {
   title: 'plugins/plugin-support/containers/DiscordComponent',
   component: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-(--dx-r1-size)' })],
   parameters: {
     layout: 'fullscreen',
     translations,

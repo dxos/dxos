@@ -24,7 +24,7 @@ const DefaultStory = () => (
 const meta = {
   title: 'plugins/plugin-support/containers/GithubComponent',
   component: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-(--dx-r1-size)' })],
   parameters: {
     layout: 'fullscreen',
     translations,

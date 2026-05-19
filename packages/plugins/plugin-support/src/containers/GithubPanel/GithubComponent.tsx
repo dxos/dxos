@@ -86,9 +86,7 @@ const Root = ({ repo = DEFAULT_REPO, limit = DEFAULT_LIMIT, children }: GithubCo
     return () => controller.abort();
   }, [repo, limit]);
 
-  return (
-    <ComponentContext.Provider value={{ repo, pulls, unavailable }}>{children}</ComponentContext.Provider>
-  );
+  return <ComponentContext.Provider value={{ repo, pulls, unavailable }}>{children}</ComponentContext.Provider>;
 };
 
 const Header = () => {
@@ -102,7 +100,7 @@ const Header = () => {
         rel='noopener noreferrer'
         className='text-sm font-medium truncate'
       >
-        {repo}
+        @{repo}
       </a>
       <div className='text-xs text-description'>
         {unavailable
@@ -142,7 +140,7 @@ const PullRow = ({ pull }: { pull: GithubPullRequest }) => (
       href={pull.html_url}
       target='_blank'
       rel='noopener noreferrer'
-      className='flex items-start gap-2 px-2 py-1 rounded hover:bg-hover-surface'
+      className='flex items-start gap-2 px-2 py-1 rounded-sm hover:bg-hover-surface'
     >
       <img src={pull.user.avatar_url} alt='' className='w-6 h-6 rounded-full shrink-0 mt-0.5' />
       <div className='flex flex-col min-w-0 flex-1'>
