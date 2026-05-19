@@ -2,12 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useThemeContext } from './useThemeContext';
+import { useIconRegistry } from '../components/ThemeProvider/IconRegistry';
 
-const ICONS_URL = '/icons.svg';
-
+/**
+ * Resolves an icon name to a same-document `<use href>`, triggering the runtime resolver
+ * to fetch and inject the symbol on demand if it isn't already in the in-DOM sprite.
+ */
 export const useIconHref = (icon?: string) => {
-  const { noCache } = useThemeContext();
-  const url = noCache ? `${ICONS_URL}?nocache=${new Date().getMinutes()}` : ICONS_URL;
-  return icon ? `${url}#${icon}` : undefined;
+  const registry = useIconRegistry();
+  if (!icon) {
+    return undefined;
+  }
+  if (!registry.hasIcon(icon)) {
+    registry.requestIcon(icon);
+  }
+  return `#${icon}`;
 };
