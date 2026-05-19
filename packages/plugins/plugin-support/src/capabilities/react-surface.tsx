@@ -12,6 +12,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { SupportSettings } from '#components';
 import {
   FeedbackPanel,
+  HelpMenu,
   ShortcutsDialogContent,
   ShortcutsHints,
   ShortcutsList,
@@ -46,6 +47,11 @@ export default Capability.makeModule(() =>
         id: 'feedback',
         role: 'deck-companion--help',
         component: () => <FeedbackPanel />,
+      }),
+      Surface.create({
+        id: 'help-menu',
+        role: 'status-indicator',
+        component: () => <HelpMenu />,
       }),
       // Generic plank companion: shows the description from the plugin that
       // owns the open article's typename. Matches any article via
