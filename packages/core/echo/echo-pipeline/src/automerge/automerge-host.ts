@@ -613,9 +613,9 @@ export class AutomergeHost extends Resource {
    * Authorization policy consulted by the Subduction sedimentree protocol.
    */
   private readonly _subductionPolicy: SubductionPolicy = {
-    authorizeConnect: async (_peerId) => { },
-    authorizeFetch: async (_peerId, _sedimentreeId) => { },
-    authorizePut: async (_requestor, _author, _sedimentreeId) => { },
+    authorizeConnect: async (_peerId) => {},
+    authorizeFetch: async (_peerId, _sedimentreeId) => {},
+    authorizePut: async (_requestor, _author, _sedimentreeId) => {},
     filterAuthorizedFetch: async (_peerId, sedimentreeIds) => sedimentreeIds,
   };
 
