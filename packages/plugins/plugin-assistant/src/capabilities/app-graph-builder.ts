@@ -94,6 +94,14 @@ export default Capability.makeModule(
               },
             }),
             Node.makeAction({
+              id: AssistantOperation.ToggleTracePanelDebug.meta.key,
+              data: () => Operation.invoke(AssistantOperation.ToggleTracePanelDebug, {}),
+              properties: {
+                label: ['toggle-trace-panel-debug.label', { ns: meta.id }],
+                icon: 'ph--brackets-curly--regular',
+              },
+            }),
+            Node.makeAction({
               id: 'reset-blueprints',
               data: Effect.fnUntraced(function* () {
                 const capabilities = yield* Capability.Service;

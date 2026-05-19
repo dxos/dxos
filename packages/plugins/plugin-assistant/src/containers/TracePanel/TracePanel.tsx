@@ -8,7 +8,7 @@ import { pipe } from 'effect/Function';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
-import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapability, useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Process, Trace } from '@dxos/compute';
@@ -25,8 +25,9 @@ import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { ProcessTree, ProcessTreeProps } from '#components';
+import { AssistantCapabilities } from '#types';
 
-import { buildExecutionGraph } from './execution-graph';
+import { buildExecutionGraph, type ExecutionGraph } from './execution-graph';
 
 export type TracePanelProps = AppSurface.SpaceArticleProps<Pick<ProcessTreeProps, 'onProcessTerminate'>>;
 
@@ -34,7 +35,9 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
   ({ space, attendableId, onProcessTerminate, ...props }, forwardedRef) => {
     const attentionAttrs = useAttentionAttributes(attendableId);
     const { invokePromise } = useOperationInvoker();
-    const { branches, commits } = useExecutionGraph(space);
+    const settings = useAtomCapability(AssistantCapabilities.Settings);
+    const tracePanelDebug = settings.tracePanelDebug ?? false;
+    const { branches, commits, spanTree } = useExecutionGraph(space);
     const monitor = useCapability(Capabilities.ProcessMonitor);
     const processes = useAtomValue(monitor?.processTreeAtom ?? atomEmpty);
 
@@ -73,7 +76,9 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
           ...attentionAttrs,
           classNames: mx(
             'h-full grid divide-y divide-separator',
-            selectedCommit ? 'grid-rows-[minmax(0,4lh)_1fr_minmax(0,206px)]' : 'grid-rows-[minmax(0,4lh)_1fr]',
+            !tracePanelDebug && selectedCommit
+              ? 'grid-rows-[minmax(0,4lh)_1fr_minmax(0,206px)]'
+              : 'grid-rows-[minmax(0,4lh)_1fr]',
           ),
         })}
         ref={forwardedRef}
@@ -88,19 +93,29 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
           <ScrollContainer.Content thin>
             <ScrollContainer.Fade />
             <ScrollContainer.Viewport>
-              <Timeline
-                compact
-                commits={commits}
-                branches={branches}
-                currentBranch={currentBranch}
-                onSelect={handleCommitSelect}
-              />
+              {tracePanelDebug ? (
+                <Syntax.Root data={spanTree}>
+                  <Syntax.Content>
+                    <Syntax.Viewport>
+                      <Syntax.Code className='text-xs' />
+                    </Syntax.Viewport>
+                  </Syntax.Content>
+                </Syntax.Root>
+              ) : (
+                <Timeline
+                  compact
+                  commits={commits}
+                  branches={branches}
+                  currentBranch={currentBranch}
+                  onSelect={handleCommitSelect}
+                />
+              )}
             </ScrollContainer.Viewport>
             <ScrollContainer.ScrollDownButton />
           </ScrollContainer.Content>
         </ScrollContainer.Root>
 
-        {selectedCommit && (
+        {!tracePanelDebug && selectedCommit && (
           <Syntax.Root data={selectedCommit}>
             <Syntax.Content>
               <Syntax.Viewport>
@@ -116,11 +131,6 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
 
 // Stable ref.
 const atomEmpty = Atom.make(() => [] as const);
-
-type ExecutionGraph = {
-  branches: string[];
-  commits: Commit[];
-};
 
 type UseExecutionGraphOptions = {
   eventLimit?: number;
