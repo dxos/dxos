@@ -38,6 +38,11 @@ export const translations = [
         'help.label': 'Feedback & Support',
         // Discord (deck-companion--discord surface).
         'discord.label': 'Discord',
+        'discord-loading.message': 'Loading…',
+        'discord-unavailable.message': 'Discord widget unavailable.',
+        'members-online.label_one': '{{count}} member online',
+        'members-online.label_other': '{{count}} members online',
+        'join-discord.button': 'Join Discord',
         'feedback-textarea.label': 'Feedback',
         'feedback-textarea.placeholder': 'Please enter your feedback, technical issue, or feature request.',
         'include-debug-logs.label': 'Include debug logs',
