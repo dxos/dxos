@@ -9,21 +9,21 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { DiscordWidget } from './DiscordWidget';
+import { DiscordComponent } from './DiscordComponent';
 
 const DefaultStory = () => (
-  <DiscordWidget.Root>
+  <DiscordComponent.Root>
     <div className='grid grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden bs-full is-full'>
-      <DiscordWidget.Header />
-      <DiscordWidget.Channels />
-      <DiscordWidget.Content />
-      <DiscordWidget.StatusBar />
+      <DiscordComponent.Header />
+      <DiscordComponent.Channels />
+      <DiscordComponent.Content />
+      <DiscordComponent.StatusBar />
     </div>
-  </DiscordWidget.Root>
+  </DiscordComponent.Root>
 );
 
 const meta = {
-  title: 'plugins/plugin-support/containers/DiscordWidget',
+  title: 'plugins/plugin-support/containers/DiscordComponent',
   component: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {

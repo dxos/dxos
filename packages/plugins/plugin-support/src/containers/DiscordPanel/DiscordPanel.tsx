@@ -4,15 +4,15 @@
 
 import React from 'react';
 
-import { DiscordWidget } from './DiscordWidget';
+import { DiscordComponent } from './DiscordComponent';
 
 export const DiscordPanel = () => (
-  <DiscordWidget.Root>
-    <div className='h-full grid grid-rows-[auto_auto_minmax(0,1fr)_auto] overflow-hidden bs-full is-full'>
-      <DiscordWidget.Header />
-      <DiscordWidget.Channels />
-      <DiscordWidget.Content />
-      <DiscordWidget.StatusBar />
+  <DiscordComponent.Root>
+    <div className='h-full grid grid-rows-[auto_minmax(0,1fr)_auto_auto] overflow-hidden bs-full is-full'>
+      <DiscordComponent.Channels />
+      <DiscordComponent.Content />
+      <DiscordComponent.Header />
+      <DiscordComponent.StatusBar />
     </div>
-  </DiscordWidget.Root>
+  </DiscordComponent.Root>
 );

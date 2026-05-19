@@ -19,9 +19,18 @@ export type DiscordChannel = {
 };
 
 const DEFAULT_CHANNELS: ReadonlyArray<DiscordChannel> = [
-  { name: 'welcome', id: '837139872460046376' },
-  { name: 'general', id: '837138313172353098' },
-  { name: 'work-in-progress', id: '1275086707342970922' },
+  {
+    name: 'welcome',
+    id: '837139872460046376',
+  },
+  {
+    name: 'general',
+    id: '837138313172353098',
+  },
+  {
+    name: 'work-in-progress',
+    id: '1275086707342970922',
+  },
 ];
 
 type WidgetMember = {
@@ -51,21 +60,21 @@ const WidgetContext = createContext<WidgetContextValue | null>(null);
 const useWidgetContext = () => {
   const ctx = useContext(WidgetContext);
   if (!ctx) {
-    throw new Error('DiscordWidget.* parts must be rendered inside DiscordWidget.Root.');
+    throw new Error('DiscordComponent.* parts must be rendered inside DiscordComponent.Root.');
   }
   return ctx;
 };
 
-export type DiscordWidgetRootProps = {
+export type DiscordComponentRootProps = {
   guildId?: string;
   /** Usernames that should sort to the top of the member list. */
   teamMembers?: Iterable<string>;
-  /** Channels rendered by `DiscordWidget.Channels`. */
+  /** Channels rendered by `DiscordComponent.Channels`. */
   channels?: ReadonlyArray<DiscordChannel>;
   children?: ReactNode;
 };
 
-const Root = ({ guildId = DXOS_GUILD_ID, teamMembers, channels, children }: DiscordWidgetRootProps) => {
+const Root = ({ guildId = DXOS_GUILD_ID, teamMembers, channels, children }: DiscordComponentRootProps) => {
   const [data, setData] = useState<WidgetData | null>(null);
   const [unavailable, setUnavailable] = useState(false);
   const team = useMemo(() => (teamMembers ? new Set(teamMembers) : DEFAULT_TEAM), [teamMembers]);
@@ -211,7 +220,7 @@ const StatusBar = () => {
   );
 };
 
-export const DiscordWidget = {
+export const DiscordComponent = {
   Root,
   Header,
   Channels,
