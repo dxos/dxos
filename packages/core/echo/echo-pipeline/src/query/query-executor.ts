@@ -268,18 +268,18 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
     switch (step._tag) {
       case 'SelectStep': {
         // Extract spaceIds from space-scoped entries.
-        const spaceScopes = step.scope.filter((s): s is QueryAST.SpaceScope => s._tag === 'space');
+        const spaceScopes = step.scope.filter((scope): scope is QueryAST.SpaceScope => scope._tag === 'space');
         if (spaceScopes.length > 0) {
           if (!scopes.spaceIds) {
             scopes.spaceIds = new Set();
           }
-          for (const s of spaceScopes) {
-            scopes.spaceIds.add(s.spaceId as SpaceId);
+          for (const spaceScope of spaceScopes) {
+            scopes.spaceIds.add(spaceScope.spaceId as SpaceId);
           }
         }
 
         // Extract queueIds from feed-scoped entries and derive spaceIds from them.
-        const feedScopesForExtract = step.scope.filter((s): s is QueryAST.FeedScope => s._tag === 'feed');
+        const feedScopesForExtract = step.scope.filter((scope): scope is QueryAST.FeedScope => scope._tag === 'feed');
         const hasIncludeAllFeeds = spaceScopes.some((s) => s.includeAllFeeds === true);
         if (feedScopesForExtract.length > 0 && !hasIncludeAllFeeds) {
           let parseFailed = false;
