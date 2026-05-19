@@ -113,9 +113,9 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
         if (from._tag !== 'scope') {
           return undefined;
         }
-        return Option.fromNullable(from.scope.feeds).pipe(
-          Option.flatMap((feeds) => Array.head(feeds)),
-          Option.map(String),
+        const feedScope = from.scopes.find((s) => s._tag === 'feed');
+        return Option.fromNullable(feedScope).pipe(
+          Option.map((s) => s.feedUri),
           Option.getOrUndefined,
         );
       }),

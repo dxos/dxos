@@ -76,7 +76,9 @@ export const PipelineProperties = ({ classNames, pipeline }: PipelinePropertiesP
       }
 
       const queue = target;
-      const query = queue ? Query.fromAst(newQuery).from({ feeds: [queue] }) : Query.fromAst(newQuery);
+      const query = queue
+        ? Query.fromAst(newQuery).from([{ _tag: 'feed' as const, feedUri: `dxn:queue:data:${EchoURI.getSpaceId(queue)}:${EchoURI.getObjectId(queue)}` }])
+        : Query.fromAst(newQuery);
       updateView((view) => {
         view.query.ast = query.ast as Mutable<typeof query.ast>;
       });

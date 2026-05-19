@@ -70,14 +70,11 @@ export interface Registry {
    */
   list(): Obj.Unknown[];
 
-  // ---------------------------------------------------------------------------
+  //
   // Static schema types (Type.AnyEntity)
   //
-  // Schema types are TypeScript class definitions annotated with ECHO metadata.
-  // They are keyed by their DXN ("dxn:type:<typename>:<version>") rather than
-  // an object id and are NOT surfaced through list() — they exist
-  // solely for schema-resolution lookups (replacing RuntimeSchemaRegistry).
-  // ---------------------------------------------------------------------------
+
+  // TODO(wittjosiah): Can these be integrated into the object registry?
 
   /**
    * Register static TypeScript schema types.
