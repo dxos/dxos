@@ -309,9 +309,10 @@ export default defineConfig((env) => ({
       injectManifest: {
         maximumFileSizeToCacheInBytes: 30000000,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,woff2}'],
-        // Exclude the Phosphor icon catalog (~9,000 SVGs) from the precache manifest;
-        // the runtime icon resolver fetches them on demand and the SW falls through to network.
-        globIgnores: ['**/node_modules/**', 'phosphor/**'],
+        // The full Phosphor catalog (~9,000 SVGs in /phosphor/) is included in the precache so
+        // that icons resolved on demand by runtime-loaded plugins (e.g. the YouTube plugin from
+        // the external registry) keep working offline after first install. One-time install
+        // cost is a few hundred KB gzipped; subsequent navigations pay nothing.
       },
       includeAssets: ['favicon.ico'],
       manifest: {
