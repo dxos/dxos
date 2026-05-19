@@ -13,6 +13,7 @@ import { SupportSettings } from '#components';
 import {
   DiscordPanel,
   FeedbackPanel,
+  HelpMenu,
   ShortcutsDialogContent,
   ShortcutsHints,
   ShortcutsList,
@@ -52,6 +53,11 @@ export default Capability.makeModule(() =>
         id: 'discord',
         role: 'deck-companion--discord',
         component: () => <DiscordPanel />,
+      }),
+      Surface.create({
+        id: 'help-menu',
+        role: 'status-indicator',
+        component: () => <HelpMenu />,
       }),
       // Generic plank companion: shows the description from the plugin that
       // owns the open article's typename. Matches any article via
