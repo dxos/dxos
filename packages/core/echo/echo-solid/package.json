@@ -29,17 +29,18 @@
     "@dxos/echo-atom": "workspace:*",
     "@dxos/effect-atom-solid": "workspace:*",
     "@effect-atom/atom": "catalog:",
-    "@solid-primitives/utils": "catalog:",
-    "effect": "catalog:"
+    "@solid-primitives/utils": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-db": "workspace:*",
     "@solidjs/testing-library": "catalog:",
+    "effect": "catalog:",
     "solid-js": "catalog:",
     "vite-plugin-solid": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependencies": {
+    "effect": "catalog:",
     "solid-js": "catalog:"
   },
   "publishConfig": {

@@ -39,13 +39,13 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "effect": "catalog:",
     "fast-deep-equal": "catalog:",
     "pkg-up": "catalog:",
     "yargs": "catalog:"
   },
   "devDependencies": {
-    "@types/yargs": "catalog:"
+    "@types/yargs": "catalog:",
+    "effect": "catalog:"
   },
   "publishConfig": {
     "access": "restricted"
