@@ -10,9 +10,6 @@ import { Context, LifecycleState, Resource } from '@dxos/context';
 import { type DatabaseDirectory } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
-// #region DEBUG
-import { log } from '@dxos/log';
-// #endregion DEBUG
 
 import { DatabaseRoot } from './database-root';
 
@@ -137,23 +134,6 @@ export class SpaceStateManager extends Resource {
       ctx,
       async () => {
         const documentIds = [root.documentId, ...root.getAllLinkedDocuments().map((url) => interpretAsDocumentId(url))];
-        // #region DEBUG
-        {
-          const prev = this._lastSpaceDocumentList.get(spaceId) ?? [];
-          const added = documentIds.filter((d) => !prev.includes(d));
-          const removed = prev.filter((d) => !documentIds.includes(d));
-          const changed = added.length > 0 || removed.length > 0;
-          log.info('[DEBUG H3] doc list check', {
-            sp: spaceId.slice(0, 8),
-            prevCount: prev.length,
-            newCount: documentIds.length,
-            added: added.slice(0, 5),
-            addedCount: added.length,
-            removedCount: removed.length,
-            changed,
-          });
-        }
-        // #endregion DEBUG
         if (!isEqual(documentIds, this._lastSpaceDocumentList.get(spaceId))) {
           const prev = this._lastSpaceDocumentList.get(spaceId) ?? [];
           this._lastSpaceDocumentList.set(spaceId, documentIds);
