@@ -3,18 +3,20 @@
 //
 
 import * as Array from 'effect/Array';
+import * as Effect from 'effect/Effect';
 import * as EFn from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useTypeOptions } from '@dxos/app-toolkit/ui';
-import { Script, Trigger } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
+import { type ComputeEnvironment } from '@dxos/client-protocol';
+import { Operation, Script, Trigger, TriggerEvent } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { Filter, Obj, Query, Tag } from '@dxos/echo';
-import { KEY_QUEUE_CURSOR } from '@dxos/functions-runtime';
+import { KEY_QUEUE_CURSOR, TriggerDispatcher } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
+import { log } from '@dxos/log';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
 import { Clipboard, IconButton, type IconButtonProps, Input, Separator, useTranslation } from '@dxos/react-ui';
@@ -24,6 +26,7 @@ import { Pipeline } from '@dxos/types';
 import { ghostHover, mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
+import { useComputeRuntime } from '#hooks';
 import { meta } from '#meta';
 
 import { TriggerEditor, type TriggerEditorProps } from '../TriggerEditor';
@@ -41,6 +44,9 @@ export type AutomationPanelProps = {
 export const AutomationPanel = ({ space, object, initialTrigger, onDone }: AutomationPanelProps) => {
   const { t } = useTranslation(meta.id);
   const client = useClient();
+  const computeRuntime = useComputeRuntime(space.id);
+  const [properties] = useObject(space.properties);
+  const computeEnvironment = properties.computeEnvironment ?? 'local';
   const functionsServiceClient = useMemo(() => FunctionsServiceClient.fromClient(client), [client]);
   const functions = useQuery(space.db, Filter.type(Operation.PersistentOperation));
   const triggers = useQuery(
@@ -98,7 +104,37 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
   };
 
   const handleForceRunTrigger = async (trigger: Trigger.Trigger) => {
-    await functionsServiceClient.forceRunCronTrigger(Context.default(), space.id, trigger.id);
+    if (computeEnvironment === 'disabled') {
+      return;
+    }
+
+    if (computeEnvironment === 'local') {
+      if (!computeRuntime) {
+        log.warn('force run trigger skipped: compute runtime not available', { spaceId: space.id });
+        return;
+      }
+
+      try {
+        await computeRuntime.runPromise(
+          Effect.gen(function* () {
+            const dispatcher = yield* TriggerDispatcher;
+            yield* dispatcher.invokeTrigger({
+              trigger,
+              event: { tick: Date.now() } satisfies TriggerEvent.TimerEvent,
+            });
+          }),
+        );
+      } catch (error) {
+        log.catch(error);
+      }
+      return;
+    }
+
+    try {
+      await functionsServiceClient.forceRunCronTrigger(Context.default(), space.id, trigger.id);
+    } catch (error) {
+      log.catch(error);
+    }
   };
 
   const handleResetCursor = async (trigger: Trigger.Trigger) => {
@@ -140,6 +176,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
                     key={trigger.id}
                     trigger={trigger}
                     functions={functions}
+                    computeEnvironment={computeEnvironment}
                     onSelect={handleSelect}
                     onDelete={handleDelete}
                     onResetCursor={handleResetCursor}
@@ -161,6 +198,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
 const TriggerListItem = ({
   trigger,
   functions,
+  computeEnvironment,
   onSelect,
   onDelete,
   onResetCursor,
@@ -168,6 +206,7 @@ const TriggerListItem = ({
 }: {
   trigger: Trigger.Trigger;
   functions: Operation.PersistentOperation[];
+  computeEnvironment: ComputeEnvironment;
   onSelect?: (trigger: Trigger.Trigger) => void;
   onDelete?: (trigger: Trigger.Trigger) => void;
   onResetCursor?: (trigger: Trigger.Trigger) => void;
@@ -205,7 +244,7 @@ const TriggerListItem = ({
   const actionProps = useMemo<IconButtonProps | undefined>(() => {
     if (trigger.spec?.kind === 'timer' && onForceRun) {
       return {
-        disabled: !enabled || trigger.spec?.kind !== 'timer',
+        disabled: !enabled || computeEnvironment === 'disabled',
         icon: 'ph--play--regular',
         label: 'Force run',
         onClick: handleForceRun,
@@ -220,7 +259,7 @@ const TriggerListItem = ({
         onClick: handleResetCursor,
       };
     }
-  }, [enabled, trigger.spec?.kind, handleForceRun]);
+  }, [computeEnvironment, enabled, trigger.spec?.kind, handleForceRun, onResetCursor]);
 
   return (
     <List.Item<Obj.Snapshot<Trigger.Trigger>>
