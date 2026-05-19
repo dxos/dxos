@@ -7,7 +7,8 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { DXN, EchoURI, Filter, JsonSchema, Obj, Query, type QueryAST, Tag, Type, type View } from '@dxos/echo';
-import { Format, type Mutable } from '@dxos/echo/internal';
+import { type EchoSchema, Format, type Mutable } from '@dxos/echo/internal';
+import { runAndForwardErrors } from '@dxos/effect';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -87,9 +88,8 @@ const DefaultStory = (props: DefaultStoryProps) => {
         });
 
         const typename = getTypenameFromQuery(query.ast);
-        const newSchema = space.db.graph.registry.types.find((t) => Type.getTypename(t) === typename) as
-          | EchoSchema
-          | undefined;
+        const allTypes = await runAndForwardErrors(space.db.graph.registry.listTypes());
+        const newSchema = allTypes.find((t) => Type.getTypename(t) === typename) as EchoSchema | undefined;
         if (!newSchema) {
           return;
         }

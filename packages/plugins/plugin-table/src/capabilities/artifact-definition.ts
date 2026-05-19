@@ -12,6 +12,7 @@ import { ToolResult, createTool } from '@dxos/ai';
 import { Capabilities, Capability, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { createArtifactElement } from '@dxos/assistant';
 import { defineArtifact } from '@dxos/compute';
+import { runAndForwardErrors } from '@dxos/effect';
 import { Filter, Obj, Query, Type, View } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
@@ -70,9 +71,8 @@ export default Capability.makeModule(() =>
             invariant(extensions?.invoke, 'No operation invoker');
 
             // Validate schema exists first.
-            const schema = extensions.space.db.graph.registry.types.find(
-              (t) => Type.getTypename(t) === typename,
-            );
+            const types = await runAndForwardErrors(extensions.space.db.graph.registry.listTypes());
+            const schema = types.find((t) => Type.getTypename(t) === typename);
             if (!schema) {
               return ToolResult.Error(`Schema not found: ${typename}`);
             }
@@ -140,9 +140,8 @@ export default Capability.makeModule(() =>
             invariant(Obj.instanceOf(TableView, table));
 
             const typename = view.query.typename;
-            const schema = space.db.graph.registry.types.find(
-              (t) => Type.getTypename(t) === typename,
-            );
+            const types = await runAndForwardErrors(space.db.graph.registry.listTypes());
+            const schema = types.find((t) => Type.getTypename(t) === typename);
             return ToolResult.Success(schema);
           },
         }),
@@ -169,9 +168,8 @@ export default Capability.makeModule(() =>
             invariant(Obj.instanceOf(TableView, table));
 
             const typename = view.query.typename;
-            const schema = space.db.graph.registry.types.find(
-              (t) => Type.getTypename(t) === typename,
-            );
+            const types = await runAndForwardErrors(space.db.graph.registry.listTypes());
+            const schema = types.find((t) => Type.getTypename(t) === typename);
             const { objects: rows } = await space.db.query(Filter.type(schema)).run();
             return ToolResult.Success(rows);
           },
@@ -198,9 +196,8 @@ export default Capability.makeModule(() =>
               .first()) as View.View;
             // Get schema for validation.
             const typename = view.query.typename;
-            const schema = space.db.graph.registry.types.find(
-              (t) => Type.getTypename(t) === typename,
-            );
+            const types = await runAndForwardErrors(space.db.graph.registry.listTypes());
+            const schema = types.find((t) => Type.getTypename(t) === typename);
 
             const table = await view.presentation.load();
             invariant(Obj.instanceOf(TableView, table));
