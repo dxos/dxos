@@ -613,9 +613,9 @@ export class AutomergeHost extends Resource {
    * Authorization policy consulted by the Subduction sedimentree protocol.
    */
   private readonly _subductionPolicy: SubductionPolicy = {
-    authorizeConnect: async (_peerId) => {},
-    authorizeFetch: async (_peerId, _sedimentreeId) => {},
-    authorizePut: async (_requestor, _author, _sedimentreeId) => {},
+    authorizeConnect: async (_peerId) => { },
+    authorizeFetch: async (_peerId, _sedimentreeId) => { },
+    authorizePut: async (_requestor, _author, _sedimentreeId) => { },
     filterAuthorizedFetch: async (_peerId, sedimentreeIds) => sedimentreeIds,
   };
 
@@ -1050,12 +1050,17 @@ export class AutomergeHost extends Resource {
       let newState: CollectionState | undefined;
 
       for (const [documentId, heads] of docHeads) {
-        if (documentId in state.documents) {
-          if (!newState) {
-            newState = structuredClone(state);
-          }
-          newState.documents[documentId] = heads;
+        const current = state.documents[documentId];
+        if (current === undefined) {
+          continue;
         }
+        if (headsEquals(current, heads)) {
+          continue;
+        }
+        if (!newState) {
+          newState = structuredClone(state);
+        }
+        newState.documents[documentId] = heads;
       }
 
       if (newState) {
