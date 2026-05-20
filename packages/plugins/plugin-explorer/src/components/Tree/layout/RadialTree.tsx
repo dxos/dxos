@@ -224,9 +224,7 @@ const renderRadialTree = (svgElement: SVGSVGElement, root: any, options: RenderO
     .attr('r', r)
     // Color leaves by typename so cluster matches the force / bundle / lattice variants.
     // Branch nodes (groups, root) keep the default slot fill.
-    .style('fill', (d: any) =>
-      isLeaf(d.data) ? getNodeFillForObject(d.data.data as Obj.Unknown | undefined) : null,
-    );
+    .style('fill', (d: any) => (isLeaf(d.data) ? getNodeFillForObject(d.data.data as Obj.Unknown | undefined) : null));
 
   nodeMerge
     .select<SVGTextElement>('text')
