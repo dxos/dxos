@@ -36,7 +36,7 @@ import { PARAM_LOG_LEVEL, PARAM_SAFE_MODE, setSafeModeUrl } from './config';
 import { APP_KEY, LOG_STORE_DB_NAME } from './constants';
 import { showDevRssBanner } from './dev-rss-banner';
 import { downloadLogs } from './log-download';
-import { type PluginConfig, getCore, getDefaults, getPlugins } from './plugin-defs';
+import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs';
 import { startupProfiler } from './profiler';
 import { translations } from './translations';
 import {
@@ -422,7 +422,6 @@ const main = async () => {
   const plugins = [...builtinPlugins, ...remotePlugins];
   const pluginLoader = UrlLoader.make(builtinPlugins, { cache: assetCache });
   const onPluginRemove = (id: string) => UrlLoader.uninstall(id, { cache: assetCache });
-  const core = getCore(conf);
   const defaults = getDefaults(conf);
   const setupEvents = [AppActivationEvents.SetupSettings];
 
@@ -472,7 +471,6 @@ const main = async () => {
       onPluginRemove,
       pluginRegistryProvider,
       plugins,
-      core,
       defaults,
       setupEvents,
       cacheEnabled: true,

@@ -27,8 +27,8 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'official',
-        filter: AppSurface.literal(AppSurface.Article, registryCategoryId('official')),
+        id: 'bundled',
+        filter: AppSurface.literal(AppSurface.Article, registryCategoryId('bundled')),
         component: () => {
           const manager = usePluginManager();
           const remoteIds = useRemotePluginIds();
@@ -40,7 +40,7 @@ export default Capability.makeModule(() =>
             [core, remoteIds],
           );
 
-          return <FilteredRegistryArticle id={registryCategoryId('official')} filter={predicate} />;
+          return <FilteredRegistryArticle id={registryCategoryId('bundled')} filter={predicate} />;
         },
       }),
       Surface.create({

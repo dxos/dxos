@@ -30,7 +30,7 @@ export const fromPlugins = (plugins: Plugin.Plugin[]) =>
       const manager = PluginManager.make({
         pluginLoader,
         plugins,
-        core: plugins.map((plugin) => plugin.meta.id),
+        enabled: plugins.map((plugin) => plugin.meta.id),
       });
 
       manager.capabilities.contribute({

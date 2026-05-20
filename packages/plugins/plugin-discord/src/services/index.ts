@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as DiscordApi from './discord-api';
+export { makeDiscordLayer, makeDiscordLayerFromToken } from './discord';
 export { makeEdgeProxyHttpClientLayer } from './proxy-http-client';

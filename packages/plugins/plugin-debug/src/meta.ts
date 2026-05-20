@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.debug',
   name: 'Debug',
+  author: 'DXOS',
   description: trim`
     Comprehensive developer toolkit for troubleshooting applications, generating test data, and exploring automation capabilities.
     Inspect objects, monitor events, and debug plugin behavior in real-time.
@@ -15,4 +16,5 @@ export const meta: Plugin.Meta = {
   icon: 'ph--bug--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-debug',
   screenshots: ['https://dxos.network/plugin-details-debug-dark.png'],
+  tags: ['labs'],
 };
