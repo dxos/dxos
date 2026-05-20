@@ -251,7 +251,7 @@ const TRIGGER_NAME = 'TooltipTrigger';
 
 type TooltipTriggerElement = ComponentRef<typeof Primitive.button>;
 type PrimitiveButtonProps = ComponentPropsWithoutRef<typeof Primitive.button>;
-type TooltipTriggerProps = PrimitiveButtonProps &
+type TooltipTriggerProps = Omit<PrimitiveButtonProps, 'content'> &
   Pick<TooltipProps, 'delayDuration'> & {
     content?: ReactNode;
     side?: TooltipSide;
