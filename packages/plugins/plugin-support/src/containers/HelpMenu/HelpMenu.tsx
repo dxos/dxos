@@ -29,9 +29,13 @@ export const HelpMenu = () => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const config = useConfig();
-  const { version, timestamp } = config.values.runtime?.app?.build ?? {};
+  const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
   const releasedAt = timestamp ? new Date(timestamp) : undefined;
   const released = releasedAt && isValid(releasedAt) ? releasedAt : undefined;
+  const releaseUrl =
+    config.values.runtime?.app?.env?.DX_ENVIRONMENT === 'production'
+      ? `${GITHUB_URL}/releases/tag/v${version}` // e.g. v0.8.3-beta.b78990fdd5
+      : `${GITHUB_URL}/commit/${commitHash}`;
 
   const openDialog = useCallback(
     (subject: string) => () => {
@@ -88,7 +92,9 @@ export const HelpMenu = () => {
             </DropdownMenu.Item>
             {version && (
               <div className='ps-8 pe-2 pb-2 flex flex-col text-xs text-description'>
-                <span className='font-mono'>{version}</span>
+                <a href={releaseUrl} target='_blank' rel='noopener noreferrer' className='dx-link-hover font-mono'>
+                  {version}
+                </a>
                 {released && (
                   <span>
                     {t('released.message', {

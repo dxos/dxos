@@ -22,15 +22,23 @@ const DefaultStory = () => (
   </StatusBar.EndContent>
 );
 
-const makeConfig = (build?: { version?: string; timestamp?: string }) =>
+type ConfigInput = {
+  build?: { version?: string; timestamp?: string; commitHash?: string };
+  env?: { DX_ENVIRONMENT?: string };
+};
+
+const makeConfig = ({ build, env }: ConfigInput = {}) =>
   new Config({
     version: 1,
     runtime: {
       app: {
         build,
+        env,
       },
     },
   });
+
+const recentTimestamp = () => new Date(Date.now() - Math.random() * 24 * 3600 * 1000).toISOString();
 
 const meta = {
   title: 'plugins/plugin-support/containers/HelpMenu',
@@ -51,9 +59,32 @@ export const Default: Story = {
   decorators: [
     withClientProvider({
       config: makeConfig({
-        version: '0.8.3-beta.b78990fdd5',
-        timestamp: new Date(Date.now() - Math.random() * 24 * 3600 * 1000).toISOString(),
+        build: {
+          version: '0.8.3-beta.b78990fdd5',
+          timestamp: recentTimestamp(),
+          commitHash: 'b78990fdd5',
+        },
+        env: { DX_ENVIRONMENT: 'development' },
       }),
     }),
   ],
+};
+
+export const Production: Story = {
+  decorators: [
+    withClientProvider({
+      config: makeConfig({
+        build: {
+          version: '0.8.3',
+          timestamp: recentTimestamp(),
+          commitHash: 'b78990fdd5',
+        },
+        env: { DX_ENVIRONMENT: 'production' },
+      }),
+    }),
+  ],
+};
+
+export const NoBuildInfo: Story = {
+  decorators: [withClientProvider({ config: makeConfig() })],
 };
