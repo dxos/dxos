@@ -86,7 +86,6 @@ export const translations = [
         'traces.label': 'Traces',
         'testing.label': 'Testing',
         // GitHub (deck-companion--github surface).
-        'github.label': 'GitHub',
         'github-loading.message': 'Loading…',
         'github-unavailable.message': 'GitHub feed unavailable.',
         'recent-prs.label_one': '{{count}} recent PR',
