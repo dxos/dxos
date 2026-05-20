@@ -4,12 +4,11 @@
 
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
-import type * as Schema from 'effect/Schema';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { AppSurface, useObjectMenuItems, useSchemaFilter } from '@dxos/app-toolkit/ui';
 import { Annotation, Filter, Obj, Query, type Ref, Type, type View } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Card, Panel, Toolbar } from '@dxos/react-ui';
@@ -37,7 +36,7 @@ export const MasonryContainer = ({
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const tag = view?.query ? getTagFromQuery(view.query.ast) : undefined;
 
-  const [cardSchema, setCardSchema] = useState<Schema.Schema.AnyNoContext>();
+  const [cardSchema, setCardSchema] = useState<Type.AnyEntity>();
 
   useEffect(() => {
     const staticSchema = schemas.flat().find((schema) => Type.getTypename(schema) === typename);
@@ -59,14 +58,11 @@ export const MasonryContainer = ({
     }
   }, [schemas, typename, db]);
 
-  const query = useMemo(() => {
-    const baseFilter = cardSchema
-      ? cardSchema instanceof Type.RuntimeType
-        ? Filter.typename(cardSchema.typename)
-        : Filter.type(cardSchema)
-      : Filter.nothing();
-    return tag ? Query.select(baseFilter).select(Filter.tag(tag)) : Query.select(baseFilter);
-  }, [cardSchema, tag]);
+  const baseFilter = useSchemaFilter(cardSchema);
+  const query = useMemo(
+    () => (tag ? Query.select(baseFilter).select(Filter.tag(tag)) : Query.select(baseFilter)),
+    [baseFilter, tag],
+  );
   const objects = useQuery(db, query);
 
   const sortedObjects = useMemo(

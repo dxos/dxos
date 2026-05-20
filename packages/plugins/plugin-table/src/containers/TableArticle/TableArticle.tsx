@@ -8,7 +8,7 @@ import React, { forwardRef, useCallback, useContext, useMemo, useRef } from 'rea
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
-import { useAppGraph, type AppSurface } from '@dxos/app-toolkit/ui';
+import { useAppGraph, useSchemaFilter, type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useGlobalFilteredObjects } from '@dxos/plugin-search';
@@ -194,16 +194,9 @@ const useQueryWorkaround = (
   ast: QueryAST.Query | undefined,
   schema: Type.AnyEntity | undefined,
 ) => {
+  const baseFilter = useSchemaFilter(schema);
   // Extract order and tag filter from query AST and apply them to the base filter query.
   const query = useMemo(() => {
-    // RuntimeType (database-registered schema) has an object-DXN identifier.
-    // Objects created from the original Effect schema use a type-DXN, so Filter.type()
-    // would produce the wrong DXN kind. Use Filter.typename() for RuntimeType schemas.
-    const baseFilter = schema
-      ? schema instanceof Type.RuntimeType
-        ? Filter.typename(schema.typename)
-        : Filter.type(schema)
-      : Filter.nothing();
     let query = Query.select(baseFilter);
 
     // Apply tag filter from the query AST.
