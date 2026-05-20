@@ -2,10 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
+import React from 'react';
+
+import VersionNumber from '../VersionNumber';
+
 export type StatusBarActionsProps = {};
 
-// Reserved slot for the main bottom bar; currently empty. Plugins can contribute
-// to roles `status-bar` / `status-bar--r1-footer` via the surface system to fill it.
 export const StatusBarActions = (_props: StatusBarActionsProps) => {
-  return null;
+  return (
+    <div className='h-full flex items-center px-2 gap-2'>
+      <VersionNumber />
+      <div className='grow' />
+    </div>
+  );
 };

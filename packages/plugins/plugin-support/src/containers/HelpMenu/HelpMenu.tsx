@@ -19,7 +19,6 @@ import { SHORTCUTS_DIALOG } from '../../constants';
 const ABOUT_DIALOG = 'org.dxos.plugin.welcome.component.about-dialog';
 
 const DOCS_URL = 'https://docs.dxos.org/composer/introduction/';
-const CONTACT_URL = 'mailto:hello@dxos.org';
 const DISCORD_URL = 'https://dxos.org/discord';
 const GITHUB_URL = 'https://github.com/dxos/dxos';
 const DOWNLOAD_URL = 'https://web.crabnebula.cloud/dxos/composer/releases';
@@ -39,7 +38,7 @@ export const HelpMenu = () => {
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
         <StatusBar.Item>
-          <IconButton icon='ph--question--regular' iconOnly label={t('help-menu.label')} />
+          <IconButton icon='ph--info--regular' iconOnly label={t('help-menu.label')} />
         </StatusBar.Item>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
@@ -49,12 +48,6 @@ export const HelpMenu = () => {
               <a href={DOCS_URL} target='_blank' rel='noopener noreferrer'>
                 <Icon icon='ph--book-open--regular' size={4} />
                 <span className='ml-2'>{t('docs.label')}</span>
-              </a>
-            </DropdownMenu.Item>
-            <DropdownMenu.Item asChild>
-              <a href={CONTACT_URL}>
-                <Icon icon='ph--envelope--regular' size={4} />
-                <span className='ml-2'>{t('contact-us.label')}</span>
               </a>
             </DropdownMenu.Item>
             <DropdownMenu.Item onClick={openDialog(SHORTCUTS_DIALOG)}>

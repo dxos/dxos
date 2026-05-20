@@ -45,7 +45,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'search-input',
         role: 'search-input',
-        position: 'fallback',
+        position: 'last',
         component: () => <CommandsTrigger />,
       }),
     ]),

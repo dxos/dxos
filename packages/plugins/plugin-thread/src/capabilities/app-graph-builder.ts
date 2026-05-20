@@ -80,7 +80,7 @@ export default Capability.makeModule(
               label: ['comments.label', { ns: meta.id }],
               icon: 'ph--chat-text--regular',
               data: 'comments',
-              position: 'hoist',
+              position: 'first',
             }),
           ]),
       }),

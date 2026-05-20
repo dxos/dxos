@@ -35,7 +35,7 @@ export const createCompanionExtensions = Effect.fnUntraced(function* () {
             label: ['object-properties.label', { ns: meta.id }],
             icon: 'ph--sliders--regular',
             data: 'settings', // TODO(burdon): Change to 'object-properties'.
-            position: 'fallback',
+            position: 'last',
           }),
         ]),
     }),
@@ -51,7 +51,7 @@ export const createCompanionExtensions = Effect.fnUntraced(function* () {
             label: ['companion-related.label', { ns: meta.id }],
             icon: 'ph--graph--regular',
             data: 'related',
-            position: 'fallback',
+            position: 'last',
           }),
         ]),
     }),

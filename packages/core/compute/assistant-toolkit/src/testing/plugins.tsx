@@ -61,7 +61,7 @@ export const capabilities: Capability.Any[] = [
     Surface.create({
       id: 'plugin-default',
       role: 'card--content',
-      position: 'fallback',
+      position: 'last',
       component: ({ data }) => (
         <Card.Content>
           <Syntax.Root data={data}>

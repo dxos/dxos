@@ -153,7 +153,7 @@ export default Capability.makeModule(
                 label: ['assistant-chat.label', { ns: meta.id }],
                 icon: 'ph--sparkle--regular',
                 data: chat,
-                position: 'hoist',
+                position: 'first',
               }),
             ];
           }),
@@ -186,7 +186,7 @@ export default Capability.makeModule(
               label: ['trace.label', { ns: meta.id }],
               icon: 'ph--line-segments--regular',
               data: 'trace' as const,
-              position: 'fallback',
+              position: 'last',
             }),
           ]),
       }),

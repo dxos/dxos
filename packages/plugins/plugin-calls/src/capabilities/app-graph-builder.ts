@@ -37,7 +37,7 @@ export default Capability.makeModule(
                     label: ['call-panel.label', { ns: meta.id }],
                     icon: 'ph--video-conference--regular',
                     data: null,
-                    position: 'hoist',
+                    position: 'first',
                   }),
                 ]
               : [],
@@ -67,7 +67,7 @@ export default Capability.makeModule(
               label: ['channel-companion.label', { ns: meta.id }],
               icon: 'ph--hash--regular',
               data: 'chat',
-              position: 'hoist',
+              position: 'first',
             }),
           ]);
         },
