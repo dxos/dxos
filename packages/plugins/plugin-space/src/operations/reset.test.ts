@@ -50,10 +50,22 @@ describe('SpaceOperation.Reset', () => {
     await space.waitUntilReady();
 
     const alice = space.db.add(
-      Obj.make(TestSchema.Person, { name: 'Alice', username: 'alice', email: 'a@x', tasks: [], address: { coordinates: {} } }),
+      Obj.make(TestSchema.Person, {
+        name: 'Alice',
+        username: 'alice',
+        email: 'a@x',
+        tasks: [],
+        address: { coordinates: {} },
+      }),
     );
     const bob = space.db.add(
-      Obj.make(TestSchema.Person, { name: 'Bob', username: 'bob', email: 'b@x', tasks: [], address: { coordinates: {} } }),
+      Obj.make(TestSchema.Person, {
+        name: 'Bob',
+        username: 'bob',
+        email: 'b@x',
+        tasks: [],
+        address: { coordinates: {} },
+      }),
     );
     space.db.add(
       Relation.make(TestSchema.HasManager, {
