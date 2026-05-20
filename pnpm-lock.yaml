@@ -9688,6 +9688,9 @@ importers:
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.94.4(effect@3.20.0)
+      dfx:
+        specifier: 'catalog:'
+        version: 0.127.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)
       effect:
         specifier: 3.20.0
         version: 3.20.0
