@@ -7,9 +7,8 @@ import React, { useEffect, useMemo, useRef } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { type SpaceGraphNode } from '@dxos/schema';
-import { mx } from '@dxos/ui-theme';
 
-import { type TreeLayoutSlots, defaultTreeLayoutSlots } from '../Tree/layout/slots';
+import { getNodeFillForObject } from '../../util/node-color';
 import { useContainerSize } from '../Tree/layout/useContainerSize';
 import { type TreeNode } from '../Tree/types';
 
@@ -20,7 +19,6 @@ export type LatticeProps = {
   nodes: SpaceGraphNode[];
   /** Padding (in screen pixels) reserved around the lattice. */
   padding?: number;
-  slots?: TreeLayoutSlots;
   /** Mirrors the hover preview contract used by the other variants. */
   onNodeHover?: (node: TreeNode<Obj.Unknown> | null, event?: MouseEvent) => void;
 };
@@ -34,11 +32,11 @@ type LatticeCell = {
 
 /**
  * Renders objects as an SVG lattice that fits the container without scrolling.
- * Columns ≈ √N so the grid is as square as possible; cell size is derived from the
- * available width/height so all nodes are always in view. Cells are sorted by typename
- * then by label so objects of the same type cluster together.
+ * Each object is a rounded rect, colored by typename via the shared hue-hash used by every
+ * other variant. Cells are sorted by typename then label so objects of the same type cluster.
+ * Hover dispatches the standard preview event — there is no rendered label.
  */
-export const Lattice = ({ nodes, padding = 16, slots = defaultTreeLayoutSlots, onNodeHover }: LatticeProps) => {
+export const Lattice = ({ nodes, padding = 16, onNodeHover }: LatticeProps) => {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const { setRef, width, height } = useContainerSize();
 
@@ -69,10 +67,9 @@ export const Lattice = ({ nodes, padding = 16, slots = defaultTreeLayoutSlots, o
       width,
       height,
       padding,
-      slots,
       onNodeHover: (n, e) => handleHoverRef.current?.(n, e),
     });
-  }, [cells, width, height, padding, slots]);
+  }, [cells, width, height, padding]);
 
   return (
     <div ref={setRef} className='dx-expander relative'>
@@ -93,12 +90,11 @@ type RenderOptions = {
   width: number;
   height: number;
   padding: number;
-  slots: TreeLayoutSlots;
   onNodeHover: (node: TreeNode<Obj.Unknown> | null, event?: MouseEvent) => void;
 };
 
 const renderLattice = (svgElement: SVGSVGElement, cells: LatticeCell[], options: RenderOptions) => {
-  const { width, height, padding, slots, onNodeHover } = options;
+  const { width, height, padding, onNodeHover } = options;
   const svg = select(svgElement);
 
   if (!cells.length) {
@@ -115,14 +111,16 @@ const renderLattice = (svgElement: SVGSVGElement, cells: LatticeCell[], options:
   const innerW = Math.max(0, width - 2 * padding);
   const innerH = Math.max(0, height - 2 * padding);
   const cellSize = Math.max(0, Math.min(innerW / columns, innerH / rows));
-  // The circle should sit inside the cell with breathing room for the label below it.
-  const r = Math.max(2, Math.min(cellSize * 0.25, 24));
+  // Leave a little gutter between cells; the rect occupies the inner area.
+  const gutter = Math.max(2, cellSize * 0.12);
+  const rectSize = Math.max(0, cellSize - gutter);
+  const radius = Math.max(2, rectSize * 0.18);
 
   // Center the lattice in the container.
   const gridW = cellSize * columns;
   const gridH = cellSize * rows;
-  const offsetX = (width - gridW) / 2 + cellSize / 2;
-  const offsetY = (height - gridH) / 2 + cellSize / 2;
+  const offsetX = (width - gridW) / 2;
+  const offsetY = (height - gridH) / 2;
 
   const g = svg
     .selectAll<SVGGElement, null>('g.dx-lattice-root')
@@ -130,31 +128,20 @@ const renderLattice = (svgElement: SVGSVGElement, cells: LatticeCell[], options:
     .join('g')
     .classed('dx-lattice-root', true);
 
-  const cellsLayer = g
-    .selectAll<SVGGElement, null>('g.dx-lattice-cells')
-    .data([null])
-    .join('g')
-    .classed('dx-lattice-cells', true);
-
   type Positioned = LatticeCell & { x: number; y: number };
   const positioned: Positioned[] = cells.map((cell, i) => ({
     ...cell,
-    x: offsetX + (i % columns) * cellSize,
-    y: offsetY + Math.floor(i / columns) * cellSize,
+    x: offsetX + (i % columns) * cellSize + gutter / 2,
+    y: offsetY + Math.floor(i / columns) * cellSize + gutter / 2,
   }));
 
-  const node = cellsLayer
+  const node = g
     .selectAll<SVGGElement, Positioned>('g.dx-lattice-cell')
     .data(positioned, (d) => d.id)
     .join(
       (enter) => {
         const ge = enter.append('g').classed('dx-lattice-cell', true).attr('opacity', 0);
-        ge.append('circle').style('cursor', 'pointer');
-        ge.append('text')
-          .attr('dy', '0.32em')
-          .attr('text-anchor', 'middle')
-          .attr('paint-order', 'stroke')
-          .style('pointer-events', 'none');
+        ge.append('rect').style('cursor', 'pointer');
         return ge;
       },
       (update) => update,
@@ -176,20 +163,14 @@ const renderLattice = (svgElement: SVGSVGElement, cells: LatticeCell[], options:
     .attr('transform', (d) => `translate(${d.x},${d.y})`);
 
   node
-    .select<SVGCircleElement>('circle')
-    .attr('class', [slots.node ?? '', 'dx-leaf'].filter(Boolean).join(' '))
-    .attr('r', r)
+    .select<SVGRectElement>('rect')
+    .attr('width', rectSize)
+    .attr('height', rectSize)
+    .attr('rx', radius)
+    .attr('ry', radius)
+    .style('fill', (d) => getNodeFillForObject(d.object))
     .on('pointerenter', (event: MouseEvent, d: Positioned) =>
       onNodeHover({ id: d.id, label: d.label, data: d.object }, event),
     )
     .on('pointerleave', () => onNodeHover(null));
-
-  node
-    .select<SVGTextElement>('text')
-    .attr('class', mx(slots.text ?? '', 'select-none'))
-    .attr('y', r + 10)
-    .text((d) => truncateLabel(d.label, Math.max(4, Math.floor(cellSize / 6))));
 };
-
-const truncateLabel = (label: string, max: number): string =>
-  label.length > max ? `${label.slice(0, Math.max(1, max - 1))}…` : label;

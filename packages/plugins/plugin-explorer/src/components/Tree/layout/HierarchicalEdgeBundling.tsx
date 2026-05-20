@@ -7,9 +7,11 @@ import { cluster, curveBundle, hierarchy, lineRadial, select } from 'd3';
 import type { HierarchyNode } from 'd3-hierarchy';
 import React, { useEffect, useMemo, useRef } from 'react';
 
+import { type Obj } from '@dxos/echo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
+import { getNodeFillForObject } from '../../../util/node-color';
 import { type TreeNode } from '../types';
 import { type TreeLayoutSlots, defaultTreeLayoutSlots } from './slots';
 import { useContainerSize } from './useContainerSize';
@@ -253,6 +255,7 @@ const renderBundling = (svgElement: SVGSVGElement, root: BundleHierarchy, option
     .select<SVGCircleElement>('circle')
     .attr('class', [slots.node ?? '', 'dx-leaf'].filter(Boolean).join(' '))
     .attr('r', r)
+    .style('fill', (d: BundleHierarchy) => getNodeFillForObject(d.data.data as Obj.Unknown | undefined))
     .on('pointerenter', onEnter)
     .on('pointerleave', onLeave);
 
