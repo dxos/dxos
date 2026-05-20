@@ -27,11 +27,24 @@ type DfxRatelimitedResponseShape = {
   readonly response: { readonly status: number };
 };
 
+/**
+ * dfx errors always carry `cause` (the parsed Discord body) and `response`
+ * (the HttpClient response). Validate both before claiming the shape so an
+ * incomplete `{ _tag: 'ErrorResponse' }` falls through to the generic
+ * formatter branch instead of crashing on a missing `error.cause`.
+ */
+const hasDiscordErrorFields = (
+  error: Record<string, unknown>,
+): error is { cause: { code?: number; message?: string }; response: { status: number } } =>
+  Predicate.isRecord(error.cause) &&
+  Predicate.isRecord(error.response) &&
+  typeof (error.response as { status?: unknown }).status === 'number';
+
 export const isDiscordErrorResponse = (error: unknown): error is DfxErrorResponseShape =>
-  Predicate.isRecord(error) && error._tag === 'ErrorResponse';
+  Predicate.isRecord(error) && error._tag === 'ErrorResponse' && hasDiscordErrorFields(error);
 
 export const isDiscordRatelimited = (error: unknown): error is DfxRatelimitedResponseShape =>
-  Predicate.isRecord(error) && error._tag === 'RatelimitedResponse';
+  Predicate.isRecord(error) && error._tag === 'RatelimitedResponse' && hasDiscordErrorFields(error);
 
 /** Read the HTTP status from a dfx Discord error if present. */
 export const discordErrorStatus = (error: unknown): number | undefined => {

@@ -88,7 +88,13 @@ const mapDiscordMessage = (message: MessageResponse): Message.Message | undefine
   const text = message.content;
   const blocks: ContentBlock.Any[] = text.length > 0 ? [{ _tag: 'text', text } as ContentBlock.Text] : [];
 
-  const referenced = message.referenced_message?.id;
+  // For replies (type 19), prefer `referenced_message.id`, but fall back to
+  // `message_reference.message_id` — Discord omits `referenced_message` when
+  // the parent has been deleted, while `message_reference` still carries the id.
+  const referenced =
+    message.type === 19
+      ? (message.referenced_message?.id ?? message.message_reference?.message_id)
+      : message.referenced_message?.id;
 
   const senderName =
     (message.author.global_name && message.author.global_name.length > 0 ? message.author.global_name : undefined) ??
@@ -150,6 +156,35 @@ export const findOrCreateChannelForDiscordChannel: (
 const TARGET_CONCURRENCY = 3;
 
 /**
+ * Locate the targets-array index for a Discord channel id, supporting both
+ * shapes the Integration carries:
+ *  - new entries: `entry.remoteId` is the Discord channel id directly.
+ *  - legacy entries: `entry.remoteId` is undefined, and the Discord id lives
+ *    on the local Channel's foreign-key metadata via `entry.object.target`.
+ *
+ * The two reads/writes that touch a target's `cursor` and `lastError` MUST
+ * use this lookup; matching `remoteId` only quietly skips legacy entries so
+ * the cursor never advances and the error never surfaces.
+ */
+const findTargetIndex = (
+  targets: ReadonlyArray<{
+    readonly remoteId?: string;
+    readonly object?: { readonly target?: unknown };
+  }>,
+  discordChannelId: string,
+): number =>
+  targets.findIndex((entry) => {
+    if (entry.remoteId !== undefined) {
+      return entry.remoteId === discordChannelId;
+    }
+    const localTarget = entry.object?.target as Parameters<typeof Obj.getMeta>[0] | undefined;
+    if (!localTarget) {
+      return false;
+    }
+    return Obj.getMeta(localTarget).keys.some((key) => key.source === DISCORD_SOURCE && key.id === discordChannelId);
+  });
+
+/**
  * Reconciles messages for currently-selected Discord targets on the Integration.
  *
  * Pull-only. Per target:
@@ -202,6 +237,10 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
               }
             }
             const guildById = new Map(guilds.map((guild) => [guild.id, guild]));
+            // Channel-discovery errors are tracked per guild so any selected
+            // target in a guild we couldn't list still surfaces a `lastError`
+            // instead of silently becoming a no-op for the whole sync run.
+            const guildErrorById = new Map<string, unknown>();
             const channelsByGuild = yield* Effect.forEach(
               guilds,
               (guild) =>
@@ -218,7 +257,10 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
                         ),
                       ] as const,
                   ),
-                  Effect.catchAll(() => Effect.succeed([guild.id, [] as ReadonlyArray<GuildChannelResponse>] as const)),
+                  Effect.catchAll((error) => {
+                    guildErrorById.set(guild.id, error);
+                    return Effect.succeed([guild.id, [] as ReadonlyArray<GuildChannelResponse>] as const);
+                  }),
                 ),
               { concurrency: 4 },
             );
@@ -249,6 +291,24 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
               }
               const discord = channelById.get(foreignId);
               if (!discord) {
+                // Target's guild errored during discovery, or the channel is no
+                // longer reachable (bot removed, channel deleted). Record a
+                // `lastError` instead of dropping the target — otherwise the
+                // sync looks successful while some selected channels were never
+                // attempted.
+                const channelIdForError = foreignId;
+                const firstGuildError = guildErrorById.values().next().value;
+                const errorMessage =
+                  firstGuildError !== undefined
+                    ? formatDiscordSyncFailure(firstGuildError)
+                    : `Discord channel ${channelIdForError} is not reachable (bot removed or channel deleted).`;
+                Obj.update(integrationObj, (integrationObj) => {
+                  const mutable = integrationObj as Obj.Mutable<typeof integrationObj>;
+                  const idx = findTargetIndex(mutable.targets, channelIdForError);
+                  if (idx >= 0) {
+                    mutable.targets[idx] = { ...mutable.targets[idx], lastError: errorMessage };
+                  }
+                });
                 continue;
               }
               const guildName = guildById.get(discord.guildId)?.name;
@@ -257,7 +317,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
                 const materializedRef = Ref.make(localObj);
                 Obj.update(integrationObj, (integrationObj) => {
                   const mutable = integrationObj as Obj.Mutable<typeof integrationObj>;
-                  const idx = mutable.targets.findIndex((entry) => entry.remoteId === foreignId);
+                  const idx = findTargetIndex(mutable.targets, foreignId);
                   if (idx >= 0) {
                     mutable.targets[idx] = { ...mutable.targets[idx], object: materializedRef };
                   }
@@ -287,7 +347,8 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
                 Effect.gen(function* () {
                   const result = yield* Effect.either(
                     Effect.gen(function* () {
-                      const targetEntry = integrationObj.targets.find((entry) => entry.remoteId === discordChannelId);
+                      const targetIdx = findTargetIndex(integrationObj.targets, discordChannelId);
+                      const targetEntry = targetIdx >= 0 ? integrationObj.targets[targetIdx] : undefined;
                       const initialAfter = computeInitialCursor(
                         targetEntry?.cursor,
                         targetEntry?.options as { daysOfHistory?: number } | undefined,
@@ -330,7 +391,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
                       const newestId = messages[messages.length - 1].id;
                       Obj.update(integrationObj, (integrationObj) => {
                         const mutable = integrationObj as Obj.Mutable<typeof integrationObj>;
-                        const idx = mutable.targets.findIndex((entry) => entry.remoteId === discordChannelId);
+                        const idx = findTargetIndex(mutable.targets, discordChannelId);
                         if (idx >= 0) {
                           mutable.targets[idx] = { ...mutable.targets[idx], cursor: newestId };
                         }
@@ -352,15 +413,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
 
                   Obj.update(integrationObj, (integrationObj) => {
                     const mutable = integrationObj as Obj.Mutable<typeof integrationObj>;
-                    const idx = mutable.targets.findIndex((entry) => {
-                      if (entry.remoteId !== undefined) {
-                        return entry.remoteId === discordChannelId;
-                      }
-                      const localId = entry.object?.target
-                        ? Obj.getMeta(entry.object.target).keys.find((key) => key.source === DISCORD_SOURCE)?.id
-                        : undefined;
-                      return localId === discordChannelId;
-                    });
+                    const idx = findTargetIndex(mutable.targets, discordChannelId);
                     if (idx < 0) {
                       return;
                     }

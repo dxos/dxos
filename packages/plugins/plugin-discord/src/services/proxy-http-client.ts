@@ -44,7 +44,13 @@ const DISCORD_BOT_USER_AGENT = 'DiscordBot (https://dxos.org, 0.1.0)';
 export const makeEdgeProxyHttpClientLayer = (): Layer.Layer<FetchHttpClient.Fetch> =>
   Layer.succeed(FetchHttpClient.Fetch, ((input, init) => {
     const url = input instanceof URL ? input : new URL(typeof input === 'string' ? input : input.url);
-    const headers = new Headers(init?.headers ?? undefined);
+    // Seed from the Request's own headers first (caller used `fetch(new Request(...))`),
+    // then overlay anything in `init.headers`. dfx currently always uses string/URL +
+    // init, but the wrapper is typed as `typeof fetch` so we honor both shapes.
+    const headers = new Headers(input instanceof Request ? input.headers : undefined);
+    new Headers(init?.headers ?? undefined).forEach((value, key) => {
+      headers.set(key, value);
+    });
     if (!headers.has(USER_AGENT_OVERRIDE_HEADER)) {
       headers.set(USER_AGENT_OVERRIDE_HEADER, DISCORD_BOT_USER_AGENT);
     }

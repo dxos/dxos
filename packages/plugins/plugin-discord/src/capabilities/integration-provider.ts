@@ -17,7 +17,7 @@ import {
 import { AccessToken } from '@dxos/types';
 
 import { DISCORD_PROVIDER_ID, DISCORD_SOURCE } from '../constants';
-import { discordErrorStatus, isDiscordErrorResponse } from '../errors';
+import { discordErrorStatus, formatDiscordSyncFailure, isDiscordErrorResponse } from '../errors';
 import { makeDiscordLayerFromToken } from '../services';
 import { DiscordOperation, DiscordTargetOptions } from '../types';
 
@@ -61,7 +61,9 @@ const validateToken = (token: string) =>
           'Discord rejected the token (401). Reset the bot token in the developer portal and paste it again.',
         );
       }
-      return error instanceof Error ? error : new Error(String(error));
+      // Preserve Discord's code/message for 403/404/5xx etc. via formatDiscordSyncFailure
+      // — `String(error)` would collapse a dfx tagged error to its `_tag` string.
+      return error instanceof Error ? error : new Error(formatDiscordSyncFailure(error));
     }),
   );
 
