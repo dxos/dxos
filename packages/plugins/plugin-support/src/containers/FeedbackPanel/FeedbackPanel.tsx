@@ -3,18 +3,56 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import { useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { runAndForwardErrors } from '@dxos/effect';
 import { ObservabilityCapabilities } from '@dxos/plugin-observability';
+import { useConfig } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { FeedbackForm } from '#components';
 import { meta } from '#meta';
 import { SupportOperation } from '#types';
+import { DISCORD_SERVICE_URL } from '../../constants';
+
+type DiscordPresence = { teamOnline: number; communityOnline: number };
+
+/** Fetches presence counts from the discord-presence Edge service, refreshing every 60 seconds. */
+const useDiscordPresence = (presenceUrl: string | undefined): DiscordPresence | null => {
+  const [presence, setPresence] = useState<DiscordPresence | null>(null);
+
+  useEffect(() => {
+    if (!presenceUrl) {
+      return;
+    }
+
+    const fetchPresence = async (signal: AbortSignal) => {
+      try {
+        const response = await fetch(`${presenceUrl}/presence`, { signal });
+        if (!response.ok) {
+          return;
+        }
+        const data = (await response.json()) as DiscordPresence;
+        setPresence({ teamOnline: data.teamOnline, communityOnline: data.communityOnline });
+      } catch {
+        // Non-essential indicator — fail silently.
+      }
+    };
+
+    const controller = new AbortController();
+    void fetchPresence(controller.signal);
+    const interval = setInterval(() => void fetchPresence(controller.signal), 60_000);
+    return () => {
+      controller.abort();
+      clearInterval(interval);
+    };
+  }, [presenceUrl]);
+
+  return presence;
+};
 
 /** Renders the feedback form, disabling it when the feedback survey is unavailable. */
 export const FeedbackPanel = () => {
@@ -22,6 +60,11 @@ export const FeedbackPanel = () => {
   const observability = useCapability(ObservabilityCapabilities.Observability);
   const [downloadLogs] = useCapabilities(ObservabilityCapabilities.LogDownloader);
   const [feedbackAvailable, setFeedbackAvailable] = useState(false);
+  const config = useConfig();
+
+  const posthogProjectId = config.values.runtime?.app?.env?.DX_POSTHOG_PROJECT_ID as string | undefined;
+
+  const discordPresence = useDiscordPresence(DISCORD_SERVICE_URL);
 
   useAsyncEffect(
     async (controller) => {
@@ -53,5 +96,56 @@ export const FeedbackPanel = () => {
     [invokePromise],
   );
 
-  return <FeedbackForm onSave={handleSave} disabled={!feedbackAvailable} onDownloadLogs={downloadLogs} />;
+  const handleDiscord = useCallback(
+    async (values: SupportOperation.UserFeedback) => {
+      if (!DISCORD_SERVICE_URL) {
+        return;
+      }
+      try {
+        const { data: eventUuid } = await invokePromise(SupportOperation.CaptureUserFeedback, values);
+        const postHogEventUrl =
+          posthogProjectId && eventUuid
+            ? `https://eu.posthog.com/project/${posthogProjectId}/events/${eventUuid}/${encodeURIComponent(new Date().toISOString())}`
+            : undefined;
+        const res = await fetch(`${DISCORD_SERVICE_URL}/feedback`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: values.message, postHogEventUrl }),
+        });
+        const { threadUrl } = (await res.json()) as { threadUrl: string };
+        window.open(threadUrl, '_blank', 'noopener,noreferrer');
+        await invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
+        await invokePromise(LayoutOperation.AddToast, {
+          id: `${meta.id}.discord-feedback-success`,
+          icon: 'ph--discord-logo--regular',
+          duration: 5000,
+          title: ['discord-feedback-toast.label', { ns: meta.id }],
+          description: ['discord-feedback-toast.description', { ns: meta.id }],
+          closeLabel: ['close.label', { ns: osTranslations }],
+        });
+      } catch {
+        // Fall back to the standard PostHog toast so the user knows feedback was received.
+        await invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
+        await invokePromise(LayoutOperation.AddToast, {
+          id: `${meta.id}.feedback-success`,
+          icon: 'ph--paper-plane-tilt--regular',
+          duration: 3000,
+          title: ['feedback-toast.label', { ns: meta.id }],
+          description: ['feedback-toast.description', { ns: meta.id }],
+          closeLabel: ['close.label', { ns: osTranslations }],
+        });
+      }
+    },
+    [invokePromise, posthogProjectId],
+  );
+
+  return (
+    <FeedbackForm
+      onSave={handleSave}
+      onDiscord={handleDiscord}
+      discordPresence={discordPresence ?? undefined}
+      disabled={!feedbackAvailable}
+      onDownloadLogs={downloadLogs}
+    />
+  );
 };

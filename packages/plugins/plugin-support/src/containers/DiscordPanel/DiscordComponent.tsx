@@ -9,10 +9,7 @@ import { IconButton, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-
-const DXOS_GUILD_ID = '837138313172353095';
-
-const DEFAULT_TEAM = new Set<string>(['Rich', 'Josiah', 'Mykola', 'Dmytro']);
+import { DEFAULT_TEAM, DXOS_GUILD_ID } from '../../constants';
 
 export type DiscordChannel = {
   name: string;

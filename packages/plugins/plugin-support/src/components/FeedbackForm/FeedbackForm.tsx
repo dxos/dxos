@@ -2,34 +2,48 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback, useRef } from 'react';
 
 import { IconButton, useTranslation } from '@dxos/react-ui';
-import { Form, type FormRootProps, type FormSubmitProps } from '@dxos/react-ui-form';
+import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { SupportOperation } from '#types';
 
-export type FeedbackFormProps = Pick<FormRootProps<SupportOperation.UserFeedback>, 'onSave'> &
-  Pick<FormSubmitProps, 'disabled'> & {
-    /** Optional handler — when supplied a "Download logs" button is rendered below the submit action. */
-    onDownloadLogs?: () => void | Promise<void>;
-  };
+export type FeedbackFormProps = {
+  onSave?: (values: SupportOperation.UserFeedback) => void | Promise<void>;
+  disabled?: boolean;
+  onDiscord?: (values: SupportOperation.UserFeedback) => void | Promise<void>;
+  discordPresence?: { teamOnline: number; communityOnline: number };
+  /** Optional handler — when supplied a "Download logs" button is rendered below the submit action. */
+  onDownloadLogs?: () => void | Promise<void>;
+};
 
 const defaultValues: SupportOperation.UserFeedback = {
   message: '',
   includeLogs: true,
 };
 
-export const FeedbackForm = ({ onSave, disabled, onDownloadLogs }: FeedbackFormProps) => {
+export const FeedbackForm = ({ onSave, onDiscord, discordPresence, disabled, onDownloadLogs }: FeedbackFormProps) => {
   const { t } = useTranslation(meta.id);
+  const actionRef = useRef<'posthog' | 'discord'>('posthog');
+
+  const handleSave = useCallback(
+    async (values: SupportOperation.UserFeedback) => {
+      if (actionRef.current === 'discord' && onDiscord) {
+        await onDiscord(values);
+      } else {
+        await onSave?.(values);
+      }
+    },
+    [onSave, onDiscord],
+  );
 
   return (
-    <Form.Root schema={SupportOperation.UserFeedback} defaultValues={defaultValues} onSave={onSave}>
+    <Form.Root schema={SupportOperation.UserFeedback} defaultValues={defaultValues} onSave={handleSave}>
       <Form.Viewport>
         <Form.Content>
           <Form.FieldSet />
-          <Form.Submit icon='ph--paper-plane-tilt--regular' label={t('send-feedback.label')} disabled={disabled} />
           {onDownloadLogs && (
             <div className='flex w-full pt-form-padding'>
               <IconButton
@@ -41,6 +55,27 @@ export const FeedbackForm = ({ onSave, disabled, onDownloadLogs }: FeedbackFormP
                 data-testid='download-logs-button'
               />
             </div>
+          )}
+          <div onPointerDown={() => (actionRef.current = 'posthog')}>
+            <Form.Submit icon='ph--paper-plane-tilt--regular' label={t('send-feedback.label')} disabled={disabled || undefined} />
+          </div>
+          {onDiscord && (
+            <>
+              <div onPointerDown={() => (actionRef.current = 'discord')}>
+                <Form.Submit icon='ph--discord-logo--regular' label={t('ask-for-help.label')} />
+              </div>
+              {discordPresence && (discordPresence.teamOnline > 0 || discordPresence.communityOnline > 0) && (
+                <p className='text-xs text-description text-center px-2'>
+                  {[
+                    discordPresence.teamOnline > 0 && t('discord-presence.team', { count: discordPresence.teamOnline }),
+                    discordPresence.communityOnline > 0 &&
+                      t('discord-presence.community', { count: discordPresence.communityOnline }),
+                  ]
+                    .filter(Boolean)
+                    .join(' · ') + ' online'}
+                </p>
+              )}
+            </>
           )}
         </Form.Content>
       </Form.Viewport>
