@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { Ref } from '@dxos/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -73,7 +74,7 @@ const DefaultStory = ({ initialFiles, enableDelete }: DefaultStoryProps) => {
 const meta = {
   title: 'plugins/plugin-gallery/components/Lightbox',
   component: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withPluginManager({ capabilities: [] })],
   parameters: {
     layout: 'fullscreen',
     translations,
