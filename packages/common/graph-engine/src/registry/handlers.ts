@@ -6,6 +6,7 @@ import { type ReactNode } from 'react';
 
 import { type DrawContext } from '../draw/draw-context';
 import { type Path } from '../draw/path';
+import { type EdgeRouter } from '../router/router';
 import { type LayoutEdge, type LayoutNode, type Point, type Rect, type SemanticPointerEvent } from '../types';
 import { type Viewport } from '../viewport';
 
@@ -69,10 +70,7 @@ export type NodeHandler<NodeData = any> = {
 export type EdgeRouterId = 'straight' | 'bezier' | 'orthogonal' | 'radial-arc';
 
 export type EdgeHandler<NodeData = any, EdgeData = any> = {
-  // TODO(graph-engine): replace with EdgeRouter import once Task 11 lands
-  router:
-    | EdgeRouterId
-    | { route: (edge: LayoutEdge<NodeData, EdgeData>) => Path; labelPoint?: (t: number, path: Path) => Point };
+  router: EdgeRouterId | EdgeRouter<NodeData, EdgeData>;
   draw(ctx: DrawContext, edge: LayoutEdge<NodeData, EdgeData>, path: Path, viewport: Viewport): void;
   hit(point: Point, edge: LayoutEdge<NodeData, EdgeData>, path: Path): boolean;
   bounds(edge: LayoutEdge<NodeData, EdgeData>, path: Path): Rect;
