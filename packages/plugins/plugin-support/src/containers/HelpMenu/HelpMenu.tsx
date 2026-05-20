@@ -53,38 +53,38 @@ export const HelpMenu = () => {
             <DropdownMenu.Item asChild>
               <a href={DOCS_URL} target='_blank' rel='noopener noreferrer'>
                 <Icon icon='ph--book-open--regular' size={4} />
-                <span className='ml-2'>{t('docs.label')}</span>
+                <span>{t('docs.label')}</span>
               </a>
             </DropdownMenu.Item>
             <DropdownMenu.Item onClick={openDialog(SHORTCUTS_DIALOG)}>
               <Icon icon='ph--keyboard--regular' size={4} />
-              <span className='ml-2'>{t('shortcuts.label')}</span>
+              <span>{t('shortcuts.label')}</span>
             </DropdownMenu.Item>
             <DropdownMenu.Separator />
             <DropdownMenu.Item asChild>
               <a href={DISCORD_URL} target='_blank' rel='noopener noreferrer'>
                 <Icon icon='ph--discord-logo--regular' size={4} />
-                <span className='ml-2'>{t('discord.label')}</span>
+                <span>{t('discord.label')}</span>
               </a>
             </DropdownMenu.Item>
             <DropdownMenu.Item asChild>
               <a href={GITHUB_URL} target='_blank' rel='noopener noreferrer'>
                 <Icon icon='ph--github-logo--regular' size={4} />
-                <span className='ml-2'>{t('github.label')}</span>
+                <span>{t('github.label')}</span>
               </a>
             </DropdownMenu.Item>
             {!isTauri() && (
               <DropdownMenu.Item asChild>
                 <a href={DOWNLOAD_URL} target='_blank' rel='noopener noreferrer'>
                   <Icon icon='ph--download-simple--regular' size={4} />
-                  <span className='ml-2'>{t('download-apps.label')}</span>
+                  <span>{t('download-apps.label')}</span>
                 </a>
               </DropdownMenu.Item>
             )}
             <DropdownMenu.Separator />
             <DropdownMenu.Item onClick={openDialog(ABOUT_DIALOG)}>
               <Icon icon='ph--info--regular' size={4} />
-              <span className='ml-2'>{t('about.label')}</span>
+              <span>{t('about.label')}</span>
             </DropdownMenu.Item>
             {version && (
               <div className='ps-8 pe-2 pb-2 flex flex-col text-xs text-description'>
