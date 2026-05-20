@@ -3,6 +3,7 @@
 //
 
 import { type Plugin } from '@dxos/app-framework';
+import { meta as fileMeta } from '@dxos/plugin-file';
 import { trim } from '@dxos/util';
 
 export const meta: Plugin.Meta = {
@@ -17,5 +18,5 @@ export const meta: Plugin.Meta = {
   iconHue: 'teal',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-wnfs',
   tags: ['labs'],
-  dependsOn: ['org.dxos.plugin.file'],
+  dependsOn: [fileMeta.id],
 };
