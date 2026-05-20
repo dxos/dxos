@@ -18,4 +18,6 @@ export const meta: Plugin.Meta = {
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-chess',
   screenshots: ['https://dxos.network/plugin-details-chess-dark.png'],
   dependsOn: [gameMeta.id],
+  version: '0.8.3',
+  spec: 'https://unpkg.com/@dxos/plugin-chess@0.8.3/PLUGIN.mdl',
 };

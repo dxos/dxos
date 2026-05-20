@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation, getCollectionsPath, getSpacePath } from '@dxos/app-toolkit';
+import { AppCapabilities, LayoutOperation, getSpacePath } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Graph, Node } from '@dxos/plugin-graph';
 import { SpaceEvents } from '@dxos/plugin-space';
@@ -15,6 +15,10 @@ import README_CONTENT from '../content/README.md?raw';
 
 const SPACE_ICON = 'house-line';
 
+// TODO(wittjosiah): Move the Getting Started collection and README into a dedicated exemplar
+//   space rather than seeding them into the user's personal space. Once that lands, this
+//   capability should stop creating the collection/README here.
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const { Obj, Ref } = yield* Effect.tryPromise(() => import('@dxos/echo'));
@@ -23,7 +27,7 @@ export default Capability.makeModule(
     const { Collection } = yield* Effect.tryPromise(() => import('@dxos/echo'));
 
     const operationInvoker = yield* Capability.get(Capabilities.OperationInvoker);
-    const { invoke, schedule } = operationInvoker;
+    const { invoke } = operationInvoker;
     const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
     const client = yield* Capability.get(ClientCapabilities.Client);
     const { getPersonalSpace } = yield* Effect.tryPromise(() => import('@dxos/app-toolkit'));
@@ -65,9 +69,6 @@ export default Capability.makeModule(
     // This will allow the expose action to work before the navtree renders for the first time.
     graph.pipe(Graph.expand(Node.RootId, 'child'), Graph.expand(space.id, 'child'));
 
-    const readmePath = getCollectionsPath(space.id, gettingStarted.id, readme.id);
     yield* invoke(LayoutOperation.SwitchWorkspace, { subject: getSpacePath(space.id) });
-    yield* invoke(LayoutOperation.SetLayoutMode, { mode: 'solo', subject: readmePath });
-    yield* schedule(LayoutOperation.Expose, { subject: readmePath });
   }),
 );
