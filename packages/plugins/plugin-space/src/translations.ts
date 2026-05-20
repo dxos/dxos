@@ -301,6 +301,7 @@ export const translations = [
         'reset-space-confirm.title': 'Reset this space?',
         'reset-space-confirm.description':
           'All objects, relations, schema, and feeds in this space will be permanently deleted. This action cannot be undone.',
+        'reset-space-failed.message': 'Failed to reset space.',
 
         'sync-edge-connected.label': 'EDGE connected',
         'sync-edge-disconnected.label': 'Edge disconnected',

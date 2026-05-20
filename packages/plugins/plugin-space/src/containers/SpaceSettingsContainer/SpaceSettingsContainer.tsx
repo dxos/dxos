@@ -282,6 +282,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
                     title={t('reset-space-confirm.title')}
                     message={t('reset-space-confirm.description')}
                     confirmLabel={t('reset-space.label')}
+                    errorMessage={t('reset-space-failed.message')}
                     onConfirm={handleReset}
                     onCancel={handleResetCancel}
                   />
