@@ -94,7 +94,7 @@ export default Capability.makeModule(
               label: [data === 'meeting' ? 'meeting-list.label' : 'meeting-companion.label', { ns: meta.id }],
               icon: 'ph--note--regular',
               data,
-              position: 'hoist',
+              position: 'first',
             }),
           ];
         }),
@@ -169,7 +169,7 @@ export default Capability.makeModule(
               label: ['transcript-companion.label', { ns: meta.id }],
               icon: 'ph--subtitles--regular',
               data: get(AtomObj.make(meeting.transcript)),
-              position: 'hoist',
+              position: 'first',
             }),
           ];
         }),
@@ -185,7 +185,7 @@ export default Capability.makeModule(
               label: ['transcript-companion.label', { ns: meta.id }],
               icon: 'ph--subtitles--regular',
               data: get(AtomObj.make(meeting.transcript)),
-              position: 'hoist',
+              position: 'first',
             }),
           ]),
       }),

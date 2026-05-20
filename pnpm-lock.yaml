@@ -9661,70 +9661,43 @@ importers:
       '@dxos/echo-db':
         specifier: workspace:*
         version: link:../../core/echo/echo-db
-      '@dxos/echo-react':
+      '@dxos/edge-client':
         specifier: workspace:*
-        version: link:../../core/echo/echo-react
-      '@dxos/effect':
+        version: link:../../core/mesh/edge-client
+      '@dxos/errors':
         specifier: workspace:*
-        version: link:../../common/effect
+        version: link:../../common/errors
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/plugin-space':
+      '@dxos/plugin-client':
         specifier: workspace:*
-        version: link:../plugin-space
-      '@dxos/react-client':
+        version: link:../plugin-client
+      '@dxos/plugin-integration':
         specifier: workspace:*
-        version: link:../../sdk/react-client
-      '@dxos/schema':
-        specifier: workspace:*
-        version: link:../../sdk/schema
+        version: link:../plugin-integration
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@effect-atom/atom-react':
+      '@effect/platform':
         specifier: 'catalog:'
-        version: 0.5.0(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)(react@19.2.6)(scheduler@0.27.0)
+        version: 0.94.4(effect@3.20.0)
       effect:
         specifier: 3.20.0
         version: 3.20.0
     devDependencies:
-      '@dxos/plugin-client':
+      '@dxos/effect':
         specifier: workspace:*
-        version: link:../plugin-client
+        version: link:../../common/effect
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
-      '@dxos/plugin-theme':
-        specifier: workspace:*
-        version: link:../plugin-theme
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../../ui/react-ui
-      '@dxos/storybook-utils':
-        specifier: workspace:*
-        version: link:../../common/storybook-utils
-      '@dxos/ui-theme':
-        specifier: workspace:*
-        version: link:../../ui/ui-theme
-      '@types/react':
-        specifier: ~19.2.7
-        version: 19.2.14
-      '@types/react-dom':
-        specifier: ~19.2.3
-        version: 19.2.3(@types/react@19.2.14)
-      react:
-        specifier: ~19.2.3
-        version: 19.2.6
-      react-dom:
-        specifier: ~19.2.3
-        version: 19.2.6(react@19.2.6)
       vite:
         specifier: '>=8.0.0'
         version: 8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
@@ -11926,6 +11899,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -11941,6 +11917,9 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@effect-atom/atom-react':
+        specifier: 'catalog:'
+        version: 0.5.0(@effect/experimental@0.58.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0)(ioredis@5.3.2))(@effect/platform@0.94.4(effect@3.20.0))(@effect/rpc@0.73.0(@effect/platform@0.94.4(effect@3.20.0))(effect@3.20.0))(effect@3.20.0)(react@19.2.6)(scheduler@0.27.0)
       '@effect/platform':
         specifier: 'catalog:'
         version: 0.94.4(effect@3.20.0)
@@ -11959,9 +11938,9 @@ importers:
       '@tauri-apps/plugin-updater':
         specifier: 'catalog:'
         version: 2.10.1
-      effect:
-        specifier: 3.20.0
-        version: 3.20.0
+      date-fns:
+        specifier: 'catalog:'
+        version: 3.6.0
     devDependencies:
       '@dxos/plugin-testing':
         specifier: workspace:*
@@ -11969,6 +11948,18 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
+      '@types/react':
+        specifier: ~19.2.7
+        version: 19.2.14
+      effect:
+        specifier: 3.20.0
+        version: 3.20.0
+      react:
+        specifier: ~19.2.3
+        version: 19.2.6
       vite:
         specifier: '>=8.0.0'
         version: 8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
@@ -14840,6 +14831,12 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/brand':
+        specifier: workspace:*
+        version: link:../../ui/brand
+      '@dxos/client-protocol':
+        specifier: workspace:*
+        version: link:../../sdk/client-protocol
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
@@ -14885,6 +14882,9 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/plugin-status-bar':
+        specifier: workspace:*
+        version: link:../plugin-status-bar
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -14921,6 +14921,9 @@ importers:
       '@fluentui/react-tabster':
         specifier: 'catalog:'
         version: 9.26.11(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      date-fns:
+        specifier: 'catalog:'
+        version: 3.6.0
       effect:
         specifier: 3.20.0
         version: 3.20.0

@@ -26,8 +26,9 @@ import { parseArgs } from 'node:util';
 import { createIntrospector, pluginsFilePath } from '../src';
 
 // Bumped whenever the sidecar shape changes. Must match the worker's
-// `fetchPluginsJson` version check (currently 1).
-const PLUGINS_SIDECAR_VERSION = 1;
+// `fetchPluginsJson` version check.
+// v2 (2026-05): added `idioms`.
+const PLUGINS_SIDECAR_VERSION = 2;
 
 const USAGE = [
   'Usage: build-index [options]',
@@ -115,7 +116,7 @@ if (verbose) {
 
 // Write the plugin metadata sidecar. Atomic rename — same convention as
 // saveCache. Worker reads `{plugins, surfaces, capabilities, operations,
-// schemas}` directly off R2; keep the keys identical.
+// schemas, idioms}` directly off R2; keep the keys identical.
 const pluginsPath = pluginsFilePath(root);
 const pluginsTmp = `${pluginsPath}.tmp`;
 mkdirSync(dirname(pluginsPath), { recursive: true });
@@ -126,11 +127,12 @@ const sidecar = {
   capabilities: intro.listCapabilities(),
   operations: intro.listOperations(),
   schemas: intro.listSchemas(),
+  idioms: intro.listIdioms(),
 };
 writeFileSync(pluginsTmp, JSON.stringify(sidecar));
 renameSync(pluginsTmp, pluginsPath);
 log(
-  `wrote plugins sidecar: ${sidecar.plugins.length} plugins, ${sidecar.surfaces.length} surfaces, ${sidecar.capabilities.length} capabilities, ${sidecar.operations.length} operations, ${sidecar.schemas.length} schemas → ${pluginsPath}`,
+  `wrote plugins sidecar: ${sidecar.plugins.length} plugins, ${sidecar.surfaces.length} surfaces, ${sidecar.capabilities.length} capabilities, ${sidecar.operations.length} operations, ${sidecar.schemas.length} schemas, ${sidecar.idioms.length} idioms → ${pluginsPath}`,
 );
 
 const elapsed = ((Date.now() - start) / 1000).toFixed(1);

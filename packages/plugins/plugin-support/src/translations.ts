@@ -36,6 +36,13 @@ export const translations = [
         'help-companion.label': 'Help',
         // Feedback (deck-companion--help surface).
         'help.label': 'Feedback & Support',
+        // Discord (deck-companion--discord surface).
+        'discord.label': 'Discord',
+        'discord-loading.message': 'Loading…',
+        'discord-unavailable.message': 'Discord widget unavailable.',
+        'members-online.label_one': '{{count}} member online',
+        'members-online.label_other': '{{count}} members online',
+        'join-discord.button': 'Join Discord',
         'feedback-textarea.label': 'Feedback',
         'feedback-textarea.placeholder': 'Please enter your feedback, technical issue, or feature request.',
         'include-debug-logs.label': 'Include debug logs',
@@ -57,6 +64,14 @@ export const translations = [
         // Settings.
         'settings.title': 'Support settings',
         'show-welcome.label': 'Show welcome article on personal space',
+        // Help menu (status-indicator surface; right-rail ? dropdown).
+        'help-menu.label': 'Help & resources',
+        'docs.label': 'Documentation',
+        'shortcuts.label': 'Keyboard shortcuts',
+        'github.label': 'GitHub',
+        'download-apps.label': 'Download apps',
+        'about.label': 'About Composer',
+        'released.message': 'Released {{released}}',
       },
     },
   },

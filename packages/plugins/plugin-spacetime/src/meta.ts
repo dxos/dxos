@@ -15,4 +15,6 @@ export const meta: Plugin.Meta = {
   icon: 'ph--cube--regular',
   iconHue: 'teal',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-spacetime',
+  version: '0.8.3',
+  spec: 'https://unpkg.com/@dxos/plugin-spacetime@0.8.3/docs/PLUGIN.mdl',
 };

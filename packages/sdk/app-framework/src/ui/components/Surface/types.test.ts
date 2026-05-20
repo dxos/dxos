@@ -77,8 +77,8 @@ describe('create', () => {
 
   test('passes position through untouched', ({ expect }) => {
     const filter: SurfaceFilter<Record<string, any>> = { bindings: [{ role: 'r', guard: () => true }] };
-    const def = create({ id: 'pos', filter, component: () => null, position: 'fallback' });
-    expect(def.position).toBe('fallback');
+    const def = create({ id: 'pos', filter, component: () => null, position: 'last' });
+    expect(def.position).toBe('last');
   });
 });
 

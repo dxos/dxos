@@ -15,13 +15,12 @@ export const Thread = {
 
   getComments: (page: Page) => page.getByTestId('cm-comment'),
 
-  getComment: (page: Page, text: string) =>
-    page.getByTestId('cm-comment').filter({ has: page.locator(`span:has-text("${text}")`) }),
+  getComment: (page: Page, text: string) => page.getByTestId('cm-comment').filter({ hasText: text }),
 
   getThreads: (page: Page) => page.getByTestId('thread'),
 
   getThread: (page: Page, text: string) =>
-    page.getByTestId('thread').filter({ has: page.locator(`[data-testid="thread.heading"]:has-text("${text}")`) }),
+    page.getByTestId('thread').filter({ has: page.getByTestId('thread.heading').filter({ hasText: text }) }),
 
   getCurrentThread: (page: Page) => page.locator('[data-testid=thread][aria-current="location"]'),
 
@@ -29,10 +28,7 @@ export const Thread = {
 
   getMessages: (thread: Locator) => thread.getByTestId('thread.message'),
 
-  getMessage: (thread: Locator, current: string) =>
-    thread.getByTestId('thread.message').filter({
-      has: thread.page().locator(`div:has-text("${current}")`),
-    }),
+  getMessage: (thread: Locator, current: string) => thread.getByTestId('thread.message').filter({ hasText: current }),
 
   addMessage: async (thread: Locator, message: string) => {
     const input = thread.getByRole('textbox').last();

@@ -163,6 +163,12 @@ export type Meta = {
   name: string;
 
   /**
+   * Semver version string of the plugin, typically the publishing package's
+   * `package.json` version.
+   */
+  version?: string;
+
+  /**
    * Short description of plugin functionality.
    */
   description?: string;
@@ -170,6 +176,7 @@ export type Meta = {
   /**
    * Name of the author or organization that created the plugin.
    */
+  // TODO(burdon): DID or domain name?
   author?: string;
 
   /**
@@ -201,6 +208,13 @@ export type Meta = {
    * Icon hue (ChromaticPalette).
    */
   iconHue?: string;
+
+  /**
+   * URL of the plugin's MDL spec, typically the published `PLUGIN.mdl` on the
+   * unpkg CDN (e.g. `https://unpkg.com/<pkg>@<version>/PLUGIN.mdl`).
+   * Rendered as a "Specification" link in the plugin detail view.
+   */
+  spec?: string;
 
   /**
    * IDs of plugins this plugin functionally depends on.

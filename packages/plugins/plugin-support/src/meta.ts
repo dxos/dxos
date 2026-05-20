@@ -17,4 +17,6 @@ export const meta: Plugin.Meta = {
   iconHue: 'rose',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-support',
   tags: ['system'],
+  version: '0.8.3',
+  spec: 'https://unpkg.com/@dxos/plugin-support@0.8.3/PLUGIN.mdl',
 };

@@ -76,7 +76,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'surface.editable',
-        position: 'hoist',
+        position: 'first',
         filter: AppSurface.object(AppSurface.Card, [Markdown.Document, Text.Text], (data) => data.editable === true),
         component: ({ data }) => <EditableMarkdownCard subject={data.subject} />,
       }),

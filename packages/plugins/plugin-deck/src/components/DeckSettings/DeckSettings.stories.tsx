@@ -30,7 +30,6 @@ export const Default: Story = {
     settings: {
       enableDeck: true,
       encapsulatedPlanks: false,
-      enableStatusbar: true,
       showHints: true,
       enableNativeRedirect: false,
     },

@@ -19,7 +19,6 @@ export default Capability.makeModule(() =>
       defaultValue: () => ({
         showHints: false,
         enableDeck: false,
-        enableStatusbar: false,
         enableNativeRedirect: false,
         encapsulatedPlanks: false,
       }),

@@ -15,7 +15,6 @@ export const meta: Plugin.Meta = {
   icon: 'ph--sparkle--regular',
   iconHue: 'sky',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-assistant',
-  tags: ['labs'],
 };
 
 export const ASSISTANT_DIALOG = `${meta.id}.assistant.dialog`;

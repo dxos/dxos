@@ -26,7 +26,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'show',
-        position: 'hoist',
+        position: 'first',
         filter: AppSurface.predicate(
           AppSurface.Article,
           (data): data is AppSurface.ArticleData<{ type: typeof meta.id; object: Gallery.Gallery }> =>
