@@ -46,6 +46,7 @@ export const useImageUrl = (file: File.File | undefined): string | undefined => 
 
     let cancelled = false;
     let createdBlobUrl: string | undefined;
+    setResolved(undefined);
     void resolver.resolve(data.url, file, getSpace(file)).then((url) => {
       if (cancelled) {
         if (url?.startsWith('blob:')) {
@@ -57,6 +58,10 @@ export const useImageUrl = (file: File.File | undefined): string | undefined => 
         createdBlobUrl = url;
       }
       setResolved(url);
+    }).catch(() => {
+      if (!cancelled) {
+        setResolved(undefined);
+      }
     });
 
     return () => {

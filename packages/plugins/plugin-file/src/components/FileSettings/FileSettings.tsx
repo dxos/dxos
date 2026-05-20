@@ -17,8 +17,10 @@ export type FileSettingsProps = AppSurface.SettingsArticleProps<Settings.Setting
 export const FileSettings = ({ settings, onSettingsChange }: FileSettingsProps) => {
   const { t } = useTranslation(meta.id);
   const backends = useCapabilities(FileCapabilities.Backend);
-  const activeId = settings.backend ?? Settings.DEFAULT_BACKEND_ID;
-  const active = backends.find((b) => b.id === activeId) ?? backends.find((b) => b.id === Settings.DEFAULT_BACKEND_ID);
+  const requestedId = settings.backend ?? Settings.DEFAULT_BACKEND_ID;
+  const active = backends.find((b) => b.id === requestedId) ?? backends.find((b) => b.id === Settings.DEFAULT_BACKEND_ID);
+  // Use the resolved backend id so the Select never shows a missing/stale value.
+  const activeId = active?.id ?? Settings.DEFAULT_BACKEND_ID;
 
   const handleChange = useCallback(
     (value: string) => onSettingsChange?.((current) => ({ ...current, backend: value })),

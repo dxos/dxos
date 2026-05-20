@@ -53,8 +53,11 @@ export const useFileUpload = ({ subject, accept, multiple, onUpload }: UseFileUp
   const enabled = !!invokePromise && !!Obj.getDatabase(subject);
 
   const open = useCallback(() => {
+    if (!enabled) {
+      return;
+    }
     inputRef.current?.click();
-  }, []);
+  }, [enabled]);
 
   const handleChange = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {

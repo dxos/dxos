@@ -218,6 +218,11 @@ class DxnImageWidget extends WidgetType {
       if (url) {
         widget.appendChild(createImg(view, url));
       }
+    }).catch(() => {
+      clearTimeout(timeout);
+      if (loaderAdded) {
+        widget.removeChild(loader);
+      }
     });
 
     return widget;

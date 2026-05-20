@@ -24,16 +24,20 @@ export default Capability.makeModule(
         if (!space) {
           return undefined;
         }
-        const blockstore = capabilities.get(WnfsCapabilities.Blockstore);
-        const instances = capabilities.get(WnfsCapabilities.Instances);
-        const { directory, forest } = await loadWnfs({ blockstore, instances, space });
-        return await getBlobUrl({
-          wnfsUrl,
-          blockstore,
-          directory,
-          forest,
-          type: file.type,
-        });
+        try {
+          const blockstore = capabilities.get(WnfsCapabilities.Blockstore);
+          const instances = capabilities.get(WnfsCapabilities.Instances);
+          const { directory, forest } = await loadWnfs({ blockstore, instances, space });
+          return await getBlobUrl({
+            wnfsUrl,
+            blockstore,
+            directory,
+            forest,
+            type: file.type,
+          });
+        } catch {
+          return undefined;
+        }
       },
     });
   }),

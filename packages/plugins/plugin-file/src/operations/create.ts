@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
 
-import { FileCapabilities, FileOperation, File, MAX_FILE_SIZE, Settings } from '../types';
+import { FileCapabilities, FileOperation, File, MAX_FILE_SIZE, Settings, isAcceptedMimeType } from '../types';
 
 export class UnsupportedFileTypeError extends Error {
   constructor(public readonly type: string) {
@@ -62,6 +62,13 @@ export const resolveActiveBackend = Effect.gen(function* () {
 const handler: Operation.WithHandler<typeof FileOperation.Create> = FileOperation.Create.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ file, db }) {
+      // Validate before hitting the backend so the contract is consistent regardless of backend.
+      if (!isAcceptedMimeType(file.type)) {
+        return yield* Effect.fail(new UnsupportedFileTypeError(file.type));
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        return yield* Effect.fail(new FileTooLargeError(file.size));
+      }
       const backend = yield* resolveActiveBackend;
       const info = yield* Effect.promise(() => backend.upload(file, db));
       return {

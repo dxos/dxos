@@ -35,6 +35,7 @@ export const FilePreview = composable<HTMLElement, FilePreviewProps>(
         <iframe
           {...composableProps(props, { classNames: 'h-full w-full overflow-auto' })}
           src={url}
+          title='PDF preview'
           ref={forwardedRef as ForwardedRef<HTMLIFrameElement>}
         />
       );

@@ -22,10 +22,11 @@ export const inlineBackend: FileCapabilities.Backend = {
     if (!isAcceptedMimeType(file.type)) {
       throw new UnsupportedFileTypeError(file.type);
     }
-    const bytes = new Uint8Array(await file.arrayBuffer());
-    if (bytes.byteLength > MAX_FILE_SIZE) {
-      throw new FileTooLargeError(bytes.byteLength);
+    // Check size before reading into memory to avoid allocating a large buffer.
+    if (file.size > MAX_FILE_SIZE) {
+      throw new FileTooLargeError(file.size);
     }
+    const bytes = new Uint8Array(await file.arrayBuffer());
     return {
       name: file.name,
       type: file.type,

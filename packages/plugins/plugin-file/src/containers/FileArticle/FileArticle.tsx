@@ -38,6 +38,7 @@ export const FileArticle = ({ role, subject: file }: FileArticleProps) => {
         setRenderUrl(undefined);
         return;
       }
+      setRenderUrl(undefined);
       void resolver.resolve(data.url, file, getSpace(file)).then((url) => {
         if (cancelled) {
           if (url?.startsWith('blob:')) {
@@ -49,6 +50,10 @@ export const FileArticle = ({ role, subject: file }: FileArticleProps) => {
           createdBlobUrl = url;
         }
         setRenderUrl(url);
+      }).catch(() => {
+        if (!cancelled) {
+          setRenderUrl(undefined);
+        }
       });
     }
 

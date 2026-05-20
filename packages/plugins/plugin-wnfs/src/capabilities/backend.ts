@@ -30,12 +30,11 @@ export default Capability.makeModule(
         const instances = capabilities.get(WnfsCapabilities.Instances);
         const space = client.spaces.get(db.spaceId);
         invariant(space, 'Space not found');
-        const bytes = new Uint8Array(await file.arrayBuffer());
         const info = await upload({ file, blockstore, instances, space });
         return {
           name: info.name,
           type: info.type,
-          size: bytes.byteLength,
+          size: file.size,
           data: File.externalData(info.url, info.cid),
         };
       },

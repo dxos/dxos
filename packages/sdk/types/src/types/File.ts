@@ -26,8 +26,19 @@ export const FileDataSchema = Schema.Union(
 
 export type FileData = Schema.Schema.Type<typeof FileDataSchema>;
 
+/**
+ * Creates an inline {@link FileData} variant that embeds raw bytes on the ECHO object.
+ * @param bytes - The file contents as a `Uint8Array`.
+ * @returns A `FileData` tagged with `'inline'`.
+ */
 export const inlineData = (bytes: Uint8Array): FileData => ({ _tag: 'inline', bytes });
 
+/**
+ * Creates an external {@link FileData} variant that references a remote URL.
+ * @param url - The URL to the file (e.g. `https://`, `wnfs://`).
+ * @param cid - Optional content identifier for IPFS/WNFS-style backends.
+ * @returns A `FileData` tagged with `'external'`.
+ */
 export const externalData = (url: string, cid?: string): FileData => ({
   _tag: 'external',
   url,
@@ -57,4 +68,9 @@ export const File = Schema.Struct({
 
 export interface File extends Schema.Schema.Type<typeof File> {}
 
+/**
+ * Constructs a `File.File` ECHO object from the given props.
+ * @param props - The initial field values for the file object.
+ * @returns A new `File.File` instance.
+ */
 export const make = (props: Obj.MakeProps<typeof File>): File => Obj.make(File, props);
