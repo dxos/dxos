@@ -20,12 +20,6 @@
  * with the facts and tone described there.
  */
 
-import { readFile, writeFile } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-import { describe, test } from 'vitest';
-
 import { Store } from '@tldraw/store';
 import {
   DocumentRecordType,
@@ -37,8 +31,11 @@ import {
   type TLRecord,
 } from '@tldraw/tlschema';
 import { type IndexKey } from '@tldraw/utils';
-
 import * as S from 'effect/Schema';
+import { readFile, writeFile } from 'node:fs/promises';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { describe, test } from 'vitest';
 
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
@@ -94,10 +91,10 @@ const RoastLog = S.Struct({
       [PropertyMetaAnnotationId]: {
         singleSelect: {
           options: [
-            { id: 'planned',  title: 'Planned',  color: 'indigo' },
-            { id: 'roasted',  title: 'Roasted',  color: 'orange' },
-            { id: 'cupped',   title: 'Cupped',   color: 'purple' },
-            { id: 'approved', title: 'Approved', color: 'green'  },
+            { id: 'planned', title: 'Planned', color: 'indigo' },
+            { id: 'roasted', title: 'Roasted', color: 'orange' },
+            { id: 'cupped', title: 'Cupped', color: 'purple' },
+            { id: 'approved', title: 'Approved', color: 'green' },
           ],
         },
       },
@@ -159,44 +156,40 @@ const actor = (name: string, email: string): Actor.Actor => ({ role: 'user', nam
 // -----------------------------------------------------------------------------
 
 describe.skipIf(!process.env.BUILD_EXEMPLAR)('build-exemplar-space', () => {
-  test(
-    'generate Bramble Coffee Roasters exemplar snapshot',
-    { timeout: 60_000 },
-    async () => {
-      const aboutMd = await readFile(ABOUT_MD_PATH, 'utf8');
-      const welcomeMd = await readFile(WELCOME_MD_PATH, 'utf8');
+  test('generate Bramble Coffee Roasters exemplar snapshot', { timeout: 60_000 }, async () => {
+    const aboutMd = await readFile(ABOUT_MD_PATH, 'utf8');
+    const welcomeMd = await readFile(WELCOME_MD_PATH, 'utf8');
 
-      console.log('booting client…');
-      const testBuilder = new TestBuilder();
-      const client = new Client({ services: testBuilder.createLocalClientServices() });
-      await client.initialize();
-      try {
-        await client.halo.createIdentity({ displayName: 'Bramble exemplar builder' });
-        await client.addTypes(SCHEMAS);
+    console.log('booting client…');
+    const testBuilder = new TestBuilder();
+    const client = new Client({ services: testBuilder.createLocalClientServices() });
+    await client.initialize();
+    try {
+      await client.halo.createIdentity({ displayName: 'Bramble exemplar builder' });
+      await client.addTypes(SCHEMAS);
 
-        console.log('creating space…');
-        const space = await client.spaces.create({ name: 'Bramble Coffee Roasters', icon: 'potted-plant', hue: 'amber' });
-        await space.waitUntilReady();
+      console.log('creating space…');
+      const space = await client.spaces.create({ name: 'Bramble Coffee Roasters', icon: 'potted-plant', hue: 'amber' });
+      await space.waitUntilReady();
 
-        await populateSpace(space, { aboutMd, welcomeMd });
+      await populateSpace(space, { aboutMd, welcomeMd });
 
-        console.log('flushing…');
-        await space.db.flush();
+      console.log('flushing…');
+      await space.db.flush();
 
-        console.log('exporting…');
-        const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
+      console.log('exporting…');
+      const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
 
-        // Store as a single line so regenerations produce a 1-line diff rather than
-        // thousands of changed lines. The file is valid JSON; use `jq .` to inspect it.
-        const parsed = JSON.parse(new TextDecoder().decode(archive.contents));
-        const minified = JSON.stringify(parsed);
-        await writeFile(OUTPUT_PATH, minified + '\n', 'utf8');
-        console.log(`wrote ${OUTPUT_PATH} (${minified.length} bytes, ${parsed.objects.length} objects)`);
-      } finally {
-        await client.destroy();
-      }
-    },
-  );
+      // Store as a single line so regenerations produce a 1-line diff rather than
+      // thousands of changed lines. The file is valid JSON; use `jq .` to inspect it.
+      const parsed = JSON.parse(new TextDecoder().decode(archive.contents));
+      const minified = JSON.stringify(parsed);
+      await writeFile(OUTPUT_PATH, minified + '\n', 'utf8');
+      console.log(`wrote ${OUTPUT_PATH} (${minified.length} bytes, ${parsed.objects.length} objects)`);
+    } finally {
+      await client.destroy();
+    }
+  });
 });
 
 // -----------------------------------------------------------------------------
@@ -279,11 +272,7 @@ const populateSpace = async (space: Space, content: { aboutMd: string; welcomeMd
   await appendToFeed(space, calendar.feed.target!, events);
 };
 
-const makeCollection = (
-  space: Space,
-  name: string,
-  objects: Ref.Ref<Obj.Unknown>[],
-): Collection.Collection =>
+const makeCollection = (space: Space, name: string, objects: Ref.Ref<Obj.Unknown>[]): Collection.Collection =>
   space.db.add(Obj.make(Collection.Collection, { name, objects }));
 
 const appendToFeed = async (space: Space, feed: Feed.Feed, items: Obj.Unknown[]) => {
@@ -303,13 +292,7 @@ type OrganizationsBundle = {
   organizations: Record<OrgKey, Organization.Organization>;
 };
 
-type OrgKey =
-  | 'bramble'
-  | 'fincaEsperanza'
-  | 'sidamoCoop'
-  | 'northStar'
-  | 'hatch'
-  | 'oliveAndVine';
+type OrgKey = 'bramble' | 'fincaEsperanza' | 'sidamoCoop' | 'northStar' | 'hatch' | 'oliveAndVine';
 
 const ORG_SEEDS: Array<{
   key: OrgKey;
@@ -393,16 +376,7 @@ type PeopleBundle = {
   people: Record<PersonKey, Person.Person>;
 };
 
-type PersonKey =
-  | 'kai'
-  | 'diego'
-  | 'sam'
-  | 'riley'
-  | 'carmen'
-  | 'abel'
-  | 'jordan'
-  | 'priya'
-  | 'mateo';
+type PersonKey = 'kai' | 'diego' | 'sam' | 'riley' | 'carmen' | 'abel' | 'jordan' | 'priya' | 'mateo';
 
 const PEOPLE_SEEDS: Array<{
   key: PersonKey;
@@ -412,21 +386,81 @@ const PEOPLE_SEEDS: Array<{
   orgKey: OrgKey;
   email: string;
 }> = [
-  { key: 'kai', fullName: 'Kai Chen', preferredName: 'Kai', jobTitle: 'Head Roaster (co-founder)', orgKey: 'bramble', email: 'kai@bramblecoffee.com' },
-  { key: 'diego', fullName: 'Diego Alvarez', preferredName: 'Diego', jobTitle: 'Sourcing (co-founder)', orgKey: 'bramble', email: 'diego@bramblecoffee.com' },
-  { key: 'sam', fullName: 'Sam Okafor', preferredName: 'Sam', jobTitle: 'Wholesale Lead', orgKey: 'bramble', email: 'sam@bramblecoffee.com' },
-  { key: 'riley', fullName: 'Riley Tanaka', preferredName: 'Riley', jobTitle: 'Operations & Logistics', orgKey: 'bramble', email: 'riley@bramblecoffee.com' },
-  { key: 'carmen', fullName: 'Carmen Restrepo', preferredName: 'Carmen', jobTitle: 'Producer', orgKey: 'fincaEsperanza', email: 'carmen@fincaesperanza.co' },
-  { key: 'abel', fullName: 'Abel Tadesse', preferredName: 'Abel', jobTitle: 'Export Liaison', orgKey: 'sidamoCoop', email: 'abel@sidamocoop.org' },
-  { key: 'jordan', fullName: 'Jordan Park', preferredName: 'Jordan', jobTitle: 'Owner / Buyer', orgKey: 'northStar', email: 'jordan@northstarcafe.com' },
-  { key: 'priya', fullName: 'Priya Shah', preferredName: 'Priya', jobTitle: 'Coffee Program Lead', orgKey: 'hatch', email: 'priya@hatchbakery.com' },
-  { key: 'mateo', fullName: 'Mateo Ruiz', preferredName: 'Mateo', jobTitle: 'Beverage Buyer', orgKey: 'oliveAndVine', email: 'mateo@oliveandvine.cafe' },
+  {
+    key: 'kai',
+    fullName: 'Kai Chen',
+    preferredName: 'Kai',
+    jobTitle: 'Head Roaster (co-founder)',
+    orgKey: 'bramble',
+    email: 'kai@bramblecoffee.com',
+  },
+  {
+    key: 'diego',
+    fullName: 'Diego Alvarez',
+    preferredName: 'Diego',
+    jobTitle: 'Sourcing (co-founder)',
+    orgKey: 'bramble',
+    email: 'diego@bramblecoffee.com',
+  },
+  {
+    key: 'sam',
+    fullName: 'Sam Okafor',
+    preferredName: 'Sam',
+    jobTitle: 'Wholesale Lead',
+    orgKey: 'bramble',
+    email: 'sam@bramblecoffee.com',
+  },
+  {
+    key: 'riley',
+    fullName: 'Riley Tanaka',
+    preferredName: 'Riley',
+    jobTitle: 'Operations & Logistics',
+    orgKey: 'bramble',
+    email: 'riley@bramblecoffee.com',
+  },
+  {
+    key: 'carmen',
+    fullName: 'Carmen Restrepo',
+    preferredName: 'Carmen',
+    jobTitle: 'Producer',
+    orgKey: 'fincaEsperanza',
+    email: 'carmen@fincaesperanza.co',
+  },
+  {
+    key: 'abel',
+    fullName: 'Abel Tadesse',
+    preferredName: 'Abel',
+    jobTitle: 'Export Liaison',
+    orgKey: 'sidamoCoop',
+    email: 'abel@sidamocoop.org',
+  },
+  {
+    key: 'jordan',
+    fullName: 'Jordan Park',
+    preferredName: 'Jordan',
+    jobTitle: 'Owner / Buyer',
+    orgKey: 'northStar',
+    email: 'jordan@northstarcafe.com',
+  },
+  {
+    key: 'priya',
+    fullName: 'Priya Shah',
+    preferredName: 'Priya',
+    jobTitle: 'Coffee Program Lead',
+    orgKey: 'hatch',
+    email: 'priya@hatchbakery.com',
+  },
+  {
+    key: 'mateo',
+    fullName: 'Mateo Ruiz',
+    preferredName: 'Mateo',
+    jobTitle: 'Beverage Buyer',
+    orgKey: 'oliveAndVine',
+    email: 'mateo@oliveandvine.cafe',
+  },
 ];
 
-const addPeople = (
-  space: Space,
-  organizations: Record<OrgKey, Organization.Organization>,
-): PeopleBundle => {
+const addPeople = (space: Space, organizations: Record<OrgKey, Organization.Organization>): PeopleBundle => {
   const people = {} as Record<PersonKey, Person.Person>;
   for (const seed of PEOPLE_SEEDS) {
     const person = Person.make({
@@ -480,7 +514,13 @@ const makeMailbox = (
   const mailbox = Mailbox.make({ name: 'Inbox' });
 
   // Build emails as a chronological list — oldest first. Numbers are days-ago.
-  type Email = { from: PersonKey | 'noise'; subject: string; body: string; daysAgo: number; senderOverride?: Actor.Actor };
+  type Email = {
+    from: PersonKey | 'noise';
+    subject: string;
+    body: string;
+    daysAgo: number;
+    senderOverride?: Actor.Actor;
+  };
   const senderFor = (key: PersonKey): Actor.Actor =>
     actor(PEOPLE_SEEDS.find((s) => s.key === key)!.fullName, PEOPLE_SEEDS.find((s) => s.key === key)!.email);
 
@@ -520,7 +560,7 @@ const makeMailbox = (
       from: 'priya',
       daysAgo: 33,
       subject: 'Espresso blend pilot — interested',
-      body: 'Hi Kai — Hatch would love to be part of the Spring Blend pilot. We have an espresso bar that\'s ready for something new. What are next steps? — Priya',
+      body: "Hi Kai — Hatch would love to be part of the Spring Blend pilot. We have an espresso bar that's ready for something new. What are next steps? — Priya",
     },
     {
       from: 'kai',
@@ -732,7 +772,7 @@ const makeCalendar = (
     }),
     eventAt({
       title: 'Site visit — Finca Esperanza',
-      description: 'Two days at Carmen\'s farm during the sourcing trip.',
+      description: "Two days at Carmen's farm during the sourcing trip.",
       daysFromNowVal: 21,
       startHour: 14,
       durationHours: 8,
@@ -747,9 +787,7 @@ const makeCalendar = (
 // Project + tasks
 // -----------------------------------------------------------------------------
 
-const makeProject = (
-  people: Record<PersonKey, Person.Person>,
-): { project: Project.Project; tasks: Task.Task[] } => {
+const makeProject = (people: Record<PersonKey, Person.Person>): { project: Project.Project; tasks: Task.Task[] } => {
   const project = Project.make({
     name: 'Spring Blend Launch',
     description: 'New seasonal espresso blend targeting wholesale espresso bars. Going live in 6 weeks.',
@@ -938,7 +976,8 @@ const makeRoastLogs = (people: Record<PersonKey, Person.Person>): RoastLog[] => 
     dropTemp: 209,
     roastLevel: 'city',
     status: 'approved',
-    notes: 'Clean reference curve for the Spring Blend. Berry up front, long chocolate finish. Approved for production.',
+    notes:
+      'Clean reference curve for the Spring Blend. Berry up front, long chocolate finish. Approved for production.',
   }),
   makeRoastLog({
     title: 'Finca Esperanza Lot #42 — Batch 2',
@@ -970,7 +1009,8 @@ const makeRoastLogs = (people: Record<PersonKey, Person.Person>): RoastLog[] => 
     dropTemp: 207,
     roastLevel: 'light',
     status: 'approved',
-    notes: 'Blueberry and lemon zest on the nose. Very clean natural process — excellent for the single-origin filter menu.',
+    notes:
+      'Blueberry and lemon zest on the nose. Very clean natural process — excellent for the single-origin filter menu.',
   }),
   // --- cupped: awaiting final approval ---
   makeRoastLog({
@@ -987,7 +1027,8 @@ const makeRoastLogs = (people: Record<PersonKey, Person.Person>): RoastLog[] => 
     dropTemp: 210,
     roastLevel: 'city',
     status: 'cupped',
-    notes: 'First full blend run. Cupped this morning — jasmine and dark cacao hitting the brief. Slight unevenness in the drum; next run increase charge rate 2 %.',
+    notes:
+      'First full blend run. Cupped this morning — jasmine and dark cacao hitting the brief. Slight unevenness in the drum; next run increase charge rate 2 %.',
   }),
   // --- roasted: cooling / resting, not yet cupped ---
   makeRoastLog({
@@ -1051,19 +1092,24 @@ const makeRoastLogs = (people: Record<PersonKey, Person.Person>): RoastLog[] => 
  * is stored in the space itself. At runtime the Table/Kanban plugins resolve the base schema from that
  * object — the View's projection.schema field is reserved for user overrides only, not the base schema.
  */
-const addRoastLogCollection = async (space: Space, people: Record<PersonKey, Person.Person>): Promise<Collection.Collection> => {
+const addRoastLogCollection = async (
+  space: Space,
+  people: Record<PersonKey, Person.Person>,
+): Promise<Collection.Collection> => {
   const typename = 'example.type.roastLog';
 
   // Register creates the PersistentType ECHO object in the space so the runtime can
   // discover and render the schema without it being compiled into the app. Pass the
   // explicit object form so `name` is stored on the PersistentType — passing a
   // Type.AnyEntity directly does not auto-derive a display name.
-  await space.db.schemaRegistry.register([{
-    typename,
-    version: '0.1.0',
-    jsonSchema: JsonSchema.toJsonSchema(RoastLog) as JsonSchema.JsonSchema,
-    name: 'Roast Log',
-  }]);
+  await space.db.schemaRegistry.register([
+    {
+      typename,
+      version: '0.1.0',
+      jsonSchema: JsonSchema.toJsonSchema(RoastLog) as JsonSchema.JsonSchema,
+      name: 'Roast Log',
+    },
+  ]);
 
   const entries = makeRoastLogs(people);
   entries.forEach((entry) => space.db.add(entry));
@@ -1071,7 +1117,18 @@ const addRoastLogCollection = async (space: Space, people: Record<PersonKey, Per
   const { view: tableView } = await ViewModel.makeFromDatabase({
     db: space.db,
     typename,
-    fields: ['title', 'date', 'origin', 'roaster', 'status', 'roastLevel', 'chargeTemp', 'firstCrackTime', 'developmentTime', 'dropTemp'],
+    fields: [
+      'title',
+      'date',
+      'origin',
+      'roaster',
+      'status',
+      'roastLevel',
+      'chargeTemp',
+      'firstCrackTime',
+      'developmentTime',
+      'dropTemp',
+    ],
   });
   const tableObj = space.db.add(Table.make({ name: 'Table', view: tableView }));
 
@@ -1083,10 +1140,7 @@ const addRoastLogCollection = async (space: Space, people: Record<PersonKey, Per
   });
   const kanbanObj = space.db.add(Kanban.make({ name: 'Kanban', view: kanbanView }));
 
-  return makeCollection(space, 'Roast Log', [
-    Ref.make(tableObj),
-    Ref.make(kanbanObj),
-  ]);
+  return makeCollection(space, 'Roast Log', [Ref.make(tableObj), Ref.make(kanbanObj)]);
 };
 
 // -----------------------------------------------------------------------------
@@ -1122,11 +1176,7 @@ const tlSchema = createTLSchema({
  * Returns a flat record map (`{ [id: string]: TLRecord }`) compatible with
  * the Canvas.content ECHO field.
  */
-const makeTLCanvas = (
-  pageId: string,
-  pageName: string,
-  shapes: TLRecord[],
-): Record<string, unknown> => {
+const makeTLCanvas = (pageId: string, pageName: string, shapes: TLRecord[]): Record<string, unknown> => {
   const store = new Store<TLRecord, any>({
     schema: tlSchema as any,
     props: { defaultName: '', assets: { upload: async () => '', resolve: () => '' }, onMount: () => {} } as any,
@@ -1196,24 +1246,33 @@ const tlGeo = (
 
 const makeFloorPlanContent = (): Record<string, unknown> => {
   const PAGE = 'page:bramble-floor';
-  const g = (id: string, idx: string, x: number, y: number, w: number, h: number, text: string, color: string, fill: string) =>
-    tlGeo(id, PAGE, idx, x, y, w, h, text, color, fill);
+  const g = (
+    id: string,
+    idx: string,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    text: string,
+    color: string,
+    fill: string,
+  ) => tlGeo(id, PAGE, idx, x, y, w, h, text, color, fill);
 
   return makeTLCanvas(PAGE, 'Roastery Floor Plan', [
     // Outer boundary (no label — the sketch name serves as the title)
-    g('fp-outer',    'a1',   0,   0, 800, 580, '',                         'black',      'none'),
+    g('fp-outer', 'a1', 0, 0, 800, 580, '', 'black', 'none'),
     // Loading dock (top strip)
-    g('fp-dock',     'a2',  20,  20, 760,  80, 'Loading Dock',             'grey',       'semi'),
+    g('fp-dock', 'a2', 20, 20, 760, 80, 'Loading Dock', 'grey', 'semi'),
     // Green coffee storage (left middle)
-    g('fp-storage',  'a3',  20, 120, 220, 200, 'Green Coffee\nStorage',    'green',      'semi'),
+    g('fp-storage', 'a3', 20, 120, 220, 200, 'Green Coffee\nStorage', 'green', 'semi'),
     // Roasting bay (right/center middle)
-    g('fp-roasting', 'a4', 260, 120, 520, 200, 'Roasting Bay',             'orange',     'semi'),
+    g('fp-roasting', 'a4', 260, 120, 520, 200, 'Roasting Bay', 'orange', 'semi'),
     // Packaging (left lower)
-    g('fp-packaging','a5',  20, 340, 220, 120, 'Packaging',                'light-blue', 'semi'),
+    g('fp-packaging', 'a5', 20, 340, 220, 120, 'Packaging', 'light-blue', 'semi'),
     // Café bar (right lower)
-    g('fp-cafe',     'a6', 260, 340, 520, 120, 'Café Bar',                 'yellow',     'semi'),
+    g('fp-cafe', 'a6', 260, 340, 520, 120, 'Café Bar', 'yellow', 'semi'),
     // Retail & tasting counter (bottom strip)
-    g('fp-retail',   'a7',  20, 480, 760,  80, 'Retail & Tasting Counter', 'violet',     'semi'),
+    g('fp-retail', 'a7', 20, 480, 760, 80, 'Retail & Tasting Counter', 'violet', 'semi'),
   ]);
 };
 
@@ -1230,27 +1289,36 @@ const makeFloorPlanContent = (): Record<string, unknown> => {
 const makeFlavorWheelContent = (): Record<string, unknown> => {
   const PAGE = 'page:flavor-wheel';
   const COL_W = 190;
-  const g = (id: string, idx: string, x: number, y: number, w: number, h: number, text: string, color: string, fill: string) =>
-    tlGeo(id, PAGE, idx, x, y, w, h, text, color, fill);
+  const g = (
+    id: string,
+    idx: string,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    text: string,
+    color: string,
+    fill: string,
+  ) => tlGeo(id, PAGE, idx, x, y, w, h, text, color, fill);
 
   return makeTLCanvas(PAGE, 'Spring Blend Flavor Wheel', [
     // Row 0: title
-    g('fw-title',     'a1',           0,   0, 4 * COL_W, 60, 'Spring Blend — Flavor Profile', 'black',  'semi'),
+    g('fw-title', 'a1', 0, 0, 4 * COL_W, 60, 'Spring Blend — Flavor Profile', 'black', 'semi'),
     // Row 1: category headers
-    g('fw-cat-fruit', 'a2',           0,  80, COL_W,     80, 'Fruit',        'red',    'semi'),
-    g('fw-cat-choc',  'a3',     COL_W,   80, COL_W,     80, 'Chocolate',    'orange', 'semi'),
-    g('fw-cat-floral','a4', 2 * COL_W,  80, COL_W,     80, 'Floral',       'violet', 'semi'),
-    g('fw-cat-spice', 'a5', 3 * COL_W,  80, COL_W,     80, 'Spice',        'yellow', 'semi'),
+    g('fw-cat-fruit', 'a2', 0, 80, COL_W, 80, 'Fruit', 'red', 'semi'),
+    g('fw-cat-choc', 'a3', COL_W, 80, COL_W, 80, 'Chocolate', 'orange', 'semi'),
+    g('fw-cat-floral', 'a4', 2 * COL_W, 80, COL_W, 80, 'Floral', 'violet', 'semi'),
+    g('fw-cat-spice', 'a5', 3 * COL_W, 80, COL_W, 80, 'Spice', 'yellow', 'semi'),
     // Row 2: first tasting note per family
-    g('fw-n1-fruit',  'a6',           0, 180, COL_W,     60, 'Berry',        'red',    'none'),
-    g('fw-n1-choc',   'a7',     COL_W,  180, COL_W,     60, 'Dark Cacao',   'orange', 'none'),
-    g('fw-n1-floral', 'a8', 2 * COL_W, 180, COL_W,     60, 'Jasmine',      'violet', 'none'),
-    g('fw-n1-spice',  'a9', 3 * COL_W, 180, COL_W,     60, 'Cardamom',     'yellow', 'none'),
+    g('fw-n1-fruit', 'a6', 0, 180, COL_W, 60, 'Berry', 'red', 'none'),
+    g('fw-n1-choc', 'a7', COL_W, 180, COL_W, 60, 'Dark Cacao', 'orange', 'none'),
+    g('fw-n1-floral', 'a8', 2 * COL_W, 180, COL_W, 60, 'Jasmine', 'violet', 'none'),
+    g('fw-n1-spice', 'a9', 3 * COL_W, 180, COL_W, 60, 'Cardamom', 'yellow', 'none'),
     // Row 3: second tasting note per family
-    g('fw-n2-fruit',  'a10',           0, 260, COL_W,     60, 'Stone Fruit',  'red',    'none'),
-    g('fw-n2-choc',   'a11',     COL_W,  260, COL_W,     60, 'Hazelnut',     'orange', 'none'),
-    g('fw-n2-floral', 'a12', 2 * COL_W, 260, COL_W,     60, 'Rose',         'violet', 'none'),
-    g('fw-n2-spice',  'a13', 3 * COL_W, 260, COL_W,     60, 'Cinnamon',     'yellow', 'none'),
+    g('fw-n2-fruit', 'a10', 0, 260, COL_W, 60, 'Stone Fruit', 'red', 'none'),
+    g('fw-n2-choc', 'a11', COL_W, 260, COL_W, 60, 'Hazelnut', 'orange', 'none'),
+    g('fw-n2-floral', 'a12', 2 * COL_W, 260, COL_W, 60, 'Rose', 'violet', 'none'),
+    g('fw-n2-spice', 'a13', 3 * COL_W, 260, COL_W, 60, 'Cinnamon', 'yellow', 'none'),
   ]);
 };
 
@@ -1347,4 +1415,3 @@ const makeSheets = (): Sheet.Sheet[] => {
 
   return [greenInventory, priceList];
 };
-

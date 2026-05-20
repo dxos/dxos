@@ -21,13 +21,13 @@ The name "Bramble" comes from the tangle of fruit notes Maya kept describing in 
 
 ## Product lines
 
-| Line | Examples | Notes |
-| --- | --- | --- |
-| Single-origin | Finca Esperanza (Colombia, washed), Sidamo Lot #42 (Ethiopia, natural) | Rotating; ~3 SKUs at any time. |
-| Blends | Linden (everyday espresso), Field Notes (filter), Late Shift (dark) | Year-round; Linden is the wholesale anchor. |
-| Seasonal | **Spring Blend** (in launch), Holiday Blend (Q4) | Two per year. |
-| Decaf | Swiss Water Colombia | One SKU. |
-| Retail | 12 oz bags, gift boxes, brewing gear | In the cafe and online. |
+| Line          | Examples                                                               | Notes                                       |
+| ------------- | ---------------------------------------------------------------------- | ------------------------------------------- |
+| Single-origin | Finca Esperanza (Colombia, washed), Sidamo Lot #42 (Ethiopia, natural) | Rotating; ~3 SKUs at any time.              |
+| Blends        | Linden (everyday espresso), Field Notes (filter), Late Shift (dark)    | Year-round; Linden is the wholesale anchor. |
+| Seasonal      | **Spring Blend** (in launch), Holiday Blend (Q4)                       | Two per year.                               |
+| Decaf         | Swiss Water Colombia                                                   | One SKU.                                    |
+| Retail        | 12 oz bags, gift boxes, brewing gear                                   | In the cafe and online.                     |
 
 ## Sourcing philosophy
 

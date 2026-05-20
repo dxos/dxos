@@ -55,14 +55,16 @@ export default Capability.makeModule(
     // The immutable EXEMPLAR_SPACE_TAG guards re-import — if a space with that tag already
     // exists we use it as-is, even if the user has renamed or partially deleted content.
     const existingExemplar = client.spaces.get().find((space) => space.tags.includes(EXEMPLAR_SPACE_TAG));
-    const exemplarSpace = existingExemplar ?? (yield* Effect.tryPromise(async () => {
-      const archive: SpaceArchive = {
-        filename: EXEMPLAR_SPACE_ARCHIVE_FILENAME,
-        contents: new TextEncoder().encode(EXEMPLAR_SPACE_JSON),
-        format: SpaceArchive.Format.JSON,
-      };
-      return client.spaces.import(archive, { tags: [EXEMPLAR_SPACE_TAG] });
-    }));
+    const exemplarSpace =
+      existingExemplar ??
+      (yield* Effect.tryPromise(async () => {
+        const archive: SpaceArchive = {
+          filename: EXEMPLAR_SPACE_ARCHIVE_FILENAME,
+          contents: new TextEncoder().encode(EXEMPLAR_SPACE_JSON),
+          format: SpaceArchive.Format.JSON,
+        };
+        return client.spaces.import(archive, { tags: [EXEMPLAR_SPACE_TAG] });
+      }));
     yield* Effect.tryPromise(() => exemplarSpace!.waitUntilReady());
 
     // Stamp the migration version so the exemplar space is treated as already migrated,

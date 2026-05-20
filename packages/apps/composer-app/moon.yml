@@ -58,4 +58,3 @@ tasks:
       - src/plugins/welcome/content/about-bramble.md
     outputs:
       - src/plugins/welcome/content/exemplar-space.dx.json
-

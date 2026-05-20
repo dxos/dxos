@@ -1,0 +1,3 @@
+# Exemplar space snapshot is stored as minified JSON (single line) to keep diffs small.
+# Use `jq .` to inspect it locally.
+packages/apps/composer-app/src/plugins/welcome/content/exemplar-space.dx.json
