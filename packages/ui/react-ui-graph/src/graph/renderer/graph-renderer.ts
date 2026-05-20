@@ -334,11 +334,14 @@ const createNode: D3Callable = <Data>(group: D3Selection, options: GraphRenderer
     hitTarget.call(options.drag);
   }
 
-  // Click.
+  // Click. d3 invokes `on` listeners as `(event, datum)` where datum is the bound data on
+  // the listener's host element (the dx-node `<g>`). Use it directly — reading from
+  // `event.target` returned undefined for the inner circle / text (which don't inherit
+  // __data__), and `this` plus `select(this).datum()` was producing inconsistent results
+  // across HMR reloads.
   if (options.onNodeClick) {
-    group.on('click', (event: MouseEvent) => {
-      const node = select<SVGElement, GraphLayoutNode<Data>>(event.target as SVGGElement).datum();
-      options.onNodeClick(node, event);
+    group.on('click', (event: MouseEvent, d: GraphLayoutNode<Data>) => {
+      options.onNodeClick(d, event);
     });
   }
 
