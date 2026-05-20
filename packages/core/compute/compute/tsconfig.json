@@ -21,6 +21,9 @@
       "path": "../../../../vendor/kbn-handlebars"
     },
     {
+      "path": "../../../common/effect"
+    },
+    {
       "path": "../../../common/errors"
     },
     {

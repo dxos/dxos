@@ -95,7 +95,7 @@ describe('ClientPlugin startup', () => {
     const manager = PluginManager.make({
       pluginLoader,
       plugins,
-      core: plugins.map(({ meta }) => meta.id),
+      enabled: plugins.map(({ meta }) => meta.id),
     });
     mark('PluginManager.make', phaseStart);
 
