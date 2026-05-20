@@ -2,20 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// TODO(dxos): Extract an Effect-native Linear client mirroring the shape of
-// `dfx` (see [plugin-discord/services/discord.ts](../../../plugin-discord/src/services/discord.ts)
-// for how the consumer side ends up). Linear is GraphQL, not REST, so the
-// target package shape is:
-//   - `LinearGraphQL` Context.Tag exposing typed `query` / `mutate` /
-//     paginated-connection helpers generated from Linear's introspection
-//     schema (one operation per `*.graphql` document in the package);
-//   - `LinearConfig` layer carrying token + base URL;
-//   - `LinearGraphQLMemoryLive` layer composing the client with a memory-
-//     backed rate-limit store that honors Linear's complexity-based
-//     `X-RateLimit-Requests-Remaining` / `X-Complexity-Limit-Reset` headers;
-//   - tagged errors for `GraphQLError` with Linear's `extensions.code`.
-// This plugin would then collapse to a thin `makeLinearLayer(integrationRef)`
-// that just wires credentials + edge proxy into that client.
+// TODO(wittjosiah): Refactor to use a dfx-style Effect-native client.
 
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientError from '@effect/platform/HttpClientError';

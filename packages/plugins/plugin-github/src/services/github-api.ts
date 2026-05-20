@@ -2,21 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-// TODO(dxos): Extract an Effect-native GitHub client mirroring the shape of
-// `dfx` (see [plugin-discord/services/discord.ts](../../../plugin-discord/src/services/discord.ts)
-// for how the consumer side ends up). The target shape is a standalone
-// package exposing:
-//   - `GithubREST` Context.Tag with typed methods (`repos.listIssues`,
-//     `users.getAuthenticated`, …) generated from GitHub's OpenAPI spec
-//     (`github/rest-api-description`);
-//   - `GithubConfig` layer carrying token + base URL (for GHES support);
-//   - `GithubRESTMemoryLive` layer composing the REST client with a memory-
-//     backed rate-limit store that honors `X-RateLimit-Reset` and the
-//     secondary abuse-detection retry-after header;
-//   - tagged errors for 4xx (with GitHub's `{ message, documentation_url }`
-//     body) and 429/403-secondary rate-limit responses.
-// This plugin would then collapse to a thin `makeGithubLayer(integrationRef)`
-// that just wires credentials + edge proxy into that client.
+// TODO(wittjosiah): Refactor to use a dfx-style Effect-native client.
 
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientError from '@effect/platform/HttpClientError';
