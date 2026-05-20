@@ -50,7 +50,9 @@ export type PluginDetailProps = {
    * in place of the enable Switch.
    */
   onInstall?: () => void;
-  /** Called when the user clicks Install on the version picker. */
+  /**
+   * Called when the user clicks Install on the version picker.
+   */
   onInstallVersion?: () => void;
   /**
    * Called when the user activates a dependency / dependent chip. When
@@ -75,7 +77,9 @@ export type PluginDetailProps = {
    * an Update button is shown in place of the enable Switch.
    */
   onUpdate?: () => void;
-  /** Called when the user selects a different version in the picker. */
+  /**
+   * Called when the user selects a different version in the picker.
+   */
   onVersionChange?: (tag: string) => void;
 };
 
@@ -109,9 +113,11 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
     const {
       id,
       name,
+      author,
       description,
       homePage,
       source,
+      spec,
       screenshots,
       icon = 'ph--circle--regular',
       iconHue = 'neutral',
@@ -140,7 +146,10 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                     <Input.Switch classNames='self-center' checked={enabled} onCheckedChange={onEnabledChange} />
                   </Input.Root>
                 )}
-                <p className='pt-0.5 text-sm text-description'>{id}</p>
+                <p className='pt-0.5 text-sm text-description'>
+                  {id}
+                  {author && <span> · {author}</span>}
+                </p>
               </div>
               <div>
                 <p className='text-description'>{description}</p>
@@ -164,6 +173,13 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                   {source && (
                     <Link href={source} target='_blank' rel='noreferrer' classNames='text-sm text-description'>
                       {t('source.label')}
+                      <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mx-1' />
+                    </Link>
+                  )}
+
+                  {spec && (
+                    <Link href={spec} target='_blank' rel='noreferrer' classNames='text-sm text-description'>
+                      {t('spec.label')}
                       <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mx-1' />
                     </Link>
                   )}

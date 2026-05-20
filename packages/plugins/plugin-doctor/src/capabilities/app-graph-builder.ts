@@ -25,7 +25,7 @@ export default Capability.makeModule(
               label: ['diagnostics-tab.label', { ns: meta.id }],
               icon: 'ph--first-aid-kit--regular',
               data: DIAGNOSTICS_DECK_COMPANION_ID,
-              position: 'fallback',
+              position: 'last',
             }),
           ]),
       }),

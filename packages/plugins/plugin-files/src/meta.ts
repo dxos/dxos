@@ -8,11 +8,12 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.files',
   name: 'Files',
+  author: 'DXOS',
   description: trim`
     Bridge between your local file system and workspace, allowing you to open and edit files directly.
     Sync changes bidirectionally while maintaining files in their original locations.
   `,
   icon: 'ph--file--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-files',
-  tags: ['labs'],
+  tags: ['system'],
 };

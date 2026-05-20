@@ -99,7 +99,6 @@ export type LoadedPlugin = {
 export type ManagerOptions = {
   pluginLoader: (id: string) => Effect.Effect<LoadedPlugin, Error>;
   plugins?: Plugin.Plugin[];
-  core?: string[];
   enabled?: string[];
   registry?: Registry.Registry;
   /**
@@ -333,7 +332,6 @@ class ManagerImpl implements PluginManager {
   constructor({
     pluginLoader,
     plugins = [],
-    core = plugins.map(({ meta }) => meta.id),
     enabled = [],
     registry,
     pluginRegistryProvider,
@@ -341,6 +339,10 @@ class ManagerImpl implements PluginManager {
     loadTimeout = DEFAULT_LOAD_TIMEOUT,
     activationTimeout = DEFAULT_ACTIVATION_TIMEOUT,
   }: ManagerOptions) {
+    // Core plugins are derived from `meta.tags.includes('system')`; the set is
+    // a snapshot of the initial `plugins` array (later `add()` calls do not
+    // promote plugins to core).
+    const core = plugins.filter(({ meta }) => meta.tags?.includes('system')).map(({ meta }) => meta.id);
     this.registry = registry ?? Registry.make();
     this.capabilities = CapabilityManager.make({
       registry: this.registry,

@@ -6,11 +6,27 @@ import { formatDistance } from 'date-fns';
 import React from 'react';
 
 import { useConfig } from '@dxos/react-client';
-import { Button, Column, Dialog, Link, Trans, useTranslation } from '@dxos/react-ui';
+import { Button, Column, Dialog, Link, Message, Trans, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta';
 
-const VERSION_REGEX = /([\d.]+)/;
+const ENV_LABELS: Record<string, string> = {
+  'edge-dev': 'Dev',
+  'edge-main': 'Main',
+  'edge-labs': 'Labs',
+  'edge-production': 'Production',
+};
+
+const REPO = 'https://github.com/dxos/dxos';
+
+/** Safe `new URL(...)` — returns the parsed URL or undefined when the input is malformed. */
+const parseUrl = (url: string): URL | undefined => {
+  try {
+    return new URL(url);
+  } catch {
+    return undefined;
+  }
+};
 
 export const ABOUT_DIALOG = `${meta.id}.component.about-dialog`;
 
@@ -18,7 +34,18 @@ export const AboutDialog = () => {
   const { t } = useTranslation(meta.id);
   const config = useConfig();
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
-  const [_, v] = version?.match(VERSION_REGEX) ?? [];
+
+  // Show edge environment when not in production, so internal builds advertise which cluster they're on.
+  const edgeUrl = config.values.runtime?.services?.edge?.url;
+  const envKey = edgeUrl ? parseUrl(edgeUrl)?.host.split('.')[0] : undefined;
+  const edgeEnv = envKey ? ENV_LABELS[envKey] : undefined;
+  const showEnv = !!edgeEnv && edgeEnv !== 'Production';
+
+  // Fall back to repo root when build metadata is missing so we never produce broken
+  // links like `/releases/tag/vundefined` or `/commit/undefined`.
+  const isProd = config.values.runtime?.app?.env?.DX_ENVIRONMENT === 'production';
+  const releaseUrl =
+    isProd && version ? `${REPO}/releases/tag/v${version}` : commitHash ? `${REPO}/commit/${commitHash}` : REPO;
 
   return (
     <Dialog.Content size='sm'>
@@ -32,24 +59,29 @@ export const AboutDialog = () => {
           <Dialog.CloseIconButton />
         </Dialog.Close>
       </Dialog.Header>
-      <Dialog.Body>
-        {/* TODO(burdon): Reconcile with plugin-status-bar */}
+      <Dialog.Body classNames='flex flex-col gap-3'>
+        <Message.Root valence='info'>
+          <Message.Title classNames='font-normal text-sm'>{t('technology-preview.message')}</Message.Title>
+        </Message.Root>
         <Column.Center classNames='flex flex-col text-sm'>
-          <div className='flex items-center'>{t('version.label', { version: v })}</div>
+          <div className='flex items-center'>{t('version.label', { version: version ?? 'unknown' })}</div>
           {timestamp && (
             <div className='flex items-center gap-1'>
-              {t('published.label', {
-                timestamp: formatDistance(new Date(timestamp), new Date(), { addSuffix: true }),
-              })}
+              <Link href={releaseUrl} target='_blank' rel='noopener noreferrer' variant='neutral'>
+                {t('published.label', {
+                  timestamp: formatDistance(new Date(timestamp), new Date(), { addSuffix: true }),
+                })}
+              </Link>
             </div>
           )}
+          {showEnv && <div className='flex items-center'>{t('environment.label', { environment: edgeEnv })}</div>}
           <p>
             <Trans
               {...{
                 t,
                 i18nKey: 'powered-by-dxos.message',
                 components: {
-                  dxos: <Link href='https://dxos.org' target='_blank' rel='noreferrer' variant='neutral' />,
+                  dxos: <Link href='https://dxos.org' target='_blank' rel='noopener noreferrer' variant='neutral' />,
                 },
               }}
             />

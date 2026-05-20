@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.search',
   name: 'Search',
+  author: 'DXOS',
   description: trim`
     Full-text search engine for finding content across all spaces and object types.
     Quickly locate documents, tables, and other objects with instant results and relevance ranking.

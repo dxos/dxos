@@ -36,6 +36,7 @@ export {
   type Plugin,
   type PluginDetail,
   type PluginId,
+  type PluginsFile,
   type SchemaContribution,
   type SourceLocation,
   type Surface,

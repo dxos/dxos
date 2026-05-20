@@ -4,6 +4,7 @@
 
 import { type ComponentType, lazy } from 'react';
 
+export * from './AgentProperties';
 export * from './Chat';
 export * from './ProcessTree';
 export * from './TaskList';
@@ -11,3 +12,4 @@ export * from './TemplateEditor';
 export * from './Toolbox';
 
 export const AssistantSettings: ComponentType<any> = lazy(() => import('./AssistantSettings'));
+export const RoutineProperties: ComponentType<any> = lazy(() => import('./RoutineProperties'));

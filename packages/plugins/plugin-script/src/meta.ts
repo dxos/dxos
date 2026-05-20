@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.script',
   name: 'Scripts',
+  author: 'DXOS',
   description: trim`
     Write and deploy custom JavaScript functions that extend your workspace capabilities.
     Create AI agent tools, spreadsheet formulas, and automation scripts that integrate seamlessly with other plugins.

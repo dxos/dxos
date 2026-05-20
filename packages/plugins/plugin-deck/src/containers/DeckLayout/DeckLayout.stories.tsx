@@ -48,7 +48,6 @@ const storyDeckSettings = Capability.makeModule(() =>
     const settingsAtom = Atom.make<Settings.Settings>({
       showHints: false,
       enableDeck: true,
-      enableStatusbar: false,
       enableNativeRedirect: false,
       encapsulatedPlanks: false,
     }).pipe(Atom.keepAlive);
@@ -249,14 +248,13 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
                 label: 'Companion Alpha',
                 icon: 'ph--sidebar--regular',
                 data: { variant: 'alpha', parentId: node.id },
-                position: 'hoist',
+                position: 'first',
               }),
               AppNode.makeCompanion({
                 id: linkedSegment('beta'),
                 label: 'Companion Beta',
                 icon: 'ph--chat-circle--regular',
                 data: { variant: 'beta', parentId: node.id },
-                position: 'static',
               }),
             ]),
         }),

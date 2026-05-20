@@ -43,7 +43,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
   return yield* Effect.all([
     GraphBuilder.createExtension({
       id: 'primary-actions',
-      position: 'hoist',
+      position: 'first',
       match: NodeMatcher.whenRoot,
       actions: () =>
         Effect.succeed([

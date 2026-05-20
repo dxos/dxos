@@ -120,6 +120,7 @@ const CounterComponent = () => {
 const CounterPlugin = Plugin.define({
   id: 'org.dxos.plugin.counter',
   name: 'Counter Plugin',
+  tags: ['system'],
 }).pipe(
   Plugin.addModule({
     id: 'CounterMain',
@@ -154,7 +155,6 @@ const CounterPlugin = Plugin.define({
 )();
 
 const plugins = [CounterPlugin];
-const core = ['org.dxos.plugin.counter'];
 const placeholder = () => (
   <div className='flex h-screen items-center justify-center p-4 text-lg text-neutral-500'>
     Initializing Application...
@@ -164,7 +164,6 @@ const placeholder = () => (
 const DefaultStory = () => {
   const App = useApp({
     plugins,
-    core,
     placeholder,
   });
 

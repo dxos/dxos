@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.zen',
   name: 'Zen',
+  author: 'DXOS',
   description: trim`
     Ambient sound and meditation plugin. Configure soundscapes with
     layered samples and binaural beat generators.
@@ -15,4 +16,5 @@ export const meta: Plugin.Meta = {
   icon: 'ph--moon-stars--regular',
   iconHue: 'violet',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-zen',
+  tags: ['labs'],
 };
