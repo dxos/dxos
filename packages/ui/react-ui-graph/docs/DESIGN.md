@@ -23,9 +23,9 @@ The existing v1 code (`packages/ui/react-ui-graph/src`) is left untouched and co
 
 ## Architecture overview
 
-Three layers, two new packages, one React frontend.
+One new package plus the existing React frontend in Phase 1.
 
-```
+```text
 @dxos/graph-engine                        (NEW, framework-agnostic)
 ├── model        — wraps GraphModel.ReactiveGraphModel<N,E> → atom subscription
 ├── registry     — TypeRegistry<NodeType|EdgeType>
@@ -34,13 +34,9 @@ Three layers, two new packages, one React frontend.
 ├── tween        — TweenService: targets in, frames out; one shared d3-timer
 ├── tools        — HoverTool, SelectTool, ZoomTool (+ DragTool/LinkTool later)
 ├── viewport     — pure: viewBox, zoom transform, world↔screen, frame events
-└── backend      — RenderBackend interface + DrawContext + Path primitives
-
-@dxos/graph-engine-backend-canvas         (NEW, Phase 1)
-└── CanvasBackend implements RenderBackend  (immediate-mode 2D context, HiDPI)
-
-@dxos/graph-engine-backend-svg            (Phase 2)
-└── SvgBackend implements RenderBackend    (d3-driven DOM diffing)
+├── backend      — RenderBackend interface + DrawContext + Path primitives
+│   └── canvas   — CanvasBackend (Phase 1, immediate-mode 2D context, HiDPI)
+└── (future)     — backend/svg — SvgBackend implements RenderBackend (Phase 2)
 
 @dxos/react-ui-graph (v2)                 (existing package, src/v2/)
 ├── <GraphRoot>          — owns engine instance, provides EngineContext
@@ -49,11 +45,16 @@ Three layers, two new packages, one React frontend.
 └── hooks                — useEngine, useViewport, useSelection, useTool
 ```
 
+> Phase 1 keeps the Canvas backend inside `@dxos/graph-engine` (under `src/backend/canvas/`)
+> for simplicity. Splitting into sibling `@dxos/graph-engine-backend-canvas` and
+> `@dxos/graph-engine-backend-svg` packages is a Phase 2 option once we have two backends
+> proven against the same `RenderBackend` interface.
+
 ## Surface composition
 
 The on-screen result is a stack of co-registered layers, all sharing one viewport transform:
 
-```
+```text
 ┌─────────────────────────────────────────┐
 │ Layer 4 — Foreground (SVG/Canvas)       │  drag previews, link-in-progress wire
 ├─────────────────────────────────────────┤

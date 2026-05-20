@@ -65,4 +65,38 @@ describe('HoverTool', () => {
 
     expect(events).toEqual(['hover-enter:a', 'hover-leave:a']);
   });
+
+  test('emits hover-leave when the pointer leaves the surface', ({ expect }) => {
+    const host = new FakeHost();
+    const target = new EventTarget();
+    const events: string[] = [];
+    const tool = new HoverTool((e) => events.push(`${e.type}:${e.entityId}`));
+    tool.attach(host, target);
+
+    host.hit = { kind: 'node', node: { id: 'a' } };
+    target.dispatchEvent(ev(0, 0));
+    target.dispatchEvent(new PointerEvent('pointerleave', { clientX: 0, clientY: 0 }));
+
+    expect(events).toEqual(['hover-enter:a', 'hover-leave:a']);
+  });
+
+  test('detach clears active hover so a reattached tool does not double-emit', ({ expect }) => {
+    const host = new FakeHost();
+    const target = new EventTarget();
+    const events: string[] = [];
+    const tool = new HoverTool((e) => events.push(`${e.type}:${e.entityId}`));
+    const detach = tool.attach(host, target);
+
+    host.hit = { kind: 'node', node: { id: 'a' } };
+    target.dispatchEvent(ev(0, 0));
+    detach();
+
+    // Re-attach; first move should emit hover-enter fresh (no stale "a" carried over).
+    const tool2 = new HoverTool((e) => events.push(`${e.type}:${e.entityId}`));
+    tool2.attach(host, target);
+    host.hit = { kind: 'node', node: { id: 'b' } };
+    target.dispatchEvent(ev(0, 0));
+
+    expect(events).toEqual(['hover-enter:a', 'hover-enter:b']);
+  });
 });

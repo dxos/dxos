@@ -46,16 +46,25 @@ export class Viewport {
     this.transformed.emit(t);
   }
 
+  /**
+   * Map a point from world coordinates to screen (CSS pixel) coordinates using the current transform.
+   */
   worldToScreen([x, y]: Point): Point {
     const { x: tx, y: ty, k } = this.#transform;
     return [x * k + tx, y * k + ty];
   }
 
+  /**
+   * Map a point from screen (CSS pixel) coordinates to world coordinates.
+   */
   screenToWorld([sx, sy]: Point): Point {
     const { x: tx, y: ty, k } = this.#transform;
     return [(sx - tx) / k, (sy - ty) / k];
   }
 
+  /**
+   * Return the visible world-space rectangle for the current size and transform.
+   */
   visibleBounds(): Rect {
     const tl = this.screenToWorld([0, 0]);
     const br = this.screenToWorld([this.#size.width, this.#size.height]);

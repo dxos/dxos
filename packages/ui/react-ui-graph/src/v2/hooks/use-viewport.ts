@@ -13,6 +13,9 @@ export const useViewport = () => {
     scale: engine.viewport.scale,
   });
   useEffect(() => {
+    // Sync immediately on engine change so callers don't observe stale values until the
+    // next event fires.
+    setState({ size: engine.viewport.size, scale: engine.viewport.scale });
     const offResize = engine.viewport.resized.on((size) => setState((s) => ({ ...s, size })));
     const offTransform = engine.viewport.transformed.on((t) => setState((s) => ({ ...s, scale: t.k })));
     return () => {

@@ -56,6 +56,8 @@ export class CanvasDrawContext implements DrawContext {
     y: number,
     opts?: { align?: 'left' | 'center' | 'right'; baseline?: 'top' | 'middle' | 'bottom' },
   ) {
+    // textAlign/textBaseline persist on the context; wrap so per-call options don't leak to siblings.
+    this.#ctx.save();
     if (opts?.align) {
       this.#ctx.textAlign = opts.align;
     }
@@ -63,6 +65,7 @@ export class CanvasDrawContext implements DrawContext {
       this.#ctx.textBaseline = opts.baseline;
     }
     this.#ctx.fillText(content, x, y);
+    this.#ctx.restore();
   }
 
   #trace(path: Path) {

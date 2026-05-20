@@ -38,7 +38,10 @@ export class TweenService {
    * Publish a new target for an entity. If duration is 0, the entity snaps to target.
    */
   setTarget(id: string, target: TweenValue, opts?: TweenOptions): void {
-    const duration = opts?.duration ?? 300;
+    const rawDuration = opts?.duration ?? 300;
+    // Clamp non-finite / negative durations to a safe default so a bad option can't
+    // permanently stall an entry.
+    const duration = Number.isFinite(rawDuration) && rawDuration >= 0 ? rawDuration : 300;
     const easing = opts?.easing ?? 'cubic-out';
     const existing = this.#entries.get(id);
     if (!existing) {

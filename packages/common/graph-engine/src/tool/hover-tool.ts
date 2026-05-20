@@ -38,7 +38,23 @@ export class HoverTool implements Tool {
       }
       this.#current = id;
     };
+    // Clear active hover when the pointer leaves the surface or is cancelled so we don't
+    // hold stale state across re-entries.
+    const onLeave = (raw: Event) => {
+      if (!this.#current) {
+        return;
+      }
+      this.#emit({ type: 'hover-leave', entityId: this.#current, native: raw as PointerEvent });
+      this.#current = undefined;
+    };
     target.addEventListener('pointermove', onMove);
-    return () => target.removeEventListener('pointermove', onMove);
+    target.addEventListener('pointerleave', onLeave);
+    target.addEventListener('pointercancel', onLeave);
+    return () => {
+      target.removeEventListener('pointermove', onMove);
+      target.removeEventListener('pointerleave', onLeave);
+      target.removeEventListener('pointercancel', onLeave);
+      this.#current = undefined;
+    };
   }
 }

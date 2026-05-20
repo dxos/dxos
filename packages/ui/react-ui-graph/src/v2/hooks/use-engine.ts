@@ -20,7 +20,7 @@ export const useEngine = <N extends Graph.Node.Any = Graph.Node.Any, E extends G
     const registry = opts.registry ?? new TypeRegistry();
     const projector = opts.projector ?? new ForceProjector();
     return new Engine<N, E>({ model: opts.model, registry, projector });
-  }, [opts.model]);
+  }, [opts.model, opts.registry, opts.projector]);
 
   // Detach any tools when the engine unmounts.
   useEffect(() => {

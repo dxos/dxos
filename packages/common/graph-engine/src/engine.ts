@@ -147,8 +147,12 @@ export class Engine<N extends Graph.Node.Any = any, E extends Graph.Edge.Any = a
 
     if (this.#backend) {
       const ctx = this.#backend.begin();
-      this.#renderLayers(ctx);
-      this.#backend.end();
+      try {
+        this.#renderLayers(ctx);
+      } finally {
+        // Always call end() so backends can flush/swap even if a handler throws.
+        this.#backend.end();
+      }
     }
 
     this.frame.emit({ t });

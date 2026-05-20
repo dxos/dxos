@@ -53,8 +53,21 @@ export const createPath = (): Path => {
               return `L${c.x} ${c.y}`;
             case 'C':
               return `C${c.cx1} ${c.cy1} ${c.cx2} ${c.cy2} ${c.x} ${c.y}`;
-            case 'A':
-              return `A${c.r} ${c.r} 0 0 ${c.ccw ? 0 : 1} ${c.cx + Math.cos(c.a1) * c.r} ${c.cy + Math.sin(c.a1) * c.r}`;
+            case 'A': {
+              // Canvas arc(cx,cy,r,a0,a1,ccw) → SVG `A`. Compute large-arc-flag from the
+              // signed sweep so arcs > 180° serialize correctly. sweep-flag mirrors Canvas
+              // direction: clockwise → 1, counterclockwise → 0.
+              const endX = c.cx + Math.cos(c.a1) * c.r;
+              const endY = c.cy + Math.sin(c.a1) * c.r;
+              const twoPi = Math.PI * 2;
+              const rawDelta = c.a1 - c.a0;
+              const normalizedDelta = c.ccw
+                ? ((rawDelta % twoPi) - twoPi) % twoPi // negative in (-2π, 0]
+                : ((rawDelta % twoPi) + twoPi) % twoPi; // positive in [0, 2π)
+              const largeArc = Math.abs(normalizedDelta) > Math.PI ? 1 : 0;
+              const sweep = c.ccw ? 0 : 1;
+              return `A${c.r} ${c.r} 0 ${largeArc} ${sweep} ${endX} ${endY}`;
+            }
             case 'Z':
               return 'Z';
           }
