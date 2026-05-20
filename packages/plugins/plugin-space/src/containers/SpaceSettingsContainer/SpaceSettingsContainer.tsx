@@ -284,9 +284,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
                     <Dialog.Title>{t('reset-space-confirm.title')}</Dialog.Title>
                   </Dialog.Header>
                   <Dialog.Body>
-                    <Dialog.Description classNames='sr-only'>
-                      {t('reset-space-confirm.description')}
-                    </Dialog.Description>
+                    <Dialog.Description classNames='sr-only'>{t('reset-space-confirm.description')}</Dialog.Description>
                     <ConfirmReset
                       active
                       title={t('reset-space-confirm.title')}
