@@ -119,7 +119,14 @@ export class GraphClusterProjector<
     const margin = this.options.margin ?? 80;
     const ringRadius = Math.max(0, Math.min(width, height) / 2 - margin);
 
-    d3Cluster<HierNode>().size([2 * Math.PI, ringRadius])(root);
+    d3Cluster<HierNode>()
+      .size([2 * Math.PI, ringRadius])
+      // Tighter sibling spacing at deeper levels — matches the previous standalone
+      // RadialTree component. Without the `/depth` divisor, large groups span a
+      // wide angular arc; the linkRadial(curveBumpPolar) curve to a leaf at the
+      // edge of that arc then has its control points placed far apart in
+      // cartesian, producing a wide swoop that visually misses the target.
+      .separation((a: any, b: any) => (a.parent === b.parent ? 1 : 2) / Math.max(1, a.depth))(root);
 
     const leafR = this.options.leafRadius ?? 4;
     const groupR = this.options.groupRadius ?? 3;

@@ -108,12 +108,6 @@ export const buildOrgHierarchy = (organizations: Obj.Any[], sectors: readonly st
   };
 };
 
-const defaultGenerateTypes: TypeSpec[] = [
-  { type: Organization.Organization, count: 20 },
-  { type: Person.Person, count: 20 },
-  { type: Pipeline.Pipeline, count: 20 },
-];
-
 export type GenerateOptions = {
   spec?: TypeSpec[];
   relations?: {
@@ -121,6 +115,21 @@ export type GenerateOptions = {
     kind: string;
   };
 };
+
+const defaultGenerateTypes: TypeSpec[] = [
+  {
+    type: Organization.Organization,
+    count: 20,
+  },
+  {
+    type: Person.Person,
+    count: 20,
+  },
+  {
+    type: Pipeline.Pipeline,
+    count: 20,
+  },
+];
 
 const defaultGenerateRelations: NonNullable<GenerateOptions['relations']> = {
   kind: 'friend',
