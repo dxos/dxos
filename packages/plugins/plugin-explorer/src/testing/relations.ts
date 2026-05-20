@@ -8,8 +8,8 @@ import { type TypeSpec, type ValueGenerator, createObjectFactory } from '@dxos/s
 import { HasConnection, HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
 import { range } from '@dxos/util';
 
-import { type BundleEdge } from '../layout';
-import { type TreeNode } from '../types';
+import { type BundleEdge } from '../components/Tree/layout';
+import { type TreeNode } from '../components/Tree/types';
 
 const SECTORS = ['Technology', 'Finance', 'Research', 'Media'];
 const CONNECTION_KINDS = ['partner', 'investor', 'vendor', 'customer'];

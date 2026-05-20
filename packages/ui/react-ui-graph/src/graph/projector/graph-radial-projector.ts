@@ -53,6 +53,11 @@ export class GraphRadialProjector<
           node.r = node.sr + (node.tr - node.sr) * d;
         });
 
+        // Subclass hook: derived projectors (e.g. cluster) can mutate edge.path
+        // here so curves track moving endpoints during the tween. The renderer's
+        // applyPositions reads edge.path fresh each frame.
+        this.onTickFrame(d);
+
         // Tween frames only mutate `x/y/r`; emit 'positions' so the renderer can fast-path.
         this.emitUpdate('positions');
         if (t >= 1) {
@@ -68,9 +73,17 @@ export class GraphRadialProjector<
         node.y = node.ty;
         node.r = node.tr;
       });
+      this.onTickFrame(1);
       this.emitUpdate('positions');
     }
   }
+
+  /**
+   * Per-frame hook called after node x/y/r are interpolated and before the
+   * 'positions' emit. Subclasses override to update edge geometry (`edge.path`)
+   * so curves stay glued to moving endpoints. `t` is the eased progress in [0, 1].
+   */
+  protected onTickFrame(t: number): void {}
 
   protected override async onStop() {
     this._timer?.stop();

@@ -2,6 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
+export * from './graph-bundle-projector';
 export * from './graph-cluster-projector';
 export * from './graph-drag';
 export * from './graph-projector';

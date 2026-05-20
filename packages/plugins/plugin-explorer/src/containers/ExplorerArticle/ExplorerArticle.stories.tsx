@@ -18,7 +18,7 @@ import { ViewModel } from '@dxos/schema';
 import { type ValueGenerator } from '@dxos/schema/testing';
 import { HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
 
-import { generate } from '../../components/Tree/testing';
+import { generate } from '../../testing';
 import { Graph } from '../../types';
 import { ExplorerArticle, type ExplorerArticleVariant } from './ExplorerArticle';
 
@@ -105,16 +105,6 @@ export const Force: Story = {
 };
 
 /**
- * Lattice: every object as a cell in a square-as-possible CSS grid, sorted by typename so
- * objects of the same type cluster together. Each cell is colored by its typename.
- */
-export const Lattice: Story = {
-  args: {
-    variant: 'lattice',
-  },
-};
-
-/**
  * Radial cluster: every object on the perimeter, grouped by its schema, all under a single database root.
  * Inspired by https://observablehq.com/@d3/radial-cluster.
  */
@@ -132,5 +122,15 @@ export const Cluster: Story = {
 export const Bundle: Story = {
   args: {
     variant: 'bundle',
+  },
+};
+
+/**
+ * Lattice: every object as a cell in a square-as-possible CSS grid, sorted by typename so
+ * objects of the same type cluster together. Each cell is colored by its typename.
+ */
+export const Lattice: Story = {
+  args: {
+    variant: 'lattice',
   },
 };

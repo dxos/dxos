@@ -21,6 +21,9 @@ export type RenderNode<NodeData = any> = (group: D3Selection<SVGGElement>, node:
 
 const createLine = line<Point>();
 
+/** Duration for edge opacity transitions on enter / exit (ms). Matches node enter/exit timing. */
+const EDGE_FADE_MS = 300;
+
 export type LabelOptions<NodeData = any> = {
   text: (node: GraphLayoutNode<NodeData>, highlight?: boolean) => string | undefined;
 };
@@ -229,7 +232,17 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
             .classed('dx-edge', true)
             .call(createEdge, this.options),
         (update) => update,
-        (exit) => exit.remove(),
+        // Exit fade: edges removed by a topology change (e.g. variant switch from cluster
+        // back to force replaces hierarchy edges with data edges) ease out rather than pop.
+        (exit) =>
+          exit
+            .transition()
+            .ease(easeCubicOut)
+            .duration(EDGE_FADE_MS)
+            .attr('opacity', 0)
+            .on('end', function () {
+              select(this).remove();
+            }),
       )
       // Apply edge updates (paths / attributes) to enter+update — see note on nodes above.
       .call(updateEdge, this.options, nodeGroup)

@@ -2,7 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import { useAtomValue } from '@effect-atom/atom-react';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
@@ -12,6 +11,8 @@ import { useObject } from '@dxos/react-client/echo';
 import { DxAnchorActivate, Icon, Panel, Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import {
+  CLUSTER_NODE_TYPE_LEAF,
+  GraphBundleProjector,
   GraphClusterProjector,
   GraphForceProjector,
   type GraphLayout,
@@ -23,8 +24,13 @@ import {
   type SVGContext,
 } from '@dxos/react-ui-graph';
 import { type SpaceGraphEdge, type SpaceGraphNode } from '@dxos/schema';
+// Side-effect import: ExplorerArticle drives `SVG.Graph` directly (previously the CSS
+// was pulled in transitively via `ForceGraph.tsx`, which we no longer use). Without it
+// the `g.dx-edge path` rules — including `fill: none` — never reach the bundle and SVG
+// defaults (stroke: none, fill: black) make every edge invisible.
+import '@dxos/react-ui-graph/styles/graph.css';
 
-import { HierarchicalEdgeBundling, RadialTree, spaceGraphToHierarchy, type TreeNode } from '#components';
+import { type TreeNode } from '#components';
 import { useGraphModel } from '#hooks';
 
 import { getNodeFillForObject } from '../../util/node-color';
@@ -39,11 +45,6 @@ const VARIANTS: { value: ExplorerArticleVariant; icon: string; label: string }[]
     label: 'Force-directed',
   },
   {
-    value: 'lattice',
-    icon: 'ph--grid-four--regular',
-    label: 'Lattice',
-  },
-  {
     value: 'cluster',
     icon: 'ph--asterisk-simple--regular',
     label: 'Radial cluster',
@@ -52,6 +53,11 @@ const VARIANTS: { value: ExplorerArticleVariant; icon: string; label: string }[]
     value: 'bundle',
     icon: 'ph--circles-three-plus--regular',
     label: 'Edge bundling',
+  },
+  {
+    value: 'lattice',
+    icon: 'ph--grid-four--regular',
+    label: 'Lattice',
   },
 ];
 
@@ -142,29 +148,15 @@ type VisualizationProps = {
   onNodeHover?: (node: TreeNode | null, event?: MouseEvent) => void;
 };
 
-const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
-  if (variant === 'force' || variant === 'lattice' || variant === 'cluster') {
-    return <ProjectorVisualization variant={variant} model={model} onNodeHover={onNodeHover} />;
-  }
-
-  return <HierarchyVisualization variant={variant} model={model} onNodeHover={onNodeHover} />;
-};
-
-type ProjectorVariant = 'force' | 'lattice' | 'cluster';
-type ProjectorVisualizationProps = {
-  variant: ProjectorVariant;
-  model: NonNullable<ReturnType<typeof useGraphModel>>;
-  onNodeHover?: (node: TreeNode | null, event?: MouseEvent) => void;
-};
-
 /**
- * One persistent `<SVG.Graph>` mount for the three projector-based variants
- * (force / lattice / cluster). When the variant changes, a new projector is
- * instantiated and seeded with the previous projector's layout so node x/y
- * survive the swap — the new projector's `animate()` then tweens each node
- * from its current position to the new target.
+ * One persistent `<SVG.Graph>` mount for all four variants. When the variant
+ * changes, a new projector is instantiated and seeded with the previous
+ * projector's layout so node x/y survive the swap — the new projector's
+ * `animate()` then tweens each node from its current position to the new
+ * target, and per-frame edge generators (cluster, bundle) keep curves glued
+ * to the moving endpoints.
  */
-const ProjectorVisualization = ({ variant, model, onNodeHover }: ProjectorVisualizationProps) => {
+const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
   const svgRef = useRef<SVGContext>(null);
   const [projector, setProjector] = useState<GraphProjector<SpaceGraphNode> | undefined>();
   const projectorRef = useRef<GraphProjector<SpaceGraphNode> | undefined>(undefined);
@@ -195,23 +187,29 @@ const ProjectorVisualization = ({ variant, model, onNodeHover }: ProjectorVisual
     [onNodeHover],
   );
 
+  // Force needs SVG.Zoom (drag interaction). Cluster/lattice don't, AND including the zoom
+  // wrapper makes their curve edges render incorrectly in some contexts (see iteration
+  // history in graph-cluster-projector.ts). So mount with vs. without zoom conditionally.
+  const inner = (
+    <SVG.Graph<SpaceGraphNode, SpaceGraphEdge>
+      model={model}
+      projector={projector}
+      renderNode={renderNode}
+      drag={variant === 'force'}
+      onInspect={handleInspect}
+    />
+  );
   return (
-    <SVG.Root ref={svgRef}>
-      <SVG.Zoom extent={[1 / 2, 2]}>
-        <SVG.Graph<SpaceGraphNode, SpaceGraphEdge>
-          model={model}
-          projector={projector}
-          renderNode={renderNode}
-          drag={variant === 'force'}
-          onInspect={handleInspect}
-        />
-      </SVG.Zoom>
-    </SVG.Root>
+    <SVG.Root ref={svgRef}>{variant === 'force' ? <SVG.Zoom extent={[1 / 2, 2]}>{inner}</SVG.Zoom> : inner}</SVG.Root>
   );
 };
 
+/** Cross-variant tween duration. Matches the renderer's edge fade timing so node
+ * movement and edge enter/exit complete together. */
+const TWEEN_MS = 500;
+
 const createProjector = (
-  variant: ProjectorVariant,
+  variant: ExplorerArticleVariant,
   ctx: SVGContext,
   prev?: GraphLayout<SpaceGraphNode>,
 ): GraphProjector<SpaceGraphNode> => {
@@ -223,9 +221,7 @@ const createProjector = (
       return new GraphLatticeProjector<SpaceGraphNode>(
         ctx,
         {
-          // No `duration`: snap directly to the target. Tweening the layout while edge
-          // paths are precomputed at the final positions leaves lines disconnected from
-          // nodes mid-flight.
+          duration: TWEEN_MS,
           // Plugin-explorer overrides the projector's force-matched default (6)
           // with a smaller node so the lattice reads as a dense matrix.
           radius: 4,
@@ -234,7 +230,7 @@ const createProjector = (
             const obj = node.data?.data?.object;
             const typename = obj ? (Obj.getTypename(obj) ?? '(untyped)') : '(untyped)';
             const label = (obj && Obj.getLabel(obj)) ?? node.data?.data?.label ?? node.id;
-            return `${typename} ${label}`;
+            return `${typename} ${label}`;
           },
         },
         undefined,
@@ -244,13 +240,18 @@ const createProjector = (
       return new GraphClusterProjector<SpaceGraphNode>(
         ctx,
         {
-          // No `duration`: cluster's edge paths are precomputed against d3.cluster's
-          // final polar positions; tweening nodes without also tweening paths produces
-          // visibly-disconnected lines. Snap to target so endpoints stay coincident.
-          groupOf: (node: GraphLayoutNode<SpaceGraphNode>) => {
-            const obj = node.data?.data?.object;
-            return obj ? (Obj.getTypename(obj) ?? '(untyped)') : undefined;
-          },
+          duration: TWEEN_MS,
+          groupOf: typenameGroupOf,
+        },
+        undefined,
+        prev,
+      );
+    case 'bundle':
+      return new GraphBundleProjector<SpaceGraphNode>(
+        ctx,
+        {
+          duration: TWEEN_MS,
+          groupOf: typenameGroupOf,
         },
         undefined,
         prev,
@@ -258,7 +259,14 @@ const createProjector = (
   }
 };
 
-const createRenderNode = (variant: ProjectorVariant): RenderNode<SpaceGraphNode> | undefined => {
+/** Group leaves by typename so same-type leaves cluster together — used by both the
+ * cluster (visible structural nodes) and bundle (invisible routing anchors) projectors. */
+const typenameGroupOf = (node: GraphLayoutNode<SpaceGraphNode>): string | undefined => {
+  const obj = node.data?.data?.object;
+  return obj ? (Obj.getTypename(obj) ?? '(untyped)') : undefined;
+};
+
+const createRenderNode = (variant: ExplorerArticleVariant): RenderNode<SpaceGraphNode> | undefined => {
   switch (variant) {
     case 'force':
       return (group, node) => {
@@ -295,23 +303,65 @@ const createRenderNode = (variant: ProjectorVariant): RenderNode<SpaceGraphNode>
           .attr('r', r)
           .style('cursor', 'pointer')
           .style('fill', obj ? getNodeFillForObject(obj) : 'var(--color-neutral-500)');
+        if (node.type === CLUSTER_NODE_TYPE_LEAF) {
+          appendRadialLeafLabel(group, node, obj, r);
+        }
+      };
+    case 'bundle':
+      // Bundle layout renders ONLY leaves (root/group are invisible routing anchors).
+      // Every node here is a leaf — same circle + radial label shape as cluster.
+      return (group, node) => {
+        const obj = node.data?.data?.object as Obj.Unknown | undefined;
+        const r = node.r ?? 4;
+        group
+          .append('circle')
+          .attr('r', r)
+          .style('cursor', 'pointer')
+          .style('fill', obj ? getNodeFillForObject(obj) : 'var(--color-neutral-500)');
+        appendRadialLeafLabel(group, node, obj, r);
       };
   }
 };
 
+/** Fade-in duration applied to labels after the layout tween completes. */
+const LABEL_FADE_MS = 200;
+
 /**
- * Read from the model's reactive graph atom so the hierarchy is rebuilt as objects/relations stream in.
+ * Append a radial leaf label outside the ring, oriented outward. Compute orientation
+ * from the TARGET position (tx/ty) — at enter time node.x/y is still at the previous
+ * projector's coordinates, so using current x/y would orient the label by the
+ * pre-transition layout (wrong) and the rotation wouldn't update during the tween.
+ *
+ * Label appears with opacity 0 and fades in after a `TWEEN_MS` delay so the text isn't
+ * sliding across the screen mid-tween — leaves first, labels after.
  */
-const HierarchyVisualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
-  // Capture the atom snapshot so the memo's dep list explicitly tracks each push from the atom.
-  const graphSnapshot = useAtomValue(model.graphAtom);
-  const { tree, edges } = useMemo(() => spaceGraphToHierarchy(model), [model, graphSnapshot]);
-  switch (variant) {
-    case 'cluster':
-      return <RadialTree data={tree} cluster onNodeHover={onNodeHover} />;
-    case 'bundle':
-      return <HierarchicalEdgeBundling data={tree} edges={edges} onNodeHover={onNodeHover} />;
-    default:
-      return null;
+const appendRadialLeafLabel = (
+  group: Parameters<RenderNode<SpaceGraphNode>>[0],
+  node: GraphLayoutNode<SpaceGraphNode>,
+  obj: Obj.Unknown | undefined,
+  r: number,
+): void => {
+  const label = (obj && Obj.getLabel(obj)) ?? node.data?.data?.label ?? node.id;
+  if (!label) {
+    return;
   }
+  const targetX = (node as any).tx ?? node.x ?? 0;
+  const targetY = (node as any).ty ?? node.y ?? 0;
+  const angleDeg = (Math.atan2(targetY, targetX) * 180) / Math.PI;
+  // Flip text 180° on the left half of the layout so it still reads left-to-right.
+  const flipped = angleDeg > 90 || angleDeg < -90;
+  group
+    .append('text')
+    .classed('dx-cluster-label', true)
+    .attr('dy', '0.32em')
+    .attr('transform', `rotate(${flipped ? angleDeg + 180 : angleDeg})`)
+    .attr('x', flipped ? -(r + 4) : r + 4)
+    .attr('text-anchor', flipped ? 'end' : 'start')
+    .attr('opacity', 0)
+    .style('pointer-events', 'none')
+    .text(label)
+    .transition()
+    .delay(TWEEN_MS)
+    .duration(LABEL_FADE_MS)
+    .attr('opacity', 1);
 };

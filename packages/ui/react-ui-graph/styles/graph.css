@@ -72,6 +72,20 @@ svg {
             @apply fill-neutral-600 stroke-none;
           }
         }
+        /* Radial cluster leaf labels — small, neutral, no fill swatch since these are SVG
+           text nodes (not HTML). Stroke + paint-order halos the text for legibility against
+           edges or color-coded nodes drawn beneath it. */
+        text.dx-cluster-label {
+          @apply fill-neutral-700 text-[10px];
+          paint-order: stroke;
+          stroke: var(--surface-bg, white);
+          stroke-width: 3px;
+          stroke-linejoin: round;
+
+          .dark & {
+            @apply fill-neutral-300;
+          }
+        }
         &.dx-selected {
           circle {
             @apply !fill-red-500 stroke-2 stroke-neutral-950;
@@ -238,7 +252,11 @@ svg {
       g.dx-edge {
         path {
           /** NOTE: Set text- so that current color is picked up by marker. */
-          @apply stroke-1 stroke-neutral-700;
+          @apply stroke-1 stroke-neutral-700 fill-none;
+          /* Force higher-quality tessellation. Some browsers' default `auto` shape-rendering
+             produces visible gaps in stroked bezier curves at certain curvature / stroke-width
+             combinations — geometricPrecision avoids the heuristic and uses precise math. */
+          shape-rendering: geometricPrecision;
 
           .dark & {
             @apply stroke-neutral-700;

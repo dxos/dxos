@@ -38,9 +38,27 @@ export const CLUSTER_NODE_TYPE_LEAF = 'leaf';
 export const CLUSTER_NODE_TYPE_GROUP = 'group';
 export const CLUSTER_NODE_TYPE_ROOT = 'root';
 
-const radialLink = linkRadial<any, any>()
-  .angle((d) => d.x)
-  .radius((d) => d.y);
+/**
+ * Standard d3 radial link generator — `curveBumpRadial`. Same shape as the original
+ * `RadialTree` component (and the d3 radial-cluster observable notebook).
+ *
+ * IMPORTANT: relies on the `dx-edge path` CSS setting `fill: none`. Without that, the SVG
+ * default fill (black) closes the curve across the source-target chord and visually
+ * swallows part of the stroke. The Graph engine's `createEdge` doesn't set `fill='none'`
+ * inline (unlike the original RadialTree), so the rule lives in graph.css.
+ */
+const linkPath = linkRadial<any, any>()
+  .angle((d: any) => d.x)
+  .radius((d: any) => d.y);
+
+/**
+ * Cartesian → d3-radial polar. d3 measures angle clockwise from "up" (the -y direction).
+ * Inverse of `[cos(a - π/2) * r, sin(a - π/2) * r]`.
+ */
+const cartesianToPolar = (x: number, y: number): { angle: number; radius: number } => ({
+  angle: Math.atan2(x, -y),
+  radius: Math.hypot(x, y),
+});
 
 /**
  * Radial cluster (d3.cluster) layout. Materializes a root → group → leaf
@@ -50,13 +68,11 @@ const radialLink = linkRadial<any, any>()
  *   inner ring; the root sits at the origin. All three kinds are added to the
  *   layout so they render via the consumer's `renderNode` (the `type` field
  *   identifies which is which).
- * - Computes radial-elbow `path` strings on each hierarchy edge so the
- *   renderer doesn't need to know about polar coordinates.
- *
- * The precomputed paths are fixed at the d3.cluster polar layout — they
- * don't follow per-frame tweens. Pair this projector with a no-duration
- * animate() (i.e. `duration: undefined`) so the layout snaps directly to
- * the target and node + path endpoints always coincide.
+ * - Each hierarchy edge carries a `path` string (d3's `linkRadial` curve)
+ *   computed from CURRENT cartesian endpoint positions every frame via
+ *   `onTickFrame`. The curve therefore tracks moving endpoints during a
+ *   cross-variant tween (e.g. force → cluster) instead of snapping to the
+ *   final polar shape.
  */
 export class GraphClusterProjector<
   NodeData = any,
@@ -70,6 +86,23 @@ export class GraphClusterProjector<
     this.doClusterLayout();
     this.emitUpdate('topology');
     this.animate();
+  }
+
+  /**
+   * Recompute each hierarchy edge's `path` from current cartesian source/target positions,
+   * so the curves track moving endpoints during a cross-variant tween (e.g. force → cluster)
+   * instead of being pinned to the final polar layout.
+   */
+  protected override onTickFrame(_t: number): void {
+    for (const edge of this.layout.graph.edges) {
+      if (edge.type !== 'hierarchy') {
+        continue;
+      }
+      const { source, target } = edge;
+      const s = cartesianToPolar(source.x ?? 0, source.y ?? 0);
+      const t = cartesianToPolar(target.x ?? 0, target.y ?? 0);
+      edge.path = linkPath({ source: { x: s.angle, y: s.radius }, target: { x: t.angle, y: t.radius } });
+    }
   }
 
   private doClusterLayout() {
@@ -146,9 +179,12 @@ export class GraphClusterProjector<
         updateNode(d.data.node, [x, y], leafR);
         (d.data.node as any).type = CLUSTER_NODE_TYPE_LEAF;
       } else {
-        // Synthetic root or group — also tween position (so it slides in from prior layouts).
+        // Synthetic root or group. These have no presence in the previous projector's layout
+        // (force / lattice) so seed their starting position at origin — the root then stays
+        // put while groups grow outward to their inner ring, framing the leaf transition.
         const isRoot = id === rootId;
-        const stub = syntheticNodes.get(id) ?? ({ id } as GraphLayoutNode<NodeData>);
+        const existing = syntheticNodes.get(id);
+        const stub = existing ?? ({ id, x: 0, y: 0 } as GraphLayoutNode<NodeData>);
         updateNode(stub, [x, y], isRoot ? rootR : groupR);
         stub.type = isRoot ? CLUSTER_NODE_TYPE_ROOT : CLUSTER_NODE_TYPE_GROUP;
         syntheticNodes.set(id, stub);
@@ -165,14 +201,15 @@ export class GraphClusterProjector<
     }
     this.layout.graph.nodes = nextNodes;
 
-    // Precompute initial edge paths against d3.cluster polar coords so the topology
-    // render has something to draw. `onTickFrame` will overwrite per animation frame
-    // from current cartesian positions, keeping edges glued to nodes during the tween.
+    // Build hierarchy edges referencing source/target nodes. The `path` is filled by
+    // onTickFrame (and again per tween frame) from current cartesian positions, so we
+    // don't precompute it here — leaving it undefined would briefly produce a straight
+    // line on first paint, but the tween's first tick (t=0) writes the correct path
+    // before the renderer's positions-emit reaches the DOM.
     const hierarchyEdges: GraphLayoutEdge<NodeData>[] = [];
     root.links().forEach((link: any) => {
       const sid = link.source.data.id;
       const tid = link.target.data.id;
-      const path = radialLink({ source: link.source, target: link.target });
       const sourceNode = link.source.data.node ?? syntheticNodes.get(sid);
       const targetNode = link.target.data.node ?? syntheticNodes.get(tid);
       hierarchyEdges.push({
@@ -180,10 +217,11 @@ export class GraphClusterProjector<
         type: 'hierarchy',
         source: sourceNode!,
         target: targetNode!,
-        path: path ?? undefined,
         data: undefined,
       });
     });
     this.layout.graph.edges = hierarchyEdges;
+    // Seed initial paths so the topology emit has correct geometry to enter into the DOM.
+    this.onTickFrame(0);
   }
 }
