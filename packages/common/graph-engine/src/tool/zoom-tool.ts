@@ -37,10 +37,18 @@ export class ZoomTool implements Tool {
       .on('zoom', (event) => this.#viewport.setTransform(event.transform));
     select(el).call(this.#zoom as any);
 
-    // Center the world origin on first non-zero resize.
+    // Center the world origin on first non-zero resize — but only if the user hasn't
+    // already panned or zoomed (i.e., viewport transform is still identity). This makes
+    // centering safe even if the surface is re-attached after the user has interacted.
     const centerOrigin = this.#options.centerOrigin ?? true;
     const tryCenter = (width: number, height: number) => {
       if (!centerOrigin || this.#centered || !width || !height || !this.#zoom) {
+        return;
+      }
+      const current = this.#viewport.transform;
+      if (current.k !== 1 || current.x !== 0 || current.y !== 0) {
+        // User has already moved the viewport — don't snap back.
+        this.#centered = true;
         return;
       }
       this.#centered = true;
