@@ -15,4 +15,5 @@ export const meta: Plugin.Meta = {
   icon: 'ph--bug--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-debug',
   screenshots: ['https://dxos.network/plugin-details-debug-dark.png'],
+  tags: ['labs'],
 };

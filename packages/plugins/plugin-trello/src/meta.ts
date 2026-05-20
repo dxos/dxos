@@ -13,4 +13,5 @@ export const meta: Plugin.Meta = {
   `,
   icon: 'ph--kanban--regular',
   iconHue: 'blue',
+  tags: ['labs', 'integration'],
 };

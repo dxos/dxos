@@ -15,5 +15,5 @@ export const meta: Plugin.Meta = {
   icon: 'ph--address-book-tabs--regular',
   iconHue: 'rose',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-inbox',
-  tags: ['labs'],
+  tags: ['integration'],
 };

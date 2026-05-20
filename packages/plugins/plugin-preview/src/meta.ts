@@ -14,4 +14,5 @@ export const meta: Plugin.Meta = {
   `,
   icon: 'ph--eye--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-preview',
+  tags: ['system'],
 };

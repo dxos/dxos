@@ -16,4 +16,5 @@ export const meta: Plugin.Meta = {
   iconHue: 'green',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-board',
   screenshots: [],
+  tags: ['labs'],
 };

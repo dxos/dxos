@@ -15,4 +15,5 @@ export const meta: Plugin.Meta = {
   icon: 'ph--file-cloud--regular',
   iconHue: 'teal',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-wnfs',
+  tags: ['labs'],
 };

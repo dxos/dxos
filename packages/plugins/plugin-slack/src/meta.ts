@@ -13,4 +13,5 @@ export const meta: Plugin.Meta = {
   `,
   icon: 'ph--slack-logo--regular',
   iconHue: 'purple',
+  tags: ['labs', 'integration'],
 };

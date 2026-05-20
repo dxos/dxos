@@ -11,4 +11,5 @@ export const meta: Plugin.Meta = {
   icon: 'ph--broadcast--regular',
   iconHue: 'green',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-iroh-beacon',
+  tags: ['labs'],
 };

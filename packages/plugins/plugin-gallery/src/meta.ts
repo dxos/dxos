@@ -17,4 +17,5 @@ export const meta: Plugin.Meta = {
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-gallery',
   version: '0.8.3',
   spec: 'https://unpkg.com/@dxos/plugin-gallery@0.8.3/PLUGIN.mdl',
+  tags: ['labs'],
 };

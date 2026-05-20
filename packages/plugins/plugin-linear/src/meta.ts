@@ -14,4 +14,5 @@ export const meta: Plugin.Meta = {
   `,
   icon: 'ph--list-checks--regular',
   iconHue: 'neutral',
+  tags: ['labs', 'integration'],
 };

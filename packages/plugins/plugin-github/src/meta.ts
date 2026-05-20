@@ -14,4 +14,5 @@ export const meta: Plugin.Meta = {
   `,
   icon: 'ph--github-logo--regular',
   iconHue: 'neutral',
+  tags: ['labs', 'integration'],
 };

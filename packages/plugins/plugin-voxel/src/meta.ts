@@ -13,4 +13,5 @@ export const meta: Plugin.Meta = {
     Place, remove, and color voxels in an interactive 3D environment with orbit controls.
   `,
   icon: 'ph--cube--regular',
+  tags: ['labs'],
 };

@@ -13,4 +13,5 @@ export const meta: Plugin.Meta = {
   `,
   icon: 'ph--butterfly--regular',
   iconHue: 'sky',
+  tags: ['labs', 'integration'],
 };

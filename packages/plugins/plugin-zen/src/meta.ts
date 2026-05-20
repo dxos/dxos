@@ -15,4 +15,5 @@ export const meta: Plugin.Meta = {
   icon: 'ph--moon-stars--regular',
   iconHue: 'violet',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-zen',
+  tags: ['labs'],
 };
