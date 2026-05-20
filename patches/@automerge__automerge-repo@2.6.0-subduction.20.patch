@@ -370,15 +370,6 @@ index a9246970a30bf4efbbfb96696368de10ad7c5489..4005d44b772d0fd45ee62b80c9fac7d4
          for (const { adapter, serviceName, role } of adapters) {
              adapterConnections.addAdapter(adapter, serviceName, role ?? "connect");
          }
-@@ -276,7 +287,7 @@ export class SubductionSource {
-                         entry.syncInFlight = true;
-                         void this.#doSync(entry);
-                     }
--                    else if (entry.handle.heads().length === 0 &&
-+                    else if (false &&
-                         !this.#anyConnectionManagerConnecting()) {
-                         // All connections settled and sync failed — give up.
-                         this.#log("marking as unavailable");
 @@ -716,11 +727,28 @@ export class SubductionSource {
          for (const entry of this.#entries.values()) {
              entry.flushSave.flush();
