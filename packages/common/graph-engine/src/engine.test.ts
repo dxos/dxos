@@ -7,9 +7,9 @@ import { describe, test } from 'vitest';
 
 import { GraphModel } from '@dxos/graph';
 
+import { Engine } from './engine';
 import { ForceProjector } from './projector/force-projector';
 import { TypeRegistry } from './registry/type-registry';
-import { Engine } from './engine';
 
 describe('Engine', () => {
   test('binds model and projects nodes', ({ expect }) => {

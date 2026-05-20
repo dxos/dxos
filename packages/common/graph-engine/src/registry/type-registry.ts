@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type EdgeHandler, type NodeHandler } from './handlers';
 import { defaultEdgeHandler, defaultNodeHandler } from './default-handlers';
+import { type EdgeHandler, type NodeHandler } from './handlers';
 
 /**
  * Minimum shape resolveNode/resolveEdge need from input. Any object with optional `type`.
@@ -31,6 +31,8 @@ export class TypeRegistry<NodeData = any, EdgeData = any> {
   }
 
   resolveEdge(edge: Typed): EdgeHandler<NodeData, EdgeData> {
-    return (edge.type ? this.#edges.get(edge.type) : undefined) ?? (defaultEdgeHandler as EdgeHandler<NodeData, EdgeData>);
+    return (
+      (edge.type ? this.#edges.get(edge.type) : undefined) ?? (defaultEdgeHandler as EdgeHandler<NodeData, EdgeData>)
+    );
   }
 }

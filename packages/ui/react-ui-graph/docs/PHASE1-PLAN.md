@@ -14,48 +14,48 @@
 
 ### New package `@dxos/graph-engine` (`packages/common/graph-engine/`)
 
-| Path | Responsibility |
-|------|----------------|
-| `package.json` / `moon.yml` / `tsconfig.json` / `vitest.config.ts` | Package boilerplate (mirrors `@dxos/graph`). |
-| `src/index.ts` | Public barrel. |
-| `src/types.ts` | `Point`, `Size`, `Rect`, `LayoutNode`, `LayoutEdge`, `LayoutGraph`, `SemanticPointerEvent`. |
-| `src/draw/path.ts` | Backend-neutral `Path` primitive + `createPath()`. |
-| `src/draw/draw-context.ts` | `DrawContext` interface used by handler `draw()` calls. |
-| `src/viewport.ts` | `Viewport` class — size, transform, world↔screen, `frame` event. |
-| `src/tween/tween-service.ts` | `TweenService` — single d3-timer; `setTarget()`, per-entity tweens. |
-| `src/registry/handlers.ts` | `NodeHandler`, `EdgeHandler`, `NodeIsland`, `EdgeIsland` types. |
-| `src/registry/type-registry.ts` | `TypeRegistry` impl with `'default'` fallback. |
-| `src/registry/default-handlers.ts` | Built-in `defaultNodeHandler` and `defaultEdgeHandler`. |
-| `src/projector/projector.ts` | `Projector` abstract base. |
-| `src/projector/force-projector.ts` | Port of v1 `GraphForceProjector` against new contract. |
-| `src/router/router.ts` | `EdgeRouter` interface + `EdgeRouterId` union. |
-| `src/router/straight-router.ts` | `StraightRouter`. |
-| `src/tool/tool.ts` | `Tool` interface, `SemanticPointerEvent`. |
-| `src/tool/hover-tool.ts` | `HoverTool`. |
-| `src/tool/select-tool.ts` | `SelectTool`. |
-| `src/tool/zoom-tool.ts` | `ZoomTool` (d3-zoom). |
-| `src/backend/render-backend.ts` | `RenderBackend` interface. |
-| `src/backend/canvas/canvas-path.ts` | Canvas `Path2D` impl of `Path`. |
-| `src/backend/canvas/canvas-draw-context.ts` | Canvas `DrawContext` impl. |
-| `src/backend/canvas/canvas-backend.ts` | `CanvasBackend` — driver for a `<canvas>` element. |
-| `src/model/model-adapter.ts` | `subscribeModel(model, cb)` — wraps `ReactiveGraphModel`. |
-| `src/engine.ts` | `Engine` class — wires registry, projector, tween, tools, viewport, backend, model. |
+| Path                                                               | Responsibility                                                                              |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| `package.json` / `moon.yml` / `tsconfig.json` / `vitest.config.ts` | Package boilerplate (mirrors `@dxos/graph`).                                                |
+| `src/index.ts`                                                     | Public barrel.                                                                              |
+| `src/types.ts`                                                     | `Point`, `Size`, `Rect`, `LayoutNode`, `LayoutEdge`, `LayoutGraph`, `SemanticPointerEvent`. |
+| `src/draw/path.ts`                                                 | Backend-neutral `Path` primitive + `createPath()`.                                          |
+| `src/draw/draw-context.ts`                                         | `DrawContext` interface used by handler `draw()` calls.                                     |
+| `src/viewport.ts`                                                  | `Viewport` class — size, transform, world↔screen, `frame` event.                            |
+| `src/tween/tween-service.ts`                                       | `TweenService` — single d3-timer; `setTarget()`, per-entity tweens.                         |
+| `src/registry/handlers.ts`                                         | `NodeHandler`, `EdgeHandler`, `NodeIsland`, `EdgeIsland` types.                             |
+| `src/registry/type-registry.ts`                                    | `TypeRegistry` impl with `'default'` fallback.                                              |
+| `src/registry/default-handlers.ts`                                 | Built-in `defaultNodeHandler` and `defaultEdgeHandler`.                                     |
+| `src/projector/projector.ts`                                       | `Projector` abstract base.                                                                  |
+| `src/projector/force-projector.ts`                                 | Port of v1 `GraphForceProjector` against new contract.                                      |
+| `src/router/router.ts`                                             | `EdgeRouter` interface + `EdgeRouterId` union.                                              |
+| `src/router/straight-router.ts`                                    | `StraightRouter`.                                                                           |
+| `src/tool/tool.ts`                                                 | `Tool` interface, `SemanticPointerEvent`.                                                   |
+| `src/tool/hover-tool.ts`                                           | `HoverTool`.                                                                                |
+| `src/tool/select-tool.ts`                                          | `SelectTool`.                                                                               |
+| `src/tool/zoom-tool.ts`                                            | `ZoomTool` (d3-zoom).                                                                       |
+| `src/backend/render-backend.ts`                                    | `RenderBackend` interface.                                                                  |
+| `src/backend/canvas/canvas-path.ts`                                | Canvas `Path2D` impl of `Path`.                                                             |
+| `src/backend/canvas/canvas-draw-context.ts`                        | Canvas `DrawContext` impl.                                                                  |
+| `src/backend/canvas/canvas-backend.ts`                             | `CanvasBackend` — driver for a `<canvas>` element.                                          |
+| `src/model/model-adapter.ts`                                       | `subscribeModel(model, cb)` — wraps `ReactiveGraphModel`.                                   |
+| `src/engine.ts`                                                    | `Engine` class — wires registry, projector, tween, tools, viewport, backend, model.         |
 
 ### Updates to `@dxos/react-ui-graph` (`packages/ui/react-ui-graph/`)
 
-| Path | Responsibility |
-|------|----------------|
-| `src/v2/index.ts` | v2 barrel — re-exported from package root via `src/index.ts`. |
-| `src/v2/context.ts` | `EngineContext` React context + `useEngineContext()`. |
-| `src/v2/hooks/use-engine.ts` | `useEngine(opts)` factory. |
-| `src/v2/hooks/use-viewport.ts` | Subscribes to viewport changes, returns scale/size/transform. |
-| `src/v2/hooks/use-selection.ts` | Selection passthrough hook (Phase 1: read-only mirror). |
-| `src/v2/GraphRoot.tsx` | Provides `EngineContext`, owns canvas/overlay resize observer. |
-| `src/v2/GraphSurface.tsx` | Mounts `<canvas>`, wires `CanvasBackend`, forwards pointer events to tools. |
-| `src/v2/HtmlOverlayLayer.tsx` | Mounts overlay div; per-island wrapper with imperative transform. |
-| `src/v2/stories/Phase1.stories.tsx` | Storybook: force layout + island popover example. |
-| `src/index.ts` | Append `export * from './v2';` (namespaced re-export not used — v2 lives in its own subpath import path via index for now). |
-| `package.json` | Add `@dxos/graph-engine: workspace:*` dependency. |
+| Path                                | Responsibility                                                                                                              |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `src/v2/index.ts`                   | v2 barrel — re-exported from package root via `src/index.ts`.                                                               |
+| `src/v2/context.ts`                 | `EngineContext` React context + `useEngineContext()`.                                                                       |
+| `src/v2/hooks/use-engine.ts`        | `useEngine(opts)` factory.                                                                                                  |
+| `src/v2/hooks/use-viewport.ts`      | Subscribes to viewport changes, returns scale/size/transform.                                                               |
+| `src/v2/hooks/use-selection.ts`     | Selection passthrough hook (Phase 1: read-only mirror).                                                                     |
+| `src/v2/GraphRoot.tsx`              | Provides `EngineContext`, owns canvas/overlay resize observer.                                                              |
+| `src/v2/GraphSurface.tsx`           | Mounts `<canvas>`, wires `CanvasBackend`, forwards pointer events to tools.                                                 |
+| `src/v2/HtmlOverlayLayer.tsx`       | Mounts overlay div; per-island wrapper with imperative transform.                                                           |
+| `src/v2/stories/Phase1.stories.tsx` | Storybook: force layout + island popover example.                                                                           |
+| `src/index.ts`                      | Append `export * from './v2';` (namespaced re-export not used — v2 lives in its own subpath import path via index for now). |
+| `package.json`                      | Add `@dxos/graph-engine: workspace:*` dependency.                                                                           |
 
 ---
 
@@ -87,6 +87,7 @@ Expected: build succeeds (warnings about DEPOT_TOKEN are ignorable).
 ## Task 1: Scaffold `@dxos/graph-engine` package
 
 **Files:**
+
 - Create: `packages/common/graph-engine/package.json`
 - Create: `packages/common/graph-engine/tsconfig.json`
 - Create: `packages/common/graph-engine/moon.yml`
@@ -194,6 +195,7 @@ export default createConfig({
 - [ ] **Step 5: Create empty barrel**
 
 `src/index.ts`:
+
 ```ts
 //
 // Copyright 2026 DXOS.org
@@ -205,6 +207,7 @@ export {};
 - [ ] **Step 6: README placeholder**
 
 `README.md`:
+
 ```markdown
 # @dxos/graph-engine
 
@@ -233,6 +236,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Task 2: Core types
 
 **Files:**
+
 - Create: `packages/common/graph-engine/src/types.ts`
 - Create: `packages/common/graph-engine/src/types.test.ts`
 - Modify: `packages/common/graph-engine/src/index.ts`
@@ -240,6 +244,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 - [ ] **Step 1: Write the failing test**
 
 `src/types.test.ts`:
+
 ```ts
 //
 // Copyright 2026 DXOS.org
@@ -339,6 +344,7 @@ export type SemanticPointerEvent =
 - [ ] **Step 4: Re-export from index**
 
 `src/index.ts`:
+
 ```ts
 //
 // Copyright 2026 DXOS.org
@@ -366,6 +372,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Task 3: Path primitive
 
 **Files:**
+
 - Create: `packages/common/graph-engine/src/draw/path.ts`
 - Create: `packages/common/graph-engine/src/draw/path.test.ts`
 - Modify: `packages/common/graph-engine/src/index.ts`
@@ -373,6 +380,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 - [ ] **Step 1: Write the failing test**
 
 `src/draw/path.test.ts`:
+
 ```ts
 //
 // Copyright 2026 DXOS.org
@@ -489,6 +497,7 @@ export const createPath = (): Path => {
 - [ ] **Step 4: Update index**
 
 `src/index.ts` (append):
+
 ```ts
 export * from './draw/path';
 ```
@@ -512,6 +521,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Task 4: DrawContext interface
 
 **Files:**
+
 - Create: `packages/common/graph-engine/src/draw/draw-context.ts`
 - Modify: `packages/common/graph-engine/src/index.ts`
 
@@ -543,7 +553,12 @@ export interface DrawContext {
   setFont(font: string): void;
   fill(path: Path): void;
   stroke(path: Path): void;
-  text(content: string, x: number, y: number, opts?: { align?: 'left' | 'center' | 'right'; baseline?: 'top' | 'middle' | 'bottom' }): void;
+  text(
+    content: string,
+    x: number,
+    y: number,
+    opts?: { align?: 'left' | 'center' | 'right'; baseline?: 'top' | 'middle' | 'bottom' },
+  ): void;
 }
 ```
 
@@ -572,6 +587,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Task 5: Viewport
 
 **Files:**
+
 - Create: `packages/common/graph-engine/src/viewport.ts`
 - Create: `packages/common/graph-engine/src/viewport.test.ts`
 - Modify: `packages/common/graph-engine/src/index.ts`
@@ -610,7 +626,7 @@ describe('Viewport', () => {
     let fired = 0;
     v.resized.on(() => fired++);
     v.setSize({ width: 100, height: 50 });
-    v.setSize({ width: 100, height: 50 });   // no change → no fire
+    v.setSize({ width: 100, height: 50 }); // no change → no fire
     v.setSize({ width: 200, height: 50 });
     expect(fired).toBe(2);
   });
@@ -735,6 +751,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Task 6: TweenService
 
 **Files:**
+
 - Create: `packages/common/graph-engine/src/tween/tween-service.ts`
 - Create: `packages/common/graph-engine/src/tween/tween-service.test.ts`
 - Modify: `packages/common/graph-engine/src/index.ts`
@@ -810,8 +827,8 @@ export type TweenValue = { x: number; y: number; r?: number };
 export type EasingId = 'linear' | 'cubic-out';
 
 export type TweenOptions = {
-  duration?: number;        // ms; default 300
-  easing?: EasingId;        // default 'cubic-out'
+  duration?: number; // ms; default 300
+  easing?: EasingId; // default 'cubic-out'
 };
 
 type Entry = {
@@ -885,7 +902,7 @@ export class TweenService {
         r:
           e.source.r !== undefined && e.target.r !== undefined
             ? e.source.r + (e.target.r - e.source.r) * u
-            : e.target.r ?? e.source.r,
+            : (e.target.r ?? e.source.r),
       };
     }
   }
@@ -934,6 +951,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Task 7: Registry — handler & island types
 
 **Files:**
+
 - Create: `packages/common/graph-engine/src/registry/handlers.ts`
 - Modify: `packages/common/graph-engine/src/index.ts`
 
@@ -1017,7 +1035,11 @@ export type EdgeHandler<NodeData = any, EdgeData = any> = {
   bounds(edge: LayoutEdge<NodeData, EdgeData>, path: Path): Rect;
   lod?: { scaling: LodScaling; levels?: LodLevel[] };
   capabilities?: EdgeCapabilities;
-  onPointer?(event: SemanticPointerEvent, edge: LayoutEdge<NodeData, EdgeData>, engineHandle: EngineHandle): void | 'veto';
+  onPointer?(
+    event: SemanticPointerEvent,
+    edge: LayoutEdge<NodeData, EdgeData>,
+    engineHandle: EngineHandle,
+  ): void | 'veto';
   island?: EdgeIsland<NodeData, EdgeData>;
 };
 ```
@@ -1025,6 +1047,7 @@ export type EdgeHandler<NodeData = any, EdgeData = any> = {
 - [ ] **Step 2: Add `react` to graph-engine dev/peer deps**
 
 Edit `packages/common/graph-engine/package.json`:
+
 - Add `"react": "catalog:"` to `peerDependencies`.
 - Add `"@types/react": "catalog:"` to `devDependencies`.
 
@@ -1055,6 +1078,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Task 8: TypeRegistry + default handlers
 
 **Files:**
+
 - Create: `packages/common/graph-engine/src/registry/type-registry.ts`
 - Create: `packages/common/graph-engine/src/registry/type-registry.test.ts`
 - Create: `packages/common/graph-engine/src/registry/default-handlers.ts`
@@ -1195,7 +1219,9 @@ export class TypeRegistry<NodeData = any, EdgeData = any> {
   }
 
   resolveEdge(edge: Graph.Edge.Any): EdgeHandler<NodeData, EdgeData> {
-    return (edge.type ? this.#edges.get(edge.type) : undefined) ?? (defaultEdgeHandler as EdgeHandler<NodeData, EdgeData>);
+    return (
+      (edge.type ? this.#edges.get(edge.type) : undefined) ?? (defaultEdgeHandler as EdgeHandler<NodeData, EdgeData>)
+    );
   }
 }
 ```
@@ -1226,6 +1252,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Task 9: Projector abstract base
 
 **Files:**
+
 - Create: `packages/common/graph-engine/src/projector/projector.ts`
 - Create: `packages/common/graph-engine/src/projector/projector.test.ts`
 - Modify: `packages/common/graph-engine/src/index.ts`
@@ -1358,6 +1385,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Task 10: ForceProjector
 
 **Files:**
+
 - Create: `packages/common/graph-engine/src/projector/force-projector.ts`
 - Create: `packages/common/graph-engine/src/projector/force-projector.test.ts`
 - Modify: `packages/common/graph-engine/src/index.ts`
@@ -1430,14 +1458,7 @@ Expected: FAIL.
 // Copyright 2026 DXOS.org
 //
 
-import {
-  type Simulation,
-  forceCenter,
-  forceCollide,
-  forceLink,
-  forceManyBody,
-  forceSimulation,
-} from 'd3';
+import { type Simulation, forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation } from 'd3';
 
 import { type Graph } from '@dxos/graph';
 import { log } from '@dxos/log';
@@ -1563,6 +1584,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Task 11: EdgeRouter + StraightRouter
 
 **Files:**
+
 - Create: `packages/common/graph-engine/src/router/router.ts`
 - Create: `packages/common/graph-engine/src/router/straight-router.ts`
 - Create: `packages/common/graph-engine/src/router/straight-router.test.ts`
@@ -1713,6 +1735,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Task 12: Tool interface
 
 **Files:**
+
 - Create: `packages/common/graph-engine/src/tool/tool.ts`
 - Modify: `packages/common/graph-engine/src/index.ts`
 
@@ -1730,10 +1753,7 @@ import { type LayoutEdge, type LayoutNode } from '../types';
 /**
  * Hit-test result handed to tools when locating an entity under a pointer.
  */
-export type EntityHit =
-  | { kind: 'node'; node: LayoutNode }
-  | { kind: 'edge'; edge: LayoutEdge }
-  | undefined;
+export type EntityHit = { kind: 'node'; node: LayoutNode } | { kind: 'edge'; edge: LayoutEdge } | undefined;
 
 /**
  * Engine surface a Tool reads from.
@@ -1777,6 +1797,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Task 13: HoverTool
 
 **Files:**
+
 - Create: `packages/common/graph-engine/src/tool/hover-tool.ts`
 - Create: `packages/common/graph-engine/src/tool/hover-tool.test.ts`
 - Modify: `packages/common/graph-engine/src/index.ts`
@@ -1805,8 +1826,7 @@ class FakeHost implements ToolHost {
   }
 }
 
-const ev = (x: number, y: number) =>
-  new PointerEvent('pointermove', { clientX: x, clientY: y, bubbles: true });
+const ev = (x: number, y: number) => new PointerEvent('pointermove', { clientX: x, clientY: y, bubbles: true });
 
 describe('HoverTool', () => {
   test('emits hover-enter when pointer moves over a node', ({ expect }) => {
@@ -1918,6 +1938,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Task 14: SelectTool
 
 **Files:**
+
 - Create: `packages/common/graph-engine/src/tool/select-tool.ts`
 - Create: `packages/common/graph-engine/src/tool/select-tool.test.ts`
 - Modify: `packages/common/graph-engine/src/index.ts`
@@ -2047,6 +2068,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Task 15: ZoomTool
 
 **Files:**
+
 - Create: `packages/common/graph-engine/src/tool/zoom-tool.ts`
 - Modify: `packages/common/graph-engine/src/index.ts`
 
@@ -2117,6 +2139,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Task 16: RenderBackend interface
 
 **Files:**
+
 - Create: `packages/common/graph-engine/src/backend/render-backend.ts`
 - Modify: `packages/common/graph-engine/src/index.ts`
 
@@ -2174,6 +2197,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Task 17: Canvas DrawContext and Path adapter
 
 **Files:**
+
 - Create: `packages/common/graph-engine/src/backend/canvas/canvas-draw-context.ts`
 - Create: `packages/common/graph-engine/src/backend/canvas/canvas-draw-context.test.ts`
 
@@ -2238,14 +2262,7 @@ describe('CanvasDrawContext', () => {
     p.close();
     dc.setFill('#f00');
     dc.fill(p);
-    expect(calls).toEqual([
-      'fillStyle=#f00',
-      'beginPath',
-      'moveTo(0,0)',
-      'lineTo(10,10)',
-      'closePath',
-      'fill',
-    ]);
+    expect(calls).toEqual(['fillStyle=#f00', 'beginPath', 'moveTo(0,0)', 'lineTo(10,10)', 'closePath', 'fill']);
   });
 
   test('text writes via fillText with alignment', ({ expect }) => {
@@ -2319,7 +2336,12 @@ export class CanvasDrawContext implements DrawContext {
     this.#ctx.stroke();
   }
 
-  text(content: string, x: number, y: number, opts?: { align?: 'left' | 'center' | 'right'; baseline?: 'top' | 'middle' | 'bottom' }) {
+  text(
+    content: string,
+    x: number,
+    y: number,
+    opts?: { align?: 'left' | 'center' | 'right'; baseline?: 'top' | 'middle' | 'bottom' },
+  ) {
     if (opts?.align) {
       this.#ctx.textAlign = opts.align;
     }
@@ -2373,6 +2395,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Task 18: CanvasBackend
 
 **Files:**
+
 - Create: `packages/common/graph-engine/src/backend/canvas/canvas-backend.ts`
 - Modify: `packages/common/graph-engine/src/index.ts`
 
@@ -2452,6 +2475,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Task 19: Model adapter
 
 **Files:**
+
 - Create: `packages/common/graph-engine/src/model/model-adapter.ts`
 - Modify: `packages/common/graph-engine/src/index.ts`
 
@@ -2502,6 +2526,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Task 20: Engine
 
 **Files:**
+
 - Create: `packages/common/graph-engine/src/engine.ts`
 - Create: `packages/common/graph-engine/src/engine.test.ts`
 - Modify: `packages/common/graph-engine/src/index.ts`
@@ -2721,7 +2746,7 @@ export class Engine<N extends Graph.Node.Any = any, E extends Graph.Edge.Any = a
 
   #routeEdge(edge: LayoutEdge, handler: EdgeHandler) {
     const router =
-      typeof handler.router === 'string' ? this.#routers.get(handler.router) ?? new StraightRouter() : handler.router;
+      typeof handler.router === 'string' ? (this.#routers.get(handler.router) ?? new StraightRouter()) : handler.router;
     return router.route(edge);
   }
 
@@ -2787,6 +2812,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Task 21: React v2 scaffolding — context + useEngine
 
 **Files:**
+
 - Create: `packages/ui/react-ui-graph/src/v2/context.ts`
 - Create: `packages/ui/react-ui-graph/src/v2/hooks/use-engine.ts`
 - Create: `packages/ui/react-ui-graph/src/v2/hooks/use-viewport.ts`
@@ -2829,7 +2855,15 @@ export const useEngineContext = (): Engine => useContext(EngineContext) ?? raise
 
 import { useEffect, useMemo } from 'react';
 
-import { Engine, type EngineOptions, ForceProjector, HoverTool, SelectTool, TypeRegistry, ZoomTool } from '@dxos/graph-engine';
+import {
+  Engine,
+  type EngineOptions,
+  ForceProjector,
+  HoverTool,
+  SelectTool,
+  TypeRegistry,
+  ZoomTool,
+} from '@dxos/graph-engine';
 import { type Graph } from '@dxos/graph';
 
 export type UseEngineOptions<N extends Graph.Node.Any, E extends Graph.Edge.Any> = Partial<EngineOptions<N, E>> &
@@ -2848,8 +2882,7 @@ export const useEngine = <N extends Graph.Node.Any = Graph.Node.Any, E extends G
 
   useEffect(() => {
     const hover = new HoverTool((e) => {
-      const handler =
-        engine.registry.resolveNode({ id: e.entityId, type: undefined } as any) ?? undefined;
+      const handler = engine.registry.resolveNode({ id: e.entityId, type: undefined } as any) ?? undefined;
       handler?.onPointer?.(e, { id: e.entityId } as any, engine);
     });
     const select = new SelectTool(() => {});
@@ -2881,12 +2914,8 @@ export const useViewport = () => {
     scale: engine.viewport.scale,
   });
   useEffect(() => {
-    const offResize = engine.viewport.resized.on((size) =>
-      setState((s) => ({ ...s, size })),
-    );
-    const offTransform = engine.viewport.transformed.on((t) =>
-      setState((s) => ({ ...s, scale: t.k })),
-    );
+    const offResize = engine.viewport.resized.on((size) => setState((s) => ({ ...s, size })));
+    const offTransform = engine.viewport.transformed.on((t) => setState((s) => ({ ...s, scale: t.k })));
     return () => {
       offResize();
       offTransform();
@@ -2952,6 +2981,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Task 22: GraphRoot component
 
 **Files:**
+
 - Create: `packages/ui/react-ui-graph/src/v2/GraphRoot.tsx`
 - Modify: `packages/ui/react-ui-graph/src/v2/index.ts`
 
@@ -3038,6 +3068,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Task 23: GraphSurface (Canvas)
 
 **Files:**
+
 - Create: `packages/ui/react-ui-graph/src/v2/GraphSurface.tsx`
 - Modify: `packages/ui/react-ui-graph/src/v2/index.ts`
 
@@ -3123,6 +3154,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Task 24: HtmlOverlayLayer
 
 **Files:**
+
 - Create: `packages/ui/react-ui-graph/src/v2/HtmlOverlayLayer.tsx`
 - Modify: `packages/ui/react-ui-graph/src/v2/index.ts`
 
@@ -3361,6 +3393,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Task 25: Storybook example
 
 **Files:**
+
 - Create: `packages/ui/react-ui-graph/src/v2/stories/Phase1.stories.tsx`
 
 - [ ] **Step 1: Implement Phase1.stories.tsx**
@@ -3389,9 +3422,7 @@ type Person = { name: string };
 
 const buildModel = (registry: ReturnType<typeof useContext<typeof RegistryContext>>) => {
   const model = new GraphModel.ReactiveGraphModel(registry);
-  ['alice', 'bob', 'carol', 'dave', 'eve'].forEach((id) =>
-    model.addNode({ id, type: 'person', data: { name: id } }),
-  );
+  ['alice', 'bob', 'carol', 'dave', 'eve'].forEach((id) => model.addNode({ id, type: 'person', data: { name: id } }));
   model.addEdge({ source: 'alice', target: 'bob' });
   model.addEdge({ source: 'alice', target: 'carol' });
   model.addEdge({ source: 'bob', target: 'dave' });
@@ -3488,6 +3519,7 @@ Run: `moon run react-ui-graph:storybook --quiet`
 Open the URL printed by Storybook (default `:9009`); navigate to `react-ui-graph/v2/Phase1 → ForceWithIslands`.
 
 Expected:
+
 - Nodes appear and animate into a force layout.
 - Each node has a labeled HTML island that tracks during animation.
 - Clicking a node ring-highlights its island.
@@ -3567,6 +3599,7 @@ EOF
 ## Self-Review Notes (post-write check)
 
 Spec coverage check:
+
 - §Architecture overview → Tasks 1, 9, 11, 12, 16, 18, 19, 20.
 - §Surface composition (layers 0–4) → Layer 0 deferred (no background layer in Phase 1, noted in DESIGN §Phase 1 out-of-scope); Layers 1–2 via Task 20 `#renderLayers`; Layer 3 via Task 24; Layer 4 deferred (no drag preview yet — Phase 2).
 - §Frame loop → Task 20 `#loop`.

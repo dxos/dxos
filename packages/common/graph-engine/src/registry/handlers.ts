@@ -76,6 +76,10 @@ export type EdgeHandler<NodeData = any, EdgeData = any> = {
   bounds(edge: LayoutEdge<NodeData, EdgeData>, path: Path): Rect;
   lod?: { scaling: LodScaling; levels?: LodLevel[] };
   capabilities?: EdgeCapabilities;
-  onPointer?(event: SemanticPointerEvent, edge: LayoutEdge<NodeData, EdgeData>, engineHandle: EngineHandle): void | 'veto';
+  onPointer?(
+    event: SemanticPointerEvent,
+    edge: LayoutEdge<NodeData, EdgeData>,
+    engineHandle: EngineHandle,
+  ): void | 'veto';
   island?: EdgeIsland<NodeData, EdgeData>;
 };

@@ -9,12 +9,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useContext, useMemo, useRef, useState } from 'react';
 
 import { GraphModel } from '@dxos/graph';
-import {
-  ForceProjector,
-  TypeRegistry,
-  createPath,
-  type SemanticPointerEvent,
-} from '@dxos/graph-engine';
+import { ForceProjector, TypeRegistry, createPath, type SemanticPointerEvent } from '@dxos/graph-engine';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
@@ -103,10 +98,7 @@ const Phase1Story = () => {
   return (
     <div className='absolute inset-0 bg-baseSurface'>
       <GraphRoot engine={engine}>
-        <GraphSurface
-          className='absolute inset-0 w-full h-full'
-          onSemanticEvent={onSemanticEvent}
-        />
+        <GraphSurface className='absolute inset-0 w-full h-full' onSemanticEvent={onSemanticEvent} />
       </GraphRoot>
     </div>
   );

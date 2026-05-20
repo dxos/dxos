@@ -9,8 +9,8 @@ export type TweenValue = { x: number; y: number; r?: number };
 export type EasingId = 'linear' | 'cubic-out';
 
 export type TweenOptions = {
-  duration?: number;        // ms; default 300
-  easing?: EasingId;        // default 'cubic-out'
+  duration?: number; // ms; default 300
+  easing?: EasingId; // default 'cubic-out'
 };
 
 type Entry = {
@@ -84,7 +84,7 @@ export class TweenService {
         r:
           e.source.r !== undefined && e.target.r !== undefined
             ? e.source.r + (e.target.r - e.source.r) * u
-            : e.target.r ?? e.source.r,
+            : (e.target.r ?? e.source.r),
       };
     }
   }

@@ -99,7 +99,7 @@ The single source of truth for what a typed node/edge looks like and how it beha
 type NodeHandler<N> = {
   // Visual.
   draw(ctx: DrawContext, node: LayoutNode<N>, viewport: Viewport): void;
-  bounds(node: LayoutNode<N>): Rect;          // for culling + hit-test broad phase
+  bounds(node: LayoutNode<N>): Rect; // for culling + hit-test broad phase
   hit(point: Point, node: LayoutNode<N>): boolean;
 
   // Layout hints (consumed by projectors).
@@ -129,7 +129,7 @@ type NodeHandler<N> = {
 };
 
 type EdgeHandler<N, E> = {
-  router: EdgeRouterId | EdgeRouter<N, E>;    // 'straight' | 'bezier' | 'orthogonal' | 'radial-arc' | custom
+  router: EdgeRouterId | EdgeRouter<N, E>; // 'straight' | 'bezier' | 'orthogonal' | 'radial-arc' | custom
   draw(ctx: DrawContext, edge: LayoutEdge<N, E>, path: Path, viewport: Viewport): void;
   hit(point: Point, edge: LayoutEdge<N, E>, path: Path): boolean;
   bounds(edge: LayoutEdge<N, E>, path: Path): Rect;
@@ -160,13 +160,13 @@ type NodeIsland<N> = {
   render(node: LayoutNode<N>, viewport: Viewport, engine: Engine): ReactNode;
   anchor?: 'center' | 'top' | 'bottom' | { offset: Point };
   scaling?: 'fixed-pixel' | 'world' | 'hybrid';
-  passthrough?: boolean;                       // pointer-events: none → events fall through
+  passthrough?: boolean; // pointer-events: none → events fall through
   show?: (viewport: Viewport) => boolean;
 };
 
 type EdgeIsland<N, E> = {
   render(edge: LayoutEdge<N, E>, path: Path, viewport: Viewport, engine: Engine): ReactNode;
-  anchor?: 'midpoint' | { t: number } | ((path: Path) => Point);  // along router-supplied path
+  anchor?: 'midpoint' | { t: number } | ((path: Path) => Point); // along router-supplied path
   scaling?: NodeIsland<any>['scaling'];
   passthrough?: boolean;
   show?: (viewport: Viewport) => boolean;
@@ -193,8 +193,8 @@ Edge islands ride on the router's `labelPoint(t, path)` — the engine never re-
 
 ```ts
 abstract class Projector<N, E> {
-  abstract onUpdate(graph: Graph<N, E>): void;       // model changed
-  abstract onTick(dt: number): boolean;              // returns true if still animating
+  abstract onUpdate(graph: Graph<N, E>): void; // model changed
+  abstract onTick(dt: number): boolean; // returns true if still animating
   abstract findNode(x: number, y: number, r: number): LayoutNode<N> | undefined;
 
   // Layout hints surfaced to routers (e.g. hierarchy depth, radial sector).
@@ -203,11 +203,11 @@ abstract class Projector<N, E> {
 
 interface EdgeRouter<N, E> {
   route(edge: LayoutEdge<N, E>, projector: Projector<N, E>): Path;
-  labelPoint(t: number, path: Path): Point;          // for edge islands and bullets
+  labelPoint(t: number, path: Path): Point; // for edge islands and bullets
 }
 ```
 
-Projectors emit *targets* into the TweenService for nodes; they don't tween directly. The `ForceProjector` is the exception in that it runs a per-frame simulation and republishes a fresh target each tick — the TweenService treats every tick as a re-target with near-zero remaining duration, which converges to "render where the sim says". This keeps the loop uniform without fighting d3-force's natural shape.
+Projectors emit _targets_ into the TweenService for nodes; they don't tween directly. The `ForceProjector` is the exception in that it runs a per-frame simulation and republishes a fresh target each tick — the TweenService treats every tick as a re-target with near-zero remaining duration, which converges to "render where the sim says". This keeps the loop uniform without fighting d3-force's natural shape.
 
 ## TweenService (hybrid animation)
 
@@ -224,8 +224,8 @@ Cross-cutting gesture FSMs attached to the engine, dispatching via per-type capa
 - `HoverTool` — pointermove → entity under cursor; emits `hover:enter`, `hover:leave`. Respects `capabilities.hoverable` and `onPointer` veto.
 - `SelectTool` — pointerdown/up → toggle/replace selection; updates `SelectionModel`.
 - `ZoomTool` — d3-zoom-driven wheel/pinch/pan; writes to `Viewport.transform`.
-- *(Phase 2)* `DragTool` — pointer-driven node drag with projector handoff (force sim pauses centering, etc.).
-- *(Phase 2)* `LinkTool` — drag from one node to another to create an edge; uses Foreground layer for in-progress wire.
+- _(Phase 2)_ `DragTool` — pointer-driven node drag with projector handoff (force sim pauses centering, etc.).
+- _(Phase 2)_ `LinkTool` — drag from one node to another to create an edge; uses Foreground layer for in-progress wire.
 
 Per-type `onPointer` runs after the Tool's gesture detection: types can decorate semantic events or veto them.
 
@@ -237,11 +237,11 @@ Pure state — no DOM:
 class Viewport {
   size: Size;
   transform: ZoomTransform;
-  scale: number;                          // derived
+  scale: number; // derived
   worldToScreen(p: Point): Point;
   screenToWorld(p: Point): Point;
   visibleBounds(): Rect;
-  frame: EventEmitter<{ t: number }>;     // emitted each engine tick
+  frame: EventEmitter<{ t: number }>; // emitted each engine tick
   resized: EventEmitter<Size>;
 }
 ```
@@ -250,17 +250,17 @@ class Viewport {
 
 ```tsx
 const engine = useEngine({
-  model,                          // ReactiveGraphModel
-  registry,                       // TypeRegistry
+  model, // ReactiveGraphModel
+  registry, // TypeRegistry
   projector: new ForceProjector(),
-  backend: 'canvas',              // 'canvas' | 'svg'
+  backend: 'canvas', // 'canvas' | 'svg'
   tools: ['hover', 'select', 'zoom'],
 });
 
 <GraphRoot engine={engine}>
-  <GraphSurface />                {/* layers 0–2, 4 */}
-  <HtmlOverlayLayer />            {/* layer 3 */}
-</GraphRoot>
+  <GraphSurface /> {/* layers 0–2, 4 */}
+  <HtmlOverlayLayer /> {/* layer 3 */}
+</GraphRoot>;
 ```
 
 `GraphRoot` provides `EngineContext`. `GraphSurface` mounts the correct DOM element (`<canvas>` or `<svg>`) for the backend, wires `ResizeObserver`, forwards pointer events to the engine's tools. `HtmlOverlayLayer` mounts the absolutely-positioned overlay div and manages island lifecycle.

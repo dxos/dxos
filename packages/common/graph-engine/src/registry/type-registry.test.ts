@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { TypeRegistry } from './type-registry';
 import { defaultNodeHandler, defaultEdgeHandler } from './default-handlers';
+import { TypeRegistry } from './type-registry';
 
 describe('TypeRegistry', () => {
   test('falls back to default handler when type unknown', ({ expect }) => {

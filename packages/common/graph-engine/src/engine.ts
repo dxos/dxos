@@ -11,8 +11,8 @@ import { subscribeModel } from './model/model-adapter';
 import { type Projector } from './projector/projector';
 import { type EdgeHandler, type EngineHandle, type NodeHandler } from './registry/handlers';
 import { type TypeRegistry } from './registry/type-registry';
-import { StraightRouter } from './router/straight-router';
 import { type EdgeRouter } from './router/router';
+import { StraightRouter } from './router/straight-router';
 import { type EntityHit, type Tool } from './tool/tool';
 import { TweenService } from './tween/tween-service';
 import { type LayoutEdge, type LayoutGraph, type LayoutNode } from './types';
@@ -133,7 +133,7 @@ export class Engine<N extends Graph.Node.Any = any, E extends Graph.Edge.Any = a
 
   #routeEdge(edge: LayoutEdge, handler: EdgeHandler) {
     const router =
-      typeof handler.router === 'string' ? this.#routers.get(handler.router) ?? new StraightRouter() : handler.router;
+      typeof handler.router === 'string' ? (this.#routers.get(handler.router) ?? new StraightRouter()) : handler.router;
     return router.route(edge);
   }
 

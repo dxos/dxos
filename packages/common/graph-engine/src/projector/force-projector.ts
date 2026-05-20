@@ -2,14 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import {
-  type Simulation,
-  forceCenter,
-  forceCollide,
-  forceLink,
-  forceManyBody,
-  forceSimulation,
-} from 'd3';
+import { type Simulation, forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation } from 'd3';
 
 import { type Graph } from '@dxos/graph';
 import { log } from '@dxos/log';

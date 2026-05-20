@@ -13,12 +13,8 @@ export const useViewport = () => {
     scale: engine.viewport.scale,
   });
   useEffect(() => {
-    const offResize = engine.viewport.resized.on((size) =>
-      setState((s) => ({ ...s, size })),
-    );
-    const offTransform = engine.viewport.transformed.on((t) =>
-      setState((s) => ({ ...s, scale: t.k })),
-    );
+    const offResize = engine.viewport.resized.on((size) => setState((s) => ({ ...s, size })));
+    const offTransform = engine.viewport.transformed.on((t) => setState((s) => ({ ...s, scale: t.k })));
     return () => {
       offResize();
       offTransform();

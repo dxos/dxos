@@ -32,8 +32,7 @@ class FakeHost implements ToolHost {
   }
 }
 
-const ev = (x: number, y: number) =>
-  new PointerEvent('pointermove', { clientX: x, clientY: y, bubbles: true });
+const ev = (x: number, y: number) => new PointerEvent('pointermove', { clientX: x, clientY: y, bubbles: true });
 
 describe('HoverTool', () => {
   test('emits hover-enter when pointer moves over a node', ({ expect }) => {

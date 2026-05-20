@@ -21,5 +21,10 @@ export interface DrawContext {
   setFont(font: string): void;
   fill(path: Path): void;
   stroke(path: Path): void;
-  text(content: string, x: number, y: number, opts?: { align?: 'left' | 'center' | 'right'; baseline?: 'top' | 'middle' | 'bottom' }): void;
+  text(
+    content: string,
+    x: number,
+    y: number,
+    opts?: { align?: 'left' | 'center' | 'right'; baseline?: 'top' | 'middle' | 'bottom' },
+  ): void;
 }

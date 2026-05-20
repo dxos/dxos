@@ -7,10 +7,7 @@ import { type LayoutEdge, type LayoutNode } from '../types';
 /**
  * Hit-test result handed to tools when locating an entity under a pointer.
  */
-export type EntityHit =
-  | { kind: 'node'; node: LayoutNode }
-  | { kind: 'edge'; edge: LayoutEdge }
-  | undefined;
+export type EntityHit = { kind: 'node'; node: LayoutNode } | { kind: 'edge'; edge: LayoutEdge } | undefined;
 
 /**
  * Engine surface a Tool reads from.

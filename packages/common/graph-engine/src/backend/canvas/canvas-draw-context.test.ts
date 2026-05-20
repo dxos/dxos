@@ -56,14 +56,7 @@ describe('CanvasDrawContext', () => {
     p.close();
     dc.setFill('#f00');
     dc.fill(p);
-    expect(calls).toEqual([
-      'fillStyle=#f00',
-      'beginPath',
-      'moveTo(0,0)',
-      'lineTo(10,10)',
-      'closePath',
-      'fill',
-    ]);
+    expect(calls).toEqual(['fillStyle=#f00', 'beginPath', 'moveTo(0,0)', 'lineTo(10,10)', 'closePath', 'fill']);
   });
 
   test('text writes via fillText with alignment', ({ expect }) => {
