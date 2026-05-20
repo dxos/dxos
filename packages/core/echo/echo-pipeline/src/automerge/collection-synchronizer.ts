@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { next as A, type Heads } from '@automerge/automerge';
+import { type Heads } from '@automerge/automerge';
 import type { DocumentId, PeerId } from '@automerge/automerge-repo';
 import * as Array from 'effect/Array';
 import * as Record from 'effect/Record';
@@ -407,7 +407,13 @@ export const diffCollectionState = (local: CollectionState, remote: CollectionSt
       missingOnLocal.push(documentId);
     } else if (!remoteDocuments[documentId]) {
       missingOnRemote.push(documentId);
-    } else if (!A.equals(local.documents[documentId], remote.documents[documentId])) {
+    } else if (!headsOverlap(local.documents[documentId], remote.documents[documentId])) {
+      // Subduction's `getAllHeads()` on the edge mixes raw `LooseCommit` tips with
+      // fragment heads (commit IDs promoted to depth >= 1 by leading-zero count of the
+      // hash). The host's `automerge.getHeads(doc)` only ever sees raw change tips —
+      // it has no notion of fragments — so the two views can disagree on a doc's
+      // head set even when every change byte is replicated. We treat the doc as in
+      // sync as long as both sides agree on at least one head.
       different.push(documentId);
     }
   }
@@ -417,6 +423,24 @@ export const diffCollectionState = (local: CollectionState, remote: CollectionSt
     missingOnLocal,
     different,
   };
+};
+
+/**
+ * Returns true when two head-sets share at least one element. Used by the collection-state
+ * diff so transient fragment-vs-commit-ID mismatches between subduction peers don't get
+ * reported as `differentDocuments` while the underlying change bytes are fully replicated.
+ */
+const headsOverlap = (a: readonly string[], b: readonly string[]): boolean => {
+  if (a.length === 0 || b.length === 0) {
+    return false;
+  }
+  const aset = new Set(a);
+  for (const h of b) {
+    if (aset.has(h)) {
+      return true;
+    }
+  }
+  return false;
 };
 
 const validateCollectionState = (state: CollectionState) => {

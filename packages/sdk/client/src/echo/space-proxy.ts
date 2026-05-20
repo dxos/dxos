@@ -732,6 +732,14 @@ export class SpaceProxy implements Space, CustomInspectable {
       throw new Error('Edge replication is disabled');
     }
 
+    // Drain pending head updates before sampling sync state. `db.flush()` calls
+    // `host.flush`, which (a) flushes loaded docs to disk and (b) `runBlocking`s
+    // `_onHeadsChangedTask` so any `_afterSave`-recorded heads have propagated into
+    // `_collectionSynchronizer`. Without this, `getCollectionSyncState` is eventually
+    // consistent and a stream emission may report `{0, 0, 0}` from stale local heads,
+    // causing the latch below to resolve prematurely.
+    await this._db.flush();
+
     return await new Promise<void>((resolve, reject) => {
       scheduleTask(
         ctx,
