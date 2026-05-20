@@ -9,6 +9,7 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
+import { runAndForwardErrors } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 
 import { NoHandlerError } from './errors';
@@ -81,19 +82,19 @@ export const reactive = (
   registry.subscribe(atom, () => {
     cached = null;
   });
-  const getHandlers = () => {
-    if (!cached) {
-      // Reset cached on rejection so a transient failure doesn't permanently
+  const compute = Effect.suspend(() =>
+    Effect.forEach(registry.get(atom), (set) => set.handlers, { concurrency: 'unbounded' }).pipe(
+      Effect.map((groups) => groups.flat()),
+      // Reset cached on failure so a transient error doesn't permanently
       // poison subsequent calls.
-      cached = Promise.all(registry.get(atom).map((set) => set.getHandlers()))
-        .then((all) => all.flat())
-        .catch((error) => {
+      Effect.tapErrorCause(() =>
+        Effect.sync(() => {
           cached = null;
-          throw error;
-        });
-    }
-    return cached;
-  };
+        }),
+      ),
+    ),
+  );
+  const getHandlers = () => (cached ??= runAndForwardErrors(compute));
   return {
     [TypeId]: TypeId,
     getHandlers,

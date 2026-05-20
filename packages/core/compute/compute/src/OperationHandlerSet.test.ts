@@ -33,10 +33,7 @@ describe('OperationHandlerSet.reactive', () => {
     let resolveCount = 0;
     const trackingSet: OperationHandlerSet.OperationHandlerSet = {
       [OperationHandlerSet.TypeId]: OperationHandlerSet.TypeId,
-      getHandlers: () => {
-        resolveCount++;
-        return Promise.resolve([makeHandler('a', 'A')]);
-      },
+      getHandlers: () => Promise.resolve([makeHandler('a', 'A')]),
       handlers: Effect.sync(() => {
         resolveCount++;
         return [makeHandler('a', 'A')];
@@ -57,14 +54,14 @@ describe('OperationHandlerSet.reactive', () => {
     let callCount = 0;
     const flakySet: OperationHandlerSet.OperationHandlerSet = {
       [OperationHandlerSet.TypeId]: OperationHandlerSet.TypeId,
-      getHandlers: () => {
+      getHandlers: () => Promise.resolve([]),
+      handlers: Effect.suspend(() => {
         callCount++;
         if (callCount === 1) {
-          return Promise.reject(new Error('transient'));
+          return Effect.promise(() => Promise.reject(new Error('transient')));
         }
-        return Promise.resolve([makeHandler('a', 'A')]);
-      },
-      handlers: Effect.succeed([]),
+        return Effect.succeed([makeHandler('a', 'A')]);
+      }),
     };
     const atom = Atom.make<readonly OperationHandlerSet.OperationHandlerSet[]>([flakySet]).pipe(Atom.keepAlive);
     registry.mount(atom);
