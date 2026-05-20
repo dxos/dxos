@@ -105,7 +105,7 @@ const RoastLog = S.Struct({
   ),
   notes: S.optional(S.String.pipe(S.annotations({ title: 'Notes' }))),
 }).pipe(
-  Type.object({ typename: 'com.bramblecoffee.type.roastLog', version: '0.1.0' }),
+  Type.object({ typename: 'example.type.roastLog', version: '0.1.0' }),
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({ icon: 'ph--fire-simple--regular', hue: 'amber' }),
 );
@@ -1051,7 +1051,7 @@ const makeRoastLogs = (): RoastLog[] => [
  * object — the View's projection.schema field is reserved for user overrides only, not the base schema.
  */
 const addRoastLogCollection = async (space: Space): Promise<Collection.Collection> => {
-  const typename = 'com.bramblecoffee.type.roastLog';
+  const typename = 'example.type.roastLog';
 
   // Register creates the PersistentType ECHO object in the space so the runtime can
   // discover and render the schema without it being compiled into the app. Pass the

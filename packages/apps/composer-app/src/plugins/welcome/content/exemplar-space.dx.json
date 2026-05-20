@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "timestamp": "2026-05-20T18:10:47.051Z",
-  "originalSpaceId": "BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT",
-  "createdAt": 1779300647051,
+  "timestamp": "2026-05-20T18:11:58.057Z",
+  "originalSpaceId": "BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC",
+  "createdAt": 1779300718057,
   "objects": [
     {
-      "id": "01KS39AFE5WK6VH2JB668V43B0",
+      "id": "01KS39CMPFBKGM920JY4VKSCGT",
       "@type": "dxn:type:org.dxos.type.spaceProperties:0.1.0",
       "@meta": {
         "keys": []
@@ -14,81 +14,81 @@
       "icon": "potted-plant",
       "name": "Bramble Coffee Roasters",
       "org.dxos.type.collection": {
-        "/": "dxn:echo:@:01KS39AFF22FVZ8T26YW307D4R"
+        "/": "dxn:echo:@:01KS39CMQC77YH0GA4499B0A4C"
       }
     },
     {
-      "id": "01KS39AFF22FVZ8T26YW307D4R",
+      "id": "01KS39CMQC77YH0GA4499B0A4C",
       "@type": "dxn:type:org.dxos.type.collection:0.1.0",
       "@meta": {
         "keys": []
       },
       "objects": [
         {
-          "/": "dxn:echo:@:01KS39AFF7Z18P10FS4QA55SR8"
+          "/": "dxn:echo:@:01KS39CMQH3VTQR5KQ1DTNY3S5"
         },
         {
-          "/": "dxn:echo:@:01KS39AFFMGPVHBK8W5W8DJMWT"
+          "/": "dxn:echo:@:01KS39CMQYBXTGW1J2885YR107"
         },
         {
-          "/": "dxn:echo:@:01KS39AFJBTZ09ZRB1X9DJ5JRG"
+          "/": "dxn:echo:@:01KS39CMVDATSNV7E235R7WYZA"
         },
         {
-          "/": "dxn:echo:@:01KS39AFJRQBM2VAFSXP74M3YS"
+          "/": "dxn:echo:@:01KS39CMVXZX2PZ8HZPCZGT1CA"
         },
         {
-          "/": "dxn:echo:@:01KS39AFK9XGQN4MJM119SKF6R"
+          "/": "dxn:echo:@:01KS39CMWHNEN3TABWAAC6AR7V"
         },
         {
-          "/": "dxn:echo:@:01KS39AFN8DSKN3MY5X9DKWYX5"
+          "/": "dxn:echo:@:01KS39CMYKSSE1BRB64NJFYJ4H"
         },
         {
-          "/": "dxn:echo:@:01KS39AFX9NXHGRQ4MTD2H2ZP3"
+          "/": "dxn:echo:@:01KS39CN7D7KH9EWPXVGDFCACE"
         }
       ]
     },
     {
-      "id": "01KS39AFF7Z18P10FS4QA55SR7",
+      "id": "01KS39CMQGW61EC5D1AAS2T6WE",
       "@type": "dxn:type:org.dxos.type.text:0.1.0",
       "@meta": {
         "keys": []
       },
-      "@parent": "dxn:echo:@:01KS39AFF7Z18P10FS4QA55SR8",
+      "@parent": "dxn:echo:@:01KS39CMQH3VTQR5KQ1DTNY3S5",
       "content": "# Welcome to Composer\n\nThis is a **sample space** we built for you. It pretends to be the workspace of *Bramble Coffee Roasters*, a small specialty coffee company in Oakland. The data is fictional — feel free to break, rename, or delete anything. Your own work lives in your **Personal** space (in the sidebar). When you're done exploring, you can delete this space entirely.\n\nWe made it so you can see what Composer is for without having to build a workspace from scratch.\n\n## Take the tour\n\n### Contacts\n\nOpen **Contacts → Organizations**. You'll find the same set of organizations rendered four different ways:\n\n- A **Table** view — rows and columns.\n- A **Kanban** view — grouped by relationship (supplier / wholesale / partner).\n- A **Map** view — plotted by location (Oakland, Portland, Brooklyn, Austin, plus the partner farms in Colombia and Ethiopia).\n- A **Masonry** view — visual cards.\n\nOpen **Contacts → People** to see the team and partner contacts. Each Person links back to their Organization — clicking the org name navigates to it.\n\n### Inbox\n\nOpen **Inbox**. There are ~20 emails — supplier updates, wholesale reorders, internal memos, plus a few unrelated newsletters and shipping notifications, the kind of noise a real inbox has. The senders are the same people you saw in Contacts.\n\n```prompt\nLook through my inbox and tell me which contacts I haven't replied to yet.\n```\n\n```prompt\nFind any emails about the Spring Blend Launch and summarise where things stand.\n```\n\n### Calendar\n\nOpen **Calendar**. You'll see meetings spread across the last two weeks and the next two — internal standups, customer cuppings, a site visit to a partner farm, a coffee expo. Attendees overlap with the People in Contacts.\n\n### Spring Blend Launch\n\nOpen the **Spring Blend Launch** project. It has a handful of tasks at different statuses, each assigned to someone on the team. This is what a small, in-flight project looks like — communications, documents, and tasks all in one space.\n\n```prompt\nWhat still needs to happen before we can ship the Spring Blend?\n```\n\n### Notes & Documents\n\nA few markdown documents (cupping notes, sourcing trip itinerary, roast log template), two sketches (the roastery floor plan and a flavor wheel), and two spreadsheets (green coffee inventory and the wholesale price list).\n\n### About Bramble Coffee Roasters\n\nThere's also an **About Bramble Coffee Roasters** document at the top of the space. It describes the company in detail — history, team, suppliers, customers, current initiatives. It's a useful grounding doc if you want to ask the agent for new sample content that fits the same world.\n\n## What Composer is\n\nComposer is an extensible, local-first workspace. Documents, sketches, tables, sheets, an inbox, a calendar, contacts, projects, and a few view types over your data — all in the same place, all yours, no server in between. You can install plugins from the Settings dialog to add more content types.\n\n**Private by default.** Your data lives on your device.\n\n**Collaborative.** Invite someone to a space with the **Share** button in the top bar and you can edit together in real time.\n\n**Open source.** [DXOS on GitHub](https://github.com/dxos/dxos).\n\n## When you're ready\n\n- **Personal space** in the sidebar is empty and waiting. That's where to do your own work.\n- This Bramble sample space can be renamed, edited, or deleted at any time.\n- Questions, bug reports, feature requests? Join us on [Discord](https://dxos.org/discord) or read the [docs](https://docs.dxos.org).\n"
     },
     {
-      "id": "01KS39AFF7Z18P10FS4QA55SR8",
+      "id": "01KS39CMQH3VTQR5KQ1DTNY3S5",
       "@type": "dxn:type:org.dxos.type.document:0.1.0",
       "@meta": {
         "keys": []
       },
       "content": {
-        "/": "dxn:echo:@:01KS39AFF7Z18P10FS4QA55SR7"
+        "/": "dxn:echo:@:01KS39CMQGW61EC5D1AAS2T6WE"
       },
       "name": "Welcome & Tour"
     },
     {
-      "id": "01KS39AFFMGPVHBK8W5W8DJMWS",
+      "id": "01KS39CMQYBXTGW1J2885YR106",
       "@type": "dxn:type:org.dxos.type.text:0.1.0",
       "@meta": {
         "keys": []
       },
-      "@parent": "dxn:echo:@:01KS39AFFMGPVHBK8W5W8DJMWT",
+      "@parent": "dxn:echo:@:01KS39CMQYBXTGW1J2885YR107",
       "content": "# About Bramble Coffee Roasters\n\n## At a glance\n\n- **Founded:** 2016\n- **Location:** Roastery + cafe at 412 Linden Avenue, Oakland, CA. Small green-coffee warehouse next door.\n- **Headcount:** 8 full-time, 4 part-time baristas.\n- **Business mix:** ~60% wholesale (cafes, bakeries, small restaurants), ~30% retail (the cafe and a webshop), ~10% subscriptions.\n- **Volume:** roughly 1,800 lbs roasted per week across all blends and single-origins.\n\n## History\n\nBramble was founded by **Maya Chen** (head roaster) and **Diego Alvarez** (sourcing) after they spent four years together at a larger Bay Area roaster. They opened with a single 12 kg Loring roaster, three wholesale accounts, and a corner of a friend's bakery. They moved into the Linden Avenue space in 2019 and added the second roaster in 2022.\n\nThe name \"Bramble\" comes from the tangle of fruit notes Maya kept describing in the Ethiopian naturals she was cupping the day they wrote the business plan.\n\n## Mission and voice\n\n- **Mission:** Make specialty coffee that respects the farm at the front and the cafe at the back. Pay above market for green coffee, charge fair for roasted, keep the supply chain short enough to remember everyone's name.\n- **Brand voice:** Warm, plainspoken, a little nerdy. We talk about coffee like it's food — terroir, ripeness, what the farmer was trying to do — not like it's wine and not like it's fuel. We don't use jargon when a normal word will do. We say please, thank you, and we send handwritten cards when a customer reorders for the fifth time.\n\n## Product lines\n\n| Line | Examples | Notes |\n| --- | --- | --- |\n| Single-origin | Finca Esperanza (Colombia, washed), Sidamo Lot #42 (Ethiopia, natural) | Rotating; ~3 SKUs at any time. |\n| Blends | Linden (everyday espresso), Field Notes (filter), Late Shift (dark) | Year-round; Linden is the wholesale anchor. |\n| Seasonal | **Spring Blend** (in launch), Holiday Blend (Q4) | Two per year. |\n| Decaf | Swiss Water Colombia | One SKU. |\n| Retail | 12 oz bags, gift boxes, brewing gear | In the cafe and online. |\n\n## Sourcing philosophy\n\n- Direct trade where the relationship is real; transparent-trade through a small set of trusted importers otherwise.\n- At least one origin visit per year per major lot.\n- We pay floor prices above the C-market and above Fair Trade. We share lot-level pricing with wholesale partners on request.\n- We prefer farms we've bought from for 2+ years over chasing one-off competition lots.\n\n### Named partner farms / cooperatives\n\n- **Finca Esperanza** — Huila, Colombia. Family farm run by **Carmen Restrepo**. We've bought from her since 2018. Washed caturra and pink bourbon. Q2 is harvest; Q3 is shipment.\n- **Sidamo Cooperative** — Sidamo, Ethiopia. Contact **Abel Tadesse**, export liaison. Naturals; we usually buy lots #38–#45 each year.\n- We also buy small parcels from Guatemala and Peru through importers; those are not named in this exemplar.\n\n## Wholesale customers\n\n- **North Star Café** — Portland, OR. Owner-buyer **Jordan Park**. On the Linden blend and rotating single-origin. Reorders every 3 weeks; uses our subscription program.\n- **Hatch Bakery** — Brooklyn, NY. Buyer **Priya Shah**. Linden + Field Notes. Currently piloting a new espresso blend with us (see Spring Blend Launch).\n- **Olive & Vine** — Austin, TX. Buyer **Mateo Ruiz**. New account; just sent first samples.\n\n## The team\n\nBramble is small; everyone wears two hats.\n\n- **Maya Chen** — co-founder, head roaster. Reads cupping forms in her sleep. Final say on roast curves.\n- **Diego Alvarez** — co-founder, sourcing & green buyer. On the road one week a month during harvest seasons.\n- **Sam Okafor** — wholesale lead. Owns the customer relationships and the Linden inventory.\n- **Riley Tanaka** — operations & logistics. Pallets, freight, the QuickBooks login, the weird vendor portals.\n- Plus four baristas (rotating) and two part-time roastery assistants. Not individually named in the exemplar.\n\n## Active initiatives\n\n### Spring Blend Launch (current focus)\n\nA new seasonal espresso blend targeting wholesale espresso bars. Going live in 6 weeks.\n\n- Diego is locking in the green: lot from Finca Esperanza + a smaller Guatemalan parcel.\n- Maya is iterating on the roast curve; current draft is two weeks old.\n- Sam is coordinating cuppings with North Star, Hatch, and Olive & Vine.\n- Riley is sorting packaging (label redesign with a freelancer) and freight.\n\n### Q2 sourcing trip\n\nDiego flies to Colombia → Ethiopia in five weeks. Two weeks total. He'll visit Finca Esperanza and the Sidamo cooperative, and meet a new Peruvian producer recommended by an importer.\n\n## Conventions used in the exemplar data\n\nWhen extending the exemplar, please keep these consistent:\n\n- **Email addresses:** `firstname@bramblecoffee.com` for internal, organization-specific domains for partners (e.g. `carmen@fincaesperanza.co`, `abel@sidamocoop.org`, `jordan@northstarcafe.com`, `priya@hatchbakery.com`, `mateo@oliveandvine.cafe`).\n- **Dates:** Recent emails should be spread across the last ~6 weeks. Calendar events span 2 weeks past → 2 weeks future. Hard-code ISO dates relative to the snapshot generation date; the script accepts a `--now` flag for reproducibility.\n- **Tone in emails:** Plain, professional but warm. Use first names. No marketing fluff. Suppliers occasionally drop a Spanish or Amharic phrase (sparingly, accurately).\n- **Locations and coordinates:** Use real coordinates so the Map view looks right. Oakland HQ, Portland (North Star), Brooklyn (Hatch), Austin (Olive & Vine), Huila Colombia (Finca Esperanza), Sidamo Ethiopia (Sidamo Cooperative).\n- **No real-world business names** — every entity in this exemplar is fictional and should stay that way. Don't reuse the names of actual specialty roasters or cafes.\n"
     },
     {
-      "id": "01KS39AFFMGPVHBK8W5W8DJMWT",
+      "id": "01KS39CMQYBXTGW1J2885YR107",
       "@type": "dxn:type:org.dxos.type.document:0.1.0",
       "@meta": {
         "keys": []
       },
       "content": {
-        "/": "dxn:echo:@:01KS39AFFMGPVHBK8W5W8DJMWS"
+        "/": "dxn:echo:@:01KS39CMQYBXTGW1J2885YR106"
       },
       "name": "About Bramble Coffee Roasters"
     },
     {
-      "id": "01KS39AFG1Q9R6AC3NRYSHQVRW",
+      "id": "01KS39CMRCJXK3A82R2H16YD7T",
       "@type": "dxn:type:org.dxos.type.organization:0.1.0",
       "@meta": {
         "keys": []
@@ -103,7 +103,7 @@
       "website": "https://bramblecoffee.com"
     },
     {
-      "id": "01KS39AFG62D6X2KAW966SP6NF",
+      "id": "01KS39CMRHWMCZB4MN75ETF9CW",
       "@type": "dxn:type:org.dxos.type.organization:0.1.0",
       "@meta": {
         "keys": []
@@ -118,7 +118,7 @@
       "website": "https://fincaesperanza.co"
     },
     {
-      "id": "01KS39AFG8C6TDFPRDNEH37SFG",
+      "id": "01KS39CMRKQ80DSD2Y3GBR1XKB",
       "@type": "dxn:type:org.dxos.type.organization:0.1.0",
       "@meta": {
         "keys": []
@@ -133,7 +133,7 @@
       "website": "https://sidamocoop.org"
     },
     {
-      "id": "01KS39AFGB0WNYVTKR4R4N8Z7G",
+      "id": "01KS39CMRPM9F4WNDDJ25A6000",
       "@type": "dxn:type:org.dxos.type.organization:0.1.0",
       "@meta": {
         "keys": []
@@ -148,7 +148,7 @@
       "website": "https://northstarcafe.com"
     },
     {
-      "id": "01KS39AFGE3AFD04H0TWFSJ7F5",
+      "id": "01KS39CMRR2BWR9E7R3R4SZKEN",
       "@type": "dxn:type:org.dxos.type.organization:0.1.0",
       "@meta": {
         "keys": []
@@ -163,7 +163,7 @@
       "website": "https://hatchbakery.com"
     },
     {
-      "id": "01KS39AFGGAKCJC7PMT2ERJK6R",
+      "id": "01KS39CMRT7XT54PDEW3N1S0VH",
       "@type": "dxn:type:org.dxos.type.organization:0.1.0",
       "@meta": {
         "keys": []
@@ -178,7 +178,7 @@
       "website": "https://oliveandvine.cafe"
     },
     {
-      "id": "01KS39AFGJGJWP0CC813KR2MRH",
+      "id": "01KS39CMRXKYY1DADGN0NXJ29P",
       "@type": "dxn:type:org.dxos.type.person:0.1.0",
       "@meta": {
         "keys": []
@@ -192,12 +192,12 @@
       "fullName": "Maya Chen",
       "jobTitle": "Head Roaster (co-founder)",
       "organization": {
-        "/": "dxn:echo:@:01KS39AFG1Q9R6AC3NRYSHQVRW"
+        "/": "dxn:echo:@:01KS39CMRCJXK3A82R2H16YD7T"
       },
       "preferredName": "Maya"
     },
     {
-      "id": "01KS39AFGN5NXKD7D726N40CN1",
+      "id": "01KS39CMRZHTDYP1W2ZCW062HP",
       "@type": "dxn:type:org.dxos.type.person:0.1.0",
       "@meta": {
         "keys": []
@@ -211,12 +211,12 @@
       "fullName": "Diego Alvarez",
       "jobTitle": "Sourcing (co-founder)",
       "organization": {
-        "/": "dxn:echo:@:01KS39AFG1Q9R6AC3NRYSHQVRW"
+        "/": "dxn:echo:@:01KS39CMRCJXK3A82R2H16YD7T"
       },
       "preferredName": "Diego"
     },
     {
-      "id": "01KS39AFGQ571F9ZHJAD3A9XG0",
+      "id": "01KS39CMS2XR2J69MEF0V4T4F6",
       "@type": "dxn:type:org.dxos.type.person:0.1.0",
       "@meta": {
         "keys": []
@@ -230,12 +230,12 @@
       "fullName": "Sam Okafor",
       "jobTitle": "Wholesale Lead",
       "organization": {
-        "/": "dxn:echo:@:01KS39AFG1Q9R6AC3NRYSHQVRW"
+        "/": "dxn:echo:@:01KS39CMRCJXK3A82R2H16YD7T"
       },
       "preferredName": "Sam"
     },
     {
-      "id": "01KS39AFGTFMDKM345HT4RDQ9P",
+      "id": "01KS39CMS4FJ5325S1GGKYPRJN",
       "@type": "dxn:type:org.dxos.type.person:0.1.0",
       "@meta": {
         "keys": []
@@ -249,12 +249,12 @@
       "fullName": "Riley Tanaka",
       "jobTitle": "Operations & Logistics",
       "organization": {
-        "/": "dxn:echo:@:01KS39AFG1Q9R6AC3NRYSHQVRW"
+        "/": "dxn:echo:@:01KS39CMRCJXK3A82R2H16YD7T"
       },
       "preferredName": "Riley"
     },
     {
-      "id": "01KS39AFGXNT95Q9N5XHAE9QW9",
+      "id": "01KS39CMS7JMXWKWDMZ261JKJQ",
       "@type": "dxn:type:org.dxos.type.person:0.1.0",
       "@meta": {
         "keys": []
@@ -268,12 +268,12 @@
       "fullName": "Carmen Restrepo",
       "jobTitle": "Producer",
       "organization": {
-        "/": "dxn:echo:@:01KS39AFG62D6X2KAW966SP6NF"
+        "/": "dxn:echo:@:01KS39CMRHWMCZB4MN75ETF9CW"
       },
       "preferredName": "Carmen"
     },
     {
-      "id": "01KS39AFGZ844YZHEDA703Z7BH",
+      "id": "01KS39CMS9AV5H79XKKW5FGNQ5",
       "@type": "dxn:type:org.dxos.type.person:0.1.0",
       "@meta": {
         "keys": []
@@ -287,12 +287,12 @@
       "fullName": "Abel Tadesse",
       "jobTitle": "Export Liaison",
       "organization": {
-        "/": "dxn:echo:@:01KS39AFG8C6TDFPRDNEH37SFG"
+        "/": "dxn:echo:@:01KS39CMRKQ80DSD2Y3GBR1XKB"
       },
       "preferredName": "Abel"
     },
     {
-      "id": "01KS39AFH1S16024VZ4K04PTCZ",
+      "id": "01KS39CMSCSPF7MHEFZ2H7EMRG",
       "@type": "dxn:type:org.dxos.type.person:0.1.0",
       "@meta": {
         "keys": []
@@ -306,12 +306,12 @@
       "fullName": "Jordan Park",
       "jobTitle": "Owner / Buyer",
       "organization": {
-        "/": "dxn:echo:@:01KS39AFGB0WNYVTKR4R4N8Z7G"
+        "/": "dxn:echo:@:01KS39CMRPM9F4WNDDJ25A6000"
       },
       "preferredName": "Jordan"
     },
     {
-      "id": "01KS39AFH3X9SMR80840E1TNJM",
+      "id": "01KS39CMSET5Z1DEYF5YWQNEWN",
       "@type": "dxn:type:org.dxos.type.person:0.1.0",
       "@meta": {
         "keys": []
@@ -325,12 +325,12 @@
       "fullName": "Priya Shah",
       "jobTitle": "Coffee Program Lead",
       "organization": {
-        "/": "dxn:echo:@:01KS39AFGE3AFD04H0TWFSJ7F5"
+        "/": "dxn:echo:@:01KS39CMRR2BWR9E7R3R4SZKEN"
       },
       "preferredName": "Priya"
     },
     {
-      "id": "01KS39AFH5SADJM6PFYYRE8B1K",
+      "id": "01KS39CMSHAHY94EZBQMD0YSC3",
       "@type": "dxn:type:org.dxos.type.person:0.1.0",
       "@meta": {
         "keys": []
@@ -344,12 +344,12 @@
       "fullName": "Mateo Ruiz",
       "jobTitle": "Beverage Buyer",
       "organization": {
-        "/": "dxn:echo:@:01KS39AFGGAKCJC7PMT2ERJK6R"
+        "/": "dxn:echo:@:01KS39CMRT7XT54PDEW3N1S0VH"
       },
       "preferredName": "Mateo"
     },
     {
-      "id": "01KS39AFH8DDD04QVDVX0Q5WTN",
+      "id": "01KS39CMSMM2GCXPD1PWECMRAR",
       "@type": "dxn:type:org.dxos.type.view:0.1.0",
       "@meta": {
         "keys": []
@@ -357,32 +357,32 @@
       "projection": {
         "fields": [
           {
-            "id": "a1be0732",
+            "id": "fff52f1a",
             "path": "image",
             "visible": false
           },
           {
-            "id": "15388147",
+            "id": "b92ca70b",
             "path": "location",
             "visible": false
           },
           {
-            "id": "bdb7a922",
+            "id": "dc7bc9ee",
             "path": "name",
             "visible": true
           },
           {
-            "id": "16787377",
+            "id": "efaa5dce",
             "path": "status",
             "visible": true
           },
           {
-            "id": "fe575643",
+            "id": "4ff991c7",
             "path": "website",
             "visible": true
           },
           {
-            "id": "d9b0b61a",
+            "id": "38d804f8",
             "path": "description",
             "visible": true
           }
@@ -400,7 +400,7 @@
       }
     },
     {
-      "id": "01KS39AFHGW3D3M6BSMTEYD2S8",
+      "id": "01KS39CMSXZ6CS88J40CBT1B34",
       "@type": "dxn:type:org.dxos.type.table:0.1.0",
       "@meta": {
         "keys": []
@@ -408,11 +408,11 @@
       "name": "Table",
       "sizes": {},
       "view": {
-        "/": "dxn:echo:@:01KS39AFH8DDD04QVDVX0Q5WTN"
+        "/": "dxn:echo:@:01KS39CMSMM2GCXPD1PWECMRAR"
       }
     },
     {
-      "id": "01KS39AFHJTDW5B39WEG252BP6",
+      "id": "01KS39CMSZK9EPMMHS5SQ2BJT1",
       "@type": "dxn:type:org.dxos.type.view:0.1.0",
       "@meta": {
         "keys": []
@@ -420,37 +420,37 @@
       "projection": {
         "fields": [
           {
-            "id": "7ee49693",
+            "id": "cc90b372",
             "path": "image",
             "visible": false
           },
           {
-            "id": "bb39f4b1",
+            "id": "03e96449",
             "path": "website",
             "visible": false
           },
           {
-            "id": "eff6f89e",
+            "id": "f80648ea",
             "path": "location",
             "visible": false
           },
           {
-            "id": "8f4e6cfc",
+            "id": "76d4ef8f",
             "path": "name",
             "visible": true
           },
           {
-            "id": "51714b91",
+            "id": "64b1c67c",
             "path": "status",
             "visible": true
           },
           {
-            "id": "60cc8f7b",
+            "id": "07f0722a",
             "path": "description",
             "visible": true
           }
         ],
-        "pivotFieldId": "51714b91"
+        "pivotFieldId": "64b1c67c"
       },
       "query": {
         "ast": {
@@ -464,7 +464,7 @@
       }
     },
     {
-      "id": "01KS39AFHS5J8S8VV30GWZ215K",
+      "id": "01KS39CMTCGQE68H483H8NWMBZ",
       "@type": "dxn:type:org.dxos.type.kanban:0.2.0",
       "@meta": {
         "keys": []
@@ -477,12 +477,12 @@
       "spec": {
         "kind": "view",
         "view": {
-          "/": "dxn:echo:@:01KS39AFHJTDW5B39WEG252BP6"
+          "/": "dxn:echo:@:01KS39CMSZK9EPMMHS5SQ2BJT1"
         }
       }
     },
     {
-      "id": "01KS39AFHV68NJFX134V2AFDPM",
+      "id": "01KS39CMTGK4HY4SF1G24CC0BB",
       "@type": "dxn:type:org.dxos.type.view:0.1.0",
       "@meta": {
         "keys": []
@@ -490,32 +490,32 @@
       "projection": {
         "fields": [
           {
-            "id": "8cf87175",
+            "id": "37af7a4d",
             "path": "status",
             "visible": false
           },
           {
-            "id": "4798d8d5",
+            "id": "76be7ddc",
             "path": "image",
             "visible": false
           },
           {
-            "id": "c395dc6a",
+            "id": "1adb647d",
             "path": "website",
             "visible": false
           },
           {
-            "id": "a03fc1eb",
+            "id": "be3229ea",
             "path": "name",
             "visible": true
           },
           {
-            "id": "e91470fb",
+            "id": "566c8a42",
             "path": "location",
             "visible": true
           },
           {
-            "id": "1540fd4b",
+            "id": "ea2a0920",
             "path": "description",
             "visible": true
           }
@@ -533,7 +533,7 @@
       }
     },
     {
-      "id": "01KS39AFJ2G9RBAZFRENTBP8X0",
+      "id": "01KS39CMTV5T0WDY5T9H8R4T9A",
       "@type": "dxn:type:org.dxos.type.map:0.1.0",
       "@meta": {
         "keys": []
@@ -544,12 +544,12 @@
       ],
       "name": "Map",
       "view": {
-        "/": "dxn:echo:@:01KS39AFHV68NJFX134V2AFDPM"
+        "/": "dxn:echo:@:01KS39CMTGK4HY4SF1G24CC0BB"
       },
       "zoom": 2
     },
     {
-      "id": "01KS39AFJ429YJMKY145R41875",
+      "id": "01KS39CMTZRYPR2MZ0A5Z777TN",
       "@type": "dxn:type:org.dxos.type.view:0.1.0",
       "@meta": {
         "keys": []
@@ -557,32 +557,32 @@
       "projection": {
         "fields": [
           {
-            "id": "06014536",
+            "id": "b53dd8bb",
             "path": "status",
             "visible": false
           },
           {
-            "id": "424a2fa5",
+            "id": "92f3d243",
             "path": "website",
             "visible": false
           },
           {
-            "id": "b1fb3a14",
+            "id": "4ba6bbff",
             "path": "location",
             "visible": false
           },
           {
-            "id": "b3b26d81",
+            "id": "333483e8",
             "path": "name",
             "visible": true
           },
           {
-            "id": "1440f731",
+            "id": "6f4842f5",
             "path": "description",
             "visible": true
           },
           {
-            "id": "1aa26ddf",
+            "id": "afe3f970",
             "path": "image",
             "visible": true
           }
@@ -600,7 +600,7 @@
       }
     },
     {
-      "id": "01KS39AFJ99Y0FBFTEGPEQCC2K",
+      "id": "01KS39CMV9GWTA337S9T8ZYFA9",
       "@type": "dxn:type:org.dxos.type.masonry:0.1.0",
       "@meta": {
         "keys": []
@@ -608,51 +608,51 @@
       "arrangement": [],
       "name": "Masonry",
       "view": {
-        "/": "dxn:echo:@:01KS39AFJ429YJMKY145R41875"
+        "/": "dxn:echo:@:01KS39CMTZRYPR2MZ0A5Z777TN"
       }
     },
     {
-      "id": "01KS39AFJBTZ09ZRB1X9DJ5JRF",
+      "id": "01KS39CMVDATSNV7E235R7WYZ9",
       "@type": "dxn:type:org.dxos.type.feed:0.1.0",
       "@meta": {
         "keys": []
       },
-      "@parent": "dxn:echo:@:01KS39AFJBTZ09ZRB1X9DJ5JRG"
+      "@parent": "dxn:echo:@:01KS39CMVDATSNV7E235R7WYZA"
     },
     {
-      "id": "01KS39AFJBTZ09ZRB1X9DJ5JRG",
+      "id": "01KS39CMVDATSNV7E235R7WYZA",
       "@type": "dxn:type:org.dxos.type.mailbox:0.1.0",
       "@meta": {
         "keys": []
       },
       "feed": {
-        "/": "dxn:echo:@:01KS39AFJBTZ09ZRB1X9DJ5JRF"
+        "/": "dxn:echo:@:01KS39CMVDATSNV7E235R7WYZ9"
       },
       "filters": [],
       "labels": {},
       "name": "Inbox"
     },
     {
-      "id": "01KS39AFJRQBM2VAFSXP74M3YR",
+      "id": "01KS39CMVXZX2PZ8HZPCZGT1C9",
       "@type": "dxn:type:org.dxos.type.feed:0.1.0",
       "@meta": {
         "keys": []
       },
-      "@parent": "dxn:echo:@:01KS39AFJRQBM2VAFSXP74M3YS"
+      "@parent": "dxn:echo:@:01KS39CMVXZX2PZ8HZPCZGT1CA"
     },
     {
-      "id": "01KS39AFJRQBM2VAFSXP74M3YS",
+      "id": "01KS39CMVXZX2PZ8HZPCZGT1CA",
       "@type": "dxn:type:org.dxos.type.calendar:0.1.0",
       "@meta": {
         "keys": []
       },
       "feed": {
-        "/": "dxn:echo:@:01KS39AFJRQBM2VAFSXP74M3YR"
+        "/": "dxn:echo:@:01KS39CMVXZX2PZ8HZPCZGT1C9"
       },
       "name": "Bramble Calendar"
     },
     {
-      "id": "01KS39AFJWJJDK1X04XQDPXXPA",
+      "id": "01KS39CMW5W977H664FHFJF3N9",
       "@type": "dxn:type:org.dxos.type.project:0.1.0",
       "@meta": {
         "keys": []
@@ -661,108 +661,108 @@
       "name": "Spring Blend Launch"
     },
     {
-      "id": "01KS39AFJX3WP46R1J06HG6P1R",
+      "id": "01KS39CMW5W977H664FHFJF3NA",
       "@type": "dxn:type:org.dxos.type.task:0.1.0",
       "@meta": {
         "keys": []
       },
       "assigned": {
-        "/": "dxn:echo:@:01KS39AFGN5NXKD7D726N40CN1"
+        "/": "dxn:echo:@:01KS39CMRZHTDYP1W2ZCW062HP"
       },
       "description": "Lock contracts with Carmen and the importer for the Guatemalan parcel.",
       "priority": "high",
       "project": {
-        "/": "dxn:echo:@:01KS39AFJWJJDK1X04XQDPXXPA"
+        "/": "dxn:echo:@:01KS39CMW5W977H664FHFJF3N9"
       },
       "status": "done",
       "title": "Source green coffee — Esperanza + Guatemalan parcel"
     },
     {
-      "id": "01KS39AFJX3WP46R1J06HG6P1S",
+      "id": "01KS39CMW5W977H664FHFJF3NB",
       "@type": "dxn:type:org.dxos.type.task:0.1.0",
       "@meta": {
         "keys": []
       },
       "assigned": {
-        "/": "dxn:echo:@:01KS39AFGJGJWP0CC813KR2MRH"
+        "/": "dxn:echo:@:01KS39CMRXKYY1DADGN0NXJ29P"
       },
       "description": "Currently on v2 with adjusted development time. One more iteration before sign-off.",
       "priority": "high",
       "project": {
-        "/": "dxn:echo:@:01KS39AFJWJJDK1X04XQDPXXPA"
+        "/": "dxn:echo:@:01KS39CMW5W977H664FHFJF3N9"
       },
       "status": "in-progress",
       "title": "Finalize roast curve (v3)"
     },
     {
-      "id": "01KS39AFJX3WP46R1J06HG6P1T",
+      "id": "01KS39CMW5W977H664FHFJF3NC",
       "@type": "dxn:type:org.dxos.type.task:0.1.0",
       "@meta": {
         "keys": []
       },
       "assigned": {
-        "/": "dxn:echo:@:01KS39AFGQ571F9ZHJAD3A9XG0"
+        "/": "dxn:echo:@:01KS39CMS2XR2J69MEF0V4T4F6"
       },
       "description": "North Star, Hatch, Olive & Vine. 2 lb each.",
       "priority": "medium",
       "project": {
-        "/": "dxn:echo:@:01KS39AFJWJJDK1X04XQDPXXPA"
+        "/": "dxn:echo:@:01KS39CMW5W977H664FHFJF3N9"
       },
       "status": "in-progress",
       "title": "Send v2 samples to wholesalers"
     },
     {
-      "id": "01KS39AFJX3WP46R1J06HG6P1V",
+      "id": "01KS39CMW5W977H664FHFJF3ND",
       "@type": "dxn:type:org.dxos.type.task:0.1.0",
       "@meta": {
         "keys": []
       },
       "assigned": {
-        "/": "dxn:echo:@:01KS39AFGTFMDKM345HT4RDQ9P"
+        "/": "dxn:echo:@:01KS39CMS4FJ5325S1GGKYPRJN"
       },
       "description": "Final draft due to the printer in 10 days.",
       "priority": "medium",
       "project": {
-        "/": "dxn:echo:@:01KS39AFJWJJDK1X04XQDPXXPA"
+        "/": "dxn:echo:@:01KS39CMW5W977H664FHFJF3N9"
       },
       "status": "in-progress",
       "title": "Design label — Letterform Press"
     },
     {
-      "id": "01KS39AFJX3WP46R1J06HG6P1W",
+      "id": "01KS39CMW5W977H664FHFJF3NE",
       "@type": "dxn:type:org.dxos.type.task:0.1.0",
       "@meta": {
         "keys": []
       },
       "assigned": {
-        "/": "dxn:echo:@:01KS39AFGQ571F9ZHJAD3A9XG0"
+        "/": "dxn:echo:@:01KS39CMS2XR2J69MEF0V4T4F6"
       },
       "priority": "medium",
       "project": {
-        "/": "dxn:echo:@:01KS39AFJWJJDK1X04XQDPXXPA"
+        "/": "dxn:echo:@:01KS39CMW5W977H664FHFJF3N9"
       },
       "status": "todo",
       "title": "Schedule launch cuppings (Oakland + remote)"
     },
     {
-      "id": "01KS39AFJX3WP46R1J06HG6P1X",
+      "id": "01KS39CMW6SJ47QDKS8CX331Q5",
       "@type": "dxn:type:org.dxos.type.task:0.1.0",
       "@meta": {
         "keys": []
       },
       "assigned": {
-        "/": "dxn:echo:@:01KS39AFGTFMDKM345HT4RDQ9P"
+        "/": "dxn:echo:@:01KS39CMS4FJ5325S1GGKYPRJN"
       },
       "description": "Webshop + email blast to subscribers.",
       "priority": "low",
       "project": {
-        "/": "dxn:echo:@:01KS39AFJWJJDK1X04XQDPXXPA"
+        "/": "dxn:echo:@:01KS39CMW5W977H664FHFJF3N9"
       },
       "status": "todo",
       "title": "Publish product page + open preorders"
     },
     {
-      "id": "01KS39AFK9XGQN4MJM119SKF6R",
+      "id": "01KS39CMWHNEN3TABWAAC6AR7V",
       "@type": "dxn:type:org.dxos.type.collection:0.1.0",
       "@meta": {
         "keys": []
@@ -770,90 +770,90 @@
       "name": "Spring Blend Launch",
       "objects": [
         {
-          "/": "dxn:echo:@:01KS39AFJWJJDK1X04XQDPXXPA"
+          "/": "dxn:echo:@:01KS39CMW5W977H664FHFJF3N9"
         },
         {
-          "/": "dxn:echo:@:01KS39AFJX3WP46R1J06HG6P1R"
+          "/": "dxn:echo:@:01KS39CMW5W977H664FHFJF3NA"
         },
         {
-          "/": "dxn:echo:@:01KS39AFJX3WP46R1J06HG6P1S"
+          "/": "dxn:echo:@:01KS39CMW5W977H664FHFJF3NB"
         },
         {
-          "/": "dxn:echo:@:01KS39AFJX3WP46R1J06HG6P1T"
+          "/": "dxn:echo:@:01KS39CMW5W977H664FHFJF3NC"
         },
         {
-          "/": "dxn:echo:@:01KS39AFJX3WP46R1J06HG6P1V"
+          "/": "dxn:echo:@:01KS39CMW5W977H664FHFJF3ND"
         },
         {
-          "/": "dxn:echo:@:01KS39AFJX3WP46R1J06HG6P1W"
+          "/": "dxn:echo:@:01KS39CMW5W977H664FHFJF3NE"
         },
         {
-          "/": "dxn:echo:@:01KS39AFJX3WP46R1J06HG6P1X"
+          "/": "dxn:echo:@:01KS39CMW6SJ47QDKS8CX331Q5"
         }
       ]
     },
     {
-      "id": "01KS39AFKB9GZG94Q3E7H1ANST",
+      "id": "01KS39CMWNQRANCSX90TE961J4",
       "@type": "dxn:type:org.dxos.type.text:0.1.0",
       "@meta": {
         "keys": []
       },
-      "@parent": "dxn:echo:@:01KS39AFKCAQ60KD5TP6AF2J2A",
-      "content": "# Cupping notes — Finca Esperanza Lot #42\n\n**Farm:** [Finca Esperanza](dxn:echo:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFG62D6X2KAW966SP6NF) · **Contact:** [Carmen Restrepo](dxn:echo:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFGXNT95Q9N5XHAE9QW9)\n\n**Date:** 2026-04-30 · **Cuppers:** [Maya](dxn:echo:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFGJGJWP0CC813KR2MRH), [Diego](dxn:echo:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFGN5NXKD7D726N40CN1), [Sam](dxn:echo:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFGQ571F9ZHJAD3A9XG0)\n\n## Profile\n\n- **Fragrance/Aroma:** Stone fruit, jasmine, light cocoa.\n- **Acidity:** Bright, malic, well-structured.\n- **Body:** Medium, silky.\n- **Flavor:** Red apple, raspberry, milk chocolate, almond finish.\n- **Aftertaste:** Long, clean, slightly floral.\n\n## Scores\n\n| Cupper | Score |\n| --- | --- |\n| Maya | 87.5 |\n| Diego | 88.0 |\n| Sam | 87.0 |\n\n## Notes\n\nBest lot Carmen has sent us in three years. Worth pushing into the Spring Blend at a higher ratio than we initially planned."
+      "@parent": "dxn:echo:@:01KS39CMWP907SDRNARGGTN2YT",
+      "content": "# Cupping notes — Finca Esperanza Lot #42\n\n**Farm:** [Finca Esperanza](dxn:echo:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMRHWMCZB4MN75ETF9CW) · **Contact:** [Carmen Restrepo](dxn:echo:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMS7JMXWKWDMZ261JKJQ)\n\n**Date:** 2026-04-30 · **Cuppers:** [Maya](dxn:echo:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMRXKYY1DADGN0NXJ29P), [Diego](dxn:echo:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMRZHTDYP1W2ZCW062HP), [Sam](dxn:echo:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMS2XR2J69MEF0V4T4F6)\n\n## Profile\n\n- **Fragrance/Aroma:** Stone fruit, jasmine, light cocoa.\n- **Acidity:** Bright, malic, well-structured.\n- **Body:** Medium, silky.\n- **Flavor:** Red apple, raspberry, milk chocolate, almond finish.\n- **Aftertaste:** Long, clean, slightly floral.\n\n## Scores\n\n| Cupper | Score |\n| --- | --- |\n| Maya | 87.5 |\n| Diego | 88.0 |\n| Sam | 87.0 |\n\n## Notes\n\nBest lot Carmen has sent us in three years. Worth pushing into the Spring Blend at a higher ratio than we initially planned."
     },
     {
-      "id": "01KS39AFKCAQ60KD5TP6AF2J2A",
+      "id": "01KS39CMWP907SDRNARGGTN2YT",
       "@type": "dxn:type:org.dxos.type.document:0.1.0",
       "@meta": {
         "keys": []
       },
       "content": {
-        "/": "dxn:echo:@:01KS39AFKB9GZG94Q3E7H1ANST"
+        "/": "dxn:echo:@:01KS39CMWNQRANCSX90TE961J4"
       },
       "name": "Cupping notes — Finca Esperanza Lot #42"
     },
     {
-      "id": "01KS39AFKCAQ60KD5TP6AF2J2B",
+      "id": "01KS39CMWP907SDRNARGGTN2YV",
       "@type": "dxn:type:org.dxos.type.text:0.1.0",
       "@meta": {
         "keys": []
       },
-      "@parent": "dxn:echo:@:01KS39AFKCAQ60KD5TP6AF2J2C",
-      "content": "# Q2 sourcing trip — itinerary\n\n**Traveler:** [Diego Alvarez](dxn:echo:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFGN5NXKD7D726N40CN1)\n**Dates:** 2026-06-10 → 2026-06-24\n\n## Colombia (Huila)\n\n**Host:** [Carmen Restrepo](dxn:echo:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFGXNT95Q9N5XHAE9QW9) · [Finca Esperanza](dxn:echo:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFG62D6X2KAW966SP6NF)\n\n- Land in Bogotá; drive to Neiva.\n- Two days at Finca Esperanza with Carmen.\n- Visit two new lots recommended by our importer.\n- Return to Bogotá; fly out.\n\n## Ethiopia (Sidamo)\n\n**Host:** [Abel Tadesse](dxn:echo:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFGZ844YZHEDA703Z7BH) · [Sidamo Cooperative](dxn:echo:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFG8C6TDFPRDNEH37SFG)\n\n- Arrive Addis Ababa; meet Abel.\n- Three days in Sidamo (cooperative + two member washing stations).\n- Cup the new harvest in Addis before flying home.\n\n## Buying targets\n\n- Colombia: lock 18 bags (Esperanza) + 6 bags (new lot if it cups above 87).\n- Ethiopia: confirm the full container of lot 42; optionally add a smaller naturals lot."
+      "@parent": "dxn:echo:@:01KS39CMWP907SDRNARGGTN2YW",
+      "content": "# Q2 sourcing trip — itinerary\n\n**Traveler:** [Diego Alvarez](dxn:echo:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMRZHTDYP1W2ZCW062HP)\n**Dates:** 2026-06-10 → 2026-06-24\n\n## Colombia (Huila)\n\n**Host:** [Carmen Restrepo](dxn:echo:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMS7JMXWKWDMZ261JKJQ) · [Finca Esperanza](dxn:echo:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMRHWMCZB4MN75ETF9CW)\n\n- Land in Bogotá; drive to Neiva.\n- Two days at Finca Esperanza with Carmen.\n- Visit two new lots recommended by our importer.\n- Return to Bogotá; fly out.\n\n## Ethiopia (Sidamo)\n\n**Host:** [Abel Tadesse](dxn:echo:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMS9AV5H79XKKW5FGNQ5) · [Sidamo Cooperative](dxn:echo:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMRKQ80DSD2Y3GBR1XKB)\n\n- Arrive Addis Ababa; meet Abel.\n- Three days in Sidamo (cooperative + two member washing stations).\n- Cup the new harvest in Addis before flying home.\n\n## Buying targets\n\n- Colombia: lock 18 bags (Esperanza) + 6 bags (new lot if it cups above 87).\n- Ethiopia: confirm the full container of lot 42; optionally add a smaller naturals lot."
     },
     {
-      "id": "01KS39AFKCAQ60KD5TP6AF2J2C",
+      "id": "01KS39CMWP907SDRNARGGTN2YW",
       "@type": "dxn:type:org.dxos.type.document:0.1.0",
       "@meta": {
         "keys": []
       },
       "content": {
-        "/": "dxn:echo:@:01KS39AFKCAQ60KD5TP6AF2J2B"
+        "/": "dxn:echo:@:01KS39CMWP907SDRNARGGTN2YV"
       },
       "name": "Q2 sourcing trip — itinerary"
     },
     {
-      "id": "01KS39AFKDDFEMY33VQXKYXRFT",
+      "id": "01KS39CMWP907SDRNARGGTN2YX",
       "@type": "dxn:type:org.dxos.type.text:0.1.0",
       "@meta": {
         "keys": []
       },
-      "@parent": "dxn:echo:@:01KS39AFKDDFEMY33VQXKYXRFV",
-      "content": "# Spring blend — tasting protocol\n\nProject: ![Spring Blend Launch](dxn:echo:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJWJJDK1X04XQDPXXPA)\n\n## Setup\n\n- Prepare 4 samples per session: v1, v2, v3, and the control (current Linden blend).\n- Grind 10 g per sample, 200 ml at 94 °C.\n- Evaluate dry fragrance, wet aroma, and taste at 4-min, 8-min, 12-min intervals.\n\n## Brew parameters\n\n1. **Espresso:** 18 g in / 36 g out / 27–30 s.\n2. **Filter:** 1:16 ratio, 4:00 total time.\n\n## Scoring dimensions\n\nFragrance/Aroma · Flavour · Aftertaste · Acidity · Body · Balance · Uniformity · Cleanliness · Sweetness\n\n## Key targets\n\n- Espresso-forward: good body at 1:2.5 ratio.\n- Profile: fruit-forward (berry, stone fruit), chocolate mid, clean finish.\n- Score on the SCA form, then add a short qualitative note.\n- Re-cup after 7 days to check for stale notes."
+      "@parent": "dxn:echo:@:01KS39CMWP907SDRNARGGTN2YY",
+      "content": "# Spring blend — tasting protocol\n\nProject: ![Spring Blend Launch](dxn:echo:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMW5W977H664FHFJF3N9)\n\n## Setup\n\n- Prepare 4 samples per session: v1, v2, v3, and the control (current Linden blend).\n- Grind 10 g per sample, 200 ml at 94 °C.\n- Evaluate dry fragrance, wet aroma, and taste at 4-min, 8-min, 12-min intervals.\n\n## Brew parameters\n\n1. **Espresso:** 18 g in / 36 g out / 27–30 s.\n2. **Filter:** 1:16 ratio, 4:00 total time.\n\n## Scoring dimensions\n\nFragrance/Aroma · Flavour · Aftertaste · Acidity · Body · Balance · Uniformity · Cleanliness · Sweetness\n\n## Key targets\n\n- Espresso-forward: good body at 1:2.5 ratio.\n- Profile: fruit-forward (berry, stone fruit), chocolate mid, clean finish.\n- Score on the SCA form, then add a short qualitative note.\n- Re-cup after 7 days to check for stale notes."
     },
     {
-      "id": "01KS39AFKDDFEMY33VQXKYXRFV",
+      "id": "01KS39CMWP907SDRNARGGTN2YY",
       "@type": "dxn:type:org.dxos.type.document:0.1.0",
       "@meta": {
         "keys": []
       },
       "content": {
-        "/": "dxn:echo:@:01KS39AFKDDFEMY33VQXKYXRFT"
+        "/": "dxn:echo:@:01KS39CMWP907SDRNARGGTN2YX"
       },
       "name": "Spring blend tasting protocol"
     },
     {
-      "id": "01KS39AFKWH7T5CJ4N2M35TQS2",
+      "id": "01KS39CMX42VTHXT9YGS3N8J8A",
       "@type": "dxn:type:org.dxos.type.canvas:0.1.0",
       "@meta": {
         "keys": []
@@ -1087,18 +1087,18 @@
       "schema": "tldraw.com/2"
     },
     {
-      "id": "01KS39AFKXFAHMS087JEW7EMZ5",
+      "id": "01KS39CMX57CM9AD4H03QJE88D",
       "@type": "dxn:type:org.dxos.type.sketch:0.1.0",
       "@meta": {
         "keys": []
       },
       "canvas": {
-        "/": "dxn:echo:@:01KS39AFKWH7T5CJ4N2M35TQS2"
+        "/": "dxn:echo:@:01KS39CMX42VTHXT9YGS3N8J8A"
       },
       "name": "Roastery floor plan"
     },
     {
-      "id": "01KS39AFKXFAHMS087JEW7EMZ6",
+      "id": "01KS39CMX57CM9AD4H03QJE88E",
       "@type": "dxn:type:org.dxos.type.canvas:0.1.0",
       "@meta": {
         "keys": []
@@ -1512,279 +1512,279 @@
       "schema": "tldraw.com/2"
     },
     {
-      "id": "01KS39AFKYXM4H634EPKBQSWBF",
+      "id": "01KS39CMX6QM26NV7Q1ZHMQVH1",
       "@type": "dxn:type:org.dxos.type.sketch:0.1.0",
       "@meta": {
         "keys": []
       },
       "canvas": {
-        "/": "dxn:echo:@:01KS39AFKXFAHMS087JEW7EMZ6"
+        "/": "dxn:echo:@:01KS39CMX57CM9AD4H03QJE88E"
       },
       "name": "Spring blend flavor wheel"
     },
     {
-      "id": "01KS39AFMW3WQ2FGDMRHST1YEM",
+      "id": "01KS39CMXYRXNJM7TBNDB0MEM0",
       "@type": "dxn:type:org.dxos.type.sheet:0.1.0",
       "@meta": {
         "keys": []
       },
       "cells": {
-        "5U1pATTs@FFPY9q4s": {
-          "value": "Guatemala — Antigua"
-        },
-        "5U1pATTs@SUWzmHN9": {
-          "value": "TOTAL"
-        },
-        "5U1pATTs@TK06xjEF": {
-          "value": "Ethiopia — Sidamo"
-        },
-        "5U1pATTs@equyoOGB": {
-          "value": "Origin"
-        },
-        "5U1pATTs@fnyQSjhz": {
-          "value": "Peru — Cajamarca"
-        },
-        "5U1pATTs@ukjhVPMC": {
-          "value": "Colombia — Esperanza"
-        },
-        "AIrW30yB@FFPY9q4s": {
-          "value": 10.8
-        },
-        "AIrW30yB@TK06xjEF": {
-          "value": 13.2
-        },
-        "AIrW30yB@equyoOGB": {
-          "value": "Cost/kg"
-        },
-        "AIrW30yB@fnyQSjhz": {
-          "value": 9.6
-        },
-        "AIrW30yB@ukjhVPMC": {
-          "value": 11.5
-        },
-        "YuNEiu6P@FFPY9q4s": {
-          "value": "Washed"
-        },
-        "YuNEiu6P@TK06xjEF": {
-          "value": "Natural"
-        },
-        "YuNEiu6P@equyoOGB": {
-          "value": "Process"
-        },
-        "YuNEiu6P@fnyQSjhz": {
-          "value": "Washed"
-        },
-        "YuNEiu6P@ukjhVPMC": {
-          "value": "Washed"
-        },
-        "g5ily39z@FFPY9q4s": {
+        "C3UVKFQI@BAR1KfFD": {
           "value": 90
         },
-        "g5ily39z@SUWzmHN9": {
-          "value": "=SUM(g5ily39z@ukjhVPMC:g5ily39z@fnyQSjhz)"
-        },
-        "g5ily39z@TK06xjEF": {
-          "value": 240
-        },
-        "g5ily39z@equyoOGB": {
-          "value": "KG"
-        },
-        "g5ily39z@fnyQSjhz": {
+        "C3UVKFQI@codVkw64": {
           "value": 60
         },
-        "g5ily39z@ukjhVPMC": {
+        "C3UVKFQI@eXWYihpH": {
+          "value": 240
+        },
+        "C3UVKFQI@h6TBzNDk": {
           "value": 180
         },
-        "no0z6kyb@FFPY9q4s": {
-          "value": "=g5ily39z@FFPY9q4s*AIrW30yB@FFPY9q4s"
+        "C3UVKFQI@kZJXt4ht": {
+          "value": "KG"
         },
-        "no0z6kyb@SUWzmHN9": {
-          "value": "=SUM(no0z6kyb@ukjhVPMC:no0z6kyb@fnyQSjhz)"
+        "C3UVKFQI@ubWxDE4u": {
+          "value": "=SUM(C3UVKFQI@h6TBzNDk:C3UVKFQI@codVkw64)"
         },
-        "no0z6kyb@TK06xjEF": {
-          "value": "=g5ily39z@TK06xjEF*AIrW30yB@TK06xjEF"
+        "JHYvNwMW@BAR1KfFD": {
+          "value": "=C3UVKFQI@BAR1KfFD*WOqlR7ZQ@BAR1KfFD"
         },
-        "no0z6kyb@equyoOGB": {
+        "JHYvNwMW@codVkw64": {
+          "value": "=C3UVKFQI@codVkw64*WOqlR7ZQ@codVkw64"
+        },
+        "JHYvNwMW@eXWYihpH": {
+          "value": "=C3UVKFQI@eXWYihpH*WOqlR7ZQ@eXWYihpH"
+        },
+        "JHYvNwMW@h6TBzNDk": {
+          "value": "=C3UVKFQI@h6TBzNDk*WOqlR7ZQ@h6TBzNDk"
+        },
+        "JHYvNwMW@kZJXt4ht": {
           "value": "Total"
         },
-        "no0z6kyb@fnyQSjhz": {
-          "value": "=g5ily39z@fnyQSjhz*AIrW30yB@fnyQSjhz"
+        "JHYvNwMW@ubWxDE4u": {
+          "value": "=SUM(JHYvNwMW@h6TBzNDk:JHYvNwMW@codVkw64)"
         },
-        "no0z6kyb@ukjhVPMC": {
-          "value": "=g5ily39z@ukjhVPMC*AIrW30yB@ukjhVPMC"
+        "MiL8Pk7O@BAR1KfFD": {
+          "value": "Washed"
         },
-        "xC6T4LaV@FFPY9q4s": {
+        "MiL8Pk7O@codVkw64": {
+          "value": "Washed"
+        },
+        "MiL8Pk7O@eXWYihpH": {
+          "value": "Natural"
+        },
+        "MiL8Pk7O@h6TBzNDk": {
+          "value": "Washed"
+        },
+        "MiL8Pk7O@kZJXt4ht": {
+          "value": "Process"
+        },
+        "WOqlR7ZQ@BAR1KfFD": {
+          "value": 10.8
+        },
+        "WOqlR7ZQ@codVkw64": {
+          "value": 9.6
+        },
+        "WOqlR7ZQ@eXWYihpH": {
+          "value": 13.2
+        },
+        "WOqlR7ZQ@h6TBzNDk": {
+          "value": 11.5
+        },
+        "WOqlR7ZQ@kZJXt4ht": {
+          "value": "Cost/kg"
+        },
+        "jOBeH18e@BAR1KfFD": {
           "value": "Lot 7"
         },
-        "xC6T4LaV@TK06xjEF": {
-          "value": "Lot 42"
-        },
-        "xC6T4LaV@equyoOGB": {
-          "value": "Lot"
-        },
-        "xC6T4LaV@fnyQSjhz": {
+        "jOBeH18e@codVkw64": {
           "value": "Lot 3"
         },
-        "xC6T4LaV@ukjhVPMC": {
+        "jOBeH18e@eXWYihpH": {
+          "value": "Lot 42"
+        },
+        "jOBeH18e@h6TBzNDk": {
           "value": "Lot A"
+        },
+        "jOBeH18e@kZJXt4ht": {
+          "value": "Lot"
+        },
+        "t6ckmF5J@BAR1KfFD": {
+          "value": "Guatemala — Antigua"
+        },
+        "t6ckmF5J@codVkw64": {
+          "value": "Peru — Cajamarca"
+        },
+        "t6ckmF5J@eXWYihpH": {
+          "value": "Ethiopia — Sidamo"
+        },
+        "t6ckmF5J@h6TBzNDk": {
+          "value": "Colombia — Esperanza"
+        },
+        "t6ckmF5J@kZJXt4ht": {
+          "value": "Origin"
+        },
+        "t6ckmF5J@ubWxDE4u": {
+          "value": "TOTAL"
         }
       },
       "columnMeta": {},
       "columns": [
-        "5U1pATTs",
-        "xC6T4LaV",
-        "YuNEiu6P",
-        "g5ily39z",
-        "AIrW30yB",
-        "no0z6kyb"
+        "t6ckmF5J",
+        "jOBeH18e",
+        "MiL8Pk7O",
+        "C3UVKFQI",
+        "WOqlR7ZQ",
+        "JHYvNwMW"
       ],
       "name": "Green coffee inventory",
       "ranges": [],
       "rowMeta": {},
       "rows": [
-        "equyoOGB",
-        "ukjhVPMC",
-        "TK06xjEF",
-        "FFPY9q4s",
-        "fnyQSjhz",
-        "SUWzmHN9",
-        "TZRiKX4c",
-        "1vU5mSfi",
-        "ExAGj97x",
-        "uuc7FSAx",
-        "SRQAUlHG",
-        "9rKIs8YL"
+        "kZJXt4ht",
+        "h6TBzNDk",
+        "eXWYihpH",
+        "BAR1KfFD",
+        "codVkw64",
+        "ubWxDE4u",
+        "HtrydS0a",
+        "jcjdGwsk",
+        "uC7LNaI5",
+        "aaOoJhRf",
+        "AlL2rFZt",
+        "NJEEjHsE"
       ]
     },
     {
-      "id": "01KS39AFMYYFNF9QYR9661TEFN",
+      "id": "01KS39CMY1YHVG1NP0Z7W0BJN4",
       "@type": "dxn:type:org.dxos.type.sheet:0.1.0",
       "@meta": {
         "keys": []
       },
       "cells": {
-        "8eLygw77@45BH2DmD": {
-          "value": 22
-        },
-        "8eLygw77@7XfSSdi9": {
-          "value": "Retail / 12 oz"
-        },
-        "8eLygw77@8PvvsRDn": {
-          "value": 19
-        },
-        "8eLygw77@AFlFJBVv": {
-          "value": 26
-        },
-        "8eLygw77@BOVYNW1o": {
-          "value": 26
-        },
-        "8eLygw77@PmNPGNCu": {
-          "value": "=AVERAGE(8eLygw77@n1IReD7Z:8eLygw77@45BH2DmD)"
-        },
-        "8eLygw77@a13yyIq9": {
-          "value": 18
-        },
-        "8eLygw77@n1IReD7Z": {
-          "value": 19
-        },
-        "Cfszez9b@45BH2DmD": {
-          "value": 21
-        },
-        "Cfszez9b@7XfSSdi9": {
-          "value": "Wholesale / lb"
-        },
-        "Cfszez9b@8PvvsRDn": {
-          "value": 18
-        },
-        "Cfszez9b@AFlFJBVv": {
-          "value": 24
-        },
-        "Cfszez9b@BOVYNW1o": {
-          "value": 24
-        },
-        "Cfszez9b@SnNyiACh": {
-          "value": "=AVERAGE(Cfszez9b@n1IReD7Z:Cfszez9b@45BH2DmD)"
-        },
-        "Cfszez9b@a13yyIq9": {
-          "value": 17
-        },
-        "Cfszez9b@n1IReD7Z": {
-          "value": 18
-        },
-        "TaNqWCL1@45BH2DmD": {
-          "value": "Spring Blend (preorder)"
-        },
-        "TaNqWCL1@7XfSSdi9": {
-          "value": "Product"
-        },
-        "TaNqWCL1@8PvvsRDn": {
-          "value": "Field Notes Blend"
-        },
-        "TaNqWCL1@AFlFJBVv": {
-          "value": "Sidamo Single-Origin"
-        },
-        "TaNqWCL1@BOVYNW1o": {
-          "value": "Esperanza Single-Origin"
-        },
-        "TaNqWCL1@a13yyIq9": {
-          "value": "Late Shift"
-        },
-        "TaNqWCL1@n1IReD7Z": {
-          "value": "Linden Blend"
-        },
-        "p2oFDA5Y@45BH2DmD": {
-          "value": "SB-12"
-        },
-        "p2oFDA5Y@7XfSSdi9": {
-          "value": "SKU"
-        },
-        "p2oFDA5Y@8PvvsRDn": {
+        "C774Hwi0@7SLuTmTl": {
           "value": "FN-12"
         },
-        "p2oFDA5Y@AFlFJBVv": {
-          "value": "SID-12"
+        "C774Hwi0@Bro5Pgj1": {
+          "value": "SB-12"
         },
-        "p2oFDA5Y@BOVYNW1o": {
-          "value": "ESP-12"
-        },
-        "p2oFDA5Y@PmNPGNCu": {
-          "value": "AVG retail"
-        },
-        "p2oFDA5Y@SnNyiACh": {
+        "C774Hwi0@JqZz9CrT": {
           "value": "AVG wholesale"
         },
-        "p2oFDA5Y@a13yyIq9": {
+        "C774Hwi0@KC1lZnHZ": {
+          "value": "AVG retail"
+        },
+        "C774Hwi0@KQjGJvm1": {
+          "value": "ESP-12"
+        },
+        "C774Hwi0@MR58LIyz": {
           "value": "LS-12"
         },
-        "p2oFDA5Y@n1IReD7Z": {
+        "C774Hwi0@ZyV9JEcX": {
           "value": "LIN-12"
+        },
+        "C774Hwi0@jqsmzauU": {
+          "value": "SKU"
+        },
+        "C774Hwi0@wskXvZxJ": {
+          "value": "SID-12"
+        },
+        "OVf65EY3@7SLuTmTl": {
+          "value": 18
+        },
+        "OVf65EY3@Bro5Pgj1": {
+          "value": 21
+        },
+        "OVf65EY3@JqZz9CrT": {
+          "value": "=AVERAGE(OVf65EY3@ZyV9JEcX:OVf65EY3@Bro5Pgj1)"
+        },
+        "OVf65EY3@KQjGJvm1": {
+          "value": 24
+        },
+        "OVf65EY3@MR58LIyz": {
+          "value": 17
+        },
+        "OVf65EY3@ZyV9JEcX": {
+          "value": 18
+        },
+        "OVf65EY3@jqsmzauU": {
+          "value": "Wholesale / lb"
+        },
+        "OVf65EY3@wskXvZxJ": {
+          "value": 24
+        },
+        "gHzHI4jc@7SLuTmTl": {
+          "value": 19
+        },
+        "gHzHI4jc@Bro5Pgj1": {
+          "value": 22
+        },
+        "gHzHI4jc@KC1lZnHZ": {
+          "value": "=AVERAGE(gHzHI4jc@ZyV9JEcX:gHzHI4jc@Bro5Pgj1)"
+        },
+        "gHzHI4jc@KQjGJvm1": {
+          "value": 26
+        },
+        "gHzHI4jc@MR58LIyz": {
+          "value": 18
+        },
+        "gHzHI4jc@ZyV9JEcX": {
+          "value": 19
+        },
+        "gHzHI4jc@jqsmzauU": {
+          "value": "Retail / 12 oz"
+        },
+        "gHzHI4jc@wskXvZxJ": {
+          "value": 26
+        },
+        "x9mOZFAu@7SLuTmTl": {
+          "value": "Field Notes Blend"
+        },
+        "x9mOZFAu@Bro5Pgj1": {
+          "value": "Spring Blend (preorder)"
+        },
+        "x9mOZFAu@KQjGJvm1": {
+          "value": "Esperanza Single-Origin"
+        },
+        "x9mOZFAu@MR58LIyz": {
+          "value": "Late Shift"
+        },
+        "x9mOZFAu@ZyV9JEcX": {
+          "value": "Linden Blend"
+        },
+        "x9mOZFAu@jqsmzauU": {
+          "value": "Product"
+        },
+        "x9mOZFAu@wskXvZxJ": {
+          "value": "Sidamo Single-Origin"
         }
       },
       "columnMeta": {},
       "columns": [
-        "p2oFDA5Y",
-        "TaNqWCL1",
-        "Cfszez9b",
-        "8eLygw77"
+        "C774Hwi0",
+        "x9mOZFAu",
+        "OVf65EY3",
+        "gHzHI4jc"
       ],
       "name": "Wholesale price list",
       "ranges": [],
       "rowMeta": {},
       "rows": [
-        "7XfSSdi9",
-        "n1IReD7Z",
-        "8PvvsRDn",
-        "a13yyIq9",
-        "BOVYNW1o",
-        "AFlFJBVv",
-        "45BH2DmD",
-        "Ems5Zc4F",
-        "SnNyiACh",
-        "PmNPGNCu"
+        "jqsmzauU",
+        "ZyV9JEcX",
+        "7SLuTmTl",
+        "MR58LIyz",
+        "KQjGJvm1",
+        "wskXvZxJ",
+        "Bro5Pgj1",
+        "wLTUifWs",
+        "JqZz9CrT",
+        "KC1lZnHZ"
       ]
     },
     {
-      "id": "01KS39AFN8DSKN3MY5X9DKWYX5",
+      "id": "01KS39CMYKSSE1BRB64NJFYJ4H",
       "@type": "dxn:type:org.dxos.type.collection:0.1.0",
       "@meta": {
         "keys": []
@@ -1792,36 +1792,36 @@
       "name": "Notes & Documents",
       "objects": [
         {
-          "/": "dxn:echo:@:01KS39AFKCAQ60KD5TP6AF2J2A"
+          "/": "dxn:echo:@:01KS39CMWP907SDRNARGGTN2YT"
         },
         {
-          "/": "dxn:echo:@:01KS39AFKCAQ60KD5TP6AF2J2C"
+          "/": "dxn:echo:@:01KS39CMWP907SDRNARGGTN2YW"
         },
         {
-          "/": "dxn:echo:@:01KS39AFKDDFEMY33VQXKYXRFV"
+          "/": "dxn:echo:@:01KS39CMWP907SDRNARGGTN2YY"
         },
         {
-          "/": "dxn:echo:@:01KS39AFKXFAHMS087JEW7EMZ5"
+          "/": "dxn:echo:@:01KS39CMX57CM9AD4H03QJE88D"
         },
         {
-          "/": "dxn:echo:@:01KS39AFKYXM4H634EPKBQSWBF"
+          "/": "dxn:echo:@:01KS39CMX6QM26NV7Q1ZHMQVH1"
         },
         {
-          "/": "dxn:echo:@:01KS39AFMW3WQ2FGDMRHST1YEM"
+          "/": "dxn:echo:@:01KS39CMXYRXNJM7TBNDB0MEM0"
         },
         {
-          "/": "dxn:echo:@:01KS39AFMYYFNF9QYR9661TEFN"
+          "/": "dxn:echo:@:01KS39CMY1YHVG1NP0Z7W0BJN4"
         }
       ]
     },
     {
-      "id": "01KS39AFNBYRXYW2ZMZME21NV0",
+      "id": "01KS39CMYP1VMV6E2M96ES38QZ",
       "@type": "dxn:type:org.dxos.type.schema:0.1.0",
       "@meta": {
         "keys": []
       },
       "jsonSchema": {
-        "$id": "dxn:echo:@:01KS39AFNBYRXYW2ZMZME21NV0",
+        "$id": "dxn:echo:@:01KS39CMYP1VMV6E2M96ES38QZ",
         "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false,
         "annotations": {
@@ -1834,7 +1834,7 @@
               "icon": "ph--fire-simple--regular"
             }
           },
-          "schemaId": "dxn:echo:@:01KS39AFNBYRXYW2ZMZME21NV0"
+          "schemaId": "dxn:echo:@:01KS39CMYP1VMV6E2M96ES38QZ"
         },
         "entityKind": "object",
         "properties": {
@@ -1956,17 +1956,17 @@
           "id"
         ],
         "type": "object",
-        "typename": "com.bramblecoffee.type.roastLog",
+        "typename": "example.type.roastLog",
         "version": "0.1.0"
       },
       "kind": "object",
       "name": "Roast Log",
-      "typename": "com.bramblecoffee.type.roastLog",
+      "typename": "example.type.roastLog",
       "version": "0.1.0"
     },
     {
-      "id": "01KS39AFNQ8ADJE3QDBWV7K5DE",
-      "@type": "dxn:type:com.bramblecoffee.type.roastLog:0.1.0",
+      "id": "01KS39CMZ210AN3QGV530P107W",
+      "@type": "dxn:type:example.type.roastLog:0.1.0",
       "@meta": {
         "keys": []
       },
@@ -1986,8 +1986,8 @@
       "title": "Finca Esperanza Lot #42 — Batch 1"
     },
     {
-      "id": "01KS39AFNQ8ADJE3QDBWV7K5DF",
-      "@type": "dxn:type:com.bramblecoffee.type.roastLog:0.1.0",
+      "id": "01KS39CMZ3B2XHY349BWD9V2DK",
+      "@type": "dxn:type:example.type.roastLog:0.1.0",
       "@meta": {
         "keys": []
       },
@@ -2007,8 +2007,8 @@
       "title": "Finca Esperanza Lot #42 — Batch 2"
     },
     {
-      "id": "01KS39AFNQ8ADJE3QDBWV7K5DG",
-      "@type": "dxn:type:com.bramblecoffee.type.roastLog:0.1.0",
+      "id": "01KS39CMZ3B2XHY349BWD9V2DM",
+      "@type": "dxn:type:example.type.roastLog:0.1.0",
       "@meta": {
         "keys": []
       },
@@ -2028,8 +2028,8 @@
       "title": "Sidamo Coop Natural — Lot 12A"
     },
     {
-      "id": "01KS39AFNQ8ADJE3QDBWV7K5DH",
-      "@type": "dxn:type:com.bramblecoffee.type.roastLog:0.1.0",
+      "id": "01KS39CMZ3B2XHY349BWD9V2DN",
+      "@type": "dxn:type:example.type.roastLog:0.1.0",
       "@meta": {
         "keys": []
       },
@@ -2049,8 +2049,8 @@
       "title": "Spring Blend — Production Run 1"
     },
     {
-      "id": "01KS39AFNQ8ADJE3QDBWV7K5DJ",
-      "@type": "dxn:type:com.bramblecoffee.type.roastLog:0.1.0",
+      "id": "01KS39CMZ3B2XHY349BWD9V2DP",
+      "@type": "dxn:type:example.type.roastLog:0.1.0",
       "@meta": {
         "keys": []
       },
@@ -2069,8 +2069,8 @@
       "title": "Finca Esperanza Lot #42 — Dev Batch"
     },
     {
-      "id": "01KS39AFNQ8ADJE3QDBWV7K5DK",
-      "@type": "dxn:type:com.bramblecoffee.type.roastLog:0.1.0",
+      "id": "01KS39CMZ3B2XHY349BWD9V2DQ",
+      "@type": "dxn:type:example.type.roastLog:0.1.0",
       "@meta": {
         "keys": []
       },
@@ -2089,8 +2089,8 @@
       "title": "Honduras El Puente — Sample Lot"
     },
     {
-      "id": "01KS39AFNQ8ADJE3QDBWV7K5DM",
-      "@type": "dxn:type:com.bramblecoffee.type.roastLog:0.1.0",
+      "id": "01KS39CMZ3B2XHY349BWD9V2DR",
+      "@type": "dxn:type:example.type.roastLog:0.1.0",
       "@meta": {
         "keys": []
       },
@@ -2104,8 +2104,8 @@
       "title": "Spring Blend — Production Run 2"
     },
     {
-      "id": "01KS39AFNR2AYCZK83CJ0VA8Z6",
-      "@type": "dxn:type:com.bramblecoffee.type.roastLog:0.1.0",
+      "id": "01KS39CMZ3B2XHY349BWD9V2DS",
+      "@type": "dxn:type:example.type.roastLog:0.1.0",
       "@meta": {
         "keys": []
       },
@@ -2119,7 +2119,7 @@
       "title": "Colombia Huila — Pre-production"
     },
     {
-      "id": "01KS39AFWEW476PP4PRA0B976C",
+      "id": "01KS39CN6H6GVYNQY10K1B6RDT",
       "@type": "dxn:type:org.dxos.type.view:0.1.0",
       "@meta": {
         "keys": []
@@ -2127,72 +2127,72 @@
       "projection": {
         "fields": [
           {
-            "id": "8376b929",
+            "id": "4320c58d",
             "path": "machine",
             "visible": false
           },
           {
-            "id": "aec67b2c",
+            "id": "cedc3f2b",
             "path": "greenWeightKg",
             "visible": false
           },
           {
-            "id": "e2da35d2",
+            "id": "326d9568",
             "path": "roastWeightKg",
             "visible": false
           },
           {
-            "id": "b8e5f32b",
+            "id": "1bc927b6",
             "path": "notes",
             "visible": false
           },
           {
-            "id": "2ad43a66",
+            "id": "4d0861b6",
             "path": "title",
             "visible": true
           },
           {
-            "id": "ad4c5f13",
+            "id": "4ce845ad",
             "path": "date",
             "visible": true
           },
           {
-            "id": "3e7ba53b",
+            "id": "093d1053",
             "path": "origin",
             "visible": true
           },
           {
-            "id": "be537dfb",
+            "id": "328b8067",
             "path": "roaster",
             "visible": true
           },
           {
-            "id": "7483b89d",
+            "id": "5e2823b4",
             "path": "status",
             "visible": true
           },
           {
-            "id": "a10816a9",
+            "id": "8b39a09d",
             "path": "roastLevel",
             "visible": true
           },
           {
-            "id": "3f63398f",
+            "id": "b977738e",
             "path": "chargeTemp",
             "visible": true
           },
           {
-            "id": "8b4b4244",
+            "id": "16afc525",
             "path": "firstCrackTime",
             "visible": true
           },
           {
-            "id": "f32cc99e",
+            "id": "c2fef6f0",
             "path": "developmentTime",
             "visible": true
           },
           {
-            "id": "24a0f78f",
+            "id": "7f3b4eeb",
             "path": "dropTemp",
             "visible": true
           }
@@ -2203,14 +2203,14 @@
           "filter": {
             "props": {},
             "type": "object",
-            "typename": "dxn:type:com.bramblecoffee.type.roastLog"
+            "typename": "dxn:type:example.type.roastLog"
           },
           "type": "select"
         }
       }
     },
     {
-      "id": "01KS39AFWJ5GE5JE45FR00PH6A",
+      "id": "01KS39CN6MFVKD06YEEVDC826T",
       "@type": "dxn:type:org.dxos.type.table:0.1.0",
       "@meta": {
         "keys": []
@@ -2218,11 +2218,11 @@
       "name": "Table",
       "sizes": {},
       "view": {
-        "/": "dxn:echo:@:01KS39AFWEW476PP4PRA0B976C"
+        "/": "dxn:echo:@:01KS39CN6H6GVYNQY10K1B6RDT"
       }
     },
     {
-      "id": "01KS39AFX19GFSM9WPBAQGCNA6",
+      "id": "01KS39CN75JCP8AC43R3JJ8JKJ",
       "@type": "dxn:type:org.dxos.type.view:0.1.0",
       "@meta": {
         "keys": []
@@ -2230,91 +2230,91 @@
       "projection": {
         "fields": [
           {
-            "id": "1762cbc1",
+            "id": "e9527cde",
             "path": "machine",
             "visible": false
           },
           {
-            "id": "3989651e",
+            "id": "e307328f",
             "path": "greenWeightKg",
             "visible": false
           },
           {
-            "id": "82bcf146",
+            "id": "784023e4",
             "path": "roastWeightKg",
             "visible": false
           },
           {
-            "id": "abcb882e",
+            "id": "2b5398c2",
             "path": "chargeTemp",
             "visible": false
           },
           {
-            "id": "652f6595",
+            "id": "63b32c60",
             "path": "firstCrackTime",
             "visible": false
           },
           {
-            "id": "3dac8ccc",
+            "id": "8a13cf24",
             "path": "developmentTime",
             "visible": false
           },
           {
-            "id": "dd04cf72",
+            "id": "78ad15e3",
             "path": "dropTemp",
             "visible": false
           },
           {
-            "id": "b0575288",
+            "id": "a4dd63b9",
             "path": "roastLevel",
             "visible": false
           },
           {
-            "id": "b938acc0",
+            "id": "889f81de",
             "path": "status",
             "visible": false
           },
           {
-            "id": "860afaf1",
+            "id": "fbef0e63",
             "path": "title",
             "visible": true
           },
           {
-            "id": "5de807ad",
+            "id": "6a227609",
             "path": "origin",
             "visible": true
           },
           {
-            "id": "7d4084e4",
+            "id": "ce3725ca",
             "path": "date",
             "visible": true
           },
           {
-            "id": "db3541fe",
+            "id": "e67234d7",
             "path": "roaster",
             "visible": true
           },
           {
-            "id": "9ccec9a2",
+            "id": "65a2612a",
             "path": "notes",
             "visible": true
           }
         ],
-        "pivotFieldId": "b938acc0"
+        "pivotFieldId": "889f81de"
       },
       "query": {
         "ast": {
           "filter": {
             "props": {},
             "type": "object",
-            "typename": "dxn:type:com.bramblecoffee.type.roastLog"
+            "typename": "dxn:type:example.type.roastLog"
           },
           "type": "select"
         }
       }
     },
     {
-      "id": "01KS39AFX4JKJRPCVTK9J8VTW1",
+      "id": "01KS39CN78XFPKZ79VZWBTCS43",
       "@type": "dxn:type:org.dxos.type.kanban:0.2.0",
       "@meta": {
         "keys": []
@@ -2327,12 +2327,12 @@
       "spec": {
         "kind": "view",
         "view": {
-          "/": "dxn:echo:@:01KS39AFX19GFSM9WPBAQGCNA6"
+          "/": "dxn:echo:@:01KS39CN75JCP8AC43R3JJ8JKJ"
         }
       }
     },
     {
-      "id": "01KS39AFX9NXHGRQ4MTD2H2ZP3",
+      "id": "01KS39CN7D7KH9EWPXVGDFCACE",
       "@type": "dxn:type:org.dxos.type.collection:0.1.0",
       "@meta": {
         "keys": []
@@ -2340,50 +2340,50 @@
       "name": "Roast Log",
       "objects": [
         {
-          "/": "dxn:echo:@:01KS39AFWJ5GE5JE45FR00PH6A"
+          "/": "dxn:echo:@:01KS39CN6MFVKD06YEEVDC826T"
         },
         {
-          "/": "dxn:echo:@:01KS39AFX4JKJRPCVTK9J8VTW1"
+          "/": "dxn:echo:@:01KS39CN78XFPKZ79VZWBTCS43"
         },
         {
-          "/": "dxn:echo:@:01KS39AFNQ8ADJE3QDBWV7K5DE"
+          "/": "dxn:echo:@:01KS39CMZ210AN3QGV530P107W"
         },
         {
-          "/": "dxn:echo:@:01KS39AFNQ8ADJE3QDBWV7K5DF"
+          "/": "dxn:echo:@:01KS39CMZ3B2XHY349BWD9V2DK"
         },
         {
-          "/": "dxn:echo:@:01KS39AFNQ8ADJE3QDBWV7K5DG"
+          "/": "dxn:echo:@:01KS39CMZ3B2XHY349BWD9V2DM"
         },
         {
-          "/": "dxn:echo:@:01KS39AFNQ8ADJE3QDBWV7K5DH"
+          "/": "dxn:echo:@:01KS39CMZ3B2XHY349BWD9V2DN"
         },
         {
-          "/": "dxn:echo:@:01KS39AFNQ8ADJE3QDBWV7K5DJ"
+          "/": "dxn:echo:@:01KS39CMZ3B2XHY349BWD9V2DP"
         },
         {
-          "/": "dxn:echo:@:01KS39AFNQ8ADJE3QDBWV7K5DK"
+          "/": "dxn:echo:@:01KS39CMZ3B2XHY349BWD9V2DQ"
         },
         {
-          "/": "dxn:echo:@:01KS39AFNQ8ADJE3QDBWV7K5DM"
+          "/": "dxn:echo:@:01KS39CMZ3B2XHY349BWD9V2DR"
         },
         {
-          "/": "dxn:echo:@:01KS39AFNR2AYCZK83CJ0VA8Z6"
+          "/": "dxn:echo:@:01KS39CMZ3B2XHY349BWD9V2DS"
         }
       ]
     }
   ],
   "feeds": [
     {
-      "feedObjectId": "01KS39AFJBTZ09ZRB1X9DJ5JRF",
+      "feedObjectId": "01KS39CMVDATSNV7E235R7WYZ9",
       "namespace": "data",
       "messages": [
         {
-          "id": "01KS39AFJBTZ09ZRB1X9DJ5JRH",
+          "id": "01KS39CMVEAH435X0M56CS0ARW",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJBTZ09ZRB1X9DJ5JRF:01KS39AFJBTZ09ZRB1X9DJ5JRH",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVDATSNV7E235R7WYZ9:01KS39CMVEAH435X0M56CS0ARW",
           "created": "2026-04-09T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2401,12 +2401,12 @@
           }
         },
         {
-          "id": "01KS39AFJCW5N15P0N18WS1HRB",
+          "id": "01KS39CMVEAH435X0M56CS0ARX",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJBTZ09ZRB1X9DJ5JRF:01KS39AFJCW5N15P0N18WS1HRB",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVDATSNV7E235R7WYZ9:01KS39CMVEAH435X0M56CS0ARX",
           "created": "2026-04-10T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2424,12 +2424,12 @@
           }
         },
         {
-          "id": "01KS39AFJCW5N15P0N18WS1HRC",
+          "id": "01KS39CMVFQGDVT8DZE1ZXBAFA",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJBTZ09ZRB1X9DJ5JRF:01KS39AFJCW5N15P0N18WS1HRC",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVDATSNV7E235R7WYZ9:01KS39CMVFQGDVT8DZE1ZXBAFA",
           "created": "2026-04-12T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2447,12 +2447,12 @@
           }
         },
         {
-          "id": "01KS39AFJDAGB0WB299H86J0CW",
+          "id": "01KS39CMVFQGDVT8DZE1ZXBAFB",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJBTZ09ZRB1X9DJ5JRF:01KS39AFJDAGB0WB299H86J0CW",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVDATSNV7E235R7WYZ9:01KS39CMVFQGDVT8DZE1ZXBAFB",
           "created": "2026-04-15T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2470,12 +2470,12 @@
           }
         },
         {
-          "id": "01KS39AFJDAGB0WB299H86J0CX",
+          "id": "01KS39CMVFQGDVT8DZE1ZXBAFC",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJBTZ09ZRB1X9DJ5JRF:01KS39AFJDAGB0WB299H86J0CX",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVDATSNV7E235R7WYZ9:01KS39CMVFQGDVT8DZE1ZXBAFC",
           "created": "2026-04-15T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2493,12 +2493,12 @@
           }
         },
         {
-          "id": "01KS39AFJDAGB0WB299H86J0CY",
+          "id": "01KS39CMVGD5FYA7WVRK6Y5JCR",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJBTZ09ZRB1X9DJ5JRF:01KS39AFJDAGB0WB299H86J0CY",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVDATSNV7E235R7WYZ9:01KS39CMVGD5FYA7WVRK6Y5JCR",
           "created": "2026-04-17T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2516,12 +2516,12 @@
           }
         },
         {
-          "id": "01KS39AFJECRQ89Y94DH85Q3SQ",
+          "id": "01KS39CMVH9K07BX2E0T75Q5FW",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJBTZ09ZRB1X9DJ5JRF:01KS39AFJECRQ89Y94DH85Q3SQ",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVDATSNV7E235R7WYZ9:01KS39CMVH9K07BX2E0T75Q5FW",
           "created": "2026-04-18T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2539,12 +2539,12 @@
           }
         },
         {
-          "id": "01KS39AFJF0RC49XPA9KH5PM28",
+          "id": "01KS39CMVJVTBANCVTTCR02F6K",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJBTZ09ZRB1X9DJ5JRF:01KS39AFJF0RC49XPA9KH5PM28",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVDATSNV7E235R7WYZ9:01KS39CMVJVTBANCVTTCR02F6K",
           "created": "2026-04-20T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2562,12 +2562,12 @@
           }
         },
         {
-          "id": "01KS39AFJF0RC49XPA9KH5PM29",
+          "id": "01KS39CMVJVTBANCVTTCR02F6M",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJBTZ09ZRB1X9DJ5JRF:01KS39AFJF0RC49XPA9KH5PM29",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVDATSNV7E235R7WYZ9:01KS39CMVJVTBANCVTTCR02F6M",
           "created": "2026-04-22T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2585,12 +2585,12 @@
           }
         },
         {
-          "id": "01KS39AFJF0RC49XPA9KH5PM2A",
+          "id": "01KS39CMVJVTBANCVTTCR02F6N",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJBTZ09ZRB1X9DJ5JRF:01KS39AFJF0RC49XPA9KH5PM2A",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVDATSNV7E235R7WYZ9:01KS39CMVJVTBANCVTTCR02F6N",
           "created": "2026-04-23T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2608,12 +2608,12 @@
           }
         },
         {
-          "id": "01KS39AFJGAPBD9WRW4MJT7374",
+          "id": "01KS39CMVKJRAJ2C4SBNGECHZV",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJBTZ09ZRB1X9DJ5JRF:01KS39AFJGAPBD9WRW4MJT7374",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVDATSNV7E235R7WYZ9:01KS39CMVKJRAJ2C4SBNGECHZV",
           "created": "2026-04-24T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2631,12 +2631,12 @@
           }
         },
         {
-          "id": "01KS39AFJGAPBD9WRW4MJT7375",
+          "id": "01KS39CMVKJRAJ2C4SBNGECHZW",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJBTZ09ZRB1X9DJ5JRF:01KS39AFJGAPBD9WRW4MJT7375",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVDATSNV7E235R7WYZ9:01KS39CMVKJRAJ2C4SBNGECHZW",
           "created": "2026-04-26T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2654,12 +2654,12 @@
           }
         },
         {
-          "id": "01KS39AFJHYV8FNKDAM9YSCYCM",
+          "id": "01KS39CMVKJRAJ2C4SBNGECHZX",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJBTZ09ZRB1X9DJ5JRF:01KS39AFJHYV8FNKDAM9YSCYCM",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVDATSNV7E235R7WYZ9:01KS39CMVKJRAJ2C4SBNGECHZX",
           "created": "2026-04-27T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2677,12 +2677,12 @@
           }
         },
         {
-          "id": "01KS39AFJHYV8FNKDAM9YSCYCN",
+          "id": "01KS39CMVMNXPZV2KY3XZ78JDW",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJBTZ09ZRB1X9DJ5JRF:01KS39AFJHYV8FNKDAM9YSCYCN",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVDATSNV7E235R7WYZ9:01KS39CMVMNXPZV2KY3XZ78JDW",
           "created": "2026-04-29T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2700,12 +2700,12 @@
           }
         },
         {
-          "id": "01KS39AFJJXG4N7HF3W0XV2VW3",
+          "id": "01KS39CMVNTMPKTYZPFAVA2NZK",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJBTZ09ZRB1X9DJ5JRF:01KS39AFJJXG4N7HF3W0XV2VW3",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVDATSNV7E235R7WYZ9:01KS39CMVNTMPKTYZPFAVA2NZK",
           "created": "2026-04-30T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2723,12 +2723,12 @@
           }
         },
         {
-          "id": "01KS39AFJJXG4N7HF3W0XV2VW4",
+          "id": "01KS39CMVNTMPKTYZPFAVA2NZM",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJBTZ09ZRB1X9DJ5JRF:01KS39AFJJXG4N7HF3W0XV2VW4",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVDATSNV7E235R7WYZ9:01KS39CMVNTMPKTYZPFAVA2NZM",
           "created": "2026-05-03T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2746,12 +2746,12 @@
           }
         },
         {
-          "id": "01KS39AFJK991HGTMWE376GF2J",
+          "id": "01KS39CMVP57YHWXS8XWBCMTZQ",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJBTZ09ZRB1X9DJ5JRF:01KS39AFJK991HGTMWE376GF2J",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVDATSNV7E235R7WYZ9:01KS39CMVP57YHWXS8XWBCMTZQ",
           "created": "2026-05-05T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2769,12 +2769,12 @@
           }
         },
         {
-          "id": "01KS39AFJK991HGTMWE376GF2K",
+          "id": "01KS39CMVP57YHWXS8XWBCMTZR",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJBTZ09ZRB1X9DJ5JRF:01KS39AFJK991HGTMWE376GF2K",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVDATSNV7E235R7WYZ9:01KS39CMVP57YHWXS8XWBCMTZR",
           "created": "2026-05-08T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2792,12 +2792,12 @@
           }
         },
         {
-          "id": "01KS39AFJK991HGTMWE376GF2M",
+          "id": "01KS39CMVQEHPPADDRNZD5EX57",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJBTZ09ZRB1X9DJ5JRF:01KS39AFJK991HGTMWE376GF2M",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVDATSNV7E235R7WYZ9:01KS39CMVQEHPPADDRNZD5EX57",
           "created": "2026-05-11T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2815,12 +2815,12 @@
           }
         },
         {
-          "id": "01KS39AFJMSJM8N9P865WK9AJY",
+          "id": "01KS39CMVQEHPPADDRNZD5EX58",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJBTZ09ZRB1X9DJ5JRF:01KS39AFJMSJM8N9P865WK9AJY",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVDATSNV7E235R7WYZ9:01KS39CMVQEHPPADDRNZD5EX58",
           "created": "2026-05-13T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2838,12 +2838,12 @@
           }
         },
         {
-          "id": "01KS39AFJMSJM8N9P865WK9AJZ",
+          "id": "01KS39CMVR4RF6P6496QX2RBPS",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJBTZ09ZRB1X9DJ5JRF:01KS39AFJMSJM8N9P865WK9AJZ",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVDATSNV7E235R7WYZ9:01KS39CMVR4RF6P6496QX2RBPS",
           "created": "2026-05-16T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2861,12 +2861,12 @@
           }
         },
         {
-          "id": "01KS39AFJMSJM8N9P865WK9AK0",
+          "id": "01KS39CMVR4RF6P6496QX2RBPT",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJBTZ09ZRB1X9DJ5JRF:01KS39AFJMSJM8N9P865WK9AK0",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVDATSNV7E235R7WYZ9:01KS39CMVR4RF6P6496QX2RBPT",
           "created": "2026-05-18T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2886,16 +2886,16 @@
       ]
     },
     {
-      "feedObjectId": "01KS39AFJRQBM2VAFSXP74M3YR",
+      "feedObjectId": "01KS39CMVXZX2PZ8HZPCZGT1C9",
       "namespace": "data",
       "messages": [
         {
-          "id": "01KS39AFJRQBM2VAFSXP74M3YT",
+          "id": "01KS39CMVXZX2PZ8HZPCZGT1CB",
           "@type": "dxn:type:org.dxos.type.event:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJRQBM2VAFSXP74M3YR:01KS39AFJRQBM2VAFSXP74M3YT",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVXZX2PZ8HZPCZGT1C9:01KS39CMVXZX2PZ8HZPCZGT1CB",
           "attendees": [
             {
               "role": "user",
@@ -2929,12 +2929,12 @@
           "endDate": "2026-05-08T17:00:00.000Z"
         },
         {
-          "id": "01KS39AFJSVN52P10H9ZR1RFG3",
+          "id": "01KS39CMVY9HG3KG4QNF4FF792",
           "@type": "dxn:type:org.dxos.type.event:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJRQBM2VAFSXP74M3YR:01KS39AFJSVN52P10H9ZR1RFG3",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVXZX2PZ8HZPCZGT1C9:01KS39CMVY9HG3KG4QNF4FF792",
           "attendees": [
             {
               "role": "user",
@@ -2963,12 +2963,12 @@
           "endDate": "2026-05-12T18:00:00.000Z"
         },
         {
-          "id": "01KS39AFJSVN52P10H9ZR1RFG4",
+          "id": "01KS39CMVY9HG3KG4QNF4FF793",
           "@type": "dxn:type:org.dxos.type.event:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJRQBM2VAFSXP74M3YR:01KS39AFJSVN52P10H9ZR1RFG4",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVXZX2PZ8HZPCZGT1C9:01KS39CMVY9HG3KG4QNF4FF793",
           "attendees": [
             {
               "role": "user",
@@ -3001,12 +3001,12 @@
           "endDate": "2026-05-15T17:00:00.000Z"
         },
         {
-          "id": "01KS39AFJSVN52P10H9ZR1RFG5",
+          "id": "01KS39CMVY9HG3KG4QNF4FF794",
           "@type": "dxn:type:org.dxos.type.event:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJRQBM2VAFSXP74M3YR:01KS39AFJSVN52P10H9ZR1RFG5",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVXZX2PZ8HZPCZGT1C9:01KS39CMVY9HG3KG4QNF4FF794",
           "attendees": [
             {
               "role": "user",
@@ -3040,12 +3040,12 @@
           "endDate": "2026-05-17T17:00:00.000Z"
         },
         {
-          "id": "01KS39AFJSVN52P10H9ZR1RFG6",
+          "id": "01KS39CMVY9HG3KG4QNF4FF795",
           "@type": "dxn:type:org.dxos.type.event:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJRQBM2VAFSXP74M3YR:01KS39AFJSVN52P10H9ZR1RFG6",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVXZX2PZ8HZPCZGT1C9:01KS39CMVY9HG3KG4QNF4FF795",
           "attendees": [
             {
               "role": "user",
@@ -3074,12 +3074,12 @@
           "endDate": "2026-05-22T15:00:00.000Z"
         },
         {
-          "id": "01KS39AFJSVN52P10H9ZR1RFG7",
+          "id": "01KS39CMVY9HG3KG4QNF4FF796",
           "@type": "dxn:type:org.dxos.type.event:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJRQBM2VAFSXP74M3YR:01KS39AFJSVN52P10H9ZR1RFG7",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVXZX2PZ8HZPCZGT1C9:01KS39CMVY9HG3KG4QNF4FF796",
           "attendees": [
             {
               "role": "user",
@@ -3103,12 +3103,12 @@
           "endDate": "2026-05-24T18:00:00.000Z"
         },
         {
-          "id": "01KS39AFJSVN52P10H9ZR1RFG8",
+          "id": "01KS39CMVZ6H9MBH174JHS7B1Z",
           "@type": "dxn:type:org.dxos.type.event:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJRQBM2VAFSXP74M3YR:01KS39AFJSVN52P10H9ZR1RFG8",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVXZX2PZ8HZPCZGT1C9:01KS39CMVZ6H9MBH174JHS7B1Z",
           "attendees": [
             {
               "role": "user",
@@ -3132,12 +3132,12 @@
           "endDate": "2026-05-28T23:00:00.000Z"
         },
         {
-          "id": "01KS39AFJT0FHDX43JHYW6CAGZ",
+          "id": "01KS39CMVZ6H9MBH174JHS7B20",
           "@type": "dxn:type:org.dxos.type.event:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJRQBM2VAFSXP74M3YR:01KS39AFJT0FHDX43JHYW6CAGZ",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVXZX2PZ8HZPCZGT1C9:01KS39CMVZ6H9MBH174JHS7B20",
           "attendees": [
             {
               "role": "user",
@@ -3156,12 +3156,12 @@
           "endDate": "2026-06-03T22:00:00.000Z"
         },
         {
-          "id": "01KS39AFJT0FHDX43JHYW6CAH0",
+          "id": "01KS39CMVZ6H9MBH174JHS7B21",
           "@type": "dxn:type:org.dxos.type.event:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:BXQ5BEGBV2VKFBPQLO7KJYAABSYEUULHT:01KS39AFJRQBM2VAFSXP74M3YR:01KS39AFJT0FHDX43JHYW6CAH0",
+          "@dxn": "dxn:queue:data:BVPXXYLMNPZL2MY5PUZK7TXOMEAWCBYNC:01KS39CMVXZX2PZ8HZPCZGT1C9:01KS39CMVZ6H9MBH174JHS7B21",
           "attendees": [
             {
               "role": "user",
