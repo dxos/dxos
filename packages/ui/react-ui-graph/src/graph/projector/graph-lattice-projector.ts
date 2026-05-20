@@ -6,35 +6,36 @@ import { type Graph } from '@dxos/graph';
 import { log } from '@dxos/log';
 
 import { type GraphLayoutNode } from '../types';
-import { GraphProjector, type GraphProjectorOptions } from './graph-projector';
+import { GraphRadialProjector, type GraphRadialProjectorOptions, updateNode } from './graph-radial-projector';
 
-export type GraphLatticeProjectorOptions = GraphProjectorOptions & {
+export type GraphLatticeProjectorOptions = GraphRadialProjectorOptions & {
   /** Reserved space around the lattice (screen pixels). */
   margin?: number;
+  /** Node radius used by `renderNode` consumers. Defaults to the force-graph default (6) so animations across variants don't resize nodes. */
+  radius?: number;
   /** Sort key for cells; defaults to the node label / id. Same-typename nodes naturally cluster. */
   sortBy?: (node: GraphLayoutNode) => string;
 };
 
 /**
  * Lays out nodes as a square-as-possible grid that fits the container.
- * No ticks — `onUpdate` computes final positions and emits a single 'topology'.
- * Pair with a custom `renderNode` (e.g. rounded rect) for a "cards" look.
+ * Extends `GraphRadialProjector` to inherit the tween (`updateNode` + `animate`),
+ * so switching to / from this layout animates each node from its current
+ * position to the grid cell — and the initial mount can also "grow" from
+ * existing positions if seeded with a prior projector's layout.
  */
 export class GraphLatticeProjector<
   NodeData = any,
   Options extends GraphLatticeProjectorOptions = any,
-> extends GraphProjector<NodeData, Options> {
-  override findNode(): GraphLayoutNode<NodeData> | undefined {
-    return undefined;
-  }
-
+> extends GraphRadialProjector<NodeData, Options> {
   protected override onUpdate(graph?: Graph.Any) {
     log('onUpdate', { graph: { nodes: graph?.nodes.length, edges: graph?.edges.length } });
     this.mergeData(graph);
-    // Lattices don't visualize relations — drop any edges merged from the source graph.
-    this.layout.graph.edges = [];
+    // Compute layout (assigns sx/sy/tx/ty + initial x/y) BEFORE emitting topology so the
+    // renderer's first render uses meaningful positions. animate() then tweens to target.
     this.doLatticeLayout();
     this.emitUpdate('topology');
+    this.animate();
   }
 
   private doLatticeLayout() {
@@ -59,8 +60,13 @@ export class GraphLatticeProjector<
     const { width, height } = this.context.size;
     const innerW = Math.max(0, width - 2 * margin);
     const innerH = Math.max(0, height - 2 * margin);
-    const cellSize = Math.max(0, Math.min(innerW / columns, innerH / rows));
-    const r = Math.max(2, Math.min(cellSize * 0.4, 32));
+    const r = this.options.radius ?? 4;
+    // Cell size sets the spacing between nodes. Cap at a small multiple of `r`
+    // so the lattice stays tight rather than ballooning to fill the container;
+    // wide enough that edges crossing between non-adjacent cells remain visible
+    // in the gaps between nodes.
+    const fit = Math.min(innerW / columns, innerH / rows);
+    const cellSize = Math.max(0, Math.min(fit, r * 6));
 
     // Center the lattice (SVG viewBox is centered at origin in `<SVG.Root>`).
     const gridW = cellSize * columns;
@@ -69,12 +75,9 @@ export class GraphLatticeProjector<
     const offsetY = -gridH / 2 + cellSize / 2;
 
     nodes.forEach((node, i) => {
-      Object.assign(node, {
-        initialized: true,
-        x: offsetX + (i % columns) * cellSize,
-        y: offsetY + Math.floor(i / columns) * cellSize,
-        r,
-      });
+      const tx = offsetX + (i % columns) * cellSize;
+      const ty = offsetY + Math.floor(i / columns) * cellSize;
+      updateNode(node, [tx, ty], r);
     });
   }
 }

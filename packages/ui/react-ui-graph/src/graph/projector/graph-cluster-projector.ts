@@ -8,11 +8,17 @@ import { type Graph } from '@dxos/graph';
 import { log } from '@dxos/log';
 
 import { type GraphLayoutEdge, type GraphLayoutNode } from '../types';
-import { GraphProjector, type GraphProjectorOptions } from './graph-projector';
+import { GraphRadialProjector, type GraphRadialProjectorOptions, updateNode } from './graph-radial-projector';
 
-export type GraphClusterProjectorOptions = GraphProjectorOptions & {
+export type GraphClusterProjectorOptions = GraphRadialProjectorOptions & {
   /** Reserved space around the cluster (screen pixels). */
   margin?: number;
+  /** Radius for leaf nodes. Default 4. */
+  leafRadius?: number;
+  /** Radius for the synthetic group nodes (visible as smaller intermediate dots). Default 3. */
+  groupRadius?: number;
+  /** Radius for the synthetic root node. Default 5. */
+  rootRadius?: number;
   /**
    * Group key for each node — synthetic intermediate nodes are created per unique key,
    * giving a root → group → leaf hierarchy. Return `undefined` to attach the node
@@ -24,30 +30,47 @@ export type GraphClusterProjectorOptions = GraphProjectorOptions & {
 };
 
 const ROOT_ID = '__cluster_root__';
+const GROUP_PREFIX = '__group__:';
+const HIER_EDGE_PREFIX = '__hier__:';
+
+/** Node type tags so consumer renderers can distinguish leaves from synthetic structural nodes. */
+export const CLUSTER_NODE_TYPE_LEAF = 'leaf';
+export const CLUSTER_NODE_TYPE_GROUP = 'group';
+export const CLUSTER_NODE_TYPE_ROOT = 'root';
+
 const radialLink = linkRadial<any, any>()
   .angle((d) => d.x)
   .radius((d) => d.y);
 
 /**
- * Radial cluster (d3.cluster) layout. Builds a hierarchy from `parentOf`
- * (defaulting to a flat root → leaves shape) and places leaves around a ring.
- * Edges between hierarchy parents and children get precomputed radial-elbow
- * paths via `edge.path`, so the renderer doesn't need to know about polar
- * coordinates.
+ * Radial cluster (d3.cluster) layout. Materializes a root → group → leaf
+ * hierarchy from the `groupOf` callback, runs d3.cluster, and:
+ *
+ * - Places leaves around the outer ring; synthetic group nodes sit on an
+ *   inner ring; the root sits at the origin. All three kinds are added to the
+ *   layout so they render via the consumer's `renderNode` (the `type` field
+ *   identifies which is which).
+ * - Computes radial-elbow `path` strings on each hierarchy edge so the
+ *   renderer doesn't need to know about polar coordinates.
+ * - Derives current edge paths from current node cartesian positions each
+ *   animation frame, so edges visually follow nodes during cross-variant
+ *   tweens instead of snapping to the final state.
  */
 export class GraphClusterProjector<
   NodeData = any,
   Options extends GraphClusterProjectorOptions = any,
-> extends GraphProjector<NodeData, Options> {
-  override findNode(): GraphLayoutNode<NodeData> | undefined {
-    return undefined;
-  }
+> extends GraphRadialProjector<NodeData, Options> {
+  /** Stable target polar coords per hierarchy id, captured by `doClusterLayout`. */
+  #targetPolarById = new Map<string, { angle: number; radius: number }>();
 
   protected override onUpdate(graph?: Graph.Any) {
     log('onUpdate', { graph: { nodes: graph?.nodes.length, edges: graph?.edges.length } });
     this.mergeData(graph);
+    // Compute layout (which mutates nodes + replaces edges with hierarchy edges) BEFORE
+    // emitting topology, so the renderer's enter/exit join sees the final node + edge sets.
     this.doClusterLayout();
     this.emitUpdate('topology');
+    this.animate();
   }
 
   private doClusterLayout() {
@@ -55,27 +78,25 @@ export class GraphClusterProjector<
       return;
     }
 
-    const nodes = this.layout.graph.nodes;
-    const edges = this.layout.graph.edges;
-    if (!nodes.length) {
+    const dataNodes = [...this.layout.graph.nodes];
+    if (!dataNodes.length) {
       return;
     }
 
     const groupOf = this.options.groupOf;
     const rootId = this.options.rootId ?? ROOT_ID;
 
-    // Materialize a synthetic group node for each unique group key, then attach
-    // leaves under their group (or the root if no group).
+    // Synthesize the hierarchy: root → groups → leaves.
     type HierNode = { id: string; parent?: string; node?: GraphLayoutNode<NodeData> };
     const items: HierNode[] = [{ id: rootId }];
     const groupIds = new Map<string, string>();
-    for (const node of nodes) {
+    for (const node of dataNodes) {
       const key = groupOf?.(node);
       let parent = rootId;
       if (key !== undefined) {
         let groupId = groupIds.get(key);
         if (!groupId) {
-          groupId = `__group__:${key}`;
+          groupId = `${GROUP_PREFIX}${key}`;
           groupIds.set(key, groupId);
           items.push({ id: groupId, parent: rootId });
         }
@@ -97,47 +118,114 @@ export class GraphClusterProjector<
 
     const { width, height } = this.context.size;
     const margin = this.options.margin ?? 80;
-    const radius = Math.max(0, Math.min(width, height) / 2 - margin);
+    const ringRadius = Math.max(0, Math.min(width, height) / 2 - margin);
 
-    d3Cluster<HierNode>().size([2 * Math.PI, radius])(root);
+    d3Cluster<HierNode>().size([2 * Math.PI, ringRadius])(root);
 
-    // Polar → Cartesian. Real nodes get their position written back; synthetic
-    // group/root nodes get a stub layout node so we can use them as edge endpoints.
-    const stubByHierId = new Map<string, GraphLayoutNode<NodeData>>();
+    // Track target polar coords for each hierarchy id so per-frame edge derivation
+    // can fall back to known angles for nodes whose cartesian position is at the origin.
+    this.#targetPolarById.clear();
+
+    const leafR = this.options.leafRadius ?? 4;
+    const groupR = this.options.groupRadius ?? 3;
+    const rootR = this.options.rootRadius ?? 5;
+
+    // Build the new node set: existing data nodes (re-positioned), plus synthetic root + groups.
+    const syntheticNodes = new Map<string, GraphLayoutNode<NodeData>>();
     root.each((d: any) => {
       const id = d.data.id;
       const angle = d.x;
       const radius = d.y;
       const x = Math.cos(angle - Math.PI / 2) * radius;
       const y = Math.sin(angle - Math.PI / 2) * radius;
+      this.#targetPolarById.set(id, { angle, radius });
+
       if (d.data.node) {
-        Object.assign(d.data.node, { initialized: true, x, y, r: 4 });
-        stubByHierId.set(id, d.data.node);
+        // Real leaf — tween its position.
+        updateNode(d.data.node, [x, y], leafR);
+        (d.data.node as any).type = CLUSTER_NODE_TYPE_LEAF;
       } else {
-        // Synthetic root / group node: no DOM rendering, just an endpoint anchor.
-        stubByHierId.set(id, { id, initialized: true, x, y, r: 0 } as GraphLayoutNode<NodeData>);
+        // Synthetic root or group — also tween position (so it slides in from prior layouts).
+        const isRoot = id === rootId;
+        const stub = syntheticNodes.get(id) ?? ({ id } as GraphLayoutNode<NodeData>);
+        updateNode(stub, [x, y], isRoot ? rootR : groupR);
+        stub.type = isRoot ? CLUSTER_NODE_TYPE_ROOT : CLUSTER_NODE_TYPE_GROUP;
+        syntheticNodes.set(id, stub);
       }
     });
 
-    // Precompute radial-elbow paths for the hierarchy's tree edges so the renderer
-    // can blit them directly.
+    // Compose the rendered node list: synthetic structure first (so leaves draw on top).
+    const nextNodes: GraphLayoutNode<NodeData>[] = [];
+    for (const stub of syntheticNodes.values()) {
+      nextNodes.push(stub);
+    }
+    for (const node of dataNodes) {
+      nextNodes.push(node);
+    }
+    this.layout.graph.nodes = nextNodes;
+
+    // Precompute initial edge paths against d3.cluster polar coords so the topology
+    // render has something to draw. `onTickFrame` will overwrite per animation frame
+    // from current cartesian positions, keeping edges glued to nodes during the tween.
     const hierarchyEdges: GraphLayoutEdge<NodeData>[] = [];
     root.links().forEach((link: any) => {
       const sid = link.source.data.id;
       const tid = link.target.data.id;
       const path = radialLink({ source: link.source, target: link.target });
+      const sourceNode = link.source.data.node ?? syntheticNodes.get(sid);
+      const targetNode = link.target.data.node ?? syntheticNodes.get(tid);
       hierarchyEdges.push({
-        id: `__hier__:${sid}->${tid}`,
+        id: `${HIER_EDGE_PREFIX}${sid}->${tid}`,
         type: 'hierarchy',
-        source: stubByHierId.get(sid)!,
-        target: stubByHierId.get(tid)!,
+        source: sourceNode!,
+        target: targetNode!,
         path: path ?? undefined,
         data: undefined,
       });
     });
-
-    // Replace existing edges with the precomputed hierarchy edges (the original
-    // data-graph edges aren't visualized in the cluster variant — only the tree).
     this.layout.graph.edges = hierarchyEdges;
   }
+
+  /**
+   * Recompute every hierarchy edge's path from current node positions each frame.
+   * Converts cartesian (x, y) → polar (angle, radius) so `linkRadial`'s curveBumpRadial
+   * stays glued to the tweening leaves and groups.
+   */
+  protected override onTickFrame(_t: number): void {
+    const edges = this.layout.graph.edges;
+    if (!edges.length) {
+      return;
+    }
+    for (const edge of edges) {
+      const source = edge.source;
+      const target = edge.target;
+      if (!source || !target) {
+        continue;
+      }
+      const sPolar = cartesianToPolar(source);
+      const tPolar = cartesianToPolar(target);
+      // For nodes pinned at the origin (root) atan2 is degenerate — borrow the target's
+      // angle so the curve still bows in the right direction.
+      if (sPolar.radius === 0) {
+        sPolar.angle = tPolar.angle;
+      }
+      const path = radialLink({
+        source: { x: sPolar.angle, y: sPolar.radius },
+        target: { x: tPolar.angle, y: tPolar.radius },
+      });
+      if (path) {
+        edge.path = path;
+      }
+    }
+  }
 }
+
+const cartesianToPolar = (node: { x?: number; y?: number }): { angle: number; radius: number } => {
+  const x = node.x ?? 0;
+  const y = node.y ?? 0;
+  const radius = Math.sqrt(x * x + y * y);
+  // Map back to d3-cluster's convention (angle=0 at 12 o'clock, increasing clockwise).
+  // Inverse of `[r*cos(angle - π/2), r*sin(angle - π/2)]` is `angle = atan2(y, x) + π/2`.
+  const angle = Math.atan2(y, x) + Math.PI / 2;
+  return { angle, radius };
+};

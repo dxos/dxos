@@ -13,14 +13,17 @@ import { DxAnchorActivate, Icon, Panel, Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import {
   GraphClusterProjector,
+  GraphForceProjector,
+  type GraphLayout,
   type GraphLayoutNode,
   GraphLatticeProjector,
+  type GraphProjector,
+  type RenderNode,
   SVG,
   type SVGContext,
 } from '@dxos/react-ui-graph';
 import { type SpaceGraphEdge, type SpaceGraphNode } from '@dxos/schema';
 
-import { ForceGraph } from '#components';
 import { HierarchicalEdgeBundling, RadialTree, spaceGraphToHierarchy, type TreeNode } from '#components';
 import { useGraphModel } from '#hooks';
 
@@ -36,6 +39,11 @@ const VARIANTS: { value: ExplorerArticleVariant; icon: string; label: string }[]
     label: 'Force-directed',
   },
   {
+    value: 'lattice',
+    icon: 'ph--grid-four--regular',
+    label: 'Lattice',
+  },
+  {
     value: 'cluster',
     icon: 'ph--asterisk-simple--regular',
     label: 'Radial cluster',
@@ -44,11 +52,6 @@ const VARIANTS: { value: ExplorerArticleVariant; icon: string; label: string }[]
     value: 'bundle',
     icon: 'ph--circles-three-plus--regular',
     label: 'Edge bundling',
-  },
-  {
-    value: 'lattice',
-    icon: 'ph--grid-four--regular',
-    label: 'Lattice',
   },
 ];
 
@@ -139,108 +142,48 @@ type VisualizationProps = {
   onNodeHover?: (node: TreeNode | null, event?: MouseEvent) => void;
 };
 
-// TODO(burdon): Create common renderer that works across all variants to support animation.
-
 const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
-  if (variant === 'force') {
-    // ForceGraph subscribes to model.graphAtom internally; don't re-render the wrapper on every tick.
-    return (
-      <ForceGraph
-        model={model}
-        onInspect={(node, event) => onNodeHover?.({ id: node.id, data: node.data?.data?.object }, event)}
-      />
-    );
-  }
-
-  if (variant === 'lattice') {
-    return <UnifiedLatticeVisualization model={model} onNodeHover={onNodeHover} />;
-  }
-
-  if (variant === 'cluster') {
-    return <UnifiedClusterVisualization model={model} onNodeHover={onNodeHover} />;
+  if (variant === 'force' || variant === 'lattice' || variant === 'cluster') {
+    return <ProjectorVisualization variant={variant} model={model} onNodeHover={onNodeHover} />;
   }
 
   return <HierarchyVisualization variant={variant} model={model} onNodeHover={onNodeHover} />;
 };
 
-/**
- * Lattice variant rendered via the shared `<SVG.Graph>` engine with a custom
- * `renderNode` slot for rounded rectangles colored by typename.
- */
-const UnifiedLatticeVisualization = ({ model, onNodeHover }: Omit<VisualizationProps, 'variant'>) => {
-  return (
-    <ProjectedGraph
-      model={model}
-      projectorFactory={(ctx) => new GraphLatticeProjector(ctx)}
-      onNodeHover={onNodeHover}
-      renderNode={(group, node: GraphLayoutNode<SpaceGraphNode>) => {
-        const r = node.r ?? 16;
-        // Rounded square inscribed in the layout's radius.
-        const size = r * 2;
-        group
-          .append('rect')
-          .attr('x', -r)
-          .attr('y', -r)
-          .attr('width', size)
-          .attr('height', size)
-          .attr('rx', r * 0.18)
-          .attr('ry', r * 0.18)
-          .style('cursor', 'pointer')
-          .style('fill', getNodeFillForObject(node.data?.data?.object as Obj.Unknown | undefined));
-      }}
-    />
-  );
-};
-
-/**
- * Cluster variant rendered via the shared `<SVG.Graph>` engine.
- */
-const UnifiedClusterVisualization = ({ model, onNodeHover }: Omit<VisualizationProps, 'variant'>) => {
-  return (
-    <ProjectedGraph
-      model={model}
-      projectorFactory={(ctx) =>
-        new GraphClusterProjector(ctx, {
-          groupOf: (node: GraphLayoutNode<SpaceGraphNode>) => {
-            const obj = node.data?.data?.object;
-            return obj ? (Obj.getTypename(obj) ?? '(untyped)') : undefined;
-          },
-        })
-      }
-      onNodeHover={onNodeHover}
-      renderNode={(group, node: GraphLayoutNode<SpaceGraphNode>) => {
-        const r = 4;
-        group
-          .append('circle')
-          .attr('r', r)
-          .style('cursor', 'pointer')
-          .style('fill', getNodeFillForObject(node.data?.data?.object as Obj.Unknown | undefined));
-      }}
-    />
-  );
-};
-
-type ProjectedGraphProps = {
+type ProjectorVariant = 'force' | 'lattice' | 'cluster';
+type ProjectorVisualizationProps = {
+  variant: ProjectorVariant;
   model: NonNullable<ReturnType<typeof useGraphModel>>;
-  projectorFactory: (ctx: SVGContext) => any;
   onNodeHover?: (node: TreeNode | null, event?: MouseEvent) => void;
-  renderNode: (group: any, node: GraphLayoutNode<SpaceGraphNode>) => void;
 };
 
+const ANIMATION_DURATION_MS = 500;
+
 /**
- * Hosts `<SVG.Graph>` with a projector instantiated from the given factory. Wires
- * `onInspect` into the standard preview-hover contract used by the other variants.
+ * One persistent `<SVG.Graph>` mount for the three projector-based variants
+ * (force / lattice / cluster). When the variant changes, a new projector is
+ * instantiated and seeded with the previous projector's layout so node x/y
+ * survive the swap — the new projector's `animate()` then tweens each node
+ * from its current position to the new target.
  */
-const ProjectedGraph = ({ model, projectorFactory, onNodeHover, renderNode }: ProjectedGraphProps) => {
+const ProjectorVisualization = ({ variant, model, onNodeHover }: ProjectorVisualizationProps) => {
   const svgRef = useRef<SVGContext>(null);
-  const [projector, setProjector] = useState<any>();
+  const [projector, setProjector] = useState<GraphProjector<SpaceGraphNode> | undefined>();
+  const projectorRef = useRef<GraphProjector<SpaceGraphNode> | undefined>(undefined);
+  projectorRef.current = projector;
+
+  // Recreate the projector when the variant changes. Pass the previous projector's
+  // layout to the constructor so existing node x/y persist across the swap, then
+  // the new projector's animate() tweens to its target positions.
   useEffect(() => {
-    if (svgRef.current) {
-      setProjector(projectorFactory(svgRef.current));
+    if (!svgRef.current) {
+      return;
     }
-    // Recreating the projector when the factory ref changes is acceptable; the
-    // factory is recreated per parent render but never changes shape.
-  }, []);
+    const prev = projectorRef.current?.layout as GraphLayout<SpaceGraphNode> | undefined;
+    setProjector(createProjector(variant, svgRef.current, prev));
+  }, [variant]);
+
+  const renderNode = useMemo(() => createRenderNode(variant), [variant]);
 
   const handleInspect = useCallback(
     (node: GraphLayoutNode<SpaceGraphNode>, event: MouseEvent) => {
@@ -256,11 +199,80 @@ const ProjectedGraph = ({ model, projectorFactory, onNodeHover, renderNode }: Pr
           model={model}
           projector={projector}
           renderNode={renderNode}
+          drag={variant === 'force'}
           onInspect={handleInspect}
         />
       </SVG.Zoom>
     </SVG.Root>
   );
+};
+
+const createProjector = (
+  variant: ProjectorVariant,
+  ctx: SVGContext,
+  prev?: GraphLayout<SpaceGraphNode>,
+): GraphProjector<SpaceGraphNode> => {
+  switch (variant) {
+    case 'force':
+      // Force has no `duration` — its own simulation drives motion via ticks.
+      return new GraphForceProjector<SpaceGraphNode>(ctx, undefined, undefined, prev);
+    case 'lattice':
+      return new GraphLatticeProjector<SpaceGraphNode>(ctx, { duration: ANIMATION_DURATION_MS }, undefined, prev);
+    case 'cluster':
+      return new GraphClusterProjector<SpaceGraphNode>(
+        ctx,
+        {
+          duration: ANIMATION_DURATION_MS,
+          groupOf: (node: GraphLayoutNode<SpaceGraphNode>) => {
+            const obj = node.data?.data?.object;
+            return obj ? (Obj.getTypename(obj) ?? '(untyped)') : undefined;
+          },
+        },
+        undefined,
+        prev,
+      );
+  }
+};
+
+const createRenderNode = (variant: ProjectorVariant): RenderNode<SpaceGraphNode> | undefined => {
+  switch (variant) {
+    case 'force':
+      return (group, node) => {
+        const r = node.r ?? 6;
+        group
+          .append('circle')
+          .attr('r', r)
+          .style('cursor', 'pointer')
+          .style('fill', getNodeFillForObject(node.data?.data?.object as Obj.Unknown | undefined));
+      };
+    case 'lattice':
+      return (group, node) => {
+        const r = node.r ?? 6;
+        const size = r * 2;
+        group
+          .append('rect')
+          .attr('x', -r)
+          .attr('y', -r)
+          .attr('width', size)
+          .attr('height', size)
+          .attr('rx', r * 0.3)
+          .attr('ry', r * 0.3)
+          .style('cursor', 'pointer')
+          .style('fill', getNodeFillForObject(node.data?.data?.object as Obj.Unknown | undefined));
+      };
+    case 'cluster':
+      return (group, node) => {
+        const obj = node.data?.data?.object as Obj.Unknown | undefined;
+        const r = node.r ?? 4;
+        // Synthetic root / group nodes have no underlying ECHO object; render them as
+        // smaller, neutral circles so the hierarchy reads as "structure + leaves".
+        group
+          .append('circle')
+          .attr('r', r)
+          .style('cursor', 'pointer')
+          .style('fill', obj ? getNodeFillForObject(obj) : 'var(--color-neutral-500)');
+      };
+  }
 };
 
 /**

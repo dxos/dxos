@@ -65,11 +65,24 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
   GraphLayout<NodeData, EdgeData>,
   GraphRendererOptions<NodeData, EdgeData>
 > {
+  // First render of this instance — used to clear DOM left behind by a previous
+  // renderer pointing at the same `<g>` (e.g. when the consumer swaps projectors
+  // and a new renderer is constructed for the same SVG root). Without this, the
+  // previous variant's node shapes (e.g. circles) would persist as d3.join sees
+  // them in the `update` set instead of `enter`.
+  #firstRender = true;
+
   override render(layout: GraphLayout<NodeData, EdgeData>) {
     // The SVG group ref is unset between mount cycles and before the container has sized;
     // skip the render rather than throw — the projector will emit again on the next tick.
     if (!this.root) {
       return;
+    }
+
+    if (this.#firstRender) {
+      this.#firstRender = false;
+      // Drop any DOM left by a prior renderer so this render's `renderNode` runs from scratch.
+      this.root.replaceChildren();
     }
 
     log('render', layout);
