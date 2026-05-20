@@ -222,7 +222,7 @@ const useQueryWorkaround = (
     }
 
     return query;
-  }, [ast, schema]);
+  }, [ast, baseFilter]);
 
   return useQuery(db, query);
 };
