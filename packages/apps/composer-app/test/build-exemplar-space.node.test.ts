@@ -259,7 +259,7 @@ const populateSpace = async (space: Space, content: { aboutMd: string; welcomeMd
   ]);
 
   // Roast Log — custom schema entries with Table + Kanban views.
-  const roastLogCollection = addRoastLogCollection(space);
+  const roastLogCollection = await addRoastLogCollection(space);
 
   // Wire up the root collection in a stable order.
   Obj.update(rootCollection, (rootCollection) => {
@@ -1045,20 +1045,33 @@ const makeRoastLogs = (): RoastLog[] => [
 /**
  * Add a "Roast Log" top-level collection with Table and Kanban views over the custom RoastLog schema,
  * then return the collection for wiring into the root.
+ *
+ * We register the schema via space.db.schemaRegistry.register() so that a PersistentType ECHO object
+ * is stored in the space itself. At runtime the Table/Kanban plugins resolve the base schema from that
+ * object — the View's projection.schema field is reserved for user overrides only, not the base schema.
  */
-const addRoastLogCollection = (space: Space): Collection.Collection => {
+const addRoastLogCollection = async (space: Space): Promise<Collection.Collection> => {
+  // Register creates the PersistentType object in the space so the runtime can discover it.
+  await space.db.schemaRegistry.register([RoastLog]);
+
   const entries = makeRoastLogs();
   entries.forEach((entry) => space.db.add(entry));
 
-  const jsonSchema = JsonSchema.toJsonSchema(RoastLog);
-  const query = Query.select(Filter.typename('com.bramblecoffee.type.roast-log'));
-  const makeView = (fields: string[], pivotFieldName?: string) =>
-    space.db.add(ViewModel.make({ query, queryRaw: undefined, jsonSchema, fields, pivotFieldName }));
+  const typename = 'com.bramblecoffee.type.roast-log';
 
-  const tableView = makeView(['title', 'date', 'origin', 'roaster', 'status', 'roastLevel', 'chargeTemp', 'firstCrackTime', 'developmentTime', 'dropTemp']);
-  space.db.add(Table.make({ name: 'Table', view: tableView, jsonSchema }));
+  const { view: tableView } = await ViewModel.makeFromDatabase({
+    db: space.db,
+    typename,
+    fields: ['title', 'date', 'origin', 'roaster', 'status', 'roastLevel', 'chargeTemp', 'firstCrackTime', 'developmentTime', 'dropTemp'],
+  });
+  space.db.add(Table.make({ name: 'Table', view: tableView }));
 
-  const kanbanView = makeView(['title', 'origin', 'date', 'roaster', 'notes'], 'status');
+  const { view: kanbanView } = await ViewModel.makeFromDatabase({
+    db: space.db,
+    typename,
+    fields: ['title', 'origin', 'date', 'roaster', 'notes'],
+    pivotFieldName: 'status',
+  });
   space.db.add(Kanban.make({ name: 'Kanban', view: kanbanView }));
 
   return makeCollection(space, 'Roast Log', [
