@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.file',
   name: 'File',
+  author: 'DXOS',
   description: trim`
     Store images, videos, and PDFs (up to 4MB) directly inside an ECHO document.
     No external blob storage, no IPFS — bytes live on the object itself.
