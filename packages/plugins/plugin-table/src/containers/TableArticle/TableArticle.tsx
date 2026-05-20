@@ -196,7 +196,14 @@ const useQueryWorkaround = (
 ) => {
   // Extract order and tag filter from query AST and apply them to the base filter query.
   const query = useMemo(() => {
-    const baseFilter = schema ? Filter.type(schema) : Filter.nothing();
+    // RuntimeType (database-registered schema) has an object-DXN identifier.
+    // Objects created from the original Effect schema use a type-DXN, so Filter.type()
+    // would produce the wrong DXN kind. Use Filter.typename() for RuntimeType schemas.
+    const baseFilter = schema
+      ? schema instanceof Type.RuntimeType
+        ? Filter.typename(schema.typename)
+        : Filter.type(schema)
+      : Filter.nothing();
     let query = Query.select(baseFilter);
 
     // Apply tag filter from the query AST.

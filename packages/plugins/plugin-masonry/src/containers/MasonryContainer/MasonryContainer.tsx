@@ -60,7 +60,11 @@ export const MasonryContainer = ({
   }, [schemas, typename, db]);
 
   const query = useMemo(() => {
-    const baseFilter = cardSchema ? Filter.type(cardSchema) : Filter.nothing();
+    const baseFilter = cardSchema
+      ? cardSchema instanceof Type.RuntimeType
+        ? Filter.typename(cardSchema.typename)
+        : Filter.type(cardSchema)
+      : Filter.nothing();
     return tag ? Query.select(baseFilter).select(Filter.tag(tag)) : Query.select(baseFilter);
   }, [cardSchema, tag]);
   const objects = useQuery(db, query);

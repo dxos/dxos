@@ -51,7 +51,11 @@ const ViewKanbanArticle = ({ role, subject: object }: KanbanArticleProps) => {
     if (!db) {
       return null;
     }
-    const baseFilter = cardSchema ? Filter.type(cardSchema) : Filter.nothing();
+    const baseFilter = cardSchema
+      ? cardSchema instanceof Type.RuntimeType
+        ? Filter.typename(cardSchema.typename)
+        : Filter.type(cardSchema)
+      : Filter.nothing();
     const query = tag ? Query.select(baseFilter).select(Filter.tag(tag)) : Query.select(baseFilter);
     return AtomQuery.make(db, query);
   }, [db, cardSchema, tag]);
