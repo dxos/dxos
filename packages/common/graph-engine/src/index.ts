@@ -23,3 +23,4 @@ export * from './backend/render-backend';
 export * from './backend/canvas/canvas-backend';
 export * from './backend/canvas/canvas-draw-context';
 export * from './model/model-adapter';
+export * from './engine';
