@@ -20,3 +20,5 @@ export * from './tool/hover-tool';
 export * from './tool/select-tool';
 export * from './tool/zoom-tool';
 export * from './backend/render-backend';
+export * from './backend/canvas/canvas-backend';
+export * from './backend/canvas/canvas-draw-context';
