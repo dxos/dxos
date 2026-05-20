@@ -72,7 +72,7 @@ svg {
             @apply fill-neutral-600 stroke-none;
           }
         }
-        /* Radial cluster leaf labels — small, neutral, no fill swatch since these are SVG
+        /* Radial cluster labels — small, neutral, no fill swatch since these are SVG
            text nodes (not HTML). Stroke + paint-order halos the text for legibility against
            edges or color-coded nodes drawn beneath it. */
         text.dx-cluster-label {
@@ -81,6 +81,23 @@ svg {
           stroke: var(--surface-bg, white);
           stroke-width: 3px;
           stroke-linejoin: round;
+
+          .dark & {
+            @apply fill-neutral-300;
+          }
+        }
+        /* Group label sits inward of the ring — slightly stronger so the typename labels
+           the cluster of leaves they introduce. */
+        text.dx-cluster-label-group {
+          @apply fill-neutral-500 text-[11px] font-medium;
+
+          .dark & {
+            @apply fill-neutral-400;
+          }
+        }
+        /* Root label is a centered caption — larger, slightly bolder. */
+        text.dx-cluster-label-root {
+          @apply fill-neutral-600 text-xs font-semibold;
 
           .dark & {
             @apply fill-neutral-300;

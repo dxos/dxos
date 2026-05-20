@@ -45,6 +45,9 @@ export type GraphLayoutNode<NodeData = any> = {
   type?: string;
   order?: number;
   data?: NodeData;
+  /** Human-readable label. Synthetic nodes (e.g. cluster root / group) carry this so
+   * consumer renderNode callbacks can label them without parsing internal id formats. */
+  label?: string;
   x?: number;
   y?: number;
   r?: number;

@@ -27,6 +27,11 @@ export type GraphClusterProjectorOptions = GraphRadialProjectorOptions & {
   groupOf?: (node: GraphLayoutNode) => string | undefined;
   /** Root id used for the synthetic root node. */
   rootId?: string;
+  /** Display label set on the synthetic root node. Renderers read `node.label`. */
+  rootLabel?: string;
+  /** Optional formatter applied to the `groupOf` key to derive the group's display label.
+   * Defaults to the key itself. */
+  groupLabel?: (key: string) => string;
 };
 
 const ROOT_ID = '__cluster_root__';
@@ -78,6 +83,31 @@ export class GraphClusterProjector<
   NodeData = any,
   Options extends GraphClusterProjectorOptions = any,
 > extends GraphRadialProjector<NodeData, Options> {
+  // Synthetic-node ids (root id, or `${GROUP_PREFIX}${key}`) whose subtree is currently
+  // hidden. Clicking the corresponding rendered circle calls toggleCollapsed to flip
+  // membership, then re-runs the layout so the renderer's exit transition fades the
+  // hidden leaves + hierarchy edges out (and back in on expand).
+  readonly #collapsed = new Set<string>();
+
+  /** Toggle collapse state for a synthetic node id. Triggers a topology re-emit. */
+  toggleCollapsed(id: string): void {
+    if (this.#collapsed.has(id)) {
+      this.#collapsed.delete(id);
+    } else {
+      this.#collapsed.add(id);
+    }
+    // Re-run the layout against the current model data so hidden / re-shown nodes are
+    // exited / entered through the renderer's join.
+    this.doClusterLayout();
+    this.emitUpdate('topology');
+    this.animate();
+  }
+
+  /** Whether a synthetic-node id is currently collapsed. */
+  isCollapsed(id: string): boolean {
+    return this.#collapsed.has(id);
+  }
+
   protected override onUpdate(graph?: Graph.Any) {
     log('onUpdate', { graph: { nodes: graph?.nodes.length, edges: graph?.edges.length } });
     this.mergeData(graph);
@@ -118,23 +148,34 @@ export class GraphClusterProjector<
     const groupOf = this.options.groupOf;
     const rootId = this.options.rootId ?? ROOT_ID;
 
-    // Synthesize the hierarchy: root → groups → leaves.
-    type HierNode = { id: string; parent?: string; node?: GraphLayoutNode<NodeData> };
+    // Synthesize the hierarchy: root → groups → leaves. `groupKey` is carried on synthetic
+    // group HierNodes so the rendered stub can pick up the original groupOf return value
+    // (the typename, in plugin-explorer's case) as its display label.
+    type HierNode = { id: string; parent?: string; node?: GraphLayoutNode<NodeData>; groupKey?: string };
     const items: HierNode[] = [{ id: rootId }];
     const groupIds = new Map<string, string>();
-    for (const node of dataNodes) {
-      const key = groupOf?.(node);
-      let parent = rootId;
-      if (key !== undefined) {
-        let groupId = groupIds.get(key);
-        if (!groupId) {
-          groupId = `${GROUP_PREFIX}${key}`;
-          groupIds.set(key, groupId);
-          items.push({ id: groupId, parent: rootId });
+    // Collapsed root → render only the root circle (no groups, no leaves).
+    const rootCollapsed = this.#collapsed.has(rootId);
+    if (!rootCollapsed) {
+      for (const node of dataNodes) {
+        const key = groupOf?.(node);
+        let parent = rootId;
+        if (key !== undefined) {
+          let groupId = groupIds.get(key);
+          if (!groupId) {
+            groupId = `${GROUP_PREFIX}${key}`;
+            groupIds.set(key, groupId);
+            items.push({ id: groupId, parent: rootId, groupKey: key });
+          }
+          parent = groupId;
         }
-        parent = groupId;
+        // Collapsed group → drop its leaves. The group itself still renders so the user
+        // can click it again to expand.
+        if (this.#collapsed.has(parent)) {
+          continue;
+        }
+        items.push({ id: node.id, parent, node });
       }
-      items.push({ id: node.id, parent, node });
     }
 
     const childrenByParent = new Map<string, HierNode[]>();
@@ -187,17 +228,34 @@ export class GraphClusterProjector<
         const stub = existing ?? ({ id, x: 0, y: 0 } as GraphLayoutNode<NodeData>);
         updateNode(stub, [x, y], isRoot ? rootR : groupR);
         stub.type = isRoot ? CLUSTER_NODE_TYPE_ROOT : CLUSTER_NODE_TYPE_GROUP;
+        // Surface a display label so renderNode callbacks don't have to parse internal ids.
+        if (isRoot) {
+          stub.label = this.options.rootLabel;
+        } else if (d.data.groupKey !== undefined) {
+          stub.label = this.options.groupLabel ? this.options.groupLabel(d.data.groupKey) : d.data.groupKey;
+        }
         syntheticNodes.set(id, stub);
       }
     });
 
     // Compose the rendered node list: synthetic structure first (so leaves draw on top).
+    // Only include data nodes that survived the collapse filter — d3.cluster ran on the
+    // synthesized hierarchy, so any leaf NOT in `visibleLeafIds` got no polar position
+    // and would otherwise render at stale coordinates.
+    const visibleLeafIds = new Set<string>();
+    for (const item of items) {
+      if (item.node) {
+        visibleLeafIds.add(item.id);
+      }
+    }
     const nextNodes: GraphLayoutNode<NodeData>[] = [];
     for (const stub of syntheticNodes.values()) {
       nextNodes.push(stub);
     }
     for (const node of dataNodes) {
-      nextNodes.push(node);
+      if (visibleLeafIds.has(node.id)) {
+        nextNodes.push(node);
+      }
     }
     this.layout.graph.nodes = nextNodes;
 

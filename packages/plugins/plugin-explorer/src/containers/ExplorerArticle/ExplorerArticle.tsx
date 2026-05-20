@@ -11,7 +11,9 @@ import { useObject } from '@dxos/react-client/echo';
 import { DxAnchorActivate, Icon, Panel, Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import {
+  CLUSTER_NODE_TYPE_GROUP,
   CLUSTER_NODE_TYPE_LEAF,
+  CLUSTER_NODE_TYPE_ROOT,
   GraphBundleProjector,
   GraphClusterProjector,
   GraphForceProjector,
@@ -187,6 +189,21 @@ const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
     [onNodeHover],
   );
 
+  // Cluster-only: clicking a root / group node toggles its subtree open/closed.
+  const handleSelect = useCallback(
+    (node: GraphLayoutNode<SpaceGraphNode>) => {
+      if (variant !== 'cluster') {
+        return;
+      }
+      if (node.type !== CLUSTER_NODE_TYPE_ROOT && node.type !== CLUSTER_NODE_TYPE_GROUP) {
+        return;
+      }
+      const cluster = projector as GraphClusterProjector<SpaceGraphNode> | undefined;
+      cluster?.toggleCollapsed(node.id);
+    },
+    [variant, projector],
+  );
+
   // Force needs SVG.Zoom (drag interaction). Cluster/lattice don't, AND including the zoom
   // wrapper makes their curve edges render incorrectly in some contexts (see iteration
   // history in graph-cluster-projector.ts). So mount with vs. without zoom conditionally.
@@ -197,6 +214,7 @@ const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
       renderNode={renderNode}
       drag={variant === 'force'}
       onInspect={handleInspect}
+      onSelect={handleSelect}
     />
   );
   return (
@@ -242,6 +260,8 @@ const createProjector = (
         {
           duration: TWEEN_MS,
           groupOf: typenameGroupOf,
+          rootLabel: 'Database',
+          groupLabel: shortTypename,
         },
         undefined,
         prev,
@@ -305,6 +325,10 @@ const createRenderNode = (variant: ExplorerArticleVariant): RenderNode<SpaceGrap
           .style('fill', obj ? getNodeFillForObject(obj) : 'var(--color-neutral-500)');
         if (node.type === CLUSTER_NODE_TYPE_LEAF) {
           appendRadialLeafLabel(group, node, obj, r);
+        } else if (node.type === CLUSTER_NODE_TYPE_ROOT) {
+          appendRootLabel(group, node, r);
+        } else if (node.type === CLUSTER_NODE_TYPE_GROUP) {
+          appendRadialGroupLabel(group, node, r);
         }
       };
     case 'bundle':
@@ -364,4 +388,73 @@ const appendRadialLeafLabel = (
     .delay(TWEEN_MS)
     .duration(LABEL_FADE_MS)
     .attr('opacity', 1);
+};
+
+/**
+ * Append a radial label INSIDE the ring (toward origin) for a synthetic group node.
+ * Same rotation/flip rules as the leaf label, but offset and anchor inverted so the
+ * text reads from the group circle back toward the center rather than outward.
+ */
+const appendRadialGroupLabel = (
+  group: Parameters<RenderNode<SpaceGraphNode>>[0],
+  node: GraphLayoutNode<SpaceGraphNode>,
+  r: number,
+): void => {
+  if (!node.label) {
+    return;
+  }
+  const targetX = (node as any).tx ?? node.x ?? 0;
+  const targetY = (node as any).ty ?? node.y ?? 0;
+  const angleDeg = (Math.atan2(targetY, targetX) * 180) / Math.PI;
+  const flipped = angleDeg > 90 || angleDeg < -90;
+  group
+    .append('text')
+    .classed('dx-cluster-label', true)
+    .classed('dx-cluster-label-group', true)
+    .attr('dy', '0.32em')
+    .attr('transform', `rotate(${flipped ? angleDeg + 180 : angleDeg})`)
+    // Inverse of the leaf offset / anchor — push the text inward, toward the origin.
+    .attr('x', flipped ? r + 4 : -(r + 4))
+    .attr('text-anchor', flipped ? 'start' : 'end')
+    .attr('opacity', 0)
+    .style('pointer-events', 'none')
+    .text(node.label)
+    .transition()
+    .delay(TWEEN_MS)
+    .duration(LABEL_FADE_MS)
+    .attr('opacity', 1);
+};
+
+/**
+ * Append a centered label below the root node. Root sits at origin where there's no
+ * meaningful radial direction; render the label as a plain horizontal caption with
+ * the standard halo style.
+ */
+const appendRootLabel = (
+  group: Parameters<RenderNode<SpaceGraphNode>>[0],
+  node: GraphLayoutNode<SpaceGraphNode>,
+  r: number,
+): void => {
+  if (!node.label) {
+    return;
+  }
+  group
+    .append('text')
+    .classed('dx-cluster-label', true)
+    .classed('dx-cluster-label-root', true)
+    .attr('text-anchor', 'middle')
+    .attr('y', -(r + 6))
+    .attr('opacity', 0)
+    .style('pointer-events', 'none')
+    .text(node.label)
+    .transition()
+    .delay(TWEEN_MS)
+    .duration(LABEL_FADE_MS)
+    .attr('opacity', 1);
+};
+
+/** Drop the package prefix from a typename for display: `org.dxos.type.Person` → `Person`. */
+const shortTypename = (typename: string): string => {
+  const last = typename.split('.').pop() ?? typename;
+  return last.charAt(0).toUpperCase() + last.slice(1);
 };
