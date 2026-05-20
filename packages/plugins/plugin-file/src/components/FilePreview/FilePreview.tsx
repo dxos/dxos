@@ -9,7 +9,7 @@ import { composable, composableProps } from '@dxos/ui-theme';
 export type FilePreviewProps = { type: string; url: string };
 
 /**
- * File/content preview — image, PDF (iframe), or fallback download link.
+ * File/content preview — image, video, PDF (iframe), or fallback download link.
  */
 export const FilePreview = composable<HTMLElement, FilePreviewProps>(
   ({ type, url, children, ...props }, forwardedRef) => {
@@ -19,6 +19,15 @@ export const FilePreview = composable<HTMLElement, FilePreviewProps>(
           {...composableProps(props, { classNames: 'h-full w-full object-contain' })}
           src={url}
           ref={forwardedRef as ForwardedRef<HTMLImageElement>}
+        />
+      );
+    } else if (type.startsWith('video/')) {
+      return (
+        <video
+          {...composableProps(props, { classNames: 'h-full w-full object-contain' })}
+          src={url}
+          controls
+          ref={forwardedRef as ForwardedRef<HTMLVideoElement>}
         />
       );
     } else if (type === 'application/pdf') {

@@ -17,7 +17,7 @@ import { FileTooLargeError, UnsupportedFileTypeError } from '../operations/creat
 export const inlineBackend: FileCapabilities.Backend = {
   id: Settings.DEFAULT_BACKEND_ID,
   name: 'Inline (ECHO)',
-  description: 'Store the file bytes directly inside the ECHO document. Capped at 4MB; images and PDFs only.',
+  description: 'Store the file bytes directly inside the ECHO document. Capped at 4MB; images, videos, and PDFs only.',
   upload: async (file) => {
     if (!isAcceptedMimeType(file.type)) {
       throw new UnsupportedFileTypeError(file.type);

@@ -25,7 +25,7 @@ export const translations = [
         'plugin.name': 'File',
         'file-input.placeholder': 'Drop a file here, or click to select a file',
         'too-large-error.message': 'File is too large. Maximum size is 4MB.',
-        'unsupported-type-error.message': 'Unsupported file type. Only images and PDFs are allowed.',
+        'unsupported-type-error.message': 'Unsupported file type. Only images, videos, and PDFs are allowed.',
         'settings.title': 'File',
         'settings.backend.label': 'Storage backend',
         'settings.backend.description':

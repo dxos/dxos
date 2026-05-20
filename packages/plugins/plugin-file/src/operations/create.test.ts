@@ -39,10 +39,10 @@ describe('inlineBackend.upload', () => {
     );
   });
 
-  test('rejects non-image / non-PDF MIME types', async ({ expect }) => {
-    await expect(inlineBackend.upload(makeFile('movie.mp4', 'video/mp4', new Uint8Array(8)), stubDb)).rejects.toThrow(
-      UnsupportedFileTypeError,
-    );
+  test('accepts video', async ({ expect }) => {
+    const result = await inlineBackend.upload(makeFile('movie.mp4', 'video/mp4', new Uint8Array(8)), stubDb);
+    expect(result.type).toBe('video/mp4');
+    expect(result.data._tag).toBe('inline');
   });
 
   test('rejects text/plain', async ({ expect }) => {

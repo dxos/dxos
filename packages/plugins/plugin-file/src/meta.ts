@@ -9,7 +9,7 @@ export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.file',
   name: 'File',
   description: trim`
-    Store images and PDFs (up to 4MB) directly inside an ECHO document.
+    Store images, videos, and PDFs (up to 4MB) directly inside an ECHO document.
     No external blob storage, no IPFS — bytes live on the object itself.
   `,
   icon: 'ph--file--regular',
