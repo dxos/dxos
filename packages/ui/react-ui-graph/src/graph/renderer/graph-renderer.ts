@@ -24,6 +24,11 @@ const createLine = line<Point>();
 /** Duration for edge opacity transitions on enter / exit (ms). Matches node enter/exit timing. */
 const EDGE_FADE_MS = 300;
 
+/** Duration for node hide/show opacity transitions (ms). Matches the projector's tween
+ * duration so a cluster collapse/expand fades opacity over the same window the position
+ * is tweening toward / away from the parent group. */
+const NODE_HIDE_MS = 500;
+
 export type LabelOptions<NodeData = any> = {
   text: (node: GraphLayoutNode<NodeData>, highlight?: boolean) => string | undefined;
 };
@@ -196,7 +201,10 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
           enter
             .append('g')
             .attr('data-id', (d) => d.id)
-            .attr('opacity', 1)
+            // Initial opacity matches `hidden` so a node that enters already-collapsed is
+            // invisible from the first frame; updateNode's named 'hide' transition then
+            // handles any subsequent toggles.
+            .attr('opacity', (d) => (d.hidden ? 0 : 1))
             .classed('dx-node', true)
             .call(createNode, this.options),
         (update) => update,
@@ -398,6 +406,16 @@ const updateNode: D3Callable = <NodeData = any, EdgeData = any>(
   group.attr('transform', (d) => {
     return d.x != null && d.y != null ? `translate(${d.x},${d.y})` : undefined;
   });
+
+  // Hidden state: drive pointer-events + the hover opacity via the `dx-hidden` class;
+  // tween the actual opacity attribute on a named transition so it doesn't fight the
+  // CSS hover transition (different namespaces, different durations).
+  group.classed('dx-hidden', (d) => d.hidden ?? false);
+  group
+    .transition('hide')
+    .ease(easeCubicOut)
+    .duration(NODE_HIDE_MS)
+    .attr('opacity', (d) => (d.hidden ? 0 : 1));
 
   // Re-run the custom shape on every full render so a topology / data update
   // refreshes geometry (e.g. lattice node.r changes on resize, fill changes on

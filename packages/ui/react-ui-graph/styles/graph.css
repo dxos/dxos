@@ -65,6 +65,20 @@ svg {
 
     g.dx-nodes {
       g.dx-node {
+        /* Hover feedback — every variant (force / lattice / cluster / bundle) wraps its
+           consumer-drawn shape in `g.dx-node`, so a single rule covers all four. Dim the
+           whole node group on hover; the `transition` smooths the in/out. */
+        cursor: pointer;
+        transition: opacity 150ms ease-out;
+        &:hover {
+          opacity: 0.65;
+        }
+        /* Cluster collapse: hidden leaves stay in the layout (so they tween to/from their
+           parent), but the d3 hide-transition fades their opacity attribute to 0 and we
+           drop pointer events so they don't catch clicks during the fade. */
+        &.dx-hidden {
+          pointer-events: none;
+        }
         circle {
           @apply fill-neutral-300 stroke-neutral-800;
 

@@ -192,7 +192,11 @@ const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
   // Cluster-only: clicking a root / group node toggles its subtree open/closed.
   const handleSelect = useCallback(
     (node: GraphLayoutNode<SpaceGraphNode>) => {
-      if (variant !== 'cluster' || !node || (node.type !== CLUSTER_NODE_TYPE_ROOT && node.type !== CLUSTER_NODE_TYPE_GROUP)) {
+      if (
+        variant !== 'cluster' ||
+        !node ||
+        (node.type !== CLUSTER_NODE_TYPE_ROOT && node.type !== CLUSTER_NODE_TYPE_GROUP)
+      ) {
         return;
       }
       const cluster = projector as GraphClusterProjector<SpaceGraphNode> | undefined;

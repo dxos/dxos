@@ -89,6 +89,12 @@ export class GraphClusterProjector<
   // hidden leaves + hierarchy edges out (and back in on expand).
   readonly #collapsed = new Set<string>();
 
+  // Snapshot of the full data-node set as of the last mergeData. doClusterLayout always
+  // reads from this rather than `layout.graph.nodes` — the layout view is filtered (it
+  // drops hidden leaves so the renderer doesn't see them), so re-reading from there
+  // would permanently lose the hidden leaves and they couldn't reappear on expand.
+  #dataNodes: GraphLayoutNode<NodeData>[] = [];
+
   /** Toggle collapse state for a synthetic node id. Triggers a topology re-emit. */
   toggleCollapsed(id: string): void {
     if (this.#collapsed.has(id)) {
@@ -111,8 +117,9 @@ export class GraphClusterProjector<
   protected override onUpdate(graph?: Graph.Any) {
     log('onUpdate', { graph: { nodes: graph?.nodes.length, edges: graph?.edges.length } });
     this.mergeData(graph);
-    // Compute layout (which mutates nodes + replaces edges with hierarchy edges) BEFORE
-    // emitting topology, so the renderer's enter/exit join sees the final node + edge sets.
+    // Snapshot the full data-node set right after mergeData — before doClusterLayout
+    // overwrites `layout.graph.nodes` with the filtered (collapse-aware) view.
+    this.#dataNodes = [...this.layout.graph.nodes];
     this.doClusterLayout();
     this.emitUpdate('topology');
     this.animate();
@@ -140,7 +147,13 @@ export class GraphClusterProjector<
       return;
     }
 
-    const dataNodes = [...this.layout.graph.nodes];
+    // Read from the post-mergeData snapshot, not from `layout.graph.nodes`. The layout
+    // view is a FILTERED projection (hidden leaves are dropped so the renderer's d3 join
+    // fades them out); reading from it would shrink monotonically across collapses and
+    // hidden leaves could never reappear on expand. The snapshot also avoids the
+    // "synthetic root re-pushed as its own child → d3.hierarchy infinite recursion" hang
+    // we'd otherwise hit, because synthetic stubs were never in this set to begin with.
+    const dataNodes = this.#dataNodes;
     if (!dataNodes.length) {
       return;
     }
@@ -206,6 +219,16 @@ export class GraphClusterProjector<
     const groupR = this.options.groupRadius ?? 3;
     const rootR = this.options.rootRadius ?? 5;
 
+    // Index any synthetic root / group stubs from the previous layout pass so we can
+    // REUSE them (preserving their current x/y as the tween start) instead of creating
+    // fresh `{x:0,y:0}` stubs that would snap the DOM element to the origin first.
+    const prevStubsById = new Map<string, GraphLayoutNode<NodeData>>();
+    for (const node of this.layout.graph.nodes) {
+      if (node.type === CLUSTER_NODE_TYPE_ROOT || node.type === CLUSTER_NODE_TYPE_GROUP) {
+        prevStubsById.set(node.id, node);
+      }
+    }
+
     // Build the new node set: existing data nodes (re-positioned), plus synthetic root + groups.
     const syntheticNodes = new Map<string, GraphLayoutNode<NodeData>>();
     root.each((d: any) => {
@@ -216,16 +239,18 @@ export class GraphClusterProjector<
       const y = Math.sin(angle - Math.PI / 2) * radius;
 
       if (d.data.node) {
-        // Real leaf — tween its position.
+        // Real leaf — tween its position and mark visible.
         updateNode(d.data.node, [x, y], leafR);
         (d.data.node as any).type = CLUSTER_NODE_TYPE_LEAF;
+        (d.data.node as any).hidden = false;
       } else {
-        // Synthetic root or group. These have no presence in the previous projector's layout
-        // (force / lattice) so seed their starting position at origin — the root then stays
-        // put while groups grow outward to their inner ring, framing the leaf transition.
+        // Synthetic root or group. On the very first cluster mount the stub is brand-new
+        // so seed it at origin — root stays put while groups grow outward. On subsequent
+        // mounts (toggleCollapsed) we reuse the previous-render stub so its current x/y
+        // becomes the tween start; otherwise the DOM element would jump to origin before
+        // animating to the new target position.
         const isRoot = id === rootId;
-        const existing = syntheticNodes.get(id);
-        const stub = existing ?? ({ id, x: 0, y: 0 } as GraphLayoutNode<NodeData>);
+        const stub = prevStubsById.get(id) ?? ({ id, x: 0, y: 0 } as GraphLayoutNode<NodeData>);
         updateNode(stub, [x, y], isRoot ? rootR : groupR);
         stub.type = isRoot ? CLUSTER_NODE_TYPE_ROOT : CLUSTER_NODE_TYPE_GROUP;
         // Surface a display label so renderNode callbacks don't have to parse internal ids.
@@ -238,24 +263,39 @@ export class GraphClusterProjector<
       }
     });
 
-    // Compose the rendered node list: synthetic structure first (so leaves draw on top).
-    // Only include data nodes that survived the collapse filter — d3.cluster ran on the
-    // synthesized hierarchy, so any leaf NOT in `visibleLeafIds` got no polar position
-    // and would otherwise render at stale coordinates.
+    // Collapse animation: hidden leaves stay in the layout but their target position is
+    // the parent group's target (or root for ungrouped leaves). animate() then tweens them
+    // toward the parent — visually "absorbed in", while their opacity transitions to 0 via
+    // the renderer's hidden-flag transition. On re-expand they tween back out to their ring.
     const visibleLeafIds = new Set<string>();
     for (const item of items) {
       if (item.node) {
         visibleLeafIds.add(item.id);
       }
     }
+    for (const node of dataNodes) {
+      if (visibleLeafIds.has(node.id)) {
+        continue;
+      }
+      // Hidden leaf — find its parent group's target. groupOf may have changed since the
+      // last layout pass (rare in practice but cheap to handle), so re-compute the key.
+      const key = groupOf?.(node);
+      const parentId = key !== undefined && groupIds.has(key) ? (groupIds.get(key) as string) : rootId;
+      const parentStub = syntheticNodes.get(parentId);
+      const targetX = (parentStub as any)?.tx ?? 0;
+      const targetY = (parentStub as any)?.ty ?? 0;
+      updateNode(node, [targetX, targetY], leafR);
+      (node as any).type = CLUSTER_NODE_TYPE_LEAF;
+      node.hidden = true;
+    }
+
+    // Compose the rendered node list: synthetic structure first (so leaves draw on top).
     const nextNodes: GraphLayoutNode<NodeData>[] = [];
     for (const stub of syntheticNodes.values()) {
       nextNodes.push(stub);
     }
     for (const node of dataNodes) {
-      if (visibleLeafIds.has(node.id)) {
-        nextNodes.push(node);
-      }
+      nextNodes.push(node);
     }
     this.layout.graph.nodes = nextNodes;
 
