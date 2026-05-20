@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.presenter',
   name: 'Presenter',
+  author: 'DXOS',
   description: trim`
     Transform markdown documents into interactive presentation slideshows.
     Navigate between slides with keyboard controls and present content in full-screen mode.

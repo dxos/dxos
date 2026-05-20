@@ -21,6 +21,7 @@ export const getPluginPath = (pluginId: string): string => `root/${REGISTRY_ID}/
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.registry',
   name: 'Plugins',
+  author: 'DXOS',
   description: trim`
     Plugin management system for discovering, installing, and configuring workspace extensions.
     Browse available plugins and customize your workspace capabilities.

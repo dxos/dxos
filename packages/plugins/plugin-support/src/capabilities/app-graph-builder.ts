@@ -117,8 +117,11 @@ export default Capability.makeModule(
       // Personal-space-only Welcome virtual node, hoisted to the top of the navtree.
       // The node is fully virtual (no backing ECHO object); the matching Article surface
       // is selected via the `welcome` literal subject. Gated by the `showWelcome` setting.
+      // The extension itself is positioned `first` so its node is inserted ahead of other
+      // `position: 'first'` siblings (Settings, Collections) under the personal space.
       GraphBuilder.createExtension({
         id: 'welcome',
+        position: 'first',
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
           if (!isPersonalSpace(space)) {

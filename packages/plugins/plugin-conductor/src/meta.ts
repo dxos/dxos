@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.conductor',
   name: 'Conductor',
+  author: 'DXOS',
   description: trim`
     Visual workflow builder using node-based compute graphs to orchestrate complex AI agent pipelines.
     Connect data sources, transformations, and AI models in a drag-and-drop interface for advanced automation.
