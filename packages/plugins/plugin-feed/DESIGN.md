@@ -26,7 +26,7 @@ Posts are immutable feed entries. All post-creation mutation moves to side maps 
 
 `Subscription.Post` collapses to feed-entry fields only:
 
-```
+```typescript
 Post: { source, title, link, description, author, published, guid }
 ```
 
