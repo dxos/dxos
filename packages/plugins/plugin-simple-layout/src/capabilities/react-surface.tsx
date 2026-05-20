@@ -38,7 +38,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'nav-branch',
         role: 'article',
-        position: 'fallback',
+        position: 'last',
         filter: (data): data is SurfaceData => {
           const props = data.properties as Record<string, any>;
           return ALLOWED_DISPOSITIONS.includes(props?.disposition) || props?.role === 'branch';

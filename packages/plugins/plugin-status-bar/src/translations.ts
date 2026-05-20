@@ -11,13 +11,7 @@ export const translations = [
     'en-US': {
       [meta.id]: {
         'plugin.name': 'Status Bar',
-        'warning.title': 'WARNING',
-        'technology-preview.message': 'Composer is currently in beta.',
-        'learn-more.label': 'Learn more',
-        'released.message': 'This version was released {{released}}.',
-        'see-release.label': 'See release on GitHub',
-        'powered-by-dxos.message': 'Powered by <dxos>DXOS</dxos>',
-        'feedback.label': 'Feedback',
+        'released.message': 'Released {{released}}',
       },
     },
   },
