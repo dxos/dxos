@@ -186,11 +186,12 @@ describe.skipIf(!process.env.BUILD_EXEMPLAR)('build-exemplar-space', () => {
         console.log('exporting…');
         const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
 
-        // Pretty-print the archive so the committed JSON is reviewable in diffs.
+        // Store as a single line so regenerations produce a 1-line diff rather than
+        // thousands of changed lines. The file is valid JSON; use `jq .` to inspect it.
         const parsed = JSON.parse(new TextDecoder().decode(archive.contents));
-        const pretty = JSON.stringify(parsed, null, 2);
-        await writeFile(OUTPUT_PATH, pretty + '\n', 'utf8');
-        console.log(`wrote ${OUTPUT_PATH} (${pretty.length} bytes, ${parsed.objects.length} objects)`);
+        const minified = JSON.stringify(parsed);
+        await writeFile(OUTPUT_PATH, minified + '\n', 'utf8');
+        console.log(`wrote ${OUTPUT_PATH} (${minified.length} bytes, ${parsed.objects.length} objects)`);
       } finally {
         await client.destroy();
       }
