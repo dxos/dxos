@@ -10206,15 +10206,15 @@ importers:
       '@dxos/plugin-deck':
         specifier: workspace:*
         version: link:../plugin-deck
+      '@dxos/plugin-file':
+        specifier: workspace:*
+        version: link:../plugin-file
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
-      '@dxos/plugin-wnfs':
-        specifier: workspace:*
-        version: link:../plugin-wnfs
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -10233,6 +10233,9 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme

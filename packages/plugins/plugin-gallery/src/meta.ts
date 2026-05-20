@@ -9,8 +9,8 @@ export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.gallery',
   name: 'Gallery',
   description: trim`
-    A simple image gallery. Drop in images from your filesystem (uploaded to WNFS) or external URLs;
-    browse them in a masonry grid and present in fullscreen.
+    A simple image gallery. Drop in images and browse them in a masonry grid;
+    present in fullscreen.
   `,
   icon: 'ph--images--regular',
   iconHue: 'rose',
