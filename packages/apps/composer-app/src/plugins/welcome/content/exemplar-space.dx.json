@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "timestamp": "2026-05-20T18:12:34.721Z",
-  "originalSpaceId": "B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD",
-  "createdAt": 1779300754721,
+  "timestamp": "2026-05-20T21:11:39.510Z",
+  "originalSpaceId": "BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5",
+  "createdAt": 1779311499510,
   "objects": [
     {
-      "id": "01KS39DRJN9JST3Q5EWCWZV864",
+      "id": "01KS3KNNH8NYJ7546FA111H0TE",
       "@type": "dxn:type:org.dxos.type.spaceProperties:0.1.0",
       "@meta": {
         "keys": []
@@ -14,81 +14,81 @@
       "icon": "potted-plant",
       "name": "Bramble Coffee Roasters",
       "org.dxos.type.collection": {
-        "/": "dxn:echo:@:01KS39DRKHM26GWVGQG31ZZX50"
+        "/": "dxn:echo:@:01KS3KNNJ4ZVF15KVS9FD8Q124"
       }
     },
     {
-      "id": "01KS39DRKHM26GWVGQG31ZZX50",
+      "id": "01KS3KNNJ4ZVF15KVS9FD8Q124",
       "@type": "dxn:type:org.dxos.type.collection:0.1.0",
       "@meta": {
         "keys": []
       },
       "objects": [
         {
-          "/": "dxn:echo:@:01KS39DRKQG6EVB9CFWND4X1VA"
+          "/": "dxn:echo:@:01KS3KNNJB46VPRJB1B2PZS8JR"
         },
         {
-          "/": "dxn:echo:@:01KS39DRM4BTQ7YB95YCVR4JFH"
+          "/": "dxn:echo:@:01KS3KNNJYD568C28G7RMNJC1N"
         },
         {
-          "/": "dxn:echo:@:01KS39DRPX46GNGR21FZVZTN58"
+          "/": "dxn:echo:@:01KS3KNNND796EN7K8XVYF9E47"
         },
         {
-          "/": "dxn:echo:@:01KS39DRQE0P24TZBT7WW5259S"
+          "/": "dxn:echo:@:01KS3KNNNT3V20JBJB795F3TXZ"
         },
         {
-          "/": "dxn:echo:@:01KS39DRRBYBGP46B4Z2W2BSK3"
+          "/": "dxn:echo:@:01KS3KNNPB6QPS410GTZNN69KD"
         },
         {
-          "/": "dxn:echo:@:01KS39DRSZ68Z66KGWCXG185WM"
+          "/": "dxn:echo:@:01KS3KNNQZMDFHJ72Q84VJWYRB"
         },
         {
-          "/": "dxn:echo:@:01KS39DS23VDSW37T40KPJXC6B"
+          "/": "dxn:echo:@:01KS3KNP4SQJ9643FY1VT2T978"
         }
       ]
     },
     {
-      "id": "01KS39DRKP7DDAPPD6R0GS76AD",
+      "id": "01KS3KNNJB46VPRJB1B2PZS8JQ",
       "@type": "dxn:type:org.dxos.type.text:0.1.0",
       "@meta": {
         "keys": []
       },
-      "@parent": "dxn:echo:@:01KS39DRKQG6EVB9CFWND4X1VA",
+      "@parent": "dxn:echo:@:01KS3KNNJB46VPRJB1B2PZS8JR",
       "content": "# Welcome to Composer\n\nThis is a **sample space** we built for you. It pretends to be the workspace of *Bramble Coffee Roasters*, a small specialty coffee company in Oakland. The data is fictional — feel free to break, rename, or delete anything. Your own work lives in your **Personal** space (in the sidebar). When you're done exploring, you can delete this space entirely.\n\nWe made it so you can see what Composer is for without having to build a workspace from scratch.\n\n## Take the tour\n\n### Contacts\n\nOpen **Contacts → Organizations**. You'll find the same set of organizations rendered four different ways:\n\n- A **Table** view — rows and columns.\n- A **Kanban** view — grouped by relationship (supplier / wholesale / partner).\n- A **Map** view — plotted by location (Oakland, Portland, Brooklyn, Austin, plus the partner farms in Colombia and Ethiopia).\n- A **Masonry** view — visual cards.\n\nOpen **Contacts → People** to see the team and partner contacts. Each Person links back to their Organization — clicking the org name navigates to it.\n\n### Inbox\n\nOpen **Inbox**. There are ~20 emails — supplier updates, wholesale reorders, internal memos, plus a few unrelated newsletters and shipping notifications, the kind of noise a real inbox has. The senders are the same people you saw in Contacts.\n\n```prompt\nLook through my inbox and tell me which contacts I haven't replied to yet.\n```\n\n```prompt\nFind any emails about the Spring Blend Launch and summarise where things stand.\n```\n\n### Calendar\n\nOpen **Calendar**. You'll see meetings spread across the last two weeks and the next two — internal standups, customer cuppings, a site visit to a partner farm, a coffee expo. Attendees overlap with the People in Contacts.\n\n### Spring Blend Launch\n\nOpen the **Spring Blend Launch** project. It has a handful of tasks at different statuses, each assigned to someone on the team. This is what a small, in-flight project looks like — communications, documents, and tasks all in one space.\n\n```prompt\nWhat still needs to happen before we can ship the Spring Blend?\n```\n\n### Notes & Documents\n\nA few markdown documents (cupping notes, sourcing trip itinerary, roast log template), two sketches (the roastery floor plan and a flavor wheel), and two spreadsheets (green coffee inventory and the wholesale price list).\n\n### About Bramble Coffee Roasters\n\nThere's also an **About Bramble Coffee Roasters** document at the top of the space. It describes the company in detail — history, team, suppliers, customers, current initiatives. It's a useful grounding doc if you want to ask the agent for new sample content that fits the same world.\n\n## What Composer is\n\nComposer is an extensible, local-first workspace. Documents, sketches, tables, sheets, an inbox, a calendar, contacts, projects, and a few view types over your data — all in the same place, all yours, no server in between. You can install plugins from the Settings dialog to add more content types.\n\n**Private by default.** Your data lives on your device.\n\n**Collaborative.** Invite someone to a space with the **Share** button in the top bar and you can edit together in real time.\n\n**Open source.** [DXOS on GitHub](https://github.com/dxos/dxos).\n\n## When you're ready\n\n- **Personal space** in the sidebar is empty and waiting. That's where to do your own work.\n- This Bramble sample space can be renamed, edited, or deleted at any time.\n- Questions, bug reports, feature requests? Join us on [Discord](https://dxos.org/discord) or read the [docs](https://docs.dxos.org).\n"
     },
     {
-      "id": "01KS39DRKQG6EVB9CFWND4X1VA",
+      "id": "01KS3KNNJB46VPRJB1B2PZS8JR",
       "@type": "dxn:type:org.dxos.type.document:0.1.0",
       "@meta": {
         "keys": []
       },
       "content": {
-        "/": "dxn:echo:@:01KS39DRKP7DDAPPD6R0GS76AD"
+        "/": "dxn:echo:@:01KS3KNNJB46VPRJB1B2PZS8JQ"
       },
       "name": "Welcome & Tour"
     },
     {
-      "id": "01KS39DRM4BTQ7YB95YCVR4JFG",
+      "id": "01KS3KNNJYD568C28G7RMNJC1M",
       "@type": "dxn:type:org.dxos.type.text:0.1.0",
       "@meta": {
         "keys": []
       },
-      "@parent": "dxn:echo:@:01KS39DRM4BTQ7YB95YCVR4JFH",
+      "@parent": "dxn:echo:@:01KS3KNNJYD568C28G7RMNJC1N",
       "content": "# About Bramble Coffee Roasters\n\n## At a glance\n\n- **Founded:** 2016\n- **Location:** Roastery + cafe at 412 Linden Avenue, Oakland, CA. Small green-coffee warehouse next door.\n- **Headcount:** 8 full-time, 4 part-time baristas.\n- **Business mix:** ~60% wholesale (cafes, bakeries, small restaurants), ~30% retail (the cafe and a webshop), ~10% subscriptions.\n- **Volume:** roughly 1,800 lbs roasted per week across all blends and single-origins.\n\n## History\n\nBramble was founded by **Maya Chen** (head roaster) and **Diego Alvarez** (sourcing) after they spent four years together at a larger Bay Area roaster. They opened with a single 12 kg Loring roaster, three wholesale accounts, and a corner of a friend's bakery. They moved into the Linden Avenue space in 2019 and added the second roaster in 2022.\n\nThe name \"Bramble\" comes from the tangle of fruit notes Maya kept describing in the Ethiopian naturals she was cupping the day they wrote the business plan.\n\n## Mission and voice\n\n- **Mission:** Make specialty coffee that respects the farm at the front and the cafe at the back. Pay above market for green coffee, charge fair for roasted, keep the supply chain short enough to remember everyone's name.\n- **Brand voice:** Warm, plainspoken, a little nerdy. We talk about coffee like it's food — terroir, ripeness, what the farmer was trying to do — not like it's wine and not like it's fuel. We don't use jargon when a normal word will do. We say please, thank you, and we send handwritten cards when a customer reorders for the fifth time.\n\n## Product lines\n\n| Line | Examples | Notes |\n| --- | --- | --- |\n| Single-origin | Finca Esperanza (Colombia, washed), Sidamo Lot #42 (Ethiopia, natural) | Rotating; ~3 SKUs at any time. |\n| Blends | Linden (everyday espresso), Field Notes (filter), Late Shift (dark) | Year-round; Linden is the wholesale anchor. |\n| Seasonal | **Spring Blend** (in launch), Holiday Blend (Q4) | Two per year. |\n| Decaf | Swiss Water Colombia | One SKU. |\n| Retail | 12 oz bags, gift boxes, brewing gear | In the cafe and online. |\n\n## Sourcing philosophy\n\n- Direct trade where the relationship is real; transparent-trade through a small set of trusted importers otherwise.\n- At least one origin visit per year per major lot.\n- We pay floor prices above the C-market and above Fair Trade. We share lot-level pricing with wholesale partners on request.\n- We prefer farms we've bought from for 2+ years over chasing one-off competition lots.\n\n### Named partner farms / cooperatives\n\n- **Finca Esperanza** — Huila, Colombia. Family farm run by **Carmen Restrepo**. We've bought from her since 2018. Washed caturra and pink bourbon. Q2 is harvest; Q3 is shipment.\n- **Sidamo Cooperative** — Sidamo, Ethiopia. Contact **Abel Tadesse**, export liaison. Naturals; we usually buy lots #38–#45 each year.\n- We also buy small parcels from Guatemala and Peru through importers; those are not named in this exemplar.\n\n## Wholesale customers\n\n- **North Star Café** — Portland, OR. Owner-buyer **Jordan Park**. On the Linden blend and rotating single-origin. Reorders every 3 weeks; uses our subscription program.\n- **Hatch Bakery** — Brooklyn, NY. Buyer **Priya Shah**. Linden + Field Notes. Currently piloting a new espresso blend with us (see Spring Blend Launch).\n- **Olive & Vine** — Austin, TX. Buyer **Mateo Ruiz**. New account; just sent first samples.\n\n## The team\n\nBramble is small; everyone wears two hats.\n\n- **Maya Chen** — co-founder, head roaster. Reads cupping forms in her sleep. Final say on roast curves.\n- **Diego Alvarez** — co-founder, sourcing & green buyer. On the road one week a month during harvest seasons.\n- **Sam Okafor** — wholesale lead. Owns the customer relationships and the Linden inventory.\n- **Riley Tanaka** — operations & logistics. Pallets, freight, the QuickBooks login, the weird vendor portals.\n- Plus four baristas (rotating) and two part-time roastery assistants. Not individually named in the exemplar.\n\n## Active initiatives\n\n### Spring Blend Launch (current focus)\n\nA new seasonal espresso blend targeting wholesale espresso bars. Going live in 6 weeks.\n\n- Diego is locking in the green: lot from Finca Esperanza + a smaller Guatemalan parcel.\n- Maya is iterating on the roast curve; current draft is two weeks old.\n- Sam is coordinating cuppings with North Star, Hatch, and Olive & Vine.\n- Riley is sorting packaging (label redesign with a freelancer) and freight.\n\n### Q2 sourcing trip\n\nDiego flies to Colombia → Ethiopia in five weeks. Two weeks total. He'll visit Finca Esperanza and the Sidamo cooperative, and meet a new Peruvian producer recommended by an importer.\n\n## Conventions used in the exemplar data\n\nWhen extending the exemplar, please keep these consistent:\n\n- **Email addresses:** `firstname@bramblecoffee.com` for internal, organization-specific domains for partners (e.g. `carmen@fincaesperanza.co`, `abel@sidamocoop.org`, `jordan@northstarcafe.com`, `priya@hatchbakery.com`, `mateo@oliveandvine.cafe`).\n- **Dates:** Recent emails should be spread across the last ~6 weeks. Calendar events span 2 weeks past → 2 weeks future. Hard-code ISO dates relative to the snapshot generation date; the script accepts a `--now` flag for reproducibility.\n- **Tone in emails:** Plain, professional but warm. Use first names. No marketing fluff. Suppliers occasionally drop a Spanish or Amharic phrase (sparingly, accurately).\n- **Locations and coordinates:** Use real coordinates so the Map view looks right. Oakland HQ, Portland (North Star), Brooklyn (Hatch), Austin (Olive & Vine), Huila Colombia (Finca Esperanza), Sidamo Ethiopia (Sidamo Cooperative).\n- **No real-world business names** — every entity in this exemplar is fictional and should stay that way. Don't reuse the names of actual specialty roasters or cafes.\n"
     },
     {
-      "id": "01KS39DRM4BTQ7YB95YCVR4JFH",
+      "id": "01KS3KNNJYD568C28G7RMNJC1N",
       "@type": "dxn:type:org.dxos.type.document:0.1.0",
       "@meta": {
         "keys": []
       },
       "content": {
-        "/": "dxn:echo:@:01KS39DRM4BTQ7YB95YCVR4JFG"
+        "/": "dxn:echo:@:01KS3KNNJYD568C28G7RMNJC1M"
       },
       "name": "About Bramble Coffee Roasters"
     },
     {
-      "id": "01KS39DRMGMD491596BPYPJ2KF",
+      "id": "01KS3KNNKARTJ1YA8QYBY5394W",
       "@type": "dxn:type:org.dxos.type.organization:0.1.0",
       "@meta": {
         "keys": []
@@ -103,7 +103,7 @@
       "website": "https://bramblecoffee.com"
     },
     {
-      "id": "01KS39DRMN2VN2G1DBKXWG9AM8",
+      "id": "01KS3KNNKCC2HXA6M7CFMPEF61",
       "@type": "dxn:type:org.dxos.type.organization:0.1.0",
       "@meta": {
         "keys": []
@@ -118,7 +118,7 @@
       "website": "https://fincaesperanza.co"
     },
     {
-      "id": "01KS39DRMR7W2K316HYBG8Y75P",
+      "id": "01KS3KNNKE13PG8BS79Z1Q4J5A",
       "@type": "dxn:type:org.dxos.type.organization:0.1.0",
       "@meta": {
         "keys": []
@@ -133,7 +133,7 @@
       "website": "https://sidamocoop.org"
     },
     {
-      "id": "01KS39DRMVWJTCCK0Q4YKS011X",
+      "id": "01KS3KNNKG84321HWPZR5G5VPQ",
       "@type": "dxn:type:org.dxos.type.organization:0.1.0",
       "@meta": {
         "keys": []
@@ -148,7 +148,7 @@
       "website": "https://northstarcafe.com"
     },
     {
-      "id": "01KS39DRMX45AQPDCMKYPKNQAB",
+      "id": "01KS3KNNKK0VB1FF48YHQ0V1YH",
       "@type": "dxn:type:org.dxos.type.organization:0.1.0",
       "@meta": {
         "keys": []
@@ -163,7 +163,7 @@
       "website": "https://hatchbakery.com"
     },
     {
-      "id": "01KS39DRN0F2JS1ZX3M0DDZFNV",
+      "id": "01KS3KNNKNNQ2J96HBASD6C4K4",
       "@type": "dxn:type:org.dxos.type.organization:0.1.0",
       "@meta": {
         "keys": []
@@ -178,7 +178,7 @@
       "website": "https://oliveandvine.cafe"
     },
     {
-      "id": "01KS39DRN24XJEP6PFQC3EYGTY",
+      "id": "01KS3KNNKQPJD9MQJC0K1PNMBZ",
       "@type": "dxn:type:org.dxos.type.person:0.1.0",
       "@meta": {
         "keys": []
@@ -186,18 +186,18 @@
       "emails": [
         {
           "label": "Work",
-          "value": "maya@bramblecoffee.com"
+          "value": "kai@bramblecoffee.com"
         }
       ],
-      "fullName": "Maya Chen",
+      "fullName": "Kai Chen",
       "jobTitle": "Head Roaster (co-founder)",
       "organization": {
-        "/": "dxn:echo:@:01KS39DRMGMD491596BPYPJ2KF"
+        "/": "dxn:echo:@:01KS3KNNKARTJ1YA8QYBY5394W"
       },
-      "preferredName": "Maya"
+      "preferredName": "Kai"
     },
     {
-      "id": "01KS39DRN5KD59PS830GXJN35Z",
+      "id": "01KS3KNNKTD7GJKHY3JFXS3NXY",
       "@type": "dxn:type:org.dxos.type.person:0.1.0",
       "@meta": {
         "keys": []
@@ -211,12 +211,12 @@
       "fullName": "Diego Alvarez",
       "jobTitle": "Sourcing (co-founder)",
       "organization": {
-        "/": "dxn:echo:@:01KS39DRMGMD491596BPYPJ2KF"
+        "/": "dxn:echo:@:01KS3KNNKARTJ1YA8QYBY5394W"
       },
       "preferredName": "Diego"
     },
     {
-      "id": "01KS39DRN7X222VXH0KWNM33YR",
+      "id": "01KS3KNNKWBQC92FF3K8MSPTB1",
       "@type": "dxn:type:org.dxos.type.person:0.1.0",
       "@meta": {
         "keys": []
@@ -230,12 +230,12 @@
       "fullName": "Sam Okafor",
       "jobTitle": "Wholesale Lead",
       "organization": {
-        "/": "dxn:echo:@:01KS39DRMGMD491596BPYPJ2KF"
+        "/": "dxn:echo:@:01KS3KNNKARTJ1YA8QYBY5394W"
       },
       "preferredName": "Sam"
     },
     {
-      "id": "01KS39DRNA3YG39WDW5YYQ5GTJ",
+      "id": "01KS3KNNKYTFFGPT8FS7400HNH",
       "@type": "dxn:type:org.dxos.type.person:0.1.0",
       "@meta": {
         "keys": []
@@ -249,12 +249,12 @@
       "fullName": "Riley Tanaka",
       "jobTitle": "Operations & Logistics",
       "organization": {
-        "/": "dxn:echo:@:01KS39DRMGMD491596BPYPJ2KF"
+        "/": "dxn:echo:@:01KS3KNNKARTJ1YA8QYBY5394W"
       },
       "preferredName": "Riley"
     },
     {
-      "id": "01KS39DRNDQSQC1853DAVTP6S7",
+      "id": "01KS3KNNM0ENW86BJYGW7PHB1W",
       "@type": "dxn:type:org.dxos.type.person:0.1.0",
       "@meta": {
         "keys": []
@@ -268,12 +268,12 @@
       "fullName": "Carmen Restrepo",
       "jobTitle": "Producer",
       "organization": {
-        "/": "dxn:echo:@:01KS39DRMN2VN2G1DBKXWG9AM8"
+        "/": "dxn:echo:@:01KS3KNNKCC2HXA6M7CFMPEF61"
       },
       "preferredName": "Carmen"
     },
     {
-      "id": "01KS39DRNGS2JNTARSPZ7TS0BW",
+      "id": "01KS3KNNM2K4EZ8HXFH2YB9N32",
       "@type": "dxn:type:org.dxos.type.person:0.1.0",
       "@meta": {
         "keys": []
@@ -287,12 +287,12 @@
       "fullName": "Abel Tadesse",
       "jobTitle": "Export Liaison",
       "organization": {
-        "/": "dxn:echo:@:01KS39DRMR7W2K316HYBG8Y75P"
+        "/": "dxn:echo:@:01KS3KNNKE13PG8BS79Z1Q4J5A"
       },
       "preferredName": "Abel"
     },
     {
-      "id": "01KS39DRNJBA0DQH3S24SAQMNY",
+      "id": "01KS3KNNM4NT5MB31XP14FCKWR",
       "@type": "dxn:type:org.dxos.type.person:0.1.0",
       "@meta": {
         "keys": []
@@ -306,12 +306,12 @@
       "fullName": "Jordan Park",
       "jobTitle": "Owner / Buyer",
       "organization": {
-        "/": "dxn:echo:@:01KS39DRMVWJTCCK0Q4YKS011X"
+        "/": "dxn:echo:@:01KS3KNNKG84321HWPZR5G5VPQ"
       },
       "preferredName": "Jordan"
     },
     {
-      "id": "01KS39DRNN32RXQ5E2TQF4JKVV",
+      "id": "01KS3KNNM6MCNH61B0JX83VW5C",
       "@type": "dxn:type:org.dxos.type.person:0.1.0",
       "@meta": {
         "keys": []
@@ -325,12 +325,12 @@
       "fullName": "Priya Shah",
       "jobTitle": "Coffee Program Lead",
       "organization": {
-        "/": "dxn:echo:@:01KS39DRMX45AQPDCMKYPKNQAB"
+        "/": "dxn:echo:@:01KS3KNNKK0VB1FF48YHQ0V1YH"
       },
       "preferredName": "Priya"
     },
     {
-      "id": "01KS39DRNQ7SP25S9B6H6HBD9F",
+      "id": "01KS3KNNM8N0Z2WPRJ4HWEJ6GD",
       "@type": "dxn:type:org.dxos.type.person:0.1.0",
       "@meta": {
         "keys": []
@@ -344,12 +344,12 @@
       "fullName": "Mateo Ruiz",
       "jobTitle": "Beverage Buyer",
       "organization": {
-        "/": "dxn:echo:@:01KS39DRN0F2JS1ZX3M0DDZFNV"
+        "/": "dxn:echo:@:01KS3KNNKNNQ2J96HBASD6C4K4"
       },
       "preferredName": "Mateo"
     },
     {
-      "id": "01KS39DRNTR34ZJWGECA5EGVM2",
+      "id": "01KS3KNNMA1N09A7202QEB4EYQ",
       "@type": "dxn:type:org.dxos.type.view:0.1.0",
       "@meta": {
         "keys": []
@@ -357,32 +357,32 @@
       "projection": {
         "fields": [
           {
-            "id": "7c8f2639",
+            "id": "012c938a",
             "path": "image",
             "visible": false
           },
           {
-            "id": "472646aa",
+            "id": "5457a094",
             "path": "location",
             "visible": false
           },
           {
-            "id": "e71288d9",
+            "id": "e5b0f630",
             "path": "name",
             "visible": true
           },
           {
-            "id": "940a401e",
+            "id": "34913473",
             "path": "status",
             "visible": true
           },
           {
-            "id": "70815bb9",
+            "id": "c0a7b4b2",
             "path": "website",
             "visible": true
           },
           {
-            "id": "fbfbcf8b",
+            "id": "3a20a900",
             "path": "description",
             "visible": true
           }
@@ -400,7 +400,7 @@
       }
     },
     {
-      "id": "01KS39DRP2ACM4GYNBXT2CNHZY",
+      "id": "01KS3KNNMKY2WGXV5BJ9XH65C2",
       "@type": "dxn:type:org.dxos.type.table:0.1.0",
       "@meta": {
         "keys": []
@@ -408,11 +408,11 @@
       "name": "Table",
       "sizes": {},
       "view": {
-        "/": "dxn:echo:@:01KS39DRNTR34ZJWGECA5EGVM2"
+        "/": "dxn:echo:@:01KS3KNNMA1N09A7202QEB4EYQ"
       }
     },
     {
-      "id": "01KS39DRP4ZFYZPXZDQACS5YFT",
+      "id": "01KS3KNNMP74QTEBS68SP16EZC",
       "@type": "dxn:type:org.dxos.type.view:0.1.0",
       "@meta": {
         "keys": []
@@ -420,37 +420,37 @@
       "projection": {
         "fields": [
           {
-            "id": "79138273",
+            "id": "fa6e7f62",
             "path": "image",
             "visible": false
           },
           {
-            "id": "4acb3c02",
+            "id": "29465431",
             "path": "website",
             "visible": false
           },
           {
-            "id": "16ab1cd5",
+            "id": "1ffbe61d",
             "path": "location",
             "visible": false
           },
           {
-            "id": "c33d894e",
+            "id": "9fae638f",
             "path": "name",
             "visible": true
           },
           {
-            "id": "8e1067d1",
+            "id": "a29696dc",
             "path": "status",
             "visible": true
           },
           {
-            "id": "2be6b7e3",
+            "id": "79475280",
             "path": "description",
             "visible": true
           }
         ],
-        "pivotFieldId": "8e1067d1"
+        "pivotFieldId": "a29696dc"
       },
       "query": {
         "ast": {
@@ -464,7 +464,7 @@
       }
     },
     {
-      "id": "01KS39DRPAPAVPPMF6CQTAZ83W",
+      "id": "01KS3KNNMXVC9TCSPJY37VBF1V",
       "@type": "dxn:type:org.dxos.type.kanban:0.2.0",
       "@meta": {
         "keys": []
@@ -477,12 +477,12 @@
       "spec": {
         "kind": "view",
         "view": {
-          "/": "dxn:echo:@:01KS39DRP4ZFYZPXZDQACS5YFT"
+          "/": "dxn:echo:@:01KS3KNNMP74QTEBS68SP16EZC"
         }
       }
     },
     {
-      "id": "01KS39DRPCX9THSD89XTZFZVGK",
+      "id": "01KS3KNNMZTR8QVPKEH0QXBYWJ",
       "@type": "dxn:type:org.dxos.type.view:0.1.0",
       "@meta": {
         "keys": []
@@ -490,32 +490,32 @@
       "projection": {
         "fields": [
           {
-            "id": "250d8f99",
+            "id": "143773ea",
             "path": "status",
             "visible": false
           },
           {
-            "id": "493a0b22",
+            "id": "ecf22006",
             "path": "image",
             "visible": false
           },
           {
-            "id": "6b2f32af",
+            "id": "a706146f",
             "path": "website",
             "visible": false
           },
           {
-            "id": "85943561",
+            "id": "21a33577",
             "path": "name",
             "visible": true
           },
           {
-            "id": "a681983e",
+            "id": "8ac3dc4e",
             "path": "location",
             "visible": true
           },
           {
-            "id": "9f679152",
+            "id": "97cba917",
             "path": "description",
             "visible": true
           }
@@ -533,7 +533,7 @@
       }
     },
     {
-      "id": "01KS39DRPKFHXJN4Z50EXVGVGM",
+      "id": "01KS3KNNN5HVCGH6XAJ0JSM4A3",
       "@type": "dxn:type:org.dxos.type.map:0.1.0",
       "@meta": {
         "keys": []
@@ -544,12 +544,12 @@
       ],
       "name": "Map",
       "view": {
-        "/": "dxn:echo:@:01KS39DRPCX9THSD89XTZFZVGK"
+        "/": "dxn:echo:@:01KS3KNNMZTR8QVPKEH0QXBYWJ"
       },
       "zoom": 2
     },
     {
-      "id": "01KS39DRPNSH2C35WWM1BK4F4W",
+      "id": "01KS3KNNN6XN2XJH5MZ9MX6ZDK",
       "@type": "dxn:type:org.dxos.type.view:0.1.0",
       "@meta": {
         "keys": []
@@ -557,32 +557,32 @@
       "projection": {
         "fields": [
           {
-            "id": "a1062696",
+            "id": "dbce1081",
             "path": "status",
             "visible": false
           },
           {
-            "id": "1ade8b17",
+            "id": "f6d8c823",
             "path": "website",
             "visible": false
           },
           {
-            "id": "e009857f",
+            "id": "efc26816",
             "path": "location",
             "visible": false
           },
           {
-            "id": "ba70b7f9",
+            "id": "5de44887",
             "path": "name",
             "visible": true
           },
           {
-            "id": "c2d72898",
+            "id": "846f4fbc",
             "path": "description",
             "visible": true
           },
           {
-            "id": "3bb4c062",
+            "id": "5cd73382",
             "path": "image",
             "visible": true
           }
@@ -600,7 +600,7 @@
       }
     },
     {
-      "id": "01KS39DRPVW4CJ76WCVG1APGPX",
+      "id": "01KS3KNNNBMZSN822X4VYYK41Q",
       "@type": "dxn:type:org.dxos.type.masonry:0.1.0",
       "@meta": {
         "keys": []
@@ -608,51 +608,51 @@
       "arrangement": [],
       "name": "Masonry",
       "view": {
-        "/": "dxn:echo:@:01KS39DRPNSH2C35WWM1BK4F4W"
+        "/": "dxn:echo:@:01KS3KNNN6XN2XJH5MZ9MX6ZDK"
       }
     },
     {
-      "id": "01KS39DRPX46GNGR21FZVZTN57",
+      "id": "01KS3KNNND796EN7K8XVYF9E46",
       "@type": "dxn:type:org.dxos.type.feed:0.1.0",
       "@meta": {
         "keys": []
       },
-      "@parent": "dxn:echo:@:01KS39DRPX46GNGR21FZVZTN58"
+      "@parent": "dxn:echo:@:01KS3KNNND796EN7K8XVYF9E47"
     },
     {
-      "id": "01KS39DRPX46GNGR21FZVZTN58",
+      "id": "01KS3KNNND796EN7K8XVYF9E47",
       "@type": "dxn:type:org.dxos.type.mailbox:0.1.0",
       "@meta": {
         "keys": []
       },
       "feed": {
-        "/": "dxn:echo:@:01KS39DRPX46GNGR21FZVZTN57"
+        "/": "dxn:echo:@:01KS3KNNND796EN7K8XVYF9E46"
       },
       "filters": [],
       "labels": {},
       "name": "Inbox"
     },
     {
-      "id": "01KS39DRQE0P24TZBT7WW5259R",
+      "id": "01KS3KNNNS865FXFAKPRPRPFQZ",
       "@type": "dxn:type:org.dxos.type.feed:0.1.0",
       "@meta": {
         "keys": []
       },
-      "@parent": "dxn:echo:@:01KS39DRQE0P24TZBT7WW5259S"
+      "@parent": "dxn:echo:@:01KS3KNNNT3V20JBJB795F3TXZ"
     },
     {
-      "id": "01KS39DRQE0P24TZBT7WW5259S",
+      "id": "01KS3KNNNT3V20JBJB795F3TXZ",
       "@type": "dxn:type:org.dxos.type.calendar:0.1.0",
       "@meta": {
         "keys": []
       },
       "feed": {
-        "/": "dxn:echo:@:01KS39DRQE0P24TZBT7WW5259R"
+        "/": "dxn:echo:@:01KS3KNNNS865FXFAKPRPRPFQZ"
       },
       "name": "Bramble Calendar"
     },
     {
-      "id": "01KS39DRQX0NJ9NPWM47HS4ZSJ",
+      "id": "01KS3KNNNYHY040HMR8792T1C8",
       "@type": "dxn:type:org.dxos.type.project:0.1.0",
       "@meta": {
         "keys": []
@@ -661,108 +661,108 @@
       "name": "Spring Blend Launch"
     },
     {
-      "id": "01KS39DRQYHVN4FX3F5FAWC2T8",
+      "id": "01KS3KNNNZE7DZ1FCJ9BDT8ZAQ",
       "@type": "dxn:type:org.dxos.type.task:0.1.0",
       "@meta": {
         "keys": []
       },
       "assigned": {
-        "/": "dxn:echo:@:01KS39DRN5KD59PS830GXJN35Z"
+        "/": "dxn:echo:@:01KS3KNNKTD7GJKHY3JFXS3NXY"
       },
       "description": "Lock contracts with Carmen and the importer for the Guatemalan parcel.",
       "priority": "high",
       "project": {
-        "/": "dxn:echo:@:01KS39DRQX0NJ9NPWM47HS4ZSJ"
+        "/": "dxn:echo:@:01KS3KNNNYHY040HMR8792T1C8"
       },
       "status": "done",
       "title": "Source green coffee — Esperanza + Guatemalan parcel"
     },
     {
-      "id": "01KS39DRQYHVN4FX3F5FAWC2T9",
+      "id": "01KS3KNNNZE7DZ1FCJ9BDT8ZAR",
       "@type": "dxn:type:org.dxos.type.task:0.1.0",
       "@meta": {
         "keys": []
       },
       "assigned": {
-        "/": "dxn:echo:@:01KS39DRN24XJEP6PFQC3EYGTY"
+        "/": "dxn:echo:@:01KS3KNNKQPJD9MQJC0K1PNMBZ"
       },
       "description": "Currently on v2 with adjusted development time. One more iteration before sign-off.",
       "priority": "high",
       "project": {
-        "/": "dxn:echo:@:01KS39DRQX0NJ9NPWM47HS4ZSJ"
+        "/": "dxn:echo:@:01KS3KNNNYHY040HMR8792T1C8"
       },
       "status": "in-progress",
       "title": "Finalize roast curve (v3)"
     },
     {
-      "id": "01KS39DRQYHVN4FX3F5FAWC2TA",
+      "id": "01KS3KNNNZE7DZ1FCJ9BDT8ZAS",
       "@type": "dxn:type:org.dxos.type.task:0.1.0",
       "@meta": {
         "keys": []
       },
       "assigned": {
-        "/": "dxn:echo:@:01KS39DRN7X222VXH0KWNM33YR"
+        "/": "dxn:echo:@:01KS3KNNKWBQC92FF3K8MSPTB1"
       },
       "description": "North Star, Hatch, Olive & Vine. 2 lb each.",
       "priority": "medium",
       "project": {
-        "/": "dxn:echo:@:01KS39DRQX0NJ9NPWM47HS4ZSJ"
+        "/": "dxn:echo:@:01KS3KNNNYHY040HMR8792T1C8"
       },
       "status": "in-progress",
       "title": "Send v2 samples to wholesalers"
     },
     {
-      "id": "01KS39DRQYHVN4FX3F5FAWC2TB",
+      "id": "01KS3KNNNZE7DZ1FCJ9BDT8ZAT",
       "@type": "dxn:type:org.dxos.type.task:0.1.0",
       "@meta": {
         "keys": []
       },
       "assigned": {
-        "/": "dxn:echo:@:01KS39DRNA3YG39WDW5YYQ5GTJ"
+        "/": "dxn:echo:@:01KS3KNNKYTFFGPT8FS7400HNH"
       },
       "description": "Final draft due to the printer in 10 days.",
       "priority": "medium",
       "project": {
-        "/": "dxn:echo:@:01KS39DRQX0NJ9NPWM47HS4ZSJ"
+        "/": "dxn:echo:@:01KS3KNNNYHY040HMR8792T1C8"
       },
       "status": "in-progress",
       "title": "Design label — Letterform Press"
     },
     {
-      "id": "01KS39DRQYHVN4FX3F5FAWC2TC",
+      "id": "01KS3KNNNZE7DZ1FCJ9BDT8ZAV",
       "@type": "dxn:type:org.dxos.type.task:0.1.0",
       "@meta": {
         "keys": []
       },
       "assigned": {
-        "/": "dxn:echo:@:01KS39DRN7X222VXH0KWNM33YR"
+        "/": "dxn:echo:@:01KS3KNNKWBQC92FF3K8MSPTB1"
       },
       "priority": "medium",
       "project": {
-        "/": "dxn:echo:@:01KS39DRQX0NJ9NPWM47HS4ZSJ"
+        "/": "dxn:echo:@:01KS3KNNNYHY040HMR8792T1C8"
       },
       "status": "todo",
       "title": "Schedule launch cuppings (Oakland + remote)"
     },
     {
-      "id": "01KS39DRQYHVN4FX3F5FAWC2TD",
+      "id": "01KS3KNNNZE7DZ1FCJ9BDT8ZAW",
       "@type": "dxn:type:org.dxos.type.task:0.1.0",
       "@meta": {
         "keys": []
       },
       "assigned": {
-        "/": "dxn:echo:@:01KS39DRNA3YG39WDW5YYQ5GTJ"
+        "/": "dxn:echo:@:01KS3KNNKYTFFGPT8FS7400HNH"
       },
       "description": "Webshop + email blast to subscribers.",
       "priority": "low",
       "project": {
-        "/": "dxn:echo:@:01KS39DRQX0NJ9NPWM47HS4ZSJ"
+        "/": "dxn:echo:@:01KS3KNNNYHY040HMR8792T1C8"
       },
       "status": "todo",
       "title": "Publish product page + open preorders"
     },
     {
-      "id": "01KS39DRRBYBGP46B4Z2W2BSK3",
+      "id": "01KS3KNNPB6QPS410GTZNN69KD",
       "@type": "dxn:type:org.dxos.type.collection:0.1.0",
       "@meta": {
         "keys": []
@@ -770,90 +770,90 @@
       "name": "Spring Blend Launch",
       "objects": [
         {
-          "/": "dxn:echo:@:01KS39DRQX0NJ9NPWM47HS4ZSJ"
+          "/": "dxn:echo:@:01KS3KNNNYHY040HMR8792T1C8"
         },
         {
-          "/": "dxn:echo:@:01KS39DRQYHVN4FX3F5FAWC2T8"
+          "/": "dxn:echo:@:01KS3KNNNZE7DZ1FCJ9BDT8ZAQ"
         },
         {
-          "/": "dxn:echo:@:01KS39DRQYHVN4FX3F5FAWC2T9"
+          "/": "dxn:echo:@:01KS3KNNNZE7DZ1FCJ9BDT8ZAR"
         },
         {
-          "/": "dxn:echo:@:01KS39DRQYHVN4FX3F5FAWC2TA"
+          "/": "dxn:echo:@:01KS3KNNNZE7DZ1FCJ9BDT8ZAS"
         },
         {
-          "/": "dxn:echo:@:01KS39DRQYHVN4FX3F5FAWC2TB"
+          "/": "dxn:echo:@:01KS3KNNNZE7DZ1FCJ9BDT8ZAT"
         },
         {
-          "/": "dxn:echo:@:01KS39DRQYHVN4FX3F5FAWC2TC"
+          "/": "dxn:echo:@:01KS3KNNNZE7DZ1FCJ9BDT8ZAV"
         },
         {
-          "/": "dxn:echo:@:01KS39DRQYHVN4FX3F5FAWC2TD"
+          "/": "dxn:echo:@:01KS3KNNNZE7DZ1FCJ9BDT8ZAW"
         }
       ]
     },
     {
-      "id": "01KS39DRRE81A01KYSNYB5KM41",
+      "id": "01KS3KNNPEA2KH23VDQMWT9YDE",
       "@type": "dxn:type:org.dxos.type.text:0.1.0",
       "@meta": {
         "keys": []
       },
-      "@parent": "dxn:echo:@:01KS39DRRE81A01KYSNYB5KM42",
-      "content": "# Cupping notes — Finca Esperanza Lot #42\n\n**Farm:** [Finca Esperanza](dxn:echo:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRMN2VN2G1DBKXWG9AM8) · **Contact:** [Carmen Restrepo](dxn:echo:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRNDQSQC1853DAVTP6S7)\n\n**Date:** 2026-04-30 · **Cuppers:** [Maya](dxn:echo:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRN24XJEP6PFQC3EYGTY), [Diego](dxn:echo:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRN5KD59PS830GXJN35Z), [Sam](dxn:echo:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRN7X222VXH0KWNM33YR)\n\n## Profile\n\n- **Fragrance/Aroma:** Stone fruit, jasmine, light cocoa.\n- **Acidity:** Bright, malic, well-structured.\n- **Body:** Medium, silky.\n- **Flavor:** Red apple, raspberry, milk chocolate, almond finish.\n- **Aftertaste:** Long, clean, slightly floral.\n\n## Scores\n\n| Cupper | Score |\n| --- | --- |\n| Maya | 87.5 |\n| Diego | 88.0 |\n| Sam | 87.0 |\n\n## Notes\n\nBest lot Carmen has sent us in three years. Worth pushing into the Spring Blend at a higher ratio than we initially planned."
+      "@parent": "dxn:echo:@:01KS3KNNPEA2KH23VDQMWT9YDF",
+      "content": "# Cupping notes — Finca Esperanza Lot #42\n\n**Farm:** [Finca Esperanza](dxn:echo:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNKCC2HXA6M7CFMPEF61) · **Contact:** [Carmen Restrepo](dxn:echo:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNM0ENW86BJYGW7PHB1W)\n\n**Date:** 2026-04-30 · **Cuppers:** [Kai](dxn:echo:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNKQPJD9MQJC0K1PNMBZ), [Diego](dxn:echo:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNKTD7GJKHY3JFXS3NXY), [Sam](dxn:echo:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNKWBQC92FF3K8MSPTB1)\n\n## Profile\n\n- **Fragrance/Aroma:** Stone fruit, jasmine, light cocoa.\n- **Acidity:** Bright, malic, well-structured.\n- **Body:** Medium, silky.\n- **Flavor:** Red apple, raspberry, milk chocolate, almond finish.\n- **Aftertaste:** Long, clean, slightly floral.\n\n## Scores\n\n| Cupper | Score |\n| --- | --- |\n| Kai | 87.5 |\n| Diego | 88.0 |\n| Sam | 87.0 |\n\n## Notes\n\nBest lot Carmen has sent us in three years. Worth pushing into the Spring Blend at a higher ratio than we initially planned."
     },
     {
-      "id": "01KS39DRRE81A01KYSNYB5KM42",
+      "id": "01KS3KNNPEA2KH23VDQMWT9YDF",
       "@type": "dxn:type:org.dxos.type.document:0.1.0",
       "@meta": {
         "keys": []
       },
       "content": {
-        "/": "dxn:echo:@:01KS39DRRE81A01KYSNYB5KM41"
+        "/": "dxn:echo:@:01KS3KNNPEA2KH23VDQMWT9YDE"
       },
       "name": "Cupping notes — Finca Esperanza Lot #42"
     },
     {
-      "id": "01KS39DRRF5948NB1KTGY88PZD",
+      "id": "01KS3KNNPEA2KH23VDQMWT9YDG",
       "@type": "dxn:type:org.dxos.type.text:0.1.0",
       "@meta": {
         "keys": []
       },
-      "@parent": "dxn:echo:@:01KS39DRRF5948NB1KTGY88PZE",
-      "content": "# Q2 sourcing trip — itinerary\n\n**Traveler:** [Diego Alvarez](dxn:echo:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRN5KD59PS830GXJN35Z)\n**Dates:** 2026-06-10 → 2026-06-24\n\n## Colombia (Huila)\n\n**Host:** [Carmen Restrepo](dxn:echo:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRNDQSQC1853DAVTP6S7) · [Finca Esperanza](dxn:echo:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRMN2VN2G1DBKXWG9AM8)\n\n- Land in Bogotá; drive to Neiva.\n- Two days at Finca Esperanza with Carmen.\n- Visit two new lots recommended by our importer.\n- Return to Bogotá; fly out.\n\n## Ethiopia (Sidamo)\n\n**Host:** [Abel Tadesse](dxn:echo:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRNGS2JNTARSPZ7TS0BW) · [Sidamo Cooperative](dxn:echo:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRMR7W2K316HYBG8Y75P)\n\n- Arrive Addis Ababa; meet Abel.\n- Three days in Sidamo (cooperative + two member washing stations).\n- Cup the new harvest in Addis before flying home.\n\n## Buying targets\n\n- Colombia: lock 18 bags (Esperanza) + 6 bags (new lot if it cups above 87).\n- Ethiopia: confirm the full container of lot 42; optionally add a smaller naturals lot."
+      "@parent": "dxn:echo:@:01KS3KNNPFRB6TCGNKPEYWWFTE",
+      "content": "# Q2 sourcing trip — itinerary\n\n**Traveler:** [Diego Alvarez](dxn:echo:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNKTD7GJKHY3JFXS3NXY)\n**Dates:** 2026-06-10 → 2026-06-24\n\n## Colombia (Huila)\n\n**Host:** [Carmen Restrepo](dxn:echo:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNM0ENW86BJYGW7PHB1W) · [Finca Esperanza](dxn:echo:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNKCC2HXA6M7CFMPEF61)\n\n- Land in Bogotá; drive to Neiva.\n- Two days at Finca Esperanza with Carmen.\n- Visit two new lots recommended by our importer.\n- Return to Bogotá; fly out.\n\n## Ethiopia (Sidamo)\n\n**Host:** [Abel Tadesse](dxn:echo:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNM2K4EZ8HXFH2YB9N32) · [Sidamo Cooperative](dxn:echo:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNKE13PG8BS79Z1Q4J5A)\n\n- Arrive Addis Ababa; meet Abel.\n- Three days in Sidamo (cooperative + two member washing stations).\n- Cup the new harvest in Addis before flying home.\n\n## Buying targets\n\n- Colombia: lock 18 bags (Esperanza) + 6 bags (new lot if it cups above 87).\n- Ethiopia: confirm the full container of lot 42; optionally add a smaller naturals lot."
     },
     {
-      "id": "01KS39DRRF5948NB1KTGY88PZE",
+      "id": "01KS3KNNPFRB6TCGNKPEYWWFTE",
       "@type": "dxn:type:org.dxos.type.document:0.1.0",
       "@meta": {
         "keys": []
       },
       "content": {
-        "/": "dxn:echo:@:01KS39DRRF5948NB1KTGY88PZD"
+        "/": "dxn:echo:@:01KS3KNNPEA2KH23VDQMWT9YDG"
       },
       "name": "Q2 sourcing trip — itinerary"
     },
     {
-      "id": "01KS39DRRF5948NB1KTGY88PZF",
+      "id": "01KS3KNNPFRB6TCGNKPEYWWFTF",
       "@type": "dxn:type:org.dxos.type.text:0.1.0",
       "@meta": {
         "keys": []
       },
-      "@parent": "dxn:echo:@:01KS39DRRF5948NB1KTGY88PZG",
-      "content": "# Spring blend — tasting protocol\n\nProject: ![Spring Blend Launch](dxn:echo:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRQX0NJ9NPWM47HS4ZSJ)\n\n## Setup\n\n- Prepare 4 samples per session: v1, v2, v3, and the control (current Linden blend).\n- Grind 10 g per sample, 200 ml at 94 °C.\n- Evaluate dry fragrance, wet aroma, and taste at 4-min, 8-min, 12-min intervals.\n\n## Brew parameters\n\n1. **Espresso:** 18 g in / 36 g out / 27–30 s.\n2. **Filter:** 1:16 ratio, 4:00 total time.\n\n## Scoring dimensions\n\nFragrance/Aroma · Flavour · Aftertaste · Acidity · Body · Balance · Uniformity · Cleanliness · Sweetness\n\n## Key targets\n\n- Espresso-forward: good body at 1:2.5 ratio.\n- Profile: fruit-forward (berry, stone fruit), chocolate mid, clean finish.\n- Score on the SCA form, then add a short qualitative note.\n- Re-cup after 7 days to check for stale notes."
+      "@parent": "dxn:echo:@:01KS3KNNPFRB6TCGNKPEYWWFTG",
+      "content": "# Spring blend — tasting protocol\n\nProject: ![Spring Blend Launch](dxn:echo:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNNYHY040HMR8792T1C8)\n\n## Setup\n\n- Prepare 4 samples per session: v1, v2, v3, and the control (current Linden blend).\n- Grind 10 g per sample, 200 ml at 94 °C.\n- Evaluate dry fragrance, wet aroma, and taste at 4-min, 8-min, 12-min intervals.\n\n## Brew parameters\n\n1. **Espresso:** 18 g in / 36 g out / 27–30 s.\n2. **Filter:** 1:16 ratio, 4:00 total time.\n\n## Scoring dimensions\n\nFragrance/Aroma · Flavour · Aftertaste · Acidity · Body · Balance · Uniformity · Cleanliness · Sweetness\n\n## Key targets\n\n- Espresso-forward: good body at 1:2.5 ratio.\n- Profile: fruit-forward (berry, stone fruit), chocolate mid, clean finish.\n- Score on the SCA form, then add a short qualitative note.\n- Re-cup after 7 days to check for stale notes."
     },
     {
-      "id": "01KS39DRRF5948NB1KTGY88PZG",
+      "id": "01KS3KNNPFRB6TCGNKPEYWWFTG",
       "@type": "dxn:type:org.dxos.type.document:0.1.0",
       "@meta": {
         "keys": []
       },
       "content": {
-        "/": "dxn:echo:@:01KS39DRRF5948NB1KTGY88PZF"
+        "/": "dxn:echo:@:01KS3KNNPFRB6TCGNKPEYWWFTF"
       },
       "name": "Spring blend tasting protocol"
     },
     {
-      "id": "01KS39DRRXVNPR7KYP99Q55FMW",
+      "id": "01KS3KNNPTFFFR8BQ1FE94SB7B",
       "@type": "dxn:type:org.dxos.type.canvas:0.1.0",
       "@meta": {
         "keys": []
@@ -1087,18 +1087,18 @@
       "schema": "tldraw.com/2"
     },
     {
-      "id": "01KS39DRRXVNPR7KYP99Q55FMX",
+      "id": "01KS3KNNPTFFFR8BQ1FE94SB7C",
       "@type": "dxn:type:org.dxos.type.sketch:0.1.0",
       "@meta": {
         "keys": []
       },
       "canvas": {
-        "/": "dxn:echo:@:01KS39DRRXVNPR7KYP99Q55FMW"
+        "/": "dxn:echo:@:01KS3KNNPTFFFR8BQ1FE94SB7B"
       },
       "name": "Roastery floor plan"
     },
     {
-      "id": "01KS39DRRY99TA9T32PQJFK1GK",
+      "id": "01KS3KNNPV2SVCEBE6R041VED0",
       "@type": "dxn:type:org.dxos.type.canvas:0.1.0",
       "@meta": {
         "keys": []
@@ -1512,279 +1512,279 @@
       "schema": "tldraw.com/2"
     },
     {
-      "id": "01KS39DRRY99TA9T32PQJFK1GM",
+      "id": "01KS3KNNPW200WGYX5VY40A4YE",
       "@type": "dxn:type:org.dxos.type.sketch:0.1.0",
       "@meta": {
         "keys": []
       },
       "canvas": {
-        "/": "dxn:echo:@:01KS39DRRY99TA9T32PQJFK1GK"
+        "/": "dxn:echo:@:01KS3KNNPV2SVCEBE6R041VED0"
       },
       "name": "Spring blend flavor wheel"
     },
     {
-      "id": "01KS39DRSN9FK6XC6HYF2T8RWW",
+      "id": "01KS3KNNQNXE7ZHH0MXDPW59KY",
       "@type": "dxn:type:org.dxos.type.sheet:0.1.0",
       "@meta": {
         "keys": []
       },
       "cells": {
-        "KaHAtnqT@6F2oyJ0X": {
-          "value": "=hWleuzjx@6F2oyJ0X*fsdxjoWA@6F2oyJ0X"
-        },
-        "KaHAtnqT@Gcvjtqsv": {
-          "value": "Total"
-        },
-        "KaHAtnqT@IuAl3FAm": {
-          "value": "=hWleuzjx@IuAl3FAm*fsdxjoWA@IuAl3FAm"
-        },
-        "KaHAtnqT@Qo9YhLU4": {
-          "value": "=SUM(KaHAtnqT@XnWqFez1:KaHAtnqT@sVwIl2T9)"
-        },
-        "KaHAtnqT@XnWqFez1": {
-          "value": "=hWleuzjx@XnWqFez1*fsdxjoWA@XnWqFez1"
-        },
-        "KaHAtnqT@sVwIl2T9": {
-          "value": "=hWleuzjx@sVwIl2T9*fsdxjoWA@sVwIl2T9"
-        },
-        "VRi3OQCI@6F2oyJ0X": {
-          "value": "Ethiopia — Sidamo"
-        },
-        "VRi3OQCI@Gcvjtqsv": {
-          "value": "Origin"
-        },
-        "VRi3OQCI@IuAl3FAm": {
-          "value": "Guatemala — Antigua"
-        },
-        "VRi3OQCI@Qo9YhLU4": {
-          "value": "TOTAL"
-        },
-        "VRi3OQCI@XnWqFez1": {
-          "value": "Colombia — Esperanza"
-        },
-        "VRi3OQCI@sVwIl2T9": {
-          "value": "Peru — Cajamarca"
-        },
-        "dElMThWt@6F2oyJ0X": {
-          "value": "Lot 42"
-        },
-        "dElMThWt@Gcvjtqsv": {
-          "value": "Lot"
-        },
-        "dElMThWt@IuAl3FAm": {
+        "0l4Wwt9e@5RAMIAwP": {
           "value": "Lot 7"
         },
-        "dElMThWt@XnWqFez1": {
+        "0l4Wwt9e@9CKHsVQr": {
           "value": "Lot A"
         },
-        "dElMThWt@sVwIl2T9": {
+        "0l4Wwt9e@FcqXU1GB": {
+          "value": "Lot 42"
+        },
+        "0l4Wwt9e@rzr9ZydH": {
+          "value": "Lot"
+        },
+        "0l4Wwt9e@tX8F735T": {
           "value": "Lot 3"
         },
-        "fdhrNuqc@6F2oyJ0X": {
-          "value": "Natural"
-        },
-        "fdhrNuqc@Gcvjtqsv": {
-          "value": "Process"
-        },
-        "fdhrNuqc@IuAl3FAm": {
-          "value": "Washed"
-        },
-        "fdhrNuqc@XnWqFez1": {
-          "value": "Washed"
-        },
-        "fdhrNuqc@sVwIl2T9": {
-          "value": "Washed"
-        },
-        "fsdxjoWA@6F2oyJ0X": {
-          "value": 13.2
-        },
-        "fsdxjoWA@Gcvjtqsv": {
-          "value": "Cost/kg"
-        },
-        "fsdxjoWA@IuAl3FAm": {
-          "value": 10.8
-        },
-        "fsdxjoWA@XnWqFez1": {
-          "value": 11.5
-        },
-        "fsdxjoWA@sVwIl2T9": {
-          "value": 9.6
-        },
-        "hWleuzjx@6F2oyJ0X": {
-          "value": 240
-        },
-        "hWleuzjx@Gcvjtqsv": {
-          "value": "KG"
-        },
-        "hWleuzjx@IuAl3FAm": {
+        "S1pxj799@5RAMIAwP": {
           "value": 90
         },
-        "hWleuzjx@Qo9YhLU4": {
-          "value": "=SUM(hWleuzjx@XnWqFez1:hWleuzjx@sVwIl2T9)"
-        },
-        "hWleuzjx@XnWqFez1": {
+        "S1pxj799@9CKHsVQr": {
           "value": 180
         },
-        "hWleuzjx@sVwIl2T9": {
+        "S1pxj799@FcqXU1GB": {
+          "value": 240
+        },
+        "S1pxj799@d19n1aup": {
+          "value": "=SUM(S1pxj799@9CKHsVQr:S1pxj799@tX8F735T)"
+        },
+        "S1pxj799@rzr9ZydH": {
+          "value": "KG"
+        },
+        "S1pxj799@tX8F735T": {
           "value": 60
+        },
+        "cClsQOYS@5RAMIAwP": {
+          "value": "Guatemala — Antigua"
+        },
+        "cClsQOYS@9CKHsVQr": {
+          "value": "Colombia — Esperanza"
+        },
+        "cClsQOYS@FcqXU1GB": {
+          "value": "Ethiopia — Sidamo"
+        },
+        "cClsQOYS@d19n1aup": {
+          "value": "TOTAL"
+        },
+        "cClsQOYS@rzr9ZydH": {
+          "value": "Origin"
+        },
+        "cClsQOYS@tX8F735T": {
+          "value": "Peru — Cajamarca"
+        },
+        "jOC4suQ7@5RAMIAwP": {
+          "value": "=S1pxj799@5RAMIAwP*vEsfk8DL@5RAMIAwP"
+        },
+        "jOC4suQ7@9CKHsVQr": {
+          "value": "=S1pxj799@9CKHsVQr*vEsfk8DL@9CKHsVQr"
+        },
+        "jOC4suQ7@FcqXU1GB": {
+          "value": "=S1pxj799@FcqXU1GB*vEsfk8DL@FcqXU1GB"
+        },
+        "jOC4suQ7@d19n1aup": {
+          "value": "=SUM(jOC4suQ7@9CKHsVQr:jOC4suQ7@tX8F735T)"
+        },
+        "jOC4suQ7@rzr9ZydH": {
+          "value": "Total"
+        },
+        "jOC4suQ7@tX8F735T": {
+          "value": "=S1pxj799@tX8F735T*vEsfk8DL@tX8F735T"
+        },
+        "rUAATrqR@5RAMIAwP": {
+          "value": "Washed"
+        },
+        "rUAATrqR@9CKHsVQr": {
+          "value": "Washed"
+        },
+        "rUAATrqR@FcqXU1GB": {
+          "value": "Natural"
+        },
+        "rUAATrqR@rzr9ZydH": {
+          "value": "Process"
+        },
+        "rUAATrqR@tX8F735T": {
+          "value": "Washed"
+        },
+        "vEsfk8DL@5RAMIAwP": {
+          "value": 10.8
+        },
+        "vEsfk8DL@9CKHsVQr": {
+          "value": 11.5
+        },
+        "vEsfk8DL@FcqXU1GB": {
+          "value": 13.2
+        },
+        "vEsfk8DL@rzr9ZydH": {
+          "value": "Cost/kg"
+        },
+        "vEsfk8DL@tX8F735T": {
+          "value": 9.6
         }
       },
       "columnMeta": {},
       "columns": [
-        "VRi3OQCI",
-        "dElMThWt",
-        "fdhrNuqc",
-        "hWleuzjx",
-        "fsdxjoWA",
-        "KaHAtnqT"
+        "cClsQOYS",
+        "0l4Wwt9e",
+        "rUAATrqR",
+        "S1pxj799",
+        "vEsfk8DL",
+        "jOC4suQ7"
       ],
       "name": "Green coffee inventory",
       "ranges": [],
       "rowMeta": {},
       "rows": [
-        "Gcvjtqsv",
-        "XnWqFez1",
-        "6F2oyJ0X",
-        "IuAl3FAm",
-        "sVwIl2T9",
-        "Qo9YhLU4",
-        "dnDY6UZx",
-        "1TozkKem",
-        "ynsOiurM",
-        "HiWyks8j",
-        "yGXsOSCt",
-        "oNGVyfeL"
+        "rzr9ZydH",
+        "9CKHsVQr",
+        "FcqXU1GB",
+        "5RAMIAwP",
+        "tX8F735T",
+        "d19n1aup",
+        "Q2DL8uCG",
+        "3naBgUih",
+        "6VMBetCl",
+        "Ae1Av8bb",
+        "3ZylfoCd",
+        "G5PZO0ur"
       ]
     },
     {
-      "id": "01KS39DRSP71DNB7G0TYA76NB6",
+      "id": "01KS3KNNQP9FD3EDVW69SQ0YC4",
       "@type": "dxn:type:org.dxos.type.sheet:0.1.0",
       "@meta": {
         "keys": []
       },
       "cells": {
-        "IMxOl4gn@3uv01SAQ": {
-          "value": "SID-12"
-        },
-        "IMxOl4gn@CpnuOglc": {
-          "value": "LS-12"
-        },
-        "IMxOl4gn@JjXc0OKr": {
-          "value": "SB-12"
-        },
-        "IMxOl4gn@Qujlymgr": {
-          "value": "ESP-12"
-        },
-        "IMxOl4gn@YsmWGN6r": {
-          "value": "AVG wholesale"
-        },
-        "IMxOl4gn@iTDDPOAp": {
-          "value": "AVG retail"
-        },
-        "IMxOl4gn@raAtKsoH": {
-          "value": "FN-12"
-        },
-        "IMxOl4gn@xfcFtSdq": {
-          "value": "SKU"
-        },
-        "IMxOl4gn@yHHtIHLt": {
-          "value": "LIN-12"
-        },
-        "Wivw1H6k@3uv01SAQ": {
-          "value": 26
-        },
-        "Wivw1H6k@CpnuOglc": {
+        "9Rg9DBhB@32beQhN7": {
           "value": 18
         },
-        "Wivw1H6k@JjXc0OKr": {
-          "value": 22
-        },
-        "Wivw1H6k@Qujlymgr": {
-          "value": 26
-        },
-        "Wivw1H6k@iTDDPOAp": {
-          "value": "=AVERAGE(Wivw1H6k@yHHtIHLt:Wivw1H6k@JjXc0OKr)"
-        },
-        "Wivw1H6k@raAtKsoH": {
-          "value": 19
-        },
-        "Wivw1H6k@xfcFtSdq": {
-          "value": "Retail / 12 oz"
-        },
-        "Wivw1H6k@yHHtIHLt": {
-          "value": 19
-        },
-        "ZwaFcoGu@3uv01SAQ": {
-          "value": "Sidamo Single-Origin"
-        },
-        "ZwaFcoGu@CpnuOglc": {
-          "value": "Late Shift"
-        },
-        "ZwaFcoGu@JjXc0OKr": {
-          "value": "Spring Blend (preorder)"
-        },
-        "ZwaFcoGu@Qujlymgr": {
-          "value": "Esperanza Single-Origin"
-        },
-        "ZwaFcoGu@raAtKsoH": {
-          "value": "Field Notes Blend"
-        },
-        "ZwaFcoGu@xfcFtSdq": {
-          "value": "Product"
-        },
-        "ZwaFcoGu@yHHtIHLt": {
-          "value": "Linden Blend"
-        },
-        "v4SDpz1H@3uv01SAQ": {
+        "9Rg9DBhB@GO8B0syW": {
           "value": 24
         },
-        "v4SDpz1H@CpnuOglc": {
+        "9Rg9DBhB@MsS23FhS": {
+          "value": 18
+        },
+        "9Rg9DBhB@WB8YaPNF": {
           "value": 17
         },
-        "v4SDpz1H@JjXc0OKr": {
-          "value": 21
-        },
-        "v4SDpz1H@Qujlymgr": {
+        "9Rg9DBhB@kZMIaN1l": {
           "value": 24
         },
-        "v4SDpz1H@YsmWGN6r": {
-          "value": "=AVERAGE(v4SDpz1H@yHHtIHLt:v4SDpz1H@JjXc0OKr)"
-        },
-        "v4SDpz1H@raAtKsoH": {
-          "value": 18
-        },
-        "v4SDpz1H@xfcFtSdq": {
+        "9Rg9DBhB@lRfBKCaX": {
           "value": "Wholesale / lb"
         },
-        "v4SDpz1H@yHHtIHLt": {
+        "9Rg9DBhB@rncQ3dwa": {
+          "value": "=AVERAGE(9Rg9DBhB@32beQhN7:9Rg9DBhB@tPJC2j2o)"
+        },
+        "9Rg9DBhB@tPJC2j2o": {
+          "value": 21
+        },
+        "L8x5kVfe@32beQhN7": {
+          "value": "Linden Blend"
+        },
+        "L8x5kVfe@GO8B0syW": {
+          "value": "Esperanza Single-Origin"
+        },
+        "L8x5kVfe@MsS23FhS": {
+          "value": "Field Notes Blend"
+        },
+        "L8x5kVfe@WB8YaPNF": {
+          "value": "Late Shift"
+        },
+        "L8x5kVfe@kZMIaN1l": {
+          "value": "Sidamo Single-Origin"
+        },
+        "L8x5kVfe@lRfBKCaX": {
+          "value": "Product"
+        },
+        "L8x5kVfe@tPJC2j2o": {
+          "value": "Spring Blend (preorder)"
+        },
+        "cNXkQd9d@32beQhN7": {
+          "value": "LIN-12"
+        },
+        "cNXkQd9d@53kO31GS": {
+          "value": "AVG retail"
+        },
+        "cNXkQd9d@GO8B0syW": {
+          "value": "ESP-12"
+        },
+        "cNXkQd9d@MsS23FhS": {
+          "value": "FN-12"
+        },
+        "cNXkQd9d@WB8YaPNF": {
+          "value": "LS-12"
+        },
+        "cNXkQd9d@kZMIaN1l": {
+          "value": "SID-12"
+        },
+        "cNXkQd9d@lRfBKCaX": {
+          "value": "SKU"
+        },
+        "cNXkQd9d@rncQ3dwa": {
+          "value": "AVG wholesale"
+        },
+        "cNXkQd9d@tPJC2j2o": {
+          "value": "SB-12"
+        },
+        "k0pM4pdh@32beQhN7": {
+          "value": 19
+        },
+        "k0pM4pdh@53kO31GS": {
+          "value": "=AVERAGE(k0pM4pdh@32beQhN7:k0pM4pdh@tPJC2j2o)"
+        },
+        "k0pM4pdh@GO8B0syW": {
+          "value": 26
+        },
+        "k0pM4pdh@MsS23FhS": {
+          "value": 19
+        },
+        "k0pM4pdh@WB8YaPNF": {
           "value": 18
+        },
+        "k0pM4pdh@kZMIaN1l": {
+          "value": 26
+        },
+        "k0pM4pdh@lRfBKCaX": {
+          "value": "Retail / 12 oz"
+        },
+        "k0pM4pdh@tPJC2j2o": {
+          "value": 22
         }
       },
       "columnMeta": {},
       "columns": [
-        "IMxOl4gn",
-        "ZwaFcoGu",
-        "v4SDpz1H",
-        "Wivw1H6k"
+        "cNXkQd9d",
+        "L8x5kVfe",
+        "9Rg9DBhB",
+        "k0pM4pdh"
       ],
       "name": "Wholesale price list",
       "ranges": [],
       "rowMeta": {},
       "rows": [
-        "xfcFtSdq",
-        "yHHtIHLt",
-        "raAtKsoH",
-        "CpnuOglc",
-        "Qujlymgr",
-        "3uv01SAQ",
-        "JjXc0OKr",
-        "9Pwi0LPG",
-        "YsmWGN6r",
-        "iTDDPOAp"
+        "lRfBKCaX",
+        "32beQhN7",
+        "MsS23FhS",
+        "WB8YaPNF",
+        "GO8B0syW",
+        "kZMIaN1l",
+        "tPJC2j2o",
+        "CzPEQvP9",
+        "rncQ3dwa",
+        "53kO31GS"
       ]
     },
     {
-      "id": "01KS39DRSZ68Z66KGWCXG185WM",
+      "id": "01KS3KNNQZMDFHJ72Q84VJWYRB",
       "@type": "dxn:type:org.dxos.type.collection:0.1.0",
       "@meta": {
         "keys": []
@@ -1792,36 +1792,36 @@
       "name": "Notes & Documents",
       "objects": [
         {
-          "/": "dxn:echo:@:01KS39DRRE81A01KYSNYB5KM42"
+          "/": "dxn:echo:@:01KS3KNNPEA2KH23VDQMWT9YDF"
         },
         {
-          "/": "dxn:echo:@:01KS39DRRF5948NB1KTGY88PZE"
+          "/": "dxn:echo:@:01KS3KNNPFRB6TCGNKPEYWWFTE"
         },
         {
-          "/": "dxn:echo:@:01KS39DRRF5948NB1KTGY88PZG"
+          "/": "dxn:echo:@:01KS3KNNPFRB6TCGNKPEYWWFTG"
         },
         {
-          "/": "dxn:echo:@:01KS39DRRXVNPR7KYP99Q55FMX"
+          "/": "dxn:echo:@:01KS3KNNPTFFFR8BQ1FE94SB7C"
         },
         {
-          "/": "dxn:echo:@:01KS39DRRY99TA9T32PQJFK1GM"
+          "/": "dxn:echo:@:01KS3KNNPW200WGYX5VY40A4YE"
         },
         {
-          "/": "dxn:echo:@:01KS39DRSN9FK6XC6HYF2T8RWW"
+          "/": "dxn:echo:@:01KS3KNNQNXE7ZHH0MXDPW59KY"
         },
         {
-          "/": "dxn:echo:@:01KS39DRSP71DNB7G0TYA76NB6"
+          "/": "dxn:echo:@:01KS3KNNQP9FD3EDVW69SQ0YC4"
         }
       ]
     },
     {
-      "id": "01KS39DRT2Z98SS0WBDT4DDV9S",
+      "id": "01KS3KNNR30ZTZ54SD3DXDC3EN",
       "@type": "dxn:type:org.dxos.type.schema:0.1.0",
       "@meta": {
         "keys": []
       },
       "jsonSchema": {
-        "$id": "dxn:echo:@:01KS39DRT2Z98SS0WBDT4DDV9S",
+        "$id": "dxn:echo:@:01KS3KNNR30ZTZ54SD3DXDC3EN",
         "$schema": "http://json-schema.org/draft-07/schema#",
         "additionalProperties": false,
         "annotations": {
@@ -1834,7 +1834,7 @@
               "icon": "ph--fire-simple--regular"
             }
           },
-          "schemaId": "dxn:echo:@:01KS39DRT2Z98SS0WBDT4DDV9S"
+          "schemaId": "dxn:echo:@:01KS3KNNR30ZTZ54SD3DXDC3EN"
         },
         "entityKind": "object",
         "properties": {
@@ -1886,8 +1886,19 @@
             "type": "number"
           },
           "roaster": {
-            "title": "Roaster",
-            "type": "string"
+            "allOf": [
+              {
+                "$id": "/schemas/echo/ref",
+                "$ref": "/schemas/echo/ref",
+                "reference": {
+                  "schema": {
+                    "$ref": "dxn:type:org.dxos.type.person"
+                  },
+                  "schemaVersion": "0.1.0"
+                }
+              }
+            ],
+            "title": "Roaster"
           },
           "status": {
             "annotations": {
@@ -1965,7 +1976,7 @@
       "version": "0.1.0"
     },
     {
-      "id": "01KS39DRTDE2A45HQM6XMJC5HD",
+      "id": "01KS3KNNREQHGS97ZAJ33JX86T",
       "@type": "dxn:type:example.type.roastLog:0.1.0",
       "@meta": {
         "keys": []
@@ -1981,12 +1992,14 @@
       "origin": "Colombia / Finca Esperanza / Lot #42",
       "roastLevel": "city",
       "roastWeightKg": 12.6,
-      "roaster": "Maya Chen",
+      "roaster": {
+        "/": "dxn:echo:@:01KS3KNNKQPJD9MQJC0K1PNMBZ"
+      },
       "status": "approved",
       "title": "Finca Esperanza Lot #42 — Batch 1"
     },
     {
-      "id": "01KS39DRTDE2A45HQM6XMJC5HE",
+      "id": "01KS3KNNREQHGS97ZAJ33JX86V",
       "@type": "dxn:type:example.type.roastLog:0.1.0",
       "@meta": {
         "keys": []
@@ -2002,12 +2015,14 @@
       "origin": "Colombia / Finca Esperanza / Lot #42",
       "roastLevel": "city",
       "roastWeightKg": 12.5,
-      "roaster": "Maya Chen",
+      "roaster": {
+        "/": "dxn:echo:@:01KS3KNNKQPJD9MQJC0K1PNMBZ"
+      },
       "status": "approved",
       "title": "Finca Esperanza Lot #42 — Batch 2"
     },
     {
-      "id": "01KS39DRTDE2A45HQM6XMJC5HF",
+      "id": "01KS3KNNREQHGS97ZAJ33JX86W",
       "@type": "dxn:type:example.type.roastLog:0.1.0",
       "@meta": {
         "keys": []
@@ -2023,12 +2038,14 @@
       "origin": "Ethiopia / Sidamo Cooperative / Natural Lot 12A",
       "roastLevel": "light",
       "roastWeightKg": 10.1,
-      "roaster": "Diego Alvarez",
+      "roaster": {
+        "/": "dxn:echo:@:01KS3KNNKTD7GJKHY3JFXS3NXY"
+      },
       "status": "approved",
       "title": "Sidamo Coop Natural — Lot 12A"
     },
     {
-      "id": "01KS39DRTDE2A45HQM6XMJC5HG",
+      "id": "01KS3KNNREQHGS97ZAJ33JX86X",
       "@type": "dxn:type:example.type.roastLog:0.1.0",
       "@meta": {
         "keys": []
@@ -2044,12 +2061,14 @@
       "origin": "Colombia / Finca Esperanza + Ethiopia / Sidamo (70/30)",
       "roastLevel": "city",
       "roastWeightKg": 25.3,
-      "roaster": "Maya Chen",
+      "roaster": {
+        "/": "dxn:echo:@:01KS3KNNKQPJD9MQJC0K1PNMBZ"
+      },
       "status": "cupped",
       "title": "Spring Blend — Production Run 1"
     },
     {
-      "id": "01KS39DRTDE2A45HQM6XMJC5HH",
+      "id": "01KS3KNNREQHGS97ZAJ33JX86Y",
       "@type": "dxn:type:example.type.roastLog:0.1.0",
       "@meta": {
         "keys": []
@@ -2064,12 +2083,14 @@
       "notes": "Longer development trial for espresso use. Resting — cup on day 4.",
       "origin": "Colombia / Finca Esperanza / Lot #42",
       "roastLevel": "city+",
-      "roaster": "Maya Chen",
+      "roaster": {
+        "/": "dxn:echo:@:01KS3KNNKQPJD9MQJC0K1PNMBZ"
+      },
       "status": "roasted",
       "title": "Finca Esperanza Lot #42 — Dev Batch"
     },
     {
-      "id": "01KS39DRTDE2A45HQM6XMJC5HJ",
+      "id": "01KS3KNNRFANJT4B13W6GDH3A0",
       "@type": "dxn:type:example.type.roastLog:0.1.0",
       "@meta": {
         "keys": []
@@ -2084,12 +2105,14 @@
       "notes": "New origin evaluation. Resting overnight before cupping.",
       "origin": "Honduras / Cooperativa El Puente / Sample",
       "roastLevel": "light",
-      "roaster": "Diego Alvarez",
+      "roaster": {
+        "/": "dxn:echo:@:01KS3KNNKTD7GJKHY3JFXS3NXY"
+      },
       "status": "roasted",
       "title": "Honduras El Puente — Sample Lot"
     },
     {
-      "id": "01KS39DRTDE2A45HQM6XMJC5HK",
+      "id": "01KS3KNNRFANJT4B13W6GDH3A1",
       "@type": "dxn:type:example.type.roastLog:0.1.0",
       "@meta": {
         "keys": []
@@ -2099,12 +2122,14 @@
       "machine": "Loring S15",
       "notes": "Increase charge rate 2 % vs Run 1 to address drum unevenness. Schedule cupping on day 5.",
       "origin": "Colombia / Finca Esperanza + Ethiopia / Sidamo (70/30)",
-      "roaster": "Maya Chen",
+      "roaster": {
+        "/": "dxn:echo:@:01KS3KNNKQPJD9MQJC0K1PNMBZ"
+      },
       "status": "planned",
       "title": "Spring Blend — Production Run 2"
     },
     {
-      "id": "01KS39DRTDE2A45HQM6XMJC5HM",
+      "id": "01KS3KNNRFANJT4B13W6GDH3A2",
       "@type": "dxn:type:example.type.roastLog:0.1.0",
       "@meta": {
         "keys": []
@@ -2114,12 +2139,14 @@
       "machine": "Loring S15",
       "notes": "Pre-production evaluation for potential Q3 addition. Diego to confirm lot details with supplier.",
       "origin": "Colombia / Huila Region / New lot (TBC)",
-      "roaster": "Diego Alvarez",
+      "roaster": {
+        "/": "dxn:echo:@:01KS3KNNKTD7GJKHY3JFXS3NXY"
+      },
       "status": "planned",
       "title": "Colombia Huila — Pre-production"
     },
     {
-      "id": "01KS39DS0YEC9CY1X6QNCFH7S5",
+      "id": "01KS3KNNZB42SGFX23FW0NMVYN",
       "@type": "dxn:type:org.dxos.type.view:0.1.0",
       "@meta": {
         "keys": []
@@ -2127,72 +2154,73 @@
       "projection": {
         "fields": [
           {
-            "id": "4063f9f0",
+            "id": "ae347193",
             "path": "machine",
             "visible": false
           },
           {
-            "id": "9e238c5a",
+            "id": "cbcf9d62",
             "path": "greenWeightKg",
             "visible": false
           },
           {
-            "id": "b763b6b5",
+            "id": "8162c7f3",
             "path": "roastWeightKg",
             "visible": false
           },
           {
-            "id": "895a2a57",
+            "id": "5e97ea3a",
             "path": "notes",
             "visible": false
           },
           {
-            "id": "c280322b",
+            "id": "1c3f1748",
             "path": "title",
             "visible": true
           },
           {
-            "id": "ace0dd8d",
+            "id": "5ef8e358",
             "path": "date",
             "visible": true
           },
           {
-            "id": "b5ac1bb2",
+            "id": "c2722bb7",
             "path": "origin",
             "visible": true
           },
           {
-            "id": "cdaa1ae9",
+            "id": "91770c81",
             "path": "roaster",
+            "referencePath": "preferredName",
             "visible": true
           },
           {
-            "id": "92eff135",
+            "id": "27367c34",
             "path": "status",
             "visible": true
           },
           {
-            "id": "58fa4ce9",
+            "id": "9114fc14",
             "path": "roastLevel",
             "visible": true
           },
           {
-            "id": "950a34a9",
+            "id": "cc3080a2",
             "path": "chargeTemp",
             "visible": true
           },
           {
-            "id": "16a711cc",
+            "id": "6e310c8f",
             "path": "firstCrackTime",
             "visible": true
           },
           {
-            "id": "29943253",
+            "id": "63cd5922",
             "path": "developmentTime",
             "visible": true
           },
           {
-            "id": "79b51fe2",
+            "id": "abbdfd44",
             "path": "dropTemp",
             "visible": true
           }
@@ -2210,7 +2238,7 @@
       }
     },
     {
-      "id": "01KS39DS11315HK4M691S28S0M",
+      "id": "01KS3KNNZRRB59WM539FCN447K",
       "@type": "dxn:type:org.dxos.type.table:0.1.0",
       "@meta": {
         "keys": []
@@ -2218,11 +2246,11 @@
       "name": "Table",
       "sizes": {},
       "view": {
-        "/": "dxn:echo:@:01KS39DS0YEC9CY1X6QNCFH7S5"
+        "/": "dxn:echo:@:01KS3KNNZB42SGFX23FW0NMVYN"
       }
     },
     {
-      "id": "01KS39DS1RAGKG9MEB24W5W6H9",
+      "id": "01KS3KNP3DY4S0ZV18567H1T82",
       "@type": "dxn:type:org.dxos.type.view:0.1.0",
       "@meta": {
         "keys": []
@@ -2230,77 +2258,78 @@
       "projection": {
         "fields": [
           {
-            "id": "cbc38e91",
+            "id": "3ef8d858",
             "path": "machine",
             "visible": false
           },
           {
-            "id": "10215546",
+            "id": "fdaa2121",
             "path": "greenWeightKg",
             "visible": false
           },
           {
-            "id": "e8d2a010",
+            "id": "3f93eea0",
             "path": "roastWeightKg",
             "visible": false
           },
           {
-            "id": "6e859f74",
+            "id": "0ac8abd9",
             "path": "chargeTemp",
             "visible": false
           },
           {
-            "id": "d394b76b",
+            "id": "22ab22fb",
             "path": "firstCrackTime",
             "visible": false
           },
           {
-            "id": "3006331f",
+            "id": "47997609",
             "path": "developmentTime",
             "visible": false
           },
           {
-            "id": "65f12a3f",
+            "id": "8a168385",
             "path": "dropTemp",
             "visible": false
           },
           {
-            "id": "192cfdd0",
+            "id": "74ea5c9e",
             "path": "roastLevel",
             "visible": false
           },
           {
-            "id": "1af7e6bc",
+            "id": "9c6c3e0f",
             "path": "status",
             "visible": false
           },
           {
-            "id": "069cd39d",
+            "id": "83e20d76",
             "path": "title",
             "visible": true
           },
           {
-            "id": "1c247c53",
+            "id": "d8221899",
             "path": "origin",
             "visible": true
           },
           {
-            "id": "5073205b",
+            "id": "d5c0b9ed",
             "path": "date",
             "visible": true
           },
           {
-            "id": "d44f5039",
+            "id": "1ba37eeb",
             "path": "roaster",
+            "referencePath": "preferredName",
             "visible": true
           },
           {
-            "id": "cd84363d",
+            "id": "1fa6305c",
             "path": "notes",
             "visible": true
           }
         ],
-        "pivotFieldId": "1af7e6bc"
+        "pivotFieldId": "9c6c3e0f"
       },
       "query": {
         "ast": {
@@ -2314,7 +2343,7 @@
       }
     },
     {
-      "id": "01KS39DS1WXSPC1P85WYNNXWEK",
+      "id": "01KS3KNP4KCHRED7YAPWCAFA9R",
       "@type": "dxn:type:org.dxos.type.kanban:0.2.0",
       "@meta": {
         "keys": []
@@ -2327,12 +2356,12 @@
       "spec": {
         "kind": "view",
         "view": {
-          "/": "dxn:echo:@:01KS39DS1RAGKG9MEB24W5W6H9"
+          "/": "dxn:echo:@:01KS3KNP3DY4S0ZV18567H1T82"
         }
       }
     },
     {
-      "id": "01KS39DS23VDSW37T40KPJXC6B",
+      "id": "01KS3KNP4SQJ9643FY1VT2T978",
       "@type": "dxn:type:org.dxos.type.collection:0.1.0",
       "@meta": {
         "keys": []
@@ -2340,26 +2369,26 @@
       "name": "Roast Log",
       "objects": [
         {
-          "/": "dxn:echo:@:01KS39DS11315HK4M691S28S0M"
+          "/": "dxn:echo:@:01KS3KNNZRRB59WM539FCN447K"
         },
         {
-          "/": "dxn:echo:@:01KS39DS1WXSPC1P85WYNNXWEK"
+          "/": "dxn:echo:@:01KS3KNP4KCHRED7YAPWCAFA9R"
         }
       ]
     }
   ],
   "feeds": [
     {
-      "feedObjectId": "01KS39DRPX46GNGR21FZVZTN57",
+      "feedObjectId": "01KS3KNNND796EN7K8XVYF9E46",
       "namespace": "data",
       "messages": [
         {
-          "id": "01KS39DRPX46GNGR21FZVZTN59",
+          "id": "01KS3KNNNEWEYSTHHBPY04VTP2",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRPX46GNGR21FZVZTN57:01KS39DRPX46GNGR21FZVZTN59",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNND796EN7K8XVYF9E46:01KS3KNNNEWEYSTHHBPY04VTP2",
           "created": "2026-04-09T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2377,12 +2406,12 @@
           }
         },
         {
-          "id": "01KS39DRPY32C2PY2DG7SEAZWE",
+          "id": "01KS3KNNNF0DP8K9VH4MFCH28X",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRPX46GNGR21FZVZTN57:01KS39DRPY32C2PY2DG7SEAZWE",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNND796EN7K8XVYF9E46:01KS3KNNNF0DP8K9VH4MFCH28X",
           "created": "2026-04-10T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2400,12 +2429,12 @@
           }
         },
         {
-          "id": "01KS39DRPY32C2PY2DG7SEAZWF",
+          "id": "01KS3KNNNF0DP8K9VH4MFCH28Y",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRPX46GNGR21FZVZTN57:01KS39DRPY32C2PY2DG7SEAZWF",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNND796EN7K8XVYF9E46:01KS3KNNNF0DP8K9VH4MFCH28Y",
           "created": "2026-04-12T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2423,12 +2452,12 @@
           }
         },
         {
-          "id": "01KS39DRPZ9GEFX84WRG3NPZEQ",
+          "id": "01KS3KNNNGWFXJ8QDW7N8B3EP5",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRPX46GNGR21FZVZTN57:01KS39DRPZ9GEFX84WRG3NPZEQ",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNND796EN7K8XVYF9E46:01KS3KNNNGWFXJ8QDW7N8B3EP5",
           "created": "2026-04-15T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2446,12 +2475,12 @@
           }
         },
         {
-          "id": "01KS39DRPZ9GEFX84WRG3NPZER",
+          "id": "01KS3KNNNGWFXJ8QDW7N8B3EP6",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRPX46GNGR21FZVZTN57:01KS39DRPZ9GEFX84WRG3NPZER",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNND796EN7K8XVYF9E46:01KS3KNNNGWFXJ8QDW7N8B3EP6",
           "created": "2026-04-15T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2469,12 +2498,12 @@
           }
         },
         {
-          "id": "01KS39DRQ06T07W17AM2247ZG8",
+          "id": "01KS3KNNNGWFXJ8QDW7N8B3EP7",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRPX46GNGR21FZVZTN57:01KS39DRQ06T07W17AM2247ZG8",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNND796EN7K8XVYF9E46:01KS3KNNNGWFXJ8QDW7N8B3EP7",
           "created": "2026-04-17T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2484,7 +2513,7 @@
           "blocks": [
             {
               "_tag": "text",
-              "text": "Hi Maya — Hatch would love to be part of the Spring Blend pilot. We have an espresso bar that's ready for something new. What are next steps? — Priya"
+              "text": "Hi Kai — Hatch would love to be part of the Spring Blend pilot. We have an espresso bar that's ready for something new. What are next steps? — Priya"
             }
           ],
           "properties": {
@@ -2492,22 +2521,22 @@
           }
         },
         {
-          "id": "01KS39DRQ06T07W17AM2247ZG9",
+          "id": "01KS3KNNNHP6FKNSS0EJYYPGHN",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRPX46GNGR21FZVZTN57:01KS39DRQ06T07W17AM2247ZG9",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNND796EN7K8XVYF9E46:01KS3KNNNHP6FKNSS0EJYYPGHN",
           "created": "2026-04-18T10:00:00.000Z",
           "sender": {
             "role": "user",
-            "name": "Maya Chen",
-            "email": "maya@bramblecoffee.com"
+            "name": "Kai Chen",
+            "email": "kai@bramblecoffee.com"
           },
           "blocks": [
             {
               "_tag": "text",
-              "text": "Priya — yes! I will send a 2 lb sample with v1 of the blend next week. Would love your feedback. — Maya"
+              "text": "Priya — yes! I will send a 2 lb sample with v1 of the blend next week. Would love your feedback. — Kai"
             }
           ],
           "properties": {
@@ -2515,12 +2544,12 @@
           }
         },
         {
-          "id": "01KS39DRQ06T07W17AM2247ZGA",
+          "id": "01KS3KNNNHP6FKNSS0EJYYPGHP",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRPX46GNGR21FZVZTN57:01KS39DRQ06T07W17AM2247ZGA",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNND796EN7K8XVYF9E46:01KS3KNNNHP6FKNSS0EJYYPGHP",
           "created": "2026-04-20T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2538,12 +2567,12 @@
           }
         },
         {
-          "id": "01KS39DRQ1NRDCCEZ08ZJZVVGB",
+          "id": "01KS3KNNNJ0684T64JFD200ESN",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRPX46GNGR21FZVZTN57:01KS39DRQ1NRDCCEZ08ZJZVVGB",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNND796EN7K8XVYF9E46:01KS3KNNNJ0684T64JFD200ESN",
           "created": "2026-04-22T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2553,7 +2582,7 @@
           "blocks": [
             {
               "_tag": "text",
-              "text": "Maya, Sam — I am locking dates for the Q2 trip. Tentatively: 9 days in Huila, then 5 in Ethiopia. Will share the full itinerary by end of week. — Diego"
+              "text": "Kai, Sam — I am locking dates for the Q2 trip. Tentatively: 9 days in Huila, then 5 in Ethiopia. Will share the full itinerary by end of week. — Diego"
             }
           ],
           "properties": {
@@ -2561,12 +2590,12 @@
           }
         },
         {
-          "id": "01KS39DRQ1NRDCCEZ08ZJZVVGC",
+          "id": "01KS3KNNNJ0684T64JFD200ESP",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRPX46GNGR21FZVZTN57:01KS39DRQ1NRDCCEZ08ZJZVVGC",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNND796EN7K8XVYF9E46:01KS3KNNNJ0684T64JFD200ESP",
           "created": "2026-04-23T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2584,22 +2613,22 @@
           }
         },
         {
-          "id": "01KS39DRQ2F4J0C08MW9SP8G3T",
+          "id": "01KS3KNNNJ0684T64JFD200ESQ",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRPX46GNGR21FZVZTN57:01KS39DRQ2F4J0C08MW9SP8G3T",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNND796EN7K8XVYF9E46:01KS3KNNNJ0684T64JFD200ESQ",
           "created": "2026-04-24T10:00:00.000Z",
           "sender": {
             "role": "user",
-            "name": "Maya Chen",
-            "email": "maya@bramblecoffee.com"
+            "name": "Kai Chen",
+            "email": "kai@bramblecoffee.com"
           },
           "blocks": [
             {
               "_tag": "text",
-              "text": "Team — current draft is in the roast log. First crack at 9:18, drop at 11:30. We are tasting flat for the espresso shot — will pull up the development a touch on v2. — Maya"
+              "text": "Team — current draft is in the roast log. First crack at 9:18, drop at 11:30. We are tasting flat for the espresso shot — will pull up the development a touch on v2. — Kai"
             }
           ],
           "properties": {
@@ -2607,12 +2636,12 @@
           }
         },
         {
-          "id": "01KS39DRQ3FE8XTZ1FSBC940SZ",
+          "id": "01KS3KNNNK13B56TF4EY6FD8Z3",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRPX46GNGR21FZVZTN57:01KS39DRQ3FE8XTZ1FSBC940SZ",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNND796EN7K8XVYF9E46:01KS3KNNNK13B56TF4EY6FD8Z3",
           "created": "2026-04-26T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2630,12 +2659,12 @@
           }
         },
         {
-          "id": "01KS39DRQ3FE8XTZ1FSBC940T0",
+          "id": "01KS3KNNNK13B56TF4EY6FD8Z4",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRPX46GNGR21FZVZTN57:01KS39DRQ3FE8XTZ1FSBC940T0",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNND796EN7K8XVYF9E46:01KS3KNNNK13B56TF4EY6FD8Z4",
           "created": "2026-04-27T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2653,12 +2682,12 @@
           }
         },
         {
-          "id": "01KS39DRQ3FE8XTZ1FSBC940T1",
+          "id": "01KS3KNNNK13B56TF4EY6FD8Z5",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRPX46GNGR21FZVZTN57:01KS39DRQ3FE8XTZ1FSBC940T1",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNND796EN7K8XVYF9E46:01KS3KNNNK13B56TF4EY6FD8Z5",
           "created": "2026-04-29T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2676,12 +2705,12 @@
           }
         },
         {
-          "id": "01KS39DRQ4N7JXD9Q66RY3KKZZ",
+          "id": "01KS3KNNNMK5ZKDRVH4S7Z10Q8",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRPX46GNGR21FZVZTN57:01KS39DRQ4N7JXD9Q66RY3KKZZ",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNND796EN7K8XVYF9E46:01KS3KNNNMK5ZKDRVH4S7Z10Q8",
           "created": "2026-04-30T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2699,12 +2728,12 @@
           }
         },
         {
-          "id": "01KS39DRQ4N7JXD9Q66RY3KM00",
+          "id": "01KS3KNNNMK5ZKDRVH4S7Z10Q9",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRPX46GNGR21FZVZTN57:01KS39DRQ4N7JXD9Q66RY3KM00",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNND796EN7K8XVYF9E46:01KS3KNNNMK5ZKDRVH4S7Z10Q9",
           "created": "2026-05-03T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2714,7 +2743,7 @@
           "blocks": [
             {
               "_tag": "text",
-              "text": "Maya — we are doing a cupping at the bakery next Tuesday at 4. Could send the Spring Blend v1 ahead, or would you want to bring it in person? — Priya"
+              "text": "Kai — we are doing a cupping at the bakery next Tuesday at 4. Could send the Spring Blend v1 ahead, or would you want to bring it in person? — Priya"
             }
           ],
           "properties": {
@@ -2722,12 +2751,12 @@
           }
         },
         {
-          "id": "01KS39DRQ5T7E7FJ80FZMJG11C",
+          "id": "01KS3KNNNMK5ZKDRVH4S7Z10QA",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRPX46GNGR21FZVZTN57:01KS39DRQ5T7E7FJ80FZMJG11C",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNND796EN7K8XVYF9E46:01KS3KNNNMK5ZKDRVH4S7Z10QA",
           "created": "2026-05-05T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2745,12 +2774,12 @@
           }
         },
         {
-          "id": "01KS39DRQ5T7E7FJ80FZMJG11D",
+          "id": "01KS3KNNNNXN6NMK7FCPJ2QQJP",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRPX46GNGR21FZVZTN57:01KS39DRQ5T7E7FJ80FZMJG11D",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNND796EN7K8XVYF9E46:01KS3KNNNNXN6NMK7FCPJ2QQJP",
           "created": "2026-05-08T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2768,12 +2797,12 @@
           }
         },
         {
-          "id": "01KS39DRQ6WP09RTJ306J746M9",
+          "id": "01KS3KNNNNXN6NMK7FCPJ2QQJQ",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRPX46GNGR21FZVZTN57:01KS39DRQ6WP09RTJ306J746M9",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNND796EN7K8XVYF9E46:01KS3KNNNNXN6NMK7FCPJ2QQJQ",
           "created": "2026-05-11T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2791,22 +2820,22 @@
           }
         },
         {
-          "id": "01KS39DRQ7A6JW6V34N5MJV4BT",
+          "id": "01KS3KNNNPSX52BBZJVTBAZKMJ",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRPX46GNGR21FZVZTN57:01KS39DRQ7A6JW6V34N5MJV4BT",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNND796EN7K8XVYF9E46:01KS3KNNNPSX52BBZJVTBAZKMJ",
           "created": "2026-05-13T10:00:00.000Z",
           "sender": {
             "role": "user",
-            "name": "Maya Chen",
-            "email": "maya@bramblecoffee.com"
+            "name": "Kai Chen",
+            "email": "kai@bramblecoffee.com"
           },
           "blocks": [
             {
               "_tag": "text",
-              "text": "v2 cupping notes are in the document. Big improvement on body, the espresso shot is much more balanced. Heading toward v3 with a small ratio change. — Maya"
+              "text": "v2 cupping notes are in the document. Big improvement on body, the espresso shot is much more balanced. Heading toward v3 with a small ratio change. — Kai"
             }
           ],
           "properties": {
@@ -2814,12 +2843,12 @@
           }
         },
         {
-          "id": "01KS39DRQ7A6JW6V34N5MJV4BV",
+          "id": "01KS3KNNNPSX52BBZJVTBAZKMK",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRPX46GNGR21FZVZTN57:01KS39DRQ7A6JW6V34N5MJV4BV",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNND796EN7K8XVYF9E46:01KS3KNNNPSX52BBZJVTBAZKMK",
           "created": "2026-05-16T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2837,12 +2866,12 @@
           }
         },
         {
-          "id": "01KS39DRQ87K63P3Z4ZBH4V09X",
+          "id": "01KS3KNNNPSX52BBZJVTBAZKMM",
           "@type": "dxn:type:org.dxos.type.message:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRPX46GNGR21FZVZTN57:01KS39DRQ87K63P3Z4ZBH4V09X",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNND796EN7K8XVYF9E46:01KS3KNNNPSX52BBZJVTBAZKMM",
           "created": "2026-05-18T10:00:00.000Z",
           "sender": {
             "role": "user",
@@ -2852,7 +2881,7 @@
           "blocks": [
             {
               "_tag": "text",
-              "text": "Maya — the team loved the chocolate and red fruit notes. Wholesale customers asked about the espresso roast specifically. Would order standing 20 lb/wk starting at launch. — Priya"
+              "text": "Kai — the team loved the chocolate and red fruit notes. Wholesale customers asked about the espresso roast specifically. Would order standing 20 lb/wk starting at launch. — Priya"
             }
           ],
           "properties": {
@@ -2862,21 +2891,21 @@
       ]
     },
     {
-      "feedObjectId": "01KS39DRQE0P24TZBT7WW5259R",
+      "feedObjectId": "01KS3KNNNS865FXFAKPRPRPFQZ",
       "namespace": "data",
       "messages": [
         {
-          "id": "01KS39DRQE0P24TZBT7WW5259T",
+          "id": "01KS3KNNNT3V20JBJB795F3TY0",
           "@type": "dxn:type:org.dxos.type.event:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRQE0P24TZBT7WW5259R:01KS39DRQE0P24TZBT7WW5259T",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNNS865FXFAKPRPRPFQZ:01KS3KNNNT3V20JBJB795F3TY0",
           "attendees": [
             {
               "role": "user",
-              "name": "Maya Chen",
-              "email": "maya@bramblecoffee.com"
+              "name": "Kai Chen",
+              "email": "kai@bramblecoffee.com"
             },
             {
               "role": "user",
@@ -2898,24 +2927,24 @@
           "description": "Weekly team sync at the roastery.",
           "owner": {
             "role": "user",
-            "name": "Maya Chen",
-            "email": "maya@bramblecoffee.com"
+            "name": "Kai Chen",
+            "email": "kai@bramblecoffee.com"
           },
           "startDate": "2026-05-08T16:00:00.000Z",
           "endDate": "2026-05-08T17:00:00.000Z"
         },
         {
-          "id": "01KS39DRQE0P24TZBT7WW5259V",
+          "id": "01KS3KNNNT3V20JBJB795F3TY1",
           "@type": "dxn:type:org.dxos.type.event:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRQE0P24TZBT7WW5259R:01KS39DRQE0P24TZBT7WW5259V",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNNS865FXFAKPRPRPFQZ:01KS3KNNNT3V20JBJB795F3TY1",
           "attendees": [
             {
               "role": "user",
-              "name": "Maya Chen",
-              "email": "maya@bramblecoffee.com"
+              "name": "Kai Chen",
+              "email": "kai@bramblecoffee.com"
             },
             {
               "role": "user",
@@ -2932,24 +2961,24 @@
           "description": "Cupping the new Sidamo + Spring Blend v1 with North Star.",
           "owner": {
             "role": "user",
-            "name": "Maya Chen",
-            "email": "maya@bramblecoffee.com"
+            "name": "Kai Chen",
+            "email": "kai@bramblecoffee.com"
           },
           "startDate": "2026-05-12T17:00:00.000Z",
           "endDate": "2026-05-12T18:00:00.000Z"
         },
         {
-          "id": "01KS39DRQRJE5Y84T7Q2KVG955",
+          "id": "01KS3KNNNT3V20JBJB795F3TY2",
           "@type": "dxn:type:org.dxos.type.event:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRQE0P24TZBT7WW5259R:01KS39DRQRJE5Y84T7Q2KVG955",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNNS865FXFAKPRPRPFQZ:01KS3KNNNT3V20JBJB795F3TY2",
           "attendees": [
             {
               "role": "user",
-              "name": "Maya Chen",
-              "email": "maya@bramblecoffee.com"
+              "name": "Kai Chen",
+              "email": "kai@bramblecoffee.com"
             },
             {
               "role": "user",
@@ -2970,24 +2999,24 @@
           "title": "Roastery standup",
           "owner": {
             "role": "user",
-            "name": "Maya Chen",
-            "email": "maya@bramblecoffee.com"
+            "name": "Kai Chen",
+            "email": "kai@bramblecoffee.com"
           },
           "startDate": "2026-05-15T16:00:00.000Z",
           "endDate": "2026-05-15T17:00:00.000Z"
         },
         {
-          "id": "01KS39DRQSKRVPQ985M5R8WGNB",
+          "id": "01KS3KNNNT3V20JBJB795F3TY3",
           "@type": "dxn:type:org.dxos.type.event:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRQE0P24TZBT7WW5259R:01KS39DRQSKRVPQ985M5R8WGNB",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNNS865FXFAKPRPRPFQZ:01KS3KNNNT3V20JBJB795F3TY3",
           "attendees": [
             {
               "role": "user",
-              "name": "Maya Chen",
-              "email": "maya@bramblecoffee.com"
+              "name": "Kai Chen",
+              "email": "kai@bramblecoffee.com"
             },
             {
               "role": "user",
@@ -3009,24 +3038,24 @@
           "description": "Plan Q2: Spring Blend launch, sourcing trip, hiring.",
           "owner": {
             "role": "user",
-            "name": "Maya Chen",
-            "email": "maya@bramblecoffee.com"
+            "name": "Kai Chen",
+            "email": "kai@bramblecoffee.com"
           },
           "startDate": "2026-05-17T15:00:00.000Z",
           "endDate": "2026-05-17T17:00:00.000Z"
         },
         {
-          "id": "01KS39DRQSKRVPQ985M5R8WGNC",
+          "id": "01KS3KNNNVX4R1MRDEPRP3ESD1",
           "@type": "dxn:type:org.dxos.type.event:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRQE0P24TZBT7WW5259R:01KS39DRQSKRVPQ985M5R8WGNC",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNNS865FXFAKPRPRPFQZ:01KS3KNNNVX4R1MRDEPRP3ESD1",
           "attendees": [
             {
               "role": "user",
-              "name": "Maya Chen",
-              "email": "maya@bramblecoffee.com"
+              "name": "Kai Chen",
+              "email": "kai@bramblecoffee.com"
             },
             {
               "role": "user",
@@ -3043,19 +3072,19 @@
           "description": "Brewer demo for the cafe.",
           "owner": {
             "role": "user",
-            "name": "Maya Chen",
-            "email": "maya@bramblecoffee.com"
+            "name": "Kai Chen",
+            "email": "kai@bramblecoffee.com"
           },
           "startDate": "2026-05-22T14:00:00.000Z",
           "endDate": "2026-05-22T15:00:00.000Z"
         },
         {
-          "id": "01KS39DRQSKRVPQ985M5R8WGND",
+          "id": "01KS3KNNNVX4R1MRDEPRP3ESD2",
           "@type": "dxn:type:org.dxos.type.event:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRQE0P24TZBT7WW5259R:01KS39DRQSKRVPQ985M5R8WGND",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNNS865FXFAKPRPRPFQZ:01KS3KNNNVX4R1MRDEPRP3ESD2",
           "attendees": [
             {
               "role": "user",
@@ -3072,24 +3101,24 @@
           "description": "Video call with Mateo to walk through pricing and ordering.",
           "owner": {
             "role": "user",
-            "name": "Maya Chen",
-            "email": "maya@bramblecoffee.com"
+            "name": "Kai Chen",
+            "email": "kai@bramblecoffee.com"
           },
           "startDate": "2026-05-24T17:00:00.000Z",
           "endDate": "2026-05-24T18:00:00.000Z"
         },
         {
-          "id": "01KS39DRQSKRVPQ985M5R8WGNE",
+          "id": "01KS3KNNNVX4R1MRDEPRP3ESD3",
           "@type": "dxn:type:org.dxos.type.event:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRQE0P24TZBT7WW5259R:01KS39DRQSKRVPQ985M5R8WGNE",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNNS865FXFAKPRPRPFQZ:01KS3KNNNVX4R1MRDEPRP3ESD3",
           "attendees": [
             {
               "role": "user",
-              "name": "Maya Chen",
-              "email": "maya@bramblecoffee.com"
+              "name": "Kai Chen",
+              "email": "kai@bramblecoffee.com"
             },
             {
               "role": "user",
@@ -3101,19 +3130,19 @@
           "description": "Cupping v2 in Brooklyn with Priya and the Hatch team.",
           "owner": {
             "role": "user",
-            "name": "Maya Chen",
-            "email": "maya@bramblecoffee.com"
+            "name": "Kai Chen",
+            "email": "kai@bramblecoffee.com"
           },
           "startDate": "2026-05-28T21:00:00.000Z",
           "endDate": "2026-05-28T23:00:00.000Z"
         },
         {
-          "id": "01KS39DRQSKRVPQ985M5R8WGNF",
+          "id": "01KS3KNNNVX4R1MRDEPRP3ESD4",
           "@type": "dxn:type:org.dxos.type.event:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRQE0P24TZBT7WW5259R:01KS39DRQSKRVPQ985M5R8WGNF",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNNS865FXFAKPRPRPFQZ:01KS3KNNNVX4R1MRDEPRP3ESD4",
           "attendees": [
             {
               "role": "user",
@@ -3125,19 +3154,19 @@
           "description": "Three-day specialty coffee expo. Sam attending.",
           "owner": {
             "role": "user",
-            "name": "Maya Chen",
-            "email": "maya@bramblecoffee.com"
+            "name": "Kai Chen",
+            "email": "kai@bramblecoffee.com"
           },
           "startDate": "2026-06-03T14:00:00.000Z",
           "endDate": "2026-06-03T22:00:00.000Z"
         },
         {
-          "id": "01KS39DRQSKRVPQ985M5R8WGNG",
+          "id": "01KS3KNNNVX4R1MRDEPRP3ESD5",
           "@type": "dxn:type:org.dxos.type.event:0.1.0",
           "@meta": {
             "keys": []
           },
-          "@dxn": "dxn:queue:data:B4VNHBT3OC2TAZH5OYAK24J4BUCSP2DTD:01KS39DRQE0P24TZBT7WW5259R:01KS39DRQSKRVPQ985M5R8WGNG",
+          "@dxn": "dxn:queue:data:BU5YBP7YEG52R27PIXVP64QLXYHFG3QI5:01KS3KNNNS865FXFAKPRPRPFQZ:01KS3KNNNVX4R1MRDEPRP3ESD5",
           "attendees": [
             {
               "role": "user",
@@ -3154,8 +3183,8 @@
           "description": "Two days at Carmen's farm during the sourcing trip.",
           "owner": {
             "role": "user",
-            "name": "Maya Chen",
-            "email": "maya@bramblecoffee.com"
+            "name": "Kai Chen",
+            "email": "kai@bramblecoffee.com"
           },
           "startDate": "2026-06-10T14:00:00.000Z",
           "endDate": "2026-06-10T22:00:00.000Z"

@@ -79,7 +79,7 @@ const RoastLog = S.Struct({
   date: S.optional(S.String.pipe(S.annotations({ title: 'Date' }))),
   origin: S.optional(S.String.pipe(S.annotations({ title: 'Origin / Lot' }))),
   machine: S.optional(S.String.pipe(S.annotations({ title: 'Machine' }))),
-  roaster: S.optional(S.String.pipe(S.annotations({ title: 'Roaster' }))),
+  roaster: S.optional(Ref.Ref(Person.Person).annotations({ title: 'Roaster' })),
   greenWeightKg: S.optional(S.Number.pipe(S.annotations({ title: 'Green (kg)' }))),
   roastWeightKg: S.optional(S.Number.pipe(S.annotations({ title: 'Roast (kg)' }))),
   chargeTemp: S.optional(S.Number.pipe(S.annotations({ title: 'Charge (°C)' }))),
@@ -259,7 +259,7 @@ const populateSpace = async (space: Space, content: { aboutMd: string; welcomeMd
   ]);
 
   // Roast Log — custom schema entries with Table + Kanban views.
-  const roastLogCollection = await addRoastLogCollection(space);
+  const roastLogCollection = await addRoastLogCollection(space, people);
 
   // Wire up the root collection in a stable order.
   Obj.update(rootCollection, (rootCollection) => {
@@ -393,7 +393,7 @@ type PeopleBundle = {
 };
 
 type PersonKey =
-  | 'maya'
+  | 'kai'
   | 'diego'
   | 'sam'
   | 'riley'
@@ -411,7 +411,7 @@ const PEOPLE_SEEDS: Array<{
   orgKey: OrgKey;
   email: string;
 }> = [
-  { key: 'maya', fullName: 'Maya Chen', preferredName: 'Maya', jobTitle: 'Head Roaster (co-founder)', orgKey: 'bramble', email: 'maya@bramblecoffee.com' },
+  { key: 'kai', fullName: 'Kai Chen', preferredName: 'Kai', jobTitle: 'Head Roaster (co-founder)', orgKey: 'bramble', email: 'kai@bramblecoffee.com' },
   { key: 'diego', fullName: 'Diego Alvarez', preferredName: 'Diego', jobTitle: 'Sourcing (co-founder)', orgKey: 'bramble', email: 'diego@bramblecoffee.com' },
   { key: 'sam', fullName: 'Sam Okafor', preferredName: 'Sam', jobTitle: 'Wholesale Lead', orgKey: 'bramble', email: 'sam@bramblecoffee.com' },
   { key: 'riley', fullName: 'Riley Tanaka', preferredName: 'Riley', jobTitle: 'Operations & Logistics', orgKey: 'bramble', email: 'riley@bramblecoffee.com' },
@@ -519,13 +519,13 @@ const makeMailbox = (
       from: 'priya',
       daysAgo: 33,
       subject: 'Espresso blend pilot — interested',
-      body: 'Hi Maya — Hatch would love to be part of the Spring Blend pilot. We have an espresso bar that\'s ready for something new. What are next steps? — Priya',
+      body: 'Hi Kai — Hatch would love to be part of the Spring Blend pilot. We have an espresso bar that\'s ready for something new. What are next steps? — Priya',
     },
     {
-      from: 'maya',
+      from: 'kai',
       daysAgo: 32,
       subject: 'Re: Espresso blend pilot — interested',
-      body: 'Priya — yes! I will send a 2 lb sample with v1 of the blend next week. Would love your feedback. — Maya',
+      body: 'Priya — yes! I will send a 2 lb sample with v1 of the blend next week. Would love your feedback. — Kai',
     },
     {
       from: 'carmen',
@@ -537,7 +537,7 @@ const makeMailbox = (
       from: 'diego',
       daysAgo: 28,
       subject: 'Trip planning — Colombia → Ethiopia',
-      body: 'Maya, Sam — I am locking dates for the Q2 trip. Tentatively: 9 days in Huila, then 5 in Ethiopia. Will share the full itinerary by end of week. — Diego',
+      body: 'Kai, Sam — I am locking dates for the Q2 trip. Tentatively: 9 days in Huila, then 5 in Ethiopia. Will share the full itinerary by end of week. — Diego',
     },
     {
       from: 'noise',
@@ -547,10 +547,10 @@ const makeMailbox = (
       body: 'Specialty Coffee Expo NYC registration is now open. Early-bird pricing through next month.',
     },
     {
-      from: 'maya',
+      from: 'kai',
       daysAgo: 26,
       subject: 'Roast curve memo — Spring Blend v1',
-      body: 'Team — current draft is in the roast log. First crack at 9:18, drop at 11:30. We are tasting flat for the espresso shot — will pull up the development a touch on v2. — Maya',
+      body: 'Team — current draft is in the roast log. First crack at 9:18, drop at 11:30. We are tasting flat for the espresso shot — will pull up the development a touch on v2. — Kai',
     },
     {
       from: 'jordan',
@@ -580,7 +580,7 @@ const makeMailbox = (
       from: 'priya',
       daysAgo: 17,
       subject: 'Cupping invite — Tuesday',
-      body: 'Maya — we are doing a cupping at the bakery next Tuesday at 4. Could send the Spring Blend v1 ahead, or would you want to bring it in person? — Priya',
+      body: 'Kai — we are doing a cupping at the bakery next Tuesday at 4. Could send the Spring Blend v1 ahead, or would you want to bring it in person? — Priya',
     },
     {
       from: 'noise',
@@ -602,10 +602,10 @@ const makeMailbox = (
       body: 'Diego — pricing attached for the full container. Up ~6% from last year, in line with what we discussed. Confirm and I will start the export paperwork. — Abel',
     },
     {
-      from: 'maya',
+      from: 'kai',
       daysAgo: 7,
       subject: 'Spring blend v2 — cupping notes',
-      body: 'v2 cupping notes are in the document. Big improvement on body, the espresso shot is much more balanced. Heading toward v3 with a small ratio change. — Maya',
+      body: 'v2 cupping notes are in the document. Big improvement on body, the espresso shot is much more balanced. Heading toward v3 with a small ratio change. — Kai',
     },
     {
       from: 'jordan',
@@ -617,7 +617,7 @@ const makeMailbox = (
       from: 'priya',
       daysAgo: 2,
       subject: 'Spring blend v1 — feedback',
-      body: 'Maya — the team loved the chocolate and red fruit notes. Wholesale customers asked about the espresso roast specifically. Would order standing 20 lb/wk starting at launch. — Priya',
+      body: 'Kai — the team loved the chocolate and red fruit notes. Wholesale customers asked about the espresso roast specifically. Would order standing 20 lb/wk starting at launch. — Priya',
     },
   ];
 
@@ -646,7 +646,7 @@ const makeCalendar = (
 
   const seedForPerson = (key: PersonKey) => PEOPLE_SEEDS.find((s) => s.key === key)!;
   const a = (key: PersonKey): Actor.Actor => actor(seedForPerson(key).fullName, seedForPerson(key).email);
-  const owner = a('maya');
+  const owner = a('kai');
 
   const eventAt = (props: {
     title: string;
@@ -672,7 +672,7 @@ const makeCalendar = (
       daysFromNowVal: -12,
       startHour: 16,
       durationHours: 1,
-      attendees: [a('maya'), a('diego'), a('sam'), a('riley')],
+      attendees: [a('kai'), a('diego'), a('sam'), a('riley')],
     }),
     eventAt({
       title: 'Tasting w/ Jordan (North Star)',
@@ -680,14 +680,14 @@ const makeCalendar = (
       daysFromNowVal: -8,
       startHour: 17,
       durationHours: 1,
-      attendees: [a('maya'), a('sam'), a('jordan')],
+      attendees: [a('kai'), a('sam'), a('jordan')],
     }),
     eventAt({
       title: 'Roastery standup',
       daysFromNowVal: -5,
       startHour: 16,
       durationHours: 1,
-      attendees: [a('maya'), a('diego'), a('sam'), a('riley')],
+      attendees: [a('kai'), a('diego'), a('sam'), a('riley')],
     }),
     eventAt({
       title: 'Q2 planning',
@@ -695,7 +695,7 @@ const makeCalendar = (
       daysFromNowVal: -3,
       startHour: 15,
       durationHours: 2,
-      attendees: [a('maya'), a('diego'), a('sam'), a('riley')],
+      attendees: [a('kai'), a('diego'), a('sam'), a('riley')],
     }),
     eventAt({
       title: 'Equipment demo — Hario rep',
@@ -703,7 +703,7 @@ const makeCalendar = (
       daysFromNowVal: 2,
       startHour: 14,
       durationHours: 1,
-      attendees: [a('maya'), a('riley'), actor('Yuki Watanabe', 'yuki@hario.co.jp')],
+      attendees: [a('kai'), a('riley'), actor('Yuki Watanabe', 'yuki@hario.co.jp')],
     }),
     eventAt({
       title: 'Wholesale onboarding — Olive & Vine',
@@ -719,7 +719,7 @@ const makeCalendar = (
       daysFromNowVal: 8,
       startHour: 21,
       durationHours: 2,
-      attendees: [a('maya'), a('priya')],
+      attendees: [a('kai'), a('priya')],
     }),
     eventAt({
       title: 'Coffee Expo NYC',
@@ -769,7 +769,7 @@ const makeProject = (
       title: 'Finalize roast curve (v3)',
       status: 'in-progress',
       priority: 'high',
-      assigned: Ref.make(people.maya),
+      assigned: Ref.make(people.kai),
       project: projectRef,
       description: 'Currently on v2 with adjusted development time. One more iteration before sign-off.',
     }),
@@ -830,7 +830,7 @@ const makeNotes = (
         '',
         `**Farm:** ${lnk('Finca Esperanza', organizations.fincaEsperanza)} · **Contact:** ${lnk('Carmen Restrepo', people.carmen)}`,
         '',
-        `**Date:** ${daysAgo(20, 10).slice(0, 10)} · **Cuppers:** ${lnk('Maya', people.maya)}, ${lnk('Diego', people.diego)}, ${lnk('Sam', people.sam)}`,
+        `**Date:** ${daysAgo(20, 10).slice(0, 10)} · **Cuppers:** ${lnk('Kai', people.kai)}, ${lnk('Diego', people.diego)}, ${lnk('Sam', people.sam)}`,
         '',
         '## Profile',
         '',
@@ -844,7 +844,7 @@ const makeNotes = (
         '',
         '| Cupper | Score |',
         '| --- | --- |',
-        '| Maya | 87.5 |',
+        '| Kai | 87.5 |',
         '| Diego | 88.0 |',
         '| Sam | 87.0 |',
         '',
@@ -921,14 +921,14 @@ const makeNotes = (
 // Roast Log — custom exemplar schema entries + Table / Kanban views
 // -----------------------------------------------------------------------------
 
-const makeRoastLogs = (): RoastLog[] => [
+const makeRoastLogs = (people: Record<PersonKey, Person.Person>): RoastLog[] => [
   // --- approved: past batches that cleared QC ---
   makeRoastLog({
     title: 'Finca Esperanza Lot #42 — Batch 1',
     date: daysAgo(28),
     origin: 'Colombia / Finca Esperanza / Lot #42',
     machine: 'Loring S15',
-    roaster: 'Maya Chen',
+    roaster: Ref.make(people.kai),
     greenWeightKg: 15,
     roastWeightKg: 12.6,
     chargeTemp: 205,
@@ -944,7 +944,7 @@ const makeRoastLogs = (): RoastLog[] => [
     date: daysAgo(21),
     origin: 'Colombia / Finca Esperanza / Lot #42',
     machine: 'Loring S15',
-    roaster: 'Maya Chen',
+    roaster: Ref.make(people.kai),
     greenWeightKg: 15,
     roastWeightKg: 12.5,
     chargeTemp: 205,
@@ -960,7 +960,7 @@ const makeRoastLogs = (): RoastLog[] => [
     date: daysAgo(14),
     origin: 'Ethiopia / Sidamo Cooperative / Natural Lot 12A',
     machine: 'Loring S15',
-    roaster: 'Diego Alvarez',
+    roaster: Ref.make(people.diego),
     greenWeightKg: 12,
     roastWeightKg: 10.1,
     chargeTemp: 200,
@@ -977,7 +977,7 @@ const makeRoastLogs = (): RoastLog[] => [
     date: daysAgo(5),
     origin: 'Colombia / Finca Esperanza + Ethiopia / Sidamo (70/30)',
     machine: 'Loring S15',
-    roaster: 'Maya Chen',
+    roaster: Ref.make(people.kai),
     greenWeightKg: 30,
     roastWeightKg: 25.3,
     chargeTemp: 206,
@@ -994,7 +994,7 @@ const makeRoastLogs = (): RoastLog[] => [
     date: daysAgo(2),
     origin: 'Colombia / Finca Esperanza / Lot #42',
     machine: 'Loring S15',
-    roaster: 'Maya Chen',
+    roaster: Ref.make(people.kai),
     greenWeightKg: 5,
     chargeTemp: 203,
     firstCrackTime: '9:10',
@@ -1009,7 +1009,7 @@ const makeRoastLogs = (): RoastLog[] => [
     date: daysAgo(1),
     origin: 'Honduras / Cooperativa El Puente / Sample',
     machine: 'Loring S15',
-    roaster: 'Diego Alvarez',
+    roaster: Ref.make(people.diego),
     greenWeightKg: 3,
     chargeTemp: 198,
     firstCrackTime: '8:40',
@@ -1025,7 +1025,7 @@ const makeRoastLogs = (): RoastLog[] => [
     date: daysFromNow(3),
     origin: 'Colombia / Finca Esperanza + Ethiopia / Sidamo (70/30)',
     machine: 'Loring S15',
-    roaster: 'Maya Chen',
+    roaster: Ref.make(people.kai),
     greenWeightKg: 30,
     status: 'planned',
     notes: 'Increase charge rate 2 % vs Run 1 to address drum unevenness. Schedule cupping on day 5.',
@@ -1035,7 +1035,7 @@ const makeRoastLogs = (): RoastLog[] => [
     date: daysFromNow(7),
     origin: 'Colombia / Huila Region / New lot (TBC)',
     machine: 'Loring S15',
-    roaster: 'Diego Alvarez',
+    roaster: Ref.make(people.diego),
     greenWeightKg: 10,
     status: 'planned',
     notes: 'Pre-production evaluation for potential Q3 addition. Diego to confirm lot details with supplier.',
@@ -1050,7 +1050,7 @@ const makeRoastLogs = (): RoastLog[] => [
  * is stored in the space itself. At runtime the Table/Kanban plugins resolve the base schema from that
  * object — the View's projection.schema field is reserved for user overrides only, not the base schema.
  */
-const addRoastLogCollection = async (space: Space): Promise<Collection.Collection> => {
+const addRoastLogCollection = async (space: Space, people: Record<PersonKey, Person.Person>): Promise<Collection.Collection> => {
   const typename = 'example.type.roastLog';
 
   // Register creates the PersistentType ECHO object in the space so the runtime can
@@ -1064,7 +1064,7 @@ const addRoastLogCollection = async (space: Space): Promise<Collection.Collectio
     name: 'Roast Log',
   }]);
 
-  const entries = makeRoastLogs();
+  const entries = makeRoastLogs(people);
   entries.forEach((entry) => space.db.add(entry));
 
   const { view: tableView } = await ViewModel.makeFromDatabase({
