@@ -28,7 +28,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'object-properties',
-        position: 'hoist',
+        position: 'first',
         filter: AppSurface.object(AppSurface.ObjectProperties, Generation.Generation),
         component: ({ data }) => <GenerationProperties subject={data.subject} />,
       }),

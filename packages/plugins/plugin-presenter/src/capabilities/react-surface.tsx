@@ -21,7 +21,7 @@ export default Capability.makeModule(() =>
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'document',
-        position: 'hoist',
+        position: 'first',
         filter: AppSurface.predicate(
           AppSurface.Article,
           (data): data is AppSurface.ArticleData<{ type: typeof meta.id; object: Markdown.Document }> =>
@@ -36,7 +36,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'collection',
-        position: 'hoist',
+        position: 'first',
         filter: AppSurface.predicate(
           AppSurface.Article,
           (data): data is AppSurface.ArticleData<{ type: typeof meta.id; object: Collection.Collection }> =>

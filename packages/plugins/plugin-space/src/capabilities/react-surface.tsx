@@ -72,13 +72,13 @@ export default Capability.makeModule(
     return Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'collection-fallback',
-        position: 'fallback',
+        position: 'last',
         filter: AppSurface.object(AppSurface.Article, Collection.Collection),
         component: ({ data }) => <CollectionArticle attendableId={data.attendableId} subject={data.subject} />,
       }),
       Surface.create({
         id: 'record-article',
-        position: 'fallback',
+        position: 'last',
         filter: AppSurface.subject(AppSurface.Article, Obj.isObject),
         component: ({ data }) => <RecordArticle subject={data.subject} />,
       }),
@@ -129,7 +129,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'space-settings-members',
-        position: 'hoist',
+        position: 'first',
         filter: AppSurface.literal(AppSurface.Article, `${meta.id}.members`),
         component: () => {
           const space = useActiveSpace();
@@ -349,7 +349,7 @@ export default Capability.makeModule(
       Surface.create({
         id: 'navtree-presence-fallback',
         role: 'navtree-item-end',
-        position: 'fallback',
+        position: 'last',
         filter: (data): data is { id: string; open?: boolean } => typeof data.id === 'string',
         component: ({ data }) => <SmallPresenceLive id={data.id} open={data.open} />,
       }),
@@ -363,7 +363,7 @@ export default Capability.makeModule(
       Surface.create({
         id: 'navbar-presence',
         role: 'navbar-end',
-        position: 'hoist',
+        position: 'first',
         filter: (data): data is { subject: Space | Obj.Unknown } => isSpace(data.subject) || Obj.isObject(data.subject),
         component: ({ data }) => {
           const space = isSpace(data.subject) ? data.subject : getSpace(data.subject);

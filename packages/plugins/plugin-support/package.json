@@ -125,6 +125,7 @@
     "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
     "@fluentui/react-tabster": "catalog:",
+    "date-fns": "catalog:",
     "effect": "catalog:",
     "react-joyride": "catalog:"
   },
