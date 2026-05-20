@@ -57,7 +57,11 @@ export const FeedbackForm = ({ onSave, onDiscord, discordPresence, disabled, onD
             </div>
           )}
           <div onPointerDown={() => (actionRef.current = 'posthog')}>
-            <Form.Submit icon='ph--paper-plane-tilt--regular' label={t('send-feedback.label')} disabled={disabled || undefined} />
+            <Form.Submit
+              icon='ph--paper-plane-tilt--regular'
+              label={t('send-feedback.label')}
+              disabled={disabled || undefined}
+            />
           </div>
           {onDiscord && (
             <>
@@ -67,7 +71,8 @@ export const FeedbackForm = ({ onSave, onDiscord, discordPresence, disabled, onD
               {discordPresence && (discordPresence.teamOnline > 0 || discordPresence.communityOnline > 0) && (
                 <p className='text-xs text-description text-center px-2'>
                   {[
-                    discordPresence.teamOnline > 0 && t('discord-presence-team.label', { count: discordPresence.teamOnline }),
+                    discordPresence.teamOnline > 0 &&
+                      t('discord-presence-team.label', { count: discordPresence.teamOnline }),
                     discordPresence.communityOnline > 0 &&
                       t('discord-presence-community.label', { count: discordPresence.communityOnline }),
                   ]

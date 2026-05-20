@@ -9,6 +9,7 @@ import { IconButton, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
+
 import { DEFAULT_TEAM, DXOS_GUILD_ID } from '../../constants';
 
 export type DiscordChannel = {
