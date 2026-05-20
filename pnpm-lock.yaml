@@ -3134,6 +3134,15 @@ importers:
       '@tauri-apps/cli':
         specifier: 'catalog:'
         version: 2.11.2
+      '@tldraw/store':
+        specifier: 'catalog:'
+        version: 3.0.0(react@19.2.6)
+      '@tldraw/tlschema':
+        specifier: 'catalog:'
+        version: 3.0.0(react@19.2.6)
+      '@tldraw/utils':
+        specifier: 'catalog:'
+        version: 3.0.0
       '@types/jsdom':
         specifier: 'catalog:'
         version: 21.1.7
@@ -3158,6 +3167,9 @@ importers:
       rollup-plugin-visualizer:
         specifier: 'catalog:'
         version: 5.12.0(rollup@3.30.0)
+      tsx:
+        specifier: 'catalog:'
+        version: 4.21.0
       vite:
         specifier: '>=8.0.0'
         version: 8.0.10(@types/node@22.10.2)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
