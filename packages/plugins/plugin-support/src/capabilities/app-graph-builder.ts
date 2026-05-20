@@ -89,7 +89,7 @@ export default Capability.makeModule(
             AppNode.makeDeckCompanion({
               id: linkedSegment('help'),
               label: ['help.label', { ns: meta.id }],
-              icon: 'ph--question--regular',
+              icon: 'ph--megaphone--regular',
               data: null,
               position: 'first',
               joyride: 'welcome/feedback',

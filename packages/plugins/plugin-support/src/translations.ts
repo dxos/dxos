@@ -77,6 +77,7 @@ export const translations = [
         'github.label': 'GitHub',
         'download-apps.label': 'Download apps',
         'about.label': 'About Composer',
+        'released.message': 'Released {{released}}',
       },
     },
   },
