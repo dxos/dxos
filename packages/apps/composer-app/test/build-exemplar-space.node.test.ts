@@ -1051,20 +1051,28 @@ const makeRoastLogs = (): RoastLog[] => [
  * object — the View's projection.schema field is reserved for user overrides only, not the base schema.
  */
 const addRoastLogCollection = async (space: Space): Promise<Collection.Collection> => {
-  // Register creates the PersistentType object in the space so the runtime can discover it.
-  await space.db.schemaRegistry.register([RoastLog]);
+  const typename = 'com.bramblecoffee.type.roastLog';
+
+  // Register creates the PersistentType ECHO object in the space so the runtime can
+  // discover and render the schema without it being compiled into the app. Pass the
+  // explicit object form so `name` is stored on the PersistentType — passing a
+  // Type.AnyEntity directly does not auto-derive a display name.
+  await space.db.schemaRegistry.register([{
+    typename,
+    version: '0.1.0',
+    jsonSchema: JsonSchema.toJsonSchema(RoastLog) as JsonSchema.JsonSchema,
+    name: 'Roast Log',
+  }]);
 
   const entries = makeRoastLogs();
   entries.forEach((entry) => space.db.add(entry));
-
-  const typename = 'com.bramblecoffee.type.roastLog';
 
   const { view: tableView } = await ViewModel.makeFromDatabase({
     db: space.db,
     typename,
     fields: ['title', 'date', 'origin', 'roaster', 'status', 'roastLevel', 'chargeTemp', 'firstCrackTime', 'developmentTime', 'dropTemp'],
   });
-  space.db.add(Table.make({ name: 'Table', view: tableView }));
+  const tableObj = space.db.add(Table.make({ name: 'Table', view: tableView }));
 
   const { view: kanbanView } = await ViewModel.makeFromDatabase({
     db: space.db,
@@ -1072,9 +1080,12 @@ const addRoastLogCollection = async (space: Space): Promise<Collection.Collectio
     fields: ['title', 'origin', 'date', 'roaster', 'notes'],
     pivotFieldName: 'status',
   });
-  space.db.add(Kanban.make({ name: 'Kanban', view: kanbanView }));
+  const kanbanObj = space.db.add(Kanban.make({ name: 'Kanban', view: kanbanView }));
 
+  // Table and Kanban go first in the collection so they're visible at the top.
   return makeCollection(space, 'Roast Log', [
+    Ref.make(tableObj),
+    Ref.make(kanbanObj),
     ...entries.map((e) => Ref.make(e)),
   ]);
 };
