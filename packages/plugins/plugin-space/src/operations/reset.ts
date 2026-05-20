@@ -14,14 +14,24 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Reset> = SpaceOperati
       const { space } = input;
       log.info('reset: invoked', { spaceId: space.id });
 
-      const entities = await space.db.query(Filter.everything()).run();
+      log.info('reset: building query');
+      const query = space.db.query(Filter.everything());
+
+      log.info('reset: awaiting entities');
+      const entities = await query.run();
+      log.info('reset: got entities', { count: entities.length });
+
       const relations = entities.filter(Relation.isRelation);
       const objects = entities.filter((entity) => !Relation.isRelation(entity));
+
+      log.info('reset: reading schema registry');
       const schemas = space.db.schemaRegistry.query().runSync();
+      log.info('reset: schema registry read', { count: schemas.length });
+
       const feeds =
         (space.internal.data.pipeline?.controlFeeds?.length ?? 0) +
         (space.internal.data.pipeline?.dataFeeds?.length ?? 0);
-      log.info('reset: starting', {
+      log.info('reset: counts', {
         spaceId: space.id,
         entities: entities.length,
         objects: objects.length,
@@ -48,9 +58,11 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Reset> = SpaceOperati
       }
       log.info('reset: removed', { removed, removeErrors, total: entities.length });
 
+      log.info('reset: flushing');
       await space.db.flush();
       log.info('reset: flushed');
 
+      log.info('reset: creating epoch');
       try {
         await space.internal.createEpoch();
         log.info('reset: epoch created');
@@ -61,6 +73,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Reset> = SpaceOperati
         throw err;
       }
 
+      log.info('reset: re-querying');
       const afterEntities = await space.db.query(Filter.everything()).run();
       const afterSchemas = space.db.schemaRegistry.query().runSync();
       const afterFeeds =
