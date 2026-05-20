@@ -163,6 +163,7 @@ const PluginManagerHost = ({
     const pluginManager = PluginManager.make({
       pluginLoader: () => Effect.die(new Error('Not implemented')),
       plugins: options.plugins ?? [],
+      enabled: (options.plugins ?? []).map(({ meta }) => meta.id),
     });
     return pluginManager;
   }, [options]);
