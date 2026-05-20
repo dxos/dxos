@@ -4948,6 +4948,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../echo/echo
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../../common/effect
       '@dxos/errors':
         specifier: workspace:*
         version: link:../../../common/errors
