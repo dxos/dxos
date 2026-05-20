@@ -241,8 +241,8 @@ describe('Feed', () => {
 
       // Reference the queue item from a container that lives in space.db.
       const container = yield* Database.add(Obj.make(TestSchema.Container, {}));
-      Obj.update(container, (container) => {
-        (container as Obj.Mutable<typeof container>).objects = [Ref.make(queuePost)];
+      Obj.update(container, (mutable) => {
+        (mutable as Obj.Mutable<typeof container>).objects = [Ref.make(queuePost)];
       });
       yield* Database.flush();
 
