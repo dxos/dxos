@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { formatDistance } from 'date-fns';
+import { formatDistance, isValid } from 'date-fns';
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
@@ -31,6 +31,8 @@ export const HelpMenu = () => {
   const { invokePromise } = useOperationInvoker();
   const config = useConfig();
   const { version, timestamp } = config.values.runtime?.app?.build ?? {};
+  const releasedAt = timestamp ? new Date(timestamp) : undefined;
+  const released = releasedAt && isValid(releasedAt) ? releasedAt : undefined;
 
   const openDialog = useCallback(
     (subject: string) => () => {
@@ -94,10 +96,10 @@ export const HelpMenu = () => {
             {version && (
               <div className='ps-8 pe-2 pb-2 flex flex-col text-xs text-description'>
                 <span className='font-mono'>{version}</span>
-                {timestamp && (
+                {released && (
                   <span>
                     {t('released.message', {
-                      released: formatDistance(new Date(timestamp), new Date(), { addSuffix: true }),
+                      released: formatDistance(released, new Date(), { addSuffix: true }),
                     })}
                   </span>
                 )}
