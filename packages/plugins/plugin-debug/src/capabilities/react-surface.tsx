@@ -153,7 +153,7 @@ export default Capability.makeModule(
         id: 'wireframe',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
-        position: 'hoist',
+        position: 'first',
         filter: (data): data is { subject: Obj.Unknown } => {
           const settings = registry.get(settingsAtom);
           return Obj.isObject(data.subject) && !!settings.wireframe;
@@ -194,7 +194,7 @@ export default Capability.makeModule(
       Surface.create({
         id: 'status',
         role: 'status-indicator',
-        position: 'hoist',
+        position: 'first',
         component: () => <DebugStatus />,
       }),
 

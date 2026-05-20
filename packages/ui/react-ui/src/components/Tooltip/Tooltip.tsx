@@ -54,7 +54,7 @@ type TooltipContextValue = {
   open: boolean;
   stateAttribute: 'closed' | 'delayed-open' | 'instant-open';
   trigger: TooltipTriggerElement | null;
-  onTriggerChange(trigger: TooltipTriggerElement | null): void;
+  onTriggerChange(trigger: TooltipTriggerElement | null, content?: ReactNode, side?: TooltipSide): void;
   onTriggerEnter(): void;
   onTriggerLeave(): void;
   onOpen(): void;
@@ -111,15 +111,18 @@ const TooltipProvider: FC<TooltipProviderProps> = (props: TooltipScopedProps<Too
 
   const popperScope = usePopperScope(__scopeTooltip);
   const [trigger, setTrigger] = useState<HTMLButtonElement | null>(null);
-  const [content, setContent] = useState<string>('');
+  const [content, setContent] = useState<ReactNode>(null);
   const [side, setSide] = useState<TooltipSide | undefined>(undefined);
   const triggerRef = useRef<HTMLButtonElement | null>(trigger);
-  const handleTriggerChange = useCallback((nextTrigger: HTMLButtonElement | null) => {
-    setTrigger(nextTrigger);
-    triggerRef.current = nextTrigger;
-    setContent(nextTrigger?.getAttribute('data-tooltip-content') ?? '');
-    setSide((nextTrigger?.getAttribute('data-tooltip-side') as TooltipSide | null) ?? undefined);
-  }, []);
+  const handleTriggerChange = useCallback(
+    (nextTrigger: HTMLButtonElement | null, nextContent?: ReactNode, nextSide?: TooltipSide) => {
+      setTrigger(nextTrigger);
+      triggerRef.current = nextTrigger;
+      setContent(nextContent ?? null);
+      setSide(nextSide);
+    },
+    [],
+  );
   const contentId = useId();
   const openTimerRef = useRef(0);
   const wasOpenDelayedRef = useRef(false);
@@ -248,9 +251,9 @@ const TRIGGER_NAME = 'TooltipTrigger';
 
 type TooltipTriggerElement = ComponentRef<typeof Primitive.button>;
 type PrimitiveButtonProps = ComponentPropsWithoutRef<typeof Primitive.button>;
-type TooltipTriggerProps = PrimitiveButtonProps &
+type TooltipTriggerProps = Omit<PrimitiveButtonProps, 'content'> &
   Pick<TooltipProps, 'delayDuration'> & {
-    content?: string;
+    content?: ReactNode;
     side?: TooltipSide;
     onInteract?: (event: SyntheticEvent) => void;
   };
@@ -283,8 +286,6 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
         // commonly anchors and the anchor `type` attribute signifies MIME type.
         aria-describedby={context.open ? context.contentId : undefined}
         data-state={context.stateAttribute}
-        data-tooltip-content={content}
-        data-tooltip-side={side}
         {...triggerProps}
         ref={composedRefs}
         onPointerMove={composeEventHandlers(props.onPointerMove, (event) => {
@@ -296,7 +297,7 @@ const TooltipTrigger = forwardRef<TooltipTriggerElement, TooltipTriggerProps>(
             if (event.defaultPrevented) {
               return;
             }
-            context.onTriggerChange(ref.current);
+            context.onTriggerChange(ref.current, content, side);
             context.onTriggerEnter();
             hasPointerMoveOpenedRef.current = true;
           }

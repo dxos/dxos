@@ -31,7 +31,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'object-properties',
-        position: 'hoist',
+        position: 'first',
         filter: AppSurface.object(AppSurface.ObjectProperties, Kanban.Kanban),
         component: ({ data }) => <KanbanSettings subject={data.subject} />,
       }),

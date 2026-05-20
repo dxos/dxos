@@ -53,7 +53,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'surface.object-properties',
-        position: 'hoist',
+        position: 'first',
         filter: AppSurface.object(AppSurface.ObjectProperties, Map.Map),
         component: ({ data }) => <MapViewEditor object={data.subject} />,
       }),

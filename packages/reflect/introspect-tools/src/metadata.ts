@@ -17,6 +17,17 @@ import { effectFieldsToZod } from '@dxos/effect-zod';
 import { trim } from '@dxos/util';
 
 import {
+  CapabilitySchema,
+  IdiomSchema,
+  OperationSchema,
+  PackageSchema,
+  PluginSchema,
+  SchemaSchema,
+  SurfaceSchema,
+  SymbolDetailSchema,
+  SymbolMatchSchema,
+} from './output-schemas';
+import {
   FindSymbolInput,
   GetPackageInput,
   GetSymbolInput,
@@ -53,6 +64,15 @@ export type ToolMetadata = {
    * (react-ui-form, etc.) use this directly.
    */
   inputSchema: Schema.Struct<any>;
+
+  /**
+   * Effect Schema struct describing the tool's success return shape.
+   * MCP's `structuredContent` must be a JSON object, so each tool wraps
+   * its item(s) under a stable top-level key (e.g. `{ packages: [...] }`,
+   * `{ package: null | {...} }`). Consumers building Effect AI Tools can
+   * pass this directly as `success` to `Tool.make`.
+   */
+  outputSchema: Schema.Struct<any>;
 };
 
 /**
@@ -72,6 +92,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
       Returns lightweight rows; call get_package for dependency and entry-point detail.
     `,
     inputSchema: ListPackagesInput,
+    outputSchema: Schema.Struct({ packages: Schema.Array(PackageSchema) }),
   },
   get_package: {
     title: 'Get package detail',
@@ -81,6 +102,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
       Use after list_packages or when the user references a package directly.
     `,
     inputSchema: GetPackageInput,
+    outputSchema: Schema.Struct({ package: Schema.NullOr(PackageSchema) }),
   },
   list_symbols: {
     title: 'List all exported symbols of a package',
@@ -90,6 +112,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
       Returns lightweight rows with refs you can pass to get_symbol; capped at 30 — refine with \`kind\` or call get_symbol directly.
     `,
     inputSchema: ListSymbolsInput,
+    outputSchema: Schema.Struct({ symbols: Schema.Array(SymbolMatchSchema) }),
   },
   find_symbol: {
     title: 'Find an exported symbol by name',
@@ -99,6 +122,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
       Returns refs you can pass to get_symbol. Ranking: exact match, then prefix, then substring.
     `,
     inputSchema: FindSymbolInput,
+    outputSchema: Schema.Struct({ matches: Schema.Array(SymbolMatchSchema) }),
   },
   get_symbol: {
     title: 'Get symbol detail',
@@ -108,6 +132,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
       Pass include=["source"] to expand the full declaration text, include=["jsdoc"] for the full JSDoc body.
     `,
     inputSchema: GetSymbolInput,
+    outputSchema: Schema.Struct({ symbol: Schema.NullOr(SymbolDetailSchema) }),
   },
   list_plugins: {
     title: 'List Composer plugins',
@@ -117,6 +142,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
       Filter by \`id\` substring (e.g. "markdown") to narrow the list.
     `,
     inputSchema: ListPluginsInput,
+    outputSchema: Schema.Struct({ plugins: Schema.Array(PluginSchema) }),
   },
   list_surfaces: {
     title: 'List surfaces',
@@ -126,6 +152,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
       Filter by \`id\` (plugin id) to scope to a single plugin's surfaces.
     `,
     inputSchema: ListSurfacesInput,
+    outputSchema: Schema.Struct({ surfaces: Schema.Array(SurfaceSchema) }),
   },
   list_capabilities: {
     title: 'List capability contributions',
@@ -134,6 +161,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
       keys are produced (or required) by which plugins. Filter by \`id\` (plugin id) to scope to a single plugin.
     `,
     inputSchema: ListCapabilitiesInput,
+    outputSchema: Schema.Struct({ capabilities: Schema.Array(CapabilitySchema) }),
   },
   list_operations: {
     title: 'List operations',
@@ -145,6 +173,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
       to scope to a single plugin.
     `,
     inputSchema: ListOperationsInput,
+    outputSchema: Schema.Struct({ operations: Schema.Array(OperationSchema) }),
   },
   list_schemas: {
     title: 'List schemas',
@@ -154,6 +183,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
       Filter by \`id\` (plugin id, e.g. "org.dxos.plugin.markdown") to scope to a single plugin's schemas.
     `,
     inputSchema: ListSchemasInput,
+    outputSchema: Schema.Struct({ schemas: Schema.Array(SchemaSchema) }),
   },
   list_idioms: {
     title: 'List idioms',
@@ -166,6 +196,7 @@ export const TOOL_METADATA: Record<string, ToolMetadata> = {
       (\`symbol\`, \`story\`, \`test\`).
     `,
     inputSchema: ListIdiomsInput,
+    outputSchema: Schema.Struct({ idioms: Schema.Array(IdiomSchema) }),
   },
 };
 

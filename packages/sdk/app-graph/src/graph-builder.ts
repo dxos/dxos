@@ -64,7 +64,7 @@ export type ActionGroupsExtension = (
 
 export type BuilderExtension = Readonly<{
   id: string;
-  position: Position;
+  position?: Position;
   relation?: Node.RelationInput;
   resolver?: ResolverExtension;
   connector?: (node: Atom.Atom<Option.Option<Node.Node>>) => Atom.Atom<Node.NodeArg<any>[]>;
@@ -572,7 +572,7 @@ export type CreateExtensionRawOptions = {
 export const createExtensionRaw = (extension: CreateExtensionRawOptions): BuilderExtension[] => {
   const {
     id,
-    position = 'static',
+    position,
     relation = 'child',
     resolver: _resolver,
     connector: _connector,

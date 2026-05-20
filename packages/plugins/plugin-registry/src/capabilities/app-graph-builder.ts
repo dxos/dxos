@@ -69,19 +69,19 @@ export default Capability.makeModule(
                 label: ['plugin-registry.label', { ns: meta.id }],
                 icon: 'ph--squares-four--regular',
                 disposition: 'pin-end',
-                position: 'hoist',
+                position: 'first',
                 testId: 'treeView.pluginRegistry',
               },
               nodes: [
                 Node.make({
-                  id: registryCategoryId('official'),
+                  id: registryCategoryId('bundled'),
                   type: 'category',
-                  data: registryCategoryId('official'),
+                  data: registryCategoryId('bundled'),
                   properties: {
-                    label: ['official-plugins.label', { ns: meta.id }],
+                    label: ['bundled-plugins.label', { ns: meta.id }],
                     icon: 'ph--squares-four--regular',
                     key: REGISTRY_KEY,
-                    testId: 'pluginRegistry.official',
+                    testId: 'pluginRegistry.bundled',
                   },
                 }),
                 Node.make({

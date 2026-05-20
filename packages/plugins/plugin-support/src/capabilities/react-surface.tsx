@@ -13,7 +13,6 @@ import { SupportSettings } from '#components';
 import {
   DiscordPanel,
   FeedbackPanel,
-  GithubPanel,
   HelpMenu,
   ShortcutsDialogContent,
   ShortcutsHints,
@@ -56,13 +55,9 @@ export default Capability.makeModule(() =>
         component: () => <DiscordPanel />,
       }),
       Surface.create({
-        id: 'github',
-        role: 'deck-companion--github',
-        component: () => <GithubPanel />,
-      }),
-      Surface.create({
         id: 'help-menu',
         role: 'status-indicator',
+        position: 'last',
         component: () => <HelpMenu />,
       }),
       // Generic plank companion: shows the description from the plugin that

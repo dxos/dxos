@@ -18,7 +18,7 @@ export default Capability.makeModule(() =>
         id: 'surface.map',
         role: ['article', 'section'],
         tagName: 'dx-map-surface',
-        position: 'hoist',
+        position: 'first',
         filter: (data): data is { subject: Map.Map } => Obj.instanceOf(Map.Map, data.subject),
       }),
     ]),

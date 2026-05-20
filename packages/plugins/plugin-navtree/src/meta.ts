@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.navtree',
   name: 'Navtree',
+  author: 'DXOS',
   description: trim`
     Hierarchical navigation tree for browsing spaces, folders, and objects.
     Provides sidebar navigation with collapsible sections and quick access to workspace content.

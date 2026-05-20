@@ -8,14 +8,12 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.discord',
   name: 'Discord',
+  author: 'DXOS',
   description: trim`
-    Configure and control a Discord bot from Composer.
-    Connect Discord guilds to spaces, track conversations, and manage bot identity.
+    Connect a Discord bot to your workspace so server channels stream alongside everything else you're doing.
   `,
   icon: 'ph--discord-logo--regular',
   iconHue: 'indigo',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-discord',
-  tags: ['labs'],
-  version: '0.8.3',
-  spec: 'https://unpkg.com/@dxos/plugin-discord@0.8.3/PLUGIN.mdl',
+  tags: ['labs', 'integration'],
 };
