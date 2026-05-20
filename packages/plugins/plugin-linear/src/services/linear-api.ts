@@ -2,6 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+// TODO(dxos): Restructure to match the dfx-based pattern in
+// [plugin-discord/services/discord.ts](../../../plugin-discord/src/services/discord.ts):
+// drop this hand-rolled HttpClient + GraphQL retry pipeline and expose just a
+// `makeLinearLayer(integrationRef)` Layer factory that wraps `@linear/sdk`
+// (which already covers Linear's full GraphQL surface with typed
+// pagination). Credentials and the edge proxy stay layer-provided.
+
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientError from '@effect/platform/HttpClientError';
 import * as HttpClientRequest from '@effect/platform/HttpClientRequest';

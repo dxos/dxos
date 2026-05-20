@@ -2,6 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+// TODO(dxos): Restructure to match the dfx-based pattern in
+// [plugin-discord/services/discord.ts](../../../plugin-discord/src/services/discord.ts):
+// drop this hand-rolled HttpClient + Schema + retry pipeline and expose just a
+// `makeGithubLayer(integrationRef)` Layer factory that wraps `@octokit/rest`
+// (or `@octokit/core` if we want a slimmer footprint). Credentials and the
+// edge proxy stay layer-provided; pagination, retries, and the full GitHub
+// REST type surface come from `@octokit/types`.
+
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientError from '@effect/platform/HttpClientError';
 import * as HttpClientRequest from '@effect/platform/HttpClientRequest';

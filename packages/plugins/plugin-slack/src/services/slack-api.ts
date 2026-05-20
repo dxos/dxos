@@ -2,6 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+// TODO(dxos): Restructure to match the dfx-based pattern in
+// [plugin-discord/services/discord.ts](../../../plugin-discord/src/services/discord.ts):
+// drop this hand-rolled HttpClient + Schema + retry pipeline and expose just a
+// `makeSlackLayer(integrationRef)` Layer factory that wraps a typed Slack SDK
+// (e.g. `@slack/web-api` or `slack-web-api-client`). Credentials and the edge
+// proxy stay layer-provided; everything else (pagination, retries, types) is
+// the SDK's responsibility.
+
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientError from '@effect/platform/HttpClientError';
 import * as HttpClientRequest from '@effect/platform/HttpClientRequest';

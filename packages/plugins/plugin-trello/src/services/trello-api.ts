@@ -2,6 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+// TODO(dxos): Restructure to match the dfx-based pattern in
+// [plugin-discord/services/discord.ts](../../../plugin-discord/src/services/discord.ts):
+// drop this hand-rolled HttpClient + Schema + retry pipeline and expose just a
+// `makeTrelloLayer(integrationRef)` Layer factory that wraps a typed Trello
+// client (no first-party Effect SDK exists; codegen from Trello's OpenAPI
+// spec or `trello.js` are options). Credentials and the edge proxy stay
+// layer-provided; pagination, retries, and types belong to the client.
+
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientError from '@effect/platform/HttpClientError';
 import * as HttpClientRequest from '@effect/platform/HttpClientRequest';

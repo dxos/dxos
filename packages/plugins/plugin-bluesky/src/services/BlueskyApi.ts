@@ -2,6 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+// TODO(dxos): Restructure to match the dfx-based pattern in
+// [plugin-discord/services/discord.ts](../../../plugin-discord/src/services/discord.ts):
+// drop this hand-rolled HttpClient + Schema pipeline and expose just a
+// `makeBlueskyLayer(integrationRef)` Layer factory that wraps `@atproto/api`
+// (the official AT Protocol client, fully typed). Credentials, refresh-token
+// handling, and the edge proxy stay layer-provided.
+
 // @import-as-namespace
 
 import * as HttpBody from '@effect/platform/HttpBody';
