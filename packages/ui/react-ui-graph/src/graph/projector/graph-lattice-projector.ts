@@ -60,7 +60,10 @@ export class GraphLatticeProjector<
     const { width, height } = this.context.size;
     const innerW = Math.max(0, width - 2 * margin);
     const innerH = Math.max(0, height - 2 * margin);
-    const r = this.options.radius ?? 4;
+    // Default radius matches the force-graph default (6) so cross-variant animations
+    // tween position only, not size. Consumers can pass a smaller `radius` for a
+    // denser matrix look.
+    const r = this.options.radius ?? 6;
     // Cell size sets the spacing between nodes. Cap at a small multiple of `r`
     // so the lattice stays tight rather than ballooning to fill the container;
     // wide enough that edges crossing between non-adjacent cells remain visible

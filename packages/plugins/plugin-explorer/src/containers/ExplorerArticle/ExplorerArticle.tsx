@@ -222,7 +222,24 @@ const createProjector = (
       // Force has no `duration` — its own simulation drives motion via ticks.
       return new GraphForceProjector<SpaceGraphNode>(ctx, undefined, undefined, prev);
     case 'lattice':
-      return new GraphLatticeProjector<SpaceGraphNode>(ctx, { duration: ANIMATION_DURATION_MS }, undefined, prev);
+      return new GraphLatticeProjector<SpaceGraphNode>(
+        ctx,
+        {
+          duration: ANIMATION_DURATION_MS,
+          // Plugin-explorer overrides the projector's force-matched default (6)
+          // with a smaller node so the lattice reads as a dense matrix.
+          radius: 4,
+          // Cluster by typename first so same-type rects sit together; break ties by label.
+          sortBy: (node: GraphLayoutNode<SpaceGraphNode>) => {
+            const obj = node.data?.data?.object;
+            const typename = obj ? (Obj.getTypename(obj) ?? '(untyped)') : '(untyped)';
+            const label = (obj && Obj.getLabel(obj)) ?? node.data?.data?.label ?? node.id;
+            return `${typename} ${label}`;
+          },
+        },
+        undefined,
+        prev,
+      );
     case 'cluster':
       return new GraphClusterProjector<SpaceGraphNode>(
         ctx,

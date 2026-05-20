@@ -36,6 +36,11 @@ export class GraphRadialProjector<
   }
 
   protected animate() {
+    // Cancel any in-flight tween so a fresh onUpdate doesn't race against the
+    // previous timer (both would be mutating x/y at different rates).
+    this._timer?.stop();
+    this._timer = undefined;
+
     const start = Date.now();
     if (this.options.duration) {
       this._timer = timer(() => {
@@ -60,6 +65,13 @@ export class GraphRadialProjector<
         }
       });
     } else {
+      // No duration: snap nodes to their target. Without this the layout would
+      // sit at `sx/sy/sr` (= previous positions) and never reach the new target.
+      this.layout.graph.nodes.forEach((node: any) => {
+        node.x = node.tx;
+        node.y = node.ty;
+        node.r = node.tr;
+      });
       this.onTickFrame(1);
       this.emitUpdate('positions');
     }
