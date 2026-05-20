@@ -186,7 +186,12 @@ const ProjectorVisualization = ({ variant, model, onNodeHover }: ProjectorVisual
   const renderNode = useMemo(() => createRenderNode(variant), [variant]);
 
   const handleInspect = useCallback(
-    (node: GraphLayoutNode<SpaceGraphNode>, event: MouseEvent) => {
+    (node: GraphLayoutNode<SpaceGraphNode> | null, event: MouseEvent) => {
+      // null = pointerleave: forward to the shared hover handler so it can clear any preview.
+      if (!node) {
+        onNodeHover?.(null);
+        return;
+      }
       onNodeHover?.({ id: node.id, data: node.data?.data?.object }, event);
     },
     [onNodeHover],

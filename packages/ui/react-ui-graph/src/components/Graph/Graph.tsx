@@ -34,7 +34,11 @@ export type GraphProps<Node extends Graph$.Node.Any = any, Edge extends Graph$.E
     drag?: boolean;
     arrows?: boolean;
     onSelect?: (node: GraphLayoutNode<Node>, event: MouseEvent) => void;
-    onInspect?: (node: GraphLayoutNode<Node>, event: MouseEvent) => void;
+    /**
+     * Fires on pointerenter with the hovered node, and on pointerleave with `null`.
+     * Use the `null` signal to clear hover-driven previews / highlights.
+     */
+    onInspect?: (node: GraphLayoutNode<Node> | null, event: MouseEvent) => void;
   }
 >;
 
@@ -69,12 +73,29 @@ const GraphInner = <Node extends Graph$.Node.Any = any, Edge extends Graph$.Edge
         drag: drag ? createGraphDrag(context, projector) : undefined,
         arrows: { end: arrows },
         onNodeClick: onSelect,
-        onNodePointerEnter: onInspect,
+        onNodePointerEnter: onInspect ? (node, event) => onInspect(node, event) : undefined,
+        // Pair pointerenter with leave so consumers can clear hover-driven previews.
+        // The callback receives `null` on leave (event still carries the source).
+        onNodePointerLeave: onInspect ? (_node, event) => onInspect(null, event) : undefined,
       });
     }
 
     return { projector, renderer };
-  }, [context, projectorProp, rendererProp, drag]);
+    // Renderer options are baked into the instance — re-memo when any of them change
+    // so a swapped `renderNode` / handler is actually applied.
+  }, [
+    context,
+    projectorProp,
+    rendererProp,
+    drag,
+    arrows,
+    onSelect,
+    onInspect,
+    props.labels,
+    props.subgraphs,
+    props.attributes,
+    props.renderNode,
+  ]);
 
   // External API.
   useImperativeHandle(

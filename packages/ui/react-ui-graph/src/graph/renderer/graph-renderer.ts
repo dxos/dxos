@@ -55,6 +55,8 @@ export type GraphRendererOptions<NodeData = any, EdgeData = any> = RendererOptio
   transition?: () => any;
   onNodeClick?: (node: GraphLayoutNode<NodeData>, event: MouseEvent) => void;
   onNodePointerEnter?: (node: GraphLayoutNode<NodeData>, event: MouseEvent) => void;
+  /** Fires on pointerleave from a node hit-target. Pair with `onNodePointerEnter` to clear hover state. */
+  onNodePointerLeave?: (node: GraphLayoutNode<NodeData>, event: MouseEvent) => void;
   onLinkClick?: (link: GraphLayoutEdge<NodeData, EdgeData>, event: MouseEvent) => void;
 }>;
 
@@ -288,15 +290,28 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
  * @param group
  * @param options
  */
+const SHAPE_CLASS = 'dx-shape';
+
+const renderCustomShape = <Data>(group: D3Selection, options: GraphRendererOptions<Data>) => {
+  group.each(function (d) {
+    const g = select<SVGGElement, GraphLayoutNode<Data>>(this);
+    // Clear any previous custom shape so subsequent renders pick up updated
+    // node.r / node.data without leaving stale elements behind.
+    g.selectAll(`.${SHAPE_CLASS}`).remove();
+    // Wrap the consumer's drawing in a `<g class="dx-shape">` so we have a
+    // stable selector for the cleanup above.
+    const shapeGroup = g.append('g').classed(SHAPE_CLASS, true);
+    options.renderNode!(shapeGroup, d);
+  });
+};
+
 const createNode: D3Callable = <Data>(group: D3Selection, options: GraphRendererOptions<Data>) => {
   // Custom node shape: consumer appends its own elements (e.g. <rect>) and the
   // renderer skips the default <circle>. Drag/hover handlers attach to the
   // wrapping <g> so the custom shape acts as the hit target.
   const useCustom = !!options.renderNode;
   if (useCustom) {
-    group.each(function (d) {
-      options.renderNode!(select<SVGGElement, GraphLayoutNode<Data>>(this), d);
-    });
+    renderCustomShape(group, options);
   }
   const hitTarget = useCustom ? group : group.append('circle');
 
@@ -323,10 +338,14 @@ const createNode: D3Callable = <Data>(group: D3Selection, options: GraphRenderer
   }
 
   // Hover.
-  if (options.onNodePointerEnter) {
+  if (options.onNodePointerEnter || options.onNodePointerLeave) {
     hitTarget.on('pointerenter', function (event: PointerEvent) {
       const node = select<any, GraphLayoutNode<Data>>(useCustom ? this : this.parentElement).datum();
-      options.onNodePointerEnter(node, event);
+      options.onNodePointerEnter?.(node, event);
+    });
+    hitTarget.on('pointerleave', function (event: PointerEvent) {
+      const node = select<any, GraphLayoutNode<Data>>(useCustom ? this : this.parentElement).datum();
+      options.onNodePointerLeave?.(node, event);
     });
 
     group.attr('data-hover', 'handled');
@@ -363,6 +382,14 @@ const updateNode: D3Callable = <NodeData = any, EdgeData = any>(
   group.attr('transform', (d) => {
     return d.x != null && d.y != null ? `translate(${d.x},${d.y})` : undefined;
   });
+
+  // Re-run the custom shape on every full render so a topology / data update
+  // refreshes geometry (e.g. lattice node.r changes on resize, fill changes on
+  // typename change). The cheap fast path (`applyPositions`) doesn't touch
+  // shapes, so this only runs on the rarer topology-emit code path.
+  if (options.renderNode) {
+    renderCustomShape(group, options);
+  }
 
   // Custom attributes.
   if (options.attributes?.node) {
