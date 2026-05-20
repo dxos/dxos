@@ -11,13 +11,14 @@ import { QueryBuilder } from '@dxos/echo-query';
 import { useObject } from '@dxos/react-client/echo';
 import { DxAnchorActivate, Icon, Panel, Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
+import { type SpaceGraphNode } from '@dxos/schema';
 
-import { ForceGraph } from '#components';
+import { ForceGraph, Lattice } from '#components';
 import { HierarchicalEdgeBundling, RadialTree, spaceGraphToHierarchy, type TreeNode } from '#components';
 import { useGraphModel } from '#hooks';
 
 /** Visualization variants exposed by `ExplorerArticle`. */
-export type ExplorerArticleVariant = 'force' | 'cluster' | 'bundle';
+export type ExplorerArticleVariant = 'force' | 'cluster' | 'bundle' | 'lattice';
 
 const VARIANTS: { value: ExplorerArticleVariant; icon: string; label: string }[] = [
   {
@@ -34,6 +35,11 @@ const VARIANTS: { value: ExplorerArticleVariant; icon: string; label: string }[]
     value: 'bundle',
     icon: 'ph--circles-three-plus--regular',
     label: 'Edge bundling',
+  },
+  {
+    value: 'lattice',
+    icon: 'ph--grid-four--regular',
+    label: 'Lattice',
   },
 ];
 
@@ -116,13 +122,15 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
 };
 
 const isVariant = (value: unknown): value is ExplorerArticleVariant =>
-  value === 'force' || value === 'cluster' || value === 'bundle';
+  value === 'force' || value === 'cluster' || value === 'bundle' || value === 'lattice';
 
 type VisualizationProps = {
   variant: ExplorerArticleVariant;
   model: NonNullable<ReturnType<typeof useGraphModel>>;
   onNodeHover?: (node: TreeNode | null, event?: MouseEvent) => void;
 };
+
+// TODO(burdon): Create common renderer that works across all variants to support animation.
 
 const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
   if (variant === 'force') {
@@ -135,7 +143,20 @@ const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
     );
   }
 
+  if (variant === 'lattice') {
+    return <LatticeVisualization model={model} onNodeHover={onNodeHover} />;
+  }
+
   return <HierarchyVisualization variant={variant} model={model} onNodeHover={onNodeHover} />;
+};
+
+const LatticeVisualization = ({ model, onNodeHover }: Omit<VisualizationProps, 'variant'>) => {
+  const graphSnapshot = useAtomValue(model.graphAtom);
+  const objectNodes = useMemo(
+    () => graphSnapshot.nodes.filter((node): node is SpaceGraphNode => node.type === 'object'),
+    [graphSnapshot],
+  );
+  return <Lattice nodes={objectNodes} onNodeHover={onNodeHover} />;
 };
 
 /**
@@ -145,9 +166,12 @@ const HierarchyVisualization = ({ variant, model, onNodeHover }: VisualizationPr
   // Capture the atom snapshot so the memo's dep list explicitly tracks each push from the atom.
   const graphSnapshot = useAtomValue(model.graphAtom);
   const { tree, edges } = useMemo(() => spaceGraphToHierarchy(model), [model, graphSnapshot]);
-  if (variant === 'cluster') {
-    return <RadialTree data={tree} cluster onNodeHover={onNodeHover} />;
+  switch (variant) {
+    case 'cluster':
+      return <RadialTree data={tree} cluster onNodeHover={onNodeHover} />;
+    case 'bundle':
+      return <HierarchicalEdgeBundling data={tree} edges={edges} onNodeHover={onNodeHover} />;
+    default:
+      return null;
   }
-
-  return <HierarchicalEdgeBundling data={tree} edges={edges} onNodeHover={onNodeHover} />;
 };

@@ -117,3 +117,14 @@ export const Bundle: Story = {
     variant: 'bundle',
   },
 };
+
+/**
+ * Lattice: every object as a cell in a square-as-possible CSS grid, sorted by typename so
+ * objects of the same type cluster together. Each cell is colored by its typename.
+ */
+export const LatticeStory: Story = {
+  name: 'Lattice',
+  args: {
+    variant: 'lattice',
+  },
+};
