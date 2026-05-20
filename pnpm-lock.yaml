@@ -20041,6 +20041,9 @@ importers:
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
+      '@dxos/graph-engine':
+        specifier: workspace:*
+        version: link:../../common/graph-engine
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant

@@ -7,3 +7,4 @@ export * from './fx';
 export * from './graph';
 export * from './hooks';
 export * from './util';
+export * as v2 from './v2';
