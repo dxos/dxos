@@ -54,7 +54,7 @@ export default Capability.makeModule(
                 label: ['plugin-settings.label', { ns: meta.id }],
                 icon: 'ph--gear--regular',
                 disposition: 'pin-end',
-                position: 'fallback',
+                position: 'hoist',
                 testId: 'treeView.appSettings',
               },
             }),

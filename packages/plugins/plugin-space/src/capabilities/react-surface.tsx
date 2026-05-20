@@ -384,7 +384,7 @@ export default Capability.makeModule(
       Surface.create({
         id: 'status',
         role: 'status-indicator',
-        position: 'hoist',
+        position: 'fallback',
         component: () => <SyncStatus />,
       }),
     ]);

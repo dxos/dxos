@@ -117,7 +117,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
             className='grid grid-cols-1 auto-rows-(--dx-rail-item) py-0.5 gap-0.5 overflow-y-auto scrollbar-none'
             style={iconSize(4)}
           >
-            <Surface.Surface role='status-indicator' reverse />
+            <Surface.Surface role='status-indicator' />
           </div>
           <div className='hidden lg:grid grid-cols-1 auto-rows-(--dx-rail-action) p-1'>
             <ToggleComplementarySidebarButton />

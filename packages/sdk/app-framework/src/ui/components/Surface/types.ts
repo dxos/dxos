@@ -90,9 +90,7 @@ export type Props<T extends Record<string, any> = Record<string, unknown>> = {
    * These props are not used by Surface itself but may be used by components which resolve the surface.
    * Exclude known prop names to prevent overriding well-defined props.
    */ & {
-    [K in keyof Record<string, any>]: K extends keyof CoreProps<T> | 'fallback' | 'placeholder' | 'type' | 'reverse'
-      ? never
-      : any;
+    [K in keyof Record<string, any>]: K extends keyof CoreProps<T> | 'fallback' | 'placeholder' | 'type' ? never : any;
   };
 
 /**
@@ -108,13 +106,12 @@ export type TypedProps<TToken extends RoleToken<any>> = {
   type: TToken;
   data?: TokenData<TToken>;
   limit?: number | undefined;
-  reverse?: boolean;
 } & {
   /**
    * Additional pass-through props. Known prop names are excluded so the
    * catch-all doesn't widen `data` / `type` / etc. to `any` at the intersection.
    */
-  [K in keyof Record<string, any>]: K extends 'fallback' | 'placeholder' | 'id' | 'type' | 'data' | 'limit' | 'reverse'
+  [K in keyof Record<string, any>]: K extends 'fallback' | 'placeholder' | 'id' | 'type' | 'data' | 'limit'
     ? never
     : any;
 };
@@ -146,13 +143,6 @@ export type CoreProps<T extends Record<string, any> = Record<string, unknown>> =
    * If more than one component is resolved, the limit determines how many are rendered.
    */
   limit?: number | undefined;
-
-  /**
-   * If `true`, render the matching surface contributions in reverse byPosition order.
-   * Useful for containers that are visually anchored to the end (e.g. a status bar
-   * where `hoist` should land at the bottom rather than the top).
-   */
-  reverse?: boolean;
 }>;
 
 // TODO(burdon): Remove ref since relying on this would be error prone.

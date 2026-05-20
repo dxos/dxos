@@ -186,10 +186,7 @@ SurfaceContextProvider.displayName = 'SurfaceContextProvider';
 // TODO(burdon): Remove `ref` since relying on this would be error prone.
 export const SurfaceComponent = memo(
   forwardRef<HTMLElement, Props & { type?: RoleToken<any> }>(
-    (
-      { id: _id, role, type, data: dataProp, limit, reverse, placeholder = DEFAULT_PLACEHOLDER, ...rest },
-      forwardedRef,
-    ) => {
+    ({ id: _id, role, type, data: dataProp, limit, placeholder = DEFAULT_PLACEHOLDER, ...rest }, forwardedRef) => {
       const data = useDefaultValue(dataProp, () => ({}));
       // TODO(wittjosiah): This will make all surfaces depend on a single signal.
       //   This isn't ideal because it means that any change to the data will cause all surfaces to re-render.
@@ -207,8 +204,7 @@ export const SurfaceComponent = memo(
       }
 
       // NOTE: Memoizing the candidates makes the surface not re-render based on reactivity within data.
-      const sorted = findCandidates(surfaces, { role: effectiveRole, data });
-      const definitions = reverse ? sorted.toReversed() : sorted;
+      const definitions = findCandidates(surfaces, { role: effectiveRole, data });
       const candidates = limit ? definitions.slice(0, limit) : definitions;
       if (DEBUG && candidates.length === 0) {
         log.warn('no candidates for surface', { role: effectiveRole, data });

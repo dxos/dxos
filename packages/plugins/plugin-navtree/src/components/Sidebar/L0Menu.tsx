@@ -349,9 +349,9 @@ export const L0Menu = ({
         </ScrollArea.Viewport>
       </ScrollArea.Root>
 
-      {/* Actions. Rendered bottom-up so `position: 'hoist'` lands at the visual bottom. */}
+      {/* Actions. */}
       <div className='grid grid-cols-1 auto-rows-(--dx-rail-action) pt-2'>
-        {pinnedItems.toReversed().map((item) => (
+        {pinnedItems.map((item) => (
           <L0Item key={item.id} item={item} parent={parent} path={path} pinned />
         ))}
       </div>
