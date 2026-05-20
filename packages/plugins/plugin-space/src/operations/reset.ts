@@ -52,21 +52,30 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Reset> = SpaceOperati
       });
 
       let removed = 0;
-      let removeErrors = 0;
+      const failures: Array<{ id: string; typename: string; error: string }> = [];
+      let firstError: unknown;
       for (const entity of entities) {
         try {
           space.db.remove(entity);
           removed += 1;
         } catch (err) {
-          removeErrors += 1;
-          log.warn('reset: remove threw', {
-            id: entity.id,
-            typename: Obj.getTypename(entity) ?? '<unknown>',
-            error: err instanceof Error ? err.message : String(err),
-          });
+          firstError ??= err;
+          const typename = Obj.getTypename(entity) ?? '<unknown>';
+          const message = err instanceof Error ? err.message : String(err);
+          failures.push({ id: entity.id, typename, error: message });
+          log.warn('reset: remove threw', { id: entity.id, typename, error: message });
         }
       }
-      log.info('reset: removed', { removed, removeErrors, total: entities.length });
+      log.info('reset: removed', { removed, failed: failures.length, total: entities.length });
+      if (failures.length > 0) {
+        // Bail before flush/createEpoch — proceeding would leave a partially reset space while the
+        // caller saw success.
+        throw new Error(
+          `reset failed: ${failures.length}/${entities.length} entities could not be removed` +
+            ` (first failure on ${failures[0].id} [${failures[0].typename}]: ${failures[0].error})`,
+          { cause: firstError instanceof Error ? firstError : undefined },
+        );
+      }
 
       // Rebuild the minimum structure the rest of Composer depends on so the space stays usable.
       log.info('reset: rebuilding space root');
@@ -148,8 +157,8 @@ const rebuildSpaceRoot = (space: Space): void => {
   const preservedVersion = versionKey ? (properties as Record<string, any>)[versionKey] : undefined;
   const cleared: string[] = [];
 
-  Obj.update(properties, (mutable) => {
-    const record = mutable as unknown as Record<string, any>;
+  Obj.update(properties, (properties) => {
+    const record = properties as unknown as Record<string, any>;
     for (const key of Object.keys(record)) {
       if (key === 'id' || key === '@meta') {
         continue;
