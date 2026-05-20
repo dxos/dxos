@@ -4,3 +4,4 @@
 
 export * from './types';
 export * from './draw/path';
+export * from './draw/draw-context';
