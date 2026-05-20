@@ -15,8 +15,8 @@ import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata
 import { useClient } from '@dxos/react-client';
 import { type Space, SpaceState, useQuery } from '@dxos/react-client/echo';
 import {
-  AlertDialog,
   Button,
+  Dialog,
   DropdownMenu,
   Icon,
   IconButton,
@@ -26,6 +26,7 @@ import {
 } from '@dxos/react-ui';
 import { Form, type FormFieldMap, Settings } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
+import { ConfirmReset } from '@dxos/shell/react';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
@@ -196,13 +197,10 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
   const { schemas, objects, relations, feeds } = useSpaceCounts(space);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const handleReset = useCallback(async () => {
+    await invokePromise(SpaceOperation.Reset, { space });
     setResetConfirmOpen(false);
-    try {
-      await invokePromise(SpaceOperation.Reset, { space });
-    } catch (err) {
-      log.catch(err);
-    }
   }, [space, invokePromise]);
+  const handleResetCancel = useCallback(() => setResetConfirmOpen(false), []);
 
   return (
     <Settings.Viewport>
@@ -268,30 +266,29 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
           </div>
         </Settings.Item>
         <Settings.Item title={t('reset-space.title')} description={t('reset-space.description')}>
-          <AlertDialog.Root open={resetConfirmOpen} onOpenChange={setResetConfirmOpen}>
-            <AlertDialog.Trigger asChild>
+          <Dialog.Root open={resetConfirmOpen} onOpenChange={setResetConfirmOpen}>
+            <Dialog.Trigger asChild>
               <Button variant='destructive'>{t('reset-space.label')}</Button>
-            </AlertDialog.Trigger>
-            <AlertDialog.Overlay>
-              <AlertDialog.Content>
-                <AlertDialog.Body>
-                  <AlertDialog.Title>{t('reset-space-confirm.title')}</AlertDialog.Title>
-                  <AlertDialog.Description>{t('reset-space-confirm.description')}</AlertDialog.Description>
-                </AlertDialog.Body>
-                <AlertDialog.ActionBar>
-                  <div className='grow' />
-                  <AlertDialog.Cancel asChild>
-                    <Button>{t('cancel.label')}</Button>
-                  </AlertDialog.Cancel>
-                  <AlertDialog.Action asChild>
-                    <Button variant='destructive' onClick={handleReset}>
-                      {t('reset-space-confirm.label')}
-                    </Button>
-                  </AlertDialog.Action>
-                </AlertDialog.ActionBar>
-              </AlertDialog.Content>
-            </AlertDialog.Overlay>
-          </AlertDialog.Root>
+            </Dialog.Trigger>
+            <Dialog.Overlay>
+              <Dialog.Content>
+                <Dialog.Header>
+                  <Dialog.Title>{t('reset-space-confirm.title')}</Dialog.Title>
+                </Dialog.Header>
+                <Dialog.Body>
+                  <Dialog.Description classNames='sr-only'>{t('reset-space-confirm.description')}</Dialog.Description>
+                  <ConfirmReset
+                    active
+                    title={t('reset-space-confirm.title')}
+                    message={t('reset-space-confirm.description')}
+                    confirmLabel={t('reset-space.label')}
+                    onConfirm={handleReset}
+                    onCancel={handleResetCancel}
+                  />
+                </Dialog.Body>
+              </Dialog.Content>
+            </Dialog.Overlay>
+          </Dialog.Root>
         </Settings.Item>
       </Settings.Section>
     </Settings.Viewport>

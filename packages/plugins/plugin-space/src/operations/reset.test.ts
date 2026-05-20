@@ -2,16 +2,24 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { describe, onTestFinished, test } from 'vitest';
 
+import { Capability } from '@dxos/app-framework';
 import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
 import { Filter, Obj, Relation } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { runAndForwardErrors } from '@dxos/effect';
+import { type Space } from '@dxos/react-client/echo';
 
 import reset from './reset';
-import { SpaceOperation } from './definitions';
+
+// The handler is wired against `Capability.Service` because the operation definition declares it,
+// but `reset.ts` does not consume the service. A stub keeps the effect's requirement satisfied for
+// direct invocation outside the framework runtime.
+const invokeReset = (space: Space) =>
+  runAndForwardErrors(reset.handler({ space }).pipe(Effect.provideService(Capability.Service, {} as any)));
 
 describe('SpaceOperation.Reset', () => {
   test('removes all user objects from the space', async ({ expect }) => {
@@ -21,7 +29,7 @@ describe('SpaceOperation.Reset', () => {
     const beforeUser = beforeAll.filter((object) => Obj.getTypename(object) === TestSchema.Expando.typename);
     expect(beforeUser).toHaveLength(3);
 
-    await runAndForwardErrors(reset.handler({ space } as SpaceOperation.Reset.Input));
+    await invokeReset(space);
     await space.db.flush();
 
     const afterAll = await space.db.query(Filter.everything()).run();
@@ -59,7 +67,7 @@ describe('SpaceOperation.Reset', () => {
     const beforeRelations = beforeEntities.filter(Relation.isRelation);
     expect(beforeRelations).toHaveLength(1);
 
-    await runAndForwardErrors(reset.handler({ space } as SpaceOperation.Reset.Input));
+    await invokeReset(space);
     await space.db.flush();
 
     const afterEntities = await space.db.query(Filter.everything()).run();
@@ -80,7 +88,7 @@ describe('SpaceOperation.Reset', () => {
       'expected the registered Expando schema to be present in the space schema registry before reset',
     ).toBeGreaterThan(0);
 
-    await runAndForwardErrors(reset.handler({ space } as SpaceOperation.Reset.Input));
+    await invokeReset(space);
     await space.db.flush();
 
     const afterSchemas = space.db.schemaRegistry.query().runSync();
