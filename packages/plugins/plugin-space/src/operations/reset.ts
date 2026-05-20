@@ -2,12 +2,22 @@
 
 import * as Effect from 'effect/Effect';
 
+import { LegacySpaceProperties, SpaceProperties } from '@dxos/client-protocol';
 import { type Space } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Filter, Obj, Relation } from '@dxos/echo';
+import { Collection, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { Migrations } from '@dxos/migrations';
 
 import { SpaceOperation } from './definitions';
+
+/**
+ * Typenames the reset operation must NOT remove. Without `SpaceProperties` (or
+ * `LegacySpaceProperties`), `SpaceProxy._initializeDb` never wakes its `propertiesAvailable`
+ * trigger on the next session start, so `space.properties` throws "Space is not initialized."
+ * and every container that reads it crashes.
+ */
+const SYSTEM_TYPENAMES = new Set<string>([SpaceProperties.typename, LegacySpaceProperties.typename]);
 
 const handler: Operation.WithHandler<typeof SpaceOperation.Reset> = SpaceOperation.Reset.pipe(
   Operation.withHandler((input) =>
@@ -16,9 +26,14 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Reset> = SpaceOperati
       log.info('reset: invoked', { spaceId: space.id });
 
       log.info('reset: snapshotting entities');
-      const entities = snapshotEntities(space);
+      const allEntities = snapshotEntities(space);
+      const entities = allEntities.filter((entity) => !SYSTEM_TYPENAMES.has(Obj.getTypename(entity) ?? ''));
+      const preserved = allEntities.length - entities.length;
       const relations = entities.filter(Relation.isRelation);
       const objects = entities.filter((entity) => !Relation.isRelation(entity));
+      if (preserved > 0) {
+        log.info('reset: preserving system entities', { preserved });
+      }
 
       log.info('reset: reading schema registry');
       const schemas = space.db.schemaRegistry.query().runSync();
@@ -52,6 +67,10 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Reset> = SpaceOperati
         }
       }
       log.info('reset: removed', { removed, removeErrors, total: entities.length });
+
+      // Rebuild the minimum structure the rest of Composer depends on so the space stays usable.
+      log.info('reset: rebuilding space root');
+      rebuildSpaceRoot(space);
 
       log.info('reset: flushing');
       await space.db.flush();
@@ -104,4 +123,56 @@ const snapshotEntities = (space: Space): Obj.Unknown[] => {
   } finally {
     unsubscribe();
   }
+};
+
+/**
+ * Schema-defined keys on `SpaceProperties` that survive a reset. Anything else on the open
+ * `{ key: string, value: any }` record (Ref to the root Collection, plugin-specific anchors, etc.)
+ * points to objects we just removed — leaving those refs in place produces "not found" errors in
+ * containers that load them. We blank them out and re-seed the root Collection so the navtree
+ * has something to render.
+ */
+const SPACE_PROPERTY_TYPED_KEYS = new Set<string>([
+  'archived',
+  'edgeReplication',
+  'invocationTraceFeed',
+  'computeEnvironment',
+  'name',
+  'icon',
+  'hue',
+]);
+
+const rebuildSpaceRoot = (space: Space): void => {
+  const properties = space.properties;
+  const versionKey = Migrations.versionProperty;
+  const preservedVersion = versionKey ? (properties as Record<string, any>)[versionKey] : undefined;
+  const cleared: string[] = [];
+
+  Obj.update(properties, (mutable) => {
+    const record = mutable as unknown as Record<string, any>;
+    for (const key of Object.keys(record)) {
+      if (key === 'id' || key === '@meta') {
+        continue;
+      }
+      if (SPACE_PROPERTY_TYPED_KEYS.has(key)) {
+        continue;
+      }
+      if (versionKey && key === versionKey) {
+        continue;
+      }
+      delete record[key];
+      cleared.push(key);
+    }
+
+    // Re-seed the root Collection (the navtree anchor).
+    record[Collection.Collection.typename] = Ref.make(Collection.make());
+
+    // Make sure the migrations version still pins the schema at the latest known target so the
+    // reloaded space doesn't fall into SPACE_REQUIRES_MIGRATION.
+    if (versionKey) {
+      record[versionKey] = preservedVersion ?? Migrations.targetVersion;
+    }
+  });
+
+  log.info('reset: space root rebuilt', { cleared });
 };
