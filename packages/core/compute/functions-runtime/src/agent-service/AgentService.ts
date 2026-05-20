@@ -137,7 +137,9 @@ export const layer = (opts?: {
               return cached;
             }
 
-            const target = Obj.getDXN(feed).toString();
+            const feedDxn = Obj.getDXN(feed);
+            const target = feedDxn.toString();
+            const spaceId = feedDxn.asEchoDXN()?.spaceId;
             const executable = AgentProcess({
               systemPrompt: opts?.systemPrompt,
               model: options?.model ?? opts?.model,
@@ -153,6 +155,7 @@ export const layer = (opts?: {
               handle = yield* processManager.spawn(executable, {
                 name: 'agent',
                 target,
+                environment: spaceId ? { space: spaceId } : undefined,
                 traceMeta: {
                   conversationId: feed.id,
                 },

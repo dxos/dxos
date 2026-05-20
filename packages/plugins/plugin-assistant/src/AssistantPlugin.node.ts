@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
+import { ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { AiContext } from '@dxos/assistant';
 import { Agent, Chat, McpServer, Memory, Plan } from '@dxos/assistant-toolkit';
@@ -12,8 +12,17 @@ import { Feed } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { HasSubject, Message } from '@dxos/types';
 
-import { AppGraphBuilder, BlueprintDefinition, CreateObject, OperationHandler } from '#capabilities';
+import {
+  AiService,
+  AppGraphBuilder,
+  BlueprintDefinition,
+  CreateObject,
+  EdgeModelResolver,
+  LocalModelResolver,
+  OperationHandler,
+} from '#capabilities';
 import { meta } from '#meta';
+import { AssistantEvents } from '#types';
 
 export const AssistantPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
@@ -37,6 +46,19 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
       Memory.Memory,
       Text.Text,
     ],
+  }),
+  Plugin.addModule({
+    activatesOn: AssistantEvents.SetupAiServiceProviders,
+    activate: EdgeModelResolver,
+  }),
+  Plugin.addModule({
+    activatesOn: AssistantEvents.SetupAiServiceProviders,
+    activate: LocalModelResolver,
+  }),
+  Plugin.addModule({
+    firesBeforeActivation: [AssistantEvents.SetupAiServiceProviders],
+    activatesOn: ActivationEvents.SetupProcessManager,
+    activate: AiService,
   }),
   Plugin.make,
 );
