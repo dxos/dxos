@@ -23,11 +23,10 @@ describe('build-index sidecar', { timeout: 60_000 }, () => {
   });
 
   test('emits version >= 2 with an idioms array', ({ expect }) => {
-    const result = spawnSync(
-      'pnpm',
-      ['exec', 'tsx', '--conditions=source', SCRIPT, '--root', FIXTURE_ROOT],
-      { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
-    );
+    const result = spawnSync('pnpm', ['exec', 'tsx', '--conditions=source', SCRIPT, '--root', FIXTURE_ROOT], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
     expect(result.status, result.stderr || result.stdout).toBe(0);
 
     const sidecar = JSON.parse(readFileSync(PLUGINS_PATH, 'utf8'));
