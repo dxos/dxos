@@ -105,7 +105,7 @@ const RoastLog = S.Struct({
   ),
   notes: S.optional(S.String.pipe(S.annotations({ title: 'Notes' }))),
 }).pipe(
-  Type.object({ typename: 'com.bramblecoffee.type.roast-log', version: '0.1.0' }),
+  Type.object({ typename: 'com.bramblecoffee.type.roastLog', version: '0.1.0' }),
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({ icon: 'ph--fire-simple--regular', hue: 'amber' }),
 );
@@ -1057,7 +1057,7 @@ const addRoastLogCollection = async (space: Space): Promise<Collection.Collectio
   const entries = makeRoastLogs();
   entries.forEach((entry) => space.db.add(entry));
 
-  const typename = 'com.bramblecoffee.type.roast-log';
+  const typename = 'com.bramblecoffee.type.roastLog';
 
   const { view: tableView } = await ViewModel.makeFromDatabase({
     db: space.db,
