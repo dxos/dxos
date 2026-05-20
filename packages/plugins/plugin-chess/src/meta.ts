@@ -20,4 +20,5 @@ export const meta: Plugin.Meta = {
   dependsOn: [gameMeta.id],
   version: '0.8.3',
   spec: 'https://unpkg.com/@dxos/plugin-chess@0.8.3/PLUGIN.mdl',
+  tags: ['game'],
 };

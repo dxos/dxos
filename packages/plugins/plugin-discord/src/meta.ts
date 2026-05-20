@@ -14,5 +14,5 @@ export const meta: Plugin.Meta = {
   icon: 'ph--discord-logo--regular',
   iconHue: 'indigo',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-discord',
-  tags: ['labs'],
+  tags: ['labs', 'integration'],
 };

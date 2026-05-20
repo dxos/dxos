@@ -19,4 +19,5 @@ export const meta: Plugin.Meta = {
   dependsOn: [gameMeta.id],
   version: '0.8.3',
   spec: 'https://unpkg.com/@dxos/plugin-tictactoe@0.8.3/PLUGIN.mdl',
+  tags: ['labs', 'game'],
 };
