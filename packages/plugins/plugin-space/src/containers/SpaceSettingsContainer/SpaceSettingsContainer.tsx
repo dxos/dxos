@@ -270,25 +270,29 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
             <Dialog.Trigger asChild>
               <Button variant='destructive'>{t('reset-space.label')}</Button>
             </Dialog.Trigger>
-            <Dialog.Overlay>
-              <Dialog.Content>
-                <Dialog.Header>
-                  <Dialog.Title>{t('reset-space-confirm.title')}</Dialog.Title>
-                </Dialog.Header>
-                <Dialog.Body>
-                  <Dialog.Description classNames='sr-only'>{t('reset-space-confirm.description')}</Dialog.Description>
-                  <ConfirmReset
-                    active
-                    title={t('reset-space-confirm.title')}
-                    message={t('reset-space-confirm.description')}
-                    confirmLabel={t('reset-space.label')}
-                    errorMessage={t('reset-space-failed.message')}
-                    onConfirm={handleReset}
-                    onCancel={handleResetCancel}
-                  />
-                </Dialog.Body>
-              </Dialog.Content>
-            </Dialog.Overlay>
+            <Dialog.Portal>
+              <Dialog.Overlay>
+                <Dialog.Content>
+                  <Dialog.Header>
+                    <Dialog.Title>{t('reset-space-confirm.title')}</Dialog.Title>
+                  </Dialog.Header>
+                  <Dialog.Body>
+                    <Dialog.Description classNames='sr-only'>
+                      {t('reset-space-confirm.description')}
+                    </Dialog.Description>
+                    <ConfirmReset
+                      active
+                      title={t('reset-space-confirm.title')}
+                      message={t('reset-space-confirm.description')}
+                      confirmLabel={t('reset-space.label')}
+                      errorMessage={t('reset-space-failed.message')}
+                      onConfirm={handleReset}
+                      onCancel={handleResetCancel}
+                    />
+                  </Dialog.Body>
+                </Dialog.Content>
+              </Dialog.Overlay>
+            </Dialog.Portal>
           </Dialog.Root>
         </Settings.Item>
       </Settings.Section>
