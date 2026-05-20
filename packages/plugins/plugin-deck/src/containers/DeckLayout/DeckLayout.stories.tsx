@@ -48,7 +48,6 @@ const storyDeckSettings = Capability.makeModule(() =>
     const settingsAtom = Atom.make<Settings.Settings>({
       showHints: false,
       enableDeck: true,
-      enableStatusbar: false,
       enableNativeRedirect: false,
       encapsulatedPlanks: false,
     }).pipe(Atom.keepAlive);

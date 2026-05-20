@@ -2,11 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import { formatDistance, isValid } from 'date-fns';
 import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
+import { useConfig } from '@dxos/react-client';
 import { DropdownMenu, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { isTauri } from '@dxos/util';
 
@@ -27,6 +29,10 @@ const DOWNLOAD_URL = 'https://web.crabnebula.cloud/dxos/composer/releases';
 export const HelpMenu = () => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
+  const config = useConfig();
+  const { version, timestamp } = config.values.runtime?.app?.build ?? {};
+  const releasedAt = timestamp ? new Date(timestamp) : undefined;
+  const released = releasedAt && isValid(releasedAt) ? releasedAt : undefined;
 
   const openDialog = useCallback(
     (subject: string) => () => {
@@ -87,6 +93,18 @@ export const HelpMenu = () => {
               <Icon icon='ph--info--regular' size={4} />
               <span className='ml-2'>{t('about.label')}</span>
             </DropdownMenu.Item>
+            {version && (
+              <div className='ps-8 pe-2 pb-2 flex flex-col text-xs text-description'>
+                <span className='font-mono'>{version}</span>
+                {released && (
+                  <span>
+                    {t('released.message', {
+                      released: formatDistance(released, new Date(), { addSuffix: true }),
+                    })}
+                  </span>
+                )}
+              </div>
+            )}
           </DropdownMenu.Viewport>
           <DropdownMenu.Arrow />
         </DropdownMenu.Content>
