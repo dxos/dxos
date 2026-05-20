@@ -16,3 +16,4 @@ export * from './projector/force-projector';
 export * from './router/router';
 export * from './router/straight-router';
 export * from './tool/tool';
+export * from './tool/hover-tool';
