@@ -1082,11 +1082,9 @@ const addRoastLogCollection = async (space: Space): Promise<Collection.Collectio
   });
   const kanbanObj = space.db.add(Kanban.make({ name: 'Kanban', view: kanbanView }));
 
-  // Table and Kanban go first in the collection so they're visible at the top.
   return makeCollection(space, 'Roast Log', [
     Ref.make(tableObj),
     Ref.make(kanbanObj),
-    ...entries.map((e) => Ref.make(e)),
   ]);
 };
 
