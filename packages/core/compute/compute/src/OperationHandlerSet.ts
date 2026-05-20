@@ -7,6 +7,7 @@
 import { type Atom, type Registry } from '@effect-atom/atom';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 
 import { runAndForwardErrors } from '@dxos/effect';
@@ -82,8 +83,12 @@ export const reactive = (
   registry.subscribe(atom, () => {
     cached = null;
   });
+  // `suspend` defers `registry.get(atom)` until each run, so re-evaluations
+  // after cache invalidation see the current contributed sets.
   const compute = Effect.suspend(() =>
-    Effect.forEach(registry.get(atom), (set) => set.handlers, { concurrency: 'unbounded' }).pipe(
+    pipe(
+      registry.get(atom),
+      Effect.forEach((set) => set.handlers, { concurrency: 'unbounded' }),
       Effect.map((groups) => groups.flat()),
       // Reset cached on failure so a transient error doesn't permanently
       // poison subsequent calls.
