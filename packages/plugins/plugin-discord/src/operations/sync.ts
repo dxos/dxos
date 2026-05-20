@@ -218,9 +218,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
                         ),
                       ] as const,
                   ),
-                  Effect.catchAll(() =>
-                    Effect.succeed([guild.id, [] as ReadonlyArray<GuildChannelResponse>] as const),
-                  ),
+                  Effect.catchAll(() => Effect.succeed([guild.id, [] as ReadonlyArray<GuildChannelResponse>] as const)),
                 ),
               { concurrency: 4 },
             );

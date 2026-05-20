@@ -38,7 +38,7 @@ export const discordErrorStatus = (error: unknown): number | undefined => {
   if (
     Predicate.isRecord(error) &&
     Predicate.isRecord((error as { response?: unknown }).response) &&
-    typeof ((error as { response: { status?: unknown } }).response.status) === 'number'
+    typeof (error as { response: { status?: unknown } }).response.status === 'number'
   ) {
     return (error as { response: { status: number } }).response.status;
   }
