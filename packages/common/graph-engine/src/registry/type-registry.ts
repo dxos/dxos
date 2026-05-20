@@ -1,0 +1,32 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { type EdgeHandler, type NodeHandler } from './handlers';
+import { defaultEdgeHandler, defaultNodeHandler } from './default-handlers';
+
+type Typed = { type?: string };
+
+/**
+ * Maps node/edge `type` to its handler. Resolves to a built-in default when missing.
+ */
+export class TypeRegistry<NodeData = any, EdgeData = any> {
+  #nodes = new Map<string, NodeHandler<NodeData>>();
+  #edges = new Map<string, EdgeHandler<NodeData, EdgeData>>();
+
+  registerNode(type: string, handler: NodeHandler<NodeData>): void {
+    this.#nodes.set(type, handler);
+  }
+
+  registerEdge(type: string, handler: EdgeHandler<NodeData, EdgeData>): void {
+    this.#edges.set(type, handler);
+  }
+
+  resolveNode(node: Typed): NodeHandler<NodeData> {
+    return (node.type ? this.#nodes.get(node.type) : undefined) ?? (defaultNodeHandler as NodeHandler<NodeData>);
+  }
+
+  resolveEdge(edge: Typed): EdgeHandler<NodeData, EdgeData> {
+    return (edge.type ? this.#edges.get(edge.type) : undefined) ?? (defaultEdgeHandler as EdgeHandler<NodeData, EdgeData>);
+  }
+}

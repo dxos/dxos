@@ -9,3 +9,5 @@ export * from './event-emitter';
 export * from './viewport';
 export * from './tween/tween-service';
 export * from './registry/handlers';
+export * from './registry/type-registry';
+export * from './registry/default-handlers';
