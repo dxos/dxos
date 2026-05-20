@@ -46,11 +46,6 @@ export type GraphRendererOptions<NodeData = any, EdgeData = any> = RendererOptio
   onLinkClick?: (link: GraphLayoutEdge<NodeData, EdgeData>, event: MouseEvent) => void;
 }>;
 
-// TODO(burdon): Perf
-// - Leaking JS event listeners.
-// - Don't update unless data changes.
-// - Cache subgraph components in layout.
-
 /**
  * Renders the Graph layout.
  */

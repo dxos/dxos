@@ -69,6 +69,11 @@ export const Lattice = ({ nodes, padding = 16, onNodeHover }: LatticeProps) => {
       padding,
       onNodeHover: (n, e) => handleHoverRef.current?.(n, e),
     });
+    // Clear any pinned preview when the lattice unmounts or re-renders, so the
+    // shared hover target doesn't keep pointing at a cell that no longer exists.
+    return () => {
+      handleHoverRef.current?.(null);
+    };
   }, [cells, width, height, padding]);
 
   return (
@@ -98,6 +103,7 @@ const renderLattice = (svgElement: SVGSVGElement, cells: LatticeCell[], options:
   const svg = select(svgElement);
 
   if (!cells.length) {
+    onNodeHover(null);
     svg.selectAll('g.dx-lattice-root').remove();
     return;
   }

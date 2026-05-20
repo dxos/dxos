@@ -156,6 +156,7 @@ const LatticeVisualization = ({ model, onNodeHover }: Omit<VisualizationProps, '
     () => graphSnapshot.nodes.filter((node): node is SpaceGraphNode => node.type === 'object'),
     [graphSnapshot],
   );
+
   return <Lattice nodes={objectNodes} onNodeHover={onNodeHover} />;
 };
 
