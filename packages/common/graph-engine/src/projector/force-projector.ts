@@ -77,16 +77,15 @@ export class ForceProjector<NodeData = any, EdgeData = any> extends Projector<No
     });
 
     const nodeById = new Map(nodes.map((n) => [n.id, n]));
-    const edges: LayoutEdge<NodeData, EdgeData>[] = graph.edges
-      .map((e) => {
-        const source = nodeById.get(e.source);
-        const target = nodeById.get(e.target);
-        if (!source || !target) {
-          return undefined;
-        }
-        return { id: e.id, type: e.type, data: e.data as EdgeData | undefined, source, target };
-      })
-      .filter((e): e is LayoutEdge<NodeData, EdgeData> => e !== undefined);
+    const edges: LayoutEdge<NodeData, EdgeData>[] = [];
+    for (const e of graph.edges) {
+      const source = nodeById.get(e.source);
+      const target = nodeById.get(e.target);
+      if (!source || !target) {
+        continue;
+      }
+      edges.push({ id: e.id, type: e.type, data: e.data as EdgeData | undefined, source, target });
+    }
 
     this.#layout = { nodes, edges };
 

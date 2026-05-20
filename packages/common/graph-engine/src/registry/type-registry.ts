@@ -5,7 +5,11 @@
 import { type EdgeHandler, type NodeHandler } from './handlers';
 import { defaultEdgeHandler, defaultNodeHandler } from './default-handlers';
 
-type Typed = { type?: string };
+/**
+ * Minimum shape resolveNode/resolveEdge need from input. Any object with optional `type`.
+ * Compatible with both `Graph.Node.Any` / `Graph.Edge.Any` from @dxos/graph and our LayoutNode/LayoutEdge.
+ */
+type Typed = { id: string; type?: string };
 
 /**
  * Maps node/edge `type` to its handler. Resolves to a built-in default when missing.
