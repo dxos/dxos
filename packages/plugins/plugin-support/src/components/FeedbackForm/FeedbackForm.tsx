@@ -67,9 +67,9 @@ export const FeedbackForm = ({ onSave, onDiscord, discordPresence, disabled, onD
               {discordPresence && (discordPresence.teamOnline > 0 || discordPresence.communityOnline > 0) && (
                 <p className='text-xs text-description text-center px-2'>
                   {[
-                    discordPresence.teamOnline > 0 && t('discord-presence.team', { count: discordPresence.teamOnline }),
+                    discordPresence.teamOnline > 0 && t('discord-presence-team.label', { count: discordPresence.teamOnline }),
                     discordPresence.communityOnline > 0 &&
-                      t('discord-presence.community', { count: discordPresence.communityOnline }),
+                      t('discord-presence-community.label', { count: discordPresence.communityOnline }),
                   ]
                     .filter(Boolean)
                     .join(' · ') + ' online'}
