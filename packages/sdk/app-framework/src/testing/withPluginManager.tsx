@@ -21,13 +21,11 @@ import { type UseAppOptions, useApp } from '../ui';
 export const setupPluginManager = ({
   capabilities,
   plugins = [],
-  core = plugins.map(({ meta }) => meta.id),
   ...options
 }: UseAppOptions & Pick<WithPluginManagerOptions, 'capabilities'> = {}) => {
   const pluginManager = PluginManager.make({
     pluginLoader: () => raise(new Error('Not implemented')),
     plugins: [StoryPlugin, ...plugins],
-    core: [StoryPlugin.meta.id, ...core],
     ...options,
   });
 
@@ -120,6 +118,7 @@ const WithPluginManagerApp = ({ fireEvents, pluginManager, setupEvents, storyId 
 const storyMeta = {
   id: 'org.dxos.app-framework.story',
   name: 'Story',
+  tags: ['system'],
 };
 
 // No-op plugin to ensure there exists at least one plugin for the startup event.

@@ -70,7 +70,6 @@ export type UseAppOptions = {
   onPluginRemove?: PluginManager.ManagerOptions['onRemove'];
   pluginRegistryProvider?: PluginManager.ManagerOptions['pluginRegistryProvider'];
   plugins?: Plugin.Plugin[];
-  core?: string[];
   defaults?: string[];
   /**
    * Additional activation events to fire before startup.
@@ -91,10 +90,9 @@ export type UseAppOptions = {
  *
  * @example
  * const plugins = [LayoutPlugin(), MyPlugin()];
- * const core = [LayoutPluginId];
  * const default = [MyPluginId];
  * const fallback = <div>Initializing Plugins...</div>;
- * const App = useApp({ plugins, core, default, fallback });
+ * const App = useApp({ plugins, default, fallback });
  * createRoot(document.getElementById('root')!).render(
  *   <StrictMode>
  *     <App />
@@ -102,8 +100,7 @@ export type UseAppOptions = {
  * );
  *
  * @param params.pluginLoader A function which loads new plugins.
- * @param params.plugins All plugins available to the application.
- * @param params.core Core plugins which will always be enabled. When omitted, defaults to plugins whose `meta.tags` includes `'system'`.
+ * @param params.plugins All plugins available to the application. Plugins whose `meta.tags` includes `'system'` are treated as core (force-enabled, not user-toggleable).
  * @param params.defaults Default plugins are enabled by default but can be disabled by the user.
  * @param params.cacheEnabled Whether to cache enabled plugins in localStorage.
  * @param params.safeMode Whether to enable safe mode, which disables optional plugins.
@@ -116,7 +113,6 @@ export const useApp = ({
   onPluginRemove,
   pluginRegistryProvider,
   plugins: pluginsProp,
-  core: coreProp,
   defaults: defaultsProp,
   setupEvents: setupEventsProp,
   placeholder,
@@ -164,14 +160,13 @@ export const useApp = ({
       PluginManager.make({
         pluginLoader,
         plugins,
-        core: coreProp,
         enabled,
         onRemove: onPluginRemove,
         pluginRegistryProvider,
       });
     log('useApp: useMemo created/reused manager', { provided: !!pluginManager });
     return mgr;
-  }, [pluginManager, pluginLoader, plugins, coreProp, enabled, onPluginRemove, pluginRegistryProvider]);
+  }, [pluginManager, pluginLoader, plugins, enabled, onPluginRemove, pluginRegistryProvider]);
 
   useEffect(() => {
     if (!cacheEnabled) {
