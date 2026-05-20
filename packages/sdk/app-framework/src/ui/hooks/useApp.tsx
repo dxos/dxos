@@ -91,7 +91,7 @@ export type UseAppOptions = {
  * @example
  * const plugins = [LayoutPlugin(), MyPlugin()];
  * const defaults = [MyPluginId];
- * const fallback = <div>Initializing Plugins...</div>;
+ * const fallback = () => <div>Initializing Plugins...</div>;
  * const App = useApp({ plugins, defaults, fallback });
  * createRoot(document.getElementById('root')!).render(
  *   <StrictMode>
