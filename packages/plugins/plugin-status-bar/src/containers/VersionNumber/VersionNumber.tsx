@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { formatDistance } from 'date-fns/formatDistance';
+import { formatDistance, isValid } from 'date-fns';
 import React from 'react';
 
 import { useConfig } from '@dxos/react-client';
@@ -25,9 +25,11 @@ export const VersionNumber = (_props: VersionNumberProps) => {
     return null;
   }
 
+  const releasedAt = timestamp ? new Date(timestamp) : undefined;
   const released =
-    timestamp &&
-    t('released.message', { released: formatDistance(new Date(timestamp), new Date(), { addSuffix: true }) });
+    releasedAt && isValid(releasedAt)
+      ? t('released.message', { released: formatDistance(releasedAt, new Date(), { addSuffix: true }) })
+      : undefined;
 
   const content = (
     <div className='flex flex-col items-start gap-0.5'>

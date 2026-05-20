@@ -38,7 +38,7 @@ const makeConfig = ({ build, env }: ConfigInput = {}) =>
     },
   });
 
-const recentTimestamp = () => new Date(Date.now() - Math.random() * 24 * 3600 * 1000).toISOString();
+const FIXED_TIMESTAMP = '2026-05-19T20:34:24.000Z';
 
 const meta = {
   title: 'plugins/plugin-support/containers/HelpMenu',
@@ -61,7 +61,7 @@ export const Default: Story = {
       config: makeConfig({
         build: {
           version: '0.8.3-beta.b78990fdd5',
-          timestamp: recentTimestamp(),
+          timestamp: FIXED_TIMESTAMP,
           commitHash: 'b78990fdd5',
         },
         env: { DX_ENVIRONMENT: 'development' },
@@ -76,7 +76,7 @@ export const Production: Story = {
       config: makeConfig({
         build: {
           version: '0.8.3',
-          timestamp: recentTimestamp(),
+          timestamp: FIXED_TIMESTAMP,
           commitHash: 'b78990fdd5',
         },
         env: { DX_ENVIRONMENT: 'production' },
