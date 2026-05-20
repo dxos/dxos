@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
+import { DiscordREST } from 'dfx';
+import type { GuildChannelResponse, MessageResponse, MyGuildResponse } from 'dfx/types';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 
 import { Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
@@ -19,7 +19,7 @@ import { meta } from '#meta';
 
 import { DEFAULT_DAYS_OF_HISTORY, DISCORD_SOURCE, snowflakeForTimestamp } from '../constants';
 import { formatDiscordSyncFailure } from '../errors';
-import { DiscordApi, makeEdgeProxyHttpClientLayer } from '../services';
+import { makeDiscordLayer } from '../services';
 import { DiscordOperation } from '../types';
 
 /**
@@ -28,6 +28,9 @@ import { DiscordOperation } from '../types';
  * is enough for any realistic "I want context" scenario.
  */
 const MAX_DAYS_OF_HISTORY = 365 * 3;
+
+const GUILD_PAGE_LIMIT = 200;
+const MESSAGE_PAGE_LIMIT = 100;
 
 /**
  * Compute the initial sync cursor for a Discord channel.
@@ -50,9 +53,6 @@ const computeInitialCursor = (cursor: string | undefined, options: { daysOfHisto
   const days = typeof raw === 'number' && raw > 0 ? Math.min(raw, MAX_DAYS_OF_HISTORY) : DEFAULT_DAYS_OF_HISTORY;
   return snowflakeForTimestamp(Date.now() - days * 24 * 60 * 60 * 1000);
 };
-
-type DiscordChannel = DiscordApi.DiscordChannel;
-type DiscordMessage = DiscordApi.DiscordMessage;
 
 /** Pull reconcile result. */
 export type PullResult = {
@@ -79,7 +79,7 @@ export type PullResult = {
  * Returns `undefined` for non-default messages (joins, pins, calls, ...) so
  * the chronological feed isn't polluted with system notices.
  */
-const mapDiscordMessage = (message: DiscordMessage): Message.Message | undefined => {
+const mapDiscordMessage = (message: MessageResponse): Message.Message | undefined => {
   // Discord message type 0 is DEFAULT; 19 is REPLY (still a real chat message).
   const type = message.type ?? 0;
   if (type !== 0 && type !== 19) {
@@ -88,13 +88,7 @@ const mapDiscordMessage = (message: DiscordMessage): Message.Message | undefined
   const text = message.content;
   const blocks: ContentBlock.Any[] = text.length > 0 ? [{ _tag: 'text', text } as ContentBlock.Text] : [];
 
-  const referenced =
-    typeof message.referenced_message === 'object' &&
-    message.referenced_message !== null &&
-    'id' in message.referenced_message &&
-    typeof (message.referenced_message as { id: unknown }).id === 'string'
-      ? ((message.referenced_message as { id: string }).id as string)
-      : undefined;
+  const referenced = message.referenced_message?.id;
 
   const senderName =
     (message.author.global_name && message.author.global_name.length > 0 ? message.author.global_name : undefined) ??
@@ -112,7 +106,7 @@ const mapDiscordMessage = (message: DiscordMessage): Message.Message | undefined
   });
 };
 
-const friendlyChannelName = (channel: DiscordChannel, guildName?: string): string => {
+const friendlyChannelName = (channel: GuildChannelResponse, guildName?: string): string => {
   const base = channel.name ? `#${channel.name}` : channel.id;
   return guildName ? `${base} — ${guildName}` : base;
 };
@@ -137,7 +131,7 @@ export const findChannelForDiscordChannel: (
  * the same `(space, channel)` returns the same Channel.
  */
 export const findOrCreateChannelForDiscordChannel: (
-  channel: DiscordChannel,
+  channel: GuildChannelResponse,
   guildName?: string,
 ) => Effect.Effect<Channel.Channel, never, Database.Service> = Effect.fn('findOrCreateChannelForDiscordChannel')(
   function* (channel, guildName) {
@@ -161,18 +155,13 @@ const TARGET_CONCURRENCY = 3;
  * Pull-only. Per target:
  *  1. Resolve (or materialize) the local Channel keyed by the Discord channel id.
  *  2. Ask Discord for messages with id greater than `target.cursor` (or from
- *     the beginning of time on first sync via `after='0'`).
+ *     "now minus daysOfHistory" on first sync).
  *  3. Map each Discord message → `@dxos/types` Message and append the batch to
  *     the channel's feed.
  *  4. Update `target.cursor` to the largest id seen so the next sync is incremental.
  *
  * Failure on one target writes `lastError` on that target only and continues
  * with the next; targets are processed in parallel up to `TARGET_CONCURRENCY`.
- *
- * `Database.Service` and `Feed.FeedService` are provided inside the handler.
- * The integration's `target` ref carries the database; the space (and its
- * `queues`, used to build `Feed.FeedService`) is resolved via the Client
- * capability — same shape as plugin-slack / plugin-thread's `AppendChannelMessage`.
  */
 const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel> =
   DiscordOperation.SyncDiscordChannel.pipe(
@@ -194,21 +183,48 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
         const outcome = yield* Effect.either(
           Effect.gen(function* () {
             const integrationObj = yield* Database.load(integration);
+            const rest = yield* DiscordREST;
 
-            // Enumerate guilds + channels up front so we can resolve every
-            // selected target id without per-target round-trips.
-            const guilds = yield* DiscordApi.fetchGuilds();
+            // Drain guild pagination up front so we can resolve every selected
+            // target id without per-target round-trips.
+            const guilds: MyGuildResponse[] = [];
+            {
+              let after: string | undefined;
+              while (true) {
+                const page = yield* rest.listMyGuilds(
+                  after ? { limit: GUILD_PAGE_LIMIT, after } : { limit: GUILD_PAGE_LIMIT },
+                );
+                guilds.push(...page);
+                if (page.length < GUILD_PAGE_LIMIT) {
+                  break;
+                }
+                after = page[page.length - 1].id;
+              }
+            }
             const guildById = new Map(guilds.map((guild) => [guild.id, guild]));
             const channelsByGuild = yield* Effect.forEach(
               guilds,
               (guild) =>
-                DiscordApi.fetchGuildChannels(guild.id).pipe(
-                  Effect.map((channels) => [guild.id, channels] as const),
-                  Effect.catchAll(() => Effect.succeed([guild.id, [] as ReadonlyArray<DiscordChannel>] as const)),
+                rest.listGuildChannels(guild.id).pipe(
+                  // Same narrow as get-discord-channels: text + announcement
+                  // are the only shapes we sync, and they're the only types
+                  // present on the GuildChannelResponse branch we want here.
+                  Effect.map(
+                    (channels) =>
+                      [
+                        guild.id,
+                        channels.filter(
+                          (channel): channel is GuildChannelResponse => channel.type === 0 || channel.type === 5,
+                        ),
+                      ] as const,
+                  ),
+                  Effect.catchAll(() =>
+                    Effect.succeed([guild.id, [] as ReadonlyArray<GuildChannelResponse>] as const),
+                  ),
                 ),
               { concurrency: 4 },
             );
-            const channelById = new Map<string, { channel: DiscordChannel; guildId: string }>();
+            const channelById = new Map<string, { channel: GuildChannelResponse; guildId: string }>();
             for (const [guildId, channels] of channelsByGuild) {
               for (const channel of channels) {
                 channelById.set(channel.id, { channel, guildId });
@@ -220,7 +236,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
               entry: (typeof integrationObj.targets)[number];
               channel: Channel.Channel;
               discordChannelId: string;
-              discordChannel: DiscordChannel;
+              discordChannel: GuildChannelResponse;
               guildName: string | undefined;
             };
             const targetEntries: TargetEntry[] = [];
@@ -274,11 +290,30 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
                   const result = yield* Effect.either(
                     Effect.gen(function* () {
                       const targetEntry = integrationObj.targets.find((entry) => entry.remoteId === discordChannelId);
-                      const after = computeInitialCursor(
+                      const initialAfter = computeInitialCursor(
                         targetEntry?.cursor,
                         targetEntry?.options as { daysOfHistory?: number } | undefined,
                       );
-                      const messages = yield* DiscordApi.fetchHistory(discordChannelId, { after });
+
+                      // Drain message pagination. Discord returns newest-first
+                      // within a page even when paging by `after`; sort each
+                      // page ascending so the final list is chronological and
+                      // the cursor we persist is the largest id seen.
+                      const messages: MessageResponse[] = [];
+                      let after = initialAfter;
+                      while (true) {
+                        const page = yield* rest.listMessages(discordChannelId, { after, limit: MESSAGE_PAGE_LIMIT });
+                        if (page.length === 0) {
+                          break;
+                        }
+                        const sorted = [...page].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+                        messages.push(...sorted);
+                        if (sorted.length < MESSAGE_PAGE_LIMIT) {
+                          break;
+                        }
+                        after = sorted[sorted.length - 1].id;
+                      }
+
                       if (messages.length === 0) {
                         return { added: 0 };
                       }
@@ -361,8 +396,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
           }).pipe(
             Effect.provide(Database.layer(db)),
             Effect.provide(createFeedServiceLayer(space.queues)),
-            Effect.provide(DiscordApi.DiscordCredentials.fromIntegration(integration)),
-            Effect.provide(FetchHttpClient.layer.pipe(Layer.provide(makeEdgeProxyHttpClientLayer()))),
+            Effect.provide(makeDiscordLayer(integration)),
           ),
         );
 

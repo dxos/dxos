@@ -6,29 +6,55 @@ import * as Predicate from 'effect/Predicate';
 
 import { BaseError } from '@dxos/errors';
 
-const DISCORD_API_ERROR_MESSAGE = 'Discord API returned an error.' as const;
-
 /**
- * Discord returned a non-2xx response with a JSON body carrying `{ code, message }`.
- *
- * Surfaced as a typed BaseError so `formatDiscordSyncFailure` can produce a
- * stable user-facing string and callers can `.is()` for known auth-revoked
- * cases (e.g. `code: 0` from 401 unauthorized).
+ * Discord returned a non-2xx response. dfx surfaces these as
+ * `DiscordRestError<'ErrorResponse', ErrorResponse>` (4xx other than 429) or
+ * `DiscordRestError<'RatelimitedResponse', RatelimitedResponse>` (429).
+ * `cause` carries the parsed Discord body `{ code, message }` and `response`
+ * exposes the HTTP status. We pattern-match on `_tag` rather than reaching
+ * for `instanceof` because dfx's tag is the stable identity surfaced through
+ * `Effect.catchTag`.
  */
-export class DiscordApiError extends BaseError.extend('DiscordApiError', DISCORD_API_ERROR_MESSAGE) {}
+type DfxErrorResponseShape = {
+  readonly _tag: 'ErrorResponse';
+  readonly cause: { readonly code?: number; readonly message?: string };
+  readonly response: { readonly status: number };
+};
+
+type DfxRatelimitedResponseShape = {
+  readonly _tag: 'RatelimitedResponse';
+  readonly cause: { readonly code?: number; readonly message?: string; readonly retry_after?: number };
+  readonly response: { readonly status: number };
+};
+
+export const isDiscordErrorResponse = (error: unknown): error is DfxErrorResponseShape =>
+  Predicate.isRecord(error) && error._tag === 'ErrorResponse';
+
+export const isDiscordRatelimited = (error: unknown): error is DfxRatelimitedResponseShape =>
+  Predicate.isRecord(error) && error._tag === 'RatelimitedResponse';
+
+/** Read the HTTP status from a dfx Discord error if present. */
+export const discordErrorStatus = (error: unknown): number | undefined => {
+  if (
+    Predicate.isRecord(error) &&
+    Predicate.isRecord((error as { response?: unknown }).response) &&
+    typeof ((error as { response: { status?: unknown } }).response.status) === 'number'
+  ) {
+    return (error as { response: { status: number } }).response.status;
+  }
+  return undefined;
+};
 
 /**
  * User-facing / persisted diagnostic string for failures from Discord sync paths.
  */
 export const formatDiscordSyncFailure = (error: unknown): string => {
-  if (DiscordApiError.is(error)) {
-    const context = error.context as { code?: unknown; message?: unknown };
-    if (typeof context.message === 'string' && context.message.length > 0) {
-      return typeof context.code === 'number'
-        ? `Discord API error ${context.code}: ${context.message}`
-        : `Discord API error: ${context.message}`;
+  if (isDiscordErrorResponse(error) || isDiscordRatelimited(error)) {
+    const { code, message } = error.cause;
+    if (typeof message === 'string' && message.length > 0) {
+      return typeof code === 'number' ? `Discord API error ${code}: ${message}` : `Discord API error: ${message}`;
     }
-    return typeof context.code === 'number' ? `Discord API error ${context.code}` : DISCORD_API_ERROR_MESSAGE;
+    return typeof code === 'number' ? `Discord API error ${code}` : `Discord API error (HTTP ${error.response.status})`;
   }
   if (error instanceof BaseError) {
     const keys = Object.keys(error.context);

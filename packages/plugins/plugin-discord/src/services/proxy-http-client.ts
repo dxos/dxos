@@ -8,6 +8,18 @@ import * as Layer from 'effect/Layer';
 import { proxyFetchLegacy } from '@dxos/edge-client';
 
 /**
+ * Discord's REST docs say a valid bot User-Agent is required and the format is
+ * `DiscordBot ($url, $versionNumber)`. Without it, requests to guild-scoped
+ * endpoints intermittently 403 with the unhelpful `40333 internal network
+ * error` code (other endpoints like `/users/@me/guilds` are more permissive,
+ * which is why bot identity / guild-list calls succeed without it but the
+ * `/guilds/{id}/channels` lookup fails). Set it via the proxy's override
+ * prefix because browsers refuse to let JS set `User-Agent` directly.
+ */
+const USER_AGENT_OVERRIDE_HEADER = 'X-Cors-Proxy-User-Agent';
+const DISCORD_BOT_USER_AGENT = 'DiscordBot (https://dxos.org, 0.1.0)';
+
+/**
  * Build an `@effect/platform` HttpClient layer that routes every request
  * through the integration proxy.
  *
@@ -32,5 +44,9 @@ import { proxyFetchLegacy } from '@dxos/edge-client';
 export const makeEdgeProxyHttpClientLayer = (): Layer.Layer<FetchHttpClient.Fetch> =>
   Layer.succeed(FetchHttpClient.Fetch, ((input, init) => {
     const url = input instanceof URL ? input : new URL(typeof input === 'string' ? input : input.url);
-    return proxyFetchLegacy(url, init);
+    const headers = new Headers(init?.headers ?? undefined);
+    if (!headers.has(USER_AGENT_OVERRIDE_HEADER)) {
+      headers.set(USER_AGENT_OVERRIDE_HEADER, DISCORD_BOT_USER_AGENT);
+    }
+    return proxyFetchLegacy(url, { ...init, headers });
   }) as typeof fetch);
