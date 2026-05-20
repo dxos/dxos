@@ -2,12 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-// TODO(dxos): Restructure to match the dfx-based pattern in
-// [plugin-discord/services/discord.ts](../../../plugin-discord/src/services/discord.ts):
-// drop this hand-rolled HttpClient + Schema pipeline and expose just a
-// `makeBlueskyLayer(integrationRef)` Layer factory that wraps `@atproto/api`
-// (the official AT Protocol client, fully typed). Credentials, refresh-token
-// handling, and the edge proxy stay layer-provided.
+// TODO(dxos): Extract an Effect-native Bluesky / AT Protocol client
+// mirroring the shape of `dfx` (see
+// [plugin-discord/services/discord.ts](../../../plugin-discord/src/services/discord.ts)
+// for how the consumer side ends up). The target shape is a standalone
+// package exposing:
+//   - `BlueskyXRPC` Context.Tag with typed methods generated from the
+//     `@atproto/lexicon` schemas (`com.atproto.*`, `app.bsky.*`);
+//   - `BlueskyConfig` layer carrying service URL + session credentials;
+//   - `BlueskySessionLive` layer that owns the access/refresh token pair
+//     and transparently refreshes via `com.atproto.server.refreshSession`
+//     on 401 (today this lives inline as `withSession` here);
+//   - tagged errors for the AT Protocol error shape (`{ error, message }`).
+// This plugin would then collapse to a thin
+// `makeBlueskyLayer(integrationRef)` that just wires credentials + edge
+// proxy into that client.
 
 // @import-as-namespace
 

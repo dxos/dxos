@@ -2,13 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-// TODO(dxos): Restructure to match the dfx-based pattern in
-// [plugin-discord/services/discord.ts](../../../plugin-discord/src/services/discord.ts):
-// drop this hand-rolled HttpClient + Schema + retry pipeline and expose just a
-// `makeTrelloLayer(integrationRef)` Layer factory that wraps a typed Trello
-// client (no first-party Effect SDK exists; codegen from Trello's OpenAPI
-// spec or `trello.js` are options). Credentials and the edge proxy stay
-// layer-provided; pagination, retries, and types belong to the client.
+// TODO(dxos): Extract an Effect-native Trello client mirroring the shape of
+// `dfx` (see [plugin-discord/services/discord.ts](../../../plugin-discord/src/services/discord.ts)
+// for how the consumer side ends up). The target shape is a standalone
+// package exposing:
+//   - `TrelloREST` Context.Tag with typed methods (`boards.list`,
+//     `cards.list`, `boards.update`, …) generated from Trello's published
+//     OpenAPI spec;
+//   - `TrelloConfig` layer carrying key + token + base URL;
+//   - `TrelloRESTMemoryLive` layer composing the REST client with a memory-
+//     backed rate-limit store (Trello: 300 req / 10s per key per token);
+//   - tagged errors for non-2xx responses with Trello's `{ message }` body.
+// This plugin would then collapse to a thin `makeTrelloLayer(integrationRef)`
+// that just wires credentials + edge proxy into that client.
 
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientError from '@effect/platform/HttpClientError';

@@ -2,13 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-// TODO(dxos): Restructure to match the dfx-based pattern in
-// [plugin-discord/services/discord.ts](../../../plugin-discord/src/services/discord.ts):
-// drop this hand-rolled HttpClient + Schema + retry pipeline and expose just a
-// `makeSlackLayer(integrationRef)` Layer factory that wraps a typed Slack SDK
-// (e.g. `@slack/web-api` or `slack-web-api-client`). Credentials and the edge
-// proxy stay layer-provided; everything else (pagination, retries, types) is
-// the SDK's responsibility.
+// TODO(dxos): Extract an Effect-native Slack client mirroring the shape of
+// `dfx` (see [plugin-discord/services/discord.ts](../../../plugin-discord/src/services/discord.ts)
+// for how the consumer side ends up). The target shape is a standalone
+// package — call it `sfx` or similar — that exposes:
+//   - `SlackREST` Context.Tag with typed methods (`conversations.history`,
+//     `users.info`, …) generated from Slack's Web API OpenAPI spec;
+//   - `SlackConfig` layer carrying token + base URL;
+//   - `SlackRESTMemoryLive` layer composing the REST client with a memory-
+//     backed rate-limit store (Slack's tier-1..4 buckets);
+//   - tagged errors for `ErrorResponse` / `RatelimitedResponse`.
+// This plugin would then collapse to a thin `makeSlackLayer(integrationRef)`
+// that just wires credentials + edge proxy into that client.
 
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientError from '@effect/platform/HttpClientError';

@@ -2,13 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
-// TODO(dxos): Restructure to match the dfx-based pattern in
-// [plugin-discord/services/discord.ts](../../../plugin-discord/src/services/discord.ts):
-// drop this hand-rolled HttpClient + Schema + retry pipeline and expose just a
-// `makeGithubLayer(integrationRef)` Layer factory that wraps `@octokit/rest`
-// (or `@octokit/core` if we want a slimmer footprint). Credentials and the
-// edge proxy stay layer-provided; pagination, retries, and the full GitHub
-// REST type surface come from `@octokit/types`.
+// TODO(dxos): Extract an Effect-native GitHub client mirroring the shape of
+// `dfx` (see [plugin-discord/services/discord.ts](../../../plugin-discord/src/services/discord.ts)
+// for how the consumer side ends up). The target shape is a standalone
+// package exposing:
+//   - `GithubREST` Context.Tag with typed methods (`repos.listIssues`,
+//     `users.getAuthenticated`, …) generated from GitHub's OpenAPI spec
+//     (`github/rest-api-description`);
+//   - `GithubConfig` layer carrying token + base URL (for GHES support);
+//   - `GithubRESTMemoryLive` layer composing the REST client with a memory-
+//     backed rate-limit store that honors `X-RateLimit-Reset` and the
+//     secondary abuse-detection retry-after header;
+//   - tagged errors for 4xx (with GitHub's `{ message, documentation_url }`
+//     body) and 429/403-secondary rate-limit responses.
+// This plugin would then collapse to a thin `makeGithubLayer(integrationRef)`
+// that just wires credentials + edge proxy into that client.
 
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientError from '@effect/platform/HttpClientError';

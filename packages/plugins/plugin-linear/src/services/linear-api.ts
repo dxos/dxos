@@ -2,12 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-// TODO(dxos): Restructure to match the dfx-based pattern in
-// [plugin-discord/services/discord.ts](../../../plugin-discord/src/services/discord.ts):
-// drop this hand-rolled HttpClient + GraphQL retry pipeline and expose just a
-// `makeLinearLayer(integrationRef)` Layer factory that wraps `@linear/sdk`
-// (which already covers Linear's full GraphQL surface with typed
-// pagination). Credentials and the edge proxy stay layer-provided.
+// TODO(dxos): Extract an Effect-native Linear client mirroring the shape of
+// `dfx` (see [plugin-discord/services/discord.ts](../../../plugin-discord/src/services/discord.ts)
+// for how the consumer side ends up). Linear is GraphQL, not REST, so the
+// target package shape is:
+//   - `LinearGraphQL` Context.Tag exposing typed `query` / `mutate` /
+//     paginated-connection helpers generated from Linear's introspection
+//     schema (one operation per `*.graphql` document in the package);
+//   - `LinearConfig` layer carrying token + base URL;
+//   - `LinearGraphQLMemoryLive` layer composing the client with a memory-
+//     backed rate-limit store that honors Linear's complexity-based
+//     `X-RateLimit-Requests-Remaining` / `X-Complexity-Limit-Reset` headers;
+//   - tagged errors for `GraphQLError` with Linear's `extensions.code`.
+// This plugin would then collapse to a thin `makeLinearLayer(integrationRef)`
+// that just wires credentials + edge proxy into that client.
 
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientError from '@effect/platform/HttpClientError';
