@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.sketch',
   name: 'Sketch',
+  author: 'DXOS',
   description: trim`
     Lightweight digital whiteboard for quick sketches and visual thinking.
     Draw freehand, add shapes and annotations, and collaborate in real-time on simple diagrams.

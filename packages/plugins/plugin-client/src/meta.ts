@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.client',
   name: 'Client',
+  author: 'DXOS',
   description: trim`
     Core client connectivity and peer-to-peer networking infrastructure.
     Manages identity, authentication, and real-time synchronization across devices.

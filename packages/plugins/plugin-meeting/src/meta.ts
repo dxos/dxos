@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.meeting',
   name: 'Meetings',
+  author: 'DXOS',
   description: trim`
     Comprehensive meeting management tool that captures notes, generates real-time transcriptions, and creates AI-powered summaries.
     Automatically organize meeting records with timestamps and action items.
