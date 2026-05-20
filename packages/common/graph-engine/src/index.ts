@@ -8,3 +8,4 @@ export * from './draw/draw-context';
 export * from './event-emitter';
 export * from './viewport';
 export * from './tween/tween-service';
+export * from './registry/handlers';

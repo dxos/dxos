@@ -38,6 +38,10 @@
     "d3-force": "catalog:"
   },
   "devDependencies": {
-    "@types/d3": "catalog:"
+    "@types/d3": "catalog:",
+    "@types/react": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "catalog:"
   }
 }

@@ -3996,6 +3996,9 @@ importers:
       '@types/d3':
         specifier: 'catalog:'
         version: 7.4.3
+      '@types/react':
+        specifier: ~19.2.7
+        version: 19.2.14
 
   packages/common/hypercore:
     dependencies:
