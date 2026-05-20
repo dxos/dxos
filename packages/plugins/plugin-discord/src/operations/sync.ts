@@ -18,7 +18,7 @@ import { Channel, ContentBlock, Message } from '@dxos/types';
 import { meta } from '#meta';
 
 import { DEFAULT_DAYS_OF_HISTORY, DISCORD_SOURCE, snowflakeForTimestamp } from '../constants';
-import { IntegrationDatabaseMissingError, formatDiscordSyncFailure } from '../errors';
+import { formatDiscordSyncFailure } from '../errors';
 import { DiscordApi, makeEdgeProxyHttpClientLayer } from '../services';
 import { DiscordOperation } from '../types';
 
@@ -179,9 +179,7 @@ const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel>
     Effect.fn(function* ({ integration, channel: channelRef }) {
       const integrationTarget = integration.target;
       const db = integrationTarget ? Obj.getDatabase(integrationTarget) : undefined;
-      if (!db) {
-        return yield* Effect.fail(new IntegrationDatabaseMissingError());
-      }
+      invariant(db, 'No database for integration ref — invoker did not provide Database.layer.');
 
       const client = yield* Capability.get(ClientCapabilities.Client);
       const space = client.spaces.get(db.spaceId);
