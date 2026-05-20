@@ -197,7 +197,14 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
   const { schemas, objects, relations, feeds } = useSpaceCounts(space);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
   const handleReset = useCallback(async () => {
-    await invokePromise(SpaceOperation.Reset, { space });
+    log.info('reset: confirmed in dialog', { spaceId: space.id });
+    try {
+      await invokePromise(SpaceOperation.Reset, { space });
+      log.info('reset: invocation resolved', { spaceId: space.id });
+    } catch (err) {
+      log.catch(err, { stage: 'reset: invocation rejected', spaceId: space.id });
+      throw err;
+    }
     setResetConfirmOpen(false);
   }, [space, invokePromise]);
   const handleResetCancel = useCallback(() => setResetConfirmOpen(false), []);
