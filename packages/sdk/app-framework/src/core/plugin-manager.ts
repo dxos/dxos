@@ -99,6 +99,10 @@ export type LoadedPlugin = {
 export type ManagerOptions = {
   pluginLoader: (id: string) => Effect.Effect<LoadedPlugin, Error>;
   plugins?: Plugin.Plugin[];
+  /**
+   * Plugin ids treated as core (force-enabled, not user-toggleable). When omitted,
+   * defaults to every plugin in `plugins` whose `meta.tags` includes `'system'`.
+   */
   core?: string[];
   enabled?: string[];
   registry?: Registry.Registry;
@@ -333,7 +337,7 @@ class ManagerImpl implements PluginManager {
   constructor({
     pluginLoader,
     plugins = [],
-    core = plugins.map(({ meta }) => meta.id),
+    core = plugins.filter(({ meta }) => meta.tags?.includes('system')).map(({ meta }) => meta.id),
     enabled = [],
     registry,
     pluginRegistryProvider,

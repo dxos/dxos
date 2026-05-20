@@ -103,7 +103,7 @@ export type UseAppOptions = {
  *
  * @param params.pluginLoader A function which loads new plugins.
  * @param params.plugins All plugins available to the application.
- * @param params.core Core plugins which will always be enabled.
+ * @param params.core Core plugins which will always be enabled. When omitted, defaults to plugins whose `meta.tags` includes `'system'`.
  * @param params.defaults Default plugins are enabled by default but can be disabled by the user.
  * @param params.cacheEnabled Whether to cache enabled plugins in localStorage.
  * @param params.safeMode Whether to enable safe mode, which disables optional plugins.
@@ -127,7 +127,6 @@ export const useApp = ({
   timeout = 30_000,
 }: UseAppOptions) => {
   const plugins = useDefaultValue(pluginsProp, () => []);
-  const core = useDefaultValue(coreProp, () => plugins.map(({ meta }) => meta.id));
   const defaults = useDefaultValue(defaultsProp, () => []);
   const setupEvents = useDefaultValue(setupEventsProp, () => []);
 
@@ -165,14 +164,14 @@ export const useApp = ({
       PluginManager.make({
         pluginLoader,
         plugins,
-        core,
+        core: coreProp,
         enabled,
         onRemove: onPluginRemove,
         pluginRegistryProvider,
       });
     log('useApp: useMemo created/reused manager', { provided: !!pluginManager });
     return mgr;
-  }, [pluginManager, pluginLoader, plugins, core, enabled, onPluginRemove, pluginRegistryProvider]);
+  }, [pluginManager, pluginLoader, plugins, coreProp, enabled, onPluginRemove, pluginRegistryProvider]);
 
   useEffect(() => {
     if (!cacheEnabled) {
