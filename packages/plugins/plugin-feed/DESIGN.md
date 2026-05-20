@@ -27,7 +27,15 @@ Posts are immutable feed entries. All post-creation mutation moves to side maps 
 `Subscription.Post` collapses to feed-entry fields only:
 
 ```typescript
-Post: { source, title, link, description, author, published, guid }
+type Post = {
+  source: Ref<Subscription>;
+  title?: string;
+  link?: string;
+  description?: string;
+  author?: string;
+  published?: string;
+  guid?: string;
+};
 ```
 
 No `snippet`, `imageUrl`, `content`, `readAt`, `tags`, `rank`, `archived` on the Post itself.
