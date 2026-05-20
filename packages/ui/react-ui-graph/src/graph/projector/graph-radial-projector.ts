@@ -53,10 +53,6 @@ export class GraphRadialProjector<
           node.r = node.sr + (node.tr - node.sr) * d;
         });
 
-        // Subclass hook: update derived state (e.g. edge paths) that depends on
-        // current node positions before the renderer's positions-only path runs.
-        this.onTickFrame(d);
-
         // Tween frames only mutate `x/y/r`; emit 'positions' so the renderer can fast-path.
         this.emitUpdate('positions');
         if (t >= 1) {
@@ -72,13 +68,9 @@ export class GraphRadialProjector<
         node.y = node.ty;
         node.r = node.tr;
       });
-      this.onTickFrame(1);
       this.emitUpdate('positions');
     }
   }
-
-  /** Override to update layout-dependent state each tween frame. `t` is the eased progress 0..1. */
-  protected onTickFrame(_t: number): void {}
 
   protected override async onStop() {
     this._timer?.stop();

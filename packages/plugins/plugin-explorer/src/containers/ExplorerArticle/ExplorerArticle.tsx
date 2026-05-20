@@ -157,8 +157,6 @@ type ProjectorVisualizationProps = {
   onNodeHover?: (node: TreeNode | null, event?: MouseEvent) => void;
 };
 
-const ANIMATION_DURATION_MS = 500;
-
 /**
  * One persistent `<SVG.Graph>` mount for the three projector-based variants
  * (force / lattice / cluster). When the variant changes, a new projector is
@@ -225,7 +223,9 @@ const createProjector = (
       return new GraphLatticeProjector<SpaceGraphNode>(
         ctx,
         {
-          duration: ANIMATION_DURATION_MS,
+          // No `duration`: snap directly to the target. Tweening the layout while edge
+          // paths are precomputed at the final positions leaves lines disconnected from
+          // nodes mid-flight.
           // Plugin-explorer overrides the projector's force-matched default (6)
           // with a smaller node so the lattice reads as a dense matrix.
           radius: 4,
@@ -244,7 +244,9 @@ const createProjector = (
       return new GraphClusterProjector<SpaceGraphNode>(
         ctx,
         {
-          duration: ANIMATION_DURATION_MS,
+          // No `duration`: cluster's edge paths are precomputed against d3.cluster's
+          // final polar positions; tweening nodes without also tweening paths produces
+          // visibly-disconnected lines. Snap to target so endpoints stay coincident.
           groupOf: (node: GraphLayoutNode<SpaceGraphNode>) => {
             const obj = node.data?.data?.object;
             return obj ? (Obj.getTypename(obj) ?? '(untyped)') : undefined;

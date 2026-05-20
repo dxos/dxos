@@ -52,17 +52,16 @@ const radialLink = linkRadial<any, any>()
  *   identifies which is which).
  * - Computes radial-elbow `path` strings on each hierarchy edge so the
  *   renderer doesn't need to know about polar coordinates.
- * - Derives current edge paths from current node cartesian positions each
- *   animation frame, so edges visually follow nodes during cross-variant
- *   tweens instead of snapping to the final state.
+ *
+ * The precomputed paths are fixed at the d3.cluster polar layout — they
+ * don't follow per-frame tweens. Pair this projector with a no-duration
+ * animate() (i.e. `duration: undefined`) so the layout snaps directly to
+ * the target and node + path endpoints always coincide.
  */
 export class GraphClusterProjector<
   NodeData = any,
   Options extends GraphClusterProjectorOptions = any,
 > extends GraphRadialProjector<NodeData, Options> {
-  /** Stable target polar coords per hierarchy id, captured by `doClusterLayout`. */
-  #targetPolarById = new Map<string, { angle: number; radius: number }>();
-
   protected override onUpdate(graph?: Graph.Any) {
     log('onUpdate', { graph: { nodes: graph?.nodes.length, edges: graph?.edges.length } });
     this.mergeData(graph);
@@ -122,10 +121,6 @@ export class GraphClusterProjector<
 
     d3Cluster<HierNode>().size([2 * Math.PI, ringRadius])(root);
 
-    // Track target polar coords for each hierarchy id so per-frame edge derivation
-    // can fall back to known angles for nodes whose cartesian position is at the origin.
-    this.#targetPolarById.clear();
-
     const leafR = this.options.leafRadius ?? 4;
     const groupR = this.options.groupRadius ?? 3;
     const rootR = this.options.rootRadius ?? 5;
@@ -138,7 +133,6 @@ export class GraphClusterProjector<
       const radius = d.y;
       const x = Math.cos(angle - Math.PI / 2) * radius;
       const y = Math.sin(angle - Math.PI / 2) * radius;
-      this.#targetPolarById.set(id, { angle, radius });
 
       if (d.data.node) {
         // Real leaf — tween its position.
@@ -185,47 +179,4 @@ export class GraphClusterProjector<
     });
     this.layout.graph.edges = hierarchyEdges;
   }
-
-  /**
-   * Recompute every hierarchy edge's path from current node positions each frame.
-   * Converts cartesian (x, y) → polar (angle, radius) so `linkRadial`'s curveBumpRadial
-   * stays glued to the tweening leaves and groups.
-   */
-  protected override onTickFrame(_t: number): void {
-    const edges = this.layout.graph.edges;
-    if (!edges.length) {
-      return;
-    }
-    for (const edge of edges) {
-      const source = edge.source;
-      const target = edge.target;
-      if (!source || !target) {
-        continue;
-      }
-      const sPolar = cartesianToPolar(source);
-      const tPolar = cartesianToPolar(target);
-      // For nodes pinned at the origin (root) atan2 is degenerate — borrow the target's
-      // angle so the curve still bows in the right direction.
-      if (sPolar.radius === 0) {
-        sPolar.angle = tPolar.angle;
-      }
-      const path = radialLink({
-        source: { x: sPolar.angle, y: sPolar.radius },
-        target: { x: tPolar.angle, y: tPolar.radius },
-      });
-      if (path) {
-        edge.path = path;
-      }
-    }
-  }
 }
-
-const cartesianToPolar = (node: { x?: number; y?: number }): { angle: number; radius: number } => {
-  const x = node.x ?? 0;
-  const y = node.y ?? 0;
-  const radius = Math.sqrt(x * x + y * y);
-  // Map back to d3-cluster's convention (angle=0 at 12 o'clock, increasing clockwise).
-  // Inverse of `[r*cos(angle - π/2), r*sin(angle - π/2)]` is `angle = atan2(y, x) + π/2`.
-  const angle = Math.atan2(y, x) + Math.PI / 2;
-  return { angle, radius };
-};
