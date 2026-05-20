@@ -884,6 +884,20 @@ const makeNotes = (
 // canvas content is always in the exact format the installed tldraw version
 // expects. @tldraw/tlschema and @tldraw/store have no DOM dependencies and
 // work fine in Node.js.
+//
+// ⚠️  tldraw v3 IndexKey rules (fractional indexing):
+//   - Every shape and page needs an `index` field that is a valid IndexKey.
+//   - Valid format: one or more lowercase letters followed by digits/alphanumeric
+//     (e.g. 'a1', 'a2', 'a9', 'a10', 'a1J', 'b0V').
+//   - INVALID: single-letter keys like 'a', 'b'; or bare-letter-then-digit
+//     patterns that don't survive fractional-index round-trips like 'b1', 'b2'.
+//     These look reasonable but throw at `store.put()` time:
+//       ValidationError: At shape(type = geo).index: Expected an index key, got "b2"
+//   - Safe rule: use 'a1', 'a2', … 'a9', 'a10', 'a11', … for sequential shapes
+//     on a single page.  Never use 'b1', 'b2', etc. as a "next row".
+//   - The error is silently swallowed by plugin-sketch's useAsyncEffect, so a
+//     bad index key results in an empty canvas with no console error in the UI.
+//   - Upstream reference: packages/plugins/plugin-sketch/src/hooks/useStoreAdapter.ts
 // -----------------------------------------------------------------------------
 
 // Minimal tldraw v3 schema with geo shapes only.
@@ -921,7 +935,9 @@ const makeTLCanvas = (
  *
  * @param id   - Shape ID suffix (prefixed with `shape:`).
  * @param page - Parent page ID (e.g. `'page:bramble-floor'`).
- * @param idx  - Fractional-index key (e.g. `'a1'`, `'a2'`).
+ * @param idx  - Fractional-index key. Use 'a1', 'a2', … 'a9', 'a10', 'a11', …
+ *   for sequential shapes. Do NOT use 'b1', 'b2', etc. — those fail tldraw v3
+ *   IndexKey validation and silently produce an empty canvas in the UI.
  */
 const tlGeo = (
   id: string,
