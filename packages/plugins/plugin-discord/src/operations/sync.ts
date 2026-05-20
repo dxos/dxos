@@ -174,217 +174,221 @@ const TARGET_CONCURRENCY = 3;
  * `queues`, used to build `Feed.FeedService`) is resolved via the Client
  * capability — same shape as plugin-slack / plugin-thread's `AppendChannelMessage`.
  */
-const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel> = DiscordOperation.SyncDiscordChannel.pipe(
-  Operation.withHandler(
-    Effect.fn(function* ({ integration, channel: channelRef }) {
-      const integrationTarget = integration.target;
-      const db = integrationTarget ? Obj.getDatabase(integrationTarget) : undefined;
-      invariant(db, 'No database for integration ref — invoker did not provide Database.layer.');
+const handler: Operation.WithHandler<typeof DiscordOperation.SyncDiscordChannel> =
+  DiscordOperation.SyncDiscordChannel.pipe(
+    Operation.withHandler(
+      Effect.fn(function* ({ integration, channel: channelRef }) {
+        const integrationTarget = integration.target;
+        const db = integrationTarget ? Obj.getDatabase(integrationTarget) : undefined;
+        invariant(db, 'No database for integration ref — invoker did not provide Database.layer.');
 
-      const client = yield* Capability.get(ClientCapabilities.Client);
-      const space = client.spaces.get(db.spaceId);
-      invariant(space, 'Space not found');
+        const client = yield* Capability.get(ClientCapabilities.Client);
+        const space = client.spaces.get(db.spaceId);
+        invariant(space, 'Space not found');
 
-      const integrationId = integration.dxn.asEchoDXN()?.echoId ?? 'unknown';
-      const toastIdSuffix = channelRef
-        ? `${integrationId}.${channelRef.dxn.asEchoDXN()?.echoId ?? 'unknown'}`
-        : integrationId;
+        const integrationId = integration.dxn.asEchoDXN()?.echoId ?? 'unknown';
+        const toastIdSuffix = channelRef
+          ? `${integrationId}.${channelRef.dxn.asEchoDXN()?.echoId ?? 'unknown'}`
+          : integrationId;
 
-      const outcome = yield* Effect.either(
-        Effect.gen(function* () {
-          const integrationObj = yield* Database.load(integration);
+        const outcome = yield* Effect.either(
+          Effect.gen(function* () {
+            const integrationObj = yield* Database.load(integration);
 
-          // Enumerate guilds + channels up front so we can resolve every
-          // selected target id without per-target round-trips.
-          const guilds = yield* DiscordApi.fetchGuilds();
-          const guildById = new Map(guilds.map((guild) => [guild.id, guild]));
-          const channelsByGuild = yield* Effect.forEach(
-            guilds,
-            (guild) =>
-              DiscordApi.fetchGuildChannels(guild.id).pipe(
-                Effect.map((channels) => [guild.id, channels] as const),
-                Effect.catchAll(() => Effect.succeed([guild.id, [] as ReadonlyArray<DiscordChannel>] as const)),
-              ),
-            { concurrency: 4 },
-          );
-          const channelById = new Map<string, { channel: DiscordChannel; guildId: string }>();
-          for (const [guildId, channels] of channelsByGuild) {
-            for (const channel of channels) {
-              channelById.set(channel.id, { channel, guildId });
+            // Enumerate guilds + channels up front so we can resolve every
+            // selected target id without per-target round-trips.
+            const guilds = yield* DiscordApi.fetchGuilds();
+            const guildById = new Map(guilds.map((guild) => [guild.id, guild]));
+            const channelsByGuild = yield* Effect.forEach(
+              guilds,
+              (guild) =>
+                DiscordApi.fetchGuildChannels(guild.id).pipe(
+                  Effect.map((channels) => [guild.id, channels] as const),
+                  Effect.catchAll(() => Effect.succeed([guild.id, [] as ReadonlyArray<DiscordChannel>] as const)),
+                ),
+              { concurrency: 4 },
+            );
+            const channelById = new Map<string, { channel: DiscordChannel; guildId: string }>();
+            for (const [guildId, channels] of channelsByGuild) {
+              for (const channel of channels) {
+                channelById.set(channel.id, { channel, guildId });
+              }
             }
-          }
 
-          const channelFilterId = channelRef?.dxn.asEchoDXN()?.echoId;
-          type TargetEntry = {
-            entry: (typeof integrationObj.targets)[number];
-            channel: Channel.Channel;
-            discordChannelId: string;
-            discordChannel: DiscordChannel;
-            guildName: string | undefined;
-          };
-          const targetEntries: TargetEntry[] = [];
-          for (const target of integrationObj.targets) {
-            let foreignId = target.remoteId;
-            let localObj = target.object?.target;
-            if (foreignId === undefined && localObj) {
-              foreignId = Obj.getMeta(localObj).keys.find((key) => key.source === DISCORD_SOURCE)?.id;
-            }
-            if (foreignId === undefined) {
-              continue;
-            }
-            const discord = channelById.get(foreignId);
-            if (!discord) {
-              continue;
-            }
-            const guildName = guildById.get(discord.guildId)?.name;
-            if (!localObj) {
-              localObj = yield* findOrCreateChannelForDiscordChannel(discord.channel, guildName);
-              const materializedRef = Ref.make(localObj);
-              Obj.update(integrationObj, (integrationObj) => {
-                const mutable = integrationObj as Obj.Mutable<typeof integrationObj>;
-                const idx = mutable.targets.findIndex((entry) => entry.remoteId === foreignId);
-                if (idx >= 0) {
-                  mutable.targets[idx] = { ...mutable.targets[idx], object: materializedRef };
-                }
+            const channelFilterId = channelRef?.dxn.asEchoDXN()?.echoId;
+            type TargetEntry = {
+              entry: (typeof integrationObj.targets)[number];
+              channel: Channel.Channel;
+              discordChannelId: string;
+              discordChannel: DiscordChannel;
+              guildName: string | undefined;
+            };
+            const targetEntries: TargetEntry[] = [];
+            for (const target of integrationObj.targets) {
+              let foreignId = target.remoteId;
+              let localObj = target.object?.target;
+              if (foreignId === undefined && localObj) {
+                foreignId = Obj.getMeta(localObj).keys.find((key) => key.source === DISCORD_SOURCE)?.id;
+              }
+              if (foreignId === undefined) {
+                continue;
+              }
+              const discord = channelById.get(foreignId);
+              if (!discord) {
+                continue;
+              }
+              const guildName = guildById.get(discord.guildId)?.name;
+              if (!localObj) {
+                localObj = yield* findOrCreateChannelForDiscordChannel(discord.channel, guildName);
+                const materializedRef = Ref.make(localObj);
+                Obj.update(integrationObj, (integrationObj) => {
+                  const mutable = integrationObj as Obj.Mutable<typeof integrationObj>;
+                  const idx = mutable.targets.findIndex((entry) => entry.remoteId === foreignId);
+                  if (idx >= 0) {
+                    mutable.targets[idx] = { ...mutable.targets[idx], object: materializedRef };
+                  }
+                });
+              }
+
+              const targetEchoId = Ref.make(localObj).dxn.asEchoDXN()?.echoId;
+              if (channelFilterId && targetEchoId !== channelFilterId) {
+                continue;
+              }
+              if (!Channel.instanceOf(localObj)) {
+                continue;
+              }
+
+              targetEntries.push({
+                entry: target,
+                channel: localObj,
+                discordChannelId: foreignId,
+                discordChannel: discord.channel,
+                guildName,
               });
             }
 
-            const targetEchoId = Ref.make(localObj).dxn.asEchoDXN()?.echoId;
-            if (channelFilterId && targetEchoId !== channelFilterId) {
-              continue;
-            }
-            if (!Channel.instanceOf(localObj)) {
-              continue;
-            }
-
-            targetEntries.push({
-              entry: target,
-              channel: localObj,
-              discordChannelId: foreignId,
-              discordChannel: discord.channel,
-              guildName,
-            });
-          }
-
-          const perTarget = yield* Effect.forEach(
-            targetEntries,
-            ({ channel: targetChannel, discordChannelId, discordChannel, guildName }) =>
-              Effect.gen(function* () {
-                const result = yield* Effect.either(
-                  Effect.gen(function* () {
-                    const targetEntry = integrationObj.targets.find((entry) => entry.remoteId === discordChannelId);
-                    const after = computeInitialCursor(targetEntry?.cursor, targetEntry?.options as { daysOfHistory?: number } | undefined);
-                    const messages = yield* DiscordApi.fetchHistory(discordChannelId, { after });
-                    if (messages.length === 0) {
-                      return { added: 0 };
-                    }
-
-                    const mapped = messages
-                      .map(mapDiscordMessage)
-                      .filter((message): message is Message.Message => message !== undefined);
-
-                    if (mapped.length === 0) {
-                      return { added: 0 };
-                    }
-
-                    const feed = yield* Database.load(targetChannel.feed);
-                    yield* Feed.append(feed, mapped);
-
-                    const newestId = messages[messages.length - 1].id;
-                    Obj.update(integrationObj, (integrationObj) => {
-                      const mutable = integrationObj as Obj.Mutable<typeof integrationObj>;
-                      const idx = mutable.targets.findIndex((entry) => entry.remoteId === discordChannelId);
-                      if (idx >= 0) {
-                        mutable.targets[idx] = { ...mutable.targets[idx], cursor: newestId };
+            const perTarget = yield* Effect.forEach(
+              targetEntries,
+              ({ channel: targetChannel, discordChannelId, discordChannel, guildName }) =>
+                Effect.gen(function* () {
+                  const result = yield* Effect.either(
+                    Effect.gen(function* () {
+                      const targetEntry = integrationObj.targets.find((entry) => entry.remoteId === discordChannelId);
+                      const after = computeInitialCursor(
+                        targetEntry?.cursor,
+                        targetEntry?.options as { daysOfHistory?: number } | undefined,
+                      );
+                      const messages = yield* DiscordApi.fetchHistory(discordChannelId, { after });
+                      if (messages.length === 0) {
+                        return { added: 0 };
                       }
-                    });
 
-                    // Mirror the channel's display name onto the local Channel
-                    // if we just learned a better one (first sync, or channel
-                    // renamed remotely).
-                    const desiredName = friendlyChannelName(discordChannel, guildName);
-                    if (targetChannel.name !== desiredName) {
-                      Obj.update(targetChannel, (targetChannel) => {
-                        (targetChannel as Obj.Mutable<typeof targetChannel>).name = desiredName;
+                      const mapped = messages
+                        .map(mapDiscordMessage)
+                        .filter((message): message is Message.Message => message !== undefined);
+
+                      if (mapped.length === 0) {
+                        return { added: 0 };
+                      }
+
+                      const feed = yield* Database.load(targetChannel.feed);
+                      yield* Feed.append(feed, mapped);
+
+                      const newestId = messages[messages.length - 1].id;
+                      Obj.update(integrationObj, (integrationObj) => {
+                        const mutable = integrationObj as Obj.Mutable<typeof integrationObj>;
+                        const idx = mutable.targets.findIndex((entry) => entry.remoteId === discordChannelId);
+                        if (idx >= 0) {
+                          mutable.targets[idx] = { ...mutable.targets[idx], cursor: newestId };
+                        }
                       });
-                    }
 
-                    return { added: mapped.length };
-                  }),
-                );
+                      // Mirror the channel's display name onto the local Channel
+                      // if we just learned a better one (first sync, or channel
+                      // renamed remotely).
+                      const desiredName = friendlyChannelName(discordChannel, guildName);
+                      if (targetChannel.name !== desiredName) {
+                        Obj.update(targetChannel, (targetChannel) => {
+                          (targetChannel as Obj.Mutable<typeof targetChannel>).name = desiredName;
+                        });
+                      }
 
-                Obj.update(integrationObj, (integrationObj) => {
-                  const mutable = integrationObj as Obj.Mutable<typeof integrationObj>;
-                  const idx = mutable.targets.findIndex((entry) => {
-                    if (entry.remoteId !== undefined) {
-                      return entry.remoteId === discordChannelId;
+                      return { added: mapped.length };
+                    }),
+                  );
+
+                  Obj.update(integrationObj, (integrationObj) => {
+                    const mutable = integrationObj as Obj.Mutable<typeof integrationObj>;
+                    const idx = mutable.targets.findIndex((entry) => {
+                      if (entry.remoteId !== undefined) {
+                        return entry.remoteId === discordChannelId;
+                      }
+                      const localId = entry.object?.target
+                        ? Obj.getMeta(entry.object.target).keys.find((key) => key.source === DISCORD_SOURCE)?.id
+                        : undefined;
+                      return localId === discordChannelId;
+                    });
+                    if (idx < 0) {
+                      return;
                     }
-                    const localId = entry.object?.target
-                      ? Obj.getMeta(entry.object.target).keys.find((key) => key.source === DISCORD_SOURCE)?.id
-                      : undefined;
-                    return localId === discordChannelId;
+                    if (result._tag === 'Right') {
+                      mutable.targets[idx] = {
+                        ...mutable.targets[idx],
+                        lastSyncAt: new Date().toISOString(),
+                        lastError: undefined,
+                      };
+                    } else {
+                      mutable.targets[idx] = {
+                        ...mutable.targets[idx],
+                        lastError: formatDiscordSyncFailure(result.left),
+                      };
+                    }
                   });
-                  if (idx < 0) {
-                    return;
-                  }
-                  if (result._tag === 'Right') {
-                    mutable.targets[idx] = {
-                      ...mutable.targets[idx],
-                      lastSyncAt: new Date().toISOString(),
-                      lastError: undefined,
-                    };
-                  } else {
-                    mutable.targets[idx] = {
-                      ...mutable.targets[idx],
-                      lastError: formatDiscordSyncFailure(result.left),
-                    };
-                  }
-                });
 
-                return result._tag === 'Right' ? result.right : undefined;
-              }),
-            { concurrency: TARGET_CONCURRENCY },
-          );
+                  return result._tag === 'Right' ? result.right : undefined;
+                }),
+              { concurrency: TARGET_CONCURRENCY },
+            );
 
-          let pulled: PullResult = { added: 0 };
-          for (const result of perTarget) {
-            if (!result) {
-              continue;
+            let pulled: PullResult = { added: 0 };
+            for (const result of perTarget) {
+              if (!result) {
+                continue;
+              }
+              pulled = { added: pulled.added + result.added };
             }
-            pulled = { added: pulled.added + result.added };
-          }
-          return { pulled };
-        }).pipe(
-          Effect.provide(Database.layer(db)),
-          Effect.provide(createFeedServiceLayer(space.queues)),
-          Effect.provide(DiscordApi.DiscordCredentials.fromIntegration(integration)),
-          Effect.provide(FetchHttpClient.layer.pipe(Layer.provide(makeEdgeProxyHttpClientLayer()))),
-        ),
-      );
+            return { pulled };
+          }).pipe(
+            Effect.provide(Database.layer(db)),
+            Effect.provide(createFeedServiceLayer(space.queues)),
+            Effect.provide(DiscordApi.DiscordCredentials.fromIntegration(integration)),
+            Effect.provide(FetchHttpClient.layer.pipe(Layer.provide(makeEdgeProxyHttpClientLayer()))),
+          ),
+        );
 
-      if (outcome._tag === 'Right') {
-        yield* Effect.ignore(
-          Operation.invoke(LayoutOperation.AddToast, {
-            id: `${meta.id}.sync-success.${toastIdSuffix}`,
-            icon: 'ph--check--regular',
-            title: ['sync-toast.success.label', { ns: meta.id }],
-          }),
-        );
-        return outcome.right;
-      } else {
-        const message = formatDiscordSyncFailure(outcome.left);
-        yield* Effect.ignore(
-          Operation.invoke(LayoutOperation.AddToast, {
-            id: `${meta.id}.sync-error.${toastIdSuffix}`,
-            icon: 'ph--warning--regular',
-            title: ['sync-toast.error.label', { ns: meta.id }],
-            description: message,
-          }),
-        );
-        return yield* Effect.fail(outcome.left);
-      }
-    }),
-  ),
-);
+        if (outcome._tag === 'Right') {
+          yield* Effect.ignore(
+            Operation.invoke(LayoutOperation.AddToast, {
+              id: `${meta.id}.sync-success.${toastIdSuffix}`,
+              icon: 'ph--check--regular',
+              title: ['sync-toast.success.label', { ns: meta.id }],
+            }),
+          );
+          return outcome.right;
+        } else {
+          const message = formatDiscordSyncFailure(outcome.left);
+          yield* Effect.ignore(
+            Operation.invoke(LayoutOperation.AddToast, {
+              id: `${meta.id}.sync-error.${toastIdSuffix}`,
+              icon: 'ph--warning--regular',
+              title: ['sync-toast.error.label', { ns: meta.id }],
+              description: message,
+            }),
+          );
+          return yield* Effect.fail(outcome.left);
+        }
+      }),
+    ),
+  );
 
 export default handler;

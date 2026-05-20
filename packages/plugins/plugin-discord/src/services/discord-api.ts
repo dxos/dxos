@@ -197,51 +197,50 @@ const parseRetryAfterMillis = (headers: PlatformHeaders.Headers): number => {
   return Math.min(Math.max(seconds * 1000, 1000), 30_000);
 };
 
-const runRequest = <T>(
-  request: HttpClientRequest.HttpClientRequest,
-  schema: Schema.Schema<T>,
-): DiscordEffect<T> =>
+const runRequest = <T>(request: HttpClientRequest.HttpClientRequest, schema: Schema.Schema<T>): DiscordEffect<T> =>
   Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient;
     const clientNoTracer = httpClient.pipe(HttpClient.withTracerDisabledWhen(() => true));
     return yield* clientNoTracer.execute(request).pipe(
-      Effect.flatMap((res): Effect.Effect<T, ParseResult.ParseError | DiscordApiError | HttpClientError.HttpClientError> => {
-        if (res.status >= 200 && res.status < 300) {
-          return Effect.flatMap(res.json, Schema.decodeUnknown(schema));
-        }
-        // On 429, honor Discord's `Retry-After` (or `X-RateLimit-Reset-After`)
-        // before bubbling a retryable error. Generic exponential backoff
-        // either over-waits or under-waits — the upstream tells us exactly
-        // what window to respect, so we use it. The error still surfaces as
-        // a DiscordApiError so `shouldRetry` triggers another attempt.
-        if (res.status === 429) {
-          const delayMillis = parseRetryAfterMillis(res.headers);
-          return Effect.sleep(`${delayMillis} millis`).pipe(
-            Effect.flatMap(() =>
-              Effect.fail(
-                new DiscordApiError({
-                  context: { status: 429, code: undefined, message: `rate limited; waited ${delayMillis}ms` },
-                }),
+      Effect.flatMap(
+        (res): Effect.Effect<T, ParseResult.ParseError | DiscordApiError | HttpClientError.HttpClientError> => {
+          if (res.status >= 200 && res.status < 300) {
+            return Effect.flatMap(res.json, Schema.decodeUnknown(schema));
+          }
+          // On 429, honor Discord's `Retry-After` (or `X-RateLimit-Reset-After`)
+          // before bubbling a retryable error. Generic exponential backoff
+          // either over-waits or under-waits — the upstream tells us exactly
+          // what window to respect, so we use it. The error still surfaces as
+          // a DiscordApiError so `shouldRetry` triggers another attempt.
+          if (res.status === 429) {
+            const delayMillis = parseRetryAfterMillis(res.headers);
+            return Effect.sleep(`${delayMillis} millis`).pipe(
+              Effect.flatMap(() =>
+                Effect.fail(
+                  new DiscordApiError({
+                    context: { status: 429, code: undefined, message: `rate limited; waited ${delayMillis}ms` },
+                  }),
+                ),
               ),
+            );
+          }
+          const errorBody = res.json.pipe(
+            Effect.flatMap(Schema.decodeUnknown(DiscordErrorBodySchema)),
+            Effect.catchAll(() => Effect.succeed({ code: undefined, message: undefined })),
+          );
+          return Effect.flatMap(errorBody, (body) =>
+            Effect.fail(
+              new DiscordApiError({
+                context: {
+                  status: res.status,
+                  code: typeof body.code === 'number' ? body.code : undefined,
+                  message: typeof body.message === 'string' ? body.message : undefined,
+                },
+              }),
             ),
           );
-        }
-        const errorBody = res.json.pipe(
-          Effect.flatMap(Schema.decodeUnknown(DiscordErrorBodySchema)),
-          Effect.catchAll(() => Effect.succeed({ code: undefined, message: undefined })),
-        );
-        return Effect.flatMap(errorBody, (body) =>
-          Effect.fail(
-            new DiscordApiError({
-              context: {
-                status: res.status,
-                code: typeof body.code === 'number' ? body.code : undefined,
-                message: typeof body.message === 'string' ? body.message : undefined,
-              },
-            }),
-          ),
-        );
-      }),
+        },
+      ),
       Effect.timeout('30 seconds'),
       // Retries are mostly to recover from transient transport errors and
       // 5xx. 429 already had its mandatory wait above; this just gives it a
@@ -311,7 +310,10 @@ export const fetchGuilds = (): DiscordEffect<ReadonlyArray<DiscordGuild>> =>
       if (after) {
         params.after = after;
       }
-      const page = yield* discordRequest((creds) => authedGet(creds, '/users/@me/guilds', params), DiscordGuildListSchema);
+      const page = yield* discordRequest(
+        (creds) => authedGet(creds, '/users/@me/guilds', params),
+        DiscordGuildListSchema,
+      );
       all.push(...page);
       after = page.length === 200 ? page[page.length - 1].id : undefined;
     } while (after);

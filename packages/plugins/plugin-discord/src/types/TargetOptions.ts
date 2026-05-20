@@ -25,7 +25,8 @@ export const DiscordTargetOptions = Schema.Struct({
   daysOfHistory: Schema.Number.pipe(
     Schema.annotations({
       title: 'Days of history to sync',
-      description: 'On first sync, fetch messages from this many days ago. Defaults to 7. Ignored after the first sync.',
+      description:
+        'On first sync, fetch messages from this many days ago. Defaults to 7. Ignored after the first sync.',
     }),
     Schema.optional,
   ),
