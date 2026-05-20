@@ -2,6 +2,7 @@
 
 import * as Effect from 'effect/Effect';
 
+import { type Space } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj, Relation } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -14,19 +15,13 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Reset> = SpaceOperati
       const { space } = input;
       log.info('reset: invoked', { spaceId: space.id });
 
-      log.info('reset: building query');
-      const query = space.db.query(Filter.everything());
-
-      log.info('reset: awaiting entities');
-      const entities = await query.run();
-      log.info('reset: got entities', { count: entities.length });
-
+      log.info('reset: snapshotting entities');
+      const entities = snapshotEntities(space);
       const relations = entities.filter(Relation.isRelation);
       const objects = entities.filter((entity) => !Relation.isRelation(entity));
 
       log.info('reset: reading schema registry');
       const schemas = space.db.schemaRegistry.query().runSync();
-      log.info('reset: schema registry read', { count: schemas.length });
 
       const feeds =
         (space.internal.data.pipeline?.controlFeeds?.length ?? 0) +
@@ -73,8 +68,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Reset> = SpaceOperati
         throw err;
       }
 
-      log.info('reset: re-querying');
-      const afterEntities = await space.db.query(Filter.everything()).run();
+      const afterEntities = snapshotEntities(space);
       const afterSchemas = space.db.schemaRegistry.query().runSync();
       const afterFeeds =
         (space.internal.data.pipeline?.controlFeeds?.length ?? 0) +
@@ -90,3 +84,24 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Reset> = SpaceOperati
   ),
 );
 export default handler;
+
+/**
+ * Returns a synchronous snapshot of every entity in the space's database.
+ *
+ * We deliberately avoid `query.run()` here. In a live Composer environment,
+ * `space.db.query(Filter.everything()).run()` never resolves (the call hangs until the
+ * operation runtime cancels it at 30s), even though it works fine in node unit tests
+ * against a fresh in-memory client. `run()` waits for every query source to reach a
+ * stable state, and the indexed-storage source apparently never reports "done" for the
+ * everything-filter. Subscribing primes the local source and `runSync()` then returns
+ * the in-memory results immediately.
+ */
+const snapshotEntities = (space: Space): Obj.Unknown[] => {
+  const query = space.db.query(Filter.everything());
+  const unsubscribe = query.subscribe(() => {}, { fire: true });
+  try {
+    return query.runSync() as Obj.Unknown[];
+  } finally {
+    unsubscribe();
+  }
+};
