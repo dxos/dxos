@@ -113,6 +113,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
     const {
       id,
       name,
+      author,
       description,
       homePage,
       source,
@@ -145,7 +146,10 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                     <Input.Switch classNames='self-center' checked={enabled} onCheckedChange={onEnabledChange} />
                   </Input.Root>
                 )}
-                <p className='pt-0.5 text-sm text-description'>{id}</p>
+                <p className='pt-0.5 text-sm text-description'>
+                  {id}
+                  {author && <span> · {author}</span>}
+                </p>
               </div>
               <div>
                 <p className='text-description'>{description}</p>

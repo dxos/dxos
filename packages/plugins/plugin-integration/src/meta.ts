@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.integration',
   name: 'Integrations',
+  author: 'DXOS',
   description: trim`
     Manage integrations with external services.
     Connect your space to external services and manage your integrations here.

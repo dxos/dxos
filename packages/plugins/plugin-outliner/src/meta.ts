@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.outliner',
   name: 'Outliner',
+  author: 'DXOS',
   description: trim`
     Tree-structured note-taking editor for organizing ideas hierarchically.
     Collapse and expand nested items, drag to reorder, and navigate deep thought structures efficiently.

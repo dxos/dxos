@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.nativeFilesystem',
   name: 'Native Filesystem',
+  author: 'DXOS',
   description: trim`
     Native filesystem access for desktop builds.
     Open local directories as workspaces, similar to Obsidian vaults.
