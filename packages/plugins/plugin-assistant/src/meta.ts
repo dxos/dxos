@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.assistant',
   name: 'Assistant',
+  author: 'DXOS',
   description: trim`
     Intelligent AI assistant that can analyze and interact with objects across your spaces.
     Chat naturally to get insights, search content, and perform actions using AI-powered context awareness.

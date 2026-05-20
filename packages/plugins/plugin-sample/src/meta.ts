@@ -13,6 +13,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.sample',
   name: 'Sample',
+  author: 'DXOS',
   description: trim`
     Pedagogical reference plugin demonstrating all common DXOS plugin patterns.
     Use this plugin as a guide when building new plugins.

@@ -105,42 +105,6 @@ export type PluginConfig = State & {
   isMobile?: boolean;
 };
 
-/**
- * System plugins.
- */
-// TODO(burdon): Replace this hardcoded list by filtering plugins on `meta.tags.includes('system')`.
-export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): string[] => {
-  const layoutPluginId = isPopover
-    ? SpotlightPlugin.meta.id
-    : isMobile
-      ? SimpleLayoutPlugin.meta.id
-      : DeckPlugin.meta.id;
-  return [
-    AttentionPlugin.meta.id,
-    AutomationPlugin.meta.id,
-    ClientPlugin.meta.id,
-    !isTauri && CrxPlugin.meta.id,
-    FilePlugin.meta.id,
-    GraphPlugin.meta.id,
-    IntegrationPlugin.meta.id,
-    SupportPlugin.meta.id,
-    layoutPluginId,
-    isTauri && !isMobile && !isPopover && NativePlugin.meta.id,
-    NavTreePlugin.meta.id,
-    ObservabilityPlugin.meta.id,
-    ProcessManagerPlugin.meta.id,
-    !isTauri && isPwa && PwaPlugin.meta.id,
-    RegistryPlugin.meta.id,
-    SettingsPlugin.meta.id,
-    SpacePlugin.meta.id,
-    StatusBarPlugin.meta.id,
-    ThemePlugin.meta.id,
-    WelcomePlugin.meta.id,
-  ]
-    .filter(isTruthy)
-    .flat();
-};
-
 export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] =>
   [
     // Default
@@ -149,9 +113,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
     KanbanPlugin.meta.id,
     MarkdownPlugin.meta.id,
     MasonryPlugin.meta.id,
-    PreviewPlugin.meta.id,
     SearchPlugin.meta.id,
-    SequencerPlugin.meta.id,
     SheetPlugin.meta.id,
     SketchPlugin.meta.id,
     TablePlugin.meta.id,
@@ -174,6 +136,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       MeetingPlugin.meta.id,
       OutlinerPlugin.meta.id,
       PipelinePlugin.meta.id,
+      SequencerPlugin.meta.id,
       SidekickPlugin.meta.id,
       TranscriptionPlugin.meta.id,
       ZenPlugin.meta.id,
@@ -202,7 +165,6 @@ export const getPlugins = ({
     AssistantPlugin(),
     AttentionPlugin(),
     AutomationPlugin(),
-    BlueskyPlugin(),
     BoardPlugin(),
     CallsPlugin(),
     ChessPlugin(),
@@ -229,18 +191,14 @@ export const getPlugins = ({
     DoctorPlugin(),
     ExplorerPlugin(),
     FeedPlugin(),
-    GalleryPlugin(),
     GamePlugin(),
     GeneratorPlugin(),
-    GitHubPlugin(),
     GraphPlugin(),
     InboxPlugin(),
-    IrohBeaconPlugin(),
     KanbanPlugin(),
     layoutPlugin,
-    LinearPlugin(),
     MapPlugin(),
-    isLabs && MapPluginSolid(),
+    isLocal && MapPluginSolid(),
     MarkdownPlugin(),
     MasonryPlugin(),
     MeetingPlugin(),
@@ -263,13 +221,10 @@ export const getPlugins = ({
     isLocal && SamplePlugin(),
     ScriptPlugin(),
     SearchPlugin(),
-    SequencerPlugin(),
     (isDev || isLabs) && SidekickPlugin(),
     SettingsPlugin(),
     SheetPlugin(),
     SketchPlugin(),
-    SlackPlugin(),
-    SpacetimePlugin(),
     SpacePlugin({
       observability: true,
       shareableLinkOrigin: origin,
@@ -284,13 +239,23 @@ export const getPlugins = ({
       noCache: isDev,
       platform: isMobile ? 'mobile' : 'desktop',
     }),
-    TicTacToePlugin(),
     ThreadPlugin(),
     IntegrationPlugin(),
     TranscriptionPlugin(),
+    WelcomePlugin(),
+
+    // TODO(wittjosiah): Consider factoring these out as standalone plugins published through the registry.
+    BlueskyPlugin(),
+    GalleryPlugin(),
+    GitHubPlugin(),
+    IrohBeaconPlugin(),
+    LinearPlugin(),
+    SequencerPlugin(),
+    SlackPlugin(),
+    SpacetimePlugin(),
+    TicTacToePlugin(),
     TrelloPlugin(),
     VoxelPlugin(),
-    WelcomePlugin(),
     FilePlugin(),
     WnfsPlugin(),
     ZenPlugin(),
