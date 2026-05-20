@@ -3,18 +3,27 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
+import React, { type ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { getPersonalSpace, getSpacePath, isPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
+import { Filter, Obj, Relation } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { useClient } from '@dxos/react-client';
-import { SpaceState } from '@dxos/react-client/echo';
-import { Button, DropdownMenu, Icon, IconButton, Input, useMulticastObservable, useTranslation } from '@dxos/react-ui';
+import { type Space, SpaceState, useQuery } from '@dxos/react-client/echo';
+import {
+  AlertDialog,
+  Button,
+  DropdownMenu,
+  Icon,
+  IconButton,
+  Input,
+  useMulticastObservable,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Form, type FormFieldMap, Settings } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
@@ -184,6 +193,17 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
     await Promise.all(repairs.map((repair) => repair({ space, isDefault: isPersonalSpace(space) })));
   }, [space, repairs]);
 
+  const { schemas, objects, relations, feeds } = useSpaceCounts(space);
+  const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
+  const handleReset = useCallback(async () => {
+    setResetConfirmOpen(false);
+    try {
+      await invokePromise(SpaceOperation.Reset, { space });
+    } catch (err) {
+      log.catch(err);
+    }
+  }, [space, invokePromise]);
+
   return (
     <Settings.Viewport>
       <Settings.Section
@@ -237,8 +257,87 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
           <Button onClick={handleRepair}>{t('repair-space.label')}</Button>
         </Settings.Item>
       </Settings.Section>
+
+      <Settings.Section title={t('danger-zone.title')} description={t('danger-zone.description')}>
+        <Settings.Item title={t('space-contents.title')} description={t('space-contents.description')}>
+          <div className='grid grid-cols-4 gap-2 justify-self-end text-center'>
+            <ContentCount label={t('schema-count.label')} value={schemas} />
+            <ContentCount label={t('object-count.label')} value={objects} />
+            <ContentCount label={t('relation-count.label')} value={relations} />
+            <ContentCount label={t('feed-count.label')} value={feeds} />
+          </div>
+        </Settings.Item>
+        <Settings.Item title={t('reset-space.title')} description={t('reset-space.description')}>
+          <AlertDialog.Root open={resetConfirmOpen} onOpenChange={setResetConfirmOpen}>
+            <AlertDialog.Trigger asChild>
+              <Button variant='destructive'>{t('reset-space.label')}</Button>
+            </AlertDialog.Trigger>
+            <AlertDialog.Overlay>
+              <AlertDialog.Content>
+                <AlertDialog.Body>
+                  <AlertDialog.Title>{t('reset-space-confirm.title')}</AlertDialog.Title>
+                  <AlertDialog.Description>{t('reset-space-confirm.description')}</AlertDialog.Description>
+                </AlertDialog.Body>
+                <AlertDialog.ActionBar>
+                  <div className='grow' />
+                  <AlertDialog.Cancel asChild>
+                    <Button>{t('cancel.label')}</Button>
+                  </AlertDialog.Cancel>
+                  <AlertDialog.Action asChild>
+                    <Button variant='destructive' onClick={handleReset}>
+                      {t('reset-space-confirm.label')}
+                    </Button>
+                  </AlertDialog.Action>
+                </AlertDialog.ActionBar>
+              </AlertDialog.Content>
+            </AlertDialog.Overlay>
+          </AlertDialog.Root>
+        </Settings.Item>
+      </Settings.Section>
     </Settings.Viewport>
   );
 };
 
 SpaceSettingsContainer.displayName = 'SpaceSettingsContainer';
+
+const ContentCount = ({ label, value }: { label: string; value: number }) => (
+  <div className='flex flex-col items-center'>
+    <div className='text-lg font-mono tabular-nums'>{value}</div>
+    <div className='text-xs text-description'>{label}</div>
+  </div>
+);
+
+type SpaceCounts = {
+  schemas: number;
+  objects: number;
+  relations: number;
+  feeds: number;
+};
+
+const useSpaceCounts = (space: Space): SpaceCounts => {
+  const entities = useQuery(space.db, Filter.everything());
+  const { objects, relations } = useMemo(() => {
+    let objects = 0;
+    let relations = 0;
+    for (const entity of entities) {
+      if (Relation.isRelation(entity)) {
+        relations += 1;
+      } else {
+        objects += 1;
+      }
+    }
+    return { objects, relations };
+  }, [entities]);
+
+  const [schemas, setSchemas] = useState(0);
+  useEffect(() => {
+    const query = space.db.schemaRegistry.query();
+    setSchemas(query.runSync().length);
+    return query.subscribe(() => setSchemas(query.results.length));
+  }, [space]);
+
+  const pipeline = useMulticastObservable(space.pipeline);
+  const feeds = (pipeline.controlFeeds?.length ?? 0) + (pipeline.dataFeeds?.length ?? 0);
+
+  return { schemas, objects, relations, feeds };
+};
