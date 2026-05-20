@@ -23,9 +23,13 @@ export const setupPluginManager = ({
   plugins = [],
   ...options
 }: UseAppOptions & Pick<WithPluginManagerOptions, 'capabilities'> = {}) => {
+  // Auto-enable every non-system plugin so stories don't have to spell out
+  // enablement. System-tagged plugins are force-enabled by the manager.
+  const enabled = plugins.filter(({ meta }) => !meta.tags?.includes('system')).map(({ meta }) => meta.id);
   const pluginManager = PluginManager.make({
     pluginLoader: () => raise(new Error('Not implemented')),
     plugins: [StoryPlugin, ...plugins],
+    enabled,
     ...options,
   });
 
