@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.simpleLayout',
   name: 'Simple Layout',
+  author: 'DXOS',
   description: trim`
     Minimal layout plugin for simplified UI contexts like popover windows.
     Provides basic content rendering without sidebars or complex navigation.

@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.inbox',
   name: 'Inbox',
+  author: 'DXOS',
   description: trim`
     Unified inbox for managing email, calendar events, and contacts in one place.
     Sync with external services and organize communications alongside your workspace content.

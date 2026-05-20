@@ -7,6 +7,7 @@ import { type Plugin } from '@dxos/app-framework';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.irohBeacon',
   name: 'Iroh Beacon',
+  author: 'DXOS',
   description: 'Peer-to-peer presence beacon for cross-tab and cross-peer liveness.',
   icon: 'ph--broadcast--regular',
   iconHue: 'green',

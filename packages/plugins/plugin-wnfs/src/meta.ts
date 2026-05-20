@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.wnfs',
   name: 'WNFS',
+  author: 'DXOS',
   description: trim`
     Decentralized file storage using the Web Native File System protocol.
     Store and sync files with end-to-end encryption across devices without central servers.

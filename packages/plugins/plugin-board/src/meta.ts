@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.board',
   name: 'Board',
+  author: 'DXOS',
   description: trim`
     Infinite canvas workspace that combines sticky notes, media, and whiteboarding tools.
     Arrange and connect ideas freely in a visual space perfect for brainstorming and creative collaboration.

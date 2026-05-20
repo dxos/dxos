@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.game',
   name: 'Game',
+  author: 'DXOS',
   description: trim`
     Generic game plugin. Provides a base Game type with shared players and a
     referenced variant state. Variant plugins (chess, tic-tac-toe, etc.) contribute

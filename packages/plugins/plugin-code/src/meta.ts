@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.code',
   name: 'Code',
+  author: 'DXOS',
   description: trim`
     Composer plugin for AI-assisted plugin development.
     Authors DEUS specs and dispatches a build agent that generates Composer plugins.

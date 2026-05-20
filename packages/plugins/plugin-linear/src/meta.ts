@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.linear',
   name: 'Linear',
+  author: 'DXOS',
   description: trim`
     Connect Linear so projects, issues, and comment threads stay available
     in your workspace alongside everything else you're doing.

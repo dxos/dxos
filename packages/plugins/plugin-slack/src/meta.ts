@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.slack',
   name: 'Slack',
+  author: 'DXOS',
   description: trim`
     Connect Slack to your workspace so channels and direct messages stream alongside everything else you're doing.
   `,

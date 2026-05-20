@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.gallery',
   name: 'Gallery',
+  author: 'DXOS',
   description: trim`
     A simple image gallery. Drop in images from your filesystem (uploaded to WNFS) or external URLs;
     browse them in a masonry grid and present in fullscreen.

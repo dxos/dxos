@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.sidekick',
   name: 'Sidekick',
+  author: 'DXOS',
   description: trim`
     Personal companion agent that monitors activity, maintains profiles of people
     and the user, keeps a daily journal, and helps manage communications.

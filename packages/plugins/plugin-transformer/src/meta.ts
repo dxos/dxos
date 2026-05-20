@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.transformer',
   name: 'Transformer',
+  author: 'DXOS',
   description: trim`
     Execute local machine learning transformers and AI models directly in your browser.
     Run embeddings, classifications, and other ML tasks without server dependencies.
