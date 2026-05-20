@@ -12,3 +12,4 @@ export * from './registry/handlers';
 export * from './registry/type-registry';
 export * from './registry/default-handlers';
 export * from './projector/projector';
+export * from './projector/force-projector';
