@@ -6,7 +6,7 @@ import '../../../styles/graph.css';
 
 import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useContext, useMemo, useState } from 'react';
+import React, { useContext, useMemo, useRef, useState } from 'react';
 
 import { GraphModel } from '@dxos/graph';
 import {
@@ -42,8 +42,14 @@ const Phase1Story = () => {
   const registry = useContext(RegistryContext);
   const [selectedId, setSelectedId] = useState<string | undefined>();
   const [hoverId, setHoverId] = useState<string | undefined>();
+  const selectedRef = useRef<string | undefined>(undefined);
+  const hoverRef = useRef<string | undefined>(undefined);
+  selectedRef.current = selectedId;
+  hoverRef.current = hoverId;
   const model = useMemo(() => buildModel(registry), [registry]);
 
+  // Stable across renders: the registry's draw fn reads live state via refs so the
+  // engine doesn't need to be re-built on every selection/hover change.
   const typeRegistry = useMemo(() => {
     const r = new TypeRegistry<Person>();
     r.registerNode(NODE_TYPE, {
@@ -51,8 +57,8 @@ const Phase1Story = () => {
         const rr = node.r ?? 12;
         const x = node.x ?? 0;
         const y = node.y ?? 0;
-        const isSelected = selectedId === node.id;
-        const isHovered = hoverId === node.id;
+        const isSelected = selectedRef.current === node.id;
+        const isHovered = hoverRef.current === node.id;
         const p = createPath();
         p.arc(x, y, rr, 0, Math.PI * 2);
         p.close();
@@ -75,7 +81,7 @@ const Phase1Story = () => {
       capabilities: { hoverable: true, selectable: true },
     });
     return r;
-  }, [selectedId, hoverId]);
+  }, []);
 
   const projector = useMemo(() => new ForceProjector({ linkDistance: 80 }), []);
   const engine = useEngine({ model, registry: typeRegistry, projector });
@@ -95,7 +101,7 @@ const Phase1Story = () => {
   };
 
   return (
-    <div style={{ width: '100%', height: '100vh', background: '#fafafa' }}>
+    <div className='absolute inset-0 bg-baseSurface'>
       <GraphRoot engine={engine}>
         <GraphSurface
           className='absolute inset-0 w-full h-full'

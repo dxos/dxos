@@ -22,7 +22,10 @@ export class HoverTool implements Tool {
   attach(host: ToolHost, target: EventTarget): () => void {
     const onMove = (raw: Event) => {
       const e = raw as PointerEvent;
-      const hit = host.hitTest(e.clientX, e.clientY);
+      const bounds = (target as Element).getBoundingClientRect?.();
+      const sx = bounds ? e.clientX - bounds.left : e.clientX;
+      const sy = bounds ? e.clientY - bounds.top : e.clientY;
+      const hit = host.hitTest(sx, sy);
       const id = hit?.kind === 'node' ? hit.node.id : hit?.kind === 'edge' ? hit.edge.id : undefined;
       if (id === this.#current) {
         return;

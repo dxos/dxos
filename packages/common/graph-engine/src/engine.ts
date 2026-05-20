@@ -159,6 +159,11 @@ export class Engine<N extends Graph.Node.Any = any, E extends Graph.Edge.Any = a
   }
 
   #renderLayers(ctx: DrawContext) {
+    // Apply viewport transform — world coords pass through draw handlers; the backend's
+    // already-applied DPR scale is preserved by save/restore.
+    const { x, y, k } = this.viewport.transform;
+    ctx.save();
+    ctx.transform(k, 0, 0, k, x, y);
     for (const edge of this.layout.edges) {
       const handler = this.registry.resolveEdge(edge as unknown as E);
       const path = this.#routeEdge(edge, handler);
@@ -168,5 +173,6 @@ export class Engine<N extends Graph.Node.Any = any, E extends Graph.Edge.Any = a
       const handler = this.registry.resolveNode(node as N) as NodeHandler;
       handler.draw(ctx, node, this.viewport);
     }
+    ctx.restore();
   }
 }

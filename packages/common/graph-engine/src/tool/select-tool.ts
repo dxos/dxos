@@ -18,7 +18,10 @@ export class SelectTool implements Tool {
   attach(host: ToolHost, target: EventTarget): () => void {
     const onDown = (raw: Event) => {
       const e = raw as PointerEvent;
-      const hit = host.hitTest(e.clientX, e.clientY);
+      const bounds = (target as Element).getBoundingClientRect?.();
+      const sx = bounds ? e.clientX - bounds.left : e.clientX;
+      const sy = bounds ? e.clientY - bounds.top : e.clientY;
+      const hit = host.hitTest(sx, sy);
       if (!hit) {
         return;
       }
