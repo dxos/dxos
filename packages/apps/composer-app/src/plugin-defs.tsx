@@ -109,6 +109,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
   [
     // Default
     AssistantPlugin.meta.id,
+    FilePlugin.meta.id,
     InboxPlugin.meta.id,
     KanbanPlugin.meta.id,
     MarkdownPlugin.meta.id,

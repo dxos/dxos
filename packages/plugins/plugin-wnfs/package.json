@@ -10,6 +10,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
+  "sideEffects": true,
   "type": "module",
   "imports": {
     "#capabilities": {

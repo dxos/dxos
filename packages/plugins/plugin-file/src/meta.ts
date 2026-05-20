@@ -16,5 +16,4 @@ export const meta: Plugin.Meta = {
   icon: 'ph--file--regular',
   iconHue: 'teal',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-file',
-  tags: ['system'],
 };
