@@ -39,7 +39,7 @@ const MESSAGE_PAGE_LIMIT = 100;
  *   use it verbatim — every subsequent sync is incremental.
  * - On first sync, derive a snowflake from "now minus N days" where N comes
  *   from the user-provided `daysOfHistory` option (clamped to a sane range,
- *   default 7).
+ *   default 30).
  *
  * The user can sync more history by re-creating the target with a larger
  * `daysOfHistory` value, since the option is only consulted while `cursor`
