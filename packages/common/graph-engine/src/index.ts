@@ -19,3 +19,4 @@ export * from './tool/tool';
 export * from './tool/hover-tool';
 export * from './tool/select-tool';
 export * from './tool/zoom-tool';
+export * from './backend/render-backend';
