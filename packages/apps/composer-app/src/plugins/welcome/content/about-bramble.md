@@ -10,9 +10,9 @@
 
 ## History
 
-Bramble was founded by **Maya Chen** (head roaster) and **Diego Alvarez** (sourcing) after they spent four years together at a larger Bay Area roaster. They opened with a single 12 kg Loring roaster, three wholesale accounts, and a corner of a friend's bakery. They moved into the Linden Avenue space in 2019 and added the second roaster in 2022.
+Bramble was founded by **Kai Chen** (head roaster) and **Diego Alvarez** (sourcing) after they spent four years together at a larger Bay Area roaster. They opened with a single 12 kg Loring roaster, three wholesale accounts, and a corner of a friend's bakery. They moved into the Linden Avenue space in 2019 and added the second roaster in 2022.
 
-The name "Bramble" comes from the tangle of fruit notes Maya kept describing in the Ethiopian naturals she was cupping the day they wrote the business plan.
+The name "Bramble" comes from the tangle of fruit notes Kai kept describing in the Ethiopian naturals she was cupping the day they wrote the business plan.
 
 ## Mission and voice
 
@@ -52,7 +52,7 @@ The name "Bramble" comes from the tangle of fruit notes Maya kept describing in 
 
 Bramble is small; everyone wears two hats.
 
-- **Maya Chen** — co-founder, head roaster. Reads cupping forms in her sleep. Final say on roast curves.
+- **Kai Chen** — co-founder, head roaster. Reads cupping forms in her sleep. Final say on roast curves.
 - **Diego Alvarez** — co-founder, sourcing & green buyer. On the road one week a month during harvest seasons.
 - **Sam Okafor** — wholesale lead. Owns the customer relationships and the Linden inventory.
 - **Riley Tanaka** — operations & logistics. Pallets, freight, the QuickBooks login, the weird vendor portals.
@@ -65,7 +65,7 @@ Bramble is small; everyone wears two hats.
 A new seasonal espresso blend targeting wholesale espresso bars. Going live in 6 weeks.
 
 - Diego is locking in the green: lot from Finca Esperanza + a smaller Guatemalan parcel.
-- Maya is iterating on the roast curve; current draft is two weeks old.
+- Kai is iterating on the roast curve; current draft is two weeks old.
 - Sam is coordinating cuppings with North Star, Hatch, and Olive & Vine.
 - Riley is sorting packaging (label redesign with a freelancer) and freight.
 
@@ -78,7 +78,7 @@ Diego flies to Colombia → Ethiopia in five weeks. Two weeks total. He'll visit
 When extending the exemplar, please keep these consistent:
 
 - **Email addresses:** `firstname@bramblecoffee.com` for internal, organization-specific domains for partners (e.g. `carmen@fincaesperanza.co`, `abel@sidamocoop.org`, `jordan@northstarcafe.com`, `priya@hatchbakery.com`, `mateo@oliveandvine.cafe`).
-- **Dates:** Recent emails should be spread across the last ~6 weeks. Calendar events span 2 weeks past → 2 weeks future. Hard-code ISO dates relative to the snapshot generation date; the script accepts a `--now` flag for reproducibility.
+- **Dates:** Recent emails should be spread across the last ~6 weeks. Calendar events span 2 weeks past → 2 weeks future. Hard-code ISO dates relative to the snapshot generation date; set the `NOW` env var (e.g. `NOW=2026-05-20`) for reproducible regeneration.
 - **Tone in emails:** Plain, professional but warm. Use first names. No marketing fluff. Suppliers occasionally drop a Spanish or Amharic phrase (sparingly, accurately).
 - **Locations and coordinates:** Use real coordinates so the Map view looks right. Oakland HQ, Portland (North Star), Brooklyn (Hatch), Austin (Olive & Vine), Huila Colombia (Finca Esperanza), Sidamo Ethiopia (Sidamo Cooperative).
 - **No real-world business names** — every entity in this exemplar is fictional and should stay that way. Don't reuse the names of actual specialty roasters or cafes.

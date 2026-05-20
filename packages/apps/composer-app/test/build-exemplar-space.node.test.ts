@@ -521,8 +521,17 @@ const makeMailbox = (
     daysAgo: number;
     senderOverride?: Actor.Actor;
   };
-  const senderFor = (key: PersonKey): Actor.Actor =>
-    actor(PEOPLE_SEEDS.find((s) => s.key === key)!.fullName, PEOPLE_SEEDS.find((s) => s.key === key)!.email);
+  const peopleSeedByKey = Object.fromEntries(PEOPLE_SEEDS.map((seed) => [seed.key, seed])) as Record<
+    PersonKey,
+    (typeof PEOPLE_SEEDS)[number]
+  >;
+  const senderFor = (key: PersonKey): Actor.Actor => {
+    const seed = peopleSeedByKey[key];
+    if (!seed) {
+      throw new Error(`No PEOPLE_SEEDS entry for PersonKey "${key}". Add the person or use senderOverride.`);
+    }
+    return actor(seed.fullName, seed.email);
+  };
 
   const emails: Email[] = [
     {
@@ -663,7 +672,7 @@ const makeMailbox = (
   ];
 
   const messages: Message.Message[] = emails.map((email) => {
-    const sender = email.senderOverride ?? senderFor(email.from as PersonKey);
+    const sender = email.senderOverride ?? senderFor(email.from as PersonKey); // 'noise' emails always carry senderOverride
     return Message.make({
       created: daysAgo(email.daysAgo, 10),
       sender,

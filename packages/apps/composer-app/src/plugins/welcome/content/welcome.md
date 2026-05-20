@@ -43,7 +43,7 @@ What still needs to happen before we can ship the Spring Blend?
 
 ### Notes & Documents
 
-A few markdown documents (cupping notes, sourcing trip itinerary, roast log template), two sketches (the roastery floor plan and a flavor wheel), and two spreadsheets (green coffee inventory and the wholesale price list).
+A few Markdown documents (cupping notes, sourcing trip itinerary, roast log template), two sketches (the roastery floor plan and a flavor wheel), and two spreadsheets (green coffee inventory and the wholesale price list).
 
 ### About Bramble Coffee Roasters
 
