@@ -79,7 +79,7 @@ export const useFileUpload = ({ subject, accept, multiple, onUpload }: UseFileUp
           if (!fileObj) {
             continue;
           }
-          const added = await invokePromise(SpaceOperation.AddObject, { target: db, object: fileObj });
+          const added = await invokePromise(SpaceOperation.AddObject, { target: db, object: fileObj, hidden: true });
           await onUpload((added.data?.object ?? fileObj) as File.File, source);
         } catch (err) {
           // TODO(burdon): Surface to caller via an `onError` option once a UX for upload errors is decided.
