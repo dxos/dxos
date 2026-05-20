@@ -280,7 +280,6 @@
     "lit": "catalog:",
     "pwa-asset-generator": "catalog:",
     "rollup-plugin-visualizer": "catalog:",
-    "tsx": "catalog:",
     "vite": "catalog:",
     "vite-plugin-pwa": "catalog:",
     "vite-plugin-solid": "catalog:",
