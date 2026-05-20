@@ -15,5 +15,5 @@ export const meta: Plugin.Meta = {
   `,
   icon: 'ph--file--regular',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-files',
-  tags: ['labs'],
+  tags: ['system'],
 };
