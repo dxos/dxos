@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.markdown',
   name: 'Markdown',
+  author: 'DXOS',
   description: trim`
     Full-featured collaborative markdown editor with real-time editing, inline comments, and rich formatting.
     Supports AI-powered editing assistance and seamlessly integrates with other workspace objects.

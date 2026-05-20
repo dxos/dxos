@@ -16,6 +16,7 @@ import { useApp } from '../../hooks';
 const TestPlugin = Plugin.define<{ error?: boolean }>({
   id: 'org.dxos.plugin.test',
   name: 'Test Plugin',
+  tags: ['system'],
 }).pipe(
   Plugin.addModule(({ error }) => ({
     id: 'TestMain',
@@ -46,14 +47,11 @@ const TestPlugin = Plugin.define<{ error?: boolean }>({
   Plugin.make,
 );
 
-const core = [TestPlugin.meta.id];
-
 type DefaultStoryProps = { plugins?: Plugin.Plugin[] };
 
 const DefaultStory = ({ plugins }: DefaultStoryProps) => {
   const App = useApp({
     plugins,
-    core,
     placeholder: () => {
       return <div className='text-description'>Loading...</div>;
     },

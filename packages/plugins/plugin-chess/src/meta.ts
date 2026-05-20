@@ -9,6 +9,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.chess',
   name: 'Chess',
+  author: 'DXOS',
   description: trim`
     Full-featured chess game supporting multiplayer matches with friends or practice sessions against AI opponents.
     Track game history and analyze moves in real-time.
@@ -20,4 +21,5 @@ export const meta: Plugin.Meta = {
   dependsOn: [gameMeta.id],
   version: '0.8.3',
   spec: 'https://unpkg.com/@dxos/plugin-chess@0.8.3/PLUGIN.mdl',
+  tags: ['game'],
 };

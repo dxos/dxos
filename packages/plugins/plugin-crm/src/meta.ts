@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.crm',
   name: 'CRM',
+  author: 'DXOS',
   description: trim`
     Contribute a CRM blueprint for researching people and organizations and
     producing structured Profile documents in your space.
