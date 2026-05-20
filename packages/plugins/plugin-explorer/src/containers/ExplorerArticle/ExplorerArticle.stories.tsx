@@ -62,15 +62,22 @@ const meta: Meta<StoryArgs> = {
               const { personalSpace } = yield* initializeIdentity(client);
               yield* Effect.promise(() => generate(personalSpace, generator));
               const { view } = yield* Effect.promise(() =>
-                ViewModel.makeFromDatabase({ db: personalSpace.db, typename: Type.getTypename(Graph.Graph) }),
-              );
-              const graph = personalSpace.db.add(
-                Graph.make({
-                  name: 'Test',
-                  view,
-                  query: { raw: '', ast: Query.select(Filter.everything()).ast },
+                ViewModel.makeFromDatabase({
+                  db: personalSpace.db,
+                  typename: Type.getTypename(Graph.Graph),
                 }),
               );
+
+              const graph = personalSpace.db.add(
+                Graph.make({
+                  name: 'Root',
+                  view,
+                  query: {
+                    ast: Query.select(Filter.everything()).ast,
+                  },
+                }),
+              );
+
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
               return graph;
             }),
@@ -98,8 +105,18 @@ export const Force: Story = {
 };
 
 /**
- * Radial cluster: every object on the perimeter, grouped by its schema, all under
- * a single database root. Inspired by https://observablehq.com/@d3/radial-cluster.
+ * Lattice: every object as a cell in a square-as-possible CSS grid, sorted by typename so
+ * objects of the same type cluster together. Each cell is colored by its typename.
+ */
+export const Lattice: Story = {
+  args: {
+    variant: 'lattice',
+  },
+};
+
+/**
+ * Radial cluster: every object on the perimeter, grouped by its schema, all under a single database root.
+ * Inspired by https://observablehq.com/@d3/radial-cluster.
  */
 export const Cluster: Story = {
   args: {
@@ -115,16 +132,5 @@ export const Cluster: Story = {
 export const Bundle: Story = {
   args: {
     variant: 'bundle',
-  },
-};
-
-/**
- * Lattice: every object as a cell in a square-as-possible CSS grid, sorted by typename so
- * objects of the same type cluster together. Each cell is colored by its typename.
- */
-export const LatticeStory: Story = {
-  name: 'Lattice',
-  args: {
-    variant: 'lattice',
   },
 };

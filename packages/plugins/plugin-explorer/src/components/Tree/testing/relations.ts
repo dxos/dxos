@@ -146,6 +146,7 @@ export const generate = async (
   if (contacts.length < 2 || relations.count <= 0) {
     return;
   }
+
   for (const _ of range(relations.count)) {
     const source = pick(contacts);
     const target = pick(contacts);

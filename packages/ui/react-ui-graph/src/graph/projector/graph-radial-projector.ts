@@ -30,6 +30,8 @@ export class GraphRadialProjector<
   protected override onUpdate(graph?: Graph.Any) {
     log('onUpdate', { graph: { nodes: graph?.nodes.length, edges: graph?.edges.length } });
     this.mergeData(graph);
+    // Bind enter/exit once before the tween starts; subsequent animate frames emit 'positions'.
+    this.emitUpdate('topology');
     this.doRadialLayout();
   }
 
@@ -46,14 +48,15 @@ export class GraphRadialProjector<
           node.r = node.sr + (node.tr - node.sr) * d;
         });
 
-        this.emitUpdate();
+        // Tween frames only mutate `x/y/r`; emit 'positions' so the renderer can fast-path.
+        this.emitUpdate('positions');
         if (t >= 1) {
           this._timer.stop();
           this._timer = undefined;
         }
       });
     } else {
-      this.emitUpdate();
+      this.emitUpdate('positions');
     }
   }
 

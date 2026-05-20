@@ -65,6 +65,12 @@ export type GraphLayoutEdge<NodeData = any, EdgeData = any> = {
   target: GraphLayoutNode<NodeData>;
   data?: EdgeData;
   linkForce?: boolean;
+  /**
+   * Precomputed SVG `d` attribute. When set, the renderer uses this instead of
+   * deriving a straight-line path from `source/target` positions. Lets projectors
+   * own edge geometry (e.g. radial elbows, bundled curves) without renderer changes.
+   */
+  path?: string;
   classes?: {
     path?: string;
   };

@@ -12,6 +12,13 @@ import { type GraphLayout, type GraphLayoutEdge, type GraphLayoutNode } from '..
 import { createBullets } from './bullets';
 import { Renderer, type RendererOptions } from './renderer';
 
+/**
+ * Replace the default `<circle>` with a custom node shape. Invoked once per
+ * entering node — append your own elements to the supplied `<g>`. Position and
+ * `attributes.node` callbacks are still applied by the renderer.
+ */
+export type RenderNode<NodeData = any> = (group: D3Selection<SVGGElement>, node: GraphLayoutNode<NodeData>) => void;
+
 const createLine = line<Point>();
 
 export type LabelOptions<NodeData = any> = {
@@ -40,6 +47,11 @@ export type GraphRendererOptions<NodeData = any, EdgeData = any> = RendererOptio
   labels?: LabelOptions<NodeData>;
   subgraphs?: boolean;
   attributes?: AttributesOptions<NodeData>;
+  /**
+   * Override the default `<circle>` node shape. When set, the renderer appends
+   * whatever this callback creates instead. Use for lattice rects, custom icons, etc.
+   */
+  renderNode?: RenderNode<NodeData>;
   transition?: () => any;
   onNodeClick?: (node: GraphLayoutNode<NodeData>, event: MouseEvent) => void;
   onNodePointerEnter?: (node: GraphLayoutNode<NodeData>, event: MouseEvent) => void;
@@ -169,7 +181,7 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
             .attr('opacity', 1)
             .classed('dx-node', true)
             .call(createNode, this.options),
-        (update) => update.call(updateNode, this.options),
+        (update) => update,
         (exit) => {
           // Fade out.
           return exit
@@ -182,6 +194,9 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
             });
         },
       )
+      // Apply update (transform / attributes / labels) to enter+update so the first render
+      // also populates `data-*` attributes and transforms — not just subsequent ticks.
+      .call(updateNode, this.options)
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
     //
@@ -198,10 +213,49 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
             .attr('data-id', (d) => d.id)
             .classed('dx-edge', true)
             .call(createEdge, this.options),
-        (update) => update.call(updateEdge, this.options, nodeGroup).each((d) => {}),
+        (update) => update,
         (exit) => exit.remove(),
       )
+      // Apply edge updates (paths / attributes) to enter+update — see note on nodes above.
+      .call(updateEdge, this.options, nodeGroup)
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  }
+
+  /**
+   * Fast positions-only update. Skips enter/exit, attribute callbacks, label sizing,
+   * and the subgraph hull pass; just writes `transform` per node and `d` per edge.
+   * Called per simulation tick / animation frame.
+   */
+  override applyPositions(layout: GraphLayout<NodeData, EdgeData>) {
+    if (!this.root) {
+      return;
+    }
+
+    const root = select(this.root);
+
+    // Transforms only — no attribute callback, no label measurement.
+    root
+      .select('g.dx-nodes')
+      .selectAll<SVGGElement, GraphLayoutNode<NodeData>>('g.dx-node')
+      .attr('transform', (d) => (d.x != null && d.y != null ? `translate(${d.x},${d.y})` : null));
+
+    // Edge geometry — either precomputed (`edge.path`) or derived from endpoint positions.
+    root
+      .select('g.dx-edges')
+      .selectAll<SVGGElement, GraphLayoutEdge<NodeData, EdgeData>>('g.dx-edge')
+      .selectAll<SVGPathElement, GraphLayoutEdge<NodeData, EdgeData>>('path')
+      .attr('d', function () {
+        // NOTE: `d` is stale after layout is switched so get the datum from the parent element.
+        const edge = select(this.parentElement).datum() as GraphLayoutEdge<NodeData, EdgeData>;
+        if (edge.path) {
+          return edge.path;
+        }
+        const { source, target } = edge;
+        if (!source.initialized || !target.initialized) {
+          return null;
+        }
+        return createLine(getCircumferencePoints([source.x, source.y], [target.x, target.y], source.r, target.r));
+      });
   }
 
   /**
@@ -222,13 +276,21 @@ export class GraphRenderer<NodeData = any, EdgeData = any> extends Renderer<
  * @param options
  */
 const createNode: D3Callable = <Data>(group: D3Selection, options: GraphRendererOptions<Data>) => {
-  // Circle.
-  const circle = group.append('circle');
+  // Custom node shape: consumer appends its own elements (e.g. <rect>) and the
+  // renderer skips the default <circle>. Drag/hover handlers attach to the
+  // wrapping <g> so the custom shape acts as the hit target.
+  const useCustom = !!options.renderNode;
+  if (useCustom) {
+    group.each(function (d) {
+      options.renderNode!(select<SVGGElement, GraphLayoutNode<Data>>(this), d);
+    });
+  }
+  const hitTarget = useCustom ? group : group.append('circle');
 
   // Drag.
   // TODO(burdon): Update when layout changes.
   if (options.drag) {
-    circle.call(options.drag);
+    hitTarget.call(options.drag);
   }
 
   // Click.
@@ -249,14 +311,14 @@ const createNode: D3Callable = <Data>(group: D3Selection, options: GraphRenderer
 
   // Hover.
   if (options.onNodePointerEnter) {
-    circle.on('pointerenter', function (event: PointerEvent) {
-      const node = select<any, GraphLayoutNode<Data>>(this.parentElement).datum();
+    hitTarget.on('pointerenter', function (event: PointerEvent) {
+      const node = select<any, GraphLayoutNode<Data>>(useCustom ? this : this.parentElement).datum();
       options.onNodePointerEnter(node, event);
     });
 
     group.attr('data-hover', 'handled');
-  } else if (options.highlight !== false) {
-    circle.on('pointerenter', function () {
+  } else if (options.highlight !== false && !useCustom) {
+    hitTarget.on('pointerenter', function () {
       select(this.closest('g.dx-node')).raise();
       if (options.labels) {
         select(this.parentElement).classed('dx-node-active', true).classed('dx-highlight', true);
@@ -314,8 +376,10 @@ const updateNode: D3Callable = <NodeData = any, EdgeData = any>(
     ? (group.transition(options.transition()) as unknown as D3Selection)
     : group;
 
-  // Update circles.
-  groupOrTransition.select<SVGCircleElement>('circle').attr('r', (d) => d.r ?? 16);
+  // Update circles. Skipped when the consumer supplied a custom node shape.
+  if (!options.renderNode) {
+    groupOrTransition.select<SVGCircleElement>('circle').attr('r', (d) => d.r ?? 16);
+  }
 
   // Update labels.
   if (options.labels) {
@@ -427,7 +491,11 @@ const updateEdge: D3Callable = <NodeData = any, EdgeData = any>(
 
   groupOrTransition.selectAll<SVGPathElement, GraphLayoutEdge<NodeData, EdgeData>>('path').attr('d', function () {
     // NOTE: `d` is stale after layout is switched so get the datum from the parent element.
-    const { source, target } = select(this.parentElement).datum() as GraphLayoutEdge<NodeData, EdgeData>;
+    const edge = select(this.parentElement).datum() as GraphLayoutEdge<NodeData, EdgeData>;
+    if (edge.path) {
+      return edge.path;
+    }
+    const { source, target } = edge;
     if (!source.initialized || !target.initialized) {
       return;
     }

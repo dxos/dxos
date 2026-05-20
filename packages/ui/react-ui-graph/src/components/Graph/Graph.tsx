@@ -27,7 +27,7 @@ export type GraphController = {
 };
 
 export type GraphProps<Node extends Graph$.Node.Any = any, Edge extends Graph$.Edge.Any = any> = ThemedClassName<
-  Pick<GraphRendererOptions<Node>, 'labels' | 'subgraphs' | 'attributes'> & {
+  Pick<GraphRendererOptions<Node>, 'labels' | 'subgraphs' | 'attributes' | 'renderNode'> & {
     model?: GraphModel.ReactiveGraphModel<Node, Edge>;
     projector?: GraphProjector<Node>;
     renderer?: GraphRenderer<Node>;
@@ -95,9 +95,9 @@ const GraphInner = <Node extends Graph$.Node.Any = any, Edge extends Graph$.Edge
 
   // Subscriptions.
   useEffect(() => {
-    projector.updateData(model?.graph);
-
-    return combine(
+    // Wire the renderer listener BEFORE calling updateData so the synchronous
+    // 'topology' emit (fired from inside onUpdate) reaches the renderer.
+    const cleanup = combine(
       // Subscribe to model changes if reactive model.
       model
         ? model.subscribe(() => {
@@ -105,15 +105,24 @@ const GraphInner = <Node extends Graph$.Node.Any = any, Edge extends Graph$.Edge
           })
         : undefined,
 
-      projector.updated.on(({ layout }) => {
+      projector.updated.on(({ layout, kind }) => {
         try {
-          renderer.render(layout);
+          // 'positions' is the per-tick fast path; 'topology' (and unset, for back-compat) is the full render.
+          if (kind === 'positions') {
+            renderer.applyPositions(layout);
+          } else {
+            renderer.render(layout);
+          }
         } catch (error) {
           log.catch(error);
           void projector.stop();
         }
       }),
     );
+
+    projector.updateData(model?.graph);
+
+    return cleanup;
   }, [model, projector, renderer]);
 
   // Start.

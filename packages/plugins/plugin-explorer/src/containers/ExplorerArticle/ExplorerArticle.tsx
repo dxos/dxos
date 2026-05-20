@@ -3,7 +3,7 @@
 //
 
 import { useAtomValue } from '@effect-atom/atom-react';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Filter, Obj, type View } from '@dxos/echo';
@@ -11,11 +11,20 @@ import { QueryBuilder } from '@dxos/echo-query';
 import { useObject } from '@dxos/react-client/echo';
 import { DxAnchorActivate, Icon, Panel, Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
-import { type SpaceGraphNode } from '@dxos/schema';
+import {
+  GraphClusterProjector,
+  type GraphLayoutNode,
+  GraphLatticeProjector,
+  SVG,
+  type SVGContext,
+} from '@dxos/react-ui-graph';
+import { type SpaceGraphEdge, type SpaceGraphNode } from '@dxos/schema';
 
-import { ForceGraph, Lattice } from '#components';
+import { ForceGraph } from '#components';
 import { HierarchicalEdgeBundling, RadialTree, spaceGraphToHierarchy, type TreeNode } from '#components';
 import { useGraphModel } from '#hooks';
+
+import { getNodeFillForObject } from '../../util/node-color';
 
 /** Visualization variants exposed by `ExplorerArticle`. */
 export type ExplorerArticleVariant = 'force' | 'cluster' | 'bundle' | 'lattice';
@@ -144,20 +153,114 @@ const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
   }
 
   if (variant === 'lattice') {
-    return <LatticeVisualization model={model} onNodeHover={onNodeHover} />;
+    return <UnifiedLatticeVisualization model={model} onNodeHover={onNodeHover} />;
+  }
+
+  if (variant === 'cluster') {
+    return <UnifiedClusterVisualization model={model} onNodeHover={onNodeHover} />;
   }
 
   return <HierarchyVisualization variant={variant} model={model} onNodeHover={onNodeHover} />;
 };
 
-const LatticeVisualization = ({ model, onNodeHover }: Omit<VisualizationProps, 'variant'>) => {
-  const graphSnapshot = useAtomValue(model.graphAtom);
-  const objectNodes = useMemo(
-    () => graphSnapshot.nodes.filter((node): node is SpaceGraphNode => node.type === 'object'),
-    [graphSnapshot],
+/**
+ * Lattice variant rendered via the shared `<SVG.Graph>` engine with a custom
+ * `renderNode` slot for rounded rectangles colored by typename.
+ */
+const UnifiedLatticeVisualization = ({ model, onNodeHover }: Omit<VisualizationProps, 'variant'>) => {
+  return (
+    <ProjectedGraph
+      model={model}
+      projectorFactory={(ctx) => new GraphLatticeProjector(ctx)}
+      onNodeHover={onNodeHover}
+      renderNode={(group, node: GraphLayoutNode<SpaceGraphNode>) => {
+        const r = node.r ?? 16;
+        // Rounded square inscribed in the layout's radius.
+        const size = r * 2;
+        group
+          .append('rect')
+          .attr('x', -r)
+          .attr('y', -r)
+          .attr('width', size)
+          .attr('height', size)
+          .attr('rx', r * 0.18)
+          .attr('ry', r * 0.18)
+          .style('cursor', 'pointer')
+          .style('fill', getNodeFillForObject(node.data?.data?.object as Obj.Unknown | undefined));
+      }}
+    />
+  );
+};
+
+/**
+ * Cluster variant rendered via the shared `<SVG.Graph>` engine.
+ */
+const UnifiedClusterVisualization = ({ model, onNodeHover }: Omit<VisualizationProps, 'variant'>) => {
+  return (
+    <ProjectedGraph
+      model={model}
+      projectorFactory={(ctx) =>
+        new GraphClusterProjector(ctx, {
+          groupOf: (node: GraphLayoutNode<SpaceGraphNode>) => {
+            const obj = node.data?.data?.object;
+            return obj ? (Obj.getTypename(obj) ?? '(untyped)') : undefined;
+          },
+        })
+      }
+      onNodeHover={onNodeHover}
+      renderNode={(group, node: GraphLayoutNode<SpaceGraphNode>) => {
+        const r = 4;
+        group
+          .append('circle')
+          .attr('r', r)
+          .style('cursor', 'pointer')
+          .style('fill', getNodeFillForObject(node.data?.data?.object as Obj.Unknown | undefined));
+      }}
+    />
+  );
+};
+
+type ProjectedGraphProps = {
+  model: NonNullable<ReturnType<typeof useGraphModel>>;
+  projectorFactory: (ctx: SVGContext) => any;
+  onNodeHover?: (node: TreeNode | null, event?: MouseEvent) => void;
+  renderNode: (group: any, node: GraphLayoutNode<SpaceGraphNode>) => void;
+};
+
+/**
+ * Hosts `<SVG.Graph>` with a projector instantiated from the given factory. Wires
+ * `onInspect` into the standard preview-hover contract used by the other variants.
+ */
+const ProjectedGraph = ({ model, projectorFactory, onNodeHover, renderNode }: ProjectedGraphProps) => {
+  const svgRef = useRef<SVGContext>(null);
+  const [projector, setProjector] = useState<any>();
+  useEffect(() => {
+    if (svgRef.current) {
+      setProjector(projectorFactory(svgRef.current));
+    }
+    // Recreating the projector when the factory ref changes is acceptable; the
+    // factory is recreated per parent render but never changes shape.
+  }, []);
+
+  const handleInspect = useCallback(
+    (node: GraphLayoutNode<SpaceGraphNode>, event: MouseEvent) => {
+      onNodeHover?.({ id: node.id, data: node.data?.data?.object }, event);
+    },
+    [onNodeHover],
   );
 
-  return <Lattice nodes={objectNodes} onNodeHover={onNodeHover} />;
+  return (
+    <SVG.Root ref={svgRef}>
+      <SVG.Zoom extent={[1 / 2, 2]}>
+        <SVG.Graph<SpaceGraphNode, SpaceGraphEdge>
+          model={model}
+          projector={projector}
+          renderNode={renderNode}
+          onInspect={handleInspect}
+        />
+      </SVG.Zoom>
+    </SVG.Root>
+  );
 };
 
 /**
