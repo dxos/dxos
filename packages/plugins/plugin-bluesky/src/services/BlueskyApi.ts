@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// TODO(wittjosiah): Refactor to use a dfx-style Effect-native client.
+
 // @import-as-namespace
 
 import * as HttpBody from '@effect/platform/HttpBody';

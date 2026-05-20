@@ -48,7 +48,7 @@ export const snowflakeForTimestamp = (timestampMs: number): string => {
 };
 
 /** Default lookback window for the first sync of a channel when the user hasn't set `daysOfHistory`. */
-export const DEFAULT_DAYS_OF_HISTORY = 7;
+export const DEFAULT_DAYS_OF_HISTORY = 30;
 
 /**
  * Builds the Discord OAuth invite URL for adding the bot to a guild.
