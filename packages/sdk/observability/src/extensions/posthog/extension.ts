@@ -156,7 +156,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
         kind: 'feedback',
         // TODO(wittjosiah): Support custom surveys.
         captureUserFeedback: (form) => {
-          return new Promise<string | undefined>((resolve) => {
+          return new Promise<string | undefined>((resolve, reject) => {
             posthog.getSurveys((surveys) => {
               void (async () => {
                 try {
@@ -186,7 +186,7 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
                   resolve(result?.uuid);
                 } catch (err) {
                   log.error('Failed to capture user feedback', { err });
-                  resolve(undefined);
+                  reject(err);
                 }
               })();
             });

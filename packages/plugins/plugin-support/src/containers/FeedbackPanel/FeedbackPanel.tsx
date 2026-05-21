@@ -113,6 +113,10 @@ export const FeedbackPanel = () => {
       // and no misleading toast is shown.
       const { data: eventUuid } = await invokePromise(SupportOperation.CaptureUserFeedback, values);
 
+      // Open a blank popup synchronously while user activation is still valid.
+      // Navigating it after the async work avoids popup-blocker policies.
+      const popup = window.open('', '_blank');
+
       // Discord thread creation is best-effort; fall back to the PostHog toast on any error.
       try {
         const postHogEventUrl =
@@ -126,7 +130,11 @@ export const FeedbackPanel = () => {
           throw new Error(`Discord service returned ${res.status}`);
         }
         const { threadUrl } = (await res.json()) as { threadUrl: string };
-        window.open(threadUrl, '_blank', 'noopener,noreferrer');
+        if (popup) {
+          popup.location.href = threadUrl;
+        } else {
+          window.open(threadUrl, '_blank', 'noopener,noreferrer');
+        }
         await invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
         await invokePromise(LayoutOperation.AddToast, {
           id: `${meta.id}.discord-feedback-success`,
@@ -137,6 +145,7 @@ export const FeedbackPanel = () => {
           closeLabel: ['close.label', { ns: osTranslations }],
         });
       } catch {
+        popup?.close();
         await invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
         await invokePromise(LayoutOperation.AddToast, {
           id: `${meta.id}.feedback-success`,
