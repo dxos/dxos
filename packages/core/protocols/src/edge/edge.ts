@@ -316,12 +316,12 @@ export type EdgeAuthChallenge = {
 
 export enum OAuthProvider {
   ATPROTO = 'atproto',
+  ATLASSIAN = 'atlassian',
   /** @deprecated Use ATPROTO instead. */
   BLUESKY = 'bluesky',
   DISCORD = 'discord',
   GITHUB = 'github',
   GOOGLE = 'google',
-  ATLASSIAN = 'atlassian',
   LINEAR = 'linear',
   NOTION = 'notion',
   SLACK = 'slack',
