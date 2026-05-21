@@ -12,7 +12,7 @@ import { Filter } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
-import { Loading, withTheme } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
@@ -99,6 +99,7 @@ const DefaultStory = (_: StoryProps) => {
   if (!project) {
     return <Loading />;
   }
+
   return <CodeArticle role='article' subject={project} attendableId='story' />;
 };
 
@@ -107,6 +108,7 @@ const meta = {
   render: DefaultStory,
   decorators: [
     withTheme(),
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryProps>(({ args: { seed, name } }) => ({
       setupEvents: [AppActivationEvents.SetupSettings],
       plugins: [
