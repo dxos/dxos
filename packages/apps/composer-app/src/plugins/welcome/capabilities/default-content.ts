@@ -14,6 +14,7 @@ import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import EXEMPLAR_SPACE_JSON from '../content/exemplar-space.dx.json?raw';
 
 const PERSONAL_SPACE_ICON = 'house-line';
+const PERSONAL_SPACE_ICON_HUE = 'violet';
 const EXEMPLAR_SPACE_ARCHIVE_FILENAME = 'exemplar-space.dx.json';
 
 export default Capability.makeModule(
@@ -33,6 +34,7 @@ export default Capability.makeModule(
     }
     Obj.update(personalSpace.properties, (obj) => {
       obj.icon = PERSONAL_SPACE_ICON;
+      obj.iconHue = PERSONAL_SPACE_ICON_HUE;
     });
 
     // Run plugin OnCreateSpace callbacks against the personal space so capabilities that
