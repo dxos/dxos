@@ -302,8 +302,6 @@ export default Capability.makeModule(
         if (!entry) {
           return;
         }
-        // Snapshot was written unconditionally in createIntegration; clean it up
-        // now that the postMessage path handled the token successfully.
         deletePendingSnapshot(decoded.accessTokenId);
         Obj.update(entry.token, (token) => {
           token.token = decoded.accessToken;
@@ -369,11 +367,9 @@ export default Capability.makeModule(
 
         pending.set(token.id, { token, integration, db, provider, existingTarget });
 
-        // Always write a snapshot so the redirect fallback works for any OAuth
-        // provider. Popup flows go through postMessage normally, but if Google
-        // (or another IdP) clears window.opener during auth, Edge falls back to
-        // redirecting the popup to /redirect/oauth — and the snapshot is then
-        // the only way to recover the pending state in that new page instance.
+        // Written for all providers: if window.opener is lost during auth, Edge
+        // redirects the popup to /redirect/oauth and this snapshot is the only
+        // recovery path.
         writePendingSnapshot(token.id, {
           spaceId,
           providerId: provider.id,
