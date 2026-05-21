@@ -99,7 +99,7 @@ export const ResetDialog = ({
       }
 
       const observability = await observabilityProp;
-      observability.feedback.captureUserFeedback(values);
+      void observability.feedback.captureUserFeedback(values);
       setFeedbackOpen(false);
       setFeedbackSent(true);
     },
