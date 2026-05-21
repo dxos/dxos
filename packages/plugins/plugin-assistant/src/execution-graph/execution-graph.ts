@@ -194,10 +194,10 @@ const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext):
       case 'text':
         return event.data.role === 'user'
           ? {
-            icon: ICONS.userMessage.icon,
-            level: ICONS.userMessage.level,
-            message: trimText(event.data.block.text),
-          }
+              icon: ICONS.userMessage.icon,
+              level: ICONS.userMessage.level,
+              message: trimText(event.data.block.text),
+            }
           : undefined;
       case 'status':
         return {
@@ -573,8 +573,8 @@ export const CommitSelector = {
    */
   compose:
     (next: CommitSelector) =>
-      (prev: CommitSelector): CommitSelector =>
-        CommitSelector.make((commits) => next.select(prev.select(commits))),
+    (prev: CommitSelector): CommitSelector =>
+      CommitSelector.make((commits) => next.select(prev.select(commits))),
 
   /**
    * If `prev` selector matches no commits, return `next` selector, otherwise return `prev` selector.
@@ -588,22 +588,22 @@ export const CommitSelector = {
    */
   orElse:
     (next: CommitSelector) =>
-      (prev: CommitSelector): CommitSelector =>
-        CommitSelector.make((commits) => {
-          const selected = prev.select(commits);
-          if (selected.length > 0) {
-            return selected;
-          }
-          return next.select(commits);
-        }),
+    (prev: CommitSelector): CommitSelector =>
+      CommitSelector.make((commits) => {
+        const selected = prev.select(commits);
+        if (selected.length > 0) {
+          return selected;
+        }
+        return next.select(commits);
+      }),
 
   /**
    * Selects commits that match either of the given selectors.
    */
   andAlso:
     (next: CommitSelector) =>
-      (prev: CommitSelector): CommitSelector =>
-        CommitSelector.unionAll(prev, next),
+    (prev: CommitSelector): CommitSelector =>
+      CommitSelector.unionAll(prev, next),
 
   /**
    * Selects the first n commits.

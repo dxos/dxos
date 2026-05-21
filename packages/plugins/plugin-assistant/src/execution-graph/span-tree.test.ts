@@ -130,10 +130,7 @@ describe('buildSpanTree', () => {
 
   test('end event without a matching begin attaches to root', ({ expect }) => {
     const messages = collectTraceEvents(
-      withMeta(
-        { pid: 'op-1' },
-        Trace.write(Trace.OperationEnd, { key: 'reply', name: 'Reply', outcome: 'success' }),
-      ),
+      withMeta({ pid: 'op-1' }, Trace.write(Trace.OperationEnd, { key: 'reply', name: 'Reply', outcome: 'success' })),
     );
     const tree = buildSpanTree(messages);
     expect(tree.children).toEqual([]);
@@ -184,11 +181,7 @@ describe('buildSpanTree', () => {
     const tree = buildSpanTree(messages, { eventLimit: 1 });
     expect(tree.children).toHaveLength(1);
     const agentSpan = tree.children[0];
-    expect(agentSpan.events.map((event) => event.type)).toEqual([
-      AgentRequestBegin.key,
-      'note',
-      AgentRequestEnd.key,
-    ]);
+    expect(agentSpan.events.map((event) => event.type)).toEqual([AgentRequestBegin.key, 'note', AgentRequestEnd.key]);
     expect((agentSpan.events[1].data as { text: string }).text).toBe('note 3');
   });
 

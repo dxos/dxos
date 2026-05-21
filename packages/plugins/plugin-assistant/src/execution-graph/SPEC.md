@@ -39,16 +39,16 @@ flattens via `Trace.flatten` (`Trace.ts#L178`) so every event inherits its messa
 
 `Meta` fields (`Trace.ts#L102`):
 
-| Field | Read by the builder | Purpose |
-| --- | --- | --- |
-| `pid` | Yes | Identifies the span the event belongs to and the branch the commit lives on. |
-| `parentPid` | Yes | Links a span to its parent span at begin time. |
-| `processName` | No (carried in `SpanMeta` for consumers) | — |
-| `space` | No | — |
-| `conversationId` | No (carried in `SpanMeta`) | — |
-| `triggerId` | No (carried in `SpanMeta`) | — |
-| `toolCallId` | No (carried in `SpanMeta`) | — |
-| `runtimeName` | No (carried in `SpanMeta`) | — |
+| Field            | Read by the builder                      | Purpose                                                                      |
+| ---------------- | ---------------------------------------- | ---------------------------------------------------------------------------- |
+| `pid`            | Yes                                      | Identifies the span the event belongs to and the branch the commit lives on. |
+| `parentPid`      | Yes                                      | Links a span to its parent span at begin time.                               |
+| `processName`    | No (carried in `SpanMeta` for consumers) | —                                                                            |
+| `space`          | No                                       | —                                                                            |
+| `conversationId` | No (carried in `SpanMeta`)               | —                                                                            |
+| `triggerId`      | No (carried in `SpanMeta`)               | —                                                                            |
+| `toolCallId`     | No (carried in `SpanMeta`)               | —                                                                            |
+| `runtimeName`    | No (carried in `SpanMeta`)               | —                                                                            |
 
 Only `pid` and `parentPid` participate in graph topology. The remaining fields are
 forwarded as `SpanMeta` for downstream display but never branch or anchor logic.
@@ -121,7 +121,7 @@ Two type sets defined in `span-tree.ts#L47`:
 
 ```ts
 export const BEGIN_EVENT_TYPES = new Set([Trace.OperationStart.key, AgentRequestBegin.key]);
-export const END_EVENT_TYPES   = new Set([Trace.OperationEnd.key,   AgentRequestEnd.key]);
+export const END_EVENT_TYPES = new Set([Trace.OperationEnd.key, AgentRequestEnd.key]);
 ```
 
 - **Begin events**: `operation.start`, `assistant.agentRequestBegin`. Open a span.
@@ -136,18 +136,18 @@ export const END_EVENT_TYPES   = new Set([Trace.OperationEnd.key,   AgentRequest
 `execution-graph.ts#L118`. Each branch validates `event.data` against the
 event-type schema; on validation failure the event is silently dropped (log only).
 
-| Event type | Condition | Icon | Level | Message | `idSuffix` |
-| --- | --- | --- | --- | --- | --- |
-| `AgentRequestBegin` | — | `ph--atom--regular` | `VERBOSE` | `"Agent processing request..."` | — |
-| `AgentRequestEnd` | — | `ph--atom--regular` | `INFO` | `"Agent completed request"` | — |
-| `CompleteBlock` text | `role === 'user'` | `ph--user--regular` | `VERBOSE` | trimmed `block.text` | — |
-| `CompleteBlock` text | `role !== 'user'` | — (drop) | — | — | — |
-| `CompleteBlock` status | — | `ph--info--regular` | `VERBOSE` | trimmed `block.statusText` | — |
-| `CompleteBlock` other | — | — (drop) | — | — | — |
-| `Trace.OperationStart` | — | `ph--function--regular` | `VERBOSE` | `data.name ?? data.key` | `${data.key}:start` |
-| `Trace.OperationEnd` (success) | `outcome === 'success'` | `ph--function--regular` | `INFO` | `${name ?? key} - Success` | `${data.key}:end` |
-| `Trace.OperationEnd` (failure) | `outcome !== 'success'` | `ph--function--regular` | `ERROR` | `${name ?? key} - Error` | `${data.key}:end` |
-| anything else | — | — (drop) | — | — | — |
+| Event type                     | Condition               | Icon                    | Level     | Message                         | `idSuffix`          |
+| ------------------------------ | ----------------------- | ----------------------- | --------- | ------------------------------- | ------------------- |
+| `AgentRequestBegin`            | —                       | `ph--atom--regular`     | `VERBOSE` | `"Agent processing request..."` | —                   |
+| `AgentRequestEnd`              | —                       | `ph--atom--regular`     | `INFO`    | `"Agent completed request"`     | —                   |
+| `CompleteBlock` text           | `role === 'user'`       | `ph--user--regular`     | `VERBOSE` | trimmed `block.text`            | —                   |
+| `CompleteBlock` text           | `role !== 'user'`       | — (drop)                | —         | —                               | —                   |
+| `CompleteBlock` status         | —                       | `ph--info--regular`     | `VERBOSE` | trimmed `block.statusText`      | —                   |
+| `CompleteBlock` other          | —                       | — (drop)                | —         | —                               | —                   |
+| `Trace.OperationStart`         | —                       | `ph--function--regular` | `VERBOSE` | `data.name ?? data.key`         | `${data.key}:start` |
+| `Trace.OperationEnd` (success) | `outcome === 'success'` | `ph--function--regular` | `INFO`    | `${name ?? key} - Success`      | `${data.key}:end`   |
+| `Trace.OperationEnd` (failure) | `outcome !== 'success'` | `ph--function--regular` | `ERROR`   | `${name ?? key} - Error`        | `${data.key}:end`   |
+| anything else                  | —                       | — (drop)                | —         | —                               | —                   |
 
 `trimText` clips to first 100 chars, trims whitespace, drops everything after the
 first newline (`execution-graph.ts#L438`).
@@ -193,7 +193,7 @@ Spans are frozen via `freezeSpan` into the public `Span` shape; the
 
 Multiple complete begin/end pairs sharing a `pid` become **sibling spans under the
 same parent**. The second begin orphans the first because `openSpans.set(pid, …)`
-unconditionally supersedes. This is intended for *sequential* execution within
+unconditionally supersedes. This is intended for _sequential_ execution within
 one process (e.g. successive agent requests in a session) — not interleaved.
 Each sibling receives a distinct synthetic id (`${pid}#${n}`); the shared `pid`
 is preserved in `SpanMeta` and used for branch derivation (§6) so siblings share
@@ -204,7 +204,7 @@ become sibling spans').
 
 ### 5.2 `eventLimit` semantics
 
-`applyEventLimit` (`span-tree.ts#L211`) — runs *after* chronological sort, *before*
+`applyEventLimit` (`span-tree.ts#L211`) — runs _after_ chronological sort, _before_
 tree construction.
 
 Rule: only **non-boundary** events count toward `eventLimit`. Span boundaries
@@ -217,7 +217,7 @@ Dropping an end leaves a span open and corrupts the open-span map for any later
 same-pid sibling. The motivating regression is documented in `remote-snapshot.test.ts`
 (commit `eae07dad83`, "enhance event limit handling").
 
-When the non-boundary count exceeds `eventLimit`, the *oldest* non-boundary events
+When the non-boundary count exceeds `eventLimit`, the _oldest_ non-boundary events
 are dropped while preserving chronological order. Test reference:
 `span-tree.test.ts#L134` ('eventLimit drops oldest non-boundary events but always
 retains span boundaries') and `#L159` (regression for parent-child preservation).
@@ -288,7 +288,7 @@ parents = lastInSpanContext(parentSpan)
 ```
 
 Anchors to the parent's structural context (own-branch tail → parent's begin →
-recurse). Critically, it does *not* anchor to the immediate parent-branch tail,
+recurse). Critically, it does _not_ anchor to the immediate parent-branch tail,
 because that tail could be a sibling span's commit; structural anchoring keeps
 the fork visually attached to the correct span identity.
 
@@ -333,15 +333,15 @@ some shared ancestor.
 
 ### 8.7 `lastInSpanContext(span)` helper
 
-`execution-graph.ts#L282`. Structural (pid-keyed) walk, *not* topological:
+`execution-graph.ts#L282`. Structural (pid-keyed) walk, _not_ topological:
 
 ```ts
-lastInSpanContext(null) = branch('main').compose(last())
+lastInSpanContext(null) = branch('main').compose(last());
 lastInSpanContext(span) = firstOf(
-  branch(branchOf(span)).compose(last()),     // (a) own-branch tail
-  beginCommitIdBySpan.get(span.id),           // (b) span's own begin commit
-  lastInSpanContext(parent(span)),            // (c) recurse to parent
-)
+  branch(branchOf(span)).compose(last()), // (a) own-branch tail
+  beginCommitIdBySpan.get(span.id), // (b) span's own begin commit
+  lastInSpanContext(parent(span)), // (c) recurse to parent
+);
 ```
 
 Why structural and not topological: if a sub-span of agent A fires before A has
@@ -363,8 +363,8 @@ ${span.id}:${globalIndex}:${suffix}   // when EventPresentation.idSuffix is set
 construction. `idSuffix` comes from `presentEvent`:
 
 - `OperationStart` → `${data.key}:start`
-- `OperationEnd`   → `${data.key}:end`
-- everything else  → none
+- `OperationEnd` → `${data.key}:end`
+- everything else → none
 
 The suffix exists so a span hosting multiple sub-operations sharing the same
 parent span id but different operation keys still produces distinct commit ids,
@@ -442,24 +442,24 @@ explicitly for `MAIN_BRANCH` at the very start so `branches` always contains
 `(commits: Commit[]) => Commit[]`. All selectors are pure and never mutate the
 input.
 
-| Combinator | Semantics |
-| --- | --- |
-| `make(fn)` | Wrap an arbitrary selector function; sets up `.pipe`. |
-| `identity()` | Returns the input array unchanged. |
-| `filter(pred)` | Keeps commits where `pred(commit)` is truthy. |
-| `id(id)` | `filter(c => c.id === id)`. |
-| `tag(t)` | `filter(c => t && c.tags?.includes(t))`. Falsy `t` (`undefined` / `null` / `false`) yields empty. |
-| `anyTags(ts)` | `filter(c => ts.some(t => t && c.tags?.includes(t)))`. |
-| `branch(b)` | `filter(c => b && c.branch === b)`. Falsy `b` yields empty (same foot-gun as `tag`). |
-| `compose(next)` | Pipe: `next(prev(commits))`. Used as `prev.pipe(compose(next))`. |
-| `orElse(next)` | If `prev` is non-empty return `prev`, else `next`. Equivalent to `firstOf(prev, next)`. |
-| `andAlso(next)` | Alias for `unionAll(prev, next)`. |
-| `first(n=1)` | `commits.slice(0, n)`. |
-| `last(n=1)` | `commits.toReversed().slice(0, n)` — **note reversed order**. |
-| `not(sel)` | `commits.filter(c => !sel(commits).includes(c))`. |
-| `unionAll(...sels)` | Concat results, dedupe by `id`. |
-| `intersectAll(...sels)` | First selector's hits that also appear in every other selector's hits (by id). |
-| `firstOf(...sels)` | First selector that returns a non-empty result; else empty. |
+| Combinator              | Semantics                                                                                         |
+| ----------------------- | ------------------------------------------------------------------------------------------------- |
+| `make(fn)`              | Wrap an arbitrary selector function; sets up `.pipe`.                                             |
+| `identity()`            | Returns the input array unchanged.                                                                |
+| `filter(pred)`          | Keeps commits where `pred(commit)` is truthy.                                                     |
+| `id(id)`                | `filter(c => c.id === id)`.                                                                       |
+| `tag(t)`                | `filter(c => t && c.tags?.includes(t))`. Falsy `t` (`undefined` / `null` / `false`) yields empty. |
+| `anyTags(ts)`           | `filter(c => ts.some(t => t && c.tags?.includes(t)))`.                                            |
+| `branch(b)`             | `filter(c => b && c.branch === b)`. Falsy `b` yields empty (same foot-gun as `tag`).              |
+| `compose(next)`         | Pipe: `next(prev(commits))`. Used as `prev.pipe(compose(next))`.                                  |
+| `orElse(next)`          | If `prev` is non-empty return `prev`, else `next`. Equivalent to `firstOf(prev, next)`.           |
+| `andAlso(next)`         | Alias for `unionAll(prev, next)`.                                                                 |
+| `first(n=1)`            | `commits.slice(0, n)`.                                                                            |
+| `last(n=1)`             | `commits.toReversed().slice(0, n)` — **note reversed order**.                                     |
+| `not(sel)`              | `commits.filter(c => !sel(commits).includes(c))`.                                                 |
+| `unionAll(...sels)`     | Concat results, dedupe by `id`.                                                                   |
+| `intersectAll(...sels)` | First selector's hits that also appear in every other selector's hits (by id).                    |
+| `firstOf(...sels)`      | First selector that returns a non-empty result; else empty.                                       |
 
 Foot-guns:
 
@@ -589,7 +589,7 @@ Each entry: **scenario → expected output → rationale**.
   "Generating..." only for processes matching `AGENT_PROCESS_KEY`. Other
   long-running spans must wait for their begin commit to land and the
   generic `RUNNING + hasBranch` heuristic to trigger.
-- **Interleaved same-pid begin/end pairs**: the data model assumes *sequential*
+- **Interleaved same-pid begin/end pairs**: the data model assumes _sequential_
   spans per pid. If a process emits `B1 B2 E1 E2` interleaved, the second `B2`
   orphans the still-open `B1` (no `E1` ever closes the first span). The first
   span receives only its begin event; the second receives `B2 E1 E2`.
@@ -609,25 +609,25 @@ Each entry: **scenario → expected output → rationale**.
 
 ## Appendix A: Source citations
 
-| Symbol | File | Line |
-| --- | --- | --- |
-| `buildSpanTree` | `packages/plugins/plugin-assistant/src/execution-graph/span-tree.ts` | L112 |
-| `applyEventLimit` | same | L211 |
-| `ROOT_SPAN_ID` | same | L12 |
-| `BEGIN_EVENT_TYPES`/`END_EVENT_TYPES` | same | L47 |
-| `walkSpanTree`/`flattenSpanTree` | same | L245 |
-| `buildExecutionGraph` | `packages/plugins/plugin-assistant/src/execution-graph/execution-graph.ts` | L91 |
-| `presentEvent` | same | L118 |
-| `isCollapsibleSpan` | same | L206 |
-| `spanTreeToCommits` | same | L239 |
-| `lastInSpanContext` | same | L282 |
-| `formatCommitId` | same | L433 |
-| `CommitSelector` | same | L446 |
-| `GraphBuilder` / `doctor` | same | L579 / L610 |
-| `Trace.Meta` / `Trace.flatten` | `packages/core/compute/compute/src/Trace.ts` | L102 / L178 |
-| `Process.Info` / `Process.State` | `packages/core/compute/compute/src/Process.ts` | L365 / L321 |
-| `AGENT_PROCESS_KEY` | `packages/core/compute/functions-runtime/src/agent-service/agent-process.ts` | L54 |
-| `Commit` type | `packages/ui/react-ui-components/src/components/Timeline/Timeline.tsx` | L40 |
+| Symbol                                                  | File                                                                         | Line        |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------- | ----------- |
+| `buildSpanTree`                                         | `packages/plugins/plugin-assistant/src/execution-graph/span-tree.ts`         | L112        |
+| `applyEventLimit`                                       | same                                                                         | L211        |
+| `ROOT_SPAN_ID`                                          | same                                                                         | L12         |
+| `BEGIN_EVENT_TYPES`/`END_EVENT_TYPES`                   | same                                                                         | L47         |
+| `walkSpanTree`/`flattenSpanTree`                        | same                                                                         | L245        |
+| `buildExecutionGraph`                                   | `packages/plugins/plugin-assistant/src/execution-graph/execution-graph.ts`   | L91         |
+| `presentEvent`                                          | same                                                                         | L118        |
+| `isCollapsibleSpan`                                     | same                                                                         | L206        |
+| `spanTreeToCommits`                                     | same                                                                         | L239        |
+| `lastInSpanContext`                                     | same                                                                         | L282        |
+| `formatCommitId`                                        | same                                                                         | L433        |
+| `CommitSelector`                                        | same                                                                         | L446        |
+| `GraphBuilder` / `doctor`                               | same                                                                         | L579 / L610 |
+| `Trace.Meta` / `Trace.flatten`                          | `packages/core/compute/compute/src/Trace.ts`                                 | L102 / L178 |
+| `Process.Info` / `Process.State`                        | `packages/core/compute/compute/src/Process.ts`                               | L365 / L321 |
+| `AGENT_PROCESS_KEY`                                     | `packages/core/compute/functions-runtime/src/agent-service/agent-process.ts` | L54         |
+| `Commit` type                                           | `packages/ui/react-ui-components/src/components/Timeline/Timeline.tsx`       | L40         |
 | `TracePanel` `useExecutionGraph` / default `eventLimit` | `packages/plugins/plugin-assistant/src/containers/TracePanel/TracePanel.tsx` | L138 / L153 |
 
 ## Appendix B: Visual contract examples

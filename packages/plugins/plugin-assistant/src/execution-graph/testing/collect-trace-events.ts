@@ -14,10 +14,7 @@ import { Trace } from '@dxos/compute';
  * {@link withMeta} scopes read it so every emitted message gets a strictly increasing
  * timestamp regardless of how many writes happened in the same wall-clock millisecond.
  */
-class TestClock extends Context.Tag('@dxos/plugin-assistant/CollectTraceEvents/TestClock')<
-  TestClock,
-  () => number
->() {}
+class TestClock extends Context.Tag('@dxos/plugin-assistant/CollectTraceEvents/TestClock')<TestClock, () => number>() {}
 
 /**
  * Runs the given Effect with a mock {@link Trace.TraceService} and {@link Trace.TraceSink}
@@ -50,9 +47,7 @@ export const collectTraceEvents = <A, E>(
     },
   });
   const clockLayer: Layer.Layer<TestClock> = Layer.succeed(TestClock, clock);
-  const traceLayer: Layer.Layer<Trace.TraceService> = Trace.testTraceService({ clock }).pipe(
-    Layer.provide(sinkLayer),
-  );
+  const traceLayer: Layer.Layer<Trace.TraceService> = Trace.testTraceService({ clock }).pipe(Layer.provide(sinkLayer));
   const layer = Layer.mergeAll(traceLayer, sinkLayer, clockLayer);
 
   const exit = Effect.runSyncExit(effect.pipe(Effect.provide(layer)));

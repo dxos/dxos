@@ -343,7 +343,10 @@ export class Request {
  * Tool calls that resolve to a toolkit handler (no Operation) are left unchanged so callers can
  * distinguish operation invocations from inline tool calls.
  */
-const enrichToolCallBlock = (block: ContentBlock.Any, toolkit: Toolkit.WithHandler<any> | undefined): ContentBlock.Any => {
+const enrichToolCallBlock = (
+  block: ContentBlock.Any,
+  toolkit: Toolkit.WithHandler<any> | undefined,
+): ContentBlock.Any => {
   if (block._tag !== 'toolCall' || !toolkit) {
     return block;
   }
