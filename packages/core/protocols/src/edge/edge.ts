@@ -321,7 +321,7 @@ export enum OAuthProvider {
   DISCORD = 'discord',
   GITHUB = 'github',
   GOOGLE = 'google',
-  JIRA = 'jira',
+  ATLASSIAN = 'atlassian',
   LINEAR = 'linear',
   NOTION = 'notion',
   SLACK = 'slack',
