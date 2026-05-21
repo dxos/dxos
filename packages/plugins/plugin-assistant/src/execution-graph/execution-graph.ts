@@ -14,6 +14,7 @@ import { Process, Trace } from '@dxos/compute';
 import { AGENT_PROCESS_KEY } from '@dxos/functions-runtime';
 import { LogLevel, log } from '@dxos/log';
 import { type Commit } from '@dxos/react-ui-components';
+import { type ContentBlock } from '@dxos/types';
 
 import { ROOT_SPAN_ID, type Span, buildSpanTree, isSpanBeginEvent, isSpanEndEvent, walkSpanTree } from './span-tree';
 
@@ -51,6 +52,18 @@ const ICONS = {
     icon: 'ph--function--regular',
     level: LogLevel.ERROR,
   },
+  toolCall: {
+    icon: 'ph--wrench--regular',
+    level: LogLevel.VERBOSE,
+  },
+  toolResultSuccess: {
+    icon: 'ph--wrench--regular',
+    level: LogLevel.INFO,
+  },
+  toolResultError: {
+    icon: 'ph--wrench--regular',
+    level: LogLevel.ERROR,
+  },
   agentRequestRunning: {
     icon: 'ph--spinner-gap--regular',
     level: LogLevel.VERBOSE,
@@ -82,7 +95,11 @@ export type ExecutionGraph = {
   branches: string[];
   commits: Commit[];
   spanTree: Span;
+  /** Commit id -> trace event. */
+  details: ExecutionGraphDetailsMap;
 };
+
+export type ExecutionGraphDetailsMap = Record<string, Trace.FlatEvent | undefined>;
 
 export const buildExecutionGraph = ({
   traceMessages,
@@ -90,7 +107,8 @@ export const buildExecutionGraph = ({
   eventLimit = 500,
 }: BuildExecutionGraphParams): ExecutionGraph => {
   const spanTree = buildSpanTree(traceMessages, { eventLimit });
-  const built = spanTreeToCommits(spanTree, activeProcesses);
+  const toolCallContext = buildToolCallContext(traceMessages);
+  const built = spanTreeToCommits(spanTree, activeProcesses, toolCallContext);
   log('trace execution graph', {
     traceMessages: traceMessages.length,
     commits: built.commits.length,
@@ -98,6 +116,39 @@ export const buildExecutionGraph = ({
     activeProcesses: activeProcesses.length,
   });
   return { ...built, spanTree };
+};
+
+/**
+ * Lookup tables that pair `toolCall` blocks with their matching `toolResult` blocks so the
+ * renderer can collapse the two events into a single commit (mirroring how begin/end events of
+ * an empty operation span collapse). Indexed by the shared `toolCallId`.
+ */
+interface ToolCallContext {
+  callById: Map<string, ContentBlock.ToolCall>;
+  resultByCallId: Map<string, ContentBlock.ToolResult>;
+}
+
+const buildToolCallContext = (messages: readonly Trace.Message[]): ToolCallContext => {
+  const callById = new Map<string, ContentBlock.ToolCall>();
+  const resultByCallId = new Map<string, ContentBlock.ToolResult>();
+  for (const message of messages) {
+    for (const event of message.events) {
+      if (event.type !== CompleteBlock.key) {
+        continue;
+      }
+      const data = event.data as { block?: ContentBlock.Any } | undefined;
+      const block = data?.block;
+      if (!block) {
+        continue;
+      }
+      if (block._tag === 'toolCall') {
+        callById.set(block.toolCallId, block);
+      } else if (block._tag === 'toolResult') {
+        resultByCallId.set(block.toolCallId, block);
+      }
+    }
+  }
+  return { callById, resultByCallId };
 };
 
 /**
@@ -111,7 +162,7 @@ interface EventPresentation {
   idSuffix?: string;
 }
 
-const presentEvent = (event: Trace.FlatEvent): EventPresentation | undefined => {
+const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext): EventPresentation | undefined => {
   if (Trace.isOfType(AgentRequestBegin, event)) {
     if (Either.isLeft(Schema.validateEither(AgentRequestBegin.schema)(event.data))) {
       log('invalid trace event', { type: event.type });
@@ -154,6 +205,42 @@ const presentEvent = (event: Trace.FlatEvent): EventPresentation | undefined => 
           level: ICONS.statusMessage.level,
           message: trimText(event.data.block.statusText),
         };
+      case 'toolCall': {
+        // Operation-backed tool calls already have a dedicated routine span (Trace.OperationStart /
+        // Trace.OperationEnd) that produces its own commits — skip the duplicate toolCall commit
+        // to avoid double-rendering.
+        if (event.data.block.operationKey) {
+          return undefined;
+        }
+        // Collapse the toolCall/toolResult pair: when the matching toolResult has arrived, the
+        // result event is the visible commit and carries the success/error state. The toolCall
+        // itself only renders while still pending (i.e. no result yet) — same intent as an
+        // operation span that collapses to a single end commit once both boundaries are present.
+        if (toolCallContext.resultByCallId.has(event.data.block.toolCallId)) {
+          return undefined;
+        }
+        return {
+          icon: ICONS.toolCall.icon,
+          level: ICONS.toolCall.level,
+          message: event.data.block.name,
+          idSuffix: `toolCall:${event.data.block.toolCallId}`,
+        };
+      }
+      case 'toolResult': {
+        // Suppress results for operation-backed calls — those are covered by the routine span.
+        const call = toolCallContext.callById.get(event.data.block.toolCallId);
+        if (call?.operationKey) {
+          return undefined;
+        }
+        const success = event.data.block.error === undefined;
+        const name = call?.name ?? event.data.block.name;
+        return {
+          icon: success ? ICONS.toolResultSuccess.icon : ICONS.toolResultError.icon,
+          level: success ? ICONS.toolResultSuccess.level : ICONS.toolResultError.level,
+          message: `${name} - ${success ? 'Success' : 'Error'}`,
+          idSuffix: `toolResult:${event.data.block.toolCallId}`,
+        };
+      }
       default:
         return undefined;
     }
@@ -235,8 +322,10 @@ const isCollapsibleSpan = (span: Span, parent: Span | null): boolean => {
 const spanTreeToCommits = (
   root: Span,
   activeProcesses: readonly Process.Info[],
-): { branches: string[]; commits: Commit[] } => {
+  toolCallContext: ToolCallContext,
+): { branches: string[]; commits: Commit[]; details: ExecutionGraphDetailsMap } => {
   const builder = new GraphBuilder();
+  const details: ExecutionGraphDetailsMap = {};
   builder.addBranch(MAIN_BRANCH);
 
   // Build a child → parent lookup using the tree's own structure (already correctly parented
@@ -262,28 +351,28 @@ const spanTreeToCommits = (
     return span.meta.pid ?? span.id;
   };
 
-  // Selector that returns the most recent commit walking up the ancestor chain of `span`,
-  // starting from `span`'s own branch and falling back through parent branches up to main.
-  // Used when a commit emitted on a parent/ancestor branch needs to attach to something
-  // that hasn't been written to yet (e.g. the first child sub-span begins before any
-  // middle event has landed on the parent branch).
-  const lastInAncestorChain = (span: Span | null): CommitSelector => {
-    const branches: string[] = [];
-    const seen = new Set<string>();
-    let current = span;
-    while (current) {
-      const branch = branchOf(current);
-      if (!seen.has(branch)) {
-        seen.add(branch);
-        branches.push(branch);
-      }
-      current = findParentSpan(current);
+  // Selector that returns "the most recent commit in this span's structural context".
+  //
+  // The walk is structural (pid/parentPid), not topological: at each ancestor, we prefer
+  //   1) the last commit on that span's own branch, then
+  //   2) that span's begin commit (the fork point on its parent branch),
+  //   3) and only then recurse into the parent span.
+  //
+  // Crucially, we never silently slip onto a *sibling* span's commit on a shared ancestor
+  // branch. E.g. if a sub-span of agent A fires before A has any middle commits, we anchor
+  // to A.begin — not to whatever unrelated commit happens to be the latest on main.
+  // This keeps fork edges visually attached to the correct span even when sibling top-level
+  // spans (different pids) overlap in time on main.
+  const lastInSpanContext = (span: Span | null): CommitSelector => {
+    if (!span || span.id === ROOT_SPAN_ID) {
+      return CommitSelector.branch(MAIN_BRANCH).pipe(CommitSelector.compose(CommitSelector.last()));
     }
-    if (!seen.has(MAIN_BRANCH)) {
-      branches.push(MAIN_BRANCH);
-    }
+    const ownBranch = branchOf(span);
+    const beginId = beginCommitIdBySpan.get(span.id);
     return CommitSelector.firstOf(
-      ...branches.map((branch) => CommitSelector.branch(branch).pipe(CommitSelector.compose(CommitSelector.last()))),
+      CommitSelector.branch(ownBranch).pipe(CommitSelector.compose(CommitSelector.last())),
+      beginId ? CommitSelector.id(beginId) : CommitSelector.filter(() => false),
+      lastInSpanContext(findParentSpan(span)),
     );
   };
 
@@ -307,7 +396,7 @@ const spanTreeToCommits = (
   const beginCommitIdBySpan = new Map<string, string>();
 
   for (const { span, event, globalIndex } of stream) {
-    const presentation = presentEvent(event);
+    const presentation = presentEvent(event, toolCallContext);
     if (!presentation) {
       continue;
     }
@@ -335,39 +424,38 @@ const spanTreeToCommits = (
     if (span.id === ROOT_SPAN_ID) {
       // Root-level events (no pid) attach sequentially to main.
       branch = MAIN_BRANCH;
-      parents = builder.computeParents(
-        CommitSelector.branch(MAIN_BRANCH).pipe(CommitSelector.compose(CommitSelector.last())),
-      );
+      parents = builder.computeParents(lastInSpanContext(null));
     } else if (collapsible) {
       // Only the end event reaches here for collapsible spans.
-      // Walk the ancestor chain so the commit attaches to the most recent ancestor
-      // even when the immediate parent branch has not received a commit yet.
+      // Anchor to the parent span's structural context so the fork attaches to the parent
+      // — not to a sibling span's commit that happens to be the latest on the shared ancestor.
       branch = parentBranch;
-      parents = builder.computeParents(lastInAncestorChain(parentSpan));
+      parents = builder.computeParents(lastInSpanContext(parentSpan));
     } else if (isBeginEvent) {
-      // Begin commit: fork off the parent branch.
-      // Walk the ancestor chain to find the most recent ancestor commit to fork from.
+      // Begin commit: fork off the parent branch, attached to the parent's structural context.
       branch = parentBranch;
-      parents = builder.computeParents(lastInAncestorChain(parentSpan));
+      parents = builder.computeParents(lastInSpanContext(parentSpan));
     } else if (isEndEvent) {
-      // End commit: merge from the span's own branch back into the parent branch.
+      // End commit: continues the parent branch chronologically and merges in own-branch work.
+      //
+      // Parent #1 is the *immediate predecessor* on the parent branch (not the matching begin
+      // commit). Pointing back to the begin commit creates a visual edge that skips over any
+      // sibling span's commits emitted between begin and end — e.g. when two top-level Routine
+      // spans overlap on main, R1.end would otherwise draw an arrow back to R1.begin that
+      // crosses over R2.begin. Anchoring to the previous main commit keeps main linear.
       branch = parentBranch;
-      const beginId = beginCommitIdBySpan.get(span.id);
       parents = builder.computeParents(
         CommitSelector.unionAll(
-          beginId ? CommitSelector.id(beginId) : lastInAncestorChain(parentSpan),
+          CommitSelector.branch(parentBranch).pipe(CommitSelector.compose(CommitSelector.last())),
           CommitSelector.branch(ownBranch).pipe(CommitSelector.compose(CommitSelector.last())),
         ),
       );
     } else {
-      // Middle event: continue the span's own branch.
+      // Middle event: continue the span's own branch; fall back to span's own context so the
+      // first middle event of a span forks from the span's begin commit, not from a sibling's
+      // commit on an ancestor branch.
       branch = ownBranch;
-      parents = builder.computeParents(
-        CommitSelector.branch(ownBranch).pipe(
-          CommitSelector.compose(CommitSelector.last()),
-          CommitSelector.orElse(lastInAncestorChain(parentSpan)),
-        ),
-      );
+      parents = builder.computeParents(lastInSpanContext(span));
     }
 
     const commitId = formatCommitId(span, globalIndex, presentation.idSuffix);
@@ -381,6 +469,7 @@ const spanTreeToCommits = (
       message: presentation.message,
     };
     builder.addCommit(commit);
+    details[commitId] = event;
 
     // Record begin commit so a later end event can merge into it.
     if (isBeginEvent && !collapsible && span.id !== ROOT_SPAN_ID) {
@@ -421,7 +510,8 @@ const spanTreeToCommits = (
     }
   }
 
-  return builder.build();
+  const { commits, branches } = builder.build();
+  return { commits, branches, details };
 };
 
 const formatCommitId = (span: Span, globalIndex: number, suffix?: string): string => {

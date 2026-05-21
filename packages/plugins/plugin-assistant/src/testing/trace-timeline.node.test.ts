@@ -26,7 +26,7 @@ import { dbg } from '@dxos/log';
 import { renderTimelineAscii } from '@dxos/react-ui-components';
 import { Organization, Person } from '@dxos/types';
 
-import { buildExecutionGraph } from '../containers/TracePanel/execution-graph';
+import { buildExecutionGraph } from '#execution-graph';
 
 ObjectId.dangerouslyDisableRandomness();
 
@@ -206,6 +206,11 @@ describe('Trace timeline', () => {
                 "
                 ●     [function] Run Routine
                 ├──●  [user] Research the given topic, or object.
+                │  ●  [wrench] AnthropicWebSearch - Success
+                │  ●  [wrench] AnthropicWebSearch - Success
+                │  ●  [wrench] AnthropicWebSearch - Success
+                │  ●  [wrench] AnthropicWebSearch - Success
+                │  ●  [wrench] completeJob - Success
                 ◆──╯  [function] Run Routine - Success
                 "
               `);

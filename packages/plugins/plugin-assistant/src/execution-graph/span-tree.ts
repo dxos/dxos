@@ -85,8 +85,11 @@ const freezeSpan = (span: MutableSpan): Span => ({
 
 export interface BuildSpanTreeOptions {
   /**
-   * If provided, only the last `eventLimit` flat events (after flattening and chronological sort)
-   * are placed into the tree. Spans with no remaining events are dropped from the result.
+   * If provided, caps how many *non-boundary* events (status updates, partial blocks, etc.)
+   * are retained — only the most recent `eventLimit` of them survive. Span boundary events
+   * (`OperationStart` / `OperationEnd` / `AgentRequestBegin` / `AgentRequestEnd`) are *always*
+   * retained regardless of the limit, because dropping them would orphan their child spans
+   * and collapse them onto the root branch.
    */
   eventLimit?: number;
 }
@@ -110,10 +113,10 @@ export const buildSpanTree = (messages: Trace.Message[], options: BuildSpanTreeO
   const allEvents = messages.flatMap((message) => Trace.flatten(message));
   allEvents.sort((a, b) => a.timestamp - b.timestamp);
 
-  const events =
-    options.eventLimit !== undefined && allEvents.length > options.eventLimit
-      ? allEvents.slice(-options.eventLimit)
-      : allEvents;
+  // The limit caps verbose middle events (status/partial-block) only. Span boundary events
+  // are always retained so the parent/child structure of older spans isn't dropped — losing a
+  // begin event detaches every descendant and collapses them onto the root branch.
+  const events = applyEventLimit(allEvents, options.eventLimit);
 
   const root = makeMutableSpan(ROOT_SPAN_ID, {});
 
@@ -193,6 +196,48 @@ export const buildSpanTree = (messages: Trace.Message[], options: BuildSpanTreeO
 
   return freezeSpan(root);
 };
+
+/**
+ * Caps the number of non-boundary events while retaining every span boundary event.
+ *
+ * Boundary events define the span tree's structure: dropping a begin event detaches every
+ * descendant span (its `parentPid` lookup fails, so children fall back to the root), and
+ * dropping an end event leaves a span open and corrupts the open-span map for sibling spans
+ * that share a pid. Status/partial-block events are the noisy bulk and the only ones the
+ * limit needs to control.
+ *
+ * The returned array stays in chronological order.
+ */
+const applyEventLimit = (events: readonly Trace.FlatEvent[], eventLimit: number | undefined): Trace.FlatEvent[] => {
+  if (eventLimit === undefined) {
+    return [...events];
+  }
+
+  let nonBoundaryCount = 0;
+  for (const event of events) {
+    if (!isBoundary(event)) {
+      nonBoundaryCount += 1;
+    }
+  }
+  if (nonBoundaryCount <= eventLimit) {
+    return [...events];
+  }
+
+  const dropCount = nonBoundaryCount - eventLimit;
+  let dropped = 0;
+  const result: Trace.FlatEvent[] = [];
+  for (const event of events) {
+    if (!isBoundary(event) && dropped < dropCount) {
+      dropped += 1;
+      continue;
+    }
+    result.push(event);
+  }
+  return result;
+};
+
+const isBoundary = (event: Trace.FlatEvent): boolean =>
+  BEGIN_EVENT_TYPES.has(event.type) || END_EVENT_TYPES.has(event.type);
 
 /**
  * Walks the span tree in depth-first pre-order, invoking `visit` for each span (root included).
