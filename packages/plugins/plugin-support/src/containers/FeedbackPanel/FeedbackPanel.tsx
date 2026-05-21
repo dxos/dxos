@@ -108,8 +108,13 @@ export const FeedbackPanel = () => {
       if (!discordServiceUrl) {
         return;
       }
+
+      // PostHog submission is the primary path — if it fails the error propagates
+      // and no misleading toast is shown.
+      const { data: eventUuid } = await invokePromise(SupportOperation.CaptureUserFeedback, values);
+
+      // Discord thread creation is best-effort; fall back to the PostHog toast on any error.
       try {
-        const { data: eventUuid } = await invokePromise(SupportOperation.CaptureUserFeedback, values);
         const postHogEventUrl =
           posthogProjectId && eventUuid ? makePostHogEventUrl(posthogProjectId, eventUuid) : undefined;
         const res = await fetch(`${discordServiceUrl}/feedback`, {
@@ -132,7 +137,7 @@ export const FeedbackPanel = () => {
           closeLabel: ['close.label', { ns: osTranslations }],
         });
       } catch {
-        // Fall back to the standard PostHog toast so the user knows feedback was received.
+        // Discord failed, but PostHog already received the feedback.
         await invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
         await invokePromise(LayoutOperation.AddToast, {
           id: `${meta.id}.feedback-success`,
