@@ -53,7 +53,7 @@ export const CaptureUserFeedback = Operation.make({
   },
   services: [Capability.Service],
   input: UserFeedback,
-  output: Schema.Void,
+  output: Schema.UndefinedOr(Schema.String),
 });
 
 export const CreateTicket = Operation.make({

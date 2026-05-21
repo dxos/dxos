@@ -53,7 +53,7 @@ export type Events = {
  * Feedback extension API (kind-specific methods only).
  */
 export type Feedback = {
-  captureUserFeedback(form: FeedbackForm): void;
+  captureUserFeedback(form: FeedbackForm): Promise<string | undefined>;
 };
 
 export type ExtensionApi =

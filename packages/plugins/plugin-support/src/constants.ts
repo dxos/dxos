@@ -6,6 +6,12 @@ import { meta } from '#meta';
 
 export const SHORTCUTS_DIALOG = `${meta.id}.ShortcutsDialog`;
 
+export const DXOS_GUILD_ID = '837138313172353095';
+
+export const DISCORD_SERVICE_URL = 'https://discord-service.dxos.workers.dev';
+
+export const DEFAULT_TEAM = new Set<string>(['Rich', 'Josiah', 'Mykola', 'Dmytro']);
+
 /**
  * Local id of the virtual Welcome node under the personal-space subtree.
  * Also used as the `data.subject` value for the Article surface filter.
