@@ -128,11 +128,20 @@ const getProjection = (type: GlobeCanvasProps['projection'] = 'orthographic'): G
 // Root
 //
 
+const DEFAULT_ZOOM = 1.5;
+
 type GlobeRootProps = Partial<Pick<GlobeContextType, 'center' | 'zoom' | 'translation' | 'rotation'>>;
 
 const GlobeRoot = composable<HTMLDivElement, GlobeRootProps>(
   (
-    { children, center: centerProp, zoom: zoomProp, translation: translationProp, rotation: rotationProp, ...props },
+    {
+      children,
+      center: centerProp,
+      zoom: zoomProp = DEFAULT_ZOOM,
+      translation: translationProp,
+      rotation: rotationProp,
+      ...props
+    },
     forwardedRef,
   ) => {
     const localRef = useRef<HTMLDivElement>(null);
@@ -140,7 +149,7 @@ const GlobeRoot = composable<HTMLDivElement, GlobeRootProps>(
     const { width, height } = useResizeDetector<HTMLDivElement>({ targetRef: localRef });
 
     const [center, setCenter] = useControlledState(centerProp);
-    const [zoom, setZoom] = useControlledState(zoomProp ?? 4);
+    const [zoom, setZoom] = useControlledState(zoomProp);
     const [translation, setTranslation] = useControlledState<Point>(translationProp);
     const [rotation, setRotation] = useControlledState<Vector>(rotationProp);
 
@@ -205,10 +214,10 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
       useGlobeContext();
     const zoomRef = useDynamicRef(zoom);
 
-    // Update rotation.
+    // Update rotation when the center changes. Preserve current zoom — callers can set zoom
+    // independently via the `zoom` prop or `setZoom` on the controller.
     useEffect(() => {
       if (center) {
-        setZoom(1);
         setRotation(positionToRotation(geoToPosition(center)));
       }
     }, [center]);
