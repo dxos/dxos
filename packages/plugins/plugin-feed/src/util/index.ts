@@ -10,4 +10,4 @@ export * from './fetch-article';
 export * from './fetch-atproto';
 export * from './fetch-rss';
 export * from './format-date';
-export * from './star-tag';
+export * from './post-state';

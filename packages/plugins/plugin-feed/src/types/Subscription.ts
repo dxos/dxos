@@ -10,12 +10,6 @@ import { Annotation, Feed as EchoFeed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { FactoryAnnotation, type FactoryFn, FeedAnnotation } from '@dxos/schema';
 
-/**
- * Label of the canonical {@link Tag.Tag} object used by the star toggle.
- * Toggling adds/removes that tag's DXN from the Post's `Obj.getMeta().tags`.
- */
-export const STAR_TAG = 'starred';
-
 /** Subscription protocol type. */
 export const FeedType = Schema.Literal('atproto', 'rss');
 export type FeedType = Schema.Schema.Type<typeof FeedType>;
@@ -59,6 +53,39 @@ export const Subscription = Schema.Struct({
   cursor: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
   /** Backing ECHO feed for posts. */
   feed: Ref.Ref(EchoFeed.Feed).pipe(FormInputAnnotation.set(false)),
+  /**
+   * Per-Post state keyed by Post id. The Posts themselves live in this
+   * subscription's queue (immutable feed entries); their mutable state lives
+   * here so the queue stays append-only and Posts never enter `space.db`.
+   *
+   * Authority: shared across every Magazine that references this
+   * Subscription's Posts. Marking a Post read here makes it read in every
+   * magazine view; archiving / starring likewise.
+   *
+   * - `content` / `fetchedAt`: full article body fetched lazily by
+   *   {@link FeedOperation.LoadPostContent}; expensive (HTTP) so persisted.
+   * - `imageUrl`: hero image extracted at curate time (from `description`) or
+   *   later refined by `LoadPostContent` (from the full article HTML). Used
+   *   by every magazine that displays this Post.
+   * - `readAt`: ISO 8601 timestamp when first opened.
+   * - `archived`: hides the Post from default magazine views.
+   * - `starred` / `starredAt`: cross-magazine star flag (replaces the older
+   *   `Obj.getMeta(post).tags + STAR_TAG` pattern).
+   */
+  postState: Schema.optional(
+    Schema.Record({
+      key: Schema.String,
+      value: Schema.Struct({
+        content: Schema.optional(Schema.String),
+        fetchedAt: Schema.optional(Schema.String),
+        imageUrl: Schema.optional(Schema.String),
+        readAt: Schema.optional(Schema.String),
+        archived: Schema.optional(Schema.Boolean),
+        starred: Schema.optional(Schema.Boolean),
+        starredAt: Schema.optional(Schema.String),
+      }),
+    }),
+  ).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.subscription.feed',
@@ -86,7 +113,15 @@ export const makeSubscription = (props: Omit<Obj.MakeProps<typeof Subscription>,
   return subscriptionFeed;
 };
 
-/** A single post/entry within a subscription feed. */
+/**
+ * A single post/entry within a subscription feed.
+ *
+ * Immutable feed-entry: every field below is set at sync time by the protocol
+ * fetcher and never written to again. Mutable state (read, archived, starred,
+ * fetched content, hero image) lives on
+ * {@link Subscription.Subscription.postState} keyed by Post id; curation
+ * outputs (snippet, rank) live on `Magazine.postState`.
+ */
 export const Post = Schema.Struct({
   /** Source subscription feed; populated by `SyncSubscription` so curated posts can show provenance. */
   source: Ref.Ref(Subscription).pipe(FormInputAnnotation.set(false), Schema.optional),
@@ -102,20 +137,6 @@ export const Post = Schema.Struct({
   published: Schema.String.pipe(Schema.optional),
   /** Unique identifier (guid) from the feed. */
   guid: Schema.String.pipe(Schema.optional),
-  /** Agent/curation-extracted snippet of the article body; suitable for tile preview. */
-  snippet: Schema.String.pipe(Schema.optional),
-  /** Full article body plain text, populated on demand from fetchArticle. */
-  content: Schema.String.pipe(Schema.optional),
-  /** Hero image URL extracted from the article page. */
-  imageUrl: Schema.String.pipe(Schema.optional),
-  /** ISO 8601 timestamp when the Post was first read; absence = unread. */
-  readAt: Schema.String.pipe(Schema.optional),
-  /** Agent-assigned tags (populated by a future tagging feature). */
-  tags: Schema.Array(Schema.String).pipe(Schema.optional),
-  /** Agent-assigned rank within a magazine (lower = more relevant). Set by the curation flow. */
-  rank: Schema.Number.pipe(FormInputAnnotation.set(false), Schema.optional),
-  /** Archive flag — archived posts are hidden by default in the magazine view. */
-  archived: Schema.Boolean.pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.subscription.post',

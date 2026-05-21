@@ -16,7 +16,7 @@ import { meta } from '#meta';
 import { FeedOperation } from '#types';
 import { Subscription } from '#types';
 
-import { ensureStarTag, fetchArticle, hasMetaTag, toggleMetaTag, useStarTag } from '../../util';
+import { fetchArticle, getSubscriptionPostState, updateSubscriptionPostState } from '../../util';
 
 export type PostArticleProps = AppSurface.ObjectArticleProps<Subscription.Post>;
 
@@ -27,7 +27,12 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
   // when their underlying state changes via Obj.update.
   const [post] = useObject(subject);
   const db = Obj.getDatabase(post);
-  const starTag = useStarTag(db);
+  // Subscribe to the source Subscription — its `postState[postId]` carries
+  // the mutable user state for this Post (read/archived/starred/content).
+  const subscription = post.source?.target;
+  useObject(subscription);
+  const postId = (post as { id: string }).id;
+  const userState = getSubscriptionPostState(subscription, postId);
 
   // Lazily fetch full article content the first time this Post is shown — covers
   // entry points that bypass MagazineArticle's `handleOpen` (deep-link, agent surface,
@@ -36,19 +41,18 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
   // from re-firing on every render.
   const requestedContentFor = useRef<string | undefined>(undefined);
   useEffect(() => {
-    const postId = Obj.getDXN(post).toString();
-    console.log('requestedContentFor', requestedContentFor.current, postId);
-    if (requestedContentFor.current === postId) {
+    const dxnString = Obj.getDXN(post).toString();
+    if (requestedContentFor.current === dxnString) {
       return;
     }
-    if (!post.link || post.content) {
+    if (!post.link || userState.content) {
       return;
     }
-    requestedContentFor.current = postId;
+    requestedContentFor.current = dxnString;
     void invokePromise(FeedOperation.LoadPostContent, { post: Ref.make(subject) }).catch((err) =>
       log.catch(err, { postLink: post.link }),
     );
-  }, [subject, post.link, post.content, invokePromise]);
+  }, [subject, post, post.link, userState.content, invokePromise]);
 
   // Reactive lookup of the source feed name. `post.feed?.target?.name` only renders
   // synchronously when the ref is already resolved; querying feeds via useQuery means
@@ -63,8 +67,8 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
     return allFeeds.find((feed) => Obj.getDXN(feed).toString() === dxn)?.name;
   }, [post.source, allFeeds]);
 
-  const archived = Boolean(post.archived);
-  const starred = hasMetaTag(subject, starTag);
+  const archived = Boolean(userState.archived);
+  const starred = Boolean(userState.starred);
 
   const handleOpenOriginal = useCallback(() => {
     if (post.link) {
@@ -73,37 +77,37 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
   }, [post.link]);
 
   const handleMarkUnread = useCallback(() => {
-    Obj.update(subject, (subject) => {
-      const mutable = subject as Obj.Mutable<typeof subject>;
-      mutable.readAt = undefined;
-    });
-  }, [subject]);
-
-  const handleToggleArchive = useCallback(() => {
-    Obj.update(subject, (subject) => {
-      const mutable = subject as Obj.Mutable<typeof subject>;
-      mutable.archived = !mutable.archived;
-    });
-  }, [subject]);
-
-  const handleToggleStar = useCallback(() => {
-    if (!db) {
+    if (!subscription) {
       return;
     }
+    updateSubscriptionPostState(subscription, postId, { readAt: undefined });
+  }, [subscription, postId]);
 
-    // Always go through ensureStarTag so we hit the same canonical tag — the closure
-    // value of `starTag` may be stale (e.g. undefined on first click before the
-    // useQuery has populated).
-    const tag = ensureStarTag(db);
-    toggleMetaTag(subject, tag);
-  }, [db, subject]);
+  const handleToggleArchive = useCallback(() => {
+    if (!subscription) {
+      return;
+    }
+    const current = getSubscriptionPostState(subscription, postId);
+    updateSubscriptionPostState(subscription, postId, { archived: !current.archived });
+  }, [subscription, postId]);
+
+  const handleToggleStar = useCallback(() => {
+    if (!subscription) {
+      return;
+    }
+    const current = getSubscriptionPostState(subscription, postId);
+    updateSubscriptionPostState(subscription, postId, {
+      starred: !current.starred,
+      ...(current.starred ? { starredAt: undefined } : { starredAt: new Date().toISOString() }),
+    });
+  }, [subscription, postId]);
 
   // Re-fetch the article body from the source. Same path MagazineArticle uses on
   // first open, but unconditional — overwrites any existing content/imageUrl so
   // the user can recover from a stale extraction.
   const [refreshing, setRefreshing] = useState(false);
   const handleRefresh = useCallback(async () => {
-    if (!post.link || refreshing) {
+    if (!post.link || refreshing || !subscription) {
       return;
     }
 
@@ -111,22 +115,17 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
     try {
       const corsProxy = typeof window !== 'undefined' ? '/api/rss?url=' : undefined;
       const { text, imageUrls } = await fetchArticle(post.link, { corsProxy });
-      Obj.update(subject, (subject) => {
-        const mutable = subject as Obj.Mutable<typeof subject>;
-        if (text) {
-          mutable.content = text;
-        }
-        const hero = imageUrls[0];
-        if (hero) {
-          mutable.imageUrl = hero;
-        }
+      const hero = imageUrls[0];
+      updateSubscriptionPostState(subscription, postId, {
+        ...(text ? { content: text, fetchedAt: new Date().toISOString() } : {}),
+        ...(hero ? { imageUrl: hero } : {}),
       });
     } catch (err) {
       log.catch(err, { postLink: post.link });
     } finally {
       setRefreshing(false);
     }
-  }, [subject, post.link, refreshing]);
+  }, [subscription, postId, post.link, refreshing]);
 
   return (
     <Panel.Root role={role}>
@@ -144,7 +143,7 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
             iconOnly
             onClick={handleToggleArchive}
           />
-          {post.readAt && (
+          {userState.readAt && (
             <Toolbar.IconButton
               label={t('mark-unread.label')}
               icon='ph--envelope--regular'

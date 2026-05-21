@@ -9,7 +9,7 @@ import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { FeedOperation, type Subscription } from '../types';
-import { fetchArticle } from '../util';
+import { fetchArticle, getSubscriptionPostState, updateSubscriptionPostState } from '../util';
 
 export default FeedOperation.LoadPostContent.pipe(
   Operation.withHandler(
@@ -24,7 +24,14 @@ export default FeedOperation.LoadPostContent.pipe(
       invariant(db, 'Post is not in a database.');
 
       const post: Subscription.Post = yield* Database.load(postRef).pipe(Effect.provide(Database.layer(db)));
-      if (!post.link || post.content) {
+      const postId = (post as { id: string }).id;
+      const subscription = post.source?.target;
+      // Without a resolved source Subscription we have nowhere to persist the
+      // fetched body. Bail rather than mutating the queue-immutable Post.
+      if (!subscription || !post.link) {
+        return;
+      }
+      if (getSubscriptionPostState(subscription, postId).content) {
         return;
       }
       yield* Effect.tryPromise({
@@ -34,14 +41,9 @@ export default FeedOperation.LoadPostContent.pipe(
           const corsProxy = typeof window !== 'undefined' ? '/api/rss?url=' : undefined;
           const { text, imageUrls } = await fetchArticle(post.link!, { corsProxy });
           const hero = imageUrls[0];
-          Obj.update(post, (post) => {
-            const mutable = post as Obj.Mutable<typeof post>;
-            if (text) {
-              mutable.content = text;
-            }
-            if (hero) {
-              mutable.imageUrl = hero;
-            }
+          updateSubscriptionPostState(subscription, postId, {
+            ...(text ? { content: text, fetchedAt: new Date().toISOString() } : {}),
+            ...(hero ? { imageUrl: hero } : {}),
           });
         },
         catch: (error) => (error instanceof Error ? error : new Error(String(error))),

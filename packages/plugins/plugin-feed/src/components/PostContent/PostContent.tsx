@@ -11,6 +11,7 @@ import { composable } from '@dxos/ui-theme';
 import { Subscription } from '#types';
 
 import { formatDate } from '../../util/format-date';
+import { getSubscriptionPostState } from '../../util/post-state';
 
 export type PostContentProps = {
   /** Post to render. */
@@ -62,41 +63,42 @@ export const contentHasImage = (markdown: string): boolean =>
 
 /**
  * Shared presentational layout for an article-style post.
- * Render order: title → hero image → Markdown body (`post.content` /
- * `post.snippet`) → meta line (author · …extra · published).
+ * Render order: title → hero image → Markdown body
+ * (`subscription.postState[id].content` / `post.description`) → meta line
+ * (author · …extra · published).
  */
 export const PostContent = composable<HTMLDivElement, PostContentProps>(
   ({ post, metadata = [], ...props }, forwardedRef) => {
     const meta = [post.author, ...metadata, formatDate(post.published)].filter(Boolean).join(' · ');
     const title = post.title;
+    const userState = getSubscriptionPostState(post.source?.target, (post as { id: string }).id);
+    const imageUrl = userState.imageUrl;
 
     // Drop duplicate images from the article body — and remove any image
-    // that matches the hero `post.imageUrl` so it doesn't appear stacked
-    // immediately below the hero. Falls through to `post.snippet` when
-    // `post.content` is unset.
+    // that matches the hero `imageUrl` so it doesn't appear stacked immediately
+    // below the hero. Falls through to `post.description` when content
+    // hasn't been fetched yet.
     const content = useMemo(() => {
-      const source = post.content || post.snippet || '';
+      const source = userState.content || post.description || '';
       if (!source) {
         return '';
       }
-      return dedupeImagesInMarkdown(source, [post.imageUrl]);
-    }, [post.content, post.snippet, post.imageUrl]);
+      return dedupeImagesInMarkdown(source, [imageUrl]);
+    }, [userState.content, post.description, imageUrl]);
 
     // Suppress the hero when the article body already carries imagery — RSS feeds often
     // duplicate the lead image inside `<content>` under a different URL than `imageUrl`,
     // and rendering both stacks the same picture twice (see e.g. Guardian galleries).
     const showHero = useMemo(
-      () => Boolean(post.imageUrl?.startsWith('http')) && !contentHasImage(content),
-      [post.imageUrl, content],
+      () => Boolean(imageUrl?.startsWith('http')) && !contentHasImage(content),
+      [imageUrl, content],
     );
 
     return (
       <ScrollArea.Root {...props} orientation='vertical' thin ref={forwardedRef}>
         <ScrollArea.Viewport classNames='flex flex-col gap-3 p-4'>
           {title && <h1 className='text-xl font-semibold'>{title}</h1>}
-          {showHero && (
-            <img src={post.imageUrl} alt='' className='rounded w-full object-cover max-h-72' loading='lazy' />
-          )}
+          {showHero && <img src={imageUrl} alt='' className='rounded w-full object-cover max-h-72' loading='lazy' />}
           {content && <MarkdownView content={content} />}
           {meta && <div className='text-xs text-subdued'>{meta}</div>}
         </ScrollArea.Viewport>
