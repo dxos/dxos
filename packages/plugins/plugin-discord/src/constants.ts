@@ -11,9 +11,6 @@ export const DISCORD_SOURCE = 'discord.com';
 /** Base URL for the Discord REST API (v10). */
 export const DISCORD_API_BASE = 'https://discord.com/api/v10';
 
-/** OAuth scopes requested during the Discord user authorization flow. */
-export const DISCORD_OAUTH_SCOPES = ['identify', 'guilds'] as const;
-
 /**
  * Bot permission integer requested by the invite URL.
  *
