@@ -16,12 +16,6 @@ import * as Integration from './Integration';
 
 const INTEGRATION_OPERATION = `${meta.id}.operation`;
 
-export const AccessTokenCreated = Operation.make({
-  meta: { key: `${INTEGRATION_OPERATION}.access-token-created`, name: 'Access Token Created' },
-  input: Schema.Struct({ accessToken: AccessToken.AccessToken }),
-  output: Schema.Void,
-});
-
 /**
  * Generic create operation: produces an empty Integration bound to the given AccessToken.
  */

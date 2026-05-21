@@ -27,7 +27,6 @@ import {
   pendingIntegrationStorageKey,
 } from '../constants';
 import { IntegrationProviderNotFoundError, SpaceUnavailableError } from '../errors';
-import { IntegrationOperation } from '../types';
 import { Integration } from '../types';
 
 /** Pending integration awaiting an OAuth callback. */
@@ -95,14 +94,6 @@ const openProviderFormDialog = (
     },
   });
 
-const dispatchAccessTokenCreated = (
-  invoker: Operation.OperationService,
-  accessToken: AccessToken.AccessToken,
-): Effect.Effect<void, never> =>
-  invoker
-    .invoke(IntegrationOperation.AccessTokenCreated, { accessToken })
-    .pipe(Effect.catchAll((error) => Effect.sync(() => log.warn('AccessTokenCreated dispatch failed', { error }))));
-
 const runOnTokenCreated = (
   provider: IntegrationProviderEntry,
   input: {
@@ -166,8 +157,6 @@ const finalizePendingEntry = (invoker: Operation.OperationService, entry: Pendin
     const persistedToken = db.add(token);
     const persistedIntegration = db.add(integration);
     Obj.setParent(persistedToken, persistedIntegration);
-
-    yield* dispatchAccessTokenCreated(invoker, persistedToken);
 
     yield* runOnTokenCreated(provider, {
       accessToken: persistedToken,
@@ -313,6 +302,7 @@ export default Capability.makeModule(
         if (!entry) {
           return;
         }
+        deletePendingSnapshot(decoded.accessTokenId);
         Obj.update(entry.token, (token) => {
           token.token = decoded.accessToken;
         });
@@ -377,16 +367,16 @@ export default Capability.makeModule(
 
         pending.set(token.id, { token, integration, db, provider, existingTarget });
 
-        if (oauth.useRedirectFlow) {
-          // Persist a snapshot so the new tab can finalize without sharing memory.
-          writePendingSnapshot(token.id, {
-            spaceId,
-            providerId: provider.id,
-            tokenSnapshot: { source: provider.source, account, scopes: oauth.scopes },
-            integrationSnapshot: { name: label, providerId: provider.id },
-            ...(existingTarget ? { existingTargetDXN: existingTarget.dxn.toString() } : {}),
-          });
-        }
+        // Written for all providers: if window.opener is lost during auth, Edge
+        // redirects the popup to /redirect/oauth and this snapshot is the only
+        // recovery path.
+        writePendingSnapshot(token.id, {
+          spaceId,
+          providerId: provider.id,
+          tokenSnapshot: { source: provider.source, account, scopes: oauth.scopes },
+          integrationSnapshot: { name: label, providerId: provider.id },
+          ...(existingTarget ? { existingTargetDXN: existingTarget.dxn.toString() } : {}),
+        });
 
         const edge = getEdgeClient();
         edgeOrigin = new URL(edge.baseUrl).origin;
@@ -395,9 +385,7 @@ export default Capability.makeModule(
           Effect.tapError(() =>
             Effect.sync(() => {
               pending.delete(token.id);
-              if (oauth.useRedirectFlow) {
-                deletePendingSnapshot(token.id);
-              }
+              deletePendingSnapshot(token.id);
             }),
           ),
         );

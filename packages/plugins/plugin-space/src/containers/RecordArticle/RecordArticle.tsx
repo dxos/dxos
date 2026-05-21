@@ -8,20 +8,28 @@ import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Annotation, Obj } from '@dxos/echo';
+import { Annotation, Obj, Type } from '@dxos/echo';
 import { Card, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
 export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) => {
   const { t } = useTranslation(meta.id);
-  const icon = Function.pipe(
-    Obj.getSchema(subject),
-    Option.fromNullable,
-    Option.flatMap(Annotation.IconAnnotation.get),
-    Option.map(({ icon }) => icon),
-    Option.getOrElse(() => 'ph--placeholder--regular'),
-  );
+  // Obj.getSchema fails for database-registered (dynamic) schemas due to DXN mismatch;
+  // fall back to typename query which matches PersistentSchema.typename.
+  const db = Obj.getDatabase(subject);
+  const typename = Obj.getTypename(subject);
+  const schema =
+    Obj.getSchema(subject) ?? (typename && db ? db.schemaRegistry.query({ typename }).runSync()[0] : undefined);
+  const icon =
+    schema && Type.isMutable(schema)
+      ? 'ph--cube--regular'
+      : Function.pipe(
+          Option.fromNullable(schema),
+          Option.flatMap(Annotation.IconAnnotation.get),
+          Option.map(({ icon }) => icon),
+          Option.getOrElse(() => 'ph--placeholder--regular'),
+        );
 
   return (
     <Panel.Root role={role}>

@@ -7,18 +7,13 @@ import * as Effect from 'effect/Effect';
 import { Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { ClientEvents } from '@dxos/plugin-client';
-import { MarkdownEvents } from '@dxos/plugin-markdown';
 
-import { Blockstore, CreateObject, FileUploader, Markdown, OperationHandler, ReactSurface } from '#capabilities';
+import { Backend, Blockstore, UrlResolver } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { WnfsCapabilities, WnfsFile } from '#types';
+import { WnfsCapabilities } from '#types';
 
 export const WnfsPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addSchemaModule({ schema: [WnfsFile.WnfsFile] }),
-  AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     id: 'blockstore',
@@ -35,14 +30,14 @@ export const WnfsPlugin = Plugin.define(meta).pipe(
       }),
   }),
   Plugin.addModule({
-    id: 'file-uploader',
+    id: 'backend',
     activatesOn: ClientEvents.ClientReady,
-    activate: FileUploader,
+    activate: Backend,
   }),
   Plugin.addModule({
-    id: 'markdown',
-    activatesOn: MarkdownEvents.SetupExtensions,
-    activate: Markdown,
+    id: 'url-resolver',
+    activatesOn: ClientEvents.ClientReady,
+    activate: UrlResolver,
   }),
   Plugin.make,
 );

@@ -9,6 +9,7 @@ import * as Channel from './Channel';
 import * as ContentBlock from './ContentBlock';
 import * as Employer from './Employer';
 import * as Event from './Event';
+import * as File from './File';
 import * as Geo from './Geo';
 import * as HasConnection from './HasConnection';
 import * as HasRelationship from './HasRelationship';
@@ -44,6 +45,7 @@ export {
   AccessToken,
   Channel,
   Event,
+  File,
   Message,
   Organization,
   Person,

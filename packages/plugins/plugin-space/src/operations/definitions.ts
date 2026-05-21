@@ -264,6 +264,7 @@ export namespace SpaceOperation {
         filename: Schema.String,
         contents: Schema.instanceOf(Uint8Array),
       }),
+      tags: Schema.Array(Schema.String).pipe(Schema.optional),
     }),
     output: Schema.Struct({
       space: SpaceSchema,
