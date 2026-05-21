@@ -26,6 +26,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
 
+// TODO(dmaretskyi): testing.ts module shadows the ./testing dir.
+import { initClientFromSpaceSnapshot } from '../../testing/snapshot';
 import { buildExecutionGraph } from './execution-graph';
 import { PLAYBACK_INTERVAL_MS, STEP_STORAGE_KEY, SimulatedAgent, useLocalStorageNumber } from './testing';
 import { TracePanel } from './TracePanel';
@@ -268,16 +270,27 @@ export const WithSnapshot: Story = {
         ...corePlugins(),
         ClientPlugin({
           types: [Feed.Feed, Trace.Message],
-          onClientInitialized: ({ client }) =>
-            Effect.promise(async () => {
-              await client.halo.createIdentity();
-              const data = await import('../../testing/data/trace-timeline.dx.json');
-              const space = await client.spaces.import({
-                filename: 'trace-events.dx.json',
-                contents: new TextEncoder().encode(JSON.stringify(data)),
-              });
-              await space.db.flush();
-            }),
+          onClientInitialized: initClientFromSpaceSnapshot(() => import('../../testing/data/trace-timeline.dx.json')),
+        }),
+        AutomationPlugin(),
+      ],
+    }),
+  ],
+};
+
+export const WithRemoteSnapshot: Story = {
+  render: SnapshotStory,
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'column', classNames: 'w-(--dx-complementary-sidebar-size)' }),
+    withPluginManager({
+      plugins: [
+        ...corePlugins(),
+        ClientPlugin({
+          types: [Feed.Feed, Trace.Message],
+          onClientInitialized: initClientFromSpaceSnapshot(
+            () => import('../../testing/data/trace-timeline-remote.dx.json'),
+          ),
         }),
         AutomationPlugin(),
       ],
