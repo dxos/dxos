@@ -8,7 +8,7 @@ export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.file',
   name: 'File',
   author: 'DXOS',
-  description: 'Store images, videos, and PDFs directly inside an ECHO document.',
+  description: 'Store images, videos, and PDFs as ECHO objects.',
   icon: 'ph--file--regular',
   iconHue: 'teal',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-file',
