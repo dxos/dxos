@@ -16,6 +16,5 @@ export const meta: Plugin.Meta = {
   icon: 'ph--graph--regular',
   iconHue: 'green',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-explorer',
-  tags: ['labs'],
   screenshots: ['https://dxos.network/plugin-details-explorer-dark.png'],
 };

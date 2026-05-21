@@ -44,6 +44,7 @@ export const translations = [
         'plugin.name': 'Code',
         'code-projects-section.label': 'Code Projects',
         'spec.label': 'Spec',
+        'plugin-spec.label': 'Specification',
         'build.label': 'Build',
         'view.code.placeholder': 'Build output will appear here.',
         'browse-pane.label': 'Browse',

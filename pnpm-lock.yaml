@@ -8992,6 +8992,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../common/log
       '@dxos/plugin-graph':
         specifier: workspace:*
         version: link:../plugin-graph

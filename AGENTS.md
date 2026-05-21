@@ -80,7 +80,8 @@
 
 ## Interacting The User
 
-- When collaborating closely with the User, determine what is the User's role.
+- When collaborating closely with the User, determine if the user's role can be automated.
+- Be precise about what you are asking the user to do and actively manage the process.
 
 ## PR Naming Convention
 
