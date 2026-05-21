@@ -70,6 +70,13 @@ export abstract class GraphProjector<NodeData = any, Options extends GraphProjec
       }
 
       current.data = node;
+      // `hidden` is a transient flag set by the cluster projector to fade
+      // collapsed leaves. Reset it on every merge so that (a) switching
+      // away from cluster to another projector — which inherits the
+      // previous layout via `prev` — doesn't carry forward stale hidden
+      // flags, and (b) the cluster projector itself re-applies the flag
+      // each `doClusterLayout` pass.
+      current.hidden = false;
       return current;
     });
 

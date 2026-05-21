@@ -22,16 +22,6 @@ export type PluginConfig = {
   isStrict?: boolean;
 };
 
-export const getCore = (): string[] => [
-  AutomationPlugin.meta.id,
-  ClientPlugin.meta.id,
-  ObservabilityPlugin.meta.id,
-  ProcessManagerPlugin.meta.id,
-  RegistryPlugin.meta.id,
-  SpacePlugin.meta.id,
-  IntegrationPlugin.meta.id,
-];
-
 export const getDefaults = (): string[] => [
   ChessPlugin.meta.id,
   SamplePlugin.meta.id,

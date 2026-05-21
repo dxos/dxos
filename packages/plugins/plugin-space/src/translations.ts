@@ -286,6 +286,23 @@ export const translations = [
         'repair-space.description': 'Run repair operations on the space.',
         'repair-space.label': 'Run repairs',
 
+        'danger-zone.title': 'Danger Zone',
+        'danger-zone.description': 'Destructive actions that cannot be undone.',
+        'space-contents.title': 'Space contents',
+        'space-contents.description': 'Current contents of this space.',
+        'schema-count.label': 'Schema',
+        'object-count.label': 'Objects',
+        'relation-count.label': 'Relations',
+        'feed-count.label': 'Feeds',
+        'reset-space.title': 'Reset Space',
+        'reset-space.description':
+          'Permanently delete all objects, relations, schema, and feeds in this space. This action cannot be undone.',
+        'reset-space.label': 'Reset space',
+        'reset-space-confirm.title': 'Reset this space?',
+        'reset-space-confirm.description':
+          'All objects, relations, schema, and feeds in this space will be permanently deleted. This action cannot be undone.',
+        'reset-space-failed.message': 'Failed to reset space.',
+
         'sync-edge-connected.label': 'EDGE connected',
         'sync-edge-disconnected.label': 'Edge disconnected',
         'sync-no-connection.label': 'No connection to edge service',

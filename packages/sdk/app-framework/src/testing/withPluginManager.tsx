@@ -21,13 +21,15 @@ import { type UseAppOptions, useApp } from '../ui';
 export const setupPluginManager = ({
   capabilities,
   plugins = [],
-  core = plugins.map(({ meta }) => meta.id),
   ...options
 }: UseAppOptions & Pick<WithPluginManagerOptions, 'capabilities'> = {}) => {
+  // Auto-enable every non-system plugin so stories don't have to spell out
+  // enablement. System-tagged plugins are force-enabled by the manager.
+  const enabled = plugins.filter(({ meta }) => !meta.tags?.includes('system')).map(({ meta }) => meta.id);
   const pluginManager = PluginManager.make({
     pluginLoader: () => raise(new Error('Not implemented')),
     plugins: [StoryPlugin, ...plugins],
-    core: [StoryPlugin.meta.id, ...core],
+    enabled,
     ...options,
   });
 
@@ -120,6 +122,7 @@ const WithPluginManagerApp = ({ fireEvents, pluginManager, setupEvents, storyId 
 const storyMeta = {
   id: 'org.dxos.app-framework.story',
   name: 'Story',
+  tags: ['system'],
 };
 
 // No-op plugin to ensure there exists at least one plugin for the startup event.

@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.map',
   name: 'Maps',
+  author: 'DXOS',
   description: trim`
     Interactive mapping visualization that plots table records containing latitude and longitude coordinates.
     Explore spatial data, add custom markers, and visualize geographic patterns in your datasets.

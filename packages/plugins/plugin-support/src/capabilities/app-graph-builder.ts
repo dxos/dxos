@@ -114,28 +114,14 @@ export default Capability.makeModule(
           ]),
       }),
 
-      // Deck companion: GitHub recent PRs tab in the complementary sidebar (R1).
-      // Renders the GithubPanel via the `deck-companion--github` surface.
-      GraphBuilder.createExtension({
-        id: 'github',
-        match: NodeMatcher.whenRoot,
-        connector: () =>
-          Effect.succeed([
-            AppNode.makeDeckCompanion({
-              id: linkedSegment('github'),
-              label: ['github.label', { ns: meta.id }],
-              icon: 'ph--github-logo--regular',
-              data: null,
-              position: 'first',
-            }),
-          ]),
-      }),
-
       // Personal-space-only Welcome virtual node, hoisted to the top of the navtree.
       // The node is fully virtual (no backing ECHO object); the matching Article surface
       // is selected via the `welcome` literal subject. Gated by the `showWelcome` setting.
+      // The extension itself is positioned `first` so its node is inserted ahead of other
+      // `position: 'first'` siblings (Settings, Collections) under the personal space.
       GraphBuilder.createExtension({
         id: 'welcome',
+        position: 'first',
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
           if (!isPersonalSpace(space)) {

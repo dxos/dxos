@@ -16,7 +16,7 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { DxAnchorActivate } from '@dxos/react-ui';
-import { type GraphProps, type GraphLayoutNode } from '@dxos/react-ui-graph';
+import { type GraphProps } from '@dxos/react-ui-graph';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type SpaceGraphEdge, type SpaceGraphNode, ViewModel } from '@dxos/schema';
 import { type ValueGenerator } from '@dxos/schema/testing';
@@ -25,7 +25,7 @@ import { HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
 import { useGraphModel } from '#hooks';
 import { Graph } from '#types';
 
-import { generate } from '../Tree/testing';
+import { generate } from '../../testing';
 import { ForceGraph } from './ForceGraph';
 
 const generator = random as any as ValueGenerator;
@@ -39,7 +39,11 @@ const DefaultStory = () => {
   const selection = useMemo(() => new SelectionModel({ mode: 'single' }), []);
 
   const handleInspect = useCallback<NonNullable<GraphProps<SpaceGraphNode, SpaceGraphEdge>['onInspect']>>(
-    (node: GraphLayoutNode<SpaceGraphNode>, event) => {
+    (node, event) => {
+      // `null` node = pointerleave (no preview to open).
+      if (!node) {
+        return;
+      }
       const obj = node.data?.data?.object;
       if (!obj) {
         return;

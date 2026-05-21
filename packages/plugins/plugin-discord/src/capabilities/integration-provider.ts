@@ -2,9 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
+import { DiscordREST } from 'dfx';
 import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
@@ -18,8 +17,8 @@ import {
 import { AccessToken } from '@dxos/types';
 
 import { DISCORD_PROVIDER_ID, DISCORD_SOURCE } from '../constants';
-import { DiscordApiError } from '../errors';
-import { DiscordApi, makeEdgeProxyHttpClientLayer } from '../services';
+import { discordErrorStatus, formatDiscordSyncFailure, isDiscordErrorResponse } from '../errors';
+import { makeDiscordLayerFromToken } from '../services';
 import { DiscordOperation, DiscordTargetOptions } from '../types';
 
 /**
@@ -49,21 +48,22 @@ const DiscordTokenForm = Schema.Struct({
  * on every later operation. As a bonus we already have the bot's identity,
  * so we populate `accessToken.account` inline and skip the `onTokenCreated`
  * round-trip.
- *
- * Routed through the edge proxy because Discord's REST API blocks direct
- * browser calls.
  */
 const validateToken = (token: string) =>
-  DiscordApi.fetchSelf().pipe(
-    Effect.provide(Layer.succeed(DiscordApi.DiscordCredentials, { token })),
-    Effect.provide(FetchHttpClient.layer.pipe(Layer.provide(makeEdgeProxyHttpClientLayer()))),
+  Effect.gen(function* () {
+    const rest = yield* DiscordREST;
+    return yield* rest.getMyUser();
+  }).pipe(
+    Effect.provide(makeDiscordLayerFromToken(token)),
     Effect.mapError((error) => {
-      if (DiscordApiError.is(error) && (error.context as { status?: number }).status === 401) {
+      if (isDiscordErrorResponse(error) && discordErrorStatus(error) === 401) {
         return new Error(
           'Discord rejected the token (401). Reset the bot token in the developer portal and paste it again.',
         );
       }
-      return error instanceof Error ? error : new Error(String(error));
+      // Preserve Discord's code/message for 403/404/5xx etc. via formatDiscordSyncFailure
+      // — `String(error)` would collapse a dfx tagged error to its `_tag` string.
+      return error instanceof Error ? error : new Error(formatDiscordSyncFailure(error));
     }),
   );
 
@@ -101,19 +101,16 @@ const credentialForm: CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>
  * Failures are elevated with {@link Effect.orDie}; plugin-integration logs
  * defects from the runner and continues so a failed `/users/@me` cannot
  * block the Integration already created.
- *
- * Routed through the edge proxy because Discord's REST API blocks direct
- * browser calls.
  */
 const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
   Effect.gen(function* () {
     if (accessToken.account) {
       return;
     }
-    const self = yield* DiscordApi.fetchSelf().pipe(
-      Effect.provide(Layer.succeed(DiscordApi.DiscordCredentials, { token: accessToken.token })),
-      Effect.provide(FetchHttpClient.layer.pipe(Layer.provide(makeEdgeProxyHttpClientLayer()))),
-    );
+    const self = yield* Effect.gen(function* () {
+      const rest = yield* DiscordREST;
+      return yield* rest.getMyUser();
+    }).pipe(Effect.provide(makeDiscordLayerFromToken(accessToken.token)));
     Obj.update(accessToken, (accessToken) => {
       const display = self.global_name && self.global_name.length > 0 ? self.global_name : self.username;
       accessToken.account = display;

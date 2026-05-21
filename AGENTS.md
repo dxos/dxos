@@ -78,6 +78,10 @@
 - Confirm work complete before final build/lint check
 - If updating `pnpm-workspace.yaml` make sure to preserve comments.
 
+## Interacting The User
+
+- When collaborating closely with the User, determine what is the User's role.
+
 ## PR Naming Convention
 
 **IMPORTANT**: All PR titles MUST use conventional commit format:

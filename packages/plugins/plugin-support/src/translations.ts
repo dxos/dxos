@@ -43,12 +43,6 @@ export const translations = [
         'members-online.label_one': '{{count}} member online',
         'members-online.label_other': '{{count}} members online',
         'join-discord.button': 'Join Discord',
-        // GitHub (deck-companion--github surface).
-        'github-loading.message': 'Loading…',
-        'github-unavailable.message': 'GitHub feed unavailable.',
-        'recent-prs.label_one': '{{count}} recent PR',
-        'recent-prs.label_other': '{{count}} recent PRs',
-        'view-on-github.button': 'View on GitHub',
         'feedback-textarea.label': 'Feedback',
         'feedback-textarea.placeholder': 'Please enter your feedback, technical issue, or feature request.',
         'include-debug-logs.label': 'Include debug logs',
