@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Page, expect, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 import { log } from '@dxos/log';
 
@@ -14,46 +14,7 @@ if (process.env.DX_PWA !== 'false') {
 }
 
 const INBOX_PLUGIN_ID = 'org.dxos.plugin.inbox';
-
-// Intercepts the Edge OAuth initiation request and the resulting popup page,
-// completing the OAuth flow immediately with the provided access token instead
-// of redirecting to Google. Routes POST /oauth/initiate to return a synthetic
-// authUrl, then routes GET /oauth-test-stub to serve HTML that posts the result
-// back to window.opener so the coordinator's origin check passes.
-const setupOAuthSimulation = async (page: Page, accessToken: string): Promise<void> => {
-  await page.context().route('**/oauth/initiate', async (route) => {
-    const edgeOrigin = new URL(route.request().url()).origin;
-    const body = JSON.parse(route.request().postData() ?? '{}') as { accessTokenId?: string };
-    const accessTokenId = body.accessTokenId ?? '';
-
-    await route.fulfill({
-      contentType: 'application/json',
-      body: JSON.stringify({
-        success: true,
-        data: {
-          authUrl: `${edgeOrigin}/oauth-test-stub?accessTokenId=${encodeURIComponent(accessTokenId)}&accessToken=${encodeURIComponent(accessToken)}`,
-        },
-      }),
-    });
-  });
-
-  await page.context().route('**/oauth-test-stub*', async (route) => {
-    const url = new URL(route.request().url());
-    const payload = JSON.stringify({
-      success: true,
-      accessTokenId: url.searchParams.get('accessTokenId') ?? '',
-      accessToken: url.searchParams.get('accessToken') ?? '',
-    });
-
-    await route.fulfill({
-      contentType: 'text/html',
-      body: `<!DOCTYPE html><html><body><script>
-        window.opener?.postMessage(${payload}, '*');
-        setTimeout(() => window.close(), 200);
-      </script></body></html>`,
-    });
-  });
-};
+const GOOGLE_TEST_EMAIL = 'test@braneframe.com';
 
 test.describe('Inbox plugin', () => {
   let host: AppManager;
@@ -82,16 +43,13 @@ test.describe('Inbox plugin', () => {
   });
 
   test('connect gmail', async ({ browserName }) => {
-    // Popup interception is not reliable in WebKit.
+    // Popup navigation is not reliable in WebKit.
     if (browserName === 'webkit') {
-      test.skip(true, 'OAuth popup interception not supported in WebKit');
+      test.skip(true, 'OAuth popup not supported in WebKit');
     }
-    if (!process.env.GOOGLE_ACCESS_TOKEN) {
-      test.skip(true, 'GOOGLE_ACCESS_TOKEN env var not set');
+    if (!process.env.GOOGLE_TEST_USER_PASSWORD) {
+      test.skip(true, 'GOOGLE_TEST_USER_PASSWORD env var not set');
     }
-
-    // Intercept the Edge OAuth flow so no browser popup to Google is needed.
-    await setupOAuthSimulation(host.page, process.env.GOOGLE_ACCESS_TOKEN!);
 
     await host.createSpace();
     await host.createObject({ type: 'Mailbox', name: 'Test Inbox' });
@@ -102,21 +60,44 @@ test.describe('Inbox plugin', () => {
     const connectButton = plank.locator.getByRole('button', { name: /Connect Gmail/i });
     await expect(connectButton).toBeVisible();
 
-    // Click "Connect Gmail". The integration coordinator opens a popup pointing
-    // at the synthetic OAuth URL. Our stub page immediately posts the result
-    // back to window.opener and closes the popup.
+    // Open the OAuth popup.
     const popupPromise = host.page.waitForEvent('popup');
     await connectButton.click();
     const popup = await popupPromise;
-    await popup.waitForEvent('close', { timeout: 10_000 });
+
+    // Wait for Google sign-in page to load (relay page first, then redirects to Google).
+    await popup.waitForURL(/accounts\.google\.com/, { timeout: 15_000 });
+
+    // Handle "Choose an account" screen if the test account already has a session.
+    const chooseAccount = popup.getByText(GOOGLE_TEST_EMAIL);
+    if (await chooseAccount.isVisible({ timeout: 3_000 }).catch(() => false)) {
+      await chooseAccount.click();
+    } else {
+      // Email step.
+      await popup.fill('input[type="email"]', GOOGLE_TEST_EMAIL);
+      await popup.click('#identifierNext');
+      await popup.waitForSelector('input[type="password"]', { state: 'visible', timeout: 10_000 });
+
+      // Password step.
+      await popup.fill('input[type="password"]', process.env.GOOGLE_TEST_USER_PASSWORD!);
+      await popup.click('#passwordNext');
+    }
+
+    // Grant access on the OAuth consent screen if it appears.
+    const allowButton = popup.getByRole('button', { name: /Allow/i });
+    if (await allowButton.isVisible({ timeout: 10_000 }).catch(() => false)) {
+      await allowButton.click();
+    }
+
+    // Popup closes once Edge has received the token and posted back to the opener.
+    await popup.waitForEvent('close', { timeout: 30_000 });
 
     // After the popup closes the coordinator persists the AccessToken and
-    // Integration objects, links the Mailbox as a sync target, and navigates
-    // the deck to show the new Integration. Click back on the mailbox to verify
-    // it transitioned out of the "no integration" empty state.
+    // Integration objects and links the Mailbox as a sync target. Click back on
+    // the mailbox to verify it transitioned out of the "no integration" empty state.
     await host.getObjectByName('Test Inbox').click({ delay: 100 });
 
-    await expect(plank.locator.getByText('No integrations configured')).not.toBeVisible({ timeout: 5_000 });
-    await expect(plank.locator.getByText('Mailbox empty')).toBeVisible({ timeout: 5_000 });
+    await expect(plank.locator.getByText('No integrations configured')).not.toBeVisible({ timeout: 10_000 });
+    await expect(plank.locator.getByText('Mailbox empty')).toBeVisible({ timeout: 10_000 });
   });
 });
