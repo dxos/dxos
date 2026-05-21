@@ -57,12 +57,25 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
     const projectId = project.id;
     const projectState = buildRunState[projectId];
 
+    // The handlers run with `Database.Service` in scope, so the invoker must be
+    // given the project's space id — that's how the process manager resolves
+    // the right database into the Effect environment.
+    const space = getSpace(project);
+    const spaceId = space?.id;
+
     const handleBuild = useCallback(async () => {
+      if (!spaceId) {
+        return;
+      }
       updateBuildRun((current) => ({
         ...current,
         [projectId]: { ...current[projectId], busy: 'build' },
       }));
-      const { data } = await invoker.invokePromise(CodeOperation.BuildProject, { project: Ref.make(project) });
+      const { data } = await invoker.invokePromise(
+        CodeOperation.BuildProject,
+        { project: Ref.make(project) },
+        { spaceId },
+      );
       updateBuildRun((current) => ({
         ...current,
         [projectId]: {
@@ -73,14 +86,17 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
             : current[projectId]?.lastBuild,
         },
       }));
-    }, [invoker, project, projectId, updateBuildRun]);
+    }, [invoker, project, projectId, spaceId, updateBuildRun]);
 
     const handleRun = useCallback(async () => {
+      if (!spaceId) {
+        return;
+      }
       updateBuildRun((current) => ({
         ...current,
         [projectId]: { ...current[projectId], busy: 'run' },
       }));
-      const { data } = await invoker.invokePromise(CodeOperation.RunBuild, { project: Ref.make(project) });
+      const { data } = await invoker.invokePromise(CodeOperation.RunBuild, { project: Ref.make(project) }, { spaceId });
       updateBuildRun((current) => ({
         ...current,
         [projectId]: {
@@ -102,7 +118,7 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
               : current[projectId]?.lastBuild,
         },
       }));
-    }, [invoker, project, projectId, updateBuildRun]);
+    }, [invoker, project, projectId, spaceId, updateBuildRun]);
 
     // Trigger re-render on files mutations.
     useObject(project);
