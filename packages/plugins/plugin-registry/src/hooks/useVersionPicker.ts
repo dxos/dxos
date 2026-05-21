@@ -46,6 +46,10 @@ export const useVersionPicker = ({
       setSelectedVersionTag(undefined);
       return;
     }
+    // Clear stale picker state before fetching so the UI doesn't display the
+    // previous plugin's versions/selection while `listVersions` is pending.
+    setVersions([]);
+    setSelectedVersionTag(undefined);
     let cancelled = false;
     void provider.listVersions(repo).pipe(
       Effect.match({
