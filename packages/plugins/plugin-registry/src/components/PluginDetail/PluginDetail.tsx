@@ -2,10 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
-import React from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import { type Plugin, type PluginManager, type Registry } from '@dxos/app-framework';
-import { Button, Icon, Input, Link, ScrollArea, Select, Tag, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  Carousel,
+  Icon,
+  Input,
+  Link,
+  ScrollArea,
+  Select,
+  Tag,
+  ThemedClassName,
+  useTranslation,
+} from '@dxos/react-ui';
 import { composable, composableProps, getStyles, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -61,6 +72,12 @@ export type PluginDetailProps = {
    */
   onNavigateToPlugin?: (pluginId: string) => void;
   /**
+   * Called when the user activates the in-app spec viewer link. When provided
+   * (i.e. the plugin bundles its MDL via `Plugin.Meta.specContent`), a second
+   * "View specification" link is rendered next to the external spec link.
+   */
+  onOpenSpec?: () => void;
+  /**
    * Resolves a plugin id to its display name for dependency / dependent
    * chip labels. The component delegates the lookup to the parent so each
    * surface can decide how to source names (e.g. `Plugin.Meta.name` from the
@@ -101,6 +118,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
       onInstall,
       onInstallVersion,
       onNavigateToPlugin,
+      onOpenSpec,
       onResolvePluginName,
       onUninstall,
       onUpdate,
@@ -117,7 +135,6 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
       description,
       homePage,
       source,
-      spec,
       screenshots,
       icon = 'ph--circle--regular',
       iconHue = 'neutral',
@@ -127,101 +144,124 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
     return (
       <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
         <ScrollArea.Viewport>
-          <div className='dx-document grid grid-cols-[min-content_1fr] gap-4 p-4'>
-            <div>
-              <Icon classNames={mx('p-1 rounded-md', styles.fill, styles.foreground)} icon={icon} size={14} />
-            </div>
-            <div className='flex flex-col gap-6'>
-              <div className='grid grid-cols-[1fr_min-content] gap-x-3 w-full pt-1'>
-                <div className='flex items-center gap-2'>
-                  <h2 className='text-xl'>{name}</h2>
-                  {failure && <PluginFailureBadge failure={failure} size={5} />}
-                </div>
-                {onInstall ? (
-                  <Button density='fine' variant='primary' disabled={installing} onClick={onInstall}>
-                    {installing ? t('installing.label') : t('install.label')}
-                  </Button>
-                ) : (
-                  <Input.Root>
-                    <Input.Switch classNames='self-center' checked={enabled} onCheckedChange={onEnabledChange} />
-                  </Input.Root>
-                )}
-                <p className='pt-0.5 text-sm text-description'>
-                  {id}
-                  {author && <span> · {author}</span>}
-                </p>
+          {/*
+           * 3-column grid: [icon/prev | content/viewport | next].
+           * Most sections occupy `col-start-2 col-span-2` so they stretch from
+           * the centre column out to the trailing edge. The carousel uses
+           * `display: contents` to flatten its children into this grid so
+           * `Carousel.Previous` lands in col 1, `Carousel.Viewport` aligns
+           * with the rest of the content in col 2, and `Carousel.Next` sits
+           * in col 3.
+           */}
+          <div className='dx-document grid grid-cols-[4rem_minmax(0,1fr)_4rem] gap-x-4 p-4 items-start'>
+            <Icon classNames={mx('row-start-1 p-1 rounded-md', styles.fill, styles.foreground)} icon={icon} size={14} />
+
+            <div className='row-start-1 col-start-2 col-span-2 grid grid-cols-[1fr_min-content] gap-x-3 w-full pt-1'>
+              <div className='flex items-center gap-2'>
+                <h2 className='text-xl'>{name}</h2>
+                {failure && <PluginFailureBadge failure={failure} size={5} />}
               </div>
-              <div>
-                <p className='text-description'>{description}</p>
-              </div>
-              {screenshots && screenshots.length > 0 && (
-                <div className='flex flex-col gap-2'>
-                  <h2>Preview</h2>
-                  <img src={screenshots[0]} alt={name} className='aspect-video object-fit' />
-                </div>
+              {onInstall ? (
+                <Button density='fine' variant='primary' disabled={installing} onClick={onInstall}>
+                  {installing ? t('installing.label') : t('install.label')}
+                </Button>
+              ) : (
+                <Input.Root>
+                  <Input.Switch classNames='self-center' checked={enabled} onCheckedChange={onEnabledChange} />
+                </Input.Root>
               )}
-              <div className='flex flex-col gap-2'>
-                <h2>Resources</h2>
-                <div className='flex gap-2'>
+              <div className='flex items-center gap-1 pt-0.5 text-sm text-description'>
+                {id}
+                {author && <span className='dx-tag dx-tag--info'>{author}</span>}
+              </div>
+            </div>
+
+            <Section.Root>
+              <Section.Heading title='Description' />
+              <Section.Body>
+                <p className='text-description'>{description}</p>
+              </Section.Body>
+            </Section.Root>
+
+            {screenshots && screenshots.length > 0 && (
+              <Section.Root>
+                <Section.Heading title='Preview' />
+                <Section.Body>
+                  <Carousel.Root classNames='contents' count={screenshots.length}>
+                    <Carousel.Viewport>
+                      {screenshots.map((src, index) => (
+                        <Carousel.Slide key={src} index={index} src={src} alt={name} />
+                      ))}
+                    </Carousel.Viewport>
+                    <Carousel.Indicators />
+                  </Carousel.Root>
+                </Section.Body>
+              </Section.Root>
+            )}
+
+            <Section.Root>
+              <Section.Heading title={t('resources.label')} />
+              <Section.Body>
+                <div className='flex gap-3 items-center'>
                   {homePage && (
-                    <Link href={homePage} target='_blank' rel='noreferrer' classNames='text-sm text-description'>
+                    <Link href={homePage} classNames='text-sm text-description'>
                       {t('home-page.label')}
-                      <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mx-1' />
+                      <Icon icon='ph--arrow-square-out--regular' size={3} classNames='ml-1 dx-icon-inline' />
                     </Link>
                   )}
 
                   {source && (
-                    <Link href={source} target='_blank' rel='noreferrer' classNames='text-sm text-description'>
+                    <Link href={source} classNames='text-sm text-description'>
                       {t('source.label')}
-                      <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mx-1' />
+                      <Icon icon='ph--arrow-square-out--regular' size={3} classNames='ml-1 dx-icon-inline' />
                     </Link>
                   )}
 
-                  {spec && (
-                    <Link href={spec} target='_blank' rel='noreferrer' classNames='text-sm text-description'>
-                      {t('spec.label')}
-                      <Icon icon='ph--arrow-square-out--bold' size={3} classNames='inline-block leading-none mx-1' />
-                    </Link>
-                  )}
+                  {onOpenSpec && <Chip id={id} name={t('open-spec.label')} onClick={onOpenSpec} />}
                 </div>
-              </div>
-              {((dependencies && dependencies.length > 0) || (dependents && dependents.length > 0)) && (
-                <div className='flex flex-col gap-2'>
-                  {dependencies && dependencies.length > 0 && (
-                    <>
-                      <h2>{t('dependencies.label')}</h2>
-                      <div className='flex flex-wrap gap-1'>
-                        {dependencies.map((depId) => (
-                          <PluginChip
-                            key={depId}
-                            id={depId}
-                            name={onResolvePluginName?.(depId) ?? depId}
-                            onClick={onNavigateToPlugin}
-                          />
-                        ))}
-                      </div>
-                    </>
-                  )}
-                  {dependents && dependents.length > 0 && (
-                    <>
-                      <h2>{t('dependents.label')}</h2>
-                      <div className='flex flex-wrap gap-1'>
-                        {dependents.map((dependentId) => (
-                          <PluginChip
-                            key={dependentId}
-                            id={dependentId}
-                            name={onResolvePluginName?.(dependentId) ?? dependentId}
-                            onClick={onNavigateToPlugin}
-                          />
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-              {versions && versions.length > 0 && (
-                <div className='flex flex-col gap-2'>
-                  <h2>{t('versions.label')}</h2>
+              </Section.Body>
+            </Section.Root>
+
+            {dependencies && dependencies.length > 0 && (
+              <Section.Root>
+                <Section.Heading title={t('dependencies.label')} />
+                <Section.Body>
+                  <div className='flex flex-wrap gap-1'>
+                    {dependencies.map((depId) => (
+                      <Chip
+                        key={depId}
+                        id={depId}
+                        name={onResolvePluginName?.(depId) ?? depId}
+                        onClick={onNavigateToPlugin}
+                      />
+                    ))}
+                  </div>
+                </Section.Body>
+              </Section.Root>
+            )}
+
+            {dependents && dependents.length > 0 && (
+              <Section.Root>
+                <Section.Heading title={t('dependents.label')} />
+                <Section.Body>
+                  <div className='flex flex-wrap gap-1'>
+                    {dependents.map((dependentId) => (
+                      <Chip
+                        key={dependentId}
+                        id={dependentId}
+                        name={onResolvePluginName?.(dependentId) ?? dependentId}
+                        onClick={onNavigateToPlugin}
+                      />
+                    ))}
+                  </div>
+                </Section.Body>
+              </Section.Root>
+            )}
+
+            {versions && versions.length > 0 && (
+              <Section.Root>
+                <Section.Heading title={t('versions.label')} />
+                <Section.Body>
                   <div className='flex gap-2 items-center'>
                     <Select.Root value={selectedVersionTag} onValueChange={onVersionChange}>
                       <Select.TriggerButton classNames='min-w-32' />
@@ -249,23 +289,24 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                       </Button>
                     )}
                   </div>
-                </div>
-              )}
-              {(onUninstall || (hasUpdate && onUpdate) || updating) && (
-                <div className='flex gap-2'>
-                  {updating ? (
-                    <Button variant='primary' disabled>
-                      {t('updating.label')}
-                    </Button>
-                  ) : hasUpdate && onUpdate ? (
-                    <Button variant='primary' onClick={onUpdate}>
-                      {t('update.label')}
-                    </Button>
-                  ) : null}
-                  {onUninstall && <Button onClick={onUninstall}>{t('uninstall.label')}</Button>}
-                </div>
-              )}
-            </div>
+                </Section.Body>
+              </Section.Root>
+            )}
+
+            {(onUninstall || (hasUpdate && onUpdate) || updating) && (
+              <div className='col-start-2 col-span-2 flex gap-2'>
+                {updating ? (
+                  <Button variant='primary' disabled>
+                    {t('updating.label')}
+                  </Button>
+                ) : hasUpdate && onUpdate ? (
+                  <Button variant='primary' onClick={onUpdate}>
+                    {t('update.label')}
+                  </Button>
+                ) : null}
+                {onUninstall && <Button onClick={onUninstall}>{t('uninstall.label')}</Button>}
+              </div>
+            )}
           </div>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
@@ -275,14 +316,24 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
 
 PluginDetail.displayName = 'PluginDetail';
 
-/**
- * Renders a single dependency / dependent reference using the shared `Tag`
- * primitive. When `onClick` is provided the chip fires the handler with the
- * canonical plugin id; the id is also surfaced via `title` so it stays one
- * hover away even when the chip shows the friendlier `name`.
- */
-const PluginChip = ({ id, name, onClick }: { id: string; name: string; onClick?: (pluginId: string) => void }) => (
-  <Tag title={id} onClick={onClick ? () => onClick(id) : undefined}>
+const SectionRoot = ({ children }: PropsWithChildren<{}>) => <>{children}</>;
+
+const SectionHeading = ({ title }: { title: string }) => (
+  <h2 className='col-start-2 col-span-2 pt-6 pb-2 uppercase text-sm font-medium text-subdued'>{title}</h2>
+);
+
+const SectionBody = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => (
+  <div className={mx('col-start-2 flex flex-col gap-2', classNames)}>{children}</div>
+);
+
+const Section = {
+  Root: SectionRoot,
+  Heading: SectionHeading,
+  Body: SectionBody,
+};
+
+const Chip = ({ id, name, onClick }: { id: string; name: string; onClick?: (pluginId: string) => void }) => (
+  <Tag title={id} onClick={onClick ? () => onClick(id) : undefined} classNames='dx-hover'>
     {name}
   </Tag>
 );

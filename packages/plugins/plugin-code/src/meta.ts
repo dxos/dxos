@@ -16,7 +16,7 @@ export const meta: Plugin.Meta = {
   icon: 'ph--code--regular',
   iconHue: 'indigo',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-code',
+  spec: 'PLUGIN.mdl',
   version: '0.1.0',
-  spec: 'https://unpkg.com/@dxos/plugin-code@0.1.0/PLUGIN.mdl',
   tags: ['labs'],
 };

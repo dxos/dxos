@@ -7,7 +7,7 @@ import React, { useCallback, useMemo } from 'react';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { ASSISTANT_COMPANION_VARIANT } from '@dxos/plugin-assistant';
-import { Button, Carousel, MediaPlayer, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, Carousel, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
@@ -81,14 +81,7 @@ export const WelcomeArticle = ({ role }: WelcomeArticleProps = {}) => {
                 <Carousel.Previous />
                 <Carousel.Viewport>
                   {slides.map((slide, i) => (
-                    <Carousel.Slide key={slide.src} index={i}>
-                      <MediaPlayer
-                        src={slide.src}
-                        alt={slide.description}
-                        classNames='absolute inset-0 w-full h-full bg-baseSurface'
-                        imgClassNames='object-cover'
-                      />
-                    </Carousel.Slide>
+                    <Carousel.Slide key={slide.src} index={i} src={slide.src} alt={slide.description} />
                   ))}
                 </Carousel.Viewport>
                 <Carousel.Next />

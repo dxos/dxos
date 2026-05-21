@@ -17,7 +17,7 @@ export const meta: Plugin.Meta = {
   icon: 'ph--lifebuoy--regular',
   iconHue: 'rose',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-support',
-  tags: ['system'],
+  spec: 'PLUGIN.mdl',
   version: '0.8.3',
-  spec: 'https://unpkg.com/@dxos/plugin-support@0.8.3/PLUGIN.mdl',
+  tags: ['system'],
 };
