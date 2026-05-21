@@ -39,22 +39,25 @@ export const FileArticle = ({ role, subject: file }: FileArticleProps) => {
         return;
       }
       setRenderUrl(undefined);
-      void resolver.resolve(data.url, file, getSpace(file)).then((url) => {
-        if (cancelled) {
-          if (url?.startsWith('blob:')) {
-            URL.revokeObjectURL(url);
+      void resolver
+        .resolve(data.url, file, getSpace(file))
+        .then((url) => {
+          if (cancelled) {
+            if (url?.startsWith('blob:')) {
+              URL.revokeObjectURL(url);
+            }
+            return;
           }
-          return;
-        }
-        if (url?.startsWith('blob:')) {
-          createdBlobUrl = url;
-        }
-        setRenderUrl(url);
-      }).catch(() => {
-        if (!cancelled) {
-          setRenderUrl(undefined);
-        }
-      });
+          if (url?.startsWith('blob:')) {
+            createdBlobUrl = url;
+          }
+          setRenderUrl(url);
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setRenderUrl(undefined);
+          }
+        });
     }
 
     return () => {

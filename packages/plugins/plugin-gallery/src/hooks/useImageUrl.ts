@@ -47,22 +47,25 @@ export const useImageUrl = (file: File.File | undefined): string | undefined => 
     let cancelled = false;
     let createdBlobUrl: string | undefined;
     setResolved(undefined);
-    void resolver.resolve(data.url, file, getSpace(file)).then((url) => {
-      if (cancelled) {
-        if (url?.startsWith('blob:')) {
-          URL.revokeObjectURL(url);
+    void resolver
+      .resolve(data.url, file, getSpace(file))
+      .then((url) => {
+        if (cancelled) {
+          if (url?.startsWith('blob:')) {
+            URL.revokeObjectURL(url);
+          }
+          return;
         }
-        return;
-      }
-      if (url?.startsWith('blob:')) {
-        createdBlobUrl = url;
-      }
-      setResolved(url);
-    }).catch(() => {
-      if (!cancelled) {
-        setResolved(undefined);
-      }
-    });
+        if (url?.startsWith('blob:')) {
+          createdBlobUrl = url;
+        }
+        setResolved(url);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setResolved(undefined);
+        }
+      });
 
     return () => {
       cancelled = true;

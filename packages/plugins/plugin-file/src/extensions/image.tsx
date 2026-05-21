@@ -210,20 +210,22 @@ class DxnImageWidget extends WidgetType {
       loaderAdded = true;
     }, WAIT_UNTIL_LOADER);
 
-    void Promise.resolve(this._url).then((url) => {
-      clearTimeout(timeout);
-      if (loaderAdded) {
-        widget.removeChild(loader);
-      }
-      if (url) {
-        widget.appendChild(createImg(view, url));
-      }
-    }).catch(() => {
-      clearTimeout(timeout);
-      if (loaderAdded) {
-        widget.removeChild(loader);
-      }
-    });
+    void Promise.resolve(this._url)
+      .then((url) => {
+        clearTimeout(timeout);
+        if (loaderAdded) {
+          widget.removeChild(loader);
+        }
+        if (url) {
+          widget.appendChild(createImg(view, url));
+        }
+      })
+      .catch(() => {
+        clearTimeout(timeout);
+        if (loaderAdded) {
+          widget.removeChild(loader);
+        }
+      });
 
     return widget;
   }
