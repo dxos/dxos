@@ -49,6 +49,24 @@ export interface ObjectIdClass extends Schema.SchemaClass<ObjectId, string> {
    * NOTE: The generated IDs depend on the order of ObjectId.random() calls, which might be affected by test order, scheduling, etc.
    */
   dangerouslyDisableRandomness(): void;
+
+  /**
+   * WARNING: To be used only within tests.
+   *
+   * Pins the time component of generated ObjectIds and seeds the PRNG used for the random component,
+   * causing the same sequence of IDs to be generated across runs.
+   * Do not use in production code as this will cause data collisions.
+   *
+   * @param time - Fixed timestamp (ms since epoch) used as the ULID time component.
+   * @param seed - Seed value for the PRNG used for the ULID random component.
+   *
+   * ```ts
+   * ObjectId.dangerouslySetSeed(new Date('2025-01-01').getTime(), 42);
+   * ```
+   *
+   * NOTE: The generated IDs depend on the order of ObjectId.random() calls, which might be affected by test order, scheduling, etc.
+   */
+  dangerouslySetSeed(time: number, seed: number): void;
 }
 
 /**
@@ -77,13 +95,18 @@ export const ObjectId: ObjectIdClass = class extends ObjectIdSchema {
     this.#factory = monotonicFactory(makeTestPRNG());
     this.#seedTime = new Date('2025-01-01').getTime();
   }
+
+  static dangerouslySetSeed(time: number, seed: number) {
+    this.#factory = monotonicFactory(makeTestPRNG(seed));
+    this.#seedTime = time;
+  }
 };
 
 /**
  * Test PRNG that always starts with the same seed and produces the same sequence.
  */
-const makeTestPRNG = (): PRNG => {
-  const rng = new SimplePRNG();
+const makeTestPRNG = (seed: number = 0): PRNG => {
+  const rng = new SimplePRNG(seed);
   return () => {
     return rng.next();
   };
