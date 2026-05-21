@@ -4,13 +4,10 @@
 
 import { expect, test } from '@playwright/test';
 
-import { log } from '@dxos/log';
-
 import { AppManager } from './app-manager';
 
 if (process.env.DX_PWA !== 'false') {
-  log.error('PWA must be disabled to run e2e tests. Set DX_PWA=false before running again.');
-  process.exit(1);
+  throw new Error('PWA must be disabled to run e2e tests. Set DX_PWA=false before running again.');
 }
 
 const GOOGLE_TEST_EMAIL = 'test@braneframe.com';
@@ -67,7 +64,11 @@ test.describe('Inbox plugin', () => {
 
     // Handle "Choose an account" screen if the test account already has a session.
     const chooseAccount = popup.getByText(GOOGLE_TEST_EMAIL);
-    if (await chooseAccount.isVisible({ timeout: 3_000 }).catch(() => false)) {
+    const accountVisible = await chooseAccount
+      .waitFor({ state: 'visible', timeout: 3_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (accountVisible) {
       await chooseAccount.click();
     } else {
       // Email step — Google uses different button IDs across versions; target by role.
@@ -88,7 +89,11 @@ test.describe('Inbox plugin', () => {
 
     // Grant access on the OAuth consent screen if it appears.
     const allowButton = popup.getByRole('button', { name: /Allow/i });
-    if (await allowButton.isVisible({ timeout: 10_000 }).catch(() => false)) {
+    const allowVisible = await allowButton
+      .waitFor({ state: 'visible', timeout: 10_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (allowVisible) {
       await allowButton.click();
     }
 
