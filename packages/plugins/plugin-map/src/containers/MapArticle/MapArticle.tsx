@@ -3,7 +3,7 @@
 //
 
 import * as Predicate from 'effect/Predicate';
-import React, { Fragment, useCallback, useMemo, useState } from 'react';
+import React, { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useSchemaFilter, type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
@@ -59,6 +59,18 @@ export const MapArticle = ({
     center: centerProp ?? DEFAULT_CENTER,
     zoom: zoomProp ?? DEFAULT_ZOOM,
   });
+
+  // Sync internal viewport when caller-provided center/zoom change so that MapArticle
+  // remains usable as a controlled component.
+  useEffect(() => {
+    if (centerProp === undefined && zoomProp === undefined) {
+      return;
+    }
+    setViewport((prev) => ({
+      center: centerProp ?? prev.center,
+      zoom: zoomProp ?? prev.zoom,
+    }));
+  }, [centerProp, zoomProp]);
 
   const db = object && Obj.getDatabase(object);
   const [view] = useObject(object?.view);

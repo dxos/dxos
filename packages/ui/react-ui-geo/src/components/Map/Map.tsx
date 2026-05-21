@@ -233,11 +233,11 @@ const MapMarkers = ({ selected, markers }: MapMarkersProps) => {
   // Fit the viewport around the markers. When there are no markers, leave the current view alone
   // so caller-provided center/zoom (or the user's prior interaction) is preserved.
   useEffect(() => {
-    if (markers.length > 0) {
+    if (markers && markers.length > 0) {
       const bounds = latLngBounds(markers.map((marker) => marker.location));
       map.fitBounds(bounds);
     }
-  }, [markers]);
+  }, [markers, map]);
 
   return (
     <>
