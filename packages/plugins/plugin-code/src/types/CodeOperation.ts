@@ -212,7 +212,7 @@ export const BuildProject = Operation.make({
     key: 'org.dxos.function.code.build-project',
     name: 'Build Project',
     description:
-      'Compile the project\'s TypeScript sources in-browser. Returns language-service diagnostics plus the ' +
+      "Compile the project's TypeScript sources in-browser. Returns language-service diagnostics plus the " +
       'emitted JavaScript for the entry file (src/hello.ts if present, else src/plugin.ts).',
   },
   input: Schema.Struct({

@@ -5,8 +5,8 @@
 import { afterAll, describe, test } from 'vitest';
 
 import { executeScript } from './build';
-import { bundleEntry } from './bundle';
 import { compileEntry } from './build';
+import { bundleEntry } from './bundle';
 import { resetCompiler } from './singleton';
 
 type File = { path: string; content: string };

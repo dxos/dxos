@@ -53,10 +53,7 @@ export const ensureEsbuild = async (): Promise<void> => {
  * bare imports (e.g. `@dxos/echo`) intentionally fail in F-12b — host
  * externals via import maps are deferred to F-13.
  */
-export const bundleEntry = async (
-  files: readonly LoadedFile[],
-  entryPath: string,
-): Promise<BundleResult> => {
+export const bundleEntry = async (files: readonly LoadedFile[], entryPath: string): Promise<BundleResult> => {
   await ensureEsbuild();
   const fileMap = new Map(files.map((file) => [normalizePath(file.path), file.content]));
 

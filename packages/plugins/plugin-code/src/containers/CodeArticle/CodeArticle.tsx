@@ -6,8 +6,8 @@ import { javascript } from '@codemirror/lang-javascript';
 import { markdown } from '@codemirror/lang-markdown';
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework/ui';
+import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Ref } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { getSpace, useObject } from '@dxos/react-client/echo';
