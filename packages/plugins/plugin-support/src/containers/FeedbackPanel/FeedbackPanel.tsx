@@ -137,7 +137,6 @@ export const FeedbackPanel = () => {
           closeLabel: ['close.label', { ns: osTranslations }],
         });
       } catch {
-        // Discord failed, but PostHog already received the feedback.
         await invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
         await invokePromise(LayoutOperation.AddToast, {
           id: `${meta.id}.feedback-success`,
