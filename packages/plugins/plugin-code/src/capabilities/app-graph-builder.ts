@@ -28,11 +28,20 @@ import { makePluginSpecSubject } from '../plugin-spec';
 // package in this monorepo. The connector below maps a plugin's
 // `Plugin.Meta.spec` (relative to its package root) back to one of these
 // entries by looking for a key that ends with `/plugin-<dir>/<spec>`.
-const PLUGIN_MDLS = import.meta.glob<string>(['../../../plugin-*/PLUGIN.mdl', '../../../plugin-*/**/PLUGIN.mdl'], {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-});
+// First pattern catches package-root specs (e.g. `plugin-chess/PLUGIN.mdl`);
+// the second catches nested specs (e.g. `plugin-spacetime/docs/PLUGIN.mdl`).
+const PLUGIN_MDLS = {
+  ...import.meta.glob<string>('../../../plugin-*/PLUGIN.mdl', {
+    query: '?raw',
+    import: 'default',
+    eager: true,
+  }),
+  ...import.meta.glob<string>('../../../plugin-*/**/PLUGIN.mdl', {
+    query: '?raw',
+    import: 'default',
+    eager: true,
+  }),
+};
 
 const resolveSpecContent = (pluginId: string, specPath: string): string | undefined => {
   const dirSegment = pluginId.replace(/^org\.dxos\.plugin\./, '');
