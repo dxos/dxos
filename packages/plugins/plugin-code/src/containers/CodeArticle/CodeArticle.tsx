@@ -4,9 +4,11 @@
 
 import { javascript } from '@codemirror/lang-javascript';
 import { markdown } from '@codemirror/lang-markdown';
-import React, { forwardRef, useEffect, useMemo, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework/ui';
+import { Ref } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
@@ -21,9 +23,9 @@ import {
 } from '@dxos/ui-editor';
 import { isTruthy } from '@dxos/util';
 
-import { FileTree } from '#components';
+import { BuildOutput, FileTree } from '#components';
 import { meta } from '#meta';
-import { type CodeProject, type SourceFile } from '#types';
+import { CodeCapabilities, CodeOperation, type CodeProject, type SourceFile } from '#types';
 
 export type CodeArticleProps = AppSurface.ObjectArticleProps<CodeProject.CodeProject>;
 
@@ -49,6 +51,60 @@ const languageForPath = (path: string) => {
 // introspect explorer so the visual rhythm matches across panels.
 export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(({ role, subject: project }, forwardedRef) => {
   const { t } = useTranslation(meta.id);
+  const invoker = useOperationInvoker();
+  const [buildRunState, updateBuildRun] = useAtomCapabilityState(CodeCapabilities.BuildRun);
+  const projectId = project.id;
+  const projectState = buildRunState[projectId];
+  const buildBusy = projectState?.busy === 'build';
+  const runBusy = projectState?.busy === 'run';
+  const lastBuildOk = projectState?.lastBuild?.ok === true;
+
+  const handleBuild = useCallback(async () => {
+    updateBuildRun((current) => ({
+      ...current,
+      [projectId]: { ...current[projectId], busy: 'build' },
+    }));
+    const { data } = await invoker.invokePromise(CodeOperation.BuildProject, { project: Ref.make(project) });
+    updateBuildRun((current) => ({
+      ...current,
+      [projectId]: {
+        ...current[projectId],
+        busy: undefined,
+        lastBuild: data
+          ? { ok: data.ok, diagnostics: data.diagnostics, entry: data.entry, timestamp: Date.now() }
+          : current[projectId]?.lastBuild,
+      },
+    }));
+  }, [invoker, project, projectId, updateBuildRun]);
+
+  const handleRun = useCallback(async () => {
+    updateBuildRun((current) => ({
+      ...current,
+      [projectId]: { ...current[projectId], busy: 'run' },
+    }));
+    const { data } = await invoker.invokePromise(CodeOperation.RunBuild, { project: Ref.make(project) });
+    updateBuildRun((current) => ({
+      ...current,
+      [projectId]: {
+        ...current[projectId],
+        busy: undefined,
+        lastRun: data
+          ? {
+              ok: data.ok,
+              stdout: data.stdout,
+              stderr: data.stderr,
+              diagnostics: data.diagnostics,
+              timestamp: Date.now(),
+            }
+          : current[projectId]?.lastRun,
+        // A failed build still surfaces diagnostics on the build slot.
+        lastBuild:
+          data && data.diagnostics.length > 0 && !data.ok
+            ? { ok: false, diagnostics: data.diagnostics, entry: undefined, timestamp: Date.now() }
+            : current[projectId]?.lastBuild,
+      },
+    }));
+  }, [invoker, project, projectId, updateBuildRun]);
 
   // Trigger re-render on files mutations.
   useObject(project);
@@ -87,9 +143,15 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(({ role,
 
   return (
     <Panel.Root role={role} ref={forwardedRef}>
-      {/* TODO(burdon): Add toolbar actions (cf. SpecArticle's Editor.Toolbar). */}
       <Panel.Toolbar asChild>
-        <Toolbar.Root />
+        <Toolbar.Root>
+          <Toolbar.Button onClick={handleBuild} disabled={buildBusy}>
+            {buildBusy ? t('action.build.busy.label') : t('action.build.label')}
+          </Toolbar.Button>
+          <Toolbar.Button onClick={handleRun} disabled={runBusy || !lastBuildOk}>
+            {runBusy ? t('action.run.busy.label') : t('action.run.label')}
+          </Toolbar.Button>
+        </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
         <div className='dx-container grid grid-cols-[30rem_1fr] divide-x divide-separator' role='none'>
@@ -102,8 +164,8 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(({ role,
                 emptyMessage={t('view.code.empty.placeholder')}
               />
             </div>
-            <div role='region' aria-label={t('inspect-pane.label')} className='dx-container grid p-2 overflow-auto'>
-              {/* TODO(burdon): Inspector / spec editor for the selected item. */}
+            <div role='region' aria-label={t('inspect-pane.label')} className='dx-container grid overflow-hidden'>
+              <BuildOutput state={projectState} />
             </div>
           </div>
           <div role='region' aria-label={t('output-pane.label')} className='dx-container grid min-bs-0 overflow-hidden'>
