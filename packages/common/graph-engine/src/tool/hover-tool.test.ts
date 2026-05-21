@@ -91,9 +91,9 @@ describe('HoverTool', () => {
     target.dispatchEvent(ev(0, 0));
     detach();
 
-    // Re-attach; first move should emit hover-enter fresh (no stale "a" carried over).
-    const tool2 = new HoverTool((e) => events.push(`${e.type}:${e.entityId}`));
-    tool2.attach(host, target);
+    // Re-attach the same instance; first move should emit hover-enter fresh (no stale "a"
+    // carried over via #current).
+    tool.attach(host, target);
     host.hit = { kind: 'node', node: { id: 'b' } };
     target.dispatchEvent(ev(0, 0));
 
