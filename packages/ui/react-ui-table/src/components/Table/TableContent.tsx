@@ -49,16 +49,17 @@ export type TableContentProps = {
   presentation?: TablePresentation;
   // TODO(burdon): Factor out attention.
   ignoreAttention?: boolean;
+  attendableId?: string;
   onCreate?: OnCreateHandler;
   onRowClick?: (row: any) => void;
   testId?: string;
 };
 
 export const TableContent = composable<HTMLDivElement, TableContentProps>(
-  ({ schema, model, presentation, ignoreAttention, onCreate, onRowClick, testId, ...props }, forwardedRef) => {
+  ({ schema, model, presentation, ignoreAttention, attendableId, onCreate, onRowClick, testId, ...props }, forwardedRef) => {
     const registry = useContext(RegistryContext);
     const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
-    const { hasAttention } = useAttention(model?.id ?? 'table');
+    const { hasAttention } = useAttention(attendableId ?? model?.id ?? 'table');
     const modals = useMemo(() => new ModalController(registry), [registry]);
     const columnMeta = useAtomValue(model?.columnMeta ?? emptyColumnMeta);
     // Subscribe to rows atom to trigger re-render when rows change.
