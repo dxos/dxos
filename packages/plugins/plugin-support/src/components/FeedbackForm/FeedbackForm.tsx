@@ -65,7 +65,11 @@ export const FeedbackForm = ({ onSave, onDiscord, discordPresence, disabled, onD
           {onDiscord && (
             <>
               <div onClick={() => (actionRef.current = 'discord')}>
-                <Form.Submit icon='ph--discord-logo--regular' label={t('ask-for-help.label')} disabled={disabled || undefined} />
+                <Form.Submit
+                  icon='ph--discord-logo--regular'
+                  label={t('ask-for-help.label')}
+                  disabled={disabled || undefined}
+                />
               </div>
               {discordPresence && (discordPresence.teamOnline > 0 || discordPresence.communityOnline > 0) && (
                 <p className='text-xs text-description text-center px-2'>
