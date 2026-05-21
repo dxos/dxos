@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { Obj, Ref } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
+import { OAuthProvider } from '@dxos/protocols';
 import { AccessToken } from '@dxos/types';
 
 import { Integration, IntegrationProvider, type IntegrationProviderEntry } from '#types';
@@ -62,6 +63,34 @@ export default Capability.makeModule<IntegrationProviderEntry[]>(
               });
               return { kind: 'complete', accessToken, integration };
             }),
+        },
+      },
+      // TODO(wip): Replace with dedicated plugins once sync operations are implemented.
+      {
+        id: 'atlassian',
+        source: 'atlassian.net',
+        label: 'Atlassian',
+        oauth: {
+          provider: OAuthProvider.ATLASSIAN,
+          scopes: ['read:jira-work', 'read:jira-user', 'offline_access'],
+        },
+      },
+      {
+        id: 'discord',
+        source: 'discord.com',
+        label: 'Discord',
+        oauth: {
+          provider: OAuthProvider.DISCORD,
+          scopes: ['identify', 'email', 'guilds'],
+        },
+      },
+      {
+        id: 'notion',
+        source: 'notion.so',
+        label: 'Notion',
+        oauth: {
+          provider: OAuthProvider.NOTION,
+          scopes: [],
         },
       },
       // GitHub, Linear, and Slack are implemented as dedicated plugins
