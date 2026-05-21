@@ -5,7 +5,7 @@
 import { Key, Obj } from '@dxos/echo';
 import { range } from '@dxos/util';
 
-import { Tree, type TreeNodeType } from '../types';
+import { Tree, type TreeNodeType } from '../components/Tree/types';
 
 type NumberOrNumberArray = number | number[];
 

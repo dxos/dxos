@@ -1,20 +1,21 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
+import { Atom, useAtomValue } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Type, View } from '@dxos/echo';
-import { ClientPlugin } from '@dxos/plugin-client/testing';
-import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import { PreviewPlugin } from '@dxos/plugin-preview/testing';
+import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
-import { ViewModel } from '@dxos/schema';
+import { type SpaceGraphNode, ViewModel } from '@dxos/schema';
 import { type ValueGenerator } from '@dxos/schema/testing';
 import { HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
 
@@ -22,25 +23,29 @@ import { useGraphModel } from '#hooks';
 import { Graph } from '#types';
 
 import { generate } from '../../testing';
-import { CanvasForceGraph } from './CanvasForceGraph';
+import { Lattice } from './Lattice';
 
 const generator = random as any as ValueGenerator;
 
-random.seed(1);
+random.seed(7);
+
+const EMPTY_ATOM = Atom.make<{ nodes: SpaceGraphNode[] }>({ nodes: [] });
 
 const DefaultStory = () => {
   const [space] = useSpaces();
   const model = useGraphModel(space?.db);
+  const graphSnapshot = useAtomValue((model?.graphAtom ?? EMPTY_ATOM) as typeof EMPTY_ATOM);
+  const nodes = useMemo(() => graphSnapshot.nodes.filter((node) => node.type === 'object'), [graphSnapshot]);
+
   if (!space || !model) {
     return <Loading data={{ space: !!space, model: !!model }} />;
   }
 
-  return <CanvasForceGraph model={model} />;
+  return <Lattice nodes={nodes} />;
 };
 
-const meta = {
-  title: 'plugins/plugin-explorer/components/CanvasForceGraph',
-  component: CanvasForceGraph,
+const meta: Meta<typeof DefaultStory> = {
+  title: 'plugins/plugin-explorer/components/Lattice',
   render: DefaultStory,
   decorators: [
     withTheme(),
@@ -48,6 +53,7 @@ const meta = {
     withPluginManager({
       plugins: [
         ...corePlugins(),
+        StorybookPlugin({}),
         ClientPlugin({
           types: [
             Graph.Graph,
@@ -68,16 +74,17 @@ const meta = {
               yield* Effect.promise(() => personalSpace.db.flush({ indexes: true }));
             }),
         }),
+        PreviewPlugin(),
       ],
     }),
   ],
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta<typeof CanvasForceGraph>;
+};
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<typeof DefaultStory>;
 
 export const Default: Story = {};
