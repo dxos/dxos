@@ -131,21 +131,61 @@ describe('buildSpanTree', () => {
     expect(tree.children.map((child) => child.meta.pid)).toEqual(['op-early', 'op-late']);
   });
 
-  test('respects eventLimit by dropping oldest events', ({ expect }) => {
+  test('eventLimit drops oldest non-boundary events but always retains span boundaries', ({ expect }) => {
+    // Three non-boundary events (`note 1..3`), all boundary events should be kept regardless.
+    // With `eventLimit: 1`, only the most recent `note` should survive.
     const tree = buildSpanTree(
       [
-        makeMessage({ pid: 'op-old' }, [
-          { ...opStart('a'), timestamp: 1 },
-          { ...opEnd('a'), timestamp: 2 },
-        ]),
-        makeMessage({ pid: 'op-new' }, [
-          { ...opStart('b'), timestamp: 3 },
-          { ...opEnd('b'), timestamp: 4 },
+        makeMessage({ pid: 'agent-1' }, [
+          { ...agentBegin(), timestamp: 1 },
+          { type: 'note', timestamp: 2, data: { text: 'note 1' } },
+          { type: 'note', timestamp: 3, data: { text: 'note 2' } },
+          { type: 'note', timestamp: 4, data: { text: 'note 3' } },
+          { ...agentEnd(), timestamp: 5 },
         ]),
       ],
+      { eventLimit: 1 },
+    );
+    expect(tree.children).toHaveLength(1);
+    const agentSpan = tree.children[0];
+    expect(agentSpan.events.map((event) => event.type)).toEqual([
+      AgentRequestBegin.key,
+      'note',
+      AgentRequestEnd.key,
+    ]);
+    expect((agentSpan.events[1].data as { text: string }).text).toBe('note 3');
+  });
+
+  test('eventLimit preserves parent-child structure when the parent begin is older than the window', ({ expect }) => {
+    // Regression: previously `events.slice(-eventLimit)` would drop the parent's begin event
+    // when the limit fell mid-span, orphaning every child span onto root. The fix retains all
+    // boundary events so the parent stays open and children remain nested.
+    const noise = Array.from({ length: 20 }, (_, index) => ({
+      type: 'note',
+      timestamp: 2 + index,
+      data: { index },
+    }));
+    const tree = buildSpanTree(
+      [
+        makeMessage({ pid: 'parent-1' }, [{ ...agentBegin(), timestamp: 1 }, ...noise]),
+        makeMessage({ pid: 'child-1', parentPid: 'parent-1' }, [
+          { ...opStart('lookup', 'Lookup'), timestamp: 100 },
+          { ...opEnd('lookup', 'Lookup'), timestamp: 101 },
+        ]),
+        makeMessage({ pid: 'parent-1' }, [{ ...agentEnd(), timestamp: 200 }]),
+      ],
+      // Limit far below the 20 `note` events — naive slicing would drop the parent's begin.
       { eventLimit: 2 },
     );
-    expect(tree.children.map((child) => child.meta.pid)).toEqual(['op-new']);
+    expect(tree.children).toHaveLength(1);
+    const parentSpan = tree.children[0];
+    expect(parentSpan.meta.pid).toBe('parent-1');
+    expect(parentSpan.children).toHaveLength(1);
+    expect(parentSpan.children[0].meta.pid).toBe('child-1');
+    expect(parentSpan.children[0].events.map((event) => event.type)).toEqual([
+      Trace.OperationStart.key,
+      Trace.OperationEnd.key,
+    ]);
   });
 
   test('flattenSpanTree returns root + all descendants in depth-first order', ({ expect }) => {
