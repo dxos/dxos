@@ -56,7 +56,10 @@ export type TableContentProps = {
 };
 
 export const TableContent = composable<HTMLDivElement, TableContentProps>(
-  ({ schema, model, presentation, ignoreAttention, attendableId, onCreate, onRowClick, testId, ...props }, forwardedRef) => {
+  (
+    { schema, model, presentation, ignoreAttention, attendableId, onCreate, onRowClick, testId, ...props },
+    forwardedRef,
+  ) => {
     const registry = useContext(RegistryContext);
     const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
     const { hasAttention } = useAttention(attendableId ?? model?.id ?? 'table');
