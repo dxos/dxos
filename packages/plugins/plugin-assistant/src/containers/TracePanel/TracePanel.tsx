@@ -25,9 +25,8 @@ import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { ProcessTree, ProcessTreeProps } from '#components';
+import { buildExecutionGraph, type ExecutionGraph } from '#execution-graph';
 import { AssistantCapabilities } from '#types';
-
-import { buildExecutionGraph, type ExecutionGraph } from './execution-graph';
 
 export type TracePanelProps = AppSurface.SpaceArticleProps<Pick<ProcessTreeProps, 'onProcessTerminate'>>;
 

@@ -26,7 +26,7 @@ import { dbg } from '@dxos/log';
 import { renderTimelineAscii } from '@dxos/react-ui-components';
 import { Organization, Person } from '@dxos/types';
 
-import { buildExecutionGraph } from '../containers/TracePanel/execution-graph';
+import { buildExecutionGraph } from '#execution-graph';
 
 ObjectId.dangerouslyDisableRandomness();
 

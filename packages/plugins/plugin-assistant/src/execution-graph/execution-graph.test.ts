@@ -2,15 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import { AgentRequestBegin, AgentRequestEnd, CompleteBlock } from '@dxos/assistant';
 import { Trace } from '@dxos/compute';
-import { Obj } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
 import { type Commit, renderTimelineAscii } from '@dxos/react-ui-components';
 
 import { CommitSelector, buildExecutionGraph } from './execution-graph';
+import { collectTraceEvents, withMeta } from './testing';
 
 ObjectId.dangerouslyDisableRandomness();
 
@@ -22,23 +23,6 @@ const makeCommit = (id: string, opts: Partial<Commit> = {}): Commit => ({
 });
 
 const ids = (commits: Commit[]) => commits.map((commit) => commit.id);
-
-const makeMessage = (
-  meta: Trace.Meta,
-  events: Array<{ type: string; timestamp: number; data?: unknown }>,
-  isEphemeral = false,
-): Trace.Message =>
-  Obj.make(Trace.Message, {
-    meta,
-    isEphemeral,
-    events: events.map((event) => ({
-      type: event.type,
-      timestamp: event.timestamp,
-      data: event.data ?? {},
-    })),
-  });
-
-const textBlock = (text: string) => ({ _tag: 'text' as const, text, pending: false });
 
 describe('CommitSelector', () => {
   describe('make', () => {
@@ -184,6 +168,8 @@ describe('CommitSelector', () => {
   });
 });
 
+const MESSAGE_ID = '01HQ0000000000000000000000';
+
 describe('buildExecutionGraph (span-tree based)', () => {
   test('empty input → no commits', ({ expect }) => {
     const { commits, branches } = buildExecutionGraph({ traceMessages: [] });
@@ -192,24 +178,16 @@ describe('buildExecutionGraph (span-tree based)', () => {
   });
 
   test('top-level operation with no inner events → collapsed to single end commit on main', ({ expect }) => {
-    const { commits, branches } = buildExecutionGraph({
-      traceMessages: [
-        makeMessage({ pid: 'op-1' }, [
-          {
-            type: Trace.OperationStart.key,
-            timestamp: 1,
-            data: { key: 'reply', name: 'Reply' },
-          },
-        ]),
-        makeMessage({ pid: 'op-1' }, [
-          {
-            type: Trace.OperationEnd.key,
-            timestamp: 2,
-            data: { key: 'reply', name: 'Reply', outcome: 'success' as const },
-          },
-        ]),
-      ],
-    });
+    const messages = collectTraceEvents(
+      withMeta(
+        { pid: 'op-1' },
+        Effect.gen(function* () {
+          yield* Trace.write(Trace.OperationStart, { key: 'reply', name: 'Reply' });
+          yield* Trace.write(Trace.OperationEnd, { key: 'reply', name: 'Reply', outcome: 'success' });
+        }),
+      ),
+    );
+    const { commits, branches } = buildExecutionGraph({ traceMessages: messages });
     expect(branches).toEqual(['main']);
     expect(commits).toHaveLength(1);
     expect(commits[0].branch).toBe('main');
@@ -221,33 +199,30 @@ describe('buildExecutionGraph (span-tree based)', () => {
   });
 
   test('nested operation under an agent → collapsed to a single end commit', ({ expect }) => {
-    const { commits, branches } = buildExecutionGraph({
-      traceMessages: [
-        // Agent begin.
-        makeMessage({ pid: 'agent-1' }, [{ type: AgentRequestBegin.key, timestamp: 1, data: {} }]),
-        // User message inside the agent.
-        makeMessage({ pid: 'agent-1' }, [
-          {
-            type: CompleteBlock.key,
-            timestamp: 2,
-            data: { messageId: '01HQ0000000000000000000000', role: 'user', block: textBlock('hello') },
-          },
-        ]),
-        // Nested operation start + end.
-        makeMessage({ pid: 'op-1', parentPid: 'agent-1' }, [
-          { type: Trace.OperationStart.key, timestamp: 3, data: { key: 'lookup', name: 'Lookup' } },
-        ]),
-        makeMessage({ pid: 'op-1', parentPid: 'agent-1' }, [
-          {
-            type: Trace.OperationEnd.key,
-            timestamp: 4,
-            data: { key: 'lookup', name: 'Lookup', outcome: 'success' as const },
-          },
-        ]),
-        // Agent end.
-        makeMessage({ pid: 'agent-1' }, [{ type: AgentRequestEnd.key, timestamp: 5, data: {} }]),
-      ],
-    });
+    const messages = collectTraceEvents(
+      Effect.gen(function* () {
+        yield* withMeta(
+          { pid: 'agent-1' },
+          Effect.gen(function* () {
+            yield* Trace.write(AgentRequestBegin, {});
+            yield* Trace.write(CompleteBlock, {
+              messageId: MESSAGE_ID,
+              role: 'user',
+              block: { _tag: 'text', text: 'hello', pending: false },
+            });
+          }),
+        );
+        yield* withMeta(
+          { pid: 'op-1', parentPid: 'agent-1' },
+          Effect.gen(function* () {
+            yield* Trace.write(Trace.OperationStart, { key: 'lookup', name: 'Lookup' });
+            yield* Trace.write(Trace.OperationEnd, { key: 'lookup', name: 'Lookup', outcome: 'success' });
+          }),
+        );
+        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestEnd, {}));
+      }),
+    );
+    const { commits, branches } = buildExecutionGraph({ traceMessages: messages });
     expect(branches).toEqual(['main', 'agent-1']);
     expect(`\n${renderTimelineAscii(commits, branches)}\n`).toMatchInlineSnapshot(`
       "
@@ -260,31 +235,21 @@ describe('buildExecutionGraph (span-tree based)', () => {
   });
 
   test('nested operation with its own inner status message → expanded fork/merge', ({ expect }) => {
-    const { commits, branches } = buildExecutionGraph({
-      traceMessages: [
-        makeMessage({ pid: 'op-1' }, [
-          { type: Trace.OperationStart.key, timestamp: 1, data: { key: 'work', name: 'Work' } },
-        ]),
-        makeMessage({ pid: 'op-1' }, [
-          {
-            type: CompleteBlock.key,
-            timestamp: 2,
-            data: {
-              messageId: '01HQ0000000000000000000000',
-              role: 'assistant',
-              block: { _tag: 'status', statusText: 'thinking', pending: false },
-            },
-          },
-        ]),
-        makeMessage({ pid: 'op-1' }, [
-          {
-            type: Trace.OperationEnd.key,
-            timestamp: 3,
-            data: { key: 'work', name: 'Work', outcome: 'success' as const },
-          },
-        ]),
-      ],
-    });
+    const messages = collectTraceEvents(
+      withMeta(
+        { pid: 'op-1' },
+        Effect.gen(function* () {
+          yield* Trace.write(Trace.OperationStart, { key: 'work', name: 'Work' });
+          yield* Trace.write(CompleteBlock, {
+            messageId: MESSAGE_ID,
+            role: 'assistant',
+            block: { _tag: 'status', statusText: 'thinking', pending: false },
+          });
+          yield* Trace.write(Trace.OperationEnd, { key: 'work', name: 'Work', outcome: 'success' });
+        }),
+      ),
+    );
+    const { commits } = buildExecutionGraph({ traceMessages: messages });
     // Three commits: begin on main, status on op-1 branch, end on main as merge.
     expect(commits).toHaveLength(3);
     expect(commits[0].branch).toBe('main');
@@ -294,19 +259,21 @@ describe('buildExecutionGraph (span-tree based)', () => {
   });
 
   test('pending span with user message → user lands on own branch, not parent', ({ expect }) => {
-    const { commits, branches } = buildExecutionGraph({
-      traceMessages: [
-        // Agent has begun and emitted a user message, but has NOT yet completed.
-        makeMessage({ pid: 'agent-1' }, [{ type: AgentRequestBegin.key, timestamp: 1, data: {} }]),
-        makeMessage({ pid: 'agent-1' }, [
-          {
-            type: CompleteBlock.key,
-            timestamp: 2,
-            data: { messageId: '01HQ0000000000000000000000', role: 'user', block: textBlock('hello') },
-          },
-        ]),
-      ],
-    });
+    const messages = collectTraceEvents(
+      // Agent has begun and emitted a user message, but has NOT yet completed.
+      withMeta(
+        { pid: 'agent-1' },
+        Effect.gen(function* () {
+          yield* Trace.write(AgentRequestBegin, {});
+          yield* Trace.write(CompleteBlock, {
+            messageId: MESSAGE_ID,
+            role: 'user',
+            block: { _tag: 'text', text: 'hello', pending: false },
+          });
+        }),
+      ),
+    );
+    const { commits, branches } = buildExecutionGraph({ traceMessages: messages });
     // Two commits: AgentBegin on main (fork), user "hello" on agent-1 branch (middle).
     // No end commit yet — the span is pending.
     expect(commits).toHaveLength(2);
@@ -323,28 +290,29 @@ describe('buildExecutionGraph (span-tree based)', () => {
   });
 
   test('pending span with collapsed sub-span then user message → user on own branch', ({ expect }) => {
-    const { commits, branches } = buildExecutionGraph({
-      traceMessages: [
-        makeMessage({ pid: 'agent-1' }, [{ type: AgentRequestBegin.key, timestamp: 1, data: {} }]),
+    const messages = collectTraceEvents(
+      Effect.gen(function* () {
+        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestBegin, {}));
         // Sub-span completes (will be collapsed).
-        makeMessage({ pid: 'op-1', parentPid: 'agent-1' }, [
-          { type: Trace.OperationStart.key, timestamp: 2, data: { key: 'lookup', name: 'Lookup' } },
-          {
-            type: Trace.OperationEnd.key,
-            timestamp: 3,
-            data: { key: 'lookup', name: 'Lookup', outcome: 'success' as const },
-          },
-        ]),
+        yield* withMeta(
+          { pid: 'op-1', parentPid: 'agent-1' },
+          Effect.gen(function* () {
+            yield* Trace.write(Trace.OperationStart, { key: 'lookup', name: 'Lookup' });
+            yield* Trace.write(Trace.OperationEnd, { key: 'lookup', name: 'Lookup', outcome: 'success' });
+          }),
+        );
         // User message arrives after the sub-span; agent is still pending.
-        makeMessage({ pid: 'agent-1' }, [
-          {
-            type: CompleteBlock.key,
-            timestamp: 4,
-            data: { messageId: '01HQ0000000000000000000001', role: 'user', block: textBlock('hello') },
-          },
-        ]),
-      ],
-    });
+        yield* withMeta(
+          { pid: 'agent-1' },
+          Trace.write(CompleteBlock, {
+            messageId: '01HQ0000000000000000000001',
+            role: 'user',
+            block: { _tag: 'text', text: 'hello', pending: false },
+          }),
+        );
+      }),
+    );
+    const { commits } = buildExecutionGraph({ traceMessages: messages });
     // AgentBegin on main, Lookup-Success on agent branch, user "hello" on agent branch.
     expect(commits).toHaveLength(3);
     expect(commits[0].branch).toBe('main');
@@ -354,28 +322,27 @@ describe('buildExecutionGraph (span-tree based)', () => {
   });
 
   test('orders sub-spans chronologically under their parent', ({ expect }) => {
-    const { commits } = buildExecutionGraph({
-      traceMessages: [
-        makeMessage({ pid: 'agent-1' }, [{ type: AgentRequestBegin.key, timestamp: 1, data: {} }]),
-        makeMessage({ pid: 'op-1', parentPid: 'agent-1' }, [
-          { type: Trace.OperationStart.key, timestamp: 2, data: { key: 'a', name: 'A' } },
-          {
-            type: Trace.OperationEnd.key,
-            timestamp: 3,
-            data: { key: 'a', name: 'A', outcome: 'success' as const },
-          },
-        ]),
-        makeMessage({ pid: 'op-2', parentPid: 'agent-1' }, [
-          { type: Trace.OperationStart.key, timestamp: 4, data: { key: 'b', name: 'B' } },
-          {
-            type: Trace.OperationEnd.key,
-            timestamp: 5,
-            data: { key: 'b', name: 'B', outcome: 'success' as const },
-          },
-        ]),
-        makeMessage({ pid: 'agent-1' }, [{ type: AgentRequestEnd.key, timestamp: 6, data: {} }]),
-      ],
-    });
+    const messages = collectTraceEvents(
+      Effect.gen(function* () {
+        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestBegin, {}));
+        yield* withMeta(
+          { pid: 'op-1', parentPid: 'agent-1' },
+          Effect.gen(function* () {
+            yield* Trace.write(Trace.OperationStart, { key: 'a', name: 'A' });
+            yield* Trace.write(Trace.OperationEnd, { key: 'a', name: 'A', outcome: 'success' });
+          }),
+        );
+        yield* withMeta(
+          { pid: 'op-2', parentPid: 'agent-1' },
+          Effect.gen(function* () {
+            yield* Trace.write(Trace.OperationStart, { key: 'b', name: 'B' });
+            yield* Trace.write(Trace.OperationEnd, { key: 'b', name: 'B', outcome: 'success' });
+          }),
+        );
+        yield* withMeta({ pid: 'agent-1' }, Trace.write(AgentRequestEnd, {}));
+      }),
+    );
+    const { commits } = buildExecutionGraph({ traceMessages: messages });
     // After collapsing, expect: AgentBegin, Op1.End, Op2.End, AgentEnd → 4 commits.
     expect(commits.map((commit) => commit.message)).toEqual([
       'Agent processing request...',

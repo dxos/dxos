@@ -243,18 +243,32 @@ export const mergeSinks = (sinks: readonly Sink[]): Sink => {
   };
 };
 
-export const testTraceService = (opts: { meta?: Meta } = {}): Layer.Layer<TraceService, never, TraceSink> =>
+/**
+ * Builds a {@link TraceService} layer that wraps each `write` into a fresh {@link Message}
+ * and forwards it to the provided {@link TraceSink}. Intended for tests and lightweight
+ * fixtures.
+ *
+ * Options:
+ *   - `meta`: stamped on every emitted message (defaults to `{}`).
+ *   - `clock`: timestamp source (defaults to {@link Date.now}). Pass a monotonic counter
+ *     in tests to make event ordering deterministic when many writes happen in the same
+ *     millisecond.
+ */
+export const testTraceService = (
+  opts: { meta?: Meta; clock?: () => number } = {},
+): Layer.Layer<TraceService, never, TraceSink> =>
   Layer.effect(
     TraceService,
     Effect.gen(function* () {
       const sink = yield* TraceSink;
+      const clock = opts.clock ?? Date.now;
       return {
         write: (event, data) => {
           sink.write(
             Obj.make(Message, {
               meta: opts.meta ?? {},
               isEphemeral: event.isEphemeral,
-              events: [{ type: event.key, timestamp: Date.now(), data }],
+              events: [{ type: event.key, timestamp: clock(), data }],
             }),
           );
         },

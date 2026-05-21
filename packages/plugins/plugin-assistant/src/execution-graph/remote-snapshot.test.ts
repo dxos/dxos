@@ -82,11 +82,11 @@ const MULTI_SNAPSHOT = 'trace-timeline-multiple.dx.json';
 interface RawMessage {
   meta?: Trace.Meta;
   isEphemeral?: boolean;
-  events?: Array<{ type: string; timestamp: number; data?: unknown }>;
+  events?: Array<{ type: string; timestamp: number; data: unknown }>;
 }
 
 const loadRemoteTraceMessages = (filename: string): Trace.Message[] => {
-  const snapshotPath = join(__dirname, '../../testing/data', filename);
+  const snapshotPath = join(__dirname, '../testing/data', filename);
   const json = JSON.parse(readFileSync(snapshotPath, 'utf8')) as unknown;
 
   const messages: Trace.Message[] = [];
