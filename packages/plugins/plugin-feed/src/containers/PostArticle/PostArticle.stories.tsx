@@ -62,6 +62,11 @@ const meta = {
       createSpace: true,
       types: [Subscription.Subscription, Subscription.Post, Tag.Tag, Text.Text],
       onCreateSpace: async ({ space }) => {
+        // The story renders a Post detail view; content/imageUrl no longer live
+        // on the Post object — they belong on `Subscription.contentFeed` /
+        // `Subscription.postState`. PostContent falls back to `description`
+        // when no fetched body is available, so we stash the sample markdown
+        // there for the story.
         space.db.add(
           Subscription.makePost({
             title: 'Local-first software: a primer',
@@ -69,8 +74,7 @@ const meta = {
             author: 'Martin Kleppmann',
             published: new Date().toISOString(),
             guid: 'local-first-primer',
-            content: SAMPLE_MARKDOWN,
-            imageUrl: 'https://picsum.photos/seed/local-first/960/480',
+            description: SAMPLE_MARKDOWN,
           }),
         );
       },

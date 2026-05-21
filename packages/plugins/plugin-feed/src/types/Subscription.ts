@@ -88,18 +88,16 @@ export const Subscription = Schema.Struct({
    * - `starred` / `starredAt`: cross-magazine star flag (replaces the older
    *   `Obj.getMeta(post).tags + STAR_TAG` pattern).
    */
-  postState: Schema.optional(
-    Schema.Record({
-      key: Schema.String,
-      value: Schema.Struct({
-        imageUrl: Schema.optional(Schema.String),
-        readAt: Schema.optional(Schema.String),
-        archived: Schema.optional(Schema.Boolean),
-        starred: Schema.optional(Schema.Boolean),
-        starredAt: Schema.optional(Schema.String),
-      }),
+  postState: Schema.Record({
+    key: Schema.String,
+    value: Schema.Struct({
+      imageUrl: Schema.optional(Schema.String),
+      readAt: Schema.optional(Schema.String),
+      archived: Schema.optional(Schema.Boolean),
+      starred: Schema.optional(Schema.Boolean),
+      starredAt: Schema.optional(Schema.String),
     }),
-  ).pipe(FormInputAnnotation.set(false)),
+  }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.subscription.feed',

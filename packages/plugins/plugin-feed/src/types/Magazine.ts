@@ -57,15 +57,13 @@ export const Magazine = Schema.Struct({
    * Per-Post state shared across magazines (readAt, archived, starred,
    * content, imageUrl) lives on `Subscription.postState` keyed by Post id.
    */
-  postState: Schema.optional(
-    Schema.Record({
-      key: Schema.String,
-      value: Schema.Struct({
-        snippet: Schema.optional(Schema.String),
-        rank: Schema.optional(Schema.Number),
-      }),
+  postState: Schema.Record({
+    key: Schema.String,
+    value: Schema.Struct({
+      snippet: Schema.optional(Schema.String),
+      rank: Schema.optional(Schema.Number),
     }),
-  ).pipe(FormInputAnnotation.set(false)),
+  }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.magazine',
