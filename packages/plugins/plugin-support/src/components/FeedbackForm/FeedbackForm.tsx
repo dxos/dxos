@@ -5,19 +5,18 @@
 import React, { useCallback, useRef } from 'react';
 
 import { IconButton, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { type FormRootProps, type FormSubmitProps, type FormUpdateMeta, Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { SupportOperation } from '#types';
 
-export type FeedbackFormProps = {
-  onSave?: (values: SupportOperation.UserFeedback) => void | Promise<void>;
-  disabled?: boolean;
-  onDiscord?: (values: SupportOperation.UserFeedback) => void | Promise<void>;
-  discordPresence?: { teamOnline: number; communityOnline: number };
-  /** Optional handler — when supplied a "Download logs" button is rendered below the submit action. */
-  onDownloadLogs?: () => void | Promise<void>;
-};
+export type FeedbackFormProps = Pick<FormRootProps<SupportOperation.UserFeedback>, 'onSave'> &
+  Pick<FormSubmitProps, 'disabled'> & {
+    discordPresence?: { teamOnline: number; communityOnline: number };
+    onDiscord?: (values: SupportOperation.UserFeedback) => void | Promise<void>;
+    /** Optional handler — when supplied a "Download logs" button is rendered below the submit action. */
+    onDownloadLogs?: () => void | Promise<void>;
+  };
 
 const defaultValues: SupportOperation.UserFeedback = {
   message: '',
@@ -29,11 +28,11 @@ export const FeedbackForm = ({ onSave, onDiscord, discordPresence, disabled, onD
   const actionRef = useRef<'posthog' | 'discord'>('posthog');
 
   const handleSave = useCallback(
-    async (values: SupportOperation.UserFeedback) => {
+    async (values: SupportOperation.UserFeedback, formMeta: FormUpdateMeta<SupportOperation.UserFeedback>) => {
       if (actionRef.current === 'discord' && onDiscord) {
         await onDiscord(values);
       } else {
-        await onSave?.(values);
+        await onSave?.(values, formMeta);
       }
     },
     [onSave, onDiscord],
