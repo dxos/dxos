@@ -935,61 +935,24 @@ describe('SubductionPolicy', () => {
       expect(progress.peek().state).to.not.equal('ready');
     });
 
-    // EMPIRICAL CORRECTION: the prior hypothesis was that
-    // `authorizeFetch` is fetch-RPC only and so flipping it on the
-    // holder won't block subsequent proactive pushes. Observation:
-    // `authorizeFetch` IS consulted on every push, so flipping it
-    // allow→deny on the HOLDER DOES block subsequent pushes.
-    //
-    // Expected: pre-flip change syncs; post-flip change does NOT
-    // reach the client within the negative window.
-    //
-    // Implication: ✅ `authorizeFetch` is a usable revoke knob on the
-    // holder for ongoing subscription access.
-    test('authorizeFetch allow → deny blocks subsequent push deliveries (empirical)', async () => {
-      let denyFetch = false;
-      const { repos, adapters } = await createHostClientRepoTopology({
-        subductionPolicies: {
-          host: {
-            ...PERMISSIVE_POLICY,
-            authorizeFetch: async () => {
-              if (denyFetch) {
-                throw new Error('denied');
-              }
-            },
-          },
-        },
-      });
-      const [host, client] = repos;
-      await connectAdapters(adapters);
-
-      const handle = host.create<{ text?: string }>({ text: 'initial' });
-      await waitForSubductionSave();
-      const clientHandle = await findInStates<{ text?: string }>(client, handle.url, FIND_STATES);
-      await expect.poll(() => clientHandle.doc()?.text, { timeout: 5_000 }).toEqual('initial');
-
-      denyFetch = true;
-      handle.change((doc: any) => {
-        doc.text = 'after-revoke';
-      });
-      await waitForSubductionSave();
-
-      // Within the negative window the client's view must NOT advance
-      // past 'initial'.
-      await sleep(NEGATIVE_ASSERTION_DELAY_MS);
-      expect(clientHandle.doc()?.text).to.equal('initial');
-    });
-
-    // Hypothesis: by contrast, flipping `authorizePut` from allow → deny
-    // on the receiver DOES block subsequent pushes, because every commit
+    // Hypothesis: flipping `authorizePut` from allow → deny on the
+    // receiver blocks subsequent pushes, because every inbound commit
     // hits `authorizePut`.
     //
     // Expected: client's view of the doc stays at the pre-flip text
     // for at least the negative window.
     //
-    // Implication: ✅ `authorizePut` is the only client-side hook that
-    // can revoke ongoing subscription access (and only on the receiver
-    // side).
+    // Implication: ✅ `authorizePut` on the receiver is the only
+    // client-side hook that reliably revokes ongoing subscription
+    // access. `authorizeFetch` allow→deny on the holder is NOT a
+    // reliable revoke knob: a new commit triggers BOTH a batch-sync
+    // round (gated by `authorizeFetch`, the denial logs as `WARN ...
+    // failed to send requested data`) AND a `LooseCommit` broadcast
+    // which falls back to "all_connections" with NO `authorizeFetch`
+    // consultation when no peer has explicitly subscribed. The
+    // `LooseCommit` path races the denial and frequently wins,
+    // delivering the commit anyway. See the `subduction-policy` skill
+    // for the source-level breakdown.
     test('authorizePut allow → deny blocks subsequent pushes', async () => {
       let denyPut = false;
       const { repos, adapters } = await createHostClientRepoTopology({
