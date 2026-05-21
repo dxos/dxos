@@ -8,12 +8,21 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { Card } from '@dxos/react-ui';
 import { Expando, type ProjectionModel } from '@dxos/schema';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
-import { ExpandoCard, FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
+import {
+  DynamicTypeCard,
+  ExpandoCard,
+  FormCard,
+  JsonCard,
+  OrganizationCard,
+  PersonCard,
+  ProjectCard,
+  TaskCard,
+} from '../cards';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -70,6 +79,31 @@ export default Capability.makeModule(() =>
         filter: AppSurface.object(AppSurface.Card, Expando.Expando),
         component: ({ data, role }) => {
           return <ExpandoCard role={role} subject={data.subject} ignorePaths={data.ignorePaths} />;
+        },
+      }),
+
+      Surface.create({
+        id: 'schema-popover--dynamic-type',
+        role: 'card--content',
+        filter: (data): data is { subject: Obj.Unknown } => {
+          if (!Obj.isObject(data.subject)) {
+            return false;
+          }
+          const schema = Obj.getSchema(data.subject);
+          if (schema) {
+            return Type.isMutable(schema);
+          }
+          // Obj.getSchema fails for database-registered schemas (DXN mismatch); fall back to typename query.
+          try {
+            const db = Obj.getDatabase(data.subject);
+            const typename = Obj.getTypename(data.subject);
+            return !!db && !!typename && db.schemaRegistry.query({ typename }).runSync().length > 0;
+          } catch {
+            return false;
+          }
+        },
+        component: ({ data, role }) => {
+          return <DynamicTypeCard role={role} subject={data.subject} />;
         },
       }),
 
