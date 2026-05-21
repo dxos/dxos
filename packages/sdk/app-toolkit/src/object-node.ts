@@ -206,8 +206,9 @@ export const createObjectNode = ({
     data: object,
     properties: {
       label,
-      icon: (schema && Type.isMutable(schema)) ? 'ph--cube--regular' : (iconAnnotation?.icon ?? 'ph--placeholder--regular'),
-      iconHue: (schema && Type.isMutable(schema)) ? 'neutral' : iconAnnotation?.hue,
+      icon:
+        schema && Type.isMutable(schema) ? 'ph--cube--regular' : (iconAnnotation?.icon ?? 'ph--placeholder--regular'),
+      iconHue: schema && Type.isMutable(schema) ? 'neutral' : iconAnnotation?.hue,
       disposition,
       testId: 'spacePlugin.object',
       persistenceClass: 'echo',
