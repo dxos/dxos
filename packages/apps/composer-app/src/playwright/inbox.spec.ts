@@ -44,6 +44,8 @@ test.describe('Inbox plugin', () => {
     if (!process.env.GOOGLE_TEST_USER_PASSWORD) {
       test.skip(true, 'GOOGLE_TEST_USER_PASSWORD env var not set');
     }
+    // Google sign-in + OAuth round-trip needs more time than the default 60 s.
+    test.setTimeout(180_000);
 
     await host.createSpace();
     await host.createObject({ type: 'Mailbox', name: 'Test Inbox' });
@@ -87,22 +89,44 @@ test.describe('Inbox plugin', () => {
       ]);
     }
 
+    // Some OAuth apps get a "This app isn't verified" warning. Handle it by
+    // clicking "Advanced" then the "unsafe" proceed link.
+    const advancedLink = popup.getByText('Advanced');
+    const advancedVisible = await advancedLink
+      .waitFor({ state: 'visible', timeout: 5_000 })
+      .then(() => true)
+      .catch(() => false);
+    if (advancedVisible) {
+      await advancedLink.click();
+      await popup.locator('a', { hasText: /unsafe/i }).click();
+    }
+
     // Grant access on the OAuth consent screen if it appears.
     const allowButton = popup.getByRole('button', { name: /Allow/i });
     const allowVisible = await allowButton
-      .waitFor({ state: 'visible', timeout: 10_000 })
+      .waitFor({ state: 'visible', timeout: 20_000 })
       .then(() => true)
       .catch(() => false);
     if (allowVisible) {
       await allowButton.click();
     }
 
-    // Popup closes once Edge has received the token and posted back to the opener.
-    await popup.waitForEvent('close', { timeout: 60_000 });
+    // Once Google redirects to Edge's callback, Edge posts the token to
+    // window.opener. The IntegrationCoordinator processes the postMessage,
+    // persists the AccessToken + Integration, and navigates the deck away from
+    // the Mailbox to the new Integration view — making "No integrations
+    // configured" disappear from the plank. We watch for this side-effect
+    // instead of relying on popup.close(), since Edge may not always call
+    // window.close() before the navigation completes.
+    await expect(plank.locator.getByText('No integrations configured')).not.toBeVisible({ timeout: 90_000 });
 
-    // After the popup closes the coordinator persists the AccessToken and
-    // Integration objects and links the Mailbox as a sync target. Click back on
-    // the mailbox to verify it transitioned out of the "no integration" empty state.
+    // Close the popup if Edge didn't — it is no longer needed.
+    if (!popup.isClosed()) {
+      await popup.close();
+    }
+
+    // The coordinator navigated to the Integration view; click back to the
+    // Mailbox to verify it transitioned out of the "no integration" empty state.
     await host.getObjectByName('Test Inbox').click({ delay: 100 });
 
     await expect(plank.locator.getByText('No integrations configured')).not.toBeVisible({ timeout: 10_000 });
