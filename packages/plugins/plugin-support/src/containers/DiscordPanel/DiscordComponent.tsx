@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// TODO(wittjosiah): Remove?
+
 import React, { type ReactNode, createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 import { DXOSHorizontalType } from '@dxos/brand';
