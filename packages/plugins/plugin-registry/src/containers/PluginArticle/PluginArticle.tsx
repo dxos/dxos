@@ -9,10 +9,12 @@ import React, { type Dispatch, type SetStateAction, useCallback, useEffect, useM
 import { type Plugin, type PluginManager, type Registry, UrlLoader } from '@dxos/app-framework';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
+import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { runAndForwardErrors } from '@dxos/effect';
+import { useNode } from '@dxos/plugin-graph';
 
 import { PluginDetail } from '#components';
-import { getPluginPath } from '#meta';
+import { getPluginPath, getPluginSpecPath } from '#meta';
 
 import { useDisableConfirmation, useRegistryPluginProvider, useRegistryPlugins, useRemotePluginIds } from '../../hooks';
 
@@ -102,6 +104,7 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
       onInstall={!isInstalled && moduleUrl ? actions.handleInstall : undefined}
       onInstallVersion={pickerVersions.length > 0 ? actions.handleInstallVersion : undefined}
       onNavigateToPlugin={handleNavigateToPlugin}
+      onOpenSpec={actions.handleOpenSpec}
       onResolvePluginName={handleResolvePluginName}
       onUninstall={canUninstall ? actions.handleUninstall : undefined}
       onUpdate={hasUpdate ? actions.handleUpdate : undefined}
@@ -113,6 +116,7 @@ export const PluginArticle = ({ subject: plugin }: PluginArticleProps) => {
 //
 // Hooks
 //
+
 // Each of the hooks below isolates a self-contained slice of the article's
 // state machine. They're declared at module scope (rather than inline in
 // `PluginArticle`) to keep the component readable as a thin wiring layer over
@@ -251,6 +255,28 @@ const useVersionPicker = ({
   return { pickerVersions, selectedVersionTag, setSelectedVersionTag };
 };
 
+type PluginActionsProps = {
+  manager: PluginManager.PluginManager;
+  pluginId: string;
+  isInstalled: boolean;
+  moduleUrl: string | undefined;
+  catalogEntry: Registry.Plugin | undefined;
+  pickerVersions: readonly Registry.PluginVersion[];
+  selectedVersionTag: string | undefined;
+  syncInstalledVersion: () => void;
+};
+
+type PluginActions = {
+  installing: boolean;
+  updating: boolean;
+  handleEnableChange: (enabled: boolean) => void;
+  handleUninstall: () => void;
+  handleInstall: () => void;
+  handleUpdate: () => void;
+  handleInstallVersion: () => void;
+  handleOpenSpec?: () => void;
+};
+
 /**
  * The user-facing actions the article exposes — enable/disable, uninstall,
  * install (latest), update (to latest catalog version), and install-from-picker —
@@ -268,19 +294,21 @@ const usePluginActions = ({
   pickerVersions,
   selectedVersionTag,
   syncInstalledVersion,
-}: {
-  manager: PluginManager.PluginManager;
-  pluginId: string;
-  isInstalled: boolean;
-  moduleUrl: string | undefined;
-  catalogEntry: Registry.Plugin | undefined;
-  pickerVersions: readonly Registry.PluginVersion[];
-  selectedVersionTag: string | undefined;
-  syncInstalledVersion: () => void;
-}) => {
+}: PluginActionsProps): PluginActions => {
+  const { invokePromise } = useOperationInvoker();
+  const { graph } = useAppGraph();
+
   const [installing, setInstalling] = useState(false);
   const [updating, setUpdating] = useState(false);
   const requestDisable = useDisableConfirmation(manager, (id) => void runAndForwardErrors(manager.disable(id)));
+
+  // The spec child node is contributed by whatever plugin can render MDL (e.g., plugin-code).
+  // When that plugin isn't enabled, the node is absent and the "View specification" button stays hidden.
+  const specPath = getPluginSpecPath(pluginId);
+  const hasSpecNode = !!useNode(graph, specPath);
+  const handleOpenSpec = useCallback(() => {
+    void invokePromise(LayoutOperation.Open, { subject: [specPath] });
+  }, [invokePromise, specPath]);
 
   const handleEnableChange = useCallback(
     (enabled: boolean) => {
@@ -288,6 +316,7 @@ const usePluginActions = ({
         void runAndForwardErrors(manager.enable(pluginId));
         return;
       }
+
       requestDisable(pluginId);
     },
     [manager, pluginId, requestDisable],
@@ -301,6 +330,7 @@ const usePluginActions = ({
     if (!moduleUrl) {
       return;
     }
+
     setInstalling(true);
     void Effect.gen(function* () {
       const added = yield* manager.add(moduleUrl);
@@ -323,6 +353,7 @@ const usePluginActions = ({
     if (!moduleUrl || !catalogEntry) {
       return;
     }
+
     setUpdating(true);
     void Effect.gen(function* () {
       yield* manager.remove(pluginId);
@@ -345,6 +376,7 @@ const usePluginActions = ({
     if (!version || !version.moduleUrl) {
       return;
     }
+
     setInstalling(true);
     void Effect.gen(function* () {
       // Remove existing version before installing a different one.
@@ -373,5 +405,6 @@ const usePluginActions = ({
     handleInstall,
     handleUpdate,
     handleInstallVersion,
+    handleOpenSpec: hasSpecNode ? handleOpenSpec : undefined,
   };
 };

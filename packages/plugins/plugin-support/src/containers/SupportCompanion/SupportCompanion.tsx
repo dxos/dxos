@@ -17,7 +17,7 @@ import { usePluginManager } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
-import { Carousel, MediaPlayer, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import { Carousel, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
 
 // The surface registration constrains incoming data to
@@ -74,13 +74,7 @@ export const SupportCompanion = ({ companionTo }: SupportCompanionProps) => {
                 <Carousel.Previous />
                 <Carousel.Viewport>
                   {screenshots.map((src, index) => (
-                    <Carousel.Slide key={src} index={index}>
-                      <MediaPlayer
-                        src={src}
-                        classNames='absolute inset-0 w-full h-full bg-baseSurface'
-                        imgClassNames='object-cover'
-                      />
-                    </Carousel.Slide>
+                    <Carousel.Slide key={src} index={index} src={src} />
                   ))}
                 </Carousel.Viewport>
                 <Carousel.Next />

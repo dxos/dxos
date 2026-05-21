@@ -16,7 +16,7 @@ export const meta: Plugin.Meta = {
   icon: 'ph--brain--regular',
   iconHue: 'violet',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-sidekick',
+  spec: 'PLUGIN.mdl',
   version: '0.8.3',
-  spec: 'https://unpkg.com/@dxos/plugin-sidekick@0.8.3/PLUGIN.mdl',
   tags: ['labs'],
 };

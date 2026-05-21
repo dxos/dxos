@@ -16,7 +16,7 @@ export type LinkProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.a
   }>;
 
 export const Link = forwardRef<HTMLAnchorElement, LinkProps>(
-  ({ asChild, variant, classNames, ...props }, forwardedRef) => {
+  ({ classNames, asChild, variant, target = '_blank', rel = 'noreferrer', ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const Comp = asChild ? Slot : Primitive.a;
     return <Comp {...props} className={tx('link.root', { variant }, classNames)} ref={forwardedRef} />;

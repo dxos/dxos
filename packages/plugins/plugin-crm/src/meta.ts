@@ -16,7 +16,7 @@ export const meta: Plugin.Meta = {
   icon: 'ph--address-book--regular',
   iconHue: 'emerald',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-crm',
-  tags: ['labs'],
+  spec: 'PLUGIN.mdl',
   version: '0.8.3',
-  spec: 'https://unpkg.com/@dxos/plugin-crm@0.8.3/PLUGIN.mdl',
+  tags: ['labs'],
 };
