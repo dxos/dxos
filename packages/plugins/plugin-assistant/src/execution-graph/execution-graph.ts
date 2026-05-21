@@ -14,6 +14,7 @@ import { Process, Trace } from '@dxos/compute';
 import { AGENT_PROCESS_KEY } from '@dxos/functions-runtime';
 import { LogLevel, log } from '@dxos/log';
 import { type Commit } from '@dxos/react-ui-components';
+import { type ContentBlock } from '@dxos/types';
 
 import { ROOT_SPAN_ID, type Span, buildSpanTree, isSpanBeginEvent, isSpanEndEvent, walkSpanTree } from './span-tree';
 
@@ -49,6 +50,18 @@ const ICONS = {
   },
   operationEndError: {
     icon: 'ph--function--regular',
+    level: LogLevel.ERROR,
+  },
+  toolCall: {
+    icon: 'ph--wrench--regular',
+    level: LogLevel.VERBOSE,
+  },
+  toolResultSuccess: {
+    icon: 'ph--wrench--regular',
+    level: LogLevel.INFO,
+  },
+  toolResultError: {
+    icon: 'ph--wrench--regular',
     level: LogLevel.ERROR,
   },
   agentRequestRunning: {
@@ -94,7 +107,8 @@ export const buildExecutionGraph = ({
   eventLimit = 500,
 }: BuildExecutionGraphParams): ExecutionGraph => {
   const spanTree = buildSpanTree(traceMessages, { eventLimit });
-  const built = spanTreeToCommits(spanTree, activeProcesses);
+  const toolCallContext = buildToolCallContext(traceMessages);
+  const built = spanTreeToCommits(spanTree, activeProcesses, toolCallContext);
   log('trace execution graph', {
     traceMessages: traceMessages.length,
     commits: built.commits.length,
@@ -102,6 +116,39 @@ export const buildExecutionGraph = ({
     activeProcesses: activeProcesses.length,
   });
   return { ...built, spanTree };
+};
+
+/**
+ * Lookup tables that pair `toolCall` blocks with their matching `toolResult` blocks so the
+ * renderer can collapse the two events into a single commit (mirroring how begin/end events of
+ * an empty operation span collapse). Indexed by the shared `toolCallId`.
+ */
+interface ToolCallContext {
+  callById: Map<string, ContentBlock.ToolCall>;
+  resultByCallId: Map<string, ContentBlock.ToolResult>;
+}
+
+const buildToolCallContext = (messages: readonly Trace.Message[]): ToolCallContext => {
+  const callById = new Map<string, ContentBlock.ToolCall>();
+  const resultByCallId = new Map<string, ContentBlock.ToolResult>();
+  for (const message of messages) {
+    for (const event of message.events) {
+      if (event.type !== CompleteBlock.key) {
+        continue;
+      }
+      const data = event.data as { block?: ContentBlock.Any } | undefined;
+      const block = data?.block;
+      if (!block) {
+        continue;
+      }
+      if (block._tag === 'toolCall') {
+        callById.set(block.toolCallId, block);
+      } else if (block._tag === 'toolResult') {
+        resultByCallId.set(block.toolCallId, block);
+      }
+    }
+  }
+  return { callById, resultByCallId };
 };
 
 /**
@@ -115,7 +162,7 @@ interface EventPresentation {
   idSuffix?: string;
 }
 
-const presentEvent = (event: Trace.FlatEvent): EventPresentation | undefined => {
+const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext): EventPresentation | undefined => {
   if (Trace.isOfType(AgentRequestBegin, event)) {
     if (Either.isLeft(Schema.validateEither(AgentRequestBegin.schema)(event.data))) {
       log('invalid trace event', { type: event.type });
@@ -158,6 +205,42 @@ const presentEvent = (event: Trace.FlatEvent): EventPresentation | undefined => 
           level: ICONS.statusMessage.level,
           message: trimText(event.data.block.statusText),
         };
+      case 'toolCall': {
+        // Operation-backed tool calls already have a dedicated routine span (Trace.OperationStart /
+        // Trace.OperationEnd) that produces its own commits — skip the duplicate toolCall commit
+        // to avoid double-rendering.
+        if (event.data.block.operationKey) {
+          return undefined;
+        }
+        // Collapse the toolCall/toolResult pair: when the matching toolResult has arrived, the
+        // result event is the visible commit and carries the success/error state. The toolCall
+        // itself only renders while still pending (i.e. no result yet) — same intent as an
+        // operation span that collapses to a single end commit once both boundaries are present.
+        if (toolCallContext.resultByCallId.has(event.data.block.toolCallId)) {
+          return undefined;
+        }
+        return {
+          icon: ICONS.toolCall.icon,
+          level: ICONS.toolCall.level,
+          message: event.data.block.name,
+          idSuffix: `toolCall:${event.data.block.toolCallId}`,
+        };
+      }
+      case 'toolResult': {
+        // Suppress results for operation-backed calls — those are covered by the routine span.
+        const call = toolCallContext.callById.get(event.data.block.toolCallId);
+        if (call?.operationKey) {
+          return undefined;
+        }
+        const success = event.data.block.error === undefined;
+        const name = call?.name ?? event.data.block.name;
+        return {
+          icon: success ? ICONS.toolResultSuccess.icon : ICONS.toolResultError.icon,
+          level: success ? ICONS.toolResultSuccess.level : ICONS.toolResultError.level,
+          message: `${name} - ${success ? 'Success' : 'Error'}`,
+          idSuffix: `toolResult:${event.data.block.toolCallId}`,
+        };
+      }
       default:
         return undefined;
     }
@@ -239,6 +322,7 @@ const isCollapsibleSpan = (span: Span, parent: Span | null): boolean => {
 const spanTreeToCommits = (
   root: Span,
   activeProcesses: readonly Process.Info[],
+  toolCallContext: ToolCallContext,
 ): { branches: string[]; commits: Commit[]; details: ExecutionGraphDetailsMap } => {
   const builder = new GraphBuilder();
   const details: ExecutionGraphDetailsMap = {};
@@ -312,7 +396,7 @@ const spanTreeToCommits = (
   const beginCommitIdBySpan = new Map<string, string>();
 
   for (const { span, event, globalIndex } of stream) {
-    const presentation = presentEvent(event);
+    const presentation = presentEvent(event, toolCallContext);
     if (!presentation) {
       continue;
     }

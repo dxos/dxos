@@ -206,6 +206,11 @@ describe('Trace timeline', () => {
                 "
                 ●     [function] Run Routine
                 ├──●  [user] Research the given topic, or object.
+                │  ●  [wrench] AnthropicWebSearch - Success
+                │  ●  [wrench] AnthropicWebSearch - Success
+                │  ●  [wrench] AnthropicWebSearch - Success
+                │  ●  [wrench] AnthropicWebSearch - Success
+                │  ●  [wrench] completeJob - Success
                 ◆──╯  [function] Run Routine - Success
                 "
               `);
