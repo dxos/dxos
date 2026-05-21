@@ -10,7 +10,6 @@ import { AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Filter } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
-import { log } from '@dxos/log';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
@@ -44,13 +43,10 @@ const PLUGIN_MDLS = {
   }),
 };
 
-log.info('plugin-spec: glob resolved', { keys: Object.keys(PLUGIN_MDLS) });
-
 const resolveSpecContent = (pluginId: string, specPath: string): string | undefined => {
   const dirSegment = pluginId.replace(/^org\.dxos\.plugin\./, '');
   const suffix = `/plugin-${dirSegment}/${specPath}`;
   const key = Object.keys(PLUGIN_MDLS).find((candidate) => candidate.endsWith(suffix));
-  log.info('plugin-spec: resolve', { pluginId, specPath, suffix, matched: key, length: key ? PLUGIN_MDLS[key].length : 0 });
   return key ? PLUGIN_MDLS[key] : undefined;
 };
 
@@ -72,16 +68,13 @@ export default Capability.makeModule(
         connector: (node) => {
           const plugin = node.data as PluginNS.Plugin;
           const { id, name, spec } = plugin.meta;
-          log.info('plugin-spec: connector invoked', { id, hasSpec: !!spec, spec });
           if (!spec) {
             return Effect.succeed([]);
           }
           const content = resolveSpecContent(id, spec);
           if (!content) {
-            log.warn('plugin-spec: no content resolved', { id, spec });
             return Effect.succeed([]);
           }
-          log.info('plugin-spec: attaching node', { id, length: content.length });
           return Effect.succeed([
             Node.make({
               id: 'spec',

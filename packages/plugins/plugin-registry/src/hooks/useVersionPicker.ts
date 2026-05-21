@@ -35,9 +35,13 @@ export const useVersionPicker = ({
   const [versions, setVersions] = useState<readonly Registry.PluginVersion[]>([]);
   const [selectedVersionTag, setSelectedVersionTag] = useState<string | undefined>();
 
-  // Load version list once the catalog entry's repo is known.
+  // Load version list once the catalog entry's repo is known. Reset state
+  // when `repo` is absent or the fetch fails so a previous plugin's
+  // versions don't leak into the picker for the current plugin.
   useEffect(() => {
     if (!repo) {
+      setVersions([]);
+      setSelectedVersionTag(undefined);
       return;
     }
     void provider.listVersions(repo).pipe(
@@ -49,7 +53,8 @@ export const useVersionPicker = ({
           setSelectedVersionTag(installedVersion ?? vs[0]?.tag);
         },
         onFailure: () => {
-          // Non-critical; version picker stays empty.
+          setVersions([]);
+          setSelectedVersionTag(undefined);
         },
       }),
       runAndForwardErrors,

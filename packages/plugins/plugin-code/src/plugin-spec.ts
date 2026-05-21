@@ -5,9 +5,11 @@
 const PLUGIN_SPEC_SUBJECT_BRAND = '@dxos/plugin-code/plugin-spec';
 
 /**
- * Subject attached to the per-plugin `spec` graph node. Carries the bundled
- * MDL content (via `Plugin.Meta.specContent`) so the spec surface can render
- * it via {@link SpecView} without any ECHO binding.
+ * Subject attached to the per-plugin `spec` graph node. Carries the MDL
+ * content resolved from `Plugin.Meta.spec` (the relative path inside the
+ * plugin's package) plus the bundled file contents loaded via Vite's eager
+ * `import.meta.glob`, so the spec surface can render it via {@link SpecView}
+ * without any ECHO binding.
  */
 export type PluginSpecSubject = {
   readonly __brand: typeof PLUGIN_SPEC_SUBJECT_BRAND;
@@ -22,4 +24,9 @@ export const makePluginSpecSubject = (input: Omit<PluginSpecSubject, '__brand'>)
 });
 
 export const isPluginSpecSubject = (value: unknown): value is PluginSpecSubject =>
-  typeof value === 'object' && value !== null && (value as { __brand?: unknown }).__brand === PLUGIN_SPEC_SUBJECT_BRAND;
+  typeof value === 'object' &&
+  value !== null &&
+  (value as { __brand?: unknown }).__brand === PLUGIN_SPEC_SUBJECT_BRAND &&
+  typeof (value as { pluginId?: unknown }).pluginId === 'string' &&
+  typeof (value as { name?: unknown }).name === 'string' &&
+  typeof (value as { content?: unknown }).content === 'string';
