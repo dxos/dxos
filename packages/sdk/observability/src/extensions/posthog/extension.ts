@@ -157,31 +157,38 @@ export const extensions: (options: ExtensionsOptions) => Effect.Effect<Extension
         // TODO(wittjosiah): Support custom surveys.
         captureUserFeedback: (form) => {
           return new Promise<string | undefined>((resolve) => {
-            posthog.getSurveys(async (surveys) => {
-              const survey = surveys.find((survey) => survey.id === feedbackSurveyId);
-              if (!survey || survey.questions.length === 0) {
-                log.error('Missing feedback survey or survey has no questions', { feedbackSurveyId });
-                resolve(undefined);
-                return;
-              }
+            posthog.getSurveys((surveys) => {
+              void (async () => {
+                try {
+                  const survey = surveys.find((survey) => survey.id === feedbackSurveyId);
+                  if (!survey || survey.questions.length === 0) {
+                    log.error('Missing feedback survey or survey has no questions', { feedbackSurveyId });
+                    resolve(undefined);
+                    return;
+                  }
 
-              let debugLogDumpKey: string | null = null;
-              if (form.includeLogs !== false && logStore !== undefined) {
-                const ndjson = await logStore.export({ maxSize: feedbackLogMaxSize });
-                if (ndjson.length > 0) {
-                  debugLogDumpKey = (await uploadLogs(ndjson)) ?? 'failed';
+                  let debugLogDumpKey: string | null = null;
+                  if (form.includeLogs !== false && logStore !== undefined) {
+                    const ndjson = await logStore.export({ maxSize: feedbackLogMaxSize });
+                    if (ndjson.length > 0) {
+                      debugLogDumpKey = (await uploadLogs(ndjson)) ?? 'failed';
+                    }
+                  }
+
+                  // https://posthog.com/docs/surveys/implementing-custom-surveys
+                  const question = survey.questions[0];
+                  const result = posthog.capture('survey sent', {
+                    $survey_id: survey.id,
+                    $survey_questions: [{ id: question.id, question: question.question }],
+                    [`$survey_response_${question.id}`]: form.message,
+                    debug_log_dump_key: debugLogDumpKey,
+                  });
+                  resolve(result?.uuid);
+                } catch (err) {
+                  log.error('Failed to capture user feedback', { err });
+                  resolve(undefined);
                 }
-              }
-
-              // https://posthog.com/docs/surveys/implementing-custom-surveys
-              const question = survey.questions[0];
-              const result = posthog.capture('survey sent', {
-                $survey_id: survey.id,
-                $survey_questions: [{ id: question.id, question: question.question }],
-                [`$survey_response_${question.id}`]: form.message,
-                debug_log_dump_key: debugLogDumpKey,
-              });
-              resolve(result?.uuid);
+              })();
             });
           });
         },

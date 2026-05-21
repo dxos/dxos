@@ -17,7 +17,11 @@ import { FeedbackForm } from '#components';
 import { meta } from '#meta';
 import { SupportOperation } from '#types';
 
-import { DISCORD_SERVICE_URL } from '../../constants';
+import { DISCORD_SERVICE_URL as DISCORD_SERVICE_URL_DEFAULT } from '../../constants';
+
+/** Build a direct PostHog event permalink (±15s search window via timestamp). */
+const makePostHogEventUrl = (projectId: string, eventUuid: string): string =>
+  `https://eu.posthog.com/project/${projectId}/events/${eventUuid}/${encodeURIComponent(new Date().toISOString())}`;
 
 type DiscordPresence = { teamOnline: number; communityOnline: number };
 
@@ -64,8 +68,10 @@ export const FeedbackPanel = () => {
   const config = useConfig();
 
   const posthogProjectId = config.values.runtime?.app?.env?.DX_POSTHOG_PROJECT_ID as string | undefined;
+  const discordServiceUrl =
+    (config.values.runtime?.app?.env?.DX_DISCORD_SERVICE_URL as string | undefined) ?? DISCORD_SERVICE_URL_DEFAULT;
 
-  const discordPresence = useDiscordPresence(DISCORD_SERVICE_URL);
+  const discordPresence = useDiscordPresence(discordServiceUrl);
 
   useAsyncEffect(
     async (controller) => {
@@ -99,20 +105,21 @@ export const FeedbackPanel = () => {
 
   const handleDiscord = useCallback(
     async (values: SupportOperation.UserFeedback) => {
-      if (!DISCORD_SERVICE_URL) {
+      if (!discordServiceUrl) {
         return;
       }
       try {
         const { data: eventUuid } = await invokePromise(SupportOperation.CaptureUserFeedback, values);
         const postHogEventUrl =
-          posthogProjectId && eventUuid
-            ? `https://eu.posthog.com/project/${posthogProjectId}/events/${eventUuid}/${encodeURIComponent(new Date().toISOString())}`
-            : undefined;
-        const res = await fetch(`${DISCORD_SERVICE_URL}/feedback`, {
+          posthogProjectId && eventUuid ? makePostHogEventUrl(posthogProjectId, eventUuid) : undefined;
+        const res = await fetch(`${discordServiceUrl}/feedback`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: values.message, postHogEventUrl }),
         });
+        if (!res.ok) {
+          throw new Error(`Discord service returned ${res.status}`);
+        }
         const { threadUrl } = (await res.json()) as { threadUrl: string };
         window.open(threadUrl, '_blank', 'noopener,noreferrer');
         await invokePromise(LayoutOperation.UpdateComplementary, { state: 'collapsed' });
@@ -137,7 +144,7 @@ export const FeedbackPanel = () => {
         });
       }
     },
-    [invokePromise, posthogProjectId],
+    [invokePromise, discordServiceUrl, posthogProjectId],
   );
 
   return (

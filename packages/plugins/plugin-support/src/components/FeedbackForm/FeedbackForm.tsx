@@ -56,7 +56,7 @@ export const FeedbackForm = ({ onSave, onDiscord, discordPresence, disabled, onD
               />
             </div>
           )}
-          <div onPointerDown={() => (actionRef.current = 'posthog')}>
+          <div onClick={() => (actionRef.current = 'posthog')}>
             <Form.Submit
               icon='ph--paper-plane-tilt--regular'
               label={t('send-feedback.label')}
@@ -65,7 +65,7 @@ export const FeedbackForm = ({ onSave, onDiscord, discordPresence, disabled, onD
           </div>
           {onDiscord && (
             <>
-              <div onPointerDown={() => (actionRef.current = 'discord')}>
+              <div onClick={() => (actionRef.current = 'discord')}>
                 <Form.Submit icon='ph--discord-logo--regular' label={t('ask-for-help.label')} />
               </div>
               {discordPresence && (discordPresence.teamOnline > 0 || discordPresence.communityOnline > 0) && (
@@ -77,7 +77,8 @@ export const FeedbackForm = ({ onSave, onDiscord, discordPresence, disabled, onD
                       t('discord-presence-community.label', { count: discordPresence.communityOnline }),
                   ]
                     .filter(Boolean)
-                    .join(' · ') + ' online'}
+                    .join(' · ')}{' '}
+                  {t('discord-presence-online.label')}
                 </p>
               )}
             </>
