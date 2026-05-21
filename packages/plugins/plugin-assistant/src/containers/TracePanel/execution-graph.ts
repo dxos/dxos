@@ -267,28 +267,28 @@ const spanTreeToCommits = (
     return span.meta.pid ?? span.id;
   };
 
-  // Selector that returns the most recent commit walking up the ancestor chain of `span`,
-  // starting from `span`'s own branch and falling back through parent branches up to main.
-  // Used when a commit emitted on a parent/ancestor branch needs to attach to something
-  // that hasn't been written to yet (e.g. the first child sub-span begins before any
-  // middle event has landed on the parent branch).
-  const lastInAncestorChain = (span: Span | null): CommitSelector => {
-    const branches: string[] = [];
-    const seen = new Set<string>();
-    let current = span;
-    while (current) {
-      const branch = branchOf(current);
-      if (!seen.has(branch)) {
-        seen.add(branch);
-        branches.push(branch);
-      }
-      current = findParentSpan(current);
+  // Selector that returns "the most recent commit in this span's structural context".
+  //
+  // The walk is structural (pid/parentPid), not topological: at each ancestor, we prefer
+  //   1) the last commit on that span's own branch, then
+  //   2) that span's begin commit (the fork point on its parent branch),
+  //   3) and only then recurse into the parent span.
+  //
+  // Crucially, we never silently slip onto a *sibling* span's commit on a shared ancestor
+  // branch. E.g. if a sub-span of agent A fires before A has any middle commits, we anchor
+  // to A.begin — not to whatever unrelated commit happens to be the latest on main.
+  // This keeps fork edges visually attached to the correct span even when sibling top-level
+  // spans (different pids) overlap in time on main.
+  const lastInSpanContext = (span: Span | null): CommitSelector => {
+    if (!span || span.id === ROOT_SPAN_ID) {
+      return CommitSelector.branch(MAIN_BRANCH).pipe(CommitSelector.compose(CommitSelector.last()));
     }
-    if (!seen.has(MAIN_BRANCH)) {
-      branches.push(MAIN_BRANCH);
-    }
+    const ownBranch = branchOf(span);
+    const beginId = beginCommitIdBySpan.get(span.id);
     return CommitSelector.firstOf(
-      ...branches.map((branch) => CommitSelector.branch(branch).pipe(CommitSelector.compose(CommitSelector.last()))),
+      CommitSelector.branch(ownBranch).pipe(CommitSelector.compose(CommitSelector.last())),
+      beginId ? CommitSelector.id(beginId) : CommitSelector.filter(() => false),
+      lastInSpanContext(findParentSpan(span)),
     );
   };
 
@@ -340,39 +340,38 @@ const spanTreeToCommits = (
     if (span.id === ROOT_SPAN_ID) {
       // Root-level events (no pid) attach sequentially to main.
       branch = MAIN_BRANCH;
-      parents = builder.computeParents(
-        CommitSelector.branch(MAIN_BRANCH).pipe(CommitSelector.compose(CommitSelector.last())),
-      );
+      parents = builder.computeParents(lastInSpanContext(null));
     } else if (collapsible) {
       // Only the end event reaches here for collapsible spans.
-      // Walk the ancestor chain so the commit attaches to the most recent ancestor
-      // even when the immediate parent branch has not received a commit yet.
+      // Anchor to the parent span's structural context so the fork attaches to the parent
+      // — not to a sibling span's commit that happens to be the latest on the shared ancestor.
       branch = parentBranch;
-      parents = builder.computeParents(lastInAncestorChain(parentSpan));
+      parents = builder.computeParents(lastInSpanContext(parentSpan));
     } else if (isBeginEvent) {
-      // Begin commit: fork off the parent branch.
-      // Walk the ancestor chain to find the most recent ancestor commit to fork from.
+      // Begin commit: fork off the parent branch, attached to the parent's structural context.
       branch = parentBranch;
-      parents = builder.computeParents(lastInAncestorChain(parentSpan));
+      parents = builder.computeParents(lastInSpanContext(parentSpan));
     } else if (isEndEvent) {
-      // End commit: merge from the span's own branch back into the parent branch.
+      // End commit: continues the parent branch chronologically and merges in own-branch work.
+      //
+      // Parent #1 is the *immediate predecessor* on the parent branch (not the matching begin
+      // commit). Pointing back to the begin commit creates a visual edge that skips over any
+      // sibling span's commits emitted between begin and end — e.g. when two top-level Routine
+      // spans overlap on main, R1.end would otherwise draw an arrow back to R1.begin that
+      // crosses over R2.begin. Anchoring to the previous main commit keeps main linear.
       branch = parentBranch;
-      const beginId = beginCommitIdBySpan.get(span.id);
       parents = builder.computeParents(
         CommitSelector.unionAll(
-          beginId ? CommitSelector.id(beginId) : lastInAncestorChain(parentSpan),
+          CommitSelector.branch(parentBranch).pipe(CommitSelector.compose(CommitSelector.last())),
           CommitSelector.branch(ownBranch).pipe(CommitSelector.compose(CommitSelector.last())),
         ),
       );
     } else {
-      // Middle event: continue the span's own branch.
+      // Middle event: continue the span's own branch; fall back to span's own context so the
+      // first middle event of a span forks from the span's begin commit, not from a sibling's
+      // commit on an ancestor branch.
       branch = ownBranch;
-      parents = builder.computeParents(
-        CommitSelector.branch(ownBranch).pipe(
-          CommitSelector.compose(CommitSelector.last()),
-          CommitSelector.orElse(lastInAncestorChain(parentSpan)),
-        ),
-      );
+      parents = builder.computeParents(lastInSpanContext(span));
     }
 
     const commitId = formatCommitId(span, globalIndex, presentation.idSuffix);

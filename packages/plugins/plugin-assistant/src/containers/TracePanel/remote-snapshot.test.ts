@@ -25,7 +25,7 @@ import { buildExecutionGraph } from './execution-graph';
  */
 describe('TracePanel remote snapshot', () => {
   test('sub-operations land on their parent Routine branch, never on main', ({ expect }) => {
-    const messages = loadRemoteTraceMessages();
+    const messages = loadRemoteTraceMessages(REMOTE_SNAPSHOT);
     const { commits } = buildExecutionGraph({ traceMessages: messages });
 
     // Commits whose message starts with one of these names originate from sub-operations
@@ -45,7 +45,39 @@ describe('TracePanel remote snapshot', () => {
     expect(branches.size).toBe(1);
     expect(branches.has('main')).toBe(false);
   });
+
+  test('Routine end commits anchor to the previous main commit, not back to their own begin', ({ expect }) => {
+    // Regression: the multi-Routine snapshot has overlapping top-level Routine spans (R2 starts
+    // before R1 ends, R4 starts before R3 ends). Previously, R1.end's first parent was
+    // R1.begin (looked up by `beginCommitIdBySpan`), which drew an edge across R2.begin in the
+    // rendered timeline. The fix anchors end commits to the immediate predecessor on the
+    // parent branch (R2.begin) and treats the own-branch tail as a separate merge parent.
+    const messages = loadRemoteTraceMessages(MULTI_SNAPSHOT);
+    const { commits } = buildExecutionGraph({ traceMessages: messages });
+
+    const mainCommits = commits.filter((commit) => commit.branch === 'main');
+    // Sanity check: 4 begin + 4 end Run-Routine commits on main.
+    expect(mainCommits).toHaveLength(8);
+
+    // For each commit on main, its first parent (if any) must be a commit that appears
+    // *earlier* in the main commit sequence — no "skip-back" edges to an older begin commit.
+    const idToMainIndex = new Map(mainCommits.map((commit, index) => [commit.id, index]));
+    for (let index = 1; index < mainCommits.length; index += 1) {
+      const commit = mainCommits[index];
+      const onMainParents = (commit.parents ?? []).filter((parentId) => idToMainIndex.has(parentId));
+      expect(onMainParents.length).toBeGreaterThan(0);
+      for (const parentId of onMainParents) {
+        const parentIndex = idToMainIndex.get(parentId)!;
+        // Every parent on main must be the immediate predecessor (index - 1). An older parent
+        // would render an edge that crosses over the intervening commits.
+        expect(parentIndex).toBe(index - 1);
+      }
+    }
+  });
 });
+
+const REMOTE_SNAPSHOT = 'trace-timeline-remote.dx.json';
+const MULTI_SNAPSHOT = 'trace-timeline-multiple.dx.json';
 
 interface RawMessage {
   meta?: Trace.Meta;
@@ -53,8 +85,8 @@ interface RawMessage {
   events?: Array<{ type: string; timestamp: number; data?: unknown }>;
 }
 
-const loadRemoteTraceMessages = (): Trace.Message[] => {
-  const snapshotPath = join(__dirname, '../../testing/data/trace-timeline-remote.dx.json');
+const loadRemoteTraceMessages = (filename: string): Trace.Message[] => {
+  const snapshotPath = join(__dirname, '../../testing/data', filename);
   const json = JSON.parse(readFileSync(snapshotPath, 'utf8')) as unknown;
 
   const messages: Trace.Message[] = [];
