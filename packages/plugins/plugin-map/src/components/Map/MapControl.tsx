@@ -27,12 +27,18 @@ export const MapControl = composable<HTMLDivElement, MapControlProps>(
       (action) => {
         switch (action) {
           case 'toggle': {
+            // Emit the live position so the next control inherits the user's current view.
+            const center = controller?.getCenter();
+            const zoom = controller?.getZoom();
+            if (center && typeof zoom === 'number') {
+              onChange?.({ center, zoom });
+            }
             onToggle?.();
             break;
           }
         }
       },
-      [onToggle],
+      [controller, onChange, onToggle],
     );
 
     return (

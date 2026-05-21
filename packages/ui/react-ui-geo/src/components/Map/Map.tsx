@@ -30,6 +30,8 @@ const defaults = {
 //
 
 type MapController = {
+  getCenter: () => LatLngLiteral | undefined;
+  getZoom: () => number | undefined;
   setCenter: (center: LatLngLiteral, zoom?: number) => void;
   setZoom: (cb: (zoom: number) => number) => void;
 };
@@ -97,6 +99,11 @@ const MapContent = forwardRef<MapController, MapContentProps>(
     useImperativeHandle(
       forwardedRef,
       () => ({
+        getCenter: () => {
+          const center = mapRef.current?.getCenter();
+          return center ? { lat: center.lat, lng: center.lng } : undefined;
+        },
+        getZoom: () => mapRef.current?.getZoom(),
         setCenter: (center: LatLngLiteral, zoom?: number) => {
           mapRef.current?.setView(center, zoom);
         },
@@ -158,7 +165,7 @@ const MapTiles = (_props: MapTilesProps) => {
   const { onChange } = useMapContext(MAP_TILES_NAME);
 
   useMapEvents({
-    zoomstart: (ev) => {
+    moveend: (ev) => {
       onChange?.({
         center: ev.target.getCenter(),
         zoom: ev.target.getZoom(),
@@ -223,15 +230,14 @@ type MapMarkersProps = {
 const MapMarkers = ({ selected, markers }: MapMarkersProps) => {
   const map = useMap();
 
-  // Set the viewport around the markers, or show the whole world map if `markers` is empty.
+  // Fit the viewport around the markers. When there are no markers, leave the current view alone
+  // so caller-provided center/zoom (or the user's prior interaction) is preserved.
   useEffect(() => {
-    if (markers.length > 0) {
+    if (markers && markers.length > 0) {
       const bounds = latLngBounds(markers.map((marker) => marker.location));
       map.fitBounds(bounds);
-    } else {
-      map.setView(defaults.center, defaults.zoom);
     }
-  }, [markers]);
+  }, [markers, map]);
 
   return (
     <>
