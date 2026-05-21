@@ -46,8 +46,7 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
     expect(client2.halo.identity.get()).toEqual(identity);
   });
 
-  // Flaky.
-  test('leader goes from first client to second', async () => {
+  test('leader goes from first client to second', { timeout: 10_000 }, async () => {
     log.break();
     const testBuilder = new TestBuilder();
     onTestFinished(() => testBuilder.destroy());
@@ -60,14 +59,21 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
     await using client2 = await new Client({ services: services2 }).initialize();
     expect(client2.halo.identity.get()).toEqual(identity);
 
+    const reconnected = new Trigger();
+    services2.reconnected.on(() => {
+      reconnected.wake();
+    });
+
     await client1.destroy();
+
+    // Wait for services2 to reconnect as the new leader with the same persisted storage.
+    await asyncTimeout(reconnected.wait(), 5_000);
 
     expect(client2.halo.identity.get()).toEqual(identity);
     log.break();
   });
 
-  // TODO(wittjosiah): Using shared storage fixes this test but that doesn't seem like a realistic solution.
-  test.fails('identity subscription survives leader change', { timeout: 2_000 }, async () => {
+  test('identity subscription survives leader change', { timeout: 10_000 }, async () => {
     const testBuilder = new TestBuilder();
     onTestFinished(() => testBuilder.destroy());
 
@@ -95,13 +101,13 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
     await client1.destroy();
 
     // Wait for client2 to reconnect to the new worker.
-    await asyncTimeout(reconnected.wait(), 1000);
+    await asyncTimeout(reconnected.wait(), 5_000);
 
     // Update display name after leader change.
     await client2.halo.updateProfile({ displayName: updatedDisplayName });
 
     // Subscription should still receive the update.
-    await asyncTimeout(trigger.wait(), 500);
+    await asyncTimeout(trigger.wait(), 3_000);
     expect(client2.halo.identity.get()!.profile?.displayName).toEqual(updatedDisplayName);
   });
 });

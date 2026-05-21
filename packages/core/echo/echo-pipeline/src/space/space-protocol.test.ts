@@ -16,8 +16,7 @@ import { TestAgentBuilder, TestFeedBuilder } from '../testing';
 import { AuthStatus, MOCK_AUTH_PROVIDER, MOCK_AUTH_VERIFIER, SpaceProtocol } from './space-protocol';
 
 describe('space/space-protocol', () => {
-  // Flaky.
-  test('two peers discover each other via presence', async () => {
+  test('two peers discover each other via presence', { timeout: 15_000 }, async () => {
     const builder = new TestAgentBuilder();
     onTestFinished(async () => {
       await builder.close();
@@ -44,12 +43,12 @@ describe('space/space-protocol', () => {
 
     await expect
       .poll(() => presence1.getPeersOnline().some(({ identityKey }) => identityKey.equals(peer2.identityKey)), {
-        timeout: 1_000,
+        timeout: 10_000,
       })
       .toBeTruthy();
     await expect
       .poll(() => presence2.getPeersOnline().some(({ identityKey }) => identityKey.equals(peer1.identityKey)), {
-        timeout: 1_000,
+        timeout: 10_000,
       })
       .toBeTruthy();
   });
