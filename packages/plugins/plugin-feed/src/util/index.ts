@@ -11,3 +11,4 @@ export * from './fetch-atproto';
 export * from './fetch-rss';
 export * from './format-date';
 export * from './post-state';
+export * from './use-post-content';

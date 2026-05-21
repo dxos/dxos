@@ -4,12 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
+import { getSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 
 import { FeedOperation, type Subscription } from '../types';
-import { fetchArticle, getSubscriptionPostState, updateSubscriptionPostState } from '../util';
+import { appendPostContent, fetchArticle, findPostContent, updateSubscriptionPostState } from '../util';
 
 export default FeedOperation.LoadPostContent.pipe(
   Operation.withHandler(
@@ -31,20 +32,31 @@ export default FeedOperation.LoadPostContent.pipe(
       if (!subscription || !post.link) {
         return;
       }
-      if (getSubscriptionPostState(subscription, postId).content) {
+      const space = getSpace(post);
+      invariant(space, 'Post is not in a space.');
+
+      // Idempotency: skip if a content entry for this Post id already exists
+      // in the Subscription's contentFeed.
+      const existing = yield* Effect.tryPromise(() => findPostContent(space, subscription, postId));
+      if (existing) {
         return;
       }
+
       yield* Effect.tryPromise({
         try: async () => {
           // In the browser, route through the dev-server CORS proxy. Server-side callers
           // (e.g. agent operations) pass no proxy and fetch directly.
           const corsProxy = typeof window !== 'undefined' ? '/api/rss?url=' : undefined;
           const { text, imageUrls } = await fetchArticle(post.link!, { corsProxy });
+          if (text) {
+            await appendPostContent(space, subscription, { postId, text });
+          }
           const hero = imageUrls[0];
-          updateSubscriptionPostState(subscription, postId, {
-            ...(text ? { content: text, fetchedAt: new Date().toISOString() } : {}),
-            ...(hero ? { imageUrl: hero } : {}),
-          });
+          if (hero) {
+            // Hero image is a hot-path read (tiles) so it stays on the side
+            // map; only the bulky body lives in the contentFeed queue.
+            updateSubscriptionPostState(subscription, postId, { imageUrl: hero });
+          }
         },
         catch: (error) => (error instanceof Error ? error : new Error(String(error))),
       });

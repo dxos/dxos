@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { getSpace } from '@dxos/client/echo';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useObject, useQuery } from '@dxos/react-client/echo';
@@ -16,7 +17,13 @@ import { meta } from '#meta';
 import { FeedOperation } from '#types';
 import { Subscription } from '#types';
 
-import { fetchArticle, getSubscriptionPostState, updateSubscriptionPostState } from '../../util';
+import {
+  appendPostContent,
+  fetchArticle,
+  getSubscriptionPostState,
+  updateSubscriptionPostState,
+  usePostContent,
+} from '../../util';
 
 export type PostArticleProps = AppSurface.ObjectArticleProps<Subscription.Post>;
 
@@ -28,11 +35,12 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
   const [post] = useObject(subject);
   const db = Obj.getDatabase(post);
   // Subscribe to the source Subscription — its `postState[postId]` carries
-  // the mutable user state for this Post (read/archived/starred/content).
+  // the mutable user state for this Post (read/archived/starred/imageUrl).
   const subscription = post.source?.target;
   useObject(subscription);
   const postId = (post as { id: string }).id;
   const userState = getSubscriptionPostState(subscription, postId);
+  const fetchedText = usePostContent(subscription, postId);
 
   // Lazily fetch full article content the first time this Post is shown — covers
   // entry points that bypass MagazineArticle's `handleOpen` (deep-link, agent surface,
@@ -45,14 +53,14 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
     if (requestedContentFor.current === dxnString) {
       return;
     }
-    if (!post.link || userState.content) {
+    if (!post.link || fetchedText) {
       return;
     }
     requestedContentFor.current = dxnString;
     void invokePromise(FeedOperation.LoadPostContent, { post: Ref.make(subject) }).catch((err) =>
       log.catch(err, { postLink: post.link }),
     );
-  }, [subject, post, post.link, userState.content, invokePromise]);
+  }, [subject, post, post.link, fetchedText, invokePromise]);
 
   // Reactive lookup of the source feed name. `post.feed?.target?.name` only renders
   // synchronously when the ref is already resolved; querying feeds via useQuery means
@@ -103,11 +111,17 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
   }, [subscription, postId]);
 
   // Re-fetch the article body from the source. Same path MagazineArticle uses on
-  // first open, but unconditional — overwrites any existing content/imageUrl so
-  // the user can recover from a stale extraction.
+  // first open, but unconditional — appends a fresh content entry to the
+  // subscription's contentFeed so the user can recover from a stale extraction.
+  // Older entries remain in the queue (feeds are append-only); the lookup in
+  // `usePostContent` picks the most recent match by Post id.
   const [refreshing, setRefreshing] = useState(false);
   const handleRefresh = useCallback(async () => {
     if (!post.link || refreshing || !subscription) {
+      return;
+    }
+    const space = getSpace(subscription);
+    if (!space) {
       return;
     }
 
@@ -115,11 +129,13 @@ export const PostArticle = ({ role, subject }: PostArticleProps) => {
     try {
       const corsProxy = typeof window !== 'undefined' ? '/api/rss?url=' : undefined;
       const { text, imageUrls } = await fetchArticle(post.link, { corsProxy });
+      if (text) {
+        await appendPostContent(space, subscription, { postId, text });
+      }
       const hero = imageUrls[0];
-      updateSubscriptionPostState(subscription, postId, {
-        ...(text ? { content: text, fetchedAt: new Date().toISOString() } : {}),
-        ...(hero ? { imageUrl: hero } : {}),
-      });
+      if (hero) {
+        updateSubscriptionPostState(subscription, postId, { imageUrl: hero });
+      }
     } catch (err) {
       log.catch(err, { postLink: post.link });
     } finally {

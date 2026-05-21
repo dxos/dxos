@@ -2,7 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Obj } from '@dxos/echo';
+import * as Effect from 'effect/Effect';
+
+import { createFeedServiceLayer, type Space } from '@dxos/client/echo';
+import { Feed, Filter, Obj } from '@dxos/echo';
+import { runAndForwardErrors } from '@dxos/effect';
 
 import { type Magazine, Subscription } from '../types';
 
@@ -74,4 +78,69 @@ export const updateMagazinePostState = (
  */
 export const getPostSubscription = (post: Subscription.Post): Subscription.Subscription | undefined => {
   return post.source?.target;
+};
+
+/**
+ * Loads every {@link Subscription.PostContent} entry from a Subscription's
+ * `contentFeed` queue. Returns a map keyed by Post id so callers can look up
+ * by the bare Post id rather than scanning the array. Returns an empty map
+ * when no contentFeed exists or it has no entries.
+ *
+ * Pass `space` so the feed service can be provided to the Effect runtime.
+ */
+export const loadContentEntries = async (
+  space: Space,
+  subscription: Subscription.Subscription,
+): Promise<Map<string, Subscription.PostContent>> => {
+  const echoFeed = subscription.contentFeed?.target;
+  if (!echoFeed || !Feed.getQueueDxn(echoFeed)) {
+    return new Map();
+  }
+  const items = await Feed.runQuery(echoFeed, Filter.type(Subscription.PostContent)).pipe(
+    Effect.provide(createFeedServiceLayer(space.queues)),
+    runAndForwardErrors,
+  );
+  const map = new Map<string, Subscription.PostContent>();
+  for (const item of items) {
+    map.set(item.postId, item);
+  }
+  return map;
+};
+
+/**
+ * Looks up a single {@link Subscription.PostContent} entry by Post id.
+ * Returns undefined when no entry has been appended yet.
+ */
+export const findPostContent = async (
+  space: Space,
+  subscription: Subscription.Subscription,
+  postId: string,
+): Promise<Subscription.PostContent | undefined> => {
+  const map = await loadContentEntries(space, subscription);
+  return map.get(postId);
+};
+
+/**
+ * Appends a new {@link Subscription.PostContent} entry to a Subscription's
+ * `contentFeed`. Caller is responsible for idempotency — call
+ * {@link findPostContent} first if you only want to write once per Post.
+ */
+export const appendPostContent = async (
+  space: Space,
+  subscription: Subscription.Subscription,
+  entry: { postId: string; text: string; fetchedAt?: string },
+): Promise<void> => {
+  const echoFeed = subscription.contentFeed?.target;
+  if (!echoFeed) {
+    throw new Error('Subscription has no contentFeed');
+  }
+  const content = Obj.make(Subscription.PostContent, {
+    postId: entry.postId,
+    text: entry.text,
+    fetchedAt: entry.fetchedAt ?? new Date().toISOString(),
+  });
+  await Feed.append(echoFeed, [content]).pipe(
+    Effect.provide(createFeedServiceLayer(space.queues)),
+    runAndForwardErrors,
+  );
 };

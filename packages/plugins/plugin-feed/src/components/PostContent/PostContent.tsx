@@ -12,6 +12,7 @@ import { Subscription } from '#types';
 
 import { formatDate } from '../../util/format-date';
 import { getSubscriptionPostState } from '../../util/post-state';
+import { usePostContent } from '../../util/use-post-content';
 
 export type PostContentProps = {
   /** Post to render. */
@@ -63,28 +64,31 @@ export const contentHasImage = (markdown: string): boolean =>
 
 /**
  * Shared presentational layout for an article-style post.
- * Render order: title → hero image → Markdown body
- * (`subscription.postState[id].content` / `post.description`) → meta line
+ * Render order: title → hero image → Markdown body (subscription contentFeed
+ * entry for this Post id, falling back to `post.description`) → meta line
  * (author · …extra · published).
  */
 export const PostContent = composable<HTMLDivElement, PostContentProps>(
   ({ post, metadata = [], ...props }, forwardedRef) => {
     const meta = [post.author, ...metadata, formatDate(post.published)].filter(Boolean).join(' · ');
     const title = post.title;
-    const userState = getSubscriptionPostState(post.source?.target, (post as { id: string }).id);
+    const subscription = post.source?.target;
+    const postId = (post as { id: string }).id;
+    const userState = getSubscriptionPostState(subscription, postId);
     const imageUrl = userState.imageUrl;
+    const fetchedText = usePostContent(subscription, postId);
 
     // Drop duplicate images from the article body — and remove any image
     // that matches the hero `imageUrl` so it doesn't appear stacked immediately
     // below the hero. Falls through to `post.description` when content
     // hasn't been fetched yet.
     const content = useMemo(() => {
-      const source = userState.content || post.description || '';
+      const source = fetchedText || post.description || '';
       if (!source) {
         return '';
       }
       return dedupeImagesInMarkdown(source, [imageUrl]);
-    }, [userState.content, post.description, imageUrl]);
+    }, [fetchedText, post.description, imageUrl]);
 
     // Suppress the hero when the article body already carries imagery — RSS feeds often
     // duplicate the lead image inside `<content>` under a different URL than `imageUrl`,

@@ -165,10 +165,11 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
         updateSubscriptionPostState(subscription, postId, { readAt: new Date().toISOString() });
       }
 
-      // Fetch the full article content in the background when we don't already have it.
-      // The operation writes subscription.postState[postId].content on success and is a no-op when
-      // already loaded; failures are logged and non-fatal.
-      if (post.link && !state.content) {
+      // Fetch the full article content in the background. The operation
+      // appends a PostContent entry to the subscription's contentFeed and is
+      // idempotent (no-op when an entry already exists or the Post has no
+      // link); failures are logged and non-fatal.
+      if (post.link) {
         void invokePromise(FeedOperation.LoadPostContent, { post: Ref.make(post) }).catch((err) =>
           log.catch(err, { postLink: post.link }),
         );
