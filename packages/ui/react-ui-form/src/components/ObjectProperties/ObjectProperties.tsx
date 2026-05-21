@@ -8,8 +8,8 @@ import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
 import { DXN, Obj, Ref, Tag, Type } from '@dxos/echo';
-import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { useSchema } from '@dxos/echo-react';
+import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { HuePicker } from '@dxos/react-ui-pickers';
 import { FactoryAnnotation } from '@dxos/schema';

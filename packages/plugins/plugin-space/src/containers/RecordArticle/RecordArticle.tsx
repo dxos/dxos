@@ -19,15 +19,17 @@ export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) 
   // fall back to typename query which matches PersistentSchema.typename.
   const db = Obj.getDatabase(subject);
   const typename = Obj.getTypename(subject);
-  const schema = Obj.getSchema(subject) ?? (typename && db ? db.schemaRegistry.query({ typename }).runSync()[0] : undefined);
-  const icon = (schema && Type.isMutable(schema))
-    ? 'ph--cube--regular'
-    : Function.pipe(
-        Option.fromNullable(schema),
-        Option.flatMap(Annotation.IconAnnotation.get),
-        Option.map(({ icon }) => icon),
-        Option.getOrElse(() => 'ph--placeholder--regular'),
-      );
+  const schema =
+    Obj.getSchema(subject) ?? (typename && db ? db.schemaRegistry.query({ typename }).runSync()[0] : undefined);
+  const icon =
+    schema && Type.isMutable(schema)
+      ? 'ph--cube--regular'
+      : Function.pipe(
+          Option.fromNullable(schema),
+          Option.flatMap(Annotation.IconAnnotation.get),
+          Option.map(({ icon }) => icon),
+          Option.getOrElse(() => 'ph--placeholder--regular'),
+        );
 
   return (
     <Panel.Root role={role}>
