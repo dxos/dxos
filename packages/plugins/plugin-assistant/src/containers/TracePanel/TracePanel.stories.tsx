@@ -297,3 +297,23 @@ export const WithRemoteSnapshot: Story = {
     }),
   ],
 };
+
+export const WithRemoteMultipleSnapshot: Story = {
+  render: SnapshotStory,
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'column', classNames: 'w-(--dx-complementary-sidebar-size)' }),
+    withPluginManager({
+      plugins: [
+        ...corePlugins(),
+        ClientPlugin({
+          types: [Feed.Feed, Trace.Message],
+          onClientInitialized: initClientFromSpaceSnapshot(
+            () => import('../../testing/data/trace-timeline-multiple.dx.json'),
+          ),
+        }),
+        AutomationPlugin(),
+      ],
+    }),
+  ],
+};
