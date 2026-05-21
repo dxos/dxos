@@ -2,7 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-import { type AnyDocumentId, type AutomergeUrl, type DocHandle, type DocumentId } from '@automerge/automerge-repo';
+import {
+  type AnyDocumentId,
+  type AutomergeUrl,
+  type DocHandle,
+  type DocumentId,
+  interpretAsDocumentId,
+} from '@automerge/automerge-repo';
 import * as SqlClient from '@effect/sql/SqlClient';
 import * as Effect from 'effect/Effect';
 
@@ -377,6 +383,13 @@ export class EchoHost extends Resource {
     const query = this._automergeHost.findWithProgress<DatabaseDirectory>(handle.documentId);
 
     return this._spaceStateManager.assignRootToSpace(spaceId, query);
+  }
+
+  /** Attribute a root doc to a space in the synchronous reverse index used by share-policy resolution, called from Epoch-credential processing before `loadDoc` resolves. */
+  recordSpaceRoot(spaceId: SpaceId, automergeUrl: AutomergeUrl): void {
+    invariant(this._lifecycleState === LifecycleState.OPEN);
+    const rootDocumentId = interpretAsDocumentId(automergeUrl);
+    this._spaceStateManager.recordSpaceRoot(spaceId, rootDocumentId);
   }
 
   // TODO(dmaretskyi): Change to document id.

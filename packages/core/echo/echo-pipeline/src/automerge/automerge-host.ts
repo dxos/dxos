@@ -455,10 +455,10 @@ export class AutomergeHost extends Resource {
     // the storage-only branch.
     if (opts?.fetchFromNetwork !== false) {
       // Network branch: announce that we want the doc, then fall through
-      // to `whenReady()` and wait for any source (storage or network) to
-      // deliver it. `_documentsToRequest` is a classical-sync announce
-      // optimization (subduction's fingerprint exchange doesn't need it);
-      // `shareConfigChanged()` is useful in both modes.
+      // to the wait below; any source may deliver it. `_documentsToRequest`
+      // is a classical-sync announce optimization (subduction's fingerprint
+      // exchange doesn't need it); `shareConfigChanged()` is useful in both
+      // modes.
       if (!this._useSubduction) {
         this._documentsToRequest.add(progress.documentId);
       }
@@ -480,17 +480,33 @@ export class AutomergeHost extends Resource {
       }
     }
 
-    const readyPromise = progress.whenReady();
-    try {
-      return opts?.timeout
-        ? await cancelWithContext(ctx, asyncTimeout(readyPromise, opts.timeout))
-        : await cancelWithContext(ctx, readyPromise);
-    } catch (error: any) {
-      if (isDocumentUnavailableError(error) && opts?.fetchFromNetwork === false) {
-        return null;
-      }
-      throw error;
+    // `_waitForReady` (vs `progress.whenReady()`) treats `'unavailable'` as transient — the query routinely transits through it when classical sync sees `peers.size === 0` before the next peer arrives.
+    return opts?.timeout
+      ? await cancelWithContext(ctx, asyncTimeout(this._waitForReady(progress), opts.timeout))
+      : await cancelWithContext(ctx, this._waitForReady(progress));
+  }
+
+  /** Resolve on `'ready'`, reject on `'failed'`, treat `'unavailable'` as transient; caller bounds via `opts.timeout` / `ctx`. */
+  private _waitForReady<T>(progress: DocumentQuery<T>): Promise<DocHandle<T>> {
+    const peeked = progress.peek();
+    if (peeked.state === 'ready') {
+      return Promise.resolve(peeked.handle);
     }
+    if (peeked.state === 'failed') {
+      return Promise.reject(peeked.error);
+    }
+    return new Promise<DocHandle<T>>((resolve, reject) => {
+      const unsubscribe = progress.subscribe((state) => {
+        if (state.state === 'ready') {
+          unsubscribe();
+          resolve(state.handle);
+        } else if (state.state === 'failed') {
+          unsubscribe();
+          reject(state.error);
+        }
+        // `'unavailable'` and `'loading'` are non-terminal — keep waiting.
+      });
+    });
   }
 
   /**
@@ -1298,10 +1314,6 @@ const decodeCollectionState = (state: unknown): CollectionState => {
 
 const encodeCollectionState = (state: CollectionState): unknown => {
   return state;
-};
-
-const isDocumentUnavailableError = (error: Error): boolean => {
-  return error.message.includes('unavailable');
 };
 
 /**

@@ -75,6 +75,11 @@ export class SpaceStateManager extends Resource {
     return this._spaceByDocument.get(documentId);
   }
 
+  /** Eagerly attribute a root document to a space in the reverse index from the Epoch credential, before `loadDoc` resolves and {@link assignRootToSpace} runs the full setup. */
+  recordSpaceRoot(spaceId: SpaceId, rootDocumentId: DocumentId): void {
+    this._spaceByDocument.set(rootDocumentId, spaceId);
+  }
+
   async assignRootToSpace(spaceId: SpaceId, query: DocumentQuery<DatabaseDirectory>): Promise<DatabaseRoot> {
     let root: DatabaseRoot;
     if (this._roots.has(query.documentId)) {
