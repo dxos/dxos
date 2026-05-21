@@ -15,18 +15,11 @@ if (process.env.DX_PWA !== 'false') {
 
 const INBOX_PLUGIN_ID = 'org.dxos.plugin.inbox';
 
-/**
- * Intercepts the Edge OAuth initiation request and the resulting popup page,
- * completing the OAuth flow immediately with the provided access token instead
- * of redirecting to Google.
- *
- * How it works:
- * 1. Routes POST **/oauth/initiate → returns a synthetic authUrl at the same
- *    Edge origin, carrying accessTokenId + accessToken as query params.
- * 2. Routes GET **/oauth-test-stub → serves HTML that posts the result back to
- *    window.opener. The message's event.origin equals the Edge origin, so it
- *    passes the coordinator's origin check.
- */
+// Intercepts the Edge OAuth initiation request and the resulting popup page,
+// completing the OAuth flow immediately with the provided access token instead
+// of redirecting to Google. Routes POST /oauth/initiate to return a synthetic
+// authUrl, then routes GET /oauth-test-stub to serve HTML that posts the result
+// back to window.opener so the coordinator's origin check passes.
 const setupOAuthSimulation = async (page: Page, accessToken: string): Promise<void> => {
   await page.context().route('**/oauth/initiate', async (route) => {
     const edgeOrigin = new URL(route.request().url()).origin;
