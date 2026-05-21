@@ -20,7 +20,6 @@ tasks:
       - $DX_OTEL_ENDPOINT
       - $DX_OTEL_HEADERS
       - $DX_PWA
-
       - $DX_POSTHOG_API_KEY
       - $DX_POSTHOG_API_HOST
       - $DX_POSTHOG_FEEDBACK_SURVEY_ID
