@@ -319,6 +319,9 @@ const makeOperationServiceLayer = (
     invariant(op.meta.deployedId, `Operation '${op.meta.key}' has no deployedId; cannot invoke remotely.`);
     const result = await functionsService.invoke(op.meta.deployedId, input, {
       spaceId: options?.spaceId,
+      // Forward the conversation DXN so the remote runtime can rebuild conversation-scoped
+      // services (e.g. `AiContext.Service`) needed by operations like `GetContext`.
+      conversation: options?.conversation,
     });
     if (result._kind === 'success') {
       return { data: result.data };

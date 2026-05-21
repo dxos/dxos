@@ -172,6 +172,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
             <TableComponent.Content
               classNames='border-t border-separator'
               key={attendableId}
+              attendableId={attendableId}
               model={model}
               presentation={presentation}
               schema={schema}

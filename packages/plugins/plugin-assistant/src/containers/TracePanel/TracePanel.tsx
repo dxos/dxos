@@ -25,9 +25,8 @@ import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { ProcessTree, ProcessTreeProps } from '#components';
+import { buildExecutionGraph, type ExecutionGraph } from '#execution-graph';
 import { AssistantCapabilities } from '#types';
-
-import { buildExecutionGraph, type ExecutionGraph } from './execution-graph';
 
 export type TracePanelProps = AppSurface.SpaceArticleProps<Pick<ProcessTreeProps, 'onProcessTerminate'>>;
 
@@ -37,7 +36,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     const { invokePromise } = useOperationInvoker();
     const settings = useAtomCapability(AssistantCapabilities.Settings);
     const tracePanelDebug = settings.tracePanelDebug ?? false;
-    const { branches, commits, spanTree } = useExecutionGraph(space);
+    const { branches, commits, spanTree, details } = useExecutionGraph(space);
     const monitor = useCapability(Capabilities.ProcessMonitor);
     const processes = useAtomValue(monitor?.processTreeAtom ?? atomEmpty);
 
@@ -116,7 +115,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
         </ScrollContainer.Root>
 
         {!tracePanelDebug && selectedCommit && (
-          <Syntax.Root data={selectedCommit}>
+          <Syntax.Root data={details[selectedCommit.id] ?? selectedCommit}>
             <Syntax.Content>
               <Syntax.Viewport>
                 <Syntax.Code className='text-xs' />

@@ -51,6 +51,9 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
@@ -75,6 +78,9 @@
       "path": "../plugin-deck"
     },
     {
+      "path": "../plugin-file"
+    },
+    {
       "path": "../plugin-graph"
     },
     {
@@ -85,9 +91,6 @@
     },
     {
       "path": "../plugin-theme"
-    },
-    {
-      "path": "../plugin-wnfs"
     }
   ]
 }

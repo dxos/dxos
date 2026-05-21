@@ -411,6 +411,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (decoded == null) {
       return decoded;
     }
+    if (decoded instanceof Uint8Array) {
+      return decoded;
+    }
     if (decoded[symbolIsProxy]) {
       return this._handleStoredSchema(target, decoded);
     }
@@ -550,6 +553,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         } else {
           return EncodedReference.fromDXN(value.dxn);
         }
+      } else if (value instanceof Uint8Array) {
+        return value;
       } else {
         return recurse(value);
       }
@@ -963,6 +968,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         if (isEncodedReference(value)) {
           return value;
         }
+        if (value instanceof Uint8Array) {
+          return value;
+        }
         return recurse(value);
       }),
     );
@@ -987,6 +995,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         let data = deepMapValues(this._getReified(target), (value, recurse) => {
           if (isEncodedReference(value)) {
             return this.lookupRef(target, value);
+          }
+          if (value instanceof Uint8Array) {
+            return value;
           }
 
           return recurse(value);
@@ -1019,7 +1030,13 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 }
 
 export const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
-  if (value == null || Array.isArray(value) || value instanceof EchoSchema || Ref.isRef(value)) {
+  if (
+    value == null ||
+    Array.isArray(value) ||
+    value instanceof EchoSchema ||
+    Ref.isRef(value) ||
+    value instanceof Uint8Array
+  ) {
     return;
   }
 
@@ -1298,6 +1315,8 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
         // Pass refs as is.
       } else if (value instanceof EchoSchema || isTypedObjectProxy(value)) {
         throw new Error('Object references must be wrapped with `Ref.make`');
+      } else if ((value as any) instanceof Uint8Array) {
+        // Pass binary buffers as is; Automerge stores them natively.
       } else {
         throwIfCustomClass(key, value);
         validateInitialProps(target[key], seen);
@@ -1310,6 +1329,10 @@ const linkAllNestedProperties = (target: ProxyTarget): DecodedAutomergePrimaryVa
   return deepMapValues(target, (value, recurse) => {
     if (Ref.isRef(value)) {
       return refToEncodedReference(target, value);
+    }
+
+    if (value instanceof Uint8Array) {
+      return value;
     }
 
     return recurse(value);

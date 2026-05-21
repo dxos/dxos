@@ -2,28 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import {
-  next as A,
-  type Heads,
-  change,
-  clone,
-  equals,
-  from,
-  getBackend,
-  getHeads,
-  save,
-  saveSince,
-} from '@automerge/automerge';
+import { next as A, type Heads, getHeads, saveSince } from '@automerge/automerge';
 import {
   type AutomergeUrl,
   type DocHandle,
   type DocumentId,
-  type DocumentProgress,
   type Message,
   type PeerId,
-  type QueryState,
-  Repo,
-  type StorageAdapterInterface,
   type SubductionPolicy,
   generateAutomergeUrl,
   initSubduction,
@@ -31,137 +16,30 @@ import {
 } from '@automerge/automerge-repo';
 import { beforeAll, describe, expect, onTestFinished, test } from 'vitest';
 
-import { Trigger, sleep } from '@dxos/async';
-import { randomBytes } from '@dxos/crypto';
-import { PublicKey } from '@dxos/keys';
-import { createTestLevel } from '@dxos/kv-store/testing';
-import { openAndClose } from '@dxos/test-utils';
-import { isNonNullable } from '@dxos/util';
+import { asyncTimeout, sleep } from '@dxos/async';
 
-import { TestAdapter, type TestConnectionStateProvider } from '../testing';
-import { LevelDBStorageAdapter } from './leveldb-storage-adapter';
-
-const HOST_AND_CLIENT: [string, string] = ['host', 'client'];
-const SUBDUCTION_SERVICE_NAME = 'test-subduction-service';
-const FIND_STATES: readonly QueryStateName[] = ['ready', 'loading'];
-
-// How long to wait before asserting "this should NOT have happened by now".
-// Tuned so that:
-//   - The happy path (basic subduction sync) consistently completes faster:
-//     observed end-to-end ~200-300 ms locally.
-//   - The window is short enough to keep the suite fast.
-//   - It's long enough that GC pauses or scheduling jitter on a busy CI box
-//     don't sneak a successful sync past the assertion.
-// If you find yourself raising this, write down WHY in the test that needs
-// more time rather than bumping the global.
-const NEGATIVE_ASSERTION_DELAY_MS = 500;
-
-// Subduction control-plane message type, sent by `NetworkAdapterTransport` from
-// `@automerge/automerge-repo/dist/subduction/network.js`. Not exported from the
-// package root, so we inline the string literal. If you change this, also update
-// `node_modules/.../subduction/network.d.ts:SUBDUCTION_MESSAGE_TYPE`.
-const SUBDUCTION_MESSAGE_TYPE = 'subduction-connection';
-
-type QueryStateName = QueryState<unknown>['state'];
-
-const waitForQueryState = async (
-  progress: DocumentProgress<unknown>,
-  awaitStates: readonly QueryStateName[],
-  { timeout }: { timeout?: number } = {},
-): Promise<void> => {
-  if (awaitStates.includes(progress.peek().state)) {
-    return;
-  }
-  const trigger = new Trigger();
-  const unsubscribe = progress.subscribe((state) => {
-    if (awaitStates.includes(state.state)) {
-      trigger.wake();
-    } else if (state.state === 'failed' && !awaitStates.includes('failed')) {
-      trigger.throw(state.error);
-    }
-  });
-  try {
-    await trigger.wait({ timeout });
-  } finally {
-    unsubscribe();
-  }
-};
-
-const findInStates = async <T>(
-  repo: Repo,
-  url: AutomergeUrl,
-  awaitStates: readonly QueryStateName[] = ['ready'],
-): Promise<DocHandle<T>> => {
-  const { documentId } = parseAutomergeUrl(url);
-  const progress = repo.findWithProgress<T>(url);
-  await waitForQueryState(progress, awaitStates);
-  return repo.handles[documentId] as DocHandle<T>;
-};
+import { TestAdapter } from '../testing';
+import {
+  FIND_STATES,
+  NEGATIVE_ASSERTION_DELAY_MS,
+  SUBDUCTION_MESSAGE_TYPE,
+  SUBDUCTION_SERVICE_NAME,
+  connectAdapters,
+  createHostClientRepoTopology,
+  createLevelAdapter,
+  createRepo,
+  createRepoTopology,
+  disconnectAdapters,
+  findInStates,
+  reconnectAdapters,
+  shutdownRepo,
+  waitForQueryState,
+  waitForSubductionSave,
+} from './subduction-test-utils';
 
 describe('AutomergeRepo with Subduction', () => {
   beforeAll(async () => {
     await initSubduction();
-  });
-
-  test('change events', () => {
-    const repo = createRepo({ network: [] });
-    const handle = repo.create<{ field?: string }>();
-
-    let valueDuringChange: string | undefined;
-    handle.addListener('change', () => {
-      valueDuringChange = handle.doc()!.field;
-    });
-
-    handle.change((doc: any) => {
-      doc.field = 'value';
-    });
-
-    expect(valueDuringChange).to.eq('value');
-  });
-
-  test('flush', async () => {
-    const storage = await createLevelAdapter();
-    const repo = createRepo({ network: [], storage });
-    const handle = repo.create<{ field?: string }>();
-
-    for (let i = 0; i < 10; i++) {
-      const p = repo.flush([handle.documentId]);
-      handle.change((doc: any) => {
-        doc.field = (doc.field ?? '') + randomBytes(1024).toString('hex');
-      });
-      await p;
-    }
-  });
-
-  test('getChangeByHash', async () => {
-    const doc = from({ foo: 'bar' });
-    const copy = clone(doc);
-    const newDoc = change(copy, 'change', (doc: any) => {
-      doc.foo = 'baz';
-    });
-
-    {
-      const heads = getHeads(newDoc);
-      const changes = heads.map((hash) => getBackend(newDoc).getChangeByHash(hash));
-      expect(changes.length).to.equal(1);
-      expect(changes[0]).to.not.be.null;
-    }
-
-    {
-      const heads = getHeads(newDoc);
-      const changes = heads.map((hash) => getBackend(doc).getChangeByHash(hash));
-      expect(changes.length).to.equal(1);
-      expect(changes[0]).to.be.null;
-    }
-  });
-
-  test('heads equality', () => {
-    const a: Heads = getHeads(from({ foo: 'bar' }));
-    const b: Heads = getHeads(from({ foo: 'bar' }));
-    const c: Heads = [...a];
-
-    expect(equals(a, b)).to.be.false;
-    expect(equals(a, c)).to.be.true;
   });
 
   test('documents missing from local storage go to loading state', async () => {
@@ -261,32 +139,6 @@ describe('AutomergeRepo with Subduction', () => {
         .toEqual(['Hello world', 'Hello world', 'Hello world']);
     });
 
-    test('replication through a 3 peer chain', { timeout: 30_000 }, async () => {
-      const { repos, adapters } = await createRepoTopology({
-        peers: ['A', 'B', 'C'],
-        connections: [
-          ['A', 'B'],
-          ['B', 'C'],
-        ],
-      });
-      const [repoA, repoB, repoC] = repos;
-      await connectAdapters(adapters);
-
-      const docA = repoA.create<{ text?: string }>();
-      docA.change((doc: any) => {
-        doc.text = 'Hello world';
-      });
-      await waitForSubductionSave();
-
-      const [docB, docC] = await Promise.all([
-        findInStates<{ text?: string }>(repoB, docA.url, FIND_STATES),
-        findInStates<{ text?: string }>(repoC, docA.url, FIND_STATES),
-      ]);
-      await expect
-        .poll(() => [docB.doc()?.text, docC.doc()?.text], { timeout: 10_000 })
-        .toEqual(['Hello world', 'Hello world']);
-    });
-
     test('documents loaded from disk get replicated', async () => {
       const storage = await createLevelAdapter();
       let url: AutomergeUrl | undefined;
@@ -309,53 +161,6 @@ describe('AutomergeRepo with Subduction', () => {
       await expect.poll(() => hostHandle.doc()?.text, { timeout: 5_000 }).toEqual('foo');
       const peer2Handle = await findInStates<any>(peer2, hostHandle.url, FIND_STATES);
       await expect.poll(() => peer2Handle.doc(), { timeout: 5_000 }).toEqual(hostHandle.doc());
-    });
-
-    test('client cold-starts and syncs doc from a Repo', async () => {
-      const repo = createRepo({ network: [] });
-      const serverHandle = repo.create<{ field?: string }>();
-
-      let clientDoc: A.Doc<{ field?: string }> | undefined;
-      const receiveByClient = (blob: Uint8Array) => {
-        clientDoc = clientDoc === undefined ? A.load(blob) : A.loadIncremental(clientDoc, blob);
-      };
-
-      let syncedHeads = getHeads(serverHandle.doc()!);
-      receiveByClient(save(serverHandle.doc()!));
-
-      serverHandle.on('change', ({ doc }) => {
-        const blob = saveSince(doc, syncedHeads);
-        syncedHeads = getHeads(doc);
-        receiveByClient(blob);
-      });
-
-      const value = 'text to test if sync works';
-      serverHandle.change((doc: any) => {
-        doc.field = value;
-      });
-      expect(clientDoc?.field).to.deep.equal(value);
-    });
-
-    test('client creates doc and syncs with a Repo', async () => {
-      const repo = createRepo({ network: [] });
-      const receiveByServer = (blob: Uint8Array, docId: DocumentId) => repo.import<any>(blob, { docId });
-      let clientDoc = A.from<{ field?: string }>({});
-      const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
-      let sentHeads: Heads = [];
-
-      const sendDoc = async (doc: A.Doc<any>) => {
-        receiveByServer(saveSince(doc, sentHeads), documentId);
-        sentHeads = getHeads(doc);
-      };
-
-      const value = 'text to test if sync works';
-      clientDoc = A.change(clientDoc, (doc: any) => {
-        doc.field = value;
-      });
-      await sendDoc(clientDoc);
-
-      const serverHandle = await repo.find<any>(documentId);
-      expect(serverHandle.doc()!.field).to.deep.equal(value);
     });
 
     test('client creates doc and Repo persists it to disk', async () => {
@@ -492,12 +297,76 @@ describe('AutomergeRepo with Subduction', () => {
       await reconnectAdapters(adapters);
       await waitForQueryState(progress, ['ready'], { timeout: 10_000 });
     });
+
+    // Regression test for the concurrent-shutdown stall in
+    // `@automerge/automerge-repo@2.6.0-subduction.17` fixed by
+    // `patches/@automerge__automerge-repo@2.6.0-subduction.17.patch`.
+    // Without the patch, `Promise.all([repoA.shutdown(), repoB.shutdown()])`
+    // takes ~30s (the Rust-side per-request timeout); with it, single-digit ms.
+    test(
+      'concurrent shutdown completes quickly when both peers have in-flight pushes',
+      { timeout: 15_000 },
+      async () => {
+        const adapters = TestAdapter.createPair() as [TestAdapter, TestAdapter];
+        const repoA = createRepo(
+          {
+            peerId: 'A' as PeerId,
+            network: [],
+            subductionAdapters: [{ adapter: adapters[0], serviceName: SUBDUCTION_SERVICE_NAME, role: 'connect' }],
+          },
+          { registerCleanup: false },
+        );
+        const repoB = createRepo(
+          {
+            peerId: 'B' as PeerId,
+            network: [],
+            subductionAdapters: [{ adapter: adapters[1], serviceName: SUBDUCTION_SERVICE_NAME, role: 'connect' }],
+          },
+          { registerCleanup: false },
+        );
+
+        // Belt-and-braces cleanup: bound shutdown so a regression
+        // doesn't hang the runner for ~30s.
+        onTestFinished(async () => {
+          disconnectAdapters([adapters]);
+          await Promise.all([
+            asyncTimeout(repoA.shutdown(), 2_000).catch(() => {}),
+            asyncTimeout(repoB.shutdown(), 2_000).catch(() => {}),
+          ]);
+        });
+
+        await connectAdapters([adapters]);
+
+        // Get a doc onto both sides so each peer has a running entry.
+        // Wait for `'ready'` (NOT `FIND_STATES` which permits `'loading'`)
+        // so repoB has actually replicated the doc before the next mutation
+        // — otherwise the symmetric in-flight push state this test relies on
+        // is not reliably set up.
+        const handle = repoA.create<{ text?: string }>();
+        handle.change((doc: any) => {
+          doc.text = 'initial';
+        });
+        await waitForSubductionSave();
+        await findInStates(repoB, handle.url, ['ready']);
+
+        // Pending throttled save at the moment of shutdown — required
+        // to put an `addBatch` in flight when both sides hit step 4.
+        handle.change((doc: any) => {
+          doc.text = 'pre-close write';
+        });
+
+        await asyncTimeout(Promise.all([repoA.shutdown(), repoB.shutdown()]), 1_500);
+      },
+    );
   });
 
   // The contract block below tests subduction-specific behavior described in
   // `.agents/skills/effect/subduction/SKILL.md`. None of these can be expressed
   // against the classical-network transport, which is why they live here and
   // not in `automerge-repo.test.ts`.
+  //
+  // Client-only-policy characterization tests live in
+  // `automerge-repo-subduction-policy.test.ts`.
   describe('subduction contract', () => {
     describe('role matrix', () => {
       test('connect/accept syncs', async () => {
@@ -651,33 +520,6 @@ describe('AutomergeRepo with Subduction', () => {
           .toEqual('should-fetch');
       });
 
-      test('authorizeConnect denial blocks handshake', async () => {
-        const denyingPolicy: SubductionPolicy = {
-          authorizeConnect: async () => {
-            throw new Error('denied');
-          },
-          authorizeFetch: async () => {},
-          authorizePut: async () => {},
-          filterAuthorizedFetch: async (_peerId, ids) => ids,
-        };
-
-        const { repos, adapters } = await createHostClientRepoTopology({
-          subductionPolicies: { client: denyingPolicy },
-        });
-        const [host, client] = repos;
-        await connectAdapters(adapters);
-
-        const handle = host.create<{ text?: string }>();
-        handle.change((doc: any) => {
-          doc.text = 'should-not-arrive';
-        });
-        await waitForSubductionSave();
-
-        const progress = client.findWithProgress<{ text?: string }>(handle.url);
-        await sleep(NEGATIVE_ASSERTION_DELAY_MS);
-        expect(progress.peek().state).to.not.equal('ready');
-      });
-
       test('authorizePut denial blocks writes from peer', async () => {
         const denyingPolicy: SubductionPolicy = {
           authorizeConnect: async () => {},
@@ -711,70 +553,6 @@ describe('AutomergeRepo with Subduction', () => {
         // Host should not have accepted client's change.
         expect(getHeads(hostHandle.doc()!)).to.deep.equal(initialHostHeads);
         expect(hostHandle.doc()?.text).to.equal('initial');
-      });
-
-      // `filterAuthorizedFetch` narrows which sedimentrees a fetcher is allowed
-      // to RECEIVE in response to a fetch RPC. Under the current
-      // automerge-repo subduction bridge wiring, however, replication is
-      // primarily driven by proactive PUSH at connection time and on every
-      // `#save`: the host announces its sedimentrees to connected peers via
-      // the same channel that delivers commits. That push path does NOT
-      // appear to consult `filterAuthorizedFetch` (which is a fetch-response
-      // filter, not a push-advertise filter — recall the SKILL doc note that
-      // there is no `authorizeAdvertise` hook).
-      //
-      // Empirically: with a host-side `filterAuthorizedFetch` returning only
-      // the allowed doc id, BOTH the allowed and blocked docs reach
-      // `'ready'` on the client because the host pushes both. The filter is
-      // essentially dead in this bridge.
-      //
-      // We assert the empirical behavior here and TODO the gap. To actually
-      // gate replication you must combine `authorizePut` on the receiver and
-      // `authorizeFetch` on the server, OR add an advertise-side hook to
-      // the bridge upstream.
-      //
-      // TODO(mykola): If the fork later adds an advertise hook OR
-      // `filterAuthorizedFetch` starts gating push, flip this assertion to
-      // `not.equal('ready')` and `expect(blocked).to.be.undefined`.
-      test('filterAuthorizedFetch on server is bypassed by proactive push', async () => {
-        let allowedDoc: DocumentId | undefined;
-        const filteringPolicy: SubductionPolicy = {
-          authorizeConnect: async () => {},
-          authorizeFetch: async () => {},
-          authorizePut: async () => {},
-          filterAuthorizedFetch: async (_peerId, ids) => {
-            if (allowedDoc === undefined) {
-              return ids;
-            }
-            return ids.filter((id) => id.toString() === (allowedDoc as unknown as string));
-          },
-        };
-
-        const { repos, adapters } = await createHostClientRepoTopology({
-          subductionPolicies: { host: filteringPolicy },
-        });
-        const [host, client] = repos;
-        await connectAdapters(adapters);
-
-        const allowedHandle = host.create<{ text?: string }>({ text: 'allowed' });
-        const blockedHandle = host.create<{ text?: string }>({ text: 'blocked' });
-        allowedDoc = allowedHandle.documentId;
-        await waitForSubductionSave();
-
-        // Allowed doc replicates as expected.
-        await expect
-          .poll(async () => (await client.find<{ text?: string }>(allowedHandle.url)).doc()?.text, {
-            timeout: 5_000,
-          })
-          .toEqual('allowed');
-
-        // Documented gap: the supposedly-blocked doc ALSO reaches the client
-        // via proactive push, despite the filter.
-        await expect
-          .poll(async () => (await client.find<{ text?: string }>(blockedHandle.url)).doc()?.text, {
-            timeout: 5_000,
-          })
-          .toEqual('blocked');
       });
 
       // Mutable-policy recovery. We hold a closure-captured `allowFetch` flag
@@ -896,159 +674,4 @@ describe('AutomergeRepo with Subduction', () => {
       expect(bcSubductionMessages).to.be.greaterThan(0);
     });
   });
-
-  const createLevelAdapter = async (level = createTestLevel()) => {
-    const storage = new LevelDBStorageAdapter({ db: level.sublevel('automerge') });
-    await openAndClose(level, storage);
-    return storage;
-  };
 });
-
-type ShareConfig = Exclude<ConstructorParameters<typeof Repo>[0], undefined>['shareConfig'];
-
-type ConnectedRepoOptions = {
-  storages?: StorageAdapterInterface[];
-  connectionStateProvider?: TestConnectionStateProvider;
-  shareConfig?: ShareConfig;
-  /**
-   * Per-peer subduction adapter role override. Defaults to `'connect'` for every
-   * peer when omitted (matches the production wiring in `AutomergeHost`).
-   */
-  roles?: Record<string, 'connect' | 'accept'>;
-  /**
-   * Per-peer `subductionPolicy` override. Defaults to all-permissive for any
-   * peer not listed here. Matches the production wiring in `AutomergeHost`.
-   */
-  subductionPolicies?: Record<string, SubductionPolicy>;
-  /**
-   * Optional per-connection `onMessage` hooks, keyed by index into `connections`.
-   * Each hook is invoked for every message that traverses the indexed
-   * `TestAdapter.createPair` pair, in either direction.
-   */
-  onMessageByConnection?: Record<number, (message: Message) => void>;
-};
-
-const createRepoTopology = async <Peers extends string[], Peer extends string = Peers[number]>(args: {
-  peers: Peers;
-  connections: [Peer, Peer][];
-  options?: ConnectedRepoOptions;
-  onMessage?: (message: Message) => void;
-  onMessageByConnection?: Record<number, (message: Message) => void>;
-}) => {
-  const onMessageByConnection = args.onMessageByConnection ?? args.options?.onMessageByConnection ?? {};
-  const adapters = args.connections.map((_, idx) => {
-    const perConnectionHook = onMessageByConnection[idx];
-    const handler = (message: Message) => {
-      args.onMessage?.(message);
-      perConnectionHook?.(message);
-    };
-    return TestAdapter.createPair(args.options?.connectionStateProvider, handler) as [TestAdapter, TestAdapter];
-  });
-  const repos = args.peers.map((peerId, peerIndex) => {
-    const network = adapters
-      .map((pair, idx) => {
-        return args.connections[idx].includes(peerId as Peer)
-          ? peerId === args.connections[idx][0]
-            ? pair[0]
-            : pair[1]
-          : null;
-      })
-      .filter(isNonNullable);
-
-    const role = args.options?.roles?.[peerId as string] ?? 'connect';
-    const subductionPolicy = args.options?.subductionPolicies?.[peerId as string];
-
-    return createRepo(
-      {
-        peerId: peerId as PeerId,
-        storage: args.options?.storages?.[peerIndex],
-        network: [],
-        shareConfig: args.options?.shareConfig,
-        ...(subductionPolicy ? { subductionPolicy } : {}),
-        subductionAdapters: network.map((adapter) => ({
-          adapter,
-          serviceName: SUBDUCTION_SERVICE_NAME,
-          role,
-        })),
-      },
-      { registerCleanup: false },
-    );
-  });
-  onTestFinished(async () => {
-    await Promise.all(repos.map((repo) => repo.flush().catch(() => {})));
-    await Promise.all(repos.map((repo) => shutdownRepo(repo)));
-    disconnectAdapters(adapters);
-  });
-  return { repos, adapters };
-};
-
-const createHostClientRepoTopology = (options?: ConnectedRepoOptions) =>
-  createRepoTopology({
-    peers: HOST_AND_CLIENT,
-    connections: [HOST_AND_CLIENT],
-    options,
-  });
-
-const connectAdapters = async (pairs: [TestAdapter, TestAdapter][], options?: { noEmitPeerCandidate?: boolean }) => {
-  for (const pair of pairs) {
-    await pair[0].onConnect.wait();
-    await pair[1].onConnect.wait();
-    if (!options?.noEmitPeerCandidate) {
-      pair[0].peerCandidate(pair[1].peerId!);
-      pair[1].peerCandidate(pair[0].peerId!);
-    }
-  }
-};
-
-const disconnectAdapters = (pairs: [TestAdapter, TestAdapter][]) => {
-  for (const [left, right] of pairs) {
-    if (left.peerId && right.peerId) {
-      left.peerDisconnected(right.peerId);
-      right.peerDisconnected(left.peerId);
-    }
-    left.disconnect();
-    right.disconnect();
-  }
-};
-
-const reconnectAdapters = async (pairs: [TestAdapter, TestAdapter][]) => {
-  for (const pair of pairs) {
-    pair[0].peerDisconnected(pair[1].peerId!);
-    pair[1].peerDisconnected(pair[0].peerId!);
-    pair[0].peerCandidate(pair[1].peerId!);
-    pair[1].peerCandidate(pair[0].peerId!);
-  }
-};
-
-const shutdownRepo = async (repo: Repo) => {
-  await repo.shutdown().catch(() => {});
-};
-
-const createRepo = (
-  options?: ConstructorParameters<typeof Repo>[0],
-  cleanupOptions: { registerCleanup?: boolean } = {},
-) => {
-  const repo = new Repo({
-    // Reduce sync timeout so inflight syncWithAllPeers fails fast when a relay
-    // peer does not yet have the document; self-healing retries kick in quickly.
-    subductionTimeouts: {
-      syncMs: 2_000,
-      healInitialDelayMs: 100,
-    },
-    ...options,
-  });
-  if (cleanupOptions.registerCleanup ?? true) {
-    onTestFinished(async () => {
-      await shutdownRepo(repo);
-    });
-  }
-  return repo;
-};
-
-const waitForSubductionSave = async () => {
-  await sleep(150);
-};
-
-export const createTmpPath = (): string => {
-  return `/tmp/dxos-${PublicKey.random().toHex()}`;
-};
