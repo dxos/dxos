@@ -94,9 +94,13 @@ export default Capability.makeModule(() =>
             return Type.isMutable(schema);
           }
           // Obj.getSchema fails for database-registered schemas (DXN mismatch); fall back to typename query.
-          const db = Obj.getDatabase(data.subject);
-          const typename = Obj.getTypename(data.subject);
-          return !!db && !!typename && db.schemaRegistry.query({ typename }).runSync().length > 0;
+          try {
+            const db = Obj.getDatabase(data.subject);
+            const typename = Obj.getTypename(data.subject);
+            return !!db && !!typename && db.schemaRegistry.query({ typename }).runSync().length > 0;
+          } catch {
+            return false;
+          }
         },
         component: ({ data, role }) => {
           return <DynamicTypeCard role={role} subject={data.subject} />;

@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { useSchema } from '@dxos/echo-react';
 import { type JsonPath, splitJsonPath } from '@dxos/effect';
 import { Card, useTranslation } from '@dxos/react-ui';
-import { Form, omitId } from '@dxos/react-ui-form';
+import { Form, type FormUpdateMeta, omitId } from '@dxos/react-ui-form';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -22,12 +22,12 @@ export const DynamicTypeCard = ({ subject }: AppSurface.ObjectCardProps) => {
   const schema = useMemo(() => runtimeSchema && omitId(runtimeSchema), [runtimeSchema]);
 
   const handleSave = useCallback(
-    (values: any, { changed }: { changed: Record<string, boolean> }) => {
-      const paths = Object.keys(changed).filter((path) => changed[path]);
+    (values: Record<string, unknown>, { changed }: FormUpdateMeta<Record<string, unknown>>) => {
+      const paths = (Object.keys(changed) as JsonPath[]).filter((path) => changed[path]);
       Obj.update(subject, () => {
         for (const path of paths) {
-          const value = values[path];
-          const parts = splitJsonPath(path as JsonPath);
+          const parts = splitJsonPath(path);
+          const value = Obj.getValue(values as any, parts);
           Obj.setValue(subject, parts, value);
         }
       });
