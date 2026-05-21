@@ -26,6 +26,7 @@ export const SpaceOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./remove-objects'),
   () => import('./rename'),
   () => import('./rename-object'),
+  () => import('./reset'),
   () => import('./restore-field'),
   () => import('./restore-objects'),
   () => import('./share'),

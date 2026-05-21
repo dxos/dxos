@@ -5,7 +5,14 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNodeMatcher, getActiveSpace, getPersonalSpace, isPersonalSpace } from '@dxos/app-toolkit';
+import {
+  AppCapabilities,
+  AppNodeMatcher,
+  getActiveSpace,
+  getPersonalSpace,
+  isExemplarSpace,
+  isPersonalSpace,
+} from '@dxos/app-toolkit';
 import { type Space, SpaceState } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Filter, Obj } from '@dxos/echo';
@@ -43,7 +50,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
   return yield* Effect.all([
     GraphBuilder.createExtension({
       id: 'primary-actions',
-      position: 'hoist',
+      position: 'first',
       match: NodeMatcher.whenRoot,
       actions: () =>
         Effect.succeed([
@@ -191,7 +198,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               ...spaces.filter((space) => !orderMap.has(space.id)),
             ]
               .filter((space, idx) => (settings?.showHidden ? true : spaceStates[idx] !== SpaceState.SPACE_INACTIVE))
-              .filter((space) => space.tags.length === 0 || isPersonalSpace(space))
+              .filter((space) => space.tags.length === 0 || isPersonalSpace(space) || isExemplarSpace(space))
               .map((space) =>
                 constructSpaceNode({
                   space,

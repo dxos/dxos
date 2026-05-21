@@ -264,6 +264,7 @@ export namespace SpaceOperation {
         filename: Schema.String,
         contents: Schema.instanceOf(Uint8Array),
       }),
+      tags: Schema.Array(Schema.String).pipe(Schema.optional),
     }),
     output: Schema.Struct({
       space: SpaceSchema,
@@ -449,6 +450,23 @@ export namespace SpaceOperation {
       // TODO(wittjosiah): This creates a type error with PropertySchema.
       props: Schema.Any.annotations({ description: 'The field properties to restore.' }),
       index: Schema.Number.annotations({ description: 'The index to restore the field at.' }),
+    }),
+    output: Schema.Void,
+  });
+
+  /**
+   * Permanently reset a space — deletes ALL objects and truncates feeds via a new epoch.
+   * This is unrecoverable.
+   */
+  export const Reset = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}.reset`,
+      name: 'Reset Space',
+      description: 'Permanently delete all objects and feeds in a space.',
+    },
+    services: [Capability.Service],
+    input: Schema.Struct({
+      space: SpaceSchema,
     }),
     output: Schema.Void,
   });

@@ -10,9 +10,11 @@ import { SpaceOperation } from './definitions';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.ImportSpace> = SpaceOperation.ImportSpace.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ archive }) {
+    Effect.fnUntraced(function* ({ archive, tags }) {
       const client = yield* Capability.get(ClientCapabilities.Client);
-      const space = yield* Effect.promise(() => client.spaces.import(archive));
+      const space = yield* Effect.promise(() =>
+        client.spaces.import(archive, tags && tags.length > 0 ? { tags: [...tags] } : undefined),
+      );
       yield* Effect.promise(() => space.waitUntilReady());
       return { space };
     }),

@@ -7,7 +7,7 @@ import React, { useCallback, useContext, useMemo } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { useSchemaFilter, type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, type Ref, Type } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { useObject, useSchema } from '@dxos/react-client/echo';
@@ -47,14 +47,14 @@ const ViewKanbanArticle = ({ role, subject: object }: KanbanArticleProps) => {
     [schemaFromDb, schemas, typename],
   );
 
+  const baseFilter = useSchemaFilter(cardSchema);
   const items = useMemo(() => {
     if (!db) {
       return null;
     }
-    const baseFilter = cardSchema ? Filter.type(cardSchema) : Filter.nothing();
     const query = tag ? Query.select(baseFilter).select(Filter.tag(tag)) : Query.select(baseFilter);
     return AtomQuery.make(db, query);
-  }, [db, cardSchema, tag]);
+  }, [db, baseFilter, tag]);
 
   const projection = useProjectionModel(cardSchema, object, registry);
   const change = useEchoChangeCallback(object);

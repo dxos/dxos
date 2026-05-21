@@ -13,20 +13,14 @@ import { useObject } from '@dxos/react-client/echo';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
-import { GalleryImage, Lightbox, type LightboxTileProps } from '#components';
+import { Lightbox } from '#components';
 import { meta } from '#meta';
 import { type Gallery } from '#types';
 
-import { useImageUrl } from '../../hooks';
 import { GALLERY_SHOW_SEGMENT } from '../../paths';
 
 export type GalleryShowProps = {
   gallery: Gallery.Gallery;
-};
-
-const ResolvingTile = ({ image }: LightboxTileProps) => {
-  const url = useImageUrl(image.url, image.type);
-  return <GalleryImage image={image} url={url} />;
 };
 
 export const GalleryShow = ({ gallery: subject }: GalleryShowProps) => {
@@ -56,7 +50,7 @@ export const GalleryShow = ({ gallery: subject }: GalleryShowProps) => {
 
   return (
     <div className='relative w-full h-full bg-attention-surface'>
-      <Lightbox.Root gallery={gallery} Tile={ResolvingTile}>
+      <Lightbox.Root gallery={gallery}>
         <Lightbox.Viewport />
       </Lightbox.Root>
       <div className='absolute top-4 right-4 z-[200]'>

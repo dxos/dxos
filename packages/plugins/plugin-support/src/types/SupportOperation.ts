@@ -7,10 +7,22 @@
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
+import { SpaceSchema } from '@dxos/client-protocol';
 import { Operation } from '@dxos/compute';
-import { Database, Format, Ref } from '@dxos/echo';
+import { Collection, Database, Format, Ref } from '@dxos/echo';
 
 import * as Support from './Support';
+
+export const OnCreateSpace = Operation.make({
+  meta: { key: 'org.dxos.function.support.on-create-space', name: 'On Create Space' },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    space: SpaceSchema,
+    rootCollection: Collection.Collection,
+    isDefault: Schema.Boolean.pipe(Schema.optional),
+  }),
+  output: Schema.Void,
+});
 
 // Schema annotations consumed by `react-ui-form`. Strings duplicated in translations.ts
 // — kept inline here to avoid an import cycle (translations -> #types -> SupportOperation).
@@ -41,7 +53,7 @@ export const CaptureUserFeedback = Operation.make({
   },
   services: [Capability.Service],
   input: UserFeedback,
-  output: Schema.Void,
+  output: Schema.UndefinedOr(Schema.String),
 });
 
 export const CreateTicket = Operation.make({

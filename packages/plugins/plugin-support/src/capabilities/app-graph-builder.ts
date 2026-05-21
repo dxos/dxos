@@ -8,14 +8,12 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
 import { AppCapabilities, AppNode, AppNodeMatcher, LayoutOperation, isPersonalSpace } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Filter, Obj } from '@dxos/echo';
-import { AtomQuery } from '@dxos/echo-atom';
-import { log } from '@dxos/log';
+import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
-import { HelpCapabilities, HelpOperation, Support, SupportCapabilities } from '#types';
+import { HelpCapabilities, HelpOperation, SupportCapabilities } from '#types';
 
-import { SHORTCUTS_DIALOG } from '../constants';
+import { SHORTCUTS_DIALOG, WELCOME_NODE_ID, WELCOME_NODE_TYPE } from '../constants';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -76,17 +74,54 @@ export default Capability.makeModule(
               label: ['help-companion.label', { ns: meta.id }],
               icon: 'ph--info--regular',
               data: 'help',
-              position: 'fallback',
+              position: 'last',
+            }),
+          ]),
+      }),
+
+      // Deck companion: feedback / help tab in the complementary sidebar (R1).
+      // Renders the FeedbackPanel via the `deck-companion--help` surface.
+      GraphBuilder.createExtension({
+        id: 'help',
+        match: NodeMatcher.whenRoot,
+        connector: () =>
+          Effect.succeed([
+            AppNode.makeDeckCompanion({
+              id: linkedSegment('help'),
+              label: ['help.label', { ns: meta.id }],
+              icon: 'ph--megaphone--regular',
+              data: null,
+              position: 'first',
+              joyride: 'welcome/feedback',
+            }),
+          ]),
+      }),
+
+      // Deck companion: Discord community tab in the complementary sidebar (R1).
+      // Renders the Discord widget iframe via the `deck-companion--discord` surface.
+      GraphBuilder.createExtension({
+        id: 'discord',
+        match: NodeMatcher.whenRoot,
+        connector: () =>
+          Effect.succeed([
+            AppNode.makeDeckCompanion({
+              id: linkedSegment('discord'),
+              label: ['discord.label', { ns: meta.id }],
+              icon: 'ph--discord-logo--regular',
+              data: null,
+              position: 'first',
             }),
           ]),
       }),
 
       // Personal-space-only Welcome virtual node, hoisted to the top of the navtree.
-      // Data is the singleton Welcome ECHO object (provisioned by WelcomeProvisioner),
-      // so the assistant plugin's companion-chat extension binds automatically.
-      // Gated by the `showWelcome` plugin setting.
+      // The node is fully virtual (no backing ECHO object); the matching Article surface
+      // is selected via the `welcome` literal subject. Gated by the `showWelcome` setting.
+      // The extension itself is positioned `first` so its node is inserted ahead of other
+      // `position: 'first'` siblings (Settings, Collections) under the personal space.
       GraphBuilder.createExtension({
         id: 'welcome',
+        position: 'first',
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
           if (!isPersonalSpace(space)) {
@@ -99,32 +134,20 @@ export default Capability.makeModule(
             return Effect.succeed([]);
           }
 
-          const welcome = get(AtomQuery.make(space.db, Filter.type(Support.Welcome)))[0] as Obj.Unknown | undefined;
-          log.info('welcome connector', { hasWelcome: !!welcome, welcomeId: welcome?.id, spaceId: space.id });
-          if (!welcome) {
-            return Effect.succeed([]);
-          }
-
-          // Build a full ECHO object node so the navtree wires up persistence/cache correctly,
-          // then layer in welcome-specific presentation.
-          const baseNode = AppNode.makeObject({ db: space.db, object: welcome });
-          if (!baseNode) {
-            return Effect.succeed([]);
-          }
-
           return Effect.succeed([
             {
-              ...baseNode,
+              id: WELCOME_NODE_ID,
+              type: WELCOME_NODE_TYPE,
+              data: WELCOME_NODE_ID,
               properties: {
-                ...baseNode.properties,
                 label: ['welcome-node.label', { ns: meta.id }],
                 icon: 'ph--lifebuoy--regular',
                 iconHue: 'rose',
-                position: 'hoist',
+                position: 'first',
                 draggable: false,
                 droppable: false,
               },
-            },
+            } satisfies Node.NodeArg<string>,
           ]);
         },
       }),

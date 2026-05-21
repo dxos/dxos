@@ -715,6 +715,20 @@ describe('Spaces', () => {
     expect(messages.map((m: any) => m.name).sort()).toEqual(['msg-1', 'msg-2']);
   });
 
+  test('import archive applies tags to the new space', { timeout: 5_000, retry: 1 }, async () => {
+    const { SpaceArchive } = await import('@dxos/protocols/proto/dxos/client/services');
+    const [client1, client2] = await createInitializedClients(2, { storage: true });
+    [client1, client2].forEach(registerTypes);
+
+    const space = await client1.spaces.create();
+    space.db.add(createDocument());
+    await space.db.flush();
+    const archive = await space.internal.export({ format: SpaceArchive.Format.JSON });
+
+    const importedSpace = await client2.spaces.import(archive, { tags: ['org.dxos.test.exemplar'] });
+    expect(importedSpace.tags).toContain('org.dxos.test.exemplar');
+  });
+
   test('import JSON into existing space', { timeout: 5_000 }, async () => {
     const [client] = await createInitializedClients(1, { storage: true });
     await registerTypes(client);

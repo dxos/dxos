@@ -16,7 +16,7 @@ export const translations = [
         'source.label': 'Source',
         'plugin-registry.label': 'Plugins',
         'plugin-settings.label': 'Plugin Settings',
-        'official-plugins.label': 'Official',
+        'bundled-plugins.label': 'Bundled',
         'installed-plugins.label': 'Enabled',
         'recommended-plugins.label': 'Recommended',
         'labs-plugins.label': 'Labs',
@@ -63,6 +63,7 @@ export const translations = [
         'failure-reason-error.label': 'error',
         'dependencies.label': 'Requires',
         'dependents.label': 'Required by',
+        'spec.label': 'Specification',
         'disable-dependents-dialog.title': 'Disable dependent plugins?',
         'disable-dependents-dialog.description':
           'Disabling {{plugin}} will also disable the following plugins that depend on it:',

@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.explorer',
   name: 'Explorer',
+  author: 'DXOS',
   description: trim`
     Interactive hypergraph visualization that reveals relationships between objects in your workspace.
     Navigate complex data structures and discover connections through a dynamic network view.

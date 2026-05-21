@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// TODO(wittjosiah): Refactor to use a dfx-style Effect-native client.
+
 import * as HttpClient from '@effect/platform/HttpClient';
 import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Effect from 'effect/Effect';

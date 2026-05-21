@@ -100,7 +100,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     firesBeforeActivation: [AssistantEvents.SetupAiServiceProviders],
     // TODO(dmaretskyi): This should activate lazily when the AI chat is used.
-    activatesOn: ActivationEvents.Startup,
+    activatesOn: ActivationEvents.SetupProcessManager,
     activate: AiService,
   }),
   Plugin.addModule({

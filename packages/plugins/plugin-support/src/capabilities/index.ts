@@ -17,4 +17,3 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
 export const ReactRoot = Capability.lazy('ReactRoot', () => import('./react-root'));
 export const ReactSurface = Capability.lazy('ReactSurface', () => import('./react-surface'));
 export const SupportSettings = Capability.lazy('SupportSettings', () => import('./settings'));
-export const WelcomeProvisioner = Capability.lazy('WelcomeProvisioner', () => import('./welcome-provisioner'));

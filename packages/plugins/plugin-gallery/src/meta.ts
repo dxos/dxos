@@ -8,11 +8,15 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.gallery',
   name: 'Gallery',
+  author: 'DXOS',
   description: trim`
-    A simple image gallery. Drop in images from your filesystem (uploaded to WNFS) or external URLs;
-    browse them in a masonry grid and present in fullscreen.
+    A simple image gallery. Drop in images and browse them in a masonry grid;
+    present in fullscreen.
   `,
   icon: 'ph--images--regular',
   iconHue: 'rose',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-gallery',
+  version: '0.8.3',
+  spec: 'https://unpkg.com/@dxos/plugin-gallery@0.8.3/PLUGIN.mdl',
+  tags: ['labs'],
 };

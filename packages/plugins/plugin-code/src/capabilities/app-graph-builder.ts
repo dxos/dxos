@@ -39,7 +39,7 @@ export default Capability.makeModule(
               icon: 'ph--code--regular',
               iconHue: 'indigo',
               space,
-              position: 'hoist',
+              position: 'first',
             }),
           ]);
         },

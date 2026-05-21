@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.table',
   name: 'Tables',
+  author: 'DXOS',
   description: trim`
     Powerful relational database tables with custom columns, sorting, and filtering capabilities.
     Build structured data models with relationships between tables and export to multiple formats.

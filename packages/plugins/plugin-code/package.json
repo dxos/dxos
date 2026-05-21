@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-code",
   "version": "0.1.0",
-  "private": true,
   "description": "Composer plugin for AI-assisted plugin development",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -124,5 +123,8 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
