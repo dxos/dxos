@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { createFeedServiceLayer, type Space } from '@dxos/client/echo';
-import { Feed, Filter, Obj } from '@dxos/echo';
+import { Feed as EchoFeed, Filter, Obj, Ref } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 
 import { type Magazine, Subscription } from '../types';
@@ -15,11 +15,12 @@ import { type Magazine, Subscription } from '../types';
  * {@link Subscription.Post}. Posts live in their Subscription's queue and are
  * immutable; their state lives on:
  *
- * - {@link Subscription.Subscription.postState} — per-Post user state (read/
- *   archived/starred/content), shared across every magazine that references
- *   the Post.
- * - {@link Magazine.Magazine.postState} — per-Post curation cache (snippet/
- *   imageUrl/rank), magazine-scoped.
+ * - {@link Subscription.Subscription.postState} — per-Post user state shared
+ *   across every magazine that references the Post (imageUrl, readAt,
+ *   archived, starred, starredAt). Fetched bodies live in the parallel
+ *   `Subscription.contentFeed` queue, not in this side map.
+ * - {@link Magazine.Magazine.postState} — per-Post curation cache (snippet,
+ *   rank), magazine-scoped.
  */
 
 export type SubscriptionPostState = NonNullable<Subscription.Subscription['postState']>[string];
@@ -82,21 +83,24 @@ export const getPostSubscription = (post: Subscription.Post): Subscription.Subsc
 
 /**
  * Loads every {@link Subscription.PostContent} entry from a Subscription's
- * `contentFeed` queue. Returns a map keyed by Post id so callers can look up
- * by the bare Post id rather than scanning the array. Returns an empty map
- * when no contentFeed exists or it has no entries.
+ * `contentFeed` queue. Returns a map keyed by Post id; the queue is iterated
+ * in append order so the last writer wins (refresh after refresh overrides
+ * the earlier extraction).
  *
- * Pass `space` so the feed service can be provided to the Effect runtime.
+ * Returns an empty map when no contentFeed exists yet — legacy Subscriptions
+ * created before `contentFeed` was added to the schema still work; callers
+ * just see "no fetched content" until the next write triggers lazy upgrade
+ * via {@link appendPostContent}.
  */
 export const loadContentEntries = async (
   space: Space,
   subscription: Subscription.Subscription,
 ): Promise<Map<string, Subscription.PostContent>> => {
   const echoFeed = subscription.contentFeed?.target;
-  if (!echoFeed || !Feed.getQueueDxn(echoFeed)) {
+  if (!echoFeed || !EchoFeed.getQueueDxn(echoFeed)) {
     return new Map();
   }
-  const items = await Feed.runQuery(echoFeed, Filter.type(Subscription.PostContent)).pipe(
+  const items = await EchoFeed.runQuery(echoFeed, Filter.type(Subscription.PostContent)).pipe(
     Effect.provide(createFeedServiceLayer(space.queues)),
     runAndForwardErrors,
   );
@@ -108,7 +112,8 @@ export const loadContentEntries = async (
 };
 
 /**
- * Looks up a single {@link Subscription.PostContent} entry by Post id.
+ * Looks up a single {@link Subscription.PostContent} entry by Post id, picking
+ * the newest entry (last appended) when multiple exist for the same id.
  * Returns undefined when no entry has been appended yet.
  */
 export const findPostContent = async (
@@ -121,25 +126,43 @@ export const findPostContent = async (
 };
 
 /**
+ * Returns the Subscription's `contentFeed`, lazily creating and attaching one
+ * when missing. Subscriptions created before `contentFeed` was added to the
+ * schema (or constructed without `makeSubscription`) don't have one yet — the
+ * first write upgrades them in place.
+ */
+const ensureContentFeed = (subscription: Subscription.Subscription): EchoFeed.Feed => {
+  const existing = subscription.contentFeed?.target;
+  if (existing) {
+    return existing;
+  }
+  const created = EchoFeed.make();
+  Obj.update(subscription, (subscription) => {
+    const mutable = subscription as Obj.Mutable<typeof subscription>;
+    mutable.contentFeed = Ref.make(created);
+  });
+  Obj.setParent(created, subscription);
+  return created;
+};
+
+/**
  * Appends a new {@link Subscription.PostContent} entry to a Subscription's
- * `contentFeed`. Caller is responsible for idempotency — call
- * {@link findPostContent} first if you only want to write once per Post.
+ * `contentFeed`, lazily creating the feed on first use. Caller is responsible
+ * for idempotency — call {@link findPostContent} first if you only want to
+ * write once per Post.
  */
 export const appendPostContent = async (
   space: Space,
   subscription: Subscription.Subscription,
   entry: { postId: string; text: string; fetchedAt?: string },
 ): Promise<void> => {
-  const echoFeed = subscription.contentFeed?.target;
-  if (!echoFeed) {
-    throw new Error('Subscription has no contentFeed');
-  }
+  const echoFeed = ensureContentFeed(subscription);
   const content = Obj.make(Subscription.PostContent, {
     postId: entry.postId,
     text: entry.text,
     fetchedAt: entry.fetchedAt ?? new Date().toISOString(),
   });
-  await Feed.append(echoFeed, [content]).pipe(
+  await EchoFeed.append(echoFeed, [content]).pipe(
     Effect.provide(createFeedServiceLayer(space.queues)),
     runAndForwardErrors,
   );

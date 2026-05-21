@@ -370,7 +370,10 @@ const useMagazinePosts = (subject: Magazine.Magazine, sort: MagazineSort, view: 
         visible = resolved.filter((post) => stateFor(post).archived);
         break;
       case 'starred':
-        visible = resolved.filter((post) => !stateFor(post).archived && stateFor(post).starred);
+        visible = resolved.filter((post) => {
+          const state = stateFor(post);
+          return !state.archived && state.starred;
+        });
         break;
       default:
         visible = resolved.filter((post) => !stateFor(post).archived);

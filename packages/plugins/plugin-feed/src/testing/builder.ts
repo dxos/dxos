@@ -9,8 +9,6 @@ import { random } from '@dxos/random';
 
 import { Magazine, Subscription } from '#types';
 
-import { makeSnippet, stripHtml } from '../util/extract';
-
 /** Generates an array of random posts. */
 export const generatePosts = (count: number): Subscription.Post[] => {
   const now = new Date();
@@ -50,8 +48,9 @@ export const generateFeed = (
  */
 export const generateCuratedPost = (_props: { imageUrl?: string; read?: boolean } = {}): Subscription.Post => {
   const description = random.lorem.paragraph(random.number.int({ min: 2, max: 4 }));
-  // Recompute the snippet on read; not stored on the Post.
-  void makeSnippet(stripHtml(description));
+  // TODO: seed Magazine.postState / Subscription.postState here once the
+  // builder has access to them; for now Posts are bare feed entries and
+  // tile snippets are recomputed on render from `description`.
   return Subscription.makePost({
     title: random.lorem.sentence(random.number.int({ min: 4, max: 10 })),
     link: random.internet.url(),

@@ -53,7 +53,10 @@ export const usePostContent = (
           return;
         }
         const apply = () => {
-          const match = queryResult.results.find((entry) => entry.postId === postId);
+          // Feed.runQuery returns entries in append order. If the user hits
+          // Refresh, a newer PostContent gets appended for the same postId —
+          // we want the latest one, not the first.
+          const match = queryResult.results.findLast((entry) => entry.postId === postId);
           setText(match?.text);
         };
         // `fire: true` makes the subscription fire immediately with the
