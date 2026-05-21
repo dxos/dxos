@@ -74,7 +74,13 @@ export const usePluginActions = ({
   const handleOpenSpec = useCallback(() => {
     void invokePromise(LayoutOperation.Open, { subject: [specPath] });
   }, [invokePromise, specPath]);
-  log.info('plugin-spec: gate', { pluginId, specPath, hasSpecNode });
+  log.info('plugin-spec: gate', {
+    pluginId,
+    specPath,
+    hasSpecNode,
+    enabled: manager.getEnabled(),
+    codeEnabled: manager.getEnabled().includes('org.dxos.plugin.code'),
+  });
 
   const handleEnableChange = useCallback(
     (enabled: boolean) => {

@@ -4,6 +4,7 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
+import { log } from '@dxos/log';
 
 import {
   AppGraphBuilder,
@@ -16,6 +17,8 @@ import {
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { CodeProject, SourceFile, Spec } from '#types';
+
+log.info('plugin-spec: CodePlugin module loaded');
 
 export const CodePlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
