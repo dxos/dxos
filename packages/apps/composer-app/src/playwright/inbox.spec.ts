@@ -13,7 +13,6 @@ if (process.env.DX_PWA !== 'false') {
   process.exit(1);
 }
 
-const INBOX_PLUGIN_ID = 'org.dxos.plugin.inbox';
 const GOOGLE_TEST_EMAIL = 'test@braneframe.com';
 
 test.describe('Inbox plugin', () => {
@@ -22,8 +21,6 @@ test.describe('Inbox plugin', () => {
   test.beforeEach(async ({ browser }) => {
     host = new AppManager(browser, false);
     await host.init();
-    await host.openPluginRegistry();
-    await host.enablePlugin(INBOX_PLUGIN_ID);
   });
 
   test.afterEach(async () => {
@@ -73,14 +70,20 @@ test.describe('Inbox plugin', () => {
     if (await chooseAccount.isVisible({ timeout: 3_000 }).catch(() => false)) {
       await chooseAccount.click();
     } else {
-      // Email step.
+      // Email step — Google uses different button IDs across versions; target by role.
       await popup.fill('input[type="email"]', GOOGLE_TEST_EMAIL);
-      await popup.click('#identifierNext');
+      await popup.getByRole('button', { name: 'Next' }).click();
       await popup.waitForSelector('input[type="password"]', { state: 'visible', timeout: 10_000 });
 
-      // Password step.
-      await popup.fill('input[type="password"]', process.env.GOOGLE_TEST_USER_PASSWORD!);
-      await popup.click('#passwordNext');
+      // Password step — type character-by-character to trigger Google's change
+      // listeners (fill() sets the value directly and may bypass React event handlers).
+      const passwordInput = popup.locator('input[type="password"]');
+      await passwordInput.click();
+      await passwordInput.type(process.env.GOOGLE_TEST_USER_PASSWORD!, { delay: 50 });
+      await Promise.all([
+        popup.waitForURL((url) => !url.href.includes('/challenge/pwd'), { timeout: 15_000 }),
+        passwordInput.press('Enter'),
+      ]);
     }
 
     // Grant access on the OAuth consent screen if it appears.
@@ -90,7 +93,7 @@ test.describe('Inbox plugin', () => {
     }
 
     // Popup closes once Edge has received the token and posted back to the opener.
-    await popup.waitForEvent('close', { timeout: 30_000 });
+    await popup.waitForEvent('close', { timeout: 60_000 });
 
     // After the popup closes the coordinator persists the AccessToken and
     // Integration objects and links the Mailbox as a sync target. Click back on
