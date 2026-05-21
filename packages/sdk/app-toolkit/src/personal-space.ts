@@ -8,11 +8,17 @@ import { Obj } from '@dxos/echo';
 /** Space tag for the personal space. */
 export const PERSONAL_SPACE_TAG = 'org.dxos.space.personal';
 
+/** Space tag for the bundled exemplar/sample space. */
+export const EXEMPLAR_SPACE_TAG = 'org.dxos.space.exemplar';
+
 // TODO(wittjosiah): Remove once all profiles have tagged personal spaces (tags cannot be added retroactively).
 const DEFAULT_SPACE_KEY = '__DEFAULT__';
 
 /** Check if a space has a specific tag. */
 export const hasTag = (space: Pick<Space, 'tags'>, tag: string): boolean => space.tags.includes(tag);
+
+/** Check if a space is the exemplar/sample space. */
+export const isExemplarSpace = (space: Pick<Space, 'tags'>): boolean => hasTag(space, EXEMPLAR_SPACE_TAG);
 
 /** Check if a space is the personal space. */
 export const isPersonalSpace = (space: Pick<Space, 'tags' | 'properties'>): boolean => {

@@ -585,6 +585,9 @@ export class CoreDatabase {
       if (Ref.isRef(value)) {
         return { '/': value.dxn.toString() };
       }
+      if (value instanceof Uint8Array) {
+        return value;
+      }
       return recurse(value);
     });
     delete mappedData.id;
@@ -592,7 +595,9 @@ export class CoreDatabase {
     invariant(mappedData['@meta'] === undefined);
 
     // deepMapValues is used to clone the automerge doc to avoid "Cannot create a reference to an existing document object" error.
-    const existingStruct: ObjectStructure = deepMapValues(core.getDecoded([]), (value, recurse) => recurse(value));
+    const existingStruct: ObjectStructure = deepMapValues(core.getDecoded([]), (value, recurse) =>
+      value instanceof Uint8Array ? value : recurse(value),
+    );
     const newStruct: ObjectStructure = {
       ...existingStruct,
       data: mappedData,

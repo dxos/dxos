@@ -610,7 +610,7 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-files/package.json",
+          "path": "packages/plugins/plugin-file/package.json",
           "jsonpath": "$.version"
         },
         {
