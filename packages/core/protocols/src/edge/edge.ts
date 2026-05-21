@@ -318,9 +318,12 @@ export enum OAuthProvider {
   ATPROTO = 'atproto',
   /** @deprecated Use ATPROTO instead. */
   BLUESKY = 'bluesky',
+  DISCORD = 'discord',
   GITHUB = 'github',
   GOOGLE = 'google',
+  JIRA = 'jira',
   LINEAR = 'linear',
+  NOTION = 'notion',
   SLACK = 'slack',
   TRELLO = 'trello',
 }
