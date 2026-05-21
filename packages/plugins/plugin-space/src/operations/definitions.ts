@@ -455,6 +455,23 @@ export namespace SpaceOperation {
   });
 
   /**
+   * Permanently reset a space — deletes ALL objects and truncates feeds via a new epoch.
+   * This is unrecoverable.
+   */
+  export const Reset = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}.reset`,
+      name: 'Reset Space',
+      description: 'Permanently delete all objects and feeds in a space.',
+    },
+    services: [Capability.Service],
+    input: Schema.Struct({
+      space: SpaceSchema,
+    }),
+    output: Schema.Void,
+  });
+
+  /**
    * Restore deleted objects to a space (inverse of RemoveObjects).
    */
   export const RestoreObjects = Operation.make({

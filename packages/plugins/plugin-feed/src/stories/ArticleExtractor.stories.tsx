@@ -145,9 +145,12 @@ const ResultView = composable<HTMLDivElement, ResultViewProps>(
           title: article.title,
           author: article.author,
           published: article.published,
-          description: article.description,
-          imageUrl: article.image,
-          content: article.markdown,
+          // The story renders the extracted body via `description`; the new
+          // Post schema no longer carries `content`/`imageUrl` — those live
+          // on Subscription.postState now. The storybook flow is a
+          // standalone preview (no Subscription), so we just feed the body
+          // through `description`.
+          description: article.markdown,
         }),
       [article],
     );
@@ -164,7 +167,7 @@ const ResultView = composable<HTMLDivElement, ResultViewProps>(
         <ScrollArea.Root {...props} orientation='vertical' thin ref={forwardedRef}>
           <ScrollArea.Viewport>
             <SyntaxHighlighter language='markdown' classNames='m-4'>
-              {post.content}
+              {article.markdown}
             </SyntaxHighlighter>
           </ScrollArea.Viewport>
         </ScrollArea.Root>

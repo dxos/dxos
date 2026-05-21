@@ -8,6 +8,7 @@ import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 
 import { FeedOperation } from '../types';
+import { updateMagazinePostState, updateSubscriptionPostState } from '../util';
 
 const handler: Operation.WithHandler<typeof FeedOperation.AddPostToMagazine> = FeedOperation.AddPostToMagazine.pipe(
   Operation.withHandler(
@@ -16,14 +17,16 @@ const handler: Operation.WithHandler<typeof FeedOperation.AddPostToMagazine> = F
       const post = yield* Database.load(postRef);
 
       const postDXN = Obj.getDXN(post).toString();
+      const postId = (post as { id: string }).id;
+      const subscription = post.source?.target;
 
-      Obj.update(post, (post) => {
-        const mutable = post as Obj.Mutable<typeof post>;
-        mutable.snippet = snippet;
-        if (imageUrl !== undefined) {
-          mutable.imageUrl = imageUrl;
-        }
-      });
+      // snippet is a magazine-scoped curation artifact; imageUrl is a
+      // per-Post hero used across magazines and lives on the Subscription
+      // side map.
+      updateMagazinePostState(magazine, postId, { snippet });
+      if (imageUrl !== undefined && subscription) {
+        updateSubscriptionPostState(subscription, postId, { imageUrl });
+      }
 
       Obj.update(magazine, (magazine) => {
         const mutable = magazine as Obj.Mutable<typeof magazine>;

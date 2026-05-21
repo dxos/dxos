@@ -774,6 +774,19 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    */
   createRef(target: ProxyTarget, proxy: any): DXN {
     let otherEchoObj = proxy instanceof EchoSchema ? proxy.persistentSchema : proxy;
+
+    // Honour a Queue DXN carried by the source. Queue-decoded objects (returned by
+    // `Feed.runQuery` / `queue.queryObjects`) have a Queue-kind `SelfDXNId` and do
+    // not live in `space.db`. Without this short-circuit, the path below would wrap
+    // the queue object as a fresh ECHO proxy and call `database.add()`, leaking the
+    // object into `space.db`.
+    if (typeof otherEchoObj === 'object' && otherEchoObj !== null) {
+      const selfDxn = (otherEchoObj as any)[SelfDXNId];
+      if (selfDxn instanceof DXN && selfDxn.kind === DXN.kind.QUEUE) {
+        return selfDxn;
+      }
+    }
+
     otherEchoObj = !isEchoObject(otherEchoObj) ? createObject(otherEchoObj) : otherEchoObj;
     const otherObjId = otherEchoObj.id;
     invariant(typeof otherObjId === 'string' && otherObjId.length > 0);
