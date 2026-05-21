@@ -487,9 +487,6 @@ export class DataSpace {
   private _onNewAutomergeRoot(rootUrl: string): void {
     log('loading automerge root doc for space', { space: this.key, rootUrl });
 
-    // Attribute the root doc to this space synchronously so classical-sync share-policy resolution can find the space key while `loadDoc` is still in flight (otherwise it denies and `loadDoc` deadlocks).
-    this._echoHost.recordSpaceRoot(this.id, rootUrl as AutomergeUrl);
-
     let handle: DocHandle<DatabaseDirectory> | null = null;
 
     // TODO(dmaretskyi): Make this single-threaded (but doc loading should still be parallel to not block epoch processing).

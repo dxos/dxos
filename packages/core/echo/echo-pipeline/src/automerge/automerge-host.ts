@@ -16,6 +16,7 @@ import {
   type DocHandle,
   type DocHandleChangePayload,
   type DocumentId,
+  type DocumentProgress,
   type DocumentQuery,
   type PeerCandidatePayload,
   type PeerDisconnectedPayload,
@@ -487,7 +488,7 @@ export class AutomergeHost extends Resource {
   }
 
   /** Resolve on `'ready'`, reject on `'failed'`, treat `'unavailable'` as transient; caller bounds via `opts.timeout` / `ctx`. */
-  private _waitForReady<T>(progress: DocumentQuery<T>): Promise<DocHandle<T>> {
+  private _waitForReady<T>(progress: DocumentProgress<T>): Promise<DocHandle<T>> {
     const peeked = progress.peek();
     if (peeked.state === 'ready') {
       return Promise.resolve(peeked.handle);
