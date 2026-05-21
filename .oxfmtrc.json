@@ -41,7 +41,7 @@
     "packages/ui/solid-ui-geo/data/**",
     "templates/**",
     "tmp",
-    "packages/apps/composer-app/src/plugins/welcome/content/exemplar-space.dx.json"
+    "*.dx.json"
   ],
   "overrides": [
     {
