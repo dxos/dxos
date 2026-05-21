@@ -42,6 +42,28 @@ export const Magazine = Schema.Struct({
   ),
   /** Curated Post refs (insertion order; UI displays newest-last reversed). */
   posts: Schema.Array(Ref.Ref(Subscription.Post)).pipe(FormInputAnnotation.set(false)),
+  /**
+   * Per-Post magazine-scoped curation cache, keyed by Post id. The Post itself
+   * lives in a Subscription's queue and is immutable; this side map carries the
+   * magazine-specific curation outputs so the feed item is never mutated or
+   * copied into space.db.
+   *
+   * - `snippet`: agent/curation-extracted summary; different magazines (with
+   *   different prompts / instructions) may produce different snippets for the
+   *   same Post.
+   * - `rank`: agent-assigned relevance within this magazine; intrinsically
+   *   magazine-scoped.
+   *
+   * Per-Post state shared across magazines (readAt, archived, starred,
+   * content, imageUrl) lives on `Subscription.postState` keyed by Post id.
+   */
+  postState: Schema.Record({
+    key: Schema.String,
+    value: Schema.Struct({
+      snippet: Schema.optional(Schema.String),
+      rank: Schema.optional(Schema.Number),
+    }),
+  }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.magazine',

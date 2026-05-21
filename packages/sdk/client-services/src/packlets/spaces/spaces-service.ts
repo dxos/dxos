@@ -334,7 +334,7 @@ export class SpacesServiceImpl implements SpacesService {
     const format = request.archive.format ?? detectSpaceArchiveFormat(request.archive);
     if (format === SpaceArchive.Format.JSON) {
       const serialized = readSerializedSpaceArchive(request.archive);
-      const space = await dataSpaceManager.createSpace(ctx);
+      const space = await dataSpaceManager.createSpace(ctx, { tags: request.tags });
       await this._hydrateSpaceFromSerialized(space, serialized);
       await this._updateMetrics();
       return { newSpaceId: space.id };
@@ -345,6 +345,7 @@ export class SpacesServiceImpl implements SpacesService {
     const space = await dataSpaceManager.createSpace(ctx, {
       documents: extracted.documents,
       rootUrl: extracted.metadata.echo?.currentRootUrl as AutomergeUrl,
+      tags: request.tags,
     });
     await this._updateMetrics();
     return { newSpaceId: space.id };

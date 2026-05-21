@@ -5,7 +5,7 @@
 import * as Predicate from 'effect/Predicate';
 import React, { Fragment, useMemo } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { useSchemaFilter, type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery, useSchema } from '@dxos/react-client/echo';
 import { Panel as DxPanel, Flex, type FlexProps, useControlledState } from '@dxos/react-ui';
@@ -32,10 +32,11 @@ export const MapArticle = ({ role, subject: object, type: typeProp = 'map', ...p
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const tag = view?.query ? getTagFromQuery(view.query.ast) : undefined;
   const schema = useSchema(db, typename);
-  const query = useMemo(() => {
-    const baseFilter = schema ? Filter.type(schema) : Filter.nothing();
-    return tag ? Query.select(baseFilter).select(Filter.tag(tag)) : Query.select(baseFilter);
-  }, [schema, tag]);
+  const baseFilter = useSchemaFilter(schema);
+  const query = useMemo(
+    () => (tag ? Query.select(baseFilter).select(Filter.tag(tag)) : Query.select(baseFilter)),
+    [baseFilter, tag],
+  );
   const objects = useQuery(db, query);
 
   const markers = objects

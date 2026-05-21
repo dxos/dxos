@@ -21,7 +21,7 @@ import { HasRelationship, Organization, Person, Pipeline } from '@dxos/types';
 import { useGraphModel } from '#hooks';
 import { Graph } from '#types';
 
-import { generate } from '../Tree/testing';
+import { generate } from '../../testing';
 import { CanvasForceGraph } from './CanvasForceGraph';
 
 const generator = random as any as ValueGenerator;
