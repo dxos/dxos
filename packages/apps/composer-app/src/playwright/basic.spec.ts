@@ -30,8 +30,9 @@ test.describe('Basic tests', () => {
 
   test('create identity, space is created by default', async () => {
     await expect(host.page.getByTestId('spacePlugin.space')).toHaveCount(1);
+    // Personal space opens with the Welcome article by default (virtual node, not a markdown document).
     const plank = host.deck.plank();
-    await expect(Markdown.getMarkdownTextboxWithLocator(plank.locator).first()).toHaveText(/.+/);
+    await expect(plank.locator.getByRole('heading', { name: 'Welcome to Composer' })).toBeVisible();
   });
 
   test('create space, which is displayed in tree', async () => {
