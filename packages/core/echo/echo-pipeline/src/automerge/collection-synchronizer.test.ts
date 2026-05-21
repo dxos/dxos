@@ -9,7 +9,14 @@ import { describe, onTestFinished, test } from 'vitest';
 import { sleep } from '@dxos/async';
 import { range } from '@dxos/util';
 
-import { type CollectionState, CollectionSynchronizer, diffCollectionState } from './collection-synchronizer';
+import {
+  type CollectionState,
+  CollectionSynchronizer,
+  diffCollectionState,
+  diffCollectionStateForPeer,
+  subsetRemoteToLocal,
+  withoutEmptyHeads,
+} from './collection-synchronizer';
 
 describe('CollectionSynchronizer', () => {
   test('sync two peers', async ({ expect }) => {
@@ -56,8 +63,8 @@ describe('CollectionSynchronizer', () => {
     peer2.onConnectionOpen(peerId1);
 
     const updated = Promise.all([
-      peer1.remoteStateUpdated.waitFor((ev) => ev.collectionId === collectionId && ev.peerId === peerId2),
-      peer2.remoteStateUpdated.waitFor((ev) => ev.collectionId === collectionId && ev.peerId === peerId1),
+      peer1.peerCollectionStateUpdated.waitFor((ev) => ev.collectionId === collectionId && ev.peerId === peerId2),
+      peer2.peerCollectionStateUpdated.waitFor((ev) => ev.collectionId === collectionId && ev.peerId === peerId1),
     ]);
 
     peer1.setLocalCollectionState(collectionId, STATE_1);
@@ -99,7 +106,12 @@ describe('CollectionSynchronizer', () => {
     await sleep(10);
 
     expect(sentStates.map((m) => m.peerId).sort()).to.deep.equal([peerId1, peerId2].sort());
-    expect(sentStates.every((m) => m.state === STATE_1)).to.equal(true);
+    // `_broadcastLocalState` wraps in `withoutEmptyHeads`, so compare against the
+    // wire form (deep-equal — not strict-equal — because the wrapper allocates).
+    const expectedWire = withoutEmptyHeads(STATE_1);
+    for (const sent of sentStates) {
+      expect(sent.state).to.deep.equal(expectedWire);
+    }
   });
 
   test('does not send to a peer after onConnectionClosed', async ({ expect }) => {
@@ -155,6 +167,104 @@ describe('CollectionSynchronizer', () => {
       missingOnRemote: ['c'],
       different: ['b'],
     });
+  });
+
+  test('edge peer diff intersects remote with local key set', ({ expect }) => {
+    // Edge ships every sedimentree it knows about (orphans + stale roots).
+    // The client-side diff must hide those from `missingOnLocal` and only
+    // surface docs that exist on the client's authoritative key set.
+    const local: CollectionState = {
+      documents: {
+        root: TEST_HEADS[0],
+        a: TEST_HEADS[1],
+      } as Record<DocumentId, A.Heads>,
+    };
+    const remoteEdge: CollectionState = {
+      documents: {
+        root: TEST_HEADS[0],
+        a: TEST_HEADS[1],
+        stale1: TEST_HEADS[2],
+        stale2: TEST_HEADS[3],
+      } as Record<DocumentId, A.Heads>,
+    };
+
+    const meshDiff = diffCollectionStateForPeer(local, remoteEdge, { isEdgePeer: false });
+    expect(meshDiff.missingOnLocal.sort()).to.deep.equal(['stale1', 'stale2']);
+
+    const edgeDiff = diffCollectionStateForPeer(local, remoteEdge, { isEdgePeer: true });
+    expect(edgeDiff).to.deep.equal({
+      missingOnLocal: [],
+      missingOnRemote: [],
+      different: [],
+    });
+
+    expect(Object.keys(subsetRemoteToLocal(local, remoteEdge).documents).sort()).to.deep.equal(['a', 'root']);
+  });
+
+  test('edge peer diff still surfaces missingOnRemote and different', ({ expect }) => {
+    // Subsetting is one-directional: docs the client knows about that the edge
+    // hasn't reported yet must still be flagged so we push them.
+    const local: CollectionState = {
+      documents: {
+        root: TEST_HEADS[0],
+        a: TEST_HEADS[1],
+        b: TEST_HEADS[2],
+      } as Record<DocumentId, A.Heads>,
+    };
+    const remoteEdge: CollectionState = {
+      documents: {
+        root: TEST_HEADS[0],
+        a: TEST_HEADS[3],
+        stale: TEST_HEADS[2],
+      } as Record<DocumentId, A.Heads>,
+    };
+
+    const diff = diffCollectionStateForPeer(local, remoteEdge, { isEdgePeer: true });
+    expect(diff.missingOnRemote).to.deep.equal(['b']);
+    expect(diff.different).to.deep.equal(['a']);
+    expect(diff.missingOnLocal).to.deep.equal([]);
+  });
+
+  test('peerCollectionStateUpdated fires with newDocsAppeared=false for edge peer orphans', async ({ expect }) => {
+    // peerId prefix must satisfy `isEdgePeerId` — anchored on the AUTOMERGE_REPLICATOR
+    // service name from `@dxos/protocols`.
+    const edgePeerId = 'automerge-replicator:edge-space-1:abc' as PeerId;
+    const collectionId = 'collection-test';
+
+    const peer = await new CollectionSynchronizer({
+      queryCollectionState: () => {},
+      sendCollectionState: () => {},
+      shouldSyncCollection: () => true,
+    }).open();
+    onTestFinished(async () => {
+      await peer.close();
+    });
+
+    peer.onConnectionOpen(edgePeerId);
+
+    const local: CollectionState = {
+      documents: {
+        root: TEST_HEADS[0],
+        a: TEST_HEADS[1],
+      } as Record<DocumentId, A.Heads>,
+    };
+    peer.setLocalCollectionState(collectionId, local);
+
+    const eventPromise = peer.peerCollectionStateUpdated.waitFor(
+      (ev) => ev.collectionId === collectionId && ev.peerId === edgePeerId,
+    );
+
+    peer.onRemoteStateReceived(collectionId, edgePeerId, {
+      documents: {
+        root: TEST_HEADS[0],
+        a: TEST_HEADS[1],
+        stale1: TEST_HEADS[2],
+        stale2: TEST_HEADS[3],
+      } as Record<DocumentId, A.Heads>,
+    });
+
+    const event = await eventPromise;
+    expect(event.newDocsAppeared).to.equal(false);
   });
 });
 

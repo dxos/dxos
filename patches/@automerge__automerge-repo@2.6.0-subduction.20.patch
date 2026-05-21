@@ -1,8 +1,8 @@
 diff --git a/dist/Repo.d.ts b/dist/Repo.d.ts
-index 723469fdcab0c10166b3e23885526b8c405f0b4d..6e343f49d9aed25645b702bd6cb33ad5f9bfdb05 100644
+index 43c5a5d9377482c4100062ac605c03ddda63e8cb..173bfe2b09408722bcadbb027323645492163ef0 100644
 --- a/dist/Repo.d.ts
 +++ b/dist/Repo.d.ts
-@@ -271,5 +271,7 @@ export interface RepoEvents {
+@@ -284,5 +284,7 @@ export interface RepoEvents {
      "heal-exhausted": (payload: {
          documentId: DocumentId;
      }) => void;
@@ -12,10 +12,10 @@ index 723469fdcab0c10166b3e23885526b8c405f0b4d..6e343f49d9aed25645b702bd6cb33ad5
  //# sourceMappingURL=Repo.d.ts.map
 \ No newline at end of file
 diff --git a/dist/Repo.js b/dist/Repo.js
-index d6726e6eca4e6d2cfae6a6f7e63a45ef4d8f538c..0ba494d66a1843cf318aad9fcb7d05189f84f8b9 100644
+index 4dd6bcd33a5011d75918e996956bc40ec1257b1c..8f5271596873530231f1ad4a1202147cf2c44832 100644
 --- a/dist/Repo.js
 +++ b/dist/Repo.js
-@@ -124,6 +124,17 @@ export class Repo extends EventEmitter {
+@@ -128,6 +128,17 @@ export class Repo extends EventEmitter {
              onHealExhausted: documentId => {
                  this.emit("heal-exhausted", { documentId });
              },
@@ -32,24 +32,39 @@ index d6726e6eca4e6d2cfae6a6f7e63a45ef4d8f538c..0ba494d66a1843cf318aad9fcb7d0518
 +            },
          });
          this.#subductionSource = subductionSource;
-         this.#sources.push(subductionSource);
+         this.#sources.set("subduction", subductionSource);
 diff --git a/dist/index.d.ts b/dist/index.d.ts
-index 0f5f6da97266bb49384768751676b0c3eefa20ba..e96d5382d18be4128a1deb0b838bdc84917fd18d 100644
+index 0dfec0c01d8de3190b1f202f8cdbdfac7b602929..b9d9fa692f30db6841ef72bb5c20315e4a451f0a 100644
 --- a/dist/index.d.ts
 +++ b/dist/index.d.ts
-@@ -45,8 +45,8 @@ export type { DeleteDocumentPayload, DocumentPayload, RepoConfig, RepoEvents, Sh
- export { DocumentQuery } from "./DocumentQuery.js";
+@@ -42,10 +42,11 @@ import { next as Automerge, type ObjID } from "@automerge/automerge/slim";
+ export * as cbor from "./helpers/cbor.js";
+ export type { DocHandleChangePayload, DocHandleDeletePayload, DocHandleEncodedChangePayload, DocHandleEphemeralMessagePayload, DocHandleRemoteHeadsPayload, DocHandleEvents, DocHandleOptions, DocHandleOutboundEphemeralMessagePayload, HandleState, SyncInfo, } from "./DocHandle.js";
+ export type { DeleteDocumentPayload, DocumentPayload, RepoConfig, RepoEvents, ShareConfig, SharePolicy, } from "./Repo.js";
++export { DocumentQuery } from "./DocumentQuery.js";
  export type { DocumentProgress, QueryState } from "./DocumentQuery.js";
  export type { DocumentSource } from "./DocumentSource.js";
 -export type { Policy as SubductionPolicy } from "@automerge/automerge-subduction/slim";
 -export type { SubductionTimeouts } from "./subduction/source.js";
 +export type { Policy as SubductionPolicy, PeerId as SubductionPeerId } from "@automerge/automerge-subduction/slim";
 +export type { SubductionPeerBinding, OnSubductionPeerBound, SubductionTimeouts } from "./subduction/source.js";
+ export type { FindProgress, FindProgressWithMethods, ProgressSignal, } from "./_compat.js";
  export type { NetworkAdapterEvents, OpenPayload, PeerCandidatePayload, PeerDisconnectedPayload, PeerMetadata, } from "./network/NetworkAdapterInterface.js";
  export type { NetworkSubsystemEvents, PeerPayload, } from "./network/NetworkSubsystem.js";
- export type { DocumentUnavailableMessage, EphemeralMessage, Message, RepoMessage, RequestMessage, SyncMessage, } from "./network/messages.js";
+diff --git a/dist/index.js b/dist/index.js
+index 57d03af437c845d97b5b262ec972c50494672361..8b45520989b4dea9b2d0d5338e99bf9740373ebb 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -26,6 +26,7 @@
+  * ```
+  */
+ export { DocHandle } from "./DocHandle.js";
++export { DocumentQuery } from "./DocumentQuery.js";
+ export { isValidAutomergeUrl, isValidDocumentId, parseAutomergeUrl, stringifyAutomergeUrl, interpretAsDocumentId, documentIdToBinary, generateAutomergeUrl, encodeHeads, decodeHeads, } from "./AutomergeUrl.js";
+ export { Repo } from "./Repo.js";
+ export { initSubduction } from "./initSubduction.js";
 diff --git a/dist/subduction/AdapterConnections.d.ts b/dist/subduction/AdapterConnections.d.ts
-index 1cdd94c3443bd0be41a149059d271bac61d0e3a7..2e6a35b849fee72beb5906048c81608c4459b414 100644
+index 1cdd94c3443bd0be41a149059d271bac61d0e3a7..c9496513751c0582546e8017af51e8a56aa421bd 100644
 --- a/dist/subduction/AdapterConnections.d.ts
 +++ b/dist/subduction/AdapterConnections.d.ts
 @@ -1,10 +1,17 @@
@@ -150,7 +165,7 @@ index 87a75d5b1983df0800519afca8921a410460b2b1..cb979d3c1c03329a0629860ef8f2be98
      }
  }
 diff --git a/dist/subduction/SubductionConnections.d.ts b/dist/subduction/SubductionConnections.d.ts
-index 4bfff03372c0f8faf56bff71a1d488ca48f13a45..86b85fdf3dd18a39d95fa30913f86329b44c1250 100644
+index 4bfff03372c0f8faf56bff71a1d488ca48f13a45..7912b0862c75fa471d6d455f1d7f98309991e18b 100644
 --- a/dist/subduction/SubductionConnections.d.ts
 +++ b/dist/subduction/SubductionConnections.d.ts
 @@ -1,9 +1,13 @@
@@ -261,14 +276,14 @@ index a949ac4a0597102eb01eb3efed606095a4939fcf..ed32c8f869e4754cb7920d8f5f5c45dc
      }
      /**
 diff --git a/dist/subduction/source.d.ts b/dist/subduction/source.d.ts
-index e95a93608115e5eb88ad3831beb3e24189469c6b..4908f2c0becc704de73ce7342e36275549caed81 100644
+index 6a38b9cd2d85fe1c37e8b7bea27c58837a6fb440..b1a0d40657a1efc829d9fe57491cbfc941f41de0 100644
 --- a/dist/subduction/source.d.ts
 +++ b/dist/subduction/source.d.ts
 @@ -1,4 +1,4 @@
--import { SedimentreeId, type Policy } from "@automerge/automerge-subduction/slim";
-+import { PeerId as SubductionPeerId, SedimentreeId, type Policy } from "@automerge/automerge-subduction/slim";
+-import { SedimentreeId, Subduction, type Policy } from "@automerge/automerge-subduction/slim";
++import { PeerId as SubductionPeerId, SedimentreeId, Subduction, type Policy } from "@automerge/automerge-subduction/slim";
  import { DocumentSource } from "../DocumentSource.js";
- import { DocumentQuery } from "../DocumentQuery.js";
+ import { DocumentQuery, SourcePriority } from "../DocumentQuery.js";
  import { DocumentId, PeerId } from "../types.js";
 @@ -13,6 +13,28 @@ export type OnRemoteHeadsChanged = (documentId: DocumentId, storageId: StorageId
  export type OnEphemeral = (sedimentreeId: SedimentreeId, senderId: {
@@ -299,36 +314,37 @@ index e95a93608115e5eb88ad3831beb3e24189469c6b..4908f2c0becc704de73ce7342e362755
  /**
   * Tunable timeouts for Subduction's sync and heal-retry behaviour.
   *
-@@ -63,13 +85,14 @@ export interface SubductionSourceOptions {
+@@ -63,6 +85,7 @@ export interface SubductionSourceOptions {
      onRemoteHeadsChanged?: OnRemoteHeadsChanged;
      onEphemeral?: OnEphemeral;
      onHealExhausted?: (documentId: DocumentId) => void;
 +    onPeerBound?: OnSubductionPeerBound;
      policy?: Policy;
-     /** Tunable timeouts for sync and heal-retry. See {@link SubductionTimeouts}. */
-     timeouts?: SubductionTimeouts;
- }
+     /**
+      * What priority this source should have w.r.t to other sources
+@@ -74,7 +97,7 @@ export interface SubductionSourceOptions {
  export declare class SubductionSource implements DocumentSource {
      #private;
--    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, policy, timeouts, }: SubductionSourceOptions);
-+    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, onPeerBound, policy, timeouts, }: SubductionSourceOptions);
+     readonly priority: SourcePriority;
+-    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, priority, policy, timeouts, }: SubductionSourceOptions);
++    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, onPeerBound, priority, policy, timeouts, }: SubductionSourceOptions);
+     getSubduction(): Promise<Subduction>;
      attach(query: DocumentQuery<unknown>): void;
      detach(documentId: DocumentId): void;
-     shareConfigChanged(): void;
 diff --git a/dist/subduction/source.js b/dist/subduction/source.js
-index cc2d6af8848629f48631b3c5cd3b48054e3d27e9..d871aa456ff379bba7b5a27ee1ed5ad1e75e7b8e 100644
+index a9246970a30bf4efbbfb96696368de10ad7c5489..4005d44b772d0fd45ee62b80c9fac7d49a964b50 100644
 --- a/dist/subduction/source.js
 +++ b/dist/subduction/source.js
-@@ -38,7 +38,7 @@ export class SubductionSource {
-     #scheduler;
+@@ -39,7 +39,7 @@ export class SubductionSource {
      #syncTimeoutMs;
      #syncTimeout;
--    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, policy, timeouts, }) {
-+    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, onPeerBound, policy, timeouts, }) {
+     priority;
+-    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, priority = 2, policy, timeouts, }) {
++    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, onPeerBound, priority = 2, policy, timeouts, }) {
+         this.priority = priority;
          this.#syncTimeoutMs = timeouts?.syncMs ?? DEFAULT_SYNC_TIMEOUT_MS;
          // Validate + coerce once at construction so the wasm boundary
-         // never sees a non-integer / NaN / negative bigint conversion.
-@@ -93,12 +93,23 @@ export class SubductionSource {
+@@ -99,12 +99,23 @@ export class SubductionSource {
              onRemoteHeads, onEphemeral));
          }
          // ── Connection managers ─────────────────────────────────────────
@@ -354,16 +370,7 @@ index cc2d6af8848629f48631b3c5cd3b48054e3d27e9..d871aa456ff379bba7b5a27ee1ed5ad1
          for (const { adapter, serviceName, role } of adapters) {
              adapterConnections.addAdapter(adapter, serviceName, role ?? "connect");
          }
-@@ -267,7 +278,7 @@ export class SubductionSource {
-                         entry.syncInFlight = true;
-                         void this.#doSync(entry);
-                     }
--                    else if (entry.handle.heads().length === 0 &&
-+                    else if (false &&
-                         !this.#anyConnectionManagerConnecting()) {
-                         // All connections settled and sync failed — give up.
-                         this.#log("marking as unavailable");
-@@ -707,11 +718,28 @@ export class SubductionSource {
+@@ -716,11 +727,28 @@ export class SubductionSource {
          for (const entry of this.#entries.values()) {
              entry.flushSave.flush();
          }
@@ -397,7 +404,7 @@ index cc2d6af8848629f48631b3c5cd3b48054e3d27e9..d871aa456ff379bba7b5a27ee1ed5ad1
          //    If hydration failed, this.#subduction is a rejected promise —
          //    treat that as a no-op (nothing to disconnect).
          let subduction = null;
-@@ -728,6 +756,11 @@ export class SubductionSource {
+@@ -737,6 +765,11 @@ export class SubductionSource {
          catch (e) {
              this.#log("error disconnecting subduction transports: %O", e);
          }

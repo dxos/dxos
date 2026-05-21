@@ -1,11 +1,12 @@
 //
-// Copyright 2021 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
 import { describe, onTestFinished, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
 import { performInvitation } from '@dxos/client-services/testing';
+import { Config } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
@@ -15,7 +16,17 @@ import { MembershipPolicy } from '@dxos/protocols/proto/dxos/halo/credentials';
 import { type Client } from '../client';
 import { createInitializedClientsWithContext, testSpaceAutomerge, waitForSpace } from '../testing';
 
-describe('Spaces/invitations', () => {
+// Mirror of `spaces-invitations.test.ts`, run with `useSubduction: true`. Subduction
+// is the sedimentree-based byte transport (see `.claude/skills/effect/subduction/SKILL.md`)
+// and is wired by setting `runtime.client.edgeFeatures.subductionReplicator`. With no
+// edge connection configured, this exercises Subduction over the in-memory mesh
+// transport — the same path used by client↔client invitations in production once the
+// feature flag is on.
+// File-level timeout: subduction invitation tests do real cryptographic admission
+// + sedimentree byte transport between 2-4 clients. Each completes in ~1-2s on dev
+// machines but consistently brushes against vitest's 5s default under CI worker
+// contention — bump for the whole describe to keep the suite stable.
+describe('Spaces/invitations (subduction)', { timeout: 30_000 }, () => {
   test('creates a space and invites a peer', async ({ expect }) => {
     const [client1, client2] = await createInitializedClients(2);
     await Promise.all([client1, client2].map((c) => c.addTypes([TestSchema.Expando])));
@@ -37,10 +48,7 @@ describe('Spaces/invitations', () => {
     }
   });
 
-  // The delegated tests spin up 3-4 clients and run ~7 sequential invitation/admission
-  // steps. They complete in ~1s on dev machines but each step can balloon under CI worker
-  // contention; the cumulative budget needs real headroom over the 5s default.
-  describe('delegated', { timeout: 30_000 }, () => {
+  describe('delegated', () => {
     test('single-use', async ({ expect }) => {
       const clients = await createInitializedClients(3);
       const [alice, bob, fred] = clients;
@@ -167,6 +175,16 @@ describe('Spaces/invitations', () => {
     onTestFinished(async () => {
       await context.dispose();
     });
-    return createInitializedClientsWithContext(context, count);
+    return createInitializedClientsWithContext(context, count, {
+      config: new Config({
+        runtime: {
+          client: {
+            edgeFeatures: {
+              subductionReplicator: true,
+            },
+          },
+        },
+      }),
+    });
   };
 });
