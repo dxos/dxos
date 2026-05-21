@@ -175,11 +175,14 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
         );
       }
 
+      // Use the Magazine's path (which lives in space.db) — the Post itself is
+      // a queue item and has no graph path. `selectionId: post.id` carries the
+      // post identity through the showItem call regardless.
       void showItem({
         contextId: id,
         selectionId: post.id,
         companion: linkedSegment('post'),
-        path: getObjectPathFromObject(post),
+        path: getObjectPathFromObject(subject),
       });
     },
     [id, showItem, invokePromise],
