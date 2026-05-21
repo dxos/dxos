@@ -129,7 +129,10 @@ export const FeedbackPanel = () => {
         if (!res.ok) {
           throw new Error(`Discord service returned ${res.status}`);
         }
-        const { threadUrl } = (await res.json()) as { threadUrl: string };
+        const { threadUrl } = (await res.json()) as { threadUrl?: string };
+        if (!threadUrl) {
+          throw new Error('Discord service did not return a thread URL');
+        }
         if (popup) {
           popup.location.href = threadUrl;
         } else {
