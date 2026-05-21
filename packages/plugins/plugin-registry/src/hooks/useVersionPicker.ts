@@ -37,28 +37,40 @@ export const useVersionPicker = ({
 
   // Load version list once the catalog entry's repo is known. Reset state
   // when `repo` is absent or the fetch fails so a previous plugin's
-  // versions don't leak into the picker for the current plugin.
+  // versions don't leak into the picker for the current plugin. The
+  // `cancelled` flag guards against a stale in-flight `listVersions`
+  // response overwriting the newer state after `repo`/`pluginId` changes.
   useEffect(() => {
     if (!repo) {
       setVersions([]);
       setSelectedVersionTag(undefined);
       return;
     }
+    let cancelled = false;
     void provider.listVersions(repo).pipe(
       Effect.match({
         onSuccess: (vs) => {
+          if (cancelled) {
+            return;
+          }
           setVersions(vs);
           // Default selection: the currently installed version, or the latest.
           const installedVersion = UrlLoader.getInstalledVersion(pluginId);
           setSelectedVersionTag(installedVersion ?? vs[0]?.tag);
         },
         onFailure: () => {
+          if (cancelled) {
+            return;
+          }
           setVersions([]);
           setSelectedVersionTag(undefined);
         },
       }),
       runAndForwardErrors,
     );
+    return () => {
+      cancelled = true;
+    };
   }, [provider, repo, pluginId]);
 
   // Make sure the picker always lists the installed version, even if the catalog
