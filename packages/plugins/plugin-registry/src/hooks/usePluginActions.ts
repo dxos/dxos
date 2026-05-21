@@ -10,6 +10,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { runAndForwardErrors } from '@dxos/effect';
+import { log } from '@dxos/log';
 import { useNode } from '@dxos/plugin-graph';
 
 import { getPluginSpecPath } from '#meta';
@@ -73,6 +74,7 @@ export const usePluginActions = ({
   const handleOpenSpec = useCallback(() => {
     void invokePromise(LayoutOperation.Open, { subject: [specPath] });
   }, [invokePromise, specPath]);
+  log.info('plugin-spec: gate', { pluginId, specPath, hasSpecNode });
 
   const handleEnableChange = useCallback(
     (enabled: boolean) => {
