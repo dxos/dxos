@@ -37,7 +37,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     const { invokePromise } = useOperationInvoker();
     const settings = useAtomCapability(AssistantCapabilities.Settings);
     const tracePanelDebug = settings.tracePanelDebug ?? false;
-    const { branches, commits, spanTree } = useExecutionGraph(space);
+    const { branches, commits, spanTree, details } = useExecutionGraph(space);
     const monitor = useCapability(Capabilities.ProcessMonitor);
     const processes = useAtomValue(monitor?.processTreeAtom ?? atomEmpty);
 
@@ -116,7 +116,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
         </ScrollContainer.Root>
 
         {!tracePanelDebug && selectedCommit && (
-          <Syntax.Root data={selectedCommit}>
+          <Syntax.Root data={details[selectedCommit.id] ?? selectedCommit}>
             <Syntax.Content>
               <Syntax.Viewport>
                 <Syntax.Code className='text-xs' />

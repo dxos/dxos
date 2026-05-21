@@ -82,7 +82,11 @@ export type ExecutionGraph = {
   branches: string[];
   commits: Commit[];
   spanTree: Span;
+  /** Commit id -> trace event. */
+  details: ExecutionGraphDetailsMap;
 };
+
+export type ExecutionGraphDetailsMap = Record<string, Trace.FlatEvent | undefined>;
 
 export const buildExecutionGraph = ({
   traceMessages,
@@ -143,10 +147,10 @@ const presentEvent = (event: Trace.FlatEvent): EventPresentation | undefined => 
       case 'text':
         return event.data.role === 'user'
           ? {
-              icon: ICONS.userMessage.icon,
-              level: ICONS.userMessage.level,
-              message: trimText(event.data.block.text),
-            }
+            icon: ICONS.userMessage.icon,
+            level: ICONS.userMessage.level,
+            message: trimText(event.data.block.text),
+          }
           : undefined;
       case 'status':
         return {
@@ -235,8 +239,9 @@ const isCollapsibleSpan = (span: Span, parent: Span | null): boolean => {
 const spanTreeToCommits = (
   root: Span,
   activeProcesses: readonly Process.Info[],
-): { branches: string[]; commits: Commit[] } => {
+): { branches: string[]; commits: Commit[]; details: ExecutionGraphDetailsMap } => {
   const builder = new GraphBuilder();
+  const details: ExecutionGraphDetailsMap = {};
   builder.addBranch(MAIN_BRANCH);
 
   // Build a child → parent lookup using the tree's own structure (already correctly parented
@@ -381,6 +386,7 @@ const spanTreeToCommits = (
       message: presentation.message,
     };
     builder.addCommit(commit);
+    details[commitId] = event;
 
     // Record begin commit so a later end event can merge into it.
     if (isBeginEvent && !collapsible && span.id !== ROOT_SPAN_ID) {
@@ -421,7 +427,8 @@ const spanTreeToCommits = (
     }
   }
 
-  return builder.build();
+  const { commits, branches } = builder.build();
+  return { commits, branches, details };
 };
 
 const formatCommitId = (span: Span, globalIndex: number, suffix?: string): string => {
@@ -483,8 +490,8 @@ export const CommitSelector = {
    */
   compose:
     (next: CommitSelector) =>
-    (prev: CommitSelector): CommitSelector =>
-      CommitSelector.make((commits) => next.select(prev.select(commits))),
+      (prev: CommitSelector): CommitSelector =>
+        CommitSelector.make((commits) => next.select(prev.select(commits))),
 
   /**
    * If `prev` selector matches no commits, return `next` selector, otherwise return `prev` selector.
@@ -498,22 +505,22 @@ export const CommitSelector = {
    */
   orElse:
     (next: CommitSelector) =>
-    (prev: CommitSelector): CommitSelector =>
-      CommitSelector.make((commits) => {
-        const selected = prev.select(commits);
-        if (selected.length > 0) {
-          return selected;
-        }
-        return next.select(commits);
-      }),
+      (prev: CommitSelector): CommitSelector =>
+        CommitSelector.make((commits) => {
+          const selected = prev.select(commits);
+          if (selected.length > 0) {
+            return selected;
+          }
+          return next.select(commits);
+        }),
 
   /**
    * Selects commits that match either of the given selectors.
    */
   andAlso:
     (next: CommitSelector) =>
-    (prev: CommitSelector): CommitSelector =>
-      CommitSelector.unionAll(prev, next),
+      (prev: CommitSelector): CommitSelector =>
+        CommitSelector.unionAll(prev, next),
 
   /**
    * Selects the first n commits.
