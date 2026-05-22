@@ -35,3 +35,29 @@ export const bufferToArray = (buffer: Buffer): Uint8Array => {
 export const stringToArray = (string: string): Uint8Array => bufferToArray(Buffer.from(string, 'hex'));
 
 export const arrayToString = (array: Uint8Array): string => arrayToBuffer(array).toString('hex');
+
+/**
+ * Marker key used to represent a `Uint8Array` in JSON.
+ * Mirrors the `'/'` convention used by encoded references.
+ */
+export const UINT8ARRAY_JSON_KEY = '/uint8array';
+
+/**
+ * JSON-safe representation of a `Uint8Array`.
+ * The bytes are encoded as a base64 string under the {@link UINT8ARRAY_JSON_KEY} marker.
+ */
+export type EncodedUint8Array = { [UINT8ARRAY_JSON_KEY]: string };
+
+export const encodeUint8ArrayToJson = (bytes: Uint8Array): EncodedUint8Array => ({
+  [UINT8ARRAY_JSON_KEY]: arrayToBuffer(bytes).toString('base64'),
+});
+
+export const isEncodedUint8Array = (value: unknown): value is EncodedUint8Array =>
+  typeof value === 'object' &&
+  value !== null &&
+  !Array.isArray(value) &&
+  typeof (value as any)[UINT8ARRAY_JSON_KEY] === 'string' &&
+  Object.keys(value).length === 1;
+
+export const decodeUint8ArrayFromJson = (encoded: EncodedUint8Array): Uint8Array =>
+  bufferToArray(Buffer.from(encoded[UINT8ARRAY_JSON_KEY], 'base64'));

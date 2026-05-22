@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
@@ -14,6 +15,7 @@ import { makeObject } from '../common/proxy';
 import { ATTR_TYPE, EntityKind, KindId, MetaId, TypeId, getSchema } from '../common/types';
 import { RelationSourceId, RelationTargetId, getObjectDXN } from '../Entity';
 import { Ref, StaticRefResolver } from '../Ref';
+import * as Type from '../../Type';
 import { createObject } from './create-object';
 import { objectFromJSON, objectToJSON } from './json-serializer';
 
@@ -116,5 +118,48 @@ describe('Object JSON serializer', () => {
     expect(expandoFromJson.id).toBe(expando.id);
     expect(expandoFromJson.message).toBe('local-only');
     expect((expandoFromJson as any)[ATTR_TYPE]).toBeUndefined();
+  });
+
+  describe('Uint8Array', () => {
+    const Blob = Schema.Struct({
+      name: Schema.String,
+      bytes: Schema.Uint8ArrayFromSelf,
+    }).pipe(
+      Type.object({
+        typename: 'com.example.type.blob',
+        version: '0.1.0',
+      }),
+    );
+    interface Blob extends Schema.Schema.Type<typeof Blob> {}
+
+    test('round-trips Uint8Array field through JSON with schema', async () => {
+      const bytes = new Uint8Array([0, 1, 2, 3, 250, 251, 252, 253, 254, 255]);
+      const blob = Obj.make(Blob, { name: 'blob', bytes });
+
+      const blobJson = objectToJSON(blob);
+      // JSON must round-trip through stringify/parse without loss.
+      const roundTripped = JSON.parse(JSON.stringify(blobJson));
+
+      const refResolver = new StaticRefResolver().addSchema(Blob);
+      const blobFromJson = (await objectFromJSON(roundTripped, { refResolver })) as Blob;
+
+      expect(blobFromJson.name).toBe('blob');
+      expect(blobFromJson.bytes).toBeInstanceOf(Uint8Array);
+      expect(Array.from(blobFromJson.bytes)).toEqual(Array.from(bytes));
+    });
+
+    test('round-trips Uint8Array field through JSON without schema resolver', async () => {
+      const bytes = new Uint8Array([10, 20, 30, 40, 50]);
+      const blob = Obj.make(Blob, { name: 'blob', bytes });
+
+      const blobJson = objectToJSON(blob);
+      const roundTripped = JSON.parse(JSON.stringify(blobJson));
+
+      const blobFromJson = (await objectFromJSON(roundTripped)) as Blob;
+
+      expect(blobFromJson.name).toBe('blob');
+      expect(blobFromJson.bytes).toBeInstanceOf(Uint8Array);
+      expect(Array.from(blobFromJson.bytes)).toEqual(Array.from(bytes));
+    });
   });
 });
