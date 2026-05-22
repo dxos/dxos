@@ -9,13 +9,13 @@ import { DXN } from '@dxos/keys';
 
 import * as Obj from '../../Obj';
 import { TestSchema } from '../../testing';
+import * as Type from '../../Type';
 import { getSchemaDXN, getSchemaTypename, getTypeDXN, getTypename } from '../Annotation';
 import { getMetaChecked } from '../common/api';
 import { makeObject } from '../common/proxy';
 import { ATTR_TYPE, EntityKind, KindId, MetaId, TypeId, getSchema } from '../common/types';
 import { RelationSourceId, RelationTargetId, getObjectDXN } from '../Entity';
 import { Ref, StaticRefResolver } from '../Ref';
-import * as Type from '../../Type';
 import { createObject } from './create-object';
 import { objectFromJSON, objectToJSON } from './json-serializer';
 
