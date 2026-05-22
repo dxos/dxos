@@ -106,10 +106,18 @@ export type Any = Schema.Schema.Type<typeof Any>;
 // Helpers
 // ---------------------------------------------------------------------------
 
+/** Parses an ISO string to a Date; returns undefined if missing or invalid. */
+export const parseDate = (iso?: string): Date | undefined => {
+  if (!iso) {
+    return undefined;
+  }
+  const parsed = new Date(iso);
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+};
+
 /** Primary date for calendar highlighting and sort order. */
 export const getPrimaryDate = (seg: Any): Date | undefined => {
-  const iso = seg._tag === 'lodging' ? (seg.checkIn ?? seg.departAt) : seg.departAt;
-  return iso ? new Date(iso) : undefined;
+  return parseDate(seg._tag === 'lodging' ? (seg.checkIn ?? seg.departAt) : seg.departAt);
 };
 
 /** Short human-readable title. */

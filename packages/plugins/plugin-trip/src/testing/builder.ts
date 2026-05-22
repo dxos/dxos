@@ -32,7 +32,7 @@ export class TripBuilder {
     if (opts.confirmed) {
       this.#bookings.push(
         Booking.make({
-          provider: { name: 'United Airlines', domain: 'united.com' as any },
+          provider: { name: 'United Airlines' },
           confirmationCode: `UA${100 + this.#counter}`,
           source: 'manual',
         }),
@@ -42,7 +42,7 @@ export class TripBuilder {
       _tag: 'flight',
       id: this.#nextId(),
       status: opts.confirmed ? 'confirmed' : 'tentative',
-      airline: { name: 'United Airlines', domain: 'united.com' as any },
+      airline: { name: 'United Airlines' },
       flightNumber: `UA ${900 + this.#counter}`,
       cabin: 'economy',
       origin: { name: 'San Francisco Intl', code: 'SFO', city: 'San Francisco' },
@@ -61,7 +61,7 @@ export class TripBuilder {
       id: this.#nextId(),
       status: 'confirmed',
       propertyName: 'The Grand Hotel',
-      operator: { name: 'Marriott', domain: 'marriott.com' as any },
+      operator: { name: 'Marriott' },
       origin: { name: 'The Grand Hotel', city: 'London' },
       destination: { name: 'The Grand Hotel', city: 'London' },
       checkIn: checkIn.toISOString(),

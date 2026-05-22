@@ -10,7 +10,11 @@ each of which may be associated with a `Booking` (the actual ticket / reservatio
 Trips can be browsed individually or in aggregate via existing Table and Map views, 
 presented as Articles, or embedded as surfaces inside Markdown documents.
 
-v1 ships the data model plus two cross-plugin integrations:
+v1 ships the data model, `TripArticle` surface (with a calendar
+mini-view and `SegmentStack`), `SegmentArticle` companion surface, and
+plugin wiring.
+
+Planned cross-plugin integrations (follow-up phases):
 
 - A `TravelMessageExtractor` that plugs into plugin-inbox's
   generic `MessageExtractor` contract to parse confirmation emails

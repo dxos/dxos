@@ -24,7 +24,10 @@ const Row = ({ label, value }: { label: string; value: string }) => (
   </div>
 );
 
-const formatDate = (iso?: string): string | undefined => (iso ? format(new Date(iso), 'PPp') : undefined);
+const formatDate = (iso?: string): string | undefined => {
+  const date = Segment.parseDate(iso);
+  return date ? format(date, 'PPp') : undefined;
+};
 
 const renderModeFields = (segment: Segment.Any): React.ReactNode => {
   switch (segment._tag) {

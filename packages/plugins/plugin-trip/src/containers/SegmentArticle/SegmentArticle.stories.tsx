@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { RegistryContext } from '@effect-atom/atom-react';
+import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useContext, useMemo } from 'react';
 
-import { SelectionManager, SelectionProvider } from '@dxos/react-ui-attention';
 import { withClientProvider } from '@dxos/react-client/testing';
+import { SelectionManager, SelectionProvider } from '@dxos/react-ui-attention';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { TripBuilder } from '#testing';

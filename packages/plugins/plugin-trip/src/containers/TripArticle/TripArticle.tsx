@@ -39,8 +39,11 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
   const calendarDates = segments.flatMap((seg): Date[] => {
     const primary = Segment.getPrimaryDate(seg);
     const dates: Date[] = primary ? [primary] : [];
-    if (seg._tag === 'lodging' && seg.checkOut) {
-      dates.push(new Date(seg.checkOut));
+    if (seg._tag === 'lodging') {
+      const end = Segment.parseDate(seg.checkOut);
+      if (end) {
+        dates.push(end);
+      }
     }
     return dates;
   });

@@ -23,12 +23,13 @@ import { TripArticle } from './TripArticle';
 
 const DefaultStory = () => {
   const spaces = useSpaces();
-  const db = useDatabase(spaces[0].id);
+  const spaceId = spaces[0]?.id;
+  const db = useDatabase(spaceId ?? '');
   const trips = useQuery(db, Filter.type(Trip.Trip));
   const trip = trips[0];
 
-  if (!db || !trip) {
-    return <Loading data={{ db: !!db, trip: !!trip }} />;
+  if (!spaceId || !db || !trip) {
+    return <Loading data={{ space: !!spaceId, db: !!db, trip: !!trip }} />;
   }
 
   return <TripArticle role='article' subject={trip} attendableId='story' />;
