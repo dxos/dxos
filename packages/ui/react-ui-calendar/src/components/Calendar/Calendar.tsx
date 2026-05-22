@@ -262,9 +262,12 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
         // Prevent text selection while dragging.
         ev.preventDefault();
         dragAnchorRef.current = date;
-        setPendingRange({ from: startOfDay(date), to: startOfDay(date) });
+        // Immediate visual feedback: render the single-select ring on the anchor
+        // day. If the pointer enters another cell we'll promote to a range.
+        setRange(undefined);
+        setSelected(date);
       },
-      [setPendingRange],
+      [setRange, setSelected],
     );
 
     const handleDayPointerEnter = useCallback(
@@ -273,9 +276,17 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
         if (!anchor) {
           return;
         }
+        if (isSameDay(anchor, date)) {
+          // Still on the anchor cell — keep the single-select ring, no range yet.
+          setPendingRange(undefined);
+          return;
+        }
+        // Pointer has moved to a different cell — promote to range and clear
+        // the single-select ring.
+        setSelected(undefined);
         setPendingRange(makeRange(anchor, date));
       },
-      [setPendingRange],
+      [setPendingRange, setSelected],
     );
 
     const handleDayPointerUp = useCallback(
@@ -287,19 +298,16 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
           return;
         }
         if (isSameDay(anchor, date)) {
-          // Single click — toggle single-day selection; clears any committed range.
-          setRange(undefined);
-          setSelected((current) => (isSameDay(date, current) ? undefined : date));
+          // Single click — `selected` was already set on pointerdown.
           onSelect?.({ date });
           return;
         }
-        // Drag commit — clears any single-day selection.
+        // Drag commit — `selected` was already cleared by pointerenter.
         const committed = makeRange(anchor, date);
-        setSelected(undefined);
         setRange(committed);
         onSelectRange?.({ range: committed });
       },
-      [onSelect, onSelectRange, setPendingRange, setRange, setSelected],
+      [onSelect, onSelectRange, setPendingRange, setRange],
     );
 
     // Cancel drag if the pointer is released outside the grid.
