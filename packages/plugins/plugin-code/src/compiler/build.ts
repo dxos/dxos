@@ -137,6 +137,14 @@ export const compileEntry = async (files: readonly LoadedFile[]): Promise<BuildR
  * `export const X` statements compile to `exports.X = X` and execute inside
  * the function scope.
  *
+ * **Async limitations.** Execution is synchronous. `await` expressions inside
+ * the entry resolve as normal microtasks, but any work scheduled past the
+ * first turn (timers, unresolved Promises, top-level `await` patterns that
+ * don't fully drain before the function returns) is not captured — those
+ * `console.log`s land in the buffer *after* {@link RunResult} has already
+ * been returned. To support async entries we would need to compile the entry
+ * with `'use strict'` + async wrapping and await it before returning.
+ *
  * **Security boundary.** The wrapper only shadows `console` and `exports`; it
  * does **not** prevent access to browser globals (`window`, `document`,
  * `fetch`), the network, or browser storage APIs. This is intentional — the
