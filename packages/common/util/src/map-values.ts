@@ -52,6 +52,9 @@ class DeepMapper {
         res[i] = this._map(value[i], i);
       }
       return res;
+    } else if (ArrayBuffer.isView(value)) {
+      // Typed arrays (Uint8Array, etc.) are opaque leaf values, not POJOs to recurse into.
+      return value;
     } else if (value !== null && typeof value === 'object') {
       const res: any = {};
       this._cyclic.set(value, res);
@@ -112,6 +115,9 @@ class DeepMapperAsync {
         res[i] = await this._map(value[i], i);
       }
       return res;
+    } else if (ArrayBuffer.isView(value)) {
+      // Typed arrays (Uint8Array, etc.) are opaque leaf values, not POJOs to recurse into.
+      return value;
     } else if (value !== null && typeof value === 'object') {
       const res: any = {};
       this._cyclic.set(value, res);

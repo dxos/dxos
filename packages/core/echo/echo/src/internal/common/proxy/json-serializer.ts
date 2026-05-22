@@ -5,7 +5,7 @@
 import { type ObjectMeta } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { EchoURI } from '@dxos/keys';
-import { deepMapValues } from '@dxos/util';
+import { deepMapValues, encodeUint8ArrayToJson } from '@dxos/util';
 
 import { Ref } from '../../Ref';
 import {
@@ -79,6 +79,9 @@ const serializeData = (data: unknown) => {
     if (Ref.isRef(value)) {
       // TODO(dmaretskyi): Should this be configurable?
       return value.noInline().encode();
+    }
+    if (value instanceof Uint8Array) {
+      return encodeUint8ArrayToJson(value);
     }
 
     return recurse(value);

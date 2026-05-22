@@ -8,7 +8,7 @@ import { raise } from '@dxos/debug';
 import { type EncodedReference, ObjectStructure, isEncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { EchoURI, ObjectId, URI } from '@dxos/keys';
-import { assumeType, deepMapValues, visitValues } from '@dxos/util';
+import { assumeType, decodeUint8ArrayFromJson, deepMapValues, isEncodedUint8Array, visitValues } from '@dxos/util';
 
 import type * as Database from '../../Database';
 import type * as Obj from '../../Obj';
@@ -96,7 +96,7 @@ export const objectFromJSON = async (
   const type = URI.make(jsonData[ATTR_TYPE]);
   const schema = await refResolver?.resolveSchema(type);
   invariant(schema === undefined || Schema.isSchema(schema));
-  const decodedInput = stripInternalJsonKeys(jsonData);
+  const decodedInput = restoreUint8Arrays(stripInternalJsonKeys(jsonData));
 
   let obj: any;
   if (schema != null) {
@@ -176,10 +176,25 @@ const decodeGeneric = (jsonData: unknown, options: { refResolver?: RefResolver }
     if (isEncodedReference(value)) {
       return refFromEncodedReference(value, options.refResolver);
     }
+    if (isEncodedUint8Array(value)) {
+      return decodeUint8ArrayFromJson(value);
+    }
 
     return visitor(value);
   });
 };
+
+/**
+ * Recursively replaces encoded `Uint8Array` JSON markers with actual `Uint8Array` instances.
+ * Runs before schema decoding so `Schema.Uint8ArrayFromSelf` sees real bytes.
+ */
+const restoreUint8Arrays = (data: unknown): any =>
+  deepMapValues(data, (value, recurse) => {
+    if (isEncodedUint8Array(value)) {
+      return decodeUint8ArrayFromJson(value);
+    }
+    return recurse(value);
+  });
 
 const stripInternalJsonKeys = (jsonData: unknown) => {
   const {

@@ -797,11 +797,14 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     let otherEchoObj = proxy instanceof EchoSchema ? proxy.persistentSchema : proxy;
 
     // Honour a Queue URI carried by the source. Queue-decoded objects (returned by
-    // `Feed.runQuery` / `queue.queryObjects`) have a `SelfURIId` annotation and do
-    // not live in `space.db`. Without this short-circuit, the path below would wrap
-    // the queue object as a fresh ECHO proxy and call `database.add()`, leaking the
-    // object into `space.db`.
-    if (typeof otherEchoObj === 'object' && otherEchoObj !== null) {
+    // `Feed.runQuery` / `queue.queryObjects`) have a `SelfURIId` annotation set directly
+    // on the plain object (not via proxy) and do not live in `space.db`. Without this
+    // short-circuit, the path below would wrap the queue object as a fresh ECHO proxy
+    // and call `database.add()`, leaking the object into `space.db`.
+    // IMPORTANT: Only apply to non-ECHO-proxy objects (plain objects with explicit SelfURIId).
+    // Regular DB-connected ECHO objects also return a SelfURIId from the proxy, but we must
+    // NOT short-circuit for those — their ref should be created as a local URI.
+    if (typeof otherEchoObj === 'object' && otherEchoObj !== null && !isEchoObject(otherEchoObj)) {
       const selfUri = (otherEchoObj as any)[SelfURIId];
       if (typeof selfUri === 'string' && EchoURI.isEchoURI(selfUri)) {
         return selfUri;
