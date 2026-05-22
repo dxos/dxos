@@ -41,6 +41,7 @@ import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
 import { Annotation, Collection, Feed, Filter, JsonSchema, Obj, Query, Ref, Type, View } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 import { Format, FormatAnnotation, LabelAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox';
 import { Kanban } from '@dxos/plugin-kanban';
@@ -867,8 +868,10 @@ const makeNotes = (
   project: Project.Project,
 ): Markdown.Document[] => {
   // Helpers — produce markdown link / block-embed syntax that the editor understands.
-  const lnk = (label: string, obj: Obj.Unknown) => `[${label}](${Obj.getDXN(obj).toString()})`;
-  const emb = (label: string, obj: Obj.Unknown) => `![${label}](${Obj.getDXN(obj).toString()})`;
+  // Use space-relative DXNs so links remain valid when the snapshot is imported into a new space.
+  const localDxn = (obj: Obj.Unknown) => DXN.fromLocalObjectId(obj.id).toString();
+  const lnk = (label: string, obj: Obj.Unknown) => `[${label}](${localDxn(obj)})`;
+  const emb = (label: string, obj: Obj.Unknown) => `![${label}](${localDxn(obj)})`;
 
   return [
     Markdown.make({
