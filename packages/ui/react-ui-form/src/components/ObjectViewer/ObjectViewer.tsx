@@ -39,6 +39,7 @@ const ObjectViewerImpl = composable<HTMLDivElement, ObjectViewerProps<any>>(
     </div>
   ),
 );
+
 ObjectViewerImpl.displayName = 'ObjectViewer';
 
 // `composable<HTMLDivElement, ObjectViewerProps<any>>` erases the `T` type

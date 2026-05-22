@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { parseProto } from '@dxos/effect-proto';
+import { log } from '@dxos/log';
 import { type Config as ConfigProto, Runtime } from '@dxos/protocols/proto/dxos/config';
 // Raw .proto source resolved through `@dxos/protocols`'s `./proto/dxos/*.proto`
 // exports entry. Vite's `?raw` query suffix returns the file as a string so we
@@ -14,6 +15,7 @@ import configProto from '@dxos/protocols/proto/dxos/config.proto?raw';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { Form } from '../Form';
 import { ObjectViewer } from './ObjectViewer';
 
 const registry = parseProto(configProto);
@@ -93,4 +95,24 @@ export const JSON = () => (
       </Syntax.Viewport>
     </Syntax.Content>
   </Syntax.Root>
+);
+
+// Renders the same proto-derived `ConfigSchema` + `value` through the
+// interactive `Form` component, for side-by-side comparison with the
+// read-only ObjectViewer above. `db` is intentionally omitted -- the proto
+// schema is not an ECHO type, so there's no space/database in play.
+export const WithForm = () => (
+  <Form.Root
+    schema={ConfigSchema as any}
+    defaultValues={value as any}
+    onSave={(next) => log.info('save', { next })}
+    onCancel={() => log.info('cancel')}
+  >
+    <Form.Viewport>
+      <Form.Content>
+        <Form.FieldSet />
+        <Form.Actions />
+      </Form.Content>
+    </Form.Viewport>
+  </Form.Root>
 );
