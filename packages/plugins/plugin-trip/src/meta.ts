@@ -10,7 +10,7 @@ export const meta: Plugin.Meta = {
   name: 'Trip',
   author: 'DXOS',
   description: trim`
-    Travel itinerary plugin for DXOS Composer. Organise trips as ordered
+    Travel itinerary planning plugin. Organise trips as ordered
     sequences of typed segments (flights, trains, boats, hotels, activities)
     each linked to a booking record.
   `,

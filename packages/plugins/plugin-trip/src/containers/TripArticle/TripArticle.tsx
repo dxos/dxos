@@ -30,8 +30,8 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const showItem = useShowItem();
-  const [trip] = useObject(subject);
-  const id = attendableId ?? Obj.getDXN(trip).toString();
+  const [trip, updateTrip] = useObject(subject);
+  const id = attendableId ?? Obj.getDXN(subject).toString();
   const currentId = useSelected(id, 'single');
 
   const segments = [...(trip.segments ?? [])].sort(byPrimaryDate);
@@ -68,20 +68,22 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
           contextId: id,
           selectionId: action.segmentId,
           companion: linkedSegment('segment'),
-          path: getObjectPathFromObject(trip),
+          path: getObjectPathFromObject(subject),
         });
       }
     },
-    [id, showItem, trip],
+    [id, showItem, subject],
   );
 
   const handleAddSegment = useCallback(() => {
     const newId = `seg-${Date.now()}`;
-    (trip as { segments: Segment.Any[] }).segments = [
-      ...(trip.segments ?? []),
-      Segment.makeDefault('flight', newId),
-    ];
-  }, [trip]);
+    updateTrip((draft) => {
+      draft.segments = [
+        ...(draft.segments ?? []),
+        Segment.makeDefault('flight', newId),
+      ] as typeof draft.segments;
+    });
+  }, [updateTrip]);
 
   return (
     <div role={role} className='@container dx-container overflow-hidden'>

@@ -12,12 +12,13 @@ import { Filter } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { type Space, useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
-import { TripBuilder } from '../../testing';
-import { TripPlugin } from '../../testing';
+import { TripBuilder } from '#testing';
 import { Booking, Trip } from '#types';
+
+import { TripPlugin } from '../../testing';
 
 import { TripArticle } from './TripArticle';
 
@@ -34,7 +35,7 @@ const DefaultStory = () => {
   return <TripArticle role='article' subject={trip} attendableId='story' />;
 };
 
-const baseDecorators = (seedFn: (space: any) => void) => [
+const baseDecorators = (seedFn: (space: Space) => void) => [
   withLayout({ layout: 'fullscreen' }),
   withPluginManager(() => ({
     setupEvents: [AppActivationEvents.SetupSettings],
@@ -73,7 +74,7 @@ export const Default: Story = {
       .addActivity(2)
       .addFlight(4)
       .build('London Trip');
-    bookings.forEach((booking) => space.db.add(booking));
+    bookings.forEach((booking: Booking.Booking) => space.db.add(booking));
     space.db.add(trip);
   }),
 };

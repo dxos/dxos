@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './TripArticle';
+export { TripArticle as default } from './TripArticle';
