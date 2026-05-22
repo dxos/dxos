@@ -24,10 +24,7 @@ export const Thread = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   status: ThreadStatus.pipe(Schema.optional),
   messages: Schema.Array(Ref.Ref(Message.Message)),
-}).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.thread', '0.1.0')),
-  SystemTypeAnnotation.set(true),
-);
+}).pipe(Type.object(DXN.fromNsidAndVersion('org.dxos.type.thread', '0.1.0')), SystemTypeAnnotation.set(true));
 
 export interface Thread extends Schema.Schema.Type<typeof Thread> {}
 

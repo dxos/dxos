@@ -6,10 +6,11 @@
 
 import * as Schema from 'effect/Schema';
 
+import { DXN } from '@dxos/keys';
+
 import * as internal from './internal';
 import * as Obj from './Obj';
 import * as Type from './Type';
-import { DXN } from '@dxos/keys';
 
 export const Tag = Schema.Struct({
   label: Schema.String,

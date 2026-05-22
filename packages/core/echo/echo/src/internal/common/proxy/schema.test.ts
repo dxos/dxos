@@ -6,10 +6,11 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { describe, expect, test } from 'vitest';
 
+import { DXN } from '@dxos/keys';
+
 import { createEchoSchema } from '../../../testing';
 import { PropertyMeta, getPropertyMetaAnnotation, getTypeAnnotation } from '../../Annotation';
 import { EchoObjectSchema } from '../../Entity';
-import { DXN } from '@dxos/keys';
 
 // TODO(dmaretskyi): Comment.
 const EmptySchemaType = Schema.Struct({}).pipe(
@@ -23,9 +24,7 @@ describe('dynamic schema', () => {
     const TestSchema = Schema.Struct({
       field1: Schema.String,
       field2: Schema.Boolean,
-    }).pipe(
-      EchoObjectSchema(DXN.fromNsidAndVersion('com.example.type.test', '0.1.0')),
-    );
+    }).pipe(EchoObjectSchema(DXN.fromNsidAndVersion('com.example.type.test', '0.1.0')));
 
     const registered = createEchoSchema(TestSchema);
     expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
@@ -37,9 +36,7 @@ describe('dynamic schema', () => {
   test('addColumns', async () => {
     const TestSchema = Schema.Struct({
       field1: Schema.String,
-    }).pipe(
-      EchoObjectSchema(DXN.fromNsidAndVersion('com.example.type.test', '0.1.0')),
-    );
+    }).pipe(EchoObjectSchema(DXN.fromNsidAndVersion('com.example.type.test', '0.1.0')));
 
     const registered = createEchoSchema(TestSchema);
     registered.addFields({ field2: Schema.Boolean });

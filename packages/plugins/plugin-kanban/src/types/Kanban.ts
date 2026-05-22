@@ -40,9 +40,7 @@ export const KanbanV1 = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false)),
   arrangement: Arrangement,
-}).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.kanban', '0.1.0')),
-);
+}).pipe(Type.object(DXN.fromNsidAndVersion('org.dxos.type.kanban', '0.1.0')));
 
 //
 // v2 — `spec` is a discriminated union of how items are sourced.

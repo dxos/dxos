@@ -52,9 +52,7 @@ export const createDefaultSchema = () =>
     description: Schema.optional(Schema.String).annotations({
       title: 'Description',
     }),
-  }).pipe(
-    Type.object(DXN.fromNsidAndVersion(`com.example.type.${PublicKey.random().truncate()}`, '0.1.0')),
-  );
+  }).pipe(Type.object(DXN.fromNsidAndVersion(`com.example.type.${PublicKey.random().truncate()}`, '0.1.0')));
 
 export const getSchema = async (
   dxn: DXN.DXN,

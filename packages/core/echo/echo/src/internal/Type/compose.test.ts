@@ -5,12 +5,13 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
+import { DXN } from '@dxos/keys';
+
 import { FieldPath } from '../Annotation';
 import { EchoObjectSchema } from '../Entity';
 import { FormatAnnotation, TypeFormat } from '../Format';
 import { ECHO_ANNOTATIONS_NS_KEY, toJsonSchema } from '../JsonSchema';
 import { composeSchema } from './compose';
-import { DXN } from '@dxos/keys';
 
 describe('schema composition', () => {
   test('schema composition', ({ expect }) => {

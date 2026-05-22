@@ -84,9 +84,7 @@ export const ServiceType = Schema.Struct({
    * Entries exposed: functions, workflows, and APIs.
    */
   interfaces: Schema.optional(Schema.Array(ServiceInterface)),
-}).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.service', '0.1.0')),
-);
+}).pipe(Type.object(DXN.fromNsidAndVersion('org.dxos.type.service', '0.1.0')));
 
 export interface ServiceType extends Schema.Schema.Type<typeof ServiceType> {}
 

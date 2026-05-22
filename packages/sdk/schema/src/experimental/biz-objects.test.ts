@@ -49,9 +49,7 @@ namespace Proposition {
 
   export interface Fields extends Schema.Schema.Type<typeof Fields> {}
 
-  export const Object = Fields.pipe(
-    Type.object(DXN.fromNsidAndVersion('org.dxos.type.proposition', '0.1.0')),
-  );
+  export const Object = Fields.pipe(Type.object(DXN.fromNsidAndVersion('org.dxos.type.proposition', '0.1.0')));
 
   export interface Object extends Schema.Schema.Type<typeof Object> {}
 
@@ -82,9 +80,7 @@ export namespace OKR {
     description: 'A goal-setting framework defining Objectives and Key Results.',
   });
 
-  const Object = Properties.pipe(
-    Type.object(DXN.fromNsidAndVersion('org.dxos.type.okr', '0.1.0')),
-  );
+  const Object = Properties.pipe(Type.object(DXN.fromNsidAndVersion('org.dxos.type.okr', '0.1.0')));
 
   export interface Object extends Schema.Schema.Type<Schema.mutable<typeof Object>> {}
 
@@ -116,9 +112,7 @@ export namespace SWOT {
       'SWOT is a strategic planning technique used to evaluate the Strengths, Weaknesses, Opportunities, and Threats involved in a project or business venture.',
   });
 
-  const Object = Properties.pipe(
-    Type.object(DXN.fromNsidAndVersion('org.dxos.type.swot', '0.1.0')),
-  );
+  const Object = Properties.pipe(Type.object(DXN.fromNsidAndVersion('org.dxos.type.swot', '0.1.0')));
 
   export interface Any extends Schema.Schema.Type<Schema.mutable<typeof Object>> {}
 
@@ -130,9 +124,7 @@ export namespace Plan {
     name: Schema.String,
   });
 
-  const Object = Properties.pipe(
-    Type.object(DXN.fromNsidAndVersion('org.dxos.type.plan', '0.1.0')),
-  );
+  const Object = Properties.pipe(Type.object(DXN.fromNsidAndVersion('org.dxos.type.plan', '0.1.0')));
 
   export interface Object extends Schema.Schema.Type<Schema.mutable<typeof Object>> {}
 

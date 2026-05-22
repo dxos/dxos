@@ -5,6 +5,8 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
+import { DXN } from '@dxos/keys';
+
 import { TestSchema } from '../../../testing';
 import { EchoObjectSchema } from '../../Entity';
 import { setValue } from '../../Obj';
@@ -12,7 +14,6 @@ import { Ref } from '../../Ref';
 import { foreignKey, getMeta } from '../types';
 import { makeObject } from './make-object';
 import { change, subscribe } from './reactive';
-import { DXN } from '@dxos/keys';
 
 describe('complex schema validations', () => {
   test('any', () => {

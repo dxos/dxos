@@ -4,11 +4,12 @@
 
 import * as Schema from 'effect/Schema';
 
+import { DXN } from '@dxos/keys';
+
 import { IconAnnotation } from '../Annotation';
 import { LabelAnnotation, TypenameSchema, VersionSchema } from '../Annotation';
 import { EchoObjectSchema } from '../Entity';
 import { JsonSchemaType } from '../JsonSchema';
-import { DXN } from '@dxos/keys';
 
 /**
  * Persistent representation of a schema.

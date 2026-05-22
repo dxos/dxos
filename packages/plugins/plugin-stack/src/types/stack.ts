@@ -21,8 +21,6 @@ export const SectionSchema = Schema.Struct({
 // TODO(wittjosiah): This needs a relation to be connected to a stack.
 export const StackViewType = Schema.Struct({
   sections: Schema.Record({ key: Schema.String, value: SectionSchema }),
-}).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.stackView', '0.1.0')),
-);
+}).pipe(Type.object(DXN.fromNsidAndVersion('org.dxos.type.stackView', '0.1.0')));
 
 export interface StackViewType extends Schema.Schema.Type<typeof StackViewType> {}

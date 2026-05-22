@@ -17,10 +17,7 @@ export const LegacyJournalEntry = Schema.Struct({
   id: Schema.String,
   date: Schema.String,
   content: Ref.Ref(Text.Text),
-}).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.journal-entry', '0.1.0')),
-  SystemTypeAnnotation.set(true),
-);
+}).pipe(Type.object(DXN.fromNsidAndVersion('org.dxos.type.journal-entry', '0.1.0')), SystemTypeAnnotation.set(true));
 
 export interface LegacyJournalEntry extends Schema.Schema.Type<typeof LegacyJournalEntry> {}
 
@@ -28,10 +25,7 @@ export const JournalEntry = Schema.Struct({
   id: Schema.String,
   date: Schema.String,
   content: Ref.Ref(Text.Text),
-}).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.journalEntry', '0.1.0')),
-  SystemTypeAnnotation.set(true),
-);
+}).pipe(Type.object(DXN.fromNsidAndVersion('org.dxos.type.journalEntry', '0.1.0')), SystemTypeAnnotation.set(true));
 
 export interface JournalEntry extends Schema.Schema.Type<typeof JournalEntry> {}
 

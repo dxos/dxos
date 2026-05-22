@@ -247,9 +247,7 @@ const ContactWithArrayOfEmails = Schema.Struct({
       }),
     ),
   ),
-}).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.contactWithArrayOfEmails', '0.1.0')),
-);
+}).pipe(Type.object(DXN.fromNsidAndVersion('org.dxos.type.contactWithArrayOfEmails', '0.1.0')));
 
 export const ArrayOfObjects: StoryObj = {
   render: DefaultStory,

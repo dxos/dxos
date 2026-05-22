@@ -10,9 +10,7 @@ import { raise } from '@dxos/debug';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { EchoURI, type ObjectId, type URI,
-  DXN,
-} from '@dxos/keys';
+import { EchoURI, type ObjectId, type URI, DXN } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type * as Database from './Database';

@@ -20,18 +20,14 @@ import { DXN } from '@dxos/keys';
 
 import { EchoTestBuilder } from '../testing';
 
-const TestEmpty = Schema.Struct({}).pipe(
-  Type.object(DXN.fromNsidAndVersion('com.example.type.empty', '0.1.0')),
-);
+const TestEmpty = Schema.Struct({}).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.empty', '0.1.0')));
 
 interface TestEmpty extends Schema.Schema.Type<typeof TestEmpty> {}
 
 const TestWithRefs = Schema.Struct({
   schema: Schema.optional(Ref(EchoSchema)),
   schemaArray: Schema.optional(Schema.Array(Ref(EchoSchema))),
-}).pipe(
-  Type.object(DXN.fromNsidAndVersion('com.example.type.test', '0.1.0')),
-);
+}).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.test', '0.1.0')));
 
 interface TestWithRefs extends Schema.Schema.Type<typeof TestWithRefs> {}
 

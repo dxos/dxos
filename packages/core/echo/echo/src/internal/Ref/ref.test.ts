@@ -5,9 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { EchoURI, ObjectId,
-  DXN,
-} from '@dxos/keys';
+import { EchoURI, ObjectId, DXN } from '@dxos/keys';
 
 import { EchoObjectSchema, getObjectEchoUri } from '../Entity';
 import { createObject } from '../Obj';
@@ -15,9 +13,7 @@ import { Ref, getReferenceAst } from './ref';
 
 const Task = Schema.Struct({
   title: Schema.optional(Schema.String),
-}).pipe(
-  EchoObjectSchema(DXN.fromNsidAndVersion('com.example.type.task', '0.1.0')),
-);
+}).pipe(EchoObjectSchema(DXN.fromNsidAndVersion('com.example.type.task', '0.1.0')));
 
 type Task = Schema.Schema.Type<typeof Task>;
 
@@ -25,9 +21,7 @@ const Contact = Schema.Struct({
   name: Schema.String,
   email: Schema.optional(Schema.String),
   tasks: Schema.Array(Ref(Task)),
-}).pipe(
-  EchoObjectSchema(DXN.fromNsidAndVersion('com.example.type.person', '0.1.0')),
-);
+}).pipe(EchoObjectSchema(DXN.fromNsidAndVersion('com.example.type.person', '0.1.0')));
 
 type Contact = Schema.Schema.Type<typeof Contact>;
 

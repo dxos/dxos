@@ -29,9 +29,7 @@ export const TestItem = Schema.Struct({
     title: 'Description',
     description: 'Product description',
   }),
-}).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.test', '0.1.0')),
-);
+}).pipe(Type.object(DXN.fromNsidAndVersion('org.dxos.type.test', '0.1.0')));
 
 // TODO(wittjosiah): Make builder generic and reuse for all message types.
 abstract class AbstractMessageBuilder {

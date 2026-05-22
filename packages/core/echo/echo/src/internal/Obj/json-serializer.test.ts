@@ -124,9 +124,7 @@ describe('Object JSON serializer', () => {
     const Blob = Schema.Struct({
       name: Schema.String,
       bytes: Schema.Uint8ArrayFromSelf,
-    }).pipe(
-      Type.object(DXN.fromNsidAndVersion('com.example.type.blob', '0.1.0')),
-    );
+    }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.blob', '0.1.0')));
     interface Blob extends Schema.Schema.Type<typeof Blob> {}
 
     test('round-trips Uint8Array field through JSON with schema', async ({ expect }) => {

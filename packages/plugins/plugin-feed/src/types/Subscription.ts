@@ -147,9 +147,7 @@ export const PostContent = Schema.Struct({
   text: Schema.String,
   /** ISO 8601 timestamp when the content was fetched. */
   fetchedAt: Schema.String,
-}).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.subscription.post-content', '0.1.0')),
-);
+}).pipe(Type.object(DXN.fromNsidAndVersion('org.dxos.type.subscription.post-content', '0.1.0')));
 
 export interface PostContent extends Schema.Schema.Type<typeof PostContent> {}
 

@@ -123,9 +123,7 @@ describe('without database', () => {
       arr: Schema.optional(Schema.Array(Schema.String)),
       ref: Schema.optional(Schema.suspend((): RefSchema<TestSchema> => Ref.Ref(TestSchema))),
     }),
-  }).pipe(
-    EchoObjectSchema(DXN.fromNsidAndVersion('com.example.type.test', '0.1.0')),
-  );
+  }).pipe(EchoObjectSchema(DXN.fromNsidAndVersion('com.example.type.test', '0.1.0')));
 
   interface TestSchema extends Schema.Schema.Type<typeof TestSchema> {}
 
@@ -433,17 +431,13 @@ describe('Reactive Object with ECHO database', () => {
   describe('references', () => {
     const Organization = Schema.Struct({
       name: Schema.String,
-    }).pipe(
-      Type.object(DXN.fromNsidAndVersion('com.example.type.organization', '0.1.0')),
-    );
+    }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.organization', '0.1.0')));
 
     const Contact = Schema.Struct({
       name: Schema.String,
       organization: Ref.Ref(Organization),
       previousEmployment: Schema.optional(Schema.Array(Ref.Ref(Organization))),
-    }).pipe(
-      Type.object(DXN.fromNsidAndVersion('com.example.type.person', '0.1.0')),
-    );
+    }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.person', '0.1.0')));
 
     test('references', async () => {
       const { db, graph } = await builder.createDatabase();

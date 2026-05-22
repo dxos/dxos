@@ -4,10 +4,11 @@
 
 import * as Schema from 'effect/Schema';
 
+import { DXN } from '@dxos/keys';
+
 import * as Obj from '../Obj';
 import * as Ref from '../Ref';
 import * as Type from '../Type';
-import { DXN } from '@dxos/keys';
 
 export namespace TestSchema {
   //
@@ -61,9 +62,7 @@ export namespace TestSchema {
   export interface ExampleSchema extends Schema.Schema.Type<typeof ExampleSchema> {}
 
   /** @deprecated Use another test schema or create a specific local test schema. */
-  export const Example = ExampleSchema.pipe(
-    Type.object(DXN.fromNsidAndVersion('com.example.type.example', '0.1.0')),
-  );
+  export const Example = ExampleSchema.pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.example', '0.1.0')));
 
   /** @deprecated Use another test schema or create a specific local test schema. */
   export interface Example extends Schema.Schema.Type<typeof Example> {}
@@ -82,9 +81,7 @@ export namespace TestSchema {
     ),
   });
 
-  export const Message = MessageStruct.pipe(
-    Type.object(DXN.fromNsidAndVersion('com.example.type.message', '0.1.0')),
-  );
+  export const Message = MessageStruct.pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.message', '0.1.0')));
 
   export interface Message extends Schema.Schema.Type<typeof Message> {}
 
@@ -100,9 +97,7 @@ export namespace TestSchema {
         value: Schema.String,
       }),
     ),
-  }).pipe(
-    Type.object(DXN.fromNsidAndVersion('com.example.type.organization', '0.1.0')),
-  );
+  }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.organization', '0.1.0')));
 
   export interface Organization extends Schema.Schema.Type<typeof Organization> {}
 
@@ -130,10 +125,7 @@ export namespace TestSchema {
       label: Schema.String,
       value: Schema.String,
     }).pipe(Schema.Array, Schema.optional),
-  }).pipe(
-    Schema.partial,
-    Type.object(DXN.fromNsidAndVersion('com.example.type.person', '0.1.0')),
-  );
+  }).pipe(Schema.partial, Type.object(DXN.fromNsidAndVersion('com.example.type.person', '0.1.0')));
 
   export interface Person extends Schema.Schema.Type<typeof Person> {}
 
@@ -149,10 +141,7 @@ export namespace TestSchema {
     previous: Schema.optional(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task))),
     subTasks: Schema.optional(Schema.Array(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task)))),
     description: Schema.optional(Schema.String),
-  }).pipe(
-    Schema.partial,
-    Type.object(DXN.fromNsidAndVersion('com.example.type.task', '0.1.0')),
-  );
+  }).pipe(Schema.partial, Type.object(DXN.fromNsidAndVersion('com.example.type.task', '0.1.0')));
 
   export interface Task extends Schema.Schema.Type<typeof Task> {}
 
@@ -209,10 +198,7 @@ export namespace TestSchema {
         }),
       ),
     ),
-  }).pipe(
-    Schema.partial,
-    Type.object(DXN.fromNsidAndVersion('com.example.type.container', '0.1.0')),
-  );
+  }).pipe(Schema.partial, Type.object(DXN.fromNsidAndVersion('com.example.type.container', '0.1.0')));
 
   export interface Container extends Schema.Schema.Type<typeof Container> {}
 }

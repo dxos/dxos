@@ -266,9 +266,7 @@ export const Blueprint_v0_1_0 = Schema.Struct({
   agentCanEnable: Schema.optional(Schema.Boolean),
 
   mcpServers: Schema.optional(Schema.Array(McpServer.McpServer)),
-}).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.blueprint', '0.1.0')),
-);
+}).pipe(Type.object(DXN.fromNsidAndVersion('org.dxos.type.blueprint', '0.1.0')));
 
 export interface Blueprint_v0_1_0 extends Schema.Schema.Type<typeof Blueprint_v0_1_0> {}
 
