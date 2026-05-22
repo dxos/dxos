@@ -60,7 +60,7 @@ describe('EchoSchema', () => {
         typename: 'com.example.type.test',
         version: '0.1.0',
       } satisfies TypeAnnotation,
-      [TypeIdentifierAnnotationId]: `dxn:echo:@:${instanceWithSchemaRef.schema?.target?.id}`,
+      [TypeIdentifierAnnotationId]: `echo:/${instanceWithSchemaRef.schema?.target?.id}`,
     });
     expect(instanceWithSchemaRef.schema?.target?.ast).to.deep.eq(schemaWithId.ast);
 
@@ -158,12 +158,12 @@ describe('EchoSchema', () => {
     expect(contact.org?.target?.id).to.eq(org.id);
   });
 
-  test('schema id stays as echo DXN after update', async () => {
+  test('schema id stays as echo URI after update', async () => {
     const { db } = await setupTest();
     const [schema] = await db.schemaRegistry.register([TestEmpty]);
     schema.updateTypename('com.example.type.updated');
-    // Schema DXN for a stored schema encodes the echo identifier (dxn:echo:... format).
-    expect(getTypeIdentifierAnnotation(schema)).to.match(/^dxn:echo:/);
+    // Stored schemas use the canonical EchoURI form (echo:/<id>) for their type identifier.
+    expect(getTypeIdentifierAnnotation(schema)).to.match(/^echo:\//);
   });
 
   const setupTest = async () => {

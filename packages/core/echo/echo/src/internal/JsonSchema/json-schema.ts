@@ -340,7 +340,7 @@ const anyToEffectSchema = (root: JSONSchema.JsonSchema7Any): Schema.Schema.AnyNo
   const echoRefinement: JsonSchemaEchoAnnotations = (root as any)[ECHO_ANNOTATIONS_NS_DEPRECATED_KEY];
   // TODO(dmaretskyi): Is this branch still taken?
   if ((echoRefinement as any)?.reference != null) {
-    const echoId = root.$id.startsWith('dxn:echo:') ? root.$id : undefined;
+    const echoId = root.$id.startsWith('echo:') || root.$id.startsWith('dxn:echo:') ? root.$id : undefined;
     return createEchoReferenceSchema(
       echoId,
       (echoRefinement as any).reference.typename,

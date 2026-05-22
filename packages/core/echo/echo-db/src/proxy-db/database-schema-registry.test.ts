@@ -41,7 +41,7 @@ describe('schema registry', () => {
     const [echoSchema] = await registry.register([Contact]);
     expect(registry.hasSchema(echoSchema)).to.be.true;
     // For stored schemas `$id` is the storage URI (the schema-as-object's EchoURI).
-    expect(echoSchema.jsonSchema.$id).toEqual(`dxn:echo:@:${echoSchema.id}`);
+    expect(echoSchema.jsonSchema.$id).toEqual(`echo:/${echoSchema.id}`);
   });
 
   test('add new schema from json-schema', async () => {
@@ -62,7 +62,7 @@ describe('schema registry', () => {
     ]);
     expect(registry.hasSchema(echoSchema)).to.be.true;
     // Storage URI form for stored schemas (see `add new schema` above).
-    expect(echoSchema.jsonSchema.$id).toEqual(`dxn:echo:@:${echoSchema.id}`);
+    expect(echoSchema.jsonSchema.$id).toEqual(`echo:/${echoSchema.id}`);
     expect(echoSchema.typename).toEqual('com.example.type.person');
     expect(echoSchema.version).toEqual('0.1.0');
     expect(echoSchema.jsonSchema.properties).toEqual({

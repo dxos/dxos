@@ -387,7 +387,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     // schemas. The schema-as-object's storage EchoURI is tracked separately on
     // TypeIdentifierAnnotation for back-references (e.g. registry lookup by object id).
     const typeDxn = DXN.fromNsidAndVersion(meta.typename, meta.version);
-    const storageEchoId = `dxn:echo:@:${schemaToStore.id}`;
+    const storageEchoId = EchoURI.fromLocalObjectId(schemaToStore.id);
     schemaToStore.jsonSchema = JsonSchema.toJsonSchema(
       schema.annotations({
         [TypeAnnotationId]: meta,
