@@ -94,12 +94,7 @@ export const ArrayField = ({
             <FormFieldLabel readonly={readonly} label={label} path={createJsonPath(path ?? [])} asChild />
           </div>
           {!readonly && layout !== 'static' && (
-            <IconButton
-              iconOnly
-              icon='ph--plus--regular'
-              label={t('add-item.button')}
-              onClick={handleAdd}
-            />
+            <IconButton iconOnly icon='ph--plus--regular' label={t('add-item.button')} onClick={handleAdd} />
           )}
         </div>
       )}
@@ -158,7 +153,6 @@ export const ArrayField = ({
           );
         })}
       </div>
-
     </>
   );
 };
