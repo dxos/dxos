@@ -8,8 +8,9 @@ import { ScrollArea } from '@dxos/react-ui';
 import { Focus, Mosaic } from '@dxos/react-ui-mosaic';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { SegmentTile, type SegmentCardActionHandler } from '../SegmentCard/SegmentCard';
 import { type Segment } from '#types';
+
+import { SegmentTile, type SegmentCardActionHandler } from '../SegmentCard/SegmentCard';
 
 export type SegmentStackProps = {
   id: string;

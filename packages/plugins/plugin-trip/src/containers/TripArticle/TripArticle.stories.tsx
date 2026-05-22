@@ -19,7 +19,6 @@ import { TripBuilder } from '#testing';
 import { Booking, Trip } from '#types';
 
 import { TripPlugin } from '../../testing';
-
 import { TripArticle } from './TripArticle';
 
 const DefaultStory = () => {

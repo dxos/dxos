@@ -18,7 +18,8 @@ export default Capability.makeModule(
         createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Trip.make({
-              name: typeof (props as { name?: unknown }).name === 'string' ? (props as { name: string }).name : undefined,
+              name:
+                typeof (props as { name?: unknown }).name === 'string' ? (props as { name: string }).name : undefined,
             });
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,

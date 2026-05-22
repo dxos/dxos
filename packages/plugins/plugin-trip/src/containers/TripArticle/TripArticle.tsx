@@ -78,10 +78,7 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
   const handleAddSegment = useCallback(() => {
     const newId = `seg-${Date.now()}`;
     updateTrip((draft) => {
-      draft.segments = [
-        ...(draft.segments ?? []),
-        Segment.makeDefault('flight', newId),
-      ] as typeof draft.segments;
+      draft.segments = [...(draft.segments ?? []), Segment.makeDefault('flight', newId)] as typeof draft.segments;
     });
   }, [updateTrip]);
 
