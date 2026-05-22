@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eo pipefail
+set -euo pipefail
 
 GREEN=4783872
 RED=16711680
@@ -25,12 +25,6 @@ function notifyStart() {
 
 notifyStart;
 
-# NPM_TOKEN is used as fallback for packages without trusted publisher configured.
-# Packages with trusted publisher will automatically use OIDC (no token needed).
-# Once all packages have trusted publisher, this line can be removed.
-if [ -n "$NPM_TOKEN" ]; then
-  echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> .npmrc
-fi
 
 if [ "$DX_ENVIRONMENT" = "production" ]; then
   pnpm --filter-prod="./packages/**" --filter-prod="./vendor/**" publish --no-git-checks --provenance --tag=latest
