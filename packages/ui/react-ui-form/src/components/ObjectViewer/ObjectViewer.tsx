@@ -13,9 +13,10 @@
 
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
-import React, { type ReactNode } from 'react';
+import React, { type ReactElement, type ReactNode, type RefAttributes } from 'react';
 
-import { mx } from '@dxos/ui-theme';
+import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { type ComposableProps } from '@dxos/ui-types';
 
 export type ObjectViewerProps<T> = {
   schema: Schema.Schema<T, any, never>;
@@ -26,14 +27,30 @@ export type ObjectViewerProps<T> = {
  * Render a value as a sequence of key/value rows whose shape and order are
  * driven by `schema`. Object-typed properties become a header row whose
  * children are indented under it; arrays expand element-by-element.
+ *
+ * Composable: spreads unknown props (incl. `className` / `classNames` /
+ * `style` / `role`) onto its root `<div>` and forwards its ref, so it can
+ * be slotted into themed parents like `Panel.Content`.
  */
-export const ObjectViewer = <T,>({ schema, value }: ObjectViewerProps<T>) => {
-  return (
-    <div role='table' className={mx('font-mono text-sm w-full')}>
+const ObjectViewerImpl = composable<HTMLDivElement, ObjectViewerProps<any>>(
+  ({ schema, value, ...props }, forwardedRef) => (
+    <div
+      {...composableProps(props, { role: 'table', classNames: 'font-mono text-sm w-full' })}
+      ref={forwardedRef}
+    >
       <Node ast={schema.ast} value={value} label={null} depth={0} />
     </div>
-  );
-};
+  ),
+);
+ObjectViewerImpl.displayName = 'ObjectViewer';
+
+// `composable<HTMLDivElement, ObjectViewerProps<any>>` erases the `T` type
+// parameter inside the factory; the cast restores the generic signature for
+// consumers without changing the underlying component (the COMPOSABLE marker
+// stays attached). This is the pattern documented on `composable()` itself.
+export const ObjectViewer = ObjectViewerImpl as unknown as <T>(
+  props: ComposableProps<ObjectViewerProps<T>> & RefAttributes<HTMLDivElement>,
+) => ReactElement | null;
 
 /**
  * Peel wrappers that don't affect the runtime shape: Refinements pass their
