@@ -89,7 +89,19 @@ export const ArrayField = ({
   return (
     <>
       {(layout !== 'static' || (values && values.length > 0)) && (
-        <FormFieldLabel readonly={readonly} label={label} path={createJsonPath(path ?? [])} asChild />
+        <div className='flex items-center gap-2'>
+          <div className='flex-1 min-w-0'>
+            <FormFieldLabel readonly={readonly} label={label} path={createJsonPath(path ?? [])} asChild />
+          </div>
+          {!readonly && layout !== 'static' && (
+            <IconButton
+              iconOnly
+              icon='ph--plus--regular'
+              label={t('add-item.button')}
+              onClick={handleAdd}
+            />
+          )}
+        </div>
       )}
 
       <div className='flex flex-col'>
@@ -147,12 +159,6 @@ export const ArrayField = ({
         })}
       </div>
 
-      {/* TODO(burdon): Get label from schema. */}
-      {!readonly && layout !== 'static' && (
-        <div className='mt-form-gap'>
-          <IconButton icon='ph--plus--regular' label={t('add-item.button')} onClick={handleAdd} />
-        </div>
-      )}
     </>
   );
 };
