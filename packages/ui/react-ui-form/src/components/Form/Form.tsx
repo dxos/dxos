@@ -6,14 +6,7 @@ import { createContext } from '@radix-ui/react-context';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
-import React, {
-  createContext as createReactContext,
-  type PropsWithChildren,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-} from 'react';
+import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
 import { Annotation as EchoAnnotation } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
@@ -42,6 +35,7 @@ import {
   FormFieldSet as NaturalFormFieldSet,
   type FormFieldSetProps as NaturalFormFieldSetProps,
 } from './FormFieldSet';
+import { FormTooltipsContext } from './FormTooltipsContext';
 
 // TODO(burdon): Move styles to form.ts (as with ui-theme).
 
@@ -185,19 +179,12 @@ const FormRoot = <T extends AnyProperties = AnyProperties>({
   );
 };
 
-/**
- * A separate context for the `tooltips` flag so that field-label decorations
- * (notably the JSON path rendered by `FormFieldLabel`) can be controlled
- * from any component down-tree without forcing a hard dependency on the full
- * `Form` context (which `FormFieldWrapper` consumers may use outside of a
- * `Form.Root`, e.g. in storybook stories). Defaults to `true` -- both when
- * `Form.Root` doesn't pass an explicit value AND when there is no enclosing
- * `Form.Root` at all.
- */
-const FormTooltipsContext = createReactContext<boolean>(true);
-
-/** Returns whether the enclosing `Form.Root` has field tooltips enabled. */
-export const useFormTooltips = (): boolean => useContext(FormTooltipsContext);
+// `FormTooltipsContext` / `useFormTooltips` live in their own module to
+// avoid a `Form.tsx <-> FormFieldComponent.tsx` circular import at
+// module-eval time (the latter consumes the hook; the former imports
+// `FormFieldLabel`). Re-export the hook here so the public surface is
+// unchanged.
+export { useFormTooltips } from './FormTooltipsContext';
 
 FormRoot.displayName = 'Form.Root';
 

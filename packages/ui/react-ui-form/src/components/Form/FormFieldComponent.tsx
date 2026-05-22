@@ -19,7 +19,7 @@ import { Icon, Input, Tooltip } from '@dxos/react-ui';
 import { inputTextLabel } from '@dxos/ui-theme';
 
 import { type FormFieldStatus } from '../../hooks';
-import { useFormTooltips } from './Form';
+import { useFormTooltips } from './FormTooltipsContext';
 
 /**
  * Dynamic props passed to input components.
