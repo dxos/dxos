@@ -1,0 +1,21 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Schema from 'effect/Schema';
+
+import { Format } from '@dxos/echo/internal';
+
+/**
+ * Generic location shape. Embedded inline — not an ECHO Type.object.
+ * Uniform across modes so Table and Map views work without per-variant branching.
+ */
+export const Place = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  code: Schema.optional(Schema.String),
+  city: Schema.optional(Schema.String),
+  country: Schema.optional(Schema.String),
+  geo: Format.GeoPoint.pipe(Schema.optional),
+});
+
+export interface Place extends Schema.Schema.Type<typeof Place> {}
