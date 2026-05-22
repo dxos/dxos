@@ -394,7 +394,8 @@ export namespace SpaceOperation {
     output: Schema.Struct({
       id: Schema.String,
       object: Type.Type,
-      schema: Schema.instanceOf(Type.RuntimeType),
+      // TODO(burdon): Validate as a Type.Type once Type.RuntimeType is replaced.
+      schema: Schema.Any,
     }),
   });
 

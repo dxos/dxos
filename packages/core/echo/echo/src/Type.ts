@@ -18,12 +18,15 @@ import type * as ObjModule from './Obj';
 import type * as RelationModule from './Relation';
 
 /**
- * Dynamic type that can be constructed, mutated, and persisted in the ECHO database.
- */
-export const RuntimeType = typeInternal.EchoSchema;
-
-/**
- * Dynamic type that can be constructed, mutated, and persisted in the ECHO database.
+ * Runtime instance of a mutable, persisted type — what `db.schemaRegistry.register`
+ * returns. Wraps the underlying `Type.Type` ECHO object and provides reactive
+ * `id`, `typename`, `version`, `jsonSchema` accessors plus an `addFields` /
+ * `updateTypename` mutation surface (preferred: use `Type.update` and the
+ * `Type.{addFields,updateTypename,…}` free functions).
+ *
+ * Exported as a TYPE only; the underlying class is an internal implementation
+ * detail. Use `Type.isMutable(value)` for runtime checks instead of
+ * `value instanceof <class>`.
  */
 export type RuntimeType = typeInternal.EchoSchema;
 
