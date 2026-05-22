@@ -6,6 +6,7 @@ import { createContext } from '@radix-ui/react-context';
 import { type Day, addDays, differenceInWeeks, format, startOfDay, startOfWeek } from 'date-fns';
 import React, {
   type Dispatch,
+  type PointerEvent as ReactPointerEvent,
   type PropsWithChildren,
   type SetStateAction,
   forwardRef,
@@ -33,6 +34,35 @@ const size = 48;
 const defaultWidth = 7 * size;
 
 //
+// Range
+//
+
+/**
+ * Inclusive date range. `from <= to`. Both endpoints are anchored at the
+ * start of their day; callers should not rely on time-of-day precision.
+ */
+export type Range = {
+  from: Date;
+  to: Date;
+};
+
+/** Normalize an ordered pair of dates into a Range (start-of-day, from <= to). */
+const makeRange = (a: Date, b: Date): Range => {
+  const dayA = startOfDay(a);
+  const dayB = startOfDay(b);
+  return dayA <= dayB ? { from: dayA, to: dayB } : { from: dayB, to: dayA };
+};
+
+/** Inclusive day-level membership check. */
+const isInRange = (date: Date, range: Range | undefined): boolean => {
+  if (!range) {
+    return false;
+  }
+  const day = startOfDay(date).getTime();
+  return day >= range.from.getTime() && day <= range.to.getTime();
+};
+
+//
 // Context
 //
 
@@ -48,6 +78,12 @@ type CalendarContextValue = {
   setIndex: Dispatch<SetStateAction<number | undefined>>;
   selected: Date | undefined;
   setSelected: Dispatch<SetStateAction<Date | undefined>>;
+  /** Committed date range, set by the most recent drag selection. */
+  range: Range | undefined;
+  setRange: Dispatch<SetStateAction<Range | undefined>>;
+  /** Live drag preview; non-undefined only while the user is dragging. */
+  pendingRange: Range | undefined;
+  setPendingRange: Dispatch<SetStateAction<Range | undefined>>;
 };
 
 const [CalendarContextProvider, useCalendarContext] = createContext<CalendarContextValue>('Calendar');
@@ -71,6 +107,8 @@ const CalendarRoot = forwardRef<CalendarController, CalendarRootProps>(
     const event = useMemo(() => new Event<CalendarEvent>(), []);
     const [selected, setSelected] = useState<Date | undefined>();
     const [index, setIndex] = useState<number | undefined>();
+    const [range, setRange] = useState<Range | undefined>();
+    const [pendingRange, setPendingRange] = useState<Range | undefined>();
 
     useImperativeHandle(
       forwardedRef,
@@ -90,6 +128,10 @@ const CalendarRoot = forwardRef<CalendarController, CalendarRootProps>(
         setIndex={setIndex}
         selected={selected}
         setSelected={setSelected}
+        range={range}
+        setRange={setRange}
+        pendingRange={pendingRange}
+        setPendingRange={setPendingRange}
       >
         {children}
       </CalendarContextProvider>
@@ -145,7 +187,6 @@ CalendarToolbar.displayName = CALENDAR_TOOLBAR_NAME;
 //
 // Grid
 // TODO(burdon): Key nav.
-// TODO(burdon): Drag range.
 //
 
 const CALENDAR_GRID_NAME = 'CalendarGrid';
@@ -154,12 +195,20 @@ type CalendarGridProps = {
   rows?: number;
   /** Dates to highlight on the grid. Each date that appears in this array receives a border indicator. */
   dates?: Date[];
+  /** Fired when a user clicks a single date (no drag). */
   onSelect?: (event: { date: Date }) => void;
+  /**
+   * Fired when a user completes a drag across multiple days. Not fired on a
+   * single-click (use {@link onSelect} for that). The range is normalized:
+   * `from <= to`, both at start-of-day.
+   */
+  onSelectRange?: (event: { range: Range }) => void;
 };
 
 const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
-  ({ classNames, rows, dates = [], onSelect, ...props }, forwardedRef) => {
-    const { weekStartsOn, event, setIndex, selected, setSelected } = useCalendarContext(CALENDAR_GRID_NAME);
+  ({ classNames, rows, dates = [], onSelect, onSelectRange, ...props }, forwardedRef) => {
+    const { weekStartsOn, event, setIndex, selected, setSelected, range, setRange, pendingRange, setPendingRange } =
+      useCalendarContext(CALENDAR_GRID_NAME);
     const { ref: containerRef, width = 0, height = 0 } = useResizeDetector();
     const maxHeight = rows ? rows * size : undefined;
     const listRef = useRef<List>(null);
@@ -196,15 +245,78 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
       });
     }, []);
 
-    // TODO(burdon): Get info by range.
+    //
+    // Drag-to-select range.
+    //
+    // Pointer down on a cell anchors the drag. Pointer enter on any cell while
+    // dragging updates the pending range. Pointer up on a cell commits: if the
+    // anchor and release are the same day, this is treated as a single-click
+    // selection (fires onSelect); otherwise it commits a range (fires
+    // onSelectRange). A global pointer-up listener cancels the drag when
+    // released outside the grid.
+    //
+    const dragAnchorRef = useRef<Date | undefined>(undefined);
 
-    const handleDaySelect = useCallback(
-      (date: Date) => {
-        setSelected((current) => (isSameDay(date, current) ? undefined : date));
-        onSelect?.({ date });
+    const handleDayPointerDown = useCallback(
+      (date: Date, ev: ReactPointerEvent<HTMLDivElement>) => {
+        // Prevent text selection while dragging.
+        ev.preventDefault();
+        dragAnchorRef.current = date;
+        setPendingRange({ from: startOfDay(date), to: startOfDay(date) });
       },
-      [onSelect],
+      [setPendingRange],
     );
+
+    const handleDayPointerEnter = useCallback(
+      (date: Date) => {
+        const anchor = dragAnchorRef.current;
+        if (!anchor) {
+          return;
+        }
+        setPendingRange(makeRange(anchor, date));
+      },
+      [setPendingRange],
+    );
+
+    const handleDayPointerUp = useCallback(
+      (date: Date) => {
+        const anchor = dragAnchorRef.current;
+        dragAnchorRef.current = undefined;
+        setPendingRange(undefined);
+        if (!anchor) {
+          return;
+        }
+        if (isSameDay(anchor, date)) {
+          // Single click — toggle single-day selection, do not fire onSelectRange.
+          setSelected((current) => (isSameDay(date, current) ? undefined : date));
+          onSelect?.({ date });
+          return;
+        }
+        const committed = makeRange(anchor, date);
+        setRange(committed);
+        setSelected(undefined);
+        onSelectRange?.({ range: committed });
+      },
+      [onSelect, onSelectRange, setPendingRange, setRange, setSelected],
+    );
+
+    // Cancel drag if the pointer is released outside the grid.
+    useEffect(() => {
+      const cancel = () => {
+        if (dragAnchorRef.current) {
+          dragAnchorRef.current = undefined;
+          setPendingRange(undefined);
+        }
+      };
+      window.addEventListener('pointerup', cancel);
+      window.addEventListener('pointercancel', cancel);
+      return () => {
+        window.removeEventListener('pointerup', cancel);
+        window.removeEventListener('pointercancel', cancel);
+      };
+    }, [setPendingRange]);
+
+    const activeRange = pendingRange ?? range;
 
     const handleScroll = useCallback<NonNullable<ListProps['onScroll']>>((info) => {
       setIndex(Math.round(info.scrollTop / size));
@@ -218,6 +330,7 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
             <div className='grid grid-cols-7 bg-input-surface' style={{ gridTemplateColumns: `repeat(7, ${size}px)` }}>
               {Array.from({ length: 7 }).map((_, i) => {
                 const date = getDate(start, index, i, weekStartsOn);
+                const inRange = isInRange(date, activeRange);
                 const border = isSameDay(date, selected)
                   ? 'border-primary-500'
                   : isSameDay(date, today)
@@ -229,10 +342,16 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
                 return (
                   <div
                     key={i}
-                    className={mx('relative flex justify-center items-center cursor-pointer', getBgColor(date))}
-                    onClick={() => handleDaySelect(date)}
+                    className={mx(
+                      'relative flex justify-center items-center cursor-pointer select-none',
+                      getBgColor(date),
+                    )}
+                    onPointerDown={(ev) => handleDayPointerDown(date, ev)}
+                    onPointerEnter={() => handleDayPointerEnter(date)}
+                    onPointerUp={() => handleDayPointerUp(date)}
                   >
-                    <span className='text-description'>{date.getDate()}</span>
+                    {inRange && <div className='absolute inset-0 bg-primary-500/20' />}
+                    <span className='relative text-description'>{date.getDate()}</span>
                     {!border && date.getDate() === 1 && (
                       <span className='absolute top-0 text-xs text-description'>{format(date, 'MMM')}</span>
                     )}
@@ -244,7 +363,7 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
           </div>
         );
       },
-      [handleDaySelect, hasDate, selected, weekStartsOn],
+      [activeRange, handleDayPointerDown, handleDayPointerEnter, handleDayPointerUp, hasDate, selected, weekStartsOn],
     );
 
     return (
