@@ -144,7 +144,5 @@
     "react": "catalog:",
     "react-dom": "catalog:"
   },
-  "publishConfig": {
-    "access": "public"
-  }
+  "private": true
 }
