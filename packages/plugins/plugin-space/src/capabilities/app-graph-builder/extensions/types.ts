@@ -118,7 +118,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
       id: 'schema-children',
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-        return space && (Obj.instanceOf(Type.PersistentType, node.data) || Schema.isSchema(node.data))
+        return space && (Obj.instanceOf(Type.Type, node.data) || Schema.isSchema(node.data))
           ? Option.some({ space, schema: node.data })
           : Option.none();
       },
@@ -269,7 +269,7 @@ const createSchemaNode = ({
       const persistentSchema = mutableSchema.persistentSchema;
       const snapshot = get(AtomObj.make(persistentSchema));
       return {
-        label: snapshot.name || ['object-name.placeholder', { ns: Type.PersistentType.typename }],
+        label: snapshot.name || ['object-name.placeholder', { ns: Type.Type.typename }],
         nodeId: typename,
       };
     }),
@@ -375,7 +375,7 @@ const createSchemaActions = ({
             })
           : Effect.fail(new Error('Cannot rename immutable schema')),
       properties: {
-        label: getDynamicLabel('rename-object.label', Type.getTypename(Type.PersistentType)),
+        label: getDynamicLabel('rename-object.label', Type.getTypename(Type.Type)),
         icon: 'ph--pencil-simple-line--regular',
         disabled: !Type.isMutable(schema),
         disposition: 'list-item',
@@ -391,7 +391,7 @@ const createSchemaActions = ({
             })
           : Effect.succeed(undefined),
       properties: {
-        label: getDynamicLabel('delete object label', Type.getTypename(Type.PersistentType)),
+        label: getDynamicLabel('delete object label', Type.getTypename(Type.Type)),
         icon: 'ph--trash--regular',
         disposition: 'list-item',
         disabled: !deletable,

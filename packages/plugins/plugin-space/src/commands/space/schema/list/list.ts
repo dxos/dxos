@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 
 import { CommandConfig, Common, getSpace, printList, spaceIdWithDefault } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
-import { type Key } from '@dxos/echo';
+import { type Key, type Type } from '@dxos/echo';
 import { getTypeAnnotation } from '@dxos/echo/internal';
 
 import { createTypenameFilter, mapSchemas, printSchemas } from './util';
@@ -28,7 +28,7 @@ export const handler = Effect.fn(function* ({
   const resolvedSpaceId = yield* spaceIdWithDefault(spaceId as Option.Option<Key.SpaceId>);
   const space = yield* getSpace(resolvedSpaceId);
 
-  const echoSchema = yield* Effect.tryPromise(() => space.db.schemaRegistry.query().run());
+  const echoSchema = (yield* Effect.tryPromise(() => space.db.schemaRegistry.query().run())) as Type.RuntimeType[];
   const runtimeSchema = space.internal.db.graph.schemaRegistry.schemas;
 
   const schemas = [

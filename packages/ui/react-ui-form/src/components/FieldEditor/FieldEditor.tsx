@@ -44,11 +44,11 @@ export const FieldEditor = ({ readonly, projection, field, registry, view, onSav
       return;
     }
 
-    const subscription = registry.query().subscribe((query) => setSchemas(query.results), { fire: true });
+    const subscription = registry.query().subscribe((query) => setSchemas(query.results as EchoSchema[]), { fire: true });
 
     // TODO(dmaretskyi): This shouldn't be needed.
     const schemas = await registry.query().run();
-    setSchemas(schemas);
+    setSchemas(schemas as EchoSchema[]);
 
     return () => subscription?.();
   }, [registry]);

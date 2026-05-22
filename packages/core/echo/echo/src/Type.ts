@@ -108,12 +108,14 @@ export const object: {
 } = internal.EchoObjectSchema as any;
 
 //
-// PersistentType (Schema stored in database)
+// Type — the ECHO entity that holds a schema and metadata.
+// Persisted via `db.add()`; subscribed to via `Filter.type(Type.Type)`.
 //
 
-export const PersistentType: Obj<typeInternal.PersistentSchema> = typeInternal.PersistentSchema as any;
-
-export interface PersistentType extends Schema.Schema.Type<typeof PersistentType> {}
+/**
+ * ECHO schema for a `Type.Type` entity. Stores `{ name?, typename, version, jsonSchema }`.
+ */
+export const Type: Obj<typeInternal.PersistentSchema> = typeInternal.PersistentSchema as any;
 
 /**
  * TypeScript type for an ECHO relation schema.
@@ -257,12 +259,13 @@ export const getMeta = (schema: AnyType): Meta | undefined => {
   return internal.getTypeAnnotation(schema);
 };
 
-//
-// `Type.Type` — first-class type entity.
-// Currently structural over the existing annotated-schema representation;
-// a follow-up phase folds `EchoSchema` and `PersistentType` into a unified
-// entity-backed `Type.Type`.
-//
+/**
+ * Instance type of a `Type.Type` ECHO entity.
+ *
+ * Holds the persisted form of a schema — `{ id, name?, typename, version, jsonSchema }`.
+ * Merged with the `Type` const via TypeScript declaration merging.
+ */
+export interface Type extends Schema.Schema.Type<typeof Type> {}
 
 /**
  * The kind of ECHO entity a `Type.Type` describes — object or relation.
@@ -275,73 +278,109 @@ export type TypeKind = 'object' | 'relation';
 export type Persistence = 'static' | 'persisted';
 
 /**
- * A first-class ECHO type entity.
- *
- * Structurally equivalent to today's annotated schema classes
- * (`AnyObjectType` / `AnyRelationType`), with the persistence phantom `P`
- * distinguishing types created via `Type.object(dxn)` (`'static'`) from
- * types that have been forked into a database via `db.add(type)`
- * (`'persisted'`).
- */
-export interface Type<
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _S extends Schema.Schema.All = Schema.Schema.All,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _K extends TypeKind = TypeKind,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _P extends Persistence = Persistence,
-> {
-  readonly typename: string;
-  readonly version: string;
-}
-
-/**
  * Convenience alias for the instance type produced by a `Type.Type`.
  */
 export type InstanceType<T extends AnyType> = Schema.Schema.Type<T>;
 
 /**
- * Alias for a persisted object-kind type. Use as the parameter type for APIs
- * that require mutation (e.g. `Type.update`).
- */
-export type PersistedObjectType<S extends Schema.Schema.All = Schema.Schema.All> = Type<S, 'object', 'persisted'>;
-
-/**
- * Alias for a persisted relation-kind type.
- */
-export type PersistedRelationType<S extends Schema.Schema.All = Schema.Schema.All> = Type<S, 'relation', 'persisted'>;
-
-/**
- * Returns the underlying Effect Schema for a `Type.Type`.
+ * Returns the underlying Effect Schema for a `Type.Type` runtime value.
  *
- * In the current representation the type entity IS the schema, so this returns
- * the value unchanged for static types. For mutable (`EchoSchema`-backed)
- * persisted types it returns a rebuilt Effect Schema snapshot.
+ * For static schemas (`Type.object(dxn)`) the value IS the schema, so this returns
+ * it unchanged. For mutable (`EchoSchema`-backed) persisted types it returns
+ * a rebuilt Effect Schema snapshot.
  */
-export const getSchema = <S extends Schema.Schema.All>(type: Type<S, TypeKind, Persistence>): S => {
+export const getSchema = <S extends Schema.Schema.All>(type: S): S => {
   if (typeInternal.isMutable(type as any)) {
     return (type as any).snapshot as S;
   }
-  return type as unknown as S;
+  return type;
 };
 
 /**
  * Perform mutations on a persisted type within a change context.
  *
- * Today this delegates to the existing `EchoSchema` mutation plumbing
- * (the `ChangeId` hook on the underlying persistent schema). In the
- * follow-up phase that collapses `EchoSchema` and `PersistentType` into
- * `Type.Type`, this becomes the primary mutation entry point and the
- * field-level helpers (`addFields`, `updateTypename`, …) move out to
- * `@dxos/schema`.
+ * Delegates to the existing `EchoSchema` change plumbing (the `ChangeId` hook
+ * on the underlying persistent schema) — the same automerge-transaction
+ * primitive `Obj.update(obj, cb)` uses.
  *
- * @throws if the type is not persisted.
+ * @throws if the type is not persisted (i.e. not mutable).
  */
 export const update = (
-  type: PersistedObjectType | PersistedRelationType,
+  type: AnyType,
   mutator: (draft: { jsonSchema: internal.JsonSchemaType; typename: string; version: string }) => void,
 ): void => {
   invariant(typeInternal.isMutable(type as any), 'Cannot mutate a type that has not been persisted.');
   const mutable = type as unknown as typeInternal.EchoSchema;
   (mutable as any)._change(mutator);
+};
+
+//
+// Field-level helpers for mutating persisted types.
+// These are thin wrappers over `Type.update` plus the JsonSchema manipulation
+// utilities. Callers pass a persisted `Type.Type` (e.g. one returned by
+// `DatabaseSchemaRegistry.register`) and the helper drives the change context.
+//
+
+/**
+ * Replace the typename on a persisted type.
+ * @throws if the type is not persisted.
+ */
+export const updateTypename = (type: AnyType, typename: string): void => {
+  const schema = getSchema(type as Schema.Schema.All);
+  const updated = typeInternal.setTypenameInSchema(schema as any, typename);
+  update(type, (draft) => {
+    draft.typename = typename;
+    draft.jsonSchema = internal.toJsonSchema(updated);
+  });
+};
+
+/**
+ * Add fields to a persisted type's schema.
+ * @throws if the type is not persisted.
+ */
+export const addFields = (type: AnyType, fields: Schema.Struct.Fields): void => {
+  const schema = getSchema(type as Schema.Schema.All);
+  const extended = typeInternal.addFieldsToSchema(schema as any, fields);
+  update(type, (draft) => {
+    draft.jsonSchema = internal.toJsonSchema(extended);
+  });
+};
+
+/**
+ * Replace existing fields on a persisted type's schema.
+ * @throws if the type is not persisted.
+ */
+export const updateFields = (type: AnyType, fields: Schema.Struct.Fields): void => {
+  const schema = getSchema(type as Schema.Schema.All);
+  const updated = typeInternal.updateFieldsInSchema(schema as any, fields);
+  update(type, (draft) => {
+    draft.jsonSchema = internal.toJsonSchema(updated);
+  });
+};
+
+/**
+ * Rename a field on a persisted type's schema.
+ * @throws if the type is not persisted.
+ */
+export const updateFieldPropertyName = (
+  type: AnyType,
+  { before, after }: { before: PropertyKey; after: PropertyKey },
+): void => {
+  const schema = getSchema(type as Schema.Schema.All);
+  const renamed = typeInternal.updateFieldNameInSchema(schema as any, { before, after });
+  update(type, (draft) => {
+    draft.jsonSchema = internal.toJsonSchema(renamed);
+  });
+};
+
+/**
+ * Remove fields from a persisted type's schema.
+ * @throws if the type is not persisted.
+ */
+export const removeFields = (type: AnyType, fieldNames: string[]): void => {
+  const schema = getSchema(type as Schema.Schema.All);
+  const removed = typeInternal.removeFieldsFromSchema(schema as any, fieldNames);
+  update(type, (draft) => {
+    draft.jsonSchema = internal.toJsonSchema(removed);
+  });
 };

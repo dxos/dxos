@@ -15,7 +15,7 @@ export const useSchemaFilter = (schema: Type.AnyType | undefined): Filter.Any =>
       return Filter.nothing();
     }
 
-    if (schema instanceof Type.RuntimeType) {
+    if (Type.isMutable(schema)) {
       return Filter.or(Filter.type(schema), Filter.typename(schema.typename));
     }
 

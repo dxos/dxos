@@ -96,7 +96,7 @@ describe('EchoSchema', () => {
     const { db } = await setupTest();
     const [schema] = await db.schemaRegistry.register([TestEmpty]);
     const object = Obj.make(schema, {});
-    schema.addFields({ field1: Schema.String });
+    Type.addFields(schema, { field1: Schema.String });
     Obj.update(object, (object) => {
       object.field1 = 'works';
     });
@@ -139,7 +139,7 @@ describe('EchoSchema', () => {
     const { db } = await setupTest();
     const [schema] = await db.schemaRegistry.register([TestEmpty]);
     const before = getSchemaURI(schema)!;
-    schema.updateTypename('com.example.type.updated');
+    Type.updateTypename(schema, 'com.example.type.updated');
     const after = getSchemaURI(schema)!;
     expect(after).to.eq(before);
     expect(schema.typename).to.eq('com.example.type.updated');
@@ -167,7 +167,7 @@ describe('EchoSchema', () => {
   test('schema id stays as echo URI after update', async () => {
     const { db } = await setupTest();
     const [schema] = await db.schemaRegistry.register([TestEmpty]);
-    schema.updateTypename('com.example.type.updated');
+    Type.updateTypename(schema, 'com.example.type.updated');
     // Stored schemas use the canonical EchoURI form (echo:/<id>) for their type identifier.
     expect(getTypeIdentifierAnnotation(schema)).to.match(/^echo:\//);
   });

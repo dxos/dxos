@@ -104,14 +104,14 @@ describe('schema registry', () => {
     const retrieved = await registry.query().run();
     expect(retrieved.length).to.eq(schemas.length);
     for (const schema of retrieved) {
-      expect(schemas.find((s) => s.id === schema.id)).not.to.undefined;
+      expect(schemas.find((s) => s.id === (schema as EchoSchema).id)).not.to.undefined;
     }
   });
 
   test('get all raw stored schemas', async () => {
     const { db, registry } = await setupTest();
     const schemas = await registry.register([Organization, Contact]);
-    const retrieved = await db.query(Filter.type(Type.PersistentType)).run();
+    const retrieved = await db.query(Filter.type(Type.Type)).run();
     expect(retrieved.length).to.eq(schemas.length);
     for (const schema of retrieved) {
       expect(schemas.find((s) => s.id === schema.id)).not.to.undefined;
@@ -177,7 +177,7 @@ describe('schema registry', () => {
 
   test('is registered if was stored in db', async () => {
     const { db, registry } = await setupTest();
-    const schemaToStore = Obj.make(Type.PersistentType, {
+    const schemaToStore = Obj.make(Type.Type, {
       typename: 'com.example.type.test',
       version: '0.1.0',
       jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ field: Schema.Number })),
@@ -191,7 +191,7 @@ describe('schema registry', () => {
     const { registry } = await setupTest();
     const [echoSchema] = await registry.register([Contact]);
     expect(echoSchema.getProperties().length).to.eq(1);
-    echoSchema.addFields({ newField: Schema.Number });
+    Type.addFields(echoSchema, { newField: Schema.Number });
     expect(echoSchema.getProperties().length).to.eq(2);
   });
 
@@ -211,13 +211,13 @@ describe('schema registry', () => {
       const schema = await new Promise<EchoSchema>((resolve) => {
         const immediate = query.runSync();
         if (immediate.length > 0) {
-          resolve(immediate[0]);
+          resolve(immediate[0] as EchoSchema);
           return;
         }
 
         const unsubscribe = query.subscribe(() => {
           if (query.results.length > 0) {
-            resolve(query.results[0]);
+            resolve(query.results[0] as EchoSchema);
           }
         });
         ctx.onTestFinished(unsubscribe);
@@ -255,7 +255,7 @@ describe('schema registry', () => {
       }),
     );
 
-    schema.addFields({ newField: Schema.String });
+    Type.addFields(schema, { newField: Schema.String });
     Obj.update(object, (object) => {
       object.newField = 'Test3';
     });

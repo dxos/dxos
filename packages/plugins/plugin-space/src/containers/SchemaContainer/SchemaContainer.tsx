@@ -46,9 +46,9 @@ export const useQuerySpaceSchemas = (space: Space): Type.RuntimeType[] => {
   useEffect(() => {
     const query = space.db.schemaRegistry.query();
     const initialResults = query.runSync();
-    setSchemas(initialResults);
+    setSchemas(initialResults as Type.RuntimeType[]);
 
-    const unsubscribe = query.subscribe(() => setSchemas(query.results));
+    const unsubscribe = query.subscribe(() => setSchemas(query.results as Type.RuntimeType[]));
     return () => unsubscribe();
   }, [space]);
 

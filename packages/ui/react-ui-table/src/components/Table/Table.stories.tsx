@@ -72,7 +72,7 @@ const StoryViewEditor = ({
     (newQuery: QueryAST.Query) => {
       invariant(schema);
       invariant(Type.isMutable(schema));
-      schema.updateTypename(getTypenameFromQuery(newQuery));
+      Type.updateTypename(schema, getTypenameFromQuery(newQuery));
       invariant(view);
       Obj.update(view, (view) => {
         view.query.ast = newQuery as Mutable<typeof newQuery>;

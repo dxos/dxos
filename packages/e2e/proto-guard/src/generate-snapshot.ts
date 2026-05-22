@@ -72,7 +72,7 @@ const seedData = async (client: Client) => {
 
     const object2 = space.db.add(Obj.make(dynamicSchema, { testField: 'Test' }));
 
-    dynamicSchema.addFields({ name: Schema.String, todo: Ref.Ref(Todo) });
+    Type.addFields(dynamicSchema, { name: Schema.String, todo: Ref.Ref(Todo) });
     Obj.update(object2, (object2) => {
       object2.name = 'Test';
       object2.todo = Ref.make(Obj.make(Todo, { name: 'Test todo' }));

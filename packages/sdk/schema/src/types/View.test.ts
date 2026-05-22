@@ -89,7 +89,7 @@ describe('Projection', () => {
   });
 
   test('maintains field order during initialization', async ({ expect }) => {
-    const schema = Obj.make(Type.PersistentType, {
+    const schema = Obj.make(Type.Type, {
       typename: 'com.example.type.person',
       version: '0.1.0',
       jsonSchema: JsonSchema.toJsonSchema(

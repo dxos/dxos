@@ -74,7 +74,7 @@ export type RegisterSchemaInput =
 
 export type ExtractQueryResult<Query> = Query extends { location: ('database' | 'runtime')[] }
   ? Type.AnyType
-  : Type.RuntimeType;
+  : Type.AnyType;
 
 // TODO(dmaretskyi): Rename TypeRegistry
 export interface SchemaRegistry {

@@ -10,6 +10,7 @@ import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
 import { Filter, JsonSchema, Obj, type QueryResult, type SchemaRegistry, Type } from '@dxos/echo';
 import {
+  EchoSchema,
   PersistentSchema,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
@@ -97,7 +98,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
   }
 
   public hasSchema(schema: Type.AnyType): boolean {
-    const schemaId = schema instanceof Type.RuntimeType ? schema.id : getObjectIdFromSchema(schema);
+    const schemaId = Type.isMutable(schema) ? schema.id : getObjectIdFromSchema(schema);
     return schemaId != null && this.getSchemaById(schemaId) != null;
   }
 
@@ -300,7 +301,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
    * @deprecated Use `query` instead.
    */
   public getSchema(typename: string): Type.RuntimeType | undefined {
-    return this.query({ typename }).runSync()[0];
+    return this.query({ typename }).runSync()[0] as Type.RuntimeType | undefined;
   }
 
   /**
@@ -328,7 +329,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
   /**
    * @internal
    *
-   * Registers a PersistentSchema object if necessary and returns a Type.RuntimeType object.
+   * Registers a PersistentSchema object if necessary and returns a Type.AnyType object.
    */
   _registerSchema(schema: PersistentSchema): Type.RuntimeType {
     const existing = this._schemaById.get(schema.id);
@@ -348,7 +349,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     }
 
     let previousTypename: string | undefined;
-    const echoSchema = new Type.RuntimeType(schema);
+    const echoSchema = new EchoSchema(schema);
     const subscription = getObjectCore(schema).updates.on(() => {
       echoSchema._invalidate();
     });
@@ -370,9 +371,9 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
 
   // TODO(dmaretskyi): Figure out how to migrate the usages to the async `register` method.
   private _addSchema(schema: Schema.Schema.AnyNoContext): Type.RuntimeType {
-    if (schema instanceof Type.RuntimeType) {
+    if (Type.isMutable(schema)) {
       // The snapshot preserves typename/version in annotations.
-      schema = schema.snapshot.annotations({
+      schema = (schema as any).snapshot.annotations({
         [TypeIdentifierAnnotationId]: undefined,
       });
     }

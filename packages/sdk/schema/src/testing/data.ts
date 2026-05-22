@@ -41,7 +41,7 @@ export const Example = Schema.Struct({
 
 export type Example = Schema.Schema.Type<typeof Example>;
 
-export const testSchema = Obj.make(Type.PersistentType, {
+export const testSchema = Obj.make(Type.Type, {
   typename: 'com.example.type.test',
   version: '0.1.0',
   jsonSchema: JsonSchema.toJsonSchema(Example),

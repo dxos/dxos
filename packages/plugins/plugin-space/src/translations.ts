@@ -12,7 +12,7 @@ import { meta } from '#meta';
 export const translations = [
   {
     'en-US': {
-      [Type.getTypename(Type.PersistentType)]: {
+      [Type.getTypename(Type.Type)]: {
         'typename.label': 'Type',
         'typename.label_zero': 'Types',
         'typename.label_one': 'Type',

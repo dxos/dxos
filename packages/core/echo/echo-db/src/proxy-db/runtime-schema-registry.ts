@@ -19,7 +19,7 @@ import { SchemaRegistryPreparedQueryImpl } from './schema-registry-prepared-quer
 const SYSTEM_SCHEMA = ['org.dxos.type.schema'];
 
 /**
- * Registry of `Type.RuntimeType` schemas.
+ * Registry of `Type.AnyType` schemas.
  *
  * Keyed internally by the schema's URI (today always a DXN). Maintains multiple
  * versions per typename for backwards lookup via `getSchemaByDXN`.
@@ -32,7 +32,7 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
   /** Emitted when schemas are registered. */
   readonly schemaChanges = new Event();
 
-  constructor(schemas: Type.AnyType[] = [Type.PersistentType]) {
+  constructor(schemas: Type.AnyType[] = [Type.Type]) {
     schemas.forEach((schema) => this._add(schema));
   }
 

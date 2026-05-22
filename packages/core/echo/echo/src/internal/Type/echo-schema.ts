@@ -304,8 +304,8 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   /**
    * Reference to the underlying persistent schema object.
    */
-  public get persistentSchema(): Type.PersistentType {
-    return this._persistentSchema as Type.PersistentType;
+  public get persistentSchema(): Type.Type {
+    return this._persistentSchema as Type.Type;
   }
 
   public getProperties(): SchemaAST.PropertySignature[] {

@@ -393,7 +393,7 @@ export namespace SpaceOperation {
     }),
     output: Schema.Struct({
       id: Schema.String,
-      object: Type.PersistentType,
+      object: Type.Type,
       schema: Schema.instanceOf(Type.RuntimeType),
     }),
   });

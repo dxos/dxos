@@ -32,7 +32,7 @@ export default Capability.makeModule(
           }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Type.getTypename(Type.PersistentType),
+        id: Type.getTypename(Type.Type),
         inputSchema: SpaceOperation.StoredSchemaForm,
         createObject: (props, options) =>
           Effect.gen(function* () {

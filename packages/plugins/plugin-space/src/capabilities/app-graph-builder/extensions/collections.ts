@@ -181,7 +181,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
           : Option.none();
       },
       actions: ({ object, nodeId }, get) => {
-        const deletable = !Obj.instanceOf(Type.PersistentType, object);
+        const deletable = !Obj.instanceOf(Type.Type, object);
 
         const [appGraph] = get(capabilities.atom(AppCapabilities.AppGraph));
         const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);

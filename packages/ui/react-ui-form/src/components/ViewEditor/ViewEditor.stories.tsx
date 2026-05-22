@@ -92,17 +92,17 @@ const DefaultStory = (props: DefaultStoryProps) => {
 
         const newView = ViewModel.make({
           query,
-          jsonSchema: newSchema.jsonSchema,
+          jsonSchema: (newSchema as EchoSchema).jsonSchema,
         });
         Obj.update(view, (view) => {
           view.projection = Obj.getSnapshot(newView).projection as Mutable<typeof view.projection>;
         });
-        setSchema(() => newSchema);
+        setSchema(() => newSchema as EchoSchema);
       } else {
         Obj.update(view, (view) => {
           view.query.ast = newQuery as Mutable<typeof newQuery>;
         });
-        schema.updateTypename(getTypenameFromQuery(newQuery));
+        Type.updateTypename(schema, getTypenameFromQuery(newQuery));
       }
     },
     [view, schema],
