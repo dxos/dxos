@@ -287,14 +287,16 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
           return;
         }
         if (isSameDay(anchor, date)) {
-          // Single click — toggle single-day selection, do not fire onSelectRange.
+          // Single click — toggle single-day selection; clears any committed range.
+          setRange(undefined);
           setSelected((current) => (isSameDay(date, current) ? undefined : date));
           onSelect?.({ date });
           return;
         }
+        // Drag commit — clears any single-day selection.
         const committed = makeRange(anchor, date);
-        setRange(committed);
         setSelected(undefined);
+        setRange(committed);
         onSelectRange?.({ range: committed });
       },
       [onSelect, onSelectRange, setPendingRange, setRange, setSelected],
