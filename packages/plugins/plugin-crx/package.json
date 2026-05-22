@@ -92,7 +92,5 @@
     "@dxos/react-ui": "workspace:*",
     "react": "catalog:"
   },
-  "publishConfig": {
-    "access": "public"
-  }
+  "private": true
 }
