@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Ref } from '@dxos/echo';
 import { Provider } from '@dxos/types';
 
-import { Booking } from './Booking';
+import * as Booking from './Booking';
 import { Place } from './Place';
 
 // ---------------------------------------------------------------------------
@@ -28,7 +28,7 @@ export const Core = Schema.Struct({
   destination: Place.pipe(Schema.optional),
   departAt: Schema.optional(Schema.String),
   arriveAt: Schema.optional(Schema.String),
-  booking: Ref.Ref(Booking).pipe(Schema.optional),
+  booking: Ref.Ref(Booking.Booking).pipe(Schema.optional),
   notes: Schema.optional(Schema.String),
 });
 
