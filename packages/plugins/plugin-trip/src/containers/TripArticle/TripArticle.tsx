@@ -52,7 +52,14 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
     ({ date }: { date: Date }) => {
       const match = segments.find((seg) => {
         const primary = Segment.getPrimaryDate(seg);
-        return primary && isSameDay(primary, date);
+        if (primary && isSameDay(primary, date)) {
+          return true;
+        }
+        if (seg._tag === 'lodging') {
+          const checkOut = Segment.parseDate(seg.checkOut);
+          return !!checkOut && isSameDay(checkOut, date);
+        }
+        return false;
       });
       if (match) {
         void invokePromise(LayoutOperation.Select, {

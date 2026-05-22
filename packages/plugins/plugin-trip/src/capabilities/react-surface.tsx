@@ -27,13 +27,14 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'surface.segment',
-        filter: AppSurface.companion(AppSurface.Article, Trip.Trip),
+        role: 'article',
+        filter: (data): data is { attendableId: string; companionTo: Trip.Trip } =>
+          typeof data === 'object' &&
+          data !== null &&
+          typeof (data as { attendableId?: unknown }).attendableId === 'string' &&
+          Trip.instanceOf((data as { companionTo?: unknown }).companionTo),
         component: ({ data, role }) => (
-          <SegmentArticle
-            role={role}
-            attendableId={(data as unknown as { attendableId: string }).attendableId}
-            companionTo={data.companionTo}
-          />
+          <SegmentArticle role={role} attendableId={data.attendableId} companionTo={data.companionTo} />
         ),
       }),
     ]),
