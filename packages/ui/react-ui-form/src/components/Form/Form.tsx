@@ -179,13 +179,6 @@ const FormRoot = <T extends AnyProperties = AnyProperties>({
   );
 };
 
-// `FormTooltipsContext` / `useFormTooltips` live in their own module to
-// avoid a `Form.tsx <-> FormFieldComponent.tsx` circular import at
-// module-eval time (the latter consumes the hook; the former imports
-// `FormFieldLabel`). Re-export the hook here so the public surface is
-// unchanged.
-export { useFormTooltips } from './FormTooltipsContext';
-
 FormRoot.displayName = 'Form.Root';
 
 //
