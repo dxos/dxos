@@ -42,16 +42,27 @@ export class QueueFactory extends Resource implements QueueAPI {
   }
 
   /**
-   * Returns an existing Queue for the given id, without creating one. Used by
-   * the ref resolver to distinguish ECHO objects from queues when both share the
-   * same `echo:` URI form post-Phase 6.
+   * Returns an existing Queue for the given URI, or `undefined` if no queue has
+   * been instantiated at that URI in this space.
+   *
+   * Unlike {@link get}, does NOT create a queue as a side effect. Use this when
+   * a URI could plausibly address either a queue or an ECHO object (the two
+   * share the same `echo://<spaceId>/<objectId>` shape) and you only want to
+   * resolve to a queue that already exists — calling `get` in that situation
+   * would manufacture a phantom queue at every URI that turns out to be an
+   * object, poisoning later real lookups.
    */
   tryGet<T extends Entity.Unknown>(echoId: EchoURI.EchoURI): Queue<T> | undefined {
     return this._queues.get(echoId) as Queue<T> | undefined;
   }
 
   /**
-   * Iterate queues already instantiated in this space (does not enumerate persisted feed catalog).
+   * Iterates queues already instantiated in this space.
+   *
+   * Returns only the in-memory cache — does NOT enumerate the persisted feed
+   * catalog. Intended for callers that need to scan currently-active queues
+   * synchronously (e.g. searching across them for an object id) without paying
+   * the cost of an async catalog query per call.
    */
   knownQueues(): Iterable<Queue<Entity.Unknown>> {
     return this._queues.values();

@@ -111,10 +111,8 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     }
   });
 
-  private readonly _subspaceTag: string;
   private readonly _spaceId: SpaceId;
   private readonly _queueId: string;
-  private readonly _echoId: EchoURI.EchoURI;
 
   /**
    * Number of active polling handlers.
@@ -133,14 +131,12 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   constructor(
     private readonly _service: FeedProtocol.QueueService,
     private readonly _refResolver: Ref.Resolver,
-    echoId: EchoURI.EchoURI,
+    private readonly _echoId: EchoURI.EchoURI,
     private readonly _database?: Database.Database,
-    subspaceTag?: string,
+    private readonly _subspaceTag: string = 'data',
   ) {
-    this._echoId = echoId;
-    this._spaceId = EchoURI.getSpaceId(echoId) ?? failedInvariant('Missing spaceId in EchoURI');
-    this._queueId = EchoURI.getObjectId(echoId) ?? failedInvariant('Missing queueId in EchoURI');
-    this._subspaceTag = subspaceTag ?? 'data';
+    this._spaceId = EchoURI.getSpaceId(_echoId) ?? failedInvariant('Missing spaceId in EchoURI');
+    this._queueId = EchoURI.getObjectId(_echoId) ?? failedInvariant('Missing queueId in EchoURI');
   }
 
   /**
