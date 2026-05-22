@@ -4,20 +4,20 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 import { Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppCapabilities, AppPlugin, createObjectNode, getPersonalSpace } from '@dxos/app-toolkit';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Filter, Query, Relation } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { GraphBuilder, Node, NodeMatcher, qualifyId } from '@dxos/plugin-graph';
+import { Graph, GraphBuilder, Node, NodeMatcher, qualifyId } from '@dxos/plugin-graph';
 import { Markdown, MarkdownEvents } from '@dxos/plugin-markdown';
-import { MarkdownPlugin } from '@dxos/plugin-markdown/plugin';
+import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
@@ -66,10 +66,19 @@ const StoryGraphPlugin = Plugin.define({ id: 'story-graph', name: 'Story Graph' 
 );
 
 const DefaultStory = () => {
+  const { graph } = useAppGraph();
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
   const attendableId = doc && qualifyId(Node.RootId, doc.id);
   const attentionAttrs = useAttentionAttributes(attendableId);
+
+  // Story renders surfaces directly (no deck), so expand graph actions for the doc node.
+  useEffect(() => {
+    if (attendableId) {
+      void Graph.expand(graph, attendableId, 'action');
+    }
+  }, [graph, attendableId]);
+
   const articleData = useMemo(() => ({ subject: doc, attendableId: attendableId ?? 'story' }), [doc, attendableId]);
   const companionData = useMemo(
     () => ({ subject: 'comments', companionTo: doc, attendableId: attendableId ?? 'story' }),
