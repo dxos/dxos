@@ -3,7 +3,7 @@
 //
 
 import { createContext } from '@radix-ui/react-context';
-import { type Day, addDays, differenceInWeeks, format, startOfDay, startOfWeek } from 'date-fns';
+import { type Day, addDays, format, startOfDay, startOfWeek } from 'date-fns';
 import React, {
   type Dispatch,
   type KeyboardEvent as ReactKeyboardEvent,
@@ -27,7 +27,7 @@ import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { getDate, isSameDay } from './util';
+import { getDate, getRowIndex, isSameDay } from './util';
 
 const maxRows = 50 * 100;
 const start = new Date('1970-01-01');
@@ -239,15 +239,15 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
 
     const [initialized, setInitialized] = useState(false);
     useEffect(() => {
-      const index = differenceInWeeks(today, start);
+      const index = getRowIndex(start, today, weekStartsOn);
       listRef.current?.scrollToRow(index);
-    }, [initialized, start, today]);
+    }, [initialized, start, today, weekStartsOn]);
 
     useEffect(() => {
       return event.on((event) => {
         switch (event.type) {
           case 'scroll': {
-            const index = differenceInWeeks(event.date, start);
+            const index = getRowIndex(start, event.date, weekStartsOn);
             listRef.current?.scrollToRow(index);
             break;
           }
@@ -288,7 +288,7 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
     // unchanged and are a no-op.
     const scrollIntoView = useCallback(
       (date: Date) => {
-        const targetRow = differenceInWeeks(date, start);
+        const targetRow = getRowIndex(start, date, weekStartsOn);
         const visibleHeight = maxHeight ?? height;
         if (!visibleHeight) {
           return;
@@ -304,7 +304,7 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
           );
         }
       },
-      [height, maxHeight],
+      [height, maxHeight, weekStartsOn],
     );
 
     const updateRangeFromAnchor = useCallback(
@@ -358,12 +358,9 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
           return;
         }
         focusRef.current = date;
-        if (isSameDay(anchor, date)) {
-          // Still on the anchor cell — keep the single-select ring, no range yet.
-          setPendingRange(undefined);
-          return;
-        }
-        // Pointer moved to a different cell — promote to range and clear the ring.
+        // Always render a pending range while dragging — even a single-day range
+        // (when the pointer is on the anchor cell or returns to it). Otherwise
+        // the anchor cell would appear empty mid-drag.
         setSelected(undefined);
         setPendingRange(makeRange(anchor, date));
       },
@@ -381,7 +378,9 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
         }
         focusRef.current = date;
         if (isSameDay(anchor, date)) {
-          // Single click — `selected` was already set on pointerdown.
+          // Single click — restore the single-select ring (pointerenter may
+          // have cleared it to show the in-drag pending-range fill).
+          setSelected(anchor);
           onSelect?.({ date });
           return;
         }
@@ -390,7 +389,7 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
         setRange(committed);
         onSelectRange?.({ range: committed });
       },
-      [onSelect, onSelectRange, setPendingRange, setRange],
+      [onSelect, onSelectRange, setPendingRange, setRange, setSelected],
     );
 
     // Cancel drag if the pointer is released outside the grid.
