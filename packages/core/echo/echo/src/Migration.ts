@@ -86,16 +86,14 @@ export type ObjectMigration = {
 export const define = <From extends Schema.Schema.AnyNoContext, To extends Schema.Schema.AnyNoContext>(
   options: DefineObjectMigrationOptions<From, To>,
 ): ObjectMigration => {
-  const fromTypeDXN = getSchemaURI(options.from);
-  if (!fromTypeDXN) {
+  const fromType = getSchemaURI(options.from);
+  if (!fromType) {
     throw new Error('Invalid from schema');
   }
-  const toTypeDXN = getSchemaURI(options.to);
-  if (!toTypeDXN) {
+  const toType = getSchemaURI(options.to);
+  if (!toType) {
     throw new Error('Invalid to schema');
   }
-  const fromType = fromTypeDXN;
-  const toType = toTypeDXN;
 
   return {
     fromType,
