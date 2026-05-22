@@ -112,12 +112,16 @@ export const ArrayField = ({
             return (
               <div key={index} className='flex flex-col'>
                 <FormField
+                  {...props}
                   autoFocus={index === values.length - 1}
                   type={elementType}
+                  // Override the array's field name (e.g. `signaling`) with
+                  // the item's index so each item is labelled `[0]`, `[1]`,
+                  // ... instead of repeating the same key for every entry.
+                  name={`[${index}]`}
                   path={[...(path ?? []), index]}
                   readonly={readonly || layout === 'static'}
                   layout={layout === 'static' ? 'static' : undefined}
-                  {...props}
                 />
                 {!readonly && layout !== 'static' && (
                   <IconButton
