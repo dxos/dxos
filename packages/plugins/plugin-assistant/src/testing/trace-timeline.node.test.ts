@@ -109,6 +109,7 @@ describe('Trace timeline', () => {
             ├──●  [user] Search for all organizations. How many are there?
             │  ●  [function] List schemas - Success
             │  ●  [function] Query - Success
+            │  ●  [function] Query - Success
             ◆──╯  [atom] Agent completed request
             "
           `);
