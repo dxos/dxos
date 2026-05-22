@@ -62,7 +62,13 @@ export const ArrayField = ({
   const handleAdd = useCallback(() => {
     const defaultValue =
       isNestedType(type) && elementType ? getDefaultObjectValue(elementType) : getDefaultValue(elementType);
-    values && onValueChange(type, [...values, defaultValue]);
+    // `values` is `undefined` on first render for arrays whose parent path
+    // hasn't been materialised in the form values yet (e.g. `package.repos`
+    // when the form starts with no `package`). `useFormValues`'s default-
+    // value effect would eventually backfill it to `[]`, but until then the
+    // old `values && ...` guard silently swallowed the click. Treat a
+    // missing array as empty so Add always produces `[defaultValue]`.
+    onValueChange(type, [...(values ?? []), defaultValue]);
   }, [onValueChange, type, elementType, values]);
 
   const handleDelete = useCallback(
@@ -110,28 +116,27 @@ export const ArrayField = ({
         {values?.map((_, index) => {
           if (renderItemAsObject) {
             return (
-              <div
-                key={index}
-                className='grid grid-cols-[1fr_min-content] gap-form-gap items-center border border-subdued-separator p-1 mb-1'
-              >
-                <FormField
-                  {...props}
-                  autoFocus={index === values.length - 1}
-                  type={elementType}
-                  // Suppress the nested struct's header label: a row labelled
-                  // by the parent's field name (e.g. "Signaling") would
-                  // repeat for every item, and the item index is already
-                  // implicit from the stacking order. `name={null}` is the
-                  // documented FormField escape hatch -- `FormFieldSet`'s
-                  // `label && <FormFieldLabel ...>` guard then skips the
-                  // header entirely.
-                  name={null}
-                  path={[...(path ?? []), index]}
-                  readonly={readonly || layout === 'static'}
-                  layout={layout === 'static' ? 'static' : undefined}
-                />
+              <div key={index} className='grid grid-cols-[1fr_min-content] gap-form-gap items-center mb-1'>
+                <div className='p-1 border border-subdued-separator'>
+                  <FormField
+                    {...props}
+                    autoFocus={index === values.length - 1}
+                    type={elementType}
+                    // Suppress the nested struct's header label: a row labelled
+                    // by the parent's field name (e.g. "Signaling") would
+                    // repeat for every item, and the item index is already
+                    // implicit from the stacking order. `name={null}` is the
+                    // documented FormField escape hatch -- `FormFieldSet`'s
+                    // `label && <FormFieldLabel ...>` guard then skips the
+                    // header entirely.
+                    name={null}
+                    path={[...(path ?? []), index]}
+                    readonly={readonly || layout === 'static'}
+                    layout={layout === 'static' ? 'static' : undefined}
+                  />
+                </div>
                 {!readonly && layout !== 'static' && (
-                  <div className='flex items-center mt-1'>
+                  <div className='h-full flex flex-col justify-end'>
                     <IconButton
                       density='fine'
                       variant='ghost'
