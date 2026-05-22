@@ -7,6 +7,9 @@ import { platform } from 'node:os';
 
 import { AppManager, INITIAL_URL } from './app-manager';
 
+// Personal space + exemplar space seeded on every new identity.
+const INITIAL_SPACE_COUNT = 2;
+
 // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
 //   https://github.com/microsoft/playwright/issues/2973
 test.describe('HALO tests', () => {
@@ -38,10 +41,9 @@ test.describe('HALO tests', () => {
 
     await host.createSpace();
 
-    // Personal space + exemplar space + newly created space = 3.
-    await expect(host.getSpaceItems()).toHaveCount(3);
+    await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
     // By the time host.createSpace() completes (>500ms), the exemplar has loaded on the guest too.
-    await expect(guest.getSpaceItems()).toHaveCount(2);
+    await expect(guest.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT);
 
     await host.openUserDevices();
     const invitationCode = await host.createDeviceInvitation();
@@ -55,11 +57,10 @@ test.describe('HALO tests', () => {
     await guest.shell.acceptDeviceInvitation(invitationCode);
     await guest.shell.authenticateDevice(authCode);
 
-    // Host still has 3 spaces (unchanged).
-    await expect(host.getSpaceItems()).toHaveCount(3);
+    await expect(host.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1);
     // TODO(wittjosiah): Why so slow?
-    // Wait for replication to complete — guest inherits all 3 of host's spaces.
-    await expect(guest.getSpaceItems()).toHaveCount(3, { timeout: 60_000 });
+    // Wait for replication to complete — guest inherits all of host's spaces.
+    await expect(guest.getSpaceItems()).toHaveCount(INITIAL_SPACE_COUNT + 1, { timeout: 60_000 });
 
     // TODO(wittjosiah): Display name is not currently set in this test.
     // await host.openIdentityManager();
