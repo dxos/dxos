@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, expect, test } from 'vitest';
 
 import { Filter, Obj, Type } from '@dxos/echo';
-import { getSchemaDXN } from '@dxos/echo/internal';
+import { getSchemaURI } from '@dxos/echo/internal';
 import { JsonPath } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
@@ -66,7 +66,7 @@ test('migrate 1 object', async () => {
   const objects = await db.query(Filter.type(ContactV2)).run();
   expect(objects).to.have.length(1);
 
-  expect(getSchemaDXN(Obj.getSchema(objects[0])!)?.toString()).to.eq(DXN.make('com.example.type.person', '0.2.0'));
+  expect(getSchemaURI(Obj.getSchema(objects[0])!)?.toString()).to.eq(DXN.make('com.example.type.person', '0.2.0'));
   expect(Obj.getTypename(objects[0])).to.eq('com.example.type.person');
   expect(Type.getVersion(Obj.getSchema(objects[0])!)).to.eq('0.2.0');
   expect(objects[0].name).to.eq('John Doe');

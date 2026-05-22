@@ -29,7 +29,7 @@ import {
 } from '@dxos/echo-protocol';
 import { batchEvents } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { type DXN, EchoURI, type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
+import { EchoURI, type ObjectId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
@@ -1201,9 +1201,10 @@ export type AtomicReplaceObjectProps = {
   data: any;
 
   /**
-   * Update object type.
+   * Update object type — either a typename DXN or a stored-schema EchoURI
+   * (see `getSchemaURI`).
    */
-  type?: DXN.DXN;
+  type?: URI.URI;
 
   /**
    * Optional partial meta patch — merged into the existing object meta.

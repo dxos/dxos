@@ -6,11 +6,11 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { type DXN } from '@dxos/keys';
+import { type URI } from '@dxos/keys';
 
 import type * as Database from './Database';
 import type * as Entity from './Entity';
-import { MetaId, type ObjectMeta, getSchemaDXN } from './internal';
+import { MetaId, type ObjectMeta, getSchemaURI } from './internal';
 
 /**
  * Result returned by a migration's `transform` callback.
@@ -62,8 +62,8 @@ type OnMigrateProps<From extends Schema.Schema.AnyNoContext, To extends Schema.S
  * Definition of a migration from one object schema version to another.
  */
 export type ObjectMigration = {
-  fromType: DXN.DXN;
-  toType: DXN.DXN;
+  fromType: URI.URI;
+  toType: URI.URI;
   fromSchema: Schema.Schema.AnyNoContext;
   toSchema: Schema.Schema.AnyNoContext;
   transform: (from: unknown, context: ObjectMigrationContext) => Promise<unknown>;
@@ -86,11 +86,11 @@ export type ObjectMigration = {
 export const define = <From extends Schema.Schema.AnyNoContext, To extends Schema.Schema.AnyNoContext>(
   options: DefineObjectMigrationOptions<From, To>,
 ): ObjectMigration => {
-  const fromTypeDXN = getSchemaDXN(options.from);
+  const fromTypeDXN = getSchemaURI(options.from);
   if (!fromTypeDXN) {
     throw new Error('Invalid from schema');
   }
-  const toTypeDXN = getSchemaDXN(options.to);
+  const toTypeDXN = getSchemaURI(options.to);
   if (!toTypeDXN) {
     throw new Error('Invalid to schema');
   }

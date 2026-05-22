@@ -21,7 +21,7 @@ import { ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET } from '@dxos/e
 import { type RuntimeProvider, runAndForwardErrors, unwrapExit } from '@dxos/effect';
 import { EscapedPropPath, type IndexEngine, type ObjectMeta, type ReverseRef } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
-import { type DXN, EchoURI, ObjectId, SpaceId, type URI } from '@dxos/keys';
+import { EchoURI, ObjectId, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dxos/echo/query';
 import { compositeKey, getDeep, isNonNullable } from '@dxos/util';
@@ -1369,7 +1369,7 @@ export class QueryExecutor extends Resource {
 
   private async _queryTypesFromSqlIndex(
     spaceIds: readonly SpaceId[],
-    typeDxns: readonly DXN.DXN[],
+    typeDxns: readonly string[],
     inverted: boolean,
     includeAllQueues: boolean,
     queueIds: readonly ObjectId[] | null,

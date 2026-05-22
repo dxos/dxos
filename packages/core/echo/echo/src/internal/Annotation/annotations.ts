@@ -46,30 +46,17 @@ export const getTypeIdentifierAnnotation = (schema: Schema.Schema.All) =>
   )(schema.ast);
 
 /**
- * @returns The schema's type DXN (`dxn:<nsid>[:<version>]`).
+ * @returns The schema's type identifier URI — whichever URI fits.
  *
- * Derived from the schema's typename + version — universal across stored and non-stored
- * schemas. The schema-as-object EchoURI (for stored schemas) is tracked separately via
- * `TypeIdentifierAnnotation` / `Obj.getURI(persistentSchema)`.
- */
-export const getSchemaDXN = (schema: Schema.Schema.All): DXN.DXN | undefined => {
-  assertArgument(Schema.isSchema(schema), 'schema', 'invalid schema');
-  const objectAnnotation = getTypeAnnotation(schema);
-  if (objectAnnotation) {
-    return DXN.make(objectAnnotation.typename, objectAnnotation.version);
-  }
-  const id = getTypeIdentifierAnnotation(schema);
-  return id ? DXN.tryMake(id) : undefined;
-};
-
-/**
- * @returns The schema's type identifier URI used as the object's `ATTR_TYPE`.
+ * - Stored (dynamic) schemas: the schema-as-object's EchoURI, so loaded objects ride
+ *   along with their schema as a strong dependency.
+ * - Non-stored (static) schemas: the typename DXN built from `TypeAnnotation`.
  *
- * For stored schemas returns the schema-as-object EchoURI so loaded objects ride along
- * with their schema as a strong dependency. Falls back to the typename DXN for
- * non-stored schemas.
+ * This URI is what gets written to an object's `system.type`; queries that filter by
+ * type also use it (see `Filter.type` / `getTypeURIFromSpecifier`), so both sides
+ * stay symmetric without per-schema branching.
  */
-export const getSchemaTypeURI = (schema: Schema.Schema.All): URI.URI | undefined => {
+export const getSchemaURI = (schema: Schema.Schema.All): URI.URI | undefined => {
   assertArgument(Schema.isSchema(schema), 'schema', 'invalid schema');
   const id = getTypeIdentifierAnnotation(schema);
   if (id) {
@@ -84,11 +71,12 @@ export const getSchemaTypeURI = (schema: Schema.Schema.All): URI.URI | undefined
 
 /**
  * @param input schema or a typename string.
- * @return type DXN.
+ * @return type identifier URI — see {@link getSchemaURI}. For a typename string,
+ * always a DXN.
  */
-export const getTypeDXNFromSpecifier = (input: Schema.Schema.All | string): DXN.DXN => {
+export const getTypeURIFromSpecifier = (input: Schema.Schema.All | string): URI.URI => {
   if (Schema.isSchema(input)) {
-    return getSchemaDXN(input) ?? raise(new TypeError('Schema has no DXN'));
+    return getSchemaURI(input) ?? raise(new TypeError('Schema has no URI'));
   } else {
     assertArgument(typeof input === 'string', 'input');
     assertArgument(!input.startsWith('dxn:'), 'input');
@@ -269,13 +257,13 @@ export const isInstanceOf = <Schema extends Schema.Schema.AnyNoContext>(
     return false;
   }
 
-  const schemaDXN = getSchemaDXN(schema);
-  if (!schemaDXN) {
+  const schemaURI = getSchemaURI(schema);
+  if (!schemaURI) {
     throw new Error('Schema must have an object annotation.');
   }
 
   const type = getTypeURI(object);
-  if (type && type === schemaDXN) {
+  if (type && type === schemaURI) {
     return true;
   }
 
@@ -284,12 +272,12 @@ export const isInstanceOf = <Schema extends Schema.Schema.AnyNoContext>(
     return false;
   }
 
-  if (!DXN.isDXN(schemaDXN)) {
-    // EchoURI-based schema DXN — no typename match possible.
+  if (!DXN.isDXN(schemaURI)) {
+    // EchoURI-based schema URI — no typename match possible.
     return false;
   }
 
-  const parsed = DXN.tryMake(schemaDXN);
+  const parsed = DXN.tryMake(schemaURI);
   return parsed != null && DXN.getName(parsed) === typename;
 };
 

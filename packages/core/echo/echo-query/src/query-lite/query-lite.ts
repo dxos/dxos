@@ -9,7 +9,7 @@ import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 // `DXN`/`EchoURI` are type-only imports to keep the `query-lite` bundle free of
 // `effect/Schema` (which pulls runtime helpers QuickJS can't parse — e.g. private class fields).
-import type { DXN, EchoURI, ObjectId } from '@dxos/keys';
+import type { DXN, EchoURI, ObjectId, URI } from '@dxos/keys';
 
 //
 // Light-weight implementation of query execution.
@@ -126,10 +126,10 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static typeDXN(dxn: DXN.DXN): Filter$.Any {
+  static typeDXN(uri: URI.URI): Filter$.Any {
     return new FilterClass({
       type: 'object',
-      typename: dxn,
+      typename: uri,
       props: {},
     });
   }

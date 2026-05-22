@@ -11,7 +11,7 @@ import type * as Types from 'effect/Types';
 
 import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
-import { DXN, EchoURI, ObjectId } from '@dxos/keys';
+import { DXN, EchoURI, ObjectId, type URI } from '@dxos/keys';
 
 import * as internal from './internal';
 import type * as Obj from './Obj';
@@ -106,7 +106,7 @@ export const type = <S extends Schema.Schema.All>(
   props?: Props<Schema.Schema.Type<S>>,
 ): Filter<Schema.Schema.Type<S>> => {
   if (Schema.isSchema(schema) && SchemaAST.isUnion(schema.ast)) {
-    const typenames = schema.ast.types.map((type) => internal.getTypeDXNFromSpecifier(Schema.make(type)));
+    const typenames = schema.ast.types.map((type) => internal.getTypeURIFromSpecifier(Schema.make(type)));
     return new FilterClass({
       type: 'or',
       filters: typenames.map((typename) => ({
@@ -117,7 +117,7 @@ export const type = <S extends Schema.Schema.All>(
     });
   }
 
-  const dxn = internal.getTypeDXNFromSpecifier(schema);
+  const dxn = internal.getTypeURIFromSpecifier(schema);
   return new FilterClass({
     type: 'object',
     typename: dxn,
@@ -138,12 +138,13 @@ export const typename = (typename: string): Any => {
 };
 
 /**
- * Filter by fully qualified type DXN.
+ * Filter by fully qualified type URI — either a typename DXN (for static schemas) or
+ * a schema-as-object EchoURI (for stored dynamic schemas). See `getSchemaURI`.
  */
-export const typeDXN = (dxn: DXN.DXN): Any => {
+export const typeDXN = (uri: URI.URI): Any => {
   return new FilterClass({
     type: 'object',
-    typename: dxn,
+    typename: uri,
     props: {},
   });
 };
@@ -227,7 +228,7 @@ export const foreignKeys = <S extends Schema.Schema.All>(
   schema: S | string,
   keys: ForeignKey[],
 ): Filter<Schema.Schema.Type<S>> => {
-  const dxn = internal.getTypeDXNFromSpecifier(schema);
+  const dxn = internal.getTypeURIFromSpecifier(schema);
   return new FilterClass({
     type: 'object',
     typename: dxn,

@@ -250,7 +250,7 @@ class QueryClass implements Any {
   }
 
   referencedBy(target?: Schema.Schema.All | string, key?: string): Any {
-    const dxn = target !== undefined ? internal.getTypeDXNFromSpecifier(target) : null;
+    const dxn = target !== undefined ? internal.getTypeURIFromSpecifier(target) : null;
     return new QueryClass({
       type: 'incoming-references',
       anchor: this.ast,

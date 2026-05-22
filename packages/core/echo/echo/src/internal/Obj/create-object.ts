@@ -8,7 +8,7 @@ import { raise } from '@dxos/debug';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 
-import { getSchemaTypeURI, getTypeAnnotation, setTypename } from '../Annotation';
+import { getSchemaURI, getTypeAnnotation, setTypename } from '../Annotation';
 import { defineHiddenProperty } from '../common/proxy';
 import { EntityKind, KindId, MetaId, setSchema } from '../common/types';
 import {
@@ -74,7 +74,7 @@ export const createObject = <S extends Schema.Schema.AnyNoContext>(
   defineHiddenProperty(obj, KindId, kind);
   defineHiddenProperty(obj, MetaId, { keys: [] });
   setSchema(obj, schema);
-  setTypename(obj, getSchemaTypeURI(schema) ?? failedInvariant('Missing schema URI'));
+  setTypename(obj, getSchemaURI(schema) ?? failedInvariant('Missing schema URI'));
   attachTypedJsonSerializer(obj);
   attachedTypedObjectInspector(obj);
 

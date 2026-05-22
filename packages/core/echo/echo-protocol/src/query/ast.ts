@@ -5,13 +5,14 @@
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 
-import { DXN, EchoURI, ObjectId } from '@dxos/keys';
+import { EchoURI, ObjectId } from '@dxos/keys';
 
 import { ForeignKey } from '../foreign-key';
 
-const TypenameSpecifier = Schema.Union(DXN.Schema, Schema.Null).annotations({
-  description: 'DXN or null; null matches any type',
-});
+// Type identifier URI — either a DXN (typename) or an EchoURI (stored-schema-as-object).
+// Matches the URI written into an object's `system.type` (see `getSchemaURI`). Typed
+// as plain string to accommodate either; null matches any type.
+const TypenameSpecifier = Schema.Union(Schema.String, Schema.Null);
 
 // NOTE: This pattern with 3 definitions per schema is need to make the types opaque, and circular references in AST to not cause compiler errors.
 

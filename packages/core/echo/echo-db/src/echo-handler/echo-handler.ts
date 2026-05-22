@@ -58,7 +58,7 @@ import {
   getProxySlot,
   getProxyTarget,
   getRefSavedTarget,
-  getSchemaDXN,
+  getSchemaURI,
   getTypeAnnotation,
   isInChangeContext,
   isInstanceOf,
@@ -1273,7 +1273,7 @@ export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: Ech
 };
 
 const validateSchema = (schema: Schema.Schema.AnyNoContext) => {
-  const dxn = getSchemaDXN(schema);
+  const dxn = getSchemaURI(schema);
   invariant(dxn, 'Schema must be defined via TypedObject.');
   const entityKind = getEntityKind(schema);
   invariant(entityKind === 'object' || entityKind === 'relation');
@@ -1285,9 +1285,9 @@ const setSchemaPropertiesOnObjectCore = (
   schema: Schema.Schema.AnyNoContext | undefined,
 ) => {
   if (schema != null) {
-    const dxn = getSchemaDXN(schema);
-    invariant(dxn, 'Schema must be defined via TypedObject.');
-    internals.core.setType(EncodedReference.fromURI(dxn));
+    const uri = getSchemaURI(schema);
+    invariant(uri, 'Schema must be defined via TypedObject.');
+    internals.core.setType(EncodedReference.fromURI(uri));
 
     const kind = getEntityKind(schema);
     invariant(kind);

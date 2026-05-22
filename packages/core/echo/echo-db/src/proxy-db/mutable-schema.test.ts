@@ -14,7 +14,7 @@ import {
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
   getTypeIdentifierAnnotation,
-  getSchemaDXN,
+  getSchemaURI,
 } from '@dxos/echo/internal';
 import { DXN } from '@dxos/keys';
 
@@ -123,20 +123,26 @@ describe('EchoSchema', () => {
     expect(queried[0].id).to.eq(object.id);
   });
 
-  test('getSchemaDXN', async ({ expect }) => {
+  test('getSchemaURI returns the schema-as-object EchoURI for stored schemas', async ({ expect }) => {
     const { db } = await setupTest();
     const [schema] = await db.schemaRegistry.register([TestEmpty]);
-    const schemaDxn = getSchemaDXN(schema)!;
-    expect(DXN.getName(schemaDxn)).to.eq(schema.typename);
-    expect(DXN.getVersion(schemaDxn)).to.eq(schema.version);
+    const uri = getSchemaURI(schema)!;
+    // Stored schemas resolve to their schema-as-object EchoURI (echo:/<id>) so the
+    // schema rides along with loaded objects as a strong dependency.
+    expect(uri).to.match(/^echo:\//);
+    // The typename + version still live on the schema metadata.
+    expect(schema.typename).to.eq(TestEmpty.typename);
+    expect(schema.version).to.eq('0.1.0');
   });
 
-  test('getSchemaDXN on schema with updated typename', async ({ expect }) => {
+  test('getSchemaURI tracks the schema EchoURI even after typename update', async ({ expect }) => {
     const { db } = await setupTest();
     const [schema] = await db.schemaRegistry.register([TestEmpty]);
+    const before = getSchemaURI(schema)!;
     schema.updateTypename('com.example.type.updated');
-    const schemaDxn = getSchemaDXN(schema)!;
-    expect(DXN.getName(schemaDxn)).to.eq('com.example.type.updated');
+    const after = getSchemaURI(schema)!;
+    expect(after).to.eq(before);
+    expect(schema.typename).to.eq('com.example.type.updated');
   });
 
   test('mutable schema refs', async () => {

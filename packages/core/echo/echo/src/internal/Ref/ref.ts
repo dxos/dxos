@@ -19,7 +19,7 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EchoURI, ObjectId, type URI } from '@dxos/keys';
 
 import * as Database from '../../Database';
-import { ReferenceAnnotationId, getSchemaDXN, getTypeAnnotation, getTypeIdentifierAnnotation } from '../Annotation';
+import { ReferenceAnnotationId, getSchemaURI, getTypeAnnotation, getTypeIdentifierAnnotation } from '../Annotation';
 import type { AnyEntity, AnyProperties } from '../common/types';
 import { type JsonSchemaType } from '../JsonSchema';
 
@@ -557,7 +557,7 @@ export const refFromEncodedReference = (encodedReference: EncodedReference, reso
 
 export class StaticRefResolver implements RefResolver {
   public objects = new Map<ObjectId, AnyProperties>();
-  public schemas = new Map<DXN.DXN, Schema.Schema.AnyNoContext>();
+  public schemas = new Map<URI.URI, Schema.Schema.AnyNoContext>();
 
   addObject(obj: AnyProperties): this {
     this.objects.set(obj.id, obj);
@@ -565,9 +565,9 @@ export class StaticRefResolver implements RefResolver {
   }
 
   addSchema(schema: Schema.Schema.AnyNoContext): this {
-    const dxn = getSchemaDXN(schema);
-    invariant(dxn, 'Schema has no DXN');
-    this.schemas.set(dxn, schema);
+    const uri = getSchemaURI(schema);
+    invariant(uri, 'Schema has no URI');
+    this.schemas.set(uri, schema);
     return this;
   }
 
@@ -592,7 +592,6 @@ export class StaticRefResolver implements RefResolver {
   }
 
   async resolveSchema(uri: URI.URI): Promise<Schema.Schema.AnyNoContext | undefined> {
-    const parsed = DXN.tryMake(uri);
-    return parsed ? this.schemas.get(parsed) : undefined;
+    return this.schemas.get(uri);
   }
 }

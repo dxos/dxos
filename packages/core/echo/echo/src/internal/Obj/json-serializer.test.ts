@@ -10,7 +10,7 @@ import { DXN, EchoURI } from '@dxos/keys';
 import * as Obj from '../../Obj';
 import { TestSchema } from '../../testing';
 import * as Type from '../../Type';
-import { getSchemaDXN, getSchemaTypename, getTypeURI, getTypename } from '../Annotation';
+import { getSchemaURI, getSchemaTypename, getTypeURI, getTypename } from '../Annotation';
 import { getMetaChecked } from '../common/api';
 import { makeObject } from '../common/proxy';
 import { ATTR_TYPE, EntityKind, KindId, MetaId, TypeId, getSchema } from '../common/types';
@@ -35,11 +35,11 @@ describe('Object JSON serializer', () => {
     const taskJson = objectToJSON(task);
 
     expect(contactJson.id).toBe(contact.id);
-    expect(contactJson[ATTR_TYPE]).toEqual(getSchemaDXN(TestSchema.Person)!.toString());
+    expect(contactJson[ATTR_TYPE]).toEqual(getSchemaURI(TestSchema.Person)!.toString());
     expect(contactJson.name).toEqual('Alice');
 
     expect(taskJson.id).toBe(task.id);
-    expect(taskJson[ATTR_TYPE]).toEqual(getSchemaDXN(TestSchema.Task)!.toString());
+    expect(taskJson[ATTR_TYPE]).toEqual(getSchemaURI(TestSchema.Task)!.toString());
     expect(taskJson.title).toEqual('Fix the tests');
     expect(taskJson.assignee).toEqual({ '/': EchoURI.make({ objectId: contact.id }) });
 
@@ -54,7 +54,7 @@ describe('Object JSON serializer', () => {
 
     expect(contactFromJson.id).toBe(contact.id);
     expect(contactFromJson.name).toBe('Alice');
-    expect((contactFromJson as any)[TypeId]).toEqual(getSchemaDXN(TestSchema.Person));
+    expect((contactFromJson as any)[TypeId]).toEqual(getSchemaURI(TestSchema.Person));
     expect((contactFromJson as any)[KindId]).toBe(EntityKind.Object);
     expect((contactFromJson as any)[RelationSourceId]).toBeUndefined();
     expect((contactFromJson as any)[RelationTargetId]).toBeUndefined();
@@ -66,7 +66,7 @@ describe('Object JSON serializer', () => {
         },
       ],
     });
-    expect(getTypeURI(contactFromJson)?.toString()).toBe(getSchemaDXN(TestSchema.Person)!.toString());
+    expect(getTypeURI(contactFromJson)?.toString()).toBe(getSchemaURI(TestSchema.Person)!.toString());
     expect(getTypename(contactFromJson)).toBe(getSchemaTypename(TestSchema.Person));
     expect(getObjectEchoUri(contactFromJson)?.toString()).toEqual(getObjectEchoUri(contact)?.toString());
     expect(getSchema(contactFromJson)).toEqual(TestSchema.Person);
@@ -76,7 +76,7 @@ describe('Object JSON serializer', () => {
     expect(taskFromJson.assignee!.uri).toEqual(EchoURI.make({ objectId: contact.id }));
     expect(taskFromJson.assignee!.target).toEqual(contact);
     expect(await taskFromJson.assignee!.load()).toEqual(contact);
-    expect((taskFromJson as any)[TypeId]).toEqual(getSchemaDXN(TestSchema.Task));
+    expect((taskFromJson as any)[TypeId]).toEqual(getSchemaURI(TestSchema.Task));
     expect((taskFromJson as any)[KindId]).toBe(EntityKind.Object);
     expect((taskFromJson as any)[RelationSourceId]).toBeUndefined();
     expect((taskFromJson as any)[RelationTargetId]).toBeUndefined();
@@ -94,7 +94,7 @@ describe('Object JSON serializer', () => {
     expect(getSchema(contactFromJson)).toBeUndefined();
     expect(getTypename(contactFromJson)).toEqual(getSchemaTypename(TestSchema.Person));
     expect(getObjectEchoUri(contactFromJson)).toEqual(getObjectEchoUri(contact));
-    expect(getTypeURI(contactFromJson)).toEqual(getSchemaDXN(TestSchema.Person));
+    expect(getTypeURI(contactFromJson)).toEqual(getSchemaURI(TestSchema.Person));
   });
 
   test('deserializes expando without leaking internal json keys', async () => {

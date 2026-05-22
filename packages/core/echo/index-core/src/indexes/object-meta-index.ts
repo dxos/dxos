@@ -32,8 +32,12 @@ export const ObjectMeta = Schema.Struct({
   spaceId: SpaceId,
   documentId: Schema.String,
   entityKind: Schema.String,
-  /** The versioned DXN of the type of the object. */
-  typeDxn: DXN.Schema,
+  /**
+   * Type identifier URI for the object — typename DXN for non-stored schemas,
+   * schema-as-object EchoURI for stored (dynamic) schemas. Mirrors the value
+   * written into the object's `system.type`.
+   */
+  typeDxn: Schema.String,
   deleted: Schema.Boolean,
   source: Schema.NullOr(EchoURI.Schema),
   target: Schema.NullOr(EchoURI.Schema),

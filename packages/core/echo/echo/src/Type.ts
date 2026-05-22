@@ -217,7 +217,7 @@ export type AnyRef = Schema.Schema<internal.Ref<any>, EncodedReference>;
  * @example "dxn:com.example.type.person:0.1.0"
  */
 export const getURI = (schema: AnyEntity): URI.URI | undefined => {
-  return internal.getSchemaDXN(schema);
+  return internal.getSchemaURI(schema);
 };
 
 /**
