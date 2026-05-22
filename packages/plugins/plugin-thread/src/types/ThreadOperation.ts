@@ -41,7 +41,11 @@ export const CreateChannel = Operation.make({
 });
 
 export const AppendChannelMessage = Operation.make({
-  meta: { key: `${THREAD_OPERATION}.append-channel-message`, name: 'Append Channel Message', icon: 'ph--chat-text--regular' },
+  meta: {
+    key: `${THREAD_OPERATION}.append-channel-message`,
+    name: 'Append Channel Message',
+    icon: 'ph--chat-text--regular',
+  },
   // Note: Feed.FeedService is provided inside the handler from space.queues, not at the
   // operation level — the runtime can't fulfill it without a space context.
   services: [Capability.Service],
@@ -149,7 +153,11 @@ export const Restore = Operation.make({
  * Restore a deleted message (inverse of DeleteMessage).
  */
 export const RestoreMessage = Operation.make({
-  meta: { key: `${THREAD_OPERATION}.restore-message`, name: 'Restore Message', icon: 'ph--clock-counter-clockwise--regular' },
+  meta: {
+    key: `${THREAD_OPERATION}.restore-message`,
+    name: 'Restore Message',
+    icon: 'ph--clock-counter-clockwise--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     anchor: AnchoredTo.AnchoredTo.annotations({ description: 'The anchor of the thread.' }),

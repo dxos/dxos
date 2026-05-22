@@ -16,7 +16,11 @@ const PRESENTER_OPERATION = `${meta.id}.operation`;
 
 // TODO(wittjosiah): This appears to be unused.
 export const TogglePresentation = Operation.make({
-  meta: { key: `${PRESENTER_OPERATION}.toggle-presentation`, name: 'Toggle Presentation', icon: 'ph--presentation--regular' },
+  meta: {
+    key: `${PRESENTER_OPERATION}.toggle-presentation`,
+    name: 'Toggle Presentation',
+    icon: 'ph--presentation--regular',
+  },
   input: Schema.Struct({
     object: Schema.Union(Markdown.Document, Collection.Collection),
     state: Schema.optional(Schema.Boolean),

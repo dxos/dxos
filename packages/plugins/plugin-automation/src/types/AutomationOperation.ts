@@ -17,7 +17,11 @@ import { TriggerTemplate } from './schema';
 const AUTOMATION_OPERATION = `${meta.id}.operation`;
 
 export const CreateTriggerFromTemplate = Operation.make({
-  meta: { key: `${AUTOMATION_OPERATION}.create-trigger-from-template`, name: 'Create Trigger From Template', icon: 'ph--lightning--regular' },
+  meta: {
+    key: `${AUTOMATION_OPERATION}.create-trigger-from-template`,
+    name: 'Create Trigger From Template',
+    icon: 'ph--lightning--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     db: Database.Database,

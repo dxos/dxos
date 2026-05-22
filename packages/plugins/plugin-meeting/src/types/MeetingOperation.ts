@@ -40,7 +40,11 @@ export const SetActive = Operation.make({
 });
 
 export const HandlePayload = Operation.make({
-  meta: { key: `${MEETING_OPERATION}.handle-payload`, name: 'Handle Meeting Payload', icon: 'ph--arrows-clockwise--regular' },
+  meta: {
+    key: `${MEETING_OPERATION}.handle-payload`,
+    name: 'Handle Meeting Payload',
+    icon: 'ph--arrows-clockwise--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     meetingId: Schema.optional(Schema.String),

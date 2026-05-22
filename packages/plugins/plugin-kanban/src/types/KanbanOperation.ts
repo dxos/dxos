@@ -47,7 +47,11 @@ export const DeleteCard = Operation.make({
 });
 
 export const RestoreCardField = Operation.make({
-  meta: { key: `${KANBAN_OPERATION}.restore-card-field`, name: 'Restore Card Field', icon: 'ph--clock-counter-clockwise--regular' },
+  meta: {
+    key: `${KANBAN_OPERATION}.restore-card-field`,
+    name: 'Restore Card Field',
+    icon: 'ph--clock-counter-clockwise--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     view: View.View.annotations({ description: 'The view to restore the field to.' }),

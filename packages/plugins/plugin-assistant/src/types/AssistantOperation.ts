@@ -61,7 +61,11 @@ export const SetCurrentChat = Operation.make({
 });
 
 export const RunPromptInNewChat = Operation.make({
-  meta: { key: `${ASSISTANT_OPERATION}.run-prompt-in-new-chat`, name: 'Run Prompt In New Chat', icon: 'ph--chat-text--regular' },
+  meta: {
+    key: `${ASSISTANT_OPERATION}.run-prompt-in-new-chat`,
+    name: 'Run Prompt In New Chat',
+    icon: 'ph--chat-text--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     db: Database.Database,
@@ -109,7 +113,11 @@ export const ResolveNavigationTargets = Operation.make({
 });
 
 export const EnsureCompanionChat = Operation.make({
-  meta: { key: `${ASSISTANT_OPERATION}.ensure-companion-chat`, name: 'Ensure Companion Chat', icon: 'ph--chat-text--regular' },
+  meta: {
+    key: `${ASSISTANT_OPERATION}.ensure-companion-chat`,
+    name: 'Ensure Companion Chat',
+    icon: 'ph--chat-text--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     db: Database.Database,

@@ -28,7 +28,11 @@ export const CloseDirectory = Operation.make({
 });
 
 export const RefreshDirectory = Operation.make({
-  meta: { key: `${FILESYSTEM_OPERATION}.refresh-directory`, name: 'Refresh Folder', icon: 'ph--arrows-clockwise--regular' },
+  meta: {
+    key: `${FILESYSTEM_OPERATION}.refresh-directory`,
+    name: 'Refresh Folder',
+    icon: 'ph--arrows-clockwise--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({ id: Schema.String }),
   output: Schema.Void,
