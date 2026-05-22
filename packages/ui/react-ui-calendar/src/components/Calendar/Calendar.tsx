@@ -332,9 +332,17 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
     //
     // Drag-to-select range.
     //
+    // `prevSelectedRef` snapshots the single-day selection that was active
+    // when the gesture began. A click on the *same* already-selected day
+    // toggles the selection off on pointerup; a click on any other day (or
+    // when no day was selected) just sets the new selection.
+    //
+    const prevSelectedRef = useRef<Date | undefined>(undefined);
+
     const handleDayPointerDown = useCallback(
       (date: Date, ev: ReactPointerEvent<HTMLDivElement>) => {
         ev.preventDefault();
+        prevSelectedRef.current = selected;
         anchorRef.current = date;
         focusRef.current = date;
         draggingRef.current = true;
@@ -345,7 +353,7 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
         // Focus the grid so subsequent keyboard nav works.
         gridRef.current?.focus({ preventScroll: true });
       },
-      [setPendingRange, setRange, setSelected],
+      [selected, setPendingRange, setRange, setSelected],
     );
 
     const handleDayPointerEnter = useCallback(
@@ -378,9 +386,16 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
         }
         focusRef.current = date;
         if (isSameDay(anchor, date)) {
-          // Single click — restore the single-select ring (pointerenter may
-          // have cleared it to show the in-drag pending-range fill).
-          setSelected(anchor);
+          // Single click — toggle off if clicking the previously-selected day,
+          // otherwise set as selected. (pointerenter may have cleared the ring
+          // mid-drag to show a 1-day pending-range fill; restore here.)
+          if (prevSelectedRef.current && isSameDay(prevSelectedRef.current, date)) {
+            setSelected(undefined);
+            anchorRef.current = undefined;
+            focusRef.current = undefined;
+          } else {
+            setSelected(anchor);
+          }
           onSelect?.({ date });
           return;
         }
