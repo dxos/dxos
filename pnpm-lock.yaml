@@ -2707,6 +2707,9 @@ importers:
       '@dxos/plugin-trello':
         specifier: workspace:*
         version: link:../../plugins/plugin-trello
+      '@dxos/plugin-trip':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-trip
       '@dxos/plugin-voxel':
         specifier: workspace:*
         version: link:../../plugins/plugin-voxel

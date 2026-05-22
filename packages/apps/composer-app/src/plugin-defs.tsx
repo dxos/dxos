@@ -75,6 +75,7 @@ import { ThreadPlugin } from '@dxos/plugin-thread/plugin';
 import { TicTacToePlugin } from '@dxos/plugin-tictactoe/plugin';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
 import { TrelloPlugin } from '@dxos/plugin-trello/plugin';
+import { TripPlugin } from '@dxos/plugin-trip/plugin';
 import { VoxelPlugin } from '@dxos/plugin-voxel/plugin';
 import { WnfsPlugin } from '@dxos/plugin-wnfs/plugin';
 import { ZenPlugin } from '@dxos/plugin-zen/plugin';
@@ -256,6 +257,7 @@ export const getPlugins = ({
     SpacetimePlugin(),
     TicTacToePlugin(),
     TrelloPlugin(),
+    TripPlugin(),
     VoxelPlugin(),
     FilePlugin(),
     WnfsPlugin(),
