@@ -109,7 +109,8 @@ const credentialForm: CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>
  * Failures are swallowed so a failed call cannot block an otherwise-valid
  * Integration.
  */
-const makeOnTokenCreated = (makeLayer: (token: string) => Layer.Layer<DiscordREST>): OnTokenCreated =>
+const makeOnTokenCreated =
+  (makeLayer: (token: string) => Layer.Layer<DiscordREST>): OnTokenCreated =>
   ({ accessToken }) =>
     Effect.gen(function* () {
       if (accessToken.account) {

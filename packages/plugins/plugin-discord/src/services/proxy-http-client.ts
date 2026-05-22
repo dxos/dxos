@@ -56,7 +56,9 @@ export interface EdgeProxyHttpClientOptions {
  * `edgeClient.proxyFetch` so each request is signed with the caller's
  * verifiable presentation.
  */
-export const makeEdgeProxyHttpClientLayer = (options?: EdgeProxyHttpClientOptions): Layer.Layer<FetchHttpClient.Fetch> =>
+export const makeEdgeProxyHttpClientLayer = (
+  options?: EdgeProxyHttpClientOptions,
+): Layer.Layer<FetchHttpClient.Fetch> =>
   Layer.succeed(FetchHttpClient.Fetch, ((input, init) => {
     const url = input instanceof URL ? input : new URL(typeof input === 'string' ? input : input.url);
     // Seed from the Request's own headers first (caller used `fetch(new Request(...))`),
