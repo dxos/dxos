@@ -3,6 +3,7 @@
 //
 
 import * as AccessToken from './AccessToken';
+import * as Account from './Account';
 import * as Actor from './Actor';
 import * as AnchoredTo from './AnchoredTo';
 import * as Channel from './Channel';
@@ -45,6 +46,7 @@ export {
   // Common object types
   //
   AccessToken,
+  Account,
   Channel,
   Event,
   File,
