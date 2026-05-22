@@ -52,7 +52,8 @@ const Example = Schema.Struct({
     title: 'Parent',
   }),
 }).pipe(
-  Type.object(DXN.make(`com.example.type.${PublicKey.random().truncate()}`, '0.1.0')),
+  // NSID last segment must start with a letter (DXN spec), so prefix the random hex.
+  Type.object(DXN.make(`com.example.type.example${PublicKey.random().truncate()}`, '0.1.0')),
   Annotation.LabelAnnotation.set(['name']),
 );
 interface Example extends Schema.Schema.Type<typeof Example> {}
