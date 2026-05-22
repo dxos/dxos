@@ -103,7 +103,5 @@
     "vite": "catalog:",
     "vitest": "catalog:"
   },
-  "publishConfig": {
-    "access": "public"
-  }
+  "private": true
 }
