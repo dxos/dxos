@@ -46,6 +46,12 @@
       "port": 9010
     },
     {
+      "name": "plugin-map-storybook",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@dxos/plugin-map", "exec", "storybook", "dev", "--port", "9010", "--no-open"],
+      "port": 9010
+    },
+    {
       "name": "docs",
       "runtimeExecutable": "moon",
       "runtimeArgs": ["run", "docs:serve"],
