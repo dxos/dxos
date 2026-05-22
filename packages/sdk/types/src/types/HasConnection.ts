@@ -10,20 +10,6 @@ import { DXN, Obj, Relation, Type } from '@dxos/echo';
 
 import * as Organization from './Organization';
 
-/** @deprecated Use HasConnection instead. */
-export const LegacyHasConnection = Schema.Struct({
-  id: Obj.ID,
-  kind: Schema.String,
-}).pipe(
-  Type.relation({
-    dxn: DXN.fromNsidAndVersion('org.dxos.relation.hasConnection', '0.1.0'),
-    source: Organization.Organization,
-    target: Organization.Organization,
-  }),
-);
-
-export interface LegacyHasConnection extends Schema.Schema.Type<typeof LegacyHasConnection> {}
-
 export const HasConnection = Schema.Struct({
   id: Obj.ID,
   kind: Schema.String.annotations({

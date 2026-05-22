@@ -9,14 +9,6 @@ import * as Schema from 'effect/Schema';
 import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 import { Format, LabelAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
 
-/** @deprecated Use AccessToken instead. */
-export const LegacyAccessToken = Schema.Struct({
-  source: Schema.String,
-  token: Schema.String,
-}).pipe(Type.object(DXN.fromNsidAndVersion('org.dxos.type.accessToken', '0.1.0')), SystemTypeAnnotation.set(true));
-
-export interface LegacyAccessToken extends Schema.Schema.Type<typeof LegacyAccessToken> {}
-
 export const AccessToken = Schema.Struct({
   source: Format.Hostname.annotations({
     title: 'Source',

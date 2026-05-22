@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
-import { DXN, ObjectId } from '@dxos/keys';
+import { ObjectId } from '@dxos/keys';
 
 import { getSchemaTypeURI, getTypeAnnotation, setTypename } from '../Annotation';
 import { defineHiddenProperty } from '../common/proxy';

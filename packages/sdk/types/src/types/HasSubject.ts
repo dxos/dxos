@@ -9,20 +9,6 @@ import * as Schema from 'effect/Schema';
 import { DXN, Obj, Relation, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 
-/** @deprecated Use HasSubject instead. */
-export const LegacyHasSubject = Schema.Struct({
-  id: Obj.ID,
-  completedAt: Schema.String,
-}).pipe(
-  Type.relation({
-    dxn: DXN.fromNsidAndVersion('org.dxos.relation.hasSubject', '0.1.0'),
-    source: Obj.Unknown,
-    target: Obj.Unknown,
-  }),
-);
-
-export interface LegacyHasSubject extends Schema.Schema.Type<typeof LegacyHasSubject> {}
-
 /**
  * @deprecated Reconcile with AnchoredTo?
  */
