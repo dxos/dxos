@@ -68,6 +68,7 @@ export const RefField = (props: RefFieldProps) => {
     type,
     readonly,
     label,
+    jsonPath,
     placeholder,
     layout,
     getStatus,
@@ -175,7 +176,7 @@ export const RefField = (props: RefFieldProps) => {
 
   return (
     <Input.Root validationValence={status}>
-      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} />}
+      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />}
       <div>
         {readonly ? (
           !item ? (
