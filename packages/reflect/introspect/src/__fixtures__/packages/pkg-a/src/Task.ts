@@ -25,7 +25,7 @@ export const Task = Schema.Struct({
   done: Schema.Boolean.annotations({
     description: 'Whether the task has been completed.',
   }),
-}).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.Task', '0.1.0')), LabelAnnotation.set(['title']));
+}).pipe(Type.object(DXN.make('com.example.type.Task', '0.1.0')), LabelAnnotation.set(['title']));
 
 export interface Task extends Schema.Schema.Type<typeof Task> {}
 

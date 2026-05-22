@@ -454,7 +454,7 @@ export default Capability.makeModule(
         });
 
         const existingTarget = snapshot.existingTargetDxn
-          ? space.db.makeRef<Obj.Any>(DXN.parse(snapshot.existingTargetDxn))
+          ? space.db.makeRef<Obj.Any>(DXN.tryMake(snapshot.existingTargetDxn)!)
           : undefined;
 
         yield* finalizePendingEntry(invoker, { token, integration, db: space.db, provider, existingTarget });

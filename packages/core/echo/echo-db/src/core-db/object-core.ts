@@ -567,7 +567,7 @@ const convertLegacyProtoReference = (value: {
   const TYPE_PROTOCOL = 'protobuf';
   let uri: URI.URI;
   if (value.protocol === TYPE_PROTOCOL) {
-    uri = DXN.fromNsid(value.objectId);
+    uri = DXN.make(value.objectId);
   } else if (value.host) {
     invariant(SpaceId.isValid(value.host), 'Invalid space id');
     invariant(ObjectId.isValid(value.objectId), 'Invalid object id');

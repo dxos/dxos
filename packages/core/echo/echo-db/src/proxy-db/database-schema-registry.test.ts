@@ -14,11 +14,11 @@ import { EchoTestBuilder } from '../testing';
 const Organization = Schema.Struct({
   name: Schema.String,
   address: Schema.String,
-}).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.organization', '0.1.0')));
+}).pipe(Type.object(DXN.make('com.example.type.organization', '0.1.0')));
 
 const Contact = Schema.Struct({
   name: Schema.String,
-}).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.person', '0.1.0')));
+}).pipe(Type.object(DXN.make('com.example.type.person', '0.1.0')));
 
 describe('schema registry', () => {
   let builder: EchoTestBuilder;
@@ -267,4 +267,4 @@ describe('schema registry', () => {
 const makeTestSchema = () =>
   Schema.Struct({
     name: Schema.String,
-  }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.test', '0.1.0')));
+  }).pipe(Type.object(DXN.make('com.example.type.test', '0.1.0')));

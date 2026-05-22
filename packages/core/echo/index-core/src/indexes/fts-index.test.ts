@@ -16,8 +16,8 @@ import { FtsIndex } from './fts-index';
 import type { IndexerObject } from './interface';
 import { ObjectMetaIndex } from './object-meta-index';
 
-const TYPE_PERSON = DXN.parse('dxn:com.example.type.person:0.1.0');
-const TYPE_DEFAULT = DXN.parse('dxn:com.example.type.Type:0.1.0');
+const TYPE_PERSON = DXN.make('com.example.type.person', '0.1.0');
+const TYPE_DEFAULT = DXN.make('com.example.type.Type', '0.1.0');
 
 const TestLayer = Layer.merge(
   SqliteClient.layer({

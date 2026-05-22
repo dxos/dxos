@@ -12,7 +12,7 @@ export type URI = string & { readonly __URI: unique symbol };
 
 /**
  * Brand a string as an opaque URI without validating the scheme.
- * For typed construction prefer `DXN.fromNsid`, `EchoURI.fromSpaceAndObjectId`, etc.
+ * For typed construction prefer `DXN.make`, `EchoURI.fromSpaceAndObjectId`, etc.
  */
 export const make = (uri: string): URI => uri as URI;
 

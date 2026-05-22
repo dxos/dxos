@@ -21,5 +21,5 @@ export const AgentStatus = Schema.Struct({
     Annotation.GeneratorAnnotation.set('date.iso8601'),
   ),
   message: Schema.String,
-}).pipe(Type.object(DXN.fromNsidAndVersion('org.dxos.type.agentStatus', '0.1.0')));
+}).pipe(Type.object(DXN.make('org.dxos.type.agentStatus', '0.1.0')));
 export interface AgentStatus extends Schema.Schema.Type<typeof AgentStatus> {}

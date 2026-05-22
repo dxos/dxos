@@ -32,7 +32,7 @@ export const Routine = Schema.Struct({
   // TODO(burdon): Change to map?
   context: Schema.Array(Schema.Any).pipe(Annotation.FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.routine', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.routine', '0.1.0')),
   Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--scroll--regular',

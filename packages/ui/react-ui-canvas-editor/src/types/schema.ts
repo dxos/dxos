@@ -56,7 +56,7 @@ export const CanvasBoard = Schema.Struct({
    */
   layout: Graph.Graph,
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.canvasBoard', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.canvasBoard', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--infinity--regular',
     hue: 'sky',

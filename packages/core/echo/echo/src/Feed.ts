@@ -43,7 +43,7 @@ export const Feed = Schema.Struct({
    */
   namespace: Schema.optional(Schema.Literal('data', 'trace')),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.feed', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.feed', '0.1.0')),
   internal.SystemTypeAnnotation.set(true),
   Annotation.IconAnnotation.set({
     icon: 'ph--rows--regular',

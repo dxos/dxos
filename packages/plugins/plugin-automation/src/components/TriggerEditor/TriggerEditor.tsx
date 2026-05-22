@@ -97,7 +97,7 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
 
         const handleOnValueChange = useCallback(
           (_type: any, dxnString: string) => {
-            const dxn = DXN.parse(dxnString);
+            const dxn = DXN.tryMake(dxnString);
             if (dxn) {
               const ref = Ref.fromURI(dxn);
               props.onValueChange(props.type, ref);

@@ -37,7 +37,7 @@ export const Example = Schema.Struct({
   // ),
   admin: Schema.optional(Schema.Boolean),
   rating: Schema.optional(Schema.Number),
-}).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.example', '0.1.0')));
+}).pipe(Type.object(DXN.make('com.example.type.example', '0.1.0')));
 
 export type Example = Schema.Schema.Type<typeof Example>;
 

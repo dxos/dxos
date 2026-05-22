@@ -30,7 +30,7 @@ export const Sequence = Schema.Struct({
   name: Schema.optional(Schema.String),
   steps: Schema.Array(Step),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.sequence', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.sequence', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--circuitry--regular',
     hue: 'sky',

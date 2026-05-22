@@ -11,13 +11,9 @@ import { DXN, Obj, Type } from '@dxos/echo';
 
 import * as AppSurface from './app-surface';
 
-const TypeA = Schema.Struct({ name: Schema.String }).pipe(
-  Type.object(DXN.fromNsidAndVersion('com.example.test.TypeA', '0.1.0')),
-);
+const TypeA = Schema.Struct({ name: Schema.String }).pipe(Type.object(DXN.make('com.example.test.TypeA', '0.1.0')));
 
-const TypeB = Schema.Struct({ value: Schema.Number }).pipe(
-  Type.object(DXN.fromNsidAndVersion('com.example.test.TypeB', '0.1.0')),
-);
+const TypeB = Schema.Struct({ value: Schema.Number }).pipe(Type.object(DXN.make('com.example.test.TypeB', '0.1.0')));
 
 describe('AppSurface', () => {
   //

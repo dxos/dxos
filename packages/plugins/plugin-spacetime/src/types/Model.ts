@@ -58,7 +58,7 @@ export const Object = Schema.Struct({
   rotation: Vec3.pipe(FormInputAnnotation.set(false)),
   color: Schema.optional(Schema.String),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.spacetime.object', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.spacetime.object', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--cube--regular',
     hue: 'teal',

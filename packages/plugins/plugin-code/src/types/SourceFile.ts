@@ -16,7 +16,7 @@ export const SourceFile = Schema.Struct({
   content: Ref.Ref(Text.Text),
   mode: Schema.optional(Schema.Number),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.sourceFile', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.sourceFile', '0.1.0')),
   Annotation.LabelAnnotation.set(['path']),
   Annotation.IconAnnotation.set({
     icon: 'ph--file-code--regular',

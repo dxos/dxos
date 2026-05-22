@@ -31,8 +31,8 @@ export const JSON_SCHEMA_ECHO_REF_ID = '/schemas/echo/ref';
 export const getSchemaReference = (property: JsonSchemaType): { typename: string } | undefined => {
   const { $id, reference: { schema: { $ref } = {} } = {} } = property;
   if ($id === JSON_SCHEMA_ECHO_REF_ID && $ref) {
-    const parsed = DXN.tryParse($ref);
-    const typename = parsed ? DXN.getNsid(parsed) : undefined;
+    const parsed = DXN.tryMake($ref);
+    const typename = parsed ? DXN.getName(parsed) : undefined;
     return typename ? { typename } : undefined;
   }
 };
@@ -42,7 +42,7 @@ export const createSchemaReference = (typename: string): Types.DeepMutable<JsonS
     $id: JSON_SCHEMA_ECHO_REF_ID,
     reference: {
       schema: {
-        $ref: DXN.fromNsid(typename),
+        $ref: DXN.make(typename),
       },
     },
   };
@@ -272,7 +272,7 @@ export const createEchoReferenceSchema = (
   const referenceInfo: JsonSchemaReferenceInfo = {
     schema: {
       // TODO(dmaretskyi): Include version?
-      $ref: echoId ?? DXN.fromNsid(typename!),
+      $ref: echoId ?? DXN.make(typename!),
     },
     schemaVersion: version,
   };
@@ -592,7 +592,7 @@ export class StaticRefResolver implements RefResolver {
   }
 
   async resolveSchema(uri: URI.URI): Promise<Schema.Schema.AnyNoContext | undefined> {
-    const parsed = DXN.tryParse(uri);
+    const parsed = DXN.tryMake(uri);
     return parsed ? this.schemas.get(parsed) : undefined;
   }
 }

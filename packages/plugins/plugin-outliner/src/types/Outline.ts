@@ -13,7 +13,7 @@ export const Outline = Schema.Struct({
   name: Schema.optional(Schema.String),
   content: Ref.Ref(Text.Text),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.outline', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.outline', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--tree-structure--regular',
     hue: 'indigo',

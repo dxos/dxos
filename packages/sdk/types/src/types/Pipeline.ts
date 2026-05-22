@@ -24,7 +24,7 @@ export const Pipeline = Schema.Struct({
   image: Format.URL.pipe(Schema.annotations({ title: 'Image' }), Schema.optional),
   columns: Schema.Array(Column).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.pipeline', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.pipeline', '0.1.0')),
   Schema.annotations({ title: 'Pipeline' }),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({

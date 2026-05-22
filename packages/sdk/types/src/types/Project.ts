@@ -14,7 +14,7 @@ export const Project = Schema.Struct({
   description: Schema.String.pipe(Schema.optional),
   image: Format.URL.pipe(Schema.annotations({ title: 'Image' }), Schema.optional),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.project', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.project', '0.1.0')),
   Schema.annotations({ title: 'Project' }),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({

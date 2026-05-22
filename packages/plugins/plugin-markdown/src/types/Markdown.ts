@@ -25,7 +25,7 @@ export const Document = Schema.Struct({
   fallbackName: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
   content: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.document', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.document', '0.1.0')),
   LabelAnnotation.set(['name', 'fallbackName']),
   DescriptionAnnotation.set('description'),
   Annotation.IconAnnotation.set({

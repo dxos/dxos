@@ -16,7 +16,7 @@ export const JournalEntry = Schema.Struct({
   id: Schema.String,
   date: Schema.String,
   content: Ref.Ref(Text.Text),
-}).pipe(Type.object(DXN.fromNsidAndVersion('org.dxos.type.journalEntry', '0.1.0')), SystemTypeAnnotation.set(true));
+}).pipe(Type.object(DXN.make('org.dxos.type.journalEntry', '0.1.0')), SystemTypeAnnotation.set(true));
 
 export interface JournalEntry extends Schema.Schema.Type<typeof JournalEntry> {}
 
@@ -26,7 +26,7 @@ export const Journal = Schema.Struct({
   // TODO(burdon): Convert map of references indexed by sortable ISO date.
   entries: Schema.Record({ key: Schema.String, value: Ref.Ref(JournalEntry) }),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.journal', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.journal', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--calendar-check--regular',
     hue: 'indigo',

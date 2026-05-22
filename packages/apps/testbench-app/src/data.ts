@@ -15,11 +15,11 @@ export const Item = Schema.Struct({
   // TODO(burdon): [API]: Are dates supported?
   //  TypeError: Method Date.prototype.toString called on incompatible receiver [object Object]
   // due: S.optional(S.Date),
-}).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.item', '0.1.0')));
+}).pipe(Type.object(DXN.make('com.example.type.item', '0.1.0')));
 export type Item = Schema.Schema.Type<typeof Item>;
 
 export const Document = Schema.Struct({
   title: Schema.optional(Schema.String),
   content: Schema.optional(Schema.String),
-}).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.document', '0.1.0')));
+}).pipe(Type.object(DXN.make('com.example.type.document', '0.1.0')));
 export type Document = Schema.Schema.Type<typeof Document>;

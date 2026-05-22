@@ -102,7 +102,7 @@ const RoastLog = S.Struct({
   ),
   notes: S.optional(S.String.pipe(S.annotations({ title: 'Notes' }))),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('example.type.roastLog', '0.1.0')),
+  Type.object(DXN.make('example.type.roastLog', '0.1.0')),
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({ icon: 'ph--fire-simple--regular', hue: 'amber' }),
 );

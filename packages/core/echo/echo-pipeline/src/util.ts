@@ -18,8 +18,8 @@ export const findInlineObjectOfType = (
     if (objType) {
       const uri = EncodedReference.toURI(objType);
       // Parse the DXN to extract the typename.
-      const parsed = DXN.tryParse(uri);
-      if (parsed !== undefined && DXN.getNsid(parsed) === typename) {
+      const parsed = DXN.tryMake(uri);
+      if (parsed !== undefined && DXN.getName(parsed) === typename) {
         return [id, obj];
       }
     }

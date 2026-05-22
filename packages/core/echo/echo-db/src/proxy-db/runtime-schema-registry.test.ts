@@ -12,11 +12,11 @@ import { RuntimeSchemaRegistry } from './runtime-schema-registry';
 
 const TestSchemaA = Schema.Struct({
   name: Schema.String,
-}).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.a', '0.1.0')));
+}).pipe(Type.object(DXN.make('com.example.type.a', '0.1.0')));
 
 const TestSchemaB = Schema.Struct({
   value: Schema.Number,
-}).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.b', '0.1.0')));
+}).pipe(Type.object(DXN.make('com.example.type.b', '0.1.0')));
 
 describe('RuntimeSchemaRegistry', () => {
   let registry: RuntimeSchemaRegistry;

@@ -39,7 +39,7 @@ export const Mailbox = Schema.Struct({
     }),
   ).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.mailbox', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.mailbox', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--tray--regular',
     hue: 'rose',

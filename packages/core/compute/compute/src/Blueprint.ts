@@ -69,7 +69,7 @@ export const Blueprint = Schema.Struct({
    */
   mcpServers: Schema.optional(Schema.Array(McpServer.McpServer)),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.blueprint', '0.2.0')),
+  Type.object(DXN.make('org.dxos.type.blueprint', '0.2.0')),
   Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--blueprint--regular',
@@ -266,7 +266,7 @@ export const Blueprint_v0_1_0 = Schema.Struct({
   agentCanEnable: Schema.optional(Schema.Boolean),
 
   mcpServers: Schema.optional(Schema.Array(McpServer.McpServer)),
-}).pipe(Type.object(DXN.fromNsidAndVersion('org.dxos.type.blueprint', '0.1.0')));
+}).pipe(Type.object(DXN.make('org.dxos.type.blueprint', '0.1.0')));
 
 export interface Blueprint_v0_1_0 extends Schema.Schema.Type<typeof Blueprint_v0_1_0> {}
 

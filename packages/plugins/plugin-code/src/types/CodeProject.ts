@@ -17,7 +17,7 @@ export const CodeProject = Schema.Struct({
   spec: Ref.Ref(Spec.Spec),
   files: Schema.optional(Schema.Array(Ref.Ref(SourceFile.SourceFile))),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.codeProject', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.codeProject', '0.1.0')),
   Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--app-window--regular',

@@ -100,7 +100,7 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
 
   // TODO(wittjosiah): Not a part of SchemaRegistry interface, remove?
   getSchemaByDXN(dxn: DXN.DXN): Type.AnyEntity | undefined {
-    const type = DXN.getNsid(dxn);
+    const type = DXN.getName(dxn);
     const version = DXN.getVersion(dxn);
     const allSchemas = this._registry.get(type) ?? [];
     if (version) {

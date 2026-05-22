@@ -364,10 +364,10 @@ const refToEffectSchema = (root: any): Schema.Schema.AnyNoContext => {
   }
 
   const ref = reference.schema.$ref;
-  invariant(DXN.isDXN(ref), `Expected a type DXN, got: ${ref}`);
-  const targetSchemaDXN = DXN.parse(ref);
+  const targetSchemaDXN = DXN.tryMake(ref);
+  invariant(targetSchemaDXN, `Expected a type DXN, got: ${ref}`);
 
-  return createEchoReferenceSchema(ref, DXN.getNsid(targetSchemaDXN), reference.schemaVersion);
+  return createEchoReferenceSchema(ref, DXN.getName(targetSchemaDXN), reference.schemaVersion);
 };
 
 //
@@ -431,8 +431,8 @@ const decodeTypeAnnotation = (schema: JsonSchemaType): TypeAnnotation | undefine
     if (annotation.kind === EntityKind.Relation) {
       const source = schema.relationSource?.$ref ?? raise(new Error('Relation source not set'));
       const target = schema.relationTarget?.$ref ?? raise(new Error('Relation target not set'));
-      annotation.sourceSchema = DXN.parse(source);
-      annotation.targetSchema = DXN.parse(target);
+      annotation.sourceSchema = DXN.tryMake(source) ?? raise(new Error(`Invalid relation source: ${source}`));
+      annotation.targetSchema = DXN.tryMake(target) ?? raise(new Error(`Invalid relation target: ${target}`));
     }
 
     return annotation;
@@ -470,7 +470,7 @@ const jsonSchemaFieldsToAnnotations = (schema: JsonSchemaType): SchemaAST.Annota
     annotations[SchemaAST.JSONSchemaAnnotationId] = makeTypeJsonSchemaAnnotation({
       // $id is the typename DXN — the schema's type identity. The storage EchoURI (if any)
       // is preserved separately on TypeIdentifierAnnotation / echo.schemaId.
-      identifier: DXN.fromNsidAndVersion(typeAnnotation.typename, typeAnnotation.version),
+      identifier: DXN.make(typeAnnotation.typename, typeAnnotation.version),
       kind: typeAnnotation.kind,
       typename: typeAnnotation.typename,
       version: typeAnnotation.version,

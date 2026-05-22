@@ -17,7 +17,7 @@ export const Map = Schema.Struct({
   //   e.g., points, lines, polygons, etc.
   coordinates: Schema.Array(Format.GeoPoint).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.map', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.map', '0.1.0')),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(['view']),
   Annotation.IconAnnotation.set({

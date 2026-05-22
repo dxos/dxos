@@ -28,7 +28,7 @@ export const ProfileOf = Schema.Struct({
 })
   .pipe(
     Type.relation({
-      dxn: DXN.fromNsidAndVersion('org.dxos.relation.plugin-crm.profileOf', '0.1.0'),
+      dxn: DXN.make('org.dxos.relation.plugin-crm.profileOf', '0.1.0'),
       source: Obj.Unknown,
       target: Obj.Unknown,
     }),

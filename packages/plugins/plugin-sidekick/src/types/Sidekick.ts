@@ -19,7 +19,7 @@ export const Profile = Schema.Struct({
   journal: Ref.Ref(Journal.Journal),
   journalEnabled: Schema.optional(Schema.Boolean),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.sidekick.profile', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.sidekick.profile', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--brain--regular',
     hue: 'violet',

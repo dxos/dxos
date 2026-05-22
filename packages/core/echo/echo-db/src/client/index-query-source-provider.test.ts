@@ -21,7 +21,7 @@ const makeQuery = (): QueryAST.Query => ({
     type: 'select',
     filter: {
       type: 'object',
-      typename: DXN.parse('dxn:org.dxos.type.person:0.1.0'),
+      typename: DXN.make('org.dxos.type.person', '0.1.0'),
       props: {},
     },
   },

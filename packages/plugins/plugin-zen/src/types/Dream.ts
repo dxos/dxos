@@ -19,7 +19,7 @@ export const Dream = Schema.Struct({
   ),
   sequences: Schema.optional(Schema.Array(Sequence)),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('dxos.org.type.Dream', '0.1.0')),
+  Type.object(DXN.make('dxos.org.type.Dream', '0.1.0')),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--moon-stars--regular',

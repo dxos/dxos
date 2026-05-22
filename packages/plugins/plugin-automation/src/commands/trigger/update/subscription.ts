@@ -79,7 +79,7 @@ const extractCurrentTypename = (spec: Trigger.SubscriptionSpec | undefined): Opt
         Match.withReturnType<Option.Option<string>>(),
         Match.when({ type: 'object' }, (f) =>
           Option.fromNullable(f.typename).pipe(
-            Option.flatMap((dxn) => Option.fromNullable(DXN.isDXN(dxn) ? DXN.getNsid(dxn) : undefined)),
+            Option.flatMap((dxn) => Option.fromNullable(DXN.isDXN(dxn) ? DXN.getName(dxn) : undefined)),
           ),
         ),
         Match.orElse(() => Option.none()),

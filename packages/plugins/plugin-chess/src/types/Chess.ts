@@ -24,7 +24,7 @@ export const State = Schema.Struct({
     description: 'Forsyth-Edwards Notation.',
   }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.chess.state', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.chess.state', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--shield-chevron--regular',
     hue: 'amber',

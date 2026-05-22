@@ -41,7 +41,7 @@ export const Message = Schema.Struct({
     }),
   ),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.message', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.message', '0.1.0')),
   LabelAnnotation.set(['properties.subject']),
   Annotation.IconAnnotation.set({
     icon: 'ph--note--regular',

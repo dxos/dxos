@@ -86,7 +86,7 @@ export const Task = Schema.Struct({
   // TODO(burdon): Generic tags.
   // tags: [String],
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.task', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.task', '0.1.0')),
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({
     icon: 'ph--check-circle--regular',

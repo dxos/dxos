@@ -14,7 +14,7 @@ describe('getFormProperties', () => {
     const TestSchema = Schema.Struct({
       name: Schema.optional(Schema.String),
       hidden: Schema.String.pipe(Annotation.FormInputAnnotation.set(false)),
-    }).pipe(Type.object(DXN.fromNsidAndVersion('org.dxos.test.keywordHidden', '0.1.0')));
+    }).pipe(Type.object(DXN.make('org.dxos.test.keywordHidden', '0.1.0')));
 
     const names = getFormProperties(TestSchema.ast).map((prop) => prop.name);
     expect(names).toContain('name');
@@ -28,7 +28,7 @@ describe('getFormProperties', () => {
     const TestSchema = Schema.Struct({
       name: Schema.optional(Schema.String),
       schema: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)),
-    }).pipe(Type.object(DXN.fromNsidAndVersion('org.dxos.test.structHidden', '0.1.0')));
+    }).pipe(Type.object(DXN.make('org.dxos.test.structHidden', '0.1.0')));
 
     const names = getFormProperties(TestSchema.ast).map((prop) => prop.name);
     expect(names).toContain('name');
@@ -39,7 +39,7 @@ describe('getFormProperties', () => {
     const TestSchema = Schema.Struct({
       name: Schema.optional(Schema.String),
       context: Schema.Array(Schema.Any).pipe(Annotation.FormInputAnnotation.set(false)),
-    }).pipe(Type.object(DXN.fromNsidAndVersion('org.dxos.test.arrayHidden', '0.1.0')));
+    }).pipe(Type.object(DXN.make('org.dxos.test.arrayHidden', '0.1.0')));
 
     const names = getFormProperties(TestSchema.ast).map((prop) => prop.name);
     expect(names).toContain('name');
@@ -54,7 +54,7 @@ describe('getFormProperties', () => {
       hidden: JsonSchema.JsonSchema.pipe(Annotation.FormInputAnnotation.set(false)).annotations({
         description: 'Hidden field',
       }),
-    }).pipe(Type.object(DXN.fromNsidAndVersion('org.dxos.test.chainedHidden', '0.1.0')));
+    }).pipe(Type.object(DXN.make('org.dxos.test.chainedHidden', '0.1.0')));
 
     const names = getFormProperties(TestSchema.ast).map((prop) => prop.name);
     expect(names).toContain('name');

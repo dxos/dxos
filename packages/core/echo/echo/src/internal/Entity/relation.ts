@@ -94,7 +94,7 @@ export const EchoRelationSchema = <
 }: EchoRelationSchemaOptions<Source, Target>) => {
   assertArgument(Schema.isSchema(source), 'source');
   assertArgument(Schema.isSchema(target), 'target');
-  const typename = DXN.getNsid(dxn);
+  const typename = DXN.getName(dxn);
   const version = DXN.getVersion(dxn);
   invariant(version, `Type.relation requires a versioned DXN: ${dxn}`);
   const sourceDXN = getDXNForRelationSchemaRef(source);
@@ -144,7 +144,7 @@ const getDXNForRelationSchemaRef = (schema: Schema.Schema.Any): DXN.DXN => {
   assertArgument(Schema.isSchema(schema), 'schema');
   const identifier = getTypeIdentifierAnnotation(schema);
   if (identifier) {
-    return DXN.parse(identifier);
+    return DXN.tryMake(identifier) ?? raise(new Error(`Invalid schema identifier: ${identifier}`));
   }
 
   const typename = getSchemaTypename(schema);
@@ -152,5 +152,5 @@ const getDXNForRelationSchemaRef = (schema: Schema.Schema.Any): DXN.DXN => {
     throw new Error('Schema must have a typename');
   }
 
-  return DXN.fromNsid(typename);
+  return DXN.make(typename);
 };

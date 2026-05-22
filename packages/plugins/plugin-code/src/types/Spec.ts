@@ -17,7 +17,7 @@ export const Spec = Schema.Struct({
   name: Schema.optional(Schema.String),
   content: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.spec', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.spec', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: meta.icon!,
     hue: meta.iconHue,

@@ -75,7 +75,7 @@ const ViewSchema = Schema.Struct({
    */
   projection: Projection,
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.view', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.view', '0.1.0')),
   internal.SystemTypeAnnotation.set(true),
   Annotation.IconAnnotation.set({
     icon: 'ph--funnel--regular',

@@ -13,9 +13,7 @@ import { PropertyMeta, getPropertyMetaAnnotation, getTypeAnnotation } from '../.
 import { EchoObjectSchema } from '../../Entity';
 
 // TODO(dmaretskyi): Comment.
-const EmptySchemaType = Schema.Struct({}).pipe(
-  EchoObjectSchema(DXN.fromNsidAndVersion('com.example.type.empty', '0.1.0')),
-);
+const EmptySchemaType = Schema.Struct({}).pipe(EchoObjectSchema(DXN.make('com.example.type.empty', '0.1.0')));
 
 interface EmptySchemaType extends Schema.Schema.Type<typeof EmptySchemaType> {}
 
@@ -24,7 +22,7 @@ describe('dynamic schema', () => {
     const TestSchema = Schema.Struct({
       field1: Schema.String,
       field2: Schema.Boolean,
-    }).pipe(EchoObjectSchema(DXN.fromNsidAndVersion('com.example.type.test', '0.1.0')));
+    }).pipe(EchoObjectSchema(DXN.make('com.example.type.test', '0.1.0')));
 
     const registered = createEchoSchema(TestSchema);
     expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
@@ -36,7 +34,7 @@ describe('dynamic schema', () => {
   test('addColumns', async () => {
     const TestSchema = Schema.Struct({
       field1: Schema.String,
-    }).pipe(EchoObjectSchema(DXN.fromNsidAndVersion('com.example.type.test', '0.1.0')));
+    }).pipe(EchoObjectSchema(DXN.make('com.example.type.test', '0.1.0')));
 
     const registered = createEchoSchema(TestSchema);
     registered.addFields({ field2: Schema.Boolean });

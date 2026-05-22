@@ -45,7 +45,7 @@ export interface Task extends Schema.Schema.Type<typeof Task> {}
  */
 export const Plan = Schema.Struct({
   tasks: Schema.Array(Task),
-}).pipe(Type.object(DXN.fromNsidAndVersion('org.dxos.type.plan', '0.1.0')), Annotation.SystemTypeAnnotation.set(true));
+}).pipe(Type.object(DXN.make('org.dxos.type.plan', '0.1.0')), Annotation.SystemTypeAnnotation.set(true));
 export interface Plan extends Schema.Schema.Type<typeof Plan> {}
 
 export const generateTaskId = (plan: Plan): TaskId => {

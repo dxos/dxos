@@ -125,7 +125,7 @@ export type JSON = internal.ObjectJSON;
 /**
  * Get the canonical URI of an entity (object or relation). Returns `URI.URI` —
  * today always an EchoURI, but future entity kinds may surface other URI schemes;
- * narrow with `EchoURI.parse(uri)` or `DXN.parse(uri)` at the point of use.
+ * narrow with `EchoURI.parse(uri)` or `DXN.tryMake(uri)` at the point of use.
  */
 export const getURI = (entity: Unknown | Snapshot): URI.URI => internal.getUri(entity);
 

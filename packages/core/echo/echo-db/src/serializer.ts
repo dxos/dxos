@@ -104,7 +104,7 @@ export const decodeDXNFromJSON = (encoded?: EncodedReference | string): URI.URI 
       return encoded;
     }
     // Treat plain strings as type names.
-    return DXN.fromNsid(encoded);
+    return DXN.make(encoded);
   }
 };
 
@@ -118,7 +118,7 @@ const decodeEncodedReferenceFromJSON = (value: any): EncodedReference | undefine
     return value as EncodedReference;
   } else if (typeof value === 'object' && value !== null && value['@type'] === LEGACY_REFERENCE_TYPE_TAG) {
     // Legacy format: convert to DXN and then to EncodedReference.
-    return EncodedRef.fromURI(DXN.fromNsid(value.objectId));
+    return EncodedRef.fromURI(DXN.make(value.objectId));
   }
 };
 

@@ -17,7 +17,7 @@ export const Chat = Schema.Struct({
   feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
   view: Schema.String.pipe(Schema.optional),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.assistant.chat', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.assistant.chat', '0.1.0')),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--sparkle--regular',
@@ -34,7 +34,7 @@ export const LegacyCompanionTo = Schema.Struct({
   id: Obj.ID,
 }).pipe(
   Type.relation({
-    dxn: DXN.fromNsidAndVersion('org.dxos.relation.assistant.companionTo', '0.1.0'),
+    dxn: DXN.make('org.dxos.relation.assistant.companionTo', '0.1.0'),
     source: Chat,
     target: Obj.Unknown,
   }),
@@ -49,7 +49,7 @@ export const CompanionTo = Schema.Struct({
   id: Obj.ID,
 }).pipe(
   Type.relation({
-    dxn: DXN.fromNsidAndVersion('org.dxos.relation.assistant.companionTo', '0.1.0'),
+    dxn: DXN.make('org.dxos.relation.assistant.companionTo', '0.1.0'),
     source: Chat,
     target: Obj.Unknown,
   }),

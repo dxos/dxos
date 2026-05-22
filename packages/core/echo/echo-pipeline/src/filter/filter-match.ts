@@ -361,14 +361,14 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
  * dxn:type:com.example.type.task:0.1.0 === dxn:type:com.example.type.task
  */
 const compareTypenameStrings = (expectedStr: string, actualStr: string): boolean => {
-  // Normalize via DXN.tryParse to handle the legacy `dxn:type:<nsid>` form alongside `dxn:<nsid>`.
-  const expectedDxn = DXN.tryParse(expectedStr);
-  const actualDxn = DXN.tryParse(actualStr);
+  // Normalize via DXN.tryMake to handle the legacy `dxn:type:<nsid>` form alongside `dxn:<nsid>`.
+  const expectedDxn = DXN.tryMake(expectedStr);
+  const actualDxn = DXN.tryMake(actualStr);
   if (expectedDxn !== undefined) {
     if (actualDxn === undefined) {
       return false;
     }
-    if (DXN.getNsid(actualDxn) !== DXN.getNsid(expectedDxn)) {
+    if (DXN.getName(actualDxn) !== DXN.getName(expectedDxn)) {
       return false;
     }
     const expectedVersion = DXN.getVersion(expectedDxn);

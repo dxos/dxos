@@ -12,7 +12,7 @@ import { DXN, Annotation, Obj, Type } from '@dxos/echo';
  * Expando object is an object with an arbitrary set of properties.
  */
 export const Expando = Schema.Struct({}, { key: Schema.String, value: Schema.Any }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.expando', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.expando', '0.1.0')),
   Annotation.SystemTypeAnnotation.set(true),
 );
 

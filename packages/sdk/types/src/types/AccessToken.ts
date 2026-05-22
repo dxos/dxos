@@ -30,7 +30,7 @@ export const AccessToken = Schema.Struct({
     })
     .pipe(Schema.optional),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.accessToken', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.accessToken', '0.1.0')),
   Schema.annotations({
     description: 'A credential or token for accessing a service.',
   }),

@@ -56,10 +56,10 @@ export const getSchemaDXN = (schema: Schema.Schema.All): DXN.DXN | undefined => 
   assertArgument(Schema.isSchema(schema), 'schema', 'invalid schema');
   const objectAnnotation = getTypeAnnotation(schema);
   if (objectAnnotation) {
-    return DXN.fromNsidAndVersion(objectAnnotation.typename, objectAnnotation.version);
+    return DXN.make(objectAnnotation.typename, objectAnnotation.version);
   }
   const id = getTypeIdentifierAnnotation(schema);
-  return id ? DXN.tryParse(id) : undefined;
+  return id ? DXN.tryMake(id) : undefined;
 };
 
 /**
@@ -77,7 +77,7 @@ export const getSchemaTypeURI = (schema: Schema.Schema.All): URI.URI | undefined
   }
   const objectAnnotation = getTypeAnnotation(schema);
   if (objectAnnotation) {
-    return DXN.fromNsidAndVersion(objectAnnotation.typename, objectAnnotation.version);
+    return DXN.make(objectAnnotation.typename, objectAnnotation.version);
   }
   return undefined;
 };
@@ -92,7 +92,7 @@ export const getTypeDXNFromSpecifier = (input: Schema.Schema.All | string): DXN.
   } else {
     assertArgument(typeof input === 'string', 'input');
     assertArgument(!input.startsWith('dxn:'), 'input');
-    return DXN.fromNsid(input);
+    return DXN.make(input);
   }
 };
 
@@ -207,7 +207,8 @@ export const getTypename = (obj: AnyProperties): string | undefined => {
     }
     // Parse the URI string to extract typename.
     if (DXN.isDXN(type)) {
-      return DXN.getNsid(DXN.parse(type));
+      const parsed = DXN.tryMake(type);
+      return parsed && DXN.getName(parsed);
     }
     return undefined;
   }
@@ -288,8 +289,8 @@ export const isInstanceOf = <Schema extends Schema.Schema.AnyNoContext>(
     return false;
   }
 
-  const schemaTypename = DXN.getNsid(DXN.parse(schemaDXN));
-  return schemaTypename === typename;
+  const parsed = DXN.tryMake(schemaDXN);
+  return parsed != null && DXN.getName(parsed) === typename;
 };
 
 //

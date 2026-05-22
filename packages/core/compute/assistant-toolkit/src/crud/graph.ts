@@ -79,7 +79,7 @@ const isSchemaAddressableByDXN = (schema: Type.AnyEntity, dxn: DXN.DXN): boolean
     return true;
   }
 
-  return DXN.getNsid(dxn) === Type.getTypename(schema);
+  return DXN.getName(dxn) === Type.getTypename(schema);
 };
 
 /**
@@ -181,7 +181,7 @@ export const createExtractionSchema = (types: Type.AnyEntity[]) => {
       types.map(preprocessSchema).map((schema, index) => [
         `objects_${getSanitizedSchemaName(types[index])}`,
         Schema.optional(Schema.Array(schema)).annotations({
-          description: `The objects of type: ${DXN.getNsid(DXN.parse(Type.getURI(types[index])!))}. ${SchemaAST.getDescriptionAnnotation(types[index].ast).pipe(Option.getOrElse(() => ''))}`,
+          description: `The objects of type: ${DXN.getName(DXN.tryMake(Type.getURI(types[index])!)!)}. ${SchemaAST.getDescriptionAnnotation(types[index].ast).pipe(Option.getOrElse(() => ''))}`,
         }),
       ]),
     ),
@@ -189,7 +189,7 @@ export const createExtractionSchema = (types: Type.AnyEntity[]) => {
 };
 
 export const getSanitizedSchemaName = (schema: Type.AnyEntity) => {
-  return DXN.getNsid(DXN.parse(Type.getURI(schema)!)).replaceAll(/[^a-zA-Z0-9]+/g, '_');
+  return DXN.getName(DXN.tryMake(Type.getURI(schema)!)!).replaceAll(/[^a-zA-Z0-9]+/g, '_');
 };
 
 export const sanitizeObjects = (

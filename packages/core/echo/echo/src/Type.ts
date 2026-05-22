@@ -52,7 +52,7 @@ type EchoSchemaKind<K extends internal.EntityKind = internal.EntityKind> = {
  * ```ts
  * const PersonSchema: Type.Obj<Person> = Schema.Struct({
  *   name: Schema.String,
- * }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.person', '0.1.0')));
+ * }).pipe(Type.object(DXN.make('com.example.type.person', '0.1.0')));
  *
  * // Access fields for introspection:
  * Object.keys(PersonSchema.fields); // ['name']
@@ -100,7 +100,7 @@ export type AnyObj = ObjectSchemaBase;
  * ```ts
  * const Person = Schema.Struct({
  *   name: Schema.String,
- * }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.person', '0.1.0')));
+ * }).pipe(Type.object(DXN.make('com.example.type.person', '0.1.0')));
  * ```
  */
 export const object: {
@@ -164,7 +164,7 @@ export type AnyRelation = RelationSchemaBase;
  * const WorksFor = Schema.Struct({
  *   role: Schema.String,
  * }).pipe(Type.relation({
- *   dxn: DXN.fromNsidAndVersion('com.example.type.worksFor', '0.1.0'),
+ *   dxn: DXN.make('com.example.type.worksFor', '0.1.0'),
  *   source: Person,
  *   target: Company,
  * }));

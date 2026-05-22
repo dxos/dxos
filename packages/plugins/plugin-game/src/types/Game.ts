@@ -45,7 +45,7 @@ export const Game = Schema.Struct({
     .annotations({ description: 'Reference to variant-specific state object.' })
     .pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.game', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.game', '0.1.0')),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--sword--regular',

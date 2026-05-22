@@ -24,7 +24,7 @@ const CalendarEventSchema = Schema.Struct({
   startTime: Schema.String,
   endTime: Schema.String,
   description: Schema.String,
-}).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.calendarEvent', '0.1.0')));
+}).pipe(Type.object(DXN.make('com.example.type.calendarEvent', '0.1.0')));
 
 type CalendarEvent = Schema.Schema.Type<typeof CalendarEventSchema>;
 

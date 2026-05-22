@@ -19,7 +19,7 @@ export const HasRelationship = Schema.Struct({
 })
   .pipe(
     Type.relation({
-      dxn: DXN.fromNsidAndVersion('org.dxos.relation.hasRelationship', '0.1.0'),
+      dxn: DXN.make('org.dxos.relation.hasRelationship', '0.1.0'),
       source: Person.Person,
       target: Person.Person,
     }),

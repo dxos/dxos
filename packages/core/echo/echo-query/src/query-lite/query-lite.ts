@@ -611,7 +611,7 @@ const isRef = (obj: any): obj is Ref.Ref<any> => {
 const makeTypeDxn = (typename: string): DXN.DXN => {
   assertArgument(typeof typename === 'string', 'typename');
   assertArgument(!typename.startsWith('dxn:'), 'typename');
-  // Inline template (rather than `DXN.fromNsid`) to keep the value-side `@dxos/keys` import out of this bundle.
+  // Inline template (rather than `DXN.make`) to keep the value-side `@dxos/keys` import out of this bundle.
   return `dxn:${typename}` as DXN.DXN;
 };
 

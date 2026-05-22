@@ -21,7 +21,7 @@ export const PersistentSchema = Schema.Struct({
   version: VersionSchema,
   jsonSchema: JsonSchemaType,
 }).pipe(
-  EchoObjectSchema(DXN.fromNsidAndVersion('org.dxos.type.schema', '0.1.0')),
+  EchoObjectSchema(DXN.make('org.dxos.type.schema', '0.1.0')),
   LabelAnnotation.set(['name']),
   IconAnnotation.set({
     icon: 'ph--database--regular',

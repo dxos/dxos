@@ -18,9 +18,9 @@ import { type DataSourceCursor, type IndexDataSource, IndexEngine, type Indexing
 import { type IndexCursor, IndexTracker } from './index-tracker';
 import { FtsIndex, type IndexerObject, ObjectMetaIndex, ReverseRefIndex } from './indexes';
 
-const TYPE_DEFAULT = DXN.parse('dxn:com.example.type.Type:0.1.0');
-const TYPE_A = DXN.parse('dxn:com.example.type.TypeA:0.1.0');
-const TYPE_B = DXN.parse('dxn:com.example.type.TypeB:0.1.0');
+const TYPE_DEFAULT = DXN.make('com.example.type.Type', '0.1.0');
+const TYPE_A = DXN.make('com.example.type.TypeA', '0.1.0');
+const TYPE_B = DXN.make('com.example.type.TypeB', '0.1.0');
 
 const TestLayer = SqlTransaction.layer.pipe(
   Layer.provideMerge(

@@ -35,7 +35,7 @@ export const State = Schema.Struct({
     description: 'AI difficulty level.',
   }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.tictactoe.state', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.tictactoe.state', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--hash-straight--regular',
     hue: 'cyan',

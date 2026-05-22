@@ -13,7 +13,7 @@ export const Gallery = Schema.Struct({
   /** References to {@link File.File} objects. */
   images: Schema.Array(Ref.Ref(File.File)).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.gallery', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.gallery', '0.1.0')),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--images--regular',

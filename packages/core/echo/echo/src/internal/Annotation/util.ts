@@ -70,7 +70,7 @@ export const makeTypeJsonSchemaAnnotation = (options: {
   assertArgument(!!options.relationTarget === (options.kind === EntityKind.Relation), 'relationTarget');
 
   const obj: Record<string, unknown> = {
-    $id: options.identifier ?? DXN.fromNsidAndVersion(options.typename, options.version),
+    $id: options.identifier ?? DXN.make(options.typename, options.version),
     entityKind: options.kind,
     version: options.version,
     typename: options.typename,

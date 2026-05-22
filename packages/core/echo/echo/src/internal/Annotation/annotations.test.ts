@@ -19,7 +19,7 @@ const TestObject = Schema.Struct({
 
 type TestObject = Schema.Schema.Type<typeof TestObject>;
 
-const TestEchoSchema = TestObject.pipe(EchoObjectSchema(DXN.fromNsidAndVersion('org.dxos.type.test', '0.1.0')));
+const TestEchoSchema = TestObject.pipe(EchoObjectSchema(DXN.make('org.dxos.type.test', '0.1.0')));
 
 type TestEchoSchema = Schema.Schema.Type<typeof TestEchoSchema>;
 

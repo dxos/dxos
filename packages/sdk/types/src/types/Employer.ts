@@ -23,7 +23,7 @@ export const Employer = Schema.Struct({
 })
   .pipe(
     Type.relation({
-      dxn: DXN.fromNsidAndVersion('org.dxos.relation.employer', '0.1.0'),
+      dxn: DXN.make('org.dxos.relation.employer', '0.1.0'),
       source: Person.Person,
       target: Organization.Organization,
     }),

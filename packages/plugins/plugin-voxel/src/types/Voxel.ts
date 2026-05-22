@@ -37,7 +37,7 @@ export const World = Schema.Struct({
   /** Map of voxel coordinates to voxel properties. Keys are `${x}:${y}:${z}`. */
   voxels: Schema.optional(Schema.Record({ key: Schema.String, value: VoxelProps })),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.voxel', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.voxel', '0.1.0')),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--cube--regular',

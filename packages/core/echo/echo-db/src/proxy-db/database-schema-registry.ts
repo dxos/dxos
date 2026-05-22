@@ -386,7 +386,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     // The schema's $id is the typename DXN — universal across stored and non-stored
     // schemas. The schema-as-object's storage EchoURI is tracked separately on
     // TypeIdentifierAnnotation for back-references (e.g. registry lookup by object id).
-    const typeDxn = DXN.fromNsidAndVersion(meta.typename, meta.version);
+    const typeDxn = DXN.make(meta.typename, meta.version);
     const storageEchoId = EchoURI.fromLocalObjectId(schemaToStore.id);
     schemaToStore.jsonSchema = JsonSchema.toJsonSchema(
       schema.annotations({

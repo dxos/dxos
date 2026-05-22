@@ -99,7 +99,7 @@ export const Subscription = Schema.Struct({
     }),
   }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.subscription.feed', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.subscription.feed', '0.1.0')),
   LabelAnnotation.set(['name', 'url']),
   Annotation.IconAnnotation.set({
     icon: 'ph--rss--regular',
@@ -147,7 +147,7 @@ export const PostContent = Schema.Struct({
   text: Schema.String,
   /** ISO 8601 timestamp when the content was fetched. */
   fetchedAt: Schema.String,
-}).pipe(Type.object(DXN.fromNsidAndVersion('org.dxos.type.subscription.postContent', '0.1.0')));
+}).pipe(Type.object(DXN.make('org.dxos.type.subscription.postContent', '0.1.0')));
 
 export interface PostContent extends Schema.Schema.Type<typeof PostContent> {}
 
@@ -176,7 +176,7 @@ export const Post = Schema.Struct({
   /** Unique identifier (guid) from the feed. */
   guid: Schema.String.pipe(Schema.optional),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.subscription.post', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.subscription.post', '0.1.0')),
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({
     icon: 'ph--article--regular',

@@ -15,7 +15,7 @@ import { change } from './reactive';
 
 const Organization = Schema.Struct({
   name: Schema.String,
-}).pipe(EchoObjectSchema(DXN.fromNsidAndVersion('com.example.type.organization', '0.1.0')));
+}).pipe(EchoObjectSchema(DXN.make('com.example.type.organization', '0.1.0')));
 
 interface Organization extends Schema.Schema.Type<typeof Organization> {}
 
@@ -27,7 +27,7 @@ const Contact = Schema.Struct(
     key: Schema.String,
     value: Schema.Any,
   },
-).pipe(Schema.partial, EchoObjectSchema(DXN.fromNsidAndVersion('com.example.type.person', '0.1.0')));
+).pipe(Schema.partial, EchoObjectSchema(DXN.make('com.example.type.person', '0.1.0')));
 
 interface Contact extends Schema.Schema.Type<typeof Contact> {}
 
@@ -89,7 +89,7 @@ describe('EchoObjectSchema class DSL', () => {
     {
       const Test2 = Schema.Struct({
         meta: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
-      }).pipe(EchoObjectSchema(DXN.fromNsidAndVersion('org.dxos.type.functionTrigger', '0.1.0')));
+      }).pipe(EchoObjectSchema(DXN.make('org.dxos.type.functionTrigger', '0.1.0')));
 
       const object = makeObject(Test2, {});
       change(object, (o) => {

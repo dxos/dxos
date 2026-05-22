@@ -67,7 +67,7 @@ export const Unknown: Type.Relation<Unknown, Obj.Any, Obj.Any> = Schema.Struct({
   // NOTE: The EchoRelationSchema annotation is required for Ref.Ref(Relation.Unknown) to work.
   //   The typename/version/source/target only satisfy ECHO schema machinery for reference targets.
   internal.EchoRelationSchema({
-    dxn: DXN.fromNsidAndVersion('org.dxos.schema.anyRelation', '0.0.0'),
+    dxn: DXN.make('org.dxos.schema.anyRelation', '0.0.0'),
     source: Obj.Unknown,
     target: Obj.Unknown,
   }),
@@ -351,7 +351,7 @@ export const setValue: (rel: Mutable<Unknown>, path: readonly (string | number)[
 /**
  * Get the canonical URI of the relation. Returns `URI.URI` — today always an EchoURI,
  * but future entity kinds may surface other URI schemes; narrow with `EchoURI.parse(uri)`
- * or `DXN.parse(uri)` at the point of use. Accepts both reactive relations and snapshots.
+ * or `DXN.tryMake(uri)` at the point of use. Accepts both reactive relations and snapshots.
  */
 export const getURI = (entity: Unknown | Snapshot): URI.URI => internal.getUri(entity);
 

@@ -505,7 +505,8 @@ describe('Spaces', () => {
         return undefined;
       }
       const uri = EncodedReference.toURI(typeRef);
-      return DXN.isDXN(uri) ? DXN.getNsid(DXN.parse(uri)) : undefined;
+      const parsed = DXN.tryMake(uri);
+      return parsed ? DXN.getName(parsed) : undefined;
     };
 
     spaceA.db.query(Filter.everything()).subscribe(

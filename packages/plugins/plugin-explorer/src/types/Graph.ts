@@ -18,7 +18,7 @@ const GraphSchema = Schema.Struct({
     ast: QueryAST.Query,
   }).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.graph', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.graph', '0.1.0')),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(['view']),
   Annotation.IconAnnotation.set({

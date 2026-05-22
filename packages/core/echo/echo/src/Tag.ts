@@ -16,7 +16,7 @@ export const Tag = Schema.Struct({
   label: Schema.String,
   hue: Schema.optional(Schema.String), // TODO(burdon): Color name?
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.tag', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.tag', '0.1.0')),
   internal.LabelAnnotation.set(['label']),
   internal.SystemTypeAnnotation.set(true),
 );

@@ -35,7 +35,7 @@ export const Ticket = Schema.Struct({
   ),
   tags: Schema.optional(Schema.Array(Schema.String).pipe(FormInputAnnotation.set(false))),
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.support.ticket', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.support.ticket', '0.1.0')),
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({
     icon: 'ph--lifebuoy--regular',

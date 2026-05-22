@@ -32,7 +32,7 @@ const WorksAt = Schema.Struct({
   role: Schema.optional(Schema.String),
 }).pipe(
   Type.relation({
-    dxn: DXN.fromNsidAndVersion('com.example.story.worksAt', '0.1.0'),
+    dxn: DXN.make('com.example.story.worksAt', '0.1.0'),
     source: TestSchema.Person,
     target: TestSchema.Organization,
   }),

@@ -32,28 +32,36 @@ const DXN_SPEC_REGEXP =
 export type DXN = URI.URI & { readonly __DXN: unique symbol };
 
 /**
- * Cheap prefix check — does not validate the full DXN grammar (use `parse` for that).
+ * Cheap prefix check — does not validate the full DXN grammar.
  * Sufficient for narrowing a URI to a DXN.
  */
 export const isDXN = (s: unknown): s is DXN => typeof s === 'string' && s.startsWith('dxn:');
 
 /**
- * Creates an unversioned DXN from an NSID. Throws if the result is not a valid DXN.
- * @example fromNsid('org.dxos.type.calendar') → 'dxn:org.dxos.type.calendar'
+ * Constructs a DXN from an NSID (and optional version). Throws if the result
+ * is not a valid DXN. Use `tryMake` for non-throwing string parsing.
+ *
+ * @example make('org.dxos.type.calendar') → 'dxn:org.dxos.type.calendar'
+ * @example make('org.dxos.type.calendar', '1.0.0') → 'dxn:org.dxos.type.calendar:1.0.0'
  */
-export const fromNsid = (nsid: string): DXN => parse(`dxn:${nsid}`);
+export const make = (nsid: string, version?: string): DXN =>
+  parse(version != null ? `dxn:${nsid}:${version}` : `dxn:${nsid}`);
 
 /**
- * Creates a versioned DXN. Throws if the result is not a valid DXN.
- * @example fromNsidAndVersion('org.dxos.type.calendar', '1.0.0') → 'dxn:org.dxos.type.calendar:1.0.0'
+ * Parses a full DXN string. Returns undefined on failure.
+ * Normalizes legacy `dxn:type:<nsid>` to the canonical `dxn:<nsid>` form.
  */
-export const fromNsidAndVersion = (nsid: string, version: string): DXN => parse(`dxn:${nsid}:${version}`);
+export const tryMake = (s: string): DXN | undefined => {
+  try {
+    return parse(s);
+  } catch {
+    return undefined;
+  }
+};
 
-/**
- * Parses a DXN string, normalizing legacy `dxn:type:<nsid>` format to the canonical
- * `dxn:<nsid>` form.
- */
-export const parse = (s: string): DXN => {
+// Internal — full-grammar validator. Callers outside this module should use
+// `make(nsid, version?)` or `tryMake(s)`.
+const parse = (s: string): DXN => {
   // Backward compat: strip legacy `type:` kind segment.
   const legacyTypeMatch = /^dxn:type:(.+)$/.exec(s);
   if (legacyTypeMatch) {
@@ -69,21 +77,10 @@ export const parse = (s: string): DXN => {
 };
 
 /**
- * Like `parse` but returns undefined on failure instead of throwing.
- */
-export const tryParse = (s: string): DXN | undefined => {
-  try {
-    return parse(s);
-  } catch {
-    return undefined;
-  }
-};
-
-/**
  * Returns the NSID portion of a DXN (the part after `dxn:` and before optional `:<version>`).
- * @example getNsid('dxn:org.dxos.type.calendar:1.0.0') → 'org.dxos.type.calendar'
+ * @example getName('dxn:org.dxos.type.calendar:1.0.0') → 'org.dxos.type.calendar'
  */
-export const getNsid = (dxn: DXN): string => {
+export const getName = (dxn: DXN): string => {
   const match = /^dxn:([^:]+)/.exec(dxn);
   if (!match) {
     throw new Error(`Invalid DXN: ${dxn}`);

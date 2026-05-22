@@ -12,7 +12,7 @@ export const Text = Schema.Struct({
   name: Schema.optional(Schema.String),
   content: Schema.String,
 }).pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.text', '0.1.0')),
+  Type.object(DXN.make('org.dxos.type.text', '0.1.0')),
   Annotation.LabelAnnotation.set(['name']),
   Annotation.SystemTypeAnnotation.set(true),
   Annotation.IconAnnotation.set({

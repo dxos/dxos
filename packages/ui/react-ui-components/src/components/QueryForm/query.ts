@@ -44,7 +44,7 @@ const extractTypenameFromFilter = (filter: QueryAST.Filter): Option.Option<strin
     Match.withReturnType<Option.Option<string>>(),
     Match.when({ type: 'object' }, (f) =>
       Option.fromNullable(f.typename).pipe(
-        Option.flatMap((dxn) => Option.fromNullable(DXN.isDXN(dxn) ? DXN.getNsid(dxn) : undefined)),
+        Option.flatMap((dxn) => Option.fromNullable(DXN.isDXN(dxn) ? DXN.getName(dxn) : undefined)),
       ),
     ),
     Match.when({ type: 'and' }, (f) =>

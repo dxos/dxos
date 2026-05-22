@@ -38,7 +38,7 @@ export const evalQuery = (queryString: string): Query.Any => {
 
 export const resolveSchemaWithRegistry = (registry: SchemaRegistry.SchemaRegistry, query: QueryAST.Query) => {
   const resolve = Effect.fn(function* (dxn: string) {
-    const typename = DXN.isDXN(dxn) ? DXN.getNsid(dxn) : undefined;
+    const typename = DXN.isDXN(dxn) ? DXN.getName(dxn) : undefined;
     if (!typename) {
       return Option.none();
     }
@@ -90,7 +90,7 @@ const resolveSchema = (
         Effect.flatMap(
           Option.match({
             onNone: () => Effect.succeed(Option.none()),
-            onSome: (typename) => resolve(DXN.fromNsid(typename)),
+            onSome: (typename) => resolve(DXN.make(typename)),
           }),
         ),
       ),

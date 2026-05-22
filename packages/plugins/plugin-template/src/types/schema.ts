@@ -10,7 +10,7 @@ export namespace Template {
   export const Data = Schema.Struct({
     name: Schema.optional(Schema.String),
   }).pipe(
-    Type.object(DXN.fromNsidAndVersion('org.dxos.type.data', '0.1.0')),
+    Type.object(DXN.make('org.dxos.type.data', '0.1.0')),
     Annotation.IconAnnotation.set({
       icon: 'ph--asterisk--regular',
       hue: 'sky',

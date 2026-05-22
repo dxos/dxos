@@ -52,7 +52,7 @@ export const createDefaultSchema = () =>
     description: Schema.optional(Schema.String).annotations({
       title: 'Description',
     }),
-  }).pipe(Type.object(DXN.fromNsidAndVersion(`com.example.type.${PublicKey.random().truncate()}`, '0.1.0')));
+  }).pipe(Type.object(DXN.make(`com.example.type.${PublicKey.random().truncate()}`, '0.1.0')));
 
 export const getSchema = async (
   dxn: DXN.DXN,
@@ -62,7 +62,7 @@ export const getSchema = async (
     return;
   }
 
-  const type = DXN.getNsid(dxn);
+  const type = DXN.getName(dxn);
   const version = DXN.getVersion(dxn);
   const schema = await registry
     ?.query({ typename: type, version, location: ['database', 'runtime'] })
@@ -90,7 +90,7 @@ export const getSchemaFromPropertyDefinitions = (
     properties.filter((prop) => prop.name !== 'id').map((prop) => [prop.name, typeToSchema[formatToType[prop.format]]]),
   );
 
-  const typeSchema = Schema.Struct(fields).pipe(EchoObjectSchema(DXN.fromNsidAndVersion(typename, '0.1.0')));
+  const typeSchema = Schema.Struct(fields).pipe(EchoObjectSchema(DXN.make(typename, '0.1.0')));
   const schema = createEchoSchema(typeSchema as unknown as Schema.Schema.AnyNoContext);
 
   // Wrap schema modifications in Obj.update since the persistent schema is an ECHO object.
