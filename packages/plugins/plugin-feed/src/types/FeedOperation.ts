@@ -40,7 +40,7 @@ export const ListCandidatePosts = Operation.make({
   meta: {
     key: `${FEED_OPERATION}.list-candidate-posts`,
     name: 'List Candidate Posts',
-    description: 'Returns uncurated Posts from a Magazine\'s referenced feeds.',
+    description: "Returns uncurated Posts from a Magazine's referenced feeds.",
     icon: 'ph--list--regular',
   },
   input: Schema.Struct({
@@ -70,7 +70,7 @@ export const FetchArticleContent = Operation.make({
   meta: {
     key: `${FEED_OPERATION}.fetch-article-content`,
     name: 'Fetch Article Content',
-    description: 'Fetches and extracts text + image URLs from a Post\'s article page.',
+    description: "Fetches and extracts text + image URLs from a Post's article page.",
     icon: 'ph--article--regular',
   },
   input: Schema.Struct({
@@ -174,7 +174,7 @@ export const CurateMagazine = Operation.make({
   meta: {
     key: `${FEED_OPERATION}.curate-magazine`,
     name: 'Curate Magazine',
-    description: 'Adds uncurated Posts from the Magazine\'s feeds with derived snippets.',
+    description: "Adds uncurated Posts from the Magazine's feeds with derived snippets.",
     icon: 'ph--sparkle--regular',
   },
   input: Schema.Struct({

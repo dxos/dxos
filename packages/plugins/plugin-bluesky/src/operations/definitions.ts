@@ -25,7 +25,7 @@ export const GetBlueskyTargets = Operation.make({
   meta: {
     key: `${BLUESKY_OPERATION}.get-bluesky-targets`,
     name: 'Get Bluesky Targets',
-    description: 'List the user\'s Bluesky timeline / likes / bookmarks plus saved custom feeds.',
+    description: "List the user's Bluesky timeline / likes / bookmarks plus saved custom feeds.",
     icon: 'ph--butterfly--regular',
   },
   // Handler resolves the Composer `Client` via `Capability.get`.
