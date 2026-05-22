@@ -19,6 +19,7 @@ import * as Organization from './Organization';
 import * as Person from './Person';
 import * as Pipeline from './Pipeline';
 import * as Project from './Project';
+import * as Provider from './Provider';
 import * as Task from './Task';
 import * as Thread from './Thread';
 import * as Transcript from './Transcript';
@@ -38,6 +39,7 @@ export {
   Actor,
   ContentBlock,
   Geo,
+  Provider,
 
   //
   // Common object types
