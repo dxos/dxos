@@ -64,7 +64,7 @@ export interface Unknown extends BaseObj {}
  * // Reference to any object type
  * const Collection = Schema.Struct({
  *   objects: Schema.Array(Ref.Ref(Obj.Unknown)),
- * }).pipe(Type.object(DXN.fromNsidAndVersion('Collection', '0.1.0')));
+ * }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.collection', '0.1.0')));
  * ```
  */
 // TODO(wittjosiah): Investigate if Schema.filter can validate KindId on ECHO instances.

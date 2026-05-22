@@ -14,7 +14,7 @@ export const LegacyAnchoredTo = Schema.Struct({
   anchor: Schema.optional(Schema.String),
 }).pipe(
   Type.relation({
-    dxn: DXN.fromNsidAndVersion('org.dxos.relation.anchored-to', '0.1.0'),
+    dxn: DXN.fromNsidAndVersion('org.dxos.relation.anchoredTo', '0.1.0'),
     source: Obj.Unknown,
     target: Obj.Unknown,
   }),

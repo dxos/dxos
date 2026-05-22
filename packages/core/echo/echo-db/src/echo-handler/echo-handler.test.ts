@@ -669,7 +669,7 @@ describe('Reactive Object with ECHO database', () => {
     test('object with meta pushed to array', async () => {
       const NestedType = Schema.Struct({
         field: Schema.Number,
-      }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.test-nested', '0.1.0')));
+      }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.testNested', '0.1.0')));
       const TestType = Schema.Struct({
         objects: Schema.Array(Ref.Ref(NestedType)),
       }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.test', '0.1.0')));

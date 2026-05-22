@@ -54,7 +54,7 @@ export type SpacePropertiesSchema = Schema.Schema.Type<typeof SpacePropertiesSch
 
 /** @deprecated Use SpaceProperties instead. */
 export const LegacySpaceProperties = SpacePropertiesSchema.pipe(
-  Type.object(DXN.fromNsidAndVersion('org.dxos.type.space-properties', '0.1.0')),
+  Type.object(DXN.fromNsidAndVersion('org.dxos.type.spaceProperties', '0.1.0')),
   Annotation.SystemTypeAnnotation.set(true),
 );
 

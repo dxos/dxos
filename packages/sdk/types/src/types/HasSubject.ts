@@ -15,7 +15,7 @@ export const LegacyHasSubject = Schema.Struct({
   completedAt: Schema.String,
 }).pipe(
   Type.relation({
-    dxn: DXN.fromNsidAndVersion('org.dxos.relation.has-subject', '0.1.0'),
+    dxn: DXN.fromNsidAndVersion('org.dxos.relation.hasSubject', '0.1.0'),
     source: Obj.Unknown,
     target: Obj.Unknown,
   }),

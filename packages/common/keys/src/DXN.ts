@@ -10,10 +10,12 @@ import type * as URI from './URI';
 
 /**
  * Full DXN regex per spec — new format only: `dxn:<nsid>[:<version>]`.
+ * Middle segments may contain hyphens; the final segment must be camelCase
+ * (alphanumeric, leading letter — no hyphens or underscores).
  * Does NOT match legacy `dxn:<kind>:<...>` formats (e.g. `dxn:type:...`).
  */
 const DXN_SPEC_REGEXP =
-  /^dxn:[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9-]{0,62})?)(:\d+\.\d+\.\d+)?$/;
+  /^dxn:[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z][a-zA-Z0-9]{0,62})(:\d+\.\d+\.\d+)?$/;
 
 /**
  * DXN names a resource (type, plugin, capability, etc.).
@@ -36,16 +38,16 @@ export type DXN = URI.URI & { readonly __DXN: unique symbol };
 export const isDXN = (s: unknown): s is DXN => typeof s === 'string' && s.startsWith('dxn:');
 
 /**
- * Creates an unversioned DXN from an NSID.
+ * Creates an unversioned DXN from an NSID. Throws if the result is not a valid DXN.
  * @example fromNsid('org.dxos.type.calendar') → 'dxn:org.dxos.type.calendar'
  */
-export const fromNsid = (nsid: string): DXN => `dxn:${nsid}` as DXN;
+export const fromNsid = (nsid: string): DXN => parse(`dxn:${nsid}`);
 
 /**
- * Creates a versioned DXN.
+ * Creates a versioned DXN. Throws if the result is not a valid DXN.
  * @example fromNsidAndVersion('org.dxos.type.calendar', '1.0.0') → 'dxn:org.dxos.type.calendar:1.0.0'
  */
-export const fromNsidAndVersion = (nsid: string, version: string): DXN => `dxn:${nsid}:${version}` as DXN;
+export const fromNsidAndVersion = (nsid: string, version: string): DXN => parse(`dxn:${nsid}:${version}`);
 
 /**
  * Parses a DXN string, normalizing legacy `dxn:type:<nsid>` format to the canonical

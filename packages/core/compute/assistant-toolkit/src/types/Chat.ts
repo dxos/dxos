@@ -34,7 +34,7 @@ export const LegacyCompanionTo = Schema.Struct({
   id: Obj.ID,
 }).pipe(
   Type.relation({
-    dxn: DXN.fromNsidAndVersion('org.dxos.relation.assistant.companion-to', '0.1.0'),
+    dxn: DXN.fromNsidAndVersion('org.dxos.relation.assistant.companionTo', '0.1.0'),
     source: Chat,
     target: Obj.Unknown,
   }),

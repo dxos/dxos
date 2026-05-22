@@ -970,7 +970,7 @@ describe('ProjectionModel', () => {
       const schemaType = expectedType === TypeEnum.Number ? Schema.Number : Schema.String;
       const schema = Schema.Struct({
         [fieldName]: schemaType,
-      }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.test-object', '0.1.0')));
+      }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.testObject', '0.1.0')));
 
       const [mutable] = await registry.register([schema]);
       const view = ViewModel.make({
@@ -1020,7 +1020,7 @@ describe('ProjectionModel', () => {
     // Create and register schema using Format.Email
     const schema = Schema.Struct({
       email: Format.Email,
-    }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.email-test', '0.1.0')));
+    }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.emailTest', '0.1.0')));
 
     // Check with the primary schema (id is added by Type.object)
     expect(() => Schema.validateSync(schema)({ id: '1', email: 'valid@example.com' })).not.toThrow();

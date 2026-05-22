@@ -231,7 +231,7 @@ describe('QueryPlanner', () => {
                 },
               },
               "type": "object",
-              "typename": "dxn:com.example.type.employed-by:0.1.0",
+              "typename": "dxn:com.example.type.employedBy:0.1.0",
             },
           },
           {
@@ -389,7 +389,7 @@ describe('QueryPlanner', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:com.example.type.employed-by:0.1.0",
+              "typename": "dxn:com.example.type.employedBy:0.1.0",
             },
           },
           {
@@ -603,7 +603,7 @@ describe('QueryPlanner', () => {
                     "id": undefined,
                     "props": {},
                     "type": "object",
-                    "typename": "dxn:com.example.type.employed-by:0.1.0",
+                    "typename": "dxn:com.example.type.employedBy:0.1.0",
                   },
                 },
                 {

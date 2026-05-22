@@ -96,7 +96,7 @@ describe('complex schema validations', () => {
 
   test('subscribe', () => {
     const TestSchema = Schema.Struct({ field: Schema.String }).pipe(
-      EchoObjectSchema(DXN.fromNsidAndVersion('Test', '0.1.0')),
+      EchoObjectSchema(DXN.fromNsidAndVersion('com.test.type.test', '0.1.0')),
     );
     const object = makeObject(TestSchema, { field: 'value' });
     let called = 0;

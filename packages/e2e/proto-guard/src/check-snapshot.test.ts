@@ -11,8 +11,8 @@ import { SpacesDumper } from './space-json-dump';
 import { withSnapshot } from './util';
 
 describe('Load client from storage snapshot', () => {
-  test('2026-03-12', { timeout: 10_000 }, async () => {
-    const snapshot = SnapshotsRegistry.getSnapshot('2026-03-12') ?? failUndefined();
+  test('2026-05-22', { timeout: 10_000 }, async () => {
+    const snapshot = SnapshotsRegistry.getSnapshot('2026-05-22') ?? failUndefined();
     await withSnapshot(snapshot, async (client, expectedData) => {
       expect(await SpacesDumper.checkIfSpacesMatchExpectedData(client, expectedData)).to.be.true;
     });

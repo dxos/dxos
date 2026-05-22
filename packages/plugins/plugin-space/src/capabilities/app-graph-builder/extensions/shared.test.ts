@@ -20,7 +20,7 @@ const TestContact = Schema.Struct({
 const TestViewWrapper = Schema.Struct({
   name: Schema.optional(Schema.String),
   view: Ref.Ref(View.View),
-}).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.view-wrapper', '0.1.0')), ViewAnnotation.set(['view']));
+}).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.viewWrapper', '0.1.0')), ViewAnnotation.set(['view']));
 
 describe('buildViewIndex', () => {
   let testBuilder: EchoTestBuilder;

@@ -276,10 +276,10 @@ describe('effect-to-json', () => {
     const schema = TestSchema.EmployedBy;
     const jsonSchema = toJsonSchema(schema);
     expect(jsonSchema).toEqual({
-      $id: 'dxn:com.example.type.employed-by:0.1.0',
+      $id: 'dxn:com.example.type.employedBy:0.1.0',
       $schema: 'http://json-schema.org/draft-07/schema#',
       entityKind: 'relation',
-      typename: 'com.example.type.employed-by',
+      typename: 'com.example.type.employedBy',
       version: '0.1.0',
       relationSource: {
         // TODO(dmaretskyi): Should those point to specific schema version?

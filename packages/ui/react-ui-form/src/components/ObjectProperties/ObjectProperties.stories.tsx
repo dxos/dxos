@@ -54,7 +54,7 @@ type Article = Schema.Schema.Type<typeof Article>;
 // backing object and links it at create time. `cursor` is an optional hidden
 // field included to exercise the same path for non-required hidden fields.
 //
-const NoteBacking = Schema.Struct({}).pipe(Type.object(DXN.fromNsidAndVersion('org.dxos.test.note-backing', '0.1.0')));
+const NoteBacking = Schema.Struct({}).pipe(Type.object(DXN.fromNsidAndVersion('org.dxos.test.noteBacking', '0.1.0')));
 type NoteBacking = Schema.Schema.Type<typeof NoteBacking>;
 
 const Note = Schema.Struct({

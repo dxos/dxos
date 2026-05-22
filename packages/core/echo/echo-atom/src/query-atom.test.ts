@@ -21,7 +21,7 @@ import * as AtomQuery from './query-atom';
 const TestItem = Schema.Struct({
   name: Schema.String,
   value: Schema.Number,
-}).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.test-item', '0.1.0')));
+}).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.testItem', '0.1.0')));
 type TestItem = Schema.Schema.Type<typeof TestItem>;
 
 describe('AtomQuery', () => {

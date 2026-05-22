@@ -57,6 +57,17 @@ describe('DXN.parse', () => {
     expect(() => DXN.parse('not-a-dxn')).toThrow();
     expect(() => DXN.parse('dxn:invalid')).toThrow();
   });
+
+  test('rejects hyphens in the last NSID segment (must be camelCase)', ({ expect }) => {
+    expect(() => DXN.parse('dxn:com.example.type.registry-entry')).toThrow();
+    expect(() => DXN.parse('dxn:com.example.type.registry-entry:0.1.0')).toThrow();
+    expect(() => DXN.fromNsid('com.example.type.registry-entry')).toThrow();
+    expect(() => DXN.fromNsidAndVersion('com.example.type.registry-entry', '0.1.0')).toThrow();
+  });
+
+  test('accepts hyphens in middle segments but not the last', ({ expect }) => {
+    expect(DXN.parse('dxn:org.dxos.relation.plugin-crm.profileOf')).toBe('dxn:org.dxos.relation.plugin-crm.profileOf');
+  });
 });
 
 describe('DXN.getNsid', () => {

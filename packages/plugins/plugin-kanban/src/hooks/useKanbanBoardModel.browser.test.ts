@@ -35,7 +35,7 @@ const KanbanTaskSchema = Schema.Struct({
     }),
     Schema.optional,
   ),
-}).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.kanban-task', '0.1.0')));
+}).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.kanbanTask', '0.1.0')));
 
 type KanbanTask = Schema.Schema.Type<typeof KanbanTaskSchema>;
 

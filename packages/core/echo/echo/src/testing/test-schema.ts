@@ -151,7 +151,7 @@ export namespace TestSchema {
 
   export const HasManager = Schema.Struct({}).pipe(
     Type.relation({
-      dxn: DXN.fromNsidAndVersion('com.example.type.has-manager', '0.1.0'),
+      dxn: DXN.fromNsidAndVersion('com.example.type.hasManager', '0.1.0'),
       source: Person,
       target: Person,
     }),
@@ -168,7 +168,7 @@ export namespace TestSchema {
     since: Schema.optional(Schema.String),
   }).pipe(
     Type.relation({
-      dxn: DXN.fromNsidAndVersion('com.example.type.employed-by', '0.1.0'),
+      dxn: DXN.fromNsidAndVersion('com.example.type.employedBy', '0.1.0'),
       source: Person,
       target: Organization,
     }),

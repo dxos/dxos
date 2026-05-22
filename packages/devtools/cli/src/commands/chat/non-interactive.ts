@@ -20,7 +20,7 @@ const TRACKED_TYPENAMES: ReadonlyArray<{ typename: string; kind: string }> = [
   { typename: 'org.dxos.type.person', kind: 'Person' },
   { typename: 'org.dxos.type.organization', kind: 'Organization' },
   { typename: 'org.dxos.type.markdown.document', kind: 'Document' },
-  { typename: 'org.dxos.relation.plugin-crm.profile-of', kind: 'ProfileOf' },
+  { typename: 'org.dxos.relation.plugin-crm.profileOf', kind: 'ProfileOf' },
 ];
 
 const TRACKED_TYPENAME_SET = new Set(TRACKED_TYPENAMES.map((t) => t.typename));

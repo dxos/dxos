@@ -164,7 +164,7 @@ export type AnyRelation = RelationSchemaBase;
  * const WorksFor = Schema.Struct({
  *   role: Schema.String,
  * }).pipe(Type.relation({
- *   dxn: DXN.fromNsidAndVersion('com.example.type.works-for', '0.1.0'),
+ *   dxn: DXN.fromNsidAndVersion('com.example.type.worksFor', '0.1.0'),
  *   source: Person,
  *   target: Company,
  * }));

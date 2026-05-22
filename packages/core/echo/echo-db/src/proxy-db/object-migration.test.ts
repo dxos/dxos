@@ -114,11 +114,11 @@ test('migration moves data key/version into meta', async () => {
     key: Schema.String,
     name: Schema.String,
     version: Schema.String,
-  }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.registry-entry', '0.1.0')));
+  }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.registryEntry', '0.1.0')));
 
   const RegistryEntryV2 = Schema.Struct({
     name: Schema.String,
-  }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.registry-entry', '0.2.0')));
+  }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.registryEntry', '0.2.0')));
 
   const migration = defineObjectMigration({
     from: RegistryEntryV1,

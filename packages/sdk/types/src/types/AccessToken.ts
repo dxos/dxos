@@ -13,7 +13,7 @@ import { Format, LabelAnnotation, SystemTypeAnnotation } from '@dxos/echo/intern
 export const LegacyAccessToken = Schema.Struct({
   source: Schema.String,
   token: Schema.String,
-}).pipe(Type.object(DXN.fromNsidAndVersion('org.dxos.type.access-token', '0.1.0')), SystemTypeAnnotation.set(true));
+}).pipe(Type.object(DXN.fromNsidAndVersion('org.dxos.type.accessToken', '0.1.0')), SystemTypeAnnotation.set(true));
 
 export interface LegacyAccessToken extends Schema.Schema.Type<typeof LegacyAccessToken> {}
 
