@@ -3,9 +3,8 @@
 //
 
 import { DiscordREST } from 'dfx';
-import * as HttpClient from '@effect/platform/HttpClient';
-import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
@@ -20,7 +19,6 @@ import { OAuthProvider } from '@dxos/protocols';
 import { AccessToken } from '@dxos/types';
 
 import {
-  DISCORD_API_BASE,
   DISCORD_BOT_LABEL,
   DISCORD_PROVIDER_ID,
   DISCORD_SOURCE,
@@ -104,67 +102,40 @@ const credentialForm: CredentialForm<Schema.Schema.Type<typeof DiscordTokenForm>
 };
 
 /**
- * Token-created hook for the Discord Bot provider.
+ * Factory for the token-created hook.
  *
- * Calls `GET /users/@me` via dfx (Bot auth) to populate `accessToken.account`
- * with the bot's display name. Failures are swallowed so a failed call cannot
- * block an Integration that is otherwise valid.
+ * Both the bot and user providers call `GET /users/@me` to populate
+ * `accessToken.account`; the only difference is which layer they use.
+ * Failures are swallowed so a failed call cannot block an otherwise-valid
+ * Integration.
  */
-const onTokenCreated: OnTokenCreated = ({ accessToken }) =>
-  Effect.gen(function* () {
-    if (accessToken.account) {
-      return;
-    }
-    const self = yield* Effect.gen(function* () {
-      const rest = yield* DiscordREST;
-      return yield* rest.getMyUser();
-    }).pipe(Effect.provide(makeDiscordLayerFromToken(accessToken.token)));
-    Obj.update(accessToken, (accessToken) => {
-      accessToken.account = self.global_name && self.global_name.length > 0 ? self.global_name : self.username;
-    });
-  }).pipe(Effect.orDie);
-
-/** Minimal wire shape for `GET /users/@me` used by `userOnTokenCreated`. */
-const DiscordUserMeResponse = Schema.Struct({
-  username: Schema.String,
-  global_name: Schema.NullOr(Schema.String).pipe(Schema.optional),
-});
-
-/**
- * Token-created hook for the Discord User OAuth provider.
- *
- * Calls `GET /users/@me` with `Bearer` auth (user OAuth token) to populate
- * `accessToken.account`. Falls back to a no-op on failure so a transient
- * network error does not break the newly created Integration.
- */
-const userOnTokenCreated: OnTokenCreated = ({ accessToken }) =>
-  Effect.gen(function* () {
-    if (accessToken.account) {
-      return;
-    }
-    const self = yield* Effect.gen(function* () {
-      const httpClient = yield* HttpClient.HttpClient;
-      return yield* HttpClientRequest.get(`${DISCORD_API_BASE}/users/@me`).pipe(
-        httpClient.execute,
-        Effect.flatMap((res) => res.json),
-        Effect.flatMap(Schema.decodeUnknown(DiscordUserMeResponse)),
-        Effect.scoped,
-      );
-    }).pipe(
-      Effect.provide(makeDiscordUserLayerFromToken(accessToken.token)),
-      Effect.orElseSucceed(() => null),
-    );
-    if (self) {
+const makeOnTokenCreated = (makeLayer: (token: string) => Layer.Layer<DiscordREST>): OnTokenCreated =>
+  ({ accessToken }) =>
+    Effect.gen(function* () {
+      if (accessToken.account) {
+        return;
+      }
+      const self = yield* Effect.gen(function* () {
+        const rest = yield* DiscordREST;
+        return yield* rest.getMyUser();
+      }).pipe(Effect.provide(makeLayer(accessToken.token)));
       Obj.update(accessToken, (accessToken) => {
         accessToken.account = self.global_name && self.global_name.length > 0 ? self.global_name : self.username;
       });
-    }
-  }).pipe(Effect.orDie);
+    }).pipe(Effect.orDie);
+
+const onTokenCreated = makeOnTokenCreated(makeDiscordLayerFromToken);
+const userOnTokenCreated = makeOnTokenCreated(makeDiscordUserLayerFromToken);
 
 /**
  * Contributes two `IntegrationProvider` entries for Discord:
  * - `discord` — bot token (manual credential form, syncs guild channels the bot was invited to)
  * - `discord-user` — OAuth user token (syncs guild channels the user is a member of)
+ *
+ * Both providers share the same `GetDiscordChannels` discovery and
+ * `SyncDiscordChannel` sync operations. The auth difference is handled
+ * transparently at the layer level: `makeDiscordUserLayerFromToken` rewrites
+ * dfx's `Bot <token>` header to `Bearer <token>` inside the proxy fetch layer.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -188,7 +159,7 @@ export default Capability.makeModule(
           scopes: ['identify', 'guilds'],
         },
         optionsSchema: DiscordTargetOptions,
-        getSyncTargets: DiscordOperation.GetDiscordUserChannels,
+        getSyncTargets: DiscordOperation.GetDiscordChannels,
         sync: DiscordOperation.SyncDiscordChannel,
         onTokenCreated: userOnTokenCreated,
       },

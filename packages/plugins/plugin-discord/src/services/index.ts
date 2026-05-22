@@ -3,4 +3,4 @@
 //
 
 export { makeDiscordLayer, makeDiscordLayerFromToken, makeDiscordUserLayer, makeDiscordUserLayerFromToken } from './discord';
-export { makeEdgeProxyHttpClientLayer } from './proxy-http-client';
+export { makeEdgeProxyHttpClientLayer, type EdgeProxyHttpClientOptions } from './proxy-http-client';
