@@ -62,6 +62,18 @@ export const compileEntry = async (files: readonly LoadedFile[]): Promise<BuildR
   }
 
   const compiler = await getCompiler();
+  // Sync the compiler's virtual FS to exactly this project's file set. The
+  // `Compiler` instance is a page-level singleton, so without this step files
+  // from a previously-built CodeProject (or files deleted from the current
+  // project) would linger in the language-service program and cause ghost
+  // module resolutions and stale diagnostics. We only manage the user's `.ts`
+  // / `.tsx` files; lib `.d.ts` entries fetched from the CDN are untouched.
+  const desired = new Set(files.map((file) => file.path));
+  for (const tracked of compiler.files()) {
+    if (!desired.has(tracked)) {
+      compiler.removeFile(tracked);
+    }
+  }
   for (const file of files) {
     compiler.setFile(file.path, file.content);
   }

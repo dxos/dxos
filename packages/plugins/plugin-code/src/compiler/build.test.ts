@@ -144,4 +144,24 @@ describe('compile + execute round-trip', () => {
       expect(run.stderr).toEqual([]);
     }
   });
+
+  test('does not leak files between consecutive builds', async ({ expect }) => {
+    // First build: a leaky module the second build does NOT include.
+    const buildA: LoadedFile[] = [
+      { path: 'src/leak.ts', content: 'export const VALUE = 1; const _x: number = "no";\n' },
+    ];
+    const a = await compileEntry(buildA);
+    // We expect this to fail (string assigned to number) — drives the test.
+    expect(a.ok).toBe(false);
+
+    // Second build: only hello.ts. If src/leak.ts lingered in the language-
+    // service program, its diagnostics would surface here and the build
+    // would (incorrectly) fail.
+    const buildB: LoadedFile[] = [{ path: 'src/hello.ts', content: HELLO_SOURCE }];
+    const b = await compileEntry(buildB);
+    expect(b.ok).toBe(true);
+    if (b.ok) {
+      expect(b.diagnostics).toEqual([]);
+    }
+  });
 });

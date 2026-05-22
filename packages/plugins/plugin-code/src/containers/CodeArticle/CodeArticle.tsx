@@ -30,6 +30,19 @@ import { CodeCapabilities, CodeOperation, type CodeProject, type SourceFile } fr
 
 export type CodeArticleProps = AppSurface.ObjectArticleProps<CodeProject.CodeProject>;
 
+/**
+ * Synthetic failed-build record used when the operation envelope contains no
+ * data (invocation error or thrown). Drives `canRun` → false in the toolbar
+ * and surfaces the message in BuildOutput so the user doesn't sit with stale
+ * green output after a real failure.
+ */
+const failedBuild = (message: string): CodeCapabilities.BuildState => ({
+  ok: false,
+  diagnostics: [{ severity: 'error', message }],
+  entry: undefined,
+  timestamp: Date.now(),
+});
+
 const languageForPath = (path: string) => {
   if (path.endsWith('.md') || path.endsWith('.mdx')) {
     return markdown();
@@ -86,20 +99,25 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
           [projectId]: {
             ...current[projectId],
             busy: undefined,
+            // On a failed envelope (no data), invalidate any prior clean build
+            // so canRun goes false and stale output can't be re-run.
             lastBuild: data
               ? { ok: data.ok, diagnostics: data.diagnostics, entry: data.entry, timestamp: Date.now() }
-              : current[projectId]?.lastBuild,
+              : failedBuild(error?.message ?? 'Build operation returned no result.'),
           },
         }));
       } catch (err) {
-        // Operation invocation threw outright — clear busy so the toolbar
-        // doesn't stick in "Building…" forever. The error is logged but not
-        // surfaced in BuildOutput because the operation never produced a
-        // result envelope; we leave `lastBuild` untouched.
+        // Operation invocation threw outright — invalidate `lastBuild` to a
+        // synthetic failure so Run is disabled and BuildOutput surfaces the
+        // error, and clear busy so the toolbar doesn't stick.
         log.catch(err);
         updateBuildRun((current) => ({
           ...current,
-          [projectId]: { ...current[projectId], busy: undefined },
+          [projectId]: {
+            ...current[projectId],
+            busy: undefined,
+            lastBuild: failedBuild(err instanceof Error ? err.message : String(err)),
+          },
         }));
       }
     }, [invoker, project, projectId, spaceId, updateBuildRun]);
@@ -135,18 +153,26 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
                   timestamp: Date.now(),
                 }
               : current[projectId]?.lastRun,
-            // A failed build still surfaces diagnostics on the build slot.
-            lastBuild:
-              data && data.diagnostics.length > 0 && !data.ok
+            // Run can fail for two reasons: (a) the underlying build had
+            // diagnostics — surface them on the build slot; (b) invocation
+            // failed entirely — invalidate the prior clean build so the
+            // user can't keep re-running stale output.
+            lastBuild: data
+              ? data.diagnostics.length > 0 && !data.ok
                 ? { ok: false, diagnostics: data.diagnostics, entry: undefined, timestamp: Date.now() }
-                : current[projectId]?.lastBuild,
+                : current[projectId]?.lastBuild
+              : failedBuild(error?.message ?? 'Run operation returned no result.'),
           },
         }));
       } catch (err) {
         log.catch(err);
         updateBuildRun((current) => ({
           ...current,
-          [projectId]: { ...current[projectId], busy: undefined },
+          [projectId]: {
+            ...current[projectId],
+            busy: undefined,
+            lastBuild: failedBuild(err instanceof Error ? err.message : String(err)),
+          },
         }));
       }
     }, [invoker, project, projectId, spaceId, updateBuildRun]);
