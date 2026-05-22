@@ -7,6 +7,8 @@ import React, { useMemo, useState } from 'react';
 import { Icon, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
+// TODO(burdon): Factor out common tree with react-ui-list.
+
 export type FileEntry = {
   path: string;
 };
