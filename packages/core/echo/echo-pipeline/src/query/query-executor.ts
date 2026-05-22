@@ -1386,7 +1386,7 @@ export class QueryExecutor extends Resource {
     const anchorDxns = workingSet.map((item) => EchoURI.make({ objectId: item.objectId }));
     const rows: readonly ReverseRef[] = (
       await Promise.all(
-        anchorDxns.map((targetDxn) => this._runInRuntime(this._indexEngine.queryReverseRef({ targetDxn }))),
+        anchorDxns.map((targetDXN) => this._runInRuntime(this._indexEngine.queryReverseRef({ targetDXN }))),
       )
     ).flat();
 
