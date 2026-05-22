@@ -112,7 +112,6 @@ export const WithForm = () => (
     defaultValues={value as any}
     onSave={(next) => log.info('save', { next })}
     onCancel={() => log.info('cancel')}
-    debug
   >
     <Form.Viewport>
       <Form.Content>
@@ -124,7 +123,7 @@ export const WithForm = () => (
 );
 
 export const WithReadOnlyForm = () => (
-  <Form.Root schema={ConfigSchema as any} defaultValues={value as any} readonly={true} debug>
+  <Form.Root schema={ConfigSchema as any} defaultValues={value as any} readonly={true}>
     <Form.Viewport>
       <Form.Content>
         <Form.FieldSet />

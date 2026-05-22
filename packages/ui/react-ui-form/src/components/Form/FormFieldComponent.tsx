@@ -19,7 +19,7 @@ import { Icon, Input, Tooltip } from '@dxos/react-ui';
 import { inputTextLabel } from '@dxos/ui-theme';
 
 import { type FormFieldStatus } from '../../hooks';
-import { useFormDebug } from './Form';
+import { useFormTooltips } from './Form';
 
 /**
  * Dynamic props passed to input components.
@@ -85,25 +85,26 @@ export type FormFieldLabelProps = {
   error?: string;
   /**
    * JSON path of the field this label describes (e.g. `runtime.client.storage.persistent`).
-   * Rendered as a right-aligned monospace hint when the enclosing `Form.Root`
-   * has `debug` enabled -- useful for spotting which field maps to which path
-   * when authoring schemas or filing bugs against a form. Callers can supply
-   * the path unconditionally; the label suppresses it unless debug is on.
+   * Surfaced as a hover tooltip on the label when the enclosing `Form.Root`
+   * has `tooltips` enabled (the default) -- useful for spotting which field
+   * maps to which path when authoring schemas or filing bugs against a form.
+   * Callers can supply the path unconditionally; the label suppresses the
+   * tooltip when `Form.Root tooltips={false}`.
    */
   path?: string;
 } & Pick<FormFieldComponentProps, 'label' | 'readonly'>;
 
 export const FormFieldLabel = ({ label, error, readonly, asChild, path }: FormFieldLabelProps) => {
-  const debug = useFormDebug();
+  const tooltips = useFormTooltips();
   const Label = readonly || asChild ? 'span' : Input.Label;
-  // In debug mode, surface the field's JSON path as a tooltip on the label
-  // (e.g. `runtime.client.storage.persistent`). Wrapping with
-  // `Tooltip.Trigger asChild` keeps the underlying `Input.Label` (or `span`)
-  // intact so form semantics and label-for-input linking are unchanged.
+  // Surface the field's JSON path as a hover tooltip on the label (e.g.
+  // `runtime.client.storage.persistent`). Wrapping with `Tooltip.Trigger
+  // asChild` keeps the underlying `Input.Label` (or `span`) intact so form
+  // semantics and label-for-input linking are unchanged.
   const labelNode = <Label className={inputTextLabel}>{label}</Label>;
   return (
     <div className='flex items-center justify-between'>
-      {debug && path ? (
+      {tooltips && path ? (
         <Tooltip.Trigger asChild content={path} side='bottom'>
           {labelNode}
         </Tooltip.Trigger>

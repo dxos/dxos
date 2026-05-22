@@ -77,9 +77,10 @@ type FormContextValue<T extends AnyProperties = any> = {
   form: FormHandler<T>;
 
   /**
-   * Show debug info.
+   * Show field tooltips (currently: JSON path on each label). Defaults to
+   * `true`; pass `false` to suppress.
    */
-  debug?: boolean;
+  tooltips?: boolean;
 
   /**
    * Testing.
@@ -176,26 +177,27 @@ const FormRoot = <T extends AnyProperties = AnyProperties>({
   const form = useFormHandler({ schema, values, onSave, onCancel, ...props });
 
   return (
-    <FormDebugContext.Provider value={props.debug ?? false}>
+    <FormTooltipsContext.Provider value={props.tooltips ?? true}>
       <FormContextProvider form={form} {...props}>
         {children}
       </FormContextProvider>
-    </FormDebugContext.Provider>
+    </FormTooltipsContext.Provider>
   );
 };
 
 /**
- * A separate context for the `debug` flag so that read-only label decorations
- * (notably the field's JSON path rendered by `FormFieldLabel`) can be enabled
+ * A separate context for the `tooltips` flag so that field-label decorations
+ * (notably the JSON path rendered by `FormFieldLabel`) can be controlled
  * from any component down-tree without forcing a hard dependency on the full
  * `Form` context (which `FormFieldWrapper` consumers may use outside of a
- * `Form.Root`, e.g. in storybook stories). Defaults to `false` when there is
- * no enclosing `Form.Root`.
+ * `Form.Root`, e.g. in storybook stories). Defaults to `true` -- both when
+ * `Form.Root` doesn't pass an explicit value AND when there is no enclosing
+ * `Form.Root` at all.
  */
-const FormDebugContext = createReactContext<boolean>(false);
+const FormTooltipsContext = createReactContext<boolean>(true);
 
-/** Returns `true` when the enclosing `Form.Root` was created with `debug`. */
-export const useFormDebug = (): boolean => useContext(FormDebugContext);
+/** Returns whether the enclosing `Form.Root` has field tooltips enabled. */
+export const useFormTooltips = (): boolean => useContext(FormTooltipsContext);
 
 FormRoot.displayName = 'Form.Root';
 
