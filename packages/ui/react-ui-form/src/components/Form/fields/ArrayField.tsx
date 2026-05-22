@@ -72,6 +72,13 @@ export const ArrayField = ({
     return null;
   }
 
+  // An array of objects (e.g. `repeated Signal`) can't share the
+  // 2-column-with-delete row layout used for scalars: each object has
+  // multiple fields that need their own (label, input) rows, so we render
+  // each item as a recursively-laid-out FormField with the delete button on
+  // its own row below. Scalar arrays keep the compact inline layout.
+  const renderItemAsObject = elementType && isNestedType(elementType);
+
   return (
     <>
       {(layout !== 'static' || (values && values.length > 0)) && (
@@ -80,6 +87,29 @@ export const ArrayField = ({
 
       <div className='flex flex-col gap-form-gap'>
         {values?.map((_, index) => {
+          if (renderItemAsObject) {
+            return (
+              <div key={index} className='flex flex-col gap-form-gap'>
+                <FormField
+                  autoFocus={index === values.length - 1}
+                  type={elementType}
+                  path={[...(path ?? []), index]}
+                  readonly={readonly || layout === 'static'}
+                  layout={layout === 'static' ? 'static' : undefined}
+                  {...props}
+                />
+                {!readonly && layout !== 'static' && (
+                  <IconButton
+                    classNames='flex w-full'
+                    icon='ph--x--regular'
+                    label={t('remove.button')}
+                    onClick={() => handleDelete(index)}
+                  />
+                )}
+              </div>
+            );
+          }
+
           return (
             <div key={index} className='grid grid-cols-[1fr_min-content] gap-form-gap last:mb-form-gap items-center'>
               <FormField
