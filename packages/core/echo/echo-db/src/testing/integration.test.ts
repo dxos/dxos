@@ -514,7 +514,7 @@ describe('Integration tests', () => {
       {
         // Can query by stored schema DXN.
         await using db = await peer.openDatabase(spaceKey, rootUrl);
-        const objects = await db.query(Query.select(Filter.typeDXN(schemaDxn))).run();
+        const objects = await db.query(Query.select(Filter.typeURI(schemaDxn))).run();
         expect(objects.length).to.eq(1);
         expect(getTypeAnnotation(Obj.getSchema(objects[0])!)).to.include({
           typename: 'com.example.type.test',
@@ -541,14 +541,14 @@ describe('Integration tests', () => {
   test('dynamic schema is eagerly loaded with objects', async () => {
     await using peer = await builder.createPeer();
 
-    let typeDXN!: URI.URI;
+    let typeURI!: URI.URI;
     {
       await using db = await peer.createDatabase(PublicKey.random(), {
         reactiveSchemaQuery: false,
         preloadSchemaOnOpen: false,
       });
       const [schema] = await db.schemaRegistry.register([TestSchema.Person]);
-      typeDXN = getSchemaURI(schema)!;
+      typeURI = getSchemaURI(schema)!;
       db.add(makeObject(schema, { name: 'Bob' }));
       await db.flush();
     }
@@ -559,7 +559,7 @@ describe('Integration tests', () => {
         reactiveSchemaQuery: false,
         preloadSchemaOnOpen: false,
       });
-      const [obj] = await db.query(Query.select(Filter.typeDXN(typeDXN))).run();
+      const [obj] = await db.query(Query.select(Filter.typeURI(typeURI))).run();
       expect(Obj.getSchema(obj)).toBeDefined();
       expect(Type.getTypename(Obj.getSchema(obj)!)).toEqual(TestSchema.Person.typename);
     }

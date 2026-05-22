@@ -117,10 +117,10 @@ export const type = <S extends Schema.Schema.All>(
     });
   }
 
-  const dxn = internal.getTypeURIFromSpecifier(schema);
+  const uri = internal.getTypeURIFromSpecifier(schema);
   return new FilterClass({
     type: 'object',
-    typename: dxn,
+    typename: uri,
     ...propsFilterToAst(props ?? {}),
   });
 };
@@ -141,7 +141,7 @@ export const typename = (typename: string): Any => {
  * Filter by fully qualified type URI — either a typename DXN (for static schemas) or
  * a schema-as-object EchoURI (for stored dynamic schemas). See `getSchemaURI`.
  */
-export const typeDXN = (uri: URI.URI): Any => {
+export const typeURI = (uri: URI.URI): Any => {
   return new FilterClass({
     type: 'object',
     typename: uri,
@@ -228,10 +228,10 @@ export const foreignKeys = <S extends Schema.Schema.All>(
   schema: S | string,
   keys: ForeignKey[],
 ): Filter<Schema.Schema.Type<S>> => {
-  const dxn = internal.getTypeURIFromSpecifier(schema);
+  const uri = internal.getTypeURIFromSpecifier(schema);
   return new FilterClass({
     type: 'object',
-    typename: dxn,
+    typename: uri,
     props: {},
     foreignKeys: keys,
   });

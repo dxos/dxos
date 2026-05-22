@@ -126,7 +126,7 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static typeDXN(uri: URI.URI): Filter$.Any {
+  static typeURI(uri: URI.URI): Filter$.Any {
     return new FilterClass({
       type: 'object',
       typename: uri,

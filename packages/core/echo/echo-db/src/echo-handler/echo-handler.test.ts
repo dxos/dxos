@@ -701,8 +701,8 @@ describe('Reactive Object with ECHO database', () => {
     test('can get type reference of unregistered schema', async () => {
       const { db } = await builder.createDatabase();
       const obj = db.add(Obj.make(TestSchema.Expando, { field: 1 }));
-      const typeDXN = getSchemaURI(TestSchema.Example)!;
-      getObjectCore(obj).setType(EncodedReference.fromURI(typeDXN));
+      const typeURI = getSchemaURI(TestSchema.Example)!;
+      getObjectCore(obj).setType(EncodedReference.fromURI(typeURI));
       expect(Obj.getTypeURI(obj)).to.deep.eq(Type.getURI(TestSchema.Example));
     });
 
