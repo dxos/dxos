@@ -35,6 +35,7 @@ import {
   FormFieldSet as NaturalFormFieldSet,
   type FormFieldSetProps as NaturalFormFieldSetProps,
 } from './FormFieldSet';
+import { FormTooltipsContext } from './FormTooltipsContext';
 
 // TODO(burdon): Move styles to form.ts (as with ui-theme).
 
@@ -70,9 +71,10 @@ type FormContextValue<T extends AnyProperties = any> = {
   form: FormHandler<T>;
 
   /**
-   * Show debug info.
+   * Show field tooltips (currently: JSON path on each label). Defaults to
+   * `true`; pass `false` to suppress.
    */
-  debug?: boolean;
+  tooltips?: boolean;
 
   /**
    * Testing.
@@ -169,9 +171,11 @@ const FormRoot = <T extends AnyProperties = AnyProperties>({
   const form = useFormHandler({ schema, values, onSave, onCancel, ...props });
 
   return (
-    <FormContextProvider form={form} {...props}>
-      {children}
-    </FormContextProvider>
+    <FormTooltipsContext.Provider value={props.tooltips ?? true}>
+      <FormContextProvider form={form} {...props}>
+        {children}
+      </FormContextProvider>
+    </FormTooltipsContext.Provider>
   );
 };
 
