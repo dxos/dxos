@@ -33,7 +33,7 @@ describe('ReverseRefIndex', () => {
       const spaceId = SpaceId.random();
       const sourceObjectId = ObjectId.random();
       const targetObjectId = ObjectId.random();
-      const targetDXN = EchoURI.parse(`dxn:echo:@:${targetObjectId}`);
+      const targetDXN = EchoURI.make({ objectId: targetObjectId });
 
       const sourceObject: IndexerObject = {
         spaceId,
@@ -67,8 +67,8 @@ describe('ReverseRefIndex', () => {
       const sourceObjectId = ObjectId.random();
       const targetObjectId1 = ObjectId.random();
       const targetObjectId2 = ObjectId.random();
-      const targetDxn1 = EchoURI.parse(`dxn:echo:@:${targetObjectId1}`);
-      const targetDxn2 = EchoURI.parse(`dxn:echo:@:${targetObjectId2}`);
+      const targetDxn1 = EchoURI.make({ objectId: targetObjectId1 });
+      const targetDxn2 = EchoURI.make({ objectId: targetObjectId2 });
 
       const sourceObject: IndexerObject = {
         spaceId,
@@ -110,8 +110,8 @@ describe('ReverseRefIndex', () => {
       const sourceObjectId = ObjectId.random();
       const targetObjectId1 = ObjectId.random();
       const targetObjectId2 = ObjectId.random();
-      const targetDxn1 = EchoURI.parse(`dxn:echo:@:${targetObjectId1}`);
-      const targetDxn2 = EchoURI.parse(`dxn:echo:@:${targetObjectId2}`);
+      const targetDxn1 = EchoURI.make({ objectId: targetObjectId1 });
+      const targetDxn2 = EchoURI.make({ objectId: targetObjectId2 });
 
       const sourceObject: IndexerObject = {
         spaceId,
@@ -149,8 +149,8 @@ describe('ReverseRefIndex', () => {
       const sourceObjectId = ObjectId.random();
       const targetObjectId1 = ObjectId.random();
       const targetObjectId2 = ObjectId.random();
-      const targetDxn1 = EchoURI.parse(`dxn:echo:@:${targetObjectId1}`);
-      const targetDxn2 = EchoURI.parse(`dxn:echo:@:${targetObjectId2}`);
+      const targetDxn1 = EchoURI.make({ objectId: targetObjectId1 });
+      const targetDxn2 = EchoURI.make({ objectId: targetObjectId2 });
       const recordId = 1;
 
       // Initial object with reference to target1.
@@ -239,7 +239,7 @@ describe('ReverseRefIndex', () => {
       const spaceId = SpaceId.random();
       const sourceObjectId = ObjectId.random();
       const targetObjectId = ObjectId.random();
-      const targetDXN = EchoURI.parse(`dxn:echo:@:${targetObjectId}`);
+      const targetDXN = EchoURI.make({ objectId: targetObjectId });
 
       const sourceObject: IndexerObject = {
         spaceId,
