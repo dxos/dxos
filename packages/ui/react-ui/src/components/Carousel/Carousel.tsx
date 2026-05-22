@@ -20,6 +20,7 @@ import { mx } from '@dxos/ui-theme';
 import { translationKey } from '../../translations';
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
+import { MediaPlayer, type MediaKind } from '../MediaPlayer';
 import { useTranslation } from '../ThemeProvider';
 
 // TODO(burdon): Move per-element class strings to `@dxos/ui-theme` (theme tokens)
@@ -183,20 +184,61 @@ CarouselViewport.displayName = 'Carousel.Viewport';
 // Slide
 //
 
-export type CarouselSlideProps = ThemedClassName<
-  PropsWithChildren<{
-    index: number;
-  }>
->;
+export type CarouselSlideProps = ThemedClassName<{
+  index: number;
+  /** Media source URL — rendered via the embedded {@link MediaPlayer}. */
+  src: string;
+  /** Override media auto-detection (`'video' | 'audio'`). */
+  kind?: MediaKind;
+  /** Accessible label / `<img alt>` fallback. */
+  alt?: string;
+  /** Class names forwarded to the inner `<img>` when MediaPlayer resolves to an image. */
+  imgClassNames?: string;
+  /** Class names forwarded to the inner `<video>` / `<audio>` / `<iframe>`. */
+  mediaClassNames?: string;
+  controls?: boolean;
+  autoPlay?: boolean;
+  loop?: boolean;
+  muted?: boolean;
+  crossOrigin?: 'anonymous' | 'use-credentials' | '';
+}>;
 
-const CarouselSlide = ({ children, index, classNames }: CarouselSlideProps) => {
+const CarouselSlide = ({
+  index,
+  classNames,
+  src,
+  kind,
+  alt,
+  imgClassNames,
+  mediaClassNames,
+  controls,
+  autoPlay,
+  loop,
+  muted,
+  crossOrigin,
+}: CarouselSlideProps) => {
   const { index: active } = useCarousel();
   if (active !== index) {
     return null;
   }
 
-  // TODO(burdon): Move to ui-theme.
-  return <div className={mx('absolute inset-0 w-full h-full bg-baseSurface', classNames)}>{children}</div>;
+  return (
+    <div className={mx('absolute inset-0 w-full h-full bg-baseSurface', classNames)}>
+      <MediaPlayer
+        src={src}
+        kind={kind}
+        alt={alt}
+        classNames='w-full h-full'
+        imgClassNames={mx('object-cover', imgClassNames)}
+        mediaClassNames={mediaClassNames}
+        controls={controls}
+        autoPlay={autoPlay}
+        loop={loop}
+        muted={muted}
+        crossOrigin={crossOrigin}
+      />
+    </div>
+  );
 };
 
 CarouselSlide.displayName = 'Carousel.Slide';
@@ -216,7 +258,7 @@ const CarouselPrevious = ({ classNames }: CarouselButtonProps) => {
 
   return (
     <IconButton
-      classNames={classNames}
+      classNames={mx('self-center', classNames)}
       square
       variant='ghost'
       icon='ph--caret-left--regular'
@@ -238,7 +280,7 @@ const CarouselNext = ({ classNames }: CarouselButtonProps) => {
 
   return (
     <IconButton
-      classNames={classNames}
+      classNames={mx('self-center', classNames)}
       square
       variant='ghost'
       icon='ph--caret-right--regular'

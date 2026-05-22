@@ -190,6 +190,14 @@ export type Meta = {
   source?: string;
 
   /**
+   * Relative path (inside the published package) to the plugin's bundled MDL
+   * specification file — e.g. `'PLUGIN.mdl'` or `'docs/PLUGIN.mdl'`. The file
+   * is shipped via the package's `files` entry and resolved by registry
+   * surfaces to render an in-app viewer and/or external link.
+   */
+  spec?: string;
+
+  /**
    * URL of screenshot.
    */
   screenshots?: string[];
@@ -208,13 +216,6 @@ export type Meta = {
    * Icon hue (ChromaticPalette).
    */
   iconHue?: string;
-
-  /**
-   * URL of the plugin's MDL spec, typically the published `PLUGIN.mdl` on the
-   * unpkg CDN (e.g. `https://unpkg.com/<pkg>@<version>/PLUGIN.mdl`).
-   * Rendered as a "Specification" link in the plugin detail view.
-   */
-  spec?: string;
 
   /**
    * IDs of plugins this plugin functionally depends on.

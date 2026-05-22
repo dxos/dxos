@@ -67,7 +67,7 @@ export const AboutDialog = () => {
           <div className='flex items-center'>{t('version.label', { version: version ?? 'unknown' })}</div>
           {timestamp && (
             <div className='flex items-center gap-1'>
-              <Link href={releaseUrl} target='_blank' rel='noopener noreferrer' variant='neutral'>
+              <Link href={releaseUrl} variant='neutral'>
                 {t('published.label', {
                   timestamp: formatDistance(new Date(timestamp), new Date(), { addSuffix: true }),
                 })}
@@ -81,7 +81,7 @@ export const AboutDialog = () => {
                 t,
                 i18nKey: 'powered-by-dxos.message',
                 components: {
-                  dxos: <Link href='https://dxos.org' target='_blank' rel='noopener noreferrer' variant='neutral' />,
+                  dxos: <Link href='https://dxos.org' variant='neutral' />,
                 },
               }}
             />

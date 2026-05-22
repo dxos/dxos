@@ -14,6 +14,9 @@ import { CodeArticle, CodeSettings, SpecArticle } from '#containers';
 import { meta } from '#meta';
 import { CodeProject, Settings, Spec } from '#types';
 
+import { SpecView } from '../containers/SpecArticle/SpecArticle';
+import { isPluginSpecSubject } from '../plugin-spec';
+
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
@@ -44,6 +47,11 @@ export default Capability.makeModule(() =>
           const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
           return <CodeSettings settings={settings} onSettingsChange={updateSettings} />;
         },
+      }),
+      Surface.create({
+        id: 'plugin-spec',
+        filter: AppSurface.subject(AppSurface.Article, isPluginSpecSubject),
+        component: ({ data: { subject }, role }) => <SpecView role={role} content={subject.content} readOnly />,
       }),
     ]),
   ),

@@ -9,7 +9,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useObject } from '@dxos/react-client/echo';
-import { Carousel, MediaPlayer, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Carousel, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { PromptEditor } from '#components';
@@ -140,9 +140,7 @@ export const GenerationArticle = ({ role, subject, attendableId }: GenerationArt
             <Carousel.Previous />
             <Carousel.Viewport classNames='aspect-auto h-full'>
               {urls.map((url, index) => (
-                <Carousel.Slide key={url} index={index}>
-                  <MediaPlayer src={url} kind={generation.type} />
-                </Carousel.Slide>
+                <Carousel.Slide key={url} index={index} src={url} kind={generation.type} />
               ))}
             </Carousel.Viewport>
             <Carousel.Next />

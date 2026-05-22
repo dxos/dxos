@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { type ThemeMode, useAsyncState, useThemeContext } from '@dxos/react-ui';
 import {
@@ -11,6 +11,8 @@ import {
   type GlobeController,
   type GlobeRootProps,
   type LatLngLiteral,
+  geoToPosition,
+  positionToRotation,
   useDrag,
   useGlobeZoomHandler,
   useTour,
@@ -78,16 +80,42 @@ const globeStyles = (themeMode: ThemeMode) =>
         },
       };
 
-export type GlobeControlProps = GeoControlProps & GlobeRootProps;
+export type GlobeControlProps = GeoControlProps &
+  GlobeRootProps & {
+    onChange?: (ev: { center: LatLngLiteral; zoom: number }) => void;
+  };
 
 export const GlobeControl = composable<HTMLDivElement, GlobeControlProps>(
-  ({ center, zoom, markers = [], selected = [], onToggle, ...props }, forwardedRef) => {
+  ({ center, zoom, markers = [], selected = [], onToggle, onChange, ...props }, forwardedRef) => {
     const [topology] = useAsyncState(loadTopology);
     const { themeMode } = useThemeContext();
     const styles = globeStyles(themeMode);
 
+    // Capture the initial position once at mount and convert to a rotation. Passing rotation
+    // directly bypasses the center→rotation effect chain in Globe.Canvas (which can race with
+    // the first paint) and avoids feedback loops when updates bubble back through onChange.
+    const initialRotation = useMemo(() => (center ? positionToRotation(geoToPosition(center)) : undefined), []);
+    const initialZoom = useMemo(() => zoom, []);
+
     const [controller, setController] = useState<GlobeController | null>();
-    const handleZoomAction = useGlobeZoomHandler(controller);
+    const baseZoomHandler = useGlobeZoomHandler(controller);
+
+    const emitChange = useCallback(() => {
+      if (!controller) {
+        return;
+      }
+
+      const [lng, lat] = controller.projection.rotate();
+      onChange?.({ center: { lat: -lat, lng: -lng }, zoom: controller.zoom });
+    }, [controller, onChange]);
+
+    const handleZoomAction = useCallback<NonNullable<ControlProps['onAction']>>(
+      (action) => {
+        baseZoomHandler?.(action);
+        requestAnimationFrame(emitChange);
+      },
+      [baseZoomHandler, emitChange],
+    );
 
     const features = useMemo(
       () => ({
@@ -114,7 +142,14 @@ export const GlobeControl = composable<HTMLDivElement, GlobeControlProps>(
 
     const [moved, setMoved] = useState(false);
     useDrag(controller, {
-      onUpdate: () => setMoved(true),
+      onUpdate: ({ type }) => {
+        if (type === 'move') {
+          setMoved(true);
+        }
+        if (type === 'end') {
+          emitChange();
+        }
+      },
     });
 
     // TODO(burdon): Redo.
@@ -131,6 +166,8 @@ export const GlobeControl = composable<HTMLDivElement, GlobeControlProps>(
     const handleAction: ControlProps['onAction'] = (action) => {
       switch (action) {
         case 'toggle': {
+          // Emit the live position so the next control inherits the user's current view.
+          emitChange();
           onToggle?.();
           break;
         }
@@ -144,7 +181,7 @@ export const GlobeControl = composable<HTMLDivElement, GlobeControlProps>(
     };
 
     return (
-      <Globe.Root {...composableProps(props)} center={center} zoom={zoom} ref={forwardedRef}>
+      <Globe.Root {...composableProps(props)} rotation={initialRotation} zoom={initialZoom} ref={forwardedRef}>
         <Globe.Canvas
           ref={setController}
           topology={topology}

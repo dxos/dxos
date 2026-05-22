@@ -17,8 +17,8 @@ export const meta: Plugin.Meta = {
   icon: 'ph--hash-straight--regular',
   iconHue: 'cyan',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-tictactoe',
+  spec: 'PLUGIN.mdl',
   dependsOn: [gameMeta.id],
   version: '0.8.3',
-  spec: 'https://unpkg.com/@dxos/plugin-tictactoe@0.8.3/PLUGIN.mdl',
   tags: ['labs', 'game'],
 };

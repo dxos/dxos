@@ -17,9 +17,9 @@ export const meta: Plugin.Meta = {
   icon: 'ph--shield-chevron--regular',
   iconHue: 'amber',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-chess',
+  spec: 'PLUGIN.mdl',
   screenshots: ['https://dxos.network/plugin-details-chess-dark.png'],
   dependsOn: [gameMeta.id],
   version: '0.8.3',
-  spec: 'https://unpkg.com/@dxos/plugin-chess@0.8.3/PLUGIN.mdl',
   tags: ['game'],
 };
