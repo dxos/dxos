@@ -6,6 +6,7 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Trigger } from '@dxos/compute';
 import { Filter, Query } from '@dxos/echo';
+import { EchoURI, ObjectId } from '@dxos/keys';
 import { useTranslation } from '@dxos/react-ui';
 import { type FormFieldComponentProps, SelectField, useFormFieldState } from '@dxos/react-ui-form';
 
@@ -26,7 +27,8 @@ export const SpecSelector = (props: SpecSelectorProps) => {
           case 'subscription':
             return Trigger.specSubscription(Query.select(Filter.nothing()));
           case 'queue':
-            return Trigger.specQueue('dxn:queue:default');
+            // Placeholder URI — replaced once the user selects a real queue in the form.
+            return Trigger.specQueue(EchoURI.make({ objectId: ObjectId.random() }));
           case 'email':
             return Trigger.specEmail();
           case 'webhook':
