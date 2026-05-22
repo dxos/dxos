@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 GREEN=4783872
 RED=16711680
