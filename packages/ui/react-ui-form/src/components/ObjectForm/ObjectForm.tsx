@@ -49,7 +49,7 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
     [schema],
   );
 
-  const handleCreate = useCallback((schema: Type.AnyEntity, values: any) => {
+  const handleCreate = useCallback((schema: Type.AnyType, values: any) => {
     invariant(db);
     invariant(Type.isObjectSchema(schema));
     const newObject = db.add(Obj.make(schema, values));

@@ -33,11 +33,12 @@ export const SnapshotKindId = '~@dxos/echo/SnapshotKind' as const;
 export type SnapshotKindId = typeof SnapshotKindId;
 
 /**
- * Kinds of entities stored in ECHO: objects and relations.
+ * Kinds of entities stored in ECHO: objects, relations, and types.
  */
 export enum EntityKind {
   Object = 'object',
   Relation = 'relation',
+  Type = 'type',
 }
 
 export const EntityKindSchema = Schema.Enums(EntityKind);

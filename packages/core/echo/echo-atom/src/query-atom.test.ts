@@ -296,7 +296,7 @@ describe('AtomQuery.fromQuery with schema registry', () => {
     expect(initialResults).toHaveLength(1);
 
     let updateCount = 0;
-    let latestResults: Type.AnyEntity[] = [];
+    let latestResults: Type.AnyType[] = [];
     registry.subscribe(atom, () => {
       updateCount++;
       latestResults = registry.get(atom);
@@ -329,7 +329,7 @@ describe('AtomQuery.fromQuery with schema registry', () => {
     const initialResults = registry.get(atom);
     expect(initialResults).toHaveLength(0);
 
-    let latestResults: Type.AnyEntity[] = [];
+    let latestResults: Type.AnyType[] = [];
     registry.subscribe(atom, () => {
       latestResults = registry.get(atom);
     });

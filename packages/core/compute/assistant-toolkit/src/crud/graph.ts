@@ -35,7 +35,7 @@ export const Subgraph = Schema.Struct({
 export interface Subgraph extends Schema.Schema.Type<typeof Subgraph> {}
 
 export type RelatedSchema = {
-  schema: Type.AnyEntity;
+  schema: Type.AnyType;
   kind: 'reference' | 'relation';
 };
 
@@ -46,7 +46,7 @@ export type RelatedSchema = {
  * @param schema
  * @returns
  */
-export const findRelatedSchema = async (db: Database.Database, anchor: Type.AnyEntity): Promise<RelatedSchema[]> => {
+export const findRelatedSchema = async (db: Database.Database, anchor: Type.AnyType): Promise<RelatedSchema[]> => {
   // TODO(dmaretskyi): Query stored schemas.
   const allSchemas = await db.graph.schemaRegistry.query().run();
 
@@ -74,7 +74,7 @@ export const findRelatedSchema = async (db: Database.Database, anchor: Type.AnyE
  * Non-strict DXN comparison.
  * Returns true if the DXN could be resolved to the schema.
  */
-const isSchemaAddressableByDXN = (schema: Type.AnyEntity, dxn: DXN.DXN): boolean => {
+const isSchemaAddressableByDXN = (schema: Type.AnyType, dxn: DXN.DXN): boolean => {
   if (getTypeIdentifierAnnotation(schema) === dxn) {
     return true;
   }
@@ -126,14 +126,14 @@ export const LocalSearchHandler = LocalSearchToolkit.toLayer({
 class GraphWriterSchema extends Context.Tag('@dxos/assistant/GraphWriterSchema')<
   GraphWriterSchema,
   {
-    schema: Type.AnyEntity[];
+    schema: Type.AnyType[];
   }
 >() {}
 
 /**
  * Forms typed objects that can be written to the graph database.
  */
-export const makeGraphWriterToolkit = ({ schema }: { schema: Type.AnyEntity[] }) => {
+export const makeGraphWriterToolkit = ({ schema }: { schema: Type.AnyType[] }) => {
   return Toolkit.make(
     Tool.make('graph_writer', {
       description: 'Write to the local graph database',
@@ -175,7 +175,7 @@ export const makeGraphWriterHandler = (
 /**
  * Create a schema for structured data extraction.
  */
-export const createExtractionSchema = (types: Type.AnyEntity[]) => {
+export const createExtractionSchema = (types: Type.AnyType[]) => {
   return Schema.Struct({
     ...Object.fromEntries(
       types.map(preprocessSchema).map((schema, index) => [
@@ -188,12 +188,12 @@ export const createExtractionSchema = (types: Type.AnyEntity[]) => {
   });
 };
 
-export const getSanitizedSchemaName = (schema: Type.AnyEntity) => {
+export const getSanitizedSchemaName = (schema: Type.AnyType) => {
   return DXN.getName(DXN.tryMake(Type.getURI(schema)!)!).replaceAll(/[^a-zA-Z0-9]+/g, '_');
 };
 
 export const sanitizeObjects = (
-  types: Type.AnyEntity[],
+  types: Type.AnyType[],
   data: Record<string, readonly unknown[]>,
   db: Database.Database,
   feed?: Feed.Feed,

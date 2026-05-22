@@ -21,7 +21,7 @@ import { type ObjectGenerator, SchemaTable, createGenerator, generator, staticGe
 
 // TODO(burdon): Make extensible.
 const staticTypes = [Markdown.Document, Sketch.Sketch, Sheet.Sheet, ComputeGraph];
-const recordTypes: Type.AnyObj[] = [Organization.Organization, Person.Person, Task.Task];
+const recordTypes: Type.AnyObjectType[] = [Organization.Organization, Person.Person, Task.Task];
 
 export type SpaceGeneratorProps = {
   space: Space;

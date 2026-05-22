@@ -87,10 +87,10 @@ type ObjectSchemaBase = Schema.Schema.AnyNoContext & {
 };
 
 /**
- * Type that represents any ECHO object schema.
+ * Type that represents any ECHO object schema (or "object type").
  * Accepts both static schemas (Type.object()) and mutable schemas (EchoSchema).
  */
-export type AnyObj = ObjectSchemaBase;
+export type AnyObjectType = ObjectSchemaBase;
 
 /**
  * Factory function to create an ECHO object schema.
@@ -150,10 +150,10 @@ type RelationSchemaBase = Schema.Schema.AnyNoContext & {
 };
 
 /**
- * Type that represents any ECHO relation schema.
+ * Type that represents any ECHO relation schema (or "relation type").
  * Accepts static schemas (Type.relation()).
  */
-export type AnyRelation = RelationSchemaBase;
+export type AnyRelationType = RelationSchemaBase;
 
 /**
  * Factory function to create an ECHO relation schema.
@@ -179,16 +179,16 @@ export const relation: {
 } = internal.EchoRelationSchema as any;
 
 /**
- * Type alias for any ECHO entity schema (object or relation).
- * Use this in type annotations for schema parameters.
+ * Type alias for any ECHO type (object or relation).
+ * Use this in type annotations for type parameters.
  */
-export type AnyEntity = AnyObj | AnyRelation;
+export type AnyType = AnyObjectType | AnyRelationType;
 
 /**
  * Type guard to check if a schema is an object schema.
  * NOTE: This checks SCHEMAS, not instances. Use Obj.isObject for instances.
  */
-export const isObjectSchema = (schema: AnyEntity): schema is AnyObj => {
+export const isObjectSchema = (schema: AnyType): schema is AnyObjectType => {
   return (schema as any)[internal.SchemaKindId] === internal.EntityKind.Object;
 };
 
@@ -196,7 +196,7 @@ export const isObjectSchema = (schema: AnyEntity): schema is AnyObj => {
  * Type guard to check if a schema is a relation schema.
  * NOTE: This checks SCHEMAS, not instances. Use Relation.isRelation for instances.
  */
-export const isRelationSchema = (schema: AnyEntity): schema is AnyRelation => {
+export const isRelationSchema = (schema: AnyType): schema is AnyRelationType => {
   return (schema as any)[internal.SchemaKindId] === internal.EntityKind.Relation;
 };
 
@@ -216,7 +216,7 @@ export type AnyRef = Schema.Schema<internal.Ref<any>, EncodedReference>;
  * breaking callers.
  * @example "dxn:com.example.type.person:0.1.0"
  */
-export const getURI = (schema: AnyEntity): URI.URI | undefined => {
+export const getURI = (schema: AnyType): URI.URI | undefined => {
   return internal.getSchemaURI(schema);
 };
 
@@ -224,7 +224,7 @@ export const getURI = (schema: AnyEntity): URI.URI | undefined => {
  * @param schema - Schema to get the typename from.
  * @returns The typename of the schema. Example: `com.example.type.person`.
  */
-export const getTypename = (schema: AnyEntity): string => {
+export const getTypename = (schema: AnyType): string => {
   const typename = internal.getSchemaTypename(schema);
   invariant(typeof typename === 'string' && !typename.startsWith('dxn:'), 'Invalid typename');
   return typename;
@@ -234,7 +234,7 @@ export const getTypename = (schema: AnyEntity): string => {
  * Gets the version of the schema.
  * @example 0.1.0
  */
-export const getVersion = (schema: AnyEntity): string => {
+export const getVersion = (schema: AnyType): string => {
   const version = internal.getSchemaVersion(schema);
   invariant(typeof version === 'string' && version.match(/^\d+\.\d+\.\d+$/), 'Invalid version');
   return version;
@@ -253,6 +253,95 @@ export type Meta = internal.TypeAnnotation;
 /**
  * Gets the meta data of the schema.
  */
-export const getMeta = (schema: AnyEntity): Meta | undefined => {
+export const getMeta = (schema: AnyType): Meta | undefined => {
   return internal.getTypeAnnotation(schema);
+};
+
+//
+// `Type.Type` — first-class type entity.
+// Currently structural over the existing annotated-schema representation;
+// a follow-up phase folds `EchoSchema` and `PersistentType` into a unified
+// entity-backed `Type.Type`.
+//
+
+/**
+ * The kind of ECHO entity a `Type.Type` describes — object or relation.
+ */
+export type TypeKind = 'object' | 'relation';
+
+/**
+ * Tracks whether a `Type.Type` has been `db.add()`ed.
+ */
+export type Persistence = 'static' | 'persisted';
+
+/**
+ * A first-class ECHO type entity.
+ *
+ * Structurally equivalent to today's annotated schema classes
+ * (`AnyObjectType` / `AnyRelationType`), with the persistence phantom `P`
+ * distinguishing types created via `Type.object(dxn)` (`'static'`) from
+ * types that have been forked into a database via `db.add(type)`
+ * (`'persisted'`).
+ */
+export interface Type<
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _S extends Schema.Schema.All = Schema.Schema.All,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _K extends TypeKind = TypeKind,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _P extends Persistence = Persistence,
+> {
+  readonly typename: string;
+  readonly version: string;
+}
+
+/**
+ * Convenience alias for the instance type produced by a `Type.Type`.
+ */
+export type InstanceType<T extends AnyType> = Schema.Schema.Type<T>;
+
+/**
+ * Alias for a persisted object-kind type. Use as the parameter type for APIs
+ * that require mutation (e.g. `Type.update`).
+ */
+export type PersistedObjectType<S extends Schema.Schema.All = Schema.Schema.All> = Type<S, 'object', 'persisted'>;
+
+/**
+ * Alias for a persisted relation-kind type.
+ */
+export type PersistedRelationType<S extends Schema.Schema.All = Schema.Schema.All> = Type<S, 'relation', 'persisted'>;
+
+/**
+ * Returns the underlying Effect Schema for a `Type.Type`.
+ *
+ * In the current representation the type entity IS the schema, so this returns
+ * the value unchanged for static types. For mutable (`EchoSchema`-backed)
+ * persisted types it returns a rebuilt Effect Schema snapshot.
+ */
+export const getSchema = <S extends Schema.Schema.All>(type: Type<S, TypeKind, Persistence>): S => {
+  if (typeInternal.isMutable(type as any)) {
+    return (type as any).snapshot as S;
+  }
+  return type as unknown as S;
+};
+
+/**
+ * Perform mutations on a persisted type within a change context.
+ *
+ * Today this delegates to the existing `EchoSchema` mutation plumbing
+ * (the `ChangeId` hook on the underlying persistent schema). In the
+ * follow-up phase that collapses `EchoSchema` and `PersistentType` into
+ * `Type.Type`, this becomes the primary mutation entry point and the
+ * field-level helpers (`addFields`, `updateTypename`, …) move out to
+ * `@dxos/schema`.
+ *
+ * @throws if the type is not persisted.
+ */
+export const update = (
+  type: PersistedObjectType | PersistedRelationType,
+  mutator: (draft: { jsonSchema: internal.JsonSchemaType; typename: string; version: string }) => void,
+): void => {
+  invariant(typeInternal.isMutable(type as any), 'Cannot mutate a type that has not been persisted.');
+  const mutable = type as unknown as typeInternal.EchoSchema;
+  (mutable as any)._change(mutator);
 };

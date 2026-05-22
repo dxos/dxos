@@ -36,7 +36,7 @@ export const MasonryContainer = ({
   const typename = view?.query ? getTypenameFromQuery(view.query.ast) : undefined;
   const tag = view?.query ? getTagFromQuery(view.query.ast) : undefined;
 
-  const [cardSchema, setCardSchema] = useState<Type.AnyEntity>();
+  const [cardSchema, setCardSchema] = useState<Type.AnyType>();
 
   useEffect(() => {
     const staticSchema = schemas.flat().find((schema) => Type.getTypename(schema) === typename);

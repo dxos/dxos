@@ -63,7 +63,7 @@ export interface Definition<I, O, S = any> extends Pipeable.Pipeable, Definition
    * ECHO types the operation uses.
    * Ensures types are available when the operation is executed remotely.
    */
-  readonly types: readonly Type.AnyEntity[];
+  readonly types: readonly Type.AnyType[];
 
   /**
    * Effect services required by this operation.

@@ -9,7 +9,7 @@ import { type Database, type Type } from '@dxos/echo';
 /**
  * Subscribe to and retrieve schema changes from a space's schema registry.
  */
-export const useSchema = <T extends Type.AnyEntity = Type.AnyEntity>(
+export const useSchema = <T extends Type.AnyType = Type.AnyType>(
   db?: Database.Database,
   typename?: string,
 ): T | undefined => {

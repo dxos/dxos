@@ -113,7 +113,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
     }, []);
 
     const handleCreate = useCallback(
-      (schema: Type.AnyEntity, values: any) => {
+      (schema: Type.AnyType, values: any) => {
         invariant(db);
         invariant(Type.isObjectSchema(schema));
         return db.add(Obj.make(schema, values));
@@ -193,7 +193,7 @@ export default TableArticle;
 const useQueryWorkaround = (
   db: Database.Database | undefined,
   ast: QueryAST.Query | undefined,
-  schema: Type.AnyEntity | undefined,
+  schema: Type.AnyType | undefined,
 ) => {
   const baseFilter = useSchemaFilter(schema);
   // Extract order and tag filter from query AST and apply them to the base filter query.

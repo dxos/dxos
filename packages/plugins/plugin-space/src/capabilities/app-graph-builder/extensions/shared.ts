@@ -135,7 +135,7 @@ export type ViewIndex = {
  * simple typename via getTypenameFromQuery are included.
  */
 // TODO(wittjosiah): Make reactive to schema registry changes (currently only object/view mutations trigger updates).
-export const buildViewIndex = (get: Atom.Context, space: Space, schemas: Type.AnyEntity[]): ViewIndex => {
+export const buildViewIndex = (get: Atom.Context, space: Space, schemas: Type.AnyType[]): ViewIndex => {
   const viewSchemas = schemas.filter((schema) => ViewAnnotation.has(schema));
 
   const viewsByTypename = new Map<string, Obj.Any[]>();

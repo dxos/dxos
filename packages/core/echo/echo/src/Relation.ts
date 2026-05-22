@@ -139,7 +139,7 @@ type MakePropsInternal<T extends Unknown> = {
  * Props type for relation creation with a given schema.
  * Takes a schema type (created with Type.Relation) and extracts the props type.
  */
-export type MakeProps<S extends Type.AnyRelation> = MakePropsInternal<Schema.Schema.Type<S>>;
+export type MakeProps<S extends Type.AnyRelationType> = MakePropsInternal<Schema.Schema.Type<S>>;
 
 /**
  * Creates new relation.
@@ -150,7 +150,7 @@ export type MakeProps<S extends Type.AnyRelation> = MakePropsInternal<Schema.Sch
  */
 // NOTE: Writing the definition this way (with generic over schema) makes typescript perfer to infer the type from the first param (this schema) rather than the second param (the props).
 // TODO(dmaretskyi): Move meta into props.
-export const make = <S extends Type.AnyRelation>(
+export const make = <S extends Type.AnyRelationType>(
   schema: S,
   props: NoInfer<MakeProps<S>>,
 ): Schema.Schema.Type<S> & Entity.OfKind<typeof Entity.Kind.Relation> => {
@@ -364,7 +364,7 @@ export const getTypeURI: (obj: internal.AnyProperties) => URI.URI | undefined = 
  * Get the schema of the relation.
  * Returns the branded ECHO schema used to create the relation.
  */
-export const getSchema: (rel: unknown | undefined) => Type.AnyEntity | undefined = internal.getSchema as any;
+export const getSchema: (rel: unknown | undefined) => Type.AnyType | undefined = internal.getSchema as any;
 
 /**
  * @returns The typename of the relation's type.

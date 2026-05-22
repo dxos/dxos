@@ -86,19 +86,19 @@ export const allOf = <TFilters extends ReadonlyArray<Surface.Filter<any>>>(
  * without having to hand-roll a fully typed `Surface.Filter`.
  */
 export const object: {
-  <TToken extends Surface.RoleToken<{ subject?: any }>, S extends Type.AnyEntity>(
+  <TToken extends Surface.RoleToken<{ subject?: any }>, S extends Type.AnyType>(
     token: TToken,
     schema: S,
     predicate?: (data: NonNullable<TokenData<TToken>>) => boolean,
   ): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Schema.Schema.Type<S> }>;
-  <TToken extends Surface.RoleToken<{ subject?: any }>, S extends Type.AnyEntity[]>(
+  <TToken extends Surface.RoleToken<{ subject?: any }>, S extends Type.AnyType[]>(
     token: TToken,
     schemas: [...S],
     predicate?: (data: NonNullable<TokenData<TToken>>) => boolean,
   ): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Schema.Schema.Type<S[number]> }>;
 } = (
   token: Surface.RoleToken<any>,
-  schemaOrSchemas: Type.AnyEntity | Type.AnyEntity[],
+  schemaOrSchemas: Type.AnyType | Type.AnyType[],
   predicate?: (data: any) => boolean,
 ): Surface.Filter<any> => {
   const schemas = Array.isArray(schemaOrSchemas) ? schemaOrSchemas : [schemaOrSchemas];
@@ -178,7 +178,7 @@ export const subject: {
  * Filter: matches when `data.subject` is an ECHO snapshot of the given schema.
  * Preserves the token's other data fields (e.g. Article/Section `attendableId`).
  */
-export const snapshot = <TToken extends Surface.RoleToken<{ subject?: any }>, S extends Type.AnyEntity>(
+export const snapshot = <TToken extends Surface.RoleToken<{ subject?: any }>, S extends Type.AnyType>(
   token: TToken,
   schema: S,
 ): Surface.Filter<
@@ -218,7 +218,7 @@ export const predicate = <TData extends Record<string, unknown>>(
  */
 export const companion: {
   <TToken extends Surface.RoleToken<any>>(token: TToken): Surface.Filter<{ companionTo: Obj.Any }>;
-  <TToken extends Surface.RoleToken<any>, S extends Type.AnyEntity>(
+  <TToken extends Surface.RoleToken<any>, S extends Type.AnyType>(
     token: TToken,
     schema: S,
   ): Surface.Filter<{ companionTo: Schema.Schema.Type<S> }>;
@@ -226,7 +226,7 @@ export const companion: {
     token: TToken,
     value: T,
   ): Surface.Filter<{ companionTo: T }>;
-} = (token: Surface.RoleToken<any>, schemaOrValue?: Type.AnyEntity | string): Surface.Filter<any> => {
+} = (token: Surface.RoleToken<any>, schemaOrValue?: Type.AnyType | string): Surface.Filter<any> => {
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
       return false;

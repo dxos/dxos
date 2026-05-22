@@ -36,7 +36,7 @@ type OpenDatabaseOptions = {
 };
 
 type PeerOptions = {
-  types?: Type.AnyEntity[];
+  types?: Type.AnyType[];
   assignQueuePositions?: boolean;
 
   kv?: LevelDB;
@@ -80,7 +80,7 @@ export class EchoTestBuilder extends Resource {
 
 export class EchoTestPeer extends Resource {
   private readonly _kv: LevelDB;
-  private readonly _types: Type.AnyEntity[];
+  private readonly _types: Type.AnyType[];
   private readonly _assignQueuePositions?: boolean;
   private readonly _clients = new Set<EchoClient>();
   private _echoHost!: EchoHost;

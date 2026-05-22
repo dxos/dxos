@@ -203,11 +203,11 @@ export const resolve: {
   // No type check.
   (ref: URI.URI | Ref<any>): Effect.Effect<Entity.Unknown, never, Service>;
   // Check matches schema.
-  <S extends Type.AnyEntity>(
+  <S extends Type.AnyType>(
     ref: URI.URI | Ref<any>,
     schema: S,
   ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service>;
-} = (<S extends Type.AnyEntity>(
+} = (<S extends Type.AnyType>(
   ref: URI.URI | Ref<any>,
   schema?: S,
 ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service> =>

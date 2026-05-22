@@ -138,7 +138,7 @@ export const getTypeURI: (obj: Unknown | Snapshot) => URI.URI | undefined = inte
  * Get the schema of an entity.
  * Returns the branded ECHO schema used to create the entity.
  */
-export const getSchema: (entity: Unknown | Snapshot) => Type.AnyEntity | undefined = internal.getSchema as any;
+export const getSchema: (entity: Unknown | Snapshot) => Type.AnyType | undefined = internal.getSchema as any;
 
 /**
  * Get the typename of an entity's type.

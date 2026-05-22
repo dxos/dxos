@@ -21,7 +21,7 @@ import { type Kanban } from '#types';
  * @param registry - Atom registry for reactive state.
  * @returns ProjectionModel when loaded, or undefined while loading or when schema/kanban are missing.
  */
-export const useProjectionModel = <S extends Type.AnyEntity>(
+export const useProjectionModel = <S extends Type.AnyType>(
   schema: S | undefined,
   kanban: Kanban.Kanban | undefined,
   registry: Registry.Registry,

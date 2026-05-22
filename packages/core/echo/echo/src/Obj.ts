@@ -154,7 +154,7 @@ export type MakeProps<S extends Schema.Schema.AnyNoContext> = {
  *
  * Note: Only accepts object schemas, not relation schemas. Use `Relation.make` for relations.
  */
-export const make = <S extends Type.AnyObj>(
+export const make = <S extends Type.AnyObjectType>(
   schema: S,
   props: NoInfer<MakeProps<S>>,
 ): OfShape<Schema.Schema.Type<S>> => {
@@ -417,9 +417,9 @@ export type ID = ObjectId;
  * ```
  */
 export const instanceOf: {
-  <S extends Type.AnyEntity>(schema: S): (value: unknown) => value is Schema.Schema.Type<S>;
-  <S extends Type.AnyEntity>(schema: S, value: unknown): value is Schema.Schema.Type<S>;
-} = ((...args: [schema: Type.AnyEntity, value: unknown] | [schema: Type.AnyEntity]) => {
+  <S extends Type.AnyType>(schema: S): (value: unknown) => value is Schema.Schema.Type<S>;
+  <S extends Type.AnyType>(schema: S, value: unknown): value is Schema.Schema.Type<S>;
+} = ((...args: [schema: Type.AnyType, value: unknown] | [schema: Type.AnyType]) => {
   if (args.length === 1) {
     return (entity: unknown) => internal.isInstanceOf(args[0], entity);
   }
@@ -441,9 +441,9 @@ export const instanceOf: {
  * ```
  */
 export const snapshotOf: {
-  <S extends Type.AnyEntity>(schema: S): (value: unknown) => value is Snapshot<Schema.Schema.Type<S>>;
-  <S extends Type.AnyEntity>(schema: S, value: unknown): value is Snapshot<Schema.Schema.Type<S>>;
-} = ((...args: [schema: Type.AnyEntity, value: unknown] | [schema: Type.AnyEntity]) => {
+  <S extends Type.AnyType>(schema: S): (value: unknown) => value is Snapshot<Schema.Schema.Type<S>>;
+  <S extends Type.AnyType>(schema: S, value: unknown): value is Snapshot<Schema.Schema.Type<S>>;
+} = ((...args: [schema: Type.AnyType, value: unknown] | [schema: Type.AnyType]) => {
   const check = (entity: unknown) =>
     entity != null &&
     typeof entity === 'object' &&
@@ -484,7 +484,7 @@ export const getTypeURI = (obj: Unknown | Snapshot): URI.URI => {
  * Get the schema of the object.
  * Returns the branded ECHO schema used to create the object.
  */
-export const getSchema: (obj: Unknown | Snapshot) => Type.AnyEntity | undefined = internal.getSchema as any;
+export const getSchema: (obj: Unknown | Snapshot) => Type.AnyType | undefined = internal.getSchema as any;
 
 /**
  * @returns The typename of the object's type.

@@ -128,7 +128,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
           ? get(AtomQuery.fromQuery(client.graph.schemaRegistry.query({ location: ['runtime'] })))
           : [];
 
-        const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.AnyObj) : schema.typename;
+        const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.AnyObjectType) : schema.typename;
 
         // {All} virtual node.
         const allNode = Node.make({
@@ -218,14 +218,14 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
           ? get(AtomQuery.fromQuery(client.graph.schemaRegistry.query({ location: ['runtime'] })))
           : [];
 
-        const targetTypename = Type.getTypename(schema as Type.AnyObj);
+        const targetTypename = Type.getTypename(schema as Type.AnyObjectType);
         const viewIndex = buildViewIndex(get, space, schemas);
         const deletable =
-          Type.isMutable(schema as Type.AnyObj) && viewIndex.getViewsForTypename(targetTypename).length === 0;
+          Type.isMutable(schema as Type.AnyObjectType) && viewIndex.getViewsForTypename(targetTypename).length === 0;
 
         return Effect.succeed(
           createSchemaActions({
-            schema: schema as Type.AnyObj,
+            schema: schema as Type.AnyObjectType,
             space,
             deletable,
             capabilities,
@@ -241,7 +241,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
 //
 
 /** Returns schemas keyed uniquely by typename, preferring later entries. */
-const uniqueSchemasByTypename = <TSchema extends Type.AnyEntity>(schemas: TSchema[]): TSchema[] => {
+const uniqueSchemasByTypename = <TSchema extends Type.AnyType>(schemas: TSchema[]): TSchema[] => {
   const uniqueSchemas = new Map<string, TSchema>();
   for (const schema of schemas) {
     uniqueSchemas.set(Type.getTypename(schema), schema);
@@ -256,10 +256,10 @@ const createSchemaNode = ({
   space,
   get,
 }: {
-  schema: Type.AnyEntity;
+  schema: Type.AnyType;
   space: Space;
   get: Atom.Context;
-}): Node.NodeArg<Type.AnyEntity> => {
+}): Node.NodeArg<Type.AnyType> => {
   const typename = Type.getTypename(schema);
   const iconAnnotation = !Type.isMutable(schema)
     ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema))
@@ -306,7 +306,7 @@ const createSchemaActions = ({
   deletable,
   capabilities,
 }: {
-  schema: Type.AnyObj;
+  schema: Type.AnyObjectType;
   space: Space;
   deletable: boolean;
   capabilities: CapabilityManager.CapabilityManager;

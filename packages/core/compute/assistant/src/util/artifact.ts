@@ -24,7 +24,7 @@ export const createArtifactElement = (id: ObjectId) => `<artifact id=${id} />`;
 // TODO(burdon): Rename RefFromLLM?
 export const ArtifactId: Schema.Schema<string> & {
   toEchoURI: (reference: ArtifactId, owningSpaceId?: SpaceId) => EchoURI.EchoURI;
-  resolve: <S extends Type.AnyEntity>(
+  resolve: <S extends Type.AnyType>(
     schema: S,
     ref: ArtifactId,
   ) => Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Database.Service>;
@@ -69,7 +69,7 @@ export const ArtifactId: Schema.Schema<string> & {
   /**
    * Resolves an artifact ID to an object.
    */
-  static resolve<S extends Type.AnyEntity>(
+  static resolve<S extends Type.AnyType>(
     schema: S,
     ref: ArtifactId,
   ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Database.Service> {

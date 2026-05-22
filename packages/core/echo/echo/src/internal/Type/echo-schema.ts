@@ -192,7 +192,7 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
 
   /**
    * Schema kind key that marks this as an ECHO schema.
-   * Makes EchoSchema satisfy the Type.AnyObj type.
+   * Makes EchoSchema satisfy the Type.AnyObjectType type.
    */
   readonly [SchemaKindId]: EntityKind.Object = EntityKind.Object;
 

@@ -89,7 +89,7 @@ export const toolkits: OpaqueToolkit.OpaqueToolkit[] = [
   OpaqueToolkit.make(TestToolkit.toolkit, TestToolkit.layer),
 ];
 
-export const types: Type.AnyEntity[] = [
+export const types: Type.AnyType[] = [
   // NOTE: Types referenced by blueprints above need to be added here.
   DataTypes,
   [Chat.Chat],

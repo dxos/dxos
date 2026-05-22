@@ -106,7 +106,7 @@ export default SyncIssues.pipe(
 
 const getLatestUpdateTimestamp: (
   teamId: string,
-  dataType: Type.AnyObj,
+  dataType: Type.AnyObjectType,
 ) => Effect.Effect<string, never, Database.Service> = Effect.fnUntraced(function* (teamId, dataType) {
   const existingTasks = yield* Database.runQuery(
     Query.type(dataType).select(Filter.foreignKeys(dataType, [{ source: LINEAR_TEAM_ID_KEY, id: teamId }])),

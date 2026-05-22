@@ -157,7 +157,7 @@ describe('schema registry', () => {
     const queryResult = registry.query({ location: ['database', 'runtime'] });
 
     let updateCount = 0;
-    let latestResults: Type.AnyEntity[] = [];
+    let latestResults: Type.AnyType[] = [];
     const unsubscribe = queryResult.subscribe(() => {
       updateCount++;
       latestResults = queryResult.results;

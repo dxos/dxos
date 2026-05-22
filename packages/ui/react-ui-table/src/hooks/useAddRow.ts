@@ -10,7 +10,7 @@ import { type InsertRowResult } from '../model';
 
 export type UseAddRowProps = {
   db?: Database.Database;
-  schema?: Type.AnyObj;
+  schema?: Type.AnyObjectType;
 };
 
 /**

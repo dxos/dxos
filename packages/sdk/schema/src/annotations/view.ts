@@ -24,7 +24,7 @@ export type ViewAnnotationModule = AnnotationHelper<EchoViewRefPath> & {
   /**
    * True when schema declares where a View-backed ref may live (`path.length > 0`).
    */
-  has: (schema: Type.AnyEntity) => boolean;
+  has: (schema: Type.AnyType) => boolean;
   /** Read property path segments until the leaf; returns undefined when a segment is missing. */
   getHolderAtPath: (object: unknown, path: EchoViewRefPath) => unknown;
   /** Whether the object currently has anything view-like at path (hydrated target or loadable ref). */
@@ -49,7 +49,7 @@ const getHolderAtPath = (object: unknown, path: EchoViewRefPath): unknown => {
 };
 
 const viewMethods: Omit<ViewAnnotationModule, keyof AnnotationHelper<EchoViewRefPath>> = {
-  has(schema: Type.AnyEntity): boolean {
+  has(schema: Type.AnyType): boolean {
     return viewAnnotation.get(schema).pipe(
       Option.map((path) => path.length > 0),
       Option.getOrElse(() => false),

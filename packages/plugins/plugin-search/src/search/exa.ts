@@ -181,7 +181,7 @@ const DATA_EXTRACTION_INSTRUCTIONS = trim`
 //   return terms;
 // };
 
-const sanitizeObjects = (entries: { data: any; schema: Type.AnyObj }[]) => {
+const sanitizeObjects = (entries: { data: any; schema: Type.AnyObjectType }[]) => {
   const idMap = new Map<string, string>();
 
   return entries
