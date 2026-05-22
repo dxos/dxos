@@ -96,21 +96,25 @@ export type FormFieldLabelProps = {
 export const FormFieldLabel = ({ label, error, readonly, asChild, path }: FormFieldLabelProps) => {
   const debug = useFormDebug();
   const Label = readonly || asChild ? 'span' : Input.Label;
+  // In debug mode, surface the field's JSON path as a tooltip on the label
+  // (e.g. `runtime.client.storage.persistent`). Wrapping with
+  // `Tooltip.Trigger asChild` keeps the underlying `Input.Label` (or `span`)
+  // intact so form semantics and label-for-input linking are unchanged.
+  const labelNode = <Label className={inputTextLabel}>{label}</Label>;
   return (
-    <div className='flex items-center justify-between gap-2'>
-      <Label className={inputTextLabel}>{label}</Label>
-      <div className='flex items-center gap-2 min-w-0'>
-        {debug && path && (
-          <span className='font-mono text-xs text-description truncate' title={path}>
-            {path}
-          </span>
-        )}
-        {error && (
-          <Tooltip.Trigger asChild content={error} side='bottom'>
-            <Icon icon='ph--warning--regular' size={4} classNames='text-error-text' />
-          </Tooltip.Trigger>
-        )}
-      </div>
+    <div className='flex items-center justify-between'>
+      {debug && path ? (
+        <Tooltip.Trigger asChild content={path} side='bottom'>
+          {labelNode}
+        </Tooltip.Trigger>
+      ) : (
+        labelNode
+      )}
+      {error && (
+        <Tooltip.Trigger asChild content={error} side='bottom'>
+          <Icon icon='ph--warning--regular' size={4} classNames='text-error-text' />
+        </Tooltip.Trigger>
+      )}
     </div>
   );
 };
