@@ -47,10 +47,18 @@ export type EncodedUint8Array = { '/': { bytes: string } };
 
 const toUnpaddedBase64 = (bytes: Uint8Array): string => arrayToBuffer(bytes).toString('base64').replace(/=+$/, '');
 
+/**
+ * Encode a `Uint8Array` as the DAG-JSON bytes form `{ '/': { bytes: '<base64-no-padding>' } }`.
+ */
 export const encodeUint8ArrayToJson = (bytes: Uint8Array): EncodedUint8Array => ({
   '/': { bytes: toUnpaddedBase64(bytes) },
 });
 
+/**
+ * Type-guard that returns true iff `value` is the DAG-JSON bytes form produced by
+ * {@link encodeUint8ArrayToJson} — an object with exactly one key `'/'` whose value is an
+ * object with exactly one string key `bytes`.
+ */
 export const isEncodedUint8Array = (value: unknown): value is EncodedUint8Array => {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
     return false;
@@ -65,5 +73,9 @@ export const isEncodedUint8Array = (value: unknown): value is EncodedUint8Array 
   return Object.keys(inner).length === 1 && typeof inner.bytes === 'string';
 };
 
+/**
+ * Decode a DAG-JSON bytes form (as produced by {@link encodeUint8ArrayToJson}) back to a
+ * `Uint8Array`. The base64 string is tolerated with or without padding.
+ */
 export const decodeUint8ArrayFromJson = (encoded: EncodedUint8Array): Uint8Array =>
   bufferToArray(Buffer.from(encoded['/'].bytes, 'base64'));

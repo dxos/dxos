@@ -132,7 +132,7 @@ describe('Object JSON serializer', () => {
     );
     interface Blob extends Schema.Schema.Type<typeof Blob> {}
 
-    test('round-trips Uint8Array field through JSON with schema', async () => {
+    test('round-trips Uint8Array field through JSON with schema', async ({ expect }) => {
       const bytes = new Uint8Array([0, 1, 2, 3, 250, 251, 252, 253, 254, 255]);
       const blob = Obj.make(Blob, { name: 'blob', bytes });
 
@@ -148,7 +148,7 @@ describe('Object JSON serializer', () => {
       expect(Array.from(blobFromJson.bytes)).toEqual(Array.from(bytes));
     });
 
-    test('round-trips Uint8Array field through JSON without schema resolver', async () => {
+    test('round-trips Uint8Array field through JSON without schema resolver', async ({ expect }) => {
       const bytes = new Uint8Array([10, 20, 30, 40, 50]);
       const blob = Obj.make(Blob, { name: 'blob', bytes });
 

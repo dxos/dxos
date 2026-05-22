@@ -989,7 +989,7 @@ describe('Reactive Object with ECHO database', () => {
       bytes: Schema.Uint8ArrayFromSelf,
     }).pipe(Type.object({ typename: 'com.example.type.blob', version: '0.1.0' }));
 
-    test('stored natively in automerge and round-trip through ECHO', async () => {
+    test('stored natively in automerge and round-trip through ECHO', async ({ expect }) => {
       const { db } = await builder.createDatabase({ types: [Blob] });
       const bytes = new Uint8Array([0, 1, 2, 3, 250, 251, 252, 253, 254, 255]);
 
