@@ -4,7 +4,7 @@
 
 import type { QueryAST } from '@dxos/echo-protocol';
 import type { EscapedPropPath } from '@dxos/index-core';
-import type { ObjectId } from '@dxos/keys';
+import type { ObjectId, URI } from '@dxos/keys';
 
 export namespace QueryPlan {
   export type TextSearchKind = 'full-text' | 'vector' | 'hybrid';
@@ -91,7 +91,7 @@ export namespace QueryPlan {
   export type TypeSelector = {
     _tag: 'TypeSelector';
 
-    typename: string[];
+    typename: URI.URI[];
     /**
      * If true, select objects that do not match the typename.
      */
@@ -110,7 +110,7 @@ export namespace QueryPlan {
     /**
      * Optionally select only objects of the given typenames.
      */
-    typename: string[] | null;
+    typename: URI.URI[] | null;
   };
 
   /**

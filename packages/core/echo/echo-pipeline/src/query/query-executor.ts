@@ -1369,7 +1369,7 @@ export class QueryExecutor extends Resource {
 
   private async _queryTypesFromSqlIndex(
     spaceIds: readonly SpaceId[],
-    typeDxns: readonly string[],
+    typeDxns: readonly URI.URI[],
     inverted: boolean,
     includeAllQueues: boolean,
     queueIds: readonly ObjectId[] | null,

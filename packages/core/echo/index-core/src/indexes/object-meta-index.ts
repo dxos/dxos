@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { ATTR_DELETED, ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
-import { DXN, EchoURI, ObjectId, SpaceId } from '@dxos/keys';
+import { DXN, EchoURI, ObjectId, SpaceId, URI } from '@dxos/keys';
 
 import type { IndexerObject } from './interface';
 import type { Index } from './interface';
@@ -37,7 +37,7 @@ export const ObjectMeta = Schema.Struct({
    * schema-as-object EchoURI for stored (dynamic) schemas. Mirrors the value
    * written into the object's `system.type`.
    */
-  typeDxn: Schema.String,
+  typeDxn: URI.Schema,
   deleted: Schema.Boolean,
   source: Schema.NullOr(EchoURI.Schema),
   target: Schema.NullOr(EchoURI.Schema),

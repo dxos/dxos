@@ -4,6 +4,8 @@
 
 // @import-as-namespace
 
+import * as Schema from 'effect/Schema';
+
 /**
  * Branded string type for any URI.
  * Base type for more specific URI schemes like DXN and EchoURI.
@@ -21,3 +23,13 @@ export const make = (uri: string): URI => uri as URI;
  */
 export const isURI = (value: unknown): value is URI =>
   typeof value === 'string' && /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(value);
+
+/**
+ * Effect Schema for any URI string.
+ */
+// Identity-encoded `Schema<URI, URI>` so consumers can refine without the encode/decode
+// types diverging. Runtime representation is identical (a branded string).
+const Schema_: Schema.Schema<URI, URI> = Schema.String.pipe(
+  Schema.filter((value): value is URI => isURI(value), { message: () => 'Invalid URI' }),
+) as unknown as Schema.Schema<URI, URI>;
+export { Schema_ as Schema };
