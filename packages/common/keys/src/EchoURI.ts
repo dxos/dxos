@@ -43,17 +43,18 @@ export type EchoURI = URI.URI & { readonly __EchoURI: unique symbol };
 /**
  * Returns true if the value is a valid EchoURI (new or legacy format).
  */
-export const isEchoURI = (s: unknown): s is EchoURI =>
-  typeof s === 'string' && (s.startsWith('echo:') || s.startsWith('dxn:echo:') || s.startsWith('dxn:queue:'));
+export const isEchoURI = (value: unknown): value is EchoURI =>
+  typeof value === 'string' &&
+  (value.startsWith('echo:') || value.startsWith('dxn:echo:') || value.startsWith('dxn:queue:'));
 
 /**
  * Parses a string to EchoURI, normalizing legacy formats to the canonical `echo:` form.
  * Throws if the (normalized) string is not a valid EchoURI.
  */
-export const parse = (s: string): EchoURI => {
-  const normalized = normalizeLegacy(s);
+export const parse = (uri: string): EchoURI => {
+  const normalized = normalizeLegacy(uri);
   if (!ECHO_URI_REGEXP.test(normalized)) {
-    throw new Error(`Invalid EchoURI: ${s}`);
+    throw new Error(`Invalid EchoURI: ${uri}`);
   }
   return normalized as EchoURI;
 };
@@ -61,41 +62,41 @@ export const parse = (s: string): EchoURI => {
 /**
  * Like `parse` but returns undefined on failure instead of throwing.
  */
-export const tryParse = (s: string): EchoURI | undefined => {
+export const tryParse = (uri: string): EchoURI | undefined => {
   try {
-    return parse(s);
+    return parse(uri);
   } catch {
     return undefined;
   }
 };
 
-const normalizeLegacy = (s: string): string => {
-  if (s.startsWith('echo:')) {
-    return s;
+const normalizeLegacy = (uri: string): string => {
+  if (uri.startsWith('echo:')) {
+    return uri;
   }
 
-  const localMatch = LEGACY_LOCAL_RE.exec(s);
+  const localMatch = LEGACY_LOCAL_RE.exec(uri);
   if (localMatch) {
     return `echo:/${localMatch[1]}`;
   }
 
   // Check queue item (more specific) before queue.
-  const queueItemMatch = LEGACY_QUEUE_ITEM_RE.exec(s);
+  const queueItemMatch = LEGACY_QUEUE_ITEM_RE.exec(uri);
   if (queueItemMatch) {
     return `echo://${queueItemMatch[1]}/${queueItemMatch[3]}`;
   }
 
-  const queueMatch = LEGACY_QUEUE_RE.exec(s);
+  const queueMatch = LEGACY_QUEUE_RE.exec(uri);
   if (queueMatch) {
     return `echo://${queueMatch[1]}/${queueMatch[2]}`;
   }
 
-  const qualifiedMatch = LEGACY_QUALIFIED_RE.exec(s);
+  const qualifiedMatch = LEGACY_QUALIFIED_RE.exec(uri);
   if (qualifiedMatch) {
     return `echo://${qualifiedMatch[1]}/${qualifiedMatch[2]}`;
   }
 
-  return s;
+  return uri;
 };
 
 /**
@@ -124,8 +125,8 @@ export const make = ({ spaceId, objectId }: { spaceId?: SpaceId; objectId?: Obje
 /**
  * Returns the SpaceId from a fully-qualified EchoURI, or undefined for local refs.
  */
-export const getSpaceId = (id: EchoURI): SpaceId | undefined => {
-  const normalized = parse(id);
+export const getSpaceId = (uri: EchoURI): SpaceId | undefined => {
+  const normalized = parse(uri);
   const match = QUALIFIED_RE.exec(normalized) ?? SPACE_ONLY_RE.exec(normalized);
   return match?.[1] as SpaceId | undefined;
 };
@@ -133,8 +134,8 @@ export const getSpaceId = (id: EchoURI): SpaceId | undefined => {
 /**
  * Returns the ObjectId from an EchoURI, or undefined for space-only refs.
  */
-export const getObjectId = (id: EchoURI): ObjectId | undefined => {
-  const normalized = parse(id);
+export const getObjectId = (uri: EchoURI): ObjectId | undefined => {
+  const normalized = parse(uri);
   const qualMatch = QUALIFIED_RE.exec(normalized);
   if (qualMatch) {
     return qualMatch[2] as ObjectId;
@@ -146,8 +147,8 @@ export const getObjectId = (id: EchoURI): ObjectId | undefined => {
 /**
  * Returns true if the EchoURI is a local reference (no authority/space).
  */
-export const isLocal = (id: EchoURI): boolean => {
-  const normalized = parse(id);
+export const isLocal = (uri: EchoURI): boolean => {
+  const normalized = parse(uri);
   return LOCAL_RE.test(normalized);
 };
 
@@ -164,7 +165,7 @@ export const equals = (a: EchoURI, b: EchoURI): boolean => parse(a) === parse(b)
 // with `Encoded = string`; we narrow the encoded form too with `as unknown as` since the
 // runtime representation is identical (a branded string).
 const Schema_: Schema.Schema<EchoURI, EchoURI> = Schema.String.pipe(
-  Schema.filter((s): s is EchoURI => isEchoURI(s), {
+  Schema.filter((value): value is EchoURI => isEchoURI(value), {
     message: () => 'Invalid EchoURI: must start with echo:, dxn:echo:, or dxn:queue:',
   }),
 ) as unknown as Schema.Schema<EchoURI, EchoURI>;

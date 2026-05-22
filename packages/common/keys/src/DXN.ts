@@ -35,7 +35,7 @@ export type DXN = URI.URI & { readonly __DXN: unique symbol };
  * Cheap prefix check — does not validate the full DXN grammar.
  * Sufficient for narrowing a URI to a DXN.
  */
-export const isDXN = (s: unknown): s is DXN => typeof s === 'string' && s.startsWith('dxn:');
+export const isDXN = (value: unknown): value is DXN => typeof value === 'string' && value.startsWith('dxn:');
 
 /**
  * Constructs a DXN from an NSID (and optional version). Throws if the result
@@ -51,29 +51,29 @@ export const make = (nsid: string, version?: string): DXN =>
  * Parses a full DXN string. Returns undefined on failure.
  * Normalizes legacy `dxn:type:<nsid>` to the canonical `dxn:<nsid>` form.
  */
-export const tryMake = (s: string): DXN | undefined => {
+export const tryMake = (dxn: string): DXN | undefined => {
   try {
-    return parse(s);
+    return parse(dxn);
   } catch {
     return undefined;
   }
 };
 
 // Internal — full-grammar validator. Callers outside this module should use
-// `make(nsid, version?)` or `tryMake(s)`.
-const parse = (s: string): DXN => {
+// `make(nsid, version?)` or `tryMake(dxn)`.
+const parse = (dxn: string): DXN => {
   // Backward compat: strip legacy `type:` kind segment.
-  const legacyTypeMatch = /^dxn:type:(.+)$/.exec(s);
+  const legacyTypeMatch = /^dxn:type:(.+)$/.exec(dxn);
   if (legacyTypeMatch) {
     const normalized = `dxn:${legacyTypeMatch[1]}` as DXN;
     if (DXN_SPEC_REGEXP.test(normalized)) {
       return normalized;
     }
   }
-  if (typeof s === 'string' && DXN_SPEC_REGEXP.test(s)) {
-    return s as DXN;
+  if (typeof dxn === 'string' && DXN_SPEC_REGEXP.test(dxn)) {
+    return dxn as DXN;
   }
-  throw new Error(`Invalid DXN: ${s}`);
+  throw new Error(`Invalid DXN: ${dxn}`);
 };
 
 /**
@@ -105,7 +105,7 @@ export const getVersion = (dxn: DXN): string | undefined => {
 // `Encoded = string`; we narrow the encoded form too with `as unknown as` since the runtime
 // representation is identical (a branded string).
 const Schema_: Schema.Schema<DXN, DXN> = Schema.String.pipe(
-  Schema.filter((s): s is DXN => isDXN(s), { message: () => 'Invalid DXN' }),
+  Schema.filter((value): value is DXN => isDXN(value), { message: () => 'Invalid DXN' }),
   Schema.annotations({
     title: 'DXN',
     description: 'DXN URI: dxn:<nsid>[:<version>]',
