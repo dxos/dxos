@@ -14,7 +14,7 @@ import { Collection, Database, Format, Ref } from '@dxos/echo';
 import * as Support from './Support';
 
 export const OnCreateSpace = Operation.make({
-  meta: { key: 'org.dxos.function.support.on-create-space', name: 'On Create Space' },
+  meta: { key: 'org.dxos.function.support.on-create-space', name: 'On Create Space', icon: 'ph--chat-text--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     space: SpaceSchema,
@@ -50,6 +50,7 @@ export const CaptureUserFeedback = Operation.make({
     key: 'org.dxos.function.support.capture-feedback',
     name: 'Capture User Feedback',
     description: 'Capture one-shot user feedback (sent to the observability backend).',
+    icon: 'ph--chat-text--regular',
   },
   services: [Capability.Service],
   input: UserFeedback,
@@ -61,6 +62,7 @@ export const CreateTicket = Operation.make({
     key: 'org.dxos.function.support.create-ticket',
     name: 'Create Support Ticket',
     description: 'Creates a new support ticket in the active space.',
+    icon: 'ph--note--regular',
   },
   input: Schema.Struct({
     title: Schema.String.annotations({
@@ -81,6 +83,7 @@ export const MarkInProgress = Operation.make({
     key: 'org.dxos.function.support.mark-in-progress',
     name: 'Mark Support Ticket In Progress',
     description: 'Marks a support ticket as in progress.',
+    icon: 'ph--clock--regular',
   },
   input: Schema.Struct({
     ticket: Ref.Ref(Support.Ticket).annotations({
@@ -96,6 +99,7 @@ export const ResolveTicket = Operation.make({
     key: 'org.dxos.function.support.resolve-ticket',
     name: 'Resolve Support Ticket',
     description: 'Marks a support ticket as resolved with optional resolution notes.',
+    icon: 'ph--check--regular',
   },
   input: Schema.Struct({
     ticket: Ref.Ref(Support.Ticket).annotations({
@@ -116,6 +120,7 @@ export const SearchDocs = Operation.make({
     key: 'org.dxos.function.support.search-docs',
     name: 'Search Documentation',
     description: 'Searches DXOS / Composer documentation for the given query.',
+    icon: 'ph--magnifying-glass--regular',
   },
   input: Schema.Struct({
     query: Schema.String.annotations({

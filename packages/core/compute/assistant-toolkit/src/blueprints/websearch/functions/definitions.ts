@@ -11,6 +11,7 @@ export const Fetch = Operation.make({
   meta: {
     key: 'org.dxos.function.web-search.fetch',
     name: 'Fetch web page',
+    icon: 'ph--globe-simple--regular',
     description: trim`
       Fetches the content of a web page and returns the HTML. 
       Use this to get the content of a web page.

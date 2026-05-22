@@ -15,6 +15,7 @@ export const AgentRules = Operation.make({
     key: 'org.dxos.function.agent-wizard.agent-rules',
     name: 'Agent rules',
     description: 'Gets the rules for creating an agent.',
+    icon: 'ph--book-open--regular',
   },
   input: Schema.Struct({}),
   output: Schema.String,
@@ -25,6 +26,7 @@ export const CreateAgent = Operation.make({
     key: 'org.dxos.function.agent-wizard.create-agent',
     name: 'Create agent',
     description: 'Creates a new agent.',
+    icon: 'ph--brain--regular',
   },
   input: Schema.Struct({
     name: Schema.String.annotations({
@@ -52,6 +54,7 @@ export const SyncTriggers = Operation.make({
     name: 'Sync triggers',
     description:
       'Synchronizes triggers with the agent: subscriptions, cron, filter-events, and enabled (copied to every trigger). Call after editing those fields.',
+    icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotations({
