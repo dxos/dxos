@@ -596,20 +596,20 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const typeURI = EncodedReference.toURI(typeRef);
     // Try to parse as a typename DXN — legacy storage forms like `dxn:echo:@:<id>` and
     // `dxn:queue:…` look like DXNs by prefix but are not parseable as typename DXNs.
-    const typeURI = DXN.tryMake(typeURI);
-    if (typeURI) {
-      const staticSchema = target[symbolInternals].database.graph.schemaRegistry.getSchemaByDXN(typeURI);
+    const typeDxn = DXN.tryMake(typeURI);
+    if (typeDxn) {
+      const staticSchema = target[symbolInternals].database.graph.schemaRegistry.getSchemaByDXN(typeDxn);
       if (staticSchema != null) {
         return staticSchema;
       }
       // Skip protobuf types as they are runtime registered types.
-      if (DXN.getName(typeURI)?.startsWith('protobuf')) {
+      if (DXN.getName(typeDxn)?.startsWith('protobuf')) {
         return undefined;
       }
       // Stored schemas use the storage URI as `$id`, so we can't look them up by typename DXN.
       // Query by typename + version instead.
-      const typename = DXN.getName(typeURI);
-      const version = DXN.getVersion(typeURI);
+      const typename = DXN.getName(typeDxn);
+      const version = DXN.getVersion(typeDxn);
       return target[symbolInternals].database.schemaRegistry
         .query({ typename, ...(version ? { version } : {}) })
         .runSync()[0];
@@ -974,11 +974,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     const sourceRef = target[symbolInternals].core.getSource();
     if (sourceRef) {
-      obj[ATTR_RELATION_SOURCE] = EchoURI.parse(EncodedReference.toURI(sourceRef));
+      obj[ATTR_RELATION_SOURCE] = EchoURI.tryParse(EncodedReference.toURI(sourceRef));
     }
     const targetRef = target[symbolInternals].core.getTarget();
     if (targetRef) {
-      obj[ATTR_RELATION_TARGET] = EchoURI.parse(EncodedReference.toURI(targetRef));
+      obj[ATTR_RELATION_TARGET] = EchoURI.tryParse(EncodedReference.toURI(targetRef));
     }
 
     Object.assign(

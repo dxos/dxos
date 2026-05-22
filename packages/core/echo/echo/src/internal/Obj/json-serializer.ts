@@ -237,8 +237,8 @@ export const objectStructureToJson = (objectId: ObjectId, structure: ObjectStruc
     id: objectId,
     [ATTR_TYPE]: typeRef ? URI.make(typeRef) : undefined,
     [ATTR_DELETED]: ObjectStructure.isDeleted(structure),
-    [ATTR_PARENT]: parent !== undefined ? EchoURI.parse(parent) : undefined,
-    [ATTR_RELATION_SOURCE]: source !== undefined ? EchoURI.parse(source) : undefined,
-    [ATTR_RELATION_TARGET]: target !== undefined ? EchoURI.parse(target) : undefined,
+    [ATTR_PARENT]: parent !== undefined ? EchoURI.tryParse(parent) : undefined,
+    [ATTR_RELATION_SOURCE]: source !== undefined ? EchoURI.tryParse(source) : undefined,
+    [ATTR_RELATION_TARGET]: target !== undefined ? EchoURI.tryParse(target) : undefined,
   };
 };
