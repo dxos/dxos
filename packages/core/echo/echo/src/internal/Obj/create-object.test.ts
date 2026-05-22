@@ -82,8 +82,8 @@ describe('create (static version)', () => {
     expect(json).toEqual({
       id: manager.id,
       [ATTR_TYPE]: DXN.make(TestSchema.HasManager.typename, TestSchema.HasManager.version),
-      [ATTR_RELATION_SOURCE]: EchoURI.fromLocalObjectId(person1.id),
-      [ATTR_RELATION_TARGET]: EchoURI.fromLocalObjectId(person2.id),
+      [ATTR_RELATION_SOURCE]: EchoURI.make({ objectId: person1.id }),
+      [ATTR_RELATION_TARGET]: EchoURI.make({ objectId: person2.id }),
       [ATTR_META]: {
         keys: [],
       },

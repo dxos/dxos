@@ -79,7 +79,7 @@ export default Capability.makeModule(
         return Effect.succeed(Option.none());
       }
 
-      const echoId = EchoURI.fromSpaceAndObjectId(spaceId, objectId as Key.ObjectId);
+      const echoId = EchoURI.make({ spaceId: spaceId, objectId: objectId as Key.ObjectId });
       const ref = space.db.makeRef(echoId);
       return Database.loadOption(ref).pipe(
         Effect.map((option) => (Option.isSome(option) ? Option.some(echoId) : Option.none<EchoURI.EchoURI>())),

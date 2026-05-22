@@ -57,7 +57,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
   useAsyncEffect(async () => {
     setInputTemplate('');
     await props.loader
-      .load(EchoURI.fromLocalObjectId(props.graph.id))
+      .load(EchoURI.make({ objectId: props.graph.id }))
       .then((workflow) => {
         const workflowMeta = workflow.resolveMeta();
         if (workflowMeta.inputs.length) {
@@ -128,7 +128,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
       if (props.mode === WorkflowDebugPanelMode.REMOTE) {
         response = await edgeClient.executeWorkflow(Context.default(), space.id, props.graph.id, requestBody);
       } else {
-        const compiled = await props.loader.load(EchoURI.fromLocalObjectId(props.graph.id));
+        const compiled = await props.loader.load(EchoURI.make({ objectId: props.graph.id }));
         response = await runAndForwardErrors(
           compiled
             .run(ValueBag.make(requestBody))

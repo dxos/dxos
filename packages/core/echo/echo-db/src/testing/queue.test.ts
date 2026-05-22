@@ -47,7 +47,7 @@ describe('queues', () => {
     await queue.append([Obj.make(TestSchema.Person, { name: 'john' })]);
     const obj = queue.objects[0];
     // Queue items now receive an ECHO-kind DXN (echo://spaceId/itemId), not a queue DXN.
-    expect(Entity.getURI(obj)).toEqual(EchoURI.fromSpaceAndObjectId(db.spaceId, obj.id));
+    expect(Entity.getURI(obj)).toEqual(EchoURI.make({ spaceId: db.spaceId, objectId: obj.id }));
   });
 
   test('create and resolve an object from a queue', async () => {
@@ -65,7 +65,7 @@ describe('queues', () => {
       // context is the correct way to resolve them.
       const resolved = await peer.client.graph
         .createRefResolver({ context: { space: spaceId, feed: queue.uri } })
-        .resolve(EchoURI.fromLocalObjectId(obj.id));
+        .resolve(EchoURI.make({ objectId: obj.id }));
       expect(resolved?.id).toEqual(obj.id);
       expect(resolved?.name).toEqual('john');
       expect(Obj.getSchema(resolved as Obj.Unknown)).toEqual(TestSchema.Person);

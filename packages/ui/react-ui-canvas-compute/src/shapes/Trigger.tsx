@@ -122,7 +122,7 @@ const createTriggerSpec = (props: { triggerKind?: Trigger.Kind; spaceId?: SpaceI
     case 'email':
       return Trigger.specEmail();
     case 'queue': {
-      const dxn = EchoURI.fromSpaceAndObjectId(props.spaceId ?? SpaceId.random(), Obj.ID.random());
+      const dxn = EchoURI.make({ spaceId: props.spaceId ?? SpaceId.random(), objectId: Obj.ID.random() });
       return Trigger.specQueue(dxn);
     }
   }

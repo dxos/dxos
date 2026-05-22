@@ -226,7 +226,7 @@ describe('ReverseRefIndex', () => {
       yield* reverseRefIndex.update([sourceObject]);
 
       // Should not throw and no results for random DXN.
-      const results = yield* reverseRefIndex.query({ targetDxn: EchoURI.fromLocalObjectId(ObjectId.random()) });
+      const results = yield* reverseRefIndex.query({ targetDxn: EchoURI.make({ objectId: ObjectId.random() }) });
       expect(results.length).toBe(0);
     }).pipe(Effect.provide(TestLayer)),
   );

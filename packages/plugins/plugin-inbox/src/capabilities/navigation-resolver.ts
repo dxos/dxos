@@ -74,7 +74,7 @@ export default Capability.makeModule(
         return Effect.succeed(Option.none());
       }
 
-      const mailboxEchoId = EchoURI.fromSpaceAndObjectId(spaceId, mailboxId as Key.ObjectId);
+      const mailboxEchoId = EchoURI.make({ spaceId: spaceId, objectId: mailboxId as Key.ObjectId });
       const mailboxRef = space.db.makeRef(mailboxEchoId);
 
       const isMessagePath = isLinkedSegment(qualifiedPath);

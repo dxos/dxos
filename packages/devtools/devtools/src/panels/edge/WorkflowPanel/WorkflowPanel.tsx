@@ -102,7 +102,7 @@ export const WorkflowPanel = (props: { space?: Space }) => {
 
 const toWorkflow = async (loader: WorkflowLoader, graph: ComputeGraph) => {
   try {
-    const loaded = await loader.load(EchoURI.fromLocalObjectId(graph.id));
+    const loaded = await loader.load(EchoURI.make({ objectId: graph.id }));
     const mapProps = (ast: SchemaAST.AST) =>
       Object.fromEntries(SchemaAST.getPropertySignatures(ast).map((prop) => [prop.name, prop.type]));
     const workflowMeta = loaded.resolveMeta();
@@ -137,7 +137,7 @@ const toCompactGraph = (graph: ComputeGraph) => {
 const createLoader = (graphs: ComputeGraph[]) =>
   new WorkflowLoader({
     graphLoader: async (graphDxn) => {
-      const graph = graphs.find((g) => graphDxn === EchoURI.fromLocalObjectId(g.id));
+      const graph = graphs.find((g) => graphDxn === EchoURI.make({ objectId: g.id }));
       if (!graph) {
         throw new Error(`Graph not found: ${graphDxn}.`);
       }

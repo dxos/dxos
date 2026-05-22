@@ -72,7 +72,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
           try {
             return await Obj.fromJSON(obj, {
               refResolver: this._refResolver,
-              uri: EchoURI.fromSpaceAndObjectId(this._spaceId, obj.id),
+              uri: EchoURI.make({ spaceId: this._spaceId, objectId: obj.id }),
               database: this._database,
               parent: this._parentEntity,
             });
@@ -203,7 +203,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
 
     for (const item of items) {
       setRefResolverOnData(item, this._refResolver);
-      defineHiddenProperty(item, SelfURIId, EchoURI.fromSpaceAndObjectId(this._spaceId, item.id));
+      defineHiddenProperty(item, SelfURIId, EchoURI.make({ spaceId: this._spaceId, objectId: item.id }));
       if (this._parentEntity) {
         defineHiddenProperty(item, ParentId, this._parentEntity);
       }
@@ -293,7 +293,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
           try {
             const decoded = await Obj.fromJSON(obj, {
               refResolver: this._refResolver,
-              uri: EchoURI.fromSpaceAndObjectId(this._spaceId, obj.id),
+              uri: EchoURI.make({ spaceId: this._spaceId, objectId: obj.id }),
               database: this._database,
               parent: this._parentEntity,
             });
@@ -332,7 +332,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     invariant(ObjectId.isValid(obj.id), 'object missing valid id');
     const decoded = await Obj.fromJSON(obj, {
       refResolver: this._refResolver,
-      uri: EchoURI.fromSpaceAndObjectId(this._spaceId, obj.id),
+      uri: EchoURI.make({ spaceId: this._spaceId, objectId: obj.id }),
       database: this._database,
       parent: this._parentEntity,
     });

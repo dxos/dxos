@@ -23,7 +23,7 @@ export type MemoryQueueOptions<T extends Entity.Unknown> = {
 export class MemoryQueue<T extends Entity.Unknown> implements Queue<T> {
   static make<T extends Entity.Unknown>({ spaceId, queueId, uri, objects }: MemoryQueueOptions<T>): MemoryQueue<T> {
     if (!uri) {
-      uri = EchoURI.fromSpaceAndObjectId(spaceId ?? SpaceId.random(), queueId ?? ObjectId.random());
+      uri = EchoURI.make({ spaceId: spaceId ?? SpaceId.random(), objectId: queueId ?? ObjectId.random() });
     } else {
       invariant(spaceId == null && queueId == null);
     }

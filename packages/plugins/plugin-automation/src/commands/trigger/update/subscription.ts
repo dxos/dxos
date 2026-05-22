@@ -40,7 +40,7 @@ export const subscription = Command.make(
         onNone: () => selectTrigger('subscription'),
         onSome: (id) => Effect.succeed(id),
       });
-      const dxn = EchoURI.fromLocalObjectId(triggerId);
+      const dxn = EchoURI.make({ objectId: triggerId });
       const trigger = yield* Database.resolve(Ref.fromURI(dxn), Trigger.Trigger);
       if (trigger.spec?.kind !== 'subscription') {
         return yield* Effect.fail(new Error(`Invalid trigger type: ${trigger.spec?.kind}`));

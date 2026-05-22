@@ -588,7 +588,7 @@ export const generator = () => ({
             );
             const queueId = canvasModel.createNode(
               createConstant({
-                value: EchoURI.fromSpaceAndObjectId(space.id, Key.ObjectId.random()),
+                value: EchoURI.make({ spaceId: space.id, objectId: Key.ObjectId.random() }),
                 ...position({ x: -10, y: 5 }),
               }),
             );
@@ -775,7 +775,7 @@ const setupQueue = (
 ) => {
   const queueId = canvasModel.createNode(
     createConstant({
-      value: EchoURI.fromSpaceAndObjectId(space.id, Key.ObjectId.random()),
+      value: EchoURI.make({ spaceId: space.id, objectId: Key.ObjectId.random() }),
       ...(args?.idPosition ? rawPosition(args.idPosition) : position({ x: -18, y: 5, width: 8, height: 6 })),
     }),
   );

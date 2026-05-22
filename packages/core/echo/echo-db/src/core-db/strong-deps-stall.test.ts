@@ -50,7 +50,7 @@ describe('Query pipeline strong-dependency stalls', () => {
           data: { title: 'main' },
           system: {
             kind: 'object',
-            type: { '/': EchoURI.fromLocalObjectId(depObjectId) },
+            type: { '/': EchoURI.make({ objectId: depObjectId }) },
           },
         },
       },
@@ -134,7 +134,7 @@ describe('Query pipeline strong-dependency stalls', () => {
           data: { title: 'main' },
           system: {
             kind: 'object',
-            type: { '/': EchoURI.fromLocalObjectId(depObjectId) },
+            type: { '/': EchoURI.make({ objectId: depObjectId }) },
           },
         },
       },
@@ -191,7 +191,7 @@ describe('Query pipeline strong-dependency stalls', () => {
         [aId]: {
           meta: { keys: [] },
           data: { title: 'A' },
-          system: { kind: 'object', type: { '/': EchoURI.fromLocalObjectId(bId) } },
+          system: { kind: 'object', type: { '/': EchoURI.make({ objectId: bId }) } },
         },
       },
     });
@@ -202,7 +202,7 @@ describe('Query pipeline strong-dependency stalls', () => {
         [bId]: {
           meta: { keys: [] },
           data: { title: 'B' },
-          system: { kind: 'object', type: { '/': EchoURI.fromLocalObjectId(cId) } },
+          system: { kind: 'object', type: { '/': EchoURI.make({ objectId: cId }) } },
         },
       },
     });

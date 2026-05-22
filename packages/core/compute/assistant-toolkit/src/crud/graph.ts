@@ -216,12 +216,12 @@ export const sanitizeObjects = (
     const resolveId = (id: string): EchoURI.EchoURI | undefined => {
       if (ObjectId.isValid(id)) {
         existingIds.add(id);
-        return EchoURI.fromLocalObjectId(id);
+        return EchoURI.make({ objectId: id });
       }
 
       const mappedId = idMap.get(id);
       if (mappedId && ObjectId.isValid(mappedId)) {
-        return EchoURI.fromLocalObjectId(mappedId);
+        return EchoURI.make({ objectId: mappedId });
       }
 
       return undefined;

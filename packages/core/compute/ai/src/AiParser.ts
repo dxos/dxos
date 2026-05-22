@@ -599,7 +599,7 @@ const parseObjectBlock = (block: StreamBlock): ContentBlock.Reference | undefine
     try {
       return {
         _tag: 'reference',
-        reference: Ref.fromURI(EchoURI.fromLocalObjectId(block.attributes.id)),
+        reference: Ref.fromURI(EchoURI.make({ objectId: block.attributes.id })),
       };
     } catch {}
   }

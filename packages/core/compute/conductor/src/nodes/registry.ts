@@ -206,7 +206,7 @@ export const registry: Record<NodeType, Executable> = {
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: id }) =>
       Effect.gen(function* () {
         const { queues } = yield* QueueService;
-        const echoId = EchoURI.isEchoURI(id) ? EchoURI.parse(id) : EchoURI.fromLocalObjectId(id);
+        const echoId = EchoURI.isEchoURI(id) ? EchoURI.parse(id) : EchoURI.make({ objectId: id });
         const messages = yield* Effect.promise(() => queues.get(echoId).queryObjects());
         const decoded = Schema.decodeUnknownSync(Schema.Any)(messages);
         return {
@@ -259,7 +259,7 @@ export const registry: Record<NodeType, Executable> = {
             id: item.id ?? ObjectId.random(),
           }));
           const { queues } = yield* QueueService;
-          const queueEchoId = EchoURI.fromLocalObjectId(id);
+          const queueEchoId = EchoURI.make({ objectId: id });
           yield* Effect.promise(() => queues.get(queueEchoId).append(mappedItems));
           return {};
         }

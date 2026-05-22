@@ -85,7 +85,7 @@ describe('filterMatch', () => {
   });
 
   test('refs', () => {
-    const filter = Filter.type(TestSchema.Expando, { parent: Ref.fromURI(EchoURI.fromLocalObjectId(OBJECT_1.id)) });
+    const filter = Filter.type(TestSchema.Expando, { parent: Ref.fromURI(EchoURI.make({ objectId: OBJECT_1.id })) });
     expect(filterMatchObject(filter.ast, OBJECT_1)).to.be.false;
     expect(filterMatchObject(filter.ast, OBJECT_2)).to.be.false;
     expect(filterMatchObject(filter.ast, OBJECT_3)).to.be.true;
@@ -133,6 +133,6 @@ const OBJECT_3: MatchedObject = {
   spaceId: SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO'),
   doc: ObjectStructure.makeObject({
     type: DXN.make(TestSchema.Expando.typename, '0.1.0'),
-    data: { title: 'test', value: 100, complete: true, parent: { '/': EchoURI.fromLocalObjectId(OBJECT_1.id) } },
+    data: { title: 'test', value: 100, complete: true, parent: { '/': EchoURI.make({ objectId: OBJECT_1.id }) } },
   }),
 };

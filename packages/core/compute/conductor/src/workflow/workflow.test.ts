@@ -194,11 +194,11 @@ describe('workflow', () => {
     outputPath: string | null,
     map: { [inputId: string]: Transform },
   ): TestWorkflowGraph => {
-    const graphUri = EchoURI.fromLocalObjectId(ObjectId.random());
+    const graphUri = EchoURI.make({ objectId: ObjectId.random() });
     const model = ComputeGraphModel.create({ id: graphUri });
     const compute: [EchoURI.EchoURI, Transform][] = [];
     for (const [inputId, transform] of Object.entries(map)) {
-      const computeNodeUri = EchoURI.fromLocalObjectId(ObjectId.random());
+      const computeNodeUri = EchoURI.make({ objectId: ObjectId.random() });
       const transformId = ObjectId.random();
       compute.push([computeNodeUri, transform]);
       addTransform(model, { id: transformId, type: computeNodeUri }, { inputId, withOutput: inputId === outputPath });
@@ -208,7 +208,7 @@ describe('workflow', () => {
   };
 
   const createSubgraphTransform = (subgraphDxn: EchoURI.EchoURI): TestWorkflowGraph => {
-    const graphUri = EchoURI.fromLocalObjectId(ObjectId.random());
+    const graphUri = EchoURI.make({ objectId: ObjectId.random() });
     const model = ComputeGraphModel.create({ id: graphUri });
     const transformId = ObjectId.random();
     addTransform(model, { id: transformId, type: subgraphDxn, subgraph: Ref.fromURI(subgraphDxn) });
@@ -217,7 +217,7 @@ describe('workflow', () => {
   };
 
   const createFunctionTransform = (functionRef: Ref.Ref<any> | null): TestWorkflowGraph => {
-    const graphUri = EchoURI.fromLocalObjectId(ObjectId.random());
+    const graphUri = EchoURI.make({ objectId: ObjectId.random() });
     const model = ComputeGraphModel.create({ id: graphUri });
     const transformId = ObjectId.random();
     addTransform(model, { id: transformId, type: 'function', function: functionRef ?? undefined });

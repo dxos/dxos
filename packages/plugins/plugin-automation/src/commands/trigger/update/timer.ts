@@ -37,7 +37,7 @@ export const timer = Command.make(
         onNone: () => selectTrigger('timer'),
         onSome: (id) => Effect.succeed(id),
       });
-      const dxn = EchoURI.fromLocalObjectId(triggerId);
+      const dxn = EchoURI.make({ objectId: triggerId });
       const trigger = yield* Database.resolve(Ref.fromURI(dxn), Trigger.Trigger);
       if (!trigger.spec || trigger.spec?.kind !== 'timer') {
         return yield* Effect.fail(new Error(`Invalid trigger type: ${trigger.spec?.kind}`));

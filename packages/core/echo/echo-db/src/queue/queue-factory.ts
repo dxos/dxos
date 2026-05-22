@@ -58,7 +58,7 @@ export class QueueFactory extends Resource implements QueueAPI {
   }
 
   create<T extends Entity.Unknown>({ subspaceTag = QueueSubspaceTags.DATA }: { subspaceTag?: string } = {}): Queue<T> {
-    const echoId = EchoURI.fromSpaceAndObjectId(this._spaceId, ObjectId.random());
+    const echoId = EchoURI.make({ spaceId: this._spaceId, objectId: ObjectId.random() });
     return this._getOrCreate<T>(echoId, subspaceTag);
   }
 

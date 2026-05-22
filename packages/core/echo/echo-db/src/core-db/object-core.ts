@@ -571,10 +571,10 @@ const convertLegacyProtoReference = (value: {
   } else if (value.host) {
     invariant(SpaceId.isValid(value.host), 'Invalid space id');
     invariant(ObjectId.isValid(value.objectId), 'Invalid object id');
-    uri = EchoURI.fromSpaceAndObjectId(value.host, value.objectId);
+    uri = EchoURI.make({ spaceId: value.host, objectId: value.objectId });
   } else {
     invariant(ObjectId.isValid(value.objectId), 'Invalid object id');
-    uri = EchoURI.fromLocalObjectId(value.objectId);
+    uri = EchoURI.make({ objectId: value.objectId });
   }
   return EncodedReference.fromURI(uri);
 };

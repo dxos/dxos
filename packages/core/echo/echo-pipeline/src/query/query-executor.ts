@@ -635,7 +635,7 @@ export class QueryExecutor extends Resource {
               }
               return null;
             } else if (spaces.length > 0) {
-              return this._loadFromDXN(EchoURI.fromLocalObjectId(id), { sourceSpaceId: spaces[0] });
+              return this._loadFromDXN(EchoURI.make({ objectId: id }), { sourceSpaceId: spaces[0] });
             } else {
               return null; // Unknown scope.
             }
@@ -779,7 +779,7 @@ export class QueryExecutor extends Resource {
         // Load space items from documents.
         const spaceItems = await Promise.all(
           spaceResults.map(async (result): Promise<QueryItem | null> => {
-            const dxn = EchoURI.fromLocalObjectId(result.objectId);
+            const dxn = EchoURI.make({ objectId: result.objectId });
             const item = await this._loadFromDXN(dxn, { sourceSpaceId: result.spaceId });
             if (item) {
               // Override the default rank with the FTS rank.
@@ -977,7 +977,7 @@ export class QueryExecutor extends Resource {
     }
 
     if (item.queueId && !directParent) {
-      const queueEchoId = EchoURI.fromSpaceAndObjectId(item.spaceId, item.queueId);
+      const queueEchoId = EchoURI.make({ spaceId: item.spaceId, objectId: item.queueId });
       parentRefs.push({
         dxnStr: queueEchoId,
         objectId: item.queueId,
@@ -1383,7 +1383,7 @@ export class QueryExecutor extends Resource {
     workingSet: QueryItem[],
     property: EscapedPropPath | null,
   ): Promise<readonly ObjectMeta[]> {
-    const anchorDxns = workingSet.map((item) => EchoURI.fromLocalObjectId(item.objectId));
+    const anchorDxns = workingSet.map((item) => EchoURI.make({ objectId: item.objectId }));
     const rows: readonly ReverseRef[] = (
       await Promise.all(
         anchorDxns.map((targetDxn) => this._runInRuntime(this._indexEngine.queryReverseRef({ targetDxn }))),
@@ -1457,7 +1457,7 @@ export class QueryExecutor extends Resource {
     workingSet: QueryItem[],
     endpoint: 'source' | 'target',
   ): Promise<readonly ObjectMeta[]> {
-    const anchorDxns = workingSet.map((item) => EchoURI.fromLocalObjectId(item.objectId));
+    const anchorDxns = workingSet.map((item) => EchoURI.make({ objectId: item.objectId }));
     return await this._runInRuntime(this._indexEngine.queryRelations({ endpoint, anchorDxns }));
   }
 

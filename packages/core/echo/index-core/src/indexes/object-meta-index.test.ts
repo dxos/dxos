@@ -150,8 +150,8 @@ describe('ObjectMetaIndex', () => {
         data: {
           id: objectId2,
           [ATTR_TYPE]: TYPE_RELATION,
-          [ATTR_RELATION_SOURCE]: EchoURI.fromSpaceAndObjectId(spaceId, ObjectId.random()),
-          [ATTR_RELATION_TARGET]: EchoURI.fromSpaceAndObjectId(spaceId, ObjectId.random()),
+          [ATTR_RELATION_SOURCE]: EchoURI.make({ spaceId: spaceId, objectId: ObjectId.random() }),
+          [ATTR_RELATION_TARGET]: EchoURI.make({ spaceId: spaceId, objectId: ObjectId.random() }),
           [ATTR_DELETED]: false,
         },
       };
@@ -260,8 +260,8 @@ describe('ObjectMetaIndex', () => {
         data: {
           id: relationId,
           [ATTR_TYPE]: TYPE_RELATION,
-          [ATTR_RELATION_SOURCE]: EchoURI.fromLocalObjectId(objectId1),
-          [ATTR_RELATION_TARGET]: EchoURI.fromLocalObjectId(objectId2),
+          [ATTR_RELATION_SOURCE]: EchoURI.make({ objectId: objectId1 }),
+          [ATTR_RELATION_TARGET]: EchoURI.make({ objectId: objectId2 }),
           [ATTR_DELETED]: false,
         },
       };
@@ -324,13 +324,13 @@ describe('ObjectMetaIndex', () => {
 
       const bySource = yield* index.queryRelations({
         endpoint: 'source',
-        anchorDxns: [EchoURI.fromLocalObjectId(objectId1)],
+        anchorDxns: [EchoURI.make({ objectId: objectId1 })],
       });
       expect(bySource.map((_) => _.objectId)).toEqual([relationId]);
 
       const byTarget = yield* index.queryRelations({
         endpoint: 'target',
-        anchorDxns: [EchoURI.fromLocalObjectId(objectId2)],
+        anchorDxns: [EchoURI.make({ objectId: objectId2 })],
       });
       expect(byTarget.map((_) => _.objectId)).toEqual([relationId]);
     }).pipe(Effect.provide(TestLayer)),

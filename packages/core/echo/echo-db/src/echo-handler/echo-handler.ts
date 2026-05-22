@@ -197,12 +197,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         }
         case SelfURIId: {
           if (target[symbolInternals].database) {
-            return EchoURI.fromSpaceAndObjectId(
-              target[symbolInternals].database.spaceId,
-              target[symbolInternals].core.id,
-            );
+            return EchoURI.make({
+              spaceId: target[symbolInternals].database.spaceId,
+              objectId: target[symbolInternals].core.id,
+            });
           } else {
-            return EchoURI.fromLocalObjectId(target[symbolInternals].core.id);
+            return EchoURI.make({ objectId: target[symbolInternals].core.id });
           }
         }
         case Entity.KindId: {
@@ -295,7 +295,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         const objectId = value.id ?? value;
         // TODO(dmaretskyi): Validate object is from the same space.
         invariant(ObjectId.isValid(objectId));
-        target[symbolInternals].core.setParent(EncodedReference.fromURI(EchoURI.fromLocalObjectId(objectId)));
+        target[symbolInternals].core.setParent(EncodedReference.fromURI(EchoURI.make({ objectId: objectId })));
       }
       return true;
     }
@@ -824,7 +824,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       // TODO(dmaretskyi): Add better validation.
       invariant(otherObjId != null);
       target[symbolInternals].linkCache.set(otherObjId, otherEchoObj as Entity.Unknown);
-      return EchoURI.fromLocalObjectId(otherObjId);
+      return EchoURI.make({ objectId: otherObjId });
     }
 
     // TODO(burdon): Remote?
@@ -832,15 +832,15 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (!foreignDatabase) {
       database.add(otherEchoObj);
       // TODO(dmaretskyi): Is this right.
-      return EchoURI.fromLocalObjectId(otherObjId);
+      return EchoURI.make({ objectId: otherObjId });
     }
 
     // Note: If the object is in a different database, return a reference to a foreign database.
     if (foreignDatabase !== database) {
-      return EchoURI.fromSpaceAndObjectId(foreignDatabase.spaceId, otherObjId);
+      return EchoURI.make({ spaceId: foreignDatabase.spaceId, objectId: otherObjId });
     }
 
-    return EchoURI.fromLocalObjectId(otherObjId);
+    return EchoURI.make({ objectId: otherObjId });
   }
 
   /**
@@ -1239,7 +1239,7 @@ const initCore = (core: ObjectCore, target: ProxyTarget) => {
   if (parentValue !== undefined) {
     const parentId = parentValue.id ?? parentValue;
     if (ObjectId.isValid(parentId)) {
-      core.setParent(EncodedReference.fromURI(EchoURI.fromLocalObjectId(parentId)));
+      core.setParent(EncodedReference.fromURI(EchoURI.make({ objectId: parentId })));
     }
     delete (target as any)[ParentId];
   }

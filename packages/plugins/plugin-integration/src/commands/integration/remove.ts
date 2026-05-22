@@ -31,7 +31,7 @@ export const remove = Command.make(
       const token = yield* Option.match(id, {
         onSome: (value) =>
           Effect.gen(function* () {
-            const dxn = EchoURI.fromLocalObjectId(value);
+            const dxn = EchoURI.make({ objectId: value });
             return yield* Database.resolve(Ref.fromURI(dxn), AccessToken.AccessToken);
           }),
         onNone: () =>
@@ -53,7 +53,7 @@ export const remove = Command.make(
               choices,
             }).pipe(Prompt.run);
 
-            const dxn = EchoURI.fromLocalObjectId(selectedId);
+            const dxn = EchoURI.make({ objectId: selectedId });
             return yield* Database.resolve(Ref.fromURI(dxn), AccessToken.AccessToken);
           }),
       });

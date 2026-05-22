@@ -239,7 +239,7 @@ Ref.make = <T extends AnyProperties>(obj: T): Ref<T> => {
   // TODO(dmaretskyi): Extract to `getObjectEchoUri` function.
   const id = obj.id;
   invariant(ObjectId.isValid(id), 'Invalid object ID');
-  const uri = EchoURI.fromLocalObjectId(id);
+  const uri = EchoURI.make({ objectId: id });
   return new RefImpl(uri, obj);
 };
 

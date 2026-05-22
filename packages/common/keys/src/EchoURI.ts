@@ -10,7 +10,14 @@ import type { ObjectId } from './object-id';
 import type { SpaceId } from './space-id';
 import type * as URI from './URI';
 
-// New format patterns.
+// Canonical-form regex covering all three EchoURI shapes.
+//   echo://<spaceId>/<objectId>
+//   echo://<spaceId>
+//   echo:/<objectId>      (local)
+//   echo:///<objectId>    (local, alt form)
+const ECHO_URI_REGEXP = /^echo:(?:\/\/[^/]+(?:\/[^/]+)?|(?:\/\/\/|\/)[^/]+)$/;
+
+// Sub-patterns used for extraction.
 const QUALIFIED_RE = /^echo:\/\/([^/]+)\/([^/]+)$/;
 const SPACE_ONLY_RE = /^echo:\/\/([^/]+)$/;
 const LOCAL_RE = /^echo:(?:\/\/\/|\/)([^/]+)$/;
@@ -41,34 +48,14 @@ export const isEchoURI = (s: unknown): s is EchoURI =>
 
 /**
  * Parses a string to EchoURI, normalizing legacy formats to the canonical `echo:` form.
+ * Throws if the (normalized) string is not a valid EchoURI.
  */
 export const parse = (s: string): EchoURI => {
-  if (s.startsWith('echo:')) {
-    return s as EchoURI;
+  const normalized = normalizeLegacy(s);
+  if (!ECHO_URI_REGEXP.test(normalized)) {
+    throw new Error(`Invalid EchoURI: ${s}`);
   }
-
-  const localMatch = LEGACY_LOCAL_RE.exec(s);
-  if (localMatch) {
-    return `echo:/${localMatch[1]}` as EchoURI;
-  }
-
-  // Check queue item (more specific) before queue.
-  const queueItemMatch = LEGACY_QUEUE_ITEM_RE.exec(s);
-  if (queueItemMatch) {
-    return `echo://${queueItemMatch[1]}/${queueItemMatch[3]}` as EchoURI;
-  }
-
-  const queueMatch = LEGACY_QUEUE_RE.exec(s);
-  if (queueMatch) {
-    return `echo://${queueMatch[1]}/${queueMatch[2]}` as EchoURI;
-  }
-
-  const qualifiedMatch = LEGACY_QUALIFIED_RE.exec(s);
-  if (qualifiedMatch) {
-    return `echo://${qualifiedMatch[1]}/${qualifiedMatch[2]}` as EchoURI;
-  }
-
-  throw new Error(`Invalid EchoURI: ${s}`);
+  return normalized as EchoURI;
 };
 
 /**
@@ -82,24 +69,57 @@ export const tryParse = (s: string): EchoURI | undefined => {
   }
 };
 
-/**
- * Creates a fully-qualified EchoURI addressing an object in a specific space.
- * @example `echo://BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE/01J00J9B45YHYSGZQTQMSKMGJ6`
- */
-export const fromSpaceAndObjectId = (spaceId: SpaceId, objectId: ObjectId): EchoURI =>
-  `echo://${spaceId}/${objectId}` as EchoURI;
+const normalizeLegacy = (s: string): string => {
+  if (s.startsWith('echo:')) {
+    return s;
+  }
+
+  const localMatch = LEGACY_LOCAL_RE.exec(s);
+  if (localMatch) {
+    return `echo:/${localMatch[1]}`;
+  }
+
+  // Check queue item (more specific) before queue.
+  const queueItemMatch = LEGACY_QUEUE_ITEM_RE.exec(s);
+  if (queueItemMatch) {
+    return `echo://${queueItemMatch[1]}/${queueItemMatch[3]}`;
+  }
+
+  const queueMatch = LEGACY_QUEUE_RE.exec(s);
+  if (queueMatch) {
+    return `echo://${queueMatch[1]}/${queueMatch[2]}`;
+  }
+
+  const qualifiedMatch = LEGACY_QUALIFIED_RE.exec(s);
+  if (qualifiedMatch) {
+    return `echo://${qualifiedMatch[1]}/${qualifiedMatch[2]}`;
+  }
+
+  return s;
+};
 
 /**
- * Creates a local EchoURI for an object in the current space.
- * @example `echo:/01J00J9B45YHYSGZQTQMSKMGJ6`
+ * Constructs an EchoURI. Validates the result via `parse`.
+ *
+ * - `{ spaceId, objectId }` → `echo://<spaceId>/<objectId>` (fully qualified)
+ * - `{ objectId }`          → `echo:/<objectId>` (local — current space)
+ * - `{ spaceId }`           → `echo://<spaceId>` (space-only)
+ *
+ * Throws if neither id is provided, or if the result is not a valid EchoURI.
  */
-export const fromLocalObjectId = (objectId: ObjectId): EchoURI => `echo:/${objectId}` as EchoURI;
-
-/**
- * Creates an EchoURI referencing a space itself (no object).
- * @example `echo://BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE`
- */
-export const fromSpaceId = (spaceId: SpaceId): EchoURI => `echo://${spaceId}` as EchoURI;
+export const make = ({ spaceId, objectId }: { spaceId?: SpaceId; objectId?: ObjectId }): EchoURI => {
+  let raw: string;
+  if (spaceId != null && objectId != null) {
+    raw = `echo://${spaceId}/${objectId}`;
+  } else if (objectId != null) {
+    raw = `echo:/${objectId}`;
+  } else if (spaceId != null) {
+    raw = `echo://${spaceId}`;
+  } else {
+    throw new Error('EchoURI.make requires at least one of spaceId or objectId');
+  }
+  return parse(raw);
+};
 
 /**
  * Returns the SpaceId from a fully-qualified EchoURI, or undefined for local refs.

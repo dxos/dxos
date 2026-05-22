@@ -29,7 +29,7 @@ export const remove = Command.make(
         onNone: () => selectTrigger(),
         onSome: (id) => Effect.succeed(id),
       });
-      const dxn = EchoURI.fromLocalObjectId(triggerId);
+      const dxn = EchoURI.make({ objectId: triggerId });
       const trigger = yield* Database.resolve(Ref.fromURI(dxn), Trigger.Trigger);
       yield* Database.remove(trigger);
       if (json) {

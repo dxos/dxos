@@ -406,8 +406,8 @@ describe('Reactive Object with ECHO database', () => {
     const objData = Relation.toJSON(manager);
     expect(objData).to.deep.contain({
       id: manager.id,
-      [ATTR_RELATION_SOURCE]: EchoURI.fromLocalObjectId(alice.id),
-      [ATTR_RELATION_TARGET]: EchoURI.fromLocalObjectId(bob.id),
+      [ATTR_RELATION_SOURCE]: EchoURI.make({ objectId: alice.id }),
+      [ATTR_RELATION_TARGET]: EchoURI.make({ objectId: bob.id }),
     });
   });
 
@@ -462,7 +462,7 @@ describe('Reactive Object with ECHO database', () => {
       // Fully serialized before added to db.
       {
         const obj = JSON.parse(JSON.stringify(obj1));
-        expect(obj.reference['/']).to.eq(EchoURI.fromLocalObjectId(obj1.reference!.target!.id));
+        expect(obj.reference['/']).to.eq(EchoURI.make({ objectId: obj1.reference!.target!.id }));
       }
 
       const obj2 = db.add(obj1);
@@ -748,7 +748,7 @@ describe('Reactive Object with ECHO database', () => {
         '@meta': { keys: [] },
         '@type': 'dxn:com.example.type.expando:0.1.0',
         name: 'John',
-        worksAt: EncodedReference.fromURI(EchoURI.fromLocalObjectId(org.id)),
+        worksAt: EncodedReference.fromURI(EchoURI.make({ objectId: org.id })),
       });
     });
 
@@ -904,7 +904,7 @@ describe('Reactive Object with ECHO database', () => {
 
   test('able to create queue references', async () => {
     const { db } = await builder.createDatabase();
-    const uri = EchoURI.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random());
+    const uri = EchoURI.make({ spaceId: SpaceId.random(), objectId: ObjectId.random() });
     const obj = Obj.make(TestSchema.Expando, { queue: Ref.fromURI(uri) });
     const dbObj = db.add(obj);
     const queueId = EchoURI.getObjectId(uri);

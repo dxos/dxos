@@ -110,7 +110,7 @@ export class MigrationBuilder {
 
   createReference(id: string) {
     invariant(ObjectId.isValid(id), 'Invalid ObjectId.');
-    return EncodedReference.fromURI(EchoURI.fromLocalObjectId(id));
+    return EncodedReference.fromURI(EchoURI.make({ objectId: id }));
   }
 
   deleteObject(id: string): void {

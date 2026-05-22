@@ -12,24 +12,21 @@ const SPACE = SpaceId.random();
 const OBJECT = ObjectId.random();
 const OBJECT2 = ObjectId.random();
 
-describe('EchoURI.fromSpaceAndObjectId', () => {
-  test('produces qualified echo URI', ({ expect }) => {
-    const id = EchoURI.fromSpaceAndObjectId(SPACE, OBJECT);
-    expect(id).toBe(`echo://${SPACE}/${OBJECT}`);
+describe('EchoURI.make', () => {
+  test('produces qualified echo URI from spaceId + objectId', ({ expect }) => {
+    expect(EchoURI.make({ spaceId: SPACE, objectId: OBJECT })).toBe(`echo://${SPACE}/${OBJECT}`);
   });
-});
 
-describe('EchoURI.fromLocalObjectId', () => {
-  test('produces local echo URI', ({ expect }) => {
-    const id = EchoURI.fromLocalObjectId(OBJECT);
-    expect(id).toBe(`echo:/${OBJECT}`);
+  test('produces local echo URI from objectId only', ({ expect }) => {
+    expect(EchoURI.make({ objectId: OBJECT })).toBe(`echo:/${OBJECT}`);
   });
-});
 
-describe('EchoURI.fromSpaceId', () => {
-  test('produces space-only echo URI', ({ expect }) => {
-    const id = EchoURI.fromSpaceId(SPACE);
-    expect(id).toBe(`echo://${SPACE}`);
+  test('produces space-only echo URI from spaceId only', ({ expect }) => {
+    expect(EchoURI.make({ spaceId: SPACE })).toBe(`echo://${SPACE}`);
+  });
+
+  test('throws when neither id is provided', ({ expect }) => {
+    expect(() => EchoURI.make({})).toThrow();
   });
 });
 
@@ -83,6 +80,8 @@ describe('EchoURI.parse', () => {
   test('throws on invalid input', ({ expect }) => {
     expect(() => EchoURI.parse('dxn:org.dxos.type.calendar')).toThrow();
     expect(() => EchoURI.parse('not-a-uri')).toThrow();
+    expect(() => EchoURI.parse('echo:')).toThrow();
+    expect(() => EchoURI.parse('echo://')).toThrow();
   });
 });
 
@@ -95,43 +94,43 @@ describe('EchoURI.tryParse', () => {
 
 describe('EchoURI.getSpaceId', () => {
   test('returns spaceId from qualified ref', ({ expect }) => {
-    expect(EchoURI.getSpaceId(EchoURI.fromSpaceAndObjectId(SPACE, OBJECT))).toBe(SPACE);
+    expect(EchoURI.getSpaceId(EchoURI.make({ spaceId: SPACE, objectId: OBJECT }))).toBe(SPACE);
   });
 
   test('returns spaceId from space-only ref', ({ expect }) => {
-    expect(EchoURI.getSpaceId(EchoURI.fromSpaceId(SPACE))).toBe(SPACE);
+    expect(EchoURI.getSpaceId(EchoURI.make({ spaceId: SPACE }))).toBe(SPACE);
   });
 
   test('returns undefined for local ref', ({ expect }) => {
-    expect(EchoURI.getSpaceId(EchoURI.fromLocalObjectId(OBJECT))).toBeUndefined();
+    expect(EchoURI.getSpaceId(EchoURI.make({ objectId: OBJECT }))).toBeUndefined();
     expect(EchoURI.getSpaceId(EchoURI.parse(`echo:///${OBJECT}`))).toBeUndefined();
   });
 });
 
 describe('EchoURI.getObjectId', () => {
   test('returns objectId from qualified ref', ({ expect }) => {
-    expect(EchoURI.getObjectId(EchoURI.fromSpaceAndObjectId(SPACE, OBJECT))).toBe(OBJECT);
+    expect(EchoURI.getObjectId(EchoURI.make({ spaceId: SPACE, objectId: OBJECT }))).toBe(OBJECT);
   });
 
   test('returns objectId from local ref', ({ expect }) => {
-    expect(EchoURI.getObjectId(EchoURI.fromLocalObjectId(OBJECT))).toBe(OBJECT);
+    expect(EchoURI.getObjectId(EchoURI.make({ objectId: OBJECT }))).toBe(OBJECT);
     expect(EchoURI.getObjectId(EchoURI.parse(`echo:///${OBJECT}`))).toBe(OBJECT);
   });
 
   test('returns undefined for space-only ref', ({ expect }) => {
-    expect(EchoURI.getObjectId(EchoURI.fromSpaceId(SPACE))).toBeUndefined();
+    expect(EchoURI.getObjectId(EchoURI.make({ spaceId: SPACE }))).toBeUndefined();
   });
 });
 
 describe('EchoURI.isLocal', () => {
   test('returns true for local refs', ({ expect }) => {
-    expect(EchoURI.isLocal(EchoURI.fromLocalObjectId(OBJECT))).toBe(true);
+    expect(EchoURI.isLocal(EchoURI.make({ objectId: OBJECT }))).toBe(true);
     expect(EchoURI.isLocal(EchoURI.parse(`echo:///${OBJECT}`))).toBe(true);
   });
 
   test('returns false for qualified refs', ({ expect }) => {
-    expect(EchoURI.isLocal(EchoURI.fromSpaceAndObjectId(SPACE, OBJECT))).toBe(false);
-    expect(EchoURI.isLocal(EchoURI.fromSpaceId(SPACE))).toBe(false);
+    expect(EchoURI.isLocal(EchoURI.make({ spaceId: SPACE, objectId: OBJECT }))).toBe(false);
+    expect(EchoURI.isLocal(EchoURI.make({ spaceId: SPACE }))).toBe(false);
   });
 
   test('normalizes legacy local format before checking', ({ expect }) => {
@@ -141,19 +140,19 @@ describe('EchoURI.isLocal', () => {
 
 describe('EchoURI.equals', () => {
   test('returns true for identical refs', ({ expect }) => {
-    const id = EchoURI.fromSpaceAndObjectId(SPACE, OBJECT);
+    const id = EchoURI.make({ spaceId: SPACE, objectId: OBJECT });
     expect(EchoURI.equals(id, id)).toBe(true);
   });
 
   test('returns true for equivalent legacy and new format', ({ expect }) => {
     const legacy = EchoURI.parse(`dxn:echo:@:${OBJECT}`);
-    const modern = EchoURI.fromLocalObjectId(OBJECT);
+    const modern = EchoURI.make({ objectId: OBJECT });
     expect(EchoURI.equals(legacy, modern)).toBe(true);
   });
 
   test('returns false for different refs', ({ expect }) => {
-    const a = EchoURI.fromSpaceAndObjectId(SPACE, OBJECT);
-    const b = EchoURI.fromSpaceAndObjectId(SPACE, OBJECT2);
+    const a = EchoURI.make({ spaceId: SPACE, objectId: OBJECT });
+    const b = EchoURI.make({ spaceId: SPACE, objectId: OBJECT2 });
     expect(EchoURI.equals(a, b)).toBe(false);
   });
 });

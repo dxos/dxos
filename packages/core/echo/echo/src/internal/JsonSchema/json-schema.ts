@@ -414,7 +414,7 @@ const decodeTypeIdentifierAnnotation = (schema: JsonSchemaType): string | undefi
   // Legacy: older serializations stored the EchoURI on echo.type.schemaId.
   const legacySchemaId = schema.echo?.type?.schemaId;
   if (legacySchemaId) {
-    return ObjectId.isValid(legacySchemaId) ? EchoURI.fromLocalObjectId(legacySchemaId) : legacySchemaId;
+    return ObjectId.isValid(legacySchemaId) ? EchoURI.make({ objectId: legacySchemaId }) : legacySchemaId;
   }
   return undefined;
 };

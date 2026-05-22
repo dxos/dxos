@@ -236,7 +236,7 @@ export const createGptCircuit = (options: {
     if (options.history) {
       const queue = model.createNode(
         createConstant({
-          value: EchoURI.fromSpaceAndObjectId(SpaceId.random(), ObjectId.random()),
+          value: EchoURI.make({ spaceId: SpaceId.random(), objectId: ObjectId.random() }),
           ...position({ x: -18, y: 5, width: 8, height: 6 }),
         }),
       );

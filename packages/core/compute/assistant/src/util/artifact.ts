@@ -57,10 +57,10 @@ export const ArtifactId: Schema.Schema<string> & {
       // We check if the space ID is the same as the owning space and then use LOCAL_SPACE_TAG for local references.
       // TODO(dmaretskyi): Fix this in the Echo and Filter API to properly handle fully qualified URIs.
       return spaceId === owningSpaceId
-        ? EchoURI.fromLocalObjectId(objectId)
-        : EchoURI.fromSpaceAndObjectId(spaceId, objectId);
+        ? EchoURI.make({ objectId: objectId })
+        : EchoURI.make({ spaceId: spaceId, objectId: objectId });
     } else if (ObjectId.isValid(stripped)) {
-      return EchoURI.fromLocalObjectId(stripped);
+      return EchoURI.make({ objectId: stripped });
     } else {
       throw new Error(`Unable to parse object reference: ${reference}`);
     }

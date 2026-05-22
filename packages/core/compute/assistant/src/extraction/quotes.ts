@@ -49,7 +49,7 @@ export const insertReferences = (text: string, quotes: ReferencedQuotes) => {
 
     // Use a case-insensitive regular expression to replace the quote.
     const regex = new RegExp(quote.quote.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-    text = text.replace(regex, `[${quote.quote}](${EchoURI.fromLocalObjectId(quote.id)})`);
+    text = text.replace(regex, `[${quote.quote}](${EchoURI.make({ objectId: quote.id })})`);
   }
 
   return text;

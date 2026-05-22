@@ -239,7 +239,7 @@ export class IndexQuerySource implements QuerySource {
     if (result.queueId && result.documentJson) {
       invariant(ObjectId.isValid(result.queueId), 'Invalid queueId');
       const json = JSON.parse(result.documentJson);
-      const queueEchoId = EchoURI.fromSpaceAndObjectId(result.spaceId, result.queueId);
+      const queueEchoId = EchoURI.make({ spaceId: result.spaceId, objectId: result.queueId });
       const refResolver = this._params.graph.createRefResolver({
         context: { space: result.spaceId, feed: queueEchoId },
       });
@@ -248,7 +248,7 @@ export class IndexQuerySource implements QuerySource {
       try {
         object = await Obj.fromJSON(json, {
           refResolver,
-          uri: EchoURI.fromSpaceAndObjectId(result.spaceId, result.id),
+          uri: EchoURI.make({ spaceId: result.spaceId, objectId: result.id }),
           database,
         });
       } catch (err) {

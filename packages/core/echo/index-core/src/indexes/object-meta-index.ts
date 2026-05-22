@@ -480,7 +480,7 @@ export class ObjectMetaIndex implements Index {
         }
 
         const sql = yield* SqlClient.SqlClient;
-        const parentDzns = query.parentIds.map((id) => EchoURI.fromLocalObjectId(id));
+        const parentDzns = query.parentIds.map((id) => EchoURI.make({ objectId: id }));
         const parentDxns = parentDzns;
         const rows =
           yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE ${sql.in('spaceId', query.spaceId)} AND (${sql.in('parent', parentDxns)} OR ${sql.in('queueId', query.parentIds)})`;

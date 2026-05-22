@@ -128,7 +128,7 @@ export class QueueLogger implements SequenceLogger {
   }
 
   private _getTraceQueueEchoId(invocationId: ObjectId): EchoURI.EchoURI {
-    return EchoURI.fromSpaceAndObjectId(this._space.id, invocationId);
+    return EchoURI.make({ spaceId: this._space.id, objectId: invocationId });
   }
 
   private _appendToTraceFeed(items: any[]): Promise<void> {

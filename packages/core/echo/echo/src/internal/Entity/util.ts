@@ -30,5 +30,5 @@ export const getObjectEchoUri = (object: any): EchoURI.EchoURI | undefined => {
     throw new TypeError('Object id is not valid.');
   }
 
-  return EchoURI.fromLocalObjectId(object.id);
+  return EchoURI.make({ objectId: object.id });
 };
