@@ -9,7 +9,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 
-import { TripArticle } from '#containers';
+import { SegmentArticle, TripArticle } from '#containers';
 import { Trip } from '#types';
 
 export default Capability.makeModule(() =>
@@ -23,6 +23,17 @@ export default Capability.makeModule(() =>
         ),
         component: ({ data, role }) => (
           <TripArticle role={role} subject={data.subject} attendableId={data.attendableId} />
+        ),
+      }),
+      Surface.create({
+        id: 'surface.segment',
+        filter: AppSurface.companion(AppSurface.Article, Trip.Trip),
+        component: ({ data, role }) => (
+          <SegmentArticle
+            role={role}
+            attendableId={(data as unknown as { attendableId: string }).attendableId}
+            companionTo={data.companionTo}
+          />
         ),
       }),
     ]),
