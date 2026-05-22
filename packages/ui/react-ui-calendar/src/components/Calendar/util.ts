@@ -2,10 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Day, startOfDay } from 'date-fns';
-
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
-const MS_PER_WEEK = 7 * MS_PER_DAY;
+import { type Day, differenceInCalendarDays } from 'date-fns';
 
 export const getDate = (start: Date, weekNumber: number, dayOfWeek: number, weekStartsOn: Day): Date => {
   const result = new Date(start);
@@ -17,16 +14,20 @@ export const getDate = (start: Date, weekNumber: number, dayOfWeek: number, week
 
 /**
  * Inverse of {@link getDate}: returns the row index for a given date, matching
- * the grid layout (which respects `weekStartsOn`). NOTE: `differenceInWeeks`
- * from date-fns uses raw 7-day chunks anchored at the start date's weekday,
- * which does NOT match the grid's row breakdown when `start` and the target
- * fall on different weekdays — use this helper instead.
+ * the grid layout (which respects `weekStartsOn`).
+ *
+ * Uses `differenceInCalendarDays` (DST-safe) — naive ms subtraction silently
+ * loses an hour each DST transition, which accumulates over decades and
+ * eventually shifts the row boundary by one day. `differenceInWeeks` is also
+ * unsuitable because it computes raw 7-day chunks anchored at the start
+ * date's weekday rather than the grid's `weekStartsOn` column.
  */
 export const getRowIndex = (start: Date, date: Date, weekStartsOn: Day): number => {
   const startDayOfWeek = start.getDay();
   const adjustedStartDay = (startDayOfWeek === 0 ? 7 : startDayOfWeek) - weekStartsOn;
-  const row0Start = startOfDay(start).getTime() - adjustedStartDay * MS_PER_DAY;
-  return Math.floor((startOfDay(date).getTime() - row0Start) / MS_PER_WEEK);
+  const row0Start = new Date(start);
+  row0Start.setDate(start.getDate() - adjustedStartDay);
+  return Math.floor(differenceInCalendarDays(date, row0Start) / 7);
 };
 
 export const isSameDay = (date1: Date, date2: Date | undefined): boolean => {
