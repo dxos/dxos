@@ -37,27 +37,33 @@ export const stringToArray = (string: string): Uint8Array => bufferToArray(Buffe
 export const arrayToString = (array: Uint8Array): string => arrayToBuffer(array).toString('hex');
 
 /**
- * Marker key used to represent a `Uint8Array` in JSON.
- * Mirrors the `'/'` convention used by encoded references.
+ * JSON-safe representation of a `Uint8Array`, per the IPLD DAG-JSON spec.
+ * https://ipld.io/specs/codecs/dag-json/spec/#bytes
+ *
+ * Bytes are encoded as `{ "/": { "bytes": "<base64-no-padding>" } }`.
+ * Distinguishable from encoded references `{ "/": "<string>" }` by the type of the `/` value.
  */
-export const UINT8ARRAY_JSON_KEY = '/uint8array';
+export type EncodedUint8Array = { '/': { bytes: string } };
 
-/**
- * JSON-safe representation of a `Uint8Array`.
- * The bytes are encoded as a base64 string under the {@link UINT8ARRAY_JSON_KEY} marker.
- */
-export type EncodedUint8Array = { [UINT8ARRAY_JSON_KEY]: string };
+const toUnpaddedBase64 = (bytes: Uint8Array): string => arrayToBuffer(bytes).toString('base64').replace(/=+$/, '');
 
 export const encodeUint8ArrayToJson = (bytes: Uint8Array): EncodedUint8Array => ({
-  [UINT8ARRAY_JSON_KEY]: arrayToBuffer(bytes).toString('base64'),
+  '/': { bytes: toUnpaddedBase64(bytes) },
 });
 
-export const isEncodedUint8Array = (value: unknown): value is EncodedUint8Array =>
-  typeof value === 'object' &&
-  value !== null &&
-  !Array.isArray(value) &&
-  typeof (value as any)[UINT8ARRAY_JSON_KEY] === 'string' &&
-  Object.keys(value).length === 1;
+export const isEncodedUint8Array = (value: unknown): value is EncodedUint8Array => {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false;
+  }
+  if (Object.keys(value).length !== 1) {
+    return false;
+  }
+  const inner = (value as any)['/'];
+  if (typeof inner !== 'object' || inner === null || Array.isArray(inner)) {
+    return false;
+  }
+  return Object.keys(inner).length === 1 && typeof inner.bytes === 'string';
+};
 
 export const decodeUint8ArrayFromJson = (encoded: EncodedUint8Array): Uint8Array =>
-  bufferToArray(Buffer.from(encoded[UINT8ARRAY_JSON_KEY], 'base64'));
+  bufferToArray(Buffer.from(encoded['/'].bytes, 'base64'));
