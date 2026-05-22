@@ -77,8 +77,18 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
     log('connecting...', { peerId: context.peerId, connectedSpaces: this._connectedSpaces.size });
     this._context = context;
     this._ctx = ctx.derive();
+    // See note in `EdgeSubductionReplicatorConnection._open`: skip the synthetic
+    // reconnect fired at registration time; only react to real WS bounces.
+    let registrationGeneration: number | undefined;
     this._ctx.onDispose(
-      this._edgeConnection.onReconnected(() => {
+      this._edgeConnection.onReconnected((generation: number) => {
+        if (registrationGeneration === undefined) {
+          registrationGeneration = generation;
+          return;
+        }
+        if (generation <= registrationGeneration) {
+          return;
+        }
         this._ctx && scheduleMicroTask(this._ctx, () => this._handleReconnect());
       }),
     );
@@ -264,15 +274,31 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
       }),
     );
 
-    let firstReconnect = true;
+    // Track the WS generation at registration time. Only restart on real WS
+    // bounces (generation > registrationGeneration), NOT on the synthetic
+    // microtask call that `EdgeClient.onReconnected` fires when the listener
+    // is registered against an already-connected client (generation ===
+    // registrationGeneration).
+    //
+    // The earlier `firstReconnect` boolean was racy: a real reconnect
+    // triggered by `EdgeClient.setIdentity()` between handshake-send and
+    // handshake-response (which happens when the guest's `createIdentity` /
+    // device-admission finalises after `connectToSpace`) was consuming the
+    // skip slot meant for the synthetic call, killing the in-progress
+    // handshake and dropping the 141-byte response on a torn-down connection.
+    let registrationGeneration: number | undefined;
     this._ctx.onDispose(
-      this._edgeConnection.onReconnected(async () => {
-        if (firstReconnect) {
-          log.verbose('first reconnect skipped');
-          firstReconnect = false;
+      this._edgeConnection.onReconnected(async (generation: number) => {
+        if (registrationGeneration === undefined) {
+          registrationGeneration = generation;
+          log.verbose('registered onReconnected', { generation });
           return;
         }
-
+        if (generation <= registrationGeneration) {
+          log.verbose('skipping reconnect at same generation', { generation });
+          return;
+        }
+        log.info('restart on real ws reconnect', { from: registrationGeneration, to: generation });
         this._onRestartRequested();
       }),
     );

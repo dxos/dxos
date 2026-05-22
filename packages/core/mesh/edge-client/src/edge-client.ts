@@ -29,7 +29,13 @@ const DEFAULT_TIMEOUT = 10_000;
 const STATUS_REFRESH_INTERVAL = 1000;
 
 export type MessageListener = (message: Message) => void;
-export type ReconnectListener = () => void;
+/**
+ * Reconnect listener. Receives the current `connectionGeneration` so the
+ * listener can distinguish the synthetic call fired at registration time
+ * (generation === captured-at-registration) from a real WS bounce
+ * (generation > captured-at-registration).
+ */
+export type ReconnectListener = (connectionGeneration: number) => void;
 
 export type MessengerConfig = {
   socketEndpoint: string;
@@ -73,6 +79,24 @@ export class EdgeClient extends Resource implements EdgeConnection {
   private readonly _baseHttpUrl: string;
   private _currentConnection?: EdgeWsConnection = undefined;
   private _ready = new Trigger();
+  /**
+   * Counter incremented on every successful WS connect (i.e. each time
+   * `_notifyReconnected` fires from `onConnected`). Listeners registered via
+   * `onReconnected` can compare the value passed at registration-time (via
+   * the synthetic microtask call) against the value of subsequent invocations
+   * to distinguish the synthetic "you're already connected" callback from a
+   * real WS bounce.
+   *
+   * Without this, `EdgeSubductionReplicatorConnection` cannot reliably tell a
+   * benign synthetic reconnect from a real one: an `EdgeClient.setIdentity()`
+   * call between handshake-send and handshake-response (which is what happens
+   * when the guest's `createIdentity` / device-admission flows complete after
+   * the subduction connection is created) bumps the WS, fires a real reconnect,
+   * and tears down the subduction connection mid-handshake — the 141-byte
+   * handshake response from edge then targets a stale `_remotePeerId` and is
+   * silently dropped on the client.
+   */
+  private _connectionGeneration = 0;
 
   constructor(
     private _identity: EdgeIdentity,
@@ -163,15 +187,18 @@ export class EdgeClient extends Resource implements EdgeConnection {
     return () => this._messageListeners.delete(listener);
   }
 
-  public onReconnected(listener: () => void) {
+  public onReconnected(listener: ReconnectListener) {
     this._reconnectListeners.add(listener);
     if (this._ready.state === TriggerState.RESOLVED) {
       // Microtask so that listener is always called asynchronously, no matter the state of the ready trigger
-      // at the moment of registration.
+      // at the moment of registration. The generation captured here is the CURRENT
+      // generation — listeners can compare against this in subsequent calls to
+      // tell synthetic vs real reconnects apart.
+      const generation = this._connectionGeneration;
       scheduleMicroTask(this._ctx, () => {
         if (this._reconnectListeners.has(listener)) {
           try {
-            listener();
+            listener(generation);
           } catch (error) {
             log.catch(error);
           }
@@ -288,10 +315,11 @@ export class EdgeClient extends Resource implements EdgeConnection {
   }
 
   private _notifyReconnected(): void {
+    this._connectionGeneration++;
     this.statusChanged.emit(this.status);
     for (const listener of this._reconnectListeners) {
       try {
-        listener();
+        listener(this._connectionGeneration);
       } catch (err) {
         log.error('ws reconnect listener failed', { err });
       }
