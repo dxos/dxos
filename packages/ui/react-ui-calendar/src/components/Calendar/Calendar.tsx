@@ -6,6 +6,7 @@ import { createContext } from '@radix-ui/react-context';
 import { type Day, addDays, differenceInWeeks, format, startOfDay, startOfWeek } from 'date-fns';
 import React, {
   type Dispatch,
+  type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
   type PropsWithChildren,
   type SetStateAction,
@@ -32,6 +33,10 @@ const maxRows = 50 * 100;
 const start = new Date('1970-01-01');
 const size = 48;
 const defaultWidth = 7 * size;
+
+// Auto-scroll while dragging near a vertical edge.
+const EDGE_SCROLL_ZONE = 32; // px
+const EDGE_SCROLL_MAX_SPEED = 12; // px per frame
 
 //
 // Range
@@ -62,6 +67,19 @@ const isInRange = (date: Date, range: Range | undefined): boolean => {
   return day >= range.from.getTime() && day <= range.to.getTime();
 };
 
+/** Resolve a DOM element back to the Date its cell represents. */
+const cellDate = (el: Element | null): Date | undefined => {
+  let current: Element | null = el;
+  while (current && current !== document.body) {
+    const iso = current.getAttribute?.('data-date');
+    if (iso) {
+      return new Date(iso);
+    }
+    current = current.parentElement;
+  }
+  return undefined;
+};
+
 //
 // Context
 //
@@ -78,7 +96,7 @@ type CalendarContextValue = {
   setIndex: Dispatch<SetStateAction<number | undefined>>;
   selected: Date | undefined;
   setSelected: Dispatch<SetStateAction<Date | undefined>>;
-  /** Committed date range, set by the most recent drag selection. */
+  /** Committed date range, set by the most recent drag or shift+arrow selection. */
   range: Range | undefined;
   setRange: Dispatch<SetStateAction<Range | undefined>>;
   /** Live drag preview; non-undefined only while the user is dragging. */
@@ -186,7 +204,6 @@ CalendarToolbar.displayName = CALENDAR_TOOLBAR_NAME;
 
 //
 // Grid
-// TODO(burdon): Key nav.
 //
 
 const CALENDAR_GRID_NAME = 'CalendarGrid';
@@ -195,12 +212,12 @@ type CalendarGridProps = {
   rows?: number;
   /** Dates to highlight on the grid. Each date that appears in this array receives a border indicator. */
   dates?: Date[];
-  /** Fired when a user clicks a single date (no drag). */
+  /** Fired when a user selects a single date (click or arrow key). */
   onSelect?: (event: { date: Date }) => void;
   /**
-   * Fired when a user completes a drag across multiple days. Not fired on a
-   * single-click (use {@link onSelect} for that). The range is normalized:
-   * `from <= to`, both at start-of-day.
+   * Fired when a user commits a multi-day range, either by a drag gesture or
+   * by shift+arrow extension. The range is normalized: `from <= to`, both at
+   * start-of-day. Not fired for single-day selections (use {@link onSelect}).
    */
   onSelectRange?: (event: { range: Range }) => void;
 };
@@ -212,6 +229,7 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
     const { ref: containerRef, width = 0, height = 0 } = useResizeDetector();
     const maxHeight = rows ? rows * size : undefined;
     const listRef = useRef<List>(null);
+    const gridRef = useRef<HTMLDivElement>(null);
     const today = useMemo(() => new Date(), []);
 
     // Build a set of ISO date strings (YYYY-MM-DD) for O(1) per-cell lookup.
@@ -246,43 +264,87 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
     }, []);
 
     //
+    // Selection refs.
+    //
+    // `anchorRef` is the immovable end of a range gesture (pointerdown date or
+    // initial day when shift+arrow starts). `focusRef` is the moving end
+    // (pointer-under-cursor during drag, or the cursor after each shift+arrow).
+    // Both refs are kept in sync across mouse drag and keyboard nav so that
+    // the user can fluidly mix gestures (e.g., drag a range, then shift+arrow
+    // to fine-tune).
+    //
+    const anchorRef = useRef<Date | undefined>(undefined);
+    const focusRef = useRef<Date | undefined>(undefined);
+    const draggingRef = useRef(false);
+
+    // Pointer tracking for edge-scroll while dragging.
+    const pointerXRef = useRef<number>(0);
+    const pointerYRef = useRef<number>(0);
+    const scrollTopRef = useRef(0);
+    const scrollRafRef = useRef<number | undefined>(undefined);
+
+    const scrollToDate = useCallback((date: Date) => {
+      const index = differenceInWeeks(date, start);
+      listRef.current?.scrollToRow(index);
+    }, []);
+
+    const updateRangeFromAnchor = useCallback(
+      (focus: Date, fireRange = false) => {
+        const anchor = anchorRef.current;
+        if (!anchor) {
+          return;
+        }
+        focusRef.current = focus;
+        if (isSameDay(anchor, focus)) {
+          setRange(undefined);
+          setSelected(anchor);
+        } else {
+          setSelected(undefined);
+          const committed = makeRange(anchor, focus);
+          setRange(committed);
+          if (fireRange) {
+            onSelectRange?.({ range: committed });
+          }
+        }
+      },
+      [onSelectRange, setRange, setSelected],
+    );
+
+    //
     // Drag-to-select range.
     //
-    // Pointer down on a cell anchors the drag. Pointer enter on any cell while
-    // dragging updates the pending range. Pointer up on a cell commits: if the
-    // anchor and release are the same day, this is treated as a single-click
-    // selection (fires onSelect); otherwise it commits a range (fires
-    // onSelectRange). A global pointer-up listener cancels the drag when
-    // released outside the grid.
-    //
-    const dragAnchorRef = useRef<Date | undefined>(undefined);
-
     const handleDayPointerDown = useCallback(
       (date: Date, ev: ReactPointerEvent<HTMLDivElement>) => {
-        // Prevent text selection while dragging.
         ev.preventDefault();
-        dragAnchorRef.current = date;
-        // Immediate visual feedback: render the single-select ring on the anchor
-        // day. If the pointer enters another cell we'll promote to a range.
+        anchorRef.current = date;
+        focusRef.current = date;
+        draggingRef.current = true;
+        // Immediate visual feedback: render the single-select ring on the anchor day.
         setRange(undefined);
+        setPendingRange(undefined);
         setSelected(date);
+        // Focus the grid so subsequent keyboard nav works.
+        gridRef.current?.focus({ preventScroll: true });
       },
-      [setRange, setSelected],
+      [setPendingRange, setRange, setSelected],
     );
 
     const handleDayPointerEnter = useCallback(
       (date: Date) => {
-        const anchor = dragAnchorRef.current;
+        if (!draggingRef.current) {
+          return;
+        }
+        const anchor = anchorRef.current;
         if (!anchor) {
           return;
         }
+        focusRef.current = date;
         if (isSameDay(anchor, date)) {
           // Still on the anchor cell — keep the single-select ring, no range yet.
           setPendingRange(undefined);
           return;
         }
-        // Pointer has moved to a different cell — promote to range and clear
-        // the single-select ring.
+        // Pointer moved to a different cell — promote to range and clear the ring.
         setSelected(undefined);
         setPendingRange(makeRange(anchor, date));
       },
@@ -291,12 +353,14 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
 
     const handleDayPointerUp = useCallback(
       (date: Date) => {
-        const anchor = dragAnchorRef.current;
-        dragAnchorRef.current = undefined;
+        const anchor = anchorRef.current;
+        const wasDragging = draggingRef.current;
+        draggingRef.current = false;
         setPendingRange(undefined);
-        if (!anchor) {
+        if (!wasDragging || !anchor) {
           return;
         }
+        focusRef.current = date;
         if (isSameDay(anchor, date)) {
           // Single click — `selected` was already set on pointerdown.
           onSelect?.({ date });
@@ -313,8 +377,8 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
     // Cancel drag if the pointer is released outside the grid.
     useEffect(() => {
       const cancel = () => {
-        if (dragAnchorRef.current) {
-          dragAnchorRef.current = undefined;
+        if (draggingRef.current) {
+          draggingRef.current = false;
           setPendingRange(undefined);
         }
       };
@@ -326,9 +390,134 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
       };
     }, [setPendingRange]);
 
+    //
+    // Edge auto-scroll while dragging near top/bottom of the grid viewport.
+    //
+    const tickEdgeScroll = useCallback(() => {
+      scrollRafRef.current = undefined;
+      if (!draggingRef.current) {
+        return;
+      }
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) {
+        return;
+      }
+      const y = pointerYRef.current;
+      let delta = 0;
+      if (y < rect.top + EDGE_SCROLL_ZONE) {
+        delta = -EDGE_SCROLL_MAX_SPEED * Math.min(1, Math.max(0, (rect.top + EDGE_SCROLL_ZONE - y) / EDGE_SCROLL_ZONE));
+      } else if (y > rect.bottom - EDGE_SCROLL_ZONE) {
+        delta =
+          EDGE_SCROLL_MAX_SPEED * Math.min(1, Math.max(0, (y - (rect.bottom - EDGE_SCROLL_ZONE)) / EDGE_SCROLL_ZONE));
+      }
+      if (delta !== 0) {
+        const newScroll = Math.max(0, scrollTopRef.current + delta);
+        listRef.current?.scrollToPosition(newScroll);
+        // After scroll, the cell under the (stationary) pointer changes.
+        // Look up the new cell and update the pending range accordingly.
+        const date = cellDate(document.elementFromPoint(pointerXRef.current, y));
+        const anchor = anchorRef.current;
+        if (date && anchor) {
+          focusRef.current = date;
+          if (isSameDay(anchor, date)) {
+            setPendingRange(undefined);
+            setSelected(anchor);
+          } else {
+            setSelected(undefined);
+            setPendingRange(makeRange(anchor, date));
+          }
+        }
+        scrollRafRef.current = requestAnimationFrame(tickEdgeScroll);
+      }
+    }, [containerRef, setPendingRange, setSelected]);
+
+    useEffect(() => {
+      const handleMove = (ev: PointerEvent) => {
+        if (!draggingRef.current) {
+          return;
+        }
+        pointerXRef.current = ev.clientX;
+        pointerYRef.current = ev.clientY;
+        if (scrollRafRef.current === undefined) {
+          scrollRafRef.current = requestAnimationFrame(tickEdgeScroll);
+        }
+      };
+      window.addEventListener('pointermove', handleMove);
+      return () => {
+        window.removeEventListener('pointermove', handleMove);
+        if (scrollRafRef.current !== undefined) {
+          cancelAnimationFrame(scrollRafRef.current);
+          scrollRafRef.current = undefined;
+        }
+      };
+    }, [tickEdgeScroll]);
+
+    //
+    // Keyboard nav: arrow keys move single selection; shift+arrow expands range.
+    //
+    const handleKeyDown = useCallback(
+      (ev: ReactKeyboardEvent<HTMLDivElement>) => {
+        let dx = 0;
+        switch (ev.key) {
+          case 'ArrowLeft':
+            dx = -1;
+            break;
+          case 'ArrowRight':
+            dx = 1;
+            break;
+          case 'ArrowUp':
+            dx = -7;
+            break;
+          case 'ArrowDown':
+            dx = 7;
+            break;
+          default:
+            return;
+        }
+        ev.preventDefault();
+
+        if (ev.shiftKey) {
+          // Bootstrap anchor/focus from current state if needed.
+          let anchor = anchorRef.current;
+          let focus = focusRef.current;
+          if (!anchor) {
+            // No prior gesture — seed from current selected/range/today.
+            if (selected) {
+              anchor = startOfDay(selected);
+              focus = anchor;
+            } else if (range) {
+              anchor = range.from;
+              focus = range.to;
+            } else {
+              anchor = startOfDay(today);
+              focus = anchor;
+            }
+            anchorRef.current = anchor;
+            focusRef.current = focus;
+          }
+          const newFocus = addDays(focus ?? anchor, dx);
+          updateRangeFromAnchor(newFocus, true);
+          scrollToDate(newFocus);
+        } else {
+          // Plain arrow — move single selection; clear any range gesture state.
+          const current = selected ?? focusRef.current ?? anchorRef.current ?? today;
+          const next = addDays(startOfDay(current), dx);
+          anchorRef.current = next;
+          focusRef.current = next;
+          setRange(undefined);
+          setPendingRange(undefined);
+          setSelected(next);
+          onSelect?.({ date: next });
+          scrollToDate(next);
+        }
+      },
+      [onSelect, range, scrollToDate, selected, setPendingRange, setRange, setSelected, today, updateRangeFromAnchor],
+    );
+
     const activeRange = pendingRange ?? range;
 
     const handleScroll = useCallback<NonNullable<ListProps['onScroll']>>((info) => {
+      scrollTopRef.current = info.scrollTop;
       setIndex(Math.round(info.scrollTop / size));
     }, []);
 
@@ -352,6 +541,7 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
                 return (
                   <div
                     key={i}
+                    data-date={startOfDay(date).toISOString()}
                     className={mx(
                       'relative flex justify-center items-center cursor-pointer select-none',
                       getBgColor(date),
@@ -380,9 +570,18 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
       <div
         {...composableProps(props, {
           role: 'none',
-          classNames: ['flex flex-col h-full w-full justify-center overflow-hidden', classNames],
+          classNames: ['flex flex-col h-full w-full justify-center overflow-hidden outline-hidden', classNames],
         })}
-        ref={forwardedRef}
+        ref={(node: HTMLDivElement | null) => {
+          gridRef.current = node;
+          if (typeof forwardedRef === 'function') {
+            forwardedRef(node);
+          } else if (forwardedRef) {
+            (forwardedRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+          }
+        }}
+        tabIndex={0}
+        onKeyDown={handleKeyDown}
       >
         {/* Day of week labels */}
         <div className='grid w-full grid-cols-7' style={{ width: defaultWidth }}>
