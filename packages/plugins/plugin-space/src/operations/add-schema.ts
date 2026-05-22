@@ -4,7 +4,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability, Plugin } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Obj } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 
 import { SpaceEvents, SpaceCapabilities } from '../types';
@@ -16,15 +16,15 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddSchema> = SpaceOpe
       const db = input.db;
       const schemas = yield* Effect.promise(() => db.schemaRegistry.register([input.schema]));
       const schema = schemas[0];
-      Obj.update(schema.persistentSchema, (obj) => {
+      Type.update(schema, (draft) => {
         if (input.name) {
-          obj.name = input.name;
+          (draft as any).name = input.name;
         }
         if (input.typename) {
-          obj.typename = input.typename;
+          draft.typename = input.typename;
         }
         if (input.version) {
-          obj.version = input.version;
+          draft.version = input.version;
         }
       });
 
@@ -44,7 +44,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddSchema> = SpaceOpe
         },
       });
 
-      return { id: schema.id, object: schema.persistentSchema, schema };
+      return { id: schema.id, object: schema.persistentSchema as any, schema };
     }),
   ),
 );

@@ -792,9 +792,8 @@ describe('ProjectionModel', () => {
     expect(projectionModel.getHiddenFields()[0].path).to.equal('title');
 
     // Modify the schema - add a field.
-    // Type assertion needed because PersistentSchema's type doesn't include [KindId] but runtime value does.
-    Obj.update(mutable.persistentSchema as unknown as Obj.Unknown, (s: any) => {
-      s.jsonSchema.properties!.status = { type: 'string' };
+    Type.update(mutable, (draft) => {
+      (draft.jsonSchema as any).properties!.status = { type: 'string' };
     });
     projectionModel.normalizeView();
 

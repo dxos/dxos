@@ -6,7 +6,7 @@ import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
-import { Format, Obj, View } from '@dxos/echo';
+import { Format, Obj, Type, View } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import {
   EchoSchema,
@@ -66,14 +66,13 @@ export const createEchoChangeCallback = (
 ): ProjectionChangeCallback => ({
   // Inside Obj.update, v is Mutable<View.View>, so v.projection is already mutable.
   projection: (mutate) => Obj.update(view, (view) => mutate(view.projection as Mutable<View.Projection>)),
-  schema:
-    schema instanceof EchoSchema
-      ? (mutate) => Obj.update(schema.persistentSchema as unknown as Obj.Unknown, (s: any) => mutate(s.jsonSchema))
-      : schema
-        ? (mutate) => mutate(schema)
-        : () => {
-            throw new Error('Schema is not mutable');
-          },
+  schema: Type.isMutable(schema as any)
+    ? (mutate) => Type.update(schema as EchoSchema, (draft) => mutate(draft.jsonSchema as Types.DeepMutable<JsonSchemaType>))
+    : schema
+      ? (mutate) => mutate(schema as Types.DeepMutable<JsonSchemaType>)
+      : () => {
+          throw new Error('Schema is not mutable');
+        },
 });
 
 /**
