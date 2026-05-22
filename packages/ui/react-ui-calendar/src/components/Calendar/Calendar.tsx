@@ -283,10 +283,29 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
     const scrollTopRef = useRef(0);
     const scrollRafRef = useRef<number | undefined>(undefined);
 
-    const scrollToDate = useCallback((date: Date) => {
-      const index = differenceInWeeks(date, start);
-      listRef.current?.scrollToRow(index);
-    }, []);
+    // Scroll the target date into view only if it's outside the visible window.
+    // Horizontal moves (left/right within the same week) leave the row index
+    // unchanged and are a no-op.
+    const scrollIntoView = useCallback(
+      (date: Date) => {
+        const targetRow = differenceInWeeks(date, start);
+        const visibleHeight = maxHeight ?? height;
+        if (!visibleHeight) {
+          return;
+        }
+        const firstVisibleRow = Math.floor(scrollTopRef.current / size);
+        const lastVisibleRow = firstVisibleRow + Math.floor(visibleHeight / size) - 1;
+        if (targetRow < firstVisibleRow) {
+          listRef.current?.scrollToRow(targetRow);
+        } else if (targetRow > lastVisibleRow) {
+          // Place the target row at the bottom of the viewport.
+          listRef.current?.scrollToPosition(
+            Math.max(0, (targetRow + 1) * size - Math.floor(visibleHeight / size) * size),
+          );
+        }
+      },
+      [height, maxHeight],
+    );
 
     const updateRangeFromAnchor = useCallback(
       (focus: Date, fireRange = false) => {
@@ -497,7 +516,7 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
           }
           const newFocus = addDays(focus ?? anchor, dx);
           updateRangeFromAnchor(newFocus, true);
-          scrollToDate(newFocus);
+          scrollIntoView(newFocus);
         } else {
           // Plain arrow — move single selection; clear any range gesture state.
           const current = selected ?? focusRef.current ?? anchorRef.current ?? today;
@@ -508,10 +527,10 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
           setPendingRange(undefined);
           setSelected(next);
           onSelect?.({ date: next });
-          scrollToDate(next);
+          scrollIntoView(next);
         }
       },
-      [onSelect, range, scrollToDate, selected, setPendingRange, setRange, setSelected, today, updateRangeFromAnchor],
+      [onSelect, range, scrollIntoView, selected, setPendingRange, setRange, setSelected, today, updateRangeFromAnchor],
     );
 
     const activeRange = pendingRange ?? range;
