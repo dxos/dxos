@@ -38,8 +38,10 @@ test.describe('HALO tests', () => {
 
     await host.createSpace();
 
-    await expect(host.getSpaceItems()).toHaveCount(2);
-    await expect(guest.getSpaceItems()).toHaveCount(1);
+    // Personal space + exemplar space + newly created space = 3.
+    await expect(host.getSpaceItems()).toHaveCount(3);
+    // By the time host.createSpace() completes (>500ms), the exemplar has loaded on the guest too.
+    await expect(guest.getSpaceItems()).toHaveCount(2);
 
     await host.openUserDevices();
     const invitationCode = await host.createDeviceInvitation();
@@ -53,10 +55,11 @@ test.describe('HALO tests', () => {
     await guest.shell.acceptDeviceInvitation(invitationCode);
     await guest.shell.authenticateDevice(authCode);
 
-    await expect(host.getSpaceItems()).toHaveCount(2);
+    // Host still has 3 spaces (unchanged).
+    await expect(host.getSpaceItems()).toHaveCount(3);
     // TODO(wittjosiah): Why so slow?
-    // Wait for replication to complete.
-    await expect(guest.getSpaceItems()).toHaveCount(2, { timeout: 60_000 });
+    // Wait for replication to complete — guest inherits all 3 of host's spaces.
+    await expect(guest.getSpaceItems()).toHaveCount(3, { timeout: 60_000 });
 
     // TODO(wittjosiah): Display name is not currently set in this test.
     // await host.openIdentityManager();

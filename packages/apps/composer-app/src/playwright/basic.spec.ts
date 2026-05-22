@@ -36,7 +36,8 @@ test.describe('Basic tests', () => {
 
   test('create space, which is displayed in tree', async () => {
     await host.createSpace();
-    await expect(host.getSpaceItems()).toHaveCount(2);
+    // Personal space + exemplar space + newly created space = 3.
+    await expect(host.getSpaceItems()).toHaveCount(3);
   });
 
   test('create document', async () => {
@@ -99,7 +100,8 @@ test.describe('Basic tests', () => {
     }
 
     await host.createSpace();
-    await expect(host.getSpaceItems()).toHaveCount(2);
+    // Personal space + exemplar space + newly created space = 3.
+    await expect(host.getSpaceItems()).toHaveCount(3);
 
     await host.openUserDevices();
     await host.resetDevice();
@@ -107,6 +109,7 @@ test.describe('Basic tests', () => {
     await host.page.waitForRequest(INITIAL_URL, { timeout: 45_000 });
     // Post-reset boot (page reload + bundle parse + identity creation) is ~8-11s;
     // 30s gives ~3x headroom over the observed worst case.
-    await expect(host.getSpaceItems()).toHaveCount(1, { timeout: 30_000 });
+    // After reset the exemplar space is re-seeded alongside the personal space = 2.
+    await expect(host.getSpaceItems()).toHaveCount(2, { timeout: 30_000 });
   });
 });
