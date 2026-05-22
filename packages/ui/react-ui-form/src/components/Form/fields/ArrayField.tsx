@@ -110,27 +110,34 @@ export const ArrayField = ({
         {values?.map((_, index) => {
           if (renderItemAsObject) {
             return (
-              <div key={index} className='flex flex-col'>
+              <div key={index} className='flex flex-col border border-subdued-separator p-1 mb-1'>
+                {!readonly && layout !== 'static' && (
+                  <div className='flex items-center justify-end'>
+                    <IconButton
+                      iconOnly
+                      density='fine'
+                      variant='ghost'
+                      icon='ph--x--regular'
+                      label={t('remove-item.button')}
+                      onClick={() => handleDelete(index)}
+                    />
+                  </div>
+                )}
                 <FormField
                   {...props}
                   autoFocus={index === values.length - 1}
                   type={elementType}
-                  // Override the array's field name (e.g. `signaling`) with
-                  // the item's index so each item is labelled `[0]`, `[1]`,
-                  // ... instead of repeating the same key for every entry.
-                  name={`[${index}]`}
+                  // Suppress the nested struct's header label: a row labelled
+                  // by the parent's field name (e.g. "Signaling") would
+                  // repeat for every item, and the item index is already
+                  // implicit from the stacking order. `name=''` makes the
+                  // downstream label fall through to `String.capitalize('')`
+                  // -> '', which `FormFieldSet` treats as "no header".
+                  name=''
                   path={[...(path ?? []), index]}
                   readonly={readonly || layout === 'static'}
                   layout={layout === 'static' ? 'static' : undefined}
                 />
-                {!readonly && layout !== 'static' && (
-                  <IconButton
-                    classNames='flex w-full mt-form-gap'
-                    icon='ph--x--regular'
-                    label={t('remove-item.button')}
-                    onClick={() => handleDelete(index)}
-                  />
-                )}
               </div>
             );
           }
