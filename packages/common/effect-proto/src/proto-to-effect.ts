@@ -51,27 +51,51 @@ export const parseProto = (source: string): ProtoRegistry => {
 
   const { messages, enums } = collectDeclarations(parsed.root);
   const schemas = new Map<string, Schema.Schema<any>>();
+  const building = new Set<string>();
 
-  const lazyRef = (fullName: string): Schema.Schema<any> =>
-    Schema.suspend(() => {
-      const found = schemas.get(fullName);
-      if (!found) {
-        throw new Error(`effect-proto: unresolved message reference "${fullName}"`);
-      }
-      return found;
-    });
-
-  for (const [fullName, type] of messages) {
+  // Build a message's schema on demand. Cross-references that aren't in a
+  // cycle resolve to the concrete `Schema.Struct` directly, which is what
+  // downstream introspection (e.g. `effect/SchemaAST.encodedBoundAST` used
+  // by `@dxos/react-ui-form`) needs to recurse into nested fields. Only
+  // genuine cycles (a message that transitively references itself, like
+  // `Module.deps: repeated Module`) get wrapped in `Schema.suspend` to
+  // break the recursion.
+  const buildMessage = (fullName: string): Schema.Schema<any> => {
+    const cached = schemas.get(fullName);
+    if (cached) {
+      return cached;
+    }
+    if (building.has(fullName)) {
+      return Schema.suspend(() => {
+        const resolved = schemas.get(fullName);
+        if (!resolved) {
+          throw new Error(`effect-proto: unresolved message reference "${fullName}"`);
+        }
+        return resolved;
+      });
+    }
+    const type = messages.get(fullName);
+    if (!type) {
+      throw new Error(`effect-proto: unknown message type "${fullName}"`);
+    }
+    building.add(fullName);
     const fields: Record<string, Schema.PropertySignature<'?:', any, never, '?:', any, false, never>> = {};
     for (const field of type.fieldsArray) {
       const jsonName = protobuf.util.camelCase(field.name);
-      const base = fieldToSchema(field, lazyRef);
+      const base = fieldToSchema(field, buildMessage);
       const arr = field.repeated ? Schema.Array(base) : base;
       // proto3: every field is effectively optional (codec uses `defaults: false`,
       // so absent fields are `undefined` in the decoded object).
       fields[jsonName] = Schema.optional(arr);
     }
-    schemas.set(fullName, Schema.Struct(fields));
+    const schema = Schema.Struct(fields);
+    schemas.set(fullName, schema);
+    building.delete(fullName);
+    return schema;
+  };
+
+  for (const fullName of messages.keys()) {
+    buildMessage(fullName);
   }
 
   return {
@@ -140,10 +164,11 @@ const stripLeadingDot = (name: string): string => (name.startsWith('.') ? name.s
 
 /**
  * Map one proto field's type to an Effect Schema, ignoring `repeated` and
- * optionality (the caller wraps those). Recurses through `lazyRef` for
- * message references so cyclic types work.
+ * optionality (the caller wraps those). Delegates to `resolveRef` for message
+ * references, which returns the concrete struct schema for already-built
+ * targets and `Schema.suspend` for in-progress (cyclic) ones.
  */
-const fieldToSchema = (field: protobuf.Field, lazyRef: (fq: string) => Schema.Schema<any>): Schema.Schema<any> => {
+const fieldToSchema = (field: protobuf.Field, resolveRef: (fq: string) => Schema.Schema<any>): Schema.Schema<any> => {
   // Scalars don't have `resolvedType`; switch on the parser-level `type` string.
   const scalar = SCALAR_SCHEMAS[field.type];
   if (scalar) {
@@ -166,7 +191,7 @@ const fieldToSchema = (field: protobuf.Field, lazyRef: (fq: string) => Schema.Sc
   }
 
   if (resolved instanceof protobuf.Type) {
-    return lazyRef(fq);
+    return resolveRef(fq);
   }
 
   throw new Error(`effect-proto: unsupported resolved type for field "${field.fullName}"`);

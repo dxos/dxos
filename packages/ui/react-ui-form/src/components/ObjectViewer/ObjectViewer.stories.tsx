@@ -15,6 +15,8 @@ import configProto from '@dxos/protocols/proto/dxos/config.proto?raw';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { translations } from '#translations';
+
 import { Form } from '../Form';
 import { ObjectViewer } from './ObjectViewer';
 
@@ -72,7 +74,10 @@ const meta = {
   title: 'ui/react-ui-form/ObjectViewer',
   component: ObjectViewer,
   decorators: [withTheme(), withLayout({ layout: 'column', scroll: true })],
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
 } satisfies Meta<typeof ObjectViewer>;
 
 export default meta;
