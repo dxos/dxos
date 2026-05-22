@@ -54,12 +54,12 @@ describe('ObjectMetaIndex', () => {
 
       yield* index.update([item]);
 
-      const results = yield* index.query({ spaceId, typeDxn: TYPE_PERSON_VERSIONLESS });
+      const results = yield* index.query({ spaceId, typeDXN: TYPE_PERSON_VERSIONLESS });
       expect(results.map((_) => _.objectId)).toEqual([objectId]);
 
       const otherTypeResults = yield* index.query({
         spaceId,
-        typeDxn: DXN.make('com.example.type.other'),
+        typeDXN: DXN.make('com.example.type.other'),
       });
       expect(otherTypeResults).toEqual([]);
     }).pipe(Effect.provide(TestLayer)),
@@ -105,7 +105,7 @@ describe('ObjectMetaIndex', () => {
 
       yield* index.update([match, falsePositive]);
 
-      const queryResults = yield* index.query({ spaceId, typeDxn: TYPE_WITH_UNDERSCORE_VERSIONLESS });
+      const queryResults = yield* index.query({ spaceId, typeDXN: TYPE_WITH_UNDERSCORE_VERSIONLESS });
       expect(queryResults.map((_) => _.objectId)).toEqual([objectIdMatch]);
 
       const queryTypesResults = yield* index.queryTypes({
@@ -160,12 +160,12 @@ describe('ObjectMetaIndex', () => {
       yield* index.update([item1, item2]);
 
       // Verify Query.
-      const results = yield* index.query({ spaceId, typeDxn: TYPE_PERSON });
+      const results = yield* index.query({ spaceId, typeDXN: TYPE_PERSON });
       expect(results.length).toBe(1);
       expect(results[0].objectId).toBe(objectId1);
       expect(results[0].version).toBe(1);
 
-      const relationResults = yield* index.query({ spaceId, typeDxn: TYPE_RELATION });
+      const relationResults = yield* index.query({ spaceId, typeDXN: TYPE_RELATION });
       expect(relationResults.length).toBe(1);
       expect(relationResults[0].objectId).toBe(objectId2);
       expect(relationResults[0].entityKind).toBe('relation');
@@ -184,7 +184,7 @@ describe('ObjectMetaIndex', () => {
 
       yield* index.update([item1Update]);
 
-      const updatedResults = yield* index.query({ spaceId, typeDxn: TYPE_PERSON });
+      const updatedResults = yield* index.query({ spaceId, typeDXN: TYPE_PERSON });
       // Depending on implementation, query might filter deleted or not.
       // Current implementation is SELECT * without deleted filter for queryType
       expect(updatedResults.length).toBe(1);
@@ -202,12 +202,12 @@ describe('ObjectMetaIndex', () => {
 
       yield* index.update([item2Update]);
 
-      const newTypeResults = yield* index.query({ spaceId, typeDxn: TYPE_RELATION_UPDATED });
+      const newTypeResults = yield* index.query({ spaceId, typeDXN: TYPE_RELATION_UPDATED });
       expect(newTypeResults.length).toBe(1);
       expect(newTypeResults[0].version).toBe(4);
       expect(newTypeResults[0].objectId).toBe(objectId2);
 
-      const oldTypeResults = yield* index.query({ spaceId, typeDxn: TYPE_RELATION });
+      const oldTypeResults = yield* index.query({ spaceId, typeDXN: TYPE_RELATION });
       expect(oldTypeResults.length).toBe(0);
     }).pipe(Effect.provide(TestLayer)),
   );
@@ -362,7 +362,7 @@ describe('ObjectMetaIndex', () => {
 
       yield* index.update([item]);
 
-      const results = yield* index.query({ spaceId, typeDxn: TYPE_PERSON });
+      const results = yield* index.query({ spaceId, typeDXN: TYPE_PERSON });
       expect(results.length).toBe(1);
       expect(results[0].createdAt).toBe(insertTimestamp);
       expect(results[0].updatedAt).toBe(insertTimestamp);
@@ -370,7 +370,7 @@ describe('ObjectMetaIndex', () => {
       const updateTimestamp = 1700001000000;
       yield* index.update([{ ...item, updatedAt: updateTimestamp, data: { ...item.data, [ATTR_DELETED]: true } }]);
 
-      const updated = yield* index.query({ spaceId, typeDxn: TYPE_PERSON });
+      const updated = yield* index.query({ spaceId, typeDXN: TYPE_PERSON });
       expect(updated[0].createdAt).toBe(insertTimestamp);
       expect(updated[0].updatedAt).toBe(updateTimestamp);
     }).pipe(Effect.provide(TestLayer)),

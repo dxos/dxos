@@ -37,7 +37,7 @@ export const ObjectMeta = Schema.Struct({
    * schema-as-object EchoURI for stored (dynamic) schemas. Mirrors the value
    * written into the object's `system.type`.
    */
-  typeDxn: URI.Schema,
+  typeDXN: URI.Schema,
   deleted: Schema.Boolean,
   source: Schema.NullOr(EchoURI.Schema),
   target: Schema.NullOr(EchoURI.Schema),
@@ -95,7 +95,7 @@ export class ObjectMetaIndex implements Index {
       spaceId TEXT NOT NULL,
       documentId TEXT NOT NULL DEFAULT '',
       entityKind TEXT NOT NULL,
-      typeDxn TEXT NOT NULL,
+      typeDXN TEXT NOT NULL,
       deleted INTEGER NOT NULL,
       source TEXT,
       target TEXT,
@@ -117,7 +117,7 @@ export class ObjectMetaIndex implements Index {
     );
 
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_objectId ON objectMeta(spaceId, objectId)`;
-    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_typeDxn ON objectMeta(spaceId, typeDxn)`;
+    yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_typeDXN ON objectMeta(spaceId, typeDXN)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_version ON objectMeta(version)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_parent ON objectMeta(spaceId, parent)`;
     yield* sql`CREATE INDEX IF NOT EXISTS idx_object_index_updatedAt ON objectMeta(updatedAt)`;
@@ -126,19 +126,19 @@ export class ObjectMetaIndex implements Index {
 
   query = Effect.fn('ObjectMetaIndex.query')(
     (
-      query: Pick<ObjectMeta, 'spaceId' | 'typeDxn'>,
+      query: Pick<ObjectMeta, 'spaceId' | 'typeDXN'>,
     ): Effect.Effect<readonly ObjectMeta[], SqlError.SqlError, SqlClient.SqlClient> =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
-        const parsedDxn = DXN.isDXN(query.typeDxn) ? query.typeDxn : undefined;
+        const parsedDxn = DXN.isDXN(query.typeDXN) ? query.typeDXN : undefined;
         const hasNoVersion = parsedDxn !== undefined && DXN.getVersion(parsedDxn) === undefined;
 
         // SQLite stores booleans as integers, so we need to specify the raw row type.
         const rows = hasNoVersion
-          ? yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND (typeDxn = ${
-              query.typeDxn
-            } OR typeDxn LIKE ${_escapeLikePrefix(query.typeDxn)} ESCAPE '\\')`
-          : yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND typeDxn = ${query.typeDxn}`;
+          ? yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND (typeDXN = ${
+              query.typeDXN
+            } OR typeDXN LIKE ${_escapeLikePrefix(query.typeDXN)} ESCAPE '\\')`
+          : yield* sql<ObjectMeta>`SELECT * FROM objectMeta WHERE spaceId = ${query.spaceId} AND typeDXN = ${query.typeDXN}`;
         return rows.map((row) => ({
           ...row,
           deleted: !!row.deleted,
@@ -181,7 +181,7 @@ export class ObjectMetaIndex implements Index {
       queueIds = null,
     }: {
       spaceIds: readonly ObjectMeta['spaceId'][];
-      typeDxns: readonly ObjectMeta['typeDxn'][];
+      typeDxns: readonly ObjectMeta['typeDXN'][];
       inverted?: boolean;
       includeAllQueues?: boolean;
       queueIds?: readonly string[] | null;
@@ -207,12 +207,12 @@ export class ObjectMetaIndex implements Index {
         const sql = yield* SqlClient.SqlClient;
         const sourceCondition = buildSourceCondition(sql, spaceIds, includeAllQueues, queueIds);
         const typeWhere = sql.or(
-          typeDxns.map((typeDxn) => {
-            const parsedDxn = DXN.isDXN(typeDxn) ? typeDxn : undefined;
+          typeDxns.map((typeDXN) => {
+            const parsedDxn = DXN.isDXN(typeDXN) ? typeDXN : undefined;
             const hasNoVersion = parsedDxn !== undefined && DXN.getVersion(parsedDxn) === undefined;
             return hasNoVersion
-              ? sql.or([sql`typeDxn = ${typeDxn}`, sql`typeDxn LIKE ${_escapeLikePrefix(typeDxn)} ESCAPE '\\'`])
-              : sql`typeDxn = ${typeDxn}`;
+              ? sql.or([sql`typeDXN = ${typeDXN}`, sql`typeDXN LIKE ${_escapeLikePrefix(typeDXN)} ESCAPE '\\'`])
+              : sql`typeDXN = ${typeDXN}`;
           }),
         );
         const rows = inverted
@@ -288,7 +288,7 @@ export class ObjectMetaIndex implements Index {
 
               // Extract metadata.
               const entityKind = castData[ATTR_RELATION_SOURCE] ? 'relation' : 'object';
-              const typeDxn = castData[ATTR_TYPE] ? String(castData[ATTR_TYPE]) : 'type';
+              const typeDXN = castData[ATTR_TYPE] ? String(castData[ATTR_TYPE]) : 'type';
               const deleted = castData[ATTR_DELETED] ? 1 : 0;
               // Relations.
               const source = entityKind === 'relation' ? (castData[ATTR_RELATION_SOURCE] ?? null) : null;
@@ -304,7 +304,7 @@ export class ObjectMetaIndex implements Index {
                     version = ${version},
                     queueNamespace = ${queueNamespace ?? ''},
                     entityKind = ${entityKind},
-                    typeDxn = ${typeDxn},
+                    typeDXN = ${typeDXN},
                     deleted = ${deleted},
                     source = ${source},
                     target = ${target},
@@ -316,11 +316,11 @@ export class ObjectMetaIndex implements Index {
                 yield* sql`
                   INSERT INTO objectMeta (
                     objectId, queueId, queueNamespace, spaceId, documentId,
-                    entityKind, typeDxn, deleted, source, target, parent, version,
+                    entityKind, typeDXN, deleted, source, target, parent, version,
                     createdAt, updatedAt
                   ) VALUES (
                     ${objectId}, ${queueId ?? ''}, ${queueNamespace ?? ''}, ${spaceId}, ${documentId ?? ''},
-                    ${entityKind}, ${typeDxn}, ${deleted},
+                    ${entityKind}, ${typeDXN}, ${deleted},
                     ${source}, ${target}, ${parent}, ${version},
                     ${sourceTimestamp}, ${sourceTimestamp}
                   )

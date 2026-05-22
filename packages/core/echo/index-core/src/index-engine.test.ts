@@ -137,7 +137,7 @@ describe('IndexEngine', () => {
       expect(updated).toBe(2);
 
       // Verify using the SAME index instance.
-      const results1 = yield* metaIndex.query({ spaceId, typeDxn: TYPE_DEFAULT });
+      const results1 = yield* metaIndex.query({ spaceId, typeDXN: TYPE_DEFAULT });
       expect(results1).toHaveLength(1);
       expect(results1[0].objectId).toBe(obj1.data.id);
       expect(results1[0].version).toBeGreaterThan(0);
@@ -169,7 +169,7 @@ describe('IndexEngine', () => {
       expect(updated2).toBe(2);
 
       // Verify update.
-      const results2 = yield* metaIndex.query({ spaceId, typeDxn: TYPE_DEFAULT });
+      const results2 = yield* metaIndex.query({ spaceId, typeDXN: TYPE_DEFAULT });
       expect(results2).toHaveLength(1);
       expect(results2[0].objectId).toBe(obj1Updated.data.id);
       expect(results2[0].version).toBeGreaterThan(results1[0].version);
@@ -239,10 +239,10 @@ describe('IndexEngine', () => {
 
       yield* engine.update(Context.default(), dataSource, { spaceId: null });
 
-      const resultsA = yield* metaIndex.query({ spaceId, typeDxn: TYPE_A });
+      const resultsA = yield* metaIndex.query({ spaceId, typeDXN: TYPE_A });
       expect(resultsA).toHaveLength(2);
 
-      const resultsB = yield* metaIndex.query({ spaceId, typeDxn: TYPE_B });
+      const resultsB = yield* metaIndex.query({ spaceId, typeDXN: TYPE_B });
       expect(resultsB).toHaveLength(1);
 
       const ftsResults = yield* ftsIndex.query({
