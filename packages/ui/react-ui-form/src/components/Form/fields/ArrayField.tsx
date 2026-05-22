@@ -122,13 +122,6 @@ export const ArrayField = ({
                     {...props}
                     autoFocus={index === values.length - 1}
                     type={elementType}
-                    // Suppress the nested struct's header label: a row labelled
-                    // by the parent's field name (e.g. "Signaling") would
-                    // repeat for every item, and the item index is already
-                    // implicit from the stacking order. `name={null}` is the
-                    // documented FormField escape hatch -- `FormFieldSet`'s
-                    // `label && <FormFieldLabel ...>` guard then skips the
-                    // header entirely.
                     name={null}
                     path={[...(path ?? []), index]}
                     readonly={readonly || layout === 'static'}
@@ -136,7 +129,7 @@ export const ArrayField = ({
                   />
                 </div>
                 {!readonly && layout !== 'static' && (
-                  <div className='h-full flex flex-col justify-end'>
+                  <div className='h-full flex flex-col justify-end pb-1'>
                     <IconButton
                       density='fine'
                       variant='ghost'
