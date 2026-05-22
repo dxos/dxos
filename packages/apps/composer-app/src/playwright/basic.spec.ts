@@ -8,11 +8,8 @@ import { log } from '@dxos/log';
 // TODO(wittjosiah): Importing this causes tests to fail.
 // import { StackPlugin } from '@dxos/plugin-stack/plugin';
 
-import { AppManager, INITIAL_URL } from './app-manager';
+import { AppManager, INITIAL_SPACE_COUNT, INITIAL_URL } from './app-manager';
 import { Markdown, StackPlugin } from './plugins';
-
-// Personal space + exemplar space seeded on every new identity.
-const INITIAL_SPACE_COUNT = 2;
 
 if (process.env.DX_PWA !== 'false') {
   log.error('PWA must be disabled to run e2e tests. Set DX_PWA=false before running again.');

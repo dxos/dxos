@@ -5,10 +5,7 @@
 import { expect, test } from '@playwright/test';
 import { platform } from 'node:os';
 
-import { AppManager, INITIAL_URL } from './app-manager';
-
-// Personal space + exemplar space seeded on every new identity.
-const INITIAL_SPACE_COUNT = 2;
+import { AppManager, INITIAL_SPACE_COUNT, INITIAL_URL } from './app-manager';
 
 // TODO(wittjosiah): WebRTC only available in chromium browser for testing currently.
 //   https://github.com/microsoft/playwright/issues/2973
