@@ -12,10 +12,11 @@ import * as Stream from 'effect/Stream';
 import { ModelName } from '@dxos/ai';
 import { AiContext } from '@dxos/assistant';
 import { type Trace, Blueprint, McpServer } from '@dxos/compute';
+import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
+import { EchoURI } from '@dxos/keys';
 
-import * as ProcessManager from '../process/ProcessManager';
 import { AgentProcess } from './agent-process';
 
 export interface Service {
@@ -138,6 +139,8 @@ export const layer = (opts?: {
             }
 
             const target = Obj.getURI(feed);
+            const parsedEchoId = EchoURI.tryParse(target);
+            const spaceId = parsedEchoId ? EchoURI.getSpaceId(parsedEchoId) : undefined;
             const executable = AgentProcess({
               systemPrompt: opts?.systemPrompt,
               model: options?.model ?? opts?.model,
@@ -153,6 +156,7 @@ export const layer = (opts?: {
               handle = yield* processManager.spawn(executable, {
                 name: 'agent',
                 target,
+                environment: spaceId ? { space: spaceId } : undefined,
                 traceMeta: {
                   conversationId: feed.id,
                 },

@@ -17,7 +17,7 @@ import { Database, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
 import { EchoURI } from '@dxos/keys';
 
 import { Enabled, Input, Queue, TriggerId } from '../options';
-import { printTrigger, promptForSchemaInput, selectFunction, selectQueue, selectTrigger } from '../util';
+import { printTrigger, promptForSchemaInput, selectFunction, selectFeed, selectTrigger } from '../util';
 
 export const queue = Command.make(
   'queue',
@@ -128,7 +128,7 @@ const updateQueue = Effect.fn(function* (trigger: Trigger.Trigger, queueOption: 
   });
   if (shouldChangeQueue) {
     const queueDxn = yield* Option.match(queueOption, {
-      onNone: () => selectQueue(),
+      onNone: () => selectFeed(),
       onSome: (dxn) => Effect.succeed(dxn),
     });
     Obj.update(trigger, (trigger) => {

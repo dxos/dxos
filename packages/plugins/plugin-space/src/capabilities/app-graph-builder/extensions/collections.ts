@@ -80,7 +80,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
               icon: 'ph--folder--regular',
               iconHue: 'amber',
               role: 'branch',
-              position: 'hoist',
+              position: 'first',
               testId: 'spacePlugin.collectionsSection',
               draggable: false,
               droppable: false,
@@ -176,7 +176,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     GraphBuilder.createExtension({
       id: 'object-actions',
       match: (node) => {
-        return Obj.getDatabase(node.data) && Obj.isObject(node.data) && Obj.getTypename(node.data) === node.type
+        return Obj.isObject(node.data) && Obj.getTypename(node.data) === node.type && Obj.getDatabase(node.data)
           ? Option.some({ object: node.data, nodeId: node.id })
           : Option.none();
       },

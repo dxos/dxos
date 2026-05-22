@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-crx",
   "version": "0.8.3",
-  "private": true,
   "description": "Composer plugin for coordinating with the composer-crx browser extension.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -65,7 +64,8 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "src",
+    "PLUGIN.mdl"
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",

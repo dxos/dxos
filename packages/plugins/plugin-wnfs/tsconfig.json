@@ -64,6 +64,9 @@
       "path": "../../sdk/schema"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../../ui/react-ui"
     },
     {
@@ -88,7 +91,7 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-markdown"
+      "path": "../plugin-file"
     },
     {
       "path": "../plugin-space"

@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
 import { Obj, Ref, Tag, Type } from '@dxos/echo';
+import { useSchema } from '@dxos/echo-react';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { URI } from '@dxos/keys';
@@ -30,14 +31,20 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
     const tags = (meta.tags ?? []).map((tag) => db?.makeRef(URI.make(tag))).filter(isNonNullable);
     const values = useMemo(() => ({ tags, ...object }), [object, tags]);
 
+    // Obj.getSchema fails for database-registered (dynamic) schemas due to DXN mismatch;
+    // useSchema queries by typename which correctly resolves both static and dynamic schemas.
+    const typename = Obj.getTypename(object) ?? undefined;
+    const schemaFromRegistry = useSchema(db, typename);
+    const rawSchema = Obj.getSchema(object) ?? schemaFromRegistry;
+
     const formSchema = useMemo(() => {
       return Function.pipe(
-        Obj.getSchema(object),
+        rawSchema,
         Option.fromNullable,
         Option.map((schema) => omitId(BaseSchema.pipe(Schema.extend(schema)))),
         Option.getOrUndefined,
       );
-    }, [object]);
+    }, [rawSchema]);
 
     // Persist a newly-created object referenced by one of the form's ref
     // fields and return it. The calling RefField wires the new Ref into its

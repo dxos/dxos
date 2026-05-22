@@ -4,10 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Database, Filter, Obj, Query, type Tag } from '@dxos/echo';
+import { Database, Filter, Obj, Query } from '@dxos/echo';
 
 import { type Magazine, Subscription } from '../types';
-import { hasMetaTag } from '../util';
+import { getSubscriptionPostState } from '../util';
 
 /**
  * Resolves the Magazine's referenced feeds and the Posts in each feed's backing
@@ -16,7 +16,7 @@ import { hasMetaTag } from '../util';
 export const collectCandidates = (magazine: Magazine.Magazine) =>
   Effect.gen(function* () {
     const seenPostIds = new Set(magazine.posts.map((ref) => ref.uri));
-    const candidates: Array<{ post: Subscription.Post; feed: Subscription.Feed }> = [];
+    const candidates: Array<{ post: Subscription.Post; feed: Subscription.Subscription }> = [];
     for (const feedRef of magazine.feeds) {
       const feed = yield* Database.load(feedRef);
       const echoFeed = feed.feed?.target;
@@ -45,21 +45,28 @@ export const publishedTimestamp = (post: Subscription.Post): number => {
   return Number.isNaN(ms) ? Number.NEGATIVE_INFINITY : ms;
 };
 
+/** Default `isStarred` predicate: reads from each Post's source Subscription's `postState`. */
+export const isPostStarred = (post: Subscription.Post): boolean =>
+  Boolean(getSubscriptionPostState(post.source?.target, (post as { id: string }).id).starred);
+
 /**
  * Partitions posts into those to keep and those to drop, given a maximum
  * non-starred retention bound. Starred posts are always kept; the remaining
  * non-starred posts are sorted newest-first by `published` and the top
  * `keep` retained.
+ *
+ * `isStarred` is injectable for testability; default reads from each Post's
+ * source Subscription's `postState`.
  */
 export const partitionByKeepBound = <T extends Subscription.Post>(
   posts: readonly T[],
   keep: number,
-  starTag: Tag.Tag | undefined,
+  isStarred: (post: T) => boolean = isPostStarred,
 ): { kept: T[]; dropped: T[] } => {
   const kept: T[] = [];
   const candidates: T[] = [];
   for (const post of posts) {
-    if (starTag && hasMetaTag(post, starTag)) {
+    if (isStarred(post)) {
       kept.push(post);
     } else {
       candidates.push(post);

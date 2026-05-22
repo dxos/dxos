@@ -35,10 +35,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/DebugPlugin.workerd.ts",
         "node": "./src/DebugPlugin.node.ts",
         "default": "./src/DebugPlugin.tsx"
       },
       "types": "./dist/types/src/DebugPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/DebugPlugin.workerd.mjs",
       "node": "./dist/lib/neutral/DebugPlugin.node.mjs",
       "default": "./dist/lib/neutral/DebugPlugin.mjs"
     },

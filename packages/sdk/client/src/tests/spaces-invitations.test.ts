@@ -37,7 +37,10 @@ describe('Spaces/invitations', () => {
     }
   });
 
-  describe('delegated', () => {
+  // The delegated tests spin up 3-4 clients and run ~7 sequential invitation/admission
+  // steps. They complete in ~1s on dev machines but each step can balloon under CI worker
+  // contention; the cumulative budget needs real headroom over the 5s default.
+  describe('delegated', { timeout: 30_000 }, () => {
     test('single-use', async ({ expect }) => {
       const clients = await createInitializedClients(3);
       const [alice, bob, fred] = clients;

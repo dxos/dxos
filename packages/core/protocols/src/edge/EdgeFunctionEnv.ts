@@ -117,6 +117,12 @@ export interface FunctionsAiService {
 
 export type FunctionInvokeOptions = {
   spaceId?: SpaceId;
+  /**
+   * DXN string of the conversation feed (queue).
+   * Forwarded into the function context so nested operations can resolve
+   * `AiContext.Service` and related conversation-scoped services.
+   */
+  conversation?: string;
   cpuTimeLimit?: number;
   subrequestsLimit?: number;
 };

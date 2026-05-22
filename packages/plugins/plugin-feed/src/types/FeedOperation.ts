@@ -26,7 +26,7 @@ export const SyncFeed = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    feed: Subscription.Feed,
+    feed: Subscription.Subscription,
   }),
   output: Schema.Void,
 });
@@ -86,9 +86,10 @@ export const FetchArticleContent = Operation.make({
 
 /**
  * Fetches a Post's article page over HTTP and writes the extracted plain text
- * to `post.content` and the first image URL to `post.imageUrl`. Idempotent —
- * skips if `post.content` is already set or the Post has no link. Used by the
- * reader view to populate the full article on first open.
+ * and hero image URL to the source Subscription's `postState[postId]` map
+ * (the Post itself is an immutable queue item). Idempotent — skips if
+ * `content` is already set or the Post has no link. Used by the reader view
+ * to populate the full article on first open.
  */
 export const LoadPostContent = Operation.make({
   meta: {

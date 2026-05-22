@@ -64,7 +64,7 @@ export default Capability.makeModule(
               icon: 'ph--tray--regular',
               iconHue: 'rose',
               space,
-              position: 'hoist',
+              position: 'first',
             }),
           ]);
         },

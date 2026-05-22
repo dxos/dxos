@@ -80,6 +80,7 @@ export class Binder extends Resource {
   private readonly _registry: Registry.Registry;
   private readonly _feed: Feed.Feed;
   private readonly _runtime: Runtime.Runtime<Feed.FeedService>;
+
   #bindingsQuery: QueryResult.QueryResult<Binding> | undefined;
 
   constructor(options: BinderOptions) {

@@ -66,6 +66,9 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/client-protocol"
+    },
+    {
       "path": "../../sdk/observability"
     },
     {
@@ -78,6 +81,9 @@
       "path": "../../sdk/types"
     },
     {
+      "path": "../../ui/brand"
+    },
+    {
       "path": "../../ui/react-primitives/react-hooks"
     },
     {
@@ -88,6 +94,9 @@
     },
     {
       "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-markdown"
     },
     {
       "path": "../../ui/ui-theme"
@@ -103,6 +112,9 @@
     },
     {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-status-bar"
     },
     {
       "path": "../plugin-testing"

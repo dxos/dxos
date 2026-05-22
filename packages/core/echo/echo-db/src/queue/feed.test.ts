@@ -7,9 +7,10 @@ import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Event } from '@dxos/async';
-import { Database, Feed, Filter, Obj } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { runAndForwardErrors } from '@dxos/effect';
+import { EchoURI } from '@dxos/keys';
 
 import { EchoTestBuilder } from '../testing';
 import { createFeedServiceLayer } from './feed-service';
@@ -218,4 +219,46 @@ describe('Feed', () => {
 
   // TODO(wittjosiah): Implement when queue retention is supported.
   test.todo('setRetention configures feed retention policy');
+
+  test('Ref.make on a feed item stores a Queue DXN and does not leak into space.db', async ({ expect }) => {
+    await using peer = await builder.createPeer({
+      types: [Feed.Feed, TestSchema.Person, TestSchema.Container],
+    });
+    const db = await peer.createDatabase();
+    const queues = peer.client.constructQueueFactory(db.spaceId);
+    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));
+
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make({ name: 'posts' }));
+
+      const post = Obj.make(TestSchema.Person, { name: 'alice' });
+      yield* Feed.append(feed, [post]);
+
+      // Re-query to obtain a queue-decoded proxy (matches the curate-magazine path).
+      const items = yield* Feed.runQuery(feed, Filter.type(TestSchema.Person));
+      expect(items).toHaveLength(1);
+      const queuePost = items[0];
+
+      // Reference the queue item from a container that lives in space.db.
+      const container = yield* Database.add(Obj.make(TestSchema.Container, {}));
+      Obj.update(container, (container) => {
+        const mutable = container as Obj.Mutable<typeof container>;
+        mutable.objects = [Ref.make(queuePost)];
+      });
+      yield* Database.flush();
+
+      // The stored ref must be a queue EchoURI — not a synthesized ECHO URI.
+      const ref = container.objects![0];
+      expect(EchoURI.isEchoURI(ref.uri)).toBe(true);
+      expect(EchoURI.getObjectId(EchoURI.parse(ref.uri))).toBe((queuePost as any).id);
+
+      // The queue item must NOT have been added to space.db.
+      const dbResults = yield* Database.runQuery(Filter.type(TestSchema.Person));
+      expect(dbResults).toHaveLength(0);
+
+      // The ref must still resolve to the queue item.
+      const resolved = yield* Effect.promise(() => ref.load());
+      expect((resolved as any).name).toBe('alice');
+    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+  });
 });

@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.spacetime',
   name: 'Spacetime',
+  author: 'DXOS',
   description: trim`
     Generative 3D modeling and animation plugin.
     Create and manipulate solid geometry with boolean operations, extrusion, and real-time collaboration.
@@ -15,4 +16,7 @@ export const meta: Plugin.Meta = {
   icon: 'ph--cube--regular',
   iconHue: 'teal',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-spacetime',
+  spec: 'docs/PLUGIN.mdl',
+  version: '0.8.3',
+  tags: ['labs'],
 };

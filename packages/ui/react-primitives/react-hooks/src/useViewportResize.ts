@@ -9,19 +9,37 @@ export const useViewportResize = (
   deps: Parameters<typeof useLayoutEffect>[1] = [],
   delay: number = 800,
 ) => {
-  const debouncedHandler = useMemo(() => {
-    let timeout: ReturnType<typeof setTimeout>;
-    return (event?: Event) => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => {
-        cb(event);
-      }, delay);
+  // The cleanup must cancel the pending debounce timeout. Otherwise, if the
+  // component unmounts during the `delay` window (common in jsdom/happy-dom
+  // test teardown), the callback fires against a torn-down DOM and surfaces
+  // as `ReferenceError: getComputedStyle is not defined`.
+  const { handler: debouncedHandler, cancel } = useMemo(() => {
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    return {
+      handler: (event?: Event) => {
+        if (timeout !== undefined) {
+          clearTimeout(timeout);
+        }
+        timeout = setTimeout(() => {
+          timeout = undefined;
+          cb(event);
+        }, delay);
+      },
+      cancel: () => {
+        if (timeout !== undefined) {
+          clearTimeout(timeout);
+          timeout = undefined;
+        }
+      },
     };
   }, [cb, delay]);
 
   return useLayoutEffect(() => {
     window.visualViewport?.addEventListener('resize', debouncedHandler);
     debouncedHandler();
-    return () => window.visualViewport?.removeEventListener('resize', debouncedHandler);
-  }, [debouncedHandler, ...deps]);
+    return () => {
+      window.visualViewport?.removeEventListener('resize', debouncedHandler);
+      cancel();
+    };
+  }, [debouncedHandler, cancel, ...deps]);
 };

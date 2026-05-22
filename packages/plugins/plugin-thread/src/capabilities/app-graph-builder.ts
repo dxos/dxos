@@ -56,8 +56,6 @@ const whenCommentableObject = NodeMatcher.whenAll(
   NodeMatcher.whenNot(NodeMatcher.whenEchoTypeMatches(Channel.Channel)),
 );
 
-// TODO(wittjosiah): Highlight active calls in L1.
-//  Track active meetings by subscribing to meetings query and polling the swarms of recent meetings in the space.
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
@@ -66,56 +64,6 @@ export default Capability.makeModule(
       capabilities.getAll(AppCapabilities.CommentConfig).find(({ id }) => id === typename);
 
     const extensions = yield* Effect.all([
-      GraphBuilder.createExtension({
-        id: 'active-call',
-        match: NodeMatcher.whenRoot,
-        connector: (node, get) => {
-          const callManagerAtom = capabilities.atom(ThreadCapabilities.CallManager);
-          const [call] = get(callManagerAtom);
-          if (!call) {
-            return Effect.succeed([]);
-          }
-          // Use derived joinedAtom for efficient subscription.
-          const joined = get(call.joinedAtom);
-          return Effect.succeed(
-            joined
-              ? [
-                  AppNode.makeDeckCompanion({
-                    id: 'active-call',
-                    label: ['call-panel.label', { ns: meta.id }],
-                    icon: 'ph--video-conference--regular',
-                    data: null,
-                    position: 'hoist',
-                  }),
-                ]
-              : [],
-          );
-        },
-      }),
-      GraphBuilder.createTypeExtension({
-        id: 'channel-chat-companion',
-        type: Channel.Channel,
-        connector: (channel, get) => {
-          const callManager = capabilities.get(ThreadCapabilities.CallManager);
-          // Use derived atoms for efficient subscription.
-          const joined = get(callManager.joinedAtom);
-          const roomId = get(callManager.roomIdAtom);
-          const isActive = joined && roomId === Obj.getURI(channel);
-          if (!isActive) {
-            return Effect.succeed([]);
-          }
-
-          return Effect.succeed([
-            AppNode.makeCompanion({
-              id: 'chat',
-              label: ['channel-companion.label', { ns: meta.id }],
-              icon: 'ph--hash--regular',
-              data: 'chat',
-              position: 'hoist',
-            }),
-          ]);
-        },
-      }),
       GraphBuilder.createExtension({
         id: 'comments-companion',
         match: (node) => {
@@ -132,7 +80,7 @@ export default Capability.makeModule(
               label: ['comments.label', { ns: meta.id }],
               icon: 'ph--chat-text--regular',
               data: 'comments',
-              position: 'hoist',
+              position: 'first',
             }),
           ]),
       }),

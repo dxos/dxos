@@ -84,6 +84,7 @@ export const PopoverContent = () => {
     [handleClose],
   );
 
+  /* TODO(thure): Make this a constant and document it. */
   const collisionBoundaries: HTMLElement[] = useMemo(() => {
     const closest = state.popoverAnchor?.closest('[data-popover-collision-boundary]') as HTMLElement | null | undefined;
     return closest ? [closest] : [];

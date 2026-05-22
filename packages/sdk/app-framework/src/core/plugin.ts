@@ -163,6 +163,12 @@ export type Meta = {
   name: string;
 
   /**
+   * Semver version string of the plugin, typically the publishing package's
+   * `package.json` version.
+   */
+  version?: string;
+
+  /**
    * Short description of plugin functionality.
    */
   description?: string;
@@ -170,6 +176,7 @@ export type Meta = {
   /**
    * Name of the author or organization that created the plugin.
    */
+  // TODO(burdon): DID or domain name?
   author?: string;
 
   /**
@@ -181,6 +188,14 @@ export type Meta = {
    * URL of source code.
    */
   source?: string;
+
+  /**
+   * Relative path (inside the published package) to the plugin's bundled MDL
+   * specification file — e.g. `'PLUGIN.mdl'` or `'docs/PLUGIN.mdl'`. The file
+   * is shipped via the package's `files` entry and resolved by registry
+   * surfaces to render an in-app viewer and/or external link.
+   */
+  spec?: string;
 
   /**
    * URL of screenshot.

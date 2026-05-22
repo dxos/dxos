@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.transcription',
   name: 'Transcription',
+  author: 'DXOS',
   description: trim`
     Real-time voice-to-text transcription service for capturing spoken content.
     Convert audio input into searchable text that integrates seamlessly with notes and documents.

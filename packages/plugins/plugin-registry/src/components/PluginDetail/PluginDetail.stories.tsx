@@ -31,6 +31,7 @@ export const Default: Story = {
     plugin: Plugin.define({
       id: 'com.example.plugin.test',
       name: 'Test Plugin',
+      author: 'DXOS',
       description: random.lorem.paragraphs(2),
       icon: 'ph--bug--regular',
       iconHue: 'sky',

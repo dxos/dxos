@@ -71,7 +71,7 @@ export const useSyncTrigger = ({
         const mailboxRef = trigger.input?.mailbox;
         const calendarRef = trigger.input?.calendar;
         const ref = mailboxRef ?? calendarRef;
-        return ref?.dxn && ref.dxn === subjectUri;
+        return ref?.uri && ref.uri === subjectUri;
       }),
     [triggers, subjectUri],
   );

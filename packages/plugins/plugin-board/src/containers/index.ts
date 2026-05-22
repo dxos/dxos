@@ -4,4 +4,4 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export const BoardContainer: ComponentType<any> = lazy(() => import('./BoardContainer'));
+export const BoardArticle: ComponentType<any> = lazy(() => import('./BoardArticle'));

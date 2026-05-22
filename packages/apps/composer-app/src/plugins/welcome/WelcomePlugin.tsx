@@ -24,7 +24,7 @@ export const WelcomePlugin = Plugin.define(meta).pipe(
     id: 'onboarding',
     activatesOn: ActivationEvent.allOf(
       AppActivationEvents.AppGraphReady,
-      ActivationEvents.OperationInvokerReady,
+      ActivationEvents.ProcessManagerReady,
       AppActivationEvents.LayoutReady,
       ClientEvents.ClientReady,
     ),

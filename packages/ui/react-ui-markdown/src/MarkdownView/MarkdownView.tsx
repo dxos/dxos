@@ -6,7 +6,7 @@ import React, { type PropsWithChildren } from 'react';
 import ReactMarkdown, { type Options as ReactMarkdownOptions } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { MediaPlayer, type ThemedClassName } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
@@ -69,20 +69,15 @@ const defaultComponents: ReactMarkdownOptions['components'] = {
   // Hide broken images: many markdown sources reference remote URLs that
   // 404 or are blocked. Drop the element on load failure rather than
   // leaving the browser's broken-image placeholder.
-  img: ({ src, alt, ...props }) => {
+  //
+  // Media URLs (mp4/mp3/etc. or legacy `iframe`-style embeds) are swapped to a
+  // native `<video>` / `<audio>` element by {@link MediaPlayer} so playable
+  // media in the source document renders inline.
+  img: ({ src, alt }) => {
     if (!src) {
       return null;
     }
-    return (
-      <img
-        src={src}
-        alt={alt}
-        onError={(event) => {
-          event.currentTarget.style.display = 'none';
-        }}
-        {...props}
-      />
-    );
+    return <MediaPlayer src={src} alt={alt} mediaClassNames='aspect-video w-full' imgClassNames='w-full' />;
   },
   ol: ({ children, ...props }) => (
     <ol className='pt-1 pb-1 ps-6 leading-tight list-decimal' {...props}>

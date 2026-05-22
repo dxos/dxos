@@ -4,13 +4,11 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { AutomationCapabilities } from '@dxos/plugin-automation';
 import { Integration } from '@dxos/plugin-integration';
 
 import { meta } from '#meta';
@@ -19,18 +17,16 @@ import { type Calendar, InboxOperation } from '../types';
 
 const dispatch = (integration: Integration.Integration, calendar: Calendar.Calendar | undefined) =>
   Effect.gen(function* () {
-    const computeRuntime = yield* Capability.get(AutomationCapabilities.ComputeRuntime);
     const db = Obj.getDatabase(integration);
     invariant(db);
-    const runtime = computeRuntime.getRuntime(db.spaceId);
     const { CalendarFunctions } = yield* Effect.promise(() => import('./google/calendar'));
-    yield* Effect.tryPromise(() =>
-      runtime.runPromise(
-        Operation.invoke(CalendarFunctions.Sync, {
-          integration: Ref.make(integration),
-          ...(calendar ? { calendar: Ref.make(calendar) } : {}),
-        }),
-      ),
+    yield* Operation.invoke(
+      CalendarFunctions.Sync,
+      {
+        integration: Ref.make(integration),
+        ...(calendar ? { calendar: Ref.make(calendar) } : {}),
+      },
+      { spaceId: db.spaceId },
     ).pipe(
       Effect.catchAll((error) => {
         log.catch(error);

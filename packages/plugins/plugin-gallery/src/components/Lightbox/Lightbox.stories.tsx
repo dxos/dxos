@@ -5,46 +5,50 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
+import { Ref } from '@dxos/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { File } from '@dxos/types';
 
 import { translations } from '#translations';
-import { Gallery } from '#types';
 
 import { Lightbox } from './Lightbox';
 
 // Picsum returns a random image at the requested size for each unique seed.
-const mockImage = (seed: string, w: number, h: number, description?: string): Gallery.Image => ({
-  url: `https://picsum.photos/seed/${seed}/${w}/${h}`,
-  type: 'image/jpeg',
-  name: `${seed}.jpg`,
-  description,
-  width: w,
-  height: h,
-});
+const mockFileRef = (seed: string, w: number, h: number): Ref.Ref<File.File> => {
+  const url = `https://picsum.photos/seed/${seed}/${w}/${h}`;
+  const obj = File.make({
+    name: `${seed}.jpg`,
+    type: 'image/jpeg',
+    size: 0,
+    data: File.externalData(url),
+  });
+  return Ref.make(obj);
+};
 
-const SAMPLE_IMAGES: Gallery.Image[] = [
-  mockImage('alpha', 600, 400, 'Mountain valley at dusk'),
-  mockImage('bravo', 500, 700, 'Vertical forest path'),
-  mockImage('charlie', 800, 500),
-  mockImage('delta', 600, 600, 'A square crop'),
-  mockImage('echo', 700, 480),
-  mockImage('foxtrot', 500, 750, 'Tall city skyline'),
-  mockImage('golf', 640, 360),
-  mockImage('hotel', 540, 720),
-  mockImage('india', 600, 450, 'Wide vista'),
-  mockImage('juliet', 480, 640),
-  mockImage('kilo', 700, 700, 'Square abstract'),
-  mockImage('lima', 800, 450),
+const SAMPLE_FILES: ReadonlyArray<Ref.Ref<File.File>> = [
+  mockFileRef('alpha', 600, 400),
+  mockFileRef('bravo', 500, 700),
+  mockFileRef('charlie', 800, 500),
+  mockFileRef('delta', 600, 600),
+  mockFileRef('echo', 700, 480),
+  mockFileRef('foxtrot', 500, 750),
+  mockFileRef('golf', 640, 360),
+  mockFileRef('hotel', 540, 720),
+  mockFileRef('india', 600, 450),
+  mockFileRef('juliet', 480, 640),
+  mockFileRef('kilo', 700, 700),
+  mockFileRef('lima', 800, 450),
 ];
 
 type DefaultStoryProps = {
-  initialImages: Gallery.Image[];
+  initialFiles: ReadonlyArray<Ref.Ref<File.File>>;
   enableDelete?: boolean;
 };
 
-const DefaultStory = ({ initialImages, enableDelete }: DefaultStoryProps) => {
-  const [images, setImages] = useState<Gallery.Image[]>(initialImages);
+const DefaultStory = ({ initialFiles, enableDelete }: DefaultStoryProps) => {
+  const [images, setImages] = useState<ReadonlyArray<Ref.Ref<File.File>>>(initialFiles);
   const gallery = { name: 'Sample Gallery', images };
 
   return (
@@ -70,7 +74,7 @@ const DefaultStory = ({ initialImages, enableDelete }: DefaultStoryProps) => {
 const meta = {
   title: 'plugins/plugin-gallery/components/Lightbox',
   component: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withPluginManager({ capabilities: [] })],
   parameters: {
     layout: 'fullscreen',
     translations,
@@ -83,21 +87,21 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    initialImages: SAMPLE_IMAGES,
+    initialFiles: SAMPLE_FILES,
     enableDelete: true,
   },
 };
 
 export const Empty: Story = {
   args: {
-    initialImages: [],
+    initialFiles: [],
     enableDelete: true,
   },
 };
 
 export const ReadOnly: Story = {
   args: {
-    initialImages: SAMPLE_IMAGES,
+    initialFiles: SAMPLE_FILES,
     enableDelete: false,
   },
 };

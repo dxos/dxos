@@ -36,10 +36,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/GamePlugin.workerd.tsx",
         "node": "./src/GamePlugin.node.tsx",
         "default": "./src/GamePlugin.tsx"
       },
       "types": "./dist/types/src/GamePlugin.d.ts",
+      "workerd": "./dist/lib/neutral/GamePlugin.workerd.mjs",
       "node": "./dist/lib/neutral/GamePlugin.node.mjs",
       "default": "./dist/lib/neutral/GamePlugin.mjs"
     },

@@ -7,10 +7,9 @@ import React, { useCallback, useMemo } from 'react';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { ASSISTANT_COMPANION_VARIANT } from '@dxos/plugin-assistant';
-import { Button, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, Carousel, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
-import { Carousel } from '#components';
 import { meta } from '#meta';
 import { HelpOperation } from '#types';
 
@@ -39,11 +38,12 @@ export const WelcomeArticle = ({ role }: WelcomeArticleProps = {}) => {
   const slides: Slide[] = useMemo(
     () => [
       welcome,
-      ...manager
-        .getPlugins()
-        .flatMap((plugin) =>
-          (plugin.meta.screenshots ?? []).map((src) => ({ src, description: plugin.meta.name ?? plugin.meta.id })),
-        ),
+      ...manager.getPlugins().flatMap((plugin) =>
+        (plugin.meta.screenshots ?? []).map((src) => ({
+          src,
+          description: plugin.meta.description ?? plugin.meta.name ?? plugin.meta.id,
+        })),
+      ),
     ],
     [manager],
   );
@@ -68,24 +68,23 @@ export const WelcomeArticle = ({ role }: WelcomeArticleProps = {}) => {
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='p-8 flex flex-col items-center gap-6'>
-            <h1 className='text-2xl font-semibold'>{t('welcome.title')}</h1>
-            <p className='max-w-prose text-center text-description'>{t('welcome.description')}</p>
-            <Button variant='primary' onClick={handleOpenChat}>
-              {t('open-chat.button')}
-            </Button>
+            <>
+              <h1 className='text-2xl font-semibold'>{t('welcome.title')}</h1>
+              <p className='max-w-prose text-center text-description'>{t('welcome.description')}</p>
+              <Button variant='primary' onClick={handleOpenChat}>
+                {t('open-assistant.button')}
+              </Button>
+            </>
+
             {slides.length > 0 && (
-              <Carousel.Root count={slides.length}>
-                <Carousel.Frame>
-                  <Carousel.Previous />
-                  <Carousel.Viewport>
-                    {slides.map((slide, i) => (
-                      <Carousel.Slide key={slide.src} index={i}>
-                        <Carousel.Media src={slide.src} alt={slide.description} />
-                      </Carousel.Slide>
-                    ))}
-                  </Carousel.Viewport>
-                  <Carousel.Next />
-                </Carousel.Frame>
+              <Carousel.Root classNames='max-w-[50rem]' count={slides.length}>
+                <Carousel.Previous />
+                <Carousel.Viewport>
+                  {slides.map((slide, i) => (
+                    <Carousel.Slide key={slide.src} index={i} src={slide.src} alt={slide.description} />
+                  ))}
+                </Carousel.Viewport>
+                <Carousel.Next />
                 <Carousel.Indicators />
                 <Carousel.Caption>{(i) => slides[i]?.description}</Carousel.Caption>
               </Carousel.Root>

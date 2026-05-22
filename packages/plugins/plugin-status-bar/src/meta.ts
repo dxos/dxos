@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.statusBar',
   name: 'Status Bar',
+  author: 'DXOS',
   description: trim`
     Persistent bottom bar displaying workspace status information and quick actions.
     Access connection state, notifications, and common commands without leaving your current context.

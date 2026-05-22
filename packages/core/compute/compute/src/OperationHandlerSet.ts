@@ -4,10 +4,13 @@
 
 // @import-as-namespace
 
+import { type Atom, type Registry } from '@effect-atom/atom';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 
+import { runAndForwardErrors } from '@dxos/effect';
 import { assertArgument } from '@dxos/invariant';
 
 import { NoHandlerError } from './errors';
@@ -64,6 +67,43 @@ export const async = (
     [TypeId]: TypeId,
     getHandlers,
     handlers: Effect.promise(getHandlersCached),
+  };
+};
+
+/**
+ * Builds a set backed by an atom of contributed sets. The merged result is
+ * cached and invalidated whenever the atom changes, so most accesses are
+ * cheap but newly registered handlers are picked up.
+ */
+export const reactive = (
+  registry: Registry.Registry,
+  atom: Atom.Atom<readonly OperationHandlerSet[]>,
+): OperationHandlerSet => {
+  let cached: Promise<Operation.WithHandler<Operation.Definition.Any>[]> | null = null;
+  registry.subscribe(atom, () => {
+    cached = null;
+  });
+  // `suspend` defers `registry.get(atom)` until each run, so re-evaluations
+  // after cache invalidation see the current contributed sets.
+  const compute = Effect.suspend(() =>
+    pipe(
+      registry.get(atom),
+      Effect.forEach((set) => set.handlers, { concurrency: 'unbounded' }),
+      Effect.map((groups) => groups.flat()),
+      // Reset cached on failure so a transient error doesn't permanently
+      // poison subsequent calls.
+      Effect.tapErrorCause(() =>
+        Effect.sync(() => {
+          cached = null;
+        }),
+      ),
+    ),
+  );
+  const getHandlers = () => (cached ??= runAndForwardErrors(compute));
+  return {
+    [TypeId]: TypeId,
+    getHandlers,
+    handlers: Effect.promise(getHandlers),
   };
 };
 

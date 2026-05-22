@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-crm",
   "version": "0.8.3",
-  "private": true,
   "description": "CRM plugin for Composer. Provides a blueprint for researching people and organizations and producing structured Profile documents.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -76,7 +75,8 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "src",
+    "PLUGIN.mdl"
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
@@ -102,5 +102,8 @@
     "@effect/vitest": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

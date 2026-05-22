@@ -113,11 +113,12 @@ export const extractDxnsFromObject = (obj: unknown): URI.URI[] => {
         addDxn(selfUri);
       }
 
-      // Check for reference blocks: { _tag: 'reference', reference: { dxn: ... } }
+      // Check for reference blocks: { _tag: 'reference', reference: { uri: ... } } (or legacy { dxn: ... })
       if (record._tag === 'reference' && record.reference && typeof record.reference === 'object') {
         const ref = record.reference as Record<string, unknown>;
-        if (ref.dxn && typeof ref.dxn === 'string') {
-          addDxn(ref.dxn);
+        const refUri = ref.uri ?? ref.dxn;
+        if (refUri && typeof refUri === 'string') {
+          addDxn(refUri);
         }
       }
 

@@ -179,6 +179,9 @@ const invokeOperation = (
     return data;
   }).pipe(Effect.withSpan('invokeOperation', { attributes: { name: operationDef.meta.name } }));
 
+/**
+ * @deprecated
+ */
 export class FunctionImplementationResolver extends Context.Tag('@dxos/functions/FunctionImplementationResolver')<
   FunctionImplementationResolver,
   {

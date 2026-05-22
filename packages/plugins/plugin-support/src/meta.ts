@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.support',
   name: 'Support',
+  author: 'DXOS',
   description: trim`
     User assistance for Composer: welcome tour, shortcuts, one-shot feedback, and an AI
     support assistant that can search documentation and capture conversations as
@@ -16,5 +17,7 @@ export const meta: Plugin.Meta = {
   icon: 'ph--lifebuoy--regular',
   iconHue: 'rose',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-support',
+  spec: 'PLUGIN.mdl',
+  version: '0.8.3',
   tags: ['system'],
 };

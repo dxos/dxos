@@ -23,7 +23,6 @@ const DefaultStory = ({ keywords }: DefaultStoryProps) => {
   const [running, setRunning] = useState(false);
   const [matchingWords, setMatchingWords] = useState<Word[]>(keywords.map((word) => ({ text: word, matched: false })));
 
-  const [transcript, setTranscript] = useState('');
   const recognition = useMemo(() => {
     // TODO(mykola): Fix types
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -38,16 +37,16 @@ const DefaultStory = ({ keywords }: DefaultStoryProps) => {
     recognition.interimResults = true;
     recognition.lang = 'en-US';
     recognition.maxAlternatives = 1;
-    // Add this line to enable punctuation
+    // Add this line to enable punctuation.
     recognition.grammars = new SpeechGrammarList();
 
-    // TODO(mykola): Fix types
+    // TODO(mykola): Fix types.
     recognition.onresult = (event: any) => {
       log.info('recognition result', { event });
       const current = event.resultIndex;
       const transcript = event.results[current][0].transcript;
 
-      // Remove punctuation and normalize whitespace for comparison
+      // Remove punctuation and normalize whitespace for comparison.
       const normalizeText = (text: string) =>
         text
           .toLowerCase()
@@ -57,7 +56,7 @@ const DefaultStory = ({ keywords }: DefaultStoryProps) => {
 
       const normalizedTranscript = normalizeText(transcript);
 
-      // Check each keyword and update matching words
+      // Check each keyword and update matching words.
       const updatedWords = matchingWords.map((word) => {
         const normalizedKeyword = normalizeText(word.text);
         const matched = normalizedTranscript.includes(normalizedKeyword);
@@ -65,10 +64,9 @@ const DefaultStory = ({ keywords }: DefaultStoryProps) => {
       });
 
       setMatchingWords(updatedWords);
-      setTranscript(transcript);
     };
 
-    // TODO(mykola): Fix types
+    // TODO(mykola): Fix types.
     recognition.onerror = (event: any) => {
       log.error('Speech recognition error:', { error: event.error });
       setRunning(false);
@@ -99,7 +97,7 @@ const DefaultStory = ({ keywords }: DefaultStoryProps) => {
       </Panel.Toolbar>
 
       <Panel.Content>
-        <div className='p-4 grid grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] gap-2'>
+        <div className='p-2 grid grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] gap-2'>
           {matchingWords.map((word, index) => (
             <span
               key={index}
@@ -118,7 +116,7 @@ const DefaultStory = ({ keywords }: DefaultStoryProps) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-transcription/components/KeyWordDetection',
+  title: 'plugins/plugin-transcription/stories/KeyWordDetection',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
 } satisfies Meta<typeof DefaultStory>;

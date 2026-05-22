@@ -49,10 +49,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/IntegrationPlugin.workerd.ts",
         "node": "./src/IntegrationPlugin.node.ts",
         "default": "./src/IntegrationPlugin.ts"
       },
       "types": "./dist/types/src/IntegrationPlugin.d.ts",
+      "workerd": "./dist/lib/node-esm/IntegrationPlugin.workerd.mjs",
       "node": "./dist/lib/node-esm/IntegrationPlugin.node.mjs",
       "default": "./dist/lib/neutral/IntegrationPlugin.mjs"
     },

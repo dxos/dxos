@@ -228,7 +228,7 @@ describe('PluginManager', () => {
       const plugin = TestPluginFactory({ count: 5 });
       plugins = [plugin];
 
-      const manager = PluginManager.make({ plugins: [plugin], core: [], pluginLoader });
+      const manager = PluginManager.make({ plugins: [plugin], pluginLoader });
       yield* manager.enable(testMeta.id);
       yield* manager.activate(ActivationEvents.Startup);
       const strings = manager.capabilities.getAll(String);
@@ -250,7 +250,7 @@ describe('PluginManager', () => {
       );
 
       const testPlugin = Test();
-      const manager = PluginManager.make({ plugins: [testPlugin], core: [], pluginLoader });
+      const manager = PluginManager.make({ plugins: [testPlugin], pluginLoader });
       yield* manager.enable(testMeta.id);
       assert.deepStrictEqual(manager.getEnabled(), [Test.meta.id]);
       assert.deepStrictEqual(manager.getModules(), [testPlugin.modules[0]]);
@@ -1400,9 +1400,12 @@ describe('PluginManager', () => {
     it.effect('coalesces concurrent lazy resolutions of the same plugin id', () =>
       Effect.gen(function* () {
         let factoryCalls = 0;
+        // System-tagged so the constructor's core derivation picks it up,
+        // forcing an implicit enable that races the explicit one below.
+        const coreLazyMeta = { ...lazyMeta, tags: ['system'] };
         const Real = (() => {
           const inner = Plugin.make(
-            Plugin.define<void>(lazyMeta).pipe(
+            Plugin.define<void>(coreLazyMeta).pipe(
               Plugin.addModule({
                 id: 'Hello',
                 activatesOn: ActivationEvents.Startup,
@@ -1414,16 +1417,16 @@ describe('PluginManager', () => {
             factoryCalls++;
             return inner();
           }) as Plugin.PluginFactory;
-          return Object.assign(factory, { meta: lazyMeta });
+          return Object.assign(factory, { meta: coreLazyMeta });
         })();
-        const LazyTest = Plugin.lazy(lazyMeta, () => Promise.resolve({ default: Real }));
+        const LazyTest = Plugin.lazy(coreLazyMeta, () => Promise.resolve({ default: Real }));
         const lazyStub = LazyTest();
         // `manager.enable(id)` is implicitly called twice — once from the
         // constructor's core/enabled chain, once from our explicit call. With
         // coalescing, the underlying factory should still run exactly once.
         plugins = [lazyStub];
-        const manager = PluginManager.make({ pluginLoader, plugins, core: [lazyMeta.id] });
-        yield* manager.enable(lazyMeta.id);
+        const manager = PluginManager.make({ pluginLoader, plugins });
+        yield* manager.enable(coreLazyMeta.id);
         assert.strictEqual(factoryCalls, 1);
       }),
     );
@@ -1600,7 +1603,7 @@ describe('PluginManager', () => {
     it.effect('does not auto-disable a core plugin even though the failure is recorded', () =>
       Effect.gen(function* () {
         const FailingEvent = ActivationEvent.make('org.dxos.test.core-fail');
-        const CorePlugin = Plugin.define({ id: 'org.dxos.test.core', name: 'Core' }).pipe(
+        const CorePlugin = Plugin.define({ id: 'org.dxos.test.core', name: 'Core', tags: ['system'] }).pipe(
           Plugin.addModule({
             id: 'Boom',
             activatesOn: FailingEvent,
@@ -1614,7 +1617,6 @@ describe('PluginManager', () => {
         const manager = PluginManager.make({
           pluginLoader,
           plugins: [corePlugin],
-          core: [corePlugin.meta.id],
         });
         // Core is auto-enabled via the constructor's enable chain.
         const exit = yield* Effect.exit(manager.activate(FailingEvent));
@@ -1672,14 +1674,15 @@ describe('PluginManager', () => {
   describe('plugin dependencies (dependsOn)', () => {
     // Build a small plugin with a `dependsOn` chain. The helper keeps each test
     // focused on the dependency semantics rather than module wiring.
-    const makePlugin = (id: string, dependsOn?: string[]) => Plugin.make(Plugin.define({ id, name: id, dependsOn }))();
+    const makePlugin = (id: string, dependsOn?: string[], tags?: string[]) =>
+      Plugin.make(Plugin.define({ id, name: id, dependsOn, tags }))();
 
     it.effect('enable resolves the transitive closure in dependency-first order', () =>
       Effect.gen(function* () {
         const a = makePlugin('a');
         const b = makePlugin('b', ['a']);
         const c = makePlugin('c', ['b']);
-        const manager = PluginManager.make({ plugins: [a, b, c], core: [], pluginLoader });
+        const manager = PluginManager.make({ plugins: [a, b, c], pluginLoader });
 
         const ok = yield* manager.enable('c');
         assert.isTrue(ok);
@@ -1692,7 +1695,7 @@ describe('PluginManager', () => {
       Effect.gen(function* () {
         const a = makePlugin('a');
         const b = makePlugin('b', ['a']);
-        const manager = PluginManager.make({ plugins: [a, b], core: [], pluginLoader });
+        const manager = PluginManager.make({ plugins: [a, b], pluginLoader });
 
         yield* manager.enable('a');
         yield* manager.enable('b');
@@ -1706,7 +1709,7 @@ describe('PluginManager', () => {
     it.effect('enable with a missing declared dependency records a PluginDependencyError', () =>
       Effect.gen(function* () {
         const dependent = makePlugin('dependent', ['org.dxos.missing']);
-        const manager = PluginManager.make({ plugins: [dependent], core: [], pluginLoader });
+        const manager = PluginManager.make({ plugins: [dependent], pluginLoader });
 
         const ok = yield* manager.enable('dependent');
         assert.isFalse(ok);
@@ -1722,7 +1725,7 @@ describe('PluginManager', () => {
       Effect.gen(function* () {
         const a = makePlugin('a', ['b']);
         const b = makePlugin('b', ['a']);
-        const manager = PluginManager.make({ plugins: [a, b], core: [], pluginLoader });
+        const manager = PluginManager.make({ plugins: [a, b], pluginLoader });
 
         const ok = yield* manager.enable('a');
         assert.isFalse(ok);
@@ -1738,7 +1741,7 @@ describe('PluginManager', () => {
         // Dependent declares a dep that is intentionally unregistered — the
         // caller has accepted responsibility for satisfying it some other way.
         const dependent = makePlugin('dependent', ['org.dxos.alt-impl']);
-        const manager = PluginManager.make({ plugins: [dependent], core: [], pluginLoader });
+        const manager = PluginManager.make({ plugins: [dependent], pluginLoader });
 
         const ok = yield* manager.enable('dependent', { resolveDependencies: false });
         assert.isTrue(ok);
@@ -1752,7 +1755,7 @@ describe('PluginManager', () => {
         const a = makePlugin('a');
         const b = makePlugin('b', ['a']);
         const c = makePlugin('c', ['b']);
-        const manager = PluginManager.make({ plugins: [a, b, c], core: [], pluginLoader });
+        const manager = PluginManager.make({ plugins: [a, b, c], pluginLoader });
 
         yield* manager.enable('c');
         assert.deepStrictEqual(manager.getEnabled(), ['a', 'b', 'c']);
@@ -1767,10 +1770,9 @@ describe('PluginManager', () => {
     it.effect('default disable refuses when a transitive dependent is core', () =>
       Effect.gen(function* () {
         const lib = makePlugin('lib');
-        const coreClient = makePlugin('coreClient', ['lib']);
+        const coreClient = makePlugin('coreClient', ['lib'], ['system']);
         const manager = PluginManager.make({
           plugins: [lib, coreClient],
-          core: ['coreClient'],
           enabled: ['lib'],
           pluginLoader,
         });
@@ -1787,7 +1789,7 @@ describe('PluginManager', () => {
       Effect.gen(function* () {
         const a = makePlugin('a');
         const b = makePlugin('b', ['a']);
-        const manager = PluginManager.make({ plugins: [a, b], core: [], pluginLoader });
+        const manager = PluginManager.make({ plugins: [a, b], pluginLoader });
 
         yield* manager.enable('b');
         const ok = yield* manager.disable('a', { cascade: false });
@@ -1802,7 +1804,7 @@ describe('PluginManager', () => {
         const a = makePlugin('a');
         const b = makePlugin('b', ['a']);
         const c = makePlugin('c', ['b']);
-        const manager = PluginManager.make({ plugins: [a, b, c], core: [], pluginLoader });
+        const manager = PluginManager.make({ plugins: [a, b, c], pluginLoader });
 
         assert.deepStrictEqual([...manager.getDependencies('c', { transitive: false })], ['b']);
         assert.deepStrictEqual([...manager.getDependencies('c', { transitive: true })], ['a', 'b']);
@@ -1831,7 +1833,6 @@ describe('PluginManager', () => {
         const registry = Registry.make();
         const manager = PluginManager.make({
           plugins: [dependent],
-          core: [],
           pluginLoader: remoteLoader,
           registry,
         });
@@ -1868,7 +1869,6 @@ describe('PluginManager', () => {
         const registry = Registry.make();
         const manager = PluginManager.make({
           plugins: [dependent],
-          core: [],
           pluginLoader: failingLoader,
           registry,
         });

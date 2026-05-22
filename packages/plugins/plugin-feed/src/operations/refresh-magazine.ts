@@ -5,11 +5,11 @@
 import * as Effect from 'effect/Effect';
 
 import { Operation } from '@dxos/compute';
-import { type Database, Obj, Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 import { FeedOperation, type Magazine, Subscription } from '../types';
-import { findStarTag } from '../util';
+import { getSubscriptionPostState } from '../util';
 
 export default FeedOperation.RefreshMagazine.pipe(
   Operation.withHandler(
@@ -34,7 +34,7 @@ export default FeedOperation.RefreshMagazine.pipe(
           }),
         ),
       );
-      const validFeeds = feeds.filter((feed): feed is Subscription.Feed => Boolean(feed?.url));
+      const validFeeds = feeds.filter((feed): feed is Subscription.Subscription => Boolean(feed?.url));
 
       let synced = 0;
       for (const feed of validFeeds) {
@@ -48,8 +48,7 @@ export default FeedOperation.RefreshMagazine.pipe(
 
       const { added } = yield* Operation.invoke(FeedOperation.CurateMagazine, { magazine: magazineRef });
 
-      const db = Obj.getDatabase(magazine);
-      applyPerFeedKeep(magazine, db);
+      applyPerFeedKeep(magazine);
 
       return { synced, added };
     }),
@@ -70,7 +69,7 @@ const publishedTimestamp = (post: Subscription.Post): number => {
 };
 
 /**
- * Apply each Subscription.Feed's `keep` bound to `magazine.posts`. Each
+ * Apply each Subscription.Subscription's `keep` bound to `magazine.posts`. Each
  * feed contributes up to its own `feed.keep ?? DEFAULT_KEEP` posts — NOT a
  * single magazine-wide cap. With a global cap, sorting all curated posts by
  * `published` and slicing top-N silently drops every post from the
@@ -81,10 +80,9 @@ const publishedTimestamp = (post: Subscription.Post): number => {
  * CurateMagazine operation) — chaining a second `mutable.posts = ...`
  * inside one change block trips ECHO's deep-mapper dedup invariant.
  */
-const applyPerFeedKeep = (magazine: Magazine.Magazine, db: Database.Database | undefined): void => {
-  const tag = db ? findStarTag(db) : undefined;
-  const tagUri = tag ? Obj.getURI(tag) : undefined;
-  const isStarred = (post: Subscription.Post) => (tagUri ? (Obj.getMeta(post).tags?.includes(tagUri) ?? false) : false);
+const applyPerFeedKeep = (magazine: Magazine.Magazine): void => {
+  const isStarred = (post: Subscription.Post) =>
+    Boolean(getSubscriptionPostState(post.source?.target, (post as { id: string }).id).starred);
 
   const feedKeepById = new Map<string, number>();
   for (const feedRef of magazine.feeds) {
@@ -107,8 +105,8 @@ const applyPerFeedKeep = (magazine: Magazine.Magazine, db: Database.Database | u
 
   const byFeedId = new Map<string | undefined, Array<{ ref: Ref.Ref<Subscription.Post>; post: Subscription.Post }>>();
   for (const pair of resolvedPairs) {
-    const feedRefDxn = pair.post.feed?.uri;
-    const feedId = feedRefDxn ? dxnTailId(feedRefDxn) : undefined;
+    const feedRefURI = pair.post.source?.uri;
+    const feedId = feedRefURI ? dxnTailId(feedRefURI) : undefined;
     const arr = byFeedId.get(feedId) ?? [];
     arr.push(pair);
     byFeedId.set(feedId, arr);

@@ -125,7 +125,17 @@ export namespace AppCapabilities {
     'org.dxos.app-framework.capability.blueprint-definition',
   );
 
+  /**
+   * @deprecated Resolve {@link AiService.AiService} through the process manager
+   * runtime (via {@link Capabilities.ProcessManagerRuntime} or a
+   * {@link ServiceResolver}) instead of pulling this layer directly. The
+   * application-affinity `LayerSpec` contributed by `plugin-assistant`
+   * registers the same layer with the {@link Capabilities.LayerSpec} graph.
+   */
   export type AiServiceLayer = Layer$.Layer<AiService$.AiService>;
+  /**
+   * @deprecated See the `AiServiceLayer` type above.
+   */
   export const AiServiceLayer = Capability$.make<AiServiceLayer>(
     'org.dxos.app-framework.capability.ai-service-factory',
   );

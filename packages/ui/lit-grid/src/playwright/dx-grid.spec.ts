@@ -12,8 +12,9 @@ import { toPlaneCellIndex } from '../util';
 
 const gridPlaneCellSize = 31;
 const gap = 1;
-const nCols = 9;
-const nRows = 7;
+// The spec viewport fits one extra column/row beyond the nominal grid plane size.
+const nCols = 10;
+const nRows = 8;
 
 test.describe('dx-grid', () => {
   let page: Page;
@@ -23,8 +24,8 @@ test.describe('dx-grid', () => {
     const setup = await setupPage(browser, {
       url: storybookUrl('dx-grid--spec', 9002),
       viewportSize: {
-        width: (gridPlaneCellSize + gap) * (nCols + 1.5),
-        height: (gridPlaneCellSize + gap) * (nRows + 1.5),
+        width: (gridPlaneCellSize + gap) * (nCols + 0.5),
+        height: (gridPlaneCellSize + gap) * (nRows + 0.5),
       }, // 336 x 272
     });
     page = setup.page;
@@ -46,8 +47,8 @@ test.describe('dx-grid', () => {
     // Now pan by wheel to the center point of the cell one right and one down from the origin cell of the grid plane.
     await grid.panByWheel(gridPlaneCellSize * 1.5 + gap, gridPlaneCellSize * 1.5 + gap);
 
-    // Confirm that the grid plane is showing only the cells that would be visible.
-    await grid.expectVirtualizationResult(nCols + 1, nRows + 1, 1, 1);
+    // Pan shifts the viewport by one cell; visible cell counts stay the same.
+    await grid.expectVirtualizationResult(nCols, nRows, 1, 1);
   });
 
   test('mouse access', async () => {

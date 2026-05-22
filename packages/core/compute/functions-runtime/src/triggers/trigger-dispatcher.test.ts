@@ -13,6 +13,7 @@ import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
 import { Operation, OperationHandlerSet, ServiceResolver, Trace, Trigger } from '@dxos/compute';
+import { ProcessManager } from '@dxos/compute-runtime';
 import { ExampleHandlers, Reply } from '@dxos/compute/testing';
 import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-db/testing';
@@ -20,7 +21,6 @@ import { credentialsLayerConfig, QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { Person, Task } from '@dxos/types';
 
-import * as ProcessManager from '../process/ProcessManager';
 import { TriggerDispatcher } from './trigger-dispatcher';
 import { TriggerStateStore } from './trigger-state-store';
 

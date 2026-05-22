@@ -4,13 +4,12 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useSpaceCallback } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { AgentPrompt } from '@dxos/assistant-toolkit';
-import { type Routine } from '@dxos/compute';
-import { Operation } from '@dxos/compute';
-import { Obj } from '@dxos/echo';
+import { Operation, type Routine } from '@dxos/compute';
+import { Database, Feed, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { useComputeRuntimeCallback } from '@dxos/plugin-automation/hooks';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -98,8 +97,9 @@ const usePromptHandler = (routine: Routine.Routine) => {
     }
   }, [routine, db]);
 
-  return useComputeRuntimeCallback(
+  return useSpaceCallback(
     db?.spaceId,
+    [Database.Service, Feed.FeedService] as const,
     () => {
       invariant(data);
       return Operation.invoke(AgentPrompt, data);

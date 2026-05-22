@@ -127,16 +127,17 @@ export const makeInitialized = (
   blueprint: Blueprint.Blueprint,
 ): Effect.Effect<Agent, never, Feed.FeedService | Database.Service> =>
   Effect.gen(function* () {
-    const agent = Obj.make(Agent, {
-      ...props,
-      instructions: Ref.make(Text.make({ content: props.instructions })),
-      plan: Ref.make(Plan.makePlan({ tasks: [] })),
-      artifacts: props.artifacts ?? [],
-      subscriptions: props.subscriptions ?? [],
-      filterEvents: props.filterEvents ?? true,
-      enabled: props.enabled ?? true,
-    });
-    yield* Database.add(agent);
+    const agent = yield* Database.add(
+      Obj.make(Agent, {
+        ...props,
+        instructions: Ref.make(Text.make({ content: props.instructions })),
+        plan: Ref.make(Plan.makePlan({ tasks: [] })),
+        artifacts: props.artifacts ?? [],
+        subscriptions: props.subscriptions ?? [],
+        filterEvents: props.filterEvents ?? true,
+        enabled: props.enabled ?? true,
+      }),
+    );
     const feed = yield* Database.add(Feed.make());
     const runtime = yield* Effect.runtime<Feed.FeedService>();
     const contextBinder = new AiContext.Binder({ feed, runtime });

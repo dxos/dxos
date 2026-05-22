@@ -271,6 +271,10 @@ export class ObjectCore {
     if (isEncodedReference(value)) {
       return value;
     }
+    if (value instanceof Uint8Array) {
+      // Automerge stores Uint8Array natively; do not recurse into its byte indices.
+      return value;
+    }
     if (Array.isArray(value)) {
       const values: any = value.map((val) => this.encode(val));
       return values;
@@ -299,6 +303,9 @@ export class ObjectCore {
     }
     if (value instanceof A.RawString) {
       return value.toString();
+    }
+    if (value instanceof Uint8Array) {
+      return value;
     }
     // EncodedReference values are already in the correct format.
     if (isEncodedReference(value)) {

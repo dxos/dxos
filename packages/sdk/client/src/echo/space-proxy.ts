@@ -43,10 +43,11 @@ import {
   type QueueFactory,
   type SpaceSyncState,
 } from '@dxos/echo-db';
+import { isEdgePeerId } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { EdgeService, decodeError } from '@dxos/protocols';
+import { decodeError } from '@dxos/protocols';
 import {
   type Contact,
   CreateEpochRequest,
@@ -68,7 +69,6 @@ import {
 import { type GossipMessage } from '@dxos/protocols/proto/dxos/mesh/teleport/gossip';
 import { Timeframe } from '@dxos/timeframe';
 import { trace } from '@dxos/tracing';
-import { compositeKey } from '@dxos/util';
 
 import { RPC_TIMEOUT } from '../common';
 import { InvitationsProxy } from '../invitations';
@@ -732,6 +732,14 @@ export class SpaceProxy implements Space, CustomInspectable {
       throw new Error('Edge replication is disabled');
     }
 
+    // Drain pending head updates before sampling sync state. `db.flush()` calls
+    // `host.flush`, which (a) flushes loaded docs to disk and (b) `runBlocking`s
+    // `_onHeadsChangedTask` so any `_afterSave`-recorded heads have propagated into
+    // `_collectionSynchronizer`. Without this, `getCollectionSyncState` is eventually
+    // consistent and a stream emission may report `{0, 0, 0}` from stale local heads,
+    // causing the latch below to resolve prematurely.
+    await this._db.flush();
+
     return await new Promise<void>((resolve, reject) => {
       scheduleTask(
         ctx,
@@ -742,7 +750,7 @@ export class SpaceProxy implements Space, CustomInspectable {
       );
 
       const checkSyncState = (syncState: SpaceSyncState) => {
-        const edgePeer = syncState.peers?.find((state) => isEdgePeerId(this.id, state.peerId));
+        const edgePeer = syncState.peers?.find((state) => isEdgePeerId(state.peerId, this.id));
         if (opts?.onProgress) {
           opts.onProgress(edgePeer);
         }
@@ -804,7 +812,3 @@ const shouldMembersUpdate = (prev: SpaceMember[] | undefined, next: SpaceMember[
 
   return !isEqualWith(prev, next, loadashEqualityFn);
 };
-
-const isEdgePeerId = (spaceId: SpaceId, peerId: string) =>
-  peerId.startsWith(compositeKey(EdgeService.AUTOMERGE_REPLICATOR, spaceId)) ||
-  peerId.startsWith(compositeKey(EdgeService.SUBDUCTION_REPLICATOR, spaceId));

@@ -7,6 +7,9 @@ import * as Layer from 'effect/Layer';
 
 import { type FunctionNotFoundError, Operation } from '@dxos/compute';
 
+/**
+ * @deprecated
+ */
 export class FunctionInvocationService extends Context.Tag('@dxos/functions/FunctionInvocationService')<
   FunctionInvocationService,
   {

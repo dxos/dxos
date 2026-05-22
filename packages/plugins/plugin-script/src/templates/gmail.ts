@@ -74,7 +74,7 @@ export default defineFunction({
         catch: (e: any) => e,
       });
       const { objects } = yield* Effect.tryPromise({
-        try: () => space.queues.queryQueue(mailbox.queue.dxn),
+        try: () => space.queues.queryQueue(mailbox.queue.uri),
         catch: (e: any) => e,
       });
       const newMessages = yield* Ref.make([]);
@@ -132,7 +132,7 @@ export default defineFunction({
           Stream.grouped(10),
           Stream.flatMap((batch: any) =>
             Effect.tryPromise({
-              try: () => space.queues.insertIntoQueue(mailbox.queue.dxn, Chunk.toReadonlyArray(batch)),
+              try: () => space.queues.insertIntoQueue(mailbox.queue.uri, Chunk.toReadonlyArray(batch)),
               catch: (e: any) => e,
             }),
           ),

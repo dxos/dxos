@@ -14,4 +14,6 @@ export const CodeOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./scaffold-project'),
   () => import('./hello-world'),
   () => import('./reset-project'),
+  () => import('./build-project'),
+  () => import('./run-build'),
 );
