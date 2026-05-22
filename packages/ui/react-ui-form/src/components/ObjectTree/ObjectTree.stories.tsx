@@ -121,3 +121,14 @@ export const WithForm = () => (
     </Form.Viewport>
   </Form.Root>
 );
+
+export const WithReadOnlyForm = () => (
+  <Form.Root schema={ConfigSchema as any} defaultValues={value as any} readonly={true}>
+    <Form.Viewport>
+      <Form.Content>
+        <Form.FieldSet />
+        <Form.Actions />
+      </Form.Content>
+    </Form.Viewport>
+  </Form.Root>
+);

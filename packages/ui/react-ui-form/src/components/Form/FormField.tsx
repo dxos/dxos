@@ -142,6 +142,18 @@ export const FormField = (props: FormFieldProps) => {
     ...fieldState,
   };
 
+  // Omit empty fields entirely in read-only mode -- an empty value has nothing
+  // to display, so a labelled row with a blank input is just noise. This
+  // mirrors what `FormFieldWrapper` already does for `layout === 'static'`, but
+  // covers every field type (including those that bypass the wrapper:
+  // RefField, SelectField, MarkdownField, ...). Container fields
+  // (`ArrayField`, nested-struct -> `FormFieldSet`) keep their own
+  // empty-value checks, but those branches only apply when the value is
+  // actually a non-null array/object, so this check doesn't interfere.
+  if (readonly && fieldState.getValue() == null) {
+    return null;
+  }
+
   //
   // Custom field.
   //
