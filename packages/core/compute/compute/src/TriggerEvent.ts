@@ -7,7 +7,6 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Ref } from '@dxos/echo';
-import { EchoURI } from '@dxos/keys';
 
 // TODO(wittjosiah): Review this type.
 //   - Should be discriminated union.
@@ -24,27 +23,12 @@ export const EmailEvent = Schema.Struct({
 });
 export type EmailEvent = Schema.Schema.Type<typeof EmailEvent>;
 
-const _QueueEvent = Schema.Struct({
-  queue: EchoURI.Schema,
+export const QueueEvent = Schema.Struct({
+  queue: Schema.String,
   item: Schema.Any,
   cursor: Schema.String,
 });
-/**
- * Explicit interface (rather than `Schema.Schema.Type<typeof _QueueEvent>`)
- * so consumers reference the named type in their declaration emit instead of
- * expanding `{ queue: EchoURI; ... }` and requiring a transitive `EchoURI` import.
- *
- * The original `DXN.Schema` resolved to `Schema<DXN, string>`, so inferred output
- * types collapsed to plain `string` and didn't drag the brand into emit. `EchoURI.Schema`
- * is identity-encoded (`Schema<EchoURI, EchoURI>`) so the brand survives — and downstream
- * packages need the explicit interface to keep `EchoURI` out of their `.d.ts` output.
- */
-export interface QueueEvent {
-  readonly queue: EchoURI.EchoURI;
-  readonly item: any;
-  readonly cursor: string;
-}
-export const QueueEvent: Schema.Schema<QueueEvent> = _QueueEvent;
+export type QueueEvent = Schema.Schema.Type<typeof QueueEvent>;
 
 export const SubscriptionEvent = Schema.Struct({
   /**

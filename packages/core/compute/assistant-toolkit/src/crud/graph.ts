@@ -58,8 +58,8 @@ export const findRelatedSchema = async (db: Database.Database, anchor: Type.AnyE
       }
 
       return (
-        isSchemaAddressableByDxn(anchor, getTypeAnnotation(schema)!.sourceSchema!) ||
-        isSchemaAddressableByDxn(anchor, getTypeAnnotation(schema)!.targetSchema!)
+        isSchemaAddressableByDXN(anchor, getTypeAnnotation(schema)!.sourceSchema!) ||
+        isSchemaAddressableByDXN(anchor, getTypeAnnotation(schema)!.targetSchema!)
       );
     })
     .map(
@@ -74,17 +74,12 @@ export const findRelatedSchema = async (db: Database.Database, anchor: Type.AnyE
  * Non-strict DXN comparison.
  * Returns true if the DXN could be resolved to the schema.
  */
-const isSchemaAddressableByDxn = (schema: Type.AnyEntity, dxnStr: string): boolean => {
-  if (getTypeIdentifierAnnotation(schema) === dxnStr) {
+const isSchemaAddressableByDXN = (schema: Type.AnyEntity, dxn: DXN.DXN): boolean => {
+  if (getTypeIdentifierAnnotation(schema) === dxn) {
     return true;
   }
 
-  const parsed = DXN.tryParse(dxnStr);
-  if (parsed) {
-    return DXN.getNsid(parsed) === Type.getTypename(schema);
-  }
-
-  return false;
+  return DXN.getNsid(dxn) === Type.getTypename(schema);
 };
 
 /**

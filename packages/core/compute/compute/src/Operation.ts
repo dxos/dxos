@@ -12,6 +12,7 @@ import * as Schema$ from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
 import { DXN, Annotation, JsonSchema, Migration, Obj, Ref, Type, type Key } from '@dxos/echo';
+import type { URI } from '@dxos/keys';
 
 import type { NoHandlerError } from './errors';
 import type { Operation } from './index';
@@ -424,7 +425,7 @@ export interface InvokeOptions {
    * at the point of use.
    * Passed to the process environment so nested operations can resolve AiContext.Service and related services.
    */
-  conversation?: Key.URI.URI;
+  conversation?: URI.URI;
   /**
    * Optional process-runtime tracing metadata (consumed by `@dxos/functions-runtime` when wired).
    */

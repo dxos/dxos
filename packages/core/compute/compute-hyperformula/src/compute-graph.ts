@@ -207,8 +207,8 @@ export class ComputeGraph extends Resource {
 
       const fn = this._remoteFunctions.find((fn) => fn.binding === binding);
       if (fn) {
-        const id = Obj.getURI(fn);
-        return `${id}(${args})`;
+        const uri = Obj.getURI(fn);
+        return `${uri}(${args})`;
       } else {
         return match;
       }
