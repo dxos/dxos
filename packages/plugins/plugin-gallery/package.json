@@ -1,6 +1,7 @@
 {
   "name": "@dxos/plugin-gallery",
   "version": "0.8.3",
+  "private": true,
   "description": "Image gallery plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -120,6 +121,5 @@
     "@dxos/ui-theme": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:"
-  },
-  "private": true
+  }
 }
