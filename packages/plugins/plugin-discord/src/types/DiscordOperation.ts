@@ -47,6 +47,29 @@ export const GetDiscordChannels = Operation.make({
 });
 
 /**
+ * Discovery only — list Discord text channels across every guild the
+ * authenticated *user* belongs to (OAuth user token).
+ *
+ * Same output shape as `GetDiscordChannels` so the same sync operation
+ * (`SyncDiscordChannel`) works for both the bot and user providers without
+ * modification.
+ */
+export const GetDiscordUserChannels = Operation.make({
+  meta: {
+    key: `${DISCORD_OPERATION}.get-discord-user-channels`,
+    name: 'Get Discord User Channels',
+    description: 'List Discord text channels reachable by the authenticated user without materializing local Channels.',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    integration: Ref.Ref(Integration.Integration),
+  }),
+  output: Schema.Struct({
+    targets: Schema.Array(RemoteTarget),
+  }),
+});
+
+/**
  * Pull-only sync of currently-selected Discord targets in an Integration.
  *
  * For each selected channel: load (or create) a local `Channel` keyed by the

@@ -3,6 +3,8 @@
 //
 
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
+import * as HttpClient from '@effect/platform/HttpClient';
+import * as HttpClientRequest from '@effect/platform/HttpClientRequest';
 import { DiscordConfig, type DiscordREST, DiscordRESTMemoryLive } from 'dfx';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -48,5 +50,38 @@ export const makeDiscordLayer = (
       const integration = yield* Database.load(integrationRef);
       const accessToken = yield* Database.load(integration.accessToken);
       return makeDiscordLayerFromToken(accessToken.token);
+    }),
+  );
+
+/**
+ * Build an `HttpClient.HttpClient` layer for Discord user OAuth tokens.
+ *
+ * Unlike bot tokens (which use dfx and a `Bot ` Authorization prefix), user
+ * OAuth tokens require `Bearer ` auth. This layer wraps the edge-proxy
+ * `FetchHttpClient` with the correct header so user-token operation handlers
+ * can call Discord's REST API without touching the raw token.
+ */
+export const makeDiscordUserLayerFromToken = (token: string): Layer.Layer<HttpClient.HttpClient> =>
+  Layer.effect(
+    HttpClient.HttpClient,
+    HttpClient.HttpClient.pipe(
+      Effect.map(
+        HttpClient.mapRequest((req) => HttpClientRequest.setHeader(req, 'Authorization', `Bearer ${token}`)),
+      ),
+    ),
+  ).pipe(Layer.provide(FetchHttpClient.layer.pipe(Layer.provide(makeEdgeProxyHttpClientLayer()))));
+
+/**
+ * Build an `HttpClient.HttpClient` layer from a persisted `Integration` ref,
+ * for use by Discord user OAuth operation handlers.
+ */
+export const makeDiscordUserLayer = (
+  integrationRef: Ref.Ref<Integration.Integration>,
+): Layer.Layer<HttpClient.HttpClient, Err.ObjectNotFoundError> =>
+  Layer.unwrapEffect(
+    Effect.gen(function* () {
+      const integration = yield* Database.load(integrationRef);
+      const accessToken = yield* Database.load(integration.accessToken);
+      return makeDiscordUserLayerFromToken(accessToken.token);
     }),
   );
