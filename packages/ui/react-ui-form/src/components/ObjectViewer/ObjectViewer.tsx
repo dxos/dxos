@@ -34,10 +34,7 @@ export type ObjectViewerProps<T> = {
  */
 const ObjectViewerImpl = composable<HTMLDivElement, ObjectViewerProps<any>>(
   ({ schema, value, ...props }, forwardedRef) => (
-    <div
-      {...composableProps(props, { role: 'table', classNames: 'font-mono text-sm w-full' })}
-      ref={forwardedRef}
-    >
+    <div {...composableProps(props, { role: 'table', classNames: 'font-mono text-sm w-full' })} ref={forwardedRef}>
       <Node ast={schema.ast} value={value} label={null} depth={0} />
     </div>
   ),
