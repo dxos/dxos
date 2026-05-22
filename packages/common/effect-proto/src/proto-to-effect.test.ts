@@ -132,3 +132,16 @@ describe('parseProto / config.proto', () => {
     expect(Schema.decodeUnknownSync(Storage)({ dataRoot: '/tmp' })).toEqual({ dataRoot: '/tmp' });
   });
 });
+
+describe('parseProto / unsupported features', () => {
+  test('rejects map<K, V> fields with a clear error', ({ expect }) => {
+    const source = `
+      syntax = "proto3";
+      package dxos.test;
+      message WithMap {
+        map<string, int32> counts = 1;
+      }
+    `;
+    expect(() => parseProto(source)).toThrow(/map fields are not supported/);
+  });
+});

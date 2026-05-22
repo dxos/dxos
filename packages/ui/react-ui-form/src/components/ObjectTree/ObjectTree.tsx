@@ -170,7 +170,8 @@ const formatLeaf = (value: unknown): ReactNode => {
 
   switch (typeof value) {
     case 'string':
-      return <span className='text-blue-text'>{value}</span>;
+      // Quote strings so empty strings remain visible (`""` rather than blank).
+      return <span className='text-blue-text'>{JSON.stringify(value)}</span>;
     case 'number':
     case 'bigint':
       return <span className='text-green-text'>{String(value)}</span>;

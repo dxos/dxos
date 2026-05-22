@@ -4,20 +4,23 @@
 
 // Convert a Protocol Buffers (proto3) source file to a registry of Effect
 // Schemas. The output is shaped to match what `@dxos/codec-protobuf` emits
-// at runtime via protobufjs (`enums: String`, `bytes: String`, `longs: String`,
-// camelCase field names) so the same JS objects can be both schema-validated
-// and round-tripped through the wire codec.
+// at runtime via protobufjs for the JSON shape (`bytes: String`,
+// `longs: String`, camelCase field names) so the same JS objects can be both
+// schema-validated and round-tripped through the wire codec. Enums diverge
+// from that codec's `enums: String` configuration on purpose -- see below.
 //
-// Supports: messages (incl. nested), enums (as string-name literal unions),
-// scalars, `repeated` (-> Schema.Array), implicit/explicit optionality
-// (every field is treated as optional, matching proto3 semantics with
-// `defaults: false`), and the well-known `google.protobuf.Any` / `Struct`
-// / `Value` / `ListValue` / `NullValue` (typed as Unknown / Record /
-// Unknown / Array<Unknown> / Null).
+// Supports: messages (incl. nested), enums (as numeric-literal unions of
+// their tag values; the name<->value map is exposed via
+// `ProtoRegistry.getEnum`), scalars, `repeated` (-> Schema.Array),
+// implicit/explicit optionality (every field is treated as optional,
+// matching proto3 semantics with `defaults: false`), and the well-known
+// `google.protobuf.Any` / `Struct` / `Value` / `ListValue` / `NullValue`
+// (typed as Unknown / Record / Unknown / Array<Unknown> / Null).
 //
-// Not yet supported: `map<K, V>` fields, user-defined `oneof` (synthetic
-// oneofs from `optional` scalars are handled), proto2 groups, comment /
-// field-option (e.g. `(env_var)`) -> annotation mapping, build-time codegen.
+// Not yet supported: `map<K, V>` fields (parsing throws if encountered),
+// user-defined `oneof` (synthetic oneofs from `optional` scalars are
+// handled), proto2 groups, comment / field-option (e.g. `(env_var)`) ->
+// annotation mapping, build-time codegen.
 
 import * as Schema from 'effect/Schema';
 import protobuf from 'protobufjs';
@@ -169,6 +172,14 @@ const stripLeadingDot = (name: string): string => (name.startsWith('.') ? name.s
  * targets and `Schema.suspend` for in-progress (cyclic) ones.
  */
 const fieldToSchema = (field: protobuf.Field, resolveRef: (fq: string) => Schema.Schema<any>): Schema.Schema<any> => {
+  // Fail fast on `map<K, V>` -- protobufjs models these specially (synthetic
+  // entry message + repeated field) and an Effect Schema needs `Schema.Record`,
+  // which we haven't wired up yet. Silent fall-through here would produce a
+  // schema that mis-types the runtime object.
+  if (field.map) {
+    throw new Error(`effect-proto: map fields are not supported ("${field.fullName}")`);
+  }
+
   // Scalars don't have `resolvedType`; switch on the parser-level `type` string.
   const scalar = SCALAR_SCHEMAS[field.type];
   if (scalar) {
