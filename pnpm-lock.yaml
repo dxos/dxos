@@ -7229,6 +7229,9 @@ importers:
       lodash.defaultsdeep:
         specifier: 'catalog:'
         version: 4.6.1
+      lodash.merge:
+        specifier: 'catalog:'
+        version: 4.6.2
       luxon:
         specifier: 'catalog:'
         version: 3.4.4
@@ -7281,6 +7284,9 @@ importers:
       '@types/lodash.defaultsdeep':
         specifier: 'catalog:'
         version: 4.6.7
+      '@types/lodash.merge':
+        specifier: 'catalog:'
+        version: 4.6.9
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.14
