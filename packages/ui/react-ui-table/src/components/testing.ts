@@ -6,7 +6,7 @@ import { Atom } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import { useEffect } from 'react';
 
-import { Format, Type } from '@dxos/echo';
+import { DXN, Format, Type } from '@dxos/echo';
 import { TypeEnum } from '@dxos/echo/internal';
 import { setValue } from '@dxos/effect';
 import { random } from '@dxos/random';
@@ -18,10 +18,7 @@ export const TestSchema = Schema.Struct({
   active: Schema.optional(Schema.Boolean),
   netWorth: Schema.optional(Schema.Number),
 }).pipe(
-  Type.object({
-    typename: 'com.example.type.test',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.fromNsidAndVersion('com.example.type.test', '0.1.0')),
 );
 
 export type TestItem = {

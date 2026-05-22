@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Relation, Type } from '@dxos/echo';
+import { DXN, Obj, Relation, Type } from '@dxos/echo';
 
 /** @deprecated Use AnchoredTo instead. */
 export const LegacyAnchoredTo = Schema.Struct({
@@ -14,8 +14,7 @@ export const LegacyAnchoredTo = Schema.Struct({
   anchor: Schema.optional(Schema.String),
 }).pipe(
   Type.relation({
-    typename: 'org.dxos.relation.anchored-to',
-    version: '0.1.0',
+    dxn: DXN.fromNsidAndVersion('org.dxos.relation.anchored-to', '0.1.0'),
     source: Obj.Unknown,
     target: Obj.Unknown,
   }),
@@ -28,8 +27,7 @@ export const AnchoredTo = Schema.Struct({
   anchor: Schema.optional(Schema.String),
 }).pipe(
   Type.relation({
-    typename: 'org.dxos.relation.anchoredTo',
-    version: '0.1.0',
+    dxn: DXN.fromNsidAndVersion('org.dxos.relation.anchoredTo', '0.1.0'),
     source: Obj.Unknown,
     target: Obj.Unknown,
   }),

@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
+import { DXN, Type } from '@dxos/echo';
 
 // All section metadata needs to be optional/have defaults.
 // Any objects added to the collection will start with the section defaults.
@@ -22,10 +22,7 @@ export const SectionSchema = Schema.Struct({
 export const StackViewType = Schema.Struct({
   sections: Schema.Record({ key: Schema.String, value: SectionSchema }),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.stackView',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.fromNsidAndVersion('org.dxos.type.stackView', '0.1.0')),
 );
 
 export interface StackViewType extends Schema.Schema.Type<typeof StackViewType> {}

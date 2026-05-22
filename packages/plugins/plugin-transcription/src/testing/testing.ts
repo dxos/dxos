@@ -10,7 +10,7 @@ import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/ass
 import { scheduleTaskInterval } from '@dxos/async';
 import { createFeedServiceLayer, type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -30,10 +30,7 @@ export const TestItem = Schema.Struct({
     description: 'Product description',
   }),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.test',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.fromNsidAndVersion('org.dxos.type.test', '0.1.0')),
 );
 
 // TODO(wittjosiah): Make builder generic and reuse for all message types.

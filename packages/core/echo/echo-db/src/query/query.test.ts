@@ -582,11 +582,11 @@ describe('Query', () => {
       const ContactV1 = Schema.Struct({
         firstName: Schema.String,
         lastName: Schema.String,
-      }).pipe(Type.object({ typename: 'com.example.type.person', version: '0.1.0' }));
+      }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.person', '0.1.0')));
 
       const ContactV2 = Schema.Struct({
         name: Schema.String,
-      }).pipe(Type.object({ typename: 'com.example.type.person', version: '0.2.0' }));
+      }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.person', '0.2.0')));
 
       const peer = await builder.createPeer({ types: [ContactV1, ContactV2] });
       const db = await peer.createDatabase();
@@ -1224,11 +1224,11 @@ describe('Query', () => {
       const ContactV1 = Schema.Struct({
         firstName: Schema.String,
         lastName: Schema.String,
-      }).pipe(Type.object({ typename: 'com.example.type.person', version: '0.1.0' }));
+      }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.person', '0.1.0')));
 
       const ContactV2 = Schema.Struct({
         name: Schema.String,
-      }).pipe(Type.object({ typename: 'com.example.type.person', version: '0.2.0' }));
+      }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.person', '0.2.0')));
 
       const { peer, db } = await builder.createDatabase({
         types: [ContactV1, ContactV2],

@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Client } from '@dxos/client';
-import { Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { CreateEpochRequest } from '@dxos/protocols/proto/dxos/client/services';
@@ -68,10 +68,7 @@ const seedData = async (client: Client) => {
     const TestType = Schema.Struct({
       testField: Schema.String,
     }).pipe(
-      Type.object({
-        typename: 'com.example.type.test',
-        version: '0.1.0',
-      }),
+      Type.object(DXN.fromNsidAndVersion('com.example.type.test', '0.1.0')),
     );
     const [dynamicSchema] = await space.db.schemaRegistry.register([TestType]);
 

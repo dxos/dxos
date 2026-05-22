@@ -7,7 +7,7 @@ import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
+import { DXN, Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
 import {
   ATTR_RELATION_SOURCE,
@@ -124,10 +124,7 @@ describe('without database', () => {
       ref: Schema.optional(Schema.suspend((): RefSchema<TestSchema> => Ref.Ref(TestSchema))),
     }),
   }).pipe(
-    EchoObjectSchema({
-      typename: 'com.example.type.test',
-      version: '0.1.0',
-    }),
+    EchoObjectSchema(DXN.fromNsidAndVersion('com.example.type.test', '0.1.0')),
   );
 
   interface TestSchema extends Schema.Schema.Type<typeof TestSchema> {}
@@ -229,7 +226,7 @@ describe('Reactive Object with ECHO database', () => {
   test('existing proxy objects can be passed to create', async () => {
     const TestSchema = Schema.Struct({
       field: Schema.Any,
-    }).pipe(Type.object({ typename: 'com.example.type.test', version: '0.1.0' }));
+    }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.test', '0.1.0')));
 
     const { db, graph } = await builder.createDatabase();
     await graph.schemaRegistry.register([TestSchema]);
@@ -437,10 +434,7 @@ describe('Reactive Object with ECHO database', () => {
     const Organization = Schema.Struct({
       name: Schema.String,
     }).pipe(
-      Type.object({
-        typename: 'com.example.type.organization',
-        version: '0.1.0',
-      }),
+      Type.object(DXN.fromNsidAndVersion('com.example.type.organization', '0.1.0')),
     );
 
     const Contact = Schema.Struct({
@@ -448,10 +442,7 @@ describe('Reactive Object with ECHO database', () => {
       organization: Ref.Ref(Organization),
       previousEmployment: Schema.optional(Schema.Array(Ref.Ref(Organization))),
     }).pipe(
-      Type.object({
-        typename: 'com.example.type.person',
-        version: '0.1.0',
-      }),
+      Type.object(DXN.fromNsidAndVersion('com.example.type.person', '0.1.0')),
     );
 
     test('references', async () => {
@@ -684,10 +675,10 @@ describe('Reactive Object with ECHO database', () => {
     test('object with meta pushed to array', async () => {
       const NestedType = Schema.Struct({
         field: Schema.Number,
-      }).pipe(Type.object({ typename: 'com.example.type.test-nested', version: '0.1.0' }));
+      }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.test-nested', '0.1.0')));
       const TestType = Schema.Struct({
         objects: Schema.Array(Ref.Ref(NestedType)),
-      }).pipe(Type.object({ typename: 'com.example.type.test', version: '0.1.0' }));
+      }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.test', '0.1.0')));
 
       const key = foreignKey('example.com', '123');
       const { db, graph } = await builder.createDatabase();
@@ -703,7 +694,7 @@ describe('Reactive Object with ECHO database', () => {
     test('push key to object created with', async () => {
       const TestType = Schema.Struct({
         field: Schema.Number,
-      }).pipe(Type.object({ typename: 'com.example.type.test', version: '0.1.0' }));
+      }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.test', '0.1.0')));
       const { db, graph } = await builder.createDatabase();
       await graph.schemaRegistry.register([TestType]);
       const obj = db.add(Obj.make(TestType, { [Obj.Meta]: { keys: [foreignKey('example.com', '123')] }, field: 1 }));
@@ -989,7 +980,7 @@ describe('Reactive Object with ECHO database', () => {
     const Blob = Schema.Struct({
       name: Schema.String,
       bytes: Schema.Uint8ArrayFromSelf,
-    }).pipe(Type.object({ typename: 'com.example.type.blob', version: '0.1.0' }));
+    }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.blob', '0.1.0')));
 
     test('stored natively in automerge and round-trip through ECHO', async ({ expect }) => {
       const { db } = await builder.createDatabase({ types: [Blob] });

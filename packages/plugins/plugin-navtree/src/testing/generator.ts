@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { type Node } from '@dxos/app-graph';
-import { Obj, Type } from '@dxos/echo';
+import { DXN, Obj, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { random } from '@dxos/random';
 import { range } from '@dxos/util';
@@ -64,10 +64,7 @@ export const defaultGenerators: { [type: string]: ObjectDataGenerator } = {
         status: Schema.String,
         priority: Schema.Number,
       }).pipe(
-        Type.object({
-          typename: 'com.example.type.project',
-          version: '0.1.0',
-        }),
+        Type.object(DXN.fromNsidAndVersion('com.example.type.project', '0.1.0')),
       ),
 
     createData: () => ({

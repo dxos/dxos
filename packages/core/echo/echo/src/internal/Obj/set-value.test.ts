@@ -8,6 +8,7 @@ import { describe, test } from 'vitest';
 import * as Obj from '../../Obj';
 import { TestSchema } from '../../testing';
 import * as Type from '../../Type';
+import { DXN } from '@dxos/keys';
 
 describe('Obj.setValue', () => {
   test('sets simple nested object property', ({ expect }) => {
@@ -61,10 +62,7 @@ describe('Obj.setValue', () => {
       name: Schema.String,
       items: Schema.optional(Schema.Array(Item)),
     }).pipe(
-      Type.object({
-        typename: 'test.com/Container',
-        version: '0.1.0',
-      }),
+      Type.object(DXN.fromNsidAndVersion('test.com/Container', '0.1.0')),
     );
 
     const container = Obj.make(Container, { name: 'box' });
@@ -152,10 +150,7 @@ describe('Obj.setValue', () => {
     const Matrix = Schema.Struct({
       values: Schema.optional(Schema.Array(Schema.Array(Schema.Number))),
     }).pipe(
-      Type.object({
-        typename: 'test.com/Matrix',
-        version: '0.1.0',
-      }),
+      Type.object(DXN.fromNsidAndVersion('test.com/Matrix', '0.1.0')),
     );
 
     const matrix = Obj.make(Matrix, {});
@@ -206,10 +201,7 @@ describe('Obj.setValue', () => {
       name: Schema.String,
       items: Schema.optional(Schema.Array(Item)),
     }).pipe(
-      Type.object({
-        typename: 'test.com/Container',
-        version: '0.1.0',
-      }),
+      Type.object(DXN.fromNsidAndVersion('test.com/Container', '0.1.0')),
     );
 
     const container = Obj.make(Container, { name: 'box' });
@@ -233,10 +225,7 @@ describe('Obj.setValue', () => {
       name: Schema.String,
       tasks: Schema.optional(Schema.Array(Task)),
     }).pipe(
-      Type.object({
-        typename: 'test.com/TodoList',
-        version: '0.1.0',
-      }),
+      Type.object(DXN.fromNsidAndVersion('test.com/TodoList', '0.1.0')),
     );
 
     const todoList = Obj.make(TodoList, { name: 'My Tasks' });
@@ -262,10 +251,7 @@ describe('Obj.setValue', () => {
       name: Schema.String,
       items: Schema.optional(Schema.Array(Item)),
     }).pipe(
-      Type.object({
-        typename: 'test.com/Container',
-        version: '0.1.0',
-      }),
+      Type.object(DXN.fromNsidAndVersion('test.com/Container', '0.1.0')),
     );
 
     const container = Obj.make(Container, { name: 'box' });

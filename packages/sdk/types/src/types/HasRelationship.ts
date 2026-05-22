@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Relation, Type } from '@dxos/echo';
+import { DXN, Obj, Relation, Type } from '@dxos/echo';
 
 import * as Person from './Person';
 
@@ -16,8 +16,7 @@ export const LegacyHasRelationship = Schema.Struct({
   kind: Schema.String,
 }).pipe(
   Type.relation({
-    typename: 'org.dxos.relation.has-relationship',
-    version: '0.1.0',
+    dxn: DXN.fromNsidAndVersion('org.dxos.relation.has-relationship', '0.1.0'),
     source: Person.Person,
     target: Person.Person,
   }),
@@ -34,8 +33,7 @@ export const HasRelationship = Schema.Struct({
 })
   .pipe(
     Type.relation({
-      typename: 'org.dxos.relation.hasRelationship',
-      version: '0.1.0',
+      dxn: DXN.fromNsidAndVersion('org.dxos.relation.hasRelationship', '0.1.0'),
       source: Person.Person,
       target: Person.Person,
     }),

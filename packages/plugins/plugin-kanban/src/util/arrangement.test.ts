@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { beforeEach, describe, test } from 'vitest';
 
-import { Filter, JsonSchema, Query, Type, type View } from '@dxos/echo';
+import { DXN, Filter, JsonSchema, Query, Type, type View } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
 import { ViewModel } from '@dxos/schema';
 
@@ -25,7 +25,7 @@ const selectOptions = [
 ];
 
 const MinimalSchema = Schema.Struct({ id: Schema.String }).pipe(
-  Type.object({ typename: 'com.example.type.minimal', version: '0.1.0' }),
+  Type.object(DXN.fromNsidAndVersion('com.example.type.minimal', '0.1.0')),
 );
 
 describe('arrangement utils', () => {

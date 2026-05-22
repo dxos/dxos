@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Obj, QueryAST, Ref, Type } from '@dxos/echo';
+import { DXN, Obj, QueryAST, Ref, Type } from '@dxos/echo';
 import { OptionsAnnotationId, SystemTypeAnnotation } from '@dxos/echo/internal';
 import { EchoId } from '@dxos/keys';
 import { Expando } from '@dxos/schema';
@@ -139,10 +139,7 @@ const TriggerSchema = Schema.Struct({
    */
   input: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.trigger',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.fromNsidAndVersion('org.dxos.type.trigger', '0.1.0')),
   SystemTypeAnnotation.set(true),
 );
 

@@ -16,7 +16,7 @@ import {
 } from '@dxos/echo-pipeline/testing';
 import { Ref, getSchemaDXN, getTypeAnnotation, makeObject } from '@dxos/echo/internal';
 import { TestSchema } from '@dxos/echo/testing';
-import { type DXN, type ObjectId, PublicKey } from '@dxos/keys';
+import { DXN, type ObjectId, PublicKey } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
 import { deferAsync } from '@dxos/util';
 
@@ -491,7 +491,7 @@ describe('Integration tests', () => {
 
         const LocalTestSchema = Schema.Struct({
           field: Schema.String,
-        }).pipe(Type.object({ typename: 'com.example.type.test', version: '0.1.0' }));
+        }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.test', '0.1.0')));
         const [stored] = await db.schemaRegistry.register([LocalTestSchema]);
         schemaDxn = getSchemaDXN(stored)!;
 

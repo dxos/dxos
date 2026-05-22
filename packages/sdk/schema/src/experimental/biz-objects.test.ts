@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Obj, Ref, Type } from '@dxos/echo';
 
 // TODO(burdon): Goal > Action > Result.
 
@@ -50,10 +50,7 @@ namespace Proposition {
   export interface Fields extends Schema.Schema.Type<typeof Fields> {}
 
   export const Object = Fields.pipe(
-    Type.object({
-      typename: 'org.dxos.type.proposition',
-      version: '0.1.0',
-    }),
+    Type.object(DXN.fromNsidAndVersion('org.dxos.type.proposition', '0.1.0')),
   );
 
   export interface Object extends Schema.Schema.Type<typeof Object> {}
@@ -86,10 +83,7 @@ export namespace OKR {
   });
 
   const Object = Properties.pipe(
-    Type.object({
-      typename: 'org.dxos.type.okr',
-      version: '0.1.0',
-    }),
+    Type.object(DXN.fromNsidAndVersion('org.dxos.type.okr', '0.1.0')),
   );
 
   export interface Object extends Schema.Schema.Type<Schema.mutable<typeof Object>> {}
@@ -123,10 +117,7 @@ export namespace SWOT {
   });
 
   const Object = Properties.pipe(
-    Type.object({
-      typename: 'org.dxos.type.swot',
-      version: '0.1.0',
-    }),
+    Type.object(DXN.fromNsidAndVersion('org.dxos.type.swot', '0.1.0')),
   );
 
   export interface Any extends Schema.Schema.Type<Schema.mutable<typeof Object>> {}
@@ -140,10 +131,7 @@ export namespace Plan {
   });
 
   const Object = Properties.pipe(
-    Type.object({
-      typename: 'org.dxos.type.plan',
-      version: '0.1.0',
-    }),
+    Type.object(DXN.fromNsidAndVersion('org.dxos.type.plan', '0.1.0')),
   );
 
   export interface Object extends Schema.Schema.Type<Schema.mutable<typeof Object>> {}

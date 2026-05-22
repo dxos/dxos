@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Relation, Type } from '@dxos/echo';
+import { DXN, Obj, Relation, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 
 /** @deprecated Use HasSubject instead. */
@@ -15,8 +15,7 @@ export const LegacyHasSubject = Schema.Struct({
   completedAt: Schema.String,
 }).pipe(
   Type.relation({
-    typename: 'org.dxos.relation.has-subject',
-    version: '0.1.0',
+    dxn: DXN.fromNsidAndVersion('org.dxos.relation.has-subject', '0.1.0'),
     source: Obj.Unknown,
     target: Obj.Unknown,
   }),
@@ -32,8 +31,7 @@ export const HasSubject = Schema.Struct({
   completedAt: Format.DateTime,
 }).pipe(
   Type.relation({
-    typename: 'org.dxos.relation.hasSubject',
-    version: '0.1.0',
+    dxn: DXN.fromNsidAndVersion('org.dxos.relation.hasSubject', '0.1.0'),
     source: Obj.Unknown,
     target: Obj.Unknown,
   }),

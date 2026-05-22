@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
 
 import * as Message from './Message';
@@ -25,10 +25,7 @@ export const Thread = Schema.Struct({
   status: ThreadStatus.pipe(Schema.optional),
   messages: Schema.Array(Ref.Ref(Message.Message)),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.thread',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.fromNsidAndVersion('org.dxos.type.thread', '0.1.0')),
   SystemTypeAnnotation.set(true),
 );
 

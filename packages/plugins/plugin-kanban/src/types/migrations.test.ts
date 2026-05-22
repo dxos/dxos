@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Filter, JsonSchema, Migration, Obj, Query, Ref, Type, View } from '@dxos/echo';
+import { DXN, Filter, JsonSchema, Migration, Obj, Query, Ref, Type, View } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { ViewModel } from '@dxos/schema';
 
@@ -13,7 +13,7 @@ import { Kanban } from './Kanban';
 import { KanbanV1 } from './Kanban';
 
 const TestCardSchema = Schema.Struct({ id: Schema.String }).pipe(
-  Type.object({ typename: 'com.example.type.test-card', version: '0.1.0' }),
+  Type.object(DXN.fromNsidAndVersion('com.example.type.test-card', '0.1.0')),
 );
 
 /**

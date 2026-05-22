@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, expect, test } from 'vitest';
 
-import { EchoURI } from '@dxos/keys';
+import { DXN, EchoURI } from '@dxos/keys';
 
 import * as Obj from '../../Obj';
 import { TestSchema } from '../../testing';
@@ -125,10 +125,7 @@ describe('Object JSON serializer', () => {
       name: Schema.String,
       bytes: Schema.Uint8ArrayFromSelf,
     }).pipe(
-      Type.object({
-        typename: 'com.example.type.blob',
-        version: '0.1.0',
-      }),
+      Type.object(DXN.fromNsidAndVersion('com.example.type.blob', '0.1.0')),
     );
     interface Blob extends Schema.Schema.Type<typeof Blob> {}
 

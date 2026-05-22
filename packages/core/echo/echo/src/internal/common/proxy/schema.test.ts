@@ -9,13 +9,11 @@ import { describe, expect, test } from 'vitest';
 import { createEchoSchema } from '../../../testing';
 import { PropertyMeta, getPropertyMetaAnnotation, getTypeAnnotation } from '../../Annotation';
 import { EchoObjectSchema } from '../../Entity';
+import { DXN } from '@dxos/keys';
 
 // TODO(dmaretskyi): Comment.
 const EmptySchemaType = Schema.Struct({}).pipe(
-  EchoObjectSchema({
-    typename: 'com.example.type.empty',
-    version: '0.1.0',
-  }),
+  EchoObjectSchema(DXN.fromNsidAndVersion('com.example.type.empty', '0.1.0')),
 );
 
 interface EmptySchemaType extends Schema.Schema.Type<typeof EmptySchemaType> {}
@@ -26,10 +24,7 @@ describe('dynamic schema', () => {
       field1: Schema.String,
       field2: Schema.Boolean,
     }).pipe(
-      EchoObjectSchema({
-        typename: 'com.example.type.test',
-        version: '0.1.0',
-      }),
+      EchoObjectSchema(DXN.fromNsidAndVersion('com.example.type.test', '0.1.0')),
     );
 
     const registered = createEchoSchema(TestSchema);
@@ -43,10 +38,7 @@ describe('dynamic schema', () => {
     const TestSchema = Schema.Struct({
       field1: Schema.String,
     }).pipe(
-      EchoObjectSchema({
-        typename: 'com.example.type.test',
-        version: '0.1.0',
-      }),
+      EchoObjectSchema(DXN.fromNsidAndVersion('com.example.type.test', '0.1.0')),
     );
 
     const registered = createEchoSchema(TestSchema);

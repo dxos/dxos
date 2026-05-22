@@ -8,7 +8,7 @@ import type * as Schema from 'effect/Schema';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { type URI } from '@dxos/keys';
+import { DXN, type URI } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
 import type * as Entity from './Entity';
@@ -52,7 +52,7 @@ type EchoSchemaKind<K extends internal.EntityKind = internal.EntityKind> = {
  * ```ts
  * const PersonSchema: Type.Obj<Person> = Schema.Struct({
  *   name: Schema.String,
- * }).pipe(Type.object({ typename: 'Person', version: '0.1.0' }));
+ * }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.person', '0.1.0')));
  *
  * // Access fields for introspection:
  * Object.keys(PersonSchema.fields); // ['name']
@@ -100,11 +100,11 @@ export type AnyObj = ObjectSchemaBase;
  * ```ts
  * const Person = Schema.Struct({
  *   name: Schema.String,
- * }).pipe(Type.object({ typename: 'com.example.type.person', version: '0.1.0' }));
+ * }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.person', '0.1.0')));
  * ```
  */
 export const object: {
-  (opts: internal.TypeMeta): <Self extends Schema.Schema.Any>(self: Self) => Obj<Schema.Schema.Type<Self>>;
+  (dxn: DXN.DXN): <Self extends Schema.Schema.Any>(self: Self) => Obj<Schema.Schema.Type<Self>>;
 } = internal.EchoObjectSchema as any;
 
 //
@@ -164,8 +164,7 @@ export type AnyRelation = RelationSchemaBase;
  * const WorksFor = Schema.Struct({
  *   role: Schema.String,
  * }).pipe(Type.relation({
- *   typename: 'com.example.type.works-for',
- *   version: '0.1.0',
+ *   dxn: DXN.fromNsidAndVersion('com.example.type.works-for', '0.1.0'),
  *   source: Person,
  *   target: Company,
  * }));

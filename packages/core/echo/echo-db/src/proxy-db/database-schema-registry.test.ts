@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
-import { Filter, JsonSchema, Obj, Type } from '@dxos/echo';
+import { DXN, Filter, JsonSchema, Obj, Type } from '@dxos/echo';
 import { EchoSchema } from '@dxos/echo/internal';
 
 import { EchoTestBuilder } from '../testing';
@@ -15,19 +15,13 @@ const Organization = Schema.Struct({
   name: Schema.String,
   address: Schema.String,
 }).pipe(
-  Type.object({
-    typename: 'com.example.type.organization',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.fromNsidAndVersion('com.example.type.organization', '0.1.0')),
 );
 
 const Contact = Schema.Struct({
   name: Schema.String,
 }).pipe(
-  Type.object({
-    typename: 'com.example.type.person',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.fromNsidAndVersion('com.example.type.person', '0.1.0')),
 );
 
 describe('schema registry', () => {
@@ -278,8 +272,5 @@ const makeTestSchema = () =>
   Schema.Struct({
     name: Schema.String,
   }).pipe(
-    Type.object({
-      typename: 'com.example.type.test',
-      version: '0.1.0',
-    }),
+    Type.object(DXN.fromNsidAndVersion('com.example.type.test', '0.1.0')),
   );

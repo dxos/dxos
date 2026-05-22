@@ -10,7 +10,9 @@ import { raise } from '@dxos/debug';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { EchoURI, type ObjectId, type URI } from '@dxos/keys';
+import { EchoURI, type ObjectId, type URI,
+  DXN,
+} from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
 import type * as Database from './Database';
@@ -67,8 +69,7 @@ export const Unknown: Type.Relation<Unknown, Obj.Any, Obj.Any> = Schema.Struct({
   // NOTE: The EchoRelationSchema annotation is required for Ref.Ref(Relation.Unknown) to work.
   //   The typename/version/source/target only satisfy ECHO schema machinery for reference targets.
   internal.EchoRelationSchema({
-    typename: 'org.dxos.schema.anyRelation',
-    version: '0.0.0',
+    dxn: DXN.fromNsidAndVersion('org.dxos.schema.anyRelation', '0.0.0'),
     source: Obj.Unknown,
     target: Obj.Unknown,
   }),

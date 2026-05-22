@@ -10,13 +10,14 @@ import { EchoObjectSchema } from '../Entity';
 import { FormatAnnotation, TypeFormat } from '../Format';
 import { ECHO_ANNOTATIONS_NS_KEY, toJsonSchema } from '../JsonSchema';
 import { composeSchema } from './compose';
+import { DXN } from '@dxos/keys';
 
 describe('schema composition', () => {
   test('schema composition', ({ expect }) => {
     const BaseType = Schema.Struct({
       name: Schema.String,
       email: Schema.String,
-    }).pipe(EchoObjectSchema({ typename: 'com.example.person', version: '0.1.0' }));
+    }).pipe(EchoObjectSchema(DXN.fromNsidAndVersion('com.example.person', '0.1.0')));
 
     const OverlaySchema = Schema.Struct({
       email: Schema.String.pipe(FieldPath('$.email'), FormatAnnotation.set(TypeFormat.Email)),

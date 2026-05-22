@@ -14,7 +14,7 @@ import * as Schema from 'effect/Schema';
 
 import { Blueprint } from '@dxos/compute';
 import { Resource } from '@dxos/context';
-import { Feed, Obj, type QueryResult, Query, Ref, Type } from '@dxos/echo';
+import { DXN, Feed, Obj, type QueryResult, Query, Ref, Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
 import { EchoURI, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -34,10 +34,7 @@ export const Binding = Schema.Struct({
     removed: Schema.Array(Ref.Ref(Obj.Unknown)),
   }),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.contextBinding',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.fromNsidAndVersion('org.dxos.type.contextBinding', '0.1.0')),
 );
 
 export interface Binding extends Schema.Schema.Type<typeof Binding> {}

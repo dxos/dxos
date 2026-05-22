@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { type URI } from '@dxos/keys';
+import { DXN, type URI } from '@dxos/keys';
 
 import type * as Entity from './Entity';
 import * as refInternal from './internal/Ref';
@@ -44,7 +44,7 @@ export type Unknown = refInternal.Ref<Obj.Unknown>;
  * ```ts
  * const Task = Schema.Struct({
  *   assignee: Ref.Ref(Person),  // Creates a Ref schema
- * }).pipe(Type.object({ typename: 'Task', version: '0.1.0' }));
+ * }).pipe(Type.object(DXN.fromNsidAndVersion('Task', '0.1.0')));
  * ```
  */
 export const Ref: <S extends Schema.Schema.Any>(schema: S) => RefSchema<Schema.Schema.Type<S>> = refInternal.Ref;

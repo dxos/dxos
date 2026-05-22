@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { invariant } from '@dxos/invariant';
-import { type ObjectId } from '@dxos/keys';
+import { DXN, type ObjectId } from '@dxos/keys';
 
 import type * as Type from '../../Type';
 import { type SchemaMeta, SchemaMetaSymbol, type TypeAnnotation, getTypeAnnotation } from '../Annotation';
@@ -177,7 +177,7 @@ const schemaVariance = {
  *
  * @example
  * ```ts
- * export class TableType extends Schema.Struct({...}).pipe(Type.object({ typename: 'com.example.type.table', version: '0.1.0' })){
+ * export class TableType extends Schema.Struct({...}).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.table', '0.1.0'))){
  *   title: Schema.String,
  *   schema: Schema.optional(ref(EchoSchema)),
  *   props: Schema.mutable(S.Array(TablePropSchema)),

@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Type } from '@dxos/echo';
+import { DXN, Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
 /**
@@ -26,10 +26,7 @@ export const Task = Schema.Struct({
     description: 'Whether the task has been completed.',
   }),
 }).pipe(
-  Type.object({
-    typename: 'com.example.type.Task',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.fromNsidAndVersion('com.example.type.Task', '0.1.0')),
   LabelAnnotation.set(['title']),
 );
 

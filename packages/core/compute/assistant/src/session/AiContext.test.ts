@@ -9,7 +9,7 @@ import * as Runtime from 'effect/Runtime';
 import * as Schema from 'effect/Schema';
 import { describe, it } from 'vitest';
 
-import { Feed, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
 
 import * as AiContext from './AiContext';
 
@@ -36,10 +36,7 @@ describe('AiContext.Binder', () => {
     const binder = new AiContext.Binder({ feed, runtime });
 
     const TestSchema = Schema.Struct({}).pipe(
-      Type.object({
-        typename: 'org.dxos.type.example',
-        version: '0.1.0',
-      }),
+      Type.object(DXN.fromNsidAndVersion('org.dxos.type.example', '0.1.0')),
     );
 
     const obj = Obj.make(TestSchema, {});

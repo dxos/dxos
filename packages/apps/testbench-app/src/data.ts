@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
+import { DXN, Type } from '@dxos/echo';
 
 // TODO(burdon): [API]: extends feels a bit Frankenstein (get review from effect discord).
 // TODO(burdon): FQ URIs for type names.
@@ -16,10 +16,7 @@ export const Item = Schema.Struct({
   //  TypeError: Method Date.prototype.toString called on incompatible receiver [object Object]
   // due: S.optional(S.Date),
 }).pipe(
-  Type.object({
-    typename: 'com.example.type.item',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.fromNsidAndVersion('com.example.type.item', '0.1.0')),
 );
 export type Item = Schema.Schema.Type<typeof Item>;
 
@@ -27,9 +24,6 @@ export const Document = Schema.Struct({
   title: Schema.optional(Schema.String),
   content: Schema.optional(Schema.String),
 }).pipe(
-  Type.object({
-    typename: 'com.example.type.document',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.fromNsidAndVersion('com.example.type.document', '0.1.0')),
 );
 export type Document = Schema.Schema.Type<typeof Document>;

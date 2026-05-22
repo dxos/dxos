@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { EchoURI, Filter, JsonSchema, Obj, Query, type QueryAST, Tag, Type, type View } from '@dxos/echo';
+import { DXN, EchoURI, Filter, JsonSchema, Obj, Query, type QueryAST, Tag, Type, type View } from '@dxos/echo';
 import { type EchoSchema, Format, type Mutable } from '@dxos/echo/internal';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -52,10 +52,7 @@ const DefaultStory = (props: DefaultStoryProps) => {
         email: Format.Email,
         salary: Format.Currency(),
       }).pipe(
-        Type.object({
-          typename: 'com.example.type.test',
-          version: '0.1.0',
-        }),
+        Type.object(DXN.fromNsidAndVersion('com.example.type.test', '0.1.0')),
       );
 
       const AlternateSchema = Schema.Struct({
@@ -63,10 +60,7 @@ const DefaultStory = (props: DefaultStoryProps) => {
         description: Schema.String,
         completed: Schema.Boolean,
       }).pipe(
-        Type.object({
-          typename: 'com.example.type.alternate',
-          version: '0.1.0',
-        }),
+        Type.object(DXN.fromNsidAndVersion('com.example.type.alternate', '0.1.0')),
       );
 
       const [testSchema] = await space.db.schemaRegistry.register([TestSchema, AlternateSchema]);

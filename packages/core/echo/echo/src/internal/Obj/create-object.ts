@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 
 import { raise } from '@dxos/debug';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
-import { ObjectId } from '@dxos/keys';
+import { DXN, ObjectId } from '@dxos/keys';
 
 import { getSchemaTypeURI, getTypeAnnotation, setTypename } from '../Annotation';
 import { defineHiddenProperty } from '../common/proxy';
@@ -40,10 +40,7 @@ export type CreateObjectProps<T> = T extends { id: string } ? Omit<T, 'id' | Kin
  * const Contact = Schema.Struct({
  *   name: Schema.String,
  *   email: Schema.String,
- * }).pipe(Type.object({
- *   typename: 'com.example.type.person',
- *   version: '0.1.0',
- * }))
+ * }).pipe(Type.object(DXN.fromNsidAndVersion('com.example.type.person', '0.1.0')))
  *
  * const contact = createObject(Contact, {
  *   name: "John",

@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Client } from '@dxos/client';
-import { Obj, Type } from '@dxos/echo';
+import { DXN, Obj, Type } from '@dxos/echo';
 import { getObjectCore } from '@dxos/echo-db';
 import { random } from '@dxos/random';
 
@@ -96,10 +96,7 @@ describe('TestObjectGenerator', () => {
     const Task = Schema.Struct({
       name: Schema.optional(Schema.String),
     }).pipe(
-      Type.object({
-        typename: 'com.example.type.task',
-        version: '0.1.0',
-      }),
+      Type.object(DXN.fromNsidAndVersion('com.example.type.task', '0.1.0')),
     );
 
     enum Types {

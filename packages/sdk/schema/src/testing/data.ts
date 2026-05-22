@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Filter, Format, JsonSchema, Obj, Query, Type, type View } from '@dxos/echo';
+import { DXN, Filter, Format, JsonSchema, Obj, Query, Type, type View } from '@dxos/echo';
 
 import { ViewModel } from '../types';
 
@@ -38,10 +38,7 @@ export const Example = Schema.Struct({
   admin: Schema.optional(Schema.Boolean),
   rating: Schema.optional(Schema.Number),
 }).pipe(
-  Type.object({
-    typename: 'com.example.type.example',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.fromNsidAndVersion('com.example.type.example', '0.1.0')),
 );
 
 export type Example = Schema.Schema.Type<typeof Example>;

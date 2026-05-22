@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 
 import { OpaqueToolkit } from '@dxos/ai';
 import { AiRequest, ToolExecutionServices } from '@dxos/assistant';
-import { Obj, Type } from '@dxos/echo';
+import { DXN, Obj, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
@@ -25,10 +25,7 @@ const CalendarEventSchema = Schema.Struct({
   endTime: Schema.String,
   description: Schema.String,
 }).pipe(
-  Type.object({
-    typename: 'com.example.type.calendar-event',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.fromNsidAndVersion('com.example.type.calendar-event', '0.1.0')),
 );
 
 type CalendarEvent = Schema.Schema.Type<typeof CalendarEventSchema>;

@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Ref, Type } from '@dxos/echo';
+import { DXN, Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
 
 //
@@ -16,10 +16,7 @@ export const TestItem = Schema.Struct({
   description: Schema.optional(Schema.String),
   label: Schema.optional(Schema.String),
 }).pipe(
-  Type.object({
-    typename: 'com.example.type.item',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.fromNsidAndVersion('com.example.type.item', '0.1.0')),
 );
 
 export interface TestItem extends Schema.Schema.Type<typeof TestItem> {}
@@ -29,10 +26,7 @@ export const TestColumn = Schema.Struct({
   name: Schema.String,
   items: Schema.mutable(Schema.Array(Ref.Ref(TestItem))),
 }).pipe(
-  Type.object({
-    typename: 'com.example.type.column',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.fromNsidAndVersion('com.example.type.column', '0.1.0')),
 );
 
 export interface TestColumn extends Schema.Schema.Type<typeof TestColumn> {}

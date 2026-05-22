@@ -6,26 +6,20 @@ import * as Schema from 'effect/Schema';
 import { beforeEach, describe, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
-import { Type } from '@dxos/echo';
+import { DXN, Type } from '@dxos/echo';
 
 import { RuntimeSchemaRegistry } from './runtime-schema-registry';
 
 const TestSchemaA = Schema.Struct({
   name: Schema.String,
 }).pipe(
-  Type.object({
-    typename: 'com.example.type.a',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.fromNsidAndVersion('com.example.type.a', '0.1.0')),
 );
 
 const TestSchemaB = Schema.Struct({
   value: Schema.Number,
 }).pipe(
-  Type.object({
-    typename: 'com.example.type.b',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.fromNsidAndVersion('com.example.type.b', '0.1.0')),
 );
 
 describe('RuntimeSchemaRegistry', () => {

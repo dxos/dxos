@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 import type * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { EchoURI } from '@dxos/keys';
+import { DXN, EchoURI } from '@dxos/keys';
 
 import * as Annotation from './Annotation';
 import type * as Entity from './Entity';
@@ -43,10 +43,7 @@ export const Feed = Schema.Struct({
    */
   namespace: Schema.optional(Schema.Literal('data', 'trace')),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.feed',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.fromNsidAndVersion('org.dxos.type.feed', '0.1.0')),
   internal.SystemTypeAnnotation.set(true),
   Annotation.IconAnnotation.set({
     icon: 'ph--rows--regular',

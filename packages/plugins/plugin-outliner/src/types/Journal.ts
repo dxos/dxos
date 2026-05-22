@@ -5,7 +5,7 @@
 import { isAfter, isBefore, isEqual } from 'date-fns';
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { updateText } from '@dxos/echo-db';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
@@ -18,10 +18,7 @@ export const LegacyJournalEntry = Schema.Struct({
   date: Schema.String,
   content: Ref.Ref(Text.Text),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.journal-entry',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.fromNsidAndVersion('org.dxos.type.journal-entry', '0.1.0')),
   SystemTypeAnnotation.set(true),
 );
 
@@ -32,10 +29,7 @@ export const JournalEntry = Schema.Struct({
   date: Schema.String,
   content: Ref.Ref(Text.Text),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.journalEntry',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.fromNsidAndVersion('org.dxos.type.journalEntry', '0.1.0')),
   SystemTypeAnnotation.set(true),
 );
 
@@ -47,10 +41,7 @@ export const Journal = Schema.Struct({
   // TODO(burdon): Convert map of references indexed by sortable ISO date.
   entries: Schema.Record({ key: Schema.String, value: Ref.Ref(JournalEntry) }),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.journal',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.fromNsidAndVersion('org.dxos.type.journal', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--calendar-check--regular',
     hue: 'indigo',

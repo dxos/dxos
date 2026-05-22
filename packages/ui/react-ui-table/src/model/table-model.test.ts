@@ -6,7 +6,7 @@ import { Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Filter, JsonSchema, Query, Type } from '@dxos/echo';
+import { DXN, Filter, JsonSchema, Query, Type } from '@dxos/echo';
 import { createEchoSchema } from '@dxos/echo/testing';
 import { ProjectionModel, ViewModel, createDirectChangeCallback } from '@dxos/schema';
 
@@ -119,10 +119,7 @@ const Test = Schema.Struct({
   title: Schema.String,
   completed: Schema.Boolean,
 }).pipe(
-  Type.object({
-    typename: 'com.example.type.test',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.fromNsidAndVersion('com.example.type.test', '0.1.0')),
 );
 
 const createTableModel = (registry: Registry.Registry, props: Partial<TableModelProps> = {}): TableModel => {

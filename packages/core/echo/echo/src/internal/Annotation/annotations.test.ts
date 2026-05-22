@@ -7,6 +7,7 @@ import { describe, test } from 'vitest';
 
 import { EchoObjectSchema } from '../Entity';
 import { LabelAnnotation, TypenameSchema, VersionSchema, getLabelWithSchema } from './annotations';
+import { DXN } from '@dxos/keys';
 
 // TODO(dmaretskyi): Use one of the testing schemas.
 const TestObject = Schema.Struct({
@@ -18,10 +19,7 @@ const TestObject = Schema.Struct({
 type TestObject = Schema.Schema.Type<typeof TestObject>;
 
 const TestEchoSchema = TestObject.pipe(
-  EchoObjectSchema({
-    typename: 'org.dxos.type.test',
-    version: '0.1.0',
-  }),
+  EchoObjectSchema(DXN.fromNsidAndVersion('org.dxos.type.test', '0.1.0')),
 );
 
 type TestEchoSchema = Schema.Schema.Type<typeof TestEchoSchema>;

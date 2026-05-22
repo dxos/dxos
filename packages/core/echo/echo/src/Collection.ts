@@ -11,6 +11,7 @@ import * as internal from './internal';
 import * as Obj from './Obj';
 import * as Ref from './Ref';
 import * as Type from './Type';
+import { DXN } from '@dxos/keys';
 
 /**
  * A an ordered set of objects.
@@ -19,10 +20,7 @@ export const Collection = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   objects: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(internal.FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.collection',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.fromNsidAndVersion('org.dxos.type.collection', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--folder--regular',
     hue: 'amber',

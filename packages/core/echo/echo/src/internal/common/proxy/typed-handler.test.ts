@@ -12,6 +12,7 @@ import { Ref } from '../../Ref';
 import { foreignKey, getMeta } from '../types';
 import { makeObject } from './make-object';
 import { change, subscribe } from './reactive';
+import { DXN } from '@dxos/keys';
 
 describe('complex schema validations', () => {
   test('any', () => {
@@ -39,10 +40,10 @@ describe('complex schema validations', () => {
 
   test('references', () => {
     const Foo = Schema.Struct({ field: Schema.String }).pipe(
-      EchoObjectSchema({ typename: 'com.example.type.foo', version: '0.1.0' }),
+      EchoObjectSchema(DXN.fromNsidAndVersion('com.example.type.foo', '0.1.0')),
     );
     const Bar = Schema.Struct({ fooRef: Ref(Foo) }).pipe(
-      EchoObjectSchema({ typename: 'com.example.type.bar', version: '0.1.0' }),
+      EchoObjectSchema(DXN.fromNsidAndVersion('com.example.type.bar', '0.1.0')),
     );
     const field = 'hello';
     expect(() => makeObject(Bar, { fooRef: { id: '1', field } as any })).to.throw();
@@ -94,7 +95,7 @@ describe('complex schema validations', () => {
 
   test('subscribe', () => {
     const TestSchema = Schema.Struct({ field: Schema.String }).pipe(
-      EchoObjectSchema({ typename: 'Test', version: '0.1.0' }),
+      EchoObjectSchema(DXN.fromNsidAndVersion('Test', '0.1.0')),
     );
     const object = makeObject(TestSchema, { field: 'value' });
     let called = 0;

@@ -14,7 +14,7 @@ import * as Utils from 'effect/Utils';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { ObjectId, type URI } from '@dxos/keys';
+import { DXN, ObjectId, type URI } from '@dxos/keys';
 import { assumeType, deepMapValues } from '@dxos/util';
 
 import type * as Database from './Database';
@@ -64,7 +64,7 @@ export interface Unknown extends BaseObj {}
  * // Reference to any object type
  * const Collection = Schema.Struct({
  *   objects: Schema.Array(Ref.Ref(Obj.Unknown)),
- * }).pipe(Type.object({ typename: 'Collection', version: '0.1.0' }));
+ * }).pipe(Type.object(DXN.fromNsidAndVersion('Collection', '0.1.0')));
  * ```
  */
 // TODO(wittjosiah): Investigate if Schema.filter can validate KindId on ECHO instances.
@@ -77,7 +77,7 @@ export const Unknown: Type.Obj<Unknown> = Schema.Struct({
   // TODO(dmaretskyi): Clean this up.
   // NOTE: The EchoObjectSchema annotation is required for Ref.Ref(Obj.Unknown) to work.
   //   The typename/version only satisfy ECHO schema machinery for reference targets.
-  internal.EchoObjectSchema({ typename: internal.ANY_OBJECT_TYPENAME, version: internal.ANY_OBJECT_VERSION }),
+  internal.EchoObjectSchema(DXN.fromNsidAndVersion(internal.ANY_OBJECT_TYPENAME, internal.ANY_OBJECT_VERSION)),
   (schema) =>
     Object.assign(schema, {
       [internal.SchemaKindId]: (schema as any)[internal.SchemaKindId],

@@ -53,10 +53,7 @@ export const createDefaultSchema = () =>
       title: 'Description',
     }),
   }).pipe(
-    Type.object({
-      typename: `com.example.type.${PublicKey.random().truncate()}`,
-      version: '0.1.0',
-    }),
+    Type.object(DXN.fromNsidAndVersion(`com.example.type.${PublicKey.random().truncate()}`, '0.1.0')),
   );
 
 export const getSchema = async (
@@ -95,7 +92,7 @@ export const getSchemaFromPropertyDefinitions = (
     properties.filter((prop) => prop.name !== 'id').map((prop) => [prop.name, typeToSchema[formatToType[prop.format]]]),
   );
 
-  const typeSchema = Schema.Struct(fields).pipe(EchoObjectSchema({ typename, version: '0.1.0' }));
+  const typeSchema = Schema.Struct(fields).pipe(EchoObjectSchema(DXN.fromNsidAndVersion(typename, '0.1.0')));
   const schema = createEchoSchema(typeSchema as unknown as Schema.Schema.AnyNoContext);
 
   // Wrap schema modifications in Obj.update since the persistent schema is an ECHO object.

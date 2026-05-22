@@ -6,7 +6,7 @@ import * as Registry from '@effect-atom/atom/Registry';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Filter, Obj, Query, Ref, Type, View } from '@dxos/echo';
+import { DXN, Filter, Obj, Query, Ref, Type, View } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { ViewAnnotation } from '@dxos/schema';
@@ -16,20 +16,14 @@ import { buildViewIndex } from './shared';
 const TestContact = Schema.Struct({
   name: Schema.String,
 }).pipe(
-  Type.object({
-    typename: 'com.example.type.contact',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.fromNsidAndVersion('com.example.type.contact', '0.1.0')),
 );
 
 const TestViewWrapper = Schema.Struct({
   name: Schema.optional(Schema.String),
   view: Ref.Ref(View.View),
 }).pipe(
-  Type.object({
-    typename: 'com.example.type.view-wrapper',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.fromNsidAndVersion('com.example.type.view-wrapper', '0.1.0')),
   ViewAnnotation.set(['view']),
 );
 
