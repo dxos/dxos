@@ -52,9 +52,9 @@ describe('jsonata', () => {
   });
 
   describe('evaluates expression with trigger event', () => {
-    const queueEchoId = EchoURI.parse('dxn:queue:data:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6');
+    const queueEchoUri = EchoURI.parse('dxn:queue:data:BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE:01J00J9B45YHYSGZQTQMSKMGJ6');
     const event: TriggerEvent.TriggerEvent = {
-      queue: queueEchoId,
+      queue: queueEchoUri,
       item: {
         name: 'John',
       },
@@ -63,7 +63,7 @@ describe('jsonata', () => {
 
     const obj = Obj.make(TestSchema.Expando, { id: '01KD35WMWTEEE1WQQPYEGD1X2B', name: 'DXOS' });
     const trigger = Trigger.make({
-      spec: Trigger.specQueue(queueEchoId),
+      spec: Trigger.specQueue(queueEchoUri),
       input: {
         nested: {
           value: 'nested',

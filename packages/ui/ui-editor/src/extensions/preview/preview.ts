@@ -79,8 +79,8 @@ const resolveLabel = (
   dxnStr: string,
   viewRef: { current: EditorView | undefined },
 ): string | undefined => {
-  const echoId = EchoURI.tryParse(dxnStr);
-  const dxnRef = echoId ?? (dxnStr.startsWith('dxn:') ? URI.make(dxnStr) : undefined);
+  const echoUri = EchoURI.tryParse(dxnStr);
+  const dxnRef = echoUri ?? (dxnStr.startsWith('dxn:') ? URI.make(dxnStr) : undefined);
   if (!dxnRef) {
     return;
   }

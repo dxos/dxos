@@ -45,9 +45,9 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
       (commit: Commit | undefined) => {
         setSelectedCommit(commit);
         if (commit?.link) {
-          const echoId = EchoURI.tryParse(commit.link);
-          const spaceId = echoId ? EchoURI.getSpaceId(echoId) : undefined;
-          const objectId = echoId ? EchoURI.getObjectId(echoId) : undefined;
+          const echoUri = EchoURI.tryParse(commit.link);
+          const spaceId = echoUri ? EchoURI.getSpaceId(echoUri) : undefined;
+          const objectId = echoUri ? EchoURI.getObjectId(echoUri) : undefined;
           if (spaceId && objectId) {
             // TODO(dmaretskyi): Navigates, but fails to open.
             void invokePromise(LayoutOperation.Open, {

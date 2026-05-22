@@ -150,12 +150,12 @@ export const getQueryTarget = (query: QueryAST.Query, space?: Space) => {
       const result = Option.fromNullable(from.scope.feeds).pipe(
         Option.flatMap((feeds) => Array.head(feeds)),
         Option.flatMap((feedRef) => Option.fromNullable(EchoURI.tryParse(String(feedRef)))),
-        Option.flatMap((echoId) => {
-          const queueId = EchoURI.getObjectId(echoId);
+        Option.flatMap((echoUri) => {
+          const queueId = EchoURI.getObjectId(echoUri);
           if (!queueId || !Key.ObjectId.isValid(queueId)) {
             return Option.none();
           }
-          return Option.fromNullable(space?.queues.get(echoId));
+          return Option.fromNullable(space?.queues.get(echoUri));
         }),
       );
       // Skip query when a requested feed is not found (structurally invalid DXN or valid DXN

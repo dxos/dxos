@@ -12,7 +12,7 @@ import { QueueImpl } from './queue';
 import { type Queue, QueueSubspaceTags } from './types';
 
 export interface QueueAPI {
-  get<T extends Entity.Unknown = Entity.Unknown>(echoId: EchoURI.EchoURI, options?: { subspaceTag?: string }): Queue<T>;
+  get<T extends Entity.Unknown = Entity.Unknown>(echoUri: EchoURI.EchoURI, options?: { subspaceTag?: string }): Queue<T>;
   create<T extends Entity.Unknown = Entity.Unknown>(options?: { subspaceTag?: string }): Queue<T>;
 }
 
@@ -36,9 +36,9 @@ export class QueueFactory extends Resource implements QueueAPI {
     this._service = service;
   }
 
-  get<T extends Entity.Unknown>(echoId: EchoURI.EchoURI, { subspaceTag }: { subspaceTag?: string } = {}): Queue<T> {
-    assertArgument(EchoURI.isEchoURI(echoId), 'echoId', 'must be an EchoURI');
-    return this._getOrCreate<T>(echoId, subspaceTag);
+  get<T extends Entity.Unknown>(echoUri: EchoURI.EchoURI, { subspaceTag }: { subspaceTag?: string } = {}): Queue<T> {
+    assertArgument(EchoURI.isEchoURI(echoUri), 'echoUri', 'must be an EchoURI');
+    return this._getOrCreate<T>(echoUri, subspaceTag);
   }
 
   /**
@@ -52,8 +52,8 @@ export class QueueFactory extends Resource implements QueueAPI {
    * would manufacture a phantom queue at every URI that turns out to be an
    * object, poisoning later real lookups.
    */
-  tryGet<T extends Entity.Unknown>(echoId: EchoURI.EchoURI): Queue<T> | undefined {
-    return this._queues.get(echoId) as Queue<T> | undefined;
+  tryGet<T extends Entity.Unknown>(echoUri: EchoURI.EchoURI): Queue<T> | undefined {
+    return this._queues.get(echoUri) as Queue<T> | undefined;
   }
 
   /**
@@ -69,24 +69,24 @@ export class QueueFactory extends Resource implements QueueAPI {
   }
 
   create<T extends Entity.Unknown>({ subspaceTag = QueueSubspaceTags.DATA }: { subspaceTag?: string } = {}): Queue<T> {
-    const echoId = EchoURI.make({ spaceId: this._spaceId, objectId: ObjectId.random() });
-    return this._getOrCreate<T>(echoId, subspaceTag);
+    const echoUri = EchoURI.make({ spaceId: this._spaceId, objectId: ObjectId.random() });
+    return this._getOrCreate<T>(echoUri, subspaceTag);
   }
 
-  private _getOrCreate<T extends Entity.Unknown>(echoId: EchoURI.EchoURI, subspaceTag?: string): Queue<T> {
+  private _getOrCreate<T extends Entity.Unknown>(echoUri: EchoURI.EchoURI, subspaceTag?: string): Queue<T> {
     assertState(this._service, 'Service not set');
-    const existing = this._queues.get(echoId);
+    const existing = this._queues.get(echoUri);
     if (existing) {
       return existing as Queue<T>;
     }
     const newQueue = new QueueImpl<T>(
       this._service,
-      this._graph.createRefResolver({ context: { space: this._spaceId, feed: echoId } }),
-      echoId,
+      this._graph.createRefResolver({ context: { space: this._spaceId, feed: echoUri } }),
+      echoUri,
       this._graph.getDatabase(this._spaceId),
       subspaceTag,
     );
-    this._queues.set(echoId, newQueue);
+    this._queues.set(echoUri, newQueue);
     return newQueue;
   }
 }

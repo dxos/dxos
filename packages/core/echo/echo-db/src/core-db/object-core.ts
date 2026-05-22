@@ -461,9 +461,9 @@ export class ObjectCore {
       if (parentRef) {
         // Checks if the reference is pointing to an object in the same space.
         const parentDXN = EncodedReference.toURI(parentRef);
-        const parentEchoId = EchoURI.tryParse(parentDXN);
-        const spaceId = parentEchoId ? EchoURI.getSpaceId(parentEchoId) : undefined;
-        const parentId = parentEchoId ? EchoURI.getObjectId(parentEchoId) : undefined;
+        const parentEchoUri = EchoURI.tryParse(parentDXN);
+        const spaceId = parentEchoUri ? EchoURI.getSpaceId(parentEchoUri) : undefined;
+        const parentId = parentEchoUri ? EchoURI.getObjectId(parentEchoUri) : undefined;
         if (parentId && (spaceId === undefined || spaceId === this.database.spaceId)) {
           // NOTE: We can't use `loadObjectCoreById` here because it might be async and we need a sync check.
           // If the parent is not loaded, we assume it's not deleted for now, or should we assume deleted?
@@ -494,9 +494,9 @@ export class ObjectCore {
 
     const typeRef = this.getType();
     if (typeRef) {
-      const typeEchoId = EchoURI.tryParse(EncodedReference.toURI(typeRef));
-      if (typeEchoId) {
-        res.push(typeEchoId);
+      const typeEchoUri = EchoURI.tryParse(EncodedReference.toURI(typeRef));
+      if (typeEchoUri) {
+        res.push(typeEchoUri);
       }
     }
 

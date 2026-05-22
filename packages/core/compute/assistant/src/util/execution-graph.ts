@@ -511,8 +511,8 @@ const stringifyRef = (ref: Ref.Unknown) => {
     return stringifyObject(ref.target);
   }
 
-  const echoId = EchoURI.tryParse(ref.uri);
-  return (echoId ? EchoURI.getObjectId(echoId) : undefined) ?? '';
+  const echoUri = EchoURI.tryParse(ref.uri);
+  return (echoUri ? EchoURI.getObjectId(echoUri) : undefined) ?? '';
 };
 
 const stringifyObject = (obj: Obj.Unknown) => {

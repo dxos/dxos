@@ -21,12 +21,12 @@ const extractReferences = (data: Record<string, unknown>): { path: string[]; tar
   const visit = (path: string[], value: unknown) => {
     if (isEncodedReference(value)) {
       const uri = EncodedReference.toURI(value);
-      const parsedEchoId = EchoURI.tryParse(uri);
-      const echoId = parsedEchoId ? EchoURI.getObjectId(parsedEchoId) : undefined;
-      if (!echoId || !parsedEchoId) {
+      const parsedEchoUri = EchoURI.tryParse(uri);
+      const echoUri = parsedEchoUri ? EchoURI.getObjectId(parsedEchoUri) : undefined;
+      if (!echoUri || !parsedEchoUri) {
         return; // Skip non-echo references.
       }
-      refs.push({ path, targetDxn: parsedEchoId });
+      refs.push({ path, targetDxn: parsedEchoUri });
     } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       for (const [key, v] of Object.entries(value)) {
         visit([...path, key], v);

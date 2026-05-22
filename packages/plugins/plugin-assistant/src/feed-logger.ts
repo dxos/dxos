@@ -143,7 +143,7 @@ export class QueueLogger implements SequenceLogger {
   // (a) materializing a Feed object per invocation, or (b) a lower-level
   // FeedService.appendByDxn primitive. Tracked as Phase 6 work in echo/AUDIT.md.
   private _getTraceEventQueue(invocationId: ObjectId): Queue<TraceEvent> {
-    const echoId = this._getTraceQueueEchoId(invocationId);
-    return this._space.queues.get(echoId);
+    const echoUri = this._getTraceQueueEchoId(invocationId);
+    return this._space.queues.get(echoUri);
   }
 }

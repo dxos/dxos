@@ -201,13 +201,13 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     context: Hypergraph.RefResolutionContext,
     onResolve?: (obj: Entity.Any) => void,
   ): Entity.Any | Queue | undefined {
-    const parsedEchoId = EchoURI.tryParse(uri);
-    if (!parsedEchoId) {
+    const parsedEchoUri = EchoURI.tryParse(uri);
+    if (!parsedEchoUri) {
       throw new Error('Unsupported URI kind');
     }
 
-    const spaceId = EchoURI.getSpaceId(parsedEchoId) ?? context.space;
-    const objectId = EchoURI.getObjectId(parsedEchoId);
+    const spaceId = EchoURI.getSpaceId(parsedEchoUri) ?? context.space;
+    const objectId = EchoURI.getObjectId(parsedEchoUri);
     if (spaceId === undefined || objectId === undefined) {
       throw new Error(`Unable to determine the Space to resolve the reference: ${uri}`);
     }
@@ -224,9 +224,9 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     // Fallback: try to resolve as a queue (Feed object backed by queue service).
     // Only resolve if a queue with this id has been explicitly created — otherwise
     // QueueFactory.get would manufacture a phantom queue for every unknown ECHO ref.
-    const queueEchoId = EchoURI.make({ spaceId: spaceId, objectId: objectId });
+    const queueEchoUri = EchoURI.make({ spaceId: spaceId, objectId: objectId });
     const queueFactory = this._queueFactories.get(spaceId);
-    const queue = queueFactory?.tryGet(queueEchoId);
+    const queue = queueFactory?.tryGet(queueEchoUri);
     if (queue) {
       return queue;
     }
@@ -259,15 +259,15 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     const beginTime = TRACE_REF_RESOLUTION ? performance.now() : 0;
     let status: string = '';
     try {
-      const parsedEchoId = EchoURI.tryParse(uri);
-      if (parsedEchoId) {
-        const echoId = EchoURI.getObjectId(parsedEchoId);
-        const echoSpaceId = EchoURI.getSpaceId(parsedEchoId);
-        if (!echoId) {
+      const parsedEchoUri = EchoURI.tryParse(uri);
+      if (parsedEchoUri) {
+        const echoUri = EchoURI.getObjectId(parsedEchoUri);
+        const echoSpaceId = EchoURI.getSpaceId(parsedEchoUri);
+        if (!echoUri) {
           status = 'error';
           throw new Error(`Invalid EchoURI: ${uri}`);
         }
-        if (!EchoURI.isLocal(parsedEchoId) && echoSpaceId !== context.space) {
+        if (!EchoURI.isLocal(parsedEchoUri) && echoSpaceId !== context.space) {
           status = 'error';
           throw new Error('Cross-space references are not yet supported');
         }
@@ -277,8 +277,8 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
           const feedSpaceId = EchoURI.getSpaceId(feedEchoId) ?? context.space;
           const queueId = EchoURI.getObjectId(feedEchoId);
           if (feedSpaceId && queueId) {
-            const queueEchoId = EchoURI.make({ spaceId: feedSpaceId, objectId: queueId });
-            const obj = await this._resolveQueueObjectAsync(queueEchoId, echoId);
+            const queueEchoUri = EchoURI.make({ spaceId: feedSpaceId, objectId: queueId });
+            const obj = await this._resolveQueueObjectAsync(queueEchoUri, echoUri);
             if (obj) {
               status = 'resolved';
               return obj;
@@ -292,22 +292,22 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         }
 
         // (1) Search space automerge docs first.
-        const obj = await this._resolveDatabaseObjectAsync(context.space, echoId);
+        const obj = await this._resolveDatabaseObjectAsync(context.space, echoUri);
         if (obj) {
           status = 'resolved';
           return obj;
         }
 
         // (2) Search known feeds in this space for an item with this id.
-        const feedObj = await this._resolveObjectInKnownQueues(context.space, echoId);
+        const feedObj = await this._resolveObjectInKnownQueues(context.space, echoUri);
         if (feedObj) {
           status = 'resolved';
           return feedObj;
         }
 
         // (3) Fallback: caller may be addressing a queue itself by URI.
-        const queueEchoId = EchoURI.make({ spaceId: context.space, objectId: echoId });
-        const queue = this._resolveQueueSync(queueEchoId);
+        const queueEchoUri = EchoURI.make({ spaceId: context.space, objectId: echoUri });
+        const queue = this._resolveQueueSync(queueEchoUri);
         if (queue) {
           status = 'resolved';
           return queue;
@@ -358,8 +358,8 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     return obj;
   }
 
-  private _resolveQueueSync(queueEchoId: EchoURI.EchoURI): Queue | undefined {
-    const spaceId = EchoURI.getSpaceId(queueEchoId);
+  private _resolveQueueSync(queueEchoUri: EchoURI.EchoURI): Queue | undefined {
+    const spaceId = EchoURI.getSpaceId(queueEchoUri);
     if (!spaceId) {
       return undefined;
     }
@@ -370,14 +370,14 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     // Use `tryGet` rather than `get` so we don't manufacture a phantom queue for a URI
     // that just happens to share an ECHO object id — we only resolve to a queue when one
     // has been explicitly created (e.g. by a prior Feed.append/query for that feed).
-    return queueFactory.tryGet(queueEchoId);
+    return queueFactory.tryGet(queueEchoUri);
   }
 
   private async _resolveQueueObjectAsync(
-    queueEchoId: EchoURI.EchoURI,
+    queueEchoUri: EchoURI.EchoURI,
     objectId: ObjectId,
   ): Promise<Entity.Unknown | undefined> {
-    const spaceId = EchoURI.getSpaceId(queueEchoId);
+    const spaceId = EchoURI.getSpaceId(queueEchoUri);
     if (!spaceId) {
       return undefined;
     }
@@ -385,7 +385,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     if (!queueFactory) {
       return undefined;
     }
-    const queue = queueFactory.get(queueEchoId);
+    const queue = queueFactory.get(queueEchoUri);
     if (!queue) {
       return undefined;
     }

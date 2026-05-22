@@ -59,9 +59,9 @@ export const ObjectsPanel = (props: { space?: Space }) => {
   const [selectedVersionObject, setSelectedVersionObject] = useState<any | null>(null);
 
   const onNavigate = (dxn: URI.URI) => {
-    const echoId = EchoURI.tryParse(dxn);
-    if (echoId && EchoURI.isLocal(echoId)) {
-      const id = EchoURI.getObjectId(echoId);
+    const echoUri = EchoURI.tryParse(dxn);
+    if (echoUri && EchoURI.isLocal(echoUri)) {
+      const id = EchoURI.getObjectId(echoUri);
       const object = id ? items.find((item) => item.id === id) : undefined;
       if (object) {
         setSelectedVersionObject(null);

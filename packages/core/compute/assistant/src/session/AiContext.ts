@@ -47,8 +47,8 @@ export class Bindings {
 
   // TODO(burdon): Some DXNs have the Space prefix so only compare the object ID.
   readonly objects = new ComplexSet<Ref.Ref<Obj.Unknown>>((ref) => {
-    const echoId = EchoURI.tryParse(ref.uri);
-    return echoId ? EchoURI.getObjectId(echoId) : undefined;
+    const echoUri = EchoURI.tryParse(ref.uri);
+    return echoUri ? EchoURI.getObjectId(echoUri) : undefined;
   });
 
   toJSON(): { blueprints: URI.URI[]; objects: URI.URI[] } {

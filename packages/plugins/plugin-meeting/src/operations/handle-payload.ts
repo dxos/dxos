@@ -30,8 +30,8 @@ const handler: Operation.WithHandler<typeof MeetingOperation.HandlePayload> = Me
       const { transcriptionManager } = store.state;
       if (space && transcriptDXN && transcriptionManager) {
         // Resolve the feed object from its queue/echo URI.
-        const echoId = EchoURI.tryParse(transcriptDXN);
-        const feedObjectId = echoId ? EchoURI.getObjectId(echoId) : undefined;
+        const echoUri = EchoURI.tryParse(transcriptDXN);
+        const feedObjectId = echoUri ? EchoURI.getObjectId(echoUri) : undefined;
         const feed = feedObjectId
           ? yield* Effect.promise(() => space.db.query(Query.select(Filter.id(feedObjectId))).first())
           : undefined;

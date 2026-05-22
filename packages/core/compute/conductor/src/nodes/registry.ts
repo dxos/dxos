@@ -206,8 +206,8 @@ export const registry: Record<NodeType, Executable> = {
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: id }) =>
       Effect.gen(function* () {
         const { queues } = yield* QueueService;
-        const echoId = EchoURI.isEchoURI(id) ? EchoURI.parse(id) : EchoURI.make({ objectId: id });
-        const messages = yield* Effect.promise(() => queues.get(echoId).queryObjects());
+        const echoUri = EchoURI.isEchoURI(id) ? EchoURI.parse(id) : EchoURI.make({ objectId: id });
+        const messages = yield* Effect.promise(() => queues.get(echoUri).queryObjects());
         const decoded = Schema.decodeUnknownSync(Schema.Any)(messages);
         return {
           [DEFAULT_OUTPUT]: decoded,
@@ -224,15 +224,15 @@ export const registry: Record<NodeType, Executable> = {
         items = Array.isArray(items) ? items : [items];
         if (EchoURI.isEchoURI(id)) {
           const parsed = EchoURI.parse(id);
-          const echoId = EchoURI.getObjectId(parsed);
+          const echoUri = EchoURI.getObjectId(parsed);
           const spaceId = EchoURI.getSpaceId(parsed);
           const { db } = yield* Database.Service;
           if (spaceId != null) {
             invariant(db.spaceId === spaceId, 'Space mismatch');
           }
-          invariant(echoId, 'Object ID missing from EchoURI');
+          invariant(echoUri, 'Object ID missing from EchoURI');
 
-          const [container] = yield* Effect.promise(() => db.query(Filter.id(echoId)).run());
+          const [container] = yield* Effect.promise(() => db.query(Filter.id(echoUri)).run());
           if (isInstanceOf(View.View, container)) {
             const schema = yield* Effect.promise(async () =>
               db.schemaRegistry
@@ -259,8 +259,8 @@ export const registry: Record<NodeType, Executable> = {
             id: item.id ?? ObjectId.random(),
           }));
           const { queues } = yield* QueueService;
-          const queueEchoId = EchoURI.make({ objectId: id });
-          yield* Effect.promise(() => queues.get(queueEchoId).append(mappedItems));
+          const queueEchoUri = EchoURI.make({ objectId: id });
+          yield* Effect.promise(() => queues.get(queueEchoUri).append(mappedItems));
           return {};
         }
       }),

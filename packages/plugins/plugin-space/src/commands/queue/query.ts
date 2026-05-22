@@ -22,12 +22,12 @@ export const query = Command.make(
   Effect.fnUntraced(function* ({ dxn }) {
     const { json } = yield* CommandConfig;
     const client = yield* ClientService;
-    const echoId = EchoURI.tryParse(dxn);
-    if (!echoId) {
+    const echoUri = EchoURI.tryParse(dxn);
+    if (!echoUri) {
       yield* Console.error(`Not a valid feed identifier: ${dxn}`);
       return;
     }
-    const spaceId = EchoURI.getSpaceId(echoId);
+    const spaceId = EchoURI.getSpaceId(echoUri);
     if (!spaceId) {
       yield* Console.error(`Could not determine space from: ${dxn}`);
       return;
@@ -37,7 +37,7 @@ export const query = Command.make(
       yield* Console.error(`Space not found: ${spaceId}`);
       return;
     }
-    const queue = space.queues.get(echoId);
+    const queue = space.queues.get(echoUri);
     const objects = yield* Effect.promise(() => queue.queryObjects());
 
     if (json) {

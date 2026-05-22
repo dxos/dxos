@@ -7,7 +7,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { DXN, Obj, QueryAST, Ref, Type } from '@dxos/echo';
 import { OptionsAnnotationId, SystemTypeAnnotation } from '@dxos/echo/internal';
-import { EchoId } from '@dxos/keys';
+import { EchoURI } from '@dxos/keys';
 import { Expando } from '@dxos/schema';
 
 /**
@@ -29,7 +29,7 @@ export const QueueSpec = Schema.Struct({
   kind: Schema.Literal('queue').annotations(kindLiteralAnnotations),
 
   // TODO(dmaretskyi): Change to a reference.
-  queue: EchoId.Schema,
+  queue: EchoURI.Schema,
 });
 export type QueueSpec = Schema.Schema.Type<typeof QueueSpec>;
 

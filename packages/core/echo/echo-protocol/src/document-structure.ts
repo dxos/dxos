@@ -41,7 +41,7 @@ export interface DatabaseDirectory {
    * Object id points to an automerge doc url where the object is embedded.
    */
   links?: {
-    [echoId: string]: string | RawString;
+    [echoUri: string]: string | RawString;
   };
 
   /**

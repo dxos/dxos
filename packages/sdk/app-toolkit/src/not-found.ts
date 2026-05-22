@@ -22,7 +22,7 @@ export const NOT_FOUND_PATH = `${Node.RootId}/${NOT_FOUND_NODE_ID}`;
  * Callback to check if an object exists on a remote service (e.g., edge).
  * Takes a DXN identifying the object. Returns an Effect resolving to true if the object exists remotely.
  */
-export type RemoteExistenceChecker = (echoId: EchoURI.EchoURI) => Effect.Effect<boolean>;
+export type RemoteExistenceChecker = (echoUri: EchoURI.EchoURI) => Effect.Effect<boolean>;
 
 /**
  * Expand a qualified graph path by expanding each ancestor prefix.
@@ -114,9 +114,9 @@ export const validateNavigationTarget = (params: {
 export const createEdgeExistenceChecker = (
   execQuery: (spaceId: Key.SpaceId, body: { query: string; reactivity: number }) => Promise<{ results?: unknown[] }>,
 ): RemoteExistenceChecker => {
-  return (echoId) => {
-    const spaceId = EchoURI.getSpaceId(echoId);
-    const objectId = EchoURI.getObjectId(echoId);
+  return (echoUri) => {
+    const spaceId = EchoURI.getSpaceId(echoUri);
+    const objectId = EchoURI.getObjectId(echoUri);
     if (!spaceId || !objectId) {
       return Effect.succeed(false);
     }

@@ -139,8 +139,8 @@ export const layer = (opts?: {
             }
 
             const target = Obj.getURI(feed);
-            const parsedEchoId = EchoURI.tryParse(target);
-            const spaceId = parsedEchoId ? EchoURI.getSpaceId(parsedEchoId) : undefined;
+            const parsedEchoUri = EchoURI.tryParse(target);
+            const spaceId = parsedEchoUri ? EchoURI.getSpaceId(parsedEchoUri) : undefined;
             const executable = AgentProcess({
               systemPrompt: opts?.systemPrompt,
               model: options?.model ?? opts?.model,

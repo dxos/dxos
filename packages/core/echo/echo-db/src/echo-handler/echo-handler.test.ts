@@ -471,8 +471,8 @@ describe('Reactive Object with ECHO database', () => {
       {
         const obj = JSON.parse(JSON.stringify(obj2));
         const refUri = EncodedReference.toURI(obj.reference);
-        const refEchoId = EchoURI.tryParse(refUri);
-        expect(refEchoId ? EchoURI.getObjectId(refEchoId) : undefined).to.eq(obj2.reference?.target?.id);
+        const refEchoUri = EchoURI.tryParse(refUri);
+        expect(refEchoUri ? EchoURI.getObjectId(refEchoUri) : undefined).to.eq(obj2.reference?.target?.id);
       }
 
       // Load refs.

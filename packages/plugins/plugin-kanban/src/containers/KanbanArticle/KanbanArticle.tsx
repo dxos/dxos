@@ -122,7 +122,7 @@ const ItemsKanbanArticle = ({ role, subject: object }: ItemsKanbanArticleProps) 
   //     - `KanbanCard` to accept `Ref<Obj.Unknown>` as `data` and call
   //       `useObject(ref)` internally.
   //     - The model to handle a ref-bearing item shape (id from
-  //       `ref.dxn.asEchoDXN()?.echoId`) and use arrangement-only ordering
+  //       `ref.dxn.asEchoDXN()?.echoUri`) and use arrangement-only ordering
   //       for items-variant (no pivot-value fallback, since refs don't expose
   //       the pivot field without loading).
   //     - `Mosaic.isItem` to accept the ref wrapper alongside `Obj.isObject`.

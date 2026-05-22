@@ -107,16 +107,16 @@ const buildDecorations = ({
         return;
       }
 
-      let echoId: string | undefined;
+      let echoUri: string | undefined;
       let echoSpaceId: string | undefined;
       try {
         const parsed = EchoURI.parse(urlText);
-        echoId = EchoURI.getObjectId(parsed);
+        echoUri = EchoURI.getObjectId(parsed);
         echoSpaceId = EchoURI.getSpaceId(parsed);
       } catch {
         return;
       }
-      if (!echoId) {
+      if (!echoUri) {
         return;
       }
 
@@ -127,7 +127,7 @@ const buildDecorations = ({
 
       const cacheKey = urlText;
       const blobUrlPromise = (async () => {
-        const matched = await space.db.query(Filter.id(echoId!)).first();
+        const matched = await space.db.query(Filter.id(echoUri!)).first();
         if (!matched || !Obj.instanceOf(File.File, matched)) {
           return undefined;
         }

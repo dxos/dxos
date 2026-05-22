@@ -102,8 +102,8 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
     (id) => {
       // TODO(burdon): Impl. DXN.equals and pass in DXN from `id`.
       const idx = board.items.findIndex((ref) => {
-        const echoId = EchoURI.tryParse(ref.uri);
-        return (echoId ? EchoURI.getObjectId(echoId) : undefined) === id;
+        const echoUri = EchoURI.tryParse(ref.uri);
+        return (echoUri ? EchoURI.getObjectId(echoUri) : undefined) === id;
       });
       Obj.update(board, (board) => {
         if (idx !== -1) {

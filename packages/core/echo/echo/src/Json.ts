@@ -68,18 +68,18 @@ export const createRefReplacer = ({ db, depth = 1 }: CreateRefReplacerOptions): 
         return value;
       }
 
-      let echoId: string | undefined;
+      let echoUri: string | undefined;
       try {
         const parsed = EchoURI.tryParse(dxnString);
-        echoId = parsed ? EchoURI.getObjectId(parsed) : undefined;
+        echoUri = parsed ? EchoURI.getObjectId(parsed) : undefined;
       } catch {
         return value;
       }
 
-      if (!echoId) {
+      if (!echoUri) {
         return value;
       }
-      const target = db.getObjectById(echoId);
+      const target = db.getObjectById(echoUri);
       if (!target) {
         return value;
       }

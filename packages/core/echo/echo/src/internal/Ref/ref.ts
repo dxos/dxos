@@ -261,18 +261,18 @@ export type JsonSchemaReferenceInfo = {
  */
 // TODO(burdon): Move to json schema and make private?
 export const createEchoReferenceSchema = (
-  echoId: string | undefined,
+  echoUri: string | undefined,
   typename: string | undefined,
   version: string | undefined,
 ): Schema.SchemaClass<Ref<any>, EncodedReference> => {
-  if (!echoId && !typename) {
-    throw new TypeError('Either echoId or typename must be provided.');
+  if (!echoUri && !typename) {
+    throw new TypeError('Either echoUri or typename must be provided.');
   }
 
   const referenceInfo: JsonSchemaReferenceInfo = {
     schema: {
       // TODO(dmaretskyi): Include version?
-      $ref: echoId ?? DXN.make(typename!),
+      $ref: echoUri ?? DXN.make(typename!),
     },
     schemaVersion: version,
   };

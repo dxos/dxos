@@ -37,12 +37,12 @@ const RESTORE_YIELD_EVERY_N_FILES = 25;
  * `ref.tryLoad()` because objects in linked documents may not be hydrated until async load.
  */
 const resolveTextObjectFromStoredDxn = async (client: Client, dxnStr: string): Promise<Text.Text | undefined> => {
-  const echoId = EchoURI.tryParse(dxnStr);
-  if (!echoId) {
+  const echoUri = EchoURI.tryParse(dxnStr);
+  if (!echoUri) {
     return undefined;
   }
-  const spaceId = EchoURI.getSpaceId(echoId);
-  const objectId = EchoURI.getObjectId(echoId);
+  const spaceId = EchoURI.getSpaceId(echoUri);
+  const objectId = EchoURI.getObjectId(echoUri);
   if (!spaceId || !objectId) {
     return undefined;
   }
@@ -56,7 +56,7 @@ const resolveTextObjectFromStoredDxn = async (client: Client, dxnStr: string): P
     return byId;
   }
 
-  const ref = owningSpace.db.makeRef(echoId);
+  const ref = owningSpace.db.makeRef(echoUri);
   const syncTarget = ref.target as Text.Text | undefined;
   if (syncTarget && Obj.instanceOf(Text.Text, syncTarget)) {
     return syncTarget;

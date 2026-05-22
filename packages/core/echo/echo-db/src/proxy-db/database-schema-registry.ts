@@ -456,10 +456,10 @@ const getObjectIdFromSchema = (schema: Schema.Schema.AnyNoContext): ObjectId | u
     return undefined;
   }
 
-  const echoId = EchoURI.tryParse(echoIdentifier);
-  if (!echoId) {
+  const echoUri = EchoURI.tryParse(echoIdentifier);
+  if (!echoUri) {
     return undefined;
   }
-  invariant(EchoURI.isLocal(echoId));
-  return EchoURI.getObjectId(echoId);
+  invariant(EchoURI.isLocal(echoUri));
+  return EchoURI.getObjectId(echoUri);
 };

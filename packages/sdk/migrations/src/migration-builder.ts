@@ -37,7 +37,7 @@ export class MigrationBuilder {
   private readonly _repo: RepoProxy;
   private readonly _rootDoc: Doc<DatabaseDirectory>;
 
-  // echoId -> automergeUrl
+  // echoUri -> automergeUrl
   private readonly _newLinks: Record<string, string> = {};
   private readonly _flushIds: DocumentId[] = [];
   private readonly _deleteObjects: string[] = [];

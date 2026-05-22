@@ -131,12 +131,12 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   constructor(
     private readonly _service: FeedProtocol.QueueService,
     private readonly _refResolver: Ref.Resolver,
-    private readonly _echoId: EchoURI.EchoURI,
+    private readonly _echoUri: EchoURI.EchoURI,
     private readonly _database?: Database.Database,
     private readonly _subspaceTag: string = 'data',
   ) {
-    this._spaceId = EchoURI.getSpaceId(_echoId) ?? failedInvariant('Missing spaceId in EchoURI');
-    this._queueId = EchoURI.getObjectId(_echoId) ?? failedInvariant('Missing queueId in EchoURI');
+    this._spaceId = EchoURI.getSpaceId(_echoUri) ?? failedInvariant('Missing spaceId in EchoURI');
+    this._queueId = EchoURI.getObjectId(_echoUri) ?? failedInvariant('Missing queueId in EchoURI');
   }
 
   /**
@@ -149,14 +149,14 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
 
   toJSON() {
     return {
-      uri: this._echoId,
+      uri: this._echoUri,
       objects: this._objects.length,
     };
   }
 
   // TODO(burdon): Rename to objects.
   get uri(): EchoURI.EchoURI {
-    return this._echoId;
+    return this._echoUri;
   }
 
   /**
@@ -260,7 +260,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
 
   private _query(queryOrFilter: Query.Any | Filter.Any) {
     const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
-    const queryWithScope = query.from({ spaceIds: [this._spaceId], feeds: [this._echoId] });
+    const queryWithScope = query.from({ spaceIds: [this._spaceId], feeds: [this._echoUri] });
     return new QueryResultImpl(new QueueQueryContext(this, this._ctx), queryWithScope);
   }
 

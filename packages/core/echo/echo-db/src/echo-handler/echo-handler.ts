@@ -355,10 +355,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         .resolveSync(parentDXN, false);
     } else {
       invariant(target[symbolInternals].linkCache);
-      const parentEchoId = EchoURI.tryParse(parentDXN);
-      const echoId = parentEchoId ? EchoURI.getObjectId(parentEchoId) : undefined;
-      invariant(echoId);
-      return target[symbolInternals].linkCache.get(echoId);
+      const parentEchoUri = EchoURI.tryParse(parentDXN);
+      const echoUri = parentEchoUri ? EchoURI.getObjectId(parentEchoUri) : undefined;
+      invariant(echoUri);
+      return target[symbolInternals].linkCache.get(echoUri);
     }
   }
 
@@ -379,9 +379,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     } else {
       invariant(target[symbolInternals].linkCache);
       const sourceEchoId = EchoURI.tryParse(sourceDXN);
-      const echoId = sourceEchoId ? EchoURI.getObjectId(sourceEchoId) : undefined;
-      invariant(echoId);
-      return target[symbolInternals].linkCache.get(echoId);
+      const echoUri = sourceEchoId ? EchoURI.getObjectId(sourceEchoId) : undefined;
+      invariant(echoUri);
+      return target[symbolInternals].linkCache.get(echoUri);
     }
   }
 
@@ -401,9 +401,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     } else {
       invariant(target[symbolInternals].linkCache);
       const targetEchoId = EchoURI.tryParse(targetDXN);
-      const echoId = targetEchoId ? EchoURI.getObjectId(targetEchoId) : undefined;
-      invariant(echoId);
-      return target[symbolInternals].linkCache.get(echoId);
+      const echoUri = targetEchoId ? EchoURI.getObjectId(targetEchoId) : undefined;
+      invariant(echoUri);
+      return target[symbolInternals].linkCache.get(echoUri);
     }
   }
 
@@ -865,8 +865,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return refImpl;
     } else {
       invariant(target[symbolInternals].linkCache);
-      const parsedEchoId = EchoURI.tryParse(dxn);
-      const objectId = parsedEchoId ? EchoURI.getObjectId(parsedEchoId) : undefined;
+      const parsedEchoUri = EchoURI.tryParse(dxn);
+      const objectId = parsedEchoUri ? EchoURI.getObjectId(parsedEchoUri) : undefined;
       invariant(objectId, 'Invalid DXN');
       return new RefImpl(dxn, this._handleStoredSchema(target, target[symbolInternals].linkCache.get(objectId)));
     }
