@@ -411,14 +411,14 @@ class QueryClass implements Any {
     }
 
     const feedItems = items as Feed.Feed[];
-    const feedDXNs = feedItems.map((feed) => {
-      const dxn = Feed.getQueueUri(feed);
-      if (!dxn) {
+    const feedUris = feedItems.map((feed) => {
+      const uri = Feed.getQueueUri(feed);
+      if (!uri) {
         throw new TypeError(
-          `Query.from() expects persisted Feed objects with a queue DXN; got feed without a space (id=${Obj.getURI(feed)}).`,
+          `Query.from() expects persisted Feed objects with a queue URI; got feed without a space (id=${Obj.getURI(feed)}).`,
         );
       }
-      return dxn;
+      return uri;
     });
     return new QueryClass({
       type: 'from',
@@ -426,7 +426,7 @@ class QueryClass implements Any {
       from: {
         _tag: 'scope',
         scope: {
-          feeds: feedDXNs,
+          feeds: feedUris,
         },
       },
     });
