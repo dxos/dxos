@@ -42,49 +42,6 @@ concurrency:
 
 # https://moonrepo.dev/docs/guides/ci
 jobs:
-  publish-config:
-    name: Verify publish config
-    permissions:
-      contents: read
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-      - name: Check all publishable packages have publishConfig.access=public
-        run: |
-          python3 - << 'PYEOF'
-          import json, os, sys
-          from pathlib import Path
-
-          errors = []
-          roots = ['packages', 'vendor']
-
-          for root in roots:
-            for pkg_json in Path(root).rglob('package.json'):
-              parts = pkg_json.parts
-              if 'node_modules' in parts or '__fixtures__' in parts:
-                continue
-              try:
-                p = json.loads(pkg_json.read_text())
-              except Exception:
-                continue
-              name = p.get('name')
-              if not name or p.get('private'):
-                continue
-              access = p.get('publishConfig', {}).get('access', '')
-              if access != 'public':
-                errors.append(f"  {name} ({pkg_json}): publishConfig.access is '{access or '(not set)'}'")
-
-          if errors:
-            print('ERROR: The following publishable packages are missing publishConfig.access = "public".')
-            print('Add "publishConfig": { "access": "public" } to their package.json.')
-            print()
-            for e in sorted(errors):
-              print(e)
-            sys.exit(1)
-
-          print(f'OK: all publishable packages have publishConfig.access = "public"')
-          PYEOF
-
   check:
     permissions:
       contents: read
@@ -120,6 +77,9 @@ jobs:
 
       - name: Check for import cycles
         run: pnpm run check-cycles
+
+      - name: Check publish config
+        run: pnpm run check-publish-config
 
       - name: Check formatting
         run: pnpm run format-check
