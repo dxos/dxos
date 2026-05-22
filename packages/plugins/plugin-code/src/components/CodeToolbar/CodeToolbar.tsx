@@ -28,11 +28,14 @@ export type CodeToolbarProps = Pick<MenuRootProps, 'attendableId'> & {
 export const CodeToolbar = ({ attendableId, role, state, onBuild, onRun }: CodeToolbarProps) => {
   const buildBusy = state?.busy === 'build';
   const runBusy = state?.busy === 'run';
+  // Either operation in flight disables both actions so the user can't race
+  // Build and Run against each other while the BuildRun atom updates.
+  const anyBusy = state?.busy !== undefined;
   const canRun = state?.lastBuild?.ok === true;
 
   const menuCreator = useMemo(
-    () => createToolbarActions({ buildBusy, runBusy, canRun, onBuild, onRun }),
-    [buildBusy, runBusy, canRun, onBuild, onRun],
+    () => createToolbarActions({ buildBusy, runBusy, anyBusy, canRun, onBuild, onRun }),
+    [buildBusy, runBusy, anyBusy, canRun, onBuild, onRun],
   );
   const menuActions = useMenuActions(menuCreator);
 
@@ -48,6 +51,7 @@ export const CodeToolbar = ({ attendableId, role, state, onBuild, onRun }: CodeT
 type CreateOptions = {
   buildBusy: boolean;
   runBusy: boolean;
+  anyBusy: boolean;
   canRun: boolean;
   onBuild: () => void;
   onRun: () => void;
@@ -56,6 +60,7 @@ type CreateOptions = {
 const createToolbarActions = ({
   buildBusy,
   runBusy,
+  anyBusy,
   canRun,
   onBuild,
   onRun,
@@ -65,13 +70,13 @@ const createToolbarActions = ({
       createMenuAction('build', onBuild, {
         label: [buildBusy ? 'action.build.busy.label' : 'action.build.label', { ns: meta.id }],
         icon: 'ph--hammer--regular',
-        disabled: buildBusy,
+        disabled: anyBusy,
         testId: 'code-toolbar.build',
       }),
       createMenuAction('run', onRun, {
         label: [runBusy ? 'action.run.busy.label' : 'action.run.label', { ns: meta.id }],
         icon: 'ph--play--regular',
-        disabled: runBusy || !canRun,
+        disabled: anyBusy || !canRun,
         testId: 'code-toolbar.run',
       }),
     ],

@@ -147,7 +147,10 @@ type Story = StoryObj<typeof meta>;
  * World!" in the Console pane.
  */
 export const HelloWorld: Story = {
-  args: { seed: [HELLO_WORLD], name: 'Hello World' },
+  args: {
+    seed: [HELLO_WORLD],
+    name: 'Hello World',
+  },
 };
 
 /**
@@ -156,7 +159,10 @@ export const HelloWorld: Story = {
  * a timestamp printed via the imported helper.
  */
 export const MultiFile: Story = {
-  args: { seed: MULTI_FILE_FILES, name: 'Multi File' },
+  args: {
+    seed: MULTI_FILE_FILES,
+    name: 'Multi File',
+  },
 };
 
 /**
@@ -164,7 +170,10 @@ export const MultiFile: Story = {
  * **Run** stays disabled because the last build is not clean.
  */
 export const BuildError: Story = {
-  args: { seed: BROKEN_FILES, name: 'Build Error' },
+  args: {
+    seed: BROKEN_FILES,
+    name: 'Build Error',
+  },
 };
 
 /**
@@ -172,5 +181,8 @@ export const BuildError: Story = {
  * or just observe the empty-state UI here.
  */
 export const Empty: Story = {
-  args: { seed: [], name: 'Empty' },
+  args: {
+    seed: [],
+    name: 'Empty',
+  },
 };

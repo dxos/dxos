@@ -124,6 +124,12 @@ export const compileEntry = async (files: readonly LoadedFile[]): Promise<BuildR
  * captured output. CommonJS emit from {@link Compiler} ensures top-level
  * `export const X` statements compile to `exports.X = X` and execute inside
  * the function scope.
+ *
+ * **Security boundary.** The wrapper only shadows `console` and `exports`; it
+ * does **not** prevent access to browser globals (`window`, `document`,
+ * `fetch`), the network, or browser storage APIs. This is intentional — the
+ * function exists to run the user's *own* code from a `CodeProject` so they
+ * can iterate on a plugin. **Do not use it to execute untrusted code.**
  */
 export const executeScript = (source: string): RunResult => {
   const stdout: string[] = [];

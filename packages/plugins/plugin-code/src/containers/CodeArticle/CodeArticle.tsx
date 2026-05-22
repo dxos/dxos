@@ -10,6 +10,7 @@ import { useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Ref } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
+import { log } from '@dxos/log';
 import { getSpace, useObject } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { Panel, useThemeContext, useTranslation } from '@dxos/react-ui';
@@ -71,21 +72,36 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
         ...current,
         [projectId]: { ...current[projectId], busy: 'build' },
       }));
-      const { data } = await invoker.invokePromise(
-        CodeOperation.BuildProject,
-        { project: Ref.make(project) },
-        { spaceId },
-      );
-      updateBuildRun((current) => ({
-        ...current,
-        [projectId]: {
-          ...current[projectId],
-          busy: undefined,
-          lastBuild: data
-            ? { ok: data.ok, diagnostics: data.diagnostics, entry: data.entry, timestamp: Date.now() }
-            : current[projectId]?.lastBuild,
-        },
-      }));
+      try {
+        const { data, error } = await invoker.invokePromise(
+          CodeOperation.BuildProject,
+          { project: Ref.make(project) },
+          { spaceId },
+        );
+        if (error) {
+          log.catch(error);
+        }
+        updateBuildRun((current) => ({
+          ...current,
+          [projectId]: {
+            ...current[projectId],
+            busy: undefined,
+            lastBuild: data
+              ? { ok: data.ok, diagnostics: data.diagnostics, entry: data.entry, timestamp: Date.now() }
+              : current[projectId]?.lastBuild,
+          },
+        }));
+      } catch (err) {
+        // Operation invocation threw outright — clear busy so the toolbar
+        // doesn't stick in "Building…" forever. The error is logged but not
+        // surfaced in BuildOutput because the operation never produced a
+        // result envelope; we leave `lastBuild` untouched.
+        log.catch(err);
+        updateBuildRun((current) => ({
+          ...current,
+          [projectId]: { ...current[projectId], busy: undefined },
+        }));
+      }
     }, [invoker, project, projectId, spaceId, updateBuildRun]);
 
     const handleRun = useCallback(async () => {
@@ -96,28 +112,43 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
         ...current,
         [projectId]: { ...current[projectId], busy: 'run' },
       }));
-      const { data } = await invoker.invokePromise(CodeOperation.RunBuild, { project: Ref.make(project) }, { spaceId });
-      updateBuildRun((current) => ({
-        ...current,
-        [projectId]: {
-          ...current[projectId],
-          busy: undefined,
-          lastRun: data
-            ? {
-                ok: data.ok,
-                stdout: data.stdout,
-                stderr: data.stderr,
-                diagnostics: data.diagnostics,
-                timestamp: Date.now(),
-              }
-            : current[projectId]?.lastRun,
-          // A failed build still surfaces diagnostics on the build slot.
-          lastBuild:
-            data && data.diagnostics.length > 0 && !data.ok
-              ? { ok: false, diagnostics: data.diagnostics, entry: undefined, timestamp: Date.now() }
-              : current[projectId]?.lastBuild,
-        },
-      }));
+      try {
+        const { data, error } = await invoker.invokePromise(
+          CodeOperation.RunBuild,
+          { project: Ref.make(project) },
+          { spaceId },
+        );
+        if (error) {
+          log.catch(error);
+        }
+        updateBuildRun((current) => ({
+          ...current,
+          [projectId]: {
+            ...current[projectId],
+            busy: undefined,
+            lastRun: data
+              ? {
+                  ok: data.ok,
+                  stdout: data.stdout,
+                  stderr: data.stderr,
+                  diagnostics: data.diagnostics,
+                  timestamp: Date.now(),
+                }
+              : current[projectId]?.lastRun,
+            // A failed build still surfaces diagnostics on the build slot.
+            lastBuild:
+              data && data.diagnostics.length > 0 && !data.ok
+                ? { ok: false, diagnostics: data.diagnostics, entry: undefined, timestamp: Date.now() }
+                : current[projectId]?.lastBuild,
+          },
+        }));
+      } catch (err) {
+        log.catch(err);
+        updateBuildRun((current) => ({
+          ...current,
+          [projectId]: { ...current[projectId], busy: undefined },
+        }));
+      }
     }, [invoker, project, projectId, spaceId, updateBuildRun]);
 
     // Trigger re-render on files mutations.

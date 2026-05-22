@@ -19,11 +19,18 @@ export const getCompiler = async (): Promise<Compiler> => {
   }
   if (!_initialization) {
     const compiler = new Compiler();
-    _initialization = compiler.initialize().then(() => {
-      _instance = compiler;
-      _initialization = undefined;
-      return compiler;
-    });
+    _initialization = compiler
+      .initialize()
+      .then(() => {
+        _instance = compiler;
+        return compiler;
+      })
+      .catch((err) => {
+        // Clear the cached promise so a subsequent caller can retry — otherwise
+        // a transient CDN failure would poison the singleton for the page.
+        _initialization = undefined;
+        throw err;
+      });
   }
   return _initialization;
 };
