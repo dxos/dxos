@@ -14,8 +14,8 @@ export class SchemaNotFoundError extends BaseError.extend('SchemaNotFoundError',
 }
 
 export class ObjectNotFoundError extends BaseError.extend('ObjectNotFoundError', 'Object not found') {
-  constructor(dxn: URI.URI | string, options?: BaseErrorOptions) {
-    super({ context: { dxn }, ...options });
+  constructor(uri: URI.URI, options?: BaseErrorOptions) {
+    super({ context: { uri }, ...options });
   }
 }
 

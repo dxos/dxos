@@ -127,7 +127,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
       if (!queueTarget) {
         return undefined;
       }
-      const feed = feeds.find((feed) => Feed.getQueueDxn(feed)?.toString() === queueTarget);
+      const feed = feeds.find((feed) => Feed.getQueueUri(feed)?.toString() === queueTarget);
       return feed ? Ref.fromURI(Entity.getURI(feed)) : undefined;
     }, [queueTarget, feeds]);
 
@@ -178,7 +178,7 @@ export const ViewEditor = forwardRef<ProjectionModel, ViewEditorProps>(
           const feedUri = targetValue.uri;
           const feed = feeds.find((feed) => Obj.getURI(feed) === feedUri);
           if (feed) {
-            queueDxn = Feed.getQueueDxn(feed);
+            queueDxn = Feed.getQueueUri(feed);
           }
         }
 

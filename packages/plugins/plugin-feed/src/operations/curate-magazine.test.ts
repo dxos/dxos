@@ -50,7 +50,7 @@ describe('curateMagazine', () => {
 
     const echoFeed = subscriptionFeed.feed?.target;
     invariant(echoFeed, 'Backing ECHO feed should be present.');
-    const feedDXN = Feed.getQueueDxn(echoFeed);
+    const feedDXN = Feed.getQueueUri(echoFeed);
     invariant(feedDXN, 'Feed should have a queue DXN.');
     const queue = queues.get(feedDXN);
     const space = { db, queues } as unknown as Space;

@@ -133,7 +133,7 @@ const seedSpaceWithQueueItems = ({ client }: { client: Client }) =>
     // is necessary post-`db.add` because the inline `savedTarget` from
     // `Ref.make(echoFeed)` is dropped when the ref is encoded for persistence.
     const echoFeed = yield* Effect.promise(() => subscriptionFeed.feed!.load());
-    const feedDXN = Feed.getQueueDxn(echoFeed);
+    const feedDXN = Feed.getQueueUri(echoFeed);
     if (!feedDXN) {
       throw new Error('Backing ECHO feed has no queue DXN — story setup is broken.');
     }

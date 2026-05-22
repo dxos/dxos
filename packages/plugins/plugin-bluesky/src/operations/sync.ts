@@ -138,7 +138,7 @@ const syncTarget = ({
 
     const echoFeed = subscriptionFeed.feed?.target;
     invariant(echoFeed, 'Subscription.Feed missing backing ECHO feed');
-    invariant(EchoFeed.getQueueDxn(echoFeed), 'ECHO feed not stored in a space');
+    invariant(EchoFeed.getQueueUri(echoFeed), 'ECHO feed not stored in a space');
     const space = client.spaces.get(db.spaceId);
     invariant(space, 'space not found');
 

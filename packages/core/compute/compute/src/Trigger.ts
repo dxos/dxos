@@ -54,7 +54,7 @@ export const specQueue = (queueDxn: string): QueueSpec => ({
  * Construct a Queue trigger spec from a Feed object.
  */
 export const specFeed = (feed: Feed.Feed): QueueSpec =>
-  specQueue(Feed.getQueueDxn(feed) ?? failedInvariant(new Error('Could not extract EchoURI from feed')));
+  specQueue(Feed.getQueueUri(feed) ?? failedInvariant(new Error('Could not extract EchoURI from feed')));
 
 /**
  * Subscription.

@@ -107,7 +107,7 @@ export const make = (props: Obj.MakeProps<typeof Feed> = {}): Feed => Obj.make(F
  *
  * Used internally by the feed service layer.
  */
-export const getQueueDxn = (feed: Feed): EchoURI.EchoURI | undefined => EchoURI.tryParse(Obj.getURI(feed));
+export const getQueueUri = (feed: Feed): EchoURI.EchoURI | undefined => EchoURI.tryParse(Obj.getURI(feed));
 
 //
 // Service
@@ -309,13 +309,13 @@ export const nextOption = <T = Obj.Snapshot>(_cursor: Cursor<T>): Effect.Effect<
 
 /**
  * Sets the local retention policy for a feed.
- * Currently stubbed — queues do not yet support retention.
+ * Currently stubbed — feeds do not yet support retention.
  *
  * @example
  * ```ts
  * yield* Feed.setRetention(feed, { count: 1000 });
  * ```
  */
-// TODO(feed): Implement when queue retention is supported.
+// TODO(dmaretskyi): Implement when feed retention is supported.
 export const setRetention = (_feed: Feed, _options: RetentionOptions): Effect.Effect<void, never, FeedService> =>
   Effect.void;

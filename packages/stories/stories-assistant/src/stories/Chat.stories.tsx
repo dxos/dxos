@@ -323,7 +323,7 @@ export const WithMail: Story = {
     config: config.remote,
     onInit: async ({ space }) => {
       const feed = space.db.add(Mailbox.make({ name: 'Mailbox' }));
-      const feedDxn = Feed.getQueueDxn(feed)!;
+      const feedDxn = Feed.getQueueUri(feed)!;
       const queue = space.queues.get<Message.Message>(feedDxn);
       const messages = createTestMailbox();
       await queue.append(messages);
@@ -616,7 +616,7 @@ export const WithTranscription: Story = {
     types: [Transcript.Transcript],
     onInit: async ({ space }) => {
       const feed = space.db.add(Feed.make());
-      const queueDxn = Feed.getQueueDxn(feed);
+      const queueDxn = Feed.getQueueUri(feed);
       invariant(queueDxn);
       const messages = createTestTranscription();
       await space.queues.get(queueDxn).append(messages);
@@ -744,7 +744,7 @@ export const WithResearchQueue: Story = {
       const feed = space.db.add(Feed.make());
       const researchInputQueue = space.db.add(Obj.make(ResearchInputQueue, { feed: Ref.make(feed) }));
       const orgs = organizations.map(({ id: _, ...org }) => Obj.make(Organization.Organization, org));
-      const feedQueueDxn = Feed.getQueueDxn(feed);
+      const feedQueueDxn = Feed.getQueueUri(feed);
       invariant(feedQueueDxn);
       await space.queues.get(feedQueueDxn).append(orgs);
 
@@ -766,7 +766,7 @@ export const WithResearchQueue: Story = {
         Trigger.make({
           function: Ref.make(Operation.serialize(AgentPrompt)),
           enabled: true,
-          spec: Trigger.specQueue(Feed.getQueueDxn(feed)!.toString()),
+          spec: Trigger.specQueue(Feed.getQueueUri(feed)!.toString()),
           input: {
             prompt: Ref.make(researchPrompt),
             input: '{{event.item}}',
@@ -824,7 +824,7 @@ export const WithProject: Story = {
       });
 
       const mailbox = space.db.add(Mailbox.make({ name: 'Mailbox' }));
-      const mailboxDxn = Feed.getQueueDxn(mailbox)!;
+      const mailboxDxn = Feed.getQueueUri(mailbox)!;
       const queue = space.queues.get<Message.Message>(mailboxDxn);
       const messages = createTestMailbox(people);
       await queue.append(messages);

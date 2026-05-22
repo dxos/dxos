@@ -130,7 +130,7 @@ export default Capability.makeModule(
                 const callManager = yield* Capability.get(CallsCapabilities.Manager);
                 const transcript = yield* Effect.promise(() => meeting.transcript.load());
                 const transcriptFeed = yield* Effect.promise(() => transcript.feed.load());
-                const transcriptQueueDxn = Feed.getQueueDxn(transcriptFeed);
+                const transcriptQueueDxn = Feed.getQueueUri(transcriptFeed);
                 invariant(transcriptQueueDxn, 'Transcript feed has no queue DXN');
                 const transcriptionEnabled = !enabled;
                 callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
