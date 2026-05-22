@@ -54,9 +54,14 @@ export type FormFieldProps = {
   type: SchemaAST.AST;
 
   /**
-   * Name of the property.
+   * Name of the property. Used to derive a default label
+   * (`title ?? capitalize(name)`) and as the projection lookup key. Pass
+   * `null` to suppress the header label entirely -- the form still renders
+   * the field/struct, but `FormFieldSet`'s top-level `<FormFieldLabel>` is
+   * skipped. Used by `ArrayField` for object-array items, where every item
+   * would otherwise repeat the array's parent name.
    */
-  name: string;
+  name: string | null;
 
   /**
    * Path to the current object from the root. Used with nested forms.
@@ -124,7 +129,11 @@ export const FormField = (props: FormFieldProps) => {
   const description = getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(type);
   const examples = getAnnotation<string[]>(SchemaAST.ExamplesAnnotationId)(type);
 
-  const label = useMemo(() => title ?? String.capitalize(name), [title, name]);
+  // `name === null` means "no header" -- collapse to an empty string so
+  // downstream consumers keep their `label: string` types, and the falsy
+  // value lets `FormFieldSet`'s `label && <FormFieldLabel ...>` guard skip
+  // the header.
+  const label = useMemo(() => title ?? (name == null ? '' : String.capitalize(name)), [title, name]);
   const placeholder = useMemo(
     () => (examples?.length ? `${t('example.placeholder')}: ${examples[0]}` : (description ?? label)),
     [examples, description, label],
@@ -166,7 +175,7 @@ export const FormField = (props: FormFieldProps) => {
   }
 
   // TODO(burdon): Expensive to create schema each time; pass AST?
-  const component = fieldProvider?.({ schema: Schema.make(type), prop: name, fieldProps });
+  const component = fieldProvider?.({ schema: Schema.make(type), prop: name ?? '', fieldProps });
   if (component) {
     return component;
   }
