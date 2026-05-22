@@ -19,6 +19,7 @@ export const SelectOptionField = ({
   type,
   readonly,
   label,
+  jsonPath,
   getStatus,
   getValue,
   onValueChange,
@@ -119,7 +120,7 @@ export const SelectOptionField = ({
 
   return (
     <Input.Root validationValence={status}>
-      <FormFieldLabel error={error} readonly={readonly} label={label} />
+      <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />
       <div>
         {options && (
           <List.Root

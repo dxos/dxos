@@ -43,6 +43,9 @@
       "path": "packages/common/effect-atom-solid/tsconfig.json"
     },
     {
+      "path": "packages/common/effect-proto/tsconfig.json"
+    },
+    {
       "path": "packages/common/effect-zod/tsconfig.json"
     },
     {

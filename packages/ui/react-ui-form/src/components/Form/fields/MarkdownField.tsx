@@ -31,6 +31,7 @@ export const MarkdownField = ({
   type,
   readonly,
   label,
+  jsonPath,
   placeholder,
   layout,
   db,
@@ -80,7 +81,7 @@ export const MarkdownField = ({
 
   return (
     <Input.Root validationValence={status}>
-      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} />}
+      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />}
       {layout === 'static' ? renderStatic() : renderEditor()}
       {layout === 'full' && <Input.Validation>{error}</Input.Validation>}
     </Input.Root>

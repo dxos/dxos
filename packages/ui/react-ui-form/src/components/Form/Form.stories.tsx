@@ -74,11 +74,9 @@ export interface Person extends Schema.Schema.Type<typeof Person> {}
 
 type DefaultStoryProps<T extends AnyProperties> = {
   schema?: Schema.Schema<T>;
-  debug?: boolean;
 } & FormRootProps<T>;
 
 const DefaultStory = <T extends AnyProperties = AnyProperties>({
-  debug,
   schema,
   values: valuesProp,
   ...props
@@ -105,7 +103,6 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
     <Tooltip.Provider>
       <TestLayout json={{ values, schema: schema?.ast }}>
         <Form.Root
-          debug={debug}
           schema={schema}
           defaultValues={values}
           db={space.db}
