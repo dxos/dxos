@@ -18,7 +18,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 
 import { Form } from '../Form';
-import { ObjectViewer } from './ObjectViewer';
+import { ObjectTree } from './ObjectTree';
 
 const registry = parseProto(configProto);
 const ConfigSchema = registry.get('dxos.config.Config');
@@ -71,14 +71,14 @@ const value: ConfigProto = {
 };
 
 const meta = {
-  title: 'ui/react-ui-form/ObjectViewer',
-  component: ObjectViewer,
+  title: 'ui/react-ui-form/ObjectTree',
+  component: ObjectTree,
   decorators: [withTheme(), withLayout({ layout: 'column', scroll: true })],
   parameters: {
     layout: 'fullscreen',
     translations,
   },
-} satisfies Meta<typeof ObjectViewer>;
+} satisfies Meta<typeof ObjectTree>;
 
 export default meta;
 
@@ -104,7 +104,7 @@ export const JSON = () => (
 
 // Renders the same proto-derived `ConfigSchema` + `value` through the
 // interactive `Form` component, for side-by-side comparison with the
-// read-only ObjectViewer above. `db` is intentionally omitted -- the proto
+// read-only ObjectTree above. `db` is intentionally omitted -- the proto
 // schema is not an ECHO type, so there's no space/database in play.
 export const WithForm = () => (
   <Form.Root

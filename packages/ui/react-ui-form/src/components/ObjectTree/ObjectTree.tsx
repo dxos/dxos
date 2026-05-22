@@ -18,7 +18,7 @@ import React, { type ReactElement, type ReactNode, type RefAttributes } from 're
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
-export type ObjectViewerProps<T> = {
+export type ObjectTreeProps<T> = {
   schema: Schema.Schema<T, any, never>;
   value: T;
 };
@@ -32,22 +32,20 @@ export type ObjectViewerProps<T> = {
  * `style` / `role`) onto its root `<div>` and forwards its ref, so it can
  * be slotted into themed parents like `Panel.Content`.
  */
-const ObjectViewerImpl = composable<HTMLDivElement, ObjectViewerProps<any>>(
-  ({ schema, value, ...props }, forwardedRef) => (
-    <div {...composableProps(props, { role: 'table', classNames: 'font-mono text-sm w-full' })} ref={forwardedRef}>
-      <Node ast={schema.ast} value={value} label={null} depth={0} />
-    </div>
-  ),
-);
+const ObjectTreeImpl = composable<HTMLDivElement, ObjectTreeProps<any>>(({ schema, value, ...props }, forwardedRef) => (
+  <div {...composableProps(props, { role: 'table', classNames: 'font-mono text-sm w-full' })} ref={forwardedRef}>
+    <Node ast={schema.ast} value={value} label={null} depth={0} />
+  </div>
+));
 
-ObjectViewerImpl.displayName = 'ObjectViewer';
+ObjectTreeImpl.displayName = 'ObjectTree';
 
-// `composable<HTMLDivElement, ObjectViewerProps<any>>` erases the `T` type
+// `composable<HTMLDivElement, ObjectTreeProps<any>>` erases the `T` type
 // parameter inside the factory; the cast restores the generic signature for
 // consumers without changing the underlying component (the COMPOSABLE marker
 // stays attached). This is the pattern documented on `composable()` itself.
-export const ObjectViewer = ObjectViewerImpl as unknown as <T>(
-  props: ComposableProps<ObjectViewerProps<T>> & RefAttributes<HTMLDivElement>,
+export const ObjectTree = ObjectTreeImpl as unknown as <T>(
+  props: ComposableProps<ObjectTreeProps<T>> & RefAttributes<HTMLDivElement>,
 ) => ReactElement | null;
 
 /**
