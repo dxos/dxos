@@ -6,7 +6,14 @@ import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback } from 'react';
 
-import { findNode, getArrayElementType, getDiscriminatedType, isDiscriminatedUnion, isNestedType } from '@dxos/effect';
+import {
+  createJsonPath,
+  findNode,
+  getArrayElementType,
+  getDiscriminatedType,
+  isDiscriminatedUnion,
+  isNestedType,
+} from '@dxos/effect';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
@@ -82,7 +89,7 @@ export const ArrayField = ({
   return (
     <>
       {(layout !== 'static' || (values && values.length > 0)) && (
-        <FormFieldLabel readonly={readonly} label={label} asChild />
+        <FormFieldLabel readonly={readonly} label={label} path={createJsonPath(path ?? [])} asChild />
       )}
 
       <div className='flex flex-col'>
@@ -142,12 +149,9 @@ export const ArrayField = ({
 
       {/* TODO(burdon): Get label from schema. */}
       {!readonly && layout !== 'static' && (
-        <IconButton
-          classNames='flex w-full mt-form-gap'
-          icon='ph--plus--regular'
-          label={t('add-item.button')}
-          onClick={handleAdd}
-        />
+        <div className='mt-form-gap'>
+          <IconButton icon='ph--plus--regular' label={t('add-item.button')} onClick={handleAdd} />
+        </div>
       )}
     </>
   );

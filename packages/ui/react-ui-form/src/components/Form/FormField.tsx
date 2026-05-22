@@ -131,11 +131,13 @@ export const FormField = (props: FormFieldProps) => {
   );
 
   const fieldState = useFormFieldState(FormField.displayName, path);
+  const jsonPath = createJsonPath(path ?? []);
   const fieldProps: FormFieldComponentProps = {
     type,
     format: Format.FormatAnnotation.getFromAst(type).pipe((annotation) => Option.getOrUndefined(annotation)),
     readonly,
     label,
+    jsonPath,
     placeholder,
     layout,
     db,
@@ -158,7 +160,6 @@ export const FormField = (props: FormFieldProps) => {
   // Custom field.
   //
 
-  const jsonPath = createJsonPath(path ?? []);
   const CustomField = fieldMap?.[jsonPath];
   if (CustomField) {
     return <CustomField {...fieldProps} />;

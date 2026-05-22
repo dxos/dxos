@@ -6,7 +6,14 @@ import { createContext } from '@radix-ui/react-context';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
-import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
+import React, {
+  createContext as createReactContext,
+  type PropsWithChildren,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+} from 'react';
 
 import { Annotation as EchoAnnotation } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
@@ -169,11 +176,26 @@ const FormRoot = <T extends AnyProperties = AnyProperties>({
   const form = useFormHandler({ schema, values, onSave, onCancel, ...props });
 
   return (
-    <FormContextProvider form={form} {...props}>
-      {children}
-    </FormContextProvider>
+    <FormDebugContext.Provider value={props.debug ?? false}>
+      <FormContextProvider form={form} {...props}>
+        {children}
+      </FormContextProvider>
+    </FormDebugContext.Provider>
   );
 };
+
+/**
+ * A separate context for the `debug` flag so that read-only label decorations
+ * (notably the field's JSON path rendered by `FormFieldLabel`) can be enabled
+ * from any component down-tree without forcing a hard dependency on the full
+ * `Form` context (which `FormFieldWrapper` consumers may use outside of a
+ * `Form.Root`, e.g. in storybook stories). Defaults to `false` when there is
+ * no enclosing `Form.Root`.
+ */
+const FormDebugContext = createReactContext<boolean>(false);
+
+/** Returns `true` when the enclosing `Form.Root` was created with `debug`. */
+export const useFormDebug = (): boolean => useContext(FormDebugContext);
 
 FormRoot.displayName = 'Form.Root';
 
