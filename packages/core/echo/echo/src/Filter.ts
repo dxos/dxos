@@ -110,7 +110,14 @@ export function type<T extends TypeNs.Type<any>>(
   type: T,
   props?: Props<TypeNs.InstanceType<T>>,
 ): Filter<TypeNs.InstanceType<T>>;
-export function type<S extends Schema.Schema.AnyNoContext>(
+// Schema-side overload restricted to the well-known unknown schemas and to
+// `Schema.Union(...)` of `Type.Type` entities (for filtering across a union
+// of ECHO types). Other raw schemas are rejected.
+export function type<S extends internal.UnknownTypeSchema<any, any>>(
+  schema: S,
+  props?: Props<Schema.Schema.Type<S>>,
+): Filter<Schema.Schema.Type<S>>;
+export function type<S extends Schema.Union<readonly Schema.Schema.AnyNoContext[]>>(
   union: S,
   props?: Props<Schema.Schema.Type<S>>,
 ): Filter<Schema.Schema.Type<S>>;

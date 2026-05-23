@@ -54,6 +54,28 @@ export const InstancePhantomId = '~@dxos/echo/Type.Instance' as const;
 export type InstancePhantomId = typeof InstancePhantomId;
 
 /**
+ * Nominal brand carried by the well-known "any object" / "any relation"
+ * schemas (`Obj.Unknown`, `Relation.Unknown`). The brand lets `Ref.Ref`,
+ * `Filter.type`, and `Query.type` accept these schemas in addition to
+ * `Type.Type` entities, without opening the door to arbitrary raw schemas.
+ *
+ * Stored as a string key so declarations remain portable across packages
+ * (see KindId comment above).
+ */
+export const UnknownTypeSchemaBrandId = '~@dxos/echo/UnknownTypeSchemaBrand' as const;
+export type UnknownTypeSchemaBrandId = typeof UnknownTypeSchemaBrandId;
+
+/**
+ * Schema-side companion to `Type.Type` entities for the "any object" /
+ * "any relation" cases. Branded so `Ref.Ref` / `Filter.type` / `Query.type`
+ * can pattern-match on it; arbitrary `Schema.Schema` values do not satisfy
+ * this shape.
+ */
+export interface UnknownTypeSchema<A, K extends EntityKind> extends Schema.Schema<A, any, never> {
+  readonly [UnknownTypeSchemaBrandId]: K;
+}
+
+/**
  * Kinds of entities stored in ECHO: objects, relations, and types.
  */
 export enum EntityKind {

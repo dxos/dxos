@@ -8,8 +8,15 @@ import type * as SchemaAST from 'effect/SchemaAST';
 import { assertArgument } from '@dxos/invariant';
 import { deepMapValues } from '@dxos/util';
 
-import { PersistentSchema, StaticTypeSchemaSlot, getSchemaTypename, makeObject, subscribe, toJsonSchema } from '../internal';
-import type * as TypeNs from '../Type';
+import {
+  PersistentSchema,
+  type PersistentSchema as PersistentSchemaT,
+  StaticTypeSchemaSlot,
+  getSchemaTypename,
+  makeObject,
+  subscribe,
+  toJsonSchema,
+} from '../internal';
 
 /**
  * Create an in-memory `Type.Type` entity (a `PersistentSchema` object) for tests.
@@ -20,12 +27,12 @@ import type * as TypeNs from '../Type';
 export const createEchoSchema = (
   input: Schema.Schema.AnyNoContext | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext },
   version = '0.1.0',
-): TypeNs.Type => {
+): PersistentSchemaT => {
   const schema = ((input as any)[StaticTypeSchemaSlot] ?? input) as Schema.Schema.AnyNoContext;
   const jsonSchema = toJsonSchema(schema);
   const typename = getSchemaTypename(schema);
   assertArgument(typename, 'typename', 'Schema does not have a typename.');
-  return makeObject(PersistentSchema, { typename, version, jsonSchema }) as unknown as TypeNs.Type;
+  return makeObject(PersistentSchema, { typename, version, jsonSchema }) as unknown as PersistentSchemaT;
 };
 
 /**

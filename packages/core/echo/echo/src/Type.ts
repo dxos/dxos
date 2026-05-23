@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import type * as Schema from 'effect/Schema';
+import * as Schema from 'effect/Schema';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -165,8 +165,8 @@ export type AnyRelationType = Relation<unknown, unknown, unknown>;
 export const relation: {
   <SourceInstance, TargetInstance>(opts: {
     dxn: DXN.DXN;
-    source: Obj<SourceInstance, any>;
-    target: Obj<TargetInstance, any>;
+    source: Obj<SourceInstance, any> | internal.UnknownTypeSchema<SourceInstance, typeof Entity.Kind.Object>;
+    target: Obj<TargetInstance, any> | internal.UnknownTypeSchema<TargetInstance, typeof Entity.Kind.Object>;
   }): <Self extends Schema.Schema.Any>(
     self: Self,
   ) => Relation<
@@ -191,7 +191,12 @@ export type AnyType = AnyObjectType | AnyRelationType | Type;
  * NOTE: This checks SCHEMAS, not instances. Use Obj.isObject for instances.
  */
 export const isObjectSchema = (schema: AnyType | Schema.Schema.AnyNoContext): schema is AnyObjectType => {
-  return (schema as any)[internal.SchemaKindId] === internal.EntityKind.Object;
+  if ((schema as any)[internal.SchemaKindId] === internal.EntityKind.Object) {
+    return true;
+  }
+  // Schema-side fallback for the well-known `Obj.Unknown` schema (and persisted
+  // `Type.Type` entities rebuilt from jsonSchema): inspect the TypeAnnotation kind.
+  return Schema.isSchema(schema) && internal.getTypeAnnotation(schema)?.kind === internal.EntityKind.Object;
 };
 
 /**
@@ -199,7 +204,10 @@ export const isObjectSchema = (schema: AnyType | Schema.Schema.AnyNoContext): sc
  * NOTE: This checks SCHEMAS, not instances. Use Relation.isRelation for instances.
  */
 export const isRelationSchema = (schema: AnyType | Schema.Schema.AnyNoContext): schema is AnyRelationType => {
-  return (schema as any)[internal.SchemaKindId] === internal.EntityKind.Relation;
+  if ((schema as any)[internal.SchemaKindId] === internal.EntityKind.Relation) {
+    return true;
+  }
+  return Schema.isSchema(schema) && internal.getTypeAnnotation(schema)?.kind === internal.EntityKind.Relation;
 };
 
 /**
@@ -376,7 +384,13 @@ export type InstanceType<T> = T extends Relation<infer Props, infer Source, infe
  * (e.g. before passing to Effect.Schema functions). For ECHO-side APIs
  * (`Obj.make`, `Filter.type`, `Ref`) you may pass the type value directly.
  */
-export const getSchema = (type: AnyObjectType | AnyRelationType | Type): Schema.Schema.AnyNoContext => {
+export const getSchema = (
+  type:
+    | AnyObjectType
+    | AnyRelationType
+    | Type
+    | internal.UnknownTypeSchema<any, any>,
+): Schema.Schema.AnyNoContext => {
   // Static `Type.Type` entities carry the source Effect Schema on a hidden
   // slot so we can return it without round-tripping through JsonSchema.
   const staticSchema = (type as any)[internal.StaticTypeSchemaSlot] as Schema.Schema.AnyNoContext | undefined;

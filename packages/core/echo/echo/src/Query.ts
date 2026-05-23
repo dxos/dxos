@@ -491,7 +491,12 @@ export const type: {
     type: T,
     predicates?: Filter.Props<TypeNs.InstanceType<T>>,
   ): Query<TypeNs.InstanceType<T>>;
-  <S extends Schema.Schema.AnyNoContext>(
+  // Brand-narrowed schema overload — only well-known unknown schemas pass.
+  <S extends internal.UnknownTypeSchema<any, any>>(
+    schema: S,
+    predicates?: Filter.Props<Schema.Schema.Type<S>>,
+  ): Query<Schema.Schema.Type<S>>;
+  <S extends Schema.Union<readonly Schema.Schema.AnyNoContext[]>>(
     union: S,
     predicates?: Filter.Props<Schema.Schema.Type<S>>,
   ): Query<Schema.Schema.Type<S>>;

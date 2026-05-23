@@ -59,19 +59,20 @@ export interface Unknown extends BaseRelation<Obj.Unknown, Obj.Unknown> {}
  * ```
  */
 // TODO(dmaretskyi): Change ObjModule.Any to ObjModule.Unknown to have stricter types.
-export const Unknown: Type.Relation<Unknown, Obj.Any, Obj.Any> = Schema.Struct({
+export const Unknown: internal.UnknownTypeSchema<Unknown, typeof Entity.Kind.Relation> = Schema.Struct({
   id: Schema.String,
 }).pipe(
   Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
-  // TODO(dmaretskyi): Clean this up.
-  // NOTE: The EchoRelationSchema annotation is required for Ref.Ref(Relation.Unknown) to work.
-  //   The typename/version/source/target only satisfy ECHO schema machinery for reference targets.
-  internal.EchoRelationSchema({
-    dxn: DXN.make('org.dxos.schema.anyRelation', '0.0.0'),
-    source: Obj.Unknown,
-    target: Obj.Unknown,
+  Schema.annotations({
+    [internal.TypeAnnotationId]: {
+      kind: Entity.Kind.Relation,
+      typename: 'org.dxos.schema.anyRelation',
+      version: '0.0.0',
+      sourceSchema: DXN.make(internal.ANY_OBJECT_TYPENAME, internal.ANY_OBJECT_VERSION),
+      targetSchema: DXN.make(internal.ANY_OBJECT_TYPENAME, internal.ANY_OBJECT_VERSION),
+    },
   }),
-) as unknown as Type.Relation<Unknown, Obj.Any, Obj.Any>;
+) as unknown as internal.UnknownTypeSchema<Unknown, typeof Entity.Kind.Relation>;
 
 /**
  * Relation type with specific source and target types.

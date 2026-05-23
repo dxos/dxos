@@ -8,6 +8,7 @@ import { DXN } from '@dxos/keys';
 
 import { IconAnnotation } from '../Annotation';
 import { LabelAnnotation, TypenameSchema, VersionSchema } from '../Annotation';
+import { EntityKind, KindId } from '../common/types';
 import { EchoObjectSchema } from '../Entity';
 import { JsonSchemaType } from '../JsonSchema';
 
@@ -30,6 +31,8 @@ export const PersistentSchema = Schema.Struct({
 );
 
 export type PersistentSchema = {
+  readonly id: string;
+  readonly [KindId]: EntityKind.Object;
   readonly name?: string;
   readonly typename: string;
   readonly version: string;
