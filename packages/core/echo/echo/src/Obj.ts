@@ -161,8 +161,7 @@ export function make<T extends Type.AnyObjectType>(
   type: T,
   props: NoInfer<MakeProps<T>>,
 ): OfShape<Type.InstanceType<T>>;
-export function make(type: Type.Type, props: any): OfShape<any>;
-export function make(input: Type.AnyObjectType | Type.Type, props: any): OfShape<any> {
+export function make(input: Type.AnyObjectType, props: any): OfShape<any> {
   // `Type.Type` entities aren't `Schema.Schema` themselves; derive the Effect
   // Schema via `Type.getSchema(...)`. Pass the entity through to `makeObject`
   // so subsequent schema mutations (`Type.addFields`, etc.) propagate.
@@ -199,7 +198,7 @@ export function make(input: Type.AnyObjectType | Type.Type, props: any): OfShape
       ...defaultMeta,
       ...meta,
     },
-    input as Type.Type,
+    input as unknown as Type.Type,
   );
 }
 

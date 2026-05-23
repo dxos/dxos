@@ -74,8 +74,17 @@ export const createObject: {
   // Raw object.
   const obj = { ...props, id: props.id ?? ObjectId.random() };
 
-  // Metadata.
-  const kind = RelationSourceId in props ? EntityKind.Relation : EntityKind.Object;
+  // Metadata. Instance-kind is read from the schema's TypeAnnotation (set by
+  // EchoObjectSchema / EchoRelationSchema / EchoTypeKindSchema): instances of
+  // a type-kind meta-schema are themselves type-kind entities, etc. The
+  // RelationSourceId-in-props check covers the legacy path where the schema
+  // annotation isn't authoritative.
+  const kind =
+    annotation.kind === EntityKind.Type
+      ? EntityKind.Type
+      : annotation.kind === EntityKind.Relation || RelationSourceId in props
+        ? EntityKind.Relation
+        : EntityKind.Object;
   defineHiddenProperty(obj, KindId, kind);
   defineHiddenProperty(obj, MetaId, { keys: [] });
   setSchema(obj, schema);

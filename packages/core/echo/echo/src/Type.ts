@@ -133,6 +133,29 @@ export const object: {
 export const Type: Type<typeInternal.PersistentSchema> = typeInternal.PersistentSchema as any;
 
 /**
+ * Construct a new type-kind ECHO entity (an instance of the {@link Type}
+ * meta-schema). Parallel to `Obj.make` / `Relation.make`, but for type
+ * definitions rather than object or relation instances.
+ *
+ * The returned entity is in-memory; persist it with `db.add(entity)`.
+ *
+ * @example
+ * ```ts
+ * const stored = Type.make({
+ *   typename: 'com.example.type.task',
+ *   version: '0.1.0',
+ *   jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ title: Schema.String })),
+ * });
+ * db.add(stored);
+ * ```
+ */
+export const make = (
+  props: Omit<typeInternal.PersistentSchema, 'id' | typeof internal.KindId> & { id?: ObjectId },
+): Type<typeInternal.PersistentSchema> => {
+  return internal.makeObject(typeInternal.PersistentSchema, props as any) as unknown as Type<typeInternal.PersistentSchema>;
+};
+
+/**
  * TypeScript type for an ECHO relation type — a `Type.Type<A>` entity (Option B).
  *
  * `T` is the instance-property type produced by `Relation.make(...)` (excluding
@@ -373,7 +396,7 @@ export type InstanceType<T> = T extends Relation<infer Props, infer Source, infe
   : T extends Obj<infer A, any>
     ? A & Entity.OfKind<typeof Entity.Kind.Object>
     : T extends Type<infer A>
-      ? A & Entity.OfKind<typeof Entity.Kind.Object>
+      ? A & Entity.OfKind<typeof Entity.Kind.Type>
       : T extends Schema.Schema.All
         ? Schema.Schema.Type<T>
         : never;

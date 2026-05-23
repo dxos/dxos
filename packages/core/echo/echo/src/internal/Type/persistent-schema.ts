@@ -32,7 +32,7 @@ export const PersistentSchema = Schema.Struct({
 
 export type PersistentSchema = {
   readonly id: string;
-  readonly [KindId]: EntityKind.Object;
+  readonly [KindId]: EntityKind.Type;
   readonly name?: string;
   readonly typename: string;
   readonly version: string;
