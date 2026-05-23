@@ -51,3 +51,12 @@ export const addSegment = (trip: Trip, segment: Segment.Segment): void => {
     trip.segments = [...(trip.segments ?? []), Ref.make(segment)] as typeof trip.segments;
   });
 };
+
+/** Removes a segment ref from a trip by its ECHO id. */
+export const removeSegment = (trip: Trip, segmentId: string): void => {
+  Obj.update(trip, (trip) => {
+    trip.segments = (trip.segments ?? []).filter(
+      (ref) => !(Ref.isRef(ref) && ref.target?.id === segmentId),
+    ) as typeof trip.segments;
+  });
+};

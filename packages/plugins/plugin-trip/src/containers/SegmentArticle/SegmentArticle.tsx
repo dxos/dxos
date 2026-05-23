@@ -182,7 +182,94 @@ const FlightForm = ({ segment, updateSegment }: { segment: Segment.Segment; upda
   );
 };
 
-/** Read-only field rows for non-flight segment variants. */
+/** Editable form for a lodging segment. */
+const LodgingForm = ({ segment, updateSegment }: { segment: Segment.Segment; updateSegment: UpdateSegment }) => {
+  const onChange = useCallback((apply: (draft: MutableSegment) => void) => apply, []);
+  return (
+    <div className='grid grid-cols-1 @md:grid-cols-2 gap-3'>
+      <Field label='Property'>
+        <Input.TextInput
+          value={segment.propertyName ?? ''}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            updateSegment(
+              onChange((draft) => {
+                draft.propertyName = e.target.value || undefined;
+              }),
+            )
+          }
+        />
+      </Field>
+      <Field label='Chain'>
+        <Input.TextInput
+          value={segment.operator?.name ?? ''}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            updateSegment(
+              onChange((draft) => {
+                draft.operator = { ...(draft.operator ?? {}), name: e.target.value };
+              }),
+            )
+          }
+        />
+      </Field>
+      <Field label='City'>
+        <Input.TextInput
+          value={segment.origin?.city ?? ''}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            updateSegment(
+              onChange((draft) => {
+                const city = e.target.value;
+                draft.origin = { ...(draft.origin ?? {}), city };
+                draft.destination = { ...(draft.destination ?? {}), city };
+              }),
+            )
+          }
+        />
+      </Field>
+      <Field label='Room type'>
+        <Input.TextInput
+          value={segment.roomType ?? ''}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            updateSegment(
+              onChange((draft) => {
+                draft.roomType = e.target.value || undefined;
+              }),
+            )
+          }
+        />
+      </Field>
+      <Field label='Check-in'>
+        <Input.TextInput
+          type='datetime-local'
+          value={toDateTimeLocal(segment.checkIn)}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            updateSegment(
+              onChange((draft) => {
+                draft.checkIn = fromDateTimeLocal(e.target.value);
+                draft.departAt = draft.checkIn;
+              }),
+            )
+          }
+        />
+      </Field>
+      <Field label='Check-out'>
+        <Input.TextInput
+          type='datetime-local'
+          value={toDateTimeLocal(segment.checkOut)}
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
+            updateSegment(
+              onChange((draft) => {
+                draft.checkOut = fromDateTimeLocal(e.target.value);
+                draft.arriveAt = draft.checkOut;
+              }),
+            )
+          }
+        />
+      </Field>
+    </div>
+  );
+};
+
+/** Read-only field rows for non-editable segment variants. */
 const renderModeFields = (segment: Segment.Segment): React.ReactNode => {
   switch (segment.kind) {
     case 'train':
@@ -276,11 +363,13 @@ export const SegmentArticle = ({ role, subject }: SegmentArticleProps) => {
           </div>
           {segment.kind === 'flight' ? (
             <FlightForm segment={segment} updateSegment={updateSegment} />
+          ) : segment.kind === 'lodging' ? (
+            <LodgingForm segment={segment} updateSegment={updateSegment} />
           ) : (
             <div className='flex flex-col'>
               {route && <Row label='Route' value={route} />}
-              {departAt && <Row label={segment.kind === 'lodging' ? 'Check-in' : 'Departs'} value={departAt} />}
-              {arriveAt && <Row label={segment.kind === 'lodging' ? 'Check-out' : 'Arrives'} value={arriveAt} />}
+              {departAt && <Row label='Departs' value={departAt} />}
+              {arriveAt && <Row label='Arrives' value={arriveAt} />}
               {renderModeFields(segment)}
               {segment.notes && <Row label='Notes' value={segment.notes} />}
             </div>

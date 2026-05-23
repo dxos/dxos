@@ -3,7 +3,7 @@
 //
 
 import { isSameDay } from 'date-fns';
-import React, { useCallback, useMemo } from 'react';
+import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
@@ -85,22 +85,38 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
 
   const handleAction = useCallback(
     (action: SegmentCardAction) => {
-      if (action.type === 'current') {
-        void showItem({
-          contextId: id,
-          selectionId: action.segmentId,
-          companion: linkedSegment('segment'),
-          path: getObjectPathFromObject(subject),
-        });
+      switch (action.type) {
+        case 'current':
+          void showItem({
+            contextId: id,
+            selectionId: action.segmentId,
+            companion: linkedSegment('segment'),
+            path: getObjectPathFromObject(subject),
+          });
+          break;
+        case 'delete':
+          Trip.removeSegment(subject, action.segmentId);
+          break;
       }
     },
     [id, showItem, subject],
   );
 
+  const [newSegmentKind, setNewSegmentKind] = useState<Segment.Kind>('flight');
+
   const handleAddSegment = useCallback(() => {
-    const segment = Segment.makeDefault('flight');
+    const segment = Segment.makeDefault(newSegmentKind);
     Trip.addSegment(subject, segment);
-  }, [subject]);
+  }, [newSegmentKind, subject]);
+
+  const KIND_OPTIONS: { value: Segment.Kind; label: string }[] = [
+    { value: 'flight', label: t('segment.flight.label') },
+    { value: 'train', label: t('segment.train.label') },
+    { value: 'boat', label: t('segment.boat.label') },
+    { value: 'road', label: t('segment.road.label') },
+    { value: 'lodging', label: t('segment.lodging.label') },
+    { value: 'activity', label: t('segment.activity.label') },
+  ];
 
   return (
     <div role={role} className='@container dx-container overflow-hidden'>
@@ -118,6 +134,18 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
         <Panel.Root>
           <Panel.Toolbar asChild>
             <Toolbar.Root>
+              <select
+                className='dx-input rounded px-2 py-1 bg-input-surface text-sm'
+                value={newSegmentKind}
+                onChange={(e: ChangeEvent<HTMLSelectElement>) => setNewSegmentKind(e.target.value as Segment.Kind)}
+                aria-label='Segment kind'
+              >
+                {KIND_OPTIONS.map(({ value, label }) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
               <IconButton icon='ph--plus--regular' label={t('segment.add.label')} onClick={handleAddSegment} />
             </Toolbar.Root>
           </Panel.Toolbar>
