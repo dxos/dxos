@@ -1,5 +1,8 @@
-name: Claude Code
+name: Claude mention
 
+# Responds to `@claude` mentions in issues, comments, and review threads.
+# Renamed from `claude.yml` to disambiguate from the Composer-specific
+# triage/implement workflows (`claude-composer-*.yml`).
 on:
   issue_comment:
     types: [created]
