@@ -35,7 +35,7 @@ import {
   hashtag,
   outliner,
 } from '@dxos/ui-editor';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 

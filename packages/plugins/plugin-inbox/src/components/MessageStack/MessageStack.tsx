@@ -8,7 +8,8 @@ import { DxAvatar } from '@dxos/lit-ui/react';
 import { Card, ScrollArea } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { type Message } from '@dxos/types';
-import { composable, composableProps, getHashStyles } from '@dxos/ui-theme';
+import { getHashStyles } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 import { type Mailbox as MailboxType } from '#types';
 

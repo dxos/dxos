@@ -18,7 +18,7 @@ import {
   useTour,
 } from '@dxos/react-ui-geo';
 import { loadTopology } from '@dxos/react-ui-geo/data';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 import { isNonNullable } from '@dxos/util';
 
 import { type GeoControlProps } from '../types';

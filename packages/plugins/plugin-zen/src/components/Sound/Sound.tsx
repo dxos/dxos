@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Form, type FormFieldMap, SelectField, omitId } from '@dxos/react-ui-form';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 import { Sequence } from '#types';
 

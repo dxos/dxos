@@ -15,7 +15,8 @@ import React, {
   useMemo,
 } from 'react';
 
-import { composable, composableProps, iconSize, mx, slottable } from '@dxos/ui-theme';
+import { iconSize, mx } from '@dxos/ui-theme';
+import { composable, composableProps, slottable } from '../../util';
 import { type Density } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';

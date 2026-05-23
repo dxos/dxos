@@ -16,7 +16,8 @@ import {
 } from '@dxos/react-ui-thread';
 import { type Message } from '@dxos/types';
 import { createBasicExtensions, createThemeExtensions, listener, type Extension } from '@dxos/ui-editor';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';

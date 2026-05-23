@@ -1,0 +1,80 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import { type Theme } from '@dxos/ui-types';
+
+import { avatarTheme } from '../components/Avatars/Avatar.theme';
+import { breadcrumbTheme } from '../components/Breadcrumb/Breadcrumb.theme';
+import { buttonTheme } from '../components/Button/Button.theme';
+import { iconButtonTheme } from '../components/Button/IconButton.theme';
+import { cardTheme } from '../components/Card/Card.theme';
+import { dialogTheme } from '../components/Dialog/Dialog.theme';
+import { focusTheme } from '../components/Focus/Focus.theme';
+import { iconTheme } from '../components/Icon/Icon.theme';
+import { inputTheme } from '../components/Input/Input.theme';
+import { linkTheme } from '../components/Link/Link.theme';
+import { listTheme } from '../components/List/List.theme';
+import { treegridTheme } from '../components/List/Treegrid.theme';
+import { mainTheme } from '../components/Main/Main.theme';
+import { menuTheme } from '../components/Menu/Menu.theme';
+import { messageTheme } from '../components/Message/Message.theme';
+import { popoverTheme } from '../components/Popover/Popover.theme';
+import { scrollAreaTheme } from '../components/ScrollArea/ScrollArea.theme';
+import { selectTheme } from '../components/Select/Select.theme';
+import { separatorTheme } from '../components/Separator/Separator.theme';
+import { skeletonTheme } from '../components/Skeleton/Skeleton.theme';
+import { splitterTheme } from '../components/Splitter/Splitter.theme';
+import { statusTheme } from '../components/Status/Status.theme';
+import { tagTheme } from '../components/Tag/Tag.theme';
+import { toastTheme } from '../components/Toast/Toast.theme';
+import { toolbarTheme } from '../components/Toolbar/Toolbar.theme';
+import { tooltipTheme } from '../components/Tooltip/Tooltip.theme';
+import { columnTheme } from '../primitives/Column/Column.theme';
+import { panelTheme } from '../primitives/Panel/Panel.theme';
+
+import { bindTheme } from './bindTheme';
+
+export const defaultTheme: Theme<Record<string, any>> = {
+  themeName: () => 'default',
+
+  //
+  // Primitives
+  //
+
+  column: columnTheme,
+  panel: panelTheme,
+
+  //
+  // Components
+  //
+
+  avatar: avatarTheme,
+  breadcrumb: breadcrumbTheme,
+  button: buttonTheme,
+  card: cardTheme,
+  dialog: dialogTheme,
+  focus: focusTheme,
+  icon: iconTheme,
+  iconButton: iconButtonTheme,
+  input: inputTheme,
+  link: linkTheme,
+  list: listTheme,
+  main: mainTheme,
+  message: messageTheme,
+  menu: menuTheme,
+  popover: popoverTheme,
+  scrollArea: scrollAreaTheme,
+  select: selectTheme,
+  separator: separatorTheme,
+  skeleton: skeletonTheme,
+  splitter: splitterTheme,
+  status: statusTheme,
+  tag: tagTheme,
+  toast: toastTheme,
+  toolbar: toolbarTheme,
+  tooltip: tooltipTheme,
+  treegrid: treegridTheme,
+};
+
+export const defaultTx = bindTheme(defaultTheme);

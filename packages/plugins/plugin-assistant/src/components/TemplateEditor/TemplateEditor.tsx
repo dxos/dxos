@@ -17,7 +17,7 @@ import {
   createThemeExtensions,
   decorateMarkdown,
 } from '@dxos/ui-editor';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';

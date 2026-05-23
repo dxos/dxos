@@ -22,7 +22,7 @@ import {
   useEditorContext,
 } from '@dxos/react-ui-editor';
 import { type PreviewBlock, type PreviewOptions } from '@dxos/ui-editor';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 import { isNonNullable } from '@dxos/util';
 
 import {

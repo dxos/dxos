@@ -7,7 +7,7 @@ import { createRoot } from 'react-dom/client';
 
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
 import { type RenderCallback } from '@dxos/ui-editor/types';
-import { defaultTx } from '@dxos/ui-theme';
+import { defaultTx } from '@dxos/react-ui';
 
 /**
  * @deprecated Use `trim` from `@dxos/util`.

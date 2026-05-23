@@ -10,7 +10,7 @@ import { log } from '@dxos/log';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { File } from '@dxos/types';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 

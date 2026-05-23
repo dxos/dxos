@@ -18,7 +18,8 @@ import { Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
 import { Tabs } from '@dxos/react-ui-tabs';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 import { PanelContainer } from '../../../components';
 import { DataSpaceSelector } from '../../../containers';

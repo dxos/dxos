@@ -14,7 +14,9 @@ import React, {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { composableProps, type DialogSize, osTranslations, slottable } from '@dxos/ui-theme';
+import { osTranslations } from '@dxos/ui-theme';
+import { type DialogSize } from '../../theme';
+import { composableProps, slottable } from '../../util';
 import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';

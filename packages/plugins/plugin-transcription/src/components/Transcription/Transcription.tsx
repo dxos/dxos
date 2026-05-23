@@ -16,7 +16,7 @@ import {
   preview,
   scroller,
 } from '@dxos/ui-editor';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 import { type SerializationModel } from '../../model';
 import { renderByline } from '../../util';

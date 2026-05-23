@@ -6,7 +6,7 @@ import { type Atom } from '@effect-atom/atom-react';
 import React from 'react';
 
 import { type ActionExecutor, type ActionGraphProps, Menu, useMenuActions } from '@dxos/react-ui-menu';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 const NAVBAR_NAME = 'SimpleLayout.NavBar';
 

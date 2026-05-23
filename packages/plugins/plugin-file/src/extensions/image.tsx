@@ -13,7 +13,7 @@ import { DXN } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { Status, ThemeProvider } from '@dxos/react-ui';
 import { focusField } from '@dxos/ui-editor';
-import { defaultTx } from '@dxos/ui-theme';
+import { defaultTx } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
 import { FileCapabilities, File } from '#types';

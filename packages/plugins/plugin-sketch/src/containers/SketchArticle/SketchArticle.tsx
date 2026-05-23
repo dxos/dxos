@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { useActions } from '@dxos/plugin-graph';
 import { Panel, Flex } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 import { isTauri } from '@dxos/util';
 
 import { SketchComponent } from '#components';

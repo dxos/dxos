@@ -12,7 +12,8 @@ import { type Node } from '@dxos/plugin-graph';
 import { getLinkedVariant } from '@dxos/react-ui-attention';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { StackItem, type StackItemSize, railGridHorizontal } from '@dxos/react-ui-stack';
-import { mainIntrinsicSize, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
+import { mainIntrinsicSize } from '@dxos/react-ui';
 
 import { useMainSize } from '#hooks';
 import { PLANK_COMPANION_TYPE } from '#types';

@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { Board, useBoard } from '@dxos/react-ui-mosaic';
 import type { ProjectionModel } from '@dxos/schema';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 import { useKanbanBoardModel, useKanbanColumnEventHandler } from '#hooks';
 import { meta } from '#meta';

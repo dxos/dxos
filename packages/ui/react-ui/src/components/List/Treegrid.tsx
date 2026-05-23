@@ -15,7 +15,7 @@ import React, {
   useCallback,
 } from 'react';
 
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '../../util';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';

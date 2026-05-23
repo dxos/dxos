@@ -31,7 +31,8 @@ import React, {
 
 import { type Density, type Elevation, Icon, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Picker, usePickerInputContext, usePickerItemContext } from '@dxos/react-ui-list';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 

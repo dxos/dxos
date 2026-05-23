@@ -15,7 +15,7 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { type MarkdownStreamController } from '@dxos/react-ui-markdown';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 import { useChatKeymapExtensions, useChatToolbarActions, useDebug } from '#hooks';
 

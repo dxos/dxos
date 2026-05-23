@@ -19,7 +19,8 @@ import {
   decorateMarkdown,
   preview,
 } from '@dxos/ui-editor';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 import { formatDateTime } from '../../util';
 import { UserIconButton } from '../UserIconButton';

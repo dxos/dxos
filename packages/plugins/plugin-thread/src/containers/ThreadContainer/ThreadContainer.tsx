@@ -10,7 +10,7 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { type ThreadRootProps } from '@dxos/react-ui-thread';
 import { Message, type Thread } from '@dxos/types';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 import { isNonNullable } from '@dxos/util';
 
 import { Chat } from '#components';

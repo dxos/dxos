@@ -26,7 +26,7 @@ import {
   defaultStyles,
 } from '@dxos/ui-editor';
 import { type EditorInputMode } from '@dxos/ui-editor/types';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 import { isNonNullable } from '@dxos/util';
 
 export type TypescriptEditorProps = ThemedClassName<

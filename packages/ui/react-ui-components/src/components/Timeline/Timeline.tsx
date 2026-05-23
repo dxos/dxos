@@ -8,7 +8,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { addEventListener } from '@dxos/async';
 import { LogLevel } from '@dxos/log';
 import { Icon, type ThemedClassName, useDynamicRef, useForwardedRef, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 import { trim } from '@dxos/util';
 
 import { translationKey } from '#translations';

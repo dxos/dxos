@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '../../util';
 
 import { Input, ScrollArea, ScrollAreaRootProps, Toolbar } from '../../components';
 import { withLayout, withTheme } from '../../testing';

@@ -16,7 +16,7 @@ import React, {
 import { useResizeDetector } from 'react-resize-detector';
 
 import { type SpaceGraphModel } from '@dxos/schema';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 import { GraphAdapter } from './graph-adapter';
 

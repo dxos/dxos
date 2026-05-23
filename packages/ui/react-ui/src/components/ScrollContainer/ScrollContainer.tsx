@@ -18,7 +18,7 @@ import React, {
 import { addEventListener, combine } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { useMergeRefs } from '@dxos/react-hooks';
-import { composable, composableProps, slottable } from '@dxos/ui-theme';
+import { composable, composableProps, slottable } from '../../util';
 import { mx } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 

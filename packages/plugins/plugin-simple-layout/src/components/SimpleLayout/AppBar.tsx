@@ -7,7 +7,8 @@ import React, { Fragment } from 'react';
 
 import { DensityProvider, IconButton, Popover, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type ActionExecutor, type ActionGraphProps, Menu, useMenuActions } from '@dxos/react-ui-menu';
-import { composable, composableProps, osTranslations } from '@dxos/ui-theme';
+import { osTranslations } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 

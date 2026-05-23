@@ -8,7 +8,8 @@ import { type Node } from '@dxos/app-graph';
 import { useActionRunner } from '@dxos/plugin-graph';
 import { IconButton, toLocalizedString, useDensityContext, useTranslation } from '@dxos/react-ui';
 import { Menu, type MenuItem } from '@dxos/react-ui-menu';
-import { composable, composableProps, hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
+import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { type ActionProperties } from '#types';

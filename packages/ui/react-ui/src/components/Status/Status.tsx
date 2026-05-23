@@ -4,7 +4,7 @@
 
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { type StatusStyleProps } from '@dxos/ui-theme';
+import { type StatusStyleProps } from '../../theme';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';

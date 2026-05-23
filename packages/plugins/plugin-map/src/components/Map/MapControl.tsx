@@ -12,7 +12,7 @@ import {
   type MapRootProps,
   useMapZoomHandler,
 } from '@dxos/react-ui-geo';
-import { composable } from '@dxos/ui-theme';
+import { composable } from '@dxos/react-ui';
 
 import { type GeoControlProps } from '../types';
 

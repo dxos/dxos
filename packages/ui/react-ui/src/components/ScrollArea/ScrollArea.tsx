@@ -7,7 +7,8 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React, { CSSProperties, useMemo } from 'react';
 
-import { composableProps, scrollbar, slottable } from '@dxos/ui-theme';
+import { scrollbar } from '../../theme';
+import { composableProps, slottable } from '../../util';
 import { type AllowedAxis, type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';

@@ -14,7 +14,7 @@ import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { IconButton, Input, Panel, ScrollArea, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { Organization, Person, Task } from '@dxos/types';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 import { sortKeys } from '@dxos/util';
 
 import { type ObjectGenerator, SchemaTable, createGenerator, generator, staticGenerators } from '#components';

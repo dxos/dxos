@@ -19,7 +19,8 @@ import {
   useMergeRefs,
   useTranslation,
 } from '@dxos/react-ui';
-import { composable, composableProps, mx, withColumn } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
+import { composable, composableProps, withColumn } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 

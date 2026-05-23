@@ -16,7 +16,8 @@ import {
   type SVGContext,
 } from '@dxos/react-ui-graph';
 import { type SpaceGraphEdge, type SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
-import { composable, composableProps, getHashStyles } from '@dxos/ui-theme';
+import { getHashStyles } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 import '@dxos/react-ui-graph/styles/graph.css';
 
 const EMPTY_ATOM = Atom.make<{ nodes: SpaceGraphNode[]; edges: SpaceGraphEdge[] }>({ nodes: [], edges: [] });

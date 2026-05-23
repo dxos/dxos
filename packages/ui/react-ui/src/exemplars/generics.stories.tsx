@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { slottable } from '@dxos/ui-theme';
+import { slottable } from '../util';
 
 import { withTheme } from '../testing';
 

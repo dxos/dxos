@@ -11,7 +11,7 @@ import { Editor, EditorViewProps } from '@dxos/react-ui-editor';
 import { Form, FormRootProps } from '@dxos/react-ui-form';
 import { type Message as MessageType } from '@dxos/types';
 import { compactSlots, createBasicExtensions, createThemeExtensions, Extension } from '@dxos/ui-editor';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 import { isTruthy } from '@dxos/util';
 
 import { meta } from '#meta';

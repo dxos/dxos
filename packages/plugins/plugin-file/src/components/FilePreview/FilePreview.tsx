@@ -4,7 +4,7 @@
 
 import React, { ForwardedRef } from 'react';
 
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 export type FilePreviewProps = { type: string; url: string };
 

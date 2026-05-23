@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 
 import { type FileInfo } from '@dxos/app-toolkit';
 import { Editor, type EditorToolbarProps } from '@dxos/react-ui-editor';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 import { FileUpload, type FileUploadAction } from './FileUpload';
 

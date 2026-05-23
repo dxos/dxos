@@ -6,7 +6,7 @@ import React, { type PropsWithChildren } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
-import { composableProps, slottable } from '@dxos/ui-theme';
+import { composableProps, slottable } from '@dxos/react-ui';
 
 type TestLayoutProps = PropsWithChildren<{ json?: any }>;
 

@@ -68,6 +68,9 @@
       "path": "../lit-ui"
     },
     {
+      "path": "../react-ui"
+    },
+    {
       "path": "../ui"
     },
     {

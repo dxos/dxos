@@ -25,7 +25,8 @@ import React, {
 import { addEventListener } from '@dxos/async';
 import { log } from '@dxos/log';
 import { useForwardedRef, useMediaQuery } from '@dxos/react-hooks';
-import { type MainStyleProps, osTranslations } from '@dxos/ui-theme';
+import { osTranslations } from '@dxos/ui-theme';
+import { type MainStyleProps } from '../../theme';
 
 import { useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';

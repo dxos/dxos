@@ -7,7 +7,7 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React from 'react';
 
-import { composableProps, slottable } from '@dxos/ui-theme';
+import { composableProps, slottable } from '../../util';
 
 import { useThemeContext } from '../../hooks';
 import { ThemedClassName } from '../../util';

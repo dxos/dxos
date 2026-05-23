@@ -19,7 +19,7 @@ import { Card, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
-import { composable } from '@dxos/ui-theme';
+import { composable } from '@dxos/react-ui';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
