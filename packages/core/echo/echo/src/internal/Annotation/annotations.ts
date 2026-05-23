@@ -79,18 +79,25 @@ export const getSchemaURI = (schema: Schema.Schema.All): URI.URI | undefined => 
  * `getSchemaURI(rebuilt schema)` which reads `TypeIdentifierAnnotation`.
  * For a static `Type.Type`, the URI is the typename DXN.
  */
-export const getTypeURIFromSpecifier = (input: Schema.Schema.All | AnyEntity | string): URI.URI => {
+export const getTypeURIFromSpecifier = (
+  input: Schema.Schema.All | AnyEntity | { readonly [KindId]: unknown; readonly typename?: string; readonly version?: string; readonly id?: string } | string,
+): URI.URI => {
   if (Schema.isSchema(input)) {
     return getSchemaURI(input) ?? raise(new TypeError('Schema has no URI'));
   }
   if (typeof input === 'object' && input !== null && KindId in input) {
-    // `Type.Type` entity. Stored entities have an ObjectId and a typename —
-    // their type URI is the local EchoURI `echo:/<objectId>` (matches the
-    // `TypeIdentifierAnnotation` stamped onto the rebuilt schema by
-    // `DatabaseSchemaRegistry._addSchema`). Drafts/static types without a
-    // stored representation fall back to `getUriFromEntity` (entity's own URI).
+    // `Type.Type` entity:
+    //  - Persisted (stored ECHO object): URI is local `echo:/<objectId>` —
+    //    matches what `Obj.make(typeEntity, ...)` writes to `system.type` via
+    //    `getSchemaURI(rebuilt)` reading `TypeIdentifierAnnotation`.
+    //  - Static (declared via `Type.object(dxn)`): URI is the typename DXN.
     if (typeof (input as any).id === 'string' && ObjectId.isValid((input as any).id)) {
       return EchoURI.make({ objectId: (input as any).id });
+    }
+    const typename = (input as any).typename;
+    const version = (input as any).version;
+    if (typeof typename === 'string' && typeof version === 'string') {
+      return DXN.make(typename, version);
     }
     return getUriFromEntity(input as AnyEntity);
   }

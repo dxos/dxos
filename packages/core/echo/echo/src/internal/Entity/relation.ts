@@ -36,6 +36,7 @@ export {
   RelationTargetId,
 };
 
+import { toJsonSchema } from '../JsonSchema';
 import { type EchoTypeSchema, makeEchoTypeSchema } from './entity';
 
 /**
@@ -136,7 +137,16 @@ export const EchoRelationSchema = <
       }),
     });
 
-    return makeEchoTypeSchema<Self, EntityKind.Relation, Fields>(fields, ast, typename, version, EntityKind.Relation);
+    const schemaForJson = Schema.make(ast);
+    const jsonSchema = toJsonSchema(schemaForJson);
+    return makeEchoTypeSchema<Self, EntityKind.Relation, Fields>(
+      fields,
+      ast,
+      typename,
+      version,
+      EntityKind.Relation,
+      jsonSchema,
+    );
   };
 };
 

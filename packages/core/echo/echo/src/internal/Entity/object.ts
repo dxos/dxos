@@ -10,6 +10,7 @@ import { DXN } from '@dxos/keys';
 
 import { type TypeAnnotation, TypeAnnotationId, makeTypeJsonSchemaAnnotation } from '../Annotation';
 import { EntityKind } from '../common/types';
+import { toJsonSchema } from '../JsonSchema';
 import { type EchoTypeSchema, makeEchoTypeSchema } from './entity';
 
 /**
@@ -57,6 +58,15 @@ export const EchoObjectSchema: {
       }),
     });
 
-    return makeEchoTypeSchema<Self, EntityKind.Object, Fields>(fields, ast, typename, version, EntityKind.Object);
+    const schemaForJson = Schema.make(ast);
+    const jsonSchema = toJsonSchema(schemaForJson);
+    return makeEchoTypeSchema<Self, EntityKind.Object, Fields>(
+      fields,
+      ast,
+      typename,
+      version,
+      EntityKind.Object,
+      jsonSchema,
+    );
   };
 };

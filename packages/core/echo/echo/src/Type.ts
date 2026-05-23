@@ -8,7 +8,7 @@ import type * as Schema from 'effect/Schema';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { DXN, EchoURI, type URI } from '@dxos/keys';
+import { DXN, EchoURI, type ObjectId, type URI } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
 import type * as Entity from './Entity';
@@ -37,34 +37,40 @@ type EchoSchemaKind<K extends internal.EntityKind = internal.EntityKind> = {
 };
 
 //
-// Obj - Runtime schema for any ECHO object
+// Obj — `Type.Type` value for an ECHO object schema.
 //
 
 /**
- * TypeScript type for an ECHO object schema.
- * `T` is the instance type produced by the schema.
- * `Fields` is the optional struct fields type for introspection.
+ * TypeScript type for an ECHO object type — a `Type.Type<A>` entity (Option B).
+ *
+ * `T` is the instance type produced by `Obj.make(Foo, props)`. `Fields` is
+ * retained as a structural hint (the runtime value still carries `.fields`),
+ * but consumers should derive instance/encoded types via `Type.InstanceType`.
+ *
+ * **Not a `Schema.Schema`.** `Foo.ast` / `Schema.Schema.Type<typeof Foo>` /
+ * `Schema.extend(Foo)` no longer typecheck — extract the Effect Schema via
+ * `Type.getSchema(Foo)` first, or derive instance types via
+ * `Type.InstanceType<typeof Foo>`.
  *
  * @example
  * ```ts
- * const PersonSchema: Type.Obj<Person> = Schema.Struct({
+ * const Person = Schema.Struct({
  *   name: Schema.String,
  * }).pipe(Type.object(DXN.make('com.example.type.person', '0.1.0')));
  *
- * // Access fields for introspection:
- * Object.keys(PersonSchema.fields); // ['name']
+ * type Person = Type.InstanceType<typeof Person>;
  * ```
  */
-export interface Obj<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>
-  extends
-    internal.TypeMeta,
-    EchoSchemaKind<internal.EntityKind.Object>,
-    Schema.AnnotableClass<
-      Obj<T, Fields>,
-      Entity.OfKind<typeof Entity.Kind.Object> & T,
-      Schema.Simplify<ObjModule.BaseObjJson & ToMutable<T>>,
-      never
-    > {
+export interface Obj<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fields> extends Type<T> {
+  readonly typename: string;
+  readonly version: string;
+
+  /** Schema-kind brand (object). */
+  readonly [internal.SchemaKindId]: internal.EntityKind.Object;
+
+  /** Source Effect Schema — used internally by `Type.getSchema(self)`. */
+  readonly [internal.StaticTypeSchemaSlot]: Schema.Schema.AnyNoContext;
+
   /**
    * The fields defined in the original struct schema.
    * Allows accessing field definitions for introspection.
@@ -73,24 +79,19 @@ export interface Obj<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fiel
 }
 
 /**
- * Structural base type for any ECHO object schema.
- * NOTE: Does not include the brand symbol to avoid TS4053 declaration portability issues.
- * Use Type.isObjectSchema() for runtime type guards.
+ * Type that represents any ECHO object type. Under Option B this is a
+ * `Type.Type<unknown>` entity branded with the object entity kind — what
+ * `Type.object(dxn)` produces.
  */
-type ObjectSchemaBase = Schema.Schema.AnyNoContext & {
-  readonly typename: string;
-  readonly version: string;
-};
+export type AnyObjectType = Obj<unknown>;
 
 /**
- * Type that represents any ECHO object schema (or "object type").
- * Accepts static schemas produced by `Type.object()`.
- */
-export type AnyObjectType = ObjectSchemaBase;
-
-/**
- * Factory function to create an ECHO object schema.
- * Adds object metadata annotations to an Effect schema.
+ * Factory function to create an ECHO object type.
+ *
+ * Returns a `Type.Type` entity (Option B). The returned value also still
+ * satisfies `Schema.Schema` at runtime for back-compat — callers should
+ * migrate `Schema.Schema.Type<typeof Foo>` to `Type.InstanceType<typeof Foo>`
+ * and `Foo.ast` / `Schema.is(Foo)` etc. to use `Type.getSchema(Foo)`.
  *
  * @example
  * ```ts
@@ -114,21 +115,24 @@ export const object: {
 export const Type: Obj<typeInternal.PersistentSchema> = typeInternal.PersistentSchema as any;
 
 /**
- * TypeScript type for an ECHO relation schema.
- * `T` is the instance type produced by the schema (excluding source/target).
- * `Source` and `Target` are the endpoint types.
- * `Fields` is the optional struct fields type for introspection.
+ * TypeScript type for an ECHO relation type — a `Type.Type<A>` entity (Option B).
+ *
+ * `T` is the instance-property type produced by `Relation.make(...)` (excluding
+ * source/target endpoints). `Source` and `Target` are the endpoint types.
+ *
+ * **Not a `Schema.Schema`.** See {@link Obj}'s note.
  */
 export interface Relation<T, Source, Target, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>
-  extends
-    internal.TypeMeta,
-    EchoSchemaKind<internal.EntityKind.Relation>,
-    Schema.AnnotableClass<
-      Relation<T, Source, Target, Fields>,
-      Entity.OfKind<typeof Entity.Kind.Relation> & RelationModule.Endpoints<Source, Target> & T,
-      Schema.Simplify<RelationModule.BaseRelationJson & ToMutable<T>>,
-      never
-    > {
+  extends Type<RelationModule.Endpoints<Source, Target> & T> {
+  readonly typename: string;
+  readonly version: string;
+
+  /** Schema-kind brand (relation). */
+  readonly [internal.SchemaKindId]: internal.EntityKind.Relation;
+
+  /** Source Effect Schema — used internally by `Type.getSchema(self)`. */
+  readonly [internal.StaticTypeSchemaSlot]: Schema.Schema.AnyNoContext;
+
   /**
    * The fields defined in the original struct schema.
    * Allows accessing field definitions for introspection.
@@ -137,21 +141,10 @@ export interface Relation<T, Source, Target, Fields extends Schema.Struct.Fields
 }
 
 /**
- * Structural base type for any ECHO relation schema.
- * Accepts static schemas (created with Type.relation()).
- * NOTE: Does not include the brand symbol to avoid TS4053 declaration portability issues.
- * Use Type.isRelationSchema() for runtime type guards.
+ * Type that represents any ECHO relation type. Under Option B this is a
+ * `Type.Type<unknown>` entity branded with the relation entity kind.
  */
-type RelationSchemaBase = Schema.Schema.AnyNoContext & {
-  readonly typename: string;
-  readonly version: string;
-};
-
-/**
- * Type that represents any ECHO relation schema (or "relation type").
- * Accepts static schemas (Type.relation()).
- */
-export type AnyRelationType = RelationSchemaBase;
+export type AnyRelationType = Relation<unknown, unknown, unknown>;
 
 /**
  * Factory function to create an ECHO relation schema.
@@ -308,7 +301,21 @@ export type InstancePhantomId = typeof InstancePhantomId;
  *
  * Merged with the `Type` const via TypeScript declaration merging.
  */
-export interface Type<A = unknown> extends Entity.OfKind<typeof Entity.Kind.Object> {
+export interface Type<A = unknown> {
+  /**
+   * Entity-kind brand. Persisted `Type.Type` entities are ECHO objects, so
+   * they're branded `Entity.Kind.Object`. Static types declared via
+   * `Type.object`/`Type.relation` share the brand.
+   */
+  readonly [internal.KindId]: internal.EntityKind.Object;
+
+  /**
+   * Object id. Present iff the type has been persisted into an ECHO database
+   * (so `getTypeURIFromSpecifier` returns `echo:/<objectId>`); absent for
+   * static types (the URI is then the typename DXN).
+   */
+  readonly id?: ObjectId;
+
   readonly name?: string;
   readonly typename: string;
   readonly version: string;
@@ -360,12 +367,16 @@ export type InstanceType<T> = T extends { readonly [InstancePhantomId]?: infer A
  * (`Obj.make`, `Filter.type`, `Ref`) you may pass the type value directly.
  */
 export const getSchema = (type: AnyObjectType | AnyRelationType | Type): Schema.Schema.AnyNoContext => {
+  // Static `Type.Type` entities carry the source Effect Schema on a hidden
+  // slot so we can return it without round-tripping through JsonSchema.
+  const staticSchema = (type as any)[internal.StaticTypeSchemaSlot] as Schema.Schema.AnyNoContext | undefined;
+  if (staticSchema != null) {
+    return staticSchema;
+  }
   if (isType(type)) {
-    // `Type.Type` entity — build the Effect Schema from its stored jsonSchema
-    // and re-attach the TypeIdentifierAnnotation so the rebuilt schema's URI
-    // (via getSchemaURI) matches the entity's local EchoURI. This keeps
-    // `Obj.make(type, ...)` writing `echo:/<objectId>` onto `system.type`,
-    // symmetric with `getTypeURIFromSpecifier(type)`/`Filter.type(type)`.
+    // Persisted `Type.Type` entity — build the Effect Schema from its stored
+    // jsonSchema and re-attach the TypeIdentifierAnnotation so the rebuilt
+    // schema's URI (via getSchemaURI) matches the entity's local EchoURI.
     const rebuilt = internal.toEffectSchema(type.jsonSchema);
     if (typeof type.id === 'string') {
       return rebuilt.annotations({
@@ -374,7 +385,7 @@ export const getSchema = (type: AnyObjectType | AnyRelationType | Type): Schema.
     }
     return rebuilt;
   }
-  return type;
+  return type as Schema.Schema.AnyNoContext;
 };
 
 /**

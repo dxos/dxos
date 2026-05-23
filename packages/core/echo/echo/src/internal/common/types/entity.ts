@@ -33,6 +33,15 @@ export const SnapshotKindId = '~@dxos/echo/SnapshotKind' as const;
 export type SnapshotKindId = typeof SnapshotKindId;
 
 /**
+ * Hidden slot on a static `Type.Type` entity that holds the source Effect
+ * Schema. `Type.getSchema(...)` reads this for static types; persisted types
+ * rebuild from `jsonSchema` instead. Stored as a string key for declaration
+ * portability (see KindId comment above).
+ */
+export const StaticTypeSchemaSlot = '~@dxos/echo/Type.StaticSchema' as const;
+export type StaticTypeSchemaSlot = typeof StaticTypeSchemaSlot;
+
+/**
  * Kinds of entities stored in ECHO: objects, relations, and types.
  */
 export enum EntityKind {

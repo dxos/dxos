@@ -102,17 +102,23 @@ export const id = (...ids: ObjectId[]): Any => {
 /**
  * Filter by type.
  *
- * Accepts:
- *  - a static object/relation schema produced by `Type.object` / `Type.relation`,
- *  - a `Type.Type` entity (e.g. one returned by `db.schemaRegistry.register`),
- *  - or a non-qualified typename string.
+ * Accepts a `Type.Type` entity (which static `Type.object`/`Type.relation`
+ * values are under Option B), a `Schema.Union` of such entities (for filtering
+ * across a union of ECHO types), or a non-qualified typename string.
  */
-export function type<S extends Schema.Schema.All>(
-  schema: S | string,
+export function type<T extends TypeNs.AnyType>(
+  type: T,
+  props?: Props<TypeNs.InstanceType<T> & Obj.Unknown>,
+): Filter<TypeNs.InstanceType<T> & Obj.Unknown>;
+export function type<S extends Schema.Schema.AnyNoContext>(
+  union: S,
   props?: Props<Schema.Schema.Type<S>>,
 ): Filter<Schema.Schema.Type<S>>;
-export function type(type: TypeNs.Type, props?: Props<Obj.Unknown>): Filter<Obj.Unknown>;
-export function type(input: Schema.Schema.All | TypeNs.Type | string, props?: Props<Obj.Unknown>): Filter<Obj.Unknown> {
+export function type(schema: string, props?: Props<unknown>): Filter<any>;
+export function type(
+  input: TypeNs.AnyType | Schema.Schema.AnyNoContext | string,
+  props?: Props<unknown>,
+): Filter<unknown> {
   if (Schema.isSchema(input) && SchemaAST.isUnion(input.ast)) {
     const typenames = input.ast.types.map((type) => internal.getTypeURIFromSpecifier(Schema.make(type)));
     return new FilterClass({
@@ -125,7 +131,7 @@ export function type(input: Schema.Schema.All | TypeNs.Type | string, props?: Pr
     });
   }
 
-  const uri = internal.getTypeURIFromSpecifier(input);
+  const uri = internal.getTypeURIFromSpecifier(input as any);
   return new FilterClass({
     type: 'object',
     typename: uri,

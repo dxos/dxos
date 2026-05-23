@@ -22,6 +22,7 @@ import {
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
   makeTypeJsonSchemaAnnotation,
+  setJsonSchemaSerializer,
 } from '../Annotation';
 import { setTypeSourceSchemaBuilder } from '../common/proxy/typed-handler';
 import { ANY_OBJECT_TYPENAME, ANY_OBJECT_VERSION, EntityKind, EntityKindSchema } from '../common/types';
@@ -537,4 +538,10 @@ const normalizeJsonSchema = (jsonSchema: Types.DeepMutable<JsonSchemaType>): Typ
 // resolve a live Schema from a Type.Type entity's jsonSchema without taking a
 // direct dependency on this module.
 setTypeSourceSchemaBuilder(toEffectSchema);
+
+
+
+// Register the toJsonSchema serializer so AnnotationHelper.set can rebuild a
+// Type.Type entity's `jsonSchema` after annotating the underlying source schema.
+setJsonSchemaSerializer(toJsonSchema);
 

@@ -131,13 +131,15 @@ type MakePropsInternal<T extends Unknown> = {
 
 // TODO(burdon): Should we allow the caller to set the id?
 /**
- * Props type for object creation with a given schema.
+ * Props type for object creation with a given type. Accepts either a static
+ * `Type.AnyObjectType` (entity) or a raw Effect Schema and derives the
+ * instance shape via `Type.InstanceType`.
  */
-export type MakeProps<S extends Schema.Schema.AnyNoContext> = {
+export type MakeProps<S> = {
   id?: ObjectId;
   [Meta]?: Partial<internal.ObjectMeta>;
   [Parent]?: Unknown;
-} & MakePropsInternal<Schema.Schema.Type<S>>;
+} & MakePropsInternal<Type.InstanceType<S> & Unknown>;
 
 /**
  * Creates a new echo object of the given schema or `Type.Type`.
@@ -156,18 +158,16 @@ export type MakeProps<S extends Schema.Schema.AnyNoContext> = {
  * Note: Only accepts object schemas / object-kind types, not relation schemas.
  * Use `Relation.make` for relations.
  */
-export function make<S extends Type.AnyObjectType>(
-  schema: S,
-  props: NoInfer<MakeProps<S>>,
-): OfShape<Schema.Schema.Type<S>>;
+export function make<T extends Type.AnyObjectType>(
+  type: T,
+  props: NoInfer<MakeProps<T>>,
+): OfShape<Type.InstanceType<T>>;
 export function make(type: Type.Type, props: any): OfShape<any>;
 export function make(input: Type.AnyObjectType | Type.Type, props: any): OfShape<any> {
-  // `Type.Type` entities aren't `Schema.Schema` themselves; derive the Schema
-  // for validation and annotation lookup via `Type.getSchema`. Keep the
-  // original `Type.Type` entity around so it can be passed through to
-  // `makeObject` for live schema resolution.
-  const isTypeEntity = !Schema.isSchema(input);
-  const schema = isTypeEntity ? Type.getSchema(input as Type.Type) : (input as Type.AnyObjectType);
+  // `Type.Type` entities aren't `Schema.Schema` themselves; derive the Effect
+  // Schema via `Type.getSchema(...)`. Pass the entity through to `makeObject`
+  // so subsequent schema mutations (`Type.addFields`, etc.) propagate.
+  const schema = Type.getSchema(input);
   assertArgument(
     internal.getTypeAnnotation(schema)?.kind === Entity.Kind.Object,
     'schema',
@@ -200,7 +200,7 @@ export function make(input: Type.AnyObjectType | Type.Type, props: any): OfShape
       ...defaultMeta,
       ...meta,
     },
-    isTypeEntity ? (input as Type.Type) : undefined,
+    input as Type.Type,
   );
 }
 

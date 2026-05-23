@@ -14,6 +14,7 @@ import type * as Entity from './Entity';
 import * as refInternal from './internal/Ref';
 import type * as JsonSchema from './JsonSchema';
 import type * as Obj from './Obj';
+import type * as TypeNs from './Type';
 
 /**
  * Instance type for a reference.
@@ -47,7 +48,9 @@ export type Unknown = refInternal.Ref<Obj.Unknown>;
  * }).pipe(Type.object(DXN.make('com.example.type.task', '0.1.0')));
  * ```
  */
-export const Ref: <S extends Schema.Schema.Any>(schema: S) => RefSchema<Schema.Schema.Type<S>> = refInternal.Ref;
+export const Ref: <S extends TypeNs.AnyObjectType | TypeNs.AnyRelationType>(
+  type: S,
+) => RefSchema<TypeNs.InstanceType<S>> = refInternal.Ref as any;
 
 export const Array = refInternal.RefArray;
 
