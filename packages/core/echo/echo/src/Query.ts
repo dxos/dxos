@@ -83,21 +83,21 @@ export interface Query<T> {
    * @param relation - Schema of the relation.
    * @param predicates - Predicates to filter the relation objects.
    */
-  'sourceOf'<S extends Schema.Schema.All>(
-    relation?: S | string,
-    predicates?: Filter.Props<Schema.Schema.Type<S>>,
-  ): Query<Schema.Schema.Type<S>>;
+  'sourceOf'<R extends TypeNs.Relation<any, any, any, any>>(
+    relation?: R | string,
+    predicates?: Filter.Props<TypeNs.InstanceType<R>>,
+  ): Query<TypeNs.InstanceType<R>>;
 
   /**
    * Find relations where this object is the target.
    * @returns Query for the relation objects.
-   * @param relation - Schema of the relation.
+   * @param relation - Type entity of the relation.
    * @param predicates - Predicates to filter the relation objects.
    */
-  'targetOf'<S extends Schema.Schema.All>(
-    relation?: S | string,
-    predicates?: Filter.Props<Schema.Schema.Type<S>>,
-  ): Query<Schema.Schema.Type<S>>;
+  'targetOf'<R extends TypeNs.Relation<any, any, any, any>>(
+    relation?: R | string,
+    predicates?: Filter.Props<TypeNs.InstanceType<R>>,
+  ): Query<TypeNs.InstanceType<R>>;
 
   /**
    * For a query for relations, get the source objects.
@@ -260,21 +260,21 @@ class QueryClass implements Any {
     });
   }
 
-  sourceOf(relation?: Schema.Schema.All | string, predicates?: Filter.Props<unknown> | undefined): Any {
+  sourceOf(relation?: TypeNs.Relation<any, any, any, any> | string, predicates?: Filter.Props<unknown> | undefined): Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
       direction: 'outgoing',
-      filter: relation !== undefined ? Filter.type(relation, predicates).ast : undefined,
+      filter: relation !== undefined ? Filter.type(relation as any, predicates as any).ast : undefined,
     });
   }
 
-  targetOf(relation?: Schema.Schema.All | string, predicates?: Filter.Props<unknown> | undefined): Any {
+  targetOf(relation?: TypeNs.Relation<any, any, any, any> | string, predicates?: Filter.Props<unknown> | undefined): Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
       direction: 'incoming',
-      filter: relation !== undefined ? Filter.type(relation, predicates).ast : undefined,
+      filter: relation !== undefined ? Filter.type(relation as any, predicates as any).ast : undefined,
     });
   }
 

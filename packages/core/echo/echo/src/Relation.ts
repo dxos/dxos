@@ -150,7 +150,7 @@ export type MakeProps<S> = MakePropsInternal<Type.InstanceType<S>>;
  */
 // NOTE: Writing the definition this way (with generic over schema) makes typescript perfer to infer the type from the first param (this schema) rather than the second param (the props).
 // TODO(dmaretskyi): Move meta into props.
-export const make = <S extends Type.AnyRelationType>(
+export const make = <S extends Type.Relation<any, any, any, any>>(
   type: S,
   props: NoInfer<MakeProps<S>>,
 ): Type.InstanceType<S> & Entity.OfKind<typeof Entity.Kind.Relation> => {

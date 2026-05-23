@@ -162,11 +162,11 @@ export type AnyRelationType = Relation<unknown, unknown, unknown>;
  * ```
  */
 export const relation: {
-  <SourceSchema extends Schema.Schema.AnyNoContext, TargetSchema extends Schema.Schema.AnyNoContext>(
-    opts: internal.EchoRelationSchemaOptions<SourceSchema, TargetSchema>,
+  <SourceType extends Obj<any, any>, TargetType extends Obj<any, any>>(
+    opts: internal.EchoRelationSchemaOptions<SourceType, TargetType>,
   ): <Self extends Schema.Schema.Any>(
     self: Self,
-  ) => Relation<Schema.Schema.Type<Self>, Schema.Schema.Type<SourceSchema>, Schema.Schema.Type<TargetSchema>>;
+  ) => Relation<Schema.Schema.Type<Self>, InstanceType<SourceType>, InstanceType<TargetType>>;
 } = internal.EchoRelationSchema as any;
 
 /**
@@ -345,11 +345,15 @@ export type Persistence = 'static' | 'persisted';
  *  - `Type<A>` entity (via the `InstancePhantomId` brand) → `A`
  *  - Effect `Schema.Schema.All`                            → `Schema.Schema.Type<T>`
  */
-export type InstanceType<T> = T extends Type<infer A>
-  ? A & Entity.OfKind<typeof Entity.Kind.Object>
-  : T extends Schema.Schema.All
-    ? Schema.Schema.Type<T>
-    : never;
+export type InstanceType<T> = T extends Relation<infer Props, infer Source, infer Target, any>
+  ? RelationModule.Endpoints<Source, Target> & Props & Entity.OfKind<typeof Entity.Kind.Relation>
+  : T extends Obj<infer A, any>
+    ? A & Entity.OfKind<typeof Entity.Kind.Object>
+    : T extends Type<infer A>
+      ? A & Entity.OfKind<typeof Entity.Kind.Object>
+      : T extends Schema.Schema.All
+        ? Schema.Schema.Type<T>
+        : never;
 
 /**
  * Returns the Effect Schema for a type value.

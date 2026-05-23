@@ -25,6 +25,7 @@ import {
   RelationSourceId,
   RelationTargetDXNId,
   RelationTargetId,
+  StaticTypeSchemaSlot,
 } from '../common/types';
 
 export {
@@ -58,10 +59,7 @@ export type RelationSourceTargetRefs<Source = any, Target = any> = {
 export type RelationSource<R> = R extends RelationSourceTargetRefs<infer Source, infer _Target> ? Source : never;
 export type RelationTarget<R> = R extends RelationSourceTargetRefs<infer _Source, infer Target> ? Target : never;
 
-export type EchoRelationSchemaOptions<
-  TSource extends Schema.Schema.AnyNoContext,
-  TTarget extends Schema.Schema.AnyNoContext,
-> = {
+export type EchoRelationSchemaOptions<TSource, TTarget> = {
   dxn: DXN.DXN;
   source: TSource;
   target: TTarget;
@@ -85,25 +83,27 @@ export type EchoRelationSchema<
 /**
  * Schema for Relation entity types.
  */
-export const EchoRelationSchema = <
-  Source extends Schema.Schema.AnyNoContext,
-  Target extends Schema.Schema.AnyNoContext,
->({
+export const EchoRelationSchema = <Source, Target>({
   dxn,
   source,
   target,
 }: EchoRelationSchemaOptions<Source, Target>) => {
-  assertArgument(Schema.isSchema(source), 'source');
-  assertArgument(Schema.isSchema(target), 'target');
+  // `source` / `target` are `Type.Type` entities (Option B) — extract their
+  // underlying source schemas from the hidden slot to feed into the schema-side
+  // machinery (DXN ref + entity-kind checks).
+  const sourceSchema = (source as any)?.[StaticTypeSchemaSlot] ?? source;
+  const targetSchema = (target as any)?.[StaticTypeSchemaSlot] ?? target;
+  assertArgument(Schema.isSchema(sourceSchema), 'source');
+  assertArgument(Schema.isSchema(targetSchema), 'target');
   const typename = DXN.getName(dxn);
   const version = DXN.getVersion(dxn);
   invariant(version, `Type.relation requires a versioned DXN: ${dxn}`);
-  const sourceDXN = getDXNForRelationSchemaRef(source);
-  const targetDXN = getDXNForRelationSchemaRef(target);
-  if (getEntityKind(source) !== EntityKind.Object) {
+  const sourceDXN = getDXNForRelationSchemaRef(sourceSchema);
+  const targetDXN = getDXNForRelationSchemaRef(targetSchema);
+  if (getEntityKind(sourceSchema) !== EntityKind.Object) {
     raise(new Error('Source schema must be an echo object schema.'));
   }
-  if (getEntityKind(target) !== EntityKind.Object) {
+  if (getEntityKind(targetSchema) !== EntityKind.Object) {
     raise(new Error('Target schema must be an echo object schema.'));
   }
 
