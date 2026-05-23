@@ -31,7 +31,10 @@ const DefaultStory = ({ selectedIndex = 0 }: StoryProps) => {
   );
   const segment = segments[selectedIndex];
 
-  return <SegmentArticle role='article' subject={segment ?? 'segment'} companionTo={trip} />;
+  if (!segment) {
+    return <div className='p-4 text-description'>Select a segment to view details.</div>;
+  }
+  return <SegmentArticle role='article' subject={segment} companionTo={trip} attendableId='story' />;
 };
 
 const meta = {

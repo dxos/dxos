@@ -28,24 +28,23 @@ export default Capability.makeModule(() =>
       // Companion surface dispatched when a segment is selected within a
       // Trip's attendable context. Mirrors plugin-inbox's EventArticle
       // pattern: app-graph-builder.ts resolves the current selectionId into
-      // a live Segment ECHO object (or the 'segment' sentinel) and the
-      // layout dispatches this surface with subject = segment,
-      // companionTo = trip.
+      // a live Segment ECHO object and the layout dispatches this surface
+      // with subject = segment, companionTo = trip. When no segment is
+      // selected the graph builder's 'segment' sentinel falls through and
+      // the surface simply doesn't render.
       Surface.create({
         id: 'surface.segment',
-        role: 'article',
-        filter: (data): data is { subject: Segment.Segment | string; companionTo: Trip.Trip } => {
-          if (typeof data !== 'object' || data === null) {
-            return false;
-          }
-          const d = data as { subject?: unknown; companionTo?: unknown };
-          if (!Trip.instanceOf(d.companionTo)) {
-            return false;
-          }
-          return typeof d.subject === 'string' ? d.subject === 'segment' : Segment.instanceOf(d.subject);
-        },
+        filter: AppSurface.allOf(
+          AppSurface.object(AppSurface.Article, Segment.Segment),
+          AppSurface.companion(AppSurface.Article, Trip.Trip),
+        ),
         component: ({ data, role }) => (
-          <SegmentArticle role={role} subject={data.subject} companionTo={data.companionTo} />
+          <SegmentArticle
+            role={role}
+            subject={data.subject}
+            companionTo={data.companionTo}
+            attendableId={data.attendableId}
+          />
         ),
       }),
     ]),
