@@ -576,8 +576,14 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    * `Obj.getType` / `Entity.getType` see a stable entity-shaped value.
    */
   getTypeEntity(target: ProxyTarget): Type.AnyType | undefined {
-    if (!target[symbolInternals].database) {
-      const root = target[symbolInternals].rootSchema;
+    if (target[symbolNamespace] === META_NAMESPACE) {
+      return undefined;
+    }
+    if (!target[symbolInternals] || !target[symbolInternals].database) {
+      const root = target[symbolInternals]?.rootSchema;
+      if (!root) {
+        return undefined;
+      }
       // For non-db reactive objects rootSchema may already be a type entity.
       return Type.isObjectSchema(root as any) ||
         Type.isRelationSchema(root as any) ||
