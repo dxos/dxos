@@ -8,12 +8,13 @@ import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
+import { Ref } from '@dxos/echo';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder } from '@dxos/plugin-graph';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
-import { type Segment, Trip } from '#types';
+import { Segment, Trip } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -32,9 +33,16 @@ export default Capability.makeModule(
       connector: (matched, get) => {
         const trip = matched.trip;
         const segmentId = get(selectedId(matched.nodeId));
-        const segment: Segment.Any | undefined = segmentId
-          ? trip.segments?.find((seg) => seg.id === segmentId)
-          : undefined;
+        let segment: Segment.Segment | undefined;
+        if (segmentId) {
+          for (const ref of trip.segments ?? []) {
+            const target = Ref.isRef(ref) ? ref.target : (ref as unknown as Segment.Segment | undefined);
+            if (Segment.instanceOf(target) && target.id === segmentId) {
+              segment = target;
+              break;
+            }
+          }
+        }
         return Effect.succeed([
           AppNode.makeCompanion({
             id: linkedSegment('segment'),

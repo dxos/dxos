@@ -19,7 +19,7 @@ type StoryProps = {
 };
 
 const DefaultStory = ({ selectedIndex = 0 }: StoryProps) => {
-  const { trip } = useMemo(
+  const { trip, segments } = useMemo(
     () =>
       new TripBuilder()
         .addFlight(0, { confirmed: true })
@@ -29,7 +29,7 @@ const DefaultStory = ({ selectedIndex = 0 }: StoryProps) => {
         .build('London Trip'),
     [],
   );
-  const segment = trip.segments?.[selectedIndex];
+  const segment = segments[selectedIndex];
 
   return <SegmentArticle role='article' subject={segment ?? 'segment'} companionTo={trip} />;
 };

@@ -9,7 +9,7 @@ import { AttentionEvents } from '@dxos/plugin-attention';
 import { AppGraphBuilder, CreateObject, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Booking, Trip } from '#types';
+import { Booking, Segment, Trip } from '#types';
 
 export const TripPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({
@@ -17,7 +17,7 @@ export const TripPlugin = Plugin.define(meta).pipe(
     activate: AppGraphBuilder,
   }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
-  AppPlugin.addSchemaModule({ schema: [Trip.Trip, Booking.Booking] }),
+  AppPlugin.addSchemaModule({ schema: [Trip.Trip, Segment.Segment, Booking.Booking] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.make,

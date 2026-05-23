@@ -22,7 +22,7 @@ export type SegmentCardAction = { segmentId: string } & (
 export type SegmentCardActionHandler = (action: SegmentCardAction) => void;
 
 type SegmentTileData = {
-  segment: Segment.Any;
+  segment: Segment.Segment;
   onAction?: SegmentCardActionHandler;
 };
 
@@ -40,7 +40,7 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
   const title = Segment.getTitle(segment);
   const route = Segment.getRoute(segment);
   const date = Segment.getPrimaryDate(segment);
-  const icon = Segment.kindIcon(segment._tag);
+  const icon = Segment.kindIcon(segment.kind);
   const isCancelled = segment.status === 'cancelled';
 
   return (

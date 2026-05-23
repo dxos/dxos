@@ -14,7 +14,7 @@ import { SegmentTile, type SegmentCardActionHandler } from '../SegmentCard/Segme
 
 export type SegmentStackProps = {
   id: string;
-  segments?: Segment.Any[];
+  segments?: Segment.Segment[];
   currentId?: string;
   selectedIds?: ReadonlySet<string>;
   onAction?: SegmentCardActionHandler;

@@ -20,7 +20,7 @@ import { Segment, type Trip } from '#types';
  */
 export type SegmentArticleProps = {
   role?: string;
-  subject: Segment.Any | string;
+  subject: Segment.Segment | string;
   companionTo: Trip.Trip;
 };
 
@@ -42,7 +42,6 @@ const toDateTimeLocal = (iso?: string): string => {
   if (!date) {
     return '';
   }
-  // YYYY-MM-DDTHH:mm in local time.
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
 };
@@ -63,17 +62,12 @@ const Field = ({ label, children }: { label: string; children: React.ReactNode }
   </Input.Root>
 );
 
-type FlightSegmentType = Extract<Segment.Any, { _tag: 'flight' }>;
-type MutableFlight = { -readonly [K in keyof FlightSegmentType]: FlightSegmentType[K] };
-
-type FlightFormProps = {
-  segment: FlightSegmentType;
-  updateFlight: (mutate: (draft: MutableFlight) => void) => void;
-};
+type MutableSegment = { -readonly [K in keyof Segment.Segment]: Segment.Segment[K] };
+type UpdateSegment = (mutate: (draft: MutableSegment) => void) => void;
 
 /** Editable form for a flight segment. */
-const FlightForm = ({ segment, updateFlight }: FlightFormProps) => {
-  const onChange = useCallback((apply: (draft: MutableFlight) => void) => apply, []);
+const FlightForm = ({ segment, updateSegment }: { segment: Segment.Segment; updateSegment: UpdateSegment }) => {
+  const onChange = useCallback((apply: (draft: MutableSegment) => void) => apply, []);
 
   return (
     <div className='grid grid-cols-1 @md:grid-cols-2 gap-3'>
@@ -81,7 +75,7 @@ const FlightForm = ({ segment, updateFlight }: FlightFormProps) => {
         <Input.TextInput
           value={segment.airline?.name ?? ''}
           onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            updateFlight(
+            updateSegment(
               onChange((draft) => {
                 draft.airline = { ...(draft.airline ?? {}), name: e.target.value };
               }),
@@ -93,7 +87,7 @@ const FlightForm = ({ segment, updateFlight }: FlightFormProps) => {
         <Input.TextInput
           value={segment.flightNumber ?? ''}
           onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            updateFlight(
+            updateSegment(
               onChange((draft) => {
                 draft.flightNumber = e.target.value || undefined;
               }),
@@ -106,7 +100,7 @@ const FlightForm = ({ segment, updateFlight }: FlightFormProps) => {
           placeholder='SFO'
           value={segment.origin?.code ?? ''}
           onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            updateFlight(
+            updateSegment(
               onChange((draft) => {
                 draft.origin = { ...(draft.origin ?? {}), code: e.target.value };
               }),
@@ -119,7 +113,7 @@ const FlightForm = ({ segment, updateFlight }: FlightFormProps) => {
           placeholder='LHR'
           value={segment.destination?.code ?? ''}
           onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            updateFlight(
+            updateSegment(
               onChange((draft) => {
                 draft.destination = { ...(draft.destination ?? {}), code: e.target.value };
               }),
@@ -132,7 +126,7 @@ const FlightForm = ({ segment, updateFlight }: FlightFormProps) => {
           type='datetime-local'
           value={toDateTimeLocal(segment.departAt)}
           onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            updateFlight(
+            updateSegment(
               onChange((draft) => {
                 draft.departAt = fromDateTimeLocal(e.target.value);
               }),
@@ -145,7 +139,7 @@ const FlightForm = ({ segment, updateFlight }: FlightFormProps) => {
           type='datetime-local'
           value={toDateTimeLocal(segment.arriveAt)}
           onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            updateFlight(
+            updateSegment(
               onChange((draft) => {
                 draft.arriveAt = fromDateTimeLocal(e.target.value);
               }),
@@ -158,9 +152,9 @@ const FlightForm = ({ segment, updateFlight }: FlightFormProps) => {
           className='dx-input rounded px-2 py-1 bg-input-surface'
           value={segment.cabin ?? ''}
           onChange={(e: ChangeEvent<HTMLSelectElement>) =>
-            updateFlight(
+            updateSegment(
               onChange((draft) => {
-                draft.cabin = (e.target.value as typeof segment.cabin) || undefined;
+                draft.cabin = (e.target.value as Segment.Cabin) || undefined;
               }),
             )
           }
@@ -176,7 +170,7 @@ const FlightForm = ({ segment, updateFlight }: FlightFormProps) => {
         <Input.TextInput
           value={segment.seat ?? ''}
           onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            updateFlight(
+            updateSegment(
               onChange((draft) => {
                 draft.seat = e.target.value || undefined;
               }),
@@ -189,14 +183,14 @@ const FlightForm = ({ segment, updateFlight }: FlightFormProps) => {
 };
 
 /** Read-only field rows for non-flight segment variants. */
-const renderModeFields = (segment: Segment.Any): React.ReactNode => {
-  switch (segment._tag) {
+const renderModeFields = (segment: Segment.Segment): React.ReactNode => {
+  switch (segment.kind) {
     case 'train':
       return (
         <>
           {segment.operator?.name && <Row label='Operator' value={segment.operator.name} />}
           {segment.trainNumber && <Row label='Train' value={segment.trainNumber} />}
-          {segment.class && <Row label='Class' value={segment.class} />}
+          {segment.cabinClass && <Row label='Class' value={segment.cabinClass} />}
           {segment.coach && <Row label='Coach' value={segment.coach} />}
           {segment.seat && <Row label='Seat' value={segment.seat} />}
         </>
@@ -212,7 +206,7 @@ const renderModeFields = (segment: Segment.Any): React.ReactNode => {
     case 'road':
       return (
         <>
-          <Row label='Mode' value={segment.subKind} />
+          {segment.subKind && <Row label='Mode' value={segment.subKind} />}
           {segment.operator?.name && <Row label='Operator' value={segment.operator.name} />}
           {segment.vehicleClass && <Row label='Vehicle' value={segment.vehicleClass} />}
         </>
@@ -228,7 +222,7 @@ const renderModeFields = (segment: Segment.Any): React.ReactNode => {
     case 'activity':
       return (
         <>
-          <Row label='Title' value={segment.title} />
+          {segment.title && <Row label='Title' value={segment.title} />}
           {segment.venue?.name && <Row label='Venue' value={segment.venue.name} />}
           {segment.operator?.name && <Row label='Operator' value={segment.operator.name} />}
         </>
@@ -238,28 +232,21 @@ const renderModeFields = (segment: Segment.Any): React.ReactNode => {
   }
 };
 
-export const SegmentArticle = ({ role, subject, companionTo: trip }: SegmentArticleProps) => {
+export const SegmentArticle = ({ role, subject }: SegmentArticleProps) => {
   const { t: _t } = useTranslation(meta.id);
 
-  const updateFlight = useCallback(
-    (mutate: (draft: MutableFlight) => void) => {
+  const updateSegment = useCallback(
+    (mutate: (draft: MutableSegment) => void) => {
       if (typeof subject !== 'object' || subject === null) {
         return;
       }
-      const segmentId = subject.id;
-      Obj.update(trip, (trip) => {
-        const seg = trip.segments?.find((s) => s.id === segmentId);
-        if (seg && seg._tag === 'flight') {
-          mutate(seg as MutableFlight);
-        }
-      });
+      Obj.update(subject, (subject) => mutate(subject as MutableSegment));
     },
-    [subject, trip],
+    [subject],
   );
 
   if (typeof subject !== 'object' || subject === null) {
-    // The graph-builder returns the sentinel string 'segment' when nothing is
-    // selected yet.
+    // Graph-builder sentinel when nothing is selected.
     return (
       <Panel.Root role={role} className='dx-document'>
         <Panel.Content asChild>
@@ -272,9 +259,9 @@ export const SegmentArticle = ({ role, subject, companionTo: trip }: SegmentArti
   const segment = subject;
   const title = Segment.getTitle(segment);
   const route = Segment.getRoute(segment);
-  const departAt = formatDate(segment._tag === 'lodging' ? segment.checkIn : segment.departAt);
-  const arriveAt = formatDate(segment._tag === 'lodging' ? segment.checkOut : segment.arriveAt);
-  const icon = Segment.kindIcon(segment._tag);
+  const departAt = formatDate(segment.kind === 'lodging' ? segment.checkIn : segment.departAt);
+  const arriveAt = formatDate(segment.kind === 'lodging' ? segment.checkOut : segment.arriveAt);
+  const icon = Segment.kindIcon(segment.kind);
 
   return (
     <Panel.Root role={role} className='dx-document'>
@@ -287,13 +274,13 @@ export const SegmentArticle = ({ role, subject, companionTo: trip }: SegmentArti
               {segment.status}
             </span>
           </div>
-          {segment._tag === 'flight' ? (
-            <FlightForm segment={segment} updateFlight={updateFlight} />
+          {segment.kind === 'flight' ? (
+            <FlightForm segment={segment} updateSegment={updateSegment} />
           ) : (
             <div className='flex flex-col'>
               {route && <Row label='Route' value={route} />}
-              {departAt && <Row label={segment._tag === 'lodging' ? 'Check-in' : 'Departs'} value={departAt} />}
-              {arriveAt && <Row label={segment._tag === 'lodging' ? 'Check-out' : 'Arrives'} value={arriveAt} />}
+              {departAt && <Row label={segment.kind === 'lodging' ? 'Check-in' : 'Departs'} value={departAt} />}
+              {arriveAt && <Row label={segment.kind === 'lodging' ? 'Check-out' : 'Arrives'} value={arriveAt} />}
               {renderModeFields(segment)}
               {segment.notes && <Row label='Notes' value={segment.notes} />}
             </div>

@@ -2,105 +2,122 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Schema from 'effect/Schema';
 
-import { Ref } from '@dxos/echo';
+import { Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { Provider } from '@dxos/types';
 
 import * as Booking from './Booking';
 import { Place } from './Place';
 
 // ---------------------------------------------------------------------------
-// Core fields (spread into every variant via ...Core.fields)
+// Kind enum
 // ---------------------------------------------------------------------------
 
-export const Core = Schema.Struct({
-  /** Stable per-trip id. Does not change when status is promoted. */
-  id: Schema.String,
+export const Kind = Schema.Literal('flight', 'train', 'boat', 'road', 'lodging', 'activity');
+export type Kind = Schema.Schema.Type<typeof Kind>;
+
+export const Status = Schema.Literal('tentative', 'proposed', 'confirmed', 'cancelled');
+export type Status = Schema.Schema.Type<typeof Status>;
+
+export const RoadSubKind = Schema.Literal('bus', 'car', 'transfer', 'taxi', 'walk');
+export type RoadSubKind = Schema.Schema.Type<typeof RoadSubKind>;
+
+export const Cabin = Schema.Literal('economy', 'premium', 'business', 'first');
+export type Cabin = Schema.Schema.Type<typeof Cabin>;
+
+// ---------------------------------------------------------------------------
+// Segment ECHO type
+// ---------------------------------------------------------------------------
+
+/**
+ * A travel segment. Single ECHO object type with union properties — `kind`
+ * discriminates the variant and the variant-specific fields are optional.
+ * Segments are referenced from a Trip via `Ref<Segment>[]` and declared as
+ * children via `Obj.setParent(segment, trip)`.
+ */
+export const Segment = Schema.Struct({
+  // Core (all variants).
   /**
    * tentative: user-authored placeholder.
    * proposed:  extractor/agent suggestion awaiting user accept.
    * confirmed: backed by a real Booking.
    * cancelled: kept for history; rendered de-emphasised.
    */
-  status: Schema.Literal('tentative', 'proposed', 'confirmed', 'cancelled'),
-  origin: Place.pipe(Schema.optional),
-  destination: Place.pipe(Schema.optional),
+  status: Status,
+  kind: Kind,
+  origin: Schema.optional(Place),
+  destination: Schema.optional(Place),
   departAt: Schema.optional(Schema.String),
   arriveAt: Schema.optional(Schema.String),
-  booking: Ref.Ref(Booking.Booking).pipe(Schema.optional),
+  booking: Schema.optional(Ref.Ref(Booking.Booking)),
   notes: Schema.optional(Schema.String),
-});
 
-export interface Core extends Schema.Schema.Type<typeof Core> {}
-
-// ---------------------------------------------------------------------------
-// Variants
-// ---------------------------------------------------------------------------
-
-export const Flight = Schema.TaggedStruct('flight', {
-  ...Core.fields,
-  airline: Provider.Provider.pipe(Schema.optional),
+  // Flight.
+  airline: Schema.optional(Provider.Provider),
   flightNumber: Schema.optional(Schema.String),
-  cabin: Schema.Literal('economy', 'premium', 'business', 'first').pipe(Schema.optional),
+  cabin: Schema.optional(Cabin),
   terminalFrom: Schema.optional(Schema.String),
   terminalTo: Schema.optional(Schema.String),
   gateFrom: Schema.optional(Schema.String),
   gateTo: Schema.optional(Schema.String),
   seat: Schema.optional(Schema.String),
-});
-export interface Flight extends Schema.Schema.Type<typeof Flight> {}
 
-export const Train = Schema.TaggedStruct('train', {
-  ...Core.fields,
-  operator: Provider.Provider.pipe(Schema.optional),
+  // Train (shares operator + seat with road/lodging/etc).
+  operator: Schema.optional(Provider.Provider),
   trainNumber: Schema.optional(Schema.String),
-  class: Schema.optional(Schema.String),
+  cabinClass: Schema.optional(Schema.String), // renamed from `class` (reserved word).
   coach: Schema.optional(Schema.String),
-  seat: Schema.optional(Schema.String),
-});
-export interface Train extends Schema.Schema.Type<typeof Train> {}
 
-export const Boat = Schema.TaggedStruct('boat', {
-  ...Core.fields,
-  operator: Provider.Provider.pipe(Schema.optional),
+  // Boat (operator + cabin shared).
   vessel: Schema.optional(Schema.String),
-  cabin: Schema.optional(Schema.String),
-});
-export interface Boat extends Schema.Schema.Type<typeof Boat> {}
 
-export const Road = Schema.TaggedStruct('road', {
-  ...Core.fields,
-  subKind: Schema.Literal('bus', 'car', 'transfer', 'taxi', 'walk'),
-  operator: Provider.Provider.pipe(Schema.optional),
+  // Road.
+  subKind: Schema.optional(RoadSubKind),
   vehicleClass: Schema.optional(Schema.String),
-});
-export interface Road extends Schema.Schema.Type<typeof Road> {}
 
-export const Lodging = Schema.TaggedStruct('lodging', {
-  ...Core.fields,
-  operator: Provider.Provider.pipe(Schema.optional),
+  // Lodging.
   propertyName: Schema.optional(Schema.String),
   roomType: Schema.optional(Schema.String),
   checkIn: Schema.optional(Schema.String),
   checkOut: Schema.optional(Schema.String),
-});
-export interface Lodging extends Schema.Schema.Type<typeof Lodging> {}
 
-export const Activity = Schema.TaggedStruct('activity', {
-  ...Core.fields,
-  title: Schema.String,
-  operator: Provider.Provider.pipe(Schema.optional),
-  venue: Place.pipe(Schema.optional),
-});
-export interface Activity extends Schema.Schema.Type<typeof Activity> {}
+  // Activity.
+  title: Schema.optional(Schema.String),
+  venue: Schema.optional(Place),
+}).pipe(
+  Type.object({
+    typename: 'org.dxos.type.trip.segment',
+    version: '0.1.0',
+  }),
+  Annotation.IconAnnotation.set({
+    icon: 'ph--ticket--regular',
+    hue: 'sky',
+  }),
+);
 
-// ---------------------------------------------------------------------------
-// Union
-// ---------------------------------------------------------------------------
+export interface Segment extends Schema.Schema.Type<typeof Segment> {}
 
-export const Any = Schema.Union(Flight, Train, Boat, Road, Lodging, Activity);
-export type Any = Schema.Schema.Type<typeof Any>;
+/** Type guard for Segment ECHO objects. */
+export const instanceOf = (value: unknown): value is Segment => Obj.instanceOf(Segment, value);
+
+/** Creates a blank Segment of the given kind. */
+export const make = (props: Obj.MakeProps<typeof Segment>): Segment => Obj.make(Segment, props);
+
+/** Convenience: create a default segment for a given kind. */
+export const makeDefault = (kind: Kind): Segment => {
+  const base: Obj.MakeProps<typeof Segment> = { kind, status: 'tentative' };
+  switch (kind) {
+    case 'road':
+      return make({ ...base, subKind: 'car' });
+    case 'activity':
+      return make({ ...base, title: 'Activity' });
+    default:
+      return make(base);
+  }
+};
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -116,13 +133,13 @@ export const parseDate = (iso?: string): Date | undefined => {
 };
 
 /** Primary date for calendar highlighting and sort order. */
-export const getPrimaryDate = (seg: Any): Date | undefined => {
-  return parseDate(seg._tag === 'lodging' ? (seg.checkIn ?? seg.departAt) : seg.departAt);
+export const getPrimaryDate = (seg: Segment): Date | undefined => {
+  return parseDate(seg.kind === 'lodging' ? (seg.checkIn ?? seg.departAt) : seg.departAt);
 };
 
 /** Short human-readable title. */
-export const getTitle = (seg: Any): string => {
-  switch (seg._tag) {
+export const getTitle = (seg: Segment): string => {
+  switch (seg.kind) {
     case 'flight':
       return [seg.airline?.name, seg.flightNumber].filter(Boolean).join(' ') || 'Flight';
     case 'train':
@@ -130,17 +147,17 @@ export const getTitle = (seg: Any): string => {
     case 'boat':
       return [seg.operator?.name, seg.vessel].filter(Boolean).join(' ') || 'Boat';
     case 'road':
-      return seg.operator?.name ?? seg.subKind;
+      return seg.operator?.name ?? seg.subKind ?? 'Road';
     case 'lodging':
       return seg.propertyName ?? seg.origin?.name ?? 'Lodging';
     case 'activity':
-      return seg.title;
+      return seg.title ?? 'Activity';
   }
 };
 
 /** Route string e.g. "JFK → LHR". */
-export const getRoute = (seg: Any): string | undefined => {
-  if (seg._tag === 'activity') {
+export const getRoute = (seg: Segment): string | undefined => {
+  if (seg.kind === 'activity') {
     return seg.venue?.name;
   }
   const from = seg.origin?.code ?? seg.origin?.city ?? seg.origin?.name;
@@ -152,8 +169,8 @@ export const getRoute = (seg: Any): string | undefined => {
 };
 
 /** Phosphor icon name for a segment kind. */
-export const kindIcon = (tag: Any['_tag']): string => {
-  switch (tag) {
+export const kindIcon = (kind: Kind): string => {
+  switch (kind) {
     case 'flight':
       return 'ph--airplane--regular';
     case 'train':
@@ -166,24 +183,5 @@ export const kindIcon = (tag: Any['_tag']): string => {
       return 'ph--bed--regular';
     case 'activity':
       return 'ph--ticket--regular';
-  }
-};
-
-/** Creates a blank segment of the given kind. */
-export const makeDefault = (tag: Any['_tag'], id: string): Any => {
-  const core = { id, status: 'tentative' as const };
-  switch (tag) {
-    case 'flight':
-      return { ...core, _tag: 'flight' };
-    case 'train':
-      return { ...core, _tag: 'train' };
-    case 'boat':
-      return { ...core, _tag: 'boat' };
-    case 'road':
-      return { ...core, _tag: 'road', subKind: 'car' };
-    case 'lodging':
-      return { ...core, _tag: 'lodging' };
-    case 'activity':
-      return { ...core, _tag: 'activity', title: 'Activity' };
   }
 };

@@ -16,7 +16,7 @@ import { type Space, useDatabase, useQuery, useSpaces } from '@dxos/react-client
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
 import { TripBuilder } from '#testing';
-import { Booking, Trip } from '#types';
+import { Booking, Segment, Trip } from '#types';
 
 import { TripPlugin } from '../../testing';
 import { TripArticle } from './TripArticle';
@@ -42,7 +42,7 @@ const baseDecorators = (seedFn: (space: Space) => void) => [
     plugins: [
       ...corePlugins(),
       ClientPlugin({
-        types: [Trip.Trip, Booking.Booking],
+        types: [Trip.Trip, Segment.Segment, Booking.Booking],
         onClientInitialized: ({ client }) =>
           Effect.gen(function* () {
             const { personalSpace } = yield* initializeIdentity(client);
@@ -68,13 +68,14 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   decorators: baseDecorators((space) => {
-    const { trip, bookings } = new TripBuilder()
+    const { trip, segments, bookings } = new TripBuilder()
       .addFlight(0, { confirmed: true })
       .addHotel(1, 3)
       .addActivity(2)
       .addFlight(4)
       .build('London Trip');
     bookings.forEach((booking: Booking.Booking) => space.db.add(booking));
+    segments.forEach((segment: Segment.Segment) => space.db.add(segment));
     space.db.add(trip);
   }),
 };

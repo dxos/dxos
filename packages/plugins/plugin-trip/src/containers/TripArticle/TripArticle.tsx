@@ -3,12 +3,12 @@
 //
 
 import { isSameDay } from 'date-fns';
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
@@ -20,7 +20,7 @@ import { Segment, Trip } from '#types';
 
 export type TripArticleProps = AppSurface.ObjectArticleProps<Trip.Trip>;
 
-const byPrimaryDate = (a: Segment.Any, b: Segment.Any): number => {
+const byPrimaryDate = (a: Segment.Segment, b: Segment.Segment): number => {
   const da = Segment.getPrimaryDate(a)?.getTime() ?? 0;
   const db = Segment.getPrimaryDate(b)?.getTime() ?? 0;
   return da - db;
@@ -30,11 +30,9 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const showItem = useShowItem();
+
   // Subscribe to subject mutations so edits made in the SegmentArticle
-  // companion re-render the stack here. `useObject` requires a reactive ECHO
-  // object — pass undefined and fall back to `subject` directly if the
-  // dispatcher hands us a non-reactive value (rare; can occur during graph
-  // rebuilds when only the snapshot is available).
+  // companion re-render the stack here.
   const reactiveSubject = Obj.isObject(subject) ? subject : undefined;
   const [snapshot] = useObject(reactiveSubject);
   const trip = (snapshot ?? subject) as Trip.Trip;
@@ -42,12 +40,18 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
   const id = attendableId ?? Obj.getDXN(subject).toString();
   const currentId = useSelected(id, 'single');
 
-  const segments = [...(trip.segments ?? [])].sort(byPrimaryDate);
+  // Resolve segment refs to live objects (filtered to currently loaded).
+  const segments = useMemo(() => {
+    const list = (trip.segments ?? [])
+      .map((ref) => (Ref.isRef(ref) ? ref.target : (ref as unknown as Segment.Segment | undefined)))
+      .filter((s): s is Segment.Segment => Segment.instanceOf(s));
+    return [...list].sort(byPrimaryDate);
+  }, [trip.segments]);
 
   const calendarDates = segments.flatMap((seg): Date[] => {
     const primary = Segment.getPrimaryDate(seg);
     const dates: Date[] = primary ? [primary] : [];
-    if (seg._tag === 'lodging') {
+    if (seg.kind === 'lodging') {
       const end = Segment.parseDate(seg.checkOut);
       if (end) {
         dates.push(end);
@@ -63,7 +67,7 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
         if (primary && isSameDay(primary, date)) {
           return true;
         }
-        if (seg._tag === 'lodging') {
+        if (seg.kind === 'lodging') {
           const checkOut = Segment.parseDate(seg.checkOut);
           return !!checkOut && isSameDay(checkOut, date);
         }
@@ -94,10 +98,8 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
   );
 
   const handleAddSegment = useCallback(() => {
-    const newId = `seg-${Date.now()}`;
-    Obj.update(subject, (subject) => {
-      subject.segments = [...(subject.segments ?? []), Segment.makeDefault('flight', newId)] as typeof subject.segments;
-    });
+    const segment = Segment.makeDefault('flight');
+    Trip.addSegment(subject, segment);
   }, [subject]);
 
   return (
