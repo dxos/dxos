@@ -17,7 +17,8 @@ import {
   ThemedClassName,
   useTranslation,
 } from '@dxos/react-ui';
-import { composable, composableProps, getStyles, mx } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
+import { getStyles, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 

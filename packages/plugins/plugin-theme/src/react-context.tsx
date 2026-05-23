@@ -10,7 +10,8 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { type ThemeMode, ThemeProvider, type ThemeProviderProps, Toast, Tooltip } from '@dxos/react-ui';
-import { defaultTx, osTranslations } from '@dxos/ui-theme';
+import { defaultTx } from '@dxos/react-ui';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { translations } from '#translations';
 

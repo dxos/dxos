@@ -3,3 +3,4 @@
 //
 
 export * from './Tooltip';
+export * from './tooltipContent';

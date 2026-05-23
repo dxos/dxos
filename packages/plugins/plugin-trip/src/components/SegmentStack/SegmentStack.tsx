@@ -4,9 +4,8 @@
 
 import React, { type KeyboardEvent, useCallback, useMemo, useState } from 'react';
 
-import { ScrollArea, ThemedClassName } from '@dxos/react-ui';
+import { ScrollArea, ThemedClassName, composable, composableProps } from '@dxos/react-ui';
 import { Focus, Mosaic } from '@dxos/react-ui-mosaic';
-import { composable, composableProps } from '@dxos/ui-theme';
 
 import { Segment } from '#types';
 

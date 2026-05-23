@@ -17,11 +17,11 @@ import React, {
 
 import { mx } from '@dxos/ui-theme';
 
+import { useTranslation } from '../../primitives/ThemeProvider';
 import { translationKey } from '../../translations';
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
 import { MediaPlayer, type MediaKind } from '../MediaPlayer';
-import { useTranslation } from '../ThemeProvider';
 
 // TODO(burdon): Move per-element class strings to `@dxos/ui-theme` (theme tokens)
 // so callers can re-theme via the same mechanism the rest of `react-ui` uses.

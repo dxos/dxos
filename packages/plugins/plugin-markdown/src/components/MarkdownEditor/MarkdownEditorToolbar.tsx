@@ -6,8 +6,8 @@ import { type EditorView } from '@codemirror/view';
 import React, { useCallback, useState } from 'react';
 
 import { type FileInfo } from '@dxos/app-toolkit';
+import { composable, composableProps } from '@dxos/react-ui';
 import { Editor, type EditorToolbarProps } from '@dxos/react-ui-editor';
-import { composable, composableProps } from '@dxos/ui-theme';
 
 import { FileUpload, type FileUploadAction } from './FileUpload';
 

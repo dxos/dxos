@@ -9,10 +9,10 @@ import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Entity } from '@dxos/echo';
 import { Card, Toolbar } from '@dxos/react-ui';
 import { ScrollArea } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
 import { type MosaicTileProps, Mosaic, useMosaicContainer, Focus } from '@dxos/react-ui-mosaic';
 import { type SearchResult } from '@dxos/react-ui-search';
-import { composable, composableProps } from '@dxos/ui-theme';
 
 //
 // SearchResultStack
