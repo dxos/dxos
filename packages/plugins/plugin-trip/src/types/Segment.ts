@@ -16,7 +16,7 @@ import { Place } from './Place';
 // Kind enum
 // ---------------------------------------------------------------------------
 
-export const Kind = Schema.Literal('flight', 'train', 'boat', 'road', 'lodging', 'activity');
+export const Kind = Schema.Literal('flight', 'train', 'boat', 'road', 'accommodation', 'activity');
 export type Kind = Schema.Schema.Type<typeof Kind>;
 
 export const Status = Schema.Literal('tentative', 'proposed', 'confirmed', 'cancelled');
@@ -65,7 +65,7 @@ export const Segment = Schema.Struct({
   gateTo: Schema.optional(Schema.String),
   seat: Schema.optional(Schema.String),
 
-  // Train (shares operator + seat with road/lodging/etc).
+  // Train (shares operator + seat with road/accommodation/etc).
   operator: Schema.optional(Provider.Provider),
   trainNumber: Schema.optional(Schema.String),
   cabinClass: Schema.optional(Schema.String), // renamed from `class` (reserved word).
@@ -78,7 +78,7 @@ export const Segment = Schema.Struct({
   subKind: Schema.optional(RoadSubKind),
   vehicleClass: Schema.optional(Schema.String),
 
-  // Lodging.
+  // Accommodation.
   propertyName: Schema.optional(Schema.String),
   roomType: Schema.optional(Schema.String),
   checkIn: Schema.optional(Schema.String),
@@ -134,7 +134,7 @@ export const parseDate = (iso?: string): Date | undefined => {
 
 /** Primary date for calendar highlighting and sort order. */
 export const getPrimaryDate = (seg: Segment): Date | undefined => {
-  return parseDate(seg.kind === 'lodging' ? (seg.checkIn ?? seg.departAt) : seg.departAt);
+  return parseDate(seg.kind === 'accommodation' ? (seg.checkIn ?? seg.departAt) : seg.departAt);
 };
 
 /** Short human-readable title. */
@@ -148,8 +148,8 @@ export const getTitle = (seg: Segment): string => {
       return [seg.operator?.name, seg.vessel].filter(Boolean).join(' ') || 'Boat';
     case 'road':
       return seg.operator?.name ?? seg.subKind ?? 'Road';
-    case 'lodging':
-      return seg.propertyName ?? seg.origin?.name ?? 'Lodging';
+    case 'accommodation':
+      return seg.propertyName ?? seg.origin?.name ?? 'Accommodation';
     case 'activity':
       return seg.title ?? 'Activity';
   }
@@ -179,7 +179,7 @@ export const kindIcon = (kind: Kind): string => {
       return 'ph--boat--regular';
     case 'road':
       return 'ph--car--regular';
-    case 'lodging':
+    case 'accommodation':
       return 'ph--bed--regular';
     case 'activity':
       return 'ph--ticket--regular';

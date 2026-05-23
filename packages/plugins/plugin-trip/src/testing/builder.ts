@@ -168,7 +168,7 @@ export class TripBuilder {
     const checkOut = addDays(checkIn, nights);
     this.#segments.push(
       Segment.make({
-        kind: 'lodging',
+        kind: 'accommodation',
         status: 'confirmed',
         propertyName: opts.propertyName,
         operator: opts.chain ? { name: opts.chain } : undefined,

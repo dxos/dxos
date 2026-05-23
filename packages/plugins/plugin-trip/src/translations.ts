@@ -31,7 +31,7 @@ export const translations = [
         'segment.train.label': 'Train',
         'segment.boat.label': 'Boat',
         'segment.road.label': 'Road',
-        'segment.lodging.label': 'Lodging',
+        'segment.accommodation.label': 'Accommodation',
         'segment.activity.label': 'Activity',
       },
     },

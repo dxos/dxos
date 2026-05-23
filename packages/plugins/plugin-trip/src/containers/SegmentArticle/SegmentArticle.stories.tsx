@@ -48,7 +48,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Flight: Story = { args: { selectedIndex: 0 } };
-export const Lodging: Story = { args: { selectedIndex: 1 } };
+export const Accommodation: Story = { args: { selectedIndex: 1 } };
 export const Activity: Story = { args: { selectedIndex: 2 } };
 export const Tentative: Story = { args: { selectedIndex: 3 } };
 export const Empty: Story = { args: { selectedIndex: -1 } };

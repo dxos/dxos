@@ -53,7 +53,7 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
   const calendarDates = segments.flatMap((seg): Date[] => {
     const primary = Segment.getPrimaryDate(seg);
     const dates: Date[] = primary ? [primary] : [];
-    if (seg.kind === 'lodging') {
+    if (seg.kind === 'accommodation') {
       const end = Segment.parseDate(seg.checkOut);
       if (end) {
         dates.push(end);
@@ -69,7 +69,7 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
         if (primary && isSameDay(primary, date)) {
           return true;
         }
-        if (seg.kind === 'lodging') {
+        if (seg.kind === 'accommodation') {
           const checkOut = Segment.parseDate(seg.checkOut);
           return !!checkOut && isSameDay(checkOut, date);
         }
@@ -129,7 +129,7 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
     { value: 'train', label: t('segment.train.label') },
     { value: 'boat', label: t('segment.boat.label') },
     { value: 'road', label: t('segment.road.label') },
-    { value: 'lodging', label: t('segment.lodging.label') },
+    { value: 'accommodation', label: t('segment.accommodation.label') },
     { value: 'activity', label: t('segment.activity.label') },
   ];
 

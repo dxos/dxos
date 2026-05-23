@@ -12,15 +12,15 @@ import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { Segment } from '#types';
 
-const mapStyles = {
-  water: { fillStyle: '#0a0a0a' },
-  land: { fillStyle: '#262626', strokeStyle: '#1a1a1a' },
-  border: { strokeStyle: '#1a1a1a' },
-  graticule: { strokeStyle: '#111' },
-  line: { lineWidth: 1.5, lineDash: [4, 8], strokeStyle: '#60a5fa' },
-  point: { pointRadius: 3, fillStyle: '#f59e0b' },
-  arc: { lineWidth: 2, strokeStyle: '#60a5fa' },
-};
+// const mapStyles = {
+//   water: { fillStyle: '#0a0a0a' },
+//   land: { fillStyle: '#262626', strokeStyle: '#1a1a1a' },
+//   border: { strokeStyle: '#1a1a1a' },
+//   graticule: { strokeStyle: '#111' },
+//   line: { lineWidth: 1.5, lineDash: [4, 8], strokeStyle: '#60a5fa' },
+//   point: { pointRadius: 3, fillStyle: '#f59e0b' },
+//   arc: { lineWidth: 2, strokeStyle: '#60a5fa' },
+// };
 
 const initialRotation: [number, number, number] = [0, -20, 0];
 
@@ -45,7 +45,7 @@ const segmentPoints = (seg: Segment.Segment): LatLng[] => {
   if (origin) {
     points.push(origin);
   }
-  // Avoid duplicating for lodging where origin === destination.
+  // Avoid duplicating for accommodation where origin === destination.
   if (destination && (!origin || !sameLatLng(destination, origin))) {
     points.push(destination);
   }
@@ -55,9 +55,9 @@ const segmentPoints = (seg: Segment.Segment): LatLng[] => {
   return points;
 };
 
-/** Origin → destination line for transport segments (skip lodging / activity). */
+/** Origin → destination line for transport segments (skip accommodation / activity). */
 const segmentLine = (seg: Segment.Segment): { source: LatLng; target: LatLng } | undefined => {
-  if (seg.kind === 'lodging' || seg.kind === 'activity') {
+  if (seg.kind === 'accommodation' || seg.kind === 'activity') {
     return undefined;
   }
   const source = toLatLng(seg.origin?.geo);
@@ -75,7 +75,7 @@ const segmentInterval = (seg: Segment.Segment): { start: number; end: number } |
     return undefined;
   }
   const start = primary.getTime();
-  const endIso = seg.kind === 'lodging' ? seg.checkOut : seg.arriveAt;
+  const endIso = seg.kind === 'accommodation' ? seg.checkOut : seg.arriveAt;
   const end = Segment.parseDate(endIso)?.getTime() ?? start;
   return { start, end };
 };
@@ -157,7 +157,9 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
     }, []);
 
     const handleZoom = useGlobeZoomHandler(controller);
-    useDrag(controller);
+    // Lock the camera tilt — drag rotates the globe around its polar axis
+    // only, keeping the inclination set by the `rotation` prop above.
+    useDrag(controller, { lockTilt: true });
 
     // Build the geo features.
     const features = useMemo(() => {
@@ -303,7 +305,7 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
 
         <div className='relative overflow-hidden'>
           <Globe.Root classNames='absolute inset-0' zoom={1.2} rotation={initialRotation}>
-            <Globe.Canvas ref={setController} topology={topology} styles={mapStyles} features={features} />
+            <Globe.Canvas ref={setController} topology={topology} features={features} />
             <Globe.Zoom onAction={handleZoom} />
           </Globe.Root>
 

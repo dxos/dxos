@@ -16,7 +16,14 @@ export type GlobeDragEvent = {
 export type DragOptions = {
   disabled?: boolean;
   duration?: number;
-  xAxis?: boolean; // TODO(burdon): Generalize.
+  /**
+   * When true, drag is constrained to rotation around the polar (vertical)
+   * axis only — i.e. longitude changes freely but the camera's tilt
+   * (latitude / phi) stays pinned at whatever value the root's `rotation`
+   * prop was initialised with. Useful for "earth-spinning-at-an-angle"
+   * presentations where the inclination should not change.
+   */
+  lockTilt?: boolean;
   onUpdate?: (event: GlobeDragEvent) => void;
 };
 
@@ -38,7 +45,7 @@ export const useDrag = (controller?: GlobeController | null, options: DragOption
       },
       controller.projection,
       {
-        xAxis: options.xAxis,
+        lockTilt: options.lockTilt,
         time: 3_000,
         start: () => options.onUpdate?.({ type: 'start', controller }),
         finish: () => options.onUpdate?.({ type: 'end', controller }),

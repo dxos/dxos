@@ -137,10 +137,10 @@ const applyFlightValues = (draft: Segment.Segment, values: Partial<FlightPropert
 };
 
 //
-// Lodging form
+// Accommodation form
 //
 
-const LodgingProperties = Schema.Struct({
+const AccommodationProperties = Schema.Struct({
   propertyName: Schema.optional(Schema.String.annotations({ title: 'Property' })),
   chain: Schema.optional(Schema.String.annotations({ title: 'Chain' })),
   city: Schema.optional(Schema.String.annotations({ title: 'City' })),
@@ -148,9 +148,9 @@ const LodgingProperties = Schema.Struct({
   checkIn: Schema.optional(Format.DateTime.annotations({ title: 'Check-in' })),
   checkOut: Schema.optional(Format.DateTime.annotations({ title: 'Check-out' })),
 });
-type LodgingProperties = Schema.Schema.Type<typeof LodgingProperties>;
+type AccommodationProperties = Schema.Schema.Type<typeof AccommodationProperties>;
 
-const lodgingValuesFrom = (seg: Segment.Segment): LodgingProperties => ({
+const accommodationValuesFrom = (seg: Segment.Segment): AccommodationProperties => ({
   propertyName: seg.propertyName,
   chain: seg.operator?.name,
   city: seg.origin?.city ?? seg.destination?.city,
@@ -159,7 +159,7 @@ const lodgingValuesFrom = (seg: Segment.Segment): LodgingProperties => ({
   checkOut: seg.checkOut,
 });
 
-const applyLodgingValues = (draft: Segment.Segment, values: Partial<LodgingProperties>): void => {
+const applyAccommodationValues = (draft: Segment.Segment, values: Partial<AccommodationProperties>): void => {
   const mutable = draft as { -readonly [K in keyof Segment.Segment]: Segment.Segment[K] };
   if ('propertyName' in values) {
     mutable.propertyName = values.propertyName || undefined;
@@ -239,12 +239,12 @@ export const SegmentArticle = ({ role, subject }: SegmentArticleProps) => {
     [subject],
   );
 
-  const handleLodgingSave = useCallback(
-    (values: LodgingProperties) => {
+  const handleAccommodationSave = useCallback(
+    (values: AccommodationProperties) => {
       if (typeof subject !== 'object' || subject === null) {
         return;
       }
-      Obj.update(subject, (subject) => applyLodgingValues(subject as Segment.Segment, values));
+      Obj.update(subject, (subject) => applyAccommodationValues(subject as Segment.Segment, values));
     },
     [subject],
   );
@@ -263,8 +263,8 @@ export const SegmentArticle = ({ role, subject }: SegmentArticleProps) => {
   const segment = subject;
   const title = Segment.getTitle(segment);
   const route = Segment.getRoute(segment);
-  const departAt = formatDate(segment.kind === 'lodging' ? segment.checkIn : segment.departAt);
-  const arriveAt = formatDate(segment.kind === 'lodging' ? segment.checkOut : segment.arriveAt);
+  const departAt = formatDate(segment.kind === 'accommodation' ? segment.checkIn : segment.departAt);
+  const arriveAt = formatDate(segment.kind === 'accommodation' ? segment.checkOut : segment.arriveAt);
   const icon = Segment.kindIcon(segment.kind);
 
   return (
@@ -294,13 +294,13 @@ export const SegmentArticle = ({ role, subject }: SegmentArticleProps) => {
             </Form.Root>
           )}
 
-          {segment.kind === 'lodging' && (
-            <Form.Root<LodgingProperties>
+          {segment.kind === 'accommodation' && (
+            <Form.Root<AccommodationProperties>
               key={segment.id}
-              schema={LodgingProperties}
-              defaultValues={lodgingValuesFrom(segment)}
+              schema={AccommodationProperties}
+              defaultValues={accommodationValuesFrom(segment)}
               autoSave
-              onSave={handleLodgingSave}
+              onSave={handleAccommodationSave}
             >
               <Form.Content>
                 <Form.FieldSet fieldMap={{ checkIn: DateTimeField, checkOut: DateTimeField }} />
@@ -308,7 +308,7 @@ export const SegmentArticle = ({ role, subject }: SegmentArticleProps) => {
             </Form.Root>
           )}
 
-          {segment.kind !== 'flight' && segment.kind !== 'lodging' && (
+          {segment.kind !== 'flight' && segment.kind !== 'accommodation' && (
             <div className='flex flex-col'>
               {route && <Row label='Route' value={route} />}
               {departAt && <Row label='Departs' value={departAt} />}
