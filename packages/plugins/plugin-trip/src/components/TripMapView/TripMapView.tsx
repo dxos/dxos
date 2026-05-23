@@ -23,7 +23,6 @@ import { CompactSegmentTile, type SegmentCardAction } from '../SegmentCard/Segme
 import { SegmentStack } from '../SegmentStack/SegmentStack';
 
 const initialRotation: [number, number, number] = [0, -20, 0];
-const TILT = initialRotation[1];
 
 type LatLng = { lat: number; lng: number };
 
@@ -109,10 +108,8 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
     }, []);
 
     const handleZoom = useGlobeZoomHandler(controller);
-    // Lock the camera tilt — drag rotates the globe around its polar axis
-    // only, keeping the inclination set by the `rotation` prop above.
-    useDrag(controller, { lockTilt: true });
-    const flyTo = useFlyTo(controller, { tilt: TILT });
+    useDrag(controller);
+    const flyTo = useFlyTo(controller);
 
     // Build the geo features.
     const features = useMemo(() => {
