@@ -29,4 +29,9 @@ export const PersistentSchema = Schema.Struct({
   }),
 );
 
-export interface PersistentSchema extends Schema.Schema.Type<typeof PersistentSchema> {}
+export type PersistentSchema = {
+  readonly name?: string;
+  readonly typename: string;
+  readonly version: string;
+  readonly jsonSchema: JsonSchemaType;
+};

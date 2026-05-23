@@ -21,7 +21,7 @@ export const Tag = Schema.Struct({
   internal.SystemTypeAnnotation.set(true),
 );
 
-export type Tag = Schema.Schema.Type<typeof Tag>;
+export type Tag = Type.InstanceType<typeof Tag>;
 
 export const make = (props: Obj.MakeProps<typeof Tag>) => Obj.make(Tag, props);
 

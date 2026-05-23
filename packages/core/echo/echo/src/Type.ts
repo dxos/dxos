@@ -80,7 +80,7 @@ export interface Obj<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fiel
 
 /**
  * Type that represents any ECHO object type. Under Option B this is a
- * `Type.Type<unknown>` entity branded with the object entity kind — what
+ * `Type.Type` entity branded with the object entity kind — what
  * `Type.object(dxn)` produces.
  */
 export type AnyObjectType = Obj<unknown>;
@@ -142,7 +142,7 @@ export interface Relation<T, Source, Target, Fields extends Schema.Struct.Fields
 
 /**
  * Type that represents any ECHO relation type. Under Option B this is a
- * `Type.Type<unknown>` entity branded with the relation entity kind.
+ * `Type.Type` entity branded with the relation entity kind.
  */
 export type AnyRelationType = Relation<unknown, unknown, unknown>;
 
@@ -162,11 +162,17 @@ export type AnyRelationType = Relation<unknown, unknown, unknown>;
  * ```
  */
 export const relation: {
-  <SourceType extends Obj<any, any>, TargetType extends Obj<any, any>>(
-    opts: internal.EchoRelationSchemaOptions<SourceType, TargetType>,
-  ): <Self extends Schema.Schema.Any>(
+  <SourceInstance, TargetInstance>(opts: {
+    dxn: DXN.DXN;
+    source: Obj<SourceInstance, any>;
+    target: Obj<TargetInstance, any>;
+  }): <Self extends Schema.Schema.Any>(
     self: Self,
-  ) => Relation<Schema.Schema.Type<Self>, InstanceType<SourceType>, InstanceType<TargetType>>;
+  ) => Relation<
+    Schema.Schema.Type<Self>,
+    SourceInstance & Entity.OfKind<typeof Entity.Kind.Object>,
+    TargetInstance & Entity.OfKind<typeof Entity.Kind.Object>
+  >;
 } = internal.EchoRelationSchema as any;
 
 /**

@@ -9,6 +9,7 @@ import { describe, expect, test } from 'vitest';
 import { DXN } from '@dxos/keys';
 
 import { EchoObjectSchema } from '../../Entity';
+import * as Type from '../../../Type';
 import { getSchema } from '../types';
 import { makeObject } from './make-object';
 import { change } from './reactive';
@@ -17,7 +18,7 @@ const Organization = Schema.Struct({
   name: Schema.String,
 }).pipe(EchoObjectSchema(DXN.make('com.example.type.organization', '0.1.0')));
 
-interface Organization extends Schema.Schema.Type<typeof Organization> {}
+type Organization = Type.InstanceType<typeof Organization>;
 
 const Contact = Schema.Struct(
   {
@@ -29,7 +30,7 @@ const Contact = Schema.Struct(
   },
 ).pipe(Schema.partial, EchoObjectSchema(DXN.make('com.example.type.person', '0.1.0')));
 
-interface Contact extends Schema.Schema.Type<typeof Contact> {}
+type Contact = Type.InstanceType<typeof Contact>;
 
 const TEST_ORG: Omit<Organization, 'id'> = { name: 'Test' };
 

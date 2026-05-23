@@ -18,7 +18,7 @@ import * as Entity from './Entity';
 import * as internal from './internal';
 import * as entityInternal from './internal/Entity';
 import * as Obj from './Obj';
-import type * as Type from './Type';
+import * as Type from './Type';
 
 export type Endpoints<Source, Target> = {
   [Source]: Source;
@@ -139,7 +139,7 @@ type MakePropsInternal<T extends Unknown> = {
  * Props type for relation creation with a given schema.
  * Takes a schema type (created with Type.Relation) and extracts the props type.
  */
-export type MakeProps<S> = MakePropsInternal<Type.InstanceType<S>>;
+export type MakeProps<S> = MakePropsInternal<Type.InstanceType<S> & Unknown>;
 
 /**
  * Creates new relation.

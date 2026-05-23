@@ -16,6 +16,7 @@ import {
   toEffectSchema,
 } from '../../JsonSchema';
 import { type PersistentSchema } from '../../Type/persistent-schema';
+import * as TypeNs from '../../../Type';
 import { Obj as ObjModule } from '../../../index';
 type Type = PersistentSchema;
 import {
@@ -78,7 +79,7 @@ const updateTypename = (type: Type, typename: string): void => {
 
 const EmptySchemaType = Schema.Struct({}).pipe(EchoObjectSchema(DXN.make('com.example.type.empty', '0.1.0')));
 
-interface EmptySchemaType extends Schema.Schema.Type<typeof EmptySchemaType> {}
+type EmptySchemaType = TypeNs.InstanceType<typeof EmptySchemaType>;
 
 describe('dynamic schema', () => {
   test('getProperties filters out id and unwraps optionality', async () => {

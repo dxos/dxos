@@ -9,12 +9,13 @@ import { describe, expect, test } from 'vitest';
 import { DXN } from '@dxos/keys';
 
 import { EchoObjectSchema } from '../Entity';
+import * as Type from '../../Type';
 
 const Organization = Schema.Struct({
   name: Schema.String,
 }).pipe(EchoObjectSchema(DXN.make('com.example.type.organization', '0.1.0')));
 
-interface Organization extends Schema.Schema.Type<typeof Organization> {}
+type Organization = Type.InstanceType<typeof Organization>;
 
 describe('EchoObjectSchema DSL', () => {
   test('type is a valid schema', async () => {
