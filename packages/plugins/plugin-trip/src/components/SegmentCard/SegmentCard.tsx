@@ -10,12 +10,16 @@ import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/r
 
 import { Segment } from '#types';
 
-export type SegmentCardAction = { type: 'current'; segmentId: string } | { type: 'select'; segmentId: string };
-export type SegmentCardActionHandler = (action: SegmentCardAction) => void;
+export type SegmentCardAction = { segmentId: string } & (
+  | {
+      type: 'current';
+    }
+  | {
+      type: 'select';
+    }
+);
 
-// ---------------------------------------------------------------------------
-// SegmentTile — used by SegmentStack's VirtualStack
-// ---------------------------------------------------------------------------
+export type SegmentCardActionHandler = (action: SegmentCardAction) => void;
 
 type SegmentTileData = {
   segment: Segment.Any;
@@ -53,9 +57,6 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
           <Card.Content>
             <Card.Row icon={icon}>
               <Card.Text classNames={isCancelled ? 'line-through' : undefined}>{title}</Card.Text>
-              {isTentative && (
-                <span className='ml-2 text-xs text-description px-1 rounded bg-attentionSurface'>tentative</span>
-              )}
             </Card.Row>
             {route && (
               <Card.Row icon='ph--arrow-right--regular'>

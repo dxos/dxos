@@ -6,14 +6,20 @@ import { format } from 'date-fns';
 import React from 'react';
 
 import { Icon, Panel, useTranslation } from '@dxos/react-ui';
-import { useSelected } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
 import { Segment, type Trip } from '#types';
 
+/**
+ * Props for the SegmentArticle companion surface. Follows the EventArticle
+ * pattern from plugin-inbox: the segment is provided as `subject` and the
+ * parent Trip is provided as `companionTo`. The graph-builder extension
+ * resolves the current selection on the Trip's attendable context into the
+ * subject before the surface is dispatched.
+ */
 export type SegmentArticleProps = {
   role?: string;
-  attendableId: string;
+  subject: Segment.Any | string;
   companionTo: Trip.Trip;
 };
 
@@ -89,12 +95,12 @@ const renderModeFields = (segment: Segment.Any): React.ReactNode => {
   }
 };
 
-export const SegmentArticle = ({ role, attendableId, companionTo: trip }: SegmentArticleProps) => {
+export const SegmentArticle = ({ role, subject }: SegmentArticleProps) => {
   const { t: _t } = useTranslation(meta.id);
-  const selectedId = useSelected(attendableId, 'single');
-  const segment = trip.segments?.find((s) => s.id === selectedId);
 
-  if (!segment) {
+  if (typeof subject !== 'object' || subject === null) {
+    // The graph-builder returns the sentinel string 'segment' when nothing is
+    // selected yet.
     return (
       <Panel.Root role={role} className='dx-document'>
         <Panel.Content asChild>
@@ -104,6 +110,7 @@ export const SegmentArticle = ({ role, attendableId, companionTo: trip }: Segmen
     );
   }
 
+  const segment = subject;
   const title = Segment.getTitle(segment);
   const route = Segment.getRoute(segment);
   const departAt = formatDate(segment._tag === 'lodging' ? segment.checkIn : segment.departAt);

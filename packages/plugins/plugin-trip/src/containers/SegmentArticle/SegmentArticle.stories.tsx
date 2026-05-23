@@ -2,12 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useContext, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import { withClientProvider } from '@dxos/react-client/testing';
-import { SelectionManager, SelectionProvider } from '@dxos/react-ui-attention';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { TripBuilder } from '#testing';
@@ -20,10 +18,7 @@ type StoryProps = {
   selectedIndex?: number;
 };
 
-const ATTENDABLE_ID = 'story-trip';
-
 const DefaultStory = ({ selectedIndex = 0 }: StoryProps) => {
-  const registry = useContext(RegistryContext);
   const { trip } = useMemo(
     () =>
       new TripBuilder()
@@ -34,19 +29,9 @@ const DefaultStory = ({ selectedIndex = 0 }: StoryProps) => {
         .build('London Trip'),
     [],
   );
-  const segmentId = trip.segments?.[selectedIndex]?.id;
+  const segment = trip.segments?.[selectedIndex];
 
-  const selection = useMemo(() => {
-    return new SelectionManager(registry, {
-      [ATTENDABLE_ID]: { mode: 'single', id: segmentId },
-    });
-  }, [registry, segmentId]);
-
-  return (
-    <SelectionProvider selection={selection}>
-      <SegmentArticle role='article' attendableId={ATTENDABLE_ID} companionTo={trip} />
-    </SelectionProvider>
-  );
+  return <SegmentArticle role='article' subject={segment ?? 'segment'} companionTo={trip} />;
 };
 
 const meta = {
@@ -66,3 +51,4 @@ export const Flight: Story = { args: { selectedIndex: 0 } };
 export const Lodging: Story = { args: { selectedIndex: 1 } };
 export const Activity: Story = { args: { selectedIndex: 2 } };
 export const Tentative: Story = { args: { selectedIndex: 3 } };
+export const Empty: Story = { args: { selectedIndex: -1 } };

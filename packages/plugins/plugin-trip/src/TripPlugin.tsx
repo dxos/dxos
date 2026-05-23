@@ -2,15 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Plugin } from '@dxos/app-framework';
-import { AppPlugin } from '@dxos/app-toolkit';
+import { ActivationEvent, Plugin } from '@dxos/app-framework';
+import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
+import { AttentionEvents } from '@dxos/plugin-attention';
 
-import { CreateObject, ReactSurface } from '#capabilities';
+import { AppGraphBuilder, CreateObject, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 import { Booking, Trip } from '#types';
 
 export const TripPlugin = Plugin.define(meta).pipe(
+  AppPlugin.addAppGraphModule({
+    activatesOn: ActivationEvent.allOf(AppActivationEvents.SetupAppGraph, AttentionEvents.AttentionReady),
+    activate: AppGraphBuilder,
+  }),
   AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addSchemaModule({ schema: [Trip.Trip, Booking.Booking] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),

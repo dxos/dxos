@@ -25,16 +25,31 @@ export default Capability.makeModule(() =>
           <TripArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
       }),
+      // Companion surface dispatched when a segment is selected within a Trip's
+      // attendable context. Mirrors plugin-inbox's EventArticle pattern:
+      // app-graph-builder.ts resolves the current selectionId into a
+      // Segment.Any (or the 'segment' sentinel) and the layout dispatches this
+      // surface with subject = segment, companionTo = trip. The filter accepts
+      // either a tagged Segment object or the sentinel string.
       Surface.create({
         id: 'surface.segment',
         role: 'article',
-        filter: (data): data is { attendableId: string; companionTo: Trip.Trip } =>
-          typeof data === 'object' &&
-          data !== null &&
-          typeof (data as { attendableId?: unknown }).attendableId === 'string' &&
-          Trip.instanceOf((data as { companionTo?: unknown }).companionTo),
+        filter: (data): data is { subject: import('#types').Segment.Any | string; companionTo: Trip.Trip } => {
+          if (typeof data !== 'object' || data === null) {
+            return false;
+          }
+          const d = data as { subject?: unknown; companionTo?: unknown };
+          if (!Trip.instanceOf(d.companionTo)) {
+            return false;
+          }
+          if (typeof d.subject === 'string') {
+            return d.subject === 'segment';
+          }
+          const tag = (d.subject as { _tag?: unknown })?._tag;
+          return typeof tag === 'string' && ['flight', 'train', 'boat', 'road', 'lodging', 'activity'].includes(tag);
+        },
         component: ({ data, role }) => (
-          <SegmentArticle role={role} attendableId={data.attendableId} companionTo={data.companionTo} />
+          <SegmentArticle role={role} subject={data.subject} companionTo={data.companionTo} />
         ),
       }),
     ]),
