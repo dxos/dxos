@@ -15,8 +15,11 @@ import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 
 import { SegmentStack, type SegmentCardAction } from '#components';
+import { TripMapView } from '#containers';
 import { meta } from '#meta';
 import { Segment, Trip } from '#types';
+
+type ViewMode = 'stack' | 'map';
 
 export type TripArticleProps = AppSurface.ObjectArticleProps<Trip.Trip>;
 
@@ -103,6 +106,19 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
   );
 
   const [newSegmentKind, setNewSegmentKind] = useState<Segment.Kind>('flight');
+  const [viewMode, setViewMode] = useState<ViewMode>('stack');
+
+  const handleMapSelect = useCallback(
+    (segmentId: string) => {
+      void showItem({
+        contextId: id,
+        selectionId: segmentId,
+        companion: linkedSegment('segment'),
+        path: getObjectPathFromObject(subject),
+      });
+    },
+    [id, showItem, subject],
+  );
 
   const handleAddSegment = useCallback(() => {
     const segment = Segment.makeDefault(newSegmentKind);
@@ -147,10 +163,29 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
                 ))}
               </select>
               <IconButton icon='ph--plus--regular' label={t('segment.add.label')} onClick={handleAddSegment} />
+              <div role='separator' className='flex-1' />
+              <IconButton
+                icon='ph--list-dashes--regular'
+                iconOnly
+                variant={viewMode === 'stack' ? 'default' : 'ghost'}
+                label='Stack view'
+                onClick={() => setViewMode('stack')}
+              />
+              <IconButton
+                icon='ph--globe--regular'
+                iconOnly
+                variant={viewMode === 'map' ? 'default' : 'ghost'}
+                label='Map view'
+                onClick={() => setViewMode('map')}
+              />
             </Toolbar.Root>
           </Panel.Toolbar>
           <Panel.Content asChild>
-            <SegmentStack id={id} segments={segments} currentId={currentId} onAction={handleAction} />
+            {viewMode === 'map' ? (
+              <TripMapView segments={segments} onSelect={handleMapSelect} />
+            ) : (
+              <SegmentStack id={id} segments={segments} currentId={currentId} onAction={handleAction} />
+            )}
           </Panel.Content>
         </Panel.Root>
       </div>

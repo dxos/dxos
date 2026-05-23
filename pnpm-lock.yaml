@@ -16039,6 +16039,9 @@ importers:
       '@dxos/react-ui-calendar':
         specifier: workspace:*
         version: link:../../ui/react-ui-calendar
+      '@dxos/react-ui-geo':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-geo
       '@dxos/react-ui-mosaic':
         specifier: workspace:*
         version: link:../../ui/react-ui-mosaic

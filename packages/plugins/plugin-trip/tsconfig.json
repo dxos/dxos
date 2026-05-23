@@ -57,6 +57,9 @@
       "path": "../../ui/react-ui-calendar"
     },
     {
+      "path": "../../ui/react-ui-geo"
+    },
+    {
       "path": "../../ui/react-ui-mosaic"
     },
     {
