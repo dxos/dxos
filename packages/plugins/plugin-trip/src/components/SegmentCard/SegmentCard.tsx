@@ -42,7 +42,6 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
   const date = Segment.getPrimaryDate(segment);
   const icon = Segment.kindIcon(segment._tag);
   const isCancelled = segment.status === 'cancelled';
-  const isTentative = segment.status === 'tentative' || segment.status === 'proposed';
 
   return (
     <Mosaic.Tile

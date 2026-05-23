@@ -9,7 +9,6 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { useObject } from '@dxos/react-client/echo';
 import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
@@ -30,11 +29,10 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const showItem = useShowItem();
-  const [trip, updateTrip] = useObject(subject);
   const id = attendableId ?? Obj.getDXN(subject).toString();
   const currentId = useSelected(id, 'single');
 
-  const segments = [...(trip.segments ?? [])].sort(byPrimaryDate);
+  const segments = [...(subject.segments ?? [])].sort(byPrimaryDate);
 
   const calendarDates = segments.flatMap((seg): Date[] => {
     const primary = Segment.getPrimaryDate(seg);
@@ -87,10 +85,10 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
 
   const handleAddSegment = useCallback(() => {
     const newId = `seg-${Date.now()}`;
-    updateTrip((draft) => {
+    Obj.update(subject, (draft) => {
       draft.segments = [...(draft.segments ?? []), Segment.makeDefault('flight', newId)] as typeof draft.segments;
     });
-  }, [updateTrip]);
+  }, [subject]);
 
   return (
     <div role={role} className='@container dx-container overflow-hidden'>
