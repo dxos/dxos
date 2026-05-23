@@ -18,7 +18,9 @@ import { JsonSchemaType } from '../JsonSchema';
 // TODO(burdon): Move.
 export const PersistentSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
-  typename: TypenameSchema,
+  // Drafts (unnamed dynamic types) carry no typename until they're given one.
+  typename: Schema.optional(TypenameSchema),
+  // Drafts default to '0.0.0'; persisted types may carry a base-version+heads suffix.
   version: VersionSchema,
   jsonSchema: JsonSchemaType,
 }).pipe(
@@ -34,7 +36,7 @@ export type PersistentSchema = {
   readonly id: string;
   readonly [KindId]: EntityKind.Type;
   readonly name?: string;
-  readonly typename: string;
+  readonly typename?: string;
   readonly version: string;
   readonly jsonSchema: JsonSchemaType;
 };

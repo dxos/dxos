@@ -148,7 +148,7 @@ export const EchoRelationSchema = <Source, Target>({
   };
 };
 
-const getDXNForRelationSchemaRef = (schema: Schema.Schema.Any): DXN.DXN => {
+export const getDXNForRelationSchemaRef = (schema: Schema.Schema.Any): DXN.DXN => {
   assertArgument(Schema.isSchema(schema), 'schema');
   const identifier = getTypeIdentifierAnnotation(schema);
   if (identifier) {

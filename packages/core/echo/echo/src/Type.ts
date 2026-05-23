@@ -133,26 +133,70 @@ export const object: {
 export const Type: Type<typeInternal.PersistentSchema> = typeInternal.PersistentSchema as any;
 
 /**
- * Construct a new type-kind ECHO entity (an instance of the {@link Type}
- * meta-schema). Parallel to `Obj.make` / `Relation.make`, but for type
- * definitions rather than object or relation instances.
+ * Default version stamped on draft (unnamed) types created via
+ * {@link makeObject} / {@link makeRelation} when the caller does not supply
+ * one. Matches the plan: pure dynamic drafts surface as `'0.0.0'` until they
+ * are persisted, at which point automerge-heads suffix the version.
+ */
+const DRAFT_VERSION = '0.0.0';
+
+/**
+ * Common props shared by the type-kind factories. Typename and version are
+ * optional — drafts omit typename and default version to {@link DRAFT_VERSION}.
+ */
+type MakeTypeProps = {
+  jsonSchema: internal.JsonSchemaType;
+  typename?: string;
+  version?: string;
+  name?: string;
+  id?: ObjectId;
+};
+
+/**
+ * Construct a new object-kind type entity from raw metadata — for cases where
+ * an Effect Schema isn't available (e.g. JSON-Schema arriving over the network
+ * or from a UI editor). Parallel to {@link object} but takes pre-built
+ * `jsonSchema` instead of piping through an Effect schema.
  *
  * The returned entity is in-memory; persist it with `db.add(entity)`.
- *
- * @example
- * ```ts
- * const stored = Type.make({
- *   typename: 'com.example.type.task',
- *   version: '0.1.0',
- *   jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ title: Schema.String })),
- * });
- * db.add(stored);
- * ```
  */
-export const make = (
-  props: Omit<typeInternal.PersistentSchema, 'id' | typeof internal.KindId> & { id?: ObjectId },
+export const makeObject = (props: MakeTypeProps): Type<typeInternal.PersistentSchema> => {
+  return internal.makeObject(typeInternal.PersistentSchema, {
+    version: DRAFT_VERSION,
+    ...props,
+  } as any) as unknown as Type<typeInternal.PersistentSchema>;
+};
+
+/**
+ * Construct a new relation-kind type entity from raw metadata. Parallel to
+ * {@link relation} but takes pre-built `jsonSchema` instead of piping through
+ * an Effect schema. `source` / `target` accept either a static `Type.Obj`
+ * entity or the well-known `Obj.Unknown` schema.
+ *
+ * The returned entity is in-memory; persist it with `db.add(entity)`.
+ */
+export const makeRelation = (
+  props: MakeTypeProps & {
+    source: AnyObjectType | internal.UnknownTypeSchema<any, typeof Entity.Kind.Object>;
+    target: AnyObjectType | internal.UnknownTypeSchema<any, typeof Entity.Kind.Object>;
+  },
 ): Type<typeInternal.PersistentSchema> => {
-  return internal.makeObject(typeInternal.PersistentSchema, props as any) as unknown as Type<typeInternal.PersistentSchema>;
+  const { source, target, jsonSchema, ...rest } = props;
+  // Embed source/target DXNs + relation entity-kind into the jsonSchema so the
+  // entity round-trips correctly through `toEffectSchema` / queries / refs.
+  const sourceURI = internal.getTypeURIFromSpecifier(source as any);
+  const targetURI = internal.getTypeURIFromSpecifier(target as any);
+  const enrichedJsonSchema: internal.JsonSchemaType = {
+    ...(jsonSchema as any),
+    entityKind: internal.EntityKind.Relation,
+    relationSource: { $ref: sourceURI },
+    relationTarget: { $ref: targetURI },
+  };
+  return internal.makeObject(typeInternal.PersistentSchema, {
+    version: DRAFT_VERSION,
+    ...rest,
+    jsonSchema: enrichedJsonSchema,
+  } as any) as unknown as Type<typeInternal.PersistentSchema>;
 };
 
 /**
