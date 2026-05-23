@@ -33,6 +33,7 @@ export const translations = [
         'segment.road.label': 'Road',
         'segment.accommodation.label': 'Accommodation',
         'segment.activity.label': 'Activity',
+        'segment.delete.label': 'Delete segment',
       },
     },
   },

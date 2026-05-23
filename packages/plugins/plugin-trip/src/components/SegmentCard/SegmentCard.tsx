@@ -5,9 +5,10 @@
 import { format } from 'date-fns';
 import React, { type MouseEvent, forwardRef, useCallback } from 'react';
 
-import { Card } from '@dxos/react-ui';
+import { Card, useTranslation } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 
+import { meta } from '#meta';
 import { Segment } from '#types';
 
 export type SegmentCardAction = { segmentId: string } & (
@@ -39,6 +40,7 @@ type SegmentTileProps = Pick<MosaicTileProps<SegmentTileData>, 'data' | 'locatio
 export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data, location, current }, forwardedRef) => {
   const { segment, onAction } = data;
   const { setCurrentId, setSelected } = useMosaicContainer('SegmentTile');
+  const { t } = useTranslation(meta.id);
 
   const handleCurrentChange = useCallback(() => {
     setCurrentId(segment.id);
@@ -73,7 +75,7 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
           <Card.Toolbar>
             <Card.Icon icon={icon} />
             <Card.Title classNames={isCancelled ? 'line-through' : undefined}>{title}</Card.Title>
-            <Card.CloseIconButton onClick={handleDelete} label='Delete segment' />
+            <Card.CloseIconButton onClick={handleDelete} label={t('segment.delete.label')} />
           </Card.Toolbar>
           {(route || date) && (
             <Card.Content>

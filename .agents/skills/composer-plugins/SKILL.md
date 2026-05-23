@@ -219,7 +219,7 @@ See: `plugin-sample/src/containers/SampleArticle.tsx`.
 - `Clipboard.IconButton` for copy-to-clipboard.
 - `Toolbar.Root` / `Toolbar.IconButton` for toolbar actions.
 - `Card.Root` / `Card.Toolbar` / `Card.Content` for card surfaces.
-- `List.Roo` for navigatble lists that track current (`dx-current`) and selected (`dx-selected`) item states.
+- `List.Root` for navigable lists that track current (`dx-current`) and selected (`dx-selected`) item states.
 - use `react-tabster` for navigation.
 
 IMPORTANT: Any deviation from standard UI components should require permission from the user.

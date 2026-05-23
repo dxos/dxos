@@ -30,7 +30,11 @@ export const SegmentArticle = ({ role, subject: segment }: SegmentArticleProps) 
       const paths = Object.keys(changed).filter((path) => changed[path]);
       Obj.update(segment, () => {
         for (const path of paths) {
-          Obj.setValue(segment, splitJsonPath(path as JsonPath), values[path]);
+          // `values` is nested (built via mergeAtPath in the form), so resolve
+          // the JSON path before writing back to the segment.
+          const parts = splitJsonPath(path as JsonPath);
+          const value = Obj.getValue(values as any, parts);
+          Obj.setValue(segment, parts, value);
         }
       });
     },

@@ -393,9 +393,9 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
             setSelected(undefined);
             anchorRef.current = undefined;
             focusRef.current = undefined;
-          } else {
-            setSelected(anchor);
+            return;
           }
+          setSelected(anchor);
           onSelect?.({ date });
           return;
         }

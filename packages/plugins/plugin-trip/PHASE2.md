@@ -1,6 +1,6 @@
 # Phase 2 Scope — plugin-trip
 
-> Phase 1 (this PR) shipped: `Trip` + `Segment` ECHO types, `Provider` / `Account` in `@dxos/types`, `TripArticle` (calendar + stack + map views), `SegmentArticle` companion with Form-driven editing for Flight & Lodging, drag-and-keyboard range selection in `react-ui-calendar`, and graph-builder wiring for the segment companion.
+> Phase 1 (this PR) shipped: `Trip` + `Segment` ECHO types, `Provider` / `Account` in `@dxos/types`, `TripArticle` (calendar + stack + map views), `SegmentArticle` companion with Form-driven editing for Flight & Accommodation, drag-and-keyboard range selection in `react-ui-calendar`, and graph-builder wiring for the segment companion.
 >
 > Phase 2 builds on that foundation. Items are grouped by theme; each is independently scopable into its own PR.
 
@@ -18,8 +18,8 @@
 
 ### 1.2 Editable forms for remaining segment kinds
 
-- Currently only `flight` and `lodging` have Form-driven edit UIs in `SegmentArticle`; `train`, `boat`, `road`, `activity` are read-only Row layouts.
-- Define `TrainProperties`, `BoatProperties`, `RoadProperties`, `ActivityProperties` schemas (same pattern as `FlightProperties` / `LodgingProperties`), wire `Form.Root` + `Form.FieldSet` per kind.
+- Currently only `flight` and `accommodation` have Form-driven edit UIs in `SegmentArticle`; `train`, `boat`, `road`, `activity` are read-only Row layouts.
+- Define `TrainProperties`, `BoatProperties`, `RoadProperties`, `ActivityProperties` schemas (same pattern as `FlightProperties` / `AccommodationProperties`), wire `Form.Root` + `Form.FieldSet` per kind.
 
 ### 1.3 Place autocomplete / geocoding
 
@@ -57,7 +57,7 @@
 ### 2.4 `TripCalendarSource` (plugin-trip)
 
 - Implementation of the above: projects `Segment`s into `CalendarEventLike` values.
-- Flight/train/boat/road: `start = departAt`, `end = arriveAt`. Lodging: `start = checkIn`, `end = checkOut`. Activity: point in time.
+- Flight/train/boat/road: `start = departAt`, `end = arriveAt`. Accommodation: `start = checkIn`, `end = checkOut`. Activity: point in time.
 
 ---
 
