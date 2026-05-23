@@ -62,6 +62,9 @@ export const WithDiscordAndPresence: Story = {
     onDiscord: (values) => {
       console.log('discord', values);
     },
-    discordPresence: { teamOnline: 2, communityOnline: 14 },
+    discordPresence: {
+      teamOnline: 2,
+      communityOnline: 14,
+    },
   },
 };
