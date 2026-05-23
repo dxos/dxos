@@ -75,7 +75,7 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
           <Card.Toolbar>
             <Card.Icon icon={icon} />
             <Card.Title classNames={isCancelled ? 'line-through' : undefined}>{title}</Card.Title>
-            <Card.CloseIconButton onClick={handleDelete} label={t('segment.delete.label')} />
+            <Card.ActionIconButton action='delete' onClick={handleDelete} label={t('segment.delete.label')} />
           </Card.Toolbar>
           {(route || date) && (
             <Card.Content>

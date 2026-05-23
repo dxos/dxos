@@ -17,6 +17,7 @@ import {
   type DialogHeaderProps,
   type DialogBodyProps,
   type DialogActionBarProps,
+  type DialogActionIconButtonProps,
   type DialogCloseIconButtonProps,
 } from './Dialog';
 
@@ -189,6 +190,8 @@ export const AlertDialog = {
   Title: AlertDialogTitle,
   Description: AlertDialogDescription,
   ActionBar: Dialog.ActionBar,
+  ActionIconButton: Dialog.ActionIconButton,
+  /** @deprecated Use `AlertDialog.ActionIconButton action='close'`. */
   CloseIconButton: Dialog.CloseIconButton,
   // AlertDialog-specific dismissal.
   Cancel: AlertDialogCancel,
@@ -209,5 +212,6 @@ export type {
   DialogHeaderProps as AlertDialogHeaderProps,
   DialogBodyProps as AlertDialogBodyProps,
   DialogActionBarProps as AlertDialogActionBarProps,
+  DialogActionIconButtonProps as AlertDialogActionIconButtonProps,
   DialogCloseIconButtonProps as AlertDialogCloseIconButtonProps,
 };
