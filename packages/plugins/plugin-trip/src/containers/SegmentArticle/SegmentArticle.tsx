@@ -3,10 +3,12 @@
 //
 
 import { format } from 'date-fns';
-import React, { type ChangeEvent, useCallback } from 'react';
+import * as Schema from 'effect/Schema';
+import React, { useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Icon, Input, Panel, useTranslation } from '@dxos/react-ui';
+import { Icon, Panel, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { Segment, type Trip } from '#types';
@@ -36,240 +38,110 @@ const formatDate = (iso?: string): string | undefined => {
   return date ? format(date, 'PPp') : undefined;
 };
 
-/** Convert an ISO string to a value suitable for an HTML datetime-local input. */
-const toDateTimeLocal = (iso?: string): string => {
-  const date = Segment.parseDate(iso);
-  if (!date) {
-    return '';
+//
+// Flight form
+//
+
+const FlightProperties = Schema.Struct({
+  airlineName: Schema.optional(Schema.String).annotations({ title: 'Airline' }),
+  flightNumber: Schema.optional(Schema.String).annotations({ title: 'Flight number' }),
+  originCode: Schema.optional(Schema.String).annotations({ title: 'From' }),
+  destinationCode: Schema.optional(Schema.String).annotations({ title: 'To' }),
+  departAt: Schema.optional(Schema.String).annotations({ title: 'Departs' }),
+  arriveAt: Schema.optional(Schema.String).annotations({ title: 'Arrives' }),
+  cabin: Schema.optional(Segment.Cabin).annotations({ title: 'Cabin' }),
+  seat: Schema.optional(Schema.String).annotations({ title: 'Seat' }),
+});
+type FlightProperties = Schema.Schema.Type<typeof FlightProperties>;
+
+const flightValuesFrom = (seg: Segment.Segment): FlightProperties => ({
+  airlineName: seg.airline?.name,
+  flightNumber: seg.flightNumber,
+  originCode: seg.origin?.code,
+  destinationCode: seg.destination?.code,
+  departAt: seg.departAt,
+  arriveAt: seg.arriveAt,
+  cabin: seg.cabin,
+  seat: seg.seat,
+});
+
+const applyFlightValues = (draft: Segment.Segment, values: Partial<FlightProperties>): void => {
+  const mutable = draft as { -readonly [K in keyof Segment.Segment]: Segment.Segment[K] };
+  if ('airlineName' in values) {
+    mutable.airline = { ...(mutable.airline ?? {}), name: values.airlineName ?? undefined };
   }
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-};
-
-const fromDateTimeLocal = (value: string): string | undefined => {
-  if (!value) {
-    return undefined;
+  if ('flightNumber' in values) {
+    mutable.flightNumber = values.flightNumber || undefined;
   }
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+  if ('originCode' in values) {
+    mutable.origin = { ...(mutable.origin ?? {}), code: values.originCode ?? undefined };
+  }
+  if ('destinationCode' in values) {
+    mutable.destination = { ...(mutable.destination ?? {}), code: values.destinationCode ?? undefined };
+  }
+  if ('departAt' in values) {
+    mutable.departAt = values.departAt || undefined;
+  }
+  if ('arriveAt' in values) {
+    mutable.arriveAt = values.arriveAt || undefined;
+  }
+  if ('cabin' in values) {
+    mutable.cabin = values.cabin;
+  }
+  if ('seat' in values) {
+    mutable.seat = values.seat || undefined;
+  }
 };
 
-/** Labeled field with a stacked label and a single child input. */
-const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <Input.Root>
-    <Input.Label classNames='text-description text-sm py-1'>{label}</Input.Label>
-    {children}
-  </Input.Root>
-);
+//
+// Lodging form
+//
 
-type MutableSegment = { -readonly [K in keyof Segment.Segment]: Segment.Segment[K] };
-type UpdateSegment = (mutate: (draft: MutableSegment) => void) => void;
+const LodgingProperties = Schema.Struct({
+  propertyName: Schema.optional(Schema.String).annotations({ title: 'Property' }),
+  chain: Schema.optional(Schema.String).annotations({ title: 'Chain' }),
+  city: Schema.optional(Schema.String).annotations({ title: 'City' }),
+  roomType: Schema.optional(Schema.String).annotations({ title: 'Room type' }),
+  checkIn: Schema.optional(Schema.String).annotations({ title: 'Check-in' }),
+  checkOut: Schema.optional(Schema.String).annotations({ title: 'Check-out' }),
+});
+type LodgingProperties = Schema.Schema.Type<typeof LodgingProperties>;
 
-/** Editable form for a flight segment. */
-const FlightForm = ({ segment, updateSegment }: { segment: Segment.Segment; updateSegment: UpdateSegment }) => {
-  const onChange = useCallback((apply: (draft: MutableSegment) => void) => apply, []);
+const lodgingValuesFrom = (seg: Segment.Segment): LodgingProperties => ({
+  propertyName: seg.propertyName,
+  chain: seg.operator?.name,
+  city: seg.origin?.city ?? seg.destination?.city,
+  roomType: seg.roomType,
+  checkIn: seg.checkIn,
+  checkOut: seg.checkOut,
+});
 
-  return (
-    <div className='grid grid-cols-1 @md:grid-cols-2 gap-3'>
-      <Field label='Airline'>
-        <Input.TextInput
-          value={segment.airline?.name ?? ''}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            updateSegment(
-              onChange((draft) => {
-                draft.airline = { ...(draft.airline ?? {}), name: e.target.value };
-              }),
-            )
-          }
-        />
-      </Field>
-      <Field label='Flight number'>
-        <Input.TextInput
-          value={segment.flightNumber ?? ''}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            updateSegment(
-              onChange((draft) => {
-                draft.flightNumber = e.target.value || undefined;
-              }),
-            )
-          }
-        />
-      </Field>
-      <Field label='From'>
-        <Input.TextInput
-          placeholder='SFO'
-          value={segment.origin?.code ?? ''}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            updateSegment(
-              onChange((draft) => {
-                draft.origin = { ...(draft.origin ?? {}), code: e.target.value };
-              }),
-            )
-          }
-        />
-      </Field>
-      <Field label='To'>
-        <Input.TextInput
-          placeholder='LHR'
-          value={segment.destination?.code ?? ''}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            updateSegment(
-              onChange((draft) => {
-                draft.destination = { ...(draft.destination ?? {}), code: e.target.value };
-              }),
-            )
-          }
-        />
-      </Field>
-      <Field label='Departs'>
-        <Input.TextInput
-          type='datetime-local'
-          value={toDateTimeLocal(segment.departAt)}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            updateSegment(
-              onChange((draft) => {
-                draft.departAt = fromDateTimeLocal(e.target.value);
-              }),
-            )
-          }
-        />
-      </Field>
-      <Field label='Arrives'>
-        <Input.TextInput
-          type='datetime-local'
-          value={toDateTimeLocal(segment.arriveAt)}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            updateSegment(
-              onChange((draft) => {
-                draft.arriveAt = fromDateTimeLocal(e.target.value);
-              }),
-            )
-          }
-        />
-      </Field>
-      <Field label='Cabin'>
-        <select
-          className='dx-input rounded px-2 py-1 bg-input-surface'
-          value={segment.cabin ?? ''}
-          onChange={(e: ChangeEvent<HTMLSelectElement>) =>
-            updateSegment(
-              onChange((draft) => {
-                draft.cabin = (e.target.value as Segment.Cabin) || undefined;
-              }),
-            )
-          }
-        >
-          <option value=''>—</option>
-          <option value='economy'>Economy</option>
-          <option value='premium'>Premium</option>
-          <option value='business'>Business</option>
-          <option value='first'>First</option>
-        </select>
-      </Field>
-      <Field label='Seat'>
-        <Input.TextInput
-          value={segment.seat ?? ''}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            updateSegment(
-              onChange((draft) => {
-                draft.seat = e.target.value || undefined;
-              }),
-            )
-          }
-        />
-      </Field>
-    </div>
-  );
+const applyLodgingValues = (draft: Segment.Segment, values: Partial<LodgingProperties>): void => {
+  const mutable = draft as { -readonly [K in keyof Segment.Segment]: Segment.Segment[K] };
+  if ('propertyName' in values) {
+    mutable.propertyName = values.propertyName || undefined;
+  }
+  if ('chain' in values) {
+    mutable.operator = { ...(mutable.operator ?? {}), name: values.chain ?? undefined };
+  }
+  if ('city' in values) {
+    mutable.origin = { ...(mutable.origin ?? {}), city: values.city ?? undefined };
+    mutable.destination = { ...(mutable.destination ?? {}), city: values.city ?? undefined };
+  }
+  if ('roomType' in values) {
+    mutable.roomType = values.roomType || undefined;
+  }
+  if ('checkIn' in values) {
+    mutable.checkIn = values.checkIn || undefined;
+    mutable.departAt = mutable.checkIn;
+  }
+  if ('checkOut' in values) {
+    mutable.checkOut = values.checkOut || undefined;
+    mutable.arriveAt = mutable.checkOut;
+  }
 };
 
-/** Editable form for a lodging segment. */
-const LodgingForm = ({ segment, updateSegment }: { segment: Segment.Segment; updateSegment: UpdateSegment }) => {
-  const onChange = useCallback((apply: (draft: MutableSegment) => void) => apply, []);
-  return (
-    <div className='grid grid-cols-1 @md:grid-cols-2 gap-3'>
-      <Field label='Property'>
-        <Input.TextInput
-          value={segment.propertyName ?? ''}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            updateSegment(
-              onChange((draft) => {
-                draft.propertyName = e.target.value || undefined;
-              }),
-            )
-          }
-        />
-      </Field>
-      <Field label='Chain'>
-        <Input.TextInput
-          value={segment.operator?.name ?? ''}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            updateSegment(
-              onChange((draft) => {
-                draft.operator = { ...(draft.operator ?? {}), name: e.target.value };
-              }),
-            )
-          }
-        />
-      </Field>
-      <Field label='City'>
-        <Input.TextInput
-          value={segment.origin?.city ?? ''}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            updateSegment(
-              onChange((draft) => {
-                const city = e.target.value;
-                draft.origin = { ...(draft.origin ?? {}), city };
-                draft.destination = { ...(draft.destination ?? {}), city };
-              }),
-            )
-          }
-        />
-      </Field>
-      <Field label='Room type'>
-        <Input.TextInput
-          value={segment.roomType ?? ''}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            updateSegment(
-              onChange((draft) => {
-                draft.roomType = e.target.value || undefined;
-              }),
-            )
-          }
-        />
-      </Field>
-      <Field label='Check-in'>
-        <Input.TextInput
-          type='datetime-local'
-          value={toDateTimeLocal(segment.checkIn)}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            updateSegment(
-              onChange((draft) => {
-                draft.checkIn = fromDateTimeLocal(e.target.value);
-                draft.departAt = draft.checkIn;
-              }),
-            )
-          }
-        />
-      </Field>
-      <Field label='Check-out'>
-        <Input.TextInput
-          type='datetime-local'
-          value={toDateTimeLocal(segment.checkOut)}
-          onChange={(e: ChangeEvent<HTMLInputElement>) =>
-            updateSegment(
-              onChange((draft) => {
-                draft.checkOut = fromDateTimeLocal(e.target.value);
-                draft.arriveAt = draft.checkOut;
-              }),
-            )
-          }
-        />
-      </Field>
-    </div>
-  );
-};
-
-/** Read-only field rows for non-editable segment variants. */
+/** Read-only field rows for kinds without a dedicated edit form. */
 const renderModeFields = (segment: Segment.Segment): React.ReactNode => {
   switch (segment.kind) {
     case 'train':
@@ -298,14 +170,6 @@ const renderModeFields = (segment: Segment.Segment): React.ReactNode => {
           {segment.vehicleClass && <Row label='Vehicle' value={segment.vehicleClass} />}
         </>
       );
-    case 'lodging':
-      return (
-        <>
-          {segment.propertyName && <Row label='Property' value={segment.propertyName} />}
-          {segment.operator?.name && <Row label='Chain' value={segment.operator.name} />}
-          {segment.roomType && <Row label='Room' value={segment.roomType} />}
-        </>
-      );
     case 'activity':
       return (
         <>
@@ -322,12 +186,22 @@ const renderModeFields = (segment: Segment.Segment): React.ReactNode => {
 export const SegmentArticle = ({ role, subject }: SegmentArticleProps) => {
   const { t: _t } = useTranslation(meta.id);
 
-  const updateSegment = useCallback(
-    (mutate: (draft: MutableSegment) => void) => {
+  const handleFlightSave = useCallback(
+    (values: FlightProperties) => {
       if (typeof subject !== 'object' || subject === null) {
         return;
       }
-      Obj.update(subject, (subject) => mutate(subject as MutableSegment));
+      Obj.update(subject, (subject) => applyFlightValues(subject as Segment.Segment, values));
+    },
+    [subject],
+  );
+
+  const handleLodgingSave = useCallback(
+    (values: LodgingProperties) => {
+      if (typeof subject !== 'object' || subject === null) {
+        return;
+      }
+      Obj.update(subject, (subject) => applyLodgingValues(subject as Segment.Segment, values));
     },
     [subject],
   );
@@ -361,11 +235,34 @@ export const SegmentArticle = ({ role, subject }: SegmentArticleProps) => {
               {segment.status}
             </span>
           </div>
-          {segment.kind === 'flight' ? (
-            <FlightForm segment={segment} updateSegment={updateSegment} />
-          ) : segment.kind === 'lodging' ? (
-            <LodgingForm segment={segment} updateSegment={updateSegment} />
-          ) : (
+
+          {segment.kind === 'flight' && (
+            <Form.Root<FlightProperties>
+              schema={FlightProperties}
+              values={flightValuesFrom(segment)}
+              autoSave
+              onSave={handleFlightSave}
+            >
+              <Form.Content>
+                <Form.FieldSet />
+              </Form.Content>
+            </Form.Root>
+          )}
+
+          {segment.kind === 'lodging' && (
+            <Form.Root<LodgingProperties>
+              schema={LodgingProperties}
+              values={lodgingValuesFrom(segment)}
+              autoSave
+              onSave={handleLodgingSave}
+            >
+              <Form.Content>
+                <Form.FieldSet />
+              </Form.Content>
+            </Form.Root>
+          )}
+
+          {segment.kind !== 'flight' && segment.kind !== 'lodging' && (
             <div className='flex flex-col'>
               {route && <Row label='Route' value={route} />}
               {departAt && <Row label='Departs' value={departAt} />}

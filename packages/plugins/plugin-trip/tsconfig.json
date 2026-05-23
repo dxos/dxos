@@ -57,6 +57,9 @@
       "path": "../../ui/react-ui-calendar"
     },
     {
+      "path": "../../ui/react-ui-form"
+    },
+    {
       "path": "../../ui/react-ui-geo"
     },
     {
