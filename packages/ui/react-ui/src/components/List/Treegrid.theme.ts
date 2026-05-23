@@ -21,15 +21,15 @@ const levelStyles = new Map<number, string>([
   [8, '[&>.indent:first-of-type]:pl-6'],
 ]);
 
-const treegridRoot: ComponentFunction<TreegridStyleProps> = (_, ...etc) => mx('grid', ...etc);
+const root: ComponentFunction<TreegridStyleProps> = (_, ...etc) => mx('grid', ...etc);
 
-const treegridRow: ComponentFunction<TreegridStyleProps> = ({ level = 1 }, ...etc) =>
+const row: ComponentFunction<TreegridStyleProps> = ({ level = 1 }, ...etc) =>
   mx(levelStyles.get(Math.min(Math.max(Math.round(level), 1), 8)), ...etc);
 
-const treegridCell: ComponentFunction<TreegridStyleProps> = ({ indent }, ...etc) => mx(indent && 'indent', ...etc);
+const cell: ComponentFunction<TreegridStyleProps> = ({ indent }, ...etc) => mx(indent && 'indent', ...etc);
 
 export const treegridTheme: Theme<TreegridStyleProps> = {
-  root: treegridRoot,
-  row: treegridRow,
-  cell: treegridCell,
+  root,
+  row,
+  cell,
 };

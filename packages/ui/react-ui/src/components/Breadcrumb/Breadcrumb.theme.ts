@@ -7,21 +7,20 @@ import { type ComponentFunction, type Theme } from '@dxos/ui-types';
 
 export type breadcrumbStyleProps = {};
 
-const breadcrumbRoot: ComponentFunction<breadcrumbStyleProps> = (_props, ...etc) =>
-  mx('shrink-0 flex items-center', ...etc);
+const root: ComponentFunction<breadcrumbStyleProps> = (_props, ...etc) => mx('shrink-0 flex items-center', ...etc);
 
-const breadcrumbList: ComponentFunction<breadcrumbStyleProps> = (_props, ...etc) => mx('contents', ...etc);
+const list: ComponentFunction<breadcrumbStyleProps> = (_props, ...etc) => mx('contents', ...etc);
 
-const breadcrumbListItem: ComponentFunction<breadcrumbStyleProps> = (_props, ...etc) => mx('contents', ...etc);
+const listItem: ComponentFunction<breadcrumbStyleProps> = (_props, ...etc) => mx('contents', ...etc);
 
-const breadcrumbCurrent: ComponentFunction<breadcrumbStyleProps> = (_props, ...etc) => mx(...etc);
+const current: ComponentFunction<breadcrumbStyleProps> = (_props, ...etc) => mx(...etc);
 
-const breadcrumbSeparator: ComponentFunction<breadcrumbStyleProps> = (_props, ...etc) => mx('opacity-50', ...etc);
+const separator: ComponentFunction<breadcrumbStyleProps> = (_props, ...etc) => mx('opacity-50', ...etc);
 
 export const breadcrumbTheme: Theme<breadcrumbStyleProps> = {
-  root: breadcrumbRoot,
-  list: breadcrumbList,
-  listItem: breadcrumbListItem,
-  current: breadcrumbCurrent,
-  separator: breadcrumbSeparator,
+  root,
+  list,
+  listItem,
+  current,
+  separator,
 };

@@ -10,7 +10,7 @@ export type SeparatorStyleProps = {
   subdued?: boolean;
 };
 
-const separatorRoot: ComponentFunction<SeparatorStyleProps> = ({ orientation, subdued }, ...etc) =>
+const root: ComponentFunction<SeparatorStyleProps> = ({ orientation, subdued }, ...etc) =>
   mx(
     'self-stretch',
     orientation === 'vertical' ? 'border-e mx-1' : 'border-b my-1',
@@ -19,5 +19,5 @@ const separatorRoot: ComponentFunction<SeparatorStyleProps> = ({ orientation, su
   );
 
 export const separatorTheme: Theme<SeparatorStyleProps> = {
-  root: separatorRoot,
+  root,
 };

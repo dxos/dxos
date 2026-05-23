@@ -12,10 +12,10 @@ export type IconButtonStyleProps = ButtonStyleProps & {
   square?: boolean;
 };
 
-const iconButtonRoot: ComponentFunction<IconButtonStyleProps> = ({ iconOnly, square }, ...etc) => {
+const root: ComponentFunction<IconButtonStyleProps> = ({ iconOnly, square }, ...etc) => {
   return mx('px-1.5', !iconOnly && 'gap-1.5', square && 'aspect-square', ...etc);
 };
 
 export const iconButtonTheme: Theme<IconButtonStyleProps> = {
-  root: iconButtonRoot,
+  root,
 };

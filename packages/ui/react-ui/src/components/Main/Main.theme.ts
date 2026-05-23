@@ -7,23 +7,23 @@ import { type ComponentFunction } from '@dxos/ui-types';
 
 import { mainPaddingTransitions } from './constants';
 
-const mainPadding = 'dx-main-content-padding';
+const padding = 'dx-main-content-padding';
 
 export type MainStyleProps = Partial<{
   bounce: boolean;
   handlesFocus: boolean;
 }>;
 
-const mainContent: ComponentFunction<MainStyleProps> = ({ bounce }, ...etc) =>
-  mx(mainPadding, mainPaddingTransitions, bounce && 'dx-main-bounce-layout', 'dx-focus-ring-main', ...etc);
+const content: ComponentFunction<MainStyleProps> = ({ bounce }, ...etc) =>
+  mx(padding, mainPaddingTransitions, bounce && 'dx-main-bounce-layout', 'dx-focus-ring-main', ...etc);
 
-const mainSidebar: ComponentFunction<MainStyleProps> = (_, ...etc) =>
+const sidebar: ComponentFunction<MainStyleProps> = (_, ...etc) =>
   mx('dx-main-sidebar', 'dx-focus-ring-inset-over-all', ...etc);
 
-const mainOverlay: ComponentFunction<MainStyleProps> = (_, ...etc) => mx('dx-main-overlay', ...etc);
+const overlay: ComponentFunction<MainStyleProps> = (_, ...etc) => mx('dx-main-overlay', ...etc);
 
 export const mainTheme = {
-  content: mainContent,
-  sidebar: mainSidebar,
-  overlay: mainOverlay,
+  content,
+  sidebar,
+  overlay,
 };

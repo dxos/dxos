@@ -43,7 +43,7 @@ const booleanInputSurfaceHover =
   'hover:bg-un-accent-hover hover:aria-checked:bg-accent-surface-hover hover:aria-[checked=mixed]:bg-accent-surface-hover';
 
 // TODO(burdon): Replace with semantic tokens.
-const inputValence = (valence?: MessageValence) => {
+const valence = (valence?: MessageValence) => {
   switch (valence) {
     case 'success':
       return 'shadow-emerald-500/50 dark:shadow-emerald-600/50';
@@ -78,12 +78,12 @@ const sharedStaticInputStyles: ComponentFragment<InputStyleProps> = (props) => [
   textInputSurfaceFocus,
   textInputSurfaceHover,
   props.focused && 'bg-attention-surface',
-  inputValence(props.validationValence),
+  valence(props.validationValence),
   props.disabled && staticDisabled,
   props.focused && 'dx-focus-static',
 ];
 
-const inputInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
+const input: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   props.variant === 'subdued'
     ? mx(...sharedSubduedInputStyles(props), ...etc)
     : props.variant === 'static'
@@ -91,19 +91,19 @@ const inputInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
       : mx(
           ...sharedDefaultInputStyles(props),
           !props.disabled && 'dx-focus-ring',
-          inputValence(props.validationValence),
+          valence(props.validationValence),
           ...etc,
         );
 
-const inputTextArea: ComponentFunction<InputStyleProps> = (props, ...etc) => inputInput(props, ...etc);
+const textArea: ComponentFunction<InputStyleProps> = (props, ...etc) => input(props, ...etc);
 
-const inputCheckbox: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
+const checkbox: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
   mx('dx-checkbox dx-focus-ring', getSize(size), ...etc);
 
-const inputCheckboxIndicator: ComponentFunction<InputStyleProps> = ({ size = 5, checked }, ...etc) =>
+const checkboxIndicator: ComponentFunction<InputStyleProps> = ({ size = 5, checked }, ...etc) =>
   mx(getSize(snapSize(sizeValue(size) * 0.65, 4)), !checked && 'invisible', ...etc);
 
-const inputSwitch: ComponentFunction<InputStyleProps> = ({ size = 5, disabled }, ...etc) =>
+const switchRoot: ComponentFunction<InputStyleProps> = ({ size = 5, disabled }, ...etc) =>
   mx(
     getHeight(size),
     getWidth(snapSize(sizeValue(size) * 1.75, 9)),
@@ -115,14 +115,14 @@ const inputSwitch: ComponentFunction<InputStyleProps> = ({ size = 5, disabled },
     ...etc,
   );
 
-const inputSwitchThumb: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
+const switchThumb: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...etc) =>
   mx(
     getSize(size === 'px' ? 'px' : ((size - 2) as Size)),
     'block bg-white rounded-full transition-transform duration-100 will-change-transform data-[state=checked]:translate-x-[100%]',
     ...etc,
   );
 
-const inputWithSegmentsInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
+const withSegmentsInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   mx(
     'font-mono selection:bg-transparent mx-auto',
     props.density === 'lg' ? 'text-lg' : props.density === 'sm' ? 'text-sm' : 'text-base pointer-fine:text-sm',
@@ -130,7 +130,7 @@ const inputWithSegmentsInput: ComponentFunction<InputStyleProps> = (props, ...et
     ...etc,
   );
 
-const inputSegment: ComponentFunction<InputStyleProps> = (props, ...etc) =>
+const segment: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   mx(
     'flex items-center justify-center font-mono',
     props.density === 'lg'
@@ -141,34 +141,34 @@ const inputSegment: ComponentFunction<InputStyleProps> = (props, ...etc) =>
     'bg-input-surface text-base-foreground transition-colors border border-separator',
     'data-[focused]:bg-attention-surface data-[focused]:border-focus-ring-subtle',
     'data-[focused]:ring-2 data-[focused]:ring-offset-0 data-[focused]:ring-focus-ring-subtle',
-    inputValence(props.validationValence),
+    valence(props.validationValence),
     props.disabled && staticDisabled,
     ...etc,
   );
 
-const inputLabel: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
+const label: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx('block', inputTextLabel, props.srOnly && 'sr-only', ...etc);
 
-const inputDescription: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
+const description: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx('text-description', props.srOnly && 'sr-only', ...etc);
 
-const inputDescriptionAndValidation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
+const descriptionAndValidation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx('leading-none my-1.5', props.srOnly && 'sr-only', ...etc);
 
-const inputValidation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
+const validation: ComponentFunction<InputMetaStyleProps> = (props, ...etc) =>
   mx(inputTextLabel, props.srOnly ? 'sr-only' : textValence(props.validationValence), ...etc);
 
 export const inputTheme = {
-  input: inputInput,
-  textArea: inputTextArea,
-  inputWithSegments: inputWithSegmentsInput,
-  segment: inputSegment,
-  checkbox: inputCheckbox,
-  checkboxIndicator: inputCheckboxIndicator,
-  label: inputLabel,
-  description: inputDescription,
-  switch: inputSwitch,
-  switchThumb: inputSwitchThumb,
-  validation: inputValidation,
-  descriptionAndValidation: inputDescriptionAndValidation,
+  input,
+  textArea,
+  inputWithSegments: withSegmentsInput,
+  segment,
+  checkbox,
+  checkboxIndicator,
+  label,
+  description,
+  switch: switchRoot,
+  switchThumb,
+  validation,
+  descriptionAndValidation,
 };

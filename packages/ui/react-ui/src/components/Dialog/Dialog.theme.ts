@@ -23,9 +23,9 @@ export type DialogStyleProps = {
   size?: DialogSize;
 };
 
-const dialogOverlay: ComponentFunction<DialogStyleProps> = (_props, ...etc) => mx('dx-dialog__overlay', ...etc);
+const overlay: ComponentFunction<DialogStyleProps> = (_props, ...etc) => mx('dx-dialog__overlay', ...etc);
 
-const dialogContent: ComponentFunction<DialogStyleProps> = ({ inOverlayLayout, size = 'md' }, ...etc) => {
+const content: ComponentFunction<DialogStyleProps> = ({ inOverlayLayout, size = 'md' }, ...etc) => {
   return mx(
     '@container',
     'dx-dialog__content dx-focus-ring dx-modal-surface py-4',
@@ -35,27 +35,27 @@ const dialogContent: ComponentFunction<DialogStyleProps> = ({ inOverlayLayout, s
   );
 };
 
-const dialogHeader: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
+const header: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
   mx('dx-dialog__header flex pb-4 items-center justify-between', withColumn.center(), ...etc);
 
-const dialogBody: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
+const body: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
   mx('dx-dialog__body dx-expander', withColumn.propagate(), ...etc);
 
-const dialogActionBar: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
+const actionBar: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
   mx('dx-dialog__actionbar flex items-center pt-4 gap-2', withColumn.center(), ...etc);
 
-const dialogTitle: ComponentFunction<DialogStyleProps> = ({ srOnly }, ...etc) =>
+const title: ComponentFunction<DialogStyleProps> = ({ srOnly }, ...etc) =>
   mx('dx-dialog__title', srOnly && 'sr-only', ...etc);
 
-const dialogDescription: ComponentFunction<DialogStyleProps> = ({ srOnly }, ...etc) =>
+const description: ComponentFunction<DialogStyleProps> = ({ srOnly }, ...etc) =>
   mx('dx-dialog__description', 'text-description', srOnly && 'sr-only', ...etc);
 
 export const dialogTheme: Theme<DialogStyleProps> = {
-  overlay: dialogOverlay,
-  content: dialogContent,
-  header: dialogHeader,
-  body: dialogBody,
-  actionbar: dialogActionBar,
-  title: dialogTitle,
-  description: dialogDescription,
+  overlay,
+  content,
+  header,
+  body,
+  actionbar: actionBar,
+  title,
+  description,
 };

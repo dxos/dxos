@@ -11,25 +11,25 @@ export type ToolbarStyleProps = Partial<{
   layoutManaged: boolean;
 }>;
 
-const toolbarLayout =
+const layout =
   'w-full shrink-0 flex flex-nowrap p-1 gap-1 items-center overflow-x-auto scrollbar-none dx-contain-layout';
 
-const toolbarRoot: ComponentFunction<ToolbarStyleProps> = ({ density, disabled, layoutManaged }, ...etc) => {
+const root: ComponentFunction<ToolbarStyleProps> = ({ density, disabled, layoutManaged }, ...etc) => {
   return mx(
     'bg-toolbar-surface dx-toolbar',
     density === 'lg' && 'h-(--dx-rail-size) px-3!',
     density === 'sm' && 'h-7 px-2!',
     disabled && '*:opacity-20',
-    !layoutManaged && toolbarLayout,
+    !layoutManaged && layout,
     ...etc,
   );
 };
 
-const toolbarText: ComponentFunction<ToolbarStyleProps> = (_, ...etc) => {
+const text: ComponentFunction<ToolbarStyleProps> = (_, ...etc) => {
   return mx('px-2 grow truncate items-center', ...etc);
 };
 
 export const toolbarTheme: Theme<ToolbarStyleProps> = {
-  root: toolbarRoot,
-  text: toolbarText,
+  root,
+  text,
 };

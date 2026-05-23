@@ -22,7 +22,7 @@ export type ScrollAreaStyleProps = {
   snap?: boolean;
 };
 
-const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orientation }, ...etc) =>
+const root: ComponentFunction<ScrollAreaStyleProps> = ({ orientation }, ...etc) =>
   mx(
     // Expand
     'dx-container',
@@ -40,7 +40,7 @@ const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orientation }
 /**
  * NOTE: The browser reserves space for scrollbars.
  */
-const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
+const viewport: ComponentFunction<ScrollAreaStyleProps> = (
   { orientation, centered, padding, snap, autoHide },
   ...etc
 ) => {
@@ -99,6 +99,6 @@ const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
 };
 
 export const scrollAreaTheme: Theme<ScrollAreaStyleProps> = {
-  root: scrollAreaRoot,
-  viewport: scrollAreaViewport,
+  root,
+  viewport,
 };

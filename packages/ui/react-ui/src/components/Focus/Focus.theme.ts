@@ -16,7 +16,7 @@ export type FocusStyleProps = {
  * The pseudo-element is `pointer-events-none` and absolutely positioned over the element.
  * When `border` is true, a subdued CSS border is always visible (e.g., for grid cell edges).
  */
-const focusRing: ComponentFunction<FocusStyleProps> = ({ border }, ...etc) =>
+const ring: ComponentFunction<FocusStyleProps> = ({ border }, ...etc) =>
   mx(
     'dx-ring-pseudo outline-hidden',
     'focus:after:ring-focus-ring-subtle',
@@ -27,6 +27,6 @@ const focusRing: ComponentFunction<FocusStyleProps> = ({ border }, ...etc) =>
   );
 
 export const focusTheme: Theme<FocusStyleProps> = {
-  group: focusRing,
-  item: focusRing,
+  group: ring,
+  item: ring,
 };

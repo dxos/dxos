@@ -10,30 +10,30 @@ export type MessageStyleProps = {
   elevation?: Elevation;
 };
 
-const messageRoot: ComponentFunction<MessageStyleProps> = ({ valence }, etc) => {
+const root: ComponentFunction<MessageStyleProps> = ({ valence }, etc) => {
   return mx('grid grid-cols-[2rem_1fr_2rem] p-1 rounded-sm', messageValence(valence), etc);
 };
 
-const messageHeader: ComponentFunction<MessageStyleProps> = (_, etc) => {
+const header: ComponentFunction<MessageStyleProps> = (_, etc) => {
   return mx('col-span-full grid grid-cols-subgrid items-center', etc);
 };
 
-const messageTitle: ComponentFunction<MessageStyleProps> = (_, etc) => {
+const title: ComponentFunction<MessageStyleProps> = (_, etc) => {
   return mx('col-start-2 overflow-hidden truncate', etc);
 };
 
-const messageIcon: ComponentFunction<MessageStyleProps> = (_, etc) => {
+const icon: ComponentFunction<MessageStyleProps> = (_, etc) => {
   return mx('col-start-1 grid place-items-center', etc);
 };
 
-const messageContent: ComponentFunction<MessageStyleProps> = (_, etc) => {
+const content: ComponentFunction<MessageStyleProps> = (_, etc) => {
   return mx('col-start-2 grid grid-cols-subgrid inline first:font-medium', etc);
 };
 
 export const messageTheme: Theme<MessageStyleProps> = {
-  root: messageRoot,
-  header: messageHeader,
-  icon: messageIcon,
-  title: messageTitle,
-  content: messageContent,
+  root,
+  header,
+  icon,
+  title,
+  content,
 };

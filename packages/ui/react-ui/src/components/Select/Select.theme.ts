@@ -9,7 +9,7 @@ export type SelectStyleProps = Partial<{
   elevation: Elevation;
 }>;
 
-const selectContent: ComponentFunction<SelectStyleProps> = ({ elevation }, ...etc) => {
+const content: ComponentFunction<SelectStyleProps> = ({ elevation }, ...etc) => {
   return mx(
     'dx-modal-surface rounded-sm border border-separator',
     'min-w-(--radix-select-trigger-width) max-h-(--radix-select-content-available-height)',
@@ -19,9 +19,9 @@ const selectContent: ComponentFunction<SelectStyleProps> = ({ elevation }, ...et
   );
 };
 
-const selectViewport: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx(...etc);
+const viewport: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx(...etc);
 
-const selectItem: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
+const item: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
   mx(
     'flex items-center min-h-[2rem] px-3 py-1 gap-2',
     'text-base-foreground leading-none select-none outline-hidden',
@@ -30,22 +30,22 @@ const selectItem: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
     ...etc,
   );
 
-const selectItemIndicator: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx('items-center', ...etc);
+const itemIndicator: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx('items-center', ...etc);
 
-const selectArrow: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx('fill-separator', ...etc);
+const arrow: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx('fill-separator', ...etc);
 
-const selectSeparator: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
+const separator: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
   mx('self-stretch border-b my-1 border-separator', ...etc);
 
-const selectScrollButton: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
+const scrollButton: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
   mx('dx-modal-surface flex items-center justify-center cursor-default h-6 w-full', ...etc);
 
 export const selectTheme: Theme<SelectStyleProps> = {
-  content: selectContent,
-  viewport: selectViewport,
-  item: selectItem,
-  itemIndicator: selectItemIndicator,
-  arrow: selectArrow,
-  separator: selectSeparator,
-  scrollButton: selectScrollButton,
+  content,
+  viewport,
+  item,
+  itemIndicator,
+  arrow,
+  separator,
+  scrollButton,
 };

@@ -2,24 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { ghostHover } from '@dxos/ui-theme';
 import { mx } from '@dxos/ui-theme';
 import type { ComponentFunction, Density, Elevation, Theme } from '@dxos/ui-types';
-
-const primaryButtonColors =
-  'text-accent-foreground bg-accent-surface hover:bg-accent-surface-hover aria-pressed:bg-primary-500 dark:aria-pressed:bg-primary-500 data-[state=open]:bg-primary-500 dark:data-[state=open]:bg-primary-500 aria-checked:bg-primary-500 dark:aria-checked:bg-primary-500 aria-checked:text-primary-100';
-
-const staticDefaultButtonColors = 'bg-input-surface text-input-foreground';
-
-const defaultButtonColors = mx(
-  staticDefaultButtonColors,
-  'data-[state=open]:bg-input-surface aria-pressed:text-accent-text aria-pressed:bg-base-surface aria-checked:text-accent-text aria-checked:bg-base-surface',
-);
-
-const ghostButtonColors = mx(
-  ghostHover,
-  'hover:text-inherit data-[state=open]:bg-input-surface aria-pressed:text-accent-text aria-pressed:bg-base-surface aria-checked:text-accent-text aria-checked:bg-base-surface',
-);
 
 export type ButtonStyleProps = Partial<{
   inGroup?: boolean;
@@ -30,11 +14,11 @@ export type ButtonStyleProps = Partial<{
   variant: 'default' | 'primary' | 'ghost' | 'outline';
 }>;
 
-const buttonRoot: ComponentFunction<ButtonStyleProps> = (_props, ...etc) => {
+const root: ComponentFunction<ButtonStyleProps> = (_props, ...etc) => {
   return mx('dx-button dx-focus-ring group gap-1 [&_span]:truncate', ...etc);
 };
 
-const buttonGroup: ComponentFunction<{ elevation?: Elevation }> = (_props, ...etc) => {
+const group: ComponentFunction<{ elevation?: Elevation }> = (_props, ...etc) => {
   return mx(
     'inline-flex rounded-xs [&>:first-child]:rounded-w-sm [&>:last-child]:rounded-ie-sm [&>button]:relative',
     ...etc,
@@ -42,6 +26,6 @@ const buttonGroup: ComponentFunction<{ elevation?: Elevation }> = (_props, ...et
 };
 
 export const buttonTheme: Theme<ButtonStyleProps> = {
-  root: buttonRoot,
-  group: buttonGroup,
+  root,
+  group,
 };

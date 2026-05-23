@@ -9,7 +9,7 @@ export type ToastStyleProps = Partial<{
   srOnly: boolean;
 }>;
 
-const toastViewport: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
+const viewport: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
   mx(
     // TODO(burdon): block-end should take into account status bar.
     'z-40 fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] inset-start-[calc(env(safe-area-inset-left)+1rem)] inset-end-[calc(env(safe-area-inset-right)+1rem)] w-auto md:end-[calc(env(safe-area-inset-right)+1rem)] md:left-auto md:w-full md:max-w-sm',
@@ -17,7 +17,7 @@ const toastViewport: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
     ...etc,
   );
 
-const toastRoot: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
+const root: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
   mx(
     'dx-modal-surface rounded-md flex p-2 gap-2',
     surfaceShadow({ elevation: 'toast' }),
@@ -30,23 +30,23 @@ const toastRoot: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
     ...etc,
   );
 
-const toastBody: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
+const body: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
   mx('grow flex flex-col gap-1 justify-center pl-2', ...etc);
 
-const toastActions: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
+const actions: ComponentFunction<ToastStyleProps> = (_props, ...etc) =>
   mx('shrink-0 flex flex-col gap-1 justify-center', ...etc);
 
-const toastTitle: ComponentFunction<ToastStyleProps> = ({ srOnly }, ...etc) =>
+const title: ComponentFunction<ToastStyleProps> = ({ srOnly }, ...etc) =>
   mx('shrink-0 font-medium', srOnly && 'sr-only', ...etc);
 
-const toastDescription: ComponentFunction<ToastStyleProps> = ({ srOnly }, ...etc) =>
+const description: ComponentFunction<ToastStyleProps> = ({ srOnly }, ...etc) =>
   mx('text-description', 'shrink-0', srOnly && 'sr-only', ...etc);
 
 export const toastTheme: Theme<ToastStyleProps> = {
-  viewport: toastViewport,
-  root: toastRoot,
-  body: toastBody,
-  title: toastTitle,
-  description: toastDescription,
-  actions: toastActions,
+  viewport,
+  root,
+  body,
+  title,
+  description,
+  actions,
 };

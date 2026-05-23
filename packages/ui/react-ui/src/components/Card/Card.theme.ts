@@ -15,7 +15,7 @@ export type CardStyleProps = {
   padding?: boolean;
 };
 
-const cardRoot: ComponentFunction<CardStyleProps> = ({ border, fullWidth }, ...etc) =>
+const root: ComponentFunction<CardStyleProps> = ({ border, fullWidth }, ...etc) =>
   mx(
     'dx-card dx-card-min-width dx-card-max-width min-h-(--dx-rail-item) group/card relative overflow-hidden',
     border &&
@@ -24,18 +24,18 @@ const cardRoot: ComponentFunction<CardStyleProps> = ({ border, fullWidth }, ...e
     ...etc,
   );
 
-const cardToolbar: ComponentFunction<CardStyleProps> = (_, ...etc) =>
+const toolbar: ComponentFunction<CardStyleProps> = (_, ...etc) =>
   mx(
     'dx-card__toolbar dx-density-md bg-transparent p-0! gap-0! col-span-3 grid! grid-cols-subgrid! [contain:none]',
     ...etc,
   );
 
-const cardTitle: ComponentFunction<CardStyleProps> = (_props, ...etc) => mx('dx-card__title grow truncate', ...etc);
+const title: ComponentFunction<CardStyleProps> = (_props, ...etc) => mx('dx-card__title grow truncate', ...etc);
 
-const cardContent: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
+const content: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__content contents pb-1 last:pb-0', ...etc);
 
-const cardHeading: ComponentFunction<CardStyleProps> = ({ variant = 'default' }, ...etc) =>
+const heading: ComponentFunction<CardStyleProps> = ({ variant = 'default' }, ...etc) =>
   mx(
     'dx-card__heading',
     variant === 'default' && 'py-1',
@@ -43,7 +43,7 @@ const cardHeading: ComponentFunction<CardStyleProps> = ({ variant = 'default' },
     ...etc,
   );
 
-const cardText: ComponentFunction<CardStyleProps> = ({ variant = 'default', truncate: _truncate }, ...etc) =>
+const text: ComponentFunction<CardStyleProps> = ({ variant = 'default', truncate: _truncate }, ...etc) =>
   mx(
     'dx-card__text items-center overflow-hidden',
     variant === 'default' && 'py-1',
@@ -51,31 +51,31 @@ const cardText: ComponentFunction<CardStyleProps> = ({ variant = 'default', trun
     ...etc,
   );
 
-const cardTextSpan: ComponentFunction<CardStyleProps> = ({ variant = 'default', truncate }, ...etc) =>
+const textSpan: ComponentFunction<CardStyleProps> = ({ variant = 'default', truncate }, ...etc) =>
   mx(variant === 'description' && 'text-sm text-description line-clamp-3', truncate && 'truncate', ...etc);
 
-const cardPoster: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
+const poster: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__poster col-span-3 max-h-[200px]', ...etc);
 
-const cardPosterIcon: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
+const posterIcon: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__poster-icon col-span-3 grid place-items-center bg-input-surface text-subdued max-h-[200px]', ...etc);
 
-const cardAction: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
+const action: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__acztion col-span-3 !grid grid-cols-subgrid p-0! w-full text-start overflow-hidden', ...etc);
 
-const cardActionLabel: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
+const actionLabel: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__action-label min-w-0 flex-1 truncate', ...etc);
 
-const cardLink: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
+const link: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__link col-span-3 !grid grid-cols-subgrid group p-0! dx-button dx-focus-ring min-h-1!', ...etc);
 
-const cardLinkLabel: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
+const linkLabel: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__link-label min-w-0 flex-1 truncate', ...etc);
 
-const cardRow: ComponentFunction<CardStyleProps> = (_, ...etc) =>
+const row: ComponentFunction<CardStyleProps> = (_, ...etc) =>
   mx('dx-card__row col-span-3 grid grid-cols-subgrid', ...etc);
 
-const cardIconBlock: ComponentFunction<CardStyleProps> = ({ padding }, ...etc) =>
+const iconBlock: ComponentFunction<CardStyleProps> = ({ padding }, ...etc) =>
   mx(
     'dx-card__icon-block grid h-[var(--dx-rail-item)] w-[var(--dx-rail-item)] place-items-center',
     padding && '[&>*]:p-1',
@@ -83,19 +83,19 @@ const cardIconBlock: ComponentFunction<CardStyleProps> = ({ padding }, ...etc) =
   );
 
 export const cardTheme: Theme<CardStyleProps> = {
-  root: cardRoot,
-  toolbar: cardToolbar,
-  title: cardTitle,
-  content: cardContent,
-  row: cardRow,
-  heading: cardHeading,
-  text: cardText,
-  'text-span': cardTextSpan,
-  poster: cardPoster,
-  'poster-icon': cardPosterIcon,
-  action: cardAction,
-  'action-label': cardActionLabel,
-  link: cardLink,
-  'link-label': cardLinkLabel,
-  'icon-block': cardIconBlock,
+  root,
+  toolbar,
+  title,
+  content,
+  row,
+  heading,
+  text,
+  'text-span': textSpan,
+  poster,
+  'poster-icon': posterIcon,
+  action,
+  'action-label': actionLabel,
+  link,
+  'link-label': linkLabel,
+  'icon-block': iconBlock,
 };

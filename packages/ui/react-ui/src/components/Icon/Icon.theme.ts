@@ -12,7 +12,7 @@ export type IconStyleProps = {
 /**
  * Size can be specified directly, or inherited from a container (e.g., toolbar).
  */
-const iconRoot: ComponentFunction<IconStyleProps> = ({ size }, etc) => {
+const root: ComponentFunction<IconStyleProps> = ({ size }, etc) => {
   return mx(
     'shrink-0 text-[var(--icons-color,currentColor)]',
     size
@@ -23,5 +23,5 @@ const iconRoot: ComponentFunction<IconStyleProps> = ({ size }, etc) => {
 };
 
 export const iconTheme: Theme<IconStyleProps> = {
-  root: iconRoot,
+  root,
 };

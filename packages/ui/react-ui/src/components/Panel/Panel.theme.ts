@@ -17,7 +17,7 @@ const sizes: Record<Size, string> = {
   sm: 'h-(--dx-statusbar-size)',
 };
 
-const panelRoot: ComponentFunction<PanelStyleProps> = (_, ...etc) =>
+const root: ComponentFunction<PanelStyleProps> = (_, ...etc) =>
   mx(
     // prettier-ignore
     'dx-container grid grid-cols-[100%] overflow-hidden',
@@ -26,17 +26,17 @@ const panelRoot: ComponentFunction<PanelStyleProps> = (_, ...etc) =>
     ...etc,
   );
 
-const panelToolbar: ComponentFunction<PanelStyleProps> = ({ size = 'md' }, ...etc) =>
+const toolbar: ComponentFunction<PanelStyleProps> = ({ size = 'md' }, ...etc) =>
   mx('[grid-area:toolbar]', 'shrink-0', sizes[size], ...etc);
 
-const panelContent: ComponentFunction<PanelStyleProps> = (_, ...etc) => mx('[grid-area:content] min-h-0', ...etc);
+const content: ComponentFunction<PanelStyleProps> = (_, ...etc) => mx('[grid-area:content] min-h-0', ...etc);
 
-const panelStatusbar: ComponentFunction<PanelStyleProps> = ({ size = 'md' }, ...etc) =>
+const statusbar: ComponentFunction<PanelStyleProps> = ({ size = 'md' }, ...etc) =>
   mx('[grid-area:statusbar]', 'shrink-0', sizes[size], ...etc);
 
 export const panelTheme = {
-  root: panelRoot,
-  toolbar: panelToolbar,
-  content: panelContent,
-  statusbar: panelStatusbar,
+  root,
+  toolbar,
+  content,
+  statusbar,
 };

@@ -11,9 +11,9 @@ export type TooltipStyleProps = Partial<{
   elevation: Elevation;
 }>;
 
-const tooltipArrow: ComponentFunction<TooltipStyleProps> = (_props, ...etc) => mx('fill-inverse-surface', ...etc);
+const arrow: ComponentFunction<TooltipStyleProps> = (_props, ...etc) => mx('fill-inverse-surface', ...etc);
 
 export const tooltipTheme: Theme<TooltipStyleProps> = {
   content: tooltipContent,
-  arrow: tooltipArrow,
+  arrow,
 };

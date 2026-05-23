@@ -15,8 +15,8 @@ export type TagStyleProps = {
   palette?: ChromaticPalette | NeutralPalette | MessageValence;
 };
 
-const tagRoot: ComponentFunction<TagStyleProps> = (_, ...etc) => mx('dx-tag', ...etc);
+const root: ComponentFunction<TagStyleProps> = (_, ...etc) => mx('dx-tag', ...etc);
 
 export const tagTheme: Theme<TagStyleProps> = {
-  root: tagRoot,
+  root,
 };
