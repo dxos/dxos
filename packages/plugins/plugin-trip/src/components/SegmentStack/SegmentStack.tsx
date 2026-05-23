@@ -8,7 +8,7 @@ import { ScrollArea, ThemedClassName } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { composable, composableProps } from '@dxos/ui-theme';
 
-import { type Segment } from '#types';
+import { Segment } from '#types';
 
 import { SegmentTile, type SegmentCardActionHandler } from '../SegmentCard/SegmentCard';
 
@@ -32,7 +32,17 @@ export const SegmentStack = composable<HTMLDivElement, SegmentStackProps>(
     forwardedRef,
   ) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
-    const items = useMemo(() => segments.map((segment) => ({ segment, onAction })), [segments, onAction]);
+    // Sort by primary (start) date ascending; segments without a date go last, stable by original order.
+    const sortedSegments = useMemo(() => {
+      const withIndex = segments.map((segment, index) => ({
+        segment,
+        index,
+        time: Segment.getPrimaryDate(segment)?.getTime() ?? Number.POSITIVE_INFINITY,
+      }));
+      withIndex.sort((a, b) => a.time - b.time || a.index - b.index);
+      return withIndex.map(({ segment }) => segment);
+    }, [segments]);
+    const items = useMemo(() => sortedSegments.map((segment) => ({ segment, onAction })), [sortedSegments, onAction]);
 
     const handleCurrentChange = useCallback(
       (id: string | undefined) => {
