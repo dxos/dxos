@@ -6,6 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { raise } from '@dxos/debug';
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, EchoURI, type ObjectId, type URI } from '@dxos/keys';
@@ -312,20 +313,25 @@ export type AnyRef = Schema.Schema<internal.Ref<any>, EncodedReference>;
 //
 
 /**
- * Gets the URI identifying the schema — currently always a DXN, but typed as
- * `URI.URI` so future stored-schema URIs (echo:/…) can be returned without
- * breaking callers.
- * @example "dxn:com.example.type.person:0.1.0"
+ * Returns the URI identifying a type entity. Always defined.
+ *
+ * - Static `Type.Obj` / `Type.Relation` → typename DXN (e.g. `dxn:com.example.type.person:0.1.0`).
+ * - Persisted `Type.Type` instance (has `id`) → local `EchoURI` (`echo:/<objectId>`).
+ * - In-memory `Type.Type` draft (has `id`, no typename) → local `EchoURI`.
+ *
+ * Only accepts `Type.AnyType` entities. Raw `Schema.Schema` values and the
+ * branded `Obj.Unknown` / `Relation.Unknown` schemas are intentionally not
+ * supported — use `internal.getSchemaURI` or the schema's typename annotation
+ * directly when working at the schema level.
  */
-export const getURI = (input: AnyType | Schema.Schema.AnyNoContext): URI.URI | undefined => {
+export const getURI = (input: AnyType): URI.URI => {
+  // `getTypeURIFromSpecifier` handles persisted entities (id → EchoURI) and
+  // static entities (typename/version → DXN); `getSchemaURI` reads the
+  // underlying Effect Schema's annotations via StaticTypeSchemaSlot.
   if (isType(input)) {
-    // Persisted `Type.Type` entity — its schema-as-object local EchoURI is the
-    // type identifier (kept symmetric with what `getTypeURIFromSpecifier`
-    // returns and what `Obj.make` writes to `system.type`). Static types
-    // without an ObjectId fall back to the typename DXN built from metadata.
     return internal.getTypeURIFromSpecifier(input as any);
   }
-  return internal.getSchemaURI(input);
+  return internal.getSchemaURI(input) ?? raise(new TypeError('Type entity has no URI'));
 };
 
 /**

@@ -76,7 +76,7 @@ describe('Type', () => {
     });
 
     test('Type.getURI(Type.Type) returns the meta-schema DXN', ({ expect }) => {
-      expect(Type.getURI(Type.Type)?.toString()).toBe('dxn:org.dxos.type.schema:0.1.0');
+      expect(Type.getURI(Type.Type).toString()).toBe('dxn:org.dxos.type.schema:0.1.0');
     });
   });
 
@@ -127,8 +127,8 @@ describe('Type', () => {
       });
       expect((entity as any)[Entity.KindId]).toBe(Entity.Kind.Type);
       expect(entity.jsonSchema.entityKind).toBe(Entity.Kind.Relation);
-      expect((entity.jsonSchema as any).relationSource?.$ref).toBe(Type.getURI(TestSchema.Person)?.toString());
-      expect((entity.jsonSchema as any).relationTarget?.$ref).toBe(Type.getURI(TestSchema.Organization)?.toString());
+      expect((entity.jsonSchema as any).relationSource?.$ref).toBe(Type.getURI(TestSchema.Person).toString());
+      expect((entity.jsonSchema as any).relationTarget?.$ref).toBe(Type.getURI(TestSchema.Organization).toString());
     });
 
     test('accepts Obj.Unknown as source/target', ({ expect }) => {
@@ -137,7 +137,7 @@ describe('Type', () => {
         source: Obj.Unknown,
         target: Obj.Unknown,
       });
-      const unknownURI = Type.getURI(Obj.Unknown)?.toString();
+      const unknownURI = 'dxn:org.dxos.schema.anyObject:0.0.0';
       expect((entity.jsonSchema as any).relationSource?.$ref).toBe(unknownURI);
       expect((entity.jsonSchema as any).relationTarget?.$ref).toBe(unknownURI);
     });
@@ -165,13 +165,8 @@ describe('Type', () => {
     });
 
     test('Type.getURI returns the DXN for static types', ({ expect }) => {
-      expect(Type.getURI(TestSchema.Person)?.toString()).toBe('dxn:com.example.type.person:0.1.0');
-      expect(Type.getURI(TestSchema.HasManager)?.toString()).toBe('dxn:com.example.type.hasManager:0.1.0');
-    });
-
-    test('Type.getURI returns the DXN for unknown schemas', ({ expect }) => {
-      expect(Type.getURI(Obj.Unknown)?.toString()).toBe('dxn:org.dxos.schema.anyObject:0.0.0');
-      expect(Type.getURI(Relation.Unknown)?.toString()).toBe('dxn:org.dxos.schema.anyRelation:0.0.0');
+      expect(Type.getURI(TestSchema.Person).toString()).toBe('dxn:com.example.type.person:0.1.0');
+      expect(Type.getURI(TestSchema.HasManager).toString()).toBe('dxn:com.example.type.hasManager:0.1.0');
     });
   });
 });
