@@ -119,7 +119,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
       id: 'schema-children',
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-        return space && (Obj.instanceOf(Type.Type, node.data) || Schema.isSchema(node.data))
+        return space && (Type.isType(node.data) || Schema.isSchema(node.data))
           ? Option.some({ space, schema: node.data })
           : Option.none();
       },

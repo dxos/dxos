@@ -434,11 +434,17 @@ export type ID = ObjectId;
  * types), use `Type.isType(value)` instead of `Obj.instanceOf(Type.Type, value)`.
  */
 export const instanceOf: {
-  <S extends Type.AnyType>(schema: S): (value: unknown) => value is Type.InstanceType<S>;
-  <S extends Type.AnyType>(schema: S, value: unknown): value is Type.InstanceType<S>;
-  <T extends Type.Type>(type: T): (value: unknown) => value is unknown;
-  <T extends Type.Type>(type: T, value: unknown): boolean;
-} = ((...args: [schema: Type.AnyType | Type.Type, value: unknown] | [schema: Type.AnyType | Type.Type]) => {
+  // Reject `Type.Type` at the type level — those are meta-schema entities, not
+  // object/relation instances. Use `Type.isType(value)` instead.
+  <T extends Type.Type>(
+    type: T,
+    _hint?: never,
+    // eslint-disable-next-line @typescript-eslint/unified-signatures
+    ..._error: ['ERROR: Obj.instanceOf does not accept Type.Type; use Type.isType(value) instead']
+  ): never;
+  <S extends Type.AnyObjectType | Type.AnyRelationType>(schema: S): (value: unknown) => value is Type.InstanceType<S>;
+  <S extends Type.AnyObjectType | Type.AnyRelationType>(schema: S, value: unknown): value is Type.InstanceType<S>;
+} = ((...args: [schema: Type.AnyType, value?: unknown]) => {
   if (args.length === 1) {
     return (entity: unknown) => internal.isInstanceOf(args[0] as any, entity);
   }

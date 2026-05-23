@@ -54,6 +54,10 @@ export const Ref: {
     type: S,
   ): RefSchema<TypeNs.InstanceType<S> & Obj.Unknown>;
 
+  // `Type.Type` entities (the meta-schema kind) can be referenced too — e.g. a
+  // trigger that points to a stored function/workflow definition.
+  <T extends TypeNs.Type<any>>(type: T): RefSchema<TypeNs.InstanceType<T>>;
+
   // Schema-side overload for the well-known "any object" / "any relation" schemas.
   // Other raw `Schema.Schema` values are intentionally rejected — callers should
   // pass a `Type.Type` entity instead.

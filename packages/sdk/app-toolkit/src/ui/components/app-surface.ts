@@ -101,7 +101,9 @@ export const object: {
   schemaOrSchemas: Type.AnyType | Type.AnyType[],
   predicate?: (data: any) => boolean,
 ): Surface.Filter<any> => {
-  const schemas = Array.isArray(schemaOrSchemas) ? schemaOrSchemas : [schemaOrSchemas];
+  const schemas = (Array.isArray(schemaOrSchemas) ? schemaOrSchemas : [schemaOrSchemas]) as Array<
+    Type.AnyObjectType | Type.AnyRelationType
+  >;
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
       return false;
@@ -238,7 +240,7 @@ export const companion: {
     if (typeof schemaOrValue === 'string') {
       return companionTo === schemaOrValue;
     }
-    return Obj.instanceOf(schemaOrValue, companionTo);
+    return Obj.instanceOf(schemaOrValue as Type.AnyObjectType | Type.AnyRelationType, companionTo);
   };
   return { bindings: [{ role: token.role, guard }] };
 };
