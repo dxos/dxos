@@ -14,8 +14,7 @@ import { Panel, Select, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 
-import { SegmentStack, type SegmentCardAction } from '#components';
-import { TripMapView } from '#containers';
+import { SegmentStack, type SegmentCardAction, TripMapView } from '#components';
 import { meta } from '#meta';
 import { Segment, Trip } from '#types';
 
