@@ -140,13 +140,13 @@ describe('introspector against fixture monorepo', { timeout: 30_000 }, () => {
   });
 
   test('getSymbol surfaces both merged declarations of Task in source', ({ expect }) => {
-    // ECHO idiom: `export const Task = Schema.Struct(...)` AND
-    // `export interface Task extends Schema.Schema.Type<typeof Task> {}` — both
-    // declarations share a name, and the indexer concatenates their source so
-    // consumers see the full pattern rather than only the value form.
+    // ECHO idiom: `export const Task = Schema.Struct(...).pipe(Type.object(...))` AND
+    // `export type Task = Type.InstanceType<typeof Task>` — both declarations share
+    // a name, and the indexer concatenates their source so consumers see the full
+    // pattern rather than only the value form.
     const detail = introspector.getSymbol('@fixture/pkg-a#Task', ['source']);
     expect(detail!.source).toContain('export const Task');
-    expect(detail!.source).toContain('export interface Task extends Schema.Schema.Type<typeof Task>');
+    expect(detail!.source).toContain('export type Task = Type.InstanceType<typeof Task>');
   });
 
   test('getSymbol on the React component captures its useObject body', ({ expect }) => {
