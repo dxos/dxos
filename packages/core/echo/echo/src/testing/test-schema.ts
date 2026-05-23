@@ -41,7 +41,25 @@ export namespace TestSchema {
   }
 
   /** @deprecated Use another test schema or create a specific local test schema. */
-  export const ExampleSchema = Schema.Struct({
+  export interface ExampleSchema {
+    readonly string?: string;
+    readonly number?: number;
+    readonly boolean?: boolean;
+    readonly null?: null;
+    readonly undefined?: undefined;
+    readonly stringArray?: readonly string[];
+    readonly twoDimNumberArray?: readonly (readonly number[])[];
+    readonly nested?: { readonly field: string };
+    readonly nestedArray?: readonly { readonly field: string }[];
+    readonly nestedNullableArray?: readonly ({ readonly field: string } | null)[];
+    readonly reference?: Ref.Ref<Example>;
+    readonly referenceArray?: readonly Ref.Ref<Example>[];
+    readonly classInstance?: TestClass;
+    readonly other?: any;
+  }
+
+  /** @deprecated Use another test schema or create a specific local test schema. */
+  export const ExampleSchema: Schema.Schema<ExampleSchema> = Schema.Struct({
     string: Schema.String,
     number: Schema.Number,
     boolean: Schema.Boolean,
@@ -56,16 +74,15 @@ export namespace TestSchema {
     referenceArray: Schema.Array(Schema.suspend((): Ref.RefSchema<Example> => Ref.Ref(Example))),
     classInstance: Schema.instanceOf(TestClass),
     other: Schema.Any,
-  }).pipe(Schema.partial);
+  }).pipe(Schema.partial) as any;
 
   /** @deprecated Use another test schema or create a specific local test schema. */
-  export interface ExampleSchema extends Schema.Schema.Type<typeof ExampleSchema> {}
+  export interface Example extends ExampleSchema, Obj.Unknown {}
 
   /** @deprecated Use another test schema or create a specific local test schema. */
-  export const Example = ExampleSchema.pipe(Type.object(DXN.make('com.example.type.example', '0.1.0')));
-
-  /** @deprecated Use another test schema or create a specific local test schema. */
-  export type Example = Type.InstanceType<typeof Example>;
+  export const Example: Type.Obj<Example> = ExampleSchema.pipe(
+    Type.object(DXN.make('com.example.type.example', '0.1.0')),
+  ) as any;
 
   //
   // Message
@@ -105,7 +122,23 @@ export namespace TestSchema {
   // Person
   //
 
-  export const Person = Schema.Struct({
+  export interface Person extends Obj.Unknown {
+    readonly name?: string;
+    readonly username?: string;
+    readonly email?: string;
+    readonly age?: number;
+    readonly tasks?: readonly Ref.Ref<Task>[];
+    readonly employer?: Ref.Ref<Organization>;
+    readonly address?: {
+      readonly city?: string;
+      readonly state?: string;
+      readonly zip?: string;
+      readonly coordinates?: { readonly lat?: number; readonly lng?: number };
+    };
+    readonly fields?: readonly { readonly label?: string; readonly value?: string }[];
+  }
+
+  export const Person: Type.Obj<Person> = Schema.Struct({
     name: Schema.String,
     username: Schema.String,
     email: Schema.String,
@@ -125,15 +158,23 @@ export namespace TestSchema {
       label: Schema.String,
       value: Schema.String,
     }).pipe(Schema.Array, Schema.optional),
-  }).pipe(Schema.partial, Type.object(DXN.make('com.example.type.person', '0.1.0')));
-
-  export type Person = Type.InstanceType<typeof Person>;
+  }).pipe(Schema.partial, Type.object(DXN.make('com.example.type.person', '0.1.0'))) as any;
 
   //
   // Task
   //
 
-  export const Task = Schema.Struct({
+  export interface Task extends Obj.Unknown {
+    readonly title?: string;
+    readonly deadline?: string;
+    readonly completed?: boolean;
+    readonly assignee?: Ref.Ref<Person>;
+    readonly previous?: Ref.Ref<Task>;
+    readonly subTasks?: readonly Ref.Ref<Task>[];
+    readonly description?: string;
+  }
+
+  export const Task: Type.Obj<Task> = Schema.Struct({
     title: Schema.optional(Schema.String),
     deadline: Schema.optional(Schema.String),
     completed: Schema.optional(Schema.Boolean),
@@ -141,9 +182,7 @@ export namespace TestSchema {
     previous: Schema.optional(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task))),
     subTasks: Schema.optional(Schema.Array(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task)))),
     description: Schema.optional(Schema.String),
-  }).pipe(Schema.partial, Type.object(DXN.make('com.example.type.task', '0.1.0')));
-
-  export type Task = Type.InstanceType<typeof Task>;
+  }).pipe(Schema.partial, Type.object(DXN.make('com.example.type.task', '0.1.0'))) as any;
 
   //
   // HasManager
