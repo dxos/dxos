@@ -97,7 +97,7 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
   }
 
   // TODO(wittjosiah): Not a part of SchemaRegistry interface, remove?
-  hasSchema<S extends Type.AnyType>(schema: S): boolean {
+  hasSchema(schema: Type.AnyType | Schema.Schema.AnyNoContext): boolean {
     const uri = Type.getURI(schema);
     if (!uri) {
       return false;

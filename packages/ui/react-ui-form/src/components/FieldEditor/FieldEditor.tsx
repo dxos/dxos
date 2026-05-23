@@ -4,8 +4,8 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Obj, type SchemaRegistry, type View } from '@dxos/echo';
-import { type EchoSchema, Format, FormatEnums, formatToType } from '@dxos/echo/internal';
+import { Obj, type SchemaRegistry, Type, type View } from '@dxos/echo';
+import { Format, FormatEnums, formatToType } from '@dxos/echo/internal';
 import { type SchemaProperty } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
@@ -38,22 +38,22 @@ export const FieldEditor = ({ readonly, projection, field, registry, view, onSav
   const [props, setProps] = useState<PropertyType>(projection.getFieldProjection(field.id).props);
   useEffect(() => setProps(projection.getFieldProjection(field.id).props), [field, projection]);
 
-  const [schemas, setSchemas] = useState<EchoSchema[]>([]);
+  const [schemas, setSchemas] = useState<Type.Type[]>([]);
   useAsyncEffect(async () => {
     if (!registry) {
       return;
     }
 
-    const subscription = registry.query().subscribe((query) => setSchemas(query.results as EchoSchema[]), { fire: true });
+    const subscription = registry.query().subscribe((query) => setSchemas(query.results), { fire: true });
 
     // TODO(dmaretskyi): This shouldn't be needed.
     const schemas = await registry.query().run();
-    setSchemas(schemas as EchoSchema[]);
+    setSchemas(schemas);
 
     return () => subscription?.();
   }, [registry]);
 
-  const [referenceSchema, setReferenceSchema] = useState<EchoSchema>();
+  const [referenceSchema, setReferenceSchema] = useState<Type.Type>();
   useEffect(() => {
     setReferenceSchema(schemas.find((schema) => schema.typename === props?.referenceSchema));
   }, [schemas, props?.referenceSchema]);
@@ -86,7 +86,7 @@ export const FieldEditor = ({ readonly, projection, field, registry, view, onSav
           {...props}
           options={
             referenceSchema
-              ? getFormProperties(referenceSchema.ast)
+              ? getFormProperties(Type.getSchema(referenceSchema).ast)
                   .sort((a, b) => a.name.toString().localeCompare(b.name.toString()))
                   .map((p) => ({ value: p.name.toString() }))
               : []

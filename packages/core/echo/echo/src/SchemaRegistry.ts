@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
 import type * as JsonSchema from './JsonSchema';
@@ -77,7 +78,7 @@ export interface SchemaRegistry {
   /**
    * Checks if the provided schema is registered.
    */
-  hasSchema(schema: Type.AnyType): boolean;
+  hasSchema(schema: Type.AnyType | Schema.Schema.AnyNoContext): boolean;
 
   /**
    * Registers the provided schema(s).

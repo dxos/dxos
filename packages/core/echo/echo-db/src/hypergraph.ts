@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { type Database, type Entity, Filter, type Hypergraph, Query, Ref } from '@dxos/echo';
+import { type Database, type Entity, Filter, type Hypergraph, Query, Ref, Type } from '@dxos/echo';
 import { batchEvents, type AnyProperties, setRefResolver } from '@dxos/echo/internal';
 import { DXN, EchoURI, type ObjectId, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -170,7 +170,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
           if (DXN.isDXN(uri)) {
             const schema = this.schemaRegistry.getSchemaByDXN(uri);
             status = schema != null ? 'resolved' : 'missing';
-            return schema;
+            return schema && (Type.isType(schema) ? Type.getSchema(schema) : schema);
           } else if (EchoURI.isEchoURI(uri)) {
             status = 'error';
             throw new Error('Not implemented: Resolving schema stored in the database');

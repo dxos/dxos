@@ -4,7 +4,7 @@
 
 import type * as Schema from 'effect/Schema';
 
-import type { Filter as Filter$, Order as Order$, Query as Query$, Ref } from '@dxos/echo';
+import type { Filter as Filter$, Obj as Obj$, Order as Order$, Query as Query$, Ref, Type as TypeNs } from '@dxos/echo';
 import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
 // `DXN`/`EchoURI` are type-only imports to keep the `query-lite` bundle free of
@@ -107,7 +107,12 @@ class FilterClass implements Filter$.Any {
   static type<S extends Schema.Schema.All>(
     schema: S | string,
     props?: Filter$.Props<Schema.Schema.Type<S>>,
-  ): Filter$.Filter<Schema.Schema.Type<S>> {
+  ): Filter$.Filter<Schema.Schema.Type<S>>;
+  static type(type: TypeNs.Type, props?: Filter$.Props<Obj$.Unknown>): Filter$.Filter<Obj$.Unknown>;
+  static type(
+    schema: Schema.Schema.All | TypeNs.Type | string,
+    props?: Filter$.Props<unknown>,
+  ): Filter$.Filter<unknown> {
     if (typeof schema !== 'string') {
       throw new TypeError('expected typename as the first paramter');
     }
@@ -419,10 +424,19 @@ class QueryClass implements Query$.Any {
     }
   }
 
-  static type(schema: Schema.Schema.All | string, predicates?: Filter$.Props<unknown>): Query$.Any {
+  static type<S extends Schema.Schema.All>(
+    schema: S,
+    predicates?: Filter$.Props<Schema.Schema.Type<S>>,
+  ): Query$.Query<Schema.Schema.Type<S>>;
+  static type(type: TypeNs.Type, predicates?: Filter$.Props<Obj$.Unknown>): Query$.Query<Obj$.Unknown>;
+  static type(schema: string, predicates?: Filter$.Props<unknown>): Query$.Query<any>;
+  static type(
+    schema: Schema.Schema.All | TypeNs.Type | string,
+    predicates?: Filter$.Props<unknown>,
+  ): Query$.Any {
     return new QueryClass({
       type: 'select',
-      filter: FilterClass.type(schema, predicates).ast,
+      filter: FilterClass.type(schema as any, predicates as any).ast,
     });
   }
 

@@ -346,7 +346,8 @@ export const selectFeed = Effect.fn(function* () {
   const schemas = yield* Database.runSchemaQuery({ location: ['database', 'runtime'] });
 
   // Filter schemas that have FeedAnnotation.
-  const feedSchemas = schemas.filter((schema) => {
+  const feedSchemas = schemas.filter((type) => {
+    const schema = Type.getSchema(type);
     const annotation = FeedAnnotation.get(schema);
     return Option.isSome(annotation) && annotation.value === true;
   });

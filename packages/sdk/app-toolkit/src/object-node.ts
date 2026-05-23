@@ -150,7 +150,8 @@ export const createObjectNode = ({
   // (dynamic) schemas the echo-handler queries by id=dxn:type:typename, but the stored
   // PersistentSchema jsonSchema.$id is dxn:echo:@:<objectId> so the id-based lookup misses.
   // Fall back to a typename query which matches the PersistentSchema.typename field.
-  const schema = Obj.getSchema(object) ?? db.schemaRegistry.query({ typename: type }).runSync()[0];
+  const rawSchema = Obj.getSchema(object) ?? db.schemaRegistry.query({ typename: type }).runSync()[0];
+  const schema = rawSchema && Type.isType(rawSchema) ? Type.getSchema(rawSchema) : rawSchema;
   const staticIcon = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema)) : undefined;
   const iconFromRefProp = schema ? Option.getOrUndefined(Annotation.IconFromRefAnnotation.get(schema)) : undefined;
   // If the schema delegates its icon to a referenced sub-entity, resolve that ref's target

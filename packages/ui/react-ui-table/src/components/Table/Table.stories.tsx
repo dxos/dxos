@@ -65,7 +65,7 @@ const StoryViewEditor = ({
   handleDeleteColumn,
 }: {
   view?: View.View;
-  schema?: Schema.Schema.AnyNoContext;
+  schema?: Type.AnyType;
   db?: Database.Database;
   handleDeleteColumn: (fieldId: string) => void;
 }) => {
@@ -89,7 +89,7 @@ const StoryViewEditor = ({
   return (
     <ViewEditor
       registry={db?.schemaRegistry}
-      schema={schema}
+      schema={Type.isType(schema) ? Type.getSchema(schema) : schema}
       view={view}
       onQueryChanged={handleQueryChanged}
       onDelete={handleDeleteColumn}

@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { useSchema } from '@dxos/echo-react';
 import { type JsonPath, splitJsonPath } from '@dxos/effect';
 import { Card, useTranslation } from '@dxos/react-ui';
@@ -19,7 +19,10 @@ export const DynamicTypeCard = ({ subject }: AppSurface.ObjectCardProps) => {
   const db = Obj.getDatabase(subject);
   const typename = Obj.getTypename(subject);
   const runtimeSchema = useSchema(db, typename);
-  const schema = useMemo(() => runtimeSchema && omitId(runtimeSchema), [runtimeSchema]);
+  const schema = useMemo(
+    () => runtimeSchema && omitId(Type.isType(runtimeSchema) ? Type.getSchema(runtimeSchema) : runtimeSchema),
+    [runtimeSchema],
+  );
 
   const handleSave = useCallback(
     (values: Record<string, unknown>, { changed }: FormUpdateMeta<Record<string, unknown>>) => {

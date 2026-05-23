@@ -184,16 +184,20 @@ export const relation: {
 } = internal.EchoRelationSchema as any;
 
 /**
- * Type alias for any ECHO type (object or relation).
- * Use this in type annotations for type parameters.
+ * Any ECHO type: a static object/relation schema or a `Type.Type` entity.
+ *
+ * The two shapes are structurally distinct — a static schema implements
+ * `Schema.Schema` directly; a `Type.Type` entity does not. APIs that accept
+ * `AnyType` must dispatch internally (e.g. via `Type.isType` and
+ * `Type.getSchema`) to handle both.
  */
-export type AnyType = AnyObjectType | AnyRelationType;
+export type AnyType = AnyObjectType | AnyRelationType | Type;
 
 /**
  * Type guard to check if a schema is an object schema.
  * NOTE: This checks SCHEMAS, not instances. Use Obj.isObject for instances.
  */
-export const isObjectSchema = (schema: AnyType): schema is AnyObjectType => {
+export const isObjectSchema = (schema: AnyType | Schema.Schema.AnyNoContext): schema is AnyObjectType => {
   return (schema as any)[internal.SchemaKindId] === internal.EntityKind.Object;
 };
 
@@ -201,7 +205,7 @@ export const isObjectSchema = (schema: AnyType): schema is AnyObjectType => {
  * Type guard to check if a schema is a relation schema.
  * NOTE: This checks SCHEMAS, not instances. Use Relation.isRelation for instances.
  */
-export const isRelationSchema = (schema: AnyType): schema is AnyRelationType => {
+export const isRelationSchema = (schema: AnyType | Schema.Schema.AnyNoContext): schema is AnyRelationType => {
   return (schema as any)[internal.SchemaKindId] === internal.EntityKind.Relation;
 };
 
@@ -221,26 +225,34 @@ export type AnyRef = Schema.Schema<internal.Ref<any>, EncodedReference>;
  * breaking callers.
  * @example "dxn:com.example.type.person:0.1.0"
  */
-export const getURI = (schema: AnyType): URI.URI | undefined => {
-  return internal.getSchemaURI(schema);
+export const getURI = (input: AnyType | Schema.Schema.AnyNoContext): URI.URI | undefined => {
+  if (typeInternal.isMutable(input)) {
+    // EchoSchema wrapper is both Schema and Type.Type — defer to the schema's
+    // `$id` annotation so callers see the same URI as `Obj.getSchema(...)` does.
+    return internal.getSchemaURI(input);
+  }
+  if (isType(input)) {
+    // Pure `Type.Type` entity (no EchoSchema wrapper) — its own EchoURI is the type identifier.
+    return internal.getUri(input);
+  }
+  return internal.getSchemaURI(input);
 };
 
 /**
- * @param schema - Schema to get the typename from.
- * @returns The typename of the schema. Example: `com.example.type.person`.
+ * @returns The typename. Example: `com.example.type.person`.
  */
-export const getTypename = (schema: AnyType): string => {
-  const typename = internal.getSchemaTypename(schema);
+export const getTypename = (input: AnyType | Schema.Schema.AnyNoContext): string => {
+  const typename = isType(input) ? input.typename : internal.getSchemaTypename(input);
   invariant(typeof typename === 'string' && !typename.startsWith('dxn:'), 'Invalid typename');
   return typename;
 };
 
 /**
- * Gets the version of the schema.
+ * Gets the version.
  * @example 0.1.0
  */
-export const getVersion = (schema: AnyType): string => {
-  const version = internal.getSchemaVersion(schema);
+export const getVersion = (input: AnyType | Schema.Schema.AnyNoContext): string => {
+  const version = isType(input) ? input.version : internal.getSchemaVersion(input);
   invariant(typeof version === 'string' && version.match(/^\d+\.\d+\.\d+$/), 'Invalid version');
   return version;
 };
@@ -255,6 +267,15 @@ export const getVersion = (schema: AnyType): string => {
 export const isMutable = (value: unknown): value is Type => typeInternal.isMutable(value);
 
 /**
+ * Type predicate: true iff the value is a `Type.Type` ECHO entity.
+ *
+ * Prefer this over `Obj.instanceOf(Type.Type, value)` — `Type.Type` is the
+ * schema-as-entity meta type, not a regular ECHO object schema, so it should
+ * not be passed to object-level type predicates.
+ */
+export const isType = (value: unknown): value is Type => typeInternal.isMutable(value);
+
+/**
  * ECHO type metadata.
  */
 export type Meta = internal.TypeAnnotation;
@@ -262,25 +283,33 @@ export type Meta = internal.TypeAnnotation;
 /**
  * Gets the meta data of the schema.
  */
-export const getMeta = (schema: AnyType): Meta | undefined => {
-  return internal.getTypeAnnotation(schema);
+export const getMeta = (input: AnyType | Schema.Schema.AnyNoContext): Meta | undefined => {
+  if (isType(input)) {
+    return {
+      typename: input.typename,
+      version: input.version,
+      kind: internal.EntityKind.Object,
+    };
+  }
+  return internal.getTypeAnnotation(input);
 };
 
 /**
  * Instance type of a `Type.Type` ECHO entity.
  *
- * A `Type.Type` is an ECHO object that holds the persisted form of a type
- * definition (`id`, `name?`, `typename`, `version`, `jsonSchema`). At runtime
- * the value also implements `Schema.Schema` (its `.ast` / `.annotations` /
- * `.pipe` are lazily rebuilt from `jsonSchema`) so it can be passed directly to
- * ECHO APIs like `Obj.make`, `Filter.type`, and `Ref` without an extra unwrap.
+ * A `Type.Type` is an ECHO object that holds a type definition — it is **not**
+ * a `Schema.Schema`. Use `Type.getSchema(type)` to derive the Effect Schema,
+ * `Type.update(type, draft => ...)` to mutate, and `Type.isType(value)` for
+ * runtime checks.
  *
- * To access the underlying Effect Schema explicitly call `Type.getSchema(type)`.
- * To mutate, use `Type.update(type, draft => ...)`.
+ * ECHO APIs (`Obj.make`, `Obj.instanceOf`, `Filter.type`, `Ref`) should accept
+ * `Type.Type` entities directly and dispatch internally via `Type.getSchema`
+ * when they need the underlying Schema. Schema-side APIs (`Schema.extend`,
+ * `Schema.is`, etc.) require an explicit `Type.getSchema(type)` call.
  *
  * Merged with the `Type` const via TypeScript declaration merging.
  */
-export interface Type extends Schema.Schema.AnyNoContext, Entity.OfKind<typeof Entity.Kind.Object> {
+export interface Type extends Entity.OfKind<typeof Entity.Kind.Object> {
   readonly name?: string;
   readonly typename: string;
   readonly version: string;
@@ -317,7 +346,11 @@ export const getSchema = (type: AnyObjectType | AnyRelationType | Type): Schema.
   if (typeInternal.isMutable(type)) {
     return type.snapshot;
   }
-  return type as Schema.Schema.AnyNoContext;
+  if (isType(type)) {
+    // `Type.Type` entity — build the Effect Schema from its stored jsonSchema.
+    return internal.toEffectSchema(type.jsonSchema);
+  }
+  return type;
 };
 
 /**

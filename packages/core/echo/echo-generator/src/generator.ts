@@ -39,7 +39,7 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
     return this.schemas.find((schema) => getTypeAnnotation(schema)!.typename === type);
   }
 
-  protected setSchema(type: T, schema: Type.AnyObjectType): void {
+  protected setSchema(type: T, schema: Type.AnyType): void {
     this._schemas[type] = schema;
   }
 
@@ -90,7 +90,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
   }
 
   async addSchemas() {
-    const result: Type.AnyObjectType[] = [];
+    const result: Type.AnyType[] = [];
     for (const [typename, schema] of Object.entries(this._schemas)) {
       const echoSchema = await this._maybeRegisterSchema(typename, schema as Type.AnyObjectType);
       this.setSchema(typename as T, echoSchema);
@@ -108,7 +108,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
     return this._space.db.add(await super.createObject({ types }));
   }
 
-  private async _maybeRegisterSchema(typename: string, schema: Type.AnyObjectType): Promise<Type.AnyObjectType> {
+  private async _maybeRegisterSchema(typename: string, schema: Type.AnyType): Promise<Type.AnyType> {
     if (Type.isMutable(schema)) {
       const existingSchema = this._space.internal.db.schemaRegistry.getSchema(typename);
       if (existingSchema != null) {

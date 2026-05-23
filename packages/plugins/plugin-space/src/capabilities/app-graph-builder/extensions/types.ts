@@ -82,14 +82,15 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
           AtomQuery.fromQuery(space.db.schemaRegistry.query({ location: ['database', 'runtime'] })),
         );
 
-        const userSchemas = allSchemas.filter((schema) => {
+        const userSchemas = allSchemas.filter((type) => {
+          const schema = Type.isType(type) ? Type.getSchema(type) : type;
           if (getTypeAnnotation(schema)?.kind === EntityKind.Relation) {
             return false;
           }
           if (SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false))) {
             return false;
           }
-          if (Type.getTypename(schema) === Collection.Collection.typename) {
+          if (Type.getTypename(type) === Collection.Collection.typename) {
             return false;
           }
           return true;

@@ -493,10 +493,12 @@ describe('Integration tests', () => {
           field: Schema.String,
         }).pipe(Type.object(DXN.make('com.example.type.test', '0.1.0')));
         const [stored] = await db.schemaRegistry.register([LocalTestSchema]);
-        schemaDxn = getSchemaURI(stored)!;
+        schemaDxn = Type.getURI(stored)!;
 
-        const object = db.add(makeObject(stored, { field: 'test' }));
-        expect(Obj.getSchema(object)).to.eq(stored);
+        const object = db.add(Obj.make(stored, { field: 'test' }));
+        // After fork, the schema attached to objects is the rebuilt Effect Schema (from jsonSchema),
+        // not identical to the Type.Type entity returned by register. Compare URIs instead.
+        expect(Type.getURI(Obj.getSchema(object)!)).to.eq(Type.getURI(stored));
 
         db.add(Obj.make(TestSchema.Expando, { text: 'Expando object' })); // Add Expando object to test filtering
         await db.flush();
@@ -548,8 +550,8 @@ describe('Integration tests', () => {
         preloadSchemaOnOpen: false,
       });
       const [schema] = await db.schemaRegistry.register([TestSchema.Person]);
-      typeURI = getSchemaURI(schema)!;
-      db.add(makeObject(schema, { name: 'Bob' }));
+      typeURI = Type.getURI(schema)!;
+      db.add(Obj.make(schema, { name: 'Bob' }));
       await db.flush();
     }
 

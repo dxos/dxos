@@ -3,13 +3,22 @@
 //
 
 import * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { DXN, Filter, JsonSchema, Obj, Type } from '@dxos/echo';
 import { EchoSchema } from '@dxos/echo/internal';
+import { invariant } from '@dxos/invariant';
 
 import { EchoTestBuilder } from '../testing';
+
+// Helper: introspect Type.Type properties via its rebuilt Effect Schema.
+const getSchemaProperties = (type: Type.Type): SchemaAST.PropertySignature[] => {
+  const ast = Type.getSchema(type).ast;
+  invariant(SchemaAST.isTypeLiteral(ast));
+  return [...ast.propertySignatures].filter((p) => p.name !== 'id');
+};
 
 const Organization = Schema.Struct({
   name: Schema.String,
@@ -104,7 +113,7 @@ describe('schema registry', () => {
     const retrieved = await registry.query().run();
     expect(retrieved.length).to.eq(schemas.length);
     for (const schema of retrieved) {
-      expect(schemas.find((s) => s.id === (schema as EchoSchema).id)).not.to.undefined;
+      expect(schemas.find((s) => s.id === schema.id)).not.to.undefined;
     }
   });
 
@@ -190,9 +199,9 @@ describe('schema registry', () => {
   test('schema is invalidated on update', async () => {
     const { registry } = await setupTest();
     const [schema] = await registry.register([Contact]);
-    expect((schema as EchoSchema).getProperties().length).to.eq(1);
+    expect(getSchemaProperties(schema).length).to.eq(1);
     Type.addFields(schema, { newField: Schema.Number });
-    expect((schema as EchoSchema).getProperties().length).to.eq(2);
+    expect(getSchemaProperties(schema).length).to.eq(2);
   });
 
   test('reactive schema query after reload', async (ctx) => {
@@ -208,16 +217,16 @@ describe('schema registry', () => {
     {
       await using db = await peer.openLastDatabase();
       const query = db.schemaRegistry.query({ typename: Type.getTypename(Contact) });
-      const schema = await new Promise<EchoSchema>((resolve) => {
+      const schema = await new Promise<Type.Type>((resolve) => {
         const immediate = query.runSync();
         if (immediate.length > 0) {
-          resolve(immediate[0] as EchoSchema);
+          resolve(immediate[0]);
           return;
         }
 
         const unsubscribe = query.subscribe(() => {
           if (query.results.length > 0) {
-            resolve(query.results[0] as EchoSchema);
+            resolve(query.results[0]);
           }
         });
         ctx.onTestFinished(unsubscribe);

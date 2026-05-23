@@ -186,6 +186,7 @@ export const makeWithReferences = async ({
 
       const referencePath = yield* Function.pipe(
         Option.fromNullable(referenceSchema),
+        Option.map((schema) => (Type.isType(schema) ? Type.getSchema(schema) : schema)),
         Option.flatMap((schema) => LabelAnnotation.get(schema)),
         Option.flatMap((labels) => (labels.length > 0 ? Option.some(labels[0]) : Option.none())),
       );
@@ -243,7 +244,8 @@ export const makeFromDatabase = async ({
   }
 
   const schema = await db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).firstOrUndefined();
-  const jsonSchema = schema && JsonSchema.toJsonSchema(schema);
+  const jsonSchema =
+    schema && (Type.isType(schema) ? schema.jsonSchema : JsonSchema.toJsonSchema(schema));
   invariant(jsonSchema, `Schema not found: ${typename}`);
   invariant(schema && Type.isObjectSchema(schema), `Schema is not an object schema: ${typename}`);
 

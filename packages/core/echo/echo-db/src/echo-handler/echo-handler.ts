@@ -8,7 +8,7 @@ import { type InspectOptionsStylized } from 'node:util';
 
 import { Event } from '@dxos/async';
 import { type DevtoolsFormatter, devtoolsFormatter, inspectCustom } from '@dxos/debug';
-import { Entity, Obj } from '@dxos/echo';
+import { Entity, Obj, Type } from '@dxos/echo';
 import {
   DATA_NAMESPACE,
   EncodedReference,
@@ -600,7 +600,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (typeDxn) {
       const staticSchema = target[symbolInternals].database.graph.schemaRegistry.getSchemaByDXN(typeDxn);
       if (staticSchema != null) {
-        return staticSchema;
+        return Type.isType(staticSchema) ? Type.getSchema(staticSchema) : staticSchema;
       }
       // Skip protobuf types as they are runtime registered types.
       if (DXN.getName(typeDxn)?.startsWith('protobuf')) {
@@ -610,12 +610,14 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       // Query by typename + version instead.
       const typename = DXN.getName(typeDxn);
       const version = DXN.getVersion(typeDxn);
-      return target[symbolInternals].database.schemaRegistry
+      const type = target[symbolInternals].database.schemaRegistry
         .query({ typename, ...(version ? { version } : {}) })
         .runSync()[0];
+      return type && Type.getSchema(type);
     }
 
-    return target[symbolInternals].database.schemaRegistry.query({ id: typeURI }).runSync()[0];
+    const type = target[symbolInternals].database.schemaRegistry.query({ id: typeURI }).runSync()[0];
+    return type && Type.getSchema(type);
   }
 
   getTypeURI(target: ProxyTarget): URI.URI | undefined {

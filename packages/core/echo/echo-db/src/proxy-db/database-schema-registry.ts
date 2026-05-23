@@ -97,7 +97,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     // Nothing to do.
   }
 
-  public hasSchema(schema: Type.AnyType): boolean {
+  public hasSchema(schema: Type.AnyType | Schema.Schema.AnyNoContext): boolean {
     const schemaId = Type.isMutable(schema) ? schema.id : getObjectIdFromSchema(schema);
     return schemaId != null && this.getSchemaById(schemaId) != null;
   }
@@ -310,7 +310,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
    * @deprecated Use `query` instead.
    */
   public getSchema(typename: string): Type.Type | undefined {
-    return this.query({ typename }).runSync()[0] as Type.Type | undefined;
+    return this.query({ typename }).runSync()[0];
   }
 
   /**
@@ -382,7 +382,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
   private _addSchema(schema: Schema.Schema.AnyNoContext): EchoSchema {
     if (Type.isMutable(schema)) {
       // The snapshot preserves typename/version in annotations.
-      schema = (schema as any).snapshot.annotations({
+      schema = Type.getSchema(schema).annotations({
         [TypeIdentifierAnnotationId]: undefined,
       });
     }

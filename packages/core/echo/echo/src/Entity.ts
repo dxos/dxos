@@ -4,12 +4,13 @@
 
 // @import-as-namespace
 
+import type * as Schema from 'effect/Schema';
+
 import type { ForeignKey } from '@dxos/echo-protocol';
 import type { ObjectId, URI } from '@dxos/keys';
 
 import * as internal from './internal';
 import type * as Relation from './Relation';
-import type * as Type from './Type';
 
 // Re-export KindId and SnapshotKindId from internal.
 export const KindId = internal.KindId;
@@ -138,7 +139,7 @@ export const getTypeURI: (obj: Unknown | Snapshot) => URI.URI | undefined = inte
  * Get the schema of an entity.
  * Returns the branded ECHO schema used to create the entity.
  */
-export const getSchema: (entity: Unknown | Snapshot) => Type.AnyType | undefined = internal.getSchema as any;
+export const getSchema: (entity: Unknown | Snapshot) => Schema.Schema.AnyNoContext | undefined = internal.getSchema;
 
 /**
  * Get the typename of an entity's type.

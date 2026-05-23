@@ -16,6 +16,7 @@ import * as Feed from './Feed';
 import * as Filter from './Filter';
 import * as internal from './internal';
 import * as Obj from './Obj';
+import type * as TypeNs from './Type';
 import type * as Order from './Order';
 import type * as Ref from './Ref';
 import type * as Relation from './Relation';
@@ -490,11 +491,15 @@ export const type: {
     schema: S,
     predicates?: Filter.Props<Schema.Schema.Type<S>>,
   ): Query<Schema.Schema.Type<S>>;
+  (type: TypeNs.Type, predicates?: Filter.Props<Obj.Unknown>): Query<Obj.Unknown>;
   (schema: string, predicates?: Filter.Props<unknown>): Query<any>;
-} = (schema: Schema.Schema.All | string, predicates?: Filter.Props<unknown>): Any => {
+} = (
+  schema: Schema.Schema.All | TypeNs.Type | string,
+  predicates?: Filter.Props<unknown>,
+): Any => {
   return new QueryClass({
     type: 'select',
-    filter: Filter.type(schema, predicates).ast,
+    filter: Filter.type(schema as any, predicates as any).ast,
   });
 };
 

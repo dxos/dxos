@@ -227,7 +227,7 @@ export const resolve: {
     if (!object) {
       return yield* Effect.fail(new Err.ObjectNotFoundError(dxn));
     }
-    invariant(!schema || isInstanceOf(schema, object), 'Object type mismatch.');
+    invariant(!schema || isInstanceOf(schema as any, object), 'Object type mismatch.');
     return object as any;
   }).pipe(Effect.withSpan('Database.resolve'))) as any;
 

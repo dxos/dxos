@@ -16,7 +16,7 @@ import { DXN, EchoURI, ObjectId, type URI } from '@dxos/keys';
 import * as internal from './internal';
 import type * as Obj from './Obj';
 import * as Ref from './Ref';
-import type * as Type from './Type';
+import type * as TypeNs from './Type';
 
 export interface Filter<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
@@ -111,8 +111,8 @@ export function type<S extends Schema.Schema.All>(
   schema: S | string,
   props?: Props<Schema.Schema.Type<S>>,
 ): Filter<Schema.Schema.Type<S>>;
-export function type(type: TypeNs.Type, props?: Props<unknown>): Filter<unknown>;
-export function type(input: Schema.Schema.All | TypeNs.Type | string, props?: Props<unknown>): Filter<unknown> {
+export function type(type: TypeNs.Type, props?: Props<Obj.Unknown>): Filter<Obj.Unknown>;
+export function type(input: Schema.Schema.All | TypeNs.Type | string, props?: Props<Obj.Unknown>): Filter<Obj.Unknown> {
   if (Schema.isSchema(input) && SchemaAST.isUnion(input.ast)) {
     const typenames = input.ast.types.map((type) => internal.getTypeURIFromSpecifier(Schema.make(type)));
     return new FilterClass({

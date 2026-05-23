@@ -41,6 +41,7 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
       return Function.pipe(
         rawSchema,
         Option.fromNullable,
+        Option.map((schema) => (Type.isType(schema) ? Type.getSchema(schema) : schema)),
         Option.map((schema) => omitId(BaseSchema.pipe(Schema.extend(schema)))),
         Option.getOrUndefined,
       );

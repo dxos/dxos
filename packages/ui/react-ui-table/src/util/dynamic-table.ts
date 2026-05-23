@@ -44,7 +44,8 @@ export const getBaseSchema = ({
     const schema = getSchemaFromPropertyDefinitions(typename, properties);
     return { typename: schema.typename, jsonSchema: JsonSchema.toJsonSchema(schema) };
   } else if (schema) {
-    return { typename: Type.getTypename(schema)!, jsonSchema: JsonSchema.toJsonSchema(schema) };
+    const effectSchema = Type.isType(schema) ? Type.getSchema(schema) : schema;
+    return { typename: Type.getTypename(schema)!, jsonSchema: JsonSchema.toJsonSchema(effectSchema) };
   } else if (typename && jsonSchema) {
     return { typename, jsonSchema };
   } else {

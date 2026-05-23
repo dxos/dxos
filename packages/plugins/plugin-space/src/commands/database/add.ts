@@ -85,7 +85,12 @@ const selectTypename = Effect.fn(function* (
     location: ['database', 'runtime'],
     includeSystem: false,
   }).pipe(
-    Effect.map((schemas) => schemas.filter((schema) => getTypeAnnotation(schema)?.kind !== EntityKind.Relation)),
+    Effect.map((schemas) =>
+      schemas.filter((type) => {
+        const schema = Type.isType(type) ? Type.getSchema(type) : type;
+        return getTypeAnnotation(schema)?.kind !== EntityKind.Relation;
+      }),
+    ),
     Effect.map((schemas) => schemas.filter((schema) => !!resolve(Type.getTypename(schema)))),
   );
 

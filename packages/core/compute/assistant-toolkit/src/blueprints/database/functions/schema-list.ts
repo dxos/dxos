@@ -19,12 +19,13 @@ export default SchemaList.pipe(
       const { db } = yield* Database.Service;
       const schema = yield* Effect.promise(() => db.schemaRegistry.query({ location: ['database', 'runtime'] }).run());
       return schema
-        .filter((schema) => !excludedTypenames.includes(Type.getTypename(schema)))
-        .map((schema) => {
-          const meta = Type.getMeta(schema);
+        .filter((type) => !excludedTypenames.includes(Type.getTypename(type)))
+        .map((type) => {
+          const meta = Type.getMeta(type);
+          const jsonSchema = Type.isType(type) ? type.jsonSchema : JsonSchema.toJsonSchema(type);
           return {
-            typename: Type.getTypename(schema),
-            jsonSchema: JsonSchema.toJsonSchema(schema),
+            typename: Type.getTypename(type),
+            jsonSchema,
             kind: meta?.sourceSchema ? 'relation' : 'record',
           };
         });

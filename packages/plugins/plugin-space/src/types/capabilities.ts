@@ -10,7 +10,7 @@ import type { ComponentType } from 'react';
 import { Capability } from '@dxos/app-framework';
 import { type Space } from '@dxos/client/echo';
 import { type Operation } from '@dxos/compute';
-import { type Collection, type Database } from '@dxos/echo';
+import { type Collection, type Database, type Type } from '@dxos/echo';
 import { type PublicKey } from '@dxos/keys';
 import { type Label } from '@dxos/ui-types/translations';
 import { type ComplexMap, type Position } from '@dxos/util';
@@ -62,7 +62,7 @@ export namespace SpaceCapabilities {
 
   export type OnSchemaAdded = (params: {
     db: Database.Database;
-    schema: Schema.Schema.AnyNoContext;
+    schema: Type.AnyType;
     // TODO(wittjosiah): This is leaky.
     show?: boolean;
   }) => Effect.Effect<void, Error, Operation.Service>;

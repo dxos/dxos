@@ -164,7 +164,7 @@ export function make(type: Type.Type, props: any): OfShape<any>;
 export function make(input: Type.AnyObjectType | Type.Type, props: any): OfShape<any> {
   // `Type.Type` entities aren't `Schema.Schema` themselves; derive the Schema
   // for validation and annotation lookup via `Type.getSchema`.
-  const schema = Schema.isSchema(input) ? input : (Type.getSchema(input) as Schema.Schema.AnyNoContext);
+  const schema = Schema.isSchema(input) ? input : Type.getSchema(input);
   assertArgument(
     internal.getTypeAnnotation(schema)?.kind === Entity.Kind.Object,
     'schema',
@@ -413,7 +413,8 @@ export const ID = ObjectId;
 export type ID = ObjectId;
 
 /**
- * Test if object or relation is an instance of a schema.
+ * Test if object or relation is an instance of a schema or `Type.Type` entity.
+ *
  * @example
  * ```ts
  * const john = Obj.make(Person, { name: 'John' });
@@ -422,16 +423,21 @@ export type ID = ObjectId;
  *   // john is Person
  * }
  * ```
+ *
+ * To test if a value is itself a `Type.Type` entity (the meta-schema for stored
+ * types), use `Type.isType(value)` instead of `Obj.instanceOf(Type.Type, value)`.
  */
 export const instanceOf: {
   <S extends Type.AnyType>(schema: S): (value: unknown) => value is Schema.Schema.Type<S>;
   <S extends Type.AnyType>(schema: S, value: unknown): value is Schema.Schema.Type<S>;
-} = ((...args: [schema: Type.AnyType, value: unknown] | [schema: Type.AnyType]) => {
+  <T extends Type.Type>(type: T): (value: unknown) => value is unknown;
+  <T extends Type.Type>(type: T, value: unknown): boolean;
+} = ((...args: [schema: Type.AnyType | Type.Type, value: unknown] | [schema: Type.AnyType | Type.Type]) => {
   if (args.length === 1) {
-    return (entity: unknown) => internal.isInstanceOf(args[0], entity);
+    return (entity: unknown) => internal.isInstanceOf(args[0] as any, entity);
   }
 
-  return internal.isInstanceOf(args[0], args[1]);
+  return internal.isInstanceOf(args[0] as any, args[1]);
 }) as any;
 
 /**
@@ -491,7 +497,7 @@ export const getTypeURI = (obj: Unknown | Snapshot): URI.URI => {
  * Get the schema of the object.
  * Returns the branded ECHO schema used to create the object.
  */
-export const getSchema: (obj: Unknown | Snapshot) => Type.AnyType | undefined = internal.getSchema as any;
+export const getSchema: (obj: Unknown | Snapshot) => Schema.Schema.AnyNoContext | undefined = internal.getSchema;
 
 /**
  * @returns The typename of the object's type.

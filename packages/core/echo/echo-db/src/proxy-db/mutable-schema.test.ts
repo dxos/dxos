@@ -14,7 +14,6 @@ import {
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
   getTypeIdentifierAnnotation,
-  getSchemaURI,
 } from '@dxos/echo/internal';
 import { DXN } from '@dxos/keys';
 
@@ -114,7 +113,7 @@ describe('EchoSchema', () => {
     //   object.field2 = false;
     // }).to.throw();
 
-    expect(Obj.getSchema(object)?.ast).to.deep.eq(schema.ast);
+    expect(Obj.getSchema(object)?.ast).to.deep.eq(Type.getSchema(schema).ast);
     expect(Obj.getTypename(object)).to.be.eq(TestEmpty.typename);
 
     db.add(object);
@@ -126,7 +125,7 @@ describe('EchoSchema', () => {
   test('getSchemaURI returns the schema-as-object EchoURI for stored schemas', async ({ expect }) => {
     const { db } = await setupTest();
     const [schema] = await db.schemaRegistry.register([TestEmpty]);
-    const uri = getSchemaURI(schema)!;
+    const uri = Type.getURI(schema)!;
     // Stored schemas resolve to their schema-as-object EchoURI (echo:/<id>) so the
     // schema rides along with loaded objects as a strong dependency.
     expect(uri).to.match(/^echo:\//);
@@ -138,9 +137,9 @@ describe('EchoSchema', () => {
   test('getSchemaURI tracks the schema EchoURI even after typename update', async ({ expect }) => {
     const { db } = await setupTest();
     const [schema] = await db.schemaRegistry.register([TestEmpty]);
-    const before = getSchemaURI(schema)!;
+    const before = Type.getURI(schema)!;
     Type.updateTypename(schema, 'com.example.type.updated');
-    const after = getSchemaURI(schema)!;
+    const after = Type.getURI(schema)!;
     expect(after).to.eq(before);
     expect(schema.typename).to.eq('com.example.type.updated');
   });
@@ -169,7 +168,7 @@ describe('EchoSchema', () => {
     const [schema] = await db.schemaRegistry.register([TestEmpty]);
     Type.updateTypename(schema, 'com.example.type.updated');
     // Stored schemas use the canonical EchoURI form (echo:/<id>) for their type identifier.
-    expect(getTypeIdentifierAnnotation(schema)).to.match(/^echo:\//);
+    expect(getTypeIdentifierAnnotation(Type.getSchema(schema))).to.match(/^echo:\//);
   });
 
   const setupTest = async () => {

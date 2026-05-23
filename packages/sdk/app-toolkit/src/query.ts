@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Filter, Key, Query, type QueryAST, type SchemaRegistry } from '@dxos/echo';
+import { Filter, Key, Query, type QueryAST, type SchemaRegistry, Type } from '@dxos/echo';
 import {
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,
@@ -45,7 +45,9 @@ export const resolveSchemaWithRegistry = (registry: SchemaRegistry.SchemaRegistr
 
     const query = registry.query({ typename, location: ['database', 'runtime'] });
     const schemas = yield* Effect.promise(() => query.run());
-    return Array.head(schemas);
+    return Array.head(schemas).pipe(
+      Option.map((type) => (Type.isType(type) ? Type.getSchema(type) : type)),
+    );
   });
 
   return resolveSchema(query, resolve).pipe(

@@ -20,8 +20,14 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
     () =>
       Filter.or(
         ...(db?.schemaRegistry.query({ location: ['database', 'runtime'] }).runSync() ?? [])
-          .filter((schema) => getTypeAnnotation(schema)?.kind !== EntityKind.Relation)
-          .filter((schema) => !SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false)))
+          .filter((type) => {
+            const schema = Type.isType(type) ? Type.getSchema(type) : type;
+            return getTypeAnnotation(schema)?.kind !== EntityKind.Relation;
+          })
+          .filter((type) => {
+            const schema = Type.isType(type) ? Type.getSchema(type) : type;
+            return !SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false));
+          })
           .map((schema) => Filter.typename(Type.getTypename(schema))),
       ),
     [db],

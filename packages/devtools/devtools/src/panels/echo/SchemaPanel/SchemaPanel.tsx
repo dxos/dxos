@@ -25,10 +25,11 @@ const textFilter = (text?: string) => {
   // TODO(burdon): Structured query (e.g., "type:Text").
   const matcher = new RegExp(text, 'i');
   return (item: Type.AnyType) => {
+    const schema = Type.isType(item) ? Type.getSchema(item) : item;
     let match = false;
     match ||= !!Type.getURI(item)?.toString().match(matcher);
-    match ||= !!SchemaAST.getTitleAnnotation(item.ast).pipe(Option.getOrUndefined)?.match(matcher);
-    match ||= !!SchemaAST.getDescriptionAnnotation(item.ast).pipe(Option.getOrUndefined)?.match(matcher);
+    match ||= !!SchemaAST.getTitleAnnotation(schema.ast).pipe(Option.getOrUndefined)?.match(matcher);
+    match ||= !!SchemaAST.getDescriptionAnnotation(schema.ast).pipe(Option.getOrUndefined)?.match(matcher);
     return match;
   };
 };
@@ -102,14 +103,17 @@ export const SchemaPanel = (props: { space?: Space }) => {
   const dataRows = useMemo(() => {
     return schema
       .filter(textFilter(filter))
-      .map((item) => ({
-        id: Type.getURI(item),
-        typename: Type.getTypename(item) ?? '',
-        version: Type.getVersion(item) ?? '',
-        kind: Entity.getKind(item),
+      .map((item) => {
+        const itemSchema = Type.isType(item) ? Type.getSchema(item) : item;
+        return {
+          id: Type.getURI(item),
+          typename: Type.getTypename(item) ?? '',
+          version: Type.getVersion(item) ?? '',
+          kind: Entity.getKind(itemSchema),
 
-        _original: item, // Store the original item for selection
-      }))
+          _original: item, // Store the original item for selection
+        };
+      })
       .toSorted((a, b) => (a.id?.toString() ?? '').localeCompare(b.id?.toString() ?? ''));
   }, [schema, filter]);
 
@@ -156,7 +160,9 @@ export const SchemaPanel = (props: { space?: Space }) => {
           <div className={mx('p-1 min-h-0 h-full overflow-auto')}>
             {selected ? (
               <ObjectViewer
-                object={JsonSchema.toJsonSchema(selected)}
+                object={
+                  Type.isType(selected) ? selected.jsonSchema : JsonSchema.toJsonSchema(selected)
+                }
                 id={Type.getURI(selected)?.toString()}
                 onNavigate={onNavigate}
               />

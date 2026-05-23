@@ -42,7 +42,7 @@ const randomElement = <T>(elements: T[]): T => elements[Math.floor(Math.random()
 export type TypedSchema = Type.AnyObjectType;
 
 export type TypeSpec = {
-  type: Type.AnyObjectType;
+  type: Type.AnyType;
   count: number;
 };
 
@@ -55,7 +55,9 @@ export const createObjectFactory =
     const result: any[] = [];
     for (const { type, count } of specs) {
       try {
-        const pipeline = createObjectPipeline(generator, type, { db });
+        const schema = Type.isType(type) ? Type.getSchema(type) : type;
+        invariant(Type.isObjectSchema(schema), 'TypeSpec.type must be an object type');
+        const pipeline = createObjectPipeline(generator, schema, { db });
         const objects = await runAndForwardErrors(createArrayPipeline(count, pipeline));
         result.push(...objects);
         // NOTE: Flush so that available to other generators as refs.
