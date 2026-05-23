@@ -21,7 +21,7 @@ export namespace TestSchema {
     content: Schema.String,
   }).pipe(Type.object(DXN.make('org.dxos.example.document', '0.1.0')));
 
-  export type DocumentType = typeof DocumentType.Type;
+  export type DocumentType = Type.InstanceType<typeof DocumentType>;
 
   //
   // Organization

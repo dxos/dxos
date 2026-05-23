@@ -9,13 +9,17 @@ import * as Schema from 'effect/Schema';
 import { DXN, Annotation, Obj, Ref, Type, View } from '@dxos/echo';
 import { FormInputAnnotation, Format, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
-export const Column = Schema.Struct({
+export const Column: Schema.Schema<Column> = Schema.Struct({
   name: Schema.String,
   view: Ref.Ref(View.View),
   order: Schema.Array(Schema.String),
-});
+}) as any;
 
-export type Column = Schema.Schema.Type<typeof Column>;
+export type Column = {
+  readonly name: string;
+  readonly view: Ref.Ref<View.View>;
+  readonly order: readonly string[];
+};
 
 // TODO(wittjosiah): Move to plugin-pipeline. This isn't a common type.
 export const Pipeline = Schema.Struct({
@@ -24,8 +28,8 @@ export const Pipeline = Schema.Struct({
   image: Format.URL.pipe(Schema.annotations({ title: 'Image' }), Schema.optional),
   columns: Schema.Array(Column).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.pipeline', '0.1.0')),
   Schema.annotations({ title: 'Pipeline' }),
+  Type.object(DXN.make('org.dxos.type.pipeline', '0.1.0')),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--path--regular',
@@ -33,7 +37,7 @@ export const Pipeline = Schema.Struct({
   }),
 );
 
-export type Pipeline = Schema.Schema.Type<typeof Pipeline>;
+export type Pipeline = Type.InstanceType<typeof Pipeline>;
 
 export const make = (props: Partial<Obj.MakeProps<typeof Pipeline>> = {}): Pipeline =>
   Obj.make(Pipeline, {

@@ -1022,8 +1022,8 @@ describe('ProjectionModel', () => {
     }).pipe(Type.object(DXN.make('com.example.type.emailTest', '0.1.0')));
 
     // Check with the primary schema (id is added by Type.object)
-    expect(() => Schema.validateSync(schema)({ id: '1', email: 'valid@example.com' })).not.toThrow();
-    expect(() => Schema.validateSync(schema)({ id: '2', email: 'invalid-email' })).toThrow();
+    expect(() => Schema.validateSync(Type.getSchema(schema))({ id: '1', email: 'valid@example.com' })).not.toThrow();
+    expect(() => Schema.validateSync(Type.getSchema(schema))({ id: '2', email: 'invalid-email' })).toThrow();
 
     const [registeredSchema] = await registry.register([schema]);
 

@@ -94,6 +94,5 @@ export const Task = Schema.Struct({
   }),
 );
 
-export interface Task extends Schema.Schema.Type<typeof Task> {}
-
+export type Task = Type.InstanceType<typeof Task>;
 export const make = (props: Obj.MakeProps<typeof Task>): Task => Obj.make(Task, props);

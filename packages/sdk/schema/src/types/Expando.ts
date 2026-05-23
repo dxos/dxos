@@ -16,7 +16,7 @@ export const Expando = Schema.Struct({}, { key: Schema.String, value: Schema.Any
   Annotation.SystemTypeAnnotation.set(true),
 );
 
-export interface Expando extends Schema.Schema.Type<typeof Expando> {}
+export type Expando = Type.InstanceType<typeof Expando>;
 
 export const make = <T extends Record<string, unknown>>(props: T = {} as T, id?: Obj.ID) =>
   Obj.make(Expando, { id, ...props });

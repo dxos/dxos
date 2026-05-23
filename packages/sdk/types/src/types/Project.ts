@@ -14,8 +14,8 @@ export const Project = Schema.Struct({
   description: Schema.String.pipe(Schema.optional),
   image: Format.URL.pipe(Schema.annotations({ title: 'Image' }), Schema.optional),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.project', '0.1.0')),
   Schema.annotations({ title: 'Project' }),
+  Type.object(DXN.make('org.dxos.type.project', '0.1.0')),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--check-square-offset--regular',
@@ -23,8 +23,7 @@ export const Project = Schema.Struct({
   }),
 );
 
-export interface Project extends Schema.Schema.Type<typeof Project> {}
-
+export type Project = Type.InstanceType<typeof Project>;
 /** Factory wrapper around `Obj.make` for {@link Project}. */
 export const make = (props: Partial<Obj.MakeProps<typeof Project>> = {}): Project =>
   Obj.make(Project, {

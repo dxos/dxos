@@ -28,8 +28,7 @@ export const Channel = Schema.Struct({
   FeedAnnotation.set(true),
 );
 
-export interface Channel extends Schema.Schema.Type<typeof Channel> {}
-
+export type Channel = Type.InstanceType<typeof Channel>;
 export const instanceOf = (value: unknown): value is Channel => Obj.instanceOf(Channel, value);
 
 type ChannelProps = Omit<Obj.MakeProps<typeof Channel>, 'feed'>;

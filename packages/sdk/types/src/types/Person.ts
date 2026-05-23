@@ -113,8 +113,8 @@ export const Person = PersonSchema.pipe(
       location: Format.GeoPoint.pipe(Schema.annotations({ title: 'Location' }), Schema.optional),
     }),
   ),
-  Type.object(DXN.make('org.dxos.type.person', '0.1.0')),
   Schema.annotations({ title: 'Person' }),
+  Type.object(DXN.make('org.dxos.type.person', '0.1.0')),
   LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
   Annotation.IconAnnotation.set({
     icon: 'ph--user--regular',
@@ -122,15 +122,14 @@ export const Person = PersonSchema.pipe(
   }),
 );
 
-export interface Person extends Schema.Schema.Type<typeof Person> {}
-
+export type Person = Type.InstanceType<typeof Person>;
 export const make = (props: Partial<Obj.MakeProps<typeof Person>> = {}) => Obj.make(Person, props);
 
 /**
  * @deprecated
  */
 export const LegacyPerson = PersonSchema.pipe(
-  Type.object(DXN.make('org.dxos.type.person', '0.1.0')),
   Schema.annotations({ title: 'Person' }),
+  Type.object(DXN.make('org.dxos.type.person', '0.1.0')),
   LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
 );

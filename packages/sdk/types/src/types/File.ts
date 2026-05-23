@@ -63,8 +63,7 @@ export const File = Schema.Struct({
   }),
 );
 
-export interface File extends Schema.Schema.Type<typeof File> {}
-
+export type File = Type.InstanceType<typeof File>;
 /**
  * Constructs a `File.File` ECHO object from the given props.
  * @param props - The initial field values for the file object.

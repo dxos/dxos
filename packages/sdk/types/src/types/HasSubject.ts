@@ -26,6 +26,5 @@ export const HasSubject = Schema.Struct({
 /**
  * @deprecated Reconcile with AnchoredTo?
  */
-export interface HasSubject extends Schema.Schema.Type<typeof HasSubject> {}
-
+export type HasSubject = Type.InstanceType<typeof HasSubject>;
 export const make = (props: Relation.MakeProps<typeof HasSubject>) => Relation.make(HasSubject, props);

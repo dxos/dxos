@@ -22,22 +22,21 @@ export const Employer = Schema.Struct({
   endDate: Schema.optional(Schema.String),
 })
   .pipe(
+    Schema.annotations({
+      description: 'An employing organization of a person.',
+    }),
     Type.relation({
       dxn: DXN.make('org.dxos.relation.employer', '0.1.0'),
       source: Person.Person,
       target: Organization.Organization,
     }),
-  )
-  .annotations({
-    description: 'An employing organization of a person.',
-  });
+  );
 
-export interface Employer extends Schema.Schema.Type<typeof Employer> {}
-
+export type Employer = Type.InstanceType<typeof Employer>;
 // TODO(wittjosiah): Add `Relation.MakeProps`.
 export const make = (
   props: {
-    [Relation.Source]: Schema.Schema.Type<typeof Person.Person>;
-    [Relation.Target]: Schema.Schema.Type<typeof Organization.Organization>;
-  } & Entity.Properties<Schema.Schema.Type<typeof Employer>>,
-) => Relation.make(Employer, props);
+    [Relation.Source]: Type.InstanceType<typeof Person.Person>;
+    [Relation.Target]: Type.InstanceType<typeof Organization.Organization>;
+  } & Entity.Properties<Type.InstanceType<typeof Employer>>,
+) => Relation.make(Employer, props as any);

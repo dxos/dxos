@@ -39,12 +39,12 @@ export const Example = Schema.Struct({
   rating: Schema.optional(Schema.Number),
 }).pipe(Type.object(DXN.make('com.example.type.example', '0.1.0')));
 
-export type Example = Schema.Schema.Type<typeof Example>;
+export type Example = Type.InstanceType<typeof Example>;
 
-export const testSchema = Obj.make(Type.Type, {
+export const testSchema = Type.makeObject({
   typename: 'com.example.type.test',
   version: '0.1.0',
-  jsonSchema: JsonSchema.toJsonSchema(Example),
+  jsonSchema: JsonSchema.toJsonSchema(Type.getSchema(Example)),
 });
 
 export const testView: View.View = ViewModel.make({

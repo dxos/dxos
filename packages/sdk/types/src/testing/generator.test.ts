@@ -28,7 +28,7 @@ const queryObjects = async (db: Database.Database, specs: TypeSpec[]) => {
     expect(objects).to.have.length(count);
     log('objects', {
       typename: type.typename,
-      objects: objects.map((obj) => stripUndefined({ name: obj.name, employer: obj.employer?.name })),
+      objects: objects.map((obj: any) => stripUndefined({ name: obj.name, employer: obj.employer?.name })),
     });
   }
 };

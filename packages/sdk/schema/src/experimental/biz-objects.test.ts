@@ -51,7 +51,7 @@ namespace Proposition {
 
   export const Object = Fields.pipe(Type.object(DXN.make('org.dxos.type.proposition', '0.1.0')));
 
-  export interface Object extends Schema.Schema.Type<typeof Object> {}
+  export type Object = Type.InstanceType<typeof Object>;
 
   // TODO(burdon): Obfuscates Obj.make?
   export const make = (props: Pick<Object, 'text'>) => Obj.make(Object, Fields.make(props));
@@ -68,11 +68,11 @@ export namespace Research {}
 
 export namespace OKR {
   const Properties = Schema.Struct({
-    objectives: Schema.mutable(Schema.Array(Proposition.Object)).annotations({
+    objectives: Schema.mutable(Schema.Array(Type.getSchema(Proposition.Object))).annotations({
       name: 'Objectives',
       description: 'Qualitative, ambitious aspirations.',
     }),
-    keyResults: Schema.mutable(Schema.Array(Proposition.Object)).annotations({
+    keyResults: Schema.mutable(Schema.Array(Type.getSchema(Proposition.Object))).annotations({
       name: 'Key Results',
       description: 'Quantitative metrics tracking progress towards those objectives.',
     }),
@@ -82,7 +82,7 @@ export namespace OKR {
 
   const Object = Properties.pipe(Type.object(DXN.make('org.dxos.type.okr', '0.1.0')));
 
-  export interface Object extends Schema.Schema.Type<Schema.mutable<typeof Object>> {}
+  export type Object = Type.InstanceType<typeof Object>;
 
   export const make = () => Obj.make(Object, { objectives: [], keyResults: [] });
 }
@@ -114,7 +114,7 @@ export namespace SWOT {
 
   const Object = Properties.pipe(Type.object(DXN.make('org.dxos.type.swot', '0.1.0')));
 
-  export interface Any extends Schema.Schema.Type<Schema.mutable<typeof Object>> {}
+  export type Any = Type.InstanceType<typeof Object>;
 
   export const make = () => Obj.make(Object, { strengths: [], weaknesses: [], opportunities: [], threats: [] });
 }
@@ -126,7 +126,7 @@ export namespace Plan {
 
   const Object = Properties.pipe(Type.object(DXN.make('org.dxos.type.plan', '0.1.0')));
 
-  export interface Object extends Schema.Schema.Type<Schema.mutable<typeof Object>> {}
+  export type Object = Type.InstanceType<typeof Object>;
 
   export const make = ({ name }: Object) => Obj.make(Object, { name });
 }

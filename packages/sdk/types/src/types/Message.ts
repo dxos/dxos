@@ -49,8 +49,7 @@ export const Message = Schema.Struct({
   }),
 );
 
-export interface Message extends Schema.Schema.Type<typeof Message> {}
-
+export type Message = Type.InstanceType<typeof Message>;
 export const make = ({
   created,
   sender,

@@ -59,4 +59,4 @@ export const SpaceProperties = SpacePropertiesSchema.pipe(
   Annotation.SystemTypeAnnotation.set(true),
 );
 
-export interface SpaceProperties extends Schema.Schema.Type<typeof SpaceProperties> {}
+export type SpaceProperties = Type.InstanceType<typeof SpaceProperties>;

@@ -26,8 +26,7 @@ export const Thread = Schema.Struct({
   messages: Schema.Array(Ref.Ref(Message.Message)),
 }).pipe(Type.object(DXN.make('org.dxos.type.thread', '0.1.0')), SystemTypeAnnotation.set(true));
 
-export interface Thread extends Schema.Schema.Type<typeof Thread> {}
-
+export type Thread = Type.InstanceType<typeof Thread>;
 export const make = ({
   status = 'staged',
   messages = [],

@@ -32,7 +32,7 @@ export const Transcript = Schema.Struct({
   }),
 );
 
-export type Transcript = Schema.Schema.Type<typeof Transcript>;
+export type Transcript = Type.InstanceType<typeof Transcript>;
 
 // TODO(burdon): Do these need to be kept in sync with EDGE?
 

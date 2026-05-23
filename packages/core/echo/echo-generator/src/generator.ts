@@ -36,7 +36,7 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
   }
 
   getSchema(type: T): Type.AnyObjectType | undefined {
-    return this.schemas.find((schema) => getTypeAnnotation(schema)!.typename === type);
+    return this.schemas.find((schema) => Type.getTypename(schema) === type) as Type.AnyObjectType | undefined;
   }
 
   protected setSchema(type: T, schema: Type.AnyType): void {
@@ -128,7 +128,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
 
   async mutateObject(object: Obj.Any, params: MutationsProviderProps): Promise<void> {
     invariant(this._mutations, 'Mutations not defined.');
-    const type = getTypeAnnotation(Obj.getSchema(object)!)!.typename as T;
+    const type = Type.getTypename(Obj.getType(object)!) as T;
     invariant(type && this._mutations?.[type], 'Invalid object type.');
 
     await this._mutations![type](object, params);

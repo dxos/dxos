@@ -94,7 +94,7 @@ export const getSchemaFromPropertyDefinitions = (
   const schema = createEchoSchema(typeSchema as unknown as Schema.Schema.AnyNoContext);
 
   // Wrap schema modifications in Type.update so they run inside the schema's change context.
-  Type.update(schema, () => {
+  Type.update(schema as any, () => {
     for (const prop of properties) {
       const jsonProp = schema.jsonSchema.properties![prop.name] as Mutable<JsonSchemaType>;
       if (prop.config?.options) {
@@ -114,7 +114,7 @@ export const getSchemaFromPropertyDefinitions = (
     }
   });
 
-  return schema;
+  return schema as unknown as Type.Type;
 };
 
 /**

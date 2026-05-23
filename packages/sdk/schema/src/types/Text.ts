@@ -21,7 +21,7 @@ export const Text = Schema.Struct({
   }),
 );
 
-export interface Text extends Schema.Schema.Type<typeof Text> {}
+export type Text = Type.InstanceType<typeof Text>;
 
 export type MakeProps = Partial<{ id: string; name: string; content: string }>;
 

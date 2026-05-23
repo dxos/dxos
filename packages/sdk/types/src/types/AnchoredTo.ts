@@ -19,6 +19,5 @@ export const AnchoredTo = Schema.Struct({
   }),
 );
 
-export interface AnchoredTo extends Schema.Schema.Type<typeof AnchoredTo> {}
-
+export type AnchoredTo = Type.InstanceType<typeof AnchoredTo>;
 export const make = (props: Relation.MakeProps<typeof AnchoredTo>) => Relation.make(AnchoredTo, props);

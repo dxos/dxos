@@ -57,7 +57,6 @@ export const Event = Schema.Struct({
   }),
 );
 
-export interface Event extends Schema.Schema.Type<typeof Event> {}
-
+export type Event = Type.InstanceType<typeof Event>;
 export const make = ({ attendees = [], ...props }: MakeOptional<Obj.MakeProps<typeof Event>, 'attendees'>): Event =>
   Obj.make(Event, { attendees, ...props });

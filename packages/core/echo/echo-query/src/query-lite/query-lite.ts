@@ -104,13 +104,13 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static type<S extends Schema.Schema.All>(
-    schema: S | string,
-    props?: Filter$.Props<Schema.Schema.Type<S>>,
-  ): Filter$.Filter<Schema.Schema.Type<S>>;
-  static type(type: TypeNs.Type, props?: Filter$.Props<Obj$.Unknown>): Filter$.Filter<Obj$.Unknown>;
+  static type<T extends TypeNs.AnyType>(
+    type: T,
+    props?: Filter$.Props<TypeNs.InstanceType<T>>,
+  ): Filter$.Filter<TypeNs.InstanceType<T>>;
+  static type(schema: string, props?: Filter$.Props<unknown>): Filter$.Filter<any>;
   static type(
-    schema: Schema.Schema.All | TypeNs.Type | string,
+    schema: TypeNs.AnyType | string,
     props?: Filter$.Props<unknown>,
   ): Filter$.Filter<unknown> {
     if (typeof schema !== 'string') {
@@ -172,10 +172,10 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static foreignKeys<S extends Schema.Schema.All>(
-    schema: S | string,
+  static foreignKeys<S extends TypeNs.AnyType | string>(
+    schema: S,
     keys: ForeignKey[],
-  ): Filter$.Filter<Schema.Schema.Type<S>> {
+  ): Filter$.Filter<S extends TypeNs.AnyType ? TypeNs.InstanceType<S> : unknown> {
     assertArgument(typeof schema === 'string', 'schema');
     assertArgument(!schema.startsWith('dxn:'), 'schema');
     return new FilterClass({
@@ -511,7 +511,7 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  referencedBy(target?: Schema.Schema.All | string, key?: string): Query$.Any {
+  referencedBy(target?: TypeNs.AnyType | string, key?: string): Query$.Any {
     if (target !== undefined && typeof target !== 'string') {
       throw new TypeError('referencedBy requires a typename string in query-lite');
     }
@@ -524,21 +524,21 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  sourceOf(relation?: Schema.Schema.All | string, predicates?: Filter$.Props<unknown> | undefined): Query$.Any {
+  sourceOf(relation?: TypeNs.Relation<any, any, any, any> | string, predicates?: Filter$.Props<unknown> | undefined): Query$.Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
       direction: 'outgoing',
-      filter: relation !== undefined ? FilterClass.type(relation, predicates).ast : undefined,
+      filter: relation !== undefined ? FilterClass.type(relation as any, predicates).ast : undefined,
     });
   }
 
-  targetOf(relation?: Schema.Schema.All | string, predicates?: Filter$.Props<unknown> | undefined): Query$.Any {
+  targetOf(relation?: TypeNs.Relation<any, any, any, any> | string, predicates?: Filter$.Props<unknown> | undefined): Query$.Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
       direction: 'incoming',
-      filter: relation !== undefined ? FilterClass.type(relation, predicates).ast : undefined,
+      filter: relation !== undefined ? FilterClass.type(relation as any, predicates).ast : undefined,
     });
   }
 

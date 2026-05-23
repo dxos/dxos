@@ -204,7 +204,8 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
     ];
 
     objects.forEach((object) => {
-      const schema = Entity.getSchema(object);
+      const type = Entity.getType(object);
+      const schema = type != null ? Type.getSchema(type) : undefined;
 
       // Relations.
       if (Relation.isRelation(object)) {

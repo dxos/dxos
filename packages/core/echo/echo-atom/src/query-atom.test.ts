@@ -22,7 +22,7 @@ const TestItem = Schema.Struct({
   name: Schema.String,
   value: Schema.Number,
 }).pipe(Type.object(DXN.make('com.example.type.testItem', '0.1.0')));
-type TestItem = Schema.Schema.Type<typeof TestItem>;
+type TestItem = Type.InstanceType<typeof TestItem>;
 
 describe('AtomQuery', () => {
   let testBuilder: EchoTestBuilder;
