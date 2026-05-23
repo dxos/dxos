@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Option from 'effect/Option';
+import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { EntityKind, StaticTypeSchemaSlot } from '../common/types';
+import { EntityKind, KindId, StaticTypeSchemaSlot } from '../common/types';
 
 export interface AnnotationHelper<T> {
   /**
@@ -39,7 +39,18 @@ export const createAnnotationHelper = <T>(id: symbol): AnnotationHelper<T> => {
       // Allow reading annotations off a `Type.Type` entity (Option B) — extract
       // its source schema from the hidden slot first.
       const slot = (schema as any)[StaticTypeSchemaSlot] as Schema.Schema.AnyNoContext | undefined;
-      const ast = slot?.ast ?? (schema as Schema.Schema.Any).ast;
+      // Persisted Type.Type entities (from db.schemaRegistry.register) carry no
+      // StaticTypeSchemaSlot but have a stored jsonSchema; rebuild the Effect
+      // Schema lazily via the registered fromJsonSchema impl so we can read
+      // its AST annotations.
+      const rebuilt =
+        slot == null && (schema as any)[KindId] === EntityKind.Type && (schema as any).jsonSchema != null
+          ? _fromJsonSchema?.((schema as any).jsonSchema)
+          : undefined;
+      const ast = slot?.ast ?? rebuilt?.ast ?? (schema as Schema.Schema.Any).ast;
+      if (ast == null) {
+        return Option.none();
+      }
       return SchemaAST.getAnnotation(ast, id);
     },
     getFromAst: (ast) => SchemaAST.getAnnotation(ast, id),
@@ -66,6 +77,7 @@ export const createAnnotationHelper = <T>(id: symbol): AnnotationHelper<T> => {
 };
 
 let _toJsonSchema: ((schema: Schema.Schema.AnyNoContext) => any) | undefined;
+let _fromJsonSchema: ((jsonSchema: any) => Schema.Schema.AnyNoContext) | undefined;
 
 /**
  * Lazy escape hatch: the JsonSchema module registers `toJsonSchema` here so
@@ -74,6 +86,15 @@ let _toJsonSchema: ((schema: Schema.Schema.AnyNoContext) => any) | undefined;
  */
 export const setJsonSchemaSerializer = (impl: (schema: Schema.Schema.AnyNoContext) => any): void => {
   _toJsonSchema = impl;
+};
+
+/**
+ * Lazy escape hatch: the JsonSchema module registers `toEffectSchema` here so
+ * `createAnnotationHelper.get` can read annotations off persisted `Type.Type`
+ * entities by rebuilding their Effect Schema from `jsonSchema`.
+ */
+export const setJsonSchemaDeserializer = (impl: (jsonSchema: any) => Schema.Schema.AnyNoContext): void => {
+  _fromJsonSchema = impl;
 };
 
 export const jsonSchemaFromSource = (schema: Schema.Schema.AnyNoContext, fallback: any): any => {

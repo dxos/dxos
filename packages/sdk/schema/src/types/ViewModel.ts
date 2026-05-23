@@ -257,7 +257,7 @@ export const makeFromDatabase = async ({
   );
 
   Array.from({ length: createInitial }).forEach(() => {
-    db.add(Obj.make(effectSchema as Type.AnyObjectType, {}));
+    db.add(Obj.make(schema as unknown as Type.AnyObjectType, {}));
   });
 
   return {
