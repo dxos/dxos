@@ -18,7 +18,11 @@ export const listItem: ComponentFunction<ListStyleProps> = ({ collapsible }, ...
   mx(!collapsible && 'flex', ...etc);
 
 export const listItemEndcap: ComponentFunction<ListStyleProps> = ({ density }, ...etc) =>
-  mx(density === 'fine' ? getSize(8) : getSize(10), 'shrink-0 flex items-center justify-center', ...etc);
+  mx(
+    density === 'lg' ? getSize(10) : density === 'sm' ? getSize(7) : getSize(8),
+    'shrink-0 flex items-center justify-center',
+    ...etc,
+  );
 
 export const listItemHeading: ComponentFunction<ListStyleProps> = ({ density }, ...etc) =>
   mx(densityBlockSize(density), 'flex items-center overflow-hidden [&>span]:truncate', ...etc);

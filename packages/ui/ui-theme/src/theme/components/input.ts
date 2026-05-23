@@ -126,7 +126,7 @@ const inputSwitchThumb: ComponentFunction<InputStyleProps> = ({ size = 5 }, ...e
 const inputWithSegmentsInput: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   mx(
     'font-mono selection:bg-transparent mx-auto',
-    props.density === 'fine' ? 'text-base pointer-fine:text-sm' : 'text-lg',
+    props.density === 'lg' ? 'text-lg' : props.density === 'sm' ? 'text-sm' : 'text-base pointer-fine:text-sm',
     props.disabled && 'cursor-not-allowed',
     ...etc,
   );
@@ -134,7 +134,11 @@ const inputWithSegmentsInput: ComponentFunction<InputStyleProps> = (props, ...et
 const inputSegment: ComponentFunction<InputStyleProps> = (props, ...etc) =>
   mx(
     'flex items-center justify-center font-mono',
-    props.density === 'fine' ? 'size-10 pointer-fine:size-8 rounded-xs' : 'size-12 rounded-xs',
+    props.density === 'lg'
+      ? 'size-12 rounded-xs'
+      : props.density === 'sm'
+        ? 'size-7 rounded-xs'
+        : 'size-10 pointer-fine:size-8 rounded-xs',
     'bg-input-surface text-base-foreground transition-colors border border-separator',
     'data-[focused]:bg-attention-surface data-[focused]:border-focus-ring-subtle',
     'data-[focused]:ring-2 data-[focused]:ring-offset-0 data-[focused]:ring-focus-ring-subtle',

@@ -7,12 +7,19 @@ import { type AllowedAxis, type ComponentFunction, type Theme } from '@dxos/ui-t
 import { mx } from '../../util';
 import { withColumn } from '../primitives/column';
 
+/**
+ * Scrollbar sizing presets keyed by density tier.
+ */
 export const scrollbar = {
-  thin: {
+  sm: {
+    size: 2,
+    padding: 2,
+  },
+  md: {
     size: 4,
     padding: 4,
   },
-  coarse: {
+  lg: {
     size: 8,
     padding: 8,
   },

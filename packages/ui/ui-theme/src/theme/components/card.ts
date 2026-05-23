@@ -27,7 +27,7 @@ const cardRoot: ComponentFunction<CardStyleProps> = ({ border, fullWidth }, ...e
 
 const cardToolbar: ComponentFunction<CardStyleProps> = (_, ...etc) =>
   mx(
-    'dx-card__toolbar dx-density-fine bg-transparent p-0! gap-0! col-span-3 grid! grid-cols-subgrid! [contain:none]',
+    'dx-card__toolbar dx-density-md bg-transparent p-0! gap-0! col-span-3 grid! grid-cols-subgrid! [contain:none]',
     ...etc,
   );
 

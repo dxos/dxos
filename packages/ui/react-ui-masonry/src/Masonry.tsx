@@ -127,7 +127,7 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
     const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gutter } = useMasonryContext('Masonry.Viewport');
     const { width } = useMasonryContentContext('Masonry.Viewport');
     const columnCount = useColumnCount(
-      width - (scrollbar.thin.size + scrollbar.thin.padding),
+      width - (scrollbar.md.size + scrollbar.md.padding),
       columns,
       maxColumns,
       minColumnWidth,

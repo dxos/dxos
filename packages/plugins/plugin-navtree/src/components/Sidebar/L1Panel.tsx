@@ -83,7 +83,7 @@ const L1PanelContent = ({ path, item, onBack }: Pick<L1PanelProps, 'open' | 'pat
   const navTreeContext = useNavTreeContext();
 
   return (
-    <DensityProvider density='fine'>
+    <DensityProvider density='md'>
       <L1PanelHeader path={path} item={item} onBack={onBack} />
       <ScrollArea.Root thin orientation='vertical'>
         <ScrollArea.Viewport>
@@ -125,11 +125,11 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'item' | 'path
   return (
     <div
       data-tauri-drag-region
-      className='flex w-full items-center border-b border-subdued-separator dx-app-drag dx-density-coarse pe-1'
+      className='flex w-full items-center border-b border-subdued-separator dx-app-drag dx-density-lg pe-1'
     >
       {backCapableWorkspace ? (
         <IconButton
-          density='coarse'
+          density='lg'
           classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
           variant='ghost'
           icon='ph--caret-left--regular'
@@ -194,7 +194,7 @@ const MenuActions = ({
   if (menuActions.length === 1) {
     return (
       <IconButton
-        density='coarse'
+        density='lg'
         classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
         variant='ghost'
         icon={menuActions[0].properties?.icon ?? 'ph--placeholder--regular'}
@@ -210,7 +210,7 @@ const MenuActions = ({
     <Menu.Root caller={NAV_TREE_ITEM} onAction={onAction}>
       <Menu.Trigger asChild>
         <IconButton
-          density='coarse'
+          density='lg'
           classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
           variant='ghost'
           icon='ph--dots-three-vertical--regular'

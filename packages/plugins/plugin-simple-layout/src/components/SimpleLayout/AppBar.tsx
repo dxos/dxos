@@ -48,11 +48,11 @@ export const AppBar = composable<HTMLDivElement, AppBarProps>(
     const AnchorRoot = popoverAnchorId ? Popover.Anchor : Fragment;
 
     return (
-      <DensityProvider density='fine'>
+      <DensityProvider density='md'>
         <Toolbar.Root
           {...composableProps(props, {
             role: 'banner',
-            classNames: 'grid grid-cols-[var(--dx-rail-size)_1fr_var(--dx-rail-size)] items-center dx-density-fine',
+            classNames: 'grid grid-cols-[var(--dx-rail-size)_1fr_var(--dx-rail-size)] items-center dx-density-md',
           })}
           ref={forwardedRef}
         >
