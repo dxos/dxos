@@ -41,7 +41,7 @@ export const ThemeProvider = ({
   appNs,
   tx = (_path, _styleProps, ..._options) => undefined,
   themeMode = 'dark',
-  rootDensity = 'fine',
+  rootDensity = 'md',
   noCache,
   platform,
 }: ThemeProviderProps) => {

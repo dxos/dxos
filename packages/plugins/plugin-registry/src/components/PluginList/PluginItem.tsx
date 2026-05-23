@@ -185,17 +185,17 @@ export const PluginItem = ({
           <div className='grow' />
           <div className='pe-1'>
             {isUpdating ? (
-              <Button aria-describedby={descriptionId} density='fine' variant='primary' disabled>
+              <Button aria-describedby={descriptionId} density='md' variant='primary' disabled>
                 {t('updating.label')}
               </Button>
             ) : showUpdateButton ? (
-              <Button aria-describedby={descriptionId} density='fine' variant='primary' onClick={handleUpdate}>
+              <Button aria-describedby={descriptionId} density='md' variant='primary' onClick={handleUpdate}>
                 {t('update.label')}
               </Button>
             ) : showInstallButton ? (
               <Button
                 aria-describedby={descriptionId}
-                density='fine'
+                density='md'
                 variant='primary'
                 disabled={isInstalling}
                 onClick={handleInstall}

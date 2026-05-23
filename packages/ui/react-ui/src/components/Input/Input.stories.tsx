@@ -76,33 +76,48 @@ export default meta;
 
 type Story = StoryObj<DefaultStoryProps & Variant>;
 
-export const DensityCoarse: Story = {
+export const DensityLg: Story = {
   args: {
     kind: 'text',
     label: 'Input value',
-    placeholder: 'This is an input',
+    placeholder: 'This is a density:lg input',
     disabled: false,
     description: undefined,
     labelVisuallyHidden: false,
     descriptionVisuallyHidden: false,
     validationMessage: '',
     validationValence: undefined,
-    density: 'coarse',
+    density: 'lg',
   },
 };
 
-export const DensityFine: Story = {
+export const DensityMd: Story = {
   args: {
     kind: 'text',
     label: 'Input value',
-    placeholder: 'This is a density:fine input',
+    placeholder: 'This is a density:md input (default)',
     disabled: false,
     description: undefined,
     labelVisuallyHidden: false,
     descriptionVisuallyHidden: false,
     validationMessage: '',
     validationValence: undefined,
-    density: 'fine',
+    density: 'md',
+  },
+};
+
+export const DensitySm: Story = {
+  args: {
+    kind: 'text',
+    label: 'Input value',
+    placeholder: 'This is a density:sm input',
+    disabled: false,
+    description: undefined,
+    labelVisuallyHidden: false,
+    descriptionVisuallyHidden: false,
+    validationMessage: '',
+    validationValence: undefined,
+    density: 'sm',
   },
 };
 
@@ -186,7 +201,7 @@ export const PinInput: Story = {
     length: 6,
     description: 'Type in secret you received',
     pattern: '\\d*',
-    density: 'coarse',
+    density: 'lg',
   },
 };
 
