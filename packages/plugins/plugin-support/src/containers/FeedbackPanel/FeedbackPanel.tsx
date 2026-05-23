@@ -90,7 +90,7 @@ const buildGitHubIssueUrl = (values: SupportOperation.SupportRequest, screenshot
     .filter(Boolean)
     .join('\n');
 
-  const body = [values.body, screenshotUrl && `![Screenshot](${screenshotUrl})`, '---', trailer]
+  const body = [screenshotUrl && `![Screenshot](${screenshotUrl})`, values.body, '---', trailer]
     .filter(Boolean)
     .join('\n\n');
   // `type` is GitHub's org-level Issue Type field (sidebar widget separate
@@ -258,7 +258,18 @@ export const FeedbackPanel = () => {
 
   const handleGitHub = useCallback(
     async (values: SupportOperation.SupportRequest) => {
-      log.info('github-issue: submit', { values });
+      // Log only the non-sensitive triage metadata — the title/body fields can
+      // contain user-typed content (including PII or paths) and shouldn't be
+      // emitted at info level. Screenshot URLs are likewise scrubbed below.
+      log.info('github-issue: submit', {
+        type: values.type,
+        severity: values.severity,
+        area: values.area,
+        includeLogs: values.includeLogs,
+        image: values.image,
+        titleLength: values.title.length,
+        bodyLength: values.body.length,
+      });
 
       // Collapse the help companion before capture so the screenshot reflects
       // what the user is reporting (the screen behind the form), not the form
@@ -287,7 +298,8 @@ export const FeedbackPanel = () => {
             log.warn('github-issue: upload returned no url');
             imageRequestedButFailed = true;
           } else {
-            log.info('github-issue: upload ok', { screenshotUrl });
+            // URL is public but still identifies the user's screenshot; log a flag, not the URL.
+            log.info('github-issue: upload ok');
           }
         }
       }
@@ -300,10 +312,23 @@ export const FeedbackPanel = () => {
       // Open the GH tab only once we have the final URL — no blank-popup
       // placeholder. The screenshot pipeline finishes in 1-2s in practice,
       // and modern Chrome tolerates a `window.open` for that long after a
-      // user gesture (the gesture-credit window is roughly 5s). If popup
-      // blockers do start denying this, the failure mode is a console
-      // warning and no new tab — the user can retry.
-      window.open(url, '_blank', 'noopener,noreferrer');
+      // user gesture (the gesture-credit window is roughly 5s). If a popup
+      // blocker denies the open, `window.open` returns `null`; show a
+      // distinct toast so the user knows the tab didn't appear rather than
+      // leaving them with a misleading success message.
+      const opened = window.open(url, '_blank', 'noopener,noreferrer');
+      if (!opened) {
+        log.warn('github-issue: popup blocked');
+        await invokePromise(LayoutOperation.AddToast, {
+          id: `${meta.id}.github-issue-popup-blocked`,
+          icon: 'ph--warning--regular',
+          duration: 8000,
+          title: ['github-issue-popup-blocked-toast.label', { ns: meta.id }],
+          description: ['github-issue-popup-blocked-toast.description', { ns: meta.id }],
+          closeLabel: ['close.label', { ns: osTranslations }],
+        });
+        return;
+      }
 
       await invokePromise(LayoutOperation.AddToast, {
         id: `${meta.id}.github-issue-success`,

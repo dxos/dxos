@@ -2,8 +2,8 @@
 
 Two GitHub Actions workflows that close the loop from "user files an issue via the Composer feedback form" to "Claude opens a draft PR addressing it."
 
-- **`claude-triage.yml`** — runs on every new `Composer`-labeled issue. Cheap. Reads the issue, decides if it's actionable, and either gates it for implementation or asks for more info.
-- **`claude-implement.yml`** — runs only when the triage agent (or a human) adds the `needs-implementation` label. Expensive. Opens a draft PR.
+- **`claude-composer-triage.yml`** — runs on every new `Composer`-labeled issue. Cheap. Reads the issue, decides if it's actionable, and either gates it for implementation or asks for more info.
+- **`claude-composer-implement.yml`** — runs only when the triage agent (or a human) adds the `needs-implementation` label. Expensive. Opens a draft PR.
 
 Drop both into `.github/workflows/` in `dxos/dxos`.
 
@@ -17,12 +17,13 @@ Drop both into `.github/workflows/` in `dxos/dxos`.
    - `claude-implementing` — set by phase 2 to prevent concurrent reentry.
 
    ```bash
-   gh label create needs-implementation --color "0052CC" --description "Triaged as actionable; awaiting implementation" --repo dxos/dxos
-   gh label create needs-info          --color "FBCA04" --description "Triaged: more info needed from reporter"          --repo dxos/dxos
-   gh label create claude-implementing --color "5319E7" --description "Claude is working on this; do not double-trigger" --repo dxos/dxos
+   # --force makes `gh label create` an upsert; safe to re-run.
+   gh label create needs-implementation --color "0052CC" --description "Triaged as actionable; awaiting implementation" --repo dxos/dxos --force
+   gh label create needs-info          --color "FBCA04" --description "Triaged: more info needed from reporter"          --repo dxos/dxos --force
+   gh label create claude-implementing --color "5319E7" --description "Claude is working on this; do not double-trigger" --repo dxos/dxos --force
    ```
 
-## `.github/workflows/claude-triage.yml`
+## `.github/workflows/claude-composer-triage.yml`
 
 ```yaml
 name: Claude triage (Composer feedback)
@@ -106,7 +107,7 @@ jobs:
                 adding `needs-implementation` manually.
 ```
 
-## `.github/workflows/claude-implement.yml`
+## `.github/workflows/claude-composer-implement.yml`
 
 ```yaml
 name: Claude implement (Composer feedback)

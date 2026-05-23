@@ -51,7 +51,7 @@ The POST actually reaches the worker and returns 200, but without `Access-Contro
     },
     });
 
-4.  **`pickOrigin` helper**: read `request.headers.get('Origin')`, return it if it's in the allowlist, otherwise return the first allowlist entry (or omit the header to refuse). `Vary: Origin` is required so caches don't serve a response for one origin to another.
+4.  **`pickOrigin` helper**: read `request.headers.get('Origin')`. If it's in the allowlist, return it; otherwise return `null` and have the caller omit the `Access-Control-Allow-Origin` header entirely (or return a 403). Do NOT fall back to a default allowlist entry — that lets a non-allowlisted origin spoof an allowed one and weakens the policy. `Vary: Origin` is required whenever you emit `Access-Control-Allow-Origin` so caches don't serve a response for one origin to another.
 
 5.  **Test from a browser** — open https://composer.space (or your dev host), open DevTools, paste:
 

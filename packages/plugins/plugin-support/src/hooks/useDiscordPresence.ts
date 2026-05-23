@@ -16,6 +16,9 @@ export const useDiscordPresence = (presenceUrl: string | undefined): DiscordPres
 
   useEffect(() => {
     if (!presenceUrl) {
+      // Clear any leftover snapshot so consumers don't render stale counts
+      // after the env-driven URL is removed (e.g. during dev hot reloads).
+      setPresence(null);
       return;
     }
 

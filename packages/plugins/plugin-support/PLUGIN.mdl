@@ -71,7 +71,9 @@ type IssueType
 
 ```mdl
 type Severity
-  literals: low | medium | high | critical
+  # Literal strings double as GitHub label names so a triager can read
+  # the priority at a glance from the labels strip on the filed issue.
+  literals: "High priority" | "Medium priority" | "Low priority"
 ```
 
 ```mdl
@@ -85,7 +87,7 @@ type SupportRequest
     build the report came from.
   fields:
     type: IssueType              # bug | feature
-    severity: Severity           # low | medium | high | critical
+    severity: Severity           # "High priority" | "Medium priority" | "Low priority"
     title: string                # Short summary (becomes GH issue title).
     body: string                 # Longer description (becomes GH issue body).
     area?: string                # Plugin id (e.g. org.dxos.plugin.echo). Optional.
@@ -262,7 +264,7 @@ feat F-5: GitHub Issue Submission
   req F-5.6:
     when: no GitHub AccessToken is present
     then: a prefilled `issues/new` URL is opened in a new tab; the user finishes the submission manually.
-  req F-5.7: type and severity are mapped to GitHub labels (e.g. `kind/bug`, `severity/high`); area, when set, adds an `area/<plugin-id>` label.
+  req F-5.7: type maps to GitHub's Issue Type field via `?type=Bug` / `?type=Feature`; severity is emitted as a label whose name matches the literal (e.g. `High priority`); area, when set, adds an `area/<plugin-id>` label. A `Composer` source-anchor label is always included.
 ```
 
 ## Acceptance

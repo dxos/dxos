@@ -35,6 +35,11 @@ jobs:
         with:
           # Full history so Claude can branch off main.
           fetch-depth: 0
+          # The Claude implementation step pushes its branch through the
+          # GitHub App identity (claude-code-action handles auth), not the
+          # checkout's persisted GITHUB_TOKEN, so we can drop credential
+          # persistence here. Matches `check.yml`.
+          persist-credentials: false
 
       # Mark the issue so a follow-up label edit doesn't re-enter.
       - name: Mark in-progress

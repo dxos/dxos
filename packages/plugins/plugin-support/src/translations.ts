@@ -52,6 +52,9 @@ export const translations = [
         'github-issue-toast.description': 'Finish the submission in the GitHub tab.',
         'github-issue-toast-no-screenshot.description':
           'Finish the submission in the GitHub tab. (Screenshot could not be attached.)',
+        'github-issue-popup-blocked-toast.label': "Couldn't open the GitHub tab",
+        'github-issue-popup-blocked-toast.description':
+          'Your browser blocked the popup. Allow popups for this site and click Create GitHub Issue again.',
         'ask-for-help.label': 'Ask for Help on Discord',
         'discord-presence-team.label': '{{count}} team',
         'discord-presence-members.label': '{{count}} members',

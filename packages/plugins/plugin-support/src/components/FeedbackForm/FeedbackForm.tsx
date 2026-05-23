@@ -20,8 +20,6 @@ import { SupportOperation } from '#types';
 import { AreaSelectField } from './AreaSelectField';
 import type { FeedbackPluginOption } from './types';
 
-export type { FeedbackPluginOption };
-
 type SubmitAction = 'posthog' | 'discord' | 'github';
 
 /**
@@ -104,7 +102,8 @@ export const FeedbackForm = ({
           return;
         case 'posthog':
         default:
-          onSave?.(submitted, formMeta);
+          await onSave?.(submitted, formMeta);
+          return;
       }
     },
     [onSave, onDiscord, onGitHub, hidden?.version],

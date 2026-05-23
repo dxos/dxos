@@ -53,7 +53,10 @@ const obscureInputs = (root: HTMLElement): (() => void) => {
     return span;
   };
 
-  for (const node of root.querySelectorAll('input, textarea, [contenteditable="true"]')) {
+  // `[contenteditable]` catches the empty-attribute form (`<div contenteditable>`)
+  // and `plaintext-only` in addition to `"true"`; the `:not([contenteditable="false"])`
+  // exclusion mirrors the spec's "false explicitly disables" semantics.
+  for (const node of root.querySelectorAll('input, textarea, [contenteditable]:not([contenteditable="false"])')) {
     const text =
       node instanceof HTMLInputElement || node instanceof HTMLTextAreaElement
         ? (node.value ?? '')
@@ -98,10 +101,13 @@ const dataUrlToBlob = (dataUrl: string): Blob => {
  * best-effort and still file the issue.
  */
 export const captureScreenshot = async (target: HTMLElement = document.body): Promise<Blob | undefined> => {
-  // Dynamic import keeps html-to-image out of the eager bundle.
-  const { toJpeg } = await import('html-to-image');
-  const restore = obscureInputs(target);
+  // The dynamic import + obscure step both happen inside the try block so a
+  // module-load failure (rare but possible) doesn't escape — callers treat
+  // capture as best-effort and we'd rather drop the screenshot than throw.
+  let restore: (() => void) | undefined;
   try {
+    const { toJpeg } = await import('html-to-image');
+    restore = obscureInputs(target);
     const dataUrl = await toJpeg(target, {
       // `pixelRatio: 1` avoids generating a Retina-density image whose payload
       // can exceed the worker's memory budget when it decodes + resizes.
@@ -131,7 +137,8 @@ export const captureScreenshot = async (target: HTMLElement = document.body): Pr
     log.warn('screenshot capture failed', { err });
     return undefined;
   } finally {
-    restore();
+    // restore() may be undefined if we threw before obscureInputs ran.
+    restore?.();
   }
 };
 
