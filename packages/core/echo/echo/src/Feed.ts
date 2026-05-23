@@ -54,7 +54,7 @@ export const Feed = Schema.Struct({
 /**
  * TypeScript instance type for a Feed object.
  */
-export type Feed = Type.InstanceType<typeof Feed>;
+export type Feed = Type.InstanceType<typeof Feed> & Obj.Unknown;
 
 //
 // Types

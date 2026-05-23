@@ -28,7 +28,7 @@ export const Collection = Schema.Struct({
   }),
 );
 
-export type Collection = Type.InstanceType<typeof Collection>;
+export type Collection = Type.InstanceType<typeof Collection> & Obj.Unknown;
 
 export const make = (props: Partial<Obj.MakeProps<typeof Collection>> = {}): Collection =>
   Obj.make(Collection, { objects: [], ...props });

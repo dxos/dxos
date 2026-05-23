@@ -346,7 +346,7 @@ export type Persistence = 'static' | 'persisted';
  *  - Effect `Schema.Schema.All`                            → `Schema.Schema.Type<T>`
  */
 export type InstanceType<T> = T extends Type<infer A>
-  ? A
+  ? A & Entity.OfKind<typeof Entity.Kind.Object>
   : T extends Schema.Schema.All
     ? Schema.Schema.Type<T>
     : never;

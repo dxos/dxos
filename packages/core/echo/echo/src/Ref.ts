@@ -50,7 +50,7 @@ export type Unknown = refInternal.Ref<Obj.Unknown>;
  */
 export const Ref: <S extends TypeNs.AnyObjectType | TypeNs.AnyRelationType>(
   type: S,
-) => RefSchema<TypeNs.InstanceType<S>> = refInternal.Ref as any;
+) => RefSchema<TypeNs.InstanceType<S> & Obj.Unknown> = refInternal.Ref as any;
 
 export const Array = refInternal.RefArray;
 
