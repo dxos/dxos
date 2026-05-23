@@ -134,19 +134,26 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
     { value: 'activity', label: t('segment.activity.label') },
   ];
 
+  const showCalendar = viewMode === 'stack';
   return (
     <div role={role} className='@container dx-container overflow-hidden'>
-      <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] h-full'>
-        <Panel.Root className='hidden @3xl:block'>
-          <NaturalCalendar.Root>
-            <Panel.Toolbar asChild>
-              <NaturalCalendar.Toolbar />
-            </Panel.Toolbar>
-            <Panel.Content asChild>
-              <NaturalCalendar.Grid dates={calendarDates} onSelect={handleDateSelect} />
-            </Panel.Content>
-          </NaturalCalendar.Root>
-        </Panel.Root>
+      <div
+        className={
+          showCalendar ? 'grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] h-full' : 'grid grid-cols-1 h-full'
+        }
+      >
+        {showCalendar && (
+          <Panel.Root className='hidden @3xl:block'>
+            <NaturalCalendar.Root>
+              <Panel.Toolbar asChild>
+                <NaturalCalendar.Toolbar />
+              </Panel.Toolbar>
+              <Panel.Content asChild>
+                <NaturalCalendar.Grid dates={calendarDates} onSelect={handleDateSelect} />
+              </Panel.Content>
+            </NaturalCalendar.Root>
+          </Panel.Root>
+        )}
         <Panel.Root>
           <Panel.Toolbar asChild>
             <Toolbar.Root>
