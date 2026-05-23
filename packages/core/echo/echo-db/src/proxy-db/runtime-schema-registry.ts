@@ -8,6 +8,7 @@ import type * as Types from 'effect/Types';
 import { type CleanupFn, Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { type QueryResult, type SchemaRegistry, Type } from '@dxos/echo';
+import * as internal from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -98,7 +99,9 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
 
   // TODO(wittjosiah): Not a part of SchemaRegistry interface, remove?
   hasSchema(schema: Type.AnyType | Schema.Schema.AnyNoContext): boolean {
-    const uri = Type.getURI(schema);
+    // Type.AnyType always has a URI; raw schemas may not, so fall back via the
+    // schema-level helper.
+    const uri = Schema.isSchema(schema) ? internal.getSchemaURI(schema) : Type.getURI(schema as Type.AnyType);
     if (!uri) {
       return false;
     }

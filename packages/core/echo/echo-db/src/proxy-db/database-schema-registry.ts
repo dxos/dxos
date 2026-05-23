@@ -71,13 +71,13 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     // Preloading schema is required for ECHO to operate.
     // TODO(dmaretskyi): Does this change with strong object deps.
     if (this._preloadSchemaOnOpen) {
-      const objects = await this._db.query(Filter.type(PersistentSchema)).run();
+      const objects = await this._db.query(Filter.type(Type.Type)).run();
 
       objects.forEach((object) => this._registerSchema(object));
     }
 
     if (this._reactiveQuery) {
-      const unsubscribe = this._db.query(Filter.type(PersistentSchema)).subscribe((query) => {
+      const unsubscribe = this._db.query(Filter.type(Type.Type)).subscribe((query) => {
         const objects = query.results;
         const currentObjectIds = new Set(objects.map((o) => o.id));
         const newObjects = objects.filter((object) => !this._schemaById.has(object.id));
@@ -97,11 +97,12 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
   }
 
   public hasSchema(schema: Type.AnyType | Schema.Schema.AnyNoContext): boolean {
-    const schemaId = Type.isType(schema)
-      ? schema.id
-      : Obj.isObject(schema)
-        ? schema.id
-        : getObjectIdFromSchema(schema);
+    // For Type entities (any of the three kinds) read the id directly; for raw
+    // schemas fall back to the TypeIdentifierAnnotation lookup.
+    const schemaId =
+      Type.isType(schema) || Obj.isObject(schema)
+        ? (schema as { id?: ObjectId }).id
+        : getObjectIdFromSchema(schema as Schema.Schema.AnyNoContext);
     return schemaId != null && this.getSchemaById(schemaId) != null;
   }
 
@@ -185,7 +186,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
 
               const backingObjectIdFilter = coerceArray(query.backingObjectId);
               if (backingObjectIdFilter.length > 0) {
-                if (!backingObjectIdFilter.includes(object.schema.id)) {
+                if (object.schema.id == null || !backingObjectIdFilter.includes(object.schema.id)) {
                   return false;
                 }
               }
@@ -222,7 +223,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     return new SchemaRegistryPreparedQueryImpl({
       changes,
       getResultsSync() {
-        const objects = self._db.query(Filter.type(PersistentSchema)).runSync();
+        const objects = self._db.query(Filter.type(Type.Type)).runSync();
 
         const results = filterOrderResults([
           ...self._db.graph.schemaRegistry.schemas.map((schema) => {
@@ -241,7 +242,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
         return results;
       },
       async getResults() {
-        const objects = await self._db.query(Filter.type(PersistentSchema)).run();
+        const objects = await self._db.query(Filter.type(Type.Type)).run();
 
         return filterOrderResults([
           ...self._db.graph.schemaRegistry.schemas.map((schema) => {
@@ -286,8 +287,10 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
 
     // TODO(dmaretskyi): Check for conflicts with the schema in the DB.
     for (const input of inputs) {
-      if (Schema.isSchema(input)) {
-        results.push(this._addSchema(input));
+      if (Type.isType(input as any) || Schema.isSchema(input)) {
+        // Type entities (Obj/Relation/Type) and raw schemas both go through
+        // _addSchema; the helper unwraps the entity's source schema internally.
+        results.push(this._addSchema(Type.getSchema(input as Type.AnyType) as any));
       } else if (typeof input === 'object' && 'typename' in input && 'version' in input && 'jsonSchema' in input) {
         const schema = this._addSchema(
           JsonSchema.toEffectSchema({
@@ -330,12 +333,12 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
       return undefined;
     }
 
-    if (!Schema.is(PersistentSchema)(typeObject)) {
-      log.warn('type object is not a stored schema', { id: typeObject?.id });
+    if (!Schema.is(Type.getSchema(Type.Type) as any)(typeObject)) {
+      log.warn('type object is not a stored schema', { id: (typeObject as any)?.id });
       return undefined;
     }
 
-    return this._register(typeObject);
+    return this._register(typeObject as any);
   }
 
   /**
@@ -362,22 +365,27 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
 
     // PersistentSchema instances *are* Type.Type entities (same shape: typename,
     // version, jsonSchema, plus the entity-kind brand). Track typename changes
-    // so the by-type index stays in sync.
+    // so the by-type index stays in sync.  Drafts (typename === undefined) are
+    // indexed by id only.
     const typeEntity = schema as unknown as Type.Type;
-    let previousTypename: string = schema.typename;
+    let previousTypename: string | undefined = schema.typename;
     const subscription = getObjectCore(schema).updates.on(() => {
       if (schema.typename !== previousTypename) {
-        if (this._schemaByType.get(previousTypename) === typeEntity) {
+        if (previousTypename != null && this._schemaByType.get(previousTypename) === typeEntity) {
           this._schemaByType.delete(previousTypename);
         }
         previousTypename = schema.typename;
-        this._schemaByType.set(schema.typename, typeEntity);
+        if (previousTypename != null) {
+          this._schemaByType.set(previousTypename, typeEntity);
+        }
         this._notifySchemaListChanged();
       }
     });
 
     this._schemaById.set(schema.id, typeEntity);
-    this._schemaByType.set(schema.typename, typeEntity);
+    if (schema.typename != null) {
+      this._schemaByType.set(schema.typename, typeEntity);
+    }
     this._unsubscribeById.set(schema.id, subscription);
     return typeEntity;
   }
@@ -393,10 +401,10 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
 
     const meta = getTypeAnnotation(schema);
     invariant(meta, 'use Schema.Struct({}).pipe(Type.Obj()) or class syntax to create a valid schema');
-    const schemaToStore = createObject(PersistentSchema, {
+    const schemaToStore = createObject(PersistentSchema as any, {
       ...meta,
       jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})),
-    });
+    }) as unknown as Type.Type & { jsonSchema: any };
     // The schema's $id is the typename DXN — universal across stored and non-stored
     // schemas. The schema-as-object's storage EchoURI is tracked separately on
     // TypeIdentifierAnnotation for back-references (e.g. registry lookup by object id).
@@ -415,8 +423,8 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
       }),
     );
 
-    const persistentSchema = this._db.add(schemaToStore);
-    const result = this._register(persistentSchema);
+    const persistentSchema = this._db.add(schemaToStore as any);
+    const result = this._register(persistentSchema as any);
 
     this._notifySchemaListChanged();
     return result;
@@ -426,9 +434,13 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     const schema = this._schemaById.get(id);
     if (schema != null) {
       this._schemaById.delete(id);
-      this._schemaByType.delete(schema.typename);
-      this._unsubscribeById.get(schema.id)?.();
-      this._unsubscribeById.delete(schema.id);
+      if (schema.typename != null) {
+        this._schemaByType.delete(schema.typename);
+      }
+      if (schema.id != null) {
+        this._unsubscribeById.get(schema.id)?.();
+        this._unsubscribeById.delete(schema.id);
+      }
     }
   }
 
