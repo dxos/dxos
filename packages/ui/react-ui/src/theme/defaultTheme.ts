@@ -32,7 +32,6 @@ import { toolbarTheme } from '../components/Toolbar/Toolbar.theme';
 import { tooltipTheme } from '../components/Tooltip/Tooltip.theme';
 import { columnTheme } from '../primitives/Column/Column.theme';
 import { panelTheme } from '../primitives/Panel/Panel.theme';
-
 import { bindTheme } from './bindTheme';
 
 export const defaultTheme: Theme<Record<string, any>> = {

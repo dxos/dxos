@@ -5,8 +5,8 @@
 import React, { useMemo } from 'react';
 
 import { ScrollArea } from '@dxos/react-ui';
-import { MarkdownView } from '@dxos/react-ui-markdown';
 import { composable } from '@dxos/react-ui';
+import { MarkdownView } from '@dxos/react-ui-markdown';
 
 import { Subscription } from '#types';
 

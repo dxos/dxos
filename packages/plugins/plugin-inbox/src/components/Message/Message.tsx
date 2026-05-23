@@ -7,6 +7,7 @@ import React, { type PropsWithChildren, useMemo, useState } from 'react';
 
 import { type DXN } from '@dxos/echo';
 import { Icon, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { Menu } from '@dxos/react-ui-menu';
 import { type Actor, type Message as MessageType } from '@dxos/types';
@@ -20,7 +21,6 @@ import {
   preview,
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
-import { composable, composableProps } from '@dxos/react-ui';
 
 import { formatDateTime } from '../../util';
 import { UserIconButton } from '../UserIconButton';

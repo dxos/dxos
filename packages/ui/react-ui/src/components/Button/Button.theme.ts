@@ -2,10 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-import type { ComponentFunction, Density, Elevation, Theme } from '@dxos/ui-types';
-
 import { ghostHover } from '@dxos/ui-theme';
 import { mx } from '@dxos/ui-theme';
+import type { ComponentFunction, Density, Elevation, Theme } from '@dxos/ui-types';
 
 export const primaryButtonColors =
   'text-accent-foreground bg-accent-surface hover:bg-accent-surface-hover aria-pressed:bg-primary-500 dark:aria-pressed:bg-primary-500 data-[state=open]:bg-primary-500 dark:data-[state=open]:bg-primary-500 aria-checked:bg-primary-500 dark:aria-checked:bg-primary-500 aria-checked:text-primary-100';

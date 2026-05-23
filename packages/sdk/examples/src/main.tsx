@@ -15,9 +15,9 @@ import { type Space } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/react-client/testing';
 import { Icon, Input, Status, ThemeProvider, Tooltip } from '@dxos/react-ui';
+import { defaultTx } from '@dxos/react-ui';
 import { Text } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
-import { defaultTx } from '@dxos/react-ui';
 import { type MaybePromise } from '@dxos/util';
 
 import TaskList from './examples/TaskList';

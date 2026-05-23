@@ -2,9 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { ComponentFunction, Theme } from '@dxos/ui-types';
-
 import { mx } from '@dxos/ui-theme';
+import type { ComponentFunction, Theme } from '@dxos/ui-types';
 
 export type SkeletonStyleProps = {
   variant?: 'default' | 'circle' | 'text';

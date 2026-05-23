@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import { mx } from '@dxos/ui-theme';
 import { type AllowedAxis, type ComponentFunction, type Theme } from '@dxos/ui-types';
 
-import { mx } from '@dxos/ui-theme';
 import { withColumn } from '../../primitives/Column/Column.theme';
 
 /**

@@ -2,9 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
-import type { ComponentFunction, Theme } from '@dxos/ui-types';
-
 import { mx } from '@dxos/ui-theme';
+import type { ComponentFunction, Theme } from '@dxos/ui-types';
 
 export type TreegridStyleProps = Partial<{
   level: number;

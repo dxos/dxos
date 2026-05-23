@@ -4,6 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
+import { composable } from '@dxos/react-ui';
 import {
   type ControlProps,
   Map,
@@ -12,7 +13,6 @@ import {
   type MapRootProps,
   useMapZoomHandler,
 } from '@dxos/react-ui-geo';
-import { composable } from '@dxos/react-ui';
 
 import { type GeoControlProps } from '../types';
 

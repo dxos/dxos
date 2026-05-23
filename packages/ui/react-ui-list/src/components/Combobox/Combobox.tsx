@@ -37,8 +37,8 @@ import {
   type ThemedClassName,
   useId,
 } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
 import { composable, composableProps } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { Picker, type PickerInputProps, type PickerItemProps } from '../Picker';
 

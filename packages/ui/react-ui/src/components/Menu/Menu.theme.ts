@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
-
 import { dataDisabled } from '@dxos/ui-theme';
 import { mx, surfaceShadow, surfaceZIndex } from '@dxos/ui-theme';
+import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
 export type MenuStyleProps = Partial<{
   constrainBlockSize: boolean;

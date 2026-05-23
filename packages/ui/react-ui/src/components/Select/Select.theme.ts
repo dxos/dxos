@@ -2,9 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
-import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
-
 import { mx, surfaceShadow, surfaceZIndex } from '@dxos/ui-theme';
+import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
 export type SelectStyleProps = Partial<{
   elevation: Elevation;

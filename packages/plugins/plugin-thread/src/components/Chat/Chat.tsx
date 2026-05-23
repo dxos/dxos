@@ -7,6 +7,7 @@ import React, { type RefObject, useLayoutEffect, useMemo, useRef, useState } fro
 import { type SpaceMember } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
 import { ScrollArea, type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import {
   type MessageMetadata,
   MessageTextbox,
@@ -17,7 +18,6 @@ import {
 import { type Message } from '@dxos/types';
 import { createBasicExtensions, createThemeExtensions, listener, type Extension } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
-import { composable, composableProps } from '@dxos/react-ui';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';

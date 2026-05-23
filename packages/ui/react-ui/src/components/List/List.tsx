@@ -24,10 +24,10 @@ import {
   useListContext,
   useListItemContext,
 } from '@dxos/react-list';
-import { composable, composableProps } from '../../util';
 import { type Density } from '@dxos/ui-types';
 
 import { useDensityContext, useThemeContext } from '../../hooks';
+import { composable, composableProps } from '../../util';
 import { type ThemedClassName } from '../../util';
 import { DensityProvider } from '../DensityProvider';
 import { Icon } from '../Icon';

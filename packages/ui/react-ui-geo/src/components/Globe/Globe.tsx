@@ -34,8 +34,8 @@ import {
   useDynamicRef,
   useThemeContext,
 } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
 import { composable, composableProps } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { GlobeContext, type GlobeContextType, type Point, type Vector, useGlobeContext } from '../../hooks';
 import {

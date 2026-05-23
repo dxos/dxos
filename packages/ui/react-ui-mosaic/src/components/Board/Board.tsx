@@ -14,9 +14,9 @@ import React, {
 } from 'react';
 
 import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
-import { composable, composableProps } from '@dxos/react-ui';
 
 import { useContainerDebug } from '../../hooks';
 import { Focus } from '../Focus';

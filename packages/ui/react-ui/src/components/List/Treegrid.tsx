@@ -15,9 +15,8 @@ import React, {
   useCallback,
 } from 'react';
 
-import { composable, composableProps } from '../../util';
-
 import { useThemeContext } from '../../hooks';
+import { composable, composableProps } from '../../util';
 import { type ThemedClassName } from '../../util';
 
 // TODO(thure): https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/treegrid_role

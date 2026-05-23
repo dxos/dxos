@@ -5,9 +5,9 @@
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Card, ScrollArea } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { type Event } from '@dxos/types';
-import { composable, composableProps } from '@dxos/react-ui';
 
 import { ActorList } from '../Actor';
 import { DateComponent } from '../DateComponent';

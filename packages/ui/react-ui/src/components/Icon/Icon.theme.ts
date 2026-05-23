@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type ComponentFunction, type Size, type Theme } from '@dxos/ui-types';
-
 import { getSize, mx } from '@dxos/ui-theme';
+import { type ComponentFunction, type Size, type Theme } from '@dxos/ui-types';
 
 export type IconStyleProps = {
   size?: Size;

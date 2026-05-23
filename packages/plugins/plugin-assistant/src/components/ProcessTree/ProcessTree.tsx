@@ -8,8 +8,8 @@ import React from 'react';
 
 import { Process } from '@dxos/compute';
 import { Icon, IconButton, ScrollArea, Tooltip, Treegrid } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
 import { composable, composableProps } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 import { Unit } from '@dxos/util';
 
 export type ProcessTreeProps = {

@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { mx } from '@dxos/ui-theme';
 import {
   type ChromaticPalette,
   type ComponentFunction,
@@ -9,8 +10,6 @@ import {
   type NeutralPalette,
   type Theme,
 } from '@dxos/ui-types';
-
-import { mx } from '@dxos/ui-theme';
 
 export type TagStyleProps = {
   palette?: ChromaticPalette | NeutralPalette | MessageValence;

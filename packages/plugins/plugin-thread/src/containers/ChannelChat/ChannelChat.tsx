@@ -8,8 +8,8 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { type Space, useMembers, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { type Channel, Message } from '@dxos/types';
 import { composable, composableProps } from '@dxos/react-ui';
+import { type Channel, Message } from '@dxos/types';
 
 import { Chat } from '#components';
 import { useStatus } from '#hooks';

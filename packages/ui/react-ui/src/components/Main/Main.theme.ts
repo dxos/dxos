@@ -2,9 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type ComponentFunction } from '@dxos/ui-types';
-
 import { mx } from '@dxos/ui-theme';
+import { type ComponentFunction } from '@dxos/ui-types';
 
 // Padding to apply to in-flow elements which need to clear the fixed topbar/bottombar.
 export const topbarBlockPaddingStart = 'py-(--dx-topbar-size) dx-sticky-top-from-topbar-bottom';

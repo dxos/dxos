@@ -2,9 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ComponentFunction } from '@dxos/ui-types';
-
 import { mx } from '@dxos/ui-theme';
+import { type ComponentFunction } from '@dxos/ui-types';
 
 type Size = 'lg' | 'md' | 'sm';
 

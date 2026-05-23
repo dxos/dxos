@@ -2,9 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
+import { mx } from '@dxos/ui-theme';
 import type { ComponentFunction, Theme } from '@dxos/ui-types';
 
-import { mx } from '@dxos/ui-theme';
 import { type ButtonStyleProps } from './Button.theme';
 
 export type IconButtonStyleProps = ButtonStyleProps & {

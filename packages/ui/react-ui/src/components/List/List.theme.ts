@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type ComponentFunction, type Density, type Theme } from '@dxos/ui-types';
-
 import { densityBlockSize, ghostHover } from '@dxos/ui-theme';
 import { getSize, mx } from '@dxos/ui-theme';
+import { type ComponentFunction, type Density, type Theme } from '@dxos/ui-types';
 
 export type ListStyleProps = Partial<{
   density: Density;

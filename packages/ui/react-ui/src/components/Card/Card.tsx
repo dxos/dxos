@@ -16,11 +16,11 @@ import React, {
 } from 'react';
 
 import { iconSize, mx } from '@dxos/ui-theme';
-import { composable, composableProps, slottable } from '../../util';
 import { type Density } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 import { Column } from '../../primitives';
+import { composable, composableProps, slottable } from '../../util';
 import { type ThemedClassName } from '../../util';
 import { Button } from '../Button';
 import { Icon, type IconProps } from '../Icon';

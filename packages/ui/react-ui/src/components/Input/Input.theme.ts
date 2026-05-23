@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import { densityDimensions, staticDisabled } from '@dxos/ui-theme';
+import { getSize, getHeight, getWidth, mx, snapSize, sizeValue, textValence } from '@dxos/ui-theme';
 import {
   type ComponentFragment,
   type ComponentFunction,
@@ -10,9 +12,6 @@ import {
   type MessageValence,
   type Size,
 } from '@dxos/ui-types';
-
-import { densityDimensions, staticDisabled } from '@dxos/ui-theme';
-import { getSize, getHeight, getWidth, mx, snapSize, sizeValue, textValence } from '@dxos/ui-theme';
 
 export type InputStyleProps = Partial<{
   variant: 'default' | 'subdued' | 'static';

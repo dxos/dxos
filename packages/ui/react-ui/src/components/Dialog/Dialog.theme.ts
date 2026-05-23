@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
+import { mx } from '@dxos/ui-theme';
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
-import { mx } from '@dxos/ui-theme';
 import { withColumn } from '../../primitives/Column/Column.theme';
 
 export type DialogSize = 'sm' | 'md' | 'lg' | 'xl';

@@ -2,9 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type ComponentFunction, type Density, type Theme } from '@dxos/ui-types';
-
 import { mx } from '@dxos/ui-theme';
+import { type ComponentFunction, type Density, type Theme } from '@dxos/ui-types';
 
 export type CardStyleProps = {
   border?: boolean;

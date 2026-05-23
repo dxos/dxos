@@ -5,10 +5,10 @@
 import { type Decorator } from '@storybook/react';
 import React from 'react';
 
-import { defaultTx } from '../../theme';
 import { type ThemeMode } from '@dxos/ui-types';
 
 import { type ThemeContextValue, ThemeProvider, Tooltip } from '../../components';
+import { defaultTx } from '../../theme';
 
 /**
  * Adds theme decorator.

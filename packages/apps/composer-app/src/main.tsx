@@ -26,8 +26,8 @@ import { IdbLogStore } from '@dxos/log-store-idb';
 import { Observability } from '@dxos/observability';
 import { translations as observabilityTranslations } from '@dxos/plugin-observability/translations';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
-import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { defaultTx } from '@dxos/react-ui';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
 import { ResetDialog } from './components';
