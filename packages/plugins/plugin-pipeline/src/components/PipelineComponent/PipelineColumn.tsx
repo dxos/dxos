@@ -122,7 +122,7 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
     const { Item } = usePipeline(ITEM_TILE_NAME);
     const icon = Function.pipe(
-      Obj.getSchema(data),
+      Obj.getType(data),
       Option.fromNullable,
       Option.flatMap(Annotation.IconAnnotation.get),
       Option.map(({ icon }) => icon),

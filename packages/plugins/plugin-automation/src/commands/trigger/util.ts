@@ -33,7 +33,13 @@ export const getTriggerRemoteStatus = (trigger: Trigger.Trigger, remoteCronIds: 
 /**
  * Pretty prints a trigger with ANSI colors.
  */
-export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger, remoteStatus?: TriggerRemoteStatus) {
+export const printTrigger: (
+  trigger: Trigger.Trigger,
+  remoteStatus?: TriggerRemoteStatus,
+) => Effect.Effect<any, any, any> = Effect.fn(function* (
+  trigger: Trigger.Trigger,
+  remoteStatus?: TriggerRemoteStatus,
+): any {
   const fn = trigger.function && (yield* Database.load(trigger.function));
 
   return FormBuilder.make({

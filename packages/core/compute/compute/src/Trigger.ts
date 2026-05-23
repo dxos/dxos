@@ -25,7 +25,7 @@ const kindLiteralAnnotations = { title: 'Kind' };
 export const EmailSpec = Schema.Struct({
   kind: Schema.Literal('email').annotations(kindLiteralAnnotations),
 });
-export type EmailSpec = Schema.Schema.Type<typeof EmailSpec>;
+export type EmailSpec = Type.InstanceType<typeof EmailSpec>;
 
 /**
  * Construct an Email trigger spec.
@@ -40,7 +40,7 @@ export const QueueSpec = Schema.Struct({
   // TODO(dmaretskyi): Rename to `feed` and change to a reference.
   queue: EchoURI.Schema,
 });
-export type QueueSpec = Schema.Schema.Type<typeof QueueSpec>;
+export type QueueSpec = Type.InstanceType<typeof QueueSpec>;
 
 /**
  * Construct a Queue trigger spec from a queue EchoURI or legacy DXN string.
@@ -74,7 +74,7 @@ export const SubscriptionSpec = Schema.Struct({
     }).annotations({ title: 'Options' }),
   ),
 });
-export type SubscriptionSpec = Schema.Schema.Type<typeof SubscriptionSpec>;
+export type SubscriptionSpec = Type.InstanceType<typeof SubscriptionSpec>;
 
 /**
  * Construct a Subscription trigger spec from a Query object.
@@ -105,7 +105,7 @@ export const TimerSpec = Schema.Struct({
     [SchemaAST.ExamplesAnnotationId]: ['0 0 * * *'],
   }),
 });
-export type TimerSpec = Schema.Schema.Type<typeof TimerSpec>;
+export type TimerSpec = Type.InstanceType<typeof TimerSpec>;
 
 /**
  * Construct a Timer trigger spec from a cron string.
@@ -129,7 +129,7 @@ export const WebhookSpec = Schema.Struct({
     }),
   ),
 });
-export type WebhookSpec = Schema.Schema.Type<typeof WebhookSpec>;
+export type WebhookSpec = Type.InstanceType<typeof WebhookSpec>;
 
 /**
  * Construct a Webhook trigger spec from a method and port.
@@ -146,7 +146,7 @@ export const specWebhook = (opts?: { method?: string; port?: number }): WebhookS
 export const Spec = Schema.Union(EmailSpec, QueueSpec, SubscriptionSpec, TimerSpec, WebhookSpec).annotations({
   title: 'Trigger',
 });
-export type Spec = Schema.Schema.Type<typeof Spec>;
+export type Spec = Type.InstanceType<typeof Spec>;
 
 /**
  * Function trigger.
@@ -195,12 +195,12 @@ const TriggerSchema = Schema.Struct({
    */
   input: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.trigger', '0.1.0')),
   Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'yellow' }),
   SystemTypeAnnotation.set(true),
+  Type.object(DXN.make('org.dxos.type.trigger', '0.1.0')),
 );
 
-export interface Trigger extends Schema.Schema.Type<typeof TriggerSchema> {}
+export type Trigger = Type.InstanceType<typeof TriggerSchema>;
 export const Trigger: Type.Obj<Trigger> = TriggerSchema as any;
 
 export const make = (props: Obj.MakeProps<typeof Trigger>) => Obj.make(Trigger, props);

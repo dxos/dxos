@@ -56,7 +56,7 @@ export const useSyncTrigger = ({
   functionKey: string;
   /** Additional input fields merged into the trigger input alongside the subject ref. */
   input?: Record<string, unknown>;
-}) => {
+}): any => {
   const client = useClient();
   const [pending, setPending] = useState(false);
   const triggers = useQuery(db, Query.select(Filter.type(Trigger.Trigger)).debugLabel('plugin-inbox.useSyncTrigger'));

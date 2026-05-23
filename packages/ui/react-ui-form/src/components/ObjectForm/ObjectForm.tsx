@@ -14,10 +14,10 @@ import { isNonNullable } from '@dxos/util';
 
 import { translationKey } from '#translations';
 
-import { Form, type FormFieldMap, omitId } from '../Form';
+import { Form, type FormFieldMap, omitId, toSchema } from '../Form';
 
 export type ObjectFormProps = {
-  schema: Schema.Schema.AnyNoContext;
+  schema: Schema.Schema.AnyNoContext | Type.AnyType;
   object: Obj.Unknown;
 };
 
@@ -44,7 +44,7 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
       omitId(
         Schema.Struct({
           tags: Schema.Array(Ref.Ref(Tag.Tag)).pipe(Schema.optional),
-        }).pipe(Schema.extend(schema)),
+        }).pipe(Schema.extend(toSchema(schema))),
       ),
     [schema],
   );

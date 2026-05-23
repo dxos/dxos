@@ -31,7 +31,7 @@ const IntegrationTarget = Schema.Struct({
   ),
 }).pipe(FormInputAnnotation.set(false));
 
-export type IntegrationTarget = Schema.Schema.Type<typeof IntegrationTarget>;
+export type IntegrationTarget = Type.InstanceType<typeof IntegrationTarget>;
 
 /**
  * External-service integration: {@link AccessToken} plus synced local roots (`targets`).
@@ -56,15 +56,15 @@ export const Integration = Schema.Struct({
     Schema.optional,
   ),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.integration', '0.1.0')),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--plugs-connected--regular',
     hue: 'cyan',
   }),
+  Type.object(DXN.make('org.dxos.type.integration', '0.1.0')),
 );
 
-export interface Integration extends Schema.Schema.Type<typeof Integration> {}
+export type Integration = Type.InstanceType<typeof Integration>;
 
 export const instanceOf = (value: unknown): value is Integration => Obj.instanceOf(Integration, value);
 

@@ -211,7 +211,7 @@ export const RefField = (props: RefFieldProps) => {
                 // Strip hidden (`FormInputAnnotation.set(false)`) fields so the
                 // form's validator doesn't reject required-but-hidden fields
                 // such as backing-object refs supplied by a `FactoryAnnotation`.
-                createSchema={createSchema && omitHiddenFormFields(omitId(Type.isType(createSchema) ? Type.getSchema(createSchema) : createSchema))}
+                createSchema={createSchema && omitHiddenFormFields(omitId(Type.getSchema(createSchema)))}
                 createOptionLabel={createOptionLabel}
                 createOptionIcon={createOptionIcon}
                 createInitialValuePath={createInitialValuePath}

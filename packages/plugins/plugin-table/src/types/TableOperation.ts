@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { SpaceSchema } from '@dxos/client-protocol';
 import { Operation } from '@dxos/compute';
-import { Database, View } from '@dxos/echo';
+import { Database, Type, View } from '@dxos/echo';
 import { TypeInputOptionsAnnotation } from '@dxos/plugin-space';
 import { Table } from '@dxos/react-ui-table/types';
 
@@ -58,7 +58,7 @@ export const Create = Operation.make({
     CreateTableSchema,
   ),
   output: Schema.Struct({
-    object: Table.Table,
+    object: Type.getSchema(Table.Table),
   }),
 });
 
@@ -66,7 +66,7 @@ export const Create = Operation.make({
 export const AddRow = Operation.make({
   meta: { key: `${TABLE_OPERATION}.add-row`, name: 'Add Row' },
   input: Schema.Struct({
-    view: View.View,
+    view: Type.getSchema(View.View),
     data: Schema.Any,
   }),
   output: Schema.Void,

@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
@@ -72,7 +73,7 @@ export const ConstantOutput = Schema.Struct({ [DEFAULT_OUTPUT]: Scalar });
 //
 
 export const QueueInput = Schema.Struct({ [DEFAULT_INPUT]: ObjectId });
-export const QueueOutput = Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Array(Message.Message) });
+export const QueueOutput = Schema.Struct({ [DEFAULT_OUTPUT]: Schema.Array(Type.getSchema(Message.Message)) });
 
 //
 // Function

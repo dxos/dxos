@@ -34,7 +34,7 @@ const Author = Schema.Struct({
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--user--regular', hue: 'blue' }),
 );
-type Author = Schema.Schema.Type<typeof Author>;
+type Author = Type.InstanceType<typeof Author>;
 
 const Article = Schema.Struct({
   title: Schema.String.pipe(Schema.optional),
@@ -44,7 +44,7 @@ const Article = Schema.Struct({
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({ icon: 'ph--article--regular', hue: 'green' }),
 );
-type Article = Schema.Schema.Type<typeof Article>;
+type Article = Type.InstanceType<typeof Article>;
 
 //
 // `Note` mirrors the `Subscription.Feed` shape: a required `Ref` field
@@ -55,7 +55,7 @@ type Article = Schema.Schema.Type<typeof Article>;
 // field included to exercise the same path for non-required hidden fields.
 //
 const NoteBacking = Schema.Struct({}).pipe(Type.object(DXN.make('org.dxos.test.noteBacking', '0.1.0')));
-type NoteBacking = Schema.Schema.Type<typeof NoteBacking>;
+type NoteBacking = Type.InstanceType<typeof NoteBacking>;
 
 const Note = Schema.Struct({
   title: Schema.String,
@@ -68,7 +68,7 @@ const Note = Schema.Struct({
   FactoryAnnotation.set(((values: any) =>
     Obj.make(Note, { ...values, backing: Ref.make(Obj.make(NoteBacking, {})) })) as FactoryFn),
 );
-type Note = Schema.Schema.Type<typeof Note>;
+type Note = Type.InstanceType<typeof Note>;
 
 const Notebook = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
@@ -78,7 +78,7 @@ const Notebook = Schema.Struct({
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({ icon: 'ph--notebook--regular', hue: 'amber' }),
 );
-type Notebook = Schema.Schema.Type<typeof Notebook>;
+type Notebook = Type.InstanceType<typeof Notebook>;
 
 //
 // Stories.

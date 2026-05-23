@@ -114,12 +114,12 @@ export const Person = PersonSchema.pipe(
     }),
   ),
   Schema.annotations({ title: 'Person' }),
-  Type.object(DXN.make('org.dxos.type.person', '0.1.0')),
   LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
   Annotation.IconAnnotation.set({
     icon: 'ph--user--regular',
     hue: 'neutral',
   }),
+  Type.object(DXN.make('org.dxos.type.person', '0.1.0')),
 );
 
 export type Person = Type.InstanceType<typeof Person>;
@@ -130,6 +130,6 @@ export const make = (props: Partial<Obj.MakeProps<typeof Person>> = {}) => Obj.m
  */
 export const LegacyPerson = PersonSchema.pipe(
   Schema.annotations({ title: 'Person' }),
-  Type.object(DXN.make('org.dxos.type.person', '0.1.0')),
   LabelAnnotation.set(['preferredName', 'fullName', 'nickname']),
+  Type.object(DXN.make('org.dxos.type.person', '0.1.0')),
 );

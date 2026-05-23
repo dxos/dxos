@@ -19,9 +19,9 @@ const handler: Operation.WithHandler<typeof AssistantOperation.EnsureCompanionCh
         const companionUri = Obj.getURI(companionTo);
 
         // 1. Look for an existing persisted companion chat in the space.
-        const existingChats = yield* Effect.promise(() =>
+        const existingChats = (yield* Effect.promise(() =>
           db.query(Query.select(Filter.id(companionTo.id)).targetOf(Chat.CompanionTo).source()).run(),
-        );
+        )) as Chat.Chat[];
         if (existingChats.length > 0) {
           const chat = existingChats.at(-1) as Chat.Chat;
           // Cache the persisted chat so the graph connector can resolve it immediately

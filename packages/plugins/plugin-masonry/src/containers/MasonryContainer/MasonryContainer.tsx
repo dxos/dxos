@@ -99,7 +99,7 @@ export const MasonryContainer = ({
 const Item = ({ data }: { data: any }) => {
   const objectMenuItems = useObjectMenuItems(data);
   const icon = Function.pipe(
-    Obj.getSchema(data),
+    Obj.getType(data),
     Option.fromNullable,
     Option.flatMap(Annotation.IconAnnotation.get),
     Option.map(({ icon }) => icon),

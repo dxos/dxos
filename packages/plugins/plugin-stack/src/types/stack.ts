@@ -23,4 +23,4 @@ export const StackViewType = Schema.Struct({
   sections: Schema.Record({ key: Schema.String, value: SectionSchema }),
 }).pipe(Type.object(DXN.make('org.dxos.type.stackView', '0.1.0')));
 
-export interface StackViewType extends Schema.Schema.Type<typeof StackViewType> {}
+export type StackViewType = Type.InstanceType<typeof StackViewType>;

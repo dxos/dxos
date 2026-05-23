@@ -4,7 +4,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { JsonSchema, Obj, Type } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { ProjectionModel, createEchoChangeCallback, getTypenameFromQuery } from '@dxos/schema';
 

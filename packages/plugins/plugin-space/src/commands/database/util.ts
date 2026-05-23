@@ -11,7 +11,7 @@ import { Entity } from '@dxos/echo';
 export const printObject = (obj: Entity.Unknown) => {
   const typename = Entity.getTypename(obj) ?? '<unknown>';
 
-  // TODO(wittjosiah): Obj.getSchema and thus Obj.getLabel are coming back undefined for some reason.
+  // TODO(wittjosiah): Obj.getType and thus Obj.getLabel are coming back undefined for some reason.
   return FormBuilder.make({ title: Entity.getLabel(obj) ?? typename }).pipe(
     FormBuilder.set('id', obj.id),
     FormBuilder.set('typename', typename),

@@ -17,19 +17,19 @@ export const Canvas = Schema.Struct({
   schema: Schema.String.pipe(Schema.optional),
   content: Schema.Record({ key: Schema.String, value: Schema.Any }),
 }).pipe(Type.object(DXN.make('org.dxos.type.canvas', '0.1.0')), SystemTypeAnnotation.set(true));
-export interface Canvas extends Schema.Schema.Type<typeof Canvas> {}
+export type Canvas = Type.InstanceType<typeof Canvas>;
 
 export const Sketch = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   canvas: Ref.Ref(Canvas).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.sketch', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--compass-tool--regular',
     hue: 'indigo',
   }),
+  Type.object(DXN.make('org.dxos.type.sketch', '0.1.0')),
 );
-export interface Sketch extends Schema.Schema.Type<typeof Sketch> {}
+export type Sketch = Type.InstanceType<typeof Sketch>;
 
 export type SketchProps = Omit<Obj.MakeProps<typeof Sketch>, 'canvas'> & {
   canvas?: Partial<Obj.MakeProps<typeof Canvas>>;

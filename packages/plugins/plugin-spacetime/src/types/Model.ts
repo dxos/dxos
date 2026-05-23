@@ -11,11 +11,11 @@ import { FormInputAnnotation } from '@dxos/echo/internal';
 
 /** Supported primitive geometry types. */
 export const PrimitiveType = Schema.Literal('cube', 'sphere', 'cylinder', 'cone', 'pyramid');
-export type PrimitiveType = Schema.Schema.Type<typeof PrimitiveType>;
+export type PrimitiveType = Type.InstanceType<typeof PrimitiveType>;
 
 /** Bundled preset model names. */
 export const PresetType = Schema.Literal('firetruck', 'race', 'taxi');
-export type PresetType = Schema.Schema.Type<typeof PresetType>;
+export type PresetType = Type.InstanceType<typeof PresetType>;
 
 /** Union of all object template types (primitives + presets). */
 export type ObjectTemplate = PrimitiveType | PresetType;
@@ -26,7 +26,7 @@ export const Vec3 = Schema.Struct({
   y: Schema.Number,
   z: Schema.Number,
 });
-export type Vec3 = Schema.Schema.Type<typeof Vec3>;
+export type Vec3 = Type.InstanceType<typeof Vec3>;
 
 /**
  * Serialized mesh geometry.
@@ -38,7 +38,7 @@ export const Mesh = Schema.Struct({
   /** Base64-encoded Uint32Array of triangle indices. */
   indexData: Schema.String,
 });
-export type Mesh = Schema.Schema.Type<typeof Mesh>;
+export type Mesh = Type.InstanceType<typeof Mesh>;
 
 /**
  * 3D model object.
@@ -58,13 +58,13 @@ export const Object = Schema.Struct({
   rotation: Vec3.pipe(FormInputAnnotation.set(false)),
   color: Schema.optional(Schema.String),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.spacetime.object', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--cube--regular',
     hue: 'teal',
   }),
+  Type.object(DXN.make('org.dxos.type.spacetime.object', '0.1.0')),
 );
-export type Object = Schema.Schema.Type<typeof Object>;
+export type Object = Type.InstanceType<typeof Object>;
 
 /** Create a model object with sensible defaults. */
 export const make = (props?: Partial<Obj.MakeProps<typeof Object>>): Object =>

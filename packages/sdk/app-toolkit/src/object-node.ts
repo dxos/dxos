@@ -146,11 +146,11 @@ export const createObjectNode = ({
     return null;
   }
 
-  // Obj.getSchema uses the stored type DXN to look up the schema. For database-registered
+  // Obj.getType uses the stored type DXN to look up the schema. For database-registered
   // (dynamic) schemas the echo-handler queries by id=dxn:type:typename, but the stored
   // PersistentSchema jsonSchema.$id is dxn:echo:@:<objectId> so the id-based lookup misses.
   // Fall back to a typename query which matches the PersistentSchema.typename field.
-  const rawSchema = Obj.getSchema(object) ?? db.schemaRegistry.query({ typename: type }).runSync()[0];
+  const rawSchema = Obj.getType(object) ?? db.schemaRegistry.query({ typename: type }).runSync()[0];
   const schema = rawSchema && Type.isType(rawSchema) ? Type.getSchema(rawSchema) : rawSchema;
   const staticIcon = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema)) : undefined;
   const iconFromRefProp = schema ? Option.getOrUndefined(Annotation.IconFromRefAnnotation.get(schema)) : undefined;
@@ -162,7 +162,7 @@ export const createObjectNode = ({
     }
     const refValue = (object as any)?.[iconFromRefProp];
     const target = Ref.isRef(refValue) ? refValue.target : undefined;
-    const targetSchema = target ? Obj.getSchema(target as Obj.Unknown) : undefined;
+    const targetSchema = target ? Obj.getType(target as Obj.Unknown) : undefined;
     return targetSchema ? Option.getOrUndefined(Annotation.IconAnnotation.get(targetSchema)) : undefined;
   })();
   const iconAnnotation = delegatedIcon ?? staticIcon;

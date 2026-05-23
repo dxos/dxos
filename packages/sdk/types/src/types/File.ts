@@ -56,11 +56,11 @@ export const File = Schema.Struct({
   data: FileDataSchema.pipe(FormInputAnnotation.set(false)),
   timestamp: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.file', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--file--regular',
     hue: 'teal',
   }),
+  Type.object(DXN.make('org.dxos.type.file', '0.1.0')),
 );
 
 export type File = Type.InstanceType<typeof File>;

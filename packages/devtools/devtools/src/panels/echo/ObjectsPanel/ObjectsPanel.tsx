@@ -112,9 +112,9 @@ export const ObjectsPanel = (props: { space?: Space }) => {
     return items.filter(textFilter(filter)).map((item) => ({
       id: item.id,
       type: Obj.getTypename(item),
-      version: Obj.getSchema(item) ? Type.getVersion(Obj.getSchema(item)!) : undefined,
+      version: Obj.getType(item) ? Type.getVersion(Obj.getType(item)!) : undefined,
       deleted: Obj.isDeleted(item) ? 'DELETED' : ' ',
-      schemaAvailable: Obj.getSchema(item) ? 'YES' : 'NO',
+      schemaAvailable: Obj.getType(item) ? 'YES' : 'NO',
       _original: item, // Store the original item for selection
     }));
   }, [items, filter]);

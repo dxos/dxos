@@ -10,10 +10,9 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 import * as Record from 'effect/Record';
-import type * as Schema from 'effect/Schema';
 
 import { type CleanupFn, type Trigger } from '@dxos/async';
-import { type Entity, type Type } from '@dxos/echo';
+import { type Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type MaybePromise, type Position, byPosition, getDebugName, isNonNullable } from '@dxos/util';
 
@@ -798,11 +797,11 @@ export type CreateTypeExtensionOptions<T extends Type.AnyType = Type.AnyType, R 
   id: string;
   type: T;
   actions?: (
-    object: Entity.Entity<Schema.Schema.Type<T>>,
+    object: Type.InstanceType<T>,
     get: Atom.Context,
   ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>>, 'type'>[], Error, R>;
   connector?: (
-    object: Entity.Entity<Schema.Schema.Type<T>>,
+    object: Type.InstanceType<T>,
     get: Atom.Context,
   ) => Effect.Effect<Node.NodeArg<any>[], Error, R>;
   relation?: Node.RelationInput;
@@ -818,7 +817,7 @@ export const createTypeExtension = <T extends Type.AnyType, R = never>(
   options: CreateTypeExtensionOptions<T, R>,
 ): Effect.Effect<BuilderExtension[], never, R> => {
   const { id, type, actions, connector, relation, position } = options;
-  return createExtension<Entity.Entity<Schema.Schema.Type<T>>, R>({
+  return createExtension<Type.InstanceType<T>, R>({
     id,
     match: NodeMatcher.whenEchoType(type),
     actions,

@@ -88,7 +88,7 @@ const _createEntityExtractionEnricher = ({ contextTypes, space }: EntityExtracti
   return async (message: Message.Message) => {
     const objects = await space.db
       .query(
-        Query.select(Filter.or(...contextTypes.map((schema) => Filter.type(schema as Schema.Schema<Obj.Unknown>)))),
+        Query.select(Filter.or(...contextTypes.map((schema) => Filter.type(schema as any)))),
       )
       .run();
 
@@ -97,7 +97,7 @@ const _createEntityExtractionEnricher = ({ contextTypes, space }: EntityExtracti
     const { message: enhancedMessage, timeElapsed } = await processTranscriptMessage({
       input: {
         message,
-        objects: await Promise.all(objects.map((obj) => processContextObject(obj))),
+        objects: await Promise.all(objects.map((obj) => processContextObject(obj as Obj.Unknown))),
       },
       function: extractionAnthropicFunction,
       options: { timeout: ENTITY_EXTRACTOR_TIMEOUT, fallbackToRaw: true },

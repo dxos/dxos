@@ -23,7 +23,7 @@ const Organization = Schema.Struct({
   name: Schema.String.pipe(Schema.minLength(1)).annotations({ title: 'Full name' }),
 }).pipe(Type.object(DXN.make('com.example.type.organization', '0.1.0')));
 
-export interface Organization extends Schema.Schema.Type<typeof Organization> {}
+export type Organization = Type.InstanceType<typeof Organization>;
 
 const Person = Schema.Struct({
   name: Schema.String.pipe(Schema.minLength(1)).annotations({ title: 'Full name' }),
@@ -60,7 +60,7 @@ const Person = Schema.Struct({
   ),
 }).pipe(Type.object(DXN.make('org.dxos.type.person', '0.1.0')));
 
-export interface Person extends Schema.Schema.Type<typeof Person> {}
+export type Person = Type.InstanceType<typeof Person>;
 
 type DefaultStoryProps<T extends AnyProperties> = {
   schema?: Schema.Schema<T>;

@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { JSONPath } from 'jsonpath-plus';
 
 import { Operation } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Ref, View } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref, Type, View } from '@dxos/echo';
 import { isInstanceOf } from '@dxos/echo/internal';
 import { QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
@@ -196,7 +196,7 @@ export const registry: Record<NodeType, Executable> = {
     input: VoidInput,
     output: Schema.Struct({
       id: ObjectId,
-      messages: Schema.Array(Message.Message),
+      messages: Schema.Array(Type.getSchema(Message.Message)),
     }),
   }),
 
@@ -245,7 +245,7 @@ export const registry: Record<NodeType, Executable> = {
             for (const item of items) {
               const { id: _id, '@type': _type, ...rest } = item;
               // TODO(dmaretskyi): Forbid type on create.
-              db.add(Obj.make(schema, rest));
+              db.add(Obj.make(schema as unknown as Type.AnyObjectType, rest));
             }
             yield* Effect.promise(() => db.flush());
           } else {

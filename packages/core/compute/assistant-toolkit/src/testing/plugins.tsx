@@ -15,7 +15,7 @@ export const MapSchema = Schema.Struct({
   coordinates: Format.GeoPoint,
 }).pipe(Type.object(DXN.make('com.example.type.map', '0.1.0')));
 
-export type MapSchema = Schema.Schema.Type<typeof MapSchema>;
+export type MapSchema = Type.InstanceType<typeof MapSchema>;
 
 // TODO(burdon): Move to ECHO def.
 export type ArtifactsContext = {

@@ -4,7 +4,7 @@
 
 import React, { forwardRef, useState } from 'react';
 
-import { Filter, Obj, Type, type View } from '@dxos/echo';
+import { Filter, Obj, type View } from '@dxos/echo';
 import { useQuery, useSchema } from '@dxos/react-client/echo';
 import { Card, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelected } from '@dxos/react-ui-attention';
@@ -27,8 +27,7 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
   const { t } = useTranslation(meta.id);
   const db = Obj.getDatabase(view);
   const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const rawSchema = useSchema(db, typename);
-  const schema = rawSchema && Type.isType(rawSchema) ? Type.getSchema(rawSchema) : rawSchema;
+  const schema = useSchema(db, typename);
 
   const queriedObjects = useQuery(db, schema ? Filter.type(schema) : Filter.nothing());
   const selectedRows = useSelected(objectId, 'multi');

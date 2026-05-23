@@ -8,7 +8,7 @@ import { DXN, Annotation, Format, Obj, Ref, Type, View } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { ViewAnnotation } from '@dxos/schema';
 
-export const Map = Schema.Struct({
+const MapSchema = Schema.Struct({
   name: Schema.optional(Schema.String),
   view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false), Schema.optional),
   center: Format.GeoPoint.pipe(FormInputAnnotation.set(false), Schema.optional),
@@ -17,16 +17,24 @@ export const Map = Schema.Struct({
   //   e.g., points, lines, polygons, etc.
   coordinates: Schema.Array(Format.GeoPoint).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.map', '0.1.0')),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(['view']),
   Annotation.IconAnnotation.set({
     icon: 'ph--compass--regular',
     hue: 'green',
   }),
+  Type.object(DXN.make('org.dxos.type.map', '0.1.0')),
 );
 
-export interface Map extends Schema.Schema.Type<typeof Map> {}
+export interface Map
+  extends Obj.OfShape<{
+    readonly name?: string;
+    view?: Ref.Ref<View.View>;
+    center?: [number, number];
+    zoom?: number;
+    coordinates?: ReadonlyArray<[number, number]>;
+  }> {}
+export const Map: Type.Obj<Map> = MapSchema as any;
 
 type MakeProps = Omit<Partial<Obj.MakeProps<typeof Map>>, 'view'> & {
   view?: View.View;

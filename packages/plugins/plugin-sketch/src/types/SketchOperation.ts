@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
+import { Type } from '@dxos/echo';
 
 import { meta } from '#meta';
 
@@ -22,6 +23,6 @@ export const Create = Operation.make({
     content: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
   }),
   output: Schema.Struct({
-    object: Sketch.Sketch,
+    object: Type.getSchema(Sketch.Sketch),
   }),
 });

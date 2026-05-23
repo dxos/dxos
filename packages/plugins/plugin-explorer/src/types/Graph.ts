@@ -18,15 +18,20 @@ const GraphSchema = Schema.Struct({
     ast: QueryAST.Query,
   }).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.graph', '0.1.0')),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(['view']),
   Annotation.IconAnnotation.set({
     icon: 'ph--graph--regular',
     hue: 'green',
   }),
+  Type.object(DXN.make('org.dxos.type.graph', '0.1.0')),
 );
-export interface Graph extends Schema.Schema.Type<typeof GraphSchema> {}
+export interface Graph
+  extends Obj.OfShape<{
+    readonly name?: string;
+    view: Ref.Ref<View.View>;
+    query: { readonly raw?: string; readonly ast: QueryAST.Query };
+  }> {}
 export const Graph: Type.Obj<Graph> = GraphSchema as any;
 
 type MakeProps = Omit<Partial<Obj.MakeProps<typeof Graph>>, 'view'> & {

@@ -24,7 +24,7 @@ export const CellValue = Schema.Struct({
   value: Schema.Any,
 });
 
-export type CellValue = Schema.Schema.Type<typeof CellValue>;
+export type CellValue = Type.InstanceType<typeof CellValue>;
 
 // TODO(burdon): IMPORTANT: Reconcile with Field definition.
 export const Range = Schema.Struct({
@@ -33,7 +33,7 @@ export const Range = Schema.Struct({
   value: Schema.String,
 });
 
-export type Range = Schema.Schema.Type<typeof Range>;
+export type Range = Type.InstanceType<typeof Range>;
 
 // TODO(burdon): Visibility, locked, frozen, etc.
 export const RowColumnMeta = Schema.Struct({
@@ -63,14 +63,14 @@ export const Sheet = Schema.Struct({
   // Cell formatting referenced by indexed range.
   ranges: Schema.Array(Range).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.sheet', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--grid-nine--regular',
     hue: 'indigo',
   }),
+  Type.object(DXN.make('org.dxos.type.sheet', '0.1.0')),
 );
 
-export interface Sheet extends Schema.Schema.Type<typeof Sheet> {}
+export type Sheet = Type.InstanceType<typeof Sheet>;
 
 export type SheetProps = {
   name?: string;

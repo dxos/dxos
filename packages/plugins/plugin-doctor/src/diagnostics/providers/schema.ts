@@ -5,7 +5,7 @@
 import * as Either from 'effect/Either';
 import * as Schema from 'effect/Schema';
 
-import { Obj } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 
 import { meta } from '#meta';
 
@@ -33,7 +33,7 @@ export const schemaDiagnostic: DiagnosticProvider = {
         if (signal.aborted) {
           break;
         }
-        const schema = Obj.getSchema(obj);
+        const schema = Obj.getType(obj);
         if (!schema) {
           // Untyped documents and some system objects legitimately have no schema —
           // surface as 'info' rather than 'warning' to keep the signal/noise ratio reasonable.
@@ -46,7 +46,7 @@ export const schemaDiagnostic: DiagnosticProvider = {
           });
           continue;
         }
-        const result = Schema.validateEither(schema as Schema.Schema.AnyNoContext)(obj);
+        const result = Schema.validateEither(Type.getSchema(schema))(obj);
         if (Either.isLeft(result)) {
           issues.push({
             id: `${space.id}:${(obj as { id?: string }).id ?? 'unknown'}:schema-mismatch`,

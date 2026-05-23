@@ -63,7 +63,7 @@ export const FormCellEditor = <T extends Type.AnyType = Type.AnyType>({
       return undefined;
     }
 
-    return narrowSchema(Type.isType(schema) ? Type.getSchema(schema) : schema, [fieldProjection.field.path]);
+    return narrowSchema(Type.getSchema(schema), [fieldProjection.field.path]);
   }, [JSON.stringify(schema), fieldProjection.field.path]); // TODO(burdon): Avoid stringify.
 
   const originalRow = useMemo<TableRow | undefined>(() => {

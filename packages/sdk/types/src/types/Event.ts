@@ -48,13 +48,13 @@ export const Event = Schema.Struct({
    */
   thread: Ref.Ref(Thread.Thread).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.event', '0.1.0')),
   LabelAnnotation.set(['title']),
   DescriptionAnnotation.set('description'),
   Annotation.IconAnnotation.set({
     icon: 'ph--calendar-dot--regular',
     hue: 'rose',
   }),
+  Type.object(DXN.make('org.dxos.type.event', '0.1.0')),
 );
 
 export type Event = Type.InstanceType<typeof Event>;

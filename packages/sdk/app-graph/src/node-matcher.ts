@@ -3,9 +3,8 @@
 //
 
 import * as Option from 'effect/Option';
-import type * as Schema from 'effect/Schema';
 
-import { type Entity, Obj, type Type } from '@dxos/echo';
+import { Obj, type Type } from '@dxos/echo';
 
 import * as Node from './node';
 
@@ -112,9 +111,9 @@ export const whenNodeType =
  * @see {@link whenEchoTypeMatches} - Returns the node instead of data for legacy composition.
  */
 export const whenEchoType =
-  <T extends Type.AnyType>(type: T): NodeMatcher<Entity.Entity<Schema.Schema.Type<T>>> =>
-  (node: Node.Node): Option.Option<Entity.Entity<Schema.Schema.Type<T>>> =>
-    Obj.instanceOf(type, node.data) ? Option.some(node.data) : Option.none();
+  <T extends Type.AnyType>(type: T): NodeMatcher<Type.InstanceType<T>> =>
+  (node: Node.Node): Option.Option<Type.InstanceType<T>> =>
+    Obj.instanceOf(type, node.data) ? Option.some(node.data as Type.InstanceType<T>) : Option.none();
 
 /**
  * Matches a node whose data is any ECHO object.

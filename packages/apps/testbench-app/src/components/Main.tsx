@@ -3,7 +3,6 @@
 //
 
 import { randSentence, randWord } from '@ngneat/falso'; // TODO(burdon): Reconcile with echo-generator.
-import type * as Schema from 'effect/Schema';
 import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Devtools, StatsPanel, useStats } from '@dxos/devtools';
@@ -51,14 +50,14 @@ export const Main = () => {
       [Item, Document].reduce((map, type) => {
         map.set(Type.getTypename(type), type);
         return map;
-      }, new Map<string, Schema.Schema<any>>()),
+      }, new Map<string, Type.AnyType>()),
     [],
   );
 
   const getSchema = (type: string | undefined) => typeMap.get(type ?? Item.typename) ?? Item;
-  const objectsOfSchema = useQuery(space?.db, Query.type(getSchema(type)));
+  const objectsOfSchema = useQuery(space?.db, Query.type(getSchema(type) as any));
   const objects = useMemo(
-    () => objectsOfSchema.filter((object) => match(filter, object.content)),
+    () => objectsOfSchema.filter((object) => match(filter, (object as any).content)),
     [objectsOfSchema, filter],
   );
 
@@ -213,9 +212,9 @@ export const Main = () => {
             onViewChange={(view) => setView(view)}
           />
 
-          {view === 'table' && <ItemTable schema={getSchema(type)} objects={objects} />}
-          {view === 'list' && <ItemList objects={objects} onDelete={handleObjectDelete} />}
-          {view === 'debug' && <ItemList debug objects={objects} onDelete={handleObjectDelete} />}
+          {view === 'table' && <ItemTable schema={getSchema(type) as any} objects={objects as any} />}
+          {view === 'list' && <ItemList objects={objects as any} onDelete={handleObjectDelete} />}
+          {view === 'debug' && <ItemList debug objects={objects as any} onDelete={handleObjectDelete} />}
         </div>
         <div className='flex h-[32px] p-2 items-center relative text-xs'>
           <div>{objects.length} objects</div>

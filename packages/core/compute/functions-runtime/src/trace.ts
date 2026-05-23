@@ -33,9 +33,9 @@ export const TraceEventException = Schema.Struct({
   stack: Schema.optional(Schema.String),
 });
 
-export type TraceEventException = Schema.Schema.Type<typeof TraceEventException>;
+export type TraceEventException = Type.InstanceType<typeof TraceEventException>;
 
-export const InvocationTraceStartEvent = Schema.Struct({
+const InvocationTraceStartEventSchema = Schema.Struct({
   /**
    * Queue message id.
    */
@@ -106,9 +106,29 @@ export const InvocationTraceStartEvent = Schema.Struct({
   runtime: Schema.optional(FunctionRuntimeKind),
 }).pipe(Type.object(DXN.make('org.dxos.type.invocationTraceStart', '0.1.0')));
 
-export interface InvocationTraceStartEvent extends Schema.Schema.Type<typeof InvocationTraceStartEvent> {}
+export interface InvocationTraceStartEvent
+  extends Obj.OfShape<{
+    readonly type: InvocationTraceEventType.START;
+    readonly invocationId: string;
+    readonly parentInvocationId?: string;
+    readonly timestamp: number;
+    readonly input: unknown;
+    readonly invocationTraceFeed?: Ref.Ref<Feed.Feed>;
+    readonly invocationTarget?: Ref.Ref<Obj.Unknown>;
+    readonly trigger?: Ref.Ref<Trigger.Trigger>;
+    readonly chat?: Ref.Ref<Obj.Unknown>;
+    readonly process?: {
+      readonly pid: string;
+      readonly parentPid?: string;
+      readonly key: string;
+      readonly name?: string;
+      readonly target?: string;
+    };
+    readonly runtime?: FunctionRuntimeKind;
+  }> {}
+export const InvocationTraceStartEvent: Type.Obj<InvocationTraceStartEvent> = InvocationTraceStartEventSchema as any;
 
-export const InvocationTraceEndEvent = Schema.Struct({
+const InvocationTraceEndEventSchema = Schema.Struct({
   /**
    * Trace event id.
    */
@@ -129,7 +149,15 @@ export const InvocationTraceEndEvent = Schema.Struct({
   error: Schema.optional(SerializedError),
 }).pipe(Type.object(DXN.make('org.dxos.type.invocationTraceEnd', '0.1.0')));
 
-export interface InvocationTraceEndEvent extends Schema.Schema.Type<typeof InvocationTraceEndEvent> {}
+export interface InvocationTraceEndEvent
+  extends Obj.OfShape<{
+    readonly type: InvocationTraceEventType.END;
+    readonly invocationId: string;
+    readonly timestamp: number;
+    readonly outcome: InvocationOutcome;
+    readonly error?: SerializedError;
+  }> {}
+export const InvocationTraceEndEvent: Type.Obj<InvocationTraceEndEvent> = InvocationTraceEndEventSchema as any;
 
 export type InvocationTraceEvent = InvocationTraceStartEvent | InvocationTraceEndEvent;
 
@@ -151,7 +179,7 @@ export const TraceEvent = Schema.Struct({
   exceptions: Schema.Array(TraceEventException),
 }).pipe(Type.object(DXN.make('org.dxos.type.traceEvent', '0.1.0')));
 
-export type TraceEvent = Schema.Schema.Type<typeof TraceEvent>;
+export type TraceEvent = Type.InstanceType<typeof TraceEvent>;
 
 /**
  * InvocationTrace event format.

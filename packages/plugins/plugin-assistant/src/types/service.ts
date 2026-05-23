@@ -33,7 +33,7 @@ const ApiAuthorizationOauth = Schema.Struct({
 });
 
 export const ApiAuthorization = Schema.Union(ApiAuthorizationKey, ApiAuthorizationOauth);
-export type ApiAuthorization = Schema.Schema.Type<typeof ApiAuthorization>;
+export type ApiAuthorization = Type.InstanceType<typeof ApiAuthorization>;
 
 const ServiceInterfaceFunction = Schema.Struct({
   kind: Schema.Literal('function'),
@@ -71,7 +71,7 @@ const ServiceInterface = Schema.Union(
   ServiceInterfaceApi,
 ) as any;
 
-export type ServiceInterface = Schema.Schema.Type<typeof ServiceInterface>;
+export type ServiceInterface = Type.InstanceType<typeof ServiceInterface>;
 
 export const ServiceType = Schema.Struct({
   serviceId: Schema.String,
@@ -86,7 +86,7 @@ export const ServiceType = Schema.Struct({
   interfaces: Schema.optional(Schema.Array(ServiceInterface)),
 }).pipe(Type.object(DXN.make('org.dxos.type.service', '0.1.0')));
 
-export interface ServiceType extends Schema.Schema.Type<typeof ServiceType> {}
+export type ServiceType = Type.InstanceType<typeof ServiceType>;
 
 //
 // Service Registry

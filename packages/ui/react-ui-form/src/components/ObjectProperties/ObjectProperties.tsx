@@ -31,17 +31,17 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
     const tags = (meta.tags ?? []).map((tag) => db?.makeRef(URI.make(tag))).filter(isNonNullable);
     const values = useMemo(() => ({ tags, ...object }), [object, tags]);
 
-    // Obj.getSchema fails for database-registered (dynamic) schemas due to DXN mismatch;
+    // Obj.getType fails for database-registered (dynamic) schemas due to DXN mismatch;
     // useSchema queries by typename which correctly resolves both static and dynamic schemas.
     const typename = Obj.getTypename(object) ?? undefined;
     const schemaFromRegistry = useSchema(db, typename);
-    const rawSchema = Obj.getSchema(object) ?? schemaFromRegistry;
+    const rawSchema = Obj.getType(object) ?? schemaFromRegistry;
 
     const formSchema = useMemo(() => {
       return Function.pipe(
         rawSchema,
         Option.fromNullable,
-        Option.map((schema) => (Type.isType(schema) ? Type.getSchema(schema) : schema)),
+        Option.map((schema) => Type.getSchema(schema) as Schema.Schema.AnyNoContext),
         Option.map((schema) => omitId(BaseSchema.pipe(Schema.extend(schema)))),
         Option.getOrUndefined,
       );

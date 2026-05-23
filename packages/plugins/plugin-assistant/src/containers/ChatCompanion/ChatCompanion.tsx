@@ -61,7 +61,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
     );
 
     const blueprintKeys = useMemo(() => {
-      const schema = companionTo ? Obj.getSchema(companionTo) : undefined;
+      const schema = companionTo ? Obj.getType(companionTo) : undefined;
       if (!schema) {
         return [] as string[];
       }

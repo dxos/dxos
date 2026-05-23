@@ -76,7 +76,7 @@ export namespace SpaceCapabilities {
   export type CreateObjectEntry = Readonly<{
     id: string;
     createObject: CreateObject;
-    inputSchema?: Schema.Schema.AnyNoContext;
+    inputSchema?: Schema.Schema.AnyNoContext | Type.AnyType;
     /**
      * Optional custom React panel rendered in place of the default `inputSchema` form.
      * Lets a plugin own the entire post-typename-selection flow (e.g. multi-stage forms).

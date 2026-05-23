@@ -30,7 +30,7 @@ const types = [
 
 // Type definition for debug objects exposed to tests.
 export type ViewEditorDebugObjects = {
-  schema: Type.Type;
+  schema: Type.AnyType;
   view: View.View;
   projection: ProjectionModel;
 };
@@ -39,7 +39,7 @@ type DefaultStoryProps = Pick<ViewEditorProps, 'readonly' | 'mode'>;
 
 const DefaultStory = (props: DefaultStoryProps) => {
   const { space } = useClientStory();
-  const [schema, setSchema] = useState<Type.Type>();
+  const [schema, setSchema] = useState<Type.AnyType>();
   const [view, setView] = useState<View.View>();
   const projectionRef = useRef<ProjectionModel>(null);
 

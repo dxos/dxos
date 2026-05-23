@@ -40,11 +40,11 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInNewCha
                 const bindingProps: Parameters<AiContext.Binder['bind']>[0] = {};
 
                 if (objects && objects.length > 0) {
-                  bindingProps.objects = objects.map((obj) => Ref.make(obj));
+                  bindingProps.objects = objects.map((obj: any) => Ref.make(obj));
                 }
 
                 if (blueprints && blueprints.length > 0) {
-                  const allBlueprints = await db.query(Filter.type(Blueprint.Blueprint)).run();
+                  const allBlueprints = (await db.query(Filter.type(Blueprint.Blueprint)).run()) as Blueprint.Blueprint[];
                   const matchedBlueprints = allBlueprints.filter((blueprint) => {
                     const blueprintKey = Obj.getMeta(blueprint).key;
                     return blueprintKey !== undefined && blueprints.includes(blueprintKey);
@@ -93,8 +93,8 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInNewCha
             typeof prompt === 'string'
               ? prompt
               : yield* Effect.gen(function* () {
-                  const promptObj = yield* Effect.promise(() => prompt.load());
-                  const source = yield* Effect.promise(() => promptObj.instructions.source.load());
+                  const promptObj = yield* Effect.promise(() => prompt.load() as any);
+                  const source = yield* Effect.promise(() => (promptObj as any).instructions.source.load());
                   invariant(Obj.instanceOf(Text.Text, source), 'Prompt template source must be Text.');
                   return Template.process(source.content ?? '');
                 });

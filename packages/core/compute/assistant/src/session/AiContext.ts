@@ -35,8 +35,7 @@ export const Binding = Schema.Struct({
   }),
 }).pipe(Type.object(DXN.make('org.dxos.type.contextBinding', '0.1.0')));
 
-export interface Binding extends Schema.Schema.Type<typeof Binding> {}
-
+export type Binding = Type.InstanceType<typeof Binding>;
 export type BindingProps = Partial<{
   blueprints: Ref.Ref<Blueprint.Blueprint>[];
   objects: Ref.Ref<Obj.Unknown>[];
@@ -398,10 +397,10 @@ export class Service extends Context.Tag('@dxos/assistant/AiContextService')<
       yield* Effect.promise(() => binder.bind({ blueprints, objects }));
     });
 
-  static findObjects = <T extends Type.AnyType>(type: T): Effect.Effect<Schema.Schema.Type<T>[], never, Service> => {
+  static findObjects = <T extends Type.AnyType>(type: T): Effect.Effect<Type.InstanceType<T>[], never, Service> => {
     return Effect.gen(function* () {
       const { binder } = yield* Service;
-      return binder.getObjects().filter(Obj.instanceOf(type));
+      return binder.getObjects().filter(Obj.instanceOf(type)) as Type.InstanceType<T>[];
     });
   };
 }

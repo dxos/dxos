@@ -77,7 +77,7 @@ export const PopoverContent = () => {
   const title = state.popoverTitle ? toLocalizedString(state.popoverTitle, t) : 'Unknown';
   const icon = isObjectPopover
     ? Function.pipe(
-        Obj.getSchema(popoverSubject),
+        Obj.getType(popoverSubject),
         Option.fromNullable,
         Option.flatMap(Annotation.IconAnnotation.get),
         Option.map(({ icon }) => icon),

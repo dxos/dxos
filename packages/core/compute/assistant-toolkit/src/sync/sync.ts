@@ -24,7 +24,7 @@ export const syncObjects: (
   objs,
   { foreignKeyId },
 ) {
-  return yield* Effect.forEach(
+  return (yield* Effect.forEach(
     objs,
     Effect.fnUntraced(function* (obj) {
       // Sync referenced objects.
@@ -47,7 +47,7 @@ export const syncObjects: (
         }
       }
 
-      const schema = Obj.getSchema(obj) ?? failedInvariant('No schema.');
+      const schema = Obj.getType(obj) ?? failedInvariant('No schema.');
       const foreignId = Obj.getKeys(obj, foreignKeyId)[0]?.id ?? failedInvariant('No foreign key.');
       const [existing] = yield* Database.runQuery(
         Query.select(Filter.foreignKeys(schema, [{ source: foreignKeyId, id: foreignId }])),
@@ -55,18 +55,18 @@ export const syncObjects: (
       log('sync object', {
         type: Obj.getTypename(obj),
         foreignId,
-        existing: existing ? Obj.getURI(existing) : undefined,
+        existing: existing ? Obj.getURI(existing as Obj.Unknown) : undefined,
       });
       if (!existing) {
         yield* Database.add(obj);
         return obj;
       } else {
-        copyObjectData(existing, obj);
-        return existing;
+        copyObjectData(existing as Obj.Unknown, obj);
+        return existing as Obj.Unknown;
       }
     }),
     { concurrency: 1 },
-  );
+  )) as Obj.Unknown[];
 });
 
 const copyObjectData = (existing: Obj.Unknown, newObj: Obj.Unknown) => {

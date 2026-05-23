@@ -4,7 +4,6 @@
 
 import { type Space } from '@dxos/client/echo';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { getTypeAnnotation } from '@dxos/echo/internal';
 import { isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';

@@ -2,7 +2,6 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
 
 import { addressToA1Notation } from '@dxos/compute-hyperformula';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
@@ -32,8 +31,8 @@ export const createGenerator = <S extends Type.AnyObjectType>(
   client: Client,
   invokePromise: OperationInvoker.OperationInvoker['invokePromise'],
   schema: S,
-): ObjectGenerator<Schema.Schema.Type<S>> => {
-  return async (space: Space, n: number): Promise<Schema.Schema.Type<S>[]> => {
+): ObjectGenerator<Type.InstanceType<S>> => {
+  return async (space: Space, n: number): Promise<Type.InstanceType<S>[]> => {
     const typename = schema.typename;
 
     // Find or create table and view.

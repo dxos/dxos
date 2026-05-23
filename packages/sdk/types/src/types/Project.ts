@@ -15,12 +15,12 @@ export const Project = Schema.Struct({
   image: Format.URL.pipe(Schema.annotations({ title: 'Image' }), Schema.optional),
 }).pipe(
   Schema.annotations({ title: 'Project' }),
-  Type.object(DXN.make('org.dxos.type.project', '0.1.0')),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--check-square-offset--regular',
     hue: 'indigo',
   }),
+  Type.object(DXN.make('org.dxos.type.project', '0.1.0')),
 );
 
 export type Project = Type.InstanceType<typeof Project>;

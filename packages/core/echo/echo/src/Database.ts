@@ -206,11 +206,11 @@ export const resolve: {
   <S extends Type.AnyType>(
     ref: URI.URI | Ref<any>,
     schema: S,
-  ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service>;
+  ): Effect.Effect<Type.InstanceType<S>, Err.ObjectNotFoundError, Service>;
 } = (<S extends Type.AnyType>(
   ref: URI.URI | Ref<any>,
   schema?: S,
-): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service> =>
+): Effect.Effect<Type.InstanceType<S>, Err.ObjectNotFoundError, Service> =>
   Effect.gen(function* () {
     const { db } = yield* Service;
     const dxn = typeof ref === 'string' ? ref : ref.uri;

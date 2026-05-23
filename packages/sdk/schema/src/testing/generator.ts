@@ -4,7 +4,6 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
 import { type Database, type Entity, Filter, Obj, Query, Ref, Type } from '@dxos/echo';

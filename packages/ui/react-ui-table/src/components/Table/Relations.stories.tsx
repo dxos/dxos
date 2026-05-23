@@ -66,7 +66,7 @@ const useTestModel = <S extends Type.AnyObjectType>(schema: S, count: number) =>
 
     const objectGenerator = createAsyncGenerator(generator, schema, { db: space?.db, force: true });
     void objectGenerator.createObjects(count).then((objects) => {
-      model.setRows(objects);
+      model.setRows(objects as unknown as TableRow[]);
     });
   }, [model, space]);
 

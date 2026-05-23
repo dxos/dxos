@@ -11,7 +11,7 @@ import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 export const BLUEPRINT_KEY = 'org.dxos.blueprint.support';
 
 export const TicketStatus = Schema.Literal('open', 'in_progress', 'resolved');
-export type TicketStatus = Schema.Schema.Type<typeof TicketStatus>;
+export type TicketStatus = Type.InstanceType<typeof TicketStatus>;
 
 /**
  * A user-reported support ticket. Chat history lives in the standard chat
@@ -35,16 +35,16 @@ export const Ticket = Schema.Struct({
   ),
   tags: Schema.optional(Schema.Array(Schema.String).pipe(FormInputAnnotation.set(false))),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.support.ticket', '0.1.0')),
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({
     icon: 'ph--lifebuoy--regular',
     hue: 'rose',
   }),
   BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  Type.object(DXN.make('org.dxos.type.support.ticket', '0.1.0')),
 );
 
-export interface Ticket extends Schema.Schema.Type<typeof Ticket> {}
+export type Ticket = Type.InstanceType<typeof Ticket>;
 
 /**
  * Creates a Ticket with default lifecycle fields (status: 'open', empty tags).

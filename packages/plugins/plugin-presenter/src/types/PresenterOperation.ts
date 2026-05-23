@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { Collection } from '@dxos/echo';
+import { Collection, Type } from '@dxos/echo';
 import { Markdown } from '@dxos/plugin-markdown';
 
 import { meta } from '#meta';
@@ -18,7 +18,7 @@ const PRESENTER_OPERATION = `${meta.id}.operation`;
 export const TogglePresentation = Operation.make({
   meta: { key: `${PRESENTER_OPERATION}.toggle-presentation`, name: 'Toggle Presentation' },
   input: Schema.Struct({
-    object: Schema.Union(Markdown.Document, Collection.Collection),
+    object: Schema.Union(Type.getSchema(Markdown.Document), Type.getSchema(Collection.Collection)),
     state: Schema.optional(Schema.Boolean),
   }),
   output: Schema.Void,

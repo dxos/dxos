@@ -129,7 +129,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
           ? get(AtomQuery.fromQuery(client.graph.schemaRegistry.query({ location: ['runtime'] })))
           : [];
 
-        const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Type.AnyObjectType) : schema.typename;
+        const typename = Schema.isSchema(schema) ? Type.getTypename(schema as unknown as Type.AnyType) : schema.typename;
 
         // {All} virtual node.
         const allNode = Node.make({
@@ -153,7 +153,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
         // View objects for this schema.
         const viewIndex = buildViewIndex(get, space, schemas);
         const viewNodes = viewIndex
-          .getViewsForTypename(typename)
+          .getViewsForTypename(typename!)
           .map((object: Obj.Unknown) =>
             createObjectNode({
               db: space.db,
@@ -219,14 +219,14 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
           ? get(AtomQuery.fromQuery(client.graph.schemaRegistry.query({ location: ['runtime'] })))
           : [];
 
-        const targetTypename = Type.getTypename(schema as Type.AnyObjectType);
+        const targetTypename = Type.getTypename(schema as unknown as Type.AnyType);
         const viewIndex = buildViewIndex(get, space, schemas);
         const deletable =
-          Type.isMutable(schema as Type.AnyObjectType) && viewIndex.getViewsForTypename(targetTypename).length === 0;
+          Type.isMutable(schema as unknown as Type.AnyType) && viewIndex.getViewsForTypename(targetTypename).length === 0;
 
         return Effect.succeed(
           createSchemaActions({
-            schema: schema as Type.AnyObjectType,
+            schema: schema as unknown as Type.AnyType,
             space,
             deletable,
             capabilities,
@@ -267,9 +267,9 @@ const createSchemaNode = ({
     : undefined;
   const { label, nodeId } = Match.value(schema).pipe(
     Match.when(Type.isMutable, (mutableSchema) => {
-      const snapshot = get(AtomObj.make(mutableSchema));
+      const snapshot = get(AtomObj.make(mutableSchema as unknown as Obj.Unknown));
       return {
-        label: snapshot.name || ['object-name.placeholder', { ns: Type.Type.typename }],
+        label: (snapshot as any).name || ['object-name.placeholder', { ns: Type.Type.typename }],
         nodeId: typename,
       };
     }),
@@ -306,7 +306,7 @@ const createSchemaActions = ({
   deletable,
   capabilities,
 }: {
-  schema: Type.AnyObjectType;
+  schema: Type.AnyType;
   space: Space;
   deletable: boolean;
   capabilities: CapabilityManager.CapabilityManager;

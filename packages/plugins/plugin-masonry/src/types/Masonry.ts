@@ -8,7 +8,7 @@ import { DXN, Annotation, Obj, Ref, Type, View } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { ViewAnnotation } from '@dxos/schema';
 
-export const Masonry = Schema.Struct({
+const MasonrySchema = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
 
   view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false)),
@@ -21,16 +21,22 @@ export const Masonry = Schema.Struct({
   ).pipe(FormInputAnnotation.set(false), Schema.optional),
   // TODO(wittjosiah): Consider Masonry supporting not being just a view but referencing arbitrary data directly.
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.masonry', '0.1.0')),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(['view']),
   Annotation.IconAnnotation.set({
     icon: 'ph--wall--regular',
     hue: 'green',
   }),
+  Type.object(DXN.make('org.dxos.type.masonry', '0.1.0')),
 );
 
-export interface Masonry extends Schema.Schema.Type<typeof Masonry> {}
+export interface Masonry
+  extends Obj.OfShape<{
+    readonly name?: string;
+    view: Ref.Ref<View.View>;
+    arrangement?: ReadonlyArray<{ readonly ids: readonly string[]; readonly hidden?: boolean }>;
+  }> {}
+export const Masonry: Type.Obj<Masonry> = MasonrySchema as any;
 
 type MakeProps = Omit<Partial<Obj.MakeProps<typeof Masonry>>, 'view'> & {
   view: View.View;

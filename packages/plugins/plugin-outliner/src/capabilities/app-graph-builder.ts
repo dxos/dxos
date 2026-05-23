@@ -27,7 +27,7 @@ export default Capability.makeModule(
             return Option.none();
           }
 
-          const schema = Obj.getSchema(node.data);
+          const schema = Obj.getType(node.data);
           const system = Option.fromNullable(schema).pipe(
             Option.flatMap((schema) => SystemTypeAnnotation.get(schema)),
             Option.getOrElse(() => false),

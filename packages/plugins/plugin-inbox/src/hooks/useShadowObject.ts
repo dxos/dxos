@@ -27,7 +27,7 @@ export const useShadowObject = <T extends Obj.Unknown>(
       const meta = Obj.getMeta(event);
       return meta.keys.find((key) => key.source === 'echo' && key.id === id);
     });
-    setTarget(target);
+    setTarget(target as T | undefined);
   }, [id, objects]);
 
   const createTarget = useCallback(() => {

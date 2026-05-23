@@ -54,7 +54,7 @@ export const Projection = Schema.Struct({
   pivotFieldId: Schema.String.pipe(Schema.optional),
 });
 
-export type Projection = Schema.Schema.Type<typeof Projection>;
+export type Projection = Type.InstanceType<typeof Projection>;
 
 /**
  * Views are generated or user-defined projections of a schema's properties.
@@ -75,12 +75,12 @@ const ViewSchema = Schema.Struct({
    */
   projection: Projection,
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.view', '0.1.0')),
   internal.SystemTypeAnnotation.set(true),
   Annotation.IconAnnotation.set({
     icon: 'ph--funnel--regular',
     hue: 'green',
   }),
+  Type.object(DXN.make('org.dxos.type.view', '0.1.0')),
 );
 
 export type View = Type.InstanceType<typeof ViewSchema> & Obj.Unknown;

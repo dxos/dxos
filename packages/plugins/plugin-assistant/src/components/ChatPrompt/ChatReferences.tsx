@@ -28,7 +28,7 @@ export const ChatReferences = ({ classNames, context, db }: ChatReferencesProps)
         const uri = Obj.getURI(obj);
         const typename = Obj.getTypename(obj);
         const label: Label = Obj.getLabel(obj) ?? (typename ? ['object-name.placeholder', { ns: typename }] : obj.id);
-        const { icon, hue } = Option.fromNullable(Obj.getSchema(obj)).pipe(
+        const { icon, hue } = Option.fromNullable(Obj.getType(obj)).pipe(
           Option.flatMap(Annotation.IconAnnotation.get),
           Option.getOrElse(() => ({ icon: DEFAULT_OBJECT_ICON, hue: undefined as string | undefined })),
         );

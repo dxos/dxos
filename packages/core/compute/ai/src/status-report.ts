@@ -22,4 +22,4 @@ export const AgentStatus = Schema.Struct({
   ),
   message: Schema.String,
 }).pipe(Type.object(DXN.make('org.dxos.type.agentStatus', '0.1.0')));
-export interface AgentStatus extends Schema.Schema.Type<typeof AgentStatus> {}
+export type AgentStatus = Type.InstanceType<typeof AgentStatus>;

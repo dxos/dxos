@@ -20,12 +20,12 @@ export const Channel = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   feed: Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.channel', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--hash--regular',
     hue: 'rose',
   }),
   FeedAnnotation.set(true),
+  Type.object(DXN.make('org.dxos.type.channel', '0.1.0')),
 );
 
 export type Channel = Type.InstanceType<typeof Channel>;

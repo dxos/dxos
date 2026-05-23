@@ -12,13 +12,11 @@ import { DXN } from '@dxos/keys';
 import { PropertyMeta, getPropertyMetaAnnotation, getTypeAnnotation } from '../../Annotation';
 import { EchoObjectSchema } from '../../Entity';
 import {
-  type JsonSchemaType,
   toEffectSchema,
 } from '../../JsonSchema';
-import { type PersistentSchema } from '../../Type/persistent-schema';
 import * as TypeNs from '../../../Type';
 import { Obj as ObjModule } from '../../../index';
-type Type = PersistentSchema;
+type Type = TypeNs.Type;
 import {
   addFieldsToSchema,
   removeFieldsFromSchema,

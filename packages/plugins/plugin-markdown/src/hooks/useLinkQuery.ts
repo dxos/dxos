@@ -48,7 +48,7 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
         results
           ?.filter((object) => toLocalizedString(getLabel(object), t).toLowerCase().includes(name))
           .map((object: Obj.Unknown): EditorMenuItem => {
-            const schema = Obj.getSchema(object);
+            const schema = Obj.getType(object);
             const icon = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema))?.icon : undefined;
             const label = toLocalizedString(getLabel(object), t);
             return {

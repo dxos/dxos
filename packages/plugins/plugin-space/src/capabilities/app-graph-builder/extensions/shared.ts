@@ -151,7 +151,7 @@ export const buildViewIndex = (get: Atom.Context, space: Space, schemas: Type.An
     const viewObjects = get(AtomQuery.make(space.db, filter));
 
     for (const viewObject of viewObjects) {
-      const holderSchema = Obj.getSchema(viewObject);
+      const holderSchema = Obj.getType(viewObject as Obj.Unknown);
       const path = holderSchema
         ? ViewAnnotation.get(holderSchema).pipe(Option.getOrElse(() => [] as EchoViewRefPath))
         : ([] as EchoViewRefPath);
@@ -177,7 +177,7 @@ export const buildViewIndex = (get: Atom.Context, space: Space, schemas: Type.An
       const typename = getTypenameFromQuery(viewTarget?.query?.ast);
       if (typename) {
         const existing = viewsByTypename.get(typename) ?? [];
-        existing.push(viewObject);
+        existing.push(viewObject as Obj.Any);
         viewsByTypename.set(typename, existing);
       }
     }

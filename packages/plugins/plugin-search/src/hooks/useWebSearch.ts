@@ -5,7 +5,7 @@
 import { useCallback, useState } from 'react';
 
 import { EXA_API_KEY } from '@dxos/ai/testing';
-import { Entity } from '@dxos/echo';
+import { Entity, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { getIconAnnotation } from '@dxos/schema';
 import { TestSchema } from '@dxos/schema/testing';
@@ -44,13 +44,13 @@ export const useWebSearch = ({ query, context }: UseWebSearchProps): UseWebSearc
       });
 
       const mappedResults = results.data.map((result): SearchResult => {
-        const schema = Entity.getSchema(result);
+        const schema = Entity.getType(result);
         return {
           id: result.id,
           label: getStringProperty(result, ['name', 'title', 'label']),
           snippet: getStringProperty(result, ['description', 'content', 'website', 'email']),
           object: result,
-          icon: schema?.pipe(getIconAnnotation),
+          icon: schema ? getIconAnnotation(Type.getSchema(schema)) : undefined,
         };
       });
 

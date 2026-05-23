@@ -12,7 +12,7 @@ import { FactoryAnnotation, type FactoryFn, FeedAnnotation } from '@dxos/schema'
 
 /** Subscription protocol type. */
 export const FeedType = Schema.Literal('atproto', 'rss');
-export type FeedType = Schema.Schema.Type<typeof FeedType>;
+export type FeedType = Type.InstanceType<typeof FeedType>;
 
 /**
  * Default upper bound on the number of (non-starred) Posts retained when
@@ -99,7 +99,6 @@ export const Subscription = Schema.Struct({
     }),
   }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.subscription.feed', '0.1.0')),
   LabelAnnotation.set(['name', 'url']),
   Annotation.IconAnnotation.set({
     icon: 'ph--rss--regular',
@@ -107,9 +106,10 @@ export const Subscription = Schema.Struct({
   }),
   FeedAnnotation.set(true),
   FactoryAnnotation.set(((values) => makeSubscription(values)) as FactoryFn),
+  Type.object(DXN.make('org.dxos.type.subscription.feed', '0.1.0')),
 );
 
-export interface Subscription extends Schema.Schema.Type<typeof Subscription> {}
+export type Subscription = Type.InstanceType<typeof Subscription>;
 
 /** Checks if a value is a Subscription.Subscription object. */
 export const instanceOf = (value: unknown): value is Subscription => Obj.instanceOf(Subscription, value);
@@ -149,7 +149,7 @@ export const PostContent = Schema.Struct({
   fetchedAt: Schema.String,
 }).pipe(Type.object(DXN.make('org.dxos.type.subscription.postContent', '0.1.0')));
 
-export interface PostContent extends Schema.Schema.Type<typeof PostContent> {}
+export type PostContent = Type.InstanceType<typeof PostContent>;
 
 /**
  * A single post/entry within a subscription feed.
@@ -176,15 +176,15 @@ export const Post = Schema.Struct({
   /** Unique identifier (guid) from the feed. */
   guid: Schema.String.pipe(Schema.optional),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.subscription.post', '0.1.0')),
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({
     icon: 'ph--article--regular',
     hue: 'orange',
   }),
+  Type.object(DXN.make('org.dxos.type.subscription.post', '0.1.0')),
 );
 
-export interface Post extends Schema.Schema.Type<typeof Post> {}
+export type Post = Type.InstanceType<typeof Post>;
 
 /** Creates a Subscription.Post object. */
 export const makePost = (props: Obj.MakeProps<typeof Post> = {}): Post => Obj.make(Post, props);

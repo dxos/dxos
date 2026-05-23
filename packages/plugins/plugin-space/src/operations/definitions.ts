@@ -25,7 +25,7 @@ export namespace CollectionOperation {
       name: Schema.optional(Schema.String),
     }),
     output: Schema.Struct({
-      object: Collection.Collection,
+      object: Type.getSchema(Collection.Collection),
     }),
   });
 }
@@ -143,7 +143,7 @@ export namespace SpaceOperation {
     services: [Capability.Service],
     input: Schema.Struct({
       object: Obj.Unknown.annotations({ description: 'The object to add.' }),
-      target: Schema.Union(Database.Database, Collection.Collection).annotations({
+      target: Schema.Union(Database.Database, Type.getSchema(Collection.Collection)).annotations({
         description: 'The database or collection to add to.',
       }),
       hidden: Schema.optional(Schema.Boolean),
@@ -160,7 +160,7 @@ export namespace SpaceOperation {
 
   export const RemoveObjectsOutput = Schema.Struct({
     objects: Schema.Array(Obj.Unknown).annotations({ description: 'The removed objects.' }),
-    parentCollection: Collection.Collection.annotations({ description: 'The collection removed from.' }),
+    parentCollection: Type.getSchema(Collection.Collection).annotations({ description: 'The collection removed from.' }),
     indices: Schema.Array(Schema.Number).annotations({ description: 'The indices the objects were at.' }),
     wasActive: Schema.Array(Schema.String).annotations({
       description: 'IDs of objects that were active before removal.',
@@ -178,7 +178,7 @@ export namespace SpaceOperation {
     services: [Capability.Service],
     input: Schema.Struct({
       objects: Schema.Array(Obj.Unknown).annotations({ description: 'The objects to remove.' }),
-      target: Schema.optional(Collection.Collection).annotations({ description: 'The collection to remove from.' }),
+      target: Schema.optional(Type.getSchema(Collection.Collection)).annotations({ description: 'The collection to remove from.' }),
     }),
     output: RemoveObjectsOutput,
   });
@@ -200,7 +200,7 @@ export namespace SpaceOperation {
     },
     services: [Capability.Service],
     input: Schema.Struct({
-      view: View.View.annotations({ description: 'The view to delete the field from.' }),
+      view: Type.getSchema(View.View).annotations({ description: 'The view to delete the field from.' }),
       fieldId: Schema.String,
     }),
     output: DeleteFieldOutput,
@@ -214,7 +214,7 @@ export namespace SpaceOperation {
     },
     services: [Capability.Service],
     input: Schema.Struct({
-      target: Schema.Union(Database.Database, Collection.Collection).annotations({
+      target: Schema.Union(Database.Database, Type.getSchema(Collection.Collection)).annotations({
         description: 'The database or collection to create in.',
       }),
       views: Schema.optional(Schema.Boolean),
@@ -393,7 +393,7 @@ export namespace SpaceOperation {
     }),
     output: Schema.Struct({
       id: Schema.String,
-      object: Type.Type,
+      object: Type.getSchema(Type.Type),
     }),
   });
 
@@ -428,7 +428,7 @@ export namespace SpaceOperation {
     services: [Capability.Service],
     input: Schema.Struct({
       object: Obj.Unknown,
-      target: Schema.Union(Database.Database, Collection.Collection),
+      target: Schema.Union(Database.Database, Type.getSchema(Collection.Collection)),
     }),
     output: Schema.Void,
   });
@@ -444,7 +444,7 @@ export namespace SpaceOperation {
     },
     services: [Capability.Service],
     input: Schema.Struct({
-      view: View.View.annotations({ description: 'The view to restore the field to.' }),
+      view: Type.getSchema(View.View).annotations({ description: 'The view to restore the field to.' }),
       field: View.FieldSchema.annotations({ description: 'The field schema to restore.' }),
       // TODO(wittjosiah): This creates a type error with PropertySchema.
       props: Schema.Any.annotations({ description: 'The field properties to restore.' }),
@@ -482,7 +482,7 @@ export namespace SpaceOperation {
     services: [Capability.Service],
     input: Schema.Struct({
       objects: Schema.Array(Obj.Unknown).annotations({ description: 'The objects to restore.' }),
-      parentCollection: Collection.Collection.annotations({ description: 'The collection to restore to.' }),
+      parentCollection: Type.getSchema(Collection.Collection).annotations({ description: 'The collection to restore to.' }),
       indices: Schema.Array(Schema.Number).annotations({ description: 'The indices to restore at.' }),
       wasActive: Schema.Array(Schema.String).annotations({
         description: 'IDs of objects that were active before deletion.',

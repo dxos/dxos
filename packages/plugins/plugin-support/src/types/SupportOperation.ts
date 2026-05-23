@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { SpaceSchema } from '@dxos/client-protocol';
 import { Operation } from '@dxos/compute';
-import { Collection, Database, Format, Ref } from '@dxos/echo';
+import { Collection, Database, Format, Ref, Type } from '@dxos/echo';
 
 import * as Support from './Support';
 
@@ -18,7 +18,7 @@ export const OnCreateSpace = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     space: SpaceSchema,
-    rootCollection: Collection.Collection,
+    rootCollection: Type.getSchema(Collection.Collection),
     isDefault: Schema.Boolean.pipe(Schema.optional),
   }),
   output: Schema.Void,
@@ -72,7 +72,7 @@ export const CreateTicket = Operation.make({
       }),
     ),
   }),
-  output: Support.Ticket,
+  output: Type.getSchema(Support.Ticket),
   services: [Database.Service],
 });
 
@@ -87,7 +87,7 @@ export const MarkInProgress = Operation.make({
       description: 'The ticket to mark as in progress.',
     }),
   }),
-  output: Support.Ticket,
+  output: Type.getSchema(Support.Ticket),
   services: [Database.Service],
 });
 
@@ -107,7 +107,7 @@ export const ResolveTicket = Operation.make({
       }),
     ),
   }),
-  output: Support.Ticket,
+  output: Type.getSchema(Support.Ticket),
   services: [Database.Service],
 });
 

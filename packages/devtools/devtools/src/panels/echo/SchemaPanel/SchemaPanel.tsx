@@ -25,7 +25,7 @@ const textFilter = (text?: string) => {
   // TODO(burdon): Structured query (e.g., "type:Text").
   const matcher = new RegExp(text, 'i');
   return (item: Type.AnyType) => {
-    const schema = Type.isType(item) ? Type.getSchema(item) : item;
+    const schema = Type.getSchema(item);
     let match = false;
     match ||= !!Type.getURI(item)?.toString().match(matcher);
     match ||= !!SchemaAST.getTitleAnnotation(schema.ast).pipe(Option.getOrUndefined)?.match(matcher);
@@ -104,7 +104,7 @@ export const SchemaPanel = (props: { space?: Space }) => {
     return schema
       .filter(textFilter(filter))
       .map((item) => {
-        const itemSchema = Type.isType(item) ? Type.getSchema(item) : item;
+        const itemSchema = Type.getSchema(item);
         return {
           id: Type.getURI(item),
           typename: Type.getTypename(item) ?? '',

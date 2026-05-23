@@ -29,12 +29,12 @@ export const Pipeline = Schema.Struct({
   columns: Schema.Array(Column).pipe(FormInputAnnotation.set(false)),
 }).pipe(
   Schema.annotations({ title: 'Pipeline' }),
-  Type.object(DXN.make('org.dxos.type.pipeline', '0.1.0')),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--path--regular',
     hue: 'purple',
   }),
+  Type.object(DXN.make('org.dxos.type.pipeline', '0.1.0')),
 );
 
 export type Pipeline = Type.InstanceType<typeof Pipeline>;

@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Filter, Format, JsonSchema, Obj, Query, Type, type View } from '@dxos/echo';
+import { DXN, Filter, Format, JsonSchema, Query, Type, type View } from '@dxos/echo';
 
 import { ViewModel } from '../types';
 

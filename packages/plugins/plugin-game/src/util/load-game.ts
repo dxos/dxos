@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import type * as Schema from 'effect/Schema';
 
 import { Database, Obj, type Ref, type Type } from '@dxos/echo';
 
@@ -29,7 +28,7 @@ export class GameVariantMismatchError extends Error {
 export const loadGame = <S extends Type.AnyObjectType>(
   ref: Ref.Ref<Game>,
   variantSchema: S,
-): Effect.Effect<{ game: Game; variant: Schema.Schema.Type<S> }, Error, Database.Service> =>
+): Effect.Effect<{ game: Game; variant: Type.InstanceType<S> }, Error, Database.Service> =>
   Effect.gen(function* () {
     const game = yield* Database.load(ref);
     const variant = yield* Database.load(game.variant);
@@ -38,5 +37,5 @@ export const loadGame = <S extends Type.AnyObjectType>(
       const actual = Obj.getTypename(variant as Obj.Any) ?? 'unknown';
       return yield* Effect.fail(new GameVariantMismatchError(game.id, expected, actual));
     }
-    return { game, variant: variant as Schema.Schema.Type<S> };
+    return { game, variant: variant as Type.InstanceType<S> };
   });

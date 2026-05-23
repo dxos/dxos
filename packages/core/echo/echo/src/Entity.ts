@@ -4,7 +4,6 @@
 
 // @import-as-namespace
 
-import type * as Schema from 'effect/Schema';
 
 import type { ForeignKey } from '@dxos/echo-protocol';
 import type { ObjectId, URI } from '@dxos/keys';

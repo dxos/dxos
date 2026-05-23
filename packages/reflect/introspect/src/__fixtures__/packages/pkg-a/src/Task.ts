@@ -27,7 +27,7 @@ export const Task = Schema.Struct({
   }),
 }).pipe(Type.object(DXN.make('com.example.type.Task', '0.1.0')), LabelAnnotation.set(['title']));
 
-export interface Task extends Schema.Schema.Type<typeof Task> {}
+export type Task = Type.InstanceType<typeof Task>;
 
 /**
  * Task factory — mirrors the make/Obj.make pattern used by real plugins.

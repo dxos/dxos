@@ -6,11 +6,12 @@ import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
 import { DXN, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
+import type { JsonSchemaType } from '@dxos/echo/internal';
 import { Graph } from '@dxos/graph';
 
 export const ComputeValueType = Schema.Literal('string', 'number', 'boolean', 'object');
 
-export type ComputeValueType = Schema.Schema.Type<typeof ComputeValueType>;
+export type ComputeValueType = Type.InstanceType<typeof ComputeValueType>;
 
 /**
  * GraphNode.
@@ -27,7 +28,7 @@ export const ComputeNode = Schema.extend(
     /**
      * For composition nodes.
      */
-    subgraph: Schema.optional(Schema.suspend((): Ref.RefSchema<ComputeGraph> => Ref.Ref(ComputeGraph))),
+    subgraph: Schema.optional(Schema.suspend((): Ref.RefSchema<ComputeGraph> => Ref.Ref(ComputeGraph) as any)),
 
     /**
      * For composition of function nodes.
@@ -55,8 +56,19 @@ export const ComputeNode = Schema.extend(
   }),
 ).pipe(Schema.mutable);
 
-export interface ComputeNode extends Schema.Schema.Type<typeof ComputeNode> {}
-
+export interface ComputeNode {
+  id: string;
+  type?: string;
+  data?: any;
+  inputSchema?: JsonSchemaType;
+  outputSchema?: JsonSchemaType;
+  subgraph?: Ref.Ref<ComputeGraph>;
+  function?: Ref.Ref<Type.InstanceType<typeof Operation.PersistentOperation>>;
+  valueType?: 'string' | 'number' | 'boolean' | 'object';
+  value?: any;
+  enabled?: boolean;
+}
+export interface ComputeGraph extends Obj.OfShape<{ graph: any; input?: ComputeNode; output?: ComputeNode }> {}
 // TODO(dmaretskyi): To effect schema.
 export type ComputeNodeMeta = {
   input: Schema.Schema.AnyNoContext;
@@ -79,8 +91,7 @@ export const ComputeEdge = Schema.extend(
   }),
 );
 
-export interface ComputeEdge extends Schema.Schema.Type<typeof ComputeEdge> {}
-
+export type ComputeEdge = Type.InstanceType<typeof ComputeEdge>;
 /**
  * Persistent graph.
  */
@@ -91,7 +102,5 @@ export const ComputeGraph = Schema.Struct({
   input: Schema.optional(ComputeNode),
   output: Schema.optional(ComputeNode),
 }).pipe(Type.object(DXN.make('org.dxos.type.computeGraph', '0.1.0')));
-
-export interface ComputeGraph extends Schema.Schema.Type<typeof ComputeGraph> {}
 
 export const isComputeGraph = Obj.instanceOf(ComputeGraph);

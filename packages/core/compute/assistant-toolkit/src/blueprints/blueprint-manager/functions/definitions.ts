@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiContext } from '@dxos/assistant';
 import { Blueprint, Operation } from '@dxos/compute';
-import { Database } from '@dxos/echo';
+import { Database, Type } from '@dxos/echo';
 
 export const QueryBlueprints = Operation.make({
   meta: {
@@ -15,7 +15,7 @@ export const QueryBlueprints = Operation.make({
     description: 'Queries available blueprints.',
   },
   input: Schema.Struct({}),
-  output: Schema.Array(Blueprint.Blueprint),
+  output: Schema.Array(Type.getSchema(Blueprint.Blueprint)),
   services: [Blueprint.RegistryService],
 });
 
@@ -33,7 +33,7 @@ export const EnableBlueprints = Operation.make({
     }),
   }),
   output: Schema.Struct({
-    enabled: Schema.Array(Blueprint.Blueprint),
+    enabled: Schema.Array(Type.getSchema(Blueprint.Blueprint)),
     rejected: Schema.Array(
       Schema.Struct({
         key: Schema.String,

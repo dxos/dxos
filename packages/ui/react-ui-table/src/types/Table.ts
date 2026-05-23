@@ -10,7 +10,7 @@ import { DXN, Annotation, JsonSchema, Obj, Ref, Type, View } from '@dxos/echo';
 import { FormInputAnnotation, type JsonPath, type JsonSchemaType, LabelAnnotation } from '@dxos/echo/internal';
 import { ViewAnnotation } from '@dxos/schema';
 
-export const Table = Schema.Struct({
+const TableSchema = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
 
   view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false)),
@@ -21,16 +21,22 @@ export const Table = Schema.Struct({
     value: Schema.Number,
   }).pipe(Schema.mutable, FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.table', '0.1.0')),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(['view']),
   Annotation.IconAnnotation.set({
     icon: 'ph--table--regular',
     hue: 'green',
   }),
+  Type.object(DXN.make('org.dxos.type.table', '0.1.0')),
 );
 
-export interface Table extends Schema.Schema.Type<typeof Table> {}
+export interface Table
+  extends Obj.OfShape<{
+    readonly name?: string;
+    view: Ref.Ref<View.View>;
+    sizes: { [k: string]: number };
+  }> {}
+export const Table: Type.Obj<Table> = TableSchema as any;
 
 type MakeProps = {
   name?: string;

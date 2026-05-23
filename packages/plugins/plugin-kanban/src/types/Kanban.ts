@@ -31,16 +31,23 @@ export const Arrangement = Schema.Struct({
   columns: ArrangementColumns,
 }).pipe(FormInputAnnotation.set(false));
 
-export type Arrangement = Schema.Schema.Type<typeof Arrangement>;
+export type Arrangement = Type.InstanceType<typeof Arrangement>;
 
 /**
  * v1: pre-existing Kanban shape. Retained as the source for the v1→v2 migration.
  */
-export const KanbanV1 = Schema.Struct({
+const KanbanV1Schema = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false)),
   arrangement: Arrangement,
 }).pipe(Type.object(DXN.make('org.dxos.type.kanban', '0.1.0')));
+export interface KanbanV1
+  extends Obj.OfShape<{
+    readonly name?: string;
+    view: Ref.Ref<View.View>;
+    arrangement: Arrangement;
+  }> {}
+export const KanbanV1: Type.Obj<KanbanV1> = KanbanV1Schema as any;
 
 //
 // v2 — `spec` is a discriminated union of how items are sourced.
@@ -53,11 +60,14 @@ export const KanbanV1 = Schema.Struct({
 //
 
 /** View-variant: items come from running the View's query (the original behaviour). */
-export const KanbanViewSpec = Schema.Struct({
+export interface KanbanViewSpec {
+  readonly kind: 'view';
+  view: Ref.Ref<View.View>;
+}
+export const KanbanViewSpec: Schema.Schema<KanbanViewSpec> = Schema.Struct({
   kind: Schema.Literal('view').pipe(FormInputAnnotation.set(false)),
   view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false)),
-});
-export type KanbanViewSpec = Schema.Schema.Type<typeof KanbanViewSpec>;
+}) as any;
 
 /** Items-variant: kanban owns its items as an explicit ref array (used by externally-synced kanbans). */
 export const KanbanItemsSpec = Schema.Struct({
@@ -67,11 +77,11 @@ export const KanbanItemsSpec = Schema.Struct({
   /** Items owned directly by the kanban. */
   items: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(FormInputAnnotation.set(false)),
 });
-export type KanbanItemsSpec = Schema.Schema.Type<typeof KanbanItemsSpec>;
+export type KanbanItemsSpec = Type.InstanceType<typeof KanbanItemsSpec>;
 
 /** Discriminated union of source specs. Distinguished by `kind`. */
 export const KanbanSpec = Schema.Union(KanbanViewSpec, KanbanItemsSpec);
-export type KanbanSpec = Schema.Schema.Type<typeof KanbanSpec>;
+export type KanbanSpec = Type.InstanceType<typeof KanbanSpec>;
 
 export const Kanban = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
@@ -79,17 +89,17 @@ export const Kanban = Schema.Struct({
   /** How this kanban sources its items. Discriminated by `spec.kind`. */
   spec: KanbanSpec,
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.kanban', '0.2.0')),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(['spec', 'view']),
   Annotation.IconAnnotation.set({
     icon: 'ph--kanban--regular',
     hue: 'green',
   }),
+  Type.object(DXN.make('org.dxos.type.kanban', '0.2.0')),
 );
 
 /** Instance type; narrow on `kanban.spec.kind` (or use the guards below). */
-export interface Kanban extends Schema.Schema.Type<typeof Kanban> {}
+export type Kanban = Type.InstanceType<typeof Kanban>;
 
 /** Narrowed view-variant kanban. */
 export type KanbanView = Kanban & { spec: KanbanViewSpec };

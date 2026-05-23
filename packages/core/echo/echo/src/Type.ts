@@ -10,12 +10,10 @@ import { raise } from '@dxos/debug';
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, EchoURI, type ObjectId, type URI } from '@dxos/keys';
-import { type ToMutable } from '@dxos/util';
 
 import type * as Entity from './Entity';
 import * as internal from './internal';
 import * as typeInternal from './internal/Type';
-import type * as ObjModule from './Obj';
 import type * as RelationModule from './Relation';
 
 //

@@ -47,7 +47,7 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
   const { t } = useTranslation(meta.id);
   const data = useMemo(() => ({ subject }), [subject]);
   const icon = Function.pipe(
-    Entity.getSchema(subject),
+    Entity.getType(subject),
     Option.fromNullable,
     Option.flatMap(Annotation.IconAnnotation.get),
     Option.map(({ icon }) => icon),

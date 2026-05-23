@@ -15,7 +15,7 @@ export type EditorProps = {
 };
 
 export const Editor = ({ dream }: EditorProps) => {
-  const echoSchema = Obj.getSchema(dream);
+  const echoSchema = Obj.getType(dream);
   const schema = useMemo(() => echoSchema && omitId(echoSchema), [echoSchema]);
 
   const handleSave = useCallback(

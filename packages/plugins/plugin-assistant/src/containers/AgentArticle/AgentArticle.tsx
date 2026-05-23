@@ -141,7 +141,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
 const ArtifactTileCard = composable<HTMLDivElement, { data: Obj.Unknown }>(({ data, ...props }, forwardedRef) => {
   const objectMenuItems = useObjectMenuItems(data);
   const icon = Function.pipe(
-    Obj.getSchema(data),
+    Obj.getType(data),
     Option.fromNullable,
     Option.flatMap(Annotation.IconAnnotation.get),
     Option.map(({ icon }) => icon),

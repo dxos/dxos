@@ -6,14 +6,15 @@ import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import { createInputSchema, createOutputSchema } from '@dxos/conductor';
+import { Type } from '@dxos/echo';
 import { type ShapeComponentProps, type ShapeDef } from '@dxos/react-ui-canvas-editor';
 import { Message } from '@dxos/types';
 
 import { Box, createFunctionAnchors } from './common';
 import { ComputeShape, type CreateShapeProps, createShape } from './defs';
 
-const InputSchema = createInputSchema(Message.Message);
-const OutputSchema = createOutputSchema(Schema.mutable(Schema.Array(Message.Message)));
+const InputSchema = createInputSchema(Type.getSchema(Message.Message));
+const OutputSchema = createOutputSchema(Schema.mutable(Schema.Array(Type.getSchema(Message.Message))));
 
 export const TableShape = Schema.extend(
   ComputeShape,

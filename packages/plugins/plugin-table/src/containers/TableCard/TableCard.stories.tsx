@@ -7,7 +7,7 @@ import React from 'react';
 
 import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Obj, View } from '@dxos/echo';
+import { Obj, Type, View } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { random } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -80,10 +80,10 @@ const meta = {
         // Populate.
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
-            Obj.make(storedSchema, {
+            Obj.make(storedSchema as unknown as Type.AnyObjectType, {
               single: random.helpers.arrayElement([...selectOptionIds, undefined]),
               multiple: random.helpers.randomSubset(selectOptionIds),
-            }),
+            } as any),
           );
         });
       },

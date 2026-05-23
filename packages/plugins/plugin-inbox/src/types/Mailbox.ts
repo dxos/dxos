@@ -24,7 +24,7 @@ export const Labels = Schema.Record({
   value: Schema.String,
 });
 
-export type Labels = Schema.Schema.Type<typeof Labels>;
+export type Labels = Type.InstanceType<typeof Labels>;
 
 /** Mailbox object schema. */
 export const Mailbox = Schema.Struct({
@@ -39,16 +39,16 @@ export const Mailbox = Schema.Struct({
     }),
   ).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.mailbox', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--tray--regular',
     hue: 'rose',
   }),
   FeedAnnotation.set(true),
   BlueprintsAnnotation.set([BLUEPRINT_KEY]),
+  Type.object(DXN.make('org.dxos.type.mailbox', '0.1.0')),
 );
 
-export interface Mailbox extends Schema.Schema.Type<typeof Mailbox> {}
+export type Mailbox = Type.InstanceType<typeof Mailbox>;
 
 /** Checks if a value is a Mailbox object. */
 export const instanceOf = (value: unknown): value is Mailbox => Obj.instanceOf(Mailbox, value);

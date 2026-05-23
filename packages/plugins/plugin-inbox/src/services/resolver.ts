@@ -5,7 +5,6 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import type * as Schema from 'effect/Schema';
 
 import { Type } from '@dxos/echo';
 
@@ -21,13 +20,13 @@ export type ResolverMap = Record<string, ResolverType<any, any>>;
 export class Resolver extends Context.Tag('PluginInbox/Resolver')<
   Resolver,
   {
-    resolve<T, I>(schema: Type.AnyType & Schema.Schema<T, any>, input: I): Effect.Effect<T | undefined>;
+    resolve<S extends Type.AnyType, I>(schema: S, input: I): Effect.Effect<Type.InstanceType<S> | undefined>;
   }
 >() {}
 
-export const resolve = <T, I>(schema: Type.AnyType & Schema.Schema<T, any>, input: I) =>
+export const resolve = <S extends Type.AnyType, I>(schema: S, input: I) =>
   Effect.flatMap(Resolver, (service) =>
-    Effect.map(service.resolve<T, I>(schema, input), (result) => result ?? undefined),
+    Effect.map(service.resolve<S, I>(schema, input), (result) => result ?? undefined),
   );
 
 export const fromResolvers = (resolvers: ResolverMap) =>

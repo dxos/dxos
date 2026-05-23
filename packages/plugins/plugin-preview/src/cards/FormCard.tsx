@@ -16,7 +16,7 @@ import { meta } from '#meta';
 
 export const FormCard = ({ subject, projection }: AppSurface.ObjectCardProps & { projection?: ProjectionModel }) => {
   const { t } = useTranslation(meta.id);
-  const echoSchema = Obj.getSchema(subject);
+  const echoSchema = Obj.getType(subject);
   const schema = useMemo(() => echoSchema && omitId(echoSchema), [echoSchema]);
 
   const handleSave = useCallback((values: any, { changed }: { changed: Record<string, boolean> }) => {

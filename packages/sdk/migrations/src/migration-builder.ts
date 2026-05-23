@@ -6,6 +6,7 @@ import { next as A, type Doc } from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
 import type * as Schema from 'effect/Schema';
 
+import type * as Type from '@dxos/echo/Type';
 import { type Space } from '@dxos/client/echo';
 import { CreateEpochRequest } from '@dxos/client/halo';
 import { type DocHandleProxy, ObjectCore, type RepoProxy, migrateDocument } from '@dxos/echo-db';
@@ -66,14 +67,18 @@ export class MigrationBuilder {
 
   async migrateObject(
     id: string,
-    migrate: (objectStructure: ObjectStructure) => MaybePromise<{ schema: Schema.Schema.AnyNoContext; props: any }>,
+    migrate: (
+      objectStructure: ObjectStructure,
+    ) => MaybePromise<{ schema: Schema.Schema.AnyNoContext | Type.AnyType; props: any }>,
   ): Promise<void> {
     const objectStructure = await this.findObject(id);
     if (!objectStructure) {
       return;
     }
 
-    const { schema, props } = await migrate(objectStructure);
+    const { schema: schemaOrType, props } = await migrate(objectStructure);
+    // Unwrap a `Type.Type` entity to its underlying Effect Schema.
+    const schema = ((schemaOrType as any)?.['~@dxos/echo/Type.StaticSchema'] ?? schemaOrType) as Schema.Schema.AnyNoContext;
 
     const oldHandle = await this._findObjectContainingHandle(id);
     invariant(oldHandle);
@@ -103,8 +108,9 @@ export class MigrationBuilder {
     this._addHandleToFlushList(newHandle.documentId!);
   }
 
-  async addObject(schema: Schema.Schema.AnyNoContext, props: any): Promise<string> {
-    const core = await this._createObject({ schema, props });
+  async addObject(schema: Schema.Schema.AnyNoContext | Type.AnyType, props: any): Promise<string> {
+    const resolved = ((schema as any)?.['~@dxos/echo/Type.StaticSchema'] ?? schema) as Schema.Schema.AnyNoContext;
+    const core = await this._createObject({ schema: resolved, props });
     return core.id;
   }
 

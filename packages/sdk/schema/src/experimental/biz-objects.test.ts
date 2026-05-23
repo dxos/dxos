@@ -47,7 +47,10 @@ namespace Proposition {
     ),
   });
 
-  export interface Fields extends Schema.Schema.Type<typeof Fields> {}
+  export interface Fields {
+    readonly text: string;
+    children?: Fields[];
+  }
 
   export const Object = Fields.pipe(Type.object(DXN.make('org.dxos.type.proposition', '0.1.0')));
 
