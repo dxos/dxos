@@ -202,7 +202,12 @@ export const getEntityKind = (schema: Schema.Schema.All): EntityKind | undefined
  * @internal
  * @returns Schema typename (without dxn: prefix or version number).
  */
-export const getSchemaTypename = (schema: Schema.Schema.All): string | undefined => getTypeAnnotation(schema)?.typename;
+export const getSchemaTypename = (
+  input: Schema.Schema.All | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext },
+): string | undefined => {
+  const schema = ((input as any)[StaticTypeSchemaSlot] ?? input) as Schema.Schema.All;
+  return getTypeAnnotation(schema)?.typename;
+};
 
 /**
  * @internal
@@ -385,10 +390,11 @@ export const LabelAnnotation = createAnnotationHelper<string[]>(LabelAnnotationI
  * Skips empty strings and whitespace-only strings, continuing to the next field.
  */
 // TODO(burdon): Convert to JsonPath?
-export const getLabelWithSchema = <S extends Schema.Schema.Any>(
-  schema: S,
-  object: Schema.Schema.Type<S>,
+export const getLabelWithSchema = (
+  input: Schema.Schema.Any | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext },
+  object: unknown,
 ): string | undefined => {
+  const schema = ((input as any)[StaticTypeSchemaSlot] ?? input) as Schema.Schema.Any;
   const annotation = LabelAnnotation.get(schema).pipe(Option.getOrElse(() => ['name']));
   for (const accessor of annotation) {
     assertArgument(

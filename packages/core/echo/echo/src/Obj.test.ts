@@ -329,8 +329,8 @@ describe('Obj', () => {
       expect(cloned.address?.city).toBe('San Francisco');
       expect(cloned.address?.state).toBe('CA');
       expect(cloned.address?.zip).toBe('94102');
-      expect(cloned.address?.coordinates.lat).toBe(37.7749);
-      expect(cloned.address?.coordinates.lng).toBe(-122.4194);
+      expect(cloned.address?.coordinates?.lat).toBe(37.7749);
+      expect(cloned.address?.coordinates?.lng).toBe(-122.4194);
 
       // Modifying nested properties should be independent
       Obj.update(person, (person) => {

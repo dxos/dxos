@@ -10,7 +10,7 @@ import { type ToMutable } from '@dxos/util';
 
 import { type TypeMeta } from '../Annotation';
 import { type JsonSchemaType } from '../JsonSchema';
-import { type AnyEntity, type EntityKind, KindId, SchemaKindId, StaticTypeSchemaSlot } from '../common/types';
+import { type AnyEntity, type EntityKind, InstancePhantomId, KindId, SchemaKindId, StaticTypeSchemaSlot } from '../common/types';
 
 // TODO(burdon): Define Schema type for `typename` and use consistently for all DXN-like properties.
 
@@ -49,6 +49,13 @@ export interface EchoTypeSchema<
 
   /** Phantom — instance type produced by `Obj.make(self, ...)`. */
   readonly _instance?: EchoTypeSchemaProps<Schema.Schema.Type<Self>, ExtraFields>;
+
+  /**
+   * Phantom slot mirroring `Type<A>` so internal helpers (`makeObject`,
+   * `createObject`, `Ref.make`) infer the instance type uniformly whether
+   * the caller passes an `EchoTypeSchema` or a top-level `Type.Type` entity.
+   */
+  readonly [InstancePhantomId]?: EchoTypeSchemaProps<Schema.Schema.Type<Self>, ExtraFields>;
 }
 
 // type MakeProps =

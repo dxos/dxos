@@ -572,7 +572,10 @@ export class StaticRefResolver implements RefResolver {
     return this;
   }
 
-  addSchema(schema: Schema.Schema.AnyNoContext): this {
+  addSchema(
+    input: Schema.Schema.AnyNoContext | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext },
+  ): this {
+    const schema = ((input as any)[StaticTypeSchemaSlot] ?? input) as Schema.Schema.AnyNoContext;
     const uri = getSchemaURI(schema);
     invariant(uri, 'Schema has no URI');
     this.schemas.set(uri, schema);

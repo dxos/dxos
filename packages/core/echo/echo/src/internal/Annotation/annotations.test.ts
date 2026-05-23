@@ -7,6 +7,7 @@ import { describe, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
+import * as Type from '../../Type';
 import { EchoObjectSchema } from '../Entity';
 import { LabelAnnotation, TypenameSchema, VersionSchema, getLabelWithSchema } from './annotations';
 
@@ -21,7 +22,7 @@ type TestObject = Schema.Schema.Type<typeof TestObject>;
 
 const TestEchoSchema = TestObject.pipe(EchoObjectSchema(DXN.make('org.dxos.type.test', '0.1.0')));
 
-type TestEchoSchema = Schema.Schema.Type<typeof TestEchoSchema>;
+type TestEchoSchema = Type.InstanceType<typeof TestEchoSchema>;
 
 describe('annotations', () => {
   describe('Typename', () => {
@@ -129,12 +130,12 @@ describe('annotations', () => {
     });
 
     test('should return label from echo object', ({ expect }) => {
-      const obj: TestEchoSchema = {
+      const obj = {
         id: 'test',
         name: 'Primary Name',
         fallbackName: 'Fallback Name',
         other: 'Other',
-      };
+      } as unknown as TestEchoSchema;
 
       expect(getLabelWithSchema(TestEchoSchema, obj)).toEqual('Primary Name');
     });

@@ -32,7 +32,7 @@ const Contact = Schema.Struct(
 
 type Contact = Type.InstanceType<typeof Contact>;
 
-const TEST_ORG: Omit<Organization, 'id'> = { name: 'Test' };
+const TEST_ORG = { name: 'Test' } satisfies Pick<Organization, 'name'>;
 
 describe('EchoObjectSchema class DSL', () => {
   test('can get object schema', async () => {

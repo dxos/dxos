@@ -436,8 +436,8 @@ export type ID = ObjectId;
  * types), use `Type.isType(value)` instead of `Obj.instanceOf(Type.Type, value)`.
  */
 export const instanceOf: {
-  <S extends Type.AnyType>(schema: S): (value: unknown) => value is Schema.Schema.Type<S>;
-  <S extends Type.AnyType>(schema: S, value: unknown): value is Schema.Schema.Type<S>;
+  <S extends Type.AnyType>(schema: S): (value: unknown) => value is Type.InstanceType<S>;
+  <S extends Type.AnyType>(schema: S, value: unknown): value is Type.InstanceType<S>;
   <T extends Type.Type>(type: T): (value: unknown) => value is unknown;
   <T extends Type.Type>(type: T, value: unknown): boolean;
 } = ((...args: [schema: Type.AnyType | Type.Type, value: unknown] | [schema: Type.AnyType | Type.Type]) => {

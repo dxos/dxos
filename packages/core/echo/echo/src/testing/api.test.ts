@@ -32,7 +32,7 @@ describe('Experimental API review', () => {
       employer: Ref.make(organization),
     });
 
-    expect(Schema.is(TestSchema.Person)(contact)).to.be.true;
+    expect(Schema.is(Type.getSchema(TestSchema.Person))(contact)).to.be.true;
     expect(Obj.instanceOf(TestSchema.Person, contact)).to.be.true;
     expect(Obj.instanceOf(TestSchema.Organization, organization)).to.be.true;
 

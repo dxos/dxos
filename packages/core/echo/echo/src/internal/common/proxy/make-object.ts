@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 import { ObjectId } from '@dxos/keys';
 
 import { getTypeAnnotation } from '../../Annotation';
-import { type AnyProperties, KindId, MetaId, type ObjectMeta, ObjectMetaSchema, ParentId, StaticTypeSchemaSlot } from '../types';
+import { type AnyProperties, InstancePhantomId, KindId, MetaId, type ObjectMeta, ObjectMetaSchema, ParentId, StaticTypeSchemaSlot } from '../types';
 import { defineHiddenProperty } from './define-hidden-property';
 import { attachTypedJsonSerializer } from './json-serializer';
 import { createProxy, getProxyTarget, isValidProxyTarget } from './proxy-utils';
@@ -29,7 +29,7 @@ export type MakeObjectProps<T extends AnyProperties> = Omit<T, 'id' | KindId>;
 // TODO(dmaretskyi): Could mutate original object making it unusable.
 export const makeObject: {
   <T extends AnyProperties>(
-    schema: Schema.Schema<T, any, never> | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext },
+    schema: Schema.Schema<T, any, never> | { readonly [InstancePhantomId]?: T },
     obj: NoInfer<MakeObjectProps<T>>,
     meta?: ObjectMeta,
     typeSource?: { jsonSchema: any; id?: string },

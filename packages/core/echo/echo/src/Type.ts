@@ -61,7 +61,8 @@ type EchoSchemaKind<K extends internal.EntityKind = internal.EntityKind> = {
  * type Person = Type.InstanceType<typeof Person>;
  * ```
  */
-export interface Obj<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fields> extends Type<T> {
+export interface Obj<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>
+  extends Type<T & Entity.OfKind<typeof Entity.Kind.Object>> {
   readonly typename: string;
   readonly version: string;
 
@@ -123,7 +124,7 @@ export const Type: Obj<typeInternal.PersistentSchema> = typeInternal.PersistentS
  * **Not a `Schema.Schema`.** See {@link Obj}'s note.
  */
 export interface Relation<T, Source, Target, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>
-  extends Type<RelationModule.Endpoints<Source, Target> & T> {
+  extends Type<RelationModule.Endpoints<Source, Target> & T & Entity.OfKind<typeof Entity.Kind.Relation>> {
   readonly typename: string;
   readonly version: string;
 
@@ -286,9 +287,12 @@ export const getMeta = (input: AnyType | Schema.Schema.AnyNoContext): Meta | und
  * String key used to phantom-carry the instance type produced by a `Type.Type`.
  * Used by `Type.InstanceType<typeof Foo>` to recover the schema instance type
  * once `Type.object(dxn)` no longer returns a `Schema.Schema` (Option B).
+ *
+ * Re-exported from the internal types layer so both `Type.ts` and internal
+ * helpers (`makeObject`, `createObject`) reference the same phantom key.
  */
-export const InstancePhantomId = '~@dxos/echo/Type.Instance' as const;
-export type InstancePhantomId = typeof InstancePhantomId;
+export const InstancePhantomId = internal.InstancePhantomId;
+export type InstancePhantomId = internal.InstancePhantomId;
 
 /**
  * Instance type of a `Type.Type` ECHO entity.

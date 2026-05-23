@@ -10,7 +10,7 @@ import { ObjectId } from '@dxos/keys';
 
 import { getSchemaURI, getTypeAnnotation, setTypename } from '../Annotation';
 import { defineHiddenProperty } from '../common/proxy';
-import { EntityKind, KindId, MetaId, StaticTypeSchemaSlot, setSchema } from '../common/types';
+import { EntityKind, InstancePhantomId, KindId, MetaId, StaticTypeSchemaSlot, setSchema } from '../common/types';
 import {
   RelationSourceDXNId,
   RelationSourceId,
@@ -49,10 +49,12 @@ export type CreateObjectProps<T> = T extends { id: string } ? Omit<T, 'id' | Kin
  * ```
  */
 // TODO(burdon): Make internal.
-export const createObject = <S extends Schema.Schema.AnyNoContext | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext }>(
-  input: S,
-  props: any,
-): any => {
+export const createObject: {
+  <T>(
+    input: Schema.Schema<T, any, never> | { readonly [InstancePhantomId]?: T },
+    props: NoInfer<CreateObjectProps<T>>,
+  ): T;
+} = (input: any, props: any): any => {
   // Accept `Type.Type` entities (Option B) — extract the underlying source
   // schema from the hidden slot.
   const schema = ((input as any)[StaticTypeSchemaSlot] ?? input) as Schema.Schema.AnyNoContext;

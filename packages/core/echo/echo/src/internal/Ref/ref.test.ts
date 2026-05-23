@@ -7,6 +7,7 @@ import { describe, expect, test } from 'vitest';
 
 import { EchoURI, ObjectId, DXN } from '@dxos/keys';
 
+import * as Type from '../../Type';
 import { EchoObjectSchema, getObjectEchoUri } from '../Entity';
 import { createObject } from '../Obj';
 import { Ref, getReferenceAst } from './ref';
@@ -15,7 +16,7 @@ const Task = Schema.Struct({
   title: Schema.optional(Schema.String),
 }).pipe(EchoObjectSchema(DXN.make('com.example.type.task', '0.1.0')));
 
-type Task = Schema.Schema.Type<typeof Task>;
+type Task = Type.InstanceType<typeof Task>;
 
 const Contact = Schema.Struct({
   name: Schema.String,
@@ -23,7 +24,7 @@ const Contact = Schema.Struct({
   tasks: Schema.Array(Ref(Task)),
 }).pipe(EchoObjectSchema(DXN.make('com.example.type.person', '0.1.0')));
 
-type Contact = Schema.Schema.Type<typeof Contact>;
+type Contact = Type.InstanceType<typeof Contact>;
 
 describe('Ref', () => {
   test('Schema is', () => {
@@ -83,7 +84,7 @@ describe('Ref', () => {
       tasks: [{ '/': `dxn:echo:@:${id}` }],
     };
 
-    const contact = Contact.pipe(Schema.decodeUnknownSync)(contactData);
+    const contact = Type.getSchema(Contact).pipe(Schema.decodeUnknownSync)(contactData) as Contact;
     expect(Ref.isRef(contact.tasks[0])).toEqual(true);
     expect(contact.tasks[0].uri.toString()).toEqual(`dxn:echo:@:${id}`);
   });

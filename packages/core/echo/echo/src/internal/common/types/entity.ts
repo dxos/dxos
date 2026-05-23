@@ -42,6 +42,18 @@ export const StaticTypeSchemaSlot = '~@dxos/echo/Type.StaticSchema' as const;
 export type StaticTypeSchemaSlot = typeof StaticTypeSchemaSlot;
 
 /**
+ * Phantom string key on `Type<A>` entities that carries the instance type `A`.
+ * Lets internal helpers (`makeObject`, `createObject`, etc.) pattern-match the
+ * instance type from an entity input without importing from the top-level
+ * `Type` module. Mirrors `Type.InstancePhantomId` (declared in `Type.ts`).
+ *
+ * Stored as a string key so declarations remain portable across packages
+ * (see KindId comment above).
+ */
+export const InstancePhantomId = '~@dxos/echo/Type.Instance' as const;
+export type InstancePhantomId = typeof InstancePhantomId;
+
+/**
  * Kinds of entities stored in ECHO: objects, relations, and types.
  */
 export enum EntityKind {
