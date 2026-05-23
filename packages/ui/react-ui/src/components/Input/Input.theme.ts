@@ -13,6 +13,8 @@ import {
   type Size,
 } from '@dxos/ui-types';
 
+import { inputTextLabel } from './constants';
+
 export type InputStyleProps = Partial<{
   variant: 'default' | 'subdued' | 'static';
   density: Density;
@@ -28,8 +30,6 @@ export type InputMetaStyleProps = Partial<{
   srOnly: boolean;
   validationValence: MessageValence;
 }>;
-
-export const inputTextLabel = 'py-1 text-sm text-description';
 
 const textInputSurfaceFocus =
   'transition-colors bg-input-surface focus:bg-focus-surface border border-separator focus:border-separator';

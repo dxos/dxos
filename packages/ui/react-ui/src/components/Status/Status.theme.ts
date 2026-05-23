@@ -10,14 +10,14 @@ export type StatusStyleProps = {
   indeterminate?: boolean;
 };
 
-export const statusRoot: ComponentFunction<StatusStyleProps> = ({ variant = 'default' }, ...etc) =>
+const statusRoot: ComponentFunction<StatusStyleProps> = ({ variant = 'default' }, ...etc) =>
   mx(
     'h-1 relative rounded-full overflow-hidden',
     variant === 'main-bottom' ? 'w-full block' : 'inline-20 inline-block bg-base-surface',
     ...etc,
   );
 
-export const statusBar: ComponentFunction<StatusStyleProps> = ({ variant = 'default', indeterminate }, ...etc) =>
+const statusBar: ComponentFunction<StatusStyleProps> = ({ variant = 'default', indeterminate }, ...etc) =>
   mx(
     'absolute inset-y-0 block rounded-full',
     variant === 'main-bottom' ? 'bg-composer-300' : 'bg-un-accent',

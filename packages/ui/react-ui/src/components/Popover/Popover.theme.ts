@@ -11,7 +11,7 @@ export type PopoverStyleProps = Partial<{
   elevation: Elevation;
 }>;
 
-export const popoverContent: ComponentFunction<PopoverStyleProps> = ({ elevation }, ...etc) =>
+const popoverContent: ComponentFunction<PopoverStyleProps> = ({ elevation }, ...etc) =>
   mx(
     'dx-modal-surface border border-separator rounded-sm',
     surfaceShadow({ elevation: 'positioned' }),
@@ -20,7 +20,7 @@ export const popoverContent: ComponentFunction<PopoverStyleProps> = ({ elevation
     ...etc,
   );
 
-export const popoverViewport: ComponentFunction<PopoverStyleProps> = ({ constrainBlock, constrainInline }, ...etc) =>
+const popoverViewport: ComponentFunction<PopoverStyleProps> = ({ constrainBlock, constrainInline }, ...etc) =>
   mx(
     'grid grid-rows-[1fr] min-h-0 min-w-popover-min-width',
     (constrainBlock || constrainInline) && 'overflow-hidden',
@@ -31,7 +31,7 @@ export const popoverViewport: ComponentFunction<PopoverStyleProps> = ({ constrai
     ...etc,
   );
 
-export const popoverArrow: ComponentFunction<PopoverStyleProps> = (_props, ...etc) => mx('fill-separator', ...etc);
+const popoverArrow: ComponentFunction<PopoverStyleProps> = (_props, ...etc) => mx('fill-separator', ...etc);
 
 export const popoverTheme: Theme<PopoverStyleProps> = {
   content: popoverContent,

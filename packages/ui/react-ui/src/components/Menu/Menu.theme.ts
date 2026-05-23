@@ -11,7 +11,7 @@ export type MenuStyleProps = Partial<{
   elevation: Elevation;
 }>;
 
-export const menuContent: ComponentFunction<MenuStyleProps> = ({ elevation }, ...etc) =>
+const menuContent: ComponentFunction<MenuStyleProps> = ({ elevation }, ...etc) =>
   mx(
     'dx-modal-surface w-48 rounded-sm md:w-56 border border-separator',
     surfaceZIndex({ elevation, level: 'menu' }),
@@ -19,10 +19,10 @@ export const menuContent: ComponentFunction<MenuStyleProps> = ({ elevation }, ..
     ...etc,
   );
 
-export const menuViewport: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
+const menuViewport: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
   mx('rounded-sm p-1 max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto', ...etc);
 
-export const menuItem: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
+const menuItem: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
   mx(
     'flex cursor-pointer select-none items-center gap-2 rounded-xs px-2 py-2 text-sm',
     'hover:bg-hover-surface data-[highlighted]:bg-hover-surface',
@@ -31,13 +31,12 @@ export const menuItem: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
     ...etc,
   );
 
-export const menuSeparator: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
-  mx('my-1 mx-2 h-px bg-separator', ...etc);
+const menuSeparator: ComponentFunction<MenuStyleProps> = (_props, ...etc) => mx('my-1 mx-2 h-px bg-separator', ...etc);
 
-export const menuGroupLabel: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
+const menuGroupLabel: ComponentFunction<MenuStyleProps> = (_props, ...etc) =>
   mx('text-description', 'select-none px-2 py-2', ...etc);
 
-export const menuArrow: ComponentFunction<MenuStyleProps> = (_props, ...etc) => mx('fill-separator', ...etc);
+const menuArrow: ComponentFunction<MenuStyleProps> = (_props, ...etc) => mx('fill-separator', ...etc);
 
 export const menuTheme: Theme<MenuStyleProps> = {
   content: menuContent,

@@ -11,10 +11,10 @@ export type ToolbarStyleProps = Partial<{
   layoutManaged: boolean;
 }>;
 
-export const toolbarLayout =
+const toolbarLayout =
   'w-full shrink-0 flex flex-nowrap p-1 gap-1 items-center overflow-x-auto scrollbar-none dx-contain-layout';
 
-export const toolbarRoot: ComponentFunction<ToolbarStyleProps> = ({ density, disabled, layoutManaged }, ...etc) => {
+const toolbarRoot: ComponentFunction<ToolbarStyleProps> = ({ density, disabled, layoutManaged }, ...etc) => {
   return mx(
     'bg-toolbar-surface dx-toolbar',
     density === 'lg' && 'h-(--dx-rail-size) px-3!',
@@ -25,7 +25,7 @@ export const toolbarRoot: ComponentFunction<ToolbarStyleProps> = ({ density, dis
   );
 };
 
-export const toolbarText: ComponentFunction<ToolbarStyleProps> = (_, ...etc) => {
+const toolbarText: ComponentFunction<ToolbarStyleProps> = (_, ...etc) => {
   return mx('px-2 grow truncate items-center', ...etc);
 };
 

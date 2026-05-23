@@ -5,25 +5,7 @@
 import { mx } from '@dxos/ui-theme';
 import { type AllowedAxis, type ComponentFunction, type Theme } from '@dxos/ui-types';
 
-import { withColumn } from '../Column/Column.theme';
-
-/**
- * Scrollbar sizing presets keyed by density tier.
- */
-export const scrollbar = {
-  sm: {
-    size: 2,
-    padding: 2,
-  },
-  md: {
-    size: 4,
-    padding: 4,
-  },
-  lg: {
-    size: 8,
-    padding: 8,
-  },
-};
+import { withColumn } from '../Column/withColumn';
 
 export type ScrollAreaStyleProps = {
   orientation?: AllowedAxis;
@@ -40,7 +22,7 @@ export type ScrollAreaStyleProps = {
   snap?: boolean;
 };
 
-export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orientation }, ...etc) =>
+const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orientation }, ...etc) =>
   mx(
     // Expand
     'dx-container',
@@ -58,7 +40,7 @@ export const scrollAreaRoot: ComponentFunction<ScrollAreaStyleProps> = ({ orient
 /**
  * NOTE: The browser reserves space for scrollbars.
  */
-export const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
+const scrollAreaViewport: ComponentFunction<ScrollAreaStyleProps> = (
   { orientation, centered, padding, snap, autoHide },
   ...etc
 ) => {

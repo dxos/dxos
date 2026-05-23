@@ -5,7 +5,7 @@
 import { mx } from '@dxos/ui-theme';
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
-import { withColumn } from '../Column/Column.theme';
+import { withColumn } from '../Column/withColumn';
 
 export type DialogSize = 'sm' | 'md' | 'lg' | 'xl';
 
@@ -23,9 +23,9 @@ export type DialogStyleProps = {
   size?: DialogSize;
 };
 
-export const dialogOverlay: ComponentFunction<DialogStyleProps> = (_props, ...etc) => mx('dx-dialog__overlay', ...etc);
+const dialogOverlay: ComponentFunction<DialogStyleProps> = (_props, ...etc) => mx('dx-dialog__overlay', ...etc);
 
-export const dialogContent: ComponentFunction<DialogStyleProps> = ({ inOverlayLayout, size = 'md' }, ...etc) => {
+const dialogContent: ComponentFunction<DialogStyleProps> = ({ inOverlayLayout, size = 'md' }, ...etc) => {
   return mx(
     '@container',
     'dx-dialog__content dx-focus-ring dx-modal-surface py-4',
@@ -35,19 +35,19 @@ export const dialogContent: ComponentFunction<DialogStyleProps> = ({ inOverlayLa
   );
 };
 
-export const dialogHeader: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
+const dialogHeader: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
   mx('dx-dialog__header flex pb-4 items-center justify-between', withColumn.center(), ...etc);
 
-export const dialogBody: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
+const dialogBody: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
   mx('dx-dialog__body dx-expander', withColumn.propagate(), ...etc);
 
-export const dialogActionBar: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
+const dialogActionBar: ComponentFunction<DialogStyleProps> = (_props, ...etc) =>
   mx('dx-dialog__actionbar flex items-center pt-4 gap-2', withColumn.center(), ...etc);
 
-export const dialogTitle: ComponentFunction<DialogStyleProps> = ({ srOnly }, ...etc) =>
+const dialogTitle: ComponentFunction<DialogStyleProps> = ({ srOnly }, ...etc) =>
   mx('dx-dialog__title', srOnly && 'sr-only', ...etc);
 
-export const dialogDescription: ComponentFunction<DialogStyleProps> = ({ srOnly }, ...etc) =>
+const dialogDescription: ComponentFunction<DialogStyleProps> = ({ srOnly }, ...etc) =>
   mx('dx-dialog__description', 'text-description', srOnly && 'sr-only', ...etc);
 
 export const dialogTheme: Theme<DialogStyleProps> = {

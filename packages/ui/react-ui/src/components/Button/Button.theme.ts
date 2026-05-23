@@ -6,17 +6,17 @@ import { ghostHover } from '@dxos/ui-theme';
 import { mx } from '@dxos/ui-theme';
 import type { ComponentFunction, Density, Elevation, Theme } from '@dxos/ui-types';
 
-export const primaryButtonColors =
+const primaryButtonColors =
   'text-accent-foreground bg-accent-surface hover:bg-accent-surface-hover aria-pressed:bg-primary-500 dark:aria-pressed:bg-primary-500 data-[state=open]:bg-primary-500 dark:data-[state=open]:bg-primary-500 aria-checked:bg-primary-500 dark:aria-checked:bg-primary-500 aria-checked:text-primary-100';
 
-export const staticDefaultButtonColors = 'bg-input-surface text-input-foreground';
+const staticDefaultButtonColors = 'bg-input-surface text-input-foreground';
 
-export const defaultButtonColors = mx(
+const defaultButtonColors = mx(
   staticDefaultButtonColors,
   'data-[state=open]:bg-input-surface aria-pressed:text-accent-text aria-pressed:bg-base-surface aria-checked:text-accent-text aria-checked:bg-base-surface',
 );
 
-export const ghostButtonColors = mx(
+const ghostButtonColors = mx(
   ghostHover,
   'hover:text-inherit data-[state=open]:bg-input-surface aria-pressed:text-accent-text aria-pressed:bg-base-surface aria-checked:text-accent-text aria-checked:bg-base-surface',
 );

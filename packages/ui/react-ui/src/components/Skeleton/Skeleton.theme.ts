@@ -9,7 +9,7 @@ export type SkeletonStyleProps = {
   variant?: 'default' | 'circle' | 'text';
 };
 
-export const skeletonRoot: ComponentFunction<SkeletonStyleProps> = ({ variant = 'default' }, ...etc) =>
+const skeletonRoot: ComponentFunction<SkeletonStyleProps> = ({ variant = 'default' }, ...etc) =>
   mx(
     'animate-pulse bg-neutral-300 dark:bg-neutral-700 rounded-md',
     variant === 'circle' && 'rounded-full',

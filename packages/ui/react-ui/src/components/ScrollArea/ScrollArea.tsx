@@ -10,8 +10,8 @@ import React, { CSSProperties, useMemo } from 'react';
 import { type AllowedAxis, type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
-import { scrollbar } from '../../theme';
 import { composableProps, slottable } from '../../util';
+import { scrollbar } from './scrollbar';
 
 //
 // Context

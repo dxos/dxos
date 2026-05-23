@@ -9,7 +9,7 @@ export type SelectStyleProps = Partial<{
   elevation: Elevation;
 }>;
 
-export const selectContent: ComponentFunction<SelectStyleProps> = ({ elevation }, ...etc) => {
+const selectContent: ComponentFunction<SelectStyleProps> = ({ elevation }, ...etc) => {
   return mx(
     'dx-modal-surface rounded-sm border border-separator',
     'min-w-(--radix-select-trigger-width) max-h-(--radix-select-content-available-height)',
@@ -19,9 +19,9 @@ export const selectContent: ComponentFunction<SelectStyleProps> = ({ elevation }
   );
 };
 
-export const selectViewport: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx(...etc);
+const selectViewport: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx(...etc);
 
-export const selectItem: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
+const selectItem: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
   mx(
     'flex items-center min-h-[2rem] px-3 py-1 gap-2',
     'text-base-foreground leading-none select-none outline-hidden',
@@ -30,14 +30,14 @@ export const selectItem: ComponentFunction<SelectStyleProps> = (_props, ...etc) 
     ...etc,
   );
 
-export const selectItemIndicator: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx('items-center', ...etc);
+const selectItemIndicator: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx('items-center', ...etc);
 
-export const selectArrow: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx('fill-separator', ...etc);
+const selectArrow: ComponentFunction<SelectStyleProps> = (_props, ...etc) => mx('fill-separator', ...etc);
 
-export const selectSeparator: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
+const selectSeparator: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
   mx('self-stretch border-b my-1 border-separator', ...etc);
 
-export const selectScrollButton: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
+const selectScrollButton: ComponentFunction<SelectStyleProps> = (_props, ...etc) =>
   mx('dx-modal-surface flex items-center justify-center cursor-default h-6 w-full', ...etc);
 
 export const selectTheme: Theme<SelectStyleProps> = {

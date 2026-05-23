@@ -9,7 +9,7 @@ export type LinkStyleProps = {
   variant?: 'accent' | 'neutral';
 };
 
-export const linkRoot: ComponentFunction<LinkStyleProps> = ({ variant }, ...etc) =>
+const linkRoot: ComponentFunction<LinkStyleProps> = ({ variant }, ...etc) =>
   mx(
     'underline decoration-1 underline-offset-2 transition-color rounded-xs',
     variant === 'neutral'

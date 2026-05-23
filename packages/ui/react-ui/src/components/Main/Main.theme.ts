@@ -5,26 +5,22 @@
 import { mx } from '@dxos/ui-theme';
 import { type ComponentFunction } from '@dxos/ui-types';
 
-// Padding to apply to in-flow elements which need to clear the fixed topbar/bottombar.
-export const topbarBlockPaddingStart = 'py-(--dx-topbar-size) dx-sticky-top-from-topbar-bottom';
-export const bottombarBlockPaddingEnd = 'pb-(--dx-statusbar-size) dx-sticky-bottom-from-statusbar-bottom';
+import { mainPaddingTransitions } from './constants';
 
-export const mainPadding = 'dx-main-content-padding';
-export const mainPaddingTransitions = 'dx-main-content-padding-transitions';
-export const mainIntrinsicSize = 'dx-main-intrinsic-size';
+const mainPadding = 'dx-main-content-padding';
 
 export type MainStyleProps = Partial<{
   bounce: boolean;
   handlesFocus: boolean;
 }>;
 
-export const mainContent: ComponentFunction<MainStyleProps> = ({ bounce }, ...etc) =>
+const mainContent: ComponentFunction<MainStyleProps> = ({ bounce }, ...etc) =>
   mx(mainPadding, mainPaddingTransitions, bounce && 'dx-main-bounce-layout', 'dx-focus-ring-main', ...etc);
 
-export const mainSidebar: ComponentFunction<MainStyleProps> = (_, ...etc) =>
+const mainSidebar: ComponentFunction<MainStyleProps> = (_, ...etc) =>
   mx('dx-main-sidebar', 'dx-focus-ring-inset-over-all', ...etc);
 
-export const mainOverlay: ComponentFunction<MainStyleProps> = (_, ...etc) => mx('dx-main-overlay', ...etc);
+const mainOverlay: ComponentFunction<MainStyleProps> = (_, ...etc) => mx('dx-main-overlay', ...etc);
 
 export const mainTheme = {
   content: mainContent,

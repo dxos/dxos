@@ -14,7 +14,7 @@ export type AvatarStyleProps = Partial<{
   inGroup: boolean;
 }>;
 
-export const avatarRoot: ComponentFunction<AvatarStyleProps> = ({ size = 10, inGroup }, ...etc) =>
+const avatarRoot: ComponentFunction<AvatarStyleProps> = ({ size = 10, inGroup }, ...etc) =>
   mx(
     'relative inline-flex shrink-0',
     getSize(size),
@@ -22,15 +22,15 @@ export const avatarRoot: ComponentFunction<AvatarStyleProps> = ({ size = 10, inG
     ...etc,
   );
 
-export const avatarLabel: ComponentFunction<AvatarStyleProps> = ({ srOnly }, ...etc) => mx(srOnly && 'sr-only', ...etc);
+const avatarLabel: ComponentFunction<AvatarStyleProps> = ({ srOnly }, ...etc) => mx(srOnly && 'sr-only', ...etc);
 
-export const avatarDescription: ComponentFunction<AvatarStyleProps> = ({ srOnly }, ...etc) =>
+const avatarDescription: ComponentFunction<AvatarStyleProps> = ({ srOnly }, ...etc) =>
   mx('text-description', srOnly && 'sr-only', ...etc);
 
-export const avatarFrame: ComponentFunction<AvatarStyleProps> = ({ variant }, ...etc) =>
+const avatarFrame: ComponentFunction<AvatarStyleProps> = ({ variant }, ...etc) =>
   mx('h-full w-full bg-(--surface-bg)', variant === 'circle' ? 'rounded-full' : 'rounded-sm', ...etc);
 
-export const avatarStatusIcon: ComponentFunction<AvatarStyleProps> = ({ status, size = 3 }, ...etc) =>
+const avatarStatusIcon: ComponentFunction<AvatarStyleProps> = ({ status, size = 3 }, ...etc) =>
   mx(
     'absolute bottom-0 end-0',
     getSize(size),
@@ -42,7 +42,7 @@ export const avatarStatusIcon: ComponentFunction<AvatarStyleProps> = ({ status, 
     ...etc,
   );
 
-export const avatarRing: ComponentFunction<AvatarStyleProps> = ({ status, variant, animation }, ...etc) =>
+const avatarRing: ComponentFunction<AvatarStyleProps> = ({ status, variant, animation }, ...etc) =>
   mx(
     'absolute inset-0 border-2',
     variant === 'circle' ? 'rounded-full' : 'rounded-sm',
@@ -63,12 +63,11 @@ export const avatarRing: ComponentFunction<AvatarStyleProps> = ({ status, varian
     ...etc,
   );
 
-export const avatarFallbackText: ComponentFunction<AvatarStyleProps> = (_props, ...etc) => mx('fill-white', ...etc);
+const avatarFallbackText: ComponentFunction<AvatarStyleProps> = (_props, ...etc) => mx('fill-white', ...etc);
 
-export const avatarGroup: ComponentFunction<AvatarStyleProps> = (_props, ...etc) =>
-  mx('inline-flex items-center', ...etc);
+const avatarGroup: ComponentFunction<AvatarStyleProps> = (_props, ...etc) => mx('inline-flex items-center', ...etc);
 
-export const avatarGroupLabel: ComponentFunction<AvatarStyleProps> = ({ size, srOnly }, ...etc) =>
+const avatarGroupLabel: ComponentFunction<AvatarStyleProps> = ({ size, srOnly }, ...etc) =>
   mx(
     srOnly
       ? 'sr-only'
@@ -77,7 +76,7 @@ export const avatarGroupLabel: ComponentFunction<AvatarStyleProps> = ({ size, sr
     ...etc,
   );
 
-export const avatarGroupDescription: ComponentFunction<AvatarStyleProps> = ({ srOnly }, ...etc) =>
+const avatarGroupDescription: ComponentFunction<AvatarStyleProps> = ({ srOnly }, ...etc) =>
   mx(srOnly ? 'sr-only' : 'text-description', ...etc);
 
 export const avatarTheme: Theme<AvatarStyleProps> = {
