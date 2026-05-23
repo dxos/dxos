@@ -18,10 +18,10 @@ import React, {
 import { addEventListener, combine } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { useMergeRefs } from '@dxos/react-hooks';
-import { composable, composableProps, slottable } from '@dxos/ui-theme';
 import { mx } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
+import { composable, composableProps, slottable } from '../../util';
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';
 import { ScrollArea, type ScrollAreaRootProps } from '../ScrollArea';

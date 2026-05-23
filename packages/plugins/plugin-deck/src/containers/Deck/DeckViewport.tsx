@@ -20,8 +20,9 @@ import { addEventListener } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { useNode } from '@dxos/plugin-graph';
 import { IconButton, Main, type MainContentProps, useOnTransition, useTranslation } from '@dxos/react-ui';
+import { mainPaddingTransitions } from '@dxos/react-ui';
 import { DEFAULT_HORIZONTAL_SIZE, Stack, StackContext } from '@dxos/react-ui-stack';
-import { hoverableControls, hoverableFocusedWithinControls, mainPaddingTransitions, mx } from '@dxos/ui-theme';
+import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
 import { useBreakpoints, useCompanions, useDeckState, useSelectedCompanion } from '#hooks';
 import { meta } from '#meta';

@@ -10,7 +10,8 @@ import React, { type ComponentType, type JSX, type PropsWithChildren, type Ref, 
 import { useResizeDetector } from 'react-resize-detector';
 
 import { ScrollArea, ScrollAreaRootProps, ThemedClassName, usePx } from '@dxos/react-ui';
-import { cardMaxInlineSize, cardMinInlineSize, composable, composableProps, scrollbar } from '@dxos/ui-theme';
+import { composable, composableProps, scrollbar } from '@dxos/react-ui';
+import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/ui-theme';
 
 //
 // Context

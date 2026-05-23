@@ -16,7 +16,7 @@ import React, {
 import { type Database } from '@dxos/echo';
 import { type Format } from '@dxos/echo/internal';
 import { Icon, Input, Tooltip } from '@dxos/react-ui';
-import { inputTextLabel } from '@dxos/ui-theme';
+import { inputTextLabel } from '@dxos/react-ui';
 
 import { type FormFieldStatus } from '../../hooks';
 import { useFormTooltips } from './FormTooltipsContext';

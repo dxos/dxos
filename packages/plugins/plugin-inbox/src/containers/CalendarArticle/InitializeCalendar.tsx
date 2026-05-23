@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useTranslation } from '@dxos/react-ui';
-import { composable } from '@dxos/ui-theme';
+import { composable } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { InboxOperation } from '#types';

@@ -12,7 +12,7 @@ import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-t
 import { runAndForwardErrors } from '@dxos/effect';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 import { PluginList, type PluginListProps } from '#components';
 import { getPluginPath, meta } from '#meta';

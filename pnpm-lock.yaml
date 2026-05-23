@@ -21163,9 +21163,6 @@ importers:
       '@dxos/storybook-utils':
         specifier: workspace:*
         version: link:../../common/storybook-utils
-      '@dxos/ui-theme':
-        specifier: workspace:*
-        version: link:../ui-theme
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.14
@@ -21409,9 +21406,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
-      '@dxos/ui-theme':
-        specifier: workspace:*
-        version: link:../ui-theme
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.14

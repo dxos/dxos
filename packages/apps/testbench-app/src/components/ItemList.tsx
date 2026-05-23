@@ -7,10 +7,10 @@ import React from 'react';
 import { Obj } from '@dxos/echo';
 import { createDocAccessor } from '@dxos/echo-db';
 import { IconButton, Input, ScrollArea, useThemeContext } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { mapSchemaToFields } from '@dxos/schema';
 import { automerge, createBasicExtensions, createMarkdownExtensions, createThemeExtensions } from '@dxos/ui-editor';
-import { composable, composableProps } from '@dxos/ui-theme';
 
 const MAX_RENDERED_COUNT = 80;
 
