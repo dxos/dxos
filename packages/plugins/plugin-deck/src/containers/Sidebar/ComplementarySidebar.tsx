@@ -91,7 +91,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
           )}
         >
           {/* TODO(burdon): ScrollArea. */}
-          <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) overflow-y-auto'>
+          <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) overflow-y-auto gap-1 p-1'>
             {companions.map((companion) => (
               <Tabs.Tab key={getLinkedVariant(companion.id)} value={getLinkedVariant(companion.id)} asChild>
                 <IconButton
