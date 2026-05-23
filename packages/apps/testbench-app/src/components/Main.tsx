@@ -212,9 +212,9 @@ export const Main = () => {
             onViewChange={(view) => setView(view)}
           />
 
-          {view === 'table' && <ItemTable schema={getSchema(type) as any} objects={objects as any} />}
-          {view === 'list' && <ItemList objects={objects as any} onDelete={handleObjectDelete} />}
-          {view === 'debug' && <ItemList debug objects={objects as any} onDelete={handleObjectDelete} />}
+          {view === 'table' && <ItemTable schema={getSchema(type)} objects={objects as Obj.Any[]} />}
+          {view === 'list' && <ItemList objects={objects as Obj.Any[]} onDelete={handleObjectDelete} />}
+          {view === 'debug' && <ItemList debug objects={objects as Obj.Any[]} onDelete={handleObjectDelete} />}
         </div>
         <div className='flex h-[32px] p-2 items-center relative text-xs'>
           <div>{objects.length} objects</div>

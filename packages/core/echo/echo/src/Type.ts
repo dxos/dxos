@@ -470,11 +470,7 @@ export type InstanceType<T> = T extends Relation<infer Props, infer Source, infe
  * (`Obj.make`, `Filter.type`, `Ref`) you may pass the type value directly.
  */
 export const getSchema = (
-  type:
-    | AnyObjectType
-    | AnyRelationType
-    | Type
-    | internal.UnknownTypeSchema<any, any>,
+  type: AnyObjectType | AnyRelationType | Type | internal.UnknownTypeSchema<any, any>,
 ): Schema.Schema.AnyNoContext => {
   // Static `Type.Type` entities carry the source Effect Schema on a hidden
   // slot so we can return it without round-tripping through JsonSchema.
