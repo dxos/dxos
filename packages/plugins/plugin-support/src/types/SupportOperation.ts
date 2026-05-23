@@ -32,7 +32,7 @@ export const UserFeedback = Schema.Struct({
     Schema.maxLength(4_096),
     Schema.annotations({
       title: 'Feedback',
-      description: 'Please enter your feedback, technical issue, or feature request.',
+      description: 'Enter your feedback, technical issue, or feature request.',
     }),
   ),
   includeLogs: Schema.Boolean.pipe(
