@@ -43,14 +43,14 @@ const formatDate = (iso?: string): string | undefined => {
 //
 
 const FlightProperties = Schema.Struct({
-  airlineName: Schema.optional(Schema.String).annotations({ title: 'Airline' }),
-  flightNumber: Schema.optional(Schema.String).annotations({ title: 'Flight number' }),
-  originCode: Schema.optional(Schema.String).annotations({ title: 'From' }),
-  destinationCode: Schema.optional(Schema.String).annotations({ title: 'To' }),
-  departAt: Schema.optional(Schema.String).annotations({ title: 'Departs' }),
-  arriveAt: Schema.optional(Schema.String).annotations({ title: 'Arrives' }),
-  cabin: Schema.optional(Segment.Cabin).annotations({ title: 'Cabin' }),
-  seat: Schema.optional(Schema.String).annotations({ title: 'Seat' }),
+  airlineName: Schema.optional(Schema.String.annotations({ title: 'Airline' })),
+  flightNumber: Schema.optional(Schema.String.annotations({ title: 'Flight number' })),
+  originCode: Schema.optional(Schema.String.annotations({ title: 'From' })),
+  destinationCode: Schema.optional(Schema.String.annotations({ title: 'To' })),
+  departAt: Schema.optional(Schema.String.annotations({ title: 'Departs' })),
+  arriveAt: Schema.optional(Schema.String.annotations({ title: 'Arrives' })),
+  cabin: Schema.optional(Segment.Cabin.annotations({ title: 'Cabin' })),
+  seat: Schema.optional(Schema.String.annotations({ title: 'Seat' })),
 });
 type FlightProperties = Schema.Schema.Type<typeof FlightProperties>;
 
@@ -98,12 +98,12 @@ const applyFlightValues = (draft: Segment.Segment, values: Partial<FlightPropert
 //
 
 const LodgingProperties = Schema.Struct({
-  propertyName: Schema.optional(Schema.String).annotations({ title: 'Property' }),
-  chain: Schema.optional(Schema.String).annotations({ title: 'Chain' }),
-  city: Schema.optional(Schema.String).annotations({ title: 'City' }),
-  roomType: Schema.optional(Schema.String).annotations({ title: 'Room type' }),
-  checkIn: Schema.optional(Schema.String).annotations({ title: 'Check-in' }),
-  checkOut: Schema.optional(Schema.String).annotations({ title: 'Check-out' }),
+  propertyName: Schema.optional(Schema.String.annotations({ title: 'Property' })),
+  chain: Schema.optional(Schema.String.annotations({ title: 'Chain' })),
+  city: Schema.optional(Schema.String.annotations({ title: 'City' })),
+  roomType: Schema.optional(Schema.String.annotations({ title: 'Room type' })),
+  checkIn: Schema.optional(Schema.String.annotations({ title: 'Check-in' })),
+  checkOut: Schema.optional(Schema.String.annotations({ title: 'Check-out' })),
 });
 type LodgingProperties = Schema.Schema.Type<typeof LodgingProperties>;
 
@@ -238,8 +238,10 @@ export const SegmentArticle = ({ role, subject }: SegmentArticleProps) => {
 
           {segment.kind === 'flight' && (
             <Form.Root<FlightProperties>
+              // Remount when the selected segment changes so defaultValues re-seed.
+              key={segment.id}
               schema={FlightProperties}
-              values={flightValuesFrom(segment)}
+              defaultValues={flightValuesFrom(segment)}
               autoSave
               onSave={handleFlightSave}
             >
@@ -251,8 +253,9 @@ export const SegmentArticle = ({ role, subject }: SegmentArticleProps) => {
 
           {segment.kind === 'lodging' && (
             <Form.Root<LodgingProperties>
+              key={segment.id}
               schema={LodgingProperties}
-              values={lodgingValuesFrom(segment)}
+              defaultValues={lodgingValuesFrom(segment)}
               autoSave
               onSave={handleLodgingSave}
             >
