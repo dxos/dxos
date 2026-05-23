@@ -17,7 +17,11 @@ const defaultDuration = 1_200;
 export type FlyToOptions = {
   /** Animation duration in ms; scales with great-circle distance like useTour. */
   duration?: number;
-  /** Pitch / tilt (latitude rotation) to preserve. */
+  /**
+   * Optional pitch / tilt offset (in degrees) applied along the latitude axis.
+   * Defaults to 0 so the target lat/lng ends up exactly at the centre of the
+   * view. Set non-zero to render the target offset vertically from centre.
+   */
   tilt?: number;
 };
 
@@ -56,11 +60,12 @@ export const useFlyTo = (controller?: GlobeController | null, options: FlyToOpti
 
       const p2 = geoToPosition(target);
       const r1 = projection.rotate() as [number, number, number];
-      // Effective tilt: preserve the current tilt unless the caller overrides it.
-      const effectiveTilt = tilt ?? r1[1];
+      // Default tilt to 0 so the target ends up exactly centred. Callers can
+      // override (e.g. to preserve a constant pitch across selections).
+      const effectiveTilt = tilt ?? 0;
       const r2 = positionToRotation(p2, effectiveTilt);
-      // Approximate current center from the rotation (assumes tilt=current) for duration scaling.
-      const p1: [number, number] = [-r1[0], effectiveTilt - r1[1]];
+      // Approximate current view centre from rotation for great-circle distance scaling.
+      const p1: [number, number] = [-r1[0], -r1[1]];
       const distance = geoDistance(p1, p2);
       const iv = versor.interpolate(r1, r2);
 
