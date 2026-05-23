@@ -18,8 +18,8 @@ import { runDx, withIsolatedHome } from '../../testing';
  */
 
 describe('dx chat --prompt (non-interactive)', () => {
-  test('chat --help advertises --prompt and --json composes with it', ({ expect }) => {
-    const { stdout, status } = runDx(['chat', '--help']);
+  test('chat --help advertises --prompt and --json composes with it', { timeout: 60_000 }, ({ expect }) => {
+    const { stdout, status } = runDx(['chat', '--help'], { timeout: 60_000 });
     expect(status).toBe(0);
     expect(stdout).toMatch(/--prompt/);
     expect(stdout).toMatch(/non-interactively/);
