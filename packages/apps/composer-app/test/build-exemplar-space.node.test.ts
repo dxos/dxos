@@ -108,7 +108,7 @@ const RoastLog = S.Struct({
 );
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-interface RoastLog extends S.Schema.Type<typeof RoastLog> {}
+type RoastLog = Type.InstanceType<typeof RoastLog>;
 const makeRoastLog = (props: Obj.MakeProps<typeof RoastLog>): RoastLog => Obj.make(RoastLog, props);
 
 // All ECHO types we add to the space. Must be registered on any client that hydrates the snapshot.
@@ -867,8 +867,8 @@ const makeNotes = (
   project: Project.Project,
 ): Markdown.Document[] => {
   // Helpers — produce markdown link / block-embed syntax that the editor understands.
-  const lnk = (label: string, obj: Obj.Unknown) => `[${label}](${Obj.getDXN(obj).toString()})`;
-  const emb = (label: string, obj: Obj.Unknown) => `![${label}](${Obj.getDXN(obj).toString()})`;
+  const lnk = (label: string, obj: Obj.Unknown) => `[${label}](${Obj.getURI(obj).toString()})`;
+  const emb = (label: string, obj: Obj.Unknown) => `![${label}](${Obj.getURI(obj).toString()})`;
 
   return [
     Markdown.make({

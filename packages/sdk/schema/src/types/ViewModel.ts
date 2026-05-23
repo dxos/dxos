@@ -247,10 +247,17 @@ export const makeFromDatabase = async ({
   const jsonSchema =
     schema && (Type.isType(schema) ? schema.jsonSchema : JsonSchema.toJsonSchema(schema));
   invariant(jsonSchema, `Schema not found: ${typename}`);
-  invariant(schema && Type.isObjectSchema(schema), `Schema is not an object schema: ${typename}`);
+  // For `Type.Type` entities (stored meta-schemas), defer the object-ness check to the
+  // rebuilt Effect Schema below — `Type.isObjectSchema` returns false for them since
+  // their entity-kind brand is `Type`, not `Object`.
+  const effectSchema = schema && (Type.isType(schema) ? Type.getSchema(schema) : schema);
+  invariant(
+    effectSchema && Type.isObjectSchema(effectSchema),
+    `Schema is not an object schema: ${typename}`,
+  );
 
   Array.from({ length: createInitial }).forEach(() => {
-    db.add(Obj.make(schema, {}));
+    db.add(Obj.make(effectSchema as Type.AnyObjectType, {}));
   });
 
   return {
