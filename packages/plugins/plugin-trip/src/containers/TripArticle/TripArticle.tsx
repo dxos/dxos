@@ -18,15 +18,15 @@ import { SegmentStack, type SegmentCardAction, TripMapView } from '#components';
 import { meta } from '#meta';
 import { Segment, Trip } from '#types';
 
-type ViewMode = 'stack' | 'map';
-
-export type TripArticleProps = AppSurface.ObjectArticleProps<Trip.Trip>;
-
 const byPrimaryDate = (a: Segment.Segment, b: Segment.Segment): number => {
   const da = Segment.getPrimaryDate(a)?.getTime() ?? 0;
   const db = Segment.getPrimaryDate(b)?.getTime() ?? 0;
   return da - db;
 };
+
+type ViewMode = 'stack' | 'map';
+
+export type TripArticleProps = AppSurface.ObjectArticleProps<Trip.Trip>;
 
 export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) => {
   const { t } = useTranslation(meta.id);

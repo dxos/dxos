@@ -4,7 +4,7 @@
 
 import React, { type KeyboardEvent, useCallback, useMemo, useState } from 'react';
 
-import { ScrollArea } from '@dxos/react-ui';
+import { ScrollArea, ThemedClassName } from '@dxos/react-ui';
 import { Focus, Mosaic } from '@dxos/react-ui-mosaic';
 import { composable, composableProps } from '@dxos/ui-theme';
 
@@ -12,13 +12,13 @@ import { type Segment } from '#types';
 
 import { SegmentTile, type SegmentCardActionHandler } from '../SegmentCard/SegmentCard';
 
-export type SegmentStackProps = {
+export type SegmentStackProps = ThemedClassName<{
   id: string;
   segments?: Segment.Segment[];
   currentId?: string;
   selectedIds?: ReadonlySet<string>;
   onAction?: SegmentCardActionHandler;
-};
+}>;
 
 export const SegmentStack = composable<HTMLDivElement, SegmentStackProps>(
   ({ segments = [], currentId, selectedIds, onAction, ...props }, forwardedRef) => {
@@ -36,9 +36,10 @@ export const SegmentStack = composable<HTMLDivElement, SegmentStackProps>(
 
     const handleSelectionChange = useCallback(
       (id: string) => {
-        onAction?.({ type: 'select', segmentId: id });
+        const isSelected = selectedIds?.has(id) ?? false;
+        onAction?.({ type: isSelected ? 'deselect' : 'select', segmentId: id });
       },
-      [onAction],
+      [onAction, selectedIds],
     );
 
     const handleKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {

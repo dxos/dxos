@@ -18,6 +18,9 @@ export type SegmentCardAction = { segmentId: string } & (
       type: 'select';
     }
   | {
+      type: 'deselect';
+    }
+  | {
       type: 'delete';
     }
 );
