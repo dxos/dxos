@@ -6,7 +6,7 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import type { ToggleGroupItemProps as ToggleGroupItemPrimitiveProps } from '@radix-ui/react-toggle-group';
 import * as ToolbarPrimitive from '@radix-ui/react-toolbar';
-import React, { forwardRef } from 'react';
+import React, { type MouseEventHandler, forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { composable, composableProps, slottable, type ToolbarStyleProps } from '@dxos/ui-theme';
@@ -230,7 +230,7 @@ const ToolbarDragHandle = forwardRef<HTMLButtonElement, ToolbarDragHandleProps>(
 // CloseIconButton
 //
 
-type ToolbarCloseIconButtonProps = { onClick?: () => void; label?: string };
+type ToolbarCloseIconButtonProps = { onClick?: MouseEventHandler<HTMLButtonElement>; label?: string };
 
 const ToolbarCloseIconButton = forwardRef<HTMLButtonElement, ToolbarCloseIconButtonProps>(
   ({ onClick, label }, forwardedRef) => {

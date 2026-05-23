@@ -5,14 +5,12 @@
 import React, { type KeyboardEvent, useCallback, useMemo, useState } from 'react';
 
 import { ScrollArea, ThemedClassName } from '@dxos/react-ui';
-import { Focus, Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
+import { Focus, Mosaic } from '@dxos/react-ui-mosaic';
 import { composable, composableProps } from '@dxos/ui-theme';
 
 import { Segment } from '#types';
 
 import { SegmentTile, type SegmentCardActionHandler } from '../SegmentCard/SegmentCard';
-
-type SegmentTileData = { segment: Segment.Segment; onAction?: SegmentCardActionHandler };
 
 export type SegmentStackProps = ThemedClassName<{
   id: string;
@@ -20,17 +18,12 @@ export type SegmentStackProps = ThemedClassName<{
   currentId?: string;
   selectedIds?: ReadonlySet<string>;
   onAction?: SegmentCardActionHandler;
-  /** Tile component used for each segment row. Defaults to SegmentTile. */
-  Tile?: MosaicStackTileComponent<SegmentTileData>;
-  /** Estimated row height — should match the chosen Tile's rendered height. */
-  estimateSize?: number;
 }>;
 
+const ROW_ESTIMATE = 120;
+
 export const SegmentStack = composable<HTMLDivElement, SegmentStackProps>(
-  (
-    { segments = [], currentId, selectedIds, onAction, Tile = SegmentTile, estimateSize = 96, ...props },
-    forwardedRef,
-  ) => {
+  ({ segments = [], currentId, selectedIds, onAction, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
     // Sort by primary (start) date ascending; segments without a date go last, stable by original order.
     const sortedSegments = useMemo(() => {
@@ -81,12 +74,12 @@ export const SegmentStack = composable<HTMLDivElement, SegmentStackProps>(
           <ScrollArea.Root orientation='vertical' padding centered>
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
-                Tile={Tile}
+                Tile={SegmentTile}
                 items={items}
                 draggable={false}
                 getId={(item) => item.segment.id}
                 getScrollElement={() => viewport}
-                estimateSize={() => estimateSize}
+                estimateSize={() => ROW_ESTIMATE}
               />
             </ScrollArea.Viewport>
           </ScrollArea.Root>

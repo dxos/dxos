@@ -19,7 +19,7 @@ import { composable, composableProps } from '@dxos/ui-theme';
 
 import { Segment } from '#types';
 
-import { CompactSegmentTile, type SegmentCardAction } from '../SegmentCard/SegmentCard';
+import { type SegmentCardAction } from '../SegmentCard/SegmentCard';
 import { SegmentStack } from '../SegmentStack/SegmentStack';
 
 const initialRotation: [number, number, number] = [0, -20, 0];
@@ -235,8 +235,6 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
               segments={segments}
               currentId={selectedSegmentId}
               onAction={handleStackAction}
-              Tile={CompactSegmentTile}
-              estimateSize={56}
               classNames='flex-1 overflow-hidden'
             />
           )}

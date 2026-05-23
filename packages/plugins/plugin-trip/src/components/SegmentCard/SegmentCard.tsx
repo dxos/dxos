@@ -5,24 +5,16 @@
 import { format } from 'date-fns';
 import React, { type MouseEvent, forwardRef, useCallback } from 'react';
 
-import { Card, IconButton } from '@dxos/react-ui';
+import { Card } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 
 import { Segment } from '#types';
 
 export type SegmentCardAction = { segmentId: string } & (
-  | {
-      type: 'current';
-    }
-  | {
-      type: 'select';
-    }
-  | {
-      type: 'deselect';
-    }
-  | {
-      type: 'delete';
-    }
+  | { type: 'current' }
+  | { type: 'select' }
+  | { type: 'deselect' }
+  | { type: 'delete' }
 );
 
 export type SegmentCardActionHandler = (action: SegmentCardAction) => void;
@@ -34,6 +26,16 @@ type SegmentTileData = {
 
 type SegmentTileProps = Pick<MosaicTileProps<SegmentTileData>, 'data' | 'location' | 'current'>;
 
+/**
+ * Mosaic tile for a Segment. Follows the Card primitives:
+ *   Card.Root
+ *     Card.Toolbar  → kind icon + title + delete (Card.CloseIconButton)
+ *     Card.Content  → optional Route and Date rows
+ *
+ * Selection / current state is wired through `Mosaic.Tile asChild` + `Focus.Item`
+ * so the host `Mosaic.Container` drives the visual `dx-current` / `dx-selected`
+ * states uniformly across the stack.
+ */
 export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data, location, current }, forwardedRef) => {
   const { segment, onAction } = data;
   const { setCurrentId, setSelected } = useMosaicContainer('SegmentTile');
@@ -44,9 +46,9 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
   }, [segment.id, setCurrentId, setSelected]);
 
   const handleDelete = useCallback(
-    (ev: MouseEvent<HTMLButtonElement>) => {
+    (event: MouseEvent<HTMLButtonElement>) => {
       // Don't let the delete button propagate as a select / current change.
-      ev.stopPropagation();
+      event.stopPropagation();
       onAction?.({ type: 'delete', segmentId: segment.id });
     },
     [onAction, segment.id],
@@ -67,35 +69,26 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
       location={location}
     >
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Card.Root
-          fullWidth
-          border={false}
-          ref={forwardedRef}
-          classNames={['group relative', isCancelled ? 'opacity-40' : '']}
-        >
-          <Card.Content>
-            <Card.Row icon={icon}>
-              <Card.Text classNames={isCancelled ? 'line-through' : undefined}>{title}</Card.Text>
-            </Card.Row>
-            {route && (
-              <Card.Row icon='ph--arrow-right--regular'>
-                <span className='text-description text-sm'>{route}</span>
-              </Card.Row>
-            )}
-            {date && (
-              <Card.Row icon='ph--calendar--regular'>
-                <span className='text-description text-sm'>{format(date, 'PPp')}</span>
-              </Card.Row>
-            )}
-          </Card.Content>
-          <IconButton
-            variant='ghost'
-            icon='ph--x--regular'
-            iconOnly
-            label='Delete segment'
-            classNames='absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity'
-            onClick={handleDelete}
-          />
+        <Card.Root fullWidth border={false} ref={forwardedRef} classNames={isCancelled ? 'opacity-40' : undefined}>
+          <Card.Toolbar>
+            <Card.Icon icon={icon} />
+            <Card.Title classNames={isCancelled ? 'line-through' : undefined}>{title}</Card.Title>
+            <Card.CloseIconButton onClick={handleDelete} label='Delete segment' />
+          </Card.Toolbar>
+          {(route || date) && (
+            <Card.Content>
+              {route && (
+                <Card.Row icon='ph--arrow-right--regular'>
+                  <Card.Text variant='description'>{route}</Card.Text>
+                </Card.Row>
+              )}
+              {date && (
+                <Card.Row icon='ph--calendar--regular'>
+                  <Card.Text variant='description'>{format(date, 'PPp')}</Card.Text>
+                </Card.Row>
+              )}
+            </Card.Content>
+          )}
         </Card.Root>
       </Focus.Item>
     </Mosaic.Tile>
@@ -103,49 +96,3 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
 });
 
 SegmentTile.displayName = 'SegmentTile';
-
-/**
- * Compact one-line variant of SegmentTile for use in narrow panels (e.g.
- * the TripMapView itinerary column). Same selection/current-aware Mosaic
- * tile, but shows just: kind icon + title + primary date on a single row.
- * No delete button; no route line.
- */
-export const CompactSegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(
-  ({ data, location, current }, forwardedRef) => {
-    const { segment } = data;
-    const { setCurrentId, setSelected } = useMosaicContainer('CompactSegmentTile');
-
-    const handleCurrentChange = useCallback(() => {
-      setCurrentId(segment.id);
-      setSelected(segment.id, true);
-    }, [segment.id, setCurrentId, setSelected]);
-
-    const title = Segment.getTitle(segment);
-    const date = Segment.getPrimaryDate(segment);
-    const icon = Segment.kindIcon(segment.kind);
-    const isCancelled = segment.status === 'cancelled';
-
-    return (
-      <Mosaic.Tile
-        asChild
-        classNames='dx-hover dx-current dx-selected border-b border-subdued-separator'
-        id={segment.id}
-        data={data}
-        location={location}
-      >
-        <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-          <Card.Root fullWidth border={false} ref={forwardedRef} classNames={isCancelled ? 'opacity-40' : undefined}>
-            <Card.Content>
-              <Card.Row icon={icon}>
-                <Card.Text classNames={isCancelled ? 'line-through' : undefined}>{title}</Card.Text>
-                {date && <span className='ml-auto text-xs text-description shrink-0'>{format(date, 'MMM d')}</span>}
-              </Card.Row>
-            </Card.Content>
-          </Card.Root>
-        </Focus.Item>
-      </Mosaic.Tile>
-    );
-  },
-);
-
-CompactSegmentTile.displayName = 'CompactSegmentTile';

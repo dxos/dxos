@@ -212,13 +212,17 @@ See: `plugin-sample/src/containers/SampleArticle.tsx`.
 
 **Containers must use standard UI primitives — never custom classNames for layout or styling.** Use:
 
-- `Panel.Root` / `Panel.Toolbar` / `Panel.Content` for article layout structure.
+- `Panel.Root` / `Panel.Toolbar` / `Panel.Content` for container (article, companion, etc.) layout structure.
 - `ScrollArea.Root` + `ScrollArea.Viewport` inside `Panel.Content asChild` for scrollable content.
 - `Input.Root` / `Input.Label` / `Input.TextInput` for form fields.
 - `Button` (with `variant`) for actions.
 - `Clipboard.IconButton` for copy-to-clipboard.
 - `Toolbar.Root` / `Toolbar.IconButton` for toolbar actions.
 - `Card.Root` / `Card.Toolbar` / `Card.Content` for card surfaces.
+- `List.Roo` for navigatble lists that track current (`dx-current`) and selected (`dx-selected`) item states.
+- use `react-tabster` for navigation.
+
+IMPORTANT: Any deviation from standard UI components should require permission from the user.
 
 The only acceptable classNames are functional layout hints on `ScrollArea.Viewport` (e.g., `p-4 space-y-4`) or responsive `@container` queries. If you find yourself writing custom styles, you are probably missing an existing UI component.
 
