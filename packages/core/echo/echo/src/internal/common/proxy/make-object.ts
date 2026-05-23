@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 import { ObjectId } from '@dxos/keys';
 
 import { getTypeAnnotation } from '../../Annotation';
-import { type AnyProperties, KindId, MetaId, type ObjectMeta, ObjectMetaSchema, ParentId } from '../types';
+import { type AnyProperties, KindId, MetaId, type ObjectMeta, ObjectMetaSchema, ParentId, StaticTypeSchemaSlot } from '../types';
 import { defineHiddenProperty } from './define-hidden-property';
 import { attachTypedJsonSerializer } from './json-serializer';
 import { createProxy, getProxyTarget, isValidProxyTarget } from './proxy-utils';
@@ -29,17 +29,19 @@ export type MakeObjectProps<T extends AnyProperties> = Omit<T, 'id' | KindId>;
 // TODO(dmaretskyi): Could mutate original object making it unusable.
 export const makeObject: {
   <T extends AnyProperties>(
-    schema: Schema.Schema<T, any, never>,
+    schema: Schema.Schema<T, any, never> | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext },
     obj: NoInfer<MakeObjectProps<T>>,
     meta?: ObjectMeta,
     typeSource?: { jsonSchema: any; id?: string },
   ): T;
 } = <T extends AnyProperties>(
-  schema: Schema.Schema<T, any>,
+  input: any,
   obj: MakeObjectProps<T>,
   meta?: ObjectMeta,
   typeSource?: { jsonSchema: any; id?: string },
 ): T => {
+  // Accept `Type.Type` entities (Option B) — extract the underlying source schema.
+  const schema = (input?.[StaticTypeSchemaSlot] ?? input) as Schema.Schema<T, any>;
   // Use Object.assign to copy symbol properties (like ParentId) that spread operator doesn't copy.
   return createReactiveObject<T>(Object.assign({}, obj) as T, meta, schema, typeSource);
 };
