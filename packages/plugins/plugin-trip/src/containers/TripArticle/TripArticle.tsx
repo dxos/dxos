@@ -9,6 +9,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { useObject } from '@dxos/react-client/echo';
 import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
@@ -29,10 +30,19 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const showItem = useShowItem();
+  // Subscribe to subject mutations so edits made in the SegmentArticle
+  // companion re-render the stack here. `useObject` requires a reactive ECHO
+  // object — pass undefined and fall back to `subject` directly if the
+  // dispatcher hands us a non-reactive value (rare; can occur during graph
+  // rebuilds when only the snapshot is available).
+  const reactiveSubject = Obj.isObject(subject) ? subject : undefined;
+  const [snapshot] = useObject(reactiveSubject);
+  const trip = (snapshot ?? subject) as Trip.Trip;
+
   const id = attendableId ?? Obj.getDXN(subject).toString();
   const currentId = useSelected(id, 'single');
 
-  const segments = [...(subject.segments ?? [])].sort(byPrimaryDate);
+  const segments = [...(trip.segments ?? [])].sort(byPrimaryDate);
 
   const calendarDates = segments.flatMap((seg): Date[] => {
     const primary = Segment.getPrimaryDate(seg);
