@@ -159,6 +159,36 @@ export const RestoreMessage = Operation.make({
   output: Schema.Void,
 });
 
+export const RespondToThread = Operation.make({
+  meta: {
+    key: `${THREAD_OPERATION}.respond-to-thread`,
+    name: 'Respond to Thread',
+    description: 'Runs one comment-thread agent turn against the given thread + subject.',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    thread: Ref.Ref(Thread.Thread).annotations({ description: 'The thread to respond to.' }),
+    subject: Ref.Ref(Obj.Unknown).annotations({ description: 'The object the thread is anchored to.' }),
+  }),
+  output: Schema.Void,
+});
+
+export const SetAgentConfig = Operation.make({
+  meta: {
+    key: `${THREAD_OPERATION}.set-agent-config`,
+    name: 'Set Agent Config',
+    description: 'Updates thread.agent. Undefined config disables the agent.',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    thread: Ref.Ref(Thread.Thread).annotations({ description: 'The thread to configure.' }),
+    config: Schema.optional(Thread.AgentConfig).annotations({
+      description: 'New agent config; omit to disable.',
+    }),
+  }),
+  output: Schema.Void,
+});
+
 export const CreateProposals = Operation.make({
   meta: {
     key: 'org.dxos.function.thread.create-proposals',

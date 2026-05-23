@@ -1,6 +1,7 @@
 {
   "name": "@dxos/plugin-sequencer",
   "version": "0.8.3",
+  "private": true,
   "description": "Music sequencer plugin (Score / Track / Sequence / Note) with a canvas-based step grid.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -118,6 +119,5 @@
     "@dxos/ui-theme": "workspace:*",
     "react": "catalog:",
     "react-dom": "catalog:"
-  },
-  "private": true
+  }
 }

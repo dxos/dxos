@@ -24,7 +24,12 @@ import { ThreadCapabilities, type ViewState } from '#types';
 
 const initialViewState: ViewState = { showResolvedThreads: false };
 
-export type CommentsCompanionProps = AppSurface.ObjectArticleProps<Thread.Thread>;
+/**
+ * Subject is the host object being commented on (e.g. a Markdown.Document),
+ * not a Thread — the threads anchored to that host are discovered via the
+ * `AnchoredTo` query inside the component.
+ */
+export type CommentsCompanionProps = AppSurface.ObjectArticleProps<Obj.Any>;
 
 export const CommentsCompanion = ({ attendableId, subject }: CommentsCompanionProps) => {
   const { t } = useTranslation(meta.id);
