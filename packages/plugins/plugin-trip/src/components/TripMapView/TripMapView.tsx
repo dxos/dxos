@@ -24,7 +24,6 @@ import { SegmentStack } from '../SegmentStack/SegmentStack';
 
 const initialRotation: [number, number, number] = [0, -20, 0];
 const initialZoom = 1.2;
-const selectedZoom = 2.5;
 
 type LatLng = { lat: number; lng: number };
 
@@ -158,7 +157,7 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
         return;
       }
       lastRecenterRef.current = selectedSegmentId;
-      flyTo({ ...point, zoom: selectedZoom });
+      flyTo(point);
     }, [controller, segments, selectedSegmentId, flyTo]);
 
     // Bridge SegmentStack actions to the parent's selection callback.
