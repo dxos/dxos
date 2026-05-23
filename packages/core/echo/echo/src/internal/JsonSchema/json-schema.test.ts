@@ -438,11 +438,12 @@ describe('json-to-effect', () => {
 
       const schema = toEffectSchema(jsonSchema);
 
-      expect(() => expect(schema.ast).to.deep.eq(Test.ast)).to.throw();
-      expect(() => expect(prepareAstForCompare(Test.ast)).to.deep.eq(Test.ast)).to.throw();
-      expect(() => expect(schema.ast).to.deep.eq(prepareAstForCompare(Test.ast))).to.throw();
+      const testAst = Type.getSchema(Test).ast;
+      expect(() => expect(schema.ast).to.deep.eq(testAst)).to.throw();
+      expect(() => expect(prepareAstForCompare(testAst)).to.deep.eq(testAst)).to.throw();
+      expect(() => expect(schema.ast).to.deep.eq(prepareAstForCompare(testAst))).to.throw();
       // log.info('', { original: prepareAstForCompare(Schema.ast), deserialized: prepareAstForCompare(schema.ast) });
-      expect(prepareAstForCompare(schema.ast)).to.deep.eq(prepareAstForCompare(Test.ast));
+      expect(prepareAstForCompare(schema.ast)).to.deep.eq(prepareAstForCompare(testAst));
 
       // TODO(dmaretskyi): Fix.
       // expect(
@@ -513,7 +514,7 @@ describe('json-to-effect', () => {
     const schema = TestSchema.HasManager;
     const jsonSchema = toJsonSchema(schema);
     const effectSchema = toEffectSchema(jsonSchema);
-    expect(prepareAstForCompare(effectSchema.ast)).to.deep.eq(prepareAstForCompare(schema.ast));
+    expect(prepareAstForCompare(effectSchema.ast)).to.deep.eq(prepareAstForCompare(Type.getSchema(schema).ast));
   });
 
   test('generator annotation', () => {
@@ -648,7 +649,7 @@ describe('json-to-effect', () => {
       name: Schema.String,
     }).pipe(EchoObjectSchema(DXN.make('com.example.type.person', '0.1.0')));
     const input = Schema.Struct({
-      contact: Contact,
+      contact: Type.getSchema(Contact) as any,
     });
     const jsonSchema = toJsonSchema(input);
     expect(jsonSchema).toMatchInlineSnapshot(`
