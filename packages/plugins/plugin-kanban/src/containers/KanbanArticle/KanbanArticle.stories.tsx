@@ -239,7 +239,7 @@ export const Default: Story = {
 };
 
 /**
- * Story variant that uses a mutable database schema (EchoSchema).
+ * Story variant that uses a database-stored Type.Type entity (mutable schema).
  * This allows testing schema mutations like adding/removing fields.
  */
 // TODO(wittjosiah): Card previews (e.g., OrganizationCard) are type-specific and hard-coded.
@@ -250,7 +250,7 @@ export const MutableSchema: Story = {
   decorators: [
     withKanbanPlugins({
       onSpaceCreated: async (space) => {
-        // Register schema in the database to make it mutable (EchoSchema).
+        // Register schema in the database to make it mutable (stored Type.Type).
         const [schema] = await space.db.schemaRegistry.register([Organization.Organization]);
 
         const { view } = await ViewModel.makeFromDatabase({

@@ -2431,7 +2431,7 @@ describe('Query', () => {
       const [schema] = await db.schemaRegistry.register([TestSchema.Person]);
       const contact = db.add(Obj.make(schema, {}));
 
-      // NOTE: Must use `Filter.type` with EchoSchema instance since matching is done by the object ID of the mutable schema.
+      // NOTE: Must use `Filter.type` with the stored Type.Type entity since matching is done by the object id of the schema entity.
       const query = db.query(Query.type(schema));
       const result = await query.run();
       expect(result).to.have.length(1);

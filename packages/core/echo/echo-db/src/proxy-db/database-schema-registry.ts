@@ -8,9 +8,8 @@ import type * as Types from 'effect/Types';
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
-import { Filter, JsonSchema, type QueryResult, type SchemaRegistry, Type } from '@dxos/echo';
+import { Filter, JsonSchema, Obj, type QueryResult, type SchemaRegistry, Type } from '@dxos/echo';
 import {
-  EchoSchema,
   PersistentSchema,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
@@ -51,8 +50,8 @@ export type DatabaseSchemaRegistryOptions = {
  * Registry of `PersistentSchema` mutable schema objects within a space.
  */
 export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.SchemaRegistry {
-  private readonly _schemaById: Map<string, EchoSchema> = new Map();
-  private readonly _schemaByType: Map<string, EchoSchema> = new Map();
+  private readonly _schemaById: Map<string, Type.Type> = new Map();
+  private readonly _schemaByType: Map<string, Type.Type> = new Map();
   private readonly _unsubscribeById: Map<string, CleanupFn> = new Map();
   private readonly _schemaSubscriptionCallbacks: SchemaSubscriptionCallback[] = [];
 
@@ -98,7 +97,11 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
   }
 
   public hasSchema(schema: Type.AnyType | Schema.Schema.AnyNoContext): boolean {
-    const schemaId = Type.isMutable(schema) ? schema.id : getObjectIdFromSchema(schema);
+    const schemaId = Type.isType(schema)
+      ? schema.id
+      : Obj.isObject(schema)
+        ? schema.id
+        : getObjectIdFromSchema(schema);
     return schemaId != null && this.getSchemaById(schemaId) != null;
   }
 
@@ -117,7 +120,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
         }
       | {
           source: 'database';
-          schema: EchoSchema;
+          schema: Type.Type;
         };
 
     // Database-sourced schemas take precedence over runtime-sourced schemas with the same
@@ -169,7 +172,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
               return true;
             }
             case 'database': {
-              if (!validateStoredSchemaIntegrity(object.schema.persistentSchema)) {
+              if (!validateStoredSchemaIntegrity(object.schema)) {
                 return false;
               }
 
@@ -338,9 +341,9 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
   /**
    * @internal
    *
-   * Registers a PersistentSchema object if necessary and returns a Type.AnyType object.
+   * Registers a PersistentSchema object if necessary and returns the Type.Type entity.
    */
-  _registerSchema(schema: PersistentSchema): EchoSchema {
+  _registerSchema(schema: PersistentSchema): Type.Type {
     const existing = this._schemaById.get(schema.id);
     if (existing != null) {
       return existing;
@@ -351,35 +354,36 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     return registered;
   }
 
-  private _register(schema: PersistentSchema): EchoSchema {
+  private _register(schema: PersistentSchema): Type.Type {
     const existing = this._schemaById.get(schema.id);
     if (existing != null) {
       return existing;
     }
 
-    let previousTypename: string | undefined;
-    const echoSchema = new EchoSchema(schema);
+    // PersistentSchema instances *are* Type.Type entities (same shape: typename,
+    // version, jsonSchema, plus the entity-kind brand). Track typename changes
+    // so the by-type index stays in sync.
+    const typeEntity = schema as unknown as Type.Type;
+    let previousTypename: string = schema.typename;
     const subscription = getObjectCore(schema).updates.on(() => {
-      echoSchema._invalidate();
+      if (schema.typename !== previousTypename) {
+        if (this._schemaByType.get(previousTypename) === typeEntity) {
+          this._schemaByType.delete(previousTypename);
+        }
+        previousTypename = schema.typename;
+        this._schemaByType.set(schema.typename, typeEntity);
+        this._notifySchemaListChanged();
+      }
     });
 
-    if (previousTypename !== undefined && schema.typename !== previousTypename) {
-      if (this._schemaByType.get(previousTypename) === echoSchema) {
-        this._schemaByType.delete(previousTypename);
-      }
-      previousTypename = schema.typename;
-      this._schemaByType.set(schema.typename, echoSchema);
-      this._notifySchemaListChanged();
-    }
-
-    this._schemaById.set(schema.id, echoSchema);
-    this._schemaByType.set(schema.typename, echoSchema);
+    this._schemaById.set(schema.id, typeEntity);
+    this._schemaByType.set(schema.typename, typeEntity);
     this._unsubscribeById.set(schema.id, subscription);
-    return echoSchema;
+    return typeEntity;
   }
 
   // TODO(dmaretskyi): Figure out how to migrate the usages to the async `register` method.
-  private _addSchema(schema: Schema.Schema.AnyNoContext): EchoSchema {
+  private _addSchema(schema: Schema.Schema.AnyNoContext): Type.Type {
     if (Type.isMutable(schema)) {
       // The snapshot preserves typename/version in annotations.
       schema = Type.getSchema(schema).annotations({
@@ -415,7 +419,6 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     const result = this._register(persistentSchema);
 
     this._notifySchemaListChanged();
-    result._rebuild();
     return result;
   }
 
@@ -446,7 +449,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
   }
 }
 
-const validateStoredSchemaIntegrity = (schema: PersistentSchema) => {
+const validateStoredSchemaIntegrity = (schema: Type.Type) => {
   if (!schema.jsonSchema.$id && !schema.jsonSchema.$id?.startsWith('dxn:')) {
     log.warn('Schema is missing $id or has invalid $id', { schema });
     return false;

@@ -403,13 +403,29 @@ const toJSON = (target: ProxyTarget): any => {
 /**
  * Recursively set AST on all potential proxy targets.
  */
-const setSchemaProperties = (obj: any, schema: Schema.Schema.AnyNoContext) => {
+const setSchemaProperties = (
+  obj: any,
+  schema: Schema.Schema.AnyNoContext,
+  typeSource?: { jsonSchema: any; id?: string },
+) => {
   const schemaType = getSchemaURI(schema);
   if (schemaType != null) {
     defineHiddenProperty(obj, TypeId, schemaType);
   }
 
-  defineHiddenProperty(obj, SchemaId, schema);
+  if (typeSource != null) {
+    // Install `SchemaId` as a getter so each access rebuilds the Effect Schema
+    // from the source `Type.Type` entity's current `jsonSchema`. This lets
+    // schema mutations performed via `Type.update`/`Type.addFields` propagate
+    // into validation of objects created with `Obj.make(typeEntity, ...)`.
+    Object.defineProperty(obj, SchemaId, {
+      get: () => buildTypeSourceSchema(typeSource),
+      enumerable: false,
+      configurable: true,
+    });
+  } else {
+    defineHiddenProperty(obj, SchemaId, schema);
+  }
   for (const key in obj) {
     if (isValidProxyTarget(obj[key])) {
       const elementSchema = SchemaValidator.getTargetPropertySchema(obj, key);
@@ -420,7 +436,28 @@ const setSchemaProperties = (obj: any, schema: Schema.Schema.AnyNoContext) => {
   }
 };
 
-export const prepareTypedTarget = <T>(target: T, schema: Schema.Schema<T>) => {
+let _toEffectSchemaImpl: ((jsonSchema: any) => Schema.Schema.AnyNoContext) | undefined;
+
+/**
+ * Lazy-installed escape hatch so this file can rebuild an Effect Schema from a
+ * `Type.Type` entity's `jsonSchema` without taking a hard dependency on the
+ * JsonSchema module (avoiding a circular import). Registered by
+ * `internal/JsonSchema/json-schema.ts` on module load.
+ */
+export const setTypeSourceSchemaBuilder = (impl: (jsonSchema: any) => Schema.Schema.AnyNoContext): void => {
+  _toEffectSchemaImpl = impl;
+};
+
+const buildTypeSourceSchema = (typeSource: { jsonSchema: any }): Schema.Schema.AnyNoContext => {
+  invariant(_toEffectSchemaImpl, 'TypeSource schema builder not installed.');
+  return _toEffectSchemaImpl(typeSource.jsonSchema);
+};
+
+export const prepareTypedTarget = <T>(
+  target: T,
+  schema: Schema.Schema<T>,
+  typeSource?: { jsonSchema: any; id?: string },
+) => {
   // log.info('prepareTypedTarget', { target, schema });
   if (!SchemaAST.isTypeLiteral(schema.ast)) {
     throw new Error('schema has to describe an object type');
@@ -429,7 +466,7 @@ export const prepareTypedTarget = <T>(target: T, schema: Schema.Schema<T>) => {
   SchemaValidator.validateSchema(schema);
   const _ = Schema.asserts(schema)(target);
   makeArraysReactive(target);
-  setSchemaProperties(target, schema);
+  setSchemaProperties(target, schema, typeSource);
 };
 
 const makeArraysReactive = (target: any) => {

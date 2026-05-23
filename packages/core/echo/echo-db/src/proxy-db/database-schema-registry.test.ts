@@ -8,7 +8,6 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
 import { DXN, Filter, JsonSchema, Obj, Type } from '@dxos/echo';
-import { EchoSchema } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 
 import { EchoTestBuilder } from '../testing';
@@ -191,9 +190,9 @@ describe('schema registry', () => {
       version: '0.1.0',
       jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ field: Schema.Number })),
     });
-    expect(registry.hasSchema(new EchoSchema(schemaToStore))).to.be.false;
+    expect(registry.hasSchema(schemaToStore)).to.be.false;
     const persistentSchema = db.add(schemaToStore);
-    expect(registry.hasSchema(new EchoSchema(persistentSchema))).to.be.true;
+    expect(registry.hasSchema(persistentSchema)).to.be.true;
   });
 
   test('schema is invalidated on update', async () => {

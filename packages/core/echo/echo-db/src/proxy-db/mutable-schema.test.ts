@@ -7,7 +7,6 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Filter, Obj, Type } from '@dxos/echo';
 import {
-  EchoSchema,
   EntityKind,
   Ref,
   type TypeAnnotation,
@@ -24,8 +23,8 @@ const TestEmpty = Schema.Struct({}).pipe(Type.object(DXN.make('com.example.type.
 interface TestEmpty extends Schema.Schema.Type<typeof TestEmpty> {}
 
 const TestWithRefs = Schema.Struct({
-  schema: Schema.optional(Ref(EchoSchema)),
-  schemaArray: Schema.optional(Schema.Array(Ref(EchoSchema))),
+  schema: Schema.optional(Ref(Type.Type)),
+  schemaArray: Schema.optional(Schema.Array(Ref(Type.Type))),
 }).pipe(Type.object(DXN.make('com.example.type.test', '0.1.0')));
 
 interface TestWithRefs extends Schema.Schema.Type<typeof TestWithRefs> {}
@@ -61,9 +60,10 @@ describe('EchoSchema', () => {
       } satisfies TypeAnnotation,
       [TypeIdentifierAnnotationId]: `echo:/${instanceWithSchemaRef.schema?.target?.id}`,
     });
-    expect(instanceWithSchemaRef.schema?.target?.ast).to.deep.eq(schemaWithId.ast);
+    const storedSchema = instanceWithSchemaRef.schema?.target && Type.getSchema(instanceWithSchemaRef.schema.target);
+    expect(storedSchema?.ast).to.deep.eq(schemaWithId.ast);
 
-    const validator = Schema.validateSync(instanceWithSchemaRef.schema!.target!);
+    const validator = Schema.validateSync(Type.getSchema(instanceWithSchemaRef.schema!.target!));
     expect(() => validator({ id: instanceWithSchemaRef.id, field: '1' })).not.to.throw();
     expect(() => validator({ id: instanceWithSchemaRef.id, field: 1 })).to.throw();
   });

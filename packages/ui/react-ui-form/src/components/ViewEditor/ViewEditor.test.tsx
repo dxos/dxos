@@ -6,8 +6,8 @@ import { composeStories } from '@storybook/react';
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import { View } from '@dxos/echo';
-import { EchoSchema, isInstanceOf } from '@dxos/echo/internal';
+import { Type, View } from '@dxos/echo';
+import { isInstanceOf } from '@dxos/echo/internal';
 import { ProjectionModel } from '@dxos/schema';
 
 import { VIEW_EDITOR_DEBUG_SYMBOL } from '../testing';
@@ -19,7 +19,7 @@ const { Default } = composeStories(stories);
 const getViewEditorDebugObjects = (): ViewEditorDebugObjects => {
   const debugObjects = (window as any)[VIEW_EDITOR_DEBUG_SYMBOL] as ViewEditorDebugObjects;
   expect(debugObjects).toBeDefined();
-  expect(debugObjects.schema).toBeInstanceOf(EchoSchema);
+  expect(Type.isType(debugObjects.schema)).toBe(true);
   expect(isInstanceOf(View.View, debugObjects.view)).toBeTruthy();
   expect(debugObjects.projection).toBeInstanceOf(ProjectionModel);
   return debugObjects;

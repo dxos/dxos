@@ -163,8 +163,11 @@ export function make<S extends Type.AnyObjectType>(
 export function make(type: Type.Type, props: any): OfShape<any>;
 export function make(input: Type.AnyObjectType | Type.Type, props: any): OfShape<any> {
   // `Type.Type` entities aren't `Schema.Schema` themselves; derive the Schema
-  // for validation and annotation lookup via `Type.getSchema`.
-  const schema = Schema.isSchema(input) ? input : Type.getSchema(input);
+  // for validation and annotation lookup via `Type.getSchema`. Keep the
+  // original `Type.Type` entity around so it can be passed through to
+  // `makeObject` for live schema resolution.
+  const isTypeEntity = !Schema.isSchema(input);
+  const schema = isTypeEntity ? Type.getSchema(input as Type.Type) : (input as Type.AnyObjectType);
   assertArgument(
     internal.getTypeAnnotation(schema)?.kind === Entity.Kind.Object,
     'schema',
@@ -190,10 +193,15 @@ export function make(input: Type.AnyObjectType | Type.Type, props: any): OfShape
     }
   }
 
-  return internal.makeObject(schema, filterUndefined, {
-    ...defaultMeta,
-    ...meta,
-  });
+  return internal.makeObject(
+    schema,
+    filterUndefined,
+    {
+      ...defaultMeta,
+      ...meta,
+    },
+    isTypeEntity ? (input as Type.Type) : undefined,
+  );
 }
 
 /**

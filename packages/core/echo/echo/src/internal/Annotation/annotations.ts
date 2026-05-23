@@ -10,7 +10,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { raise } from '@dxos/debug';
 import { type JsonPath, getField } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, URI } from '@dxos/keys';
+import { DXN, EchoURI, ObjectId, URI } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
 import { type Mutable } from '../common/proxy';
@@ -73,15 +73,25 @@ export const getSchemaURI = (schema: Schema.Schema.All): URI.URI | undefined => 
 /**
  * @param input schema, `Type.Type` entity, or a typename string.
  * @return type identifier URI — see {@link getSchemaURI}.  For a typename string,
- * always a DXN.  For a `Type.Type` entity, the schema-as-object EchoURI.
+ * always a DXN.  For a persisted `Type.Type` entity, the schema-as-object's
+ * local EchoURI (`echo:/<objectId>`) — kept symmetric with what
+ * `Obj.make(typeEntity, ...)` writes to `system.type` via
+ * `getSchemaURI(rebuilt schema)` which reads `TypeIdentifierAnnotation`.
+ * For a static `Type.Type`, the URI is the typename DXN.
  */
 export const getTypeURIFromSpecifier = (input: Schema.Schema.All | AnyEntity | string): URI.URI => {
   if (Schema.isSchema(input)) {
     return getSchemaURI(input) ?? raise(new TypeError('Schema has no URI'));
   }
   if (typeof input === 'object' && input !== null && KindId in input) {
-    // `Type.Type` (or any ECHO entity used as a type identifier) — the URI is the
-    // entity's own EchoURI, which is what `Obj.make` writes to `system.type`.
+    // `Type.Type` entity. Stored entities have an ObjectId and a typename —
+    // their type URI is the local EchoURI `echo:/<objectId>` (matches the
+    // `TypeIdentifierAnnotation` stamped onto the rebuilt schema by
+    // `DatabaseSchemaRegistry._addSchema`). Drafts/static types without a
+    // stored representation fall back to `getUriFromEntity` (entity's own URI).
+    if (typeof (input as any).id === 'string' && ObjectId.isValid((input as any).id)) {
+      return EchoURI.make({ objectId: (input as any).id });
+    }
     return getUriFromEntity(input as AnyEntity);
   }
   assertArgument(typeof input === 'string', 'input');

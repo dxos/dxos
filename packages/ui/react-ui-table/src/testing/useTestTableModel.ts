@@ -5,8 +5,7 @@
 import { RegistryContext } from '@effect-atom/atom-react';
 import { type RefObject, useCallback, useContext, useMemo, useRef } from 'react';
 
-import { type Database, Filter, type Type } from '@dxos/echo';
-import { isMutable } from '@dxos/echo/internal';
+import { type Database, Filter, Type } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { useQuery, useSchema } from '@dxos/react-client/echo';
 import { useClientStory } from '@dxos/react-client/testing';
@@ -53,7 +52,7 @@ export const useTestTableModel = (): TestTableModel => {
     () => ({
       selection: { enabled: true, mode: 'multiple' as const },
       dataEditable: true,
-      schemaEditable: schema && isMutable(schema),
+      schemaEditable: schema && Type.isType(schema),
     }),
     [schema],
   );

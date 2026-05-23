@@ -64,9 +64,9 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
       return undefined;
     }
 
-    // For mutable schemas (EchoSchema), use the live jsonSchema reference for reactivity.
-    const jsonSchema = Type.isMutable(schema) ? schema.jsonSchema : JsonSchema.toJsonSchema(schema);
-    const change = createEchoChangeCallback(view, Type.isMutable(schema) ? schema : undefined);
+    // For stored Type.Type entities, use the live jsonSchema reference for reactivity.
+    const jsonSchema = Type.isType(schema) ? schema.jsonSchema : JsonSchema.toJsonSchema(schema);
+    const change = createEchoChangeCallback(view, Type.isType(schema) ? schema : undefined);
     return new ProjectionModel({ view, baseSchema: jsonSchema, change });
   }, [schema, view]);
 

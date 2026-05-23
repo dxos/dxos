@@ -32,13 +32,24 @@ export const makeObject: {
     schema: Schema.Schema<T, any, never>,
     obj: NoInfer<MakeObjectProps<T>>,
     meta?: ObjectMeta,
+    typeSource?: { jsonSchema: any; id?: string },
   ): T;
-} = <T extends AnyProperties>(schema: Schema.Schema<T, any>, obj: MakeObjectProps<T>, meta?: ObjectMeta): T => {
+} = <T extends AnyProperties>(
+  schema: Schema.Schema<T, any>,
+  obj: MakeObjectProps<T>,
+  meta?: ObjectMeta,
+  typeSource?: { jsonSchema: any; id?: string },
+): T => {
   // Use Object.assign to copy symbol properties (like ParentId) that spread operator doesn't copy.
-  return createReactiveObject<T>(Object.assign({}, obj) as T, meta, schema);
+  return createReactiveObject<T>(Object.assign({}, obj) as T, meta, schema, typeSource);
 };
 
-const createReactiveObject = <T extends AnyProperties>(obj: T, meta?: ObjectMeta, schema?: Schema.Schema<T>): T => {
+const createReactiveObject = <T extends AnyProperties>(
+  obj: T,
+  meta?: ObjectMeta,
+  schema?: Schema.Schema<T>,
+  typeSource?: { jsonSchema: any; id?: string },
+): T => {
   if (!isValidProxyTarget(obj)) {
     throw new Error('Value cannot be made into a reactive object.');
   }
@@ -62,7 +73,7 @@ const createReactiveObject = <T extends AnyProperties>(obj: T, meta?: ObjectMeta
   if (parent !== undefined) {
     defineHiddenProperty(obj, ParentId, parent);
   }
-  prepareTypedTarget(obj, schema);
+  prepareTypedTarget(obj, schema, typeSource);
   attachTypedJsonSerializer(obj);
   const proxy = createProxy<T>(obj, TypedReactiveHandler.instance);
 

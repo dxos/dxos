@@ -8,7 +8,7 @@ import type * as Schema from 'effect/Schema';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { DXN, type URI } from '@dxos/keys';
+import { DXN, EchoURI, type URI } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
 import type * as Entity from './Entity';
@@ -18,17 +18,11 @@ import type * as ObjModule from './Obj';
 import type * as RelationModule from './Relation';
 
 /**
- * Runtime instance of a mutable, persisted type — what `db.schemaRegistry.register`
- * returns. Wraps the underlying `Type.Type` ECHO object and provides reactive
- * `id`, `typename`, `version`, `jsonSchema` accessors plus an `addFields` /
- * `updateTypename` mutation surface (preferred: use `Type.update` and the
- * `Type.{addFields,updateTypename,…}` free functions).
- *
- * Exported as a TYPE only; the underlying class is an internal implementation
- * detail. Use `Type.isMutable(value)` for runtime checks instead of
- * `value instanceof <class>`.
+ * @deprecated Alias for {@link Type}. The legacy `EchoSchema` runtime wrapper has
+ * been removed; `db.schemaRegistry.register(...)` now returns `Type.Type`
+ * entities directly. Prefer using `Type.Type`.
  */
-export type RuntimeType = typeInternal.EchoSchema;
+export type RuntimeType = Type;
 
 //
 // Internal types (not exported)
@@ -80,7 +74,6 @@ export interface Obj<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fiel
 
 /**
  * Structural base type for any ECHO object schema.
- * Accepts both static schemas (created with Type.object()) and EchoSchema.
  * NOTE: Does not include the brand symbol to avoid TS4053 declaration portability issues.
  * Use Type.isObjectSchema() for runtime type guards.
  */
@@ -91,7 +84,7 @@ type ObjectSchemaBase = Schema.Schema.AnyNoContext & {
 
 /**
  * Type that represents any ECHO object schema (or "object type").
- * Accepts both static schemas (Type.object()) and mutable schemas (EchoSchema).
+ * Accepts static schemas produced by `Type.object()`.
  */
 export type AnyObjectType = ObjectSchemaBase;
 
@@ -226,14 +219,12 @@ export type AnyRef = Schema.Schema<internal.Ref<any>, EncodedReference>;
  * @example "dxn:com.example.type.person:0.1.0"
  */
 export const getURI = (input: AnyType | Schema.Schema.AnyNoContext): URI.URI | undefined => {
-  if (typeInternal.isMutable(input)) {
-    // EchoSchema wrapper is both Schema and Type.Type — defer to the schema's
-    // `$id` annotation so callers see the same URI as `Obj.getSchema(...)` does.
-    return internal.getSchemaURI(input);
-  }
   if (isType(input)) {
-    // Pure `Type.Type` entity (no EchoSchema wrapper) — its own EchoURI is the type identifier.
-    return internal.getUri(input);
+    // Persisted `Type.Type` entity — its schema-as-object local EchoURI is the
+    // type identifier (kept symmetric with what `getTypeURIFromSpecifier`
+    // returns and what `Obj.make` writes to `system.type`). Static types
+    // without an ObjectId fall back to the typename DXN built from metadata.
+    return internal.getTypeURIFromSpecifier(input as any);
   }
   return internal.getSchemaURI(input);
 };
@@ -258,22 +249,20 @@ export const getVersion = (input: AnyType | Schema.Schema.AnyNoContext): string 
 };
 
 /**
- * Type predicate: true iff the value is a mutable (persisted) `Type.Type`.
- *
- * Mutable types are produced by `db.schemaRegistry.register(...)` (and stored as
- * ECHO objects in a space). Outside that, you have an immutable static schema
- * produced by `Type.object(...)`, which cannot be passed to `Type.update`.
- */
-export const isMutable = (value: unknown): value is Type => typeInternal.isMutable(value);
-
-/**
  * Type predicate: true iff the value is a `Type.Type` ECHO entity.
  *
- * Prefer this over `Obj.instanceOf(Type.Type, value)` — `Type.Type` is the
- * schema-as-entity meta type, not a regular ECHO object schema, so it should
- * not be passed to object-level type predicates.
+ * `Type.Type` is the schema-as-entity meta type — an ECHO object whose schema
+ * is `PersistentSchema`. Use this in place of the legacy `Type.isMutable` check
+ * (formerly tested for the now-removed `EchoSchema` runtime wrapper).
  */
-export const isType = (value: unknown): value is Type => typeInternal.isMutable(value);
+export const isType = (value: unknown): value is Type => internal.isInstanceOf(internal.PersistentSchema, value);
+
+/**
+ * @deprecated Alias for {@link isType}. Originally distinguished the mutable
+ * `EchoSchema` runtime wrapper from the persistent backing object — that
+ * wrapper has been removed, so the two predicates coincide.
+ */
+export const isMutable = isType;
 
 /**
  * ECHO type metadata.
@@ -371,12 +360,19 @@ export type InstanceType<T> = T extends { readonly [InstancePhantomId]?: infer A
  * (`Obj.make`, `Filter.type`, `Ref`) you may pass the type value directly.
  */
 export const getSchema = (type: AnyObjectType | AnyRelationType | Type): Schema.Schema.AnyNoContext => {
-  if (typeInternal.isMutable(type)) {
-    return type.snapshot;
-  }
   if (isType(type)) {
-    // `Type.Type` entity — build the Effect Schema from its stored jsonSchema.
-    return internal.toEffectSchema(type.jsonSchema);
+    // `Type.Type` entity — build the Effect Schema from its stored jsonSchema
+    // and re-attach the TypeIdentifierAnnotation so the rebuilt schema's URI
+    // (via getSchemaURI) matches the entity's local EchoURI. This keeps
+    // `Obj.make(type, ...)` writing `echo:/<objectId>` onto `system.type`,
+    // symmetric with `getTypeURIFromSpecifier(type)`/`Filter.type(type)`.
+    const rebuilt = internal.toEffectSchema(type.jsonSchema);
+    if (typeof type.id === 'string') {
+      return rebuilt.annotations({
+        [internal.TypeIdentifierAnnotationId]: EchoURI.make({ objectId: type.id }),
+      });
+    }
+    return rebuilt;
   }
   return type;
 };
@@ -403,10 +399,7 @@ export interface Mutable {
  */
 export const update = (type: Type, callback: (mutable: Mutable) => void): void => {
   // `Type.Type` is an ECHO object; the change machinery is the same as `Obj.update`.
-  // Internal runtime caches (e.g. the lazy Effect-Schema cache on the EchoSchema
-  // wrapper) are picked up via the type's hidden change hook.
-  const target = typeInternal.isMutable(type) ? typeInternal.getEchoSchemaPersistentObject(type) : type;
-  internal.change(target as any, callback as (draft: any) => void);
+  internal.change(type as any, callback as (draft: any) => void);
 };
 
 //

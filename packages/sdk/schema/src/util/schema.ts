@@ -7,7 +7,6 @@ import * as Schema from 'effect/Schema';
 import { type SchemaRegistry, Type } from '@dxos/echo';
 import {
   EchoObjectSchema,
-  type EchoSchema,
   Format,
   FormatAnnotation,
   type JsonSchemaType,
@@ -75,7 +74,7 @@ export const getSchema = async (
 export const getSchemaFromPropertyDefinitions = (
   typename: string,
   properties: SchemaPropertyDefinition[],
-): EchoSchema => {
+): Type.Type => {
   // TODO(burdon): Move to echo-schema.
   const typeToSchema: Record<TypeEnum, Schema.Any> = {
     [TypeEnum.String]: Schema.String.pipe(Schema.optional),

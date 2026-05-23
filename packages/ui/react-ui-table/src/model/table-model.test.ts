@@ -131,7 +131,7 @@ const createTableModel = (registry: Registry.Registry, props: Partial<TableModel
     registry,
     view,
     baseSchema: schema.jsonSchema,
-    change: createDirectChangeCallback(view.projection, JsonSchema.toJsonSchema(schema)),
+    change: createDirectChangeCallback(view.projection, JsonSchema.toJsonSchema(Type.getSchema(schema))),
   });
   projection.normalizeView();
   return new TableModel({

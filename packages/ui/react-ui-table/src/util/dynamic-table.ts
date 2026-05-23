@@ -41,8 +41,8 @@ export const getBaseSchema = ({
   jsonSchema?: Types.DeepMutable<JsonSchema.JsonSchema>;
 }): { typename: string; jsonSchema: Types.DeepMutable<JsonSchema.JsonSchema> } => {
   if (typename && properties) {
-    const schema = getSchemaFromPropertyDefinitions(typename, properties);
-    return { typename: schema.typename, jsonSchema: JsonSchema.toJsonSchema(schema) };
+    const type = getSchemaFromPropertyDefinitions(typename, properties);
+    return { typename: type.typename, jsonSchema: type.jsonSchema as Types.DeepMutable<JsonSchema.JsonSchema> };
   } else if (schema) {
     const effectSchema = Type.isType(schema) ? Type.getSchema(schema) : schema;
     return { typename: Type.getTypename(schema)!, jsonSchema: JsonSchema.toJsonSchema(effectSchema) };

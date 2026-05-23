@@ -8,24 +8,18 @@ import type * as SchemaAST from 'effect/SchemaAST';
 import { assertArgument } from '@dxos/invariant';
 import { deepMapValues } from '@dxos/util';
 
-import { EchoSchema, PersistentSchema, getSchemaTypename, makeObject, subscribe, toJsonSchema } from '../internal';
+import { PersistentSchema, getSchemaTypename, makeObject, subscribe, toJsonSchema } from '../internal';
+import type * as TypeNs from '../Type';
 
 /**
- * Create a reactive mutable schema that updates when the JSON schema is updated.
+ * Create an in-memory `Type.Type` entity (a `PersistentSchema` object) for tests.
  */
 // TODO(dmaretskyi): Should be replaced by registration of typed object.
-export const createEchoSchema = (schema: Schema.Schema.AnyNoContext, version = '0.1.0'): EchoSchema => {
+export const createEchoSchema = (schema: Schema.Schema.AnyNoContext, version = '0.1.0'): TypeNs.Type => {
   const jsonSchema = toJsonSchema(schema);
   const typename = getSchemaTypename(schema);
   assertArgument(typename, 'typename', 'Schema does not have a typename.');
-  const echoSchema = new EchoSchema(makeObject(PersistentSchema, { typename, version, jsonSchema }));
-
-  // TODO(burdon): Unsubscribe is never called.
-  subscribe(echoSchema.persistentSchema, () => {
-    echoSchema._invalidate();
-  });
-
-  return echoSchema;
+  return makeObject(PersistentSchema, { typename, version, jsonSchema }) as unknown as TypeNs.Type;
 };
 
 /**

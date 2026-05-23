@@ -24,7 +24,6 @@ import {
   ATTR_TYPE,
   type AnyProperties,
   ChangeId,
-  EchoSchema,
   EntityKind,
   EventId,
   MetaId,
@@ -330,7 +329,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    */
   private _getTypename(target: ProxyTarget): URI.URI | undefined {
     const schema = this.getSchema(target);
-    // Special handling for EchoSchema. objectId is persistentSchema objectId, not a typename.
+    // Stored Type.Type entities: the object id (not a typename) identifies the type.
     if (schema && typeof schema === 'object' && SchemaMetaSymbol in schema) {
       return (schema as any)[SchemaMetaSymbol].typename;
     }
@@ -461,7 +460,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   private _handleStoredSchema(target: ProxyTarget, object: any): any {
-    // Object instanceof StoredEchoSchema requires database to lookup schema.
+    // Stored schemas surface through the database schema registry so consumers
+    // see the registered Type.Type entity rather than the raw persisted object.
     const database = target[symbolInternals].database;
     if (database && isInstanceOf(PersistentSchema, object)) {
       return database.schemaRegistry._registerSchema(object);
@@ -531,8 +531,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return value;
     }
 
-    // DynamicEchoSchema is a utility-wrapper around the object we actually store in automerge, unwrap it
-    const unwrappedValue = value instanceof EchoSchema ? value.persistentSchema : value;
+    // Type.Type entities are stored directly — no runtime wrapper to unwrap.
+    const unwrappedValue = value;
     const propertySchema = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) => {
       return target[symbolInternals].core.getDecoded([getNamespace(target), ...path]);
     });
@@ -581,8 +581,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     // TODO(burdon): May not be attached to database yet.
     if (!target[symbolInternals].database) {
       // For objects created by `createObject` outside of the database.
-      if (target[symbolInternals].rootSchema != null) {
-        return target[symbolInternals].rootSchema;
+      const root = target[symbolInternals].rootSchema;
+      if (root != null) {
+        // When the root is a Type.Type entity, rebuild on each access so
+        // schema mutations performed via `Type.addFields`/`Type.update` are
+        // reflected in subsequent validations.
+        return Type.isType(root) ? Type.getSchema(root) : root;
       }
 
       return undefined;
@@ -613,9 +617,26 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       const type = target[symbolInternals].database.schemaRegistry
         .query({ typename, ...(version ? { version } : {}) })
         .runSync()[0];
+      console.log('[getSchema DXN branch]', { typename, hasType: !!type, jsonSchemaProps: type?.jsonSchema?.properties });
       return type && Type.getSchema(type);
     }
 
+    // For persisted Type.Type entities, system.type holds the local schema-as-object
+    // EchoURI (`echo:/<objectId>`). Look up by `backingObjectId` so we find the
+    // entity by its ObjectId even when the registry stores `jsonSchema.$id` as
+    // the typename DXN.
+    const echoUri = EchoURI.tryParse(typeURI);
+    if (echoUri != null) {
+      const backingObjectId = EchoURI.getObjectId(echoUri);
+      if (backingObjectId != null) {
+        const type = target[symbolInternals].database.schemaRegistry
+          .query({ backingObjectId })
+          .runSync()[0];
+        if (type != null) {
+          return Type.getSchema(type);
+        }
+      }
+    }
     const type = target[symbolInternals].database.schemaRegistry.query({ id: typeURI }).runSync()[0];
     return type && Type.getSchema(type);
   }
@@ -796,7 +817,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    * @param proxy - the proxy that was passed to the method
    */
   createRef(target: ProxyTarget, proxy: any): URI.URI {
-    let otherEchoObj = proxy instanceof EchoSchema ? proxy.persistentSchema : proxy;
+    let otherEchoObj = proxy;
 
     // Honour a Queue URI carried by the source. Queue-decoded objects (returned by
     // `Feed.runQuery` / `queue.queryObjects`) have a `SelfURIId` annotation set directly
@@ -1052,13 +1073,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 }
 
 export const throwIfCustomClass = (prop: KeyPath[number], value: any) => {
-  if (
-    value == null ||
-    Array.isArray(value) ||
-    value instanceof EchoSchema ||
-    Ref.isRef(value) ||
-    value instanceof Uint8Array
-  ) {
+  if (value == null || Array.isArray(value) || Ref.isRef(value) || value instanceof Uint8Array) {
     return;
   }
 
@@ -1335,7 +1350,7 @@ const validateInitialProps = (target: any, seen: Set<object> = new Set()) => {
     } else if (typeof value === 'object') {
       if (Ref.isRef(value)) {
         // Pass refs as is.
-      } else if (value instanceof EchoSchema || isTypedObjectProxy(value)) {
+      } else if (isTypedObjectProxy(value)) {
         throw new Error('Object references must be wrapped with `Ref.make`');
       } else if ((value as any) instanceof Uint8Array) {
         // Pass binary buffers as is; Automerge stores them natively.

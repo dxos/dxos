@@ -648,7 +648,7 @@ describe('ProjectionModel', () => {
       change: createEchoChangeCallback(view, mutable),
     });
     projectionModel.normalizeView();
-    const initialSchema = Type.getSchema(mutable);
+    const initialJsonSchema = JSON.parse(JSON.stringify(mutable.jsonSchema));
 
     // Verify only the included fields are in the view.
     expect(projectionModel.getFields()).to.have.length(2);
@@ -717,7 +717,7 @@ describe('ProjectionModel', () => {
     expect(projectionModel.getFields().find((f) => f.path === 'email')?.id).to.equal(emailId);
 
     // Ensure schema still matches.
-    expect(Type.getSchema(mutable)).to.deep.equal(initialSchema);
+    expect(JSON.parse(JSON.stringify(mutable.jsonSchema))).to.deep.equal(initialJsonSchema);
   });
 
   test('schema fields are automatically added to hiddenFields', async ({ expect }) => {
