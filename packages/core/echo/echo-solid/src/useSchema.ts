@@ -16,10 +16,10 @@ type MaybeAccessor<T> = T | Accessor<T>;
  * @param typename - The schema typename to query (can be reactive)
  * @returns An accessor that returns the current schema or undefined
  */
-export const useSchema = <T extends Type.AnyType = Type.AnyType>(
+export const useSchema = (
   db?: MaybeAccessor<Database.Database | undefined>,
   typename?: MaybeAccessor<string | undefined>,
-): Accessor<T | undefined> => {
+): Accessor<Type.Type | undefined> => {
   // Derive the schema query reactively
   const query = createMemo(() => {
     const resolvedDb = typeof db === 'function' ? db() : db;
@@ -31,7 +31,7 @@ export const useSchema = <T extends Type.AnyType = Type.AnyType>(
   });
 
   // Store the current schema in a signal
-  const [schema, setSchema] = createSignal<T | undefined>(undefined);
+  const [schema, setSchema] = createSignal<Type.Type | undefined>(undefined);
 
   // Subscribe to query changes
   createEffect(() => {
@@ -47,7 +47,7 @@ export const useSchema = <T extends Type.AnyType = Type.AnyType>(
       () => {
         // Access results inside the callback to ensure query is running
         const results = q.results;
-        setSchema(() => results[0] as T | undefined);
+        setSchema(() => results[0]);
       },
       { fire: true },
     );

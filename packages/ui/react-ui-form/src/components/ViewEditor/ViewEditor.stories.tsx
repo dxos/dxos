@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { DXN, EchoURI, Filter, JsonSchema, Obj, Query, type QueryAST, Tag, Type, type View } from '@dxos/echo';
-import { type EchoSchema, Format, type Mutable } from '@dxos/echo/internal';
+import { Format, type Mutable } from '@dxos/echo/internal';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
@@ -30,7 +30,7 @@ const types = [
 
 // Type definition for debug objects exposed to tests.
 export type ViewEditorDebugObjects = {
-  schema: EchoSchema;
+  schema: Type.Type;
   view: View.View;
   projection: ProjectionModel;
 };
@@ -39,7 +39,7 @@ type DefaultStoryProps = Pick<ViewEditorProps, 'readonly' | 'mode'>;
 
 const DefaultStory = (props: DefaultStoryProps) => {
   const { space } = useClientStory();
-  const [schema, setSchema] = useState<EchoSchema>();
+  const [schema, setSchema] = useState<Type.Type>();
   const [view, setView] = useState<View.View>();
   const projectionRef = useRef<ProjectionModel>(null);
 
@@ -92,12 +92,12 @@ const DefaultStory = (props: DefaultStoryProps) => {
 
         const newView = ViewModel.make({
           query,
-          jsonSchema: (newSchema as EchoSchema).jsonSchema,
+          jsonSchema: newSchema.jsonSchema,
         });
         Obj.update(view, (view) => {
           view.projection = Obj.getSnapshot(newView).projection as Mutable<typeof view.projection>;
         });
-        setSchema(() => newSchema as EchoSchema);
+        setSchema(() => newSchema);
       } else {
         Obj.update(view, (view) => {
           view.query.ast = newQuery as Mutable<typeof newQuery>;

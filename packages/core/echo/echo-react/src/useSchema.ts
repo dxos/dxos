@@ -9,21 +9,17 @@ import { type Database, type Type } from '@dxos/echo';
 /**
  * Subscribe to and retrieve schema changes from a space's schema registry.
  */
-export const useSchema = <T extends Type.AnyType = Type.AnyType>(
-  db?: Database.Database,
-  typename?: string,
-): T | undefined => {
+export const useSchema = (db?: Database.Database, typename?: string): Type.Type | undefined => {
   const { subscribe, getSchema } = useMemo(() => {
     if (!typename || !db) {
       return {
         subscribe: () => () => {},
-        getSchema: () => undefined,
+        getSchema: (): Type.Type | undefined => undefined,
       };
     }
 
     const query = db.schemaRegistry.query({ typename, location: ['database', 'runtime'] });
-    const initialResult = query.runSync()[0];
-    let currentSchema = initialResult;
+    let currentSchema: Type.Type | undefined = query.runSync()[0];
 
     return {
       subscribe: (onStoreChange: () => void) => {
@@ -38,5 +34,5 @@ export const useSchema = <T extends Type.AnyType = Type.AnyType>(
     };
   }, [typename, db]);
 
-  return useSyncExternalStore(subscribe, getSchema) as T;
+  return useSyncExternalStore(subscribe, getSchema);
 };

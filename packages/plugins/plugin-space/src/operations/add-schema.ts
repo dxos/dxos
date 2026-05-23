@@ -44,7 +44,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddSchema> = SpaceOpe
         },
       });
 
-      return { id: schema.id, object: schema.persistentSchema as any, schema };
+      return { id: schema.id, object: schema };
     }),
   ),
 );

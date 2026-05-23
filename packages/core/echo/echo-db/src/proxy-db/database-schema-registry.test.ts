@@ -189,10 +189,10 @@ describe('schema registry', () => {
 
   test('schema is invalidated on update', async () => {
     const { registry } = await setupTest();
-    const [echoSchema] = await registry.register([Contact]);
-    expect(echoSchema.getProperties().length).to.eq(1);
-    Type.addFields(echoSchema, { newField: Schema.Number });
-    expect(echoSchema.getProperties().length).to.eq(2);
+    const [schema] = await registry.register([Contact]);
+    expect((schema as EchoSchema).getProperties().length).to.eq(1);
+    Type.addFields(schema, { newField: Schema.Number });
+    expect((schema as EchoSchema).getProperties().length).to.eq(2);
   });
 
   test('reactive schema query after reload', async (ctx) => {

@@ -16,6 +16,7 @@ import { DXN, EchoURI, ObjectId, type URI } from '@dxos/keys';
 import * as internal from './internal';
 import type * as Obj from './Obj';
 import * as Ref from './Ref';
+import type * as Type from './Type';
 
 export interface Filter<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
@@ -100,13 +101,20 @@ export const id = (...ids: ObjectId[]): Any => {
 
 /**
  * Filter by type.
+ *
+ * Accepts:
+ *  - a static object/relation schema produced by `Type.object` / `Type.relation`,
+ *  - a `Type.Type` entity (e.g. one returned by `db.schemaRegistry.register`),
+ *  - or a non-qualified typename string.
  */
-export const type = <S extends Schema.Schema.All>(
+export function type<S extends Schema.Schema.All>(
   schema: S | string,
   props?: Props<Schema.Schema.Type<S>>,
-): Filter<Schema.Schema.Type<S>> => {
-  if (Schema.isSchema(schema) && SchemaAST.isUnion(schema.ast)) {
-    const typenames = schema.ast.types.map((type) => internal.getTypeURIFromSpecifier(Schema.make(type)));
+): Filter<Schema.Schema.Type<S>>;
+export function type(type: TypeNs.Type, props?: Props<unknown>): Filter<unknown>;
+export function type(input: Schema.Schema.All | TypeNs.Type | string, props?: Props<unknown>): Filter<unknown> {
+  if (Schema.isSchema(input) && SchemaAST.isUnion(input.ast)) {
+    const typenames = input.ast.types.map((type) => internal.getTypeURIFromSpecifier(Schema.make(type)));
     return new FilterClass({
       type: 'or',
       filters: typenames.map((typename) => ({
@@ -117,13 +125,13 @@ export const type = <S extends Schema.Schema.All>(
     });
   }
 
-  const uri = internal.getTypeURIFromSpecifier(schema);
+  const uri = internal.getTypeURIFromSpecifier(input);
   return new FilterClass({
     type: 'object',
     typename: uri,
     ...propsFilterToAst(props ?? {}),
   });
-};
+}
 
 /**
  * Filter by non-qualified typename.

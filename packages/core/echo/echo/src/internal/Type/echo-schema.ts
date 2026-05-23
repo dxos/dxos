@@ -8,10 +8,9 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { invariant } from '@dxos/invariant';
 import { type ObjectId } from '@dxos/keys';
 
-import type * as Type from '../../Type';
 import { type SchemaMeta, SchemaMetaSymbol, type TypeAnnotation, getTypeAnnotation } from '../Annotation';
 import { ChangeId } from '../common/proxy';
-import { EntityKind, SchemaKindId } from '../common/types';
+import { EntityKind, KindId, SchemaKindId } from '../common/types';
 import { type JsonSchemaType, toEffectSchema, toJsonSchema } from '../JsonSchema';
 import { type TypedObject, type TypedObjectPrototype, getSnapshot } from '../Obj';
 import {
@@ -154,8 +153,18 @@ const EchoSchemaConstructor = (): TypedObjectPrototype => {
   } as any;
 };
 
-export const isMutable = (schema: Schema.Schema.AnyNoContext): schema is EchoSchema => {
-  return schema instanceof EchoSchema;
+export const isMutable = (value: unknown): value is EchoSchema => {
+  return value instanceof EchoSchema;
+};
+
+/**
+ * Extracts the underlying persistent ECHO object from a mutable type's runtime
+ * wrapper. Internal use only; lets `Type.update` route through the standard
+ * `Obj.update` change machinery on the entity backing the type.
+ */
+export const getEchoSchemaPersistentObject = (type: unknown): PersistentSchema => {
+  invariant(isMutable(type), 'Type has no persistent backing.');
+  return type.persistentSchema;
 };
 
 // NOTE: Keep in this file.
@@ -195,6 +204,13 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
    * Makes EchoSchema satisfy the Type.AnyObjectType type.
    */
   readonly [SchemaKindId]: EntityKind.Object = EntityKind.Object;
+
+  /**
+   * Entity kind brand — makes EchoSchema satisfy the `Type.Type` (ECHO entity)
+   * interface, so the runtime wrapper is interchangeable with the underlying
+   * persistent object from the caller's perspective.
+   */
+  readonly [KindId]: EntityKind.Object = EntityKind.Object;
 
   constructor(private readonly _persistentSchema: PersistentSchema) {
     super();
@@ -304,8 +320,8 @@ export class EchoSchema<A = any, I = any> extends EchoSchemaConstructor() implem
   /**
    * Reference to the underlying persistent schema object.
    */
-  public get persistentSchema(): Type.Type {
-    return this._persistentSchema as Type.Type;
+  public get persistentSchema(): PersistentSchema {
+    return this._persistentSchema;
   }
 
   public getProperties(): SchemaAST.PropertySignature[] {

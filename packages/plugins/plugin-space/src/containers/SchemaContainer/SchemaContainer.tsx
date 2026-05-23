@@ -40,15 +40,15 @@ export const SchemaContainer = ({ space }: AppSurface.SpaceArticleProps) => {
 /**
  * Subscribe to and retrieve all schemas from a space's schema registry.
  */
-export const useQuerySpaceSchemas = (space: Space): Type.RuntimeType[] => {
-  const [schemas, setSchemas] = useState<Type.RuntimeType[]>([]);
+export const useQuerySpaceSchemas = (space: Space): Type.Type[] => {
+  const [schemas, setSchemas] = useState<Type.Type[]>([]);
 
   useEffect(() => {
     const query = space.db.schemaRegistry.query();
     const initialResults = query.runSync();
-    setSchemas(initialResults as Type.RuntimeType[]);
+    setSchemas(initialResults as Type.Type[]);
 
-    const unsubscribe = query.subscribe(() => setSchemas(query.results as Type.RuntimeType[]));
+    const unsubscribe = query.subscribe(() => setSchemas(query.results as Type.Type[]));
     return () => unsubscribe();
   }, [space]);
 

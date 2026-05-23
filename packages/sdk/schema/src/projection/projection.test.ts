@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { DXN, Filter, Obj, Query, Type, View } from '@dxos/echo';
+import { DXN, Filter, Query, Type, View } from '@dxos/echo';
 import { DatabaseSchemaRegistry, RuntimeSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import {
@@ -465,7 +465,7 @@ describe('ProjectionModel', () => {
       },
     });
 
-    const effectSchema = mutable.snapshot;
+    const effectSchema = Type.getSchema(mutable);
     expect(() => Schema.validateSync(effectSchema)({ id: '1', status: 'draft' })).not.to.throw();
     expect(() => Schema.validateSync(effectSchema)({ id: '2', status: 'published' })).not.to.throw();
     expect(() => Schema.validateSync(effectSchema)({ id: '3', status: 'archived' })).not.to.throw();
@@ -592,7 +592,7 @@ describe('ProjectionModel', () => {
       },
     });
 
-    const effectSchema = mutable.snapshot;
+    const effectSchema = Type.getSchema(mutable);
     expect(effectSchema).not.toBeUndefined;
     expect(() => Schema.validateSync(effectSchema)({ id: '1', tags: ['draft'] })).not.to.throw();
     expect(() => Schema.validateSync(effectSchema)({ id: '2', tags: ['published'] })).not.to.throw();
@@ -648,7 +648,7 @@ describe('ProjectionModel', () => {
       change: createEchoChangeCallback(view, mutable),
     });
     projectionModel.normalizeView();
-    const initialSchema = mutable.snapshot;
+    const initialSchema = Type.getSchema(mutable);
 
     // Verify only the included fields are in the view.
     expect(projectionModel.getFields()).to.have.length(2);
@@ -717,7 +717,7 @@ describe('ProjectionModel', () => {
     expect(projectionModel.getFields().find((f) => f.path === 'email')?.id).to.equal(emailId);
 
     // Ensure schema still matches.
-    expect(mutable.snapshot).to.deep.equal(initialSchema);
+    expect(Type.getSchema(mutable)).to.deep.equal(initialSchema);
   });
 
   test('schema fields are automatically added to hiddenFields', async ({ expect }) => {
@@ -1036,7 +1036,7 @@ describe('ProjectionModel', () => {
     });
 
     // Verify reconstructed Effect schema maintains validation
-    const reconstructedSchema = registeredSchema.snapshot;
+    const reconstructedSchema = Type.getSchema(registeredSchema);
 
     expect(() => Schema.validateSync(reconstructedSchema)({ id: '1', email: 'valid@example.com' })).not.toThrow();
     expect(() => Schema.validateSync(reconstructedSchema)({ id: '2', email: 'invalid-email' })).toThrow();

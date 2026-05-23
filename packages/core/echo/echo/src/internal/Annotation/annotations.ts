@@ -14,7 +14,8 @@ import { DXN, URI } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
 import { type Mutable } from '../common/proxy';
-import { type AnyProperties, EntityKind, TypeId, getSchema } from '../common/types';
+import { type AnyEntity, type AnyProperties, EntityKind, KindId, TypeId, getSchema } from '../common/types';
+import { getUri as getUriFromEntity } from '../Entity/api';
 import { type AnnotationHelper, createAnnotationHelper } from './util';
 
 /**
@@ -70,18 +71,22 @@ export const getSchemaURI = (schema: Schema.Schema.All): URI.URI | undefined => 
 };
 
 /**
- * @param input schema or a typename string.
- * @return type identifier URI — see {@link getSchemaURI}. For a typename string,
- * always a DXN.
+ * @param input schema, `Type.Type` entity, or a typename string.
+ * @return type identifier URI — see {@link getSchemaURI}.  For a typename string,
+ * always a DXN.  For a `Type.Type` entity, the schema-as-object EchoURI.
  */
-export const getTypeURIFromSpecifier = (input: Schema.Schema.All | string): URI.URI => {
+export const getTypeURIFromSpecifier = (input: Schema.Schema.All | AnyEntity | string): URI.URI => {
   if (Schema.isSchema(input)) {
     return getSchemaURI(input) ?? raise(new TypeError('Schema has no URI'));
-  } else {
-    assertArgument(typeof input === 'string', 'input');
-    assertArgument(!input.startsWith('dxn:'), 'input');
-    return DXN.make(input);
   }
+  if (typeof input === 'object' && input !== null && KindId in input) {
+    // `Type.Type` (or any ECHO entity used as a type identifier) — the URI is the
+    // entity's own EchoURI, which is what `Obj.make` writes to `system.type`.
+    return getUriFromEntity(input as AnyEntity);
+  }
+  assertArgument(typeof input === 'string', 'input');
+  assertArgument(!input.startsWith('dxn:'), 'input');
+  return DXN.make(input);
 };
 
 //

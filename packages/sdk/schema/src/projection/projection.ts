@@ -62,14 +62,14 @@ export type ProjectionChangeCallback = {
  */
 export const createEchoChangeCallback = (
   view: View.View,
-  schema?: EchoSchema | Types.DeepMutable<JsonSchemaType>,
+  schema?: Type.Type | Types.DeepMutable<JsonSchemaType>,
 ): ProjectionChangeCallback => ({
   // Inside Obj.update, v is Mutable<View.View>, so v.projection is already mutable.
   projection: (mutate) => Obj.update(view, (view) => mutate(view.projection as Mutable<View.Projection>)),
-  schema: Type.isMutable(schema as any)
-    ? (mutate) => Type.update(schema as EchoSchema, (draft) => mutate(draft.jsonSchema as Types.DeepMutable<JsonSchemaType>))
+  schema: Type.isMutable(schema)
+    ? (mutate) => Type.update(schema, (draft) => mutate(draft.jsonSchema as Types.DeepMutable<JsonSchemaType>))
     : schema
-      ? (mutate) => mutate(schema as Types.DeepMutable<JsonSchemaType>)
+      ? (mutate) => mutate(schema)
       : () => {
           throw new Error('Schema is not mutable');
         },

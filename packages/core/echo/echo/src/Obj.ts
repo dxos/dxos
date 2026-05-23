@@ -24,7 +24,7 @@ import * as internal from './internal';
 import { getProxyTarget, isProxy } from './internal/common/proxy/proxy-utils';
 import * as objInternal from './internal/Obj';
 import * as Ref from './Ref';
-import type * as Type from './Type';
+import * as Type from './Type';
 
 /**
  * Base type for all ECHO objects.
@@ -140,10 +140,11 @@ export type MakeProps<S extends Schema.Schema.AnyNoContext> = {
 } & MakePropsInternal<Schema.Schema.Type<S>>;
 
 /**
- * Creates a new echo object of the given schema.
- * @param schema - Object schema.
+ * Creates a new echo object of the given schema or `Type.Type`.
+ *
+ * @param typeOrSchema - A static object schema (`Type.object(...)`) or a
+ *   `Type.Type` entity (e.g. one returned by `db.schemaRegistry.register`).
  * @param props - Object properties.
- * @param meta - Object metadata (deprecated) -- pass with Obj.Meta.
  *
  * Meta can be passed as a symbol in `props`.
  *
@@ -152,12 +153,18 @@ export type MakeProps<S extends Schema.Schema.AnyNoContext> = {
  * const obj = Obj.make(Person, { [Obj.Meta]: { keys: [...] }, name: 'John' });
  * ```
  *
- * Note: Only accepts object schemas, not relation schemas. Use `Relation.make` for relations.
+ * Note: Only accepts object schemas / object-kind types, not relation schemas.
+ * Use `Relation.make` for relations.
  */
-export const make = <S extends Type.AnyObjectType>(
+export function make<S extends Type.AnyObjectType>(
   schema: S,
   props: NoInfer<MakeProps<S>>,
-): OfShape<Schema.Schema.Type<S>> => {
+): OfShape<Schema.Schema.Type<S>>;
+export function make(type: Type.Type, props: any): OfShape<any>;
+export function make(input: Type.AnyObjectType | Type.Type, props: any): OfShape<any> {
+  // `Type.Type` entities aren't `Schema.Schema` themselves; derive the Schema
+  // for validation and annotation lookup via `Type.getSchema`.
+  const schema = Schema.isSchema(input) ? input : (Type.getSchema(input) as Schema.Schema.AnyNoContext);
   assertArgument(
     internal.getTypeAnnotation(schema)?.kind === Entity.Kind.Object,
     'schema',
@@ -183,11 +190,11 @@ export const make = <S extends Type.AnyObjectType>(
     }
   }
 
-  return internal.makeObject<Schema.Schema.Type<S>>(schema, filterUndefined as any, {
+  return internal.makeObject(schema, filterUndefined, {
     ...defaultMeta,
     ...meta,
   });
-};
+}
 
 /**
  * Determine if object is an ECHO object.

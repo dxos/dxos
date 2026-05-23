@@ -40,7 +40,7 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
     return Array.from(this._registry.values());
   }
 
-  async register(input: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.RuntimeType[]> {
+  async register(input: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.Type[]> {
     input
       // TODO(wittjosiah): This should filter out or throw on non-ECHO schemas.
       .filter((schema): schema is Type.AnyType => Schema.isSchema(schema))
@@ -69,17 +69,17 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
 
   query<Q extends Types.NoExcessProperties<SchemaRegistry.Query, Q>>(
     query?: Q & SchemaRegistry.Query,
-  ): QueryResult.QueryResult<SchemaRegistry.ExtractQueryResult<Q>> {
+  ): QueryResult.QueryResult<Type.Type> {
     const self = this;
     const changes = new Event();
     let unsubscribe: CleanupFn | undefined;
-    return new SchemaRegistryPreparedQueryImpl<SchemaRegistry.ExtractQueryResult<Q>>({
+    return new SchemaRegistryPreparedQueryImpl<Type.Type>({
       changes,
       getResultsSync() {
-        return filterOrderResults(self.schemas, query ?? {}) as SchemaRegistry.ExtractQueryResult<Q>[];
+        return filterOrderResults(self.schemas, query ?? {}) as Type.Type[];
       },
       async getResults() {
-        return filterOrderResults(self.schemas, query ?? {}) as SchemaRegistry.ExtractQueryResult<Q>[];
+        return filterOrderResults(self.schemas, query ?? {}) as Type.Type[];
       },
       async start() {
         if (unsubscribe) {

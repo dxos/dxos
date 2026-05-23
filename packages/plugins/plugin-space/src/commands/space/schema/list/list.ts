@@ -28,7 +28,7 @@ export const handler = Effect.fn(function* ({
   const resolvedSpaceId = yield* spaceIdWithDefault(spaceId as Option.Option<Key.SpaceId>);
   const space = yield* getSpace(resolvedSpaceId);
 
-  const echoSchema = (yield* Effect.tryPromise(() => space.db.schemaRegistry.query().run())) as Type.RuntimeType[];
+  const echoSchema = (yield* Effect.tryPromise(() => space.db.schemaRegistry.query().run())) as Type.Type[];
   const runtimeSchema = space.internal.db.graph.schemaRegistry.schemas;
 
   const schemas = [

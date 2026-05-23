@@ -266,8 +266,7 @@ const createSchemaNode = ({
     : undefined;
   const { label, nodeId } = Match.value(schema).pipe(
     Match.when(Type.isMutable, (mutableSchema) => {
-      const persistentSchema = mutableSchema.persistentSchema;
-      const snapshot = get(AtomObj.make(persistentSchema));
+      const snapshot = get(AtomObj.make(mutableSchema));
       return {
         label: snapshot.name || ['object-name.placeholder', { ns: Type.Type.typename }],
         nodeId: typename,
@@ -370,7 +369,7 @@ const createSchemaActions = ({
       data: (params?: Node.InvokeProps) =>
         Type.isMutable(schema)
           ? Operation.invoke(SpaceOperation.RenameObject, {
-              object: (schema as Type.RuntimeType).persistentSchema as any,
+              object: schema as Obj.Unknown,
               caller: `${params?.caller}:${params?.parent?.id}`,
             })
           : Effect.fail(new Error('Cannot rename immutable schema')),
@@ -387,7 +386,7 @@ const createSchemaActions = ({
       data: () =>
         Type.isMutable(schema)
           ? Operation.invoke(SpaceOperation.RemoveObjects, {
-              objects: [(schema as Type.RuntimeType).persistentSchema as Obj.Unknown],
+              objects: [schema as Obj.Unknown],
             })
           : Effect.succeed(undefined),
       properties: {
