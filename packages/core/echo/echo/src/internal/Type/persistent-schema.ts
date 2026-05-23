@@ -9,7 +9,7 @@ import { DXN } from '@dxos/keys';
 import { IconAnnotation } from '../Annotation';
 import { LabelAnnotation, TypenameSchema, VersionSchema } from '../Annotation';
 import { EntityKind, KindId } from '../common/types';
-import { EchoObjectSchema } from '../Entity';
+import { EchoTypeKindSchema } from '../Entity';
 import { JsonSchemaType } from '../JsonSchema';
 
 /**
@@ -22,7 +22,7 @@ export const PersistentSchema = Schema.Struct({
   version: VersionSchema,
   jsonSchema: JsonSchemaType,
 }).pipe(
-  EchoObjectSchema(DXN.make('org.dxos.type.schema', '0.1.0')),
+  EchoTypeKindSchema(DXN.make('org.dxos.type.schema', '0.1.0')),
   LabelAnnotation.set(['name']),
   IconAnnotation.set({
     icon: 'ph--database--regular',

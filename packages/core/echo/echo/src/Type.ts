@@ -17,20 +17,38 @@ import * as typeInternal from './internal/Type';
 import type * as ObjModule from './Obj';
 import type * as RelationModule from './Relation';
 
-/**
- * @deprecated Alias for {@link Type}. The legacy `EchoSchema` runtime wrapper has
- * been removed; `db.schemaRegistry.register(...)` now returns `Type.Type`
- * entities directly. Prefer using `Type.Type`.
- */
-export type RuntimeType = Type;
-
 //
 // Internal types (not exported)
 //
 
 /**
+ * Structural base shared by the three sibling type-entity interfaces
+ * ({@link Obj}, {@link Relation}, {@link Type}). NOT exported — callers
+ * should constrain on {@link AnyType} when they want "any of the three"
+ * and on the specific kind interface otherwise.
+ */
+interface BaseTypeEntity<A> {
+  /**
+   * Instance-kind brand of the type-entity value itself. Static type entities
+   * created via `Type.object` / `Type.relation` are in-memory ECHO objects
+   * (`EntityKind.Object`); a persisted entity returned by `db.add(...)` is
+   * branded `EntityKind.Type` (it's a stored instance of the meta-schema).
+   */
+  readonly [internal.KindId]: internal.EntityKind;
+
+  /** Object id — present once the type has been persisted into a database. */
+  readonly id?: ObjectId;
+
+  readonly name?: string;
+  readonly typename: string;
+  readonly version: string;
+  readonly jsonSchema: internal.JsonSchemaType;
+  readonly [InstancePhantomId]?: A;
+}
+
+/**
  * Type that marks a schema as an ECHO schema.
- * The value indicates the entity kind (Object or Relation).
+ * The value indicates the entity kind (Object, Relation, or Type).
  */
 type EchoSchemaKind<K extends internal.EntityKind = internal.EntityKind> = {
   readonly [internal.SchemaKindId]: K;
@@ -62,10 +80,7 @@ type EchoSchemaKind<K extends internal.EntityKind = internal.EntityKind> = {
  * ```
  */
 export interface Obj<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>
-  extends Type<T & Entity.OfKind<typeof Entity.Kind.Object>> {
-  readonly typename: string;
-  readonly version: string;
-
+  extends BaseTypeEntity<T & Entity.OfKind<typeof Entity.Kind.Object>> {
   /** Schema-kind brand (object). */
   readonly [internal.SchemaKindId]: internal.EntityKind.Object;
 
@@ -111,9 +126,11 @@ export const object: {
 //
 
 /**
- * ECHO schema for a `Type.Type` entity. Stores `{ name?, typename, version, jsonSchema }`.
+ * ECHO meta-schema entity — stores `{ name?, typename, version, jsonSchema }`.
+ * Type-kind sibling of `Type.object(...)` / `Type.relation(...)` outputs.
+ * Stored types live under this entity; filter via `Filter.type(Type.Type)`.
  */
-export const Type: Obj<typeInternal.PersistentSchema> = typeInternal.PersistentSchema as any;
+export const Type: Type<typeInternal.PersistentSchema> = typeInternal.PersistentSchema as any;
 
 /**
  * TypeScript type for an ECHO relation type — a `Type.Type<A>` entity (Option B).
@@ -124,10 +141,9 @@ export const Type: Obj<typeInternal.PersistentSchema> = typeInternal.PersistentS
  * **Not a `Schema.Schema`.** See {@link Obj}'s note.
  */
 export interface Relation<T, Source, Target, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>
-  extends Type<RelationModule.Endpoints<Source, Target> & T & Entity.OfKind<typeof Entity.Kind.Relation>> {
-  readonly typename: string;
-  readonly version: string;
-
+  extends BaseTypeEntity<
+    RelationModule.Endpoints<Source, Target> & T & Entity.OfKind<typeof Entity.Kind.Relation>
+  > {
   /** Schema-kind brand (relation). */
   readonly [internal.SchemaKindId]: internal.EntityKind.Relation;
 
@@ -177,12 +193,9 @@ export const relation: {
 } = internal.EchoRelationSchema as any;
 
 /**
- * Any ECHO type: a static object/relation schema or a `Type.Type` entity.
- *
- * The two shapes are structurally distinct — a static schema implements
- * `Schema.Schema` directly; a `Type.Type` entity does not. APIs that accept
- * `AnyType` must dispatch internally (e.g. via `Type.isType` and
- * `Type.getSchema`) to handle both.
+ * Any ECHO type-entity — one of the three sibling kinds: object-kind, relation-kind,
+ * or type-kind (the meta-schema). APIs that want "any ECHO type" use this union;
+ * the underlying Effect Schema is retrieved via `Type.getSchema`.
  */
 export type AnyType = AnyObjectType | AnyRelationType | Type;
 
@@ -208,6 +221,17 @@ export const isRelationSchema = (schema: AnyType | Schema.Schema.AnyNoContext): 
     return true;
   }
   return Schema.isSchema(schema) && internal.getTypeAnnotation(schema)?.kind === internal.EntityKind.Relation;
+};
+
+/**
+ * Type guard to check if a value is a type-kind schema (a meta-schema such as
+ * `Type.Type`). Mirrors {@link isObjectSchema} / {@link isRelationSchema}.
+ */
+export const isTypeKindSchema = (schema: AnyType | Schema.Schema.AnyNoContext): schema is Type => {
+  if ((schema as any)[internal.SchemaKindId] === internal.EntityKind.Type) {
+    return true;
+  }
+  return Schema.isSchema(schema) && internal.getTypeAnnotation(schema)?.kind === internal.EntityKind.Type;
 };
 
 /**
@@ -241,7 +265,7 @@ export const getURI = (input: AnyType | Schema.Schema.AnyNoContext): URI.URI | u
  * @returns The typename. Example: `com.example.type.person`.
  */
 export const getTypename = (input: AnyType | Schema.Schema.AnyNoContext): string => {
-  const typename = isType(input) ? input.typename : internal.getSchemaTypename(input);
+  const typename = isType(input) ? input.typename : internal.getSchemaTypename(input as any);
   invariant(typeof typename === 'string' && !typename.startsWith('dxn:'), 'Invalid typename');
   return typename;
 };
@@ -251,7 +275,7 @@ export const getTypename = (input: AnyType | Schema.Schema.AnyNoContext): string
  * @example 0.1.0
  */
 export const getVersion = (input: AnyType | Schema.Schema.AnyNoContext): string => {
-  const version = isType(input) ? input.version : internal.getSchemaVersion(input);
+  const version = isType(input) ? input.version : internal.getSchemaVersion(input as any);
   invariant(typeof version === 'string' && version.match(/^\d+\.\d+\.\d+$/), 'Invalid version');
   return version;
 };
@@ -285,10 +309,10 @@ export const getMeta = (input: AnyType | Schema.Schema.AnyNoContext): Meta | und
     return {
       typename: input.typename,
       version: input.version,
-      kind: internal.EntityKind.Object,
+      kind: (input as any)[internal.SchemaKindId] ?? internal.EntityKind.Object,
     };
   }
-  return internal.getTypeAnnotation(input);
+  return internal.getTypeAnnotation(input as any);
 };
 
 /**
@@ -303,42 +327,23 @@ export const InstancePhantomId = internal.InstancePhantomId;
 export type InstancePhantomId = internal.InstancePhantomId;
 
 /**
- * Instance type of a `Type.Type` ECHO entity.
+ * Sibling of {@link Obj} / {@link Relation} for the third ECHO entity kind:
+ * **type-kind** entities (meta-schemas). The singleton {@link Type} const is
+ * the canonical example — it describes stored type definitions themselves.
  *
- * A `Type.Type` is an ECHO object that holds a type definition — it is **not**
- * a `Schema.Schema`. Use `Type.getSchema(type)` to derive the Effect Schema,
- * `Type.update(type, draft => ...)` to mutate, and `Type.isType(value)` for
- * runtime checks.
+ * Not a `Schema.Schema`. Use `Type.getSchema(value)` to obtain the underlying
+ * Effect Schema and `Type.update(value, draft => ...)` to mutate.
  *
- * ECHO APIs (`Obj.make`, `Obj.instanceOf`, `Filter.type`, `Ref`) should accept
- * `Type.Type` entities directly and dispatch internally via `Type.getSchema`
- * when they need the underlying Schema. Schema-side APIs (`Schema.extend`,
- * `Schema.is`, etc.) require an explicit `Type.getSchema(type)` call.
- *
- * `A` is a phantom carrying the instance type produced by `Obj.make(Foo, ...)`.
- *
- * Merged with the `Type` const via TypeScript declaration merging.
+ * `A` is the instance-type phantom — what `Obj.make(value, ...)` would produce.
+ * Merged with the `Type` const value via TypeScript declaration merging.
  */
-export interface Type<A = unknown> {
-  /**
-   * Entity-kind brand. Persisted `Type.Type` entities are ECHO objects, so
-   * they're branded `Entity.Kind.Object`. Static types declared via
-   * `Type.object`/`Type.relation` share the brand.
-   */
-  readonly [internal.KindId]: internal.EntityKind.Object;
+export interface Type<A = unknown>
+  extends BaseTypeEntity<A & Entity.OfKind<typeof Entity.Kind.Object>> {
+  /** Schema-kind brand (type — the meta-schema kind). */
+  readonly [internal.SchemaKindId]: internal.EntityKind.Type;
 
-  /**
-   * Object id. Present iff the type has been persisted into an ECHO database
-   * (so `getTypeURIFromSpecifier` returns `echo:/<objectId>`); absent for
-   * static types (the URI is then the typename DXN).
-   */
-  readonly id?: ObjectId;
-
-  readonly name?: string;
-  readonly typename: string;
-  readonly version: string;
-  readonly jsonSchema: internal.JsonSchemaType;
-  readonly [InstancePhantomId]?: A;
+  /** Source Effect Schema — used internally by `Type.getSchema(self)`. */
+  readonly [internal.StaticTypeSchemaSlot]: Schema.Schema.AnyNoContext;
 }
 
 /**

@@ -70,11 +70,11 @@ export interface Query<T> {
    */
   // TODO(dmaretskyi): any way to enforce `Ref.Target<Schema.Schema.Type<S>[key]> == T`?
   // TODO(dmaretskyi): Ability to go through arrays of references.
-  'referencedBy'<S extends TypeNs.Type<any>>(
+  'referencedBy'<S extends TypeNs.AnyType>(
     target: S | string,
     key: RefPropKey<TypeNs.InstanceType<S>>,
   ): Query<TypeNs.InstanceType<S>>;
-  'referencedBy'<S extends TypeNs.Type<any>>(target: S | string): Query<TypeNs.InstanceType<S>>;
+  'referencedBy'<S extends TypeNs.AnyType>(target: S | string): Query<TypeNs.InstanceType<S>>;
   'referencedBy'(): Query<any>;
 
   /**
@@ -250,7 +250,7 @@ class QueryClass implements Any {
     });
   }
 
-  referencedBy(target?: TypeNs.Type<any> | string, key?: string): Any {
+  referencedBy(target?: TypeNs.AnyType | string, key?: string): Any {
     const uri = target !== undefined ? internal.getTypeURIFromSpecifier(target) : null;
     return new QueryClass({
       type: 'incoming-references',
@@ -487,7 +487,7 @@ export const select = <F extends Filter.Any>(filter: F): Query<Filter.Type<F>> =
  * Shorthand for: `Query.select(Filter.type(schema, predicates))`.
  */
 export const type: {
-  <T extends TypeNs.Type<any>>(
+  <T extends TypeNs.AnyType>(
     type: T,
     predicates?: Filter.Props<TypeNs.InstanceType<T>>,
   ): Query<TypeNs.InstanceType<T>>;
@@ -502,7 +502,7 @@ export const type: {
   ): Query<Schema.Schema.Type<S>>;
   (schema: string, predicates?: Filter.Props<unknown>): Query<any>;
 } = (
-  schema: TypeNs.Type<any> | Schema.Schema.AnyNoContext | string,
+  schema: TypeNs.AnyType | Schema.Schema.AnyNoContext | string,
   predicates?: Filter.Props<unknown>,
 ): Any => {
   return new QueryClass({

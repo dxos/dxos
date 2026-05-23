@@ -54,8 +54,16 @@ export interface EchoTypeSchema<
    * Phantom slot mirroring `Type<A>` so internal helpers (`makeObject`,
    * `createObject`, `Ref.make`) infer the instance type uniformly whether
    * the caller passes an `EchoTypeSchema` or a top-level `Type.Type` entity.
+   *
+   * Includes the instance-kind brand (`[KindId]`) so the phantom is assignable
+   * to the matching public-side interface in `Type.ts` (`Type.Obj` /
+   * `Type.Relation` / `Type.Type`), all of which require an `OfKind` brand
+   * in their phantom. Type-kind schemas describe instances which are still
+   * ECHO objects at the instance level, so we project `Type → Object` here.
    */
-  readonly [InstancePhantomId]?: EchoTypeSchemaProps<Schema.Schema.Type<Self>, ExtraFields>;
+  readonly [InstancePhantomId]?: EchoTypeSchemaProps<Schema.Schema.Type<Self>, ExtraFields> & {
+    readonly [KindId]: K extends EntityKind.Type ? EntityKind.Object : K;
+  };
 }
 
 // type MakeProps =
