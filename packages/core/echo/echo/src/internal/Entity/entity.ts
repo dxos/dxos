@@ -31,10 +31,15 @@ export interface EchoTypeSchema<
   K extends EntityKind = EntityKind,
   Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
 > extends TypeMeta {
-  /** Entity-kind brand — always `EntityKind.Object` for type entities. */
-  readonly [KindId]: EntityKind.Object;
+  /**
+   * Entity-kind brand. Type entities are their own kind (`Type`) regardless of
+   * the kind of instance they describe — `[SchemaKindId]` carries the latter.
+   * This lets predicates like `Obj.isObject` / `Relation.isRelation` cleanly
+   * reject type entities without also having to inspect `[SchemaKindId]`.
+   */
+  readonly [KindId]: EntityKind.Type;
 
-  /** Schema-kind brand indicating object vs relation. */
+  /** Schema-kind brand indicating what kind of instance this type describes. */
   readonly [SchemaKindId]: K;
 
   /** Source Effect Schema (kept on a hidden slot for `Type.getSchema`). */
@@ -135,7 +140,7 @@ export const makeEchoTypeSchema = <
   >(ast);
   let memoizedJsonSchema: JsonSchemaType | undefined;
   const entity = {
-    [KindId]: 'object' as EntityKind.Object,
+    [KindId]: 'type' as EntityKind.Type,
     [SchemaKindId]: kind,
     [StaticTypeSchemaSlot]: schema as unknown as Schema.Schema.AnyNoContext,
     typename,

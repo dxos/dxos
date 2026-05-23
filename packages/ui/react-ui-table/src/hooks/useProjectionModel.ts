@@ -27,7 +27,7 @@ export const useProjectionModel = <S extends Type.AnyType>(
 
       // Always use createEchoChangeCallback since the view is ECHO-backed.
       // Pass the type entity only when stored, to allow schema mutations.
-      const change = createEchoChangeCallback(view, Type.isType(schema) ? schema : undefined);
+      const change = createEchoChangeCallback(view, Type.isMutable(schema) ? schema : undefined);
 
       const projection = new ProjectionModel({ registry, view, baseSchema: jsonSchema, change });
       projection.normalizeView();

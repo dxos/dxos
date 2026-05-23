@@ -8,7 +8,7 @@ import type * as Types from 'effect/Types';
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
-import { Filter, JsonSchema, Obj, type QueryResult, type SchemaRegistry, Type } from '@dxos/echo';
+import { Filter, JsonSchema, type QueryResult, type SchemaRegistry, Type } from '@dxos/echo';
 import {
   PersistentSchema,
   TypeAnnotationId,
@@ -99,10 +99,9 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
   public hasSchema(schema: Type.AnyType | Schema.Schema.AnyNoContext): boolean {
     // For Type entities (any of the three kinds) read the id directly; for raw
     // schemas fall back to the TypeIdentifierAnnotation lookup.
-    const schemaId =
-      Type.isType(schema) || Obj.isObject(schema)
-        ? (schema as { id?: ObjectId }).id
-        : getObjectIdFromSchema(schema as Schema.Schema.AnyNoContext);
+    const schemaId = Type.isType(schema)
+      ? (schema as { id?: ObjectId }).id
+      : getObjectIdFromSchema(schema as Schema.Schema.AnyNoContext);
     return schemaId != null && this.getSchemaById(schemaId) != null;
   }
 

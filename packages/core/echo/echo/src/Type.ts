@@ -28,12 +28,12 @@ import type * as RelationModule from './Relation';
  */
 interface BaseTypeEntity<A> {
   /**
-   * Instance-kind brand of the type-entity value itself. Static type entities
-   * created via `Type.object` / `Type.relation` are in-memory ECHO objects
-   * (`EntityKind.Object`); a persisted entity returned by `db.add(...)` is
-   * branded `EntityKind.Type` (it's a stored instance of the meta-schema).
+   * Entity-kind brand of the type-entity value itself — always `EntityKind.Type`.
+   * The kind of instance the type *describes* lives on `[SchemaKindId]`
+   * (Object / Relation / Type). Lets `Obj.isObject` / `Relation.isRelation`
+   * reject type entities by a single `[KindId]` check.
    */
-  readonly [internal.KindId]: internal.EntityKind;
+  readonly [internal.KindId]: internal.EntityKind.Type;
 
   /** Object id — present once the type has been persisted into a database. */
   readonly id?: ObjectId;
@@ -352,20 +352,26 @@ export const getVersion = (input: AnyType | Schema.Schema.AnyNoContext): string 
 };
 
 /**
- * Type predicate: true iff the value is a `Type.Type` ECHO entity.
+ * Type predicate: true iff the value is any type-kind ECHO entity — a static
+ * `Type.Obj` / `Type.Relation` produced by `Type.object` / `Type.relation`, a
+ * static meta `Type.Type`, or a persisted `Type.Type` returned by the database.
  *
- * `Type.Type` is the schema-as-entity meta type — an ECHO object whose schema
- * is `PersistentSchema`. Use this in place of the legacy `Type.isMutable` check
- * (formerly tested for the now-removed `EchoSchema` runtime wrapper).
+ * All three branches stamp `[KindId] = Type`, so this is a single brand check.
+ * Use {@link isObjectSchema} / {@link isRelationSchema} / {@link isTypeKindSchema}
+ * when you need to discriminate further; use {@link isMutable} when you mean
+ * "is this a db-stored type I can pass to `Type.update`".
  */
-export const isType = (value: unknown): value is Type => internal.isInstanceOf(internal.PersistentSchema, value);
+export const isType = (value: unknown): value is AnyType =>
+  typeof value === 'object' && value !== null && (value as any)[internal.KindId] === internal.EntityKind.Type;
 
 /**
- * @deprecated Alias for {@link isType}. Originally distinguished the mutable
- * `EchoSchema` runtime wrapper from the persistent backing object — that
- * wrapper has been removed, so the two predicates coincide.
+ * Type predicate: true iff the value is a persisted `Type.Type` entity that
+ * can be mutated via `Type.update`. Distinct from {@link isType}: static type
+ * entities are also type-kind but are frozen at construction. Implemented by
+ * matching against the `PersistentSchema` meta-schema's type URI.
  */
-export const isMutable = isType;
+export const isMutable = (value: unknown): value is Type =>
+  internal.isInstanceOf(internal.PersistentSchema, value);
 
 /**
  * ECHO type metadata.

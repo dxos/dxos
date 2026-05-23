@@ -52,7 +52,7 @@ export const useTestTableModel = (): TestTableModel => {
     () => ({
       selection: { enabled: true, mode: 'multiple' as const },
       dataEditable: true,
-      schemaEditable: schema && Type.isType(schema),
+      schemaEditable: schema && Type.isMutable(schema),
     }),
     [schema],
   );
