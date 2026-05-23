@@ -62,8 +62,9 @@ type AgentIdentity
 service AgentRunner
   desc: |
     Capability that executes one agent turn for a given thread + subject.
-    Default implementation spins an AiSession.Session bound to the
-    ThreadAgent blueprint. Stub implementations used in storybook + tests.
+    Default implementation performs one `LanguageModel.generateText` call
+    with edit tools (`editAnchoredRange`, `updateDocument`) registered per
+    turn. Stub implementations are used in storybook + tests.
   methods:
     run(thread: Thread, subject: Obj.Any) -> Effect<void>
 ```
@@ -120,8 +121,10 @@ feat F-1: Per-thread agent configuration
   req F-1.2: The `AgentIdentity` Effect service MUST be the sole source of
     the agent's display name. Thread schema MUST NOT store the name.
 
-  req F-1.3: A default `AgentIdentity` layer MUST be provided at plugin
-    activation, reading `Settings.agentName` from the thread plugin settings.
+  req F-1.3: ThreadPlugin MUST contribute a default `AgentIdentity` capability
+    at plugin activation (`{ name: 'Kai' }`). Hosts overriding the default
+    contribute their own `AgentIdentity` earlier in plugin order so
+    `Capability.get` returns it first.
 
 feat F-2: Trigger gate
 
@@ -130,7 +133,7 @@ feat F-2: Trigger gate
 
   req F-2.2: The gate MUST return true iff ALL hold:
     - thread.agent?.enabled === true
-    - message.sender.role === 'user'
+    - message.sender.role !== 'assistant'  # user-authored messages carry no role
     - thread.status !== 'resolved'
     - mode === 'auto' OR text contains '@' + agentName (case-insensitive)
 
@@ -144,19 +147,19 @@ feat F-3: Agent runner
   req F-3.1: The runner MUST be a Capability so storybook and tests can swap
     in a stub without changing call sites.
 
-  req F-3.2: The default runner MUST construct an AiSession.Session bound to
-    a `org.dxos.blueprint.thread-agent` blueprint, distinct from the existing
-    `org.dxos.blueprint.thread`.
+  req F-3.2: The default runner MUST execute one LLM turn via
+    `LanguageModel.generateText`, providing the thread message history as
+    prompt and appending the response (or a synthesized post-tool ack) as
+    an assistant message on the same thread.
 
-  req F-3.3: The agent MUST be given tools for:
-    - `postReply(text)` — wraps ThreadOperation.AddMessage with role='assistant'.
-    - `createProposals(diffs)` — wraps ThreadOperation.CreateProposals.
-    - `readRange(anchor)` — returns the anchor's text via the subject's
-      CommentConfig.getAnchorLabel.
-    - `readDocument()` — returns the subject's full text when a CommentConfig exists.
+  req F-3.3: The agent MUST be given edit tools for in-place markdown updates:
+    - `editAnchoredRange(replacement)` — splices the replacement into the
+      anchored span via Automerge-diff (`updateText`) and rewrites the
+      AnchoredTo cursor so the comment marker tracks the new text.
+    - `updateDocument(content)` — replaces the entire document content.
 
-  req F-3.4: When no CommentConfig matches the subject's typename, the runner
-    MUST limit itself to `postReply` (no doc-edit tools registered).
+  req F-3.4: When the subject is not a Markdown.Document (no editable text in
+    scope), the runner MUST omit the edit tools and only post a chat reply.
 
   req F-3.5: Assistant messages emitted by the runner MUST carry
     sender = { role: 'assistant', name: identity.name, identityDid: identity.identityDid }.
