@@ -23,14 +23,7 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
             <IconButton {...args} label='Test' icon='ph--circle--regular' density='lg' />
           </div>
           <div className='flex justify-center'>
-            <IconButton
-              {...args}
-              label='Test'
-              icon='ph--circle--regular'
-              iconOnly
-              density='lg'
-              classNames='px-1.5'
-            />
+            <IconButton {...args} label='Test' icon='ph--circle--regular' iconOnly density='lg' classNames='px-1.5' />
           </div>
         </div>
 
