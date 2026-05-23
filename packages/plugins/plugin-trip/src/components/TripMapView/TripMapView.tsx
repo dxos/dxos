@@ -2,17 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { format } from 'date-fns';
-import React, { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { IconButton, useThemeContext } from '@dxos/react-ui';
 import {
   Globe,
   type GlobeController,
-  geoToPosition,
   globeStyles,
-  positionToRotation,
   useDrag,
+  useFlyTo,
   useGlobeZoomHandler,
   useTour,
 } from '@dxos/react-ui-geo';
@@ -71,18 +69,6 @@ const segmentLine = (seg: Segment.Segment): { source: LatLng; target: LatLng } |
   return { source, target };
 };
 
-/** Time interval covered by a segment, in ms. Single-point segments report a point interval. */
-const segmentInterval = (seg: Segment.Segment): { start: number; end: number } | undefined => {
-  const primary = Segment.getPrimaryDate(seg);
-  if (!primary) {
-    return undefined;
-  }
-  const start = primary.getTime();
-  const endIso = seg.kind === 'accommodation' ? seg.checkOut : seg.arriveAt;
-  const end = Segment.parseDate(endIso)?.getTime() ?? start;
-  return { start, end };
-};
-
 /** Great-circle squared-distance heuristic for nearest-point search. */
 const distanceSq = (a: LatLng, b: LatLng): number => {
   const dLat = a.lat - b.lat;
@@ -102,15 +88,10 @@ export type TripMapViewProps = {
  * destination, and venue as points; transport segments add origin→destination
  * arcs.
  *
- * Toolbar (top-right of the globe area) hosts a play/pause button that
- * animates a tour through the trip's points (4.1). A range slider along the
- * bottom scrubs through the trip's time range — segments active at the
- * current scrubber value are highlighted in the itinerary column (4.2).
- * Clicking a point on the globe selects the nearest segment via the
- * `onSelect` callback; the matching row in the itinerary column is
- * highlighted (4.3). The Globe.Canvas API doesn't currently support
- * per-point styling, so the selected point is not visually distinguished
- * on the globe itself.
+ * Selecting a segment in the itinerary (or via SegmentArticle) smoothly
+ * animates the globe to that segment's first geo-tagged point using a
+ * great-circle interpolation (`useFlyTo`). Clicking a point on the globe
+ * selects the nearest segment via the `onSelect` callback.
  *
  * Composable: the root <div> forwards refs and merges incoming
  * `className`/`classNames` so the component can be used with `asChild`
@@ -131,6 +112,7 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
     // Lock the camera tilt — drag rotates the globe around its polar axis
     // only, keeping the inclination set by the `rotation` prop above.
     useDrag(controller, { lockTilt: true });
+    const flyTo = useFlyTo(controller, { tilt: TILT });
 
     // Build the geo features.
     const features = useMemo(() => {
@@ -150,7 +132,7 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
       return { points, lines };
     }, [segments]);
 
-    // Tour (4.1).
+    // Tour through itinerary points.
     const tourPoints = useMemo(
       () =>
         segments
@@ -160,73 +142,9 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
     );
     const [tourRunning, setTourRunning] = useTour(controller, tourPoints, { loop: true });
 
-    // Time scrubber (4.2).
-    const intervals = useMemo(() => {
-      return segments
-        .map((seg) => ({ id: seg.id, interval: segmentInterval(seg) }))
-        .filter((x): x is { id: string; interval: { start: number; end: number } } => !!x.interval);
-    }, [segments]);
-    const range = useMemo(() => {
-      if (intervals.length === 0) {
-        return undefined;
-      }
-      let min = Infinity;
-      let max = -Infinity;
-      for (const { interval } of intervals) {
-        if (interval.start < min) {
-          min = interval.start;
-        }
-        if (interval.end > max) {
-          max = interval.end;
-        }
-      }
-      return min < max ? { min, max } : { min, max: min + 86400000 };
-    }, [intervals]);
-    const [scrubMs, setScrubMs] = useState<number | undefined>(undefined);
-    useEffect(() => {
-      // Reset scrubber when the time range changes.
-      setScrubMs(undefined);
-    }, [range?.min, range?.max]);
-
-    /**
-     * Pick the segment whose interval contains the scrubber's current value.
-     * If multiple overlap (e.g. a flight during a hotel stay), prefer the
-     * one with the latest start so the more specific (shorter) segment
-     * "wins" and the user sees the in-flight focus.
-     */
-    const scrubberSegmentId = useMemo(() => {
-      if (scrubMs === undefined) {
-        return undefined;
-      }
-      let bestId: string | undefined;
-      let bestStart = -Infinity;
-      for (const { id, interval } of intervals) {
-        if (scrubMs >= interval.start && scrubMs <= interval.end && interval.start >= bestStart) {
-          bestId = id;
-          bestStart = interval.start;
-        }
-      }
-      return bestId;
-    }, [intervals, scrubMs]);
-
-    // Drive the parent's selection from the scrubber: when the active segment
-    // changes (as the user drags), notify via onSelect. We don't want to fire
-    // continuously while sitting on the same active segment.
-    const lastScrubSelectionRef = useRef<string | undefined>(undefined);
-    useEffect(() => {
-      if (scrubberSegmentId && scrubberSegmentId !== lastScrubSelectionRef.current) {
-        lastScrubSelectionRef.current = scrubberSegmentId;
-        onSelect?.(scrubberSegmentId);
-      }
-    }, [scrubberSegmentId, onSelect]);
-
-    /**
-     * Recenter the globe on the selected segment's first geo-tagged point
-     * whenever the selection changes (either from the scrubber driving
-     * onSelect or from external sources like the SegmentArticle companion).
-     * Preserves the locked tilt by re-applying it as the second axis of the
-     * rotation.
-     */
+    // Recenter the globe on the selected segment's first geo-tagged point
+    // whenever the selection changes. The transition is animated by
+    // `useFlyTo`, which interrupts any in-flight tween.
     const lastRecenterRef = useRef<string | undefined>(undefined);
     useEffect(() => {
       if (!controller || !selectedSegmentId) {
@@ -241,9 +159,8 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
         return;
       }
       lastRecenterRef.current = selectedSegmentId;
-      const [lambda] = positionToRotation(geoToPosition(point));
-      controller.setRotation([lambda, TILT, 0]);
-    }, [controller, segments, selectedSegmentId]);
+      flyTo(point);
+    }, [controller, segments, selectedSegmentId, flyTo]);
 
     // Bridge SegmentStack actions to the parent's selection callback.
     const handleStackAction = useCallback(
@@ -255,7 +172,7 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
       [onSelect],
     );
 
-    // Selection sync (4.3): click on the canvas → nearest segment.
+    // Click on the canvas → nearest segment.
     const handleSelectNearest = useCallback(
       (clientX: number, clientY: number) => {
         if (!controller?.canvas || !controller.projection) {
@@ -344,28 +261,6 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
                 onClick={() => setTourRunning((r) => !r)}
                 classNames='bg-base-surface/70 backdrop-blur'
               />
-            </div>
-          )}
-
-          {/* Time scrubber */}
-          {range && (
-            <div className='absolute bottom-3 left-3 right-3 z-10 flex items-center gap-2 px-3 py-2 rounded bg-base-surface/80 backdrop-blur'>
-              <span className='text-xs text-description shrink-0'>{format(range.min, 'MMM d')}</span>
-              <input
-                type='range'
-                min={range.min}
-                max={range.max}
-                value={scrubMs ?? range.min}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setScrubMs(Number(e.target.value))}
-                className='flex-1'
-                aria-label='Trip time scrubber'
-              />
-              <span className='text-xs text-description shrink-0'>{format(range.max, 'MMM d')}</span>
-              {scrubMs !== undefined && (
-                <span className='text-xs text-description shrink-0 min-w-[6rem] text-right'>
-                  {format(scrubMs, 'MMM d, p')}
-                </span>
-              )}
             </div>
           )}
         </div>
