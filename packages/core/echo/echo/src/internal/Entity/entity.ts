@@ -116,7 +116,7 @@ export const makeEchoTypeSchema = <
   return Object.freeze({
     [KindId]: 'object' as EntityKind.Object,
     [SchemaKindId]: kind,
-    [StaticTypeSchemaSlot]: schema as Schema.Schema.AnyNoContext,
+    [StaticTypeSchemaSlot]: schema as unknown as Schema.Schema.AnyNoContext,
     typename,
     version,
     jsonSchema,

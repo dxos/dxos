@@ -109,7 +109,7 @@ export const EchoRelationSchema = <Source, Target>({
 
   return <Self extends Schema.Schema.Any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
     self: Self & { fields?: Fields },
-  ): EchoRelationSchema<Self, Source, Target, Fields> => {
+  ): EchoRelationSchema<Self, Schema.Schema.AnyNoContext, Schema.Schema.AnyNoContext, Fields> => {
     invariant(SchemaAST.isTypeLiteral(self.ast), 'Schema must be a TypeLiteral.');
 
     // Extract fields from the schema if available (Struct schemas have .fields).

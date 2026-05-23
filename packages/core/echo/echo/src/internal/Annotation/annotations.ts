@@ -14,7 +14,15 @@ import { DXN, EchoURI, ObjectId, URI } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
 import { type Mutable } from '../common/proxy';
-import { type AnyEntity, type AnyProperties, EntityKind, KindId, TypeId, getSchema } from '../common/types';
+import {
+  type AnyEntity,
+  type AnyProperties,
+  EntityKind,
+  KindId,
+  StaticTypeSchemaSlot,
+  TypeId,
+  getSchema,
+} from '../common/types';
 import { getUri as getUriFromEntity } from '../Entity/api';
 import { type AnnotationHelper, createAnnotationHelper } from './util';
 
@@ -518,10 +526,14 @@ export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): Annotation
     );
 
   return {
-    get: (schema) => getFromAst(schema.ast),
+    get: (schema) => {
+      const slot = (schema as any)[StaticTypeSchemaSlot] as Schema.Schema.AnyNoContext | undefined;
+      const ast = slot?.ast ?? (schema as Schema.Schema.Any).ast;
+      return getFromAst(ast);
+    },
     getFromAst: (ast) => getFromAst(ast),
     set: (value) =>
-      PropertyMeta(props.id, Schema.encodeSync(props.schema)(value)) as <S extends Schema.Schema.Any>(schema: S) => S,
+      PropertyMeta(props.id, Schema.encodeSync(props.schema)(value)) as any,
   };
 };
 
