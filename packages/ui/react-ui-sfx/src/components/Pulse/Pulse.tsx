@@ -3,7 +3,7 @@
 //
 
 import { useAnimationFrame } from 'motion/react';
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
@@ -52,10 +52,6 @@ export const Pulse = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const radiiRef = useRef<Float32Array>(new Float32Array(dim * dim));
 
-  useEffect(() => {
-    radiiRef.current = new Float32Array(dim * dim);
-  }, [dim]);
-
   const stride = 2 * maxRadius + gap;
   const size = dim * stride - gap;
 
@@ -79,6 +75,10 @@ export const Pulse = ({
     ctx.clearRect(0, 0, size, size);
     ctx.fillStyle = color === 'currentColor' ? getComputedStyle(canvas).color : color;
 
+    // Resize the radii buffer in sync with `dim` to avoid out-of-bounds access on the frame after dim changes.
+    if (radiiRef.current.length !== dim * dim) {
+      radiiRef.current = new Float32Array(dim * dim);
+    }
     const radii = radiiRef.current;
     const seconds = time / 1_000;
     for (let i = 0; i < dim; i++) {
