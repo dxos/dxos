@@ -162,7 +162,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                 {failure && <PluginFailureBadge failure={failure} size={5} />}
               </div>
               {onInstall ? (
-                <Button density='fine' variant='primary' disabled={installing} onClick={onInstall}>
+                <Button density='md' variant='primary' disabled={installing} onClick={onInstall}>
                   {installing ? t('installing.label') : t('install.label')}
                 </Button>
               ) : (
@@ -280,7 +280,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                     </Select.Root>
                     {onInstallVersion && (
                       <Button
-                        density='fine'
+                        density='md'
                         variant='primary'
                         disabled={installing || selectedVersionTag === installedVersionTag}
                         onClick={onInstallVersion}

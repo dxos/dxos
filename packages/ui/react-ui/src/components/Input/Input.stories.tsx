@@ -76,34 +76,17 @@ export default meta;
 
 type Story = StoryObj<DefaultStoryProps & Variant>;
 
-export const DensityCoarse: Story = {
-  args: {
-    kind: 'text',
-    label: 'Input value',
-    placeholder: 'This is an input',
-    disabled: false,
-    description: undefined,
-    labelVisuallyHidden: false,
-    descriptionVisuallyHidden: false,
-    validationMessage: '',
-    validationValence: undefined,
-    density: 'coarse',
-  },
-};
-
-export const DensityFine: Story = {
-  args: {
-    kind: 'text',
-    label: 'Input value',
-    placeholder: 'This is a density:fine input',
-    disabled: false,
-    description: undefined,
-    labelVisuallyHidden: false,
-    descriptionVisuallyHidden: false,
-    validationMessage: '',
-    validationValence: undefined,
-    density: 'fine',
-  },
+export const Density: Story = {
+  render: () => (
+    <div className='flex flex-col gap-4'>
+      {(['lg', 'md', 'sm'] as const).map((density) => (
+        <Input.Root key={density}>
+          <Input.Label>{`density="${density}"`}</Input.Label>
+          <Input.TextInput density={density} placeholder={`This is a density:${density} input`} />
+        </Input.Root>
+      ))}
+    </div>
+  ),
 };
 
 export const Subdued: Story = {
@@ -186,7 +169,7 @@ export const PinInput: Story = {
     length: 6,
     description: 'Type in secret you received',
     pattern: '\\d*',
-    density: 'coarse',
+    density: 'lg',
   },
 };
 

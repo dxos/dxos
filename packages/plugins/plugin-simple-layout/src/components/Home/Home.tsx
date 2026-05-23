@@ -104,7 +104,7 @@ const WorkspaceTile: MosaicStackTileComponent<Node.Node> = (props) => {
       onClick={handleSelect}
       ref={cardRef}
     >
-      <Card.Toolbar density='fine'>
+      <Card.Toolbar density='md'>
         <Avatar.Root>
           <Avatar.Content
             icon={data.properties.icon}

@@ -102,7 +102,7 @@ export const ArrayField = ({
           {!readonly && layout !== 'static' && (
             <IconButton
               iconOnly
-              density='fine'
+              density='md'
               variant='ghost'
               icon='ph--plus--regular'
               label={t('add-item.button')}
@@ -131,7 +131,7 @@ export const ArrayField = ({
                 {!readonly && layout !== 'static' && (
                   <div className='h-full flex flex-col justify-end pb-1'>
                     <IconButton
-                      density='fine'
+                      density='md'
                       variant='ghost'
                       icon='ph--x--regular'
                       iconOnly
