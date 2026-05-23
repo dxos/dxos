@@ -188,6 +188,17 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
           }
         }
       },
+
+      // Parallel to resolveSchema, but returns the Type.AnyType entity itself
+      // rather than its underlying Effect Schema. Used by `Obj.fromJSON` (queue
+      // and serializer paths) so deserialized objects stamp a TypeEntityId
+      // back-reference resolvable via `Obj.getType` / `Entity.getType`.
+      resolveType: async (uri) => {
+        if (DXN.isDXN(uri)) {
+          return this.schemaRegistry.getSchemaByDXN(uri);
+        }
+        return undefined;
+      },
     } satisfies Ref.Resolver;
   }
 

@@ -25,6 +25,7 @@ import {
   ObjectMetaSchema,
   ParentId,
   setSchema,
+  setType,
 } from '../common/types';
 import {
   ATTR_DELETED,
@@ -112,6 +113,15 @@ export const objectFromJSON = async (
   setTypename(obj, type);
   if (schema) {
     setSchema(obj, schema);
+  }
+  // Resolve and stamp the source type entity, if the resolver provides one.
+  // Lets `Obj.getType` / `Entity.getType` return a stable entity for objects
+  // loaded via `Obj.fromJSON` (serializer / queue paths).
+  if (refResolver?.resolveType) {
+    const typeEntity = await refResolver.resolveType(type);
+    if (typeEntity != null) {
+      setType(obj, typeEntity);
+    }
   }
 
   const isRelation =
