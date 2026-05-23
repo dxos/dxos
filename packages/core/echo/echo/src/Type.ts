@@ -345,12 +345,8 @@ export type Persistence = 'static' | 'persisted';
  *  - `Type<A>` entity (via the `InstancePhantomId` brand) → `A`
  *  - Effect `Schema.Schema.All`                            → `Schema.Schema.Type<T>`
  */
-export type InstanceType<T> = T extends { readonly [InstancePhantomId]?: infer A }
-  ? unknown extends A
-    ? T extends Schema.Schema.All
-      ? Schema.Schema.Type<T>
-      : never
-    : A
+export type InstanceType<T> = T extends Type<infer A>
+  ? A
   : T extends Schema.Schema.All
     ? Schema.Schema.Type<T>
     : never;

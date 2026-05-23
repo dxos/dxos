@@ -462,14 +462,14 @@ export const instanceOf: {
  * ```
  */
 export const snapshotOf: {
-  <S extends Type.AnyType>(schema: S): (value: unknown) => value is Snapshot<Schema.Schema.Type<S>>;
-  <S extends Type.AnyType>(schema: S, value: unknown): value is Snapshot<Schema.Schema.Type<S>>;
+  <S extends Type.AnyType>(schema: S): (value: unknown) => value is Snapshot<Type.InstanceType<S> & Unknown>;
+  <S extends Type.AnyType>(schema: S, value: unknown): value is Snapshot<Type.InstanceType<S> & Unknown>;
 } = ((...args: [schema: Type.AnyType, value: unknown] | [schema: Type.AnyType]) => {
   const check = (entity: unknown) =>
     entity != null &&
     typeof entity === 'object' &&
     Entity.SnapshotKindId in entity &&
-    internal.isInstanceOf(args[0], entity);
+    internal.isInstanceOf(args[0] as any, entity);
 
   if (args.length === 1) {
     return (entity: unknown) => check(entity);

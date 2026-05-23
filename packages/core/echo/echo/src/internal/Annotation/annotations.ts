@@ -271,15 +271,15 @@ export const getTypeURI = (obj: AnyProperties): URI.URI | undefined => {
  *  - Object was created with a different schema (maybe dynamic) that has the same typename.
  */
 // TODO(burdon): Can we use `Schema.is`?
-export const isInstanceOf = <S extends Schema.Schema.AnyNoContext>(
-  schemaOrType: S | AnyEntity,
+export const isInstanceOf = <S>(
+  schemaOrType: S extends Schema.Schema.AnyNoContext ? S : Schema.Schema.AnyNoContext | AnyEntity | { readonly [KindId]: unknown; readonly typename?: string; readonly version?: string; readonly id?: string },
   object: any,
-): object is Schema.Schema.Type<S> => {
+): boolean => {
   if (object == null) {
     return false;
   }
 
-  const schemaURI = getTypeURIFromSpecifier(schemaOrType as Schema.Schema.AnyNoContext | AnyEntity | string);
+  const schemaURI = getTypeURIFromSpecifier(schemaOrType as any);
 
   const type = getTypeURI(object);
   if (type && type === schemaURI) {

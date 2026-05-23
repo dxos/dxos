@@ -23,7 +23,7 @@ export namespace TestSchema {
     Type.object(DXN.make('com.example.type.expando', '0.1.0')),
   );
 
-  export interface Expando extends Schema.Schema.Type<typeof Expando> {}
+  export type Expando = Type.InstanceType<typeof Expando>;
 
   //
   // Example
@@ -65,7 +65,7 @@ export namespace TestSchema {
   export const Example = ExampleSchema.pipe(Type.object(DXN.make('com.example.type.example', '0.1.0')));
 
   /** @deprecated Use another test schema or create a specific local test schema. */
-  export interface Example extends Schema.Schema.Type<typeof Example> {}
+  export type Example = Type.InstanceType<typeof Example>;
 
   //
   // Message
@@ -83,7 +83,7 @@ export namespace TestSchema {
 
   export const Message = MessageStruct.pipe(Type.object(DXN.make('com.example.type.message', '0.1.0')));
 
-  export interface Message extends Schema.Schema.Type<typeof Message> {}
+  export type Message = Type.InstanceType<typeof Message>;
 
   //
   // Organization
@@ -99,7 +99,7 @@ export namespace TestSchema {
     ),
   }).pipe(Type.object(DXN.make('com.example.type.organization', '0.1.0')));
 
-  export interface Organization extends Schema.Schema.Type<typeof Organization> {}
+  export type Organization = Type.InstanceType<typeof Organization>;
 
   //
   // Person
@@ -127,7 +127,7 @@ export namespace TestSchema {
     }).pipe(Schema.Array, Schema.optional),
   }).pipe(Schema.partial, Type.object(DXN.make('com.example.type.person', '0.1.0')));
 
-  export interface Person extends Schema.Schema.Type<typeof Person> {}
+  export type Person = Type.InstanceType<typeof Person>;
 
   //
   // Task
@@ -143,7 +143,7 @@ export namespace TestSchema {
     description: Schema.optional(Schema.String),
   }).pipe(Schema.partial, Type.object(DXN.make('com.example.type.task', '0.1.0')));
 
-  export interface Task extends Schema.Schema.Type<typeof Task> {}
+  export type Task = Type.InstanceType<typeof Task>;
 
   //
   // HasManager
@@ -157,7 +157,7 @@ export namespace TestSchema {
     }),
   );
 
-  export interface HasManager extends Schema.Schema.Type<typeof HasManager> {}
+  export type HasManager = Type.InstanceType<typeof HasManager>;
 
   //
   // EmployedBy
@@ -174,7 +174,7 @@ export namespace TestSchema {
     }),
   );
 
-  export interface EmployedBy extends Schema.Schema.Type<typeof EmployedBy> {}
+  export type EmployedBy = Type.InstanceType<typeof EmployedBy>;
 
   //
   // RecordType
@@ -200,5 +200,5 @@ export namespace TestSchema {
     ),
   }).pipe(Schema.partial, Type.object(DXN.make('com.example.type.container', '0.1.0')));
 
-  export interface Container extends Schema.Schema.Type<typeof Container> {}
+  export type Container = Type.InstanceType<typeof Container>;
 }

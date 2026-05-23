@@ -108,8 +108,8 @@ export const id = (...ids: ObjectId[]): Any => {
  */
 export function type<T extends TypeNs.AnyType>(
   type: T,
-  props?: Props<TypeNs.InstanceType<T> & Obj.Unknown>,
-): Filter<TypeNs.InstanceType<T> & Obj.Unknown>;
+  props?: Props<TypeNs.InstanceType<T>>,
+): Filter<TypeNs.InstanceType<T>>;
 export function type<S extends Schema.Schema.AnyNoContext>(
   union: S,
   props?: Props<Schema.Schema.Type<S>>,

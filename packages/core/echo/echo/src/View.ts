@@ -83,7 +83,7 @@ const ViewSchema = Schema.Struct({
   }),
 );
 
-export interface View extends Schema.Schema.Type<typeof ViewSchema> {}
+export type View = Type.InstanceType<typeof ViewSchema>;
 
 /**
  * View instance type.
