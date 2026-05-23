@@ -43,8 +43,14 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
 
   async register(input: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.Type[]> {
     input
-      // TODO(wittjosiah): This should filter out or throw on non-ECHO schemas.
-      .filter((schema): schema is Type.AnyType => Schema.isSchema(schema))
+      // Accept any ECHO type entity (object/relation/type-kind) or raw Effect Schema.
+      .filter(
+        (schema): schema is Type.AnyType =>
+          Type.isObjectSchema(schema as any) ||
+          Type.isRelationSchema(schema as any) ||
+          Type.isTypeKindSchema(schema as any) ||
+          Schema.isSchema(schema),
+      )
       .forEach((schema) => this._add(schema));
 
     this.schemaChanges.emit();
@@ -54,15 +60,18 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
   }
 
   private _add(schema: Type.AnyType): void {
-    const uri = Type.getURI(schema) ?? raise(new TypeError('Schema has no URI'));
+    const uri =
+      (Schema.isSchema(schema)
+        ? internal.getSchemaURI(schema as any)
+        : Type.getURI(schema as Type.AnyType)) ?? raise(new TypeError('Schema has no URI'));
     if (this._registry.has(uri)) {
-      const typename = Type.getTypename(schema);
-      const version = Type.getVersion(schema);
+      const typename = Type.getTypename(schema as any);
+      const version = Type.getVersion(schema as any);
       throw new Error(`Schema version already registered: ${typename}:${version}`);
     }
     this._registry.set(uri, schema);
 
-    const typename = Type.getTypename(schema) ?? raise(new TypeError('Schema has no typename'));
+    const typename = Type.getTypename(schema as any) ?? raise(new TypeError('Schema has no typename'));
     invariant(typename, 'Not a valid ECHO schema');
     const versions = defaultMap(this._byTypename, typename, () => [] as Type.AnyType[]);
     versions.push(schema);

@@ -44,6 +44,7 @@ import {
   RelationTargetDXNId,
   RelationTargetId,
   SchemaId,
+  TypeEntityId,
   SchemaMetaSymbol,
   SchemaValidator,
   SelfURIId,
@@ -186,6 +187,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         return target[symbolInternals];
       case SchemaId:
         return this.getSchema(target);
+      case TypeEntityId:
+        return this.getTypeEntity(target);
     }
 
     // Non-reactive root properties.
@@ -565,6 +568,49 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         return recurse(value);
       }
     });
+  }
+
+  /**
+   * Resolve the source `Type.Type` entity (Obj/Relation/Type-kind) for an
+   * instance. Returns the actual entity (not just its schema) so callers using
+   * `Obj.getType` / `Entity.getType` see a stable entity-shaped value.
+   */
+  getTypeEntity(target: ProxyTarget): Type.AnyType | undefined {
+    if (!target[symbolInternals].database) {
+      const root = target[symbolInternals].rootSchema;
+      // For non-db reactive objects rootSchema may already be a type entity.
+      return Type.isObjectSchema(root as any) ||
+        Type.isRelationSchema(root as any) ||
+        Type.isTypeKindSchema(root as any)
+        ? (root as unknown as Type.AnyType)
+        : undefined;
+    }
+    const typeRef = target[symbolInternals].core.getType();
+    if (typeRef == null) {
+      return undefined;
+    }
+    const typeURI = EncodedReference.toURI(typeRef);
+    const typeDxn = DXN.tryMake(typeURI);
+    if (typeDxn) {
+      const staticType = target[symbolInternals].database.graph.schemaRegistry.getSchemaByDXN(typeDxn);
+      if (staticType != null) {
+        return staticType;
+      }
+      const typename = DXN.getName(typeDxn);
+      const version = DXN.getVersion(typeDxn);
+      return target[symbolInternals].database.schemaRegistry
+        .query({ typename, ...(version ? { version } : {}) })
+        .runSync()[0];
+    }
+    // EchoURI-typed: look up the persisted Type entity by id.
+    const echoUri = EchoURI.tryParse(typeURI);
+    if (echoUri) {
+      const id = EchoURI.getObjectId(echoUri);
+      if (id) {
+        return target[symbolInternals].database.schemaRegistry.getSchemaById(id);
+      }
+    }
+    return undefined;
   }
 
   getSchema(target: ProxyTarget): Schema.Schema.AnyNoContext | undefined {
@@ -1294,7 +1340,7 @@ const validateSchema = (schema: Schema.Schema.AnyNoContext) => {
   const dxn = getSchemaURI(schema);
   invariant(dxn, 'Schema must be defined via TypedObject.');
   const entityKind = getEntityKind(schema);
-  invariant(entityKind === 'object' || entityKind === 'relation');
+  invariant(entityKind === 'object' || entityKind === 'relation' || entityKind === 'type');
   SchemaValidator.validateSchema(schema);
 };
 
