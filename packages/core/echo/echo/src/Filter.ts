@@ -106,7 +106,7 @@ export const id = (...ids: ObjectId[]): Any => {
  * values are under Option B), a `Schema.Union` of such entities (for filtering
  * across a union of ECHO types), or a non-qualified typename string.
  */
-export function type<T extends TypeNs.AnyType>(
+export function type<T extends TypeNs.Type<any>>(
   type: T,
   props?: Props<TypeNs.InstanceType<T>>,
 ): Filter<TypeNs.InstanceType<T>>;

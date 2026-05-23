@@ -487,13 +487,13 @@ export const select = <F extends Filter.Any>(filter: F): Query<Filter.Type<F>> =
  * Shorthand for: `Query.select(Filter.type(schema, predicates))`.
  */
 export const type: {
-  <T extends TypeNs.AnyType>(
+  <T extends TypeNs.Type<any>>(
     type: T,
     predicates?: Filter.Props<TypeNs.InstanceType<T>>,
   ): Query<TypeNs.InstanceType<T>>;
   (schema: string, predicates?: Filter.Props<unknown>): Query<any>;
 } = (
-  schema: TypeNs.AnyType | string,
+  schema: TypeNs.Type<any> | string,
   predicates?: Filter.Props<unknown>,
 ): Any => {
   return new QueryClass({
