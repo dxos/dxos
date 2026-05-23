@@ -5,12 +5,14 @@
 import React, { type KeyboardEvent, useCallback, useMemo, useState } from 'react';
 
 import { ScrollArea, ThemedClassName } from '@dxos/react-ui';
-import { Focus, Mosaic } from '@dxos/react-ui-mosaic';
+import { Focus, Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { composable, composableProps } from '@dxos/ui-theme';
 
 import { type Segment } from '#types';
 
 import { SegmentTile, type SegmentCardActionHandler } from '../SegmentCard/SegmentCard';
+
+type SegmentTileData = { segment: Segment.Segment; onAction?: SegmentCardActionHandler };
 
 export type SegmentStackProps = ThemedClassName<{
   id: string;
@@ -18,10 +20,17 @@ export type SegmentStackProps = ThemedClassName<{
   currentId?: string;
   selectedIds?: ReadonlySet<string>;
   onAction?: SegmentCardActionHandler;
+  /** Tile component used for each segment row. Defaults to SegmentTile. */
+  Tile?: MosaicStackTileComponent<SegmentTileData>;
+  /** Estimated row height — should match the chosen Tile's rendered height. */
+  estimateSize?: number;
 }>;
 
 export const SegmentStack = composable<HTMLDivElement, SegmentStackProps>(
-  ({ segments = [], currentId, selectedIds, onAction, ...props }, forwardedRef) => {
+  (
+    { segments = [], currentId, selectedIds, onAction, Tile = SegmentTile, estimateSize = 96, ...props },
+    forwardedRef,
+  ) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
     const items = useMemo(() => segments.map((segment) => ({ segment, onAction })), [segments, onAction]);
 
@@ -62,12 +71,12 @@ export const SegmentStack = composable<HTMLDivElement, SegmentStackProps>(
           <ScrollArea.Root orientation='vertical' padding centered>
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
-                Tile={SegmentTile}
+                Tile={Tile}
                 items={items}
                 draggable={false}
                 getId={(item) => item.segment.id}
                 getScrollElement={() => viewport}
-                estimateSize={() => 96}
+                estimateSize={() => estimateSize}
               />
             </ScrollArea.Viewport>
           </ScrollArea.Root>

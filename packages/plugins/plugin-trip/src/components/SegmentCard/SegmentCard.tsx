@@ -103,3 +103,49 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
 });
 
 SegmentTile.displayName = 'SegmentTile';
+
+/**
+ * Compact one-line variant of SegmentTile for use in narrow panels (e.g.
+ * the TripMapView itinerary column). Same selection/current-aware Mosaic
+ * tile, but shows just: kind icon + title + primary date on a single row.
+ * No delete button; no route line.
+ */
+export const CompactSegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(
+  ({ data, location, current }, forwardedRef) => {
+    const { segment } = data;
+    const { setCurrentId, setSelected } = useMosaicContainer('CompactSegmentTile');
+
+    const handleCurrentChange = useCallback(() => {
+      setCurrentId(segment.id);
+      setSelected(segment.id, true);
+    }, [segment.id, setCurrentId, setSelected]);
+
+    const title = Segment.getTitle(segment);
+    const date = Segment.getPrimaryDate(segment);
+    const icon = Segment.kindIcon(segment.kind);
+    const isCancelled = segment.status === 'cancelled';
+
+    return (
+      <Mosaic.Tile
+        asChild
+        classNames='dx-hover dx-current dx-selected border-b border-subdued-separator'
+        id={segment.id}
+        data={data}
+        location={location}
+      >
+        <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
+          <Card.Root fullWidth border={false} ref={forwardedRef} classNames={isCancelled ? 'opacity-40' : undefined}>
+            <Card.Content>
+              <Card.Row icon={icon}>
+                <Card.Text classNames={isCancelled ? 'line-through' : undefined}>{title}</Card.Text>
+                {date && <span className='ml-auto text-xs text-description shrink-0'>{format(date, 'MMM d')}</span>}
+              </Card.Row>
+            </Card.Content>
+          </Card.Root>
+        </Focus.Item>
+      </Mosaic.Tile>
+    );
+  },
+);
+
+CompactSegmentTile.displayName = 'CompactSegmentTile';

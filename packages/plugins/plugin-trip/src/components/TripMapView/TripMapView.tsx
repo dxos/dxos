@@ -5,7 +5,7 @@
 import { format } from 'date-fns';
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Icon, IconButton, useThemeContext } from '@dxos/react-ui';
+import { IconButton, useThemeContext } from '@dxos/react-ui';
 import {
   Globe,
   type GlobeController,
@@ -17,9 +17,12 @@ import {
   useTour,
 } from '@dxos/react-ui-geo';
 import { loadTopology } from '@dxos/react-ui-geo/data';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/ui-theme';
 
 import { Segment } from '#types';
+
+import { CompactSegmentTile, type SegmentCardAction } from '../SegmentCard/SegmentCard';
+import { SegmentStack } from '../SegmentStack/SegmentStack';
 
 const initialRotation: [number, number, number] = [0, -20, 0];
 const TILT = initialRotation[1];
@@ -85,40 +88,6 @@ const distanceSq = (a: LatLng, b: LatLng): number => {
   const dLat = a.lat - b.lat;
   const dLng = a.lng - b.lng;
   return dLat * dLat + dLng * dLng;
-};
-
-/** Compact row: kind icon, title, primary date — for the itinerary column. */
-const CompactSegmentRow = ({
-  segment,
-  active,
-  selected,
-  onClick,
-}: {
-  segment: Segment.Segment;
-  active?: boolean;
-  selected?: boolean;
-  onClick?: () => void;
-}) => {
-  const title = Segment.getTitle(segment);
-  const date = Segment.getPrimaryDate(segment);
-  const icon = Segment.kindIcon(segment.kind);
-  return (
-    <button
-      type='button'
-      onClick={onClick}
-      className={mx(
-        'flex items-center gap-2 w-full text-left px-3 py-2 rounded hover:bg-input-surface',
-        selected && 'bg-input-surface',
-        active && !selected && 'bg-attentionSurface/40',
-      )}
-    >
-      <Icon icon={icon} size={4} />
-      <div className='flex-1 min-w-0'>
-        <div className='text-sm truncate'>{title}</div>
-        {date && <div className='text-xs text-description'>{format(date, 'MMM d, p')}</div>}
-      </div>
-    </button>
-  );
 };
 
 export type TripMapViewProps = {
@@ -276,6 +245,16 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
       controller.setRotation([lambda, TILT, 0]);
     }, [controller, segments, selectedSegmentId]);
 
+    // Bridge SegmentStack actions to the parent's selection callback.
+    const handleStackAction = useCallback(
+      (action: SegmentCardAction) => {
+        if (action.type === 'current' || action.type === 'select') {
+          onSelect?.(action.segmentId);
+        }
+      },
+      [onSelect],
+    );
+
     // Selection sync (4.3): click on the canvas → nearest segment.
     const handleSelectNearest = useCallback(
       (clientX: number, clientY: number) => {
@@ -333,21 +312,19 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
           className='flex flex-col overflow-hidden border-r border-subdued-separator bg-base-surface'
         >
           <div className='shrink-0 px-3 py-2 text-sm font-medium border-b border-subdued-separator'>Itinerary</div>
-          <div className='flex-1 overflow-y-auto p-1'>
-            {segments.length === 0 ? (
-              <div className='p-3 text-sm text-description'>No segments yet.</div>
-            ) : (
-              segments.map((segment) => (
-                <CompactSegmentRow
-                  key={segment.id}
-                  segment={segment}
-                  selected={segment.id === selectedSegmentId}
-                  active={segment.id === scrubberSegmentId}
-                  onClick={() => onSelect?.(segment.id)}
-                />
-              ))
-            )}
-          </div>
+          {segments.length === 0 ? (
+            <div className='p-3 text-sm text-description'>No segments yet.</div>
+          ) : (
+            <SegmentStack
+              id='trip-map-itinerary'
+              segments={segments}
+              currentId={selectedSegmentId}
+              onAction={handleStackAction}
+              Tile={CompactSegmentTile}
+              estimateSize={56}
+              classNames='flex-1 overflow-hidden'
+            />
+          )}
         </aside>
 
         <div className='relative overflow-hidden'>
