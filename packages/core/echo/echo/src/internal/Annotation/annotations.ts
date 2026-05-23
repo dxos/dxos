@@ -24,7 +24,7 @@ import {
   getSchema,
 } from '../common/types';
 import { getUri as getUriFromEntity } from '../Entity/api';
-import { type AnnotationHelper, createAnnotationHelper, jsonSchemaFromSource } from './util';
+import { type AnnotationHelper, createAnnotationHelper, effectSchemaFromJsonSchema, jsonSchemaFromSource } from './util';
 
 /**
  * @internal
@@ -185,12 +185,27 @@ export interface TypeAnnotation extends Schema.Schema.Type<typeof TypeAnnotation
  * @returns {@link TypeAnnotation} from a schema.
  * Schema must have been created with {@link TypedObject} or {@link TypedLink} or manually assigned an appropriate annotation.
  */
-export const getTypeAnnotation = (schema: Schema.Schema.All): TypeAnnotation | undefined => {
-  assertArgument(schema != null && schema.ast != null, 'schema', 'invalid schema');
+export const getTypeAnnotation = (
+  schema: Schema.Schema.All | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext },
+): TypeAnnotation | undefined => {
+  assertArgument(schema != null, 'schema', 'invalid schema');
+  // Allow reading the type annotation off a `Type.Type` entity — either via the
+  // hidden `StaticTypeSchemaSlot` (static Type.Obj / Type.Relation entities) or
+  // by rebuilding the Effect Schema from the persisted `jsonSchema` (kind=Type
+  // entities returned by `db.schemaRegistry.register`).
+  const slot = (schema as any)[StaticTypeSchemaSlot] as Schema.Schema.AnyNoContext | undefined;
+  const rebuilt =
+    slot == null && (schema as any)[KindId] === EntityKind.Type && (schema as any).jsonSchema != null
+      ? effectSchemaFromJsonSchema((schema as any).jsonSchema)
+      : undefined;
+  const ast = slot?.ast ?? rebuilt?.ast ?? (schema as Schema.Schema.All).ast;
+  if (ast == null) {
+    return undefined;
+  }
   return Function.flow(
     SchemaAST.getAnnotation<TypeAnnotation>(TypeAnnotationId),
     Option.getOrElse(() => undefined),
-  )(schema.ast);
+  )(ast);
 };
 
 /**

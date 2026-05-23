@@ -102,6 +102,15 @@ export const jsonSchemaFromSource = (schema: Schema.Schema.AnyNoContext, fallbac
 };
 
 /**
+ * Rebuild the Effect Schema from a persisted `Type.Type` entity's `jsonSchema`
+ * using the lazily-registered deserializer. Returns `undefined` if the
+ * deserializer hasn't been registered (avoids the import cycle).
+ */
+export const effectSchemaFromJsonSchema = (jsonSchema: any): Schema.Schema.AnyNoContext | undefined => {
+  return _fromJsonSchema?.(jsonSchema);
+};
+
+/**
  * If property is optional returns the nested property, otherwise returns the property.
  */
 // TODO(wittjosiah): Is there a way to do this as a generic?

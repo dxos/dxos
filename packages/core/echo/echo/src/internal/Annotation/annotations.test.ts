@@ -8,8 +8,17 @@ import { describe, test } from 'vitest';
 import { DXN } from '@dxos/keys';
 
 import * as Type from '../../Type';
+import { createEchoSchema } from '../../testing';
 import { EchoObjectSchema } from '../Entity';
-import { LabelAnnotation, TypenameSchema, VersionSchema, getLabelWithSchema } from './annotations';
+import { EntityKind } from '../common/types';
+import {
+  LabelAnnotation,
+  SystemTypeAnnotation,
+  TypenameSchema,
+  VersionSchema,
+  getLabelWithSchema,
+  getTypeAnnotation,
+} from './annotations';
 
 // TODO(dmaretskyi): Use one of the testing schemas.
 const TestObject = Schema.Struct({
@@ -138,6 +147,41 @@ describe('annotations', () => {
       } as unknown as TestEchoSchema;
 
       expect(getLabelWithSchema(TestEchoSchema, obj)).toEqual('Primary Name');
+    });
+  });
+
+  // Regression: plugin-space's `userSchemas` filter (extensions/types.ts) calls
+  // `getTypeAnnotation(schema)` for every schema the registry returns. After the
+  // Option B refactor where `Type.object(...)` yields a `Type.Obj` entity (not a
+  // Schema), passing the entity directly threw `Invalid argument 'schema': invalid schema`
+  // because the entity carries its AST on a hidden `StaticTypeSchemaSlot`,
+  // not on `.ast`. That blew up the filter and made the entire Database subgraph
+  // render empty — only the database-stored `Type.Type` entities (whose
+  // `.ast` happens to exist via JsonSchema rehydration upstream) survived.
+  describe('getTypeAnnotation on Type entities', () => {
+    test('returns TypeAnnotation for a static Type.Obj entity (no .ast, has StaticTypeSchemaSlot)', ({ expect }) => {
+      // TestEchoSchema is a `Type.Obj` entity produced by `EchoObjectSchema(DXN)`.
+      const annotation = getTypeAnnotation(TestEchoSchema as any);
+      expect(annotation).toBeDefined();
+      expect(annotation?.kind).toBe(EntityKind.Object);
+      expect(annotation?.typename).toBe('org.dxos.type.test');
+    });
+
+    test('returns TypeAnnotation for a persisted Type.Type entity (no slot, has jsonSchema)', ({ expect }) => {
+      // createEchoSchema produces a kind=Type entity rebuilt from jsonSchema,
+      // with no StaticTypeSchemaSlot — only `jsonSchema`.
+      const persisted = createEchoSchema(TestEchoSchema as any);
+      const annotation = getTypeAnnotation(persisted as any);
+      expect(annotation).toBeDefined();
+      expect(annotation?.typename).toBe('org.dxos.type.test');
+    });
+
+    test('SystemTypeAnnotation.get works on a Type.Obj entity', ({ expect }) => {
+      // Mirrors the call at plugin-space/types.ts:90 that gated user-visible
+      // schemas. Should yield Option.none() / falsy for non-system types.
+      const value = SystemTypeAnnotation.get(TestEchoSchema as any);
+      // Option.isNone or false-by-default — either way must not throw.
+      expect(value).toBeDefined();
     });
   });
 });
