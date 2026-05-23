@@ -7,6 +7,7 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
+import { Format } from '@dxos/echo/internal';
 import { Icon, Panel, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -47,8 +48,8 @@ const FlightProperties = Schema.Struct({
   flightNumber: Schema.optional(Schema.String.annotations({ title: 'Flight number' })),
   originCode: Schema.optional(Schema.String.annotations({ title: 'From' })),
   destinationCode: Schema.optional(Schema.String.annotations({ title: 'To' })),
-  departAt: Schema.optional(Schema.String.annotations({ title: 'Departs' })),
-  arriveAt: Schema.optional(Schema.String.annotations({ title: 'Arrives' })),
+  departAt: Schema.optional(Format.DateTime.annotations({ title: 'Departs' })),
+  arriveAt: Schema.optional(Format.DateTime.annotations({ title: 'Arrives' })),
   cabin: Schema.optional(Segment.Cabin.annotations({ title: 'Cabin' })),
   seat: Schema.optional(Schema.String.annotations({ title: 'Seat' })),
 });
@@ -102,8 +103,8 @@ const LodgingProperties = Schema.Struct({
   chain: Schema.optional(Schema.String.annotations({ title: 'Chain' })),
   city: Schema.optional(Schema.String.annotations({ title: 'City' })),
   roomType: Schema.optional(Schema.String.annotations({ title: 'Room type' })),
-  checkIn: Schema.optional(Schema.String.annotations({ title: 'Check-in' })),
-  checkOut: Schema.optional(Schema.String.annotations({ title: 'Check-out' })),
+  checkIn: Schema.optional(Format.DateTime.annotations({ title: 'Check-in' })),
+  checkOut: Schema.optional(Format.DateTime.annotations({ title: 'Check-out' })),
 });
 type LodgingProperties = Schema.Schema.Type<typeof LodgingProperties>;
 
