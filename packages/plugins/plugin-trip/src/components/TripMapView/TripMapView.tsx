@@ -23,6 +23,8 @@ import { CompactSegmentTile, type SegmentCardAction } from '../SegmentCard/Segme
 import { SegmentStack } from '../SegmentStack/SegmentStack';
 
 const initialRotation: [number, number, number] = [0, -20, 0];
+const initialZoom = 1.2;
+const selectedZoom = 2.5;
 
 type LatLng = { lat: number; lng: number };
 
@@ -156,7 +158,7 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
         return;
       }
       lastRecenterRef.current = selectedSegmentId;
-      flyTo(point);
+      flyTo({ ...point, zoom: selectedZoom });
     }, [controller, segments, selectedSegmentId, flyTo]);
 
     // Bridge SegmentStack actions to the parent's selection callback.
@@ -242,7 +244,7 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
         </aside>
 
         <div className='relative overflow-hidden'>
-          <Globe.Root classNames='absolute inset-0' zoom={1.2} rotation={initialRotation}>
+          <Globe.Root classNames='absolute inset-0' zoom={initialZoom} rotation={initialRotation}>
             <Globe.Canvas ref={setController} topology={topology} styles={styles} features={features} />
             <Globe.Zoom onAction={handleZoom} />
           </Globe.Root>

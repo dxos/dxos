@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { selection as d3Selection, geoDistance } from 'd3';
+import { selection as d3Selection, geoDistance, interpolateNumber } from 'd3';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import versor from 'versor';
 
@@ -21,11 +21,17 @@ export type FlyToOptions = {
   tilt?: number;
 };
 
+export type FlyToTarget = {
+  /** Optional zoom factor; interpolated alongside rotation when set. */
+  zoom?: number;
+} & LatLngLiteral;
+
 /**
  * Returns a `flyTo` function that smoothly animates the globe's rotation
- * to a target lat/lng using d3 transition + versor.interpolate for
- * great-circle motion. Calling `flyTo` again interrupts the previous
- * animation. The hook cleans up the pending transition on unmount.
+ * (and optionally zoom) to a target lat/lng using d3 transition +
+ * versor.interpolate for great-circle motion. Calling `flyTo` again
+ * interrupts the previous animation. The hook cleans up the pending
+ * transition on unmount.
  */
 export const useFlyTo = (controller?: GlobeController | null, options: FlyToOptions = {}) => {
   const selection = useMemo(() => d3Selection(), []);
@@ -40,12 +46,12 @@ export const useFlyTo = (controller?: GlobeController | null, options: FlyToOpti
   );
 
   return useCallback(
-    (target: LatLngLiteral) => {
+    (target: FlyToTarget) => {
       if (!controller) {
         return;
       }
 
-      const { projection, setRotation } = controller;
+      const { projection, setRotation, setZoom, zoom: currentZoom } = controller;
       const { duration = defaultDuration, tilt } = optionsRef.current;
 
       const p2 = geoToPosition(target);
@@ -58,13 +64,19 @@ export const useFlyTo = (controller?: GlobeController | null, options: FlyToOpti
       const distance = geoDistance(p1, p2);
       const iv = versor.interpolate(r1, r2);
 
+      const targetZoom = target.zoom;
+      const iz = targetZoom !== undefined ? interpolateNumber(currentZoom, targetZoom) : undefined;
+
       selection.interrupt(TRANSITION_NAME);
       selection
         .transition(TRANSITION_NAME)
         .duration(Math.max(duration, distance * 1_500))
-        .tween('rotate', () => (t: number) => {
+        .tween('flyTo', () => (t: number) => {
           projection.rotate(iv(t));
           setRotation(projection.rotate() as [number, number, number]);
+          if (iz) {
+            setZoom(iz(t));
+          }
         });
     },
     [controller, selection],
