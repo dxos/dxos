@@ -5,7 +5,7 @@
 import { mx } from '@dxos/ui-theme';
 import { type AllowedAxis, type ComponentFunction, type Theme } from '@dxos/ui-types';
 
-import { withColumn } from '../../primitives/Column/Column.theme';
+import { withColumn } from '../Column/Column.theme';
 
 /**
  * Scrollbar sizing presets keyed by density tier.

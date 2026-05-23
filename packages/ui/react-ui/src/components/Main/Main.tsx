@@ -28,9 +28,9 @@ import { useForwardedRef, useMediaQuery } from '@dxos/react-hooks';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { useThemeContext } from '../../hooks';
+import { type Label, toLocalizedString, useTranslation } from '../../primitives/ThemeProvider';
 import { type MainStyleProps } from '../../theme';
 import { type ThemedClassName } from '../../util';
-import { type Label, toLocalizedString, useTranslation } from '../ThemeProvider';
 import { useSwipeToDismiss } from './useSwipeToDismiss';
 
 const MAIN_NAME = 'Main';

@@ -19,10 +19,10 @@ import { iconSize, mx } from '@dxos/ui-theme';
 import { type Density } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
-import { Column } from '../../primitives';
 import { composable, composableProps, slottable } from '../../util';
 import { type ThemedClassName } from '../../util';
 import { Button } from '../Button';
+import { Column } from '../Column';
 import { Icon, type IconProps } from '../Icon';
 import { Image } from '../Image';
 import {

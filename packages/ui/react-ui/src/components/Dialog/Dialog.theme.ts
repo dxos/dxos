@@ -5,7 +5,7 @@
 import { mx } from '@dxos/ui-theme';
 import { type ComponentFunction, type Elevation, type Theme } from '@dxos/ui-types';
 
-import { withColumn } from '../../primitives/Column/Column.theme';
+import { withColumn } from '../Column/Column.theme';
 
 export type DialogSize = 'sm' | 'md' | 'lg' | 'xl';
 

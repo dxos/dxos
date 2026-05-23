@@ -9,6 +9,7 @@ import { breadcrumbTheme } from '../components/Breadcrumb/Breadcrumb.theme';
 import { buttonTheme } from '../components/Button/Button.theme';
 import { iconButtonTheme } from '../components/Button/IconButton.theme';
 import { cardTheme } from '../components/Card/Card.theme';
+import { columnTheme } from '../components/Column/Column.theme';
 import { dialogTheme } from '../components/Dialog/Dialog.theme';
 import { focusTheme } from '../components/Focus/Focus.theme';
 import { iconTheme } from '../components/Icon/Icon.theme';
@@ -19,6 +20,7 @@ import { treegridTheme } from '../components/List/Treegrid.theme';
 import { mainTheme } from '../components/Main/Main.theme';
 import { menuTheme } from '../components/Menu/Menu.theme';
 import { messageTheme } from '../components/Message/Message.theme';
+import { panelTheme } from '../components/Panel/Panel.theme';
 import { popoverTheme } from '../components/Popover/Popover.theme';
 import { scrollAreaTheme } from '../components/ScrollArea/ScrollArea.theme';
 import { selectTheme } from '../components/Select/Select.theme';
@@ -30,8 +32,6 @@ import { tagTheme } from '../components/Tag/Tag.theme';
 import { toastTheme } from '../components/Toast/Toast.theme';
 import { toolbarTheme } from '../components/Toolbar/Toolbar.theme';
 import { tooltipTheme } from '../components/Tooltip/Tooltip.theme';
-import { columnTheme } from '../primitives/Column/Column.theme';
-import { panelTheme } from '../primitives/Panel/Panel.theme';
 import { bindTheme } from './bindTheme';
 
 export const defaultTheme: Theme<Record<string, any>> = {

@@ -10,7 +10,7 @@ import { withLayout, withTheme } from '../../testing';
 import { ThemeProvider } from './ThemeProvider';
 
 const meta = {
-  title: 'ui/react-ui-core/components/ThemeProvider',
+  title: 'ui/react-ui-core/primitives/ThemeProvider',
   component: ThemeProvider,
   render: () => {
     const { themeMode, platform } = useThemeContext();

@@ -7,10 +7,10 @@ import { createContext } from '@radix-ui/react-context';
 import React, { type ForwardRefExoticComponent, type FunctionComponent, forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
-import { Column } from '../../primitives';
+import { ElevationProvider } from '../../primitives/ElevationProvider';
 import { type DialogSize } from '../../theme';
 import { type ThemedClassName } from '../../util';
-import { ElevationProvider } from '../ElevationProvider';
+import { Column } from '../Column';
 import {
   Dialog,
   type DialogHeaderProps,

@@ -7,7 +7,8 @@ import React from 'react';
 
 import { type ThemeMode } from '@dxos/ui-types';
 
-import { type ThemeContextValue, ThemeProvider, Tooltip } from '../../components';
+import { Tooltip } from '../../components';
+import { type ThemeContextValue, ThemeProvider } from '../../primitives';
 import { defaultTx } from '../../theme';
 
 /**

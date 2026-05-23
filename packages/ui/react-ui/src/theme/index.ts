@@ -33,5 +33,5 @@ export * from '../components/Tag/Tag.theme';
 export * from '../components/Toast/Toast.theme';
 export * from '../components/Toolbar/Toolbar.theme';
 export * from '../components/Tooltip/Tooltip.theme';
-export * from '../primitives/Column/Column.theme';
-export * from '../primitives/Panel/Panel.theme';
+export * from '../components/Column/Column.theme';
+export * from '../components/Panel/Panel.theme';

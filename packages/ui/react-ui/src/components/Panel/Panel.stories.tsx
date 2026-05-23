@@ -52,7 +52,7 @@ const DefaultStory = () => {
 };
 
 const meta: Meta = {
-  title: 'ui/react-ui-core/primitives/Panel',
+  title: 'ui/react-ui-core/components/Panel',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
