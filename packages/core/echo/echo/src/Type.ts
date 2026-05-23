@@ -519,7 +519,7 @@ export interface Mutable {
  * a `Type.Type` outside `Type.update` throws at runtime, mirroring `Obj.update`.
  * Delegates to the same automerge-transaction primitive `Obj.update(obj, cb)` uses.
  */
-export const update = (type: Type, callback: (mutable: Mutable) => void): void => {
+export const update = (type: AnyType, callback: (mutable: Mutable) => void): void => {
   // `Type.Type` is an ECHO object; the change machinery is the same as `Obj.update`.
   internal.change(type as any, callback as (draft: any) => void);
 };
@@ -535,7 +535,7 @@ export const update = (type: Type, callback: (mutable: Mutable) => void): void =
  * Replace the typename on a persisted type.
  * @throws if the type is not persisted.
  */
-export const updateTypename = (type: Type, typename: string): void => {
+export const updateTypename = (type: AnyType, typename: string): void => {
   const updated = typeInternal.setTypenameInSchema(getSchema(type), typename);
   update(type, (draft) => {
     draft.typename = typename;
@@ -547,7 +547,7 @@ export const updateTypename = (type: Type, typename: string): void => {
  * Add fields to a persisted type's schema.
  * @throws if the type is not persisted.
  */
-export const addFields = (type: Type, fields: Schema.Struct.Fields): void => {
+export const addFields = (type: AnyType, fields: Schema.Struct.Fields): void => {
   const extended = typeInternal.addFieldsToSchema(getSchema(type), fields);
   update(type, (draft) => {
     draft.jsonSchema = internal.toJsonSchema(extended);
@@ -558,7 +558,7 @@ export const addFields = (type: Type, fields: Schema.Struct.Fields): void => {
  * Replace existing fields on a persisted type's schema.
  * @throws if the type is not persisted.
  */
-export const updateFields = (type: Type, fields: Schema.Struct.Fields): void => {
+export const updateFields = (type: AnyType, fields: Schema.Struct.Fields): void => {
   const updated = typeInternal.updateFieldsInSchema(getSchema(type), fields);
   update(type, (draft) => {
     draft.jsonSchema = internal.toJsonSchema(updated);
@@ -583,7 +583,7 @@ export const updateFieldPropertyName = (
  * Remove fields from a persisted type's schema.
  * @throws if the type is not persisted.
  */
-export const removeFields = (type: Type, fieldNames: string[]): void => {
+export const removeFields = (type: AnyType, fieldNames: string[]): void => {
   const removed = typeInternal.removeFieldsFromSchema(getSchema(type), fieldNames);
   update(type, (draft) => {
     draft.jsonSchema = internal.toJsonSchema(removed);

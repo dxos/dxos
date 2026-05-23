@@ -165,7 +165,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
       test('getSchemaURI', async () => {
         const obj = await createObject({ number: 42 });
-        const schema = Obj.getSchema(obj);
+        const schema = Obj.getType(obj);
         expect(Obj.getTypeURI(obj)?.toString()).to.deep.eq(schema && getSchemaURI(schema)?.toString());
       });
 

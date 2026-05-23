@@ -95,7 +95,7 @@ describe('Query', () => {
     let db: EchoDatabase;
 
     beforeEach(async () => {
-      ({ db } = await builder.createDatabase({ types: [...Dataset.Dataset.members] }));
+      ({ db } = await builder.createDatabase({ types: [Feed.Feed, Collection.Collection, View.View] }));
       createTestObjects().forEach((object) => db.add(object));
       await db.flush();
     });

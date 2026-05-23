@@ -7,7 +7,7 @@ import { afterEach, assert, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Filter, Obj, Query, Relation, Type } from '@dxos/echo';
+import { Entity, Filter, Obj, Query, Relation, Type } from '@dxos/echo';
 import { MeshEchoReplicator } from '@dxos/echo-pipeline';
 import {
   TestReplicationNetwork,
@@ -518,7 +518,7 @@ describe('Integration tests', () => {
         await using db = await peer.openDatabase(spaceKey, rootUrl);
         const objects = await db.query(Query.select(Filter.typeURI(schemaDxn))).run();
         expect(objects.length).to.eq(1);
-        expect(getTypeAnnotation(Obj.getType(objects[0])!)).to.include({
+        expect(getTypeAnnotation(Type.getSchema(Obj.getType(objects[0])!))).to.include({
           typename: 'com.example.type.test',
           version: '0.1.0',
         });
@@ -532,7 +532,7 @@ describe('Integration tests', () => {
 
         const objects = await db.query(Filter.type(schema!)).run();
         expect(objects.length).to.eq(1);
-        expect(getTypeAnnotation(Obj.getType(objects[0])!)).to.include({
+        expect(getTypeAnnotation(Type.getSchema(Entity.getType(objects[0])!))).to.include({
           typename: 'com.example.type.test',
           version: '0.1.0',
         });

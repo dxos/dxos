@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { EchoTestBuilder } from '../testing';
 
 // Helper: introspect Type.Type properties via its rebuilt Effect Schema.
-const getSchemaProperties = (type: Type.Type): SchemaAST.PropertySignature[] => {
+const getSchemaProperties = (type: Type.AnyType): SchemaAST.PropertySignature[] => {
   const ast = Type.getSchema(type).ast;
   invariant(SchemaAST.isTypeLiteral(ast));
   return [...ast.propertySignatures].filter((p) => p.name !== 'id');
@@ -185,13 +185,13 @@ describe('schema registry', () => {
 
   test('is registered if was stored in db', async () => {
     const { db, registry } = await setupTest();
-    const schemaToStore = Obj.make(Type.Type, {
+    const schemaToStore = Type.makeObject({
       typename: 'com.example.type.test',
       version: '0.1.0',
       jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ field: Schema.Number })),
     });
-    expect(registry.hasSchema(schemaToStore)).to.be.false;
-    const persistentSchema = db.add(schemaToStore);
+    expect(registry.hasSchema(schemaToStore as any)).to.be.false;
+    const persistentSchema = db.add(schemaToStore as any);
     expect(registry.hasSchema(persistentSchema)).to.be.true;
   });
 
@@ -257,14 +257,14 @@ describe('schema registry', () => {
     const { db } = await setupTest();
     const TestSchema = makeTestSchema();
     const [schema] = await db.schemaRegistry.register([TestSchema]);
-    const object = db.add(
+    const object: any = db.add(
       Obj.make(schema, {
         name: 'Test',
       }),
     );
 
     Type.addFields(schema, { newField: Schema.String });
-    Obj.update(object, (object) => {
+    Obj.update(object, (object: any) => {
       object.newField = 'Test3';
     });
     expect(object.newField).toEqual('Test3');

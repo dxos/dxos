@@ -116,29 +116,38 @@ describe('ECHO specific proxy properties with schema', () => {
 });
 
 describe('without database', () => {
-  const TestSchema = Schema.Struct({
+  interface TestSchema extends Obj.Unknown {
+    readonly text?: string;
+    readonly nested: {
+      readonly name?: string;
+      readonly arr?: readonly string[];
+      readonly ref?: Ref.Ref<TestSchema>;
+    };
+  }
+
+  const TestSchema: Type.Obj<TestSchema> = Schema.Struct({
     text: Schema.optional(Schema.String),
     nested: Schema.Struct({
       name: Schema.optional(Schema.String),
       arr: Schema.optional(Schema.Array(Schema.String)),
       ref: Schema.optional(Schema.suspend((): RefSchema<TestSchema> => Ref.Ref(TestSchema))),
     }),
-  }).pipe(EchoObjectSchema(DXN.make('com.example.type.test', '0.1.0')));
-
-  interface TestSchema extends Schema.Schema.Type<typeof TestSchema> {}
+  }).pipe(EchoObjectSchema(DXN.make('com.example.type.test', '0.1.0'))) as any;
 
   test('get schema on object', () => {
     const obj = createObject(Obj.make(TestSchema, { nested: { name: 'foo', arr: [] } }));
-    const schema = Obj.getType(obj);
-    expect(schema).to.exist;
-    expect(prepareAstForCompare(schema!.ast)).to.deep.eq(prepareAstForCompare(TestSchema.ast));
+    const type = Obj.getType(obj);
+    expect(type).to.exist;
+    expect(prepareAstForCompare(Type.getSchema(type!).ast)).to.deep.eq(
+      prepareAstForCompare(Type.getSchema(TestSchema).ast),
+    );
   });
 
   // TODO(dmaretskyi): Fix -- right now we always return the root schema.
   test.skip('get schema on nested object', () => {
     const obj = createObject(Obj.make(TestSchema, { nested: { name: 'foo', arr: [] } }));
-    const NestedSchema = TestSchema.pipe(Schema.pluck('nested'), Schema.typeSchema);
-    expect(prepareAstForCompare(Obj.getType(obj.nested as Obj.Unknown)!.ast)).to.deep.eq(
+    const NestedSchema = Type.getSchema(TestSchema).pipe(Schema.pluck('nested'), Schema.typeSchema);
+    expect(prepareAstForCompare(Type.getSchema(Obj.getType(obj.nested as Obj.Unknown)!).ast)).to.deep.eq(
       prepareAstForCompare(NestedSchema.ast),
     );
   });

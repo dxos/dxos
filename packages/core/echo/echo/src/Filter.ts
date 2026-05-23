@@ -245,11 +245,11 @@ export const text = (
 /**
  * Filter by foreign keys.
  */
-export const foreignKeys = <S extends Schema.Schema.All>(
-  schema: S | string,
+export const foreignKeys = <S extends TypeNs.AnyType | string>(
+  schema: S,
   keys: ForeignKey[],
-): Filter<Schema.Schema.Type<S>> => {
-  const uri = internal.getTypeURIFromSpecifier(schema);
+): Filter<S extends TypeNs.AnyType ? TypeNs.InstanceType<S> : unknown> => {
+  const uri = internal.getTypeURIFromSpecifier(schema as any);
   return new FilterClass({
     type: 'object',
     typename: uri,

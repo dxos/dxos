@@ -282,6 +282,8 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
   }
 
   // TODO(burdon): Tighten type signature to TypedObject?
+  async register<T extends Type.AnyType>(input: T[]): Promise<T[]>;
+  async register(input: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.Type[]>;
   async register(inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.Type[]> {
     const results: Type.Type[] = [];
 
