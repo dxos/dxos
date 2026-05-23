@@ -3,26 +3,26 @@
 //
 
 import { format } from 'date-fns';
-import React, { type ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Icon, IconButton } from '@dxos/react-ui';
-import { Globe, type GlobeController, useDrag, useGlobeZoomHandler, useTour } from '@dxos/react-ui-geo';
+import { Icon, IconButton, useThemeContext } from '@dxos/react-ui';
+import {
+  Globe,
+  type GlobeController,
+  geoToPosition,
+  globeStyles,
+  positionToRotation,
+  useDrag,
+  useGlobeZoomHandler,
+  useTour,
+} from '@dxos/react-ui-geo';
 import { loadTopology } from '@dxos/react-ui-geo/data';
 import { composable, composableProps, mx } from '@dxos/ui-theme';
 
 import { Segment } from '#types';
 
-// const mapStyles = {
-//   water: { fillStyle: '#0a0a0a' },
-//   land: { fillStyle: '#262626', strokeStyle: '#1a1a1a' },
-//   border: { strokeStyle: '#1a1a1a' },
-//   graticule: { strokeStyle: '#111' },
-//   line: { lineWidth: 1.5, lineDash: [4, 8], strokeStyle: '#60a5fa' },
-//   point: { pointRadius: 3, fillStyle: '#f59e0b' },
-//   arc: { lineWidth: 2, strokeStyle: '#60a5fa' },
-// };
-
 const initialRotation: [number, number, number] = [0, -20, 0];
+const TILT = initialRotation[1];
 
 type LatLng = { lat: number; lng: number };
 
@@ -149,8 +149,10 @@ export type TripMapViewProps = {
  */
 export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
   ({ segments, selectedSegmentId, onSelect, ...props }, forwardedRef) => {
+    const { themeMode } = useThemeContext();
     const [topology, setTopology] = useState<Awaited<ReturnType<typeof loadTopology>>>();
     const [controller, setController] = useState<GlobeController | null>();
+    const styles = useMemo(() => globeStyles(themeMode), [themeMode]);
 
     useEffect(() => {
       void loadTopology().then(setTopology);
@@ -216,18 +218,63 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
       // Reset scrubber when the time range changes.
       setScrubMs(undefined);
     }, [range?.min, range?.max]);
-    const activeIds = useMemo(() => {
+
+    /**
+     * Pick the segment whose interval contains the scrubber's current value.
+     * If multiple overlap (e.g. a flight during a hotel stay), prefer the
+     * one with the latest start so the more specific (shorter) segment
+     * "wins" and the user sees the in-flight focus.
+     */
+    const scrubberSegmentId = useMemo(() => {
       if (scrubMs === undefined) {
-        return new Set<string>();
+        return undefined;
       }
-      const active = new Set<string>();
+      let bestId: string | undefined;
+      let bestStart = -Infinity;
       for (const { id, interval } of intervals) {
-        if (scrubMs >= interval.start && scrubMs <= interval.end) {
-          active.add(id);
+        if (scrubMs >= interval.start && scrubMs <= interval.end && interval.start >= bestStart) {
+          bestId = id;
+          bestStart = interval.start;
         }
       }
-      return active;
+      return bestId;
     }, [intervals, scrubMs]);
+
+    // Drive the parent's selection from the scrubber: when the active segment
+    // changes (as the user drags), notify via onSelect. We don't want to fire
+    // continuously while sitting on the same active segment.
+    const lastScrubSelectionRef = useRef<string | undefined>(undefined);
+    useEffect(() => {
+      if (scrubberSegmentId && scrubberSegmentId !== lastScrubSelectionRef.current) {
+        lastScrubSelectionRef.current = scrubberSegmentId;
+        onSelect?.(scrubberSegmentId);
+      }
+    }, [scrubberSegmentId, onSelect]);
+
+    /**
+     * Recenter the globe on the selected segment's first geo-tagged point
+     * whenever the selection changes (either from the scrubber driving
+     * onSelect or from external sources like the SegmentArticle companion).
+     * Preserves the locked tilt by re-applying it as the second axis of the
+     * rotation.
+     */
+    const lastRecenterRef = useRef<string | undefined>(undefined);
+    useEffect(() => {
+      if (!controller || !selectedSegmentId) {
+        return;
+      }
+      if (lastRecenterRef.current === selectedSegmentId) {
+        return;
+      }
+      const segment = segments.find((s) => s.id === selectedSegmentId);
+      const point = segment ? segmentPoints(segment)[0] : undefined;
+      if (!point) {
+        return;
+      }
+      lastRecenterRef.current = selectedSegmentId;
+      const [lambda] = positionToRotation(geoToPosition(point));
+      controller.setRotation([lambda, TILT, 0]);
+    }, [controller, segments, selectedSegmentId]);
 
     // Selection sync (4.3): click on the canvas → nearest segment.
     const handleSelectNearest = useCallback(
@@ -295,7 +342,7 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
                   key={segment.id}
                   segment={segment}
                   selected={segment.id === selectedSegmentId}
-                  active={activeIds.has(segment.id)}
+                  active={segment.id === scrubberSegmentId}
                   onClick={() => onSelect?.(segment.id)}
                 />
               ))
@@ -305,7 +352,7 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
 
         <div className='relative overflow-hidden'>
           <Globe.Root classNames='absolute inset-0' zoom={1.2} rotation={initialRotation}>
-            <Globe.Canvas ref={setController} topology={topology} features={features} />
+            <Globe.Canvas ref={setController} topology={topology} styles={styles} features={features} />
             <Globe.Zoom onAction={handleZoom} />
           </Globe.Root>
 
