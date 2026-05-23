@@ -602,9 +602,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     // `dxn:queue:…` look like DXNs by prefix but are not parseable as typename DXNs.
     const typeDxn = DXN.tryMake(typeURI);
     if (typeDxn) {
-      const staticSchema = target[symbolInternals].database.graph.schemaRegistry.getSchemaByDXN(typeDxn);
-      if (staticSchema != null) {
-        return Type.isType(staticSchema) ? Type.getSchema(staticSchema) : staticSchema;
+      const staticType = target[symbolInternals].database.graph.schemaRegistry.getSchemaByDXN(typeDxn);
+      if (staticType != null) {
+        return Type.getSchema(staticType) as any;
       }
       // Skip protobuf types as they are runtime registered types.
       if (DXN.getName(typeDxn)?.startsWith('protobuf')) {
@@ -1126,9 +1126,9 @@ export const isTypedObjectProxy = (value: any): value is any => {
     return true;
   }
 
-  const schema = Obj.getSchema(value);
-  if (schema != null) {
-    return !!getTypeAnnotation(schema);
+  const type = Obj.getType(value);
+  if (type != null) {
+    return !!getTypeAnnotation(Type.getSchema(type) as any);
   }
 
   return false;
@@ -1146,7 +1146,8 @@ type CreateObjectReturn<T> = T extends Obj.Unknown ? T : Entity.Entity<T>;
 // TODO(burdon): Document lifecycle.
 export const createObject = <T extends AnyProperties>(obj: T): CreateObjectReturn<T> => {
   assertArgument(!isEchoObject(obj), 'obj', 'Object is already an ECHO object');
-  const schema = Obj.getSchema(obj as unknown as Obj.Unknown);
+  const type = Obj.getType(obj as unknown as Obj.Unknown);
+  const schema = type != null ? (Type.getSchema(type) as any) : undefined;
   if (schema != null) {
     validateSchema(schema);
   }
