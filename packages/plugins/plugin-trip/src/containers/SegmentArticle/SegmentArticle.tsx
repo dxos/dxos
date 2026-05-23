@@ -8,8 +8,8 @@ import React, { useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
-import { Icon, Panel, useTranslation } from '@dxos/react-ui';
-import { Form } from '@dxos/react-ui-form';
+import { Icon, Input, Panel, useTranslation } from '@dxos/react-ui';
+import { Form, FormFieldWrapper, type FormFieldComponent } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 import { Segment, type Trip } from '#types';
@@ -37,6 +37,48 @@ const Row = ({ label, value }: { label: string; value: string }) => (
 const formatDate = (iso?: string): string | undefined => {
   const date = Segment.parseDate(iso);
   return date ? format(date, 'PPp') : undefined;
+};
+
+/** Convert an ISO string into the `YYYY-MM-DDTHH:mm` shape that <input type='datetime-local'> wants. */
+const toDateTimeLocal = (iso?: string): string => {
+  const date = Segment.parseDate(iso);
+  if (!date) {
+    return '';
+  }
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
+const fromDateTimeLocal = (value: string): string | undefined => {
+  if (!value) {
+    return undefined;
+  }
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+};
+
+/**
+ * Custom form field that renders <input type='datetime-local'> wrapped in
+ * the standard react-ui Input primitives. Used via the form's `fieldMap`
+ * for DateTime-format fields, since the default TextField only renders a
+ * plain text input.
+ */
+const DateTimeField: FormFieldComponent = ({ type, readonly, placeholder, onBlur, onValueChange, ...props }) => {
+  return (
+    <FormFieldWrapper<string> readonly={readonly} {...props}>
+      {({ value }) => (
+        <Input.TextInput
+          type='datetime-local'
+          noAutoFill
+          disabled={!!readonly}
+          placeholder={placeholder}
+          value={toDateTimeLocal(value)}
+          onBlur={onBlur}
+          onChange={(event) => onValueChange(type, fromDateTimeLocal(event.target.value) as unknown as string)}
+        />
+      )}
+    </FormFieldWrapper>
+  );
 };
 
 //
@@ -247,7 +289,7 @@ export const SegmentArticle = ({ role, subject }: SegmentArticleProps) => {
               onSave={handleFlightSave}
             >
               <Form.Content>
-                <Form.FieldSet />
+                <Form.FieldSet fieldMap={{ departAt: DateTimeField, arriveAt: DateTimeField }} />
               </Form.Content>
             </Form.Root>
           )}
@@ -261,7 +303,7 @@ export const SegmentArticle = ({ role, subject }: SegmentArticleProps) => {
               onSave={handleLodgingSave}
             >
               <Form.Content>
-                <Form.FieldSet />
+                <Form.FieldSet fieldMap={{ checkIn: DateTimeField, checkOut: DateTimeField }} />
               </Form.Content>
             </Form.Root>
           )}

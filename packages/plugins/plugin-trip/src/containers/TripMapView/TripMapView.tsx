@@ -106,7 +106,7 @@ export type TripMapViewProps = {
  * slots (e.g. inside `Panel.Content asChild`).
  */
 export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
-  ({ classNames, segments, onSelect, ...props }, forwardedRef) => {
+  ({ segments, onSelect, ...props }, forwardedRef) => {
     const [topology, setTopology] = useState<Awaited<ReturnType<typeof loadTopology>>>();
     const [controller, setController] = useState<GlobeController | null>();
 
@@ -137,7 +137,7 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
     return (
       <div
         {...composableProps(props, {
-          classNames: ['grid grid-cols-[16rem_1fr] h-full w-full overflow-hidden bg-black', classNames],
+          classNames: 'grid grid-cols-[16rem_1fr] h-full w-full overflow-hidden bg-black',
         })}
         ref={forwardedRef}
       >
