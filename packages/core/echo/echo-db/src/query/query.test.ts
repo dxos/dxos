@@ -2042,7 +2042,7 @@ describe('Query', () => {
       expect(Obj.getURI(obj)).toMatch(/^echo:\/\//);
       expect(Obj.getURI(obj)).toContain(obj.id);
       expect(Obj.getTypename(obj)).toBe(TestSchema.Task.typename);
-      expect(Obj.getSchema(obj)).toEqual(TestSchema.Task);
+      expect(Obj.getType(obj)).toEqual(TestSchema.Task);
       expect(obj.id).toEqual(task.id);
       expect(Obj.isDeleted(obj)).toBe(false);
       expect(Obj.getMeta(obj).keys).toEqual([]);

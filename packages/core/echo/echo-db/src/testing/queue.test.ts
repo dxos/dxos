@@ -68,7 +68,7 @@ describe('queues', () => {
         .resolve(EchoURI.make({ objectId: obj.id }));
       expect(resolved?.id).toEqual(obj.id);
       expect(resolved?.name).toEqual('john');
-      expect(Obj.getSchema(resolved as Obj.Unknown)).toEqual(TestSchema.Person);
+      expect(Obj.getType(resolved as Obj.Unknown)).toEqual(TestSchema.Person);
     }
   });
 

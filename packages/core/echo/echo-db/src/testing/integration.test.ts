@@ -498,7 +498,7 @@ describe('Integration tests', () => {
         const object = db.add(Obj.make(stored, { field: 'test' }));
         // After fork, the schema attached to objects is the rebuilt Effect Schema (from jsonSchema),
         // not identical to the Type.Type entity returned by register. Compare URIs instead.
-        expect(Type.getURI(Obj.getSchema(object)!)).to.eq(Type.getURI(stored));
+        expect(Type.getURI(Obj.getType(object)!)).to.eq(Type.getURI(stored));
 
         db.add(Obj.make(TestSchema.Expando, { text: 'Expando object' })); // Add Expando object to test filtering
         await db.flush();
@@ -518,7 +518,7 @@ describe('Integration tests', () => {
         await using db = await peer.openDatabase(spaceKey, rootUrl);
         const objects = await db.query(Query.select(Filter.typeURI(schemaDxn))).run();
         expect(objects.length).to.eq(1);
-        expect(getTypeAnnotation(Obj.getSchema(objects[0])!)).to.include({
+        expect(getTypeAnnotation(Obj.getType(objects[0])!)).to.include({
           typename: 'com.example.type.test',
           version: '0.1.0',
         });
@@ -532,7 +532,7 @@ describe('Integration tests', () => {
 
         const objects = await db.query(Filter.type(schema!)).run();
         expect(objects.length).to.eq(1);
-        expect(getTypeAnnotation(Obj.getSchema(objects[0])!)).to.include({
+        expect(getTypeAnnotation(Obj.getType(objects[0])!)).to.include({
           typename: 'com.example.type.test',
           version: '0.1.0',
         });
@@ -562,8 +562,8 @@ describe('Integration tests', () => {
         preloadSchemaOnOpen: false,
       });
       const [obj] = await db.query(Query.select(Filter.typeURI(typeURI))).run();
-      expect(Obj.getSchema(obj)).toBeDefined();
-      expect(Type.getTypename(Obj.getSchema(obj)!)).toEqual(TestSchema.Person.typename);
+      expect(Obj.getType(obj)).toBeDefined();
+      expect(Type.getTypename(Obj.getType(obj)!)).toEqual(TestSchema.Person.typename);
     }
   });
 

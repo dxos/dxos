@@ -129,7 +129,7 @@ describe('without database', () => {
 
   test('get schema on object', () => {
     const obj = createObject(Obj.make(TestSchema, { nested: { name: 'foo', arr: [] } }));
-    const schema = Obj.getSchema(obj);
+    const schema = Obj.getType(obj);
     expect(schema).to.exist;
     expect(prepareAstForCompare(schema!.ast)).to.deep.eq(prepareAstForCompare(TestSchema.ast));
   });
@@ -138,7 +138,7 @@ describe('without database', () => {
   test.skip('get schema on nested object', () => {
     const obj = createObject(Obj.make(TestSchema, { nested: { name: 'foo', arr: [] } }));
     const NestedSchema = TestSchema.pipe(Schema.pluck('nested'), Schema.typeSchema);
-    expect(prepareAstForCompare(Obj.getSchema(obj.nested as Obj.Unknown)!.ast)).to.deep.eq(
+    expect(prepareAstForCompare(Obj.getType(obj.nested as Obj.Unknown)!.ast)).to.deep.eq(
       prepareAstForCompare(NestedSchema.ast),
     );
   });
@@ -193,7 +193,7 @@ describe('Reactive Object with ECHO database', () => {
     expect(Obj.isSnapshot(snapshot)).to.be.true;
     expect(Entity.isSnapshot(snapshot)).to.be.true;
     expect(Relation.isSnapshot(snapshot)).to.be.false;
-    expect(Obj.getSchema(snapshot)).to.eq(TestSchema.Example);
+    expect(Obj.getType(snapshot)).to.eq(TestSchema.Example);
     expect(Obj.getURI(snapshot)).to.eq(Obj.getURI(obj));
   });
 
@@ -217,7 +217,7 @@ describe('Reactive Object with ECHO database', () => {
     const returnObj = db.add(obj);
     expect(returnObj.id).to.be.a('string');
     expect(returnObj.string).to.eq('foo');
-    expect(Obj.getSchema(returnObj)).to.eq(TestSchema.Example);
+    expect(Obj.getType(returnObj)).to.eq(TestSchema.Example);
     expect(returnObj === obj).to.be.true;
   });
 
@@ -246,7 +246,7 @@ describe('Reactive Object with ECHO database', () => {
     expect(obj.id).to.be.a('string');
     expect(obj.string).to.eq('foo');
     // Note: Schema is now tracked for all typed objects (Expando is the default schema).
-    expect(Obj.getSchema(obj)).to.eq(TestSchema.Expando);
+    expect(Obj.getType(obj)).to.eq(TestSchema.Expando);
   });
 
   test('instantiating reactive objects after a restart', async () => {
@@ -279,7 +279,7 @@ describe('Reactive Object with ECHO database', () => {
       expect(obj.id).to.eq(id);
       expect(obj.string).to.eq('foo');
 
-      expect(Obj.getSchema(obj)).to.eq(TestSchema.Example);
+      expect(Obj.getType(obj)).to.eq(TestSchema.Example);
     }
   });
 
@@ -314,7 +314,7 @@ describe('Reactive Object with ECHO database', () => {
       expect(obj.string).to.eq('foo');
 
       await peer.client.graph.schemaRegistry.register([TestSchema.Example]);
-      expect(Obj.getSchema(obj)).to.eq(TestSchema.Example);
+      expect(Obj.getType(obj)).to.eq(TestSchema.Example);
     }
   });
 

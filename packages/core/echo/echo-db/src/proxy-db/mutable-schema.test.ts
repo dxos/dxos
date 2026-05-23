@@ -113,7 +113,7 @@ describe('EchoSchema', () => {
     //   object.field2 = false;
     // }).to.throw();
 
-    expect(Obj.getSchema(object)?.ast).to.deep.eq(Type.getSchema(schema).ast);
+    expect(Obj.getType(object)?.ast).to.deep.eq(Type.getSchema(schema).ast);
     expect(Obj.getTypename(object)).to.be.eq(TestEmpty.typename);
 
     db.add(object);

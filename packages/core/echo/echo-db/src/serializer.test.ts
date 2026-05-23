@@ -220,7 +220,7 @@ describe('Serializer', () => {
         const [contact] = await db.query(Filter.type(TestSchema.Person)).run();
         expect(contact.name).to.eq(name);
         expect(Obj.instanceOf(TestSchema.Person, contact)).to.be.true;
-        expect(Obj.getSchema(contact)).to.eq(TestSchema.Person);
+        expect(Obj.getType(contact)).to.eq(TestSchema.Person);
       }
     });
 
