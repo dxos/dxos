@@ -74,15 +74,10 @@ export const Unknown: Type.Obj<Unknown> = Schema.Struct({
   id: Schema.String,
 }).pipe(
   Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
-  // TODO(dmaretskyi): Clean this up.
   // NOTE: The EchoObjectSchema annotation is required for Ref.Ref(Obj.Unknown) to work.
   //   The typename/version only satisfy ECHO schema machinery for reference targets.
   internal.EchoObjectSchema(DXN.make(internal.ANY_OBJECT_TYPENAME, internal.ANY_OBJECT_VERSION)),
-  (schema) =>
-    Object.assign(schema, {
-      [internal.SchemaKindId]: (schema as any)[internal.SchemaKindId],
-    }) as unknown as Type.Obj<Unknown>,
-);
+) as unknown as Type.Obj<Unknown>;
 
 /**
  * Object with arbitrary properties.

@@ -76,7 +76,7 @@ export const setJsonSchemaSerializer = (impl: (schema: Schema.Schema.AnyNoContex
   _toJsonSchema = impl;
 };
 
-const jsonSchemaFromSource = (schema: Schema.Schema.AnyNoContext, fallback: any): any => {
+export const jsonSchemaFromSource = (schema: Schema.Schema.AnyNoContext, fallback: any): any => {
   return _toJsonSchema?.(schema) ?? fallback;
 };
 

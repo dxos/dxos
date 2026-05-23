@@ -71,11 +71,7 @@ export const Unknown: Type.Relation<Unknown, Obj.Any, Obj.Any> = Schema.Struct({
     source: Obj.Unknown,
     target: Obj.Unknown,
   }),
-  (schema) =>
-    Object.assign(schema, {
-      [internal.SchemaKindId]: (schema as any)[internal.SchemaKindId],
-    }) as unknown as Type.Relation<Unknown, Obj.Any, Obj.Any>,
-);
+) as unknown as Type.Relation<Unknown, Obj.Any, Obj.Any>;
 
 /**
  * Relation type with specific source and target types.

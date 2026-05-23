@@ -113,20 +113,33 @@ export const makeEchoTypeSchema = <
   typename: string,
   version: string,
   kind: K,
-  jsonSchema: JsonSchemaType,
+  /**
+   * Thunk that computes the entity's `jsonSchema`. Deferred so that schemas
+   * with `Schema.suspend(...)` recursion (self-referential `Ref.Ref(Self)`)
+   * don't force evaluation of the suspended branches at construction time.
+   */
+  computeJsonSchema: () => JsonSchemaType,
 ): EchoTypeSchema<Self, {}, K, Fields> => {
   const schema = Schema.make<
     EchoTypeSchemaProps<Schema.Schema.Type<Self>>,
     EchoTypeSchemaProps<Schema.Schema.Encoded<Self>>,
     Schema.Schema.Context<Self>
   >(ast);
-  return Object.freeze({
+  let memoizedJsonSchema: JsonSchemaType | undefined;
+  const entity = {
     [KindId]: 'object' as EntityKind.Object,
     [SchemaKindId]: kind,
     [StaticTypeSchemaSlot]: schema as unknown as Schema.Schema.AnyNoContext,
     typename,
     version,
-    jsonSchema,
     fields,
-  }) as unknown as EchoTypeSchema<Self, {}, K, Fields>;
+  };
+  Object.defineProperty(entity, 'jsonSchema', {
+    configurable: true,
+    enumerable: true,
+    get() {
+      return (memoizedJsonSchema ??= computeJsonSchema());
+    },
+  });
+  return Object.freeze(entity) as unknown as EchoTypeSchema<Self, {}, K, Fields>;
 };

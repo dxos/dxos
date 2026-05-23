@@ -37,7 +37,7 @@ const TEST_ORG = { name: 'Test' } satisfies Pick<Organization, 'name'>;
 describe('EchoObjectSchema class DSL', () => {
   test('can get object schema', async () => {
     const obj = makeObject(Organization, TEST_ORG);
-    expect(getSchema(obj)).to.deep.eq(Organization);
+    expect(getSchema(obj)).to.deep.eq(Type.getSchema(Organization));
   });
 
   describe('class options', () => {

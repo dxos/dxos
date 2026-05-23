@@ -11,7 +11,7 @@ import { inspectCustom } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 
 import { getSchemaURI } from '../../Annotation';
-import { ObjectDeletedId, ParentId, SchemaId, TypeId } from '../types';
+import { ObjectDeletedId, ParentId, SchemaId, StaticTypeSchemaSlot, TypeId } from '../types';
 import { executeChange, isInChangeContext, queueNotification } from './change-context';
 import { defineHiddenProperty } from './define-hidden-property';
 import { createPropertyDeleteError } from './errors';
@@ -414,12 +414,28 @@ const setSchemaProperties = (
   }
 
   if (typeSource != null) {
-    // Install `SchemaId` as a getter so each access rebuilds the Effect Schema
-    // from the source `Type.Type` entity's current `jsonSchema`. This lets
-    // schema mutations performed via `Type.update`/`Type.addFields` propagate
-    // into validation of objects created with `Obj.make(typeEntity, ...)`.
+    // Install `SchemaId` as a getter so schema mutations performed via
+    // `Type.update` / `Type.addFields` propagate into validation of objects
+    // created with `Obj.make(typeEntity, ...)`. The getter prefers the source
+    // entity's own static schema slot when present (constant identity for
+    // static `Type.Type` entities), and falls back to rebuilding from the
+    // entity's `jsonSchema` only when no slot is available (persisted types).
+    // The rebuilt schema is memoized by the source `jsonSchema` reference so
+    // identity-based comparisons hold until the underlying schema mutates.
+    let cachedJsonSchema: any | undefined;
+    let cachedRebuilt: Schema.Schema.AnyNoContext | undefined;
     Object.defineProperty(obj, SchemaId, {
-      get: () => buildTypeSourceSchema(typeSource),
+      get: () => {
+        const slot = (typeSource as any)[StaticTypeSchemaSlot] as Schema.Schema.AnyNoContext | undefined;
+        if (slot != null) {
+          return slot;
+        }
+        if (cachedRebuilt === undefined || cachedJsonSchema !== typeSource.jsonSchema) {
+          cachedJsonSchema = typeSource.jsonSchema;
+          cachedRebuilt = buildTypeSourceSchema(typeSource);
+        }
+        return cachedRebuilt;
+      },
       enumerable: false,
       configurable: true,
     });

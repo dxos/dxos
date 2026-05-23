@@ -24,7 +24,7 @@ import {
   getSchema,
 } from '../common/types';
 import { getUri as getUriFromEntity } from '../Entity/api';
-import { type AnnotationHelper, createAnnotationHelper } from './util';
+import { type AnnotationHelper, createAnnotationHelper, jsonSchemaFromSource } from './util';
 
 /**
  * @internal
@@ -336,14 +336,34 @@ export type PropertyMetaAnnotation = {
 // TODO(wittjosiah): Align with other annotations.
 // TODO(wittjosiah): Why is this separate from FormatAnnotation?
 export const PropertyMeta = (name: string, value: PropertyMetaValue) => {
-  return <A, I, R>(self: Schema.Schema<A, I, R>): Schema.Schema<A, I, R> => {
+  return <S extends Schema.Schema.Any | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext }>(
+    input: S,
+  ): S => {
+    // Accept `Type.Type` entity inputs — annotate the underlying source
+    // schema and rebuild the entity's `jsonSchema` from it.
+    const source = (input as any)[StaticTypeSchemaSlot] as Schema.Schema.AnyNoContext | undefined;
+    if (source != null) {
+      const existingMeta = source.ast.annotations[PropertyMetaAnnotationId] as PropertyMetaAnnotation;
+      const annotatedSource = source.annotations({
+        [PropertyMetaAnnotationId]: {
+          ...existingMeta,
+          [name]: value,
+        },
+      });
+      return Object.freeze({
+        ...(input as any),
+        [StaticTypeSchemaSlot]: annotatedSource,
+        jsonSchema: jsonSchemaFromSource(annotatedSource, (input as any).jsonSchema),
+      }) as unknown as S;
+    }
+    const self = input as Schema.Schema.Any;
     const existingMeta = self.ast.annotations[PropertyMetaAnnotationId] as PropertyMetaAnnotation;
     return self.annotations({
       [PropertyMetaAnnotationId]: {
         ...existingMeta,
         [name]: value,
       },
-    });
+    }) as unknown as S;
   };
 };
 

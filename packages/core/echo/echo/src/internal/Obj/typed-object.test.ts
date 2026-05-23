@@ -18,8 +18,8 @@ const Organization = Schema.Struct({
 type Organization = Type.InstanceType<typeof Organization>;
 
 describe('EchoObjectSchema DSL', () => {
-  test('type is a valid schema', async () => {
-    expect(Schema.isSchema(Organization)).to.be.true;
+  test('type is a Type.Type entity', async () => {
+    expect(Schema.isSchema(Type.getSchema(Organization))).to.be.true;
   });
 
   test('static typename accessor', async () => {

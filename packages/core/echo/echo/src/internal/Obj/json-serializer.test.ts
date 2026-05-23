@@ -69,7 +69,7 @@ describe('Object JSON serializer', () => {
     expect(getTypeURI(contactFromJson)?.toString()).toBe(getSchemaURI(TestSchema.Person)!.toString());
     expect(getTypename(contactFromJson)).toBe(getSchemaTypename(TestSchema.Person));
     expect(getObjectEchoUri(contactFromJson)?.toString()).toEqual(getObjectEchoUri(contact)?.toString());
-    expect(getSchema(contactFromJson)).toEqual(TestSchema.Person);
+    expect(getSchema(contactFromJson)).toEqual(Type.getSchema(TestSchema.Person));
 
     expect(taskFromJson.id).toBe(task.id);
     expect(taskFromJson.title).toBe('Fix the tests');
@@ -81,7 +81,7 @@ describe('Object JSON serializer', () => {
     expect((taskFromJson as any)[RelationSourceId]).toBeUndefined();
     expect((taskFromJson as any)[RelationTargetId]).toBeUndefined();
     expect((taskFromJson as any)[MetaId]).toEqual({ keys: [] });
-    expect(getSchema(taskFromJson)).toEqual(TestSchema.Task);
+    expect(getSchema(taskFromJson)).toEqual(Type.getSchema(TestSchema.Task));
   });
 
   test('serialize with unresolved schema', async () => {

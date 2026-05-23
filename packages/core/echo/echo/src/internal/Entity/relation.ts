@@ -137,15 +137,13 @@ export const EchoRelationSchema = <Source, Target>({
       }),
     });
 
-    const schemaForJson = Schema.make(ast);
-    const jsonSchema = toJsonSchema(schemaForJson);
     return makeEchoTypeSchema<Self, EntityKind.Relation, Fields>(
       fields,
       ast,
       typename,
       version,
       EntityKind.Relation,
-      jsonSchema,
+      () => toJsonSchema(Schema.make(ast)),
     );
   };
 };
