@@ -295,6 +295,14 @@ export const getMeta = (input: AnyType | Schema.Schema.AnyNoContext): Meta | und
 };
 
 /**
+ * String key used to phantom-carry the instance type produced by a `Type.Type`.
+ * Used by `Type.InstanceType<typeof Foo>` to recover the schema instance type
+ * once `Type.object(dxn)` no longer returns a `Schema.Schema` (Option B).
+ */
+export const InstancePhantomId = '~@dxos/echo/Type.Instance' as const;
+export type InstancePhantomId = typeof InstancePhantomId;
+
+/**
  * Instance type of a `Type.Type` ECHO entity.
  *
  * A `Type.Type` is an ECHO object that holds a type definition — it is **not**
@@ -307,13 +315,16 @@ export const getMeta = (input: AnyType | Schema.Schema.AnyNoContext): Meta | und
  * when they need the underlying Schema. Schema-side APIs (`Schema.extend`,
  * `Schema.is`, etc.) require an explicit `Type.getSchema(type)` call.
  *
+ * `A` is a phantom carrying the instance type produced by `Obj.make(Foo, ...)`.
+ *
  * Merged with the `Type` const via TypeScript declaration merging.
  */
-export interface Type extends Entity.OfKind<typeof Entity.Kind.Object> {
+export interface Type<A = unknown> extends Entity.OfKind<typeof Entity.Kind.Object> {
   readonly name?: string;
   readonly typename: string;
   readonly version: string;
   readonly jsonSchema: internal.JsonSchemaType;
+  readonly [InstancePhantomId]?: A;
 }
 
 /**
@@ -327,9 +338,26 @@ export type TypeKind = 'object' | 'relation';
 export type Persistence = 'static' | 'persisted';
 
 /**
- * Convenience alias for the instance type produced by a `Type.Type`.
+ * Convenience alias for the instance type produced by a type value.
+ *
+ * Works uniformly for static schemas (created via `Type.object`/`Type.relation`)
+ * and persisted `Type.Type` entities. Prefer this over
+ * `Schema.Schema.Type<typeof Foo>` so call sites stay valid regardless of
+ * whether `Foo` is a schema or a `Type.Type` entity.
+ *
+ * Dispatches on the input shape:
+ *  - `Type<A>` entity (via the `InstancePhantomId` brand) → `A`
+ *  - Effect `Schema.Schema.All`                            → `Schema.Schema.Type<T>`
  */
-export type InstanceType<T extends AnyType> = Schema.Schema.Type<T>;
+export type InstanceType<T> = T extends { readonly [InstancePhantomId]?: infer A }
+  ? unknown extends A
+    ? T extends Schema.Schema.All
+      ? Schema.Schema.Type<T>
+      : never
+    : A
+  : T extends Schema.Schema.All
+    ? Schema.Schema.Type<T>
+    : never;
 
 /**
  * Returns the Effect Schema for a type value.
