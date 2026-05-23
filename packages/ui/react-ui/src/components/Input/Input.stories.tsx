@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 import { type MessageValence } from '@dxos/ui-types';
 
@@ -219,6 +219,53 @@ export const TextInputTypes: Story = {
         <Input.Root key={type}>
           <Input.Label>{`type="${type}"`}</Input.Label>
           <Input.TextInput type={type} placeholder={placeholder} />
+        </Input.Root>
+      ))}
+    </div>
+  ),
+};
+
+/**
+ * Calls `HTMLInputElement.showPicker()` on mount and on every focus so the
+ * native picker pops open as soon as the input gains focus. Browsers don't
+ * expose a way to "lock" the picker permanently open; this is the closest
+ * approximation for visual inspection of the picker UIs.
+ */
+const PickerOpenInput = ({ type, ...props }: React.InputHTMLAttributes<HTMLInputElement>) => {
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) {
+      return;
+    }
+    const open = () => {
+      try {
+        el.showPicker?.();
+      } catch {
+        // Some browsers reject showPicker() if not user-initiated; ignore.
+      }
+    };
+    el.addEventListener('focus', open);
+    el.focus();
+    return () => el.removeEventListener('focus', open);
+  }, []);
+  return <Input.TextInput ref={ref} type={type} {...props} />;
+};
+
+const PICKER_TYPES = ['date', 'time', 'datetime-local', 'month', 'week'] as const;
+
+/**
+ * Date/time picker variants with the native picker opened on mount (and
+ * re-opened on focus). One story per type — only one input is focused at a
+ * time, so each picker can be inspected without overlap.
+ */
+export const DateTimePickersOpen: Story = {
+  render: () => (
+    <div className='flex flex-col gap-3 min-w-[24rem]'>
+      {PICKER_TYPES.map((type) => (
+        <Input.Root key={type}>
+          <Input.Label>{`type="${type}"`}</Input.Label>
+          <PickerOpenInput type={type} />
         </Input.Root>
       ))}
     </div>
