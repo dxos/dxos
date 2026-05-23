@@ -189,3 +189,38 @@ export const Switch: Story = {
     description: 'On or off',
   },
 };
+
+/**
+ * Native HTML input types. `Input.TextInput` accepts every standard
+ * `<input type="…">` value via its `type` prop; this story exercises the most
+ * commonly used ones so the rendering across themes/browsers can be
+ * inspected at a glance.
+ */
+const TEXT_INPUT_TYPES: { type: string; placeholder: string }[] = [
+  { type: 'text', placeholder: 'Plain text' },
+  { type: 'email', placeholder: 'name@example.com' },
+  { type: 'password', placeholder: '••••••••' },
+  { type: 'search', placeholder: 'Search…' },
+  { type: 'tel', placeholder: '+1 (555) 555-5555' },
+  { type: 'url', placeholder: 'https://example.com' },
+  { type: 'number', placeholder: '42' },
+  { type: 'date', placeholder: '' },
+  { type: 'time', placeholder: '' },
+  { type: 'datetime-local', placeholder: '' },
+  { type: 'month', placeholder: '' },
+  { type: 'week', placeholder: '' },
+  { type: 'color', placeholder: '' },
+];
+
+export const TextInputTypes: Story = {
+  render: () => (
+    <div className='flex flex-col gap-3 min-w-[24rem]'>
+      {TEXT_INPUT_TYPES.map(({ type, placeholder }) => (
+        <Input.Root key={type}>
+          <Input.Label>{`type="${type}"`}</Input.Label>
+          <Input.TextInput type={type} placeholder={placeholder} />
+        </Input.Root>
+      ))}
+    </div>
+  ),
+};
