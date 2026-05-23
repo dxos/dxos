@@ -13,12 +13,12 @@ import { TestSchema } from './test-schema';
 describe('Experimental API review', () => {
   test('type checks', ({ expect }) => {
     const contact = Obj.make(TestSchema.Person, { name: 'Test' });
-    const schema = Obj.getSchema(contact) ?? raise(new Error('No schema found'));
+    const type = Obj.getType(contact) ?? raise(new Error('No type found'));
 
-    expect(Type.getTypename(schema)).to.eq(TestSchema.Person.typename);
-    expect(Type.getTypename(schema)).to.eq('com.example.type.person');
-    expect(Type.getVersion(schema)).to.eq('0.1.0');
-    expect(Type.getMeta(schema)).to.deep.eq({
+    expect(Type.getTypename(type)).to.eq(TestSchema.Person.typename);
+    expect(Type.getTypename(type)).to.eq('com.example.type.person');
+    expect(Type.getVersion(type)).to.eq('0.1.0');
+    expect(Type.getMeta(type)).to.deep.eq({
       kind: Entity.Kind.Object,
       typename: 'com.example.type.person',
       version: '0.1.0',

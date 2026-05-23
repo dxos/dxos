@@ -500,10 +500,14 @@ export const getTypeURI = (obj: Unknown | Snapshot): URI.URI => {
 };
 
 /**
- * Get the schema of the object.
- * Returns the branded ECHO schema used to create the object.
+ * Get the type entity (`Type.Obj` / `Type.Type`) the object was created from.
+ * Returns `undefined` for instances loaded without a registered type (e.g.
+ * deserialized JSON where the schema resolver returned only a raw `Schema`).
+ *
+ * To get the Effect Schema from the returned entity, use `Type.getSchema(...)`.
  */
-export const getSchema: (obj: Unknown | Snapshot) => Schema.Schema.AnyNoContext | undefined = internal.getSchema;
+export const getType = (obj: Unknown | Snapshot): Type.AnyObjectType | Type.Type | undefined =>
+  internal.getType(obj) as Type.AnyObjectType | Type.Type | undefined;
 
 /**
  * @returns The typename of the object's type.

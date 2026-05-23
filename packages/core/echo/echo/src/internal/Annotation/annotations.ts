@@ -213,7 +213,12 @@ export const getSchemaTypename = (
  * @internal
  * @returns Schema version in semver format.
  */
-export const getSchemaVersion = (schema: Schema.Schema.All): string | undefined => getTypeAnnotation(schema)?.version;
+export const getSchemaVersion = (
+  input: Schema.Schema.All | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext },
+): string | undefined => {
+  const schema = ((input as any)[StaticTypeSchemaSlot] ?? input) as Schema.Schema.All;
+  return getTypeAnnotation(schema)?.version;
+};
 
 /**
  * Gets the typename of the object without the version.

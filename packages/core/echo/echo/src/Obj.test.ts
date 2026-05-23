@@ -405,7 +405,7 @@ describe('Obj', () => {
       const cloned = Obj.clone(person);
 
       expect(Obj.instanceOf(TestSchema.Person, cloned)).toBe(true);
-      expect(Obj.getSchema(cloned)).toBe(Obj.getSchema(person));
+      expect(Obj.getType(cloned)).toBe(Obj.getType(person));
     });
   });
 

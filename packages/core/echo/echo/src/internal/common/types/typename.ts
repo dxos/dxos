@@ -30,11 +30,20 @@ export const ATTR_PARENT = '@parent';
 export const ParentId = Symbol.for('@dxos/echo/Parent');
 
 /**
- * Returns the schema for the given object if one is defined.
- *
- * @internal (Use Obj.getSchema)
+ * Reference to the object's type entity (`Type.Obj`, `Type.Relation`, or
+ * `Type.Type`). Set at instance creation by `createObject` / `makeObject`
+ * when the entity is known. Public read-back via `Obj.getType` / `Relation.getType`
+ * / `Entity.getType`.
  */
-// TODO(burdon): Narrow type.
+export const TypeEntityId = Symbol.for('@dxos/echo/TypeEntity');
+
+/**
+ * Returns the Effect Schema for the given object if one is defined.
+ *
+ * @internal
+ * Internal callers needing schema-side validation read from `SchemaId`.
+ * Public callers should use `Type.getSchema(Obj.getType(obj))` instead.
+ */
 // TODO(dmaretskyi): For echo objects, this always returns the root schema.
 export const getSchema = (obj: unknown | undefined): Schema.Schema.AnyNoContext | undefined => {
   if (obj) {
@@ -51,5 +60,30 @@ export const setSchema = (obj: any, schema: Schema.Schema.AnyNoContext): void =>
     writable: false,
     enumerable: false,
     configurable: false,
+  });
+};
+
+/**
+ * Returns the type entity (`Type.AnyType`) for the given instance, if known.
+ * Set at instance creation; may be undefined for deserialized instances where
+ * the resolver returned only an Effect Schema (no entity wrapper).
+ *
+ * @internal Re-exported via `Obj.getType` / `Relation.getType` / `Entity.getType`.
+ */
+export const getType = (obj: unknown | undefined): unknown | undefined => {
+  if (obj) {
+    return (obj as any)[TypeEntityId];
+  }
+};
+
+/**
+ * @internal
+ */
+export const setType = (obj: any, type: unknown): void => {
+  Object.defineProperty(obj, TypeEntityId, {
+    value: type,
+    writable: false,
+    enumerable: false,
+    configurable: true,
   });
 };

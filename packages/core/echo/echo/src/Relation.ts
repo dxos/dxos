@@ -172,7 +172,9 @@ export const make = <S extends Type.Relation<any, any, any, any>>(
   (props as any)[internal.RelationSourceDXNId] = sourceDXN;
   (props as any)[internal.RelationTargetDXNId] = targetDXN;
 
-  return internal.makeObject(schema as any, props as any, meta) as any;
+  // Pass the type entity through as `typeSource` so the resulting instance
+  // carries a back-reference resolvable via `Relation.getType` / `Entity.getType`.
+  return internal.makeObject(schema as any, props as any, meta, type as any) as any;
 };
 
 /**
@@ -362,7 +364,8 @@ export const getTypeURI: (obj: internal.AnyProperties) => URI.URI | undefined = 
  * Get the schema of the relation.
  * Returns the branded ECHO schema used to create the relation.
  */
-export const getSchema: (rel: unknown | undefined) => Schema.Schema.AnyNoContext | undefined = internal.getSchema;
+export const getType = (rel: unknown | undefined): Type.AnyRelationType | undefined =>
+  internal.getType(rel) as Type.AnyRelationType | undefined;
 
 /**
  * @returns The typename of the relation's type.

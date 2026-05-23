@@ -11,7 +11,7 @@ import { inspectCustom } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 
 import { getSchemaURI } from '../../Annotation';
-import { ObjectDeletedId, ParentId, SchemaId, StaticTypeSchemaSlot, TypeId } from '../types';
+import { ObjectDeletedId, ParentId, SchemaId, StaticTypeSchemaSlot, TypeEntityId, TypeId } from '../types';
 import { executeChange, isInChangeContext, queueNotification } from './change-context';
 import { defineHiddenProperty } from './define-hidden-property';
 import { createPropertyDeleteError } from './errors';
@@ -207,6 +207,12 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
         // Return a function that allows mutations within a controlled context.
         // Uses target as both the context key and event target for non-database objects.
         return (callback: (obj: any) => void) => executeChange(target, target, receiver, callback);
+      }
+      case TypeEntityId: {
+        // The back-reference to the type entity is metadata — return the raw
+        // value so we don't try to wrap a frozen `Type.Type` entity in a
+        // reactive proxy (which would fail the SchemaId-in-target invariant).
+        return Reflect.get(target, prop, receiver);
       }
     }
 
@@ -414,6 +420,10 @@ const setSchemaProperties = (
   }
 
   if (typeSource != null) {
+    // Keep a back-reference to the type entity so `Obj.getType` /
+    // `Relation.getType` / `Entity.getType` can return it.
+    defineHiddenProperty(obj, TypeEntityId, typeSource);
+
     // Install `SchemaId` as a getter so schema mutations performed via
     // `Type.update` / `Type.addFields` propagate into validation of objects
     // created with `Obj.make(typeEntity, ...)`. The getter prefers the source

@@ -10,7 +10,7 @@ import { ObjectId } from '@dxos/keys';
 
 import { getSchemaURI, getTypeAnnotation, setTypename } from '../Annotation';
 import { defineHiddenProperty } from '../common/proxy';
-import { EntityKind, InstancePhantomId, KindId, MetaId, StaticTypeSchemaSlot, setSchema } from '../common/types';
+import { EntityKind, InstancePhantomId, KindId, MetaId, StaticTypeSchemaSlot, setSchema, setType } from '../common/types';
 import {
   RelationSourceDXNId,
   RelationSourceId,
@@ -88,6 +88,11 @@ export const createObject: {
   defineHiddenProperty(obj, KindId, kind);
   defineHiddenProperty(obj, MetaId, { keys: [] });
   setSchema(obj, schema);
+  // If the caller passed a type entity (recognised via the schema slot), keep
+  // a reference to it on the instance for `Obj.getType` / `Relation.getType`.
+  if (input !== schema) {
+    setType(obj, input);
+  }
   setTypename(obj, getSchemaURI(schema) ?? failedInvariant('Missing schema URI'));
   attachTypedJsonSerializer(obj);
   attachedTypedObjectInspector(obj);

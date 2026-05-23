@@ -153,6 +153,35 @@ describe('Type', () => {
     });
   });
 
+  describe('Obj/Relation/Entity.getType', () => {
+    test('Obj.getType returns the static type entity for instances of Type.object', ({ expect }) => {
+      const person = Obj.make(TestSchema.Person, { name: 'Alice' });
+      expect(Obj.getType(person)).toBe(TestSchema.Person);
+    });
+
+    test('Relation.getType returns the static type entity for instances of Type.relation', ({ expect }) => {
+      const a = Obj.make(TestSchema.Person, { name: 'A' });
+      const b = Obj.make(TestSchema.Person, { name: 'B' });
+      const rel = Relation.make(TestSchema.HasManager, {
+        [Relation.Source]: a,
+        [Relation.Target]: b,
+      });
+      expect(Relation.getType(rel)).toBe(TestSchema.HasManager);
+    });
+
+    test('Entity.getType narrows uniformly across object/relation instances', ({ expect }) => {
+      const person = Obj.make(TestSchema.Person, { name: 'A' });
+      const a = Obj.make(TestSchema.Person, { name: 'A' });
+      const b = Obj.make(TestSchema.Person, { name: 'B' });
+      const rel = Relation.make(TestSchema.HasManager, {
+        [Relation.Source]: a,
+        [Relation.Target]: b,
+      });
+      expect(Entity.getType(person)).toBe(TestSchema.Person);
+      expect(Entity.getType(rel)).toBe(TestSchema.HasManager);
+    });
+  });
+
   describe('static type factories', () => {
     test('Type.object stamps schema-kind=object', ({ expect }) => {
       expect((TestSchema.Person as any)['~@dxos/echo/SchemaKind']).toBe(Entity.Kind.Object);
