@@ -3,14 +3,14 @@
 //
 
 import { isSameDay } from 'date-fns';
-import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
-import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Panel, Select, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 
@@ -157,34 +157,43 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
         <Panel.Root>
           <Panel.Toolbar asChild>
             <Toolbar.Root>
-              <select
-                className='dx-input rounded px-2 py-1 bg-input-surface text-sm'
-                value={newSegmentKind}
-                onChange={(e: ChangeEvent<HTMLSelectElement>) => setNewSegmentKind(e.target.value as Segment.Kind)}
-                aria-label='Segment kind'
+              <Select.Root value={newSegmentKind} onValueChange={(value) => setNewSegmentKind(value as Segment.Kind)}>
+                <Toolbar.Button asChild>
+                  <Select.TriggerButton placeholder={t('segment.add.label')} />
+                </Toolbar.Button>
+                <Select.Portal>
+                  <Select.Content>
+                    <Select.Viewport>
+                      {KIND_OPTIONS.map(({ value, label }) => (
+                        <Select.Option key={value} value={value}>
+                          {label}
+                        </Select.Option>
+                      ))}
+                    </Select.Viewport>
+                    <Select.Arrow />
+                  </Select.Content>
+                </Select.Portal>
+              </Select.Root>
+              <Toolbar.IconButton
+                icon='ph--plus--regular'
+                iconOnly
+                label={t('segment.add.label')}
+                onClick={handleAddSegment}
+              />
+              <div className='grow' />
+              <Toolbar.ToggleGroup
+                type='single'
+                value={viewMode}
+                onValueChange={(value) => value && setViewMode(value as ViewMode)}
               >
-                {KIND_OPTIONS.map(({ value, label }) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-              <IconButton icon='ph--plus--regular' label={t('segment.add.label')} onClick={handleAddSegment} />
-              <div role='separator' className='flex-1' />
-              <IconButton
-                icon='ph--list-dashes--regular'
-                iconOnly
-                variant={viewMode === 'stack' ? 'default' : 'ghost'}
-                label='Stack view'
-                onClick={() => setViewMode('stack')}
-              />
-              <IconButton
-                icon='ph--globe--regular'
-                iconOnly
-                variant={viewMode === 'map' ? 'default' : 'ghost'}
-                label='Map view'
-                onClick={() => setViewMode('map')}
-              />
+                <Toolbar.ToggleGroupIconItem
+                  value='stack'
+                  icon='ph--list-dashes--regular'
+                  iconOnly
+                  label='Stack view'
+                />
+                <Toolbar.ToggleGroupIconItem value='map' icon='ph--globe--regular' iconOnly label='Map view' />
+              </Toolbar.ToggleGroup>
             </Toolbar.Root>
           </Panel.Toolbar>
           <Panel.Content asChild>

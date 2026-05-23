@@ -129,7 +129,7 @@ export const TripMapView = ({ segments, onSelect }: TripMapViewProps) => {
 
   return (
     <div className='relative h-full w-full overflow-hidden bg-black'>
-      <Globe.Root classNames='absolute inset-0' zoom={1} rotation={initialRotation}>
+      <Globe.Root classNames='absolute inset-0' zoom={3} rotation={initialRotation}>
         <Globe.Canvas ref={setController} topology={topology} styles={mapStyles} features={features} />
         <Globe.Zoom onAction={handleZoom} />
       </Globe.Root>
@@ -137,7 +137,7 @@ export const TripMapView = ({ segments, onSelect }: TripMapViewProps) => {
       {/* Floating itinerary panel. */}
       <aside
         aria-label='Itinerary'
-        className='absolute top-4 right-4 bottom-4 w-72 rounded-lg bg-base-surface/95 backdrop-blur shadow-lg flex flex-col overflow-hidden'
+        className='absolute top-4 left-4 bottom-4 w-72 rounded-lg bg-base-surface/95 backdrop-blur shadow-lg flex flex-col overflow-hidden'
       >
         <div className='shrink-0 px-3 py-2 text-sm font-medium border-b border-subdued-separator'>Itinerary</div>
         <div className='flex-1 overflow-y-auto p-1'>
