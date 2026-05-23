@@ -24,14 +24,14 @@ import { ThreadCapabilities, type ViewState } from '#types';
 
 const initialViewState: ViewState = { showResolvedThreads: false };
 
-export type ThreadCompanionProps = AppSurface.ObjectArticleProps<
-  Thread.Thread,
-  {
-    attendableId?: string;
-  }
->;
+/**
+ * Subject is the host object being commented on (e.g. a Markdown.Document),
+ * not a Thread — the threads anchored to that host are discovered via the
+ * `AnchoredTo` query inside the component.
+ */
+export type CommentsCompanionProps = AppSurface.ObjectArticleProps<Obj.Any>;
 
-export const ThreadCompanion = ({ attendableId, subject }: ThreadCompanionProps) => {
+export const CommentsCompanion = ({ attendableId, subject }: CommentsCompanionProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const identity = useIdentity();
@@ -51,19 +51,10 @@ export const ThreadCompanion = ({ attendableId, subject }: ThreadCompanionProps)
       registry.set(viewStoreAtom, { ...viewStore, [subjectId]: { ...initialViewState } });
       return initialViewState;
     }
+
     return viewStore[subjectId];
   }, [viewStore, subjectId, registry, viewStoreAtom]);
   const { showResolvedThreads } = viewState;
-
-  const onChangeViewState = useCallback(
-    (nextValue: string) => {
-      registry.set(viewStoreAtom, {
-        ...registry.get(viewStoreAtom),
-        [subjectId]: { ...registry.get(viewStoreAtom)[subjectId], showResolvedThreads: nextValue === 'all' },
-      });
-    },
-    [registry, viewStoreAtom, subjectId],
-  );
 
   const commentConfigs = useCapabilities(AppCapabilities.CommentConfig);
   const anchorSorts = useCapabilities(AppCapabilities.AnchorSort);
@@ -79,6 +70,16 @@ export const ThreadCompanion = ({ attendableId, subject }: ThreadCompanionProps)
     .filter((anchor) => Obj.instanceOf(Thread.Thread, Relation.getSource(anchor)))
     .concat(drafts ?? []);
 
+  const handleChangeViewState = useCallback(
+    (nextValue: string) => {
+      registry.set(viewStoreAtom, {
+        ...registry.get(viewStoreAtom),
+        [subjectId]: { ...registry.get(viewStoreAtom)[subjectId], showResolvedThreads: nextValue === 'all' },
+      });
+    },
+    [registry, viewStoreAtom, subjectId],
+  );
+
   const { hasAttention, isAncestor, isRelated } = useAttention(parentId);
   const isAttended = hasAttention || isAncestor || isRelated;
 
@@ -86,7 +87,6 @@ export const ThreadCompanion = ({ attendableId, subject }: ThreadCompanionProps)
     (anchor: AnchoredTo.AnchoredTo) => {
       const thread = Relation.getSource(anchor) as Thread.Thread;
       const threadId = Obj.getDXN(thread).toString();
-
       if (state.current !== threadId) {
         registry.set(stateAtom, { ...registry.get(stateAtom), current: threadId });
 
@@ -186,7 +186,7 @@ export const ThreadCompanion = ({ attendableId, subject }: ThreadCompanionProps)
     <Tabs.Root
       orientation='horizontal'
       value={showResolvedThreads ? 'all' : 'unresolved'}
-      onValueChange={onChangeViewState}
+      onValueChange={handleChangeViewState}
     >
       <Panel.Root>
         <Panel.Toolbar asChild>
