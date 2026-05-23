@@ -15,7 +15,7 @@ import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { type Space, useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
-import { TripBuilder } from '#testing';
+import { PLACES, TripBuilder } from '#testing';
 import { Booking, Segment, Trip } from '#types';
 
 import { TripPlugin } from '../../testing';
@@ -68,12 +68,81 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   decorators: baseDecorators((space) => {
+    // NYC → CDG, CDG → BHX, LTV → EUS → CDG (train), CDG → SIN, SIN → CDG, CDG → NYC.
     const { trip, segments, bookings } = new TripBuilder()
-      .addFlight(0, { confirmed: true })
-      .addHotel(1, 3)
-      .addActivity(2)
-      .addFlight(4)
-      .build('London Trip');
+      .addFlight({
+        from: PLACES.JFK,
+        to: PLACES.CDG,
+        daysFromNow: 0,
+        durationHours: 7,
+        airline: { name: 'Air France', code: 'AF' },
+        flightNumber: 'AF 023',
+        cabin: 'business',
+        confirmed: true,
+      })
+      .addFlight({
+        from: PLACES.CDG,
+        to: PLACES.BHX,
+        daysFromNow: 1,
+        departHour: 13,
+        durationHours: 1,
+        airline: { name: 'Air France', code: 'AF' },
+        flightNumber: 'AF 1268',
+        cabin: 'economy',
+        confirmed: true,
+      })
+      .addTrain({
+        from: PLACES.LTV,
+        to: PLACES.EUS,
+        daysFromNow: 4,
+        departHour: 9,
+        durationHours: 1,
+        operator: { name: 'Thameslink' },
+        trainNumber: 'TL 9F32',
+      })
+      .addTrain({
+        from: PLACES.EUS,
+        to: PLACES.CDG,
+        daysFromNow: 4,
+        departHour: 11,
+        durationHours: 3,
+        operator: { name: 'Eurostar' },
+        trainNumber: 'ES 9024',
+      })
+      .addFlight({
+        from: PLACES.CDG,
+        to: PLACES.SIN,
+        daysFromNow: 5,
+        departHour: 20,
+        durationHours: 13,
+        airline: { name: 'Singapore Airlines', code: 'SQ' },
+        flightNumber: 'SQ 333',
+        cabin: 'business',
+        confirmed: true,
+      })
+      .addFlight({
+        from: PLACES.SIN,
+        to: PLACES.CDG,
+        daysFromNow: 12,
+        departHour: 23,
+        durationHours: 13,
+        airline: { name: 'Singapore Airlines', code: 'SQ' },
+        flightNumber: 'SQ 334',
+        cabin: 'business',
+        confirmed: true,
+      })
+      .addFlight({
+        from: PLACES.CDG,
+        to: PLACES.JFK,
+        daysFromNow: 14,
+        departHour: 10,
+        durationHours: 8,
+        airline: { name: 'Air France', code: 'AF' },
+        flightNumber: 'AF 006',
+        cabin: 'business',
+        confirmed: true,
+      })
+      .build('Paris · Singapore (via the UK)');
     bookings.forEach((booking: Booking.Booking) => space.db.add(booking));
     segments.forEach((segment: Segment.Segment) => space.db.add(segment));
     space.db.add(trip);
