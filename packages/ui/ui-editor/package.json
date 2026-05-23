@@ -63,7 +63,6 @@
     "@dxos/lit-ui": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/react-ui": "workspace:*",
     "@dxos/ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",

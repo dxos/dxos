@@ -21712,9 +21712,6 @@ importers:
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
-      '@dxos/react-ui':
-        specifier: workspace:*
-        version: link:../react-ui
       '@dxos/ui':
         specifier: workspace:*
         version: link:../ui
