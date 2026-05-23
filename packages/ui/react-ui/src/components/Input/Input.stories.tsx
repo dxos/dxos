@@ -226,12 +226,13 @@ export const TextInputTypes: Story = {
 };
 
 /**
- * Calls `HTMLInputElement.showPicker()` on mount and on every focus so the
- * native picker pops open as soon as the input gains focus. Browsers don't
- * expose a way to "lock" the picker permanently open; this is the closest
- * approximation for visual inspection of the picker UIs.
+ * Single `datetime-local` input that auto-focuses and re-invokes
+ * `showPicker()` on every focus so the native picker pops open as soon
+ * as the story mounts. Browsers don't expose a way to lock the picker
+ * permanently open — this is the closest approximation for visual
+ * inspection of the native picker UI.
  */
-const PickerOpenInput = ({ type, ...props }: React.InputHTMLAttributes<HTMLInputElement>) => {
+const DateTimeLocalPickerOpen = () => {
   const ref = useRef<HTMLInputElement>(null);
   useEffect(() => {
     const el = ref.current;
@@ -249,25 +250,18 @@ const PickerOpenInput = ({ type, ...props }: React.InputHTMLAttributes<HTMLInput
     el.focus();
     return () => el.removeEventListener('focus', open);
   }, []);
-  return <Input.TextInput ref={ref} type={type} {...props} />;
+  return (
+    <Input.Root>
+      <Input.Label>{'type="datetime-local"'}</Input.Label>
+      <Input.TextInput ref={ref} type='datetime-local' />
+    </Input.Root>
+  );
 };
 
-const PICKER_TYPES = ['date', 'time', 'datetime-local', 'month', 'week'] as const;
-
-/**
- * Date/time picker variants with the native picker opened on mount (and
- * re-opened on focus). One story per type — only one input is focused at a
- * time, so each picker can be inspected without overlap.
- */
-export const DateTimePickersOpen: Story = {
+export const DateTimeLocalPicker: Story = {
   render: () => (
-    <div className='flex flex-col gap-3 min-w-[24rem]'>
-      {PICKER_TYPES.map((type) => (
-        <Input.Root key={type}>
-          <Input.Label>{`type="${type}"`}</Input.Label>
-          <PickerOpenInput type={type} />
-        </Input.Root>
-      ))}
+    <div className='min-w-[24rem]'>
+      <DateTimeLocalPickerOpen />
     </div>
   ),
 };
