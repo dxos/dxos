@@ -14,6 +14,7 @@ import { EchoObjectSchema } from '../../Entity';
 import {
   toEffectSchema,
 } from '../../JsonSchema';
+// eslint-disable-next-line @dxos/rules/import-as-namespace
 import * as TypeNs from '../../../Type';
 import { Obj as ObjModule } from '../../../index';
 type Type = TypeNs.Type;

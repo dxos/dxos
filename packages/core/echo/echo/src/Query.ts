@@ -16,7 +16,8 @@ import * as Feed from './Feed';
 import * as Filter from './Filter';
 import * as internal from './internal';
 import * as Obj from './Obj';
-import type * as TypeNs from './Type';
+// eslint-disable-next-line @dxos/rules/import-as-namespace
+import type * as TypeNs from "./Type";
 import type * as Order from './Order';
 import type * as Ref from './Ref';
 import type * as Relation from './Relation';

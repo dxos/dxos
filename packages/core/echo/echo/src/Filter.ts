@@ -16,7 +16,8 @@ import { DXN, EchoURI, ObjectId, type URI } from '@dxos/keys';
 import * as internal from './internal';
 import type * as Obj from './Obj';
 import * as Ref from './Ref';
-import type * as TypeNs from './Type';
+// eslint-disable-next-line @dxos/rules/import-as-namespace
+import type * as TypeNs from "./Type";
 
 export interface Filter<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.

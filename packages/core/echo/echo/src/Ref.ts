@@ -15,7 +15,8 @@ import type * as internal from './internal';
 import * as refInternal from './internal/Ref';
 import type * as JsonSchema from './JsonSchema';
 import type * as Obj from './Obj';
-import type * as TypeNs from './Type';
+// eslint-disable-next-line @dxos/rules/import-as-namespace
+import type * as TypeNs from "./Type";
 
 /**
  * Instance type for a reference.
