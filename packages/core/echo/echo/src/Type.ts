@@ -373,13 +373,22 @@ export type Meta = internal.TypeAnnotation;
  */
 export const getMeta = (input: AnyType | Schema.Schema.AnyNoContext): Meta | undefined => {
   if (isType(input)) {
-    return {
-      typename: input.typename,
-      version: input.version,
-      kind: (input as any)[internal.SchemaKindId] ?? internal.EntityKind.Object,
-    };
+    // Persisted Type.Type instance — read fields directly. typename may be
+    // undefined for unnamed drafts.
+    if (typeof input.typename === 'string') {
+      return {
+        typename: input.typename,
+        version: input.version,
+        kind: (input as any)[internal.SchemaKindId] ?? internal.EntityKind.Object,
+      };
+    }
+    return undefined;
   }
-  return internal.getTypeAnnotation(input as any);
+  // Static `Type.Obj` / `Type.Relation` / `Type.Type` entity: unwrap the
+  // hidden Effect Schema slot before reading the TypeAnnotation off its AST.
+  // Raw Schemas are passed through.
+  const schema = ((input as any)[internal.StaticTypeSchemaSlot] ?? input) as Schema.Schema.All;
+  return internal.getTypeAnnotation(schema);
 };
 
 /**
