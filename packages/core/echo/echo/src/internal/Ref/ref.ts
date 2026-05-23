@@ -20,7 +20,7 @@ import { DXN, EchoURI, ObjectId, type URI } from '@dxos/keys';
 
 import * as Database from '../../Database';
 import { ReferenceAnnotationId, getSchemaURI, getTypeAnnotation, getTypeIdentifierAnnotation } from '../Annotation';
-import type { AnyEntity, AnyProperties } from '../common/types';
+import { type AnyEntity, type AnyProperties, StaticTypeSchemaSlot } from '../common/types';
 import { type JsonSchemaType } from '../JsonSchema';
 
 /**
@@ -84,7 +84,9 @@ export interface RefSchema<T extends AnyEntity> extends Schema.SchemaClass<Ref<T
  * Type of the `Ref` function and extra methods attached to it.
  */
 export interface RefFn {
-  <S extends Schema.Schema.Any>(schema: S): RefSchema<Schema.Schema.Type<S>>;
+  <S extends Schema.Schema.Any | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext }>(
+    schema: S,
+  ): RefSchema<S extends Schema.Schema.Any ? Schema.Schema.Type<S> : any>;
 
   /**
    * @returns True if the object is a reference.
@@ -122,7 +124,13 @@ export interface RefFn {
 /**
  * Schema builder for references.
  */
-export const Ref: RefFn = <S extends Schema.Schema.Any>(schema: S): RefSchema<Schema.Schema.Type<S>> => {
+export const Ref: RefFn = (input: any): RefSchema<any> => {
+  // Accept `Type.Type` entities (Option B) — extract the underlying source
+  // schema from the hidden slot. Static schemas still work as-is.
+  const schema =
+    input != null && typeof input === 'object' && input[StaticTypeSchemaSlot] != null
+      ? (input[StaticTypeSchemaSlot] as Schema.Schema.AnyNoContext)
+      : input;
   assertArgument(Schema.isSchema(schema), 'schema', 'Must call with an instance of effect-schema');
   const annotation = getTypeAnnotation(schema);
   if (annotation == null) {
