@@ -8,6 +8,7 @@ import React, { useMemo, useState } from 'react';
 import { Icon } from '@dxos/react-ui';
 import { Globe, type GlobeController, useDrag, useGlobeZoomHandler } from '@dxos/react-ui-geo';
 import { loadTopology } from '@dxos/react-ui-geo/data';
+import { composable, composableProps } from '@dxos/ui-theme';
 
 import { Segment } from '#types';
 
@@ -68,7 +69,7 @@ const segmentLine = (seg: Segment.Segment): { source: LatLng; target: LatLng } |
   return { source, target };
 };
 
-/** Compact card: kind icon, title, primary date — for the floating itinerary. */
+/** Compact row: kind icon, title, primary date — for the itinerary column. */
 const CompactSegmentRow = ({ segment, onClick }: { segment: Segment.Segment; onClick?: () => void }) => {
   const title = Segment.getTitle(segment);
   const date = Segment.getPrimaryDate(segment);
@@ -77,7 +78,7 @@ const CompactSegmentRow = ({ segment, onClick }: { segment: Segment.Segment; onC
     <button
       type='button'
       onClick={onClick}
-      className='flex items-center gap-2 w-full text-left px-2 py-2 rounded hover:bg-input-surface'
+      className='flex items-center gap-2 w-full text-left px-3 py-2 rounded hover:bg-input-surface'
     >
       <Icon icon={icon} size={4} />
       <div className='flex-1 min-w-0'>
@@ -94,62 +95,77 @@ export type TripMapViewProps = {
 };
 
 /**
- * Map view for a Trip. Renders a globe with every segment's geo-tagged origin,
- * destination, and venue plotted as points; transport segments add an arc from
- * origin to destination. A floating itinerary panel on the right lists each
- * segment as a compact card.
+ * Map view for a Trip. Two-column layout: a narrow itinerary list on the
+ * left (compact rows: kind icon + title + primary date), and a larger globe
+ * on the right. The globe plots each segment's geo-tagged origin,
+ * destination, and venue as points; transport segments add an arc from
+ * origin to destination.
+ *
+ * Composable: the root <div> forwards refs and merges incoming
+ * `className`/`classNames` so the component can be used with `asChild`
+ * slots (e.g. inside `Panel.Content asChild`).
  */
-export const TripMapView = ({ segments, onSelect }: TripMapViewProps) => {
-  const [topology, setTopology] = useState<Awaited<ReturnType<typeof loadTopology>>>();
-  const [controller, setController] = useState<GlobeController | null>();
+export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
+  ({ classNames, segments, onSelect, ...props }, forwardedRef) => {
+    const [topology, setTopology] = useState<Awaited<ReturnType<typeof loadTopology>>>();
+    const [controller, setController] = useState<GlobeController | null>();
 
-  React.useEffect(() => {
-    void loadTopology().then(setTopology);
-  }, []);
+    React.useEffect(() => {
+      void loadTopology().then(setTopology);
+    }, []);
 
-  const handleZoom = useGlobeZoomHandler(controller);
-  useDrag(controller);
+    const handleZoom = useGlobeZoomHandler(controller);
+    useDrag(controller);
 
-  const features = useMemo(() => {
-    const points: LatLng[] = [];
-    const lines: { source: LatLng; target: LatLng }[] = [];
-    for (const seg of segments) {
-      for (const p of segmentPoints(seg)) {
-        if (!points.some((q) => q.lat === p.lat && q.lng === p.lng)) {
-          points.push(p);
+    const features = useMemo(() => {
+      const points: LatLng[] = [];
+      const lines: { source: LatLng; target: LatLng }[] = [];
+      for (const seg of segments) {
+        for (const p of segmentPoints(seg)) {
+          if (!points.some((q) => q.lat === p.lat && q.lng === p.lng)) {
+            points.push(p);
+          }
+        }
+        const line = segmentLine(seg);
+        if (line) {
+          lines.push(line);
         }
       }
-      const line = segmentLine(seg);
-      if (line) {
-        lines.push(line);
-      }
-    }
-    return { points, lines };
-  }, [segments]);
+      return { points, lines };
+    }, [segments]);
 
-  return (
-    <div className='relative h-full w-full overflow-hidden bg-black'>
-      <Globe.Root classNames='absolute inset-0' zoom={3} rotation={initialRotation}>
-        <Globe.Canvas ref={setController} topology={topology} styles={mapStyles} features={features} />
-        <Globe.Zoom onAction={handleZoom} />
-      </Globe.Root>
-
-      {/* Floating itinerary panel. */}
-      <aside
-        aria-label='Itinerary'
-        className='absolute top-4 left-4 bottom-4 w-72 rounded-lg bg-base-surface/95 backdrop-blur shadow-lg flex flex-col overflow-hidden'
+    return (
+      <div
+        {...composableProps(props, {
+          classNames: ['grid grid-cols-[16rem_1fr] h-full w-full overflow-hidden bg-black', classNames],
+        })}
+        ref={forwardedRef}
       >
-        <div className='shrink-0 px-3 py-2 text-sm font-medium border-b border-subdued-separator'>Itinerary</div>
-        <div className='flex-1 overflow-y-auto p-1'>
-          {segments.length === 0 ? (
-            <div className='p-3 text-sm text-description'>No segments yet.</div>
-          ) : (
-            segments.map((segment) => (
-              <CompactSegmentRow key={segment.id} segment={segment} onClick={() => onSelect?.(segment.id)} />
-            ))
-          )}
+        <aside
+          aria-label='Itinerary'
+          className='flex flex-col overflow-hidden border-r border-subdued-separator bg-base-surface'
+        >
+          <div className='shrink-0 px-3 py-2 text-sm font-medium border-b border-subdued-separator'>Itinerary</div>
+          <div className='flex-1 overflow-y-auto p-1'>
+            {segments.length === 0 ? (
+              <div className='p-3 text-sm text-description'>No segments yet.</div>
+            ) : (
+              segments.map((segment) => (
+                <CompactSegmentRow key={segment.id} segment={segment} onClick={() => onSelect?.(segment.id)} />
+              ))
+            )}
+          </div>
+        </aside>
+
+        <div className='relative overflow-hidden'>
+          <Globe.Root classNames='absolute inset-0' zoom={1.2} rotation={initialRotation}>
+            <Globe.Canvas ref={setController} topology={topology} styles={mapStyles} features={features} />
+            <Globe.Zoom onAction={handleZoom} />
+          </Globe.Root>
         </div>
-      </aside>
-    </div>
-  );
-};
+      </div>
+    );
+  },
+);
+
+TripMapView.displayName = 'TripMapView';
