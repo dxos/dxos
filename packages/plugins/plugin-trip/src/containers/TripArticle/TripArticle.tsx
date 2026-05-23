@@ -197,7 +197,7 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
           </Panel.Toolbar>
           <Panel.Content asChild>
             {viewMode === 'map' ? (
-              <TripMapView segments={segments} onSelect={handleMapSelect} />
+              <TripMapView segments={segments} selectedSegmentId={currentId} onSelect={handleMapSelect} />
             ) : (
               <SegmentStack id={id} segments={segments} currentId={currentId} onAction={handleAction} />
             )}
