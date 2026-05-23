@@ -76,49 +76,17 @@ export default meta;
 
 type Story = StoryObj<DefaultStoryProps & Variant>;
 
-export const DensityLg: Story = {
-  args: {
-    kind: 'text',
-    label: 'Input value',
-    placeholder: 'This is a density:lg input',
-    disabled: false,
-    description: undefined,
-    labelVisuallyHidden: false,
-    descriptionVisuallyHidden: false,
-    validationMessage: '',
-    validationValence: undefined,
-    density: 'lg',
-  },
-};
-
-export const DensityMd: Story = {
-  args: {
-    kind: 'text',
-    label: 'Input value',
-    placeholder: 'This is a density:md input (default)',
-    disabled: false,
-    description: undefined,
-    labelVisuallyHidden: false,
-    descriptionVisuallyHidden: false,
-    validationMessage: '',
-    validationValence: undefined,
-    density: 'md',
-  },
-};
-
-export const DensitySm: Story = {
-  args: {
-    kind: 'text',
-    label: 'Input value',
-    placeholder: 'This is a density:sm input',
-    disabled: false,
-    description: undefined,
-    labelVisuallyHidden: false,
-    descriptionVisuallyHidden: false,
-    validationMessage: '',
-    validationValence: undefined,
-    density: 'sm',
-  },
+export const Density: Story = {
+  render: () => (
+    <div className='flex flex-col gap-4'>
+      {(['lg', 'md', 'sm'] as const).map((density) => (
+        <Input.Root key={density}>
+          <Input.Label>{`density="${density}"`}</Input.Label>
+          <Input.TextInput density={density} placeholder={`This is a density:${density} input`} />
+        </Input.Root>
+      ))}
+    </div>
+  ),
 };
 
 export const Subdued: Story = {
