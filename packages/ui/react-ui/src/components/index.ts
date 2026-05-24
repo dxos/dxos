@@ -10,6 +10,7 @@ export * from './Card';
 export * from './Carousel';
 export * from './Clipboard';
 export * from './Column';
+export * from './DatePicker';
 export * from './Dialog';
 export * from './ErrorFallback';
 export * from './Focus';
