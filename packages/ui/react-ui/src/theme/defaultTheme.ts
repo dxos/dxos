@@ -8,6 +8,7 @@ import { avatarTheme } from '../components/Avatars/Avatar.theme';
 import { breadcrumbTheme } from '../components/Breadcrumb/Breadcrumb.theme';
 import { buttonTheme } from '../components/Button/Button.theme';
 import { iconButtonTheme } from '../components/Button/IconButton.theme';
+import { calendarTheme } from '../components/Calendar/Calendar.theme';
 import { cardTheme } from '../components/Card/Card.theme';
 import { columnTheme } from '../components/Column/Column.theme';
 import { dialogTheme } from '../components/Dialog/Dialog.theme';
@@ -51,6 +52,7 @@ export const defaultTheme: Theme<Record<string, any>> = {
   avatar: avatarTheme,
   breadcrumb: breadcrumbTheme,
   button: buttonTheme,
+  calendar: calendarTheme,
   card: cardTheme,
   dialog: dialogTheme,
   focus: focusTheme,
