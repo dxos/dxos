@@ -94,6 +94,20 @@ export const attachPointerHandlers = <T>(
         drag = { kind: 'toggle', mode, touched: new Set([key]) };
         break;
       }
+      case 'edit': {
+        // Always adds notes regardless of current cell state.
+        const key = cellKey(coord.col, coord.row);
+        handlers.onCellToggle?.(coord, 'set');
+        drag = { kind: 'toggle', mode: 'set', touched: new Set([key]) };
+        break;
+      }
+      case 'delete': {
+        // Always removes notes regardless of current cell state.
+        const key = cellKey(coord.col, coord.row);
+        handlers.onCellToggle?.(coord, 'unset');
+        drag = { kind: 'toggle', mode: 'unset', touched: new Set([key]) };
+        break;
+      }
       case 'select': {
         drag = { kind: 'select', origin: coord };
         registry.set(atoms.selection, {
