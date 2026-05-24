@@ -336,3 +336,19 @@ export const ExtractContact = Operation.make({
   }),
   output: Schema.Void,
 });
+
+export const ExtractMessage = Operation.make({
+  meta: { key: `${INBOX_OPERATION}.extract-message`, name: 'Extract Message' },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    db: Database.Database,
+    message: Message.Message,
+    extractorId: Schema.optional(Schema.String),
+    targetTripId: Schema.optional(Schema.String),
+  }),
+  output: Schema.Struct({
+    extractorId: Schema.String,
+    created: Schema.Number,
+    summary: Schema.optional(Schema.String),
+  }),
+});
