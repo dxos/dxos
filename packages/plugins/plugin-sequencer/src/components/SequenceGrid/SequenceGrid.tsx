@@ -3,7 +3,7 @@
 //
 
 import { RegistryContext, useAtomValue } from '@effect-atom/atom-react';
-import React, { useContext, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import {
@@ -46,16 +46,19 @@ export type SequenceGridProps = {
   loopEnd?: number;
   onLoopChange?: (loopStart: number, loopEnd: number) => void;
   /**
-   * Active tool mode. 'toggle' (default) flips notes on click/drag; 'edit' always adds;
-   * 'delete' always removes.
+   * Active tool mode. 'toggle' (default) flips notes on click/drag; 'edit' draws a single
+   * note spanning the drag extent; 'delete' always removes.
    */
   tool?: Tool;
+  /** Beats per bar used for auto-scroll bar snapping. Defaults to 4 (4/4 time). */
+  beatsPerBar?: number;
   /**
    * Called when the user toggles a cell. The caller is responsible for mutating the sequence.
    * `mode` reflects the gesture: a single click reports `toggle`; a drag reports `set` or
    * `unset` for every cell crossed (chosen by the cell under the initial pointerdown).
+   * `duration` is provided by the edit tool to specify the note length in beats.
    */
-  onToggleNote?: (pitch: number, startTime: number, mode: ToggleMode) => void;
+  onToggleNote?: (pitch: number, startTime: number, mode: ToggleMode, duration?: number) => void;
   /**
    * Other tracks to paint underneath the active sequence in a subdued color.
    * Cells from these tracks are non-interactive — toggle gestures always target
@@ -118,6 +121,7 @@ export const SequenceGrid = ({
   minPitch: minPitchProp,
   maxPitch: maxPitchProp,
   beatsPerCell = 0.25,
+  beatsPerBar = 4,
   playhead = null,
   loopStart,
   loopEnd,
@@ -143,6 +147,9 @@ export const SequenceGrid = ({
       createCellGridAtoms<{ color: string; velocity: number; subdued?: boolean }>({ cellWidth: 28, cellHeight: 18 }),
     [],
   );
+
+  // Temporary cell shown while the user is mid-drag with the edit tool.
+  const [drawPreview, setDrawPreview] = useState<{ col: number; row: number; length: number } | null>(null);
 
   // Rows are pitches arranged high-to-low (row 0 = maxPitch at the top).
   const rows: Row[] = useMemo(
@@ -226,8 +233,17 @@ export const SequenceGrid = ({
         data: { color: trackColor, velocity: note.velocity ?? 0.8 },
       });
     }
+    // Show a live preview cell while the user drags with the edit tool.
+    if (drawPreview) {
+      cells.set(cellKey(drawPreview.col, drawPreview.row), {
+        col: drawPreview.col,
+        row: drawPreview.row,
+        length: drawPreview.length,
+        data: { color: trackColor, velocity: 0.8 },
+      });
+    }
     registry.set(atoms.cells, cells);
-  }, [registry, atoms.cells, notes, overlayCellInputs, minPitch, maxPitch, beatsPerCell, trackColor]);
+  }, [registry, atoms.cells, notes, overlayCellInputs, minPitch, maxPitch, beatsPerCell, trackColor, drawPreview]);
 
   // Mirror playhead (beats → column units, accounting for beatsPerCell).
   useEffect(() => {
@@ -239,22 +255,61 @@ export const SequenceGrid = ({
     registry.set(atoms.tool, tool);
   }, [registry, atoms.tool, tool]);
 
-  const handleToggle = (coord: CellCoord, mode: ToggleMode) => {
-    const pitch = maxPitch - coord.row;
-    const startTime = coord.col * beatsPerCell;
-    if (onToggleNote) {
-      onToggleNote(pitch, startTime, mode);
-      return;
-    }
-    // Default: write directly to the cells atom (preview mode).
-    toggleCell(
-      registry,
-      atoms,
-      coord,
-      ({ col, row }) => ({ col, row, length: 1, data: { color: trackColor, velocity: 0.8 } }),
-      mode,
-    );
-  };
+  const handleToggle = useCallback(
+    (coord: CellCoord, mode: ToggleMode) => {
+      const pitch = maxPitch - coord.row;
+      const startTime = coord.col * beatsPerCell;
+      if (onToggleNote) {
+        onToggleNote(pitch, startTime, mode);
+        return;
+      }
+      // Default: write directly to the cells atom (preview mode).
+      toggleCell(
+        registry,
+        atoms,
+        coord,
+        ({ col, row }) => ({ col, row, length: 1, data: { color: trackColor, velocity: 0.8 } }),
+        mode,
+      );
+    },
+    [maxPitch, beatsPerCell, onToggleNote, registry, atoms, trackColor],
+  );
+
+  const handleDrawUpdate = useCallback(
+    (startCoord: CellCoord, endCoord: CellCoord) => {
+      const col = Math.min(startCoord.col, endCoord.col);
+      const length = Math.abs(endCoord.col - startCoord.col) + 1;
+      setDrawPreview({ col, row: startCoord.row, length });
+    },
+    [],
+  );
+
+  const handleDrawCommit = useCallback(
+    (startCoord: CellCoord, endCoord: CellCoord) => {
+      setDrawPreview(null);
+      const col = Math.min(startCoord.col, endCoord.col);
+      const length = Math.abs(endCoord.col - startCoord.col) + 1;
+      const pitch = maxPitch - startCoord.row;
+      const startTime = col * beatsPerCell;
+      const duration = length * beatsPerCell;
+      if (onToggleNote) {
+        onToggleNote(pitch, startTime, 'set', duration);
+        return;
+      }
+      // Default: write directly to atoms (preview mode).
+      registry.update(atoms.cells, (current) => {
+        const next = new Map(current);
+        next.set(cellKey(col, startCoord.row), {
+          col,
+          row: startCoord.row,
+          length,
+          data: { color: trackColor, velocity: 0.8 },
+        });
+        return next;
+      });
+    },
+    [maxPitch, beatsPerCell, onToggleNote, registry, atoms.cells, trackColor],
+  );
 
   // Style the row bands so black-key rows are darker (piano-roll feel).
   const rowBandRenderer = useMemo(() => {
@@ -302,7 +357,7 @@ export const SequenceGrid = ({
   const pixelsPerBeat = pixelsPerCell / beatsPerCell;
 
   // Auto-scroll: when the playhead moves past the right edge of the visible area,
-  // jump-scroll so the playhead stays in view.
+  // jump-scroll to the nearest previous bar boundary so bar lines stay aligned.
   useEffect(() => {
     return registry.subscribe(atoms.playhead, (playheadCol) => {
       if (playheadCol === null) {
@@ -316,10 +371,12 @@ export const SequenceGrid = ({
         return;
       }
       if (playheadPx > vp.scrollX + visibleWidth) {
-        registry.set(atoms.viewport, { ...vp, scrollX: Math.max(0, playheadPx - pxPerCell * 4) });
+        const pxPerBar = (beatsPerBar / beatsPerCell) * pxPerCell;
+        const barAlignedScrollX = Math.floor(playheadPx / pxPerBar) * pxPerBar;
+        registry.set(atoms.viewport, { ...vp, scrollX: Math.max(0, barAlignedScrollX) });
       }
     });
-  }, [registry, atoms.playhead, atoms.viewport, paneWidth, cellGridHeaders.left]);
+  }, [registry, atoms.playhead, atoms.viewport, paneWidth, cellGridHeaders.left, beatsPerBar, beatsPerCell]);
   const resolvedLoopEnd = loopEnd ?? sequence.length;
   const resolvedLoopStart = loopStart ?? 0;
   // Loop range is allowed to extend beyond the current sequence length — the
@@ -336,6 +393,8 @@ export const SequenceGrid = ({
         headers={cellGridHeaders}
         staticStyle={cellGridStaticStyle}
         onCellToggle={handleToggle}
+        onDrawUpdate={handleDrawUpdate}
+        onDrawCommit={handleDrawCommit}
       />
       {onLoopChange && paneWidth > 0 && (
         <LoopMarkers

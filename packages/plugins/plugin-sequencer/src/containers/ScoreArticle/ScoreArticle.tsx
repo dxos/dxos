@@ -10,7 +10,7 @@ import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { Button, Icon, Input, Panel } from '@dxos/react-ui';
 import { type ToggleMode, type Tool } from '@dxos/react-ui-canvas';
-import { Menu, MenuBuilder, useMenuActions, type ActionGraphProps } from '@dxos/react-ui-menu';
+import { Menu, MenuBuilder, useMenuActions, type ActionGraphProps, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 import { Oscilloscope } from '@dxos/react-ui-sfx';
 import { mx } from '@dxos/ui-theme';
 
@@ -234,7 +234,7 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
   const beatsPerCell = 0.25;
 
   const handleToggleNote = useCallback(
-    (pitch: number, startTime: number, mode: ToggleMode) => {
+    (pitch: number, startTime: number, mode: ToggleMode, duration?: number) => {
       if (!activeSequence) {
         return;
       }
@@ -254,7 +254,7 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
         if (shouldRemove && exists) {
           sequence.notes.splice(existingIndex, 1);
         } else if (shouldAdd && !exists) {
-          sequence.notes.push({ pitch, startTime, duration: beatsPerCell, velocity: 0.8 });
+          sequence.notes.push({ pitch, startTime, duration: duration ?? beatsPerCell, velocity: 0.8 });
         }
       });
     },
@@ -352,29 +352,28 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
               toggleShowAllTracks,
             )
             .separator()
-            .action(
-              'tool-edit',
+            .group(
+              'tool-modes',
               {
-                label: 'Edit (draw notes)',
-                icon: 'ph--pencil-simple--regular',
+                label: 'Tool',
                 iconOnly: true,
-                disposition: 'toolbar',
-                variant: 'toggle',
-                checked: toolMode === 'edit',
+                variant: 'toggleGroup',
+                selectCardinality: 'single',
+                value: toolMode === 'edit' ? 'tool-edit' : toolMode === 'delete' ? 'tool-delete' : '',
+              } as ToolbarMenuActionGroupProperties,
+              (group) => {
+                group
+                  .action(
+                    'tool-edit',
+                    { label: 'Edit (draw notes)', icon: 'ph--pencil-simple--regular', checked: toolMode === 'edit' },
+                    activateEditTool,
+                  )
+                  .action(
+                    'tool-delete',
+                    { label: 'Delete (erase notes)', icon: 'ph--eraser--regular', checked: toolMode === 'delete' },
+                    activateDeleteTool,
+                  );
               },
-              activateEditTool,
-            )
-            .action(
-              'tool-delete',
-              {
-                label: 'Delete (erase notes)',
-                icon: 'ph--eraser--regular',
-                iconOnly: true,
-                disposition: 'toolbar',
-                variant: 'toggle',
-                checked: toolMode === 'delete',
-              },
-              activateDeleteTool,
             )
             .separator()
             .action(
@@ -452,6 +451,7 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
                 sequence={activeSequence}
                 track={activeTrack}
                 beatsPerCell={beatsPerCell}
+                beatsPerBar={beatsPerBar}
                 playhead={playhead}
                 loopStart={score.loopStart}
                 loopEnd={score.loopEnd}
