@@ -43,96 +43,93 @@ export const useMessageActions = ({
 }: UseMessageToolbarActionsProps) => {
   const extractorActions = useExtractorActions(message);
 
-  return useMenuBuilder(
-    () => {
-      let builder = MenuBuilder.make()
-        .root({ label: ['message-toolbar.label', { ns: meta.id }] })
-        .subgraph(
-          onOpen &&
-            ((b) =>
-              b.action(
-                'open',
-                {
-                  label: ['message-toolbar-open.menu', { ns: meta.id }],
-                  icon: 'ph--arrow-square-out--regular',
-                },
-                onOpen,
-              )),
-        )
-        .action(
-          'renderMode',
-          {
-            label: [
-              renderMode === 'markdown' ? 'message toolbar show plain text' : 'message toolbar show markdown',
-              { ns: meta.id },
-            ],
-            icon: renderMode === 'markdown' ? 'ph--text-t--regular' : 'ph--markdown-logo--regular',
-          },
-          () => setRenderMode(renderMode === 'markdown' ? 'plain' : 'markdown'),
-        )
-        .separator('gap')
-        .subgraph(
-          onReply &&
-            ((b) =>
-              b.action(
-                'reply',
-                {
-                  label: ['message-toolbar-reply.menu', { ns: meta.id }],
-                  icon: 'ph--arrow-bend-up-left--regular',
-                },
-                onReply,
-              )),
-        )
-        .subgraph(
-          onReplyAll &&
-            ((b) =>
-              b.action(
-                'replyAll',
-                {
-                  label: ['message-toolbar-reply-all.menu', { ns: meta.id }],
-                  icon: 'ph--arrow-bend-double-up-left--regular',
-                },
-                onReplyAll,
-              )),
-        )
-        .subgraph(
-          onForward &&
-            ((b) =>
-              b.action(
-                'forward',
-                {
-                  label: ['message-toolbar-forward.menu', { ns: meta.id }],
-                  icon: 'ph--arrow-bend-up-right--regular',
-                },
-                onForward,
-              )),
-        )
-        .action(
-          'viewMode',
-          {
-            label: [
-              viewMode === 'plain'
-                ? 'message toolbar show enriched message'
-                : viewMode === 'enriched'
-                  ? 'message toolbar show plain message'
-                  : 'message toolbar enriched message not available',
-              { ns: meta.id },
-            ],
-            icon: viewMode === 'enriched' ? 'ph--article--regular' : 'ph--graph--regular',
-          },
-          () => setViewMode(viewMode === 'plain' ? 'enriched' : 'plain'),
-        );
+  return useMenuBuilder(() => {
+    let builder = MenuBuilder.make()
+      .root({ label: ['message-toolbar.label', { ns: meta.id }] })
+      .subgraph(
+        onOpen &&
+          ((b) =>
+            b.action(
+              'open',
+              {
+                label: ['message-toolbar-open.menu', { ns: meta.id }],
+                icon: 'ph--arrow-square-out--regular',
+              },
+              onOpen,
+            )),
+      )
+      .action(
+        'renderMode',
+        {
+          label: [
+            renderMode === 'markdown' ? 'message toolbar show plain text' : 'message toolbar show markdown',
+            { ns: meta.id },
+          ],
+          icon: renderMode === 'markdown' ? 'ph--text-t--regular' : 'ph--markdown-logo--regular',
+        },
+        () => setRenderMode(renderMode === 'markdown' ? 'plain' : 'markdown'),
+      )
+      .separator('gap')
+      .subgraph(
+        onReply &&
+          ((b) =>
+            b.action(
+              'reply',
+              {
+                label: ['message-toolbar-reply.menu', { ns: meta.id }],
+                icon: 'ph--arrow-bend-up-left--regular',
+              },
+              onReply,
+            )),
+      )
+      .subgraph(
+        onReplyAll &&
+          ((b) =>
+            b.action(
+              'replyAll',
+              {
+                label: ['message-toolbar-reply-all.menu', { ns: meta.id }],
+                icon: 'ph--arrow-bend-double-up-left--regular',
+              },
+              onReplyAll,
+            )),
+      )
+      .subgraph(
+        onForward &&
+          ((b) =>
+            b.action(
+              'forward',
+              {
+                label: ['message-toolbar-forward.menu', { ns: meta.id }],
+                icon: 'ph--arrow-bend-up-right--regular',
+              },
+              onForward,
+            )),
+      )
+      .action(
+        'viewMode',
+        {
+          label: [
+            viewMode === 'plain'
+              ? 'message toolbar show enriched message'
+              : viewMode === 'enriched'
+                ? 'message toolbar show plain message'
+                : 'message toolbar enriched message not available',
+            { ns: meta.id },
+          ],
+          icon: viewMode === 'enriched' ? 'ph--article--regular' : 'ph--graph--regular',
+        },
+        () => setViewMode(viewMode === 'plain' ? 'enriched' : 'plain'),
+      );
 
-      for (const item of extractorActions) {
-        builder = builder.action(
-          `extract-${item.id}`,
-          { label: item.label, icon: 'ph--magic-wand--regular' },
-          item.onSelect,
-        );
-      }
+    for (const item of extractorActions) {
+      builder = builder.action(
+        `extract-${item.id}`,
+        { label: item.label, icon: 'ph--magic-wand--regular' },
+        item.onSelect,
+      );
+    }
 
-      return builder.build();
-    },
-    [viewMode, setViewMode, renderMode, setRenderMode, onOpen, onReply, onReplyAll, onForward, extractorActions],
-  );
+    return builder.build();
+  }, [viewMode, setViewMode, renderMode, setRenderMode, onOpen, onReply, onReplyAll, onForward, extractorActions]);
 };

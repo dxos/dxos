@@ -14,7 +14,6 @@ import { Message } from '@dxos/types';
 
 import { type ExtractError, type ExtractResult, type MessageExtractor } from '../capabilities/MessageExtractor';
 import { ExtractedFrom, InboxCapabilities } from '../types';
-
 import handler from './extract-message';
 
 // Stub builder for MessageExtractor instances.

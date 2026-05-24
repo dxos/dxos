@@ -1736,42 +1736,42 @@ At the end of Task 11 `plugin-trip` is a buildable, lint-clean package with:
 
 ### `packages/plugins/plugin-inbox/`
 
-| File                                                      | Action | Purpose                                                                              |
-| --------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------ |
-| `src/types/ExtractedFrom.ts`                              | Create | Generic provenance relation (extracted obj → source Message).                        |
-| `src/types/Mailbox.ts`                                    | Modify | Add optional `extractors` field (`{ enabled: string[]; threshold: number }`).        |
-| `src/types/index.ts`                                      | Modify | Barrel-export `ExtractedFrom`.                                                       |
-| `src/capabilities/MessageExtractor.ts`                    | Create | Capability declaration + `MatchResult` / `ExtractResult` / `ExtractCtx` types.       |
-| `src/capabilities/index.ts`                               | Modify | Re-export `MessageExtractor`.                                                        |
-| `src/types/InboxCapabilities.ts`                          | Modify | Add `MessageExtractor` capability key.                                               |
-| `src/types/InboxOperation.ts`                             | Modify | Add `ExtractMessage` operation definition.                                           |
-| `src/operations/extract-message.ts`                       | Create | Operation handler — picks extractor, runs `extract`, persists output + ExtractedFrom |
-| `src/operations/index.ts`                                 | Modify | Register `extract-message` in the lazy handler set.                                  |
-| `src/blueprints/inbox.ts`                                 | Modify | Append `InboxOperation.ExtractMessage` to `toolDefinitions.operations[]`.            |
-| `src/operations/google/gmail/sync.ts`                     | Modify | After each appended message, dispatch auto-on-arrival per `Mailbox.extractors`.      |
-| `src/components/Message/useExtractorActions.tsx`          | Create | Hook that resolves registered extractors, matches the message, returns menu items.   |
-| `src/components/Message/useToolbar.tsx`                   | Modify | Compose extractor menu items into the existing message toolbar.                     |
-| `src/types/ExtractedFrom.test.ts`                         | Create | Relation make / source / target round-trip.                                          |
-| `src/operations/extract-message.test.ts`                  | Create | Operation handler tests (no-match, top-confidence, error, persists ExtractedFrom).   |
+| File                                             | Action | Purpose                                                                              |
+| ------------------------------------------------ | ------ | ------------------------------------------------------------------------------------ |
+| `src/types/ExtractedFrom.ts`                     | Create | Generic provenance relation (extracted obj → source Message).                        |
+| `src/types/Mailbox.ts`                           | Modify | Add optional `extractors` field (`{ enabled: string[]; threshold: number }`).        |
+| `src/types/index.ts`                             | Modify | Barrel-export `ExtractedFrom`.                                                       |
+| `src/capabilities/MessageExtractor.ts`           | Create | Capability declaration + `MatchResult` / `ExtractResult` / `ExtractCtx` types.       |
+| `src/capabilities/index.ts`                      | Modify | Re-export `MessageExtractor`.                                                        |
+| `src/types/InboxCapabilities.ts`                 | Modify | Add `MessageExtractor` capability key.                                               |
+| `src/types/InboxOperation.ts`                    | Modify | Add `ExtractMessage` operation definition.                                           |
+| `src/operations/extract-message.ts`              | Create | Operation handler — picks extractor, runs `extract`, persists output + ExtractedFrom |
+| `src/operations/index.ts`                        | Modify | Register `extract-message` in the lazy handler set.                                  |
+| `src/blueprints/inbox.ts`                        | Modify | Append `InboxOperation.ExtractMessage` to `toolDefinitions.operations[]`.            |
+| `src/operations/google/gmail/sync.ts`            | Modify | After each appended message, dispatch auto-on-arrival per `Mailbox.extractors`.      |
+| `src/components/Message/useExtractorActions.tsx` | Create | Hook that resolves registered extractors, matches the message, returns menu items.   |
+| `src/components/Message/useToolbar.tsx`          | Modify | Compose extractor menu items into the existing message toolbar.                      |
+| `src/types/ExtractedFrom.test.ts`                | Create | Relation make / source / target round-trip.                                          |
+| `src/operations/extract-message.test.ts`         | Create | Operation handler tests (no-match, top-confidence, error, persists ExtractedFrom).   |
 
 ### `packages/plugins/plugin-trip/`
 
-| File                                                                | Action | Purpose                                                                  |
-| ------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------ |
-| `package.json`                                                      | Modify | Add `@dxos/plugin-inbox` workspace dep.                                  |
-| `src/extractors/types.ts`                                           | Create | `Parser` type — `(msg) => { booking, segments } \| null`; shared shapes. |
-| `src/extractors/providers.ts`                                       | Create | Known-domain → `Provider` lookup (United, Booking.com).                  |
-| `src/extractors/parseUnitedFlight.ts`                               | Create | Pure parser for `@united.com` confirmation emails.                       |
-| `src/extractors/parseBookingComHotel.ts`                            | Create | Pure parser for `@booking.com` confirmation emails.                      |
-| `src/extractors/TravelMessageExtractor.ts`                          | Create | `MessageExtractor` impl: dispatch + Trip resolution + Account dedup.     |
-| `src/extractors/__fixtures__/united-flight.ts`                      | Create | Fixture Message for canonical UA itinerary.                              |
-| `src/extractors/__fixtures__/booking-com-hotel.ts`                  | Create | Fixture Message for canonical Booking.com confirmation.                  |
-| `src/extractors/parseUnitedFlight.test.ts`                          | Create | Parser unit tests (canonical, missing-fields).                           |
-| `src/extractors/parseBookingComHotel.test.ts`                       | Create | Parser unit tests.                                                       |
-| `src/extractors/TravelMessageExtractor.test.ts`                     | Create | Dispatch, Trip resolution, Account dedup.                                |
-| `src/capabilities/extractor.ts`                                     | Create | Capability module that registers `TravelMessageExtractor`.               |
-| `src/capabilities/index.ts`                                         | Modify | Re-export the new capability module.                                     |
-| `src/TripPlugin.tsx`                                                | Modify | Activate the extractor capability module.                                |
+| File                                               | Action | Purpose                                                                  |
+| -------------------------------------------------- | ------ | ------------------------------------------------------------------------ |
+| `package.json`                                     | Modify | Add `@dxos/plugin-inbox` workspace dep.                                  |
+| `src/extractors/types.ts`                          | Create | `Parser` type — `(msg) => { booking, segments } \| null`; shared shapes. |
+| `src/extractors/providers.ts`                      | Create | Known-domain → `Provider` lookup (United, Booking.com).                  |
+| `src/extractors/parseUnitedFlight.ts`              | Create | Pure parser for `@united.com` confirmation emails.                       |
+| `src/extractors/parseBookingComHotel.ts`           | Create | Pure parser for `@booking.com` confirmation emails.                      |
+| `src/extractors/TravelMessageExtractor.ts`         | Create | `MessageExtractor` impl: dispatch + Trip resolution + Account dedup.     |
+| `src/extractors/__fixtures__/united-flight.ts`     | Create | Fixture Message for canonical UA itinerary.                              |
+| `src/extractors/__fixtures__/booking-com-hotel.ts` | Create | Fixture Message for canonical Booking.com confirmation.                  |
+| `src/extractors/parseUnitedFlight.test.ts`         | Create | Parser unit tests (canonical, missing-fields).                           |
+| `src/extractors/parseBookingComHotel.test.ts`      | Create | Parser unit tests.                                                       |
+| `src/extractors/TravelMessageExtractor.test.ts`    | Create | Dispatch, Trip resolution, Account dedup.                                |
+| `src/capabilities/extractor.ts`                    | Create | Capability module that registers `TravelMessageExtractor`.               |
+| `src/capabilities/index.ts`                        | Modify | Re-export the new capability module.                                     |
+| `src/TripPlugin.tsx`                               | Modify | Activate the extractor capability module.                                |
 
 ---
 
@@ -1966,7 +1966,10 @@ export type ExtractResult = {
 
 export class ExtractError {
   readonly _tag = 'ExtractError';
-  constructor(readonly message: string, readonly cause?: unknown) {}
+  constructor(
+    readonly message: string,
+    readonly cause?: unknown,
+  ) {}
 }
 
 export interface MessageExtractor {
@@ -2147,9 +2150,7 @@ describe('extract-message', () => {
 
   it.effect('returns no-match error when no extractor matches', () =>
     Effect.gen(function* () {
-      const { db } = yield* Effect.promise(() =>
-        builder.createDatabase({ types: [Message, ExtractedFrom] }),
-      );
+      const { db } = yield* Effect.promise(() => builder.createDatabase({ types: [Message, ExtractedFrom] }));
       const message = db.add(makeMessage());
       yield* Effect.promise(() => db.flush());
 
@@ -2163,13 +2164,13 @@ describe('extract-message', () => {
         }),
       ]);
 
-      const result = yield* handler.run({ db, message, extractorId: undefined, targetTripId: undefined }).pipe(
-        Effect.provide(capabilities),
-        Effect.either,
-      );
+      const result = yield* handler
+        .run({ db, message, extractorId: undefined, targetTripId: undefined })
+        .pipe(Effect.provide(capabilities), Effect.either);
 
       expect(result._tag).toBe('Left');
-    }));
+    }),
+  );
 });
 ```
 
@@ -2443,10 +2444,10 @@ Note the line where new messages are persisted in the loop.
 Immediately after the message is appended to the feed, add:
 
 ```typescript
-const extractors = yield* Capability.getAll(InboxCapabilities.MessageExtractor);
+const extractors = yield * Capability.getAll(InboxCapabilities.MessageExtractor);
 const config = mailbox.extractors;
 if (config && config.enabled.length > 0) {
-  let best: { extractor: typeof extractors[number]; confidence: number } | undefined;
+  let best: { extractor: (typeof extractors)[number]; confidence: number } | undefined;
   for (const extractor of extractors) {
     if (!config.enabled.includes(extractor.id)) continue;
     const result = extractor.match(message);
@@ -2456,12 +2457,13 @@ if (config && config.enabled.length > 0) {
     }
   }
   if (best) {
-    yield* OperationInvoker.invoke(InboxOperation.ExtractMessage, {
-      db,
-      message,
-      extractorId: best.extractor.id,
-      targetTripId: undefined,
-    }).pipe(Effect.catchAll(() => Effect.void));
+    yield *
+      OperationInvoker.invoke(InboxOperation.ExtractMessage, {
+        db,
+        message,
+        extractorId: best.extractor.id,
+        targetTripId: undefined,
+      }).pipe(Effect.catchAll(() => Effect.void));
   }
 }
 ```
@@ -2607,9 +2609,7 @@ Seat: 21A
 
 Thank you for flying United.`;
 
-export const unitedFlightFixture = (
-  opts: { withConfirmationCode?: boolean } = {},
-): Message.Message => {
+export const unitedFlightFixture = (opts: { withConfirmationCode?: boolean } = {}): Message.Message => {
   const body = opts.withConfirmationCode === false ? BODY.replace(/Confirmation:.*\n/, '') : BODY;
   return Obj.make(Message, {
     created: '2026-08-01T10:00:00Z',
@@ -2642,7 +2642,10 @@ const CABIN = /Cabin:\s*(Economy|Premium|Business|First)/i;
 const SEAT = /Seat:\s*([0-9]+[A-Z])/;
 
 const pickText = (message: { blocks: Array<{ kind: string; content?: string }> }): string =>
-  message.blocks.filter((b) => b.kind === 'text').map((b) => b.content ?? '').join('\n');
+  message.blocks
+    .filter((b) => b.kind === 'text')
+    .map((b) => b.content ?? '')
+    .join('\n');
 
 export const parseUnitedFlight: Parser = (message) => {
   if (lookupBySenderDomain(message.sender.email) !== UNITED) return null;
@@ -2799,7 +2802,10 @@ const toISO = (s: string): string | undefined => {
 };
 
 const pickText = (message: { blocks: Array<{ kind: string; content?: string }> }): string =>
-  message.blocks.filter((b) => b.kind === 'text').map((b) => b.content ?? '').join('\n');
+  message.blocks
+    .filter((b) => b.kind === 'text')
+    .map((b) => b.content ?? '')
+    .join('\n');
 
 export const parseBookingComHotel: Parser = (message) => {
   if (lookupBySenderDomain(message.sender.email) !== BOOKING_COM) return null;
