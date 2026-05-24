@@ -359,10 +359,15 @@ export const SequenceGrid = ({
   // Auto-scroll: when the playhead moves past the right edge of the visible area,
   // jump-scroll to the nearest previous bar boundary so bar lines stay aligned.
   useEffect(() => {
+    let wasPlaying = false;
     return registry.subscribe(atoms.playhead, (playheadCol) => {
       if (playheadCol === null) {
-        registry.update(atoms.viewport, (vp) => ({ ...vp, scrollX: 0 }));
+        wasPlaying = false;
         return;
+      }
+      if (!wasPlaying) {
+        wasPlaying = true;
+        registry.update(atoms.viewport, (vp) => ({ ...vp, scrollX: 0 }));
       }
       const vp = registry.get(atoms.viewport);
       const pxPerCell = vp.baseCellWidth * vp.zoomX;
