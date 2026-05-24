@@ -18,8 +18,7 @@ const trigger: ComponentFunction<DatePickerStyleProps> = ({ hasValue }, ...etc) 
     ...etc,
   );
 
-const content: ComponentFunction<DatePickerStyleProps> = (_p, ...etc) =>
-  mx('flex flex-col gap-2 p-2', ...etc);
+const content: ComponentFunction<DatePickerStyleProps> = (_p, ...etc) => mx('flex flex-col gap-2 p-2', ...etc);
 
 const timeField: ComponentFunction<DatePickerStyleProps> = (_p, ...etc) =>
   mx(
