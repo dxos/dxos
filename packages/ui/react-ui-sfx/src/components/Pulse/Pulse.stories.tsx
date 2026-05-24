@@ -62,9 +62,9 @@ export const Default: Story = {
 };
 
 // Each column pulses with a phase-shifted sine — vertical bars sweeping across the grid.
-const sweep: PulseSignal = (i, _j, time) => 0.5 + 0.5 * Math.sin(time * 3 + i * 0.6);
+const ripple: PulseSignal = (i, j, time) => 0.5 + 0.5 * Math.sin(time * 3 + Math.sin((i + j) / 3) * 0.6);
 
-export const Sweep: Story = {
+export const Ripple: Story = {
   args: {
     dim: 12,
     maxRadius: 6,
@@ -72,12 +72,12 @@ export const Sweep: Story = {
     gap: 4,
     smoothing: 0.3,
     classNames: 'text-emerald-500',
-    getSignal: sweep,
+    getSignal: ripple,
   },
 };
 
 // Grows the single dot under the cursor; smoothing eases it back down when the cursor moves or leaves.
-const Pointer = (props: PulseProps) => {
+const PointerStory = (props: PulseProps) => {
   const { maxRadius = 8, gap = 4 } = props;
   const stride = 2 * maxRadius + gap;
   const containerRef = useRef<HTMLDivElement>(null);
@@ -122,11 +122,11 @@ const Pointer = (props: PulseProps) => {
   );
 };
 
-export const PointerDriven: Story = {
+export const Pointer: Story = {
   render: (props) => (
     <Panel.Root>
       <Panel.Content classNames='flex items-center justify-center'>
-        <Pointer {...props} />
+        <PointerStory {...props} />
       </Panel.Content>
     </Panel.Root>
   ),

@@ -42,13 +42,15 @@ const DialogRoot: FunctionComponent<DialogRootProps> = (props) => (
   </ElevationProvider>
 );
 
+DialogRoot.displayName = 'Dialog.Root';
+
 //
 // Trigger
 //
 
 type DialogTriggerProps = DialogPrimitive.DialogTriggerProps;
 
-const DialogTrigger: FunctionComponent<DialogTriggerProps> = DialogPrimitive.Trigger;
+const DialogTrigger = DialogPrimitive.Trigger;
 
 //
 // Portal
@@ -56,13 +58,13 @@ const DialogTrigger: FunctionComponent<DialogTriggerProps> = DialogPrimitive.Tri
 
 type DialogPortalProps = DialogPrimitive.DialogPortalProps;
 
-const DialogPortal: FunctionComponent<DialogPortalProps> = DialogPrimitive.Portal;
+const DialogPortal = DialogPrimitive.Portal;
 
 //
 // Overlay
 //
 
-const DIALOG_OVERLAY_NAME = 'DialogOverlay';
+const DIALOG_OVERLAY_NAME = 'Dialog.Overlay';
 
 type OverlayLayoutContextValue = { inOverlayLayout?: boolean };
 
@@ -98,7 +100,7 @@ DialogOverlay.displayName = DIALOG_OVERLAY_NAME;
 // Content
 //
 
-const DIALOG_CONTENT_NAME = 'DialogContent';
+const DIALOG_CONTENT_NAME = 'Dialog.Content';
 
 type DialogContentProps = ThemedClassName<ComponentPropsWithRef<typeof DialogPrimitive.Content>> & {
   size?: DialogSize;
@@ -153,6 +155,8 @@ const DialogHeader = slottable<HTMLDivElement>(({ children, asChild, ...props },
   );
 });
 
+DialogHeader.displayName = 'Dialog.Header';
+
 //
 // ActionIconButton
 //
@@ -189,16 +193,7 @@ const DialogActionIconButton = forwardRef<HTMLButtonElement, DialogActionIconBut
   },
 );
 
-//
-// CloseIconButton
-//
-
-type DialogCloseIconButtonProps = { label?: string };
-
-/** @deprecated Use `Dialog.ActionIconButton action='close'`. */
-const DialogCloseIconButton = forwardRef<HTMLButtonElement, DialogCloseIconButtonProps>((props, forwardedRef) => (
-  <DialogActionIconButton action='close' {...props} ref={forwardedRef} />
-));
+DialogActionIconButton.displayName = 'Dialog.ActionIconButton';
 
 //
 // Body
@@ -217,6 +212,8 @@ const DialogBody = slottable<HTMLDivElement>(({ children, asChild, ...props }, f
   );
 });
 
+DialogBody.displayName = 'Dialog.Body';
+
 //
 // Title
 //
@@ -231,6 +228,8 @@ const DialogTitle = forwardRef<HTMLHeadingElement, DialogTitleProps>(
     );
   },
 );
+
+DialogTitle.displayName = 'Dialog.Title';
 
 //
 // Description
@@ -251,6 +250,8 @@ const DialogDescription = forwardRef<HTMLParagraphElement, DialogDescriptionProp
   },
 );
 
+DialogDescription.displayName = 'Dialog.Description';
+
 //
 // ActionBar
 //
@@ -268,13 +269,15 @@ const DialogActionBar = slottable<HTMLDivElement>(({ children, asChild, ...props
   );
 });
 
+DialogActionBar.displayName = 'Dialog.ActionBar';
+
 //
 // Close
 //
 
 type DialogCloseProps = DialogPrimitive.DialogCloseProps;
 
-const DialogClose: FunctionComponent<DialogCloseProps> = DialogPrimitive.Close;
+const DialogClose = DialogPrimitive.Close;
 
 //
 // Dialog
@@ -293,8 +296,6 @@ export const Dialog = {
   ActionBar: DialogActionBar,
   Close: DialogClose,
   ActionIconButton: DialogActionIconButton,
-  /** @deprecated Use `Dialog.ActionIconButton action='close'`. */
-  CloseIconButton: DialogCloseIconButton,
 };
 
 export type {
@@ -311,5 +312,4 @@ export type {
   DialogCloseProps,
   DialogActionIconButtonAction,
   DialogActionIconButtonProps,
-  DialogCloseIconButtonProps,
 };

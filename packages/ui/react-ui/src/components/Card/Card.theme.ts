@@ -35,14 +35,6 @@ const title: ComponentFunction<CardStyleProps> = (_props, ...etc) => mx('dx-card
 const content: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__content contents pb-1 last:pb-0', ...etc);
 
-const heading: ComponentFunction<CardStyleProps> = ({ variant = 'default' }, ...etc) =>
-  mx(
-    'dx-card__heading',
-    variant === 'default' && 'py-1',
-    variant === 'subtitle' && 'py-2 text-xs text-description font-medium uppercase',
-    ...etc,
-  );
-
 const text: ComponentFunction<CardStyleProps> = ({ variant = 'default', truncate: _truncate }, ...etc) =>
   mx(
     'dx-card__text items-center overflow-hidden',
@@ -72,8 +64,13 @@ const link: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
 const linkLabel: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
   mx('dx-card__link-label min-w-0 flex-1 truncate', ...etc);
 
-const row: ComponentFunction<CardStyleProps> = (_, ...etc) =>
-  mx('dx-card__row col-span-3 grid grid-cols-subgrid', ...etc);
+const row: ComponentFunction<CardStyleProps> = ({ fullWidth }, ...etc) =>
+  mx('dx-card__row', fullWidth ? 'col-span-full' : 'col-span-3 grid grid-cols-subgrid', ...etc);
+
+const section: ComponentFunction<CardStyleProps> = (_props, ...etc) => mx('dx-card__section contents', ...etc);
+
+const sectionTitle: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
+  mx('dx-card__section-title col-span-full py-2 text-xs text-description font-medium uppercase', ...etc);
 
 const iconBlock: ComponentFunction<CardStyleProps> = ({ padding }, ...etc) =>
   mx(
@@ -88,7 +85,8 @@ export const cardTheme: Theme<CardStyleProps> = {
   title,
   content,
   row,
-  heading,
+  section,
+  'section-title': sectionTitle,
   text,
   'text-span': textSpan,
   poster,
