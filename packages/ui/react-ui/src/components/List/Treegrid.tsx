@@ -21,7 +21,7 @@ import { type ThemedClassName } from '../../util';
 
 // TODO(thure): https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/treegrid_role
 
-const TREEGRID_ROW_NAME = 'TreegridRow';
+const TREEGRID_ROW_NAME = 'Treegrid.Row';
 
 type TreegridRowScopedProps<P> = P & { __treegridRowScope?: Scope };
 

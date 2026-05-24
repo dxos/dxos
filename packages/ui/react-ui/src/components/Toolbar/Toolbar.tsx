@@ -58,6 +58,8 @@ const ToolbarRoot = composable<HTMLDivElement, ToolbarRootProps>(
   },
 );
 
+ToolbarRoot.displayName = 'Toolbar.Root';
+
 //
 // Text
 //
@@ -75,6 +77,8 @@ const ToolbarText = slottable<HTMLDivElement>(({ children, asChild, ...props }, 
   );
 });
 
+ToolbarText.displayName = 'Toolbar.Text';
+
 //
 // Button
 //
@@ -88,6 +92,8 @@ const ToolbarButton = forwardRef<HTMLButtonElement, ToolbarButtonProps>((props, 
     </ToolbarPrimitive.Button>
   );
 });
+
+ToolbarButton.displayName = 'Toolbar.Button';
 
 //
 // IconButton
@@ -103,6 +109,8 @@ const ToolbarIconButton = forwardRef<HTMLButtonElement, ToolbarIconButtonProps>(
   );
 });
 
+ToolbarIconButton.displayName = 'Toolbar.IconButton';
+
 type ToolbarToggleProps = ToggleProps;
 
 const ToolbarToggle = forwardRef<HTMLButtonElement, ToolbarToggleProps>((props, forwardedRef) => {
@@ -112,6 +120,8 @@ const ToolbarToggle = forwardRef<HTMLButtonElement, ToolbarToggleProps>((props, 
     </ToolbarPrimitive.Button>
   );
 });
+
+ToolbarToggle.displayName = 'Toolbar.Toggle';
 
 //
 // Link
@@ -126,6 +136,8 @@ const ToolbarLink = forwardRef<HTMLAnchorElement, ToolbarLinkProps>((props, forw
     </ToolbarPrimitive.Link>
   );
 });
+
+ToolbarLink.displayName = 'Toolbar.Link';
 
 type ToolbarToggleGroupProps = (
   | Omit<ToolbarPrimitive.ToolbarToggleGroupSingleProps, 'className'>
@@ -147,6 +159,8 @@ const ToolbarToggleGroup = forwardRef<HTMLDivElement, ToolbarToggleGroupProps>(
   },
 );
 
+ToolbarToggleGroup.displayName = 'Toolbar.ToggleGroup';
+
 type ToolbarToggleGroupItemProps = ToggleGroupItemProps;
 
 const ToolbarToggleGroupItem = forwardRef<HTMLButtonElement, ToolbarToggleGroupItemProps>(
@@ -158,6 +172,8 @@ const ToolbarToggleGroupItem = forwardRef<HTMLButtonElement, ToolbarToggleGroupI
     );
   },
 );
+
+ToolbarToggleGroupItem.displayName = 'Toolbar.ToggleGroupItem';
 
 type ToolbarToggleGroupIconItemProps = Omit<ToggleGroupItemPrimitiveProps, 'className'> & IconButtonProps;
 
@@ -183,6 +199,8 @@ const ToolbarToggleGroupIconItem = forwardRef<HTMLButtonElement, ToolbarToggleGr
   },
 );
 
+ToolbarToggleGroupIconItem.displayName = 'Toolbar.ToggleGroupIconItem';
+
 //
 // Separator
 //
@@ -200,6 +218,8 @@ const ToolbarSeparator = forwardRef<HTMLDivElement, ToolbarSeparatorProps>(
     );
   },
 );
+
+ToolbarSeparator.displayName = 'Toolbar.Separator';
 
 //
 // DragHandle
@@ -226,6 +246,8 @@ const ToolbarDragHandle = forwardRef<HTMLButtonElement, ToolbarDragHandleProps>(
     );
   },
 );
+
+ToolbarDragHandle.displayName = 'Toolbar.DragHandle';
 
 //
 // ActionIconButton
@@ -273,6 +295,8 @@ const ToolbarActionIconButton = forwardRef<HTMLButtonElement, ToolbarActionIconB
   },
 );
 
+ToolbarActionIconButton.displayName = 'Toolbar.ActionIconButton';
+
 //
 // CloseIconButton
 //
@@ -285,6 +309,8 @@ const ToolbarCloseIconButton = forwardRef<HTMLButtonElement, ToolbarCloseIconBut
     <ToolbarActionIconButton action='close' onClick={onClick} label={label} ref={forwardedRef} />
   ),
 );
+
+ToolbarCloseIconButton.displayName = 'Toolbar.CloseIconButton';
 
 //
 // Menu
@@ -301,7 +327,7 @@ type ToolbarMenuProps<T extends any | void = void> = {
 };
 
 // TODO(burdon): Make slottable.
-const ToolbarMenu = <T extends any | void = void>({ context, items }: ToolbarMenuProps<T>) => {
+function ToolbarMenu<T extends any | void = void>({ context, items }: ToolbarMenuProps<T>) {
   const { t } = useTranslation(translationKey);
 
   return (
@@ -330,7 +356,9 @@ const ToolbarMenu = <T extends any | void = void>({ context, items }: ToolbarMen
       )}
     </DropdownMenu.Root>
   );
-};
+}
+
+ToolbarMenu.displayName = 'Toolbar.Menu';
 
 //
 // Toolbar

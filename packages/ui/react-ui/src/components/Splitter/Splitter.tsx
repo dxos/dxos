@@ -34,11 +34,9 @@ const [SplitterProvider, useSplitterContext] = createSplitterContext<SplitterCon
 
 const ROOT_NAME = 'Splitter.Root';
 
-type RootOwnProps = Partial<SplitterContextValue>;
+type SplitterRootProps = Partial<SplitterContextValue>;
 
-type RootProps = RootOwnProps;
-
-const Root = slottable<HTMLDivElement, RootOwnProps>(
+const SplitterRoot = slottable<HTMLDivElement, SplitterRootProps>(
   ({ asChild, mode = 'top', ratio = 0.5, transition = 250, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { __scopeSplitter, ...rest } = props as ScopedProps<typeof props>;
@@ -55,7 +53,7 @@ const Root = slottable<HTMLDivElement, RootOwnProps>(
   },
 );
 
-Root.displayName = ROOT_NAME;
+SplitterRoot.displayName = ROOT_NAME;
 
 //
 // Panel
@@ -63,13 +61,11 @@ Root.displayName = ROOT_NAME;
 
 const PANEL_NAME = 'Splitter.Panel';
 
-type PanelOwnProps = ThemedClassName<{
+type SplitterPanelProps = ThemedClassName<{
   position: 'top' | 'bottom';
 }>;
 
-type PanelProps = PanelOwnProps;
-
-const Panel = slottable<HTMLDivElement, PanelOwnProps>(
+const SplitterPanel = slottable<HTMLDivElement, SplitterPanelProps>(
   ({ classNames, asChild, children, position, style, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { __scopeSplitter, ...rest } = props as ScopedProps<typeof props>;
@@ -110,17 +106,17 @@ const Panel = slottable<HTMLDivElement, PanelOwnProps>(
   },
 );
 
-Panel.displayName = PANEL_NAME;
+SplitterPanel.displayName = PANEL_NAME;
 
 //
 // Splitter
 //
 
 const Splitter = {
-  Root,
-  Panel,
+  Root: SplitterRoot,
+  Panel: SplitterPanel,
 };
 
 export { Splitter, createSplitterScope };
 
-export type { Mode as SplitterMode, RootProps as SplitterRootProps, PanelProps as SplitterPanelProps };
+export type { Mode as SplitterMode, SplitterRootProps, SplitterPanelProps };
