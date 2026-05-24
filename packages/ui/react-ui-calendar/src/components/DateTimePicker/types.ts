@@ -6,13 +6,7 @@ import { type Day } from 'date-fns';
 
 import { type Range } from '../Calendar/Calendar';
 
-export type DateTimePickerMode =
-  | 'date'
-  | 'date-time'
-  | 'date-range'
-  | 'date-time-range'
-  | 'time'
-  | 'time-range';
+export type DateTimePickerMode = 'date' | 'date-time' | 'date-range' | 'date-time-range' | 'time' | 'time-range';
 
 /**
  * Inclusive date range used by range picker modes.
@@ -52,19 +46,13 @@ export type DateTimePickerRootProps<M extends DateTimePickerMode = DateTimePicke
 };
 
 /** True for any mode whose value includes a time-of-day component. */
-export const isTimeMode = (
-  mode: DateTimePickerMode,
-): mode is 'date-time' | 'date-time-range' | 'time' | 'time-range' =>
+export const isTimeMode = (mode: DateTimePickerMode): mode is 'date-time' | 'date-time-range' | 'time' | 'time-range' =>
   mode === 'date-time' || mode === 'date-time-range' || mode === 'time' || mode === 'time-range';
 
 /** True for any mode whose value includes a date (day) component. */
-export const isDateMode = (
-  mode: DateTimePickerMode,
-): mode is 'date' | 'date-time' | 'date-range' | 'date-time-range' =>
+export const isDateMode = (mode: DateTimePickerMode): mode is 'date' | 'date-time' | 'date-range' | 'date-time-range' =>
   mode === 'date' || mode === 'date-time' || mode === 'date-range' || mode === 'date-time-range';
 
 /** True for range modes. */
-export const isRangeMode = (
-  mode: DateTimePickerMode,
-): mode is 'date-range' | 'date-time-range' | 'time-range' =>
+export const isRangeMode = (mode: DateTimePickerMode): mode is 'date-range' | 'date-time-range' | 'time-range' =>
   mode === 'date-range' || mode === 'date-time-range' || mode === 'time-range';

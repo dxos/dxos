@@ -8,9 +8,7 @@ import { type DateTimePickerMode, type DateTimeRange, type ValueFor, isRangeMode
 
 /** Normalize an unordered range so `from <= to`. Always returns a shallow copy; never the input reference. */
 export const normalizeRange = (range: DateTimeRange): DateTimeRange =>
-  range.from.getTime() <= range.to.getTime()
-    ? { from: range.from, to: range.to }
-    : { from: range.to, to: range.from };
+  range.from.getTime() <= range.to.getTime() ? { from: range.from, to: range.to } : { from: range.to, to: range.from };
 
 /** Replace the date portion (year/month/day) of `target` with `source`'s date, preserving target's time. */
 export const withDate = (target: Date, source: Date): Date => {

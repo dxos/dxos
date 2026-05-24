@@ -55,10 +55,7 @@ const [DateTimePickerContextProvider, useDateTimePickerContext] =
 // Root
 //
 
-const Root = <M extends DateTimePickerMode>({
-  children,
-  ...props
-}: PropsWithChildren<DateTimePickerRootProps<M>>) => {
+const Root = <M extends DateTimePickerMode>({ children, ...props }: PropsWithChildren<DateTimePickerRootProps<M>>) => {
   const state = useDateTimePicker<M>(props);
   const locale = props.locale ?? (typeof navigator !== 'undefined' ? navigator.language : 'en-US');
   const hourCycle = props.hourCycle ?? resolveHourCycle(locale);
@@ -169,10 +166,7 @@ type ScalarSegmentsProps = {
 const ScalarSegments = ({ dateOrder, timeOrder, disabled }: ScalarSegmentsProps) => {
   const { state } = useDateTimePickerContext(INPUT_NAME);
   const committed = state.committed as Date;
-  const values = useMemo(
-    () => formatSegments(committed, { dateOrder, timeOrder }),
-    [committed, dateOrder, timeOrder],
-  );
+  const values = useMemo(() => formatSegments(committed, { dateOrder, timeOrder }), [committed, dateOrder, timeOrder]);
 
   const handleChange = useCallback(
     (next: SegmentValues) => {
@@ -185,7 +179,13 @@ const ScalarSegments = ({ dateOrder, timeOrder, disabled }: ScalarSegmentsProps)
   );
 
   return (
-    <SegmentedInput dateOrder={dateOrder} timeOrder={timeOrder} values={values} onChange={handleChange} disabled={disabled} />
+    <SegmentedInput
+      dateOrder={dateOrder}
+      timeOrder={timeOrder}
+      values={values}
+      onChange={handleChange}
+      disabled={disabled}
+    />
   );
 };
 
@@ -205,10 +205,7 @@ const EndpointSegments = ({ endpoint, label, dateOrder, timeOrder, disabled }: E
   const { state } = useDateTimePickerContext(INPUT_NAME);
   const range = state.committed as DateRange;
   const date = range[endpoint];
-  const values = useMemo(
-    () => formatSegments(date, { dateOrder, timeOrder }),
-    [date, dateOrder, timeOrder],
-  );
+  const values = useMemo(() => formatSegments(date, { dateOrder, timeOrder }), [date, dateOrder, timeOrder]);
 
   const handleChange = useCallback(
     (next: SegmentValues) => {
@@ -224,7 +221,13 @@ const EndpointSegments = ({ endpoint, label, dateOrder, timeOrder, disabled }: E
   return (
     <div className='inline-flex flex-col gap-0.5'>
       <span className='text-xs text-description'>{label}</span>
-      <SegmentedInput dateOrder={dateOrder} timeOrder={timeOrder} values={values} onChange={handleChange} disabled={disabled} />
+      <SegmentedInput
+        dateOrder={dateOrder}
+        timeOrder={timeOrder}
+        values={values}
+        onChange={handleChange}
+        disabled={disabled}
+      />
     </div>
   );
 };
@@ -235,11 +238,9 @@ const EndpointSegments = ({ endpoint, label, dateOrder, timeOrder, disabled }: E
 
 const CONTENT_NAME = 'DateTimePicker.Content';
 
-type ContentProps = {
-  classNames?: string;
-};
+type ContentProps = {};
 
-const Content = ({ classNames }: ContentProps) => {
+const Content = composable<HTMLDivElement, ContentProps>(({ classNames, ...props }, forwardedRef) => {
   const { state, weekStartsOn } = useDateTimePickerContext(CONTENT_NAME);
   const controllerRef = useRef<CalendarController>(null);
 
@@ -290,7 +291,10 @@ const Content = ({ classNames }: ContentProps) => {
         sideOffset={4}
         onEscapeKeyDown={() => state.cancelDraft()}
         onPointerDownOutside={() => state.cancelDraft()}
-        classNames={mx('p-2 rounded flex flex-col gap-2', classNames)}
+        {...composableProps(props, {
+          classNames: ['p-2 rounded bg-modal-surface shadow-md flex flex-col gap-2', classNames],
+        })}
+        ref={forwardedRef}
       >
         <Calendar.Root ref={controllerRef} weekStartsOn={weekStartsOn}>
           <Calendar.Toolbar nav />
@@ -301,7 +305,9 @@ const Content = ({ classNames }: ContentProps) => {
       </Popover.Content>
     </Popover.Portal>
   );
-};
+});
+
+Content.displayName = CONTENT_NAME;
 
 //
 // Time

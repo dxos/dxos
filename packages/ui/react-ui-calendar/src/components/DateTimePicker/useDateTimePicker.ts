@@ -4,12 +4,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 
-import {
-  type DateTimePickerMode,
-  type DateTimePickerRootProps,
-  type ValueFor,
-  isRangeMode,
-} from './types';
+import { type DateTimePickerMode, type DateTimePickerRootProps, type ValueFor, isRangeMode } from './types';
 import { coerceValue, defaultValueFor } from './util';
 
 export type RangeEndpoint = 'from' | 'to';

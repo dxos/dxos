@@ -61,10 +61,7 @@ const isNumericSegment = (kind: SegmentKind): boolean => kind !== 'a';
  */
 export const SegmentedInput = forwardRef<HTMLDivElement, SegmentedInputProps>(
   ({ dateOrder, timeOrder, values, onChange, disabled = false, classNames }, forwardedRef) => {
-    const segments: SegmentKind[] = [
-      ...((dateOrder ?? []) as SegmentKind[]),
-      ...((timeOrder ?? []) as SegmentKind[]),
-    ];
+    const segments: SegmentKind[] = [...((dateOrder ?? []) as SegmentKind[]), ...((timeOrder ?? []) as SegmentKind[])];
     const segmentRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
     const focusSegment = useCallback((kind: SegmentKind) => {

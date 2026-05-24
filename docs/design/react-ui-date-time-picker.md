@@ -10,7 +10,7 @@ A namespaced `DateTimePicker` primitive in `@dxos/react-ui-calendar` that compos
 
 ## Motivation
 
-We have `Calendar.Grid` (infinite virtualized scroller, single-day + drag-range selection, keyboard nav). We need a *form-field* primitive on top of it for typical "pick a date/time" UX: a compact segmented input that behaves like the native `<input type="date">`, with a popover that opens via a calendar icon and lets the user pick day and time-of-day with an explicit commit.
+We have `Calendar.Grid` (infinite virtualized scroller, single-day + drag-range selection, keyboard nav). We need a _form-field_ primitive on top of it for typical "pick a date/time" UX: a compact segmented input that behaves like the native `<input type="date">`, with a popover that opens via a calendar icon and lets the user pick day and time-of-day with an explicit commit.
 
 ## Non-goals
 
@@ -71,21 +71,23 @@ DateTimePicker.Root          # state, mode, controlled/uncontrolled value
 ### Types
 
 ```ts
-export type DateTimePickerMode =
-  | 'date' | 'date-time'
-  | 'date-range' | 'date-time-range'
-  | 'time' | 'time-range';
+export type DateTimePickerMode = 'date' | 'date-time' | 'date-range' | 'date-time-range' | 'time' | 'time-range';
 
 export type DateTimeRange = { from: Date; to: Date }; // alias of Calendar's Range
 
-export type ValueFor<M extends DateTimePickerMode> =
-  M extends 'date'             ? Date :
-  M extends 'date-time'        ? Date :
-  M extends 'date-range'       ? DateTimeRange :
-  M extends 'date-time-range'  ? DateTimeRange :
-  M extends 'time'             ? Date :
-  M extends 'time-range'       ? DateTimeRange :
-  never;
+export type ValueFor<M extends DateTimePickerMode> = M extends 'date'
+  ? Date
+  : M extends 'date-time'
+    ? Date
+    : M extends 'date-range'
+      ? DateTimeRange
+      : M extends 'date-time-range'
+        ? DateTimeRange
+        : M extends 'time'
+          ? Date
+          : M extends 'time-range'
+            ? DateTimeRange
+            : never;
 ```
 
 A single `Date` carries time even in `date` mode — we just zero the time component. Range modes reuse `Calendar`'s existing `Range` type.
@@ -105,9 +107,9 @@ type DateTimePickerRootProps<M extends DateTimePickerMode> = {
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
   // Time options
-  step?: number;            // minute step, default 15
+  step?: number; // minute step, default 15
   hourCycle?: 'h12' | 'h23'; // default: from locale
-  locale?: string;          // default: navigator.language
+  locale?: string; // default: navigator.language
   // Forwarded to Calendar.Root
   weekStartsOn?: Day;
   disabled?: boolean;
@@ -124,11 +126,11 @@ type DateTimePickerRootProps<M extends DateTimePickerMode> = {
 ### Component surface
 
 ```ts
-DateTimePicker.Root      // generic on mode
-DateTimePicker.Input     // segmented trigger (calendar icon is Popover.Trigger)
-DateTimePicker.Content   // popover content wrapper
-DateTimePicker.Time      // HH:MM (+ AM/PM); rendered inside Content
-DateTimePicker.Commit    // OK button
+DateTimePicker.Root; // generic on mode
+DateTimePicker.Input; // segmented trigger (calendar icon is Popover.Trigger)
+DateTimePicker.Content; // popover content wrapper
+DateTimePicker.Time; // HH:MM (+ AM/PM); rendered inside Content
+DateTimePicker.Commit; // OK button
 ```
 
 For range modes, `Time` renders twice (start, end). The draft tracks which endpoint is being edited based on whichever of `from`/`to` the user last touched in the Grid.
@@ -220,6 +222,7 @@ For range modes, `Time` renders twice (start, end). The draft tracks which endpo
 **Working directory:** `packages/ui/react-ui-calendar/`.
 
 **Test commands:**
+
 - Unit tests for one file: `moon run react-ui-calendar:test -- src/components/DateTimePicker/segments.test.ts`
 - All unit tests in package: `moon run react-ui-calendar:test`
 - Lint+fix: `moon run react-ui-calendar:lint -- --fix`
@@ -233,6 +236,7 @@ For range modes, `Time` renders twice (start, end). The draft tracks which endpo
 ## Task 1: Extend `Calendar.Toolbar` with prev/next month nav
 
 **Files:**
+
 - Modify: `packages/ui/react-ui-calendar/src/components/Calendar/Calendar.tsx` (the `CalendarToolbar` component and `CalendarToolbarProps` type, around lines 165–204)
 - Modify: `packages/ui/react-ui-calendar/src/translations.ts` (add `prev.button` / `next.button` keys)
 - Modify: `packages/ui/react-ui-calendar/src/components/Calendar/Calendar.stories.tsx` (add story exercising `<Calendar.Toolbar nav />`)
@@ -367,6 +371,7 @@ export const WithNav: Story = {
 - [ ] **Step 4: Build, lint, run any existing tests**
 
 Run:
+
 ```
 moon run react-ui-calendar:lint -- --fix
 moon run react-ui-calendar:build
@@ -389,6 +394,7 @@ git commit -m "feat(react-ui-calendar): add optional prev/next month nav to Cale
 ## Task 2: Scaffold `DateTimePicker` directory and types
 
 **Files:**
+
 - Create: `packages/ui/react-ui-calendar/src/components/DateTimePicker/types.ts`
 - Create: `packages/ui/react-ui-calendar/src/components/DateTimePicker/index.ts`
 - Modify: `packages/ui/react-ui-calendar/src/components/index.ts`
@@ -406,24 +412,23 @@ import { type Day } from 'date-fns';
 
 import { type Range } from '../Calendar/Calendar';
 
-export type DateTimePickerMode =
-  | 'date'
-  | 'date-time'
-  | 'date-range'
-  | 'date-time-range'
-  | 'time'
-  | 'time-range';
+export type DateTimePickerMode = 'date' | 'date-time' | 'date-range' | 'date-time-range' | 'time' | 'time-range';
 
 export type DateTimeRange = Range;
 
-export type ValueFor<M extends DateTimePickerMode> =
-  M extends 'date' ? Date :
-  M extends 'date-time' ? Date :
-  M extends 'date-range' ? DateTimeRange :
-  M extends 'date-time-range' ? DateTimeRange :
-  M extends 'time' ? Date :
-  M extends 'time-range' ? DateTimeRange :
-  never;
+export type ValueFor<M extends DateTimePickerMode> = M extends 'date'
+  ? Date
+  : M extends 'date-time'
+    ? Date
+    : M extends 'date-range'
+      ? DateTimeRange
+      : M extends 'date-time-range'
+        ? DateTimeRange
+        : M extends 'time'
+          ? Date
+          : M extends 'time-range'
+            ? DateTimeRange
+            : never;
 
 export type HourCycle = 'h12' | 'h23';
 
@@ -487,6 +492,7 @@ export * from './DateTimePicker';
 - [ ] **Step 4: Build**
 
 Run:
+
 ```
 moon run react-ui-calendar:build
 ```
@@ -506,6 +512,7 @@ git commit -m "feat(react-ui-calendar): scaffold DateTimePicker types and barrel
 ## Task 3: Implement `util.ts` (value coercion + range normalization) with TDD
 
 **Files:**
+
 - Create: `packages/ui/react-ui-calendar/src/components/DateTimePicker/util.ts`
 - Create: `packages/ui/react-ui-calendar/src/components/DateTimePicker/util.test.ts`
 
@@ -600,6 +607,7 @@ describe('defaultValueFor', () => {
 - [ ] **Step 2: Run the tests to verify they fail**
 
 Run:
+
 ```
 moon run react-ui-calendar:test -- src/components/DateTimePicker/util.test.ts
 ```
@@ -617,13 +625,7 @@ Expected: FAIL with "module not found" or "coerceValue is not exported".
 
 import { startOfDay } from 'date-fns';
 
-import {
-  type DateTimeRange,
-  type DateTimePickerMode,
-  type ValueFor,
-  isRangeMode,
-  isTimeMode,
-} from './types';
+import { type DateTimeRange, type DateTimePickerMode, type ValueFor, isRangeMode, isTimeMode } from './types';
 
 /** Normalize an unordered range so `from <= to`. */
 export const normalizeRange = (range: DateTimeRange): DateTimeRange =>
@@ -674,6 +676,7 @@ export const defaultValueFor = <M extends DateTimePickerMode>(mode: M): ValueFor
 - [ ] **Step 4: Re-run tests, expect pass**
 
 Run:
+
 ```
 moon run react-ui-calendar:test -- src/components/DateTimePicker/util.test.ts
 ```
@@ -693,6 +696,7 @@ git commit -m "feat(react-ui-calendar): add DateTimePicker value coercion utilit
 ## Task 4: Implement `segments.ts` (locale-aware segment definitions + parse/format) with TDD
 
 **Files:**
+
 - Create: `packages/ui/react-ui-calendar/src/components/DateTimePicker/segments.ts`
 - Create: `packages/ui/react-ui-calendar/src/components/DateTimePicker/segments.test.ts`
 
@@ -826,6 +830,7 @@ These tests intentionally cover both the public formatter/parser and the per-seg
 - [ ] **Step 2: Run tests to verify they fail**
 
 Run:
+
 ```
 moon run react-ui-calendar:test -- src/components/DateTimePicker/segments.test.ts
 ```
@@ -1003,6 +1008,7 @@ export const incrementSegment = (kind: SegmentKind, value: string, delta: number
 - [ ] **Step 4: Run tests, expect pass**
 
 Run:
+
 ```
 moon run react-ui-calendar:test -- src/components/DateTimePicker/segments.test.ts
 ```
@@ -1022,6 +1028,7 @@ git commit -m "feat(react-ui-calendar): add locale-aware segment parser/formatte
 ## Task 5: Implement `SegmentedInput` component (presentational)
 
 **Files:**
+
 - Create: `packages/ui/react-ui-calendar/src/components/DateTimePicker/SegmentedInput.tsx`
 
 This task is presentational; the heavy logic is already covered by `segments.ts` tests. We rely on Storybook (Task 9) for visual coverage and on the consumer tests in Task 8 for integration coverage.
@@ -1092,10 +1099,7 @@ const isNumericSegment = (kind: SegmentKind): boolean => kind !== 'a';
  */
 export const SegmentedInput = forwardRef<HTMLDivElement, SegmentedInputProps>(
   ({ dateOrder, timeOrder, values, onChange, disabled = false, classNames }, forwardedRef) => {
-    const segments: SegmentKind[] = [
-      ...((dateOrder ?? []) as SegmentKind[]),
-      ...((timeOrder ?? []) as SegmentKind[]),
-    ];
+    const segments: SegmentKind[] = [...((dateOrder ?? []) as SegmentKind[]), ...((timeOrder ?? []) as SegmentKind[])];
     const segmentRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
     const focusSegment = useCallback((kind: SegmentKind) => {
@@ -1131,7 +1135,7 @@ export const SegmentedInput = forwardRef<HTMLDivElement, SegmentedInputProps>(
           onChange({ ...values, [kind]: incrementSegment(kind, seed, -1) });
           return;
         }
-        if (ev.key === 'ArrowRight' || ev.key === 'Tab' && !ev.shiftKey) {
+        if (ev.key === 'ArrowRight' || (ev.key === 'Tab' && !ev.shiftKey)) {
           if (ev.key === 'ArrowRight') {
             ev.preventDefault();
             focusOffset(kind, 1);
@@ -1253,6 +1257,7 @@ const separatorBetween = (prev: SegmentKind, next: SegmentKind): string => {
 - [ ] **Step 2: Build**
 
 Run:
+
 ```
 moon run react-ui-calendar:build
 ```
@@ -1271,6 +1276,7 @@ git commit -m "feat(react-ui-calendar): add SegmentedInput primitive for DateTim
 ## Task 6: Implement `useDateTimePicker` state hook
 
 **Files:**
+
 - Create: `packages/ui/react-ui-calendar/src/components/DateTimePicker/useDateTimePicker.ts`
 
 - [ ] **Step 1: Create the hook**
@@ -1398,6 +1404,7 @@ Note: `DateTimeRange` is imported only for its type — but `isRangeMode` is the
 - [ ] **Step 2: Build**
 
 Run:
+
 ```
 moon run react-ui-calendar:build
 ```
@@ -1416,6 +1423,7 @@ git commit -m "feat(react-ui-calendar): add useDateTimePicker state hook"
 ## Task 7: Implement `DateTimePicker.tsx` (namespace, Root, Input, Content, Time, Commit)
 
 **Files:**
+
 - Create: `packages/ui/react-ui-calendar/src/components/DateTimePicker/DateTimePicker.tsx`
 - Modify: `packages/ui/react-ui-calendar/src/components/DateTimePicker/index.ts`
 - Modify: `packages/ui/react-ui-calendar/src/translations.ts`
@@ -1460,15 +1468,7 @@ export const translations = [
 
 import { createContext } from '@radix-ui/react-context';
 import { type Day, startOfDay } from 'date-fns';
-import React, {
-  type PropsWithChildren,
-  type Ref,
-  forwardRef,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-} from 'react';
+import React, { type PropsWithChildren, type Ref, forwardRef, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { Button, IconButton, Popover, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
@@ -1519,10 +1519,7 @@ const [DateTimePickerContextProvider, useDateTimePickerContext] =
 // Root
 //
 
-const Root = <M extends DateTimePickerMode>({
-  children,
-  ...props
-}: PropsWithChildren<DateTimePickerRootProps<M>>) => {
+const Root = <M extends DateTimePickerMode>({ children, ...props }: PropsWithChildren<DateTimePickerRootProps<M>>) => {
   const state = useDateTimePicker<M>(props);
   const locale = props.locale ?? (typeof navigator !== 'undefined' ? navigator.language : 'en-US');
   const hourCycle = props.hourCycle ?? resolveHourCycle(locale);
@@ -1567,9 +1564,21 @@ const Input = composable<HTMLDivElement, InputProps>(({ classNames, ...props }, 
         })}
         ref={forwardedRef}
       >
-        <EndpointSegments endpoint='from' label={t('range.from')} dateOrder={dateOrder} timeOrder={timeOrder} disabled={disabled} />
+        <EndpointSegments
+          endpoint='from'
+          label={t('range.from')}
+          dateOrder={dateOrder}
+          timeOrder={timeOrder}
+          disabled={disabled}
+        />
         <span className='text-description'>—</span>
-        <EndpointSegments endpoint='to' label={t('range.to')} dateOrder={dateOrder} timeOrder={timeOrder} disabled={disabled} />
+        <EndpointSegments
+          endpoint='to'
+          label={t('range.to')}
+          dateOrder={dateOrder}
+          timeOrder={timeOrder}
+          disabled={disabled}
+        />
         <Popover.Trigger asChild>
           <IconButton
             variant='ghost'
@@ -1622,10 +1631,7 @@ type ScalarSegmentsProps = {
 const ScalarSegments = ({ dateOrder, timeOrder, disabled }: ScalarSegmentsProps) => {
   const { state } = useDateTimePickerContext(INPUT_NAME);
   const committed = state.committed as Date;
-  const values = useMemo(
-    () => formatSegments(committed, { dateOrder, timeOrder }),
-    [committed, dateOrder, timeOrder],
-  );
+  const values = useMemo(() => formatSegments(committed, { dateOrder, timeOrder }), [committed, dateOrder, timeOrder]);
 
   const handleChange = useCallback(
     (next: SegmentValues) => {
@@ -1642,7 +1648,15 @@ const ScalarSegments = ({ dateOrder, timeOrder, disabled }: ScalarSegmentsProps)
     [state],
   );
 
-  return <SegmentedInput dateOrder={dateOrder} timeOrder={timeOrder} values={values} onChange={handleChange} disabled={disabled} />;
+  return (
+    <SegmentedInput
+      dateOrder={dateOrder}
+      timeOrder={timeOrder}
+      values={values}
+      onChange={handleChange}
+      disabled={disabled}
+    />
+  );
 };
 
 //
@@ -1661,10 +1675,7 @@ const EndpointSegments = ({ endpoint, label, dateOrder, timeOrder, disabled }: E
   const { state } = useDateTimePickerContext(INPUT_NAME);
   const range = state.committed as DateRange;
   const date = range[endpoint];
-  const values = useMemo(
-    () => formatSegments(date, { dateOrder, timeOrder }),
-    [date, dateOrder, timeOrder],
-  );
+  const values = useMemo(() => formatSegments(date, { dateOrder, timeOrder }), [date, dateOrder, timeOrder]);
 
   const handleChange = useCallback(
     (next: SegmentValues) => {
@@ -1680,7 +1691,13 @@ const EndpointSegments = ({ endpoint, label, dateOrder, timeOrder, disabled }: E
   return (
     <div className='inline-flex flex-col gap-0.5'>
       <span className='text-xs text-description'>{label}</span>
-      <SegmentedInput dateOrder={dateOrder} timeOrder={timeOrder} values={values} onChange={handleChange} disabled={disabled} />
+      <SegmentedInput
+        dateOrder={dateOrder}
+        timeOrder={timeOrder}
+        values={values}
+        onChange={handleChange}
+        disabled={disabled}
+      />
     </div>
   );
 };
@@ -1884,6 +1901,7 @@ export * from './DateTimePicker';
 - [ ] **Step 4: Build, lint**
 
 Run:
+
 ```
 moon run react-ui-calendar:lint -- --fix
 moon run react-ui-calendar:build
@@ -1905,6 +1923,7 @@ git commit -m "feat(react-ui-calendar): add DateTimePicker namespace (Root/Input
 ## Task 8: Integration test — `useDateTimePicker` controlled/uncontrolled
 
 **Files:**
+
 - Create: `packages/ui/react-ui-calendar/src/components/DateTimePicker/useDateTimePicker.test.ts`
 
 - [ ] **Step 1: Write the test**
@@ -2023,6 +2042,7 @@ git commit -m "test(react-ui-calendar): cover useDateTimePicker controlled/uncon
 ## Task 9: Storybook stories for every mode
 
 **Files:**
+
 - Create: `packages/ui/react-ui-calendar/src/components/DateTimePicker/DateTimePicker.stories.tsx`
 
 - [ ] **Step 1: Write the stories**
@@ -2173,6 +2193,7 @@ export const LocaleDeDE: Story = {
 - [ ] **Step 2: Lint + build (storybook is built via the package build)**
 
 Run:
+
 ```
 moon run react-ui-calendar:lint -- --fix
 moon run react-ui-calendar:build
@@ -2183,11 +2204,13 @@ Expected: green.
 - [ ] **Step 3: Visual sanity check**
 
 Run:
+
 ```
 moon run storybook-react:serve
 ```
 
 Navigate to `ui/react-ui-calendar/DateTimePicker`. Verify each story:
+
 - Trigger renders segmented input + calendar icon.
 - Calendar icon opens popover; segments do not.
 - ESC closes popover without committing; OK commits.
@@ -2210,6 +2233,7 @@ git commit -m "docs(react-ui-calendar): add DateTimePicker stories for every mod
 - [ ] **Step 1: Full test + build + lint sweep**
 
 Run:
+
 ```
 moon run react-ui-calendar:lint -- --fix
 moon run react-ui-calendar:build
@@ -2221,6 +2245,7 @@ Expected: all green.
 - [ ] **Step 2: Verify `git status` is clean**
 
 Run:
+
 ```
 git status
 ```
@@ -2271,4 +2296,3 @@ Design spec: [docs/design/react-ui-date-time-picker.md](docs/design/react-ui-dat
 EOF
 )"
 ```
-
