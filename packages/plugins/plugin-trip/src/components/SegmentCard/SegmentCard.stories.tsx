@@ -40,11 +40,13 @@ const DefaultStory = ({ segmentIndex, current }: StoryArgs) => {
   };
   return (
     <div className='w-[28rem] border border-subdued-separator'>
-      <Focus.Group asChild>
-        <Mosaic.Container withFocus currentId={current ? segment.id : undefined}>
-          <SegmentTile data={{ segment, onAction: handleAction }} location='story' current={current} />
-        </Mosaic.Container>
-      </Focus.Group>
+      <Mosaic.Root>
+        <Focus.Group asChild>
+          <Mosaic.Container withFocus currentId={current ? segment.id : undefined}>
+            <SegmentTile data={{ segment, onAction: handleAction }} location='story' current={current} />
+          </Mosaic.Container>
+        </Focus.Group>
+      </Mosaic.Root>
     </div>
   );
 };
