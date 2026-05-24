@@ -82,7 +82,9 @@ export const SegmentedInput = forwardRef<HTMLDivElement, SegmentedInputProps>(
 
     const handleKeyDown = useCallback(
       (kind: SegmentKind) => (ev: ReactKeyboardEvent<HTMLInputElement>) => {
-        if (disabled) return;
+        if (disabled) {
+          return;
+        }
         const current = values[kind] ?? '';
 
         if (ev.key === 'ArrowUp') {
@@ -205,8 +207,14 @@ const defaultSeed = (kind: SegmentKind): string => {
 
 /** Separator character drawn between two adjacent segments. */
 const separatorBetween = (prev: SegmentKind, next: SegmentKind): string => {
-  if (next === 'mm' && (prev === 'HH' || prev === 'hh')) return ':';
-  if (next === 'a') return ' ';
-  if (prev === 'mm' || prev === 'HH' || prev === 'hh') return ' ';
+  if (next === 'mm' && (prev === 'HH' || prev === 'hh')) {
+    return ':';
+  }
+  if (next === 'a') {
+    return ' ';
+  }
+  if (prev === 'mm' || prev === 'HH' || prev === 'hh') {
+    return ' ';
+  }
   return '/';
 };

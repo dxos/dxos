@@ -8,7 +8,6 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef 
 
 import { Button, IconButton, Popover, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
@@ -101,7 +100,7 @@ const Input = composable<HTMLDivElement, InputProps>(({ classNames, ...props }, 
       >
         <EndpointSegments
           endpoint='from'
-          label={t('range.from')}
+          label={t('range.from.label')}
           dateOrder={dateOrder}
           timeOrder={timeOrder}
           disabled={disabled}
@@ -109,7 +108,7 @@ const Input = composable<HTMLDivElement, InputProps>(({ classNames, ...props }, 
         <span className='text-description'>—</span>
         <EndpointSegments
           endpoint='to'
-          label={t('range.to')}
+          label={t('range.to.label')}
           dateOrder={dateOrder}
           timeOrder={timeOrder}
           disabled={disabled}

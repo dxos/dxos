@@ -27,9 +27,13 @@ export const resolveDateSegmentOrder = (locale: string = DEFAULT_LOCALE()): Date
     }).formatToParts(new Date(2026, 4, 24));
     const order: ('yyyy' | 'MM' | 'dd')[] = [];
     for (const part of parts) {
-      if (part.type === 'year') order.push('yyyy');
-      else if (part.type === 'month') order.push('MM');
-      else if (part.type === 'day') order.push('dd');
+      if (part.type === 'year') {
+        order.push('yyyy');
+      } else if (part.type === 'month') {
+        order.push('MM');
+      } else if (part.type === 'day') {
+        order.push('dd');
+      }
     }
     return order.length === 3 ? order : ['yyyy', 'MM', 'dd'];
   } catch {
@@ -41,7 +45,9 @@ export const resolveHourCycle = (locale: string = DEFAULT_LOCALE()): HourCycle =
   try {
     const resolved = new Intl.DateTimeFormat(locale, { hour: 'numeric' }).resolvedOptions();
     const cycle = resolved.hourCycle;
-    if (cycle === 'h11' || cycle === 'h12') return 'h12';
+    if (cycle === 'h11' || cycle === 'h12') {
+      return 'h12';
+    }
     return 'h23';
   } catch {
     return 'h23';
@@ -102,11 +108,15 @@ export const parseSegments = (segments: SegmentValues): Date | undefined => {
   const has12 = segments.hh !== undefined && segments.hh !== '';
   if (hasH23) {
     const h = Number(segments.HH);
-    if (!Number.isFinite(h)) return undefined;
+    if (!Number.isFinite(h)) {
+      return undefined;
+    }
     hours = h;
   } else if (has12) {
     const h = Number(segments.hh);
-    if (!Number.isFinite(h)) return undefined;
+    if (!Number.isFinite(h)) {
+      return undefined;
+    }
     const ampm = segments.a ?? 'AM';
     if (ampm === 'PM') {
       hours = h === 12 ? 12 : h + 12;
@@ -116,7 +126,9 @@ export const parseSegments = (segments: SegmentValues): Date | undefined => {
   }
   if (segments.mm !== undefined && segments.mm !== '') {
     const m = Number(segments.mm);
-    if (!Number.isFinite(m)) return undefined;
+    if (!Number.isFinite(m)) {
+      return undefined;
+    }
     minutes = m;
   }
 
@@ -127,8 +139,12 @@ export const parseSegments = (segments: SegmentValues): Date | undefined => {
 const wrap = (value: number, delta: number, min: number, max: number): number => {
   const span = max - min + 1;
   let next = value + delta;
-  while (next < min) next += span;
-  while (next > max) next -= span;
+  while (next < min) {
+    next += span;
+  }
+  while (next > max) {
+    next -= span;
+  }
   return next;
 };
 
