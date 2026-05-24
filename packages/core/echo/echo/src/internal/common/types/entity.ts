@@ -68,6 +68,29 @@ export const unwrapToSchema = <S extends Schema.Schema.AnyNoContext>(
 };
 
 /**
+ * Read the `[SchemaKindId]` brand off a value. Returns `undefined` for raw
+ * schemas (which don't carry the brand on their static type) and non-object
+ * inputs. Single point-of-cast for the brand lookup.
+ */
+export const getSchemaKind = (value: unknown): EntityKind | undefined => {
+  if (value == null || typeof value !== 'object') {
+    return undefined;
+  }
+  return (value as { [SchemaKindId]?: EntityKind })[SchemaKindId];
+};
+
+/**
+ * Read the `[KindId]` brand off a value. Returns `undefined` for raw schemas
+ * and non-object inputs. Companion to {@link getSchemaKind}.
+ */
+export const getEntityKindBrand = (value: unknown): EntityKind | undefined => {
+  if (value == null || typeof value !== 'object') {
+    return undefined;
+  }
+  return (value as { [KindId]?: EntityKind })[KindId];
+};
+
+/**
  * Phantom string key on `Type<A>` entities that carries the instance type `A`.
  * Lets internal helpers (`makeObject`, `createObject`, etc.) pattern-match the
  * instance type from an entity input without importing from the top-level

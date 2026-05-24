@@ -269,7 +269,7 @@ export type AnyType = AnyObjectType | AnyRelationType | Type;
  * NOTE: This checks SCHEMAS, not instances. Use Obj.isObject for instances.
  */
 export const isObjectSchema = (schema: AnyType | Schema.Schema.AnyNoContext): schema is AnyObjectType => {
-  if ((schema as any)[internal.SchemaKindId] === internal.EntityKind.Object) {
+  if (internal.getSchemaKind(schema) === internal.EntityKind.Object) {
     return true;
   }
   // Schema-side fallback for the well-known `Obj.Unknown` schema (and persisted
@@ -282,7 +282,7 @@ export const isObjectSchema = (schema: AnyType | Schema.Schema.AnyNoContext): sc
  * NOTE: This checks SCHEMAS, not instances. Use Relation.isRelation for instances.
  */
 export const isRelationSchema = (schema: AnyType | Schema.Schema.AnyNoContext): schema is AnyRelationType => {
-  if ((schema as any)[internal.SchemaKindId] === internal.EntityKind.Relation) {
+  if (internal.getSchemaKind(schema) === internal.EntityKind.Relation) {
     return true;
   }
   return Schema.isSchema(schema) && internal.getTypeAnnotation(schema)?.kind === internal.EntityKind.Relation;
@@ -293,7 +293,7 @@ export const isRelationSchema = (schema: AnyType | Schema.Schema.AnyNoContext): 
  * `Type.Type`). Mirrors {@link isObjectSchema} / {@link isRelationSchema}.
  */
 export const isTypeKindSchema = (schema: AnyType | Schema.Schema.AnyNoContext): schema is Type => {
-  if ((schema as any)[internal.SchemaKindId] === internal.EntityKind.Type) {
+  if (internal.getSchemaKind(schema) === internal.EntityKind.Type) {
     return true;
   }
   return Schema.isSchema(schema) && internal.getTypeAnnotation(schema)?.kind === internal.EntityKind.Type;
@@ -384,7 +384,7 @@ export const getVersion = (input: AnyType | Schema.Schema.AnyNoContext): string 
  * "is this a db-stored type I can pass to `Type.update`".
  */
 export const isType = (value: unknown): value is AnyType =>
-  typeof value === 'object' && value !== null && (value as any)[internal.KindId] === internal.EntityKind.Type;
+  internal.getEntityKindBrand(value) === internal.EntityKind.Type;
 
 /**
  * Type predicate: true iff the value is a persisted `Type.Type` entity that
@@ -414,7 +414,7 @@ export const getMeta = (input: AnyType | Schema.Schema.AnyNoContext): Meta | und
       return {
         typename: input.typename,
         version: input.version,
-        kind: (input as any)[internal.SchemaKindId] ?? internal.EntityKind.Object,
+        kind: internal.getSchemaKind(input) ?? internal.EntityKind.Object,
       };
     }
     return undefined;
@@ -545,7 +545,7 @@ export interface Mutable {
  */
 export const update = (type: AnyType, callback: (mutable: Mutable) => void): void => {
   // `Type.Type` is an ECHO object; the change machinery is the same as `Obj.update`.
-  internal.change(type as any, callback as (draft: any) => void);
+  internal.change(type, callback as internal.ChangeCallback<AnyType>);
 };
 
 //
