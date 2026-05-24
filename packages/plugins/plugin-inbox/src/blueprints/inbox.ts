@@ -19,7 +19,6 @@ const make = () =>
         InboxOperation.DraftEmail,
         InboxOperation.ReadEmail,
         InboxOperation.GoogleMailSync,
-        InboxOperation.ExtractMessage,
       ],
       tools: [],
     }),
@@ -49,9 +48,6 @@ const make = () =>
         - [ ] Task description.
 
         Additional information can be included (indented).
-
-        # Email extraction
-        Use ExtractMessage to parse a confirmation email (e.g., flight booking, hotel reservation) into structured objects.
 
         Note: Sending emails is handled by the "Inbox (Send)" blueprint.
       `,

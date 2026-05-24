@@ -163,7 +163,7 @@ export const GoogleMailSync = Operation.make({
   output: Schema.Struct({
     newMessages: Schema.Number,
   }),
-  services: [Database.Service, Feed.FeedService, Credential.CredentialsService, Trace.TraceService],
+  services: [Capability.Service, Database.Service, Feed.FeedService, Credential.CredentialsService, Trace.TraceService],
 });
 
 // TODO(wittjosiah): Factor out notify of failures to invocation option.
