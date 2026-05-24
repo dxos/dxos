@@ -125,7 +125,9 @@ export const MediaPlayer = ({
   }
 
   if (isLegacyIframeUrl(src)) {
-    return <LegacyIframePlayer src={src} alt={alt} classNames={classNames} mediaClassNames={mediaClassNames} />;
+    return (
+      <LegacyIframePlayer key={src} src={src} alt={alt} classNames={classNames} mediaClassNames={mediaClassNames} />
+    );
   }
 
   return (
