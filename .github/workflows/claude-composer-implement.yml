@@ -23,9 +23,17 @@ concurrency:
 
 jobs:
   implement:
+    # PILOT GATE — see `claude-composer-triage.yml` for the rationale. The
+    # implement step inherits the same upstream-bug exposure, so it stays
+    # gated behind `claude-pilot` until anthropics/claude-code-action#1351
+    # is resolved. To re-enable, delete the
+    # `contains(github.event.issue.labels.*.name, 'claude-pilot') &&` line
+    # from the `if:` block below (and this comment), in lockstep with the
+    # matching change in `claude-composer-triage.yml`.
     if: >
       github.event.label.name == 'needs-implementation' &&
       contains(github.event.issue.labels.*.name, 'Composer') &&
+      contains(github.event.issue.labels.*.name, 'claude-pilot') &&
       !contains(github.event.issue.labels.*.name, 'claude-implementing')
     runs-on: ubuntu-latest
     timeout-minutes: 30
