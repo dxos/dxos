@@ -64,8 +64,11 @@ export const useWheel = (controller?: GlobeController | null, options: WheelOpti
         // Mutating the projection here matches how useDrag accumulates.
         // Both deltas are negated so the wheel feels like "natural scroll":
         // scrolling/swiping in a direction moves the globe content the same way.
+        // Scale by 1/zoom so the gesture feels consistent at any zoom level
+        // (a bigger on-screen globe needs smaller angular rotation per pixel).
         const [lambda, phi, gamma] = controller.projection.rotate() as Vector;
-        const next: Vector = [lambda - event.deltaX * sensitivity, phi + event.deltaY * sensitivity, gamma];
+        const k = sensitivity / Math.max(controller.zoom, 0.1);
+        const next: Vector = [lambda - event.deltaX * k, phi + event.deltaY * k, gamma];
         controller.projection.rotate(next);
         controller.setRotation(controller.projection.rotate() as Vector);
       }
