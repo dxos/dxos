@@ -44,7 +44,11 @@ jobs:
       - name: Run Claude triage
         uses: anthropics/claude-code-action@beta
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # The org-level `ANTHROPIC_API_KEY` is currently rejected by Claude
+          # as "Invalid API key" (likely rotated). A `CLAUDE_CODE_OAUTH_TOKEN`
+          # repo secret was added 2026-05-23 as the working alternative; the
+          # action accepts either input.
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           # `mode: tag` (the default) is required — `mode: agent` only accepts
           # `workflow_dispatch` and `schedule` events per the action's beta
           # source (`src/modes/agent/index.ts`), not `issues:`. In tag mode,

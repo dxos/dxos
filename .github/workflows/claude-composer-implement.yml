@@ -56,7 +56,10 @@ jobs:
       - name: Run Claude implementation
         uses: anthropics/claude-code-action@beta
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # See claude-composer-triage.yml for the auth caveat — the org-level
+          # ANTHROPIC_API_KEY is rejected; the repo's CLAUDE_CODE_OAUTH_TOKEN
+          # is the currently-working credential.
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           # `mode: tag` (default) — `agent` mode only accepts
           # `workflow_dispatch`/`schedule` events. With `direct_prompt` set
           # the tag-mode trigger check returns true unconditionally, so the
