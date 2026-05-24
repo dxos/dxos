@@ -337,7 +337,10 @@ export const getURI = (input: AnyType): URI.URI => {
  */
 export const getTypename = (input: AnyType | Schema.Schema.AnyNoContext): string => {
   const typename = isType(input) ? input.typename : internal.getSchemaTypename(input as any);
-  invariant(typeof typename === 'string' && !typename.startsWith('dxn:'), 'Invalid typename');
+  invariant(
+    typeof typename === 'string' && !typename.startsWith('dxn:'),
+    `Invalid typename: ${JSON.stringify(typename)}`,
+  );
   return typename;
 };
 
