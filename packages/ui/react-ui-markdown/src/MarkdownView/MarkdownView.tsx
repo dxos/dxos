@@ -77,7 +77,7 @@ const defaultComponents: ReactMarkdownOptions['components'] = {
     if (!src) {
       return null;
     }
-    return <MediaPlayer src={src} alt={alt} mediaClassNames='aspect-video w-full' imgClassNames='w-full' />;
+    return <MediaPlayer src={src} alt={alt} classNames='w-full' />;
   },
   ol: ({ children, ...props }) => (
     <ol className='pt-1 pb-1 ps-6 leading-tight list-decimal' {...props}>
