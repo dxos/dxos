@@ -40,20 +40,20 @@ export const detectMediaKind = (src: string): MediaKind | undefined => {
  * Heuristic match for URLs that should render as native `<video>` / `<audio>`
  * (i.e. URLs ending in a recognised media extension).
  *
- * NB: legacy embed URLs (Cloudflare Stream etc. — paths containing `iframe`)
- * serve an HTML player page, **not** a media stream, so they cannot be loaded
- * via `<video>`. Those are detected by {@link isLegacyIframeUrl} and rendered
- * via `<iframe>` instead.
+ * NB: Cloudflare Stream embed URLs serve an HTML player page, **not** a media
+ * stream, so they cannot be loaded via `<video>`. Those are detected by
+ * {@link isCloudflareStreamEmbed} and rendered via `<iframe>` instead.
  */
 export const isEmbedUrl = (src: string): boolean => detectMediaKind(src) !== undefined;
 
-/** Match URLs whose pathname has an `/iframe` segment (e.g. Cloudflare Stream embeds). */
-const LEGACY_IFRAME_PATH_PATTERN = /\/iframe(?:[/?#]|$)/i;
+/**
+ * Match Cloudflare Stream `/iframe` embed URLs of the form
+ * `https://customer-<code>.cloudflarestream.com/<32-hex-uid>/iframe[?…]`.
+ */
+const CLOUDFLARE_STREAM_IFRAME_PATTERN =
+  /^https:\/\/[a-z0-9-]+\.cloudflarestream\.com\/[a-f0-9]{32}\/iframe(?:[/?#]|$)/i;
 
-const isLegacyIframeUrl = (src: string): boolean => {
-  const pathAndQuery = src.split('#', 1)[0]!;
-  return LEGACY_IFRAME_PATH_PATTERN.test(pathAndQuery);
-};
+const isCloudflareStreamEmbed = (src: string): boolean => CLOUDFLARE_STREAM_IFRAME_PATTERN.test(src);
 
 export type MediaPlayerProps = ThemedClassName<{
   src: string;
@@ -76,7 +76,7 @@ export type MediaPlayerProps = ThemedClassName<{
 /**
  * Renders a media URL using the appropriate element:
  * - Direct media URLs (mp4, mp3, …) → native `<video>` / `<audio>`.
- * - Legacy `iframe`-style embed URLs (Cloudflare Stream, oEmbed players) → `<iframe>`.
+ * - Cloudflare Stream `/iframe` embed URLs → `<iframe>`.
  * - Everything else → `<img>` that hides itself on load failure (broken images
  *   are common in feeds and the placeholder is uglier than nothing).
  */
@@ -124,9 +124,9 @@ export const MediaPlayer = ({
     );
   }
 
-  if (isLegacyIframeUrl(src)) {
+  if (isCloudflareStreamEmbed(src)) {
     return (
-      <LegacyIframePlayer key={src} src={src} alt={alt} classNames={classNames} mediaClassNames={mediaClassNames} />
+      <CloudflareStreamPlayer key={src} src={src} alt={alt} classNames={classNames} mediaClassNames={mediaClassNames} />
     );
   }
 
@@ -143,13 +143,13 @@ export const MediaPlayer = ({
   );
 };
 
-type LegacyIframePlayerProps = ThemedClassName<{
+type CloudflareStreamPlayerProps = ThemedClassName<{
   src: string;
   alt?: string;
   mediaClassNames?: string;
 }>;
 
-const LegacyIframePlayer = ({ src, alt, classNames, mediaClassNames }: LegacyIframePlayerProps) => {
+const CloudflareStreamPlayer = ({ src, alt, classNames, mediaClassNames }: CloudflareStreamPlayerProps) => {
   const [loaded, setLoaded] = useState(false);
   return (
     <div className={mx('relative bg-baseSurface', classNames)}>
