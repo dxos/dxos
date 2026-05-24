@@ -12,19 +12,16 @@ export type CalendarStyleProps = Partial<{}>;
 
 const root: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
   // `relative` anchors the absolutely-positioned `nav` to the calendar bounds; `w-fit` keeps the root from spanning its container.
-  mx('relative w-fit p-2 select-none text-base-foreground', ...etc);
+  mx('relative w-fit p-2 select-none bg-group-surface text-base-foreground', ...etc);
 
-const months: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
-  mx('flex flex-col sm:flex-row gap-2', ...etc);
+const months: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('flex flex-col sm:flex-row gap-2', ...etc);
 
-const month: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
-  mx('flex flex-col gap-2', ...etc);
+const month: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('flex flex-col gap-2', ...etc);
 
 const month_caption: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
   mx('flex justify-center items-center h-8 relative', ...etc);
 
-const caption_label: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
-  mx('text-sm font-medium', ...etc);
+const caption_label: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('text-sm font-medium', ...etc);
 
 const nav: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
   mx('flex items-center justify-between absolute inset-x-1 top-1', ...etc);
@@ -43,16 +40,14 @@ const button_next: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
     ...etc,
   );
 
-const month_grid: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
-  mx('w-full border-collapse', ...etc);
+const month_grid: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('w-full border-collapse', ...etc);
 
 const weekdays: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('flex', ...etc);
 
 const weekday: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
   mx('w-9 text-xs font-thin text-description', ...etc);
 
-const week: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
-  mx('flex w-full mt-1', ...etc);
+const week: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('flex w-full mt-1', ...etc);
 
 const day: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
   mx('relative w-9 h-9 p-0 text-center text-sm', ...etc);
@@ -71,11 +66,9 @@ const selected: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
 const today: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
   mx('[&_button]:border [&_button]:border-amber-500', ...etc);
 
-const outside: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
-  mx('text-description/50', ...etc);
+const outside: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('text-description/50', ...etc);
 
-const disabled: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
-  mx('text-description/40', ...etc);
+const disabled: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('text-description/40', ...etc);
 
 const range_start: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
   mx('[&_button]:bg-primary-500 [&_button]:text-primary-fg rounded-l-sm', ...etc);

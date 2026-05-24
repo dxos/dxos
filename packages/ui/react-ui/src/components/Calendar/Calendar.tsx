@@ -15,7 +15,10 @@ import {
 } from 'react-day-picker';
 
 import { useThemeContext } from '../../hooks';
+import { useTranslation } from '../../primitives';
+import { translationKey } from '../../translations';
 import { type ThemedClassName } from '../../util';
+import { IconButton } from '../Button';
 
 // Slot names match react-day-picker v9 `ClassNames` enum values.
 const themeSlots = [
@@ -100,14 +103,25 @@ const CalendarNav: CustomComponents['Nav'] = ({
   nextMonth,
   ...rest
 }: NavProps) => {
+  const { t } = useTranslation(translationKey);
   return (
     <nav {...rest}>
-      <button type='button' onClick={onPreviousClick} aria-disabled={!previousMonth}>
-        {'‹'}
-      </button>
-      <button type='button' onClick={onNextClick} aria-disabled={!nextMonth}>
-        {'›'}
-      </button>
+      <IconButton
+        variant='ghost'
+        iconOnly
+        icon='ph--caret-left--regular'
+        label={t('calendar.nav.previous.label')}
+        disabled={!previousMonth}
+        onClick={onPreviousClick}
+      />
+      <IconButton
+        variant='ghost'
+        iconOnly
+        icon='ph--caret-right--regular'
+        label={t('calendar.nav.next.label')}
+        disabled={!nextMonth}
+        onClick={onNextClick}
+      />
     </nav>
   );
 };
