@@ -809,43 +809,33 @@ describe('SubductionPolicy', () => {
     // The existing `'shareConfigChanged() retries after subductionPolicy
     // denial flips to allow'` test recovers a denied `authorizeFetch`
     // by flipping allow and calling `client.shareConfigChanged()`. The
-    // symmetric setup for `authorizePut` does NOT recover the same
-    // way under the current bridge:
+    // recovery shape for `authorizePut` deny→allow flips is
+    // non-deterministic under the current bridge:
     //
-    //   1. `host.shareConfigChanged()` + `client.shareConfigChanged()`
-    //      after the flip does not deliver the doc within 1.5s.
-    //   2. `reconnectAdapters` (full peer-disconnected +
-    //      peer-candidate cycle on both sides) also does NOT deliver
-    //      the doc within an additional 10s window.
-    //   3. Only a fresh `#save` on the holder AFTER the flip
-    //      reliably retriggers a push that now passes the allowing
-    //      policy.
+    //   - On lightly-loaded environments, `shareConfigChanged()` +
+    //     `reconnectAdapters` may NOT deliver the doc within 500 ms
+    //     windows.
+    //   - On loaded CI boxes, subduction-core request timeouts cause
+    //     implicit reconnects; the doc may arrive within those 500 ms
+    //     windows even without an explicit new commit.
+    //   - A fresh `#save` on the holder AFTER the flip reliably
+    //     retriggers a push that passes the now-allowing policy in
+    //     both environments.
     //
     // Suspected cause: a holder's push that was rejected by the
     // receiver's `authorizePut` does not transition the holder's
     // sync-entry into a state the bridge's recovery hooks address
     // (heal-retry alone would eventually fire, but on a slow
-    // exponential backoff). The reconnect path also doesn't recover
-    // because — per the SKILL doc's documented fork gap —
-    // `lastSyncResult === 'all-failed'` is not retried on
-    // connection-generation bumps. A new `#save` enqueues a fresh
-    // outbound batch from scratch, sidestepping the stuck entry.
+    // exponential backoff). A new `#save` enqueues a fresh outbound
+    // batch from scratch, sidestepping the stuck entry.
     //
-    // Expected: kick via `shareConfigChanged()` does NOT recover;
-    // `reconnectAdapters` does NOT recover; a new local commit on the
-    // holder DOES recover.
+    // Reliable invariant: a new local commit on the holder DOES
+    // recover after the flip regardless of timing.
     //
     // Implication: 🚨 production code that flips a client-side
     // `authorizePut` gate from deny → allow (e.g. when a new space is
-    // authorized) must drive a fresh push from the holder side. The
-    // SKILL-doc-recommended `shareConfigChanged()` escape hatch alone
-    // is insufficient for `authorizePut` flips. This is a real bridge
-    // limitation worth filing upstream.
-    //
-    // TODO(mykola): If/when the upstream bridge starts treating
-    // post-`authorizePut`-denial entries as recoverable via
-    // `shareConfigChanged()`, simplify this test to mirror the
-    // existing `authorizeFetch` flip test.
+    // authorized) must drive a fresh push from the holder side to
+    // guarantee timely delivery.
     test('authorizePut deny → allow needs a fresh holder commit to recover', { timeout: 20_000 }, async () => {
       let allowPut = false;
       const { repos, adapters } = await createHostClientRepoTopology({
@@ -870,20 +860,16 @@ describe('SubductionPolicy', () => {
       await sleep(NEGATIVE_ASSERTION_DELAY_MS);
       expect(progress.peek().state).to.not.equal('ready');
 
-      // Step 1: flip + shareConfigChanged + reconnect, both
-      // documented escape hatches. Empirically neither lands the doc.
+      // Flip the policy and use the documented recovery helpers.
+      // Whether these alone deliver the doc is non-deterministic (see
+      // the block comment above); don't assert intermediate state.
       allowPut = true;
       host.shareConfigChanged();
       client.shareConfigChanged();
-      await sleep(NEGATIVE_ASSERTION_DELAY_MS);
-      expect(progress.peek().state).to.not.equal('ready');
-
       await reconnectAdapters(adapters);
-      await sleep(NEGATIVE_ASSERTION_DELAY_MS);
-      expect(progress.peek().state).to.not.equal('ready');
 
-      // Step 2: drive a new commit on the holder. The fresh `#save`
-      // sidesteps the stuck post-denial entry and pushes successfully.
+      // Drive a new commit on the holder. The fresh `#save` reliably
+      // re-enqueues an outbound batch that now passes the policy.
       handle.change((doc: any) => {
         doc.text = 'after-flip';
       });
