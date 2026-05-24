@@ -1,0 +1,100 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { format } from 'date-fns';
+import React, { type MouseEvent, forwardRef, useCallback } from 'react';
+
+import { Card, useTranslation } from '@dxos/react-ui';
+import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+
+import { meta } from '#meta';
+import { Segment } from '#types';
+
+export type SegmentCardAction = { segmentId: string } & (
+  | { type: 'current' }
+  | { type: 'select' }
+  | { type: 'deselect' }
+  | { type: 'delete' }
+);
+
+export type SegmentCardActionHandler = (action: SegmentCardAction) => void;
+
+type SegmentTileData = {
+  segment: Segment.Segment;
+  onAction?: SegmentCardActionHandler;
+};
+
+type SegmentTileProps = Pick<MosaicTileProps<SegmentTileData>, 'data' | 'location' | 'current'>;
+
+/**
+ * Mosaic tile for a Segment. Follows the Card primitives:
+ *   Card.Root
+ *     Card.Toolbar  → kind icon + title + delete (Card.CloseIconButton)
+ *     Card.Content  → optional Route and Date rows
+ *
+ * Selection / current state is wired through `Mosaic.Tile asChild` + `Focus.Item`
+ * so the host `Mosaic.Container` drives the visual `dx-current` / `dx-selected`
+ * states uniformly across the stack.
+ */
+export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data, location, current }, forwardedRef) => {
+  const { segment, onAction } = data;
+  const { setCurrentId, setSelected } = useMosaicContainer('SegmentTile');
+  const { t } = useTranslation(meta.id);
+
+  const handleCurrentChange = useCallback(() => {
+    setCurrentId(segment.id);
+    setSelected(segment.id, true);
+  }, [segment.id, setCurrentId, setSelected]);
+
+  const handleDelete = useCallback(
+    (event: MouseEvent<HTMLButtonElement>) => {
+      // Don't let the delete button propagate as a select / current change.
+      event.stopPropagation();
+      onAction?.({ type: 'delete', segmentId: segment.id });
+    },
+    [onAction, segment.id],
+  );
+
+  const title = Segment.getTitle(segment);
+  const route = Segment.getRoute(segment);
+  const date = Segment.getPrimaryDate(segment);
+  const icon = Segment.kindIcon(segment.kind);
+  const isCancelled = segment.status === 'cancelled';
+
+  return (
+    <Mosaic.Tile
+      asChild
+      classNames='dx-hover dx-current dx-selected border-b border-subdued-separator'
+      id={segment.id}
+      data={data}
+      location={location}
+    >
+      <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
+        <Card.Root fullWidth border={false} ref={forwardedRef} classNames={isCancelled ? 'opacity-40' : undefined}>
+          <Card.Toolbar>
+            <Card.Icon icon={icon} />
+            <Card.Title classNames={isCancelled ? 'line-through' : undefined}>{title}</Card.Title>
+            <Card.ActionIconButton action='delete' onClick={handleDelete} label={t('segment.delete.label')} />
+          </Card.Toolbar>
+          {(route || date) && (
+            <Card.Content>
+              {route && (
+                <Card.Row icon='ph--arrow-right--regular'>
+                  <Card.Text variant='description'>{route}</Card.Text>
+                </Card.Row>
+              )}
+              {date && (
+                <Card.Row icon='ph--calendar--regular'>
+                  <Card.Text variant='description'>{format(date, 'PPp')}</Card.Text>
+                </Card.Row>
+              )}
+            </Card.Content>
+          )}
+        </Card.Root>
+      </Focus.Item>
+    </Mosaic.Tile>
+  );
+});
+
+SegmentTile.displayName = 'SegmentTile';

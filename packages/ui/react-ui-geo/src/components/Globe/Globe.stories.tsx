@@ -132,7 +132,7 @@ type DefaultStoryProps = Pick<GlobeRootProps, 'zoom' | 'translation' | 'rotation
     drag?: boolean;
     spin?: boolean;
     tour?: boolean;
-    xAxis?: boolean;
+    lockTilt?: boolean;
   };
 
 const DefaultStory = ({
@@ -144,7 +144,7 @@ const DefaultStory = ({
   drag = false,
   spin = false,
   tour = false,
-  xAxis = false,
+  lockTilt = false,
 }: DefaultStoryProps) => {
   const controller = useRef<GlobeController>(null);
   const [dots] = useAsyncState(async () => {
@@ -165,7 +165,7 @@ const DefaultStory = ({
   const [startSpinner, stopSpinner] = useSpinner(controller.current, { disabled: !spin });
   const [_running, setRunning] = useTour(controller.current, features?.points, { disabled: !tour, styles });
   useDrag(controller.current, {
-    xAxis,
+    lockTilt,
     disabled: !drag,
     onUpdate: (event) => {
       switch (event.type) {
@@ -352,7 +352,7 @@ export const Globe5: Story = {
 export const Globe6: Story = {
   args: {
     drag: true,
-    xAxis: true,
+    lockTilt: true,
     tour: true,
     zoom: 2,
     translation: { x: 0, y: 600 },

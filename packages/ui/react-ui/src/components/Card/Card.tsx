@@ -27,6 +27,7 @@ import { Icon, type IconProps } from '../Icon';
 import { Image } from '../Image';
 import {
   Toolbar,
+  type ToolbarActionIconButtonProps,
   ToolbarCloseIconButtonProps,
   ToolbarDragHandleProps,
   type ToolbarMenuItem,
@@ -137,6 +138,24 @@ const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>((props
 CardDragHandle.displayName = CARD_DRAG_HANDLE_NAME;
 
 //
+// ActionIconButton
+//
+
+const CARD_ACTION_ICON_BUTTON_NAME = 'Card.ActionIconButton';
+
+type CardActionIconButtonProps = ToolbarActionIconButtonProps;
+
+const CardActionIconButton = forwardRef<HTMLButtonElement, CardActionIconButtonProps>((props, forwardedRef) => {
+  return (
+    <CardIconBlock padding>
+      <Toolbar.ActionIconButton {...props} ref={forwardedRef} />
+    </CardIconBlock>
+  );
+});
+
+CardActionIconButton.displayName = CARD_ACTION_ICON_BUTTON_NAME;
+
+//
 // CloseIconButton
 //
 
@@ -144,12 +163,9 @@ const CARD_CLOSE_ICON_BUTTON_NAME = 'Card.CloseIconButton';
 
 type CloseIconButtonProps = ToolbarCloseIconButtonProps;
 
+/** @deprecated Use `Card.ActionIconButton action='close'`. */
 const CloseIconButton = forwardRef<HTMLButtonElement, CloseIconButtonProps>((props, forwardedRef) => {
-  return (
-    <CardIconBlock padding>
-      <Toolbar.CloseIconButton {...props} ref={forwardedRef} />
-    </CardIconBlock>
-  );
+  return <CardActionIconButton action='close' {...props} ref={forwardedRef} />;
 });
 
 CloseIconButton.displayName = CARD_CLOSE_ICON_BUTTON_NAME;
@@ -488,6 +504,8 @@ export const Card = {
   // Toolbar blocks
   IconBlock: CardIconBlock,
   DragHandle: CardDragHandle,
+  ActionIconButton: CardActionIconButton,
+  /** @deprecated Use `Card.ActionIconButton action='close'`. */
   CloseIconButton: CloseIconButton,
   Menu: CardMenu,
   Icon: CardIcon,
@@ -510,6 +528,7 @@ export type {
   CardRootProps,
   CardToolbarProps,
   CardDragHandleProps,
+  CardActionIconButtonProps,
   CloseIconButtonProps,
   CardMenuProps,
 };

@@ -35,7 +35,7 @@ export const geoInertiaDrag = (target, render, projection, options) => {
       projection.rotate(rotation);
       render && render();
     },
-    axis: restrictAxis(options.xAxis ? [true, false, false] : [true, true, true]),
+    axis: restrictAxis(options.lockTilt ? [true, false, false] : [true, true, true]),
     start: options.start,
     move: options.move,
     end: options.end,

@@ -6,7 +6,7 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import type { ToggleGroupItemProps as ToggleGroupItemPrimitiveProps } from '@radix-ui/react-toggle-group';
 import * as ToolbarPrimitive from '@radix-ui/react-toolbar';
-import React, { forwardRef } from 'react';
+import React, { type MouseEventHandler, forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { type SlottableProps } from '@dxos/ui-types';
@@ -228,27 +228,62 @@ const ToolbarDragHandle = forwardRef<HTMLButtonElement, ToolbarDragHandleProps>(
 );
 
 //
-// CloseIconButton
+// ActionIconButton
 //
 
-type ToolbarCloseIconButtonProps = { onClick?: () => void; label?: string };
+/**
+ * Known semantic actions a toolbar icon-button can represent. Each action
+ * picks its own phosphor icon + default translation key so call sites just
+ * declare intent (`action='delete'`) rather than re-specifying the icon /
+ * label every time.
+ */
+type ToolbarActionIconButtonAction = 'close' | 'delete';
 
-const ToolbarCloseIconButton = forwardRef<HTMLButtonElement, ToolbarCloseIconButtonProps>(
-  ({ onClick, label }, forwardedRef) => {
+type ToolbarActionIconButtonProps = {
+  action: ToolbarActionIconButtonAction;
+  onClick?: MouseEventHandler<HTMLButtonElement>;
+  label?: string;
+};
+
+const TOOLBAR_ACTION_ICONS: Record<ToolbarActionIconButtonAction, string> = {
+  close: 'ph--x--regular',
+  delete: 'ph--trash--regular',
+};
+
+const TOOLBAR_ACTION_LABEL_KEYS: Record<ToolbarActionIconButtonAction, string> = {
+  close: 'toolbar-close.label',
+  delete: 'toolbar-delete.label',
+};
+
+const ToolbarActionIconButton = forwardRef<HTMLButtonElement, ToolbarActionIconButtonProps>(
+  ({ action, onClick, label }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
 
     return (
       <ToolbarIconButton
         iconOnly
-        icon='ph--x--regular'
+        icon={TOOLBAR_ACTION_ICONS[action]}
         variant='ghost'
-        label={label ?? t('toolbar-close.label')}
+        label={label ?? t(TOOLBAR_ACTION_LABEL_KEYS[action])}
         classNames='cursor-pointer'
         onClick={onClick}
         ref={forwardedRef}
       />
     );
   },
+);
+
+//
+// CloseIconButton
+//
+
+type ToolbarCloseIconButtonProps = { onClick?: MouseEventHandler<HTMLButtonElement>; label?: string };
+
+/** @deprecated Use `Toolbar.ActionIconButton action='close'`. */
+const ToolbarCloseIconButton = forwardRef<HTMLButtonElement, ToolbarCloseIconButtonProps>(
+  ({ onClick, label }, forwardedRef) => (
+    <ToolbarActionIconButton action='close' onClick={onClick} label={label} ref={forwardedRef} />
+  ),
 );
 
 //
@@ -313,6 +348,8 @@ export const Toolbar = {
   ToggleGroupIconItem: ToolbarToggleGroupIconItem,
   Separator: ToolbarSeparator,
   DragHandle: ToolbarDragHandle,
+  ActionIconButton: ToolbarActionIconButton,
+  /** @deprecated Use `Toolbar.ActionIconButton action='close'`. */
   CloseIconButton: ToolbarCloseIconButton,
   Menu: ToolbarMenu,
 };
@@ -329,6 +366,8 @@ export type {
   ToolbarToggleGroupIconItemProps,
   ToolbarSeparatorProps,
   ToolbarDragHandleProps,
+  ToolbarActionIconButtonAction,
+  ToolbarActionIconButtonProps,
   ToolbarCloseIconButtonProps,
   ToolbarMenuItem,
   ToolbarMenuProps,

@@ -154,19 +154,32 @@ const DialogHeader = slottable<HTMLDivElement>(({ children, asChild, ...props },
 });
 
 //
-// CloseIconButton
+// ActionIconButton
 //
 
-type DialogCloseIconButtonProps = { label?: string };
+type DialogActionIconButtonAction = 'close' | 'delete';
 
-const DialogCloseIconButton = forwardRef<HTMLButtonElement, DialogCloseIconButtonProps>(
-  ({ label, ...props }, forwardedRef) => {
+type DialogActionIconButtonProps = { action: DialogActionIconButtonAction; label?: string };
+
+const DIALOG_ACTION_ICONS: Record<DialogActionIconButtonAction, string> = {
+  close: 'ph--x--regular',
+  delete: 'ph--trash--regular',
+};
+
+const DIALOG_ACTION_LABEL_KEYS: Record<DialogActionIconButtonAction, string> = {
+  // Preserves the legacy `close-dialog.label` translation key for backward compat.
+  close: 'close-dialog.label',
+  delete: 'toolbar-delete.label',
+};
+
+const DialogActionIconButton = forwardRef<HTMLButtonElement, DialogActionIconButtonProps>(
+  ({ action, label, ...props }, forwardedRef) => {
     const { t } = useTranslation(osTranslations);
     return (
       <IconButton
         {...props}
-        label={label ?? t('close-dialog.label')}
-        icon='ph--x--regular'
+        label={label ?? t(DIALOG_ACTION_LABEL_KEYS[action])}
+        icon={DIALOG_ACTION_ICONS[action]}
         iconOnly
         size={4}
         variant='ghost'
@@ -175,6 +188,17 @@ const DialogCloseIconButton = forwardRef<HTMLButtonElement, DialogCloseIconButto
     );
   },
 );
+
+//
+// CloseIconButton
+//
+
+type DialogCloseIconButtonProps = { label?: string };
+
+/** @deprecated Use `Dialog.ActionIconButton action='close'`. */
+const DialogCloseIconButton = forwardRef<HTMLButtonElement, DialogCloseIconButtonProps>((props, forwardedRef) => (
+  <DialogActionIconButton action='close' {...props} ref={forwardedRef} />
+));
 
 //
 // Body
@@ -268,6 +292,8 @@ export const Dialog = {
   Description: DialogDescription,
   ActionBar: DialogActionBar,
   Close: DialogClose,
+  ActionIconButton: DialogActionIconButton,
+  /** @deprecated Use `Dialog.ActionIconButton action='close'`. */
   CloseIconButton: DialogCloseIconButton,
 };
 
@@ -283,5 +309,7 @@ export type {
   DialogDescriptionProps,
   DialogActionBarProps,
   DialogCloseProps,
+  DialogActionIconButtonAction,
+  DialogActionIconButtonProps,
   DialogCloseIconButtonProps,
 };

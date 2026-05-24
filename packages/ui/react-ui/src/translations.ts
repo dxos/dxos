@@ -13,6 +13,7 @@ export const translations = [
         'toolbar-menu.label': 'Action menu',
         'toolbar-drag-handle.label': 'Drag to rearrange',
         'toolbar-close.label': 'Close',
+        'toolbar-delete.label': 'Delete',
         'carousel-viewport.label': 'Carousel',
         'carousel-prev.label': 'Previous slide',
         'carousel-next.label': 'Next slide',
