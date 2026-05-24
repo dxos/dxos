@@ -39,7 +39,9 @@ const meta = {
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type StoryProps = PulseProps & { interval?: number };
+
+type Story = StoryObj<StoryProps>;
 
 // Radial wave emanating from the center.
 const radialWave: PulseSignal = (i, j, time) => {
@@ -67,9 +69,9 @@ const ripple: PulseSignal = (i, j, time) => 0.5 + 0.5 * Math.sin(time * 3 + Math
 export const Ripple: Story = {
   args: {
     dim: 12,
-    maxRadius: 6,
+    maxRadius: 2,
     minRadius: 0,
-    gap: 4,
+    gap: 8,
     smoothing: 0.3,
     classNames: 'text-emerald-500',
     getSignal: ripple,
@@ -142,7 +144,7 @@ export const Pointer: Story = {
 };
 
 // Randomly pings dots that then decay back to zero.
-const RandomPing = (props: PulseProps) => {
+const RandomPing = (props: StoryProps) => {
   const { dim = 4 } = props;
   const valuesRef = useRef<Float32Array>(new Float32Array(dim * dim));
   const lastTimeRef = useRef(0);
@@ -155,7 +157,8 @@ const RandomPing = (props: PulseProps) => {
   useEffect(() => {
     const interval = setInterval(() => {
       valuesRef.current[Math.floor(Math.random() * valuesRef.current.length)] = 1;
-    }, 100);
+    }, props.interval ?? 100);
+
     return () => clearInterval(interval);
   }, [dim]);
 
@@ -179,6 +182,25 @@ const RandomPing = (props: PulseProps) => {
   return <Pulse {...props} getSignal={getSignal} />;
 };
 
+export const Matrix: Story = {
+  render: (props) => (
+    <Panel.Root>
+      <Panel.Content classNames='flex items-center justify-center'>
+        <RandomPing {...props} />
+      </Panel.Content>
+    </Panel.Root>
+  ),
+  args: {
+    dim: 50,
+    maxRadius: 2,
+    minRadius: 0.25,
+    gap: 4,
+    smoothing: 0.5,
+    classNames: 'text-green-500',
+    interval: 5,
+  },
+};
+
 export const Icon: Story = {
   render: (props) => (
     <Panel.Root>
@@ -194,5 +216,6 @@ export const Icon: Story = {
     gap: 0,
     smoothing: 0.5,
     classNames: 'text-primary-500',
+    interval: 100,
   },
 };
