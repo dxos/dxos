@@ -93,7 +93,7 @@ catalog:
   '@effect/sql-sqlite-wasm': 0.52.0
   '@effect/typeclass': 0.40.0
   '@effect/vitest': 0.29.0
-  '@effect/wa-sqlite': ^0.2.1
+  '@effect/wa-sqlite': ^0.1.2
   '@effect/workflow': ^0.18.1
   '@emoji-mart/data': ^1.1.2
   '@emoji-mart/react': ^1.1.1
@@ -764,9 +764,6 @@ patchedDependencies:
 peerDependencyRules:
   allowedVersions:
     '@bryanguffey/astro-standard-site>astro': '>=5.0.0'
-    '@effect-atom/atom>@effect/experimental': '>=0.58.0'
-    '@effect-atom/atom>@effect/platform': '>=0.94.2'
-    '@effect-atom/atom>@effect/rpc': '>=0.73.0'
     '@effect/vitest>vitest': '>=3.2.0'
     dfx>@effect/platform: '>=0.93.0'
     manifold-3d>esbuild-wasm: '*'
