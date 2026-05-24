@@ -50,15 +50,15 @@ export type CalendarProps = ThemedClassName<Omit<DayPickerProps, 'classNames'>> 
 const CalendarRoot = forwardRef<HTMLDivElement, CalendarProps>(
   ({ classNames: classNamesProp, components, ...props }, _forwardedRef) => {
     const { tx } = useThemeContext();
-    const themed: Record<string, string> = {};
+    const themed: Partial<ClassNames> = {};
     for (const slot of themeSlots) {
-      themed[slot] = tx(`calendar.${slot}`, {}, (classNamesProp as Record<string, string> | undefined)?.[slot]);
+      themed[slot] = tx(`calendar.${slot}`, {}, classNamesProp?.[slot]);
     }
     // react-day-picker does not forward a ref to a single DOM node; intentionally ignored.
     return (
       <DayPicker
-        {...props}
-        classNames={themed as Partial<ClassNames>}
+        {...(props as DayPickerProps)}
+        classNames={themed}
         components={{
           MonthCaption: MonthCaptionDefault,
           Nav: NavDefault,
