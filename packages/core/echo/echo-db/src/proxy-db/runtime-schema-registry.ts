@@ -107,10 +107,8 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
   }
 
   // TODO(wittjosiah): Not a part of SchemaRegistry interface, remove?
-  hasSchema(schema: Type.AnyType | Schema.Schema.AnyNoContext): boolean {
-    // Type.AnyType always has a URI; raw schemas may not, so fall back via the
-    // schema-level helper.
-    const uri = Schema.isSchema(schema) ? internal.getSchemaURI(schema) : Type.getURI(schema as Type.AnyType);
+  hasSchema(schema: Type.AnyType): boolean {
+    const uri = Type.getURI(schema);
     if (!uri) {
       return false;
     }

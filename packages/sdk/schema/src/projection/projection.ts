@@ -6,7 +6,7 @@ import { Atom, Registry } from '@effect-atom/atom-react';
 import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
-import { Format, Obj, Type, View } from '@dxos/echo';
+import { Format, JsonSchema, Obj, Type, View } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import {
   type JsonProp,
@@ -45,7 +45,7 @@ export type ProjectionChangeCallback = {
   /** Callback to wrap projection mutations. */
   projection: (mutate: (mutableProjection: Mutable<View.Projection>) => void) => void;
   /** Callback to wrap schema mutations. */
-  schema: (mutate: (mutableSchema: Types.DeepMutable<JsonSchemaType>) => void) => void;
+  schema: (mutate: (mutableSchema: Types.DeepMutable<JsonSchema.JsonSchema>) => void) => void;
 };
 
 /**
@@ -53,11 +53,11 @@ export type ProjectionChangeCallback = {
  * Use this when the view is stored in the ECHO database.
  *
  * @param view - The ECHO-backed view object.
- * @param schema - Optional persisted `Type.Type`. If not provided, schema mutations will throw.
+ * @param schema - Optional persisted `Type.AnyType`. If not provided, schema mutations will throw.
  */
 export const createEchoChangeCallback = (
   view: View.View,
-  schema?: Type.Type | Types.DeepMutable<JsonSchemaType>,
+  schema?: Type.AnyType,
 ): ProjectionChangeCallback => ({
   // Inside Obj.update, v is Mutable<View.View>, so v.projection is already mutable.
   projection: (mutate) => Obj.update(view, (view) => mutate(view.projection as Mutable<View.Projection>)),
@@ -65,9 +65,7 @@ export const createEchoChangeCallback = (
     ? () => {
         throw new Error('Schema is not mutable');
       }
-    : Type.isType(schema)
-      ? (mutate) => Type.update(schema, (draft) => mutate(draft.jsonSchema as Types.DeepMutable<JsonSchemaType>))
-      : (mutate) => mutate(schema),
+    : (mutate) => Type.update(schema, (draft) => mutate(draft.jsonSchema as Types.DeepMutable<JsonSchemaType>)),
 });
 
 /**

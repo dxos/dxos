@@ -20,7 +20,7 @@ export const DynamicTypeCard = ({ subject }: AppSurface.ObjectCardProps) => {
   const typename = Obj.getTypename(subject);
   const runtimeSchema = useSchema(db, typename);
   const schema = useMemo(
-    () => runtimeSchema && omitId(Type.isType(runtimeSchema) ? Type.getSchema(runtimeSchema) : runtimeSchema),
+    () => runtimeSchema && omitId(Type.getSchema(runtimeSchema)),
     [runtimeSchema],
   );
 

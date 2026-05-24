@@ -87,7 +87,7 @@ const selectTypename = Effect.fn(function* (
   }).pipe(
     Effect.map((schemas) =>
       schemas.filter((type) => {
-        const schema = Type.isType(type) ? Type.getSchema(type) : type;
+        const schema = Type.getSchema(type);
         return getTypeAnnotation(schema)?.kind !== EntityKind.Relation;
       }),
     ),

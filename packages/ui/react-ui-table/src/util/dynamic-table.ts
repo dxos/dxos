@@ -6,11 +6,11 @@ import { type Registry } from '@effect-atom/atom-react';
 import type * as Types from 'effect/Types';
 
 import { Filter, JsonSchema, Obj, Order, Query, type QueryAST, Ref, Type, type View } from '@dxos/echo';
+import { type Mutable } from '@dxos/echo/internal'; // Mutable needed for View.Projection cast
 import {
   ProjectionModel,
   type SchemaPropertyDefinition,
   ViewModel,
-  createEchoChangeCallback,
   getSchemaFromPropertyDefinitions,
 } from '@dxos/schema';
 
@@ -45,10 +45,10 @@ export const getBaseSchema = ({
     // `getSchemaFromPropertyDefinitions` is always called with a typename, so
     // the returned Type entity always carries one (the optionality on Type.Type
     // covers anonymous drafts which this codepath doesn't produce).
-    return { typename: type.typename!, jsonSchema: type.jsonSchema as Types.DeepMutable<JsonSchema.JsonSchema> };
+    // Snapshot through toJsonSchema — type.jsonSchema is ECHO-backed and can't be mutated directly.
+    return { typename: type.typename!, jsonSchema: JsonSchema.toJsonSchema(Type.getSchema(type)) as Types.DeepMutable<JsonSchema.JsonSchema> };
   } else if (schema) {
-    const effectSchema = Type.isType(schema) ? Type.getSchema(schema) : schema;
-    return { typename: Type.getTypename(schema)!, jsonSchema: JsonSchema.toJsonSchema(effectSchema) };
+    return { typename: Type.getTypename(schema)!, jsonSchema: JsonSchema.toJsonSchema(Type.getSchema(schema)) as Types.DeepMutable<JsonSchema.JsonSchema> };
   } else if (typename && jsonSchema) {
     return { typename, jsonSchema };
   } else {
@@ -72,11 +72,16 @@ export const makeDynamicTable = ({
   });
   const object = Obj.make(Table.Table, { view: Ref.make(view), sizes: {} });
 
+  // `view` is ECHO-backed so projection mutations must run inside Obj.update.
+  // `jsonSchema` is a plain JS object (not a Type entity), so schema mutations are direct.
   const projection = new ProjectionModel({
     registry,
     view,
     baseSchema: jsonSchema,
-    change: createEchoChangeCallback(view, jsonSchema),
+    change: {
+      projection: (mutate) => Obj.update(view, (v) => mutate(v.projection as Mutable<View.Projection>)),
+      schema: (mutate) => mutate(jsonSchema),
+    },
   });
   projection.normalizeView();
   if (properties && projection.getFields()) {

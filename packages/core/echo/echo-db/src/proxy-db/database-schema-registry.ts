@@ -15,7 +15,6 @@ import {
   TypeIdentifierAnnotationId,
   createObject,
   getTypeAnnotation,
-  getTypeIdentifierAnnotation,
   makeTypeJsonSchemaAnnotation,
 } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -96,12 +95,8 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     // Nothing to do.
   }
 
-  public hasSchema(schema: Type.AnyType | Schema.Schema.AnyNoContext): boolean {
-    // For Type entities (any of the three kinds) read the id directly; for raw
-    // schemas fall back to the TypeIdentifierAnnotation lookup.
-    const schemaId = Type.isType(schema)
-      ? (schema as { id?: ObjectId }).id
-      : getObjectIdFromSchema(schema as Schema.Schema.AnyNoContext);
+  public hasSchema(schema: Type.AnyType): boolean {
+    const schemaId = (schema as { id?: ObjectId }).id;
     return schemaId != null && this.getSchemaById(schemaId) != null;
   }
 
@@ -488,16 +483,3 @@ const validateStoredSchemaIntegrity = (schema: Type.Type) => {
   return true;
 };
 
-const getObjectIdFromSchema = (schema: Schema.Schema.AnyNoContext): ObjectId | undefined => {
-  const echoIdentifier = getTypeIdentifierAnnotation(schema);
-  if (!echoIdentifier) {
-    return undefined;
-  }
-
-  const echoUri = EchoURI.tryParse(echoIdentifier);
-  if (!echoUri) {
-    return undefined;
-  }
-  invariant(EchoURI.isLocal(echoUri));
-  return EchoURI.getObjectId(echoUri);
-};

@@ -151,7 +151,7 @@ export const createObjectNode = ({
   // PersistentSchema jsonSchema.$id is dxn:echo:@:<objectId> so the id-based lookup misses.
   // Fall back to a typename query which matches the PersistentSchema.typename field.
   const rawSchema = Obj.getType(object) ?? db.schemaRegistry.query({ typename: type }).runSync()[0];
-  const schema = rawSchema && Type.isType(rawSchema) ? Type.getSchema(rawSchema) : rawSchema;
+  const schema = rawSchema && Type.getSchema(rawSchema);
   const staticIcon = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema)) : undefined;
   const iconFromRefProp = schema ? Option.getOrUndefined(Annotation.IconFromRefAnnotation.get(schema)) : undefined;
   // If the schema delegates its icon to a referenced sub-entity, resolve that ref's target

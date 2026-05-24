@@ -63,7 +63,8 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
       });
     }, [graph, attendableId]);
 
-    const addRow = useAddRow({ db, schema });
+    const objectSchema = schema && Type.isObjectSchema(schema) ? schema : undefined;
+    const addRow = useAddRow({ db, schema: objectSchema });
 
     const handleDeleteRows = useCallback(
       (_row: number, objects: any[]) => {

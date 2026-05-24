@@ -64,6 +64,9 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
       return undefined;
     }
 
+    // TODO(wittjosiah): resolveSchemaWithRegistry returns Schema.Schema.AnyNoContext, not Type.AnyType,
+    // so schema.jsonSchema is not available here. This branch can be simplified once
+    // resolveSchemaWithRegistry is updated to return Type.AnyType directly.
     // For stored Type.Type entities, use the live jsonSchema reference for reactivity.
     const jsonSchema = Type.isType(schema) ? schema.jsonSchema : JsonSchema.toJsonSchema(schema);
     const change = createEchoChangeCallback(view, Type.isMutable(schema) ? schema : undefined);

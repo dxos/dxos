@@ -40,7 +40,7 @@ export const AgentProperties = ({ agent }: AgentPropertiesProps) => {
     return feedSchemas.length === 0
       ? Filter.nothing()
       : Filter.or(
-          ...feedSchemas.map((schema) => (Type.isType(schema) ? Filter.type(schema) : Filter.type(schema))),
+          ...feedSchemas.map((schema) => Filter.type(schema)),
         );
   }, [db]);
 

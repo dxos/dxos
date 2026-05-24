@@ -245,8 +245,19 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           return this._getVersion(target);
         case ObjectDatabaseId:
           return target[symbolInternals].database;
-        case SchemaKindId:
-          return target[symbolInternals].core.getSchemaKind();
+        case SchemaKindId: {
+          const storedKind = target[symbolInternals].core.getSchemaKind();
+          // For persisted Type.Type entities, setSchemaPropertiesOnObjectCore writes the kind of
+          // PersistentSchema itself ('type') — not what the schema DESCRIBES. The true described
+          // kind (object/relation/type) is stored in the jsonSchema's entityKind field.
+          if (storedKind === EntityKind.Type) {
+            const jsonSchemaEntityKind = (receiver as any).jsonSchema?.entityKind;
+            if (jsonSchemaEntityKind != null) {
+              return jsonSchemaEntityKind;
+            }
+          }
+          return storedKind;
+        }
         case StaticTypeSchemaSlot:
           return this._getStaticTypeSchemaSlot(target, receiver);
       }
@@ -429,7 +440,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    * Type entities structurally satisfy the `Type<A>` interface.
    */
   private _getStaticTypeSchemaSlot(target: ProxyTarget, receiver: any): Schema.Schema.AnyNoContext | undefined {
-    if (target[symbolInternals].core.getSchemaKind() !== EntityKind.Type) {
+    // Gate on the entity-kind brand (stored as `system.kind`), not schemaKind (which now
+    // returns the described kind for persisted Type.Type entities).
+    if (target[symbolInternals].core.getKind() !== EntityKind.Type) {
       return undefined;
     }
     const cached = target[symbolInternals].cachedStaticSlot;
@@ -674,6 +687,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         // When the root is a Type.Type entity, rebuild on each access so
         // schema mutations performed via `Type.addFields`/`Type.update` are
         // reflected in subsequent validations.
+        // TODO(wittjosiah): rootSchema is typed as Schema.Schema.AnyNoContext; updating to
+        // Type.AnyType requires changing echo-proxy-target.ts and all call sites of createObject.
         return Type.isType(root) ? Type.getSchema(root) : root;
       }
 

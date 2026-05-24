@@ -46,7 +46,7 @@ export const resolveSchemaWithRegistry = (registry: SchemaRegistry.SchemaRegistr
     const query = registry.query({ typename, location: ['database', 'runtime'] });
     const schemas = yield* Effect.promise(() => query.run());
     return Array.head(schemas).pipe(
-      Option.map((type) => (Type.isType(type) ? Type.getSchema(type) : type)),
+      Option.map((type) => Type.getSchema(type)),
     );
   });
 

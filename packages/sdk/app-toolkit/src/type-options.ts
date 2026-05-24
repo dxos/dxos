@@ -34,7 +34,7 @@ export const getTypenames = ({ annotation, db }: { annotation: TypeInputOptions;
           .query({ location: ['runtime'] })
           .runSync()
           .filter((type) => {
-            const schema = Type.isType(type) ? Type.getSchema(type) : type;
+            const schema = Type.getSchema(type);
             const relation = getTypeAnnotation(schema)?.kind === EntityKind.Relation;
             if (relation) {
               return includeSystemType;

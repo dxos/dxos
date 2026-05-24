@@ -18,7 +18,7 @@ import * as Type from './Type';
  * The data shape matches the target schema; the optional `[Obj.Meta]` symbol key lets the
  * transform update the object's meta (e.g. `key` / `version`) atomically with the data swap.
  */
-type MigrationSchemaInput = Type.AnyType | Schema.Schema.AnyNoContext;
+type MigrationSchemaInput = Type.AnyType;
 
 type MigrationInstanceType<S> = S extends Type.AnyType
   ? Type.InstanceType<S>
@@ -92,11 +92,8 @@ export type ObjectMigration = {
 export const define = <From extends MigrationSchemaInput, To extends MigrationSchemaInput>(
   options: DefineObjectMigrationOptions<From, To>,
 ): ObjectMigration => {
-  // Bridge: `getSchema` accepts Type.AnyType + UnknownTypeSchema but not raw
-  // Schemas; `MigrationSchemaInput` unions in `Schema.Schema.AnyNoContext`, and
-  // `getSchema` passes raw schemas through unchanged.
-  const fromSchema = Type.getSchema(options.from as Type.AnyType);
-  const toSchema = Type.getSchema(options.to as Type.AnyType);
+  const fromSchema = Type.getSchema(options.from);
+  const toSchema = Type.getSchema(options.to);
   const fromType = getSchemaURI(fromSchema);
   if (!fromType) {
     throw new Error('Invalid from schema');

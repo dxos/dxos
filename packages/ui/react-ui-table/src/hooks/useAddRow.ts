@@ -10,7 +10,7 @@ import { type InsertRowResult } from '../model';
 
 export type UseAddRowProps = {
   db?: Database.Database;
-  schema?: Type.AnyObjectType | Type.Type;
+  schema?: Type.AnyObjectType;
 };
 
 /**
@@ -23,7 +23,7 @@ export const useAddRow = ({ db, schema }: UseAddRowProps) => {
     (data?: any): InsertRowResult => {
       if (db && schema) {
         try {
-          const obj = Type.isType(schema) ? Obj.make(Type.expectObject(schema), data ?? {}) : Obj.make(schema, data ?? {});
+          const obj = Obj.make(schema, data ?? {});
           db.add(obj);
           return 'final';
         } catch (error) {

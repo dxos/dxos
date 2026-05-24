@@ -83,7 +83,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
         );
 
         const userSchemas = allSchemas.filter((type) => {
-          const schema = Type.isType(type) ? Type.getSchema(type) : type;
+          const schema = Type.getSchema(type);
           if (getTypeAnnotation(schema)?.kind === EntityKind.Relation) {
             return false;
           }

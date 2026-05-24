@@ -37,7 +37,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
       });
 
       const [runtimeType] = db.schemaRegistry.query({ typename, location: ['runtime'] }).runSync();
-      const runtimeSchema = runtimeType && Type.isType(runtimeType) ? Type.getSchema(runtimeType) : runtimeType;
+      const runtimeSchema = runtimeType && Type.getSchema(runtimeType);
       const echoViewPath =
         runtimeSchema !== undefined ? ViewAnnotation.get(runtimeSchema).pipe(Option.getOrElse(() => [])) : [];
       const view = echoViewPath.length > 0 ? yield* ViewAnnotation.tryLoadAtPath(object, echoViewPath) : undefined;

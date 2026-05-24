@@ -186,7 +186,7 @@ export const makeWithReferences = async ({
 
       const referencePath = yield* Function.pipe(
         Option.fromNullable(referenceSchema),
-        Option.map((schema) => (Type.isType(schema) ? Type.getSchema(schema) : schema)),
+        Option.map((schema) => Type.getSchema(schema)),
         Option.flatMap((schema) => LabelAnnotation.get(schema)),
         Option.flatMap((labels) => (labels.length > 0 ? Option.some(labels[0]) : Option.none())),
       );
@@ -245,12 +245,12 @@ export const makeFromDatabase = async ({
 
   const schema = await db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).firstOrUndefined();
   const jsonSchema =
-    schema && (Type.isType(schema) ? schema.jsonSchema : JsonSchema.toJsonSchema(schema));
+    schema && schema.jsonSchema;
   invariant(jsonSchema, `Schema not found: ${typename}`);
   // For `Type.Type` entities (stored meta-schemas), defer the object-ness check to the
   // rebuilt Effect Schema below — `Type.isObjectSchema` returns false for them since
   // their entity-kind brand is `Type`, not `Object`.
-  const effectSchema = schema && (Type.isType(schema) ? Type.getSchema(schema) : schema);
+  const effectSchema = schema && Type.getSchema(schema);
   invariant(
     effectSchema && Type.isObjectSchema(effectSchema),
     `Schema is not an object schema: ${typename}`,

@@ -21,11 +21,11 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
       Filter.or(
         ...(db?.schemaRegistry.query({ location: ['database', 'runtime'] }).runSync() ?? [])
           .filter((type) => {
-            const schema = Type.isType(type) ? Type.getSchema(type) : type;
+            const schema = Type.getSchema(type);
             return getTypeAnnotation(schema)?.kind !== EntityKind.Relation;
           })
           .filter((type) => {
-            const schema = Type.isType(type) ? Type.getSchema(type) : type;
+            const schema = Type.getSchema(type);
             return !SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false));
           })
           .map((schema) => Filter.typename(Type.getTypename(schema))),

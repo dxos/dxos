@@ -69,7 +69,7 @@ export class MigrationBuilder {
     id: string,
     migrate: (
       objectStructure: ObjectStructure,
-    ) => MaybePromise<{ schema: Schema.Schema.AnyNoContext | Type.AnyType; props: any }>,
+    ) => MaybePromise<{ schema: Type.AnyType; props: any }>,
   ): Promise<void> {
     const objectStructure = await this.findObject(id);
     if (!objectStructure) {
@@ -77,8 +77,7 @@ export class MigrationBuilder {
     }
 
     const { schema: schemaOrType, props } = await migrate(objectStructure);
-    // Unwrap a `Type.Type` entity to its underlying Effect Schema.
-    const schema = Type.isType(schemaOrType) ? Type.getSchema(schemaOrType) : schemaOrType;
+    const schema = Type.getSchema(schemaOrType);
 
     const oldHandle = await this._findObjectContainingHandle(id);
     invariant(oldHandle);
@@ -108,8 +107,8 @@ export class MigrationBuilder {
     this._addHandleToFlushList(newHandle.documentId!);
   }
 
-  async addObject(schema: Schema.Schema.AnyNoContext | Type.AnyType, props: any): Promise<string> {
-    const resolved = Type.isType(schema) ? Type.getSchema(schema) : schema;
+  async addObject(schema: Type.AnyType, props: any): Promise<string> {
+    const resolved = Type.getSchema(schema);
     const core = await this._createObject({ schema: resolved, props });
     return core.id;
   }

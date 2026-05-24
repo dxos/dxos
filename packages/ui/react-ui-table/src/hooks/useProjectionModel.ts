@@ -5,7 +5,7 @@
 import { type Registry } from '@effect-atom/atom-react';
 import { useState } from 'react';
 
-import { JsonSchema, Type } from '@dxos/echo';
+import { Type } from '@dxos/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 
@@ -21,9 +21,8 @@ export const useProjectionModel = <S extends Type.AnyType>(
   useAsyncEffect(async () => {
     if (schema && table) {
       const view = await table.view.load();
-      // For stored Type.Type entities, use the live jsonSchema reference for reactivity.
-      // For static schemas, take a snapshot.
-      const jsonSchema = Type.isType(schema) ? schema.jsonSchema : JsonSchema.toJsonSchema(schema);
+      // Use the live jsonSchema reference for reactivity.
+      const jsonSchema = schema.jsonSchema;
 
       // Always use createEchoChangeCallback since the view is ECHO-backed.
       // Pass the type entity only when stored, to allow schema mutations.

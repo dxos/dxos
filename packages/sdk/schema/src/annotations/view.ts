@@ -50,7 +50,7 @@ const getHolderAtPath = (object: unknown, path: EchoViewRefPath): unknown => {
 
 const viewMethods: Omit<ViewAnnotationModule, keyof AnnotationHelper<EchoViewRefPath>> = {
   has(schema: Type.AnyType): boolean {
-    const effectSchema = Type.isType(schema) ? Type.getSchema(schema) : schema;
+    const effectSchema = Type.getSchema(schema);
     return viewAnnotation.get(effectSchema).pipe(
       Option.map((path) => path.length > 0),
       Option.getOrElse(() => false),
