@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { useState } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
@@ -125,18 +125,7 @@ export const MediaPlayer = ({
   }
 
   if (isLegacyIframeUrl(src)) {
-    return (
-      <iframe
-        src={src}
-        title={alt ?? 'Embedded media'}
-        loading='lazy'
-        className={mx('border-none', classNames, mediaClassNames)}
-        sandbox={DEFAULT_IFRAME_SANDBOX}
-        referrerPolicy='no-referrer'
-        allow='accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;'
-        allowFullScreen
-      />
-    );
+    return <LegacyIframePlayer src={src} alt={alt} classNames={classNames} mediaClassNames={mediaClassNames} />;
   }
 
   return (
@@ -149,5 +138,35 @@ export const MediaPlayer = ({
         event.currentTarget.style.display = 'none';
       }}
     />
+  );
+};
+
+type LegacyIframePlayerProps = ThemedClassName<{
+  src: string;
+  alt?: string;
+  mediaClassNames?: string;
+}>;
+
+const LegacyIframePlayer = ({ src, alt, classNames, mediaClassNames }: LegacyIframePlayerProps) => {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <div className={mx('relative bg-baseSurface', classNames)}>
+      <iframe
+        src={src}
+        title={alt ?? 'Embedded media'}
+        loading='lazy'
+        className={mx(
+          'border-none w-full h-full transition-opacity duration-150',
+          loaded ? 'opacity-100' : 'opacity-0',
+          mediaClassNames,
+        )}
+        style={{ colorScheme: 'dark' }}
+        sandbox={DEFAULT_IFRAME_SANDBOX}
+        referrerPolicy='no-referrer'
+        allow='accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;'
+        allowFullScreen
+        onLoad={() => setLoaded(true)}
+      />
+    </div>
   );
 };
