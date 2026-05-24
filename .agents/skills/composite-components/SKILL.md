@@ -46,9 +46,7 @@ Use when the part wraps a `@radix-ui/react-*` primitive that already provides `a
 ```tsx
 const FooTitle = forwardRef<HTMLHeadingElement, FooTitleProps>(({ classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
-  return (
-    <FooPrimitive.Title {...props} className={tx('foo.title', {}, classNames)} ref={forwardedRef} />
-  );
+  return <FooPrimitive.Title {...props} className={tx('foo.title', {}, classNames)} ref={forwardedRef} />;
 });
 
 FooTitle.displayName = 'Foo.Title';
@@ -78,7 +76,7 @@ Do **not** annotate aliases as `FunctionComponent<...>` — it strips ref suppor
    ```
 4. **Export every part's Props type**:
    ```tsx
-   export type { FooRootProps, FooTriggerProps, /* ... */ };
+   export type { FooRootProps, FooTriggerProps /* ... */ };
    ```
 5. **Section comments** delimit each part:
    ```tsx

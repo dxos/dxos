@@ -17,7 +17,7 @@ import React, {
 
 import { mx } from '@dxos/ui-theme';
 
-import { useTranslation } from '../../primitives/ThemeProvider';
+import { useTranslation } from '../../primitives';
 import { translationKey } from '../../translations';
 import { type ThemedClassName } from '../../util';
 import { IconButton } from '../Button';

@@ -179,35 +179,36 @@ type ScrollContainerViewportProps = SlottableProps;
 
 const ScrollContainerViewport = slottable<HTMLDivElement, ScrollContainerViewportProps>(
   ({ children, asChild, ...props }, forwardedRef) => {
-  const scrollerRef = useRef<HTMLDivElement>(null);
-  const mergedRef = useMergeRefs([forwardedRef, scrollerRef]);
-  const { setViewport, setPinned, setOverflow } = useScrollContainerContext(VIEWPORT_NAME);
+    const scrollerRef = useRef<HTMLDivElement>(null);
+    const mergedRef = useMergeRefs([forwardedRef, scrollerRef]);
+    const { setViewport, setPinned, setOverflow } = useScrollContainerContext(VIEWPORT_NAME);
 
-  // Register the scroll element with Root and set up wheel/scroll listeners.
-  useEffect(() => {
-    const el = scrollerRef.current;
-    if (!el) {
-      return;
-    }
+    // Register the scroll element with Root and set up wheel/scroll listeners.
+    useEffect(() => {
+      const el = scrollerRef.current;
+      if (!el) {
+        return;
+      }
 
-    setViewport(el);
+      setViewport(el);
 
-    return combine(
-      addEventListener(el, 'wheel', () => setPinned(isBottom(el))),
-      addEventListener(el, 'scroll', () => setOverflow((el.scrollTop ?? 0) > 0)),
-      () => setViewport(null),
+      return combine(
+        addEventListener(el, 'wheel', () => setPinned(isBottom(el))),
+        addEventListener(el, 'scroll', () => setOverflow((el.scrollTop ?? 0) > 0)),
+        () => setViewport(null),
+      );
+    }, [setViewport, setPinned, setOverflow]);
+
+    return (
+      <>
+        <ScrollArea.Viewport asChild={asChild} {...composableProps(props)} ref={mergedRef}>
+          {children}
+        </ScrollArea.Viewport>
+        <ScrollContainerPinEffect scrollerRef={scrollerRef} />
+      </>
     );
-  }, [setViewport, setPinned, setOverflow]);
-
-  return (
-    <>
-      <ScrollArea.Viewport asChild={asChild} {...composableProps(props)} ref={mergedRef}>
-        {children}
-      </ScrollArea.Viewport>
-      <ScrollContainerPinEffect scrollerRef={scrollerRef} />
-    </>
-  );
-});
+  },
+);
 
 ScrollContainerViewport.displayName = VIEWPORT_NAME;
 
