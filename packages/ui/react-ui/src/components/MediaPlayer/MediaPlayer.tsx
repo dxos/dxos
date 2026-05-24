@@ -57,20 +57,17 @@ const isCloudflareStreamEmbed = (src: string): boolean => CLOUDFLARE_STREAM_IFRA
 
 export type MediaPlayerProps = ThemedClassName<{
   src: string;
+  alt?: string;
   /** Override auto-detection. When omitted, `detectMediaKind(src)` is used and falls back to 'video'. */
   kind?: MediaKind;
   controls?: boolean;
   autoPlay?: boolean;
   loop?: boolean;
   muted?: boolean;
-  /** Accessible label for the `<video>` / `<audio>` element. */
-  alt?: string;
   /** Defaults to 'anonymous' for cross-origin sources (e.g. signed S3 URLs). */
   crossOrigin?: 'anonymous' | 'use-credentials' | '';
   /** Additional classes applied only when rendering `<img>`. */
   imgClassNames?: string;
-  /** Additional classes applied only when rendering native media or `<iframe>`. */
-  mediaClassNames?: string;
 }>;
 
 /**
@@ -91,14 +88,13 @@ export const MediaPlayer = ({
   alt,
   crossOrigin = 'anonymous',
   imgClassNames,
-  mediaClassNames,
 }: MediaPlayerProps) => {
   if (isEmbedUrl(src)) {
     const resolved = kind ?? detectMediaKind(src) ?? 'video';
     if (resolved === 'audio') {
       return (
         <audio
-          className={mx('w-full', classNames, mediaClassNames)}
+          className={mx('w-full', classNames)}
           src={src}
           controls={controls}
           autoPlay={autoPlay}
@@ -112,7 +108,7 @@ export const MediaPlayer = ({
 
     return (
       <video
-        className={mx('aspect-video max-w-full max-h-full', classNames, mediaClassNames)}
+        className={mx('aspect-video max-w-full max-h-full', classNames)}
         src={src}
         controls={controls}
         autoPlay={autoPlay}
@@ -125,9 +121,7 @@ export const MediaPlayer = ({
   }
 
   if (isCloudflareStreamEmbed(src)) {
-    return (
-      <IframePlayer key={src} src={src} alt={alt} classNames={classNames} mediaClassNames={mediaClassNames} />
-    );
+    return <IframePlayer key={src} src={src} alt={alt} classNames={classNames} />;
   }
 
   return (
@@ -146,10 +140,9 @@ export const MediaPlayer = ({
 type IframePlayerProps = ThemedClassName<{
   src: string;
   alt?: string;
-  mediaClassNames?: string;
 }>;
 
-const IframePlayer = ({ src, alt, classNames, mediaClassNames }: IframePlayerProps) => {
+const IframePlayer = ({ src, alt, classNames }: IframePlayerProps) => {
   const [loaded, setLoaded] = useState(false);
   return (
     <div className={mx('relative bg-baseSurface', classNames)}>
@@ -160,7 +153,6 @@ const IframePlayer = ({ src, alt, classNames, mediaClassNames }: IframePlayerPro
         className={mx(
           'border-none w-full h-full transition-opacity duration-150',
           loaded ? 'opacity-100' : 'opacity-0',
-          mediaClassNames,
         )}
         style={{ colorScheme: 'dark' }}
         sandbox={DEFAULT_IFRAME_SANDBOX}

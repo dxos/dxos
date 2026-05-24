@@ -194,8 +194,6 @@ export type CarouselSlideProps = ThemedClassName<{
   alt?: string;
   /** Class names forwarded to the inner `<img>` when MediaPlayer resolves to an image. */
   imgClassNames?: string;
-  /** Class names forwarded to the inner `<video>` / `<audio>` / `<iframe>`. */
-  mediaClassNames?: string;
   controls?: boolean;
   autoPlay?: boolean;
   loop?: boolean;
@@ -210,7 +208,6 @@ const CarouselSlide = ({
   kind,
   alt,
   imgClassNames,
-  mediaClassNames,
   controls,
   autoPlay,
   loop,
@@ -230,7 +227,6 @@ const CarouselSlide = ({
         alt={alt}
         classNames='w-full h-full'
         imgClassNames={mx('object-cover', imgClassNames)}
-        mediaClassNames={mediaClassNames}
         controls={controls}
         autoPlay={autoPlay}
         loop={loop}
