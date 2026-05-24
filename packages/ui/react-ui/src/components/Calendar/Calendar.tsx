@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { forwardRef } from 'react';
 import {
   DayPicker,
   type ClassNames,
@@ -14,10 +14,12 @@ import {
   useDayPicker,
 } from 'react-day-picker';
 
+import { type ClassNameValue } from '@dxos/ui-types';
+
 import { useThemeContext } from '../../hooks';
 import { useTranslation } from '../../primitives';
 import { translationKey } from '../../translations';
-import { type ThemedClassName } from '../../util';
+import { composableProps } from '../../util';
 import { IconButton } from '../Button';
 
 // Slot names match react-day-picker v9 `ClassNames` enum values.
@@ -47,27 +49,33 @@ const themeSlots = [
   'footer',
 ] as const;
 
-// Distribute `ThemedClassName` over the DayPicker discriminated union so each variant preserves
-// its correlated `mode` / `selected` / `onSelect` triple at call sites.
-type DistributiveThemed<U> = U extends unknown ? ThemedClassName<Omit<U, 'classNames' | 'className'>> : never;
+// Distribute `Omit` over the DayPicker discriminated union so each variant preserves its correlated
+// `mode` / `selected` / `onSelect` triple at call sites.
+type DistributiveOmit<U, K extends keyof any> = U extends unknown ? Omit<U, K> : never;
 
-export type CalendarRootProps = DistributiveThemed<DayPickerProps> & {
+export type CalendarRootProps = DistributiveOmit<DayPickerProps, 'classNames' | 'className'> & {
+  /** Consumer-facing theming override (DXOS convention). Merged with any `className` from a Slot parent. */
+  classNames?: ClassNameValue;
+  /** Forwarded from a Radix Slot parent; merged with `classNames`. */
+  className?: string;
   /** Slot-level class overrides matching react-day-picker's `ClassNames` shape. Merged on top of theme defaults. */
   slots?: Partial<ClassNames>;
 };
 
-const CalendarRoot = ({ classNames, slots, components, ...props }: CalendarRootProps) => {
+const CalendarRoot = forwardRef<HTMLDivElement, CalendarRootProps>(({ slots, components, ...props }, _forwardedRef) => {
   const { tx } = useThemeContext();
   const themed: Partial<ClassNames> = {};
   for (const slot of themeSlots) {
     themed[slot] = tx(`calendar.${slot}`, {}, slots?.[slot]);
   }
-
+  // composableProps merges any `className` from a Slot parent with the consumer-facing `classNames` and
+  // the theme default into a single `className` for DayPicker; DayPicker doesn't forward refs.
+  const { className } = composableProps(props, { classNames: tx('calendar.root', {}) });
   return (
     <DayPicker
       // Spread loses union narrowing inside the function body; restore the type at the DayPicker boundary.
       {...(props as DayPickerProps)}
-      className={tx('calendar.root', {}, classNames)}
+      className={className}
       classNames={{ ...themed, root: undefined }}
       components={{
         MonthCaption: CalendarMonthCaption,
@@ -76,7 +84,7 @@ const CalendarRoot = ({ classNames, slots, components, ...props }: CalendarRootP
       }}
     />
   );
-};
+});
 
 CalendarRoot.displayName = 'Calendar.Root';
 
