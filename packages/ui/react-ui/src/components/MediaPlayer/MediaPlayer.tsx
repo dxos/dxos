@@ -126,7 +126,7 @@ export const MediaPlayer = ({
 
   if (isCloudflareStreamEmbed(src)) {
     return (
-      <CloudflareStreamPlayer key={src} src={src} alt={alt} classNames={classNames} mediaClassNames={mediaClassNames} />
+      <IframePlayer key={src} src={src} alt={alt} classNames={classNames} mediaClassNames={mediaClassNames} />
     );
   }
 
@@ -143,13 +143,13 @@ export const MediaPlayer = ({
   );
 };
 
-type CloudflareStreamPlayerProps = ThemedClassName<{
+type IframePlayerProps = ThemedClassName<{
   src: string;
   alt?: string;
   mediaClassNames?: string;
 }>;
 
-const CloudflareStreamPlayer = ({ src, alt, classNames, mediaClassNames }: CloudflareStreamPlayerProps) => {
+const IframePlayer = ({ src, alt, classNames, mediaClassNames }: IframePlayerProps) => {
   const [loaded, setLoaded] = useState(false);
   return (
     <div className={mx('relative bg-baseSurface', classNames)}>
