@@ -260,7 +260,7 @@ const main = async () => {
       void observability
         .then((obs) => {
           obs.events.captureEvent('composer.startup', summary);
-          log.info('startup summary captured', summary);
+          log.info('startup', summary);
         })
         .catch((error) => log.catch(error));
     },

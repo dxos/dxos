@@ -129,6 +129,7 @@
     "@fluentui/react-tabster": "catalog:",
     "date-fns": "catalog:",
     "effect": "catalog:",
+    "html-to-image": "catalog:",
     "react-joyride": "catalog:"
   },
   "devDependencies": {
