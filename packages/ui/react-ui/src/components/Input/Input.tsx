@@ -49,6 +49,8 @@ const Label = forwardRef<HTMLLabelElement, LabelProps>(({ classNames, children, 
   );
 });
 
+Label.displayName = 'Input.Label';
+
 type DescriptionProps = ThemedClassName<DescriptionPrimitiveProps> & { srOnly?: boolean };
 
 const Description = forwardRef<HTMLSpanElement, DescriptionProps>(
@@ -61,6 +63,8 @@ const Description = forwardRef<HTMLSpanElement, DescriptionProps>(
     );
   },
 );
+
+Description.displayName = 'Input.Description';
 
 type ValidationProps = ThemedClassName<ValidationPrimitiveProps> & { srOnly?: boolean };
 
@@ -80,6 +84,8 @@ const Validation = forwardRef<HTMLSpanElement, InputScopedProps<ValidationProps>
   },
 );
 
+Validation.displayName = 'Input.Validation';
+
 type DescriptionAndValidationProps = ThemedClassName<DescriptionAndValidationPrimitiveProps> & { srOnly?: boolean };
 
 const DescriptionAndValidation = forwardRef<HTMLParagraphElement, DescriptionAndValidationProps>(
@@ -96,6 +102,8 @@ const DescriptionAndValidation = forwardRef<HTMLParagraphElement, DescriptionAnd
     );
   },
 );
+
+DescriptionAndValidation.displayName = 'Input.DescriptionAndValidation';
 
 type PinInputProps = ThemedClassName<InputSharedProps & Omit<PinInputPrimitiveProps, 'className' | 'segmentClassName'>>;
 
@@ -119,6 +127,8 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
     );
   },
 );
+
+PinInput.displayName = 'Input.PinInput';
 
 // TODO(burdon): Implement inline icon within button: e.g., https://www.radix-ui.com/themes/playground#text-field
 
@@ -162,6 +172,8 @@ const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>
   },
 );
 
+TextInput.displayName = 'Input.TextInput';
+
 type TextAreaProps = InputSharedProps & ThemedClassName<TextAreaPrimitiveProps>;
 
 const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>>(
@@ -192,6 +204,8 @@ const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>
     );
   },
 );
+
+TextArea.displayName = 'Input.TextArea';
 
 type CheckboxProps = ThemedClassName<Omit<CheckboxPrimitive.CheckboxProps, 'children'>> & {
   size?: Size;
@@ -246,6 +260,8 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
   },
 );
 
+Checkbox.displayName = 'Input.Checkbox';
+
 type SwitchProps = ThemedClassName<
   Omit<ComponentPropsWithRef<'input'>, 'children' | 'onChange'> & { onCheckedChange?: (checked: boolean) => void }
 >;
@@ -290,6 +306,8 @@ const Switch = forwardRef<HTMLInputElement, InputScopedProps<SwitchProps>>(
     );
   },
 );
+
+Switch.displayName = 'Input.Switch';
 
 export const Input = {
   Root: InputRoot,
