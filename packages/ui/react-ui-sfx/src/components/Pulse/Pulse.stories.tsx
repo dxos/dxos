@@ -145,7 +145,7 @@ export const Pointer: Story = {
 
 // Randomly pings dots that then decay back to zero.
 const RandomPing = (props: StoryProps) => {
-  const { dim = 4 } = props;
+  const { dim = 4, interval = 100 } = props;
   const valuesRef = useRef<Float32Array>(new Float32Array(dim * dim));
   const lastTimeRef = useRef(0);
 
@@ -155,12 +155,12 @@ const RandomPing = (props: StoryProps) => {
   }, [dim]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    const id = setInterval(() => {
       valuesRef.current[Math.floor(Math.random() * valuesRef.current.length)] = 1;
-    }, props.interval ?? 100);
+    }, interval);
 
-    return () => clearInterval(interval);
-  }, [dim]);
+    return () => clearInterval(id);
+  }, [interval]);
 
   const getSignal = useCallback<PulseSignal>(
     (i, j, time) => {

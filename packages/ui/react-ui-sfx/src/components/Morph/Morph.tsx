@@ -55,12 +55,12 @@ const CIRCLE_PATH = buildCirclePath(50, 50, 10);
 export type MorphProps = ThemedClassName<{
   /** Pixel size of the rendered SVG (square). */
   size?: number;
-  /** Duration of one segment (star↔circle or circle↔cross) in seconds. Full cycle = 4× this value. */
+  /** Duration of one segment (star↔circle) in seconds. Full cycle = 4× this value. */
   duration?: number;
 }>;
 
 /**
- * Infinite morph cycle: star → small circle → cross → small circle → star.
+ * Infinite morph cycle: 6-point star → small circle → 8-point star → small circle → 6-point star.
  * Inspired by https://motion.dev/tutorials/react-path-morphing.
  */
 export const Morph = ({ classNames, size = 32, duration = 2 }: MorphProps) => {
