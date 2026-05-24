@@ -6,6 +6,7 @@ import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback } from 'react';
 
+import { Ref } from '@dxos/echo';
 import {
   createJsonPath,
   findNode,
@@ -90,7 +91,9 @@ export const ArrayField = ({
   // multiple fields that need their own (label, input) rows, so we render
   // each item as a recursively-laid-out FormField with the delete button on
   // its own row below. Scalar arrays keep the compact inline layout.
-  const renderItemAsObject = elementType && isNestedType(elementType);
+  // Refs are AST declarations but render as a single picker — treat them
+  // as scalars so they don't get the bordered object layout.
+  const renderItemAsObject = elementType && isNestedType(elementType) && !Ref.isRefType(elementType);
 
   return (
     <>
