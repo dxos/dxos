@@ -15,12 +15,14 @@ import {
   type SwitchProps,
   type TextAreaProps,
   type TextInputProps,
+  type TimeProps,
 } from './Input';
 
 type VariantMap = {
   text: TextInputProps;
   pin: PinInputProps;
   textarea: TextAreaProps;
+  time: TimeProps;
   checkbox: CheckboxProps;
   switch: SwitchProps;
 };
@@ -54,6 +56,7 @@ const DefaultStory = ({
       {kind === 'text' && <Input.TextInput {...props} />}
       {kind === 'pin' && <Input.PinInput {...props} />}
       {kind === 'textarea' && <Input.TextArea {...props} />}
+      {kind === 'time' && <Input.Time {...props} />}
       {kind === 'checkbox' && <Input.Checkbox {...props} />}
       {kind === 'switch' && <Input.Switch {...props} />}
 
@@ -170,6 +173,32 @@ export const PinInput: Story = {
     description: 'Type in secret you received',
     pattern: '\\d*',
     density: 'lg',
+  },
+};
+
+export const Time: Story = {
+  args: {
+    kind: 'time',
+    label: 'Time',
+    defaultValue: '09:30',
+    description: 'Native <input type="time">',
+  },
+};
+
+export const TimeUncontrolled: Story = {
+  args: {
+    kind: 'time',
+    label: 'Time (uncontrolled)',
+    defaultValue: '14:00',
+  },
+};
+
+export const TimeDisabled: Story = {
+  args: {
+    kind: 'time',
+    label: 'Time (disabled)',
+    defaultValue: '12:00',
+    disabled: true,
   },
 };
 
