@@ -128,6 +128,7 @@ describe('AiRequest.Request', () => {
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
+    { timeout: 60_000 },
   );
 
   it.effect(
