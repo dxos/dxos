@@ -21,9 +21,9 @@ import {
 } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
-import { Support, SupportOperation, type Step } from '#types';
+import { Support, SupportOperation, type Tour } from '#types';
 
-export type SupportPluginOptions = { helpSteps?: Step[] };
+export type SupportPluginOptions = { helpSteps?: Tour.Step[] };
 
 export const SupportPlugin = Plugin.define<SupportPluginOptions>(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),

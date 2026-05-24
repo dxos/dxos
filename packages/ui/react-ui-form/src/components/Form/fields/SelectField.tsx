@@ -16,6 +16,7 @@ export const SelectField = ({
   type,
   readonly,
   label,
+  jsonPath,
   layout,
   placeholder,
   options,
@@ -37,7 +38,7 @@ export const SelectField = ({
 
   return (
     <Input.Root validationValence={status}>
-      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} />}
+      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />}
       {layout === 'static' ? (
         <p>{options?.find(({ value: optionValue }) => optionValue === value)?.label ?? String(value)}</p>
       ) : (

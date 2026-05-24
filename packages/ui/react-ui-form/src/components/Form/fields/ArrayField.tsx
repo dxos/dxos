@@ -6,7 +6,14 @@ import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback } from 'react';
 
-import { findNode, getArrayElementType, getDiscriminatedType, isDiscriminatedUnion, isNestedType } from '@dxos/effect';
+import {
+  createJsonPath,
+  findNode,
+  getArrayElementType,
+  getDiscriminatedType,
+  isDiscriminatedUnion,
+  isNestedType,
+} from '@dxos/effect';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
@@ -55,7 +62,13 @@ export const ArrayField = ({
   const handleAdd = useCallback(() => {
     const defaultValue =
       isNestedType(type) && elementType ? getDefaultObjectValue(elementType) : getDefaultValue(elementType);
-    values && onValueChange(type, [...values, defaultValue]);
+    // `values` is `undefined` on first render for arrays whose parent path
+    // hasn't been materialised in the form values yet (e.g. `package.repos`
+    // when the form starts with no `package`). `useFormValues`'s default-
+    // value effect would eventually backfill it to `[]`, but until then the
+    // old `values && ...` guard silently swallowed the click. Treat a
+    // missing array as empty so Add always produces `[defaultValue]`.
+    onValueChange(type, [...(values ?? []), defaultValue]);
   }, [onValueChange, type, elementType, values]);
 
   const handleDelete = useCallback(
@@ -72,14 +85,65 @@ export const ArrayField = ({
     return null;
   }
 
+  // An array of objects (e.g. `repeated Signal`) can't share the
+  // 2-column-with-delete row layout used for scalars: each object has
+  // multiple fields that need their own (label, input) rows, so we render
+  // each item as a recursively-laid-out FormField with the delete button on
+  // its own row below. Scalar arrays keep the compact inline layout.
+  const renderItemAsObject = elementType && isNestedType(elementType);
+
   return (
     <>
       {(layout !== 'static' || (values && values.length > 0)) && (
-        <FormFieldLabel readonly={readonly} label={label} asChild />
+        <div className='flex items-center gap-2'>
+          <div className='flex-1 min-w-0'>
+            <FormFieldLabel readonly={readonly} label={label} path={createJsonPath(path ?? [])} asChild />
+          </div>
+          {!readonly && layout !== 'static' && (
+            <IconButton
+              iconOnly
+              density='md'
+              variant='ghost'
+              icon='ph--plus--regular'
+              label={t('add-item.button')}
+              onClick={handleAdd}
+            />
+          )}
+        </div>
       )}
 
-      <div className='flex flex-col gap-form-gap'>
+      <div className='flex flex-col'>
         {values?.map((_, index) => {
+          if (renderItemAsObject) {
+            return (
+              <div key={index} className='grid grid-cols-[1fr_min-content] gap-form-gap items-center mb-1'>
+                <div className='p-1 border border-subdued-separator'>
+                  <FormField
+                    {...props}
+                    autoFocus={index === values.length - 1}
+                    type={elementType}
+                    name={null}
+                    path={[...(path ?? []), index]}
+                    readonly={readonly || layout === 'static'}
+                    layout={layout === 'static' ? 'static' : undefined}
+                  />
+                </div>
+                {!readonly && layout !== 'static' && (
+                  <div className='h-full flex flex-col justify-end pb-1'>
+                    <IconButton
+                      density='md'
+                      variant='ghost'
+                      icon='ph--x--regular'
+                      iconOnly
+                      label={t('remove-item.button')}
+                      onClick={() => handleDelete(index)}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          }
+
           return (
             <div key={index} className='grid grid-cols-[1fr_min-content] gap-form-gap last:mb-form-gap items-center'>
               <FormField
@@ -109,16 +173,6 @@ export const ArrayField = ({
           );
         })}
       </div>
-
-      {/* TODO(burdon): Get label from schema. */}
-      {!readonly && layout !== 'static' && (
-        <IconButton
-          classNames='flex w-full'
-          icon='ph--plus--regular'
-          label={t('add-item.button')}
-          onClick={handleAdd}
-        />
-      )}
     </>
   );
 };

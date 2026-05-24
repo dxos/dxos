@@ -21,10 +21,10 @@ import React, {
   useState,
 } from 'react';
 
-import { composableProps, slottable } from '@dxos/ui-theme';
 import { type Axis } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
+import { composableProps, slottable } from '../../util';
 
 //
 // Context

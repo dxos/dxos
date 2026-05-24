@@ -192,3 +192,60 @@ export const ResetProject = Operation.make({
   }),
   services: [Database.Service],
 });
+
+const Diagnostic = Schema.Struct({
+  path: Schema.optional(Schema.String),
+  line: Schema.optional(Schema.Number),
+  column: Schema.optional(Schema.Number),
+  severity: Schema.Literal('error', 'warning'),
+  code: Schema.optional(Schema.Number),
+  message: Schema.String,
+});
+
+const BuildEntry = Schema.Struct({
+  path: Schema.String,
+  source: Schema.String,
+});
+
+export const BuildProject = Operation.make({
+  meta: {
+    key: 'org.dxos.function.code.build-project',
+    name: 'Build Project',
+    description:
+      "Compile the project's TypeScript sources in-browser. Returns language-service diagnostics plus the " +
+      'emitted JavaScript for the entry file (src/hello.ts if present, else src/plugin.ts).',
+  },
+  input: Schema.Struct({
+    project: Ref.Ref(CodeProject.CodeProject).annotations({
+      description: 'The CodeProject to build.',
+    }),
+  }),
+  output: Schema.Struct({
+    ok: Schema.Boolean,
+    diagnostics: Schema.Array(Diagnostic),
+    entry: Schema.optional(BuildEntry),
+  }),
+  services: [Database.Service],
+});
+
+export const RunBuild = Operation.make({
+  meta: {
+    key: 'org.dxos.function.code.run-build',
+    name: 'Run Build',
+    description:
+      'Build the project and, on a clean build, execute the emitted entry script inside a console-capturing ' +
+      'sandbox. Captures console.log/warn to stdout and console.error plus thrown errors to stderr.',
+  },
+  input: Schema.Struct({
+    project: Ref.Ref(CodeProject.CodeProject).annotations({
+      description: 'The CodeProject to build and run.',
+    }),
+  }),
+  output: Schema.Struct({
+    ok: Schema.Boolean,
+    stdout: Schema.Array(Schema.String),
+    stderr: Schema.Array(Schema.String),
+    diagnostics: Schema.Array(Diagnostic),
+  }),
+  services: [Database.Service],
+});

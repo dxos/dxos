@@ -8,7 +8,7 @@ import NativeSyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-asy
 import { coldarkDark as dark, coldarkCold as light } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 import { Clipboard, useThemeContext } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 const zeroWidthSpace = '\u200b';
 

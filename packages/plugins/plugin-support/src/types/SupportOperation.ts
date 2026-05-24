@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { Capability } from '@dxos/app-framework';
 import { SpaceSchema } from '@dxos/client-protocol';
 import { Operation } from '@dxos/compute';
-import { Collection, Database, Format, Ref } from '@dxos/echo';
+import { Annotation, Collection, Database, Format, Ref } from '@dxos/echo';
 
 import * as Support from './Support';
 
@@ -26,14 +26,54 @@ export const OnCreateSpace = Operation.make({
 
 // Schema annotations consumed by `react-ui-form`. Strings duplicated in translations.ts
 // — kept inline here to avoid an import cycle (translations -> #types -> SupportOperation).
-export const UserFeedback = Schema.Struct({
-  message: Format.Text.pipe(
+export const IssueType = Schema.Literal('bug', 'feature').annotations({
+  title: 'Type',
+  description: 'Whether this is a bug report or a feature request.',
+});
+export type IssueType = Schema.Schema.Type<typeof IssueType>;
+
+export const Severity = Schema.Literal('High priority', 'Medium priority', 'Low priority').annotations({
+  title: 'Severity',
+  description: 'How disruptive the issue is.',
+});
+export type Severity = Schema.Schema.Type<typeof Severity>;
+
+/**
+ * Form payload shared by all three FeedbackPanel submit actions (PostHog
+ * feedback, Discord help thread, GitHub issue). `version` is a hidden form
+ * field populated by the panel from runtime config and forwarded to the
+ * backend for triage. `area` is a free-form plugin id; the panel
+ * pre-populates options from the active plugin list.
+ */
+export const SupportRequest = Schema.Struct({
+  title: Schema.String.pipe(
     Schema.nonEmptyString(),
-    Schema.maxLength(4_096),
+    Schema.maxLength(256),
     Schema.annotations({
-      title: 'Feedback',
-      description: 'Please enter your feedback, technical issue, or feature request.',
+      title: 'Title',
+      description: 'Short summary of the issue.',
     }),
+  ),
+  body: Format.Text.pipe(
+    Schema.nonEmptyString(),
+    Schema.maxLength(16_384),
+    Schema.annotations({
+      title: 'Description',
+      description: 'Please describe the issue or feature request in detail.',
+    }),
+  ),
+  area: Schema.String.annotations({
+    title: 'Area',
+    description: 'The plugin or area this relates to (optional).',
+  }).pipe(Schema.optional),
+  type: IssueType,
+  severity: Severity,
+  image: Schema.Boolean.pipe(
+    Schema.annotations({
+      title: 'Attach screenshot',
+      description: 'Capture the current view and attach it to the report. Form fields are obscured for privacy.',
+    }),
+    Schema.optional,
   ),
   includeLogs: Schema.Boolean.pipe(
     Schema.annotations({
@@ -41,6 +81,16 @@ export const UserFeedback = Schema.Struct({
     }),
     Schema.optional,
   ),
+  // Hidden — auto-populated by FeedbackPanel; never rendered as an input.
+  version: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+});
+
+export type SupportRequest = Schema.Schema.Type<typeof SupportRequest>;
+
+/** Legacy observability-backend input. Derived from {@link SupportRequest} by the FeedbackPanel. */
+export const UserFeedback = Schema.Struct({
+  message: Schema.String,
+  includeLogs: Schema.Boolean.pipe(Schema.optional),
 });
 
 export type UserFeedback = Schema.Schema.Type<typeof UserFeedback>;

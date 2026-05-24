@@ -34,12 +34,12 @@ const SelectPortal = SelectPrimitive.Portal;
 type SelectTriggerButtonProps = Omit<ButtonProps, 'children'> & Pick<SelectValueProps, 'placeholder' | 'children'>;
 
 const SelectTriggerButton = forwardRef<HTMLButtonElement, SelectTriggerButtonProps>(
-  ({ children, placeholder, ...props }, forwardedRef) => {
+  ({ children, placeholder, classNames, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
     return (
       <SelectPrimitive.Trigger asChild ref={forwardedRef}>
-        <Button {...props}>
+        <Button {...props} classNames={tx('select.triggerButton', {}, classNames)}>
           <SelectPrimitive.Value placeholder={placeholder}>{children}</SelectPrimitive.Value>
-          <span className='w-1 flex-1' />
           <SelectPrimitive.Icon asChild>
             <Icon size={3} icon='ph--caret-down--bold' />
           </SelectPrimitive.Icon>
@@ -148,16 +148,13 @@ const SelectItemIndicator = forwardRef<HTMLDivElement, SelectItemIndicatorProps>
 
 type SelectOptionProps = SelectItemProps;
 
-// TODO(burdon): Option to show icon on left/right.
 const SelectOption = forwardRef<HTMLDivElement, SelectItemProps>(({ children, classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   return (
     <SelectPrimitive.Item {...props} className={tx('select.item', {}, classNames)} ref={forwardedRef}>
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
-      <span className='grow w-1' />
-      {/* <SelectPrimitive.ItemIndicator className={tx('select.itemIndicator', 'option__indicator', {})}> */}
-      <Icon icon='ph--check--regular' />
-      {/* </SelectPrimitive.ItemIndicator> */}
+      <span className='grow' />
+      <Icon size={3} icon='ph--check--regular' />
     </SelectPrimitive.Item>
   );
 });

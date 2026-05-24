@@ -5,6 +5,7 @@
 import React from 'react';
 
 import { useThemeContext } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { type Message, type Transcript } from '@dxos/types';
 import {
@@ -16,7 +17,6 @@ import {
   preview,
   scroller,
 } from '@dxos/ui-editor';
-import { composable, composableProps } from '@dxos/ui-theme';
 
 import { type SerializationModel } from '../../model';
 import { renderByline } from '../../util';

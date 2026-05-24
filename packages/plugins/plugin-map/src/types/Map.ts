@@ -10,9 +10,7 @@ import { ViewAnnotation } from '@dxos/schema';
 
 export const Map = Schema.Struct({
   name: Schema.optional(Schema.String),
-
   view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false), Schema.optional),
-
   center: Format.GeoPoint.pipe(FormInputAnnotation.set(false), Schema.optional),
   zoom: Schema.Number.pipe(FormInputAnnotation.set(false), Schema.optional),
   // TODO(wittjosiah): Use GeoJSON format for rendering arbitrary data on the map.

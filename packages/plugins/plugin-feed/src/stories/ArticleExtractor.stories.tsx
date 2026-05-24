@@ -6,9 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { IconButton, Input, Panel, ScrollArea, Select, Toolbar } from '@dxos/react-ui';
+import { composable } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { composable } from '@dxos/ui-theme';
 
 import { translations } from '#translations';
 

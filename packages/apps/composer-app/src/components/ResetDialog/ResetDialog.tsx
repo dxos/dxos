@@ -93,13 +93,26 @@ export const ResetDialog = ({
   }, [download, logStore]);
 
   const handleSaveFeedback = useCallback(
-    async (values: SupportOperation.UserFeedback) => {
+    async (values: SupportOperation.SupportRequest) => {
       if (!observabilityProp) {
         return;
       }
 
+      // Collapse the richer SupportRequest into the legacy `{ message, includeLogs }`
+      // shape consumed by Observability. Triage metadata (type/severity/area/version)
+      // is embedded as a Markdown trailer so it travels with the message.
+      const trailer = [
+        `**Type:** ${values.type}`,
+        `**Severity:** ${values.severity}`,
+        values.area && `**Area:** ${values.area}`,
+        values.version && `**Version:** ${values.version}`,
+      ]
+        .filter(Boolean)
+        .join('\n');
+      const message = [`# ${values.title}`, values.body, '---', trailer].filter(Boolean).join('\n\n');
+
       const observability = await observabilityProp;
-      void observability.feedback.captureUserFeedback(values);
+      void observability.feedback.captureUserFeedback({ message, includeLogs: values.includeLogs });
       setFeedbackOpen(false);
       setFeedbackSent(true);
     },
