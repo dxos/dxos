@@ -119,8 +119,7 @@ const renderNoteCell: RenderCell<{ color: string; velocity: number; subdued?: bo
 /** Find a note on `pitch` whose time span includes `beat`. */
 const findNoteAtBeat = (notes: ReadonlyArray<Note.Note>, pitch: number, beat: number): Note.Note | undefined =>
   notes.find(
-    (note) =>
-      note.pitch === pitch && note.startTime <= beat + 1e-6 && beat < note.startTime + note.duration - 1e-6,
+    (note) => note.pitch === pitch && note.startTime <= beat + 1e-6 && beat < note.startTime + note.duration - 1e-6,
   );
 
 /**
@@ -383,7 +382,7 @@ export const SequenceGrid = ({
       const existingNote = resizeNoteRef.current;
       resizeNoteRef.current = null;
 
-      // --- Pure click (no drag) ---
+      // Pure click (no drag).
       if (startCoord.col === endCoord.col) {
         if (onToggleNote) {
           if (existingNote) {
@@ -409,7 +408,7 @@ export const SequenceGrid = ({
         return;
       }
 
-      // --- Drag on existing note: resize ---
+      // Drag on existing note: resize.
       if (existingNote) {
         const noteStartCol = Math.round(existingNote.startTime / beatsPerCell);
         const maxEnd = maxNoteEndCol(notes, pitch, noteStartCol, beatsPerCell, existingNote.startTime);
@@ -439,7 +438,7 @@ export const SequenceGrid = ({
         return;
       }
 
-      // --- New note draw ---
+      // New note draw.
       let col: number;
       let length: number;
       if (endCoord.col >= startCoord.col) {
