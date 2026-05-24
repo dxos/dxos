@@ -38,6 +38,10 @@ type InputVariant = 'default' | 'subdued';
 
 type InputSharedProps = Partial<{ density: Density; elevation: Elevation; variant: InputVariant }>;
 
+//
+// Label
+//
+
 type LabelProps = ThemedClassName<LabelPrimitiveProps> & { srOnly?: boolean };
 
 const Label = forwardRef<HTMLLabelElement, LabelProps>(({ classNames, children, srOnly, ...props }, forwardedRef) => {
@@ -50,6 +54,10 @@ const Label = forwardRef<HTMLLabelElement, LabelProps>(({ classNames, children, 
 });
 
 Label.displayName = 'Input.Label';
+
+//
+// Description
+//
 
 type DescriptionProps = ThemedClassName<DescriptionPrimitiveProps> & { srOnly?: boolean };
 
@@ -65,6 +73,10 @@ const Description = forwardRef<HTMLSpanElement, DescriptionProps>(
 );
 
 Description.displayName = 'Input.Description';
+
+//
+// Validation
+//
 
 type ValidationProps = ThemedClassName<ValidationPrimitiveProps> & { srOnly?: boolean };
 
@@ -86,6 +98,10 @@ const Validation = forwardRef<HTMLSpanElement, InputScopedProps<ValidationProps>
 
 Validation.displayName = 'Input.Validation';
 
+//
+// DescriptionAndValidation
+//
+
 type DescriptionAndValidationProps = ThemedClassName<DescriptionAndValidationPrimitiveProps> & { srOnly?: boolean };
 
 const DescriptionAndValidation = forwardRef<HTMLParagraphElement, DescriptionAndValidationProps>(
@@ -104,6 +120,10 @@ const DescriptionAndValidation = forwardRef<HTMLParagraphElement, DescriptionAnd
 );
 
 DescriptionAndValidation.displayName = 'Input.DescriptionAndValidation';
+
+//
+// PinInput
+//
 
 type PinInputProps = ThemedClassName<InputSharedProps & Omit<PinInputPrimitiveProps, 'className' | 'segmentClassName'>>;
 
@@ -130,7 +150,10 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
 
 PinInput.displayName = 'Input.PinInput';
 
+//
+// TextInput
 // TODO(burdon): Implement inline icon within button: e.g., https://www.radix-ui.com/themes/playground#text-field
+//
 
 type AutoFillProps = {
   noAutoFill?: boolean;
@@ -174,6 +197,10 @@ const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>
 
 TextInput.displayName = 'Input.TextInput';
 
+//
+// Time
+//
+
 type TimeProps = InputSharedProps & ThemedClassName<Omit<TextInputPrimitiveProps, 'type'>>;
 
 const Time = forwardRef<HTMLInputElement, InputScopedProps<TimeProps>>(
@@ -205,6 +232,10 @@ const Time = forwardRef<HTMLInputElement, InputScopedProps<TimeProps>>(
 );
 
 Time.displayName = 'Input.Time';
+
+//
+// TextArea
+//
 
 type TextAreaProps = InputSharedProps & ThemedClassName<TextAreaPrimitiveProps>;
 
@@ -238,6 +269,10 @@ const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>
 );
 
 TextArea.displayName = 'Input.TextArea';
+
+//
+// Checkbox
+//
 
 type CheckboxProps = ThemedClassName<Omit<CheckboxPrimitive.CheckboxProps, 'children'>> & {
   size?: Size;
@@ -294,6 +329,10 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
 
 Checkbox.displayName = 'Input.Checkbox';
 
+//
+// Switch
+//
+
 type SwitchProps = ThemedClassName<
   Omit<ComponentPropsWithRef<'input'>, 'children' | 'onChange'> & { onCheckedChange?: (checked: boolean) => void }
 >;
@@ -340,6 +379,10 @@ const Switch = forwardRef<HTMLInputElement, InputScopedProps<SwitchProps>>(
 );
 
 Switch.displayName = 'Input.Switch';
+
+//
+// Input
+//
 
 export const Input = {
   Root: InputRoot,
