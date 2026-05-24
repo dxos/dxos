@@ -275,14 +275,11 @@ export const SequenceGrid = ({
     [maxPitch, beatsPerCell, onToggleNote, registry, atoms, trackColor],
   );
 
-  const handleDrawUpdate = useCallback(
-    (startCoord: CellCoord, endCoord: CellCoord) => {
-      const col = Math.min(startCoord.col, endCoord.col);
-      const length = Math.abs(endCoord.col - startCoord.col) + 1;
-      setDrawPreview({ col, row: startCoord.row, length });
-    },
-    [],
-  );
+  const handleDrawUpdate = useCallback((startCoord: CellCoord, endCoord: CellCoord) => {
+    const col = Math.min(startCoord.col, endCoord.col);
+    const length = Math.abs(endCoord.col - startCoord.col) + 1;
+    setDrawPreview({ col, row: startCoord.row, length });
+  }, []);
 
   const handleDrawCommit = useCallback(
     (startCoord: CellCoord, endCoord: CellCoord) => {

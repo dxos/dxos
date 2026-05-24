@@ -150,21 +150,30 @@ const disposeTrackVoices = (trackVoices: TrackVoices) => {
   trackVoices.fallback.dispose();
 };
 
-type ScheduledTrack = {
+type NoteEvent = { time: number; pitch: number; duration: number; velocity: number };
+
+type TrackData = {
   trackId: string;
   voices: TrackVoices;
-  part: Tone.Part<{ time: number; pitch: number; duration: number; velocity: number }>;
+  events: NoteEvent[];
 };
 
 /**
- * Builds Tone.Parts for each Track of a Score and controls the global transport.
- * Call `load` to (re)build with a new Score, then `play()` / `stop()`.
+ * Builds and runs a Tone.js transport for a Score.
+ * Call `load` to (re)build voices/events from a new Score, then `play()` / `stop()`.
+ *
+ * Tone.js state-machine note: `Tone.Part` instances cannot be reliably
+ * restarted after `part.stop()` or after `Transport.stop()` (which internally
+ * stops all synced sources). To guarantee clean playback on every play/stop
+ * cycle, Parts are created fresh in `play()` and disposed in `stop()`. Voices
+ * (synths, gains) are heavier and are reused across play cycles — they are
+ * only rebuilt when `load()` is called with a new Score.
  */
 export class ScorePlayer {
-  #scheduled: ScheduledTrack[] = [];
+  #tracks: TrackData[] = [];
+  #activeParts: Tone.Part<NoteEvent>[] = [];
   #master?: Tone.Gain;
   #started = false;
-  #partsStarted = false;
   #loopBeats = 16;
   #loopStartBeats = 0;
   #loopEndBeats = 0;
@@ -186,8 +195,9 @@ export class ScorePlayer {
   }
 
   /**
-   * Rebuild Tone Parts from the given Score. Disposes any previously scheduled
-   * tracks. The transport is stopped if running; call `play()` afterwards.
+   * Rebuild voices and note-event tables from the given Score. Disposes any
+   * previously loaded tracks. The transport is stopped if running; call
+   * `play()` afterwards.
    */
   load(score: Score.Score): void {
     this.dispose();
@@ -208,21 +218,13 @@ export class ScorePlayer {
       }
       maxLength = Math.max(maxLength, sequence.length);
       const voices = buildTrackVoices(track, this.#master);
-      type Event = { time: number; pitch: number; duration: number; velocity: number };
-      const events: Event[] = (sequence.notes ?? []).map((note: Note.Note) => ({
+      const events: NoteEvent[] = (sequence.notes ?? []).map((note: Note.Note) => ({
         time: beatsToSeconds(note.startTime, score.tempo),
         pitch: note.pitch,
         duration: note.duration,
         velocity: note.velocity ?? 0.8,
       }));
-      const part = new Tone.Part<Event>((time, value) => {
-        const voice = findVoice(voices, value.pitch);
-        voice.trigger(time, value.pitch, value.duration, value.velocity);
-      }, events);
-      // Parts must NOT loop independently — the global Transport drives the loop
-      // between Score.loopStart..loopEnd so every track stays phase-locked.
-      part.loop = false;
-      this.#scheduled.push({ trackId: track.id, voices, part });
+      this.#tracks.push({ trackId: track.id, voices, events });
     }
 
     // Resolve the score-level loop range with defaults. The loop is allowed to
@@ -252,17 +254,22 @@ export class ScorePlayer {
 
   async play(): Promise<void> {
     await Tone.start();
+    // Create fresh Parts on every play. Tone.js Part instances cannot be
+    // reliably restarted after Transport.stop() (which internally calls stop()
+    // on all synced sources, deregistering them from the Transport's event
+    // queue). Creating new instances avoids all stale-state issues.
+    this.#disposeActiveParts();
     const transport = Tone.getTransport();
-    // Parts are added to the Transport timeline once. Calling part.start()
-    // again after part.stop() is unreliable in Tone.js — the Part's internal
-    // state machine may silently drop the re-schedule. Instead we start each
-    // Part exactly once and keep them in the Transport's event list; on
-    // subsequent plays we only restart the Transport.
-    if (!this.#partsStarted) {
-      for (const { part } of this.#scheduled) {
-        part.start(0);
-      }
-      this.#partsStarted = true;
+    for (const { voices, events } of this.#tracks) {
+      const part = new Tone.Part<NoteEvent>((time, value) => {
+        const voice = findVoice(voices, value.pitch);
+        voice.trigger(time, value.pitch, value.duration, value.velocity);
+      }, events);
+      // Parts must NOT loop independently — the global Transport drives the
+      // loop between Score.loopStart..loopEnd so every track stays phase-locked.
+      part.loop = false;
+      part.start(0);
+      this.#activeParts.push(part);
     }
     // Start the transport AT loopStart so playback always begins inside the
     // configured loop range — otherwise events at beats 0..loopStart would
@@ -281,18 +288,13 @@ export class ScorePlayer {
     // schedule cancel-time setter validates `value >= 0` and throws
     // RangeError. Pass an explicit clamped time and additionally swallow
     // the rare race so a stop after a transient play never bubbles up.
-    //
-    // Parts are intentionally NOT stopped here — stopping a Part removes it
-    // from the Transport's schedule and Tone.js does not reliably re-add it
-    // via part.start() on the same instance. The Transport stop() already
-    // silences all audio; Parts remain in the schedule and replay on the
-    // next transport.start().
     const time = Math.max(0, Tone.now());
     try {
       Tone.getTransport().stop(time);
     } catch {
       /* see comment above */
     }
+    this.#disposeActiveParts();
   }
 
   /** True if play() has been called since the last stop()/dispose(). */
@@ -302,13 +304,25 @@ export class ScorePlayer {
 
   dispose(): void {
     this.stop();
-    for (const entry of this.#scheduled) {
-      entry.part.dispose();
+    this.#disposeActiveParts();
+    for (const entry of this.#tracks) {
       disposeTrackVoices(entry.voices);
     }
-    this.#scheduled = [];
-    this.#partsStarted = false;
+    this.#tracks = [];
     this.#master?.dispose();
     this.#master = undefined;
+  }
+
+  #disposeActiveParts(): void {
+    const time = Math.max(0, Tone.now());
+    for (const part of this.#activeParts) {
+      try {
+        part.stop(time);
+      } catch {
+        // ignore
+      }
+      part.dispose();
+    }
+    this.#activeParts = [];
   }
 }
