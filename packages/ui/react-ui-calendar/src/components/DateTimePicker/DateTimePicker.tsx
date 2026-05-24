@@ -295,10 +295,12 @@ const Content = composable<HTMLDivElement, ContentProps>(({ classNames, ...props
         })}
         ref={forwardedRef}
       >
-        <Calendar.Root ref={controllerRef} weekStartsOn={weekStartsOn}>
-          <Calendar.Toolbar nav />
-          <Calendar.Grid rows={6} onSelect={handleSelect} onSelectRange={handleSelectRange} />
-        </Calendar.Root>
+        {isDateMode(state.mode) && (
+          <Calendar.Root ref={controllerRef} weekStartsOn={weekStartsOn}>
+            <Calendar.Toolbar nav />
+            <Calendar.Grid rows={6} onSelect={handleSelect} onSelectRange={handleSelectRange} />
+          </Calendar.Root>
+        )}
         {isTimeMode(state.mode) && <Time />}
         <Commit />
       </Popover.Content>

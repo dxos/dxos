@@ -110,8 +110,8 @@ describe('incrementSegment', () => {
     expect(incrementSegment('a', 'AM', -1)).toBe('PM');
   });
 
-  test('hh rolls 12 -> 1 on +1', ({ expect }) => {
-    expect(incrementSegment('hh', '12', 1)).toBe('1');
+  test('hh rolls 12 -> 01 on +1 (zero-padded)', ({ expect }) => {
+    expect(incrementSegment('hh', '12', 1)).toBe('01');
   });
 });
 

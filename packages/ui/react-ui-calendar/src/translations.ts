@@ -15,7 +15,6 @@ export const translations = [
         'next.button': 'Next month',
         'open.button': 'Open calendar',
         'commit.button': 'OK',
-        'cancel.button': 'Cancel',
         'range.from.label': 'From',
         'range.to.label': 'To',
       },

@@ -76,7 +76,7 @@ export const formatSegments = (
     }
     if (options.timeOrder.includes('hh')) {
       const h = date.getHours() % 12;
-      segments.hh = String(h === 0 ? 12 : h);
+      segments.hh = pad(h === 0 ? 12 : h, 2);
       segments.a = date.getHours() >= 12 ? 'PM' : 'AM';
     }
     segments.mm = pad(date.getMinutes(), 2);
@@ -170,7 +170,7 @@ export const incrementSegment = (kind: SegmentKind, value: string, delta: number
     case 'HH':
       return String(wrap(n, delta, 0, 23)).padStart(2, '0');
     case 'hh':
-      return String(wrap(n, delta, 1, 12));
+      return String(wrap(n, delta, 1, 12)).padStart(2, '0');
     case 'mm':
       return String(wrap(n, delta, 0, 59)).padStart(2, '0');
   }
