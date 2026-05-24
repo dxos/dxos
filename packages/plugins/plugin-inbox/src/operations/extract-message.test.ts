@@ -7,12 +7,12 @@ import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Capability, CapabilityManager } from '@dxos/app-framework';
-import { Database, Filter, Obj, Relation } from '@dxos/echo';
+import { Filter, Obj, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 import { Message } from '@dxos/types';
 
-import { type ExtractError, type ExtractResult, type MessageExtractor } from '../capabilities/MessageExtractor';
+import * as MessageExtractor from '../capabilities/MessageExtractor';
 import { ExtractedFrom, InboxCapabilities } from '../types';
 import handler from './extract-message';
 
@@ -21,8 +21,8 @@ const stubExtractor = (opts: {
   id: string;
   matched: boolean;
   confidence?: number;
-  extract?: () => Effect.Effect<ExtractResult, ExtractError>;
-}): MessageExtractor => ({
+  extract?: () => Effect.Effect<MessageExtractor.ExtractResult, MessageExtractor.ExtractError>;
+}): MessageExtractor.MessageExtractor => ({
   id: opts.id,
   description: opts.id,
   kinds: [],
@@ -39,7 +39,7 @@ const makeMessage = () =>
   });
 
 // Build a Capability.Service from a list of MessageExtractor instances.
-const makeCapabilityService = (extractors: MessageExtractor[]) => {
+const makeCapabilityService = (extractors: MessageExtractor.MessageExtractor[]) => {
   const registry = Registry.make();
   const manager = CapabilityManager.make({ registry });
   for (const extractor of extractors) {

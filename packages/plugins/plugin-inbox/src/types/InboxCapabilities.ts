@@ -10,8 +10,6 @@ import { Capability } from '@dxos/app-framework';
 
 import { meta } from '#meta';
 
-import { type MessageExtractor as MessageExtractorImpl } from '../capabilities/MessageExtractor';
-
 // Inline import to avoid `Settings` namespace alias colliding with the
 // `Settings` capability export below.
 export const Settings = Capability.make<Atom.Writable<import('./Settings').Settings>>(`${meta.id}.capability.settings`);
@@ -20,4 +18,6 @@ export const Settings = Capability.make<Atom.Writable<import('./Settings').Setti
  * Plugins contribute message extractors via this capability.
  * Multiple plugins may register; the ExtractMessage operation selects one based on match() confidence.
  */
-export const MessageExtractor = Capability.make<MessageExtractorImpl>(`${meta.id}.capability.messageExtractor`);
+export const MessageExtractor = Capability.make<import('../capabilities/MessageExtractor').MessageExtractor>(
+  `${meta.id}.capability.messageExtractor`,
+);

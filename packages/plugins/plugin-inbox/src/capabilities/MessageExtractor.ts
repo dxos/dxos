@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { type Effect } from 'effect';
+import type * as Effect from 'effect/Effect';
 
 import { type Database, type Obj, type Relation } from '@dxos/echo';
 import { type Message } from '@dxos/types';

@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { Obj, Relation } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import { ExtractedFrom, make } from './ExtractedFrom';
+import * as ExtractedFrom from './ExtractedFrom';
 
 describe('ExtractedFrom', () => {
   test('relation links extracted object to source Message', ({ expect }) => {
@@ -22,7 +22,7 @@ describe('ExtractedFrom', () => {
       blocks: [],
     });
 
-    const rel = make({
+    const rel = ExtractedFrom.make({
       [Relation.Source]: extracted,
       [Relation.Target]: message,
       extractorId: 'trip-travel',
@@ -34,6 +34,6 @@ describe('ExtractedFrom', () => {
     expect(Relation.getSource(rel).id).toBe(extracted.id);
     expect(Relation.getTarget(rel).id).toBe(message.id);
     // Verify the schema constant is exported.
-    expect(ExtractedFrom).toBeDefined();
+    expect(ExtractedFrom.ExtractedFrom).toBeDefined();
   });
 });
