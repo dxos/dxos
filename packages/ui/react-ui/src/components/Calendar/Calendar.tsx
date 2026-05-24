@@ -14,9 +14,8 @@ import {
   type NavProps,
 } from 'react-day-picker';
 
-import { type ClassNameValue } from '@dxos/ui-types';
-
 import { useThemeContext } from '../../hooks';
+import { type ThemedClassName } from '../../util';
 
 // Slot names match react-day-picker v9 `ClassNames` enum values.
 const themeSlots = [
@@ -45,12 +44,11 @@ const themeSlots = [
   'footer',
 ] as const;
 
-// Distributive `Omit` so the DayPicker discriminated union is preserved per variant.
-type DistributiveOmit<T, K extends keyof any> = T extends unknown ? Omit<T, K> : never;
+// Distribute `ThemedClassName` over the DayPicker discriminated union so each variant preserves
+// its correlated `mode` / `selected` / `onSelect` triple at call sites.
+type DistributiveThemed<U> = U extends unknown ? ThemedClassName<Omit<U, 'classNames' | 'className'>> : never;
 
-export type CalendarRootProps = DistributiveOmit<DayPickerProps, 'classNames' | 'className'> & {
-  /** Class string applied to the calendar root (DXOS convention). */
-  classNames?: ClassNameValue;
+export type CalendarRootProps = DistributiveThemed<DayPickerProps> & {
   /** Slot-level class overrides matching react-day-picker's `ClassNames` shape. Merged on top of theme defaults. */
   slots?: Partial<ClassNames>;
 };
@@ -75,6 +73,7 @@ const CalendarRoot = ({ classNames, slots, components, ...props }: CalendarRootP
     />
   );
 };
+
 CalendarRoot.displayName = 'Calendar.Root';
 
 //
