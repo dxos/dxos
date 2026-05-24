@@ -45,15 +45,18 @@ jobs:
         uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          # `mode: agent` bypasses the default `@claude` trigger-phrase check
-          # so the action runs unconditionally for every dispatched event —
-          # the workflow's own `if:` gates handle the actual filtering.
-          mode: agent
+          # `mode: tag` (the default) is required — `mode: agent` only accepts
+          # `workflow_dispatch` and `schedule` events per the action's beta
+          # source (`src/modes/agent/index.ts`), not `issues:`. In tag mode,
+          # supplying a non-empty `direct_prompt` triggers the action
+          # unconditionally (see `checkContainsTrigger` in the action source),
+          # so the workflow's own `if:` gate on the Composer label is what
+          # filters which events get here, and `direct_prompt` then forces
+          # the run.
           max_turns: 3
-          # The `@beta` ref of `claude-code-action` exposes `direct_prompt`
-          # for instructions and `max_turns` as a separate top-level input.
-          # (HEAD of the action's repo recently renamed these to `prompt` and
-          # `claude_args` — when the beta tag catches up, swap the keys.)
+          # `direct_prompt` carries the triage instructions. (HEAD of the
+          # action's repo renamed this to `prompt` — swap when @beta catches
+          # up.)
           direct_prompt: |
             You are triaging a GitHub issue filed from the Composer in-app
             feedback form. The body contains a markdown trailer with the
