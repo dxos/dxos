@@ -139,7 +139,7 @@ describe('Object JSON serializer', () => {
         name: 'Regression Type',
       });
 
-      const typeJson = objectToJSON(typeEntity);
+      const typeJson = objectToJSON(typeEntity as any);
       const refResolver = new StaticRefResolver().addSchema(PersistedTypeSchema);
       const reconstructed = (await objectFromJSON(typeJson, { refResolver })) as any;
 

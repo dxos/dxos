@@ -5,7 +5,9 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import * as Schema from 'effect/Schema';
+
+import { Filter, JsonSchema, Obj, Query, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -220,6 +222,89 @@ describe('Serializer', () => {
         const [contact] = await db.query(Filter.type(TestSchema.Person)).run();
         expect(contact.name).to.eq(name);
         expect(Obj.instanceOf(TestSchema.Person, contact)).to.be.true;
+      }
+    });
+
+    // Regression: the Bramble exemplar space stores a dynamic `Type.Type` entity
+    // (the RoastLog schema) and is hydrated into fresh spaces via
+    // `serializer.import`. Once the import lands, the markdown editor (and any
+    // other code that runs `db.schemaRegistry.query({ location: ['database',
+    // 'runtime'] }).runSync()`) was throwing
+    //   "Invalid typename [typeof typename === 'string' && !typename.startsWith('dxn:')]"
+    // from `Type.getTypename` in `getSortKey`, which blanked the Composer
+    // Database subgraph and crashed every imported document.
+    test('schema registry query works after importing a Type.Type entity', async () => {
+      let data: SerializedSpace;
+
+      {
+        const { db } = await builder.createDatabase();
+        await db.schemaRegistry.register([
+          {
+            typename: 'example.type.regression',
+            version: '0.1.0',
+            jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ title: Schema.String })) as JsonSchema.JsonSchema,
+            name: 'Regression Type',
+          },
+        ]);
+        await db.flush();
+        data = await new Serializer().export(db);
+      }
+
+      data = JSON.parse(JSON.stringify(data));
+
+      {
+        const { db } = await builder.createDatabase();
+        await new Serializer().import(db, data);
+
+        // Direct entity query must produce the imported Type.Type entity.
+        const entities = await db.query(Filter.type(Type.Type)).run();
+        expect(entities.length).to.eq(1);
+        expect(Type.isType(entities[0])).to.be.true;
+        expect(entities[0].typename).to.eq('example.type.regression');
+
+        // Registry query (the path the markdown editor takes) must not throw.
+        const results = db.schemaRegistry.query({ location: ['database', 'runtime'] }).runSync();
+        const databaseSchemas = results.filter((schema) => Type.getTypename(schema) === 'example.type.regression');
+        expect(databaseSchemas.length).to.eq(1);
+      }
+    });
+
+    // Same shape as the Bramble welcome flow: the destination side registers a
+    // batch of static types (the app's plugin-contributed schemas) on top of the
+    // imported snapshot. Exercises the mixed runtime/database query path that
+    // the markdown editor's `useLinkQuery` hits.
+    test('mixed runtime + database schema registry query after import', async () => {
+      let data: SerializedSpace;
+
+      {
+        const { db } = await builder.createDatabase();
+        await db.schemaRegistry.register([
+          {
+            typename: 'example.type.regressionMixed',
+            version: '0.1.0',
+            jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ title: Schema.String })) as JsonSchema.JsonSchema,
+            name: 'Regression Mixed',
+          },
+        ]);
+        await db.flush();
+        data = await new Serializer().export(db);
+      }
+
+      data = JSON.parse(JSON.stringify(data));
+
+      {
+        const { db, graph } = await builder.createDatabase();
+        await graph.schemaRegistry.register([TestSchema.Person, TestSchema.Task]);
+        await new Serializer().import(db, data);
+
+        // Every schema returned by the registry must have a valid typename —
+        // `getSortKey` will call `Type.getTypename` for sorting and throws
+        // `Invalid typename` if any entry is malformed.
+        const results = db.schemaRegistry.query({ location: ['database', 'runtime'] }).runSync();
+        for (const schema of results) {
+          expect(() => Type.getTypename(schema)).not.to.throw();
+        }
+        expect(results.length).to.be.greaterThan(2);
       }
     });
 
