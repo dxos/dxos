@@ -35,6 +35,12 @@ export type Arrangement = Type.InstanceType<typeof Arrangement>;
 
 /**
  * v1: pre-existing Kanban shape. Retained as the source for the v1→v2 migration.
+ *
+ * The explicit interface + `as any` cast on the const is intentional: the
+ * inferred type of `Type.object(...)` over `Ref.Ref(View.View)` drags in
+ * transitive symbols (`QueryFilterClause`, etc.) that aren't portable across
+ * package boundaries, so TS refuses to emit the inferred declaration. The
+ * hand-written interface gives a portable shape; the cast bridges to it.
  */
 const KanbanV1Schema = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
@@ -59,7 +65,11 @@ export const KanbanV1: Type.Obj<KanbanV1> = KanbanV1Schema as any;
 // variants are tagged with a `kind` literal.
 //
 
-/** View-variant: items come from running the View's query (the original behaviour). */
+/**
+ * View-variant: items come from running the View's query (the original behaviour).
+ *
+ * Explicit interface + cast for the same portability reason as `KanbanV1` above.
+ */
 export interface KanbanViewSpec {
   readonly kind: 'view';
   view: Ref.Ref<View.View>;
