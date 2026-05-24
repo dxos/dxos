@@ -10,6 +10,17 @@ import { type ThemedClassName } from '../../util';
 
 export type MediaKind = 'video' | 'audio';
 
+export type MediaFit = 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
+
+/** Static map to keep Tailwind's class scanner happy (no dynamic `object-${fit}`). */
+const FIT_CLASS: Record<MediaFit, string> = {
+  cover: 'object-cover',
+  contain: 'object-contain',
+  fill: 'object-fill',
+  none: 'object-none',
+  'scale-down': 'object-scale-down',
+};
+
 const VIDEO_EXTENSIONS = ['.mp4', '.webm', '.ogv', '.mov', '.m4v'];
 const AUDIO_EXTENSIONS = ['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac'];
 
@@ -66,8 +77,8 @@ export type MediaPlayerProps = ThemedClassName<{
   muted?: boolean;
   /** Defaults to 'anonymous' for cross-origin sources (e.g. signed S3 URLs). */
   crossOrigin?: 'anonymous' | 'use-credentials' | '';
-  /** Additional classes applied only when rendering `<img>`. */
-  imgClassNames?: string;
+  /** CSS `object-fit` for `<img>` and `<video>`. Ignored for `<iframe>`/`<audio>`. Defaults to 'cover'. */
+  fit?: MediaFit;
 }>;
 
 /**
@@ -87,8 +98,9 @@ export const MediaPlayer = ({
   muted = false,
   alt,
   crossOrigin = 'anonymous',
-  imgClassNames,
+  fit = 'cover',
 }: MediaPlayerProps) => {
+  const fitClass = FIT_CLASS[fit];
   if (isEmbedUrl(src)) {
     const resolved = kind ?? detectMediaKind(src) ?? 'video';
     if (resolved === 'audio') {
@@ -108,7 +120,7 @@ export const MediaPlayer = ({
 
     return (
       <video
-        className={mx('aspect-video max-w-full max-h-full', classNames)}
+        className={mx('max-w-full max-h-full aspect-video', fitClass, classNames)}
         src={src}
         controls={controls}
         autoPlay={autoPlay}
@@ -121,15 +133,15 @@ export const MediaPlayer = ({
   }
 
   if (isCloudflareStreamEmbed(src)) {
-    return <IframePlayer key={src} src={src} alt={alt} classNames={classNames} />;
+    return <IframePlayer key={src} classNames={classNames} src={src} alt={alt} />;
   }
 
   return (
     <img
+      className={mx(fitClass, classNames)}
       src={src}
       alt={alt ?? ''}
       loading='lazy'
-      className={mx(classNames, imgClassNames)}
       onError={(event) => {
         event.currentTarget.style.display = 'none';
       }}
