@@ -73,7 +73,7 @@ const CROSS_PATH = buildCrossPath(50, 50, 40, 12);
 // Intermediate circle is intentionally smaller than the star/cross extents.
 const CIRCLE_PATH = buildCirclePath(50, 50, 20);
 
-export type HelloProps = ThemedClassName<{
+export type MorphProps = ThemedClassName<{
   /** Pixel size of the rendered SVG (square). */
   size?: number;
   /** Duration of one segment (star↔circle or circle↔cross) in seconds. Full cycle = 4× this value. */
@@ -84,7 +84,7 @@ export type HelloProps = ThemedClassName<{
  * Infinite morph cycle: star → small circle → cross → small circle → star.
  * Inspired by https://motion.dev/tutorials/react-path-morphing.
  */
-export const Hello = ({ classNames, size = 32, duration = 2 }: HelloProps) => {
+export const Morph = ({ classNames, size = 32, duration = 2 }: MorphProps) => {
   const progress = useMotionValue(0);
   const starToCircle = useMemo(() => interpolate(STAR_PATH, CIRCLE_PATH, { maxSegmentLength: 2 }), []);
   const circleToCross = useMemo(() => interpolate(CIRCLE_PATH, CROSS_PATH, { maxSegmentLength: 2 }), []);
