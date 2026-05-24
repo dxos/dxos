@@ -18,7 +18,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddSchema> = SpaceOpe
       const schema = schemas[0];
       Type.update(schema, (draft) => {
         if (input.name) {
-          (draft as any).name = input.name;
+          draft.name = input.name;
         }
         if (input.typename) {
           draft.typename = input.typename;

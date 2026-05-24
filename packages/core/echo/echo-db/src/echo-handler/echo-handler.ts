@@ -585,9 +585,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         return undefined;
       }
       // For non-db reactive objects rootSchema may already be a type entity.
-      return Type.isObjectSchema(root as any) ||
-        Type.isRelationSchema(root as any) ||
-        Type.isTypeKindSchema(root as any)
+      return Type.isObjectSchema(root) || Type.isRelationSchema(root) || Type.isTypeKindSchema(root)
         ? (root as unknown as Type.AnyType)
         : undefined;
     }
@@ -656,7 +654,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (typeDxn) {
       const staticType = target[symbolInternals].database.graph.schemaRegistry.getSchemaByDXN(typeDxn);
       if (staticType != null) {
-        return Type.getSchema(staticType) as any;
+        return Type.getSchema(staticType);
       }
       // Skip protobuf types as they are runtime registered types.
       if (DXN.getName(typeDxn)?.startsWith('protobuf')) {
@@ -1180,7 +1178,7 @@ export const isTypedObjectProxy = (value: any): value is any => {
 
   const type = Obj.getType(value);
   if (type != null) {
-    return !!getTypeAnnotation(Type.getSchema(type) as any);
+    return !!getTypeAnnotation(Type.getSchema(type));
   }
 
   return false;
@@ -1199,7 +1197,7 @@ type CreateObjectReturn<T> = T extends Obj.Unknown ? T : Entity.Entity<T>;
 export const createObject = <T extends AnyProperties>(obj: T): CreateObjectReturn<T> => {
   assertArgument(!isEchoObject(obj), 'obj', 'Object is already an ECHO object');
   const type = Obj.getType(obj as unknown as Obj.Unknown);
-  const schema = type != null ? (Type.getSchema(type) as any) : undefined;
+  const schema = type != null ? Type.getSchema(type) : undefined;
   if (schema != null) {
     validateSchema(schema);
   }

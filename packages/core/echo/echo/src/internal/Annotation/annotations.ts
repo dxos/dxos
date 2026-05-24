@@ -316,7 +316,7 @@ export const isInstanceOf = <S>(
     return false;
   }
 
-  const schemaURI = getTypeURIFromSpecifier(schemaOrType as any);
+  const schemaURI = getTypeURIFromSpecifier(schemaOrType);
 
   const type = getTypeURI(object);
   if (type && type === schemaURI) {

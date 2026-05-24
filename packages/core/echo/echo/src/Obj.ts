@@ -446,10 +446,10 @@ export const instanceOf: {
   <S extends Type.AnyObjectType | Type.AnyRelationType>(schema: S, value: unknown): value is Type.InstanceType<S>;
 } = ((...args: [schema: Type.AnyType, value?: unknown]) => {
   if (args.length === 1) {
-    return (entity: unknown) => internal.isInstanceOf(args[0] as any, entity);
+    return (entity: unknown) => internal.isInstanceOf(args[0], entity);
   }
 
-  return internal.isInstanceOf(args[0] as any, args[1]);
+  return internal.isInstanceOf(args[0], args[1]);
 }) as any;
 
 /**
@@ -473,7 +473,7 @@ export const snapshotOf: {
     entity != null &&
     typeof entity === 'object' &&
     Entity.SnapshotKindId in entity &&
-    internal.isInstanceOf(args[0] as any, entity);
+    internal.isInstanceOf(args[0], entity);
 
   if (args.length === 1) {
     return (entity: unknown) => check(entity);

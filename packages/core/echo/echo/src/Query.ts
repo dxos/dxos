@@ -508,6 +508,7 @@ export const type: {
 ): Any => {
   return new QueryClass({
     type: 'select',
+    // `Filter.type`'s overload set doesn't narrow over the local input union.
     filter: Filter.type(schema as any, predicates as any).ast,
   });
 };

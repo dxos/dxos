@@ -139,7 +139,7 @@ export function type(
     });
   }
 
-  const uri = internal.getTypeURIFromSpecifier(input as any);
+  const uri = internal.getTypeURIFromSpecifier(input);
   return new FilterClass({
     type: 'object',
     typename: uri,
@@ -250,7 +250,7 @@ export const foreignKeys = <S extends TypeNs.AnyType | string>(
   schema: S,
   keys: ForeignKey[],
 ): Filter<S extends TypeNs.AnyType ? TypeNs.InstanceType<S> : unknown> => {
-  const uri = internal.getTypeURIFromSpecifier(schema as any);
+  const uri = internal.getTypeURIFromSpecifier(schema);
   return new FilterClass({
     type: 'object',
     typename: uri,

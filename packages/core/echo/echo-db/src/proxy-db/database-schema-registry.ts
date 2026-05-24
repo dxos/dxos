@@ -287,10 +287,16 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
 
     // TODO(dmaretskyi): Check for conflicts with the schema in the DB.
     for (const input of inputs) {
-      if (Type.isType(input as any) || Schema.isSchema(input)) {
+      if (Type.isType(input) || Schema.isSchema(input)) {
         // Type entities (Obj/Relation/Type) and raw schemas both go through
-        // _addSchema; the helper unwraps the entity's source schema internally.
-        results.push(this._addSchema(Type.getSchema(input as Type.AnyType) as any));
+        // `_addSchema`; unwrap the entity's source schema via `Type.getSchema`
+        // before handing it to the schema-side helper. The raw-Schema branch
+        // is runtime-only (not in `RegisterSchemaInput`); use `unknown` to be
+        // explicit that we're escaping the declared union.
+        const schema = Type.isType(input)
+          ? Type.getSchema(input)
+          : (input as unknown as Schema.Schema.AnyNoContext);
+        results.push(this._addSchema(schema));
       } else if (typeof input === 'object' && 'typename' in input && 'version' in input && 'jsonSchema' in input) {
         const schema = this._addSchema(
           JsonSchema.toEffectSchema({
@@ -333,12 +339,16 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
       return undefined;
     }
 
-    if (!Schema.is(Type.getSchema(Type.Type) as any)(typeObject)) {
-      log.warn('type object is not a stored schema', { id: (typeObject as any)?.id });
+    if (!Type.isType(typeObject)) {
+      log.warn('type object is not a stored schema', { id });
       return undefined;
     }
 
-    return this._register(typeObject as any);
+    // `Type.isType` narrows to `Type.AnyType` but `_register` wants the
+    // database-persisted variant (`PersistentSchema`). Same runtime shape —
+    // the structural divergence between the static-entity `Type.Type` brand
+    // and the on-disk record forces the bridge.
+    return this._register(typeObject as unknown as PersistentSchema);
   }
 
   /**
@@ -428,8 +438,11 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
       }),
     );
 
+    // `Type.Type.id` is optional (drafts may not have one), but `db.add`
+    // requires `Entity.Unknown` which has required `id`. By the time we hand it
+    // to `_register` it's persisted, so the runtime branding is fine.
     const persistentSchema = this._db.add(schemaToStore as any);
-    const result = this._register(persistentSchema as any);
+    const result = this._register(persistentSchema as unknown as PersistentSchema);
 
     this._notifySchemaListChanged();
     return result;

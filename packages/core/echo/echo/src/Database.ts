@@ -227,6 +227,8 @@ export const resolve: {
     if (!object) {
       return yield* Effect.fail(new Err.ObjectNotFoundError(dxn));
     }
+    // `isInstanceOf` uses a conditional generic that TS can't resolve through
+    // the local `S extends Type.AnyType` parameter — runtime accepts it fine.
     invariant(!schema || isInstanceOf(schema as any, object), 'Object type mismatch.');
     return object as any;
   }).pipe(Effect.withSpan('Database.resolve'))) as any;

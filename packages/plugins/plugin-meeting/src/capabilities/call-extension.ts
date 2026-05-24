@@ -88,6 +88,7 @@ const _createEntityExtractionEnricher = ({ contextTypes, space }: EntityExtracti
   return async (message: Message.Message) => {
     const objects = await space.db
       .query(
+        // `Filter.type`'s overload set doesn't narrow across the schema/type-entity union.
         Query.select(Filter.or(...contextTypes.map((schema) => Filter.type(schema as any)))),
       )
       .run();

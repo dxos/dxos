@@ -6,7 +6,7 @@ import { next as A, type Doc } from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
 import type * as Schema from 'effect/Schema';
 
-import type * as Type from '@dxos/echo/Type';
+import * as Type from '@dxos/echo/Type';
 import { type Space } from '@dxos/client/echo';
 import { CreateEpochRequest } from '@dxos/client/halo';
 import { type DocHandleProxy, ObjectCore, type RepoProxy, migrateDocument } from '@dxos/echo-db';
@@ -78,7 +78,7 @@ export class MigrationBuilder {
 
     const { schema: schemaOrType, props } = await migrate(objectStructure);
     // Unwrap a `Type.Type` entity to its underlying Effect Schema.
-    const schema = ((schemaOrType as any)?.['~@dxos/echo/Type.StaticSchema'] ?? schemaOrType) as Schema.Schema.AnyNoContext;
+    const schema = Type.isType(schemaOrType) ? Type.getSchema(schemaOrType) : schemaOrType;
 
     const oldHandle = await this._findObjectContainingHandle(id);
     invariant(oldHandle);
@@ -109,7 +109,7 @@ export class MigrationBuilder {
   }
 
   async addObject(schema: Schema.Schema.AnyNoContext | Type.AnyType, props: any): Promise<string> {
-    const resolved = ((schema as any)?.['~@dxos/echo/Type.StaticSchema'] ?? schema) as Schema.Schema.AnyNoContext;
+    const resolved = Type.isType(schema) ? Type.getSchema(schema) : schema;
     const core = await this._createObject({ schema: resolved, props });
     return core.id;
   }

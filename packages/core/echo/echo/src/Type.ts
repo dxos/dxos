@@ -182,8 +182,8 @@ export const makeRelation = (
   const { source, target, jsonSchema, ...rest } = props;
   // Embed source/target DXNs + relation entity-kind into the jsonSchema so the
   // entity round-trips correctly through `toEffectSchema` / queries / refs.
-  const sourceURI = internal.getTypeURIFromSpecifier(source as any);
-  const targetURI = internal.getTypeURIFromSpecifier(target as any);
+  const sourceURI = internal.getTypeURIFromSpecifier(source);
+  const targetURI = internal.getTypeURIFromSpecifier(target);
   const enrichedJsonSchema: internal.JsonSchemaType = {
     ...(jsonSchema as any),
     entityKind: internal.EntityKind.Relation,
@@ -326,7 +326,7 @@ export const getURI = (input: AnyType): URI.URI => {
   // static entities (typename/version → DXN); `getSchemaURI` reads the
   // underlying Effect Schema's annotations via StaticTypeSchemaSlot.
   if (isType(input)) {
-    return internal.getTypeURIFromSpecifier(input as any);
+    return internal.getTypeURIFromSpecifier(input);
   }
   return internal.getSchemaURI(input) ?? raise(new TypeError('Type entity has no URI'));
 };
@@ -335,7 +335,7 @@ export const getURI = (input: AnyType): URI.URI => {
  * @returns The typename. Example: `com.example.type.person`.
  */
 export const getTypename = (input: AnyType | Schema.Schema.AnyNoContext): string => {
-  const typename = isType(input) ? input.typename : internal.getSchemaTypename(input as any);
+  const typename = isType(input) ? input.typename : internal.getSchemaTypename(input);
   invariant(typeof typename === 'string' && !typename.startsWith('dxn:'), 'Invalid typename');
   return typename;
 };
@@ -345,7 +345,7 @@ export const getTypename = (input: AnyType | Schema.Schema.AnyNoContext): string
  * @example 0.1.0
  */
 export const getVersion = (input: AnyType | Schema.Schema.AnyNoContext): string => {
-  const version = isType(input) ? input.version : internal.getSchemaVersion(input as any);
+  const version = isType(input) ? input.version : internal.getSchemaVersion(input);
   invariant(typeof version === 'string' && version.match(/^\d+\.\d+\.\d+$/), 'Invalid version');
   return version;
 };

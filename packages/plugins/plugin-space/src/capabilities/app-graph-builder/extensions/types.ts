@@ -129,7 +129,9 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
           ? get(AtomQuery.fromQuery(client.graph.schemaRegistry.query({ location: ['runtime'] })))
           : [];
 
-        const typename = Schema.isSchema(schema) ? Type.getTypename(schema as unknown as Type.AnyType) : schema.typename;
+        // `Schema.isSchema` narrows to `Schema.Schema.Any` (Context=unknown), not
+        // `Schema.Schema.AnyNoContext` — `Type.getTypename`'s param is the latter.
+        const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Schema.Schema.AnyNoContext) : schema.typename;
 
         // {All} virtual node.
         const allNode = Node.make({
@@ -219,10 +221,12 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
           ? get(AtomQuery.fromQuery(client.graph.schemaRegistry.query({ location: ['runtime'] })))
           : [];
 
-        const targetTypename = Type.getTypename(schema as unknown as Type.AnyType);
+        // `Schema.isSchema` narrows to `Schema.Schema.Any` (Context=unknown); the
+        // type helpers require `Schema.Schema.AnyNoContext`.
+        const schemaNoCtx = schema as Schema.Schema.AnyNoContext;
+        const targetTypename = Type.getTypename(schemaNoCtx);
         const viewIndex = buildViewIndex(get, space, schemas);
-        const deletable =
-          Type.isMutable(schema as unknown as Type.AnyType) && viewIndex.getViewsForTypename(targetTypename).length === 0;
+        const deletable = Type.isMutable(schemaNoCtx) && viewIndex.getViewsForTypename(targetTypename).length === 0;
 
         return Effect.succeed(
           createSchemaActions({

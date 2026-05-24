@@ -92,8 +92,11 @@ export type ObjectMigration = {
 export const define = <From extends MigrationSchemaInput, To extends MigrationSchemaInput>(
   options: DefineObjectMigrationOptions<From, To>,
 ): ObjectMigration => {
-  const fromSchema = Type.getSchema(options.from as any);
-  const toSchema = Type.getSchema(options.to as any);
+  // Bridge: `getSchema` accepts Type.AnyType + UnknownTypeSchema but not raw
+  // Schemas; `MigrationSchemaInput` unions in `Schema.Schema.AnyNoContext`, and
+  // `getSchema` passes raw schemas through unchanged.
+  const fromSchema = Type.getSchema(options.from as Type.AnyType);
+  const toSchema = Type.getSchema(options.to as Type.AnyType);
   const fromType = getSchemaURI(fromSchema);
   if (!fromType) {
     throw new Error('Invalid from schema');

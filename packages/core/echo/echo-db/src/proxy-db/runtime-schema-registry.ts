@@ -65,13 +65,13 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
         ? internal.getSchemaURI(schema as any)
         : Type.getURI(schema as Type.AnyType)) ?? raise(new TypeError('Schema has no URI'));
     if (this._registry.has(uri)) {
-      const typename = Type.getTypename(schema as any);
-      const version = Type.getVersion(schema as any);
+      const typename = Type.getTypename(schema);
+      const version = Type.getVersion(schema);
       throw new Error(`Schema version already registered: ${typename}:${version}`);
     }
     this._registry.set(uri, schema);
 
-    const typename = Type.getTypename(schema as any) ?? raise(new TypeError('Schema has no typename'));
+    const typename = Type.getTypename(schema) ?? raise(new TypeError('Schema has no typename'));
     invariant(typename, 'Not a valid ECHO schema');
     const versions = defaultMap(this._byTypename, typename, () => [] as Type.AnyType[]);
     versions.push(schema);

@@ -170,7 +170,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
           if (DXN.isDXN(uri)) {
             const typeEntity = this.schemaRegistry.getSchemaByDXN(uri);
             status = typeEntity != null ? 'resolved' : 'missing';
-            return typeEntity != null ? (Type.getSchema(typeEntity) as any) : undefined;
+            return typeEntity != null ? Type.getSchema(typeEntity) : undefined;
           } else if (EchoURI.isEchoURI(uri)) {
             status = 'error';
             throw new Error('Not implemented: Resolving schema stored in the database');
