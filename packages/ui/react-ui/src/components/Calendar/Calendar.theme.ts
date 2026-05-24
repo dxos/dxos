@@ -20,13 +20,13 @@ const months: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('flex f
 const month: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('flex flex-col gap-2', ...etc);
 
 const month_caption: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
-  mx('flex justify-center items-center h-8 relative', ...etc);
+  mx('flex justify-center items-center relative', ...etc);
 
 const caption_label: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('text-sm font-medium', ...etc);
 
 const nav: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
-  // `z-10` keeps the nav above the absolutely-positioned month caption so chevron clicks land.
-  mx('flex items-center justify-between absolute inset-x-1 top-1 z-10', ...etc);
+  // Flex row: prev chevron, month label (from CalendarNav via useDayPicker), next chevron.
+  mx('flex items-center justify-between', ...etc);
 
 const button_previous: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
   mx(

@@ -10,8 +10,8 @@ import {
   type DayPickerProps,
   type DayProps,
   type FooterProps,
-  type MonthCaptionProps,
   type NavProps,
+  useDayPicker,
 } from 'react-day-picker';
 
 import { useThemeContext } from '../../hooks';
@@ -62,6 +62,7 @@ const CalendarRoot = ({ classNames, slots, components, ...props }: CalendarRootP
   for (const slot of themeSlots) {
     themed[slot] = tx(`calendar.${slot}`, {}, slots?.[slot]);
   }
+
   return (
     <DayPicker
       // Spread loses union narrowing inside the function body; restore the type at the DayPicker boundary.
@@ -84,17 +85,8 @@ CalendarRoot.displayName = 'Calendar.Root';
 // Consumers may pass these (or their own wrappers) via DayPicker's `components` prop.
 //
 
-const CalendarMonthCaption: CustomComponents['MonthCaption'] = ({
-  calendarMonth,
-  displayIndex: _displayIndex,
-  ...rest
-}: MonthCaptionProps) => {
-  return (
-    <div {...rest}>
-      <span>{calendarMonth.date.toLocaleString(undefined, { month: 'long', year: 'numeric' })}</span>
-    </div>
-  );
-};
+// The default MonthCaption is rendered inside the nav (see CalendarNav); hide the per-month caption.
+const CalendarMonthCaption: CustomComponents['MonthCaption'] = () => <span hidden />;
 
 const CalendarNav: CustomComponents['Nav'] = ({
   onPreviousClick,
@@ -104,6 +96,8 @@ const CalendarNav: CustomComponents['Nav'] = ({
   ...rest
 }: NavProps) => {
   const { t } = useTranslation(translationKey);
+  const { months } = useDayPicker();
+  const displayed = months[0]?.date;
   return (
     <nav {...rest}>
       <IconButton
@@ -114,6 +108,9 @@ const CalendarNav: CustomComponents['Nav'] = ({
         disabled={!previousMonth}
         onClick={onPreviousClick}
       />
+      <span className='text-sm font-medium'>
+        {displayed?.toLocaleString(undefined, { month: 'long', year: 'numeric' })}
+      </span>
       <IconButton
         variant='ghost'
         iconOnly
