@@ -181,7 +181,6 @@ export const Time: Story = {
     kind: 'time',
     label: 'Time',
     defaultValue: '09:30',
-    description: 'Native <input type="time">',
   },
 };
 

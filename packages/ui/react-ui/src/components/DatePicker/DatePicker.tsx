@@ -4,7 +4,14 @@
 
 import { createContext } from '@radix-ui/react-context';
 import { format as formatDate } from 'date-fns';
-import React, { type ComponentPropsWithoutRef, type ReactNode, forwardRef, useCallback, useState } from 'react';
+import React, {
+  type ComponentPropsWithoutRef,
+  PropsWithChildren,
+  type ReactNode,
+  forwardRef,
+  useCallback,
+  useState,
+} from 'react';
 import { type DateRange } from 'react-day-picker';
 
 import { useThemeContext } from '../../hooks';
@@ -133,12 +140,11 @@ const formatValue = (mode: DatePickerMode, value: unknown, fmt: string): string 
   }
 };
 
-export type DatePickerTriggerProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'button'>, 'children'>> & {
-  format?: string;
-  placeholder?: string;
-  /** Override the default `[calendar icon] [label]` content entirely. */
-  children?: ReactNode;
-};
+export type DatePickerTriggerProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'button'>, 'children'>> &
+  PropsWithChildren<{
+    format?: string;
+    placeholder?: string;
+  }>;
 
 const DatePickerTrigger = forwardRef<HTMLButtonElement, DatePickerTriggerProps>(
   ({ classNames, format: fmt = 'PPP', placeholder, children, ...props }, forwardedRef) => {
@@ -160,7 +166,7 @@ const DatePickerTrigger = forwardRef<HTMLButtonElement, DatePickerTriggerProps>(
         >
           {children ?? (
             <>
-              <Icon icon='ph--calendar--regular' size={4} />
+              <Icon size={4} icon='ph--calendar--regular' />
               {label}
             </>
           )}
