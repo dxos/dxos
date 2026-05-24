@@ -121,14 +121,10 @@ describe('Object JSON serializer', () => {
     expect((expandoFromJson as any)[ATTR_TYPE]).toBeUndefined();
   });
 
-  // Regression: the Bramble exemplar space stores a `Type.Type` entity (the
-  // persisted RoastLog schema) and reaches users via `client.spaces.import`,
-  // which routes through `objectFromJSON`. Before the fix, `fromJSON` only
-  // stamped `KindId` as Object/Relation — never Type — so the imported
-  // entity ended up branded as Object, was excluded from `Filter.type(Type.Type)`
-  // / `Type.isType`, and the Database subgraph in Composer rendered empty
-  // (no types section at all). `objectFromJSON` must honour the schema's
-  // TypeAnnotation kind the way `createObject` does.
+  // `objectFromJSON` is the deserialization path for queue messages and devtools
+  // round-trips. For persisted `Type.Type` entities it must stamp `KindId = Type`
+  // (not Object), mirroring the kind resolution that `createObject` does for the
+  // in-memory path. Otherwise `Filter.type(Type.Type)` / `Type.isType` skip them.
   describe('Type.Type round-trip', () => {
     test('preserves KindId=Type for a persisted Type.Type entity', async ({ expect }) => {
       const PersistedTypeSchema = Type.getSchema(Type.Type);
@@ -139,7 +135,7 @@ describe('Object JSON serializer', () => {
         name: 'Regression Type',
       });
 
-      const typeJson = objectToJSON(typeEntity);
+      const typeJson = objectToJSON(typeEntity as any);
       const refResolver = new StaticRefResolver().addSchema(PersistedTypeSchema);
       const reconstructed = (await objectFromJSON(typeJson, { refResolver })) as any;
 

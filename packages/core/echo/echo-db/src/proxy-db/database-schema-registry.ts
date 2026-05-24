@@ -401,8 +401,13 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
 
     const meta = getTypeAnnotation(schema);
     invariant(meta, 'use Schema.Struct({}).pipe(Type.Obj()) or class syntax to create a valid schema');
+    // PersistentSchema only declares typename/version/jsonSchema/name as data fields.
+    // `meta.kind` is the entity-kind brand (set on `[KindId]` via `setSchemaPropertiesOnObjectCore`),
+    // NOT a data field — spreading it here would leak `kind: 'object'` into the data namespace,
+    // surface through `Obj.toJSON`, and end up baked into committed snapshots.
+    const { kind: _kind, ...metaWithoutKind } = meta;
     const schemaToStore = createObject(PersistentSchema as any, {
-      ...meta,
+      ...metaWithoutKind,
       jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})),
     }) as unknown as Type.Type & { jsonSchema: any };
     // The schema's $id is the typename DXN — universal across stored and non-stored

@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Filter, JsonSchema, Obj, Query, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -220,6 +221,65 @@ describe('Serializer', () => {
         const [contact] = await db.query(Filter.type(TestSchema.Person)).run();
         expect(contact.name).to.eq(name);
         expect(Obj.instanceOf(TestSchema.Person, contact)).to.be.true;
+      }
+    });
+
+    // Regression: `_addSchema` was spreading the schema's TypeAnnotation
+    // (`{ kind, typename, version }`) into the data props of the new
+    // PersistentSchema instance. That leaked `kind: 'object'` into the data
+    // namespace; `Obj.toJSON` then serialized it as a top-level field. On import
+    // the entity's [KindId] brand came back wrong (Object, not Type), so
+    // `Filter.type(Type.Type)` and `Type.isType` skipped it, the Database
+    // subgraph rendered empty, and any code that ran a schema-registry query
+    // (e.g. the markdown editor's link suggestions) threw `Invalid typename`
+    // because `Type.getTypename` couldn't read the typename through the wrong
+    // narrowing branch.
+    test('Type.Type entity survives export/import round-trip with correct kind brand', async () => {
+      let data: SerializedSpace;
+      const typename = 'example.type.roundTrip';
+
+      {
+        const { db } = await builder.createDatabase();
+        await db.schemaRegistry.register([
+          {
+            typename,
+            version: '0.1.0',
+            jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ title: Schema.String })) as JsonSchema.JsonSchema,
+            name: 'Round Trip Type',
+          },
+        ]);
+        await db.flush();
+        data = await new Serializer().export(db);
+      }
+
+      // Snapshot must NOT carry `kind` as a data field — it's the entity-kind
+      // brand (lives on [KindId] / SYSTEM namespace), not a data field on
+      // PersistentSchema. Earlier the export side was leaking it.
+      const typeRow = data.objects.find((o: any) => o.typename === typename);
+      expect(typeRow).toBeDefined();
+      expect(typeRow).not.toHaveProperty('kind');
+
+      // Survive a JSON round-trip — mirrors what `client.spaces.import` does.
+      data = JSON.parse(JSON.stringify(data));
+
+      {
+        const { db } = await builder.createDatabase();
+        await new Serializer().import(db, data);
+
+        // The reconstituted Type.Type entity must brand `KindId = Type`.
+        const entities = await db.query(Filter.type(Type.Type)).run();
+        expect(entities.length).to.eq(1);
+        expect(Type.isType(entities[0])).to.be.true;
+        expect(Type.getTypename(entities[0] as any)).to.eq(typename);
+
+        // And the registry query path — the one Composer's markdown editor
+        // hits via `useLinkQuery` — must not throw `Invalid typename` from
+        // `getSortKey` for any returned schema.
+        const results = db.schemaRegistry.query({ location: ['database', 'runtime'] }).runSync();
+        for (const schema of results) {
+          expect(() => Type.getTypename(schema as any)).not.to.throw();
+        }
+        expect(results.some((schema) => Type.getTypename(schema as any) === typename)).to.be.true;
       }
     });
 

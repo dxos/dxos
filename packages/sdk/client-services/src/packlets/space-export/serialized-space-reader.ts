@@ -16,6 +16,15 @@ const ATTR_PARENT = '@parent';
 const ATTR_RELATION_SOURCE = '@relationSource';
 const ATTR_RELATION_TARGET = '@relationTarget';
 
+/**
+ * Type URI of the meta-schema (`PersistentSchema` / `Type.Type`). Objects with this
+ * `@type` represent persisted ECHO type definitions and must be branded
+ * `system.kind = 'type'` so `Filter.type(Type.Type)` and `Type.isType` recognize
+ * them after import. Anything else defaults to `'object'` (or `'relation'` when
+ * source/target attrs are present).
+ */
+const TYPE_KIND_SCHEMA_URI = 'dxn:org.dxos.type.schema:0.1.0';
+
 const INTERNAL_KEYS: ReadonlySet<string> = new Set([
   'id',
   ATTR_TYPE,
@@ -76,6 +85,10 @@ export const objJsonToObjectStructure = (obj: Obj.JSON): ObjectStructure => {
     if (typeof relationTarget === 'string') {
       system.target = { '/': URI.make(relationTarget) };
     }
+  } else if (type === TYPE_KIND_SCHEMA_URI) {
+    // Persisted ECHO type definitions — instances of the meta-schema — must
+    // brand `kind = 'type'` so the database schema registry can find them.
+    system.kind = 'type';
   } else {
     system.kind = 'object';
   }

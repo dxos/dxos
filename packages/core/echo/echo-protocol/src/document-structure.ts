@@ -250,9 +250,11 @@ export type ObjectMeta = {
  */
 export type ObjectSystem = {
   /**
-   * Entity kind.
+   * Entity kind. `'type'` covers persisted ECHO type definitions (instances of
+   * the `Type.Type` meta-schema); `'object'` / `'relation'` cover regular ECHO
+   * instances.
    */
-  kind?: 'object' | 'relation';
+  kind?: 'object' | 'relation' | 'type';
 
   /**
    * Object reference ('protobuf' protocol) type.
