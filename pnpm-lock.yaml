@@ -18946,6 +18946,9 @@ importers:
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
+      '@testing-library/react':
+        specifier: 'catalog:'
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@types/react':
         specifier: ~19.2.7
         version: 19.2.14
