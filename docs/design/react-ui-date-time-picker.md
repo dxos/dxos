@@ -164,7 +164,7 @@ For range modes, `Time` renders twice (start, end). The draft tracks which endpo
 - Segment order derived from `Intl.DateTimeFormat(locale).formatToParts(new Date())`.
 - Per-segment state machine: empty → partial → filled. Tab/Shift+Tab move between segments. ArrowUp/ArrowDown increment/decrement (with overflow wrapping per segment). Typing digits fills the segment; auto-advances when the segment is unambiguously complete (e.g. typing 4 in the month tens place stays in segment because `4_` could be `4` or `4x` only if `x<10`; we auto-advance once unambiguous).
 - The AM/PM segment is non-numeric; ArrowUp/Down toggles, A/P keys jump to the choice.
-- Trigger renders one `SegmentedInput` for `time`/`time-only` modes, and one date + one time `SegmentedInput` for `date-time*` modes (range modes render two of whichever).
+- Trigger renders one `SegmentedInput` for `time` mode, and one date + one time `SegmentedInput` for `date-time*` modes (range modes render two of whichever).
 - A trailing calendar `IconButton` is the `Popover.Trigger`.
 
 ## Locale
@@ -2009,7 +2009,7 @@ describe('useDateTimePicker', () => {
 `@testing-library/react` is already a devDependency in many packages; verify availability:
 
 ```
-ls /Users/burdon/Code/dxos/dxos/.claude/worktrees/condescending-galileo-30f588/node_modules/@testing-library/react 2>/dev/null && echo OK
+pnpm --filter @dxos/react-ui-calendar why @testing-library/react >/dev/null && echo OK
 ```
 
 If it is not available in `react-ui-calendar`, add it before running the test:

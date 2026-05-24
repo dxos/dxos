@@ -358,8 +358,11 @@ const TimeField = ({ endpoint, date, timeOrder, step }: TimeFieldProps) => {
       if (!parsed) {
         return;
       }
+      // Round minutes to nearest `step`; if rounding overflows to 60, carry into
+      // the hour (Date.setHours normalizes hour overflow into day-of-month).
       const snappedMinutes = Math.round(parsed.getMinutes() / step) * step;
-      const snapped = withTime(parsed, parsed.getHours(), snappedMinutes % 60);
+      const hourCarry = Math.floor(snappedMinutes / 60);
+      const snapped = withTime(parsed, parsed.getHours() + hourCarry, snappedMinutes % 60);
 
       if (endpoint == null) {
         state.setDraft(snapped as ValueFor<DateTimePickerMode>);

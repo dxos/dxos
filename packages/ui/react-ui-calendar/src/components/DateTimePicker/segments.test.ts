@@ -77,6 +77,26 @@ describe('formatSegments / parseSegments', () => {
     const segments = { yyyy: '2026', MM: '05', dd: '24', hh: '12', mm: '00', a: 'PM' };
     expect(parseSegments(segments)?.getHours()).toBe(12);
   });
+
+  test('parseSegments rejects month > 12', ({ expect }) => {
+    expect(parseSegments({ yyyy: '2026', MM: '13', dd: '01' })).toBeUndefined();
+  });
+
+  test('parseSegments rejects day > 31', ({ expect }) => {
+    expect(parseSegments({ yyyy: '2026', MM: '05', dd: '32' })).toBeUndefined();
+  });
+
+  test('parseSegments rejects Feb 30 (would overflow into March)', ({ expect }) => {
+    expect(parseSegments({ yyyy: '2026', MM: '02', dd: '30' })).toBeUndefined();
+  });
+
+  test('parseSegments rejects HH > 23', ({ expect }) => {
+    expect(parseSegments({ yyyy: '2026', MM: '05', dd: '24', HH: '25', mm: '00' })).toBeUndefined();
+  });
+
+  test('parseSegments rejects mm > 59', ({ expect }) => {
+    expect(parseSegments({ yyyy: '2026', MM: '05', dd: '24', HH: '14', mm: '99' })).toBeUndefined();
+  });
 });
 
 describe('incrementSegment', () => {

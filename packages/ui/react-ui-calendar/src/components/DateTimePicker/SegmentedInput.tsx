@@ -44,6 +44,16 @@ const SEGMENT_NUMERIC_MAX_LEN: Record<SegmentKind, number> = {
   a: 2,
 };
 
+const SEGMENT_ARIA_LABEL: Record<SegmentKind, string> = {
+  yyyy: 'Year',
+  MM: 'Month',
+  dd: 'Day',
+  HH: 'Hour (24-hour)',
+  hh: 'Hour (12-hour)',
+  mm: 'Minute',
+  a: 'AM/PM',
+};
+
 export type SegmentedInputProps = {
   dateOrder?: DateSegmentOrder;
   timeOrder?: TimeSegmentOrder;
@@ -163,6 +173,7 @@ export const SegmentedInput = forwardRef<HTMLDivElement, SegmentedInputProps>(
                 ref={(node) => {
                   segmentRefs.current[kind] = node;
                 }}
+                aria-label={SEGMENT_ARIA_LABEL[kind]}
                 value={value}
                 placeholder={placeholder}
                 disabled={disabled}
@@ -205,8 +216,15 @@ const defaultSeed = (kind: SegmentKind): string => {
   }
 };
 
+const isDateSegment = (kind: SegmentKind): boolean => kind === 'yyyy' || kind === 'MM' || kind === 'dd';
+const isTimeSegment = (kind: SegmentKind): boolean => kind === 'HH' || kind === 'hh' || kind === 'mm' || kind === 'a';
+
 /** Separator character drawn between two adjacent segments. */
 const separatorBetween = (prev: SegmentKind, next: SegmentKind): string => {
+  // Date → time boundary (e.g. yyyy → hh in 'date-time' modes) uses a space.
+  if (isDateSegment(prev) && isTimeSegment(next)) {
+    return ' ';
+  }
   if (next === 'mm' && (prev === 'HH' || prev === 'hh')) {
     return ':';
   }

@@ -92,13 +92,19 @@ export const formatSegments = (
  * If neither time segment is present, time defaults to 00:00.
  */
 export const parseSegments = (segments: SegmentValues): Date | undefined => {
+  if (segments.yyyy === '' || segments.MM === '' || segments.dd === '') {
+    return undefined;
+  }
   const yyyy = Number(segments.yyyy);
   const MM = Number(segments.MM);
   const dd = Number(segments.dd);
   if (!Number.isFinite(yyyy) || !Number.isFinite(MM) || !Number.isFinite(dd)) {
     return undefined;
   }
-  if (segments.yyyy === '' || segments.MM === '' || segments.dd === '') {
+  // Reject obviously out-of-range date segments before constructing a Date —
+  // otherwise the Date constructor silently normalizes (e.g. month 13 → Jan
+  // next year, day 32 → next month).
+  if (MM < 1 || MM > 12 || dd < 1 || dd > 31) {
     return undefined;
   }
 
@@ -108,16 +114,19 @@ export const parseSegments = (segments: SegmentValues): Date | undefined => {
   const has12 = segments.hh !== undefined && segments.hh !== '';
   if (hasH23) {
     const h = Number(segments.HH);
-    if (!Number.isFinite(h)) {
+    if (!Number.isFinite(h) || h < 0 || h > 23) {
       return undefined;
     }
     hours = h;
   } else if (has12) {
     const h = Number(segments.hh);
-    if (!Number.isFinite(h)) {
+    if (!Number.isFinite(h) || h < 1 || h > 12) {
       return undefined;
     }
     const ampm = segments.a ?? 'AM';
+    if (ampm !== 'AM' && ampm !== 'PM') {
+      return undefined;
+    }
     if (ampm === 'PM') {
       hours = h === 12 ? 12 : h + 12;
     } else {
@@ -126,13 +135,19 @@ export const parseSegments = (segments: SegmentValues): Date | undefined => {
   }
   if (segments.mm !== undefined && segments.mm !== '') {
     const m = Number(segments.mm);
-    if (!Number.isFinite(m)) {
+    if (!Number.isFinite(m) || m < 0 || m > 59) {
       return undefined;
     }
     minutes = m;
   }
 
-  return new Date(yyyy, MM - 1, dd, hours, minutes, 0, 0);
+  // Final guard: the Date constructor still normalizes invalid day-of-month
+  // (e.g. Feb 31 → Mar 3). Reject those by round-tripping the components.
+  const parsed = new Date(yyyy, MM - 1, dd, hours, minutes, 0, 0);
+  if (parsed.getFullYear() !== yyyy || parsed.getMonth() !== MM - 1 || parsed.getDate() !== dd) {
+    return undefined;
+  }
+  return parsed;
 };
 
 /** Clamp-wrap a numeric segment within [min, max] (inclusive). */

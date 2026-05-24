@@ -177,21 +177,24 @@ const CalendarToolbar = composable<HTMLDivElement, CalendarToolbarProps>(
     const { t } = useTranslation(translationKey);
     const { weekStartsOn, event, index, selected } = useCalendarContext(CALENDAR_TOOLBAR_NAME);
     const top = useMemo(() => getDate(start, index ?? 0, 6, weekStartsOn), [index, weekStartsOn]);
-    const today = useMemo(() => new Date(), []);
+    // The month/year the header is displaying. Prev/next nav must move relative
+    // to this same anchor so the visible header and the nav target stay in sync.
+    const anchor = selected ?? top;
 
     const handleToday = useCallback(() => {
-      event.emit({ type: 'scroll', date: today });
-    }, [event, today]);
+      // Compute "today" lazily so the button doesn't go stale across midnight.
+      event.emit({ type: 'scroll', date: new Date() });
+    }, [event]);
 
     const handlePrev = useCallback(() => {
-      const target = new Date(top.getFullYear(), top.getMonth() - 1, 1);
+      const target = new Date(anchor.getFullYear(), anchor.getMonth() - 1, 1);
       event.emit({ type: 'scroll', date: target });
-    }, [event, top]);
+    }, [event, anchor]);
 
     const handleNext = useCallback(() => {
-      const target = new Date(top.getFullYear(), top.getMonth() + 1, 1);
+      const target = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 1);
       event.emit({ type: 'scroll', date: target });
-    }, [event, top]);
+    }, [event, anchor]);
 
     return (
       <div
@@ -212,7 +215,7 @@ const CalendarToolbar = composable<HTMLDivElement, CalendarToolbarProps>(
             onClick={handleToday}
           />
         </div>
-        <div className='flex justify-center p-2 text-description'>{format(selected ?? top, 'MMMM')}</div>
+        <div className='flex justify-center p-2 text-description'>{format(anchor, 'MMMM')}</div>
         <div className='flex justify-end items-center gap-1 p-2 text-description'>
           {nav && (
             <IconButton
@@ -224,7 +227,7 @@ const CalendarToolbar = composable<HTMLDivElement, CalendarToolbarProps>(
               onClick={handlePrev}
             />
           )}
-          <span>{(selected ?? top).getFullYear()}</span>
+          <span>{anchor.getFullYear()}</span>
           {nav && (
             <IconButton
               variant='ghost'
