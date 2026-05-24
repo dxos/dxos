@@ -20,7 +20,7 @@ import { DXN, EchoURI, ObjectId, type URI } from '@dxos/keys';
 
 import * as Database from '../../Database';
 import { ReferenceAnnotationId, getSchemaURI, getTypeAnnotation, getTypeIdentifierAnnotation } from '../Annotation';
-import { type AnyEntity, type AnyProperties, StaticTypeSchemaSlot } from '../common/types';
+import { type AnyEntity, type AnyProperties, StaticTypeSchemaSlot, unwrapToSchema } from '../common/types';
 import { type JsonSchemaType } from '../JsonSchema';
 
 /**
@@ -127,10 +127,7 @@ export interface RefFn {
 export const Ref: RefFn = (input: any): RefSchema<any> => {
   // Accept `Type.Type` entities — extract the underlying source schema from
   // the hidden slot. Static schemas still work as-is.
-  const schema =
-    input != null && typeof input === 'object' && input[StaticTypeSchemaSlot] != null
-      ? (input[StaticTypeSchemaSlot] as Schema.Schema.AnyNoContext)
-      : input;
+  const schema = unwrapToSchema(input as Schema.Schema.AnyNoContext);
   assertArgument(Schema.isSchema(schema), 'schema', 'Must call with an instance of effect-schema');
   const annotation = getTypeAnnotation(schema);
   if (annotation == null) {
@@ -584,7 +581,7 @@ export class StaticRefResolver implements RefResolver {
   addSchema(
     input: Schema.Schema.AnyNoContext | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext },
   ): this {
-    const schema = ((input as any)[StaticTypeSchemaSlot] ?? input) as Schema.Schema.AnyNoContext;
+    const schema = unwrapToSchema(input as Schema.Schema.AnyNoContext);
     const uri = getSchemaURI(schema);
     invariant(uri, 'Schema has no URI');
     this.schemas.set(uri, schema);

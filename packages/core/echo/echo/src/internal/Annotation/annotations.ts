@@ -22,6 +22,8 @@ import {
   StaticTypeSchemaSlot,
   TypeId,
   getSchema,
+  getStaticTypeSchema,
+  unwrapToSchema,
 } from '../common/types';
 import { getUri as getUriFromEntity } from '../Entity/api';
 import { type AnnotationHelper, createAnnotationHelper, effectSchemaFromJsonSchema, jsonSchemaFromSource } from './util';
@@ -69,7 +71,7 @@ export const getSchemaURI = (
   input: Schema.Schema.All | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext },
 ): URI.URI | undefined => {
   // Accept `Type.Type` entities — unwrap to the underlying source schema.
-  const schema = ((input as any)[StaticTypeSchemaSlot] ?? input) as Schema.Schema.All;
+  const schema = unwrapToSchema(input as Schema.Schema.AnyNoContext);
   assertArgument(Schema.isSchema(schema), 'schema', 'invalid schema');
   const id = getTypeIdentifierAnnotation(schema);
   if (id) {
@@ -103,13 +105,12 @@ export const getTypeURIFromSpecifier = (
     //    matches what `Obj.make(typeEntity, ...)` writes to `system.type` via
     //    `getSchemaURI(rebuilt)` reading `TypeIdentifierAnnotation`.
     //  - Static (declared via `Type.object(dxn)`): URI is the typename DXN.
-    if (typeof (input as any).id === 'string' && ObjectId.isValid((input as any).id)) {
-      return EchoURI.make({ objectId: (input as any).id });
+    const entity = input as { id?: string; typename?: string; version?: string };
+    if (typeof entity.id === 'string' && ObjectId.isValid(entity.id)) {
+      return EchoURI.make({ objectId: entity.id });
     }
-    const typename = (input as any).typename;
-    const version = (input as any).version;
-    if (typeof typename === 'string' && typeof version === 'string') {
-      return DXN.make(typename, version);
+    if (typeof entity.typename === 'string' && typeof entity.version === 'string') {
+      return DXN.make(entity.typename, entity.version);
     }
     return getUriFromEntity(input as AnyEntity);
   }
@@ -193,10 +194,11 @@ export const getTypeAnnotation = (
   // hidden `StaticTypeSchemaSlot` (static Type.Obj / Type.Relation entities) or
   // by rebuilding the Effect Schema from the persisted `jsonSchema` (kind=Type
   // entities returned by `db.schemaRegistry.register`).
-  const slot = (schema as any)[StaticTypeSchemaSlot] as Schema.Schema.AnyNoContext | undefined;
+  const slot = getStaticTypeSchema(schema);
+  const entity = schema as { [KindId]?: unknown; jsonSchema?: unknown };
   const rebuilt =
-    slot == null && (schema as any)[KindId] === EntityKind.Type && (schema as any).jsonSchema != null
-      ? effectSchemaFromJsonSchema((schema as any).jsonSchema)
+    slot == null && entity[KindId] === EntityKind.Type && entity.jsonSchema != null
+      ? effectSchemaFromJsonSchema(entity.jsonSchema)
       : undefined;
   const ast = slot?.ast ?? rebuilt?.ast ?? (schema as Schema.Schema.All).ast;
   if (ast == null) {
@@ -220,8 +222,7 @@ export const getEntityKind = (schema: Schema.Schema.All): EntityKind | undefined
 export const getSchemaTypename = (
   input: Schema.Schema.All | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext },
 ): string | undefined => {
-  const schema = ((input as any)[StaticTypeSchemaSlot] ?? input) as Schema.Schema.All;
-  return getTypeAnnotation(schema)?.typename;
+  return getTypeAnnotation(unwrapToSchema(input as Schema.Schema.AnyNoContext))?.typename;
 };
 
 /**
@@ -231,8 +232,7 @@ export const getSchemaTypename = (
 export const getSchemaVersion = (
   input: Schema.Schema.All | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext },
 ): string | undefined => {
-  const schema = ((input as any)[StaticTypeSchemaSlot] ?? input) as Schema.Schema.All;
-  return getTypeAnnotation(schema)?.version;
+  return getTypeAnnotation(unwrapToSchema(input as Schema.Schema.AnyNoContext))?.version;
 };
 
 /**
@@ -361,7 +361,7 @@ export const PropertyMeta = (name: string, value: PropertyMetaValue) => {
   ): S => {
     // Accept `Type.Type` entity inputs — annotate the underlying source
     // schema and rebuild the entity's `jsonSchema` from it.
-    const source = (input as any)[StaticTypeSchemaSlot] as Schema.Schema.AnyNoContext | undefined;
+    const source = getStaticTypeSchema(input);
     if (source != null) {
       const existingMeta = source.ast.annotations[PropertyMetaAnnotationId] as PropertyMetaAnnotation;
       const annotatedSource = source.annotations({
@@ -370,10 +370,11 @@ export const PropertyMeta = (name: string, value: PropertyMetaValue) => {
           [name]: value,
         },
       });
+      const inputJsonSchema = (input as { jsonSchema?: unknown }).jsonSchema;
       return Object.freeze({
-        ...(input as any),
+        ...(input as object),
         [StaticTypeSchemaSlot]: annotatedSource,
-        jsonSchema: jsonSchemaFromSource(annotatedSource, (input as any).jsonSchema),
+        jsonSchema: jsonSchemaFromSource(annotatedSource, inputJsonSchema),
       }) as unknown as S;
     }
     const self = input as Schema.Schema.Any;
@@ -434,7 +435,7 @@ export const getLabelWithSchema = (
   input: Schema.Schema.Any | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext },
   object: unknown,
 ): string | undefined => {
-  const schema = ((input as any)[StaticTypeSchemaSlot] ?? input) as Schema.Schema.Any;
+  const schema = unwrapToSchema(input as Schema.Schema.AnyNoContext);
   const annotation = LabelAnnotation.get(schema).pipe(Option.getOrElse(() => ['name']));
   for (const accessor of annotation) {
     assertArgument(
@@ -577,7 +578,7 @@ export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): Annotation
 
   return {
     get: (schema) => {
-      const slot = (schema as any)[StaticTypeSchemaSlot] as Schema.Schema.AnyNoContext | undefined;
+      const slot = getStaticTypeSchema(schema);
       const ast = slot?.ast ?? (schema as Schema.Schema.Any).ast;
       return getFromAst(ast);
     },

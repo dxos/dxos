@@ -32,6 +32,7 @@ import {
   EntityKind,
   EntityKindSchema,
   StaticTypeSchemaSlot,
+  getStaticTypeSchema,
 } from '../common/types';
 import { type JsonSchemaReferenceInfo, createEchoReferenceSchema } from '../Ref';
 import { CustomAnnotations, DecodedAnnotations, EchoAnnotations } from './annotations';
@@ -95,11 +96,14 @@ export const toJsonSchema = (
 ): Types.DeepMutable<JsonSchemaType> => {
   // Allow passing a `Type.Type` entity — use its hidden source schema (or its
   // already-built jsonSchema as a fallback).
-  const slot = (schema as any)[StaticTypeSchemaSlot] as Schema.Schema.AnyNoContext | undefined;
+  const slot = getStaticTypeSchema(schema);
   if (slot != null) {
     schema = slot;
-  } else if (!Schema.isSchema(schema) && (schema as any).jsonSchema != null) {
-    return (schema as any).jsonSchema as Types.DeepMutable<JsonSchemaType>;
+  } else if (!Schema.isSchema(schema)) {
+    const entityJsonSchema = (schema as { jsonSchema?: JsonSchemaType }).jsonSchema;
+    if (entityJsonSchema != null) {
+      return entityJsonSchema as Types.DeepMutable<JsonSchemaType>;
+    }
   }
   assertArgument(Schema.isSchema(schema), 'schema');
   let jsonSchema = _toJsonSchemaAST((schema as Schema.Schema.All).ast);

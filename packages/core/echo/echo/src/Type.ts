@@ -399,8 +399,7 @@ export const getMeta = (input: AnyType | Schema.Schema.AnyNoContext): Meta | und
   // Static `Type.Obj` / `Type.Relation` / `Type.Type` entity: unwrap the
   // hidden Effect Schema slot before reading the TypeAnnotation off its AST.
   // Raw Schemas are passed through.
-  const schema = ((input as any)[internal.StaticTypeSchemaSlot] ?? input) as Schema.Schema.All;
-  return internal.getTypeAnnotation(schema);
+  return internal.getTypeAnnotation(internal.unwrapToSchema(input as Schema.Schema.AnyNoContext));
 };
 
 /**
@@ -482,7 +481,7 @@ export const getSchema = (
 ): Schema.Schema.AnyNoContext => {
   // Static `Type.Type` entities carry the source Effect Schema on a hidden
   // slot so we can return it without round-tripping through JsonSchema.
-  const staticSchema = (type as any)[internal.StaticTypeSchemaSlot] as Schema.Schema.AnyNoContext | undefined;
+  const staticSchema = internal.getStaticTypeSchema(type);
   if (staticSchema != null) {
     return staticSchema;
   }

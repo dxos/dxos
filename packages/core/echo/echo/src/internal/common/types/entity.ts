@@ -42,6 +42,32 @@ export const StaticTypeSchemaSlot = '~@dxos/echo/Type.StaticSchema' as const;
 export type StaticTypeSchemaSlot = typeof StaticTypeSchemaSlot;
 
 /**
+ * Read the hidden `StaticTypeSchemaSlot` off any value that may carry one.
+ * Returns `undefined` for raw schemas (no slot) and non-object inputs.
+ * Single point-of-cast for the slot lookup.
+ */
+export const getStaticTypeSchema = (value: unknown): Schema.Schema.AnyNoContext | undefined => {
+  if (value == null || typeof value !== 'object') {
+    return undefined;
+  }
+  return (value as { [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext })[StaticTypeSchemaSlot];
+};
+
+/**
+ * Unwrap a Type-entity-like input to its underlying source Effect Schema; if
+ * the input is already a raw schema (no slot), return it unchanged.
+ *
+ * The two callers — `createObject` and `Ref.Ref` — both want "the Effect
+ * Schema the caller meant to register", whether they were handed a static
+ * `Type.Type` entity or a raw `Schema.Schema`.
+ */
+export const unwrapToSchema = <S extends Schema.Schema.AnyNoContext>(
+  input: S | { [StaticTypeSchemaSlot]?: S },
+): S => {
+  return (getStaticTypeSchema(input) as S | undefined) ?? (input as S);
+};
+
+/**
  * Phantom string key on `Type<A>` entities that carries the instance type `A`.
  * Lets internal helpers (`makeObject`, `createObject`, etc.) pattern-match the
  * instance type from an entity input without importing from the top-level

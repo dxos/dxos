@@ -9,7 +9,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { EntityKind, KindId, StaticTypeSchemaSlot } from '../common/types';
+import { EntityKind, KindId, StaticTypeSchemaSlot, getStaticTypeSchema } from '../common/types';
 
 export interface AnnotationHelper<T> {
   /**
@@ -38,14 +38,15 @@ export const createAnnotationHelper = <T>(id: symbol): AnnotationHelper<T> => {
     get: (schema) => {
       // Allow reading annotations off a `Type.Type` entity — extract its
       // source schema from the hidden slot first.
-      const slot = (schema as any)[StaticTypeSchemaSlot] as Schema.Schema.AnyNoContext | undefined;
+      const slot = getStaticTypeSchema(schema);
       // Persisted Type.Type entities (from db.schemaRegistry.register) carry no
       // StaticTypeSchemaSlot but have a stored jsonSchema; rebuild the Effect
       // Schema lazily via the registered fromJsonSchema impl so we can read
       // its AST annotations.
+      const entity = schema as { [KindId]?: unknown; jsonSchema?: unknown };
       const rebuilt =
-        slot == null && (schema as any)[KindId] === EntityKind.Type && (schema as any).jsonSchema != null
-          ? _fromJsonSchema?.((schema as any).jsonSchema)
+        slot == null && entity[KindId] === EntityKind.Type && entity.jsonSchema != null
+          ? _fromJsonSchema?.(entity.jsonSchema)
           : undefined;
       const ast = slot?.ast ?? rebuilt?.ast ?? (schema as Schema.Schema.Any).ast;
       if (ast == null) {
@@ -62,13 +63,14 @@ export const createAnnotationHelper = <T>(id: symbol): AnnotationHelper<T> => {
         // `Type.Type` entity input — annotate the underlying source schema and
         // rebuild the entity's `jsonSchema` from it. The entity is frozen so we
         // assemble a fresh object.
-        const source = (schema as any)[StaticTypeSchemaSlot] as Schema.Schema.AnyNoContext | undefined;
+        const source = getStaticTypeSchema(schema);
         if (source != null) {
           const annotatedSource = source.annotations({ [id]: value });
+          const entityJsonSchema = (schema as { jsonSchema?: unknown }).jsonSchema;
           return Object.freeze({
-            ...(schema as any),
+            ...(schema as object),
             [StaticTypeSchemaSlot]: annotatedSource,
-            jsonSchema: jsonSchemaFromSource(annotatedSource, (schema as any).jsonSchema),
+            jsonSchema: jsonSchemaFromSource(annotatedSource, entityJsonSchema),
           }) as unknown as S;
         }
         return (schema as Schema.Schema.Any).annotations({ [id]: value }) as S;

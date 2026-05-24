@@ -10,7 +10,7 @@ import { ObjectId } from '@dxos/keys';
 
 import { getSchemaURI, getTypeAnnotation, setTypename } from '../Annotation';
 import { defineHiddenProperty } from '../common/proxy';
-import { EntityKind, InstancePhantomId, KindId, MetaId, StaticTypeSchemaSlot, setSchema, setType } from '../common/types';
+import { EntityKind, InstancePhantomId, KindId, MetaId, setSchema, setType, unwrapToSchema } from '../common/types';
 import {
   RelationSourceDXNId,
   RelationSourceId,
@@ -57,7 +57,7 @@ export const createObject: {
 } = (input: any, props: any): any => {
   // Accept `Type.Type` entities — extract the underlying source schema from
   // the hidden slot.
-  const schema = ((input as any)[StaticTypeSchemaSlot] ?? input) as Schema.Schema.AnyNoContext;
+  const schema = unwrapToSchema(input as Schema.Schema.AnyNoContext);
   const annotation = getTypeAnnotation(schema);
   if (!annotation) {
     throw new Error('Schema is not an ECHO schema');
