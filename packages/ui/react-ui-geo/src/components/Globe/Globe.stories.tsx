@@ -251,6 +251,7 @@ export const Earth1 = () => {
   const [controller, setController] = useState<GlobeController | null>();
   const handleAction = useGlobeZoomHandler(controller);
   useDrag(controller);
+  useWheel(controller);
 
   return (
     <Globe.Root zoom={1.2} rotation={[Math.random() * 360, 0, 0]}>
@@ -265,6 +266,7 @@ export const Earth2 = () => {
   const [controller, setController] = useState<GlobeController | null>();
   const handleAction = useGlobeZoomHandler(controller);
   useDrag(controller);
+  useWheel(controller);
 
   return (
     <div className='absolute bottom-0 left-0 right-0 '>
@@ -300,6 +302,7 @@ export const Mercator = () => {
   const [controller, setController] = useState<GlobeController | null>();
   const handleAction = useGlobeZoomHandler(controller);
   useDrag(controller);
+  useWheel(controller);
 
   return (
     <Globe.Root classNames='flex grow overflow-hidden' zoom={0.7} rotation={initialRotation}>
@@ -325,6 +328,7 @@ export const Globe1: Story = {
 export const Globe2: Story = {
   args: {
     drag: true,
+    wheel: true,
     projection: 'transverse-mercator',
     zoom: 0.8,
     rotation: initialRotation,
@@ -335,6 +339,7 @@ export const Globe2: Story = {
 export const Globe3: Story = {
   args: {
     drag: true,
+    wheel: true,
     spin: true,
     zoom: 1.5,
     rotation: initialRotation,
@@ -345,6 +350,7 @@ export const Globe3: Story = {
 export const Globe4: Story = {
   args: {
     drag: true,
+    wheel: true,
     tour: true,
     zoom: 2,
     rotation: initialRotation,
@@ -355,6 +361,7 @@ export const Globe4: Story = {
 export const Globe5: Story = {
   args: {
     drag: true,
+    wheel: true,
     tour: true,
     zoom: 0.9,
     rotation: initialRotation,
@@ -365,6 +372,7 @@ export const Globe5: Story = {
 export const Globe6: Story = {
   args: {
     drag: true,
+    wheel: true,
     lockTilt: true,
     tour: true,
     zoom: 2,
@@ -377,6 +385,7 @@ export const Globe6: Story = {
 export const GlobeVersorDrag: Story = {
   args: {
     drag: true,
+    wheel: true,
     mode: 'versor',
     zoom: 1.5,
     rotation: initialRotation,
