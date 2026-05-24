@@ -254,7 +254,11 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
         setTranslation,
         setRotation,
       };
-    }, [canvas]);
+      // `projection` must be in deps: switching between stories that pass
+      // different projection types creates a new instance via useMemo, and
+      // any consumer reading controller.projection (e.g. useDrag) would
+      // otherwise mutate a dead instance while the canvas renders the new one.
+    }, [canvas, projection]);
 
     // https://d3js.org/d3-geo/path#geoPath
     // https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
