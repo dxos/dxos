@@ -5,14 +5,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { IconButton, composable, composableProps, useThemeContext } from '@dxos/react-ui';
-import {
-  Globe,
-  type GlobeController,
-  globeStyles,
-  useDrag,
-  useGlobeZoomHandler,
-  useTour,
-} from '@dxos/react-ui-geo';
+import { Globe, type GlobeController, globeStyles, useDrag, useGlobeZoomHandler, useTour } from '@dxos/react-ui-geo';
 import { loadTopology } from '@dxos/react-ui-geo/data';
 
 import { Segment } from '#types';

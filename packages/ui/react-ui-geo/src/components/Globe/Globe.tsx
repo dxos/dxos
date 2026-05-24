@@ -40,6 +40,7 @@ import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { GlobeContext, type GlobeContextType, type Point, type Vector, useGlobeContext } from '../../hooks';
+import { type LatLngLiteral } from '../../types';
 import {
   type Features,
   type StyleSet,
@@ -51,7 +52,6 @@ import {
   renderLayers,
   timer,
 } from '../../util';
-import { type LatLngLiteral } from '../../types';
 import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar';
 
 /**
