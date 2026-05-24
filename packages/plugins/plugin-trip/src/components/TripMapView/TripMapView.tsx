@@ -218,7 +218,7 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
     return (
       <div
         {...composableProps(props, {
-          classNames: 'grid grid-cols-[var(--spacing-card-min-width)_1fr] h-full w-full overflow-hidden',
+          classNames: 'grid grid-cols-[calc(var(--spacing-card-min-width)+2rem)_1fr] h-full w-full overflow-hidden',
         })}
         ref={forwardedRef}
       >
