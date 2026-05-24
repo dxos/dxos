@@ -154,6 +154,7 @@ type NoteEvent = { time: number; pitch: number; duration: number; velocity: numb
 
 type TrackData = {
   trackId: string;
+  track: Track.Track;
   voices: TrackVoices;
   events: NoteEvent[];
 };
@@ -224,7 +225,7 @@ export class ScorePlayer {
         duration: note.duration,
         velocity: note.velocity ?? 0.8,
       }));
-      this.#tracks.push({ trackId: track.id, voices, events });
+      this.#tracks.push({ trackId: track.id, track, voices, events });
     }
 
     // Resolve the score-level loop range with defaults. The loop is allowed to
@@ -254,11 +255,19 @@ export class ScorePlayer {
 
   async play(): Promise<void> {
     await Tone.start();
-    // Create fresh Parts on every play. Tone.js Part instances cannot be
-    // reliably restarted after Transport.stop() (which internally calls stop()
-    // on all synced sources, deregistering them from the Transport's event
-    // queue). Creating new instances avoids all stale-state issues.
+    // Rebuild voices and Parts on every play. Transport.stop() abruptly
+    // cancels scheduled notes, which can leave PolySynth voice pools in a
+    // bad state. Creating fresh PolySynth instances (via buildTrackVoices)
+    // and fresh Parts matches the clean state you get after an unmount/remount.
+    // The master Gain node is kept stable so the oscilloscope connection is
+    // preserved across play cycles.
     this.#disposeActiveParts();
+    if (this.#master) {
+      for (const trackData of this.#tracks) {
+        disposeTrackVoices(trackData.voices);
+        trackData.voices = buildTrackVoices(trackData.track, this.#master);
+      }
+    }
     const transport = Tone.getTransport();
     for (const { voices, events } of this.#tracks) {
       const part = new Tone.Part<NoteEvent>((time, value) => {
