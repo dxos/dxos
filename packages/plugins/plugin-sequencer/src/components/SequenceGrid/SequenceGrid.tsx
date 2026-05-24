@@ -60,6 +60,11 @@ export type SequenceGridProps = {
    */
   onToggleNote?: (pitch: number, startTime: number, mode: ToggleMode, duration?: number) => void;
   /**
+   * Called when the user drags on an existing note to resize it.
+   * Mutating the duration in-place is preferred over remove+add.
+   */
+  onResizeNote?: (pitch: number, startTime: number, newDuration: number) => void;
+  /**
    * Other tracks to paint underneath the active sequence in a subdued color.
    * Cells from these tracks are non-interactive — toggle gestures always target
    * the active sequence.
@@ -111,6 +116,58 @@ const renderNoteCell: RenderCell<{ color: string; velocity: number; subdued?: bo
   ctx.globalAlpha = 1;
 };
 
+/** Find a note on `pitch` whose time span includes `beat`. */
+const findNoteAtBeat = (notes: ReadonlyArray<Note.Note>, pitch: number, beat: number): Note.Note | undefined =>
+  notes.find(
+    (note) =>
+      note.pitch === pitch && note.startTime <= beat + 1e-6 && beat < note.startTime + note.duration - 1e-6,
+  );
+
+/**
+ * Maximum end column (inclusive) a note starting at `noteStartCol` on `pitch` may occupy
+ * without overlapping any other note. Pass `excludeStartTime` to skip the note being resized.
+ */
+const maxNoteEndCol = (
+  notes: ReadonlyArray<Note.Note>,
+  pitch: number,
+  noteStartCol: number,
+  beatsPerCell: number,
+  excludeStartTime?: number,
+): number => {
+  let max = Number.MAX_SAFE_INTEGER;
+  for (const note of notes) {
+    if (note.pitch !== pitch) continue;
+    if (excludeStartTime !== undefined && Math.abs(note.startTime - excludeStartTime) < 1e-6) continue;
+    const col = Math.round(note.startTime / beatsPerCell);
+    if (col > noteStartCol) {
+      max = Math.min(max, col - 1);
+    }
+  }
+  return max;
+};
+
+/**
+ * Minimum start column (inclusive) a note whose right edge is at `anchorCol` may begin at
+ * on `pitch` without overlapping any other note to the left of that anchor.
+ */
+const minNoteStartCol = (
+  notes: ReadonlyArray<Note.Note>,
+  pitch: number,
+  anchorCol: number,
+  beatsPerCell: number,
+): number => {
+  let min = 0;
+  for (const note of notes) {
+    if (note.pitch !== pitch) continue;
+    const col = Math.round(note.startTime / beatsPerCell);
+    const endCol = col + Math.max(1, Math.round(note.duration / beatsPerCell)) - 1;
+    if (endCol < anchorCol) {
+      min = Math.max(min, endCol + 1);
+    }
+  }
+  return min;
+};
+
 /**
  * 2D piano-roll style editor for a single Sequence. Y-axis = pitch (high pitches on top);
  * x-axis = time in beats. Renders via the shared CellGrid canvas component.
@@ -127,6 +184,7 @@ export const SequenceGrid = ({
   loopEnd,
   onLoopChange,
   onToggleNote,
+  onResizeNote,
   overlayTracks,
   tool = 'edit',
   classNames,
@@ -150,6 +208,8 @@ export const SequenceGrid = ({
 
   // Temporary cell shown while the user is mid-drag with the edit tool.
   const [drawPreview, setDrawPreview] = useState<{ col: number; row: number; length: number } | null>(null);
+  // Tracks the existing note being resized during a drag gesture (set on pointerdown, cleared on commit).
+  const resizeNoteRef = useRef<Note.Note | null>(null);
 
   // Rows are pitches arranged high-to-low (row 0 = maxPitch at the top).
   const rows: Row[] = useMemo(
@@ -275,25 +335,132 @@ export const SequenceGrid = ({
     [maxPitch, beatsPerCell, onToggleNote, registry, atoms, trackColor],
   );
 
-  const handleDrawUpdate = useCallback((startCoord: CellCoord, endCoord: CellCoord) => {
-    const col = Math.min(startCoord.col, endCoord.col);
-    const length = Math.abs(endCoord.col - startCoord.col) + 1;
-    setDrawPreview({ col, row: startCoord.row, length });
-  }, []);
+  const handleDrawUpdate = useCallback(
+    (startCoord: CellCoord, endCoord: CellCoord) => {
+      const pitch = maxPitch - startCoord.row;
+      const startBeat = startCoord.col * beatsPerCell;
+
+      // Initial pointerdown call (start === end): detect gesture type.
+      if (startCoord.col === endCoord.col) {
+        resizeNoteRef.current = findNoteAtBeat(notes, pitch, startBeat) ?? null;
+        if (!resizeNoteRef.current) {
+          // Empty cell: show immediate 1-cell preview.
+          setDrawPreview({ col: startCoord.col, row: startCoord.row, length: 1 });
+        }
+        // For resize: the existing note is already visible; skip preview update.
+        return;
+      }
+
+      const existingNote = resizeNoteRef.current;
+
+      if (existingNote) {
+        // Resize mode: anchor is the existing note's start, right edge follows drag.
+        const noteStartCol = Math.round(existingNote.startTime / beatsPerCell);
+        const maxEnd = maxNoteEndCol(notes, pitch, noteStartCol, beatsPerCell, existingNote.startTime);
+        const clampedEnd = Math.max(noteStartCol, Math.min(endCoord.col, maxEnd));
+        setDrawPreview({ col: noteStartCol, row: startCoord.row, length: clampedEnd - noteStartCol + 1 });
+      } else if (endCoord.col >= startCoord.col) {
+        // New note, dragging right: clamp end against right-side notes.
+        const maxEnd = maxNoteEndCol(notes, pitch, startCoord.col, beatsPerCell);
+        const clampedEnd = Math.min(endCoord.col, maxEnd);
+        setDrawPreview({ col: startCoord.col, row: startCoord.row, length: clampedEnd - startCoord.col + 1 });
+      } else {
+        // New note, dragging left: clamp start against left-side notes.
+        const minStart = minNoteStartCol(notes, pitch, startCoord.col, beatsPerCell);
+        const clampedStart = Math.max(endCoord.col, minStart);
+        setDrawPreview({ col: clampedStart, row: startCoord.row, length: startCoord.col - clampedStart + 1 });
+      }
+    },
+    [notes, maxPitch, beatsPerCell],
+  );
 
   const handleDrawCommit = useCallback(
     (startCoord: CellCoord, endCoord: CellCoord) => {
       setDrawPreview(null);
-      const col = Math.min(startCoord.col, endCoord.col);
-      const length = Math.abs(endCoord.col - startCoord.col) + 1;
       const pitch = maxPitch - startCoord.row;
-      const startTime = col * beatsPerCell;
-      const duration = length * beatsPerCell;
-      if (onToggleNote) {
-        onToggleNote(pitch, startTime, 'set', duration);
+      const startBeat = startCoord.col * beatsPerCell;
+
+      const existingNote = resizeNoteRef.current;
+      resizeNoteRef.current = null;
+
+      // --- Pure click (no drag) ---
+      if (startCoord.col === endCoord.col) {
+        if (onToggleNote) {
+          if (existingNote) {
+            // Click on existing note: remove it.
+            onToggleNote(pitch, existingNote.startTime, 'unset');
+          } else {
+            // Click on empty cell: add a 1-cell note.
+            onToggleNote(pitch, startBeat, 'set', beatsPerCell);
+          }
+          return;
+        }
+        // Atoms-only mode: always add.
+        registry.update(atoms.cells, (current) => {
+          const next = new Map(current);
+          next.set(cellKey(startCoord.col, startCoord.row), {
+            col: startCoord.col,
+            row: startCoord.row,
+            length: 1,
+            data: { color: trackColor, velocity: 0.8 },
+          });
+          return next;
+        });
         return;
       }
-      // Default: write directly to atoms (preview mode).
+
+      // --- Drag on existing note: resize ---
+      if (existingNote) {
+        const noteStartCol = Math.round(existingNote.startTime / beatsPerCell);
+        const maxEnd = maxNoteEndCol(notes, pitch, noteStartCol, beatsPerCell, existingNote.startTime);
+        const clampedEnd = Math.max(noteStartCol, Math.min(endCoord.col, maxEnd));
+        const newDuration = (clampedEnd - noteStartCol + 1) * beatsPerCell;
+        if (onResizeNote) {
+          onResizeNote(pitch, existingNote.startTime, newDuration);
+          return;
+        }
+        if (onToggleNote) {
+          // Fallback: remove old note then add resized version.
+          onToggleNote(pitch, existingNote.startTime, 'unset');
+          onToggleNote(pitch, existingNote.startTime, 'set', newDuration);
+          return;
+        }
+        // Atoms-only: update cell in place.
+        registry.update(atoms.cells, (current) => {
+          const next = new Map(current);
+          next.set(cellKey(noteStartCol, startCoord.row), {
+            col: noteStartCol,
+            row: startCoord.row,
+            length: clampedEnd - noteStartCol + 1,
+            data: { color: trackColor, velocity: 0.8 },
+          });
+          return next;
+        });
+        return;
+      }
+
+      // --- New note draw ---
+      let col: number;
+      let length: number;
+      if (endCoord.col >= startCoord.col) {
+        const maxEnd = maxNoteEndCol(notes, pitch, startCoord.col, beatsPerCell);
+        const clampedEnd = Math.min(endCoord.col, maxEnd);
+        col = startCoord.col;
+        length = clampedEnd - col + 1;
+      } else {
+        const minStart = minNoteStartCol(notes, pitch, startCoord.col, beatsPerCell);
+        const clampedStart = Math.max(endCoord.col, minStart);
+        col = clampedStart;
+        length = startCoord.col - col + 1;
+      }
+
+      const noteStartTime = col * beatsPerCell;
+      const duration = length * beatsPerCell;
+      if (onToggleNote) {
+        onToggleNote(pitch, noteStartTime, 'set', duration);
+        return;
+      }
+      // Atoms-only mode: write directly to cells.
       registry.update(atoms.cells, (current) => {
         const next = new Map(current);
         next.set(cellKey(col, startCoord.row), {
@@ -305,7 +472,7 @@ export const SequenceGrid = ({
         return next;
       });
     },
-    [maxPitch, beatsPerCell, onToggleNote, registry, atoms.cells, trackColor],
+    [notes, maxPitch, beatsPerCell, onToggleNote, onResizeNote, registry, atoms.cells, trackColor],
   );
 
   // Style the row bands so black-key rows are darker (piano-roll feel).

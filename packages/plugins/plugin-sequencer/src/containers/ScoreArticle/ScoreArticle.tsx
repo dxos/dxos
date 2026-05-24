@@ -277,6 +277,27 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
     [subject, activeSequence, beatsPerCell],
   );
 
+  const handleResizeNote = useCallback(
+    (pitch: number, startTime: number, newDuration: number) => {
+      if (!activeSequence) {
+        return;
+      }
+      const sequenceId = activeSequence.id;
+      Obj.update(subject, (subject) => {
+        const mutable = subject as unknown as MutableScore;
+        const sequence = mutable.sequences.find((seq) => seq.id === sequenceId);
+        if (!sequence) {
+          return;
+        }
+        const note = sequence.notes.find((n) => n.pitch === pitch && Math.abs(n.startTime - startTime) < 1e-6);
+        if (note) {
+          note.duration = newDuration;
+        }
+      });
+    },
+    [subject, activeSequence],
+  );
+
   // Tone.js audio playback. The ScorePlayer is rebuilt whenever the Score structure
   // changes; play/stop is driven by isPlaying. The playhead animation runs in
   // parallel via rAF — visually accurate within a few ms of the audio.
@@ -478,6 +499,7 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
                 loopEnd={score.loopEnd}
                 onLoopChange={handleLoopChange}
                 onToggleNote={handleToggleNote}
+                onResizeNote={handleResizeNote}
                 tool={toolMode}
                 overlayTracks={
                   showAllTracks
