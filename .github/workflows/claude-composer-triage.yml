@@ -45,8 +45,16 @@ jobs:
         uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          claude_args: '--max-turns 3'
-          prompt: |
+          # `mode: agent` bypasses the default `@claude` trigger-phrase check
+          # so the action runs unconditionally for every dispatched event —
+          # the workflow's own `if:` gates handle the actual filtering.
+          mode: agent
+          max_turns: 3
+          # The `@beta` ref of `claude-code-action` exposes `direct_prompt`
+          # for instructions and `max_turns` as a separate top-level input.
+          # (HEAD of the action's repo recently renamed these to `prompt` and
+          # `claude_args` — when the beta tag catches up, swap the keys.)
+          direct_prompt: |
             You are triaging a GitHub issue filed from the Composer in-app
             feedback form. The body contains a markdown trailer with the
             user-reported type, severity, area (plugin id), and app version.
