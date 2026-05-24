@@ -47,8 +47,13 @@ export const useWheel = (controller?: GlobeController | null, options: WheelOpti
       if (event.ctrlKey) {
         // Pinch-to-zoom on trackpads, or ctrl+scroll on a mouse. The
         // browser synthesises ctrlKey on pinch even when ctrl is not held.
+        // Read live zoom from controller.zoom (a getter on zoomRef.current)
+        // and set the new value directly: useControlledState's functional
+        // setter resolves against the prop, not the state, and passing a
+        // function to controller.setZoom triggers the 200ms eased transition
+        // intended for button clicks.
         const factor = Math.exp(-event.deltaY * zoomSensitivity);
-        controller.setZoom((zoom) => zoom * factor);
+        controller.setZoom(controller.zoom * factor);
       } else {
         // Read the live rotation off the projection (kept in sync by the
         // render effect). The React-state path can't be used here:
