@@ -23,8 +23,16 @@ jobs:
   triage:
     # Only run on Composer-labeled issues — never every issue. Avoid retriggering
     # on labels we (or the implement workflow) add ourselves, or on bot events.
+    #
+    # PILOT GATE: requires the `claude-pilot` label in addition to `Composer`.
+    # The action currently crashes mid-run on its own progress-spinner GIF
+    # (https://github.com/anthropics/claude-code-action/issues/1351). Until
+    # that upstream fix lands, only issues explicitly labeled `claude-pilot`
+    # will trigger triage — so we don't keep burning ~$0.10 per filed issue
+    # for a guaranteed crash. Remove this line once #1351 ships.
     if: >
       contains(github.event.issue.labels.*.name, 'Composer') &&
+      contains(github.event.issue.labels.*.name, 'claude-pilot') &&
       !contains(github.event.issue.labels.*.name, 'needs-implementation') &&
       !contains(github.event.issue.labels.*.name, 'needs-info') &&
       !contains(github.event.issue.labels.*.name, 'claude-implementing') &&
