@@ -9,7 +9,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { Button, Icon, Input, Panel } from '@dxos/react-ui';
-import { type ToggleMode } from '@dxos/react-ui-canvas';
+import { type ToggleMode, type Tool } from '@dxos/react-ui-canvas';
 import { Menu, MenuBuilder, useMenuActions, type ActionGraphProps } from '@dxos/react-ui-menu';
 import { Oscilloscope } from '@dxos/react-ui-sfx';
 import { mx } from '@dxos/ui-theme';
@@ -86,6 +86,7 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
   const [isPlaying, setIsPlaying] = useState(false);
   const [playhead, setPlayhead] = useState<number | null>(null);
   const [showAllTracks, setShowAllTracks] = useState(false);
+  const [toolMode, setToolMode] = useState<Tool>('toggle');
 
   // Auto-select the first track when one becomes available.
   useEffect(() => {
@@ -320,6 +321,11 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
   // menu's invoke handlers close over so the actions stay in sync.
   const togglePlay = useCallback(() => setIsPlaying((current) => !current), []);
   const toggleShowAllTracks = useCallback(() => setShowAllTracks((current) => !current), []);
+  const activateEditTool = useCallback(() => setToolMode((current) => (current === 'edit' ? 'toggle' : 'edit')), []);
+  const activateDeleteTool = useCallback(
+    () => setToolMode((current) => (current === 'delete' ? 'toggle' : 'delete')),
+    [],
+  );
   const actionsAtom = useMemo(
     () =>
       Atom.make(
@@ -347,6 +353,31 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
             )
             .separator()
             .action(
+              'tool-edit',
+              {
+                label: 'Edit (draw notes)',
+                icon: 'ph--pencil-simple--regular',
+                iconOnly: true,
+                disposition: 'toolbar',
+                variant: 'toggle',
+                checked: toolMode === 'edit',
+              },
+              activateEditTool,
+            )
+            .action(
+              'tool-delete',
+              {
+                label: 'Delete (erase notes)',
+                icon: 'ph--eraser--regular',
+                iconOnly: true,
+                disposition: 'toolbar',
+                variant: 'toggle',
+                checked: toolMode === 'delete',
+              },
+              activateDeleteTool,
+            )
+            .separator()
+            .action(
               'import',
               {
                 label: 'Import lead sheet',
@@ -368,7 +399,17 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
             )
             .build(),
       ),
-    [isPlaying, togglePlay, showAllTracks, toggleShowAllTracks, handleImport, handleExport],
+    [
+      isPlaying,
+      togglePlay,
+      showAllTracks,
+      toggleShowAllTracks,
+      toolMode,
+      activateEditTool,
+      activateDeleteTool,
+      handleImport,
+      handleExport,
+    ],
   );
   const menuActions = useMenuActions(actionsAtom);
 
@@ -416,6 +457,7 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
                 loopEnd={score.loopEnd}
                 onLoopChange={handleLoopChange}
                 onToggleNote={handleToggleNote}
+                tool={toolMode}
                 overlayTracks={
                   showAllTracks
                     ? score.tracks

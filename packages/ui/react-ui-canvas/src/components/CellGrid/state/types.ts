@@ -33,7 +33,7 @@ export type Selection = {
   range: SelectionRange | null;
 };
 
-export type Tool = 'toggle' | 'select' | 'resize';
+export type Tool = 'toggle' | 'select' | 'resize' | 'edit' | 'delete';
 
 export type Row = { id: string; label?: string };
 

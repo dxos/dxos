@@ -13,6 +13,7 @@ import {
   type RenderCell,
   type Row,
   type ToggleMode,
+  type Tool,
   createCellGridAtoms,
   toggleCell,
   cellKey,
@@ -44,6 +45,11 @@ export type SequenceGridProps = {
   loopStart?: number;
   loopEnd?: number;
   onLoopChange?: (loopStart: number, loopEnd: number) => void;
+  /**
+   * Active tool mode. 'toggle' (default) flips notes on click/drag; 'edit' always adds;
+   * 'delete' always removes.
+   */
+  tool?: Tool;
   /**
    * Called when the user toggles a cell. The caller is responsible for mutating the sequence.
    * `mode` reflects the gesture: a single click reports `toggle`; a drag reports `set` or
@@ -118,6 +124,7 @@ export const SequenceGrid = ({
   onLoopChange,
   onToggleNote,
   overlayTracks,
+  tool = 'toggle',
   classNames,
 }: SequenceGridProps) => {
   const registry = useContext(RegistryContext);
@@ -227,6 +234,11 @@ export const SequenceGrid = ({
     registry.set(atoms.playhead, playhead === null ? null : playhead / beatsPerCell);
   }, [registry, atoms.playhead, playhead, beatsPerCell]);
 
+  // Sync the active tool into the atoms so the pointer handler uses the right mode.
+  useEffect(() => {
+    registry.set(atoms.tool, tool);
+  }, [registry, atoms.tool, tool]);
+
   const handleToggle = (coord: CellCoord, mode: ToggleMode) => {
     const pitch = maxPitch - coord.row;
     const startTime = coord.col * beatsPerCell;
@@ -288,6 +300,26 @@ export const SequenceGrid = ({
   }, [paneHeight, totalRows, cellGridHeaders.top, registry, atoms.viewport]);
   const pixelsPerCell = viewport.baseCellWidth * viewport.zoomX;
   const pixelsPerBeat = pixelsPerCell / beatsPerCell;
+
+  // Auto-scroll: when the playhead moves past the right edge of the visible area,
+  // jump-scroll so the playhead stays in view.
+  useEffect(() => {
+    return registry.subscribe(atoms.playhead, (playheadCol) => {
+      if (playheadCol === null) {
+        return;
+      }
+      const vp = registry.get(atoms.viewport);
+      const pxPerCell = vp.baseCellWidth * vp.zoomX;
+      const playheadPx = playheadCol * pxPerCell;
+      const visibleWidth = Math.max(0, paneWidth - cellGridHeaders.left);
+      if (visibleWidth <= 0) {
+        return;
+      }
+      if (playheadPx > vp.scrollX + visibleWidth) {
+        registry.set(atoms.viewport, { ...vp, scrollX: Math.max(0, playheadPx - pxPerCell * 4) });
+      }
+    });
+  }, [registry, atoms.playhead, atoms.viewport, paneWidth, cellGridHeaders.left]);
   const resolvedLoopEnd = loopEnd ?? sequence.length;
   const resolvedLoopStart = loopStart ?? 0;
   // Loop range is allowed to extend beyond the current sequence length — the
