@@ -29,4 +29,5 @@ export const ExtractedFrom = Schema.Struct({
 
 export interface ExtractedFrom extends Schema.Schema.Type<typeof ExtractedFrom> {}
 
+/** Creates an `ExtractedFrom` provenance relation linking an extracted object to its source `Message`. */
 export const make = (props: Relation.MakeProps<typeof ExtractedFrom>) => Relation.make(ExtractedFrom, props);

@@ -40,7 +40,7 @@ export const Mailbox = Schema.Struct({
   ).pipe(FormInputAnnotation.set(false)),
   extractors: Schema.Struct({
     enabled: Schema.Array(Schema.String),
-    threshold: Schema.Number,
+    threshold: Schema.Number.pipe(Schema.between(0, 1)),
   }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.object({

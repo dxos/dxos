@@ -20,7 +20,7 @@ class NoMatchingExtractorError extends Error {
 
 const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = InboxOperation.ExtractMessage.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ db, message, extractorId }) {
+    Effect.fnUntraced(function* ({ db, message, extractorId, targetTripId }) {
       const extractors = yield* Capability.getAll(InboxCapabilities.MessageExtractor);
 
       // Pick the extractor.
@@ -63,7 +63,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
 
       log.info('extract message', { extractorId: chosen.id, confidence: chosenConfidence });
 
-      const result = yield* chosen.extract({ database: db }, message);
+      const result = yield* chosen.extract({ database: db, targetTripId }, message);
 
       const extractedAt = new Date().toISOString();
 

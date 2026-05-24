@@ -17,6 +17,8 @@ export type MatchResult = {
 
 export type ExtractCtx = {
   database: Database.Database;
+  /** Optional target Trip (or other container) the extractor should append into. */
+  targetTripId?: string;
 };
 
 export type ExtractResult = {
