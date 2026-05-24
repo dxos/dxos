@@ -11,7 +11,8 @@ export type CalendarStyleProps = Partial<{}>;
 // See https://daypicker.dev/api/type-aliases/ClassNames
 
 const root: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
-  mx('p-2 select-none text-base-foreground', ...etc);
+  // `relative` anchors the absolutely-positioned `nav` to the calendar bounds; `w-fit` keeps the root from spanning its container.
+  mx('relative w-fit p-2 select-none text-base-foreground', ...etc);
 
 const months: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
   mx('flex flex-col sm:flex-row gap-2', ...etc);

@@ -7,13 +7,14 @@ import React, { useState } from 'react';
 import { type DateRange } from 'react-day-picker';
 
 import { withTheme } from '../../testing';
+import { translations } from '../../translations';
 import { Icon } from '../Icon';
 import { DatePicker } from './DatePicker';
 
 const meta: Meta<typeof DatePicker.Root> = {
   title: 'ui/react-ui-core/DatePicker',
   decorators: [withTheme()],
-  parameters: { layout: 'centered' },
+  parameters: { layout: 'centered', translations },
 };
 
 export default meta;
