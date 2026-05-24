@@ -9,6 +9,7 @@ import React, {
   type ReactNode,
   forwardRef,
   useCallback,
+  useId,
   useState,
 } from 'react';
 import { type DateRange } from 'react-day-picker';
@@ -133,7 +134,7 @@ const formatValue = (mode: DatePickerMode, value: unknown, fmt: string): string 
     }
     case 'multiple': {
       const arr = value as Date[];
-      return arr.length ? arr.map((d) => formatDate(d, fmt)).join(', ') : undefined;
+      return arr.length ? arr.map((date) => formatDate(date, fmt)).join(', ') : undefined;
     }
   }
 };
@@ -191,14 +192,54 @@ const DatePickerContent = forwardRef<HTMLDivElement, DatePickerContentProps>(
 DatePickerContent.displayName = 'DatePickerContent';
 
 //
-// Calendar bound to context (time-of-day preservation added in Task 8).
+// Calendar bound to context (time-of-day preservation).
 //
+
+/** Copies the hour/minute from oldDate into a fresh copy of newDate. */
+const carryTime = (oldDate: Date | undefined, newDate: Date | undefined): Date | undefined => {
+  if (!newDate) {
+    return newDate;
+  }
+  if (!oldDate) {
+    return newDate;
+  }
+  const out = new Date(newDate);
+  out.setHours(oldDate.getHours(), oldDate.getMinutes(), 0, 0);
+  return out;
+};
 
 const DatePickerCalendar = (
   props: Omit<ComponentPropsWithoutRef<typeof Calendar>, 'mode' | 'selected' | 'onSelect'>,
 ) => {
-  const { mode, value, setValue } = useDatePickerContext('DatePickerCalendar');
-  const handleSelect = useCallback((next: ValueByMode[DatePickerMode]) => setValue(next), [setValue]);
+  const { mode, value, setValue, withTime } = useDatePickerContext('DatePickerCalendar');
+
+  const handleSelect = useCallback(
+    (next: ValueByMode[DatePickerMode]) => {
+      if (!withTime) {
+        setValue(next);
+        return;
+      }
+      if (mode === 'single') {
+        setValue(carryTime(value as Date | undefined, next as Date | undefined));
+      } else if (mode === 'range') {
+        const oldRange = value as DateRange | undefined;
+        const newRange = next as DateRange | undefined;
+        setValue(
+          newRange
+            ? { from: carryTime(oldRange?.from, newRange.from)!, to: carryTime(oldRange?.to, newRange.to) }
+            : undefined,
+        );
+      } else {
+        // Multiple — react-day-picker emits the full array; preserve time on existing dates by index.
+        const oldDates = (value as Date[] | undefined) ?? [];
+        const newDates = (next as Date[] | undefined) ?? [];
+        const merged = newDates.map((date, index) => carryTime(oldDates[index], date) ?? date);
+        setValue(merged);
+      }
+    },
+    [withTime, mode, value, setValue],
+  );
+
   // Branch on mode so each Calendar render targets a single DayPickerProps union member.
   if (mode === 'single') {
     return <Calendar {...props} mode='single' selected={value as Date | undefined} onSelect={handleSelect as (d: Date | undefined) => void} />;
@@ -211,7 +252,76 @@ const DatePickerCalendar = (
 DatePickerCalendar.displayName = 'DatePickerCalendar';
 
 //
-// Public namespace (TimeField added in Task 8).
+// TimeField — native <input type='time'>; only renders when withTime is on.
+//
+
+export type DatePickerTimeFieldProps = ThemedClassName<
+  Omit<ComponentPropsWithoutRef<'div'>, 'children'>
+> & {
+  /** For range mode: which endpoint to bind to. Defaults to 'from'. */
+  endpoint?: 'from' | 'to';
+};
+
+const pad = (num: number) => num.toString().padStart(2, '0');
+const toTimeValue = (date: Date | undefined): string =>
+  date ? `${pad(date.getHours())}:${pad(date.getMinutes())}` : '';
+
+const DatePickerTimeField = forwardRef<HTMLDivElement, DatePickerTimeFieldProps>(
+  ({ classNames, endpoint = 'from', ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    const { mode, value, setValue, withTime } = useDatePickerContext('DatePickerTimeField');
+    const id = useId();
+
+    if (!withTime) {
+      return null;
+    }
+
+    let current: Date | undefined;
+    if (mode === 'single') {
+      current = value as Date | undefined;
+    } else if (mode === 'range') {
+      current = (value as DateRange | undefined)?.[endpoint];
+    } else {
+      const arr = value as Date[] | undefined;
+      current = arr && arr.length ? arr[arr.length - 1] : undefined;
+    }
+
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const parts = event.target.value.split(':');
+      const hours = parseInt(parts[0] ?? '', 10);
+      const minutes = parseInt(parts[1] ?? '', 10);
+      const base = current ? new Date(current) : new Date();
+      base.setHours(Number.isFinite(hours) ? hours : 0, Number.isFinite(minutes) ? minutes : 0, 0, 0);
+      if (mode === 'single') {
+        setValue(base);
+      } else if (mode === 'range') {
+        const range = (value as DateRange | undefined) ?? { from: base };
+        setValue({ ...range, [endpoint]: base } as DateRange);
+      } else {
+        const arr = ((value as Date[] | undefined) ?? []).slice();
+        if (arr.length === 0) {
+          arr.push(base);
+        } else {
+          arr[arr.length - 1] = base;
+        }
+        setValue(arr);
+      }
+    };
+
+    return (
+      <div ref={forwardedRef} {...props} className={tx('datePicker.timeField', {}, classNames)}>
+        <label htmlFor={id} className='text-xs text-description'>
+          {mode === 'range' ? endpoint : 'time'}
+        </label>
+        <input id={id} type='time' value={toTimeValue(current)} onChange={handleChange} />
+      </div>
+    );
+  },
+);
+DatePickerTimeField.displayName = 'DatePickerTimeField';
+
+//
+// Public namespace.
 //
 
 export const DatePicker = {
@@ -219,6 +329,7 @@ export const DatePicker = {
   Trigger: DatePickerTrigger,
   Content: DatePickerContent,
   Calendar: DatePickerCalendar,
+  TimeField: DatePickerTimeField,
 };
 
 export { useDatePickerContext };
