@@ -50,15 +50,19 @@ export const useWheel = (controller?: GlobeController | null, options: WheelOpti
         const factor = Math.exp(-event.deltaY * zoomSensitivity);
         controller.setZoom((zoom) => zoom * factor);
       } else {
-        // Use the functional setter so each event applies its delta to the
-        // latest rotation. `controller.rotation` is a snapshot captured by
-        // useImperativeHandle and would be stale across rapid events.
+        // Read the live rotation off the projection (kept in sync by the
+        // render effect). The React-state path can't be used here:
+        // - `controller.rotation` is a snapshot captured by useImperativeHandle.
+        // - `useControlledState`'s functional setter resolves `prev` against
+        //   the latest *prop*, not the latest state, so each event would
+        //   start from the initial rotation and just jitter around it.
+        // Mutating the projection here matches how useDrag accumulates.
         // Negate deltaY so the wheel matches the linear-drag Y convention
         // (downward motion brings the northern hemisphere into view).
-        controller.setRotation((prev) => {
-          const [lambda, phi, gamma] = prev ?? [0, 0, 0];
-          return [lambda + event.deltaX * sensitivity, phi - event.deltaY * sensitivity, gamma] as Vector;
-        });
+        const [lambda, phi, gamma] = controller.projection.rotate() as Vector;
+        const next: Vector = [lambda + event.deltaX * sensitivity, phi - event.deltaY * sensitivity, gamma];
+        controller.projection.rotate(next);
+        controller.setRotation(controller.projection.rotate() as Vector);
       }
       options.onUpdate?.(controller);
     };
