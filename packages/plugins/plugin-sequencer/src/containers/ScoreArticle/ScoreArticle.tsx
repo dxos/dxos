@@ -305,6 +305,8 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
       setPlayhead(null);
       return;
     }
+    player.load(score as Score.Score);
+    setAudioOutputNode(player.outputNode);
     void player.play();
     const startedAt = performance.now();
     const beatsPerSecond = score.tempo / 60;
