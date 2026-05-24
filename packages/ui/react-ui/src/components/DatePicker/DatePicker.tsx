@@ -194,17 +194,20 @@ DatePickerContent.displayName = 'DatePickerContent';
 // Calendar bound to context (time-of-day preservation added in Task 8).
 //
 
-const DatePickerCalendar = forwardRef<
-  HTMLDivElement,
-  Omit<ComponentPropsWithoutRef<typeof Calendar>, 'mode' | 'selected' | 'onSelect'>
->(({ ...props }, forwardedRef) => {
+const DatePickerCalendar = (
+  props: Omit<ComponentPropsWithoutRef<typeof Calendar>, 'mode' | 'selected' | 'onSelect'>,
+) => {
   const { mode, value, setValue } = useDatePickerContext('DatePickerCalendar');
   const handleSelect = useCallback((next: ValueByMode[DatePickerMode]) => setValue(next), [setValue]);
-  // Cast required because Calendar's DayPicker discriminated union cannot be narrowed at this call site.
-  const dpProps = { mode, selected: value, onSelect: handleSelect } as unknown as ComponentPropsWithoutRef<typeof Calendar>;
-  // Calendar's forwardRef wraps DayPicker which does not wire the ref to a DOM node; ref is accepted but intentionally unused.
-  return <Calendar ref={forwardedRef as React.Ref<HTMLDivElement>} {...dpProps} {...props} />;
-});
+  // Branch on mode so each Calendar render targets a single DayPickerProps union member.
+  if (mode === 'single') {
+    return <Calendar {...props} mode='single' selected={value as Date | undefined} onSelect={handleSelect as (d: Date | undefined) => void} />;
+  }
+  if (mode === 'range') {
+    return <Calendar {...props} mode='range' selected={value as DateRange | undefined} onSelect={handleSelect as (r: DateRange | undefined) => void} />;
+  }
+  return <Calendar {...props} mode='multiple' selected={value as Date[] | undefined} onSelect={handleSelect as (d: Date[] | undefined) => void} />;
+};
 DatePickerCalendar.displayName = 'DatePickerCalendar';
 
 //

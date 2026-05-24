@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { forwardRef } from 'react';
+import React from 'react';
 import {
   DayPicker,
   type DayPickerProps,
@@ -11,7 +11,6 @@ import {
 } from 'react-day-picker';
 
 import { useThemeContext } from '../../hooks';
-import { type ThemedClassName } from '../../util';
 
 // Slot names match react-day-picker v9 `ClassNames` enum values.
 const themeSlots = [
@@ -40,34 +39,27 @@ const themeSlots = [
   'footer',
 ] as const;
 
-type CalendarOwnProps = {
-  /** Merged on top of theme defaults — keys match react-day-picker `ClassNames`. */
-  classNames?: Partial<ClassNames>;
+export type CalendarProps = DayPickerProps;
+
+const CalendarRoot = ({ classNames: classNamesProp, components, ...props }: CalendarProps) => {
+  const { tx } = useThemeContext();
+  const themed: Partial<ClassNames> = {};
+  for (const slot of themeSlots) {
+    themed[slot] = tx(`calendar.${slot}`, {}, classNamesProp?.[slot]);
+  }
+  return (
+    <DayPicker
+      // Spread loses union narrowing inside the function body; restore the type at the DayPicker boundary.
+      {...(props as DayPickerProps)}
+      classNames={themed}
+      components={{
+        MonthCaption: MonthCaptionDefault,
+        Nav: NavDefault,
+        ...(components ?? {}),
+      }}
+    />
+  );
 };
-
-export type CalendarProps = ThemedClassName<Omit<DayPickerProps, 'classNames'>> & CalendarOwnProps;
-
-const CalendarRoot = forwardRef<HTMLDivElement, CalendarProps>(
-  ({ classNames: classNamesProp, components, ...props }, _forwardedRef) => {
-    const { tx } = useThemeContext();
-    const themed: Partial<ClassNames> = {};
-    for (const slot of themeSlots) {
-      themed[slot] = tx(`calendar.${slot}`, {}, classNamesProp?.[slot]);
-    }
-    // react-day-picker does not forward a ref to a single DOM node; intentionally ignored.
-    return (
-      <DayPicker
-        {...(props as DayPickerProps)}
-        classNames={themed}
-        components={{
-          MonthCaption: MonthCaptionDefault,
-          Nav: NavDefault,
-          ...(components ?? {}),
-        }}
-      />
-    );
-  },
-);
 CalendarRoot.displayName = 'Calendar';
 
 //
