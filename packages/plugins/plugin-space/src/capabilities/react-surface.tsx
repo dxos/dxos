@@ -11,7 +11,7 @@ import React, { type ComponentProps, useCallback } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace, useTypeOptions } from '@dxos/app-toolkit/ui';
-import { Collection, Database, Obj } from '@dxos/echo';
+import { Collection, Database, Entity, Obj } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { type Space, SpaceState, getSpace, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
@@ -30,9 +30,9 @@ import {
   JoinDialog,
   MembersContainer,
   MenuFooter,
+  EntityRenamePopover,
   ObjectCardStack,
   ObjectProperties,
-  ObjectRenamePopover,
   RecordArticle,
   RelatedArticle,
   SchemaContainer,
@@ -59,7 +59,7 @@ import {
   CREATE_SPACE_DIALOG,
   IMPORT_SPACE_DIALOG,
   JOIN_DIALOG,
-  OBJECT_RENAME_POPOVER,
+  ENTITY_RENAME_POPOVER,
   SPACE_RENAME_POPOVER,
 } from '../constants';
 
@@ -324,11 +324,11 @@ export default Capability.makeModule(
         component: ({ data }) => <SpaceRenamePopover space={data.props} />,
       }),
       Surface.create({
-        id: OBJECT_RENAME_POPOVER,
+        id: ENTITY_RENAME_POPOVER,
         role: 'popover',
-        filter: (data): data is { props: Obj.Unknown } =>
-          data.component === OBJECT_RENAME_POPOVER && Obj.isObject(data.props),
-        component: ({ data }) => <ObjectRenamePopover object={data.props} />,
+        filter: (data): data is { props: Entity.Unknown } =>
+          data.component === ENTITY_RENAME_POPOVER && Entity.isEntity(data.props),
+        component: ({ data }) => <EntityRenamePopover entity={data.props} />,
       }),
       Surface.create({
         id: 'menu-footer',

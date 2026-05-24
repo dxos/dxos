@@ -5,6 +5,8 @@
 // @import-as-namespace
 
 
+import * as Schema from 'effect/Schema';
+
 import type { ForeignKey } from '@dxos/echo-protocol';
 import type { ObjectId, URI } from '@dxos/keys';
 
@@ -52,6 +54,17 @@ export type Entity<Props> = OfKind<Kind> & Props;
  * Unknown Obj or Relation (reactive).
  */
 export interface Unknown extends OfKind<Kind> {}
+
+/**
+ * Effect Schema for any reactive ECHO entity (object, relation, or type).
+ *
+ * Kind-agnostic counterpart to `Obj.Unknown` / `Relation.Unknown` — validates
+ * the structural shape (id + properties) without constraining `[KindId]`.
+ * Use this in operation input schemas that accept any entity flavour.
+ */
+export const Unknown: Schema.Schema<Unknown> = Schema.Struct({
+  id: Schema.String,
+}).pipe(Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown }))) as unknown as Schema.Schema<Unknown>;
 
 /**
  * Snapshot of an Obj or Relation.
@@ -178,6 +191,12 @@ export const isDeleted = (entity: Unknown | Snapshot): boolean => internal.isDel
  * Get the label of an entity.
  */
 export const getLabel = (entity: Unknown | Snapshot): string | undefined => internal.getLabel(entity);
+
+/**
+ * Set the label of an entity.
+ * Must be called within an `Entity.update` / `Obj.update` / `Relation.update` callback.
+ */
+export const setLabel = (entity: Mutable<Unknown>, label: string): void => internal.setLabel(entity, label);
 
 /**
  * Get the description of an entity.

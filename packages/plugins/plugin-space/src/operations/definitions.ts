@@ -8,7 +8,7 @@ import { Capability, Plugin } from '@dxos/app-framework';
 import { SpaceSchema } from '@dxos/client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/client/invitations';
 import { Operation } from '@dxos/compute';
-import { Collection, Database, Obj, QueryAST, Type, View } from '@dxos/echo';
+import { Collection, Database, Entity, Obj, QueryAST, Type, View } from '@dxos/echo';
 import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 
 import { meta } from '#meta';
@@ -159,7 +159,7 @@ export namespace SpaceOperation {
   });
 
   export const RemoveObjectsOutput = Schema.Struct({
-    objects: Schema.Array(Obj.Unknown).annotations({ description: 'The removed objects.' }),
+    objects: Schema.Array(Entity.Unknown).annotations({ description: 'The removed entities.' }),
     parentCollection: Type.getSchema(Collection.Collection).annotations({ description: 'The collection removed from.' }),
     indices: Schema.Array(Schema.Number).annotations({ description: 'The indices the objects were at.' }),
     wasActive: Schema.Array(Schema.String).annotations({
@@ -173,11 +173,11 @@ export namespace SpaceOperation {
     meta: {
       key: `${SPACE_OPERATION}.remove-objects`,
       name: 'Remove Objects',
-      description: 'Remove objects from a space.',
+      description: 'Remove entities (objects, relations, or persisted types) from a space.',
     },
     services: [Capability.Service],
     input: Schema.Struct({
-      objects: Schema.Array(Obj.Unknown).annotations({ description: 'The objects to remove.' }),
+      objects: Schema.Array(Entity.Unknown).annotations({ description: 'The entities to remove.' }),
       target: Schema.optional(Type.getSchema(Collection.Collection)).annotations({ description: 'The collection to remove from.' }),
     }),
     output: RemoveObjectsOutput,
@@ -333,11 +333,11 @@ export namespace SpaceOperation {
     meta: {
       key: `${SPACE_OPERATION}.rename-object`,
       name: 'Rename Object',
-      description: 'Rename an object.',
+      description: 'Rename an entity (object, relation, or persisted type).',
     },
     services: [Capability.Service],
     input: Schema.Struct({
-      object: Obj.Unknown,
+      object: Entity.Unknown,
       caller: Schema.optional(Schema.String),
     }),
     output: Schema.Void,
@@ -471,17 +471,17 @@ export namespace SpaceOperation {
   });
 
   /**
-   * Restore deleted objects to a space (inverse of RemoveObjects).
+   * Restore deleted entities to a space (inverse of RemoveObjects).
    */
   export const RestoreObjects = Operation.make({
     meta: {
       key: `${SPACE_OPERATION}.restore-objects`,
       name: 'Restore Objects',
-      description: 'Restore deleted objects to a space.',
+      description: 'Restore deleted entities to a space.',
     },
     services: [Capability.Service],
     input: Schema.Struct({
-      objects: Schema.Array(Obj.Unknown).annotations({ description: 'The objects to restore.' }),
+      objects: Schema.Array(Entity.Unknown).annotations({ description: 'The entities to restore.' }),
       parentCollection: Type.getSchema(Collection.Collection).annotations({ description: 'The collection to restore to.' }),
       indices: Schema.Array(Schema.Number).annotations({ description: 'The indices to restore at.' }),
       wasActive: Schema.Array(Schema.String).annotations({

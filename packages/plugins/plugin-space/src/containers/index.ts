@@ -17,7 +17,7 @@ export const MembersContainer: ComponentType<any> = lazy(() => import('./Members
 export const MenuFooter: ComponentType<any> = lazy(() => import('./MenuFooter'));
 export const ObjectCardStack: ComponentType<any> = lazy(() => import('./ObjectCardStack'));
 export const ObjectProperties: ComponentType<any> = lazy(() => import('./ObjectProperties'));
-export const ObjectRenamePopover: ComponentType<any> = lazy(() => import('./ObjectRenamePopover'));
+export const EntityRenamePopover: ComponentType<any> = lazy(() => import('./EntityRenamePopover'));
 export const RecordArticle: ComponentType<any> = lazy(() => import('./RecordArticle'));
 export const RelatedArticle: ComponentType<any> = lazy(() => import('./RelatedArticle'));
 export const SchemaContainer: ComponentType<any> = lazy(() => import('./SchemaContainer'));

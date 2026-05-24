@@ -369,8 +369,11 @@ export const isType = (value: unknown): value is AnyType =>
  * can be mutated via `Type.update`. Distinct from {@link isType}: static type
  * entities are also type-kind but are frozen at construction. Implemented by
  * matching against the `PersistentSchema` meta-schema's type URI.
+ *
+ * Narrowed to `Type & { id: string }` because persisted entities always carry
+ * an `id` (the optionality on the base `Type` interface covers static cases).
  */
-export const isMutable = (value: unknown): value is Type =>
+export const isMutable = (value: unknown): value is Type & { readonly id: string } =>
   internal.isInstanceOf(internal.PersistentSchema, value);
 
 /**

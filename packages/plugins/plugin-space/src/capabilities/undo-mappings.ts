@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability, UndoMapping } from '@dxos/app-framework';
-import { Obj } from '@dxos/echo';
+import { Entity } from '@dxos/echo';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
@@ -42,7 +42,7 @@ export default Capability.makeModule(
             wasActive: output.wasActive,
           }),
           message: (input, _output) => {
-            const ns = Obj.getTypename(input.objects[0]);
+            const ns = Entity.getTypename(input.objects[0]);
             return ns && input.objects.length === 1
               ? ['object-deleted.label', { ns }]
               : ['objects-deleted.label', { ns: meta.id }];

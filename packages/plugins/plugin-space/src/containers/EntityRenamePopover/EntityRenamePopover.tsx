@@ -6,29 +6,29 @@ import React, { useCallback, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Obj } from '@dxos/echo';
+import { Entity } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Button, Input, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-export const OBJECT_RENAME_POPOVER = `${meta.id}.ObjectRenamePopover`;
+export const ENTITY_RENAME_POPOVER = `${meta.id}.EntityRenamePopover`;
 
-export const ObjectRenamePopover = ({ object }: { object: Obj.Unknown }) => {
+export const EntityRenamePopover = ({ entity }: { entity: Entity.Unknown }) => {
   const { t } = useTranslation(meta.id);
   const doneButton = useRef<HTMLButtonElement>(null);
-  const [name, setName] = useState(Obj.getLabel(object));
+  const [name, setName] = useState(Entity.getLabel(entity));
   const { invokePromise } = useOperationInvoker();
 
   const handleDone = useCallback(() => {
     try {
-      name && Obj.update(object, () => Obj.setLabel(object, name));
+      name && Entity.update(entity, () => Entity.setLabel(entity, name));
     } catch (err) {
-      log.error('Failed to rename object', { err });
+      log.error('Failed to rename entity', { err });
     }
     void invokePromise(LayoutOperation.UpdatePopover, { anchorId: '', state: false });
-  }, [object, name, invokePromise]);
+  }, [entity, name, invokePromise]);
 
   return (
     <div className='p-2 flex gap-2'>

@@ -370,10 +370,7 @@ const createSchemaActions = ({
       data: (params?: Node.InvokeProps) =>
         Type.isMutable(schema)
           ? Operation.invoke(SpaceOperation.RenameObject, {
-              // TODO(jdw): RenameObject expects Obj.Unknown but persisted Type entities are
-              // [KindId]=Type. The rename popover filters via Obj.isObject so this path is
-              // brittle today; follow-up should split out a dedicated RenameType operation.
-              object: schema as unknown as Obj.Unknown,
+              object: schema,
               caller: `${params?.caller}:${params?.parent?.id}`,
             })
           : Effect.fail(new Error('Cannot rename immutable schema')),
@@ -390,9 +387,7 @@ const createSchemaActions = ({
       data: () =>
         Type.isMutable(schema)
           ? Operation.invoke(SpaceOperation.RemoveObjects, {
-              // TODO(jdw): RemoveObjects expects Obj.Unknown; persisted Type entities now
-              // brand [KindId]=Type. Schema-delete should grow its own operation.
-              objects: [schema as unknown as Obj.Unknown],
+              objects: [schema],
             })
           : Effect.succeed(undefined),
       properties: {
