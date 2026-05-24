@@ -164,6 +164,7 @@ export class ScorePlayer {
   #scheduled: ScheduledTrack[] = [];
   #master?: Tone.Gain;
   #started = false;
+  #partsStarted = false;
   #loopBeats = 16;
   #loopStartBeats = 0;
   #loopEndBeats = 0;
@@ -252,8 +253,16 @@ export class ScorePlayer {
   async play(): Promise<void> {
     await Tone.start();
     const transport = Tone.getTransport();
-    for (const { part } of this.#scheduled) {
-      part.start(0);
+    // Parts are added to the Transport timeline once. Calling part.start()
+    // again after part.stop() is unreliable in Tone.js — the Part's internal
+    // state machine may silently drop the re-schedule. Instead we start each
+    // Part exactly once and keep them in the Transport's event list; on
+    // subsequent plays we only restart the Transport.
+    if (!this.#partsStarted) {
+      for (const { part } of this.#scheduled) {
+        part.start(0);
+      }
+      this.#partsStarted = true;
     }
     // Start the transport AT loopStart so playback always begins inside the
     // configured loop range — otherwise events at beats 0..loopStart would
@@ -272,18 +281,17 @@ export class ScorePlayer {
     // schedule cancel-time setter validates `value >= 0` and throws
     // RangeError. Pass an explicit clamped time and additionally swallow
     // the rare race so a stop after a transient play never bubbles up.
+    //
+    // Parts are intentionally NOT stopped here — stopping a Part removes it
+    // from the Transport's schedule and Tone.js does not reliably re-add it
+    // via part.start() on the same instance. The Transport stop() already
+    // silences all audio; Parts remain in the schedule and replay on the
+    // next transport.start().
     const time = Math.max(0, Tone.now());
     try {
       Tone.getTransport().stop(time);
     } catch {
       /* see comment above */
-    }
-    for (const { part } of this.#scheduled) {
-      try {
-        part.stop(time);
-      } catch {
-        /* see comment above */
-      }
     }
   }
 
@@ -299,6 +307,7 @@ export class ScorePlayer {
       disposeTrackVoices(entry.voices);
     }
     this.#scheduled = [];
+    this.#partsStarted = false;
     this.#master?.dispose();
     this.#master = undefined;
   }
