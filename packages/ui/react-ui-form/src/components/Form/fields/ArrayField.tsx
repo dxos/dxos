@@ -86,13 +86,6 @@ export const ArrayField = ({
     return null;
   }
 
-  // An array of objects (e.g. `repeated Signal`) can't share the
-  // 2-column-with-delete row layout used for scalars: each object has
-  // multiple fields that need their own (label, input) rows, so we render
-  // each item as a recursively-laid-out FormField with the delete button on
-  // its own row below. Scalar arrays keep the compact inline layout.
-  // Refs are AST declarations but render as a single picker — treat them
-  // as scalars so they don't get the bordered object layout.
   const renderItemAsObject = elementType && isNestedType(elementType) && !Ref.isRefType(elementType);
 
   return (
@@ -117,22 +110,38 @@ export const ArrayField = ({
 
       <div className='flex flex-col'>
         {values?.map((_, index) => {
-          if (renderItemAsObject) {
-            return (
-              <div key={index} className='grid grid-cols-[1fr_min-content] gap-form-gap items-center mb-1'>
-                <div className='p-1 border border-subdued-separator'>
-                  <FormField
-                    {...props}
-                    autoFocus={index === values.length - 1}
-                    type={elementType}
-                    name={null}
-                    path={[...(path ?? []), index]}
-                    readonly={readonly || layout === 'static'}
-                    layout={layout === 'static' ? 'static' : undefined}
-                  />
-                </div>
-                {!readonly && layout !== 'static' && (
-                  <div className='h-full flex flex-col justify-end pb-1'>
+          const isLast = index === values.length - 1;
+          // Object items: each row contains a recursively-rendered FormField
+          //   (multiple sub-rows for the object's fields) wrapped in a border,
+          //   with the delete button bottom-aligned next to it.
+          // Scalar items: a single-row inline FormField with a center-aligned
+          //   delete button. Refs and primitive arrays use this layout.
+          const fieldField = (
+            <FormField
+              {...props}
+              autoFocus={isLast}
+              type={elementType}
+              name={null}
+              path={[...(path ?? []), index]}
+              readonly={readonly || layout === 'static'}
+              layout={renderItemAsObject ? (layout === 'static' ? 'static' : undefined) : 'inline'}
+            />
+          );
+
+          return (
+            <div
+              key={index}
+              className='grid grid-cols-[1fr_min-content] gap-form-gap items-center mb-1 last:mb-form-gap'
+            >
+              {renderItemAsObject ? (
+                <div className='p-1 border border-subdued-separator'>{fieldField}</div>
+              ) : (
+                fieldField
+              )}
+
+              {!readonly && layout !== 'static' && (
+                <div className='h-full flex flex-col justify-end'>
+                  {renderItemAsObject ? (
                     <IconButton
                       density='md'
                       variant='ghost'
@@ -140,36 +149,20 @@ export const ArrayField = ({
                       iconOnly
                       label={t('remove-item.button')}
                       onClick={() => handleDelete(index)}
+                      classNames='mb-1'
                     />
-                  </div>
-                )}
-              </div>
-            );
-          }
-
-          return (
-            <div key={index} className='grid grid-cols-[1fr_min-content] gap-form-gap last:mb-form-gap items-center'>
-              <FormField
-                autoFocus={index === values.length - 1}
-                type={elementType}
-                path={[...(path ?? []), index]}
-                readonly={readonly || layout === 'static'}
-                layout='inline'
-                {...props}
-              />
-
-              {!readonly && layout !== 'static' && (
-                <div className='flex flex-col h-full justify-end'>
-                  {/* NOTE: Aligns with center of last field if multi-field object. */}
-                  <div className='flex items-center h-[2rem]'>
-                    <IconButton
-                      icon='ph--x--regular'
-                      iconOnly
-                      label={t('remove.button')}
-                      onClick={() => handleDelete(index)}
-                      classNames='self-center'
-                    />
-                  </div>
+                  ) : (
+                    // Centers against the inline single-row FormField.
+                    <div className='flex items-center h-[2rem]'>
+                      <IconButton
+                        icon='ph--x--regular'
+                        iconOnly
+                        label={t('remove-item.button')}
+                        onClick={() => handleDelete(index)}
+                        classNames='self-center'
+                      />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
