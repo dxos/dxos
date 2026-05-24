@@ -27,27 +27,6 @@ const buildStarPath = (cx: number, cy: number, outerR: number, innerR: number, p
 };
 
 /**
- * Builds a 12-vertex plus-sign cross. `outerR` is the distance from center to far edge
- * of each arm; `armR` is the half-width of each arm.
- */
-const buildCrossPath = (cx: number, cy: number, outerR: number, armR: number): string =>
-  [
-    `M${cx - armR},${cy - outerR}`,
-    `L${cx + armR},${cy - outerR}`,
-    `L${cx + armR},${cy - armR}`,
-    `L${cx + outerR},${cy - armR}`,
-    `L${cx + outerR},${cy + armR}`,
-    `L${cx + armR},${cy + armR}`,
-    `L${cx + armR},${cy + outerR}`,
-    `L${cx - armR},${cy + outerR}`,
-    `L${cx - armR},${cy + armR}`,
-    `L${cx - outerR},${cy + armR}`,
-    `L${cx - outerR},${cy - armR}`,
-    `L${cx - armR},${cy - armR}`,
-    'Z',
-  ].join(' ');
-
-/**
  * Builds a circular path of radius `r` around (cx, cy) using four cubic beziers.
  * Starts at the top vertex (cx, cy - r). Bezier handle = r · 0.5523.
  */
@@ -68,10 +47,10 @@ const buildCirclePath = (cx: number, cy: number, r: number): string => {
   ].join(' ');
 };
 
-const STAR_PATH = buildStarPath(50, 50, 40, 18, 6);
-const CROSS_PATH = buildCrossPath(50, 50, 40, 12);
-// Intermediate circle is intentionally smaller than the star/cross extents.
-const CIRCLE_PATH = buildCirclePath(50, 50, 20);
+const STAR1_PATH = buildStarPath(50, 50, 40, 18, 6);
+const STAR2_PATH = buildStarPath(50, 50, 40, 18, 8);
+
+const CIRCLE_PATH = buildCirclePath(50, 50, 10);
 
 export type MorphProps = ThemedClassName<{
   /** Pixel size of the rendered SVG (square). */
@@ -86,9 +65,9 @@ export type MorphProps = ThemedClassName<{
  */
 export const Morph = ({ classNames, size = 32, duration = 2 }: MorphProps) => {
   const progress = useMotionValue(0);
-  const starToCircle = useMemo(() => interpolate(STAR_PATH, CIRCLE_PATH, { maxSegmentLength: 2 }), []);
-  const circleToCross = useMemo(() => interpolate(CIRCLE_PATH, CROSS_PATH, { maxSegmentLength: 2 }), []);
-  const path = useTransform(progress, (t) => (t <= 1 ? starToCircle(t) : circleToCross(t - 1)));
+  const inter1 = useMemo(() => interpolate(STAR1_PATH, CIRCLE_PATH, { maxSegmentLength: 2 }), []);
+  const inter2 = useMemo(() => interpolate(CIRCLE_PATH, STAR2_PATH, { maxSegmentLength: 2 }), []);
+  const path = useTransform(progress, (t) => (t <= 1 ? inter1(t) : inter2(t - 1)));
 
   useEffect(() => {
     const controls = animate(progress, [0, 1, 2, 1, 0], {
@@ -96,6 +75,7 @@ export const Morph = ({ classNames, size = 32, duration = 2 }: MorphProps) => {
       ease: 'easeInOut',
       repeat: Infinity,
     });
+
     return () => controls.stop();
   }, [progress, duration]);
 
