@@ -80,7 +80,7 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
           {(route || date) && (
             <Card.Content>
               {route && (
-                <Card.Row icon='ph--arrow-right--regular'>
+                <Card.Row>
                   <Card.Text variant='description'>{route}</Card.Text>
                 </Card.Row>
               )}

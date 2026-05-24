@@ -55,9 +55,7 @@ export const addSegment = (trip: Trip, segment: Segment.Segment): void => {
 /** Removes a segment ref from a trip by its ECHO id. */
 export const removeSegment = (trip: Trip, segmentId: string): void => {
   Obj.update(trip, (trip) => {
-    const index = trip.segments.findIndex(
-      (ref) => Ref.isRef(ref) && ref.target?.id === segmentId,
-    );
+    const index = trip.segments.findIndex((ref) => Ref.isRef(ref) && ref.target?.id === segmentId);
     if (index >= 0) {
       trip.segments.splice(index, 1);
     }
