@@ -101,7 +101,7 @@ export namespace AppPlugin {
   }
 
   export type SchemaModuleOptions = Omit<PluginModuleOptions, 'activate'> & {
-    schema: ReadonlyArray<Type.AnyType>;
+    schema: ReadonlyArray<Type.Entity>;
   };
 
   /**

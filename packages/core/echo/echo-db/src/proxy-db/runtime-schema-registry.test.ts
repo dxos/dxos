@@ -69,7 +69,7 @@ describe('RuntimeSchemaRegistry', () => {
     await registry.register([TestSchemaA]);
 
     const queryResult = registry.query();
-    let latestResults: Type.AnyType[] = [];
+    let latestResults: Type.Entity[] = [];
     const unsubscribe = queryResult.subscribe(() => {
       latestResults = queryResult.results;
     });
@@ -109,7 +109,7 @@ describe('RuntimeSchemaRegistry', () => {
   test('filtered reactive query only fires for matching schemas', async ({ expect }) => {
     const queryResult = registry.query({ typename: 'com.example.type.a' });
 
-    let latestResults: Type.AnyType[] = [];
+    let latestResults: Type.Entity[] = [];
     let updateCount = 0;
     const unsubscribe = queryResult.subscribe(() => {
       updateCount++;

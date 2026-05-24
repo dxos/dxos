@@ -41,7 +41,7 @@ export const handler = Effect.fn(function* ({
         version: schema.version,
       })),
     ...runtimeSchema.map((type) => {
-      const schema = Type.getSchema(type as Type.AnyType);
+      const schema = Type.getSchema(type as Type.Entity);
       const schemaAnnotation = getTypeAnnotation(schema)!;
       return {
         typename: schemaAnnotation.typename,

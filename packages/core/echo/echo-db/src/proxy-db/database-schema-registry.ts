@@ -95,7 +95,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     // Nothing to do.
   }
 
-  public hasSchema(schema: Type.AnyType): boolean {
+  public hasSchema(schema: Type.Entity): boolean {
     const schemaId = (schema as { id?: ObjectId }).id;
     return schemaId != null && this.getSchemaById(schemaId) != null;
   }
@@ -111,7 +111,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     type Entry =
       | {
           source: 'runtime';
-          schema: Type.AnyType;
+          schema: Type.Entity;
         }
       | {
           source: 'database';
@@ -275,7 +275,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
   }
 
   // TODO(burdon): Tighten type signature to TypedObject?
-  async register<T extends Type.AnyType>(input: T[]): Promise<T[]>;
+  async register<T extends Type.Entity>(input: T[]): Promise<T[]>;
   async register(input: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.Type[]>;
   async register(inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.Type[]> {
     const results: Type.Type[] = [];

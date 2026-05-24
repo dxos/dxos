@@ -61,7 +61,7 @@ export type Query = {
  * - JSON schema with typename and version
  */
 export type RegisterSchemaInput =
-  | Type.AnyType
+  | Type.Entity
   | {
       typename: string;
       version: string;
@@ -77,13 +77,13 @@ export interface SchemaRegistry {
   /**
    * Checks if the provided schema is registered.
    */
-  hasSchema(schema: Type.AnyType): boolean;
+  hasSchema(schema: Type.Entity): boolean;
 
   /**
    * Registers the provided schema(s).
    *
-   * @returns The persisted type entities. When passed `Type.AnyObjectType` /
-   * `Type.AnyRelationType` inputs, the return type preserves the entity kind
+   * @returns The persisted type entities. When passed `Type.ObjectEntity` /
+   * `Type.RelationEntity` inputs, the return type preserves the entity kind
    * (so callers can chain into `Obj.make` / `Relation.make` without casts).
    *
    * The behavior of this method depends on the state of the database.
@@ -92,7 +92,7 @@ export interface SchemaRegistry {
    * If a different schema with the same name and version exists, the method throws an error.
    * If no schema with the same name and version exists, a new schema will be inserted based on semantic versioning rules.
    */
-  register<T extends Type.AnyType>(input: T[]): Promise<T[]>;
+  register<T extends Type.Entity>(input: T[]): Promise<T[]>;
   register(input: RegisterSchemaInput[]): Promise<Type.Type[]>;
 
   query<Q extends Types.NoExcessProperties<Query, Q>>(query?: Q & Query): QueryResult.QueryResult<Type.Type>;

@@ -22,9 +22,9 @@ export type GameVariant = {
   /** Optional Phosphor icon name (e.g. 'ph--shield-chevron--regular'). */
   icon?: string;
   /** Schema of the variant state ECHO object referenced by `Game.variant`. */
-  variantSchema: Schema.Schema.AnyNoContext | Type.AnyType;
+  variantSchema: Schema.Schema.AnyNoContext | Type.Entity;
   /** Optional input schema rendered as a form after the user picks the variant. */
-  inputSchema?: Schema.Schema.AnyNoContext | Type.AnyType;
+  inputSchema?: Schema.Schema.AnyNoContext | Type.Entity;
   /** Roles a player may take in this variant (e.g. ['white', 'black']). */
   roles: readonly string[];
   /**

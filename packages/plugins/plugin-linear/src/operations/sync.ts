@@ -99,7 +99,7 @@ const fkFor = (id: string) => ({ source: LINEAR_SOURCE, id });
  * Generic foreign-key lookup. Schema is forwarded to `Filter.foreignKeys`
  * untyped — the caller supplies the result type via the explicit `T` parameter.
  */
-const findByForeignId = <T>(schema: Schema.Schema<any, any> | Type.AnyType, id: string) =>
+const findByForeignId = <T>(schema: Schema.Schema<any, any> | Type.Entity, id: string) =>
   Effect.gen(function* () {
     const results = yield* Database.runQuery(Query.select(Filter.foreignKeys(schema as never, [fkFor(id)])));
     return results.length > 0 ? (results[0] as T) : undefined;

@@ -20,24 +20,24 @@ import { SchemaRegistryPreparedQueryImpl } from './schema-registry-prepared-quer
 const SYSTEM_SCHEMA = ['org.dxos.type.schema'];
 
 /**
- * Registry of `Type.AnyType` schemas.
+ * Registry of `Type.Entity` schemas.
  *
  * Keyed internally by the schema's URI (today always a DXN). Maintains multiple
  * versions per typename for backwards lookup via `getSchemaByDXN`.
  */
 export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
   /** Keyed by URI (DXN today, possibly EchoURI in future). */
-  private readonly _registry = new Map<URI.URI, Type.AnyType>();
+  private readonly _registry = new Map<URI.URI, Type.Entity>();
   /** Secondary index by typename for `getSchemaByDXN` fallback (no-version lookups). */
-  private readonly _byTypename = new Map<string, Type.AnyType[]>();
+  private readonly _byTypename = new Map<string, Type.Entity[]>();
   /** Emitted when schemas are registered. */
   readonly schemaChanges = new Event();
 
-  constructor(schemas: Type.AnyType[] = [Type.Type]) {
+  constructor(schemas: Type.Entity[] = [Type.Type]) {
     schemas.forEach((schema) => this._add(schema));
   }
 
-  get schemas(): Type.AnyType[] {
+  get schemas(): Type.Entity[] {
     return Array.from(this._registry.values());
   }
 
@@ -45,9 +45,9 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
     input
       // Accept any ECHO type entity (object/relation/type-kind) or raw Effect Schema.
       .filter(
-        (schema): schema is Type.AnyType =>
-          Type.isObjectSchema(schema as any) ||
-          Type.isRelationSchema(schema as any) ||
+        (schema): schema is Type.Entity =>
+          Type.isObject(schema as any) ||
+          Type.isRelation(schema as any) ||
           Type.isTypeKindSchema(schema as any) ||
           Schema.isSchema(schema),
       )
@@ -59,11 +59,11 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
     return [];
   }
 
-  private _add(schema: Type.AnyType): void {
+  private _add(schema: Type.Entity): void {
     const uri =
       (Schema.isSchema(schema)
         ? internal.getSchemaURI(schema as any)
-        : Type.getURI(schema as Type.AnyType)) ?? raise(new TypeError('Schema has no URI'));
+        : Type.getURI(schema as Type.Entity)) ?? raise(new TypeError('Schema has no URI'));
     if (this._registry.has(uri)) {
       const typename = Type.getTypename(schema);
       const version = Type.getVersion(schema);
@@ -73,7 +73,7 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
 
     const typename = Type.getTypename(schema) ?? raise(new TypeError('Schema has no typename'));
     invariant(typename, 'Not a valid ECHO schema');
-    const versions = defaultMap(this._byTypename, typename, () => [] as Type.AnyType[]);
+    const versions = defaultMap(this._byTypename, typename, () => [] as Type.Entity[]);
     versions.push(schema);
   }
 
@@ -107,7 +107,7 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
   }
 
   // TODO(wittjosiah): Not a part of SchemaRegistry interface, remove?
-  hasSchema(schema: Type.AnyType): boolean {
+  hasSchema(schema: Type.Entity): boolean {
     const uri = Type.getURI(schema);
     if (!uri) {
       return false;
@@ -116,7 +116,7 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
   }
 
   // TODO(wittjosiah): Not a part of SchemaRegistry interface, remove?
-  getSchemaByDXN(dxn: DXN.DXN): Type.AnyType | undefined {
+  getSchemaByDXN(dxn: DXN.DXN): Type.Entity | undefined {
     // If the DXN has a version, look up directly by URI.
     if (DXN.getVersion(dxn)) {
       return this._registry.get(dxn);
@@ -132,15 +132,15 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
    * @deprecated Use getSchemaByDXN.
    */
   // TODO(wittjosiah): Remove.
-  getSchema(typename: string): Type.AnyType | undefined {
+  getSchema(typename: string): Type.Entity | undefined {
     return this._byTypename.get(typename)?.[0];
   }
 }
 
-const getSortKey = (schema: Type.AnyType) =>
+const getSortKey = (schema: Type.Entity) =>
   compositeKey(Type.getTypename(schema), Type.getVersion(schema), String(Type.getURI(schema)));
 
-const filterOrderResults = (schemas: Type.AnyType[], query: SchemaRegistry.Query) => {
+const filterOrderResults = (schemas: Type.Entity[], query: SchemaRegistry.Query) => {
   const filtered = schemas
     .filter((schema) => {
       const typename = Type.getTypename(schema);

@@ -7,7 +7,7 @@ import { type Entity, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { Employer, HasConnection, Message, Organization, Person } from '@dxos/types';
 
-export const testTypes: Type.AnyType[] = [
+export const testTypes: Type.Entity[] = [
   Organization.Organization,
   Person.Person,
   Employer.Employer,
@@ -106,7 +106,7 @@ export const addTestData = async (space: Space): Promise<void> => {
   for (const [typename, objects] of Object.entries(testObjects)) {
     const schema = space.internal.db.graph.schemaRegistry.getSchema(typename);
     invariant(schema, `Schema not found: ${typename}`);
-    invariant(Type.isObjectSchema(schema), `Schema is not an object schema: ${typename}`);
+    invariant(Type.isObject(schema), `Schema is not an object schema: ${typename}`);
     for (const { id, ...data } of objects) {
       const object = space.internal.db.add(Obj.make(schema, data));
       objectMap.set(id, object);
@@ -116,7 +116,7 @@ export const addTestData = async (space: Space): Promise<void> => {
   for (const [typename, relationships] of Object.entries(testRelationships)) {
     const schema = space.internal.db.graph.schemaRegistry.getSchema(typename);
     invariant(schema, `Schema not found: ${typename}`);
-    invariant(Type.isRelationSchema(schema), `Schema is not a relation schema: ${typename}`);
+    invariant(Type.isRelation(schema), `Schema is not a relation schema: ${typename}`);
 
     for (const { source, target, ...data } of relationships) {
       const sourceObject = objectMap.get(source);

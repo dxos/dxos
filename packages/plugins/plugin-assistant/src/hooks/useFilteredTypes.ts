@@ -10,8 +10,8 @@ import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/
 
 // TODO(burdon): Pass in filter.
 // TODO(wittjosiah): Factor out.
-export const useFilteredTypes = (db?: Database.Database): Type.AnyType[] => {
-  const [types, setTypes] = useState<Type.AnyType[]>([]);
+export const useFilteredTypes = (db?: Database.Database): Type.Entity[] => {
+  const [types, setTypes] = useState<Type.Entity[]>([]);
   useEffect(() => {
     if (!db) {
       return;

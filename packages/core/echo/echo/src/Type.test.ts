@@ -15,10 +15,10 @@ import * as Type from './Type';
 describe('Type', () => {
   describe('Obj.Unknown schema', () => {
     test('has SchemaKindId for schema type checking', ({ expect }) => {
-      // Type.isObjectSchema uses SchemaKindId to check if a schema is an object schema.
-      expect(Type.isObjectSchema(Obj.Unknown)).toBe(true);
-      expect(Type.isObjectSchema(TestSchema.Person)).toBe(true);
-      expect(Type.isObjectSchema(Relation.Unknown)).toBe(false);
+      // Type.isObject uses SchemaKindId to check if a schema is an object schema.
+      expect(Type.isObject(Obj.Unknown)).toBe(true);
+      expect(Type.isObject(TestSchema.Person)).toBe(true);
+      expect(Type.isObject(Relation.Unknown)).toBe(false);
     });
 
     test('Schema.is validates structural compatibility only', ({ expect }) => {
@@ -32,10 +32,10 @@ describe('Type', () => {
 
   describe('Relation.Unknown schema', () => {
     test('has SchemaKindId for schema type checking', ({ expect }) => {
-      // Type.isRelationSchema uses SchemaKindId to check if a value is a relation type entity.
-      expect(Type.isRelationSchema(Relation.Unknown)).toBe(true);
-      expect(Type.isRelationSchema(TestSchema.HasManager)).toBe(true);
-      expect(Type.isRelationSchema(Obj.Unknown)).toBe(false);
+      // Type.isRelation uses SchemaKindId to check if a value is a relation type entity.
+      expect(Type.isRelation(Relation.Unknown)).toBe(true);
+      expect(Type.isRelation(TestSchema.HasManager)).toBe(true);
+      expect(Type.isRelation(Obj.Unknown)).toBe(false);
     });
 
     test('Schema.is validates structural compatibility only', ({ expect }) => {
@@ -57,8 +57,8 @@ describe('Type', () => {
       // The Type.Type entity itself is an in-memory object (KindId=Object) that
       // *declares* a type-kind schema (SchemaKindId=Type).
       expect(Type.isTypeKindSchema(Type.Type)).toBe(true);
-      expect(Type.isObjectSchema(Type.Type)).toBe(false);
-      expect(Type.isRelationSchema(Type.Type)).toBe(false);
+      expect(Type.isObject(Type.Type)).toBe(false);
+      expect(Type.isRelation(Type.Type)).toBe(false);
     });
 
     test('static object/relation types are not type-kind', ({ expect }) => {
@@ -185,12 +185,12 @@ describe('Type', () => {
   describe('static type factories', () => {
     test('Type.object stamps schema-kind=object', ({ expect }) => {
       expect((TestSchema.Person as any)['~@dxos/echo/SchemaKind']).toBe(Entity.Kind.Object);
-      expect(Type.isObjectSchema(TestSchema.Person)).toBe(true);
+      expect(Type.isObject(TestSchema.Person)).toBe(true);
     });
 
     test('Type.relation stamps schema-kind=relation', ({ expect }) => {
       expect((TestSchema.HasManager as any)['~@dxos/echo/SchemaKind']).toBe(Entity.Kind.Relation);
-      expect(Type.isRelationSchema(TestSchema.HasManager)).toBe(true);
+      expect(Type.isRelation(TestSchema.HasManager)).toBe(true);
     });
 
     test('Type.getURI returns the DXN for static types', ({ expect }) => {

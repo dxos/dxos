@@ -63,7 +63,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
       });
     }, [graph, attendableId]);
 
-    const objectSchema = schema && Type.isObjectSchema(schema) ? schema : undefined;
+    const objectSchema = schema && Type.isObject(schema) ? schema : undefined;
     const addRow = useAddRow({ db, schema: objectSchema });
 
     const handleDeleteRows = useCallback(
@@ -114,9 +114,9 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
     }, []);
 
     const handleCreate = useCallback(
-      (schema: Type.AnyType, values: any) => {
+      (schema: Type.Entity, values: any) => {
         invariant(db);
-        invariant(Type.isObjectSchema(schema));
+        invariant(Type.isObject(schema));
         return db.add(Obj.make(schema, values));
       },
       [db],
@@ -194,7 +194,7 @@ export default TableArticle;
 const useQueryWorkaround = (
   db: Database.Database | undefined,
   ast: QueryAST.Query | undefined,
-  schema: Type.AnyType | undefined,
+  schema: Type.Entity | undefined,
 ) => {
   const baseFilter = useSchemaFilter(schema);
   // Extract order and tag filter from query AST and apply them to the base filter query.

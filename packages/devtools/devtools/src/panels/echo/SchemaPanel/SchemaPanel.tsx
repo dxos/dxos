@@ -24,7 +24,7 @@ const textFilter = (text?: string) => {
 
   // TODO(burdon): Structured query (e.g., "type:Text").
   const matcher = new RegExp(text, 'i');
-  return (item: Type.AnyType) => {
+  return (item: Type.Entity) => {
     const schema = Type.getSchema(item);
     let match = false;
     match ||= !!Type.getURI(item)?.toString().match(matcher);
@@ -34,8 +34,8 @@ const textFilter = (text?: string) => {
   };
 };
 
-const useSchemaQuery = (space?: Space): Type.AnyType[] => {
-  const [schema, setSchema] = useState<Type.AnyType[]>([]);
+const useSchemaQuery = (space?: Space): Type.Entity[] => {
+  const [schema, setSchema] = useState<Type.Entity[]>([]);
   useEffect(() => {
     if (!space) {
       return;
@@ -59,7 +59,7 @@ export const SchemaPanel = (props: { space?: Space }) => {
   const schema = useSchemaQuery(space);
   const [filter, setFilter] = useState('');
   // NOTE: Always call setSelected with a function: setSelected(() => item) because schema is a class constructor.
-  const [selected, setSelected] = useState<Type.AnyType>();
+  const [selected, setSelected] = useState<Type.Entity>();
 
   const onNavigate = (dxn: URI.URI) => {
     const selectedSchema = schema.find((item) => Type.getURI(item) === dxn);
@@ -77,7 +77,7 @@ export const SchemaPanel = (props: { space?: Space }) => {
     }
   };
 
-  const itemSelect = (item: Type.AnyType) => {
+  const itemSelect = (item: Type.Entity) => {
     setSelected(() => item);
   };
 

@@ -19,7 +19,7 @@ const handler: Operation.WithHandler<typeof TableOperation.AddRow> = TableOperat
       invariant(typename);
       const schema = yield* Effect.promise(() => db.schemaRegistry.query({ typename }).firstOrUndefined());
       invariant(schema);
-      const object = Obj.make(Type.expectObject(schema), data);
+      const object = Obj.make(Type.assertObject(schema), data);
       yield* Operation.invoke(SpaceOperation.AddObject, { target: db, object, hidden: true });
     }),
   ),

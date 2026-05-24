@@ -80,7 +80,7 @@ export default Capability.makeModule(
 );
 
 type EntityExtractionEnricherFactoryOptions = {
-  contextTypes: (Schema.Schema.AnyNoContext | Type.AnyObjectType | Type.AnyRelationType)[];
+  contextTypes: (Schema.Schema.AnyNoContext | Type.ObjectEntity | Type.RelationEntity)[];
   space: Space;
 };
 

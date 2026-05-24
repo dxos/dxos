@@ -107,7 +107,7 @@ export const id = (...ids: ObjectId[]): Any => {
  * `Type.relation`), a `Schema.Union` of such entities (for filtering across a
  * union of ECHO types), or a non-qualified typename string.
  */
-export function type<T extends TypeNs.AnyType>(
+export function type<T extends TypeNs.Entity>(
   type: T,
   props?: Props<TypeNs.InstanceType<T>>,
 ): Filter<TypeNs.InstanceType<T>>;
@@ -124,7 +124,7 @@ export function type<S extends Schema.Union<readonly Schema.Schema.AnyNoContext[
 ): Filter<Schema.Schema.Type<S>>;
 export function type(schema: string, props?: Props<unknown>): Filter<any>;
 export function type(
-  input: TypeNs.AnyType | Schema.Schema.AnyNoContext | string,
+  input: TypeNs.Entity | Schema.Schema.AnyNoContext | string,
   props?: Props<unknown>,
 ): Filter<unknown> {
   if (Schema.isSchema(input) && SchemaAST.isUnion(input.ast)) {
@@ -246,10 +246,10 @@ export const text = (
 /**
  * Filter by foreign keys.
  */
-export const foreignKeys = <S extends TypeNs.AnyType | string>(
+export const foreignKeys = <S extends TypeNs.Entity | string>(
   schema: S,
   keys: ForeignKey[],
-): Filter<S extends TypeNs.AnyType ? TypeNs.InstanceType<S> : unknown> => {
+): Filter<S extends TypeNs.Entity ? TypeNs.InstanceType<S> : unknown> => {
   const uri = internal.getTypeURIFromSpecifier(schema);
   return new FilterClass({
     type: 'object',

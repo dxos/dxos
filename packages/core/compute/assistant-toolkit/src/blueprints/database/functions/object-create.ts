@@ -19,7 +19,7 @@ export default ObjectCreate.pipe(
       const schema = yield* Effect.promise(() =>
         db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).first(),
       );
-      invariant(Type.isObjectSchema(schema), 'Schema is not an object schema');
+      invariant(Type.isObject(schema), 'Schema is not an object schema');
 
       const object = db.add(
         Obj.make(

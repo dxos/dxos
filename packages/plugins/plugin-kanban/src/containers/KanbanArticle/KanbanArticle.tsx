@@ -66,7 +66,7 @@ const ViewKanbanArticle = ({ role, subject: object }: KanbanArticleProps) => {
   const handleCardAdd = useCallback(
     (columnValue: string | undefined) => {
       if (db && cardSchema && columnFieldPath) {
-        const card = Obj.make(Type.expectObject(cardSchema), {
+        const card = Obj.make(Type.assertObject(cardSchema), {
           [columnFieldPath]: columnValue,
         });
         db.add(card);

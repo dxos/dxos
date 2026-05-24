@@ -112,7 +112,7 @@ type RoastLog = Type.InstanceType<typeof RoastLog>;
 const makeRoastLog = (props: Obj.MakeProps<typeof RoastLog>): RoastLog => Obj.make(RoastLog, props);
 
 // All ECHO types we add to the space. Must be registered on any client that hydrates the snapshot.
-const SCHEMAS: Type.AnyType[] = [
+const SCHEMAS: Type.Entity[] = [
   Collection.Collection,
   Feed.Feed,
   Markdown.Document,
@@ -1110,7 +1110,7 @@ const addRoastLogCollection = async (
   // Register creates the PersistentType ECHO object in the space so the runtime can
   // discover and render the schema without it being compiled into the app. Pass the
   // explicit object form so `name` is stored on the PersistentType — passing a
-  // Type.AnyType directly does not auto-derive a display name.
+  // Type.Entity directly does not auto-derive a display name.
   await space.db.schemaRegistry.register([
     {
       typename,

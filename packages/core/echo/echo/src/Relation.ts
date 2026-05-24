@@ -364,8 +364,8 @@ export const getTypeURI: (obj: internal.AnyProperties) => URI.URI | undefined = 
  * Get the schema of the relation.
  * Returns the branded ECHO schema used to create the relation.
  */
-export const getType = (rel: unknown | undefined): Type.AnyRelationType | undefined =>
-  internal.getType(rel) as Type.AnyRelationType | undefined;
+export const getType = (rel: unknown | undefined): Type.RelationEntity | undefined =>
+  internal.getType(rel) as Type.RelationEntity | undefined;
 
 /**
  * @returns The typename of the relation's type.

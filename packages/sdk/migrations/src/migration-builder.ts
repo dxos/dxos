@@ -69,7 +69,7 @@ export class MigrationBuilder {
     id: string,
     migrate: (
       objectStructure: ObjectStructure,
-    ) => MaybePromise<{ schema: Type.AnyType; props: any }>,
+    ) => MaybePromise<{ schema: Type.Entity; props: any }>,
   ): Promise<void> {
     const objectStructure = await this.findObject(id);
     if (!objectStructure) {
@@ -107,7 +107,7 @@ export class MigrationBuilder {
     this._addHandleToFlushList(newHandle.documentId!);
   }
 
-  async addObject(schema: Type.AnyType, props: any): Promise<string> {
+  async addObject(schema: Type.Entity, props: any): Promise<string> {
     const resolved = Type.getSchema(schema);
     const core = await this._createObject({ schema: resolved, props });
     return core.id;

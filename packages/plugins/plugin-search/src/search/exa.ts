@@ -14,7 +14,7 @@ import { ReferenceAnnotationId } from '@dxos/echo/internal';
 import { mapAst } from '@dxos/effect';
 import { deepMapValues, trim } from '@dxos/util';
 
-export type SearchOptions<S extends Schema.Schema.AnyNoContext | Type.AnyType> = {
+export type SearchOptions<S extends Schema.Schema.AnyNoContext | Type.Entity> = {
   query?: string;
   // TODO(dmaretskyi): How can we pass this through.
   context?: string;
@@ -32,7 +32,7 @@ export type SearchResult<T = unknown> = {
 };
 
 /** @deprecated Use MixedStreamParser */
-export const search = async <S extends Schema.Schema.AnyNoContext | Type.AnyType>(
+export const search = async <S extends Schema.Schema.AnyNoContext | Type.Entity>(
   options: SearchOptions<S>,
 ): Promise<SearchResult<Entity.Unknown>> => {
   throw new Error('Not implemented');
@@ -181,7 +181,7 @@ const DATA_EXTRACTION_INSTRUCTIONS = trim`
 //   return terms;
 // };
 
-const sanitizeObjects = (entries: { data: any; schema: Type.AnyObjectType }[]) => {
+const sanitizeObjects = (entries: { data: any; schema: Type.ObjectEntity }[]) => {
   const idMap = new Map<string, string>();
 
   return entries

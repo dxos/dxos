@@ -15,7 +15,7 @@ export const queryStringToMatch = (queryString?: string): RegExp | undefined => 
 };
 
 // TODO(burdon): Type name registry linked to schema?
-const getIcon = (type: Type.AnyType | undefined): string | undefined => {
+const getIcon = (type: Type.Entity | undefined): string | undefined => {
   if (!type) {
     return undefined;
   }

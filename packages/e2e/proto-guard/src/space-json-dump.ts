@@ -109,7 +109,7 @@ export class SpacesDumper {
     return data;
   }
 
-  static getExpectedObjectsOfType = (expected: SpacesDump, spaceId: SpaceId, schema: Type.AnyType) => {
+  static getExpectedObjectsOfType = (expected: SpacesDump, spaceId: SpaceId, schema: Type.Entity) => {
     const objects = expected[spaceId] ?? [];
     return Record.values(objects).filter((obj) => obj['@type'] === Type.getURI(schema)?.toString());
   };

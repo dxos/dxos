@@ -115,7 +115,7 @@ describe('Generator', () => {
     const { db } = await builder.createDatabase();
     const [type] = await db.schemaRegistry.register([Message.Message]);
     const schema = Type.getSchema(type);
-    invariant(Type.isObjectSchema(schema), 'expected object schema');
+    invariant(Type.isObject(schema), 'expected object schema');
     const objectGenerator = createGenerator(generator, schema, { force: true });
     const object = objectGenerator.createObject();
     expect(object).to.exist;

@@ -58,9 +58,9 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
     // values)` alone (e.g. types with a required ref to a backing object) can
     // declare a `FactoryAnnotation` to take over construction.
     const handleCreate = useCallback(
-      (schema: Type.AnyType, values: any): Obj.Unknown => {
+      (schema: Type.Entity, values: any): Obj.Unknown => {
         invariant(db);
-        invariant(Type.isObjectSchema(schema));
+        invariant(Type.isObject(schema));
         const factory = Option.getOrUndefined(FactoryAnnotation.get(schema));
         const newObject = factory ? (factory(values) as Obj.Unknown) : Obj.make(schema, values);
         return db.add(newObject) as Obj.Unknown;

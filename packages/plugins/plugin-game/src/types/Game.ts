@@ -77,8 +77,8 @@ export type Game = Type.InstanceType<typeof Game>;
  */
 export type GameRef<_V> = Ref.Ref<Game>;
 
-export const GameRef = <S extends Schema.Schema.AnyNoContext | Type.AnyType>(_variantSchema: S) =>
-  Ref.Ref(Game) as Schema.Schema<GameRef<S extends Type.AnyType ? Type.InstanceType<S> : S extends Schema.Schema.AnyNoContext ? Schema.Schema.Type<S> : never>, any, never>;
+export const GameRef = <S extends Schema.Schema.AnyNoContext | Type.Entity>(_variantSchema: S) =>
+  Ref.Ref(Game) as Schema.Schema<GameRef<S extends Type.Entity ? Type.InstanceType<S> : S extends Schema.Schema.AnyNoContext ? Schema.Schema.Type<S> : never>, any, never>;
 
 /**
  * Build a base `Game` object referencing the given variant-state ECHO object.

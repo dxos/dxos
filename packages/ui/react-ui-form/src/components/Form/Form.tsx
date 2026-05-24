@@ -39,17 +39,17 @@ import {
 // TODO(burdon): Move styles to form.ts (as with ui-theme).
 
 // TODO(burdon): Reconcile with @dxos/echo.
-export type ExcludeId<S> = S extends Type.AnyType
+export type ExcludeId<S> = S extends Type.Entity
   ? Omit<Type.InstanceType<S>, 'id'>
   : S extends Schema.Schema.AnyNoContext
     ? Omit<Schema.Schema.Type<S>, 'id'>
     : never;
 
-export type SchemaOrType = Schema.Schema.AnyNoContext | Type.AnyType;
+export type SchemaOrType = Schema.Schema.AnyNoContext | Type.Entity;
 
 export const toSchema = (schemaOrType: SchemaOrType): Schema.Schema.AnyNoContext =>
   (schemaOrType as any)[SchemaKindId] != null
-    ? (Type.getSchema(schemaOrType as Type.AnyType) as Schema.Schema.AnyNoContext)
+    ? (Type.getSchema(schemaOrType as Type.Entity) as Schema.Schema.AnyNoContext)
     : (schemaOrType as Schema.Schema.AnyNoContext);
 
 // TODO(burdon): Move to @dxos/schema (re-export here).

@@ -69,7 +69,7 @@ export const useTestTableModel = (): TestTableModel => {
     tableRef.current?.update?.();
   }, []);
 
-  const objectSchema = schema && Type.isObjectSchema(schema) ? schema : undefined;
+  const objectSchema = schema && Type.isObject(schema) ? schema : undefined;
   const addRow = useAddRow({ db, schema: objectSchema });
 
   const handleDeleteRows = useCallback(

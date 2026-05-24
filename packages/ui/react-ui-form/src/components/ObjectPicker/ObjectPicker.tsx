@@ -27,7 +27,7 @@ export type ObjectPickerContentProps = ThemedClassName<{
   selectedIds?: string[];
   createOptionLabel?: [string, { ns: string }];
   createOptionIcon?: string;
-  createSchema?: Schema.Schema.AnyNoContext | Type.AnyType;
+  createSchema?: Schema.Schema.AnyNoContext | Type.Entity;
   createInitialValuePath?: string;
   createFieldMap?: FormFieldMap;
   /**

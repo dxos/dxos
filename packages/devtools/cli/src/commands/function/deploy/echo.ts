@@ -17,7 +17,7 @@ import { incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
 import { Text } from '@dxos/schema';
 
-export const DATA_TYPES: Type.AnyType[] = [
+export const DATA_TYPES: Type.Entity[] = [
   Operation.PersistentOperation,
   Script.Script,
   Collection.Collection,

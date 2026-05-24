@@ -248,16 +248,16 @@ export const makeFromDatabase = async ({
     schema && schema.jsonSchema;
   invariant(jsonSchema, `Schema not found: ${typename}`);
   // For `Type.Type` entities (stored meta-schemas), defer the object-ness check to the
-  // rebuilt Effect Schema below — `Type.isObjectSchema` returns false for them since
+  // rebuilt Effect Schema below — `Type.isObject` returns false for them since
   // their entity-kind brand is `Type`, not `Object`.
   const effectSchema = schema && Type.getSchema(schema);
   invariant(
-    effectSchema && Type.isObjectSchema(effectSchema),
+    effectSchema && Type.isObject(effectSchema),
     `Schema is not an object schema: ${typename}`,
   );
 
   Array.from({ length: createInitial }).forEach(() => {
-    db.add(Obj.make(Type.expectObject(schema!), {}));
+    db.add(Obj.make(Type.assertObject(schema!), {}));
   });
 
   return {

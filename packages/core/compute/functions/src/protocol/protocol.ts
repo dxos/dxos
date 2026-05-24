@@ -43,7 +43,7 @@ export interface FunctionWrappingOptions {
   /**
    * Additional types to register with the database.
    */
-  types?: Type.AnyType[];
+  types?: Type.Entity[];
 
   /**
    * Toolkits to make available via the `OpaqueToolkitProvider`.
@@ -109,7 +109,7 @@ export const wrapFunctionHandler = (
         const types = [...(opts.types ?? []), ...(func.types ?? [])];
         if (types.length > 0) {
           invariant(funcContext.db, 'Database is required for functions with types');
-          await funcContext.db.graph.schemaRegistry.register(types as Type.AnyType[]);
+          await funcContext.db.graph.schemaRegistry.register(types as Type.Entity[]);
         }
 
         const dataWithDecodedRefs =

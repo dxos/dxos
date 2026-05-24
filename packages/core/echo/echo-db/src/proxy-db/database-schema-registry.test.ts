@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 import { EchoTestBuilder } from '../testing';
 
 // Helper: introspect Type.Type properties via its rebuilt Effect Schema.
-const getSchemaProperties = (type: Type.AnyType): SchemaAST.PropertySignature[] => {
+const getSchemaProperties = (type: Type.Entity): SchemaAST.PropertySignature[] => {
   const ast = Type.getSchema(type).ast;
   invariant(SchemaAST.isTypeLiteral(ast));
   return [...ast.propertySignatures].filter((p) => p.name !== 'id');
@@ -165,7 +165,7 @@ describe('schema registry', () => {
     const queryResult = registry.query({ location: ['database', 'runtime'] });
 
     let updateCount = 0;
-    let latestResults: Type.AnyType[] = [];
+    let latestResults: Type.Entity[] = [];
     const unsubscribe = queryResult.subscribe(() => {
       updateCount++;
       latestResults = queryResult.results;

@@ -27,7 +27,7 @@ const testBuilder = new TestBuilder();
 
 type PeersInSpaceProps = {
   count?: number;
-  types?: Type.AnyObjectType[];
+  types?: Type.ObjectEntity[];
   onCreateSpace?: (props: { space: Space }) => MaybePromise<void>;
 };
 

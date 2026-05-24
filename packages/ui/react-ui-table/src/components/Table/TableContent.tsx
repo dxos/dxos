@@ -44,7 +44,7 @@ const emptyCellUpdateAtom = Atom.make<number>(0);
 const TABLE_CONTENT_NAME = 'Table.Content';
 
 export type TableContentProps = {
-  schema?: Type.AnyType;
+  schema?: Type.Entity;
   model?: TableModel;
   presentation?: TablePresentation;
   // TODO(burdon): Factor out attention.

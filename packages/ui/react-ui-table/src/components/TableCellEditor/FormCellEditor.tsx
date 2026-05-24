@@ -21,9 +21,9 @@ import { narrowSchema } from '../../util';
 
 const createOptionLabel: Label = ['create-new-object.label', { ns: translationKey }];
 
-export type OnCreateHandler = (schema: Type.AnyType, values: any) => Parameters<typeof Ref.make>[0];
+export type OnCreateHandler = (schema: Type.Entity, values: any) => Parameters<typeof Ref.make>[0];
 
-export type FormCellEditorProps<T extends Type.AnyType = Type.AnyType> = {
+export type FormCellEditorProps<T extends Type.Entity = Type.Entity> = {
   __gridScope: any;
   schema?: T;
   model?: TableModel;
@@ -33,7 +33,7 @@ export type FormCellEditorProps<T extends Type.AnyType = Type.AnyType> = {
   onCreate?: OnCreateHandler;
 } & Omit<FormRootProps<any>, 'values' | 'schema' | 'onCreate'>;
 
-export const FormCellEditor = <T extends Type.AnyType = Type.AnyType>({
+export const FormCellEditor = <T extends Type.Entity = Type.Entity>({
   __gridScope,
   schema,
   model,
