@@ -271,9 +271,9 @@ const createSchemaNode = ({
     : undefined;
   const { label, nodeId } = Match.value(schema).pipe(
     Match.when(Type.isMutable, (mutableSchema) => {
-      const snapshot = get(AtomObj.make(mutableSchema as unknown as Obj.Unknown));
+      const snapshot = get(AtomObj.make(mutableSchema));
       return {
-        label: (snapshot as any).name || ['object-name.placeholder', { ns: Type.Type.typename }],
+        label: (snapshot as { name?: string }).name || ['object-name.placeholder', { ns: Type.Type.typename }],
         nodeId: typename,
       };
     }),

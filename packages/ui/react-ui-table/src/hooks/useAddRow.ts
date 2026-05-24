@@ -23,9 +23,7 @@ export const useAddRow = ({ db, schema }: UseAddRowProps) => {
     (data?: any): InsertRowResult => {
       if (db && schema) {
         try {
-          const obj = Type.isType(schema)
-            ? Obj.make(schema as unknown as Type.AnyObjectType, data ?? {})
-            : Obj.make(schema, data ?? {});
+          const obj = Type.isType(schema) ? Obj.make(Type.expectObject(schema), data ?? {}) : Obj.make(schema, data ?? {});
           db.add(obj);
           return 'final';
         } catch (error) {

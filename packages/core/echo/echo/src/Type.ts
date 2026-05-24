@@ -300,6 +300,29 @@ export const isTypeKindSchema = (schema: AnyType | Schema.Schema.AnyNoContext): 
 };
 
 /**
+ * Narrow a `Type.AnyType` (e.g. one returned from `schemaRegistry.query(...)`)
+ * to `AnyObjectType`, throwing if it describes a relation or the type-kind
+ * meta-schema. Use at call sites that need to pass the value to `Obj.make`,
+ * `Filter.type`, or other object-only APIs.
+ */
+export const expectObject = (schema: AnyType | Schema.Schema.AnyNoContext): AnyObjectType => {
+  invariant(isObjectSchema(schema), 'Expected an object-kind Type entity.');
+  return schema;
+};
+
+/** Narrow a `Type.AnyType` to `AnyRelationType`, throwing otherwise. */
+export const expectRelation = (schema: AnyType | Schema.Schema.AnyNoContext): AnyRelationType => {
+  invariant(isRelationSchema(schema), 'Expected a relation-kind Type entity.');
+  return schema;
+};
+
+/** Narrow a `Type.AnyType` to the `Type.Type` meta-schema, throwing otherwise. */
+export const expectTypeKind = (schema: AnyType | Schema.Schema.AnyNoContext): Type => {
+  invariant(isTypeKindSchema(schema), 'Expected a type-kind Type entity.');
+  return schema;
+};
+
+/**
  * Type that represents any Ref schema (with unknown target type).
  * This is a schema type, not an instance type.
  */
