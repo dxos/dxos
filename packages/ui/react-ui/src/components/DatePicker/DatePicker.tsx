@@ -208,9 +208,12 @@ const carryTime = (oldDate: Date | undefined, newDate: Date | undefined): Date |
   return out;
 };
 
-const DatePickerCalendar = (
-  props: Omit<ComponentPropsWithoutRef<typeof Calendar>, 'mode' | 'selected' | 'onSelect'>,
-) => {
+type DatePickerCalendarProps = {
+  classNames?: ComponentPropsWithoutRef<typeof Calendar.Root>['classNames'];
+  slots?: ComponentPropsWithoutRef<typeof Calendar.Root>['slots'];
+};
+
+const DatePickerCalendar = (props: DatePickerCalendarProps) => {
   const { mode, value, setValue, withTime } = useDatePickerContext('DatePickerCalendar');
 
   const handleSelect = useCallback(
@@ -242,12 +245,12 @@ const DatePickerCalendar = (
 
   // Branch on mode so each Calendar render targets a single DayPickerProps union member.
   if (mode === 'single') {
-    return <Calendar {...props} mode='single' selected={value as Date | undefined} onSelect={handleSelect as (d: Date | undefined) => void} />;
+    return <Calendar.Root {...props} mode='single' selected={value as Date | undefined} onSelect={handleSelect as (date: Date | undefined) => void} />;
   }
   if (mode === 'range') {
-    return <Calendar {...props} mode='range' selected={value as DateRange | undefined} onSelect={handleSelect as (r: DateRange | undefined) => void} />;
+    return <Calendar.Root {...props} mode='range' selected={value as DateRange | undefined} onSelect={handleSelect as (range: DateRange | undefined) => void} />;
   }
-  return <Calendar {...props} mode='multiple' selected={value as Date[] | undefined} onSelect={handleSelect as (d: Date[] | undefined) => void} />;
+  return <Calendar.Root {...props} mode='multiple' selected={value as Date[] | undefined} onSelect={handleSelect as (dates: Date[] | undefined) => void} />;
 };
 DatePickerCalendar.displayName = 'DatePickerCalendar';
 

@@ -12,7 +12,7 @@ import { Icon } from '../Icon';
 import { DatePicker } from './DatePicker';
 
 const meta: Meta<typeof DatePicker.Root> = {
-  title: 'ui/react-ui-core/DatePicker',
+  title: 'ui/react-ui-core/components/DatePicker',
   decorators: [withTheme()],
   parameters: { layout: 'centered', translations },
 };

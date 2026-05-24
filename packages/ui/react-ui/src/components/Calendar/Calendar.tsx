@@ -5,10 +5,16 @@
 import React from 'react';
 import {
   DayPicker,
-  type DayPickerProps,
   type ClassNames,
   type CustomComponents,
+  type DayPickerProps,
+  type DayProps,
+  type FooterProps,
+  type MonthCaptionProps,
+  type NavProps,
 } from 'react-day-picker';
+
+import { type ClassNameValue } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
 
@@ -39,40 +45,44 @@ const themeSlots = [
   'footer',
 ] as const;
 
-export type CalendarProps = DayPickerProps;
+// Distributive `Omit` so the DayPicker discriminated union is preserved per variant.
+type DistributiveOmit<T, K extends keyof any> = T extends unknown ? Omit<T, K> : never;
 
-const CalendarRoot = ({ classNames: classNamesProp, components, ...props }: CalendarProps) => {
+export type CalendarRootProps = DistributiveOmit<DayPickerProps, 'classNames' | 'className'> & {
+  /** Class string applied to the calendar root (DXOS convention). */
+  classNames?: ClassNameValue;
+  /** Slot-level class overrides matching react-day-picker's `ClassNames` shape. Merged on top of theme defaults. */
+  slots?: Partial<ClassNames>;
+};
+
+const CalendarRoot = ({ classNames, slots, components, ...props }: CalendarRootProps) => {
   const { tx } = useThemeContext();
   const themed: Partial<ClassNames> = {};
   for (const slot of themeSlots) {
-    themed[slot] = tx(`calendar.${slot}`, {}, classNamesProp?.[slot]);
+    themed[slot] = tx(`calendar.${slot}`, {}, slots?.[slot]);
   }
   return (
     <DayPicker
       // Spread loses union narrowing inside the function body; restore the type at the DayPicker boundary.
       {...(props as DayPickerProps)}
-      classNames={themed}
+      className={tx('calendar.root', {}, classNames)}
+      classNames={{ ...themed, root: undefined }}
       components={{
-        MonthCaption: MonthCaptionDefault,
-        Nav: NavDefault,
+        MonthCaption: CalendarMonthCaption,
+        Nav: CalendarNav,
         ...(components ?? {}),
       }}
     />
   );
 };
-CalendarRoot.displayName = 'Calendar';
+CalendarRoot.displayName = 'Calendar.Root';
 
 //
-// Slot defaults exported on the namespace.
+// Slot defaults exposed on the namespace.
 // Consumers may pass these (or their own wrappers) via DayPicker's `components` prop.
 //
 
-type MonthCaptionProps = Parameters<typeof import('react-day-picker').MonthCaption>[0];
-type NavProps = Parameters<typeof import('react-day-picker').Nav>[0];
-type DayProps = Parameters<typeof import('react-day-picker').Day>[0];
-type FooterProps = Parameters<typeof import('react-day-picker').Footer>[0];
-
-const MonthCaptionDefault: CustomComponents['MonthCaption'] = ({
+const CalendarMonthCaption: CustomComponents['MonthCaption'] = ({
   calendarMonth,
   displayIndex: _displayIndex,
   ...rest
@@ -84,7 +94,7 @@ const MonthCaptionDefault: CustomComponents['MonthCaption'] = ({
   );
 };
 
-const NavDefault: CustomComponents['Nav'] = ({
+const CalendarNav: CustomComponents['Nav'] = ({
   onPreviousClick,
   onNextClick,
   previousMonth,
@@ -103,17 +113,18 @@ const NavDefault: CustomComponents['Nav'] = ({
   );
 };
 
-const FooterDefault: CustomComponents['Footer'] = ({ ...rest }: FooterProps) => <div {...rest} />;
+const CalendarFooter: CustomComponents['Footer'] = ({ ...rest }: FooterProps) => <div {...rest} />;
 
-const DayDefault: CustomComponents['Day'] = ({ day, modifiers: _modifiers, ...rest }: DayProps) => {
+const CalendarDay: CustomComponents['Day'] = ({ day, modifiers: _modifiers, ...rest }: DayProps) => {
   return <div {...rest}>{day.date.getDate()}</div>;
 };
 
-export const Calendar = Object.assign(CalendarRoot, {
-  Day: DayDefault,
-  MonthCaption: MonthCaptionDefault,
-  Nav: NavDefault,
-  Footer: FooterDefault,
-});
+export const Calendar = {
+  Root: CalendarRoot,
+  Day: CalendarDay,
+  MonthCaption: CalendarMonthCaption,
+  Nav: CalendarNav,
+  Footer: CalendarFooter,
+};
 
 export type { ClassNames as CalendarClassNames, DayPickerProps };
