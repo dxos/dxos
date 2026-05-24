@@ -47,8 +47,8 @@ export const SegmentArticle = ({ role, subject: segment }: SegmentArticleProps) 
 
   return (
     <Panel.Root role={role} className='dx-document'>
-      <Panel.Content asChild>
-        <Form.Root key={segment.id} schema={schema} values={segment} autoSave onSave={handleSave}>
+      <Panel.Content>
+        <Form.Root key={segment.id} schema={schema} defaultValues={segment} autoSave onSave={handleSave}>
           <Form.Viewport>
             <Form.Content>
               <Form.FieldSet />

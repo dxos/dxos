@@ -9,7 +9,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
-import { useObject } from '@dxos/react-client/echo';
+import { getSpace, useObject } from '@dxos/react-client/echo';
 import { Panel, Select, Toolbar, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
@@ -120,17 +120,39 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
   );
 
   const handleAddSegment = useCallback(() => {
-    const segment = Segment.makeDefault(newSegmentKind);
+    const space = getSpace(subject);
+    if (!space) {
+      return;
+    }
+    const segment = space.db.add(Segment.makeDefault(newSegmentKind));
     Trip.addSegment(subject, segment);
   }, [newSegmentKind, subject]);
 
   const KIND_OPTIONS: { value: Segment.Kind; label: string }[] = [
-    { value: 'flight', label: t('segment.flight.label') },
-    { value: 'train', label: t('segment.train.label') },
-    { value: 'boat', label: t('segment.boat.label') },
-    { value: 'road', label: t('segment.road.label') },
-    { value: 'accommodation', label: t('segment.accommodation.label') },
-    { value: 'activity', label: t('segment.activity.label') },
+    {
+      value: 'flight',
+      label: t('segment.flight.label'),
+    },
+    {
+      value: 'train',
+      label: t('segment.train.label'),
+    },
+    {
+      value: 'boat',
+      label: t('segment.boat.label'),
+    },
+    {
+      value: 'road',
+      label: t('segment.road.label'),
+    },
+    {
+      value: 'accommodation',
+      label: t('segment.accommodation.label'),
+    },
+    {
+      value: 'activity',
+      label: t('segment.activity.label'),
+    },
   ];
 
   const showCalendar = viewMode === 'stack';

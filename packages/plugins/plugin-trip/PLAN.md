@@ -1717,3 +1717,1451 @@ At the end of Task 11 `plugin-trip` is a buildable, lint-clean package with:
 - `TravelMessageExtractor` in plugin-inbox (email → Booking + Segments).
 - `TripCalendarSource` in plugin-inbox (calendar projection).
 - Segment edit form / Booking attachment operations.
+
+---
+
+# Phase 2 Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Ship the generic `MessageExtractor` contract in `plugin-inbox` and the heuristic `TravelMessageExtractor` impl in `plugin-trip` that converts United Airlines flight + Booking.com hotel confirmation emails into `Booking` + `Segment`s, attaches them to a Trip, and supports manual (per-message menu), agent (blueprint tool), and auto-on-arrival dispatch modes.
+
+**Architecture:** Two-package change. plugin-inbox owns the abstract contract (`MessageExtractor` capability, `ExtractedFrom` relation, `Mailbox.extractors` config, `ExtractMessage` operation) plus the UI / blueprint / ingestion wiring. plugin-trip contributes one `MessageExtractor` registration backed by pure per-provider parser functions. All three dispatch modes funnel through the single `ExtractMessage` operation handler.
+
+**Tech Stack:** Effect-TS Schema, `@dxos/echo`, `@dxos/echo-db/testing`, `@dxos/operation`, `@dxos/app-framework`, `@effect/vitest`, `@dxos/react-ui-menu` (for toolbar menu extension).
+
+---
+
+## File map — Phase 2
+
+### `packages/plugins/plugin-inbox/`
+
+| File                                             | Action | Purpose                                                                              |
+| ------------------------------------------------ | ------ | ------------------------------------------------------------------------------------ |
+| `src/types/ExtractedFrom.ts`                     | Create | Generic provenance relation (extracted obj → source Message).                        |
+| `src/types/Mailbox.ts`                           | Modify | Add optional `extractors` field (`{ enabled: string[]; threshold: number }`).        |
+| `src/types/index.ts`                             | Modify | Barrel-export `ExtractedFrom`.                                                       |
+| `src/capabilities/MessageExtractor.ts`           | Create | Capability declaration + `MatchResult` / `ExtractResult` / `ExtractCtx` types.       |
+| `src/capabilities/index.ts`                      | Modify | Re-export `MessageExtractor`.                                                        |
+| `src/types/InboxCapabilities.ts`                 | Modify | Add `MessageExtractor` capability key.                                               |
+| `src/types/InboxOperation.ts`                    | Modify | Add `ExtractMessage` operation definition.                                           |
+| `src/operations/extract-message.ts`              | Create | Operation handler — picks extractor, runs `extract`, persists output + ExtractedFrom |
+| `src/operations/index.ts`                        | Modify | Register `extract-message` in the lazy handler set.                                  |
+| `src/blueprints/inbox.ts`                        | Modify | Append `InboxOperation.ExtractMessage` to `toolDefinitions.operations[]`.            |
+| `src/operations/google/gmail/sync.ts`            | Modify | After each appended message, dispatch auto-on-arrival per `Mailbox.extractors`.      |
+| `src/components/Message/useExtractorActions.tsx` | Create | Hook that resolves registered extractors, matches the message, returns menu items.   |
+| `src/components/Message/useToolbar.tsx`          | Modify | Compose extractor menu items into the existing message toolbar.                      |
+| `src/types/ExtractedFrom.test.ts`                | Create | Relation make / source / target round-trip.                                          |
+| `src/operations/extract-message.test.ts`         | Create | Operation handler tests (no-match, top-confidence, error, persists ExtractedFrom).   |
+
+### `packages/plugins/plugin-trip/`
+
+| File                                               | Action | Purpose                                                                  |
+| -------------------------------------------------- | ------ | ------------------------------------------------------------------------ |
+| `package.json`                                     | Modify | Add `@dxos/plugin-inbox` workspace dep.                                  |
+| `src/extractors/types.ts`                          | Create | `Parser` type — `(msg) => { booking, segments } \| null`; shared shapes. |
+| `src/extractors/providers.ts`                      | Create | Known-domain → `Provider` lookup (United, Booking.com).                  |
+| `src/extractors/parseUnitedFlight.ts`              | Create | Pure parser for `@united.com` confirmation emails.                       |
+| `src/extractors/parseBookingComHotel.ts`           | Create | Pure parser for `@booking.com` confirmation emails.                      |
+| `src/extractors/TravelMessageExtractor.ts`         | Create | `MessageExtractor` impl: dispatch + Trip resolution + Account dedup.     |
+| `src/extractors/__fixtures__/united-flight.ts`     | Create | Fixture Message for canonical UA itinerary.                              |
+| `src/extractors/__fixtures__/booking-com-hotel.ts` | Create | Fixture Message for canonical Booking.com confirmation.                  |
+| `src/extractors/parseUnitedFlight.test.ts`         | Create | Parser unit tests (canonical, missing-fields).                           |
+| `src/extractors/parseBookingComHotel.test.ts`      | Create | Parser unit tests.                                                       |
+| `src/extractors/TravelMessageExtractor.test.ts`    | Create | Dispatch, Trip resolution, Account dedup.                                |
+| `src/capabilities/extractor.ts`                    | Create | Capability module that registers `TravelMessageExtractor`.               |
+| `src/capabilities/index.ts`                        | Modify | Re-export the new capability module.                                     |
+| `src/TripPlugin.tsx`                               | Modify | Activate the extractor capability module.                                |
+
+---
+
+## Task 12: Add `@dxos/plugin-inbox` as workspace dep
+
+**Files:**
+
+- Modify: `packages/plugins/plugin-trip/package.json`
+
+- [ ] **Step 1: Add dependency**
+
+```bash
+pnpm add --filter "@dxos/plugin-trip" --save-workspace "@dxos/plugin-inbox@workspace:*"
+```
+
+- [ ] **Step 2: Verify**
+
+```bash
+grep '"@dxos/plugin-inbox"' packages/plugins/plugin-trip/package.json
+# Expected: "@dxos/plugin-inbox": "workspace:*",
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add packages/plugins/plugin-trip/package.json pnpm-lock.yaml
+git commit -m "chore(plugin-trip): add plugin-inbox workspace dep for MessageExtractor"
+```
+
+---
+
+## Task 13: Create `ExtractedFrom` relation
+
+**Files:**
+
+- Create: `packages/plugins/plugin-inbox/src/types/ExtractedFrom.ts`
+- Create: `packages/plugins/plugin-inbox/src/types/ExtractedFrom.test.ts`
+- Modify: `packages/plugins/plugin-inbox/src/types/index.ts`
+
+- [ ] **Step 1: Write the failing test**
+
+`packages/plugins/plugin-inbox/src/types/ExtractedFrom.test.ts`:
+
+```typescript
+//
+// Copyright 2026 DXOS.org
+//
+
+import { describe, test } from 'vitest';
+
+import { Obj, Relation } from '@dxos/echo';
+import { Message } from '@dxos/types';
+
+import { ExtractedFrom } from './ExtractedFrom';
+
+describe('ExtractedFrom', () => {
+  test('relation links extracted object to source Message', ({ expect }) => {
+    const message = Obj.make(Message, {
+      created: new Date().toISOString(),
+      sender: { email: 'noreply@united.com' },
+      blocks: [],
+    });
+    const extracted = Obj.make(Message, {
+      created: new Date().toISOString(),
+      sender: { email: 'system@dxos' },
+      blocks: [],
+    });
+
+    const rel = ExtractedFrom.make({
+      [Relation.Source]: extracted,
+      [Relation.Target]: message,
+      extractorId: 'trip-travel',
+      extractedAt: new Date().toISOString(),
+      confidence: 0.9,
+    });
+
+    expect(rel.extractorId).toBe('trip-travel');
+    expect(Relation.getSource(rel).id).toBe(extracted.id);
+    expect(Relation.getTarget(rel).id).toBe(message.id);
+  });
+});
+```
+
+- [ ] **Step 2: Run test to verify failure**
+
+```bash
+moon run plugin-inbox:test -- packages/plugins/plugin-inbox/src/types/ExtractedFrom.test.ts
+```
+
+Expected: FAIL with `Cannot find module './ExtractedFrom'`.
+
+- [ ] **Step 3: Implement `ExtractedFrom.ts`**
+
+`packages/plugins/plugin-inbox/src/types/ExtractedFrom.ts`:
+
+```typescript
+//
+// Copyright 2026 DXOS.org
+//
+
+import * as Schema from 'effect/Schema';
+
+import { Obj, Relation, Type } from '@dxos/echo';
+import { Message } from '@dxos/types';
+
+/**
+ * Provenance relation. Source = the extracted object (Booking, Segment, …).
+ * Target = the source Message. One relation per created object so callers
+ * can walk Booking → Message and Segment → Message independently.
+ */
+export const ExtractedFrom = Schema.Struct({
+  id: Obj.ID,
+  extractorId: Schema.String,
+  extractedAt: Schema.String,
+  confidence: Schema.optional(Schema.Number),
+}).pipe(
+  Type.relation({
+    typename: 'org.dxos.relation.extractedFrom',
+    version: '0.1.0',
+    source: Obj.Unknown,
+    target: Message,
+  }),
+);
+
+export interface ExtractedFrom extends Schema.Schema.Type<typeof ExtractedFrom> {}
+
+export const make = (props: Relation.MakeProps<typeof ExtractedFrom>) => Relation.make(ExtractedFrom, props);
+```
+
+- [ ] **Step 4: Re-run test**
+
+```bash
+moon run plugin-inbox:test -- packages/plugins/plugin-inbox/src/types/ExtractedFrom.test.ts
+```
+
+Expected: PASS.
+
+- [ ] **Step 5: Add to barrel**
+
+In `packages/plugins/plugin-inbox/src/types/index.ts`, add `export * as ExtractedFrom from './ExtractedFrom';` next to the other type exports.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add packages/plugins/plugin-inbox/src/types/ExtractedFrom.ts \
+        packages/plugins/plugin-inbox/src/types/ExtractedFrom.test.ts \
+        packages/plugins/plugin-inbox/src/types/index.ts
+git commit -m "feat(plugin-inbox): add ExtractedFrom provenance relation"
+```
+
+---
+
+## Task 14: Declare `MessageExtractor` capability
+
+**Files:**
+
+- Create: `packages/plugins/plugin-inbox/src/capabilities/MessageExtractor.ts`
+- Modify: `packages/plugins/plugin-inbox/src/capabilities/index.ts`
+- Modify: `packages/plugins/plugin-inbox/src/types/InboxCapabilities.ts`
+
+- [ ] **Step 1: Implement the capability module**
+
+`packages/plugins/plugin-inbox/src/capabilities/MessageExtractor.ts`:
+
+```typescript
+//
+// Copyright 2026 DXOS.org
+//
+
+import { type Effect } from 'effect';
+
+import { type AnyEchoObject, type AnyRelation, type Space } from '@dxos/client/echo';
+import { type Database } from '@dxos/echo-db';
+import type * as Message from '@dxos/types/Message';
+
+export type MatchResult = {
+  matched: boolean;
+  confidence?: number;
+  reason?: string;
+};
+
+export type ExtractCtx = {
+  space: Space;
+  database: Database;
+};
+
+export type ExtractResult = {
+  created: AnyEchoObject[];
+  relations: AnyRelation[];
+  summary?: string;
+};
+
+export class ExtractError {
+  readonly _tag = 'ExtractError';
+  constructor(
+    readonly message: string,
+    readonly cause?: unknown,
+  ) {}
+}
+
+export interface MessageExtractor {
+  readonly id: string;
+  readonly description: string;
+  readonly kinds: readonly string[];
+  match(message: Message.Message): MatchResult;
+  extract(ctx: ExtractCtx, message: Message.Message): Effect.Effect<ExtractResult, ExtractError>;
+}
+```
+
+- [ ] **Step 2: Declare the capability key**
+
+In `packages/plugins/plugin-inbox/src/types/InboxCapabilities.ts`, append after the `Settings` declaration:
+
+```typescript
+import type { MessageExtractor as MessageExtractorImpl } from '../capabilities/MessageExtractor';
+
+export const MessageExtractor = Capability.make<MessageExtractorImpl>(`${meta.id}.capability.messageExtractor`);
+```
+
+- [ ] **Step 3: Re-export from capabilities/index.ts**
+
+In `packages/plugins/plugin-inbox/src/capabilities/index.ts`, add:
+
+```typescript
+export * as MessageExtractor from './MessageExtractor';
+```
+
+- [ ] **Step 4: Build**
+
+```bash
+moon run plugin-inbox:build
+```
+
+Expected: PASS.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add packages/plugins/plugin-inbox/src/capabilities/MessageExtractor.ts \
+        packages/plugins/plugin-inbox/src/capabilities/index.ts \
+        packages/plugins/plugin-inbox/src/types/InboxCapabilities.ts
+git commit -m "feat(plugin-inbox): declare MessageExtractor capability"
+```
+
+---
+
+## Task 15: Add `extractors` config to `Mailbox`
+
+**Files:**
+
+- Modify: `packages/plugins/plugin-inbox/src/types/Mailbox.ts`
+
+- [ ] **Step 1: Add the optional field**
+
+In `Mailbox.ts`, inside the `Schema.Struct({ ... })` block (before `.pipe(Type.object(...))`):
+
+```typescript
+extractors: Schema.optional(
+  Schema.Struct({
+    enabled: Schema.Array(Schema.String),
+    threshold: Schema.Number,
+  }),
+).pipe(FormInputAnnotation.set(false)),
+```
+
+- [ ] **Step 2: Build**
+
+```bash
+moon run plugin-inbox:build
+```
+
+Expected: PASS.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add packages/plugins/plugin-inbox/src/types/Mailbox.ts
+git commit -m "feat(plugin-inbox): add Mailbox.extractors config for auto-on-arrival"
+```
+
+---
+
+## Task 16: Define `ExtractMessage` operation
+
+**Files:**
+
+- Modify: `packages/plugins/plugin-inbox/src/types/InboxOperation.ts`
+
+- [ ] **Step 1: Add the operation definition**
+
+At the end of `InboxOperation.ts`, append (use the existing imports — `Operation`, `Schema`, `Capability.Service`, `Database`, `Message`):
+
+```typescript
+export const ExtractMessage = Operation.make({
+  meta: { key: `${INBOX_OPERATION}.extract-message`, name: 'Extract Message' },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    db: Database.Database,
+    message: Schema.suspend(() => Message.Message),
+    extractorId: Schema.optional(Schema.String),
+    targetTripId: Schema.optional(Schema.String),
+  }),
+  output: Schema.Struct({
+    extractorId: Schema.String,
+    created: Schema.Number,
+    summary: Schema.optional(Schema.String),
+  }),
+});
+```
+
+- [ ] **Step 2: Build**
+
+```bash
+moon run plugin-inbox:build
+```
+
+Expected: PASS.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add packages/plugins/plugin-inbox/src/types/InboxOperation.ts
+git commit -m "feat(plugin-inbox): define ExtractMessage operation"
+```
+
+---
+
+## Task 17: Implement the `ExtractMessage` operation handler
+
+**Files:**
+
+- Create: `packages/plugins/plugin-inbox/src/operations/extract-message.ts`
+- Create: `packages/plugins/plugin-inbox/src/operations/extract-message.test.ts`
+- Modify: `packages/plugins/plugin-inbox/src/operations/index.ts`
+
+- [ ] **Step 1: Write the failing test**
+
+`packages/plugins/plugin-inbox/src/operations/extract-message.test.ts`:
+
+```typescript
+//
+// Copyright 2026 DXOS.org
+//
+
+import { Effect, Layer } from 'effect';
+import { afterEach, beforeEach, describe, expect, it } from '@effect/vitest';
+
+import { Capability } from '@dxos/app-framework';
+import { Obj } from '@dxos/echo';
+import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { Message } from '@dxos/types';
+
+import { InboxCapabilities } from '../types';
+import { InboxOperation } from '../types/InboxOperation';
+import { ExtractedFrom } from '../types/ExtractedFrom';
+import handler from './extract-message';
+
+const makeMessage = (overrides?: Partial<Message.Message>): Message.Message =>
+  Obj.make(Message, {
+    created: new Date().toISOString(),
+    sender: { email: 'noreply@example.com' },
+    blocks: [],
+    ...overrides,
+  });
+
+describe('extract-message', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  it.effect('returns no-match error when no extractor matches', () =>
+    Effect.gen(function* () {
+      const { db } = yield* Effect.promise(() => builder.createDatabase({ types: [Message, ExtractedFrom] }));
+      const message = db.add(makeMessage());
+      yield* Effect.promise(() => db.flush());
+
+      const capabilities = Capability.makeRegistry([
+        Capability.contributes(InboxCapabilities.MessageExtractor, {
+          id: 'noop',
+          description: 'never matches',
+          kinds: [],
+          match: () => ({ matched: false }),
+          extract: () => Effect.die('unreachable'),
+        }),
+      ]);
+
+      const result = yield* handler
+        .run({ db, message, extractorId: undefined, targetTripId: undefined })
+        .pipe(Effect.provide(capabilities), Effect.either);
+
+      expect(result._tag).toBe('Left');
+    }),
+  );
+});
+```
+
+- [ ] **Step 2: Run to verify failure**
+
+```bash
+moon run plugin-inbox:test -- packages/plugins/plugin-inbox/src/operations/extract-message.test.ts
+```
+
+Expected: FAIL — module `./extract-message` missing.
+
+- [ ] **Step 3: Implement the handler**
+
+`packages/plugins/plugin-inbox/src/operations/extract-message.ts`:
+
+```typescript
+//
+// Copyright 2026 DXOS.org
+//
+
+import { Effect, Either } from 'effect';
+
+import { Capability } from '@dxos/app-framework';
+import { Obj, Relation } from '@dxos/echo';
+import { Operation } from '@dxos/operation';
+
+import { InboxCapabilities } from '../types';
+import { InboxOperation } from '../types/InboxOperation';
+import * as ExtractedFrom from '../types/ExtractedFrom';
+import type { MessageExtractor } from '../capabilities/MessageExtractor';
+
+class NoMatchingExtractor {
+  readonly _tag = 'NoMatchingExtractor';
+}
+
+const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = InboxOperation.ExtractMessage.pipe(
+  Operation.withHandler(
+    Effect.fnUntraced(function* ({ db, message, extractorId, targetTripId }) {
+      const extractors = yield* Capability.getAll(InboxCapabilities.MessageExtractor);
+
+      // Pick extractor by id, or highest-confidence matching one.
+      let chosen: MessageExtractor | undefined;
+      let confidence = 0;
+      for (const extractor of extractors) {
+        if (extractorId && extractor.id !== extractorId) {
+          continue;
+        }
+        const result = extractor.match(message);
+        if (!result.matched) {
+          continue;
+        }
+        if (extractorId || (result.confidence ?? 0) > confidence) {
+          chosen = extractor;
+          confidence = result.confidence ?? 0;
+          if (extractorId) break;
+        }
+      }
+      if (!chosen) {
+        return yield* Effect.fail(new NoMatchingExtractor());
+      }
+
+      const space = (db as any).space; // EchoDatabase exposes the owning Space.
+      const result = yield* chosen.extract({ space, database: db }, message);
+
+      for (const obj of result.created) {
+        db.add(obj);
+      }
+      const extractedAt = new Date().toISOString();
+      for (const created of result.created) {
+        const rel = ExtractedFrom.make({
+          [Relation.Source]: created,
+          [Relation.Target]: message,
+          extractorId: chosen.id,
+          extractedAt,
+          confidence,
+        });
+        db.add(rel);
+      }
+      for (const rel of result.relations) {
+        db.add(rel);
+      }
+
+      return {
+        extractorId: chosen.id,
+        created: result.created.length,
+        summary: result.summary,
+      };
+    }),
+  ),
+);
+
+export default handler;
+```
+
+- [ ] **Step 4: Register in the operations barrel**
+
+In `packages/plugins/plugin-inbox/src/operations/index.ts`, find the `OperationHandlerSet.lazy(...)` array and add a new entry:
+
+```typescript
+() => import('./extract-message'),
+```
+
+- [ ] **Step 5: Re-run test**
+
+```bash
+moon run plugin-inbox:test -- packages/plugins/plugin-inbox/src/operations/extract-message.test.ts
+```
+
+Expected: PASS.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add packages/plugins/plugin-inbox/src/operations/extract-message.ts \
+        packages/plugins/plugin-inbox/src/operations/extract-message.test.ts \
+        packages/plugins/plugin-inbox/src/operations/index.ts
+git commit -m "feat(plugin-inbox): add ExtractMessage operation handler"
+```
+
+---
+
+## Task 18: Wire extractor menu items into message toolbar
+
+**Files:**
+
+- Create: `packages/plugins/plugin-inbox/src/components/Message/useExtractorActions.tsx`
+- Modify: `packages/plugins/plugin-inbox/src/components/Message/useToolbar.tsx`
+
+- [ ] **Step 1: Build the hook**
+
+`packages/plugins/plugin-inbox/src/components/Message/useExtractorActions.tsx`:
+
+```typescript
+//
+// Copyright 2026 DXOS.org
+//
+
+import { useMemo } from 'react';
+
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { Obj } from '@dxos/echo';
+import { getSpace } from '@dxos/react-client/echo';
+import type * as Message from '@dxos/types/Message';
+
+import { InboxCapabilities } from '../../types';
+import { InboxOperation } from '../../types/InboxOperation';
+
+export type ExtractorMenuItem = {
+  id: string;
+  label: string;
+  onSelect: () => void;
+};
+
+export const useExtractorActions = (message: Message.Message): ExtractorMenuItem[] => {
+  const extractors = useCapabilities(InboxCapabilities.MessageExtractor);
+  const { invokePromise } = useOperationInvoker();
+
+  return useMemo(() => {
+    return extractors
+      .filter((extractor) => extractor.match(message).matched)
+      .map((extractor) => ({
+        id: extractor.id,
+        label: extractor.description,
+        onSelect: () => {
+          const space = getSpace(message);
+          if (!space) return;
+          void invokePromise(InboxOperation.ExtractMessage, {
+            db: space.db,
+            message,
+            extractorId: extractor.id,
+            targetTripId: undefined,
+          });
+        },
+      }));
+  }, [extractors, message, invokePromise]);
+};
+```
+
+- [ ] **Step 2: Compose into useToolbar**
+
+In `useToolbar.tsx`, locate the `useMessageActions` builder (where the existing `.action('open', ...)` and `.action('renderMode', ...)` calls live). After the existing actions, before `.build()`, add:
+
+```typescript
+const extractorActions = useExtractorActions(message);
+for (const item of extractorActions) {
+  menu = menu.action(`extract-${item.id}`, { label: item.label, icon: 'ph--magic-wand--regular' }, item.onSelect);
+}
+```
+
+Add the import:
+
+```typescript
+import { useExtractorActions } from './useExtractorActions';
+```
+
+- [ ] **Step 3: Storybook smoke**
+
+```bash
+moon run plugin-inbox:test-storybook -- --grep "Message"
+```
+
+Expected: PASS (no new stories yet; existing stories must still render).
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add packages/plugins/plugin-inbox/src/components/Message/useExtractorActions.tsx \
+        packages/plugins/plugin-inbox/src/components/Message/useToolbar.tsx
+git commit -m "feat(plugin-inbox): show registered extractors in message toolbar"
+```
+
+---
+
+## Task 19: Expose `ExtractMessage` as an agent tool
+
+**Files:**
+
+- Modify: `packages/plugins/plugin-inbox/src/blueprints/inbox.ts`
+
+- [ ] **Step 1: Append the operation to the blueprint tool list**
+
+In the `tools: Blueprint.toolDefinitions({ operations: [...] })` block, add `InboxOperation.ExtractMessage` after `InboxOperation.GoogleMailSync`:
+
+```typescript
+operations: [
+  InboxOperation.ClassifyEmail,
+  InboxOperation.DraftEmail,
+  InboxOperation.ReadEmail,
+  InboxOperation.GoogleMailSync,
+  InboxOperation.ExtractMessage,
+],
+```
+
+- [ ] **Step 2: Update the blueprint instructions**
+
+Add a sentence to the `instructions` template (same file) telling the agent: "Use `ExtractMessage` to parse a confirmation email (e.g., flight, hotel) into structured objects."
+
+- [ ] **Step 3: Build**
+
+```bash
+moon run plugin-inbox:build
+```
+
+Expected: PASS.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add packages/plugins/plugin-inbox/src/blueprints/inbox.ts
+git commit -m "feat(plugin-inbox): expose ExtractMessage as inbox blueprint tool"
+```
+
+---
+
+## Task 20: Auto-on-arrival hook in `GoogleMailSync`
+
+**Files:**
+
+- Modify: `packages/plugins/plugin-inbox/src/operations/google/gmail/sync.ts`
+
+- [ ] **Step 1: Locate the message append site**
+
+```bash
+grep -n "feed.append\|appendMessage\|messages.push" packages/plugins/plugin-inbox/src/operations/google/gmail/sync.ts
+```
+
+Note the line where new messages are persisted in the loop.
+
+- [ ] **Step 2: Inject the dispatch**
+
+Immediately after the message is appended to the feed, add:
+
+```typescript
+const extractors = yield * Capability.getAll(InboxCapabilities.MessageExtractor);
+const config = mailbox.extractors;
+if (config && config.enabled.length > 0) {
+  let best: { extractor: (typeof extractors)[number]; confidence: number } | undefined;
+  for (const extractor of extractors) {
+    if (!config.enabled.includes(extractor.id)) continue;
+    const result = extractor.match(message);
+    if (!result.matched) continue;
+    if ((result.confidence ?? 0) >= config.threshold && (!best || (result.confidence ?? 0) > best.confidence)) {
+      best = { extractor, confidence: result.confidence ?? 0 };
+    }
+  }
+  if (best) {
+    yield *
+      OperationInvoker.invoke(InboxOperation.ExtractMessage, {
+        db,
+        message,
+        extractorId: best.extractor.id,
+        targetTripId: undefined,
+      }).pipe(Effect.catchAll(() => Effect.void));
+  }
+}
+```
+
+Add imports as needed: `InboxCapabilities`, `InboxOperation`, `Capability`, `OperationInvoker`.
+
+- [ ] **Step 3: Build**
+
+```bash
+moon run plugin-inbox:build
+```
+
+Expected: PASS.
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add packages/plugins/plugin-inbox/src/operations/google/gmail/sync.ts
+git commit -m "feat(plugin-inbox): dispatch enabled extractors on message arrival"
+```
+
+---
+
+## Task 21: `parseUnitedFlight` parser + fixture + tests
+
+**Files:**
+
+- Create: `packages/plugins/plugin-trip/src/extractors/types.ts`
+- Create: `packages/plugins/plugin-trip/src/extractors/providers.ts`
+- Create: `packages/plugins/plugin-trip/src/extractors/parseUnitedFlight.ts`
+- Create: `packages/plugins/plugin-trip/src/extractors/__fixtures__/united-flight.ts`
+- Create: `packages/plugins/plugin-trip/src/extractors/parseUnitedFlight.test.ts`
+
+- [ ] **Step 1: Define shared parser types**
+
+`packages/plugins/plugin-trip/src/extractors/types.ts`:
+
+```typescript
+//
+// Copyright 2026 DXOS.org
+//
+
+import type { Booking, Segment } from '#types';
+import type * as Message from '@dxos/types/Message';
+
+export type ParseResult = {
+  booking: ReturnType<typeof Booking.make>;
+  segments: Segment.Segment[];
+  confidence: number;
+};
+
+export type Parser = (message: Message.Message) => ParseResult | null;
+```
+
+- [ ] **Step 2: Define the providers table**
+
+`packages/plugins/plugin-trip/src/extractors/providers.ts`:
+
+```typescript
+//
+// Copyright 2026 DXOS.org
+//
+
+import { Provider } from '@dxos/types';
+
+export const UNITED: Provider.Provider = { name: 'United Airlines', domain: 'united.com' };
+export const BOOKING_COM: Provider.Provider = { name: 'Booking.com', domain: 'booking.com' };
+
+export const lookupBySenderDomain = (email: string | undefined): Provider.Provider | undefined => {
+  if (!email) return undefined;
+  const domain = email.split('@')[1]?.toLowerCase();
+  if (!domain) return undefined;
+  if (domain === 'united.com' || domain.endsWith('.united.com')) return UNITED;
+  if (domain === 'booking.com' || domain.endsWith('.booking.com')) return BOOKING_COM;
+  return undefined;
+};
+```
+
+- [ ] **Step 3: Write the failing parser test**
+
+`packages/plugins/plugin-trip/src/extractors/parseUnitedFlight.test.ts`:
+
+```typescript
+//
+// Copyright 2026 DXOS.org
+//
+
+import { describe, test } from 'vitest';
+
+import { unitedFlightFixture } from './__fixtures__/united-flight';
+import { parseUnitedFlight } from './parseUnitedFlight';
+
+describe('parseUnitedFlight', () => {
+  test('parses canonical UA eTicket itinerary', ({ expect }) => {
+    const result = parseUnitedFlight(unitedFlightFixture());
+    expect(result).not.toBeNull();
+    expect(result!.confidence).toBeGreaterThanOrEqual(0.9);
+    expect(result!.booking.confirmationCode).toBe('ABC123');
+    expect(result!.segments.length).toBe(1);
+    const segment = result!.segments[0];
+    expect(segment.kind).toBe('flight');
+    expect(segment.airline?.name).toBe('United Airlines');
+    expect(segment.flightNumber).toBe('UA 904');
+    expect(segment.origin?.code).toBe('SFO');
+    expect(segment.destination?.code).toBe('LHR');
+  });
+
+  test('returns null when sender does not match', ({ expect }) => {
+    const fixture = unitedFlightFixture();
+    (fixture as any).sender = { email: 'random@elsewhere.com' };
+    expect(parseUnitedFlight(fixture)).toBeNull();
+  });
+
+  test('returns null when confirmation code is missing', ({ expect }) => {
+    const fixture = unitedFlightFixture({ withConfirmationCode: false });
+    expect(parseUnitedFlight(fixture)).toBeNull();
+  });
+});
+```
+
+- [ ] **Step 4: Write the fixture**
+
+`packages/plugins/plugin-trip/src/extractors/__fixtures__/united-flight.ts`:
+
+```typescript
+//
+// Copyright 2026 DXOS.org
+//
+
+import { Obj } from '@dxos/echo';
+import { Message } from '@dxos/types';
+
+const BODY = `Hello,
+Your reservation is confirmed.
+
+Confirmation: ABC123
+
+UA 904  SFO → LHR
+Depart: 2026-08-12 18:30 SFO
+Arrive: 2026-08-13 12:45 LHR
+Cabin: Economy
+Seat: 21A
+
+Thank you for flying United.`;
+
+export const unitedFlightFixture = (opts: { withConfirmationCode?: boolean } = {}): Message.Message => {
+  const body = opts.withConfirmationCode === false ? BODY.replace(/Confirmation:.*\n/, '') : BODY;
+  return Obj.make(Message, {
+    created: '2026-08-01T10:00:00Z',
+    sender: { email: 'noreply@united.com', name: 'United Airlines' },
+    properties: { subject: 'Your eTicket Itinerary — UA 904' },
+    blocks: [{ kind: 'text', content: body }],
+  });
+};
+```
+
+- [ ] **Step 5: Implement the parser**
+
+`packages/plugins/plugin-trip/src/extractors/parseUnitedFlight.ts`:
+
+```typescript
+//
+// Copyright 2026 DXOS.org
+//
+
+import { Booking, Segment } from '#types';
+
+import { lookupBySenderDomain, UNITED } from './providers';
+import type { Parser } from './types';
+
+const CONFIRMATION = /Confirmation:\s*([A-Z0-9]{4,10})/;
+const FLIGHT = /UA\s*(\d{1,4})\s+([A-Z]{3})\s*[→\-]+\s*([A-Z]{3})/;
+const DEPART = /Depart:\s*(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})/;
+const ARRIVE = /Arrive:\s*(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})/;
+const CABIN = /Cabin:\s*(Economy|Premium|Business|First)/i;
+const SEAT = /Seat:\s*([0-9]+[A-Z])/;
+
+const pickText = (message: { blocks: Array<{ kind: string; content?: string }> }): string =>
+  message.blocks
+    .filter((b) => b.kind === 'text')
+    .map((b) => b.content ?? '')
+    .join('\n');
+
+export const parseUnitedFlight: Parser = (message) => {
+  if (lookupBySenderDomain(message.sender.email) !== UNITED) return null;
+  const body = pickText(message as any);
+
+  const confirmation = CONFIRMATION.exec(body)?.[1];
+  const flight = FLIGHT.exec(body);
+  if (!confirmation || !flight) return null;
+
+  const depart = DEPART.exec(body);
+  const arrive = ARRIVE.exec(body);
+  const cabin = CABIN.exec(body)?.[1]?.toLowerCase();
+  const seat = SEAT.exec(body)?.[1];
+
+  const booking = Booking.make({
+    provider: UNITED,
+    confirmationCode: confirmation,
+    source: 'email',
+    rawPayload: body,
+  });
+  const segment = Segment.make({
+    status: 'confirmed',
+    kind: 'flight',
+    airline: UNITED,
+    flightNumber: `UA ${flight[1]}`,
+    origin: { name: flight[2], code: flight[2] },
+    destination: { name: flight[3], code: flight[3] },
+    departAt: depart ? `${depart[1]}T${depart[2]}:00Z` : undefined,
+    arriveAt: arrive ? `${arrive[1]}T${arrive[2]}:00Z` : undefined,
+    cabin: (cabin as any) ?? undefined,
+    seat,
+  });
+
+  return { booking, segments: [segment], confidence: 0.9 };
+};
+```
+
+- [ ] **Step 6: Run tests**
+
+```bash
+moon run plugin-trip:test -- packages/plugins/plugin-trip/src/extractors/parseUnitedFlight.test.ts
+```
+
+Expected: 3 PASS.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add packages/plugins/plugin-trip/src/extractors
+git commit -m "feat(plugin-trip): heuristic parseUnitedFlight + fixtures + tests"
+```
+
+---
+
+## Task 22: `parseBookingComHotel` parser + fixture + tests
+
+**Files:**
+
+- Create: `packages/plugins/plugin-trip/src/extractors/parseBookingComHotel.ts`
+- Create: `packages/plugins/plugin-trip/src/extractors/__fixtures__/booking-com-hotel.ts`
+- Create: `packages/plugins/plugin-trip/src/extractors/parseBookingComHotel.test.ts`
+
+- [ ] **Step 1: Write the failing test**
+
+`packages/plugins/plugin-trip/src/extractors/parseBookingComHotel.test.ts`:
+
+```typescript
+//
+// Copyright 2026 DXOS.org
+//
+
+import { describe, test } from 'vitest';
+
+import { bookingComHotelFixture } from './__fixtures__/booking-com-hotel';
+import { parseBookingComHotel } from './parseBookingComHotel';
+
+describe('parseBookingComHotel', () => {
+  test('parses canonical Booking.com confirmation', ({ expect }) => {
+    const result = parseBookingComHotel(bookingComHotelFixture());
+    expect(result).not.toBeNull();
+    expect(result!.confidence).toBeGreaterThanOrEqual(0.9);
+    expect(result!.booking.confirmationCode).toBe('3456789012');
+    const segment = result!.segments[0];
+    expect(segment.kind).toBe('accommodation');
+    expect(segment.propertyName).toContain('Grand Hotel');
+    expect(segment.checkIn).toContain('2026-08-13');
+    expect(segment.checkOut).toContain('2026-08-15');
+  });
+
+  test('returns null when sender does not match', ({ expect }) => {
+    const fixture = bookingComHotelFixture();
+    (fixture as any).sender = { email: 'other@elsewhere.com' };
+    expect(parseBookingComHotel(fixture)).toBeNull();
+  });
+});
+```
+
+- [ ] **Step 2: Write the fixture**
+
+`packages/plugins/plugin-trip/src/extractors/__fixtures__/booking-com-hotel.ts`:
+
+```typescript
+//
+// Copyright 2026 DXOS.org
+//
+
+import { Obj } from '@dxos/echo';
+import { Message } from '@dxos/types';
+
+const BODY = `Hello,
+
+Your booking is confirmed.
+
+Booking number: 3456789012
+Property: Grand Hotel London
+City: London
+Check-in: Thu, Aug 13, 2026
+Check-out: Sat, Aug 15, 2026
+Room: Deluxe Double`;
+
+export const bookingComHotelFixture = (): Message.Message =>
+  Obj.make(Message, {
+    created: '2026-08-01T10:00:00Z',
+    sender: { email: 'noreply@booking.com', name: 'Booking.com' },
+    properties: { subject: 'Booking confirmation #3456789012' },
+    blocks: [{ kind: 'text', content: BODY }],
+  });
+```
+
+- [ ] **Step 3: Implement the parser**
+
+`packages/plugins/plugin-trip/src/extractors/parseBookingComHotel.ts`:
+
+```typescript
+//
+// Copyright 2026 DXOS.org
+//
+
+import { Booking, Segment } from '#types';
+
+import { BOOKING_COM, lookupBySenderDomain } from './providers';
+import type { Parser } from './types';
+
+const BOOKING_NUMBER = /Booking number:\s*(\d{6,})/;
+const PROPERTY = /Property:\s*(.+)/;
+const CITY = /City:\s*(.+)/;
+const CHECK_IN = /Check-in:\s*[A-Za-z]+,?\s+([A-Za-z]+\s+\d{1,2},\s+\d{4})/;
+const CHECK_OUT = /Check-out:\s*[A-Za-z]+,?\s+([A-Za-z]+\s+\d{1,2},\s+\d{4})/;
+const ROOM = /Room:\s*(.+)/;
+
+const toISO = (s: string): string | undefined => {
+  const d = new Date(s);
+  return Number.isNaN(d.getTime()) ? undefined : d.toISOString();
+};
+
+const pickText = (message: { blocks: Array<{ kind: string; content?: string }> }): string =>
+  message.blocks
+    .filter((b) => b.kind === 'text')
+    .map((b) => b.content ?? '')
+    .join('\n');
+
+export const parseBookingComHotel: Parser = (message) => {
+  if (lookupBySenderDomain(message.sender.email) !== BOOKING_COM) return null;
+  const body = pickText(message as any);
+
+  const confirmation = BOOKING_NUMBER.exec(body)?.[1];
+  const checkIn = toISO(CHECK_IN.exec(body)?.[1] ?? '');
+  const checkOut = toISO(CHECK_OUT.exec(body)?.[1] ?? '');
+  if (!confirmation || !checkIn || !checkOut) return null;
+
+  const property = PROPERTY.exec(body)?.[1]?.trim();
+  const city = CITY.exec(body)?.[1]?.trim();
+  const room = ROOM.exec(body)?.[1]?.trim();
+
+  const booking = Booking.make({
+    provider: BOOKING_COM,
+    confirmationCode: confirmation,
+    source: 'email',
+    rawPayload: body,
+  });
+  const segment = Segment.make({
+    status: 'confirmed',
+    kind: 'accommodation',
+    propertyName: property,
+    roomType: room,
+    origin: city ? { name: city, city } : undefined,
+    checkIn,
+    checkOut,
+  });
+
+  return { booking, segments: [segment], confidence: 0.9 };
+};
+```
+
+- [ ] **Step 4: Run tests**
+
+```bash
+moon run plugin-trip:test -- packages/plugins/plugin-trip/src/extractors/parseBookingComHotel.test.ts
+```
+
+Expected: 2 PASS.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add packages/plugins/plugin-trip/src/extractors/parseBookingComHotel.ts \
+        packages/plugins/plugin-trip/src/extractors/parseBookingComHotel.test.ts \
+        packages/plugins/plugin-trip/src/extractors/__fixtures__/booking-com-hotel.ts
+git commit -m "feat(plugin-trip): heuristic parseBookingComHotel + fixtures + tests"
+```
+
+---
+
+## Task 23: `TravelMessageExtractor` impl + tests
+
+**Files:**
+
+- Create: `packages/plugins/plugin-trip/src/extractors/TravelMessageExtractor.ts`
+- Create: `packages/plugins/plugin-trip/src/extractors/TravelMessageExtractor.test.ts`
+
+- [ ] **Step 1: Write the failing test**
+
+`packages/plugins/plugin-trip/src/extractors/TravelMessageExtractor.test.ts`:
+
+```typescript
+//
+// Copyright 2026 DXOS.org
+//
+
+import { Effect } from 'effect';
+import { afterEach, beforeEach, describe, test } from 'vitest';
+
+import { type EchoDatabase } from '@dxos/echo-db';
+import { EchoTestBuilder } from '@dxos/echo-db/testing';
+
+import { Booking, Segment, Trip } from '#types';
+
+import { TravelMessageExtractor } from './TravelMessageExtractor';
+import { unitedFlightFixture } from './__fixtures__/united-flight';
+import { bookingComHotelFixture } from './__fixtures__/booking-com-hotel';
+
+describe('TravelMessageExtractor', () => {
+  let builder: EchoTestBuilder;
+  let db: EchoDatabase;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+    const result = await builder.createDatabase({ types: [Trip.Trip, Segment.Segment, Booking.Booking] });
+    db = result.db;
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  test('match() returns true for known providers, false otherwise', ({ expect }) => {
+    expect(TravelMessageExtractor.match(unitedFlightFixture()).matched).toBe(true);
+    expect(TravelMessageExtractor.match(bookingComHotelFixture()).matched).toBe(true);
+    const unknown = unitedFlightFixture();
+    (unknown as any).sender = { email: 'random@elsewhere.com' };
+    expect(TravelMessageExtractor.match(unknown).matched).toBe(false);
+  });
+
+  test('extract() creates Booking + Segment and a new Trip when none exists', async ({ expect }) => {
+    const result = await Effect.runPromise(
+      TravelMessageExtractor.extract({ space: (db as any).space, database: db }, unitedFlightFixture()),
+    );
+    expect(result.created.some((o: any) => o.kind === 'flight')).toBe(true);
+    expect(result.created.some((o: any) => o.provider)).toBe(true);
+    expect(result.created.some((o: any) => Array.isArray(o.segments))).toBe(true);
+  });
+
+  test('extract() appends to most-recently-updated Trip when one exists', async ({ expect }) => {
+    const existing = db.add(Trip.make({ name: 'Existing' }));
+    await db.flush();
+
+    const result = await Effect.runPromise(
+      TravelMessageExtractor.extract({ space: (db as any).space, database: db }, unitedFlightFixture()),
+    );
+    // No new trip should be created.
+    expect(result.created.some((o: any) => Array.isArray(o.segments))).toBe(false);
+    // Existing trip should now have a segment.
+    expect(existing.segments.length).toBe(1);
+  });
+});
+```
+
+- [ ] **Step 2: Implement the extractor**
+
+`packages/plugins/plugin-trip/src/extractors/TravelMessageExtractor.ts`:
+
+```typescript
+//
+// Copyright 2026 DXOS.org
+//
+
+import { Effect } from 'effect';
+
+import { Filter } from '@dxos/echo';
+import type { MessageExtractor, MatchResult, ExtractResult, ExtractCtx, ExtractError } from '@dxos/plugin-inbox';
+import type * as Message from '@dxos/types/Message';
+
+import { Trip } from '#types';
+
+import { parseBookingComHotel } from './parseBookingComHotel';
+import { parseUnitedFlight } from './parseUnitedFlight';
+import type { Parser } from './types';
+
+const PARSERS: ReadonlyArray<Parser> = [parseUnitedFlight, parseBookingComHotel];
+
+const pickMostRecent = (trips: ReadonlyArray<Trip.Trip>): Trip.Trip | undefined => {
+  if (trips.length === 0) return undefined;
+  return [...trips].sort((a, b) => {
+    const av = (a as any).__updated ?? 0;
+    const bv = (b as any).__updated ?? 0;
+    return bv - av;
+  })[0];
+};
+
+export const TravelMessageExtractor: MessageExtractor = {
+  id: 'trip-travel',
+  description: 'Extract travel from confirmation email',
+  kinds: ['flight', 'accommodation'],
+
+  match(message: Message.Message): MatchResult {
+    for (const parser of PARSERS) {
+      const result = parser(message);
+      if (result) {
+        return { matched: true, confidence: result.confidence };
+      }
+    }
+    return { matched: false };
+  },
+
+  extract: Effect.fnUntraced(function* (ctx: ExtractCtx, message: Message.Message) {
+    let parsed: ReturnType<Parser> = null;
+    for (const parser of PARSERS) {
+      parsed = parser(message);
+      if (parsed) break;
+    }
+    if (!parsed) {
+      return yield* Effect.fail({ _tag: 'ExtractError', message: 'no parser matched' } as ExtractError);
+    }
+
+    const { booking, segments } = parsed;
+
+    // Resolve Trip: most-recently-updated, else new.
+    const existingTrips = yield* Effect.promise(() => ctx.database.runQuery(Filter.type(Trip.Trip)).run());
+    let trip = pickMostRecent(existingTrips);
+    const created: any[] = [booking, ...segments];
+    if (!trip) {
+      trip = Trip.make({ name: parsed.booking.provider.name ?? 'Trip' });
+      created.push(trip);
+    }
+
+    // Persist segments first so refs are valid, then link to trip.
+    for (const segment of segments) {
+      ctx.database.add(segment);
+      Trip.addSegment(trip, segment);
+    }
+    ctx.database.add(booking);
+    if (created.includes(trip)) {
+      ctx.database.add(trip);
+    }
+
+    return {
+      created,
+      relations: [],
+      summary: `Extracted ${parsed.booking.provider.name} booking ${parsed.booking.confirmationCode}`,
+    } satisfies ExtractResult;
+  }),
+};
+```
+
+- [ ] **Step 3: Re-export from package barrel**
+
+In `packages/plugins/plugin-inbox/src/index.ts`, confirm `MessageExtractor` type + `MatchResult` + `ExtractResult` + `ExtractCtx` + `ExtractError` are exported. Add them if missing.
+
+- [ ] **Step 4: Run tests**
+
+```bash
+moon run plugin-trip:test -- packages/plugins/plugin-trip/src/extractors/TravelMessageExtractor.test.ts
+```
+
+Expected: 3 PASS.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add packages/plugins/plugin-trip/src/extractors/TravelMessageExtractor.ts \
+        packages/plugins/plugin-trip/src/extractors/TravelMessageExtractor.test.ts \
+        packages/plugins/plugin-inbox/src/index.ts
+git commit -m "feat(plugin-trip): TravelMessageExtractor dispatch + Trip resolution"
+```
+
+---
+
+## Task 24: Register `TravelMessageExtractor` capability
+
+**Files:**
+
+- Create: `packages/plugins/plugin-trip/src/capabilities/extractor.ts`
+- Modify: `packages/plugins/plugin-trip/src/capabilities/index.ts`
+- Modify: `packages/plugins/plugin-trip/src/TripPlugin.tsx`
+
+- [ ] **Step 1: Create the capability module**
+
+`packages/plugins/plugin-trip/src/capabilities/extractor.ts`:
+
+```typescript
+//
+// Copyright 2026 DXOS.org
+//
+
+import { Effect } from 'effect';
+
+import { Capability } from '@dxos/app-framework';
+import { InboxCapabilities } from '@dxos/plugin-inbox';
+
+import { TravelMessageExtractor } from '../extractors/TravelMessageExtractor';
+
+export default Capability.makeModule(
+  Effect.fnUntraced(function* () {
+    return Capability.contributes(InboxCapabilities.MessageExtractor, TravelMessageExtractor);
+  }),
+);
+```
+
+- [ ] **Step 2: Re-export from capabilities barrel**
+
+In `packages/plugins/plugin-trip/src/capabilities/index.ts`, add:
+
+```typescript
+export { default as Extractor } from './extractor';
+```
+
+- [ ] **Step 3: Activate in the plugin**
+
+In `TripPlugin.tsx`, where other capability modules are activated (next to the existing `addOperationHandlerModule` / `react-surface` activations), add:
+
+```typescript
+AppPlugin.addCapabilityModule({ activate: Extractor }),
+```
+
+Add the import:
+
+```typescript
+import { Extractor } from './capabilities';
+```
+
+- [ ] **Step 4: Build**
+
+```bash
+moon run plugin-trip:build && moon run plugin-inbox:build
+```
+
+Expected: PASS.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add packages/plugins/plugin-trip/src/capabilities/extractor.ts \
+        packages/plugins/plugin-trip/src/capabilities/index.ts \
+        packages/plugins/plugin-trip/src/TripPlugin.tsx
+git commit -m "feat(plugin-trip): register TravelMessageExtractor capability"
+```
+
+---
+
+## Task 25: Phase 2 close-out
+
+**Files:**
+
+- Modify: `packages/plugins/plugin-trip/PLAN.md`
+- Modify: `packages/plugins/plugin-trip/PHASE2.md`
+
+- [ ] **Step 1: Full lint + test sweep**
+
+```bash
+moon run :lint -- --fix
+MOON_CONCURRENCY=4 moon run plugin-trip:test plugin-inbox:test
+```
+
+Expected: PASS.
+
+- [ ] **Step 2: Manual smoke (composer-app)**
+
+Start the app, create a Trip, paste a UA confirmation email into a Mailbox message, open the message → click the extractor menu item → confirm a Booking + Flight Segment appear under the Trip and an `ExtractedFrom` row exists in the database panel.
+
+- [ ] **Step 3: Mark PHASE2.md item 2.1 + 2.2 complete**
+
+Tick off the matching items in `packages/plugins/plugin-trip/PHASE2.md` "Suggested PR slicing".
+
+- [ ] **Step 4: Append "Phase 2 complete" summary to this PLAN.md**
+
+```markdown
+## Phase 2 complete
+
+- `MessageExtractor` capability + `ExtractedFrom` relation in plugin-inbox.
+- `ExtractMessage` operation routes manual, agent, and auto-on-arrival dispatch.
+- `TravelMessageExtractor` ships parseUnitedFlight + parseBookingComHotel.
+- Per-message extractor menu items in the inbox toolbar.
+- All three dispatch modes wired end-to-end.
+
+**Next phases:**
+
+- Agent-backed parser variant (AiService-driven).
+- Additional carriers (BA, Lufthansa, Eurostar, Avis, …).
+- `TripCalendarSource` (PHASE2 §2.3-2.4).
+- Trip picker UI in the manual extraction flow.
+```
+
+- [ ] **Step 5: Commit + push**
+
+```bash
+git add packages/plugins/plugin-trip/PLAN.md packages/plugins/plugin-trip/PHASE2.md
+git commit -m "docs(plugin-trip): Phase 2 close-out"
+git push
+```
