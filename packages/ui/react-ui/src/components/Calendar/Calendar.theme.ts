@@ -15,7 +15,8 @@ const root: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
   // sized to its content; `self-start` prevents a flex/grid parent from stretching the calendar vertically.
   mx('relative w-fit h-fit self-start p-2 select-none bg-group-surface text-base-foreground', ...etc);
 
-const months: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('flex flex-col sm:flex-row gap-2', ...etc);
+// `<Months>` wraps `<Nav>` and each `<Month>` as flex siblings — keep them stacked so nav sits above the grid.
+const months: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('flex flex-col gap-2', ...etc);
 
 const month: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('flex flex-col gap-2', ...etc);
 
