@@ -81,7 +81,9 @@ export const SingleWithTime: Story = {
         <DatePicker.Trigger format='PPP p' />
         <DatePicker.Content>
           <DatePicker.Calendar />
-          <Input.Time value={toTime(value)} onChange={(event) => setValue(applyTime(value, event.target.value))} />
+          <Input.Root>
+            <Input.Time value={toTime(value)} onChange={(event) => setValue(applyTime(value, event.target.value))} />
+          </Input.Root>
         </DatePicker.Content>
       </DatePicker.Root>
     );
@@ -96,18 +98,22 @@ export const RangeWithTime: Story = {
         <DatePicker.Trigger format='PPP p' />
         <DatePicker.Content>
           <DatePicker.Calendar />
-          <Input.Time
-            value={toTime(value?.from)}
-            onChange={(event) =>
-              setValue(value ? { ...value, from: applyTime(value.from, event.target.value) } : undefined)
-            }
-          />
-          <Input.Time
-            value={toTime(value?.to)}
-            onChange={(event) =>
-              setValue(value?.from ? { ...value, to: applyTime(value.to, event.target.value) } : undefined)
-            }
-          />
+          <Input.Root>
+            <Input.Time
+              value={toTime(value?.from)}
+              onChange={(event) =>
+                setValue(value ? { ...value, from: applyTime(value.from, event.target.value) } : undefined)
+              }
+            />
+          </Input.Root>
+          <Input.Root>
+            <Input.Time
+              value={toTime(value?.to)}
+              onChange={(event) =>
+                setValue(value?.from ? { ...value, to: applyTime(value.to, event.target.value) } : undefined)
+              }
+            />
+          </Input.Root>
         </DatePicker.Content>
       </DatePicker.Root>
     );
