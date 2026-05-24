@@ -57,10 +57,10 @@ export const useWheel = (controller?: GlobeController | null, options: WheelOpti
         //   the latest *prop*, not the latest state, so each event would
         //   start from the initial rotation and just jitter around it.
         // Mutating the projection here matches how useDrag accumulates.
-        // Negate deltaY so the wheel matches the linear-drag Y convention
-        // (downward motion brings the northern hemisphere into view).
+        // Both deltas are negated so the wheel feels like "natural scroll":
+        // scrolling/swiping in a direction moves the globe content the same way.
         const [lambda, phi, gamma] = controller.projection.rotate() as Vector;
-        const next: Vector = [lambda + event.deltaX * sensitivity, phi - event.deltaY * sensitivity, gamma];
+        const next: Vector = [lambda - event.deltaX * sensitivity, phi + event.deltaY * sensitivity, gamma];
         controller.projection.rotate(next);
         controller.setRotation(controller.projection.rotate() as Vector);
       }
