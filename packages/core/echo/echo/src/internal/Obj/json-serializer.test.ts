@@ -11,6 +11,7 @@ import * as Obj from '../../Obj';
 import { TestSchema } from '../../testing';
 import * as Type from '../../Type';
 import { getSchemaURI, getSchemaTypename, getTypeURI, getTypename } from '../Annotation';
+import * as JsonSchema from '../JsonSchema';
 import { getMetaChecked } from '../common/api';
 import { makeObject } from '../common/proxy';
 import { ATTR_TYPE, EntityKind, KindId, MetaId, TypeId, getSchema } from '../common/types';
@@ -118,6 +119,34 @@ describe('Object JSON serializer', () => {
     expect(expandoFromJson.id).toBe(expando.id);
     expect(expandoFromJson.message).toBe('local-only');
     expect((expandoFromJson as any)[ATTR_TYPE]).toBeUndefined();
+  });
+
+  // Regression: the Bramble exemplar space stores a `Type.Type` entity (the
+  // persisted RoastLog schema) and reaches users via `client.spaces.import`,
+  // which routes through `objectFromJSON`. Before the fix, `fromJSON` only
+  // stamped `KindId` as Object/Relation — never Type — so the imported
+  // entity ended up branded as Object, was excluded from `Filter.type(Type.Type)`
+  // / `Type.isType`, and the Database subgraph in Composer rendered empty
+  // (no types section at all). `objectFromJSON` must honour the schema's
+  // TypeAnnotation kind the way `createObject` does.
+  describe('Type.Type round-trip', () => {
+    test('preserves KindId=Type for a persisted Type.Type entity', async ({ expect }) => {
+      const PersistedTypeSchema = Type.getSchema(Type.Type);
+      const typeEntity = Type.makeObject({
+        typename: 'com.example.type.regression',
+        version: '0.1.0',
+        jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ field: Schema.Number })),
+        name: 'Regression Type',
+      });
+
+      const typeJson = objectToJSON(typeEntity);
+      const refResolver = new StaticRefResolver().addSchema(PersistedTypeSchema);
+      const reconstructed = (await objectFromJSON(typeJson, { refResolver })) as any;
+
+      expect(reconstructed[KindId]).toBe(EntityKind.Type);
+      expect(Type.isType(reconstructed)).toBe(true);
+      expect(reconstructed.typename).toBe('com.example.type.regression');
+    });
   });
 
   describe('Uint8Array', () => {

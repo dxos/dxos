@@ -12,7 +12,7 @@ import { assumeType, decodeUint8ArrayFromJson, deepMapValues, isEncodedUint8Arra
 
 import type * as Database from '../../Database';
 import type * as Obj from '../../Obj';
-import { getTypeURI, setTypename } from '../Annotation';
+import { getTypeAnnotation, getTypeURI, setTypename } from '../Annotation';
 import { attachTypedJsonSerializer, defineHiddenProperty, typedJsonSerializer } from '../common/proxy';
 import {
   ATTR_META,
@@ -139,7 +139,13 @@ export const objectFromJSON = async (
     defineHiddenProperty(obj, RelationSourceId, source);
     defineHiddenProperty(obj, RelationTargetId, target);
   } else {
-    defineHiddenProperty(obj, KindId, EntityKind.Object);
+    // Honour the schema's TypeAnnotation kind — persisted `Type.Type` entities
+    // (e.g. dynamic schemas loaded from a snapshot import) must brand as
+    // `KindId = Type`, not Object, otherwise `Filter.type(Type.Type)` /
+    // `Type.isType` skip them and the schema registry never picks them up.
+    // Mirrors the kind resolution in `createObject` (the in-memory path).
+    const annotationKind = schema != null ? getTypeAnnotation(schema)?.kind : undefined;
+    defineHiddenProperty(obj, KindId, annotationKind === EntityKind.Type ? EntityKind.Type : EntityKind.Object);
   }
 
   if (typeof jsonData[ATTR_META] === 'object') {
