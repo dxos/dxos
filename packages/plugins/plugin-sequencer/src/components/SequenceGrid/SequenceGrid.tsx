@@ -135,8 +135,12 @@ const maxNoteEndCol = (
 ): number => {
   let max = Number.MAX_SAFE_INTEGER;
   for (const note of notes) {
-    if (note.pitch !== pitch) continue;
-    if (excludeStartTime !== undefined && Math.abs(note.startTime - excludeStartTime) < 1e-6) continue;
+    if (note.pitch !== pitch) {
+      continue;
+    }
+    if (excludeStartTime !== undefined && Math.abs(note.startTime - excludeStartTime) < 1e-6) {
+      continue;
+    }
     const col = Math.round(note.startTime / beatsPerCell);
     if (col > noteStartCol) {
       max = Math.min(max, col - 1);
@@ -157,7 +161,9 @@ const minNoteStartCol = (
 ): number => {
   let min = 0;
   for (const note of notes) {
-    if (note.pitch !== pitch) continue;
+    if (note.pitch !== pitch) {
+      continue;
+    }
     const col = Math.round(note.startTime / beatsPerCell);
     const endCol = col + Math.max(1, Math.round(note.duration / beatsPerCell)) - 1;
     if (endCol < anchorCol) {
