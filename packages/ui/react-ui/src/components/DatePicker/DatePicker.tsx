@@ -4,14 +4,7 @@
 
 import { createContext } from '@radix-ui/react-context';
 import { format as formatDate } from 'date-fns';
-import React, {
-  type ComponentPropsWithoutRef,
-  type ReactNode,
-  forwardRef,
-  useCallback,
-  useId,
-  useState,
-} from 'react';
+import React, { type ComponentPropsWithoutRef, type ReactNode, forwardRef, useCallback, useState } from 'react';
 import { type DateRange } from 'react-day-picker';
 
 import { useThemeContext } from '../../hooks';
@@ -247,88 +240,41 @@ const DatePickerCalendar = (props: DatePickerCalendarProps) => {
 
   // Branch on mode so each Calendar render targets a single DayPickerProps union member.
   if (mode === 'single') {
-    return <Calendar.Root {...props} mode='single' selected={value as Date | undefined} onSelect={handleSelect as (date: Date | undefined) => void} />;
+    return (
+      <Calendar.Root
+        {...props}
+        mode='single'
+        selected={value as Date | undefined}
+        onSelect={handleSelect as (date: Date | undefined) => void}
+      />
+    );
   }
   if (mode === 'range') {
-    return <Calendar.Root {...props} mode='range' selected={value as DateRange | undefined} onSelect={handleSelect as (range: DateRange | undefined) => void} />;
+    return (
+      <Calendar.Root
+        {...props}
+        mode='range'
+        selected={value as DateRange | undefined}
+        onSelect={handleSelect as (range: DateRange | undefined) => void}
+      />
+    );
   }
-  return <Calendar.Root {...props} mode='multiple' selected={value as Date[] | undefined} onSelect={handleSelect as (dates: Date[] | undefined) => void} />;
+  return (
+    <Calendar.Root
+      {...props}
+      mode='multiple'
+      selected={value as Date[] | undefined}
+      onSelect={handleSelect as (dates: Date[] | undefined) => void}
+    />
+  );
 };
 
 DatePickerCalendar.displayName = 'DatePickerCalendar';
 
 //
-// TimeField — native <input type='time'>; only renders when withTime is on.
-//
-
-export type DatePickerTimeFieldProps = ThemedClassName<
-  Omit<ComponentPropsWithoutRef<'div'>, 'children'>
-> & {
-  /** For range mode: which endpoint to bind to. Defaults to 'from'. */
-  endpoint?: 'from' | 'to';
-};
-
-const pad = (num: number) => num.toString().padStart(2, '0');
-const toTimeValue = (date: Date | undefined): string =>
-  date ? `${pad(date.getHours())}:${pad(date.getMinutes())}` : '';
-
-const DatePickerTimeField = forwardRef<HTMLDivElement, DatePickerTimeFieldProps>(
-  ({ classNames, endpoint = 'from', ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
-    const { mode, value, setValue, withTime } = useDatePickerContext('DatePickerTimeField');
-    const id = useId();
-
-    if (!withTime) {
-      return null;
-    }
-
-    let current: Date | undefined;
-    if (mode === 'single') {
-      current = value as Date | undefined;
-    } else if (mode === 'range') {
-      current = (value as DateRange | undefined)?.[endpoint];
-    } else {
-      const arr = value as Date[] | undefined;
-      current = arr && arr.length ? arr[arr.length - 1] : undefined;
-    }
-
-    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-      const parts = event.target.value.split(':');
-      const hours = parseInt(parts[0] ?? '', 10);
-      const minutes = parseInt(parts[1] ?? '', 10);
-      const base = current ? new Date(current) : new Date();
-      base.setHours(Number.isFinite(hours) ? hours : 0, Number.isFinite(minutes) ? minutes : 0, 0, 0);
-      if (mode === 'single') {
-        setValue(base);
-      } else if (mode === 'range') {
-        const range = (value as DateRange | undefined) ?? { from: base };
-        setValue({ ...range, [endpoint]: base } as DateRange);
-      } else {
-        const arr = ((value as Date[] | undefined) ?? []).slice();
-        if (arr.length === 0) {
-          arr.push(base);
-        } else {
-          arr[arr.length - 1] = base;
-        }
-        setValue(arr);
-      }
-    };
-
-    return (
-      <div ref={forwardedRef} {...props} className={tx('datePicker.timeField', {}, classNames)}>
-        <label htmlFor={id} className='text-xs text-description'>
-          {mode === 'range' ? endpoint : 'time'}
-        </label>
-        <input id={id} type='time' value={toTimeValue(current)} onChange={handleChange} />
-      </div>
-    );
-  },
-);
-
-DatePickerTimeField.displayName = 'DatePickerTimeField';
-
-//
 // Public namespace.
+// Time-of-day entry: compose `Input.Time` inside `DatePicker.Content` and wire it to your own state;
+// `DatePicker.Root`'s `withTime` flag preserves hour/minute when the user clicks a new date.
 //
 
 export const DatePicker = {
@@ -336,8 +282,8 @@ export const DatePicker = {
   Trigger: DatePickerTrigger,
   Content: DatePickerContent,
   Calendar: DatePickerCalendar,
-  TimeField: DatePickerTimeField,
 };
 
 export { useDatePickerContext };
+
 export type { ValueByMode };

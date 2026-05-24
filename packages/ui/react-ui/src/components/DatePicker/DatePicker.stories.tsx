@@ -3,13 +3,23 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import { format } from 'date-fns';
 import React, { useState } from 'react';
 import { type DateRange } from 'react-day-picker';
 
 import { withTheme } from '../../testing';
 import { translations } from '../../translations';
 import { Icon } from '../Icon';
+import { Input } from '../Input';
 import { DatePicker } from './DatePicker';
+
+const toTime = (date: Date | undefined) => (date ? format(date, 'HH:mm') : '');
+const applyTime = (date: Date | undefined, time: string): Date => {
+  const [hours, minutes] = time.split(':').map((part) => parseInt(part, 10));
+  const out = date ? new Date(date) : new Date();
+  out.setHours(Number.isFinite(hours) ? hours : 0, Number.isFinite(minutes) ? minutes : 0, 0, 0);
+  return out;
+};
 
 const meta: Meta<typeof DatePicker.Root> = {
   title: 'ui/react-ui-core/components/DatePicker',
@@ -71,7 +81,7 @@ export const SingleWithTime: Story = {
         <DatePicker.Trigger format='PPP p' />
         <DatePicker.Content>
           <DatePicker.Calendar />
-          <DatePicker.TimeField />
+          <Input.Time value={toTime(value)} onChange={(event) => setValue(applyTime(value, event.target.value))} />
         </DatePicker.Content>
       </DatePicker.Root>
     );
@@ -86,8 +96,18 @@ export const RangeWithTime: Story = {
         <DatePicker.Trigger format='PPP p' />
         <DatePicker.Content>
           <DatePicker.Calendar />
-          <DatePicker.TimeField endpoint='from' />
-          <DatePicker.TimeField endpoint='to' />
+          <Input.Time
+            value={toTime(value?.from)}
+            onChange={(event) =>
+              setValue(value ? { ...value, from: applyTime(value.from, event.target.value) } : undefined)
+            }
+          />
+          <Input.Time
+            value={toTime(value?.to)}
+            onChange={(event) =>
+              setValue(value?.from ? { ...value, to: applyTime(value.to, event.target.value) } : undefined)
+            }
+          />
         </DatePicker.Content>
       </DatePicker.Root>
     );

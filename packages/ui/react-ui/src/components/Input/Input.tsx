@@ -174,6 +174,38 @@ const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>
 
 TextInput.displayName = 'Input.TextInput';
 
+type TimeProps = InputSharedProps & ThemedClassName<Omit<TextInputPrimitiveProps, 'type'>>;
+
+const Time = forwardRef<HTMLInputElement, InputScopedProps<TimeProps>>(
+  ({ __inputScope, classNames, density: densityProp, elevation: elevationProp, variant, ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    const density = useDensityContext(densityProp);
+    const elevation = useElevationContext(elevationProp);
+    const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
+
+    return (
+      <TextInputPrimitive
+        {...props}
+        type='time'
+        className={tx(
+          'input.input',
+          {
+            variant,
+            disabled: props.disabled,
+            density,
+            elevation,
+            validationValence,
+          },
+          classNames,
+        )}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
+
+Time.displayName = 'Input.Time';
+
 type TextAreaProps = InputSharedProps & ThemedClassName<TextAreaPrimitiveProps>;
 
 const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>>(
@@ -314,6 +346,7 @@ export const Input = {
   PinInput,
   TextInput,
   TextArea,
+  Time,
   Checkbox,
   Switch,
   Label,
@@ -329,6 +362,7 @@ export type {
   PinInputProps,
   TextInputProps,
   TextAreaProps,
+  TimeProps,
   CheckboxProps,
   SwitchProps,
   LabelProps,

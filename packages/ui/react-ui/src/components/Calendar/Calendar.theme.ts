@@ -45,7 +45,7 @@ const button_next: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
 
 const month_grid: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('w-full border-collapse', ...etc);
 
-const weekdays: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('flex', ...etc);
+const weekdays: ComponentFunction<CalendarStyleProps> = (_p, ...etc) => mx('flex pb-1', ...etc);
 
 const weekday: ComponentFunction<CalendarStyleProps> = (_p, ...etc) =>
   mx('w-9 text-xs font-thin text-description', ...etc);
