@@ -9,7 +9,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { Button, Icon, Input, Panel } from '@dxos/react-ui';
-import { type ToggleMode, type Tool } from '@dxos/react-ui-canvas';
+import { type ToggleMode } from '@dxos/react-ui-canvas';
 import { Menu, MenuBuilder, useMenuActions, type ActionGraphProps, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
 import { Oscilloscope } from '@dxos/react-ui-sfx';
 import { mx } from '@dxos/ui-theme';
@@ -86,7 +86,7 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
   const [isPlaying, setIsPlaying] = useState(false);
   const [playhead, setPlayhead] = useState<number | null>(null);
   const [showAllTracks, setShowAllTracks] = useState(false);
-  const [toolMode, setToolMode] = useState<Tool>('toggle');
+  const [toolMode, setToolMode] = useState<'edit' | 'delete'>('edit');
 
   // Auto-select the first track when one becomes available.
   useEffect(() => {
@@ -245,9 +245,16 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
         if (!sequence) {
           return;
         }
-        const existingIndex = sequence.notes.findIndex(
-          (note) => note.pitch === pitch && Math.abs(note.startTime - startTime) < 1e-6,
-        );
+        const existingIndex = sequence.notes.findIndex((note) => {
+          if (note.pitch !== pitch) {
+            return false;
+          }
+          if (mode === 'unset') {
+            // Hit any note whose duration spans over the cursor position.
+            return note.startTime <= startTime + 1e-6 && startTime < note.startTime + note.duration - 1e-6;
+          }
+          return Math.abs(note.startTime - startTime) < 1e-6;
+        });
         const exists = existingIndex >= 0;
         const shouldRemove = mode === 'unset' || (mode === 'toggle' && exists);
         const shouldAdd = mode === 'set' || (mode === 'toggle' && !exists);
@@ -321,11 +328,8 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
   // menu's invoke handlers close over so the actions stay in sync.
   const togglePlay = useCallback(() => setIsPlaying((current) => !current), []);
   const toggleShowAllTracks = useCallback(() => setShowAllTracks((current) => !current), []);
-  const activateEditTool = useCallback(() => setToolMode((current) => (current === 'edit' ? 'toggle' : 'edit')), []);
-  const activateDeleteTool = useCallback(
-    () => setToolMode((current) => (current === 'delete' ? 'toggle' : 'delete')),
-    [],
-  );
+  const activateEditTool = useCallback(() => setToolMode('edit'), []);
+  const activateDeleteTool = useCallback(() => setToolMode('delete'), []);
   const actionsAtom = useMemo(
     () =>
       Atom.make(
@@ -359,7 +363,7 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
                 iconOnly: true,
                 variant: 'toggleGroup',
                 selectCardinality: 'single',
-                value: toolMode === 'edit' ? 'tool-edit' : toolMode === 'delete' ? 'tool-delete' : '',
+                value: toolMode === 'edit' ? 'tool-edit' : 'tool-delete',
               } as ToolbarMenuActionGroupProperties,
               (group) => {
                 group

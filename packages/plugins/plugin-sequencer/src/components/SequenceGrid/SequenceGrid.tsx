@@ -128,7 +128,7 @@ export const SequenceGrid = ({
   onLoopChange,
   onToggleNote,
   overlayTracks,
-  tool = 'toggle',
+  tool = 'edit',
   classNames,
 }: SequenceGridProps) => {
   const registry = useContext(RegistryContext);
@@ -361,6 +361,7 @@ export const SequenceGrid = ({
   useEffect(() => {
     return registry.subscribe(atoms.playhead, (playheadCol) => {
       if (playheadCol === null) {
+        registry.update(atoms.viewport, (vp) => ({ ...vp, scrollX: 0 }));
         return;
       }
       const vp = registry.get(atoms.viewport);
