@@ -12,6 +12,7 @@ import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
 import * as Stream from 'effect/Stream';
 
+import { Capability } from '@dxos/app-framework';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import type { Credential } from '@dxos/compute';
 import { Operation, Trace } from '@dxos/compute';
@@ -22,8 +23,7 @@ import { Message } from '@dxos/types';
 
 import { GoogleMail } from '../../../apis';
 import { InboxResolver, GoogleCredentials } from '../../../services';
-import { InboxOperation } from '../../../types';
-import { Mailbox } from '../../../types';
+import { InboxCapabilities, InboxOperation, Mailbox } from '../../../types';
 import { mapMessage } from './mapper';
 
 type DateChunk = {
@@ -126,6 +126,7 @@ const syncSingleMailbox = (input: {
     const newMessagesCount = yield* streamGmailMessagesToFeed(
       startDate,
       feed,
+      mailbox,
       userId,
       defaultLabel,
       existingGmailIds,
@@ -249,6 +250,7 @@ const fetchMessagesForDateRange = (userId: string, label: string, dateChunk: Dat
 const streamGmailMessagesToFeed = Effect.fn(function* (
   startDate: Date,
   feed: Feed.Feed,
+  mailbox: Mailbox.Mailbox,
   userId: string,
   label: string,
   existingGmailIds: Set<string>,
@@ -295,6 +297,54 @@ const streamGmailMessagesToFeed = Effect.fn(function* (
           count: messages.length,
         });
         yield* Feed.append(feed, messages);
+
+        const extractorsConfig = mailbox.extractors;
+        if (extractorsConfig && extractorsConfig.enabled.length > 0) {
+          const extractors = yield* Capability.getAll(InboxCapabilities.MessageExtractor);
+          const db = Obj.getDatabase(mailbox);
+          if (db) {
+            for (const message of messages) {
+              let best: { extractor: (typeof extractors)[number]; confidence: number } | undefined;
+              for (const extractor of extractors) {
+                if (!extractorsConfig.enabled.includes(extractor.id)) {
+                  continue;
+                }
+                let result;
+                try {
+                  result = extractor.match(message);
+                } catch (err) {
+                  log.warn('auto-on-arrival match failed', {
+                    err,
+                    extractorId: extractor.id,
+                    messageId: message.id,
+                  });
+                  continue;
+                }
+                if (!result.matched) {
+                  continue;
+                }
+                const confidence = result.confidence ?? 0;
+                if (confidence >= extractorsConfig.threshold && (!best || confidence > best.confidence)) {
+                  best = { extractor, confidence };
+                }
+              }
+              if (best) {
+                yield* Operation.invoke(InboxOperation.ExtractMessage, {
+                  db,
+                  message,
+                  extractorId: best.extractor.id,
+                  targetTripId: undefined,
+                }).pipe(
+                  Effect.catchAll((err) => {
+                    log.warn('auto-on-arrival extract failed', { err, messageId: message.id });
+                    return Effect.void;
+                  }),
+                );
+              }
+            }
+          }
+        }
+
         return messages.length;
       }),
     ),
