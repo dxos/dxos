@@ -53,6 +53,16 @@ export const Range: Story = {
   },
 };
 
+export const WithNav: Story = {
+  decorators: [withTheme(), withLayout({ layout: 'centered' })],
+  render: () => (
+    <Calendar.Root>
+      <Calendar.Toolbar nav />
+      <Calendar.Grid rows={6} />
+    </Calendar.Root>
+  ),
+};
+
 export const Column: Story = {
   decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-auto' })],
   render: () => (

@@ -11,6 +11,8 @@ export const translations = [
     'en-US': {
       [translationKey]: {
         'today.button': 'Today',
+        'prev.button': 'Previous month',
+        'next.button': 'Next month',
       },
     },
   },

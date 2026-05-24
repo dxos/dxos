@@ -164,42 +164,82 @@ const CalendarRoot = forwardRef<CalendarController, CalendarRootProps>(
 
 const CALENDAR_TOOLBAR_NAME = 'CalendarHeader';
 
-type CalendarToolbarProps = {};
+type CalendarToolbarProps = {
+  /**
+   * When `true`, render previous/next month buttons alongside the today button.
+   * Defaults to `false` for backwards compatibility.
+   */
+  nav?: boolean;
+};
 
-const CalendarToolbar = composable<HTMLDivElement, CalendarToolbarProps>(({ classNames, ...props }, forwardedRef) => {
-  const { t } = useTranslation(translationKey);
-  const { weekStartsOn, event, index, selected } = useCalendarContext(CALENDAR_TOOLBAR_NAME);
-  const top = useMemo(() => getDate(start, index ?? 0, 6, weekStartsOn), [index, weekStartsOn]);
-  const today = useMemo(() => new Date(), []);
+const CalendarToolbar = composable<HTMLDivElement, CalendarToolbarProps>(
+  ({ classNames, nav = false, ...props }, forwardedRef) => {
+    const { t } = useTranslation(translationKey);
+    const { weekStartsOn, event, index, selected } = useCalendarContext(CALENDAR_TOOLBAR_NAME);
+    const top = useMemo(() => getDate(start, index ?? 0, 6, weekStartsOn), [index, weekStartsOn]);
+    const today = useMemo(() => new Date(), []);
 
-  const handleToday = useCallback(() => {
-    event.emit({ type: 'scroll', date: today });
-  }, [event, start, today]);
+    const handleToday = useCallback(() => {
+      event.emit({ type: 'scroll', date: today });
+    }, [event, today]);
 
-  return (
-    <div
-      {...composableProps(props, {
-        role: 'none',
-        classNames: ['shrink-0 grid! grid-cols-3 items-center bg-toolbar-surface', classNames],
-      })}
-      ref={forwardedRef}
-      style={{ width: defaultWidth }}
-    >
-      <div className='flex justify-start'>
-        <IconButton
-          variant='ghost'
-          icon='ph--calendar--regular'
-          iconOnly
-          classNames='aspect-square'
-          label={t('today.button')}
-          onClick={handleToday}
-        />
+    const handlePrev = useCallback(() => {
+      const target = new Date(top.getFullYear(), top.getMonth() - 1, 1);
+      event.emit({ type: 'scroll', date: target });
+    }, [event, top]);
+
+    const handleNext = useCallback(() => {
+      const target = new Date(top.getFullYear(), top.getMonth() + 1, 1);
+      event.emit({ type: 'scroll', date: target });
+    }, [event, top]);
+
+    return (
+      <div
+        {...composableProps(props, {
+          role: 'none',
+          classNames: ['shrink-0 grid! grid-cols-3 items-center bg-toolbar-surface', classNames],
+        })}
+        ref={forwardedRef}
+        style={{ width: defaultWidth }}
+      >
+        <div className='flex justify-start'>
+          <IconButton
+            variant='ghost'
+            icon='ph--calendar--regular'
+            iconOnly
+            classNames='aspect-square'
+            label={t('today.button')}
+            onClick={handleToday}
+          />
+        </div>
+        <div className='flex justify-center p-2 text-description'>{format(selected ?? top, 'MMMM')}</div>
+        <div className='flex justify-end items-center gap-1 p-2 text-description'>
+          {nav && (
+            <IconButton
+              variant='ghost'
+              icon='ph--caret-left--regular'
+              iconOnly
+              classNames='aspect-square'
+              label={t('prev.button')}
+              onClick={handlePrev}
+            />
+          )}
+          <span>{(selected ?? top).getFullYear()}</span>
+          {nav && (
+            <IconButton
+              variant='ghost'
+              icon='ph--caret-right--regular'
+              iconOnly
+              classNames='aspect-square'
+              label={t('next.button')}
+              onClick={handleNext}
+            />
+          )}
+        </div>
       </div>
-      <div className='flex justify-center p-2 text-description'>{format(selected ?? top, 'MMMM')}</div>
-      <div className='flex justify-end p-2 text-description'>{(selected ?? top).getFullYear()}</div>
-    </div>
-  );
-});
+    );
+  },
+);
 
 CalendarToolbar.displayName = CALENDAR_TOOLBAR_NAME;
 
