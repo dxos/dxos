@@ -5,4 +5,4 @@
 export { type Label, isLabel, toLocalizedString } from '@dxos/ui-types/translations';
 
 export * from './ThemeProvider';
-export { useTranslation } from './TranslationsProvider';
+export { TranslationsContext, useTranslation } from './TranslationsProvider';

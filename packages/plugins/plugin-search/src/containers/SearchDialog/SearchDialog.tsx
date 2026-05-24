@@ -69,7 +69,7 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
       <Dialog.Header>
         <Dialog.Title>{t('search-dialog.title')}</Dialog.Title>
         <Dialog.Close asChild>
-          <Dialog.CloseIconButton />
+          <Dialog.ActionIconButton action='close' />
         </Dialog.Close>
       </Dialog.Header>
       <SearchList.Root onSearch={handleSearch}>

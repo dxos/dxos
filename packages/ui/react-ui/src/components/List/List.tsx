@@ -27,7 +27,7 @@ import {
 import { type Density } from '@dxos/ui-types';
 
 import { useDensityContext, useThemeContext } from '../../hooks';
-import { DensityProvider } from '../../primitives/DensityProvider';
+import { DensityProvider } from '../../primitives';
 import { composable, composableProps } from '../../util';
 import { type ThemedClassName } from '../../util';
 import { Icon } from '../Icon';

@@ -3,7 +3,7 @@
 //
 
 import { RegistryContext, useAtomValue } from '@effect-atom/atom-react';
-import React, { useContext, useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import {
@@ -13,6 +13,7 @@ import {
   type RenderCell,
   type Row,
   type ToggleMode,
+  type Tool,
   createCellGridAtoms,
   toggleCell,
   cellKey,
@@ -45,11 +46,24 @@ export type SequenceGridProps = {
   loopEnd?: number;
   onLoopChange?: (loopStart: number, loopEnd: number) => void;
   /**
+   * Active tool mode. 'toggle' (default) flips notes on click/drag; 'edit' draws a single
+   * note spanning the drag extent; 'delete' always removes.
+   */
+  tool?: Tool;
+  /** Beats per bar used for auto-scroll bar snapping. Defaults to 4 (4/4 time). */
+  beatsPerBar?: number;
+  /**
    * Called when the user toggles a cell. The caller is responsible for mutating the sequence.
    * `mode` reflects the gesture: a single click reports `toggle`; a drag reports `set` or
    * `unset` for every cell crossed (chosen by the cell under the initial pointerdown).
+   * `duration` is provided by the edit tool to specify the note length in beats.
    */
-  onToggleNote?: (pitch: number, startTime: number, mode: ToggleMode) => void;
+  onToggleNote?: (pitch: number, startTime: number, mode: ToggleMode, duration?: number) => void;
+  /**
+   * Called when the user drags on an existing note to resize it.
+   * Mutating the duration in-place is preferred over remove+add.
+   */
+  onResizeNote?: (pitch: number, startTime: number, newDuration: number) => void;
   /**
    * Other tracks to paint underneath the active sequence in a subdued color.
    * Cells from these tracks are non-interactive — toggle gestures always target
@@ -102,6 +116,63 @@ const renderNoteCell: RenderCell<{ color: string; velocity: number; subdued?: bo
   ctx.globalAlpha = 1;
 };
 
+/** Find a note on `pitch` whose time span includes `beat`. */
+const findNoteAtBeat = (notes: ReadonlyArray<Note.Note>, pitch: number, beat: number): Note.Note | undefined =>
+  notes.find(
+    (note) => note.pitch === pitch && note.startTime <= beat + 1e-6 && beat < note.startTime + note.duration - 1e-6,
+  );
+
+/**
+ * Maximum end column (inclusive) a note starting at `noteStartCol` on `pitch` may occupy
+ * without overlapping any other note. Pass `excludeStartTime` to skip the note being resized.
+ */
+const maxNoteEndCol = (
+  notes: ReadonlyArray<Note.Note>,
+  pitch: number,
+  noteStartCol: number,
+  beatsPerCell: number,
+  excludeStartTime?: number,
+): number => {
+  let max = Number.MAX_SAFE_INTEGER;
+  for (const note of notes) {
+    if (note.pitch !== pitch) {
+      continue;
+    }
+    if (excludeStartTime !== undefined && Math.abs(note.startTime - excludeStartTime) < 1e-6) {
+      continue;
+    }
+    const col = Math.round(note.startTime / beatsPerCell);
+    if (col > noteStartCol) {
+      max = Math.min(max, col - 1);
+    }
+  }
+  return max;
+};
+
+/**
+ * Minimum start column (inclusive) a note whose right edge is at `anchorCol` may begin at
+ * on `pitch` without overlapping any other note to the left of that anchor.
+ */
+const minNoteStartCol = (
+  notes: ReadonlyArray<Note.Note>,
+  pitch: number,
+  anchorCol: number,
+  beatsPerCell: number,
+): number => {
+  let min = 0;
+  for (const note of notes) {
+    if (note.pitch !== pitch) {
+      continue;
+    }
+    const col = Math.round(note.startTime / beatsPerCell);
+    const endCol = col + Math.max(1, Math.round(note.duration / beatsPerCell)) - 1;
+    if (endCol < anchorCol) {
+      min = Math.max(min, endCol + 1);
+    }
+  }
+  return min;
+};
+
 /**
  * 2D piano-roll style editor for a single Sequence. Y-axis = pitch (high pitches on top);
  * x-axis = time in beats. Renders via the shared CellGrid canvas component.
@@ -112,12 +183,15 @@ export const SequenceGrid = ({
   minPitch: minPitchProp,
   maxPitch: maxPitchProp,
   beatsPerCell = 0.25,
+  beatsPerBar = 4,
   playhead = null,
   loopStart,
   loopEnd,
   onLoopChange,
   onToggleNote,
+  onResizeNote,
   overlayTracks,
+  tool = 'edit',
   classNames,
 }: SequenceGridProps) => {
   const registry = useContext(RegistryContext);
@@ -136,6 +210,11 @@ export const SequenceGrid = ({
       createCellGridAtoms<{ color: string; velocity: number; subdued?: boolean }>({ cellWidth: 28, cellHeight: 18 }),
     [],
   );
+
+  // Temporary cell shown while the user is mid-drag with the edit tool.
+  const [drawPreview, setDrawPreview] = useState<{ col: number; row: number; length: number } | null>(null);
+  // Tracks the existing note being resized during a drag gesture (set on pointerdown, cleared on commit).
+  const resizeNoteRef = useRef<Note.Note | null>(null);
 
   // Rows are pitches arranged high-to-low (row 0 = maxPitch at the top).
   const rows: Row[] = useMemo(
@@ -219,30 +298,187 @@ export const SequenceGrid = ({
         data: { color: trackColor, velocity: note.velocity ?? 0.8 },
       });
     }
+    // Show a live preview cell while the user drags with the edit tool.
+    if (drawPreview) {
+      cells.set(cellKey(drawPreview.col, drawPreview.row), {
+        col: drawPreview.col,
+        row: drawPreview.row,
+        length: drawPreview.length,
+        data: { color: trackColor, velocity: 0.8 },
+      });
+    }
     registry.set(atoms.cells, cells);
-  }, [registry, atoms.cells, notes, overlayCellInputs, minPitch, maxPitch, beatsPerCell, trackColor]);
+  }, [registry, atoms.cells, notes, overlayCellInputs, minPitch, maxPitch, beatsPerCell, trackColor, drawPreview]);
 
   // Mirror playhead (beats → column units, accounting for beatsPerCell).
   useEffect(() => {
     registry.set(atoms.playhead, playhead === null ? null : playhead / beatsPerCell);
   }, [registry, atoms.playhead, playhead, beatsPerCell]);
 
-  const handleToggle = (coord: CellCoord, mode: ToggleMode) => {
-    const pitch = maxPitch - coord.row;
-    const startTime = coord.col * beatsPerCell;
-    if (onToggleNote) {
-      onToggleNote(pitch, startTime, mode);
-      return;
-    }
-    // Default: write directly to the cells atom (preview mode).
-    toggleCell(
-      registry,
-      atoms,
-      coord,
-      ({ col, row }) => ({ col, row, length: 1, data: { color: trackColor, velocity: 0.8 } }),
-      mode,
-    );
-  };
+  // Sync the active tool into the atoms so the pointer handler uses the right mode.
+  useEffect(() => {
+    registry.set(atoms.tool, tool);
+  }, [registry, atoms.tool, tool]);
+
+  const handleToggle = useCallback(
+    (coord: CellCoord, mode: ToggleMode) => {
+      const pitch = maxPitch - coord.row;
+      const startTime = coord.col * beatsPerCell;
+      if (onToggleNote) {
+        onToggleNote(pitch, startTime, mode);
+        return;
+      }
+      // Default: write directly to the cells atom (preview mode).
+      toggleCell(
+        registry,
+        atoms,
+        coord,
+        ({ col, row }) => ({ col, row, length: 1, data: { color: trackColor, velocity: 0.8 } }),
+        mode,
+      );
+    },
+    [maxPitch, beatsPerCell, onToggleNote, registry, atoms, trackColor],
+  );
+
+  const handleDrawUpdate = useCallback(
+    (startCoord: CellCoord, endCoord: CellCoord) => {
+      const pitch = maxPitch - startCoord.row;
+      const startBeat = startCoord.col * beatsPerCell;
+
+      // Initial pointerdown call (start === end): detect gesture type.
+      if (startCoord.col === endCoord.col) {
+        resizeNoteRef.current = findNoteAtBeat(notes, pitch, startBeat) ?? null;
+        if (!resizeNoteRef.current) {
+          // Empty cell: show immediate 1-cell preview.
+          setDrawPreview({ col: startCoord.col, row: startCoord.row, length: 1 });
+        }
+        // For resize: the existing note is already visible; skip preview update.
+        return;
+      }
+
+      const existingNote = resizeNoteRef.current;
+
+      if (existingNote) {
+        // Resize mode: anchor is the existing note's start, right edge follows drag.
+        const noteStartCol = Math.round(existingNote.startTime / beatsPerCell);
+        const maxEnd = maxNoteEndCol(notes, pitch, noteStartCol, beatsPerCell, existingNote.startTime);
+        const clampedEnd = Math.max(noteStartCol, Math.min(endCoord.col, maxEnd));
+        setDrawPreview({ col: noteStartCol, row: startCoord.row, length: clampedEnd - noteStartCol + 1 });
+      } else if (endCoord.col >= startCoord.col) {
+        // New note, dragging right: clamp end against right-side notes.
+        const maxEnd = maxNoteEndCol(notes, pitch, startCoord.col, beatsPerCell);
+        const clampedEnd = Math.min(endCoord.col, maxEnd);
+        setDrawPreview({ col: startCoord.col, row: startCoord.row, length: clampedEnd - startCoord.col + 1 });
+      } else {
+        // New note, dragging left: clamp start against left-side notes.
+        const minStart = minNoteStartCol(notes, pitch, startCoord.col, beatsPerCell);
+        const clampedStart = Math.max(endCoord.col, minStart);
+        setDrawPreview({ col: clampedStart, row: startCoord.row, length: startCoord.col - clampedStart + 1 });
+      }
+    },
+    [notes, maxPitch, beatsPerCell],
+  );
+
+  const handleDrawCommit = useCallback(
+    (startCoord: CellCoord, endCoord: CellCoord) => {
+      setDrawPreview(null);
+      const pitch = maxPitch - startCoord.row;
+      const startBeat = startCoord.col * beatsPerCell;
+
+      const existingNote = resizeNoteRef.current;
+      resizeNoteRef.current = null;
+
+      // Pure click (no drag).
+      if (startCoord.col === endCoord.col) {
+        if (onToggleNote) {
+          if (existingNote) {
+            // Click on existing note: remove it.
+            onToggleNote(pitch, existingNote.startTime, 'unset');
+          } else {
+            // Click on empty cell: add a 1-cell note.
+            onToggleNote(pitch, startBeat, 'set', beatsPerCell);
+          }
+          return;
+        }
+        // Atoms-only mode: always add.
+        registry.update(atoms.cells, (current) => {
+          const next = new Map(current);
+          next.set(cellKey(startCoord.col, startCoord.row), {
+            col: startCoord.col,
+            row: startCoord.row,
+            length: 1,
+            data: { color: trackColor, velocity: 0.8 },
+          });
+          return next;
+        });
+        return;
+      }
+
+      // Drag on existing note: resize.
+      if (existingNote) {
+        const noteStartCol = Math.round(existingNote.startTime / beatsPerCell);
+        const maxEnd = maxNoteEndCol(notes, pitch, noteStartCol, beatsPerCell, existingNote.startTime);
+        const clampedEnd = Math.max(noteStartCol, Math.min(endCoord.col, maxEnd));
+        const newDuration = (clampedEnd - noteStartCol + 1) * beatsPerCell;
+        if (onResizeNote) {
+          onResizeNote(pitch, existingNote.startTime, newDuration);
+          return;
+        }
+        if (onToggleNote) {
+          // Fallback: remove old note then add resized version.
+          onToggleNote(pitch, existingNote.startTime, 'unset');
+          onToggleNote(pitch, existingNote.startTime, 'set', newDuration);
+          return;
+        }
+        // Atoms-only: update cell in place.
+        registry.update(atoms.cells, (current) => {
+          const next = new Map(current);
+          next.set(cellKey(noteStartCol, startCoord.row), {
+            col: noteStartCol,
+            row: startCoord.row,
+            length: clampedEnd - noteStartCol + 1,
+            data: { color: trackColor, velocity: 0.8 },
+          });
+          return next;
+        });
+        return;
+      }
+
+      // New note draw.
+      let col: number;
+      let length: number;
+      if (endCoord.col >= startCoord.col) {
+        const maxEnd = maxNoteEndCol(notes, pitch, startCoord.col, beatsPerCell);
+        const clampedEnd = Math.min(endCoord.col, maxEnd);
+        col = startCoord.col;
+        length = clampedEnd - col + 1;
+      } else {
+        const minStart = minNoteStartCol(notes, pitch, startCoord.col, beatsPerCell);
+        const clampedStart = Math.max(endCoord.col, minStart);
+        col = clampedStart;
+        length = startCoord.col - col + 1;
+      }
+
+      const noteStartTime = col * beatsPerCell;
+      const duration = length * beatsPerCell;
+      if (onToggleNote) {
+        onToggleNote(pitch, noteStartTime, 'set', duration);
+        return;
+      }
+      // Atoms-only mode: write directly to cells.
+      registry.update(atoms.cells, (current) => {
+        const next = new Map(current);
+        next.set(cellKey(col, startCoord.row), {
+          col,
+          row: startCoord.row,
+          length,
+          data: { color: trackColor, velocity: 0.8 },
+        });
+        return next;
+      });
+    },
+    [notes, maxPitch, beatsPerCell, onToggleNote, onResizeNote, registry, atoms.cells, trackColor],
+  );
 
   // Style the row bands so black-key rows are darker (piano-roll feel).
   const rowBandRenderer = useMemo(() => {
@@ -288,6 +524,34 @@ export const SequenceGrid = ({
   }, [paneHeight, totalRows, cellGridHeaders.top, registry, atoms.viewport]);
   const pixelsPerCell = viewport.baseCellWidth * viewport.zoomX;
   const pixelsPerBeat = pixelsPerCell / beatsPerCell;
+
+  // Auto-scroll: when the playhead moves past the right edge of the visible area,
+  // jump-scroll to the nearest previous bar boundary so bar lines stay aligned.
+  useEffect(() => {
+    let wasPlaying = false;
+    return registry.subscribe(atoms.playhead, (playheadCol) => {
+      if (playheadCol === null) {
+        wasPlaying = false;
+        return;
+      }
+      if (!wasPlaying) {
+        wasPlaying = true;
+        registry.update(atoms.viewport, (vp) => ({ ...vp, scrollX: 0 }));
+      }
+      const vp = registry.get(atoms.viewport);
+      const pxPerCell = vp.baseCellWidth * vp.zoomX;
+      const playheadPx = playheadCol * pxPerCell;
+      const visibleWidth = Math.max(0, paneWidth - cellGridHeaders.left);
+      if (visibleWidth <= 0) {
+        return;
+      }
+      if (playheadPx > vp.scrollX + visibleWidth) {
+        const pxPerBar = (beatsPerBar / beatsPerCell) * pxPerCell;
+        const barAlignedScrollX = Math.floor(playheadPx / pxPerBar) * pxPerBar;
+        registry.set(atoms.viewport, { ...vp, scrollX: Math.max(0, barAlignedScrollX) });
+      }
+    });
+  }, [registry, atoms.playhead, atoms.viewport, paneWidth, cellGridHeaders.left, beatsPerBar, beatsPerCell]);
   const resolvedLoopEnd = loopEnd ?? sequence.length;
   const resolvedLoopStart = loopStart ?? 0;
   // Loop range is allowed to extend beyond the current sequence length — the
@@ -304,6 +568,8 @@ export const SequenceGrid = ({
         headers={cellGridHeaders}
         staticStyle={cellGridStaticStyle}
         onCellToggle={handleToggle}
+        onDrawUpdate={handleDrawUpdate}
+        onDrawCommit={handleDrawCommit}
       />
       {onLoopChange && paneWidth > 0 && (
         <LoopMarkers

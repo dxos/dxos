@@ -2,16 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { Button, Icon, Input, Panel } from '@dxos/react-ui';
 import { type ToggleMode } from '@dxos/react-ui-canvas';
-import { Menu, MenuBuilder, useMenuActions, type ActionGraphProps } from '@dxos/react-ui-menu';
-import { Oscilloscope } from '@dxos/react-ui-sfx';
+import { Menu, MenuBuilder, useMenuBuilder, type ToolbarMenuActionGroupProperties } from '@dxos/react-ui-menu';
+import { Oscilloscope, OscilloscopeMode } from '@dxos/react-ui-sfx';
 import { mx } from '@dxos/ui-theme';
 
 import { SequenceGrid, TrackList } from '#components';
@@ -60,6 +59,7 @@ const findSequenceForTrack = (score: Score.Score, trackId: string | null): Seque
   if (!trackId) {
     return undefined;
   }
+
   return score.sequences.find((sequence) => sequence.trackId === trackId);
 };
 
@@ -67,6 +67,7 @@ const parseTimeSignature = (input: string | undefined): number => {
   if (!input) {
     return 4;
   }
+
   const match = /^(\d+)\s*\/\s*\d+$/.exec(input.trim());
   const beats = match ? Number(match[1]) : NaN;
   // Reject zero / negative / non-integer / non-finite — beatsPerBar=0 would break
@@ -82,10 +83,18 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
   const [snapshot] = useObject(subject);
   const score = snapshot as unknown as Score.Score;
 
+  const beatsPerBar = parseTimeSignature(score.timeSignature);
+  const beatsPerCell = 0.25;
+
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playhead, setPlayhead] = useState<number | null>(null);
   const [showAllTracks, setShowAllTracks] = useState(false);
+  const [toolMode, setToolMode] = useState<'edit' | 'delete'>('edit');
+  const [oscilloscopeMode, setOscilloscopeMode] = useState<OscilloscopeMode>('waveform');
+
+  const activeTrack = score.tracks.find((track) => track.id === selectedTrackId) ?? null;
+  const activeSequence = findSequenceForTrack(score, selectedTrackId) ?? null;
 
   // Auto-select the first track when one becomes available.
   useEffect(() => {
@@ -95,9 +104,6 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
       setSelectedTrackId(score.tracks[0]?.id ?? null);
     }
   }, [selectedTrackId, score.tracks]);
-
-  const activeTrack = score.tracks.find((track) => track.id === selectedTrackId) ?? null;
-  const activeSequence = findSequenceForTrack(score, selectedTrackId) ?? null;
 
   // Ensure a sequence exists for the selected track.
   useEffect(() => {
@@ -180,8 +186,6 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
     [subject],
   );
 
-  const beatsPerBar = parseTimeSignature(score.timeSignature);
-
   const handleExport = useCallback(() => {
     const document = scoreToLeadSheet(score);
     const text = formatLeadSheet(document, { beatsPerBar });
@@ -209,11 +213,13 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
       if (!file) {
         return;
       }
+
       const text = await file.text();
       if (!text.trim()) {
         window.alert(`${file.name} is empty.`);
         return;
       }
+
       let document: LeadSheetDocument;
       try {
         document = parseLeadSheet(text, { beatsPerBar });
@@ -221,19 +227,58 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
         window.alert(`Lead-sheet parse error: ${(error as Error).message}`);
         return;
       }
+
       Obj.update(subject, (subject) => {
         const mutable = subject as unknown as MutableScore;
         applyLeadSheetToScore(mutable, document);
       });
     });
+
     window.document.body.appendChild(input);
     input.click();
   }, [subject, beatsPerBar]);
 
-  const beatsPerCell = 0.25;
-
   const handleToggleNote = useCallback(
-    (pitch: number, startTime: number, mode: ToggleMode) => {
+    (pitch: number, startTime: number, mode: ToggleMode, duration?: number) => {
+      if (!activeSequence) {
+        return;
+      }
+
+      const sequenceId = activeSequence.id;
+      Obj.update(subject, (subject) => {
+        const mutable = subject as unknown as MutableScore;
+        const sequence = mutable.sequences.find((seq) => seq.id === sequenceId);
+        if (!sequence) {
+          return;
+        }
+
+        const existingIndex = sequence.notes.findIndex((note) => {
+          if (note.pitch !== pitch) {
+            return false;
+          }
+          if (mode === 'unset') {
+            // Hit any note whose duration spans over the cursor position.
+            return note.startTime <= startTime + 1e-6 && startTime < note.startTime + note.duration - 1e-6;
+          }
+
+          return Math.abs(note.startTime - startTime) < 1e-6;
+        });
+
+        const exists = existingIndex >= 0;
+        const shouldRemove = mode === 'unset' || (mode === 'toggle' && exists);
+        const shouldAdd = mode === 'set' || (mode === 'toggle' && !exists);
+        if (shouldRemove && exists) {
+          sequence.notes.splice(existingIndex, 1);
+        } else if (shouldAdd && !exists) {
+          sequence.notes.push({ pitch, startTime, duration: duration ?? beatsPerCell, velocity: 0.8 });
+        }
+      });
+    },
+    [subject, activeSequence, beatsPerCell],
+  );
+
+  const handleResizeNote = useCallback(
+    (pitch: number, startTime: number, newDuration: number) => {
       if (!activeSequence) {
         return;
       }
@@ -244,20 +289,13 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
         if (!sequence) {
           return;
         }
-        const existingIndex = sequence.notes.findIndex(
-          (note) => note.pitch === pitch && Math.abs(note.startTime - startTime) < 1e-6,
-        );
-        const exists = existingIndex >= 0;
-        const shouldRemove = mode === 'unset' || (mode === 'toggle' && exists);
-        const shouldAdd = mode === 'set' || (mode === 'toggle' && !exists);
-        if (shouldRemove && exists) {
-          sequence.notes.splice(existingIndex, 1);
-        } else if (shouldAdd && !exists) {
-          sequence.notes.push({ pitch, startTime, duration: beatsPerCell, velocity: 0.8 });
+        const note = sequence.notes.find((n) => n.pitch === pitch && Math.abs(n.startTime - startTime) < 1e-6);
+        if (note) {
+          note.duration = newDuration;
         }
       });
     },
-    [subject, activeSequence, beatsPerCell],
+    [subject, activeSequence],
   );
 
   // Tone.js audio playback. The ScorePlayer is rebuilt whenever the Score structure
@@ -291,13 +329,16 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
       setPlayhead(null);
       return;
     }
+
+    player.load(score as Score.Score);
+    setAudioOutputNode(player.outputNode);
     void player.play();
     const startedAt = performance.now();
     const beatsPerSecond = score.tempo / 60;
     // Match the ScorePlayer's effective loop range so the visual playhead loops
-    // in lockstep with the audio (start → end → wrap → start). Trust the
-    // score-level loopStart/loopEnd directly; the loop is allowed to extend
-    // past activeSequence.length.
+    // in lockstep with the audio (start → end → wrap → start).
+    // Trust the score-level loopStart/loopEnd directly;
+    // the loop is allowed to extend past activeSequence.length.
     const loopStartBeats = Math.max(0, score.loopStart ?? 0);
     const loopEndBeats = Math.max(loopStartBeats + 0.0625, score.loopEnd ?? activeSequence.length);
     const loopSpan = loopEndBeats - loopStartBeats;
@@ -316,61 +357,92 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
   }, [isPlaying, activeSequence, score.tempo, score.loopStart, score.loopEnd]);
 
   // Toolbar actions composed via the MenuBuilder / Menu.Root idiom
-  // (org.dxos.react-ui-menu.toolbarMenu). useMemo deps cover every value the
-  // menu's invoke handlers close over so the actions stay in sync.
+  // (org.dxos.react-ui-menu.toolbarMenu). Deps cover every value the menu's
+  // invoke handlers close over so the actions stay in sync.
   const togglePlay = useCallback(() => setIsPlaying((current) => !current), []);
   const toggleShowAllTracks = useCallback(() => setShowAllTracks((current) => !current), []);
-  const actionsAtom = useMemo(
+  const activateEditTool = useCallback(() => setToolMode('edit'), []);
+  const activateDeleteTool = useCallback(() => setToolMode('delete'), []);
+  const menuActions = useMenuBuilder(
     () =>
-      Atom.make(
-        (): ActionGraphProps =>
-          MenuBuilder.make()
-            .action(
-              'play',
-              {
-                label: isPlaying ? 'Stop' : 'Play',
-                icon: isPlaying ? 'ph--pause--regular' : 'ph--play--regular',
-                iconOnly: true,
-                disposition: 'toolbar',
-              },
-              togglePlay,
-            )
-            .action(
-              'show-all-tracks',
-              {
-                label: showAllTracks ? 'Show active track only' : 'Show all tracks',
-                icon: showAllTracks ? 'ph--stack--regular' : 'ph--stack-simple--regular',
-                iconOnly: true,
-                disposition: 'toolbar',
-              },
-              toggleShowAllTracks,
-            )
-            .separator()
-            .action(
-              'import',
-              {
-                label: 'Import lead sheet',
-                icon: 'ph--upload-simple--regular',
-                iconOnly: true,
-                disposition: 'toolbar',
-              },
-              handleImport,
-            )
-            .action(
-              'export',
-              {
-                label: 'Export lead sheet',
-                icon: 'ph--download-simple--regular',
-                iconOnly: true,
-                disposition: 'toolbar',
-              },
-              handleExport,
-            )
-            .build(),
-      ),
-    [isPlaying, togglePlay, showAllTracks, toggleShowAllTracks, handleImport, handleExport],
+      MenuBuilder.make()
+        .action(
+          'play',
+          {
+            label: isPlaying ? 'Stop' : 'Play',
+            icon: isPlaying ? 'ph--pause--regular' : 'ph--play--regular',
+            iconOnly: true,
+            disposition: 'toolbar',
+          },
+          togglePlay,
+        )
+        .action(
+          'show-all-tracks',
+          {
+            label: showAllTracks ? 'Show active track only' : 'Show all tracks',
+            icon: showAllTracks ? 'ph--stack--regular' : 'ph--stack-simple--regular',
+            iconOnly: true,
+            disposition: 'toolbar',
+          },
+          toggleShowAllTracks,
+        )
+        .group(
+          'tool-modes',
+          {
+            label: 'Tool',
+            iconOnly: true,
+            variant: 'toggleGroup',
+            selectCardinality: 'single',
+            value: toolMode === 'edit' ? 'tool-edit' : 'tool-delete',
+          } as ToolbarMenuActionGroupProperties,
+          (group) => {
+            group
+              .action(
+                'tool-edit',
+                { label: 'Edit (draw notes)', icon: 'ph--music-note--regular', checked: toolMode === 'edit' },
+                activateEditTool,
+              )
+              .action(
+                'tool-delete',
+                { label: 'Delete (erase notes)', icon: 'ph--eraser--regular', checked: toolMode === 'delete' },
+                activateDeleteTool,
+              );
+          },
+        )
+        .separator()
+        .action(
+          'import',
+          {
+            label: 'Import lead sheet',
+            icon: 'ph--upload-simple--regular',
+            iconOnly: true,
+            disposition: 'toolbar',
+          },
+          handleImport,
+        )
+        .action(
+          'export',
+          {
+            label: 'Export lead sheet',
+            icon: 'ph--download-simple--regular',
+            iconOnly: true,
+            disposition: 'toolbar',
+          },
+          handleExport,
+        )
+        .build(),
+    [
+      isPlaying,
+      togglePlay,
+      showAllTracks,
+      toggleShowAllTracks,
+      toolMode,
+      activateEditTool,
+      activateDeleteTool,
+      handleImport,
+      handleExport,
+    ],
   );
-  const menuActions = useMenuActions(actionsAtom);
 
   return (
     <Panel.Root role={role}>
@@ -401,8 +473,18 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
               onAdd={handleAddTrack}
               onRemove={handleRemoveTrack}
             />
-            <div className='grid p-2 aspect-square'>
-              <Oscilloscope classNames='border-green-500' mode='waveform' active={isPlaying} source={audioOutputNode} />
+            <div
+              className='grid p-2 aspect-square'
+              onClick={() => {
+                setOscilloscopeMode((current) => (current === 'waveform' ? 'frequency' : 'waveform'));
+              }}
+            >
+              <Oscilloscope
+                classNames='border-green-500'
+                mode={oscilloscopeMode}
+                active={isPlaying}
+                source={audioOutputNode}
+              />
             </div>
           </div>
           <div className='flex-1 min-w-0 relative'>
@@ -411,11 +493,14 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
                 sequence={activeSequence}
                 track={activeTrack}
                 beatsPerCell={beatsPerCell}
+                beatsPerBar={beatsPerBar}
                 playhead={playhead}
                 loopStart={score.loopStart}
                 loopEnd={score.loopEnd}
                 onLoopChange={handleLoopChange}
                 onToggleNote={handleToggleNote}
+                onResizeNote={handleResizeNote}
+                tool={toolMode}
                 overlayTracks={
                   showAllTracks
                     ? score.tracks
