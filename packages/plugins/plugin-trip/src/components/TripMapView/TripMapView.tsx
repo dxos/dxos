@@ -10,7 +10,6 @@ import {
   type GlobeController,
   globeStyles,
   useDrag,
-  useFlyTo,
   useGlobeZoomHandler,
   useTour,
 } from '@dxos/react-ui-geo';
@@ -89,7 +88,7 @@ export type TripMapViewProps = {
  *
  * Selecting a segment in the itinerary (or via SegmentArticle) smoothly
  * animates the globe to that segment's first geo-tagged point using a
- * great-circle interpolation (`useFlyTo`). Clicking a point on the globe
+ * great-circle interpolation (`controller.flyTo`). Clicking a point on the globe
  * selects the nearest segment via the `onSelect` callback.
  *
  * Composable: the root <div> forwards refs and merges incoming
@@ -109,7 +108,6 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
 
     const handleZoom = useGlobeZoomHandler(controller);
     useDrag(controller);
-    const flyTo = useFlyTo(controller);
 
     // Build the geo features.
     const features = useMemo(() => {
@@ -140,8 +138,8 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
     const [tourRunning, setTourRunning] = useTour(controller, tourPoints, { loop: true });
 
     // Recenter the globe on the selected segment's first geo-tagged point
-    // whenever the selection changes. The transition is animated by
-    // `useFlyTo`, which interrupts any in-flight tween.
+    // whenever the selection changes. `controller.flyTo` interrupts any
+    // in-flight tween on the same globe.
     const lastRecenterRef = useRef<string | undefined>(undefined);
     useEffect(() => {
       if (!controller || !selectedSegmentId) {
@@ -156,8 +154,8 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
         return;
       }
       lastRecenterRef.current = selectedSegmentId;
-      flyTo(point);
-    }, [controller, segments, selectedSegmentId, flyTo]);
+      void controller.flyTo(point).catch(() => {});
+    }, [controller, segments, selectedSegmentId]);
 
     // Bridge SegmentStack actions to the parent's selection callback.
     const handleStackAction = useCallback(
