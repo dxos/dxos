@@ -121,7 +121,12 @@ export const ArrayField = ({
               {...props}
               autoFocus={isLast}
               type={elementType}
-              name={null}
+              // Suppress the per-item header for object items only — the recursive
+              // form already renders labels for each sub-field. Scalar items
+              // (refs, primitives) keep the parent name so inline-layout
+              // children (e.g. RefField) have a real label to use as a
+              // fallback placeholder.
+              {...(renderItemAsObject && { name: null })}
               path={[...(path ?? []), index]}
               readonly={readonly || layout === 'static'}
               layout={renderItemAsObject ? (layout === 'static' ? 'static' : undefined) : 'inline'}
@@ -143,18 +148,17 @@ export const ArrayField = ({
                 <div className='h-full flex flex-col justify-end'>
                   {renderItemAsObject ? (
                     <IconButton
-                      density='md'
                       variant='ghost'
                       icon='ph--x--regular'
                       iconOnly
                       label={t('remove-item.button')}
                       onClick={() => handleDelete(index)}
-                      classNames='mb-1'
                     />
                   ) : (
                     // Centers against the inline single-row FormField.
                     <div className='flex items-center h-[2rem]'>
                       <IconButton
+                        variant='ghost'
                         icon='ph--x--regular'
                         iconOnly
                         label={t('remove-item.button')}

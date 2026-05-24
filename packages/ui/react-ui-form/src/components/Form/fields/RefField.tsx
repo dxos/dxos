@@ -199,7 +199,7 @@ export const RefField = (props: RefFieldProps) => {
                 <Button classNames='w-full text-start gap-form-gap'>
                   <div className='grow overflow-hidden'>
                     <span className='truncate text-description'>
-                      {placeholder ?? label ?? t('ref-field.placeholder')}
+                      {placeholder || label || t('ref-field.placeholder')}
                     </span>
                   </div>
                   <Icon size={3} icon='ph--caret-down--bold' />
