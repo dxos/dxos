@@ -5,8 +5,7 @@
 import * as SelectPrimitive from '@radix-ui/react-select';
 import React, { forwardRef } from 'react';
 
-import { useElevationContext, useThemeContext } from '../../hooks';
-import { useSafeCollisionPadding } from '../../hooks/useSafeCollisionPadding';
+import { useSafeCollisionPadding, useElevationContext, useThemeContext } from '../../hooks';
 import { type ThemedClassName } from '../../util';
 import { Button, type ButtonProps } from '../Button';
 import { Icon } from '../Icon';

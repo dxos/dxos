@@ -8,7 +8,7 @@ import * as ToastPrimitive from '@radix-ui/react-toast';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
-import { ElevationProvider } from '../../primitives/ElevationProvider';
+import { ElevationProvider } from '../../primitives';
 import { type ThemedClassName } from '../../util';
 
 type ToastProviderProps = ToastPrimitive.ToastProviderProps;

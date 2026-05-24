@@ -18,10 +18,9 @@ import { osTranslations } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
-import { ElevationProvider } from '../../primitives/ElevationProvider';
+import { ElevationProvider } from '../../primitives';
 import { type DialogSize } from '../../theme';
-import { composableProps, slottable } from '../../util';
-import { type ThemedClassName } from '../../util';
+import { type ThemedClassName, composableProps, slottable } from '../../util';
 import { IconButton } from '../Button';
 import { Column } from '../Column';
 
