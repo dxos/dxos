@@ -309,7 +309,17 @@ const streamGmailMessagesToFeed = Effect.fn(function* (
                 if (!extractorsConfig.enabled.includes(extractor.id)) {
                   continue;
                 }
-                const result = extractor.match(message);
+                let result;
+                try {
+                  result = extractor.match(message);
+                } catch (err) {
+                  log.warn('auto-on-arrival match failed', {
+                    err,
+                    extractorId: extractor.id,
+                    messageId: message.id,
+                  });
+                  continue;
+                }
                 if (!result.matched) {
                   continue;
                 }

@@ -6,6 +6,7 @@ import { useMemo } from 'react';
 
 import { Capabilities } from '@dxos/app-framework';
 import { useCapabilities } from '@dxos/app-framework/ui';
+import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
 import { type Message } from '@dxos/types';
 
@@ -32,7 +33,16 @@ export const useExtractorActions = (message: Message.Message): ExtractorMenuItem
     }
 
     return extractors
-      .filter((extractor) => extractor.match(message).matched)
+      .filter((extractor) => {
+        // Guard against extractor implementations that throw during match —
+        // one bad extractor must not break the entire message toolbar.
+        try {
+          return extractor.match(message).matched;
+        } catch (err) {
+          log.warn('extractor match failed', { err, extractorId: extractor.id });
+          return false;
+        }
+      })
       .map((extractor) => ({
         id: extractor.id,
         label: extractor.description,
@@ -42,11 +52,13 @@ export const useExtractorActions = (message: Message.Message): ExtractorMenuItem
             return;
           }
 
-          void invoker.invokePromise(InboxOperation.ExtractMessage, {
-            db: space.db,
-            message,
-            extractorId: extractor.id,
-          });
+          void invoker
+            .invokePromise(InboxOperation.ExtractMessage, {
+              db: space.db,
+              message,
+              extractorId: extractor.id,
+            })
+            .catch((err) => log.warn('extract message failed', { err, extractorId: extractor.id }));
         },
       }));
   }, [extractors, invoker, message]);

@@ -51,7 +51,7 @@ const make = () =>
         Additional information can be included (indented).
 
         # Email extraction
-        Use ExtractMessage to parse a confirmation email (e.g., flight booking, hotel reservation) into structured objects.
+        Parse confirmation emails (e.g., flight bookings or hotel reservations) into structured objects.
 
         Note: Sending emails is handled by the "Inbox (Send)" blueprint.
       `,
