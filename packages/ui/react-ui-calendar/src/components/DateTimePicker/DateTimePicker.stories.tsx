@@ -138,3 +138,60 @@ export const LocaleDeDE: Story = {
     );
   },
 };
+
+//
+// Popover-open variants. These render `defaultOpen` so the calendar + time
+// footer + commit button are visible on story load, without requiring an
+// interaction. Useful for visually reviewing the popover layout per mode.
+//
+
+export const PopoverDate: Story = {
+  render: () => {
+    const [value, setValue] = useState<Date>(new Date(2026, 4, 24));
+    return (
+      <DateTimePicker.Root mode='date' defaultOpen value={value} onValueChange={setValue}>
+        <DateTimePicker.Input />
+        <DateTimePicker.Content />
+      </DateTimePicker.Root>
+    );
+  },
+};
+
+export const PopoverDateTime: Story = {
+  render: () => {
+    const [value, setValue] = useState<Date>(new Date(2026, 4, 24, 14, 30));
+    return (
+      <DateTimePicker.Root mode='date-time' defaultOpen value={value} onValueChange={setValue}>
+        <DateTimePicker.Input />
+        <DateTimePicker.Content />
+      </DateTimePicker.Root>
+    );
+  },
+};
+
+export const PopoverDateTimeRange: Story = {
+  render: () => {
+    const [value, setValue] = useState<DateTimeRange>({
+      from: new Date(2026, 4, 24, 9, 0),
+      to: new Date(2026, 4, 28, 17, 0),
+    });
+    return (
+      <DateTimePicker.Root mode='date-time-range' defaultOpen value={value} onValueChange={setValue}>
+        <DateTimePicker.Input />
+        <DateTimePicker.Content />
+      </DateTimePicker.Root>
+    );
+  },
+};
+
+export const PopoverTime: Story = {
+  render: () => {
+    const [value, setValue] = useState<Date>(new Date(2026, 4, 24, 14, 30));
+    return (
+      <DateTimePicker.Root mode='time' defaultOpen value={value} onValueChange={setValue}>
+        <DateTimePicker.Input />
+        <DateTimePicker.Content />
+      </DateTimePicker.Root>
+    );
+  },
+};
