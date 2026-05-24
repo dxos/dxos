@@ -57,14 +57,15 @@ jobs:
         uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          # `mode: agent` bypasses the default `@claude` trigger-phrase check
-          # so the action runs unconditionally — the workflow's `if:` gate on
-          # the `needs-implementation` label handles trigger filtering.
-          mode: agent
+          # `mode: tag` (default) — `agent` mode only accepts
+          # `workflow_dispatch`/`schedule` events. With `direct_prompt` set
+          # the tag-mode trigger check returns true unconditionally, so the
+          # workflow's own `if:` gate on the `needs-implementation` label is
+          # what filters which events reach this step.
           max_turns: 15
-          # See claude-composer-triage.yml for the input-name caveat: beta tag
-          # still accepts `direct_prompt` + `max_turns`; HEAD has renamed to
-          # `prompt` + `claude_args`. Swap when beta catches up.
+          # `direct_prompt` carries the implementation instructions. (HEAD of
+          # the action's repo renamed this to `prompt` — swap when @beta
+          # catches up.)
           direct_prompt: |
             This issue has been triaged as actionable. Implement a fix or
             feature in a DRAFT pull request.
