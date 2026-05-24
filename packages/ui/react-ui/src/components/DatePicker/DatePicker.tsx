@@ -12,6 +12,7 @@ import { useTranslation } from '../../primitives';
 import { translationKey } from '../../translations';
 import { type ThemedClassName } from '../../util';
 import { Calendar } from '../Calendar';
+import { Icon } from '../Icon';
 import { Popover } from '../Popover';
 
 //
@@ -135,7 +136,8 @@ const formatValue = (mode: DatePickerMode, value: unknown, fmt: string): string 
 export type DatePickerTriggerProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'button'>, 'children'>> & {
   format?: string;
   placeholder?: string;
-  children?: ReactNode | ((args: { value: ValueByMode[DatePickerMode]; label: string }) => ReactNode);
+  /** Override the default `[calendar icon] [label]` content entirely. */
+  children?: ReactNode;
 };
 
 const DatePickerTrigger = forwardRef<HTMLButtonElement, DatePickerTriggerProps>(
@@ -156,7 +158,12 @@ const DatePickerTrigger = forwardRef<HTMLButtonElement, DatePickerTriggerProps>(
           {...props}
           className={tx('datePicker.trigger', { hasValue }, classNames) ?? undefined}
         >
-          {typeof children === 'function' ? children({ value, label }) : (children ?? label)}
+          {children ?? (
+            <>
+              <Icon icon='ph--calendar--regular' size={4} />
+              {label}
+            </>
+          )}
         </button>
       </Popover.Trigger>
     );

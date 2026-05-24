@@ -9,7 +9,6 @@ import { type DateRange } from 'react-day-picker';
 
 import { withTheme } from '../../testing';
 import { translations } from '../../translations';
-import { Icon } from '../Icon';
 import { Input } from '../Input';
 import { DatePicker } from './DatePicker';
 
@@ -120,23 +119,3 @@ export const RangeWithTime: Story = {
   },
 };
 
-export const ShadcnStyle: Story = {
-  render: () => {
-    const [value, setValue] = useState<Date | undefined>();
-    return (
-      <DatePicker.Root mode='single' value={value} onValueChange={setValue}>
-        <DatePicker.Trigger>
-          {({ label }) => (
-            <>
-              <Icon icon='ph--calendar--regular' size={4} />
-              {label}
-            </>
-          )}
-        </DatePicker.Trigger>
-        <DatePicker.Content>
-          <DatePicker.Calendar />
-        </DatePicker.Content>
-      </DatePicker.Root>
-    );
-  },
-};
