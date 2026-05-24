@@ -548,6 +548,7 @@ catalog:
   re-resizable: ^6.9.17
   react: ~19.2.3
   react-charts: beta
+  react-day-picker: ^9.4.0
   react-dom: ~19.2.3
   react-drag-drop-files: ^2.3.8
   react-dropzone: ^14.2.3
