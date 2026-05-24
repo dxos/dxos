@@ -6,9 +6,11 @@ import { startOfDay } from 'date-fns';
 
 import { type DateTimePickerMode, type DateTimeRange, type ValueFor, isRangeMode, isTimeMode } from './types';
 
-/** Normalize an unordered range so `from <= to`. */
+/** Normalize an unordered range so `from <= to`. Always returns a shallow copy; never the input reference. */
 export const normalizeRange = (range: DateTimeRange): DateTimeRange =>
-  range.from.getTime() <= range.to.getTime() ? range : { from: range.to, to: range.from };
+  range.from.getTime() <= range.to.getTime()
+    ? { from: range.from, to: range.to }
+    : { from: range.to, to: range.from };
 
 /** Replace the date portion (year/month/day) of `target` with `source`'s date, preserving target's time. */
 export const withDate = (target: Date, source: Date): Date => {
@@ -46,7 +48,7 @@ export const defaultValueFor = <M extends DateTimePickerMode>(mode: M): ValueFor
   const now = new Date();
   if (isRangeMode(mode)) {
     const start = isTimeMode(mode) ? now : startOfDay(now);
-    return { from: start, to: start } as ValueFor<M>;
+    return { from: start, to: new Date(start) } as ValueFor<M>;
   }
   return (isTimeMode(mode) ? now : startOfDay(now)) as ValueFor<M>;
 };
