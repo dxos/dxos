@@ -102,7 +102,7 @@ describe('Projection', () => {
     });
 
     const view = ViewModel.make({
-      query: Query.select(Filter.typename(schema.typename)),
+      query: Query.select(Filter.typename(schema.typename!)),
       jsonSchema: schema.jsonSchema,
       fields: ['name', 'email', 'salary'], // Explicitly define order.
     });

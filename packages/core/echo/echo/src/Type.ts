@@ -448,12 +448,19 @@ export type InstancePhantomId = internal.InstancePhantomId;
  * Merged with the `Type` const value via TypeScript declaration merging.
  */
 export interface Type<A = unknown>
-  extends BaseTypeEntity<A & Entity.OfKind<typeof Entity.Kind.Object>> {
+  extends Omit<BaseTypeEntity<A & Entity.OfKind<typeof Entity.Kind.Type>>, 'typename'> {
   /** Schema-kind brand (type — the meta-schema kind). */
   readonly [internal.SchemaKindId]: internal.EntityKind.Type;
 
   /** Source Effect Schema — used internally by `Type.getSchema(self)`. */
   readonly [internal.StaticTypeSchemaSlot]: Schema.Schema.AnyNoContext;
+
+  /**
+   * Type's typename (e.g. `'com.example.type.person'`). Optional because
+   * unnamed draft `Type.Type` entities (`Type.makeObject({ jsonSchema })`)
+   * carry no typename until they're given one.
+   */
+  readonly typename?: string;
 }
 
 /**

@@ -76,9 +76,11 @@ export const FieldEditor = ({ readonly, projection, field, registry, view, onSav
       ['referenceSchema' satisfies keyof PropertyType]: (props) => (
         <SelectField
           {...props}
-          options={schemas.map((schema) => ({
-            value: schema.typename,
-          }))}
+          options={schemas
+            .filter((schema): schema is typeof schema & { typename: string } => schema.typename != null)
+            .map((schema) => ({
+              value: schema.typename,
+            }))}
         />
       ),
       ['referencePath' satisfies keyof PropertyType]: (props) => (

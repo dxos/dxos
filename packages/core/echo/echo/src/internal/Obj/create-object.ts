@@ -10,7 +10,17 @@ import { ObjectId } from '@dxos/keys';
 
 import { getSchemaURI, getTypeAnnotation, setTypename } from '../Annotation';
 import { defineHiddenProperty } from '../common/proxy';
-import { EntityKind, InstancePhantomId, KindId, MetaId, setSchema, setType, unwrapToSchema } from '../common/types';
+import {
+  EntityKind,
+  InstancePhantomId,
+  KindId,
+  MetaId,
+  SchemaKindId,
+  StaticTypeSchemaSlot,
+  setSchema,
+  setType,
+  unwrapToSchema,
+} from '../common/types';
 import {
   RelationSourceDXNId,
   RelationSourceId,
@@ -22,7 +32,12 @@ import {
 import { attachedTypedObjectInspector } from './inspect';
 import { attachTypedJsonSerializer } from './json-serializer';
 
-export type CreateObjectProps<T> = T extends { id: string } ? Omit<T, 'id' | KindId> & { id?: string } : T;
+// Omits the brand slots — those get stamped on the instance by the entity
+// handler (KindId via setKind, SchemaKindId via setSchemaKind, the
+// StaticTypeSchemaSlot lazily via the proxy), not supplied by the caller.
+export type CreateObjectProps<T> = T extends { id: string }
+  ? Omit<T, 'id' | KindId | SchemaKindId | StaticTypeSchemaSlot> & { id?: string }
+  : Omit<T, KindId | SchemaKindId | StaticTypeSchemaSlot>;
 
 /**
  * Creates a new object instance from a schema and data, without signal reactivity.

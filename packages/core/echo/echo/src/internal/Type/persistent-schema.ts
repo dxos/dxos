@@ -8,7 +8,7 @@ import { DXN } from '@dxos/keys';
 
 import { IconAnnotation } from '../Annotation';
 import { LabelAnnotation, TypenameSchema, VersionSchema } from '../Annotation';
-import { EntityKind, KindId } from '../common/types';
+import { EntityKind, KindId, SchemaKindId, StaticTypeSchemaSlot } from '../common/types';
 import { EchoTypeKindSchema } from '../Entity';
 import { JsonSchemaType } from '../JsonSchema';
 
@@ -32,9 +32,21 @@ export const PersistentSchema = Schema.Struct({
   }),
 );
 
+/**
+ * Persistent representation of a schema — the runtime shape that
+ * `db.add(Type.makeObject(...))` / `db.schemaRegistry.register([...])` produces
+ * and `Filter.type(Type.Type).run()` returns.
+ *
+ * Structurally identical to a static `Type.Type` entity: the entity-handler's
+ * `get` trap exposes `[SchemaKindId]` from `system.schemaKind` and rebuilds
+ * `[StaticTypeSchemaSlot]` lazily from `jsonSchema`, so a persisted instance
+ * satisfies the public `Type<A>` interface without casting.
+ */
 export type PersistentSchema = {
   readonly id: string;
   readonly [KindId]: EntityKind.Type;
+  readonly [SchemaKindId]: EntityKind.Type;
+  readonly [StaticTypeSchemaSlot]: Schema.Schema.AnyNoContext;
   readonly name?: string;
   readonly typename?: string;
   readonly version: string;

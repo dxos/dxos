@@ -81,6 +81,16 @@ export class ObjectInternals {
    */
   rootSchema?: Schema.Schema.AnyNoContext = undefined;
 
+  /**
+   * Memoized rebuilt Effect Schema for persisted `Type.Type` entities. Reading
+   * `[StaticTypeSchemaSlot]` off a persisted type entity goes through this
+   * cache so repeated reads share the same Schema instance.
+   *
+   * Lazily populated by the proxy's `get` trap when the slot is requested;
+   * invalidated when the entity's `jsonSchema` changes.
+   */
+  cachedStaticSlot?: Schema.Schema.AnyNoContext = undefined;
+
   constructor(core: ObjectCore, database?: EchoDatabase) {
     this.core = core;
     this.database = database;

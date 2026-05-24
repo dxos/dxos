@@ -42,7 +42,10 @@ export const getBaseSchema = ({
 }): { typename: string; jsonSchema: Types.DeepMutable<JsonSchema.JsonSchema> } => {
   if (typename && properties) {
     const type = getSchemaFromPropertyDefinitions(typename, properties);
-    return { typename: type.typename, jsonSchema: type.jsonSchema as Types.DeepMutable<JsonSchema.JsonSchema> };
+    // `getSchemaFromPropertyDefinitions` is always called with a typename, so
+    // the returned Type entity always carries one (the optionality on Type.Type
+    // covers anonymous drafts which this codepath doesn't produce).
+    return { typename: type.typename!, jsonSchema: type.jsonSchema as Types.DeepMutable<JsonSchema.JsonSchema> };
   } else if (schema) {
     const effectSchema = Type.isType(schema) ? Type.getSchema(schema) : schema;
     return { typename: Type.getTypename(schema)!, jsonSchema: JsonSchema.toJsonSchema(effectSchema) };

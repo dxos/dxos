@@ -387,6 +387,21 @@ export class ObjectCore {
     this._setRaw([SYSTEM_NAMESPACE, 'kind'], kind);
   }
 
+  /**
+   * Kind of the *schema* the entity instantiates. For `Type.Type` entities
+   * this equals `getKind()` (`Type`); for `Obj`/`Relation` instances it
+   * records the underlying schema kind. Mirrors `[SchemaKindId]` on entity
+   * values; defaults to whatever `getKind()` returns when the schema layer
+   * hasn't supplied a value.
+   */
+  getSchemaKind(): EntityKind {
+    return (this._getRaw([SYSTEM_NAMESPACE, 'schemaKind']) as any) ?? this.getKind();
+  }
+
+  setSchemaKind(kind: EntityKind): void {
+    this._setRaw([SYSTEM_NAMESPACE, 'schemaKind'], kind);
+  }
+
   getSource(): EncodedReference | undefined {
     const res = this._getRaw([SYSTEM_NAMESPACE, 'source']);
     if (!res || !EncodedReference.isEncodedReference(res)) {

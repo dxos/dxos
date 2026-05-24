@@ -7,7 +7,17 @@ import type * as Schema from 'effect/Schema';
 import { ObjectId } from '@dxos/keys';
 
 import { getTypeAnnotation } from '../../Annotation';
-import { type AnyProperties, InstancePhantomId, KindId, MetaId, type ObjectMeta, ObjectMetaSchema, ParentId, StaticTypeSchemaSlot } from '../types';
+import {
+  type AnyProperties,
+  InstancePhantomId,
+  KindId,
+  MetaId,
+  type ObjectMeta,
+  ObjectMetaSchema,
+  ParentId,
+  SchemaKindId,
+  StaticTypeSchemaSlot,
+} from '../types';
 import { defineHiddenProperty } from './define-hidden-property';
 import { attachTypedJsonSerializer } from './json-serializer';
 import { createProxy, getProxyTarget, isValidProxyTarget } from './proxy-utils';
@@ -17,7 +27,10 @@ import { TypedReactiveHandler, prepareTypedTarget, setMetaOwner } from './typed-
  *
  */
 // TODO(burdon): Make internal
-export type MakeObjectProps<T extends AnyProperties> = Omit<T, 'id' | KindId>;
+// Omits the brand slots — those get stamped on the instance by the entity
+// handler (KindId via setKind, SchemaKindId via setSchemaKind, the
+// StaticTypeSchemaSlot lazily via the proxy), not supplied by the caller.
+export type MakeObjectProps<T extends AnyProperties> = Omit<T, 'id' | KindId | SchemaKindId | StaticTypeSchemaSlot>;
 
 /**
  * Creates a reactive object from a plain Javascript object.

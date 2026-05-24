@@ -192,7 +192,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
 
               const typenameFilter = coerceArray(query.typename);
               if (typenameFilter.length > 0) {
-                if (!typenameFilter.includes(object.schema.typename)) {
+                if (object.schema.typename == null || !typenameFilter.includes(object.schema.typename)) {
                   return false;
                 }
               }
@@ -344,11 +344,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
       return undefined;
     }
 
-    // `Type.isType` narrows to `Type.AnyType` but `_register` wants the
-    // database-persisted variant (`PersistentSchema`). Same runtime shape —
-    // the structural divergence between the static-entity `Type.Type` brand
-    // and the on-disk record forces the bridge.
-    return this._register(typeObject as unknown as PersistentSchema);
+    return this._register(typeObject);
   }
 
   /**
@@ -373,11 +369,9 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
       return existing;
     }
 
-    // PersistentSchema instances *are* Type.Type entities (same shape: typename,
-    // version, jsonSchema, plus the entity-kind brand). Track typename changes
-    // so the by-type index stays in sync.  Drafts (typename === undefined) are
-    // indexed by id only.
-    const typeEntity = schema as unknown as Type.Type;
+    // Track typename changes so the by-typename index stays in sync. Drafts
+    // (typename === undefined) are indexed by id only.
+    const typeEntity: Type.Type = schema;
     let previousTypename: string | undefined = schema.typename;
     const subscription = getObjectCore(schema).updates.on(() => {
       if (schema.typename !== previousTypename) {
@@ -416,33 +410,34 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     // NOT a data field — spreading it here would leak `kind: 'object'` into the data namespace,
     // surface through `Obj.toJSON`, and end up baked into committed snapshots.
     const { kind: _kind, ...metaWithoutKind } = meta;
-    const schemaToStore = createObject(PersistentSchema as any, {
+    const schemaToStore = createObject(PersistentSchema, {
       ...metaWithoutKind,
       jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})),
-    }) as unknown as Type.Type & { jsonSchema: any };
+    });
     // The schema's $id is the typename DXN — universal across stored and non-stored
     // schemas. The schema-as-object's storage EchoURI is tracked separately on
     // TypeIdentifierAnnotation for back-references (e.g. registry lookup by object id).
     const typeDxn = DXN.make(meta.typename, meta.version);
     const storageEchoId = EchoURI.make({ objectId: schemaToStore.id });
-    schemaToStore.jsonSchema = JsonSchema.toJsonSchema(
-      schema.annotations({
-        [TypeAnnotationId]: meta,
-        [TypeIdentifierAnnotationId]: storageEchoId,
-        [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({
-          identifier: typeDxn,
-          kind: meta.kind,
-          typename: meta.typename,
-          version: meta.version,
+    // `jsonSchema` is declared readonly on the Type<A> interface; mutate it via
+    // `Type.update` so the change goes through the automerge transaction.
+    Type.update(schemaToStore, (draft) => {
+      draft.jsonSchema = JsonSchema.toJsonSchema(
+        schema.annotations({
+          [TypeAnnotationId]: meta,
+          [TypeIdentifierAnnotationId]: storageEchoId,
+          [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({
+            identifier: typeDxn,
+            kind: meta.kind,
+            typename: meta.typename,
+            version: meta.version,
+          }),
         }),
-      }),
-    );
+      );
+    });
 
-    // `Type.Type.id` is optional (drafts may not have one), but `db.add`
-    // requires `Entity.Unknown` which has required `id`. By the time we hand it
-    // to `_register` it's persisted, so the runtime branding is fine.
-    const persistentSchema = this._db.add(schemaToStore as any);
-    const result = this._register(persistentSchema as unknown as PersistentSchema);
+    const persistentSchema = this._db.add(schemaToStore);
+    const result = this._register(persistentSchema);
 
     this._notifySchemaListChanged();
     return result;

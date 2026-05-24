@@ -257,6 +257,15 @@ export type ObjectSystem = {
   kind?: 'object' | 'relation' | 'type';
 
   /**
+   * The kind of schema this entity is an instance of. For Type.Type entities
+   * (persisted schema definitions), this matches `kind` (`'type'`). For Obj /
+   * Relation instances, it tracks the underlying schema's kind so consumers
+   * that hold a Type.Type entity can read the `[SchemaKindId]` brand without
+   * looking up the schema separately.
+   */
+  schemaKind?: 'object' | 'relation' | 'type';
+
+  /**
    * Object reference ('protobuf' protocol) type.
    */
   type?: EncodedReference;

@@ -44,6 +44,8 @@ import {
   RelationTargetDXNId,
   RelationTargetId,
   SchemaId,
+  SchemaKindId,
+  StaticTypeSchemaSlot,
   TypeEntityId,
   SchemaMetaSymbol,
   SchemaValidator,
@@ -52,6 +54,7 @@ import {
   assertObjectModel,
   createProxy,
   defineHiddenProperty,
+  effectSchemaFromJsonSchema,
   executeChange,
   getEntityKind,
   getProxyHandler,
@@ -242,6 +245,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           return this._getVersion(target);
         case ObjectDatabaseId:
           return target[symbolInternals].database;
+        case SchemaKindId:
+          return target[symbolInternals].core.getSchemaKind();
+        case StaticTypeSchemaSlot:
+          return this._getStaticTypeSchemaSlot(target, receiver);
       }
     } else {
       switch (prop) {
@@ -255,6 +262,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         case ObjectDeletedId:
         case ObjectDatabaseId:
         case ChangeId:
+        case SchemaKindId:
+        case StaticTypeSchemaSlot:
           return undefined;
       }
     }
@@ -407,6 +416,35 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       invariant(echoUri);
       return target[symbolInternals].linkCache.get(echoUri);
     }
+  }
+
+  /**
+   * Lazy `[StaticTypeSchemaSlot]` for persisted `Type.Type` entities: rebuilds
+   * the Effect Schema from the entity's `jsonSchema` on first read and caches
+   * the result on the internals so repeated reads share the same instance.
+   *
+   * Returns `undefined` for non-type entities (the slot only carries meaning
+   * for things branded `[KindId] = Type`). Matches what `Type.getSchema(t)`
+   * returns for the same input, just via the proxy `get` trap so persisted
+   * Type entities structurally satisfy the `Type<A>` interface.
+   */
+  private _getStaticTypeSchemaSlot(target: ProxyTarget, receiver: any): Schema.Schema.AnyNoContext | undefined {
+    if (target[symbolInternals].core.getSchemaKind() !== EntityKind.Type) {
+      return undefined;
+    }
+    const cached = target[symbolInternals].cachedStaticSlot;
+    if (cached != null) {
+      return cached;
+    }
+    const jsonSchema = (receiver as { jsonSchema?: unknown }).jsonSchema;
+    if (jsonSchema == null) {
+      return undefined;
+    }
+    const rebuilt = effectSchemaFromJsonSchema(jsonSchema);
+    if (rebuilt != null) {
+      target[symbolInternals].cachedStaticSlot = rebuilt;
+    }
+    return rebuilt;
   }
 
   /**
@@ -1223,6 +1261,9 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
 
     target[symbolInternals].subscriptions.push(
       core.updates.on(() => {
+        // Invalidate the lazily-rebuilt `[StaticTypeSchemaSlot]` cache so it
+        // gets recomputed from the (possibly new) `jsonSchema` on next read.
+        target[symbolInternals].cachedStaticSlot = undefined;
         if (isInChangeContext(core)) {
           // Defer notification until the change context exits.
           queueNotification(core);
@@ -1258,6 +1299,9 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
     target[symbolInternals].rootSchema = schema;
     target[symbolInternals].subscriptions.push(
       core.updates.on(() => {
+        // Invalidate the lazily-rebuilt `[StaticTypeSchemaSlot]` cache so it
+        // gets recomputed from the (possibly new) `jsonSchema` on next read.
+        target[symbolInternals].cachedStaticSlot = undefined;
         if (isInChangeContext(core)) {
           // Defer notification until the change context exits.
           queueNotification(core);
@@ -1360,6 +1404,11 @@ const setSchemaPropertiesOnObjectCore = (
     const kind = getEntityKind(schema);
     invariant(kind);
     internals.core.setKind(kind);
+    // Mirror the schema's TypeAnnotation kind onto the entity as
+    // `[SchemaKindId]` so consumers can read the brand off the instance — this
+    // is what lets persisted `Type.Type` entities structurally satisfy the
+    // `Type<A>` interface (which requires `[SchemaKindId]: Type`).
+    internals.core.setSchemaKind(kind);
   }
 };
 

@@ -32,11 +32,14 @@ export const handler = Effect.fn(function* ({
   const runtimeSchema = space.internal.db.graph.schemaRegistry.schemas;
 
   const schemas = [
-    ...echoSchema.map((schema) => ({
-      id: schema.id,
-      typename: schema.typename,
-      version: schema.version,
-    })),
+    // Skip persisted drafts without a typename — they can't be listed by name.
+    ...echoSchema
+      .filter((schema): schema is typeof schema & { typename: string } => schema.typename != null)
+      .map((schema) => ({
+        id: schema.id,
+        typename: schema.typename,
+        version: schema.version,
+      })),
     ...runtimeSchema.map((type) => {
       const schema = Type.getSchema(type as Type.AnyType);
       const schemaAnnotation = getTypeAnnotation(schema)!;

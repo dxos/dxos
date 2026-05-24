@@ -62,13 +62,20 @@ export interface EchoTypeSchema<
    *
    * Includes the instance-kind brand (`[KindId]`) so the phantom is assignable
    * to the matching public-side interface in `Type.ts` (`Type.Obj` /
-   * `Type.Relation` / `Type.Type`), all of which require an `OfKind` brand
-   * in their phantom. Type-kind schemas describe instances which are still
-   * ECHO objects at the instance level, so we project `Type → Object` here.
+   * `Type.Relation` / `Type.Type`). Each kind projects identity: instances of
+   * an object-kind schema are object-kind entities, type-kind schemas produce
+   * type-kind (persisted Type.Type) entities — the latter additionally carry
+   * the `[SchemaKindId]` / `[StaticTypeSchemaSlot]` brands the echo-handler
+   * proxy exposes on persisted Type entities.
    */
   readonly [InstancePhantomId]?: EchoTypeSchemaProps<Schema.Schema.Type<Self>, ExtraFields> & {
-    readonly [KindId]: K extends EntityKind.Type ? EntityKind.Object : K;
-  };
+    readonly [KindId]: K;
+  } & (K extends EntityKind.Type
+      ? {
+          readonly [SchemaKindId]: EntityKind.Type;
+          readonly [StaticTypeSchemaSlot]: Schema.Schema.AnyNoContext;
+        }
+      : {});
 }
 
 // type MakeProps =
