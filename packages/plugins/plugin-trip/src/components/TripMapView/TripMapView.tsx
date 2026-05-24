@@ -10,8 +10,8 @@ import { loadTopology } from '@dxos/react-ui-geo/data';
 
 import { Segment } from '#types';
 
-import { type SegmentCardAction } from '../SegmentCard/SegmentCard';
-import { SegmentStack } from '../SegmentStack/SegmentStack';
+import { type SegmentCardAction } from '../SegmentCard';
+import { SegmentStack } from '../SegmentStack';
 
 const initialRotation: [number, number, number] = [0, -20, 0];
 const initialZoom = 1.2;
@@ -146,6 +146,7 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
       if (!point) {
         return;
       }
+
       lastRecenterRef.current = selectedSegmentId;
       void controller.flyTo(point).catch(() => {});
     }, [controller, segments, selectedSegmentId]);
@@ -208,7 +209,7 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
     return (
       <div
         {...composableProps(props, {
-          classNames: 'grid grid-cols-[16rem_1fr] h-full w-full overflow-hidden bg-black',
+          classNames: 'grid grid-cols-[calc(var(--spacing-card-min-width)+2rem)_1fr] h-full w-full overflow-hidden',
         })}
         ref={forwardedRef}
       >
@@ -216,7 +217,6 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
           aria-label='Itinerary'
           className='flex flex-col overflow-hidden border-r border-subdued-separator bg-base-surface'
         >
-          <div className='shrink-0 px-3 py-2 text-sm font-medium border-b border-subdued-separator'>Itinerary</div>
           {segments.length === 0 ? (
             <div className='p-3 text-sm text-description'>No segments yet.</div>
           ) : (

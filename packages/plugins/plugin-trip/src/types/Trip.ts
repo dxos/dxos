@@ -48,15 +48,16 @@ export const make = (props: Partial<Obj.MakeProps<typeof Trip>> = {}): Trip =>
 export const addSegment = (trip: Trip, segment: Segment.Segment): void => {
   Obj.setParent(segment, trip);
   Obj.update(trip, (trip) => {
-    trip.segments = [...(trip.segments ?? []), Ref.make(segment)] as typeof trip.segments;
+    trip.segments.push(Ref.make(segment));
   });
 };
 
 /** Removes a segment ref from a trip by its ECHO id. */
 export const removeSegment = (trip: Trip, segmentId: string): void => {
   Obj.update(trip, (trip) => {
-    trip.segments = (trip.segments ?? []).filter(
-      (ref) => !(Ref.isRef(ref) && ref.target?.id === segmentId),
-    ) as typeof trip.segments;
+    const index = trip.segments.findIndex((ref) => Ref.isRef(ref) && ref.target?.id === segmentId);
+    if (index >= 0) {
+      trip.segments.splice(index, 1);
+    }
   });
 };
