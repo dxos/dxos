@@ -97,9 +97,10 @@ MessageRoot.displayName = 'Message.Root';
 const MESSAGE_TOOLBAR_NAME = 'Message.Toolbar';
 
 const MessageToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
-  const { attendableId, viewMode, setViewMode, renderMode, setRenderMode, onOpen, onReply, onReplyAll, onForward } =
+  const { attendableId, message, viewMode, setViewMode, renderMode, setRenderMode, onOpen, onReply, onReplyAll, onForward } =
     useMessageContext(MESSAGE_TOOLBAR_NAME);
   const menuActions = useMessageActions({
+    message,
     viewMode,
     setViewMode,
     renderMode,

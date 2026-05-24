@@ -3,8 +3,11 @@
 //
 
 import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { type Message } from '@dxos/types';
 
 import { meta } from '#meta';
+
+import { useExtractorActions } from './useExtractorActions';
 
 export type ViewMode = 'plain' | 'enriched' | 'plain-only';
 
@@ -16,6 +19,7 @@ export type ViewMode = 'plain' | 'enriched' | 'plain-only';
 export type RenderMode = 'markdown' | 'plain';
 
 export type UseMessageToolbarActionsProps = {
+  message: Message.Message;
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
   renderMode: RenderMode;
@@ -27,6 +31,7 @@ export type UseMessageToolbarActionsProps = {
 };
 
 export const useMessageActions = ({
+  message,
   viewMode,
   setViewMode,
   renderMode,
@@ -36,9 +41,11 @@ export const useMessageActions = ({
   onReplyAll,
   onForward,
 }: UseMessageToolbarActionsProps) => {
+  const extractorActions = useExtractorActions(message);
+
   return useMenuBuilder(
-    () =>
-      MenuBuilder.make()
+    () => {
+      let builder = MenuBuilder.make()
         .root({ label: ['message-toolbar.label', { ns: meta.id }] })
         .subgraph(
           onOpen &&
@@ -114,8 +121,18 @@ export const useMessageActions = ({
             icon: viewMode === 'enriched' ? 'ph--article--regular' : 'ph--graph--regular',
           },
           () => setViewMode(viewMode === 'plain' ? 'enriched' : 'plain'),
-        )
-        .build(),
-    [viewMode, setViewMode, renderMode, setRenderMode, onOpen, onReply, onReplyAll, onForward],
+        );
+
+      for (const item of extractorActions) {
+        builder = builder.action(
+          `extract-${item.id}`,
+          { label: item.label, icon: 'ph--magic-wand--regular' },
+          item.onSelect,
+        );
+      }
+
+      return builder.build();
+    },
+    [viewMode, setViewMode, renderMode, setRenderMode, onOpen, onReply, onReplyAll, onForward, extractorActions],
   );
 };
