@@ -50,11 +50,15 @@ export const useWheel = (controller?: GlobeController | null, options: WheelOpti
         const factor = Math.exp(-event.deltaY * zoomSensitivity);
         controller.setZoom((zoom) => zoom * factor);
       } else {
-        const [lambda, phi, gamma] = controller.rotation ?? [0, 0, 0];
+        // Use the functional setter so each event applies its delta to the
+        // latest rotation. `controller.rotation` is a snapshot captured by
+        // useImperativeHandle and would be stale across rapid events.
         // Negate deltaY so the wheel matches the linear-drag Y convention
         // (downward motion brings the northern hemisphere into view).
-        const next: Vector = [lambda + event.deltaX * sensitivity, phi - event.deltaY * sensitivity, gamma];
-        controller.setRotation(next);
+        controller.setRotation((prev) => {
+          const [lambda, phi, gamma] = prev ?? [0, 0, 0];
+          return [lambda + event.deltaX * sensitivity, phi - event.deltaY * sensitivity, gamma] as Vector;
+        });
       }
       options.onUpdate?.(controller);
     };
