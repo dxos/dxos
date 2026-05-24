@@ -36,8 +36,8 @@ export interface AnnotationHelper<T> {
 export const createAnnotationHelper = <T>(id: symbol): AnnotationHelper<T> => {
   return {
     get: (schema) => {
-      // Allow reading annotations off a `Type.Type` entity (Option B) — extract
-      // its source schema from the hidden slot first.
+      // Allow reading annotations off a `Type.Type` entity — extract its
+      // source schema from the hidden slot first.
       const slot = (schema as any)[StaticTypeSchemaSlot] as Schema.Schema.AnyNoContext | undefined;
       // Persisted Type.Type entities (from db.schemaRegistry.register) carry no
       // StaticTypeSchemaSlot but have a stored jsonSchema; rebuild the Effect

@@ -125,8 +125,8 @@ export interface RefFn {
  * Schema builder for references.
  */
 export const Ref: RefFn = (input: any): RefSchema<any> => {
-  // Accept `Type.Type` entities (Option B) — extract the underlying source
-  // schema from the hidden slot. Static schemas still work as-is.
+  // Accept `Type.Type` entities — extract the underlying source schema from
+  // the hidden slot. Static schemas still work as-is.
   const schema =
     input != null && typeof input === 'object' && input[StaticTypeSchemaSlot] != null
       ? (input[StaticTypeSchemaSlot] as Schema.Schema.AnyNoContext)

@@ -19,7 +19,7 @@ export type EchoTypeSchemaProps<T, ExtraFields = {}> = Types.Simplify<AnyEntity 
 
 /**
  * Static (in-memory) `Type.Type` entity shape produced by
- * `Type.object(dxn)` / `Type.relation({...})` under Option B.
+ * `Type.object(dxn)` / `Type.relation({...})`.
  *
  * NOT a `Schema.Schema`. The underlying Effect Schema lives in the hidden
  * `StaticTypeSchemaSlot` slot — retrieve it via `Type.getSchema(...)`.

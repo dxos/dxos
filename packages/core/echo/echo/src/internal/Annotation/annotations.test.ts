@@ -150,14 +150,13 @@ describe('annotations', () => {
     });
   });
 
-  // Regression: plugin-space's `userSchemas` filter (extensions/types.ts) calls
-  // `getTypeAnnotation(schema)` for every schema the registry returns. After the
-  // Option B refactor where `Type.object(...)` yields a `Type.Obj` entity (not a
-  // Schema), passing the entity directly threw `Invalid argument 'schema': invalid schema`
-  // because the entity carries its AST on a hidden `StaticTypeSchemaSlot`,
-  // not on `.ast`. That blew up the filter and made the entire Database subgraph
-  // render empty — only the database-stored `Type.Type` entities (whose
-  // `.ast` happens to exist via JsonSchema rehydration upstream) survived.
+  // `getTypeAnnotation(schema)` must work both when given a raw Effect Schema
+  // and when given a `Type.Type` entity (which carries its AST on the hidden
+  // `StaticTypeSchemaSlot` instead of `.ast`), plus when given a persisted
+  // `Type.Type` entity (which carries only `jsonSchema` and needs lazy
+  // rehydration via the registered deserializer). Plugin-space's
+  // `userSchemas` filter calls this on every schema the registry returns, so
+  // a failure here empties the entire Database subgraph in Composer.
   describe('getTypeAnnotation on Type entities', () => {
     test('returns TypeAnnotation for a static Type.Obj entity (no .ast, has StaticTypeSchemaSlot)', ({ expect }) => {
       // TestEchoSchema is a `Type.Obj` entity produced by `EchoObjectSchema(DXN)`.

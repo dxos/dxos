@@ -55,8 +55,8 @@ export const createObject: {
     props: NoInfer<CreateObjectProps<T>>,
   ): T;
 } = (input: any, props: any): any => {
-  // Accept `Type.Type` entities (Option B) — extract the underlying source
-  // schema from the hidden slot.
+  // Accept `Type.Type` entities — extract the underlying source schema from
+  // the hidden slot.
   const schema = ((input as any)[StaticTypeSchemaSlot] ?? input) as Schema.Schema.AnyNoContext;
   const annotation = getTypeAnnotation(schema);
   if (!annotation) {

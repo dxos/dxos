@@ -68,7 +68,7 @@ export const getTypeIdentifierAnnotation = (schema: Schema.Schema.All) =>
 export const getSchemaURI = (
   input: Schema.Schema.All | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext },
 ): URI.URI | undefined => {
-  // Accept `Type.Type` entities (Option B) — unwrap to the underlying source schema.
+  // Accept `Type.Type` entities — unwrap to the underlying source schema.
   const schema = ((input as any)[StaticTypeSchemaSlot] ?? input) as Schema.Schema.All;
   assertArgument(Schema.isSchema(schema), 'schema', 'invalid schema');
   const id = getTypeIdentifierAnnotation(schema);

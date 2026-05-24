@@ -103,9 +103,9 @@ export const id = (...ids: ObjectId[]): Any => {
 /**
  * Filter by type.
  *
- * Accepts a `Type.Type` entity (which static `Type.object`/`Type.relation`
- * values are under Option B), a `Schema.Union` of such entities (for filtering
- * across a union of ECHO types), or a non-qualified typename string.
+ * Accepts a `Type.Type` entity (the value produced by `Type.object` /
+ * `Type.relation`), a `Schema.Union` of such entities (for filtering across a
+ * union of ECHO types), or a non-qualified typename string.
  */
 export function type<T extends TypeNs.AnyType>(
   type: T,

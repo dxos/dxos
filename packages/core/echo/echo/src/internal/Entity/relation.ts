@@ -88,9 +88,9 @@ export const EchoRelationSchema = <Source, Target>({
   source,
   target,
 }: EchoRelationSchemaOptions<Source, Target>) => {
-  // `source` / `target` are `Type.Type` entities (Option B) — extract their
-  // underlying source schemas from the hidden slot to feed into the schema-side
-  // machinery (DXN ref + entity-kind checks).
+  // `source` / `target` are `Type.Type` entities — extract their underlying
+  // source schemas from the hidden slot to feed into the schema-side machinery
+  // (DXN ref + entity-kind checks).
   const sourceSchema = (source as any)?.[StaticTypeSchemaSlot] ?? source;
   const targetSchema = (target as any)?.[StaticTypeSchemaSlot] ?? target;
   assertArgument(Schema.isSchema(sourceSchema), 'source');

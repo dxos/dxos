@@ -40,9 +40,9 @@ export const makeObject: {
   meta?: ObjectMeta,
   typeSource?: { jsonSchema: any; id?: string },
 ): T => {
-  // Accept `Type.Type` entities (Option B) — extract the underlying source
-  // schema, and if no explicit typeSource was passed, default it to the input
-  // entity so the resulting instance carries a back-reference (`Obj.getType`).
+  // Accept `Type.Type` entities — extract the underlying source schema, and
+  // if no explicit typeSource was passed, default it to the input entity so
+  // the resulting instance carries a back-reference (`Obj.getType`).
   const inputIsEntity = input != null && input[StaticTypeSchemaSlot] != null;
   const schema = (inputIsEntity ? input[StaticTypeSchemaSlot] : input) as Schema.Schema<T, any>;
   const effectiveTypeSource = typeSource ?? (inputIsEntity ? (input as { jsonSchema: any; id?: string }) : undefined);

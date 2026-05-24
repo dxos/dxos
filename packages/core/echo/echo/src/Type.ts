@@ -58,7 +58,7 @@ type EchoSchemaKind<K extends internal.EntityKind = internal.EntityKind> = {
 //
 
 /**
- * TypeScript type for an ECHO object type — a `Type.Type<A>` entity (Option B).
+ * TypeScript type for an ECHO object type — a `Type.Type<A>` entity.
  *
  * `T` is the instance type produced by `Obj.make(Foo, props)`. `Fields` is
  * retained as a structural hint (the runtime value still carries `.fields`),
@@ -94,18 +94,17 @@ export interface Obj<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fiel
 }
 
 /**
- * Type that represents any ECHO object type. Under Option B this is a
- * `Type.Type` entity branded with the object entity kind — what
- * `Type.object(dxn)` produces.
+ * Type that represents any ECHO object type — a `Type.Type` entity branded
+ * with the object entity kind, i.e. what `Type.object(dxn)` produces.
  */
 export type AnyObjectType = Obj<unknown>;
 
 /**
  * Factory function to create an ECHO object type.
  *
- * Returns a `Type.Type` entity (Option B). The returned value also still
- * satisfies `Schema.Schema` at runtime for back-compat — callers should
- * migrate `Schema.Schema.Type<typeof Foo>` to `Type.InstanceType<typeof Foo>`
+ * Returns a `Type.Type` entity. The returned value also still satisfies
+ * `Schema.Schema` at runtime for back-compat — callers should migrate
+ * `Schema.Schema.Type<typeof Foo>` to `Type.InstanceType<typeof Foo>`
  * and `Foo.ast` / `Schema.is(Foo)` etc. to use `Type.getSchema(Foo)`.
  *
  * @example
@@ -134,8 +133,8 @@ export const Type: Type<typeInternal.PersistentSchema> = typeInternal.Persistent
 /**
  * Default version stamped on draft (unnamed) types created via
  * {@link makeObject} / {@link makeRelation} when the caller does not supply
- * one. Matches the plan: pure dynamic drafts surface as `'0.0.0'` until they
- * are persisted, at which point automerge-heads suffix the version.
+ * one. Pure dynamic drafts surface as `'0.0.0'` until they are persisted, at
+ * which point automerge-heads suffix the version.
  */
 const DRAFT_VERSION = '0.0.0';
 
@@ -199,7 +198,7 @@ export const makeRelation = (
 };
 
 /**
- * TypeScript type for an ECHO relation type — a `Type.Type<A>` entity (Option B).
+ * TypeScript type for an ECHO relation type — a `Type.Type<A>` entity.
  *
  * `T` is the instance-property type produced by `Relation.make(...)` (excluding
  * source/target endpoints). `Source` and `Target` are the endpoint types.
@@ -224,8 +223,8 @@ export interface Relation<T, Source, Target, Fields extends Schema.Struct.Fields
 }
 
 /**
- * Type that represents any ECHO relation type. Under Option B this is a
- * `Type.Type` entity branded with the relation entity kind.
+ * Type that represents any ECHO relation type — a `Type.Type` entity branded
+ * with the relation entity kind, i.e. what `Type.relation(...)` produces.
  */
 export type AnyRelationType = Relation<unknown, unknown, unknown>;
 
@@ -407,7 +406,7 @@ export const getMeta = (input: AnyType | Schema.Schema.AnyNoContext): Meta | und
 /**
  * String key used to phantom-carry the instance type produced by a `Type.Type`.
  * Used by `Type.InstanceType<typeof Foo>` to recover the schema instance type
- * once `Type.object(dxn)` no longer returns a `Schema.Schema` (Option B).
+ * since `Type.object(dxn)` does not return a `Schema.Schema`.
  *
  * Re-exported from the internal types layer so both `Type.ts` and internal
  * helpers (`makeObject`, `createObject`) reference the same phantom key.
