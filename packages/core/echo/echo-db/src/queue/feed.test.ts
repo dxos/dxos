@@ -10,7 +10,7 @@ import { Event } from '@dxos/async';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { runAndForwardErrors } from '@dxos/effect';
-import { EchoURI, type SpaceId } from '@dxos/keys';
+import { EchoURI } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 
 import { EchoTestBuilder } from '../testing';
