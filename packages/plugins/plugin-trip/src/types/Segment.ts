@@ -49,13 +49,14 @@ const transportFields = {
   /** Operator of the leg: airline for flights, rail operator for trains, ferry line for boats, road operator for taxi/bus. */
   provider: Schema.optional(Provider.Provider),
   /** Operator-assigned identifier: flight number, train number, vessel/route code. */
-  serviceNumber: Schema.optional(Schema.String),
+  number: Schema.optional(Schema.String),
   origin: Schema.optional(Place),
   destination: Schema.optional(Place),
   departAt: Schema.optional(Format.DateTime),
   arriveAt: Schema.optional(Format.DateTime),
   serviceClass: Schema.optional(ServiceClass),
-  seat: Schema.optional(Schema.String),
+  /** Single seat assignment, or a list when the booking covers multiple passengers. */
+  seat: Schema.optional(Schema.Union(Schema.String, Schema.Array(Schema.String))),
 };
 
 export const FlightDetails = Schema.TaggedStruct('flight', {
@@ -245,12 +246,12 @@ export const getPrimaryDate = (seg: Segment): Date | undefined => parseDate(getD
 export const getTitle = (seg: Segment): string => {
   switch (seg.details._tag) {
     case 'flight':
-      return [seg.details.provider?.name, seg.details.serviceNumber].filter(Boolean).join(' ') || 'Flight';
+      return [seg.details.provider?.name, seg.details.number].filter(Boolean).join(' ') || 'Flight';
     case 'train':
-      return [seg.details.provider?.name, seg.details.serviceNumber].filter(Boolean).join(' ') || 'Train';
+      return [seg.details.provider?.name, seg.details.number].filter(Boolean).join(' ') || 'Train';
     case 'boat':
       return (
-        [seg.details.provider?.name, seg.details.vessel ?? seg.details.serviceNumber].filter(Boolean).join(' ') ||
+        [seg.details.provider?.name, seg.details.vessel ?? seg.details.number].filter(Boolean).join(' ') ||
         'Boat'
       );
     case 'road':

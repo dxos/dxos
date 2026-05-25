@@ -30,7 +30,7 @@ type ExtractResult = import('@dxos/plugin-inbox').MessageExtractor.ExtractResult
  *   Gate: 21B
  *
  * Create-or-update: existing flight segments in `ctx.database` are looked up
- * by `(serviceNumber, departAt date)`. A match is mutated in place (returned in
+ * by `(number, departAt date)`. A match is mutated in place (returned in
  * `updated`) and a fresh `Booking` is NOT emitted; otherwise a new `Booking`
  * + `Segment` pair is created.
  */
@@ -73,7 +73,7 @@ const matchMessage = (message: Message.Message): MatchResult => {
 };
 
 /**
- * Parsed candidate fields from an email body. Only `serviceNumber` + `departAt`
+ * Parsed candidate fields from an email body. Only `number` + `departAt`
  * are required for the create-or-update identity lookup; everything else is
  * optional and merged when present.
  */
@@ -81,7 +81,7 @@ const matchMessage = (message: Message.Message): MatchResult => {
 type PlaceCandidate = { code: string; name?: string };
 
 type Candidate = {
-  serviceNumber?: string;
+  number?: string;
   origin?: PlaceCandidate;
   destination?: PlaceCandidate;
   departAt?: string;
@@ -104,7 +104,7 @@ const parseCandidate = (body: string): Candidate => {
   const seat = SEAT_REGEX.exec(body);
 
   return {
-    serviceNumber: flight?.[1],
+    number: flight?.[1],
     origin: from ? { code: from[1], name: from[2] ?? undefined } : undefined,
     destination: to ? { code: to[1], name: to[2] ?? undefined } : undefined,
     departAt: depart ? toIso(depart[1], depart[2]) : undefined,
@@ -117,19 +117,19 @@ const parseCandidate = (body: string): Candidate => {
 };
 
 /** Identity key used to dedupe segments across multiple emails. */
-const matchKey = (serviceNumber: string, departAt: string): string =>
-  `${serviceNumber.toUpperCase()}|${departAt.split('T')[0]}`;
+const matchKey = (number: string, departAt: string): string =>
+  `${number.toUpperCase()}|${departAt.split('T')[0]}`;
 
 const isSameFlight = (segment: Segment.Segment, candidate: Candidate): boolean => {
-  if (segment.details._tag !== 'flight' || !segment.details.serviceNumber || !segment.details.departAt) {
+  if (segment.details._tag !== 'flight' || !segment.details.number || !segment.details.departAt) {
     return false;
   }
-  if (!candidate.serviceNumber || !candidate.departAt) {
+  if (!candidate.number || !candidate.departAt) {
     return false;
   }
   return (
-    matchKey(segment.details.serviceNumber, segment.details.departAt) ===
-    matchKey(candidate.serviceNumber, candidate.departAt)
+    matchKey(segment.details.number, segment.details.departAt) ===
+    matchKey(candidate.number, candidate.departAt)
   );
 };
 
@@ -138,7 +138,7 @@ const extractFromMessage = (ctx: ExtractCtx, message: Message.Message): Effect.E
     const body = getBodyText(message);
     const candidate = parseCandidate(body);
 
-    // Try to find an existing segment matching the same (serviceNumber, depart-date) pair.
+    // Try to find an existing segment matching the same (number, depart-date) pair.
     const existing = yield* findExistingFlight(ctx, candidate);
 
     if (existing && existing.details._tag === 'flight') {
@@ -183,7 +183,7 @@ const extractFromMessage = (ctx: ExtractCtx, message: Message.Message): Effect.E
         destination: candidate.destination,
         departAt: candidate.departAt,
         arriveAt: candidate.arriveAt,
-        serviceNumber: candidate.serviceNumber,
+        number: candidate.number,
         provider: { name: 'United Airlines', domain: 'united.com' },
         gateFrom: candidate.gateFrom,
         terminalFrom: candidate.terminalFrom,
@@ -198,7 +198,7 @@ const findExistingFlight = (
   ctx: ExtractCtx,
   candidate: Candidate,
 ): Effect.Effect<Segment.Segment | undefined, never> => {
-  if (!candidate.serviceNumber || !candidate.departAt || !ctx.database) {
+  if (!candidate.number || !candidate.departAt || !ctx.database) {
     return Effect.succeed(undefined);
   }
   return Effect.promise(() => ctx.database.query(Filter.type(Segment.Segment)).run()).pipe(

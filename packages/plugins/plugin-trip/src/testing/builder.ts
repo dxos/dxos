@@ -115,7 +115,7 @@ export class TripBuilder {
         details: {
           _tag: 'flight',
           provider: airline,
-          serviceNumber: flightNumber,
+          number: flightNumber,
           serviceClass: opts.cabin ?? 'economy',
           origin: opts.from,
           destination: opts.to,
@@ -138,7 +138,7 @@ export class TripBuilder {
         details: {
           _tag: 'train',
           provider: opts.operator,
-          serviceNumber: opts.trainNumber,
+          number: opts.trainNumber,
           origin: opts.from,
           destination: opts.to,
           departAt: depart.toISOString(),
