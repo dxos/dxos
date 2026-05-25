@@ -96,7 +96,7 @@ export const useChatProcessor = ({
     ).pipe(Layer.provide(Layer.succeed(ServiceResolver.ServiceResolver, serviceResolver)));
 
     log('creating processor', { preset, model: preset?.model, settings });
-    return new AiChatProcessor(session, runtime, feed, spaceLayer, {
+    return new AiChatProcessor(session, runtime, feed, spaceLayer, space.id, {
       chat: chat ? Ref.make(chat) : undefined,
       observableRegistry,
       blueprintRegistry,
