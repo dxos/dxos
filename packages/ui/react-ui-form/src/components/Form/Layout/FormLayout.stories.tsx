@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Format, Type } from '@dxos/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Tooltip, useThemeContext } from '@dxos/react-ui';
+import { Card, Tooltip, useThemeContext } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -215,7 +215,12 @@ export const NamedAnnotation: Story = {
  * parse, the previous valid layout stays on screen and an error banner
  * surfaces under the editor.
  */
-const PlaygroundStory = () => {
+type PlaygroundStoryProps = {
+  /** Wrap the rendered form in `Card.Root` / `Card.Content` chrome. */
+  card?: boolean;
+};
+
+const PlaygroundStory = ({ card = false }: PlaygroundStoryProps) => {
   const schema = useMemo(() => omitId(Flight) as unknown as Schema.Schema<any>, []);
   const [template, setTemplate] = useState(FLIGHT_LAYOUT);
   const [lastValid, setLastValid] = useState(FLIGHT_LAYOUT);
@@ -255,18 +260,28 @@ const PlaygroundStory = () => {
     [themeMode],
   );
 
+  const form = (
+    <Form.Root schema={schema} defaultValues={values} onSave={handleSave} autoSave>
+      <Form.Viewport>
+        <Form.Content>
+          <Form.Layout schema={schema} template={lastValid} />
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
+  );
+
   return (
     <Tooltip.Provider>
       <div className='dx-container grid grid-cols-[1fr_1fr] grid-rows-1 p-4 gap-4 overflow-hidden'>
         <TestPanel>
           <div className='overflow-auto h-full'>
-            <Form.Root schema={schema} defaultValues={values} onSave={handleSave} autoSave>
-              <Form.Viewport>
-                <Form.Content>
-                  <Form.Layout schema={schema} template={lastValid} />
-                </Form.Content>
-              </Form.Viewport>
-            </Form.Root>
+            {card ? (
+              <Card.Root fullWidth>
+                <Card.Content>{form}</Card.Content>
+              </Card.Root>
+            ) : (
+              form
+            )}
           </div>
         </TestPanel>
         <div className='grid grid-rows-3 gap-4 overflow-hidden'>
@@ -311,4 +326,9 @@ const PlaygroundStory = () => {
 
 export const Playground: Story = {
   render: () => <PlaygroundStory />,
+};
+
+/** Same playground, but the form is rendered inside a `Card.Root` / `Card.Content`. */
+export const CardPlayground: Story = {
+  render: () => <PlaygroundStory card />,
 };
