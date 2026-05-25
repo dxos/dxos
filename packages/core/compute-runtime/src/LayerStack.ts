@@ -83,7 +83,11 @@ export class LayerStack {
       const services = this.#resolveServices(topAffinity, context, [tag]);
       const service = Context.getOption(services, tag);
       if (Option.isNone(service)) {
-        return yield* Effect.fail(new ServiceNotAvailableError(tag.key));
+        return yield* Effect.fail(
+          new ServiceNotAvailableError(tag.key, {
+            message: this.#formatMissingServiceMessage(tag.key, topAffinity, context),
+          }),
+        );
       }
       return service.value;
     }).pipe(this.#semapphore.withPermits(1));
@@ -181,6 +185,58 @@ export class LayerStack {
       }
     }).pipe(this.#semapphore.withPermits(1));
   }
+
+  #formatMissingServiceMessage(
+    tagKey: string,
+    topAffinity: LayerSpec.Affinity,
+    context: LayerSpec.LayerContext,
+  ): string {
+    const contextSummary = [
+      context.space !== undefined ? `space=${context.space}` : 'space=<missing>',
+      context.conversation !== undefined ? `conversation=${context.conversation}` : 'conversation=<missing>',
+      context.process !== undefined ? `process=${context.process}` : 'process=<missing>',
+    ].join(', ');
+
+    const hints: string[] = [];
+
+    if (context.space === undefined && this.#layers.some((l) => l.affinity === 'space' || l.affinity === 'process')) {
+      hints.push('spawn environment is missing `space` (required for space/process-affinity services)');
+    }
+    if (
+      context.conversation === undefined &&
+      this.#layers.some((l) => l.provides.some((p) => p.key === tagKey) && l.affinity === 'process')
+    ) {
+      hints.push(
+        'spawn environment is missing `conversation` (set via Operation.withInvocationOptions or ProcessManager.spawn)',
+      );
+    }
+
+    for (const affinity of ['application', 'space', 'process'] as const) {
+      const affinityContext = contextForAffinity(affinity, context);
+      const slice = this.#slices.find(
+        (s) => s.affinity === affinity && layerContextEquals(s.context, affinityContext),
+      );
+      if (!slice) {
+        continue;
+      }
+      const pruned = slice.droppedProvidersFor(tagKey);
+      if (pruned.length > 0) {
+        const missingDeps = [...new Set(pruned.flatMap((spec) => spec.missing))].join(', ');
+        hints.push(`${affinity} provider spec pruned due to missing deps: ${missingDeps}`);
+      }
+    }
+
+    const providers = this.#layers.filter((l) => l.provides.some((p) => p.key === tagKey));
+    if (providers.length === 0) {
+      hints.push('no LayerSpec contributes this service — is the providing plugin activated on SetupProcessManager?');
+    } else if (hints.length === 0) {
+      const affinities = [...new Set(providers.map((l) => l.affinity))].join(', ');
+      hints.push(`registered at affinity=[${affinities}] but not resolved in current context`);
+    }
+
+    const hint = hints.length > 0 ? ` — ${hints.join('; ')}` : '';
+    return `Service not available: ${tagKey} (affinity=${topAffinity}) [${contextSummary}]${hint}`;
+  }
 }
 
 const lowerAffinity = (affinity: LayerSpec.Affinity): LayerSpec.Affinity | undefined => {
@@ -238,6 +294,13 @@ class Slice {
    * Everything that all the layers in the slice provide.
    */
   #provides: Context.Tag<any, any>[] = [];
+
+  /**
+   * Specs that were dropped during {@link init} because their `requires` could not be
+   * satisfied. Indexed by each tag they would have provided, so resolve-time failures can
+   * surface the upstream missing dependency in the error message.
+   */
+  #droppedProviders: Map<string, { provides: readonly string[]; missing: readonly string[] }[]> = new Map();
 
   #managedRuntime?: ManagedRuntime.ManagedRuntime<any, any> = undefined;
 
@@ -312,6 +375,14 @@ class Slice {
     return this.#layers;
   }
 
+  /**
+   * Specs that previously offered `tagKey` but were dropped at slice init. Empty if no spec
+   * ever advertised the tag at this affinity, or if all such specs survived pruning.
+   */
+  droppedProvidersFor(tagKey: string): ReadonlyArray<{ provides: readonly string[]; missing: readonly string[] }> {
+    return this.#droppedProviders.get(tagKey) ?? [];
+  }
+
   get services(): Context.Context<unknown> {
     return this.#services;
   }
@@ -330,10 +401,69 @@ class Slice {
     if (this.#sortError) {
       return Effect.fail(this.#sortError);
     }
-    const missing = this.#requires.find((id) => Option.isNone(Context.getOption(requirements, id)));
-    if (missing) {
-      return Effect.fail(new ServiceNotAvailableError(missing.key));
+
+    // Per-spec pruning: drop specs whose `requires` aren't satisfied by the
+    // parent slice's services (or by surviving earlier specs in this slice).
+    // Iterate in topological order so a spec only sees what came before it.
+    //
+    // The previous behaviour failed the entire slice when ANY spec's
+    // requirements were missing — which blew up unrelated tags. Example: a
+    // `process`-affinity AiContext spec that requires `Database.Service`
+    // would break every spawn without a `space` context (e.g. UI ops like
+    // `update-complementary`), because the slice is shared across every
+    // process-affinity spec.
+    //
+    // Now: dropped specs simply don't contribute their tags. Callers asking
+    // for those tags fail with a precise `ServiceNotAvailable` at
+    // `#resolveService` time (via `Context.getOption` returning `None`),
+    // rather than dragging unrelated tags down with them.
+    const availableKeys = new Set<string>();
+    for (const tag of this.#requires) {
+      if (Option.isSome(Context.getOption(requirements, tag))) {
+        availableKeys.add(tag.key);
+      }
     }
+    const survivingLayers: LayerSpec.LayerSpec[] = [];
+    const droppedLayers: { provides: string[]; missing: string[] }[] = [];
+    this.#droppedProviders.clear();
+    for (const layer of this.#layers) {
+      const missing = layer.requires.filter((r) => !availableKeys.has(r.key));
+      if (missing.length === 0) {
+        survivingLayers.push(layer);
+        for (const p of layer.provides) {
+          availableKeys.add(p.key);
+        }
+      } else {
+        const dropped = {
+          provides: layer.provides.map((p) => p.key),
+          missing: missing.map((m) => m.key),
+        };
+        droppedLayers.push(dropped);
+        for (const provided of dropped.provides) {
+          const bucket = this.#droppedProviders.get(provided) ?? [];
+          bucket.push(dropped);
+          this.#droppedProviders.set(provided, bucket);
+        }
+      }
+    }
+    if (droppedLayers.length > 0) {
+      log('pruned layer specs with unsatisfied requirements', {
+        affinity: this.#affinity,
+        context: this.#context,
+        dropped: droppedLayers,
+      });
+    }
+    this.#layers = survivingLayers;
+    // Recompute `#provides` so `#resolveServices` advertises only what the
+    // surviving layers actually deliver. Tags whose only provider was pruned
+    // fall through to the `ServiceNotAvailable` branch in `#resolveService`.
+    const provides = new Map<string, Context.Tag<any, any>>();
+    for (const layer of survivingLayers) {
+      for (const p of layer.provides) {
+        provides.set(p.key, p);
+      }
+    }
+    this.#provides = [...provides.values()];
 
     // Layers are already topologically sorted so dependencies come before dependants.
     // Fold them left-to-right with `provideMerge` so that each subsequent layer can see the

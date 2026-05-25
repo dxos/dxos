@@ -272,6 +272,85 @@ describe('LayerStack', () => {
     );
 
     it.effect(
+      'process slice initialises even when an unrelated process-affinity spec has unsatisfied requirements',
+      Effect.fn(function* ({ expect }) {
+        // Self-sufficient spec — provides ServiceA without requiring anything
+        // from a lower-affinity slice. This stands in for an op like
+        // `update-complementary` that needs nothing space-scoped.
+        const selfSufficient = LayerSpec.make(
+          {
+            affinity: 'process',
+            requires: [],
+            provides: [ServiceA],
+          },
+          () => Layer.succeed(ServiceA, { value: 'self-sufficient' }),
+        );
+
+        // Spec that requires a space-affinity service (ServiceC). When the
+        // resolver is invoked for a process context with no `space`, the
+        // space slice can't materialise ServiceC. Previously this would fail
+        // the entire process slice init — including the unrelated
+        // `selfSufficient` spec. Now the LayerStack must drop just this spec
+        // so the slice still serves other tags.
+        const spaceDependent = LayerSpec.make(
+          {
+            affinity: 'process',
+            requires: [ServiceC],
+            provides: [ServiceB],
+          },
+          () =>
+            Layer.effect(
+              ServiceB,
+              Effect.gen(function* () {
+                const c = yield* ServiceC;
+                return { value: `space-dependent:${c.value}` };
+              }),
+            ),
+        );
+
+        const spaceService = LayerSpec.make(
+          {
+            affinity: 'space',
+            requires: [],
+            provides: [ServiceC],
+          },
+          (ctx) => Layer.succeed(ServiceC, { value: `space:${ctx.space}` }),
+        );
+
+        const stack = new LayerStack.LayerStack({ layers: [selfSufficient, spaceDependent, spaceService] });
+        const resolver = stack.getServiceResolver();
+
+        // No space context — `spaceDependent`'s requirement cannot be met.
+        // `selfSufficient` must still resolve successfully.
+        const resolvedA = yield* resolveWithScope(resolver.resolve(ServiceA, { process: 'p1' as any }));
+        expect(resolvedA).toEqual({ value: 'self-sufficient' });
+
+        // Asking for the actually-unavailable tag fails with a precise
+        // `ServiceNotAvailable` for THAT tag, not for the missing dependency.
+        const exit = yield* resolveWithScope(resolver.resolve(ServiceB, { process: 'p1' as any })).pipe(Effect.exit);
+        expect(Exit.isFailure(exit)).toBe(true);
+        const failureText = String(
+          Exit.match(exit, {
+            onFailure: (cause) => cause,
+            onSuccess: () => '',
+          }),
+        );
+        expect(failureText).toContain('ServiceNotAvailable');
+        expect(failureText).toContain('test/ServiceB');
+        expect(failureText).toContain('provider spec pruned due to missing deps');
+        expect(failureText).toContain('test/ServiceC');
+        expect(failureText).toContain('space=<missing>');
+
+        // With a space context the same `spaceDependent` spec can resolve.
+        // Different process id → separate process slice that gets to use the
+        // satisfied space slice this time around.
+        const space = SpaceId.random();
+        const resolvedB = yield* resolveWithScope(resolver.resolve(ServiceB, { space, process: 'p2' as any }));
+        expect(resolvedB).toEqual({ value: `space-dependent:space:${space}` });
+      }),
+    );
+
+    it.effect(
       'reuses application and space slices across resolutions for different processes',
       Effect.fn(function* ({ expect }) {
         let appConstructions = 0;
