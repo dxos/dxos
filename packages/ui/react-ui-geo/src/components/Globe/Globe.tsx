@@ -241,7 +241,7 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
     const projection = useMemo(() => getProjection(projectionProp), [projectionProp]);
 
     // Layers.
-    // TODO(burdon): Generate on the fly based on what is visible.
+    // TODO(burdon): Generate on-the-fly based on what is visible.
     const layers = useMemo(() => {
       return timer(() => createLayers(topology as Topology, features, styles));
     }, [topology, features, styles]);
