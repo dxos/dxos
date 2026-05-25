@@ -3,14 +3,15 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import { format } from 'date-fns';
+import React, { useState } from 'react';
 
 import { Panel } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { Calendar } from './Calendar';
+import { Calendar, type Range as DateRange } from './Calendar';
 
 const meta = {
   title: 'ui/react-ui-calendar/Calendar',
@@ -32,6 +33,24 @@ export const Default: Story = {
       <Calendar.Grid rows={6} />
     </Calendar.Root>
   ),
+};
+
+export const Range: Story = {
+  decorators: [withTheme(), withLayout({ layout: 'centered' })],
+  render: () => {
+    const [range, setRange] = useState<DateRange | undefined>();
+    return (
+      <div className='flex flex-col gap-2'>
+        <Calendar.Root>
+          <Calendar.Toolbar />
+          <Calendar.Grid rows={6} onSelectRange={({ range }) => setRange(range)} />
+        </Calendar.Root>
+        <div className='text-sm text-description text-center'>
+          {range ? `${format(range.from, 'PP')} → ${format(range.to, 'PP')}` : 'Drag across days to select a range.'}
+        </div>
+      </div>
+    );
+  },
 };
 
 export const Column: Story = {

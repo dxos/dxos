@@ -17,7 +17,7 @@ import { meta } from '#meta';
 const TRANSCRIPT_OPERATION = `${meta.id}.operation`;
 
 export const Create = Operation.make({
-  meta: { key: `${TRANSCRIPT_OPERATION}.create`, name: 'Create Transcript' },
+  meta: { key: `${TRANSCRIPT_OPERATION}.create`, name: 'Create Transcript', icon: 'ph--microphone--regular' },
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
     space: SpaceSchema,
@@ -43,6 +43,7 @@ export const Open = Operation.make({
     key: 'org.dxos.function.transcription.open',
     name: 'Open',
     description: 'Opens and reads the contents of a transcription object.',
+    icon: 'ph--folder-open--regular',
   },
   input: Schema.Struct({
     transcript: Ref.Ref(Transcript.Transcript).annotations({
@@ -60,6 +61,7 @@ export const Summarize = Operation.make({
     key: 'org.dxos.function.transcription.summarize',
     name: 'Summarize',
     description: 'Summarize a transcript of a meeting.',
+    icon: 'ph--text-align-left--regular',
   },
   input: Schema.Struct({
     transcript: Schema.String.annotations({
@@ -96,6 +98,7 @@ export const SentenceNormalization = Operation.make({
     key: 'org.dxos.function.transcription.sentence-normalization',
     name: 'Sentence Normalization',
     description: 'Post process of transcription for sentence normalization',
+    icon: 'ph--text-t--regular',
   },
   input: SentenceNormalizationInput,
   output: SentenceNormalizationOutput,

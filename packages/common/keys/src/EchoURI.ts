@@ -168,5 +168,9 @@ const Schema_: Schema.Schema<EchoURI, EchoURI> = Schema.String.pipe(
   Schema.filter((value): value is EchoURI => isEchoURI(value), {
     message: () => 'Invalid EchoURI: must start with echo:, dxn:echo:, or dxn:queue:',
   }),
+  Schema.annotations({
+    title: 'EchoURI',
+    description: 'ECHO object/space URI: echo://<spaceId>[/<objectId>] or echo:/<objectId>',
+  }),
 ) as unknown as Schema.Schema<EchoURI, EchoURI>;
 export { Schema_ as Schema };

@@ -30,6 +30,7 @@ export const QueryWorld = Operation.make({
     key: 'dxos.org/function/voxel/query-world',
     name: 'Query world',
     description: 'Returns the current state of the voxel world including all voxels, grid dimensions, and block size.',
+    icon: 'ph--cube--regular',
   },
   input: Schema.Struct({
     world: Ref.Ref(Voxel.World).annotations({
@@ -58,6 +59,7 @@ export const AddVoxels = Operation.make({
     key: 'dxos.org/function/voxel/add-voxels',
     name: 'Add voxels',
     description: 'Adds one or more voxels to the world at specified coordinates with a given hue.',
+    icon: 'ph--plus--regular',
   },
   input: Schema.Struct({
     world: Ref.Ref(Voxel.World).annotations({
@@ -78,6 +80,7 @@ export const RemoveVoxels = Operation.make({
     key: 'dxos.org/function/voxel/remove-voxels',
     name: 'Remove voxels',
     description: 'Removes voxels at specified coordinates from the world.',
+    icon: 'ph--minus--regular',
   },
   input: Schema.Struct({
     world: Ref.Ref(Voxel.World).annotations({
@@ -98,6 +101,7 @@ export const GenerateShape = Operation.make({
     key: 'dxos.org/function/voxel/generate-shape',
     name: 'Generate shape',
     description: `Generates a 3D shape made of voxels at the given origin. Available shapes: ${MODEL_TYPES.join(', ')}.`,
+    icon: 'ph--cube--regular',
   },
   input: Schema.Struct({
     world: Ref.Ref(Voxel.World).annotations({

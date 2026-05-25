@@ -73,7 +73,7 @@ const handler: Operation.WithHandler<typeof Qualifier> = Qualifier.pipe(
 
         if (isRelevant) {
           const feedTarget = yield* Database.load(queue);
-          if ('queue' in event && event.item) {
+          if ('feed' in event && event.item) {
             const obj = event.item;
             yield* Feed.append(feedTarget, [obj]);
           } else if ('subject' in event && Ref.isRef(event.subject)) {

@@ -38,13 +38,18 @@ export default Capability.makeModule(
             const actions = [];
             if (provider?.sync) {
               const sync = provider.sync;
+              const spaceId = Obj.getDatabase(integration)?.spaceId;
               actions.push(
                 Node.makeAction({
                   id: `${meta.id}.sync-integration.${integration.id}`,
                   data: () =>
-                    Operation.invoke(sync, {
-                      integration: Ref.make(integration),
-                    }),
+                    Operation.invoke(
+                      sync,
+                      {
+                        integration: Ref.make(integration),
+                      },
+                      { spaceId },
+                    ),
                   properties: {
                     label: ['sync-integration.label', { ns: meta.id }],
                     icon: 'ph--arrows-clockwise--regular',

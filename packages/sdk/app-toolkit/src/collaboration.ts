@@ -16,6 +16,7 @@ export namespace CollaborationOperation {
       key: `${COLLABORATION_OPERATION}.accept-proposal`,
       name: 'Accept Proposal',
       description: 'Accept a proposal from a collaborator.',
+      icon: 'ph--check--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({

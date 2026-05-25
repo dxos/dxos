@@ -38,6 +38,10 @@ export const Mailbox = Schema.Struct({
       filter: Schema.String,
     }),
   ).pipe(FormInputAnnotation.set(false)),
+  extractors: Schema.Struct({
+    enabled: Schema.Array(Schema.String),
+    threshold: Schema.Number.pipe(Schema.between(0, 1)),
+  }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Annotation.IconAnnotation.set({
     icon: 'ph--tray--regular',
@@ -57,8 +61,9 @@ export const CreateMailboxSchema = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
 });
 
-type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'feed' | 'filters'> & {
+type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'feed' | 'filters' | 'extractors'> & {
   filters?: { name: string; filter: string }[];
+  extractors?: { enabled: string[]; threshold: number };
 };
 
 /** Creates a mailbox object with a backing feed. */

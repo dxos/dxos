@@ -10,7 +10,7 @@ import path from 'node:path';
 import { type Client } from '@dxos/client';
 import { Filter, type Obj, Type } from '@dxos/echo';
 import { Serializer } from '@dxos/echo-db';
-import { EchoURI, type SpaceId } from '@dxos/keys';
+import { DXN, EchoURI, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 export type SpacesDump = {
@@ -111,7 +111,26 @@ export class SpacesDumper {
 
   static getExpectedObjectsOfType = (expected: SpacesDump, spaceId: SpaceId, schema: Type.Entity) => {
     const objects = expected[spaceId] ?? [];
-    return Record.values(objects).filter((obj) => obj['@type'] === Type.getURI(schema)?.toString());
+    const schemaURI = Type.getURI(schema)?.toString();
+    return Record.values(objects).filter((obj) => {
+      const objType: string | undefined = obj['@type'];
+      if (!objType || !schemaURI) {
+        return false;
+      }
+      if (objType === schemaURI) {
+        return true;
+      }
+      // Normalize DXN-style type URIs: handles `dxn:type:<nsid>` (legacy) vs `dxn:<nsid>` (canonical).
+      if (DXN.isDXN(objType) && DXN.isDXN(schemaURI)) {
+        return DXN.tryMake(objType) === DXN.tryMake(schemaURI);
+      }
+      // Normalize EchoURI-style type references: handles `dxn:echo:@:<id>` (legacy local)
+      // vs `echo://<spaceId>/<id>` (new qualified) — same object, different format.
+      if (EchoURI.isEchoURI(objType) && EchoURI.isEchoURI(schemaURI)) {
+        return EchoURI.getObjectId(EchoURI.parse(objType)) === EchoURI.getObjectId(EchoURI.parse(schemaURI));
+      }
+      return false;
+    });
   };
 }
 

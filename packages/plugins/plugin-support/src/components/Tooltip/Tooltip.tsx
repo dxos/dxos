@@ -48,7 +48,7 @@ export const Tooltip = forwardRef<HTMLDivElement, TooltipRenderProps>(
         <div className='flex p-2'>
           <h2 className='grow px-2 py-1 text-lg font-medium text-accent-foreground'>{title}</h2>
           <IconButton
-            density='fine'
+            density='md'
             icon='ph--x--bold'
             iconOnly
             label={closeProps['aria-label']}

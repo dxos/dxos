@@ -16,9 +16,10 @@ import React, {
 import { type Database } from '@dxos/echo';
 import { type Format } from '@dxos/echo/internal';
 import { Icon, Input, Tooltip } from '@dxos/react-ui';
-import { inputTextLabel } from '@dxos/ui-theme';
+import { inputTextLabel } from '@dxos/react-ui';
 
 import { type FormFieldStatus } from '../../hooks';
+import { useFormTooltips } from './FormTooltipsContext';
 
 /**
  * Dynamic props passed to input components.
@@ -48,6 +49,13 @@ export type FormFieldComponentProps<T = any> = {
   format?: Format.TypeFormat;
   readonly?: boolean;
   label: string;
+  /**
+   * Dotted JSON path of this field within the form values (e.g.
+   * `runtime.client.storage.persistent`). Forwarded to `FormFieldLabel` so
+   * that it can render the path as a debug hint when the enclosing
+   * `Form.Root` has `debug` enabled.
+   */
+  jsonPath?: string;
   placeholder?: string;
   autoFocus?: boolean;
   layout?: Presentation;
@@ -75,13 +83,34 @@ export type FormFieldProvider = (props: {
 export type FormFieldLabelProps = {
   asChild?: boolean;
   error?: string;
+  /**
+   * JSON path of the field this label describes (e.g. `runtime.client.storage.persistent`).
+   * Surfaced as a hover tooltip on the label when the enclosing `Form.Root`
+   * has `tooltips` enabled (the default) -- useful for spotting which field
+   * maps to which path when authoring schemas or filing bugs against a form.
+   * Callers can supply the path unconditionally; the label suppresses the
+   * tooltip when `Form.Root tooltips={false}`.
+   */
+  path?: string;
 } & Pick<FormFieldComponentProps, 'label' | 'readonly'>;
 
-export const FormFieldLabel = ({ label, error, readonly, asChild }: FormFieldLabelProps) => {
+export const FormFieldLabel = ({ label, error, readonly, asChild, path }: FormFieldLabelProps) => {
+  const tooltips = useFormTooltips();
   const Label = readonly || asChild ? 'span' : Input.Label;
+  // Surface the field's JSON path as a hover tooltip on the label (e.g.
+  // `runtime.client.storage.persistent`). Wrapping with `Tooltip.Trigger
+  // asChild` keeps the underlying `Input.Label` (or `span`) intact so form
+  // semantics and label-for-input linking are unchanged.
+  const labelNode = <Label className={inputTextLabel}>{label}</Label>;
   return (
     <div className='flex items-center justify-between'>
-      <Label className={inputTextLabel}>{label}</Label>
+      {tooltips && path ? (
+        <Tooltip.Trigger asChild content={path} side='bottom'>
+          {labelNode}
+        </Tooltip.Trigger>
+      ) : (
+        labelNode
+      )}
       {error && (
         <Tooltip.Trigger asChild content={error} side='bottom'>
           <Icon icon='ph--warning--regular' size={4} classNames='text-error-text' />
@@ -99,13 +128,13 @@ FormFieldLabel.displayName = 'Form.FieldLabel';
 
 export type FormFieldWrapperProps<T = any> = Pick<
   FormFieldComponentProps,
-  'readonly' | 'label' | 'layout' | 'getStatus' | 'getValue'
+  'readonly' | 'label' | 'layout' | 'getStatus' | 'getValue' | 'jsonPath'
 > & {
   children?: (props: { value: T }) => ReactNode;
 };
 
 export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
-  const { children, readonly, layout, label, getStatus, getValue } = props;
+  const { children, readonly, layout, label, jsonPath, getStatus, getValue } = props;
   const { status, error } = getStatus();
 
   const value = getValue();
@@ -118,7 +147,7 @@ export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
   return (
     <div className='contents'>
       <Input.Root validationValence={status}>
-        {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} />}
+        {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />}
         {layout === 'static' ? <p>{str}</p> : children ? children({ value }) : null}
         {layout === 'full' && (
           <Input.DescriptionAndValidation>

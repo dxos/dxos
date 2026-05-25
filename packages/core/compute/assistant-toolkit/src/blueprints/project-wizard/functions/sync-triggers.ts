@@ -104,27 +104,30 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
     }
 
     if ((agent.filterEvents ?? true) && agent.feed) {
-      yield* Database.add(
-        Trigger.make({
-          [Obj.Parent]: agent,
-          [Obj.Meta]: {
-            keys: [
-              { source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id },
-              {
-                source: AGENT_TRIGGER_TARGET_EXTENSION_KEY,
-                id: Obj.getURI(agent) ?? '',
-              },
-            ],
-          },
-          function: Ref.make(Operation.serialize(AgentWorker)),
-          enabled: triggersEnabled,
-          spec: Trigger.specQueue(agent.feed.uri),
-          input: {
-            agent: Ref.make(agent),
-            event: '{{event}}',
-          },
-        }),
-      );
+      const agentFeedOption = yield* Database.loadOption(agent.feed);
+      if (Option.isSome(agentFeedOption) && Feed.getQueueUri(agentFeedOption.value)) {
+        yield* Database.add(
+          Trigger.make({
+            [Obj.Parent]: agent,
+            [Obj.Meta]: {
+              keys: [
+                { source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id },
+                {
+                  source: AGENT_TRIGGER_TARGET_EXTENSION_KEY,
+                  id: Obj.getURI(agent) ?? '',
+                },
+              ],
+            },
+            function: Ref.make(Operation.serialize(AgentWorker)),
+            enabled: triggersEnabled,
+            spec: Trigger.specFeed(agentFeedOption.value),
+            input: {
+              agent: Ref.make(agent),
+              event: '{{event}}',
+            },
+          }),
+        );
+      }
     }
 
     // Timer trigger bypasses the qualifier and invokes the agent worker directly on a schedule.

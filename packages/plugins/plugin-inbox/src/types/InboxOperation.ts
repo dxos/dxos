@@ -36,6 +36,7 @@ export const GetGoogleCalendars = Operation.make({
     name: 'Get Google Calendars',
     description:
       'Discover Google Calendars reachable from an integration and materialize a Calendar object per remote calendar.',
+    icon: 'ph--calendar--regular',
   },
   input: Schema.Struct({
     integration: Ref.Ref(Integration.Integration),
@@ -46,7 +47,7 @@ export const GetGoogleCalendars = Operation.make({
 });
 
 export const AddMailbox = Operation.make({
-  meta: { key: `${INBOX_OPERATION}.add-mailbox`, name: 'Add Mailbox' },
+  meta: { key: `${INBOX_OPERATION}.add-mailbox`, name: 'Add Mailbox', icon: 'ph--envelope--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     object: Obj.Unknown,
@@ -64,6 +65,7 @@ export const DraftEmail = Operation.make({
     key: `${INBOX_OPERATION}.draft-email`,
     name: 'Draft email',
     description: 'Creates a new email draft.',
+    icon: 'ph--pencil--regular',
   },
   input: Schema.Struct({
     subject: Schema.String.annotations({
@@ -93,6 +95,7 @@ export const DraftEmailAndOpen = Operation.make({
   meta: {
     key: `${INBOX_OPERATION}.draft-email-and-open`,
     name: 'Draft email and open',
+    icon: 'ph--pencil--regular',
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -112,6 +115,7 @@ export const GmailSend = Operation.make({
     key: `${INBOX_OPERATION}.google-mail-send`,
     name: 'Send Gmail',
     description: 'Send emails via Gmail.',
+    icon: 'ph--paper-plane-tilt--regular',
   },
   input: Schema.Struct({
     userId: Schema.String.pipe(Schema.optional),
@@ -132,6 +136,7 @@ export const GoogleMailSync = Operation.make({
     key: `${INBOX_OPERATION}.google-mail-sync`,
     name: 'Sync Google Mail',
     description: 'Sync emails from Gmail to the mailbox feed.',
+    icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
     integration: Ref.Ref(Integration.Integration).annotations({
@@ -163,7 +168,7 @@ export const GoogleMailSync = Operation.make({
   output: Schema.Struct({
     newMessages: Schema.Number,
   }),
-  services: [Database.Service, Feed.FeedService, Credential.CredentialsService, Trace.TraceService],
+  services: [Capability.Service, Database.Service, Feed.FeedService, Credential.CredentialsService, Trace.TraceService],
 });
 
 // TODO(wittjosiah): Factor out notify of failures to invocation option.
@@ -172,6 +177,7 @@ export const SyncMailbox = Operation.make({
     key: `${INBOX_OPERATION}.sync-mailbox`,
     name: 'Sync Mailbox',
     description: 'Runs Google Mail sync and notifies of progress.',
+    icon: 'ph--arrows-clockwise--regular',
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -187,6 +193,7 @@ export const GoogleCalendarSync = Operation.make({
     name: 'Sync Google Calendar',
     description:
       'Sync events from Google Calendar. The initial sync uses startTime ordering for specified number of days. Subsequent syncs use updatedMin to catch all changes.',
+    icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
     integration: Ref.Ref(Integration.Integration).annotations({
@@ -215,6 +222,7 @@ export const SyncCalendar = Operation.make({
     key: `${INBOX_OPERATION}.sync-calendar`,
     name: 'Sync Calendar',
     description: 'Runs Google Calendar sync and notifies of progress.',
+    icon: 'ph--arrows-clockwise--regular',
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -229,6 +237,7 @@ export const GetGoogleContactGroups = Operation.make({
     key: `${INBOX_OPERATION}.get-google-contact-groups`,
     name: 'Get Google Contact Groups',
     description: 'Discover Google Contact Groups reachable from an integration.',
+    icon: 'ph--users--regular',
   },
   input: Schema.Struct({
     integration: Ref.Ref(Integration.Integration),
@@ -243,6 +252,7 @@ export const GoogleContactsSync = Operation.make({
     key: `${INBOX_OPERATION}.google-contacts-sync`,
     name: 'Sync Google Contacts',
     description: 'Sync contacts from a Google Contact group into Person objects in the space.',
+    icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
     integration: Ref.Ref(Integration.Integration).annotations({
@@ -265,6 +275,7 @@ export const SyncContacts = Operation.make({
     key: `${INBOX_OPERATION}.sync-contacts`,
     name: 'Sync Contacts',
     description: 'Runs Google Contacts sync and notifies of progress.',
+    icon: 'ph--arrows-clockwise--regular',
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -278,6 +289,7 @@ export const ReadEmail = Operation.make({
     key: `${INBOX_OPERATION}.read-email`,
     name: 'Read email',
     description: 'Opens and reads the contents of a mailbox.',
+    icon: 'ph--envelope-open--regular',
   },
   input: Schema.Struct({
     mailbox: Ref.Ref(Mailbox.Mailbox).annotations({
@@ -307,6 +319,7 @@ export const ClassifyEmail = Operation.make({
     name: 'Classify email',
     description:
       'Classifies an email message by selecting and applying an appropriate tag from available tags in the database.',
+    icon: 'ph--tag--regular',
   },
   input: Schema.Struct({
     message: Schema.Any.annotations({
@@ -328,11 +341,27 @@ export const ClassifyEmail = Operation.make({
 });
 
 export const ExtractContact = Operation.make({
-  meta: { key: `${INBOX_OPERATION}.extract-contact`, name: 'Extract Contact' },
+  meta: { key: `${INBOX_OPERATION}.extract-contact`, name: 'Extract Contact', icon: 'ph--user--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     db: Database.Database,
     actor: Actor.Actor,
   }),
   output: Schema.Void,
+});
+
+export const ExtractMessage = Operation.make({
+  meta: { key: `${INBOX_OPERATION}.extract-message`, name: 'Extract Message' },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    db: Database.Database,
+    message: Type.getSchema(Message.Message),
+    extractorId: Schema.optional(Schema.String),
+    targetTripId: Schema.optional(Schema.String),
+  }),
+  output: Schema.Struct({
+    extractorId: Schema.String,
+    created: Schema.Number,
+    summary: Schema.optional(Schema.String),
+  }),
 });

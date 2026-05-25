@@ -4,9 +4,8 @@
 
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { type StatusStyleProps } from '@dxos/ui-theme';
-
 import { useThemeContext } from '../../hooks';
+import { type StatusStyleProps } from '../../theme';
 import { type ThemedClassName } from '../../util';
 
 type StatusProps = ThemedClassName<

@@ -19,7 +19,7 @@ import { meta } from '#meta';
 const ASSISTANT_OPERATION = `${meta.id}.operation`;
 
 export const OnCreateSpace = Operation.make({
-  meta: { key: `${ASSISTANT_OPERATION}.on-create-space`, name: 'On Create Space' },
+  meta: { key: `${ASSISTANT_OPERATION}.on-create-space`, name: 'On Create Space', icon: 'ph--chat-text--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     space: SpaceSchema,
@@ -29,7 +29,7 @@ export const OnCreateSpace = Operation.make({
 });
 
 export const CreateChat = Operation.make({
-  meta: { key: `${ASSISTANT_OPERATION}.create-chat`, name: 'Create Chat' },
+  meta: { key: `${ASSISTANT_OPERATION}.create-chat`, name: 'Create Chat', icon: 'ph--chat-text--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     db: Database.Database,
@@ -43,7 +43,7 @@ export const CreateChat = Operation.make({
 });
 
 export const UpdateChatName = Operation.make({
-  meta: { key: `${ASSISTANT_OPERATION}.update-chat-name`, name: 'Update Chat Name' },
+  meta: { key: `${ASSISTANT_OPERATION}.update-chat-name`, name: 'Update Chat Name', icon: 'ph--pencil--regular' },
   services: [Database.Service, Feed.FeedService, AiService.AiService],
   input: Schema.Struct({
     chat: Type.getSchema(Chat.Chat),
@@ -52,7 +52,7 @@ export const UpdateChatName = Operation.make({
 });
 
 export const SetCurrentChat = Operation.make({
-  meta: { key: `${ASSISTANT_OPERATION}.set-current-chat`, name: 'Set Current Chat' },
+  meta: { key: `${ASSISTANT_OPERATION}.set-current-chat`, name: 'Set Current Chat', icon: 'ph--chat-text--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     companionTo: Obj.Unknown,
@@ -62,7 +62,11 @@ export const SetCurrentChat = Operation.make({
 });
 
 export const RunPromptInNewChat = Operation.make({
-  meta: { key: `${ASSISTANT_OPERATION}.run-prompt-in-new-chat`, name: 'Run Prompt In New Chat' },
+  meta: {
+    key: `${ASSISTANT_OPERATION}.run-prompt-in-new-chat`,
+    name: 'Run Prompt In New Chat',
+    icon: 'ph--chat-text--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     db: Database.Database,
@@ -94,6 +98,7 @@ export const ResolveNavigationTargets = Operation.make({
     name: 'Resolve navigation targets',
     description:
       'Resolve navigation targets within the application. The returned paths can be used with the Open operation. Without a query, returns pages that can be navigated to.',
+    icon: 'ph--compass--regular',
   },
   input: Schema.Struct({
     query: Schema.optional(
@@ -109,7 +114,11 @@ export const ResolveNavigationTargets = Operation.make({
 });
 
 export const EnsureCompanionChat = Operation.make({
-  meta: { key: `${ASSISTANT_OPERATION}.ensure-companion-chat`, name: 'Ensure Companion Chat' },
+  meta: {
+    key: `${ASSISTANT_OPERATION}.ensure-companion-chat`,
+    name: 'Ensure Companion Chat',
+    icon: 'ph--chat-text--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     db: Database.Database,
@@ -133,6 +142,7 @@ export const ToggleTracePanelDebug = Operation.make({
     key: `${ASSISTANT_OPERATION}.toggle-trace-panel-debug`,
     name: 'Toggle trace panel debug',
     description: 'Toggle trace panel between commit graph and raw span tree JSON.',
+    icon: 'ph--bug--regular',
   },
   services: [Capability.Service],
   input: Schema.Struct({

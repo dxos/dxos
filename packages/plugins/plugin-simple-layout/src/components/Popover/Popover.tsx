@@ -110,7 +110,7 @@ export const PopoverContent = () => {
                 {/* TODO(wittjosiah): Cleaner way to handle no drag handle in toolbar? */}
                 <span />
                 {state.popoverTitle ? <Card.Title>{toLocalizedString(state.popoverTitle, t)}</Card.Title> : <span />}
-                <Card.CloseIconButton onClick={handleClose} />
+                <Card.ActionIconButton action='close' onClick={handleClose} />
               </Card.Toolbar>
               {state.popoverContent && 'subject' in state.popoverContent && (
                 <Surface.Surface type={AppSurface.Card} data={state.popoverContent} limit={1} />

@@ -8,6 +8,7 @@ import React, { type MouseEvent, type WheelEvent, useCallback, useContext, useEf
 
 import { type Type } from '@dxos/echo';
 import { log } from '@dxos/log';
+import { composable, composableProps } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridAxisMeta,
@@ -21,7 +22,7 @@ import {
   gridSeparatorInlineEnd,
 } from '@dxos/react-ui-grid';
 import { DxEditRequest } from '@dxos/react-ui-grid';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { type InsertRowResult, ModalController, type TableModel, type TablePresentation } from '../../model';
 import { tableButtons, tableControls } from '../../util';

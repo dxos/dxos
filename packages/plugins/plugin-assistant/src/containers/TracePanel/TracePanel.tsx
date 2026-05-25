@@ -19,10 +19,11 @@ import { EchoURI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
 import { ScrollContainer } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Timeline, type Commit } from '@dxos/react-ui-components';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { ProcessTree, ProcessTreeProps } from '#components';
 import { buildExecutionGraph, type ExecutionGraph } from '#execution-graph';

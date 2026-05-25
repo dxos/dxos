@@ -9,15 +9,13 @@ import * as SchemaAST from 'effect/SchemaAST';
 
 import { DXN, Annotation, Feed, Obj, QueryAST, Ref, Type, type Query } from '@dxos/echo';
 import { OptionsAnnotationId, SystemTypeAnnotation } from '@dxos/echo/internal';
-import { failedInvariant } from '@dxos/invariant';
-import { EchoURI } from '@dxos/keys';
 
 /**
  * Type discriminator for TriggerType.
  * Every spec has a type field of type TriggerKind that we can use to understand which type we're working with.
  * https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions
  */
-export const Kinds = ['email', 'queue', 'subscription', 'timer', 'webhook'] as const;
+export const Kinds = ['email', 'feed', 'subscription', 'timer', 'webhook'] as const;
 export type Kind = (typeof Kinds)[number];
 
 const kindLiteralAnnotations = { title: 'Kind' };
@@ -32,29 +30,20 @@ export type EmailSpec = Type.InstanceType<typeof EmailSpec>;
  */
 export const specEmail = (): EmailSpec => ({ kind: 'email' });
 
-// TODO(burdon): Change to Feed.
 // TODO(wittjosiah): Remove. Migrate to Subscription triggers once EDGE supports them for feed queries.
-export const QueueSpec = Schema.Struct({
-  kind: Schema.Literal('queue').annotations(kindLiteralAnnotations),
-
-  // TODO(dmaretskyi): Rename to `feed` and change to a reference.
-  queue: EchoURI.Schema,
+export const FeedSpec = Schema.Struct({
+  kind: Schema.Literal('feed').annotations(kindLiteralAnnotations),
+  feed: Schema.optional(Ref.Ref(Feed.Feed).annotations({ title: 'Feed' })),
 });
-export type QueueSpec = Type.InstanceType<typeof QueueSpec>;
+export type FeedSpec = Type.InstanceType<typeof FeedSpec>;
 
 /**
- * Construct a Queue trigger spec from a queue EchoURI or legacy DXN string.
+ * Construct a Feed trigger spec from a Feed object.
  */
-export const specQueue = (queueDxn: string): QueueSpec => ({
-  kind: 'queue',
-  queue: EchoURI.parse(queueDxn),
+export const specFeed = (feed: Feed.Feed): FeedSpec => ({
+  kind: 'feed',
+  feed: Ref.make(feed),
 });
-
-/**
- * Construct a Queue trigger spec from a Feed object.
- */
-export const specFeed = (feed: Feed.Feed): QueueSpec =>
-  specQueue(Feed.getQueueUri(feed) ?? failedInvariant(new Error('Could not extract EchoURI from feed')));
 
 /**
  * Subscription.
@@ -143,7 +132,7 @@ export const specWebhook = (opts?: { method?: string; port?: number }): WebhookS
 /**
  * Trigger schema.
  */
-export const Spec = Schema.Union(EmailSpec, QueueSpec, SubscriptionSpec, TimerSpec, WebhookSpec).annotations({
+export const Spec = Schema.Union(EmailSpec, FeedSpec, SubscriptionSpec, TimerSpec, WebhookSpec).annotations({
   title: 'Trigger',
 });
 export type Spec = Type.InstanceType<typeof Spec>;

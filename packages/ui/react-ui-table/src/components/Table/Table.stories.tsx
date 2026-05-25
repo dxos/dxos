@@ -297,7 +297,7 @@ export const Tags: Meta<DefaultStoryProps> = {
       createSpace: true,
       onCreateSpace: async ({ space }) => {
         // Configure schema.
-        const typename = 'com.example.type.single-select';
+        const typename = 'com.example.type.singleSelect';
         const selectOptions = [
           { id: 'one', title: 'One', color: 'emerald' },
           { id: 'two', title: 'Two', color: 'blue' },

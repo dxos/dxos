@@ -85,8 +85,8 @@ const printSpec = <T extends Trigger.Spec>(spec: T): FormBuilder.FormBuilder => 
       return printSubscription(spec);
     case 'webhook':
       return printWebhook(spec);
-    case 'queue':
-      return printQueue(spec);
+    case 'feed':
+      return printFeed(spec);
     default:
       return FormBuilder.make({}).pipe(FormBuilder.set('unknown', 'Unknown spec type'));
   }
@@ -100,7 +100,8 @@ const printSubscription = (spec: Trigger.SubscriptionSpec) =>
 const printWebhook = (spec: Trigger.WebhookSpec) =>
   FormBuilder.make({}).pipe(FormBuilder.set('method', spec.method), FormBuilder.set('port', spec.port));
 
-const printQueue = (spec: Trigger.QueueSpec) => FormBuilder.make({}).pipe(FormBuilder.set('queue', spec.queue));
+const printFeed = (spec: Trigger.FeedSpec) =>
+  FormBuilder.make({}).pipe(FormBuilder.set('feed', spec.feed ? spec.feed.uri.toString() : '(none)'));
 
 /**
  * Prompts for input values based on an Effect schema.
@@ -345,7 +346,7 @@ export const selectTrigger = Effect.fn(function* (kind?: Trigger.Kind) {
 /**
  * Selects a feed interactively from available feeds in the database.
  * Queries schemas with FeedAnnotation, then queries objects of those types,
- * and extracts queue DXNs from the objects' feed properties.
+ * and returns the chosen Feed object.
  */
 export const selectFeed = Effect.fn(function* () {
   // Query schema registry for schemas with FeedAnnotation.
@@ -362,10 +363,10 @@ export const selectFeed = Effect.fn(function* () {
     return yield* Effect.fail(new Error('No schemas with Feed annotation found'));
   }
 
-  // Collect all objects with feeds.
-  const feedChoices: Array<{ title: string; value: string; description?: string }> = [];
+  // Collect all Feed objects referenced by host objects.
+  const feedChoices: Array<{ title: string; value: Feed.Feed; description?: string }> = [];
 
-  // Process each feed schema, loading the Feed object to extract queue DXN.
+  // Process each feed schema, resolving the Feed object reference.
   for (const schema of feedSchemas) {
     yield* Effect.gen(function* () {
       const typename = Type.getTypename(schema);
@@ -383,17 +384,12 @@ export const selectFeed = Effect.fn(function* () {
           continue;
         }
 
-        const feedDXN = Feed.getQueueUri(feedObj);
-        if (!feedDXN) {
-          continue;
-        }
-
         const label = Obj.getLabel(obj) ?? obj.id;
         const description = Obj.getTypename(obj);
 
         feedChoices.push({
           title: label,
-          value: feedDXN.toString(),
+          value: feedObj,
           description,
         });
       }
@@ -401,15 +397,15 @@ export const selectFeed = Effect.fn(function* () {
   }
 
   if (feedChoices.length === 0) {
-    return yield* Effect.fail(new Error('No objects with queue properties found'));
+    return yield* Effect.fail(new Error('No objects with feed properties found'));
   }
 
   const selected = yield* Prompt.select({
-    message: 'Select a queue:',
+    message: 'Select a feed:',
     choices: feedChoices,
   });
 
-  return String(selected);
+  return selected as Feed.Feed;
 });
 
 /**

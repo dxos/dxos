@@ -12,13 +12,16 @@ const getDocumentElementFontSize = () => parseFloat(getComputedStyle(document.do
  * @param rem The rem value to convert to pixels
  * @returns The current pixel value equivalent of the rem input
  */
+// TODO(burdon): Change to array.
+// TODO(burdon): Integrate with theme provider.
 export const usePx = (rem: number): number => {
   const [fontSize, setFontSize] = useState(() => {
     if (typeof document !== 'undefined') {
       return getDocumentElementFontSize();
     }
 
-    return 16; // Default fallback for SSR
+    // Default fallback for SSR
+    return 16;
   });
 
   const updateFontSize = useCallback(() => {

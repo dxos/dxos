@@ -15,7 +15,7 @@ import { type ComputeEnvironment } from '@dxos/client-protocol';
 import { Operation, Script, ServiceResolver, Trigger, TriggerEvent } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { Filter, Obj, Query, Tag, Type } from '@dxos/echo';
-import { KEY_QUEUE_CURSOR, TriggerDispatcher } from '@dxos/functions-runtime';
+import { KEY_FEED_CURSOR, TriggerDispatcher } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { log } from '@dxos/log';
 import { type Client, useClient } from '@dxos/react-client';
@@ -134,7 +134,7 @@ export const AutomationPanel = ({ space, object, initialTrigger, onDone }: Autom
 
   const handleResetCursor = async (trigger: Trigger.Trigger) => {
     Obj.update(trigger, (trigger) => {
-      Obj.deleteKeys(trigger, KEY_QUEUE_CURSOR);
+      Obj.deleteKeys(trigger, KEY_FEED_CURSOR);
     });
     await space.db.flush({ indexes: true });
   };
@@ -210,7 +210,7 @@ const TriggerListItem = ({
   const client = useClient();
   const copyAction = getCopyAction(client, trigger);
   const { t } = useTranslation(meta.id);
-  const cursor = Obj.getKeys(trigger, KEY_QUEUE_CURSOR).at(0)?.id;
+  const cursor = Obj.getKeys(trigger, KEY_FEED_CURSOR).at(0)?.id;
   const [snapshot, updateTrigger] = useObject(trigger);
 
   const enabled = snapshot.enabled ?? false;
@@ -246,7 +246,7 @@ const TriggerListItem = ({
       };
     }
 
-    if (trigger.spec?.kind === 'queue' && onResetCursor) {
+    if (trigger.spec?.kind === 'feed' && onResetCursor) {
       return {
         disabled: !cursor,
         icon: 'ph--arrow-clockwise--regular',

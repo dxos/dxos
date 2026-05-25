@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ComponentPropsWithoutRef, forwardRef, useState } from 'react';
 
-import { Panel } from '../../primitives';
 import { withLayout, withTheme } from '../../testing';
+import { Panel } from '../Panel';
 import { ScrollArea } from '../ScrollArea';
 import { Toolbar } from '../Toolbar';
 import { Splitter, type SplitterRootProps } from './Splitter';

@@ -56,7 +56,7 @@ export const AboutDialog = () => {
           </h1>
         </Dialog.Title>
         <Dialog.Close asChild>
-          <Dialog.CloseIconButton />
+          <Dialog.ActionIconButton action='close' />
         </Dialog.Close>
       </Dialog.Header>
       <Dialog.Body classNames='flex flex-col gap-3'>

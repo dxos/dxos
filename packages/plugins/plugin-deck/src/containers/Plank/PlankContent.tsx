@@ -4,8 +4,8 @@
 
 import React, { type PropsWithChildren } from 'react';
 
+import { composable, composableProps, mainIntrinsicSize } from '@dxos/react-ui';
 import { railGridHorizontal } from '@dxos/react-ui-stack';
-import { composable, composableProps, mainIntrinsicSize } from '@dxos/ui-theme';
 
 import { useMainSize } from '#hooks';
 

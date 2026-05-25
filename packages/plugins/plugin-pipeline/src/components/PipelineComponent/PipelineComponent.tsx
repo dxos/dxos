@@ -9,10 +9,10 @@ import React, { type FC, type PropsWithChildren } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Toolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps, slottable } from '@dxos/react-ui';
 import { Board, type BoardModel, useBoard, useEventHandlerAdapter } from '@dxos/react-ui-mosaic';
 import { type ProjectionModel } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
-import { composable, composableProps, slottable } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 

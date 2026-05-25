@@ -196,7 +196,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                         ) : (
                           <span />
                         )}
-                        <Card.CloseIconButton onClick={handleClose} />
+                        <Card.ActionIconButton action='close' onClick={handleClose} />
                       </Card.Toolbar>
                       <Surface.Surface type={AppSurface.Card} data={layout.popoverContent} limit={1} />
                     </Card.Root>

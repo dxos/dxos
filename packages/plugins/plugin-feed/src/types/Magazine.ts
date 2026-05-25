@@ -36,7 +36,7 @@ export const Magazine = Schema.Struct({
   keep: Schema.Number.pipe(
     Schema.annotations({
       title: 'Keep',
-      description: 'Maximum number of curated items to keep (starred items are always preserved).',
+      description: 'Number of items to keep.',
     }),
     Schema.optional,
   ),

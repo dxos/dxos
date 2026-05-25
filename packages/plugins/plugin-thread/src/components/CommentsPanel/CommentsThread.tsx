@@ -156,12 +156,17 @@ export const CommentsThread = ({
       ))}
 
       {/*
-        TODO(wittjosiah): Can't autofocus this generally.
-          There can be multiple threads with inputs and they can't all be focused.
-          Also, it steals focus from documents when first rendered.
-          Need to find a way to autofocus in one scenario only: when a new thread is created.
+        Autofocus only newly-created (draft) threads. Once the first message is
+        posted the thread transitions from 'staged' → 'active' and stops stealing
+        focus, satisfying the "one scenario only" constraint flagged in the
+        previous TODO (multiple active threads no longer fight for focus).
       */}
-      <MessageTextbox extensions={extensions} onSend={handleComment} {...textboxMetadata} />
+      <MessageTextbox
+        autoFocus={thread.status === 'staged'}
+        extensions={extensions}
+        onSend={handleComment}
+        {...textboxMetadata}
+      />
 
       <ThreadComponent.Status activity={activity}>{t('activity.message')}</ThreadComponent.Status>
 

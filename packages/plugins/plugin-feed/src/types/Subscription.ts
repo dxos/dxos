@@ -45,7 +45,7 @@ export const Subscription = Schema.Struct({
   keep: Schema.Number.pipe(
     Schema.annotations({
       title: 'Keep',
-      description: 'Maximum number of items to keep when syncing (starred items are always preserved).',
+      description: 'Number of synced items.',
     }),
     Schema.optional,
   ),

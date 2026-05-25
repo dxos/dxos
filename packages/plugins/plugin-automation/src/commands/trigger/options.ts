@@ -39,7 +39,9 @@ export const Cron = Options.text('cron').pipe(
 );
 
 //
-// Queue
+// Feed
 //
 
-export const Queue = Options.text('queue').pipe(Options.withDescription('The DXN of the queue for the queue trigger.'));
+export const Feed = Options.text('feed').pipe(
+  Options.withDescription('The EchoURI of the feed for the feed trigger (echo://<spaceId>/<objectId>).'),
+);

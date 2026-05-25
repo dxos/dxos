@@ -167,7 +167,7 @@ export const FormCellEditor = <T extends Type.Entity = Type.Entity>({
     <Popover.Root open={editing} onOpenChange={handleOpenChange}>
       <Popover.VirtualTrigger virtualRef={anchorRef} />
       <Popover.Portal>
-        <Popover.Content tabIndex={-1} classNames='dx-card-popover-width dx-density-fine'>
+        <Popover.Content tabIndex={-1} classNames='dx-card-popover-width dx-density-md'>
           <Popover.Arrow />
           <Popover.Viewport>
             <Form.Root

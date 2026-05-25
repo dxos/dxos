@@ -23,7 +23,7 @@ export const DeleteCardFieldOutput = Schema.Struct({
 export type DeleteCardFieldOutput = Schema.Schema.Type<typeof DeleteCardFieldOutput>;
 
 export const DeleteCardField = Operation.make({
-  meta: { key: `${KANBAN_OPERATION}.delete-card-field`, name: 'Delete Card Field' },
+  meta: { key: `${KANBAN_OPERATION}.delete-card-field`, name: 'Delete Card Field', icon: 'ph--minus-circle--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     view: Type.getSchema(View.View),
@@ -39,7 +39,7 @@ export const DeleteCardOutput = Schema.Struct({
 export type DeleteCardOutput = Schema.Schema.Type<typeof DeleteCardOutput>;
 
 export const DeleteCard = Operation.make({
-  meta: { key: `${KANBAN_OPERATION}.delete-card`, name: 'Delete Card' },
+  meta: { key: `${KANBAN_OPERATION}.delete-card`, name: 'Delete Card', icon: 'ph--trash--regular' },
   input: Schema.Struct({
     card: Schema.Any,
   }),
@@ -47,7 +47,11 @@ export const DeleteCard = Operation.make({
 });
 
 export const RestoreCardField = Operation.make({
-  meta: { key: `${KANBAN_OPERATION}.restore-card-field`, name: 'Restore Card Field' },
+  meta: {
+    key: `${KANBAN_OPERATION}.restore-card-field`,
+    name: 'Restore Card Field',
+    icon: 'ph--clock-counter-clockwise--regular',
+  },
   services: [Capability.Service],
   input: Schema.Struct({
     view: Type.getSchema(View.View).annotations({ description: 'The view to restore the field to.' }),
@@ -59,7 +63,7 @@ export const RestoreCardField = Operation.make({
 });
 
 export const RestoreCard = Operation.make({
-  meta: { key: `${KANBAN_OPERATION}.restore-card`, name: 'Restore Card' },
+  meta: { key: `${KANBAN_OPERATION}.restore-card`, name: 'Restore Card', icon: 'ph--clock-counter-clockwise--regular' },
   input: Schema.Struct({
     card: Schema.Any.annotations({ description: 'The card to restore.' }),
   }),

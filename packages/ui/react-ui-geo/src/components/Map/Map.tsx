@@ -11,7 +11,8 @@ import { createRoot } from 'react-dom/client';
 import { MapContainer, type MapContainerProps, Marker, Popup, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 
 import { type ThemedClassName, ThemeProvider, Tooltip } from '@dxos/react-ui';
-import { composable, composableProps, defaultTx, mx } from '@dxos/ui-theme';
+import { composable, composableProps, defaultTx } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { type GeoMarker } from '../../types';
 import { ActionControls, type ControlProps, ZoomControls, controlPositions } from '../Toolbar';

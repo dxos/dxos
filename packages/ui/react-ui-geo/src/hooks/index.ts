@@ -8,3 +8,4 @@ export * from './useGlobeZoomHandler';
 export * from './useMapZoomHandler';
 export * from './useSpinner';
 export * from './useTour';
+export * from './useWheel';

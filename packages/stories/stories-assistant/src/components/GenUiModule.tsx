@@ -69,7 +69,7 @@ export const COMPONENT_REGISTRY = {
   'Card.Root': Card.Root,
   'Card.Toolbar': Card.Toolbar,
   'Card.Content': Card.Content,
-  'Card.Heading': Card.Heading,
+  'Card.Section': Card.Section,
   'Card.Text': Card.Text,
 
   Flex,
@@ -377,7 +377,10 @@ export const GenUiModule = ({ space }: ModuleProps) => {
   const [generating, setGenerating] = useState(false);
   const { invokePromise } = useOperationInvoker();
 
-  const invokerFn: InvokerFn = useCallback((op, args) => void invokePromise(op, args), [invokePromise]);
+  const invokerFn: InvokerFn = useCallback(
+    (op, args) => void invokePromise(op, args, { spaceId: space.id }),
+    [invokePromise, space.id],
+  );
 
   const handleGenerate = useSpaceCallback(
     space.id,

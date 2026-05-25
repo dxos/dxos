@@ -46,6 +46,9 @@ const Person = Schema.Struct({
   status: Schema.optional(Schema.Literal('active', 'inactive').annotations({ title: 'Status' })),
   notes: Schema.optional(Format.Text.annotations({ title: 'Notes' })),
   location: Schema.optional(Format.GeoPoint.annotations({ title: 'Location' })),
+  birthday: Schema.optional(Format.DateOnly.annotations({ title: 'Birthday' })),
+  meetingAt: Schema.optional(Format.DateTime.annotations({ title: 'Next meeting' })),
+  reminderAt: Schema.optional(Format.TimeOnly.annotations({ title: 'Reminder time' })),
   tasks: Schema.optional(Schema.Array(Schema.String).annotations({ title: 'Tasks' })),
   locations: Schema.optional(Schema.Array(Format.GeoPoint).annotations({ title: 'Locations' })),
   identities: Schema.optional(
@@ -64,11 +67,9 @@ export type Person = Type.InstanceType<typeof Person>;
 
 type DefaultStoryProps<T extends AnyProperties> = {
   schema?: Schema.Schema<T>;
-  debug?: boolean;
 } & FormRootProps<T>;
 
 const DefaultStory = <T extends AnyProperties = AnyProperties>({
-  debug,
   schema,
   values: valuesProp,
   ...props
@@ -95,7 +96,6 @@ const DefaultStory = <T extends AnyProperties = AnyProperties>({
     <Tooltip.Provider>
       <TestLayout json={{ values, schema: schema?.ast }}>
         <Form.Root
-          debug={debug}
           schema={schema}
           defaultValues={values}
           db={space.db}
@@ -149,6 +149,9 @@ const values: Partial<Person> = {
   name: 'Alice',
   location: [40.7128, -74.006],
   tasks: ['task 1', 'task 2'],
+  birthday: '1990-05-12',
+  meetingAt: '2026-06-01T15:30:00.000Z',
+  reminderAt: '09:00:00',
 };
 
 export const Default: Story<ExcludeId<typeof Person>> = {
