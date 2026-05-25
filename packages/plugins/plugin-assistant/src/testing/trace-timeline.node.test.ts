@@ -196,7 +196,7 @@ describe('Trace timeline', () => {
 
           const dispatcher = yield* TriggerDispatcher;
           yield* dispatcher
-            .invokeScheduledTriggers({ kinds: ['queue'], untilExhausted: true })
+            .invokeScheduledTriggers({ kinds: ['feed'], untilExhausted: true })
             .pipe(Effect.flatMap(Effect.forEach((result) => result.result)));
 
           const messages = yield* queryTraceMessages;

@@ -6,11 +6,13 @@
 
 **Phase 2 COMPLETE**: Migrated `AiConversation` and `AiContextBinder` to use `Feed` object and `feedRuntime` instead of `Queue`.
 
+**Phase 3 COMPLETE**: Migrated `TriggerDispatcher` to `Feed.FeedService` and renamed the `'queue'` trigger kind (spec, event, helpers, cursor key) to `'feed'`. `Trigger.specQueue` was removed; `Trigger.QueueSpec`/`TriggerEvent.QueueEvent` are now `Trigger.FeedSpec`/`TriggerEvent.FeedEvent`; spec storage changed from a queue DXN string to `Ref.Ref(Feed.Feed)`.
+
 ## Decisions (from PR review)
 
 Based on feedback from @dmaretskyi:
 
-1. **Trigger Dispatcher**: Do NOT migrate - let it continue using QueueService
+1. **Trigger Dispatcher**: ~~Do NOT migrate - let it continue using QueueService~~ Migrated in Phase 3 (decision reversed).
 2. **Service Container**: Deprecated - updates are fine but not critical
 3. **AiConversation**: Should be changed to take a `Feed` object instead of `Queue`
 4. **ContextQueueService**: Deprecated - doesn't need migration
@@ -118,11 +120,7 @@ Only migrate handlers that don't need Queue-specific methods (sync/refresh/subsc
 
 The following should continue using QueueService:
 
-1. **Trigger Dispatcher** (`packages/core/functions-runtime/src/triggers/trigger-dispatcher.ts`)
-   - Uses queue DXN strings in trigger specs
-   - Complex cursor/position tracking logic
-
-2. **Code paths using Queue methods**: `sync()`, `refresh()`, `subscribe()`
+1. **Code paths using Queue methods**: `sync()`, `refresh()`, `subscribe()`
 
 ## Escape Hatch
 

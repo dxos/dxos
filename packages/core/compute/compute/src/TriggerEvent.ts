@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Obj, Ref } from '@dxos/echo';
+import { Feed, Obj, Ref } from '@dxos/echo';
 
 // TODO(wittjosiah): Review this type.
 //   - Should be discriminated union.
@@ -23,12 +23,12 @@ export const EmailEvent = Schema.Struct({
 });
 export type EmailEvent = Schema.Schema.Type<typeof EmailEvent>;
 
-export const QueueEvent = Schema.Struct({
-  queue: DXN.Schema,
+export const FeedEvent = Schema.Struct({
+  feed: Ref.Ref(Feed.Feed),
   item: Schema.Any,
   cursor: Schema.String,
 });
-export type QueueEvent = Schema.Schema.Type<typeof QueueEvent>;
+export type FeedEvent = Schema.Schema.Type<typeof FeedEvent>;
 
 export const SubscriptionEvent = Schema.Struct({
   /**
@@ -60,5 +60,5 @@ export const WebhookEvent = Schema.Struct({
 });
 export type WebhookEvent = Schema.Schema.Type<typeof WebhookEvent>;
 
-export const TriggerEvent = Schema.Union(EmailEvent, QueueEvent, SubscriptionEvent, TimerEvent, WebhookEvent);
+export const TriggerEvent = Schema.Union(EmailEvent, FeedEvent, SubscriptionEvent, TimerEvent, WebhookEvent);
 export type TriggerEvent = Schema.Schema.Type<typeof TriggerEvent>;

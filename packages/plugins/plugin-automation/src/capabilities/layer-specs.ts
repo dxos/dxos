@@ -13,7 +13,6 @@ import { ClientService } from '@dxos/client';
 import { Blueprint, LayerSpec, OperationHandlerSet, OperationRegistry } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
 import {
   AgentService,
   FeedTraceSink,
@@ -192,7 +191,7 @@ const TriggerDispatcherSpec = LayerSpec.make(
     affinity: 'space',
     requires: [
       Database.Service,
-      QueueService,
+      Feed.FeedService,
       TriggerStateStore,
       ProcessManager.ProcessManagerService,
       Registry.AtomRegistry,
