@@ -8,4 +8,4 @@ export * as Settings from './Settings';
 export * as Support from './Support';
 export * as SupportCapabilities from './SupportCapabilities';
 export * as SupportOperation from './SupportOperation';
-export * from './schema';
+export * as Tour from './Tour';

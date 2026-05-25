@@ -31,7 +31,7 @@
 
 ## Knowledge
 
-- **IMPORTANT**: Follow DXOS-specific rules in `.agents/sdk/*`.
+- **IMPORTANT**: Follow DXOS-specific rules in `.agents/skills/*`.
 - Update these documents when you learn better patterns; or when the user asks you to correct your implementation.
 
 ## Code Style

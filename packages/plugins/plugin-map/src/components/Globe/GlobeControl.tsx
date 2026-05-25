@@ -4,7 +4,8 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { type ThemeMode, useAsyncState, useThemeContext } from '@dxos/react-ui';
+import { useAsyncState, useThemeContext } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import {
   type ControlProps,
   Globe,
@@ -12,73 +13,17 @@ import {
   type GlobeRootProps,
   type LatLngLiteral,
   geoToPosition,
+  globeStyles,
   positionToRotation,
   useDrag,
   useGlobeZoomHandler,
   useTour,
+  useWheel,
 } from '@dxos/react-ui-geo';
 import { loadTopology } from '@dxos/react-ui-geo/data';
-import { composable, composableProps } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { type GeoControlProps } from '../types';
-
-const globeStyles = (themeMode: ThemeMode) =>
-  themeMode === 'dark'
-    ? {
-        water: {
-          fillStyle: '#191919',
-        },
-
-        land: {
-          fillStyle: '#444',
-          strokeStyle: '#222',
-        },
-
-        border: {
-          strokeStyle: '#111',
-        },
-
-        graticule: {
-          strokeStyle: '#111',
-        },
-
-        line: {
-          lineWidth: 1.5,
-          lineDash: [4, 16],
-          strokeStyle: '#333',
-        },
-
-        point: {
-          radius: 0.2,
-          fillStyle: 'red',
-        },
-      }
-    : {
-        water: {
-          fillStyle: '#fff',
-        },
-
-        land: {
-          fillStyle: '#f5f5f5',
-          strokeStyle: '#ccc',
-        },
-
-        graticule: {
-          strokeStyle: '#ddd',
-        },
-
-        line: {
-          lineWidth: 1.5,
-          lineDash: [4, 16],
-          strokeStyle: '#333',
-        },
-
-        point: {
-          radius: 0.2,
-          fillStyle: 'red',
-        },
-      };
 
 export type GlobeControlProps = GeoControlProps &
   GlobeRootProps & {
@@ -141,6 +86,7 @@ export const GlobeControl = composable<HTMLDivElement, GlobeControlProps>(
     }, [markers, selected]);
 
     const [moved, setMoved] = useState(false);
+    useWheel(controller);
     useDrag(controller, {
       onUpdate: ({ type }) => {
         if (type === 'move') {

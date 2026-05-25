@@ -69,7 +69,7 @@ export const COMPONENT_REGISTRY = {
   'Card.Root': Card.Root,
   'Card.Toolbar': Card.Toolbar,
   'Card.Content': Card.Content,
-  'Card.Heading': Card.Heading,
+  'Card.Section': Card.Section,
   'Card.Text': Card.Text,
 
   Flex,

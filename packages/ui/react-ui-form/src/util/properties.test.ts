@@ -46,6 +46,21 @@ describe('getFormProperties', () => {
     expect(names).not.toContain('context');
   });
 
+  test('filters out optional fields annotated FormInputAnnotation.set(false)', ({ expect }) => {
+    // Regression: optional fields' `prop.type` is the union `T | undefined`; the
+    // annotation lives on the inner `T`. Without unwrapping, the filter would
+    // miss the annotation and the hidden field would render. Covers the
+    // conventional pattern `Schema.X.pipe(FormInputAnnotation.set(false), Schema.optional)`.
+    const TestSchema = Schema.Struct({
+      name: Schema.optional(Schema.String),
+      userId: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
+    }).pipe(Type.object({ typename: 'org.dxos.test.optional-hidden', version: '0.1.0' }));
+
+    const names = getFormProperties(TestSchema.ast).map((prop) => prop.name);
+    expect(names).toContain('name');
+    expect(names).not.toContain('userId');
+  });
+
   test('preserves annotation when chained with .annotations()', ({ expect }) => {
     // Regression: `.pipe(FormInputAnnotation.set(false)).annotations({...})` must
     // not lose the form-input annotation.

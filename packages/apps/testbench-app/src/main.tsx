@@ -13,9 +13,9 @@ import { log } from '@dxos/log';
 // import { initializeAppObservability } from '@dxos/observability';
 import { type Client, ClientProvider } from '@dxos/react-client';
 import { type ThemeMode, ThemeProvider } from '@dxos/react-ui';
+import { defaultTx } from '@dxos/react-ui';
 import { Expando } from '@dxos/schema';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
-import { defaultTx } from '@dxos/ui-theme';
 
 import { AppContainer, Error, Main } from './components';
 import { SyncBench } from './components/SyncBench';

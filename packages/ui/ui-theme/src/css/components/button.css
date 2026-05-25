@@ -77,8 +77,14 @@
   .dx-button:not([data-props~='wrap']) {
     @apply truncate;
   }
+  .dx-button[data-density='lg'] {
+    @apply min-h-[2.5rem] px-3;
+  }
+  .dx-button[data-density='sm'] {
+    @apply min-h-[1.75rem] px-2;
+  }
   @media (pointer: fine) {
-    .dx-button[data-density='fine'] {
+    .dx-button[data-density='md'] {
       @apply min-h-[2rem] px-2.5;
     }
   }

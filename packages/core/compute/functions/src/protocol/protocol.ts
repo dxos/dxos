@@ -337,7 +337,7 @@ const makeOperationServiceLayer = (
           outcome.error ? Effect.die(outcome.error) : Effect.succeed(outcome.data as never),
         ),
       )) as Operation.OperationService['invoke'],
-    schedule: ((op: Operation.Definition.Any, input: unknown) =>
+    schedule: ((op: Operation.Definition.Any, input: unknown, _options?: Operation.InvokeOptions) =>
       Effect.sync(() => {
         invariant(op.meta.deployedId, `Operation '${op.meta.key}' has no deployedId; cannot schedule remotely.`);
         // Fire and forget — schedule is intentionally non-awaiting.

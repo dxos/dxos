@@ -1,0 +1,271 @@
+---
+id: org.dxos.plugin.thread
+name: ThreadPlugin
+version: 0.1.0
+---
+
+ThreadPlugin renders comment threads anchored to ECHO objects (primarily Markdown documents). This spec covers the **comment-thread AI agent** feature: per-thread opt-in AI that responds to user comments either automatically or on @mention, with a model-selected response shape (reply message or document edit proposal).
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+| `component` | `org.dxos.mdl.component@1.0`   |
+| `op`        | `org.dxos.mdl.op@1.0`          |
+| `service`   | `org.dxos.mdl.service@1.0`     |
+
+## Types
+
+```mdl
+type AgentMode
+  literals: auto | mention
+  desc: Per-thread agent firing policy.
+```
+
+```mdl
+type AgentConfig
+  desc: Per-thread agent configuration. Stored on Thread.Thread as optional field.
+  fields:
+    enabled: Boolean
+    mode: AgentMode
+```
+
+```mdl
+type Thread
+  desc: |
+    Extends the existing org.dxos.type.thread schema. Version bumps to 0.2.0.
+    The `agent` field is optional; absent or disabled means no AI involvement.
+  fields:
+    agent?: AgentConfig
+```
+
+```mdl
+type AgentIdentity
+  desc: |
+    Effect Context.Tag. Resolved at runtime, not stored on threads.
+    Default layer reads from the plugin Settings (`agentName`); tests/stories
+    provide static layers; the host may layer in a workspace-scoped producer.
+  fields:
+    name: String          # display name + @mention token
+    identityDid?: String  # optional ECHO identity DID stamped on assistant messages
+    avatar?: String       # optional icon hint
+```
+
+## Services
+
+```mdl
+service AgentRunner
+  desc: |
+    Capability that executes one agent turn for a given thread + subject.
+    Default implementation performs one `LanguageModel.generateText` call
+    with edit tools (`editAnchoredRange`, `updateDocument`) registered per
+    turn. Stub implementations are used in storybook + tests.
+  methods:
+    run(thread: Thread, subject: Obj.Any) -> Effect<void>
+```
+
+## Operations
+
+```mdl
+op RespondToThread
+  key: org.dxos.plugin.thread.operation.respond-to-thread
+  desc: Run one agent turn against a thread. Scheduled by AddMessage when the gate passes.
+  input:
+    thread: Ref<Thread>
+    subject: Ref<Obj.Any>
+
+op SetAgentConfig
+  key: org.dxos.plugin.thread.operation.set-agent-config
+  desc: Mutate thread.agent. Undefined config means off.
+  input:
+    thread: Ref<Thread>
+    config?: AgentConfig
+```
+
+## Components
+
+```mdl
+component AgentToggle
+  desc: |
+    Per-thread radio popover hung off the thread header in CommentsPanel.
+    Three states: off / mention / auto. Shows the resolved AgentIdentity.name
+    as a read-only label.
+  props:
+    value?: AgentConfig
+    agentName: String
+  emits:
+    change: { config?: AgentConfig }
+  layout: |
+    ┌──────────────────────────────┐
+    │ Agent: {agentName}           │
+    │                              │
+    │  ◯ Off                       │
+    │  ◉ Reply only on @mention    │
+    │  ◯ Auto-respond              │
+    └──────────────────────────────┘
+```
+
+## Features
+
+```mdl
+feat F-1: Per-thread agent configuration
+
+  req F-1.1: Thread schema MUST add an optional `agent: AgentConfig` field
+    without breaking existing threads (no migration required).
+
+  req F-1.2: The `AgentIdentity` Effect service MUST be the sole source of
+    the agent's display name. Thread schema MUST NOT store the name.
+
+  req F-1.3: ThreadPlugin MUST contribute a default `AgentIdentity` capability
+    at plugin activation (`{ name: 'Kai' }`). Hosts overriding the default
+    contribute their own `AgentIdentity` earlier in plugin order so
+    `Capability.get` returns it first.
+
+feat F-2: Trigger gate
+
+  req F-2.1: ThreadOperation.AddMessage MUST evaluate the gate after appending
+    the message and MUST schedule (not invoke) RespondToThread when it passes.
+
+  req F-2.2: The gate MUST return true iff ALL hold:
+    - thread.agent?.enabled === true
+    - message.sender.role !== 'assistant'  # user-authored messages carry no role
+    - thread.status !== 'resolved'
+    - mode === 'auto' OR text contains '@' + agentName (case-insensitive)
+
+  req F-2.3: The gate MUST NOT fire on assistant messages (self-loop guard).
+
+  req F-2.4: Flipping enabled on a thread MUST NOT retroactively respond to
+    prior messages; only future user messages.
+
+feat F-3: Agent runner
+
+  req F-3.1: The runner MUST be a Capability so storybook and tests can swap
+    in a stub without changing call sites.
+
+  req F-3.2: The default runner MUST execute one LLM turn via
+    `LanguageModel.generateText`, providing the thread message history as
+    prompt and appending the response (or a synthesized post-tool ack) as
+    an assistant message on the same thread.
+
+  req F-3.3: The agent MUST be given edit tools for in-place markdown updates:
+    - `editAnchoredRange(replacement)` — splices the replacement into the
+      anchored span via Automerge-diff (`updateText`) and rewrites the
+      AnchoredTo cursor so the comment marker tracks the new text.
+    - `updateDocument(content)` — replaces the entire document content.
+
+  req F-3.4: When the subject is not a Markdown.Document (no editable text in
+    scope), the runner MUST omit the edit tools and only post a chat reply.
+
+  req F-3.5: Assistant messages emitted by the runner MUST carry
+    sender = { role: 'assistant', name: identity.name, identityDid: identity.identityDid }.
+
+  req F-3.6: Runner errors MUST be caught at the operation handler boundary,
+    logged via @dxos/log, and emit a `threads.agent.failed` observability event.
+    The user's message MUST remain in the thread.
+
+feat F-4: Toggle UI
+
+  req F-4.1: CommentsPanel MUST render an AgentToggle icon button per thread,
+    next to existing controls (resolve, delete).
+
+  req F-4.2: Clicking the toggle MUST open a popover with three radio options
+    (off / mention / auto) and a non-editable label showing AgentIdentity.name.
+
+  req F-4.3: Changes MUST go through ThreadOperation.SetAgentConfig, not
+    direct schema writes from the popover.
+
+  req F-4.4: No UI is provided for changing the agent name in v1; the name
+    is read-only from the user's perspective.
+
+feat F-5: Storybook coverage
+
+  req F-5.1: CommentsCompanion.stories.tsx MUST add three new variants:
+    - `WithMentionAgent`: thread auto-opted-in with mode='mention'; stub runner.
+    - `WithAutoAgent`: thread auto-opted-in with mode='auto'; stub runner.
+    - `WithLiveAgent`: thread auto-opted-in with mode='auto'; live runner
+      (Anthropic via DXOS edge).
+
+  req F-5.2: `WithMentionAgent` and `WithAutoAgent` MUST contribute a stub
+    `AgentRunner` that performs a canned `postReply` and never makes network
+    calls (so headless `test-storybook` runs are deterministic and offline).
+
+  req F-5.3: `WithLiveAgent` MUST contribute an `AppCapabilities.AiServiceLayer`
+    (Anthropic via DXOS edge) so ThreadPlugin's default LLM-backed `AgentRunner`
+    reaches a real model. Headless `test-storybook` renders but does not submit
+    a comment, so no network call occurs in CI.
+
+  req F-5.4: All three variants MUST contribute a static `AgentIdentity`
+    capability (e.g. `{ name: 'Kai' }`) so the runner stamps the assistant
+    message correctly even when no host layer is present.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Auto mode responds to every user message
+  given: A thread with agent = { enabled: true, mode: 'auto' }
+  when: A user appends a text message via ThreadOperation.AddMessage
+  then:
+    - RespondToThread is scheduled exactly once
+    - The runner's `run` is invoked with the thread and subject
+
+test T-2: Mention mode gates on @name
+  given: A thread with agent = { enabled: true, mode: 'mention' }, identity.name = 'claude'
+  when: A user posts "hello world" (no mention) then "hey @Claude check this"
+  then:
+    - The first message does not schedule RespondToThread
+    - The second message schedules RespondToThread
+
+test T-3: Self-loop guard
+  given: A thread with agent = { enabled: true, mode: 'auto' }
+  when: A message with sender.role = 'assistant' is appended
+  then: RespondToThread is NOT scheduled
+
+test T-4: Resolved threads do not trigger
+  given: A thread with agent.enabled = true and status = 'resolved'
+  when: A user appends a message
+  then: RespondToThread is NOT scheduled
+
+test T-5: Disabled mid-conversation does not delete history
+  given: A thread with prior assistant messages
+  when: SetAgentConfig is invoked with config = undefined
+  then:
+    - thread.agent becomes undefined
+    - thread.messages is unchanged
+
+test T-6: Story WithAutoAgent posts an assistant reply
+  given: The WithAutoAgent storybook variant is rendered
+  when: The user types "hello" and clicks send
+  then:
+    - The thread shows two messages
+    - The second message has sender.role = 'assistant' and sender.name = 'echo'
+
+test T-7: Story WithMentionAgent gates correctly
+  given: The WithMentionAgent storybook variant is rendered
+  when: The user posts "hello" then "@echo hello"
+  then:
+    - After the first send, only the user message is visible
+    - After the second send, an assistant message is appended
+
+test T-8: Runner errors do not lose the user message
+  given: A thread with agent enabled and a runner stubbed to fail
+  when: A user appends a message
+  then:
+    - The user message persists in the thread
+    - A `threads.agent.failed` observability event is emitted
+    - No assistant message is appended
+```
+
+## Out of Scope (v1)
+
+- Per-document default agent config (was discussed during brainstorming; punted).
+- UI to rename the agent within Composer (lives in plugin settings).
+- "Thinking…" / streaming indicator on the message list.
+- Cancellation of in-flight runner turns when the agent is disabled mid-turn.
+- De-duplication of concurrent triggers from multiple users on the same thread.
+- Token-budget caps on long threads or large documents.

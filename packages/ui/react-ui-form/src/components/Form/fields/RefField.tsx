@@ -68,6 +68,7 @@ export const RefField = (props: RefFieldProps) => {
     type,
     readonly,
     label,
+    jsonPath,
     placeholder,
     layout,
     getStatus,
@@ -175,7 +176,7 @@ export const RefField = (props: RefFieldProps) => {
 
   return (
     <Input.Root validationValence={status}>
-      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} />}
+      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />}
       <div>
         {readonly ? (
           !item ? (
@@ -197,7 +198,9 @@ export const RefField = (props: RefFieldProps) => {
               ) : (
                 <Button classNames='w-full text-start gap-form-gap'>
                   <div className='grow overflow-hidden'>
-                    <span className='truncate text-description'>{placeholder ?? t('ref-field.placeholder')}</span>
+                    <span className='truncate text-description'>
+                      {placeholder || label || t('ref-field.placeholder')}
+                    </span>
                   </div>
                   <Icon size={3} icon='ph--caret-down--bold' />
                 </Button>

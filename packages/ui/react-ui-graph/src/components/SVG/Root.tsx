@@ -14,7 +14,8 @@ import React, {
 } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { composableProps, mx } from '@dxos/ui-theme';
+import { composableProps } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { SVGContext, type SVGContextOptions, SVGContextProvider } from '../../hooks';
 

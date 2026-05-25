@@ -8,6 +8,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
 import { Obj, Relation } from '@dxos/echo';
+import { Markdown, MarkdownCapabilities } from '@dxos/plugin-markdown';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { AnchoredTo, Thread } from '@dxos/types';
 
@@ -20,7 +21,21 @@ const handler: Operation.WithHandler<typeof ThreadOperation.Create> = ThreadOper
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
       const stateAtom = yield* Capability.get(ThreadCapabilities.State);
       const subjectId = Obj.getURI(subject);
-      const thread = Thread.make({ name });
+
+      // Inherit the markdown plugin's `commentAgentMode` setting when the
+      // subject is a Markdown.Document, so new comment threads on docs are
+      // opted-in (or not) based on the user's preference. Non-markdown
+      // subjects always get an un-opted thread (no agent).
+      const markdownSettingsAtoms = yield* Capability.getAll(MarkdownCapabilities.Settings);
+      const markdownSettingsAtom = markdownSettingsAtoms[0];
+      const commentAgentMode =
+        markdownSettingsAtom && Obj.instanceOf(Markdown.Document, subject)
+          ? registry.get(markdownSettingsAtom).commentAgentMode
+          : undefined;
+      const agent =
+        commentAgentMode && commentAgentMode !== 'off' ? { enabled: true, mode: commentAgentMode } : undefined;
+
+      const thread = Thread.make({ name, agent });
       const anchor = Relation.make(AnchoredTo.AnchoredTo, {
         [Relation.Source]: thread,
         [Relation.Target]: subject,

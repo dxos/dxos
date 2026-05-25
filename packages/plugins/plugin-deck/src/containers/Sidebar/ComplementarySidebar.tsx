@@ -91,10 +91,11 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
           )}
         >
           {/* TODO(burdon): ScrollArea. */}
-          <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) overflow-y-auto'>
+          <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) overflow-y-auto gap-1 p-1'>
             {companions.map((companion) => (
               <Tabs.Tab key={getLinkedVariant(companion.id)} value={getLinkedVariant(companion.id)} asChild>
                 <IconButton
+                  classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
                   label={toLocalizedString(companion.properties.label, t)}
                   icon={companion.properties.icon}
                   iconOnly
@@ -163,10 +164,10 @@ const ComplementarySidebarPanel = ({ companion, activeId, data }: ComplementaryS
   return (
     <Panel.Root>
       <Panel.Toolbar asChild size='lg'>
-        <Toolbar.Root classNames='bg-modal-surface border-b border-subdued-separator'>
+        <Toolbar.Root style={iconSize(5)} classNames='bg-modal-surface border-b border-subdued-separator'>
           <IconButton
+            classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
             label={toLocalizedString(companion.properties.label, t)}
-            size={5}
             icon={companion.properties.icon}
             iconOnly
             tooltipSide='left'

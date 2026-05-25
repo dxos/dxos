@@ -24,6 +24,8 @@ const BreadcrumbRoot = forwardRef<HTMLDivElement, BreadcrumbRootProps>(
   },
 );
 
+BreadcrumbRoot.displayName = 'Breadcrumb.Root';
+
 type BreadcrumbListProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.ol>> & { asChild?: boolean };
 
 const BreadcrumbList = forwardRef<HTMLOListElement, BreadcrumbListProps>(
@@ -33,6 +35,8 @@ const BreadcrumbList = forwardRef<HTMLOListElement, BreadcrumbListProps>(
     return <Comp role='list' {...props} className={tx('breadcrumb.list', {}, classNames)} ref={forwardedRef} />;
   },
 );
+
+BreadcrumbList.displayName = 'Breadcrumb.List';
 
 type BreadcrumbListItemProps = ThemedClassName<ComponentPropsWithRef<typeof Primitive.li>> & { asChild?: boolean };
 
@@ -44,12 +48,16 @@ const BreadcrumbListItem = forwardRef<HTMLLIElement, BreadcrumbListItemProps>(
   },
 );
 
+BreadcrumbListItem.displayName = 'Breadcrumb.ListItem';
+
 type BreadcrumbLinkProps = LinkProps;
 
 const BreadcrumbLink = forwardRef<HTMLAnchorElement, BreadcrumbLinkProps>(({ asChild, ...props }, forwardedRef) => {
   const Comp = asChild ? Slot : Link;
   return <Comp {...props} ref={forwardedRef} />;
 });
+
+BreadcrumbLink.displayName = 'Breadcrumb.Link';
 
 type BreadcrumbCurrentProps = ThemedClassName<ComponentPropsWithRef<'h1'>> & { asChild?: boolean };
 
@@ -63,9 +71,11 @@ const BreadcrumbCurrent = forwardRef<HTMLHeadingElement, BreadcrumbCurrentProps>
   },
 );
 
+BreadcrumbCurrent.displayName = 'Breadcrumb.Current';
+
 type BreadcrumbSeparatorProps = ThemedClassName<ComponentPropsWithoutRef<typeof Primitive.span>>;
 
-const BreadcrumbSeparator = ({ children, classNames, ...props }: BreadcrumbSeparatorProps) => {
+function BreadcrumbSeparator({ children, classNames, ...props }: BreadcrumbSeparatorProps) {
   const { tx } = useThemeContext();
   return (
     <Primitive.span
@@ -77,7 +87,9 @@ const BreadcrumbSeparator = ({ children, classNames, ...props }: BreadcrumbSepar
       {children ?? <Icon icon='ph--dot--bold' />}
     </Primitive.span>
   );
-};
+}
+
+BreadcrumbSeparator.displayName = 'Breadcrumb.Separator';
 
 export const Breadcrumb = {
   Root: BreadcrumbRoot,

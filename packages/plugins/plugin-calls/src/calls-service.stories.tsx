@@ -173,7 +173,7 @@ const DefaultStory = ({ source }: DefaultStoryProps) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-thread/experimental/Calls',
+  title: 'plugins/plugin-calls/experimental/Calls',
   render: DefaultStory,
   decorators: [
     withTheme(),

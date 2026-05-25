@@ -15,6 +15,7 @@ import { Obj } from '@dxos/echo';
 import { URI } from '@dxos/keys';
 import { useClient } from '@dxos/react-client';
 import { type ThemedClassName } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import {
   type EditorRootProps,
   type EditorToolbarState,
@@ -22,7 +23,6 @@ import {
   useEditorContext,
 } from '@dxos/react-ui-editor';
 import { type PreviewBlock, type PreviewOptions } from '@dxos/ui-editor';
-import { composable, composableProps } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import {

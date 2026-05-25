@@ -387,8 +387,12 @@ export class AiChatProcessor {
       return Effect.void;
     }
 
-    // TODO(dmaretskyi): Operation.schedule didn't work.
+    const spaceId = Obj.getDatabase(chat)?.spaceId;
+    if (!spaceId) {
+      return Effect.void;
+    }
+
     log.info('scheduling chat name update', { hasName: !!chat.name, chance });
-    return Operation.schedule(AssistantOperation.UpdateChatName, { chat });
+    return Operation.schedule(AssistantOperation.UpdateChatName, { chat }, { spaceId });
   }
 }

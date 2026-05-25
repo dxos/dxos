@@ -99,10 +99,11 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
           <IconButton
-            icon='ph--caret-down--regular'
             size={4}
             label={t('invite-options.label')}
+            icon='ph--caret-down--regular'
             iconOnly
+            variant={variant}
             classNames={['h-11 flex-none rounded-w-none', classNames]}
             data-testid={dropdownTestId}
           />

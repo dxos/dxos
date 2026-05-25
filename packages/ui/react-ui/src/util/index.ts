@@ -4,5 +4,6 @@
 
 export type { ThemedClassName } from '@dxos/ui-types';
 
-export * from './hasIosKeyboard';
+export * from './mobile';
+export * from './slots';
 export * from './usePx';

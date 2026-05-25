@@ -25,18 +25,20 @@ import React, {
 import { addEventListener } from '@dxos/async';
 import { log } from '@dxos/log';
 import { useForwardedRef, useMediaQuery } from '@dxos/react-hooks';
-import { type MainStyleProps, osTranslations } from '@dxos/ui-theme';
+import { osTranslations } from '@dxos/ui-theme';
 
 import { useThemeContext } from '../../hooks';
+import { type Label, toLocalizedString, useTranslation } from '../../primitives';
+import { type MainStyleProps } from '../../theme';
 import { type ThemedClassName } from '../../util';
-import { type Label, toLocalizedString, useTranslation } from '../ThemeProvider';
 import { useSwipeToDismiss } from './useSwipeToDismiss';
 
 const MAIN_NAME = 'Main';
-const MAIN_ROOT_NAME = 'MainRoot';
-const MAIN_OVERLAY_NAME = 'MainOverlay';
-const NAVIGATION_SIDEBAR_NAME = 'NavigationSidebar';
-const COMPLEMENTARY_SIDEBAR_NAME = 'ComplementarySidebar';
+const MAIN_ROOT_NAME = 'Main.Root';
+const MAIN_OVERLAY_NAME = 'Main.Overlay';
+const MAIN_CONTENT_NAME = 'Main.Content';
+const NAVIGATION_SIDEBAR_NAME = 'Main.NavigationSidebar';
+const COMPLEMENTARY_SIDEBAR_NAME = 'Main.ComplementarySidebar';
 
 const handleOpenAutoFocus = (event: Event) => {
   !document.body.hasAttribute('data-w-keyboard') && event.preventDefault();
@@ -412,7 +414,7 @@ const MainContent = forwardRef<HTMLDivElement, MainContentProps>(
   },
 );
 
-MainContent.displayName = MAIN_NAME;
+MainContent.displayName = MAIN_CONTENT_NAME;
 
 //
 // Main

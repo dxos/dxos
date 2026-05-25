@@ -114,7 +114,7 @@ PopoverRoot.displayName = POPOVER_NAME;
 // PopoverAnchor
 //
 
-const ANCHOR_NAME = 'PopoverAnchor';
+const ANCHOR_NAME = 'Popover.Anchor';
 
 type PopoverAnchorElement = ComponentRef<typeof PopperPrimitive.Anchor>;
 type PopperAnchorProps = ComponentPropsWithoutRef<typeof PopperPrimitive.Anchor>;
@@ -142,7 +142,7 @@ PopoverAnchor.displayName = ANCHOR_NAME;
 // PopoverTrigger
 //
 
-const TRIGGER_NAME = 'PopoverTrigger';
+const TRIGGER_NAME = 'Popover.Trigger';
 
 type PopoverTriggerElement = ComponentRef<typeof Primitive.button>;
 type PrimitiveButtonProps = ComponentPropsWithoutRef<typeof Primitive.button>;
@@ -187,7 +187,7 @@ PopoverTrigger.displayName = TRIGGER_NAME;
 // PopoverVirtualTrigger
 //
 
-const VIRTUAL_TRIGGER_NAME = 'PopoverVirtualTrigger';
+const VIRTUAL_TRIGGER_NAME = 'Popover.VirtualTrigger';
 
 type PopoverVirtualTriggerProps = {
   virtualRef: RefObject<PopoverTriggerElement | null>;
@@ -211,7 +211,7 @@ PopoverVirtualTrigger.displayName = VIRTUAL_TRIGGER_NAME;
 // PopoverPortal
 //
 
-const PORTAL_NAME = 'PopoverPortal';
+const PORTAL_NAME = 'Popover.Portal';
 
 type PortalContextValue = { forceMount?: true };
 const [PortalProvider, usePortalContext] = createPopoverContext<PortalContextValue>(PORTAL_NAME, {
@@ -252,7 +252,7 @@ PopoverPortal.displayName = PORTAL_NAME;
 // PopoverContent
 //
 
-const CONTENT_NAME = 'PopoverContent';
+const CONTENT_NAME = 'Popover.Content';
 
 type PopoverContentProps = ThemedClassName<PopoverContentTypeProps> & {
   /**
@@ -512,7 +512,7 @@ const PopoverContentImpl = forwardRef<PopoverContentImplElement, PopoverContentI
 // PopoverClose
 //
 
-const CLOSE_NAME = 'PopoverClose';
+const CLOSE_NAME = 'Popover.Close';
 
 type PopoverCloseElement = ComponentRef<typeof Primitive.button>;
 type PopoverCloseProps = PrimitiveButtonProps;
@@ -538,7 +538,7 @@ PopoverClose.displayName = CLOSE_NAME;
 // PopoverArrow
 //
 
-const ARROW_NAME = 'PopoverArrow';
+const ARROW_NAME = 'Popover.Arrow';
 
 type PopoverArrowElement = ComponentRef<typeof PopperPrimitive.Arrow>;
 type PopperArrowProps = ThemedClassName<ComponentPropsWithoutRef<typeof PopperPrimitive.Arrow>>;

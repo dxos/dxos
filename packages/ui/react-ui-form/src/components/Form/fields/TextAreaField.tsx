@@ -25,7 +25,7 @@ export const TextAreaField = ({
     <FormFieldWrapper<string> readonly={readonly} {...props}>
       {({ value = '' }) => (
         <Input.TextArea
-          rows={3}
+          rows={5}
           disabled={!!readonly}
           placeholder={placeholder}
           value={value}

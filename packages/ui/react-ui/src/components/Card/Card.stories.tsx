@@ -28,13 +28,10 @@ const DefaultStory = ({ title, description, image, fullWidth }: DefaultStoryProp
       <Card.Toolbar>
         <Card.DragHandle ref={handleRef} />
         <Card.Title>{title}</Card.Title>
-        <Card.CloseIconButton onClick={() => console.log('close')} />
+        <Card.ActionIconButton action='close' onClick={() => console.log('close')} />
       </Card.Toolbar>
       <Card.Content>
         <Card.Poster alt='Card.Poster' image={image} />
-        <Card.Row icon='ph--dot-outline--regular'>
-          <Card.Heading>Card.Heading</Card.Heading>
-        </Card.Row>
         <Card.Row icon='ph--dot-outline--regular'>
           <Card.Text>Card.Text (default)</Card.Text>
         </Card.Row>
@@ -44,9 +41,6 @@ const DefaultStory = ({ title, description, image, fullWidth }: DefaultStoryProp
             <br />
             {description}
           </Card.Text>
-        </Card.Row>
-        <Card.Row icon='ph--dot-outline--regular'>
-          <Card.Heading variant='subtitle'>Card.Heading (subtitle)</Card.Heading>
         </Card.Row>
         <Card.Action label='Card.Action' onClick={() => console.log('action')} />
         <Card.Link label='Card.Link' href='https://dxos.org' />
@@ -95,8 +89,35 @@ export const Simple: Story = {
         <Card.Toolbar>
           <Card.DragHandle ref={handleRef} />
           <Card.Title>{title}</Card.Title>
-          <Card.CloseIconButton onClick={() => console.log('close')} />
+          <Card.ActionIconButton action='close' onClick={() => console.log('close')} />
         </Card.Toolbar>
+      </Card.Root>
+    );
+  },
+};
+
+export const Section: Story = {
+  args: {
+    title: random.commerce.productName(),
+  },
+  render: ({ title }) => {
+    const handleRef = useRef<HTMLButtonElement>(null);
+    return (
+      <Card.Root>
+        <Card.Toolbar>
+          <Card.DragHandle ref={handleRef} />
+          <Card.Title>{title}</Card.Title>
+          <Card.ActionIconButton action='close' onClick={() => console.log('close')} />
+        </Card.Toolbar>
+        <Card.Content>
+          <Card.Section title='Recent'>
+            <Card.Action label='First action' icon='ph--calendar-dot--regular' onClick={() => console.log('1')} />
+            <Card.Action label='Second action' icon='ph--calendar-dot--regular' onClick={() => console.log('2')} />
+          </Card.Section>
+          <Card.Section title='Upcoming'>
+            <Card.Action label='Third action' icon='ph--calendar-dot--regular' onClick={() => console.log('3')} />
+          </Card.Section>
+        </Card.Content>
       </Card.Root>
     );
   },
@@ -114,7 +135,7 @@ export const Description: Story = {
         <Card.Toolbar>
           <Card.DragHandle ref={handleRef} />
           <Card.Title>{title}</Card.Title>
-          <Card.CloseIconButton onClick={() => console.log('close')} />
+          <Card.ActionIconButton action='close' onClick={() => console.log('close')} />
         </Card.Toolbar>
         <Card.Content>
           <Card.Row>
