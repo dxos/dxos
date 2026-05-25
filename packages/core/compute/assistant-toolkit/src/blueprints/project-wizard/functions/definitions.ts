@@ -6,7 +6,6 @@ import * as Schema from 'effect/Schema';
 
 import { Blueprint, Operation } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
 
 import { Agent } from '../../../types';
 
@@ -43,7 +42,7 @@ export const CreateAgent = Operation.make({
     }),
   }),
   output: Agent.Agent,
-  services: [Blueprint.RegistryService, Database.Service, QueueService, Feed.FeedService],
+  services: [Blueprint.RegistryService, Database.Service, Feed.FeedService],
 });
 
 export const SyncTriggers = Operation.make({

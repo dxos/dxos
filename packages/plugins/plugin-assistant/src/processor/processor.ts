@@ -31,7 +31,6 @@ import {
 } from '@dxos/compute';
 import { type Database, Feed, Obj, Ref } from '@dxos/echo';
 import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
-import { type QueueService } from '@dxos/functions';
 import { AgentService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
@@ -45,7 +44,6 @@ import { AssistantOperation } from '#types';
 export type AiChatServices =
   | Credential.CredentialsService
   | Database.Service
-  | QueueService
   | AiService.AiService
   | Trace.TraceService;
 
@@ -56,7 +54,6 @@ export type AiChatServices =
  */
 export type SpaceServices =
   | Database.Service
-  | QueueService
   | Feed.FeedService
   | Credential.CredentialsService
   | AiService.AiService

@@ -10,7 +10,6 @@ import { Agent, AgentBlueprint, Chat } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation, Routine, ServiceResolver } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
 import { Database, Feed, Obj } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 
 import { AssistantOperation } from '#types';
@@ -92,7 +91,6 @@ export default Capability.makeModule(
                 { space: options.db.spaceId },
                 Database.Service,
                 Feed.FeedService,
-                QueueService,
               ).pipe(Layer.provide(Capability.asLayer(Capabilities.ServiceResolver, ServiceResolver.ServiceResolver))),
             ),
           ),

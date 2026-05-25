@@ -16,7 +16,6 @@ import { type Blueprint, Credential, OperationRegistry, ServiceResolver } from '
 import { Database, Feed, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
-import { QueueService } from '@dxos/functions';
 import { AgentService } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
 import { type Space } from '@dxos/react-client/echo';
@@ -86,7 +85,6 @@ export const useChatProcessor = ({
     const spaceLayer = ServiceResolver.provide(
       { space: space.id },
       Database.Service,
-      QueueService,
       Feed.FeedService,
       Credential.CredentialsService,
       AiService.AiService,

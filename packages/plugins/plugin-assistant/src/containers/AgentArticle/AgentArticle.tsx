@@ -13,7 +13,6 @@ import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Agent } from '@dxos/assistant-toolkit';
 import { Annotation, Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
-import { QueueService } from '@dxos/functions';
 import { useQuery } from '@dxos/react-client/echo';
 import { Card, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable } from '@dxos/react-ui';
@@ -37,13 +36,13 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
   // TODO(burdon): Clear input queue also.
   const resetHistory = useSpaceCallback(
     spaceId,
-    [QueueService, Feed.FeedService, Database.Service] as const,
+    [Feed.FeedService, Database.Service] as const,
     Effect.fnUntraced(function* () {
       yield* Agent.resetChatHistory(agent);
       if (!agent.feed) {
-        const queue = yield* QueueService.createQueue();
+        const feed = yield* Database.add(Feed.make());
         Obj.update(agent, (agent) => {
-          agent.feed = Ref.fromDXN(queue.dxn);
+          agent.feed = Ref.make(feed);
         });
       }
     }),
