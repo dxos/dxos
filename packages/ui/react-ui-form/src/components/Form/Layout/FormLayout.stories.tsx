@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { xml } from '@codemirror/lang-xml';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -10,13 +11,14 @@ import { Format, Type } from '@dxos/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Tooltip } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
+import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
 
 import { translations } from '#translations';
 
-import { TestLayout } from '../../testing';
+import { TestLayout, TestPanel } from '../../testing';
 import { Form, type FormRootProps, omitId } from '../Form';
 import { FormLayoutAnnotation } from './annotation';
 import { parseLayout } from './parser';
@@ -175,32 +177,58 @@ const PlaygroundStory = () => {
   }, []);
 
   const extensions = useMemo(
-    () => [createBasicExtensions({ placeholder: 'Edit layout DSL…' }), createThemeExtensions()],
+    () => [xml(), createBasicExtensions({ placeholder: 'Edit layout DSL…' }), createThemeExtensions()],
     [],
   );
 
   return (
     <Tooltip.Provider>
-      <div className='grid grid-cols-2 gap-form-gap h-full p-form-padding overflow-hidden'>
-        <div className='overflow-auto'>
-          <Form.Root schema={schema} defaultValues={values} onSave={handleSave} autoSave>
-            <Form.Viewport>
-              <Form.Content>
-                <Form.Layout schema={schema} template={lastValid.current} />
-              </Form.Content>
-            </Form.Viewport>
-          </Form.Root>
-        </div>
-        <div className='flex flex-col overflow-hidden border border-separator rounded-sm'>
-          <Editor.Root>
-            <Editor.View
-              classNames='flex-1 overflow-auto font-mono text-sm'
-              extensions={extensions}
-              value={template}
-              onChange={setTemplate}
-            />
-          </Editor.Root>
-          {error && <div className='border-t border-separator p-2 text-sm text-error-text font-mono'>{error}</div>}
+      <div className='dx-container grid grid-cols-[1fr_1fr] grid-rows-1 p-4 gap-4 overflow-hidden'>
+        <TestPanel>
+          <div className='overflow-auto h-full'>
+            <Form.Root schema={schema} defaultValues={values} onSave={handleSave} autoSave>
+              <Form.Viewport>
+                <Form.Content>
+                  <Form.Layout schema={schema} template={lastValid.current} />
+                </Form.Content>
+              </Form.Viewport>
+            </Form.Root>
+          </div>
+        </TestPanel>
+        <div className='grid grid-rows-3 gap-4 overflow-hidden'>
+          <TestPanel>
+            <div className='flex flex-col h-full overflow-hidden'>
+              <Editor.Root>
+                <Editor.View
+                  classNames='flex-1 overflow-auto font-mono text-sm'
+                  extensions={extensions}
+                  value={template}
+                  onChange={setTemplate}
+                />
+              </Editor.Root>
+              {error && <div className='border-t border-separator p-2 text-sm text-error-text font-mono'>{error}</div>}
+            </div>
+          </TestPanel>
+          <TestPanel>
+            <Syntax.Root data={schema.ast}>
+              <Syntax.Content>
+                <Syntax.Filter />
+                <Syntax.Viewport>
+                  <Syntax.Code testId='schema' classNames='text-xs' />
+                </Syntax.Viewport>
+              </Syntax.Content>
+            </Syntax.Root>
+          </TestPanel>
+          <TestPanel>
+            <Syntax.Root data={values}>
+              <Syntax.Content>
+                <Syntax.Filter />
+                <Syntax.Viewport>
+                  <Syntax.Code testId='data' classNames='text-xs' />
+                </Syntax.Viewport>
+              </Syntax.Content>
+            </Syntax.Root>
+          </TestPanel>
         </div>
       </div>
     </Tooltip.Provider>

@@ -30,7 +30,7 @@ export const TestLayout = ({ children, json }: TestLayoutProps) => {
 
 type TestPanelProps = ThemedClassName<PropsWithChildren>;
 
-const TestPanel = slottable<HTMLDivElement, TestPanelProps>(({ children }, forwardedRef) => {
+export const TestPanel = slottable<HTMLDivElement, TestPanelProps>(({ children }, forwardedRef) => {
   return (
     <div {...composableProps({ classNames: 'dx-container bg-modal-surface rounded-md' })} ref={forwardedRef}>
       {children}
