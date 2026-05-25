@@ -25,7 +25,7 @@ export const Magazine = Schema.Struct({
   /** User-facing title of the magazine. */
   name: Schema.String.pipe(Schema.optional),
   /** Feeds to pull content from. */
-  feeds: Schema.Array(Ref.Ref(Subscription.Feed)),
+  feeds: Schema.Array(Ref.Ref(Subscription.Subscription)),
   /** Routine describing what content the Magazine should gather. */
   routine: Schema.optional(Ref.Ref(Routine.Routine).pipe(Schema.annotations({ title: 'Routine' }))),
   /**
@@ -36,12 +36,34 @@ export const Magazine = Schema.Struct({
   keep: Schema.Number.pipe(
     Schema.annotations({
       title: 'Keep',
-      description: 'Maximum number of curated items to keep (starred items are always preserved).',
+      description: 'Number of items to keep.',
     }),
     Schema.optional,
   ),
   /** Curated Post refs (insertion order; UI displays newest-last reversed). */
   posts: Schema.Array(Ref.Ref(Subscription.Post)).pipe(FormInputAnnotation.set(false)),
+  /**
+   * Per-Post magazine-scoped curation cache, keyed by Post id. The Post itself
+   * lives in a Subscription's queue and is immutable; this side map carries the
+   * magazine-specific curation outputs so the feed item is never mutated or
+   * copied into space.db.
+   *
+   * - `snippet`: agent/curation-extracted summary; different magazines (with
+   *   different prompts / instructions) may produce different snippets for the
+   *   same Post.
+   * - `rank`: agent-assigned relevance within this magazine; intrinsically
+   *   magazine-scoped.
+   *
+   * Per-Post state shared across magazines (readAt, archived, starred,
+   * content, imageUrl) lives on `Subscription.postState` keyed by Post id.
+   */
+  postState: Schema.Record({
+    key: Schema.String,
+    value: Schema.Struct({
+      snippet: Schema.optional(Schema.String),
+      rank: Schema.optional(Schema.Number),
+    }),
+  }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.magazine',
@@ -63,7 +85,7 @@ export const instanceOf = (value: unknown): value is Magazine => Obj.instanceOf(
 /** Creates a Magazine. */
 export const make = (
   props: Omit<Obj.MakeProps<typeof Magazine>, 'feeds' | 'posts'> & {
-    feeds?: Ref.Ref<Subscription.Feed>[];
+    feeds?: Ref.Ref<Subscription.Subscription>[];
     posts?: Ref.Ref<Subscription.Post>[];
   } = {},
 ): Magazine =>

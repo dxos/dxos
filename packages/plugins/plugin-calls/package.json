@@ -1,7 +1,6 @@
 {
   "name": "@dxos/plugin-calls",
   "version": "0.8.3",
-  "private": true,
   "description": "DXOS Calls (video / audio conferencing) plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -41,10 +40,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/CallsPlugin.workerd.ts",
         "node": "./src/CallsPlugin.node.ts",
         "default": "./src/CallsPlugin.tsx"
       },
       "types": "./dist/types/src/CallsPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/CallsPlugin.workerd.mjs",
       "node": "./dist/lib/neutral/CallsPlugin.node.mjs",
       "default": "./dist/lib/neutral/CallsPlugin.mjs"
     },
@@ -79,7 +80,8 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "src",
+    "PLUGIN.mdl"
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
@@ -141,5 +143,8 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

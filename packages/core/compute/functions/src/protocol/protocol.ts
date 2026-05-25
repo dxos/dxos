@@ -12,6 +12,7 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { AiModelResolver, AiService, OpaqueToolkit } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
 import {
+  Blueprint,
   FunctionError,
   InvalidOperationInputError,
   InvalidOperationOutputError,
@@ -48,6 +49,12 @@ export interface FunctionWrappingOptions {
    * Toolkits to make available via the `OpaqueToolkitProvider`.
    */
   toolkits?: OpaqueToolkit.OpaqueToolkit[];
+
+  /**
+   * Blueprint registry to expose as `Blueprint.RegistryService` inside handler Effects.
+   * Required for operations that declare `Blueprint.RegistryService` in their `services` list.
+   */
+  blueprintRegistry?: Blueprint.Registry;
 }
 
 /**
@@ -119,6 +126,18 @@ export const wrapFunctionHandler = (
               Effect.provide(funcContext.createLayer()),
             ),
           );
+        }
+
+        // Flush in-memory ECHO writes before the function scope closes.
+        // Writes performed by `db.add` / `db.remove` are buffered in the in-memory
+        // `EchoDatabaseImpl` and only pushed across the `DataService` binding when
+        // `db.flush({ disk })` is called. `FunctionContext._close` (invoked by the
+        // `await using` above) calls `db.close()` but does NOT flush, so mutations
+        // performed by handlers that declare `Database.Service` (e.g. `object-create`,
+        // `object-update`, `relation-create`) would be silently dropped before reaching
+        // the edge `AutomergeReplicator`. Flushing here closes that hole.
+        if (serviceTags.includes(Database.Service.key) && funcContext.db) {
+          await funcContext.db.flush({ disk: true, indexes: false });
         }
 
         if (func.output && !SchemaAST.isAnyKeyword(func.output.ast)) {
@@ -223,6 +242,10 @@ class FunctionContext extends Resource {
       types: this.opts.types?.length ?? 0,
     });
 
+    const blueprintRegistryLayer = this.opts.blueprintRegistry
+      ? Layer.succeed(Blueprint.RegistryService, this.opts.blueprintRegistry)
+      : Blueprint.RegistryService.notAvailable;
+
     return Layer.mergeAll(
       dbLayer,
       queuesLayer,
@@ -233,6 +256,7 @@ class FunctionContext extends Resource {
       aiLayer,
       OpaqueToolkit.providerLayer(OpaqueToolkit.merge(...(this.opts.toolkits ?? []))),
       traceWriterLayer,
+      blueprintRegistryLayer,
 
       // `FunctionInvocationService` is deprecated; new code should yield `Operation.Service`.
       // The cloudflare wrapper provides only the unavailable layer to satisfy the (still-present)
@@ -295,6 +319,9 @@ const makeOperationServiceLayer = (
     invariant(op.meta.deployedId, `Operation '${op.meta.key}' has no deployedId; cannot invoke remotely.`);
     const result = await functionsService.invoke(op.meta.deployedId, input, {
       spaceId: options?.spaceId,
+      // Forward the conversation DXN so the remote runtime can rebuild conversation-scoped
+      // services (e.g. `AiContext.Service`) needed by operations like `GetContext`.
+      conversation: options?.conversation,
     });
     if (result._kind === 'success') {
       return { data: result.data };
@@ -310,7 +337,7 @@ const makeOperationServiceLayer = (
           outcome.error ? Effect.die(outcome.error) : Effect.succeed(outcome.data as never),
         ),
       )) as Operation.OperationService['invoke'],
-    schedule: ((op: Operation.Definition.Any, input: unknown) =>
+    schedule: ((op: Operation.Definition.Any, input: unknown, _options?: Operation.InvokeOptions) =>
       Effect.sync(() => {
         invariant(op.meta.deployedId, `Operation '${op.meta.key}' has no deployedId; cannot schedule remotely.`);
         // Fire and forget — schedule is intentionally non-awaiting.

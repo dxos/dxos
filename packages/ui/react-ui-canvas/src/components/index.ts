@@ -3,5 +3,6 @@
 //
 
 export * from './Canvas';
+export * from './CellGrid';
 export * from './FPS';
 export * from './Grid';

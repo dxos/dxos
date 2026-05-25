@@ -50,10 +50,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/SpacePlugin.workerd.ts",
         "node": "./src/SpacePlugin.node.ts",
         "default": "./src/SpacePlugin.ts"
       },
       "types": "./dist/types/src/SpacePlugin.d.ts",
+      "workerd": "./dist/lib/neutral/SpacePlugin.workerd.mjs",
       "node": "./dist/lib/neutral/SpacePlugin.node.mjs",
       "default": "./dist/lib/neutral/SpacePlugin.mjs"
     },
@@ -181,5 +183,8 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

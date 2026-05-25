@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { type Space } from '@dxos/client/echo';
-import { Feed as EchoFeed, Obj, Ref, Tag } from '@dxos/echo';
+import { Feed, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { invariant } from '@dxos/invariant';
 import { Text } from '@dxos/schema';
@@ -39,16 +39,18 @@ describe('curateMagazine', () => {
 
   const setup = async () => {
     const { db, queues } = await builder.createDatabase({
-      types: [EchoFeed.Feed, Subscription.Feed, Subscription.Post, Magazine.Magazine, Tag.Tag, Text.Text],
+      types: [Feed.Feed, Subscription.Subscription, Subscription.Post, Magazine.Magazine, Tag.Tag, Text.Text],
     });
 
-    const subscriptionFeed = db.add(Subscription.makeFeed({ name: 'test feed', url: 'https://example.com/rss' }));
+    const subscriptionFeed = db.add(
+      Subscription.makeSubscription({ name: 'test feed', url: 'https://example.com/rss' }),
+    );
     const magazine = db.add(Magazine.make({ feeds: [Ref.make(subscriptionFeed)] }));
     await db.flush();
 
     const echoFeed = subscriptionFeed.feed?.target;
     invariant(echoFeed, 'Backing ECHO feed should be present.');
-    const feedDXN = EchoFeed.getQueueDxn(echoFeed);
+    const feedDXN = Feed.getQueueDxn(echoFeed);
     invariant(feedDXN, 'Feed should have a queue DXN.');
     const queue = queues.get(feedDXN);
     const space = { db, queues } as unknown as Space;
@@ -74,6 +76,31 @@ describe('curateMagazine', () => {
     const result = await curateMagazine(space, magazine);
     expect(result.added).toBe(2);
     expect(magazine.posts.length).toBe(2);
+  });
+
+  test('Posts stay in the queue and never enter space.db', async () => {
+    // Core invariant for Layer B: curating never copies Post objects into
+    // `space.db`. They remain immutable feed entries; magazine-side state
+    // (snippet, imageUrl, readAt, archived) lives on `magazine.postState`.
+    const { db, magazine, queue, space } = await setup();
+    await queue.append([
+      makePost({ title: 'A', description: 'first body', published: '2026-04-01T00:00:00Z' }),
+      makePost({ title: 'B', description: 'second body', published: '2026-04-02T00:00:00Z' }),
+    ]);
+
+    await curateMagazine(space, magazine);
+
+    // No Subscription.Post objects in space.db.
+    const dbPosts = db.query(Filter.type(Subscription.Post)).runSync();
+    expect(dbPosts).toHaveLength(0);
+
+    // Curation metadata landed on the Magazine sidecar.
+    const items = (await queue.queryObjects()) ?? [];
+    for (const item of items) {
+      const id = (item as any).id;
+      const state = magazine.postState?.[id];
+      expect(state?.snippet).toBeDefined();
+    }
   });
 
   test('re-running curate is idempotent (no addCore invariant violation)', async () => {
@@ -161,34 +188,25 @@ describe('curateMagazine', () => {
     expect(magazine.posts.length).toBe(3);
   });
 
-  test('regression: re-curate with persisted refs survives DXN form mismatch', async () => {
-    // The bug behind the user-reported `addCore` invariant violation: when a
-    // Post is added to magazine.posts via `Ref.make`, the persisted ref's DXN
-    // is in local-id form (`dxn:echo:@:<id>`), but a Post read fresh from the
-    // queue via `queue.queryObjects()` carries a queue-scoped `SelfDXNId`
-    // (`dxn:queue:<spaceId>:<queueId>:<id>`). String-comparing the two forms
-    // makes dedup fail, so subsequent curates re-process the post — call
-    // `Ref.make` on the fresh queue proxy (with a fresh `core`) — and ECHO's
-    // deep-mapper invokes `database.add` on a core whose id is already
-    // present in `_objects` (from the first curate's add), tripping the
-    // `!_objects.has(core.id)` invariant.
-    //
-    // Verify the fix dedups by the bare object id (last DXN segment) so the
-    // mismatch doesn't matter.
+  test('magazine ref uses Queue DXN matching the queue item', async () => {
+    // Post-Layer-A invariant: the ref persisted on `magazine.posts` is the
+    // Queue DXN of the underlying queue item (not a synthesised ECHO DXN).
+    // EchoHandler.createRef short-circuits on the Queue-kind SelfDXNId, so
+    // Ref.make(queuePost) stores the canonical queue address — meaning the
+    // Post never enters `space.db` and `magazine.posts[0].dxn` equals
+    // `Obj.getDXN(queueItem)` byte-for-byte.
     const { db, magazine, queue, space } = await setup();
     await queue.append([makePost({ title: 'A', description: 'first body', published: '2026-04-01T00:00:00Z' })]);
 
     const first = await curateMagazine(space, magazine);
     expect(first.added).toBe(1);
 
-    // Confirm the DXN form mismatch is real (so this test is exercising the
-    // condition the fix targets, not a coincidence).
     const magDXN = magazine.posts[0].dxn.toString();
     const items = (await queue.queryObjects()) ?? [];
     const queueDXN = Obj.getDXN(items[0] as any).toString();
-    expect(magDXN).not.toBe(queueDXN);
+    expect(magDXN).toBe(queueDXN);
 
-    // Second curate must not throw the addCore invariant and must add 0.
+    // Idempotent re-curate.
     await expect(curateMagazine(space, magazine)).resolves.toEqual({ added: 0 });
     expect(magazine.posts.length).toBe(1);
   });

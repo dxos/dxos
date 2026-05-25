@@ -32,7 +32,7 @@ export type CreateTableType = Schema.Schema.Type<typeof CreateTableSchema>;
 const TABLE_OPERATION = `${meta.id}.operation`;
 
 export const OnCreateSpace = Operation.make({
-  meta: { key: `${TABLE_OPERATION}.on-create-space`, name: 'On Create Space' },
+  meta: { key: `${TABLE_OPERATION}.on-create-space`, name: 'On Create Space', icon: 'ph--table--regular' },
   input: Schema.Struct({
     space: SpaceSchema,
   }),
@@ -40,7 +40,7 @@ export const OnCreateSpace = Operation.make({
 });
 
 export const OnSchemaAdded = Operation.make({
-  meta: { key: `${TABLE_OPERATION}.on-schema-added`, name: 'On Schema Added' },
+  meta: { key: `${TABLE_OPERATION}.on-schema-added`, name: 'On Schema Added', icon: 'ph--table--regular' },
   input: Schema.Struct({
     db: Database.Database,
     schema: Schema.Any,
@@ -50,7 +50,7 @@ export const OnSchemaAdded = Operation.make({
 });
 
 export const Create = Operation.make({
-  meta: { key: `${TABLE_OPERATION}.create`, name: 'Create Table' },
+  meta: { key: `${TABLE_OPERATION}.create`, name: 'Create Table', icon: 'ph--table--regular' },
   input: Schema.extend(
     Schema.Struct({
       db: Database.Database,
@@ -64,7 +64,7 @@ export const Create = Operation.make({
 
 // TODO(wittjosiah): This appears to be unused.
 export const AddRow = Operation.make({
-  meta: { key: `${TABLE_OPERATION}.add-row`, name: 'Add Row' },
+  meta: { key: `${TABLE_OPERATION}.add-row`, name: 'Add Row', icon: 'ph--plus--regular' },
   input: Schema.Struct({
     view: View.View,
     data: Schema.Any,

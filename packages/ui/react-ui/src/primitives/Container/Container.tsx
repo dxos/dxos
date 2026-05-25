@@ -6,7 +6,9 @@ import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import React from 'react';
 
-import { composableProps, mx, slottable } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
+
+import { composableProps, slottable } from '../../util';
 
 export const Container = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps<HTMLDivElement>(props);

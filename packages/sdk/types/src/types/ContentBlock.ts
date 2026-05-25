@@ -94,6 +94,18 @@ export const ToolCall = Schema.TaggedStruct('toolCall', {
    */
   providerExecuted: Schema.Boolean,
 
+  /**
+   * Key of the Operation that backs this tool call, when the tool is an Operation invocation.
+   * Absent for tool calls handled inline by a toolkit handler (e.g. provider-defined tools, MCP tools).
+   */
+  operationKey: Schema.optional(Schema.String),
+
+  /**
+   * Human-readable name of the Operation that backs this tool call.
+   * Absent when the tool is not backed by an Operation.
+   */
+  operationName: Schema.optional(Schema.String),
+
   ...Base.fields,
 });
 

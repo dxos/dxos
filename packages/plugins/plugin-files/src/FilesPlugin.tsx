@@ -27,7 +27,7 @@ export const FilesPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'state',
     activatesOn: ActivationEvent.allOf(
-      ActivationEvents.OperationInvokerReady,
+      ActivationEvents.ProcessManagerReady,
       SettingsReady,
       AttentionEvents.AttentionReady,
     ),
@@ -47,7 +47,7 @@ export const FilesPlugin = Plugin.define(meta).pipe(
           {
             inputType: Node.RootType,
             outputType: 'text/directory',
-            position: 'fallback',
+            position: 'last',
             serialize: async () => ({
               name: 'root',
               data: 'root',

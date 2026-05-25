@@ -84,6 +84,7 @@ export const PopoverContent = () => {
     [handleClose],
   );
 
+  /* TODO(thure): Make this a constant and document it. */
   const collisionBoundaries: HTMLElement[] = useMemo(() => {
     const closest = state.popoverAnchor?.closest('[data-popover-collision-boundary]') as HTMLElement | null | undefined;
     return closest ? [closest] : [];
@@ -109,7 +110,7 @@ export const PopoverContent = () => {
                 {/* TODO(wittjosiah): Cleaner way to handle no drag handle in toolbar? */}
                 <span />
                 {state.popoverTitle ? <Card.Title>{toLocalizedString(state.popoverTitle, t)}</Card.Title> : <span />}
-                <Card.CloseIconButton onClick={handleClose} />
+                <Card.ActionIconButton action='close' onClick={handleClose} />
               </Card.Toolbar>
               {state.popoverContent && 'subject' in state.popoverContent && (
                 <Surface.Surface type={AppSurface.Card} data={state.popoverContent} limit={1} />

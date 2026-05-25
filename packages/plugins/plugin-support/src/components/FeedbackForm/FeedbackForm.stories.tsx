@@ -42,3 +42,29 @@ export const WithDownloadLogs: Story = {
     },
   },
 };
+
+export const WithDiscord: Story = {
+  args: {
+    onSave: (values) => {
+      console.log('posthog', values);
+    },
+    onDiscord: (values) => {
+      console.log('discord', values);
+    },
+  },
+};
+
+export const WithDiscordAndPresence: Story = {
+  args: {
+    onSave: (values) => {
+      console.log('posthog', values);
+    },
+    onDiscord: (values) => {
+      console.log('discord', values);
+    },
+    discordPresence: {
+      teamOnline: 2,
+      communityOnline: 14,
+    },
+  },
+};

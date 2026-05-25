@@ -16,11 +16,13 @@ import { ActivationEvents, Capabilities } from '../common';
 import { ActivationEvent, type Capability, type CapabilityManager, type Plugin, PluginManager } from '../core';
 
 export type TestAppOptions = {
-  /** Plugins to register. */
+  /**
+   * Plugins to register. Plugins whose `meta.tags` includes `'system'` are treated as core
+   * (force-enabled). For test convenience, plugins without a `'system'` tag are enabled by
+   * default unless `enabled` is provided.
+   */
   plugins: Plugin.Plugin[];
-  /** Plugin ids that are always enabled. Defaults to all provided plugin ids. */
-  core?: string[];
-  /** Plugin ids that are enabled by default in addition to core. */
+  /** Plugin ids that are enabled by default in addition to core. Defaults to all non-system plugin ids. */
   enabled?: string[];
   /** Additional activation events fired alongside SetupReactSurface. */
   setupEvents?: ActivationEvent.ActivationEvent[];
@@ -61,6 +63,15 @@ export interface TestHarness {
   /** Invokes an operation through the `Capabilities.OperationInvoker` capability. */
   invoke<I, O>(op: Operation.Definition<I, O>, ...args: void extends I ? [input?: I] : [input: I]): Promise<O>;
 
+  /**
+   * Waits for `Capabilities.ProcessManagerRuntime` and runs the given effect on it.
+   * Convenience around `waitForCapability(ProcessManagerRuntime).runPromise(effect)`.
+   */
+  runPromise<A, E>(
+    effect: Effect.Effect<A, E, Capabilities.ProcessManagerRuntimeServices>,
+    options?: { readonly timeout?: number; readonly signal?: AbortSignal },
+  ): Promise<A>;
+
   enable(id: string): Promise<boolean>;
   disable(id: string): Promise<boolean>;
 
@@ -86,8 +97,7 @@ const DEFAULT_TIMEOUT_MS = 5_000;
 export const createTestApp = async (opts: TestAppOptions): Promise<TestHarness> => {
   const {
     plugins,
-    core = plugins.map((plugin) => plugin.meta.id),
-    enabled,
+    enabled = plugins.filter(({ meta }) => !meta.tags?.includes('system')).map((plugin) => plugin.meta.id),
     setupEvents = [],
     autoStart = true,
     registerFrameworkCapabilities = true,
@@ -100,7 +110,7 @@ export const createTestApp = async (opts: TestAppOptions): Promise<TestHarness> 
       return { plugin };
     });
 
-  const manager = PluginManager.make({ pluginLoader, plugins, core, enabled });
+  const manager = PluginManager.make({ pluginLoader, plugins, enabled });
 
   if (registerFrameworkCapabilities) {
     manager.capabilities.contribute({
@@ -207,6 +217,14 @@ class TestHarnessImpl implements TestHarness {
       throw result.error;
     }
     return result.data as O;
+  }
+
+  async runPromise<A, E>(
+    effect: Effect.Effect<A, E, Capabilities.ProcessManagerRuntimeServices>,
+    options?: { readonly timeout?: number; readonly signal?: AbortSignal },
+  ): Promise<A> {
+    const runtime = await this.waitForCapability(Capabilities.ProcessManagerRuntime, { timeout: options?.timeout });
+    return runtime.runPromise(effect, options?.signal ? { signal: options.signal } : undefined);
   }
 
   enable(id: string): Promise<boolean> {

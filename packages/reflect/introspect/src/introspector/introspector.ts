@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { scanIdioms } from '../idioms';
 import {
   cacheFilePath,
   computePackageMtimes,
@@ -16,6 +17,8 @@ import {
 import { findSymbol as queryFindSymbol, getSymbol as queryGetSymbol } from '../query';
 import {
   type Capability,
+  type Idiom,
+  type IdiomFilter,
   type Operation,
   type Package,
   type PackageDetail,
@@ -120,6 +123,16 @@ export type Introspector = {
    * List ECHO schemas registered by a single plugin (when `id` is given), or by every plugin.
    */
   listSchemas: (id?: string) => Schema[];
+
+  //
+  // Idioms
+  //
+
+  /**
+   * List `@idiom`-tagged reference examples discovered under `rootPath`.
+   * Returns a flat list sorted by slug; filter by slug substring or host kind.
+   */
+  listIdioms: (filter?: IdiomFilter) => Idiom[];
 };
 
 export const createIntrospector = (options: IntrospectorOptions): Introspector => {
@@ -128,6 +141,7 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
 
   let packages: PackageDetail[] = [];
   let pluginRecords: PluginRecord[] = [];
+  let idioms: Idiom[] = [];
   let initialized = false;
   let disposed = false;
 
@@ -228,6 +242,10 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
     // a future enhancement once we measure the cost on the real monorepo.
     pluginRecords = extractPlugins(rootPath, packages);
 
+    // Idiom scanning is regex-over-source — cheap relative to ts-morph parse —
+    // and the set is small enough that we can hold every idiom in memory.
+    idioms = await scanIdioms({ rootPath });
+
     initialized = true;
   })();
 
@@ -327,6 +345,20 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
     return matchPlugins(id).flatMap((record) => record.schemas);
   };
 
+  const listIdioms = (filter?: IdiomFilter): Idiom[] => {
+    assertReady();
+    let result = [...idioms];
+    if (filter?.slug) {
+      const needle = filter.slug.toLowerCase();
+      result = result.filter((idiom) => idiom.slug.toLowerCase().includes(needle));
+    }
+    if (filter?.hostKind) {
+      const kind = filter.hostKind;
+      result = result.filter((idiom) => idiom.host.kind === kind);
+    }
+    return result;
+  };
+
   const dispose = (): void => {
     if (disposed) {
       return;
@@ -334,6 +366,7 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
     disposed = true;
     symbolsByPackage.clear();
     pluginRecords = [];
+    idioms = [];
   };
 
   return {
@@ -349,6 +382,7 @@ export const createIntrospector = (options: IntrospectorOptions): Introspector =
     listCapabilities,
     listOperations,
     listSchemas,
+    listIdioms,
   };
 };
 

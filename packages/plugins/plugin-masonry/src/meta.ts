@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.masonry',
   name: 'Masonry',
+  author: 'DXOS',
   description: trim`
     Responsive grid layout that displays query results in an adaptive masonry pattern.
     Visualize collections of cards, images, or mixed content that automatically adjusts to available screen space.

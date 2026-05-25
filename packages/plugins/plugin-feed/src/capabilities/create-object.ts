@@ -19,17 +19,17 @@ const DEFAULT_MAGAZINE_FEED = {
   name: 'EFF Updates',
   url: 'https://www.eff.org/rss/updates.xml',
   type: 'rss',
-} as Subscription.Feed;
+} as Subscription.Subscription;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Subscription.Feed.typename,
-        inputSchema: Subscription.CreateFeedSchema,
+        id: Subscription.Subscription.typename,
+        inputSchema: Subscription.Subscription,
         createObject: (props, options) =>
           Effect.gen(function* () {
-            const object = Subscription.makeFeed(props);
+            const object = Subscription.makeSubscription(props);
             const result = yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
@@ -56,7 +56,7 @@ export default Capability.makeModule(
             // feed referenced by no magazine. Wrapping the whole block in
             // `Effect.option` collapses both into a clean None on failure.
             const seededFeed = yield* Effect.gen(function* () {
-              const defaultFeed = Subscription.makeFeed({ ...DEFAULT_MAGAZINE_FEED });
+              const defaultFeed = Subscription.makeSubscription({ ...DEFAULT_MAGAZINE_FEED });
               yield* Operation.invoke(SpaceOperation.AddObject, {
                 object: defaultFeed,
                 target: options.target,

@@ -8,19 +8,17 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Surface, useCapabilities } from '@dxos/app-framework/ui';
+import { Surface, useSpaceCallback } from '@dxos/app-framework/ui';
 import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Agent } from '@dxos/assistant-toolkit';
-import { Annotation, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Annotation, Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
-import { QueueService } from '@dxos/functions';
-import { AutomationCapabilities } from '@dxos/plugin-automation';
 import { useQuery } from '@dxos/react-client/echo';
 import { Card, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { composable } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
-import { composable } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -34,31 +32,25 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
   const [tab, setTab] = useState<Tab>('artifacts');
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
-  const [computeRuntime] = useCapabilities(AutomationCapabilities.ComputeRuntime);
+  const spaceId = Obj.getDatabase(agent)?.spaceId;
   // TODO(burdon): Clear input queue also.
+  const resetHistory = useSpaceCallback(
+    spaceId,
+    [Feed.FeedService, Database.Service] as const,
+    Effect.fnUntraced(function* () {
+      yield* Agent.resetChatHistory(agent);
+      if (!agent.feed) {
+        const feed = yield* Database.add(Feed.make());
+        Obj.update(agent, (agent) => {
+          agent.feed = Ref.make(feed);
+        });
+      }
+    }),
+    [agent],
+  );
   const handleResetHistory = useCallback(async () => {
-    if (!computeRuntime) {
-      return;
-    }
-
-    const space = Obj.getDatabase(agent);
-    if (!space) {
-      return;
-    }
-
-    const runtime = computeRuntime.getRuntime(space.spaceId);
-    await runtime.runPromise(Agent.resetChatHistory(agent));
-    if (!agent.feed) {
-      await runtime.runPromise(
-        Effect.gen(function* () {
-          const queue = yield* QueueService.createQueue();
-          Obj.update(agent, (agent) => {
-            agent.feed = Ref.fromDXN(queue.dxn);
-          });
-        }),
-      );
-    }
-  }, [agent, computeRuntime]);
+    await resetHistory();
+  }, [resetHistory]);
 
   const artifacts = useAtomValue(
     useMemo(

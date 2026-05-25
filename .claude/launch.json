@@ -9,9 +9,9 @@
     },
     {
       "name": "composer-app",
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@dxos/composer-app", "exec", "vite", "dev"],
-      "port": 5173,
+      "runtimeExecutable": "moon",
+      "runtimeArgs": ["run", "composer-app:serve", "--", "--port", "5180", "--strictPort"],
+      "port": 5180,
       "autoPort": true
     },
     {
@@ -43,6 +43,12 @@
       "name": "plugin-explorer-storybook",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "@dxos/plugin-explorer", "exec", "storybook", "dev", "--port", "9010", "--no-open"],
+      "port": 9010
+    },
+    {
+      "name": "plugin-map-storybook",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@dxos/plugin-map", "exec", "storybook", "dev", "--port", "9010", "--no-open"],
       "port": 9010
     },
     {

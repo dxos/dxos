@@ -10,7 +10,8 @@ import { type Database, Filter, type Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useQuery } from '@dxos/react-client/echo';
 import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { ServiceType } from '#types';
 

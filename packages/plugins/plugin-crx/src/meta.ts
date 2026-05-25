@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.crx',
   name: 'CRX',
+  author: 'DXOS',
   description: trim`
     Coordinates with the composer-crx browser extension. Owns the settings
     surface and receives clippings from the extension, materializing them as
@@ -16,5 +17,7 @@ export const meta: Plugin.Meta = {
   icon: 'ph--browser--regular',
   iconHue: 'neutral',
   source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-crx',
+  spec: 'PLUGIN.mdl',
+  version: '0.8.3',
   tags: ['system'],
 };

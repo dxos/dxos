@@ -38,7 +38,7 @@ const DefaultStory = ({ size, title, description, openTrigger, closeTrigger, blo
             <Dialog.Title>{title}</Dialog.Title>
             {closeTrigger && (
               <Dialog.Close asChild>
-                <Dialog.CloseIconButton />
+                <Dialog.ActionIconButton action='close' />
               </Dialog.Close>
             )}
           </Dialog.Header>
@@ -77,7 +77,7 @@ const ScrollingStory = ({ size, title, description, openTrigger, closeTrigger, b
             <Dialog.Title>{title}</Dialog.Title>
             {closeTrigger && (
               <Dialog.Close asChild>
-                <Dialog.CloseIconButton />
+                <Dialog.ActionIconButton action='close' />
               </Dialog.Close>
             )}
           </Dialog.Header>

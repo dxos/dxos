@@ -45,10 +45,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/DeckPlugin.workerd.ts",
         "node": "./src/DeckPlugin.node.ts",
         "default": "./src/DeckPlugin.ts"
       },
       "types": "./dist/types/src/DeckPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/DeckPlugin.workerd.mjs",
       "node": "./dist/lib/neutral/DeckPlugin.node.mjs",
       "default": "./dist/lib/neutral/DeckPlugin.mjs"
     },
@@ -153,5 +155,8 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

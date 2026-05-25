@@ -33,6 +33,7 @@ import {
   type GetPackageArgs,
   type GetSymbolArgs,
   type ListCapabilitiesArgs,
+  type ListIdiomsArgs,
   type ListOperationsArgs,
   type ListOptions,
   type ListPackagesArgs,
@@ -48,6 +49,7 @@ import {
   shapeGetPackage,
   shapeGetSymbol,
   shapeListCapabilities,
+  shapeListIdioms,
   shapeListOperations,
   shapeListPackages,
   shapeListPlugins,
@@ -209,4 +211,14 @@ export const createToolDefinitions = (
       return shaped;
     },
   } satisfies ToolDefinition<ListSchemasArgs>,
+
+  list_idioms: {
+    ...TOOL_METADATA.list_idioms,
+    handler: (args: ListIdiomsArgs) => {
+      const result = introspector.listIdioms({ slug: args.slug, hostKind: args.hostKind });
+      const shaped = shapeListIdioms(result, pickListOptions(args));
+      log({ tool: 'list_idioms', args, count: result.length, truncated: shaped.truncated });
+      return shaped;
+    },
+  } satisfies ToolDefinition<ListIdiomsArgs>,
 });

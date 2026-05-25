@@ -37,7 +37,7 @@ import {
   navigatePreviousEffect,
   preview,
   scroller,
-  scrollerLineEffect,
+  crawlerLineEffect,
   fader,
   typewriter,
   typewriterBypass,
@@ -45,7 +45,6 @@ import {
   xmlTagResetEffect,
   xmlTagUpdateEffect,
   xmlTags,
-  autoScroll,
   documentSlots,
   xmlFormatting,
   xmlBlockDecoration,
@@ -287,8 +286,7 @@ const useMarkdownStreamTextEditor = (
               hideTags: true,
             }),
             xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
-            scroller({ overScroll: 80 }),
-            options?.autoScroll && autoScroll(),
+            scroller({ overScroll: 80, autoScroll: options?.autoScroll }),
             options?.typewriter &&
               typewriter({
                 cursor: options?.cursor,
@@ -390,7 +388,7 @@ const createMarkdownStreamController = ({
     /** Scroll to bottom. */
     scrollToBottom: (behavior?: ScrollBehavior) => {
       viewRef.current?.dispatch({
-        effects: scrollerLineEffect.of({ line: -1, behavior }),
+        effects: crawlerLineEffect.of({ line: -1, behavior }),
       });
     },
 

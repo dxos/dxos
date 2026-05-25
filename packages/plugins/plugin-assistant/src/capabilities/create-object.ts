@@ -3,16 +3,14 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
-import { Capability } from '@dxos/app-framework';
+import { Capability, Capabilities } from '@dxos/app-framework';
 import { Agent, AgentBlueprint, Chat } from '@dxos/assistant-toolkit';
-import { Blueprint, Operation, Routine } from '@dxos/compute';
+import { Blueprint, Operation, Routine, ServiceResolver } from '@dxos/compute';
 import { Sequence } from '@dxos/conductor';
-import { Obj } from '@dxos/echo';
-import { type SpaceId } from '@dxos/keys';
-import { AutomationCapabilities } from '@dxos/plugin-automation';
-import { SpaceOperation } from '@dxos/plugin-space';
-import { SpaceCapabilities } from '@dxos/plugin-space';
+import { Database, Feed, Obj } from '@dxos/echo';
+import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 
 import { AssistantOperation } from '#types';
 
@@ -79,29 +77,22 @@ export default Capability.makeModule(
         id: Agent.Agent.typename,
         createObject: (props, options) =>
           Effect.gen(function* () {
-            const object = yield* Agent.makeInitialized({ name: '', instructions: '' }, AgentBlueprint.make()).pipe(
-              withComputeRuntime(options.db.spaceId),
-            );
+            const object = yield* Agent.makeInitialized({ name: '', instructions: '' }, AgentBlueprint.make());
+
             return yield* Operation.invoke(SpaceOperation.AddObject, {
               object,
               target: options.target,
               hidden: true,
               targetNodeId: options.targetNodeId,
             });
-          }),
+          }).pipe(
+            Effect.provide(
+              ServiceResolver.provide({ space: options.db.spaceId }, Database.Service, Feed.FeedService).pipe(
+                Layer.provide(Capability.asLayer(Capabilities.ServiceResolver, ServiceResolver.ServiceResolver)),
+              ),
+            ),
+          ),
       }),
     ];
   }),
 );
-
-// TODO(dmaretskyi): Extract to a helper module.
-const withComputeRuntime =
-  (spaceId: SpaceId) =>
-  <A, E, R>(
-    effect: Effect.Effect<A, E, R>,
-  ): Effect.Effect<A, E, Exclude<R, AutomationCapabilities.ComputeServices> | Capability.Service> =>
-    Effect.gen(function* () {
-      const provider = yield* Capability.get(AutomationCapabilities.ComputeRuntime).pipe(Effect.orDie);
-      const runtime = yield* provider.getRuntime(spaceId).runtimeEffect;
-      return yield* effect.pipe(Effect.provide(runtime));
-    });

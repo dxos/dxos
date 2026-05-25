@@ -26,8 +26,8 @@ import { IdbLogStore } from '@dxos/log-store-idb';
 import { Observability } from '@dxos/observability';
 import { translations as observabilityTranslations } from '@dxos/plugin-observability/translations';
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
+import { defaultTx } from '@dxos/react-ui';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
-import { defaultTx } from '@dxos/ui-theme';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
 import { ResetDialog } from './components';
@@ -36,7 +36,7 @@ import { PARAM_LOG_LEVEL, PARAM_SAFE_MODE, setSafeModeUrl } from './config';
 import { APP_KEY, LOG_STORE_DB_NAME } from './constants';
 import { showDevRssBanner } from './dev-rss-banner';
 import { downloadLogs } from './log-download';
-import { type PluginConfig, getCore, getDefaults, getPlugins } from './plugin-defs';
+import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs';
 import { startupProfiler } from './profiler';
 import { translations } from './translations';
 import {
@@ -260,7 +260,7 @@ const main = async () => {
       void observability
         .then((obs) => {
           obs.events.captureEvent('composer.startup', summary);
-          log.info('startup summary captured', summary);
+          log.info('startup', summary);
         })
         .catch((error) => log.catch(error));
     },
@@ -422,7 +422,6 @@ const main = async () => {
   const plugins = [...builtinPlugins, ...remotePlugins];
   const pluginLoader = UrlLoader.make(builtinPlugins, { cache: assetCache });
   const onPluginRemove = (id: string) => UrlLoader.uninstall(id, { cache: assetCache });
-  const core = getCore(conf);
   const defaults = getDefaults(conf);
   const setupEvents = [AppActivationEvents.SetupSettings];
 
@@ -472,7 +471,6 @@ const main = async () => {
       onPluginRemove,
       pluginRegistryProvider,
       plugins,
-      core,
       defaults,
       setupEvents,
       cacheEnabled: true,

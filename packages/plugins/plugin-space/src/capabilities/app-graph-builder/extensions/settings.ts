@@ -19,7 +19,7 @@ import { SETTINGS_SECTION_TYPE } from '#types';
 /**
  * Settings section attached directly under each Space node, plus its children.
  *
- * The virtual `settings` section is pinned to the top via `position: 'hoist'`
+ * The virtual `settings` section is pinned to the top via `position: 'first'`
  * so it sits above the un-positioned middle band (collections, mailboxes,
  * automations, integrations, etc.). It groups the panels contributed by this
  * plugin (general, members) and by other plugins (automation, functions).
@@ -37,7 +37,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
           icon: 'ph--sliders--regular',
           iconHue: 'indigo',
           space,
-          position: 'hoist',
+          position: 'first',
           testId: 'spacePlugin.settings',
         }),
       ]),

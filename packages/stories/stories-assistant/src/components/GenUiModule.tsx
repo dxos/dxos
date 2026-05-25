@@ -17,11 +17,10 @@ import React, {
 } from 'react';
 
 import { AiService } from '@dxos/ai';
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker, useSpaceCallback } from '@dxos/app-framework/ui';
 import { LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
 import { type Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
-import { useComputeRuntimeCallback } from '@dxos/plugin-automation/hooks';
 import {
   Button,
   ButtonGroup,
@@ -70,7 +69,7 @@ export const COMPONENT_REGISTRY = {
   'Card.Root': Card.Root,
   'Card.Toolbar': Card.Toolbar,
   'Card.Content': Card.Content,
-  'Card.Heading': Card.Heading,
+  'Card.Section': Card.Section,
   'Card.Text': Card.Text,
 
   Flex,
@@ -378,10 +377,14 @@ export const GenUiModule = ({ space }: ModuleProps) => {
   const [generating, setGenerating] = useState(false);
   const { invokePromise } = useOperationInvoker();
 
-  const invokerFn: InvokerFn = useCallback((op, args) => void invokePromise(op, args), [invokePromise]);
+  const invokerFn: InvokerFn = useCallback(
+    (op, args) => void invokePromise(op, args, { spaceId: space.id }),
+    [invokePromise, space.id],
+  );
 
-  const handleGenerate = useComputeRuntimeCallback(
+  const handleGenerate = useSpaceCallback(
     space.id,
+    [AiService.AiService] as const,
     () =>
       Effect.gen(function* () {
         setGenerating(true);

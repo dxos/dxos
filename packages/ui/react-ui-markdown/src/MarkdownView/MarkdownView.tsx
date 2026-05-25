@@ -6,11 +6,9 @@ import React, { type PropsWithChildren } from 'react';
 import ReactMarkdown, { type Options as ReactMarkdownOptions } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import { MediaPlayer, type ThemedClassName } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
-
-import { MarkdownMedia } from './Media';
 
 export type MarkdownViewProps = ThemedClassName<
   PropsWithChildren<{
@@ -72,14 +70,14 @@ const defaultComponents: ReactMarkdownOptions['components'] = {
   // 404 or are blocked. Drop the element on load failure rather than
   // leaving the browser's broken-image placeholder.
   //
-  // Iframe-style URLs (e.g. Cloudflare Stream embeds the author included via
-  // standard `![alt](src)` syntax) are swapped to `<iframe>` by
-  // {@link MarkdownMedia}, so embeds in the source document render inline.
+  // Media URLs (mp4/mp3/etc. or legacy `iframe`-style embeds) are swapped to a
+  // native `<video>` / `<audio>` element by {@link MediaPlayer} so playable
+  // media in the source document renders inline.
   img: ({ src, alt }) => {
     if (!src) {
       return null;
     }
-    return <MarkdownMedia src={src} alt={alt} iframeClassNames='aspect-video w-full' />;
+    return <MediaPlayer src={src} alt={alt} classNames='w-full' />;
   },
   ol: ({ children, ...props }) => (
     <ol className='pt-1 pb-1 ps-6 leading-tight list-decimal' {...props}>

@@ -60,6 +60,7 @@ export const SpotlightOperationHandlerSet = OperationHandlerSet.make(
   LayoutOperation.Open.pipe(
     Operation.withHandler(
       Effect.fnUntraced(function* (input) {
+        log('LayoutOperation.Open handler start');
         yield* Effect.promise(async () => {
           try {
             const { emitTo } = await import('@tauri-apps/api/event');

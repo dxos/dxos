@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationPlugin, type Plugin, RuntimePlugin } from '@dxos/app-framework';
+import { type Plugin, ProcessManagerPlugin } from '@dxos/app-framework';
 // `/testing` entrypoints re-export the plugin eagerly (without `Plugin.lazy`).
 // The default `.` and `/plugin` exports wrap each plugin in a lazy stub
 // (`() => import('./XPlugin')`), which webkit cannot reliably resolve under
@@ -20,7 +20,7 @@ import { AttentionPlugin } from '@dxos/plugin-attention/testing';
 import { GraphPlugin } from '@dxos/plugin-graph/testing';
 import { SettingsPlugin } from '@dxos/plugin-settings/testing';
 import { ThemePlugin } from '@dxos/plugin-theme/testing';
-import { defaultTx } from '@dxos/ui-theme';
+import { defaultTx } from '@dxos/react-ui';
 
 /**
  * Core plugins for testing/storybook environments.
@@ -30,8 +30,7 @@ import { defaultTx } from '@dxos/ui-theme';
 export const corePlugins = (): Plugin.Plugin[] => [
   AttentionPlugin(),
   GraphPlugin(),
-  OperationPlugin(),
-  RuntimePlugin(),
+  ProcessManagerPlugin(),
   SettingsPlugin(),
   ThemePlugin({ tx: defaultTx }),
 ];

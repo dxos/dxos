@@ -48,6 +48,12 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   env.command === 'serve' &&
     !isFastBundle &&
     importSource({
+      // Include `#*` subpath imports so that intra-package imports
+      // (e.g. `#capabilities`) from source-served files keep resolving to
+      // source — required for Vite-specific constructs like
+      // `import.meta.glob` to run at the consumer (this app), not be
+      // pre-baked as plain text in the published dist.
+      include: ['@dxos/**', '#*'],
       exclude: [
         '@dxos/random-access-storage',
         '@dxos/lock-file',

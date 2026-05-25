@@ -26,7 +26,7 @@ const FIXTURE_ROOT = join(__dirname, '..', '..', '..', 'introspect', 'src', '__f
 // takes ~4s on the GitHub runner, blowing past vitest's 5s default. Bump
 // the per-test timeout for both tests in this suite.
 describe('@dxos/introspect-mcp/tools subpath export', { timeout: 30_000 }, () => {
-  test('createToolDefinitions returns the full 10-tool map', async ({ expect }) => {
+  test('createToolDefinitions returns the full tool map', async ({ expect }) => {
     const introspector = createIntrospector({ rootPath: FIXTURE_ROOT, cache: false });
     await introspector.ready;
     try {
@@ -37,6 +37,7 @@ describe('@dxos/introspect-mcp/tools subpath export', { timeout: 30_000 }, () =>
         'get_package',
         'get_symbol',
         'list_capabilities',
+        'list_idioms',
         'list_operations',
         'list_packages',
         'list_plugins',

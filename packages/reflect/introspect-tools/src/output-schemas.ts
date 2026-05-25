@@ -166,3 +166,58 @@ export const PluginDetailSchema = Schema.Struct({
   schemas: Schema.Array(SchemaSchema),
 });
 export type PluginDetail = typeof PluginDetailSchema.Type;
+
+//
+// Idioms
+//
+
+export const IdiomHostKindSchema = Schema.Literal('story', 'test', 'symbol');
+export type IdiomHostKind = typeof IdiomHostKindSchema.Type;
+
+export const IdiomHostSchema = Schema.Struct({
+  /** Path relative to the scan root. */
+  file: Schema.String,
+  /** 1-indexed line where the JSDoc opens. */
+  line: Schema.Number,
+  /** Best-effort name of the export immediately following the JSDoc. */
+  symbol: Schema.optional(Schema.String),
+  /** Detected host kind based on file location and symbol shape. */
+  kind: IdiomHostKindSchema,
+});
+export type IdiomHost = typeof IdiomHostSchema.Type;
+
+export const IdiomSchema = Schema.Struct({
+  /** Globally unique AT Protocol NSID (https://atproto.com/specs/nsid). */
+  slug: Schema.String,
+  /** Leading JSDoc paragraph (rationale). */
+  summary: Schema.optional(Schema.String),
+  /** Applicability (required field per IDIOMS.md). */
+  applies: Schema.String,
+  /** Anti-pattern this replaces. */
+  insteadOf: Schema.optional(Schema.String),
+  /** Raw {@link …} targets named under `uses:`. */
+  uses: Schema.Array(Schema.String),
+  /** Slugs of related idioms. */
+  related: Schema.Array(Schema.String),
+  host: IdiomHostSchema,
+});
+export type Idiom = typeof IdiomSchema.Type;
+
+//
+// Sidecar file format
+//
+
+/**
+ * Shape of the `plugins.json` sidecar stored in R2 / written by the cache
+ * upload script. Uses plain mutable arrays so callers can work with standard
+ * JSON.parse output without readonly friction.
+ */
+export type PluginsFile = {
+  version: 1;
+  plugins: Plugin[];
+  surfaces: Surface[];
+  capabilities: Capability[];
+  operations: Operation[];
+  schemas: SchemaContribution[];
+  idioms?: Idiom[];
+};

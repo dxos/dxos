@@ -12,6 +12,7 @@ tasks:
       - '--entryPoint=src/index.ts'
       - '--entryPoint=src/ScriptPlugin.tsx'
       - '--entryPoint=src/ScriptPlugin.node.ts'
+      - '--entryPoint=src/ScriptPlugin.workerd.ts'
       - '--entryPoint=src/blueprints/index.ts'
       - '--entryPoint=src/capabilities/index.ts'
       - '--entryPoint=src/capabilities/node.ts'

@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
-import { type SchemaProperty } from '@dxos/effect';
+import { createJsonPath, type SchemaProperty } from '@dxos/effect';
 
 import { type FormHandlerProps } from '../../hooks';
 import { getFormProperties } from '../../util';
@@ -62,7 +62,7 @@ export const FormFieldSet = ({
 
   return (
     <>
-      {layout !== 'inline' && label && <FormFieldLabel label={label} asChild />}
+      {layout !== 'inline' && label && <FormFieldLabel label={label} path={createJsonPath(path ?? [])} asChild />}
       {properties.map((property) => {
         const name = property.name.toString();
         return (

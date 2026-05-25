@@ -12,6 +12,7 @@
 
 import type {
   Capability,
+  Idiom,
   Operation,
   Package,
   PackageDetail,
@@ -195,4 +196,33 @@ export const shapeListSchemas = (all: Schema[], opts: ListOptions = {}): ToolRes
     full: (s) => ({ pluginId: s.pluginId, name: s.name, typename: s.typename, location: s.location }),
     compact: (s) => ({ pluginId: s.pluginId, name: s.name, typename: s.typename }),
     truncationHint: 'raise `limit` (max 200) or filter by plugin `id`.',
+  });
+
+//
+// Idioms
+//
+
+export const shapeListIdioms = (all: Idiom[], opts: ListOptions = {}): ToolResult =>
+  shapeList(all, opts, {
+    full: (idiom) => ({
+      slug: idiom.slug,
+      summary: idiom.summary,
+      applies: idiom.applies,
+      insteadOf: idiom.insteadOf,
+      uses: idiom.uses,
+      related: idiom.related,
+      host: {
+        file: idiom.host.file,
+        line: idiom.host.line,
+        symbol: idiom.host.symbol,
+        kind: idiom.host.kind,
+      },
+    }),
+    compact: (idiom) => ({
+      slug: idiom.slug,
+      kind: idiom.host.kind,
+      file: idiom.host.file,
+      symbol: idiom.host.symbol,
+    }),
+    truncationHint: 'raise `limit` (max 200), refine with `slug`, or filter by `hostKind`.',
   });

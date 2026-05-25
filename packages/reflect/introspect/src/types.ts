@@ -9,8 +9,13 @@
 // continues to import them from `@dxos/introspect` without taking a runtime
 // dependency on `effect`.
 
+import type { IdiomHostKind } from '@dxos/introspect-tools';
+
 export type {
   Capability,
+  Idiom,
+  IdiomHost,
+  IdiomHostKind,
   Package,
   PackageDetail,
   Operation,
@@ -38,4 +43,11 @@ export type PackageFilter = {
 export type PluginFilter = {
   /** Substring match against plugin id (case-insensitive). */
   id?: string;
+};
+
+export type IdiomFilter = {
+  /** Substring match against the idiom slug (case-insensitive). */
+  slug?: string;
+  /** Restrict to idioms whose host site has this kind. */
+  hostKind?: IdiomHostKind;
 };

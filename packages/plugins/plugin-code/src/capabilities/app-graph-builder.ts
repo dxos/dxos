@@ -5,22 +5,91 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
-import { Capability } from '@dxos/app-framework';
+import { Capability, type Plugin as PluginNS } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Filter } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
-import { GraphBuilder, Node } from '@dxos/plugin-graph';
+import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
 import { CodeProject } from '#types';
 
-import { CODE_PROJECTS_SECTION_TYPE, CODE_PROJECT_BUILD_TYPE, CODE_PROJECT_SPEC_TYPE } from '../constants';
+import {
+  CODE_PROJECTS_SECTION_TYPE,
+  CODE_PROJECT_BUILD_TYPE,
+  CODE_PROJECT_SPEC_TYPE,
+  PLUGIN_SPEC_TYPE,
+} from '../constants';
 import { getCodeProjectBuildId, getCodeProjectSpecId, getCodeProjectsSectionId } from '../paths';
+import { makePluginSpecSubject } from '../plugin-spec';
+
+// Eager raw-text imports of every PLUGIN.mdl that lives next to a plugin
+// package in this monorepo. The connector below maps a plugin's
+// `Plugin.Meta.spec` (relative to its package root) back to one of these
+// entries by looking for a key that ends with `/plugin-<dir>/<spec>`.
+// First pattern catches package-root specs (e.g. `plugin-chess/PLUGIN.mdl`);
+// the second catches nested specs (e.g. `plugin-spacetime/docs/PLUGIN.mdl`).
+const PLUGIN_MDLS = {
+  ...import.meta.glob<string>('../../../plugin-*/PLUGIN.mdl', {
+    query: '?raw',
+    import: 'default',
+    eager: true,
+  }),
+  ...import.meta.glob<string>('../../../plugin-*/**/PLUGIN.mdl', {
+    query: '?raw',
+    import: 'default',
+    eager: true,
+  }),
+};
+
+const resolveSpecContent = (pluginId: string, specPath: string): string | undefined => {
+  const dirSegment = pluginId.replace(/^org\.dxos\.plugin\./, '');
+  const suffix = `/plugin-${dirSegment}/${specPath}`;
+  const key = Object.keys(PLUGIN_MDLS).find((candidate) => candidate.endsWith(suffix));
+  return key ? PLUGIN_MDLS[key] : undefined;
+};
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
+      // Per-plugin `spec` child node, attached to the registry's
+      // `org.dxos.plugin` nodes when the plugin declares a bundled MDL via
+      // `Plugin.Meta.spec` (a relative path inside the published package)
+      // and the content can be resolved from the eager glob above. The path
+      // `${getPluginPath(id)}/spec` is the contract used by plugin-registry
+      // to dispatch `LayoutOperation.Open` and to gate the "View
+      // specification" button — when this extension isn't registered (i.e.
+      // plugin-code isn't enabled) or the spec content can't be resolved,
+      // the node is absent and the button stays hidden.
+      GraphBuilder.createExtension({
+        id: 'plugin-spec',
+        match: NodeMatcher.whenNodeType('org.dxos.plugin'),
+        connector: (node) => {
+          const plugin = node.data as PluginNS.Plugin;
+          const { id, name, spec } = plugin.meta;
+          if (!spec) {
+            return Effect.succeed([]);
+          }
+          const content = resolveSpecContent(id, spec);
+          if (!content) {
+            return Effect.succeed([]);
+          }
+          return Effect.succeed([
+            Node.make({
+              id: 'spec',
+              type: PLUGIN_SPEC_TYPE,
+              data: makePluginSpecSubject({ pluginId: id, name, content }),
+              properties: {
+                label: ['plugin-spec.label', { ns: meta.id }],
+                icon: 'ph--file-code--regular',
+                disposition: 'hidden',
+              },
+            }),
+          ]);
+        },
+      }),
+
       // Top-level "Code Projects" section in each space that has at least one CodeProject.
       GraphBuilder.createExtension({
         id: 'code-projects-section',
@@ -39,7 +108,7 @@ export default Capability.makeModule(
               icon: 'ph--code--regular',
               iconHue: 'indigo',
               space,
-              position: 'hoist',
+              position: 'first',
             }),
           ]);
         },

@@ -90,6 +90,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/effect-proto/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/effect-zod/package.json",
           "jsonpath": "$.version"
         },
@@ -246,6 +251,11 @@
         {
           "type": "json",
           "path": "packages/common/web-context-solid/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/compute-runtime/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -605,7 +615,7 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-files/package.json",
+          "path": "packages/plugins/plugin-file/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -616,6 +626,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-game/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-generator/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -750,6 +765,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-sequencer/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-settings/package.json",
           "jsonpath": "$.version"
         },
@@ -851,6 +871,11 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-trello/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/plugins/plugin-trip/package.json",
           "jsonpath": "$.version"
         },
         {

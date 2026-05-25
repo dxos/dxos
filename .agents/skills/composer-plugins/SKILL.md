@@ -11,21 +11,40 @@ Exemplar: `packages/plugins/plugin-chess`. Read its source files to understand e
 
 ## Discovery
 
-Use the `dxos-introspect` MCP server as the source of truth for plugin metadata — not directory listings.
-A "plugin" is a package whose `src/meta.ts` exports a `Plugin.Meta`, so `ls packages/plugins/` overcounts (e.g. `plugin-spec` is tooling, not a plugin).
+Use the `dxos-introspect` MCP server (`@dxos/introspect-mcp`, served by the `dx-introspect-mcp` binary) as the source of truth for plugin metadata and reference examples — not directory listings.
+A "plugin" is a package whose `src/meta.ts` exports a `Plugin.Meta`, so `ls packages/plugins/` overcounts (e.g. `plugin-generator` is tooling, not a plugin).
 
 - `mcp__dxos-introspect__list_plugins` — enumerate plugins (filter by `id` substring; pass `compact: true` for identifying fields only).
 - `mcp__dxos-introspect__get_package` — package details for a given plugin.
 - `mcp__dxos-introspect__list_surfaces` / `list_capabilities` / `list_operations` / `list_schemas` — drill into a plugin's contributions.
 - `mcp__dxos-introspect__find_symbol` / `get_symbol` / `list_symbols` — locate code by symbol rather than grepping paths.
+- `mcp__dxos-introspect__list_idioms` — enumerate `@idiom`-tagged reference examples (filter by `slug` substring or `hostKind: 'symbol' | 'story' | 'test'`).
 
 Reach for these first when answering questions like "how many plugins", "which plugin contributes X surface", or "where is symbol Y defined".
 
+### Search idioms before implementing
+
+**Required.** Before writing or refactoring any container, capability, operation, blueprint, or schema, call `mcp__dxos-introspect__list_idioms` and scan for a slug that matches what you're about to build. An idiom is a JSDoc-tagged pinning of the canonical way to do one thing — when one exists, it is the answer, and you should `get_symbol` on the host artifact and follow the pattern rather than reinventing it.
+
+Typical triggers:
+
+- Building a toolbar → look for `org.dxos.react-ui-menu.*` idioms.
+- Wiring `useObject` / mutating ECHO subjects → look for ECHO idioms.
+- Writing a surface filter, operation handler, blueprint, or container scaffold → search by the feature word first.
+
+If no idiom matches, proceed using the exemplar (`plugin-chess`); if you find yourself writing something that other plugins will copy, consider adding a new `@idiom` tag (see [`packages/reflect/deus/docs/IDIOMS.md`](../../../packages/reflect/deus/docs/IDIOMS.md) for the format and slug rules).
+
 ## Specification
 
-Each plugin MUST have a `PLUGIN.mdl` specification written in the MDL language defined by `plugin-spec` (see `packages/plugins/plugin-spec/docs/` and `src/extension/mdl.grammar` for syntax).
+Each plugin MUST have a `PLUGIN.mdl` specification written in the **MDL** (`.mdl`) language defined by `@dxos/deus`. The authoritative references live under [`packages/reflect/deus/`](../../../packages/reflect/deus/):
 
-**The `PLUGIN.mdl` IS the design document.** Do not write a separate design doc (e.g., in `agents/superpowers/specs/`). During brainstorming, once the design is approved, write the spec directly as `packages/plugins/plugin-<name>/PLUGIN.mdl`. Use `packages/plugins/plugin-spec/docs/PLUGIN-.template.mdl` as the template and `packages/plugins/plugin-chess/PLUGIN.mdl` as a reference.
+- [`docs/DESIGN.md`](../../../packages/reflect/deus/docs/DESIGN.md) — language specification.
+- [`docs/IDIOMS.md`](../../../packages/reflect/deus/docs/IDIOMS.md) — idiom format and `@idiom` JSDoc-tag conventions.
+- [`lang/core.mdl`](../../../packages/reflect/deus/lang/core.mdl) — core dialect.
+- [`lang/PLUGIN-.template.mdl`](../../../packages/reflect/deus/lang/PLUGIN-.template.mdl) — the plugin template.
+- [`src/extension/mdl.grammar`](../../../packages/reflect/deus/src/extension/mdl.grammar) — Lezer grammar (use only when chasing syntax questions).
+
+**The `PLUGIN.mdl` IS the design document.** Do not write a separate design doc (e.g., in `agents/superpowers/specs/`). During brainstorming, once the design is approved, write the spec directly as `packages/plugins/plugin-<name>/PLUGIN.mdl`. Use [`packages/reflect/deus/lang/PLUGIN-.template.mdl`](../../../packages/reflect/deus/lang/PLUGIN-.template.mdl) as the template and `packages/plugins/plugin-chess/PLUGIN.mdl` as a reference.
 
 The specification is the source of truth for what the plugin does. It must be:
 
@@ -193,13 +212,17 @@ See: `plugin-sample/src/containers/SampleArticle.tsx`.
 
 **Containers must use standard UI primitives — never custom classNames for layout or styling.** Use:
 
-- `Panel.Root` / `Panel.Toolbar` / `Panel.Content` for article layout structure.
+- `Panel.Root` / `Panel.Toolbar` / `Panel.Content` for container (article, companion, etc.) layout structure.
 - `ScrollArea.Root` + `ScrollArea.Viewport` inside `Panel.Content asChild` for scrollable content.
 - `Input.Root` / `Input.Label` / `Input.TextInput` for form fields.
 - `Button` (with `variant`) for actions.
 - `Clipboard.IconButton` for copy-to-clipboard.
 - `Toolbar.Root` / `Toolbar.IconButton` for toolbar actions.
 - `Card.Root` / `Card.Toolbar` / `Card.Content` for card surfaces.
+- `List.Root` for navigable lists that track current (`dx-current`) and selected (`dx-selected`) item states.
+- use `react-tabster` for navigation.
+
+IMPORTANT: Any deviation from standard UI components should require permission from the user.
 
 The only acceptable classNames are functional layout hints on `ScrollArea.Viewport` (e.g., `p-4 space-y-4`) or responsive `@container` queries. If you find yourself writing custom styles, you are probably missing an existing UI component.
 
@@ -227,6 +250,18 @@ See: `plugin-chess/src/containers/ChessArticle/`, `plugin-discord/src/containers
 Plugin modules that contribute functionality to the framework. Each is a single file with a default export using `Capability.makeModule()`. The barrel `index.ts` uses only `Capability.lazy()` exports. Do NOT add non-lazy exports.
 
 See: `plugin-chess/src/capabilities/`
+
+#### LayerSpec contributions (`src/capabilities/layer-specs.ts`)
+
+Plugins that contribute Effect services to the process-manager runtime do so via `Capabilities.LayerSpec` entries (see `plugin-client/src/capabilities/layer-specs.ts` for a minimal reference).
+
+Conventions:
+
+- **Declare each spec at module level**, not inside the `Capability.makeModule(Effect.fnUntraced(...))` activation body. Keep the activation block to just the `Capability.contributes(...)` list (+ any conditional contributions that depend on runtime config).
+- **Use PascalCase names ending in `LayerSpec`** (`ClientLayerSpec`, `DatabaseLayerSpec`, `RemoteFunctionExecutionSpec`, …). This makes the module-level intent obvious at the callsite.
+- **Declare runtime dependencies via `requires`, not via outer-scope closures.** If a spec needs the `Client`, require `ClientService` (or `Capability.Service` + `Capability.get(ClientCapabilities.Client)` inside a `Layer.unwrapEffect(Effect.gen(...))`). If a spec needs contributed capabilities (e.g. operation handlers, blueprint definitions), require `Capability.Service` and resolve them with `Capability.get` / `Capability.getAll` — this keeps the spec portable and the dependency graph explicit.
+- **Hard-fail with `invariant` on missing space context or missing space records.** Space-affinity specs that receive a `context` argument should `invariant(context.space, …)` and `invariant(space, …)` on the client lookup — returning a `notAvailable` fallback hides configuration bugs in the layer graph.
+- **Activation-conditional specs stay inside the `makeModule` body.** Specs that only apply when a runtime config flag is set (e.g. `runtime.client.edgeFeatures.agents`) can still read that config from the `Client` and conditionally append themselves to the contributions list.
 
 ### Schema (`src/types/`)
 

@@ -43,6 +43,9 @@
       "path": "packages/common/effect-atom-solid/tsconfig.json"
     },
     {
+      "path": "packages/common/effect-proto/tsconfig.json"
+    },
+    {
       "path": "packages/common/effect-zod/tsconfig.json"
     },
     {
@@ -137,6 +140,9 @@
     },
     {
       "path": "packages/common/web-context-solid/tsconfig.json"
+    },
+    {
+      "path": "packages/core/compute-runtime/tsconfig.json"
     },
     {
       "path": "packages/core/compute/ai/tsconfig.json"
@@ -349,13 +355,16 @@
       "path": "packages/plugins/plugin-feed/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-files/tsconfig.json"
+      "path": "packages/plugins/plugin-file/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-gallery/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-game/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-generator/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-github/tsconfig.json"
@@ -436,6 +445,9 @@
       "path": "packages/plugins/plugin-search/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-sequencer/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-settings/tsconfig.json"
     },
     {
@@ -497,6 +509,9 @@
     },
     {
       "path": "packages/plugins/plugin-trello/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-trip/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-voxel/tsconfig.json"

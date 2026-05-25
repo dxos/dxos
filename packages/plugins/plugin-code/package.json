@@ -80,7 +80,8 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "src",
+    "PLUGIN.mdl"
   ],
   "dependencies": {
     "@codemirror/lang-javascript": "catalog:",
@@ -94,6 +95,8 @@
     "@dxos/echo-atom": "workspace:*",
     "@dxos/echo-db": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
@@ -106,7 +109,10 @@
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect-atom/atom-react": "catalog:",
-    "effect": "catalog:"
+    "@typescript/vfs": "catalog:",
+    "effect": "catalog:",
+    "esbuild-wasm": "catalog:",
+    "typescript": "catalog:"
   },
   "devDependencies": {
     "@dxos/plugin-client": "workspace:*",

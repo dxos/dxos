@@ -8,6 +8,8 @@
 
 import { log } from '@dxos/log';
 
+const worker = new Worker(new URL('./worker.ts', import.meta.url), { type: 'module' });
+
 class TestThing {
   info() {
     log.info('Info message from example app', { timestamp: Date.now() });
@@ -52,6 +54,16 @@ const setupButtons = () => {
   document.getElementById('btn-catch')?.addEventListener('click', () => {
     // eslint-disable-next-line @dxos/rules/no-empty-promise-catch
     new TestThing().catch();
+  });
+
+  document.getElementById('btn-worker-info')?.addEventListener('click', () => {
+    worker.postMessage('info');
+  });
+  document.getElementById('btn-worker-warn')?.addEventListener('click', () => {
+    worker.postMessage('warn');
+  });
+  document.getElementById('btn-worker-error')?.addEventListener('click', () => {
+    worker.postMessage('error');
   });
 };
 

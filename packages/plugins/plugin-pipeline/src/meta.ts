@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.pipeline',
   name: 'Pipelines',
+  author: 'DXOS',
   description: trim`
     Pipelines for organizing tasks, milestones, and deliverables.
     Track progress across multiple pipelines and coordinate team activities in a structured environment.

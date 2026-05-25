@@ -78,6 +78,9 @@ jobs:
       - name: Check for import cycles
         run: pnpm run check-cycles
 
+      - name: Check publish config
+        run: pnpm run check-publish-config
+
       - name: Check formatting
         run: pnpm run format-check
 

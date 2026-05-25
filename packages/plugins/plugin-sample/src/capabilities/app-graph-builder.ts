@@ -34,10 +34,10 @@ export default Capability.makeModule(
       // --- Root-level action ---
       // `NodeMatcher.whenRoot` matches the graph root, making this action appear
       // in the global action menu (e.g., the "+" button in the navigation tree).
-      // `position: 'hoist'` places the action in the primary action area.
+      // `position: 'first'` places the action in the primary action area.
       GraphBuilder.createExtension({
         id: 'root-actions',
-        position: 'hoist',
+        position: 'first',
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
@@ -160,7 +160,7 @@ export default Capability.makeModule(
       // Deck companions are workspace-wide panels (not attached to a specific object).
       // `AppNode.makeDeckCompanion` creates a node with `DECK_COMPANION_TYPE`.
       // The surface role follows the convention: `deck-companion--{id}`.
-      // `position: 'fallback'` places it after higher-priority companions.
+      // `position: 'last'` places it after higher-priority companions.
       GraphBuilder.createExtension({
         id: 'deck-companion',
         match: NodeMatcher.whenRoot,
@@ -171,7 +171,7 @@ export default Capability.makeModule(
               label: ['deck-companion.label', { ns: meta.id }],
               icon: 'ph--book-open--regular',
               data: 'sample-panel' as const,
-              position: 'fallback',
+              position: 'last',
             }),
           ]),
       }),

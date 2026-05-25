@@ -23,10 +23,11 @@ export const SyncFeed = Operation.make({
     key: `${FEED_OPERATION}.sync-feed`,
     name: 'Sync Feed',
     description: 'Fetches RSS/Atom feed and writes posts to the ECHO feed.',
+    icon: 'ph--arrows-clockwise--regular',
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    feed: Subscription.Feed,
+    feed: Subscription.Subscription,
   }),
   output: Schema.Void,
 });
@@ -39,7 +40,8 @@ export const ListCandidatePosts = Operation.make({
   meta: {
     key: `${FEED_OPERATION}.list-candidate-posts`,
     name: 'List Candidate Posts',
-    description: 'Returns uncurated Posts from a Magazine’s referenced feeds.',
+    description: "Returns uncurated Posts from a Magazine's referenced feeds.",
+    icon: 'ph--list--regular',
   },
   input: Schema.Struct({
     magazine: Ref.Ref(Magazine.Magazine).annotations({
@@ -68,7 +70,8 @@ export const FetchArticleContent = Operation.make({
   meta: {
     key: `${FEED_OPERATION}.fetch-article-content`,
     name: 'Fetch Article Content',
-    description: 'Fetches and extracts text + image URLs from a Post’s article page.',
+    description: "Fetches and extracts text + image URLs from a Post's article page.",
+    icon: 'ph--article--regular',
   },
   input: Schema.Struct({
     post: Ref.Ref(Subscription.Post).annotations({
@@ -86,15 +89,17 @@ export const FetchArticleContent = Operation.make({
 
 /**
  * Fetches a Post's article page over HTTP and writes the extracted plain text
- * to `post.content` and the first image URL to `post.imageUrl`. Idempotent —
- * skips if `post.content` is already set or the Post has no link. Used by the
- * reader view to populate the full article on first open.
+ * and hero image URL to the source Subscription's `postState[postId]` map
+ * (the Post itself is an immutable queue item). Idempotent — skips if
+ * `content` is already set or the Post has no link. Used by the reader view
+ * to populate the full article on first open.
  */
 export const LoadPostContent = Operation.make({
   meta: {
     key: `${FEED_OPERATION}.load-post-content`,
     name: 'Load Post Content',
     description: 'Fetches and stores the full article content on a Post.',
+    icon: 'ph--download--regular',
   },
   input: Schema.Struct({
     post: Ref.Ref(Subscription.Post).annotations({
@@ -113,6 +118,7 @@ export const AddPostToMagazine = Operation.make({
     key: `${FEED_OPERATION}.add-post-to-magazine`,
     name: 'Add Post to Magazine',
     description: 'Enriches a Post with snippet/imageUrl and appends it to a Magazine.',
+    icon: 'ph--plus--regular',
   },
   input: Schema.Struct({
     magazine: Ref.Ref(Magazine.Magazine).annotations({
@@ -145,6 +151,7 @@ export const RefreshMagazine = Operation.make({
     key: `${FEED_OPERATION}.refresh-magazine`,
     name: 'Refresh Magazine',
     description: 'Syncs feeds, curates new posts, and applies per-feed keep limits.',
+    icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
     magazine: Ref.Ref(Magazine.Magazine).annotations({
@@ -167,7 +174,8 @@ export const CurateMagazine = Operation.make({
   meta: {
     key: `${FEED_OPERATION}.curate-magazine`,
     name: 'Curate Magazine',
-    description: 'Adds uncurated Posts from the Magazine’s feeds with derived snippets.',
+    description: "Adds uncurated Posts from the Magazine's feeds with derived snippets.",
+    icon: 'ph--sparkle--regular',
   },
   input: Schema.Struct({
     magazine: Ref.Ref(Magazine.Magazine).annotations({

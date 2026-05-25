@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { OperationPlugin, type Plugin, RuntimePlugin } from '@dxos/app-framework';
+import { type Plugin, ProcessManagerPlugin } from '@dxos/app-framework';
 import { APP_DOMAIN } from '@dxos/app-toolkit';
 import { type ClientServicesProvider, type Config } from '@dxos/client';
 import { type IdbLogStore } from '@dxos/log-store-idb';
@@ -26,8 +26,10 @@ import { DiscordPlugin } from '@dxos/plugin-discord/plugin';
 import { DoctorPlugin } from '@dxos/plugin-doctor/plugin';
 import { ExplorerPlugin } from '@dxos/plugin-explorer/plugin';
 import { FeedPlugin } from '@dxos/plugin-feed/plugin';
+import { FilePlugin } from '@dxos/plugin-file/plugin';
 import { GalleryPlugin } from '@dxos/plugin-gallery/plugin';
 import { GamePlugin } from '@dxos/plugin-game/plugin';
+import { GeneratorPlugin } from '@dxos/plugin-generator/plugin';
 import { GitHubPlugin } from '@dxos/plugin-github/plugin';
 import { GraphPlugin } from '@dxos/plugin-graph/plugin';
 import { InboxPlugin } from '@dxos/plugin-inbox/plugin';
@@ -54,6 +56,7 @@ import { RegistryPlugin } from '@dxos/plugin-registry/plugin';
 import { SamplePlugin } from '@dxos/plugin-sample/plugin';
 import { ScriptPlugin } from '@dxos/plugin-script/plugin';
 import { SearchPlugin } from '@dxos/plugin-search/plugin';
+import { SequencerPlugin } from '@dxos/plugin-sequencer/plugin';
 import { SettingsPlugin } from '@dxos/plugin-settings/plugin';
 import { SheetPlugin } from '@dxos/plugin-sheet/plugin';
 import { SidekickPlugin } from '@dxos/plugin-sidekick/plugin';
@@ -72,6 +75,7 @@ import { ThreadPlugin } from '@dxos/plugin-thread/plugin';
 import { TicTacToePlugin } from '@dxos/plugin-tictactoe/plugin';
 import { TranscriptionPlugin } from '@dxos/plugin-transcription/plugin';
 import { TrelloPlugin } from '@dxos/plugin-trello/plugin';
+import { TripPlugin } from '@dxos/plugin-trip/plugin';
 import { VoxelPlugin } from '@dxos/plugin-voxel/plugin';
 import { WnfsPlugin } from '@dxos/plugin-wnfs/plugin';
 import { ZenPlugin } from '@dxos/plugin-zen/plugin';
@@ -102,57 +106,20 @@ export type PluginConfig = State & {
   isMobile?: boolean;
 };
 
-/**
- * System plugins.
- */
-// TODO(burdon): Replace this hardcoded list by filtering plugins on `meta.tags.includes('system')`.
-export const getCore = ({ isPwa, isTauri, isPopover, isMobile }: PluginConfig): string[] => {
-  const layoutPluginId = isPopover
-    ? SpotlightPlugin.meta.id
-    : isMobile
-      ? SimpleLayoutPlugin.meta.id
-      : DeckPlugin.meta.id;
-  return [
-    AttentionPlugin.meta.id,
-    AutomationPlugin.meta.id,
-    ClientPlugin.meta.id,
-    !isTauri && CrxPlugin.meta.id,
-    GraphPlugin.meta.id,
-    IntegrationPlugin.meta.id,
-    SupportPlugin.meta.id,
-    layoutPluginId,
-    isTauri && !isMobile && !isPopover && NativePlugin.meta.id,
-    OperationPlugin.meta.id,
-    NavTreePlugin.meta.id,
-    ObservabilityPlugin.meta.id,
-    !isTauri && isPwa && PwaPlugin.meta.id,
-    RegistryPlugin.meta.id,
-    RuntimePlugin.meta.id,
-    SettingsPlugin.meta.id,
-    SpacePlugin.meta.id,
-    StatusBarPlugin.meta.id,
-    ThemePlugin.meta.id,
-    WelcomePlugin.meta.id,
-  ]
-    .filter(isTruthy)
-    .flat();
-};
-
 export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] =>
   [
     // Default
     AssistantPlugin.meta.id,
+    FilePlugin.meta.id,
     InboxPlugin.meta.id,
     KanbanPlugin.meta.id,
     MarkdownPlugin.meta.id,
     MasonryPlugin.meta.id,
-    PreviewPlugin.meta.id,
     SearchPlugin.meta.id,
     SheetPlugin.meta.id,
     SketchPlugin.meta.id,
     TablePlugin.meta.id,
     ThreadPlugin.meta.id,
-    WnfsPlugin.meta.id,
 
     // Dev
     isDev && DebugPlugin.meta.id,
@@ -171,6 +138,7 @@ export const getDefaults = ({ isDev, isLocal, isLabs }: PluginConfig): string[] 
       MeetingPlugin.meta.id,
       OutlinerPlugin.meta.id,
       PipelinePlugin.meta.id,
+      SequencerPlugin.meta.id,
       SidekickPlugin.meta.id,
       TranscriptionPlugin.meta.id,
       ZenPlugin.meta.id,
@@ -199,7 +167,6 @@ export const getPlugins = ({
     AssistantPlugin(),
     AttentionPlugin(),
     AutomationPlugin(),
-    BlueskyPlugin(),
     BoardPlugin(),
     CallsPlugin(),
     ChessPlugin(),
@@ -226,18 +193,14 @@ export const getPlugins = ({
     DoctorPlugin(),
     ExplorerPlugin(),
     FeedPlugin(),
-    GalleryPlugin(),
     GamePlugin(),
-    GitHubPlugin(),
+    GeneratorPlugin(),
     GraphPlugin(),
     InboxPlugin(),
-    IrohBeaconPlugin(),
-    OperationPlugin(),
     KanbanPlugin(),
     layoutPlugin,
-    LinearPlugin(),
     MapPlugin(),
-    isLabs && MapPluginSolid(),
+    isLocal && MapPluginSolid(),
     MarkdownPlugin(),
     MasonryPlugin(),
     MeetingPlugin(),
@@ -254,9 +217,9 @@ export const getPlugins = ({
     PipelinePlugin(),
     PresenterPlugin(),
     PreviewPlugin(),
+    ProcessManagerPlugin(),
     !isTauri && isPwa && PwaPlugin(),
     RegistryPlugin(),
-    RuntimePlugin(),
     isLocal && SamplePlugin(),
     ScriptPlugin(),
     SearchPlugin(),
@@ -264,8 +227,6 @@ export const getPlugins = ({
     SettingsPlugin(),
     SheetPlugin(),
     SketchPlugin(),
-    SlackPlugin(),
-    SpacetimePlugin(),
     SpacePlugin({
       observability: true,
       shareableLinkOrigin: origin,
@@ -280,13 +241,25 @@ export const getPlugins = ({
       noCache: isDev,
       platform: isMobile ? 'mobile' : 'desktop',
     }),
-    TicTacToePlugin(),
     ThreadPlugin(),
     IntegrationPlugin(),
     TranscriptionPlugin(),
-    TrelloPlugin(),
-    VoxelPlugin(),
     WelcomePlugin(),
+
+    // TODO(wittjosiah): Consider factoring these out as standalone plugins published through the registry.
+    BlueskyPlugin(),
+    GalleryPlugin(),
+    GitHubPlugin(),
+    IrohBeaconPlugin(),
+    LinearPlugin(),
+    SequencerPlugin(),
+    SlackPlugin(),
+    SpacetimePlugin(),
+    TicTacToePlugin(),
+    TrelloPlugin(),
+    TripPlugin(),
+    VoxelPlugin(),
+    FilePlugin(),
     WnfsPlugin(),
     ZenPlugin(),
   ]

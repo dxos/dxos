@@ -17,10 +17,8 @@ import { usePluginManager } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
-import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import { Carousel, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
-
-import { Carousel } from '#components';
 
 // The surface registration constrains incoming data to
 // `AppSurface.ArticleProps<'help', {}, Obj.Any>` (companion node with
@@ -72,18 +70,14 @@ export const SupportCompanion = ({ companionTo }: SupportCompanionProps) => {
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='p-4 flex flex-col items-center gap-4'>
             {screenshots.length > 0 && (
-              <Carousel.Root classNames='w-full' count={screenshots.length} gutter='md'>
-                <Carousel.Frame>
-                  <Carousel.Previous />
-                  <Carousel.Viewport>
-                    {screenshots.map((src, index) => (
-                      <Carousel.Slide key={src} index={index}>
-                        <Carousel.Media src={src} />
-                      </Carousel.Slide>
-                    ))}
-                  </Carousel.Viewport>
-                  <Carousel.Next />
-                </Carousel.Frame>
+              <Carousel.Root classNames='w-full' count={screenshots.length}>
+                <Carousel.Previous />
+                <Carousel.Viewport>
+                  {screenshots.map((src, index) => (
+                    <Carousel.Slide key={src} index={index} src={src} />
+                  ))}
+                </Carousel.Viewport>
+                <Carousel.Next />
                 <Carousel.Indicators />
               </Carousel.Root>
             )}

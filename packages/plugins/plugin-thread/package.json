@@ -50,10 +50,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/ThreadPlugin.workerd.ts",
         "node": "./src/ThreadPlugin.node.ts",
         "default": "./src/ThreadPlugin.tsx"
       },
       "types": "./dist/types/src/ThreadPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/ThreadPlugin.workerd.mjs",
       "node": "./dist/lib/neutral/ThreadPlugin.node.mjs",
       "default": "./dist/lib/neutral/ThreadPlugin.mjs"
     },
@@ -99,6 +101,7 @@
     "@codemirror/language": "catalog:",
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
+    "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
@@ -148,10 +151,12 @@
     "@effect-atom/atom": "catalog:",
     "@effect-atom/atom-react": "catalog:",
     "@effect/ai": "catalog:",
+    "@effect/ai-anthropic": "catalog:",
     "@effect/experimental": "catalog:",
     "date-fns": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-atom": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",
     "@dxos/react-ui": "workspace:*",
@@ -174,5 +179,8 @@
     "effect": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

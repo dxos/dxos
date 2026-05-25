@@ -363,7 +363,7 @@ describe('Observability', () => {
           Observability.addExtension(Effect.succeed(feedbackExt)),
           Observability.initialize,
         );
-        obs.feedback.captureUserFeedback({ message: 'great app' });
+        void obs.feedback.captureUserFeedback({ message: 'great app' });
         expect(captureUserFeedback).toHaveBeenCalledWith({ message: 'great app' });
       }),
     );
