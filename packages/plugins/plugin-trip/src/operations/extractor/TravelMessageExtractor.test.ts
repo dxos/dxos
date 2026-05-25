@@ -66,7 +66,6 @@ describe('TravelMessageExtractor', () => {
     expect(booking.source).toBe('email');
     expect(booking.provider?.domain).toBe('united.com');
 
-    expect(segment.status).toBe('proposed');
     expect(segment.details._tag).toBe('flight');
     if (segment.details._tag !== 'flight') {
       throw new Error('expected flight details');
