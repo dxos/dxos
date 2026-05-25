@@ -14,6 +14,7 @@ import { Editor } from '@dxos/react-ui-editor';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 
 import { translations } from '#translations';
@@ -256,7 +257,14 @@ const PlaygroundStory = ({ card = false }: PlaygroundStoryProps) => {
   );
 
   const renderForm = (readonly = false) => (
-    <Form.Root schema={schema} defaultValues={values} onSave={handleSave} autoSave readonly={readonly}>
+    <Form.Root
+      schema={schema}
+      defaultValues={values}
+      layout={readonly ? 'static' : 'full'}
+      readonly={readonly}
+      autoSave
+      onSave={handleSave}
+    >
       <Form.Viewport>
         <Form.Content>
           <Form.Layout schema={schema} template={lastValid} />
@@ -267,10 +275,15 @@ const PlaygroundStory = ({ card = false }: PlaygroundStoryProps) => {
 
   return (
     <Tooltip.Provider>
-      <div className='dx-container grid grid-cols-[var(--spacing-card-min-width)_1fr] grid-rows-1 p-4 gap-4 overflow-hidden'>
-        <div className='overflow-auto h-full'>
-          {card ? (
-            <div className='flex flex-col gap-form-gap'>
+      <div
+        className={mx(
+          'dx-container grid grid-rows-1 p-4 gap-4 overflow-hidden',
+          card ? 'grid-cols-[var(--spacing-card-min-width)_var(--spacing-card-min-width)_1fr]' : 'grid-cols-2',
+        )}
+      >
+        {card ? (
+          <>
+            <div>
               <Card.Root fullWidth>
                 <Card.Toolbar>
                   <Card.DragHandle />
@@ -279,6 +292,8 @@ const PlaygroundStory = ({ card = false }: PlaygroundStoryProps) => {
                 </Card.Toolbar>
                 <Card.Content>{renderForm(true)}</Card.Content>
               </Card.Root>
+            </div>
+            <div>
               <Card.Root fullWidth>
                 <Card.Toolbar>
                   <Card.DragHandle />
@@ -288,10 +303,10 @@ const PlaygroundStory = ({ card = false }: PlaygroundStoryProps) => {
                 <Card.Content>{renderForm(false)}</Card.Content>
               </Card.Root>
             </div>
-          ) : (
-            <TestPanel>{renderForm(false)}</TestPanel>
-          )}
-        </div>
+          </>
+        ) : (
+          <TestPanel>{renderForm(false)}</TestPanel>
+        )}
         <div className='grid grid-rows-3 gap-4 overflow-hidden'>
           <TestPanel>
             <div className='flex flex-col h-full overflow-hidden'>
