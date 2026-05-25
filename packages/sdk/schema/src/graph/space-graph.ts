@@ -211,8 +211,8 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
         const edge: SpaceGraphEdge = {
           id: object.id,
           type: 'relation',
-          source: EchoURI.getObjectId(EchoURI.tryParse(Relation.getSourceDXN(object))!)!,
-          target: EchoURI.getObjectId(EchoURI.tryParse(Relation.getTargetDXN(object))!)!,
+          source: EchoURI.getObjectId(Relation.getSourceURI(object))!,
+          target: EchoURI.getObjectId(Relation.getTargetURI(object))!,
           data: {
             object,
           },
