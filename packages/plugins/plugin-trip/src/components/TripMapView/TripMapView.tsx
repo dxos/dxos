@@ -36,32 +36,29 @@ const toLatLng = (geo?: readonly [number, number, number?] | undefined): LatLng 
 
 const sameLatLng = (a: LatLng, b: LatLng): boolean => a.lat === b.lat && a.lng === b.lng;
 
-/** All points referenced by a segment (origin, destination, venue), with geo coords if present. */
+/** All points referenced by a segment (origin, destination), with geo coords if present. */
 const segmentPoints = (seg: Segment.Segment): LatLng[] => {
   const points: LatLng[] = [];
-  const origin = toLatLng(seg.origin?.geo);
-  const destination = toLatLng(seg.destination?.geo);
-  const venue = toLatLng(seg.venue?.geo);
+  const origin = toLatLng(Segment.getOrigin(seg)?.geo);
+  const destination = toLatLng(Segment.getDestination(seg)?.geo);
   if (origin) {
     points.push(origin);
   }
-  // Avoid duplicating for accommodation where origin === destination.
+  // Single-location variants (accommodation/activity) get the same place from getOrigin/getDestination —
+  // skip the dup.
   if (destination && (!origin || !sameLatLng(destination, origin))) {
     points.push(destination);
-  }
-  if (venue && !points.some((p) => sameLatLng(p, venue))) {
-    points.push(venue);
   }
   return points;
 };
 
 /** Origin → destination line for transport segments (skip accommodation / activity). */
 const segmentLine = (seg: Segment.Segment): { source: LatLng; target: LatLng } | undefined => {
-  if (seg.kind === 'accommodation' || seg.kind === 'activity') {
+  if (seg.details._tag === 'accommodation' || seg.details._tag === 'activity') {
     return undefined;
   }
-  const source = toLatLng(seg.origin?.geo);
-  const target = toLatLng(seg.destination?.geo);
+  const source = toLatLng(seg.details.origin?.geo);
+  const target = toLatLng(seg.details.destination?.geo);
   if (!source || !target || sameLatLng(source, target)) {
     return undefined;
   }

@@ -34,7 +34,7 @@ type FlightOptions = {
   durationHours?: number;
   airline?: { name?: string; code?: string };
   flightNumber?: string;
-  cabin?: Segment.Cabin;
+  cabin?: Segment.ServiceClass;
   confirmed?: boolean;
 };
 
@@ -112,15 +112,17 @@ export class TripBuilder {
     }
     this.#segments.push(
       Segment.make({
-        kind: 'flight',
         status: opts.confirmed ? 'confirmed' : 'tentative',
-        airline,
-        flightNumber,
-        cabin: opts.cabin ?? 'economy',
-        origin: opts.from,
-        destination: opts.to,
-        departAt: depart.toISOString(),
-        arriveAt: arrive.toISOString(),
+        details: {
+          _tag: 'flight',
+          airline,
+          flightNumber,
+          serviceClass: opts.cabin ?? 'economy',
+          origin: opts.from,
+          destination: opts.to,
+          departAt: depart.toISOString(),
+          arriveAt: arrive.toISOString(),
+        },
       }),
     );
     return this;
@@ -134,14 +136,16 @@ export class TripBuilder {
     const arrive = addHours(depart, durationHours);
     this.#segments.push(
       Segment.make({
-        kind: 'train',
         status: 'confirmed',
-        operator: opts.operator,
-        trainNumber: opts.trainNumber,
-        origin: opts.from,
-        destination: opts.to,
-        departAt: depart.toISOString(),
-        arriveAt: arrive.toISOString(),
+        details: {
+          _tag: 'train',
+          operator: opts.operator,
+          trainNumber: opts.trainNumber,
+          origin: opts.from,
+          destination: opts.to,
+          departAt: depart.toISOString(),
+          arriveAt: arrive.toISOString(),
+        },
       }),
     );
     return this;
@@ -168,16 +172,14 @@ export class TripBuilder {
     const checkOut = addDays(checkIn, nights);
     this.#segments.push(
       Segment.make({
-        kind: 'accommodation',
         status: 'confirmed',
-        propertyName: opts.propertyName,
-        operator: opts.chain ? { name: opts.chain } : undefined,
-        origin: opts.place,
-        destination: opts.place,
-        checkIn: checkIn.toISOString(),
-        checkOut: checkOut.toISOString(),
-        departAt: checkIn.toISOString(),
-        arriveAt: checkOut.toISOString(),
+        details: {
+          _tag: 'accommodation',
+          propertyName: opts.propertyName,
+          location: opts.place,
+          checkIn: checkIn.toISOString(),
+          checkOut: checkOut.toISOString(),
+        },
       }),
     );
     return this;
@@ -201,11 +203,13 @@ export class TripBuilder {
     const start = addHours(startOfDay(addDays(this.#now, daysFromNow)), departHour);
     this.#segments.push(
       Segment.make({
-        kind: 'activity',
         status: 'confirmed',
-        title: opts.title,
-        venue: opts.venue,
-        departAt: start.toISOString(),
+        details: {
+          _tag: 'activity',
+          title: opts.title,
+          venue: opts.venue,
+          departAt: start.toISOString(),
+        },
       }),
     );
     return this;

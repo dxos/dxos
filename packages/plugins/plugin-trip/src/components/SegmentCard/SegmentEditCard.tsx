@@ -54,7 +54,10 @@ export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardP
     const handleDepartChange = useCallback(
       (event: ChangeEvent<HTMLInputElement>) => {
         Obj.update(segment, (segment) => {
-          segment.departAt = localDateTimeToIso(event.target.value);
+          // Card is only mounted for flight segments (see SegmentEdit registration).
+          if (segment.details._tag === 'flight') {
+            segment.details.departAt = localDateTimeToIso(event.target.value);
+          }
         });
       },
       [segment],
@@ -70,9 +73,10 @@ export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardP
 
     const title = Segment.getTitle(segment);
     const route = Segment.getRoute(segment);
-    const icon = Segment.kindIcon(segment.kind);
+    const icon = Segment.kindIcon(Segment.getKind(segment));
     const isCancelled = segment.status === 'cancelled';
-    const departDate = Segment.parseDate(segment.departAt);
+    const departAt = Segment.getDepartAt(segment);
+    const departDate = Segment.parseDate(departAt);
 
     return (
       <Card.Root fullWidth ref={forwardedRef} classNames={isCancelled ? 'opacity-40' : undefined}>
@@ -91,7 +95,7 @@ export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardP
             {editable ? (
               <Input.Root>
                 <Input.DateTime
-                  value={isoToLocalDateTime(segment.departAt)}
+                  value={isoToLocalDateTime(departAt)}
                   onChange={handleDepartChange}
                   placeholder={t('segment.depart.placeholder')}
                 />

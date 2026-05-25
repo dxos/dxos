@@ -59,7 +59,7 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
   const title = Segment.getTitle(segment);
   const route = Segment.getRoute(segment);
   const date = Segment.getPrimaryDate(segment);
-  const icon = Segment.kindIcon(segment.kind);
+  const icon = Segment.kindIcon(Segment.getKind(segment));
   const isCancelled = segment.status === 'cancelled';
 
   return (
