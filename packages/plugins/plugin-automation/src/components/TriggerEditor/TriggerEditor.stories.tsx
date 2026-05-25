@@ -165,8 +165,9 @@ export const Spec: Story = {
     await expect(combobox).not.toBeDisabled();
     await expect(canvas.queryByLabelText('Method')).not.toBeInTheDocument();
 
-    // Feed — should show a "Feed" label for the feed-selector field.
+    // Feed — should show Feed field label (distinct from kind combobox value).
     await selectKind(combobox, 'f');
-    await expect(canvas.findByText('Feed', { selector: 'label' })).resolves.toBeInTheDocument();
+    await expect(combobox).not.toBeDisabled();
+    await expect(await canvas.findByText('Feed', { selector: 'label' })).toBeInTheDocument();
   },
 };

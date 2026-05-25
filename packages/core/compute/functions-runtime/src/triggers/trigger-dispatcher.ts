@@ -360,8 +360,15 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
 
         const manager = yield* ProcessManager.Service;
         const executable = Process.fromOperation(functionDef, manager.operationHandlerSet);
+        // Thread the dispatcher's space through `ProcessManager.spawn` so the
+        // spawned process resolves space-affinity services (e.g.
+        // `Database.Service`) for the same space the dispatcher is bound to.
+        // Pulled from the captured `Database.Service` rather than a separate
+        // option so the dispatcher API stays single-source-of-truth on space.
+        const { db } = yield* Database.Service;
         const handle = yield* manager.spawn(executable, {
           name: functionDef.meta.name ? `${functionDef.meta.name} (${functionDef.meta.key})` : functionDef.meta.key,
+          environment: { space: db.spaceId },
         });
 
         return yield* handle.runAndExit({ inputs: [inputData] }).pipe(
