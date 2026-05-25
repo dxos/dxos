@@ -11,3 +11,7 @@ export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHan
   'OperationHandler',
   () => import('./operation-handler'),
 );
+export const TriggerRuntimeController = Capability.lazy(
+  'TriggerRuntimeController',
+  () => import('./trigger-runtime-controller'),
+);
