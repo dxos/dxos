@@ -40,7 +40,20 @@ import { describe, test } from 'vitest';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { TestBuilder } from '@dxos/client/testing';
-import { Annotation, Collection, DXN, EchoURI, Feed, Filter, JsonSchema, Obj, Query, Ref, Type, View } from '@dxos/echo';
+import {
+  Annotation,
+  Collection,
+  DXN,
+  EchoURI,
+  Feed,
+  Filter,
+  JsonSchema,
+  Obj,
+  Query,
+  Ref,
+  Type,
+  View,
+} from '@dxos/echo';
 import { Format, FormatAnnotation, LabelAnnotation, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { Calendar, Mailbox } from '@dxos/plugin-inbox';
 import { Kanban } from '@dxos/plugin-kanban';

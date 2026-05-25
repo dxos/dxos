@@ -52,7 +52,7 @@ const Example = Schema.Struct({
     title: 'Parent',
   }),
 }).pipe(
-  Type.object(DXN.make(`com.example.type.${PublicKey.random().truncate()}`, '0.1.0')),
+  Type.object(DXN.make(`com.example.type.example${PublicKey.random().truncate()}`, '0.1.0')),
   Annotation.LabelAnnotation.set(['name']),
 );
 interface Example extends Schema.Schema.Type<typeof Example> {}
@@ -289,7 +289,7 @@ export const Tags: Meta<DefaultStoryProps> = {
       createSpace: true,
       onCreateSpace: async ({ space }) => {
         // Configure schema.
-        const typename = 'com.example.type.single-select';
+        const typename = 'com.example.type.singleSelect';
         const selectOptions = [
           { id: 'one', title: 'One', color: 'emerald' },
           { id: 'two', title: 'Two', color: 'blue' },
