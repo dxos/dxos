@@ -29,8 +29,27 @@ export type ServiceClass = Schema.Schema.Type<typeof ServiceClass>;
 // Variant details — discriminated by `_tag`.
 //
 
-/** Shared fields for any leg that moves between two places at scheduled times. */
+/**
+ * Shared fields for any leg that moves between two places at scheduled times.
+ *
+ * -------------------
+ * | JFK    | LHR    |
+ * | May 23 | May 24 |
+ * | 10:00  | 12:00  |
+ * -------------------
+ * | Delta 123       |
+ * -------------------
+ *
+ * <section cols={2}>
+ *   <field name="origin" />
+ *   <field name="destination" />
+ * </section>
+ */
 const transportFields = {
+  /** Operator of the leg: airline for flights, rail operator for trains, ferry line for boats, road operator for taxi/bus. */
+  provider: Schema.optional(Provider.Provider),
+  /** Operator-assigned identifier: flight number, train number, vessel/route code. */
+  serviceNumber: Schema.optional(Schema.String),
   origin: Schema.optional(Place),
   destination: Schema.optional(Place),
   departAt: Schema.optional(Format.DateTime),
@@ -41,9 +60,6 @@ const transportFields = {
 
 export const FlightDetails = Schema.TaggedStruct('flight', {
   ...transportFields,
-  // TODO(burdon): Generalize airline → provider, flightNumber → number.
-  airline: Schema.optional(Provider.Provider),
-  flightNumber: Schema.optional(Schema.String),
   terminalFrom: Schema.optional(Schema.String),
   terminalTo: Schema.optional(Schema.String),
   gateFrom: Schema.optional(Schema.String),
@@ -53,8 +69,6 @@ export interface FlightDetails extends Schema.Schema.Type<typeof FlightDetails> 
 
 export const TrainDetails = Schema.TaggedStruct('train', {
   ...transportFields,
-  operator: Schema.optional(Provider.Provider),
-  trainNumber: Schema.optional(Schema.String),
   platform: Schema.optional(Schema.String),
   coach: Schema.optional(Schema.String),
 });
@@ -62,7 +76,6 @@ export interface TrainDetails extends Schema.Schema.Type<typeof TrainDetails> {}
 
 export const BoatDetails = Schema.TaggedStruct('boat', {
   ...transportFields,
-  operator: Schema.optional(Provider.Provider),
   vessel: Schema.optional(Schema.String),
 });
 export interface BoatDetails extends Schema.Schema.Type<typeof BoatDetails> {}
@@ -71,7 +84,6 @@ export interface BoatDetails extends Schema.Schema.Type<typeof BoatDetails> {}
 export const RoadDetails = Schema.TaggedStruct('road', {
   ...transportFields,
   subKind: Schema.optional(RoadSubKind),
-  operator: Schema.optional(Provider.Provider),
 });
 export interface RoadDetails extends Schema.Schema.Type<typeof RoadDetails> {}
 
@@ -113,10 +125,9 @@ export type Details = Schema.Schema.Type<typeof Details>;
 //
 
 /**
- * A travel segment. ECHO struct with a discriminated `details` field whose
- * `_tag` selects the variant (`flight` / `train` / `boat` / `road` /
- * `accommodation` / `activity`). Segments are referenced from a Trip via
- * `Ref<Segment>[]` and declared as children via `Obj.setParent(segment, trip)`.
+ * A travel segment. ECHO struct with a discriminated `details` field whose `_tag` selects the variant.
+ * Segments are referenced from a Trip via `Ref<Segment>[]` and declared as children via `Obj.setParent(segment, trip)`.
+ * NOTE: Multiple segments may reference the same Booking.
  */
 export const Segment = Schema.Struct({
   booking: Schema.optional(Ref.Ref(Booking.Booking)),
@@ -234,13 +245,16 @@ export const getPrimaryDate = (seg: Segment): Date | undefined => parseDate(getD
 export const getTitle = (seg: Segment): string => {
   switch (seg.details._tag) {
     case 'flight':
-      return [seg.details.airline?.name, seg.details.flightNumber].filter(Boolean).join(' ') || 'Flight';
+      return [seg.details.provider?.name, seg.details.serviceNumber].filter(Boolean).join(' ') || 'Flight';
     case 'train':
-      return [seg.details.operator?.name, seg.details.trainNumber].filter(Boolean).join(' ') || 'Train';
+      return [seg.details.provider?.name, seg.details.serviceNumber].filter(Boolean).join(' ') || 'Train';
     case 'boat':
-      return [seg.details.operator?.name, seg.details.vessel].filter(Boolean).join(' ') || 'Boat';
+      return (
+        [seg.details.provider?.name, seg.details.vessel ?? seg.details.serviceNumber].filter(Boolean).join(' ') ||
+        'Boat'
+      );
     case 'road':
-      return seg.details.operator?.name ?? seg.details.subKind ?? 'Road';
+      return seg.details.provider?.name ?? seg.details.subKind ?? 'Road';
     case 'accommodation':
       return seg.details.propertyName ?? seg.details.location?.name ?? 'Accommodation';
     case 'activity':

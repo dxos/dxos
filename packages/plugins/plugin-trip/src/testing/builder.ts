@@ -114,8 +114,8 @@ export class TripBuilder {
       Segment.make({
         details: {
           _tag: 'flight',
-          airline,
-          flightNumber,
+          provider: airline,
+          serviceNumber: flightNumber,
           serviceClass: opts.cabin ?? 'economy',
           origin: opts.from,
           destination: opts.to,
@@ -137,8 +137,8 @@ export class TripBuilder {
       Segment.make({
         details: {
           _tag: 'train',
-          operator: opts.operator,
-          trainNumber: opts.trainNumber,
+          provider: opts.operator,
+          serviceNumber: opts.trainNumber,
           origin: opts.from,
           destination: opts.to,
           departAt: depart.toISOString(),
