@@ -255,8 +255,8 @@ const PlaygroundStory = ({ card = false }: PlaygroundStoryProps) => {
     [themeMode],
   );
 
-  const form = (
-    <Form.Root schema={schema} defaultValues={values} onSave={handleSave} autoSave>
+  const renderForm = (readonly = false) => (
+    <Form.Root schema={schema} defaultValues={values} onSave={handleSave} autoSave readonly={readonly}>
       <Form.Viewport>
         <Form.Content>
           <Form.Layout schema={schema} template={lastValid} />
@@ -270,16 +270,26 @@ const PlaygroundStory = ({ card = false }: PlaygroundStoryProps) => {
       <div className='dx-container grid grid-cols-[var(--spacing-card-min-width)_1fr] grid-rows-1 p-4 gap-4 overflow-hidden'>
         <div className='overflow-auto h-full'>
           {card ? (
-            <Card.Root fullWidth>
-              <Card.Toolbar>
-                <Card.DragHandle />
-                <Card.Title>Form Layout</Card.Title>
-                <Card.ActionIconButton action='close' onClick={() => console.log('close')} />
-              </Card.Toolbar>
-              <Card.Content>{form}</Card.Content>
-            </Card.Root>
+            <div className='flex flex-col gap-form-gap'>
+              <Card.Root fullWidth>
+                <Card.Toolbar>
+                  <Card.DragHandle />
+                  <Card.Title>Read-only</Card.Title>
+                  <Card.ActionIconButton action='close' onClick={() => console.log('close')} />
+                </Card.Toolbar>
+                <Card.Content>{renderForm(true)}</Card.Content>
+              </Card.Root>
+              <Card.Root fullWidth>
+                <Card.Toolbar>
+                  <Card.DragHandle />
+                  <Card.Title>Editable</Card.Title>
+                  <Card.ActionIconButton action='close' onClick={() => console.log('close')} />
+                </Card.Toolbar>
+                <Card.Content>{renderForm(false)}</Card.Content>
+              </Card.Root>
+            </div>
           ) : (
-            <TestPanel>{form}</TestPanel>
+            <TestPanel>{renderForm(false)}</TestPanel>
           )}
         </div>
         <div className='grid grid-rows-3 gap-4 overflow-hidden'>
