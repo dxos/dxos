@@ -6,19 +6,25 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Format, Obj, Ref, Type } from '@dxos/echo';
 import { Provider } from '@dxos/types';
 
 import * as Booking from './Booking';
 import { Place } from './Place';
 
-// ---------------------------------------------------------------------------
+//
 // Kind enum
-// ---------------------------------------------------------------------------
+//
 
 export const Kind = Schema.Literal('flight', 'train', 'boat', 'road', 'accommodation', 'activity');
 export type Kind = Schema.Schema.Type<typeof Kind>;
 
+/**
+ * tentative: user-authored placeholder.
+ * proposed:  extractor/agent suggestion awaiting user accept.
+ * confirmed: backed by a real Booking.
+ * cancelled: kept for history; rendered de-emphasised.
+ */
 export const Status = Schema.Literal('tentative', 'proposed', 'confirmed', 'cancelled');
 export type Status = Schema.Schema.Type<typeof Status>;
 
@@ -28,9 +34,9 @@ export type RoadSubKind = Schema.Schema.Type<typeof RoadSubKind>;
 export const Cabin = Schema.Literal('economy', 'premium', 'business', 'first');
 export type Cabin = Schema.Schema.Type<typeof Cabin>;
 
-// ---------------------------------------------------------------------------
+//
 // Segment ECHO type
-// ---------------------------------------------------------------------------
+//
 
 /**
  * A travel segment. Single ECHO object type with union properties — `kind`
@@ -40,20 +46,18 @@ export type Cabin = Schema.Schema.Type<typeof Cabin>;
  */
 export const Segment = Schema.Struct({
   // Core (all variants).
-  /**
-   * tentative: user-authored placeholder.
-   * proposed:  extractor/agent suggestion awaiting user accept.
-   * confirmed: backed by a real Booking.
-   * cancelled: kept for history; rendered de-emphasised.
-   */
   status: Status,
   kind: Kind,
+
   origin: Schema.optional(Place),
   destination: Schema.optional(Place),
-  departAt: Schema.optional(Schema.String),
-  arriveAt: Schema.optional(Schema.String),
+  departAt: Schema.optional(Format.DateTime),
+  arriveAt: Schema.optional(Format.DateTime),
   booking: Schema.optional(Ref.Ref(Booking.Booking)),
   notes: Schema.optional(Schema.String),
+
+  // TOOD(burdon): Harmonize flight/train/vesselNumber, airline/operator, common fields, etc.
+  // TODO(burdon): Annotations for IATA codes, etc. (See Amadeus for examples.)
 
   // Flight.
   airline: Schema.optional(Provider.Provider),
@@ -68,7 +72,6 @@ export const Segment = Schema.Struct({
   // Train (shares operator + seat with road/accommodation/etc).
   operator: Schema.optional(Provider.Provider),
   trainNumber: Schema.optional(Schema.String),
-  cabinClass: Schema.optional(Schema.String), // renamed from `class` (reserved word).
   coach: Schema.optional(Schema.String),
 
   // Boat (operator + cabin shared).
@@ -81,8 +84,8 @@ export const Segment = Schema.Struct({
   // Accommodation.
   propertyName: Schema.optional(Schema.String),
   roomType: Schema.optional(Schema.String),
-  checkIn: Schema.optional(Schema.String),
-  checkOut: Schema.optional(Schema.String),
+  checkIn: Schema.optional(Format.DateTime),
+  checkOut: Schema.optional(Format.DateTime),
 
   // Activity.
   title: Schema.optional(Schema.String),
@@ -119,9 +122,9 @@ export const makeDefault = (kind: Kind): Segment => {
   }
 };
 
-// ---------------------------------------------------------------------------
+//
 // Helpers
-// ---------------------------------------------------------------------------
+//
 
 /** Parses an ISO string to a Date; returns undefined if missing or invalid. */
 export const parseDate = (iso?: string): Date | undefined => {
