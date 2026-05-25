@@ -165,8 +165,8 @@ export const Spec: Story = {
     await expect(combobox).not.toBeDisabled();
     await expect(canvas.queryByLabelText('Method')).not.toBeInTheDocument();
 
-    // Feed — should show the queue URI field (a combobox, not an input — use getByText).
+    // Feed — should show a "Feed" label for the feed-selector field.
     await selectKind(combobox, 'f');
-    await expect(canvas.findByText('EchoURI')).resolves.toBeInTheDocument();
+    await expect(canvas.findByText('Feed', { selector: 'label' })).resolves.toBeInTheDocument();
   },
 };
