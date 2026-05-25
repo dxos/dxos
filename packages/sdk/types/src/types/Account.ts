@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
 import * as AccessToken from './AccessToken';
@@ -28,10 +28,7 @@ export const Account = Schema.Struct({
   notes: Schema.optional(Schema.String),
   accessTokens: Schema.Array(Ref.Ref(AccessToken.AccessToken)).pipe(Schema.optional),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.account',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.account', '0.1.0')),
   LabelAnnotation.set(['displayName']),
   Annotation.IconAnnotation.set({
     icon: 'ph--identification-card--regular',

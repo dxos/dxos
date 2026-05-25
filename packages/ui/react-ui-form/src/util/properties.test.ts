@@ -54,7 +54,7 @@ describe('getFormProperties', () => {
     const TestSchema = Schema.Struct({
       name: Schema.optional(Schema.String),
       userId: Schema.String.pipe(Annotation.FormInputAnnotation.set(false), Schema.optional),
-    }).pipe(Type.object({ typename: 'org.dxos.test.optional-hidden', version: '0.1.0' }));
+    }).pipe(Type.object(DXN.make('org.dxos.test.optionalHidden', '0.1.0')));
 
     const names = getFormProperties(TestSchema.ast).map((prop) => prop.name);
     expect(names).toContain('name');

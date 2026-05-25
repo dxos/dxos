@@ -239,7 +239,7 @@ export const make = (opts: {
         traceMeta,
         environment: {
           ...(options?.spaceId !== undefined ? { space: options.spaceId } : {}),
-          ...(options?.conversation !== undefined ? { conversation: options.conversation as DXN.String } : {}),
+          ...(options?.conversation !== undefined ? { conversation: options.conversation } : {}),
         },
       }).pipe(
         Effect.ensuring(Ref.update(pendingCount, (count) => count - 1)),
