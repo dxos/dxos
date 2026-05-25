@@ -24,7 +24,7 @@ export const PLACES: Record<string, PlaceType> = {
   SIN: { name: 'Singapore Changi', code: 'SIN', city: 'Singapore', country: 'SG', geo: [103.9915, 1.3644] },
   LTV: { name: 'Lichfield Trent Valley', code: 'LTV', city: 'Lichfield', country: 'GB', geo: [-1.8044, 52.6841] },
   EUS: { name: 'London Euston', code: 'EUS', city: 'London', country: 'GB', geo: [-0.1335, 51.5285] },
-  STP: { name: 'London St Pancras International', code: 'STP', city: 'London', country: 'GB', geo: [-0.1264, 51.5320] },
+  STP: { name: 'London St Pancras International', code: 'STP', city: 'London', country: 'GB', geo: [-0.1264, 51.532] },
   PAR_NORD: { name: 'Paris Gare du Nord', code: 'PAR', city: 'Paris', country: 'FR', geo: [2.3553, 48.8809] },
 };
 
