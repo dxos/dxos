@@ -116,13 +116,8 @@ export const ObjectStructure = Object.freeze({
     return object.system?.type;
   },
 
-  /**
-   * @throws On invalid object structure.
-   */
-  getEntityKind: (object: ObjectStructure): 'object' | 'relation' => {
-    const kind = object.system?.kind ?? 'object';
-    invariant(kind === 'object' || kind === 'relation', 'Invalid kind');
-    return kind;
+  getEntityKind: (object: ObjectStructure): 'object' | 'relation' | 'type' => {
+    return object.system?.kind ?? 'object';
   },
 
   isDeleted: (object: ObjectStructure): boolean => {
@@ -212,6 +207,28 @@ export const ObjectStructure = Object.freeze({
       data: data ?? {},
     };
   },
+
+  makeType: ({
+    type,
+    keys,
+    data,
+  }: {
+    type: URI.URI;
+    keys?: ForeignKey[];
+    data?: unknown;
+  }): ObjectStructure => {
+    return {
+      system: {
+        kind: 'type',
+        schemaKind: 'type',
+        type: { '/': type },
+      },
+      meta: {
+        keys: keys ?? [],
+      },
+      data: data ?? {},
+    };
+  },
 });
 
 /**
@@ -257,11 +274,14 @@ export type ObjectSystem = {
   kind?: 'object' | 'relation' | 'type';
 
   /**
-   * The kind of schema this entity is an instance of. For Type.Type entities
-   * (persisted schema definitions), this matches `kind` (`'type'`). For Obj /
-   * Relation instances, it tracks the underlying schema's kind so consumers
-   * that hold a Type.Type entity can read the `[SchemaKindId]` brand without
-   * looking up the schema separately.
+   * The kind of entity this `Type.Type` entity _describes_ — `'object'`,
+   * `'relation'`, or `'type'` (for a meta-schema). Only meaningful when
+   * `kind === 'type'`; absent or ignored on regular Obj / Relation instances.
+   *
+   * Note: always stored as `'type'` in practice (PersistentSchema stamps
+   * `EntityKind.Type`). The true described kind is embedded inside
+   * `data.jsonSchema.entityKind` by `makeTypeJsonSchemaAnnotation` and is
+   * what the `[SchemaKindId]` proxy trap reads.
    */
   schemaKind?: 'object' | 'relation' | 'type';
 
