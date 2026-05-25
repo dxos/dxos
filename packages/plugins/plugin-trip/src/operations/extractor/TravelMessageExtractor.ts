@@ -5,15 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import { Filter, Obj } from '@dxos/echo';
+import { type MessageExtractor } from '@dxos/plugin-inbox';
 import { type ContentBlock, type Message } from '@dxos/types';
 
 import { Booking, Segment } from '../../types';
-
-// Imported lazily for types only — plugin-trip doesn't depend on plugin-inbox at runtime.
-type MessageExtractorImpl = import('@dxos/plugin-inbox').MessageExtractor.MessageExtractor;
-type MatchResult = import('@dxos/plugin-inbox').MessageExtractor.MatchResult;
-type ExtractCtx = import('@dxos/plugin-inbox').MessageExtractor.ExtractCtx;
-type ExtractResult = import('@dxos/plugin-inbox').MessageExtractor.ExtractResult;
 
 /**
  * Heuristic v1 extractor for travel-booking confirmation emails. Recognises
@@ -60,7 +55,7 @@ const getSubject = (message: Message.Message): string => String(message.properti
 
 const toIso = (datePart: string, timePart: string): string => `${datePart}T${timePart}:00.000Z`;
 
-const matchMessage = (message: Message.Message): MatchResult => {
+const matchMessage = (message: Message.Message): MessageExtractor.MatchResult => {
   const senderEmail = message.sender.email ?? '';
   const subject = getSubject(message);
   const domainMatched = UNITED_DOMAIN_REGEX.test(senderEmail);
@@ -68,6 +63,7 @@ const matchMessage = (message: Message.Message): MatchResult => {
   if (!domainMatched && !subjectMatched) {
     return { matched: false };
   }
+
   const confidence = domainMatched && subjectMatched ? 0.9 : domainMatched ? 0.8 : 0.5;
   return { matched: true, confidence, reason: domainMatched ? 'sender-domain' : 'subject-keyword' };
 };
@@ -129,7 +125,10 @@ const isSameFlight = (segment: Segment.Segment, candidate: Candidate): boolean =
   return matchKey(segment.details.number, segment.details.departAt) === matchKey(candidate.number, candidate.departAt);
 };
 
-const extractFromMessage = (ctx: ExtractCtx, message: Message.Message): Effect.Effect<ExtractResult, never> =>
+const extractFromMessage = (
+  ctx: MessageExtractor.ExtractCtx,
+  message: Message.Message,
+): Effect.Effect<MessageExtractor.ExtractResult, never> =>
   Effect.gen(function* () {
     const body = getBodyText(message);
     const candidate = parseCandidate(body);
@@ -142,7 +141,6 @@ const extractFromMessage = (ctx: ExtractCtx, message: Message.Message): Effect.E
 
     // Try to find an existing segment matching the same (number, depart-date) pair.
     const existing = yield* findExistingFlight(ctx, candidate);
-
     if (existing && existing.details._tag === 'flight') {
       Obj.update(existing, (existing) => {
         if (existing.details._tag !== 'flight') {
@@ -197,7 +195,7 @@ const extractFromMessage = (ctx: ExtractCtx, message: Message.Message): Effect.E
   });
 
 const findExistingFlight = (
-  ctx: ExtractCtx,
+  ctx: MessageExtractor.ExtractCtx,
   candidate: Candidate,
 ): Effect.Effect<Segment.Segment | undefined, never> => {
   if (!candidate.number || !candidate.departAt || !ctx.database) {
@@ -213,7 +211,7 @@ const findExistingFlight = (
 };
 
 /** Heuristic v1 extractor — recognises United-style flight confirmations. */
-export const TravelMessageExtractor: MessageExtractorImpl = {
+export const TravelMessageExtractor: MessageExtractor.MessageExtractor = {
   id: ID,
   description: 'Recognises airline booking confirmations and produces Bookings + flight Segments.',
   kinds: ['flight'],
