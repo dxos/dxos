@@ -32,7 +32,7 @@ import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import { Database, DXN, Feed, Tag, Type } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { type TestContextService } from '@dxos/effect/testing';
-import { configuredCredentialsLayer, QueueService } from '@dxos/functions';
+import { configuredCredentialsLayer } from '@dxos/functions';
 
 import { AgentService } from '../agent-service';
 import * as FeedTraceSink from '../FeedTraceSink';
@@ -77,7 +77,6 @@ export type AssistantTestServices =
   | AgentService.AgentService
   | AiService.AiService
   | Database.Service
-  | QueueService
   | Blueprint.RegistryService
   | OperationRegistry.Service
   | OpaqueToolkit.OpaqueToolkitProvider
@@ -169,7 +168,6 @@ export const AssistantTestLayer = ({
               AiService.AiService,
               OperationRegistry.Service,
               Blueprint.RegistryService,
-              QueueService,
             ),
           );
         }),
