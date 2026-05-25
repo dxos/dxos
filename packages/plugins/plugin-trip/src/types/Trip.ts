@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Format, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
 import * as Segment from './Segment';
@@ -19,9 +19,9 @@ import * as Segment from './Segment';
 export const Trip = Schema.Struct({
   name: Schema.optional(Schema.String),
   summary: Schema.optional(Schema.String),
-  startDate: Schema.optional(Schema.String),
-  endDate: Schema.optional(Schema.String),
-  segments: Schema.Array(Ref.Ref(Segment.Segment)),
+  start: Schema.optional(Format.DateTime),
+  end: Schema.optional(Format.DateTime),
+  segments: Schema.Array(Ref.Ref(Segment.Segment)).pipe(Annotation.FormInputAnnotation.set(false)),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.trip',
