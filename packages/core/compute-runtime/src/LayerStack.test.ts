@@ -452,38 +452,32 @@ describe('LayerStack', () => {
         let serviceBConstructions = 0;
         let serviceCConstructions = 0;
 
-        const layerA = LayerSpec.make(
-          { affinity: 'process', requires: [], provides: [ServiceA] },
-          () =>
-            Layer.effect(
-              ServiceA,
-              Effect.sync(() => {
-                serviceAConstructions++;
-                return { value: 'a' };
-              }),
-            ),
+        const layerA = LayerSpec.make({ affinity: 'process', requires: [], provides: [ServiceA] }, () =>
+          Layer.effect(
+            ServiceA,
+            Effect.sync(() => {
+              serviceAConstructions++;
+              return { value: 'a' };
+            }),
+          ),
         );
-        const layerB = LayerSpec.make(
-          { affinity: 'process', requires: [], provides: [ServiceB] },
-          () =>
-            Layer.effect(
-              ServiceB,
-              Effect.sync(() => {
-                serviceBConstructions++;
-                return { value: 'b' };
-              }),
-            ),
+        const layerB = LayerSpec.make({ affinity: 'process', requires: [], provides: [ServiceB] }, () =>
+          Layer.effect(
+            ServiceB,
+            Effect.sync(() => {
+              serviceBConstructions++;
+              return { value: 'b' };
+            }),
+          ),
         );
-        const layerC = LayerSpec.make(
-          { affinity: 'process', requires: [], provides: [ServiceC] },
-          () =>
-            Layer.effect(
-              ServiceC,
-              Effect.sync(() => {
-                serviceCConstructions++;
-                return { value: 'c' };
-              }),
-            ),
+        const layerC = LayerSpec.make({ affinity: 'process', requires: [], provides: [ServiceC] }, () =>
+          Layer.effect(
+            ServiceC,
+            Effect.sync(() => {
+              serviceCConstructions++;
+              return { value: 'c' };
+            }),
+          ),
         );
 
         const stack = new LayerStack.LayerStack({ layers: [layerA, layerB, layerC] });

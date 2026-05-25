@@ -267,11 +267,11 @@ Conventions:
 
 A spec's `affinity` determines the slice it lives in and which fields of `LayerContext` are populated when its factory runs (see `packages/core/compute/compute/src/LayerSpec.ts`):
 
-| Affinity      | Lifetime                                        | `LayerContext` fields available             |
-| ------------- | ----------------------------------------------- | ------------------------------------------- |
-| `application` | Process-manager runtime                         | (none — `{}`)                               |
-| `space`       | Per space, reused across all processes in space | `space`                                     |
-| `process`     | Per spawned process                             | `space`, `conversation`, `process` (pid)    |
+| Affinity      | Lifetime                                        | `LayerContext` fields available          |
+| ------------- | ----------------------------------------------- | ---------------------------------------- |
+| `application` | Process-manager runtime                         | (none — `{}`)                            |
+| `space`       | Per space, reused across all processes in space | `space`                                  |
+| `process`     | Per spawned process                             | `space`, `conversation`, `process` (pid) |
 
 `conversation` and `process` are **process-affinity only** — a `space`-affinity factory cannot see them. If a service is keyed on `conversation` (e.g. `AiContext.Service`, `AiSession.Service`), it must be `process`-affinity even though it depends on space-affinity services like `Database.Service` and `Feed.FeedService`. The `LayerStack` initialises lower-affinity slices first, so process specs can require space services without issue.
 

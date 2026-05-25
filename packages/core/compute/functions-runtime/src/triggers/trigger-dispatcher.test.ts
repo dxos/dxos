@@ -817,7 +817,10 @@ describe('TriggerDispatcher', () => {
         const dispatcher = yield* TriggerDispatcher;
         const { result } = yield* dispatcher.invokeTrigger({ trigger, event: { tick: 0 } });
 
-        invariant(Exit.isSuccess(result), `trigger invocation failed: ${Exit.isFailure(result) ? String(result.cause) : ''}`);
+        invariant(
+          Exit.isSuccess(result),
+          `trigger invocation failed: ${Exit.isFailure(result) ? String(result.cause) : ''}`,
+        );
 
         const { db } = yield* Database.Service;
         expect(result.value).toEqual({ spaceId: db.spaceId });

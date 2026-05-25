@@ -14,7 +14,14 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
-import { Operation, OperationHandlerSet, Process, ServiceNotAvailableError, ServiceResolver, Trace } from '@dxos/compute';
+import {
+  Operation,
+  OperationHandlerSet,
+  Process,
+  ServiceNotAvailableError,
+  ServiceResolver,
+  Trace,
+} from '@dxos/compute';
 import * as StorageService from '@dxos/compute/StorageService';
 import { Database, type DXN } from '@dxos/echo';
 import { log } from '@dxos/log';

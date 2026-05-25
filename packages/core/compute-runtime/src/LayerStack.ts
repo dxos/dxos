@@ -250,9 +250,7 @@ export class LayerStack {
 
     for (const affinity of ['application', 'space', 'process'] as const) {
       const affinityContext = contextForAffinity(affinity, context);
-      const slice = this.#slices.find(
-        (s) => s.affinity === affinity && layerContextEquals(s.context, affinityContext),
-      );
+      const slice = this.#slices.find((s) => s.affinity === affinity && layerContextEquals(s.context, affinityContext));
       if (!slice) {
         continue;
       }
@@ -625,7 +623,10 @@ class Slice {
       const exit = yield* Effect.gen(this, function* () {
         const rt = yield* runtime.runtimeEffect;
         const providedTags = newLayers.flatMap((layer) => layer.provides);
-        const materialized = yield* Effect.context().pipe(Effect.map(Context.pick(...providedTags)), Effect.provide(rt));
+        const materialized = yield* Effect.context().pipe(
+          Effect.map(Context.pick(...providedTags)),
+          Effect.provide(rt),
+        );
         this.#services = Context.merge(this.#services, materialized);
         this.#managedRuntimes.push(runtime);
       }).pipe(Effect.exit);

@@ -45,11 +45,9 @@ describe('TriggerRuntimeController', () => {
     // Observe the dispatcher's `state` atom (the same surface the UI hook
     // exposes through `useTriggerRuntimeControls`).
     const observedStates: boolean[] = [];
-    const unsubscribe = harness.registry.subscribe(
-      dispatcher.state,
-      (state) => observedStates.push(state.enabled),
-      { immediate: true },
-    );
+    const unsubscribe = harness.registry.subscribe(dispatcher.state, (state) => observedStates.push(state.enabled), {
+      immediate: true,
+    });
     try {
       // Default `computeEnvironment` is `local`, so the controller should
       // start the dispatcher shortly after the space becomes ready.
