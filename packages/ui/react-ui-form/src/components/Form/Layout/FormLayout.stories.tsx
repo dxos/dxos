@@ -5,7 +5,7 @@
 import { xml } from '@codemirror/lang-xml';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Format, Type } from '@dxos/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -149,13 +149,13 @@ export const SchemaAnnotation: Story = {
 const PlaygroundStory = () => {
   const schema = useMemo(() => omitId(Flight) as unknown as Schema.Schema<any>, []);
   const [template, setTemplate] = useState(FLIGHT_LAYOUT);
+  const [lastValid, setLastValid] = useState(FLIGHT_LAYOUT);
   const [error, setError] = useState<string | undefined>();
-  const lastValid = useRef(FLIGHT_LAYOUT);
 
   useEffect(() => {
     try {
       parseLayout(template);
-      lastValid.current = template;
+      setLastValid(template);
       setError(undefined);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -190,7 +190,7 @@ const PlaygroundStory = () => {
             <Form.Root schema={schema} defaultValues={values} onSave={handleSave} autoSave>
               <Form.Viewport>
                 <Form.Content>
-                  <Form.Layout schema={schema} template={lastValid.current} />
+                  <Form.Layout schema={schema} template={lastValid} />
                 </Form.Content>
               </Form.Viewport>
             </Form.Root>
