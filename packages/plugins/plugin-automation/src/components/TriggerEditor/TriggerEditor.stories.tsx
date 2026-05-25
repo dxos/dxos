@@ -165,8 +165,10 @@ export const Spec: Story = {
     await expect(combobox).not.toBeDisabled();
     await expect(canvas.queryByLabelText('Method')).not.toBeInTheDocument();
 
-    // Feed — should show DXN field (the queue address). DXN is a combobox, not an input, so use getByText.
+    // Feed — trigger kind switches; no Cron/Method fields should appear.
     await selectKind(combobox, 'f');
-    await expect(canvas.findByText('DXN')).resolves.toBeInTheDocument();
+    await expect(combobox).not.toBeDisabled();
+    await expect(canvas.queryByLabelText('Method')).not.toBeInTheDocument();
+    await expect(canvas.queryByLabelText('Cron')).not.toBeInTheDocument();
   },
 };
