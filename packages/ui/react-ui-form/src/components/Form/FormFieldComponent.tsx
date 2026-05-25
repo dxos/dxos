@@ -98,12 +98,7 @@ export type FormFieldLabelProps = {
 export const FormFieldLabel = ({ label, error, readonly, asChild, path }: FormFieldLabelProps) => {
   const tooltips = useFormTooltips();
   const Label = readonly || asChild ? 'span' : Input.Label;
-  // Surface the field's JSON path as a hover tooltip on the label (e.g.
-  // `runtime.client.storage.persistent`). Wrapping with `Tooltip.Trigger
-  // asChild` keeps the underlying `Input.Label` (or `span`) intact so form
-  // semantics and label-for-input linking are unchanged.
-  // Form labels are denser than free-standing Input.Label uses elsewhere; downsize to text-xs.
-  const labelNode = <Label className={mx(inputTextLabel, 'text-xs')}>{label}</Label>;
+  const labelNode = <Label className={mx(inputTextLabel, 'text-sm')}>{label}</Label>;
   return (
     <div className='flex items-center justify-between'>
       {tooltips && path ? (
@@ -150,7 +145,13 @@ export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
     <div className='contents'>
       <Input.Root validationValence={status}>
         {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />}
-        {layout === 'static' ? <p>{str}</p> : children ? children({ value }) : null}
+        {layout === 'static' ? (
+          <p className='truncate min-w-0' title={str}>
+            {str}
+          </p>
+        ) : children ? (
+          children({ value })
+        ) : null}
         {layout === 'full' && (
           <Input.DescriptionAndValidation>
             <Input.Validation>{error}</Input.Validation>

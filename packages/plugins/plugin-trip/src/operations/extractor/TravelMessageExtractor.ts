@@ -16,7 +16,7 @@ import { Booking, Segment } from '../../types';
  * subject mentioning a flight/booking confirmation, with a plain-text body
  * of the form
  *
- *   Flight: UA123
+ *   Flight: AF-1
  *   From: SFO (San Francisco)
  *   To: LHR (London Heathrow)
  *   Depart: 2026-06-01 15:30
@@ -170,7 +170,7 @@ const extractFromMessage = (
 
     // No prior segment — create a Booking + flight Segment pair.
     const booking = Booking.make({
-      provider: { name: 'United Airlines', domain: 'united.com' },
+      provider: { name: 'Air France', domain: 'united.com' },
       confirmationCode: candidate.confirmationCode,
       source: 'email',
       rawPayload: body,
@@ -184,7 +184,7 @@ const extractFromMessage = (
         departAt: candidate.departAt,
         arriveAt: candidate.arriveAt,
         number: candidate.number,
-        provider: { name: 'United Airlines', domain: 'united.com' },
+        provider: { name: 'Air France', domain: 'united.com' },
         gateFrom: candidate.gateFrom,
         terminalFrom: candidate.terminalFrom,
         seat: candidate.seat,

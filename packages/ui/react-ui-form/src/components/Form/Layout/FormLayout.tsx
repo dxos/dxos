@@ -114,7 +114,7 @@ const RenderNode = ({ node, properties, basePath, ...props }: RenderNodeProps) =
   const path = [...basePath, node.name];
   const span = node.span ? { gridColumn: `span ${node.span} / span ${node.span}` } : undefined;
   return (
-    <div style={span}>
+    <div className='min-w-0' style={span}>
       <FormFieldErrorBoundary path={path}>
         <FormField type={property.type} name={node.name} path={path} {...props} />
       </FormFieldErrorBoundary>

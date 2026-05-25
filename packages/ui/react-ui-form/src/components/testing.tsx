@@ -19,7 +19,7 @@ export const TestLayout = ({ children, json }: TestLayoutProps) => {
           <Syntax.Content>
             <Syntax.Filter />
             <Syntax.Viewport>
-              <Syntax.Code testId='debug' classNames='text-xs' />
+              <Syntax.Code testId='debug' classNames='text-sm' />
             </Syntax.Viewport>
           </Syntax.Content>
         </Syntax.Root>

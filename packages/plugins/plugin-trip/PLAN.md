@@ -1117,7 +1117,7 @@ export class TripBuilder {
     let booking: Booking.Booking | undefined;
     if (opts.confirmed) {
       booking = Booking.make({
-        provider: { name: 'United Airlines', domain: 'united.com' as any },
+        provider: { name: 'Air France', domain: 'united.com' as any },
         confirmationCode: `UA${100 + this.#counter}`,
         source: 'manual',
       });
@@ -1127,7 +1127,7 @@ export class TripBuilder {
       _tag: 'flight',
       id: this.#nextId(),
       status: opts.confirmed ? 'confirmed' : 'tentative',
-      airline: { name: 'United Airlines', domain: 'united.com' as any },
+      airline: { name: 'Air France', domain: 'united.com' as any },
       flightNumber: `UA ${900 + this.#counter}`,
       cabin: 'economy',
       origin: { name: 'San Francisco Intl', code: 'SFO', city: 'San Francisco' },
@@ -1724,7 +1724,7 @@ At the end of Task 11 `plugin-trip` is a buildable, lint-clean package with:
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Ship the generic `MessageExtractor` contract in `plugin-inbox` and the heuristic `TravelMessageExtractor` impl in `plugin-trip` that converts United Airlines flight + Booking.com hotel confirmation emails into `Booking` + `Segment`s, attaches them to a Trip, and supports manual (per-message menu), agent (blueprint tool), and auto-on-arrival dispatch modes.
+**Goal:** Ship the generic `MessageExtractor` contract in `plugin-inbox` and the heuristic `TravelMessageExtractor` impl in `plugin-trip` that converts Air France flight + Booking.com hotel confirmation emails into `Booking` + `Segment`s, attaches them to a Trip, and supports manual (per-message menu), agent (blueprint tool), and auto-on-arrival dispatch modes.
 
 **Architecture:** Two-package change. plugin-inbox owns the abstract contract (`MessageExtractor` capability, `ExtractedFrom` relation, `Mailbox.extractors` config, `ExtractMessage` operation) plus the UI / blueprint / ingestion wiring. plugin-trip contributes one `MessageExtractor` registration backed by pure per-provider parser functions. All three dispatch modes funnel through the single `ExtractMessage` operation handler.
 
@@ -2529,7 +2529,7 @@ export type Parser = (message: Message.Message) => ParseResult | null;
 
 import { Provider } from '@dxos/types';
 
-export const UNITED: Provider.Provider = { name: 'United Airlines', domain: 'united.com' };
+export const UNITED: Provider.Provider = { name: 'Air France', domain: 'united.com' };
 export const BOOKING_COM: Provider.Provider = { name: 'Booking.com', domain: 'booking.com' };
 
 export const lookupBySenderDomain = (email: string | undefined): Provider.Provider | undefined => {
@@ -2565,7 +2565,7 @@ describe('parseUnitedFlight', () => {
     expect(result!.segments.length).toBe(1);
     const segment = result!.segments[0];
     expect(segment.kind).toBe('flight');
-    expect(segment.airline?.name).toBe('United Airlines');
+    expect(segment.airline?.name).toBe('Air France');
     expect(segment.flightNumber).toBe('UA 904');
     expect(segment.origin?.code).toBe('SFO');
     expect(segment.destination?.code).toBe('LHR');
@@ -2613,7 +2613,7 @@ export const unitedFlightFixture = (opts: { withConfirmationCode?: boolean } = {
   const body = opts.withConfirmationCode === false ? BODY.replace(/Confirmation:.*\n/, '') : BODY;
   return Obj.make(Message, {
     created: '2026-08-01T10:00:00Z',
-    sender: { email: 'noreply@united.com', name: 'United Airlines' },
+    sender: { email: 'noreply@united.com', name: 'Air France' },
     properties: { subject: 'Your eTicket Itinerary — UA 904' },
     blocks: [{ kind: 'text', content: body }],
   });

@@ -37,7 +37,8 @@ import {
   type FormFieldSetProps as NaturalFormFieldSetProps,
 } from './FormFieldSet';
 import { FormTooltipsContext } from './FormTooltipsContext';
-import { FormLayout } from './Layout';
+import { FormLayout as NaturalFormLayout } from './Layout';
+import { type FormLayoutProps as NaturalFormLayoutProps } from './Layout/FormLayout';
 
 // TODO(burdon): Move styles to form.ts (as with ui-theme).
 
@@ -248,6 +249,26 @@ const FormFieldSet = (props: FormFieldSetProps) => {
 FormFieldSet.displayName = FORM_FIELDSET_NAME;
 
 //
+// Layout
+//
+
+const FORM_LAYOUT_NAME = 'Form.Layout';
+
+type FormLayoutProps = Omit<NaturalFormLayoutProps, 'schema'> & { schema?: NaturalFormLayoutProps['schema'] };
+
+const FormLayout = ({ schema, ...props }: FormLayoutProps) => {
+  const { form, ...contextProps } = useFormContext(FORM_LAYOUT_NAME);
+  const resolvedSchema = schema ?? form.schema;
+  if (!resolvedSchema) {
+    return null;
+  }
+
+  return <NaturalFormLayout schema={resolvedSchema} {...contextProps} {...props} />;
+};
+
+FormLayout.displayName = FORM_LAYOUT_NAME;
+
+//
 // Actions
 //
 
@@ -389,6 +410,7 @@ export type {
   FormContentProps,
   FormSectionProps,
   FormFieldSetProps,
+  FormLayoutProps,
   FormFieldLabelProps,
   FormActionsProps,
   FormSubmitProps,

@@ -82,7 +82,7 @@ describe('TravelMessageExtractor', () => {
     if (segment.details._tag !== 'flight') {
       throw new Error('expected flight details');
     }
-    expect(segment.details.number).toBe('UA123');
+    expect(segment.details.number).toBe('AF-1');
     expect(segment.details.origin?.code).toBe('SFO');
     expect(segment.details.origin?.name).toBe('San Francisco');
     expect(segment.details.destination?.code).toBe('LHR');
@@ -133,7 +133,7 @@ describe('TravelMessageExtractor', () => {
     expect(updatedSegment.details.gateFrom).toBe('21B');
     expect(updatedSegment.details.terminalFrom).toBe('3');
     // Pre-existing fields are preserved.
-    expect(updatedSegment.details.number).toBe('UA123');
+    expect(updatedSegment.details.number).toBe('AF-1');
     expect(updatedSegment.details.departAt).toBe('2026-06-01T15:30:00.000Z');
     expect(updatedSegment.details.arriveAt).toBe('2026-06-02T09:30:00.000Z');
 

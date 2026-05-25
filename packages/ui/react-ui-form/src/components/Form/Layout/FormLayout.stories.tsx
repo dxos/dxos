@@ -48,6 +48,18 @@ const Flight = Schema.Struct({
 
 export interface Flight extends Schema.Schema.Type<typeof Flight> {}
 
+type FlightValues = Omit<Schema.Schema.Type<typeof Flight>, 'id'>;
+
+const flight = {
+  airline: 'Air France',
+  flightNumber: 'AF-1',
+  origin: 'JFK',
+  destination: 'CDG',
+  departAt: '2026-06-01T15:30:00.000Z',
+  arriveAt: '2026-06-02T09:30:00.000Z',
+  cabin: 'economy',
+} satisfies Partial<FlightValues>;
+
 const FLIGHT_LAYOUT = trim`
   <grid cols="2">
     <field name="airline"/>
@@ -79,23 +91,13 @@ const AnnotatedFlight = Flight.annotations({}).pipe(
   FormLayoutAnnotation.set({ default: FLIGHT_LAYOUT, compact: FLIGHT_LAYOUT_COMPACT }),
 );
 
-type FlightValues = Omit<Schema.Schema.Type<typeof Flight>, 'id'>;
-
 type StoryProps = {
   schema: Schema.Schema<any>;
   template?: string;
 };
 
 const DefaultStory = ({ schema, template }: StoryProps) => {
-  const [values, setValues] = useState<Partial<FlightValues>>({
-    airline: 'United Airlines',
-    flightNumber: 'UA123',
-    origin: 'SFO',
-    destination: 'LHR',
-    departAt: '2026-06-01T15:30:00.000Z',
-    arriveAt: '2026-06-02T09:30:00.000Z',
-    cabin: 'economy',
-  });
+  const [values, setValues] = useState<Partial<FlightValues>>(flight);
 
   const handleSave = useCallback<NonNullable<FormRootProps<any>['onSave']>>((next) => {
     setValues(next as Partial<FlightValues>);
@@ -163,17 +165,10 @@ export const SchemaAnnotation: Story = {
 const NamedAnnotationStory = () => {
   const schema = useMemo(() => omitId(AnnotatedFlight) as unknown as Schema.Schema<any>, []);
   const [layoutName, setLayoutName] = useState<'default' | 'compact'>('default');
-  const [values, setValues] = useState<Partial<FlightValues>>({
-    airline: 'United Airlines',
-    flightNumber: 'UA123',
-    origin: 'SFO',
-    destination: 'LHR',
-    departAt: '2026-06-01T15:30:00.000Z',
-    arriveAt: '2026-06-02T09:30:00.000Z',
-    cabin: 'economy',
-  });
+  const [values, setValues] = useState<Partial<FlightValues>>(flight);
+
   const handleSave = useCallback<NonNullable<FormRootProps<any>['onSave']>>((next) => {
-    setValues(next as Partial<FlightValues>);
+    setValues(next as Flight);
   }, []);
 
   return (
@@ -232,15 +227,7 @@ const PlaygroundStory = ({ card = false }: PlaygroundStoryProps) => {
     }
   }, [template]);
 
-  const [values, setValues] = useState<Partial<FlightValues>>({
-    airline: 'United Airlines',
-    flightNumber: 'UA123',
-    origin: 'SFO',
-    destination: 'LHR',
-    departAt: '2026-06-01T15:30:00.000Z',
-    arriveAt: '2026-06-02T09:30:00.000Z',
-    cabin: 'economy',
-  });
+  const [values, setValues] = useState<Partial<FlightValues>>(flight);
 
   const handleSave = useCallback<NonNullable<FormRootProps<any>['onSave']>>((next) => {
     setValues(next as Partial<FlightValues>);
@@ -326,7 +313,7 @@ const PlaygroundStory = ({ card = false }: PlaygroundStoryProps) => {
               <Syntax.Content>
                 <Syntax.Filter />
                 <Syntax.Viewport>
-                  <Syntax.Code testId='schema' classNames='text-xs' />
+                  <Syntax.Code testId='schema' classNames='text-sm' />
                 </Syntax.Viewport>
               </Syntax.Content>
             </Syntax.Root>
@@ -336,7 +323,7 @@ const PlaygroundStory = ({ card = false }: PlaygroundStoryProps) => {
               <Syntax.Content>
                 <Syntax.Filter />
                 <Syntax.Viewport>
-                  <Syntax.Code testId='data' classNames='text-xs' />
+                  <Syntax.Code testId='data' classNames='text-sm' />
                 </Syntax.Viewport>
               </Syntax.Content>
             </Syntax.Root>
@@ -347,7 +334,7 @@ const PlaygroundStory = ({ card = false }: PlaygroundStoryProps) => {
   );
 };
 
-export const Playground: Story = {
+export const FormPlayground: Story = {
   render: () => <PlaygroundStory />,
 };
 

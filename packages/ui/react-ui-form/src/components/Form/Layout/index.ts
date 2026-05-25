@@ -3,5 +3,5 @@
 //
 
 export * from './annotation';
-export * from './FormLayout';
+export { FormLayout } from './FormLayout';
 export { LayoutParseError, parseLayout, type LayoutNode } from './parser';

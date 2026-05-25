@@ -1,7 +1,7 @@
 From: noreply@united.com
-Subject: Gate change for your flight UA123
+Subject: Gate change for your flight AF-1
 
-Flight: UA123
+Flight: AF-1
 From: SFO
 To: LHR
 Depart: 2026-06-01 15:30
