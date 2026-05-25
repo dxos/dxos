@@ -19,16 +19,6 @@ import { Place } from './Place';
 export const Kind = Schema.Literal('flight', 'train', 'boat', 'road', 'accommodation', 'activity');
 export type Kind = Schema.Schema.Type<typeof Kind>;
 
-/**
- * tentative: user-authored placeholder.
- * proposed:  extractor/agent suggestion awaiting user accept.
- * confirmed: backed by a real Booking.
- * cancelled: kept for history; rendered de-emphasised.
- */
-// TODO(burdon): Remove -- infer status from booking.
-export const Status = Schema.Literal('tentative', 'proposed', 'confirmed', 'cancelled');
-export type Status = Schema.Schema.Type<typeof Status>;
-
 export const RoadSubKind = Schema.Literal('bus', 'car', 'transfer', 'taxi', 'walk');
 export type RoadSubKind = Schema.Schema.Type<typeof RoadSubKind>;
 
@@ -77,6 +67,7 @@ export const BoatDetails = Schema.TaggedStruct('boat', {
 });
 export interface BoatDetails extends Schema.Schema.Type<typeof BoatDetails> {}
 
+// TODO(burdon): Separate structure for route?
 export const RoadDetails = Schema.TaggedStruct('road', {
   ...transportFields,
   subKind: Schema.optional(RoadSubKind),
@@ -128,8 +119,6 @@ export type Details = Schema.Schema.Type<typeof Details>;
  * `Ref<Segment>[]` and declared as children via `Obj.setParent(segment, trip)`.
  */
 export const Segment = Schema.Struct({
-  // TODO(burdon): Infer status from booking.
-  status: Status,
   booking: Schema.optional(Ref.Ref(Booking.Booking)),
   notes: Schema.optional(Schema.String),
   details: Details,
@@ -152,21 +141,21 @@ export const instanceOf = (value: unknown): value is Segment => Obj.instanceOf(S
 /** Creates a new Segment from full props. Callers usually want `makeDefault(kind)`. */
 export const make = (props: Obj.MakeProps<typeof Segment>): Segment => Obj.make(Segment, props);
 
-/** Convenience: create a default segment for a given kind, status `tentative`. */
+/** Convenience: create a default segment for a given kind. */
 export const makeDefault = (kind: Kind): Segment => {
   switch (kind) {
     case 'flight':
-      return make({ status: 'tentative', details: { _tag: 'flight' } });
+      return make({ details: { _tag: 'flight' } });
     case 'train':
-      return make({ status: 'tentative', details: { _tag: 'train' } });
+      return make({ details: { _tag: 'train' } });
     case 'boat':
-      return make({ status: 'tentative', details: { _tag: 'boat' } });
+      return make({ details: { _tag: 'boat' } });
     case 'road':
-      return make({ status: 'tentative', details: { _tag: 'road', subKind: 'car' } });
+      return make({ details: { _tag: 'road', subKind: 'car' } });
     case 'accommodation':
-      return make({ status: 'tentative', details: { _tag: 'accommodation' } });
+      return make({ details: { _tag: 'accommodation' } });
     case 'activity':
-      return make({ status: 'tentative', details: { _tag: 'activity', title: 'Activity' } });
+      return make({ details: { _tag: 'activity', title: 'Activity' } });
   }
 };
 

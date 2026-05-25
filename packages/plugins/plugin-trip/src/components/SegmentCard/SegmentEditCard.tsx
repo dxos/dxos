@@ -42,14 +42,11 @@ const localDateTimeToIso = (value: string): string | undefined => {
 /**
  * Editable card variant for a flight Segment. Surfaces only the most important fields:
  * kind icon + title + delete in the toolbar, route and departure date in the content.
- * The departure date becomes editable (via `Input.DateTime`) when `segment.status === 'tentative'`;
- * otherwise it renders as static text.
+ * The departure date is always editable via `Input.DateTime`.
  */
 export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardProps>(
   ({ segment, onAction }, forwardedRef) => {
     const { t } = useTranslation(meta.id);
-
-    const editable = segment.status === 'tentative';
 
     const handleDepartChange = useCallback(
       (event: ChangeEvent<HTMLInputElement>) => {
@@ -74,15 +71,13 @@ export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardP
     const title = Segment.getTitle(segment);
     const route = Segment.getRoute(segment);
     const icon = Segment.kindIcon(Segment.getKind(segment));
-    const isCancelled = segment.status === 'cancelled';
     const departAt = Segment.getDepartAt(segment);
-    const departDate = Segment.parseDate(departAt);
 
     return (
-      <Card.Root fullWidth ref={forwardedRef} classNames={isCancelled ? 'opacity-40' : undefined}>
+      <Card.Root fullWidth ref={forwardedRef}>
         <Card.Toolbar>
           <Card.Icon icon={icon} />
-          <Card.Title classNames={isCancelled ? 'line-through' : undefined}>{title}</Card.Title>
+          <Card.Title>{title}</Card.Title>
           <Card.ActionIconButton action='delete' onClick={handleDelete} label={t('segment.delete.label')} />
         </Card.Toolbar>
         <Card.Content>
@@ -92,19 +87,13 @@ export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardP
             </Card.Row>
           )}
           <Card.Row icon='ph--calendar--regular'>
-            {editable ? (
-              <Input.Root>
-                <Input.DateTime
-                  value={isoToLocalDateTime(departAt)}
-                  onChange={handleDepartChange}
-                  placeholder={t('segment.depart.placeholder')}
-                />
-              </Input.Root>
-            ) : (
-              <Card.Text variant='description'>
-                {departDate ? formatDate(departDate, 'PPp') : t('segment.depart.placeholder')}
-              </Card.Text>
-            )}
+            <Input.Root>
+              <Input.DateTime
+                value={isoToLocalDateTime(departAt)}
+                onChange={handleDepartChange}
+                placeholder={t('segment.depart.placeholder')}
+              />
+            </Input.Root>
           </Card.Row>
         </Card.Content>
       </Card.Root>

@@ -112,7 +112,6 @@ export class TripBuilder {
     }
     this.#segments.push(
       Segment.make({
-        status: opts.confirmed ? 'confirmed' : 'tentative',
         details: {
           _tag: 'flight',
           airline,
@@ -136,7 +135,6 @@ export class TripBuilder {
     const arrive = addHours(depart, durationHours);
     this.#segments.push(
       Segment.make({
-        status: 'confirmed',
         details: {
           _tag: 'train',
           operator: opts.operator,
@@ -172,7 +170,6 @@ export class TripBuilder {
     const checkOut = addDays(checkIn, nights);
     this.#segments.push(
       Segment.make({
-        status: 'confirmed',
         details: {
           _tag: 'accommodation',
           propertyName: opts.propertyName,
@@ -203,7 +200,6 @@ export class TripBuilder {
     const start = addHours(startOfDay(addDays(this.#now, daysFromNow)), departHour);
     this.#segments.push(
       Segment.make({
-        status: 'confirmed',
         details: {
           _tag: 'activity',
           title: opts.title,

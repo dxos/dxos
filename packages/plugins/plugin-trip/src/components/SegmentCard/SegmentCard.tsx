@@ -60,7 +60,6 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
   const route = Segment.getRoute(segment);
   const date = Segment.getPrimaryDate(segment);
   const icon = Segment.kindIcon(Segment.getKind(segment));
-  const isCancelled = segment.status === 'cancelled';
 
   return (
     <Mosaic.Tile
@@ -71,10 +70,10 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
       location={location}
     >
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Card.Root fullWidth border={false} ref={forwardedRef} classNames={isCancelled ? 'opacity-40' : undefined}>
+        <Card.Root fullWidth border={false} ref={forwardedRef}>
           <Card.Toolbar>
             <Card.Icon icon={icon} />
-            <Card.Title classNames={isCancelled ? 'line-through' : undefined}>{title}</Card.Title>
+            <Card.Title>{title}</Card.Title>
             <Card.ActionIconButton action='delete' onClick={handleDelete} label={t('segment.delete.label')} />
           </Card.Toolbar>
           {(route || date) && (

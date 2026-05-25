@@ -177,7 +177,6 @@ const extractFromMessage = (ctx: ExtractCtx, message: Message.Message): Effect.E
     });
 
     const segment = Segment.make({
-      status: 'proposed',
       details: {
         _tag: 'flight',
         origin: candidate.origin,
