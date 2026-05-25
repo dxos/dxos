@@ -135,9 +135,9 @@ Real callers. These need code changes, not just a type prune.
    `conversation.dxn` is a queue DXN; the matching `Feed` object exists in
    the database (chat.feed). Replace with
    `Database.resolve(conversation.dxn, Feed.Feed)` + `Feed.runQuery(feed,
-   Filter.everything())`. *(Conversation refs in conductor are queue DXNs —
+Filter.everything())`. _(Conversation refs in conductor are queue DXNs —
    confirm the resolver works for queue DXNs or thread the feed DXN through
-   instead.)*
+   instead.)_
 2. `packages/core/compute/functions-runtime/src/triggers/trigger-dispatcher.ts:460`
    — `QueueService.getQueue(DXN.parse(spec.queue))` then `queue.queryObjects()`.
    Per `MIGRATION_PLAN.md`, the trigger dispatcher was explicitly excluded
@@ -151,7 +151,7 @@ Real callers. These need code changes, not just a type prune.
    re-modelled around `Feed`.
 4. `packages/devtools/cli/src/commands/function/trace/trace.tsx:42` —
    `const { queues } = yield* QueueService` then passed into `<Trace
-   db={db} queues={queues} ...>`. The UI uses the queue API directly.
+db={db} queues={queues} ...>`. The UI uses the queue API directly.
    Lower priority — keep for now.
 5. `packages/devtools/devtools/src/panels/edge/WorkflowPanel/WorkflowDebugPanel.tsx:243`
    — `createLocalExecutionContext` constructs a `ServiceContainer` with

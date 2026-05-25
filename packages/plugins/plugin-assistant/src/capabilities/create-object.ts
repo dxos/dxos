@@ -87,11 +87,9 @@ export default Capability.makeModule(
             });
           }).pipe(
             Effect.provide(
-              ServiceResolver.provide(
-                { space: options.db.spaceId },
-                Database.Service,
-                Feed.FeedService,
-              ).pipe(Layer.provide(Capability.asLayer(Capabilities.ServiceResolver, ServiceResolver.ServiceResolver))),
+              ServiceResolver.provide({ space: options.db.spaceId }, Database.Service, Feed.FeedService).pipe(
+                Layer.provide(Capability.asLayer(Capabilities.ServiceResolver, ServiceResolver.ServiceResolver)),
+              ),
             ),
           ),
       }),
