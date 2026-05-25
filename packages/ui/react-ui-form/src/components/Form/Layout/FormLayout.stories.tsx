@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Format, Type } from '@dxos/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Tooltip } from '@dxos/react-ui';
+import { Tooltip, useThemeContext } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -176,9 +176,10 @@ const PlaygroundStory = () => {
     setValues(next as Partial<FlightValues>);
   }, []);
 
+  const { themeMode } = useThemeContext();
   const extensions = useMemo(
-    () => [xml(), createBasicExtensions({ placeholder: 'Edit layout DSL…' }), createThemeExtensions()],
-    [],
+    () => [xml(), createBasicExtensions({ placeholder: 'Edit layout DSL…' }), createThemeExtensions({ themeMode })],
+    [themeMode],
   );
 
   return (
@@ -200,7 +201,7 @@ const PlaygroundStory = () => {
             <div className='flex flex-col h-full overflow-hidden'>
               <Editor.Root>
                 <Editor.View
-                  classNames='flex-1 overflow-auto font-mono text-sm'
+                  classNames='flex-1 overflow-auto font-mono text-sm p-2'
                   extensions={extensions}
                   value={template}
                   onChange={setTemplate}
