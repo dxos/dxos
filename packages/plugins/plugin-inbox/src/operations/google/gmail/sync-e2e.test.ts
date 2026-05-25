@@ -216,7 +216,9 @@ export const observeInvocations = async (space: Space, maxCount: number | null) 
     try {
       const traceFeed = space.properties.invocationTraceFeed?.target;
       const traceQueueDXN = traceFeed ? Feed.getQueueUri(traceFeed) : undefined;
-      const invocations = traceQueueDXN ? ((await space.queues.get(traceQueueDXN).queryObjects()) ?? []) : [];
+      const invocations = traceQueueDXN
+        ? ((await space.queues.get(traceQueueDXN, { subspaceTag: traceFeed!.namespace }).queryObjects()) ?? [])
+        : [];
 
       for (const invocation of invocations) {
         if (Obj.instanceOf(InvocationTraceStartEvent, invocation)) {
