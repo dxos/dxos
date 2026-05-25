@@ -78,14 +78,7 @@ export const DateField = ({
     <FormFieldWrapper<string> readonly={readonly} {...props}>
       {({ value }) => {
         if (isTimeOnly) {
-          return (
-            <Input.Time
-              disabled={!!readonly}
-              value={value ?? ''}
-              onChange={handleTimeChange}
-              onBlur={onBlur}
-            />
-          );
+          return <Input.Time disabled={!!readonly} value={value ?? ''} onChange={handleTimeChange} onBlur={onBlur} />;
         }
 
         const date = isDateOnly ? parseDateOnly(value) : parseDateTime(value);
