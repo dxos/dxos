@@ -152,7 +152,7 @@ export const FormFieldWrapper = <T,>(props: FormFieldWrapperProps<T>) => {
         ) : children ? (
           children({ value })
         ) : null}
-        {layout === 'full' && (
+        {layout === 'full' && error && (
           <Input.DescriptionAndValidation>
             <Input.Validation>{error}</Input.Validation>
           </Input.DescriptionAndValidation>

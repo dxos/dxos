@@ -22,8 +22,10 @@ export const PLACES: Record<string, PlaceType> = {
   CDG: { name: 'Paris-Charles de Gaulle', code: 'CDG', city: 'Paris', country: 'FR', geo: [2.5479, 49.0097] },
   BHX: { name: 'Birmingham Airport', code: 'BHX', city: 'Birmingham', country: 'GB', geo: [-1.748, 52.4539] },
   SIN: { name: 'Singapore Changi', code: 'SIN', city: 'Singapore', country: 'SG', geo: [103.9915, 1.3644] },
-  LTV: { name: 'Luton Airport Parkway', code: 'LTV', city: 'Luton', country: 'GB', geo: [-0.4147, 51.8794] },
+  LTV: { name: 'Lichfield Trent Valley', code: 'LTV', city: 'Lichfield', country: 'GB', geo: [-1.8044, 52.6841] },
   EUS: { name: 'London Euston', code: 'EUS', city: 'London', country: 'GB', geo: [-0.1335, 51.5285] },
+  STP: { name: 'London St Pancras International', code: 'STP', city: 'London', country: 'GB', geo: [-0.1264, 51.5320] },
+  PAR_NORD: { name: 'Paris Gare du Nord', code: 'PAR', city: 'Paris', country: 'FR', geo: [2.3553, 48.8809] },
 };
 
 type FlightOptions = {

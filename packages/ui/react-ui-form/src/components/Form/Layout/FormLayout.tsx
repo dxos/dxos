@@ -97,7 +97,7 @@ type RenderNodeProps = Omit<FormLayoutProps, 'schema' | 'template' | 'path'> & {
 const RenderNode = ({ node, properties, basePath, ...props }: RenderNodeProps) => {
   if (node.kind === 'grid') {
     return (
-      <div className='grid gap-form-gap' style={{ gridTemplateColumns: `repeat(${node.cols}, minmax(0, 1fr))` }}>
+      <div className='grid gap-x-form-gap' style={{ gridTemplateColumns: `repeat(${node.cols}, minmax(0, 1fr))` }}>
         {node.children.map((child, index) => (
           <Fragment key={index}>
             <RenderNode node={child} properties={properties} basePath={basePath} {...props} />

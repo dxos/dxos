@@ -127,13 +127,14 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
     }, [segments]);
 
     // Tour through itinerary points.
-    const tourPoints = useMemo(
-      () =>
-        segments
-          .flatMap((seg) => segmentPoints(seg))
-          .filter((p, i, arr) => arr.findIndex((q) => sameLatLng(p, q)) === i),
-      [segments],
-    );
+    // Dedupe only *consecutive* duplicates so hub revisits are preserved — e.g.
+    // a trip with legs CDG→BHX, EUS→CDG, CDG→SIN should fly the camera CDG → BHX
+    // → LTV → EUS → CDG → SIN, not skip the second CDG just because it appeared
+    // earlier in the itinerary.
+    const tourPoints = useMemo(() => {
+      const points = segments.flatMap((seg) => segmentPoints(seg));
+      return points.filter((point, index) => index === 0 || !sameLatLng(point, points[index - 1]));
+    }, [segments]);
     const [tourRunning, setTourRunning] = useTour(controller, tourPoints, { loop: true });
 
     // Recenter the globe on the selected segment's first geo-tagged point
