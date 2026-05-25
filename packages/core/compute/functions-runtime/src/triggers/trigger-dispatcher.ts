@@ -29,8 +29,8 @@ import { failedInvariant, invariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { createInvocationPayload } from './input-builder';
 import { filterReadyFeedItems } from './feed-position';
+import { createInvocationPayload } from './input-builder';
 import { type TriggerState, TriggerStateStore } from './trigger-state-store';
 
 export type TimeControl = 'natural' | 'manual';
@@ -404,10 +404,9 @@ class TriggerDispatcherImpl implements Context.Tag.Service<TriggerDispatcher> {
       return triggerExecutionResult;
     }).pipe(Effect.provide(this._services));
 
-  invokeScheduledTriggers = ({
-    kinds = ['timer', 'feed', 'subscription'],
-    untilExhausted = false,
-  } = {}): Effect.Effect<TriggerExecutionResult[]> =>
+  invokeScheduledTriggers = ({ kinds = ['timer', 'feed', 'subscription'], untilExhausted = false } = {}): Effect.Effect<
+    TriggerExecutionResult[]
+  > =>
     Effect.gen(this, function* () {
       yield* this.refreshTriggers();
       const invocations: TriggerExecutionResult[] = [];
