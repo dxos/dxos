@@ -19892,6 +19892,9 @@ importers:
 
   packages/ui/react-ui-form:
     dependencies:
+      '@codemirror/lang-xml':
+        specifier: 'catalog:'
+        version: 6.1.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async

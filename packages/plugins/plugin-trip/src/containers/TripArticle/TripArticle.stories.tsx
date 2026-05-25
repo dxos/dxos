@@ -68,7 +68,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   decorators: baseDecorators((space) => {
-    // NYC → CDG, CDG → BHX, LTV → EUS → CDG (train), CDG → SIN, SIN → CDG, CDG → NYC.
+    // NYC → CDG, CDG → BHX, LTV → EUS, STP → Paris Nord (Eurostar), CDG → SIN, SIN → CDG, CDG → NYC.
     const { trip, segments, bookings } = new TripBuilder()
       .addFlight({
         from: PLACES.JFK,
@@ -101,8 +101,8 @@ export const Default: Story = {
         trainNumber: 'TL 9F32',
       })
       .addTrain({
-        from: PLACES.EUS,
-        to: PLACES.CDG,
+        from: PLACES.STP,
+        to: PLACES.PAR_NORD,
         daysFromNow: 4,
         departHour: 11,
         durationHours: 3,
