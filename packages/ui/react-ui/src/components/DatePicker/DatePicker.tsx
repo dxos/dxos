@@ -144,10 +144,12 @@ export type DatePickerTriggerProps = ThemedClassName<Omit<ComponentPropsWithoutR
   PropsWithChildren<{
     format?: string;
     placeholder?: string;
+    /** Show the leading calendar icon in the default trigger. Defaults to true. */
+    icon?: boolean;
   }>;
 
 const DatePickerTrigger = forwardRef<HTMLButtonElement, DatePickerTriggerProps>(
-  ({ classNames, format: fmt = 'PPP', placeholder, children, ...props }, forwardedRef) => {
+  ({ classNames, format: fmt = 'PPP', placeholder, icon = true, children, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { t } = useTranslation(translationKey);
     const { mode, value } = useDatePickerContext('DatePickerTrigger');
@@ -166,7 +168,7 @@ const DatePickerTrigger = forwardRef<HTMLButtonElement, DatePickerTriggerProps>(
         >
           {children ?? (
             <>
-              <Icon size={4} icon='ph--calendar--regular' />
+              {icon && <Icon size={4} icon='ph--calendar--regular' />}
               {label}
             </>
           )}

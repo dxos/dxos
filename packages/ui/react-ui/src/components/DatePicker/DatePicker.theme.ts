@@ -11,7 +11,7 @@ export type DatePickerStyleProps = Partial<{
 
 const trigger: ComponentFunction<DatePickerStyleProps> = ({ hasValue }, ...etc) =>
   mx(
-    'inline-flex items-center gap-2 h-9 px-3 rounded-sm border border-separator',
+    'inline-flex w-fit items-center gap-2 px-2 rounded-sm border border-separator',
     'bg-input-surface text-base-foreground',
     'hover:bg-hover-surface focus-visible:outline-2 focus-visible:outline-primary-500',
     !hasValue && 'text-description',
