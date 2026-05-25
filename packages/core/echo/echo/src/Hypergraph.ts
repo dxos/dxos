@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type EchoURI, type URI } from '@dxos/keys';
+import { type URI } from '@dxos/keys';
 
 import type * as Database from './Database';
 import type * as Entity from './Entity';
@@ -22,10 +22,10 @@ export interface RefResolutionContext {
   space?: Key.SpaceId;
 
   /**
-   * Feed that the resolution is happening from (as an EchoURI).
+   * Feed that the resolution is happening from.
    * This feed will be searched first, and then the space it belongs to.
    */
-  feed?: EchoURI.EchoURI;
+  feed?: URI.URI;
 }
 
 export interface RefResolverOptions {
