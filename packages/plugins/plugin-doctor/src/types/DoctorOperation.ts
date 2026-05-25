@@ -158,6 +158,7 @@ export const QueryComposerLogs = Operation.make({
   meta: {
     key: 'org.dxos.function.doctor.query-composer-logs',
     name: 'Query Composer Logs',
+    icon: 'ph--magnifying-glass--regular',
     description: trim`
       Query the local browser tab's own NDJSON log store (the one populated by
       @dxos/log-store-idb). Use this when the user reports a bug, an unexpected

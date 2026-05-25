@@ -36,6 +36,7 @@ export const GetDiscordChannels = Operation.make({
     key: `${DISCORD_OPERATION}.get-discord-channels`,
     name: 'Get Discord Channels',
     description: 'List Discord text channels reachable from an integration without materializing local Channels.',
+    icon: 'ph--hash--regular',
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -58,6 +59,7 @@ export const SyncDiscordChannel = Operation.make({
     key: `${DISCORD_OPERATION}.sync-discord-channel`,
     name: 'Sync Discord Channel',
     description: 'Reconcile messages for currently-selected Discord targets in an Integration.',
+    icon: 'ph--arrows-clockwise--regular',
   },
   services: [Capability.Service],
   input: Schema.Struct({

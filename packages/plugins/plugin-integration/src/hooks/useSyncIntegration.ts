@@ -5,7 +5,7 @@
 import { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { Ref } from '@dxos/echo';
+import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 import { useIntegrationProvider } from '#hooks';
@@ -44,9 +44,13 @@ export const useSyncIntegration = (integration: Integration.Integration | undefi
     }
     setSyncing(true);
     try {
-      const result = await invokePromise(provider.sync, {
-        integration: Ref.make(integration),
-      });
+      const result = await invokePromise(
+        provider.sync,
+        {
+          integration: Ref.make(integration),
+        },
+        { spaceId: Obj.getDatabase(integration)?.spaceId },
+      );
       if (result.error) {
         throw result.error;
       }

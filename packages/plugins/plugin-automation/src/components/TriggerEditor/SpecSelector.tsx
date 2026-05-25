@@ -6,7 +6,6 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Trigger } from '@dxos/compute';
 import { Filter, Query } from '@dxos/echo';
-import { EchoURI, ObjectId } from '@dxos/keys';
 import { useTranslation } from '@dxos/react-ui';
 import { type FormFieldComponentProps, SelectField, useFormFieldState } from '@dxos/react-ui-form';
 
@@ -26,9 +25,8 @@ export const SpecSelector = (props: SpecSelectorProps) => {
             return Trigger.specTimer('');
           case 'subscription':
             return Trigger.specSubscription(Query.select(Filter.nothing()));
-          case 'queue':
-            // Placeholder URI — replaced once the user selects a real queue in the form.
-            return Trigger.specQueue(EchoURI.make({ objectId: ObjectId.random() }));
+          case 'feed':
+            return { kind: 'feed' } satisfies Trigger.FeedSpec;
           case 'email':
             return Trigger.specEmail();
           case 'webhook':
@@ -55,7 +53,7 @@ export const SpecSelector = (props: SpecSelectorProps) => {
     websocket: t('trigger-type.websocket.label'),
     subscription: t('trigger-type.subscription.label'),
     email: t('trigger-type.email.label'),
-    queue: t('trigger-type.queue.label'),
+    feed: t('trigger-type.feed.label'),
   };
 
   const options = useMemo(

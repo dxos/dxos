@@ -7,7 +7,6 @@ exports[`jsonata > evaluates expression with trigger event > input as expression
     "name": "John",
     "value": "nested",
   },
-  "queue": "echo://BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE/01J00J9B45YHYSGZQTQMSKMGJ6",
   "ref": {
     "/": "echo:/01KD35WMWTEEE1WQQPYEGD1X2B",
   },
@@ -22,7 +21,6 @@ exports[`jsonata > evaluates expression with trigger event > input templating 1`
     "name": "John",
     "value": "nested",
   },
-  "queue": "echo://BA25QRC2FEWCSAMRP4RZL65LWJ7352CKE/01J00J9B45YHYSGZQTQMSKMGJ6",
   "ref": {
     "/": "echo:/01KD35WMWTEEE1WQQPYEGD1X2B",
     "target": {

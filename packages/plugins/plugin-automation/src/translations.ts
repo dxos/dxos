@@ -42,7 +42,7 @@ export const translations = [
         'trigger-type.websocket.label': 'Websocket',
         'trigger-type.subscription.label': 'Subscription',
         'trigger-type.email.label': 'Email',
-        'trigger-type.queue.label': 'Feed',
+        'trigger-type.feed.label': 'Feed',
 
         'trigger-payload-prop-name.placeholder': 'New payload property name',
         'import-function-button.label': 'Loading...',

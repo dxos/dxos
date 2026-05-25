@@ -19,7 +19,7 @@ const COLLECTION_OPERATION = 'org.dxos.plugin.collection.operation';
 
 export namespace CollectionOperation {
   export const Create = Operation.make({
-    meta: { key: `${COLLECTION_OPERATION}.create`, name: 'Create Collection' },
+    meta: { key: `${COLLECTION_OPERATION}.create`, name: 'Create Collection', icon: 'ph--folder--regular' },
     services: [Capability.Service],
     input: Schema.Struct({
       name: Schema.optional(Schema.String),
@@ -41,6 +41,7 @@ export namespace SpaceOperation {
       key: `${SPACE_OPERATION}.create`,
       name: 'Create Space',
       description: 'Create a new space.',
+      icon: 'ph--plus--regular',
     },
     services: [Capability.Service, Plugin.Service],
     input: SpaceForm,
@@ -56,6 +57,7 @@ export namespace SpaceOperation {
       key: `${SPACE_OPERATION}.join`,
       name: 'Join Space',
       description: 'Join a space via invitation.',
+      icon: 'ph--sign-in--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -70,6 +72,7 @@ export namespace SpaceOperation {
       key: `${SPACE_OPERATION}.open`,
       name: 'Open Space',
       description: 'Open a space.',
+      icon: 'ph--arrow-square-out--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -83,6 +86,7 @@ export namespace SpaceOperation {
       key: `${SPACE_OPERATION}.close`,
       name: 'Close Space',
       description: 'Close a space.',
+      icon: 'ph--x-circle--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -96,6 +100,7 @@ export namespace SpaceOperation {
       key: `${SPACE_OPERATION}.share`,
       name: 'Share Space',
       description: 'Share a space.',
+      icon: 'ph--share-network--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -113,6 +118,7 @@ export namespace SpaceOperation {
       key: `${SPACE_OPERATION}.open-settings`,
       name: 'Open Space Settings',
       description: 'Open space settings.',
+      icon: 'ph--gear--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -126,6 +132,7 @@ export namespace SpaceOperation {
       key: `${SPACE_OPERATION}.wait-for-object`,
       name: 'Wait For Object',
       description: 'Wait for an object to be available.',
+      icon: 'ph--clock-countdown--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -139,6 +146,7 @@ export namespace SpaceOperation {
       key: `${SPACE_OPERATION}.add-object`,
       name: 'Add Object',
       description: 'Add an object to a space.',
+      icon: 'ph--plus--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -174,6 +182,7 @@ export namespace SpaceOperation {
       key: `${SPACE_OPERATION}.remove-objects`,
       name: 'Remove Objects',
       description: 'Remove objects from a space.',
+      icon: 'ph--trash--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -197,6 +206,7 @@ export namespace SpaceOperation {
       key: `${SPACE_OPERATION}.delete-field`,
       name: 'Delete Field',
       description: 'Delete a field from a view.',
+      icon: 'ph--minus-circle--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -211,6 +221,7 @@ export namespace SpaceOperation {
       key: `${SPACE_OPERATION}.open-create-object`,
       name: 'Open Create Object Dialog',
       description: 'Open the create object dialog.',
+      icon: 'ph--plus--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -235,6 +246,7 @@ export namespace SpaceOperation {
       key: `${SPACE_OPERATION}.open-create-space`,
       name: 'Open Create Space Dialog',
       description: 'Open the create space dialog.',
+      icon: 'ph--plus--regular',
     },
     services: [Capability.Service],
     input: Schema.Void,
@@ -246,6 +258,7 @@ export namespace SpaceOperation {
       key: `${SPACE_OPERATION}.open-import-space`,
       name: 'Open Import Space Dialog',
       description: 'Open the import space dialog to create a new space from a backup.',
+      icon: 'ph--download--regular',
     },
     services: [Capability.Service],
     input: Schema.Void,
@@ -257,6 +270,7 @@ export namespace SpaceOperation {
       key: `${SPACE_OPERATION}.import-space`,
       name: 'Import Space',
       description: 'Import a space archive as a new space.',
+      icon: 'ph--upload--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -276,6 +290,7 @@ export namespace SpaceOperation {
       key: `${SPACE_OPERATION}.export-space`,
       name: 'Export Space',
       description: 'Export a space as a backup and download the archive.',
+      icon: 'ph--download--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -290,6 +305,7 @@ export namespace SpaceOperation {
       key: `${SPACE_OPERATION}.migrate`,
       name: 'Migrate Space',
       description: 'Migrate a space to a new version.',
+      icon: 'ph--arrows-clockwise--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -304,6 +320,7 @@ export namespace SpaceOperation {
       key: `${SPACE_OPERATION}.snapshot`,
       name: 'Create Snapshot',
       description: 'Create a snapshot of the space.',
+      icon: 'ph--camera--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -320,6 +337,7 @@ export namespace SpaceOperation {
       key: `${SPACE_OPERATION}.rename`,
       name: 'Rename Space',
       description: 'Rename a space.',
+      icon: 'ph--pencil-simple--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -334,6 +352,7 @@ export namespace SpaceOperation {
       key: `${SPACE_OPERATION}.rename-object`,
       name: 'Rename Object',
       description: 'Rename an object.',
+      icon: 'ph--pencil-simple--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -348,6 +367,7 @@ export namespace SpaceOperation {
       key: `${SPACE_OPERATION}.open-members`,
       name: 'Open Members',
       description: 'Open the members panel for a space.',
+      icon: 'ph--users--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -361,6 +381,7 @@ export namespace SpaceOperation {
       key: `${SPACE_OPERATION}.get-share-link`,
       name: 'Get Share Link',
       description: 'Get a shareable link for a space.',
+      icon: 'ph--link--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -380,6 +401,7 @@ export namespace SpaceOperation {
       key: `${SPACE_OPERATION}.add-schema`,
       name: 'Add Schema',
       description: 'Add a schema to the space.',
+      icon: 'ph--code--regular',
     },
     services: [Capability.Service, Plugin.Service],
     input: Schema.Struct({
@@ -403,6 +425,7 @@ export namespace SpaceOperation {
       key: `${SPACE_OPERATION}.add-relation`,
       name: 'Add Relation',
       description: 'Add a relation between objects.',
+      icon: 'ph--link--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -425,6 +448,7 @@ export namespace SpaceOperation {
       key: `${SPACE_OPERATION}.duplicate-object`,
       name: 'Duplicate Object',
       description: 'Duplicate an object.',
+      icon: 'ph--file--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -442,6 +466,7 @@ export namespace SpaceOperation {
       key: `${SPACE_OPERATION}.restore-field`,
       name: 'Restore Field',
       description: 'Restore a deleted field to a view.',
+      icon: 'ph--clock-counter-clockwise--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -463,6 +488,7 @@ export namespace SpaceOperation {
       key: `${SPACE_OPERATION}.reset`,
       name: 'Reset Space',
       description: 'Permanently delete all objects and feeds in a space.',
+      icon: 'ph--warning--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({
@@ -479,6 +505,7 @@ export namespace SpaceOperation {
       key: `${SPACE_OPERATION}.restore-objects`,
       name: 'Restore Objects',
       description: 'Restore deleted objects to a space.',
+      icon: 'ph--clock-counter-clockwise--regular',
     },
     services: [Capability.Service],
     input: Schema.Struct({

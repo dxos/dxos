@@ -29,7 +29,7 @@ export const NotebookProps = Schema.Struct({
 });
 
 export const CreateScript = Operation.make({
-  meta: { key: `${SCRIPT_OPERATION}.create-script`, name: 'Create Script' },
+  meta: { key: `${SCRIPT_OPERATION}.create-script`, name: 'Create Script', icon: 'ph--code--regular' },
   input: Schema.extend(
     ScriptProps,
     Schema.Struct({

@@ -72,12 +72,10 @@ describe('Trace timeline', () => {
             ├──●  [user] Create an organization called "Cyberdyne Systems".
             │  ●  [function] List schemas - Success
             │  ●  [function] Create object - Success
-            │  ●  [function] Add to context - Success
             ◆──╯  [atom] Agent completed request
             ●  │  [atom] Agent processing request...
             │  ●  [user] Create a person named "John Connor".
             │  ●  [function] Create object - Success
-            │  ●  [function] Add to context - Success
             ◆──╯  [atom] Agent completed request
             "
           `);
@@ -197,7 +195,7 @@ describe('Trace timeline', () => {
 
           const dispatcher = yield* TriggerDispatcher;
           yield* dispatcher
-            .invokeScheduledTriggers({ kinds: ['queue'], untilExhausted: true })
+            .invokeScheduledTriggers({ kinds: ['feed'], untilExhausted: true })
             .pipe(Effect.flatMap(Effect.forEach((result) => result.result)));
 
           const messages = yield* queryTraceMessages;

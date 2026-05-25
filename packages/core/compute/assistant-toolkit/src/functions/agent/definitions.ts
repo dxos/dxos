@@ -17,6 +17,7 @@ export const AgentPrompt = Operation.make({
     key: 'org.dxos.function.prompt',
     name: 'Run Routine',
     description: 'Agentic worker that executes a provided prompt using blueprints and tools.',
+    icon: 'ph--brain--regular',
   },
   input: Schema.Struct({
     prompt: Ref.Ref(Routine.Routine),

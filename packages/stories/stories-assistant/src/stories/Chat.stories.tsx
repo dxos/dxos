@@ -766,7 +766,7 @@ export const WithResearchQueue: Story = {
         Trigger.make({
           function: Ref.make(Operation.serialize(AgentPrompt)),
           enabled: true,
-          spec: Trigger.specQueue(Feed.getQueueUri(feed)!.toString()),
+          spec: Trigger.specFeed(feed),
           input: {
             prompt: Ref.make(researchPrompt),
             input: '{{event.item}}',

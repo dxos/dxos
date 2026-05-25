@@ -57,10 +57,14 @@ export default Capability.makeModule(
             {
               id: 'trello-sync-this-board',
               data: () =>
-                Operation.invoke(TrelloOperation.SyncTrelloBoard, {
-                  integration: Ref.make(integration),
-                  kanban: Ref.make(kanban),
-                }),
+                Operation.invoke(
+                  TrelloOperation.SyncTrelloBoard,
+                  {
+                    integration: Ref.make(integration),
+                    kanban: Ref.make(kanban),
+                  },
+                  { spaceId: db.spaceId },
+                ),
               properties: {
                 label: ['sync-this-board.label', { ns: meta.id }],
                 icon: 'ph--arrows-clockwise--regular',

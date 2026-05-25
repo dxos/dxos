@@ -191,7 +191,7 @@ describe('Agent', () => {
         );
 
         const dispatcher = yield* TriggerDispatcher;
-        const invocations = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'], untilExhausted: true });
+        const invocations = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'], untilExhausted: true });
         expect(invocations.every((invocation) => Exit.isSuccess(invocation.result))).toBe(true);
 
         console.log(yield* Effect.promise(() => dumpAgent(agent)));
