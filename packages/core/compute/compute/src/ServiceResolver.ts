@@ -158,7 +158,7 @@ export const layerRequirements = <const Tags extends readonly Context.Tag<any, a
  * @example
  * ```ts
  * processManagerRuntime.runPromise(
- *   myEffect.pipe(Effect.provide(ServiceResolver.provide({ space }, Database.Service, QueueService))),
+ *   myEffect.pipe(Effect.provide(ServiceResolver.provide({ space }, Database.Service, Feed.FeedService))),
  * );
  * ```
  */
