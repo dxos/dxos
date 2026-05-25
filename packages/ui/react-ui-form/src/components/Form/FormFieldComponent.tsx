@@ -17,6 +17,7 @@ import { type Database } from '@dxos/echo';
 import { type Format } from '@dxos/echo/internal';
 import { Icon, Input, Tooltip } from '@dxos/react-ui';
 import { inputTextLabel } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { type FormFieldStatus } from '../../hooks';
 import { useFormTooltips } from './FormTooltipsContext';
@@ -101,7 +102,8 @@ export const FormFieldLabel = ({ label, error, readonly, asChild, path }: FormFi
   // `runtime.client.storage.persistent`). Wrapping with `Tooltip.Trigger
   // asChild` keeps the underlying `Input.Label` (or `span`) intact so form
   // semantics and label-for-input linking are unchanged.
-  const labelNode = <Label className={inputTextLabel}>{label}</Label>;
+  // Form labels are denser than free-standing Input.Label uses elsewhere; downsize to text-xs.
+  const labelNode = <Label className={mx(inputTextLabel, 'text-xs')}>{label}</Label>;
   return (
     <div className='flex items-center justify-between'>
       {tooltips && path ? (
