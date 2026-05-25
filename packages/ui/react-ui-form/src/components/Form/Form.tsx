@@ -37,6 +37,7 @@ import {
   type FormFieldSetProps as NaturalFormFieldSetProps,
 } from './FormFieldSet';
 import { FormTooltipsContext } from './FormTooltipsContext';
+import { FormLayout } from './Layout';
 
 // TODO(burdon): Move styles to form.ts (as with ui-theme).
 
@@ -374,6 +375,7 @@ export const Form = {
   Content: FormContent,
   Section: FormSection,
   FieldSet: FormFieldSet,
+  Layout: FormLayout,
   Label: FormFieldLabel,
   Actions: FormActions,
   Submit: FormSubmit,

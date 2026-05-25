@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import React, { useMemo } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
@@ -12,6 +13,7 @@ import { getFormProperties } from '../../util';
 import { useFormValues } from './Form';
 import { FormField, type FormFieldProps } from './FormField';
 import { FormFieldErrorBoundary, FormFieldLabel } from './FormFieldComponent';
+import { FormLayout, FormLayoutAnnotation } from './Layout';
 
 const FORM_FIELDSET_NAME = 'Form.FieldSet';
 
@@ -58,6 +60,26 @@ export const FormFieldSet = ({
   const properties = useFormFieldSetProperties({ schema, values, exclude, sort, projection });
   if ((readonly || layout === 'static') && values == null) {
     return null;
+  }
+
+  // If the schema carries a layout template, hand off to <Form.Layout/> which renders the DSL.
+  // Linear rendering still runs when no annotation is present, so existing call sites are unchanged.
+  const template = schema ? Option.getOrUndefined(FormLayoutAnnotation.get(schema)) : undefined;
+  if (template !== undefined && schema) {
+    return (
+      <>
+        {layout !== 'inline' && label && <FormFieldLabel label={label} path={createJsonPath(path ?? [])} asChild />}
+        <FormLayout
+          schema={schema}
+          template={template}
+          path={path}
+          readonly={readonly}
+          layout={layout}
+          projection={projection}
+          {...props}
+        />
+      </>
+    );
   }
 
   return (
