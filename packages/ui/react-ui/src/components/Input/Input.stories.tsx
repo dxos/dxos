@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useRef } from 'react';
+import React, { useRef } from 'react';
 
 import { type MessageValence } from '@dxos/ui-types';
 
@@ -271,47 +271,6 @@ export const TextInputTypes: Story = {
           <Input.TextInput type={type} placeholder={placeholder} />
         </Input.Root>
       ))}
-    </div>
-  ),
-};
-
-/**
- * Single `datetime-local` input that auto-focuses and re-invokes
- * `showPicker()` on every focus so the native picker pops open as soon
- * as the story mounts. Browsers don't expose a way to lock the picker
- * permanently open — this is the closest approximation for visual
- * inspection of the native picker UI.
- */
-const DateTimeLocalPickerOpen = () => {
-  const ref = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) {
-      return;
-    }
-    const open = () => {
-      try {
-        el.showPicker?.();
-      } catch {
-        // Some browsers reject showPicker() if not user-initiated; ignore.
-      }
-    };
-    el.addEventListener('focus', open);
-    el.focus();
-    return () => el.removeEventListener('focus', open);
-  }, []);
-  return (
-    <Input.Root>
-      <Input.Label>{'type="datetime-local"'}</Input.Label>
-      <Input.TextInput ref={ref} type='datetime-local' />
-    </Input.Root>
-  );
-};
-
-export const DateTimeLocalPicker: Story = {
-  render: () => (
-    <div className='min-w-[24rem]'>
-      <DateTimeLocalPickerOpen />
     </div>
   ),
 };

@@ -6,7 +6,7 @@ import { format as formatDate } from 'date-fns';
 import React, { type ChangeEvent, useCallback } from 'react';
 
 import { Format } from '@dxos/echo';
-import { DatePicker, Input } from '@dxos/react-ui';
+import { Input } from '@dxos/react-ui';
 
 import { type FormFieldComponentProps, FormFieldWrapper } from '../FormFieldComponent';
 
@@ -15,45 +15,33 @@ import { type FormFieldComponentProps, FormFieldWrapper } from '../FormFieldComp
  * - `Format.DateTime` -> ISO 8601 (`2018-11-13T20:20:39.000Z`).
  * - `Format.Date`     -> `YYYY-MM-DD`.
  * - `Format.Time`     -> `HH:mm:ss`.
+ *
+ * Native input value shapes:
+ * - `<input type='datetime-local'>` -> `YYYY-MM-DDTHH:mm` in local time.
+ * - `<input type='date'>`           -> `YYYY-MM-DD`.
+ * - `<input type='time'>`           -> `HH:mm`.
  */
 
-const parseDateTime = (value: string | undefined): Date | undefined => {
+/** ISO 8601 → `YYYY-MM-DDTHH:mm` in the user's local timezone. */
+const isoToLocalDateTime = (value: string | undefined): string => {
   if (!value) {
-    return undefined;
+    return '';
   }
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? undefined : date;
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+  return formatDate(date, "yyyy-MM-dd'T'HH:mm");
 };
 
-const parseDateOnly = (value: string | undefined): Date | undefined => {
+/** `YYYY-MM-DDTHH:mm` (local) → ISO 8601 with timezone. */
+const localDateTimeToIso = (value: string): string | undefined => {
   if (!value) {
     return undefined;
   }
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-  if (!match) {
-    return undefined;
-  }
-  const year = Number(match[1]);
-  const month = Number(match[2]);
-  const day = Number(match[3]);
-  const date = new Date(year, month - 1, day);
-  // Reject impossible calendar dates (e.g. 2026-02-31) which Date() would otherwise silently shift.
-  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
-    return undefined;
-  }
-  return date;
-};
-
-const encodeDateOnly = (date: Date | undefined): string | undefined =>
-  date ? formatDate(date, 'yyyy-MM-dd') : undefined;
-
-const encodeDateTime = (date: Date | undefined): string | undefined => date?.toISOString();
-
-const applyHoursMinutes = (date: Date | undefined, hhmm: string): Date => {
-  const [h, m] = hhmm.split(':').map((part) => Number.parseInt(part, 10));
-  const next = date ? new Date(date) : new Date();
-  next.setHours(Number.isFinite(h) ? h : 0, Number.isFinite(m) ? m : 0, 0, 0);
-  return next;
+  // Treat the input as local time. `new Date('YYYY-MM-DDTHH:mm')` parses as local.
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
 };
 
 export const DateField = ({
@@ -65,49 +53,60 @@ export const DateField = ({
   onBlur,
   ...props
 }: FormFieldComponentProps<string>) => {
-  const isDateOnly = format === Format.TypeFormat.Date;
-  const isTimeOnly = format === Format.TypeFormat.Time;
+  const handleDateOnlyChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => onValueChange(type, event.target.value),
+    [type, onValueChange],
+  );
 
   const handleTimeChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>) => onValueChange(type, event.target.value),
     [type, onValueChange],
   );
 
-  const handleDateChange = useCallback(
-    (next: Date | undefined) => {
-      const encoded = isDateOnly ? encodeDateOnly(next) : encodeDateTime(next);
-      onValueChange(type, encoded as string);
+  const handleDateTimeChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const iso = localDateTimeToIso(event.target.value);
+      onValueChange(type, iso as string);
     },
-    [type, isDateOnly, onValueChange],
+    [type, onValueChange],
   );
 
   return (
     <FormFieldWrapper<string> readonly={readonly} {...props}>
       {({ value }) => {
-        if (isTimeOnly) {
-          return <Input.Time disabled={!!readonly} value={value ?? ''} onChange={handleTimeChange} onBlur={onBlur} />;
+        switch (format) {
+          case Format.TypeFormat.Date:
+            return (
+              <Input.Date
+                disabled={!!readonly}
+                placeholder={placeholder}
+                value={value ?? ''}
+                onChange={handleDateOnlyChange}
+                onBlur={onBlur}
+              />
+            );
+          case Format.TypeFormat.Time:
+            return (
+              <Input.Time
+                disabled={!!readonly}
+                placeholder={placeholder}
+                value={value ?? ''}
+                onChange={handleTimeChange}
+                onBlur={onBlur}
+              />
+            );
+          case Format.TypeFormat.DateTime:
+          default:
+            return (
+              <Input.DateTime
+                disabled={!!readonly}
+                placeholder={placeholder}
+                value={isoToLocalDateTime(value)}
+                onChange={handleDateTimeChange}
+                onBlur={onBlur}
+              />
+            );
         }
-
-        const date = isDateOnly ? parseDateOnly(value) : parseDateTime(value);
-        const triggerFormat = isDateOnly ? 'PPP' : 'PPp';
-        const withTime = !isDateOnly;
-
-        return (
-          <DatePicker.Root mode='single' withTime={withTime} value={date} onValueChange={handleDateChange}>
-            <DatePicker.Trigger disabled={!!readonly} placeholder={placeholder} format={triggerFormat} />
-            <DatePicker.Content>
-              <DatePicker.Calendar />
-              {withTime && (
-                <Input.Root>
-                  <Input.Time
-                    value={date ? formatDate(date, 'HH:mm') : ''}
-                    onChange={(event) => handleDateChange(applyHoursMinutes(date, event.target.value))}
-                  />
-                </Input.Root>
-              )}
-            </DatePicker.Content>
-          </DatePicker.Root>
-        );
       }}
     </FormFieldWrapper>
   );

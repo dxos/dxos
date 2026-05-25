@@ -307,6 +307,7 @@ Date_.displayName = 'Input.Date';
 
 type DateTimeInputProps = DateInputProps;
 
+// TODO(burdon): Use DatePicker.
 const DateTime = forwardRef<HTMLInputElement, InputScopedProps<DateTimeInputProps>>(
   (
     { __inputScope, classNames, density: densityProp, elevation: elevationProp, variant, icon = true, ...props },
