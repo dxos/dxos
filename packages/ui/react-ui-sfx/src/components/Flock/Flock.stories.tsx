@@ -117,7 +117,7 @@ const initializeCircleRandom = (
     const y = 200 * Math.cos(angle);
     return {
       position: new Vec2(x + width / 2, y + height / 2),
-      velocity: randomVelocity({ maxVelocity }).scale(maxVelocity),
+      velocity: randomVelocity({ maxVelocity }),
     };
   });
 
@@ -270,7 +270,8 @@ const tick = (
     const { coloring } = config;
     if (coloring === 'Movement') {
       const last = b1.last ?? (b1.last = []);
-      last.push(b1.acceleration.length() / (alignment + cohesion + separation));
+      const sum = alignment + cohesion + separation;
+      last.push(sum > 0 ? b1.acceleration.length() / sum : 0);
       if (last.length > 20) {
         last.shift();
       }
@@ -364,7 +365,7 @@ const Flock = () => {
       setObstacles(generateObstacles({ width, height }, { numObstacles }));
       setBoids(generateBoids({ width, height }, { num, startingPosition, maxVelocity }));
     }
-  }, [width, height, num, numObstacles, startingPosition]);
+  }, [width, height, num, numObstacles, startingPosition, maxVelocity]);
 
   useEffect(() => {
     if (!canvas.current || !buffer.current || !width || !height) {

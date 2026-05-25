@@ -35,6 +35,9 @@ export class Vec2 {
 
   scaleTo(s: number): this {
     const length = this.length();
+    if (length === 0) {
+      return this;
+    }
     this.x = (this.x * s) / length;
     this.y = (this.y * s) / length;
     return this;
@@ -42,6 +45,9 @@ export class Vec2 {
 
   normalize(): this {
     const length = this.length();
+    if (length === 0) {
+      return this;
+    }
     this.x /= length;
     this.y /= length;
     return this;
