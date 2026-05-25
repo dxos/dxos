@@ -178,7 +178,11 @@ const PlaygroundStory = () => {
 
   const { themeMode } = useThemeContext();
   const extensions = useMemo(
-    () => [xml(), createBasicExtensions({ placeholder: 'Edit layout DSL…' }), createThemeExtensions({ themeMode })],
+    () => [
+      xml(),
+      createBasicExtensions({ placeholder: 'Edit layout DSL…' }),
+      createThemeExtensions({ themeMode, syntaxHighlighting: true }),
+    ],
     [themeMode],
   );
 
