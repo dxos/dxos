@@ -964,7 +964,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     const obj: Partial<ObjectJSON> = {
       id: target[symbolInternals].core.id,
-      [ATTR_TYPE]: typeRef ? (DXN.tryMake(EncodedReference.toURI(typeRef)) ?? EncodedReference.toURI(typeRef)) : undefined,
+      [ATTR_TYPE]: typeRef ? EncodedReference.toURI(typeRef) : undefined,
       [ATTR_META]: { ...this.getMeta(target) } as ObjectMetaJSON,
     };
 
