@@ -24,7 +24,7 @@ export const Dream = Schema.Struct({
     icon: 'ph--moon-stars--regular',
     hue: 'violet',
   }),
-  Type.object(DXN.make('dxos.org.type.Dream', '0.1.0')),
+  Type.makeObject(DXN.make('dxos.org.type.Dream', '0.1.0')),
 );
 
 export type Dream = Type.InstanceType<typeof Dream>;

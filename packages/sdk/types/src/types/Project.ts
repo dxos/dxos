@@ -20,7 +20,7 @@ export const Project = Schema.Struct({
     icon: 'ph--check-square-offset--regular',
     hue: 'indigo',
   }),
-  Type.object(DXN.make('org.dxos.type.project', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.project', '0.1.0')),
 );
 
 export type Project = Type.InstanceType<typeof Project>;

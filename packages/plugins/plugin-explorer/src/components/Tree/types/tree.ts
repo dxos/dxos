@@ -22,7 +22,7 @@ export type TreeNodeType = Type.InstanceType<typeof TreeNodeType>;
 export const TreeType = Schema.Struct({
   root: Key.ObjectId,
   nodes: Schema.mutable(Schema.Record({ key: Key.ObjectId, value: TreeNodeType })),
-}).pipe(Type.object(DXN.make('org.dxos.type.tree', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.tree', '0.1.0')));
 
 export type TreeType = Type.InstanceType<typeof TreeType>;
 

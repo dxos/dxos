@@ -13,7 +13,7 @@ import { DXN, Annotation, Obj, Type } from '@dxos/echo';
  */
 export const Expando = Schema.Struct({}, { key: Schema.String, value: Schema.Any }).pipe(
   Annotation.SystemTypeAnnotation.set(true),
-  Type.object(DXN.make('org.dxos.type.expando', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.expando', '0.1.0')),
 );
 
 export type Expando = Type.InstanceType<typeof Expando>;

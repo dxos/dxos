@@ -25,7 +25,7 @@ const selectOptions = [
 ];
 
 const MinimalSchema = Schema.Struct({ id: Schema.String }).pipe(
-  Type.object(DXN.make('com.example.type.minimal', '0.1.0')),
+  Type.makeObject(DXN.make('com.example.type.minimal', '0.1.0')),
 );
 
 describe('arrangement utils', () => {

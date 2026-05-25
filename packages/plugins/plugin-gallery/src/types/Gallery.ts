@@ -18,7 +18,7 @@ export const Gallery = Schema.Struct({
     icon: 'ph--images--regular',
     hue: 'rose',
   }),
-  Type.object(DXN.make('org.dxos.type.gallery', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.gallery', '0.1.0')),
 );
 
 export type Gallery = Type.InstanceType<typeof Gallery>;

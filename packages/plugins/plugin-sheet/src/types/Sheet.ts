@@ -67,7 +67,7 @@ export const Sheet = Schema.Struct({
     icon: 'ph--grid-nine--regular',
     hue: 'indigo',
   }),
-  Type.object(DXN.make('org.dxos.type.sheet', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.sheet', '0.1.0')),
 );
 
 export type Sheet = Type.InstanceType<typeof Sheet>;

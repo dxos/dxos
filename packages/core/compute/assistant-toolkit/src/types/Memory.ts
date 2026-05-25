@@ -18,7 +18,7 @@ export const Memory = Schema.Struct({
     icon: 'ph--brain--regular',
     hue: 'pink',
   }),
-  Type.object(DXN.make('org.dxos.type.memory', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.memory', '0.1.0')),
 );
 
 export type Memory = Type.InstanceType<typeof Memory>;

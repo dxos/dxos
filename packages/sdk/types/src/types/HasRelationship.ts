@@ -21,7 +21,7 @@ export const HasRelationship = Schema.Struct({
     description: 'A relationship between two people.',
   })
   .pipe(
-    Type.relation({
+    Type.makeRelation({
       dxn: DXN.make('org.dxos.relation.hasRelationship', '0.1.0'),
       source: Person.Person,
       target: Person.Person,

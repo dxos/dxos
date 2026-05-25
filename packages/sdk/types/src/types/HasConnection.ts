@@ -21,7 +21,7 @@ export const HasConnection = Schema.Struct({
     description: 'A relationship between two organizations.',
   })
   .pipe(
-    Type.relation({
+    Type.makeRelation({
       dxn: DXN.make('org.dxos.relation.hasConnection', '0.1.0'),
       source: Organization.Organization,
       target: Organization.Organization,

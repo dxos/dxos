@@ -31,7 +31,7 @@ const Person = Schema.Struct({
   name: Schema.String,
   email: Schema.optional(Schema.String),
 }).pipe(
-  Type.object({ typename: 'com.example.type.person', version: '0.1.0' }),
+  Type.makeObject({ typename: 'com.example.type.person', version: '0.1.0' }),
   Annotation.LabelAnnotation.set(['name']),
 );
 
@@ -44,7 +44,7 @@ interface Person extends Schema.Schema.Type<typeof Person> {}
 const AnchoredTo = Schema.Struct({
   anchor: Schema.optional(Schema.String),
 }).pipe(
-  Type.relation({
+  Type.makeRelation({
     typename: 'org.dxos.relation.anchoredTo',
     version: '0.1.0',
     source: Type.Obj,
@@ -61,7 +61,7 @@ interface AnchoredTo extends Schema.Schema.Type<typeof AnchoredTo> {}
 const Task = Schema.Struct({
   assignee: Ref.Ref(Person),
   watchers: Ref.Array(Ref.Ref(Person)),
-}).pipe(Type.object({ typename: 'com.example.type.task', version: '0.1.0' }));
+}).pipe(Type.makeObject({ typename: 'com.example.type.task', version: '0.1.0' }));
 
 interface Task extends Schema.Schema.Type<typeof Task> {}
 ```

@@ -50,7 +50,7 @@ export const Meeting = Schema.Struct({
     icon: 'ph--note--regular',
     hue: 'rose',
   }),
-  Type.object(DXN.make('org.dxos.type.meeting', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.meeting', '0.1.0')),
 );
 
 export type Meeting = Type.InstanceType<typeof Meeting>;

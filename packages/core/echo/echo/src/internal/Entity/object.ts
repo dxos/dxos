@@ -34,7 +34,7 @@ export const EchoObjectSchema: {
 } = (dxn) => {
   const typename = DXN.getName(dxn);
   const version = DXN.getVersion(dxn);
-  invariant(version, `Type.object requires a versioned DXN: ${dxn}`);
+  invariant(version, `Type.makeObject requires a versioned DXN: ${dxn}`);
 
   return <Self extends Schema.Schema.Any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
     self: Self & { fields?: Fields },

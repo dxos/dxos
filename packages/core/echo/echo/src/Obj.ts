@@ -64,7 +64,7 @@ export interface Unknown extends BaseObj {}
  * // Reference to any object type
  * const Collection = Schema.Struct({
  *   objects: Schema.Array(Ref.Ref(Obj.Unknown)),
- * }).pipe(Type.object(DXN.make('com.example.type.collection', '0.1.0')));
+ * }).pipe(Type.makeObject(DXN.make('com.example.type.collection', '0.1.0')));
  * ```
  */
 // TODO(wittjosiah): Investigate if Schema.filter can validate KindId on ECHO instances.
@@ -143,7 +143,7 @@ export type MakeProps<S> = {
 /**
  * Creates a new echo object of the given schema or `Type.Type`.
  *
- * @param typeOrSchema - A static object schema (`Type.object(...)`) or a
+ * @param typeOrSchema - A static object schema (`Type.makeObject(...)`) or a
  *   `Type.Type` entity (e.g. one returned by `db.schemaRegistry.register`).
  * @param props - Object properties.
  *

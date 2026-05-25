@@ -43,7 +43,7 @@ export const Thread = Schema.Struct({
   status: ThreadStatus.pipe(Schema.optional),
   messages: Schema.Array(Ref.Ref(Message.Message)),
   agent: Schema.optional(AgentConfig),
-}).pipe(Type.object(DXN.make('org.dxos.type.thread', '0.2.0')), SystemTypeAnnotation.set(true));
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.thread', '0.2.0')), SystemTypeAnnotation.set(true));
 
 export type Thread = Type.InstanceType<typeof Thread>;
 export const make = ({

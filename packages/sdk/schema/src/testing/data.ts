@@ -37,11 +37,11 @@ export const Example = Schema.Struct({
   // ),
   admin: Schema.optional(Schema.Boolean),
   rating: Schema.optional(Schema.Number),
-}).pipe(Type.object(DXN.make('com.example.type.example', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('com.example.type.example', '0.1.0')));
 
 export type Example = Type.InstanceType<typeof Example>;
 
-export const testSchema = Type.makeObject({
+export const testSchema = Type.makeObjectFromJsonSchema({
   typename: 'com.example.type.test',
   version: '0.1.0',
   jsonSchema: JsonSchema.toJsonSchema(Type.getSchema(Example)),

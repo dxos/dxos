@@ -128,7 +128,7 @@ describe('Object JSON serializer', () => {
   describe('Type.Type round-trip', () => {
     test('preserves KindId=Type for a persisted Type.Type entity', async ({ expect }) => {
       const PersistedTypeSchema = Type.getSchema(Type.Type);
-      const typeEntity = Type.makeObject({
+      const typeEntity = Type.makeObjectFromJsonSchema({
         typename: 'com.example.type.regression',
         version: '0.1.0',
         jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ field: Schema.Number })),
@@ -149,7 +149,7 @@ describe('Object JSON serializer', () => {
     const Blob = Schema.Struct({
       name: Schema.String,
       bytes: Schema.Uint8ArrayFromSelf,
-    }).pipe(Type.object(DXN.make('com.example.type.blob', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.blob', '0.1.0')));
     type Blob = Type.InstanceType<typeof Blob>;
 
     test('round-trips Uint8Array field through JSON with schema', async ({ expect }) => {

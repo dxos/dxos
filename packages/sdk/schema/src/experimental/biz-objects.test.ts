@@ -52,7 +52,7 @@ namespace Proposition {
     children?: Fields[];
   }
 
-  export const Object = Fields.pipe(Type.object(DXN.make('org.dxos.type.proposition', '0.1.0')));
+  export const Object = Fields.pipe(Type.makeObject(DXN.make('org.dxos.type.proposition', '0.1.0')));
 
   export type Object = Type.InstanceType<typeof Object>;
 
@@ -83,7 +83,7 @@ export namespace OKR {
     description: 'A goal-setting framework defining Objectives and Key Results.',
   });
 
-  const Object = Properties.pipe(Type.object(DXN.make('org.dxos.type.okr', '0.1.0')));
+  const Object = Properties.pipe(Type.makeObject(DXN.make('org.dxos.type.okr', '0.1.0')));
 
   export type Object = Type.InstanceType<typeof Object>;
 
@@ -115,7 +115,7 @@ export namespace SWOT {
       'SWOT is a strategic planning technique used to evaluate the Strengths, Weaknesses, Opportunities, and Threats involved in a project or business venture.',
   });
 
-  const Object = Properties.pipe(Type.object(DXN.make('org.dxos.type.swot', '0.1.0')));
+  const Object = Properties.pipe(Type.makeObject(DXN.make('org.dxos.type.swot', '0.1.0')));
 
   export type Any = Type.InstanceType<typeof Object>;
 
@@ -127,7 +127,7 @@ export namespace Plan {
     name: Schema.String,
   });
 
-  const Object = Properties.pipe(Type.object(DXN.make('org.dxos.type.plan', '0.1.0')));
+  const Object = Properties.pipe(Type.makeObject(DXN.make('org.dxos.type.plan', '0.1.0')));
 
   export type Object = Type.InstanceType<typeof Object>;
 

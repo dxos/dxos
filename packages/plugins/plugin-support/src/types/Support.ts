@@ -41,7 +41,7 @@ export const Ticket = Schema.Struct({
     hue: 'rose',
   }),
   BlueprintsAnnotation.set([BLUEPRINT_KEY]),
-  Type.object(DXN.make('org.dxos.type.support.ticket', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.support.ticket', '0.1.0')),
 );
 
 export type Ticket = Type.InstanceType<typeof Ticket>;

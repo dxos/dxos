@@ -51,13 +51,13 @@ const DefaultStory = (props: DefaultStoryProps) => {
         name: Schema.String,
         email: Format.Email,
         salary: Format.Currency(),
-      }).pipe(Type.object(DXN.make('com.example.type.test', '0.1.0')));
+      }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
 
       const AlternateSchema = Schema.Struct({
         title: Schema.String,
         description: Schema.String,
         completed: Schema.Boolean,
-      }).pipe(Type.object(DXN.make('com.example.type.alternate', '0.1.0')));
+      }).pipe(Type.makeObject(DXN.make('com.example.type.alternate', '0.1.0')));
 
       const [testSchema] = await space.db.schemaRegistry.register([TestSchema, AlternateSchema]);
       const view = ViewModel.make({

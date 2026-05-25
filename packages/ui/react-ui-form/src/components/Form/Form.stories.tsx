@@ -21,7 +21,7 @@ import { type ExcludeId, Form, type FormRootProps, omitId } from './Form';
 
 const Organization = Schema.Struct({
   name: Schema.String.pipe(Schema.minLength(1)).annotations({ title: 'Full name' }),
-}).pipe(Type.object(DXN.make('com.example.type.organization', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('com.example.type.organization', '0.1.0')));
 
 export type Organization = Type.InstanceType<typeof Organization>;
 
@@ -61,7 +61,7 @@ const Person = Schema.Struct({
       title: 'Identities',
     }),
   ),
-}).pipe(Type.object(DXN.make('org.dxos.type.person', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.person', '0.1.0')));
 
 export type Person = Type.InstanceType<typeof Person>;
 

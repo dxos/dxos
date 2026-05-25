@@ -49,9 +49,9 @@ export const SampleItem = Schema.Struct({
     icon: 'ph--book-open--regular',
     hue: 'cyan',
   }),
-  // `Type.object` registers this schema as an ECHO type with a globally unique typename.
+  // `Type.makeObject` registers this schema as an ECHO type with a globally unique typename.
   // The typename is used for storage, queries, and cross-plugin type resolution.
-  Type.object(DXN.make('org.dxos.type.sample', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.sample', '0.1.0')),
 );
 
 // The interface provides the TypeScript instance type for use in type positions.

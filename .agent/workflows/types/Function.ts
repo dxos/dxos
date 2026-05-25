@@ -50,7 +50,7 @@ export const Function = Schema.Struct({
   // Local binding to a function name.
   binding: Schema.optional(Schema.String),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.function', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.function', '0.1.0')),
   Annotation.LabelAnnotation.set(['name']),
   SystemTypeAnnotation.set(true),
 );

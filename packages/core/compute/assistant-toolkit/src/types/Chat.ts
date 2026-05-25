@@ -22,7 +22,7 @@ export const Chat = Schema.Struct({
     icon: 'ph--sparkle--regular',
     hue: 'sky',
   }),
-  Type.object(DXN.make('org.dxos.type.assistant.chat', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.assistant.chat', '0.1.0')),
 );
 
 export type Chat = Type.InstanceType<typeof Chat>;
@@ -32,7 +32,7 @@ export const make = (props: Obj.MakeProps<typeof Chat>) => Obj.make(Chat, props)
 export const LegacyCompanionTo = Schema.Struct({
   id: Obj.ID,
 }).pipe(
-  Type.relation({
+  Type.makeRelation({
     dxn: DXN.make('org.dxos.relation.assistant.companionTo', '0.1.0'),
     source: Chat,
     target: Obj.Unknown,
@@ -46,7 +46,7 @@ export type LegacyCompanionTo = Type.InstanceType<typeof LegacyCompanionTo>;
 export const CompanionTo = Schema.Struct({
   id: Obj.ID,
 }).pipe(
-  Type.relation({
+  Type.makeRelation({
     dxn: DXN.make('org.dxos.relation.assistant.companionTo', '0.1.0'),
     source: Chat,
     target: Obj.Unknown,

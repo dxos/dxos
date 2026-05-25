@@ -34,7 +34,7 @@ export const PersistentSchema = Schema.Struct({
 
 /**
  * Persistent representation of a schema — the runtime shape that
- * `db.add(Type.makeObject(...))` / `db.schemaRegistry.register([...])` produces
+ * `db.add(Type.makeObjectFromJsonSchema(...))` / `db.schemaRegistry.register([...])` produces
  * and `Filter.type(Type.Type).run()` returns.
  *
  * Structurally identical to a static `Type.Type` entity: the entity-handler's

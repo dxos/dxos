@@ -523,7 +523,7 @@ export const CodeProject = Schema.Struct({
   name: Schema.optional(Schema.String),
   spec: Ref.Ref(Spec),
 }).pipe(
-  Type.object({
+  Type.makeObject({
     typename: 'org.dxos.type.codeProject',
     version: '0.1.0',
   }),

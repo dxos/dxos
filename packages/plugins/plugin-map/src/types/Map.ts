@@ -23,7 +23,7 @@ const MapSchema = Schema.Struct({
     icon: 'ph--compass--regular',
     hue: 'green',
   }),
-  Type.object(DXN.make('org.dxos.type.map', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.map', '0.1.0')),
 );
 
 export interface Map

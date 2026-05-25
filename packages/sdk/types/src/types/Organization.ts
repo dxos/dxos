@@ -87,7 +87,7 @@ export const Organization = OrganizationSchema.pipe(
     icon: 'ph--building-office--regular',
     hue: 'neutral',
   }),
-  Type.object(DXN.make('org.dxos.type.organization', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.organization', '0.1.0')),
 );
 
 export type Organization = Type.InstanceType<typeof Organization>;
@@ -102,5 +102,5 @@ export const LegacyOrganization = OrganizationSchema.pipe(
     icon: 'ph--building-office--regular',
     hue: 'neutral',
   }),
-  Type.object(DXN.make('org.dxos.type.organization', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.organization', '0.1.0')),
 );

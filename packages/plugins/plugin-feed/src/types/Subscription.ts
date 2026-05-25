@@ -106,7 +106,7 @@ export const Subscription = Schema.Struct({
   }),
   FeedAnnotation.set(true),
   FactoryAnnotation.set(((values) => makeSubscription(values)) as FactoryFn),
-  Type.object(DXN.make('org.dxos.type.subscription.feed', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.subscription.feed', '0.1.0')),
 );
 
 export type Subscription = Type.InstanceType<typeof Subscription>;
@@ -147,7 +147,7 @@ export const PostContent = Schema.Struct({
   text: Schema.String,
   /** ISO 8601 timestamp when the content was fetched. */
   fetchedAt: Schema.String,
-}).pipe(Type.object(DXN.make('org.dxos.type.subscription.postContent', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.subscription.postContent', '0.1.0')));
 
 export type PostContent = Type.InstanceType<typeof PostContent>;
 
@@ -181,7 +181,7 @@ export const Post = Schema.Struct({
     icon: 'ph--article--regular',
     hue: 'orange',
   }),
-  Type.object(DXN.make('org.dxos.type.subscription.post', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.subscription.post', '0.1.0')),
 );
 
 export type Post = Type.InstanceType<typeof Post>;

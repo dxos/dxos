@@ -18,7 +18,7 @@ export const Script = Schema.Struct({
   // Whether source has changed since last deploy.
   changed: Schema.Boolean.pipe(FormInputAnnotation.set(false), Schema.optional),
   source: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
-}).pipe(Type.object(DXN.make('org.dxos.type.script', '0.1.0')), Annotation.LabelAnnotation.set(['name']));
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.script', '0.1.0')), Annotation.LabelAnnotation.set(['name']));
 
 export interface Script extends Schema.Schema.Type<typeof Script> {}
 

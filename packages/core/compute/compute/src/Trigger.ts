@@ -186,7 +186,7 @@ const TriggerSchema = Schema.Struct({
 }).pipe(
   Annotation.IconAnnotation.set({ icon: 'ph--lightning--regular', hue: 'yellow' }),
   SystemTypeAnnotation.set(true),
-  Type.object(DXN.make('org.dxos.type.trigger', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.trigger', '0.1.0')),
 );
 
 export type Trigger = Type.InstanceType<typeof TriggerSchema>;

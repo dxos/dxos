@@ -61,7 +61,7 @@ export const Integration = Schema.Struct({
     icon: 'ph--plugs-connected--regular',
     hue: 'cyan',
   }),
-  Type.object(DXN.make('org.dxos.type.integration', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.integration', '0.1.0')),
 );
 
 export type Integration = Type.InstanceType<typeof Integration>;

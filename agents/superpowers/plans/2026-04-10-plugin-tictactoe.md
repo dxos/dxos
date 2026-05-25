@@ -219,7 +219,7 @@ export const Game = Schema.Struct({
     ),
   }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.object({
+  Type.makeObject({
     typename: 'org.dxos.type.tictactoe',
     version: '0.1.0',
   }),

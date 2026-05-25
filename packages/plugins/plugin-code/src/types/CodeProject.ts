@@ -22,7 +22,7 @@ export const CodeProject = Schema.Struct({
     icon: 'ph--app-window--regular',
     hue: meta.iconHue,
   }),
-  Type.object(DXN.make('org.dxos.type.codeProject', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.codeProject', '0.1.0')),
 );
 
 export type CodeProject = Type.InstanceType<typeof CodeProject>;

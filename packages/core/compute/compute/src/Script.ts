@@ -26,7 +26,7 @@ export const Script = Schema.Struct({
     icon: 'ph--code--regular',
     hue: 'sky',
   }),
-  Type.object(DXN.make('org.dxos.type.script', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.script', '0.1.0')),
 );
 
 export type Script = Type.InstanceType<typeof Script>;

@@ -18,7 +18,7 @@ export const Text = Schema.Struct({
     icon: 'ph--text-t--regular',
     hue: 'green',
   }),
-  Type.object(DXN.make('org.dxos.type.text', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.text', '0.1.0')),
 );
 
 export type Text = Type.InstanceType<typeof Text>;

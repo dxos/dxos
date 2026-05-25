@@ -13,7 +13,7 @@ import * as Organization from './Organization';
 
 /**
  * Reference to an external service or company.
- * Plain struct (not a Type.object) — embedded inline by callers.
+ * Plain struct (not a Type.makeObject) — embedded inline by callers.
  * Parallel to Actor: human label + machine identifier + optional rich link.
  */
 export const Provider = Schema.Struct({

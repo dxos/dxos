@@ -28,7 +28,7 @@ export const McpServer = Schema.Struct({
     icon: 'ph--plugs-connected--regular',
     hue: 'sky',
   }),
-  Type.object(DXN.make('org.dxos.type.assistant.mcpServer', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.assistant.mcpServer', '0.1.0')),
 );
 
 export type McpServer = Type.InstanceType<typeof McpServer>;

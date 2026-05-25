@@ -71,7 +71,7 @@ export const Magazine = Schema.Struct({
     hue: 'indigo',
   }),
   BlueprintsAnnotation.set([BLUEPRINT_KEY]),
-  Type.object(DXN.make('org.dxos.type.magazine', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.magazine', '0.1.0')),
 );
 
 export type Magazine = Type.InstanceType<typeof Magazine>;

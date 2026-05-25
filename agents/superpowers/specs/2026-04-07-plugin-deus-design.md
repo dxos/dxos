@@ -14,7 +14,7 @@ A new DXOS plugin that defines a `Spec` type containing a `Text` object and rend
 
 ## Type: `Spec`
 
-Defined in `src/types/Spec.ts` using Effect Schema + `Type.object()`.
+Defined in `src/types/Spec.ts` using Effect Schema + `Type.makeObject()`.
 
 ```ts
 Spec {

@@ -23,7 +23,7 @@ import { type ReplicantEnv, ReplicantRegistry } from '../env';
 
 export const Text = Schema.Struct({
   content: Schema.String,
-}).pipe(Type.object(DXN.make('org.dxos.type.bladeRunner.text', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.bladeRunner.text', '0.1.0')));
 
 export type Text = Type.InstanceType<typeof Text>;
 

@@ -37,7 +37,7 @@ export type Arrangement = Type.InstanceType<typeof Arrangement>;
  * v1: pre-existing Kanban shape. Retained as the source for the v1→v2 migration.
  *
  * The explicit interface + `as any` cast on the const is intentional: the
- * inferred type of `Type.object(...)` over `Ref.Ref(View.View)` drags in
+ * inferred type of `Type.makeObject(...)` over `Ref.Ref(View.View)` drags in
  * transitive symbols (`QueryFilterClause`, etc.) that aren't portable across
  * package boundaries, so TS refuses to emit the inferred declaration. The
  * hand-written interface gives a portable shape; the cast bridges to it.
@@ -46,7 +46,7 @@ const KanbanV1Schema = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false)),
   arrangement: Arrangement,
-}).pipe(Type.object(DXN.make('org.dxos.type.kanban', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.kanban', '0.1.0')));
 export interface KanbanV1
   extends Obj.OfShape<{
     readonly name?: string;
@@ -60,7 +60,7 @@ export const KanbanV1: Type.Obj<KanbanV1> = KanbanV1Schema as any;
 //
 // Mirrors the canonical DXOS pattern (see `Trigger.Spec` in
 // `@dxos/functions/src/types/Trigger.ts` and `Sequence.Source` in
-// `@dxos/plugin-zen`): the `Type.object` schema is a flat `Schema.Struct`,
+// `@dxos/plugin-zen`): the `Type.makeObject` schema is a flat `Schema.Struct`,
 // and the discriminated union lives one level down as a single field whose
 // variants are tagged with a `kind` literal.
 //
@@ -105,7 +105,7 @@ export const Kanban = Schema.Struct({
     icon: 'ph--kanban--regular',
     hue: 'green',
   }),
-  Type.object(DXN.make('org.dxos.type.kanban', '0.2.0')),
+  Type.makeObject(DXN.make('org.dxos.type.kanban', '0.2.0')),
 );
 
 /** Instance type; narrow on `kanban.spec.kind` (or use the guards below). */

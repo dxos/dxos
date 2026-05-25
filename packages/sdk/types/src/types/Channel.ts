@@ -25,7 +25,7 @@ export const Channel = Schema.Struct({
     hue: 'rose',
   }),
   FeedAnnotation.set(true),
-  Type.object(DXN.make('org.dxos.type.channel', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.channel', '0.1.0')),
 );
 
 export type Channel = Type.InstanceType<typeof Channel>;

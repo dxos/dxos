@@ -17,7 +17,7 @@ export const Outline = Schema.Struct({
     icon: 'ph--tree-structure--regular',
     hue: 'indigo',
   }),
-  Type.object(DXN.make('org.dxos.type.outline', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.outline', '0.1.0')),
 );
 
 export type Outline = Type.InstanceType<typeof Outline>;

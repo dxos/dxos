@@ -298,7 +298,7 @@ export const Spec = Schema.Struct({
   name: Schema.optional(Schema.String),
   content: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object({
+  Type.makeObject({
     typename: 'org.dxos.plugin.spec',
     version: '0.1.0',
   }),

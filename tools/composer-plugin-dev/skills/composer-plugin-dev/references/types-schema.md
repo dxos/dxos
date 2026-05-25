@@ -1,6 +1,6 @@
 # ECHO types & schemas
 
-Types are Effect Schema definitions registered with ECHO via `Type.object()`.
+Types are Effect Schema definitions registered with ECHO via `Type.makeObject()`.
 
 ```ts
 // src/types/Foo.ts
@@ -12,7 +12,7 @@ export const Thing = Schema.Struct({
   name: Schema.optional(Schema.String),
   notes: Schema.optional(Schema.String).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object({
+  Type.makeObject({
     typename: 'com.example.type.thing', // dotted, namespaced — globally unique.
     version: '0.1.0',
   }),

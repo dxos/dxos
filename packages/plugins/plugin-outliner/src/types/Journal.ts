@@ -16,7 +16,7 @@ export const JournalEntry = Schema.Struct({
   id: Schema.String,
   date: Schema.String,
   content: Ref.Ref(Text.Text),
-}).pipe(Type.object(DXN.make('org.dxos.type.journalEntry', '0.1.0')), SystemTypeAnnotation.set(true));
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.journalEntry', '0.1.0')), SystemTypeAnnotation.set(true));
 
 export type JournalEntry = Type.InstanceType<typeof JournalEntry>;
 
@@ -30,7 +30,7 @@ export const Journal = Schema.Struct({
     icon: 'ph--calendar-check--regular',
     hue: 'indigo',
   }),
-  Type.object(DXN.make('org.dxos.type.journal', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.journal', '0.1.0')),
 );
 
 export type Journal = Type.InstanceType<typeof Journal>;

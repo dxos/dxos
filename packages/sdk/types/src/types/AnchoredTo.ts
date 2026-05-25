@@ -12,7 +12,7 @@ export const AnchoredTo = Schema.Struct({
   id: Obj.ID,
   anchor: Schema.optional(Schema.String),
 }).pipe(
-  Type.relation({
+  Type.makeRelation({
     dxn: DXN.make('org.dxos.relation.anchoredTo', '0.1.0'),
     source: Obj.Unknown,
     target: Obj.Unknown,

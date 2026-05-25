@@ -53,7 +53,7 @@ export const Game = Schema.Struct({
   // Delegate the graph-node icon to the referenced variant state's schema. Falls back to
   // the static `ph--sword--regular` above while the variant ref is still loading.
   Annotation.IconFromRefAnnotation.set('variant'),
-  Type.object(DXN.make('org.dxos.type.game', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.game', '0.1.0')),
 );
 
 export type Game = Type.InstanceType<typeof Game>;

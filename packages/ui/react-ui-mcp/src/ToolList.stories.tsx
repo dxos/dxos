@@ -47,7 +47,7 @@ const SAMPLE_TOOLS: Tool[] = [
   {
     id: 'list_schemas',
     title: 'List schemas',
-    description: 'List ECHO-registered types — anything passing through Type.object({ typename, version }).',
+    description: 'List ECHO-registered types — anything passing through Type.makeObject({ typename, version }).',
   },
 ];
 

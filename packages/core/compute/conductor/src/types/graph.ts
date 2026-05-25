@@ -101,6 +101,6 @@ export const ComputeGraph = Schema.Struct({
   // Reference nodes.
   input: Schema.optional(ComputeNode),
   output: Schema.optional(ComputeNode),
-}).pipe(Type.object(DXN.make('org.dxos.type.computeGraph', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.computeGraph', '0.1.0')));
 
 export const isComputeGraph = Obj.instanceOf(ComputeGraph);

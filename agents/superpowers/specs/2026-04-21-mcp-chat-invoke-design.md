@@ -39,7 +39,7 @@ export const McpServer = Schema.Struct({
   apiKey: Schema.optional(Schema.String),
   enabled: Schema.optional(Schema.Boolean),
 }).pipe(
-  Type.object({
+  Type.makeObject({
     typename: 'org.dxos.type.assistant.mcpServer',
     version: '0.1.0',
   }),

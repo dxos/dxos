@@ -62,7 +62,7 @@ export const Object = Schema.Struct({
     icon: 'ph--cube--regular',
     hue: 'teal',
   }),
-  Type.object(DXN.make('org.dxos.type.spacetime.object', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.spacetime.object', '0.1.0')),
 );
 export type Object = Type.InstanceType<typeof Object>;
 

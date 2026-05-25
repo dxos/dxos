@@ -13,7 +13,7 @@ import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 
 export const MapSchema = Schema.Struct({
   coordinates: Format.GeoPoint,
-}).pipe(Type.object(DXN.make('com.example.type.map', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('com.example.type.map', '0.1.0')));
 
 export type MapSchema = Type.InstanceType<typeof MapSchema>;
 

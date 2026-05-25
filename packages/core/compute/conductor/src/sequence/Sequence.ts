@@ -32,7 +32,7 @@ export const Sequence = Schema.Struct({
     icon: 'ph--circuitry--regular',
     hue: 'sky',
   }),
-  Type.object(DXN.make('org.dxos.type.sequence', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.sequence', '0.1.0')),
 );
 
 export type Sequence = Type.InstanceType<typeof Sequence>;

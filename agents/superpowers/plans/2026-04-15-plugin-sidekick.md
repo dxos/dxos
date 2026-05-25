@@ -208,7 +208,7 @@ export namespace Sidekick {
     researchEnabled: Schema.optional(Schema.Boolean),
     lastUpdated: Schema.optional(Schema.String),
   }).pipe(
-    Type.object({
+    Type.makeObject({
       typename: 'org.dxos.type.sidekick.profile',
       version: '0.1.0',
     }),
@@ -223,7 +223,7 @@ export namespace Sidekick {
   export const Properties = Schema.Struct({
     journalEnabled: Schema.optional(Schema.Boolean),
   }).pipe(
-    Type.object({
+    Type.makeObject({
       typename: 'org.dxos.type.sidekick.properties',
       version: '0.1.0',
     }),

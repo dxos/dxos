@@ -22,7 +22,7 @@ export const Calendar = Schema.Struct({
     hue: 'rose',
   }),
   BlueprintsAnnotation.set([BLUEPRINT_KEY]),
-  Type.object(DXN.make('org.dxos.type.calendar', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.calendar', '0.1.0')),
 );
 
 export type Calendar = Type.InstanceType<typeof Calendar>;

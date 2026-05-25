@@ -8,4 +8,4 @@ import { DXN, Feed, Ref, Type } from '@dxos/echo';
 
 export const ResearchInputQueue = Schema.Struct({
   feed: Ref.Ref(Feed.Feed),
-}).pipe(Type.object(DXN.make('org.dxos.type.researchInputQueue', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.researchInputQueue', '0.1.0')));

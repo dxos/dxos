@@ -102,7 +102,7 @@ export const Agent = Schema.Struct({
     icon: 'ph--drone--regular',
     hue: 'sky',
   }),
-  Type.object(DXN.make('org.dxos.type.agent', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.agent', '0.1.0')),
 );
 
 export type Agent = Type.InstanceType<typeof Agent>;

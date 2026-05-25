@@ -42,7 +42,7 @@ export const World = Schema.Struct({
     icon: 'ph--cube--regular',
     hue: 'white',
   }),
-  Type.object(DXN.make('org.dxos.type.voxel', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.voxel', '0.1.0')),
 );
 
 export type World = Type.InstanceType<typeof World>;

@@ -14,7 +14,7 @@ export const Contact = Schema.Struct({
   email: Schema.optional(Schema.String).annotations({ description: 'Email address.' }),
 }).pipe(
   Schema.annotations({ description: 'Contact information.' }),
-  Type.object(DXN.make('com.example.type.person', '0.1.0')),
+  Type.makeObject(DXN.make('com.example.type.person', '0.1.0')),
 );
 export type Contact = Type.InstanceType<typeof Contact>;
 /** @deprecated */
@@ -23,7 +23,7 @@ export const Project = Schema.Struct({
   description: Schema.optional(Schema.String).annotations({ description: 'The description of the project.' }),
 }).pipe(
   Schema.annotations({ description: 'Project information.' }),
-  Type.object(DXN.make('com.example.type.project', '0.1.0')),
+  Type.makeObject(DXN.make('com.example.type.project', '0.1.0')),
 );
 export type Project = Type.InstanceType<typeof Project>;
 export const Task = Schema.Struct({
@@ -33,7 +33,7 @@ export const Task = Schema.Struct({
   assignee: Ref.Ref(Contact),
 }).pipe(
   Schema.annotations({ description: 'Task information.' }),
-  Type.object(DXN.make('com.example.type.task', '0.1.0')),
+  Type.makeObject(DXN.make('com.example.type.task', '0.1.0')),
 );
 export type Task = Type.InstanceType<typeof Task>;
 /** @deprecated */
@@ -43,6 +43,6 @@ export const Organization = Schema.Struct({
   employees: Schema.Array(Ref.Ref(Contact)),
 }).pipe(
   Schema.annotations({ description: 'Organization information.' }),
-  Type.object(DXN.make('com.example.type.organization', '0.1.0')),
+  Type.makeObject(DXN.make('com.example.type.organization', '0.1.0')),
 );
 export type Organization = Type.InstanceType<typeof Organization>;

@@ -265,7 +265,7 @@ Conventions:
 
 ### Schema (`src/types/`)
 
-ECHO type definitions using Effect Schema with `Type.object()`, `LabelAnnotation`, and `Annotation.IconAnnotation`. Use namespace re-exports (e.g., `export * as Chess from './Chess'`). Include a `make()` factory function using `Obj.make()`.
+ECHO type definitions using Effect Schema with `Type.makeObject()`, `LabelAnnotation`, and `Annotation.IconAnnotation`. Use namespace re-exports (e.g., `export * as Chess from './Chess'`). Include a `make()` factory function using `Obj.make()`.
 
 See: `plugin-chess/src/types/Chess.ts`
 

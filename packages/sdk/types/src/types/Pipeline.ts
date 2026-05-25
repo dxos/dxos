@@ -34,7 +34,7 @@ export const Pipeline = Schema.Struct({
     icon: 'ph--path--regular',
     hue: 'purple',
   }),
-  Type.object(DXN.make('org.dxos.type.pipeline', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.pipeline', '0.1.0')),
 );
 
 export type Pipeline = Type.InstanceType<typeof Pipeline>;

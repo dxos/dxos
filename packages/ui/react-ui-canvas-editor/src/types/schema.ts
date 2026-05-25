@@ -60,7 +60,7 @@ export const CanvasBoard = Schema.Struct({
     icon: 'ph--infinity--regular',
     hue: 'sky',
   }),
-  Type.object(DXN.make('org.dxos.type.canvasBoard', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.canvasBoard', '0.1.0')),
 );
 
 export type CanvasBoard = Type.InstanceType<typeof CanvasBoard>;

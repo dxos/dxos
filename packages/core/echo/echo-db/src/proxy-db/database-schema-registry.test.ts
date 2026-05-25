@@ -22,11 +22,11 @@ const getSchemaProperties = (type: Type.Entity): SchemaAST.PropertySignature[] =
 const Organization = Schema.Struct({
   name: Schema.String,
   address: Schema.String,
-}).pipe(Type.object(DXN.make('com.example.type.organization', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('com.example.type.organization', '0.1.0')));
 
 const Contact = Schema.Struct({
   name: Schema.String,
-}).pipe(Type.object(DXN.make('com.example.type.person', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
 describe('schema registry', () => {
   let builder: EchoTestBuilder;
@@ -185,7 +185,7 @@ describe('schema registry', () => {
 
   test('is registered if was stored in db', async () => {
     const { db, registry } = await setupTest();
-    const schemaToStore = Type.makeObject({
+    const schemaToStore = Type.makeObjectFromJsonSchema({
       typename: 'com.example.type.test',
       version: '0.1.0',
       jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ field: Schema.Number })),
@@ -275,4 +275,4 @@ describe('schema registry', () => {
 const makeTestSchema = () =>
   Schema.Struct({
     name: Schema.String,
-  }).pipe(Type.object(DXN.make('com.example.type.test', '0.1.0')));
+  }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));

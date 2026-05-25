@@ -20,7 +20,7 @@ export namespace TestSchema {
    * This is the test variant with example.com namespace.
    */
   export const Expando = Schema.Struct({}, { key: Schema.String, value: Schema.Any }).pipe(
-    Type.object(DXN.make('com.example.type.expando', '0.1.0')),
+    Type.makeObject(DXN.make('com.example.type.expando', '0.1.0')),
   );
 
   export type Expando = Type.InstanceType<typeof Expando>;
@@ -81,7 +81,7 @@ export namespace TestSchema {
 
   /** @deprecated Use another test schema or create a specific local test schema. */
   export const Example: Type.Obj<Example> = ExampleSchema.pipe(
-    Type.object(DXN.make('com.example.type.example', '0.1.0')),
+    Type.makeObject(DXN.make('com.example.type.example', '0.1.0')),
   ) as any;
 
   //
@@ -98,7 +98,7 @@ export namespace TestSchema {
     ),
   });
 
-  export const Message = MessageStruct.pipe(Type.object(DXN.make('com.example.type.message', '0.1.0')));
+  export const Message = MessageStruct.pipe(Type.makeObject(DXN.make('com.example.type.message', '0.1.0')));
 
   export type Message = Type.InstanceType<typeof Message>;
 
@@ -114,7 +114,7 @@ export namespace TestSchema {
         value: Schema.String,
       }),
     ),
-  }).pipe(Type.object(DXN.make('com.example.type.organization', '0.1.0')));
+  }).pipe(Type.makeObject(DXN.make('com.example.type.organization', '0.1.0')));
 
   export type Organization = Type.InstanceType<typeof Organization>;
 
@@ -158,7 +158,7 @@ export namespace TestSchema {
       label: Schema.String,
       value: Schema.String,
     }).pipe(Schema.Array, Schema.optional),
-  }).pipe(Schema.partial, Type.object(DXN.make('com.example.type.person', '0.1.0'))) as any;
+  }).pipe(Schema.partial, Type.makeObject(DXN.make('com.example.type.person', '0.1.0'))) as any;
 
   //
   // Task
@@ -182,14 +182,14 @@ export namespace TestSchema {
     previous: Schema.optional(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task))),
     subTasks: Schema.optional(Schema.Array(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task)))),
     description: Schema.optional(Schema.String),
-  }).pipe(Schema.partial, Type.object(DXN.make('com.example.type.task', '0.1.0'))) as any;
+  }).pipe(Schema.partial, Type.makeObject(DXN.make('com.example.type.task', '0.1.0'))) as any;
 
   //
   // HasManager
   //
 
   export const HasManager = Schema.Struct({}).pipe(
-    Type.relation({
+    Type.makeRelation({
       dxn: DXN.make('com.example.type.hasManager', '0.1.0'),
       source: Person,
       target: Person,
@@ -206,7 +206,7 @@ export namespace TestSchema {
     role: Schema.String,
     since: Schema.optional(Schema.String),
   }).pipe(
-    Type.relation({
+    Type.makeRelation({
       dxn: DXN.make('com.example.type.employedBy', '0.1.0'),
       source: Person,
       target: Organization,
@@ -237,7 +237,7 @@ export namespace TestSchema {
         }),
       ),
     ),
-  }).pipe(Schema.partial, Type.object(DXN.make('com.example.type.container', '0.1.0')));
+  }).pipe(Schema.partial, Type.makeObject(DXN.make('com.example.type.container', '0.1.0')));
 
   export type Container = Type.InstanceType<typeof Container>;
 }

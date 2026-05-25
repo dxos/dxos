@@ -14,7 +14,7 @@ When your plugin integrates with a third-party API (Gmail, GitHub, Slack, custom
    export const Mailbox = Schema.Struct({
      name: Schema.optional(Schema.String),
      accessToken: Schema.optional(Ref.Ref(AccessToken.AccessToken)),
-   }).pipe(Type.object({ typename: 'com.example.type.mailbox', version: '0.1.0' }));
+   }).pipe(Type.makeObject({ typename: 'com.example.type.mailbox', version: '0.1.0' }));
    ```
 
 2. **Load it inside the operation** via an Effect helper. Never resolve it in a container.

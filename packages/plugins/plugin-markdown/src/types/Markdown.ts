@@ -33,7 +33,7 @@ export const Document = Schema.Struct({
   }),
   BlueprintsAnnotation.set([BLUEPRINT_KEY]),
   GraphPropsAnnotation.set({ managesAutofocus: true }),
-  Type.object(DXN.make('org.dxos.type.document', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.document', '0.1.0')),
 );
 
 export type Document = Type.InstanceType<typeof Document>;

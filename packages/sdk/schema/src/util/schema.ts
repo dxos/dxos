@@ -52,7 +52,7 @@ export const createDefaultSchema = () =>
       title: 'Description',
     }),
   // NSID last segment must start with a letter (DXN spec), so prefix the random hex.
-  }).pipe(Type.object(DXN.make(`com.example.type.example${PublicKey.random().truncate()}`, '0.1.0')));
+  }).pipe(Type.makeObject(DXN.make(`com.example.type.example${PublicKey.random().truncate()}`, '0.1.0')));
 
 export const getSchema = async (
   dxn: DXN.DXN,

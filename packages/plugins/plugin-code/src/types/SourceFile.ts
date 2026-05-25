@@ -21,7 +21,7 @@ export const SourceFile = Schema.Struct({
     icon: 'ph--file-code--regular',
     hue: meta.iconHue,
   }),
-  Type.object(DXN.make('org.dxos.type.sourceFile', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.sourceFile', '0.1.0')),
 );
 
 export type SourceFile = Type.InstanceType<typeof SourceFile>;

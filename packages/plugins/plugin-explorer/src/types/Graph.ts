@@ -24,7 +24,7 @@ const GraphSchema = Schema.Struct({
     icon: 'ph--graph--regular',
     hue: 'green',
   }),
-  Type.object(DXN.make('org.dxos.type.graph', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.graph', '0.1.0')),
 );
 export interface Graph
   extends Obj.OfShape<{

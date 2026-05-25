@@ -104,7 +104,7 @@ export const getTypeURIFromSpecifier = (
     //  - Persisted (stored ECHO object): URI is local `echo:/<objectId>` —
     //    matches what `Obj.make(typeEntity, ...)` writes to `system.type` via
     //    `getSchemaURI(rebuilt)` reading `TypeIdentifierAnnotation`.
-    //  - Static (declared via `Type.object(dxn)`): URI is the typename DXN.
+    //  - Static (declared via `Type.makeObject(dxn)`): URI is the typename DXN.
     const entity = input as { id?: string; typename?: string; version?: string };
     if (typeof entity.id === 'string' && ObjectId.isValid(entity.id)) {
       return EchoURI.make({ objectId: entity.id });

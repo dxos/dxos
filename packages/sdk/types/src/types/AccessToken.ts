@@ -39,7 +39,7 @@ export const AccessToken = Schema.Struct({
   Schema.annotations({
     description: 'A credential or token for accessing a service.',
   }),
-  Type.object(DXN.make('org.dxos.type.accessToken', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.accessToken', '0.1.0')),
 );
 
 export type AccessToken = Type.InstanceType<typeof AccessToken>;

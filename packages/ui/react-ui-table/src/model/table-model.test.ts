@@ -118,7 +118,7 @@ describe('TableModel', () => {
 const Test = Schema.Struct({
   title: Schema.String,
   completed: Schema.Boolean,
-}).pipe(Type.object(DXN.make('com.example.type.test', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
 
 const createTableModel = (registry: Registry.Registry, props: Partial<TableModelProps> = {}): TableModel => {
   const schema = createEchoSchema(Test);

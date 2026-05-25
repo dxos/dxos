@@ -21,7 +21,7 @@ import * as AtomQuery from './query-atom';
 const TestItem = Schema.Struct({
   name: Schema.String,
   value: Schema.Number,
-}).pipe(Type.object(DXN.make('com.example.type.testItem', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('com.example.type.testItem', '0.1.0')));
 type TestItem = Type.InstanceType<typeof TestItem>;
 
 describe('AtomQuery', () => {
@@ -259,11 +259,11 @@ describe('AtomQuery with queues', () => {
 
 const SchemaA = Schema.Struct({
   name: Schema.String,
-}).pipe(Type.object(DXN.make('com.example.type.a', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('com.example.type.a', '0.1.0')));
 
 const SchemaB = Schema.Struct({
   value: Schema.Number,
-}).pipe(Type.object(DXN.make('com.example.type.b', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('com.example.type.b', '0.1.0')));
 
 describe('AtomQuery.fromQuery with schema registry', () => {
   let schemaRegistry: RuntimeSchemaRegistry;

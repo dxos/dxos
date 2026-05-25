@@ -80,7 +80,7 @@ const ViewSchema = Schema.Struct({
     icon: 'ph--funnel--regular',
     hue: 'green',
   }),
-  Type.object(DXN.make('org.dxos.type.view', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.view', '0.1.0')),
 );
 
 export type View = Type.InstanceType<typeof ViewSchema> & Obj.Unknown;

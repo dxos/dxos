@@ -54,7 +54,7 @@ export const Generation = Schema.Struct({
     icon: 'ph--film-reel--regular',
     hue: 'fuchsia',
   }),
-  Type.object(DXN.make('org.dxos.type.generation', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.generation', '0.1.0')),
 );
 
 export type Generation = Type.InstanceType<typeof Generation>;

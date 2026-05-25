@@ -137,7 +137,7 @@ const describeSymbol = (
   packageName: string,
 ): ExtractedSymbol | null => {
   // ECHO idiom emits a value AND a same-named interface companion:
-  //   export const Task = Schema.Struct({...}).pipe(Type.object({...}));
+  //   export const Task = Schema.Struct({...}).pipe(Type.makeObject({...}));
   //   export type Task = Type.InstanceType<typeof Task>;
   // We surface them as a single symbol so callers see both forms in `source`.
   // The "primary" declaration drives signature/location/kind; the rest contribute

@@ -18,7 +18,7 @@ export const Tag = Schema.Struct({
 }).pipe(
   internal.LabelAnnotation.set(['label']),
   internal.SystemTypeAnnotation.set(true),
-  Type.object(DXN.make('org.dxos.type.tag', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.tag', '0.1.0')),
 );
 
 export type Tag = Type.InstanceType<typeof Tag>;

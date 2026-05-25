@@ -25,7 +25,7 @@ export const Employer = Schema.Struct({
     Schema.annotations({
       description: 'An employing organization of a person.',
     }),
-    Type.relation({
+    Type.makeRelation({
       dxn: DXN.make('org.dxos.relation.employer', '0.1.0'),
       source: Person.Person,
       target: Organization.Organization,

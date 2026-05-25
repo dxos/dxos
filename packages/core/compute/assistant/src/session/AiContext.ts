@@ -33,7 +33,7 @@ export const Binding = Schema.Struct({
     added: Schema.Array(Ref.Ref(Obj.Unknown)),
     removed: Schema.Array(Ref.Ref(Obj.Unknown)),
   }),
-}).pipe(Type.object(DXN.make('org.dxos.type.contextBinding', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.contextBinding', '0.1.0')));
 
 export type Binding = Type.InstanceType<typeof Binding>;
 export type BindingProps = Partial<{

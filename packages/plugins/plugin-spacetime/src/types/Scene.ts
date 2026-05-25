@@ -19,7 +19,7 @@ export const Scene = Schema.Struct({
     icon: 'ph--cube--regular',
     hue: 'teal',
   }),
-  Type.object(DXN.make('org.dxos.type.spacetime.scene', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.spacetime.scene', '0.1.0')),
 );
 
 export type Scene = Type.InstanceType<typeof Scene>;

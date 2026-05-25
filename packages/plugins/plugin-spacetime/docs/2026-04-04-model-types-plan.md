@@ -72,7 +72,7 @@ export const Object = Schema.Struct({
   rotation: Vec3.pipe(FormInputAnnotation.set(false)),
   color: Schema.optional(Schema.String),
 }).pipe(
-  Type.object({
+  Type.makeObject({
     typename: 'org.dxos.type.spacetime.object',
     version: '0.1.0',
   }),
@@ -136,7 +136,7 @@ export namespace Spacetime {
     name: Schema.optional(Schema.String),
     objects: Ref.Ref(ModelObject).pipe(Schema.Array, FormInputAnnotation.set(false)),
   }).pipe(
-    Type.object({
+    Type.makeObject({
       typename: 'org.dxos.type.Scene.Scene',
       version: '0.1.0',
     }),

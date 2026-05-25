@@ -56,7 +56,7 @@ export type SpacePropertiesSchema = Type.InstanceType<typeof SpacePropertiesSche
 // TODO(burdon): Is separate schema def required for forms? Can it be extracted from SpaceProperties?
 export const SpaceProperties = SpacePropertiesSchema.pipe(
   Annotation.SystemTypeAnnotation.set(true),
-  Type.object(DXN.make('org.dxos.type.spaceProperties', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.spaceProperties', '0.1.0')),
 );
 
 export type SpaceProperties = Type.InstanceType<typeof SpaceProperties>;

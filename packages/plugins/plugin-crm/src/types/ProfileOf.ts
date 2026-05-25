@@ -30,7 +30,7 @@ export const ProfileOf = Schema.Struct({
     description: 'Links a Profile Document to the Person or Organization it describes.',
   })
   .pipe(
-    Type.relation({
+    Type.makeRelation({
       dxn: DXN.make('org.dxos.relation.plugin-crm.profileOf', '0.1.0'),
       source: Obj.Unknown,
       target: Obj.Unknown,

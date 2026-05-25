@@ -25,7 +25,7 @@ export const Collection = Schema.Struct({
     icon: 'ph--folder--regular',
     hue: 'amber',
   }),
-  Type.object(DXN.make('org.dxos.type.collection', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.collection', '0.1.0')),
 );
 
 export type Collection = Type.InstanceType<typeof Collection> & Obj.Unknown;

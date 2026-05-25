@@ -16,7 +16,7 @@ export const HasSubject = Schema.Struct({
   id: Obj.ID,
   completedAt: Format.DateTime,
 }).pipe(
-  Type.relation({
+  Type.makeRelation({
     dxn: DXN.make('org.dxos.relation.hasSubject', '0.1.0'),
     source: Obj.Unknown,
     target: Obj.Unknown,

@@ -54,7 +54,7 @@ export const Event = Schema.Struct({
     icon: 'ph--calendar-dot--regular',
     hue: 'rose',
   }),
-  Type.object(DXN.make('org.dxos.type.event', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.event', '0.1.0')),
 );
 
 export type Event = Type.InstanceType<typeof Event>;

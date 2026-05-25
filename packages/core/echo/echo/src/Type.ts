@@ -73,7 +73,7 @@ type EchoSchemaKind<K extends internal.EntityKind = internal.EntityKind> = {
  * ```ts
  * const Person = Schema.Struct({
  *   name: Schema.String,
- * }).pipe(Type.object(DXN.make('com.example.type.person', '0.1.0')));
+ * }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
  *
  * type Person = Type.InstanceType<typeof Person>;
  * ```
@@ -95,7 +95,7 @@ export interface Obj<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fiel
 
 /**
  * Type that represents any ECHO object type — a `Type.Type` entity branded
- * with the object entity kind, i.e. what `Type.object(dxn)` produces.
+ * with the object entity kind, i.e. what `Type.makeObject(dxn)` produces.
  */
 export type ObjectEntity = Obj<unknown>;
 
@@ -111,10 +111,10 @@ export type ObjectEntity = Obj<unknown>;
  * ```ts
  * const Person = Schema.Struct({
  *   name: Schema.String,
- * }).pipe(Type.object(DXN.make('com.example.type.person', '0.1.0')));
+ * }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
  * ```
  */
-export const object: {
+export const makeObject: {
   (dxn: DXN.DXN): <Self extends Schema.Schema.Any>(self: Self) => Obj<Schema.Schema.Type<Self>>;
 } = internal.EchoObjectSchema as any;
 
@@ -125,16 +125,16 @@ export const object: {
 
 /**
  * ECHO meta-schema entity — stores `{ name?, typename, version, jsonSchema }`.
- * Type-kind sibling of `Type.object(...)` / `Type.relation(...)` outputs.
+ * Type-kind sibling of `Type.makeObject(...)` / `Type.makeRelation(...)` outputs.
  * Stored types live under this entity; filter via `Filter.type(Type.Type)`.
  */
 export const Type: Type<typeInternal.PersistentSchema> = typeInternal.PersistentSchema as any;
 
 /**
  * Default version stamped on draft (unnamed) types created via
- * {@link makeObject} / {@link makeRelation} when the caller does not supply
- * one. Pure dynamic drafts surface as `'0.0.0'` until they are persisted, at
- * which point automerge-heads suffix the version.
+ * {@link makeObjectFromJsonSchema} / {@link makeRelationFromJsonSchema} when
+ * the caller does not supply one. Pure dynamic drafts surface as `'0.0.0'`
+ * until they are persisted, at which point automerge-heads suffix the version.
  */
 const DRAFT_VERSION = '0.0.0';
 
@@ -153,12 +153,12 @@ type MakeTypeProps = {
 /**
  * Construct a new object-kind type entity from raw metadata — for cases where
  * an Effect Schema isn't available (e.g. JSON-Schema arriving over the network
- * or from a UI editor). Parallel to {@link object} but takes pre-built
+ * or from a UI editor). Parallel to {@link makeObject} but takes pre-built
  * `jsonSchema` instead of piping through an Effect schema.
  *
  * The returned entity is in-memory; persist it with `db.add(entity)`.
  */
-export const makeObject = (props: MakeTypeProps): Type<typeInternal.PersistentSchema> => {
+export const makeObjectFromJsonSchema = (props: MakeTypeProps): Type<typeInternal.PersistentSchema> => {
   return internal.makeObject(typeInternal.PersistentSchema, {
     version: DRAFT_VERSION,
     ...props,
@@ -167,13 +167,13 @@ export const makeObject = (props: MakeTypeProps): Type<typeInternal.PersistentSc
 
 /**
  * Construct a new relation-kind type entity from raw metadata. Parallel to
- * {@link relation} but takes pre-built `jsonSchema` instead of piping through
- * an Effect schema. `source` / `target` accept either a static `Type.Obj`
- * entity or the well-known `Obj.Unknown` schema.
+ * {@link makeRelation} but takes pre-built `jsonSchema` instead of piping
+ * through an Effect schema. `source` / `target` accept either a static
+ * `Type.Obj` entity or the well-known `Obj.Unknown` schema.
  *
  * The returned entity is in-memory; persist it with `db.add(entity)`.
  */
-export const makeRelation = (
+export const makeRelationFromJsonSchema = (
   props: MakeTypeProps & {
     source: ObjectEntity | internal.UnknownTypeSchema<any, typeof EntityModule.Kind.Object>;
     target: ObjectEntity | internal.UnknownTypeSchema<any, typeof EntityModule.Kind.Object>;
@@ -224,7 +224,7 @@ export interface Relation<T, Source, Target, Fields extends Schema.Struct.Fields
 
 /**
  * Type that represents any ECHO relation type — a `Type.Type` entity branded
- * with the relation entity kind, i.e. what `Type.relation(...)` produces.
+ * with the relation entity kind, i.e. what `Type.makeRelation(...)` produces.
  */
 export type RelationEntity = Relation<unknown, unknown, unknown>;
 
@@ -236,14 +236,14 @@ export type RelationEntity = Relation<unknown, unknown, unknown>;
  * ```ts
  * const WorksFor = Schema.Struct({
  *   role: Schema.String,
- * }).pipe(Type.relation({
+ * }).pipe(Type.makeRelation({
  *   dxn: DXN.make('com.example.type.worksFor', '0.1.0'),
  *   source: Person,
  *   target: Company,
  * }));
  * ```
  */
-export const relation: {
+export const makeRelation: {
   <SourceInstance, TargetInstance>(opts: {
     dxn: DXN.DXN;
     source: Obj<SourceInstance, any> | internal.UnknownTypeSchema<SourceInstance, typeof EntityModule.Kind.Object>;
@@ -375,7 +375,7 @@ export const getVersion = (input: Entity | Schema.Schema.AnyNoContext): string =
 
 /**
  * Type predicate: true iff the value is any type-kind ECHO entity — a static
- * `Type.Obj` / `Type.Relation` produced by `Type.object` / `Type.relation`, a
+ * `Type.Obj` / `Type.Relation` produced by `Type.makeObject` / `Type.makeRelation`, a
  * static meta `Type.Type`, or a persisted `Type.Type` returned by the database.
  *
  * All three branches stamp `[KindId] = Type`, so this is a single brand check.
@@ -428,7 +428,7 @@ export const getMeta = (input: Entity | Schema.Schema.AnyNoContext): Meta | unde
 /**
  * String key used to phantom-carry the instance type produced by a `Type.Type`.
  * Used by `Type.InstanceType<typeof Foo>` to recover the schema instance type
- * since `Type.object(dxn)` does not return a `Schema.Schema`.
+ * since `Type.makeObject(dxn)` does not return a `Schema.Schema`.
  *
  * Re-exported from the internal types layer so both `Type.ts` and internal
  * helpers (`makeObject`, `createObject`) reference the same phantom key.
@@ -457,7 +457,7 @@ export interface Type<A = unknown>
 
   /**
    * Type's typename (e.g. `'com.example.type.person'`). Optional because
-   * unnamed draft `Type.Type` entities (`Type.makeObject({ jsonSchema })`)
+   * unnamed draft `Type.Type` entities (`Type.makeObjectFromJsonSchema({ jsonSchema })`)
    * carry no typename until they're given one.
    */
   readonly typename?: string;
@@ -476,7 +476,7 @@ export type Persistence = 'static' | 'persisted';
 /**
  * Convenience alias for the instance type produced by a type value.
  *
- * Works uniformly for static schemas (created via `Type.object`/`Type.relation`)
+ * Works uniformly for static schemas (created via `Type.makeObject`/`Type.makeRelation`)
  * and persisted `Type.Type` entities. Prefer this over
  * `Schema.Schema.Type<typeof Foo>` so call sites stay valid regardless of
  * whether `Foo` is a schema or a `Type.Type` entity.
@@ -498,7 +498,7 @@ export type InstanceType<T> = T extends Relation<infer Props, infer Source, infe
 /**
  * Returns the Effect Schema for a type value.
  *
- * - For static schemas (those produced by `Type.object(dxn)` etc.) the input
+ * - For static schemas (those produced by `Type.makeObject(dxn)` etc.) the input
  *   IS the schema, so this returns it unchanged.
  * - For `Type.Type` entities the schema is rebuilt from `type.jsonSchema`.
  *

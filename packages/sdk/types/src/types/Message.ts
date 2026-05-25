@@ -46,7 +46,7 @@ export const Message = Schema.Struct({
     icon: 'ph--note--regular',
     hue: 'rose',
   }),
-  Type.object(DXN.make('org.dxos.type.message', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.message', '0.1.0')),
 );
 
 export type Message = Type.InstanceType<typeof Message>;

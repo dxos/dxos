@@ -49,7 +49,7 @@ export const Mailbox = Schema.Struct({
   }),
   FeedAnnotation.set(true),
   BlueprintsAnnotation.set([BLUEPRINT_KEY]),
-  Type.object(DXN.make('org.dxos.type.mailbox', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.mailbox', '0.1.0')),
 );
 
 export type Mailbox = Type.InstanceType<typeof Mailbox>;

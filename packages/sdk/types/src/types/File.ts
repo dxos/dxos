@@ -60,7 +60,7 @@ export const File = Schema.Struct({
     icon: 'ph--file--regular',
     hue: 'teal',
   }),
-  Type.object(DXN.make('org.dxos.type.file', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.file', '0.1.0')),
 );
 
 export type File = Type.InstanceType<typeof File>;

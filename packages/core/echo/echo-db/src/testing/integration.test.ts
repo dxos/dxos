@@ -491,7 +491,7 @@ describe('Integration tests', () => {
 
         const LocalTestSchema = Schema.Struct({
           field: Schema.String,
-        }).pipe(Type.object(DXN.make('com.example.type.test', '0.1.0')));
+        }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
         const [stored] = await db.schemaRegistry.register([LocalTestSchema]);
         schemaDxn = Type.getURI(stored)!;
 

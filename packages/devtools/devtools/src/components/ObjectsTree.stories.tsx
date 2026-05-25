@@ -30,7 +30,7 @@ const withDevtoolsContext: Decorator = (Story) => (
 const WorksAt = Schema.Struct({
   role: Schema.optional(Schema.String),
 }).pipe(
-  Type.relation({
+  Type.makeRelation({
     dxn: DXN.make('com.example.story.worksAt', '0.1.0'),
     source: TestSchema.Person,
     target: TestSchema.Organization,

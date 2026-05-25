@@ -13,7 +13,7 @@ import { Kanban } from './Kanban';
 import { KanbanV1 } from './Kanban';
 
 const TestCardSchema = Schema.Struct({ id: Schema.String }).pipe(
-  Type.object(DXN.make('com.example.type.testCard', '0.1.0')),
+  Type.makeObject(DXN.make('com.example.type.testCard', '0.1.0')),
 );
 
 /**

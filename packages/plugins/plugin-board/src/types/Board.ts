@@ -21,7 +21,7 @@ export const Board = Schema.Struct({
     icon: 'ph--squares-four--regular',
     hue: 'green',
   }),
-  Type.object(DXN.make('org.dxos.type.board', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.board', '0.1.0')),
 );
 
 export type Board = Type.InstanceType<typeof Board>;

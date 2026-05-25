@@ -21,7 +21,7 @@ export const Spec = Schema.Struct({
     icon: meta.icon!,
     hue: meta.iconHue,
   }),
-  Type.object(DXN.make('org.dxos.type.spec', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.spec', '0.1.0')),
 );
 
 export type Spec = Type.InstanceType<typeof Spec>;

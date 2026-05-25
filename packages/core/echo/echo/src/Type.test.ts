@@ -80,9 +80,9 @@ describe('Type', () => {
     });
   });
 
-  describe('Type.makeObject', () => {
+  describe('Type.makeObjectFromJsonSchema', () => {
     test('creates an instance branded KindId=type', ({ expect }) => {
-      const entity = Type.makeObject({
+      const entity = Type.makeObjectFromJsonSchema({
         typename: 'com.example.type.test',
         version: '0.1.0',
         jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ field: Schema.Number })),
@@ -94,7 +94,7 @@ describe('Type', () => {
     });
 
     test('defaults version to 0.0.0 for drafts', ({ expect }) => {
-      const draft = Type.makeObject({
+      const draft = Type.makeObjectFromJsonSchema({
         jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ field: Schema.String })),
       });
       expect(draft.version).toBe('0.0.0');
@@ -102,23 +102,23 @@ describe('Type', () => {
     });
 
     test('assigns a stable id', ({ expect }) => {
-      const a = Type.makeObject({ jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})) });
-      const b = Type.makeObject({ jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})) });
+      const a = Type.makeObjectFromJsonSchema({ jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})) });
+      const b = Type.makeObjectFromJsonSchema({ jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})) });
       expect(typeof a.id).toBe('string');
       expect(a.id).not.toBe(b.id);
     });
 
     test('result satisfies isType', ({ expect }) => {
-      const entity = Type.makeObject({
+      const entity = Type.makeObjectFromJsonSchema({
         jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ field: Schema.Number })),
       });
       expect(Type.isType(entity)).toBe(true);
     });
   });
 
-  describe('Type.makeRelation', () => {
+  describe('Type.makeRelationFromJsonSchema', () => {
     test('embeds source/target DXNs into jsonSchema', ({ expect }) => {
-      const entity = Type.makeRelation({
+      const entity = Type.makeRelationFromJsonSchema({
         typename: 'com.example.type.testRel',
         version: '0.1.0',
         jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ note: Schema.String })),
@@ -132,7 +132,7 @@ describe('Type', () => {
     });
 
     test('accepts Obj.Unknown as source/target', ({ expect }) => {
-      const entity = Type.makeRelation({
+      const entity = Type.makeRelationFromJsonSchema({
         jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})),
         source: Obj.Unknown,
         target: Obj.Unknown,
@@ -143,7 +143,7 @@ describe('Type', () => {
     });
 
     test('defaults version to 0.0.0 for drafts', ({ expect }) => {
-      const draft = Type.makeRelation({
+      const draft = Type.makeRelationFromJsonSchema({
         jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})),
         source: TestSchema.Person,
         target: TestSchema.Person,
@@ -154,12 +154,12 @@ describe('Type', () => {
   });
 
   describe('Obj/Relation/Entity.getType', () => {
-    test('Obj.getType returns the static type entity for instances of Type.object', ({ expect }) => {
+    test('Obj.getType returns the static type entity for instances of Type.makeObject', ({ expect }) => {
       const person = Obj.make(TestSchema.Person, { name: 'Alice' });
       expect(Obj.getType(person)).toBe(TestSchema.Person);
     });
 
-    test('Relation.getType returns the static type entity for instances of Type.relation', ({ expect }) => {
+    test('Relation.getType returns the static type entity for instances of Type.makeRelation', ({ expect }) => {
       const a = Obj.make(TestSchema.Person, { name: 'A' });
       const b = Obj.make(TestSchema.Person, { name: 'B' });
       const rel = Relation.make(TestSchema.HasManager, {
@@ -183,12 +183,12 @@ describe('Type', () => {
   });
 
   describe('static type factories', () => {
-    test('Type.object stamps schema-kind=object', ({ expect }) => {
+    test('Type.makeObject stamps schema-kind=object', ({ expect }) => {
       expect((TestSchema.Person as any)['~@dxos/echo/SchemaKind']).toBe(Entity.Kind.Object);
       expect(Type.isObject(TestSchema.Person)).toBe(true);
     });
 
-    test('Type.relation stamps schema-kind=relation', ({ expect }) => {
+    test('Type.makeRelation stamps schema-kind=relation', ({ expect }) => {
       expect((TestSchema.HasManager as any)['~@dxos/echo/SchemaKind']).toBe(Entity.Kind.Relation);
       expect(Type.isRelation(TestSchema.HasManager)).toBe(true);
     });

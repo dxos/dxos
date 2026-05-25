@@ -18,14 +18,14 @@ import { DXN } from '@dxos/keys';
 
 import { EchoTestBuilder } from '../testing';
 
-const TestEmpty = Schema.Struct({}).pipe(Type.object(DXN.make('com.example.type.empty', '0.1.0')));
+const TestEmpty = Schema.Struct({}).pipe(Type.makeObject(DXN.make('com.example.type.empty', '0.1.0')));
 
 type TestEmpty = Type.InstanceType<typeof TestEmpty>;
 
 const TestWithRefs = Schema.Struct({
   schema: Schema.optional(Ref(Type.Type)),
   schemaArray: Schema.optional(Schema.Array(Ref(Type.Type))),
-}).pipe(Type.object(DXN.make('com.example.type.test', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
 
 type TestWithRefs = Type.InstanceType<typeof TestWithRefs>;
 
@@ -46,7 +46,7 @@ describe('EchoSchema', () => {
     const instanceWithSchemaRef = db.add(Obj.make(TestWithRefs, {}));
     const GeneratedSchema = Schema.Struct({
       field: Schema.String,
-    }).pipe(Type.object(DXN.make('com.example.type.test', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
 
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
     Obj.update(instanceWithSchemaRef, (instanceWithSchemaRef) => {
@@ -72,7 +72,7 @@ describe('EchoSchema', () => {
     const { db } = await setupTest();
     const GeneratedSchema = Schema.Struct({
       field: Schema.String,
-    }).pipe(Type.object(DXN.make('com.example.type.test', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
     const instanceWithSchemaRef = db.add(Obj.make(TestWithRefs, { schema: Ref.make(schema as any) }));
     expect(instanceWithSchemaRef.schema!.target!.typename).to.eq(GeneratedSchema.typename);
@@ -83,7 +83,7 @@ describe('EchoSchema', () => {
     const instanceWithSchemaRef = db.add(Obj.make(TestWithRefs, { schemaArray: [] }));
     const GeneratedSchema = Schema.Struct({
       field: Schema.String,
-    }).pipe(Type.object(DXN.make('com.example.type.test', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
     Obj.update(instanceWithSchemaRef, (instanceWithSchemaRef) => {
       instanceWithSchemaRef.schemaArray!.push(Ref.make(schema as any));
@@ -149,12 +149,12 @@ describe('EchoSchema', () => {
 
     const OrgSchema = Schema.Struct({
       name: Schema.optional(Schema.String),
-    }).pipe(Type.object(DXN.make('com.example.type.org', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.org', '0.1.0')));
 
     const ContactSchema = Schema.Struct({
       name: Schema.optional(Schema.String),
       org: Schema.optional(Ref(OrgSchema)),
-    }).pipe(Type.object(DXN.make('com.example.type.contact', '0.1.0')));
+    }).pipe(Type.makeObject(DXN.make('com.example.type.contact', '0.1.0')));
 
     const [orgSchema] = await db.schemaRegistry.register([OrgSchema]);
     const [contactSchema] = await db.schemaRegistry.register([ContactSchema]);

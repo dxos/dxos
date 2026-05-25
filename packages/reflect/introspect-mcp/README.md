@@ -6,7 +6,7 @@ Lets LLM tools (Claude Code, etc.) query the DXOS monorepo's package, symbol, an
 Coverage so far:
 - **Phase 1** — packages and symbols.
 - **Phase 2** — plugins, surfaces, capabilities, operations (extracted statically from `Plugin.define` / `Surface.create` / `Capability.contributes` / `Operation.make`).
-- **Phase 3** — ECHO-registered schemas (`Type.object` / `Type.Obj`).
+- **Phase 3** — ECHO-registered schemas (`Type.makeObject` / `Type.Obj`).
 
 Idioms, composition queries, and UI components are next (see [SPEC.md](../introspect/SPEC.md#build-order)).
 
@@ -36,9 +36,9 @@ Idioms, composition queries, and UI components are next (see [SPEC.md](../intros
 
 | Tool | Purpose |
 | --- | --- |
-| `list_schemas` | List every ECHO-registered type — `Schema.Struct(...).pipe(Type.object({ typename, version }))` and the lowercase `Type.Obj(...)` variant used inside `@dxos/echo` internals. Filter by `pluginId` (most common — narrows to a single plugin's schemas) or `package`. |
+| `list_schemas` | List every ECHO-registered type — `Schema.Struct(...).pipe(Type.makeObject({ typename, version }))` and the lowercase `Type.Obj(...)` variant used inside `@dxos/echo` internals. Filter by `pluginId` (most common — narrows to a single plugin's schemas) or `package`. |
 | `get_schema` | Detail for one schema by typename: full field list, version, owning package, source location. |
-| `find_schema_usage` | Every line in the monorepo that mentions a typename — references, JSDoc, plugin wiring. The defining `Type.object` line is excluded. |
+| `find_schema_usage` | Every line in the monorepo that mentions a typename — references, JSDoc, plugin wiring. The defining `Type.makeObject` line is excluded. |
 
 Tool descriptions are written for LLM trigger accuracy — they describe *when* to use a tool, not just what it does.
 

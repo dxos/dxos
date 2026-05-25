@@ -11,7 +11,7 @@ import { LabelAnnotation } from '@dxos/echo/internal';
 
 /**
  * Task item — fixture ECHO type used to verify symbol extraction against
- * realistic DXOS shapes (Schema.Struct + Type.object + annotations).
+ * realistic DXOS shapes (Schema.Struct + Type.makeObject + annotations).
  */
 export const Task = Schema.Struct({
   title: Schema.String.annotations({
@@ -25,7 +25,7 @@ export const Task = Schema.Struct({
   done: Schema.Boolean.annotations({
     description: 'Whether the task has been completed.',
   }),
-}).pipe(Type.object(DXN.make('com.example.type.Task', '0.1.0')), LabelAnnotation.set(['title']));
+}).pipe(Type.makeObject(DXN.make('com.example.type.Task', '0.1.0')), LabelAnnotation.set(['title']));
 
 export type Task = Type.InstanceType<typeof Task>;
 

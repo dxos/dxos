@@ -74,7 +74,7 @@ export const Blueprint = Schema.Struct({
     icon: 'ph--blueprint--regular',
     hue: 'sky',
   }),
-  Type.object(DXN.make('org.dxos.type.blueprint', '0.2.0')),
+  Type.makeObject(DXN.make('org.dxos.type.blueprint', '0.2.0')),
 );
 
 /**
@@ -266,7 +266,7 @@ export const Blueprint_v0_1_0 = Schema.Struct({
   agentCanEnable: Schema.optional(Schema.Boolean),
 
   mcpServers: Schema.optional(Schema.Array(McpServer.McpServer)),
-}).pipe(Type.object(DXN.make('org.dxos.type.blueprint', '0.1.0')));
+}).pipe(Type.makeObject(DXN.make('org.dxos.type.blueprint', '0.1.0')));
 
 export type Blueprint_v0_1_0 = Type.InstanceType<typeof Blueprint_v0_1_0>;
 /**

@@ -117,7 +117,7 @@ const RoastLog = S.Struct({
 }).pipe(
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({ icon: 'ph--fire-simple--regular', hue: 'amber' }),
-  Type.object(DXN.make('example.type.roastLog', '0.1.0')),
+  Type.makeObject(DXN.make('example.type.roastLog', '0.1.0')),
 );
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

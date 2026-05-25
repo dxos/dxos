@@ -91,7 +91,7 @@ export const Task = Schema.Struct({
     icon: 'ph--check-circle--regular',
     hue: 'neutral',
   }),
-  Type.object(DXN.make('org.dxos.type.task', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.task', '0.1.0')),
 );
 
 export type Task = Type.InstanceType<typeof Task>;

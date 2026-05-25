@@ -279,7 +279,7 @@ export namespace Spacetime {
   export const Scene = Schema.Struct({
     name: Schema.optional(Schema.String),
   }).pipe(
-    Type.object({
+    Type.makeObject({
       typename: 'org.dxos.type.Scene.Scene',
       version: '0.1.0',
     }),

@@ -23,7 +23,7 @@ export const Profile = Schema.Struct({
     icon: 'ph--brain--regular',
     hue: 'violet',
   }),
-  Type.object(DXN.make('org.dxos.type.sidekick.profile', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.sidekick.profile', '0.1.0')),
 );
 
 export type Profile = Type.InstanceType<typeof Profile>;

@@ -91,7 +91,7 @@ export const Segment = Schema.Struct({
   title: Schema.optional(Schema.String),
   venue: Schema.optional(Place),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.trip.segment', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.trip.segment', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--ticket--regular',
     hue: 'sky',

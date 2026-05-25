@@ -48,7 +48,7 @@ export const Feed = Schema.Struct({
     icon: 'ph--rows--regular',
     hue: 'yellow',
   }),
-  Type.object(DXN.make('org.dxos.type.feed', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.feed', '0.1.0')),
 );
 
 /**

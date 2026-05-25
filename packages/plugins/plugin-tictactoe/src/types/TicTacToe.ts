@@ -43,7 +43,7 @@ export const State = Schema.Struct({
   // same reasoning). Keeps the state out of the navtree's typed branches so an orphaned
   // state doesn't reappear after the wrapping Game is deleted.
   SystemTypeAnnotation.set(true),
-  Type.object(DXN.make('org.dxos.type.tictactoe.state', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.tictactoe.state', '0.1.0')),
 );
 
 export type State = Type.InstanceType<typeof State>;

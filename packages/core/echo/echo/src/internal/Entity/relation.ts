@@ -97,7 +97,7 @@ export const EchoRelationSchema = <Source, Target>({
   assertArgument(Schema.isSchema(targetSchema), 'target');
   const typename = DXN.getName(dxn);
   const version = DXN.getVersion(dxn);
-  invariant(version, `Type.relation requires a versioned DXN: ${dxn}`);
+  invariant(version, `Type.makeRelation requires a versioned DXN: ${dxn}`);
   const sourceDXN = getDXNForRelationSchemaRef(sourceSchema);
   const targetDXN = getDXNForRelationSchemaRef(targetSchema);
   if (getEntityKind(sourceSchema) !== EntityKind.Object) {

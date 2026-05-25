@@ -28,7 +28,7 @@ export const Account = Schema.Struct({
   notes: Schema.optional(Schema.String),
   accessTokens: Schema.Array(Ref.Ref(AccessToken.AccessToken)).pipe(Schema.optional),
 }).pipe(
-  Type.object(DXN.make('org.dxos.type.account', '0.1.0')),
+  Type.makeObject(DXN.make('org.dxos.type.account', '0.1.0')),
   LabelAnnotation.set(['displayName']),
   Annotation.IconAnnotation.set({
     icon: 'ph--identification-card--regular',
