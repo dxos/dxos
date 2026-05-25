@@ -17,7 +17,7 @@ import * as internal from './internal';
 import type * as Obj from './Obj';
 import * as Ref from './Ref';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
-import type * as TypeNs from "./Type";
+import type * as TypeNs from './Type';
 
 export interface Filter<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.

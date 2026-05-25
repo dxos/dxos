@@ -60,13 +60,8 @@ export const EchoTypeKindSchema: {
       }),
     });
 
-    return makeEchoTypeSchema<Self, EntityKind.Type, Fields>(
-      fields,
-      ast,
-      typename,
-      version,
-      EntityKind.Type,
-      () => toJsonSchema(Schema.make(ast)),
+    return makeEchoTypeSchema<Self, EntityKind.Type, Fields>(fields, ast, typename, version, EntityKind.Type, () =>
+      toJsonSchema(Schema.make(ast)),
     );
   };
 };

@@ -26,14 +26,13 @@ const MapSchema = Schema.Struct({
   Type.makeObject(DXN.make('org.dxos.type.map', '0.1.0')),
 );
 
-export interface Map
-  extends Obj.OfShape<{
-    readonly name?: string;
-    view?: Ref.Ref<View.View>;
-    center?: [number, number];
-    zoom?: number;
-    coordinates?: ReadonlyArray<[number, number]>;
-  }> {}
+export interface Map extends Obj.OfShape<{
+  readonly name?: string;
+  view?: Ref.Ref<View.View>;
+  center?: [number, number];
+  zoom?: number;
+  coordinates?: ReadonlyArray<[number, number]>;
+}> {}
 export const Map: Type.Obj<Map> = MapSchema as any;
 
 type MakeProps = Omit<Partial<Obj.MakeProps<typeof Map>>, 'view'> & {

@@ -720,7 +720,11 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       const type = target[symbolInternals].database.schemaRegistry
         .query({ typename, ...(version ? { version } : {}) })
         .runSync()[0];
-      console.log('[getSchema DXN branch]', { typename, hasType: !!type, jsonSchemaProps: type?.jsonSchema?.properties });
+      console.log('[getSchema DXN branch]', {
+        typename,
+        hasType: !!type,
+        jsonSchemaProps: type?.jsonSchema?.properties,
+      });
       return type && Type.getSchema(type);
     }
 
@@ -732,9 +736,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (echoUri != null) {
       const backingObjectId = EchoURI.getObjectId(echoUri);
       if (backingObjectId != null) {
-        const type = target[symbolInternals].database.schemaRegistry
-          .query({ backingObjectId })
-          .runSync()[0];
+        const type = target[symbolInternals].database.schemaRegistry.query({ backingObjectId }).runSync()[0];
         if (type != null) {
           return Type.getSchema(type);
         }

@@ -58,13 +58,8 @@ export const EchoObjectSchema: {
       }),
     });
 
-    return makeEchoTypeSchema<Self, EntityKind.Object, Fields>(
-      fields,
-      ast,
-      typename,
-      version,
-      EntityKind.Object,
-      () => toJsonSchema(Schema.make(ast)),
+    return makeEchoTypeSchema<Self, EntityKind.Object, Fields>(fields, ast, typename, version, EntityKind.Object, () =>
+      toJsonSchema(Schema.make(ast)),
     );
   };
 };

@@ -178,12 +178,14 @@ export const makeGraphWriterHandler = (
 export const createExtractionSchema = (types: Type.AnyEntity[]) => {
   return Schema.Struct({
     ...Object.fromEntries(
-      types.map((type) => preprocessSchema(Type.getSchema(type))).map((schema, index) => [
-        `objects_${getSanitizedSchemaName(types[index])}`,
-        Schema.optional(Schema.Array(schema)).annotations({
-          description: `The objects of type: ${DXN.getName(DXN.tryMake(Type.getURI(types[index])!)!)}. ${SchemaAST.getDescriptionAnnotation(Type.getSchema(types[index]).ast).pipe(Option.getOrElse(() => ''))}`,
-        }),
-      ]),
+      types
+        .map((type) => preprocessSchema(Type.getSchema(type)))
+        .map((schema, index) => [
+          `objects_${getSanitizedSchemaName(types[index])}`,
+          Schema.optional(Schema.Array(schema)).annotations({
+            description: `The objects of type: ${DXN.getName(DXN.tryMake(Type.getURI(types[index])!)!)}. ${SchemaAST.getDescriptionAnnotation(Type.getSchema(types[index]).ast).pipe(Option.getOrElse(() => ''))}`,
+          }),
+        ]),
     ),
   });
 };

@@ -32,7 +32,9 @@ const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = Ass
 
       // TODO(wittjosiah): This should be a space-level setting.
       // TODO(burdon): Clone when activated. Copy-on-write for template.
-      const blueprints = (yield* Effect.promise(() => db.query(Filter.type(Blueprint.Blueprint)).run())) as Blueprint.Blueprint[];
+      const blueprints = (yield* Effect.promise(() =>
+        db.query(Filter.type(Blueprint.Blueprint)).run(),
+      )) as Blueprint.Blueprint[];
       let defaultAssistantBlueprint = blueprints.find(
         (blueprint) => Obj.getMeta(blueprint).key === AssistantBlueprint.key,
       );

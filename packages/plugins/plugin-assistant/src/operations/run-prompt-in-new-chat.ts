@@ -44,7 +44,9 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInNewCha
                 }
 
                 if (blueprints && blueprints.length > 0) {
-                  const allBlueprints = (await db.query(Filter.type(Blueprint.Blueprint)).run()) as Blueprint.Blueprint[];
+                  const allBlueprints = (await db
+                    .query(Filter.type(Blueprint.Blueprint))
+                    .run()) as Blueprint.Blueprint[];
                   const matchedBlueprints = allBlueprints.filter((blueprint) => {
                     const blueprintKey = Obj.getMeta(blueprint).key;
                     return blueprintKey !== undefined && blueprints.includes(blueprintKey);

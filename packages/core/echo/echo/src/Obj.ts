@@ -157,10 +157,7 @@ export type MakeProps<S> = {
  * Note: Only accepts object schemas / object-kind types, not relation schemas.
  * Use `Relation.make` for relations.
  */
-export function make<T extends Type.AnyObject>(
-  type: T,
-  props: NoInfer<MakeProps<T>>,
-): OfShape<Type.InstanceType<T>>;
+export function make<T extends Type.AnyObject>(type: T, props: NoInfer<MakeProps<T>>): OfShape<Type.InstanceType<T>>;
 export function make(input: Type.AnyObject, props: any): OfShape<any> {
   // `Type.Type` entities aren't `Schema.Schema` themselves; derive the Effect
   // Schema via `Type.getSchema(...)`. Pass the entity through to `makeObject`

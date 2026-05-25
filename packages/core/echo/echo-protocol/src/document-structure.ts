@@ -208,15 +208,7 @@ export const ObjectStructure = Object.freeze({
     };
   },
 
-  makeType: ({
-    type,
-    keys,
-    data,
-  }: {
-    type: URI.URI;
-    keys?: ForeignKey[];
-    data?: unknown;
-  }): ObjectStructure => {
+  makeType: ({ type, keys, data }: { type: URI.URI; keys?: ForeignKey[]; data?: unknown }): ObjectStructure => {
     return {
       system: {
         kind: 'type',

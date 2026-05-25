@@ -30,12 +30,11 @@ const MasonrySchema = Schema.Struct({
   Type.makeObject(DXN.make('org.dxos.type.masonry', '0.1.0')),
 );
 
-export interface Masonry
-  extends Obj.OfShape<{
-    readonly name?: string;
-    view: Ref.Ref<View.View>;
-    arrangement?: ReadonlyArray<{ readonly ids: readonly string[]; readonly hidden?: boolean }>;
-  }> {}
+export interface Masonry extends Obj.OfShape<{
+  readonly name?: string;
+  view: Ref.Ref<View.View>;
+  arrangement?: ReadonlyArray<{ readonly ids: readonly string[]; readonly hidden?: boolean }>;
+}> {}
 export const Masonry: Type.Obj<Masonry> = MasonrySchema as any;
 
 type MakeProps = Omit<Partial<Obj.MakeProps<typeof Masonry>>, 'view'> & {

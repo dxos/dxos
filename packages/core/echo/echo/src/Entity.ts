@@ -4,7 +4,6 @@
 
 // @import-as-namespace
 
-
 import * as Schema from 'effect/Schema';
 
 import type { ForeignKey } from '@dxos/echo-protocol';
@@ -64,7 +63,9 @@ export interface Unknown extends OfKind<Kind> {}
  */
 export const Unknown: Schema.Schema<Unknown> = Schema.Struct({
   id: Schema.String,
-}).pipe(Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown }))) as unknown as Schema.Schema<Unknown>;
+}).pipe(
+  Schema.extend(Schema.Record({ key: Schema.String, value: Schema.Unknown })),
+) as unknown as Schema.Schema<Unknown>;
 
 /**
  * Snapshot of an Obj or Relation.

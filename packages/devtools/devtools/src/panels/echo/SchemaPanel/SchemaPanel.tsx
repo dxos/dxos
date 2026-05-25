@@ -160,9 +160,7 @@ export const SchemaPanel = (props: { space?: Space }) => {
           <div className={mx('p-1 min-h-0 h-full overflow-auto')}>
             {selected ? (
               <ObjectViewer
-                object={
-                  Type.isType(selected) ? selected.jsonSchema : JsonSchema.toJsonSchema(selected)
-                }
+                object={Type.isType(selected) ? selected.jsonSchema : JsonSchema.toJsonSchema(selected)}
                 id={Type.getURI(selected)?.toString()}
                 onNavigate={onNavigate}
               />

@@ -20,17 +20,16 @@ export const Employer = Schema.Struct({
   active: Schema.optional(Schema.Boolean),
   startDate: Schema.optional(Schema.String),
   endDate: Schema.optional(Schema.String),
-})
-  .pipe(
-    Schema.annotations({
-      description: 'An employing organization of a person.',
-    }),
-    Type.makeRelation({
-      dxn: DXN.make('org.dxos.relation.employer', '0.1.0'),
-      source: Person.Person,
-      target: Organization.Organization,
-    }),
-  );
+}).pipe(
+  Schema.annotations({
+    description: 'An employing organization of a person.',
+  }),
+  Type.makeRelation({
+    dxn: DXN.make('org.dxos.relation.employer', '0.1.0'),
+    source: Person.Person,
+    target: Organization.Organization,
+  }),
+);
 
 export type Employer = Type.InstanceType<typeof Employer>;
 // TODO(wittjosiah): Add `Relation.MakeProps`.

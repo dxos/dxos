@@ -42,7 +42,9 @@ export namespace TestSchema {
     Annotation.IconAnnotation.set({ icon: 'ph--building--regular', hue: 'blue' }),
   );
 
-  export const Organization = OrganizationSchema.pipe(Type.makeObject(DXN.make('com.example.type.organization', '0.1.0')));
+  export const Organization = OrganizationSchema.pipe(
+    Type.makeObject(DXN.make('com.example.type.organization', '0.1.0')),
+  );
 
   export type Organization = Schema.Schema.Type<typeof Organization>;
 

@@ -19,10 +19,7 @@ export const DynamicTypeCard = ({ subject }: AppSurface.ObjectCardProps) => {
   const db = Obj.getDatabase(subject);
   const typename = Obj.getTypename(subject);
   const runtimeSchema = useSchema(db, typename);
-  const schema = useMemo(
-    () => runtimeSchema && omitId(Type.getSchema(runtimeSchema)),
-    [runtimeSchema],
-  );
+  const schema = useMemo(() => runtimeSchema && omitId(Type.getSchema(runtimeSchema)), [runtimeSchema]);
 
   const handleSave = useCallback(
     (values: Record<string, unknown>, { changed }: FormUpdateMeta<Record<string, unknown>>) => {

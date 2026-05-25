@@ -109,10 +109,7 @@ class FilterClass implements Filter$.Any {
     props?: Filter$.Props<TypeNs.InstanceType<T>>,
   ): Filter$.Filter<TypeNs.InstanceType<T>>;
   static type(schema: string, props?: Filter$.Props<unknown>): Filter$.Filter<any>;
-  static type(
-    schema: TypeNs.AnyEntity | string,
-    props?: Filter$.Props<unknown>,
-  ): Filter$.Filter<unknown> {
+  static type(schema: TypeNs.AnyEntity | string, props?: Filter$.Props<unknown>): Filter$.Filter<unknown> {
     if (typeof schema !== 'string') {
       throw new TypeError('expected typename as the first paramter');
     }
@@ -430,10 +427,7 @@ class QueryClass implements Query$.Any {
   ): Query$.Query<Schema.Schema.Type<S>>;
   static type(type: TypeNs.Type, predicates?: Filter$.Props<Obj$.Unknown>): Query$.Query<Obj$.Unknown>;
   static type(schema: string, predicates?: Filter$.Props<unknown>): Query$.Query<any>;
-  static type(
-    schema: Schema.Schema.All | TypeNs.Type | string,
-    predicates?: Filter$.Props<unknown>,
-  ): Query$.Any {
+  static type(schema: Schema.Schema.All | TypeNs.Type | string, predicates?: Filter$.Props<unknown>): Query$.Any {
     return new QueryClass({
       type: 'select',
       filter: FilterClass.type(schema as any, predicates as any).ast,
@@ -524,7 +518,10 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  sourceOf(relation?: TypeNs.Relation<any, any, any, any> | string, predicates?: Filter$.Props<unknown> | undefined): Query$.Any {
+  sourceOf(
+    relation?: TypeNs.Relation<any, any, any, any> | string,
+    predicates?: Filter$.Props<unknown> | undefined,
+  ): Query$.Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
@@ -533,7 +530,10 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  targetOf(relation?: TypeNs.Relation<any, any, any, any> | string, predicates?: Filter$.Props<unknown> | undefined): Query$.Any {
+  targetOf(
+    relation?: TypeNs.Relation<any, any, any, any> | string,
+    predicates?: Filter$.Props<unknown> | undefined,
+  ): Query$.Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,

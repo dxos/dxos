@@ -26,12 +26,11 @@ const GraphSchema = Schema.Struct({
   }),
   Type.makeObject(DXN.make('org.dxos.type.graph', '0.1.0')),
 );
-export interface Graph
-  extends Obj.OfShape<{
-    readonly name?: string;
-    view: Ref.Ref<View.View>;
-    query: { readonly raw?: string; readonly ast: QueryAST.Query };
-  }> {}
+export interface Graph extends Obj.OfShape<{
+  readonly name?: string;
+  view: Ref.Ref<View.View>;
+  query: { readonly raw?: string; readonly ast: QueryAST.Query };
+}> {}
 export const Graph: Type.Obj<Graph> = GraphSchema as any;
 
 type MakeProps = Omit<Partial<Obj.MakeProps<typeof Graph>>, 'view'> & {

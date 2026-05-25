@@ -55,17 +55,15 @@ export type ProjectionChangeCallback = {
  * @param view - The ECHO-backed view object.
  * @param schema - Optional persisted `Type.AnyEntity`. If not provided, schema mutations will throw.
  */
-export const createEchoChangeCallback = (
-  view: View.View,
-  schema?: Type.AnyEntity,
-): ProjectionChangeCallback => ({
+export const createEchoChangeCallback = (view: View.View, schema?: Type.AnyEntity): ProjectionChangeCallback => ({
   // Inside Obj.update, v is Mutable<View.View>, so v.projection is already mutable.
   projection: (mutate) => Obj.update(view, (view) => mutate(view.projection as Mutable<View.Projection>)),
-  schema: schema == null
-    ? () => {
-        throw new Error('Schema is not mutable');
-      }
-    : (mutate) => Type.update(schema, (draft) => mutate(draft.jsonSchema as Types.DeepMutable<JsonSchemaType>)),
+  schema:
+    schema == null
+      ? () => {
+          throw new Error('Schema is not mutable');
+        }
+      : (mutate) => Type.update(schema, (draft) => mutate(draft.jsonSchema as Types.DeepMutable<JsonSchemaType>)),
 });
 
 /**

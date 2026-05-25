@@ -288,9 +288,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
         // before handing it to the schema-side helper. The raw-Schema branch
         // is runtime-only (not in `RegisterSchemaInput`); use `unknown` to be
         // explicit that we're escaping the declared union.
-        const schema = Type.isType(input)
-          ? Type.getSchema(input)
-          : (input as unknown as Schema.Schema.AnyNoContext);
+        const schema = Type.isType(input) ? Type.getSchema(input) : (input as unknown as Schema.Schema.AnyNoContext);
         results.push(this._addSchema(schema));
       } else if (typeof input === 'object' && 'typename' in input && 'version' in input && 'jsonSchema' in input) {
         const schema = this._addSchema(
@@ -482,4 +480,3 @@ const validateStoredSchemaIntegrity = (schema: Type.Type) => {
 
   return true;
 };
-

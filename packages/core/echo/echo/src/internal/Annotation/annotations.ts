@@ -26,7 +26,12 @@ import {
   unwrapToSchema,
 } from '../common/types';
 import { getUri as getUriFromEntity } from '../Entity/api';
-import { type AnnotationHelper, createAnnotationHelper, effectSchemaFromJsonSchema, jsonSchemaFromSource } from './util';
+import {
+  type AnnotationHelper,
+  createAnnotationHelper,
+  effectSchemaFromJsonSchema,
+  jsonSchemaFromSource,
+} from './util';
 
 /**
  * @internal
@@ -94,7 +99,11 @@ export const getSchemaURI = (
  * For a static `Type.Type`, the URI is the typename DXN.
  */
 export const getTypeURIFromSpecifier = (
-  input: Schema.Schema.All | AnyEntity | { readonly [KindId]: unknown; readonly typename?: string; readonly version?: string; readonly id?: string } | string,
+  input:
+    | Schema.Schema.All
+    | AnyEntity
+    | { readonly [KindId]: unknown; readonly typename?: string; readonly version?: string; readonly id?: string }
+    | string,
 ): URI.URI => {
   if (Schema.isSchema(input)) {
     return getSchemaURI(input) ?? raise(new TypeError('Schema has no URI'));
@@ -309,7 +318,12 @@ export const getTypeURI = (obj: AnyProperties): URI.URI | undefined => {
  */
 // TODO(burdon): Can we use `Schema.is`?
 export const isInstanceOf = <S>(
-  schemaOrType: S extends Schema.Schema.AnyNoContext ? S : Schema.Schema.AnyNoContext | AnyEntity | { readonly [KindId]: unknown; readonly typename?: string; readonly version?: string; readonly id?: string },
+  schemaOrType: S extends Schema.Schema.AnyNoContext
+    ? S
+    :
+        | Schema.Schema.AnyNoContext
+        | AnyEntity
+        | { readonly [KindId]: unknown; readonly typename?: string; readonly version?: string; readonly id?: string },
   object: any,
 ): boolean => {
   if (object == null) {
@@ -583,8 +597,7 @@ export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): Annotation
       return getFromAst(ast);
     },
     getFromAst: (ast) => getFromAst(ast),
-    set: (value) =>
-      PropertyMeta(props.id, Schema.encodeSync(props.schema)(value)) as any,
+    set: (value) => PropertyMeta(props.id, Schema.encodeSync(props.schema)(value)) as any,
   };
 };
 

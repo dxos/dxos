@@ -168,7 +168,9 @@ export namespace SpaceOperation {
 
   export const RemoveObjectsOutput = Schema.Struct({
     objects: Schema.Array(Entity.Unknown).annotations({ description: 'The removed entities.' }),
-    parentCollection: Type.getSchema(Collection.Collection).annotations({ description: 'The collection removed from.' }),
+    parentCollection: Type.getSchema(Collection.Collection).annotations({
+      description: 'The collection removed from.',
+    }),
     indices: Schema.Array(Schema.Number).annotations({ description: 'The indices the objects were at.' }),
     wasActive: Schema.Array(Schema.String).annotations({
       description: 'IDs of objects that were active before removal.',
@@ -187,7 +189,9 @@ export namespace SpaceOperation {
     services: [Capability.Service],
     input: Schema.Struct({
       objects: Schema.Array(Entity.Unknown).annotations({ description: 'The entities to remove.' }),
-      target: Schema.optional(Type.getSchema(Collection.Collection)).annotations({ description: 'The collection to remove from.' }),
+      target: Schema.optional(Type.getSchema(Collection.Collection)).annotations({
+        description: 'The collection to remove from.',
+      }),
     }),
     output: RemoveObjectsOutput,
   });
@@ -509,7 +513,9 @@ export namespace SpaceOperation {
     services: [Capability.Service],
     input: Schema.Struct({
       objects: Schema.Array(Entity.Unknown).annotations({ description: 'The entities to restore.' }),
-      parentCollection: Type.getSchema(Collection.Collection).annotations({ description: 'The collection to restore to.' }),
+      parentCollection: Type.getSchema(Collection.Collection).annotations({
+        description: 'The collection to restore to.',
+      }),
       indices: Schema.Array(Schema.Number).annotations({ description: 'The indices to restore at.' }),
       wasActive: Schema.Array(Schema.String).annotations({
         description: 'IDs of objects that were active before deletion.',

@@ -16,7 +16,7 @@ import * as refInternal from './internal/Ref';
 import type * as JsonSchema from './JsonSchema';
 import type * as Obj from './Obj';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
-import type * as TypeNs from "./Type";
+import type * as TypeNs from './Type';
 
 /**
  * Instance type for a reference.
@@ -51,9 +51,7 @@ export type Unknown = refInternal.Ref<Obj.Unknown>;
  * ```
  */
 export const Ref: {
-  <S extends TypeNs.AnyObject | TypeNs.AnyRelation>(
-    type: S,
-  ): RefSchema<TypeNs.InstanceType<S> & Obj.Unknown>;
+  <S extends TypeNs.AnyObject | TypeNs.AnyRelation>(type: S): RefSchema<TypeNs.InstanceType<S> & Obj.Unknown>;
 
   // `Type.Type` entities (the meta-schema kind) can be referenced too — e.g. a
   // trigger that points to a stored function/workflow definition.

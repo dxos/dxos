@@ -33,7 +33,9 @@ const EXAMPLE_NAMESPACE = '@example';
 
 describe('effect-to-json', () => {
   test('type annotation', () => {
-    const Test = Schema.Struct({ name: Schema.String }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
+    const Test = Schema.Struct({ name: Schema.String }).pipe(
+      Type.makeObject(DXN.make('com.example.type.test', '0.1.0')),
+    );
     const jsonSchema = toJsonSchema(Test);
     expect(jsonSchema.$id).toEqual('dxn:com.example.type.test:0.1.0');
     expect(jsonSchema.version).toEqual('0.1.0');

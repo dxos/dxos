@@ -53,10 +53,7 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
     }));
   }, [allSchemata]);
 
-  const jsonSchema = useMemo(
-    () => currentSchema ? currentSchema.jsonSchema : {},
-    [currentSchema],
-  );
+  const jsonSchema = useMemo(() => (currentSchema ? currentSchema.jsonSchema : {}), [currentSchema]);
   const locationFields = useMemo(() => {
     if (!jsonSchema?.properties) {
       return [];

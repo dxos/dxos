@@ -15,7 +15,9 @@ export interface AnnotationHelper<T> {
   /**
    * Get the annotation value from a schema or `Type.Type` entity.
    */
-  get: (schema: Schema.Schema.Any | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext }) => Option.Option<T>;
+  get: (
+    schema: Schema.Schema.Any | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext },
+  ) => Option.Option<T>;
   /**
    * Get the annotation value from the AST.
    */

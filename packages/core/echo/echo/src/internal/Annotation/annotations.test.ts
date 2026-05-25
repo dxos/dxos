@@ -7,10 +7,10 @@ import { describe, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import * as Type from '../../Type';
 import { createEchoSchema } from '../../testing';
-import { EchoObjectSchema } from '../Entity';
+import * as Type from '../../Type';
 import { EntityKind } from '../common/types';
+import { EchoObjectSchema } from '../Entity';
 import {
   LabelAnnotation,
   SystemTypeAnnotation,

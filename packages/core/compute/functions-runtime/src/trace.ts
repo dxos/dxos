@@ -106,26 +106,25 @@ const InvocationTraceStartEventSchema = Schema.Struct({
   runtime: Schema.optional(FunctionRuntimeKind),
 }).pipe(Type.makeObject(DXN.make('org.dxos.type.invocationTraceStart', '0.1.0')));
 
-export interface InvocationTraceStartEvent
-  extends Obj.OfShape<{
-    readonly type: InvocationTraceEventType.START;
-    readonly invocationId: string;
-    readonly parentInvocationId?: string;
-    readonly timestamp: number;
-    readonly input: unknown;
-    readonly invocationTraceFeed?: Ref.Ref<Feed.Feed>;
-    readonly invocationTarget?: Ref.Ref<Obj.Unknown>;
-    readonly trigger?: Ref.Ref<Trigger.Trigger>;
-    readonly chat?: Ref.Ref<Obj.Unknown>;
-    readonly process?: {
-      readonly pid: string;
-      readonly parentPid?: string;
-      readonly key: string;
-      readonly name?: string;
-      readonly target?: string;
-    };
-    readonly runtime?: FunctionRuntimeKind;
-  }> {}
+export interface InvocationTraceStartEvent extends Obj.OfShape<{
+  readonly type: InvocationTraceEventType.START;
+  readonly invocationId: string;
+  readonly parentInvocationId?: string;
+  readonly timestamp: number;
+  readonly input: unknown;
+  readonly invocationTraceFeed?: Ref.Ref<Feed.Feed>;
+  readonly invocationTarget?: Ref.Ref<Obj.Unknown>;
+  readonly trigger?: Ref.Ref<Trigger.Trigger>;
+  readonly chat?: Ref.Ref<Obj.Unknown>;
+  readonly process?: {
+    readonly pid: string;
+    readonly parentPid?: string;
+    readonly key: string;
+    readonly name?: string;
+    readonly target?: string;
+  };
+  readonly runtime?: FunctionRuntimeKind;
+}> {}
 export const InvocationTraceStartEvent: Type.Obj<InvocationTraceStartEvent> = InvocationTraceStartEventSchema as any;
 
 const InvocationTraceEndEventSchema = Schema.Struct({
@@ -149,14 +148,13 @@ const InvocationTraceEndEventSchema = Schema.Struct({
   error: Schema.optional(SerializedError),
 }).pipe(Type.makeObject(DXN.make('org.dxos.type.invocationTraceEnd', '0.1.0')));
 
-export interface InvocationTraceEndEvent
-  extends Obj.OfShape<{
-    readonly type: InvocationTraceEventType.END;
-    readonly invocationId: string;
-    readonly timestamp: number;
-    readonly outcome: InvocationOutcome;
-    readonly error?: SerializedError;
-  }> {}
+export interface InvocationTraceEndEvent extends Obj.OfShape<{
+  readonly type: InvocationTraceEventType.END;
+  readonly invocationId: string;
+  readonly timestamp: number;
+  readonly outcome: InvocationOutcome;
+  readonly error?: SerializedError;
+}> {}
 export const InvocationTraceEndEvent: Type.Obj<InvocationTraceEndEvent> = InvocationTraceEndEventSchema as any;
 
 export type InvocationTraceEvent = InvocationTraceStartEvent | InvocationTraceEndEvent;

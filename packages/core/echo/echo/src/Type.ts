@@ -78,8 +78,9 @@ type EchoSchemaKind<K extends internal.EntityKind = internal.EntityKind> = {
  * type Person = Type.InstanceType<typeof Person>;
  * ```
  */
-export interface Obj<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>
-  extends BaseTypeEntity<T & EntityModule.OfKind<typeof EntityModule.Kind.Object>> {
+export interface Obj<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fields> extends BaseTypeEntity<
+  T & EntityModule.OfKind<typeof EntityModule.Kind.Object>
+> {
   /** Schema-kind brand (object). */
   readonly [internal.SchemaKindId]: internal.EntityKind.Object;
 
@@ -205,10 +206,14 @@ export const makeRelationFromJsonSchema = (
  *
  * **Not a `Schema.Schema`.** See {@link Obj}'s note.
  */
-export interface Relation<T, Source, Target, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>
-  extends BaseTypeEntity<
-    RelationModule.Endpoints<Source, Target> & T & EntityModule.OfKind<typeof EntityModule.Kind.Relation>
-  > {
+export interface Relation<
+  T,
+  Source,
+  Target,
+  Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
+> extends BaseTypeEntity<
+  RelationModule.Endpoints<Source, Target> & T & EntityModule.OfKind<typeof EntityModule.Kind.Relation>
+> {
   /** Schema-kind brand (relation). */
   readonly [internal.SchemaKindId]: internal.EntityKind.Relation;
 
@@ -447,8 +452,10 @@ export type InstancePhantomId = internal.InstancePhantomId;
  * `A` is the instance-type phantom — what `Obj.make(value, ...)` would produce.
  * Merged with the `Type` const value via TypeScript declaration merging.
  */
-export interface Type<A = unknown>
-  extends Omit<BaseTypeEntity<A & EntityModule.OfKind<typeof EntityModule.Kind.Type>>, 'typename'> {
+export interface Type<A = unknown> extends Omit<
+  BaseTypeEntity<A & EntityModule.OfKind<typeof EntityModule.Kind.Type>>,
+  'typename'
+> {
   /** Schema-kind brand (type — the meta-schema kind). */
   readonly [internal.SchemaKindId]: internal.EntityKind.Type;
 
@@ -485,15 +492,16 @@ export type Persistence = 'static' | 'persisted';
  *  - `Type<A>` entity (via the `InstancePhantomId` brand) → `A`
  *  - Effect `Schema.Schema.All`                            → `Schema.Schema.Type<T>`
  */
-export type InstanceType<T> = T extends Relation<infer Props, infer Source, infer Target, any>
-  ? RelationModule.Endpoints<Source, Target> & Props & EntityModule.OfKind<typeof EntityModule.Kind.Relation>
-  : T extends Obj<infer A, any>
-    ? A & EntityModule.OfKind<typeof EntityModule.Kind.Object>
-    : T extends Type<infer A>
-      ? A & EntityModule.OfKind<typeof EntityModule.Kind.Type>
-      : T extends Schema.Schema.All
-        ? Schema.Schema.Type<T>
-        : never;
+export type InstanceType<T> =
+  T extends Relation<infer Props, infer Source, infer Target, any>
+    ? RelationModule.Endpoints<Source, Target> & Props & EntityModule.OfKind<typeof EntityModule.Kind.Relation>
+    : T extends Obj<infer A, any>
+      ? A & EntityModule.OfKind<typeof EntityModule.Kind.Object>
+      : T extends Type<infer A>
+        ? A & EntityModule.OfKind<typeof EntityModule.Kind.Type>
+        : T extends Schema.Schema.All
+          ? Schema.Schema.Type<T>
+          : never;
 
 /**
  * Returns the Effect Schema for a type value.

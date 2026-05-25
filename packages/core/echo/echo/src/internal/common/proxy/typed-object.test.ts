@@ -8,8 +8,8 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
-import { EchoObjectSchema } from '../../Entity';
 import * as Type from '../../../Type';
+import { EchoObjectSchema } from '../../Entity';
 import { getSchema } from '../types';
 import { makeObject } from './make-object';
 import { change } from './reactive';

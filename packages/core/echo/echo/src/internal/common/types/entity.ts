@@ -61,9 +61,7 @@ export const getStaticTypeSchema = (value: unknown): Schema.Schema.AnyNoContext 
  * Schema the caller meant to register", whether they were handed a static
  * `Type.Type` entity or a raw `Schema.Schema`.
  */
-export const unwrapToSchema = <S extends Schema.Schema.AnyNoContext>(
-  input: S | { [StaticTypeSchemaSlot]?: S },
-): S => {
+export const unwrapToSchema = <S extends Schema.Schema.AnyNoContext>(input: S | { [StaticTypeSchemaSlot]?: S }): S => {
   return (getStaticTypeSchema(input) as S | undefined) ?? (input as S);
 };
 

@@ -91,7 +91,9 @@ export type JsonSchemaOptions = {
 //  We add additional propertyOrder (but the object properties ARE ordered); and type "string" for literals.
 // TODO(wittjosiah): This is mutable because its a pojo, perhaps should be left as readonly at type level though?
 export const toJsonSchema = (
-  schema: Schema.Schema.All | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext; jsonSchema?: JsonSchemaType },
+  schema:
+    | Schema.Schema.All
+    | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext; jsonSchema?: JsonSchemaType },
   options: JsonSchemaOptions = {},
 ): Types.DeepMutable<JsonSchemaType> => {
   // Allow passing a `Type.Type` entity — use its hidden source schema (or its
@@ -558,8 +560,6 @@ const normalizeJsonSchema = (jsonSchema: Types.DeepMutable<JsonSchemaType>): Typ
 // direct dependency on this module.
 setTypeSourceSchemaBuilder(toEffectSchema);
 
-
-
 // Register the toJsonSchema serializer so AnnotationHelper.set can rebuild a
 // Type.Type entity's `jsonSchema` after annotating the underlying source schema.
 setJsonSchemaSerializer(toJsonSchema);
@@ -567,4 +567,3 @@ setJsonSchemaSerializer(toJsonSchema);
 // annotations off persisted `Type.Type` entities (which have a jsonSchema but
 // no source-schema slot).
 setJsonSchemaDeserializer(toEffectSchema);
-

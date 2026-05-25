@@ -19,7 +19,9 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
       const entities = input.objects;
 
       const space = getSpace(entities[0] as Obj.Unknown);
-      invariant(space && entities.every((entity) => Entity.isEntity(entity) && getSpace(entity as Obj.Unknown) === space));
+      invariant(
+        space && entities.every((entity) => Entity.isEntity(entity) && getSpace(entity as Obj.Unknown) === space),
+      );
 
       const parentCollection: Collection.Collection =
         input.target ?? space.properties[Collection.Collection.typename]?.target;

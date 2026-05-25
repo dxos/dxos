@@ -46,9 +46,15 @@ export const getBaseSchema = ({
     // the returned Type entity always carries one (the optionality on Type.Type
     // covers anonymous drafts which this codepath doesn't produce).
     // Snapshot through toJsonSchema — type.jsonSchema is ECHO-backed and can't be mutated directly.
-    return { typename: type.typename!, jsonSchema: JsonSchema.toJsonSchema(Type.getSchema(type)) as Types.DeepMutable<JsonSchema.JsonSchema> };
+    return {
+      typename: type.typename!,
+      jsonSchema: JsonSchema.toJsonSchema(Type.getSchema(type)) as Types.DeepMutable<JsonSchema.JsonSchema>,
+    };
   } else if (schema) {
-    return { typename: Type.getTypename(schema)!, jsonSchema: JsonSchema.toJsonSchema(Type.getSchema(schema)) as Types.DeepMutable<JsonSchema.JsonSchema> };
+    return {
+      typename: Type.getTypename(schema)!,
+      jsonSchema: JsonSchema.toJsonSchema(Type.getSchema(schema)) as Types.DeepMutable<JsonSchema.JsonSchema>,
+    };
   } else if (typename && jsonSchema) {
     return { typename, jsonSchema };
   } else {

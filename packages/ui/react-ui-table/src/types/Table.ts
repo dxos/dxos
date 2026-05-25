@@ -30,12 +30,11 @@ const TableSchema = Schema.Struct({
   Type.makeObject(DXN.make('org.dxos.type.table', '0.1.0')),
 );
 
-export interface Table
-  extends Obj.OfShape<{
-    readonly name?: string;
-    view: Ref.Ref<View.View>;
-    sizes: { [k: string]: number };
-  }> {}
+export interface Table extends Obj.OfShape<{
+  readonly name?: string;
+  view: Ref.Ref<View.View>;
+  sizes: { [k: string]: number };
+}> {}
 export const Table: Type.Obj<Table> = TableSchema as any;
 
 type MakeProps = {

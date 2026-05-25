@@ -145,9 +145,7 @@ export const buildViewIndex = (get: Atom.Context, space: Space, schemas: Type.An
   const viewObjectIds = new Set<string>();
 
   if (viewSchemas.length > 0) {
-    const filter = Filter.or(
-      ...viewSchemas.map((schema) => Filter.type(schema)),
-    );
+    const filter = Filter.or(...viewSchemas.map((schema) => Filter.type(schema)));
     const viewObjects = get(AtomQuery.make(space.db, filter));
 
     for (const viewObject of viewObjects) {

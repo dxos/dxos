@@ -47,12 +47,11 @@ const KanbanV1Schema = Schema.Struct({
   view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false)),
   arrangement: Arrangement,
 }).pipe(Type.makeObject(DXN.make('org.dxos.type.kanban', '0.1.0')));
-export interface KanbanV1
-  extends Obj.OfShape<{
-    readonly name?: string;
-    view: Ref.Ref<View.View>;
-    arrangement: Arrangement;
-  }> {}
+export interface KanbanV1 extends Obj.OfShape<{
+  readonly name?: string;
+  view: Ref.Ref<View.View>;
+  arrangement: Arrangement;
+}> {}
 export const KanbanV1: Type.Obj<KanbanV1> = KanbanV1Schema as any;
 
 //

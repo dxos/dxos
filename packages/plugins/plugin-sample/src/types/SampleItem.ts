@@ -38,7 +38,6 @@ export const SampleItem = Schema.Struct({
     Schema.optional,
   ),
 }).pipe(
-
   // `LabelAnnotation` tells the framework which field(s) to use as the display label.
   // The navigation tree, search results, and breadcrumbs all use this.
   LabelAnnotation.set(['name']),

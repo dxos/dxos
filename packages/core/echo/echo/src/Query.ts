@@ -16,11 +16,11 @@ import * as Feed from './Feed';
 import * as Filter from './Filter';
 import * as internal from './internal';
 import * as Obj from './Obj';
-// eslint-disable-next-line @dxos/rules/import-as-namespace
-import type * as TypeNs from "./Type";
 import type * as Order from './Order';
 import type * as Ref from './Ref';
 import type * as Relation from './Relation';
+// eslint-disable-next-line @dxos/rules/import-as-namespace
+import type * as TypeNs from './Type';
 import type * as View from './View';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
@@ -261,7 +261,10 @@ class QueryClass implements Any {
     });
   }
 
-  sourceOf(relation?: TypeNs.Relation<any, any, any, any> | string, predicates?: Filter.Props<unknown> | undefined): Any {
+  sourceOf(
+    relation?: TypeNs.Relation<any, any, any, any> | string,
+    predicates?: Filter.Props<unknown> | undefined,
+  ): Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
@@ -270,7 +273,10 @@ class QueryClass implements Any {
     });
   }
 
-  targetOf(relation?: TypeNs.Relation<any, any, any, any> | string, predicates?: Filter.Props<unknown> | undefined): Any {
+  targetOf(
+    relation?: TypeNs.Relation<any, any, any, any> | string,
+    predicates?: Filter.Props<unknown> | undefined,
+  ): Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
@@ -502,10 +508,7 @@ export const type: {
     predicates?: Filter.Props<Schema.Schema.Type<S>>,
   ): Query<Schema.Schema.Type<S>>;
   (schema: string, predicates?: Filter.Props<unknown>): Query<any>;
-} = (
-  schema: TypeNs.AnyEntity | Schema.Schema.AnyNoContext | string,
-  predicates?: Filter.Props<unknown>,
-): Any => {
+} = (schema: TypeNs.AnyEntity | Schema.Schema.AnyNoContext | string, predicates?: Filter.Props<unknown>): Any => {
   return new QueryClass({
     type: 'select',
     // `Filter.type`'s overload set doesn't narrow over the local input union.

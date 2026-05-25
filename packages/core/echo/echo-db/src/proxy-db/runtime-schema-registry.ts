@@ -61,9 +61,8 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
 
   private _add(schema: Type.AnyEntity): void {
     const uri =
-      (Schema.isSchema(schema)
-        ? internal.getSchemaURI(schema as any)
-        : Type.getURI(schema as Type.AnyEntity)) ?? raise(new TypeError('Schema has no URI'));
+      (Schema.isSchema(schema) ? internal.getSchemaURI(schema as any) : Type.getURI(schema as Type.AnyEntity)) ??
+      raise(new TypeError('Schema has no URI'));
     if (this._registry.has(uri)) {
       const typename = Type.getTypename(schema);
       const version = Type.getVersion(schema);

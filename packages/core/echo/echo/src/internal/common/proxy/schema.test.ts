@@ -9,22 +9,20 @@ import { describe, expect, test } from 'vitest';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { PropertyMeta, getPropertyMetaAnnotation, getTypeAnnotation } from '../../Annotation';
-import { EchoObjectSchema } from '../../Entity';
-import {
-  toEffectSchema,
-} from '../../JsonSchema';
+import { Obj as ObjModule } from '../../../index';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import * as TypeNs from '../../../Type';
-import { Obj as ObjModule } from '../../../index';
+import { PropertyMeta, getPropertyMetaAnnotation, getTypeAnnotation } from '../../Annotation';
+import { EchoObjectSchema } from '../../Entity';
+import { toEffectSchema } from '../../JsonSchema';
 type Type = TypeNs.Type;
+import { createEchoSchema } from '../../../testing';
 import {
   addFieldsToSchema,
   removeFieldsFromSchema,
   setTypenameInSchema,
   updateFieldsInSchema,
 } from '../../Type/manipulation';
-import { createEchoSchema } from '../../../testing';
 
 // Helper: introspect a Type.Type entity's properties via its rebuilt Effect Schema.
 const unwrapOptionality = (property: SchemaAST.PropertySignature): SchemaAST.PropertySignature => {

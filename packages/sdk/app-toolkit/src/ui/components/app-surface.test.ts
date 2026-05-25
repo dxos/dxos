@@ -13,7 +13,9 @@ import * as AppSurface from './app-surface';
 
 const TypeA = Schema.Struct({ name: Schema.String }).pipe(Type.makeObject(DXN.make('com.example.test.TypeA', '0.1.0')));
 
-const TypeB = Schema.Struct({ value: Schema.Number }).pipe(Type.makeObject(DXN.make('com.example.test.TypeB', '0.1.0')));
+const TypeB = Schema.Struct({ value: Schema.Number }).pipe(
+  Type.makeObject(DXN.make('com.example.test.TypeB', '0.1.0')),
+);
 
 describe('AppSurface', () => {
   //

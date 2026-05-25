@@ -803,10 +803,7 @@ export type CreateTypeExtensionOptions<
     object: Type.InstanceType<T>,
     get: Atom.Context,
   ) => Effect.Effect<Omit<Node.NodeArg<Node.ActionData<any>>, 'type'>[], Error, R>;
-  connector?: (
-    object: Type.InstanceType<T>,
-    get: Atom.Context,
-  ) => Effect.Effect<Node.NodeArg<any>[], Error, R>;
+  connector?: (object: Type.InstanceType<T>, get: Atom.Context) => Effect.Effect<Node.NodeArg<any>[], Error, R>;
   relation?: Node.RelationInput;
   position?: Position;
 };

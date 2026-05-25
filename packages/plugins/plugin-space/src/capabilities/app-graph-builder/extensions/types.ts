@@ -131,7 +131,9 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
 
         // `Schema.isSchema` narrows to `Schema.Schema.Any` (Context=unknown), not
         // `Schema.Schema.AnyNoContext` — `Type.getTypename`'s param is the latter.
-        const typename = Schema.isSchema(schema) ? Type.getTypename(schema as Schema.Schema.AnyNoContext) : schema.typename;
+        const typename = Schema.isSchema(schema)
+          ? Type.getTypename(schema as Schema.Schema.AnyNoContext)
+          : schema.typename;
 
         // {All} virtual node.
         const allNode = Node.make({
