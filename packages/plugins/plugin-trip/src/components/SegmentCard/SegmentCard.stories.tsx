@@ -73,6 +73,7 @@ export const FlightEditable: StoryObj = {
     const segments = useMemo(() => buildSegments(), []);
     const segment = segments[3];
     const handleAction: SegmentCardActionHandler = useCallback((action: SegmentCardAction) => {
+      // eslint-disable-next-line no-console
       console.log(action);
     }, []);
 

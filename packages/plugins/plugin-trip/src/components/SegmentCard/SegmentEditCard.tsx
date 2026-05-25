@@ -3,7 +3,7 @@
 //
 
 import { format } from 'date-fns';
-import React, { type MouseEvent, forwardRef, useCallback, useState } from 'react';
+import React, { type MouseEvent, forwardRef, useCallback, useEffect, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Card, DatePicker, useTranslation } from '@dxos/react-ui';
@@ -29,6 +29,11 @@ export const FlightEditCard = forwardRef<HTMLDivElement, FlightEditCardProps>(({
 
   const editable = segment.status === 'tentative';
   const [departDate, setDepartDate] = useState<Date | undefined>(() => Segment.parseDate(segment.departAt));
+
+  // Re-sync if the component is reused for a different segment.
+  useEffect(() => {
+    setDepartDate(Segment.parseDate(segment.departAt));
+  }, [segment.id, segment.departAt]);
 
   const handleDepartChange = useCallback(
     (next: Date | undefined) => {
