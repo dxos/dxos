@@ -182,12 +182,7 @@ const NamedAnnotationStory = () => {
           <div className='flex gap-2 text-sm'>
             {(['default', 'compact'] as const).map((name) => (
               <label key={name} className='flex items-center gap-1'>
-                <input
-                  type='radio'
-                  name='layout'
-                  checked={layoutName === name}
-                  onChange={() => setLayoutName(name)}
-                />
+                <input type='radio' name='layout' checked={layoutName === name} onChange={() => setLayoutName(name)} />
                 {name}
               </label>
             ))}
@@ -272,18 +267,21 @@ const PlaygroundStory = ({ card = false }: PlaygroundStoryProps) => {
 
   return (
     <Tooltip.Provider>
-      <div className='dx-container grid grid-cols-[1fr_1fr] grid-rows-1 p-4 gap-4 overflow-hidden'>
-        <TestPanel>
-          <div className='overflow-auto h-full'>
-            {card ? (
-              <Card.Root fullWidth>
-                <Card.Content>{form}</Card.Content>
-              </Card.Root>
-            ) : (
-              form
-            )}
-          </div>
-        </TestPanel>
+      <div className='dx-container grid grid-cols-[var(--spacing-card-min-width)_1fr] grid-rows-1 p-4 gap-4 overflow-hidden'>
+        <div className='overflow-auto h-full'>
+          {card ? (
+            <Card.Root fullWidth>
+              <Card.Toolbar>
+                <Card.DragHandle />
+                <Card.Title>Form Layout</Card.Title>
+                <Card.ActionIconButton action='close' onClick={() => console.log('close')} />
+              </Card.Toolbar>
+              <Card.Content>{form}</Card.Content>
+            </Card.Root>
+          ) : (
+            <TestPanel>{form}</TestPanel>
+          )}
+        </div>
         <div className='grid grid-rows-3 gap-4 overflow-hidden'>
           <TestPanel>
             <div className='flex flex-col h-full overflow-hidden'>
