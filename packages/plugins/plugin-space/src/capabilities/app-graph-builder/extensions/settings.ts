@@ -3,23 +3,54 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
-import { isPersonalSpace } from '@dxos/app-toolkit';
-import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { AppNode, AppNodeMatcher, isPersonalSpace } from '@dxos/app-toolkit';
+import { type Space, isSpace } from '@dxos/client/echo';
+import { GraphBuilder, Node } from '@dxos/plugin-graph';
 
 import { meta } from '#meta';
+import { SETTINGS_SECTION_TYPE } from '#types';
 
 //
 // Extension Factory
 //
 
-/** Creates the settings-sections extension for space settings panel. */
+/**
+ * Settings section attached directly under each Space node, plus its children.
+ *
+ * The virtual `settings` section is pinned to the top via `position: 'first'`
+ * so it sits above the un-positioned middle band (collections, mailboxes,
+ * automations, integrations, etc.). It groups the panels contributed by this
+ * plugin (general, members) and by other plugins (automation, functions).
+ */
 export const createSettingsExtensions = Effect.fnUntraced(function* () {
-  const extension = yield* GraphBuilder.createExtension({
+  const sectionExtension = yield* GraphBuilder.createExtension({
+    id: 'settings-section',
+    match: AppNodeMatcher.whenSpace,
+    connector: (space) =>
+      Effect.succeed([
+        AppNode.makeSection({
+          id: 'settings',
+          type: SETTINGS_SECTION_TYPE,
+          label: ['settings-section.label', { ns: meta.id }],
+          icon: 'ph--sliders--regular',
+          iconHue: 'indigo',
+          space,
+          position: 'first',
+          testId: 'spacePlugin.settings',
+        }),
+      ]),
+  });
+
+  const childrenExtension = yield* GraphBuilder.createExtension({
     id: 'settings-sections',
-    match: NodeMatcher.whenNodeType(`${meta.id}.settings`),
-    connector: (node) => {
-      const personal = node.properties.space && isPersonalSpace(node.properties.space);
+    match: (node) => {
+      const space = isSpace(node.properties.space) ? (node.properties.space as Space) : undefined;
+      return node.type === SETTINGS_SECTION_TYPE && space ? Option.some(space) : Option.none();
+    },
+    connector: (space) => {
+      const personal = isPersonalSpace(space);
       return Effect.succeed([
         Node.make({
           id: 'general',
@@ -27,8 +58,9 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
           data: `${meta.id}.general`,
           properties: {
             label: ['space-settings-properties.label', { ns: meta.id }],
-            icon: 'ph--sliders--regular',
-            position: 'hoist',
+            icon: 'ph--brackets-curly--regular',
+            iconHue: 'indigo',
+            space,
             testId: 'spacePlugin.general',
           },
         }),
@@ -41,24 +73,16 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
                 properties: {
                   label: ['members-panel.label', { ns: meta.id }],
                   icon: 'ph--users--regular',
-                  position: 'hoist',
+                  iconHue: 'indigo',
+                  space,
                   testId: 'spacePlugin.members',
                 },
               }),
             ]
           : []),
-        Node.make({
-          id: 'schema',
-          type: `${meta.id}.schema`,
-          data: `${meta.id}.schema`,
-          properties: {
-            label: ['space-settings-schema.label', { ns: meta.id }],
-            icon: 'ph--shapes--regular',
-            testId: 'spacePlugin.schema',
-          },
-        }),
       ]);
     },
   });
-  return [extension];
+
+  return [sectionExtension, childrenExtension];
 });

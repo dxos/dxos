@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
+import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
+import * as Option from 'effect/Option';
 
 import { Node } from '@dxos/app-graph';
-import { Collection, type Database, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Collection, type Database, Obj, Ref, Type } from '@dxos/echo';
 import { type TreeData } from '@dxos/react-ui-list';
-import { Expando } from '@dxos/schema';
-/** Resolves metadata for a given typename. */
-export type MetadataResolver = (typename: string) => Record<string, any>;
+
+import { GraphPropsAnnotation } from './annotations';
 
 //
 // Caching infrastructure.
@@ -67,17 +67,13 @@ export const rearrangeCache = new Map<string, (nextOrder: unknown[]) => void>();
 // Collection partials.
 //
 
-/** Build collection partials for drag/drop and copy behavior. */
-export const buildCollectionPartials = (
-  collection: Collection.Collection,
-  db: Database.Database, // TODO(burdon): db before collection.
-  resolve: MetadataResolver,
-) => ({
+/** Build collection partials for drag/drop behavior. */
+export const buildCollectionPartials = (collection: Collection.Collection, db: Database.Database) => ({
   acceptPersistenceClass: ACCEPT_ECHO_CLASS,
   acceptPersistenceKey: getAcceptPersistenceKey(db.spaceId),
   role: 'branch' as const,
   onTransferStart: (child: Node.Node<Obj.Unknown>, index?: number) => {
-    Obj.change(collection, (collection) => {
+    Obj.update(collection, (collection) => {
       if (!collection.objects.find((object) => object.target === child.data)) {
         if (typeof index !== 'undefined') {
           collection.objects.splice(index, 0, Ref.make(child.data));
@@ -88,39 +84,38 @@ export const buildCollectionPartials = (
     });
   },
   onTransferEnd: (child: Node.Node<Obj.Unknown>, _destination: Node.Node) => {
-    Obj.change(collection, (collection) => {
+    Obj.update(collection, (collection) => {
       const idx = collection.objects.findIndex((object) => object.target === child.data);
       if (idx > -1) {
         collection.objects.splice(idx, 1);
       }
     });
   },
-  onCopy: async (child: Node.Node<Obj.Unknown>, index?: number) => {
-    const newObject = await cloneObject(child.data, resolve, db);
-    db.add(newObject);
-    Obj.change(collection, (collection) => {
-      if (typeof index !== 'undefined') {
-        collection.objects.splice(index, 0, Ref.make(newObject));
-      } else {
-        collection.objects.push(Ref.make(newObject));
-      }
-    });
-  },
+  // TODO(wittjosiah): Reimplement once ECHO supports native object cloning.
+  // onCopy: async (child: Node.Node<Obj.Unknown>, index?: number) => {
+  //   const newObject = await cloneObject(child.data, resolve, db);
+  //   db.add(newObject);
+  //   Obj.update(collection, (collection) => {
+  //     if (typeof index !== 'undefined') {
+  //       collection.objects.splice(index, 0, Ref.make(newObject));
+  //     } else {
+  //       collection.objects.push(Ref.make(newObject));
+  //     }
+  //   });
+  // },
 });
 
 export const getCollectionGraphNodePartials = ({
-  collection,
   db,
-  resolve,
+  collection,
 }: {
+  db: Database.Database;
   collection: Collection.Collection;
-  db: Database.Database; // TODO(burdon): db before collection.
-  resolve: MetadataResolver;
 }) => {
   const id = Obj.getDXN(collection).toString();
   let cached = collectionPartialsCache.get(id);
   if (!cached) {
-    cached = buildCollectionPartials(collection, db, resolve);
+    cached = buildCollectionPartials(collection, db);
     collectionPartialsCache.set(id, cached);
   }
   return cached;
@@ -137,7 +132,6 @@ export const createObjectNode = ({
   disposition,
   droppable = true,
   navigable = false,
-  resolve,
   parentCollection,
 }: {
   db: Database.Database;
@@ -145,7 +139,6 @@ export const createObjectNode = ({
   disposition?: string;
   droppable?: boolean;
   navigable?: boolean;
-  resolve: MetadataResolver;
   parentCollection?: Collection.Collection;
 }) => {
   const type = Obj.getTypename(object);
@@ -153,39 +146,55 @@ export const createObjectNode = ({
     return null;
   }
 
-  const metadata = resolve(type);
-  const partials = Obj.instanceOf(Collection.Collection, object)
-    ? getCollectionGraphNodePartials({ collection: object, db, resolve })
-    : metadata.graphProps;
+  // Obj.getSchema uses the stored type DXN to look up the schema. For database-registered
+  // (dynamic) schemas the echo-handler queries by id=dxn:type:typename, but the stored
+  // PersistentSchema jsonSchema.$id is dxn:echo:@:<objectId> so the id-based lookup misses.
+  // Fall back to a typename query which matches the PersistentSchema.typename field.
+  const schema = Obj.getSchema(object) ?? db.schemaRegistry.query({ typename: type }).runSync()[0];
+  const staticIcon = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema)) : undefined;
+  const iconFromRefProp = schema ? Option.getOrUndefined(Annotation.IconFromRefAnnotation.get(schema)) : undefined;
+  // If the schema delegates its icon to a referenced sub-entity, resolve that ref's target
+  // and use its schema's IconAnnotation. Falls back to the static icon if the ref is not yet loaded.
+  const delegatedIcon = (() => {
+    if (!iconFromRefProp) {
+      return undefined;
+    }
+    const refValue = (object as any)?.[iconFromRefProp];
+    const target = Ref.isRef(refValue) ? refValue.target : undefined;
+    const targetSchema = target ? Obj.getSchema(target as Obj.Unknown) : undefined;
+    return targetSchema ? Option.getOrUndefined(Annotation.IconAnnotation.get(targetSchema)) : undefined;
+  })();
+  const iconAnnotation = delegatedIcon ?? staticIcon;
+  const graphProps = schema ? Option.getOrUndefined(GraphPropsAnnotation.get(schema)) : undefined;
 
-  const label =
-    (object as any).name ||
-    Obj.getLabel(object) ||
-    metadata.label?.(object) ||
-    getDynamicLabel('object-name.placeholder', type, { defaultValue: 'New item' });
+  const partials = Obj.instanceOf(Collection.Collection, object)
+    ? getCollectionGraphNodePartials({ db, collection: object })
+    : graphProps;
+
+  const label = Obj.getLabel(object) || getDynamicLabel('object-name.placeholder', type, { defaultValue: 'New item' });
 
   const selectable =
     !Obj.instanceOf(Collection.Collection, object) || (navigable && Obj.instanceOf(Collection.Collection, object));
 
   let onRearrange: ((nextOrder: unknown[]) => void) | undefined;
   if (parentCollection) {
-    const collectionDxn = Obj.getDXN(parentCollection).toString();
-    onRearrange = rearrangeCache.get(collectionDxn);
+    const collectionDXN = Obj.getDXN(parentCollection).toString();
+    onRearrange = rearrangeCache.get(collectionDXN);
     if (!onRearrange) {
       onRearrange = (nextOrder: unknown[]) => {
-        Obj.change(parentCollection, (parentCollection) => {
+        Obj.update(parentCollection, (parentCollection) => {
           parentCollection.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
         });
       };
-      rearrangeCache.set(collectionDxn, onRearrange);
+      rearrangeCache.set(collectionDXN, onRearrange);
     }
   }
 
-  const objectDxn = Obj.getDXN(object).toString();
-  let blockInstruction = blockInstructionCache.get(objectDxn);
+  const objectDXN = Obj.getDXN(object).toString();
+  let blockInstruction = blockInstructionCache.get(objectDXN);
   if (!blockInstruction) {
     blockInstruction = (_source: TreeData, _instruction: Instruction) => false;
-    blockInstructionCache.set(objectDxn, blockInstruction);
+    blockInstructionCache.set(objectDXN, blockInstruction);
   }
 
   const canDrop = droppable ? CAN_DROP_OBJECT : undefined;
@@ -197,8 +206,9 @@ export const createObjectNode = ({
     data: object,
     properties: {
       label,
-      icon: metadata.icon ?? 'ph--placeholder--regular',
-      iconHue: metadata.iconHue,
+      icon:
+        schema && Type.isMutable(schema) ? 'ph--cube--regular' : (iconAnnotation?.icon ?? 'ph--placeholder--regular'),
+      iconHue: schema && Type.isMutable(schema) ? 'neutral' : iconAnnotation?.hue,
       disposition,
       testId: 'spacePlugin.object',
       persistenceClass: 'echo',
@@ -211,25 +221,4 @@ export const createObjectNode = ({
       ...partials,
     },
   };
-};
-
-//
-// Internal helpers.
-//
-
-/** @deprecated Workaround for ECHO not supporting clone. */
-const cloneObject = async (
-  object: Obj.Unknown,
-  resolve: MetadataResolver,
-  newDb: Database.Database,
-): Promise<Obj.Unknown> => {
-  const schema = Obj.getSchema(object);
-  const typename = schema ? (Type.getTypename(schema) ?? Expando.Expando.typename) : Expando.Expando.typename;
-  const metadata = resolve(typename);
-  const serializer = metadata.serializer;
-  if (!serializer) {
-    throw new Error(`No serializer for type: ${typename}`);
-  }
-  const content = await serializer.serialize({ object });
-  return serializer.deserialize({ content, db: newDb, newId: true });
 };

@@ -6,21 +6,20 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
+import { Operation, Trigger } from '@dxos/compute';
 import { Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
-import { Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
 import { random } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { TestSchema, useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAsyncEffect } from '@dxos/react-ui';
-import { translations as formTranslations } from '@dxos/react-ui-form';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 import { functions } from '#testing';
+import { translations } from '#translations';
 
-import { translations } from '../../translations';
 import { TriggerEditor, type TriggerEditorProps } from './TriggerEditor';
 
 const types = [
@@ -42,7 +41,7 @@ const DefaultStory = (props: Partial<TriggerEditorProps>) => {
     }
 
     const functions = await space.db.query(Filter.type(Operation.PersistentOperation)).run();
-    const fn = functions.find((fn) => fn.name === 'example.com/function/forex');
+    const fn = functions.find((fn) => fn.name === 'com.example.function.forex');
     invariant(fn);
     const trigger = space.db.add(
       Trigger.make({
@@ -92,7 +91,13 @@ const meta = {
 
         // Functions.
         functions.forEach((fn) => {
-          space.db.add(Obj.make(Operation.PersistentOperation, { ...fn, version: fn.version ?? '0.1.0' }));
+          const { key, version, ...data } = fn;
+          space.db.add(
+            Obj.make(Operation.PersistentOperation, {
+              [Obj.Meta]: { key, version: version ?? '0.1.0' },
+              ...data,
+            }),
+          );
         });
 
         // Objects.

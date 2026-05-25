@@ -4,10 +4,12 @@
 
 import * as Schema from 'effect/Schema';
 
+import { BlueprintsAnnotation } from '@dxos/app-toolkit';
 import { Annotation, Feed, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { FeedAnnotation } from '@dxos/schema';
-import { AccessToken } from '@dxos/types';
+
+export const BLUEPRINT_KEY = 'org.dxos.blueprint.inbox';
 
 // TODO(burdon): Implement as labels?
 export enum MessageState {
@@ -36,12 +38,10 @@ export const Mailbox = Schema.Struct({
       filter: Schema.String,
     }),
   ).pipe(FormInputAnnotation.set(false)),
-  accessToken: Schema.optional(
-    Ref.Ref(AccessToken.AccessToken).annotations({
-      title: 'Account',
-      description: 'Google account credentials for syncing this mailbox.',
-    }),
-  ),
+  extractors: Schema.Struct({
+    enabled: Schema.Array(Schema.String),
+    threshold: Schema.Number.pipe(Schema.between(0, 1)),
+  }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
   Type.object({
     typename: 'org.dxos.type.mailbox',
@@ -52,6 +52,7 @@ export const Mailbox = Schema.Struct({
     hue: 'rose',
   }),
   FeedAnnotation.set(true),
+  BlueprintsAnnotation.set([BLUEPRINT_KEY]),
 );
 
 export interface Mailbox extends Schema.Schema.Type<typeof Mailbox> {}
@@ -61,16 +62,11 @@ export const instanceOf = (value: unknown): value is Mailbox => Obj.instanceOf(M
 
 export const CreateMailboxSchema = Schema.Struct({
   name: Schema.optional(Schema.String.annotations({ title: 'Name' })),
-  accessToken: Schema.optional(
-    Ref.Ref(AccessToken.AccessToken).annotations({
-      title: 'Account',
-      description: 'Google account credentials for syncing this mailbox.',
-    }),
-  ),
 });
 
-type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'feed' | 'filters'> & {
+type MailboxProps = Omit<Obj.MakeProps<typeof Mailbox>, 'feed' | 'filters' | 'extractors'> & {
   filters?: { name: string; filter: string }[];
+  extractors?: { enabled: string[]; threshold: number };
 };
 
 /** Creates a mailbox object with a backing feed. */

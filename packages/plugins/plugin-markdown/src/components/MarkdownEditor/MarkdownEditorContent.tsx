@@ -17,7 +17,6 @@ import {
 import {
   type EditorSelectionState,
   type EditorStateStore,
-  type EditorViewMode,
   type ThemeExtensionsOptions,
   mobileSlots,
   createBasicExtensions,
@@ -29,6 +28,7 @@ import {
   processEditorPayload,
   editorClassNames,
 } from '@dxos/ui-editor';
+import { type EditorViewMode } from '@dxos/ui-editor/types';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
@@ -130,7 +130,7 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
           extensions,
         ].filter(isTruthy),
       }),
-      [id, viewMode, themeMode, extensions],
+      [id, viewMode, themeMode, extensions, compact],
     );
 
     useImperativeHandle<EditorView | null, EditorView | null>(forwardedRef, () => editorView, [editorView]);
@@ -149,7 +149,6 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
       <div
         {...focusAttributes}
         className={mx(editorClassNames(role), classNames)}
-        role='none'
         data-testid='composer.markdownRoot'
         data-popover-collision-boundary={true}
         ref={parentRef}

@@ -5,17 +5,18 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
+import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
-import { ClientPlugin } from '@dxos/plugin-client';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
+import { Markdown } from '@dxos/plugin-markdown';
 import { random } from '@dxos/random';
 import { Card } from '@dxos/react-ui';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { MarkdownCard, type MarkdownCardProps } from './MarkdownCard';
 
 random.seed(1234);
@@ -50,7 +51,7 @@ const meta: Meta<typeof MarkdownCardStory> = {
   decorators: [
     withTheme(),
     withPluginManager({
-      plugins: [OperationPlugin(), RuntimePlugin(), ClientPlugin({})],
+      plugins: [ProcessManagerPlugin(), ClientPlugin({})],
     }),
   ],
   parameters: {

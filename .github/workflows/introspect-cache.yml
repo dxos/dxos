@@ -1,0 +1,85 @@
+# Builds the @dxos/introspect symbol cache on every commit to main and uploads
+# it as a GitHub Actions artifact named `dxos-introspect-cache`.
+#
+# Consumers (developers, the MCP server) can download the artifact and skip the
+# ~80s cold-start ts-morph parse. Cache entries are keyed by per-package git
+# tree SHA, so a CI-built cache reused on a dev machine matches as long as both
+# sides are at the same commit (and the dev's working tree is clean).
+#
+# Fetch on a dev machine:
+#   moon run introspect-mcp:fetch-cache
+#
+# See packages/reflect/introspect-mcp/README.md for details.
+
+name: Introspect Cache
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  DEPOT_TOKEN: ${{ secrets.DEPOT_TOKEN }}
+
+# A second main commit cancels the in-flight build — only the latest matters
+# because newer commits invalidate the cache anyway.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          # Full history so the tree-SHA computation in the cache has the
+          # commit's tree object available (`git ls-tree -r -d HEAD`).
+          fetch-depth: 0
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      # The index task imports @dxos/introspect compiled output via the
+      # `source` export condition, so building first isn't strictly required —
+      # but doing it keeps any compile errors from manifesting as runtime
+      # errors during indexing.
+      - name: Build introspect
+        run: moon run introspect:build
+
+      - name: Build symbol cache
+        run: moon run introspect:index
+
+      - name: Show cache stats
+        run: |
+          ls -lh \
+            node_modules/.cache/dxos-introspect/core.json \
+            node_modules/.cache/dxos-introspect/plugins.json
+          echo "Packages indexed: $(jq '.entries | length' node_modules/.cache/dxos-introspect/core.json)"
+          echo "Plugins indexed:  $(jq '.plugins | length' node_modules/.cache/dxos-introspect/plugins.json)"
+
+      - name: Upload cache artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dxos-introspect-cache
+          # Both files share an artifact (single download for `fetch-cache`).
+          path: |
+            node_modules/.cache/dxos-introspect/core.json
+            node_modules/.cache/dxos-introspect/plugins.json
+          # 30 days is enough for typical dev usage; older caches will likely
+          # be mostly stale anyway because most main commits invalidate at
+          # least one package's tree SHA.
+          retention-days: 30
+          if-no-files-found: error

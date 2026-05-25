@@ -37,8 +37,8 @@ const ColorSwatch = ({ hue }: { hue: string }) => {
     >
       <div
         style={{
-          color: `var(--color-${hue}-text)`,
           backgroundColor: `var(--color-base-surface)`,
+          color: `var(--color-${hue}-text)`,
         }}
         className='p-2 text-sm'
       >
@@ -46,8 +46,8 @@ const ColorSwatch = ({ hue }: { hue: string }) => {
       </div>
       <div
         style={{
-          color: `var(--color-${hue}-text)`,
           backgroundColor: `var(--color-${hue}-fill)`,
+          color: `var(--color-${hue}-text)`,
         }}
         className='px-1 text-sm flex items-center'
       >
@@ -57,8 +57,8 @@ const ColorSwatch = ({ hue }: { hue: string }) => {
       </div>
       <div
         style={{
-          color: `var(--color-${hue}-surface-text)`,
           backgroundColor: `var(--color-${hue}-surface)`,
+          color: `var(--color-${hue}-foreground)`,
         }}
         className='p-2 text-sm'
       >
@@ -163,9 +163,9 @@ export const Surfaces = {
             { className: 'bg-card-surface', label: 'card' },
             { className: 'bg-modal-surface', label: 'modal' },
             { className: 'bg-input-surface', label: 'input' },
-            { className: 'bg-active-surface', label: 'active' },
+            { className: 'bg-current-surface', label: 'current' },
             { className: 'bg-hover-surface', label: 'hover' },
-            { className: 'bg-inverse-surface text-inverse-surface-text', label: 'inverse' },
+            { className: 'bg-inverse-surface text-inverse-foreground', label: 'inverse' },
           ].map(({ className, label }) => (
             <div key={className} className={mx('shrink-0 p-2 aspect-square w-48 rounded-md', className)}>
               {label}
@@ -206,7 +206,7 @@ export const Animation = {
   render: () => {
     return (
       <div className='absolute inset-0 grid place-items-center'>
-        <div className='dx-density-coarse border border-separator rounded-md'>
+        <div className='dx-density-lg border border-separator rounded-md'>
           <div
             className={mx(
               'flex items-center font-mono text-2xl text-test-experimental',

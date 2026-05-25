@@ -7,7 +7,9 @@
 // The `#capabilities` import resolves to this file in Node.js contexts.
 
 import { Capability } from '@dxos/app-framework';
-import { type OperationHandlerSet } from '@dxos/operation';
+import { type OperationHandlerSet } from '@dxos/compute';
+
+export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
 
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',

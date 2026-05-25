@@ -7,10 +7,10 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { debounce } from '@dxos/async';
-import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute';
-import { Obj, Relation } from '@dxos/echo';
-import { ThreadOperation } from '@dxos/plugin-thread/operations';
-import { Filter, Query, useQuery } from '@dxos/react-client/echo';
+import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute-hyperformula';
+import { Filter, Obj, Query, Relation } from '@dxos/echo';
+import { ThreadOperation } from '@dxos/plugin-thread';
+import { useQuery } from '@dxos/react-client/echo';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { AnchoredTo, Thread } from '@dxos/types';
 

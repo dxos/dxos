@@ -1,0 +1,36 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/*.ts"
+  ],
+  "references": [
+    {
+      "path": "../../common/storybook-utils"
+    },
+    {
+      "path": "../../reflect/introspect-tools"
+    },
+    {
+      "path": "../react-ui"
+    },
+    {
+      "path": "../react-ui-form"
+    },
+    {
+      "path": "../react-ui-list"
+    },
+    {
+      "path": "../react-ui-syntax-highlighter"
+    },
+    {
+      "path": "../ui-theme"
+    }
+  ]
+}

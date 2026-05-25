@@ -38,6 +38,18 @@ export const ObjectMetaSchema = Schema.Struct({
   // Defaulting to an empty array is possible but requires a bit more work.
   // TODO(dmaretskyi): In automerge this should be a map of { [tag]: boolean } for uniqueness and conflict resolution.
   tags: Schema.optional(Schema.Array(Schema.String)),
+
+  /**
+   * Fully-qualified registry key for the object (FQN format, e.g. `org.example.type.foo`).
+   * Identifies the canonical registry entry the object instance was created from.
+   */
+  key: Schema.optional(Schema.String),
+
+  /**
+   * Semantic version of the registry entry the object was created from.
+   * Must be a valid semver string (e.g. `1.2.3`).
+   */
+  version: Schema.optional(Schema.String),
 });
 
 export type ObjectMeta = Schema.Schema.Type<typeof ObjectMetaSchema>;

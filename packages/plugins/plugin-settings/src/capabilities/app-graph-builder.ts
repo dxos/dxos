@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability, type Plugin as Plugin$ } from '@dxos/app-framework';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/app-graph';
 import { AppCapabilities, SettingsOperation, getSpacePath } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -31,7 +31,7 @@ export default Capability.makeModule(
               id: 'root',
               data: () => Operation.invoke(SettingsOperation.Open, {}),
               properties: {
-                label: ['open-settings.label', { ns: meta.id }],
+                label: ['plugin-settings.label', { ns: meta.id }],
                 icon: 'ph--gear--regular',
                 disposition: 'menu',
                 keyBinding: {
@@ -51,10 +51,10 @@ export default Capability.makeModule(
               id: SETTINGS_ID,
               type: meta.id,
               properties: {
-                label: ['app-settings.label', { ns: meta.id }],
+                label: ['plugin-settings.label', { ns: meta.id }],
                 icon: 'ph--gear--regular',
                 disposition: 'pin-end',
-                position: 'hoist',
+                position: 'first',
                 testId: 'treeView.appSettings',
               },
             }),
@@ -78,6 +78,7 @@ export default Capability.makeModule(
                 return [plugin.meta, settings];
               })
               .filter(isNonNullable)
+              .sort(([a], [b]) => (a.name ?? a.id).localeCompare(b.name ?? b.id, undefined, { sensitivity: 'base' }))
               .map(([meta, settings]: [Plugin$.Meta, AppCapabilities.Settings]) =>
                 Node.make({
                   id: `${SETTINGS_KEY}:${meta.id.replaceAll('/', ':')}`,

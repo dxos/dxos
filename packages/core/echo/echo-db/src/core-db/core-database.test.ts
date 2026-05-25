@@ -6,8 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Entity, Filter, Obj, Ref } from '@dxos/echo';
-import { Query } from '@dxos/echo';
+import { type Entity, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { type DatabaseDirectory, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { ObjectId } from '@dxos/keys';
@@ -239,7 +238,7 @@ describe('CoreDatabase', () => {
       const partiallyLoadedLinks = range(3).map(() => createTextObject('test2'));
       const objectsToAdd = range(2).map(() => Obj.make(TestSchema.Expando, {}));
       const rootObject = Obj.make(TestSchema.Expando, {});
-      Obj.change(rootObject, (rootObject: any) => {
+      Obj.update(rootObject, (rootObject: any) => {
         [linksToRemove, loadedLinks, partiallyLoadedLinks]
           .flatMap((v: any[]) => v)
           .forEach((obj: any) => {

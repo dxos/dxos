@@ -5,21 +5,21 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
+import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Obj } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import { Obj, View } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { random } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
-import { translations as tableTranslations } from '@dxos/react-ui-table';
 import { useTestTableModel } from '@dxos/react-ui-table/testing';
+import { translations as tableTranslations } from '@dxos/react-ui-table/translations';
 import { Table } from '@dxos/react-ui-table/types';
 import { withTheme } from '@dxos/react-ui/testing';
 import { ViewModel, getSchemaFromPropertyDefinitions } from '@dxos/schema';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { TableCard } from './TableCard';
 
 random.seed(1234);
@@ -48,7 +48,7 @@ const meta = {
       createSpace: true,
       onCreateSpace: async ({ space }) => {
         // Configure schema.
-        const typename = 'example.com/SingleSelect';
+        const typename = 'com.example.type.singleSelect';
         const selectOptions = [
           { id: 'one', title: 'One', color: 'emerald' },
           { id: 'two', title: 'Two', color: 'blue' },
@@ -89,7 +89,7 @@ const meta = {
       },
     }),
     withPluginManager({
-      plugins: [OperationPlugin(), RuntimePlugin()],
+      plugins: [ProcessManagerPlugin()],
     }),
   ],
   parameters: {

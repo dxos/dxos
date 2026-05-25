@@ -12,7 +12,7 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { useAtomCapability } from '@dxos/app-framework/ui';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
-import { Operation, OperationHandlerSet } from '@dxos/operation';
+import { Operation, OperationHandlerSet } from '@dxos/compute';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { IconButton, Input, Main, Toolbar } from '@dxos/react-ui';
@@ -23,9 +23,9 @@ import { mx } from '@dxos/ui-theme';
 
 import { NavTreeContainer } from '#containers';
 import { storybookGraphBuilders } from '#testing';
+import { translations } from '#translations';
 
 import { NavTreePlugin } from '../../NavTreePlugin';
-import { translations } from '../../translations';
 
 random.seed(1234);
 
@@ -43,7 +43,7 @@ const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
   return (
     <div className='flex p-1 items-center border-b border-separator'>
       <IconButton
-        density='coarse'
+        density='lg'
         icon='ph--circle--regular'
         label='Test'
         iconOnly
@@ -82,7 +82,7 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
           <Toolbar.Button>Test</Toolbar.Button>
         </Toolbar.Root>
 
-        <div className={mx(container, 'm-2 bg-active-surface')}>
+        <div className={mx(container, 'm-2 bg-current-surface')}>
           <Input.Root>
             <Input.Label>Level 1 (group)</Input.Label>
           </Input.Root>

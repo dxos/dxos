@@ -7,17 +7,15 @@ import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/app-toolkit';
-import { Obj } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
-import { DeckCapabilities } from '@dxos/plugin-deck';
-import { DeckOperation } from '@dxos/plugin-deck/operations';
+import { Operation } from '@dxos/compute';
+import { Collection, Obj } from '@dxos/echo';
+import { DeckCapabilities, DeckOperation } from '@dxos/plugin-deck';
 import { GraphBuilder, type Node, NodeMatcher } from '@dxos/plugin-graph';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { Markdown } from '@dxos/plugin-markdown';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
-import { PresenterOperation } from '#operations';
+import { PresenterOperation } from '#types';
 import { PresenterCapabilities } from '#types';
 
 /** Match nodes that can be presented (Collection or Document). */

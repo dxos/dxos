@@ -5,6 +5,7 @@
 import { type Atom } from '@effect-atom/atom-react';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 
 import type * as CapabilityManager from './capability-manager';
 import type * as Plugin from './plugin';
@@ -71,6 +72,12 @@ export const atomByModule = <T>(
   interfaceDef: InterfaceDef<T>,
 ): Effect.Effect<Atom.Atom<Record<string, T[]>>, never, Service> =>
   Effect.map(Service, (manager) => manager.atomByModule(interfaceDef));
+
+/**
+ * Constructs a layer that will request its interface implementation from the capability manager.
+ */
+export const asLayer = <T, I>(interfaceDef: InterfaceDef<T>, tag: Context.Tag<I, T>): Layer.Layer<I, never, Service> =>
+  Layer.effect(tag, get(interfaceDef).pipe(Effect.orDie));
 
 const InterfaceDefTypeId: unique symbol = Symbol.for('InterfaceDefTypeId');
 
@@ -232,7 +239,7 @@ export const getModuleTag = (capability: unknown): string | undefined => {
  * export default Capability.makeModule(
  *   Effect.fnUntraced(function* (props: { observability: boolean }) {
  *     const invoker = yield* Capability.get(Capabilities.OperationInvoker);
- *     return contributes(Capabilities.IntentResolver, ...);
+ *     return contributes(Capabilities.OperationHandler, ...);
  *   })
  * );
  * ```

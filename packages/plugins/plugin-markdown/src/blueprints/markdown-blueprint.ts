@@ -2,20 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AppCapabilities } from '@dxos/app-toolkit';
-import { Blueprint, Template } from '@dxos/blueprints';
+import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
-import { Create, Open, Update } from '../operations/definitions';
-
-const BLUEPRINT_KEY = 'org.dxos.blueprint.markdown';
+import { Markdown, MarkdownOperation } from '#types';
 
 const make = () =>
   Blueprint.make({
-    key: BLUEPRINT_KEY,
+    key: Markdown.BLUEPRINT_KEY,
     name: 'Markdown',
     description: 'Work with markdown documents. Preferred over raw database operations.',
-    tools: Blueprint.toolDefinitions({ operations: [Create, Open, Update] }),
+    tools: Blueprint.toolDefinitions({
+      operations: [MarkdownOperation.Create, MarkdownOperation.Open, MarkdownOperation.Update],
+    }),
     instructions: Template.make({
       // TODO(wittjosiah): Move example to function input schema annotation.
       source: trim`
@@ -36,8 +35,8 @@ const make = () =>
     }),
   });
 
-const blueprint: AppCapabilities.BlueprintDefinition = {
-  key: BLUEPRINT_KEY,
+const blueprint: Blueprint.Definition = {
+  key: Markdown.BLUEPRINT_KEY,
   make,
 };
 

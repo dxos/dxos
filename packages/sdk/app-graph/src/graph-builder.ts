@@ -11,12 +11,13 @@ import * as Option from 'effect/Option';
 import * as Pipeable from 'effect/Pipeable';
 import * as Record from 'effect/Record';
 import type * as Schema from 'effect/Schema';
-import { scheduleTask, yieldOrContinue } from 'main-thread-scheduling';
 
 import { type CleanupFn, type Trigger } from '@dxos/async';
 import { type Entity, type Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type MaybePromise, type Position, byPosition, getDebugName, isNonNullable } from '@dxos/util';
+
+import { scheduleTask, yieldOrContinue } from '#scheduler';
 
 import * as Graph from './graph';
 import * as Node from './node';
@@ -63,7 +64,7 @@ export type ActionGroupsExtension = (
 
 export type BuilderExtension = Readonly<{
   id: string;
-  position: Position;
+  position?: Position;
   relation?: Node.RelationInput;
   resolver?: ResolverExtension;
   connector?: (node: Atom.Atom<Option.Option<Node.Node>>) => Atom.Atom<Node.NodeArg<any>[]>;
@@ -125,6 +126,8 @@ class GraphBuilderImpl implements GraphBuilder {
   >();
   /** Last-flushed node IDs per connector key, used for edge removal on update. */
   readonly _connectorPrevious = new Map<string, string[]>();
+  /** All inline-descendant IDs per connector key, used to remove stale inline nodes on update. */
+  readonly _connectorPreviousInlineIds = new Map<string, string[]>();
   /** Last-flushed node args per connector key, used for change detection. */
   readonly _connectorPreviousArgs = new Map<string, Node.NodeArg<any>[]>();
   /** Whether a dirty-flush task is already scheduled. */
@@ -178,6 +181,12 @@ class GraphBuilderImpl implements GraphBuilder {
     this._connectorPrevious.set(key, ids);
     this._connectorPreviousArgs.set(key, nodes);
 
+    const currentInlineIds = collectAllInlineIds(nodes);
+    const previousInlineIds = this._connectorPreviousInlineIds.get(key) ?? [];
+    const staleInlineIds = previousInlineIds.filter((pid) => !currentInlineIds.includes(pid));
+    this._connectorPreviousInlineIds.set(key, currentInlineIds);
+
+    Graph.removeNodes(this._graph, staleInlineIds, true);
     Graph.removeEdges(
       this._graph,
       removed.map((target) => ({ source: id, target, relation })),
@@ -563,7 +572,7 @@ export type CreateExtensionRawOptions = {
 export const createExtensionRaw = (extension: CreateExtensionRawOptions): BuilderExtension[] => {
   const {
     id,
-    position = 'static',
+    position,
     relation = 'child',
     resolver: _resolver,
     connector: _connector,
@@ -840,6 +849,16 @@ const qualifyNodeArgs =
         nodes: node.nodes ? qualifyNodeArgs(qualified)(node.nodes) : undefined,
       };
     });
+
+/**
+ * Recursively collect all inline-descendant IDs (the `nodes` arrays at every level)
+ * from a list of top-level NodeArgs. Top-level IDs are excluded because they are
+ * already tracked via `_connectorPrevious`.
+ */
+const collectAllInlineIds = (nodes: Node.NodeArg<any>[]): string[] =>
+  nodes.flatMap((node) =>
+    node.nodes ? [...node.nodes.map((child) => child.id), ...collectAllInlineIds(node.nodes)] : [],
+  );
 
 const connectorKey = (id: string, relation: Node.RelationInput): string => primaryKey(id, Graph.relationKey(relation));
 

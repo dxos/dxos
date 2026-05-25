@@ -11,10 +11,19 @@ export type ProjectorOptions = {
 };
 
 /**
+ * Update kinds signal what changed since the previous render.
+ * - `topology`: nodes/edges added or removed, or per-node attributes may have changed.
+ *   The renderer should perform a full enter/exit join and re-run attribute callbacks.
+ * - `positions`: only `x/y` (and similar transient layout state) changed.
+ *   The renderer can fast-path: just update transforms and edge geometry.
+ */
+export type ProjectorUpdateKind = 'topology' | 'positions';
+
+/**
  * Generates a layout to be rendered.
  */
 export abstract class Projector<NodeData, Layout, Options extends ProjectorOptions> {
-  public readonly updated = new EventEmitter<{ layout: Layout }>();
+  public readonly updated = new EventEmitter<{ layout: Layout; kind: ProjectorUpdateKind }>();
 
   private readonly _options: Options;
 
@@ -48,8 +57,8 @@ export abstract class Projector<NodeData, Layout, Options extends ProjectorOptio
     this.onUpdate(data);
   }
 
-  emitUpdate() {
-    this.updated.emit({ layout: this.layout });
+  emitUpdate(kind: ProjectorUpdateKind = 'topology') {
+    this.updated.emit({ layout: this.layout, kind });
   }
 
   async clear() {

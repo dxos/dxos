@@ -7,7 +7,8 @@ import React, { ComponentPropsWithRef, forwardRef, PropsWithChildren } from 'rea
 import { Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { hoverableControlItem, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
-import { translationKey } from '../translations';
+import { translationKey } from '#translations';
+
 import type { ThreadEntity } from '../types';
 
 // TODO(burdon): Avoid exporting fragments.
@@ -55,10 +56,10 @@ const ThreadHeader = forwardRef<HTMLParagraphElement, ThreadHeaderProps>(
   ({ children, detached, ...props }, forwardedRef) => {
     return (
       <>
-        <div role='none' className='flex items-center justify-center text-description'>
+        <div className='flex items-center justify-center text-description'>
           <Icon icon='ph--caret-double-right--regular' />
         </div>
-        <div role='none' className='flex items-center overflow-hidden'>
+        <div className='flex items-center overflow-hidden'>
           <p
             role='heading'
             data-testid='thread.heading'

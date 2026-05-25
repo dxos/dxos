@@ -4,8 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import { Annotation, Obj, Ref, Type, View } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { ViewAnnotation } from '@dxos/schema';
 
@@ -27,7 +26,7 @@ export const Masonry = Schema.Struct({
     version: '0.1.0',
   }),
   LabelAnnotation.set(['name']),
-  ViewAnnotation.set(true),
+  ViewAnnotation.set(['view']),
   Annotation.IconAnnotation.set({
     icon: 'ph--wall--regular',
     hue: 'green',

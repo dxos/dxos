@@ -3,12 +3,12 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import type { OperationHandlerSet } from '@dxos/operation';
+import type { OperationHandlerSet } from '@dxos/compute';
 
-import { TicTacToeHandlers } from '#operations';
+import { TicTacToeOperationHandlerSet } from '#operations';
 
 export default Capability.makeModule<OperationHandlerSet.OperationHandlerSet>(
   Effect.fnUntraced(function* () {
-    return Capability.contributes(Capabilities.OperationHandler, TicTacToeHandlers);
+    return Capability.contributes(Capabilities.OperationHandler, TicTacToeOperationHandlerSet);
   }),
 );

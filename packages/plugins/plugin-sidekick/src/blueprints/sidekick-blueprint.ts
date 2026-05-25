@@ -2,8 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AppCapabilities } from '@dxos/app-toolkit';
-import { Blueprint, Template } from '@dxos/blueprints';
+import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
 const BLUEPRINT_KEY = 'org.dxos.blueprint.sidekick';
@@ -65,15 +64,15 @@ const make = () =>
       inputs: [
         {
           name: 'agent',
-          kind: 'function',
-          function: 'org.dxos.function.agent.get-context',
+          kind: 'operation',
+          operation: 'org.dxos.function.agent.get-context',
         },
       ],
     }),
     tools: Blueprint.toolDefinitions({ operations: [] }),
   });
 
-const blueprint: AppCapabilities.BlueprintDefinition = {
+const blueprint: Blueprint.Definition = {
   key: BLUEPRINT_KEY,
   make,
 };

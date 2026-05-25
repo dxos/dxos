@@ -8,15 +8,14 @@
 // The `role` prop is forwarded to Panel.Root so the layout system can adapt
 // (e.g., articles vs sections have different chrome).
 
-import { Atom } from '@effect-atom/atom-react';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { type Node, useActionRunner } from '@dxos/plugin-graph';
 import { useObject } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
-import { type ActionExecutor, type ActionGraphProps, Menu, MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
+import { type ActionExecutor, type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { SampleItemView } from '#components';
 import { meta } from '#meta';
@@ -31,14 +30,14 @@ export const SampleArticle = ({ role, subject, attendableId }: SampleArticleProp
   // `useObject` subscribes to the ECHO object and returns a new snapshot whenever it changes.
   // Reading from the snapshot ensures values do not change in the middle of a render cycle.
   const [snapshot] = useObject(subject);
-  const { actions, onAction } = useToolbarActions(attendableId);
+  const { actions, onAction } = useMenuActions(attendableId);
 
   // `onValuesChanged` receives partial updates from the form.
-  // `Obj.change` provides a mutable draft for safe property assignment.
+  // `Obj.update` provides a mutable draft for safe property assignment.
   // ECHO objects are reactive proxies — changes replicate to other peers.
   const handleValuesChanged = useCallback(
     (values: Partial<{ name: string; description: string; status: 'active' | 'archived' | 'draft' }>) => {
-      Obj.change(subject, (subject) => {
+      Obj.update(subject, (subject) => {
         if (values.name !== undefined) {
           subject.name = values.name;
         }
@@ -84,28 +83,25 @@ export default SampleArticle;
  * `useMenuActions` converts the atom into props for `Menu.Root`.
  * `useActionRunner` executes graph actions when triggered.
  */
-const useToolbarActions = (
+const useMenuActions = (
   attendableId: string,
-): { actions: ReturnType<typeof useMenuActions>; onAction: ActionExecutor } => {
+): { actions: ReturnType<typeof useMenuBuilder>; onAction: ActionExecutor } => {
   const { graph } = useAppGraph();
   const runAction = useActionRunner();
 
-  const actionsAtom = useMemo(
-    () =>
-      Atom.make((get): ActionGraphProps => {
-        const actions = get(graph.actions(attendableId));
-        const toolbarActions = actions.filter((action) => action.properties.disposition === 'toolbar');
-        return MenuBuilder.make()
-          .subgraph({
-            nodes: toolbarActions as ActionGraphProps['nodes'],
-            edges: toolbarActions.map((node) => ({ source: 'root', target: node.id, relation: 'child' })),
-          })
-          .build();
-      }),
+  const menuActions = useMenuBuilder(
+    (get): ActionGraphProps => {
+      const actions = get(graph.actions(attendableId));
+      const toolbarActions = actions.filter((action) => action.properties.disposition === 'toolbar');
+      return MenuBuilder.make()
+        .subgraph({
+          nodes: toolbarActions as ActionGraphProps['nodes'],
+          edges: toolbarActions.map((node) => ({ source: 'root', target: node.id, relation: 'child' })),
+        })
+        .build();
+    },
     [graph, attendableId],
   );
-
-  const menuActions = useMenuActions(actionsAtom);
 
   const onAction: ActionExecutor = useCallback(
     (action) => {

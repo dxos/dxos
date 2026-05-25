@@ -13,7 +13,6 @@ import {
   WidgetType,
   keymap,
 } from '@codemirror/view';
-// TODO(burdon): Factor out agnostic types (React/solid).
 import { type FunctionComponent } from 'react';
 
 import { invariant } from '@dxos/invariant';
@@ -22,7 +21,7 @@ import { Domino } from '@dxos/ui';
 
 import { type Range } from '../../types';
 import { decorationSetToArray } from '../../util';
-import { scrollerLineEffect } from '../scroller';
+import { crawlerLineEffect } from '../scrolling';
 import { nodeToJson } from './xml-util';
 
 /**
@@ -300,7 +299,7 @@ const createNavigationEffectPlugin = (
           const line = view.state.doc.lineAt(widget?.from ?? 0);
           view.dispatch({
             selection: { anchor: line.from, head: line.from },
-            effects: scrollerLineEffect.of({ line: line.number - 1, offset: -16 }),
+            effects: crawlerLineEffect.of({ line: line.number - 1, offset: -16 }),
           });
 
           continue;
@@ -326,13 +325,13 @@ const createNavigationEffectPlugin = (
             const line = view.state.doc.lineAt(widget?.from);
             view.dispatch({
               selection: { anchor: line.to, head: line.to },
-              effects: scrollerLineEffect.of({ line: line.number - 1, offset: -16 }),
+              effects: crawlerLineEffect.of({ line: line.number - 1, offset: -16 }),
             });
           } else {
             const line = view.state.doc.lineAt(view.state.doc.length);
             view.dispatch({
               selection: { anchor: line.to, head: line.to },
-              effects: scrollerLineEffect.of({ line: line.number - 1, position: 'end' }),
+              effects: crawlerLineEffect.of({ line: line.number - 1, position: 'end' }),
             });
           }
 

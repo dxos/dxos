@@ -43,11 +43,7 @@ export const translations = [
         'regenerate-summary.label': 'Regenerate Summary',
         'generate-summary.label': 'Generate Summary',
 
-        'meeting-thread.label': 'Meeting Chat',
         'transcript-companion.label': 'Meeting Transcript',
-        'entity-extraction.label': 'Entity extraction',
-        'entity-extraction.description':
-          'While transcribing, use the Assistant to detect and annotate mentions of known objects such as people or organizations.',
       },
     },
   },

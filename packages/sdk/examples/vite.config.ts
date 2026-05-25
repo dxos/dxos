@@ -7,7 +7,6 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
-import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
 
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
@@ -15,6 +14,10 @@ import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { createConfig as createTestConfig } from '../../../vitest.base.config';
 
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
+
+// Aligned with composer-app. These targets support top-level await natively,
+// so no `vite-plugin-top-level-await` polyfill is needed.
+const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'] as const;
 
 // https://vitejs.dev/config
 export default defineConfig({
@@ -36,8 +39,12 @@ export default defineConfig({
       ],
     },
   },
+  oxc: {
+    target: [...browserTargets],
+  },
   build: {
     sourcemap: true,
+    target: [...browserTargets],
   },
   resolve: {
     alias: {
@@ -46,11 +53,10 @@ export default defineConfig({
   },
   worker: {
     format: 'es',
-    plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
+    plugins: () => [WasmPlugin()],
   },
   plugins: [
     ThemePlugin({}),
-    TopLevelAwaitPlugin(),
     WasmPlugin(),
     // https://github.com/preactjs/signals/issues/269
     ReactPlugin({ jsxRuntime: 'classic' }),

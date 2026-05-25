@@ -4,7 +4,7 @@
 
 import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { ClientEvents } from '@dxos/plugin-client/types';
+import { ClientEvents } from '@dxos/plugin-client';
 import { SpaceEvents } from '@dxos/plugin-space';
 
 import { AppGraphBuilder, DefaultContent, Onboarding, ReactSurface } from './capabilities';
@@ -24,7 +24,7 @@ export const WelcomePlugin = Plugin.define(meta).pipe(
     id: 'onboarding',
     activatesOn: ActivationEvent.allOf(
       AppActivationEvents.AppGraphReady,
-      ActivationEvents.OperationInvokerReady,
+      ActivationEvents.ProcessManagerReady,
       AppActivationEvents.LayoutReady,
       ClientEvents.ClientReady,
     ),

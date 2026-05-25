@@ -6,8 +6,8 @@ import React, { type FC } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { ThemeProvider, Tooltip } from '@dxos/react-ui';
-import { type RenderCallback } from '@dxos/ui-editor';
-import { defaultTx } from '@dxos/ui-theme';
+import { defaultTx } from '@dxos/react-ui';
+import { type RenderCallback } from '@dxos/ui-editor/types';
 
 /**
  * @deprecated Use `trim` from `@dxos/util`.

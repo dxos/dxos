@@ -8,11 +8,10 @@ import React, { useCallback, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
 import { useTypeOptions } from '@dxos/app-toolkit/ui';
-import { DXN, Filter, JsonSchema, Obj, Query, type QueryAST, Tag, Type } from '@dxos/echo';
-import { type View } from '@dxos/echo';
+import { DXN, Filter, JsonSchema, Obj, Query, type QueryAST, Tag, Type, type View } from '@dxos/echo';
 import { type Mutable } from '@dxos/echo/internal';
 import { useClient } from '@dxos/react-client';
-import { getSpace, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 import { ViewEditor as NaturalViewEditor } from '@dxos/react-ui-form';
 import { ViewModel } from '@dxos/schema';
@@ -24,11 +23,11 @@ export type ViewEditorProps = { view: View.View };
 export const ViewEditor = ({ view }: ViewEditorProps) => {
   const { invokePromise } = useOperationInvoker();
   const client = useClient();
-  const space = getSpace(view);
+  const db = Obj.getDatabase(view);
   const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>(() => Schema.Struct({}));
-  const tags = useQuery(space?.db, Filter.type(Tag.Tag));
+  const tags = useQuery(db, Filter.type(Tag.Tag));
   const types = useTypeOptions({
-    space,
+    db,
     annotation: {
       location: ['database', 'runtime'],
       kind: ['user'],
@@ -36,28 +35,28 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
   });
 
   useAsyncEffect(async () => {
-    if (!view?.query || !space) {
+    if (!view?.query || !db) {
       return;
     }
 
-    const foundSchema = await resolveSchemaWithRegistry(space.db.schemaRegistry, view.query.ast);
+    const foundSchema = await resolveSchemaWithRegistry(db.schemaRegistry, view.query.ast);
     if (foundSchema && foundSchema !== schema) {
       setSchema(() => foundSchema);
     }
-  }, [client, space, view, schema]);
+  }, [client, db, view, schema]);
 
   const handleQueryChanged = useCallback(
     async (newQuery: QueryAST.Query, target?: string) => {
-      if (!view || !space) {
+      if (!view || !db) {
         return;
       }
 
       const queue = target && DXN.tryParse(target) ? target : undefined;
-      const query = queue ? Query.fromAst(newQuery).from({ queues: [queue] }) : Query.fromAst(newQuery);
-      Obj.change(view, (view) => {
+      const query = queue ? Query.fromAst(newQuery).from({ feeds: [queue] }) : Query.fromAst(newQuery);
+      Obj.update(view, (view) => {
         view.query.ast = query.ast as Mutable<typeof query.ast>;
       });
-      const newSchema = await resolveSchemaWithRegistry(space.db.schemaRegistry, query.ast);
+      const newSchema = await resolveSchemaWithRegistry(db.schemaRegistry, query.ast);
       if (!newSchema) {
         return;
       }
@@ -66,7 +65,7 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
         query,
         jsonSchema: JsonSchema.toJsonSchema(newSchema),
       });
-      Obj.change(view, (view) => {
+      Obj.update(view, (view) => {
         view.projection = Obj.getSnapshot(newView).projection as Mutable<typeof view.projection>;
       });
 
@@ -82,17 +81,17 @@ export const ViewEditor = ({ view }: ViewEditorProps) => {
     [invokePromise, view],
   );
 
-  if (!space || !schema) {
+  if (!db || !schema) {
     return null;
   }
 
   return (
     <NaturalViewEditor
-      registry={space.db.schemaRegistry}
+      registry={db.schemaRegistry}
       schema={schema}
       view={view}
       mode='tag'
-      db={space.db}
+      db={db}
       tags={tags}
       types={types}
       onQueryChanged={handleQueryChanged}

@@ -9,7 +9,6 @@ import { useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 import {
-  type EditorViewMode,
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
@@ -17,10 +16,12 @@ import {
   documentSlots,
   formattingKeymap,
 } from '@dxos/ui-editor';
+import { type EditorViewMode } from '@dxos/ui-editor/types';
+
+import { translations } from '#translations';
 
 import { Editor } from '../components';
 import { type UseTextEditorProps } from '../hooks';
-import { translations } from '../translations';
 
 type DefaultStoryProps = { placeholder?: string; viewMode?: EditorViewMode } & UseTextEditorProps;
 
@@ -51,7 +52,7 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder, viewMode = 'source
     <Editor.Root extensions={extensions} viewMode={viewMode}>
       <Editor.Content>
         <Editor.Toolbar classNames='dx-document' />
-        <div role='none' className='dx-container dx-document bg-base-surface'>
+        <div className='dx-container dx-document bg-base-surface'>
           <Editor.View autoFocus={autoFocus} initialValue={initialValue} selectionEnd />
         </div>
       </Editor.Content>

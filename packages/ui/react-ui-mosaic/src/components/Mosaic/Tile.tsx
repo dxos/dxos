@@ -24,7 +24,7 @@ import React, { type PropsWithChildren, useLayoutEffect, useMemo, useRef, useSta
 import { createPortal } from 'react-dom';
 
 import { type ThemedClassName } from '@dxos/react-ui';
-import { composableProps, slottable } from '@dxos/ui-theme';
+import { composableProps, slottable } from '@dxos/react-ui';
 
 import { useMosaicContainerContext } from './Container';
 import { type LocationType, type MosaicTileData, getSourceData } from './types';
@@ -61,6 +61,8 @@ type MosaicTileProps<TData = any, TLocation = LocationType> = ThemedClassName<
     draggable?: boolean;
     /** Whether this tile is the current (aria-current) item. */
     current?: boolean;
+    /** Whether this tile is selected (aria-selected). */
+    selected?: boolean;
     debug?: boolean;
   }>
 >;
@@ -76,7 +78,8 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
       id,
       data: dataProp,
       draggable: draggableProp,
-      current: _current,
+      current,
+      selected,
       debug: _,
       ...props
     },
@@ -211,6 +214,12 @@ const MosaicTile = slottable<HTMLDivElement, MosaicTileProps>(
             [`data-${MOSAIC_TILE_STATE_ATTR}`]: state.type,
           }}
           role='listitem'
+          // Pair `current` / `selected` props with `aria-current` / `aria-selected`
+          // so the `dx-current` / `dx-selected` / `dx-hover` utilities (which key
+          // off those attributes) actually fire. Without this the props are purely
+          // advisory and the corresponding styling silently no-ops.
+          aria-current={current ? 'true' : undefined}
+          aria-selected={selected ? 'true' : undefined}
           className={className}
           ref={composedRef}
         >

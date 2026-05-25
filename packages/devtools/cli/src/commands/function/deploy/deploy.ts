@@ -14,12 +14,12 @@ import { resolve } from 'node:path';
 
 import { CommandConfig, Common, flushAndSync, spaceLayer } from '@dxos/cli-util';
 import { ClientService } from '@dxos/client';
+import { Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { Database, Obj } from '@dxos/echo';
 import { FUNCTIONS_META_KEY } from '@dxos/functions';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { PublicKey } from '@dxos/keys';
-import { Operation } from '@dxos/operation';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 
 import { bundle } from './bundle';
@@ -116,8 +116,8 @@ export const deploy = Command.make(
       yield* Console.log(JSON.stringify(func, null, 2));
     } else {
       yield* Console.log('Function uploaded successfully!');
-      yield* Console.log(`Key: ${func.key}`);
-      yield* Console.log(`Version: ${func.version}`);
+      yield* Console.log(`Key: ${Obj.getMeta(func).key}`);
+      yield* Console.log(`Version: ${Obj.getMeta(func).version}`);
       yield* Console.log(`Function ID: ${Obj.getKeys(functionObject, FUNCTIONS_META_KEY).at(0)?.id}`);
     }
 

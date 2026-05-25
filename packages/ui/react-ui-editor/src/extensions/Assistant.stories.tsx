@@ -16,8 +16,9 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { compactSlots, createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
 
+import { translations } from '#translations';
+
 import { Editor, type EditorViewProps } from '../components';
-import { translations } from '../translations';
 import { assistant, type AssistantOptions } from './assistant-extension';
 
 // TODO(burdon): Factor out.

@@ -7,8 +7,9 @@ import * as Schema from 'effect/Schema';
 import { Capability, Plugin } from '@dxos/app-framework';
 import { SpaceSchema } from '@dxos/client/echo';
 import { CancellableInvitationObservable, Invitation } from '@dxos/client/invitations';
+import { Operation } from '@dxos/compute';
 import { Collection, Database, Obj, QueryAST, Type, View } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
+import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 
 import { meta } from '#meta';
 
@@ -161,9 +162,6 @@ export namespace SpaceOperation {
     objects: Schema.Array(Obj.Unknown).annotations({ description: 'The removed objects.' }),
     parentCollection: Collection.Collection.annotations({ description: 'The collection removed from.' }),
     indices: Schema.Array(Schema.Number).annotations({ description: 'The indices the objects were at.' }),
-    nestedObjectsList: Schema.Array(Schema.Array(Obj.Unknown)).annotations({
-      description: 'Nested objects that were removed.',
-    }),
     wasActive: Schema.Array(Schema.String).annotations({
       description: 'IDs of objects that were active before removal.',
     }),
@@ -240,6 +238,50 @@ export namespace SpaceOperation {
     },
     services: [Capability.Service],
     input: Schema.Void,
+    output: Schema.Void,
+  });
+
+  export const OpenImportSpace = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}.open-import-space`,
+      name: 'Open Import Space Dialog',
+      description: 'Open the import space dialog to create a new space from a backup.',
+    },
+    services: [Capability.Service],
+    input: Schema.Void,
+    output: Schema.Void,
+  });
+
+  export const ImportSpace = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}.import-space`,
+      name: 'Import Space',
+      description: 'Import a space archive as a new space.',
+    },
+    services: [Capability.Service],
+    input: Schema.Struct({
+      archive: Schema.Struct({
+        filename: Schema.String,
+        contents: Schema.instanceOf(Uint8Array),
+      }),
+      tags: Schema.Array(Schema.String).pipe(Schema.optional),
+    }),
+    output: Schema.Struct({
+      space: SpaceSchema,
+    }),
+  });
+
+  export const ExportSpace = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}.export-space`,
+      name: 'Export Space',
+      description: 'Export a space as a backup and download the archive.',
+    },
+    services: [Capability.Service],
+    input: Schema.Struct({
+      space: SpaceSchema,
+      format: Schema.Enums(SpaceArchive.Format),
+    }),
     output: Schema.Void,
   });
 
@@ -413,6 +455,23 @@ export namespace SpaceOperation {
   });
 
   /**
+   * Permanently reset a space — deletes ALL objects and truncates feeds via a new epoch.
+   * This is unrecoverable.
+   */
+  export const Reset = Operation.make({
+    meta: {
+      key: `${SPACE_OPERATION}.reset`,
+      name: 'Reset Space',
+      description: 'Permanently delete all objects and feeds in a space.',
+    },
+    services: [Capability.Service],
+    input: Schema.Struct({
+      space: SpaceSchema,
+    }),
+    output: Schema.Void,
+  });
+
+  /**
    * Restore deleted objects to a space (inverse of RemoveObjects).
    */
   export const RestoreObjects = Operation.make({
@@ -426,9 +485,6 @@ export namespace SpaceOperation {
       objects: Schema.Array(Obj.Unknown).annotations({ description: 'The objects to restore.' }),
       parentCollection: Collection.Collection.annotations({ description: 'The collection to restore to.' }),
       indices: Schema.Array(Schema.Number).annotations({ description: 'The indices to restore at.' }),
-      nestedObjectsList: Schema.Array(Schema.Array(Obj.Unknown)).annotations({
-        description: 'Nested objects to restore.',
-      }),
       wasActive: Schema.Array(Schema.String).annotations({
         description: 'IDs of objects that were active before deletion.',
       }),

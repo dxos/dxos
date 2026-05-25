@@ -5,17 +5,20 @@
 import * as FetchHttpClient from '@effect/platform/FetchHttpClient';
 import * as Effect from 'effect/Effect';
 
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Credential } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
 
 import { GoogleMail } from '../../../apis';
+import { GmailSendMessageInvalidError } from '../../../errors';
 import { GoogleCredentials } from '../../../services/google-credentials';
-import { GmailSend } from '../../definitions';
+import { InboxOperation } from '../../../types';
 
-export default GmailSend.pipe(
-  Operation.withHandler(({ userId = 'me', message, mailbox: mailboxRef }) =>
+export default InboxOperation.GmailSend.pipe(
+  Operation.withHandler(({ userId = 'me', message, integration: integrationRef }) =>
     Effect.gen(function* () {
-      log('sending email', { userId, mailbox: mailboxRef?.dxn.toString() });
+      log('sending email', { userId, integration: integrationRef.dxn.toString() });
 
       const to = message.properties?.to;
       const subject = message.properties?.subject;
@@ -27,7 +30,7 @@ export default GmailSend.pipe(
       const text = message.blocks.find((b) => b._tag === 'text')?.text;
 
       if (!to || !text) {
-        return yield* Effect.fail(new Error('Missing "to" or content in message.'));
+        return yield* Effect.fail(new GmailSendMessageInvalidError());
       }
 
       const headers = [
@@ -51,9 +54,6 @@ export default GmailSend.pipe(
         id: response.id,
         threadId: response.threadId,
       };
-    }).pipe(
-      Effect.provide(FetchHttpClient.layer),
-      Effect.provide(mailboxRef ? GoogleCredentials.fromMailbox(mailboxRef) : GoogleCredentials.default),
-    ),
+    }).pipe(Effect.provide(FetchHttpClient.layer), Effect.provide(GoogleCredentials.fromIntegration(integrationRef))),
   ),
 );

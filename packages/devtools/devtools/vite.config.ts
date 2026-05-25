@@ -2,14 +2,13 @@
 // Copyright 2022 DXOS.org
 //
 
-import react from '@vitejs/plugin-react-swc';
+import react from '@vitejs/plugin-react';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import VitePluginFonts from 'unplugin-fonts/vite';
 import { defineConfig, searchForWorkspaceRoot } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
-import TopLevelAwaitPlugin from 'vite-plugin-top-level-await';
 import WasmPlugin from 'vite-plugin-wasm';
 
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
@@ -20,6 +19,10 @@ import { createConfig as createTestConfig } from '../../../vitest.base.config';
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
 const PACKAGE_VERSION = require('./package.json').version;
+
+// Aligned with composer-app. These targets support top-level await natively,
+// so no `vite-plugin-top-level-await` polyfill is needed.
+const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'] as const;
 
 // https://vitejs.dev/config
 export default defineConfig({
@@ -35,19 +38,31 @@ export default defineConfig({
       ],
     },
   },
+  oxc: {
+    target: [...browserTargets],
+  },
   build: {
     sourcemap: true,
+    target: [...browserTargets],
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-router-dom', 'react-dom'],
+        // Rolldown (used by Vite 8) requires `manualChunks` to be a function — the
+        // record form that worked in Rollup is rejected at runtime.
+        manualChunks: (id: string) => {
+          if (
+            id.includes('/node_modules/react/') ||
+            id.includes('/node_modules/react-router-dom/') ||
+            id.includes('/node_modules/react-dom/')
+          ) {
+            return 'vendor';
+          }
         },
       },
     },
   },
   worker: {
     format: 'es',
-    plugins: () => [TopLevelAwaitPlugin(), WasmPlugin()],
+    plugins: () => [WasmPlugin()],
   },
   plugins: [
     {
@@ -70,9 +85,8 @@ export default defineConfig({
       ],
     }),
     ThemePlugin({}),
-    TopLevelAwaitPlugin(),
     WasmPlugin(),
-    react({ tsDecorators: true }),
+    react(),
     VitePWA({
       // TODO(wittjosiah): Remove once this has been released.
       selfDestroying: true,

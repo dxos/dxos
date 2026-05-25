@@ -11,7 +11,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 
-import { RangeList, SheetContainer } from '#containers';
+import { RangeList, SheetArticle } from '#containers';
 import { Sheet, SheetCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
@@ -24,12 +24,12 @@ export default Capability.makeModule(() =>
         filter: (data): data is { attendableId: string; subject: Sheet.Sheet } =>
           typeof data.attendableId === 'string' &&
           Obj.instanceOf(Sheet.Sheet, data.subject) &&
-          !!getSpace(data.subject),
+          !!Obj.getDatabase(data.subject),
         component: ({ data, role }) => {
           const computeGraphRegistry = useCapability(SheetCapabilities.ComputeGraphRegistry);
 
           return (
-            <SheetContainer
+            <SheetArticle
               role={role}
               subject={data.subject}
               attendableId={data.attendableId}

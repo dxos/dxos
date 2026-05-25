@@ -15,14 +15,14 @@ name = "app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2.3.1", features = [] }
+tauri-build = { version = "2.5", features = [] }
 
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
 anyhow = "1"
-tauri = { version = "2.7.0", features = ["devtools", "macos-private-api", "tray-icon"] }
+tauri = { version = "2.11", features = ["devtools", "macos-private-api", "tray-icon"] }
 tauri-plugin-log = "2"
 tauri-plugin-os = "2"
 tauri-plugin-process = "2"
@@ -31,6 +31,13 @@ tauri-plugin-shell = "2"
 tauri-plugin-deep-link = "2.4"
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = { version = "2", features = ["watch"] }
+
+# Plugin asset cache: shared between desktop and mobile (iOS).
+sha2 = "0.10"
+http = "1"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+tokio = { version = "1", features = ["rt", "fs", "net", "sync", "macros"] }
+url = "2"
 
 [target.'cfg(unix)'.dependencies]
 xattr = "1"
@@ -46,9 +53,6 @@ tauri-plugin-localhost = "2"
 hyper = { version = "1", features = ["http1", "server"] }
 hyper-util = { version = "0.1", features = ["tokio"] }
 http-body-util = "0.1"
-tokio = { version = "1", features = ["rt", "net", "sync", "macros"] }
-url = "2"
-reqwest = { version = "0.12", features = ["json"] }
 tauri-plugin-updater = "2"
 tauri-plugin-global-shortcut = "2"
 

@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, getSpaceIdFromPath } from '@dxos/app-toolkit';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { meta as spaceMeta } from '@dxos/plugin-space/meta';
+import { SPACE_TYPE } from '@dxos/plugin-space';
 import { getParentId } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
@@ -19,10 +19,9 @@ const DEVTOOLS_TYPE = `${meta.id}.devtools`;
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
-      // Devtools node.
       GraphBuilder.createExtension({
         id: 'devtools',
-        match: NodeMatcher.whenAny(NodeMatcher.whenRoot, NodeMatcher.whenNodeType(`${spaceMeta.id}.settings`)),
+        match: NodeMatcher.whenAny(NodeMatcher.whenRoot, NodeMatcher.whenNodeType(SPACE_TYPE)),
         connector: (node, get) =>
           Effect.gen(function* () {
             const client = yield* Capability.get(ClientCapabilities.Client);
@@ -41,7 +40,7 @@ export default Capability.makeModule(
                   label: ['devtools.label', { ns: meta.id }],
                   icon: 'ph--hammer--regular',
                   disposition: 'pin-end',
-                  position: 'fallback',
+                  position: 'last',
                 },
                 nodes: [
                   Node.make({
@@ -53,7 +52,16 @@ export default Capability.makeModule(
                       icon: 'ph--graph--regular',
                     },
                   }),
-                  ...(space && node.type === `${spaceMeta.id}.settings`
+                  Node.make({
+                    id: 'tools-explorer',
+                    data: Devtools.ToolsExplorer,
+                    type: DEVTOOLS_TYPE,
+                    properties: {
+                      label: ['debug-tools-explorer.label', { ns: meta.id }],
+                      icon: 'ph--toolbox--regular',
+                    },
+                  }),
+                  ...(space && node.type === SPACE_TYPE
                     ? [
                         Node.make({
                           id: 'debug',
@@ -354,7 +362,7 @@ export default Capability.makeModule(
               label: ['debug.label', { ns: meta.id }],
               icon: 'ph--bug--regular',
               data: 'debug',
-              position: 'fallback',
+              position: 'last',
             }),
           ]),
       }),
@@ -370,7 +378,7 @@ export default Capability.makeModule(
               label: ['devtools-overview.label', { ns: meta.id }],
               icon: 'ph--equalizer--regular',
               data: 'devtools' as const,
-              position: 'fallback',
+              position: 'last',
             }),
           ]),
       }),
@@ -386,7 +394,7 @@ export default Capability.makeModule(
               label: ['space-objects.label', { ns: meta.id }],
               icon: 'ph--cube--regular',
               data: 'space-objects' as const,
-              position: 'fallback',
+              position: 'last',
             }),
           ]),
       }),

@@ -33,6 +33,9 @@
       "path": "../../common/display-name"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -57,28 +60,22 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/ai"
+      "path": "../../core/compute/ai"
     },
     {
-      "path": "../../core/assistant"
+      "path": "../../core/compute/assistant"
     },
     {
-      "path": "../../core/blueprints"
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/functions-runtime"
     },
     {
       "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/echo/echo-db"
-    },
-    {
-      "path": "../../core/functions"
-    },
-    {
-      "path": "../../core/functions-runtime"
-    },
-    {
-      "path": "../../core/operation"
     },
     {
       "path": "../../core/protocols"
@@ -120,7 +117,13 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-graph"
+    },
+    {
       "path": "../../ui/react-ui-grid"
+    },
+    {
+      "path": "../../ui/react-ui-menu"
     },
     {
       "path": "../../ui/react-ui-mosaic"
@@ -139,6 +142,12 @@
     },
     {
       "path": "../../ui/ui-theme"
+    },
+    {
+      "path": "../../ui/ui-types"
+    },
+    {
+      "path": "../plugin-calls"
     },
     {
       "path": "../plugin-client"
@@ -163,9 +172,6 @@
     },
     {
       "path": "../plugin-theme"
-    },
-    {
-      "path": "../plugin-thread"
     }
   ]
 }

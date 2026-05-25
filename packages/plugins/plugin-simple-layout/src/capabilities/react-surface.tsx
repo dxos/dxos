@@ -18,7 +18,7 @@ type SurfaceData = {
   properties: Record<string, any>;
 };
 
-const ALLOWED_DISPOSITIONS = ['workspace', 'user-account', 'pin-end', 'alternate-tree'];
+const ALLOWED_DISPOSITIONS = ['workspace', 'user-account', 'pin-end'];
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -38,7 +38,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'nav-branch',
         role: 'article',
-        position: 'fallback',
+        position: 'last',
         filter: (data): data is SurfaceData => {
           const props = data.properties as Record<string, any>;
           return ALLOWED_DISPOSITIONS.includes(props?.disposition) || props?.role === 'branch';

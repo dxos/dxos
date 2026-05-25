@@ -39,10 +39,10 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/echo/echo"
+      "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/operation"
+      "path": "../../core/echo/echo"
     },
     {
       "path": "../../core/protocols"
@@ -52,6 +52,9 @@
     },
     {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/client"
     },
     {
       "path": "../../sdk/observability"
@@ -79,6 +82,9 @@
     },
     {
       "path": "../plugin-graph"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

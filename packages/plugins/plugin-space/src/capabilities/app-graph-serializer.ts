@@ -7,14 +7,13 @@ import * as Effect from 'effect/Effect';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
-import { Obj } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
+import { Collection, Obj } from '@dxos/echo';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#operations';
+import { translations } from '#translations';
 import { SPACE_TYPE } from '#types';
 
-import { translations } from '../translations';
 import { SPACES } from '../util';
 
 const COLLECTION_TYPE = Collection.Collection.typename;

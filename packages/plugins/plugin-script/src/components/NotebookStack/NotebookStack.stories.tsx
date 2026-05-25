@@ -7,15 +7,15 @@ import * as Effect from 'effect/Effect';
 import React, { useMemo } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AutomationPlugin } from '@dxos/plugin-automation';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { AutomationPlugin } from '@dxos/plugin-automation/testing';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { createNotebook } from '#testing';
+import { translations } from '#translations';
 
-import { translations } from '../../translations';
 import { NotebookStack } from './NotebookStack';
 
 const NotebookStackStory = () => {

@@ -146,19 +146,21 @@ export const getQueryTarget = (query: QueryAST.Query, space?: Space) => {
       if (from._tag !== 'scope') {
         return space?.db;
       }
-      const result = Option.fromNullable(from.scope.queues).pipe(
-        Option.flatMap((queues) => Array.head(queues)),
-        Option.flatMap((queueDxn) => Option.fromNullable(DXN.tryParse(String(queueDxn)))),
+      const result = Option.fromNullable(from.scope.feeds).pipe(
+        Option.flatMap((feeds) => Array.head(feeds)),
+        Option.flatMap((feedDXN) => Option.fromNullable(DXN.tryParse(String(feedDXN)))),
         Option.flatMap((parsed) => {
           const q = parsed.asQueueDXN();
-          if (!q || !Key.ObjectId.isValid(q.queueId)) return Option.none();
+          if (!q || !Key.ObjectId.isValid(q.queueId)) {
+            return Option.none();
+          }
           return Option.fromNullable(space?.queues.get(parsed));
         }),
       );
-      // Skip query when a requested queue is not found (structurally invalid DXN or valid DXN
-      // referencing a queue not present in space.queues, e.g. not yet synced) to avoid 400 errors.
+      // Skip query when a requested feed is not found (structurally invalid DXN or valid DXN
+      // referencing a feed not present in space.queues, e.g. not yet synced) to avoid 400 errors.
       // TODO(wittjosiah): Can we handle this upstream?
-      if (from.scope.queues?.length && Option.isNone(result)) {
+      if (from.scope.feeds?.length && Option.isNone(result)) {
         return undefined;
       }
       return Option.getOrElse(result, () => space?.db);

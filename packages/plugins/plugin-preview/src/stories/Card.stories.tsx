@@ -9,12 +9,14 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { Card } from '@dxos/react-ui';
-import { withLayout } from '@dxos/react-ui/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { type Expando } from '@dxos/schema';
 import { type Organization, type Person, type Pipeline, type Task } from '@dxos/types';
 
-import { FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
-import { translations } from '../translations';
-import { DefaultStory, createOrganization, createPerson, createProject, createTask } from './testing';
+import { translations } from '#translations';
+
+import { ExpandoCard, FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
+import { DefaultStory, createExpando, createOrganization, createPerson, createProject, createTask } from './testing';
 
 random.seed(999);
 
@@ -22,6 +24,11 @@ const meta = {
   title: 'plugins/plugin-preview/cards/Card',
   render: DefaultStory,
   decorators: [
+    // `Card` and its descendants in `@dxos/react-ui` consume `ThemeContext`
+    // for tx-token resolution; without this the stories trip the surface's
+    // `ErrorBoundary` with "Missing ThemeContext" and the storybook test
+    // assert-no-error fails.
+    withTheme(),
     withLayout({ layout: 'fullscreen' }),
     // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
     withPluginManager({ plugins: corePlugins() }),
@@ -72,6 +79,13 @@ export const _Task: StoryObj<typeof DefaultStory<Task.Task>> = {
     Component: TaskCard,
     createObject: createTask,
     image: true,
+  },
+};
+
+export const _Expando: StoryObj<typeof DefaultStory<Expando.Expando>> = {
+  args: {
+    Component: ExpandoCard,
+    createObject: createExpando,
   },
 };
 

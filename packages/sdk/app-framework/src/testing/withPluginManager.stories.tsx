@@ -23,7 +23,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'sdk/app-framework/withPluginManager',
+  title: 'sdk/app-framework/testing/withPluginManager',
   render: DefaultStory,
   decorators: [
     withTheme(),

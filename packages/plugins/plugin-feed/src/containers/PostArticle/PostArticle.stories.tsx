@@ -11,9 +11,9 @@ import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
+import { translations } from '#translations';
 import { Subscription } from '#types';
 
-import { translations } from '../../translations';
 import { PostArticle } from './PostArticle';
 
 const SAMPLE_MARKDOWN = `# Local-first software
@@ -60,8 +60,13 @@ const meta = {
     withClientProvider({
       createIdentity: true,
       createSpace: true,
-      types: [Subscription.Feed, Subscription.Post, Tag.Tag, Text.Text],
+      types: [Subscription.Subscription, Subscription.Post, Tag.Tag, Text.Text],
       onCreateSpace: async ({ space }) => {
+        // The story renders a Post detail view; content/imageUrl no longer live
+        // on the Post object — they belong on `Subscription.contentFeed` /
+        // `Subscription.postState`. PostContent falls back to `description`
+        // when no fetched body is available, so we stash the sample markdown
+        // there for the story.
         space.db.add(
           Subscription.makePost({
             title: 'Local-first software: a primer',
@@ -69,8 +74,7 @@ const meta = {
             author: 'Martin Kleppmann',
             published: new Date().toISOString(),
             guid: 'local-first-primer',
-            content: SAMPLE_MARKDOWN,
-            imageUrl: 'https://picsum.photos/seed/local-first/960/480',
+            description: SAMPLE_MARKDOWN,
           }),
         );
       },

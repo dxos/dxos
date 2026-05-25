@@ -20,8 +20,8 @@ import {
   AuthStatus,
   CredentialServerExtension,
   DatabaseRoot,
-  type EchoEdgeReplicator,
   type EchoHost,
+  type EdgeAutomergeReplicator,
   type MeshEchoReplicator,
   type MetadataStore,
   type Space,
@@ -37,7 +37,7 @@ import { assertArgument, assertState, failedInvariant, invariant } from '@dxos/i
 import { type Keyring } from '@dxos/keyring';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { AlreadyJoinedError, trace as Trace } from '@dxos/protocols';
+import { AlreadyJoinedError } from '@dxos/protocols';
 import { Invitation, SpaceState } from '@dxos/protocols/proto/dxos/client/services';
 import { type Runtime } from '@dxos/protocols/proto/dxos/config';
 import { type FeedMessage } from '@dxos/protocols/proto/dxos/echo/feed';
@@ -113,7 +113,7 @@ export type DataSpaceManagerProps = {
   edgeConnection?: EdgeConnection;
   edgeHttpClient?: EdgeHttpClient;
   meshReplicator?: MeshEchoReplicator;
-  echoEdgeReplicator?: EchoEdgeReplicator;
+  echoEdgeReplicator?: EdgeAutomergeReplicator;
   runtimeProps?: DataSpaceManagerRuntimeProps;
   edgeFeatures?: Runtime.Client.EdgeFeatures;
 };
@@ -144,8 +144,6 @@ export class DataSpaceManager extends Resource {
 
   private readonly _spaces = new ComplexMap<PublicKey, DataSpace>(PublicKey.hash);
 
-  private readonly _instanceId = PublicKey.random().toHex();
-
   private readonly _spaceManager: SpaceManager;
   private readonly _metadataStore: MetadataStore;
   private readonly _keyring: Keyring;
@@ -157,7 +155,7 @@ export class DataSpaceManager extends Resource {
   private readonly _edgeHttpClient?: EdgeHttpClient = undefined;
   private readonly _edgeFeatures?: Runtime.Client.EdgeFeatures = undefined;
   private readonly _meshReplicator?: MeshEchoReplicator = undefined;
-  private readonly _echoEdgeReplicator?: EchoEdgeReplicator = undefined;
+  private readonly _echoEdgeReplicator?: EdgeAutomergeReplicator = undefined;
   private readonly _runtimeProps?: DataSpaceManagerRuntimeProps = undefined;
 
   constructor(params: DataSpaceManagerProps) {
@@ -187,7 +185,6 @@ export class DataSpaceManager extends Resource {
             const rootHandle = rootUrl
               ? await this._echoHost.loadDoc<Doc<DatabaseDirectory>>(this._ctx, rootUrl as AutomergeUrl)
               : undefined;
-            await rootHandle?.whenReady();
             const rootDoc = rootHandle?.doc();
 
             const properties = rootDoc && findInlineObjectOfType(rootDoc, Type.getTypename(SpaceProperties));
@@ -221,7 +218,6 @@ export class DataSpaceManager extends Resource {
   @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
   protected override async _open(ctx: Context): Promise<void> {
     log('open');
-    log.trace('dxos.echo.data-space-manager.open', Trace.begin({ id: this._instanceId }));
     log('metadata loaded', { spaces: this._metadataStore.spaces.length });
 
     const spacesToActivate: DataSpace[] = [];
@@ -247,8 +243,6 @@ export class DataSpaceManager extends Resource {
     }
 
     this.updated.emit();
-
-    log.trace('dxos.echo.data-space-manager.open', Trace.end({ id: this._instanceId }));
   }
 
   @synchronized
@@ -326,6 +320,7 @@ export class DataSpaceManager extends Resource {
     if (options.rootUrl) {
       const newRootDocId = documentIdMapping[interpretAsDocumentId(options.rootUrl)] ?? failedInvariant();
       const rootDocHandle = await this._echoHost.loadDoc<DatabaseDirectory>(ctx, newRootDocId);
+      invariant(rootDocHandle, 'Root document must be available after import.');
       DatabaseRoot.mapLinks(rootDocHandle, documentIdMapping);
 
       root = await this._echoHost.openSpaceRoot(ctx, spaceId, `automerge:${newRootDocId}` as AutomergeUrl);
@@ -583,7 +578,7 @@ export class DataSpaceManager extends Resource {
         // Use lifecycle ctx: the caller ctx from _constructSpace may be disposed by the time postOpen fires.
         await this._echoEdgeReplicator?.connectToSpace(this._ctx, dataSpace.id);
       } else if (this._echoEdgeReplicator) {
-        log('not connecting EchoEdgeReplicator because of EdgeReplicationSetting', { spaceId: dataSpace.id });
+        log('not connecting edge replicator because of EdgeReplicationSetting', { spaceId: dataSpace.id });
       }
     });
     dataSpace.preClose.append(async () => {

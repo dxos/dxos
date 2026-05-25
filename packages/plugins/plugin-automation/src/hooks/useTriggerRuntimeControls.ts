@@ -7,12 +7,11 @@ import type * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import { useEffect, useState } from 'react';
 
-import { type Database, Filter } from '@dxos/echo';
-import { Trigger } from '@dxos/functions';
+import { useSpaceCallback } from '@dxos/app-framework/ui';
+import { Trigger } from '@dxos/compute';
+import { type Database, Filter, Query } from '@dxos/echo';
 import { TriggerDispatcher, type TriggerDispatcherState } from '@dxos/functions-runtime';
 import { useQuery } from '@dxos/react-client/echo';
-
-import { useComputeRuntimeCallback } from './useComputeRuntimeCallback';
 
 interface TriggerRuntimeControls {
   triggers: Trigger.Trigger[];
@@ -24,12 +23,16 @@ interface TriggerRuntimeControls {
 }
 
 export const useTriggerRuntimeControls = (db: Database.Database | undefined): TriggerRuntimeControls => {
-  const triggers = useQuery(db, Filter.type(Trigger.Trigger));
+  const triggers = useQuery(
+    db,
+    Query.select(Filter.type(Trigger.Trigger)).debugLabel('plugin-automation.useTriggerRuntimeControls'),
+  );
 
   const [dispatcher, setDispatcher] = useState<Context.Tag.Service<TriggerDispatcher> | undefined>(undefined);
 
-  const init = useComputeRuntimeCallback(
+  const init = useSpaceCallback(
     db?.spaceId,
+    [TriggerDispatcher],
     Effect.fnUntraced(function* () {
       const dispatcher = yield* TriggerDispatcher;
       setDispatcher(dispatcher);
@@ -42,16 +45,18 @@ export const useTriggerRuntimeControls = (db: Database.Database | undefined): Tr
 
   const state = useAtomValue(dispatcher?.state ?? Atom.make(undefined));
 
-  const start = useComputeRuntimeCallback(
+  const start = useSpaceCallback(
     db?.spaceId,
+    [TriggerDispatcher],
     Effect.fnUntraced(function* () {
       const dispatcher = yield* TriggerDispatcher;
       yield* dispatcher.start();
     }),
   );
 
-  const stop = useComputeRuntimeCallback(
+  const stop = useSpaceCallback(
     db?.spaceId,
+    [TriggerDispatcher],
     Effect.fnUntraced(function* () {
       const dispatcher = yield* TriggerDispatcher;
       yield* dispatcher.stop();

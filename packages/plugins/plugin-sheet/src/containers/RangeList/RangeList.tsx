@@ -5,8 +5,8 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { rangeToA1Notation } from '@dxos/compute';
-import { Obj } from '@dxos/echo';
+import { rangeToA1Notation } from '@dxos/compute-hyperformula';
+import { useObject } from '@dxos/echo-react';
 import { Input, Message, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 
@@ -18,18 +18,19 @@ export type RangeListProps = {
   sheet: Sheet.Sheet;
 };
 
-export const RangeList = ({ sheet }: RangeListProps) => {
+export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
   const { t } = useTranslation(meta.id);
+  const [sheet, updateSheet] = useObject(sheetProp);
   // TODO(thure): Implement similar to comments, #8121
   const handleSelectRange = (range: Sheet.Range) => {};
   const handleDeleteRange = useCallback(
     (range: Sheet.Range) => {
       const index = sheet.ranges.findIndex((sheetRange) => sheetRange === range);
-      Obj.change(sheet, (sheet) => {
+      updateSheet((sheet) => {
         sheet.ranges.splice(index, 1);
       });
     },
-    [sheet],
+    [sheet, updateSheet],
   );
   return (
     <>
@@ -48,7 +49,7 @@ export const RangeList = ({ sheet }: RangeListProps) => {
                 <List.ItemDragHandle />
                 <List.ItemTitle onClick={() => handleSelectRange(range)}>
                   {t('range.title', {
-                    position: rangeToA1Notation(rangeFromIndex(sheet, range.range)),
+                    position: rangeToA1Notation(rangeFromIndex(sheetProp, range.range)),
                     key: t(`range-key.${range.key}.label`),
                     value: t(`range-value.${range.value}.label`),
                   })}

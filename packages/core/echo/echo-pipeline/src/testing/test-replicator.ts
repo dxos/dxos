@@ -9,17 +9,18 @@ import { log } from '@dxos/log';
 import type { AutomergeProtocolMessage } from '@dxos/protocols';
 import * as TeleportAutomergeReplicator from '@dxos/teleport-extension-automerge-replicator';
 
-import type {
-  AutomergeReplicator,
-  AutomergeReplicatorConnection,
-  AutomergeReplicatorContext,
-  ShouldAdvertiseProps,
-  ShouldSyncCollectionProps,
-} from '../automerge';
+import type { AutomergeReplicator, AutomergeReplicatorConnection, AutomergeReplicatorContext } from '../automerge';
+import type { ShouldAdvertiseProps } from '../automerge/echo-replicator';
 
 export type TestReplicatorNetworkOptions = {
   latency?: number;
 };
+
+/**
+ * Per-connection `shouldAdvertise` predicate evaluated against the local peer's
+ * declared id (whichever peer constructed the `TestReplicator`) and the document.
+ */
+export type TestShouldAdvertise = (params: ShouldAdvertiseProps) => boolean | Promise<boolean>;
 
 export class TestReplicationNetwork extends Resource {
   private readonly _replicators = new Set<TestReplicator>();
@@ -39,8 +40,9 @@ export class TestReplicationNetwork extends Resource {
     }
   }
 
-  async createReplicator(): Promise<TestReplicator> {
+  async createReplicator(options?: { shouldAdvertise?: TestShouldAdvertise }): Promise<TestReplicator> {
     const replicator = new TestReplicator({
+      shouldAdvertise: options?.shouldAdvertise,
       onConnect: async () => {
         invariant(this._lifecycleState === LifecycleState.OPEN);
         await this._connectReplicator(replicator);
@@ -64,6 +66,8 @@ export class TestReplicationNetwork extends Resource {
       const [connection1, connection2] = this._createConnectionPair(
         replicator.context!.peerId,
         otherReplicator.context!.peerId,
+        replicator,
+        otherReplicator,
       );
       await replicator.context!.onConnectionOpen(connection1);
       await otherReplicator.context!.onConnectionOpen(connection2);
@@ -77,7 +81,12 @@ export class TestReplicationNetwork extends Resource {
     }
   }
 
-  private _createConnectionPair(peer1: string, peer2: string): [TestReplicatorConnection, TestReplicatorConnection] {
+  private _createConnectionPair(
+    peer1: string,
+    peer2: string,
+    replicator1: TestReplicator,
+    replicator2: TestReplicator,
+  ): [TestReplicatorConnection, TestReplicatorConnection] {
     const LOG = false;
 
     const forward = new TransformStream({
@@ -107,8 +116,18 @@ export class TestReplicationNetwork extends Resource {
       },
     });
 
-    const connection1 = new TestReplicatorConnection(peer2, backwards.readable, forward.writable);
-    const connection2 = new TestReplicatorConnection(peer1, forward.readable, backwards.writable);
+    const connection1 = new TestReplicatorConnection(
+      peer2,
+      backwards.readable,
+      forward.writable,
+      replicator1.shouldAdvertiseCallback,
+    );
+    const connection2 = new TestReplicatorConnection(
+      peer1,
+      forward.readable,
+      backwards.writable,
+      replicator2.shouldAdvertiseCallback,
+    );
     connection1.otherSide = connection2;
     connection2.otherSide = connection1;
     return [connection1, connection2];
@@ -118,14 +137,25 @@ export class TestReplicationNetwork extends Resource {
 type TestReplicatorProps = {
   onConnect: () => Promise<void>;
   onDisconnect: () => Promise<void>;
+  shouldAdvertise?: TestShouldAdvertise;
 };
 
 export class TestReplicator implements AutomergeReplicator {
-  constructor(private readonly _params: TestReplicatorProps) {}
-
   public connected = false;
   public context: AutomergeReplicatorContext | undefined = undefined;
   public connections = new Set<TestReplicatorConnection>();
+
+  /** Live `shouldAdvertise` callback evaluated by connections on this side. */
+  shouldAdvertise: TestShouldAdvertise | undefined;
+
+  constructor(private readonly _params: TestReplicatorProps) {
+    this.shouldAdvertise = _params.shouldAdvertise;
+  }
+
+  /** Indirection so connections re-read the current value (allows post-construction flips). */
+  get shouldAdvertiseCallback(): TestShouldAdvertise | undefined {
+    return this.shouldAdvertise ? (params) => this.shouldAdvertise!(params) : undefined;
+  }
 
   async connect(_ctx: Context, context: AutomergeReplicatorContext): Promise<void> {
     log('connect', { peerId: context.peerId });
@@ -161,17 +191,18 @@ export class TestReplicatorConnection implements AutomergeReplicatorConnection {
     public readonly peerId: string,
     public readonly readable: ReadableStream<AutomergeProtocolMessage>,
     public readonly writable: WritableStream<AutomergeProtocolMessage>,
+    private readonly _shouldAdvertise?: TestShouldAdvertise,
   ) {}
 
   get bundleSyncEnabled(): boolean {
     return false;
   }
 
-  async shouldAdvertise(_params: ShouldAdvertiseProps): Promise<boolean> {
-    return true;
+  async shouldAdvertise(params: ShouldAdvertiseProps): Promise<boolean> {
+    return this._shouldAdvertise ? this._shouldAdvertise(params) : true;
   }
 
-  shouldSyncCollection(_params: ShouldSyncCollectionProps): boolean {
+  shouldSyncCollection(): boolean {
     return true;
   }
 }

@@ -6,15 +6,14 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { Observability } from '@dxos/observability';
-import { Operation } from '@dxos/operation';
 
 import { meta } from '#meta';
 
-import { ObservabilityCapabilities, type Settings } from '../types';
-import { Toggle } from './definitions';
+import { ObservabilityCapabilities, ObservabilityOperation, type Settings } from '../types';
 
-const handler: Operation.WithHandler<typeof Toggle> = Toggle.pipe(
+const handler: Operation.WithHandler<typeof ObservabilityOperation.Toggle> = ObservabilityOperation.Toggle.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
       const namespace = yield* Capability.get(ObservabilityCapabilities.Namespace);

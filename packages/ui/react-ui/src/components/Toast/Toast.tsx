@@ -5,15 +5,15 @@
 import { Primitive } from '@radix-ui/react-primitive';
 import { Slot } from '@radix-ui/react-slot';
 import * as ToastPrimitive from '@radix-ui/react-toast';
-import React, { type ComponentPropsWithRef, type FunctionComponent, forwardRef } from 'react';
+import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks';
+import { ElevationProvider } from '../../primitives';
 import { type ThemedClassName } from '../../util';
-import { ElevationProvider } from '../ElevationProvider';
 
 type ToastProviderProps = ToastPrimitive.ToastProviderProps;
 
-const ToastProvider: FunctionComponent<ToastProviderProps> = ToastPrimitive.Provider;
+const ToastProvider = ToastPrimitive.Provider;
 
 type ToastViewportProps = ThemedClassName<ToastPrimitive.ToastViewportProps>;
 
@@ -73,11 +73,11 @@ const ToastActions = forwardRef<HTMLDivElement, ToastActionsProps>(
 
 type ToastActionProps = ToastPrimitive.ToastActionProps;
 
-const ToastAction: FunctionComponent<ToastActionProps> = ToastPrimitive.Action;
+const ToastAction = ToastPrimitive.Action;
 
 type ToastCloseProps = ToastPrimitive.ToastCloseProps;
 
-const ToastClose: FunctionComponent<ToastCloseProps> = ToastPrimitive.Close;
+const ToastClose = ToastPrimitive.Close;
 
 export const Toast = {
   Provider: ToastProvider,

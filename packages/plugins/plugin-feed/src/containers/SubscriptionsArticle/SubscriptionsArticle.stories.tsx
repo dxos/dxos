@@ -9,29 +9,30 @@ import React from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { Filter } from '@dxos/echo';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { SpacePlugin } from '@dxos/plugin-space';
+import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
+import { translations } from '#translations';
 import { Subscription } from '#types';
 
 import { FeedPlugin } from '../../FeedPlugin';
-import { translations } from '../../translations';
 import { SubscriptionsArticle } from './SubscriptionsArticle';
 
 const DefaultStory = () => {
   const spaces = useSpaces();
   const space = spaces[spaces.length - 1];
-  const feeds = useQuery(space?.db, Filter.type(Subscription.Feed));
-  if (feeds.length === 0) {
+  const feeds = useQuery(space?.db, Filter.type(Subscription.Subscription));
+  if (!space || feeds.length === 0) {
     return <Loading />;
   }
 
-  return <SubscriptionsArticle role='article' subject='feeds-root' attendableId='story' />;
+  return <SubscriptionsArticle role='article' space={space} attendableId='story' />;
 };
 
 const meta: Meta<typeof DefaultStory> = {
@@ -43,7 +44,7 @@ const meta: Meta<typeof DefaultStory> = {
       plugins: [
         ...corePlugins(),
         ClientPlugin({
-          types: [Subscription.Feed, Subscription.Post],
+          types: [Subscription.Subscription, Subscription.Post],
           onClientInitialized: ({ client }: { client: Client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client);
@@ -51,7 +52,7 @@ const meta: Meta<typeof DefaultStory> = {
               yield* Effect.promise(() => space.waitUntilReady());
               Array.from({ length: 5 }).forEach(() => {
                 space.db.add(
-                  Subscription.makeFeed({
+                  Subscription.makeSubscription({
                     name: random.company.name() + ' Blog',
                     url: random.internet.url(),
                     description: random.lorem.sentence(),

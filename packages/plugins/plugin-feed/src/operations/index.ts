@@ -2,9 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/operation';
-
-export * as FeedOperation from './definitions';
+import { OperationHandlerSet } from '@dxos/compute';
 
 export const FeedOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./add-post-to-magazine'),

@@ -2,17 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type AppCapabilities } from '@dxos/app-toolkit';
-import { Blueprint, Template } from '@dxos/blueprints';
+import { Blueprint, Template } from '@dxos/compute';
 import { trim } from '@dxos/util';
 
-import { InboxOperation } from '#operations';
-
-const BLUEPRINT_KEY = 'org.dxos.blueprint.inbox';
+import { InboxOperation } from '#types';
+import { Mailbox } from '#types';
 
 const make = () =>
   Blueprint.make({
-    key: BLUEPRINT_KEY,
+    key: Mailbox.BLUEPRINT_KEY,
     name: 'Inbox',
     agentCanEnable: true,
     tools: Blueprint.toolDefinitions({
@@ -20,8 +18,8 @@ const make = () =>
         InboxOperation.ClassifyEmail,
         InboxOperation.DraftEmail,
         InboxOperation.ReadEmail,
-        InboxOperation.SummarizeMailbox,
         InboxOperation.GoogleMailSync,
+        InboxOperation.ExtractMessage,
       ],
       tools: [],
     }),
@@ -52,13 +50,16 @@ const make = () =>
 
         Additional information can be included (indented).
 
+        # Email extraction
+        Parse confirmation emails (e.g., flight bookings or hotel reservations) into structured objects.
+
         Note: Sending emails is handled by the "Inbox (Send)" blueprint.
       `,
     }),
   });
 
-const blueprint: AppCapabilities.BlueprintDefinition = {
-  key: BLUEPRINT_KEY,
+const blueprint: Blueprint.Definition = {
+  key: Mailbox.BLUEPRINT_KEY,
   make,
 };
 

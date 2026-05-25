@@ -3,10 +3,5 @@
 //
 
 export * from './blueprints';
-export * from './components';
-export * from './hooks';
 export * from './meta';
-export * from './translations';
 export * from './types';
-
-export * from './AssistantPlugin';

@@ -38,6 +38,10 @@ type InputVariant = 'default' | 'subdued';
 
 type InputSharedProps = Partial<{ density: Density; elevation: Elevation; variant: InputVariant }>;
 
+//
+// Label
+//
+
 type LabelProps = ThemedClassName<LabelPrimitiveProps> & { srOnly?: boolean };
 
 const Label = forwardRef<HTMLLabelElement, LabelProps>(({ classNames, children, srOnly, ...props }, forwardedRef) => {
@@ -48,6 +52,12 @@ const Label = forwardRef<HTMLLabelElement, LabelProps>(({ classNames, children, 
     </LabelPrimitive>
   );
 });
+
+Label.displayName = 'Input.Label';
+
+//
+// Description
+//
 
 type DescriptionProps = ThemedClassName<DescriptionPrimitiveProps> & { srOnly?: boolean };
 
@@ -61,6 +71,12 @@ const Description = forwardRef<HTMLSpanElement, DescriptionProps>(
     );
   },
 );
+
+Description.displayName = 'Input.Description';
+
+//
+// Validation
+//
 
 type ValidationProps = ThemedClassName<ValidationPrimitiveProps> & { srOnly?: boolean };
 
@@ -80,6 +96,12 @@ const Validation = forwardRef<HTMLSpanElement, InputScopedProps<ValidationProps>
   },
 );
 
+Validation.displayName = 'Input.Validation';
+
+//
+// DescriptionAndValidation
+//
+
 type DescriptionAndValidationProps = ThemedClassName<DescriptionAndValidationPrimitiveProps> & { srOnly?: boolean };
 
 const DescriptionAndValidation = forwardRef<HTMLParagraphElement, DescriptionAndValidationProps>(
@@ -96,6 +118,12 @@ const DescriptionAndValidation = forwardRef<HTMLParagraphElement, DescriptionAnd
     );
   },
 );
+
+DescriptionAndValidation.displayName = 'Input.DescriptionAndValidation';
+
+//
+// PinInput
+//
 
 type PinInputProps = ThemedClassName<InputSharedProps & Omit<PinInputPrimitiveProps, 'className' | 'segmentClassName'>>;
 
@@ -120,7 +148,12 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
   },
 );
 
+PinInput.displayName = 'Input.PinInput';
+
+//
+// TextInput
 // TODO(burdon): Implement inline icon within button: e.g., https://www.radix-ui.com/themes/playground#text-field
+//
 
 type AutoFillProps = {
   noAutoFill?: boolean;
@@ -162,6 +195,71 @@ const TextInput = forwardRef<HTMLInputElement, InputScopedProps<TextInputProps>>
   },
 );
 
+TextInput.displayName = 'Input.TextInput';
+
+//
+// Time
+//
+
+type TimeProps = InputSharedProps &
+  ThemedClassName<Omit<TextInputPrimitiveProps, 'type'>> & {
+    /** Show the native time-picker icon (clock). Defaults to true. */
+    icon?: boolean;
+    /** Show the time-of-day text. Defaults to true. Hide to render an icon-only trigger. */
+    time?: boolean;
+  };
+
+const Time = forwardRef<HTMLInputElement, InputScopedProps<TimeProps>>(
+  (
+    {
+      __inputScope,
+      classNames,
+      density: densityProp,
+      elevation: elevationProp,
+      variant,
+      icon = true,
+      time = true,
+      ...props
+    },
+    forwardedRef,
+  ) => {
+    const { tx } = useThemeContext();
+    const density = useDensityContext(densityProp);
+    const elevation = useElevationContext(elevationProp);
+    const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
+
+    return (
+      <TextInputPrimitive
+        {...props}
+        type='time'
+        className={tx(
+          'input.input',
+          {
+            variant,
+            disabled: props.disabled,
+            density,
+            elevation,
+            validationValence,
+          },
+          // Force 32px (native time inputs add intrinsic height; the density
+          // `min-h-[2.5rem]` arbitrary value also outranks plain `min-h-8`).
+          '!h-8 !min-h-8 box-border leading-none',
+          !icon && '[&::-webkit-calendar-picker-indicator]:hidden',
+          !time && 'text-transparent',
+          classNames,
+        )}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
+
+Time.displayName = 'Input.Time';
+
+//
+// TextArea
+//
+
 type TextAreaProps = InputSharedProps & ThemedClassName<TextAreaPrimitiveProps>;
 
 const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>>(
@@ -192,6 +290,12 @@ const TextArea = forwardRef<HTMLTextAreaElement, InputScopedProps<TextAreaProps>
     );
   },
 );
+
+TextArea.displayName = 'Input.TextArea';
+
+//
+// Checkbox
+//
 
 type CheckboxProps = ThemedClassName<Omit<CheckboxPrimitive.CheckboxProps, 'children'>> & {
   size?: Size;
@@ -246,6 +350,12 @@ const Checkbox: ForwardRefExoticComponent<CheckboxProps> = forwardRef<
   },
 );
 
+Checkbox.displayName = 'Input.Checkbox';
+
+//
+// Switch
+//
+
 type SwitchProps = ThemedClassName<
   Omit<ComponentPropsWithRef<'input'>, 'children' | 'onChange'> & { onCheckedChange?: (checked: boolean) => void }
 >;
@@ -291,11 +401,18 @@ const Switch = forwardRef<HTMLInputElement, InputScopedProps<SwitchProps>>(
   },
 );
 
+Switch.displayName = 'Input.Switch';
+
+//
+// Input
+//
+
 export const Input = {
   Root: InputRoot,
   PinInput,
   TextInput,
   TextArea,
+  Time,
   Checkbox,
   Switch,
   Label,
@@ -311,6 +428,7 @@ export type {
   PinInputProps,
   TextInputProps,
   TextAreaProps,
+  TimeProps,
   CheckboxProps,
   SwitchProps,
   LabelProps,

@@ -4,38 +4,39 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Database, Obj } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
+import { Obj } from '@dxos/echo';
+import { loadGame } from '@dxos/plugin-game';
 
 import { checkWin, currentTurn, placeMarker } from '#components';
-import { type TicTacToe } from '#types';
+import { TicTacToe } from '#types';
 
-import { MakeMove } from './definitions';
+import { TicTacToeOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof MakeMove> = MakeMove.pipe(
+const handler: Operation.WithHandler<typeof TicTacToeOperation.MakeMove> = TicTacToeOperation.MakeMove.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ game, position }) {
-      const obj = (yield* Database.load(game)) as TicTacToe.Game;
-      const currentStatus = checkWin(obj.board, obj.size, obj.winCondition);
+      const { variant } = yield* loadGame(game, TicTacToe.State);
+      const currentStatus = checkWin(variant.board, variant.size, variant.winCondition);
       if (currentStatus !== 'playing') {
         return yield* Effect.fail(new Error('GameOver'));
       }
       const [rowStr, colStr] = position.split(',');
       const row = parseInt(rowStr, 10);
       const col = parseInt(colStr, 10);
-      const marker = currentTurn(obj.board);
+      const marker = currentTurn(variant.board);
 
-      const result = placeMarker(obj.board, obj.size, row, col, marker);
+      const result = placeMarker(variant.board, variant.size, row, col, marker);
       if (result.error) {
         return yield* Effect.fail(new Error(result.error));
       }
 
-      const status = checkWin(result.board, obj.size, obj.winCondition);
+      const status = checkWin(result.board, variant.size, variant.winCondition);
       const moveEntry = `${marker}:${row},${col}`;
-      const moves = obj.moves ? `${obj.moves};${moveEntry}` : moveEntry;
+      const moves = variant.moves ? `${variant.moves};${moveEntry}` : moveEntry;
 
-      Obj.change(obj, (obj) => {
-        const mutable = obj as Obj.Mutable<typeof obj>;
+      Obj.update(variant, (variant) => {
+        const mutable = variant as Obj.Mutable<typeof variant>;
         mutable.board = result.board;
         mutable.moves = moves;
       });

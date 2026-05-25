@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { AppCapabilities, isPinnedWorkspace, LayoutOperation } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
 import { Graph, Node } from '@dxos/plugin-graph';
 
 import { DeckCapabilities, defaultDeck } from '../types';
@@ -49,7 +49,13 @@ const handler: Operation.WithHandler<typeof LayoutOperation.SwitchWorkspace> = L
             (node) => !Node.isActionLike(node) && !node.properties.disposition,
           );
           if (item) {
-            yield* Operation.schedule(LayoutOperation.Open, { subject: [item.id] });
+            // Use `invoke` (synchronous) rather than `schedule` (fire-and-forget) so
+            // that the implicit "open first child" finishes BEFORE this handler
+            // returns. Otherwise, a caller that follows `SwitchWorkspace` with its
+            // own `SetLayoutMode`/`Open` (e.g. WelcomePlugin DefaultContent) has
+            // its `solo`/`active` clobbered by this scheduled Open when it later
+            // races behind the caller's state writes.
+            yield* Operation.invoke(LayoutOperation.Open, { subject: [item.id] });
           }
         }
       }

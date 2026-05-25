@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Icon, Toolbar, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 

@@ -84,6 +84,9 @@
       "path": "../react-ui-grid"
     },
     {
+      "path": "../react-ui-list"
+    },
+    {
       "path": "../react-ui-menu"
     },
     {

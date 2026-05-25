@@ -15,10 +15,11 @@ import React, {
 } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
-import { type CellRange, rangeToA1Notation } from '@dxos/compute';
+import { type CellRange, rangeToA1Notation } from '@dxos/compute-hyperformula';
 import { Obj } from '@dxos/echo';
 import { defaultColSize, defaultRowSize } from '@dxos/lit-grid';
 import { DropdownMenu, Icon, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridCellIndex,
@@ -33,10 +34,9 @@ import {
   editorKeys,
   parseCellIndex,
 } from '@dxos/react-ui-grid';
-import { composable, composableProps } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { SheetOperation } from '#operations';
+import { SheetOperation } from '#types';
 import { DEFAULT_COLS, DEFAULT_ROWS, SheetCapabilities } from '#types';
 
 import { type RangeController, rangeExtension, sheetExtension } from '../../extensions';
@@ -145,7 +145,7 @@ export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props
 
   const handleAxisResize = useCallback<NonNullable<GridContentProps['onAxisResize']>>(
     ({ axis, size, index: numericIndex }) => {
-      Obj.change(model.sheet, (sheet) => {
+      Obj.update(model.sheet, (sheet) => {
         if (axis === 'row') {
           const rowId = sheet.rows[parseInt(numericIndex)];
           sheet.rowMeta[rowId] ??= {};

@@ -12,21 +12,21 @@ import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { PostStack, type PostStackAction } from '#components';
 import { meta } from '#meta';
-import { FeedOperation } from '#operations';
+import { FeedOperation } from '#types';
 import { Subscription } from '#types';
 
-export type FeedArticleProps = AppSurface.ObjectArticleProps<Subscription.Feed>;
+export type FeedArticleProps = AppSurface.ObjectArticleProps<Subscription.Subscription>;
 
 export const FeedArticle = ({ role, subject }: FeedArticleProps) => {
   const { t } = useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const [currentPostId, setCurrentPostId] = useState<string>();
   const [error, setError] = useState<string>();
-  useObject(subject);
-  const feed = subject.feed?.target;
+  const [feed] = useObject(subject);
+  const feedTarget = feed.feed?.target;
   const posts = useQuery(
-    Obj.getDatabase(subject),
-    feed ? Query.select(Filter.everything()).from(feed) : Query.select(Filter.nothing()),
+    Obj.getDatabase(feed),
+    feedTarget ? Query.select(Filter.everything()).from(feedTarget) : Query.select(Filter.nothing()),
   );
 
   const handleAction = useCallback((action: PostStackAction) => {
@@ -46,7 +46,7 @@ export const FeedArticle = ({ role, subject }: FeedArticleProps) => {
     <Panel.Root role={role} className='dx-document'>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <Toolbar.Text>{Entity.getLabel(subject)}</Toolbar.Text>
+          <Toolbar.Text>{Entity.getLabel(feed)}</Toolbar.Text>
           <Toolbar.Separator />
           <Toolbar.IconButton
             label={t('sync-feed.label')}
@@ -57,7 +57,7 @@ export const FeedArticle = ({ role, subject }: FeedArticleProps) => {
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
-        <PostStack id={subject.id} posts={posts} currentId={currentPostId} onAction={handleAction} />
+        <PostStack id={feed.id} posts={posts} currentId={currentPostId} onAction={handleAction} />
       </Panel.Content>
       {error && (
         <Panel.Statusbar>

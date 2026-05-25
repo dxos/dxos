@@ -28,7 +28,7 @@ const AT_DXN_PATTERN = /@(dxn:[a-zA-Z0-9]+(?::[a-zA-Z0-9@_-]+)+)/g;
 /**
  * Extracts all DXN references from a string.
  */
-export const extractDxnsFromString = (text: string): DXN[] => {
+export const extractDxnFromString = (text: string): DXN[] => {
   const dxns: DXN[] = [];
   const seen = new Set<string>();
 
@@ -68,7 +68,7 @@ export const extractDxnsFromObject = (obj: unknown): DXN[] => {
   const dxns: DXN[] = [];
   const seen = new Set<string>();
 
-  const addDxn = (dxnStr: string) => {
+  const addDXN = (dxnStr: string) => {
     if (!seen.has(dxnStr)) {
       const dxn = DXN.tryParse(dxnStr);
       if (dxn) {
@@ -86,14 +86,14 @@ export const extractDxnsFromObject = (obj: unknown): DXN[] => {
     if (typeof value === 'string') {
       // Check if the string itself is a DXN.
       if (value.startsWith('dxn:')) {
-        addDxn(value);
+        addDXN(value);
       } else if (value.startsWith('@dxn:')) {
-        addDxn(value.slice(1));
+        addDXN(value.slice(1));
       }
       // Also extract DXNs from within the string.
-      const extracted = extractDxnsFromString(value);
+      const extracted = extractDxnFromString(value);
       for (const dxn of extracted) {
-        addDxn(dxn.toString());
+        addDXN(dxn.toString());
       }
       return;
     }
@@ -112,7 +112,7 @@ export const extractDxnsFromObject = (obj: unknown): DXN[] => {
       if ('/' in record && typeof record['/'] === 'string') {
         const dxnStr = record['/'];
         if (typeof dxnStr === 'string' && dxnStr.startsWith('dxn:')) {
-          addDxn(dxnStr);
+          addDXN(dxnStr);
         }
       }
 
@@ -120,7 +120,7 @@ export const extractDxnsFromObject = (obj: unknown): DXN[] => {
       if ('@dxn' in record && typeof record['@dxn'] === 'string') {
         const dxnStr = record['@dxn'];
         if (typeof dxnStr === 'string' && dxnStr.startsWith('dxn:')) {
-          addDxn(dxnStr);
+          addDXN(dxnStr);
         }
       }
 
@@ -128,7 +128,7 @@ export const extractDxnsFromObject = (obj: unknown): DXN[] => {
       if (record._tag === 'reference' && record.reference && typeof record.reference === 'object') {
         const ref = record.reference as Record<string, unknown>;
         if (ref.dxn && typeof ref.dxn === 'string') {
-          addDxn(ref.dxn);
+          addDXN(ref.dxn);
         }
       }
 
@@ -153,7 +153,7 @@ export const extractFirstDxnFromToolInput = (input: string): DXN | undefined => 
     return dxns[0];
   } catch {
     // If JSON parsing fails, try to extract from the raw string.
-    const dxns = extractDxnsFromString(input);
+    const dxns = extractDxnFromString(input);
     return dxns[0];
   }
 };
@@ -172,7 +172,7 @@ export const extractFirstDxnFromToolResult = (result: string | undefined): DXN |
     return dxns[0];
   } catch {
     // If JSON parsing fails, try to extract from the raw string.
-    const dxns = extractDxnsFromString(result);
+    const dxns = extractDxnFromString(result);
     return dxns[0];
   }
 };

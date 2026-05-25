@@ -49,10 +49,10 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/ai"
+      "path": "../../core/compute/ai"
     },
     {
-      "path": "../../core/blueprints"
+      "path": "../../core/compute/compute"
     },
     {
       "path": "../../core/echo/echo"
@@ -65,12 +65,6 @@
     },
     {
       "path": "../../core/echo/echo-protocol"
-    },
-    {
-      "path": "../../core/functions"
-    },
-    {
-      "path": "../../core/operation"
     },
     {
       "path": "../../core/protocols"

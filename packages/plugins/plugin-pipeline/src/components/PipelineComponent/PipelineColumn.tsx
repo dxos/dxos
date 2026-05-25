@@ -9,8 +9,8 @@ import type * as Schema from 'effect/Schema';
 import React, { forwardRef, useMemo, useRef, useState } from 'react';
 
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
-import { Annotation, JsonSchema, Obj, Query, Type } from '@dxos/echo';
-import { Filter, getSpace, useObject } from '@dxos/react-client/echo';
+import { Annotation, Filter, JsonSchema, Obj, Query, Type } from '@dxos/echo';
+import { useObject } from '@dxos/react-client/echo';
 import { Panel, Toolbar, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { Menu } from '@dxos/react-ui-menu';
@@ -33,11 +33,11 @@ export type PipelineColumnProps = Pick<MosaicTileProps<Pipeline.Column>, 'classN
 // TODO(wittjosiah): Support item DnD reordering (ordering needs to be stored on the view presentation collection).
 export const PipelineColumn = ({ data: column, location, classNames, debug }: PipelineColumnProps) => {
   const { t } = useTranslation(meta.id);
-  const dragHandleRef = useRef<HTMLButtonElement>(null);
+  const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
   // Subscribe to the view target for reactivity.
   const [viewSnapshot] = useObject(column.view);
   const view = column.view.target;
-  const space = getSpace(view);
+  const db = view && Obj.getDatabase(view);
   const { Item } = usePipeline(PIPELINE_COLUMN_NAME);
   const [schema, setSchema] = useState<Schema.Schema.AnyNoContext>();
   const query = useMemo(() => {
@@ -51,13 +51,13 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
   }, [JSON.stringify(viewSnapshot?.query.ast)]);
 
   useAsyncEffect(async () => {
-    if (!query || !space?.db) {
+    if (!query || !db) {
       return;
     }
 
-    const schema = await resolveSchemaWithRegistry(space.db.schemaRegistry, query.ast);
+    const schema = await resolveSchemaWithRegistry(db.schemaRegistry, query.ast);
     setSchema(() => schema);
-  }, [space, query]);
+  }, [db, query]);
 
   const projectionModel = useMemo(() => {
     if (!schema || !view) {
@@ -87,13 +87,13 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
         data={column}
         location={location}
         classNames={classNames}
-        dragHandleRef={dragHandleRef}
+        dragHandle={dragHandle}
       >
         <Panel.Toolbar asChild>
           <Board.Column.Header
             classNames='_opacity-10'
             label={column.name || t('untitled-view.title')}
-            dragHandleRef={dragHandleRef}
+            dragHandleRef={setDragHandle}
           />
         </Panel.Toolbar>
         <Panel.Content asChild>

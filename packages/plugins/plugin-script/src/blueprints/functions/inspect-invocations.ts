@@ -5,10 +5,10 @@
 import * as Effect from 'effect/Effect';
 
 import { SpaceProperties } from '@dxos/client-protocol';
+import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { getUserFunctionIdInMetadata } from '@dxos/functions';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent, createInvocationSpans } from '@dxos/functions-runtime';
-import { Operation } from '@dxos/operation';
 
 import { InspectInvocations } from './definitions';
 
@@ -34,8 +34,8 @@ export default InspectInvocations.pipe(
         if (!span.invocationTarget || !functionId) {
           return false;
         }
-        const targetDxn = span.invocationTarget.dxn.toString();
-        const uuidPart = targetDxn.split(':').pop();
+        const targetDXN = span.invocationTarget.dxn.toString();
+        const uuidPart = targetDXN.split(':').pop();
         return uuidPart === functionId;
       });
 

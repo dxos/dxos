@@ -3,4 +3,5 @@
 //
 
 export * from './actions';
-export * from './SettingsPlugin';
+export * from './meta';
+export { SETTINGS_ID, SETTINGS_KEY } from './types';

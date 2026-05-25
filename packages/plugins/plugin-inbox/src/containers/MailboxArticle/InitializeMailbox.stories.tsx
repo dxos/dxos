@@ -10,12 +10,12 @@ import { Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Feed, Obj } from '@dxos/echo';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { Feed, Filter, Obj } from '@dxos/echo';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { PreviewPlugin } from '@dxos/plugin-preview';
+import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { Filter, useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useDatabase, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { AccessToken, Message, Person } from '@dxos/types';
 
@@ -27,7 +27,7 @@ import { InitializeMailbox } from './InitializeMailbox';
 
 // Contributes a stub `integration--auth` surface so stories can exercise the
 // empty-state path that delegates to an installed integration plugin without
-// pulling in `@dxos/plugin-token-manager`.
+// pulling in `@dxos/plugin-integration`.
 const MockAuthSurfacePlugin = Plugin.define({ id: 'story.mock-auth-surface', name: 'Mock Auth Surface' }).pipe(
   AppPlugin.addSurfaceModule({
     activate: () =>

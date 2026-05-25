@@ -56,7 +56,7 @@ Truncate/restart behavior is owned by the plugin (file cleared on dev server sta
 In **Node / vitest** runs, `@dxos/log` reads **`process.env.LOG_FILTER`** when building the default config (`packages/common/log/src/options.ts`). Set it to control **which levels and paths are printed to the test process stdout** (same filter string shape as **`query-logs -q`**: level name, `pathFragment:level`, comma-separated list, etc.).
 
 ```bash
-LOG_FILTER=debug moon run assistant:test -- AgentService.test.ts
+LOG_FILTER=debug moon run functions-runtime:test -- AgentService.test.ts
 ```
 
 Use **`trace`** for maximum noise, **`info`** for quieter runs, or a path-scoped value (e.g. `AgentService:debug`, `functions-runtime:debug`) to narrow output. This does **not** write `app.log`; it only affects the **console processor** during that command.

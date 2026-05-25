@@ -4,19 +4,19 @@
 
 import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Database, JsonSchema, Obj } from '@dxos/echo';
-import { type Collection } from '@dxos/echo';
+import { type Collection, Database, JsonSchema, Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 import { type LatLngLiteral } from '@dxos/react-ui-geo';
 
-import { MapContainer, MapViewEditor } from '#containers';
+import { MapArticle, MapViewEditor } from '#containers';
 import { LocationAnnotationId, Map, MapCapabilities } from '#types';
 
 export default Capability.makeModule(() =>
@@ -40,7 +40,7 @@ export default Capability.makeModule(() =>
           }, []);
 
           return (
-            <MapContainer
+            <MapArticle
               role={role}
               subject={data.subject}
               type={state.type}
@@ -53,7 +53,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'surface.object-properties',
-        position: 'hoist',
+        position: 'first',
         filter: AppSurface.object(AppSurface.ObjectProperties, Map.Map),
         component: ({ data }) => <MapViewEditor object={data.subject} />,
       }),
@@ -67,12 +67,18 @@ export default Capability.makeModule(() =>
           prop: string;
           schema: Schema.Schema<any>;
           target: Database.Database | Collection.Collection | undefined;
+          fieldPropertyAst?: SchemaAST.AST;
         } => {
           const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, LocationAnnotationId);
           return !!annotation;
         },
-        component: ({ data: { target }, ...inputProps }) => {
-          const props = inputProps as any as FormFieldComponentProps;
+        component: ({ data: { target, fieldPropertyAst }, ...inputProps }) => {
+          const ast = fieldPropertyAst;
+          if (!ast) {
+            return null;
+          }
+
+          const props = { ...inputProps, type: ast } as any as FormFieldComponentProps;
           const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
           const { typename } = useFormValues('MapForm');
 

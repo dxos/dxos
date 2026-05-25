@@ -17,11 +17,10 @@ import React, {
 } from 'react';
 
 import { AiService } from '@dxos/ai';
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker, useSpaceCallback } from '@dxos/app-framework/ui';
 import { LayoutOperation, SettingsOperation } from '@dxos/app-toolkit';
+import { type Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
-import { type Operation } from '@dxos/operation';
-import { useComputeRuntimeCallback } from '@dxos/plugin-automation/hooks';
 import {
   Button,
   ButtonGroup,
@@ -38,7 +37,7 @@ import {
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { trim } from '@dxos/util';
 
-import { type ComponentProps } from './types';
+import { type ModuleProps } from './types';
 
 /**
  * Maps DXOS react-ui registry keys to components. Keys use compound names (e.g. Panel.Root) or
@@ -70,7 +69,7 @@ export const COMPONENT_REGISTRY = {
   'Card.Root': Card.Root,
   'Card.Toolbar': Card.Toolbar,
   'Card.Content': Card.Content,
-  'Card.Heading': Card.Heading,
+  'Card.Section': Card.Section,
   'Card.Text': Card.Text,
 
   Flex,
@@ -372,7 +371,7 @@ const GenUiMarkupPreview = ({ markup }: { markup: string }) => {
   return <div className='min-h-[120px] overflow-auto'>{rendered}</div>;
 };
 
-export const GenUiModule = ({ space }: ComponentProps) => {
+export const GenUiModule = ({ space }: ModuleProps) => {
   const [input, setInput] = useState('');
   const [markup, setMarkup] = useState('');
   const [generating, setGenerating] = useState(false);
@@ -380,8 +379,9 @@ export const GenUiModule = ({ space }: ComponentProps) => {
 
   const invokerFn: InvokerFn = useCallback((op, args) => void invokePromise(op, args), [invokePromise]);
 
-  const handleGenerate = useComputeRuntimeCallback(
+  const handleGenerate = useSpaceCallback(
     space.id,
+    [AiService.AiService] as const,
     () =>
       Effect.gen(function* () {
         setGenerating(true);

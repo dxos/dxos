@@ -3,76 +3,55 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 
-import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
-import { useClient } from '@dxos/react-client';
-import { type ClientRepeatedComponentProps, ClientRepeater } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { createTree } from '../../testing';
 import { Tree, type TreeComponentProps } from './Tree';
-import { Tree as TreeModel, TreeType } from './types';
-
-// TODO(burdon): Storybook for Graph/Tree/Plot (generics); incl. GraphModel.
-// TODO(burdon): Type for all Explorer components (Space, Object, Query, etc.) incl.
+import { treeTypeToTreeNode } from './types';
 
 random.seed(1);
 
-type ComponentProps = ClientRepeatedComponentProps & { type?: TreeComponentProps<any>['variant'] };
+type StoryArgs = Pick<TreeComponentProps, 'variant'>;
 
-const Component = ({ type }: ComponentProps) => {
-  const client = useClient();
-  const space = client.spaces.get()[0];
-  invariant(space, 'Tree story requires at least one space');
-  const [object, setObject] = useState<TreeType>();
-  useEffect(() => {
-    setTimeout(() => {
-      const tree = space.db.add(TreeModel.create());
-      setObject(tree);
-    });
-  }, []);
-
-  if (!object) {
-    return null;
+const DefaultStory = ({ variant }: StoryArgs) => {
+  const data = useMemo(() => treeTypeToTreeNode(createTree([3, [2, 4], [1, 3]]).tree), []);
+  if (!data) {
+    return <Loading />;
   }
 
-  return <Tree space={space} selected={object?.id} variant={type} />;
+  return <Tree data={data} variant={variant} />;
 };
 
-const DefaultStory = () => {
-  return <ClientRepeater component={Component} types={[TreeType]} createSpace />;
-};
-
-const meta = {
+const meta: Meta<StoryArgs> = {
   title: 'plugins/plugin-explorer/components/Tree',
-  component: Tree as any,
   render: DefaultStory,
-  decorators: [withRegistry, withTheme(), withLayout()],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
   },
-} satisfies Meta<typeof DefaultStory>;
+};
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<StoryArgs>;
 
 export const Tidy: Story = {
   args: {
-    type: 'tidy',
+    variant: 'tidy',
   },
 };
 
 export const Radial: Story = {
   args: {
-    type: 'radial',
+    variant: 'radial',
   },
 };
 
 export const Edge: Story = {
   args: {
-    type: 'edge',
+    variant: 'edge',
   },
 };

@@ -8,19 +8,18 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Surface, useCapabilities } from '@dxos/app-framework/ui';
+import { Surface, useSpaceCallback } from '@dxos/app-framework/ui';
 import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Agent } from '@dxos/assistant-toolkit';
-import { Annotation, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Annotation, Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { AtomObj, AtomRef } from '@dxos/echo-atom';
 import { QueueService } from '@dxos/functions';
-import { AutomationCapabilities } from '@dxos/plugin-automation/types';
 import { useQuery } from '@dxos/react-client/echo';
 import { Card, Message, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { composable } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
-import { composable } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -34,31 +33,25 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
   const [tab, setTab] = useState<Tab>('artifacts');
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
-  const [computeRuntime] = useCapabilities(AutomationCapabilities.ComputeRuntime);
+  const spaceId = Obj.getDatabase(agent)?.spaceId;
   // TODO(burdon): Clear input queue also.
+  const resetHistory = useSpaceCallback(
+    spaceId,
+    [QueueService, Feed.FeedService, Database.Service] as const,
+    Effect.fnUntraced(function* () {
+      yield* Agent.resetChatHistory(agent);
+      if (!agent.feed) {
+        const queue = yield* QueueService.createQueue();
+        Obj.update(agent, (agent) => {
+          agent.feed = Ref.fromDXN(queue.dxn);
+        });
+      }
+    }),
+    [agent],
+  );
   const handleResetHistory = useCallback(async () => {
-    if (!computeRuntime) {
-      return;
-    }
-
-    const space = Obj.getDatabase(agent);
-    if (!space) {
-      return;
-    }
-
-    const runtime = computeRuntime.getRuntime(space.spaceId);
-    await runtime.runPromise(Agent.resetChatHistory(agent));
-    if (!agent.queue) {
-      await runtime.runPromise(
-        Effect.gen(function* () {
-          const queue = yield* QueueService.createQueue();
-          Obj.change(agent, (agent) => {
-            agent.queue = Ref.fromDXN(queue.dxn);
-          });
-        }),
-      );
-    }
-  }, [agent, computeRuntime]);
+    await resetHistory();
+  }, [resetHistory]);
 
   const artifacts = useAtomValue(
     useMemo(
@@ -74,15 +67,19 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
     ),
   );
 
-  const inputQueue = useAtomValue(
+  const inputFeed = useAtomValue(
     AtomObj.make(agent).pipe((_) =>
       Atom.make((get) =>
-        Option.fromNullable(get(_).queue).pipe(Option.map(AtomRef.make), Option.map(get), Option.getOrUndefined),
+        Option.fromNullable(get(_).feed).pipe(Option.map(AtomRef.make), Option.map(get), Option.getOrUndefined),
       ),
     ),
   );
 
-  const inputObjects = useQuery(inputQueue, Query.select(Filter.everything()));
+  const db = Obj.getDatabase(agent);
+  const inputObjects = useQuery(
+    db,
+    inputFeed ? Query.select(Filter.everything()).from(inputFeed) : Query.select(Filter.nothing()),
+  );
 
   return (
     <Panel.Root role={role}>
@@ -90,7 +87,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
         <Toolbar.Root>
           <Toolbar.ToggleGroup type='single' value={tab} onValueChange={(value) => value && setTab(value as Tab)}>
             <Toolbar.ToggleGroupIconItem value='artifacts' label={t('artifacts.label')} icon='ph--cube--regular' />
-            <Toolbar.ToggleGroupIconItem value='inputs' label={t('input-queue.label')} icon='ph--queue--regular' />
+            <Toolbar.ToggleGroupIconItem value='inputs' label={t('inputs.label')} icon='ph--queue--regular' />
           </Toolbar.ToggleGroup>
           <Toolbar.Separator />
           <Toolbar.IconButton

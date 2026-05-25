@@ -6,9 +6,9 @@ import { Atom, type Registry, RegistryContext } from '@effect-atom/atom-react';
 import React, { useContext, useMemo } from 'react';
 
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { type CompleteCellRange } from '@dxos/compute';
+import { type CompleteCellRange } from '@dxos/compute-hyperformula';
+import { composable, composableProps } from '@dxos/react-ui';
 import { type ActionGraphProps, Menu, createGapSeparator, useMenuActions } from '@dxos/react-ui-menu';
-import { composable, composableProps } from '@dxos/ui-theme';
 
 import { type SheetModel } from '../../model';
 import { useSheetContext } from '../SheetRoot';

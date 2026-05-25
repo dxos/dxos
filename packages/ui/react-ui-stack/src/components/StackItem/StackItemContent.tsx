@@ -37,10 +37,9 @@ export const StackItemContent = forwardRef<HTMLDivElement, StackItemContentProps
     return (
       <div
         {...props}
-        role='none'
         style={style}
         className={mx(
-          'group grid grid-cols-[100%] dx-density-coarse',
+          'group grid grid-cols-[100%] dx-density-lg',
           stackItemSize === 'contain' && 'min-h-0 overflow-hidden',
           toolbar &&
             role === 'section' &&

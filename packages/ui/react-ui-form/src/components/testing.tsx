@@ -5,14 +5,14 @@
 import React, { type PropsWithChildren } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
+import { composableProps, slottable } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
-import { composableProps, slottable } from '@dxos/ui-theme';
 
 type TestLayoutProps = PropsWithChildren<{ json?: any }>;
 
 export const TestLayout = ({ children, json }: TestLayoutProps) => {
   return (
-    <div role='none' className='dx-container grid grid-cols-[1fr_1fr] p-4 gap-4'>
+    <div className='dx-container grid grid-cols-[1fr_1fr] p-4 gap-4'>
       <TestPanel>{children}</TestPanel>
       <TestPanel>
         <Syntax.Root data={json}>

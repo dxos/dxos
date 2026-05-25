@@ -4,15 +4,14 @@
 
 import type * as Schema from 'effect/Schema';
 
-import { addressToA1Notation } from '@dxos/compute';
+import { addressToA1Notation } from '@dxos/compute-hyperformula';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
-import { DXN, Filter, Key, type Type } from '@dxos/echo';
-import { View } from '@dxos/echo';
-import { type OperationInvoker } from '@dxos/operation';
-import { Markdown } from '@dxos/plugin-markdown/types';
-import { Sheet } from '@dxos/plugin-sheet/types';
-import { Sketch } from '@dxos/plugin-sketch/types';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
+import { DXN, Filter, Key, type Type, View } from '@dxos/echo';
+import { OperationInvoker } from '@dxos/operation';
+import { Markdown } from '@dxos/plugin-markdown';
+import { Sheet } from '@dxos/plugin-sheet';
+import { Sketch } from '@dxos/plugin-sketch';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { random } from '@dxos/random';
 import { type Client } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';

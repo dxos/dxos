@@ -8,14 +8,14 @@ import * as Config from 'effect/Config';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { CredentialsService } from '@dxos/functions';
+import { credentialsLayerConfig } from '@dxos/functions';
 
 import { GoogleCalendar } from '../../../apis';
 import { GoogleCredentials, InboxResolver } from '../../../services';
 import { mapEvent } from './mapper';
 
 const TestLayer = Layer.mergeAll(
-  CredentialsService.layerConfig([
+  credentialsLayerConfig([
     {
       service: 'google.com',
       apiKey: Config.redacted('ACCESS_TOKEN'),

@@ -10,6 +10,18 @@ import { type QueryAST } from '@dxos/echo-protocol';
 export const prettyFilter = (filter: QueryAST.Filter): string => {
   switch (filter.type) {
     case 'object': {
+      // A type-less object filter with only a meta-key constraint is `Filter.key(...)`.
+      if (
+        filter.typename === null &&
+        (filter.id === undefined || filter.id.length === 0) &&
+        Object.keys(filter.props).length === 0 &&
+        (filter.foreignKeys === undefined || filter.foreignKeys.length === 0) &&
+        filter.metaKey !== undefined
+      ) {
+        return filter.metaVersion !== undefined
+          ? `Filter.key(${JSON.stringify(filter.metaKey)}, { version: ${JSON.stringify(filter.metaVersion)} })`
+          : `Filter.key(${JSON.stringify(filter.metaKey)})`;
+      }
       const parts: string[] = [];
       if (filter.typename !== null) {
         parts.push(String(filter.typename));
@@ -24,6 +36,13 @@ export const prettyFilter = (filter: QueryAST.Filter): string => {
       }
       if (filter.foreignKeys !== undefined && filter.foreignKeys.length > 0) {
         parts.push(`foreignKeys: [${filter.foreignKeys.map((fk) => JSON.stringify(fk)).join(', ')}]`);
+      }
+      if (filter.metaKey !== undefined) {
+        parts.push(
+          filter.metaVersion !== undefined
+            ? `metaKey: ${JSON.stringify(filter.metaKey)} (${filter.metaVersion})`
+            : `metaKey: ${JSON.stringify(filter.metaKey)}`,
+        );
       }
       return parts.length > 0 ? `Filter.type(${parts.join(', ')})` : 'Filter.everything()';
     }
@@ -109,6 +128,9 @@ export const prettyQuery = (query: QueryAST.Query): string => {
       if (opts.deleted !== undefined) {
         parts.push(`deleted: ${JSON.stringify(opts.deleted)}`);
       }
+      if (opts.debugLabel !== undefined) {
+        parts.push(`debugLabel: ${JSON.stringify(opts.debugLabel)}`);
+      }
       return `${prettyQuery(query.query)}.options({ ${parts.join(', ')} })`;
     }
     case 'from': {
@@ -118,11 +140,11 @@ export const prettyQuery = (query: QueryAST.Query): string => {
         if (scope.spaceIds !== undefined) {
           parts.push(`spaceIds: [${scope.spaceIds.map((s) => JSON.stringify(s)).join(', ')}]`);
         }
-        if (scope.queues !== undefined) {
-          parts.push(`queues: [${scope.queues.map(String).join(', ')}]`);
+        if (scope.feeds !== undefined) {
+          parts.push(`feeds: [${scope.feeds.map(String).join(', ')}]`);
         }
-        if (scope.allQueuesFromSpaces !== undefined) {
-          parts.push(`allQueuesFromSpaces: ${scope.allQueuesFromSpaces}`);
+        if (scope.allFeedsFromSpaces !== undefined) {
+          parts.push(`allFeedsFromSpaces: ${scope.allFeedsFromSpaces}`);
         }
         return `${prettyQuery(query.query)}.from({ ${parts.join(', ')} })`;
       }

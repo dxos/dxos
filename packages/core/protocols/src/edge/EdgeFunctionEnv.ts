@@ -2,9 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type SpaceId } from '@dxos/keys';
+import { type DXN, type SpaceId } from '@dxos/keys';
 
 import type * as FeedProtocol from '../FeedProtocol';
+import type { SerializedError } from '../index';
 import { type QueryRequest, type QueryResponse } from '../proto/gen/dxos/echo/query';
 import { type CreateDocumentResponse } from '../proto/gen/dxos/echo/service';
 
@@ -112,6 +113,42 @@ export interface FunctionsAiService {
    * Enables proxying HTTP requests to the AI service from other workers.
    */
   fetch(request: Request): Promise<RpcResult<Response>>;
+}
+
+export type FunctionInvokeOptions = {
+  spaceId?: SpaceId;
+  /**
+   * DXN string of the conversation feed (queue).
+   * Forwarded into the function context so nested operations can resolve
+   * `AiContext.Service` and related conversation-scoped services.
+   */
+  conversation?: DXN.String;
+  cpuTimeLimit?: number;
+  subrequestsLimit?: number;
+};
+
+export type FunctionInvokeResult =
+  | {
+      _kind: 'success';
+      data: unknown;
+    }
+  | {
+      _kind: 'error';
+      error: SerializedError;
+    };
+
+export interface FunctionsQuery {
+  spaceId?: SpaceId;
+}
+
+export interface FunctionsService {
+  query(query: FunctionsQuery): Promise<RpcResult<unknown[]>>; // TODO(dmaretskyi): The type is Operation.PersistentOperation[].
+
+  invoke(
+    deploymentId: string,
+    input: unknown,
+    options?: FunctionInvokeOptions,
+  ): Promise<RpcResult<FunctionInvokeResult>>;
 }
 
 export type ObjectDocumentJson = {

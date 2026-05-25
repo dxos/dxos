@@ -9,7 +9,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "type": "module",
   "exports": {
@@ -28,7 +28,8 @@
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
     "@dxos/assistant": "workspace:*",
-    "@dxos/blueprints": "workspace:*",
+    "@dxos/assistant-toolkit": "workspace:*",
+    "@dxos/compute": "workspace:*",
     "@dxos/conductor": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-db": "workspace:*",

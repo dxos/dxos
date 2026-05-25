@@ -7,31 +7,23 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, AppNode, createObjectNode, getActiveSpace } from '@dxos/app-toolkit';
-import { type Space, isSpace } from '@dxos/client/echo';
+import { AppCapabilities, AppNode, AppNodeMatcher, createObjectNode, getActiveSpace } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { Filter } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
-import { Operation } from '@dxos/operation';
-import { AttentionCapabilities } from '@dxos/plugin-attention/types';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { SPACE_TYPE } from '@dxos/plugin-space/types';
+import { SpaceOperation } from '@dxos/plugin-space';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
-import { FeedOperation } from '#operations';
+import { FeedOperation } from '#types';
 import { Magazine, Subscription } from '#types';
-
-const whenSpace = (node: Node.Node): Option.Option<Space> =>
-  node.type === SPACE_TYPE && isSpace(node.data) ? Option.some(node.data) : Option.none();
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
-
-    const resolve = (typename: string) =>
-      capabilities.getAll(AppCapabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
 
     const selectionManager = yield* Capability.get(AttentionCapabilities.Selection);
     const selectedId = Atom.family((nodeId: string) =>
@@ -43,12 +35,12 @@ export default Capability.makeModule(
     );
 
     const extensions = yield* Effect.all([
-      // Show Subscription.Feed objects as nodes under each space.
+      // Show Subscription.Subscription objects as nodes under each space.
       GraphBuilder.createExtension({
         id: 'subscription-feeds',
-        match: whenSpace,
+        match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
-          const feeds = get(AtomQuery.make(space.db, Filter.type(Subscription.Feed)));
+          const feeds = get(AtomQuery.make(space.db, Filter.type(Subscription.Subscription)));
           if (feeds.length === 0) {
             return Effect.succeed([]);
           }
@@ -59,13 +51,12 @@ export default Capability.makeModule(
               id: 'feeds',
               type: 'feeds', // TODO(burdon): Const.
               data: 'feeds-root', // TODO(burdon): Const.
-              properties: { label: 'Feeds', icon: 'ph--rss--regular', role: 'branch', position: 'hoist' },
+              properties: { label: 'Feeds', icon: 'ph--rss--regular', role: 'branch', position: 'first' },
               nodes: feeds
-                .map((feed: Subscription.Feed) =>
+                .map((feed: Subscription.Subscription) =>
                   createObjectNode({
                     db: space.db,
                     object: feed,
-                    resolve,
                   }),
                 )
                 .filter((node): node is NonNullable<typeof node> => node !== null),
@@ -88,7 +79,7 @@ export default Capability.makeModule(
           // Resolve the selected feed from the attention selection.
           const feedId = get(selectedId(matched.id));
           const selectedFeed = feedId
-            ? get(AtomQuery.make(db, Filter.and(Filter.type(Subscription.Feed), Filter.id(feedId))))[0]
+            ? get(AtomQuery.make(db, Filter.and(Filter.type(Subscription.Subscription), Filter.id(feedId))))[0]
             : undefined;
 
           return Effect.succeed([
@@ -133,11 +124,11 @@ export default Capability.makeModule(
         },
       }),
 
-      // Actions on each Subscription.Feed node.
+      // Actions on each Subscription.Subscription node.
       GraphBuilder.createExtension({
         id: 'feed-actions',
         match: (node) =>
-          Subscription.instanceOf(node.data) ? Option.some(node.data as Subscription.Feed) : Option.none(),
+          Subscription.instanceOf(node.data) ? Option.some(node.data as Subscription.Subscription) : Option.none(),
         actions: (feed) =>
           Effect.succeed([
             {
@@ -153,7 +144,7 @@ export default Capability.makeModule(
               id: 'delete',
               data: () => Operation.invoke(SpaceOperation.RemoveObjects, { objects: [feed] }),
               properties: {
-                label: ['delete-object.label', { ns: Subscription.Feed.typename }],
+                label: ['delete-object.label', { ns: Subscription.Subscription.typename }],
                 icon: 'ph--trash--regular',
                 disposition: 'list-item',
               },

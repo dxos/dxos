@@ -7,9 +7,7 @@
 // Each module must `export default` a handler created with `Operation.withHandler`.
 // The framework loads handlers on demand when an operation is invoked.
 
-import { OperationHandlerSet } from '@dxos/operation';
-
-export * as SampleOperation from './definitions';
+import { OperationHandlerSet } from '@dxos/compute';
 
 export const SampleOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./create-sample-item'),

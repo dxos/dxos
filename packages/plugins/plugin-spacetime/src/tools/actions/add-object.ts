@@ -47,7 +47,7 @@ export class AddObjectAction implements ActionHandler {
       });
     }
 
-    Obj.change(scene, (scene) => {
+    Obj.update(scene, (scene) => {
       scene.objects.push(Ref.make(object));
     });
     Obj.setParent(object, scene);

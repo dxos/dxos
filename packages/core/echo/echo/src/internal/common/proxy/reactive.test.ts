@@ -15,20 +15,20 @@ describe('Obj.subscribe', () => {
       calls++;
     });
 
-    Obj.change(obj, (obj) => {
+    Obj.update(obj, (obj) => {
       obj.name = 'Updated';
     });
     expect(calls).toBeGreaterThan(0);
 
     unsubscribe();
     const seen = calls;
-    Obj.change(obj, (obj) => {
+    Obj.update(obj, (obj) => {
       obj.name = 'After unsubscribe';
     });
     expect(calls).toBe(seen);
   });
 
-  // Regression: queue-stored typed objects (e.g. ContextBinding) and other Obj-shaped values
+  // Regression: queue-stored typed objects (e.g. AiContext.Binding) and other Obj-shaped values
   // satisfy `Obj.isObject` (KindId is set) but are not wrapped in a reactive Proxy. Earlier
   // versions invariant'd inside `getProxyTarget` when an atom body did `Obj.subscribe(obj)` on
   // such an input. The contract is "no-op for non-reactive inputs"; verify the function

@@ -24,6 +24,7 @@ export * from './error-format';
 export * from './filename';
 export * from './for-each-async';
 export * from './human-hash';
+export * from './id';
 export * from './instance-id';
 export * from './interval';
 export * from './join-tables';

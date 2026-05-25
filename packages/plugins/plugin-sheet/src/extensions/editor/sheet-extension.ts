@@ -18,8 +18,8 @@ import { type SyntaxNode } from '@lezer/common';
 import { tags } from '@lezer/highlight';
 import { spreadsheet } from 'codemirror-lang-spreadsheet';
 
-import { type FunctionDefinition } from '@dxos/compute';
-import { RANGE_NOTATION } from '@dxos/compute';
+import { type FunctionDefinition } from '@dxos/compute-hyperformula';
+import { RANGE_NOTATION } from '@dxos/compute-hyperformula';
 import { singleValueFacet } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 

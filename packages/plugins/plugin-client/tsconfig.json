@@ -39,10 +39,16 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/functions"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/operation"
+      "path": "../../core/echo/echo-db"
     },
     {
       "path": "../../core/protocols"

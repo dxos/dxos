@@ -10,7 +10,6 @@ import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { trace } from '@dxos/protocols';
 import { schema } from '@dxos/protocols/proto';
 import { type Signal, type Message as SignalMessage } from '@dxos/protocols/proto/dxos/mesh/signal';
 import { type ProtoRpcPeer, createProtoRpcPeer } from '@dxos/rpc';
@@ -62,8 +61,7 @@ export class SignalRPCClient {
   private readonly _monitor = new SignalRpcClientMonitor();
 
   constructor({ url, callbacks = {} }: SignalRPCClientProps) {
-    const traceId = PublicKey.random().toHex();
-    log.trace('dxos.mesh.signal-rpc-client.constructor', trace.begin({ id: traceId }));
+    log('creating signal rpc client', { url });
     this._url = url;
     this._callbacks = callbacks;
     this._socket = new WebSocket(this._url);
@@ -149,7 +147,7 @@ export class SignalRPCClient {
       log.warn(`Socket ${event.type ?? 'unknown'} error`, { message: event.message, url: this._url });
     };
 
-    log.trace('dxos.mesh.signal-rpc-client.constructor', trace.end({ id: traceId }));
+    log('created signal rpc client', { url });
   }
 
   async close(): Promise<void> {

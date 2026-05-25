@@ -41,6 +41,9 @@
       "path": "../../common/util"
     },
     {
+      "path": "../../core/compute/compute"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -48,9 +51,6 @@
     },
     {
       "path": "../../core/echo/echo-query"
-    },
-    {
-      "path": "../../core/operation"
     },
     {
       "path": "../../sdk/app-framework"
@@ -98,10 +98,16 @@
       "path": "../plugin-graph"
     },
     {
+      "path": "../plugin-preview"
+    },
+    {
       "path": "../plugin-search"
     },
     {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

@@ -6,14 +6,13 @@ import * as Effect from 'effect/Effect';
 
 import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppCapabilities, AppPlugin } from '@dxos/app-toolkit';
-import { AttentionEvents } from '@dxos/plugin-attention/types';
+import { AttentionEvents } from '@dxos/plugin-attention';
 import { Node } from '@dxos/plugin-graph';
 
 import { AppGraphBuilder, FileSettings, FileState, Markdown, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
+import { translations } from '#translations';
 import { FileCapabilities } from '#types';
-
-import { translations } from './translations';
 
 // TODO(burdon): Rename package plugin-file (singular).
 
@@ -28,7 +27,7 @@ export const FilesPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'state',
     activatesOn: ActivationEvent.allOf(
-      ActivationEvents.OperationInvokerReady,
+      ActivationEvents.ProcessManagerReady,
       SettingsReady,
       AttentionEvents.AttentionReady,
     ),
@@ -48,7 +47,7 @@ export const FilesPlugin = Plugin.define(meta).pipe(
           {
             inputType: Node.RootType,
             outputType: 'text/directory',
-            position: 'fallback',
+            position: 'last',
             serialize: async () => ({
               name: 'root',
               data: 'root',
@@ -63,3 +62,5 @@ export const FilesPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default FilesPlugin;

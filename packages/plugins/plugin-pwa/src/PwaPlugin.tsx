@@ -10,14 +10,13 @@ import { AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { log } from '@dxos/log';
 
 import { meta } from '#meta';
-
-import { translations } from './translations';
+import { translations } from '#translations';
 
 export const PwaPlugin = Plugin.define(meta).pipe(
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
     id: 'register-pwa',
-    activatesOn: ActivationEvents.OperationInvokerReady,
+    activatesOn: ActivationEvents.ProcessManagerReady,
     activate: Effect.fnUntraced(function* () {
       const { invokePromise } = yield* Capability.get(Capabilities.OperationInvoker);
 
@@ -48,3 +47,5 @@ export const PwaPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default PwaPlugin;

@@ -3,7 +3,7 @@
 //
 
 import { type Resource } from '@dxos/react-ui';
-import { translations as formTranslations } from '@dxos/react-ui-form';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 
 import { meta } from '#meta';
 import { Magazine, Subscription } from '#types';
@@ -12,7 +12,7 @@ export const translations = [
   ...formTranslations,
   {
     'en-US': {
-      [Subscription.Feed.typename]: {
+      [Subscription.Subscription.typename]: {
         'typename.label': 'Feed',
         'typename.label_zero': 'Feeds',
         'typename.label_one': 'Feed',

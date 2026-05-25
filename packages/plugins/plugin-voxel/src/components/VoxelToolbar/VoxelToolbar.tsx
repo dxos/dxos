@@ -5,8 +5,9 @@
 import React from 'react';
 
 import { Toolbar, type ToolbarRootProps } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { HuePicker } from '@dxos/react-ui-pickers';
-import { type Hue, composable, composableProps } from '@dxos/ui-theme';
+import { type Hue } from '@dxos/ui-theme';
 
 import { type ToolMode } from '../VoxelEditor';
 

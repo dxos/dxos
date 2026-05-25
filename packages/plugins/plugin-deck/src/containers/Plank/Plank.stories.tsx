@@ -20,8 +20,8 @@ import { Organization } from '@dxos/types';
 
 import { DeckSettings, DeckState } from '#capabilities';
 import { meta as pluginMeta } from '#meta';
+import { translations } from '#translations';
 
-import { translations } from '../../translations';
 import { Plank } from './Plank';
 
 const TestPlugin = Plugin.define(pluginMeta).pipe(
@@ -71,7 +71,7 @@ const DefaultStory = () => {
   return (
     <Main.Root>
       <Main.Content bounce handlesFocus classNames='grid' style={{ '--main-spacing': '0' } as any}>
-        <div role='none' className='relative overflow-hidden bg-deck-surface'>
+        <div className='relative overflow-hidden bg-deck-surface'>
           <StackContext.Provider value={{ orientation: 'horizontal', size: 'contain', rail: true }}>
             <Plank.Root graph={graph} part='solo' layoutMode='solo'>
               <Plank.Content solo companion={false} encapsulate={false}>

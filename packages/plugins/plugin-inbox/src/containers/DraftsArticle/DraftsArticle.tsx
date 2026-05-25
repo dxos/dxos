@@ -7,9 +7,8 @@ import React, { useCallback, useMemo } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useLayout } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
-import { type Space } from '@dxos/react-client/echo';
-import { Filter, useQuery } from '@dxos/react-client/echo';
+import { Filter, Obj } from '@dxos/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
 import { Message } from '@dxos/types';
@@ -21,7 +20,10 @@ import { DraftMessage, type Mailbox } from '#types';
 import { getMailboxMessagePath } from '../../paths';
 import { sortByCreated } from '../../util';
 
-export type DraftsArticleProps = AppSurface.ArticleProps<unknown, { space?: Space; mailbox: Mailbox.Mailbox }>;
+export type DraftsArticleProps = AppSurface.SpaceArticleProps<{
+  attendableId?: string;
+  mailbox: Mailbox.Mailbox;
+}>;
 
 /**
  * Drafts list for a mailbox. Query matches the same mailbox-scoped draft messages as the former per-draft nav nodes.
@@ -34,26 +36,26 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
   const id = attendableId ?? Obj.getDXN(mailbox).toString();
   const currentId = useSelected(id, 'single');
 
-  const db = space?.db ?? Obj.getDatabase(mailbox);
-  const mailboxDxn = Obj.getDXN(mailbox).toString();
+  const db = space.db;
+  const mailboxDXN = Obj.getDXN(mailbox).toString();
 
   const draftsFilter = useMemo(
     () =>
       Filter.type(Message.Message, {
         properties: {
-          mailbox: mailboxDxn,
+          mailbox: mailboxDXN,
         },
       }),
-    [mailboxDxn],
+    [mailboxDXN],
   );
 
   const mailboxScopedMessages = useQuery(db, draftsFilter);
   const drafts = useMemo(
     () =>
       [...mailboxScopedMessages]
-        .filter((m) => DraftMessage.belongsTo(m, mailboxDxn))
+        .filter((m) => DraftMessage.belongsTo(m, mailboxDXN))
         .sort(sortByCreated('created', true)),
-    [mailboxDxn, mailboxScopedMessages],
+    [mailboxDXN, mailboxScopedMessages],
   );
 
   const handleAction = useCallback<MessageStackActionHandler>(

@@ -37,7 +37,7 @@ export const modules = [
   'sdk/*/src/**',
   'stories/*/src/**',
   'ui/*/src/**',
-  'ui/primitives/*/src/**',
+  'ui/react-primitives/*/src/**',
 ];
 
 // NOTE: Storybook test depends on relative paths.
@@ -96,6 +96,7 @@ export const createConfig = ({
     const { default: react } = await import('@vitejs/plugin-react-swc');
     const { mergeConfig } = await import('vite');
     const { default: inspect } = await import('vite-plugin-inspect');
+    const { DxosLogPlugin } = await import('@dxos/vite-plugin-log');
 
     const finalConfig = mergeConfig(
       {
@@ -254,6 +255,13 @@ export const createConfig = ({
 
           !isFastBundle &&
             importSource({
+              // Include `#*` so Node subpath imports (e.g. `#translations`, `#meta`)
+              // resolve to the `source` condition (`./src/...`) instead of falling
+              // through to `default` (`./dist/lib/neutral/...`). Without this, a
+              // package's own `test-storybook` task fails when its `compile` task
+              // hasn't been triggered as an upstream dep — manifests as
+              // `[vite] Failed to resolve import "#translations"`.
+              include: ['@dxos/**', '#*'],
               exclude: [
                 '@dxos/random-access-storage',
                 '@dxos/lock-file',
@@ -285,6 +293,8 @@ export const createConfig = ({
           //
           // Custom DXOS plugins.
           //
+
+          DxosLogPlugin(),
 
           IconsPlugin({
             assetPath: (name, variant) =>

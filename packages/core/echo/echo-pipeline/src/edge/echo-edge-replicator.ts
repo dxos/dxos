@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import * as Automerge from '@automerge/automerge';
+import * as A from '@automerge/automerge';
 import { type DocumentId, type Heads, cbor } from '@automerge/automerge-repo';
 
 import { Mutex, scheduleMicroTask, scheduleTask } from '@dxos/async';
@@ -31,9 +31,9 @@ import { trace } from '@dxos/tracing';
 import { bufferToArray, compositeKey, setDeep } from '@dxos/util';
 
 import {
-  type AutomergeReplicator,
   type AutomergeReplicatorConnection,
   type AutomergeReplicatorContext,
+  type EdgeAutomergeReplicator,
   type ShouldAdvertiseProps,
   type ShouldSyncCollectionProps,
   getSpaceIdFromCollectionId,
@@ -54,7 +54,7 @@ export type EchoEdgeReplicatorProps = {
 };
 
 @trace.resource()
-export class EchoEdgeReplicator implements AutomergeReplicator {
+export class EchoEdgeReplicator implements EdgeAutomergeReplicator {
   private readonly _edgeConnection: EdgeConnection;
   private readonly _edgeHttpClient: EdgeHttpClient;
   private readonly _mutex = new Mutex();
@@ -445,7 +445,7 @@ class EdgeReplicatorConnection extends Resource implements AutomergeReplicatorCo
 const isErrorMessage = (message: AutomergeProtocolMessage) => message.type === 'error';
 
 const getMessageInfo = (msg: AutomergeProtocolMessage) => {
-  const { have, heads, need, changes } = msg.type === 'sync' ? Automerge.decodeSyncMessage(msg.data) : {};
+  const { have, heads, need, changes } = msg.type === 'sync' ? A.decodeSyncMessage(msg.data) : {};
   return {
     type: msg.type,
     documentId: 'documentId' in msg ? msg.documentId : undefined,

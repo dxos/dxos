@@ -2,11 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type AppCapabilities } from '@dxos/app-toolkit';
-import { Blueprint, Template } from '@dxos/blueprints';
+import { Blueprint, Template } from '@dxos/compute';
 
-import { AttachImage } from '#operations';
 import { defaultResearchSources, type ResearchSource } from '#sources';
+import { CrmOperation } from '#types';
 
 import { makeInstructions } from './instructions';
 
@@ -24,7 +23,7 @@ export const makeCrmBlueprint = (researchSources: ReadonlyArray<ResearchSource> 
     description: 'Research people and organizations and produce structured Profile documents in your space.',
     agentCanEnable: true,
     tools: Blueprint.toolDefinitions({
-      operations: [AttachImage, ...researchSources.flatMap((source) => source.operations ?? [])],
+      operations: [CrmOperation.AttachImage, ...researchSources.flatMap((source) => source.operations ?? [])],
       tools: researchSources.flatMap((source) => source.tools ?? []),
     }),
     instructions: Template.make({
@@ -34,7 +33,7 @@ export const makeCrmBlueprint = (researchSources: ReadonlyArray<ResearchSource> 
 
 const make = () => makeCrmBlueprint();
 
-const blueprint: AppCapabilities.BlueprintDefinition = {
+const blueprint: Blueprint.Definition = {
   key: BLUEPRINT_KEY,
   make,
 };

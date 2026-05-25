@@ -14,7 +14,8 @@ import { DxAnchor } from '@dxos/lit-ui/react';
 import { Button, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { ParentLabelAnnotationId } from '@dxos/schema';
 
-import { translationKey } from '../../../translations';
+import { translationKey } from '#translations';
+
 import { ObjectPicker, type ObjectPickerContentProps, type RefOption } from '../../ObjectPicker';
 import { omitHiddenFormFields, omitId } from '../Form';
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
@@ -67,6 +68,7 @@ export const RefField = (props: RefFieldProps) => {
     type,
     readonly,
     label,
+    jsonPath,
     placeholder,
     layout,
     getStatus,
@@ -174,7 +176,7 @@ export const RefField = (props: RefFieldProps) => {
 
   return (
     <Input.Root validationValence={status}>
-      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} />}
+      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />}
       <div>
         {readonly ? (
           !item ? (
@@ -188,15 +190,17 @@ export const RefField = (props: RefFieldProps) => {
           <ObjectPicker.Root open={open} onOpenChange={setOpen}>
             <ObjectPicker.Trigger asChild classNames='p-0'>
               {item ? (
-                <div role='none' className='flex gap-form-gap w-full'>
+                <div className='flex gap-form-gap w-full'>
                   <Input.Root key={item.id}>
                     <Input.TextInput value={item.label} readOnly classNames='w-full' />
                   </Input.Root>
                 </div>
               ) : (
                 <Button classNames='w-full text-start gap-form-gap'>
-                  <div role='none' className='grow overflow-hidden'>
-                    <span className='truncate text-description'>{placeholder ?? t('ref-field.placeholder')}</span>
+                  <div className='grow overflow-hidden'>
+                    <span className='truncate text-description'>
+                      {placeholder || label || t('ref-field.placeholder')}
+                    </span>
                   </div>
                   <Icon size={3} icon='ph--caret-down--bold' />
                 </Button>

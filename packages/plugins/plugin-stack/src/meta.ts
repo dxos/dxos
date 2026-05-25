@@ -12,6 +12,7 @@ export const meta: Plugin.Meta = {
   // TODO(wittjosiah): Prevents "stacks" language from being exposed to users in settings panel.
   //   Conside renaming this to the collection plugin and trying to factor more collections logic from the space plugin.
   name: 'Collections',
+  author: 'DXOS',
   description: trim`
     Organize and view curated collections of workspace objects in customizable layouts.
     Group related items together and manage collections with sections and filtering.

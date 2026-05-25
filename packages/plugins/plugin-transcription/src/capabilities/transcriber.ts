@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { TranscriptionCapabilities } from '#types';
 
@@ -43,6 +43,7 @@ export default Capability.makeModule(
       onSegments,
       transcriberConfig,
       recorderConfig,
+      transcribe,
     }) => {
       // Initialize audio transcription.
       return new Transcriber({
@@ -59,6 +60,7 @@ export default Capability.makeModule(
           },
         }),
         onSegments,
+        transcribe,
       });
     };
 

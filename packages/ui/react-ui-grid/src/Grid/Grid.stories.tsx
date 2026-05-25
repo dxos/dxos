@@ -10,7 +10,8 @@ import { type DxGridPlaneCells } from '@dxos/lit-grid';
 import { random } from '@dxos/random';
 import { DropdownMenu } from '@dxos/react-ui';
 import { toPlaneCellIndex } from '@dxos/react-ui-grid';
-import { Combobox, type ComboboxRootProps, useSearchListResults } from '@dxos/react-ui-search';
+import { Combobox, type ComboboxRootProps } from '@dxos/react-ui-list';
+import { useSearchListResults } from '@dxos/react-ui-search';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Grid, type GridContentProps, type GridEditing, type GridRootProps } from './Grid';
@@ -64,7 +65,7 @@ const GridStory = ({ initialCells, ...props }: GridStoryProps) => {
   }, []);
 
   return (
-    <div role='none' className='contents'>
+    <div className='contents'>
       <Grid.Root id='story' editing={editing} onEditingChange={handleEditingChange}>
         {/* TODO(burdon): Why is this property not just "cells" or "values" */}
         <Grid.Content {...props} initialCells={cells} onClick={handleClick} />
@@ -94,13 +95,13 @@ const GridStory = ({ initialCells, ...props }: GridStoryProps) => {
 };
 
 const ComboboxContentWithFiltering = () => {
-  const { results, handleSearch } = useSearchListResults({
+  const { results, query, handleSearch } = useSearchListResults({
     items: storybookItems,
   });
 
   return (
-    <Combobox.Content onSearch={handleSearch}>
-      <Combobox.Input placeholder='Search...' />
+    <Combobox.Content>
+      <Combobox.Input placeholder='Search...' value={query} onValueChange={handleSearch} />
       <Combobox.List>
         {results.map((value) => (
           <Combobox.Item key={value} value={value} label={value} />
@@ -125,6 +126,29 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+/**
+ * Single focusable cell — for verifying focus-ring alignment with grid lines.
+ */
+export const SingleCell: Story = {
+  args: {
+    id: 'story',
+    limitColumns: 1,
+    limitRows: 1,
+    columnDefault: { grid: { size: 200, resizeable: false } },
+    rowDefault: { grid: { size: 32, resizeable: false } },
+    initialCells: {
+      grid: {
+        '0,0': { value: 'Focus me' },
+      },
+    },
+  },
+  render: (args) => (
+    <div className='h-full grid place-items-center'>
+      <GridStory {...args} />
+    </div>
+  ),
+};
 
 export const Basic: Story = {
   args: {

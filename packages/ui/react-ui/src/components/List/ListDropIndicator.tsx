@@ -52,7 +52,6 @@ export const ListDropIndicator = ({
 
   return (
     <div
-      role='none'
       style={
         {
           '--line-thickness': `${strokeSize}px`,

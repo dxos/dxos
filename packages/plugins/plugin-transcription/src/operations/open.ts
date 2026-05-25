@@ -4,14 +4,14 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 import { Message } from '@dxos/types';
 
+import { TranscriptOperation } from '../types';
 import { renderByline } from '../util';
-import { Open } from './definitions';
 
-const handler: Operation.WithHandler<typeof Open> = Open.pipe(
+const handler: Operation.WithHandler<typeof TranscriptOperation.Open> = TranscriptOperation.Open.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ transcript }) {
       const transcriptObj = yield* Database.load(transcript);

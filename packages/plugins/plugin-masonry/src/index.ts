@@ -3,5 +3,4 @@
 //
 
 export * from './meta';
-
-export * from './MasonryPlugin';
+export * from './types';

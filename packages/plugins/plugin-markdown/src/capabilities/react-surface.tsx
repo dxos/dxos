@@ -15,12 +15,12 @@ import {
 } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { AttentionCapabilities } from '@dxos/plugin-attention/types';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { Text } from '@dxos/schema';
-import { type EditorViewMode } from '@dxos/ui-editor';
+import { type EditorViewMode } from '@dxos/ui-editor/types';
 
 import { MarkdownSettings } from '#components';
-import { MarkdownCard, MarkdownContainer, type MarkdownContainerProps } from '#containers';
+import { MarkdownCard, EditableMarkdownCard, MarkdownArticle, type MarkdownArticleProps } from '#containers';
 import { meta } from '#meta';
 import { Markdown, MarkdownCapabilities } from '#types';
 
@@ -75,8 +75,14 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
+        id: 'surface.editable',
+        position: 'first',
+        filter: AppSurface.object(AppSurface.Card, [Markdown.Document, Text.Text], (data) => data.editable === true),
+        component: ({ data }) => <EditableMarkdownCard subject={data.subject} />,
+      }),
+      Surface.create({
         id: 'surface.preview',
-        filter: AppSurface.object(AppSurface.Card, [Markdown.Document, Text.Text]),
+        filter: AppSurface.object(AppSurface.Card, [Markdown.Document, Text.Text], (data) => data.editable !== true),
         component: ({ data }) => <MarkdownCard {...data} />,
       }),
     ]),
@@ -98,13 +104,13 @@ const Container = forwardRef<
   const extensionProviders = useMemo(() => extensions.flat(), [extensions]);
 
   const viewMode: EditorViewMode = (id && state.viewMode[id]) || settings?.defaultViewMode || 'source';
-  const handleViewModeChange = useCallback<NonNullable<MarkdownContainerProps['onViewModeChange']>>(
+  const handleViewModeChange = useCallback<NonNullable<MarkdownArticleProps['onViewModeChange']>>(
     (mode) => setState((current) => ({ ...current, viewMode: { ...current.viewMode, [id]: mode } })),
     [id, setState],
   );
 
   return (
-    <MarkdownContainer
+    <MarkdownArticle
       role={role}
       subject={subject}
       id={id}

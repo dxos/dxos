@@ -7,15 +7,16 @@ import * as Effect from 'effect/Effect';
 import React, { useEffect, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { ClientPlugin } from '@dxos/plugin-client';
+import { Filter } from '@dxos/echo';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { StorybookPlugin, corePlugins } from '@dxos/plugin-testing';
-import { Filter, useQuery, useSpaces } from '@dxos/react-client/echo';
+import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
+import { translations } from '#translations';
 import { Model, Scene } from '#types';
 
-import { translations } from '../../translations';
 import { SpacetimeArticle } from './SpacetimeArticle';
 
 const DefaultStory = () => {

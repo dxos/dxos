@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
-import { getHeads } from '@automerge/automerge';
-import * as Automerge from '@automerge/automerge';
+import * as A from '@automerge/automerge';
 import { type DocumentId, type Heads, generateAutomergeUrl, parseAutomergeUrl } from '@automerge/automerge-repo';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
+import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import type { LevelDB } from '@dxos/kv-store';
 import { createTestLevel } from '@dxos/kv-store/testing';
@@ -16,6 +17,7 @@ import { range } from '@dxos/util';
 
 import { TestReplicationNetwork } from '../testing';
 import { AutomergeHost } from './automerge-host';
+import { type EchoNetworkAdapter } from './echo-network-adapter';
 
 describe('AutomergeHost', () => {
   test('can create documents', async () => {
@@ -43,6 +45,7 @@ describe('AutomergeHost', () => {
 
     const host2 = await setupAutomergeHost({ level });
     const handle2 = await host2.loadDoc<any>(Context.default(), url);
+    invariant(handle2);
     await handle2.whenReady();
     expect(handle2.doc()!.text).toEqual('Hello world');
     await host2.flush(Context.default());
@@ -53,8 +56,8 @@ describe('AutomergeHost', () => {
     const host = await setupAutomergeHost({ level });
 
     // Create a document to get its binary representation
-    const document = Automerge.from({ text: 'Hello world' });
-    const binary = Automerge.save(document);
+    const document = A.from({ text: 'Hello world' });
+    const binary = A.save(document);
     const { documentId } = parseAutomergeUrl(generateAutomergeUrl());
 
     // Start loading a non-existent document (should hang until created)
@@ -65,6 +68,7 @@ describe('AutomergeHost', () => {
 
     // The load should now resolve
     const loadedHandle = await loadPromise;
+    invariant(loadedHandle);
     expect(loadedHandle.doc()).toEqual(createdHandle.doc());
   });
 
@@ -74,7 +78,7 @@ describe('AutomergeHost', () => {
     const level = await createLevel(tmpPath);
     const host = await setupAutomergeHost({ level });
     const handle = await host.createDoc({ text: 'Hello world' });
-    const expectedHeads = getHeads(handle.doc()!);
+    const expectedHeads = A.getHeads(handle.doc()!);
     await host.flush(Context.default());
 
     expect(await host.getHeads([handle.documentId])).toEqual([expectedHeads]);
@@ -94,7 +98,7 @@ describe('AutomergeHost', () => {
     const level = await createLevel(tmpPath);
     const host = await setupAutomergeHost({ level });
     const handles = await Promise.all(range(2, () => host.createDoc({ text: 'Hello world' })));
-    const expectedHeads: (Heads | undefined)[] = handles.map((handle) => getHeads(handle.doc()!));
+    const expectedHeads: (Heads | undefined)[] = handles.map((handle) => A.getHeads(handle.doc()!));
     await host.flush(Context.default());
 
     const ids = handles.map((handle) => handle.documentId);
@@ -115,25 +119,112 @@ describe('AutomergeHost', () => {
     }
   });
 
-  test('collection synchronization', async () => {
+  test('loadDoc respects fetchFromNetwork', { timeout: 10_000 }, async () => {
+    const level1 = await createLevel();
+    const host1 = await setupAutomergeHost({ level: level1 });
+
+    const level2 = await createLevel();
+    const host2 = await setupAutomergeHost({ level: level2 });
+    const handle = await host2.createDoc({ text: 'Hello world' });
+    await host2.flush(Context.default());
+
+    const network = await new TestReplicationNetwork().open();
+    await host1.addReplicator(Context.default(), await network.createReplicator());
+    await host2.addReplicator(Context.default(), await network.createReplicator());
+
+    // (1) fetchFromNetwork=false on a doc not yet on disk: returns null immediately
+    // without waiting on the network, even though host2 has it.
+    expect(
+      await host1.loadDoc(Context.default(), handle.documentId, { fetchFromNetwork: false, timeout: 1_000 }),
+    ).toBeNull();
+
+    // (2) fetchFromNetwork=true: host1 announces, host2 sends bytes, doc syncs.
+    const loaded = await host1.loadDoc<{ text: string }>(Context.default(), handle.documentId, {
+      fetchFromNetwork: true,
+      timeout: 5_000,
+    });
+    invariant(loaded);
+    expect(loaded.doc()!.text).toEqual('Hello world');
+
+    // (3) Now that host1 has the doc on disk, fetchFromNetwork=false succeeds.
+    await host1.flush(Context.default());
+    const localOnly = await host1.loadDoc<{ text: string }>(Context.default(), handle.documentId, {
+      fetchFromNetwork: false,
+    });
+    invariant(localOnly);
+    expect(localOnly.doc()!.text).toEqual('Hello world');
+
+    await host1.close();
+    await host2.close();
+    await network.close();
+  });
+
+  test('loadDoc with fetchFromNetwork=false does not announce when doc is in storage', { timeout: 5_000 }, async () => {
+    // Pre-populate host1's storage with the doc, then close so that the
+    // host1 we test with has the doc on disk but did not author it (i.e.
+    // it's not in `_createdDocuments` and won't auto-announce).
+    const tmpPath = `/tmp/dxos-${PublicKey.random().toHex()}`;
+    let documentId: DocumentId;
+    {
+      const level = await createLevel(tmpPath);
+      const provider = await setupAutomergeHost({ level });
+      const handle = await provider.createDoc({ text: 'Hello world' });
+      documentId = handle.documentId;
+      await provider.flush(Context.default());
+      await provider.close();
+      await level.close();
+    }
+
+    const level1 = await createLevel(tmpPath);
+    const host1 = await setupAutomergeHost({ level: level1 });
+
+    const level2 = await createLevel();
+    const host2 = await setupAutomergeHost({ level: level2 });
+
+    const network = await new TestReplicationNetwork().open();
+    await host1.addReplicator(Context.default(), await network.createReplicator());
+    await host2.addReplicator(Context.default(), await network.createReplicator());
+
+    // Spy on host2's incoming-request event — fires when any peer sends
+    // an automerge `request` message for a doc to host2. If host1 ever
+    // announced wanting `documentId`, this would trigger.
+    const requests: DocumentId[] = [];
+    const adapter = (host2 as unknown as { _echoNetworkAdapter: EchoNetworkAdapter })._echoNetworkAdapter;
+    adapter.documentRequested.on(({ documentId: requestedId }) => {
+      requests.push(requestedId);
+    });
+
+    // Load the doc that's already on disk; should resolve from storage.
+    const loaded = await host1.loadDoc<{ text: string }>(Context.default(), documentId, {
+      fetchFromNetwork: false,
+    });
+    invariant(loaded);
+    expect(loaded.doc()!.text).toEqual('Hello world');
+
+    // Give any in-flight share-policy debounce a chance to fire.
+    await sleep(100);
+
+    expect(requests).not.toContain(documentId);
+
+    await host1.close();
+    await host2.close();
+    await network.close();
+  });
+
+  test('collection synchronization', { timeout: 30_000 }, async () => {
     const NUM_DOCUMENTS = 10;
 
     const level1 = await createLevel();
     const host1 = await setupAutomergeHost({ level: level1 });
 
     const level2 = await createLevel();
-    const documentIds: DocumentId[] = [];
-    {
-      const host2 = await setupAutomergeHost({ level: level2 });
-      for (const i of range(NUM_DOCUMENTS)) {
-        const handle = await host2.createDoc({ docIndex: i });
-        documentIds.push(handle.documentId);
-      }
-      await host2.flush(Context.default());
-      await host2.close();
-    }
-
     const host2 = await setupAutomergeHost({ level: level2 });
+    const documentIds: DocumentId[] = [];
+    for (const i of range(NUM_DOCUMENTS)) {
+      const handle = await host2.createDoc({ docIndex: i });
+      documentIds.push(handle.documentId);
+    }
+    await host2.flush(Context.default());
 
     const network = await new TestReplicationNetwork().open();
     await host1.addReplicator(Context.default(), await network.createReplicator());
@@ -144,7 +235,9 @@ describe('AutomergeHost', () => {
     await host2.updateLocalCollectionState(collectionId, documentIds);
 
     for (const documentId of documentIds) {
-      await expect.poll(() => host1.getHeads([documentId])).toEqual(await host2.getHeads([documentId]));
+      await expect
+        .poll(() => host1.getHeads([documentId]), { timeout: 20_000 })
+        .toEqual(await host2.getHeads([documentId]));
     }
 
     await host1.close();

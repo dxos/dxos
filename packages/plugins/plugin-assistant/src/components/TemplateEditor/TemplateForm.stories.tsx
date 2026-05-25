@@ -5,7 +5,7 @@
 import { type Meta } from '@storybook/react-vite';
 import React, { useCallback, useState } from 'react';
 
-import { Blueprint, Template } from '@dxos/blueprints';
+import { Blueprint, Template } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useClient } from '@dxos/react-client';
@@ -13,7 +13,8 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { trim } from '@dxos/util';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { type TemplateChangeCallback, TemplateForm } from './TemplateForm';
 
 const TEMPLATE = trim`
@@ -33,7 +34,7 @@ const DefaultStory = () => {
     invariant(space, 'TemplateForm story requires at least one space');
     return space.db.add(
       Blueprint.make({
-        key: 'example.com/blueprint/test',
+        key: 'com.example.blueprint.test',
         name: 'Test',
         instructions: Template.make({ source: TEMPLATE }),
       }),
@@ -42,16 +43,12 @@ const DefaultStory = () => {
 
   const handleChange: TemplateChangeCallback = useCallback(
     (mutate) => {
-      Obj.change(blueprint, (blueprint) => mutate(blueprint.instructions));
+      Obj.update(blueprint, (blueprint) => mutate(blueprint.instructions));
     },
     [blueprint],
   );
 
-  return (
-    <div role='none' className='flex w-[40rem] border border-separator overflow-hidden'>
-      <TemplateForm id={blueprint.id} template={blueprint.instructions} onChange={handleChange} />
-    </div>
-  );
+  return <TemplateForm id={blueprint.id} template={blueprint.instructions} onChange={handleChange} />;
 };
 
 const meta = {

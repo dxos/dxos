@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './blueprints';
 export * from './meta';
 export * from './types';
-
-export * from './DiscordPlugin';
+export { generateInviteUrl, DISCORD_PROVIDER_ID, DISCORD_SOURCE } from './constants';

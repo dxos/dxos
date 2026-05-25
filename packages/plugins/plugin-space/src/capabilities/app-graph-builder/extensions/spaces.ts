@@ -5,14 +5,22 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { AppCapabilities, getActiveSpace, getPersonalSpace, isPersonalSpace } from '@dxos/app-toolkit';
+import {
+  AppCapabilities,
+  AppNodeMatcher,
+  getActiveSpace,
+  getPersonalSpace,
+  isExemplarSpace,
+  isPersonalSpace,
+} from '@dxos/app-toolkit';
 import { type Space, SpaceState } from '@dxos/client/echo';
+import { Operation } from '@dxos/compute';
 import { Filter, Obj } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { Migrations } from '@dxos/migrations';
-import { Operation } from '@dxos/operation';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { CreateAtom, Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
+import { SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 import { Expando } from '@dxos/schema';
 
 import { meta } from '#meta';
@@ -26,11 +34,9 @@ import {
   CREATE_OBJECT_IN_SPACE_LABEL,
   MIGRATE_SPACE_LABEL,
   RENAME_SPACE_LABEL,
-  SETTINGS_PANEL_LABEL,
   checkPendingMigration,
   spaceActionsCache,
   spaceRearrangeCache,
-  whenSpace,
 } from './shared';
 
 //
@@ -44,7 +50,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
   return yield* Effect.all([
     GraphBuilder.createExtension({
       id: 'primary-actions',
-      position: 'hoist',
+      position: 'first',
       match: NodeMatcher.whenRoot,
       actions: () =>
         Effect.succeed([
@@ -66,6 +72,45 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               icon: 'ph--sign-in--regular',
               testId: 'spacePlugin.joinSpace',
               disposition: 'menu',
+            },
+          }),
+          Node.makeAction({
+            id: SpaceOperation.OpenImportSpace.meta.key,
+            data: () => Operation.invoke(SpaceOperation.OpenImportSpace),
+            properties: {
+              label: ['import-space.label', { ns: meta.id }],
+              icon: 'ph--upload--regular',
+              testId: 'spacePlugin.importSpace',
+            },
+          }),
+          Node.makeAction({
+            id: `${SpaceOperation.ExportSpace.meta.key}.binary`,
+            data: Effect.fnUntraced(function* () {
+              const client = yield* Capability.get(ClientCapabilities.Client);
+              const space = getActiveSpace(client, capabilities) ?? getPersonalSpace(client);
+              if (space) {
+                yield* Operation.invoke(SpaceOperation.ExportSpace, { space, format: SpaceArchive.Format.BINARY });
+              }
+            }),
+            properties: {
+              label: ['export-space-binary.label', { ns: meta.id }],
+              icon: 'ph--download--regular',
+              testId: 'spacePlugin.exportSpaceBinary',
+            },
+          }),
+          Node.makeAction({
+            id: `${SpaceOperation.ExportSpace.meta.key}.json`,
+            data: Effect.fnUntraced(function* () {
+              const client = yield* Capability.get(ClientCapabilities.Client);
+              const space = getActiveSpace(client, capabilities) ?? getPersonalSpace(client);
+              if (space) {
+                yield* Operation.invoke(SpaceOperation.ExportSpace, { space, format: SpaceArchive.Format.JSON });
+              }
+            }),
+            properties: {
+              label: ['export-space-json.label', { ns: meta.id }],
+              icon: 'ph--download--regular',
+              testId: 'spacePlugin.exportSpaceJson',
             },
           }),
           Node.makeAction({
@@ -153,7 +198,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
               ...spaces.filter((space) => !orderMap.has(space.id)),
             ]
               .filter((space, idx) => (settings?.showHidden ? true : spaceStates[idx] !== SpaceState.SPACE_INACTIVE))
-              .filter((space) => space.tags.length === 0 || isPersonalSpace(space))
+              .filter((space) => space.tags.length === 0 || isPersonalSpace(space) || isExemplarSpace(space))
               .map((space) =>
                 constructSpaceNode({
                   space,
@@ -175,7 +220,7 @@ export const createSpaceExtensions = Effect.fnUntraced(function* () {
 
     GraphBuilder.createExtension({
       id: 'actions',
-      match: whenSpace,
+      match: AppNodeMatcher.whenSpace,
       actions: (space, get) => {
         const [client] = get(capabilities.atom(ClientCapabilities.Client));
         const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
@@ -230,7 +275,7 @@ const constructSpaceNode = ({
           nextOrder.map(({ id }) => id),
         );
 
-        Obj.change(spacesOrder, (spacesOrder: any) => {
+        Obj.update(spacesOrder, (spacesOrder: any) => {
           spacesOrder.order = nextOrder.map(({ id }) => id);
         });
       };
@@ -258,19 +303,6 @@ const constructSpaceNode = ({
       onRearrange,
       canDrop: CAN_DROP_SPACE,
     },
-    nodes: [
-      Node.make({
-        id: 'settings',
-        type: `${meta.id}.settings`,
-        data: null,
-        properties: {
-          label: SETTINGS_PANEL_LABEL,
-          icon: 'ph--faders--regular',
-          disposition: 'alternate-tree',
-          space,
-        },
-      }),
-    ],
   });
 };
 

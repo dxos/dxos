@@ -3,7 +3,7 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/operation';
+import { OperationHandlerSet } from '@dxos/compute';
 
 export const Client = Capability.lazy('Client', () => import('./client'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(

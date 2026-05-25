@@ -5,8 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { beforeEach, describe, test } from 'vitest';
 
-import { Filter, JsonSchema, Query, Type } from '@dxos/echo';
-import { type View } from '@dxos/echo';
+import { Filter, JsonSchema, Query, Type, type View } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
 import { ViewModel } from '@dxos/schema';
 
@@ -97,6 +96,16 @@ describe('arrangement utils', () => {
       expect(byColumn.a).toEqual({ ids: [id1, id2], hidden: true });
       expect(byColumn.b).toEqual({ ids: [id3] });
       expect(byColumn.b.hidden).toBeUndefined();
+    });
+
+    test('treats non-array ids as empty (Automerge / corrupt layout)', ({ expect }) => {
+      const arrangement = {
+        order: [],
+        columns: { a: { ids: {} as unknown as string[] }, b: { ids: ['ok'] } },
+      };
+      const byColumn = getOrderByColumnFromArrangement(arrangement);
+      expect(byColumn.a.ids).toEqual([]);
+      expect(byColumn.b.ids).toEqual(['ok']);
     });
 
     test('returns mutable copies', ({ expect }) => {

@@ -8,14 +8,16 @@ import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
 import { DXN, Obj, Ref, Tag, Type } from '@dxos/echo';
+import { useSchema } from '@dxos/echo-react';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
+import { composable, composableProps } from '@dxos/react-ui';
 import { HuePicker } from '@dxos/react-ui-pickers';
 import { FactoryAnnotation } from '@dxos/schema';
-import { composable, composableProps } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
+
 import { Form, type FormFieldMap, omitId } from '../Form';
 
 export type ObjectPropertiesProps = PropsWithChildren<{ object: Obj.Unknown }>;
@@ -28,14 +30,20 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
     const tags = (meta.tags ?? []).map((tag) => db?.makeRef(DXN.parse(tag))).filter(isNonNullable);
     const values = useMemo(() => ({ tags, ...object }), [object, tags]);
 
+    // Obj.getSchema fails for database-registered (dynamic) schemas due to DXN mismatch;
+    // useSchema queries by typename which correctly resolves both static and dynamic schemas.
+    const typename = Obj.getTypename(object) ?? undefined;
+    const schemaFromRegistry = useSchema(db, typename);
+    const rawSchema = Obj.getSchema(object) ?? schemaFromRegistry;
+
     const formSchema = useMemo(() => {
       return Function.pipe(
-        Obj.getSchema(object),
+        rawSchema,
         Option.fromNullable,
         Option.map((schema) => omitId(BaseSchema.pipe(Schema.extend(schema)))),
         Option.getOrUndefined,
       );
-    }, [object]);
+    }, [rawSchema]);
 
     // Persist a newly-created object referenced by one of the form's ref
     // fields and return it. The calling RefField wires the new Ref into its
@@ -70,10 +78,10 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
 
         const changedPaths = Object.keys(changed).filter((path) => changed[path as JsonPath]) as JsonPath[];
 
-        // Handle tags separately using Obj.change.
+        // Handle tags separately using Obj.update.
         const hasTagsChange = changedPaths.some((path) => splitJsonPath(path)[0] === 'tags');
         if (hasTagsChange) {
-          Obj.change(object, (object) => {
+          Obj.update(object, (object) => {
             Obj.getMeta(object).tags = tags?.map((tag: Ref.Ref<Tag.Tag>) => tag.dxn.toString()) ?? [];
           });
         }
@@ -81,7 +89,7 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
         // Handle other property changes.
         const nonTagPaths = changedPaths.filter((path) => splitJsonPath(path)[0] !== 'tags');
         if (nonTagPaths.length > 0) {
-          Obj.change(object, () => {
+          Obj.update(object, () => {
             for (const path of nonTagPaths) {
               const parts = splitJsonPath(path);
               const value = Obj.getValue(values as any, parts);

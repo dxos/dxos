@@ -16,7 +16,7 @@ import RevealHighlight from 'reveal.js/plugin/highlight/highlight';
 import RevealMarkdown from 'reveal.js/plugin/markdown/plugin.js';
 
 import { useAsyncEffect } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 const styles = `
 <style type="text/css">
@@ -152,7 +152,7 @@ export const RevealPlayer = composable<HTMLDivElement, RevealProps>(
         })}
         ref={forwardedRef}
       >
-        <div role='none' className='relative aspect-video h-full w-full h-auto max-h-full overflow-hidden'>
+        <div className='relative aspect-video h-full w-full h-auto max-h-full overflow-hidden'>
           <div ref={deckDivRef} className='absolute inset-0 reveal'>
             {/* NOTE: Must be in head. */}
             <style>

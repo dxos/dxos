@@ -4,7 +4,7 @@
 
 import { debounce } from '@dxos/async';
 import { Obj } from '@dxos/echo';
-import { type TypedObjectSerializer } from '@dxos/plugin-space/types';
+import { type TypedObjectSerializer } from '@dxos/plugin-space';
 
 import { Markdown } from '#types';
 
@@ -116,7 +116,7 @@ export const getContentSnippet = (content = '', maxLines = 3) => {
 export const setFallbackName = debounce((doc: Markdown.Document, content = '') => {
   const name = getFallbackName(content);
   if (doc.fallbackName !== name) {
-    Obj.change(doc, (doc) => {
+    Obj.update(doc, (doc) => {
       doc.fallbackName = name;
     });
   }

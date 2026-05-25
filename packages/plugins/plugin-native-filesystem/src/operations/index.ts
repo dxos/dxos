@@ -2,9 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/operation';
-
-export * as NativeFilesystemOperation from './definitions';
+import { OperationHandlerSet } from '@dxos/compute';
 
 export const NativeFilesystemOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./open-directory'),

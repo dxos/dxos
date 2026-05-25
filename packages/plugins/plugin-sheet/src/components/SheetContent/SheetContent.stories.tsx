@@ -5,17 +5,17 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
+import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { testFunctionPlugins } from '@dxos/compute/testing';
+import { testFunctionPlugins } from '@dxos/compute-hyperformula/testing';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { createTestCells, useTestSheet, withComputeGraphDecorator } from '#testing';
+import { translations } from '#translations';
 import { Sheet } from '#types';
 
-import { translations } from '../../translations';
 import { useComputeGraph } from '../ComputeGraph';
 import { SheetRoot } from '../SheetRoot';
 import { SheetContent } from './SheetContent';
@@ -30,7 +30,7 @@ export const Basic = () => {
 
   return (
     <SheetRoot graph={graph} sheet={sheet} attendableId='test' ignoreAttention>
-      <div role='none' className='grid h-full w-full'>
+      <div className='grid h-full w-full'>
         <SheetContent />
       </div>
     </SheetRoot>
@@ -46,7 +46,7 @@ const meta = {
     withClientProvider({ types: [Sheet.Sheet], createSpace: true }),
     withComputeGraphDecorator({ plugins: testFunctionPlugins }),
     withPluginManager({
-      plugins: [OperationPlugin(), RuntimePlugin()],
+      plugins: [ProcessManagerPlugin()],
     }),
   ],
   parameters: {

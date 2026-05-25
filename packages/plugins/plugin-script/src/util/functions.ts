@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import { type Operation, Script } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { getUserFunctionIdInMetadata } from '@dxos/functions';
 import { getInvocationUrl } from '@dxos/functions-runtime';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type Operation } from '@dxos/operation';
 import { type Credential } from '@dxos/protocols/proto/dxos/halo/credentials';
-import { getSpace } from '@dxos/react-client/echo';
+
 /**
  * Get the function URL for a given script and client configuration
  */
@@ -22,7 +22,7 @@ export const getFunctionUrl = ({
   fn: any;
   edgeUrl: string;
 }): string | undefined => {
-  const space = getSpace(script);
+  const spaceId = Obj.getDatabase(script)?.spaceId;
   const existingFunctionId = fn && getUserFunctionIdInMetadata(Obj.getMeta(fn));
 
   if (!existingFunctionId) {
@@ -30,7 +30,7 @@ export const getFunctionUrl = ({
   }
 
   return getInvocationUrl(existingFunctionId, edgeUrl, {
-    spaceId: space?.id,
+    spaceId,
   });
 };
 
@@ -40,7 +40,7 @@ export const updateFunctionMetadata = (
   meta: any,
   functionId: string,
 ) => {
-  Obj.change(storedFunction, (storedFunction) => {
+  Obj.update(storedFunction, (storedFunction) => {
     if (script.description !== undefined && script.description.trim() !== '') {
       storedFunction.description = script.description;
     } else if (meta.description) {
@@ -62,7 +62,7 @@ export const updateFunctionMetadata = (
     }
 
     if (meta.key) {
-      storedFunction.key = meta.key;
+      Obj.getMeta(storedFunction).key = meta.key;
     } else {
       log.verbose('no key in function metadata', { functionId });
     }

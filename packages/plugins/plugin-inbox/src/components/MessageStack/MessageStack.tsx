@@ -6,9 +6,10 @@ import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, us
 
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { Card, ScrollArea } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { type Message } from '@dxos/types';
-import { composable, composableProps, getHashStyles } from '@dxos/ui-theme';
+import { getHashStyles } from '@dxos/ui-theme';
 
 import { type Mailbox as MailboxType } from '#types';
 
@@ -33,6 +34,8 @@ export type MessageStackProps = {
   messages?: Message.Message[];
   labels?: MailboxType.Labels;
   currentId?: string;
+  /** IDs of selected messages (forwarded to Mosaic so `aria-selected` fires `dx-selected`). */
+  selectedIds?: ReadonlySet<string>;
   /**
    * When true, messages are grouped by `threadId` and only the most recent message
    * in each thread is displayed. Messages without a threadId form singleton threads.
@@ -45,7 +48,7 @@ export type MessageStackProps = {
  * Card-based message stack component using mosaic layout.
  */
 export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
-  ({ messages, labels, currentId, threads, onAction, ...props }, forwardedRef) => {
+  ({ messages, labels, currentId, selectedIds, threads, onAction, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
     const threadGroups = useMemo(() => {
@@ -85,6 +88,24 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
       return messages?.map((message) => ({ message, labels, onAction }));
     }, [threadGroups, messages, labels, onAction]);
 
+    // In threaded view, the incoming `currentId` is a message ID (set when a
+    // specific message becomes selected), but the tiles are keyed by thread ID.
+    // Map the message ID up to its enclosing thread so the tile actually lights
+    // up. Without this, `aria-current` is never set on a thread tile and
+    // `dx-current`'s background never appears (especially visible when the
+    // Card has `border={false}` and no default surface).
+    const effectiveCurrentId = useMemo(() => {
+      if (!threadGroups || !currentId) {
+        return currentId;
+      }
+      for (const [threadId, threadMessages] of threadGroups) {
+        if (threadId === currentId || threadMessages.some((message) => message.id === currentId)) {
+          return threadId;
+        }
+      }
+      return currentId;
+    }, [threadGroups, currentId]);
+
     const handleCurrentChange = useCallback(
       (id: string | undefined) => {
         if (id) {
@@ -93,6 +114,13 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
             messageId: id,
           });
         }
+      },
+      [onAction],
+    );
+
+    const handleSelectionChange = useCallback(
+      (id: string, _selected: boolean) => {
+        onAction?.({ type: 'select', messageId: id });
       },
       [onAction],
     );
@@ -106,13 +134,18 @@ export const MessageStack = composable<HTMLDivElement, MessageStackProps>(
 
     return (
       <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
-        <Mosaic.Container asChild withFocus currentId={currentId} onCurrentChange={handleCurrentChange}>
-          <ScrollArea.Root padding centered>
+        <Mosaic.Container
+          asChild
+          withFocus
+          currentId={effectiveCurrentId}
+          onCurrentChange={handleCurrentChange}
+          selectedIds={selectedIds}
+          onSelectionChange={handleSelectionChange}
+        >
+          <ScrollArea.Root>
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={threads ? (ThreadTile as any) : MessageTile}
-                classNames='my-2'
-                gap={8}
                 items={items as any}
                 draggable={false}
                 getId={(item: any) => item.threadId ?? item.message?.id}
@@ -144,11 +177,15 @@ type MessageTileProps = Pick<MosaicTileProps<MessageTileData>, 'data' | 'locatio
 const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, location, current }, forwardedRef) => {
   const { message, labels, onAction } = data;
   const { hue, from, date, subject, snippet } = getMessageProps(message, new Date(), { compact: true });
-  const { setCurrentId } = useMosaicContainer('MessageTile');
+  const { setCurrentId, setSelected } = useMosaicContainer('MessageTile');
 
+  // Click / Enter commit both current and selection. Arrow keys only move
+  // focus (Focus.Item's onCurrentChange fires on click/Enter, not on focus
+  // change), so they don't select.
   const handleCurrentChange = useCallback(() => {
     setCurrentId(message.id);
-  }, [message.id, setCurrentId]);
+    setSelected(message.id, true);
+  }, [message.id, setCurrentId, setSelected]);
 
   const handleAvatarClick = useCallback(
     (event: MouseEvent) => {
@@ -182,9 +219,15 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
   }, [labels, message.properties?.labels]);
 
   return (
-    <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={message.id} data={data} location={location}>
+    <Mosaic.Tile
+      asChild
+      classNames='dx-hover dx-current dx-selected border-b border-subdued-separator'
+      id={message.id}
+      data={data}
+      location={location}
+    >
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Card.Root ref={forwardedRef} fullWidth>
+        <Card.Root fullWidth border={false} ref={forwardedRef}>
           <Card.Toolbar>
             <Card.IconBlock>
               <DxAvatar
@@ -213,7 +256,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
             )}
             {messageLabels.length > 0 && (
               <Card.Row>
-                <div role='none' className='flex flex-wrap gap-1 py-1'>
+                <div className='flex flex-wrap gap-1 py-1'>
                   {messageLabels.map(({ id: labelId, label, hue: labelHue }) => (
                     <button
                       key={labelId}
@@ -255,11 +298,17 @@ const ThreadTile = forwardRef<HTMLDivElement, ThreadTileProps>(({ data, location
   const { threadId, messages, onAction } = data;
   const latest = messages[0];
   const { hue, from, subject } = getMessageProps(latest, new Date());
-  const { setCurrentId } = useMosaicContainer('ThreadTile');
+  const { setCurrentId, setSelected } = useMosaicContainer('ThreadTile');
 
+  // Click / Enter commit current + selection using the LATEST message's ID, not
+  // the threadId. The parent's action handler resolves `messageId` against the
+  // flat message list, so passing a threadId would cause an `invariant` to
+  // fire. MessageStack maps the message ID back up to the enclosing thread
+  // when computing `effectiveCurrentId` so the tile still lights up.
   const handleCurrentChange = useCallback(() => {
-    setCurrentId(threadId);
-  }, [threadId, setCurrentId]);
+    setCurrentId(latest.id);
+    setSelected(latest.id, true);
+  }, [latest.id, setCurrentId, setSelected]);
 
   const handleThreadClick = useCallback(
     (event: MouseEvent) => {
@@ -278,9 +327,15 @@ const ThreadTile = forwardRef<HTMLDivElement, ThreadTileProps>(({ data, location
   );
 
   return (
-    <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={threadId} data={data} location={location}>
-      <Focus.Item asChild current={current}>
-        <Card.Root ref={forwardedRef} fullWidth onClick={handleThreadClick}>
+    <Mosaic.Tile
+      asChild
+      classNames='dx-hover dx-current dx-selected border-b border-subdued-separator'
+      id={threadId}
+      data={data}
+      location={location}
+    >
+      <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
+        <Card.Root fullWidth border={false} onClick={handleThreadClick} ref={forwardedRef}>
           <Card.Toolbar>
             <Card.IconBlock>
               <DxAvatar hue={hue} hueVariant='surface' variant='square' size={6} fallback={from} />
@@ -296,7 +351,7 @@ const ThreadTile = forwardRef<HTMLDivElement, ThreadTileProps>(({ data, location
               const { from, date, snippet } = getMessageProps(message, new Date(), { compact: true, time: true });
               return (
                 <Card.Row key={message.id} icon='ph--user--regular'>
-                  <div role='none' className='flex flex-col py-1'>
+                  <div className='flex flex-col py-1'>
                     <button
                       type='button'
                       className='flex items-center justify-between w-full gap-2 text-start text-sm dx-hover dx-focus-ring'

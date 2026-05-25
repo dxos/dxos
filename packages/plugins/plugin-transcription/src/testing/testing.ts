@@ -2,19 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { useEffect, useMemo, useState } from 'react';
 
 import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/assistant/extraction';
 import { scheduleTaskInterval } from '@dxos/async';
-import { Filter, type Queue } from '@dxos/client/echo';
+import { createFeedServiceLayer, type Space } from '@dxos/client/echo';
 import { Context } from '@dxos/context';
-import { type Key, Obj, Ref, Type } from '@dxos/echo';
-import { createQueueDXN } from '@dxos/echo/internal';
+import { Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { runAndForwardErrors } from '@dxos/effect';
 import { IdentityDid } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
-import { type Space, useQueue } from '@dxos/react-client/echo';
 import { TestSchema } from '@dxos/schema/testing';
 import { type ContentBlock, Message, Organization, Person } from '@dxos/types';
 import { seedTestData } from '@dxos/types/testing';
@@ -139,71 +139,64 @@ class EntityExtractionMessageBuilder extends AbstractMessageBuilder {
 
 type UseTestTranscriptionQueue = (
   space: Space | undefined,
-  queueId?: Key.ObjectId,
   running?: boolean,
   interval?: number,
-) => Queue<Message.Message> | undefined;
+) => Feed.Feed | undefined;
 
 /**
- * Test transcriptionqueue.
+ * Test transcription feed.
  */
 export const useTestTranscriptionQueue: UseTestTranscriptionQueue = (
   space: Space | undefined,
-  queueId?: Key.ObjectId,
   running = true,
   interval = 1_000,
 ) => {
-  // TODO(dmaretskyi): Use space.queues.create() instead.
-  const queueDxn = useMemo(() => (space ? createQueueDXN(space.id, queueId) : undefined), [space, queueId]);
-  const queue = useQueue<Message.Message>(queueDxn);
+  const feed = useMemo(() => (space ? space.db.add(Feed.make({ name: 'transcription' })) : undefined), [space]);
   const builder = useMemo(() => new MessageBuilder(space), [space]);
 
   useEffect(() => {
-    if (!queue || !running) {
+    if (!space || !feed || !running) {
       return;
     }
+    const feedServiceLayer = createFeedServiceLayer(space.queues);
 
     const i = setInterval(() => {
       void builder.createMessage(Math.ceil(Math.random() * 3)).then(async (message) => {
-        await queue.append([Obj.make(Message.Message, message)]);
+        await Feed.append(feed, [message]).pipe(Effect.provide(feedServiceLayer), runAndForwardErrors);
       });
     }, interval);
     return () => clearInterval(i);
-  }, [queue, running, interval]);
+  }, [space, feed, running, interval]);
 
-  return queue;
+  return feed;
 };
 
 /**
- * Test transcription queue.
+ * Test transcription feed with entity extraction.
  */
 // TODO(burdon): Reconcile with useTestTranscriptionQueue.
 export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscriptionQueue = (
   space: Space | undefined,
-  queueId?: Key.ObjectId,
   running = true,
   interval = 1_000,
 ) => {
-  // TODO(dmaretskyi): Use space.queues.create() instead.
-  const queueDxn = useMemo(() => (space ? createQueueDXN(space.id, queueId) : undefined), [space, queueId]);
-  const queue = useQueue<Message.Message>(queueDxn);
+  const feed = useMemo(() => (space ? space.db.add(Feed.make({ name: 'transcription' })) : undefined), [space]);
   const [builder] = useState(() => new EntityExtractionMessageBuilder());
 
   useEffect(() => {
-    if (!queue || !running) {
+    if (!space || !feed || !running) {
       return;
     }
 
-    if (space) {
-      void builder.connect(space);
-    }
+    void builder.connect(space);
 
+    const feedServiceLayer = createFeedServiceLayer(space.queues);
     const ctx = new Context();
     scheduleTaskInterval(
       ctx,
       async () => {
         const message = await builder.createMessage();
-        void queue.append([Obj.make(Message.Message, message)]);
+        await Feed.append(feed, [message]).pipe(Effect.provide(feedServiceLayer), runAndForwardErrors);
       },
       interval,
     );
@@ -211,7 +204,7 @@ export const useTestTranscriptionQueueWithEntityExtraction: UseTestTranscription
     return () => {
       void ctx.dispose();
     };
-  }, [space, queue, running, interval]);
+  }, [space, feed, running, interval]);
 
-  return queue;
+  return feed;
 };

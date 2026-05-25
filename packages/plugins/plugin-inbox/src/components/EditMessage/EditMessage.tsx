@@ -7,11 +7,11 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { Column, Message, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { Editor, EditorViewProps } from '@dxos/react-ui-editor';
 import { Form, FormRootProps } from '@dxos/react-ui-form';
 import { type Message as MessageType } from '@dxos/types';
 import { compactSlots, createBasicExtensions, createThemeExtensions, Extension } from '@dxos/ui-editor';
-import { composable, composableProps } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -54,7 +54,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
 
     const handleValuesChanged = useCallback<NonNullable<FormRootProps<MessageProperties>['onValuesChanged']>>(
       (values) => {
-        Obj.change(message, (message) => {
+        Obj.update(message, (message) => {
           const properties = (message.properties ??= {});
           if (values.to !== undefined) {
             properties.to = values.to;
@@ -75,7 +75,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
 
     const handleBodyChanged = useCallback<NonNullable<EditorViewProps['onChange']>>(
       (value) => {
-        Obj.change(message, (message) => {
+        Obj.update(message, (message) => {
           const blocks = (message.blocks ??= []);
           const textBlock = blocks.find((b) => b._tag === 'text');
           if (textBlock && 'text' in textBlock) {

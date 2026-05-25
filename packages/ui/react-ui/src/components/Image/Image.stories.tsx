@@ -15,7 +15,7 @@ const seed = Math.random();
 random.seed(seed);
 
 const meta = {
-  title: 'ui/react-ui-mosaic/Image',
+  title: 'ui/react-ui-core/components/Image',
   component: Image,
   render: (args) => (
     <div className='absolute inset-0 flex justify-center items-center'>

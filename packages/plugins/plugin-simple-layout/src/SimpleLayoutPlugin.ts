@@ -15,9 +15,8 @@ import {
   UrlHandler,
 } from '#capabilities';
 import { meta } from '#meta';
+import { translations } from '#translations';
 import { SimpleLayoutEvents } from '#types';
-
-import { translations } from './translations';
 
 export type SimpleLayoutPluginOptions = {
   /** Determines if running in popover window context (hides mobile-specific UI). */
@@ -51,8 +50,10 @@ export const SimpleLayoutPlugin = Plugin.define<SimpleLayoutPluginOptions>(meta)
   }),
   Plugin.addModule({
     id: Capability.getModuleTag(UrlHandler),
-    activatesOn: ActivationEvent.allOf(ActivationEvents.OperationInvokerReady, SimpleLayoutEvents.StateReady),
+    activatesOn: ActivationEvent.allOf(ActivationEvents.ProcessManagerReady, SimpleLayoutEvents.StateReady),
     activate: UrlHandler,
   }),
   Plugin.make,
 );
+
+export default SimpleLayoutPlugin;

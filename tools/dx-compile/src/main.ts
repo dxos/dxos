@@ -2,25 +2,21 @@
 // Copyright 2022 DXOS.org
 //
 
-import { readFile, readdir, rm, writeFile } from 'node:fs/promises';
-import { createRequire } from 'node:module';
-import { basename, dirname, join } from 'node:path';
-
-const require = createRequire(import.meta.url);
-
-import type * as Swc from '@swc/core';
 import * as Array from 'effect/Array';
 import * as Function from 'effect/Function';
 import { type Format, type Platform, type Plugin, build, formatMessages } from 'esbuild';
 import glsl from 'esbuild-plugin-glsl';
 import RawPlugin from 'esbuild-plugin-raw';
 import esbuildPluginYaml from 'esbuild-plugin-yaml';
+import { readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { basename, dirname, join } from 'node:path';
 import pkgUp from 'pkg-up';
 
 const { yamlPlugin } = esbuildPluginYaml;
 
 import { NodeExternalPlugin } from '@dxos/esbuild-plugins';
 
+import { BabelSolidTransformPlugin } from './babel-solid-transform-plugin.ts';
 import { bundleDepsPlugin } from './bundle-deps-plugin.ts';
 import { esmOutputToCjs } from './esm-output-to-cjs-plugin.ts';
 import { fixRequirePlugin } from './fix-require-plugin.ts';
@@ -73,6 +69,23 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
   }
   const { jsx, jsxImportSource, jsxFactory, jsxFragmentFactory } = tsConfig.compilerOptions || {};
 
+  // Solid packages need `babel-preset-solid` to compile JSX into reactive
+  // primitives. SWC's React JSX runtime would emit `_jsx(...)` calls plus
+  // `import { jsx } from 'solid-js/jsx-runtime'`, but solid-js doesn't export
+  // a JSX runtime at all — its `./jsx-runtime` subpath resolves to the main
+  // bundle which has no `jsx`/`jsxs` symbols. When `jsxImportSource: 'solid-js'`
+  // is set in tsconfig, we route `.tsx` files through Babel instead, keeping
+  // SWC for plain `.ts` (which has no JSX and is ~5x faster).
+  const isSolidPackage = jsxImportSource === 'solid-js';
+  const babelSolidTransformPlugin = isSolidPackage
+    ? new BabelSolidTransformPlugin({ isVerbose: options.verbose })
+    : undefined;
+
+  // Log-meta injection (`__dxlog_file`, `{F,L,S,...}`) is also applied here on the
+  // post-SWC output via `@dxos/vite-plugin-log`'s `transformLogMeta`. The Rolldown
+  // app-build pass still runs at the consumer side, but doing it here too means
+  // packages that ship pre-compiled `dist/` (e.g. e2e fixtures, library consumers
+  // that don't go through Rolldown) keep the same call-site metadata.
   const swcTransformPlugin = new SwcTransformPlugin({
     isVerbose: options.verbose,
     getTranspilerOptions: ({ filePath }) => ({
@@ -92,52 +105,6 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
             pragma: jsxFactory,
             pragmaFrag: jsxFragmentFactory,
           },
-        },
-        experimental: {
-          plugins: [
-            ...(function* (): Iterable<Swc.WasmPlugin> {
-              yield [
-                require.resolve('@dxos/swc-log-plugin'),
-                {
-                  filename: filePath,
-                  to_transform: [
-                    {
-                      name: 'log',
-                      package: '@dxos/log',
-                      param_index: 2,
-                      include_args: false,
-                      include_call_site: true,
-                      include_scope: true,
-                    },
-                    {
-                      name: 'dbg',
-                      package: '@dxos/log',
-                      param_index: 1,
-                      include_args: true,
-                      include_call_site: false,
-                      include_scope: false,
-                    },
-                    {
-                      name: 'invariant',
-                      package: '@dxos/invariant',
-                      param_index: 2,
-                      include_args: true,
-                      include_call_site: false,
-                      include_scope: true,
-                    },
-                    {
-                      name: 'Context',
-                      package: '@dxos/context',
-                      param_index: 1,
-                      include_args: false,
-                      include_call_site: false,
-                      include_scope: false,
-                    },
-                  ],
-                },
-              ];
-            })(),
-          ],
         },
         target: 'esnext',
       },
@@ -217,6 +184,9 @@ export default async (options: EsbuildExecutorOptions): Promise<{ success: boole
             ignore: options.ignorePackages,
             alias: options.alias,
           }),
+          // Register babel before swc — esbuild's onLoad is first-match-wins,
+          // so babel claims `.tsx` for solid packages and swc handles `.ts`.
+          babelSolidTransformPlugin?.createPlugin(),
           swcTransformPlugin.createPlugin(),
           RawPlugin(),
           // Substitute '/*?url' imports with empty string.

@@ -3,7 +3,6 @@
 //
 
 import { Atom, useAtomValue } from '@effect-atom/atom-react';
-import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { useCallback, useMemo } from 'react';
 
@@ -16,7 +15,7 @@ import { type ActionGraphProps } from '@dxos/react-ui-menu';
 
 import { type AppBarProps } from '#components';
 import { meta } from '#meta';
-import { SimpleLayoutState as SimpleLayoutStateCapability } from '#types';
+import { SimpleLayoutCapabilities } from '#types';
 
 /**
  * Hook that computes all AppBar props from the app graph.
@@ -24,7 +23,7 @@ import { SimpleLayoutState as SimpleLayoutStateCapability } from '#types';
  */
 export const useAppBarProps = (): Omit<AppBarProps, 'classNames'> => {
   const { t } = useTranslation(meta.id);
-  const stateAtom = useCapability(SimpleLayoutStateCapability);
+  const stateAtom = useCapability(SimpleLayoutCapabilities.State);
   const state = useAtomValue(stateAtom);
   const { graph } = useAppGraph();
   const { invokePromise } = useOperationInvoker();
@@ -54,25 +53,6 @@ export const useAppBarProps = (): Omit<AppBarProps, 'classNames'> => {
           target: action.id,
           relation: 'child',
         }));
-
-        // Add alternate-tree action (e.g. Settings) from the workspace node.
-        const workspaceConnections = state.workspace ? get(graph.connections(state.workspace, 'child')) : [];
-        const alternateTreeNode = workspaceConnections.find(
-          (node: Node.Node) => node.properties.disposition === 'alternate-tree',
-        );
-        if (alternateTreeNode && activeId !== alternateTreeNode.id) {
-          const settingsAction = {
-            id: `appbar-settings-${alternateTreeNode.id}`,
-            type: Node.ActionType,
-            data: () => Effect.promise(() => invokePromise(LayoutOperation.Open, { subject: [alternateTreeNode.id] })),
-            properties: {
-              label: alternateTreeNode.properties.label ?? alternateTreeNode.id,
-              icon: alternateTreeNode.properties.icon ?? 'ph--placeholder--regular',
-            },
-          };
-          nodes.push(settingsAction);
-          edges.push({ source: 'root', target: settingsAction.id, relation: 'child' });
-        }
 
         return { nodes, edges };
       }),

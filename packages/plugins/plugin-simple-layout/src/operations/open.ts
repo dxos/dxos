@@ -9,15 +9,17 @@ import {
   createEdgeExistenceChecker,
   validateNavigationTarget,
 } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
-import { Operation } from '@dxos/operation';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { log } from '@dxos/log';
+import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { layoutStateAccess } from './state-access';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Open> = LayoutOperation.Open.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (input) {
+      log('LayoutOperation.Open handler start');
       const { graph } = yield* Capability.get(AppCapabilities.AppGraph);
       const { updateState } = yield* layoutStateAccess;
       const id = input.subject[0];

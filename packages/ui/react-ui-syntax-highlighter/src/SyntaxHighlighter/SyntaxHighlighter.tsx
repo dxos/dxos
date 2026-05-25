@@ -3,12 +3,12 @@
 //
 
 import React, { Children } from 'react';
-import { type SyntaxHighlighterProps as NativeSyntaxHighlighterProps } from 'react-syntax-highlighter';
+import { type SyntaxHighlighterProps as NaturalSyntaxHighlighterProps } from 'react-syntax-highlighter';
 import NativeSyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-async-light';
 import { coldarkDark as dark, coldarkCold as light } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 import { Clipboard, useThemeContext } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 const zeroWidthSpace = '\u200b';
 
@@ -18,7 +18,7 @@ const languages = {
 };
 
 export type SyntaxHighlighterProps = Pick<
-  NativeSyntaxHighlighterProps,
+  NaturalSyntaxHighlighterProps,
   | 'language'
   | 'renderer'
   | 'showLineNumbers'
@@ -28,7 +28,7 @@ export type SyntaxHighlighterProps = Pick<
   | 'wrapLongLines'
   | 'PreTag'
 > & {
-  themeStyle?: NativeSyntaxHighlighterProps['style'];
+  themeStyle?: NaturalSyntaxHighlighterProps['style'];
   fallback?: string;
   copyButton?: boolean;
 };
@@ -95,10 +95,7 @@ export const SyntaxHighlighter = composable<HTMLDivElement, SyntaxHighlighterPro
         </NativeSyntaxHighlighter>
 
         {copyButton && (
-          <div
-            role='none'
-            className='pointer-events-none absolute top-1 right-1 z-10 opacity-0 group-hover:opacity-100 focus-within:opacity-100'
-          >
+          <div className='pointer-events-none absolute top-1 right-1 z-10 opacity-0 group-hover:opacity-100 focus-within:opacity-100'>
             <Clipboard.Provider>
               <Clipboard.IconButton
                 value={source}

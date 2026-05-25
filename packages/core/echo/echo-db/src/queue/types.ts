@@ -2,10 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
-
 import { type Database, type Entity } from '@dxos/echo';
-import { EntityKind, type TypeAnnotation, TypeAnnotationId } from '@dxos/echo/internal';
 import { type DXN, type ObjectId } from '@dxos/keys';
 
 /**
@@ -76,17 +73,3 @@ export interface Queue<T extends Entity.Unknown = Entity.Unknown> extends Databa
   // TODO(dmaretskyi): Remove.
   refresh(): Promise<void>;
 }
-
-// TODO(dmaretskyi): Implement.
-const isQueue = (value: unknown): value is Queue => {
-  return false;
-};
-
-export const Queue: Schema.Schema<Queue> = Schema.declare(isQueue, {
-  [TypeAnnotationId]: {
-    // TODO(dmaretskyi): Perhaps queue should be its own entity kind.
-    kind: EntityKind.Object,
-    typename: 'org.dxos.type.queue',
-    version: '0.1.0',
-  } satisfies TypeAnnotation,
-});

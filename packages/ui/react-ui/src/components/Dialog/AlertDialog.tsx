@@ -6,18 +6,17 @@ import * as AlertDialogPrimitive from '@radix-ui/react-alert-dialog';
 import { createContext } from '@radix-ui/react-context';
 import React, { type ForwardRefExoticComponent, type FunctionComponent, forwardRef } from 'react';
 
-import { type DialogSize } from '@dxos/ui-theme';
-
 import { useThemeContext } from '../../hooks';
-import { Column } from '../../primitives';
+import { ElevationProvider } from '../../primitives';
+import { type DialogSize } from '../../theme';
 import { type ThemedClassName } from '../../util';
-import { ElevationProvider } from '../ElevationProvider';
+import { Column } from '../Column';
 import {
   Dialog,
   type DialogHeaderProps,
   type DialogBodyProps,
   type DialogActionBarProps,
-  type DialogCloseIconButtonProps,
+  type DialogActionIconButtonProps,
 } from './Dialog';
 
 //
@@ -38,7 +37,7 @@ const AlertDialogRoot: FunctionComponent<AlertDialogRootProps> = (props) => (
 
 type AlertDialogTriggerProps = AlertDialogPrimitive.AlertDialogTriggerProps;
 
-const AlertDialogTrigger: FunctionComponent<AlertDialogTriggerProps> = AlertDialogPrimitive.Trigger;
+const AlertDialogTrigger = AlertDialogPrimitive.Trigger;
 
 //
 // Portal
@@ -46,7 +45,7 @@ const AlertDialogTrigger: FunctionComponent<AlertDialogTriggerProps> = AlertDial
 
 type AlertDialogPortalProps = AlertDialogPrimitive.AlertDialogPortalProps;
 
-const AlertDialogPortal: FunctionComponent<AlertDialogPortalProps> = AlertDialogPrimitive.Portal;
+const AlertDialogPortal = AlertDialogPrimitive.Portal;
 
 //
 // Cancel
@@ -54,7 +53,7 @@ const AlertDialogPortal: FunctionComponent<AlertDialogPortalProps> = AlertDialog
 
 type AlertDialogCancelProps = AlertDialogPrimitive.AlertDialogCancelProps;
 
-const AlertDialogCancel: FunctionComponent<AlertDialogCancelProps> = AlertDialogPrimitive.Cancel;
+const AlertDialogCancel = AlertDialogPrimitive.Cancel;
 
 //
 // Action
@@ -62,7 +61,7 @@ const AlertDialogCancel: FunctionComponent<AlertDialogCancelProps> = AlertDialog
 
 type AlertDialogActionProps = AlertDialogPrimitive.AlertDialogActionProps;
 
-const AlertDialogAction: FunctionComponent<AlertDialogActionProps> = AlertDialogPrimitive.Action;
+const AlertDialogAction = AlertDialogPrimitive.Action;
 
 //
 // Context
@@ -70,8 +69,8 @@ const AlertDialogAction: FunctionComponent<AlertDialogActionProps> = AlertDialog
 
 type OverlayLayoutContextValue = { inOverlayLayout?: boolean };
 
-const ALERT_DIALOG_OVERLAY_NAME = 'AlertDialogOverlay';
-const ALERT_DIALOG_CONTENT_NAME = 'AlertDialogContent';
+const ALERT_DIALOG_OVERLAY_NAME = 'AlertDialog.Overlay';
+const ALERT_DIALOG_CONTENT_NAME = 'AlertDialog.Content';
 
 const [OverlayLayoutProvider, useOverlayLayoutContext] = createContext<OverlayLayoutContextValue>(
   ALERT_DIALOG_OVERLAY_NAME,
@@ -189,7 +188,7 @@ export const AlertDialog = {
   Title: AlertDialogTitle,
   Description: AlertDialogDescription,
   ActionBar: Dialog.ActionBar,
-  CloseIconButton: Dialog.CloseIconButton,
+  ActionIconButton: Dialog.ActionIconButton,
   // AlertDialog-specific dismissal.
   Cancel: AlertDialogCancel,
   Action: AlertDialogAction,
@@ -209,5 +208,5 @@ export type {
   DialogHeaderProps as AlertDialogHeaderProps,
   DialogBodyProps as AlertDialogBodyProps,
   DialogActionBarProps as AlertDialogActionBarProps,
-  DialogCloseIconButtonProps as AlertDialogCloseIconButtonProps,
+  DialogActionIconButtonProps as AlertDialogActionIconButtonProps,
 };

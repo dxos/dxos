@@ -12,7 +12,7 @@ import { Capability, Plugin, PluginManager } from '../../core';
 import { useApp } from './useApp';
 
 const String = Capability.make<{ string: string }>('org.dxos.test.string');
-const testMeta = { id: 'org.dxos.plugin.test', name: 'Test' };
+const testMeta = { id: 'org.dxos.plugin.test', name: 'Test', tags: ['system'] };
 
 const pluginLoader = (plugins: Plugin.Plugin[]) =>
   Effect.fn(function* (id: string) {
@@ -20,7 +20,7 @@ const pluginLoader = (plugins: Plugin.Plugin[]) =>
     if (!plugin) {
       return yield* Effect.fail(new Error(`Plugin not found: ${id}`));
     }
-    return plugin;
+    return { plugin };
   });
 
 const TestHost = ({ manager }: { manager: PluginManager.PluginManager }) => {

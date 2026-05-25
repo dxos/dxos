@@ -15,7 +15,7 @@ import { hoverableControls, hoverableFocusedWithinControls, iconSize } from '@dx
 
 import { useBreakpoints } from '#hooks';
 import { meta } from '#meta';
-import { DeckOperation } from '#operations';
+import { DeckOperation } from '#types';
 import { type LayoutMode, PLANK_COMPANION_TYPE, type ResolvedPart } from '#types';
 
 import { PlankCompanionControls, PlankControls } from './PlankControls';
@@ -143,7 +143,7 @@ export const PlankHeading = memo(
         data-plank-heading
         style={iconSize(5)}
         classNames={[
-          'py-1 items-stretch gap-1 sticky left-12 dx-app-drag min-w-0 dx-contain-layout dx-density-coarse',
+          'py-1 items-stretch gap-1 sticky left-12 dx-app-drag min-w-0 dx-contain-layout dx-density-lg',
           part === 'solo'
             ? 'ps-[calc(env(safe-area-inset-left)+.25rem)] pe-[calc(env(safe-area-inset-right)+.25rem)]'
             : 'px-1',
@@ -161,7 +161,7 @@ export const PlankHeading = memo(
       >
         {companions && isCompanionNode ? (
           /* TODO(thure): IMPORTANT: This is a tablist; it should be implemented as such. */
-          <div data-tauri-drag-region role='none' className='flex-1 min-w-0 overflow-x-auto scrollbar-none flex gap-1'>
+          <div data-tauri-drag-region className='flex-1 min-w-0 overflow-x-auto scrollbar-none flex gap-1'>
             {companions.map(({ id, properties: { icon, label } }) => (
               <IconButton
                 key={id}
@@ -211,7 +211,7 @@ export const PlankHeading = memo(
           </>
         )}
         {debug && (
-          <div role='none' className='flex items-center text-sm text-info-text'>
+          <div className='flex items-center text-sm text-info-text'>
             {layoutMode}:{part}:{companioned}
           </div>
         )}

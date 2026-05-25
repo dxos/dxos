@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+export * from './DynamicTypeCard';
+export * from './ExpandoCard';
 export * from './FormCard';
 export * from './JsonCard';
 export * from './OrganizationCard';

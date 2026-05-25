@@ -1,0 +1,878 @@
+---
+id: org.dxos.plugin.code
+name: CodePlugin
+version: 0.1.0
+---
+
+A plugin for AI-assisted Composer plugin development. Hosts authored DEUS specs
+(`.mdl` files), couples them to a `CodeProject`, and provides a Coder blueprint
+that lets the assistant verify a spec, write source files into the project,
+and (eventually) dispatch a build agent. The build/sandbox itself is a
+separate EDGE service (out of scope until phase 2).
+
+Phase 1 shipped: rename, schema, blueprint scaffold, settings, credential
+wiring, and stub `verifySpec` / `runBuildAgent` operations.
+
+Phase 1.5 (this PR) adds an in-memory CRUD surface for source files. The agent
+can scaffold a project, list/read/write/delete files, and call the
+`introspect-mcp` server to look up DXOS / Composer APIs. All file state is
+ECHO-canonical — there is no sandbox or build runtime yet. The CodeArticle
+renders a file tree alongside a CodeMirror editor (via `react-ui-editor`'s
+`Editor.Root`) so a human can see what the agent is producing.
+
+The plugin reuses `react-ui-editor`'s `Editor.Root` / `Editor.Toolbar` /
+`Editor.Content` together with the existing `mdl()` CodeMirror extensions
+instead of a bespoke editor implementation.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+| `service`   | `org.dxos.mdl.service@1.0`    |
+
+## Types
+
+```mdl
+type Spec
+  desc: |
+    A DEUS spec document. Carries `.mdl` content and a human-readable name.
+    Existing typename `org.dxos.type.spec` is preserved across the rename.
+  fields:
+    name?: string
+    content: Ref<Text>          # mdl source
+```
+
+```mdl
+type CodeProject
+  desc: |
+    A coding project. Pairs a name with a Spec used to drive code generation
+    and the set of TypeScript source files that compose the plugin.
+    Typename `org.dxos.type.codeProject`.
+  fields:
+    name?: string
+    spec: Ref<Spec>             # the DEUS spec authored for this project
+    files?: Ref<SourceFile>[]   # source tree, hierarchy implicit in path
+```
+
+```mdl
+type SourceFile
+  desc: |
+    A single file in a CodeProject. The path is POSIX-style with folder
+    separators ("src/components/Button.tsx"); folder objects are not modeled
+    explicitly. `content` references a Text object so edits flow through ECHO
+    reactivity and CRDT conflict resolution.
+    Typename `org.dxos.type.sourceFile`.
+  fields:
+    path: string                # e.g. "src/plugin.ts"
+    content: Ref<Text>
+    mode?: number               # POSIX file mode; reserved for future use
+```
+
+```mdl
+type Settings
+  desc: |
+    Plugin settings (plugin-scoped, not per-space). Reactive.
+    The Anthropic API key itself is NOT stored here — it lives in an
+    AccessToken ECHO object with source `anthropic.com`, accessed via
+    the composer credentials API.
+  fields:
+    endpoint?: string           # URL of the EDGE build service (phase-2 wiring)
+```
+
+## Components
+
+```mdl
+component CodeArticle
+  desc: |
+    Article surface for a CodeProject. Two-pane layout: the left pane is a
+    FileTree built from `project.files`, the right pane is a `react-ui-editor`
+    `Editor.Root` bound to the selected SourceFile's `content` Text. Selecting
+    a file in the tree replaces the editor's extensions to pick up the right
+    language (`javascript({ typescript: true })` for .ts/.tsx, `markdown()`
+    for .md, plain text otherwise). Edits flow through `createDataExtensions`
+    so the underlying ECHO Text is updated reactively.
+  props:
+    role: string
+    subject: CodeProject
+    attendableId?: string
+  state:
+    selectedPath?: string
+  layout: |
+    ┌──────────────┬──────────────────────────┐
+    │ FileTree     │ Editor.View              │
+    │  package.json│   (lang based on path)   │
+    │  ▾ src/      │                          │
+    │    plugin.ts │                          │
+    │  README.md   │                          │
+    └──────────────┴──────────────────────────┘
+```
+
+```mdl
+component FileTree
+  desc: |
+    Renders a flat list of SourceFile-style entries as a hierarchical tree.
+    Folders are derived from path components and rendered as collapsible
+    nodes; clicking a leaf calls `onSelect`. Pure component — no ECHO
+    awareness — to keep storybook coverage simple.
+  props:
+    files: { path: string }[]
+    selectedPath?: string
+    onSelect?: (path: string) => void
+    emptyMessage?: string
+```
+
+```mdl
+component SpecArticle
+  desc: |
+    Article surface for a bare Spec. Uses `react-ui-editor`'s Editor primitives
+    with the existing `mdl()` / `mdlBlockDescription` / `mdlLint` /
+    `mdlComplete` CodeMirror extensions for `.mdl` syntax, lint, completion.
+  props:
+    role: string
+    subject: Spec
+    attendableId?: string
+```
+
+```mdl
+component CodeSettings
+  desc: |
+    Settings surface contributed via `AppPlugin.addSettingsModule`. Lets the
+    user paste/clear an Anthropic API key. The key is persisted to an
+    AccessToken (source `anthropic.com`) in the user's HALO space; reads/
+    writes go through the composer credentials API, not Settings.
+  props:
+    settings: Settings
+  state:
+    apiKey?: string             # bound to AccessToken.token
+  actions:
+    saveApiKey(value: string)
+    clearApiKey()
+```
+
+## Services
+
+```mdl
+service Credentials
+  desc: |
+    Composer credentials API (`@dxos/functions/services/CredentialsService`).
+    Used by `CodeSettings` to read/write the Anthropic API key as an
+    AccessToken with source `anthropic.com`.
+  ops:
+    getCredential(query: { service: string }) → ServiceCredential
+    queryCredentials(query: { service: string }) → ServiceCredential[]
+```
+
+```mdl
+service BuildAgent
+  desc: |
+    The remote EDGE service that runs the Claude Agent SDK to generate
+    Composer plugins from a Spec. Out of scope for this PR — phase 1 only
+    declares the contract surface. Will live in `dxos/edge`.
+  loading: lazy
+  ops:
+    verify(spec: Spec) → { ok: bool, messages: string[] }
+    build(project: CodeProject) → { runId: string, status: string }
+```
+
+## Operations
+
+Phase-1 ops (`verifySpec`, `runBuildAgent`) are stubs until the EDGE build
+service exists. Phase-1.5 adds real handlers for file CRUD over ECHO; no
+sandbox is involved.
+
+```mdl
+op verifySpec
+  desc: |
+    Static verification of a DEUS spec — lint + structural checks. Phase-1
+    stub returns `{ ok: true, messages: [] }`. Will eventually delegate to
+    BuildAgent.verify.
+  input:
+    spec: Ref<Spec>
+  output: { ok: bool, messages: string[] }
+  effects: [echo:read]
+  requires: [Database]
+  note: |
+    Operation key: `org.dxos.function.code.verify-spec`.
+    Exposed as a blueprint tool on CoderBlueprint.
+```
+
+```mdl
+op runBuildAgent
+  desc: |
+    Dispatches a build of the project via the EDGE BuildAgent. Phase-1 stub
+    returns `{ status: "queued" }` without performing any work.
+  input:
+    project: Ref<CodeProject>
+  output: { status: queued | running | succeeded | failed }
+  effects: [echo:read, http]
+  requires: [Database, Credentials]
+  note: |
+    Operation key: `org.dxos.function.code.run-build-agent`.
+    Phase-2: reads the Anthropic API key via Credentials and POSTs to the
+    EDGE BuildAgent endpoint configured in Settings.endpoint.
+```
+
+```mdl
+op listFiles
+  desc: List the source files in a CodeProject (path + size).
+  input:  { project: Ref<CodeProject> }
+  output: { files: { path: string, size: number }[] }   # sorted ascending by path
+  effects: [echo:read]
+  requires: [Database]
+  note:   Operation key `org.dxos.function.code.list-files`.
+```
+
+```mdl
+op readFile
+  desc: Read the content of a single file in a CodeProject.
+  input:  { project: Ref<CodeProject>, path: string }
+  output: { path: string, content: string }
+  errors: [FileNotFound]
+  effects: [echo:read]
+  requires: [Database]
+  note:   Operation key `org.dxos.function.code.read-file`.
+```
+
+```mdl
+op writeFile
+  desc: |
+    Create or overwrite a file in a CodeProject. Whole-file write — for
+    targeted edits, prefer reading first and writing back the new content.
+    Returns `created: true` for new files, `created: false` for overwrites.
+  input:  { project: Ref<CodeProject>, path: string, content: string }
+  output: { path: string, created: boolean }
+  effects: [echo:read, echo:write]
+  requires: [Database]
+  note:   Operation key `org.dxos.function.code.write-file`.
+```
+
+```mdl
+op deleteFile
+  desc: Remove a file from a CodeProject by path.
+  input:  { project: Ref<CodeProject>, path: string }
+  output: { path: string, deleted: boolean }
+  effects: [echo:read, echo:write]
+  requires: [Database]
+  note:   Operation key `org.dxos.function.code.delete-file`.
+```
+
+```mdl
+op scaffoldProject
+  desc: |
+    Seed a CodeProject with a minimal Composer plugin scaffold
+    (package.json, src/plugin.ts, README.md). Idempotent — overwrites any
+    files at the scaffold paths but never deletes user files.
+  input:  { project: Ref<CodeProject>, name?: string }
+  output: { files: { path: string, size: number }[] }
+  effects: [echo:read, echo:write]
+  requires: [Database]
+  note:   Operation key `org.dxos.function.code.scaffold`.
+```
+
+```mdl
+op helloWorld
+  desc: |
+    Sanity-check operation. Writes (or overwrites) a single `src/hello.ts`
+    file containing a Hello World program. Used to verify end-to-end that
+    the agent can manipulate the file abstraction and that the result
+    surfaces in the CodeArticle.
+  input:  { project: Ref<CodeProject> }
+  output: { path: string, created: boolean }
+  effects: [echo:read, echo:write]
+  requires: [Database]
+  note:   Operation key `org.dxos.function.code.hello-world`.
+```
+
+```mdl
+op resetProject
+  desc: |
+    Delete every source file in a CodeProject. Destructive; intended for
+    testing and iteration when the agent needs a clean slate. Removes
+    each SourceFile (and its owned Text) from ECHO and clears the
+    project's `files` array.
+  input:  { project: Ref<CodeProject> }
+  output: { removed: number }
+  effects: [echo:read, echo:write]
+  requires: [Database]
+  note:   Operation key `org.dxos.function.code.reset`.
+```
+
+```mdl
+op buildProject
+  desc: |
+    Compile the project's TypeScript sources in-browser. F-12a transpiles a
+    single entry file (`src/hello.ts` if present, else `src/plugin.ts`) with
+    the TypeScript language service (no bundling, no imports). F-12b
+    extends to multi-file bundling via esbuild-wasm with the project's
+    SourceFiles as a virtual filesystem. Returns diagnostics from the TS
+    language service and the emitted JS for the entry. Distinct from
+    `runBuildAgent`, which targets the remote EDGE codegen service.
+  input:  { project: Ref<CodeProject> }
+  output: {
+    ok: bool,
+    diagnostics: { path?: string, line?: number, column?: number, severity: "error" | "warning", code?: number, message: string }[],
+    entry?: { path: string, source: string }
+  }
+  effects: [echo:read]
+  requires: [Database]
+  note:   Operation key `org.dxos.function.code.build-project`.
+```
+
+```mdl
+op runBuild
+  desc: |
+    Build the project and, on a clean build, execute the entry source on the
+    main thread inside a `console`-capturing wrapper. Captures `console.log`
+    / `console.warn` (→ stdout) and `console.error` plus uncaught errors
+    (→ stderr). Synchronous-only in F-12a; the wrapper restores the original
+    console even on throw.
+  input:  { project: Ref<CodeProject> }
+  output: {
+    ok: bool,
+    stdout: string[],
+    stderr: string[],
+    diagnostics: { path?: string, line?: number, column?: number, severity: "error" | "warning", code?: number, message: string }[]
+  }
+  effects: [echo:read]
+  requires: [Database]
+  note:   Operation key `org.dxos.function.code.run-build`.
+```
+
+## Blueprints
+
+```mdl
+type CoderBlueprint
+  desc: |
+    Blueprint key `org.dxos.blueprint.coder`. Drives plugin authoring:
+    iterate on the Spec with the user, look up DXOS / Composer APIs through
+    introspect-mcp, scaffold the project, then write/read/delete source
+    files until the user is satisfied.
+  fields:
+    key: org.dxos.blueprint.coder
+    tools:
+      - op:verifySpec
+      - op:runBuildAgent
+      - op:listFiles
+      - op:readFile
+      - op:writeFile
+      - op:deleteFile
+      - op:scaffoldProject
+      - op:helloWorld
+      - op:resetProject
+      - op:buildProject
+      - op:runBuild
+    mcpServers:
+      - introspect-mcp        # remote MCP, http; tools: list_packages,
+                              # get_package, list_symbols, find_symbol,
+                              # get_symbol
+    instructions: prose
+```
+
+## Features
+
+```mdl
+feat F-1: Rename plugin-spec → plugin-code
+
+  req F-1.1: Package renamed `@dxos/plugin-spec` → `@dxos/plugin-code`.
+  req F-1.2: Directory renamed `packages/plugins/plugin-spec` → `packages/plugins/plugin-code`.
+  req F-1.3: Plugin id renamed `org.dxos.plugin.spec` → `org.dxos.plugin.code`.
+  req F-1.4: SpecPlugin → CodePlugin; SpecArticle → CodeArticle.
+  req F-1.5: Spec ECHO type retains typename `org.dxos.type.spec` (no migration).
+  req F-1.6:
+    when: composer-app loads after rename
+    then: existing Spec objects continue to render; no schema migration needed
+```
+
+```mdl
+feat F-2: CodeProject type
+
+  req F-2.1: New ECHO type `CodeProject` with typename `org.dxos.type.codeProject`.
+  req F-2.2: Fields `name?: string`, `spec: Ref<Spec>`; both reactive.
+  req F-2.3:
+    when: user creates a CodeProject from the navtree
+    then: an empty Spec is created and referenced by the new CodeProject
+  req F-2.4: CodeProject registered via `addSchemaModule` and `addMetadataModule`.
+```
+
+```mdl
+feat F-3: CodeArticle uses react-ui-editor
+
+  req F-3.1: CodeArticle uses `Editor.Root` + `Editor.Toolbar` + `Editor.Content`
+             from `@dxos/react-ui-editor` instead of a bespoke `useTextEditor` setup.
+  req F-3.2: The existing `mdl()`, `mdlBlockDescription`, `mdlLint`, `mdlComplete`
+             extensions are passed to the editor.
+  req F-3.3:
+    when: a Spec is opened
+    then: its `content` is editable with markdown + .mdl block highlighting
+  req F-3.4: Toolbar exposes a Spec | Code tab toggle via `customActions`.
+  req F-3.5:
+    when: user clicks "Code"
+    then: editor area is hidden and a placeholder ("Build output will appear here") is shown
+  req F-3.6:
+    when: user clicks "Spec"
+    then: editor area is restored and focus returns to the document
+  req F-3.7: Active tab is local component state (not persisted).
+```
+
+```mdl
+feat F-4: Settings + credentials
+
+  req F-4.1: `Settings` schema mutable, with optional `endpoint: string`.
+  req F-4.2: Settings registered via `AppPlugin.addSettingsModule`.
+  req F-4.3: A `CodeSettings` container renders an API-key input.
+  req F-4.4:
+    when: user enters an API key and saves
+    then: an `AccessToken` is upserted with `source: "anthropic.com"`, `token: <value>`
+          via the composer credentials API
+  req F-4.5:
+    when: user clears the key
+    then: the matching AccessToken is removed
+  req F-4.6: API key value is never stored in `Settings`.
+```
+
+```mdl
+feat F-5: Coder blueprint
+
+  req F-5.1: A blueprint with key `org.dxos.blueprint.coder` is contributed
+             via `addBlueprintDefinitionModule`.
+  req F-5.2: Tools include op:verifySpec and op:runBuildAgent.
+  req F-5.3: System instructions describe the Coder role:
+              author/refine spec with user, run verifySpec, then runBuildAgent.
+```
+
+```mdl
+feat F-6: Stub operations
+
+  req F-6.1: op:verifySpec defined and handler returns `{ ok: true, messages: [] }`.
+  req F-6.2: op:runBuildAgent defined and handler returns `{ status: "queued" }`.
+  req F-6.3: Both handlers are contributed via `addOperationHandlerModule`.
+  req F-6.4: Both operations resolve from blueprint tool calls without error.
+```
+
+```mdl
+feat F-7: Source files in ECHO
+
+  req F-7.1: New ECHO type SourceFile with typename `org.dxos.type.sourceFile`.
+  req F-7.2: CodeProject extended with optional `files: Ref<SourceFile>[]`.
+  req F-7.3: SourceFile registered via `addSchemaModule` and translations.
+  req F-7.4:
+    when: a SourceFile is mutated through write-file
+    then: the underlying Text object is updated; the file Ref already in
+          `project.files` is reused (no duplicate file objects per path).
+  req F-7.5:
+    when: a path that doesn't yet exist is written
+    then: a new SourceFile + Text are created and appended to `project.files`.
+```
+
+```mdl
+feat F-8: File CRUD operations
+
+  req F-8.1: op:listFiles returns the project's files sorted by path.
+  req F-8.2: op:readFile resolves a file by exact-path match and returns its content.
+  req F-8.3:
+    when: op:readFile is called with an unknown path
+    then: the operation fails with a FileNotFound error
+  req F-8.4: op:writeFile creates new files and overwrites existing ones (whole-file).
+  req F-8.5: op:deleteFile removes the matching file from `project.files`.
+  req F-8.6: op:scaffoldProject seeds package.json, src/plugin.ts, README.md and
+             returns the resulting file list.
+  req F-8.7: All file ops are wired into the CoderBlueprint tool set.
+```
+
+```mdl
+feat F-9: CodeArticle file tree + editor
+
+  req F-9.1: CodeArticle renders a two-pane layout: FileTree on the left,
+             editor on the right.
+  req F-9.2: FileTree is a pure component (no ECHO awareness) and is unit-
+             coverable from a Storybook story.
+  req F-9.3: Selecting a file replaces the editor's language extension based
+             on the file's extension (`.ts`/`.tsx` → typescript JS, `.md` →
+             markdown, otherwise plain JS).
+  req F-9.4: The editor is `react-ui-editor`'s `Editor.Root` with
+             `createDataExtensions` so edits propagate back into the
+             SourceFile's Text via ECHO.
+  req F-9.5:
+    when: the agent writes a new file via op:writeFile
+    then: the file appears in the FileTree on the next render
+  req F-9.6:
+    when: `project.files` is empty
+    then: an empty-state message points the user at the Coder agent
+```
+
+```mdl
+feat F-10: Coder integrates introspect-mcp
+
+  req F-10.1: CoderBlueprint declares a remote MCP server entry pointing at the
+              introspect-mcp HTTP endpoint.
+  req F-10.2: System prompt directs the agent to call introspect-mcp
+              (find_symbol / get_symbol / list_packages …) before writing
+              code that touches DXOS / Composer APIs.
+  req F-10.3:
+    when: introspect-mcp is unreachable
+    then: chat continues to function (per @dxos/plugin-assistant resilience);
+          the agent simply has no API search tools available.
+```
+
+```mdl
+feat F-11: Sanity + reset operations
+
+  req F-11.1: op:helloWorld writes (or overwrites) `src/hello.ts` containing a
+              minimal Hello World program; idempotent.
+  req F-11.2: op:resetProject removes every SourceFile from `project.files`
+              and calls Database.remove + flush so the underlying ECHO
+              objects are not leaked.
+  req F-11.3: Both operations are wired into the CoderBlueprint tool set.
+  req F-11.4:
+    when: the user asks the agent to "build hello world"
+    then: the agent invokes op:helloWorld and `src/hello.ts` shows up in the
+          FileTree on the next render.
+  req F-11.5:
+    when: the user asks the agent to "reset the project"
+    then: the agent invokes op:resetProject and the FileTree shows the
+          empty-state placeholder.
+```
+
+```mdl
+feat F-12a: Local build & run — single-file entry
+
+  req F-12a.1: A `Compiler` module wraps `@typescript/vfs`'s virtual TS
+               environment. lib.d.ts files are fetched lazily from the
+               TypeScript playground CDN on first use and cached for the
+               lifetime of the page. The compiler instance is module-level
+               and reused across operation invocations.
+  req F-12a.2: op:buildProject identifies an entry file (`src/hello.ts` if
+               present, else `src/plugin.ts`), feeds its content to the
+               compiler, and returns the language service's syntactic +
+               semantic diagnostics plus the emitted JS for the entry.
+  req F-12a.3:
+    when: op:buildProject is called and no entry file exists
+    then: it returns `{ ok: false, diagnostics: [...], entry: undefined }`
+          with a diagnostic explaining the entry is missing
+  req F-12a.4: op:runBuild internally builds the project; on a clean build
+               it evaluates the emitted JS via `new Function(...)` inside a
+               wrapper that captures `console.log` / `console.warn` (→ stdout)
+               and `console.error` plus thrown errors (→ stderr).
+  req F-12a.5: The console-capture wrapper restores `console` even on throw,
+               and never leaks captured strings between concurrent calls
+               (each call uses its own arrays + per-call console shim).
+  req F-12a.6:
+    when: the entry source throws at runtime
+    then: op:runBuild returns `{ ok: false, stdout, stderr: [...err], diagnostics: [] }`
+          and does not throw
+  req F-12a.7: Both ops are registered in the OperationHandlerSet and added
+               to CoderBlueprint's tool set. The Coder system prompt mentions
+               `build-project` and `run-build` and the recommended sequence
+               (write source → build → run).
+  req F-12a.8: The CodeArticle toolbar exposes Build and Run buttons. Run is
+               disabled until the most recent build for the current project
+               completed cleanly. The bottom-left inspect-pane TODO is
+               replaced with a Diagnostics / Console pane showing the last
+               build's diagnostics and the last run's stdout/stderr.
+  req F-12a.9: Per-project build/run state lives in a CodePlugin capability
+               atom keyed by `CodeProject.id`. CodeArticle reads the atom for
+               the open project; remounting the article does not lose state.
+```
+
+```mdl
+feat F-12b: Local build & run — multi-file bundling
+
+  req F-12b.1: `esbuild-wasm` is added as a workspace catalog dependency.
+               Esbuild is initialized lazily on first multi-file build; the
+               WASM binary loads from the npm package URL and is cached by
+               the browser.
+  req F-12b.2: A `bundle(files, entryPath)` helper wraps esbuild with a
+               custom plugin that resolves bare and relative paths against
+               the in-memory SourceFile set. Paths the plugin cannot resolve
+               within the project surface as esbuild diagnostics.
+  req F-12b.3: op:buildProject chooses a strategy: if the project has
+               exactly one `.ts`/`.tsx` file and that file has no imports,
+               it uses the plain TS transpile path (F-12a); otherwise it
+               uses esbuild for bundling, with the TS language service still
+               providing type-check diagnostics.
+  req F-12b.4:
+    when: op:buildProject runs on a project with `src/util.ts` and
+          `src/hello.ts` (where `hello.ts` imports from `./util`)
+    then: the build returns one bundled `entry.source` containing both
+          modules, the bundle executes via op:runBuild, and stdout reflects
+          values defined in `util.ts`
+  req F-12b.5: External imports (anything not matching a path in the
+               project's SourceFiles) are treated as build errors in
+               F-12b. Host-externals via import maps are deferred to F-13.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Rename preserves Spec compatibility
+  given: a space already containing a Spec object created by plugin-spec
+  when: the renamed plugin-code is loaded
+  then:
+    - the Spec object is queryable
+    - opening it renders CodeArticle with the same content
+    - typename remains `org.dxos.type.spec`
+```
+
+```mdl
+test T-2: Create CodeProject
+  given: composer-app with plugin-code loaded
+  when: user invokes "Create CodeProject" from a space
+  then:
+    - a new CodeProject object is created with default name
+    - a new empty Spec is created and referenced via `project.spec`
+    - opening the project surfaces the linked Spec via CodeArticle
+```
+
+```mdl
+test T-3: Editor renders mdl content
+  given: a Spec containing an mdl fenced block
+  when: CodeArticle mounts
+  then:
+    - markdown is decorated by `decorateMarkdown()`
+    - the mdl block body is highlighted by `mdlBlockDescription`
+    - lint and completion sources are wired
+```
+
+```mdl
+test T-4: Toolbar tab toggle
+  given: a CodeArticle is open showing the Spec view
+  when: user clicks the Code tab
+  then:
+    - the editor content is hidden
+    - the Code placeholder ("Build output will appear here") is visible
+  when: user clicks the Spec tab
+  then: the editor content is visible again
+```
+
+```mdl
+test T-5: Save API key persists AccessToken
+  given: CodeSettings is open and no AccessToken exists for `anthropic.com`
+  when: user enters a key and clicks save
+  then:
+    - an AccessToken with `source: "anthropic.com"` and the entered token is created
+    - the input shows the masked persisted value on next render
+```
+
+```mdl
+test T-6: Clear API key removes AccessToken
+  given: an AccessToken exists for `anthropic.com`
+  when: user clicks clear
+  then:
+    - the AccessToken is removed
+    - subsequent `CredentialsService.getCredential({ service: "anthropic.com" })` rejects
+```
+
+```mdl
+test T-7: Blueprint registers tools
+  given: composer-app with plugin-code loaded
+  when: AppCapabilities.BlueprintDefinition is queried for `org.dxos.blueprint.coder`
+  then:
+    - the blueprint is present
+    - its tool set includes verifySpec and runBuildAgent
+```
+
+```mdl
+test T-8: Stub operations resolve
+  given: an assistant chat with the Coder blueprint loaded
+  when: the assistant invokes verifySpec on a Spec
+  then: the call returns `{ ok: true, messages: [] }`
+  when: the assistant invokes runBuildAgent on a CodeProject
+  then: the call returns `{ status: "queued" }`
+```
+
+```mdl
+test T-9: Scaffold seeds project files
+  given: an empty CodeProject
+  when: op:scaffoldProject is invoked with name "demo"
+  then:
+    - `project.files` includes SourceFiles at paths package.json, src/plugin.ts, README.md
+    - each file's Text content is non-empty and reflects the project name
+```
+
+```mdl
+test T-10: Round-trip read/write/delete
+  given: a CodeProject with one file at "src/foo.ts"
+  when: op:writeFile is called with path "src/foo.ts" and content "X"
+  then: op:writeFile returns `created: false`; op:readFile returns content "X"
+  when: op:writeFile is called with path "src/bar.ts" and content "Y"
+  then: op:writeFile returns `created: true`; op:readFile returns content "Y"
+  when: op:deleteFile is called with path "src/bar.ts"
+  then: op:listFiles no longer reports "src/bar.ts"
+```
+
+```mdl
+test T-11: CodeArticle reflects ECHO mutations
+  given: a CodeArticle is mounted on a CodeProject
+  when: a new SourceFile is added to `project.files` via op:writeFile
+  then: the FileTree shows the new path on next render without manual reload
+```
+
+```mdl
+test T-12: Coder blueprint exposes file tools
+  given: composer-app with plugin-code loaded
+  when: AppCapabilities.BlueprintDefinition is queried for `org.dxos.blueprint.coder`
+  then:
+    - the blueprint's tool set includes listFiles, readFile, writeFile,
+      deleteFile, scaffoldProject, helloWorld, and resetProject
+    - the blueprint declares an introspect-mcp remote MCP server
+```
+
+```mdl
+test T-13: Hello World sanity round-trip
+  given: a CodeProject with no files
+  when: op:helloWorld is invoked
+  then:
+    - `project.files` includes exactly one SourceFile at path "src/hello.ts"
+    - the result is `{ path: "src/hello.ts", created: true }`
+  when: op:helloWorld is invoked a second time
+  then: the result is `{ path: "src/hello.ts", created: false }` and the
+        file count is unchanged (idempotent overwrite)
+```
+
+```mdl
+test T-14: Reset clears project files
+  given: a CodeProject with N (>0) files
+  when: op:resetProject is invoked
+  then:
+    - the result is `{ removed: N }`
+    - `project.files` is empty
+    - each previously-referenced SourceFile has been removed from ECHO
+      (`Database.remove` + flush)
+  when: op:resetProject is invoked on an already-empty project
+  then: the result is `{ removed: 0 }`
+```
+
+```mdl
+test T-15: Build the Hello World scaffold
+  given: a CodeProject with `src/hello.ts` containing the helloWorld scaffold
+  when: op:buildProject is invoked
+  then:
+    - the result is `{ ok: true, diagnostics: [], entry: { path: "src/hello.ts", source: <non-empty JS> } }`
+    - `entry.source` is a transpiled JavaScript string (no remaining `:` type
+      annotations on declarations)
+  given: a CodeProject whose only file is `src/hello.ts` with a syntax error
+  when: op:buildProject is invoked
+  then: the result is `{ ok: false, diagnostics: [{severity: "error", ...}] }`
+        and `entry` is undefined
+```
+
+```mdl
+test T-16: Run the Hello World scaffold
+  given: a CodeProject containing only the helloWorld scaffold
+  when: op:runBuild is invoked
+  then:
+    - the result is `{ ok: true, stdout: [..., "Hello, World!"], stderr: [], diagnostics: [] }`
+  given: a CodeProject whose entry throws at runtime
+  when: op:runBuild is invoked
+  then: the result is `{ ok: false, stdout: [...], stderr: [<error message>], diagnostics: [] }`
+        and the operation does not raise
+```
+
+```mdl
+test T-17: Coder blueprint exposes build/run tools
+  given: composer-app with plugin-code loaded
+  when: AppCapabilities.BlueprintDefinition is queried for `org.dxos.blueprint.coder`
+  then: the blueprint's tool set includes buildProject and runBuild
+```
+
+```mdl
+test T-18: Multi-file bundle round-trip (F-12b)
+  given: a CodeProject with two files:
+         - src/util.ts: `export const MESSAGE = "from util";`
+         - src/hello.ts: `import { MESSAGE } from "./util"; console.log(MESSAGE);`
+  when: op:buildProject is invoked
+  then: the build is clean and `entry.source` includes the bundled contents of util.ts
+  when: op:runBuild is invoked
+  then: `stdout` includes the line "from util"
+  given: src/hello.ts also imports from "@dxos/echo"
+  when: op:buildProject is invoked
+  then: the result is `{ ok: false, diagnostics: [{severity: "error", message: <unresolved import>}] }`
+        (host externals are deferred to F-13)
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: dxos.spec/ext/type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap
+    literals?: UnionList
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: dxos.spec/ext/feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext test
+  uri: dxos.spec/ext/test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap
+    state?: FieldMap
+    slots?: FieldMap
+    actions?: ActionMap
+    emits?: EventMap
+    layout?: CodeBlock
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: A named operation with typed inputs, outputs, and declared errors.
+  fields:
+    desc?: Prose
+    input?: FieldMap
+    output?: TypeExpr
+    errors?: ErrorMap
+    effects?: EffectList
+    requires?: ServiceList
+    note?: Prose
+```
+
+```mdl
+ext service
+  uri: org.dxos.mdl.service@1.0
+  desc: An external or system-level dependency providing named operations.
+  fields:
+    desc?: Prose
+    loading?: eager | lazy
+    ops?: OpMap
+    errors?: ErrorMap
+    note?: Prose
+```

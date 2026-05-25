@@ -49,22 +49,25 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/ai"
+      "path": "../../core/compute/ai"
     },
     {
-      "path": "../../core/assistant"
+      "path": "../../core/compute/assistant"
     },
     {
-      "path": "../../core/assistant-toolkit"
+      "path": "../../core/compute/assistant-toolkit"
     },
     {
-      "path": "../../core/blueprints"
+      "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/compute"
+      "path": "../../core/compute/conductor"
     },
     {
-      "path": "../../core/conductor"
+      "path": "../../core/compute/functions"
+    },
+    {
+      "path": "../../core/compute/functions-runtime"
     },
     {
       "path": "../../core/echo/echo"
@@ -79,16 +82,7 @@
       "path": "../../core/echo/echo-query"
     },
     {
-      "path": "../../core/functions"
-    },
-    {
-      "path": "../../core/functions-runtime"
-    },
-    {
       "path": "../../core/mesh/edge-client"
-    },
-    {
-      "path": "../../core/operation"
     },
     {
       "path": "../../core/protocols"
@@ -121,10 +115,16 @@
       "path": "../../plugins/plugin-explorer"
     },
     {
+      "path": "../../plugins/plugin-game"
+    },
+    {
       "path": "../../plugins/plugin-graph"
     },
     {
       "path": "../../plugins/plugin-inbox"
+    },
+    {
+      "path": "../../plugins/plugin-integration"
     },
     {
       "path": "../../plugins/plugin-map"
@@ -161,9 +161,6 @@
     },
     {
       "path": "../../plugins/plugin-thread"
-    },
-    {
-      "path": "../../plugins/plugin-token-manager"
     },
     {
       "path": "../../plugins/plugin-transcription"
@@ -233,9 +230,6 @@
     },
     {
       "path": "../../ui/react-ui-mosaic"
-    },
-    {
-      "path": "../../ui/react-ui-search"
     },
     {
       "path": "../../ui/react-ui-sfx"

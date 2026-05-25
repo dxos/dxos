@@ -7,9 +7,8 @@ import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
 import { type PublicKey } from '@dxos/client';
-import { Database, Obj } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
+import { Collection, Database, Obj } from '@dxos/echo';
 import { type ComplexMap } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -19,6 +18,9 @@ export * as Settings from './Settings';
 export const SPACE_DIRECTORY_HANDLE = `${meta.id}.directory`;
 
 export const SPACE_TYPE = 'org.dxos.type.space';
+
+/** Type for the per-space virtual "Settings" section that groups settings panels. */
+export const SETTINGS_SECTION_TYPE = `${meta.id}.settings`;
 
 /** Key for the Expando that stores cross-space ordering (must stay stable for persisted data). */
 export const SHARED = 'shared-spaces';

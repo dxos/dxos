@@ -6,14 +6,14 @@ import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 
+import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 import { Message } from '@dxos/types';
 
+import { InboxOperation } from '../types';
 import { renderMarkdown } from '../util';
-import { ReadEmail } from './definitions';
 
-const handler: Operation.WithHandler<typeof ReadEmail> = ReadEmail.pipe(
+const handler: Operation.WithHandler<typeof InboxOperation.ReadEmail> = InboxOperation.ReadEmail.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ mailbox: mailboxRef, skip = 0, limit = 20 }) {
       const mailbox = yield* Database.load(mailboxRef);

@@ -38,6 +38,9 @@
       "path": "../../../tools/vite-plugin-log"
     },
     {
+      "path": "../../../tools/vite-plugin-shutdown"
+    },
+    {
       "path": "../../common/async"
     },
     {
@@ -89,6 +92,9 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../common/log-store-idb"
+    },
+    {
       "path": "../../common/merkle-search-tree"
     },
     {
@@ -122,22 +128,31 @@
       "path": "../../common/web-context-solid"
     },
     {
-      "path": "../../core/ai"
+      "path": "../../core/compute/ai"
     },
     {
-      "path": "../../core/assistant"
+      "path": "../../core/compute/assistant"
     },
     {
-      "path": "../../core/assistant-toolkit"
+      "path": "../../core/compute/assistant-toolkit"
     },
     {
-      "path": "../../core/blueprints"
+      "path": "../../core/compute/compute"
     },
     {
-      "path": "../../core/compute"
+      "path": "../../core/compute/conductor"
     },
     {
-      "path": "../../core/conductor"
+      "path": "../../core/compute/functions"
+    },
+    {
+      "path": "../../core/compute/functions-runtime"
+    },
+    {
+      "path": "../../core/compute/mcp-client"
+    },
+    {
+      "path": "../../core/compute/operation"
     },
     {
       "path": "../../core/echo/echo"
@@ -170,19 +185,10 @@
       "path": "../../core/echo/index-core"
     },
     {
-      "path": "../../core/functions"
-    },
-    {
-      "path": "../../core/functions-runtime"
-    },
-    {
       "path": "../../core/halo/credentials"
     },
     {
       "path": "../../core/halo/keyring"
-    },
-    {
-      "path": "../../core/mcp-client"
     },
     {
       "path": "../../core/mesh/edge-client"
@@ -218,9 +224,6 @@
       "path": "../../core/mesh/websocket-rpc"
     },
     {
-      "path": "../../core/operation"
-    },
-    {
       "path": "../../core/protocols"
     },
     {
@@ -236,7 +239,13 @@
       "path": "../../plugins/plugin-automation"
     },
     {
+      "path": "../../plugins/plugin-bluesky"
+    },
+    {
       "path": "../../plugins/plugin-board"
+    },
+    {
+      "path": "../../plugins/plugin-calls"
     },
     {
       "path": "../../plugins/plugin-chess"
@@ -245,16 +254,13 @@
       "path": "../../plugins/plugin-client"
     },
     {
+      "path": "../../plugins/plugin-code"
+    },
+    {
       "path": "../../plugins/plugin-conductor"
     },
     {
       "path": "../../plugins/plugin-crx"
-    },
-    {
-      "path": "../../plugins/plugin-crx-bridge"
-    },
-    {
-      "path": "../../plugins/plugin-daily-summary"
     },
     {
       "path": "../../plugins/plugin-debug"
@@ -266,28 +272,46 @@
       "path": "../../plugins/plugin-discord"
     },
     {
+      "path": "../../plugins/plugin-doctor"
+    },
+    {
       "path": "../../plugins/plugin-explorer"
     },
     {
       "path": "../../plugins/plugin-feed"
     },
     {
-      "path": "../../plugins/plugin-files"
+      "path": "../../plugins/plugin-file"
+    },
+    {
+      "path": "../../plugins/plugin-gallery"
+    },
+    {
+      "path": "../../plugins/plugin-game"
+    },
+    {
+      "path": "../../plugins/plugin-generator"
+    },
+    {
+      "path": "../../plugins/plugin-github"
     },
     {
       "path": "../../plugins/plugin-graph"
     },
     {
-      "path": "../../plugins/plugin-help"
+      "path": "../../plugins/plugin-inbox"
     },
     {
-      "path": "../../plugins/plugin-inbox"
+      "path": "../../plugins/plugin-integration"
     },
     {
       "path": "../../plugins/plugin-iroh-beacon"
     },
     {
       "path": "../../plugins/plugin-kanban"
+    },
+    {
+      "path": "../../plugins/plugin-linear"
     },
     {
       "path": "../../plugins/plugin-map"
@@ -347,6 +371,9 @@
       "path": "../../plugins/plugin-search"
     },
     {
+      "path": "../../plugins/plugin-sequencer"
+    },
+    {
       "path": "../../plugins/plugin-settings"
     },
     {
@@ -362,13 +389,13 @@
       "path": "../../plugins/plugin-sketch"
     },
     {
+      "path": "../../plugins/plugin-slack"
+    },
+    {
       "path": "../../plugins/plugin-space"
     },
     {
       "path": "../../plugins/plugin-spacetime"
-    },
-    {
-      "path": "../../plugins/plugin-spec"
     },
     {
       "path": "../../plugins/plugin-spotlight"
@@ -378,6 +405,9 @@
     },
     {
       "path": "../../plugins/plugin-status-bar"
+    },
+    {
+      "path": "../../plugins/plugin-support"
     },
     {
       "path": "../../plugins/plugin-table"
@@ -395,19 +425,19 @@
       "path": "../../plugins/plugin-tictactoe"
     },
     {
-      "path": "../../plugins/plugin-token-manager"
+      "path": "../../plugins/plugin-transcription"
     },
     {
-      "path": "../../plugins/plugin-transcription"
+      "path": "../../plugins/plugin-trello"
+    },
+    {
+      "path": "../../plugins/plugin-trip"
     },
     {
       "path": "../../plugins/plugin-voxel"
     },
     {
       "path": "../../plugins/plugin-wnfs"
-    },
-    {
-      "path": "../../plugins/plugin-youtube"
     },
     {
       "path": "../../plugins/plugin-zen"
@@ -534,9 +564,6 @@
     },
     {
       "path": "../../ui/react-ui-pickers"
-    },
-    {
-      "path": "../../ui/react-ui-search"
     },
     {
       "path": "../../ui/react-ui-sfx"

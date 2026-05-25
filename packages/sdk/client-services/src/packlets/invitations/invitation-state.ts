@@ -84,11 +84,7 @@ const logStateUpdate = (invitation: Invitation, actor: any, newState: Invitation
     error: error?.message,
     errorStack: error?.stack,
   };
-  if (isNonTerminalState(newState)) {
-    log.verbose('dxos.sdk.invitations-handler.state.update', logContext);
-  } else {
-    log.info('dxos.sdk.invitations-handler.state.update', logContext);
-  }
+  log.verbose('dxos.sdk.invitations-handler.state.update', logContext);
 };
 
 const isNonTerminalState = (currentState: Invitation.State): boolean => {

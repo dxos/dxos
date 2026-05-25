@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import React from 'react';
 
-import { type AiContextBinder } from '@dxos/assistant';
+import { type AiContext } from '@dxos/assistant';
 import { Annotation, type Database, Obj } from '@dxos/echo';
 import { Icon, IconButton, type Label, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { getStyles, mx } from '@dxos/ui-theme';
@@ -14,7 +14,7 @@ import { useContextObjects } from '#hooks';
 import { meta } from '#meta';
 
 export type ChatReferencesProps = ThemedClassName<{
-  context: AiContextBinder;
+  context: AiContext.Binder;
   db: Database.Database;
 }>;
 
@@ -35,13 +35,13 @@ export const ChatReferences = ({ classNames, context, db }: ChatReferencesProps)
         const styles = hue ? getStyles(hue) : undefined;
         return (
           <li key={dxn.toString()} className='dx-tag py-0 ps-2 flex items-center gap-1' data-hue='neutral'>
-            <Icon icon={icon} size={4} classNames={styles?.surfaceText} />
+            <Icon icon={icon} size={4} classNames={styles?.foreground} />
             {toLocalizedString(label, t)}
             <IconButton
               icon='ph--x--bold'
               iconOnly
               variant='ghost'
-              label={t('remove-object-in-context.label')}
+              label={t('remove-object.label')}
               classNames='p-0 hover:bg-transparent'
               size={3}
               onClick={() => onUpdateObject?.(dxn, false)}

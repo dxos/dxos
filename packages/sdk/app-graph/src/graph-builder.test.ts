@@ -485,6 +485,132 @@ describe('GraphBuilder', () => {
       expect(exists).to.be.true;
     });
 
+    describe('inline nodes', () => {
+      const parent = (child?: Node.NodeArg<any>): Node.NodeArg<any> => ({
+        id: 'parent-node',
+        type: EXAMPLE_TYPE,
+        data: null,
+        nodes: child ? [child] : [],
+      });
+
+      const inlineChild = (overrides?: Partial<Node.NodeArg<any>>): Node.NodeArg<any> => ({
+        id: 'inline-child',
+        type: EXAMPLE_TYPE,
+        data: null,
+        ...overrides,
+      });
+
+      const makeGraph = () => {
+        const registry = Registry.make();
+        const builder = GraphBuilder.make({ registry });
+        const nodesAtom = Atom.make<Node.NodeArg<any>[]>([]);
+        GraphBuilder.addExtension(
+          builder,
+          GraphBuilder.createExtensionRaw({
+            id: 'inline-connector',
+            connector: () => Atom.make((get) => get(nodesAtom)),
+          }),
+        );
+        const graph = builder.graph;
+        Graph.expand(graph, Node.RootId, 'child');
+        return { registry, builder, graph, nodesAtom };
+      };
+
+      const getInlineChild = (graph: Graph.ExpandableGraph) =>
+        Graph.getNode(graph, 'root/parent-node/inline-child').pipe(Option.getOrNull);
+
+      test('are removed when connector re-runs with data change', async () => {
+        const { registry, builder, graph, nodesAtom } = makeGraph();
+        registry.set(nodesAtom, [parent(inlineChild())]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)).to.not.be.null;
+
+        // Remove inline child while also changing parent data to trigger the update.
+        registry.set(nodesAtom, [{ ...parent(), data: 'v2' }]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)).to.be.null;
+      });
+
+      test('are removed when only inline children change', async () => {
+        const { registry, builder, graph, nodesAtom } = makeGraph();
+        registry.set(nodesAtom, [parent(inlineChild())]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)).to.not.be.null;
+
+        // Remove inline child without touching parent — tests change detection covers inline children.
+        registry.set(nodesAtom, [parent()]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)).to.be.null;
+      });
+
+      test('are added when connector re-runs', async () => {
+        const { registry, builder, graph, nodesAtom } = makeGraph();
+        registry.set(nodesAtom, [parent()]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)).to.be.null;
+
+        registry.set(nodesAtom, [parent(inlineChild())]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)).to.not.be.null;
+      });
+
+      test('reactively update data', async ({ expect }) => {
+        const { registry, builder, graph, nodesAtom } = makeGraph();
+        registry.set(nodesAtom, [parent(inlineChild({ data: 'v1' }))]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)?.data).to.equal('v1');
+
+        // Change only the inline child's data — parent is unchanged.
+        registry.set(nodesAtom, [parent(inlineChild({ data: 'v2' }))]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)?.data).to.equal('v2');
+      });
+
+      test('reactively update properties', async ({ expect }) => {
+        const { registry, builder, graph, nodesAtom } = makeGraph();
+        registry.set(nodesAtom, [parent(inlineChild({ properties: { label: 'before' } }))]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)?.properties.label).to.equal('before');
+
+        registry.set(nodesAtom, [parent(inlineChild({ properties: { label: 'after' } }))]);
+        await GraphBuilder.flush(builder);
+
+        expect(getInlineChild(graph)?.properties.label).to.equal('after');
+      });
+
+      test('deeply nested inline nodes reactively update', async ({ expect }) => {
+        const { registry, builder, graph, nodesAtom } = makeGraph();
+
+        const withGrandchild = (data: string) =>
+          parent({
+            id: 'child',
+            type: EXAMPLE_TYPE,
+            data: null,
+            nodes: [{ id: 'grandchild', type: EXAMPLE_TYPE, data }],
+          });
+
+        registry.set(nodesAtom, [withGrandchild('v1')]);
+        await GraphBuilder.flush(builder);
+
+        expect(Graph.getNode(graph, 'root/parent-node/child/grandchild').pipe(Option.getOrNull)?.data).to.equal('v1');
+
+        // Change only the grandchild's data — all ancestors unchanged.
+        registry.set(nodesAtom, [withGrandchild('v2')]);
+        await GraphBuilder.flush(builder);
+
+        expect(Graph.getNode(graph, 'root/parent-node/child/grandchild').pipe(Option.getOrNull)?.data).to.equal('v2');
+      });
+    });
+
     test('sort edges', async () => {
       const registry = Registry.make();
       const builder = GraphBuilder.make({ registry });

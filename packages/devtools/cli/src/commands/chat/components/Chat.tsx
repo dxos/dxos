@@ -8,11 +8,11 @@ import { For, Match, Switch, createEffect, createMemo, createSignal, useContext 
 
 import { type ModelName } from '@dxos/ai';
 import { type AiSession, GenerationObserver } from '@dxos/assistant';
-import { type Blueprint } from '@dxos/blueprints';
+import { type Blueprint } from '@dxos/compute';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { useAtomValue } from '@dxos/effect-atom-solid';
 import { log } from '@dxos/log';
-import { Assistant } from '@dxos/plugin-assistant/types';
+import { Assistant } from '@dxos/plugin-assistant';
 import { isTruthy } from '@dxos/util';
 
 import { AppContext } from '../../../components';
@@ -32,7 +32,7 @@ import { StatusBar } from './StatusBar';
 export type ChatProps = {
   db: Database.Database;
   processor: ChatProcessor;
-  conversation: AiSession;
+  conversation: AiSession.Session;
   model: ModelName;
   verbose?: boolean;
   onChatSelect?: (chat: Assistant.Chat) => void;
@@ -55,7 +55,10 @@ export const Chat = (props: ChatProps) => {
   // Transform blueprints to full blueprint definitions from registry.
   const blueprints = createMemo(() =>
     contextBlueprints()
-      .map((blueprint) => blueprintRegistry.getByKey(blueprint.key))
+      .map((blueprint) => {
+        const key = Obj.getMeta(blueprint).key;
+        return key !== undefined ? blueprintRegistry.getByKey(key) : undefined;
+      })
       .filter(isTruthy),
   );
 
@@ -165,7 +168,10 @@ export const Chat = (props: ChatProps) => {
           </Match>
           <Match when={popup() === 'blueprints'}>
             <BlueprintPicker
-              selected={props.conversation.context.getBlueprints().map((blueprint) => blueprint.key)}
+              selected={props.conversation.context
+                .getBlueprints()
+                .map((blueprint) => Obj.getMeta(blueprint).key)
+                .filter((key): key is string => key !== undefined)}
               onSave={(blueprints) => {
                 props.onChatCreate?.({ blueprints });
                 setPopup(undefined);
@@ -246,10 +252,12 @@ const BlueprintPicker = (props: Pick<PickerProps, 'selected' | 'onSave' | 'onCan
     <Picker
       multi
       title='Select Blueprints'
-      items={blueprintRegistry.blueprints.map((blueprint) => ({
-        id: blueprint.key,
-        label: blueprint.name,
-      }))}
+      items={blueprintRegistry.blueprints
+        .map((blueprint) => {
+          const key = Obj.getMeta(blueprint).key;
+          return key !== undefined ? { id: key, label: blueprint.name } : undefined;
+        })
+        .filter((item): item is { id: string; label: string } => item !== undefined)}
       selected={props.selected}
       onSave={(ids) => props.onSave?.(ids)}
       onCancel={() => props.onCancel?.()}

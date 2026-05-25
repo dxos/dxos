@@ -111,7 +111,7 @@ class FilterClass implements Filter$.Any {
     }
     return new FilterClass({
       type: 'object',
-      typename: makeTypeDxn(schema),
+      typename: makeTypeDXN(schema),
       ...propsFilterToAst(props ?? {}),
     });
   }
@@ -119,7 +119,7 @@ class FilterClass implements Filter$.Any {
   static typename(typename: string): Filter$.Any {
     return new FilterClass({
       type: 'object',
-      typename: makeTypeDxn(typename),
+      typename: makeTypeDXN(typename),
       props: {},
     });
   }
@@ -136,6 +136,16 @@ class FilterClass implements Filter$.Any {
     return new FilterClass({
       type: 'tag',
       tag,
+    });
+  }
+
+  static key(key: string, options?: Filter$.KeyFilterOptions): Filter$.Any {
+    return new FilterClass({
+      type: 'object',
+      typename: null,
+      props: {},
+      metaKey: key,
+      metaVersion: options?.version,
     });
   }
 
@@ -451,7 +461,7 @@ class QueryClass implements Query$.Any {
         from: {
           _tag: 'scope',
           scope: {
-            ...(options?.includeFeeds ? { allQueuesFromSpaces: true } : {}),
+            ...(options?.includeFeeds ? { allFeedsFromSpaces: true } : {}),
           },
         },
       });
@@ -573,6 +583,21 @@ class QueryClass implements Query$.Any {
       options,
     });
   }
+
+  debugLabel(label: string): Query$.Any {
+    if (this.ast.type === 'options') {
+      return new QueryClass({
+        type: 'options',
+        query: this.ast.query,
+        options: { ...this.ast.options, debugLabel: label },
+      });
+    }
+    return new QueryClass({
+      type: 'options',
+      query: this.ast,
+      options: { debugLabel: label },
+    });
+  }
 }
 
 export const Query1: typeof Query$ = QueryClass;
@@ -583,7 +608,7 @@ const isRef = (obj: any): obj is Ref.Ref<any> => {
   return obj && typeof obj === 'object' && RefTypeId in obj;
 };
 
-const makeTypeDxn = (typename: string) => {
+const makeTypeDXN = (typename: string) => {
   assertArgument(typeof typename === 'string', 'typename');
   assertArgument(!typename.startsWith('dxn:'), 'typename');
   return `dxn:type:${typename}`;
@@ -599,7 +624,7 @@ const isDxnLike = (value: unknown): value is DXN => {
   );
 };
 
-const SCOPE_KEYS = new Set(['spaceIds', 'queues', 'allQueuesFromSpaces']);
+const SCOPE_KEYS = new Set(['spaceIds', 'feeds', 'allFeedsFromSpaces']);
 
 const _isScopeLike = (value: unknown): value is QueryAST.Scope => {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) {
@@ -701,6 +726,9 @@ const prettyQuery = (query: QueryAST.Query): string => {
       if (query.options.deleted !== undefined) {
         parts.push(`deleted: ${JSON.stringify(query.options.deleted)}`);
       }
+      if (query.options.debugLabel !== undefined) {
+        parts.push(`debugLabel: ${JSON.stringify(query.options.debugLabel)}`);
+      }
       return `${prettyQuery(query.query)}.options({ ${parts.join(', ')} })`;
     }
     case 'from': {
@@ -710,11 +738,11 @@ const prettyQuery = (query: QueryAST.Query): string => {
         if (scope.spaceIds !== undefined) {
           parts.push(`spaceIds: [${scope.spaceIds.join(', ')}]`);
         }
-        if (scope.queues !== undefined) {
-          parts.push(`queues: [${scope.queues.join(', ')}]`);
+        if (scope.feeds !== undefined) {
+          parts.push(`feeds: [${scope.feeds.join(', ')}]`);
         }
-        if (scope.allQueuesFromSpaces !== undefined) {
-          parts.push(`allQueuesFromSpaces: ${scope.allQueuesFromSpaces}`);
+        if (scope.allFeedsFromSpaces !== undefined) {
+          parts.push(`allFeedsFromSpaces: ${scope.allFeedsFromSpaces}`);
         }
         return `${prettyQuery(query.query)}.from({ ${parts.join(', ')} })`;
       }

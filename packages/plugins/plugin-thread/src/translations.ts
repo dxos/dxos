@@ -2,16 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
+import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
-import { Channel } from '#types';
 
 export const translations = [
   {
     'en-US': {
-      [Type.getTypename(Channel.Channel)]: {
+      // TODO(burdon): Thread.
+      [Channel.Channel.typename]: {
         'typename.label': 'Channel',
         'typename.label_zero': 'Channels',
         'typename.label_one': 'Channel',

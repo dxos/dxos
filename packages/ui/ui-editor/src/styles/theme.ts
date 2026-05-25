@@ -108,15 +108,21 @@ export const baseTheme = EditorView.baseTheme({
    * Scroller
    */
   '.cm-scroller': {
-    // Browser scroll-anchoring: see comment in `scroller.ts`. `auto` lets the browser pin a
+    // Browser scroll-anchoring: see comment in `scrolling/crawler.ts`. `auto` lets the browser pin a
     // stable element near the viewport top so widget resizes (e.g. tool-block TogglePanel
     // open/close) don't jump the user's view.
     overflowAnchor: 'auto',
   },
   '.cm-scroller::-webkit-scrollbar': {
-    width: '8px',
+    width: 'var(--scrollbar-size,8px)',
+    height: 'var(--scrollbar-size,8px)',
   },
-  '.cm-scroller::-webkit-scrollbar-track': {},
+  '.cm-scroller::-webkit-scrollbar-corner': {
+    background: 'transparent',
+  },
+  '.cm-scroller::-webkit-scrollbar-track': {
+    background: 'transparent',
+  },
   '.cm-scroller::-webkit-scrollbar-thumb': {
     background: 'transparent',
     transition: 'background 0.15s',
@@ -155,7 +161,7 @@ export const baseTheme = EditorView.baseTheme({
    * Height is set to match the corresponding line (which may have wrapped).
    */
   '.cm-gutterElement': {
-    lineHeight: 1.5,
+    lineHeight: '24px',
     fontSize: '12px',
   },
 
@@ -221,6 +227,7 @@ export const baseTheme = EditorView.baseTheme({
     textDecorationColor: 'var(--color-separator)',
     textUnderlineOffset: '2px',
     borderRadius: '.125rem',
+    cursor: 'pointer',
   },
   '.cm-link > span': {
     color: 'var(--color-accent-text)',
@@ -260,12 +267,12 @@ export const baseTheme = EditorView.baseTheme({
     padding: '4px',
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > li[aria-selected]': {
-    background: 'var(--color-active-surface)',
-    color: 'var(--color-base-surface-text)',
+    background: 'var(--color-current-surface)',
+    color: 'var(--color-base-foreground)',
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul > completion-section': {
     paddingLeft: '4px !important',
-    color: 'var(--color-base-surface-text)',
+    color: 'var(--color-base-foreground)',
   },
 
   /**
@@ -285,7 +292,7 @@ export const baseTheme = EditorView.baseTheme({
     padding: '0 4px',
   },
   '.cm-completionMatchedText': {
-    color: 'var(--color-base-surface-text)',
+    color: 'var(--color-base-foreground)',
     textDecoration: 'none !important',
   },
 
@@ -321,7 +328,7 @@ export const baseTheme = EditorView.baseTheme({
     backgroundColor: 'var(--color-input-surface)',
   },
   '.cm-panel input:focus, .cm-panel button:focus': {
-    outline: '1px solid var(--color-neutral-focus-indicator)',
+    outline: '1px solid var(--color-focus-ring-subtle)',
   },
   '.cm-panel label': {
     display: 'inline-flex',
@@ -334,7 +341,7 @@ export const baseTheme = EditorView.baseTheme({
     height: '8px',
     marginRight: '6px !important',
     padding: '2px !important',
-    color: 'var(--color-neutral-focus-indicator)',
+    color: 'var(--color-focus-ring-subtle)',
   },
   '.cm-panel button': {
     '&:hover': {

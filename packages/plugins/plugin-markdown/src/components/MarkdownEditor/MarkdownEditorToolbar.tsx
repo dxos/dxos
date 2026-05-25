@@ -6,8 +6,8 @@ import { type EditorView } from '@codemirror/view';
 import React, { useCallback, useState } from 'react';
 
 import { type FileInfo } from '@dxos/app-toolkit';
+import { composable, composableProps } from '@dxos/react-ui';
 import { Editor, type EditorToolbarProps } from '@dxos/react-ui-editor';
-import { composable, composableProps } from '@dxos/ui-theme';
 
 import { FileUpload, type FileUploadAction } from './FileUpload';
 
@@ -28,7 +28,7 @@ export const MarkdownEditorToolbar = composable<HTMLDivElement, MarkdownEditorTo
     }
 
     return (
-      <div role='none' className='contents' ref={forwardedRef}>
+      <div className='contents' ref={forwardedRef}>
         <Editor.Toolbar
           {...rest}
           classNames={className}

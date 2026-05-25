@@ -8,9 +8,11 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.space',
   name: 'Spaces',
+  author: 'DXOS',
   description: trim`
     Core workspace container system for organizing and sharing collaborative environments.
     Create, manage, and share spaces with granular access control and invitation management.
   `,
   icon: 'ph--planet--regular',
+  tags: ['system'],
 };

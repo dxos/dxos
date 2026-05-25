@@ -27,7 +27,7 @@ import { type QueryReactivity, type QueryResult } from '@dxos/protocols/proto/dx
 import { compositeKey, getDeep, isNonNullable } from '@dxos/util';
 
 import type { AutomergeHost } from '../automerge';
-import type { SpaceStateManager } from '../db-host';
+import type { InvalidationHint, SpaceStateManager } from '../db-host';
 import { filterMatchObject, filterMatchObjectJSON } from '../filter';
 import { QueryError } from './errors';
 import type { QueryPlan } from './plan';
@@ -226,10 +226,154 @@ declare global {
   }
 }
 
-const TRACE_QUERY_EXECUTION = !!import.meta.env.DX_TRACE_QUERY_EXECUTION;
+const TRACE_QUERY_EXECUTION = !!import.meta.env?.DX_TRACE_QUERY_EXECUTION;
 
 const MAX_DEPTH_FOR_DELETION_TRACING = 10;
 const MAX_DEPTH_FOR_CHILD_OF_TRACING = 10;
+
+/**
+ * Cached scope constraints extracted from a query plan.
+ * Used to quickly determine whether an invalidation hint can affect this query.
+ *
+ * A null dimension means the query is unconstrained on that dimension (matches any value).
+ */
+type QueryScopes = {
+  /**
+   * False for text-search, traversal, union, set-difference, or child-of queries.
+   * When false, matchesHint always returns true (conservative: always re-execute).
+   */
+  isSimple: boolean;
+  spaceIds: Set<SpaceId> | null;
+  queueIds: Set<ObjectId> | null;
+  typenames: Set<string> | null;
+  objectIds: Set<ObjectId> | null;
+};
+
+const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
+  const scopes: QueryScopes = {
+    isSimple: true,
+    spaceIds: null,
+    queueIds: null,
+    typenames: null,
+    objectIds: null,
+  };
+
+  for (const step of plan.steps) {
+    switch (step._tag) {
+      case 'SelectStep': {
+        // Extract spaceIds from scope.
+        if (step.scope.spaceIds && step.scope.spaceIds.length > 0) {
+          if (!scopes.spaceIds) {
+            scopes.spaceIds = new Set();
+          }
+          for (const spaceId of step.scope.spaceIds) {
+            scopes.spaceIds.add(spaceId as SpaceId);
+          }
+        }
+
+        // Extract queueIds from explicit feed DXNs (queue-kinded) and derive spaceIds from them.
+        if (step.scope.feeds && step.scope.feeds.length > 0 && !step.scope.allFeedsFromSpaces) {
+          let parseFailed = false;
+          const derivedQueueIds = new Set<ObjectId>();
+          const derivedSpaceIds = new Set<SpaceId>();
+          for (const queueDxnStr of step.scope.feeds as DXN.String[]) {
+            try {
+              const queueDXN = DXN.parse(queueDxnStr).asQueueDXN();
+              if (queueDXN) {
+                derivedQueueIds.add(queueDXN.queueId as ObjectId);
+                derivedSpaceIds.add(queueDXN.spaceId as SpaceId);
+              }
+            } catch {
+              parseFailed = true;
+            }
+          }
+
+          if (!parseFailed) {
+            if (derivedQueueIds.size > 0) {
+              scopes.queueIds ??= new Set<ObjectId>();
+              for (const id of derivedQueueIds) {
+                scopes.queueIds.add(id);
+              }
+            }
+            if (derivedSpaceIds.size > 0) {
+              scopes.spaceIds ??= new Set<SpaceId>();
+              for (const id of derivedSpaceIds) {
+                // Derive spaceId from the queue DXN so space-scoped hints can skip this query.
+                scopes.spaceIds.add(id);
+              }
+            }
+          }
+          // On any parse error, leave queue-derived dimensions unconstrained.
+        }
+
+        // Extract typename / objectId constraints from selector.
+        switch (step.selector._tag) {
+          case 'TypeSelector': {
+            if (step.selector.inverted) {
+              // Inverted type selectors come from Filter.not — mark as non-simple.
+              scopes.isSimple = false;
+            } else {
+              if (!scopes.typenames) {
+                scopes.typenames = new Set();
+              }
+              for (const typename of step.selector.typename) {
+                scopes.typenames.add(typename as string);
+              }
+            }
+            break;
+          }
+          case 'IdSelector': {
+            if (!scopes.objectIds) {
+              scopes.objectIds = new Set();
+            }
+            for (const id of step.selector.objectIds) {
+              scopes.objectIds.add(id);
+            }
+            break;
+          }
+          case 'TextSelector': {
+            scopes.isSimple = false;
+            break;
+          }
+          default:
+            // WildcardSelector, TimestampSelector — no type/id constraint.
+            break;
+        }
+        break;
+      }
+      case 'FilterStep': {
+        // child-of filters require transitive parent traversal which can't be hinted.
+        if (step.filter.type === 'child-of') {
+          scopes.isSimple = false;
+        }
+        break;
+      }
+      case 'TraverseStep':
+      case 'UnionStep':
+      case 'SetDifferenceStep':
+        scopes.isSimple = false;
+        break;
+      default:
+        // ClearWorkingSetStep, FilterDeletedStep, OrderStep, LimitStep are fine.
+        break;
+    }
+  }
+
+  return scopes;
+};
+
+const setsOverlap = <T>(a: ReadonlySet<T>, b: ReadonlySet<T>): boolean => {
+  const [smaller, larger]: [ReadonlySet<T>, ReadonlySet<T>] = a.size <= b.size ? [a, b] : [b, a];
+  for (const item of smaller) {
+    if (larger.has(item)) {
+      return true;
+    }
+  }
+  return false;
+};
+
+const overlapsOrUnconstrained = <T>(hintSet: ReadonlySet<T> | undefined, scopeSet: Set<T> | null): boolean =>
+  hintSet === undefined || scopeSet === null || setsOverlap(hintSet, scopeSet);
 
 /**
  * Executes query plans against the IndexEngine and AutomergeHost.
@@ -255,6 +399,7 @@ export class QueryExecutor extends Resource {
   private readonly _reactivity: QueryReactivity;
 
   private _plan: QueryPlan.Plan;
+  #scopes: QueryScopes;
   private _trace: ExecutionTrace = ExecutionTrace.makeEmpty();
   private _lastResultSet: QueryItem[] = [];
 
@@ -272,6 +417,11 @@ export class QueryExecutor extends Resource {
 
     const queryPlanner = new QueryPlanner();
     this._plan = queryPlanner.createPlan(this._query);
+    this.#scopes = extractScopes(this._plan);
+  }
+
+  get queryId(): string {
+    return this._id;
   }
 
   get query(): QueryAST.Query {
@@ -302,8 +452,32 @@ export class QueryExecutor extends Resource {
     );
   }
 
+  /**
+   * Returns true if the given invalidation hint could affect this query's result set.
+   * When false, the query can safely be skipped for this invalidation cycle.
+   *
+   * Conservative: returns true for complex queries (traversals, text-search, unions) and
+   * for any dimension where either the hint or the query is unconstrained.
+   */
+  matchesHint(hint: InvalidationHint): boolean {
+    if (!this.#scopes.isSimple) {
+      return true;
+    }
+    return (
+      overlapsOrUnconstrained(hint.spaceIds, this.#scopes.spaceIds) &&
+      overlapsOrUnconstrained(hint.queueIds, this.#scopes.queueIds) &&
+      overlapsOrUnconstrained(hint.typenames, this.#scopes.typenames) &&
+      overlapsOrUnconstrained(hint.objectIds, this.#scopes.objectIds)
+    );
+  }
+
   async execQuery(): Promise<QueryExecutionResult> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
+
+    log('exec query', {
+      queryId: this._id,
+      query: Query.pretty(Query.fromAst(this._query)),
+    });
 
     const prevResultSet = this._lastResultSet;
     const { workingSet, trace } = await this._execPlan(this._plan, []);
@@ -318,7 +492,9 @@ export class QueryExecutor extends Resource {
         (item, index) =>
           workingSet[index].objectId !== item.objectId ||
           workingSet[index].spaceId !== item.spaceId ||
-          workingSet[index].documentId !== item.documentId,
+          workingSet[index].documentId !== item.documentId ||
+          workingSet[index].queueId !== item.queueId ||
+          workingSet[index].queueNamespace !== item.queueNamespace,
       );
 
     // Disabled because concurrent queries don't print hierarchies correctly.
@@ -399,8 +575,8 @@ export class QueryExecutor extends Resource {
     workingSet = [...workingSet];
 
     const spaces = (step.scope.spaceIds ?? []) as SpaceId[];
-    const queues = (step.scope.queues ?? []) as DXN.String[];
-    const allQueuesFromSpaces = step.scope.allQueuesFromSpaces ?? false;
+    const queues = (step.scope.feeds ?? []) as DXN.String[];
+    const allQueuesFromSpaces = step.scope.allFeedsFromSpaces ?? false;
 
     const trace: ExecutionTrace = {
       ...ExecutionTrace.makeEmpty(),
@@ -569,7 +745,7 @@ export class QueryExecutor extends Resource {
                 objectId: result.objectId as ObjectId,
                 spaceId: result.spaceId as SpaceId,
                 queueId: result.queueId as ObjectId,
-                queueNamespace: 'data',
+                queueNamespace: result.queueNamespace || null,
                 documentId: null,
                 doc: null,
                 data: snapshot as Obj.JSON,
@@ -734,9 +910,9 @@ export class QueryExecutor extends Resource {
     const parentObjectIds = new Set<string>();
     for (const parentDxnStr of filter.parents) {
       const dxn = DXN.parse(parentDxnStr);
-      const echoDxn = dxn.asEchoDXN();
-      if (echoDxn) {
-        parentObjectIds.add(echoDxn.echoId);
+      const echoDXN = dxn.asEchoDXN();
+      if (echoDXN) {
+        parentObjectIds.add(echoDXN.echoId);
       }
     }
     const maxDepth = filter.transitive ? MAX_DEPTH_FOR_CHILD_OF_TRACING : 1;
@@ -770,9 +946,9 @@ export class QueryExecutor extends Resource {
 
     const directParent = QueryItem.getParent(item);
     if (directParent) {
-      const echoDxn = DXN.parse(directParent).asEchoDXN();
-      if (echoDxn) {
-        parentRefs.push({ dxnStr: directParent, objectId: echoDxn.echoId });
+      const echoDXN = DXN.parse(directParent).asEchoDXN();
+      if (echoDXN) {
+        parentRefs.push({ dxnStr: directParent, objectId: echoDXN.echoId });
       }
     }
 
@@ -1195,7 +1371,7 @@ export class QueryExecutor extends Resource {
     const anchorDxns = workingSet.map((item) => DXN.fromLocalObjectId(item.objectId).toString());
     const rows: readonly ReverseRef[] = (
       await Promise.all(
-        anchorDxns.map((targetDxn) => this._runInRuntime(this._indexEngine.queryReverseRef({ targetDxn }))),
+        anchorDxns.map((targetDXN) => this._runInRuntime(this._indexEngine.queryReverseRef({ targetDXN }))),
       )
     ).flat();
 
@@ -1315,7 +1491,7 @@ export class QueryExecutor extends Resource {
       objectId: meta.objectId as ObjectId,
       spaceId: meta.spaceId as SpaceId,
       queueId: meta.queueId as ObjectId,
-      queueNamespace: 'data',
+      queueNamespace: meta.queueNamespace || null,
       documentId: null,
       doc: null,
       data: snapshot as Obj.JSON,
@@ -1333,13 +1509,12 @@ export class QueryExecutor extends Resource {
       return null;
     }
     const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, meta.documentId as DocumentId, {
-      fetchFromNetwork: true,
+      fetchFromNetwork: false,
     });
-    const doc = handle.doc();
-    if (!doc) {
+    if (!handle) {
       return null;
     }
-    const object = DatabaseDirectory.getInlineObject(doc, meta.objectId);
+    const object = DatabaseDirectory.getInlineObject(handle.doc(), meta.objectId);
     if (!object) {
       return null;
     }
@@ -1358,13 +1533,13 @@ export class QueryExecutor extends Resource {
   private async _loadFromDXN(dxn: DXN, { sourceSpaceId }: { sourceSpaceId: SpaceId }): Promise<QueryItem | null> {
     switch (dxn.kind) {
       case DXN.kind.ECHO: {
-        const echoDxn = dxn.asEchoDXN();
-        if (!echoDxn) {
+        const echoDXN = dxn.asEchoDXN();
+        if (!echoDXN) {
           log.warn('unable to resolve DXN', { dxn });
           return null;
         }
 
-        const spaceId = echoDxn.spaceId ?? sourceSpaceId;
+        const spaceId = echoDXN.spaceId ?? sourceSpaceId;
 
         const spaceRoot = this._spaceStateManager.getRootBySpaceId(spaceId);
         if (!spaceRoot) {
@@ -1377,10 +1552,10 @@ export class QueryExecutor extends Resource {
           return null;
         }
 
-        const inlineObject = DatabaseDirectory.getInlineObject(dbDirectory, echoDxn.echoId);
+        const inlineObject = DatabaseDirectory.getInlineObject(dbDirectory, echoDXN.echoId);
         if (inlineObject) {
           return {
-            objectId: echoDxn.echoId,
+            objectId: echoDXN.echoId,
             documentId: spaceRoot.documentId,
             spaceId,
             queueId: null,
@@ -1391,26 +1566,24 @@ export class QueryExecutor extends Resource {
           };
         }
 
-        const link = DatabaseDirectory.getLink(dbDirectory, echoDxn.echoId);
+        const link = DatabaseDirectory.getLink(dbDirectory, echoDXN.echoId);
         if (!link) {
           return null;
         }
 
         const handle = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, link as AutomergeUrl, {
-          fetchFromNetwork: true,
+          fetchFromNetwork: false,
         });
-        const doc = handle.doc();
-        if (!doc) {
+        if (!handle) {
           return null;
         }
-
-        const object = DatabaseDirectory.getInlineObject(doc, echoDxn.echoId);
+        const object = DatabaseDirectory.getInlineObject(handle.doc(), echoDXN.echoId);
         if (!object) {
           return null;
         }
 
         return {
-          objectId: echoDxn.echoId,
+          objectId: echoDXN.echoId,
           documentId: handle.documentId,
           spaceId,
           queueId: null,
@@ -1422,13 +1595,13 @@ export class QueryExecutor extends Resource {
         break;
       }
       case DXN.kind.QUEUE: {
-        const queueDxn = dxn.asQueueDXN();
-        if (!queueDxn || !queueDxn.objectId) {
+        const queueDXN = dxn.asQueueDXN();
+        if (!queueDXN || !queueDXN.objectId) {
           log.warn('unable to resolve queue DXN', { dxn });
           return null;
         }
 
-        const { spaceId, queueId, objectId } = queueDxn;
+        const { spaceId, queueId, objectId } = queueDXN;
         const meta = await this._runInRuntime(
           this._indexEngine.lookupByObjectId({
             objectId,

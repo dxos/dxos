@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { type PeerSyncState, type Space, type SpaceId, SpaceState, useSpace } from '@dxos/react-client/echo';
+import { type SpaceId } from '@dxos/keys';
+import { type PeerSyncState, type Space, SpaceState, useSpace } from '@dxos/react-client/echo';
 import { mx } from '@dxos/ui-theme';
 
 // TODO(wittjosiah): Factor out (copied from plugin-space).

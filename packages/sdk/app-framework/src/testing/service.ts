@@ -24,13 +24,13 @@ export const fromPlugins = (plugins: Plugin.Plugin[]) =>
         Effect.sync(() => {
           const plugin = plugins.find((plugin) => plugin.meta.id === id);
           invariant(plugin, `Plugin not found: ${id}`);
-          return plugin;
+          return { plugin };
         });
 
       const manager = PluginManager.make({
         pluginLoader,
         plugins,
-        core: plugins.map((plugin) => plugin.meta.id),
+        enabled: plugins.map((plugin) => plugin.meta.id),
       });
 
       manager.capabilities.contribute({

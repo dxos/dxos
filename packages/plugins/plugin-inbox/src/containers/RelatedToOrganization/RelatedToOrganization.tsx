@@ -10,7 +10,7 @@ import { LayoutOperation, getObjectPathFromObject, getSpacePath } from '@dxos/ap
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
-import { useDatabase, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { Table } from '@dxos/react-ui-table/types';
 import { getTypenameFromQuery } from '@dxos/schema';
 import { type Organization, Person } from '@dxos/types';
@@ -22,20 +22,14 @@ export const RelatedToOrganization = ({
 }: AppSurface.ObjectArticleProps<Organization.Organization>) => {
   const { invoke } = useOperationInvoker();
   const db = Obj.getDatabase(organization);
-  const defaultDb = useDatabase();
-  const currentSpaceContacts = useQuery(db, Filter.type(Person.Person));
-  const defaultSpaceContacts = useQuery(defaultDb === db ? undefined : defaultDb, Filter.type(Person.Person));
-  const contacts = [...(currentSpaceContacts ?? []), ...(defaultSpaceContacts ?? [])];
+
+  const contacts = useQuery(db, Filter.type(Person.Person));
   const related = contacts.filter((contact) =>
     typeof contact.organization === 'string' ? false : contact.organization?.target === organization,
   );
 
-  const currentSpaceViews = useQuery(db, Filter.type(Table.Table));
-  const defaultSpaceViews = useQuery(defaultDb, Filter.type(Table.Table));
-  const currentSpaceContactTable = currentSpaceViews.find(
-    (table) => getTypenameFromQuery(table.view.target?.query.ast) === Person.Person.typename,
-  );
-  const defaultSpaceContactTable = defaultSpaceViews.find(
+  const spaceViews = useQuery(db, Filter.type(Table.Table));
+  const spaceContactTable = spaceViews.find(
     (table) => getTypenameFromQuery(table.view.target?.query.ast) === Person.Person.typename,
   );
 
@@ -50,7 +44,7 @@ export const RelatedToOrganization = ({
           workspace: db ? getSpacePath(db.spaceId) : undefined,
         });
       }).pipe(runAndForwardErrors),
-    [invoke, currentSpaceContacts, currentSpaceContactTable, defaultSpaceContactTable, db, defaultDb],
+    [invoke, db, contacts, spaceContactTable],
   );
 
   return <RelatedContacts contacts={related} onContactClick={handleContactClick} />;

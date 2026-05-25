@@ -22,7 +22,8 @@ export const LoadPluginDialog = () => {
   const closeRef = useRef<HTMLButtonElement | null>(null);
 
   const handleLoad = useCallback(() => {
-    if (!url.trim()) {
+    const trimmed = url.trim();
+    if (!trimmed) {
       return;
     }
 
@@ -30,7 +31,7 @@ export const LoadPluginDialog = () => {
     setError(null);
 
     void Effect.gen(function* () {
-      const plugin = yield* manager.add(url.trim());
+      const plugin = yield* manager.add(trimmed);
       yield* manager.enable(plugin.meta.id);
       closeRef.current?.click();
     }).pipe(
@@ -49,7 +50,7 @@ export const LoadPluginDialog = () => {
       <Dialog.Header>
         <Dialog.Title>{t('load-by-url-dialog.title')}</Dialog.Title>
         <Dialog.Close asChild>
-          <Dialog.CloseIconButton ref={closeRef} />
+          <Dialog.ActionIconButton action='close' ref={closeRef} />
         </Dialog.Close>
       </Dialog.Header>
       <Dialog.Body>
@@ -58,7 +59,7 @@ export const LoadPluginDialog = () => {
           <Input.Root validationValence={error ? 'error' : undefined}>
             <Input.Label>{t('plugin-url.label')}</Input.Label>
             <Input.TextInput
-              placeholder='https://example.com/plugin.mjs'
+              placeholder='https://example.com/manifest.json'
               value={url}
               onChange={(event) => {
                 setUrl(event.target.value);

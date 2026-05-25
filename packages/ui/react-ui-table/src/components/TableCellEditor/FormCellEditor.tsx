@@ -14,8 +14,9 @@ import { parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
 import { type FieldProjection } from '@dxos/schema';
 import { getDeep, isTruthy, setDeep } from '@dxos/util';
 
+import { translationKey } from '#translations';
+
 import { type ModalController, type TableModel, type TableRow } from '../../model';
-import { translationKey } from '../../translations';
 import { narrowSchema } from '../../util';
 
 const createOptionLabel: Label = ['create-new-object.label', { ns: translationKey }];
@@ -166,7 +167,7 @@ export const FormCellEditor = <T extends Type.AnyEntity = Type.AnyEntity>({
     <Popover.Root open={editing} onOpenChange={handleOpenChange}>
       <Popover.VirtualTrigger virtualRef={anchorRef} />
       <Popover.Portal>
-        <Popover.Content tabIndex={-1} classNames='dx-card-popover-width dx-density-fine'>
+        <Popover.Content tabIndex={-1} classNames='dx-card-popover-width dx-density-md'>
           <Popover.Arrow />
           <Popover.Viewport>
             <Form.Root

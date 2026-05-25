@@ -8,6 +8,7 @@ export * from './automerge';
 export * from './client';
 export * from './core-db';
 export * from './echo-handler';
+export * from './effect-queue-service';
 export * from './guarded-scope';
 export * from './hypergraph';
 export * from './proxy-db';

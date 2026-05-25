@@ -6,18 +6,19 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import type * as Types from 'effect/Types';
 import React, { useMemo, useState } from 'react';
 
-import { type JsonSchema, Obj } from '@dxos/echo';
+import { Filter, type JsonSchema, Obj } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { random } from '@dxos/random';
-import { Filter, useQuery, useSchema } from '@dxos/react-client/echo';
+import { useQuery, useSchema } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type SchemaPropertyDefinition } from '@dxos/schema';
 import { TestSchema } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
+import { translations } from '#translations';
+
 import { type TableFeatures } from '../../model';
-import { translations } from '../../translations';
 import { DynamicTable } from './DynamicTable';
 
 random.seed(0);

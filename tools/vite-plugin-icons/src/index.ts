@@ -46,6 +46,23 @@ export const IconsPlugin = ({
   let spritePath: string;
   let server: ViteDevServer | null = null;
 
+  // Coalesce sprite writes during dev startup. Without this, every transform
+  // that detects a new icon symbol triggers a full `makeSprite()` write to
+  // disk; that file lives under publicDir, which fires CSS HMR for every
+  // stylesheet referencing it. During a cold-start with many lazy-loaded
+  // packages, dozens of new icons are discovered in tight bursts as plugin
+  // sources stream through — leading to a "main.css HMR storm" (40+ updates
+  // in 1-2 s) and growing esbuild deps-bundle pass times because CSS HMR
+  // work contends with the deps optimizer. Coalescing collapses N "new
+  // icon" detections in the same idle window into a single write.
+  //
+  // Also skip the write when the symbol set hasn't actually grown beyond
+  // what's already on disk — a cheap guard against repeating the work
+  // when the same icons get re-detected after a reload.
+  let writeTimer: NodeJS.Timeout | null = null;
+  let lastWrittenSize = 0;
+  const writeDebounceMs = Number(process.env.DX_ICONS_DEBOUNCE_MS) || 200;
+
   return [
     {
       // Step 1: Scan source files incrementally.
@@ -62,28 +79,34 @@ export const IconsPlugin = ({
 
         // Process chunks.
         server.middlewares.use((req, res, next) => {
-          if (req.url?.indexOf('/virtual:') === -1) {
-            const match = req.url?.match(/^(\/@fs)?(.+)\.(\w+)$/);
-            if (match) {
-              const [, prefix, path, ext] = match;
-              const filename = join((prefix ? '' : rootDir) + `${path}.${ext}`);
-              if (!visitedFiles.has(filename)) {
-                visitedFiles.add(filename);
-                // TODO(burdon): Check if matches contentPaths (incl. mjs).
-                const extensions = ['js', 'ts', 'jsx', 'tsx', 'mjs'];
-                if (extensions.some((e) => e === ext) && path.indexOf('node_modules') === -1) {
-                  try {
-                    const src = fs.readFileSync(filename, 'utf8');
-                    const match = scan(src);
-                    status.updated ||= match;
-                  } catch {
-                    console.error('Missing file', req.url);
-                  }
+          const url = req.url ?? '';
+          // Skip plugin-resolved virtual modules — these aren't files on disk.
+          // Conventions:
+          //   `/virtual:` — legacy Vite convention.
+          //   `/@id/`     — Vite's URL form for `resolveId`-returned IDs, including
+          //                 Rolldown's null-byte (`\0`) prefix encoded as `__x00__`.
+          if (url.includes('/virtual:') || url.includes('/@id/')) {
+            return next();
+          }
+          const match = url.match(/^(\/@fs)?(.+)\.(\w+)$/);
+          if (match) {
+            const [, prefix, path, ext] = match;
+            const filename = join((prefix ? '' : rootDir) + `${path}.${ext}`);
+            if (!visitedFiles.has(filename)) {
+              visitedFiles.add(filename);
+              // TODO(burdon): Check if matches contentPaths (incl. mjs).
+              const extensions = ['js', 'ts', 'jsx', 'tsx', 'mjs'];
+              if (extensions.some((e) => e === ext) && path.indexOf('node_modules') === -1) {
+                try {
+                  const src = fs.readFileSync(filename, 'utf8');
+                  const match = scan(src);
+                  status.updated ||= match;
+                } catch {
+                  console.error('Missing file', url);
                 }
               }
             }
           }
-
           next();
         });
       },
@@ -104,9 +127,26 @@ export const IconsPlugin = ({
       // Step 2: Write sprite.
       // NOTE: This must run before the public directory is copied.
       name: '@ch-ui/icons:write',
-      transform: async () => {
-        if (status.updated) {
-          status.updated = false;
+      transform: () => {
+        if (!status.updated) {
+          return;
+        }
+        status.updated = false;
+        // Debounce: every flip of `status.updated` resets the timer; only
+        // when no new icon has been detected for `writeDebounceMs` does the
+        // write actually happen. Bursts during cold-start collapse into one
+        // write instead of N.
+        if (writeTimer) {
+          clearTimeout(writeTimer);
+        }
+        writeTimer = setTimeout(async () => {
+          writeTimer = null;
+          if (detectedSymbols.size === lastWrittenSize) {
+            // Same set as last write — skip. (Possible after a browser
+            // reload re-runs scanning over already-known modules.)
+            return;
+          }
+          lastWrittenSize = detectedSymbols.size;
           await makeSprite({ assetPath, symbolPattern, spritePath, contentPaths, config }, detectedSymbols);
           if (verbose) {
             const symbols = Array.from(detectedSymbols.values());
@@ -116,6 +156,18 @@ export const IconsPlugin = ({
               JSON.stringify({ path: spritePath, size: detectedSymbols.size, symbols }, null, 2),
             );
           }
+        }, writeDebounceMs);
+      },
+      // Force a final write at build close so production builds aren't
+      // missing icons that were detected during the very last transforms.
+      buildEnd: async () => {
+        if (writeTimer) {
+          clearTimeout(writeTimer);
+          writeTimer = null;
+        }
+        if (detectedSymbols.size !== lastWrittenSize) {
+          lastWrittenSize = detectedSymbols.size;
+          await makeSprite({ assetPath, symbolPattern, spritePath, contentPaths, config }, detectedSymbols);
         }
       },
     },

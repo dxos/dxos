@@ -110,11 +110,7 @@ type EditorContentProps = ThemedClassName<PropsWithChildren<{}>>;
  * Content component that wraps the toolbar and editor view area.
  */
 const EditorContent = ({ classNames, children }: EditorContentProps) => {
-  return (
-    <div role='none' className={mx('grid grid-rows-[min-content_1fr] h-full overflow-hidden', classNames)}>
-      {children}
-    </div>
-  );
+  return <div className={mx('grid grid-rows-[min-content_1fr] h-full overflow-hidden', classNames)}>{children}</div>;
 };
 
 EditorContent.displayName = EDITOR_CONTENT_NAME;
@@ -157,8 +153,6 @@ type EditorToolbarProps = Omit<NaturalEditorToolbarProps, 'getView' | 'state'>;
  */
 const EditorToolbar = (props: EditorToolbarProps) => {
   const { controller, state } = useEditorContext(EDITOR_TOOLBAR_NAME);
-
-  // TODO(burdon): Fix invariant.
   const getView = useCallback(() => {
     invariant(controller?.view);
     return controller?.view;
@@ -175,9 +169,9 @@ EditorToolbar.displayName = EDITOR_TOOLBAR_NAME;
 
 export const Editor = {
   Root: EditorRoot,
+  Toolbar: EditorToolbar,
   Content: EditorContent,
   View: EditorView,
-  Toolbar: EditorToolbar,
 };
 
 export type {

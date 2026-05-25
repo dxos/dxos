@@ -3,11 +3,14 @@
 //
 
 import * as AccessToken from './AccessToken';
+import * as Account from './Account';
 import * as Actor from './Actor';
 import * as AnchoredTo from './AnchoredTo';
+import * as Channel from './Channel';
 import * as ContentBlock from './ContentBlock';
 import * as Employer from './Employer';
 import * as Event from './Event';
+import * as File from './File';
 import * as Geo from './Geo';
 import * as HasConnection from './HasConnection';
 import * as HasRelationship from './HasRelationship';
@@ -16,6 +19,8 @@ import * as Message from './Message';
 import * as Organization from './Organization';
 import * as Person from './Person';
 import * as Pipeline from './Pipeline';
+import * as Project from './Project';
+import * as Provider from './Provider';
 import * as Task from './Task';
 import * as Thread from './Thread';
 import * as Transcript from './Transcript';
@@ -35,16 +40,21 @@ export {
   Actor,
   ContentBlock,
   Geo,
+  Provider,
 
   //
   // Common object types
   //
   AccessToken,
+  Account,
+  Channel,
   Event,
+  File,
   Message,
   Organization,
   Person,
   Pipeline,
+  Project,
   Task,
   Thread,
   Transcript,

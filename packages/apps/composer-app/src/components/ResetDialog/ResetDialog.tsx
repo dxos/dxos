@@ -4,10 +4,10 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { type LogBuffer } from '@dxos/log';
+import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Observability } from '@dxos/observability';
-import { FeedbackForm } from '@dxos/plugin-observability';
-import { type UserFeedback } from '@dxos/plugin-observability/operations';
+import { type SupportOperation } from '@dxos/plugin-support';
+import { FeedbackForm } from '@dxos/plugin-support/components';
 import {
   AlertDialog,
   type AlertDialogRootProps,
@@ -47,7 +47,7 @@ const parseError = (t: (name: string, context?: object) => string, error: Error)
 
 export type ResetDialogProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open' | 'onOpenChange'> & {
   error?: Error;
-  logBuffer: LogBuffer;
+  logStore: IdbLogStore;
   observability?: Promise<Observability.Observability>;
   needRefresh?: boolean;
   onRefresh?: () => void;
@@ -56,7 +56,7 @@ export type ResetDialogProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open'
 
 export const ResetDialog = ({
   error: propsError,
-  logBuffer,
+  logStore,
   observability: observabilityProp,
   needRefresh,
   defaultOpen,
@@ -85,21 +85,34 @@ export const ResetDialog = ({
     void navigator.clipboard.writeText(JSON.stringify(error));
   }, [error]);
 
-  const handleDownloadLogs = useCallback(() => {
-    const ndjson = logBuffer.serialize();
+  const handleDownloadLogs = useCallback(async () => {
+    const ndjson = await logStore.export();
     const file = new Blob([ndjson], { type: 'application/x-ndjson' });
     const fileName = `composer-logs-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.ndjson`;
     download(file, fileName);
-  }, [download, logBuffer]);
+  }, [download, logStore]);
 
   const handleSaveFeedback = useCallback(
-    async (values: UserFeedback) => {
+    async (values: SupportOperation.SupportRequest) => {
       if (!observabilityProp) {
         return;
       }
 
+      // Collapse the richer SupportRequest into the legacy `{ message, includeLogs }`
+      // shape consumed by Observability. Triage metadata (type/severity/area/version)
+      // is embedded as a Markdown trailer so it travels with the message.
+      const trailer = [
+        `**Type:** ${values.type}`,
+        `**Severity:** ${values.severity}`,
+        values.area && `**Area:** ${values.area}`,
+        values.version && `**Version:** ${values.version}`,
+      ]
+        .filter(Boolean)
+        .join('\n');
+      const message = [`# ${values.title}`, values.body, '---', trailer].filter(Boolean).join('\n\n');
+
       const observability = await observabilityProp;
-      observability.feedback.captureUserFeedback(values);
+      void observability.feedback.captureUserFeedback({ message, includeLogs: values.includeLogs });
       setFeedbackOpen(false);
       setFeedbackSent(true);
     },
@@ -127,13 +140,13 @@ export const ResetDialog = ({
       <AlertDialog.Overlay>
         <AlertDialog.Content size='md' data-testid='resetDialog'>
           <AlertDialog.Header>
-            <AlertDialog.Title>{t(error ? error.title : 'reset dialog label')}</AlertDialog.Title>
+            <AlertDialog.Title>{t(error ? error.title : 'reset-dialog.label')}</AlertDialog.Title>
           </AlertDialog.Header>
           <AlertDialog.Body>
-            <AlertDialog.Description>{t(error ? error.message : 'reset dialog message')}</AlertDialog.Description>
+            <AlertDialog.Description>{t(error ? error.message : 'reset-dialog.message')}</AlertDialog.Description>
             {error && (
               <>
-                <div role='none'>
+                <div>
                   <div className='flex items-center justify-between py-3'>
                     <IconButton
                       icon={showStack ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
@@ -143,7 +156,7 @@ export const ResetDialog = ({
                       onClick={() => setShowStack((showStack) => !showStack)}
                       data-testid='resetDialog.showStackTrace'
                     />
-                    <div role='none' className='flex items-center gap-1'>
+                    <div className='flex items-center gap-1'>
                       <IconButton
                         icon='ph--clipboard--duotone'
                         iconOnly
@@ -196,7 +209,7 @@ export const ResetDialog = ({
               </DropdownMenu.Root>
             )}
 
-            <div role='none' className='flex-grow' />
+            <div className='flex-grow' />
             {observabilityProp &&
               isNotMobile &&
               (feedbackSent ? (

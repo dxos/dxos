@@ -30,9 +30,11 @@ import {
   usePx,
   useTranslation,
 } from '@dxos/react-ui';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
+
 import { BoardCell, type BoardCellProps } from './BoardCell';
 import { defaultGrid, defaultLayout } from './defs';
 import { type BoardGeometry, type Rect, getBoardBounds, getBoardRect, getCenter } from './geometry';
@@ -250,11 +252,7 @@ const BOARD_CONTENT_NAME = 'Board.Content';
 type BoardContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
 const BoardContent = ({ classNames, children, ...props }: BoardContentProps) => {
-  return (
-    <div role='none' className={mx(classNames)}>
-      {children}
-    </div>
-  );
+  return <div className={mx(classNames)}>{children}</div>;
 };
 
 BoardContent.displayName = BOARD_CONTENT_NAME;

@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
@@ -39,7 +39,6 @@
     "@dxos/codec-protobuf": "workspace:*",
     "@dxos/protobuf-test": "workspace:*",
     "@types/argparse": "catalog:",
-    "@types/glob": "catalog:",
     "@types/mocha": "catalog:",
     "expect": "catalog:",
     "mocha": "catalog:",

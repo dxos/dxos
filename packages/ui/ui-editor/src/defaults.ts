@@ -22,8 +22,11 @@ export const documentSlots: ThemeExtensionsOptions['slots'] = {
      * NOTE: Max width - 4rem = 2rem left/right margin (or 2rem gutter plus 1rem left/right margin).
      */
     className: mx(
-      // NOTE: Container for widget sizing (must have `max-w-[100cqi]`).
-      'dx-size-container',
+      // Inline-size container for widget sizing (children use `max-w-[100cqi]`).
+      // NOTE: Use inline-size, not full size containment — `container-type: size` on the
+      // editor content breaks CodeMirror's viewport measurement, leaving blank gaps during
+      // scroll until a click forces a re-measure.
+      'dx-inline-size-container',
       // Wider margin for web (vs. mobile).
       'pointer-fine:max-w-[min(50rem,100%-4rem)] pointer-coarse:max-w-[min(50rem,100%-2rem)]',
       'mx-auto! w-full',

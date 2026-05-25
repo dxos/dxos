@@ -5,14 +5,13 @@
 import * as Effect from 'effect/Effect';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
+import { Operation } from '@dxos/compute';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
 
-import { NativeFilesystemCapabilities } from '../types';
+import { NativeFilesystemCapabilities, NativeFilesystemOperation } from '../types';
 import { loadWorkspace, openDirectoryPicker } from '../util';
-import { OpenDirectory } from './definitions';
 
-export default OpenDirectory.pipe(
+export default NativeFilesystemOperation.OpenDirectory.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);

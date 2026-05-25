@@ -10,12 +10,15 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { type ContentBlock } from '@dxos/types';
 
-import { TRANSCRIPTION_URL } from '#types';
-
 import { mergeFloat64Arrays } from '../util';
 import { type AudioChunk, type AudioRecorder } from './audio-recorder';
 
-type WhisperWord = {
+/**
+ * Endpoint to the calls service.
+ */
+const DEFAULT_TRANSCRIPTION_URL = 'https://calls-service.dxos.workers.dev';
+
+export type WhisperWord = {
   word: string;
 
   /**
@@ -29,7 +32,7 @@ type WhisperWord = {
   end: number;
 };
 
-type WhisperSegment = {
+export type WhisperSegment = {
   text: string;
 
   /**
@@ -61,7 +64,19 @@ export type TranscribeConfig = {
    * This is needed to catch the beginning of the user's speech.
    */
   prefixBufferChunksAmount: number;
+
+  /**
+   * Override the transcription endpoint base URL.
+   * Defaults to the DXOS calls service.
+   */
+  endpoint?: string;
 };
+
+/**
+ * Function that converts a base64-encoded WAV payload into Whisper segments.
+ * Allows callers to swap in alternative providers or mock the transport.
+ */
+export type TranscribeFn = (audio: string) => Promise<WhisperSegment[]>;
 
 export type TranscriberProps = {
   config: TranscribeConfig;
@@ -71,6 +86,10 @@ export type TranscriberProps = {
    * @param segments - The transcribed segments.
    */
   onSegments: (segments: ContentBlock.Transcript[]) => Promise<void>;
+  /**
+   * Optional override of the transcription transport. When provided, supersedes `config.endpoint`.
+   */
+  transcribe?: TranscribeFn;
 };
 
 /**
@@ -80,22 +99,24 @@ export type TranscriberProps = {
  */
 export class Transcriber extends Resource {
   private _audioChunks: AudioChunk[] = [];
-  private _lastUsedTimestamp = 0;
+  private _lastTimestamp = 0;
 
   private readonly _openTrigger = new Trigger({ autoReset: true });
 
   private readonly _config: TranscribeConfig;
   private readonly _recorder: AudioRecorder;
   private readonly _onSegments: TranscriberProps['onSegments'];
+  private readonly _transcribeFn?: TranscribeFn;
 
   private _recording = false;
   private _transcribeTask?: DeferredTask = undefined;
 
-  constructor({ config, recorder, onSegments }: TranscriberProps) {
+  constructor({ config, recorder, onSegments, transcribe }: TranscriberProps) {
     super();
     this._config = config;
     this._recorder = recorder;
     this._onSegments = onSegments;
+    this._transcribeFn = transcribe;
   }
 
   protected override async _open(ctx: Context): Promise<void> {
@@ -192,67 +213,91 @@ export class Transcriber extends Resource {
   @trace.span({ showInBrowserTimeline: true })
   private async _fetchTranscription(audio: string): Promise<WhisperSegment[]> {
     if (audio.length === 0) {
-      this._audioChunks = [];
       throw new Error('No audio to send for transcribing');
     }
 
-    const response = await fetch(`${TRANSCRIPTION_URL}/transcribe`, {
-      method: 'POST',
-      body: JSON.stringify({ audio }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+    let segments: unknown;
+    if (this._transcribeFn) {
+      segments = await this._transcribeFn(audio);
+    } else {
+      // TODO(burdon): Create separate endpoint?
+      const endpoint = this._config.endpoint ?? DEFAULT_TRANSCRIPTION_URL;
+      const response = await fetch(`${endpoint}/transcribe`, {
+        method: 'POST',
+        body: JSON.stringify({ audio }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-    if (!response.ok) {
-      this._audioChunks = [];
-      throw new Error(`Transcription failed: ${response.statusText}`);
+      if (!response.ok) {
+        throw new Error(`Transcription failed: ${response.statusText}`);
+      }
+
+      ({ segments } = (await response.json()) as { segments?: unknown });
     }
 
-    const { segments } = (await response.json()) as {
-      segments: WhisperSegment[];
-    };
+    if (!Array.isArray(segments)) {
+      throw new Error('Transcription response payload is invalid');
+    }
 
-    log.info('transcription response', {
-      segments: segments.length,
-      string: segments.map((segments) => segments.text).join(' '),
-    });
-
-    return segments;
+    log.info('transcription response', { segments: segments.length });
+    return segments as WhisperSegment[];
   }
 
   private _alignSegments(segments: WhisperSegment[], originalChunks: AudioChunk[]): ContentBlock.Transcript[] {
-    // Absolute zero for all relative timestamps in the segments.
-    const zeroTimestamp = originalChunks.at(0)!.timestamp;
-
-    const filteredSegments = segments
-      // Use segments that end after the last used timestamp.
-      // Segments could overlap, so we need to filter words that starts after the last used timestamp.
-      .filter((segment) => zeroTimestamp + segment.end * 1_000 >= this._lastUsedTimestamp)
-      // Use words that starts after the last used timestamp.
-      .map((segment) => {
-        const words = segment.words.filter((word) => zeroTimestamp + word.start * 1_000 >= this._lastUsedTimestamp);
-        return {
-          ...segment,
-          words,
-          text: words.map((word) => word.word).join(''),
-          start: words.at(0)?.start ?? segment.end,
-        };
-      })
-      .filter((segment) => segment.words.length > 0);
-
-    if (filteredSegments.length === 0) {
-      return [];
+    const result = alignWhisperSegments(segments, originalChunks, this._lastTimestamp);
+    if (result.lastTimestamp !== undefined) {
+      this._lastTimestamp = result.lastTimestamp;
     }
 
-    // Update last timestamp.
-    this._lastUsedTimestamp = zeroTimestamp + filteredSegments.at(-1)!.end * 1_000;
+    return result.transcripts;
+  }
+}
 
-    // Add absolute timestamp to each segment.
-    return filteredSegments.map((segment) => ({
+/**
+ * Pure helper that filters and absolute-timestamps Whisper segments against a chunk timeline.
+ * Exported for testing.
+ *
+ * @param segments - Raw segments returned by the Whisper service for `originalChunks`.
+ * @param originalChunks - Chunks fed into the transcription request (used for the zero timestamp).
+ * @param lastTimestamp - Most recent absolute timestamp already emitted; segments whose end
+ *   falls strictly before this point are deduped out, as are individual words whose start does.
+ */
+export const alignWhisperSegments = (
+  segments: WhisperSegment[],
+  originalChunks: AudioChunk[],
+  lastTimestamp: number,
+): { transcripts: ContentBlock.Transcript[]; lastTimestamp?: number } => {
+  if (originalChunks.length === 0) {
+    return { transcripts: [] };
+  }
+
+  const zeroTimestamp = originalChunks[0].timestamp;
+
+  const filteredSegments = segments
+    .filter((segment) => zeroTimestamp + segment.end * 1_000 >= lastTimestamp)
+    .map((segment) => {
+      const words = segment.words.filter((word) => zeroTimestamp + word.start * 1_000 >= lastTimestamp);
+      return {
+        ...segment,
+        words,
+        text: words.map((word) => word.word).join(''),
+        start: words.at(0)?.start ?? segment.end,
+      };
+    })
+    .filter((segment) => segment.words.length > 0);
+
+  if (filteredSegments.length === 0) {
+    return { transcripts: [] };
+  }
+
+  return {
+    lastTimestamp: zeroTimestamp + filteredSegments.at(-1)!.end * 1_000,
+    transcripts: filteredSegments.map((segment) => ({
       _tag: 'transcript',
       started: new Date(zeroTimestamp + segment.start * 1_000).toISOString(),
       text: segment.text.trim(),
-    }));
-  }
-}
+    })),
+  };
+};

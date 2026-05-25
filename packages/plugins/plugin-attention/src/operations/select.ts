@@ -7,7 +7,7 @@ import * as Match from 'effect/Match';
 
 import { Capability } from '@dxos/app-framework';
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 
 import { AttentionCapabilities } from '../types';
 

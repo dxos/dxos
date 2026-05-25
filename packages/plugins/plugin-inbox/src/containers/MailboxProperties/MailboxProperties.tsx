@@ -40,7 +40,7 @@ export const MailboxProperties = ({ subject }: AppSurface.ObjectPropertiesProps<
   return (
     <Input.Root>
       <Input.Label>{t('mailbox-sync.label')}</Input.Label>
-      <div role='none' className='flex flex-row items-center'>
+      <div className='flex flex-row items-center'>
         {/* TODO(burdon): Pad Switch like button/icon (square with padding). */}
         <Input.Switch
           checked={syncEnabled ?? false}

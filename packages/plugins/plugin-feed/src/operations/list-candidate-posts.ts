@@ -4,13 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Operation } from '@dxos/compute';
 import { Database, Obj } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 
-import { ListCandidatePosts } from './definitions';
+import { FeedOperation } from '../types';
 import { collectCandidates } from './util';
 
-const handler: Operation.WithHandler<typeof ListCandidatePosts> = ListCandidatePosts.pipe(
+const handler: Operation.WithHandler<typeof FeedOperation.ListCandidatePosts> = FeedOperation.ListCandidatePosts.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ magazine: magazineRef }) {
       const magazine = yield* Database.load(magazineRef);

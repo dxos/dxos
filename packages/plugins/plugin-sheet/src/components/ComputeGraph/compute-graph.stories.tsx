@@ -5,10 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useRef, useState } from 'react';
 
-import { testFunctionPlugins } from '@dxos/compute/testing';
-import { Filter } from '@dxos/echo';
-import { Obj } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
+import { testFunctionPlugins } from '@dxos/compute-hyperformula/testing';
+import { Filter, Obj } from '@dxos/echo';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Button, Input, Toolbar } from '@dxos/react-ui';
@@ -45,7 +44,13 @@ const DefaultStory = () => {
         setResult({ functions: { standard: f1.length, echo: f2.length } });
       });
 
-      space.db.add(Obj.make(Operation.PersistentOperation, { name: 'test', version: '0.0.1', binding: FUNCTION_NAME }));
+      space.db.add(
+        Obj.make(Operation.PersistentOperation, {
+          [Obj.Meta]: { version: '0.0.1' },
+          name: 'test',
+          binding: FUNCTION_NAME,
+        }),
+      );
     }
   }, [space, graph]);
 

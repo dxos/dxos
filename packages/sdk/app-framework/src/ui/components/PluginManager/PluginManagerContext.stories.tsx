@@ -38,7 +38,9 @@ const CountStatus = () => {
     }
   }, [counter]);
 
-  if (!manager) return null;
+  if (!manager) {
+    return null;
+  }
 
   const isEven = count % 2 === 0;
 
@@ -118,6 +120,7 @@ const CounterComponent = () => {
 const CounterPlugin = Plugin.define({
   id: 'org.dxos.plugin.counter',
   name: 'Counter Plugin',
+  tags: ['system'],
 }).pipe(
   Plugin.addModule({
     id: 'CounterMain',
@@ -152,7 +155,6 @@ const CounterPlugin = Plugin.define({
 )();
 
 const plugins = [CounterPlugin];
-const core = ['org.dxos.plugin.counter'];
 const placeholder = () => (
   <div className='flex h-screen items-center justify-center p-4 text-lg text-neutral-500'>
     Initializing Application...
@@ -162,7 +164,6 @@ const placeholder = () => (
 const DefaultStory = () => {
   const App = useApp({
     plugins,
-    core,
     placeholder,
   });
 
@@ -170,7 +171,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'sdk/app-framework/PluginManagerContext',
+  title: 'sdk/app-framework/components/PluginManagerContext',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {

@@ -100,11 +100,11 @@ const WorkspaceTile: MosaicStackTileComponent<Node.Node> = (props) => {
       fullWidth
       tabIndex={-1} // TODO(burdon): Use Mosaic.Focus.
       data-selected={isSelected}
-      classNames={mx('dx-focus-ring', isSelected && 'bg-hover-overlay')}
+      classNames={mx('dx-focus-ring', isSelected && 'bg-selected-surface')}
       onClick={handleSelect}
       ref={cardRef}
     >
-      <Card.Toolbar density='fine'>
+      <Card.Toolbar density='md'>
         <Avatar.Root>
           <Avatar.Content
             icon={data.properties.icon}

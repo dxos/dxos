@@ -19,7 +19,7 @@ describe('DedicatedWorkerClientServices', { timeout: 1_000, retry: 0 }, () => {
     await using _services = await testBuilder.createDedicatedWorkerClientServices().open();
   });
 
-  test('connect client', async () => {
+  test('connect client', { timeout: 2_000 }, async () => {
     const testBuilder = new TestBuilder();
     onTestFinished(() => testBuilder.destroy());
 

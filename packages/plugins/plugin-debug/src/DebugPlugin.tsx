@@ -6,18 +6,12 @@ import * as Effect from 'effect/Effect';
 
 import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { type LogBuffer } from '@dxos/log';
 import { type Client } from '@dxos/react-client';
 
 import { AppGraphBuilder, DebugSettings, ReactContext, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
-
-import { translations } from './translations';
-
-export type DebugPluginOptions = {
-  /** Shared log buffer for capturing and downloading logs. */
-  logBuffer: LogBuffer;
-};
+import { translations } from '#translations';
+import { type DebugPluginOptions } from '#types';
 
 // TODO(wittjosiah): Factor out DevtoolsPlugin?
 
@@ -25,10 +19,10 @@ export const DebugPlugin = Plugin.define<DebugPluginOptions>(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addReactContextModule({ activate: ReactContext }),
   AppPlugin.addSettingsModule({ activate: DebugSettings }),
-  Plugin.addModule(({ logBuffer }) => ({
+  Plugin.addModule(({ logStore }) => ({
     id: Capability.getModuleTag(ReactSurface) ?? 'surfaces',
     activatesOn: ActivationEvents.SetupReactSurface,
-    activate: () => ReactSurface({ logBuffer }),
+    activate: () => ReactSurface({ logStore }),
   })),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule({
@@ -54,3 +48,5 @@ const setupDevtools = () => {
     location.pathname = '/';
   };
 };
+
+export default DebugPlugin;

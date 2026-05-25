@@ -20,6 +20,11 @@ export interface IndexerObject {
    */
   queueId: ObjectId | null;
   /**
+   * Queue subspace namespace (e.g. 'data', 'trace') the object lives in.
+   * Set together with `queueId`; null for non-queue objects.
+   */
+  queueNamespace: string | null;
+  /**
    * Document id if object is from the automerge document.
    * If null, `queueId` must be set.
    */

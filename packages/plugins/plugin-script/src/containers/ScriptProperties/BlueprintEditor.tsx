@@ -5,10 +5,10 @@
 import React, { useCallback, useState } from 'react';
 
 import { ToolId } from '@dxos/ai';
-import { Blueprint, Template } from '@dxos/blueprints';
+import { Blueprint, Template } from '@dxos/compute';
+import { type Script } from '@dxos/compute';
+import { Operation } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
-import { type Script } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { useQuery } from '@dxos/react-client/echo';
 import { Button, Input, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -28,7 +28,8 @@ export const BlueprintEditor = ({ object }: BlueprintEditorProps) => {
   // TODO(burdon): Remove?
   const [instructions, setInstructions] = useState<string>(`You can run the script "${object.name ?? 'script'}".`);
   const blueprintKey = `org.dxos.blueprint.${kebabize(object.name ?? 'script')}`;
-  const existingBlueprint = blueprints.find((bp) => bp.key === blueprintKey);
+  const existingBlueprint = blueprints.find((bp) => Obj.getMeta(bp).key === blueprintKey);
+  const fnKey = fn ? Obj.getMeta(fn).key : undefined;
 
   useAsyncEffect(async () => {
     if (!existingBlueprint) {
@@ -48,25 +49,25 @@ export const BlueprintEditor = ({ object }: BlueprintEditorProps) => {
     try {
       if (existingBlueprint) {
         const text = await existingBlueprint.instructions.source.load();
-        Obj.change(text, (text) => {
+        Obj.update(text, (text) => {
           text.content = instructions;
         });
 
-        if (fn?.key) {
-          const toolId = ToolId.make(fn.key);
+        if (fnKey) {
+          const toolId = ToolId.make(fnKey);
           if (!existingBlueprint.tools?.includes(toolId)) {
-            Obj.change(existingBlueprint, (existingBlueprint) => {
+            Obj.update(existingBlueprint, (existingBlueprint) => {
               existingBlueprint.tools = [...(existingBlueprint.tools ?? []), toolId];
             });
           }
         }
-      } else if (fn?.key) {
+      } else if (fnKey) {
         db.add(
           Blueprint.make({
             key: blueprintKey,
             name: object.name ?? 'Script',
             instructions: Template.make({ source: instructions }),
-            tools: [ToolId.make(fn.key)],
+            tools: [ToolId.make(fnKey)],
           }),
         );
       }
@@ -74,10 +75,10 @@ export const BlueprintEditor = ({ object }: BlueprintEditorProps) => {
     } finally {
       setCreating(false);
     }
-  }, [db, existingBlueprint, fn, blueprintKey, object.name, instructions]);
+  }, [db, existingBlueprint, fnKey, blueprintKey, object.name, instructions]);
 
   return (
-    <div role='none' className='flex flex-col'>
+    <div className='flex flex-col'>
       <Form.Section label={t('blueprint-editor.label')} description={t('blueprint-editor.description')} />
 
       <Input.Root>
@@ -91,8 +92,8 @@ export const BlueprintEditor = ({ object }: BlueprintEditorProps) => {
         />
       </Input.Root>
 
-      <div role='none' className='pt-2'>
-        <Button disabled={(!existingBlueprint && !fn?.key) || creating} onClick={handleSave}>
+      <div className='pt-2'>
+        <Button disabled={(!existingBlueprint && !fnKey) || creating} onClick={handleSave}>
           {t(existingBlueprint ? 'update-blueprint.label' : 'create-blueprint.label')}
         </Button>
       </div>

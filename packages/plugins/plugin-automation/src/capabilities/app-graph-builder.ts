@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
-import { Script } from '@dxos/functions';
+import { Script } from '@dxos/compute';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
-import { meta as spaceMeta } from '@dxos/plugin-space/meta';
+import { SETTINGS_SECTION_TYPE } from '@dxos/plugin-space';
 import { linkedSegment } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
@@ -18,27 +18,31 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'space-settings-automation',
-        match: NodeMatcher.whenNodeType(`${spaceMeta.id}.settings`),
-        connector: (node) =>
+        match: NodeMatcher.whenNodeType(SETTINGS_SECTION_TYPE),
+        connector: () =>
           Effect.succeed([
             AppNode.makeSettingsPanel({
               id: 'automations',
               type: `${meta.id}.space-settings-automation`,
               label: ['automation-panel.label', { ns: meta.id }],
               icon: 'ph--lightning--regular',
+              iconHue: 'indigo',
+              position: 'last',
             }),
           ]),
       }),
       GraphBuilder.createExtension({
         id: 'space-settings-functions',
-        match: NodeMatcher.whenNodeType(`${spaceMeta.id}.settings`),
-        connector: (node) =>
+        match: NodeMatcher.whenNodeType(SETTINGS_SECTION_TYPE),
+        connector: () =>
           Effect.succeed([
             AppNode.makeSettingsPanel({
               id: 'functions',
               type: `${meta.id}.space-settings-functions`,
               label: ['functions-panel.label', { ns: meta.id }],
               icon: 'ph--function--regular',
+              iconHue: 'indigo',
+              position: 'last',
             }),
           ]),
       }),

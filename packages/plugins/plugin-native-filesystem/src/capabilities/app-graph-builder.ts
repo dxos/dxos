@@ -7,17 +7,17 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { Filter, Obj } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
-import { Operation } from '@dxos/operation';
-import { ClientCapabilities } from '@dxos/plugin-client/types';
+import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
-import { SHARED } from '@dxos/plugin-space/types';
+import { SHARED } from '@dxos/plugin-space';
 import { Expando, Text } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
-import { NativeFilesystemOperation } from '#operations';
+import { NativeFilesystemOperation } from '#types';
 import {
   NativeFilesystemCapabilities,
   isFilesystemDirectory,
@@ -32,7 +32,6 @@ import { findDirectoryById } from '../util';
 import type { FilesystemManager } from './state';
 
 const FILESYSTEM_TYPE = `${meta.id}.workspace`;
-const SETTINGS_TYPE = `${meta.id}.settings`;
 const GENERAL_TYPE = `${meta.id}.general`;
 const DIRECTORY_TYPE = `${meta.id}.directory`;
 const MARKDOWN_PENDING_TYPE = `${meta.id}.markdown-pending`;
@@ -105,7 +104,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'primary-actions',
-        position: 'hoist',
+        position: 'first',
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
@@ -177,7 +176,7 @@ export default Capability.makeModule(
                     }),
                   );
 
-                  Obj.change(spacesOrder, (spacesOrder: Record<string, unknown>) => {
+                  Obj.update(spacesOrder, (spacesOrder: Record<string, unknown>) => {
                     spacesOrder.order = nextOrder.map((item) => {
                       if (isFilesystemWorkspace(item)) {
                         return item.id;
@@ -202,18 +201,6 @@ export default Capability.makeModule(
                   position: orderMap.get(workspace.id),
                   onRearrange,
                 },
-                nodes: [
-                  Node.make({
-                    id: 'settings',
-                    type: SETTINGS_TYPE,
-                    data: null,
-                    properties: {
-                      label: ['settings.panel.label', { ns: meta.id }],
-                      icon: 'ph--faders--regular',
-                      disposition: 'alternate-tree',
-                    },
-                  }),
-                ],
               });
             }),
           );
@@ -221,8 +208,8 @@ export default Capability.makeModule(
       }),
 
       GraphBuilder.createExtension({
-        id: 'settings-sections',
-        match: NodeMatcher.whenNodeType(SETTINGS_TYPE),
+        id: 'workspace-settings',
+        match: NodeMatcher.whenNodeType(FILESYSTEM_TYPE),
         connector: () =>
           Effect.succeed([
             Node.make({
@@ -232,7 +219,7 @@ export default Capability.makeModule(
               properties: {
                 label: ['settings.general.label', { ns: meta.id }],
                 icon: 'ph--sliders--regular',
-                position: 'hoist',
+                position: 'first',
               },
             }),
           ]),

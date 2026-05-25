@@ -7,10 +7,10 @@ import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
-import { Script } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { Filter, type Space, useQuery } from '@dxos/react-client/echo';
+import { Operation, Script } from '@dxos/compute';
+import { Filter } from '@dxos/echo';
+import { SpaceOperation } from '@dxos/plugin-space';
+import { type Space, useQuery } from '@dxos/react-client/echo';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Settings } from '@dxos/react-ui-form';
 import { List } from '@dxos/react-ui-list';

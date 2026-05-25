@@ -5,16 +5,15 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
+import { Operation, Trigger } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { Trigger } from '@dxos/functions';
-import { Operation } from '@dxos/operation';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { functions } from '#testing';
+import { translations } from '#translations';
 
-import { translations } from '../../translations';
 import { AutomationPanel } from './AutomationPanel';
 
 const DefaultStory = () => {
@@ -40,7 +39,13 @@ const meta = {
       types: [Operation.PersistentOperation, Trigger.Trigger],
       onCreateSpace: ({ space }) => {
         for (const fn of functions) {
-          space.db.add(Obj.make(Operation.PersistentOperation, { ...fn, version: fn.version ?? '0.1.0' }));
+          const { key, version, ...data } = fn;
+          space.db.add(
+            Obj.make(Operation.PersistentOperation, {
+              [Obj.Meta]: { key, version: version ?? '0.1.0' },
+              ...data,
+            }),
+          );
         }
       },
     }),

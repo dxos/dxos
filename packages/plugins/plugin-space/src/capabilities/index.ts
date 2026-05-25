@@ -3,11 +3,12 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/operation';
+import { OperationHandlerSet } from '@dxos/compute';
 
 export * from './app-graph-builder';
 
 export const AppGraphSerializer = Capability.lazy('AppGraphSerializer', () => import('./app-graph-serializer'));
+export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
 export const IdentityCreated = Capability.lazy('IdentityCreated', () => import('./identity-created'));
 export const Migrations = Capability.lazy('SpaceMigrations', () => import('./migrations'));
 export { NavigationHandler } from './navigation-handler';

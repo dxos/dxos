@@ -2,9 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/operation';
-
-export * as DeckOperation from './definitions';
+import { OperationHandlerSet } from '@dxos/compute';
 
 export const DeckOperationHandlerSet = OperationHandlerSet.lazy(
   () => import('./add-toast'),

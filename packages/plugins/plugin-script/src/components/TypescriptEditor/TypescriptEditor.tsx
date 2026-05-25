@@ -16,17 +16,17 @@ import { type HoverInfo, tsAutocomplete, tsFacet, tsHover, tsLinter, tsSync } fr
 import React from 'react';
 
 import { type ThemeMode, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
 import { Domino } from '@dxos/ui';
 import {
   type BasicExtensionsOptions,
-  type EditorInputMode,
   InputModeExtensions,
   createBasicExtensions,
   createThemeExtensions,
   defaultStyles,
 } from '@dxos/ui-editor';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { type EditorInputMode } from '@dxos/ui-editor/types';
 import { isNonNullable } from '@dxos/util';
 
 export type TypescriptEditorProps = ThemedClassName<

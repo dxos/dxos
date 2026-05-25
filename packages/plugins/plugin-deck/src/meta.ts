@@ -8,9 +8,11 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.deck',
   name: 'Layout',
+  author: 'DXOS',
   description: trim`
     Flexible layout system for arranging workspace views in tabs, splits, and panels.
     Customize your workspace organization with drag-and-drop layout management.
   `,
   icon: 'ph--layout--regular',
+  tags: ['system'],
 };

@@ -9,19 +9,19 @@ import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { AppActivationEvents } from '@dxos/app-toolkit';
 import { Collection } from '@dxos/echo';
-import { ClientPlugin } from '@dxos/plugin-client';
-import { SearchPlugin } from '@dxos/plugin-search';
-import { SpacePlugin } from '@dxos/plugin-space';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
+import { SearchPlugin } from '@dxos/plugin-search/testing';
+import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { translations as searchTranslation } from '@dxos/react-ui-search';
+import { translations as searchTranslation } from '@dxos/react-ui-search/translations';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { ReactRoot, ReactSurface, State } from '#capabilities';
 import { meta as pluginMeta } from '#meta';
+import { translations } from '#translations';
 import { SimpleLayoutEvents } from '#types';
 
 import { type SimpleLayoutPluginOptions } from '../../SimpleLayoutPlugin';
-import { translations } from '../../translations';
 import { SimpleLayout } from './SimpleLayout';
 
 const createPluginManager = ({ isPopover }: { isPopover?: boolean }) => {

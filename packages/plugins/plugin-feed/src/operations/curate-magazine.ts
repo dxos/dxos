@@ -4,53 +4,22 @@
 
 import * as Effect from 'effect/Effect';
 
-import { getSpace, type Space } from '@dxos/client/echo';
-import { type Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { createFeedServiceLayer, getSpace, type Space } from '@dxos/client/echo';
+import { Operation } from '@dxos/compute';
+import { Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
 
+import { FeedOperation } from '../types';
 import { type Magazine, Subscription } from '../types';
-import { extractImageUrls, makeSnippet, stripHtml } from '../util';
-import { CurateMagazine } from './definitions';
-
-/**
- * Extracts the bare ECHO object id from a DXN. Robust to DXN form differences
- * — `dxn:echo:@:<id>` (local), `dxn:echo:<spaceId>:<id>` (space-scoped),
- * `dxn:queue:<...>:<id>` (queue-scoped) — by always taking the last part.
- */
-const dxnToObjectId = (dxn: { parts: readonly any[] }): string => String(dxn.parts[dxn.parts.length - 1]);
-
-/**
- * Returns the canonical space.db proxy for a Post by id, if it has been
- * registered there before; otherwise registers the supplied queue-side proxy
- * and returns it.
- *
- * Why this exists: `queue.queryObjects()` re-decodes from JSON on every call,
- * yielding a fresh proxy backed by a fresh `ObjectCore` whose
- * `core.database` link is unset. If the underlying object was previously
- * added to `space.db` (e.g. by a prior curate's `createRef` →
- * `database.add`), `space.db._objects` already maps that id to an OLDER
- * core. Letting the deep-mapper run `createRef` on the fresh queue proxy
- * then calls `database.add(freshCore)` → `addCore` → the
- * `!_objects.has(core.id)` invariant fires.
- *
- * Reusing the canonical proxy (its core has `core.database === space.db`,
- * so `addCore` returns early) sidesteps the invariant entirely. For a Post
- * being curated for the first time we still call `db.add` ourselves, which
- * is the safe path because the id is genuinely new.
- */
-const reuseOrAdd = async (db: Database.Database, post: Subscription.Post): Promise<Subscription.Post> => {
-  const id = (post as { id: string }).id;
-  const existing = await db
-    .query(Filter.id(id))
-    .first()
-    .catch(() => undefined);
-  if (existing) {
-    return existing as Subscription.Post;
-  }
-
-  return db.add(post);
-};
+import {
+  dxnToObjectId,
+  extractImageUrls,
+  getSubscriptionPostState,
+  makeSnippet,
+  stripHtml,
+  updateSubscriptionPostState,
+} from '../util';
 
 /**
  * Pure-additive curation logic, extracted from the operation handler so it can
@@ -58,7 +27,10 @@ const reuseOrAdd = async (db: Database.Database, post: Subscription.Post): Promi
  *
  * For every uncurated candidate Post in the Magazine's referenced feeds,
  * derives a snippet and image from the Post's existing `description` (no HTTP fetch).
- * Appends each enriched Post's ref to `magazine.posts`.
+ * Appends each Post's queue-DXN ref to `magazine.posts` and stores the derived
+ * snippet/imageUrl in `magazine.postState[postId]` — the Post itself is never
+ * mutated and never enters `space.db`.
+ *
  * Skips Posts with empty descriptions.
  *
  * The Magazine-level `keep` bound is enforced separately by the Clear button
@@ -68,7 +40,15 @@ const reuseOrAdd = async (db: Database.Database, post: Subscription.Post): Promi
  */
 export const curateMagazine = async (space: Space, magazine: Magazine.Magazine): Promise<{ added: number }> => {
   const seenIds = new Set(magazine.posts.map((ref) => dxnToObjectId(ref.dxn)));
-  const added: Ref.Ref<Subscription.Post>[] = [];
+  const added: {
+    ref: Ref.Ref<Subscription.Post>;
+    id: string;
+    subscription: Subscription.Subscription;
+    snippet: string;
+    imageUrl?: string;
+  }[] = [];
+
+  const feedServiceLayer = createFeedServiceLayer(space.queues);
 
   for (const feedRef of magazine.feeds) {
     const feed = await feedRef.load();
@@ -76,13 +56,14 @@ export const curateMagazine = async (space: Space, magazine: Magazine.Magazine):
     if (!echoFeed) {
       continue;
     }
-    const feedDxn = Feed.getQueueDxn(echoFeed);
-    if (!feedDxn) {
+    if (!Feed.getQueueDxn(echoFeed)) {
       continue;
     }
 
-    const queue = space.queues.get(feedDxn);
-    const items = (await queue.queryObjects()) ?? [];
+    const items = await Feed.runQuery(echoFeed, Filter.everything()).pipe(
+      Effect.provide(feedServiceLayer),
+      runAndForwardErrors,
+    );
 
     for (const item of items) {
       if (!Obj.instanceOf(Subscription.Post, item)) {
@@ -105,42 +86,58 @@ export const curateMagazine = async (space: Space, magazine: Magazine.Magazine):
       const snippet = makeSnippet(text);
       const imageUrl = extractImageUrls(source)[0];
 
-      // Resolve to the canonical space.db proxy (or register if new) so
-      // the ref we hand to the deep-mapper has a working `core.database`
-      // link. Without this, a re-curate after Clear (or any path that
-      // re-encounters a post already in space.db via a fresh queue proxy)
-      // trips `addCore`'s `!_objects.has(core.id)` invariant.
-      const post = await reuseOrAdd(space.db, queuePost);
-
-      Obj.change(post, (post) => {
-        const mutable = post as Obj.Mutable<typeof post>;
-        mutable.snippet = snippet;
-        if (imageUrl) {
-          mutable.imageUrl = imageUrl;
-        }
-      });
-      added.push(Ref.make(post));
+      // The Ref carries the queue DXN (see EchoHandler.createRef short-circuit
+      // for Queue-kind SelfDXNId). The Post stays in the queue; per-magazine
+      // state goes onto `magazine.postState` and per-Post state (imageUrl)
+      // goes onto `subscription.postState` below.
+      added.push({ ref: Ref.make(queuePost), id: postId, subscription: feed, snippet, imageUrl });
       seenIds.add(postId);
     }
   }
 
   let appended = 0;
   if (added.length > 0) {
-    Obj.change(magazine, (magazine) => {
+    Obj.update(magazine, (magazine) => {
       const mutable = magazine as Obj.Mutable<typeof magazine>;
       const existing = new Set(mutable.posts.map((ref) => dxnToObjectId(ref.dxn)));
-      const fresh = added.filter((ref) => !existing.has(dxnToObjectId(ref.dxn)));
-      if (fresh.length > 0) {
-        mutable.posts = [...mutable.posts, ...fresh];
+      const fresh = added.filter((entry) => !existing.has(entry.id));
+      if (fresh.length === 0) {
+        appended = 0;
+        return;
       }
+
+      // Single Obj.update for both the ref list and the magazine-scoped
+      // curation cache (snippet, rank) so a single notification fires.
+      mutable.posts = [...mutable.posts, ...fresh.map((entry) => entry.ref)];
+      const nextState = { ...(mutable.postState ?? {}) };
+      for (const entry of fresh) {
+        nextState[entry.id] = {
+          ...nextState[entry.id],
+          snippet: entry.snippet,
+        };
+      }
+      mutable.postState = nextState;
       appended = fresh.length;
     });
+
+    // imageUrl is per-Post (shared across magazines): write it to each
+    // contributing subscription's postState. Skip writes that would clobber
+    // an already-present imageUrl (e.g. a later LoadPostContent refinement).
+    for (const entry of added) {
+      if (!entry.imageUrl) {
+        continue;
+      }
+      if (getSubscriptionPostState(entry.subscription, entry.id).imageUrl) {
+        continue;
+      }
+      updateSubscriptionPostState(entry.subscription, entry.id, { imageUrl: entry.imageUrl });
+    }
   }
 
   return { added: appended };
 };
 
-const handler: Operation.WithHandler<typeof CurateMagazine> = CurateMagazine.pipe(
+const handler: Operation.WithHandler<typeof FeedOperation.CurateMagazine> = FeedOperation.CurateMagazine.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ magazine: magazineRef }) {
       const magazine = yield* Effect.promise(() => magazineRef.load());

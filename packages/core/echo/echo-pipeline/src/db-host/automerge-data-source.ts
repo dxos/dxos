@@ -3,7 +3,6 @@
 //
 
 import * as A from '@automerge/automerge';
-import { type Heads } from '@automerge/automerge';
 import { type DocumentId } from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
 
@@ -27,7 +26,7 @@ export const headsCodec = {
    * Serialize automerge heads to a cursor string.
    * Heads are sorted to ensure consistent comparison.
    */
-  encode: (heads: Heads): string => [...heads].sort().join(HEADS_DELIMITER),
+  encode: (heads: A.Heads): string => [...heads].sort().join(HEADS_DELIMITER),
 
   /**
    * Deserialize a cursor string back to heads array.
@@ -38,7 +37,7 @@ export const headsCodec = {
 /**
  * Check if document has changed by comparing cursor with current heads.
  */
-const hasChanged = (cursor: string | undefined, currentHeads: Heads): boolean => {
+const hasChanged = (cursor: string | undefined, currentHeads: A.Heads): boolean => {
   if (!cursor) {
     return true; // New document.
   }
@@ -74,7 +73,7 @@ export class AutomergeDataSource implements IndexDataSource {
 
       // Find changed documents by iterating all documents from HeadsStore.
       const changedDocuments = yield* Effect.promise(async () => {
-        const result: { documentId: DocumentId; heads: Heads }[] = [];
+        const result: { documentId: DocumentId; heads: A.Heads }[] = [];
         const limit = opts?.limit ?? Infinity;
 
         for await (const { documentId, heads } of this.#automergeHost.listDocumentHeads()) {
@@ -96,10 +95,10 @@ export class AutomergeDataSource implements IndexDataSource {
       for (const { documentId, heads: docHeads } of changedDocuments) {
         try {
           const handle = yield* Effect.promise(() => this.#automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId));
-          const doc = handle.doc();
-          if (!doc) {
+          if (!handle) {
             continue;
           }
+          const doc = handle.doc();
 
           // Skip outdated docs.
           if (doc.version !== SpaceDocVersion.CURRENT) {
@@ -127,6 +126,7 @@ export class AutomergeDataSource implements IndexDataSource {
               spaceId,
               documentId,
               queueId: null,
+              queueNamespace: null,
               recordId: null,
               data: objectStructureToJson(objectId, structure),
               updatedAt,

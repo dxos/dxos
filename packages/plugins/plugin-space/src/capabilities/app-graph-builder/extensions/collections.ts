@@ -6,12 +6,19 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { AppCapabilities, LayoutOperation, Segments, getObjectPathFromObject, toUrlPath } from '@dxos/app-toolkit';
-import { SpaceState, getSpace, isSpace } from '@dxos/client/echo';
+import {
+  AppCapabilities,
+  AppNodeMatcher,
+  LayoutOperation,
+  Segments,
+  getObjectPathFromObject,
+  toUrlPath,
+} from '@dxos/app-toolkit';
+import { SpaceState, isSpace } from '@dxos/client/echo';
+import { Operation } from '@dxos/compute';
 import { Collection, Obj, Type } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
 import { CreateAtom, Graph, GraphBuilder, Node } from '@dxos/plugin-graph';
 import { isNonNullable } from '@dxos/util';
 
@@ -24,12 +31,10 @@ import {
   COPY_LINK_LABEL,
   CREATE_OBJECT_IN_COLLECTION_LABEL,
   EXPOSE_OBJECT_LABEL,
-  type MetadataResolver,
   REMOVE_FROM_COLLECTION_LABEL,
   createObjectNode,
   getCollectionGraphNodePartials,
   getDynamicLabel,
-  whenSpace,
 } from './shared';
 
 //
@@ -44,14 +49,11 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
 }) {
   const capabilities = yield* Capability.Service;
 
-  const resolve = (get: any) => (typename: string) =>
-    capabilities.getAll(AppCapabilities.Metadata).find(({ id }) => id === typename)?.metadata ?? {};
-
   return yield* Effect.all([
     // Collections section virtual node under each space.
     GraphBuilder.createExtension({
       id: 'collections-section',
-      match: whenSpace,
+      match: AppNodeMatcher.whenSpace,
       connector: (space, get) => {
         const spaceState = get(CreateAtom.fromObservable(space.state));
         if (spaceState !== SpaceState.SPACE_READY) {
@@ -65,7 +67,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
         }
         const rootCollection = collectionRef?.target;
         const collectionPartials = rootCollection
-          ? getCollectionGraphNodePartials({ collection: rootCollection, db: space.db, resolve: resolve(get) })
+          ? getCollectionGraphNodePartials({ db: space.db, collection: rootCollection })
           : undefined;
 
         return Effect.succeed([
@@ -76,9 +78,9 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
             properties: {
               label: ['collections-section.label', { ns: meta.id }],
               icon: 'ph--folder--regular',
-              iconHue: 'neutral',
+              iconHue: 'amber',
               role: 'branch',
-              position: 'hoist',
+              position: 'first',
               testId: 'spacePlugin.collectionsSection',
               draggable: false,
               droppable: false,
@@ -123,7 +125,6 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
               createObjectNode({
                 db: space.db,
                 object,
-                resolve: resolve(get),
                 navigable: ephemeralState.navigableCollections,
                 parentCollection: collectionRef?.target,
               }),
@@ -140,7 +141,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
       connector: (collection, get) => {
         const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
         const ephemeralState = get(ephemeralAtom);
-        const space = getSpace(collection);
+        const db = Obj.getDatabase(collection);
 
         const collectionSnapshot = get(AtomObj.make(collection));
         const refs = collectionSnapshot.objects ?? [];
@@ -156,11 +157,10 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
           objects
             .map(
               (object: Obj.Unknown) =>
-                space &&
+                db &&
                 createObjectNode({
                   object,
-                  db: space.db,
-                  resolve: resolve(get),
+                  db,
                   navigable: ephemeralState.navigableCollections,
                   parentCollection: collection,
                 }),
@@ -176,12 +176,11 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     GraphBuilder.createExtension({
       id: 'object-actions',
       match: (node) => {
-        const space = getSpace(node.data);
-        return space && Obj.isObject(node.data) && Obj.getTypename(node.data) === node.type
-          ? Option.some({ space, object: node.data, nodeId: node.id })
+        return Obj.isObject(node.data) && Obj.getTypename(node.data) === node.type && Obj.getDatabase(node.data)
+          ? Option.some({ object: node.data, nodeId: node.id })
           : Option.none();
       },
-      actions: ({ space, object, nodeId }, get) => {
+      actions: ({ object, nodeId }, get) => {
         const deletable = !Obj.instanceOf(Type.PersistentType, object);
 
         const [appGraph] = get(capabilities.atom(AppCapabilities.AppGraph));
@@ -201,7 +200,6 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
           constructObjectActions({
             object,
             nodeId,
-            resolve: resolve(get),
             deletable,
             navigable: ephemeralState.navigableCollections,
             shareableLinkOrigin,
@@ -221,7 +219,6 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
 const constructObjectActions = ({
   object,
   nodeId,
-  resolve,
   deletable = true,
   navigable = false,
   shareableLinkOrigin,
@@ -229,7 +226,6 @@ const constructObjectActions = ({
 }: {
   object: Obj.Unknown;
   nodeId: string;
-  resolve: MetadataResolver;
   shareableLinkOrigin: string;
   deletable?: boolean;
   navigable?: boolean;
@@ -260,7 +256,7 @@ const constructObjectActions = ({
       data: (params?: Node.InvokeProps) =>
         Operation.invoke(SpaceOperation.RenameObject, { object, caller: `${params?.caller}:${params?.parent?.id}` }),
       properties: {
-        label: getDynamicLabel('rename object label', typename, { defaultValue: 'Rename' }),
+        label: getDynamicLabel('rename-object.label', typename, { defaultValue: 'Rename' }),
         icon: 'ph--pencil-simple-line--regular',
         disposition: 'list-item',
         testId: 'spacePlugin.renameObject',
@@ -277,7 +273,7 @@ const constructObjectActions = ({
                   const layout = yield* Capabilities.getAtomValue(AppCapabilities.Layout);
                   const isActive = layout.active.includes(nodeId);
 
-                  Obj.change(parentCollection, (parentCollection) => {
+                  Obj.update(parentCollection, (parentCollection) => {
                     parentCollection.objects.splice(index, 1);
                   });
 

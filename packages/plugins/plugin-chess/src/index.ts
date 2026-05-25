@@ -3,8 +3,5 @@
 //
 
 export * from './blueprints';
-export * from './components/Chessboard';
 export * from './meta';
 export * from './types';
-
-export * from './ChessPlugin';

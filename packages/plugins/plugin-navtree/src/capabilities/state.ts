@@ -11,21 +11,23 @@ import { Graph, Node } from '@dxos/plugin-graph';
 import { Path } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
-import { type NavTreeCapabilities as NC, NavTreeCapabilities } from '#types';
+import { NavTreeCapabilities } from '#types';
 
 const KEY = `${meta.id}.state.v1`;
 
 /** Default item state for new entries. */
-const defaultItemState: NC.NavTreeItemState = { open: false, current: false, alternateTree: false };
+const defaultItemState: NavTreeCapabilities.NavTreeItemState = { open: false, current: false };
 
 /** L0 (top-level workspace) paths are direct children of root — not part of the expandable tree model. */
 const isTopLevelPath = (path: string[]): boolean => path.length === 2 && path[0] === Node.RootId;
 
 /** Default state entries for initial tree structure. */
 // TODO(thure): Initialize these dynamically.
-const defaultStateEntries: [string, NC.NavTreeItemState][] = [['root', { open: true, current: false }]];
+const defaultStateEntries: [string, NavTreeCapabilities.NavTreeItemState][] = [
+  ['root', { open: true, current: false }],
+];
 
-const getInitialState = (): Map<string, NC.NavTreeItemState> => {
+const getInitialState = (): Map<string, NavTreeCapabilities.NavTreeItemState> => {
   const stringified = localStorage.getItem(KEY);
   if (!stringified) {
     return new Map(defaultStateEntries);
@@ -51,10 +53,12 @@ export default Capability.makeModule(
     // keepAlive prevents atoms from being garbage collected when components unmount,
     // ensuring state is preserved across deletion/restoration cycles.
     const itemAtomFamily = Atom.family((pathString: string) =>
-      Atom.make<NC.NavTreeItemState>(backingState.get(pathString) ?? { ...defaultItemState }).pipe(Atom.keepAlive),
+      Atom.make<NavTreeCapabilities.NavTreeItemState>(backingState.get(pathString) ?? { ...defaultItemState }).pipe(
+        Atom.keepAlive,
+      ),
     );
 
-    const getItemAtom = (path: string[]): Atom.Atom<NC.NavTreeItemState> => {
+    const getItemAtom = (path: string[]): Atom.Atom<NavTreeCapabilities.NavTreeItemState> => {
       const pathString = Path.create(...path);
       if (!backingState.has(pathString)) {
         backingState.set(pathString, { ...defaultItemState });
@@ -62,11 +66,11 @@ export default Capability.makeModule(
       return itemAtomFamily(pathString);
     };
 
-    const getItem = (path: string[]): NC.NavTreeItemState => {
+    const getItem = (path: string[]): NavTreeCapabilities.NavTreeItemState => {
       return registry.get(getItemAtom(path));
     };
 
-    const setItem = (path: string[], key: 'open' | 'current' | 'alternateTree', next: boolean) => {
+    const setItem = (path: string[], key: 'open' | 'current', next: boolean) => {
       const pathString = Path.create(...path);
       const atom = itemAtomFamily(pathString);
       const currentValue = registry.get(atom);

@@ -4,17 +4,17 @@
 
 import * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
+import * as SchemaAST from 'effect/SchemaAST';
 import React, { useMemo } from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Database, JsonSchema, Obj } from '@dxos/echo';
-import { type Collection } from '@dxos/echo';
+import { type Collection, Database, JsonSchema, Obj } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 
-import { KanbanContainer, KanbanViewEditor } from '#containers';
+import { KanbanArticle, KanbanSettings } from '#containers';
 import { Kanban, PivotColumnAnnotationId } from '#types';
 
 export default Capability.makeModule(() =>
@@ -27,13 +27,13 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Article, Kanban.Kanban),
           AppSurface.object(AppSurface.Section, Kanban.Kanban),
         ),
-        component: ({ data, role }) => <KanbanContainer role={role} subject={data.subject} />,
+        component: ({ data, role }) => <KanbanArticle role={role} subject={data.subject} />,
       }),
       Surface.create({
         id: 'object-properties',
-        position: 'hoist',
+        position: 'first',
         filter: AppSurface.object(AppSurface.ObjectProperties, Kanban.Kanban),
-        component: ({ data }) => <KanbanViewEditor subject={data.subject} />,
+        component: ({ data }) => <KanbanSettings subject={data.subject} />,
       }),
       Surface.create({
         id: 'create-initial-schema-form-[pivot-column]',
@@ -44,12 +44,18 @@ export default Capability.makeModule(() =>
           prop: string;
           schema: Schema.Schema<any>;
           target: Database.Database | Collection.Collection | undefined;
+          fieldPropertyAst?: SchemaAST.AST;
         } => {
           const annotation = findAnnotation<boolean>((data.schema as Schema.Schema.All).ast, PivotColumnAnnotationId);
           return !!annotation;
         },
-        component: ({ data: { target }, ...inputProps }) => {
-          const props = inputProps as any as FormFieldComponentProps;
+        component: ({ data: { target, fieldPropertyAst }, ...inputProps }) => {
+          const ast = fieldPropertyAst;
+          if (!ast) {
+            return null;
+          }
+
+          const props = { ...inputProps, type: ast } as any as FormFieldComponentProps;
           const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
           if (!db) {
             return null;

@@ -2,10 +2,15 @@ layer: library
 language: typescript
 tags:
   - ts-build
+  - ts-test
   - pack
 tasks:
   compile:
     args:
       - '--entryPoint=src/index.ts'
-      - '--platform=browser'
+      - '--entryPoint=src/PwaPlugin.tsx'
+      - '--entryPoint=src/meta.ts'
+      - '--entryPoint=src/plugin.ts'
+      - '--entryPoint=src/translations.ts'
+      - '--platform=neutral'
       - '--ignorePackage=virtual:pwa-register'

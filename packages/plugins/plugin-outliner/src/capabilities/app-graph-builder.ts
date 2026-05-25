@@ -7,15 +7,15 @@ import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { Obj, Relation } from '@dxos/echo';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
 import { HasSubject } from '@dxos/types';
 
 import { QUICK_ENTRY_DIALOG, meta } from '#meta';
-import { OutlineOperation } from '#operations';
+import { OutlineOperation } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

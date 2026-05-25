@@ -7,7 +7,7 @@ import * as Array from 'effect/Array';
 import { Event } from '@dxos/async';
 import { type Stream } from '@dxos/codec-protobuf/stream';
 import { Context } from '@dxos/context';
-import { Entity, type Hypergraph, Obj, type QueryResult } from '@dxos/echo';
+import { Entity, type Hypergraph, Obj, Query, type QueryResult } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
@@ -124,7 +124,7 @@ export class IndexQuerySource implements QuerySource {
   ): void {
     const queryId = nextQueryId++;
 
-    log('queryIndex', { queryId });
+    log('queryIndex', { queryId, query: Query.pretty(Query.fromAst(query)) });
     const start = Date.now();
     let currentCtx: Context;
 
@@ -168,6 +168,7 @@ export class IndexQuerySource implements QuerySource {
 
           log('queryIndex raw results', {
             queryId,
+            query: Query.pretty(Query.fromAst(query)),
             length: response.results?.length ?? 0,
           });
 
@@ -185,6 +186,7 @@ export class IndexQuerySource implements QuerySource {
 
           log('queryIndex processed results', {
             queryId,
+            query: Query.pretty(Query.fromAst(query)),
             fetchedFromIndex: response.results?.length ?? 0,
             loaded: results.length,
           });
@@ -235,24 +237,28 @@ export class IndexQuerySource implements QuerySource {
     // For queue items, hydrate using Obj.fromJSON with ref resolver.
     if (result.queueId && result.documentJson) {
       const json = JSON.parse(result.documentJson);
-      const queueDxn = DXN.fromQueue(
+      const queueDXN = DXN.fromQueue(
         (result.queueNamespace ?? 'data') as QueueSubspaceTag,
         result.spaceId as SpaceId,
         result.queueId as ObjectId,
       );
       const refResolver = this._params.graph.createRefResolver({
-        context: { space: result.spaceId as SpaceId, queue: queueDxn },
+        context: { space: result.spaceId as SpaceId, feed: queueDXN },
       });
       const database = this._params.graph.getDatabase(result.spaceId as SpaceId);
       let object;
       try {
         object = await Obj.fromJSON(json, {
           refResolver,
-          dxn: queueDxn.extend([result.id as ObjectId]),
+          dxn: queueDXN.extend([result.id as ObjectId]),
           database,
         });
       } catch (err) {
-        log.warn('object failed schema validation', { type: json[ATTR_TYPE], error: err });
+        const typeDXN = typeof json[ATTR_TYPE] === 'string' ? json[ATTR_TYPE] : '<unknown>';
+        if (!emittedSchemaValidationWarnings.has(typeDXN)) {
+          emittedSchemaValidationWarnings.add(typeDXN);
+          log.warn('object failed schema validation', { type: typeDXN, error: err });
+        }
         return null;
       }
       const queryResult: QueryResult.EntityEntry = {
@@ -296,3 +302,8 @@ export class IndexQuerySource implements QuerySource {
  * Used for logging.
  */
 let nextQueryId = 1;
+
+/**
+ * Keyed by the type DXN.
+ */
+const emittedSchemaValidationWarnings = new Set<string>();

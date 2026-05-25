@@ -1,0 +1,41 @@
+{
+  "name": "@dxos/effect-proto",
+  "version": "0.8.3",
+  "private": true,
+  "description": "Generate Effect Schema definitions at runtime from Protocol Buffer (proto3) source. Used by react-ui-form to drive a hierarchical schema-driven editor over proto-defined config objects.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "browser": "./dist/lib/browser/index.mjs",
+      "node": "./dist/lib/node-esm/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "effect": "catalog:",
+    "protobufjs": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/protocols": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -5,6 +5,7 @@
 export * from './dxn';
 export * from './identity-did';
 export * from './object-id';
+export * from './parse-id';
 export * from './public-key';
 export * from './space-id';
 export type * from './types';

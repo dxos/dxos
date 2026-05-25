@@ -31,7 +31,7 @@
 
 ## Knowledge
 
-- **IMPORTANT**: Follow DXOS-specific rules in `.agents/sdk/*`.
+- **IMPORTANT**: Follow DXOS-specific rules in `.agents/skills/*`.
 - Update these documents when you learn better patterns; or when the user asks you to correct your implementation.
 
 ## Code Style
@@ -47,8 +47,13 @@
 - Remember to remove/update TODOs as you go.
 - Avoid single letter variable names.
 - Avoid re-exports. Prefer importing symbols directly from the package that defines them.
+- **IMPORTANT**: When moving code (between files, packages, or namespaces), do NOT leave compatibility re-exports or shims behind. Proactively update every call site to import from the new location in the same change. Backwards-compatibility aliases rot and hide the refactor; fix all usages up front.
 - Use barrel imports whenever possible.
 - Prefer ES `#private` fields/methods over TypeScript `private` keyword in new code. Existing `_private` convention is fine to keep.
+- For files imported as a namespace (i.e., marked with `// @import-as-namespace`), avoid prefixing top-level types with the namespace name. Inside `Foo.ts` prefer `Manager`, `Service`, `Options` over `FooManager`, `FooService`, `FooOptions` — callers see `Foo.Manager` either way.
+- Common suffix for constructor option-bag types is `Options` (e.g., `SpawnOptions`, `ManagerImplOptions`) — pick this over `Opts`/`Props`/`Config` for consistency.
+- Consider taking an options object when a constructor or function has more than a few readonly props, especially when several are optional or share a logical grouping.
+- Class member ordering (consider): static fields → public readonly → public mutable → private readonly (incl. constructor-injected) → private mutable → constructor → public methods → private methods. Within each group, rank properties roughly from most-important to least — importance signals include "further up the stack" (closer to public API), required over optional, readonly over mutable.
 
 ### React
 
@@ -61,14 +66,22 @@
 
 ## Workflow
 
-- Never work on main; if not already in a worktree, create a new git worktree for the branch you are working on.
-- IMPORTANT: Do not change the branch or worktree after you have started unless you are instructed to directly by the user.
-- When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the agent name (e.g., `claude/add-auth-to-client`).
-- Worktrees must be created inside the main repo (e.g., `.claude/worktrees/<branch-short-name>`).
+- Never work on `main`
+  - Before working on code, suggest to the user a worktree name then create the worktree using this or the name provided by the user (adding the agent-name prefix, e.g., `claude/`).
+  - When creating worktrees/branches, use a short (2-4 word) descriptive title (kebab-case) prefixed with the agent name (e.g., `claude/add-auth-to-client`).
+  - Worktrees must be created inside the main repo (e.g., `.claude/worktrees/<branch-short-name>`).
+  - If there are unstaged changes, stash these and move them into the worktree.
+  - IMPORTANT: Do not change the branch or worktree name after you have started unless you are instructed to directly by the user.
+  - **IMPORTANT**: Always work in the worktree directory the harness assigned to you — do NOT `cd` into other worktrees or create parallel worktrees on the side. The harness UI tracks progress by watching that directory; working elsewhere makes changes invisible to the user. If the user asks you to continue a different branch, check out that branch in the assigned worktree (clean up the old branch first if needed); do not switch to another worktree path.
 - Check `moon.yml` for available package tasks
 - Run linter at natural stopping points
 - Confirm work complete before final build/lint check
 - If updating `pnpm-workspace.yaml` make sure to preserve comments.
+
+## Interacting The User
+
+- When collaborating closely with the User, determine if the user's role can be automated.
+- Be precise about what you are asking the user to do and actively manage the process.
 
 ## PR Naming Convention
 
@@ -85,8 +98,9 @@ Examples:
 
 ## CI
 
+- **IMPORTANT**: There is ONE main CI workflow ("Check") and it verifies **build, test, lint, and fmt**. If any of those are red on your branch, treat them as YOUR failures, not pre-existing ones — address the root cause of the failure on the branch rather than shrugging it off. Never merge around a red "Check".
 - **IMPORTANT**: After every `git push`, proactively check CI status using `gh run list --branch <branch> --limit 5 --workflow "Check"`. Do NOT rely solely on `pnpm -w gh-action --verify` — it only checks agent workflows, not the main **Check** workflow that runs build and tests.
-- If the Check workflow fails, inspect the failure with `gh run view <run-id>` and `gh run view <run-id> --log-failed`, identify the failing job/test, and fix it.
+- If the Check workflow fails, inspect the failure with `gh run view <run-id>` and `gh run view <run-id> --log-failed`, identify the failing job/test, and fix it at the root cause.
 - When the user asks "what is the CI status" or similar, always check the **Check** workflow specifically.
 
 ## Committing and Pushing
@@ -129,3 +143,7 @@ This project requires Node.js 24.x, pnpm 10.28.0, and moon 2.0.4. All are manage
 - The `pnpm.onlyBuiltDependencies` allowlist in `pnpm-workspace.yaml` controls which native addons are built; warnings about "ignored build scripts" for packages not in the list are normal.
 - Builds must complete before running `serve` commands, because moon tasks have `deps` on `:prebuild`/`:build` targets.
 - No Docker or external services are required for unit tests or local dev. Signal servers for networking tests are pre-compiled binaries spawned automatically by tests.
+
+### DXOS APIs
+
+Read additional information about DXOS APIs in ./agents/instructions

@@ -5,27 +5,30 @@
 import * as Option from 'effect/Option';
 import React, { type JSX, useCallback, useMemo, useState } from 'react';
 
-import { type AiContextBinder } from '@dxos/assistant';
-import { McpServer } from '@dxos/assistant-toolkit';
-import { type Blueprint } from '@dxos/blueprints';
+import { type AiContext } from '@dxos/assistant';
+import { type Chat as ChatModule, McpServer } from '@dxos/assistant-toolkit';
+import { type Blueprint } from '@dxos/compute';
 import { Annotation, type Database, Filter, Obj, Type } from '@dxos/echo';
-import { useQuery } from '@dxos/react-client/echo';
+import { useObject, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Input, Popover, Select, useTranslation } from '@dxos/react-ui';
-import { Listbox, SearchList, useSearchListResults } from '@dxos/react-ui-search';
+import { Listbox } from '@dxos/react-ui-list';
+import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { Tabs } from '@dxos/react-ui-tabs';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { useActiveBlueprints, useBlueprintHandlers, useBlueprints, useContextObjects, useFilteredTypes } from '#hooks';
 import { meta } from '#meta';
+import { Assistant } from '#types';
 
 const styles = {
-  panel: 'w-[calc(100dvw-.5rem)] sm:w-max md:w-popover-default-width max-w-document-width',
-  toolbar: 'p-form-chrome border-t border-separator',
+  panel: 'w-[calc(100dvw-.5rem)] sm:w-max max-w-document-width',
+  toolbar: 'p-0! gap-0! border-t border-separator',
 };
 
 export type ChatOptionsProps = {
+  chat?: ChatModule.Chat;
   db: Database.Database;
-  context: AiContextBinder;
+  context: AiContext.Binder;
   blueprintRegistry?: Blueprint.Registry;
   presets?: { id: string; label: string }[];
   preset?: string;
@@ -35,11 +38,19 @@ export type ChatOptionsProps = {
 /**
  * Manages the runtime context for the chat.
  */
-export const ChatOptions = ({ db, context, blueprintRegistry, presets, preset, onPresetChange }: ChatOptionsProps) => {
+export const ChatOptions = ({
+  chat,
+  db,
+  context,
+  blueprintRegistry,
+  presets,
+  preset,
+  onPresetChange,
+}: ChatOptionsProps) => {
   const { t } = useTranslation(meta.id);
 
   return (
-    <div role='none' className='flex p-2'>
+    <div className='flex'>
       <Popover.Root>
         <Popover.Trigger asChild>
           <IconButton variant='ghost' icon='ph--plus--regular' iconOnly label={t('context-objects.button')} />
@@ -66,37 +77,39 @@ export const ChatOptions = ({ db, context, blueprintRegistry, presets, preset, o
         <Popover.Portal>
           <Popover.Content side='top' classNames={styles.panel}>
             <Popover.Viewport>
-              <Tabs.Root orientation='horizontal' defaultValue='model' defaultActivePart='list' tabIndex={-1}>
-                <Tabs.Viewport
-                  // TODO(burdon): Simplify styles.
-                  classNames={mx(
-                    'max-h-(--radix-popover-content-available-height) grid grid-rows-[1fr_min-content]',
-                    '[&_[cmdk-root]]:contents [&_[role="tabpanel"]]:grid [&_[role="tabpanel"]]:grid-rows-[1fr_min-content]',
-                    '[&_[role="listbox"]]:min-h-0 [&_[role="listbox"]]:overflow-y-auto',
-                    '[&_[role="tabpanel"]]:min-h-0 [&_[role="tabpanel"]]:px-form-chrome [&_[role="tabpanel"][data-state="active"]]:order-first [&_[role="tabpanel"][data-state="inactive"]]:hidden',
-                  )}
-                >
-                  <Tabs.Panel value='model' tabIndex={-1} classNames='dx-focus-ring-inset'>
-                    <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
+              <Tabs.Root
+                classNames='flex'
+                orientation='horizontal'
+                defaultValue='view'
+                defaultActivePart='list'
+                tabIndex={-1}
+              >
+                <Tabs.Viewport classNames={mx('grid grid-rows-[1fr_40px] w-full')}>
+                  <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='view'>
+                    <ViewPanel chat={chat} />
                   </Tabs.Panel>
-                  <Tabs.Panel value='mcp-servers' tabIndex={-1} classNames='dx-focus-ring-inset'>
-                    <McpServersPanel db={db} />
-                  </Tabs.Panel>
-                  <Tabs.Panel value='blueprints' tabIndex={-1} classNames='dx-focus-ring-inset'>
+                  <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='blueprints'>
                     <BlueprintsPanel blueprintRegistry={blueprintRegistry} db={db} context={context} />
                   </Tabs.Panel>
-                  <Tabs.Tablist classNames={styles.toolbar}>
-                    <Tabs.IconTab value='model' icon='ph--cpu--regular' label={t('chat-model.title')} />
+                  <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='mcp-servers'>
+                    <McpServersPanel db={db} />
+                  </Tabs.Panel>
+                  <Tabs.Panel tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='model'>
+                    <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
+                  </Tabs.Panel>
+                  <Tabs.Tablist classNames={[styles.toolbar]}>
+                    <Tabs.IconTab value='view' icon='ph--eye--regular' label={t('chat-view.title')} />
                     <Tabs.IconTab
                       value='blueprints'
                       icon='ph--blueprint--regular'
-                      label={t('blueprints-in-context.title')}
+                      label={t('options.blueprints.title')}
                     />
                     <Tabs.IconTab
                       value='mcp-servers'
                       icon='ph--plugs-connected--regular'
-                      label={t('mcp-servers.title')}
+                      label={t('options.mcp.title')}
                     />
+                    <Tabs.IconTab value='model' icon='ph--cpu--regular' label={t('options.chat-model.title')} />
                   </Tabs.Tablist>
                 </Tabs.Viewport>
               </Tabs.Root>
@@ -126,25 +139,43 @@ const BlueprintsPanel = ({
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <SearchList.Content classNames='py-form-chrome'>
+      <SearchList.Content classNames='flex flex-col'>
         <SearchList.Viewport>
           {results.map((blueprint) => {
-            const isActive = activeBlueprints.has(blueprint.key);
+            const blueprintKey = Obj.getMeta(blueprint).key ?? blueprint.id;
+            const isActive = activeBlueprints.has(blueprintKey);
             return (
               <SearchList.Item
                 classNames='flex items-center overflow-hidden'
-                key={blueprint.key}
-                value={blueprint.key}
+                key={blueprintKey}
+                value={blueprintKey}
                 label={blueprint.name}
                 checked={isActive}
-                onSelect={() => onUpdateBlueprint?.(blueprint.key, !isActive)}
+                onSelect={() => onUpdateBlueprint?.(blueprintKey, !isActive)}
               />
             );
           })}
         </SearchList.Viewport>
+        <SearchList.Input placeholder={t('search.placeholder')} classNames='border-t border-separator' autoFocus />
       </SearchList.Content>
-      <SearchList.Input placeholder={t('search.placeholder')} classNames='mb-form-chrome' autoFocus />
     </SearchList.Root>
+  );
+};
+
+const ViewPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
+  const { t } = useTranslation(meta.id);
+  const [view, setView] = useObject(chat, 'view');
+  const value = (view as Assistant.ChatView | undefined) ?? 'normal';
+
+  return (
+    <Listbox.Root value={value} onValueChange={setView} autoFocus>
+      {Assistant.ChatViews.map((view) => (
+        <Listbox.Option key={view} value={view}>
+          <Listbox.OptionLabel>{t(`chat-view.${view}.label`, { defaultValue: view })}</Listbox.OptionLabel>
+          <Listbox.OptionIndicator />
+        </Listbox.Option>
+      ))}
+    </Listbox.Root>
   );
 };
 
@@ -184,12 +215,6 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
     [db],
   );
 
-  const handleToggle = useCallback((server: McpServer.McpServer, enabled: boolean) => {
-    Obj.change(server, (server) => {
-      server.enabled = enabled;
-    });
-  }, []);
-
   const handleRemove = useCallback(
     (server: McpServer.McpServer) => {
       db.remove(server);
@@ -198,31 +223,14 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
   );
 
   return (
-    <div className='py-form-chrome space-y-2'>
+    <div className='p-form-chrome'>
       {servers.map((server) => (
-        <div key={server.id} className='flex items-center gap-2 px-form-chrome'>
-          <Input.Root>
-            <Input.Label srOnly>{server.name}</Input.Label>
-            <Input.Switch
-              checked={server.enabled !== false}
-              onCheckedChange={(checked) => handleToggle(server, !!checked)}
-            />
-          </Input.Root>
-          <span className='flex-1 truncate text-sm'>{server.name}</span>
-          <span className='truncate text-xs text-description'>{server.url}</span>
-          <IconButton
-            variant='ghost'
-            icon='ph--x--regular'
-            iconOnly
-            label={t('mcp-server-remove.label')}
-            onClick={() => handleRemove(server)}
-          />
-        </div>
+        <McpServerRow key={server.id} server={server} onRemove={handleRemove} />
       ))}
       {adding ? (
         <McpServerForm onSubmit={handleAdd} onCancel={() => setAdding(false)} />
       ) : (
-        <div role='none' className='px-form-chrome'>
+        <div>
           <IconButton
             variant='ghost'
             icon='ph--plus--regular'
@@ -231,6 +239,39 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
           />
         </div>
       )}
+    </div>
+  );
+};
+
+type McpServerRowProps = {
+  server: McpServer.McpServer;
+  onRemove: (server: McpServer.McpServer) => void;
+};
+
+/**
+ * `useQuery` returns live objects but only re-renders on result-identity changes,
+ * so we must subscribe to the per-server `enabled` field via `useObject` to keep the
+ * switch in sync with mutations made through the returned setter.
+ */
+const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
+  const { t } = useTranslation(meta.id);
+  const [enabled, setEnabled] = useObject(server, 'enabled');
+
+  return (
+    <div className='flex items-center gap-2 px-form-chrome'>
+      <Input.Root>
+        <Input.Label srOnly>{server.name}</Input.Label>
+        <Input.Switch checked={enabled !== false} onCheckedChange={(checked) => setEnabled(!!checked)} />
+      </Input.Root>
+      <span className='flex-1 truncate text-sm'>{server.name}</span>
+      <span className='truncate text-xs text-description'>{server.url}</span>
+      <IconButton
+        variant='ghost'
+        icon='ph--x--regular'
+        iconOnly
+        label={t('mcp-server-remove.label')}
+        onClick={() => onRemove(server)}
+      />
     </div>
   );
 };
@@ -293,7 +334,7 @@ const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
           onChange={(event) => setApiKey(event.target.value)}
         />
       </Input.Root>
-      <div role='none' className='flex gap-2'>
+      <div className='flex gap-2'>
         <IconButton
           variant='ghost'
           icon='ph--check--regular'
@@ -365,7 +406,7 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
                   key={object.id}
                   value={object.id}
                   icon={icon}
-                  iconClassNames={styles?.surfaceText}
+                  iconClassNames={styles?.foreground}
                   label={Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id}
                   checked={isActive}
                   onSelect={() => onUpdateObject?.(Obj.getDXN(object), !isActive)}
@@ -378,7 +419,7 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
         </SearchList.Viewport>
       </SearchList.Content>
 
-      <div role='none' className={mx('flex flex-col', styles.toolbar)}>
+      <div className={mx('flex flex-col', styles.toolbar)}>
         <Select.Root value={typename === ANY ? undefined : typename} onValueChange={setTypename}>
           <Select.TriggerButton placeholder={t('type-filter.placeholder')} />
           <Select.Portal>

@@ -8,11 +8,11 @@ import { log } from '@dxos/log';
 import { ContentBlock, type Message } from '@dxos/types';
 import { type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
 
+import { type Assistant } from '../../types';
 import { type BlockRenderer, type MessageThreadContext } from './sync';
 import { applyToolBlockToWidgetState } from './tool-widget-state';
 import {
   FallbackWidget,
-  PromptWidget,
   ReasoningWidget,
   ReferenceWidget,
   SelectWidget,
@@ -25,19 +25,28 @@ import {
 
 /**
  * Custom XML tags registry.
+ *
+ * NOTE: `<prompt>` has no widget — it is rendered via mark + line decorations
+ * (`xmlBlockDecoration`) in MarkdownStream so the prompt text remains part of the document
+ * and can be highlighted by `xmlFormatting`. It is still listed here so the markdown block
+ * parser (`xmlBlockParsers`) knows to keep `<prompt>...</prompt>` as a single HTMLBlock
+ * — otherwise an unregistered prompt opens a Paragraph that lazy-continues into the
+ * following lines and breaks parsing of subsequent multi-line tags (e.g. a `<reasoning>`
+ * block whose content contains an ordered list).
  */
 export const componentRegistry: XmlWidgetRegistry = {
   //
-  // DOM Widgets
+  // Block-only (no widget — see note above).
   //
 
   prompt: {
     block: true,
-    factory: ({ children }) => {
-      const text = getXmlTextChild(children);
-      return text ? new PromptWidget(text) : null;
-    },
   },
+
+  //
+  // DOM Widgets
+  //
+
   synthetic: {
     block: true,
     factory: ({ children, range }) => {
@@ -89,9 +98,9 @@ export const componentRegistry: XmlWidgetRegistry = {
   status: {
     block: true,
     streaming: true,
-    factory: ({ children, range }) => {
+    factory: ({ children }) => {
       const text = getXmlTextChild(children);
-      return text ? new StatusWidget(text, range.from) : null;
+      return text ? new StatusWidget(text) : null;
     },
   },
 
@@ -106,7 +115,7 @@ export const componentRegistry: XmlWidgetRegistry = {
   toolCall: {
     block: true,
     Component: (props) => (
-      <div role='none' className='py-2'>
+      <div className='py-2'>
         <ToolWidget {...props} />
       </div>
     ),
@@ -133,17 +142,51 @@ export const componentRegistry: XmlWidgetRegistry = {
 /**
  * Convert block to markdown.
  */
-export const blockToMarkdown: BlockRenderer = (
-  context: MessageThreadContext,
+export const blockToMarkdown: BlockRenderer = createBlockRenderer('normal');
+
+/**
+ * Create a {@link BlockRenderer} that filters blocks based on the chat view type.
+ *
+ * - `summary`: only user prompts.
+ * - `normal`: user prompts + assistant text + tool calls + summary/select/suggestion/reference + status. Hides reasoning.
+ * - `thinking`: same as normal plus reasoning.
+ * - `debug`: renders every block (raw fallbacks visible).
+ */
+export function createBlockRenderer(viewType: Assistant.ChatView | undefined): BlockRenderer {
+  return (context, message, block) => {
+    if (!isBlockVisible(viewType, message, block)) {
+      return;
+    }
+    let str = blockToMarkdownImpl(context, message, block);
+    if (str && !block.pending) {
+      // Use a blank line as the block separator so each rendered block parses as its own
+      // markdown block. A single newline lets CommonMark absorb a following `<prompt>` (an
+      // HTML type-7 tag, which can't interrupt an open paragraph) into the previous
+      // paragraph, rendering the prompt bubble inline next to the prior assistant text.
+      return (str += '\n');
+    }
+    return str;
+  };
+}
+
+const isBlockVisible = (
+  viewType: Assistant.ChatView | undefined,
   message: Message.Message,
   block: ContentBlock.Any,
-) => {
-  let str = blockToMarkdownImpl(context, message, block);
-  if (str && !block.pending) {
-    return (str += '\n');
+): boolean => {
+  switch (viewType) {
+    case 'debug':
+      return true;
+    case 'normal':
+      return block._tag !== 'reasoning';
+    case 'summary':
+      // Show only conversational text (user prompts + assistant replies); hide reasoning,
+      // tool calls, status, stats, and synthetic system messages.
+      return block._tag === 'text' && (block as ContentBlock.Text).disposition !== 'synthetic';
+    case 'thinking':
+    default:
+      return true;
   }
-
-  return str;
 };
 
 const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Message, block: ContentBlock.Any) => {
@@ -154,7 +197,7 @@ const blockToMarkdownImpl = (context: MessageThreadContext, message: Message.Mes
         if (block.disposition === 'synthetic') {
           return renderXMLBlock('synthetic', { content: block.text, pending: block.pending });
         } else {
-          return `<prompt>${block.text}</prompt>`;
+          return `\n<prompt>${block.text}</prompt>`;
         }
       } else {
         const text = block.text.trim();

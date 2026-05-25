@@ -26,11 +26,14 @@ interface PluginImportSourceOptions {
 const PluginImportSource = ({
   include = ['@dxos/**'],
   exclude = [],
-  verbose = !!process.env.IMPORT_SOURCE_DEBUG,
+  verbose = process.env.IMPORT_SOURCE_DEBUG === '1' || process.env.IMPORT_SOURCE_DEBUG === 'true',
 }: PluginImportSourceOptions = {}): Plugin => {
   let resolver: ResolverFactory;
 
-  const globOptions = { dot: true };
+  // `nocomment: true` keeps Minimatch from treating leading `#` (used for Node
+  // subpath imports like `#diagnostics-broadcast`) as a comment pattern that
+  // matches nothing.
+  const globOptions = { dot: true, nocomment: true };
   const isMatch = (filePath: string) =>
     include.some((pattern) => Minimatch(filePath, pattern, globOptions)) &&
     !exclude.some((pattern) => Minimatch(filePath, pattern, globOptions));
@@ -61,8 +64,8 @@ const PluginImportSource = ({
 
         // Filter by package name pattern before resolving.
         const match =
-          include.some((pattern) => Minimatch(source, pattern, { dot: true })) &&
-          !exclude.some((pattern) => Minimatch(source, pattern, { dot: true }));
+          include.some((pattern) => Minimatch(source, pattern, globOptions)) &&
+          !exclude.some((pattern) => Minimatch(source, pattern, globOptions));
 
         if (!match) {
           verbose && console.log(`[plugin-import-source] ${source} -> excluded`);
@@ -70,6 +73,17 @@ const PluginImportSource = ({
         }
 
         if (!importer) {
+          return null;
+        }
+
+        // Don't re-route `#*` subpath imports to source when the importer
+        // is already in a compiled `dist/` tree. Compiled packages expect
+        // their own subpath imports to stay on the dist→dist chain;
+        // jumping back to source would pull in TypeScript that may not be
+        // browser-safe (e.g. raw `node:path` in `random-access-storage`'s
+        // src). Non-subpath `@dxos/*` imports from dist are unaffected —
+        // they still benefit from source resolution.
+        if (source.startsWith('#') && importer.includes('/dist/')) {
           return null;
         }
 
@@ -94,22 +108,14 @@ const PluginImportSource = ({
       },
     },
 
-    // Hook into load to add all matching files to watch list (including relative imports).
-    load(id) {
-      // Skip virtual modules and non-file paths.
-      if (id.startsWith('\0') || !id.startsWith('/')) {
-        return null;
-      }
-
-      // Strip query params (e.g., ?v=123).
-      const filePath = id.split('?')[0];
-
-      this.addWatchFile(filePath);
-      verbose && console.log(`[watch] ${filePath}`);
-
-      // Return null to let Vite load the file normally.
-      return null;
-    },
+    // NOTE: A previous version called `this.addWatchFile(filePath)` here for
+    // every loaded module. Vite already watches resolved files; the redundant
+    // calls flooded chokidar with thousands of registrations on cold start
+    // (one per file, including non-`@dxos/*` modules — the include filter
+    // only runs in resolveId), turning warm starts into multi-minute hangs
+    // when the watcher backend falls back to polling. Watches added in
+    // `resolveId` (above) for resolved package paths are sufficient to pick
+    // up source changes when condition resolution would shift.
   };
 };
 

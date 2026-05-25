@@ -5,11 +5,12 @@
 import React, { useCallback } from 'react';
 
 import { Icon, Toolbar as NaturalToolbar, type ToolbarRootProps, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
-import { composable, composableProps } from '@dxos/ui-theme';
 import { type MenuActionProperties } from '@dxos/ui-types';
 
-import { translationKey } from '../translations';
+import { translationKey } from '#translations';
+
 import {
   type MenuAction,
   type MenuItem,
@@ -56,7 +57,7 @@ const ActionToolbarItem = ({ __menuScope, action }: MenuScopedProps<{ action: Me
   const { iconSize, onAction } = useMenuScoped('ActionToolbarItem', __menuScope);
   const { t } = useTranslation(translationKey);
 
-  const { icon, iconOnly = true, disabled, testId, hidden, classNames } = action.properties;
+  const { icon, iconOnly = true, disabled, testId, hidden, classNames, iconClassNames } = action.properties;
   const buttonVariant =
     (action.properties as { variant?: string }).variant === 'primary' ? ('primary' as const) : ('ghost' as const);
 
@@ -87,6 +88,7 @@ const ActionToolbarItem = ({ __menuScope, action }: MenuScopedProps<{ action: Me
       icon={icon}
       size={iconSize}
       iconOnly={iconOnly}
+      iconClassNames={iconClassNames}
       label={actionLabel(action, t)}
     />
   ) : (
@@ -111,6 +113,11 @@ const DropdownMenuToolbarItem = ({
       // TODO(thure): Handle other menu item types.
       (activeItem as MenuAction)?.properties.icon) ||
     group.properties.icon;
+  // Follow the same `applyActive` rule for `iconClassNames` so a per-item
+  // accent (e.g. tag colour) tracks the displayed icon.
+  const iconClassNames =
+    ((group.properties as any).applyActive && (activeItem as MenuAction)?.properties.iconClassNames) ||
+    (group.properties as { iconClassNames?: any }).iconClassNames;
   const Root = icon ? NaturalToolbar.IconButton : NaturalToolbar.Button;
   const labelAction = (group.properties as any).applyActive && activeItem ? (activeItem as MenuAction) : group;
   const rootProps = icon
@@ -118,6 +125,7 @@ const DropdownMenuToolbarItem = ({
         icon,
         size: iconSize,
         iconOnly,
+        iconClassNames,
         label: actionLabel(labelAction, t),
         caretDown: true,
       }
@@ -142,7 +150,7 @@ const DropdownMenuToolbarItem = ({
 const ToggleGroupItem = ({ __menuScope, group, action }: MenuScopedProps<ToolbarMenuActionProps>) => {
   const { iconSize, onAction } = useMenuScoped('ToggleGroupItem', __menuScope);
   const { t } = useTranslation(translationKey);
-  const { icon, iconOnly = true, disabled, testId, hidden, classNames } = action.properties;
+  const { icon, iconOnly = true, disabled, testId, hidden, classNames, iconClassNames } = action.properties;
 
   const handleClick = useCallback(() => {
     if (onAction) {
@@ -167,6 +175,7 @@ const ToggleGroupItem = ({ __menuScope, group, action }: MenuScopedProps<Toolbar
       icon={icon}
       size={iconSize}
       iconOnly={iconOnly}
+      iconClassNames={iconClassNames}
       label={actionLabel(action, t)}
     />
   ) : (

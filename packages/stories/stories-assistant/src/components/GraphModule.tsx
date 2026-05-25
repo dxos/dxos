@@ -5,12 +5,12 @@
 import * as Match from 'effect/Match';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { ResearchGraph } from '@dxos/assistant-toolkit';
-import { Feed, Filter, Query } from '@dxos/echo';
+import { Filter, Query } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { useFlush } from '@dxos/plugin-assistant';
-import { D3ForceGraph, useGraphModel } from '@dxos/plugin-explorer';
-import { useQuery, useQueue } from '@dxos/react-client/echo';
+import { useFlush } from '@dxos/plugin-assistant/hooks';
+import { ForceGraph } from '@dxos/plugin-explorer/components';
+import { useGraphModel } from '@dxos/plugin-explorer/hooks';
+import { useQuery } from '@dxos/react-client/echo';
 import { IconButton, Toolbar } from '@dxos/react-ui';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
@@ -18,18 +18,21 @@ import { StackItem } from '@dxos/react-ui-stack';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
-import { type ComponentProps } from './types';
+import { ResearchInputQueue } from '../testing';
+import { type ModuleProps } from './types';
 
-export const GraphModule = ({ space }: ComponentProps) => {
+export const GraphModule = ({ space }: ModuleProps) => {
   const [filter, setFilter] = useState<Filter.Any>();
   const [open, setOpen] = useState(false);
 
-  const [researchGraph] = useQuery(space.db, Query.type(ResearchGraph.ResearchGraph));
-  const feed = researchGraph?.queue.target;
-  const queue = useQueue(feed ? Feed.getQueueDxn(feed) : undefined);
+  const [researchInput] = useQuery(space.db, Filter.type(ResearchInputQueue));
+  const feed = researchInput?.feed.target;
+  const items = useQuery(
+    space.db,
+    feed ? Query.select(Filter.everything()).from(feed) : Query.select(Filter.nothing()),
+  );
 
-  // TODO(burdon): Clean-up API.
-  const model = useGraphModel(space, undefined, undefined, queue);
+  const model = useGraphModel(space.db, undefined, undefined, items);
   useEffect(() => {
     model?.setFilter(filter ?? Filter.everything());
   }, [model, filter]);
@@ -47,11 +50,10 @@ export const GraphModule = ({ space }: ComponentProps) => {
   return (
     <StackItem.Content toolbar classNames={['relative h-full grid', open && 'grid-rows-[min-content_1fr]']}>
       <SearchBar space={space} onSubmit={handleSubmit} />
-      <D3ForceGraph classNames='min-h-[50vh]' model={model} />
+      <ForceGraph classNames='min-h-[50vh]' model={model} />
 
       {open && (
         <div
-          role='none'
           className={mx(
             'flex absolute left-2 right-2 bottom-2 h-[8rem]',
             'overflow-hidden bg-base-surface border border-subdued-separator opacity-80',
@@ -61,7 +63,7 @@ export const GraphModule = ({ space }: ComponentProps) => {
         </div>
       )}
 
-      <div role='none' className='absolute bottom-4 right-4 z-10'>
+      <div className='absolute bottom-4 right-4 z-10'>
         <IconButton
           variant='ghost'
           icon={open ? 'ph--x--regular' : 'ph--arrow-line-up--regular'}
@@ -74,7 +76,7 @@ export const GraphModule = ({ space }: ComponentProps) => {
   );
 };
 
-export const SearchBar = ({ space, onSubmit }: ComponentProps & Pick<ChatEditorProps, 'onSubmit'>) => {
+export const SearchBar = ({ space, onSubmit }: ModuleProps & Pick<ChatEditorProps, 'onSubmit'>) => {
   const { state: flushState, handleFlush } = useFlush(space);
   const editorRef = useRef<EditorController>(null);
 

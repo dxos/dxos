@@ -135,6 +135,16 @@ export class DataServiceImpl implements DataService {
     await this._updateIndexes();
   }
 
+  /**
+   * Test affordance: pause/resume flushing of document updates on every
+   * active subscription. See `DocumentsSynchronizer.setSendUpdatesPaused`.
+   */
+  setAllSubscriptionsSendUpdatesPaused(paused: boolean): void {
+    for (const synchronizer of this._subscriptions.values()) {
+      synchronizer.setSendUpdatesPaused(paused);
+    }
+  }
+
   subscribeSpaceSyncState(request: GetSpaceSyncStateRequest): Stream<SpaceSyncState> {
     return new Stream<SpaceSyncState>(({ ctx, next, ready }) => {
       const spaceId = request.spaceId;
@@ -143,6 +153,12 @@ export class DataServiceImpl implements DataService {
       const rootDocumentId = this._spaceStateManager.getSpaceRootDocumentId(spaceId);
       let collectionId = rootDocumentId && deriveCollectionIdFromSpaceId(spaceId, rootDocumentId);
       this._spaceStateManager.spaceDocumentListUpdated.on(ctx, (event) => {
+        // Filter by spaceId — without this, an update for any other space rewrites our
+        // collectionId to `space:<our-spaceId>:<other-space-root>`, which never has any
+        // recorded peers and so the subscriber's sync-state stalls at peerCount: 0.
+        if (event.spaceId !== spaceId) {
+          return;
+        }
         const newId = deriveCollectionIdFromSpaceId(spaceId, event.spaceRootId);
         if (newId !== collectionId) {
           collectionId = newId;

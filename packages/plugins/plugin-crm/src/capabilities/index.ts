@@ -3,7 +3,8 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/operation';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Blueprint, OperationHandlerSet } from '@dxos/compute';
 
 export const BlueprintDefinition = Capability.lazy('BlueprintDefinition', () => import('./blueprint-definition'));
 

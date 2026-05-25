@@ -35,12 +35,8 @@ export const NavBranch = ({ id }: NavBranchProps) => {
 
   const children = useConnections(graph, id, 'child');
 
-  // TODO(wittjosiah): Move alternate-tree nodes to a non-child relation so they don't need filtering.
   const visibleChildren = useMemo(
-    () =>
-      children.filter(
-        (node) => node.properties.disposition !== 'alternate-tree' && node.properties.disposition !== 'hidden',
-      ),
+    () => children.filter((node) => node.properties.disposition !== 'hidden'),
     [children],
   );
 
@@ -106,7 +102,7 @@ const NavBranchTile: MosaicStackTileComponent<Node.Node> = (props) => {
       fullWidth
       tabIndex={-1} // TODO(burdon): Use Mosaic.Focus.
       data-selected={isSelected}
-      classNames={mx('dx-focus-ring cursor-pointer', isSelected && 'bg-hover-overlay')}
+      classNames={mx('dx-focus-ring cursor-pointer', isSelected && 'bg-selected-surface')}
       onClick={handleSelect}
     >
       <Card.Toolbar>

@@ -8,10 +8,13 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": false,
   "type": "module",
+  "imports": {
+    "#translations": "./src/translations.ts"
+  },
   "exports": {
     ".": {
       "source": "./src/index.ts",
@@ -24,6 +27,12 @@
       "browser": "./dist/lib/browser/testing/index.mjs",
       "node": "./dist/lib/node-esm/testing/index.mjs",
       "types": "./dist/types/src/testing/index.d.ts"
+    },
+    "./translations": {
+      "source": "./src/translations.ts",
+      "types": "./dist/types/src/translations.d.ts",
+      "browser": "./dist/lib/browser/translations.mjs",
+      "node": "./dist/lib/node-esm/translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -82,6 +91,7 @@
     "error-stack-parser": "catalog:",
     "i18next": "catalog:",
     "keyborg": "catalog:",
+    "react-day-picker": "catalog:",
     "react-error-boundary": "catalog:",
     "react-i18next": "catalog:",
     "react-remove-scroll": "catalog:"

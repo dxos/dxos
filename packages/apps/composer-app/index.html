@@ -27,7 +27,7 @@
 
     <link rel="manifest" href="/site.webmanifest" />
 
-    <!--
+    <!-- 
       Suppress lit's dev-mode warning. Lit checks `globalThis.litIssuedWarnings`
       against either the warning code or the full text and skips emitting if a
       match is already present (`@lit/reactive-element/development/reactive-element.js`).
@@ -40,12 +40,6 @@
     </script>
   </head>
   <body>
-    <!--
-      Boot loader (style block, skeleton DOM, and inline driver script) is injected by
-      `bootLoaderPlugin` from `@dxos/app-framework/vite-plugin` (see vite.config.ts).
-      The host calls `window.__bootLoader.status(text)` from `src/main.tsx` between
-      phases and `window.__bootLoader.dismiss()` once React has mounted.
-    -->
     <div id="root" class="contents"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

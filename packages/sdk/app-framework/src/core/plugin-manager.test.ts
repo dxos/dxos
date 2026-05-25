@@ -61,7 +61,7 @@ describe('PluginManager', () => {
   const pluginLoader = Effect.fn(function* (id: string) {
     const plugin = plugins.find((plugin) => plugin.meta.id === id);
     invariant(plugin, `Plugin not found: ${id}`);
-    return plugin;
+    return { plugin };
   });
 
   afterEach(() => {
@@ -79,7 +79,7 @@ describe('PluginManager', () => {
       assert.strictEqual(added, testPlugin);
       assert.deepStrictEqual(manager.getPlugins(), [testPlugin]);
       assert.deepStrictEqual(manager.getEnabled(), []);
-      const removed = manager.remove(testMeta.id);
+      const removed = yield* manager.remove(testMeta.id);
       assert.isTrue(removed);
       assert.deepStrictEqual(manager.getPlugins(), []);
     }),
@@ -93,7 +93,7 @@ describe('PluginManager', () => {
       const urlLocator = 'https://example.com/plugin.mjs';
       const urlLoader = Effect.fn(function* (locator: string) {
         if (locator === urlLocator) {
-          return testPlugin;
+          return { plugin: testPlugin };
         }
         return yield* Effect.fail(new Error(`Unknown locator: ${locator}`));
       });
@@ -105,6 +105,106 @@ describe('PluginManager', () => {
       assert.deepStrictEqual(manager.getEnabled(), []);
       yield* manager.enable(added.meta.id);
       assert.deepStrictEqual(manager.getEnabled(), [testMeta.id]);
+    }),
+  );
+
+  it.effect('dev plugin shadows an existing plugin with the same id', () =>
+    Effect.gen(function* () {
+      const productionPlugin = Plugin.make(
+        Plugin.define(testMeta).pipe(
+          Plugin.addModule({
+            id: 'Prod',
+            activatesOn: ActivationEvents.Startup,
+            activate: () => Effect.succeed(Capability.contributes(String, { string: 'prod' })),
+          }),
+        ),
+      )();
+      const devPlugin = Plugin.make(
+        Plugin.define(testMeta).pipe(
+          Plugin.addModule({
+            id: 'Dev',
+            activatesOn: ActivationEvents.Startup,
+            activate: () => Effect.succeed(Capability.contributes(String, { string: 'dev' })),
+          }),
+        ),
+      )();
+
+      const loader = Effect.fn(function* (locator: string) {
+        if (locator === 'prod') {
+          return { plugin: productionPlugin };
+        }
+        if (locator === 'dev') {
+          return { plugin: devPlugin, dev: true };
+        }
+        return yield* Effect.fail(new Error(`Unknown locator: ${locator}`));
+      });
+
+      const manager = PluginManager.make({ pluginLoader: loader });
+      yield* manager.add('prod');
+      yield* manager.enable(testMeta.id);
+      yield* manager.activate(ActivationEvents.Startup);
+      assert.deepStrictEqual(
+        manager.capabilities.getAll(String).map((value) => value.string),
+        ['prod'],
+      );
+
+      // Loading the dev plugin with the same id swaps it into the id slot.
+      yield* manager.add('dev');
+      yield* manager.enable(testMeta.id);
+      assert.strictEqual(
+        manager.getPlugins().find((plugin) => plugin.meta.id === testMeta.id),
+        devPlugin,
+      );
+      yield* manager.reset(ActivationEvents.Startup);
+      assert.deepStrictEqual(
+        manager.capabilities.getAll(String).map((value) => value.string),
+        ['dev'],
+      );
+
+      // Removing the dev plugin restores the original and re-enables it
+      // because it was enabled at shadow time.
+      yield* manager.remove(testMeta.id);
+      assert.strictEqual(
+        manager.getPlugins().find((plugin) => plugin.meta.id === testMeta.id),
+        productionPlugin,
+      );
+      assert.isTrue(manager.getEnabled().includes(testMeta.id));
+      yield* manager.reset(ActivationEvents.Startup);
+      assert.deepStrictEqual(
+        manager.capabilities.getAll(String).map((value) => value.string),
+        ['prod'],
+      );
+    }),
+  );
+
+  it.effect('dev plugin add does not auto-enable a previously-disabled shadow target', () =>
+    Effect.gen(function* () {
+      const productionPlugin = Plugin.make(Plugin.define(testMeta))();
+      const devPlugin = Plugin.make(Plugin.define(testMeta))();
+      const loader = Effect.fn(function* (locator: string) {
+        if (locator === 'prod') {
+          return { plugin: productionPlugin };
+        }
+        if (locator === 'dev') {
+          return { plugin: devPlugin, dev: true };
+        }
+        return yield* Effect.fail(new Error(`Unknown locator: ${locator}`));
+      });
+
+      const manager = PluginManager.make({ pluginLoader: loader });
+      yield* manager.add('prod');
+      // Production plugin is registered but explicitly NOT enabled.
+      assert.deepStrictEqual(manager.getEnabled(), []);
+
+      yield* manager.add('dev');
+      yield* manager.remove(testMeta.id);
+
+      // Original is restored but stays disabled, matching its pre-shadow state.
+      assert.strictEqual(
+        manager.getPlugins().find((plugin) => plugin.meta.id === testMeta.id),
+        productionPlugin,
+      );
+      assert.deepStrictEqual(manager.getEnabled(), []);
     }),
   );
 
@@ -128,7 +228,7 @@ describe('PluginManager', () => {
       const plugin = TestPluginFactory({ count: 5 });
       plugins = [plugin];
 
-      const manager = PluginManager.make({ plugins: [plugin], core: [], pluginLoader });
+      const manager = PluginManager.make({ plugins: [plugin], pluginLoader });
       yield* manager.enable(testMeta.id);
       yield* manager.activate(ActivationEvents.Startup);
       const strings = manager.capabilities.getAll(String);
@@ -150,7 +250,7 @@ describe('PluginManager', () => {
       );
 
       const testPlugin = Test();
-      const manager = PluginManager.make({ plugins: [testPlugin], core: [], pluginLoader });
+      const manager = PluginManager.make({ plugins: [testPlugin], pluginLoader });
       yield* manager.enable(testMeta.id);
       assert.deepStrictEqual(manager.getEnabled(), [Test.meta.id]);
       assert.deepStrictEqual(manager.getModules(), [testPlugin.modules[0]]);
@@ -764,7 +864,7 @@ describe('PluginManager', () => {
       assert.strictEqual(eventsFiredUpdates.count, 1);
       assert.strictEqual(pendingResetUpdates.count, 4);
 
-      manager.remove(Plugin1.meta.id);
+      yield* manager.remove(Plugin1.meta.id);
       assert.strictEqual(pluginUpdates.count, 4);
       assert.strictEqual(enabledUpdates.count, 4);
       assert.strictEqual(modulesUpdates.count, 4);
@@ -1139,4 +1239,661 @@ describe('PluginManager', () => {
       assert.strictEqual(manager.capabilities.getAll(String).length, 1);
     }),
   );
+
+  describe('Plugin.lazy', () => {
+    const lazyMeta = { id: 'org.dxos.plugin.lazy', name: 'Lazy' };
+
+    it('exposes meta synchronously without invoking the loader', () => {
+      let loaderCalls = 0;
+      const Real = Plugin.make(Plugin.define<void>(lazyMeta));
+      const LazyTest = Plugin.lazy(lazyMeta, () => {
+        loaderCalls++;
+        return Promise.resolve({ default: Real });
+      });
+
+      assert.strictEqual(LazyTest.meta.id, lazyMeta.id);
+      assert.strictEqual(LazyTest.meta.name, 'Lazy');
+      assert.strictEqual(loaderCalls, 0);
+
+      const stub = LazyTest();
+      assert.strictEqual(stub.meta.id, lazyMeta.id);
+      assert.deepStrictEqual([...stub.modules], []);
+      assert.isTrue(Plugin.isLazy(stub));
+      assert.strictEqual(loaderCalls, 0);
+    });
+
+    it.effect('resolves the loader on enable and registers the real plugin modules', () =>
+      Effect.gen(function* () {
+        let loaderCalls = 0;
+        const Real = Plugin.define(lazyMeta).pipe(
+          Plugin.addModule({
+            id: 'Hello',
+            activatesOn: ActivationEvents.Startup,
+            activate: () => Effect.succeed(Capability.contributes(String, { string: 'hello' })),
+          }),
+          Plugin.make,
+        );
+        const LazyTest = Plugin.lazy(lazyMeta, () => {
+          loaderCalls++;
+          return Promise.resolve({ default: Real });
+        });
+
+        const lazyStub = LazyTest();
+        plugins = [lazyStub];
+
+        const manager = PluginManager.make({ pluginLoader });
+        yield* manager.add(lazyMeta.id);
+        // Loader has not been invoked yet — only meta is exposed.
+        assert.strictEqual(loaderCalls, 0);
+        assert.deepStrictEqual(manager.getModules(), []);
+
+        yield* manager.enable(lazyMeta.id);
+        assert.strictEqual(loaderCalls, 1);
+        // After enable the registered plugin should be the real one (not the stub),
+        // and its modules should be registered with the manager.
+        const registered = manager.getPlugins().find((p) => p.meta.id === lazyMeta.id);
+        assert.isDefined(registered);
+        assert.isFalse(Plugin.isLazy(registered!));
+        assert.strictEqual(registered!.modules.length, 1);
+
+        yield* manager.activate(ActivationEvents.Startup);
+        assert.strictEqual(manager.capabilities.getAll(String).length, 1);
+      }),
+    );
+
+    it.effect('does not invoke the loader if the plugin is never enabled', () =>
+      Effect.gen(function* () {
+        let loaderCalls = 0;
+        const Real = Plugin.make(Plugin.define<void>(lazyMeta));
+        const LazyTest = Plugin.lazy(lazyMeta, () => {
+          loaderCalls++;
+          return Promise.resolve({ default: Real });
+        });
+        const lazyStub = LazyTest();
+        plugins = [lazyStub];
+
+        const manager = PluginManager.make({ pluginLoader });
+        yield* manager.add(lazyMeta.id);
+
+        // Activate an event that has no listeners — the lazy plugin must not load.
+        yield* manager.activate(ActivationEvents.Startup);
+        assert.strictEqual(loaderCalls, 0);
+      }),
+    );
+
+    it.effect('forwards factory options to the real plugin factory', () =>
+      Effect.gen(function* () {
+        type Opts = { greeting: string };
+        const RealFactory = (opts: Opts) =>
+          Plugin.define(lazyMeta).pipe(
+            Plugin.addModule({
+              id: 'Hello',
+              activatesOn: ActivationEvents.Startup,
+              activate: () => Effect.succeed(Capability.contributes(String, { string: opts.greeting })),
+            }),
+            Plugin.make,
+          )(undefined as void);
+
+        const RealFactoryWithMeta = Object.assign(RealFactory, { meta: lazyMeta });
+
+        const LazyTest = Plugin.lazy<Opts>(lazyMeta, () => Promise.resolve({ default: RealFactoryWithMeta }));
+        const lazyStub = LazyTest({ greeting: 'hola' });
+        plugins = [lazyStub];
+
+        const manager = PluginManager.make({ pluginLoader });
+        yield* manager.add(lazyMeta.id);
+        yield* manager.enable(lazyMeta.id);
+        yield* manager.activate(ActivationEvents.Startup);
+
+        const all = manager.capabilities.getAll(String);
+        assert.strictEqual(all.length, 1);
+        assert.strictEqual(all[0].string, 'hola');
+      }),
+    );
+
+    it.effect('wraps loader rejections in a descriptive error', () =>
+      Effect.gen(function* () {
+        const LazyTest = Plugin.lazy(lazyMeta, () =>
+          Promise.reject<{ default: Plugin.PluginFactory }>(new Error('boom')),
+        );
+        const lazyStub = LazyTest();
+        plugins = [lazyStub];
+
+        const manager = PluginManager.make({ pluginLoader });
+        yield* manager.add(lazyMeta.id);
+
+        const exit = yield* Effect.exit(manager.enable(lazyMeta.id));
+        assert.isTrue(Exit.isFailure(exit));
+        if (Exit.isFailure(exit)) {
+          const failure = Cause.failureOption(exit.cause);
+          assert.isTrue(failure._tag === 'Some');
+          if (failure._tag === 'Some') {
+            assert.isTrue(Plugin.LazyPluginError.is(failure.value));
+            assert.strictEqual((failure.value as Plugin.LazyPluginError).context.id, lazyMeta.id);
+            assert.strictEqual((failure.value as Plugin.LazyPluginError).context.reason, 'load-failed');
+          }
+        }
+      }),
+    );
+
+    it.effect('publishes a lazy:<id> error message when resolution fails', () =>
+      Effect.gen(function* () {
+        const LazyTest = Plugin.lazy(lazyMeta, () =>
+          Promise.reject<{ default: Plugin.PluginFactory }>(new Error('boom')),
+        );
+        const lazyStub = LazyTest();
+        plugins = [lazyStub];
+
+        const manager = PluginManager.make({ pluginLoader });
+        // Subscribe first so we don't miss the activating/error pair.
+        const queue = yield* PubSub.subscribe(manager.activation);
+        yield* manager.add(lazyMeta.id);
+        yield* Effect.exit(manager.enable(lazyMeta.id));
+        const messages = yield* Queue.takeAll(queue);
+
+        const errorMessage = [...messages].find((m) => m.module === `lazy:${lazyMeta.id}` && m.state === 'error');
+        assert.isDefined(errorMessage);
+        assert.isDefined(errorMessage!.error);
+      }).pipe(Effect.scoped),
+    );
+
+    it.effect('coalesces concurrent lazy resolutions of the same plugin id', () =>
+      Effect.gen(function* () {
+        let factoryCalls = 0;
+        // System-tagged so the constructor's core derivation picks it up,
+        // forcing an implicit enable that races the explicit one below.
+        const coreLazyMeta = { ...lazyMeta, tags: ['system'] };
+        const Real = (() => {
+          const inner = Plugin.make(
+            Plugin.define<void>(coreLazyMeta).pipe(
+              Plugin.addModule({
+                id: 'Hello',
+                activatesOn: ActivationEvents.Startup,
+                activate: () => Effect.succeed(Capability.contributes(String, { string: 'hello' })),
+              }),
+            ),
+          );
+          const factory = (() => {
+            factoryCalls++;
+            return inner();
+          }) as Plugin.PluginFactory;
+          return Object.assign(factory, { meta: coreLazyMeta });
+        })();
+        const LazyTest = Plugin.lazy(coreLazyMeta, () => Promise.resolve({ default: Real }));
+        const lazyStub = LazyTest();
+        // `manager.enable(id)` is implicitly called twice — once from the
+        // constructor's core/enabled chain, once from our explicit call. With
+        // coalescing, the underlying factory should still run exactly once.
+        plugins = [lazyStub];
+        const manager = PluginManager.make({ pluginLoader, plugins });
+        yield* manager.enable(coreLazyMeta.id);
+        assert.strictEqual(factoryCalls, 1);
+      }),
+    );
+
+    it.effect('fails with a tagged error when the factory output is not a Plugin', () =>
+      Effect.gen(function* () {
+        const BadFactory = Object.assign(() => ({ not: 'a plugin' }) as any, { meta: lazyMeta });
+        const LazyTest = Plugin.lazy(lazyMeta, () => Promise.resolve({ default: BadFactory }));
+        const lazyStub = LazyTest();
+        plugins = [lazyStub];
+
+        const manager = PluginManager.make({ pluginLoader });
+        yield* manager.add(lazyMeta.id);
+
+        const exit = yield* Effect.exit(manager.enable(lazyMeta.id));
+        assert.isTrue(Exit.isFailure(exit));
+        if (Exit.isFailure(exit)) {
+          const failure = Cause.failureOption(exit.cause);
+          assert.isTrue(failure._tag === 'Some');
+          if (failure._tag === 'Some') {
+            assert.isTrue(Plugin.LazyPluginError.is(failure.value));
+            assert.strictEqual((failure.value as Plugin.LazyPluginError).context.reason, 'invalid-plugin');
+          }
+        }
+      }),
+    );
+  });
+
+  describe('timeouts and failure tracking', () => {
+    // Atom subscriptions fire synchronously when the registry's `_set` runs,
+    // even from a forked fiber on the default runtime. Wrapping in
+    // `Effect.async` lets a TestClock-driven test wait for state produced by
+    // a background `_runForkedFiber` (e.g. the auto-disable triggered when a
+    // module activation times out) without relying on real-time `sleep`.
+    const waitFor = <T>(registry: Registry.Registry, atom: Atom.Atom<T>, predicate: (value: T) => boolean) =>
+      Effect.async<void>((resume) => {
+        if (predicate(registry.get(atom))) {
+          resume(Effect.void);
+          return;
+        }
+        let resolved = false;
+        const dispose = registry.subscribe(atom, () => {
+          if (!resolved && predicate(registry.get(atom))) {
+            resolved = true;
+            dispose();
+            resume(Effect.void);
+          }
+        });
+        return Effect.sync(() => {
+          if (!resolved) {
+            dispose();
+          }
+        });
+      });
+
+    it.effect('records and auto-disables a plugin whose module exceeds the activation timeout', () =>
+      Effect.gen(function* () {
+        const SlowEvent = ActivationEvent.make('org.dxos.test.activation-timeout');
+        const SlowPlugin = Plugin.define({ id: 'org.dxos.test.slow-activation', name: 'Slow Activation' }).pipe(
+          Plugin.addModule({
+            id: 'Slow',
+            activatesOn: SlowEvent,
+            activate: Effect.fnUntraced(function* () {
+              yield* Effect.sleep(Duration.seconds(60));
+              return Capability.contributes(String, { string: 'never' });
+            }),
+          }),
+          Plugin.make,
+        );
+        plugins = [SlowPlugin()];
+
+        const registry = Registry.make();
+        const manager = PluginManager.make({
+          pluginLoader,
+          registry,
+          activationTimeout: Duration.seconds(2),
+        });
+        yield* manager.add(SlowPlugin.meta.id);
+        yield* manager.enable(SlowPlugin.meta.id);
+
+        const fiber = yield* Effect.fork(manager.activate(SlowEvent));
+        // Push past the 2s activation timeout. The forked module fiber is on
+        // TestClock too, so the timeout fires deterministically.
+        yield* TestClock.adjust(Duration.seconds(3));
+        const exit = yield* Fiber.await(fiber);
+        assert.isTrue(Exit.isFailure(exit));
+
+        const failed = manager.getFailed();
+        assert.strictEqual(failed.length, 1);
+        assert.strictEqual(failed[0].id, SlowPlugin.meta.id);
+        assert.strictEqual(failed[0].phase, 'activation');
+        assert.strictEqual(failed[0].reason, 'timeout');
+
+        // Auto-disable runs in a forked fiber on the default runtime; wait for
+        // the `enabled` atom to settle to the disabled state.
+        yield* waitFor(registry, manager.enabled, (ids) => !ids.includes(SlowPlugin.meta.id));
+        assert.deepStrictEqual(manager.getEnabled(), []);
+      }),
+    );
+
+    it.effect('records and auto-disables a lazy plugin whose loader exceeds the load timeout', () =>
+      Effect.gen(function* () {
+        const lazyMeta = { id: 'org.dxos.test.slow-load', name: 'Slow Load' };
+        // The dynamic import never resolves; the manager's load timeout should
+        // surface this as a `LazyPluginError` whose `cause` is `PluginTimeoutError`.
+        const LazyTest = Plugin.lazy(lazyMeta, () => new Promise<{ default: Plugin.PluginFactory }>(() => {}));
+        plugins = [LazyTest()];
+
+        const registry = Registry.make();
+        const manager = PluginManager.make({
+          pluginLoader,
+          registry,
+          loadTimeout: Duration.seconds(1),
+        });
+        yield* manager.add(lazyMeta.id);
+
+        const enableFiber = yield* Effect.fork(manager.enable(lazyMeta.id));
+        yield* TestClock.adjust(Duration.seconds(2));
+        const exit = yield* Fiber.await(enableFiber);
+        assert.isTrue(Exit.isFailure(exit));
+
+        // The wrapped `LazyPluginError` carries the timeout error as its cause.
+        if (Exit.isFailure(exit)) {
+          const failure = Cause.failureOption(exit.cause);
+          if (failure._tag === 'Some') {
+            assert.isTrue(Plugin.LazyPluginError.is(failure.value));
+            const lazyError = failure.value as Plugin.LazyPluginError;
+            assert.isTrue(PluginManager.PluginTimeoutError.is(lazyError.cause as Error));
+          }
+        }
+
+        const failed = manager.getFailed();
+        assert.strictEqual(failed.length, 1);
+        assert.strictEqual(failed[0].id, lazyMeta.id);
+        assert.strictEqual(failed[0].phase, 'load');
+        assert.strictEqual(failed[0].reason, 'timeout');
+
+        // The plugin was added to `enabled` before the lazy resolution failed,
+        // so the auto-disable fork should clear it.
+        yield* waitFor(registry, manager.enabled, (ids) => !ids.includes(lazyMeta.id));
+      }),
+    );
+
+    it.effect('records non-timeout activation errors as reason: error', () =>
+      Effect.gen(function* () {
+        const FailingEvent = ActivationEvent.make('org.dxos.test.activation-error');
+        const FailingPlugin = Plugin.define({ id: 'org.dxos.test.failing', name: 'Failing' }).pipe(
+          Plugin.addModule({
+            id: 'Boom',
+            activatesOn: FailingEvent,
+            activate: () => Effect.fail(new Error('boom')),
+          }),
+          Plugin.make,
+        );
+        plugins = [FailingPlugin()];
+
+        const registry = Registry.make();
+        const manager = PluginManager.make({ pluginLoader, registry });
+        yield* manager.add(FailingPlugin.meta.id);
+        yield* manager.enable(FailingPlugin.meta.id);
+
+        const exit = yield* Effect.exit(manager.activate(FailingEvent));
+        assert.isTrue(Exit.isFailure(exit));
+
+        const failed = manager.getFailed();
+        assert.strictEqual(failed.length, 1);
+        assert.strictEqual(failed[0].reason, 'error');
+        assert.strictEqual(failed[0].error.message, 'boom');
+
+        yield* waitFor(registry, manager.enabled, (ids) => !ids.includes(FailingPlugin.meta.id));
+      }),
+    );
+
+    it.effect('does not auto-disable a core plugin even though the failure is recorded', () =>
+      Effect.gen(function* () {
+        const FailingEvent = ActivationEvent.make('org.dxos.test.core-fail');
+        const CorePlugin = Plugin.define({ id: 'org.dxos.test.core', name: 'Core', tags: ['system'] }).pipe(
+          Plugin.addModule({
+            id: 'Boom',
+            activatesOn: FailingEvent,
+            activate: () => Effect.fail(new Error('boom')),
+          }),
+          Plugin.make,
+        );
+        const corePlugin = CorePlugin();
+        plugins = [corePlugin];
+
+        const manager = PluginManager.make({
+          pluginLoader,
+          plugins: [corePlugin],
+        });
+        // Core is auto-enabled via the constructor's enable chain.
+        const exit = yield* Effect.exit(manager.activate(FailingEvent));
+        assert.isTrue(Exit.isFailure(exit));
+
+        assert.strictEqual(manager.getFailed().length, 1);
+        // Core stays enabled; host opted into it being non-removable.
+        assert.deepStrictEqual(manager.getEnabled(), [corePlugin.meta.id]);
+      }),
+    );
+
+    it.effect('clearFailure removes the failure record and re-enable starts fresh', () =>
+      Effect.gen(function* () {
+        let shouldFail = true;
+        const Event = ActivationEvent.make('org.dxos.test.flaky');
+        const FlakyPlugin = Plugin.define({ id: 'org.dxos.test.flaky', name: 'Flaky' }).pipe(
+          Plugin.addModule({
+            id: 'Maybe',
+            activatesOn: Event,
+            activate: () =>
+              shouldFail
+                ? Effect.fail(new Error('first try'))
+                : Effect.succeed(Capability.contributes(String, { string: 'ok' })),
+          }),
+          Plugin.make,
+        );
+        const flakyPlugin = FlakyPlugin();
+        plugins = [flakyPlugin];
+
+        const registry = Registry.make();
+        const manager = PluginManager.make({ pluginLoader, registry });
+        yield* manager.add(flakyPlugin.meta.id);
+        yield* manager.enable(flakyPlugin.meta.id);
+
+        yield* Effect.exit(manager.activate(Event));
+        assert.strictEqual(manager.getFailed().length, 1);
+        yield* waitFor(registry, manager.enabled, (ids) => !ids.includes(flakyPlugin.meta.id));
+
+        // Calling `enable` again clears the prior failure record before
+        // attempting resolution; verify the explicit API does too.
+        assert.isTrue(manager.clearFailure(flakyPlugin.meta.id));
+        assert.strictEqual(manager.getFailed().length, 0);
+        assert.isFalse(manager.clearFailure(flakyPlugin.meta.id));
+
+        // Retry: enable + reset the activation event so the module re-runs.
+        shouldFail = false;
+        yield* manager.enable(flakyPlugin.meta.id);
+        yield* manager.reset(Event);
+        assert.strictEqual(manager.getFailed().length, 0);
+        assert.strictEqual(manager.capabilities.getAll(String).length, 1);
+      }),
+    );
+  });
+
+  describe('plugin dependencies (dependsOn)', () => {
+    // Build a small plugin with a `dependsOn` chain. The helper keeps each test
+    // focused on the dependency semantics rather than module wiring.
+    const makePlugin = (id: string, dependsOn?: string[], tags?: string[]) =>
+      Plugin.make(Plugin.define({ id, name: id, dependsOn, tags }))();
+
+    it.effect('enable resolves the transitive closure in dependency-first order', () =>
+      Effect.gen(function* () {
+        const a = makePlugin('a');
+        const b = makePlugin('b', ['a']);
+        const c = makePlugin('c', ['b']);
+        const manager = PluginManager.make({ plugins: [a, b, c], pluginLoader });
+
+        const ok = yield* manager.enable('c');
+        assert.isTrue(ok);
+        // `a` enables first, then `b`, then `c`.
+        assert.deepStrictEqual(manager.getEnabled(), ['a', 'b', 'c']);
+      }),
+    );
+
+    it.effect('enable is idempotent when dependencies are already enabled', () =>
+      Effect.gen(function* () {
+        const a = makePlugin('a');
+        const b = makePlugin('b', ['a']);
+        const manager = PluginManager.make({ plugins: [a, b], pluginLoader });
+
+        yield* manager.enable('a');
+        yield* manager.enable('b');
+        assert.deepStrictEqual(manager.getEnabled(), ['a', 'b']);
+        // Re-enabling shouldn't duplicate entries.
+        yield* manager.enable('b');
+        assert.deepStrictEqual(manager.getEnabled(), ['a', 'b']);
+      }),
+    );
+
+    it.effect('enable with a missing declared dependency records a PluginDependencyError', () =>
+      Effect.gen(function* () {
+        const dependent = makePlugin('dependent', ['org.dxos.missing']);
+        const manager = PluginManager.make({ plugins: [dependent], pluginLoader });
+
+        const ok = yield* manager.enable('dependent');
+        assert.isFalse(ok);
+        assert.deepStrictEqual(manager.getEnabled(), []);
+        const failures = manager.getFailed();
+        assert.strictEqual(failures.length, 1);
+        assert.strictEqual(failures[0].id, 'dependent');
+        assert.instanceOf(failures[0].error, Plugin.PluginDependencyError);
+      }),
+    );
+
+    it.effect('enable detects A↔B cycle and records a cycle failure', () =>
+      Effect.gen(function* () {
+        const a = makePlugin('a', ['b']);
+        const b = makePlugin('b', ['a']);
+        const manager = PluginManager.make({ plugins: [a, b], pluginLoader });
+
+        const ok = yield* manager.enable('a');
+        assert.isFalse(ok);
+        assert.deepStrictEqual(manager.getEnabled(), []);
+        const failures = manager.getFailed();
+        assert.strictEqual(failures.length, 1);
+        assert.instanceOf(failures[0].error, Plugin.PluginDependencyError);
+      }),
+    );
+
+    it.effect('enable with resolveDependencies: false skips closure walk and missing-dep check', () =>
+      Effect.gen(function* () {
+        // Dependent declares a dep that is intentionally unregistered — the
+        // caller has accepted responsibility for satisfying it some other way.
+        const dependent = makePlugin('dependent', ['org.dxos.alt-impl']);
+        const manager = PluginManager.make({ plugins: [dependent], pluginLoader });
+
+        const ok = yield* manager.enable('dependent', { resolveDependencies: false });
+        assert.isTrue(ok);
+        assert.deepStrictEqual(manager.getEnabled(), ['dependent']);
+        assert.strictEqual(manager.getFailed().length, 0);
+      }),
+    );
+
+    it.effect('disable cascades to transitive dependents by default', () =>
+      Effect.gen(function* () {
+        const a = makePlugin('a');
+        const b = makePlugin('b', ['a']);
+        const c = makePlugin('c', ['b']);
+        const manager = PluginManager.make({ plugins: [a, b, c], pluginLoader });
+
+        yield* manager.enable('c');
+        assert.deepStrictEqual(manager.getEnabled(), ['a', 'b', 'c']);
+
+        const ok = yield* manager.disable('a');
+        assert.isTrue(ok);
+        // Cascade tears down `c` (leaf) and `b` before `a`.
+        assert.deepStrictEqual(manager.getEnabled(), []);
+      }),
+    );
+
+    it.effect('default disable refuses when a transitive dependent is core', () =>
+      Effect.gen(function* () {
+        const lib = makePlugin('lib');
+        const coreClient = makePlugin('coreClient', ['lib'], ['system']);
+        const manager = PluginManager.make({
+          plugins: [lib, coreClient],
+          enabled: ['lib'],
+          pluginLoader,
+        });
+
+        const exit = yield* Effect.exit(manager.disable('lib'));
+        assert.isTrue(Exit.isFailure(exit));
+        // No state mutation when cascade is refused for a core dependent.
+        assert.isTrue(manager.getEnabled().includes('lib'));
+        assert.isTrue(manager.getEnabled().includes('coreClient'));
+      }),
+    );
+
+    it.effect('disable with cascade: false disables only the target', () =>
+      Effect.gen(function* () {
+        const a = makePlugin('a');
+        const b = makePlugin('b', ['a']);
+        const manager = PluginManager.make({ plugins: [a, b], pluginLoader });
+
+        yield* manager.enable('b');
+        const ok = yield* manager.disable('a', { cascade: false });
+        assert.isTrue(ok);
+        // `b` is left enabled-but-broken (no `a` to satisfy its declared dep).
+        assert.deepStrictEqual(manager.getEnabled(), ['b']);
+      }),
+    );
+
+    it.effect('getDependencies and getDependents reflect the declared graph', () =>
+      Effect.gen(function* () {
+        const a = makePlugin('a');
+        const b = makePlugin('b', ['a']);
+        const c = makePlugin('c', ['b']);
+        const manager = PluginManager.make({ plugins: [a, b, c], pluginLoader });
+
+        assert.deepStrictEqual([...manager.getDependencies('c', { transitive: false })], ['b']);
+        assert.deepStrictEqual([...manager.getDependencies('c', { transitive: true })], ['a', 'b']);
+
+        assert.deepStrictEqual([...manager.getDependents('a', { transitive: false })], ['b']);
+        assert.deepStrictEqual([...manager.getDependents('a', { transitive: true })], ['c', 'b']);
+
+        yield* manager.enable('b');
+        assert.deepStrictEqual([...manager.getDependents('a', { transitive: true, enabledOnly: true })], ['b']);
+      }),
+    );
+
+    it.effect('enable installs a catalog-only dependency via add() before enabling it', () =>
+      Effect.gen(function* () {
+        // The "remote" plugin is not pre-registered; the loader knows about
+        // it, simulating a fetch from the registry.
+        const remote = makePlugin('remote');
+        const dependent = makePlugin('dependent', ['remote']);
+        const remoteLoader = Effect.fn(function* (id: string) {
+          if (id === 'remote') {
+            return { plugin: remote };
+          }
+          throw new Error(`Unknown id: ${id}`);
+        });
+
+        const registry = Registry.make();
+        const manager = PluginManager.make({
+          plugins: [dependent],
+          pluginLoader: remoteLoader,
+          registry,
+        });
+        // Seed the catalog with the remote entry so the dependency walk can
+        // discover it.
+        registry.set(manager.pluginRegistry.plugins, {
+          entries: [
+            {
+              id: 'remote',
+              name: 'Remote',
+              moduleUrl: 'about:blank',
+              repo: 'example/remote',
+              version: 'v0.0.0',
+            },
+          ],
+          loading: false,
+          error: null,
+        });
+
+        const ok = yield* manager.enable('dependent');
+        assert.isTrue(ok);
+        assert.deepStrictEqual(manager.getEnabled(), ['remote', 'dependent']);
+        assert.isTrue(manager.getPlugins().some((plugin) => plugin.meta.id === 'remote'));
+      }),
+    );
+
+    it.effect('enable records install-failed when a catalog-only dep fails to load', () =>
+      Effect.gen(function* () {
+        const dependent = makePlugin('dependent', ['remote-broken']);
+        const failingLoader = Effect.fn(function* (_id: string) {
+          return yield* Effect.fail(new Error('fetch failed'));
+        });
+
+        const registry = Registry.make();
+        const manager = PluginManager.make({
+          plugins: [dependent],
+          pluginLoader: failingLoader,
+          registry,
+        });
+        registry.set(manager.pluginRegistry.plugins, {
+          entries: [
+            {
+              id: 'remote-broken',
+              name: 'Broken',
+              moduleUrl: 'about:blank',
+              repo: 'example/broken',
+              version: 'v0.0.0',
+            },
+          ],
+          loading: false,
+          error: null,
+        });
+
+        const ok = yield* manager.enable('dependent');
+        assert.isFalse(ok);
+        assert.deepStrictEqual(manager.getEnabled(), []);
+        const failures = manager.getFailed();
+        assert.strictEqual(failures.length, 1);
+        assert.strictEqual(failures[0].id, 'dependent');
+        assert.instanceOf(failures[0].error, Plugin.PluginDependencyError);
+      }),
+    );
+  });
 });

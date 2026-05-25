@@ -43,6 +43,7 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
           // TODO(wittjosiah): OPFS doesn't work in Playwright's WebKit (works in real Safari).
           //   https://github.com/microsoft/playwright/issues/18235
           //   Test if OPFS is actually available before enabling SQLite.
+          log('dedicated-worker: probing OPFS availability');
           let opfsAvailable = false;
           try {
             if (typeof navigator !== 'undefined' && navigator.storage?.getDirectory) {
@@ -54,9 +55,12 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
             log.warn('OPFS not available, disabling persistent indexing');
             opfsAvailable = false;
           }
+          log('dedicated-worker: OPFS probe complete', { opfsAvailable });
+          log('dedicated-worker: constructing WorkerRuntime');
           runtime = new WorkerRuntime({
             configProvider: async () => config,
             onStop: async () => {
+              log('dedicated-worker: WorkerRuntime onStop, closing self');
               // Close the shared worker, lock will be released automatically.
               self.close();
               releaseLock();
@@ -68,8 +72,14 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
             // Only enable SQLite if OPFS is available (fails in Playwright WebKit).
             sqliteLayer: opfsAvailable ? undefined : layerMemory,
           });
-          await options.onBeforeStart?.(config);
+          if (options.onBeforeStart) {
+            log('dedicated-worker: running onBeforeStart');
+            await options.onBeforeStart(config);
+            log('dedicated-worker: onBeforeStart complete');
+          }
+          log('dedicated-worker: starting WorkerRuntime');
           await runtime.start();
+          log('dedicated-worker: WorkerRuntime started, posting ready');
           self.postMessage({
             type: 'ready',
             livenessLockKey: runtime.livenessLockKey,
@@ -78,7 +88,7 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
         }
         case 'start-session': {
           if (tabsProcessed.has(message.clientId)) {
-            log('ignoring duplicate client');
+            log('ignoring duplicate client', { clientId: message.clientId });
             break;
           }
           tabsProcessed.add(message.clientId);
@@ -86,6 +96,7 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
           const appChannel = new MessageChannel();
           const systemChannel = new MessageChannel();
 
+          log('dedicated-worker: posting session ports', { clientId: message.clientId });
           self.postMessage(
             {
               type: 'session',
@@ -98,14 +109,18 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
 
           // Will block until the other side finishes the handshake.
           {
+            log('dedicated-worker: creating session (waiting for handshake)', { clientId: message.clientId });
             const session = await runtime.createSession({
               systemPort: createWorkerPort({ port: systemChannel.port2 }),
               appPort: createWorkerPort({ port: appChannel.port2 }),
               onClose: async () => {
+                log('dedicated-worker: session closed', { clientId: message.clientId });
                 tabsProcessed.delete(message.clientId);
               },
             });
+            log('dedicated-worker: session created', { clientId: message.clientId });
             if (message.clientId === owningClientId) {
+              log('dedicated-worker: connecting webrtc bridge to owning client', { clientId: message.clientId });
               runtime.connectWebrtcBridge(session);
             }
           }

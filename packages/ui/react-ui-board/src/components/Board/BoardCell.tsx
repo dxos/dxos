@@ -8,10 +8,11 @@ import React, { type PropsWithChildren, useEffect, useRef, useState } from 'reac
 import { type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui';
+import { Card, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { translationKey } from '../../translations';
+import { translationKey } from '#translations';
+
 import { useBoardContext } from './Board';
 import { getBoardRect } from './geometry';
 import { type CellLayout, type Position } from './types';
@@ -63,21 +64,16 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
 
   return (
     <Card.Root
-      ref={rootRef}
-      classNames={mx(
-        'absolute p-0 grid grid-rows-[min-content_1fr]',
-        dragState === 'dragging' && 'opacity-50',
-        classNames,
-      )}
+      classNames={mx('absolute grid-rows-[auto_1fr]', dragState === 'dragging' && 'opacity-50', classNames)}
       style={getBoardRect(board, layout)}
       onClick={() => onSelect?.(item.id)}
+      ref={rootRef}
     >
       <Card.Toolbar>
         <Card.DragHandle ref={dragHandleRef} />
-        {/* TODO(burdon): Title. */}
-        <Card.ToolbarSeparator variant='gap' />
+        <Toolbar.Separator variant='gap' />
         {dragState !== 'dragging' && (
-          <Card.ToolbarIconButton
+          <Toolbar.IconButton
             variant='ghost'
             icon='ph--x--regular'
             iconOnly
@@ -86,9 +82,7 @@ export const BoardCell = ({ classNames, children, item, layout, draggable: isDra
           />
         )}
       </Card.Toolbar>
-      <div role='none' {...{ inert: true }} className='pointer-events-none min-h-0 min-w-0'>
-        {children}
-      </div>
+      {children}
     </Card.Root>
   );
 };

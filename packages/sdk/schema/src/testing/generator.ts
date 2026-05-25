@@ -7,8 +7,7 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { type Database, type Entity, Obj, Ref, Type } from '@dxos/echo';
-import { Filter, Query } from '@dxos/echo';
+import { type Database, type Entity, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import {
   type AnyProperties,
   GeneratorAnnotationId,
@@ -161,7 +160,7 @@ export const createReferences = <S extends Type.AnyObj>(schema: S, db: Database.
 
     // Set all references within a change context.
     if (refsToSet.length > 0) {
-      Obj.change(obj as any, (mutableObj: any) => {
+      Obj.update(obj as any, (mutableObj: any) => {
         for (const { name, ref } of refsToSet) {
           mutableObj[name] = ref;
         }

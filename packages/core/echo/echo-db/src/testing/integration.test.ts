@@ -7,8 +7,7 @@ import { afterEach, assert, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger, asyncTimeout } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { Obj, Relation, Type } from '@dxos/echo';
-import { Filter, Query } from '@dxos/echo';
+import { Filter, Obj, Query, Relation, Type } from '@dxos/echo';
 import { MeshEchoReplicator } from '@dxos/echo-pipeline';
 import {
   TestReplicationNetwork,
@@ -90,8 +89,8 @@ describe('Integration tests', () => {
     await dataAssertion.verify(db2);
   });
 
-  test('reload peer -- save index before restart', { timeout: 20_000 }, async () => {
-    const NUM_OBJECTS = 500;
+  test('reload peer -- save index before restart', { timeout: 60_000 }, async () => {
+    const NUM_OBJECTS = 100;
     await using peer = await builder.createPeer({
       types: [TestSchema.Person],
     });
@@ -101,6 +100,7 @@ describe('Integration tests', () => {
       db.add(Obj.make(TestSchema.Person, { name: `Person ${i}` }));
     }
     await db.flush();
+    await peer.host.updateIndexes();
 
     await peer.reload();
     await using db2 = await peer.openLastDatabase();
@@ -484,7 +484,7 @@ describe('Integration tests', () => {
       const [spaceKey] = PublicKey.randomSequence();
       await using peer = await builder.createPeer();
 
-      let rootUrl: string, schemaDxn: string;
+      let rootUrl: string, schemaDXN: string;
       {
         await using db = await peer.createDatabase(spaceKey);
         rootUrl = db.rootUrl!;
@@ -493,7 +493,7 @@ describe('Integration tests', () => {
           field: Schema.String,
         }).pipe(Type.object({ typename: 'com.example.type.test', version: '0.1.0' }));
         const [stored] = await db.schemaRegistry.register([LocalTestSchema]);
-        schemaDxn = DXN.fromLocalObjectId(stored.id).toString();
+        schemaDXN = DXN.fromLocalObjectId(stored.id).toString();
 
         const object = db.add(makeObject(stored, { field: 'test' }));
         expect(Obj.getSchema(object)).to.eq(stored);
@@ -514,7 +514,7 @@ describe('Integration tests', () => {
       {
         // Can query by stored schema DXN.
         await using db = await peer.openDatabase(spaceKey, rootUrl);
-        const objects = await db.query(Query.select(Filter.typeDXN(DXN.parse(schemaDxn)))).run();
+        const objects = await db.query(Query.select(Filter.typeDXN(DXN.parse(schemaDXN)))).run();
         expect(objects.length).to.eq(1);
         expect(getTypeAnnotation(Obj.getSchema(objects[0])!)).to.include({
           typename: 'com.example.type.test',

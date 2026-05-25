@@ -10,10 +10,12 @@ import { Capabilities, Capability } from '@dxos/app-framework';
 import { useCapabilities } from '@dxos/app-framework/ui';
 import { AppCapabilities } from '@dxos/app-toolkit';
 import { type ThemeMode, ThemeProvider, type ThemeProviderProps, Toast, Tooltip } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/ui-theme';
+import { defaultTx } from '@dxos/react-ui';
+import { osTranslations } from '@dxos/ui-theme';
+
+import { translations } from '#translations';
 
 import { meta } from './meta';
-import { translations } from './translations';
 
 export type ThemePluginOptions = Partial<Pick<ThemeProviderProps, 'tx' | 'noCache' | 'resourceExtensions'>> & {
   appName?: string;
@@ -21,11 +23,13 @@ export type ThemePluginOptions = Partial<Pick<ThemeProviderProps, 'tx' | 'noCach
 };
 
 export default Capability.makeModule(
-  Effect.fnUntraced(function* (
-    { appName, tx: propsTx = defaultTx, resourceExtensions = [], platform, ...rest }: ThemePluginOptions = {
-      appName: 'test',
-    },
-  ) {
+  Effect.fnUntraced(function* ({
+    appName,
+    tx: propsTx = defaultTx,
+    resourceExtensions = [],
+    platform,
+    ...rest
+  }: ThemePluginOptions = {}) {
     const registry: Registry.Registry = yield* Capability.get(Capabilities.AtomRegistry);
     const themeAtom = Atom.make<{ themeMode: ThemeMode }>({ themeMode: 'dark' }).pipe(Atom.keepAlive);
 
@@ -46,7 +50,12 @@ export default Capability.makeModule(
           const _resources = useCapabilities(AppCapabilities.Translations);
           const { themeMode } = useAtomValue(themeAtom);
           const resources = useMemo(
-            () => [...translations, ...resourceExtensions, ..._resources.flat()],
+            () => [
+              ...translations,
+              ...resourceExtensions,
+              ..._resources.flat(),
+              ...(appName ? [{ 'en-US': { [osTranslations]: { 'current-app.name': appName } } }] : []),
+            ],
             [appName, resourceExtensions, _resources],
           );
 

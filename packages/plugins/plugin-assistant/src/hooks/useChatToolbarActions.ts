@@ -2,9 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
-import { useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Chat } from '@dxos/assistant-toolkit';
@@ -12,11 +10,11 @@ import { Filter, Obj, Query } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { useQuery } from '@dxos/react-client/echo';
-import { MenuBuilder, useMenuActions } from '@dxos/react-ui-menu';
+import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { useChatContext } from '#components';
 import { meta } from '#meta';
-import { AssistantOperation } from '#operations';
+import { AssistantOperation } from '#types';
 
 export type ChatToolbarActionsProps = {
   chat?: Chat.Chat;
@@ -33,90 +31,90 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
   // TODO(wittjosiah): Query in react vs query in atom?
   const chats = useQuery(db, query);
 
-  // Create stable reference for dependency array to avoid circular reference issues.
-  return useMenuActions(
-    useMemo(() => {
-      return Atom.make(() => {
-        const builder = MenuBuilder.make()
-          .root({
-            label: ['chat-toolbar.title', { ns: meta.id }],
-          })
-          .action(
-            'new',
-            {
-              label: ['new-thread.button', { ns: meta.id }],
-              icon: 'ph--plus--regular',
-              type: 'new',
-              disabled: !companionTo,
-            },
-            () => {
-              invariant(companionTo);
-              return invoke(AssistantOperation.SetCurrentChat, {
-                companionTo,
-                chat: undefined,
-              }).pipe(runAndForwardErrors);
-            },
-          )
-          .action(
-            'rename',
-            {
-              label: ['rename-thread.button', { ns: meta.id }],
-              icon: 'ph--magic-wand--regular',
-              type: 'rename',
-              disabled: !chat,
-            },
-            () =>
-              Effect.gen(function* () {
-                invariant(chat);
-                yield* invoke(AssistantOperation.UpdateChatName, { chat });
-              }).pipe(runAndForwardErrors),
-          )
-          .action(
-            'branch',
-            {
-              label: ['branch-thread.menu', { ns: meta.id }],
-              icon: 'ph--git-branch--regular',
-              type: 'branch',
-              disabled: true,
-            },
-            () => {},
-          );
+  // Stable projection of chat identity + label so the menu rebuilds when a chat is renamed
+  // (same count, same ids → without this the history labels go stale).
+  const chatsVersion = chats.map((chat) => `${chat.id}:${Obj.getLabel(chat) ?? ''}`).join('|');
 
-        if (chats.length > 0) {
-          builder.group(
-            'chats',
-            {
-              label: ['chat-history.label', { ns: meta.id }],
-              icon: 'ph--clock-counter-clockwise--regular',
-              selectCardinality: 'single',
-              variant: 'dropdownMenu',
-            },
-            (builder) => {
-              chats
-                // TODO(wittjosiah): This should be the default sort order.
-                .toSorted((a, b) => a.id.localeCompare(b.id))
-                .forEach((chat) => {
-                  builder.action(
-                    chat.id,
-                    {
-                      label: Obj.getLabel(chat) ?? ['object-name.placeholder', { ns: Chat.Chat.typename }],
-                    },
-                    () =>
-                      Effect.gen(function* () {
-                        invariant(companionTo);
-                        yield* invoke(AssistantOperation.SetCurrentChat, {
-                          companionTo,
-                          chat,
-                        });
-                      }).pipe(runAndForwardErrors),
-                  );
-                });
-            },
-          );
-        }
+  // Stable references in deps avoid circular reference issues.
+  return useMenuBuilder(() => {
+    const builder = MenuBuilder.make()
+      .root({
+        label: ['chat-toolbar.title', { ns: meta.id }],
+      })
+      .action(
+        'new',
+        {
+          label: ['new-thread.button', { ns: meta.id }],
+          icon: 'ph--plus--regular',
+          type: 'new',
+          disabled: !companionTo,
+        },
+        () => {
+          invariant(companionTo);
+          return invoke(AssistantOperation.SetCurrentChat, {
+            companionTo,
+            chat: undefined,
+          }).pipe(runAndForwardErrors);
+        },
+      )
+      .action(
+        'rename',
+        {
+          label: ['rename-thread.button', { ns: meta.id }],
+          icon: 'ph--magic-wand--regular',
+          type: 'rename',
+          disabled: !chat,
+        },
+        () =>
+          Effect.gen(function* () {
+            invariant(chat);
+            yield* invoke(AssistantOperation.UpdateChatName, { chat });
+          }).pipe(runAndForwardErrors),
+      )
+      .action(
+        'branch',
+        {
+          label: ['branch-thread.menu', { ns: meta.id }],
+          icon: 'ph--git-branch--regular',
+          type: 'branch',
+          disabled: true,
+        },
+        () => {},
+      );
 
-        return builder.build();
-      });
-    }, [chats.length, db?.spaceId, companionTo?.id, chat?.id, invoke]),
-  );
+    if (chats.length > 0) {
+      builder.group(
+        'chats',
+        {
+          label: ['chat-history.label', { ns: meta.id }],
+          icon: 'ph--clock-counter-clockwise--regular',
+          selectCardinality: 'single',
+          variant: 'dropdownMenu',
+        },
+        (builder) => {
+          chats
+            // TODO(wittjosiah): This should be the default sort order.
+            .toSorted((a, b) => a.id.localeCompare(b.id))
+            .forEach((chat) => {
+              builder.action(
+                chat.id,
+                {
+                  label: Obj.getLabel(chat) ?? ['object-name.placeholder', { ns: Chat.Chat.typename }],
+                },
+                () =>
+                  Effect.gen(function* () {
+                    invariant(companionTo);
+                    yield* invoke(AssistantOperation.SetCurrentChat, {
+                      companionTo,
+                      chat,
+                    });
+                  }).pipe(runAndForwardErrors),
+              );
+            });
+        },
+      );
+    }
+
+    return builder.build();
+  }, [chatsVersion, db?.spaceId, companionTo?.id, chat?.id, invoke]);
 };

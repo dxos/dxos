@@ -3,7 +3,8 @@
 //
 
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
-import react from '@vitejs/plugin-react-swc';
+import react from '@vitejs/plugin-react';
+import { playwright } from '@vitest/browser-playwright';
 import path, { join } from 'node:path';
 import pkgUp from 'pkg-up';
 import { type Plugin } from 'vite';
@@ -15,8 +16,26 @@ import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
 import { MODULES } from '@dxos/node-std/_/config';
 import PluginImportSource from '@dxos/vite-plugin-import-source';
 
+// NOTE: Imported by relative path on purpose. Going through `@dxos/vite-plugin-log`
+// would force every package's `:test`/`:test-browser`/`:test-storybook` task to
+// build the plugin first, which introduces a moon dep cycle through @dxos/log
+// (vite-plugin-log -> log -> ... -> log:test -> vite-plugin-log).
+import { DxosLogPlugin } from './tools/vite-plugin-log/src/plugin.ts';
+import { TEST_TAGS } from './vitest.tags';
+
+export { TEST_TAGS };
+
 const isDebug = !!process.env.VITEST_DEBUG;
 const xmlReport = Boolean(process.env.VITEST_XML_REPORT);
+const DEBUG_TIMEOUT_MS = 3_600_000;
+
+// Browser/storybook tests transitively import `@anthropic-ai/tokenizer` via
+// `@dxos/ai`, which pulls in `tiktoken/lite` — a WASM bundle whose top-level
+// `await` cannot be rewrapped by esbuild's dep pre-bundler. Composer-app's
+// vite.config.ts aliases it to an empty stub for the same reason. None of
+// the browser tests actually tokenize, so the alias is safe.
+const TIKTOKEN_STUB = new URL('./vitest/tiktoken-stub.mjs', import.meta.url).pathname;
+const TIKTOKEN_ALIAS = { 'tiktoken/lite': TIKTOKEN_STUB };
 
 export type ConfigOptions = {
   dirname: string;
@@ -35,8 +54,7 @@ export const createConfig = (options: ConfigOptions): ViteUserConfig => {
   return {
     test: {
       ...resolveReporterConfig(dirname),
-      // Suppress flaky WebSocket birpc teardown unhandled rejections from storybook test runner.
-      ...(storybook ? { dangerouslyIgnoreUnhandledErrors: true } : {}),
+      tags: TEST_TAGS,
       projects: [nodeProject, storybookProject, ...browserProjects].filter(
         (project): project is UserWorkspaceConfig => project !== undefined,
       ),
@@ -48,13 +66,21 @@ const createStorybookProject = (dirname: string) =>
   defineProject({
     test: {
       name: 'storybook',
+      // The playwright/chromium session occasionally dies mid-run with
+      // "Browser connection was closed while running tests", causing every
+      // subsequent story file to fail to import. Retry once so a transient
+      // browser-side flake doesn't fail the whole job.
+      retry: 1,
       browser: {
         enabled: true,
         headless: true,
-        provider: 'playwright',
+        provider: playwright(),
         instances: [{ browser: 'chromium' }],
       },
       setupFiles: [new URL('./tools/storybook-react/.storybook/vitest.setup.ts', import.meta.url).pathname],
+    },
+    resolve: {
+      alias: { ...TIKTOKEN_ALIAS },
     },
     optimizeDeps: {
       include: ['react', 'react-dom', 'react/jsx-runtime'],
@@ -92,6 +118,9 @@ const createBrowserProject = ({
       ...plugins,
       // Inspect()
     ],
+    resolve: {
+      alias: { ...TIKTOKEN_ALIAS },
+    },
     optimizeDeps: {
       include: ['buffer/'],
       esbuildOptions: {
@@ -102,7 +131,10 @@ const createBrowserProject = ({
           ...(nodeExternal ? [NodeExternalPlugin({ injectGlobals, nodeStd: true })] : []),
         ],
       },
-      exclude: ['@dxos/wa-sqlite'],
+      // `@anthropic-ai/tokenizer` re-exports `tiktoken/lite` via `require`, but
+      // tiktoken's wasm has top-level await which esbuild can't put behind a
+      // require(). Skip prebundling for the wasm dep so vite serves it as ESM.
+      exclude: ['@dxos/wa-sqlite', 'tiktoken', 'tiktoken/lite'],
     },
     esbuild: {
       target: 'esnext',
@@ -121,7 +153,7 @@ const createBrowserProject = ({
         '!**/test/**/*.node.test.{ts,tsx}',
       ],
 
-      testTimeout: isDebug ? 3600_000 : 5000,
+      testTimeout: isDebug ? DEBUG_TIMEOUT_MS : 5000,
       isolate: false,
       poolOptions: {
         threads: {
@@ -133,8 +165,8 @@ const createBrowserProject = ({
         enabled: true,
         screenshotFailures: false,
         headless: !isDebug,
-        provider: 'playwright',
-        name: browserName,
+        provider: playwright(),
+        instances: [{ browser: browserName }],
         isolate: false,
       },
     },
@@ -162,7 +194,7 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
       name: 'node',
       environment,
       retry,
-      testTimeout: timeout,
+      testTimeout: timeout ?? (isDebug ? DEBUG_TIMEOUT_MS : undefined),
       include: [
         '**/src/**/*.test.{ts,tsx}',
         '**/test/**/*.test.{ts,tsx}',
@@ -179,56 +211,9 @@ const createNodeProject = ({ environment = 'node', retry, timeout, setupFiles = 
       ...plugins,
       PluginImportSource({ include: ['@dxos/**', '#*'] }),
       process.env.VITE_INSPECT ? Inspect() : undefined,
-      // Add react plugin to enable SWC transfors.
-      react({
-        tsDecorators: true,
-        useAtYourOwnRisk_mutateSwcOptions: (options) => {
-          // Disable syntax lowering. Prevents perfomance loss due to private properties polyfill.
-          options.jsc ??= {};
-          options.jsc.target = 'esnext';
-        },
-        plugins: [
-          [
-            '@dxos/swc-log-plugin',
-            {
-              to_transform: [
-                {
-                  name: 'log',
-                  package: '@dxos/log',
-                  param_index: 2,
-                  include_args: false,
-                  include_call_site: true,
-                  include_scope: true,
-                },
-                {
-                  name: 'dbg',
-                  package: '@dxos/log',
-                  param_index: 1,
-                  include_args: true,
-                  include_call_site: false,
-                  include_scope: false,
-                },
-                {
-                  name: 'invariant',
-                  package: '@dxos/invariant',
-                  param_index: 2,
-                  include_args: true,
-                  include_call_site: false,
-                  include_scope: true,
-                },
-                {
-                  name: 'Context',
-                  package: '@dxos/context',
-                  param_index: 1,
-                  include_args: false,
-                  include_call_site: false,
-                  include_scope: false,
-                },
-              ],
-            },
-          ],
-        ],
-      }),
+      // Log-meta injection only — no dev file sink (vitest is a test runner, not a dev server).
+      DxosLogPlugin({ logToFile: false }),
+      react(),
     ],
   });
 

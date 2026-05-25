@@ -8,7 +8,8 @@ import { Plugin } from '@dxos/app-framework';
 import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { PluginDetail } from './PluginDetail';
 
 const meta = {
@@ -28,8 +29,9 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     plugin: Plugin.define({
-      id: 'example.com/plugin/test-plugin',
+      id: 'com.example.plugin.test',
       name: 'Test Plugin',
+      author: 'DXOS',
       description: random.lorem.paragraphs(2),
       icon: 'ph--bug--regular',
       iconHue: 'sky',

@@ -18,7 +18,7 @@ import React, {
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 import { type Scene } from '#types';
 
@@ -155,7 +155,7 @@ const SpacetimeEditorRoot = forwardRef<SpacetimeController, SpacetimeEditorRootP
       for (const ref of scene.objects) {
         const obj = ref?.target;
         if (obj && (obj as any).id === selectedObjectId) {
-          Obj.change(obj, (obj) => {
+          Obj.update(obj, (obj) => {
             obj.color = editorState.hue;
           });
           break;

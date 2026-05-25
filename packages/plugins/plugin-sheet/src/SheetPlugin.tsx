@@ -2,22 +2,16 @@
 // Copyright 2023 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
-
-import { ActivationEvent, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Annotation } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
-import { AutomationEvents } from '@dxos/plugin-automation/types';
-import { ClientEvents } from '@dxos/plugin-client/types';
+import { ClientEvents } from '@dxos/plugin-client';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { type CreateObject } from '@dxos/plugin-space/types';
 
 import {
   AnchorSort,
+  CommentConfig,
   ComputeGraphRegistry,
+  CreateObject,
   Markdown,
   OperationHandler,
   UndoMappings,
@@ -25,38 +19,14 @@ import {
   SheetState,
 } from '#capabilities';
 import { meta } from '#meta';
-import { SheetOperation } from '#operations';
+import { translations } from '#translations';
 import { Sheet } from '#types';
 
-import { serializer } from './serializer';
-import { translations } from './translations';
-
 export const SheetPlugin = Plugin.define(meta).pipe(
-  AppPlugin.addMetadataModule({
-    metadata: {
-      id: Sheet.Sheet.typename,
-      metadata: {
-        label: (object: Sheet.Sheet) => object.name,
-        icon: Annotation.IconAnnotation.get(Sheet.Sheet).pipe(Option.getOrThrow).icon,
-        iconHue: Annotation.IconAnnotation.get(Sheet.Sheet).pipe(Option.getOrThrow).hue ?? 'white',
-        serializer,
-        comments: 'anchored',
-        createObject: ((props, options) =>
-          Effect.gen(function* () {
-            const object = Sheet.make(props);
-            return yield* Operation.invoke(SpaceOperation.AddObject, {
-              object,
-              target: options.target,
-              hidden: true,
-              targetNodeId: options.targetNodeId,
-            });
-          })) satisfies CreateObject,
-        scrollToAnchor: SheetOperation.ScrollToAnchor,
-      },
-    },
-  }),
+  AppPlugin.addCommentConfigModule({ activate: CommentConfig }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addOperationHandlerModule({ id: 'undo-mappings', activate: UndoMappings }),
+  AppPlugin.addUndoMappingsModule({ activate: UndoMappings }),
   AppPlugin.addSchemaModule({ schema: [Sheet.Sheet] }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
@@ -65,7 +35,7 @@ export const SheetPlugin = Plugin.define(meta).pipe(
     activate: SheetState,
   }),
   Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(ClientEvents.ClientReady, AutomationEvents.ComputeRuntimeReady),
+    activatesOn: ActivationEvent.allOf(ClientEvents.ClientReady, ActivationEvents.ProcessManagerReady),
     activate: ComputeGraphRegistry,
   }),
   Plugin.addModule({
@@ -79,3 +49,5 @@ export const SheetPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.make,
 );
+
+export default SheetPlugin;

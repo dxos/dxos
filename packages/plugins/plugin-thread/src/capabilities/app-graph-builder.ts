@@ -8,16 +8,17 @@ import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode } from '@dxos/app-toolkit';
+import { Operation } from '@dxos/compute';
 import { Obj } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
-import { AttentionCapabilities } from '@dxos/plugin-attention/types';
+import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { GraphBuilder, NodeMatcher } from '@dxos/plugin-graph';
 import { linkedSegment } from '@dxos/react-ui-attention';
 import { type SelectionManager, type SelectionMode, defaultSelection } from '@dxos/react-ui-attention';
+import { Channel } from '@dxos/types';
 
 import { meta } from '#meta';
-import { ThreadOperation } from '#operations';
-import { Channel, ThreadCapabilities, type ThreadState } from '#types';
+import { ThreadOperation } from '#types';
+import { ThreadCapabilities, type ThreadState } from '#types';
 
 import { getAnchor } from '../util';
 
@@ -55,74 +56,22 @@ const whenCommentableObject = NodeMatcher.whenAll(
   NodeMatcher.whenNot(NodeMatcher.whenEchoTypeMatches(Channel.Channel)),
 );
 
-// TODO(wittjosiah): Highlight active calls in L1.
-//  Track active meetings by subscribing to meetings query and polling the swarms of recent meetings in the space.
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const capabilities = yield* Capability.Service;
 
-    const resolve = (typename: string) =>
-      capabilities.getAll(AppCapabilities.Metadata).find(({ id }: { id: string }) => id === typename)?.metadata ?? {};
+    const getCommentConfig = (typename: string) =>
+      capabilities.getAll(AppCapabilities.CommentConfig).find(({ id }) => id === typename);
 
     const extensions = yield* Effect.all([
-      GraphBuilder.createExtension({
-        id: 'active-call',
-        match: NodeMatcher.whenRoot,
-        connector: (node, get) => {
-          const callManagerAtom = capabilities.atom(ThreadCapabilities.CallManager);
-          const [call] = get(callManagerAtom);
-          if (!call) {
-            return Effect.succeed([]);
-          }
-          // Use derived joinedAtom for efficient subscription.
-          const joined = get(call.joinedAtom);
-          return Effect.succeed(
-            joined
-              ? [
-                  AppNode.makeDeckCompanion({
-                    id: 'active-call',
-                    label: ['call-panel.label', { ns: meta.id }],
-                    icon: 'ph--video-conference--regular',
-                    data: null,
-                    position: 'hoist',
-                  }),
-                ]
-              : [],
-          );
-        },
-      }),
-      GraphBuilder.createTypeExtension({
-        id: 'channel-chat-companion',
-        type: Channel.Channel,
-        connector: (channel, get) => {
-          const callManager = capabilities.get(ThreadCapabilities.CallManager);
-          // Use derived atoms for efficient subscription.
-          const joined = get(callManager.joinedAtom);
-          const roomId = get(callManager.roomIdAtom);
-          const isActive = joined && roomId === Obj.getDXN(channel).toString();
-          if (!isActive) {
-            return Effect.succeed([]);
-          }
-
-          return Effect.succeed([
-            AppNode.makeCompanion({
-              id: 'chat',
-              label: ['channel-companion.label', { ns: meta.id }],
-              icon: 'ph--hash--regular',
-              data: 'chat',
-              position: 'hoist',
-            }),
-          ]);
-        },
-      }),
       GraphBuilder.createExtension({
         id: 'comments-companion',
         match: (node) => {
           if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node))) {
             return Option.none();
           }
-          const metadata = resolve(Obj.getTypename(node.data)!);
-          return typeof metadata.comments === 'string' ? Option.some(node) : Option.none();
+          const commentConfig = getCommentConfig(Obj.getTypename(node.data)!);
+          return commentConfig ? Option.some(node) : Option.none();
         },
         connector: () =>
           Effect.succeed([
@@ -131,7 +80,7 @@ export default Capability.makeModule(
               label: ['comments.label', { ns: meta.id }],
               icon: 'ph--chat-text--regular',
               data: 'comments',
-              position: 'hoist',
+              position: 'first',
             }),
           ]),
       }),
@@ -141,23 +90,23 @@ export default Capability.makeModule(
           if (!Obj.isObject(node.data) || Option.isNone(whenCommentableObject(node))) {
             return Option.none();
           }
-          const metadata = resolve(Obj.getTypename(node.data)!);
-          return typeof metadata.comments === 'string' ? Option.some(node) : Option.none();
+          const commentConfig = getCommentConfig(Obj.getTypename(node.data)!);
+          return commentConfig ? Option.some(node) : Option.none();
         },
         actions: (matched, get) => {
           const object = matched.data;
-          const objectDxn = Obj.getDXN(object).toString();
+          const objectDXN = Obj.getDXN(object).toString();
           const stateAtom = capabilities.atom(ThreadCapabilities.State);
           const selectionManager = capabilities.get(AttentionCapabilities.Selection);
-          const metadata = resolve(Obj.getTypename(object)!);
+          const commentConfig = getCommentConfig(Obj.getTypename(object)!)!;
 
           const disabled = get(
             commentDisabledFamily({
               stateAtom,
               selectionManager,
-              objectId: objectDxn,
-              commentsType: metadata.comments as string,
-              selectionMode: metadata.selectionMode,
+              objectId: objectDXN,
+              commentsType: commentConfig.comments,
+              selectionMode: commentConfig.selectionMode as SelectionMode | undefined,
             }),
           );
 
@@ -165,10 +114,11 @@ export default Capability.makeModule(
             {
               id: 'comment',
               data: Effect.fnUntraced(function* () {
-                const metadata = resolve(Obj.getTypename(object)!);
-                const selection = selectionManager.getSelection(objectDxn);
-                const anchor = metadata.comments === 'anchored' ? getAnchor(selection) : Date.now().toString();
-                const name = metadata.getAnchorLabel?.(object, anchor);
+                const config = getCommentConfig(Obj.getTypename(object)!)!;
+                const selection = selectionManager.getSelection(objectDXN);
+                const anchor =
+                  (config.comments === 'anchored' ? getAnchor(selection) : undefined) ?? Date.now().toString();
+                const name = config.getAnchorLabel?.(object, anchor);
                 yield* Operation.invoke(ThreadOperation.Create, {
                   anchor,
                   name,

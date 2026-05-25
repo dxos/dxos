@@ -19,7 +19,10 @@ import {
   useMergeRefs,
   useTranslation,
 } from '@dxos/react-ui';
-import { composable, composableProps, mx, withColumn } from '@dxos/ui-theme';
+import { composable, composableProps, withColumn } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
+
+import { translationKey } from '#translations';
 
 import {
   type FormHandler,
@@ -28,12 +31,12 @@ import {
   useFormHandler,
   useKeyHandler,
 } from '../../hooks';
-import { translationKey } from '../../translations';
 import { FormFieldLabel, type FormFieldLabelProps, type FormFieldStateProps } from './FormFieldComponent';
 import {
   FormFieldSet as NaturalFormFieldSet,
   type FormFieldSetProps as NaturalFormFieldSetProps,
 } from './FormFieldSet';
+import { FormTooltipsContext } from './FormTooltipsContext';
 
 // TODO(burdon): Move styles to form.ts (as with ui-theme).
 
@@ -69,9 +72,10 @@ type FormContextValue<T extends AnyProperties = any> = {
   form: FormHandler<T>;
 
   /**
-   * Show debug info.
+   * Show field tooltips (currently: JSON path on each label). Defaults to
+   * `true`; pass `false` to suppress.
    */
-  debug?: boolean;
+  tooltips?: boolean;
 
   /**
    * Testing.
@@ -168,9 +172,11 @@ const FormRoot = <T extends AnyProperties = AnyProperties>({
   const form = useFormHandler({ schema, values, onSave, onCancel, ...props });
 
   return (
-    <FormContextProvider form={form} {...props}>
-      {children}
-    </FormContextProvider>
+    <FormTooltipsContext.Provider value={props.tooltips ?? true}>
+      <FormContextProvider form={form} {...props}>
+        {children}
+      </FormContextProvider>
+    </FormTooltipsContext.Provider>
   );
 };
 
@@ -265,7 +271,6 @@ const FormActions = ({ classNames }: FormActionsProps) => {
 
   return (
     <div
-      role='none'
       className={mx(withColumn.center(), 'grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding', classNames)}
     >
       {onCancel && (
@@ -301,7 +306,7 @@ FormActions.displayName = FORM_ACTIONS_NAME;
 
 const FORM_SECTION_NAME = 'Form.Section';
 
-type FormSectionProps = ThemedClassName<{ label: string; description?: string }>;
+type FormSectionProps = ThemedClassName<{ label?: string; description?: string }>;
 
 const FormSection = composable<HTMLDivElement, FormSectionProps>(
   ({ children, label, description, ...props }, forwardedRef) => {
@@ -310,7 +315,7 @@ const FormSection = composable<HTMLDivElement, FormSectionProps>(
         {...composableProps(props, { classNames: 'flex flex-col pt-form-section-gap first:pt-0' })}
         ref={forwardedRef}
       >
-        <h2 className='text-lg'>{label}</h2>
+        {label && <h2 className='text-lg'>{label}</h2>}
         {description && <p className='text-description'>{description}</p>}
         {children}
       </div>
@@ -341,7 +346,7 @@ const FormSubmit = ({ classNames, label, icon, disabled }: FormSubmitProps) => {
   }
 
   return (
-    <div role='none' className={mx('flex w-full pt-form-padding', classNames)}>
+    <div className={mx('flex w-full pt-form-padding', classNames)}>
       <IconButton
         classNames='w-full'
         type='submit'

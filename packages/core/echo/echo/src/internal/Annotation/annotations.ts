@@ -481,7 +481,7 @@ export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): Annotation
 
   const getFromAst = (ast: SchemaAST.AST) =>
     SchemaAST.getAnnotation<PropertyMetaAnnotation>(PropertyMetaAnnotationId)(ast).pipe(
-      Option.map((meta) => meta[props.id] as unknown),
+      Option.flatMap((meta) => Option.fromNullable(meta[props.id])),
       Option.map(Schema.decodeUnknownSync(props.schema)),
     );
 
@@ -533,6 +533,19 @@ export const IconAnnotation = makeUserAnnotation<IconAnnotation>({
 });
 
 /**
+ * Indicates that this entity's icon should be resolved from a property whose value is a `Ref`
+ * to another entity. Consumers (e.g. graph node builders) resolve the ref target and use that
+ * target's schema `IconAnnotation` in place of the static one declared on this schema.
+ *
+ * Useful for wrapper schemas that delegate their visual identity to a referenced sub-entity
+ * (e.g. a generic `Game` whose icon should come from its `variant` ref's typed state).
+ */
+export const IconFromRefAnnotation = makeUserAnnotation<string>({
+  id: 'org.dxos.annotation.icon.from-ref',
+  schema: Schema.String,
+});
+
+/**
  * Get the label of an entity.
  * Accepts both reactive entities and snapshots.
  */
@@ -545,7 +558,7 @@ export const getLabel = (entity: AnyProperties): string | undefined => {
 
 /**
  * Set the label of an entity.
- * Must be called within an Obj.change or Relation.change callback.
+ * Must be called within an Obj.update or Relation.update callback.
  */
 export const setLabel = (entity: Mutable<AnyProperties>, label: string) => {
   const schema = getSchema(entity);
@@ -567,7 +580,7 @@ export const getDescription = (entity: AnyProperties): string | undefined => {
 
 /**
  * Set the description of an entity.
- * Must be called within an Obj.change or Relation.change callback.
+ * Must be called within an Obj.update or Relation.update callback.
  */
 export const setDescription = (entity: Mutable<AnyProperties>, description: string) => {
   const schema = getSchema(entity);

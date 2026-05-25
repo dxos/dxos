@@ -2,15 +2,15 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Operation } from '@dxos/operation';
+import { Operation } from '@dxos/compute';
 import { Task } from '@dxos/types';
 
-import { OnCreateSpace, Create } from './definitions';
+import { TableOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof OnCreateSpace> = OnCreateSpace.pipe(
+const handler: Operation.WithHandler<typeof TableOperation.OnCreateSpace> = TableOperation.OnCreateSpace.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ space }) {
-      const { object } = yield* Operation.invoke(Create, {
+      const { object } = yield* Operation.invoke(TableOperation.Create, {
         db: space.db,
         typename: Task.Task.typename,
       });

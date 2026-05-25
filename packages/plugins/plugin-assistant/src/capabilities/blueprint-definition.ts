@@ -18,14 +18,14 @@ import {
   DatabaseBlueprint,
   DatabaseHandlers,
   DiscordBlueprint,
-  EntityExtractionHandlers,
   LinearBlueprint,
   PlanningBlueprint,
-  ResearchBlueprint,
   WebSearchBlueprint,
   MemoryBlueprint,
   AutomationBlueprint,
 } from '@dxos/assistant-toolkit';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Blueprint } from '@dxos/compute';
 
 import { AssistantBlueprint } from '#blueprints';
 
@@ -35,7 +35,6 @@ const blueprintDefinition: () => Effect.Effect<Capability.Capability<unknown>[]>
     Capability.contributes(AppCapabilities.BlueprintDefinition, AssistantBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, BrowserBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, DatabaseBlueprint),
-    Capability.contributes(AppCapabilities.BlueprintDefinition, ResearchBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, WebSearchBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, DiscordBlueprint),
     Capability.contributes(AppCapabilities.BlueprintDefinition, LinearBlueprint),
@@ -50,7 +49,6 @@ const blueprintDefinition: () => Effect.Effect<Capability.Capability<unknown>[]>
     Capability.contributes(Capabilities.OperationHandler, AgentBlueprintHandlers),
     Capability.contributes(Capabilities.OperationHandler, BlueprintManagerHandlers),
     Capability.contributes(Capabilities.OperationHandler, DatabaseHandlers),
-    Capability.contributes(Capabilities.OperationHandler, EntityExtractionHandlers),
     Capability.contributes(Capabilities.OperationHandler, AgentWizardHandlers),
   ]),
 );

@@ -2,10 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
+import { Collection, Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
-import { Event, Message, Organization, Person, Pipeline, Task } from '@dxos/types';
+import { Event, Message, Organization, Person, Pipeline, Project, Task } from '@dxos/types';
 
 import { meta } from '#meta';
 
@@ -80,6 +79,17 @@ export const translations = [
         'object-deleted.label': 'Person deleted',
       },
       [Pipeline.Pipeline.typename]: {
+        'typename.label': 'Pipeline',
+        'typename.label_zero': 'Pipelines',
+        'typename.label_one': 'Pipeline',
+        'typename.label_other': 'Pipelines',
+        'object-name.placeholder': 'New pipeline',
+        'add-object.label': 'Add pipeline',
+        'rename-object.label': 'Rename pipeline',
+        'delete-object.label': 'Delete pipeline',
+        'object-deleted.label': 'Pipeline deleted',
+      },
+      [Project.Project.typename]: {
         'typename.label': 'Project',
         'typename.label_zero': 'Projects',
         'typename.label_one': 'Project',
@@ -106,6 +116,12 @@ export const translations = [
         'first-run.message': 'Nothing selected.',
         'create-space.label': 'Create space',
         'join-space.label': 'Join space',
+        'import-space.label': 'Import space',
+        'export-space-binary.label': 'Export space (Binary)',
+        'export-space-json.label': 'Export space (JSON)',
+        'import-space-dialog.title': 'Import space',
+        'import-space-dialog.description': 'Importing from a backup will create a new space from the file.',
+        'import-space-dialog.upload.label': 'Drag file here or click to browse',
         'empty-space.message': 'No documents',
         'empty-tree.message': 'No spaces',
         'unnamed-space.label': 'New space',
@@ -133,7 +149,7 @@ export const translations = [
         'spaces.label': 'Spaces',
         'space-settings.label': 'Spaces',
         'space-settings.description':
-          'Each space has its own settings you can configure, where you can adjust its properties, membership, integrations, and other objects specific to that space.',
+          'Per-space settings for properties, membership, integrations, and other space-specific objects.',
         'show-hidden-spaces.label': 'Show archived spaces',
         'show-hidden-spaces.description':
           'Display archived spaces in the sidebar so they can be accessed or unarchived.',
@@ -224,7 +240,7 @@ export const translations = [
 
         'members-panel.label': 'Members',
         'members-verbose.label': 'Manage space members',
-        'members.description': 'You can view the current status of space members here as well as invite new members.',
+        'members.description': 'Current space members and pending invitations.',
         'members.label': 'Members',
         'invitations.label': 'Invitations',
         'space-invitation.description': 'Manage invitations to the space.',
@@ -234,13 +250,14 @@ export const translations = [
         'space-locked.description': 'Locking a space prevents new members from being invited to the space.',
 
         'settings.panel.label': 'Space Settings',
+        'settings-section.label': 'Settings',
         'open-current-space-settings.label': 'Open current space settings',
-        'space-settings-properties.label': 'General settings',
+        'space-settings-properties.label': 'General',
         'space-properties-settings-verbose.label': 'Manage space properties',
-        'space-properties-settings.description': 'You can configure how this space is displayed in the app here.',
+        'space-properties-settings.description': 'Display settings for this space.',
         'space-settings-schema.label': 'Types',
         'schema-verbose.label': 'Manage types',
-        'schema.description': 'You can manage all of the types stored within this space here.',
+        'schema.description': 'Types defined within this space.',
         'no-schemas-found.message': 'No types found',
         'display-name-input.placeholder': 'Space name',
         'display-name.description': 'Name of the space as it appears in the app.',
@@ -249,7 +266,7 @@ export const translations = [
         'edge-replication.description':
           "Only change this if you know what you're doing. Disabling this will prevent the space from replicating through Composer's EDGE services, and relies solely on peer-to-peer sync.",
         'archive-space.description':
-          'Archiving a space will remove it from the sidebar and stop replicating updates, but will not delete the data. You can unarchive it by enabling archived spaces in the app settings.',
+          'Archiving a space will remove it from the sidebar and stop replicating updates, but will not delete the data. Unarchive by enabling archived spaces in the app settings.',
         'archive-space.label': 'Archive',
         'unarchive-space.label': 'Unarchive',
 
@@ -268,6 +285,23 @@ export const translations = [
         'repair-space.title': 'Repair Space',
         'repair-space.description': 'Run repair operations on the space.',
         'repair-space.label': 'Run repairs',
+
+        'danger-zone.title': 'Danger Zone',
+        'danger-zone.description': 'Destructive actions that cannot be undone.',
+        'space-contents.title': 'Space contents',
+        'space-contents.description': 'Current contents of this space.',
+        'schema-count.label': 'Schema',
+        'object-count.label': 'Objects',
+        'relation-count.label': 'Relations',
+        'feed-count.label': 'Feeds',
+        'reset-space.title': 'Reset Space',
+        'reset-space.description':
+          'Permanently delete all objects, relations, schema, and feeds in this space. This action cannot be undone.',
+        'reset-space.label': 'Reset space',
+        'reset-space-confirm.title': 'Reset this space?',
+        'reset-space-confirm.description':
+          'All objects, relations, schema, and feeds in this space will be permanently deleted. This action cannot be undone.',
+        'reset-space-failed.message': 'Failed to reset space.',
 
         'sync-edge-connected.label': 'EDGE connected',
         'sync-edge-disconnected.label': 'Edge disconnected',
@@ -293,7 +327,7 @@ export const translations = [
 
         'presence.label': 'Online activity',
         'qr.label': 'QR Code',
-        'typename.label': 'Typename',
+        'typename.label': 'Object',
         'unnamed-collection.label': 'Unnamed',
       },
     },

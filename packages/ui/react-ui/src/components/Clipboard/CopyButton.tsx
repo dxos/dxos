@@ -6,9 +6,9 @@ import React from 'react';
 
 import { mx, osTranslations } from '@dxos/ui-theme';
 
+import { useTranslation } from '../../primitives';
 import { Button, type ButtonProps, IconButton } from '../Button';
 import { Icon, type IconProps } from '../Icon';
-import { useTranslation } from '../ThemeProvider';
 import { type TooltipScopedProps, useTooltipContext } from '../Tooltip';
 import { useClipboard } from './ClipboardProvider';
 
@@ -30,11 +30,11 @@ export const CopyButton = ({ classNames, value, size = 5, ...props }: CopyButton
       onClick={() => setTextValue(value)}
       data-testid='copy-invitation'
     >
-      <div role='none' className={mx('flex gap-1 items-center', isCopied && inactiveLabelStyles)}>
+      <div className={mx('flex gap-1 items-center', isCopied && inactiveLabelStyles)}>
         <span className='px-1'>{t('copy.label')}</span>
         <Icon icon='ph--copy--regular' size={size} />
       </div>
-      <div role='none' className={mx('flex gap-1 items-center', !isCopied && inactiveLabelStyles)}>
+      <div className={mx('flex gap-1 items-center', !isCopied && inactiveLabelStyles)}>
         <span className='px-1'>{t('copy-success.label')}</span>
         <Icon icon='ph--check--regular' size={size} />
       </div>

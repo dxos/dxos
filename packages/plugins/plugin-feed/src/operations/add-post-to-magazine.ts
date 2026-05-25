@@ -4,30 +4,33 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Operation } from '@dxos/compute';
 import { Database, Obj, Ref } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 
-import { AddPostToMagazine } from './definitions';
+import { FeedOperation } from '../types';
+import { updateMagazinePostState, updateSubscriptionPostState } from '../util';
 
-const handler: Operation.WithHandler<typeof AddPostToMagazine> = AddPostToMagazine.pipe(
+const handler: Operation.WithHandler<typeof FeedOperation.AddPostToMagazine> = FeedOperation.AddPostToMagazine.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ magazine: magazineRef, post: postRef, snippet, imageUrl }) {
       const magazine = yield* Database.load(magazineRef);
       const post = yield* Database.load(postRef);
 
-      const postDxn = Obj.getDXN(post).toString();
+      const postDXN = Obj.getDXN(post).toString();
+      const postId = (post as { id: string }).id;
+      const subscription = post.source?.target;
 
-      Obj.change(post, (post) => {
-        const mutable = post as Obj.Mutable<typeof post>;
-        mutable.snippet = snippet;
-        if (imageUrl !== undefined) {
-          mutable.imageUrl = imageUrl;
-        }
-      });
+      // snippet is a magazine-scoped curation artifact; imageUrl is a
+      // per-Post hero used across magazines and lives on the Subscription
+      // side map.
+      updateMagazinePostState(magazine, postId, { snippet });
+      if (imageUrl !== undefined && subscription) {
+        updateSubscriptionPostState(subscription, postId, { imageUrl });
+      }
 
-      Obj.change(magazine, (magazine) => {
+      Obj.update(magazine, (magazine) => {
         const mutable = magazine as Obj.Mutable<typeof magazine>;
-        const alreadyCurated = mutable.posts.some((ref) => ref.dxn.toString() === postDxn);
+        const alreadyCurated = mutable.posts.some((ref) => ref.dxn.toString() === postDXN);
         if (!alreadyCurated) {
           mutable.posts = [...mutable.posts, Ref.make(post)];
         }

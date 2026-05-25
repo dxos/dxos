@@ -66,7 +66,9 @@ export const TreeItemHeading = memo(
             onKeyDown={handleButtonKeydown}
             {...(current && { 'aria-current': 'location' })}
           >
-            {icon && <Icon icon={icon ?? 'ph--placeholder--regular'} classNames={['my-1', styles?.surfaceText]} />}
+            {icon && (
+              <Icon size={5} icon={icon ?? 'ph--placeholder--regular'} classNames={['my-1', styles?.foreground]} />
+            )}
             <span className='flex-1 w-0 truncate text-start font-normal' data-tooltip>
               {toLocalizedString(label, t)}
             </span>

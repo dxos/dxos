@@ -9,15 +9,17 @@ import { PublicKey } from '@dxos/keys';
 import { type ChromaticPalette, IconButton, Input, Tag, useTranslation } from '@dxos/react-ui';
 import { List } from '@dxos/react-ui-list';
 import { HuePicker } from '@dxos/react-ui-pickers';
-import { hues, osTranslations, subtleHover } from '@dxos/ui-theme';
+import { hues, osTranslations } from '@dxos/ui-theme';
 
-import { translationKey } from '../../../translations';
+import { translationKey } from '#translations';
+
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
 export const SelectOptionField = ({
   type,
   readonly,
   label,
+  jsonPath,
   getStatus,
   getValue,
   onValueChange,
@@ -118,8 +120,8 @@ export const SelectOptionField = ({
 
   return (
     <Input.Root validationValence={status}>
-      <FormFieldLabel error={error} readonly={readonly} label={label} />
-      <div role='none'>
+      <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} />
+      <div>
         {options && (
           <List.Root
             items={options}
@@ -134,7 +136,7 @@ export const SelectOptionField = ({
                     <List.Item
                       role='button'
                       item={item}
-                      classNames={[subtleHover, 'flex flex-col cursor-pointer rounded-xs']}
+                      classNames='flex flex-col cursor-pointer rounded-xs dx-hover'
                       aria-expanded={selected === item.id}
                     >
                       <div className='flex items-center'>
@@ -146,13 +148,13 @@ export const SelectOptionField = ({
                         <IconButton
                           iconOnly
                           variant='ghost'
-                          label={t(selected === item.id ? 'collapse label' : 'expand label', { ns: osTranslations })}
+                          label={t(selected === item.id ? 'collapse.label' : 'expand.label', { ns: osTranslations })}
                           icon={selected === item.id ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
                           onClick={() => handleClick(item.id)}
                         />
                       </div>
                       {selected === item.id && (
-                        <div className='flex flex-col p-form-padding gap-form-gap dx-density-fine'>
+                        <div className='flex flex-col p-form-padding gap-form-gap dx-density-md'>
                           <Input.Label classNames='text-xs'>{t('select-option.label')}</Input.Label>
                           <div className='grid grid-cols-[1fr_min-content_min-content] gap-form-gap'>
                             <Input.TextInput

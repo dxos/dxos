@@ -3,13 +3,13 @@
 //
 
 import { type Client } from '@dxos/client';
+import { Script, Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
-import { type Script, getUserFunctionIdInMetadata } from '@dxos/functions';
+import { getUserFunctionIdInMetadata } from '@dxos/functions';
 import { bundleFunction } from '@dxos/functions-runtime/bundler';
 import { FunctionsServiceClient, incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
 import { FunctionRuntimeKind } from '@dxos/protocols';
 import { type Space } from '@dxos/react-client/echo';
 
@@ -55,7 +55,7 @@ export const deployScript = async ({
     const newFunction = await functionsServiceClient.deploy(Context.default(), {
       // TODO(dmaretskyi): Space key or identity key.
       ownerPublicKey: space.key,
-      version: fn ? incrementSemverPatch(fn.version) : '0.0.1',
+      version: fn ? incrementSemverPatch(Obj.getMeta(fn).version ?? '0.0.0') : '0.0.1',
       functionId: existingFunctionId,
       entryPoint: buildResult.entryPoint,
       assets: buildResult.assets,
@@ -63,7 +63,7 @@ export const deployScript = async ({
     });
 
     const storedFunction = createOrUpdateFunctionInSpace(space, fn, script, newFunction);
-    Obj.change(script, (script) => {
+    Obj.update(script, (script) => {
       script.changed = false;
     });
 
@@ -94,7 +94,7 @@ const createOrUpdateFunctionInSpace = (
     Operation.setFrom(fn, newFunction);
     return fn;
   } else {
-    Obj.change(newFunction, (newFunction) => {
+    Obj.update(newFunction, (newFunction) => {
       newFunction.source = Ref.make(script);
     });
     return space.db.add(newFunction);

@@ -10,7 +10,8 @@ import React, { type ComponentType, type JSX, type PropsWithChildren, type Ref, 
 import { useResizeDetector } from 'react-resize-detector';
 
 import { ScrollArea, ScrollAreaRootProps, ThemedClassName, usePx } from '@dxos/react-ui';
-import { cardMaxInlineSize, cardMinInlineSize, composable, composableProps, scrollbar } from '@dxos/ui-theme';
+import { composable, composableProps, scrollbar } from '@dxos/react-ui';
+import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/ui-theme';
 
 //
 // Context
@@ -101,6 +102,12 @@ const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps>(
 
 MasonryContentInner.displayName = 'Masonry.Content';
 
+const MasonryContent = MasonryContentInner as (
+  props: MasonryContentProps & {
+    ref?: Ref<HTMLDivElement | null>;
+  },
+) => JSX.Element;
+
 //
 // Viewport
 //
@@ -121,7 +128,7 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
     const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gutter } = useMasonryContext('Masonry.Viewport');
     const { width } = useMasonryContentContext('Masonry.Viewport');
     const columnCount = useColumnCount(
-      width - (scrollbar.thin.size + scrollbar.thin.padding),
+      width - (scrollbar.md.size + scrollbar.md.padding),
       columns,
       maxColumns,
       minColumnWidth,
@@ -180,12 +187,6 @@ const ComposableVirtuosoMasonry = composable<HTMLDivElement, VirtuosoMasonryProp
 );
 
 MasonryViewportInner.displayName = 'Masonry.Viewport';
-
-const MasonryContent = MasonryContentInner as (
-  props: MasonryContentProps & {
-    ref?: Ref<HTMLDivElement | null>;
-  },
-) => JSX.Element;
 
 const MasonryViewport = MasonryViewportInner as <Item>(
   props: MasonryViewportProps<Item> & {

@@ -6,7 +6,7 @@ import { setAutoFreeze } from 'immer';
 
 import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { translations as stackTranslations } from '@dxos/react-ui-stack';
+import { translations as stackTranslations } from '@dxos/react-ui-stack/translations';
 
 import {
   AppGraphBuilder,
@@ -19,9 +19,8 @@ import {
   UrlHandler,
 } from '#capabilities';
 import { meta } from '#meta';
+import { translations } from '#translations';
 import { DeckEvents } from '#types';
-
-import { translations } from './translations';
 
 // NOTE(Zan): When producing values with immer, we shouldn't auto-freeze them because
 //   our signal implementation needs to add some hidden properties to the produced values.
@@ -39,7 +38,7 @@ export const DeckPlugin = Plugin.define(meta).pipe(
     activate: DeckSettings,
   }),
   Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(DeckEvents.SettingsReady, ActivationEvents.OperationInvokerReady),
+    activatesOn: ActivationEvent.allOf(DeckEvents.SettingsReady, ActivationEvents.ProcessManagerReady),
     activate: CheckAppScheme,
   }),
   Plugin.addModule({
@@ -59,8 +58,10 @@ export const DeckPlugin = Plugin.define(meta).pipe(
   //   activate: Tools,
   // }),
   Plugin.addModule({
-    activatesOn: ActivationEvent.allOf(ActivationEvents.OperationInvokerReady, DeckEvents.StateReady),
+    activatesOn: ActivationEvent.allOf(ActivationEvents.ProcessManagerReady, DeckEvents.StateReady),
     activate: UrlHandler,
   }),
   Plugin.make,
 );
+
+export default DeckPlugin;

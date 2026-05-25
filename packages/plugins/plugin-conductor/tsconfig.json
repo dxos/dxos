@@ -31,28 +31,25 @@
       "path": "../../common/util"
     },
     {
-      "path": "../../core/ai"
+      "path": "../../core/compute/ai"
     },
     {
-      "path": "../../core/assistant"
+      "path": "../../core/compute/assistant"
     },
     {
-      "path": "../../core/conductor"
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/conductor"
+    },
+    {
+      "path": "../../core/compute/functions"
     },
     {
       "path": "../../core/echo/echo"
     },
     {
-      "path": "../../core/functions"
-    },
-    {
-      "path": "../../core/functions-runtime"
-    },
-    {
       "path": "../../core/mesh/edge-client"
-    },
-    {
-      "path": "../../core/operation"
     },
     {
       "path": "../../sdk/app-framework"
@@ -89,6 +86,9 @@
     },
     {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-testing"
     }
   ]
 }

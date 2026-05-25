@@ -4,13 +4,13 @@
 
 import * as Effect from 'effect/Effect';
 
+import { Operation } from '@dxos/compute';
 import { Feed, Ref } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
 import { Transcript } from '@dxos/types';
 
-import { Create } from './definitions';
+import { TranscriptOperation } from '../types';
 
-const handler: Operation.WithHandler<typeof Create> = Create.pipe(
+const handler: Operation.WithHandler<typeof TranscriptOperation.Create> = TranscriptOperation.Create.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ space }) {
       const feed = space.db.add(Feed.make());

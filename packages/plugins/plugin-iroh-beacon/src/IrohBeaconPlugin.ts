@@ -4,12 +4,11 @@
 
 import { Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
-import { ClientEvents } from '@dxos/plugin-client/types';
+import { ClientEvents } from '@dxos/plugin-client';
 
 import { BeaconServiceModule, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
-
-import { translations } from './translations';
+import { translations } from '#translations';
 
 export const IrohBeaconPlugin = Plugin.define(meta).pipe(
   // Beacon service: creates transport + starts broadcasting.
@@ -26,3 +25,5 @@ export const IrohBeaconPlugin = Plugin.define(meta).pipe(
 
   Plugin.make,
 );
+
+export default IrohBeaconPlugin;

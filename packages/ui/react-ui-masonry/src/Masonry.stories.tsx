@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Filter } from '@dxos/client/echo';
+import { Filter } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -25,9 +25,9 @@ const StoryItem = ({ data: { image, name, description } }: { data: Organization.
       </Card.Toolbar>
       <Card.Poster alt={name!} {...(image ? { image } : { icon: 'ph--building-office--regular' })} />
       {description && (
-        <Card.Section classNames='px-2 pb-2'>
+        <Card.Row fullWidth classNames='px-2 pb-2'>
           <Card.Text variant='description'>{description}</Card.Text>
-        </Card.Section>
+        </Card.Row>
       )}
     </Card.Root>
   );

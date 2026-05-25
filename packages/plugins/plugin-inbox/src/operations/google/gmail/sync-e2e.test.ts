@@ -9,16 +9,15 @@ import { describe, test } from 'vitest';
 import { sleep } from '@dxos/async';
 import { Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
+import { Trigger, Operation } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
 import { Feed, Obj, Query, Ref } from '@dxos/echo';
-import { Trigger } from '@dxos/functions';
 import { InvocationTraceEndEvent, InvocationTraceStartEvent } from '@dxos/functions-runtime';
 import { FunctionsServiceClient } from '@dxos/functions-runtime/edge';
 import { bundleFunction } from '@dxos/functions-runtime/native';
 import { failedInvariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { Operation } from '@dxos/operation';
 import { ErrorCodec, FunctionRuntimeKind } from '@dxos/protocols';
 import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
 import { AccessToken, Message } from '@dxos/types';
@@ -27,7 +26,7 @@ import { Mailbox } from '../../../types';
 
 const config = configPreset({ edge: 'local' });
 
-describe.runIf(process.env.DX_TEST_TAGS?.includes('functions-e2e'))('Functions deployment', () => {
+describe('Functions deployment', { tags: ['functions-e2e'] }, () => {
   test('bundle function', async () => {
     const artifact = await bundleFunction({
       entryPoint: new URL('./sync.ts', import.meta.url).pathname,
@@ -158,7 +157,6 @@ const setup = async () => {
     Obj.make(AccessToken.AccessToken, {
       source: 'google.com',
       token: process.env.GOOGLE_ACCESS_TOKEN ?? failedInvariant('GOOGLE_ACCESS_TOKEN is not set'),
-      note: 'Email read access.',
     }),
   );
 
@@ -192,12 +190,12 @@ const deployFunction = async (space: Space, functionsServiceClient: FunctionsSer
 };
 
 const checkEmails = async (feed: Feed.Feed, space: Space) => {
-  const queueDxn = Feed.getQueueDxn(feed);
-  if (!queueDxn) {
+  const queueDXN = Feed.getQueueDxn(feed);
+  if (!queueDXN) {
     console.log('No feed found for mailbox');
     return [];
   }
-  const queue = space.queues.get<Message.Message>(queueDxn);
+  const queue = space.queues.get<Message.Message>(queueDXN);
   const messages = await queue.query(Query.type(Message.Message)).run();
   console.log(`Messages in mailbox: ${messages.length}`);
   return messages;
@@ -217,8 +215,8 @@ export const observeInvocations = async (space: Space, maxCount: number | null) 
   while (true) {
     try {
       const traceFeed = space.properties.invocationTraceFeed?.target;
-      const traceQueueDxn = traceFeed ? Feed.getQueueDxn(traceFeed) : undefined;
-      const invocations = traceQueueDxn ? ((await space.queues.get(traceQueueDxn).queryObjects()) ?? []) : [];
+      const traceQueueDXN = traceFeed ? Feed.getQueueDxn(traceFeed) : undefined;
+      const invocations = traceQueueDXN ? ((await space.queues.get(traceQueueDXN).queryObjects()) ?? []) : [];
 
       for (const invocation of invocations) {
         if (Obj.instanceOf(InvocationTraceStartEvent, invocation)) {

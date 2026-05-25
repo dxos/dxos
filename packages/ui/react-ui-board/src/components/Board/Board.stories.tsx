@@ -7,10 +7,11 @@ import React, { useCallback, useRef, useState } from 'react';
 
 import { random } from '@dxos/random';
 import { Card } from '@dxos/react-ui';
-import { translations as stackTranslations } from '@dxos/react-ui-stack';
+import { translations as stackTranslations } from '@dxos/react-ui-stack/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { Board, type BoardContentProps, type BoardController, type BoardRootProps } from './Board';
 import { defaultGrid } from './defs';
 import { type BoardLayout } from './types';
@@ -82,7 +83,7 @@ const DefaultStory = ({ layout: _layout, items: _items, grid, ...props }: Defaul
             {items.map((item: TestItem, index: number) => (
               <Board.Cell item={item} key={index} layout={layout?.cells[item.id] ?? { x: 0, y: 0 }}>
                 <Card.Row>
-                  <Card.Heading>{item.description}</Card.Heading>
+                  <Card.Text>{item.description}</Card.Text>
                 </Card.Row>
               </Board.Cell>
             ))}

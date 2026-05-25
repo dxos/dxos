@@ -6,23 +6,24 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { Annotation, type Database, Format, Obj, type QueryAST, Ref, Type } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import { Annotation, type Database, Format, Obj, type QueryAST, Ref, Type, View } from '@dxos/echo';
 import { type Mutable, PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Panel, ScrollArea } from '@dxos/react-ui';
-import { ViewEditor, translations as formTranslations } from '@dxos/react-ui-form';
+import { ViewEditor } from '@dxos/react-ui-form';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { ViewModel, getSchemaFromPropertyDefinitions, getTypenameFromQuery } from '@dxos/schema';
 import { TestSchema, createObjectFactory } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
+import { translations } from '#translations';
+
 import { useTestTableModel } from '../../testing';
-import { translations } from '../../translations';
 import { Table } from '../../types';
 import { Table as TableComponent } from './Table';
 
@@ -73,7 +74,7 @@ const StoryViewEditor = ({
       invariant(Type.isMutable(schema));
       schema.updateTypename(getTypenameFromQuery(newQuery));
       invariant(view);
-      Obj.change(view, (view) => {
+      Obj.update(view, (view) => {
         view.query.ast = newQuery as Mutable<typeof newQuery>;
       });
     },
@@ -171,7 +172,7 @@ const meta = {
         const [schema] = await space.db.schemaRegistry.register([Example]);
         const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: space.db, typename: schema.typename });
         const table = Table.make({ view, jsonSchema });
-        Obj.change(view, (view) => {
+        Obj.update(view, (view) => {
           view.projection.fields = [
             view.projection.fields.find((field) => field.path === 'name')!,
             ...view.projection.fields.filter((field) => field.path !== 'name'),

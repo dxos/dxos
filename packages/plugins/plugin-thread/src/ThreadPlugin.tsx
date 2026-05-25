@@ -3,35 +3,29 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
-import { Capability, Plugin } from '@dxos/app-framework';
+import { ActivationEvents, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
-import { Annotation, Ref, Type } from '@dxos/echo';
-import { Operation } from '@dxos/operation';
-import { ClientEvents } from '@dxos/plugin-client/types';
+import { Operation } from '@dxos/compute';
 import { MarkdownEvents } from '@dxos/plugin-markdown';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { SpaceCapabilities, SpaceEvents, type CreateObject } from '@dxos/plugin-space/types';
-import { translations as threadTranslations } from '@dxos/react-ui-thread';
-import { AnchoredTo, Message, Thread } from '@dxos/types';
+import { SpaceCapabilities, SpaceEvents } from '@dxos/plugin-space';
+import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
+import { AnchoredTo, Channel, Message, Thread } from '@dxos/types';
 
 import {
+  AgentRunner,
   AppGraphBuilder,
   BlueprintDefinition,
-  CallManager,
+  CreateObject,
   Markdown,
   OperationHandler,
   UndoMappings,
-  ReactRoot,
   ReactSurface,
   ThreadState,
 } from '#capabilities';
-import { THREAD_ITEM, meta } from '#meta';
-import { ThreadOperation } from '#operations';
-import { Channel } from '#types';
-
-import { translations } from './translations';
+import { meta } from '#meta';
+import { translations } from '#translations';
+import { AgentIdentity, DEFAULT_AGENT_IDENTITY, ThreadOperation } from '#types';
 
 // TODO(Zan): Every instance of `cursor` should be replaced with `anchor`.
 //  NOTE(burdon): Review/discuss CursorConverter semantics.
@@ -42,62 +36,14 @@ import { translations } from './translations';
 export const ThreadPlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addBlueprintDefinitionModule({ activate: BlueprintDefinition }),
-  AppPlugin.addMetadataModule({
-    metadata: [
-      {
-        id: Type.getTypename(Channel.Channel),
-        metadata: {
-          icon: Annotation.IconAnnotation.get(Channel.Channel).pipe(Option.getOrThrow).icon,
-          iconHue: Annotation.IconAnnotation.get(Channel.Channel).pipe(Option.getOrThrow).hue ?? 'white',
-          createObject: ((props, options) =>
-            Effect.gen(function* () {
-              const object = Channel.make(props);
-              return yield* Operation.invoke(SpaceOperation.AddObject, {
-                object,
-                target: options.target,
-                hidden: true,
-                targetNodeId: options.targetNodeId,
-              });
-            })) satisfies CreateObject,
-        },
-      },
-      {
-        id: Type.getTypename(Thread.Thread),
-        metadata: {
-          // TODO(wittjosiah): Move out of metadata.
-          loadReferences: async (thread: Thread.Thread) => await Ref.Array.loadAll(thread.messages ?? []),
-        },
-      },
-      {
-        id: THREAD_ITEM,
-        metadata: {
-          parse: (item: Thread.Thread, type: string) => {
-            switch (type) {
-              case 'node':
-                return { id: item.id, label: item.name, data: item };
-              case 'object':
-                return item;
-              case 'view-object':
-                return { id: `${item.id}-view`, object: item };
-            }
-          },
-        },
-      },
-    ],
-  }),
+  AppPlugin.addCreateObjectModule({ activate: CreateObject }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
-  AppPlugin.addOperationHandlerModule({ id: 'undo-mappings', activate: UndoMappings }),
-  AppPlugin.addReactRootModule({ activate: ReactRoot }),
+  AppPlugin.addUndoMappingsModule({ activate: UndoMappings }),
   AppPlugin.addSchemaModule({
     schema: [AnchoredTo.AnchoredTo, Channel.Channel, Message.Message, Thread.Thread],
   }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations: [...translations, ...threadTranslations] }),
-  Plugin.addModule({
-    id: 'call-manager',
-    activatesOn: ClientEvents.ClientReady,
-    activate: CallManager,
-  }),
   // TODO(wittjosiah): Currently not used but leaving because there will likely be settings for threads again.
   // Plugin.addModule({
   //   id: 'settings',
@@ -127,5 +73,23 @@ export const ThreadPlugin = Plugin.define(meta).pipe(
     activatesOn: MarkdownEvents.SetupExtensions,
     activate: Markdown,
   }),
+  // Default comment-thread agent runner (one-shot LLM call per scheduled turn).
+  // Test/storybook hosts that contribute a stub `AgentRunner` earlier in plugin
+  // order — i.e. before ThreadPlugin in the plugins list — win, because
+  // `Capability.get` returns the first contribution.
+  Plugin.addModule({
+    id: 'agent-runner',
+    activatesOn: ActivationEvents.Startup,
+    activate: AgentRunner,
+  }),
+  // Default agent identity. Hosts wanting a different name contribute their own
+  // `AgentIdentity` earlier in plugin order to win the `Capability.get`.
+  Plugin.addModule({
+    id: 'agent-identity',
+    activatesOn: ActivationEvents.Startup,
+    activate: () => Effect.succeed(Capability.contributes(AgentIdentity, DEFAULT_AGENT_IDENTITY)),
+  }),
   Plugin.make,
 );
+
+export default ThreadPlugin;

@@ -4,11 +4,11 @@
 
 import React, { type FC } from 'react';
 
-import { type ComponentProps } from '../components';
+import { type ModuleProps } from '../components';
 import { ModuleContainer } from '../testing';
 
 export type DefaultStoryProps = {
-  modules: FC<ComponentProps>[][];
+  modules: FC<ModuleProps>[][];
   showContext?: boolean;
   blueprints?: string[];
 };

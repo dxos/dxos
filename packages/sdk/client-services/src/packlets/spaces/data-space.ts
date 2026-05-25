@@ -487,7 +487,7 @@ export class DataSpace {
   private _onNewAutomergeRoot(rootUrl: string): void {
     log('loading automerge root doc for space', { space: this.key, rootUrl });
 
-    let handle: DocHandle<DatabaseDirectory>;
+    let handle: DocHandle<DatabaseDirectory> | null = null;
 
     // TODO(dmaretskyi): Make this single-threaded (but doc loading should still be parallel to not block epoch processing).
     queueMicrotask(async () => {
@@ -499,9 +499,12 @@ export class DataSpace {
               fetchFromNetwork: true,
             }),
           );
-          await cancelWithContext(this._ctx, handle.whenReady());
         });
         if (this._ctx.disposed) {
+          return;
+        }
+        if (!handle) {
+          log.warn('automerge root doc not available yet', { space: this.key, rootUrl });
           return;
         }
 
@@ -509,7 +512,7 @@ export class DataSpace {
         using _guard = await this._epochProcessingMutex.acquire();
 
         // Attaching space keys to legacy documents.
-        const doc = handle.doc() ?? failedInvariant();
+        const doc = handle.doc();
         if (!doc.access?.spaceKey) {
           handle.change((doc: any) => {
             doc.access = { spaceKey: this.key.toHex() };

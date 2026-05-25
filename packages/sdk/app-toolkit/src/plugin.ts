@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { ActivationEvents, Capabilities, Capability as Capability$, Plugin as Plugin$ } from '@dxos/app-framework';
 import { type Type } from '@dxos/echo';
+import { assertArgument } from '@dxos/invariant';
 
 import { AppActivationEvents } from './activation-events';
 import { AppCapabilities } from './capabilities';
@@ -29,6 +30,7 @@ export namespace AppPlugin {
   export function addAppGraphModule<T = void>(
     options: AppGraphModuleOptions,
   ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    assertArgument(typeof options.activate === 'function', 'activate', 'must be a function');
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'app-graph-builder',
       activatesOn: options.activatesOn ?? AppActivationEvents.SetupAppGraph,
@@ -62,29 +64,6 @@ export namespace AppPlugin {
     });
   }
 
-  export type MetadataModuleOptions = Omit<PluginModuleOptions, 'activate'> & {
-    metadata: AppCapabilities.Metadata | AppCapabilities.Metadata[];
-  };
-
-  /**
-   * Creates a module that contributes metadata.
-   */
-  export function addMetadataModule<T = void>(
-    options: MetadataModuleOptions,
-  ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
-    return Plugin$.addModule({
-      id: options.id ?? 'metadata',
-      activatesOn: options.activatesOn ?? AppActivationEvents.SetupMetadata,
-      firesBeforeActivation: options.firesBeforeActivation,
-      firesAfterActivation: options.firesAfterActivation,
-      activate: Effect.fnUntraced(function* () {
-        return (Array.isArray(options.metadata) ? options.metadata : [options.metadata]).map((m) =>
-          Capability$.contributes(AppCapabilities.Metadata, m),
-        );
-      }),
-    });
-  }
-
   export type SettingsModuleOptions = PluginModuleOptions;
 
   /**
@@ -93,6 +72,7 @@ export namespace AppPlugin {
   export function addSettingsModule<T = void>(
     options: SettingsModuleOptions,
   ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    assertArgument(typeof options.activate === 'function', 'activate', 'must be a function');
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'settings',
       activatesOn: options.activatesOn ?? AppActivationEvents.SetupSettings,
@@ -110,6 +90,7 @@ export namespace AppPlugin {
   export function addBlueprintDefinitionModule<T = void>(
     options: BlueprintDefinitionModuleOptions,
   ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    assertArgument(typeof options.activate === 'function', 'activate', 'must be a function');
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'blueprint-definition',
       activatesOn: options.activatesOn ?? AppActivationEvents.SetupArtifactDefinition,
@@ -171,7 +152,24 @@ export namespace AppPlugin {
   ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'operation-handler',
-      activatesOn: options.activatesOn ?? ActivationEvents.SetupOperationHandler,
+      activatesOn: options.activatesOn ?? ActivationEvents.SetupProcessManager,
+      firesBeforeActivation: options.firesBeforeActivation,
+      firesAfterActivation: options.firesAfterActivation,
+      activate: options.activate,
+    });
+  }
+
+  export type UndoMappingsModuleOptions = PluginModuleOptions;
+
+  /**
+   * Creates a module that contributes undo operation mappings.
+   */
+  export function addUndoMappingsModule<T = void>(
+    options: UndoMappingsModuleOptions,
+  ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    return Plugin$.addModule({
+      id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'undo-mappings',
+      activatesOn: options.activatesOn ?? ActivationEvents.SetupProcessManager,
       firesBeforeActivation: options.firesBeforeActivation,
       firesAfterActivation: options.firesAfterActivation,
       activate: options.activate,
@@ -222,7 +220,7 @@ export namespace AppPlugin {
   ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'navigation-resolver',
-      activatesOn: options.activatesOn ?? ActivationEvents.OperationInvokerReady,
+      activatesOn: options.activatesOn ?? ActivationEvents.ProcessManagerReady,
       firesBeforeActivation: options.firesBeforeActivation,
       firesAfterActivation: options.firesAfterActivation,
       activate: options.activate,
@@ -244,7 +242,7 @@ export namespace AppPlugin {
         const resolved = options(pluginOptions);
         return {
           id: Capability$.getModuleTag(resolved.activate) ?? resolved.id ?? 'navigation-handler',
-          activatesOn: resolved.activatesOn ?? ActivationEvents.OperationInvokerReady,
+          activatesOn: resolved.activatesOn ?? ActivationEvents.ProcessManagerReady,
           firesBeforeActivation: resolved.firesBeforeActivation,
           firesAfterActivation: resolved.firesAfterActivation,
           activate: resolved.activate,
@@ -253,7 +251,7 @@ export namespace AppPlugin {
     }
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'navigation-handler',
-      activatesOn: options.activatesOn ?? ActivationEvents.OperationInvokerReady,
+      activatesOn: options.activatesOn ?? ActivationEvents.ProcessManagerReady,
       firesBeforeActivation: options.firesBeforeActivation,
       firesAfterActivation: options.firesAfterActivation,
       activate: options.activate,
@@ -271,6 +269,57 @@ export namespace AppPlugin {
     return Plugin$.addModule({
       id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'surfaces',
       activatesOn: options.activatesOn ?? ActivationEvents.SetupReactSurface,
+      firesBeforeActivation: options.firesBeforeActivation,
+      firesAfterActivation: options.firesAfterActivation,
+      activate: options.activate,
+    });
+  }
+
+  export type CreateObjectModuleOptions = PluginModuleOptions;
+
+  /**
+   * Creates a module that contributes a create-object capability entry.
+   */
+  export function addCreateObjectModule<T = void>(
+    options: CreateObjectModuleOptions,
+  ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    return Plugin$.addModule({
+      id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'create-object',
+      activatesOn: options.activatesOn ?? AppActivationEvents.SetupSchema,
+      firesBeforeActivation: options.firesBeforeActivation,
+      firesAfterActivation: options.firesAfterActivation,
+      activate: options.activate,
+    });
+  }
+
+  export type CommentConfigModuleOptions = PluginModuleOptions;
+
+  /**
+   * Creates a module that contributes a comment configuration.
+   */
+  export function addCommentConfigModule<T = void>(
+    options: CommentConfigModuleOptions,
+  ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    return Plugin$.addModule({
+      id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'comment-config',
+      activatesOn: options.activatesOn ?? AppActivationEvents.SetupSchema,
+      firesBeforeActivation: options.firesBeforeActivation,
+      firesAfterActivation: options.firesAfterActivation,
+      activate: options.activate,
+    });
+  }
+
+  export type TextContentModuleOptions = PluginModuleOptions;
+
+  /**
+   * Creates a module that contributes a text content extractor.
+   */
+  export function addTextContentModule<T = void>(
+    options: TextContentModuleOptions,
+  ): (builder: Plugin$.PluginBuilder<T>) => Plugin$.PluginBuilder<T> {
+    return Plugin$.addModule({
+      id: Capability$.getModuleTag(options.activate) ?? options.id ?? 'text-content',
+      activatesOn: options.activatesOn ?? AppActivationEvents.SetupSchema,
       firesBeforeActivation: options.firesBeforeActivation,
       firesAfterActivation: options.firesAfterActivation,
       activate: options.activate,

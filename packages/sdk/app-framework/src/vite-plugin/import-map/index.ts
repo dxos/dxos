@@ -129,6 +129,9 @@ const importMapExcludedSubpaths: Readonly<Record<string, ReadonlySet<string>>> =
   // `node:async_hooks` (AsyncLocalStorage) and has no browser shim. Client
   // code imports `solid-js`, `solid-js/store`, and `solid-js/web` only.
   'solid-js': new Set(['web/storage']),
+  // `effect` publishes `./.index` for bundler internals — maps to `effect/.index`, which Vite
+  // often cannot resolve for the import map and is not part of the plugin-facing surface.
+  effect: new Set(['.index']),
 };
 
 /**
@@ -330,12 +333,24 @@ const getCjsNamedExports = (filePath: string, seen = new Set<string>()): string[
  * Vite plugin for the **host app** (Composer). Generates a browser import map so that
  * shared packages are loaded once and reused by both the host and any remote plugins.
  *
- * In dev mode, maps bare specifiers directly to resolved file paths.
  * In production, emits a dedicated chunk per specifier via virtual wrapper modules,
  * then injects a `<script type="importmap">` tag into the HTML with the chunk URLs.
  *
  * Virtual wrappers are needed because directly emitting chunks for CJS packages loses
  * their named exports due to Rollup's interop. The wrapper re-exports them explicitly.
+ *
+ * TODO: Restore dev-mode support. The previous dev path mapped each bare specifier to
+ * its absolute `/@fs/` file path during `buildStart`, which forced `this.resolve()` for
+ * hundreds of subpath entrypoints and raced with Vite's optimize-deps static scan —
+ * producing non-deterministic chunk content (~34 chunks drifting per warm-start) and
+ * triggering Vite 8.0.10's `runOptimizer` / `commitProcessing` crashes (`fileHash` /
+ * `browserHash` undefined on partial-discovery batches). Plugin is currently gated to
+ * `apply: 'build'` to avoid both. A working dev-mode implementation would need to
+ * resolve specifiers without participating in the optimize-deps phase — candidates:
+ *   - defer resolution to `transformIndexHtml` (after the optimizer settles)
+ *   - read resolved paths from `environment.depsOptimizer.metadata` rather than calling
+ *     `this.resolve()` ourselves
+ *   - resolve via `require.resolve` directly, bypassing the Vite plugin pipeline entirely
  */
 export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => {
   const packages = options?.packages ?? DEFAULT_PACKAGES;
@@ -348,9 +363,21 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
   let base = '/';
 
   return [
-    // Phase 1: Resolve all package entrypoints and emit chunks (or record dev paths).
+    // Phase 1: Resolve all package entrypoints and emit chunks.
+    //
+    // Build-only. The dev-mode path (recording absolute `/@fs/` paths in
+    // `imports[]`) is non-functional today and was actively harmful: calling
+    // `this.resolve()` for every shared package's subpath entrypoints during
+    // `buildStart` races with Vite's optimize-deps static scan, producing
+    // non-deterministic chunk content (~34 drifting chunks per warm-start) and
+    // triggering Vite 8.0.10's `runOptimizer` / `commitProcessing` crashes
+    // (`fileHash` / `browserHash` undefined on partial-discovery batches) when
+    // the resolved set doesn't match the optimizer's metadata. The importmap
+    // is only meaningful for production builds where remote plugins consume
+    // the emitted wrapper chunks.
     {
       name: 'import-map:get-chunk-ref-ids',
+      apply: 'build',
       configResolved(config) {
         base = config.base ?? '/';
       },
@@ -424,14 +451,23 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
       // Generate the source for each virtual wrapper module.
       // For CJS packages, explicitly re-export named exports (discovered via static analysis)
       // because Rollup's `export *` interop doesn't preserve them for CJS.
+      //
+      // Each wrapper also emits a local `__keepalive` export. Without this, Rolldown
+      // (Vite 8) tree-shakes wrappers whose `export *` re-exports happen to coincide
+      // with another already-emitted chunk's exports — typical for umbrella packages
+      // (e.g. `@dxos/compute` re-exports from `@dxos/operation`, so the operation
+      // wrapper looks "redundant" to Rolldown and gets merged away). A local const
+      // export has no upstream source for Rolldown to dedupe against, so the chunk
+      // is always preserved and the import-map entry resolves at runtime.
       load(id) {
         if (!id.startsWith(WRAPPER_PREFIX)) {
           return;
         }
         const specifier = id.slice(WRAPPER_PREFIX.length);
+        const keepalive = `export const __dxosImportMapKeepalive = ${JSON.stringify(specifier)};`;
         const resolvedId = resolvedIds[specifier];
         if (!resolvedId) {
-          return `export * from ${JSON.stringify(specifier)};\n`;
+          return `export * from ${JSON.stringify(specifier)};\n${keepalive}\n`;
         }
 
         const filePath = trimQueryString(resolvedId);
@@ -440,10 +476,10 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
         if (isCjs) {
           const named = getCjsNamedExports(filePath);
           if (named.length > 0) {
-            return `export { default, ${named.join(', ')} } from ${JSON.stringify(specifier)};\n`;
+            return `export { default, ${named.join(', ')} } from ${JSON.stringify(specifier)};\n${keepalive}\n`;
           }
         }
-        return `export * from ${JSON.stringify(specifier)};\n`;
+        return `export * from ${JSON.stringify(specifier)};\n${keepalive}\n`;
       },
 
       // After bundling, map each specifier to the URL of its emitted chunk. Preserves
@@ -468,6 +504,7 @@ export const importMapPlugin = (options?: { packages?: string[] }): Plugin[] => 
     // Phase 2: Inject the import map into the HTML as a <script type="importmap"> tag.
     {
       name: 'import-map:transform-index-html',
+      apply: 'build',
       enforce: 'post',
       transformIndexHtml(html: string) {
         const tags = [

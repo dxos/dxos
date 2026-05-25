@@ -5,11 +5,12 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren } from 'react';
 
-import { type Database } from '@dxos/react-client/echo';
+import { type Database } from '@dxos/echo';
 import { Icon, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { type Actor, type Event as EventType } from '@dxos/types';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
@@ -99,26 +100,26 @@ const EventHeader = ({ db, onContactCreate }: EventHeaderProps) => {
   const { event } = useEventContext(EVENT_HEADER_NAME);
 
   return (
-    <div role='none' className='p-1 flex flex-col gap-2 border-b border-subdued-separator'>
-      <div role='none' className='grid grid-cols-[2rem_1fr] gap-1'>
-        <div role='none' className='flex px-2 text-subdued h-[28px] items-center'>
+    <div className='p-1 flex flex-col gap-2 border-b border-subdued-separator'>
+      <div className='grid grid-cols-[2rem_1fr] gap-1'>
+        <div className='flex px-2 text-subdued h-[28px] items-center'>
           <Icon icon='ph--check--regular' />
         </div>
-        <div role='none' className='flex flex-col gap-1 overflow-hidden'>
+        <div className='flex flex-col gap-1 overflow-hidden'>
           <h2 className='text-lg line-clamp-2'>{event.title ?? t('event-untitled.label')}</h2>
         </div>
       </div>
 
-      <div role='none' className='grid grid-cols-[2rem_1fr] gap-1'>
-        <div role='none' className='flex px-2 text-subdued items-center'>
+      <div className='grid grid-cols-[2rem_1fr] gap-1'>
+        <div className='flex px-2 text-subdued items-center'>
           <Icon icon='ph--calendar--regular' />
         </div>
-        <div role='none' className='flex flex-col gap-1 overflow-hidden'>
+        <div className='flex flex-col gap-1 overflow-hidden'>
           <DateComponent start={new Date(event.startDate)} end={new Date(event.endDate)} />
         </div>
       </div>
 
-      <div role='none'>
+      <div>
         {event.attendees.map((attendee) => (
           <EventAttendee key={attendee.email} attendee={attendee} db={db} onContactCreate={onContactCreate} />
         ))}
@@ -140,11 +141,7 @@ type EventContentProps = ThemedClassName<{}>;
 const EventContent = ({ classNames }: EventContentProps) => {
   const { event } = useEventContext(EVENT_CONTENT_NAME);
 
-  return event.description ? (
-    <div role='none' className={mx('p-3', classNames)}>
-      {event.description}
-    </div>
-  ) : null;
+  return event.description ? <div className={mx('p-3', classNames)}>{event.description}</div> : null;
 };
 
 EventContent.displayName = EVENT_CONTENT_NAME;

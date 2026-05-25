@@ -8,12 +8,14 @@ import { GeoLocation, type GeoPoint } from '@dxos/echo/internal';
 import { Input, useTranslation } from '@dxos/react-ui';
 import { safeParseFloat } from '@dxos/util';
 
-import { translationKey } from '../../../translations';
+import { translationKey } from '#translations';
+
 import { type FormFieldComponentProps, FormFieldLabel } from '../FormFieldComponent';
 
 export const GeoPointField = ({
   type,
   label,
+  jsonPath,
   readonly,
   layout,
   getStatus,
@@ -58,11 +60,13 @@ export const GeoPointField = ({
 
   return (
     <Input.Root validationValence={status}>
-      {layout !== 'inline' && <FormFieldLabel error={error} readonly={readonly} label={label} asChild />}
+      {layout !== 'inline' && (
+        <FormFieldLabel error={error} readonly={readonly} label={label} path={jsonPath} asChild />
+      )}
       {layout === 'static' ? (
         <LatLng {...value} />
       ) : (
-        <div role='none' className='grid grid-cols-2 gap-form-gap'>
+        <div className='grid grid-cols-2 gap-form-gap'>
           <div>
             <Input.Root>
               {layout !== 'inline' && <Input.Label>{t('latitude.label')}</Input.Label>}

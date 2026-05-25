@@ -8,8 +8,8 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import React, { type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Filter, type Space, SpaceState, isSpace } from '@dxos/client/echo';
-import { Obj, Query } from '@dxos/echo';
+import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
+import { Filter, Obj, Query } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { TestSchema } from '@dxos/echo/testing';
 import { random } from '@dxos/random';
@@ -145,7 +145,7 @@ const runAction = async (client: Client, action: Action) => {
     case Action.RENAME_SPACE: {
       const space = getRandomSpace(client);
       if (space) {
-        Obj.change(space.properties, (obj) => {
+        Obj.update(space.properties, (obj) => {
           obj.name = random.commerce.productName();
         });
       }
@@ -175,7 +175,7 @@ const runAction = async (client: Client, action: Action) => {
       if (space) {
         const objects = await space.db.query(Filter.type(TestSchema.Expando, { type: 'test' })).run();
         const object = objects[Math.floor(Math.random() * objects.length)];
-        Obj.change(object, (object) => {
+        Obj.update(object, (object) => {
           object.name = random.commerce.productName();
         });
       }

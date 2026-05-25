@@ -8,7 +8,7 @@ import { Show, createMemo, createSignal } from 'solid-js';
 
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery, useSchema } from '@dxos/echo-solid';
-import { type Map as MapType } from '@dxos/plugin-map/types';
+import { type Map as MapType } from '@dxos/plugin-map';
 import { getTypenameFromQuery } from '@dxos/schema';
 import { type GeoMarker } from '@dxos/solid-ui-geo';
 import { getDeep } from '@dxos/util';
@@ -72,7 +72,7 @@ const MapSurface = (props: MapSurfaceProps) => {
   });
 
   return (
-    <div role='none' class='flex h-full w-full min-h-0'>
+    <div class='flex h-full w-full min-h-0'>
       <Show when={type() === 'map'}>
         <MapControl markers={markers} onToggle={() => setType('globe')} />
       </Show>

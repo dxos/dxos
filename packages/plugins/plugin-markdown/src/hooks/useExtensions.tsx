@@ -20,11 +20,9 @@ import {
   Cursor,
   type EditorStateStore,
   EditorView,
-  type EditorViewMode,
   type Extension,
   InputModeExtensions,
   type PreviewOptions,
-  type RenderCallback,
   createDataExtensions,
   decorateMarkdown,
   documentId,
@@ -35,8 +33,9 @@ import {
   preview,
   replacer,
   selectionState,
-  typewriter,
+  snippets,
 } from '@dxos/ui-editor';
+import { type EditorViewMode, type RenderCallback } from '@dxos/ui-editor/types';
 import { isTruthy, safeUrl } from '@dxos/util';
 
 import { Markdown } from '#types';
@@ -113,7 +112,6 @@ export const useExtensions = ({
       settings?.editorInputMode,
       settings?.folding,
       settings?.numberedHeadings,
-      settings?.typewriter,
       platform,
       onSelectObject,
     ],
@@ -188,9 +186,9 @@ const createBaseExtensions = ({
   }
 
   if (settings?.debug) {
-    const items = settings.typewriter?.split(/[,\n]/) ?? '';
+    const items = settings.snippets?.split(/[,\n]/) ?? '';
     if (items) {
-      extensions.push(typewriter({ items }));
+      extensions.push(snippets({ items }));
     }
   }
 
@@ -202,12 +200,18 @@ const selectionChange = (selectionManager: SelectionManager) => {
     const id = update.state.facet(documentId);
     const cursorConverter = update.state.facet(Cursor.converter);
     const selection = update.state.selection;
+    // NOTE: Filter on numeric offsets BEFORE converting to cursor strings.
+    // Cursors are opaque (Automerge-encoded), so a lexicographic `to > from`
+    // comparison is nondeterministic — it would let some cursor-placements
+    // (where from === to numerically) through and reject genuine selections
+    // depending on encoding, which made the comment button's enabled state
+    // appear random across different lines.
     const ranges = selection.ranges
+      .filter((range) => range.to > range.from)
       .map((range) => ({
         from: cursorConverter.toCursor(range.from),
         to: cursorConverter.toCursor(range.to),
-      }))
-      .filter(({ from, to }) => to > from);
+      }));
 
     selectionManager.updateMultiRange(id, ranges);
   }, 100);

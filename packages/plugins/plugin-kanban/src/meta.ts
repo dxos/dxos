@@ -8,6 +8,7 @@ import { trim } from '@dxos/util';
 export const meta: Plugin.Meta = {
   id: 'org.dxos.plugin.kanban',
   name: 'Kanban',
+  author: 'DXOS',
   description: trim`
     Visual project management using customizable kanban boards to track workflow progress.
     Organize table data into columns, drag and drop items between stages, and trigger automations based on status changes.

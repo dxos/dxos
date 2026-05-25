@@ -12,7 +12,7 @@ import { Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form, useFormContext } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { OutlineOperation } from '#operations';
+import { OutlineOperation } from '#types';
 
 const QuickEntryForm = Schema.Struct({
   text: Schema.String.pipe(
@@ -51,7 +51,7 @@ const QuickEntryActions = ({ continueRef, formSaveRef }: QuickEntryActionsProps)
   }, [onSave, continueRef]);
 
   return (
-    <div role='none' className='grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding'>
+    <div className='grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding'>
       {onCancel && (
         <IconButton
           icon='ph--x--regular'
@@ -92,12 +92,14 @@ export const QuickEntryDialog = () => {
   const formSaveRef = useRef<(() => void) | null>(null);
 
   // Auto-focus the text input when the dialog opens or the form resets.
+  // The selector matches a plain text input, a textarea, or CodeMirror's
+  // contenteditable content node (used by the markdown form field).
   useEffect(() => {
     requestAnimationFrame(() => {
-      const input = contentRef.current?.querySelector('textarea, input[type="text"]');
-      if (input instanceof HTMLElement) {
-        input.focus();
-      }
+      const input = contentRef.current?.querySelector<HTMLElement>(
+        'textarea, input[type="text"], [contenteditable="true"]',
+      );
+      input?.focus();
     });
   }, [formKey]);
 
@@ -133,7 +135,7 @@ export const QuickEntryDialog = () => {
       <Dialog.Header>
         <Dialog.Title>{t('quick-entry-dialog.title')}</Dialog.Title>
         <Dialog.Close asChild>
-          <Dialog.CloseIconButton />
+          <Dialog.ActionIconButton action='close' />
         </Dialog.Close>
       </Dialog.Header>
       <Dialog.Body>

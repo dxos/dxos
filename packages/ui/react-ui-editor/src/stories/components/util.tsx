@@ -9,7 +9,6 @@ import { random } from '@dxos/random';
 import { Domino } from '@dxos/ui';
 import {
   type EditorSelectionState,
-  type RenderCallback,
   decorateMarkdown,
   folding,
   formattingKeymap,
@@ -17,6 +16,7 @@ import {
   linkTooltip,
   table,
 } from '@dxos/ui-editor';
+import { type RenderCallback } from '@dxos/ui-editor/types';
 import { safeUrl } from '@dxos/util';
 
 import { str } from '../../util';
@@ -206,7 +206,7 @@ export const links: Completion[] = [
 export const names = ['adam', 'alice', 'alison', 'bob', 'carol', 'charlie', 'sayuri', 'shoko'];
 
 const hover =
-  'rounded-xs text-base-surface-text text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
+  'rounded-xs text-base-foreground text-primary-600 hover:text-primary-500 dark:text-primary-300 hover:dark:text-primary-200';
 
 export const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
   el.appendChild(

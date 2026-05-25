@@ -27,10 +27,7 @@
       "path": "../react-ui"
     },
     {
-      "path": "../react-ui-attention"
-    },
-    {
-      "path": "../react-ui-mosaic"
+      "path": "../react-ui-list"
     },
     {
       "path": "../ui-theme"

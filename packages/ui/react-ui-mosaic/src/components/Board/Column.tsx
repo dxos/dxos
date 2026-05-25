@@ -8,21 +8,21 @@ import React, {
   type PropsWithChildren,
   type ReactElement,
   type Ref as ReactRef,
-  type RefObject,
   forwardRef,
   useMemo,
-  useRef,
   useState,
 } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
 import { IconButton, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import { Menu, createMenuAction } from '@dxos/react-ui-menu';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
+
+import { translationKey } from '#translations';
 
 import { useContainerDebug, useEventHandlerAdapter } from '../../hooks';
-import { translationKey } from '../../translations';
 import { Focus } from '../Focus';
 import { Mosaic, type MosaicContainerProps, type MosaicStackProps, type MosaicTileProps } from '../Mosaic';
 import { useBoard } from './Board';
@@ -49,7 +49,10 @@ export function useBoardColumn<TColumn = unknown>(): TColumn | undefined {
   return value?.column as TColumn | undefined;
 }
 
-type BoardColumnProps<TColumn = any> = Pick<MosaicTileProps<TColumn>, 'classNames' | 'location' | 'data' | 'debug'>;
+type BoardColumnProps<TColumn = any> = Pick<
+  MosaicTileProps<TColumn>,
+  'classNames' | 'location' | 'data' | 'debug' | 'draggable'
+>;
 
 //
 // Column Root
@@ -58,16 +61,15 @@ type BoardColumnProps<TColumn = any> = Pick<MosaicTileProps<TColumn>, 'className
 const BOARD_COLUMN_ROOT_NAME = 'Board.Column.Root';
 
 type BoardColumnRootProps<TColumn = any> = PropsWithChildren<BoardColumnProps<TColumn>> & {
-  dragHandleRef?: RefObject<HTMLButtonElement | null>;
+  // Pass the actual button element (not a ref). Refs don't trigger re-renders, so reading
+  // `ref.current` at render time leaves Mosaic.Tile's `dragHandle` prop null forever.
+  // Consumers should track this with `useState` and a callback ref on `Board.Column.Header`.
+  dragHandle?: HTMLButtonElement | null;
 };
 
 const BoardColumnRootInner = composable<HTMLDivElement, BoardColumnRootProps>(
-  ({ classNames, children, location, data, debug, dragHandleRef: dragHandleRefProp, ...rest }, forwardedRef) => {
+  ({ classNames, children, location, data, debug, draggable, dragHandle, ...rest }, forwardedRef) => {
     const { model } = useBoard(BOARD_COLUMN_ROOT_NAME);
-
-    // TODO(burdon): Use merge ref hook (see react-hooks).
-    const internalRef = useRef<HTMLButtonElement>(null);
-    const dragHandleRef = dragHandleRefProp ?? internalRef;
 
     return (
       <Mosaic.Tile
@@ -76,7 +78,8 @@ const BoardColumnRootInner = composable<HTMLDivElement, BoardColumnRootProps>(
         id={model.getColumnId(data)}
         data={data}
         debug={debug}
-        dragHandle={dragHandleRef.current}
+        draggable={draggable}
+        dragHandle={dragHandle}
       >
         <Focus.Group
           {...rest}
@@ -239,10 +242,10 @@ const BOARD_DEFAULT_COLUMN_NAME = 'Board.DefaultColumn';
 type DefaultBoardColumnProps = BoardColumnProps & Pick<BoardColumnBodyProps, 'Tile'>;
 
 const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
-  ({ classNames, location, data, debug, Tile = BoardItem }, forwardedRef) => {
+  ({ classNames, location, data, debug, draggable, Tile = BoardItem }, forwardedRef) => {
     const { model } = useBoard(BOARD_DEFAULT_COLUMN_NAME);
     const [DebugInfo, debugHandler] = useContainerDebug(debug);
-    const dragHandleRef = useRef<HTMLButtonElement>(null);
+    const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
     const [column, updateColumn] = useObject(data);
 
     const eventHandler = useEventHandlerAdapter<Ref.Unknown>({
@@ -269,12 +272,13 @@ const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
         )}
         location={location}
         data={data}
-        dragHandleRef={dragHandleRef}
+        draggable={draggable}
+        dragHandle={dragHandle}
         ref={forwardedRef}
       >
-        <BoardColumnHeader label={Obj.getLabel(data) ?? data.id} dragHandleRef={dragHandleRef} />
+        <BoardColumnHeader label={Obj.getLabel(data) ?? data.id} dragHandleRef={setDragHandle} />
         <BoardColumnBody data={data} eventHandler={eventHandler} debug={debugHandler} Tile={Tile} />
-        <div role='none' className='flex flex-col col-span-full'>
+        <div className='flex flex-col col-span-full'>
           <BoardColumnFooter data={data} />
           <DebugInfo />
         </div>

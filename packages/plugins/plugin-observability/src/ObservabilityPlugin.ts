@@ -8,27 +8,22 @@ import { ActivationEvent, ActivationEvents, Capability, Plugin } from '@dxos/app
 import { AppActivationEvents, AppPlugin } from '@dxos/app-toolkit';
 import { type Observability } from '@dxos/observability';
 
-import {
-  AppGraphBuilder,
-  ClientReady,
-  ObservabilitySettings,
-  ObservabilityState,
-  OperationHandler,
-  ReactSurface,
-} from '#capabilities';
+import { ClientReady, ObservabilitySettings, ObservabilityState, OperationHandler, ReactSurface } from '#capabilities';
 import { meta } from '#meta';
-import { ClientReadyEvent, ObservabilityEvents } from '#types';
-import { ObservabilityCapabilities } from '#types';
-
-import { translations } from './translations';
+import { translations } from '#translations';
+import { ObservabilityCapabilities, ObservabilityEvents } from '#types';
 
 export type ObservabilityPluginOptions = {
   namespace: string;
   observability: () => Promise<Observability.Observability>;
+  /**
+   * Optional callback invoked by the help/feedback UI to download captured logs.
+   * When omitted the "Download logs" action is hidden.
+   */
+  downloadLogs?: () => void | Promise<void>;
 };
 
 export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(meta).pipe(
-  AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
   Plugin.addModule(({ observability }) => ({
@@ -55,13 +50,21 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
     activatesOn: ActivationEvents.Startup,
     activate: () => Effect.succeed(Capability.contributes(ObservabilityCapabilities.Namespace, namespace)),
   })),
+  Plugin.addModule(({ downloadLogs }) => ({
+    id: 'log-downloader',
+    activatesOn: ActivationEvents.Startup,
+    activate: () =>
+      Effect.succeed(
+        downloadLogs !== undefined ? Capability.contributes(ObservabilityCapabilities.LogDownloader, downloadLogs) : [],
+      ),
+  })),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   Plugin.addModule(({ namespace, observability }) => ({
     id: Capability.getModuleTag(ClientReady),
     activatesOn: ActivationEvent.allOf(
-      ActivationEvents.OperationInvokerReady,
+      ActivationEvents.ProcessManagerReady,
       ObservabilityEvents.StateReady,
-      ClientReadyEvent,
+      ObservabilityEvents.ClientReadyEvent,
     ),
     activate: () =>
       Effect.gen(function* () {
@@ -71,3 +74,5 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityPluginOptions>(met
   })),
   Plugin.make,
 );
+
+export default ObservabilityPlugin;

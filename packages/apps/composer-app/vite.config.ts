@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import react from '@vitejs/plugin-react-swc';
+import react from '@vitejs/plugin-react';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -21,7 +21,8 @@ import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { isNonNullable } from '@dxos/util';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
-import { vitePluginLog } from '@dxos/vite-plugin-log';
+import { DxosLogPlugin } from '@dxos/vite-plugin-log';
+import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config';
 
@@ -35,6 +36,11 @@ const dxosIcons = path.join(rootDir, '/packages/ui/brand/assets/icons');
 
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 
+/**
+ * Transpile targets for oxc (dev) and Rolldown (build).
+ */
+const browserTargets = ['chrome108', 'edge107', 'firefox104', 'safari16'] as const;
+
 // Shared plugins for worker that are using in prod build.
 // In dev vite uses root plugins for both worker and page.
 const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
@@ -42,6 +48,12 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   env.command === 'serve' &&
     !isFastBundle &&
     importSource({
+      // Include `#*` subpath imports so that intra-package imports
+      // (e.g. `#capabilities`) from source-served files keep resolving to
+      // source — required for Vite-specific constructs like
+      // `import.meta.glob` to run at the consumer (this app), not be
+      // pre-baked as plain text in the published dist.
+      include: ['@dxos/**', '#*'],
       exclude: [
         '@dxos/random-access-storage',
         '@dxos/lock-file',
@@ -54,7 +66,8 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
         '@dxos/lit-*',
       ],
     }),
-  env.command === 'serve' && vitePluginLog(),
+  // Dev log file sink (serve only) + Rolldown log-meta injection (serve + build).
+  DxosLogPlugin(),
   wasm(),
   // sourcemaps(),
 ];
@@ -95,15 +108,15 @@ export default defineConfig((env) => ({
       ],
     },
   },
-  esbuild: {
-    keepNames: true,
+  oxc: {
+    target: [...browserTargets],
   },
+
   build: {
     outDir: 'out/composer',
     sourcemap: true,
     minify: !isFalse(process.env.DX_MINIFY),
-    // Target modern browsers for better performance and smaller bundle sizes.
-    target: ['chrome108', 'edge107', 'firefox104', 'safari16'],
+    target: [...browserTargets],
     rollupOptions: {
       // NOTE: Set cache to `false` to help debug flaky builds.
       // cache: false,
@@ -116,93 +129,39 @@ export default defineConfig((env) => ({
       },
       output: {
         chunkFileNames,
-        manualChunks: {
-          react: ['react', 'react-dom'],
+        // Rolldown (used by Vite 8) requires `manualChunks` to be a function — the
+        // record form that worked in Rollup is rejected at runtime.
+        manualChunks: (id: string) => {
+          if (id.includes('/node_modules/react/') || id.includes('/node_modules/react-dom/')) {
+            return 'react';
+          }
         },
       },
     },
   },
   optimizeDeps: {
     exclude: ['@dxos/wa-sqlite'],
-    // List deeply-imported dep entrypoints so vite's optimize-deps phase
-    // pre-bundles them up front. Without this, vite discovers them mid-load
-    // (when a dynamic import unwraps a new subpath), which forces a full
-    // page reload with the "Discovered new dependencies" banner — ~10 s of
-    // wasted dev time per discovery cycle. The pre-bundle cost is amortized
-    // after the first `vite serve`.
-    include: [
-      // React.
-      'react',
-      'react-dom',
-      'react/jsx-runtime',
-      // Effect (with subpath imports).
-      'effect',
-      'effect/Effect',
-      'effect/Array',
-      'effect/Ref',
-      'effect/Option',
-      'effect/Cause',
-      'effect/Exit',
-      'effect/Layer',
-      'effect/Runtime',
-      'effect/Fiber',
-      'effect/Deferred',
-      'effect/Function',
-      'effect/HashSet',
-      'effect/PubSub',
-      'effect/Schema',
-      'effect/Context',
-      'effect/Stream',
-      'effect/Console',
-      '@effect/platform',
-      '@effect/platform-browser',
-      // Effect AI (with submodule exports).
-      '@effect/ai',
-      '@effect/ai/AiError',
-      '@effect/ai/Chat',
-      '@effect/ai/LanguageModel',
-      '@effect/ai/Prompt',
-      '@effect/ai/Response',
-      '@effect/ai/Tool',
-      '@effect/ai/Toolkit',
-      '@effect/ai-anthropic',
-      '@effect/ai-anthropic/AnthropicClient',
-      '@effect/ai-anthropic/AnthropicLanguageModel',
-      '@effect/ai-anthropic/AnthropicTool',
-      '@effect/ai-openai',
-      '@effect/ai-openai/OpenAiClient',
-      '@effect/ai-openai/OpenAiLanguageModel',
-      // Automerge.
-      '@automerge/automerge',
-      '@automerge/automerge-repo',
-      // CodeMirror (many files in HAR).
-      'codemirror',
-      '@codemirror/state',
-      '@codemirror/view',
-      '@codemirror/language',
-      '@codemirror/commands',
-      '@codemirror/autocomplete',
-      '@codemirror/lang-javascript',
-      '@codemirror/lang-json',
-      '@codemirror/lang-markdown',
-      '@codemirror/theme-one-dark',
-      // Radix (many requests in HAR).
-      '@radix-ui/react-dialog',
-      '@radix-ui/react-dropdown-menu',
-      '@radix-ui/react-tooltip',
-      '@radix-ui/react-scroll-area',
-      '@radix-ui/react-popover',
-      '@radix-ui/react-slot',
-      '@radix-ui/react-context-menu',
-      // Atlaskit drag-and-drop.
-      '@atlaskit/pragmatic-drag-and-drop',
-      '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator',
-    ],
     // Scan the auxiliary HTML entrypoints during pre-bundle so navigations
     // to `internal.html` / `devtools.html` / `reset.html` /
     // `script-frame/index.html` don't trip a "discovered new dependencies"
     // reload mid-session.
-    entries: ['./index.html', './internal.html', './devtools.html', './reset.html', './script-frame/index.html'],
+    //
+    // Additionally, point the scanner at every plugin's entry files. Plugins
+    // are loaded via `await import(...)` at runtime so their bare-module
+    // imports aren't reachable from the static graph rooted at `index.html` —
+    // Vite would discover them mid-session and trigger a re-optimize + full
+    // page reload per plugin family. Walking the entries at startup makes the
+    // first optimize-deps pass discover all transitive deps. Production
+    // bundling is unaffected: Rolldown still emits a separate chunk per
+    // dynamic import.
+    entries: [
+      './index.html',
+      './internal.html',
+      './devtools.html',
+      './reset.html',
+      './script-frame/index.html',
+      path.resolve(rootDir, 'packages/plugins/*/src/index.{ts,tsx}'),
+    ],
   },
   resolve: {
     alias: {
@@ -235,6 +194,7 @@ export default defineConfig((env) => ({
     plugins: () => [...sharedPlugins(env)],
   },
   plugins: [
+    ShutdownPlugin(),
     ...sharedPlugins(env),
 
     // RSS proxy middleware for CORS-free feed fetching.
@@ -298,68 +258,35 @@ export default defineConfig((env) => ({
       ],
     }),
 
-    react({
-      tsDecorators: true,
-      useAtYourOwnRisk_mutateSwcOptions: (options) => {
-        // Disable syntax lowering. Prevents perfomance loss due to private properties polyfill.
-        options.jsc ??= {};
-        options.jsc.target = 'esnext';
-      },
-      plugins: [
-        [
-          '@dxos/swc-log-plugin',
-          {
-            to_transform: [
-              {
-                name: 'log',
-                package: '@dxos/log',
-                param_index: 2,
-                include_args: false,
-                include_call_site: true,
-                include_scope: true,
-              },
-              {
-                name: 'dbg',
-                package: '@dxos/log',
-                param_index: 1,
-                include_args: true,
-                include_call_site: false,
-                include_scope: false,
-              },
-              {
-                name: 'invariant',
-                package: '@dxos/invariant',
-                param_index: 2,
-                include_args: true,
-                include_call_site: false,
-                include_scope: true,
-              },
-              {
-                name: 'Context',
-                package: '@dxos/context',
-                param_index: 1,
-                include_args: false,
-                include_call_site: false,
-                include_scope: false,
-              },
-            ],
-          },
-        ],
-      ],
-    }),
+    react(),
 
-    // ???
+    // Emit a `<script type="importmap">` into the production HTML mapping shared
+    // bare specifiers (`react`, `effect`, `@dxos/client`, etc.) to dedicated chunk
+    // URLs the host serves. Two consumers:
+    //   1. **Third-party plugins (primary)** — remote plugin bundles externalize
+    //      these specifiers via `composerPlugin`'s `isSharedPackage`; the import
+    //      map is what lets a plugin loaded from a third-party origin call
+    //      `import 'react'` and get the host's React instance instead of bundling
+    //      a duplicate copy. Singleton-correct hooks, contexts, and ECHO state
+    //      depend on this.
+    //   2. **In-browser console use** — once the importmap is registered, the
+    //      DevTools console can `await import('@dxos/client')` and reach the
+    //      host's instance for ad-hoc inspection / scripting.
+    //
+    // Currently `apply: 'build'`-gated; the dev-mode path is a TODO documented
+    // on the plugin definition (it raced with Vite's optimize-deps and produced
+    // a chunk-content drift + partial-batch crash cascade).
     importMapPlugin(),
 
     // Hand the boot loader the Composer brand mark so the visual identity
-    // is established before any JS bundle parses. The SVG uses
-    // `fill="currentColor"` so it picks up the loader's `prefers-color-scheme`
-    // text colour and ships as ~1.6 KB of inline markup. Wrapped in try/catch
-    // so an asset rename or move only loses the brand mark — the loader
-    // still renders the bar + status without it.
+    // is established before any JS bundle parses. The SVG carries its own
+    // brand-palette fills (no `currentColor` reliance) and ships as ~2 KB of
+    // inline markup. Wrapped in try/catch so an asset rename or move only
+    // loses the brand mark — the loader still renders the bar + status
+    // without it.
     bootLoaderPlugin({
       markSvg: (() => {
-        const markPath = path.join(rootDir, 'packages/ui/brand/assets/icons/composer-icon-monochrome.svg');
+        const markPath = path.join(rootDir, 'packages/ui/brand/assets/icons/composer-icon.svg');
         try {
           return readFileSync(markPath, 'utf8');
         } catch (error) {
@@ -378,7 +305,13 @@ export default defineConfig((env) => ({
       // NOTE: Check cached resources (on CF, and in the PWA).
       // curl -I --header "Cache-Control: no-cache" https://staging.composer.space/icons.svg
       selfDestroying: process.env.DX_PWA === 'false',
-      workbox: {
+      // injectManifest mode: bundle a custom service worker (src/sw.ts) so we can intercept
+      // fetches for third-party plugin assets and serve them from a dedicated cache when
+      // offline. The host shell still gets the same Workbox-managed precache.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      injectManifest: {
         maximumFileSizeToCacheInBytes: 30000000,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,wasm,woff2}'],
       },

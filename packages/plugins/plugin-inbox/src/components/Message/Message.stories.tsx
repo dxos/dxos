@@ -5,11 +5,13 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
+import { withPluginManager } from '@dxos/app-framework/testing';
 import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message as MessageType } from '@dxos/types';
 
-import { translations } from '../../translations';
+import { translations } from '#translations';
+
 import { Message } from './Message';
 
 const DefaultStory = () => {
@@ -39,7 +41,7 @@ const DefaultStory = () => {
 const meta = {
   title: 'plugins/plugin-inbox/components/Message',
   component: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withPluginManager(), withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
     translations,

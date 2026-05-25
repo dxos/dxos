@@ -3,4 +3,4 @@
 //
 
 export * from './meta';
-export * from './RegistryPlugin';
+export * from './storage';

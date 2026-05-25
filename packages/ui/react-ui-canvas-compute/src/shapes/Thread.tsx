@@ -55,11 +55,7 @@ export const ThreadComponent = ({ shape }: ShapeComponentProps<ThreadShape>) => 
 
 export const ThreadItem = ({ classNames, item }: ThemedClassName<{ item: any }>) => {
   if (typeof item !== 'object') {
-    return (
-      <div role='none' className={mx(classNames)}>
-        {item}
-      </div>
-    );
+    return <div className={mx(classNames)}>{item}</div>;
   }
 
   // TODO(burdon): Hack; introspect type.

@@ -6,9 +6,7 @@ import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useEffect, useMemo } from 'react';
 
-import { Filter, Ref } from '@dxos/client/echo';
-import { JsonSchema, Obj, Query } from '@dxos/echo';
-import { Collection, View } from '@dxos/echo';
+import { Collection, Filter, JsonSchema, Obj, Query, Ref, View } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -21,8 +19,8 @@ import { withRegistry } from '@dxos/storybook-utils';
 import { Person, Pipeline } from '@dxos/types';
 
 import { usePipelineBoardModel } from '#hooks';
+import { translations } from '#translations';
 
-import { translations } from '../../translations';
 import { type ItemProps, PipelineComponent } from './PipelineComponent';
 
 const StorybookProjectItem = ({ item, projectionModel }: ItemProps) => {
@@ -64,7 +62,7 @@ const DefaultStory = () => {
       fields: ['fullName'],
     });
 
-    Obj.change(pipeline, (pipeline) => {
+    Obj.update(pipeline, (pipeline) => {
       pipeline.columns.push({
         name: 'New Contacts',
         view: Ref.make(view) as (typeof pipeline.columns)[number]['view'],
@@ -108,7 +106,7 @@ const MutationsStory = () => {
       fields: ['fullName'],
     });
 
-    Obj.change(pipeline, (pipeline) => {
+    Obj.update(pipeline, (pipeline) => {
       pipeline.columns.push({
         name: 'New Contacts',
         view: Ref.make(view) as (typeof pipeline.columns)[number]['view'],
@@ -131,7 +129,7 @@ const MutationsStory = () => {
       if (p < 0.4) {
         // Append to the name
         const contactToAdjust = random.helpers.arrayElement(contacts);
-        Obj.change(contactToAdjust, (contactToAdjust) => {
+        Obj.update(contactToAdjust, (contactToAdjust) => {
           contactToAdjust.fullName = (contactToAdjust.fullName ?? '') + ' X';
         });
         return;

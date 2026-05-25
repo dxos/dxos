@@ -2,8 +2,5 @@
 // Copyright 2023 DXOS.org
 //
 
-export { ObservabilityCapabilities, ObservabilityEvents } from './types';
-export * from './components';
 export * from './meta';
-export * from './ObservabilityPlugin';
-export { translations as observabilityTranslations } from './translations';
+export * from './types';

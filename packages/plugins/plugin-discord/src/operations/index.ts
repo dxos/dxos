@@ -2,14 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationHandlerSet } from '@dxos/operation';
+import { OperationHandlerSet } from '@dxos/compute';
 
-const Handlers = OperationHandlerSet.lazy(
-  () => import('./create-bot'),
-  () => import('./set-token'),
-  () => import('./disconnect-guild'),
+export const DiscordOperationHandlerSet = OperationHandlerSet.lazy(
+  () => import('./get-discord-channels'),
+  () => import('./sync'),
 );
-
-export { CreateBot, SetToken, DisconnectGuild } from './definitions';
-
-export const DiscordHandlers = Handlers;

@@ -3,9 +3,13 @@
 //
 
 import { Capability } from '@dxos/app-framework';
-import { OperationHandlerSet } from '@dxos/operation';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import type { Operation } from '@dxos/compute';
+import { OperationHandlerSet } from '@dxos/compute';
 
 export const AppGraphSerializer = Capability.lazy('AppGraphSerializer', () => import('./app-graph-serializer'));
+export const CommentConfig = Capability.lazy('CommentConfig', () => import('./comment-config'));
+export const CreateObject = Capability.lazy('CreateObject', () => import('./create-object'));
 export const OperationHandler = Capability.lazy<OperationHandlerSet.OperationHandlerSet>(
   'OperationHandler',
   () => import('./operation-handler'),

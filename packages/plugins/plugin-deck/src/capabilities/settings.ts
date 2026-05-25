@@ -19,8 +19,7 @@ export default Capability.makeModule(() =>
       defaultValue: () => ({
         showHints: false,
         enableDeck: false,
-        enableStatusbar: false,
-        enableNativeRedirect: !import.meta.env.DEV,
+        enableNativeRedirect: false,
         encapsulatedPlanks: false,
       }),
     });

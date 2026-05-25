@@ -4,18 +4,25 @@
 
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
+import { type GameVariantSurfaceProps } from '@dxos/plugin-game';
 
 import { TicTacToeBoard, getWinningCells } from '#components';
-import { type TicTacToe } from '#types';
+import { TicTacToe } from '#types';
 
-export type TicTacToeCardProps = AppSurface.ObjectCardProps<TicTacToe.Game>;
+export type TicTacToeCardProps = GameVariantSurfaceProps;
 
-export const TicTacToeCard = ({ subject: game }: TicTacToeCardProps) => {
-  const [board] = useObject(game, 'board');
-  const [size] = useObject(game, 'size');
-  const [winCondition] = useObject(game, 'winCondition');
+export const TicTacToeCard = ({ variant }: TicTacToeCardProps) => {
+  const state = Obj.instanceOf(TicTacToe.State, variant) ? variant : undefined;
+  const [board] = useObject(state, 'board');
+  const [size] = useObject(state, 'size');
+  const [winCondition] = useObject(state, 'winCondition');
+
+  if (!state || !board || !size || !winCondition) {
+    return null;
+  }
+
   const winningCells = getWinningCells(board, size, winCondition);
 
   return (

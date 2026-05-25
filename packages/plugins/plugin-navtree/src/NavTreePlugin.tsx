@@ -7,34 +7,14 @@ import * as Effect from 'effect/Effect';
 import { ActivationEvent, ActivationEvents, Capabilities, Capability, Plugin } from '@dxos/app-framework';
 import { AppActivationEvents, AppCapabilities, AppPlugin, LayoutOperation } from '@dxos/app-toolkit';
 import { Graph } from '@dxos/plugin-graph';
-import { type TreeData } from '@dxos/react-ui-list';
 
 import { AppGraphBuilder, Keyboard, OperationHandler, ReactSurface, State } from '#capabilities';
-import { NODE_TYPE } from '#containers';
 import { meta } from '#meta';
+import { translations } from '#translations';
 import { NavTreeEvents } from '#types';
-
-import { translations } from './translations';
 
 export const NavTreePlugin = Plugin.define(meta).pipe(
   AppPlugin.addAppGraphModule({ activate: AppGraphBuilder }),
-  AppPlugin.addMetadataModule({
-    metadata: {
-      id: NODE_TYPE,
-      metadata: {
-        parse: ({ item }: TreeData, type: string) => {
-          switch (type) {
-            case 'node':
-              return item;
-            case 'object':
-              return item.data;
-            case 'view-object':
-              return { id: `${item.id}-view`, object: item.data };
-          }
-        },
-      },
-    },
-  }),
   AppPlugin.addOperationHandlerModule({ activate: OperationHandler }),
   AppPlugin.addSurfaceModule({ activate: ReactSurface }),
   AppPlugin.addTranslationsModule({ translations }),
@@ -47,7 +27,7 @@ export const NavTreePlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     id: 'expose',
     activatesOn: ActivationEvent.allOf(
-      ActivationEvents.OperationInvokerReady,
+      ActivationEvents.ProcessManagerReady,
       AppActivationEvents.AppGraphReady,
       AppActivationEvents.LayoutReady,
       NavTreeEvents.StateReady,
@@ -69,8 +49,10 @@ export const NavTreePlugin = Plugin.define(meta).pipe(
   }),
   Plugin.addModule({
     id: 'keyboard',
-    activatesOn: ActivationEvent.allOf(AppActivationEvents.AppGraphReady, ActivationEvents.OperationInvokerReady),
+    activatesOn: ActivationEvent.allOf(AppActivationEvents.AppGraphReady, ActivationEvents.ProcessManagerReady),
     activate: Keyboard,
   }),
   Plugin.make,
 );
+
+export default NavTreePlugin;

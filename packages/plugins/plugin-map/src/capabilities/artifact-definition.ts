@@ -11,12 +11,11 @@ import * as Schema from 'effect/Schema';
 import { ToolResult, createTool } from '@dxos/ai';
 import { Capabilities, Capability, type PromiseIntentDispatcher } from '@dxos/app-framework';
 import { createArtifactElement } from '@dxos/assistant';
-import { defineArtifact } from '@dxos/blueprints';
-import { Obj } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import { defineArtifact } from '@dxos/compute';
+import { Filter, Obj, View } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { SpaceOperation } from '@dxos/plugin-space/operations';
-import { Filter, type Space } from '@dxos/react-client/echo';
+import { SpaceOperation } from '@dxos/plugin-space';
+import { type Space } from '@dxos/react-client/echo';
 import { ViewModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 

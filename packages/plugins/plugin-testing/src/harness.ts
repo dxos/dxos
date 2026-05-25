@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { OperationPlugin, type Plugin, RuntimePlugin } from '@dxos/app-framework';
+import { type Plugin, ProcessManagerPlugin } from '@dxos/app-framework';
 import { createTestApp, type TestAppOptions, type TestHarness } from '@dxos/app-framework/testing';
-import { AttentionPlugin } from '@dxos/plugin-attention';
-import { GraphPlugin } from '@dxos/plugin-graph';
-import { SettingsPlugin } from '@dxos/plugin-settings';
+import { AttentionPlugin } from '@dxos/plugin-attention/testing';
+import { GraphPlugin } from '@dxos/plugin-graph/testing';
+import { SettingsPlugin } from '@dxos/plugin-settings/testing';
 
 export type ComposerTestAppOptions = Omit<TestAppOptions, 'plugins'> & {
   /** Plugins to register in addition to the Composer core plugins. */
@@ -26,14 +26,13 @@ export type ComposerTestAppOptions = Omit<TestAppOptions, 'plugins'> & {
 const headlessCorePlugins = (): Plugin.Plugin[] => [
   AttentionPlugin(),
   GraphPlugin(),
-  OperationPlugin(),
-  RuntimePlugin(),
+  ProcessManagerPlugin(),
   SettingsPlugin(),
 ];
 
 /**
  * Creates a TestHarness pre-loaded with the Composer core plugins
- * (Attention, Graph, Operation, Runtime, Settings, optionally Theme).
+ * (Attention, Graph, ProcessManager, Settings, optionally Theme).
  *
  * For a ClientPlugin-backed harness, pass `ClientPlugin({ ... })` via `plugins`.
  */
@@ -41,8 +40,8 @@ export const createComposerTestApp = async (opts: ComposerTestAppOptions = {}): 
   const { plugins = [], theme = false, ...rest } = opts;
   const core = headlessCorePlugins();
   if (theme) {
-    const { ThemePlugin } = await import('@dxos/plugin-theme');
-    const { defaultTx } = await import('@dxos/ui-theme');
+    const { ThemePlugin } = await import('@dxos/plugin-theme/testing');
+    const { defaultTx } = await import('@dxos/react-ui');
     core.push(ThemePlugin({ tx: defaultTx }));
   }
   return createTestApp({

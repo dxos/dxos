@@ -4,16 +4,14 @@
 
 import * as Schema from 'effect/Schema';
 
-import { AgentPrompt, EntityExtraction, ResearchBlueprint } from '@dxos/assistant-toolkit';
-import { Prompt } from '@dxos/blueprints';
+import { AgentPrompt, WebSearchBlueprint } from '@dxos/assistant-toolkit';
+import { Routine, Trigger, Operation } from '@dxos/compute';
 import { type ComputeGraphModel, NODE_INPUT } from '@dxos/conductor';
 import { DXN, Feed, Filter, JsonSchema, Key, Obj, Query, type QueryAST, Ref, Tag } from '@dxos/echo';
-import { Trigger } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
-import { Operation } from '@dxos/operation';
 import { InboxOperation } from '@dxos/plugin-inbox';
-import { Mailbox } from '@dxos/plugin-inbox/types';
-import { Markdown } from '@dxos/plugin-markdown/types';
+import { Mailbox } from '@dxos/plugin-inbox';
+import { Markdown } from '@dxos/plugin-markdown';
 import { type Space } from '@dxos/react-client/echo';
 import {
   type ComputeShape,
@@ -73,9 +71,9 @@ export const generator = () => ({
           );
 
           const tag = space.db.add(Tag.make({ label: 'Investor' }));
-          const tagDxn = Obj.getDXN(tag).toString();
-          Obj.change(doc, (doc) => {
-            Obj.getMeta(doc).tags = [tagDxn];
+          const tagDXN = Obj.getDXN(tag).toString();
+          Obj.update(doc, (doc) => {
+            Obj.getMeta(doc).tags = [tagDXN];
           });
 
           // space.db.add(
@@ -87,7 +85,7 @@ export const generator = () => ({
           // );
 
           space.db.add(
-            Obj.make(Person.Person, { [Obj.Meta]: { tags: [tagDxn] }, fullName: 'Rich', organization: Ref.make(org) }),
+            Obj.make(Person.Person, { [Obj.Meta]: { tags: [tagDXN] }, fullName: 'Rich', organization: Ref.make(org) }),
           );
           space.db.add(
             Obj.make(Person.Person, {
@@ -122,15 +120,15 @@ export const generator = () => ({
         invariant(mailbox, 'Mailbox not found');
         const mailboxFeed = await mailbox.feed?.tryLoad();
         invariant(mailboxFeed, 'Mailbox missing feed reference');
-        const queueDxn = Feed.getQueueDxn(mailboxFeed)?.toString();
-        invariant(queueDxn, 'Mailbox feed missing queue DXN key');
+        const feedDXN = Feed.getQueueDxn(mailboxFeed)?.toString();
+        invariant(feedDXN, 'Mailbox feed missing DXN');
         const tag = await space.db.query(Filter.type(Tag.Tag, { label: 'Investor' })).first();
-        const tagDxn = Obj.getDXN(tag).toString();
+        const tagDXN = Obj.getDXN(tag).toString();
 
         const objects = range(n, () => {
-          const contactsQuery = Query.select(Filter.type(Person.Person)).select(Filter.tag(tagDxn));
-          const organizationsQuery = Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagDxn));
-          const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagDxn));
+          const contactsQuery = Query.select(Filter.type(Person.Person)).select(Filter.tag(tagDXN));
+          const organizationsQuery = Query.select(Filter.type(Organization.Organization)).select(Filter.tag(tagDXN));
+          const notesQuery = Query.select(Filter.type(Markdown.Document)).select(Filter.tag(tagDXN));
 
           space.db.add(
             Trigger.make({
@@ -143,20 +141,8 @@ export const generator = () => ({
             }),
           );
 
-          space.db.add(
-            Trigger.make({
-              enabled: true,
-              // TODO(wittjosiah): Queue trigger doesn't support matching query of the column.
-              spec: Trigger.specQueue(queueDxn),
-              function: Ref.make(Operation.serialize(EntityExtraction)),
-              input: {
-                source: '{{event.item}}',
-              },
-            }),
-          );
-
           const researchPrompt = space.db.add(
-            Prompt.make({
+            Routine.make({
               name: 'Research',
               description: 'Research organization',
               input: Schema.Struct({
@@ -171,7 +157,7 @@ export const generator = () => ({
                 Create a research note for it at the end.
                 NOTE: Do mocked reseach (set mockSearch to true).
               `,
-              blueprints: [Ref.make(ResearchBlueprint.make())],
+              blueprints: [Ref.make(WebSearchBlueprint.make())],
             }),
           );
 
@@ -193,7 +179,7 @@ export const generator = () => ({
                 properties: { labels: Filter.contains('investor') },
               }),
             ).from({
-              queues: [queueDxn],
+              feeds: [feedDXN],
             }),
             jsonSchema: JsonSchema.toJsonSchema(Message.Message),
           });
@@ -752,7 +738,7 @@ const createQueueSinkPreset = <SpecType extends Trigger.Kind>(
     functionTrigger = triggerShape.functionTrigger!.target!;
     const triggerSpec = functionTrigger.spec;
     invariant(triggerSpec && triggerSpec.kind === triggerKind, 'No trigger spec.');
-    Obj.change(functionTrigger, (functionTrigger) => {
+    Obj.update(functionTrigger, (functionTrigger) => {
       initSpec(functionTrigger.spec as any);
     });
   });
@@ -804,7 +790,7 @@ const setupQueue = (
 const attachTrigger = (functionTrigger: Trigger.Trigger | undefined, computeModel: ComputeGraphModel) => {
   invariant(functionTrigger);
   const inputNode = computeModel.nodes.find((node) => node.type === NODE_INPUT)!;
-  Obj.change(functionTrigger, (functionTrigger) => {
+  Obj.update(functionTrigger, (functionTrigger) => {
     functionTrigger.function = Ref.make(computeModel.root);
     functionTrigger.inputNodeId = inputNode.id;
   });
