@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { defineObjectMigration } from '@dxos/client/echo';
+import { Migration } from '@dxos/echo';
 import { ClientCapabilities } from '@dxos/plugin-client';
 
 import { Kanban } from '#types';
@@ -16,7 +16,7 @@ import { Kanban } from '#types';
  * pre-migration objects were all view-based by construction.
  */
 const migrations = [
-  defineObjectMigration({
+  Migration.define({
     from: Kanban.KanbanV1,
     to: Kanban.Kanban,
     transform: async (from) => ({

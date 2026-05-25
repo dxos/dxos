@@ -27,6 +27,7 @@ export const Adjust = Operation.make({
     key: `${meta.id}.operation.adjust`,
     name: 'Adjust',
     description: 'Adjust the layout of a plank.',
+    icon: 'ph--layout--regular',
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -41,6 +42,7 @@ export const UpdatePlankSize = Operation.make({
     key: `${meta.id}.operation.update-plank-size`,
     name: 'Update Plank Size',
     description: 'Update the size of a plank.',
+    icon: 'ph--arrows-out--regular',
   },
   services: [Capability.Service],
   input: Schema.Struct({

@@ -63,7 +63,7 @@ const PreviewCard = () => {
               <Card.Icon icon='ph--file-text--regular' />
               <Card.Title>{target.label}</Card.Title>
               <Popover.Close asChild>
-                <Card.CloseIconButton />
+                <Card.ActionIconButton action='close' />
               </Popover.Close>
             </Card.Toolbar>
             <Card.Row>

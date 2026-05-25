@@ -85,7 +85,7 @@ export const createTestServices = ({
     credentials: createCredentialsService(credentials),
     database: space || db ? Database.makeService(space?.db || db!) : undefined,
     trace: logging?.trace ?? (logging?.enabled ? consoleTraceWriter : noopTraceWriter),
-    queues: space || queues ? QueueService.make(space?.queues || queues!, undefined) : undefined,
+    queues: space || queues ? QueueService.make(space?.queues || queues!) : undefined,
   });
 };
 

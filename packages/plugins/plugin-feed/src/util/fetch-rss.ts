@@ -92,7 +92,7 @@ export const fetchRss: FeedFetcher = async (url: string, { corsProxy }: FetchOpt
     });
   });
 
-  const feed = Subscription.makeFeed({
+  const feed = Subscription.makeSubscription({
     name: feedName,
     url,
     description: feedDescription,

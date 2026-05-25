@@ -5,8 +5,9 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { Filter } from '@dxos/echo';
 import { ClientProvider } from '@dxos/react-client';
-import { Filter, useDatabase, useQuery } from '@dxos/react-client/echo';
+import { useDatabase, useQuery } from '@dxos/react-client/echo';
 
 import { Task } from './schema';
 

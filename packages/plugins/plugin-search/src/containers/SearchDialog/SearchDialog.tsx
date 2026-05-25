@@ -8,8 +8,8 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { getObjectPathFromObject, LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { useLayout } from '@dxos/app-toolkit/ui';
-import { Entity, Obj, Query } from '@dxos/echo';
-import { Filter, useQuery } from '@dxos/react-client/echo';
+import { Entity, Filter, Obj, Query } from '@dxos/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-search';
 import { Text } from '@dxos/schema';
@@ -69,7 +69,7 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
       <Dialog.Header>
         <Dialog.Title>{t('search-dialog.title')}</Dialog.Title>
         <Dialog.Close asChild>
-          <Dialog.CloseIconButton />
+          <Dialog.ActionIconButton action='close' />
         </Dialog.Close>
       </Dialog.Header>
       <SearchList.Root onSearch={handleSearch}>

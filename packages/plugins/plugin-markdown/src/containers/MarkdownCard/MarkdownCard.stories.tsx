@@ -5,10 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
+import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { Markdown } from '@dxos/plugin-markdown';
 import { random } from '@dxos/random';
 import { Card } from '@dxos/react-ui';
@@ -51,7 +51,7 @@ const meta: Meta<typeof MarkdownCardStory> = {
   decorators: [
     withTheme(),
     withPluginManager({
-      plugins: [OperationPlugin(), RuntimePlugin(), ClientPlugin({})],
+      plugins: [ProcessManagerPlugin(), ClientPlugin({})],
     }),
   ],
   parameters: {

@@ -2,16 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
-import { next as A, type Heads } from '@automerge/automerge';
+import { type Heads } from '@automerge/automerge';
 import type { DocumentId, PeerId } from '@automerge/automerge-repo';
 import * as Array from 'effect/Array';
 import * as Record from 'effect/Record';
 
 import { Event, asyncReturn, scheduleTask, scheduleTaskInterval } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
+import { isEdgePeerId } from '@dxos/echo-protocol';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { defaultMap } from '@dxos/util';
+
+import { PeerNotFoundError } from './errors';
 
 const MIN_QUERY_INTERVAL = 5_000;
 
@@ -40,7 +43,11 @@ export class CollectionSynchronizer extends Resource {
 
   private readonly _connectedPeers = new Set<PeerId>();
 
-  public readonly remoteStateUpdated = new Event<{ collectionId: string; peerId: PeerId; newDocsAppeared: boolean }>();
+  public readonly peerCollectionStateUpdated = new Event<{
+    collectionId: string;
+    peerId: PeerId;
+    newDocsAppeared: boolean;
+  }>();
 
   constructor(params: CollectionSynchronizerProps) {
     super();
@@ -174,6 +181,9 @@ export class CollectionSynchronizer extends Resource {
 
     for (const perCollectionState of this._perCollectionStates.values()) {
       perCollectionState.remoteStates.delete(peerId);
+      perCollectionState.interestedPeers.delete(peerId);
+      perCollectionState.lastQueried.delete(peerId);
+      perCollectionState.lastBroadcast.delete(peerId);
     }
   }
 
@@ -187,7 +197,15 @@ export class CollectionSynchronizer extends Resource {
     const perCollectionState = this._getOrCreatePerCollectionState(collectionId);
 
     if (perCollectionState.localState) {
-      this._sendCollectionState(collectionId, peerId, perCollectionState.localState);
+      try {
+        this._sendCollectionState(collectionId, peerId, withoutEmptyHeads(perCollectionState.localState));
+      } catch (error) {
+        if (PeerNotFoundError.is(error)) {
+          log('peer not found when sending collection state callback', { error });
+          return;
+        }
+        throw error;
+      }
     }
   }
 
@@ -198,6 +216,10 @@ export class CollectionSynchronizer extends Resource {
     log('onRemoteStateReceived', { collectionId, peerId, state });
     validateCollectionState(state);
     const perCollectionState = this._getOrCreatePerCollectionState(collectionId);
+    const previousRemoteState = perCollectionState.remoteStates.get(peerId);
+    if (previousRemoteState && isCollectionStateEqual(previousRemoteState, state)) {
+      return;
+    }
     perCollectionState.remoteStates.set(peerId, state);
     this._diffCollectionState(collectionId, peerId);
   }
@@ -211,7 +233,7 @@ export class CollectionSynchronizer extends Resource {
 
     log('diffCollectionState', { collectionId, peerId });
     const localState = perCollectionState.localState ?? { documents: {} };
-    const diff = diffCollectionState(localState, remoteState);
+    const diff = diffCollectionStateForPeer(localState, remoteState, { isEdgePeer: isEdgePeerId(peerId) });
     const spanId = getSpanId(peerId);
     if (diff.different.length === 0) {
       trace.spanEnd(spanId);
@@ -233,14 +255,12 @@ export class CollectionSynchronizer extends Resource {
       missingOnRemote: diff.missingOnRemote,
       different: diff.different,
     });
-    if (diff.missingOnLocal.length > 0 || diff.different.length > 0 || diff.missingOnRemote.length > 0) {
-      log('emit remote state update');
-      this.remoteStateUpdated.emit({
-        peerId,
-        collectionId,
-        newDocsAppeared: diff.missingOnLocal.length > 0,
-      });
-    }
+    log('emit peer collection state update');
+    this.peerCollectionStateUpdated.emit({
+      peerId,
+      collectionId,
+      newDocsAppeared: diff.missingOnLocal.length > 0,
+    });
   }
 
   private _getOrCreatePerCollectionState(collectionId: string): PerCollectionState {
@@ -269,11 +289,25 @@ export class CollectionSynchronizer extends Resource {
     if (!localState) {
       return;
     }
+    // Edge replicators are pull-only from our perspective: the edge is the source of truth and
+    // already holds every doc in the space, so proactively pushing our heads on every local
+    // change is wasted work. The edge can still pull our state via `onCollectionStateQueried`.
     for (const peerId of perCollectionState.interestedPeers) {
+      if (isEdgePeerId(peerId)) {
+        continue;
+      }
       const lastBroadcast = perCollectionState.lastBroadcast.get(peerId) ?? 0;
       if (Date.now() - lastBroadcast > MIN_QUERY_INTERVAL) {
         perCollectionState.lastBroadcast.set(peerId, Date.now());
-        this._sendCollectionState(collectionId, peerId, localState);
+        try {
+          this._sendCollectionState(collectionId, peerId, withoutEmptyHeads(localState));
+        } catch (error) {
+          if (PeerNotFoundError.is(error)) {
+            log('peer not found when broadcasting collection state', { error });
+            return;
+          }
+          throw error;
+        }
       }
     }
   }
@@ -310,6 +344,55 @@ export type CollectionStateDiff = {
   different: DocumentId[];
 };
 
+export const isCollectionStateEqual = (local: CollectionState, remote: CollectionState): boolean => {
+  const diff = diffCollectionState(local, remote);
+  return diff.different.length === 0 && diff.missingOnLocal.length === 0 && diff.missingOnRemote.length === 0;
+};
+
+/**
+ * Strip entries whose heads array is empty before sending a CollectionState
+ * over the wire. Empty-heads entries are inert (they don't participate in the
+ * diff thanks to `Record.filter` in {@link diffCollectionState}) but they
+ * inflate the on-wire payload AND end up advertised as "I know about this
+ * document with no commits" to the receiver — leaking sedimentree ids that
+ * leaked into the local store from other spaces via the subduction
+ * fingerprint exchange. Filtering at the send site is the cheapest place to
+ * keep collection-state semantics aligned with `diffCollectionState`.
+ */
+export const withoutEmptyHeads = (state: CollectionState): CollectionState => ({
+  documents: Record.filter(state.documents, (heads) => heads.length > 0),
+});
+
+/**
+ * Restrict a remote {@link CollectionState} to the document keys present in `local`.
+ *
+ * Used when diffing against an edge peer: edge subduction storage retains every
+ * sedimentree id it has ever seen (old roots, partial creations, cross-space
+ * fingerprint leaks), so a raw symmetric diff would surface those as
+ * `missingOnLocal` forever. The local root's `links` are authoritative for
+ * "what docs are in this space"; intersecting the remote view with the local
+ * key set drops the noise without changing wire format.
+ */
+export const subsetRemoteToLocal = (local: CollectionState, remote: CollectionState): CollectionState => ({
+  documents: Record.filter(remote.documents, (_heads, documentId) => documentId in local.documents),
+});
+
+/**
+ * Peer-aware wrapper around {@link diffCollectionState}.
+ *
+ * For mesh peers the diff is symmetric (every doc on either side participates).
+ * For edge peers we first intersect the remote state with the local key set —
+ * see {@link subsetRemoteToLocal} for why.
+ */
+export const diffCollectionStateForPeer = (
+  local: CollectionState,
+  remote: CollectionState,
+  { isEdgePeer }: { isEdgePeer: boolean },
+): CollectionStateDiff => {
+  const effectiveRemote = isEdgePeer ? subsetRemoteToLocal(local, remote) : remote;
+  return diffCollectionState(local, effectiveRemote);
+};
+
 export const diffCollectionState = (local: CollectionState, remote: CollectionState): CollectionStateDiff => {
   const localDocuments = Record.filter(local.documents, (heads) => heads.length > 0);
   const remoteDocuments = Record.filter(remote.documents, (heads) => heads.length > 0);
@@ -324,7 +407,13 @@ export const diffCollectionState = (local: CollectionState, remote: CollectionSt
       missingOnLocal.push(documentId);
     } else if (!remoteDocuments[documentId]) {
       missingOnRemote.push(documentId);
-    } else if (!A.equals(local.documents[documentId], remote.documents[documentId])) {
+    } else if (!headsOverlap(local.documents[documentId], remote.documents[documentId])) {
+      // Subduction's `getAllHeads()` on the edge mixes raw `LooseCommit` tips with
+      // fragment heads (commit IDs promoted to depth >= 1 by leading-zero count of the
+      // hash). The host's `automerge.getHeads(doc)` only ever sees raw change tips —
+      // it has no notion of fragments — so the two views can disagree on a doc's
+      // head set even when every change byte is replicated. We treat the doc as in
+      // sync as long as both sides agree on at least one head.
       different.push(documentId);
     }
   }
@@ -334,6 +423,24 @@ export const diffCollectionState = (local: CollectionState, remote: CollectionSt
     missingOnLocal,
     different,
   };
+};
+
+/**
+ * Returns true when two head-sets share at least one element. Used by the collection-state
+ * diff so transient fragment-vs-commit-ID mismatches between subduction peers don't get
+ * reported as `differentDocuments` while the underlying change bytes are fully replicated.
+ */
+const headsOverlap = (a: readonly string[], b: readonly string[]): boolean => {
+  if (a.length === 0 || b.length === 0) {
+    return false;
+  }
+  const aset = new Set(a);
+  for (const h of b) {
+    if (aset.has(h)) {
+      return true;
+    }
+  }
+  return false;
 };
 
 const validateCollectionState = (state: CollectionState) => {

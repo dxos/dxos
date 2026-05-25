@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
@@ -70,6 +70,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-settings": "workspace:*",

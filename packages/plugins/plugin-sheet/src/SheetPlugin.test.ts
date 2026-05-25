@@ -22,7 +22,7 @@ describe('SheetPlugin', () => {
 
     expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('CreateObject'), moduleId('schema')]));
 
-    await harness.fire(ActivationEvents.SetupOperationHandler);
+    await harness.fire(ActivationEvents.SetupProcessManager);
     expect(harness.manager.getActive()).toEqual(
       expect.arrayContaining([moduleId('OperationHandler'), moduleId('UndoMappings')]),
     );

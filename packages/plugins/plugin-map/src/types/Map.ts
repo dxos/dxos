@@ -4,16 +4,13 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Format, Obj, Ref, Type } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import { Annotation, Format, Obj, Ref, Type, View } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { ViewAnnotation } from '@dxos/schema';
 
 export const Map = Schema.Struct({
   name: Schema.optional(Schema.String),
-
   view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false), Schema.optional),
-
   center: Format.GeoPoint.pipe(FormInputAnnotation.set(false), Schema.optional),
   zoom: Schema.Number.pipe(FormInputAnnotation.set(false), Schema.optional),
   // TODO(wittjosiah): Use GeoJSON format for rendering arbitrary data on the map.

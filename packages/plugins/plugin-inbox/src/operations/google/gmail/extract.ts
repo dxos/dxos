@@ -51,6 +51,9 @@ export const parseSignature = (body: string): ParsedSignature => {
   ];
 
   // Helper functions
+  const signOffPattern = /^(thanks|regards|best|sincerely|cheers|sent\s+(from|with\s+care\s+from|via)\b)/i;
+  const isSignOff = (line: string) => signOffPattern.test(line.replace(/[,.]$/, '').trim());
+  const isSeparator = (line: string) => /[*=-]/.test(line) && /^[\s*=-]+$/.test(line);
   const isEmail = (line: string) => emailPattern.test(line) || line.includes('@');
   const isPhone = (line: string) => {
     const digits = line.match(/\d/g);
@@ -81,7 +84,8 @@ export const parseSignature = (body: string): ParsedSignature => {
     isTitle: isTitle(line),
     isCompany: isCompanyName(line),
     looksLikeName: looksLikeName(line),
-    isThanks: line.toLowerCase() === 'thanks' || line.toLowerCase() === 'thanks,',
+    isSignOff: isSignOff(line),
+    isSeparator: isSeparator(line),
     isPronoun:
       line.includes('(') && line.includes(')') && (line.includes('/') || line.includes('him') || line.includes('her')),
   }));
@@ -92,7 +96,7 @@ export const parseSignature = (body: string): ParsedSignature => {
     const next = lineTypes[i + 1];
 
     // Skip non-name lines.
-    if (current.isEmail || current.isPhone || current.isUrl || current.isThanks) {
+    if (current.isEmail || current.isPhone || current.isUrl || current.isSignOff || current.isSeparator) {
       continue;
     }
 
@@ -120,7 +124,14 @@ export const parseSignature = (body: string): ParsedSignature => {
     const current = lineTypes[i];
 
     // Skip if it's the name we found or contact info.
-    if (current.line === name || current.isEmail || current.isPhone || current.isUrl || current.isThanks) {
+    if (
+      current.line === name ||
+      current.isEmail ||
+      current.isPhone ||
+      current.isUrl ||
+      current.isSignOff ||
+      current.isSeparator
+    ) {
       continue;
     }
 

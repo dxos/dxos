@@ -5,7 +5,8 @@
 import React, { type PropsWithChildren } from 'react';
 
 import { type Label, ScrollArea, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 

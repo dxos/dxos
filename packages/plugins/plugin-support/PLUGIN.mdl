@@ -1,0 +1,323 @@
+---
+id: org.dxos.plugin.support
+name: SupportPlugin
+version: 0.1.0
+---
+
+Composer's user-facing assistance plugin. Covers two paths:
+
+1. **Conversational support** — users open a `Ticket` from the navtree and the AI
+   assistant collaborates on diagnosing the issue, searching documentation, and
+   recording the resolution. Tickets are ECHO objects so a conversation is
+   local-first, replicable to other devices, and reviewable by a human
+   supporter later.
+2. **One-shot feedback** — users send anonymous feedback (with optional debug
+   logs) to the observability backend via the deck `--help` companion. This
+   replaces the same surface previously owned by plugin-observability and
+   keeps the telemetry plugin focused on instrumentation only.
+3. **GitHub issue submission** — same form, optional third action: file a
+   structured bug/feature request against the upstream repo. When the user
+   has authenticated the GitHub integration (via plugin-integration) the
+   issue is filed as them via the GitHub API; otherwise we open a prefilled
+   `issues/new` URL in a new tab so the user can finish the submission in
+   their own browser session.
+
+A future iteration will absorb plugin-help (welcome tour, contextual hints,
+keyboard shortcuts) so all user education lives here.
+
+Initial scope is a thin skeleton: a `Ticket` schema, four ticket operations
+wired to a blueprint, a `FeedbackForm` + `captureUserFeedback` operation, and
+two surfaces (`Ticket` article + `--help` companion). Documentation search and
+issue filing are stubbed — the blueprint exists so the assistant can be
+exercised end-to-end while the integrations land in later phases.
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+
+## Types
+
+```mdl
+type TicketStatus
+  literals: open | in_progress | resolved
+```
+
+```mdl
+type Ticket
+  desc: >
+    A user-reported support ticket. Conversation history is kept by the
+    AI assistant in a separate ECHO conversation; the Ticket itself
+    carries the summary and the resolution status.
+  fields:
+    title: string
+    body?: string                # Initial description of the problem.
+    status: TicketStatus
+    resolution?: string          # Resolution notes written when status -> resolved.
+    tags: string[]               # Free-form tags (e.g. echo, ui, performance).
+```
+
+```mdl
+type IssueType
+  literals: bug | feature
+```
+
+```mdl
+type Severity
+  # Literal strings double as GitHub label names so a triager can read
+  # the priority at a glance from the labels strip on the filed issue.
+  literals: "High priority" | "Medium priority" | "Low priority"
+```
+
+```mdl
+type SupportRequest
+  desc: >
+    Form payload submitted from the help companion. Drives all three
+    submission paths: PostHog (one-shot feedback), Discord (help thread),
+    and GitHub issue. The hidden field `version` is populated by the
+    FeedbackPanel from the runtime config; the user never edits it but
+    it is forwarded to the backend so support triage can identify the
+    build the report came from.
+  fields:
+    type: IssueType              # bug | feature
+    severity: Severity           # "High priority" | "Medium priority" | "Low priority"
+    title: string                # Short summary (becomes GH issue title).
+    body: string                 # Longer description (becomes GH issue body).
+    area?: string                # Plugin id (e.g. org.dxos.plugin.echo). Optional.
+    includeLogs?: boolean        # Forward debug logs with the submission.
+    version?: string             # Hidden: app build version. Auto-populated.
+```
+
+## Components
+
+```mdl
+component SupportArticle
+  desc: >
+    Article surface bound to a Ticket. Displays title, body, status and
+    resolution. The assistant chat lives in the standard chat companion
+    surface; this article is the persistent record.
+  props:
+    ticket: Ticket
+  slots:
+    toolbar?: ReactNode
+  actions:
+    setTitle(value: string)
+    setBody(value: string)
+    setResolution(value: string)
+    setStatus(status: TicketStatus)
+  layout: |
+    ┌─────────────────────────────────┐
+    │ [toolbar slot] status: open     │
+    ├─────────────────────────────────┤
+    │ Title  [_______________________]│
+    │ Body   [_______________________]│
+    │        [_______________________]│
+    ├─────────────────────────────────┤
+    │ Resolution                      │
+    │        [_______________________]│
+    ├─────────────────────────────────┤
+    │ [Mark in progress] [Resolve]    │
+    └─────────────────────────────────┘
+```
+
+## Operations
+
+```mdl
+op createTicket
+  desc: Creates a new Ticket in the active space.
+  input:
+    title: string
+    body?: string
+  output: Ticket
+  effects: [echo:write]
+```
+
+```mdl
+op markInProgress
+  desc: Marks a Ticket as in progress (active investigation).
+  input:
+    ticket: Ticket
+  output: Ticket
+  effects: [echo:write]
+```
+
+```mdl
+op resolveTicket
+  desc: Marks a Ticket as resolved with optional resolution notes.
+  input:
+    ticket: Ticket
+    resolution?: string
+  output: Ticket
+  effects: [echo:write]
+```
+
+```mdl
+op searchDocs
+  desc: >
+    Searches Composer / DXOS documentation for the given query and returns
+    a list of excerpts. Stub implementation in the initial phase; later
+    backed by an embedded vector index or a remote search endpoint.
+  input:
+    query: string
+    limit?: number
+  output:
+    results: { title: string, url: string, excerpt: string }[]
+```
+
+```mdl
+op captureUserFeedback
+  desc: >
+    Sends a one-shot feedback message (with optional debug logs) to the
+    observability backend. Backed by the Observability capability contributed
+    by plugin-observability — plugin-support owns the UI and operation; the
+    actual transport stays in the observability plugin.
+  input:
+    message: string
+    includeLogs?: boolean
+  output: void
+```
+
+GitHub issue submission is performed inline by the FeedbackPanel — it
+queries the user's personal space for an `AccessToken` with source
+`github.com`, POSTs to the GitHub API if found, and falls back to opening
+a prefilled `issues/new` URL otherwise. No dedicated operation is exposed
+in this phase; if AI / CLI invocation is needed later, add one wrapping
+the same flow.
+
+## Features
+
+```mdl
+feat F-1: Ticket Lifecycle
+
+  req F-1.1: User can create a Ticket from the AI assistant or directly via the navtree.
+  req F-1.2:
+    when: a Ticket is created
+    then: status === open; resolution unset.
+  req F-1.3:
+    when: assistant or user calls markInProgress
+    then: status === in_progress.
+  req F-1.4:
+    when: assistant or user calls resolveTicket
+    then: status === resolved; resolution recorded (if provided).
+  req F-1.5: Ticket title and body are editable in SupportArticle.
+  req F-1.6:
+    when: user clicks Reopen on a resolved Ticket in SupportArticle
+    then: status === open (UI-driven; no dedicated op).
+```
+
+```mdl
+feat F-2: AI Support Assistant
+
+  req F-2.1: A blueprint is registered with key org.dxos.blueprint.support.
+  req F-2.2: Blueprint tools include createTicket, markInProgress, resolveTicket, searchDocs.
+  req F-2.3:
+    when: a Ticket is the active object
+    then: the support blueprint is bound to the chat companion surface.
+  req F-2.4: The assistant is instructed to gather details, search docs, and only resolve when the user confirms.
+```
+
+```mdl
+feat F-3: Documentation Search
+
+  req F-3.1: searchDocs operation is defined with a query input.
+  req F-3.2:
+    when: assistant calls searchDocs
+    then: zero or more {title,url,excerpt} results are returned.
+  req F-3.3: Initial implementation returns a small in-memory set; replaceable without changing the schema.
+```
+
+```mdl
+feat F-4: One-shot Feedback
+
+  req F-4.1: plugin-support contributes the deck `--help` companion surface; it renders a FeedbackForm.
+  req F-4.2:
+    when: user submits the FeedbackForm
+    then: captureUserFeedback runs and forwards to the Observability capability.
+  req F-4.3:
+    when: feedback succeeds
+    then: a confirmation toast is shown and the companion collapses.
+  req F-4.4: When the LogDownloader capability is contributed, a "Download logs" action is offered alongside the form.
+  req F-4.5:
+    when: the Observability capability reports feedback is unavailable
+    then: the submit button is disabled.
+```
+
+```mdl
+feat F-5: GitHub Issue Submission
+
+  req F-5.1: FeedbackForm exposes type (bug/feature), severity, title, body, and area (optional plugin) alongside the existing submit + Discord actions.
+  req F-5.2: The form auto-populates and submits a hidden `version` field (app build) without rendering it as an input.
+  req F-5.3: The area select is populated from the runtime plugin list (plugin id + name); empty selection is allowed.
+  req F-5.4:
+    when: user clicks "Create GitHub issue"
+    then: submitGitHubIssue is invoked with the form values.
+  req F-5.5:
+    when: an AccessToken with source `github.com` is present in the active space
+    then: the issue is POSTed to the GitHub API; the response URL is opened in a new tab and a success toast is shown.
+  req F-5.6:
+    when: no GitHub AccessToken is present
+    then: a prefilled `issues/new` URL is opened in a new tab; the user finishes the submission manually.
+  req F-5.7: type maps to GitHub's Issue Type field via `?type=Bug` / `?type=Feature`; severity is emitted as a label whose name matches the literal (e.g. `High priority`); area, when set, adds an `area/<plugin-id>` label. A `Composer` source-anchor label is always included.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Create a ticket
+  given: user is in a space
+  when: createTicket invoked with title "Echo sync hung"
+  then:
+    - Ticket created in space
+    - status === open
+    - title === "Echo sync hung"
+```
+
+```mdl
+test T-2: Resolve a ticket
+  given: an open Ticket
+  when: resolveTicket invoked with resolution "Restarted client"
+  then:
+    - status === resolved
+    - resolution === "Restarted client"
+```
+
+```mdl
+test T-3: SupportArticle renders ticket
+  given: a Ticket with title and body
+  when: SupportArticle is rendered
+  then:
+    - title visible and editable
+    - body visible and editable
+    - status indicator reflects ticket.status
+```
+
+```mdl
+test T-4: Resolve button updates status
+  given: SupportArticle is shown for an open Ticket
+  when: user clicks the Resolve button
+  then:
+    - Ticket.status === resolved
+```
+
+```mdl
+test T-5: Mark in progress
+  given: an open Ticket
+  when: markInProgress invoked (via assistant or UI button)
+  then:
+    - Ticket.status === in_progress
+```
+
+```mdl
+test T-6: Reopen a resolved ticket
+  given: a resolved Ticket shown in SupportArticle
+  when: user clicks the Reopen button
+  then:
+    - Ticket.status === open
+```

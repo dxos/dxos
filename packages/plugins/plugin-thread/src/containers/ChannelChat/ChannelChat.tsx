@@ -8,8 +8,8 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { type Space, useMembers, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
+import { composable, composableProps } from '@dxos/react-ui';
 import { type Channel, Message } from '@dxos/types';
-import { composable, composableProps } from '@dxos/ui-theme';
 
 import { Chat } from '#components';
 import { useStatus } from '#hooks';
@@ -41,7 +41,7 @@ export const ChannelChat = composable<HTMLDivElement, ChannelChatProps>(
     const messages = useQuery(
       space.db,
       feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
-    ) as Message.Message[];
+    );
 
     const readOnly = Obj.getMeta(channel).keys.length > 0;
 

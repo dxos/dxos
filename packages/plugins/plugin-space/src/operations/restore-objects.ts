@@ -3,7 +3,6 @@
 import * as Effect from 'effect/Effect';
 
 import { LayoutOperation } from '@dxos/app-toolkit';
-import { getSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Collection, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -18,10 +17,10 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RestoreObjects> = Spa
       const indices = input.indices as number[];
       const wasActive = input.wasActive as string[];
 
-      const space = getSpace(objects[0]);
-      invariant(space);
+      const db = Obj.getDatabase(objects[0]);
+      invariant(db);
 
-      const restoredObjects = objects.map((obj: Obj.Unknown) => space.db.add(obj));
+      const restoredObjects = objects.map((obj: Obj.Unknown) => db.add(obj));
 
       Obj.update(parentCollection, (parentCollection) => {
         indices.forEach((index: number, i: number) => {

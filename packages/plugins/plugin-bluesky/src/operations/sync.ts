@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { type Client } from '@dxos/client';
+import { createFeedServiceLayer } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Database, Feed as EchoFeed, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
@@ -137,18 +138,16 @@ const syncTarget = ({
 
     const echoFeed = subscriptionFeed.feed?.target;
     invariant(echoFeed, 'Subscription.Feed missing backing ECHO feed');
-    const feedDxn = EchoFeed.getQueueDxn(echoFeed);
-    invariant(feedDxn, 'ECHO feed not stored in a space');
+    invariant(EchoFeed.getQueueDxn(echoFeed), 'ECHO feed not stored in a space');
     const space = client.spaces.get(db.spaceId);
     invariant(space, 'space not found');
 
     const feedRef = Ref.make(subscriptionFeed);
     const postObjects = collected.map((item) => {
       const input = BlueskyApi.toSubscriptionPostInput(item);
-      return Subscription.makePost({ feed: feedRef, ...input });
+      return Subscription.makePost({ source: feedRef, ...input });
     });
-    const queue = space.queues.get(feedDxn);
-    yield* Effect.tryPromise(() => queue.append(postObjects));
+    yield* EchoFeed.append(echoFeed, postObjects).pipe(Effect.provide(createFeedServiceLayer(space.queues)));
 
     if (newestUri) {
       Obj.update(subscriptionFeed, (subscriptionFeed) => {
@@ -203,7 +202,7 @@ const resolveOrCreateLocalFeed = ({
     if (existing && Subscription.instanceOf(existing)) {
       return existing;
     }
-    const newFeed = Subscription.makeFeed({
+    const newFeed = Subscription.makeSubscription({
       name,
       url: remoteIdToFeedUrl(remoteId),
       type: 'atproto',

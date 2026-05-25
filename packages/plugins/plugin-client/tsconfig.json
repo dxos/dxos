@@ -42,7 +42,13 @@
       "path": "../../core/compute/compute"
     },
     {
+      "path": "../../core/compute/functions"
+    },
+    {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-db"
     },
     {
       "path": "../../core/mesh/edge-client"

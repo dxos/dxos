@@ -6,9 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Database, Feed, Filter, Obj } from '@dxos/echo';
+import { Event } from '@dxos/async';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { runAndForwardErrors } from '@dxos/effect';
+import { DXN } from '@dxos/keys';
 
 import { EchoTestBuilder } from '../testing';
 import { createFeedServiceLayer } from './feed-service';
@@ -143,6 +145,120 @@ describe('Feed', () => {
     }).pipe(Effect.provide(testLayer), runAndForwardErrors);
   });
 
+  test('query.subscribe fires with current results when fire: true', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const queues = peer.client.constructQueueFactory(db.spaceId);
+    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));
+
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make({ name: 'subscribable' }));
+
+      const alice = Obj.make(TestSchema.Person, { name: 'alice' });
+      const bob = Obj.make(TestSchema.Person, { name: 'bob' });
+      yield* Feed.append(feed, [alice, bob]);
+
+      const queryResult = yield* Feed.query(feed, Filter.type(TestSchema.Person));
+      const called = new Event();
+      const calledOnce = called.waitForCount(1);
+      const unsubscribe = queryResult.subscribe(() => called.emit(), { fire: true });
+
+      yield* Effect.promise(() => calledOnce);
+      expect(queryResult.results).toHaveLength(2);
+      expect(queryResult.results.map((person) => person.name).sort()).toEqual(['alice', 'bob']);
+      unsubscribe();
+    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+  });
+
+  test('query.subscribe fires when items are appended', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const queues = peer.client.constructQueueFactory(db.spaceId);
+    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));
+
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make({ name: 'reactive' }));
+
+      const alice = Obj.make(TestSchema.Person, { name: 'alice' });
+      yield* Feed.append(feed, [alice]);
+
+      const queryResult = yield* Feed.query(feed, Filter.type(TestSchema.Person));
+      const called = new Event();
+      const calledOnce = called.waitForCount(1);
+      const unsubscribe = queryResult.subscribe(() => called.emit());
+
+      const bob = Obj.make(TestSchema.Person, { name: 'bob' });
+      yield* Feed.append(feed, [bob]);
+
+      yield* Effect.promise(() => calledOnce);
+      expect(queryResult.results).toHaveLength(2);
+      expect(queryResult.results.map((person) => person.name).sort()).toEqual(['alice', 'bob']);
+      unsubscribe();
+    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+  });
+
+  test('sync flushes the feed without throwing', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const queues = peer.client.constructQueueFactory(db.spaceId);
+    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));
+
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make({ name: 'syncable' }));
+
+      const alice = Obj.make(TestSchema.Person, { name: 'alice' });
+      yield* Feed.append(feed, [alice]);
+      yield* Feed.sync(feed);
+      yield* Feed.sync(feed, { shouldPush: false });
+      yield* Feed.sync(feed, { shouldPull: false });
+
+      const results = yield* Feed.runQuery(feed, Filter.type(TestSchema.Person));
+      expect(results).toHaveLength(1);
+    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+  });
+
   // TODO(wittjosiah): Implement when queue retention is supported.
   test.todo('setRetention configures feed retention policy');
+
+  test('Ref.make on a feed item stores a Queue DXN and does not leak into space.db', async ({ expect }) => {
+    await using peer = await builder.createPeer({
+      types: [Feed.Feed, TestSchema.Person, TestSchema.Container],
+    });
+    const db = await peer.createDatabase();
+    const queues = peer.client.constructQueueFactory(db.spaceId);
+    const testLayer = Layer.merge(Database.layer(db), createFeedServiceLayer(queues));
+
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make({ name: 'posts' }));
+
+      const post = Obj.make(TestSchema.Person, { name: 'alice' });
+      yield* Feed.append(feed, [post]);
+
+      // Re-query to obtain a queue-decoded proxy (matches the curate-magazine path).
+      const items = yield* Feed.runQuery(feed, Filter.type(TestSchema.Person));
+      expect(items).toHaveLength(1);
+      const queuePost = items[0];
+
+      // Reference the queue item from a container that lives in space.db.
+      const container = yield* Database.add(Obj.make(TestSchema.Container, {}));
+      Obj.update(container, (container) => {
+        const mutable = container as Obj.Mutable<typeof container>;
+        mutable.objects = [Ref.make(queuePost)];
+      });
+      yield* Database.flush();
+
+      // The stored ref must be a Queue DXN — not a synthesized ECHO DXN.
+      const ref = container.objects![0];
+      expect(ref.dxn.kind).toBe(DXN.kind.QUEUE);
+      expect(ref.dxn.asQueueDXN()?.objectId).toBe((queuePost as any).id);
+
+      // The queue item must NOT have been added to space.db.
+      const dbResults = yield* Database.runQuery(Filter.type(TestSchema.Person));
+      expect(dbResults).toHaveLength(0);
+
+      // The ref must still resolve to the queue item.
+      const resolved = yield* Effect.promise(() => ref.load());
+      expect((resolved as any).name).toBe('alice');
+    }).pipe(Effect.provide(testLayer), runAndForwardErrors);
+  });
 });

@@ -10,12 +10,11 @@ import React, { useMemo } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Database, JsonSchema, Obj } from '@dxos/echo';
-import { type Collection } from '@dxos/echo';
+import { type Collection, Database, JsonSchema, Obj } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { type FormFieldComponentProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 
-import { KanbanContainer, KanbanSettings } from '#containers';
+import { KanbanArticle, KanbanSettings } from '#containers';
 import { Kanban, PivotColumnAnnotationId } from '#types';
 
 export default Capability.makeModule(() =>
@@ -28,11 +27,11 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Article, Kanban.Kanban),
           AppSurface.object(AppSurface.Section, Kanban.Kanban),
         ),
-        component: ({ data, role }) => <KanbanContainer role={role} subject={data.subject} />,
+        component: ({ data, role }) => <KanbanArticle role={role} subject={data.subject} />,
       }),
       Surface.create({
         id: 'object-properties',
-        position: 'hoist',
+        position: 'first',
         filter: AppSurface.object(AppSurface.ObjectProperties, Kanban.Kanban),
         component: ({ data }) => <KanbanSettings subject={data.subject} />,
       }),

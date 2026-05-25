@@ -5,8 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Filter, Query } from '@dxos/echo';
-import { Tag, Type } from '@dxos/echo';
+import { Filter, Query, Tag, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Toolbar } from '@dxos/react-ui';

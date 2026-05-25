@@ -9,7 +9,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
@@ -65,7 +65,8 @@
   "types": "dist/types/src/index.d.ts",
   "files": [
     "dist",
-    "src"
+    "src",
+    "PLUGIN.mdl"
   ],
   "dependencies": {
     "@dxos/app-framework": "workspace:*",
@@ -91,8 +92,5 @@
   "peerDependencies": {
     "@dxos/react-ui": "workspace:*",
     "react": "catalog:"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

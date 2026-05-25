@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": false,
   "type": "module",
@@ -91,6 +91,7 @@
     "error-stack-parser": "catalog:",
     "i18next": "catalog:",
     "keyborg": "catalog:",
+    "react-day-picker": "catalog:",
     "react-error-boundary": "catalog:",
     "react-i18next": "catalog:",
     "react-remove-scroll": "catalog:"

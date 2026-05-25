@@ -11,10 +11,9 @@ import React, { type ComponentProps, useCallback } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace, useTypeOptions } from '@dxos/app-toolkit/ui';
-import { Database, Obj } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
+import { Collection, Database, Obj } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
-import { type Space, SpaceState, getSpace, isSpace, useSpace, useSpaces } from '@dxos/react-client/echo';
+import { type Space, SpaceState, getSpace, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { type FormFieldComponentProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
@@ -73,13 +72,13 @@ export default Capability.makeModule(
     return Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
         id: 'collection-fallback',
-        position: 'fallback',
+        position: 'last',
         filter: AppSurface.object(AppSurface.Article, Collection.Collection),
         component: ({ data }) => <CollectionArticle attendableId={data.attendableId} subject={data.subject} />,
       }),
       Surface.create({
         id: 'record-article',
-        position: 'fallback',
+        position: 'last',
         filter: AppSurface.subject(AppSurface.Article, Obj.isObject),
         component: ({ data }) => <RecordArticle subject={data.subject} />,
       }),
@@ -130,7 +129,7 @@ export default Capability.makeModule(
       }),
       Surface.create({
         id: 'space-settings-members',
-        position: 'hoist',
+        position: 'first',
         filter: AppSurface.literal(AppSurface.Article, `${meta.id}.members`),
         component: () => {
           const space = useActiveSpace();
@@ -287,9 +286,8 @@ export default Capability.makeModule(
 
           const props = { ...inputProps, type: ast } as any as FormFieldComponentProps;
           const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
-          const space = useSpace(db?.spaceId);
           const annotation = findAnnotation<TypeInputOptions>(schema.ast, TypeInputOptionsAnnotationId)!;
-          const options = useTypeOptions({ space, annotation });
+          const options = useTypeOptions({ db, annotation });
 
           return <SelectField {...props} options={options} />;
         },
@@ -351,7 +349,7 @@ export default Capability.makeModule(
       Surface.create({
         id: 'navtree-presence-fallback',
         role: 'navtree-item-end',
-        position: 'fallback',
+        position: 'last',
         filter: (data): data is { id: string; open?: boolean } => typeof data.id === 'string',
         component: ({ data }) => <SmallPresenceLive id={data.id} open={data.open} />,
       }),
@@ -365,7 +363,7 @@ export default Capability.makeModule(
       Surface.create({
         id: 'navbar-presence',
         role: 'navbar-end',
-        position: 'hoist',
+        position: 'first',
         filter: (data): data is { subject: Space | Obj.Unknown } => isSpace(data.subject) || Obj.isObject(data.subject),
         component: ({ data }) => {
           const space = isSpace(data.subject) ? data.subject : getSpace(data.subject);

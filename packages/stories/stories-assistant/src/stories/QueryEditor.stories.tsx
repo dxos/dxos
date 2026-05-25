@@ -28,7 +28,7 @@ const DefaultStory = ({ value: valueProp }: QueryEditorProps) => {
   const [query, setQuery] = useState<string | undefined>(valueProp);
   const filter = useQueryBuilder(query);
   const objects = useQuery(space?.db, filter).sort(Obj.sort(Obj.sortByTypename, Obj.sortByLabel));
-  const model = useGraphModel(space, filter);
+  const model = useGraphModel(space?.db, filter);
 
   return (
     <div className='grid grid-cols-2 grow divide-x divide-subdued-separator overflow-hidden'>

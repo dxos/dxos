@@ -16,12 +16,6 @@ import * as Integration from './Integration';
 
 const INTEGRATION_OPERATION = `${meta.id}.operation`;
 
-export const AccessTokenCreated = Operation.make({
-  meta: { key: `${INTEGRATION_OPERATION}.access-token-created`, name: 'Access Token Created' },
-  input: Schema.Struct({ accessToken: AccessToken.AccessToken }),
-  output: Schema.Void,
-});
-
 /**
  * Generic create operation: produces an empty Integration bound to the given AccessToken.
  */
@@ -30,6 +24,7 @@ export const CreateIntegration = Operation.make({
     key: `${INTEGRATION_OPERATION}.create-integration`,
     name: 'Create Integration',
     description: 'Creates a new Integration bound to an existing AccessToken.',
+    icon: 'ph--plugs-connected--regular',
   },
   input: Schema.Struct({
     accessToken: Ref.Ref(AccessToken.AccessToken).annotations({
@@ -50,6 +45,7 @@ export const SetIntegrationTargets = Operation.make({
     key: `${INTEGRATION_OPERATION}.set-integration-targets`,
     name: 'Set Integration Targets',
     description: "Reconciles an Integration's targets to match the chosen selection.",
+    icon: 'ph--sliders--regular',
   },
   input: Schema.Struct({
     integration: Ref.Ref(Integration.Integration),

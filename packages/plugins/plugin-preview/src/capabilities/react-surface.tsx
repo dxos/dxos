@@ -8,12 +8,21 @@ import React from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { Card } from '@dxos/react-ui';
 import { Expando, type ProjectionModel } from '@dxos/schema';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
-import { ExpandoCard, FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
+import {
+  DynamicTypeCard,
+  ExpandoCard,
+  FormCard,
+  JsonCard,
+  OrganizationCard,
+  PersonCard,
+  ProjectCard,
+  TaskCard,
+} from '../cards';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -25,7 +34,7 @@ export default Capability.makeModule(() =>
 
       Surface.create<{ subject: Person.Person }>({
         id: 'schema-popover--contact',
-        position: 'hoist',
+        position: 'first',
         filter: AppSurface.object(AppSurface.Card, Person.Person),
         component: ({ data, role }) => {
           return (
@@ -38,7 +47,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'schema-popover--organization',
-        position: 'hoist',
+        position: 'first',
         filter: AppSurface.object(AppSurface.Card, Organization.Organization),
         component: ({ data, role }) => {
           return (
@@ -51,7 +60,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'schema-popover--project',
-        position: 'hoist',
+        position: 'first',
         filter: AppSurface.object(AppSurface.Card, Pipeline.Pipeline),
         component: ({ data, role }) => {
           return <ProjectCard role={role} subject={data.subject} />;
@@ -59,7 +68,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'schema-popover--task',
-        position: 'hoist',
+        position: 'first',
         filter: AppSurface.object(AppSurface.Card, Task.Task),
         component: ({ data, role }) => {
           return <TaskCard role={role} subject={data.subject} />;
@@ -73,6 +82,31 @@ export default Capability.makeModule(() =>
         },
       }),
 
+      Surface.create({
+        id: 'schema-popover--dynamic-type',
+        role: 'card--content',
+        filter: (data): data is { subject: Obj.Unknown } => {
+          if (!Obj.isObject(data.subject)) {
+            return false;
+          }
+          const schema = Obj.getSchema(data.subject);
+          if (schema) {
+            return Type.isMutable(schema);
+          }
+          // Obj.getSchema fails for database-registered schemas (DXN mismatch); fall back to typename query.
+          try {
+            const db = Obj.getDatabase(data.subject);
+            const typename = Obj.getTypename(data.subject);
+            return !!db && !!typename && db.schemaRegistry.query({ typename }).runSync().length > 0;
+          } catch {
+            return false;
+          }
+        },
+        component: ({ data, role }) => {
+          return <DynamicTypeCard role={role} subject={data.subject} />;
+        },
+      }),
+
       //
       // Fallback for any object.
       //
@@ -80,7 +114,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'fallback-popover',
         role: 'card--content',
-        position: 'fallback',
+        position: 'last',
         filter: (data): data is { subject: Obj.Unknown; projection?: ProjectionModel } => Obj.isObject(data.subject),
         component: ({ data, role }) => {
           return <FormCard role={role} subject={data.subject} projection={data.projection} />;
@@ -90,7 +124,7 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'fallback-json',
         role: 'card--content',
-        position: 'fallback',
+        position: 'last',
         filter: (data): data is Record<string, unknown> => true,
         component: ({ data }) => {
           return <JsonCard data={data} />;
@@ -99,7 +133,7 @@ export default Capability.makeModule(() =>
 
       Surface.create({
         id: 'section',
-        position: 'fallback',
+        position: 'last',
         filter: AppSurface.subject(AppSurface.Section, Obj.isObject),
         component: ({ data }) => {
           return (

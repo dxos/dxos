@@ -315,12 +315,15 @@ export type EdgeAuthChallenge = {
 };
 
 export enum OAuthProvider {
+  ATLASSIAN = 'atlassian',
   ATPROTO = 'atproto',
   /** @deprecated Use ATPROTO instead. */
   BLUESKY = 'bluesky',
+  DISCORD = 'discord',
   GITHUB = 'github',
   GOOGLE = 'google',
   LINEAR = 'linear',
+  NOTION = 'notion',
   SLACK = 'slack',
   TRELLO = 'trello',
 }
@@ -550,7 +553,7 @@ export type InspectSpaceResponse = {
     objectCount: number;
     deletedObjectCount: number;
     indexedDocumentCount: number;
-    objectsByType: { typeDxn: string; count: number }[];
+    objectsByType: { typeDXN: string; count: number }[];
     indexerStatus: {
       indexingInProgress: boolean;
       cursors: { indexName: string; sourceName: string; resourceId: string | null; cursor: string | number }[];

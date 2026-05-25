@@ -8,10 +8,9 @@ import React, { useCallback, useMemo } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getCollectionObjectPath, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Annotation, Obj } from '@dxos/echo';
-import { type Collection } from '@dxos/echo';
+import { Annotation, type Collection, Obj } from '@dxos/echo';
 import { ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui';
+import { Card, Toolbar } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListResults } from '@dxos/react-ui-search';
 import { getStyles } from '@dxos/ui-theme';
@@ -70,12 +69,12 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
   return (
     <Card.Root fullWidth role='button' classNames='cursor-pointer' onClick={handleClick}>
       <Card.Toolbar>
-        <Card.ToolbarIconButton
+        <Toolbar.IconButton
           variant='ghost'
           label={label}
           icon={item.icon}
           iconOnly
-          iconClassNames={styles?.surfaceText}
+          iconClassNames={styles?.foreground}
         />
         <Card.Title>{label}</Card.Title>
         <Card.Menu />

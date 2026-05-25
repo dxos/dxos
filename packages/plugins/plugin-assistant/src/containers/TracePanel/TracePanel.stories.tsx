@@ -7,14 +7,15 @@ import * as Effect from 'effect/Effect';
 import React, { PropsWithChildren, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { addEventListener } from '@dxos/async';
 import { Process, Trace } from '@dxos/compute';
+import { ProcessManager } from '@dxos/compute-runtime';
 import { Feed, Filter, Query } from '@dxos/echo';
-import { FeedTraceSink, ProcessManager } from '@dxos/functions-runtime';
+import { FeedTraceSink } from '@dxos/functions-runtime';
 import { log } from '@dxos/log';
-import { useComputeRuntime } from '@dxos/plugin-automation/hooks';
-import { AutomationPlugin } from '@dxos/plugin-automation/plugin';
-import { ClientPlugin } from '@dxos/plugin-client/plugin';
+import { AutomationPlugin } from '@dxos/plugin-automation/testing';
+import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
@@ -22,10 +23,12 @@ import { IconButton, Panel, ScrollContainer, Toolbar } from '@dxos/react-ui';
 import { Timeline } from '@dxos/react-ui-components';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { buildExecutionGraph } from '#execution-graph';
 import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
 
-import { buildExecutionGraph } from './execution-graph';
+// TODO(dmaretskyi): testing.ts module shadows the ./testing dir.
+import { initClientFromSpaceSnapshot } from '../../testing/snapshot';
 import { PLAYBACK_INTERVAL_MS, STEP_STORAGE_KEY, SimulatedAgent, useLocalStorageNumber } from './testing';
 import { TracePanel } from './TracePanel';
 
@@ -42,7 +45,7 @@ const BaseStory = ({ children, toolbar }: BaseStoryProps) => (
 
 const DefaultStory = () => {
   const [space] = useSpaces();
-  const runtime = useComputeRuntime(space?.id);
+  const runtime = useProcessManagerRuntime();
 
   const handleStart = useCallback(() => {
     if (!runtime) {
@@ -267,16 +270,47 @@ export const WithSnapshot: Story = {
         ...corePlugins(),
         ClientPlugin({
           types: [Feed.Feed, Trace.Message],
-          onClientInitialized: ({ client }) =>
-            Effect.promise(async () => {
-              await client.halo.createIdentity();
-              const data = await import('../../testing/data/trace-timeline.dx.json');
-              const space = await client.spaces.import({
-                filename: 'trace-events.dx.json',
-                contents: new TextEncoder().encode(JSON.stringify(data)),
-              });
-              await space.db.flush();
-            }),
+          onClientInitialized: initClientFromSpaceSnapshot(() => import('../../testing/data/trace-timeline.dx.json')),
+        }),
+        AutomationPlugin(),
+      ],
+    }),
+  ],
+};
+
+export const WithRemoteSnapshot: Story = {
+  render: SnapshotStory,
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'column', classNames: 'w-(--dx-complementary-sidebar-size)' }),
+    withPluginManager({
+      plugins: [
+        ...corePlugins(),
+        ClientPlugin({
+          types: [Feed.Feed, Trace.Message],
+          onClientInitialized: initClientFromSpaceSnapshot(
+            () => import('../../testing/data/trace-timeline-remote.dx.json'),
+          ),
+        }),
+        AutomationPlugin(),
+      ],
+    }),
+  ],
+};
+
+export const WithRemoteMultipleSnapshot: Story = {
+  render: SnapshotStory,
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'column', classNames: 'w-(--dx-complementary-sidebar-size)' }),
+    withPluginManager({
+      plugins: [
+        ...corePlugins(),
+        ClientPlugin({
+          types: [Feed.Feed, Trace.Message],
+          onClientInitialized: initClientFromSpaceSnapshot(
+            () => import('../../testing/data/trace-timeline-multiple.dx.json'),
+          ),
         }),
         AutomationPlugin(),
       ],

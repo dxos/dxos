@@ -26,6 +26,12 @@ export type Plugin = {
   tags?: string[];
   icon?: string;
   iconHue?: string;
+  /**
+   * IDs of plugins this entry declares as runtime dependencies. Mirrors
+   * {@link Plugin.Meta.dependsOn}. Surfaced in the catalog so the manager can
+   * resolve and auto-install transitive deps before they are first loaded.
+   */
+  dependsOn?: string[];
   /** URL to dynamic-import the latest version of this plugin module. */
   moduleUrl: string;
   /** GitHub repository slug, e.g. `owner/name`. Used to fetch version history. */

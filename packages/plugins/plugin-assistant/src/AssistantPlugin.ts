@@ -19,6 +19,7 @@ import { Text } from '@dxos/schema';
 import { HasSubject, Message } from '@dxos/types';
 
 import {
+  AiContext as AiContextCapability,
   AiService,
   AppGraphBuilder,
   AssistantState,
@@ -100,8 +101,17 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
   Plugin.addModule({
     firesBeforeActivation: [AssistantEvents.SetupAiServiceProviders],
     // TODO(dmaretskyi): This should activate lazily when the AI chat is used.
-    activatesOn: ActivationEvents.Startup,
+    activatesOn: ActivationEvents.SetupProcessManager,
     activate: AiService,
+  }),
+  Plugin.addModule({
+    // Process-affinity `AiContext.Service` LayerSpec — needed so operations
+    // dispatched as their own processes (e.g. via `Operation.invoke` from
+    // `AiSession.createRequest` or `TriggerDispatcher`) can resolve
+    // conversation-scoped services without an inline `Effect.provideService`
+    // upstream. See `capabilities/ai-context.ts` for the rationale.
+    activatesOn: ActivationEvents.SetupProcessManager,
+    activate: AiContextCapability,
   }),
   Plugin.addModule({
     // TODO(wittjosiah): Use a different event.
@@ -110,7 +120,7 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
   }),
   Plugin.addModule({
     activatesOn: ActivationEvent.allOf(
-      ActivationEvents.OperationInvokerReady,
+      ActivationEvents.ProcessManagerReady,
       AppActivationEvents.AppGraphReady,
       DeckEvents.StateReady,
     ),

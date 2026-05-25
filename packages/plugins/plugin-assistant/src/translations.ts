@@ -109,6 +109,7 @@ export const translations: Resource[] = [
         'open-assistant.label': 'Open assistant',
         'reset-blueprints.label': 'Reset blueprints',
         'import-compute-operations.label': 'Import compute operations',
+        'toggle-trace-panel-debug.label': 'Toggle trace panel debug view',
 
         'no-results.message': 'No results',
 
@@ -174,7 +175,7 @@ export const translations: Resource[] = [
         'project-empty-spec.message': 'Open the Properties companion to configure the agent.',
         'project-empty-spec.description': 'Open the Assistant companion to interact with the agent.',
         'artifacts.label': 'Artifacts',
-        'input-queue.label': 'Inputs',
+        'inputs.label': 'Inputs',
 
         // AgentProperties.
         'instructions.label': 'Instructions',

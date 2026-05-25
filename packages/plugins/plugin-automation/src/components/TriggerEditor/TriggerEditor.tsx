@@ -6,8 +6,8 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Operation, Script, Trigger } from '@dxos/compute';
 import { ComputeGraph } from '@dxos/conductor';
-import { DXN, type Database, Entity, Feed, Obj, type Query } from '@dxos/echo';
-import { Filter, Ref, useQuery } from '@dxos/react-client/echo';
+import { type Database, DXN, Entity, Feed, Filter, Obj, type Query, Ref } from '@dxos/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import {
@@ -119,8 +119,35 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
       // Spec selector.
       'spec.kind': (props) => <SpecSelector {...props} readonly={readonlySpec} />,
 
-      // Queue feed selector with parent labels.
-      'spec.queue': (props) => <SelectField {...props} options={getFeedQueueOptions(feeds)} />,
+      // Feed selector with parent labels.
+      'spec.feed': (props) => {
+        const getValue = useCallback(() => {
+          const formValue = props.getValue();
+          if (Ref.isRef(formValue)) {
+            return formValue.dxn.toString() as string;
+          }
+          return undefined;
+        }, [props]);
+
+        const handleOnValueChange = useCallback(
+          (_type: any, dxnString: string) => {
+            const dxn = DXN.parse(dxnString);
+            if (dxn) {
+              props.onValueChange(props.type, Ref.fromDXN(dxn));
+            }
+          },
+          [props.type, props.onValueChange],
+        );
+
+        return (
+          <SelectField
+            {...props}
+            getValue={getValue as any}
+            onValueChange={handleOnValueChange}
+            options={getFeedOptions(feeds)}
+          />
+        );
+      },
 
       // TODO(wittjosiah): Copied from ViewEditor.
       // Query input editor.
@@ -155,14 +182,10 @@ const getFunctionOptions = (scripts: Script.Script[], functions: Operation.Persi
   return functions.map((fn) => ({ label: getLabel(fn), value: `dxn:echo:@:${fn.id}` }));
 };
 
-const getFeedQueueOptions = (feeds: Feed.Feed[]) => {
-  return feeds.flatMap((feed) => {
-    const queueDxn = Feed.getQueueDxn(feed);
-    if (!queueDxn) {
-      return [];
-    }
+const getFeedOptions = (feeds: Feed.Feed[]) => {
+  return feeds.map((feed) => {
     const parent = Obj.getParent(feed);
     const label = parent ? Entity.getLabel(parent) : Entity.getLabel(feed);
-    return [{ label: label ?? feed.id, value: queueDxn.toString() }];
+    return { label: label ?? feed.id, value: Obj.getDXN(feed).toString() };
   });
 };

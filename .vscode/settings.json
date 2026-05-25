@@ -407,5 +407,6 @@
   "typescript.preferences.importModuleSpecifier": "non-relative",
   "typescript.tsdk": "node_modules/typescript/lib",
   "vitest.disableWorkspaceWarning": true,
-  "vitest.rootConfig": "vitest.all.config.ts"
+  "vitest.rootConfig": "vitest.all.config.ts",
+  "typescript.native-preview.tsdk": "${workspaceFolder}/node_modules/@typescript/native-preview"
 }

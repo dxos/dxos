@@ -1,0 +1,104 @@
+//
+// Copyright 2025 DXOS.org
+//
+
+import { Atom } from '@effect-atom/atom';
+import { useAtomValue } from '@effect-atom/atom-react';
+import * as Option from 'effect/Option';
+import React, { useCallback, useMemo } from 'react';
+
+import { type Agent } from '@dxos/assistant-toolkit';
+import { DXN, Filter, Obj, Ref } from '@dxos/echo';
+import { AtomObj } from '@dxos/echo-atom';
+import { useQuery } from '@dxos/react-client/echo';
+import { Input, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form';
+import { FeedAnnotation } from '@dxos/schema';
+
+import { meta } from '#meta';
+
+export type AgentPropertiesProps = {
+  agent: Agent.Agent;
+};
+
+export const AgentProperties = ({ agent }: AgentPropertiesProps) => {
+  const { t } = useTranslation(meta.id);
+  const db = Obj.getDatabase(agent);
+
+  // Build a filter matching objects of any schema annotated as a feed.
+  const feedFilter = useMemo(() => {
+    if (!db) {
+      return Filter.nothing();
+    }
+
+    const schemas = db.schemaRegistry.query({ location: ['database', 'runtime'] }).runSync();
+    const feedSchemas = schemas.filter((schema) => {
+      const annotation = FeedAnnotation.get(schema);
+      return Option.isSome(annotation) && annotation.value === true;
+    });
+
+    return feedSchemas.length === 0 ? Filter.nothing() : Filter.or(...feedSchemas.map((schema) => Filter.type(schema)));
+  }, [db]);
+
+  const subscribedObjects = useQuery(db, feedFilter);
+
+  // Query all existing subscriptions (e.g., mail, calendar, etc.)
+  const existingSubscriptions = useAtomValue(
+    useMemo(
+      () =>
+        AtomObj.make(agent).pipe((_) =>
+          Atom.make((get) => {
+            const agentObj = get(_);
+            const selectedSubscriptions: Obj.Unknown[] = subscribedObjects.filter((object) =>
+              agentObj.subscriptions.some((subscription) => DXN.equals(subscription.dxn, Obj.getDXN(object))),
+            );
+
+            return selectedSubscriptions;
+          }),
+        ),
+      [agent, subscribedObjects],
+    ),
+  );
+
+  // Create/remove agent subscription.
+  const handleSubscriptionChange = useCallback(
+    (object: Obj.Unknown, checked: boolean) => {
+      Obj.update(agent, (agent) => {
+        if (checked) {
+          agent.subscriptions.push(Ref.fromDXN(Obj.getDXN(object)));
+        } else {
+          agent.subscriptions = agent.subscriptions.filter(
+            (subscription) => !DXN.equals(subscription.dxn, Obj.getDXN(object)),
+          );
+        }
+      });
+    },
+    [agent],
+  );
+
+  if (subscribedObjects.length === 0) {
+    return null;
+  }
+
+  return (
+    <Form.Section>
+      <Input.Root>
+        <Input.Label classNames='mt-form-gap'>{t('subscriptions.label')}</Input.Label>
+      </Input.Root>
+
+      {subscribedObjects.map((object) => (
+        <Input.Root key={object.id}>
+          <div className='flex items-center gap-2'>
+            <Input.Checkbox
+              checked={existingSubscriptions.includes(object)}
+              onCheckedChange={(checked) => {
+                handleSubscriptionChange(object, checked === true);
+              }}
+            />
+            <Input.Label>{Obj.getLabel(object) ?? object.id}</Input.Label>
+          </div>
+        </Input.Root>
+      ))}
+    </Form.Section>
+  );
+};

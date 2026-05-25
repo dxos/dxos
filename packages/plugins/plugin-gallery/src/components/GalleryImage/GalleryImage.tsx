@@ -5,53 +5,37 @@
 import React from 'react';
 
 import { Card, Icon, Toolbar, useTranslation } from '@dxos/react-ui';
+import { File } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { Gallery } from '#types';
+
+import { useImageUrl } from '../../hooks';
 
 export type GalleryImageProps = {
-  image: Gallery.Image;
-  /**
-   * Pre-resolved URL for `<img src>`.
-   * For `http(s)://` URLs this is just `image.url`.
-   * For `wnfs://` URLs the caller resolves to a blob URL via `useImageUrl`.
-   */
-  url?: string;
+  file: File.File | undefined;
   classNames?: string;
   onDelete?: () => void;
 };
 
-export const GalleryImage = ({ image, url, classNames, onDelete }: GalleryImageProps) => {
+export const GalleryImage = ({ file, classNames, onDelete }: GalleryImageProps) => {
   const { t } = useTranslation(meta.id);
-  const alt = image.description ?? image.name ?? '';
-
-  // Aspect set inline (when dimensions are known) so the tile reserves the
-  // correct height before the image loads — important for the masonry layout
-  // to pack columns without reflow.
-  const aspectRatio = image.width && image.height ? image.width / image.height : undefined;
+  const url = useImageUrl(file);
+  const alt = file?.name ?? '';
 
   return (
     <Card.Root classNames={mx('group relative', classNames)}>
       {/* col-span-full so the image spans Card.Root's grid (icon|title|menu). */}
       <div className='col-span-full'>
         {url ? (
-          <img
-            src={url}
-            alt={alt}
-            loading='lazy'
-            width={image.width}
-            height={image.height}
-            className='block w-full h-auto'
-            style={aspectRatio ? { aspectRatio } : undefined}
-          />
+          <img src={url} alt={alt} loading='lazy' className='block w-full h-auto' />
         ) : (
-          <div role='img' aria-label={alt} className='w-full bg-input' style={{ aspectRatio: aspectRatio ?? 16 / 9 }} />
+          <div role='img' aria-label={alt} className='w-full bg-input' style={{ aspectRatio: 16 / 9 }} />
         )}
       </div>
       <Card.Toolbar>
-        <Icon icon={image.description ? 'ph--text-aa--regular' : 'ph--image--regular'} size={5} />
-        <Card.Title>{image.description ?? image.name ?? ''}</Card.Title>
+        <Icon icon='ph--image--regular' size={5} />
+        <Card.Title>{file?.name ?? ''}</Card.Title>
         {onDelete && (
           <Toolbar.IconButton
             icon='ph--trash--regular'

@@ -48,8 +48,12 @@ const stripWhitespace = (str: string): string => {
   return (
     str
       .trim()
+      // Blank out setext-underline / horizontal-rule lines (entirely `=` or `-`).
+      .replace(/^[ \t\u00A0]*[=-]+[ \t\u00A0]*$/gm, '')
       // Replace multiple newlines with double newlines.
       .replace(WHITESPACE, '\n\n')
+      // Trim trailing whitespace from every line.
+      .replace(/[ \t\u00A0]+$/gm, '')
       // Replace old-school sign-off dash with horizontal rule.
       .replace(/\\--/g, '---')
   );
@@ -57,8 +61,10 @@ const stripWhitespace = (str: string): string => {
 
 // TODO(burdon): Replace legal disclaimers, etc.
 export const normalizeText = (text: string): string => {
-  const str = isHTML(text) ? stripWhitespace(toMarkdown(text)) : text;
-  return str;
+  // Collapse runs of blank lines for both HTML (after markdown conversion) and
+  // plain-text emails so the rendered message never shows more than one blank
+  // line between paragraphs.
+  return stripWhitespace(isHTML(text) ? toMarkdown(text) : text);
 };
 
 // TODO(burdon): Customizable parser for plaintext.

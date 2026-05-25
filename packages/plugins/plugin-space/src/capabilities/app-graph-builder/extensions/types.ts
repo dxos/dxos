@@ -63,7 +63,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
             label: ['types-section.label', { ns: meta.id }],
             icon: 'ph--database--regular',
             space,
-            position: 'fallback',
+            position: 'last',
             testId: 'spacePlugin.typesSection',
           }),
         ]);

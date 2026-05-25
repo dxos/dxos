@@ -90,6 +90,11 @@
         },
         {
           "type": "json",
+          "path": "packages/common/effect-proto/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/common/effect-zod/package.json",
           "jsonpath": "$.version"
         },
@@ -250,6 +255,11 @@
         },
         {
           "type": "json",
+          "path": "packages/core/compute-runtime/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/core/compute/ai/package.json",
           "jsonpath": "$.version"
         },
@@ -310,21 +320,6 @@
         },
         {
           "type": "json",
-          "path": "packages/core/compute/introspect/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/compute/introspect-mcp/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/core/compute/introspect-tools/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
           "path": "packages/core/compute/mcp-client/package.json",
           "jsonpath": "$.version"
         },
@@ -371,6 +366,11 @@
         {
           "type": "json",
           "path": "packages/core/echo/echo-react/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/core/echo/echo-registry/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -550,6 +550,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-calls/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-chess/package.json",
           "jsonpath": "$.version"
         },
@@ -576,11 +581,6 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-crx/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/plugin-daily-summary/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -615,7 +615,7 @@
         },
         {
           "type": "json",
-          "path": "packages/plugins/plugin-files/package.json",
+          "path": "packages/plugins/plugin-file/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -630,17 +630,17 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-generator/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-github/package.json",
           "jsonpath": "$.version"
         },
         {
           "type": "json",
           "path": "packages/plugins/plugin-graph/package.json",
-          "jsonpath": "$.version"
-        },
-        {
-          "type": "json",
-          "path": "packages/plugins/plugin-help/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -765,6 +765,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-sequencer/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-settings/package.json",
           "jsonpath": "$.version"
         },
@@ -820,6 +825,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-support/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-table/package.json",
           "jsonpath": "$.version"
         },
@@ -865,6 +875,11 @@
         },
         {
           "type": "json",
+          "path": "packages/plugins/plugin-trip/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
           "path": "packages/plugins/plugin-voxel/package.json",
           "jsonpath": "$.version"
         },
@@ -876,6 +891,26 @@
         {
           "type": "json",
           "path": "packages/plugins/plugin-zen/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/reflect/deus/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/reflect/introspect/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/reflect/introspect-mcp/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "packages/reflect/introspect-tools/package.json",
           "jsonpath": "$.version"
         },
         {
@@ -1271,6 +1306,11 @@
         {
           "type": "json",
           "path": "tools/vite-plugin-log/example/package.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "tools/vite-plugin-shutdown/package.json",
           "jsonpath": "$.version"
         },
         {

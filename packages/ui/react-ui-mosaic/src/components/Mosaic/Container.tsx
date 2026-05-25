@@ -22,7 +22,7 @@ import React, {
 } from 'react';
 
 import { type AllowedAxis } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 import { isTruthy } from '@dxos/util';
 
 import { useFocus } from '../Focus';
@@ -60,6 +60,11 @@ type MosaicContainerContextValue<TData = any, Location = LocationType> = {
   /** Set the current item by ID. */
   setCurrentId: (id: string | undefined) => void;
 
+  /** IDs of selected (aria-selected) items. */
+  selectedIds?: ReadonlySet<string>;
+  /** Request to set or unset selection on an item by ID. */
+  setSelected: (id: string, selected: boolean) => void;
+
   /** Register a scroll-to-item callback (provided by Stack/VirtualStack). */
   registerScrollTo: (fn: ((id: string) => void) | undefined) => void;
 };
@@ -86,6 +91,10 @@ type MosaicContainerProps = PropsWithChildren<
     currentId?: string;
     /** Called when a tile requests to become current. */
     onCurrentChange?: (id: string | undefined) => void;
+    /** Controlled set of selected item IDs. */
+    selectedIds?: ReadonlySet<string>;
+    /** Called when a tile requests to toggle selection. */
+    onSelectionChange?: (id: string, selected: boolean) => void;
     debug?: () => ReactNode;
   }
 >;
@@ -102,6 +111,8 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
       withFocus,
       currentId,
       onCurrentChange,
+      selectedIds,
+      onSelectionChange,
       debug,
       ...props
     },
@@ -126,6 +137,10 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
     const [activeLocation, setActiveLocation] = useState<LocationType | undefined>();
     const [scrolling, setScrolling] = useState(false);
     const setCurrentId = useCallback((id: string | undefined) => onCurrentChange?.(id), [onCurrentChange]);
+    const setSelected = useCallback(
+      (id: string, selected: boolean) => onSelectionChange?.(id, selected),
+      [onSelectionChange],
+    );
 
     // Scroll-to-item: Stack/VirtualStack registers its implementation.
     const scrollToRef = useRef<((id: string) => void) | undefined>(undefined);
@@ -283,6 +298,8 @@ const MosaicContainer = composable<HTMLDivElement, MosaicContainerProps>(
         setActiveLocation={setActiveLocation}
         currentId={currentId}
         setCurrentId={setCurrentId}
+        selectedIds={selectedIds}
+        setSelected={setSelected}
         registerScrollTo={registerScrollTo}
       >
         <Comp

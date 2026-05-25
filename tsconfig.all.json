@@ -43,6 +43,9 @@
       "path": "packages/common/effect-atom-solid/tsconfig.json"
     },
     {
+      "path": "packages/common/effect-proto/tsconfig.json"
+    },
+    {
       "path": "packages/common/effect-zod/tsconfig.json"
     },
     {
@@ -139,6 +142,9 @@
       "path": "packages/common/web-context-solid/tsconfig.json"
     },
     {
+      "path": "packages/core/compute-runtime/tsconfig.json"
+    },
+    {
       "path": "packages/core/compute/ai/tsconfig.json"
     },
     {
@@ -175,15 +181,6 @@
       "path": "packages/core/compute/functions-testing/tsconfig.json"
     },
     {
-      "path": "packages/core/compute/introspect/tsconfig.json"
-    },
-    {
-      "path": "packages/core/compute/introspect-mcp/tsconfig.json"
-    },
-    {
-      "path": "packages/core/compute/introspect-tools/tsconfig.json"
-    },
-    {
       "path": "packages/core/compute/mcp-client/tsconfig.json"
     },
     {
@@ -212,6 +209,9 @@
     },
     {
       "path": "packages/core/echo/echo-react/tsconfig.json"
+    },
+    {
+      "path": "packages/core/echo/echo-registry/tsconfig.json"
     },
     {
       "path": "packages/core/echo/echo-solid/tsconfig.json"
@@ -316,6 +316,9 @@
       "path": "packages/plugins/plugin-board/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-calls/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-chess/tsconfig.json"
     },
     {
@@ -332,9 +335,6 @@
     },
     {
       "path": "packages/plugins/plugin-crx/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/plugin-daily-summary/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-debug/tsconfig.json"
@@ -355,7 +355,7 @@
       "path": "packages/plugins/plugin-feed/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-files/tsconfig.json"
+      "path": "packages/plugins/plugin-file/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-gallery/tsconfig.json"
@@ -364,13 +364,13 @@
       "path": "packages/plugins/plugin-game/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-generator/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-github/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-graph/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/plugin-help/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-inbox/tsconfig.json"
@@ -445,6 +445,9 @@
       "path": "packages/plugins/plugin-search/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-sequencer/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-settings/tsconfig.json"
     },
     {
@@ -478,6 +481,9 @@
       "path": "packages/plugins/plugin-status-bar/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-support/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-table/tsconfig.json"
     },
     {
@@ -505,6 +511,9 @@
       "path": "packages/plugins/plugin-trello/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-trip/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-voxel/tsconfig.json"
     },
     {
@@ -512,6 +521,18 @@
     },
     {
       "path": "packages/plugins/plugin-zen/tsconfig.json"
+    },
+    {
+      "path": "packages/reflect/deus/tsconfig.json"
+    },
+    {
+      "path": "packages/reflect/introspect/tsconfig.json"
+    },
+    {
+      "path": "packages/reflect/introspect-mcp/tsconfig.json"
+    },
+    {
+      "path": "packages/reflect/introspect-tools/tsconfig.json"
     },
     {
       "path": "packages/sdk/app-framework/tsconfig.json"
@@ -746,6 +767,9 @@
     },
     {
       "path": "tools/vite-plugin-log/tsconfig.json"
+    },
+    {
+      "path": "tools/vite-plugin-shutdown/tsconfig.json"
     },
     {
       "path": "tools/x/tsconfig.json"

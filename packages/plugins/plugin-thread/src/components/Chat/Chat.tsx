@@ -7,6 +7,7 @@ import React, { type RefObject, useLayoutEffect, useMemo, useRef, useState } fro
 import { type SpaceMember } from '@dxos/react-client/echo';
 import { type Identity } from '@dxos/react-client/halo';
 import { ScrollArea, type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { composable, composableProps } from '@dxos/react-ui';
 import {
   type MessageMetadata,
   MessageTextbox,
@@ -16,7 +17,7 @@ import {
 } from '@dxos/react-ui-thread';
 import { type Message } from '@dxos/types';
 import { createBasicExtensions, createThemeExtensions, listener, type Extension } from '@dxos/ui-editor';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -68,7 +69,7 @@ export type ChatOrientation = 'top' | 'bottom';
  * Owns its own UI state (textbox content, scroll position, editor extensions) but
  * does not load data or invoke operations — the caller passes messages and an
  * `onSend` callback. Used by both `ThreadContainer` (AutoMerge `Thread`) and
- * `ChannelContainer`'s feed-backed channel chat.
+ * `ChannelArticle`'s feed-backed channel chat.
  */
 export const Chat = composable<HTMLDivElement, ChatProps>(
   (

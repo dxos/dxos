@@ -7,8 +7,7 @@ import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { Entity, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
-import { Filter } from '@dxos/echo';
+import { Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { EncodedReference } from '@dxos/echo-protocol';
 import {
   ATTR_RELATION_SOURCE,
@@ -982,5 +981,27 @@ describe('Reactive Object with ECHO database', () => {
 
     // Verify the original object still has its keys.
     expect(Obj.getMeta(newObj).keys).to.have.length(2);
+  });
+
+  describe('Uint8Array fields', () => {
+    const Blob = Schema.Struct({
+      name: Schema.String,
+      bytes: Schema.Uint8ArrayFromSelf,
+    }).pipe(Type.object({ typename: 'com.example.type.blob', version: '0.1.0' }));
+
+    test('stored natively in automerge and round-trip through ECHO', async ({ expect }) => {
+      const { db } = await builder.createDatabase({ types: [Blob] });
+      const bytes = new Uint8Array([0, 1, 2, 3, 250, 251, 252, 253, 254, 255]);
+
+      const obj = db.add(Obj.make(Blob, { name: 'blob', bytes }));
+      expect(obj.bytes).toBeInstanceOf(Uint8Array);
+      expect(Array.from(obj.bytes)).toEqual(Array.from(bytes));
+
+      // Verify the underlying automerge value is a Uint8Array, not the encoded JSON form.
+      const core = getObjectCore(obj);
+      const raw = core.getDecoded(['data', 'bytes']);
+      expect(raw).toBeInstanceOf(Uint8Array);
+      expect(Array.from(raw as Uint8Array)).toEqual(Array.from(bytes));
+    });
   });
 });

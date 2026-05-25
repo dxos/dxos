@@ -22,6 +22,7 @@ import { isNonNullable } from '@dxos/util';
 import { IconsPlugin } from '@dxos/vite-plugin-icons';
 import importSource from '@dxos/vite-plugin-import-source';
 import { DxosLogPlugin } from '@dxos/vite-plugin-log';
+import { ShutdownPlugin } from '@dxos/vite-plugin-shutdown';
 
 import { createConfig as createTestConfig } from '../../../vitest.base.config';
 
@@ -47,6 +48,12 @@ const sharedPlugins = (env: ConfigEnv): PluginOption[] => [
   env.command === 'serve' &&
     !isFastBundle &&
     importSource({
+      // Include `#*` subpath imports so that intra-package imports
+      // (e.g. `#capabilities`) from source-served files keep resolving to
+      // source — required for Vite-specific constructs like
+      // `import.meta.glob` to run at the consumer (this app), not be
+      // pre-baked as plain text in the published dist.
+      include: ['@dxos/**', '#*'],
       exclude: [
         '@dxos/random-access-storage',
         '@dxos/lock-file',
@@ -187,6 +194,7 @@ export default defineConfig((env) => ({
     plugins: () => [...sharedPlugins(env)],
   },
   plugins: [
+    ShutdownPlugin(),
     ...sharedPlugins(env),
 
     // RSS proxy middleware for CORS-free feed fetching.

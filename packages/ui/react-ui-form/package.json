@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "type": "module",
   "imports": {
@@ -62,12 +62,15 @@
     "tabster": "catalog:"
   },
   "devDependencies": {
+    "@dxos/effect-proto": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
     "@dxos/storybook-utils": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",

@@ -20,10 +20,11 @@ import { addEventListener } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { useNode } from '@dxos/plugin-graph';
 import { IconButton, Main, type MainContentProps, useOnTransition, useTranslation } from '@dxos/react-ui';
+import { mainPaddingTransitions } from '@dxos/react-ui';
 import { DEFAULT_HORIZONTAL_SIZE, Stack, StackContext } from '@dxos/react-ui-stack';
-import { hoverableControls, hoverableFocusedWithinControls, mainPaddingTransitions, mx } from '@dxos/ui-theme';
+import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
-import { useBreakpoints, useCompanions, useDeckState, useHoistStatusbar, useSelectedCompanion } from '#hooks';
+import { useBreakpoints, useCompanions, useDeckState, useSelectedCompanion } from '#hooks';
 import { meta } from '#meta';
 import { DeckOperation } from '#types';
 import { getMode } from '#types';
@@ -57,7 +58,6 @@ export const DeckViewport = ({ children }: DeckViewportProps) => {
 
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, layoutMode);
-  const hoistStatusbar = useHoistStatusbar(breakpoint, layoutMode);
 
   return (
     <Main.Content
@@ -66,7 +66,6 @@ export const DeckViewport = ({ children }: DeckViewportProps) => {
       classNames={[
         'grid top-[env(safe-area-inset-top)]!',
         topbar && 'top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]!',
-        hoistStatusbar && 'lg:bottom-(--dx-statusbar-size)',
       ]}
       style={
         {

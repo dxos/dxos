@@ -14,7 +14,7 @@ import {
   getObjectPathFromObject,
   toUrlPath,
 } from '@dxos/app-toolkit';
-import { SpaceState, getSpace, isSpace } from '@dxos/client/echo';
+import { SpaceState, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Collection, Obj, Type } from '@dxos/echo';
 import { AtomObj } from '@dxos/echo-atom';
@@ -80,7 +80,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
               icon: 'ph--folder--regular',
               iconHue: 'amber',
               role: 'branch',
-              position: 'hoist',
+              position: 'first',
               testId: 'spacePlugin.collectionsSection',
               draggable: false,
               droppable: false,
@@ -141,7 +141,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
       connector: (collection, get) => {
         const ephemeralAtom = capabilities.get(SpaceCapabilities.EphemeralState);
         const ephemeralState = get(ephemeralAtom);
-        const space = getSpace(collection);
+        const db = Obj.getDatabase(collection);
 
         const collectionSnapshot = get(AtomObj.make(collection));
         const refs = collectionSnapshot.objects ?? [];
@@ -157,10 +157,10 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
           objects
             .map(
               (object: Obj.Unknown) =>
-                space &&
+                db &&
                 createObjectNode({
                   object,
-                  db: space.db,
+                  db,
                   navigable: ephemeralState.navigableCollections,
                   parentCollection: collection,
                 }),
@@ -176,12 +176,11 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
     GraphBuilder.createExtension({
       id: 'object-actions',
       match: (node) => {
-        const space = getSpace(node.data);
-        return space && Obj.isObject(node.data) && Obj.getTypename(node.data) === node.type
-          ? Option.some({ space, object: node.data, nodeId: node.id })
+        return Obj.isObject(node.data) && Obj.getTypename(node.data) === node.type && Obj.getDatabase(node.data)
+          ? Option.some({ object: node.data, nodeId: node.id })
           : Option.none();
       },
-      actions: ({ space, object, nodeId }, get) => {
+      actions: ({ object, nodeId }, get) => {
         const deletable = !Obj.instanceOf(Type.PersistentType, object);
 
         const [appGraph] = get(capabilities.atom(AppCapabilities.AppGraph));

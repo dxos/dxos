@@ -18,6 +18,9 @@
   ],
   "references": [
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -39,10 +42,10 @@
       "path": "../../ui/react-ui"
     },
     {
-      "path": "../plugin-assistant"
+      "path": "../../ui/react-ui-form"
     },
     {
-      "path": "../plugin-help"
+      "path": "../plugin-assistant"
     },
     {
       "path": "../plugin-navtree"

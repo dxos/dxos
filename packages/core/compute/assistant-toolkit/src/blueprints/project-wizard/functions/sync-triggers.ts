@@ -76,12 +76,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
         feedObj = feedRef ? Option.getOrUndefined(yield* Database.loadOption(feedRef)) : undefined;
       }
 
-      const queueDxn = Option.fromNullable(feedObj).pipe(
-        Option.filter(Obj.instanceOf(Feed.Feed)),
-        Option.map(Feed.getQueueDxn),
-        Option.getOrUndefined,
-      );
-      if (!queueDxn) {
+      if (!feedObj || !Obj.instanceOf(Feed.Feed, feedObj) || !Feed.getQueueDxn(feedObj)) {
         continue;
       }
 
@@ -97,7 +92,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
             ],
           },
           enabled: triggersEnabled,
-          spec: Trigger.specQueue(queueDxn.toString()),
+          spec: Trigger.specFeed(feedObj),
           function: Ref.make(Operation.serialize(filterEvents ? Qualifier : AgentWorker)),
           input: {
             agent: Ref.make(agent),
@@ -108,28 +103,31 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
       );
     }
 
-    if ((agent.filterEvents ?? true) && agent.queue) {
-      yield* Database.add(
-        Trigger.make({
-          [Obj.Parent]: agent,
-          [Obj.Meta]: {
-            keys: [
-              { source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id },
-              {
-                source: AGENT_TRIGGER_TARGET_EXTENSION_KEY,
-                id: Obj.getDXN(agent)?.toString() ?? '',
-              },
-            ],
-          },
-          function: Ref.make(Operation.serialize(AgentWorker)),
-          enabled: triggersEnabled,
-          spec: Trigger.specQueue(agent.queue.dxn.toString()),
-          input: {
-            agent: Ref.make(agent),
-            event: '{{event}}',
-          },
-        }),
-      );
+    if ((agent.filterEvents ?? true) && agent.feed) {
+      const agentFeedOption = yield* Database.loadOption(agent.feed);
+      if (Option.isSome(agentFeedOption) && Feed.getQueueDxn(agentFeedOption.value)) {
+        yield* Database.add(
+          Trigger.make({
+            [Obj.Parent]: agent,
+            [Obj.Meta]: {
+              keys: [
+                { source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id },
+                {
+                  source: AGENT_TRIGGER_TARGET_EXTENSION_KEY,
+                  id: Obj.getDXN(agent)?.toString() ?? '',
+                },
+              ],
+            },
+            function: Ref.make(Operation.serialize(AgentWorker)),
+            enabled: triggersEnabled,
+            spec: Trigger.specFeed(agentFeedOption.value),
+            input: {
+              agent: Ref.make(agent),
+              event: '{{event}}',
+            },
+          }),
+        );
+      }
     }
 
     // Timer trigger bypasses the qualifier and invokes the agent worker directly on a schedule.

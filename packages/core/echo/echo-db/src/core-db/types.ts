@@ -18,6 +18,7 @@ export type DecodedAutomergePrimaryValue =
   | string
   | number
   | boolean
+  | Uint8Array
   | readonly DecodedAutomergePrimaryValue[]
   | { readonly [key: string]: DecodedAutomergePrimaryValue }
   | EncodedReference;

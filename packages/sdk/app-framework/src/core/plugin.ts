@@ -163,6 +163,12 @@ export type Meta = {
   name: string;
 
   /**
+   * Semver version string of the plugin, typically the publishing package's
+   * `package.json` version.
+   */
+  version?: string;
+
+  /**
    * Short description of plugin functionality.
    */
   description?: string;
@@ -170,6 +176,7 @@ export type Meta = {
   /**
    * Name of the author or organization that created the plugin.
    */
+  // TODO(burdon): DID or domain name?
   author?: string;
 
   /**
@@ -181,6 +188,14 @@ export type Meta = {
    * URL of source code.
    */
   source?: string;
+
+  /**
+   * Relative path (inside the published package) to the plugin's bundled MDL
+   * specification file — e.g. `'PLUGIN.mdl'` or `'docs/PLUGIN.mdl'`. The file
+   * is shipped via the package's `files` entry and resolved by registry
+   * surfaces to render an in-app viewer and/or external link.
+   */
+  spec?: string;
 
   /**
    * URL of screenshot.
@@ -201,6 +216,22 @@ export type Meta = {
    * Icon hue (ChromaticPalette).
    */
   iconHue?: string;
+
+  /**
+   * IDs of plugins this plugin functionally depends on.
+   *
+   * Treated as a convenience by the default `PluginManager` flow:
+   * - Enabling this plugin auto-enables the transitive closure of `dependsOn`
+   *   (installing missing entries from the plugin registry when possible).
+   * - Disabling a depended-upon plugin surfaces dependents to the caller; the
+   *   `PluginManager.disable` API supports an opt-in cascade.
+   *
+   * Not an invariant: low-level `PluginManager` APIs accept opt-outs
+   * (`resolveDependencies: false`, `ignoreDependents: true`) so a caller may
+   * substitute an alternative implementation that satisfies the dependent's
+   * capability needs in its own way.
+   */
+  dependsOn?: string[];
 };
 
 /**
@@ -346,6 +377,7 @@ const resolveModule = (
 export function make<T>(builder: PluginBuilder<T>): PluginFactory<T>;
 export function make<T>(builder: PluginBuilder<T>): PluginFactory<T> {
   const meta = builder.meta;
+  invariant(!meta.dependsOn?.includes(meta.id), `Plugin ${meta.id} declares itself as a dependency.`);
 
   const factory = (options: T) => {
     const modules = builder.modules.map((module) => resolveModule(meta, module, options));
@@ -424,6 +456,24 @@ export const isLazy = (plugin: Plugin): boolean => LazyTag in plugin;
  * 'meta-mismatch'`) so callers can route on it.
  */
 export class LazyPluginError extends BaseError.extend('LazyPluginError', 'Failed to resolve lazy plugin') {}
+
+/**
+ * Tagged error for plugin-level dependency resolution failures.
+ *
+ * `context.id` is the plugin id the manager was acting on. `context.reason`
+ * discriminates the failure mode:
+ *  - `'missing'` — declared dep is neither registered nor in the catalog.
+ *    `context.missing` lists offending ids.
+ *  - `'install-failed'` — dep was found in the catalog but `add()` failed.
+ *    `cause` carries the original error.
+ *  - `'cycle'` — closure walk detected a cycle. `context.path` is the cycle path.
+ *  - `'core-dependent'` — cascade-disable would have to disable a core plugin.
+ *    `context.coreDependent` is the blocking id.
+ */
+export class PluginDependencyError extends BaseError.extend(
+  'PluginDependencyError',
+  'Plugin dependency resolution failed',
+) {}
 
 /**
  * Resolves a lazy plugin stub to its real plugin.

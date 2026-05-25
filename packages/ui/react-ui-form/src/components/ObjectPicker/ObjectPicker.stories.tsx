@@ -7,9 +7,9 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
-import { Obj } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { random } from '@dxos/random';
-import { Filter, useQuery } from '@dxos/react-client/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { Button } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
@@ -48,7 +48,7 @@ const DefaultStory = () => {
     }
   }, [space]);
 
-  // Get all objects in the space (similar to BoardContainer)
+  // Get all objects in the space (similar to BoardArticle)
   const allObjects = useQuery(space?.db, Filter.everything());
 
   // Map objects to options format expected by ObjectPicker

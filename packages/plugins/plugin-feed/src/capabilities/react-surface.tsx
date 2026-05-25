@@ -36,7 +36,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'feed-article',
-        filter: AppSurface.object(AppSurface.Article, Subscription.Feed),
+        filter: AppSurface.object(AppSurface.Article, Subscription.Subscription),
         component: ({ data, role }) => (
           <FeedArticle role={role} subject={data.subject} attendableId={data.attendableId} />
         ),
@@ -50,7 +50,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'post-card',
-        position: 'hoist',
+        position: 'first',
         filter: AppSurface.object(AppSurface.Card, Subscription.Post),
         component: ({ data, role }) => <PostCard role={role} subject={data.subject} />,
       }),

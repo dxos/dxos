@@ -5,10 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { OperationPlugin, RuntimePlugin } from '@dxos/app-framework';
+import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Obj } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import { Obj, View } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { random } from '@dxos/random';
 import { withClientProvider } from '@dxos/react-client/testing';
@@ -90,7 +89,7 @@ const meta = {
       },
     }),
     withPluginManager({
-      plugins: [OperationPlugin(), RuntimePlugin()],
+      plugins: [ProcessManagerPlugin()],
     }),
   ],
   parameters: {

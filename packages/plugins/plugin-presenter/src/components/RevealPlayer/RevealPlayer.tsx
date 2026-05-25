@@ -16,7 +16,7 @@ import RevealHighlight from 'reveal.js/plugin/highlight/highlight';
 import RevealMarkdown from 'reveal.js/plugin/markdown/plugin.js';
 
 import { useAsyncEffect } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 const styles = `
 <style type="text/css">

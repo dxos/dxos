@@ -5,37 +5,42 @@
 // @import-as-namespace
 
 import { type Atom } from '@effect-atom/atom-react';
+import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { type Channel } from '@dxos/types';
+import { type Obj } from '@dxos/echo';
+import { type Thread } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { type CallManager as CallManagerImpl, type CallState, type MediaState } from '../calls';
 import { type ThreadState, type ViewStore } from '../types';
 
 export const Settings = Capability.make<Atom.Writable<import('./Settings').Settings>>(`${meta.id}.capability.settings`);
-export const CallManager = Capability.make<CallManagerImpl>(`${meta.id}.capability.call-manager`);
 
 /** Comment configuration contributed per typename by plugins that support commenting. */
 export type CommentConfig = AppCapabilities.CommentConfig;
 export const CommentConfig: Capability.InterfaceDef<AppCapabilities.CommentConfig> = AppCapabilities.CommentConfig;
-
-// TODO(burdon): Better way to define specific extensions for meeting companions.
-// TODO(burdon): This brings in deps from ../calls; how should we manage/minimize explicit type exposure to other plugins?
-// TODO(wittjosiah): These callbacks could be intents once we support broadcast.
-export type CallProperties = {
-  onJoin: (state: { channel?: Channel.Channel; roomId?: string }) => Promise<void>;
-  onLeave: (roomId?: string) => Promise<void>;
-  onCallStateUpdated: (callState: CallState) => Promise<void>;
-  onMediaStateUpdated: ([mediaState, isSpeaking]: [MediaState, boolean]) => Promise<void>;
-};
-
-export const CallExtension = Capability.make<CallProperties>(`${meta.id}.capability.call-extension`);
 
 /** Thread state (drafts, toolbar state, current selection). */
 export const State = Capability.make<Atom.Writable<ThreadState>>(`${meta.id}.capability.state`);
 
 /** Per-subject view state (e.g., showResolvedThreads). */
 export const ViewState = Capability.make<Atom.Writable<ViewStore>>(`${meta.id}.capability.view-state`);
+
+/**
+ * Runs one comment-thread agent turn against a thread/subject pair.
+ *
+ * `run` may depend on `Capability.Service` so implementations can read
+ * `AgentIdentity` and any other contributed capabilities. The caller
+ * (RespondToThread operation handler) already provides `Capability.Service`.
+ *
+ * The default implementation (built atop AiSession) is not yet wired; storybook
+ * and tests contribute stub implementations via `Capability.contributes` to
+ * exercise the trigger plumbing without making network calls.
+ */
+export interface AgentRunner {
+  run(input: { thread: Thread.Thread; subject: Obj.Any }): Effect.Effect<void, Error, Capability.Service>;
+}
+
+export const AgentRunner = Capability.make<AgentRunner>(`${meta.id}.capability.agent-runner`);

@@ -81,6 +81,12 @@ const DEFAULT_RETRY_JITTER = 500;
 const DEFAULT_MAX_RETRIES_COUNT = 3;
 const WARNING_BODY_SIZE = 10 * 1024 * 1024; // 10MB
 
+// TEMPORARY: legacy standalone CORS proxy used by `proxyFetch` until the
+// authenticated `/proxy/*` route on the main edge worker ships
+// (https://github.com/dxos/edge/pull/576). Delete this constant when the
+// commented-out authenticated branch in `proxyFetch` is restored.
+const LEGACY_CORS_PROXY_URL = 'https://cors-proxy.dxos.workers.dev';
+
 export type RetryConfig = {
   /**
    * A number of call retries, not counting the initial request.
@@ -583,6 +589,65 @@ export class EdgeHttpClient {
   }
 
   //
+  // Integration proxy.
+  //
+
+  /**
+   * Fetch through the edge proxy, used by integration plugins (Discord, ...)
+   * to call third-party REST APIs that don't set permissive CORS headers.
+   *
+   * `init.headers.Authorization` (caller-supplied) is preserved by prefixing
+   * with `X-Cors-Proxy-Authorization`, since the proxy strips `Authorization`
+   * on forwarding to avoid leaking the DXOS presentation upstream — the
+   * prefix carries the upstream's bot token / token through.
+   *
+   * TEMPORARY: routed through the legacy standalone proxy at
+   * `cors-proxy.dxos.workers.dev` (open, unauthenticated, path
+   * `/<host>/<path>`) so that integration plugins can be tested before the
+   * authenticated `/proxy/*` route on the main edge worker ships
+   * (https://github.com/dxos/edge/pull/576). When that PR deploys, restore
+   * the commented-out block below — it rewrites the target under
+   * `${this.baseUrl}/proxy/...` and signs the request with the cached
+   * verifiable presentation. The header-remap and `x-cors-proxy-*` override
+   * conventions are unchanged between the two paths.
+   */
+  public async proxyFetch(target: URL, init: RequestInit = {}): Promise<Response> {
+    return proxyFetchLegacy(target, init, this._clientTag);
+
+    //
+    // Restore once the authenticated route on the main edge worker is deployed:
+    //
+    // const proxyUrl = new URL(`/proxy/${target.host}${target.pathname}${target.search}`, this.baseUrl);
+    // if (target.protocol === 'http:') {
+    //   proxyUrl.searchParams.set('scheme', 'http');
+    // }
+    // const headers = remapAuthorizationForProxy(new Headers(init.headers ?? undefined));
+    // let handledAuth = false;
+    // while (true) {
+    //   if (!this._authHeader) {
+    //     const authResponse = await fetch(new URL('/auth', this.baseUrl));
+    //     if (authResponse.status === 401) {
+    //       this._authHeader = await this._handleUnauthorized(authResponse);
+    //     }
+    //   }
+    //   const requestHeaders = new Headers(headers);
+    //   if (this._authHeader) {
+    //     requestHeaders.set('Authorization', this._authHeader);
+    //   }
+    //   if (this._clientTag) {
+    //     requestHeaders.set(EDGE_CLIENT_TAG_HEADER, this._clientTag);
+    //   }
+    //   const response = await fetch(proxyUrl, { ...init, headers: requestHeaders });
+    //   if (response.status === 401 && !handledAuth) {
+    //     this._authHeader = await this._handleUnauthorized(response);
+    //     handledAuth = true;
+    //     continue;
+    //   }
+    //   return response;
+    // }
+  }
+
+  //
   // Internal
   //
 
@@ -764,3 +829,45 @@ const getFileMimeType = (filename: string) =>
     : filename.endsWith('.wasm')
       ? 'application/wasm'
       : 'application/octet-stream';
+
+/**
+ * Move any caller-supplied `Authorization` header to `X-Cors-Proxy-Authorization`
+ * so it survives the proxy hop. The edge proxy strips the top-level
+ * `Authorization` (it carries the DXOS presentation, never to be leaked
+ * upstream) and applies any `x-cors-proxy-*` override prefix as the actual
+ * upstream header — which is exactly the channel we want for forwarding bot
+ * tokens, OAuth tokens, etc.
+ */
+const remapAuthorizationForProxy = (headers: Headers): Headers => {
+  const callerAuth = headers.get('Authorization');
+  if (callerAuth !== null) {
+    headers.delete('Authorization');
+    headers.set('X-Cors-Proxy-Authorization', callerAuth);
+  }
+  return headers;
+};
+
+/**
+ * Fetch through the legacy standalone open proxy at `cors-proxy.dxos.workers.dev`.
+ *
+ * No DXOS auth, no `EdgeHttpClient` instance required — pure URL rewrite +
+ * header remap + `fetch`. Used by integration plugins from contexts that
+ * don't have an `EdgeHttpClient` in scope (e.g. plugin-integration's
+ * `credentialForm.onSubmit` and `onTokenCreated`, which run inside the
+ * coordinator's runtime that does not provide `Capability.Service`).
+ *
+ * TEMPORARY — see `LEGACY_CORS_PROXY_URL`. When the authenticated `/proxy/*`
+ * route on edge ships (https://github.com/dxos/edge/pull/576), delete this
+ * function and route everything through `EdgeHttpClient.proxyFetch` again.
+ */
+export const proxyFetchLegacy = (target: URL, init: RequestInit = {}, clientTag?: string): Promise<Response> => {
+  const proxyUrl = new URL(`/${target.host}${target.pathname}${target.search}`, LEGACY_CORS_PROXY_URL);
+  if (target.protocol === 'http:') {
+    proxyUrl.searchParams.set('scheme', 'http');
+  }
+  const requestHeaders = remapAuthorizationForProxy(new Headers(init.headers ?? undefined));
+  if (clientTag) {
+    requestHeaders.set(EDGE_CLIENT_TAG_HEADER, clientTag);
+  }
+  return fetch(proxyUrl, { ...init, headers: requestHeaders });
+};

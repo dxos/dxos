@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 import * as Either from 'effect/Either';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
-import type * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Scope from 'effect/Scope';
 
 import type { AiService } from '@dxos/ai';
@@ -106,9 +105,19 @@ export type ComputeServices =
  */
 const AUTO_TRIGGER_NODES = ['chat', 'switch', 'constant'];
 
+/**
+ * Minimal runtime interface required by the {@link ComputeGraphController}.
+ *
+ * Satisfied by both `effect/ManagedRuntime.ManagedRuntime` and ad-hoc adapters
+ * built on top of the app-framework `ProcessManagerRuntime`.
+ */
+export interface ComputeGraphRuntime {
+  runPromiseExit<A, E>(effect: Effect.Effect<A, E, ComputeServices>): Promise<Exit.Exit<A, E>>;
+}
+
 export const createComputeGraphController = (
   graph: CanvasGraphModel<ComputeShape>,
-  computeRuntime: ManagedRuntime.ManagedRuntime<ComputeServices, never>,
+  computeRuntime: ComputeGraphRuntime,
 ) => {
   const computeGraph = createComputeGraph(graph);
   const controller = new ComputeGraphController(computeRuntime, computeGraph);
@@ -146,7 +155,7 @@ export class ComputeGraphController extends Resource {
   public readonly events = new Event<ComputeEvent>();
 
   constructor(
-    private readonly _computeRuntime: ManagedRuntime.ManagedRuntime<ComputeServices, never>,
+    private readonly _computeRuntime: ComputeGraphRuntime,
     /** Persistent compute graph. */
     private readonly _graph: ComputeGraphModel,
   ) {

@@ -90,7 +90,7 @@ export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: Test
               if (onInit) {
                 yield* onInit().pipe(
                   Effect.provideService(Database.Service, Database.makeService(db)),
-                  Effect.provideService(QueueService, QueueService.make(queues, undefined)),
+                  Effect.provideService(QueueService, QueueService.make(queues)),
                 );
               }
             } else {
@@ -107,7 +107,7 @@ export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: Test
             if (onInit) {
               yield* onInit().pipe(
                 Effect.provideService(Database.Service, Database.makeService(db)),
-                Effect.provideService(QueueService, QueueService.make(queues, undefined)),
+                Effect.provideService(QueueService, QueueService.make(queues)),
               );
             }
           }
@@ -122,7 +122,7 @@ export const TestDatabaseLayer = ({ types, spaceKey, storagePath, onInit }: Test
 
           return Context.mergeAll(
             Context.make(Database.Service, Database.makeService(db)),
-            Context.make(QueueService, QueueService.make(queues, undefined)),
+            Context.make(QueueService, QueueService.make(queues)),
           );
         }),
       ),

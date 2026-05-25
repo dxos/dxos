@@ -8,7 +8,7 @@
     "type": "git",
     "url": "https://github.com/dxos/dxos"
   },
-  "license": "MIT",
+  "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
   "sideEffects": true,
   "type": "module",
@@ -54,10 +54,12 @@
     },
     "#plugin": {
       "source": {
+        "workerd": "./src/InboxPlugin.workerd.ts",
         "node": "./src/InboxPlugin.node.ts",
         "default": "./src/InboxPlugin.tsx"
       },
       "types": "./dist/types/src/InboxPlugin.d.ts",
+      "workerd": "./dist/lib/neutral/InboxPlugin.workerd.mjs",
       "node": "./dist/lib/neutral/InboxPlugin.node.mjs",
       "default": "./dist/lib/neutral/InboxPlugin.mjs"
     },
@@ -83,6 +85,11 @@
       "source": "./src/plugin.ts",
       "types": "./dist/types/src/plugin.d.ts",
       "default": "./dist/lib/neutral/plugin.mjs"
+    },
+    "./testing": {
+      "source": "./src/testing.ts",
+      "types": "./dist/types/src/testing.d.ts",
+      "default": "./dist/lib/neutral/testing.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",

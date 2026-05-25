@@ -141,7 +141,7 @@ export const PluginItem = ({
     >
       <div className={mx(gridRows, 'justify-center rounded-l-md', styles.surface)}>
         <Icon
-          classNames={mx('row-start-2 cursor-pointer', styles.surfaceText)}
+          classNames={mx('row-start-2 cursor-pointer', styles.foreground)}
           icon={icon}
           size={14}
           onClick={handleClick}
@@ -185,17 +185,17 @@ export const PluginItem = ({
           <div className='grow' />
           <div className='pe-1'>
             {isUpdating ? (
-              <Button aria-describedby={descriptionId} density='fine' variant='primary' disabled>
+              <Button aria-describedby={descriptionId} density='md' variant='primary' disabled>
                 {t('updating.label')}
               </Button>
             ) : showUpdateButton ? (
-              <Button aria-describedby={descriptionId} density='fine' variant='primary' onClick={handleUpdate}>
+              <Button aria-describedby={descriptionId} density='md' variant='primary' onClick={handleUpdate}>
                 {t('update.label')}
               </Button>
             ) : showInstallButton ? (
               <Button
                 aria-describedby={descriptionId}
-                density='fine'
+                density='md'
                 variant='primary'
                 disabled={isInstalling}
                 onClick={handleInstall}

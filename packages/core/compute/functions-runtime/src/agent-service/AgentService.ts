@@ -12,10 +12,10 @@ import * as Stream from 'effect/Stream';
 import { ModelName } from '@dxos/ai';
 import { AiContext } from '@dxos/assistant';
 import { type Trace, Blueprint, McpServer } from '@dxos/compute';
+import { ProcessManager } from '@dxos/compute-runtime';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 
-import * as ProcessManager from '../process/ProcessManager';
 import { AgentProcess } from './agent-process';
 
 export interface Service {
@@ -86,7 +86,7 @@ export const createSession: (
   Database.Service | Feed.FeedService | Blueprint.RegistryService | AgentService
 > = Effect.fn('createSession')(function* (opts) {
   const blueprints = yield* Effect.forEach(opts?.blueprints ?? [], (blueprint) =>
-    Blueprint.upsert(blueprint.key).pipe(Effect.map(Ref.make)),
+    Blueprint.upsert(Blueprint.getKey(blueprint)).pipe(Effect.map(Ref.make)),
   );
 
   const feed = yield* Database.add(Feed.make());
@@ -137,7 +137,9 @@ export const layer = (opts?: {
               return cached;
             }
 
-            const target = Obj.getDXN(feed).toString();
+            const feedDxn = Obj.getDXN(feed);
+            const target = feedDxn.toString();
+            const spaceId = feedDxn.asEchoDXN()?.spaceId;
             const executable = AgentProcess({
               systemPrompt: opts?.systemPrompt,
               model: options?.model ?? opts?.model,
@@ -153,6 +155,10 @@ export const layer = (opts?: {
               handle = yield* processManager.spawn(executable, {
                 name: 'agent',
                 target,
+                environment: {
+                  ...(spaceId !== undefined ? { space: spaceId } : {}),
+                  conversation: target,
+                },
                 traceMeta: {
                   conversationId: feed.id,
                 },

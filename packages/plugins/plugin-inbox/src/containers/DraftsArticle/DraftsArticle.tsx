@@ -7,8 +7,8 @@ import React, { useCallback, useMemo } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useLayout } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
-import { Filter, useQuery } from '@dxos/react-client/echo';
+import { Filter, Obj } from '@dxos/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
 import { Message } from '@dxos/types';
@@ -37,25 +37,25 @@ export const DraftsArticle = ({ role, space, attendableId, mailbox }: DraftsArti
   const currentId = useSelected(id, 'single');
 
   const db = space.db;
-  const mailboxDxn = Obj.getDXN(mailbox).toString();
+  const mailboxDXN = Obj.getDXN(mailbox).toString();
 
   const draftsFilter = useMemo(
     () =>
       Filter.type(Message.Message, {
         properties: {
-          mailbox: mailboxDxn,
+          mailbox: mailboxDXN,
         },
       }),
-    [mailboxDxn],
+    [mailboxDXN],
   );
 
   const mailboxScopedMessages = useQuery(db, draftsFilter);
   const drafts = useMemo(
     () =>
       [...mailboxScopedMessages]
-        .filter((m) => DraftMessage.belongsTo(m, mailboxDxn))
+        .filter((m) => DraftMessage.belongsTo(m, mailboxDXN))
         .sort(sortByCreated('created', true)),
-    [mailboxDxn, mailboxScopedMessages],
+    [mailboxDXN, mailboxScopedMessages],
   );
 
   const handleAction = useCallback<MessageStackActionHandler>(

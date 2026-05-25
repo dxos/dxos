@@ -21,7 +21,7 @@ describe('NavTreePlugin', () => {
 
     expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('AppGraphBuilder')]));
 
-    await harness.fire(ActivationEvents.SetupOperationHandler);
+    await harness.fire(ActivationEvents.SetupProcessManager);
     expect(harness.manager.getActive()).toContain(moduleId('OperationHandler'));
   });
 });

@@ -123,7 +123,7 @@ export const AccountContainer = () => {
                       classNames='min-w-64'
                     />
                   </Input.Root>
-                  <Button type='submit' density='fine'>
+                  <Button type='submit' density='sm'>
                     {t('request-access.label')}
                   </Button>
                 </form>
@@ -145,7 +145,7 @@ export const AccountContainer = () => {
                   icon='ph--paper-plane-tilt--regular'
                   label={t('resend-verification.label')}
                   onClick={handleResend}
-                  density='fine'
+                  density='sm'
                 />
                 {resendStatus ? <span className='text-xs text-description'>{resendStatus}</span> : null}
               </div>

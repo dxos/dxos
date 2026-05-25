@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 
 import { type Plugin, type PluginManager } from '@dxos/app-framework';
 import { usePluginManager } from '@dxos/app-framework/ui';
-import { composable } from '@dxos/ui-theme';
+import { composable } from '@dxos/react-ui';
 
 import { BaseRegistryArticle } from '../BaseRegistryArticle';
 

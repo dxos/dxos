@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type SpaceId } from '@dxos/keys';
+import { type DXN, type SpaceId } from '@dxos/keys';
 
 import type * as FeedProtocol from '../FeedProtocol';
 import type { SerializedError } from '../index';
@@ -117,6 +117,12 @@ export interface FunctionsAiService {
 
 export type FunctionInvokeOptions = {
   spaceId?: SpaceId;
+  /**
+   * DXN string of the conversation feed (queue).
+   * Forwarded into the function context so nested operations can resolve
+   * `AiContext.Service` and related conversation-scoped services.
+   */
+  conversation?: DXN.String;
   cpuTimeLimit?: number;
   subrequestsLimit?: number;
 };

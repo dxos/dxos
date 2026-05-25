@@ -9,42 +9,29 @@ import React, {
   CSSProperties,
   MouseEventHandler,
   type PropsWithChildren,
-  createContext,
+  type ReactNode,
   forwardRef,
-  useContext,
+  useId,
   useMemo,
 } from 'react';
 
-import { composable, composableProps, iconSize, mx, slottable } from '@dxos/ui-theme';
+import { iconSize } from '@dxos/ui-theme';
 import { type Density } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks';
-import { Column } from '../../primitives';
+import { composable, composableProps, slottable } from '../../util';
 import { type ThemedClassName } from '../../util';
 import { Button } from '../Button';
+import { Column } from '../Column';
 import { Icon, type IconProps } from '../Icon';
 import { Image } from '../Image';
 import {
   Toolbar,
-  ToolbarCloseIconButtonProps,
+  type ToolbarActionIconButtonProps,
   ToolbarDragHandleProps,
-  type ToolbarMenuItem,
   type ToolbarMenuProps,
   type ToolbarRootProps,
 } from '../Toolbar';
-
-//
-// Context
-//
-
-const CARD_NAME = 'Card';
-
-type CardContextValue = {
-  menuItems?: CardMenuItem<any>[];
-};
-
-/** @deprecated Use context for menus. */
-const CardContext = createContext<CardContextValue>({});
 
 //
 // Root
@@ -64,15 +51,17 @@ type CardRootProps = {
   'data-testid'?: string;
 };
 
-// `Card.Root` does not support `asChild`. The Column grid is the root element
-// (one `<div>` carrying both the `dx-card` and `dx-column-root` classes
-// instead of the previous outer-card + inner-column pair), so caller-provided
-// HTML attributes — `onClick`, `tabIndex`, `style`, `data-*`, `grid-template-rows`
-// overrides via `classNames` — land directly on the grid container. Slot-parents
-// (`Focus.Item asChild`, `Mosaic.Tile asChild`, etc.) continue to work because
-// `composable()` preserves the COMPOSABLE marker that slottable parents check
-// before warning, and Radix `Slot` merges the parent's props onto the inner
-// `<div>` exactly the way `slottable`'s `Slot`/`Primitive.div` branch did.
+/**
+ * `Card.Root` does not support `asChild`. The Column grid is the root element
+ * (one `<div>` carrying both the `dx-card` and `dx-column-root` classes
+ * instead of the previous outer-card + inner-column pair), so caller-provided
+ * HTML attributes — `onClick`, `tabIndex`, `style`, `data-*`, `grid-template-rows`
+ * overrides via `classNames` — land directly on the grid container.
+ * Slot-parents (`Focus.Item asChild`, `Mosaic.Tile asChild`, etc.) continue to
+ * work because `composable()` preserves the COMPOSABLE marker that slottable parents
+ * check before warning, and Radix `Slot` merges the parent's props onto the inner
+ * `<div>` exactly the way `slottable`'s `Slot`/`Primitive.div` branch did.
+ */
 const CardRoot = composable<HTMLDivElement, CardRootProps>(
   ({ children, id, role, border = true, fullWidth, density, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
@@ -81,7 +70,7 @@ const CardRoot = composable<HTMLDivElement, CardRootProps>(
     return (
       <Column.Root
         asChild
-        gutter={density === 'coarse' ? 'lg' : 'md'}
+        gutter={density === 'lg' ? 'lg' : density === 'sm' ? 'sm' : 'md'}
         classNames={tx('card.root', { border, fullWidth }, className)}
         role={role ?? 'group'}
       >
@@ -134,22 +123,22 @@ const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>((props
 CardDragHandle.displayName = CARD_DRAG_HANDLE_NAME;
 
 //
-// CloseIconButton
+// ActionIconButton
 //
 
-const CARD_CLOSE_ICON_BUTTON_NAME = 'Card.CloseIconButton';
+const CARD_ACTION_ICON_BUTTON_NAME = 'Card.ActionIconButton';
 
-type CloseIconButtonProps = ToolbarCloseIconButtonProps;
+type CardActionIconButtonProps = ToolbarActionIconButtonProps;
 
-const CloseIconButton = forwardRef<HTMLButtonElement, CloseIconButtonProps>((props, forwardedRef) => {
+const CardActionIconButton = forwardRef<HTMLButtonElement, CardActionIconButtonProps>((props, forwardedRef) => {
   return (
     <CardIconBlock padding>
-      <Toolbar.CloseIconButton {...props} ref={forwardedRef} />
+      <Toolbar.ActionIconButton {...props} ref={forwardedRef} />
     </CardIconBlock>
   );
 });
 
-CloseIconButton.displayName = CARD_CLOSE_ICON_BUTTON_NAME;
+CardActionIconButton.displayName = CARD_ACTION_ICON_BUTTON_NAME;
 
 //
 // Menu
@@ -157,22 +146,17 @@ CloseIconButton.displayName = CARD_CLOSE_ICON_BUTTON_NAME;
 
 const CARD_MENU_NAME = 'Card.Menu';
 
-type CardMenuItem<T extends any | void = void> = ToolbarMenuItem<T>;
-
 type CardMenuProps<T extends any | void = void> = ToolbarMenuProps<T>;
 
-const CardMenu = <T extends any | void = void>({ context, items, ...props }: CardMenuProps<T>) => {
-  const { menuItems } = useContext(CardContext) ?? {};
-  const combinedItems = [...(items ?? []), ...((menuItems as CardMenuItem<T>[]) ?? [])];
-
+function CardMenu<T extends any | void = void>({ context, items, ...props }: CardMenuProps<T>) {
   return (
     <CardIconBlock padding>
-      <Toolbar.Menu {...props} context={context} items={combinedItems} />
+      <Toolbar.Menu {...props} context={context} items={items ?? []} />
     </CardIconBlock>
   );
-};
+}
 
-(CardMenu as any).displayName = CARD_MENU_NAME;
+CardMenu.displayName = CARD_MENU_NAME;
 
 //
 // Icon
@@ -180,15 +164,15 @@ const CardMenu = <T extends any | void = void>({ context, items, ...props }: Car
 
 const CARD_ICON_NAME = 'Card.Icon';
 
-const CardIcon = (props: IconProps) => {
+function CardIcon(props: IconProps) {
   return (
     <CardIconBlock>
       <Icon {...props} />
     </CardIconBlock>
   );
-};
+}
 
-(CardIcon as any).displayName = CARD_ICON_NAME;
+CardIcon.displayName = CARD_ICON_NAME;
 
 //
 // IconBlock
@@ -251,6 +235,48 @@ const CardContent = slottable<HTMLDivElement>(({ children, asChild, ...props }, 
 CardContent.displayName = CARD_CONTENT_NAME;
 
 //
+// Section
+//
+
+const CARD_SECTION_NAME = 'Card.Section';
+
+type CardSectionProps = { title?: ReactNode };
+
+/**
+ * A labeled grouping of card content. `display: contents` keeps children aligned
+ * to the Card's column grid (like `Card.Content`); when `title` is provided,
+ * renders a subheading row at the top and exposes the group with
+ * `role='group' aria-labelledby=…` for screen readers.
+ */
+const CardSection = slottable<HTMLDivElement, CardSectionProps>(
+  ({ children, asChild, title, role, ...props }, forwardedRef) => {
+    const { className, ...rest } = composableProps(props);
+    const Comp = asChild ? Slot : Primitive.div;
+    const { tx } = useThemeContext();
+    const titleId = useId();
+
+    return (
+      <Comp
+        {...rest}
+        role={role ?? (title ? 'group' : 'none')}
+        aria-labelledby={title ? titleId : undefined}
+        className={tx('card.section', {}, className)}
+        ref={forwardedRef}
+      >
+        {title && (
+          <div id={titleId} className={tx('card.section-title', {})}>
+            {title}
+          </div>
+        )}
+        {children}
+      </Comp>
+    );
+  },
+);
+
+CardSection.displayName = CARD_SECTION_NAME;
+
+//
 // Row
 //
 
@@ -258,75 +284,29 @@ const CARD_ROW_NAME = 'Card.Row';
 
 type CardRowProps = { icon?: string; fullWidth?: boolean };
 
-// TODO(burdon): fullWidth should mean no columns.
-const CardRow = slottable<HTMLDivElement, CardRowProps>(({ children, asChild, icon, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps(props);
-  const Comp = asChild ? Slot : Primitive.div;
-  const { tx } = useThemeContext();
-
-  return (
-    <Comp {...rest} className={tx('card.row', {}, className)} ref={forwardedRef}>
-      {(icon && <CardIcon classNames='text-subdued' icon={icon} size={4} />) || <div />}
-      {children}
-    </Comp>
-  );
-});
-
-CardRow.displayName = CARD_ROW_NAME;
-
-//
-// Section
-//
-
-const CARD_SECTION_NAME = 'Card.Section';
-
 /**
- * @deprecated Merge with Card.Row fullWidth
+ * A row inside a Card.
+ * - Default: spans all 3 columns and establishes a subgrid so children align to the Card's columns.
+ *   An optional `icon` lands in the first column; when omitted, the first column is left empty.
+ * - `fullWidth`: spans all columns without a subgrid — children do their own internal layout.
+ *   The `icon` prop is ignored in this mode.
  */
-const CardSection = slottable<HTMLDivElement>(({ children, asChild, role, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps(props);
-  const Comp = asChild ? Slot : Primitive.div;
-
-  return (
-    <Comp {...rest} role={role ?? 'none'} className={mx('col-span-full', className)} ref={forwardedRef}>
-      {children}
-    </Comp>
-  );
-});
-
-CardSection.displayName = CARD_SECTION_NAME;
-
-//
-// Heading
-//
-
-const CARD_HEADING_NAME = 'Card.Heading';
-
-type CardHeadingProps = { variant?: 'default' | 'subtitle' };
-
-/**
- * @deprecated Use typography.
- */
-const CardHeading = slottable<HTMLDivElement, CardHeadingProps>(
-  ({ children, asChild, role, variant = 'default', ...props }, forwardedRef) => {
+const CardRow = slottable<HTMLDivElement, CardRowProps>(
+  ({ children, asChild, icon, fullWidth, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
     const Comp = asChild ? Slot : Primitive.div;
     const { tx } = useThemeContext();
 
     return (
-      <Comp
-        {...rest}
-        role={role ?? 'heading'}
-        className={tx('card.heading', { variant }, className)}
-        ref={forwardedRef}
-      >
+      <Comp {...rest} className={tx('card.row', { fullWidth }, className)} ref={forwardedRef}>
+        {!fullWidth && (icon ? <CardIcon classNames='text-subdued' icon={icon} size={4} /> : <div />)}
         {children}
       </Comp>
     );
   },
 );
 
-CardHeading.displayName = CARD_HEADING_NAME;
+CardRow.displayName = CARD_ROW_NAME;
 
 //
 // Text
@@ -364,7 +344,7 @@ type CardHtmlProps = { html: string; variant?: 'default' | 'description' };
  * Renders sanitized HTML content inside a card text slot.
  * Uses DOMPurify to prevent XSS from untrusted markup (e.g. RSS feed content).
  */
-const CardHtml = ({ html, variant = 'default', ...props }: CardHtmlProps & ThemedClassName<object>) => {
+function CardHtml({ html, variant = 'default', ...props }: CardHtmlProps & ThemedClassName<object>) {
   const { tx } = useThemeContext();
   const sanitized = useMemo(() => DOMPurify.sanitize(html), [html]);
 
@@ -376,9 +356,9 @@ const CardHtml = ({ html, variant = 'default', ...props }: CardHtmlProps & Theme
       dangerouslySetInnerHTML={{ __html: sanitized }}
     />
   );
-};
+}
 
-(CardHtml as any).displayName = CARD_HTML_NAME;
+CardHtml.displayName = CARD_HTML_NAME;
 
 //
 // Poster
@@ -400,7 +380,7 @@ type CardPosterProps = ThemedClassName<
   } & Partial<{ image: string; icon: string }>
 >;
 
-const CardPoster = (props: CardPosterProps) => {
+function CardPoster(props: CardPosterProps) {
   const { tx } = useThemeContext();
   const aspect = props.aspect === 'auto' ? 'aspect-auto' : 'aspect-video';
 
@@ -424,9 +404,9 @@ const CardPoster = (props: CardPosterProps) => {
       </div>
     );
   }
-};
+}
 
-(CardPoster as any).displayName = CARD_POSTER_NAME;
+CardPoster.displayName = CARD_POSTER_NAME;
 
 //
 // Action
@@ -436,7 +416,7 @@ const CARD_ACTION_NAME = 'Card.Action';
 
 type CardActionProps = { icon?: string; label: string; actionIcon?: string; onClick?: () => void };
 
-const CardAction = ({ icon, actionIcon = 'ph--arrow-right--regular', label, onClick }: CardActionProps) => {
+function CardAction({ icon, actionIcon = 'ph--arrow-right--regular', label, onClick }: CardActionProps) {
   const { tx } = useThemeContext();
   return (
     <Button variant='ghost' classNames={tx('card.action', {})} onClick={onClick}>
@@ -445,9 +425,9 @@ const CardAction = ({ icon, actionIcon = 'ph--arrow-right--regular', label, onCl
       {actionIcon && <CardIcon icon={actionIcon} size={4} />}
     </Button>
   );
-};
+}
 
-(CardAction as any).displayName = CARD_ACTION_NAME;
+CardAction.displayName = CARD_ACTION_NAME;
 
 //
 // Link
@@ -457,7 +437,7 @@ const CARD_LINK_NAME = 'Card.Link';
 
 type CardLinkProps = { label: string; href: string };
 
-const CardLink = ({ label, href }: CardLinkProps) => {
+function CardLink({ label, href }: CardLinkProps) {
   const { tx } = useThemeContext();
   return (
     <a className={tx('card.link', {})} data-variant='ghost' href={href} target='_blank' rel='noreferrer'>
@@ -466,9 +446,9 @@ const CardLink = ({ label, href }: CardLinkProps) => {
       <CardIcon classNames='invisible group-hover:visible' icon='ph--arrow-square-out--regular' />
     </a>
   );
-};
+}
 
-(CardLink as any).displayName = CARD_LINK_NAME;
+CardLink.displayName = CARD_LINK_NAME;
 
 //
 // Card
@@ -479,22 +459,21 @@ export const Card = {
 
   // Toolbar
   Toolbar: CardToolbar,
-  ToolbarIconButton: Toolbar.IconButton,
-  ToolbarSeparator: Toolbar.Separator,
 
-  // Toolbar blocks
+  // Toolbar parts
   IconBlock: CardIconBlock,
   DragHandle: CardDragHandle,
-  CloseIconButton: CloseIconButton,
+  ActionIconButton: CardActionIconButton,
   Menu: CardMenu,
   Icon: CardIcon,
   Title: CardTitle,
 
   // Content
   Content: CardContent,
-  Row: CardRow,
   Section: CardSection,
-  Heading: CardHeading,
+  Row: CardRow,
+
+  // Content parts
   Text: CardText,
   Html: CardHtml,
   Poster: CardPoster,
@@ -503,10 +482,10 @@ export const Card = {
 };
 
 export type {
-  CardContextValue,
   CardRootProps,
   CardToolbarProps,
   CardDragHandleProps,
-  CloseIconButtonProps,
+  CardActionIconButtonProps,
   CardMenuProps,
+  CardSectionProps,
 };

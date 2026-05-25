@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { getPersonalSpace } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
+import { Filter } from '@dxos/echo';
 import { ClientCapabilities } from '@dxos/plugin-client';
-import { Filter } from '@dxos/react-client/echo';
 
 import { Journal, OutlineOperation } from '../types';
 

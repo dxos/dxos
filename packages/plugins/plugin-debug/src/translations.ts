@@ -21,7 +21,7 @@ export const translations = [
         'debug.label': 'Debug',
         'generate-objects.label': 'Generate Objects',
         'debug-app-graph.label': 'App Graph',
-        'debug-tools-explorer.label': 'Tools Explorer',
+        'debug-tools-explorer.label': 'SDK Explorer',
 
         'settings.wireframe.label': 'Show wireframes.',
         'settings.wireframe.description': 'Overlay wireframe outlines on UI components for debugging layout.',
@@ -85,6 +85,12 @@ export const translations = [
         'workflows.label': 'Workflows',
         'traces.label': 'Traces',
         'testing.label': 'Testing',
+        // GitHub (deck-companion--github surface).
+        'github-loading.message': 'Loading…',
+        'github-unavailable.message': 'GitHub feed unavailable.',
+        'recent-prs.label_one': '{{count}} recent PR',
+        'recent-prs.label_other': '{{count}} recent PRs',
+        'view-on-github.button': 'View on GitHub',
       },
     },
   },

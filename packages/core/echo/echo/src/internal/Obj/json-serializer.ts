@@ -8,7 +8,7 @@ import { raise } from '@dxos/debug';
 import { type EncodedReference, ObjectStructure, isEncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
-import { assumeType, deepMapValues, visitValues } from '@dxos/util';
+import { assumeType, decodeUint8ArrayFromJson, deepMapValues, isEncodedUint8Array, visitValues } from '@dxos/util';
 
 import type * as Database from '../../Database';
 import type * as Obj from '../../Obj';
@@ -95,7 +95,7 @@ export const objectFromJSON = async (
   const type = DXN.parse(jsonData[ATTR_TYPE]);
   const schema = await refResolver?.resolveSchema(type);
   invariant(schema === undefined || Schema.isSchema(schema));
-  const decodedInput = stripInternalJsonKeys(jsonData);
+  const decodedInput = restoreUint8Arrays(stripInternalJsonKeys(jsonData));
 
   let obj: any;
   if (schema != null) {
@@ -116,15 +116,15 @@ export const objectFromJSON = async (
   const isRelation =
     typeof jsonData[ATTR_RELATION_SOURCE] === 'string' || typeof jsonData[ATTR_RELATION_TARGET] === 'string';
   if (isRelation) {
-    const sourceDxn: DXN = DXN.parse(jsonData[ATTR_RELATION_SOURCE] ?? raise(new TypeError('Missing relation source')));
-    const targetDxn: DXN = DXN.parse(jsonData[ATTR_RELATION_TARGET] ?? raise(new TypeError('Missing relation target')));
+    const sourceDXN: DXN = DXN.parse(jsonData[ATTR_RELATION_SOURCE] ?? raise(new TypeError('Missing relation source')));
+    const targetDXN: DXN = DXN.parse(jsonData[ATTR_RELATION_TARGET] ?? raise(new TypeError('Missing relation target')));
 
-    const source = (await refResolver?.resolve(sourceDxn)) as AnyEntity | undefined;
-    const target = (await refResolver?.resolve(targetDxn)) as AnyEntity | undefined;
+    const source = (await refResolver?.resolve(sourceDXN)) as AnyEntity | undefined;
+    const target = (await refResolver?.resolve(targetDXN)) as AnyEntity | undefined;
 
     defineHiddenProperty(obj, KindId, EntityKind.Relation);
-    defineHiddenProperty(obj, RelationSourceDXNId, sourceDxn);
-    defineHiddenProperty(obj, RelationTargetDXNId, targetDxn);
+    defineHiddenProperty(obj, RelationSourceDXNId, sourceDXN);
+    defineHiddenProperty(obj, RelationTargetDXNId, targetDXN);
     defineHiddenProperty(obj, RelationSourceId, source);
     defineHiddenProperty(obj, RelationTargetId, target);
   } else {
@@ -142,8 +142,8 @@ export const objectFromJSON = async (
   }
 
   if (jsonData[ATTR_PARENT]) {
-    const parentDxn = DXN.parse(jsonData[ATTR_PARENT]);
-    const resolvedParent = (await refResolver?.resolve(parentDxn)) as Obj.Unknown | undefined;
+    const parentDXN = DXN.parse(jsonData[ATTR_PARENT]);
+    const resolvedParent = (await refResolver?.resolve(parentDXN)) as Obj.Unknown | undefined;
     defineHiddenProperty(obj, ParentId, resolvedParent);
   } else if (parent) {
     defineHiddenProperty(obj, ParentId, parent);
@@ -174,17 +174,32 @@ const decodeGeneric = (jsonData: unknown, options: { refResolver?: RefResolver }
     if (isEncodedReference(value)) {
       return refFromEncodedReference(value, options.refResolver);
     }
+    if (isEncodedUint8Array(value)) {
+      return decodeUint8ArrayFromJson(value);
+    }
 
     return visitor(value);
   });
 };
+
+/**
+ * Recursively replaces encoded `Uint8Array` JSON markers with actual `Uint8Array` instances.
+ * Runs before schema decoding so `Schema.Uint8ArrayFromSelf` sees real bytes.
+ */
+const restoreUint8Arrays = (data: unknown): any =>
+  deepMapValues(data, (value, recurse) => {
+    if (isEncodedUint8Array(value)) {
+      return decodeUint8ArrayFromJson(value);
+    }
+    return recurse(value);
+  });
 
 const stripInternalJsonKeys = (jsonData: unknown) => {
   const {
     [ATTR_TYPE]: _type,
     [ATTR_META]: _meta,
     [ATTR_DELETED]: _deleted,
-    [ATTR_SELF_DXN]: _selfDxn,
+    [ATTR_SELF_DXN]: _selfDXN,
     [ATTR_RELATION_SOURCE]: _relationSource,
     [ATTR_RELATION_TARGET]: _relationTarget,
     ...props

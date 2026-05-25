@@ -11,8 +11,18 @@ import * as SchemaAST from 'effect/SchemaAST';
 import * as String from 'effect/String';
 import type * as Types from 'effect/Types';
 
-import { type Database, Filter, Format, JsonSchema, Obj, Query, Ref, type SchemaRegistry, Type } from '@dxos/echo';
-import { View } from '@dxos/echo';
+import {
+  type Database,
+  Filter,
+  Format,
+  JsonSchema,
+  Obj,
+  Query,
+  Ref,
+  type SchemaRegistry,
+  Type,
+  View,
+} from '@dxos/echo';
 import {
   type JsonSchemaType,
   LabelAnnotation,
@@ -166,13 +176,13 @@ export const makeWithReferences = async ({
     projection.showFieldProjection(name);
 
     await Effect.gen(function* () {
-      const referenceDxn = yield* Function.pipe(
+      const referenceDXN = yield* Function.pipe(
         findAnnotation<ReferenceAnnotationValue>(property.type, ReferenceAnnotationId),
         Option.fromNullable,
         Option.map((ref) => DXN.fromTypenameAndVersion(ref.typename, ref.version)),
       );
 
-      const referenceSchema = yield* Effect.tryPromise(() => getSchema(referenceDxn, registry));
+      const referenceSchema = yield* Effect.tryPromise(() => getSchema(referenceDXN, registry));
 
       const referencePath = yield* Function.pipe(
         Option.fromNullable(referenceSchema),

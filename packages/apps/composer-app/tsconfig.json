@@ -38,6 +38,9 @@
       "path": "../../../tools/vite-plugin-log"
     },
     {
+      "path": "../../../tools/vite-plugin-shutdown"
+    },
+    {
       "path": "../../common/async"
     },
     {
@@ -242,6 +245,9 @@
       "path": "../../plugins/plugin-board"
     },
     {
+      "path": "../../plugins/plugin-calls"
+    },
+    {
       "path": "../../plugins/plugin-chess"
     },
     {
@@ -255,9 +261,6 @@
     },
     {
       "path": "../../plugins/plugin-crx"
-    },
-    {
-      "path": "../../plugins/plugin-daily-summary"
     },
     {
       "path": "../../plugins/plugin-debug"
@@ -278,7 +281,7 @@
       "path": "../../plugins/plugin-feed"
     },
     {
-      "path": "../../plugins/plugin-files"
+      "path": "../../plugins/plugin-file"
     },
     {
       "path": "../../plugins/plugin-gallery"
@@ -287,13 +290,13 @@
       "path": "../../plugins/plugin-game"
     },
     {
+      "path": "../../plugins/plugin-generator"
+    },
+    {
       "path": "../../plugins/plugin-github"
     },
     {
       "path": "../../plugins/plugin-graph"
-    },
-    {
-      "path": "../../plugins/plugin-help"
     },
     {
       "path": "../../plugins/plugin-inbox"
@@ -368,6 +371,9 @@
       "path": "../../plugins/plugin-search"
     },
     {
+      "path": "../../plugins/plugin-sequencer"
+    },
+    {
       "path": "../../plugins/plugin-settings"
     },
     {
@@ -401,6 +407,9 @@
       "path": "../../plugins/plugin-status-bar"
     },
     {
+      "path": "../../plugins/plugin-support"
+    },
+    {
       "path": "../../plugins/plugin-table"
     },
     {
@@ -420,6 +429,9 @@
     },
     {
       "path": "../../plugins/plugin-trello"
+    },
+    {
+      "path": "../../plugins/plugin-trip"
     },
     {
       "path": "../../plugins/plugin-voxel"

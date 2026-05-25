@@ -41,7 +41,7 @@ const tags = ['red', 'green', 'blue'];
 Obj.make(TestSchema.Expando, { foo: 100 });
 
 type ObjectProps = {
-  [Obj.Meta]?: { tags?: string[] };
+  [Obj.Meta]?: { tags?: string[]; key?: string; version?: string };
   value?: number;
 };
 
@@ -207,6 +207,107 @@ describe('Query', () => {
         .query(Filter.foreignKeys(TestSchema.Expando, [{ id: 'test-id', source: 'test-source' }]))
         .run();
       expect(objects).toEqual([obj]);
+    });
+
+    test('filter by meta key', async ({ expect }) => {
+      const target = db.add(
+        Obj.make(TestSchema.Expando, {
+          [Obj.Meta]: { key: 'org.example.type.foo', version: '1.2.3' },
+          value: 42,
+        }),
+      );
+      db.add(
+        Obj.make(TestSchema.Expando, {
+          [Obj.Meta]: { key: 'org.example.type.bar', version: '1.2.3' },
+          value: 43,
+        }),
+      );
+      await db.flush();
+
+      const objects = await db.query(Filter.key('org.example.type.foo')).run();
+      expect(objects).toEqual([target]);
+    });
+
+    test('filter by meta key matches any version when range omitted', async ({ expect }) => {
+      const matchingA = db.add(
+        Obj.make(TestSchema.Expando, {
+          [Obj.Meta]: { key: 'org.example.type.foo', version: '1.0.0' },
+          value: 1,
+        }),
+      );
+      const matchingB = db.add(
+        Obj.make(TestSchema.Expando, {
+          [Obj.Meta]: { key: 'org.example.type.foo' },
+          value: 2,
+        }),
+      );
+      db.add(
+        Obj.make(TestSchema.Expando, {
+          [Obj.Meta]: { key: 'org.example.type.other', version: '1.0.0' },
+          value: 3,
+        }),
+      );
+      await db.flush();
+
+      const objects = await db.query(Filter.key('org.example.type.foo')).run();
+      expect(new Set(objects.map((o) => o.id))).toEqual(new Set([matchingA.id, matchingB.id]));
+    });
+
+    test('filter by meta key with semver caret range', async ({ expect }) => {
+      const match = db.add(
+        Obj.make(TestSchema.Expando, {
+          [Obj.Meta]: { key: 'org.example.type.foo', version: '1.5.0' },
+          value: 1,
+        }),
+      );
+      db.add(
+        Obj.make(TestSchema.Expando, {
+          [Obj.Meta]: { key: 'org.example.type.foo', version: '2.0.0' },
+          value: 2,
+        }),
+      );
+      db.add(
+        Obj.make(TestSchema.Expando, {
+          [Obj.Meta]: { key: 'org.example.type.foo', version: '1.0.0' },
+          value: 3,
+        }),
+      );
+      await db.flush();
+
+      const objects = await db.query(Filter.key('org.example.type.foo', { version: '^1.2.3' })).run();
+      expect(objects).toEqual([match]);
+    });
+
+    test('filter by meta key with semver tilde range', async ({ expect }) => {
+      const match = db.add(
+        Obj.make(TestSchema.Expando, {
+          [Obj.Meta]: { key: 'org.example.type.foo', version: '1.2.7' },
+          value: 1,
+        }),
+      );
+      db.add(
+        Obj.make(TestSchema.Expando, {
+          [Obj.Meta]: { key: 'org.example.type.foo', version: '1.3.0' },
+          value: 2,
+        }),
+      );
+      await db.flush();
+
+      const objects = await db.query(Filter.key('org.example.type.foo', { version: '~1.2.3' })).run();
+      expect(objects).toEqual([match]);
+    });
+
+    test('filter by meta key excludes objects without version when range specified', async ({ expect }) => {
+      db.add(
+        Obj.make(TestSchema.Expando, {
+          [Obj.Meta]: { key: 'org.example.type.foo' },
+          value: 1,
+        }),
+      );
+      await db.flush();
+
+      const objects = await db.query(Filter.key('org.example.type.foo', { version: '^1.0.0' })).run();
+      expect(objects).toEqual([]);
     });
 
     test('filter by foreign keys without flushing index', async () => {
@@ -524,7 +625,7 @@ describe('Query', () => {
       const obj: TestSchema.Task = await db
         .query(
           Query.select(Filter.type(TestSchema.Task, { title: 'Queue type selector task' })).from({
-            queues: [queue.dxn.toString()],
+            feeds: [queue.dxn.toString()],
           }),
         )
         .first();
@@ -569,7 +670,7 @@ describe('Query', () => {
       }
 
       {
-        // allQueuesFromSpaces: true → space + all queue objects.
+        // allFeedsFromSpaces: true → space + all queue objects.
         const results = await graph
           .query(Query.select(Filter.type(TestSchema.Task)).from([db1, db2], { includeFeeds: true }))
           .run();
@@ -583,7 +684,7 @@ describe('Query', () => {
           .query(
             Query.select(Filter.type(TestSchema.Task)).from({
               spaceIds: bothSpaces,
-              queues: [queue1.dxn.toString()],
+              feeds: [queue1.dxn.toString()],
             }),
           )
           .run();
@@ -597,7 +698,7 @@ describe('Query', () => {
           .query(
             Query.select(Filter.type(TestSchema.Task)).from({
               spaceIds: bothSpaces,
-              queues: [queue2.dxn.toString()],
+              feeds: [queue2.dxn.toString()],
             }),
           )
           .run();
@@ -606,12 +707,12 @@ describe('Query', () => {
       }
 
       {
-        // Both queues explicitly → same as allQueuesFromSpaces.
+        // Both queues explicitly → same as allFeedsFromSpaces.
         const results = await graph
           .query(
             Query.select(Filter.type(TestSchema.Task)).from({
               spaceIds: bothSpaces,
-              queues: [queue1.dxn.toString(), queue2.dxn.toString()],
+              feeds: [queue1.dxn.toString(), queue2.dxn.toString()],
             }),
           )
           .run();
@@ -620,7 +721,7 @@ describe('Query', () => {
       }
 
       {
-        // Single space with allQueuesFromSpaces → only that space's objects + queues.
+        // Single space with allFeedsFromSpaces → only that space's objects + queues.
         const results = await graph
           .query(Query.select(Filter.type(TestSchema.Task)).from(db1, { includeFeeds: true }))
           .run();
@@ -820,8 +921,8 @@ describe('Query', () => {
 
       // Create a feed object - its queue DXN is derived from the feed's own DXN.
       const feed = db.add(Feed.make({ name: 'test-feed' }));
-      const feedDxn = Feed.getQueueDxn(feed)!;
-      const queue = queues.get(feedDxn);
+      const feedDXN = Feed.getQueueDxn(feed)!;
+      const queue = queues.get(feedDXN);
 
       // Add items to the queue and a separate item to the space.
       db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
@@ -843,8 +944,8 @@ describe('Query', () => {
       const queues = peer.client.constructQueueFactory(db.spaceId);
 
       const feed = db.add(Feed.make({ name: 'test-feed' }));
-      const feedDxn = Feed.getQueueDxn(feed)!;
-      const queue = queues.get(feedDxn);
+      const feedDXN = Feed.getQueueDxn(feed)!;
+      const queue = queues.get(feedDXN);
 
       const feedItem = Obj.make(TestSchema.Task, { title: 'Feed Task' });
       const spaceItem = db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
@@ -873,14 +974,14 @@ describe('Query', () => {
       expect(results).toHaveLength(0);
     });
 
-    test('from({ queues: [] }) returns empty results', async () => {
+    test('from({ feeds: [] }) returns empty results', async () => {
       const peer = await builder.createPeer({ types: [TestSchema.Task] });
       const db = await peer.createDatabase();
 
       db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
       await db.flush({ indexes: true });
 
-      const results = await db.query(Query.select(Filter.type(TestSchema.Task)).from({ queues: [] })).run();
+      const results = await db.query(Query.select(Filter.type(TestSchema.Task)).from({ feeds: [] })).run();
       expect(results).toHaveLength(0);
     });
 
@@ -890,8 +991,8 @@ describe('Query', () => {
       const queues = peer.client.constructQueueFactory(db.spaceId);
 
       const feed = db.add(Feed.make({ name: 'test-feed' }));
-      const feedDxn = Feed.getQueueDxn(feed)!;
-      const queue = queues.get(feedDxn);
+      const feedDXN = Feed.getQueueDxn(feed)!;
+      const queue = queues.get(feedDXN);
 
       db.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
       await queue.append([
@@ -1559,8 +1660,8 @@ describe('Query', () => {
       const queues = feedPeer.client.constructQueueFactory(feedDb.spaceId);
 
       const feed = feedDb.add(Feed.make({ name: 'test-feed' }));
-      const feedDxn = Feed.getQueueDxn(feed)!;
-      const queue = queues.get(feedDxn);
+      const feedDXN = Feed.getQueueDxn(feed)!;
+      const queue = queues.get(feedDXN);
 
       // Space-only task (should NOT appear as a child of the feed).
       feedDb.add(Obj.make(TestSchema.Task, { title: 'Space Task' }));
@@ -1864,7 +1965,7 @@ describe('Query', () => {
         const objects = await db
           .query(
             Query.select(Filter.text('TypeScript', { type: 'full-text' })).from({
-              queues: [queue.dxn.toString()],
+              feeds: [queue.dxn.toString()],
             }),
           )
           .run();
@@ -1875,7 +1976,7 @@ describe('Query', () => {
       // Search for React.
       {
         const objects = await db
-          .query(Query.select(Filter.text('React', { type: 'full-text' })).from({ queues: [queue.dxn.toString()] }))
+          .query(Query.select(Filter.text('React', { type: 'full-text' })).from({ feeds: [queue.dxn.toString()] }))
           .run();
         expect(objects).toHaveLength(1);
         expect((objects[0] as TestSchema.Task).title).toEqual('Getting Started with React');
@@ -1886,7 +1987,7 @@ describe('Query', () => {
         const objects = await db
           .query(
             Query.select(Filter.text('JavaScript', { type: 'full-text' })).from({
-              queues: [queue.dxn.toString()],
+              feeds: [queue.dxn.toString()],
             }),
           )
           .run();
@@ -1894,7 +1995,7 @@ describe('Query', () => {
       }
     });
 
-    test('full-text search with allQueuesFromSpaces via indexer2', async () => {
+    test('full-text search with allFeedsFromSpaces via indexer2', async () => {
       const peer = await builder.createPeer({ types: [TestSchema.Task] });
       const db = await peer.createDatabase();
       const queues = peer.client.constructQueueFactory(db.spaceId);
@@ -1909,7 +2010,7 @@ describe('Query', () => {
       // Wait for indexing.
       await db.flush();
 
-      // Search with allQueuesFromSpaces: true should return both space and queue objects.
+      // Search with allFeedsFromSpaces: true should return both space and queue objects.
       {
         const objects: TestSchema.Task[] = await db
           .query(Query.select(Filter.text('TypeScript', { type: 'full-text' })).from(db, { includeFeeds: true }))
@@ -1918,7 +2019,7 @@ describe('Query', () => {
         expect(objects.map((_) => _.title).sort()).toEqual(['Queue Object TypeScript', 'Space Object TypeScript']);
       }
 
-      // Search without allQueuesFromSpaces should return only space objects.
+      // Search without allFeedsFromSpaces should return only space objects.
       {
         const objects = await db.query(Query.select(Filter.text('TypeScript', { type: 'full-text' }))).run();
         expect(objects).toHaveLength(1);
@@ -1940,7 +2041,7 @@ describe('Query', () => {
       const obj: TestSchema.Task = await db
         .query(
           Query.select(Filter.text('TypeScript', { type: 'full-text' })).from({
-            queues: [queue.dxn.toString()],
+            feeds: [queue.dxn.toString()],
           }),
         )
         .first();
@@ -2471,8 +2572,8 @@ describe('Query', () => {
       const feed = db.add(Feed.make({ name: 'test-feed' }));
       await db.flush();
 
-      const feedDxn = Feed.getQueueDxn(feed)!;
-      const queue = queues.get(feedDxn);
+      const feedDXN = Feed.getQueueDxn(feed)!;
+      const queue = queues.get(feedDXN);
       await queue.append([Obj.make(TestSchema.Task, { title: 'Task in feed' })]);
       await db.flush();
 
@@ -2494,8 +2595,8 @@ describe('Query', () => {
       );
       await db.flush();
 
-      const feedDxn = Feed.getQueueDxn(feed)!;
-      const queue = queues.get(feedDxn);
+      const feedDXN = Feed.getQueueDxn(feed)!;
+      const queue = queues.get(feedDXN);
       await queue.append([Obj.make(TestSchema.Task, { title: 'Grandchild task' })]);
       await db.flush();
 
@@ -2517,8 +2618,8 @@ describe('Query', () => {
       );
       await db.flush();
 
-      const feedDxn = Feed.getQueueDxn(feed)!;
-      const queue = queues.get(feedDxn);
+      const feedDXN = Feed.getQueueDxn(feed)!;
+      const queue = queues.get(feedDXN);
       await queue.append([Obj.make(TestSchema.Task, { title: 'Task from feed' })]);
       await db.flush();
 
@@ -2542,10 +2643,10 @@ describe('Query', () => {
       const feed2 = db.add(Feed.make({ name: 'feed-2' }));
       await db.flush();
 
-      const feedDxn1 = Feed.getQueueDxn(feed1)!;
-      const feedDxn2 = Feed.getQueueDxn(feed2)!;
-      const queue1 = queues.get(feedDxn1);
-      const queue2 = queues.get(feedDxn2);
+      const feedDXN1 = Feed.getQueueDxn(feed1)!;
+      const feedDXN2 = Feed.getQueueDxn(feed2)!;
+      const queue1 = queues.get(feedDXN1);
+      const queue2 = queues.get(feedDXN2);
 
       await queue1.append([Obj.make(TestSchema.Task, { title: 'Task in feed 1' })]);
       await queue2.append([Obj.make(TestSchema.Task, { title: 'Task in feed 2' })]);

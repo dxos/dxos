@@ -10,11 +10,9 @@ import { MemoizedAiService } from '@dxos/ai/testing';
 import { AiSession } from '@dxos/assistant';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { Blueprint, Trigger, Operation, OperationHandlerSet } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
+import { Collection, Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
-import { QueueService } from '@dxos/functions';
 import { TriggerDispatcher } from '@dxos/functions-runtime';
 import { AssistantTestLayerWithTriggers } from '@dxos/functions-runtime/testing';
 import { invariant } from '@dxos/invariant';
@@ -98,11 +96,11 @@ describe('Agent', () => {
         const session = yield* acquireReleaseResource(() => new AiSession.Session({ feed: chatFeed, runtime }));
         yield* Effect.promise(() => session.context.open());
 
-        const documentDxn = Obj.getDXN(document);
+        const documentDXN = Obj.getDXN(document);
         yield* session
           .createRequest({
             system: SYSTEM,
-            prompt: `Please add the document ${documentDxn} as an artifact named "My Test Document" to this agent.`,
+            prompt: `Please add the document ${documentDXN} as an artifact named "My Test Document" to this agent.`,
           })
           .pipe(Effect.provide(session.makeToolExecutionServices()));
 
@@ -174,11 +172,11 @@ describe('Agent', () => {
         );
         yield* Database.flush();
 
-        const inboxQueue = yield* QueueService.createQueue();
+        const inboxFeed = yield* Database.add(Feed.make());
         yield* Database.add(
           Trigger.make({
             enabled: true,
-            spec: Trigger.specQueue(inboxQueue.dxn.toString()),
+            spec: Trigger.specFeed(inboxFeed),
             function: Ref.make(Operation.serialize(AgentWorker)),
             input: {
               agent: Ref.make(agent),
@@ -187,13 +185,13 @@ describe('Agent', () => {
           }),
         );
 
-        yield* QueueService.append(
-          inboxQueue,
+        yield* Feed.append(
+          inboxFeed,
           TEST_MESSAGES.map((message) => Obj.clone(message)),
         );
 
         const dispatcher = yield* TriggerDispatcher;
-        const invocations = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'], untilExhausted: true });
+        const invocations = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'], untilExhausted: true });
         expect(invocations.every((invocation) => Exit.isSuccess(invocation.result))).toBe(true);
 
         console.log(yield* Effect.promise(() => dumpAgent(agent)));
@@ -240,7 +238,7 @@ describe('Agent', () => {
         invariant(timerTrigger.function);
         const operation = yield* Database.load(timerTrigger.function);
         invariant(Obj.instanceOf(Operation.PersistentOperation, operation));
-        expect(operation.key).toBe(AgentWorker.meta.key);
+        expect(Obj.getMeta(operation).key).toBe(AgentWorker.meta.key);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

@@ -22,10 +22,7 @@ export const RelatedMessages = ({ messages, onMessageClick }: RelatedMessagesPro
   }
 
   return (
-    <>
-      <Card.Row>
-        <Card.Heading variant='subtitle'>{t('related-messages.title')}</Card.Heading>
-      </Card.Row>
+    <Card.Section title={t('related-messages.title')}>
       {messages.map((message) => (
         <Card.Action
           key={message.id}
@@ -35,6 +32,6 @@ export const RelatedMessages = ({ messages, onMessageClick }: RelatedMessagesPro
           onClick={() => onMessageClick?.(message)}
         />
       ))}
-    </>
+    </Card.Section>
   );
 };

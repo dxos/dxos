@@ -91,7 +91,13 @@ const meta = {
 
         // Functions.
         functions.forEach((fn) => {
-          space.db.add(Obj.make(Operation.PersistentOperation, { ...fn, version: fn.version ?? '0.1.0' }));
+          const { key, version, ...data } = fn;
+          space.db.add(
+            Obj.make(Operation.PersistentOperation, {
+              [Obj.Meta]: { key, version: version ?? '0.1.0' },
+              ...data,
+            }),
+          );
         });
 
         // Objects.
@@ -159,8 +165,9 @@ export const Spec: Story = {
     await expect(combobox).not.toBeDisabled();
     await expect(canvas.queryByLabelText('Method')).not.toBeInTheDocument();
 
-    // Feed — should show DXN field (the queue address). DXN is a combobox, not an input, so use getByText.
+    // Feed — should show Feed field label (distinct from kind combobox value).
     await selectKind(combobox, 'f');
-    await expect(canvas.findByText('DXN')).resolves.toBeInTheDocument();
+    await expect(combobox).not.toBeDisabled();
+    await expect(await canvas.findByText('Feed', { selector: 'label' })).toBeInTheDocument();
   },
 };

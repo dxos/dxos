@@ -114,7 +114,7 @@ const ObjectsTreeRow = ({
             {node.type === 'incoming-relation' && (
               <Icon icon='ph--arrow-left--regular' classNames='shrink-0 w-4 h-4 opacity-70' />
             )}
-            <Icon icon={node.icon} classNames={['shrink-0 w-4 h-4', styles?.surfaceText]} />
+            <Icon icon={node.icon} classNames={['shrink-0 w-4 h-4', styles?.foreground]} />
             <span className={node.deleted ? 'line-through opacity-60' : 'truncate'}>{node.label}</span>
           </Treegrid.Cell>
           <Treegrid.Cell classNames='contents'>
@@ -190,21 +190,12 @@ const ExpandedKeySchema = Schema.TemplateLiteralParser(
   Schema.Number,
 );
 
-const AUTO_EXPAND_LEVEL = 3;
-
 class ObjectsTreeModel {
   #onSelect: (entity: Entity.Snapshot) => void;
   #database: Database.Database;
   #root: Entity.Unknown | null;
   #atoms = Atom.family((anchor: string | null) => this.#makeNodeAtom(anchor));
-  #expandedState = Atom.family((key: string) => {
-    const [id, _, level] = Schema.decodeUnknownSync(ExpandedKeySchema)(key);
-    if (level <= AUTO_EXPAND_LEVEL) {
-      return Atom.make(true);
-    } else {
-      return Atom.make(false);
-    }
-  });
+  #expandedState = Atom.family((_key: string) => Atom.make(false));
 
   constructor(database: Database.Database, root: Entity.Unknown | null, onSelect: (entity: Entity.Snapshot) => void) {
     this.#database = database;

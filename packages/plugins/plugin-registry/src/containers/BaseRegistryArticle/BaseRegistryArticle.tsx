@@ -12,10 +12,12 @@ import { AppCapabilities, LayoutOperation, SettingsOperation } from '@dxos/app-t
 import { runAndForwardErrors } from '@dxos/effect';
 import { ObservabilityOperation } from '@dxos/plugin-observability';
 import { Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
 
 import { PluginList, type PluginListProps } from '#components';
 import { getPluginPath, meta } from '#meta';
+
+import { useDisableConfirmation } from '../../hooks';
 
 const matchesFilter = (plugin: Plugin.Plugin, query: string) => {
   const haystack = `${plugin.meta.name ?? ''} ${plugin.meta.id}`.toLowerCase();
@@ -77,7 +79,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
       return query.length === 0 ? plugins : plugins.filter((plugin) => matchesFilter(plugin, query));
     }, [plugins, filter]);
 
-    const handleChange = useCallback(
+    const dispatchToggle = useCallback(
       (pluginId: string, nextEnabled: boolean) =>
         Effect.gen(function* () {
           if (nextEnabled) {
@@ -93,6 +95,19 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
           });
         }).pipe(runAndForwardErrors),
       [invoke, manager, source],
+    );
+
+    const requestDisable = useDisableConfirmation(manager, (id) => void dispatchToggle(id, false));
+
+    const handleChange = useCallback(
+      (pluginId: string, nextEnabled: boolean) => {
+        if (nextEnabled) {
+          void dispatchToggle(pluginId, true);
+          return;
+        }
+        requestDisable(pluginId);
+      },
+      [dispatchToggle, requestDisable],
     );
 
     const handleClick = useCallback(

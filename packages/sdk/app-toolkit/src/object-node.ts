@@ -6,8 +6,7 @@ import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-
 import * as Option from 'effect/Option';
 
 import { Node } from '@dxos/app-graph';
-import { Collection, type Database, Obj, Ref } from '@dxos/echo';
-import { Annotation } from '@dxos/echo';
+import { Annotation, Collection, type Database, Obj, Ref, Type } from '@dxos/echo';
 import { type TreeData } from '@dxos/react-ui-list';
 
 import { GraphPropsAnnotation } from './annotations';
@@ -147,7 +146,11 @@ export const createObjectNode = ({
     return null;
   }
 
-  const schema = Obj.getSchema(object);
+  // Obj.getSchema uses the stored type DXN to look up the schema. For database-registered
+  // (dynamic) schemas the echo-handler queries by id=dxn:type:typename, but the stored
+  // PersistentSchema jsonSchema.$id is dxn:echo:@:<objectId> so the id-based lookup misses.
+  // Fall back to a typename query which matches the PersistentSchema.typename field.
+  const schema = Obj.getSchema(object) ?? db.schemaRegistry.query({ typename: type }).runSync()[0];
   const staticIcon = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema)) : undefined;
   const iconFromRefProp = schema ? Option.getOrUndefined(Annotation.IconFromRefAnnotation.get(schema)) : undefined;
   // If the schema delegates its icon to a referenced sub-entity, resolve that ref's target
@@ -175,23 +178,23 @@ export const createObjectNode = ({
 
   let onRearrange: ((nextOrder: unknown[]) => void) | undefined;
   if (parentCollection) {
-    const collectionDxn = Obj.getDXN(parentCollection).toString();
-    onRearrange = rearrangeCache.get(collectionDxn);
+    const collectionDXN = Obj.getDXN(parentCollection).toString();
+    onRearrange = rearrangeCache.get(collectionDXN);
     if (!onRearrange) {
       onRearrange = (nextOrder: unknown[]) => {
         Obj.update(parentCollection, (parentCollection) => {
           parentCollection.objects = nextOrder.filter(Obj.isObject).map(Ref.make);
         });
       };
-      rearrangeCache.set(collectionDxn, onRearrange);
+      rearrangeCache.set(collectionDXN, onRearrange);
     }
   }
 
-  const objectDxn = Obj.getDXN(object).toString();
-  let blockInstruction = blockInstructionCache.get(objectDxn);
+  const objectDXN = Obj.getDXN(object).toString();
+  let blockInstruction = blockInstructionCache.get(objectDXN);
   if (!blockInstruction) {
     blockInstruction = (_source: TreeData, _instruction: Instruction) => false;
-    blockInstructionCache.set(objectDxn, blockInstruction);
+    blockInstructionCache.set(objectDXN, blockInstruction);
   }
 
   const canDrop = droppable ? CAN_DROP_OBJECT : undefined;
@@ -203,8 +206,9 @@ export const createObjectNode = ({
     data: object,
     properties: {
       label,
-      icon: iconAnnotation?.icon ?? 'ph--placeholder--regular',
-      iconHue: iconAnnotation?.hue,
+      icon:
+        schema && Type.isMutable(schema) ? 'ph--cube--regular' : (iconAnnotation?.icon ?? 'ph--placeholder--regular'),
+      iconHue: schema && Type.isMutable(schema) ? 'neutral' : iconAnnotation?.hue,
       disposition,
       testId: 'spacePlugin.object',
       persistenceClass: 'echo',

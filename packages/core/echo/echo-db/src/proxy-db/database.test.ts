@@ -12,9 +12,7 @@ import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { asyncTimeout, sleep } from '@dxos/async';
-import { Obj, Query, Ref, Type } from '@dxos/echo';
-import { Err } from '@dxos/echo';
-import { Filter } from '@dxos/echo';
+import { Err, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 import { createTestLevel } from '@dxos/kv-store/testing';

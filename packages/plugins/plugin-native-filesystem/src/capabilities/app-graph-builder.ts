@@ -104,7 +104,7 @@ export default Capability.makeModule(
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
         id: 'primary-actions',
-        position: 'hoist',
+        position: 'first',
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
@@ -219,7 +219,7 @@ export default Capability.makeModule(
               properties: {
                 label: ['settings.general.label', { ns: meta.id }],
                 icon: 'ph--sliders--regular',
-                position: 'hoist',
+                position: 'first',
               },
             }),
           ]),

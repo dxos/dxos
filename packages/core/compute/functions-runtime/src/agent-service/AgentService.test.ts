@@ -11,6 +11,7 @@ import { expect } from 'vitest';
 
 import { PartialBlock } from '@dxos/assistant';
 import { Blueprint, Operation, OperationHandlerSet, Trace } from '@dxos/compute';
+import { Process } from '@dxos/compute';
 import { Feed } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
@@ -19,7 +20,6 @@ import { log } from '@dxos/log';
 import { Organization } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { Process } from '../process';
 import * as AgentService from './AgentService';
 
 ObjectId.dangerouslyDisableRandomness();

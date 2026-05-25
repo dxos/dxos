@@ -9,13 +9,13 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef,
 
 import { Agent, Plan } from '@dxos/assistant-toolkit';
 import { Event } from '@dxos/async';
-import { Filter, Obj } from '@dxos/echo';
-import { type Queue, useQuery } from '@dxos/react-client/echo';
+import { type Feed, Filter, Obj, Query } from '@dxos/echo';
+import { useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
+import { composable, composableProps } from '@dxos/react-ui';
 import { type MarkdownStreamController } from '@dxos/react-ui-markdown';
 import { Menu, MenuRootProps } from '@dxos/react-ui-menu';
 import { Message } from '@dxos/types';
-import { composable, composableProps } from '@dxos/ui-theme';
 
 import { useChatKeymapExtensions, useChatToolbarActions, useDebug } from '#hooks';
 
@@ -37,7 +37,7 @@ export { useChatContext };
 
 type ChatRootProps = PropsWithChildren<
   Pick<ChatContextValue, 'db' | 'chat' | 'processor'> & {
-    feed?: Queue;
+    feed?: Feed.Feed;
     onEvent?: (event: ChatEvent) => void;
   }
 >;
@@ -50,7 +50,10 @@ const ChatRoot = ({ children, chat, feed, processor, onEvent, ...props }: ChatRo
   const lastPrompt = useRef<string | undefined>(undefined);
   const db = props.db ?? (chat && Obj.getDatabase(chat));
 
-  const feedMessages = useQuery(feed, Filter.type(Message.Message));
+  const feedMessages = useQuery(
+    db,
+    feed ? Query.select(Filter.type(Message.Message)).from(feed) : Query.select(Filter.nothing()),
+  );
   const pendingMessages = useAtomValue(processor.messages);
   const messages = useMemo(
     () => Array.dedupeWith([...feedMessages, ...pendingMessages], ({ id: a }, { id: b }) => a === b),

@@ -35,8 +35,7 @@ import {
   TestingPanel,
   WorkflowPanel,
 } from '@dxos/devtools';
-import { Feed, Obj } from '@dxos/echo';
-import { Collection } from '@dxos/echo';
+import { Collection, Feed, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { type Graph } from '@dxos/plugin-graph';
@@ -154,7 +153,7 @@ export default Capability.makeModule(
         id: 'wireframe',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         role: ['article', 'section'],
-        position: 'hoist',
+        position: 'first',
         filter: (data): data is { subject: Obj.Unknown } => {
           const settings = registry.get(settingsAtom);
           return Obj.isObject(data.subject) && !!settings.wireframe;
@@ -195,7 +194,7 @@ export default Capability.makeModule(
       Surface.create({
         id: 'status',
         role: 'status-indicator',
-        position: 'hoist',
+        position: 'first',
         component: () => <DebugStatus />,
       }),
 
@@ -398,8 +397,8 @@ export default Capability.makeModule(
           }
 
           const feed = space.properties.invocationTraceFeed?.target;
-          const queueDxn = feed ? Feed.getQueueDxn(feed) : undefined;
-          return <InvocationTraceContainer db={space.db} queueDxn={queueDxn} detailAxis='block' />;
+          const feedDXN = feed ? Feed.getQueueDxn(feed) : undefined;
+          return <InvocationTraceContainer db={space.db} feedDXN={feedDXN} detailAxis='block' />;
         },
       }),
       Surface.create({

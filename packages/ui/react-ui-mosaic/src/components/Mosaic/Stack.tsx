@@ -17,7 +17,8 @@ import React, {
 
 import { invariant } from '@dxos/invariant';
 import { type Axis, type ThemedClassName } from '@dxos/react-ui';
-import { composable, composableProps, mx } from '@dxos/ui-theme';
+import { composable, composableProps } from '@dxos/react-ui';
+import { mx } from '@dxos/ui-theme';
 
 import { useVisibleItems } from '../../hooks';
 import { useMosaicContainerContext } from './Container';
@@ -85,6 +86,7 @@ const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
       orientation = orientationProp,
       dragging,
       currentId,
+      selectedIds,
       registerScrollTo,
     } = useMosaicContainerContext(MOSAIC_STACK_NAME);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
@@ -130,6 +132,7 @@ const MosaicStackInner = composable<HTMLDivElement, MosaicStackProps>(
               location={index + 1}
               draggable={draggable}
               current={getId(item) === currentId}
+              selected={selectedIds?.has(getId(item))}
               debug={debug}
             />
             {draggable && <InternalPlaceholder orientation={orientation} location={index + 1.5} />}
@@ -178,7 +181,8 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
     forwardedRef,
   ) => {
     invariant(Tile);
-    const { id, dragging, currentId, registerScrollTo } = useMosaicContainerContext(MOSAIC_VIRTUAL_STACK_NAME);
+    const { id, dragging, currentId, selectedIds, registerScrollTo } =
+      useMosaicContainerContext(MOSAIC_VIRTUAL_STACK_NAME);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
     // In draggable mode virtual indices alternate: even=placeholder, odd=tile.
     // Wrap estimateSize so placeholders get 0 (their actual negligible height) and
@@ -293,6 +297,7 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
                   location={location}
                   draggable={draggable}
                   current={getId(data) === currentId}
+                  selected={selectedIds?.has(getId(data))}
                   debug={debug}
                 />
               ) : (
