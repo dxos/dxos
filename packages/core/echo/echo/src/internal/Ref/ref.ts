@@ -366,7 +366,7 @@ export interface RefResolver {
   resolveSchema(uri: URI.URI): Promise<Schema.Schema.AnyNoContext | undefined>;
 
   /**
-   * Resolve the source `Type.Entity` entity for a type URI. Used by
+   * Resolve the source `Type.AnyEntity` entity for a type URI. Used by
    * deserialization paths (`Obj.fromJSON`) to set the back-reference accessed
    * via `Obj.getType` / `Entity.getType`. Optional — resolvers that only
    * carry raw schemas may leave this unimplemented; the deserializer falls

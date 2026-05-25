@@ -17,7 +17,7 @@ import { translationKey } from '#translations';
 import { Form, type FormFieldMap, omitId, toSchema } from '../Form';
 
 export type ObjectFormProps = {
-  schema: Schema.Schema.AnyNoContext | Type.Entity;
+  schema: Schema.Schema.AnyNoContext | Type.AnyEntity;
   object: Obj.Unknown;
 };
 
@@ -49,7 +49,7 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
     [schema],
   );
 
-  const handleCreate = useCallback((schema: Type.Entity, values: any) => {
+  const handleCreate = useCallback((schema: Type.AnyEntity, values: any) => {
     invariant(db);
     invariant(Type.isObject(schema));
     const newObject = db.add(Obj.make(schema, values));

@@ -104,13 +104,13 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static type<T extends TypeNs.Entity>(
+  static type<T extends TypeNs.AnyEntity>(
     type: T,
     props?: Filter$.Props<TypeNs.InstanceType<T>>,
   ): Filter$.Filter<TypeNs.InstanceType<T>>;
   static type(schema: string, props?: Filter$.Props<unknown>): Filter$.Filter<any>;
   static type(
-    schema: TypeNs.Entity | string,
+    schema: TypeNs.AnyEntity | string,
     props?: Filter$.Props<unknown>,
   ): Filter$.Filter<unknown> {
     if (typeof schema !== 'string') {
@@ -172,10 +172,10 @@ class FilterClass implements Filter$.Any {
     });
   }
 
-  static foreignKeys<S extends TypeNs.Entity | string>(
+  static foreignKeys<S extends TypeNs.AnyEntity | string>(
     schema: S,
     keys: ForeignKey[],
-  ): Filter$.Filter<S extends TypeNs.Entity ? TypeNs.InstanceType<S> : unknown> {
+  ): Filter$.Filter<S extends TypeNs.AnyEntity ? TypeNs.InstanceType<S> : unknown> {
     assertArgument(typeof schema === 'string', 'schema');
     assertArgument(!schema.startsWith('dxn:'), 'schema');
     return new FilterClass({
@@ -511,7 +511,7 @@ class QueryClass implements Query$.Any {
     });
   }
 
-  referencedBy(target?: TypeNs.Entity | string, key?: string): Query$.Any {
+  referencedBy(target?: TypeNs.AnyEntity | string, key?: string): Query$.Any {
     if (target !== undefined && typeof target !== 'string') {
       throw new TypeError('referencedBy requires a typename string in query-lite');
     }

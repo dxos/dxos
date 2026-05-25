@@ -20,11 +20,11 @@ export type ResolverMap = Record<string, ResolverType<any, any>>;
 export class Resolver extends Context.Tag('PluginInbox/Resolver')<
   Resolver,
   {
-    resolve<S extends Type.Entity, I>(schema: S, input: I): Effect.Effect<Type.InstanceType<S> | undefined>;
+    resolve<S extends Type.AnyEntity, I>(schema: S, input: I): Effect.Effect<Type.InstanceType<S> | undefined>;
   }
 >() {}
 
-export const resolve = <S extends Type.Entity, I>(schema: S, input: I) =>
+export const resolve = <S extends Type.AnyEntity, I>(schema: S, input: I) =>
   Effect.flatMap(Resolver, (service) =>
     Effect.map(service.resolve<S, I>(schema, input), (result) => result ?? undefined),
   );

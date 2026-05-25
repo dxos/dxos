@@ -53,11 +53,11 @@ export type ProjectionChangeCallback = {
  * Use this when the view is stored in the ECHO database.
  *
  * @param view - The ECHO-backed view object.
- * @param schema - Optional persisted `Type.Entity`. If not provided, schema mutations will throw.
+ * @param schema - Optional persisted `Type.AnyEntity`. If not provided, schema mutations will throw.
  */
 export const createEchoChangeCallback = (
   view: View.View,
-  schema?: Type.Entity,
+  schema?: Type.AnyEntity,
 ): ProjectionChangeCallback => ({
   // Inside Obj.update, v is Mutable<View.View>, so v.projection is already mutable.
   projection: (mutate) => Obj.update(view, (view) => mutate(view.projection as Mutable<View.Projection>)),

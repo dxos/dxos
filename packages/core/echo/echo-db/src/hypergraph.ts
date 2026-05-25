@@ -189,7 +189,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         }
       },
 
-      // Parallel to resolveSchema, but returns the Type.Entity entity itself
+      // Parallel to resolveSchema, but returns the Type.AnyEntity entity itself
       // rather than its underlying Effect Schema. Used by `Obj.fromJSON` (queue
       // and serializer paths) so deserialized objects stamp a TypeEntityId
       // back-reference resolvable via `Obj.getType` / `Entity.getType`.

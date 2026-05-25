@@ -626,7 +626,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    * instance. Returns the actual entity (not just its schema) so callers using
    * `Obj.getType` / `Entity.getType` see a stable entity-shaped value.
    */
-  getTypeEntity(target: ProxyTarget): Type.Entity | undefined {
+  getTypeEntity(target: ProxyTarget): Type.AnyEntity | undefined {
     if (target[symbolNamespace] === META_NAMESPACE) {
       return undefined;
     }
@@ -637,7 +637,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       }
       // For non-db reactive objects rootSchema may already be a type entity.
       return Type.isObject(root) || Type.isRelation(root) || Type.isTypeKindSchema(root)
-        ? (root as unknown as Type.Entity)
+        ? (root as unknown as Type.AnyEntity)
         : undefined;
     }
     const typeRef = target[symbolInternals].core.getType();
@@ -688,7 +688,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         // schema mutations performed via `Type.addFields`/`Type.update` are
         // reflected in subsequent validations.
         // TODO(wittjosiah): rootSchema is typed as Schema.Schema.AnyNoContext; updating to
-        // Type.Entity requires changing echo-proxy-target.ts and all call sites of createObject.
+        // Type.AnyEntity requires changing echo-proxy-target.ts and all call sites of createObject.
         return Type.isType(root) ? Type.getSchema(root) : root;
       }
 

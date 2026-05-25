@@ -29,7 +29,7 @@ export interface TestConfiguration {
   createObjectFn: (props?: Partial<TestSchema.Example>) => Promise<TestSchema.Example>;
 }
 
-export type TestConfigurationFactory = (schema: Type.ObjectEntity) => TestConfiguration | null;
+export type TestConfigurationFactory = (schema: Type.AnyObject) => TestConfiguration | null;
 
 export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory): void => {
   for (const schema of [TestSchema.Expando, TestSchema.Example]) {

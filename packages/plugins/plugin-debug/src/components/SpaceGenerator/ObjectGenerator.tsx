@@ -27,7 +27,7 @@ const findViewByTypename = async (views: View.View[], typename: string) => {
 
 export type ObjectGenerator<T> = (space: Space, n: number, cb?: (objects: T[]) => void) => Promise<T[]>;
 
-export const createGenerator = <S extends Type.ObjectEntity>(
+export const createGenerator = <S extends Type.AnyObject>(
   client: Client,
   invokePromise: OperationInvoker.OperationInvoker['invokePromise'],
   schema: S,

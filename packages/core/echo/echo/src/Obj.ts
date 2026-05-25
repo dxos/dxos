@@ -131,7 +131,7 @@ type MakePropsInternal<T extends Unknown> = {
 // TODO(burdon): Should we allow the caller to set the id?
 /**
  * Props type for object creation with a given type. Accepts either a static
- * `Type.ObjectEntity` (entity) or a raw Effect Schema and derives the
+ * `Type.AnyObject` (entity) or a raw Effect Schema and derives the
  * instance shape via `Type.InstanceType`.
  */
 export type MakeProps<S> = {
@@ -157,11 +157,11 @@ export type MakeProps<S> = {
  * Note: Only accepts object schemas / object-kind types, not relation schemas.
  * Use `Relation.make` for relations.
  */
-export function make<T extends Type.ObjectEntity>(
+export function make<T extends Type.AnyObject>(
   type: T,
   props: NoInfer<MakeProps<T>>,
 ): OfShape<Type.InstanceType<T>>;
-export function make(input: Type.ObjectEntity, props: any): OfShape<any> {
+export function make(input: Type.AnyObject, props: any): OfShape<any> {
   // `Type.Type` entities aren't `Schema.Schema` themselves; derive the Effect
   // Schema via `Type.getSchema(...)`. Pass the entity through to `makeObject`
   // so subsequent schema mutations (`Type.addFields`, etc.) propagate.
@@ -442,9 +442,9 @@ export const instanceOf: {
     // eslint-disable-next-line @typescript-eslint/unified-signatures
     ..._error: ['ERROR: Obj.instanceOf does not accept Type.Type; use Type.isType(value) instead']
   ): never;
-  <S extends Type.ObjectEntity | Type.RelationEntity>(schema: S): (value: unknown) => value is Type.InstanceType<S>;
-  <S extends Type.ObjectEntity | Type.RelationEntity>(schema: S, value: unknown): value is Type.InstanceType<S>;
-} = ((...args: [schema: Type.Entity, value?: unknown]) => {
+  <S extends Type.AnyObject | Type.AnyRelation>(schema: S): (value: unknown) => value is Type.InstanceType<S>;
+  <S extends Type.AnyObject | Type.AnyRelation>(schema: S, value: unknown): value is Type.InstanceType<S>;
+} = ((...args: [schema: Type.AnyEntity, value?: unknown]) => {
   if (args.length === 1) {
     return (entity: unknown) => internal.isInstanceOf(args[0], entity);
   }
@@ -466,9 +466,9 @@ export const instanceOf: {
  * ```
  */
 export const snapshotOf: {
-  <S extends Type.Entity>(schema: S): (value: unknown) => value is Snapshot<Type.InstanceType<S> & Unknown>;
-  <S extends Type.Entity>(schema: S, value: unknown): value is Snapshot<Type.InstanceType<S> & Unknown>;
-} = ((...args: [schema: Type.Entity, value: unknown] | [schema: Type.Entity]) => {
+  <S extends Type.AnyEntity>(schema: S): (value: unknown) => value is Snapshot<Type.InstanceType<S> & Unknown>;
+  <S extends Type.AnyEntity>(schema: S, value: unknown): value is Snapshot<Type.InstanceType<S> & Unknown>;
+} = ((...args: [schema: Type.AnyEntity, value: unknown] | [schema: Type.AnyEntity]) => {
   const check = (entity: unknown) =>
     entity != null &&
     typeof entity === 'object' &&
@@ -512,8 +512,8 @@ export const getTypeURI = (obj: Unknown | Snapshot): URI.URI => {
  *
  * To get the Effect Schema from the returned entity, use `Type.getSchema(...)`.
  */
-export const getType = (obj: Unknown | Snapshot): Type.ObjectEntity | Type.Type | undefined =>
-  internal.getType(obj) as Type.ObjectEntity | Type.Type | undefined;
+export const getType = (obj: Unknown | Snapshot): Type.AnyObject | Type.Type | undefined =>
+  internal.getType(obj) as Type.AnyObject | Type.Type | undefined;
 
 /**
  * @returns The typename of the object's type.

@@ -104,7 +104,7 @@ export namespace AppCapabilities {
    */
   export const Settings = Capability$.make<Settings>('org.dxos.app-framework.capability.settings');
 
-  export type Schema = ReadonlyArray<Type.Entity>;
+  export type Schema = ReadonlyArray<Type.AnyEntity>;
 
   /**
    * @category Capability

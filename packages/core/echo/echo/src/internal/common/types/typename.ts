@@ -64,7 +64,7 @@ export const setSchema = (obj: any, schema: Schema.Schema.AnyNoContext): void =>
 };
 
 /**
- * Returns the type entity (`Type.Entity`) for the given instance, if known.
+ * Returns the type entity (`Type.AnyEntity`) for the given instance, if known.
  * Set at instance creation; may be undefined for deserialized instances where
  * the resolver returned only an Effect Schema (no entity wrapper).
  *

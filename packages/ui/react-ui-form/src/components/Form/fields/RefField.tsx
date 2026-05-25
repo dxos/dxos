@@ -51,7 +51,7 @@ export type RefFieldProps = FormFieldComponentProps &
   > & {
     db?: Database.Database;
     // TODO(burdon): Replace hooks with callbacks.
-    useSchema?: (db?: Database.Database, typename?: string) => Type.Entity;
+    useSchema?: (db?: Database.Database, typename?: string) => Type.AnyEntity;
     useResults?: (db?: Database.Database, typename?: string) => Entity.Any[];
     getOptions?: (objects: Entity.Any[], options?: { parentLabel?: boolean }) => RefOption[];
     /**
@@ -60,7 +60,7 @@ export type RefFieldProps = FormFieldComponentProps &
      * database and return it (sync or async). The returned object is then
      * wired into this slot's form value as a Ref.
      */
-    onCreate?: (schema: Type.Entity, values: any) => Obj.Unknown | Promise<Obj.Unknown> | undefined | void;
+    onCreate?: (schema: Type.AnyEntity, values: any) => Obj.Unknown | Promise<Obj.Unknown> | undefined | void;
   };
 
 export const RefField = (props: RefFieldProps) => {

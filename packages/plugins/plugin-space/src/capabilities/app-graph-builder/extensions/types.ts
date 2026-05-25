@@ -230,7 +230,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
 
         return Effect.succeed(
           createSchemaActions({
-            schema: schema as unknown as Type.Entity,
+            schema: schema as unknown as Type.AnyEntity,
             space,
             deletable,
             capabilities,
@@ -246,7 +246,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
 //
 
 /** Returns schemas keyed uniquely by typename, preferring later entries. */
-const uniqueSchemasByTypename = <TSchema extends Type.Entity>(schemas: TSchema[]): TSchema[] => {
+const uniqueSchemasByTypename = <TSchema extends Type.AnyEntity>(schemas: TSchema[]): TSchema[] => {
   const uniqueSchemas = new Map<string, TSchema>();
   for (const schema of schemas) {
     uniqueSchemas.set(Type.getTypename(schema), schema);
@@ -261,10 +261,10 @@ const createSchemaNode = ({
   space,
   get,
 }: {
-  schema: Type.Entity;
+  schema: Type.AnyEntity;
   space: Space;
   get: Atom.Context;
-}): Node.NodeArg<Type.Entity> => {
+}): Node.NodeArg<Type.AnyEntity> => {
   const typename = Type.getTypename(schema);
   const iconAnnotation = !Type.isMutable(schema)
     ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema))
@@ -310,7 +310,7 @@ const createSchemaActions = ({
   deletable,
   capabilities,
 }: {
-  schema: Type.Entity;
+  schema: Type.AnyEntity;
   space: Space;
   deletable: boolean;
   capabilities: CapabilityManager.CapabilityManager;

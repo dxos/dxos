@@ -10,7 +10,7 @@ import type * as Type from './Type';
 
 describe('Exemplars', () => {
   test('factory', ({ expect }) => {
-    const factory = <S extends Type.ObjectEntity>(schema: S) => {
+    const factory = <S extends Type.AnyObject>(schema: S) => {
       return (props: Obj.MakeProps<S>) => Obj.make(schema, props);
     };
 

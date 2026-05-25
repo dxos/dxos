@@ -11,7 +11,7 @@ import * as ViewModel from './ViewModel';
 
 export { Expando, Text, CollectionModel, ViewModel };
 
-export const DataTypes: Type.Entity[] = [
+export const DataTypes: Type.AnyEntity[] = [
   Collection.Collection,
   Expando.Expando,
   Feed.Feed,

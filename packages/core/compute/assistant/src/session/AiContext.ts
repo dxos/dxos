@@ -397,7 +397,7 @@ export class Service extends Context.Tag('@dxos/assistant/AiContextService')<
       yield* Effect.promise(() => binder.bind({ blueprints, objects }));
     });
 
-  static findObjects = <T extends Type.ObjectEntity | Type.RelationEntity>(
+  static findObjects = <T extends Type.AnyObject | Type.AnyRelation>(
     type: T,
   ): Effect.Effect<Type.InstanceType<T>[], never, Service> => {
     return Effect.gen(function* () {

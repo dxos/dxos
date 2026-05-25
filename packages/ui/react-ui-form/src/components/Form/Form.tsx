@@ -41,17 +41,17 @@ import { FormTooltipsContext } from './FormTooltipsContext';
 // TODO(burdon): Move styles to form.ts (as with ui-theme).
 
 // TODO(burdon): Reconcile with @dxos/echo.
-export type ExcludeId<S> = S extends Type.Entity
+export type ExcludeId<S> = S extends Type.AnyEntity
   ? Omit<Type.InstanceType<S>, 'id'>
   : S extends Schema.Schema.AnyNoContext
     ? Omit<Schema.Schema.Type<S>, 'id'>
     : never;
 
-export type SchemaOrType = Schema.Schema.AnyNoContext | Type.Entity;
+export type SchemaOrType = Schema.Schema.AnyNoContext | Type.AnyEntity;
 
 export const toSchema = (schemaOrType: SchemaOrType): Schema.Schema.AnyNoContext =>
   (schemaOrType as any)[SchemaKindId] != null
-    ? (Type.getSchema(schemaOrType as Type.Entity) as Schema.Schema.AnyNoContext)
+    ? (Type.getSchema(schemaOrType as Type.AnyEntity) as Schema.Schema.AnyNoContext)
     : (schemaOrType as Schema.Schema.AnyNoContext);
 
 // TODO(burdon): Move to @dxos/schema (re-export here).

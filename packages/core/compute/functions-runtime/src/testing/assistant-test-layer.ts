@@ -43,7 +43,7 @@ interface TestLayerOptions {
   model?: ModelName;
   operationHandlers?: OperationHandlerSet.OperationHandlerSet | OperationHandlerSet.OperationHandlerSet[];
   toolkits?: OpaqueToolkit.OpaqueToolkit[];
-  types?: Type.Entity[];
+  types?: Type.AnyEntity[];
   blueprints?: Blueprint.Blueprint[];
   credentials?: Credential.ServiceCredential[];
 

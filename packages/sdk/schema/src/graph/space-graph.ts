@@ -44,7 +44,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
   private _options?: SpaceGraphModelOptions;
   private _filter?: Filter.Any;
   private _db?: Database.Database;
-  private _schema?: Type.Entity[];
+  private _schema?: Type.AnyEntity[];
   private _objects?: Entity.Unknown[];
   private _extraItems?: Entity.Unknown[];
   private _schemaSubscription?: CleanupFn;
@@ -108,7 +108,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
 
     const schemaaQuery = db.schemaRegistry.query({});
     this._schemaSubscription = schemaaQuery.subscribe(
-      ({ results }: { results: Type.Entity[] }) => (this._schema = results),
+      ({ results }: { results: Type.AnyEntity[] }) => (this._schema = results),
       { fire: true },
     );
 

@@ -72,7 +72,7 @@ const StoryViewEditor = ({
   handleDeleteColumn,
 }: {
   view?: View.View;
-  schema?: Type.Entity;
+  schema?: Type.AnyEntity;
   db?: Database.Database;
   handleDeleteColumn: (fieldId: string) => void;
 }) => {
@@ -330,7 +330,7 @@ export const Tags: Meta<DefaultStoryProps> = {
         // Populate.
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
-            Obj.make(storedSchema as unknown as Type.ObjectEntity, {
+            Obj.make(storedSchema as unknown as Type.AnyObject, {
               single: random.helpers.arrayElement([...selectOptionIds, undefined]),
               multiple: random.helpers.randomSubset(selectOptionIds),
             } as any),

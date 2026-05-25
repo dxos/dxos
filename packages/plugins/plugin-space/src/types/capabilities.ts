@@ -62,7 +62,7 @@ export namespace SpaceCapabilities {
 
   export type OnSchemaAdded = (params: {
     db: Database.Database;
-    schema: Type.Entity;
+    schema: Type.AnyEntity;
     // TODO(wittjosiah): This is leaky.
     show?: boolean;
   }) => Effect.Effect<void, Error, Operation.Service>;
@@ -76,7 +76,7 @@ export namespace SpaceCapabilities {
   export type CreateObjectEntry = Readonly<{
     id: string;
     createObject: CreateObject;
-    inputSchema?: Schema.Schema.AnyNoContext | Type.Entity;
+    inputSchema?: Schema.Schema.AnyNoContext | Type.AnyEntity;
     /**
      * Optional custom React panel rendered in place of the default `inputSchema` form.
      * Lets a plugin own the entire post-typename-selection flow (e.g. multi-stage forms).

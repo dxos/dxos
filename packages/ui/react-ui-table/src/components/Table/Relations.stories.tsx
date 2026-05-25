@@ -35,7 +35,7 @@ const generator: ValueGenerator = random as any;
 // TODO(burdon): Mutable and immutable views.
 // TODO(burdon): Reconcile schemas types and utils (see API PR).
 // TODO(burdon): Base type for T (with id); see ECHO API PR?
-const useTestModel = <S extends Type.ObjectEntity>(schema: S, count: number) => {
+const useTestModel = <S extends Type.AnyObject>(schema: S, count: number) => {
   const registry = useContext(RegistryContext);
   const { space } = useClientStory();
   const [object, setObject] = useState<Table.Table>();
@@ -87,7 +87,7 @@ const DefaultStory = () => {
   const { space } = useClientStory();
 
   const handleCreate = useCallback(
-    (schema: Type.Entity, values: any) => {
+    (schema: Type.AnyEntity, values: any) => {
       invariant(Type.isObject(schema));
       invariant(space);
       return space.db.add(Obj.make(schema, values));

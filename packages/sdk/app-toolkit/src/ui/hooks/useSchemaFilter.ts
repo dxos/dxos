@@ -9,7 +9,7 @@ import { Filter, Type } from '@dxos/echo';
 // TODO(wittjosiah): This should use the full query AST directly.
 //   RuntimeType-backed spaces can contain objects tagged with either the schema object DXN
 //   (Obj.make registered schema) or the static type DXN (Obj.make Effect schema).
-export const useSchemaFilter = (schema: Type.Entity | undefined): Filter.Any =>
+export const useSchemaFilter = (schema: Type.AnyEntity | undefined): Filter.Any =>
   useMemo(() => {
     if (!schema) {
       return Filter.nothing();

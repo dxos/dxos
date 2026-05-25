@@ -86,23 +86,23 @@ export const allOf = <TFilters extends ReadonlyArray<Surface.Filter<any>>>(
  * without having to hand-roll a fully typed `Surface.Filter`.
  */
 export const object: {
-  <TToken extends Surface.RoleToken<{ subject?: any }>, S extends Type.Entity>(
+  <TToken extends Surface.RoleToken<{ subject?: any }>, S extends Type.AnyEntity>(
     token: TToken,
     schema: S,
     predicate?: (data: NonNullable<TokenData<TToken>>) => boolean,
   ): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Type.InstanceType<S> }>;
-  <TToken extends Surface.RoleToken<{ subject?: any }>, S extends Type.Entity[]>(
+  <TToken extends Surface.RoleToken<{ subject?: any }>, S extends Type.AnyEntity[]>(
     token: TToken,
     schemas: [...S],
     predicate?: (data: NonNullable<TokenData<TToken>>) => boolean,
   ): Surface.Filter<Omit<NonNullable<TokenData<TToken>>, 'subject'> & { subject: Schema.Schema.Type<S[number]> }>;
 } = (
   token: Surface.RoleToken<any>,
-  schemaOrSchemas: Type.Entity | Type.Entity[],
+  schemaOrSchemas: Type.AnyEntity | Type.AnyEntity[],
   predicate?: (data: any) => boolean,
 ): Surface.Filter<any> => {
   const schemas = (Array.isArray(schemaOrSchemas) ? schemaOrSchemas : [schemaOrSchemas]) as Array<
-    Type.ObjectEntity | Type.RelationEntity
+    Type.AnyObject | Type.AnyRelation
   >;
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
@@ -220,7 +220,7 @@ export const predicate = <TData extends Record<string, unknown>>(
  */
 export const companion: {
   <TToken extends Surface.RoleToken<any>>(token: TToken): Surface.Filter<{ companionTo: Obj.Any }>;
-  <TToken extends Surface.RoleToken<any>, S extends Type.Entity>(
+  <TToken extends Surface.RoleToken<any>, S extends Type.AnyEntity>(
     token: TToken,
     schema: S,
   ): Surface.Filter<{ companionTo: Type.InstanceType<S> }>;
@@ -228,7 +228,7 @@ export const companion: {
     token: TToken,
     value: T,
   ): Surface.Filter<{ companionTo: T }>;
-} = (token: Surface.RoleToken<any>, schemaOrValue?: Type.Entity | string): Surface.Filter<any> => {
+} = (token: Surface.RoleToken<any>, schemaOrValue?: Type.AnyEntity | string): Surface.Filter<any> => {
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
       return false;
@@ -240,7 +240,7 @@ export const companion: {
     if (typeof schemaOrValue === 'string') {
       return companionTo === schemaOrValue;
     }
-    return Obj.instanceOf(schemaOrValue as Type.ObjectEntity | Type.RelationEntity, companionTo);
+    return Obj.instanceOf(schemaOrValue as Type.AnyObject | Type.AnyRelation, companionTo);
   };
   return { bindings: [{ role: token.role, guard }] };
 };

@@ -18,9 +18,9 @@ import * as Type from './Type';
  * The data shape matches the target schema; the optional `[Obj.Meta]` symbol key lets the
  * transform update the object's meta (e.g. `key` / `version`) atomically with the data swap.
  */
-type MigrationSchemaInput = Type.Entity;
+type MigrationSchemaInput = Type.AnyEntity;
 
-type MigrationInstanceType<S> = S extends Type.Entity
+type MigrationInstanceType<S> = S extends Type.AnyEntity
   ? Type.InstanceType<S>
   : S extends Schema.Schema.AnyNoContext
     ? Schema.Schema.Type<S>

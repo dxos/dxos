@@ -94,7 +94,7 @@ const fkFor = (id: string | number) => ({ source: GITHUB_SOURCE, id: String(id) 
  * untyped — the caller supplies the result type via the explicit `T` parameter
  * (mirrors how plugin-trello casts after `Database.runQuery`).
  */
-const findByForeignId = <T>(schema: Schema.Schema<any, any> | Type.Entity, id: string | number) =>
+const findByForeignId = <T>(schema: Schema.Schema<any, any> | Type.AnyEntity, id: string | number) =>
   Effect.gen(function* () {
     const results = yield* Database.runQuery(Query.select(Filter.foreignKeys(schema as never, [fkFor(id)])));
     return results.length > 0 ? (results[0] as T) : undefined;

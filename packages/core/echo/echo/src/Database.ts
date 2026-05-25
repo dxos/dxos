@@ -203,11 +203,11 @@ export const resolve: {
   // No type check.
   (ref: URI.URI | Ref<any>): Effect.Effect<Entity.Unknown, never, Service>;
   // Check matches schema.
-  <S extends Type.Entity>(
+  <S extends Type.AnyEntity>(
     ref: URI.URI | Ref<any>,
     schema: S,
   ): Effect.Effect<Type.InstanceType<S>, Err.ObjectNotFoundError, Service>;
-} = (<S extends Type.Entity>(
+} = (<S extends Type.AnyEntity>(
   ref: URI.URI | Ref<any>,
   schema?: S,
 ): Effect.Effect<Type.InstanceType<S>, Err.ObjectNotFoundError, Service> =>
@@ -228,7 +228,7 @@ export const resolve: {
       return yield* Effect.fail(new Err.ObjectNotFoundError(dxn));
     }
     // `isInstanceOf` uses a conditional generic that TS can't resolve through
-    // the local `S extends Type.Entity` parameter — runtime accepts it fine.
+    // the local `S extends Type.AnyEntity` parameter — runtime accepts it fine.
     invariant(!schema || isInstanceOf(schema as any, object), 'Object type mismatch.');
     return object as any;
   }).pipe(Effect.withSpan('Database.resolve'))) as any;

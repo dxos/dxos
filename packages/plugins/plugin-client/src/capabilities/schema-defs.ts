@@ -23,7 +23,7 @@ export default Capability.makeModule(
       schemasAtom,
       async (schemas) => {
         const seenSchemaDxns = new Set<string>();
-        const batch: { schema: Type.Entity; dxnKey: string }[] = [];
+        const batch: { schema: Type.AnyEntity; dxnKey: string }[] = [];
         for (const schema of schemas.flat()) {
           const uri = Type.getURI(schema);
           if (!uri) {

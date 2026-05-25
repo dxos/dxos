@@ -35,7 +35,7 @@ export const getBaseSchema = ({
   properties,
   jsonSchema,
 }: {
-  schema?: Type.Entity;
+  schema?: Type.AnyEntity;
   typename?: string;
   properties?: TablePropertyDefinition[];
   jsonSchema?: Types.DeepMutable<JsonSchema.JsonSchema>;

@@ -794,7 +794,7 @@ const createConnectorWithRuntime = <TData, R>(
  * Effects may fail - errors are caught, logged, and the extension returns empty results.
  */
 export type CreateTypeExtensionOptions<
-  T extends Type.ObjectEntity | Type.RelationEntity = Type.ObjectEntity | Type.RelationEntity,
+  T extends Type.AnyObject | Type.AnyRelation = Type.AnyObject | Type.AnyRelation,
   R = never,
 > = {
   id: string;
@@ -816,7 +816,7 @@ export type CreateTypeExtensionOptions<
  * The entity type is inferred from the schema type and works for both object and relation schemas.
  * Returns an Effect to allow callbacks to access services via dependency injection.
  */
-export const createTypeExtension = <T extends Type.ObjectEntity | Type.RelationEntity, R = never>(
+export const createTypeExtension = <T extends Type.AnyObject | Type.AnyRelation, R = never>(
   options: CreateTypeExtensionOptions<T, R>,
 ): Effect.Effect<BuilderExtension[], never, R> => {
   const { id, type, actions, connector, relation, position } = options;
