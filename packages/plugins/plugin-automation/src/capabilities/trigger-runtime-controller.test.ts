@@ -9,6 +9,7 @@ import { ServiceResolver } from '@dxos/compute';
 import { Feed, Obj } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { TriggerDispatcher } from '@dxos/functions-runtime';
+import type { SpaceId } from '@dxos/keys';
 import { ClientCapabilities, ClientEvents } from '@dxos/plugin-client';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
@@ -21,7 +22,7 @@ import { AutomationPlugin } from '#plugin';
  * `{ space }` context, so the returned instance is the same one the
  * controller is driving.
  */
-const getDispatcher = (harness: Awaited<ReturnType<typeof createComposerTestApp>>, spaceId: string) =>
+const getDispatcher = (harness: Awaited<ReturnType<typeof createComposerTestApp>>, spaceId: SpaceId) =>
   harness.runPromise(
     Effect.flatMap(TriggerDispatcher, Effect.succeed).pipe(
       Effect.provide(ServiceResolver.provide({ space: spaceId }, TriggerDispatcher)),
