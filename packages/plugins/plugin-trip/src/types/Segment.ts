@@ -250,10 +250,7 @@ export const getTitle = (seg: Segment): string => {
     case 'train':
       return [seg.details.provider?.name, seg.details.number].filter(Boolean).join(' ') || 'Train';
     case 'boat':
-      return (
-        [seg.details.provider?.name, seg.details.vessel ?? seg.details.number].filter(Boolean).join(' ') ||
-        'Boat'
-      );
+      return [seg.details.provider?.name, seg.details.vessel ?? seg.details.number].filter(Boolean).join(' ') || 'Boat';
     case 'road':
       return seg.details.provider?.name ?? seg.details.subKind ?? 'Road';
     case 'accommodation':

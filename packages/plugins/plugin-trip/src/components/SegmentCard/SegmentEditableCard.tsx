@@ -89,6 +89,7 @@ export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardP
           <Card.Row icon='ph--calendar--regular'>
             <Input.Root>
               <Input.DateTime
+                aria-label={t('segment.depart.placeholder')}
                 value={isoToLocalDateTime(departAt)}
                 onChange={handleDepartChange}
                 placeholder={t('segment.depart.placeholder')}

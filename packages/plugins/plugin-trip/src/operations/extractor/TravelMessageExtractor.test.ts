@@ -52,6 +52,18 @@ describe('TravelMessageExtractor', () => {
     expect(result.matched).toBe(false);
   });
 
+  test('extract — subject-only generic confirmation emits no objects', async ({ expect }) => {
+    // Match succeeds on the "booking confirmation" subject keyword, but the body lacks any
+    // flight identity. Without a number + departAt the extractor should not invent a Booking.
+    const result = await TravelMessageExtractor.extract(
+      { database: db },
+      parseFixtureMessage(genericConfirmationRaw),
+    ).pipe(runAndForwardErrors);
+
+    expect(result.created).toEqual([]);
+    expect(result.updated).toEqual([]);
+  });
+
   test('extract — first email creates Booking + flight Segment', async ({ expect }) => {
     const message = parseFixtureMessage(unitedConfirmationRaw);
     const result = await TravelMessageExtractor.extract({ database: db }, message).pipe(runAndForwardErrors);

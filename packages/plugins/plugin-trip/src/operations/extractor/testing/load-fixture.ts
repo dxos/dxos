@@ -21,9 +21,12 @@ import { ContentBlock, Message } from '@dxos/types';
  * fixture coverage; one file = one `Message`.
  */
 export const parseFixtureMessage = (raw: string): Message.Message => {
-  const blankLineIndex = raw.indexOf('\n\n');
-  const headerBlock = blankLineIndex >= 0 ? raw.slice(0, blankLineIndex) : '';
-  const body = blankLineIndex >= 0 ? raw.slice(blankLineIndex + 2) : raw;
+  // Normalise CRLF / CR (raw email sources from "Show original" frequently use \r\n) so the
+  // blank-line split and header parsing don't depend on platform line endings.
+  const normalised = raw.replace(/\r\n?/g, '\n');
+  const blankLineIndex = normalised.indexOf('\n\n');
+  const headerBlock = blankLineIndex >= 0 ? normalised.slice(0, blankLineIndex) : '';
+  const body = blankLineIndex >= 0 ? normalised.slice(blankLineIndex + 2) : normalised;
 
   const headers = new Map<string, string>();
   for (const line of headerBlock.split('\n')) {

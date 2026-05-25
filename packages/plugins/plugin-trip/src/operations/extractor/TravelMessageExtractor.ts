@@ -117,8 +117,7 @@ const parseCandidate = (body: string): Candidate => {
 };
 
 /** Identity key used to dedupe segments across multiple emails. */
-const matchKey = (number: string, departAt: string): string =>
-  `${number.toUpperCase()}|${departAt.split('T')[0]}`;
+const matchKey = (number: string, departAt: string): string => `${number.toUpperCase()}|${departAt.split('T')[0]}`;
 
 const isSameFlight = (segment: Segment.Segment, candidate: Candidate): boolean => {
   if (segment.details._tag !== 'flight' || !segment.details.number || !segment.details.departAt) {
@@ -127,16 +126,19 @@ const isSameFlight = (segment: Segment.Segment, candidate: Candidate): boolean =
   if (!candidate.number || !candidate.departAt) {
     return false;
   }
-  return (
-    matchKey(segment.details.number, segment.details.departAt) ===
-    matchKey(candidate.number, candidate.departAt)
-  );
+  return matchKey(segment.details.number, segment.details.departAt) === matchKey(candidate.number, candidate.departAt);
 };
 
 const extractFromMessage = (ctx: ExtractCtx, message: Message.Message): Effect.Effect<ExtractResult, never> =>
   Effect.gen(function* () {
     const body = getBodyText(message);
     const candidate = parseCandidate(body);
+
+    // `match()` can accept subject-only signals (e.g. generic "booking confirmation" emails);
+    // without flight identity we have nothing useful to persist, so emit no objects.
+    if (!candidate.number || !candidate.departAt) {
+      return { created: [], updated: [], relations: [] };
+    }
 
     // Try to find an existing segment matching the same (number, depart-date) pair.
     const existing = yield* findExistingFlight(ctx, candidate);
