@@ -227,7 +227,6 @@ const Time = forwardRef<HTMLInputElement, InputScopedProps<TimeProps>>(
     const density = useDensityContext(densityProp);
     const elevation = useElevationContext(elevationProp);
     const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
-    console.log('time', props.value);
 
     return (
       <TextInputPrimitive
