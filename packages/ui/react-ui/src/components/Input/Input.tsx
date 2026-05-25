@@ -227,6 +227,7 @@ const Time = forwardRef<HTMLInputElement, InputScopedProps<TimeProps>>(
     const density = useDensityContext(densityProp);
     const elevation = useElevationContext(elevationProp);
     const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
+    console.log('time', props.value);
 
     return (
       <TextInputPrimitive
@@ -241,9 +242,10 @@ const Time = forwardRef<HTMLInputElement, InputScopedProps<TimeProps>>(
             elevation,
             validationValence,
           },
+          // TODO(burdon): Move to theme.
           // Force 32px (native time inputs add intrinsic height; the density
           // `min-h-[2.5rem]` arbitrary value also outranks plain `min-h-8`).
-          '!h-8 !min-h-8 box-border leading-none',
+          // '!h-8 !min-h-8 box-border leading-none',
           !icon && '[&::-webkit-calendar-picker-indicator]:hidden',
           !time && 'text-transparent',
           classNames,

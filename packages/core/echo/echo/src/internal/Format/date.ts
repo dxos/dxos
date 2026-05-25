@@ -104,7 +104,6 @@ export const DateOnly = /* Schema.transformOrFail(Schema.String, SimpleDate, {
 }) */ Schema.String.pipe(
   FormatAnnotation.set(TypeFormat.Date),
   Schema.annotations({
-    title: 'Date',
     description: 'Valid date in ISO format',
   }),
 );
@@ -134,7 +133,6 @@ export const TimeOnly = /* Schema.transformOrFail(Schema.String, SimpleTime, {
 }) */ Schema.String.pipe(
   FormatAnnotation.set(TypeFormat.Time),
   Schema.annotations({
-    title: 'Time',
     description: 'Valid time in ISO format',
   }),
 );
@@ -179,7 +177,6 @@ export const DateTime = /* Schema.transformOrFail(Schema.String, SimpleDateTime,
 }) */ Schema.String.pipe(
   FormatAnnotation.set(TypeFormat.DateTime),
   Schema.annotations({
-    title: 'DateTime',
     description: 'Valid date and time in ISO format',
   }),
 );
@@ -191,7 +188,6 @@ export const DateTime = /* Schema.transformOrFail(Schema.String, SimpleDateTime,
 export const Duration = Schema.String.pipe(
   FormatAnnotation.set(TypeFormat.Duration),
   Schema.annotations({
-    title: 'Duration',
     description: 'Duration in ISO 8601 format',
     [SchemaAST.ExamplesAnnotationId]: ['1h', '3D'],
   }),
