@@ -83,10 +83,10 @@ export class TripBuilder {
       typeof arg === 'object'
         ? arg
         : {
-            from: PLACES.SFO,
-            to: PLACES.LHR,
+            from: PLACES.JFK,
+            to: PLACES.CDG,
             daysFromNow: arg ?? 0,
-            airline: { name: 'United Airlines' },
+            airline: { name: 'Air France' },
             cabin: 'economy',
             confirmed: legacyOpts?.confirmed,
           };

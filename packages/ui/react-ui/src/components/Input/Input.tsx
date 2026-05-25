@@ -201,10 +201,28 @@ TextInput.displayName = 'Input.TextInput';
 // Time
 //
 
-type TimeProps = InputSharedProps & ThemedClassName<Omit<TextInputPrimitiveProps, 'type'>>;
+type TimeProps = InputSharedProps &
+  ThemedClassName<Omit<TextInputPrimitiveProps, 'type'>> & {
+    /** Show the native time-picker icon (clock). Defaults to true. */
+    icon?: boolean;
+    /** Show the time-of-day text. Defaults to true. Hide to render an icon-only trigger. */
+    time?: boolean;
+  };
 
 const Time = forwardRef<HTMLInputElement, InputScopedProps<TimeProps>>(
-  ({ __inputScope, classNames, density: densityProp, elevation: elevationProp, variant, ...props }, forwardedRef) => {
+  (
+    {
+      __inputScope,
+      classNames,
+      density: densityProp,
+      elevation: elevationProp,
+      variant,
+      icon = true,
+      time = true,
+      ...props
+    },
+    forwardedRef,
+  ) => {
     const { tx } = useThemeContext();
     const density = useDensityContext(densityProp);
     const elevation = useElevationContext(elevationProp);
@@ -223,6 +241,11 @@ const Time = forwardRef<HTMLInputElement, InputScopedProps<TimeProps>>(
             elevation,
             validationValence,
           },
+          // Force 32px (native time inputs add intrinsic height; the density
+          // `min-h-[2.5rem]` arbitrary value also outranks plain `min-h-8`).
+          '!h-8 !min-h-8 box-border leading-none',
+          !icon && '[&::-webkit-calendar-picker-indicator]:hidden',
+          !time && 'text-transparent',
           classNames,
         )}
         ref={forwardedRef}

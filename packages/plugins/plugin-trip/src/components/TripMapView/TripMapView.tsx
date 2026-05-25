@@ -5,7 +5,15 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { IconButton, composable, composableProps, useThemeContext } from '@dxos/react-ui';
-import { Globe, type GlobeController, globeStyles, useDrag, useGlobeZoomHandler, useTour } from '@dxos/react-ui-geo';
+import {
+  Globe,
+  type GlobeController,
+  globeStyles,
+  useDrag,
+  useGlobeZoomHandler,
+  useTour,
+  useWheel,
+} from '@dxos/react-ui-geo';
 import { loadTopology } from '@dxos/react-ui-geo/data';
 
 import { Segment } from '#types';
@@ -100,6 +108,7 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
     }, []);
 
     const handleZoom = useGlobeZoomHandler(controller);
+    useWheel(controller);
     useDrag(controller);
 
     // Build the geo features.

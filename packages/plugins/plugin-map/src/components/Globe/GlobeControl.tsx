@@ -18,6 +18,7 @@ import {
   useDrag,
   useGlobeZoomHandler,
   useTour,
+  useWheel,
 } from '@dxos/react-ui-geo';
 import { loadTopology } from '@dxos/react-ui-geo/data';
 import { isNonNullable } from '@dxos/util';
@@ -85,6 +86,7 @@ export const GlobeControl = composable<HTMLDivElement, GlobeControlProps>(
     }, [markers, selected]);
 
     const [moved, setMoved] = useState(false);
+    useWheel(controller);
     useDrag(controller, {
       onUpdate: ({ type }) => {
         if (type === 'move') {
