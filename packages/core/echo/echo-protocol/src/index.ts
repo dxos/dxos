@@ -11,3 +11,4 @@ export * from './query';
 export * from './reference';
 export * from './space-doc-version';
 export * from './space-id';
+export * from './space-tags';

@@ -689,6 +689,17 @@ export class SpaceProxy implements Space, CustomInspectable {
     return credentials.filter((credential) => checkCredentialType(credential, 'dxos.halo.credentials.Epoch'));
   }
 
+  /**
+   * Returns this space's `SpaceGenesis` credential, the self-signed root that establishes the
+   * space's identity, key, and immutable `tags`. Used by infrastructure (e.g. OAuth recovery
+   * registration) that needs to attest a space's identity out-of-band by verifying a
+   * client-supplied signed credential.
+   */
+  async getGenesisCredential(): Promise<Credential | undefined> {
+    const credentials = await this._getCredentials();
+    return credentials.find((credential) => checkCredentialType(credential, 'dxos.halo.credentials.SpaceGenesis'));
+  }
+
   private async _migrate(): Promise<void> {
     await this._createEpoch({
       migration: CreateEpochRequest.Migration.MIGRATE_REFERENCES_TO_DXN,
