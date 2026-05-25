@@ -25,6 +25,7 @@ export const GetLinearTeams = Operation.make({
     key: `${LINEAR_OPERATION}.get-linear-teams`,
     name: 'Get Linear Teams',
     description: 'List Linear teams reachable from an integration without materializing local objects.',
+    icon: 'ph--users--regular',
   },
   input: GetSyncTargetsInput,
   output: GetSyncTargetsOutput,
@@ -56,6 +57,7 @@ export const SyncLinearTeams = Operation.make({
     key: `${LINEAR_OPERATION}.sync-linear-teams`,
     name: 'Sync Linear Teams',
     description: 'Reconcile selected Linear teams — projects and issues.',
+    icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
     integration: Ref.Ref(Integration.Integration),

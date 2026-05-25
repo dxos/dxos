@@ -15,6 +15,7 @@ export const QueryMemories = Operation.make({
     name: 'Query memories',
     description:
       'Search for stored memories using full-text search. Returns memories matching the query terms. Use this to recall previously saved knowledge, facts, or preferences.',
+    icon: 'ph--brain--regular',
   },
   input: Schema.Struct({
     text: Schema.optional(
@@ -40,6 +41,7 @@ export const SaveMemory = Operation.make({
     name: 'Save memory',
     description:
       'Saves a new memory to the database. Use this to persist knowledge, facts, preferences, or any information that should be remembered across conversations.',
+    icon: 'ph--brain--regular',
   },
   input: Schema.Struct({
     title: Schema.String.annotations({
@@ -59,6 +61,7 @@ export const DeleteMemory = Operation.make({
     key: 'org.dxos.function.memory.delete',
     name: 'Delete memory',
     description: 'Deletes a memory from the database. Use this to remove outdated or incorrect memories.',
+    icon: 'ph--trash--regular',
   },
   input: Schema.Struct({
     memory: Ref.Ref(Memory),

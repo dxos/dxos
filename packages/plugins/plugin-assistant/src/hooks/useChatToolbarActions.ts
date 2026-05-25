@@ -68,7 +68,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
         () =>
           Effect.gen(function* () {
             invariant(chat);
-            yield* invoke(AssistantOperation.UpdateChatName, { chat });
+            yield* invoke(AssistantOperation.UpdateChatName, { chat }, { spaceId: db?.spaceId });
           }).pipe(runAndForwardErrors),
       )
       .action(

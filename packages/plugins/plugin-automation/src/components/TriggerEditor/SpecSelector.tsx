@@ -25,8 +25,8 @@ export const SpecSelector = (props: SpecSelectorProps) => {
             return Trigger.specTimer('');
           case 'subscription':
             return Trigger.specSubscription(Query.select(Filter.nothing()));
-          case 'queue':
-            return Trigger.specQueue('dxn:queue:default');
+          case 'feed':
+            return { kind: 'feed' } satisfies Trigger.FeedSpec;
           case 'email':
             return Trigger.specEmail();
           case 'webhook':
@@ -53,7 +53,7 @@ export const SpecSelector = (props: SpecSelectorProps) => {
     websocket: t('trigger-type.websocket.label'),
     subscription: t('trigger-type.subscription.label'),
     email: t('trigger-type.email.label'),
-    queue: t('trigger-type.queue.label'),
+    feed: t('trigger-type.feed.label'),
   };
 
   const options = useMemo(

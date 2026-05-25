@@ -10,7 +10,7 @@ import { meta } from '#meta';
 
 export const TriggerTemplate = Schema.Union(
   Schema.Struct({ type: Schema.Literal('timer'), cron: Schema.String }),
-  Schema.Struct({ type: Schema.Literal('queue'), queueDXN: Schema.Any }),
+  Schema.Struct({ type: Schema.Literal('feed'), feed: Schema.Any }),
 );
 
 export namespace AutomationAction {

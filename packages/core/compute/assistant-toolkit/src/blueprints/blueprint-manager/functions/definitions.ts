@@ -13,6 +13,7 @@ export const QueryBlueprints = Operation.make({
     key: 'org.dxos.function.blueprint-manager.query-blueprints',
     name: 'Query blueprints',
     description: 'Queries available blueprints.',
+    icon: 'ph--blueprint--regular',
   },
   input: Schema.Struct({}),
   output: Schema.Array(Blueprint.Blueprint),
@@ -25,6 +26,7 @@ export const EnableBlueprints = Operation.make({
     name: 'Enable blueprints',
     description:
       'Enables blueprints in the current conversation by their keys. Only blueprints with agentCanEnable=true can be enabled. Always call [query-blueprints] first to discover available blueprint keys.',
+    icon: 'ph--plugs-connected--regular',
   },
   input: Schema.Struct({
     keys: Schema.Array(Schema.String).annotations({
@@ -50,6 +52,7 @@ export const UpdateBlueprints = Operation.make({
     name: 'Refresh blueprints',
     description:
       'Updates the blueprints saved to the database with the latest version from the registry. Sometimes blueprints in the database can become outdated. Use this function to pull in the latest versions.',
+    icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({}),
   output: Schema.Void,

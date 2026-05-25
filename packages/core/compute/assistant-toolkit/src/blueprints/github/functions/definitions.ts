@@ -12,6 +12,7 @@ export const FetchPrs = Operation.make({
     key: 'org.dxos.function.github.fetch-prs',
     name: 'Fetch PRs',
     description: 'Fetches PRs from GitHub.',
+    icon: 'ph--github-logo--regular',
   },
   input: Schema.Struct({
     owner: Schema.String.annotations({

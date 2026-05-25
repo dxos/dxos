@@ -28,6 +28,7 @@ export const GetGitHubRepositories = Operation.make({
     key: `${GITHUB_OPERATION}.get-github-repositories`,
     name: 'Get GitHub Repositories',
     description: 'List GitHub repositories reachable from an integration without materializing local objects.',
+    icon: 'ph--github-logo--regular',
   },
   input: GetSyncTargetsInput,
   output: GetSyncTargetsOutput,
@@ -60,6 +61,7 @@ export const SyncGitHubRepositories = Operation.make({
     key: `${GITHUB_OPERATION}.sync-github-repositories`,
     name: 'Sync GitHub Repositories',
     description: 'Reconcile selected GitHub repos plus their owning orgs, members, issues, PRs, and comments.',
+    icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
     integration: Ref.Ref(Integration.Integration),
