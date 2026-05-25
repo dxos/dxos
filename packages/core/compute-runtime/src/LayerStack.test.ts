@@ -9,7 +9,7 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Scope from 'effect/Scope';
 
-import { LayerSpec } from '@dxos/compute';
+import { LayerSpec, ServiceNotAvailableError } from '@dxos/compute';
 import { runAndForwardErrors } from '@dxos/effect';
 import { SpaceId } from '@dxos/keys';
 
@@ -351,6 +351,156 @@ describe('LayerStack', () => {
     );
 
     it.effect(
+      'does not materialise conversation-scoped specs when resolving unrelated services',
+      Effect.fn(function* ({ expect }) {
+        let conversationSpecConstructions = 0;
+
+        // Mirrors `sync-triggers`: process op that only needs a space-affinity service.
+        const opLayer = LayerSpec.make(
+          {
+            affinity: 'process',
+            requires: [ServiceC],
+            provides: [ServiceA],
+          },
+          () =>
+            Layer.effect(
+              ServiceA,
+              Effect.gen(function* () {
+                const spaceService = yield* ServiceC;
+                return { value: `op:${spaceService.value}` };
+              }),
+            ),
+        );
+
+        // Mirrors `AiContextSpec`: same space deps, but only valid with `conversation`.
+        const conversationScoped = LayerSpec.make(
+          {
+            affinity: 'process',
+            requires: [ServiceC],
+            provides: [ServiceB],
+          },
+          (context) =>
+            Layer.effect(
+              ServiceB,
+              Effect.gen(function* () {
+                conversationSpecConstructions++;
+                if (!context.conversation) {
+                  return yield* Effect.die(
+                    new ServiceNotAvailableError('test/ServiceB', {
+                      message: 'conversation-scoped spec materialised without conversation',
+                    }),
+                  );
+                }
+                const spaceService = yield* ServiceC;
+                return { value: `conversation:${spaceService.value}:${context.conversation}` };
+              }),
+            ),
+        );
+
+        const spaceService = LayerSpec.make(
+          {
+            affinity: 'space',
+            requires: [],
+            provides: [ServiceC],
+          },
+          (ctx) => Layer.succeed(ServiceC, { value: `space:${ctx.space}` }),
+        );
+
+        const stack = new LayerStack.LayerStack({ layers: [opLayer, conversationScoped, spaceService] });
+        const resolver = stack.getServiceResolver();
+        const space = SpaceId.random();
+        const process = 'sync-triggers' as any;
+
+        // Op only declares `Database.Service` — resolved from the space slice.
+        const resolvedSpace = yield* resolveWithScope(resolver.resolve(ServiceC, { space, process }));
+        expect(resolvedSpace).toEqual({ value: `space:${space}` });
+        expect(conversationSpecConstructions).toBe(0);
+
+        // Another unrelated process tag with satisfied space deps must not touch conversation spec.
+        const resolvedOp = yield* resolveWithScope(resolver.resolve(ServiceA, { space, process }));
+        expect(resolvedOp).toEqual({ value: `op:space:${space}` });
+        expect(conversationSpecConstructions).toBe(0);
+
+        // Only when the conversation-scoped tag is actually requested does its factory run.
+        const exit = yield* resolveWithScope(resolver.resolve(ServiceB, { space, process })).pipe(Effect.exit);
+        expect(Exit.isFailure(exit)).toBe(true);
+        expect(conversationSpecConstructions).toBe(1);
+        const failureText = String(
+          Exit.match(exit, {
+            onFailure: (cause) => cause,
+            onSuccess: () => '',
+          }),
+        );
+        expect(failureText).toContain('ServiceNotAvailable');
+        expect(failureText).toContain('test/ServiceB');
+
+        // With conversation present the same tag resolves successfully.
+        const conversation = 'dxn:queue:test-feed' as any;
+        const resolvedConversation = yield* resolveWithScope(
+          resolver.resolve(ServiceB, { space, conversation, process: 'agent' as any }),
+        );
+        expect(resolvedConversation).toEqual({
+          value: `conversation:space:${space}:${conversation}`,
+        });
+      }),
+    );
+
+    it.effect(
+      'materialising a second tag in the same slice does not re-run prior factories',
+      Effect.fn(function* ({ expect }) {
+        let serviceAConstructions = 0;
+        let serviceBConstructions = 0;
+        let serviceCConstructions = 0;
+
+        const layerA = LayerSpec.make(
+          { affinity: 'process', requires: [], provides: [ServiceA] },
+          () =>
+            Layer.effect(
+              ServiceA,
+              Effect.sync(() => {
+                serviceAConstructions++;
+                return { value: 'a' };
+              }),
+            ),
+        );
+        const layerB = LayerSpec.make(
+          { affinity: 'process', requires: [], provides: [ServiceB] },
+          () =>
+            Layer.effect(
+              ServiceB,
+              Effect.sync(() => {
+                serviceBConstructions++;
+                return { value: 'b' };
+              }),
+            ),
+        );
+        const layerC = LayerSpec.make(
+          { affinity: 'process', requires: [], provides: [ServiceC] },
+          () =>
+            Layer.effect(
+              ServiceC,
+              Effect.sync(() => {
+                serviceCConstructions++;
+                return { value: 'c' };
+              }),
+            ),
+        );
+
+        const stack = new LayerStack.LayerStack({ layers: [layerA, layerB, layerC] });
+        const resolver = stack.getServiceResolver();
+        const process = 'p-multi' as any;
+
+        yield* resolveWithScope(resolver.resolve(ServiceA, { process }));
+        yield* resolveWithScope(resolver.resolve(ServiceB, { process }));
+        yield* resolveWithScope(resolver.resolve(ServiceC, { process }));
+
+        expect(serviceAConstructions).toBe(1);
+        expect(serviceBConstructions).toBe(1);
+        expect(serviceCConstructions).toBe(1);
+      }),
+    );
+
+    it.effect(
       'reuses application and space slices across resolutions for different processes',
       Effect.fn(function* ({ expect }) {
         let appConstructions = 0;
@@ -407,11 +557,15 @@ describe('LayerStack', () => {
         const resolver = stack.getServiceResolver();
 
         const space = SpaceId.random();
-        // Resolve process-affinity service twice with different process contexts.
+        // Materialise each affinity once, then resolve again from a second process context.
+        yield* resolveWithScope(resolver.resolve(ServiceA, {}));
+        yield* resolveWithScope(resolver.resolve(ServiceA, {}));
+        yield* resolveWithScope(resolver.resolve(ServiceB, { space }));
+        yield* resolveWithScope(resolver.resolve(ServiceB, { space }));
         yield* resolveWithScope(resolver.resolve(ServiceC, { space, process: 'p1' as any }));
         yield* resolveWithScope(resolver.resolve(ServiceC, { space, process: 'p2' as any }));
 
-        // Application and space slices should be instantiated exactly once.
+        // Lazy materialisation: factories run once per slice, not at slice init.
         expect(appConstructions).toBe(1);
         expect(spaceConstructions).toBe(1);
         // Process slices should be instantiated per process.

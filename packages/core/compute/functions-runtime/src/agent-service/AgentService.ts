@@ -155,7 +155,10 @@ export const layer = (opts?: {
               handle = yield* processManager.spawn(executable, {
                 name: 'agent',
                 target,
-                environment: spaceId ? { space: spaceId } : undefined,
+                environment: {
+                  ...(spaceId !== undefined ? { space: spaceId } : {}),
+                  conversation: target,
+                },
                 traceMeta: {
                   conversationId: feed.id,
                 },

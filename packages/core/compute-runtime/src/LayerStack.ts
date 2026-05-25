@@ -7,6 +7,7 @@
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
@@ -80,6 +81,8 @@ export class LayerStack {
         yield* this.#getOrInitSlice('process', contextForAffinity('process', context));
       }
 
+      yield* this.#materializeTag(tag, context, topAffinity);
+
       const services = this.#resolveServices(topAffinity, context, [tag]);
       const service = Context.getOption(services, tag);
       if (Option.isNone(service)) {
@@ -108,6 +111,9 @@ export class LayerStack {
           layers: this.#layers.filter((l) => l.affinity === affinity),
         });
         const resolveAffinity = lowerAffinity(affinity);
+        if (resolveAffinity) {
+          yield* this.#materializeTags(resolveAffinity, context, newSlice.requires);
+        }
         const requirements = resolveAffinity
           ? this.#resolveServices(resolveAffinity, context, newSlice.requires)
           : Context.empty();
@@ -172,6 +178,37 @@ export class LayerStack {
     }
 
     return resolved;
+  }
+
+  #materializeTag(
+    tag: Context.Tag<any, any>,
+    context: LayerSpec.LayerContext,
+    topAffinity: LayerSpec.Affinity,
+  ): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError, Scope.Scope> {
+    return this.#materializeTags(topAffinity, context, [tag]);
+  }
+
+  #materializeTags(
+    affinity: LayerSpec.Affinity,
+    context: LayerSpec.LayerContext,
+    tags: Context.Tag<any, any>[],
+  ): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError, Scope.Scope> {
+    return Effect.gen(this, function* () {
+      let currentAffinity: LayerSpec.Affinity | undefined = affinity;
+      while (currentAffinity) {
+        const affinityContext = contextForAffinity(currentAffinity, context);
+        const slice = this.#slices.find(
+          (s) => s.affinity === currentAffinity && layerContextEquals(s.context, affinityContext),
+        );
+        if (slice) {
+          const pending = tags.filter((tag) => slice.provides.some((p) => p.key === tag.key));
+          if (pending.length > 0) {
+            yield* slice.materialize(pending);
+          }
+        }
+        currentAffinity = lowerAffinity(currentAffinity);
+      }
+    });
   }
 
   #maybeDestroySlice(slice: Slice) {
@@ -302,7 +339,21 @@ class Slice {
    */
   #droppedProviders: Map<string, { provides: readonly string[]; missing: readonly string[] }[]> = new Map();
 
-  #managedRuntime?: ManagedRuntime.ManagedRuntime<any, any> = undefined;
+  /**
+   * Externally supplied services from lower-affinity slices, set during {@link init}.
+   */
+  #requirements: Context.Context<unknown> = Context.empty() as Context.Context<unknown>;
+
+  /**
+   * Layer specs whose factories have been executed for this slice.
+   */
+  #materializedLayers: LayerSpec.LayerSpec[] = [];
+
+  /**
+   * One managed runtime per incremental materialisation batch. Kept alive so scoped
+   * services from earlier batches are not torn down when a new tag is materialised.
+   */
+  #managedRuntimes: ManagedRuntime.ManagedRuntime<any, any>[] = [];
 
   #services: Context.Context<unknown> = Context.empty() as Context.Context<unknown>;
 
@@ -465,27 +516,142 @@ class Slice {
     }
     this.#provides = [...provides.values()];
 
-    // Layers are already topologically sorted so dependencies come before dependants.
-    // Fold them left-to-right with `provideMerge` so that each subsequent layer can see the
-    // services provided by the previous ones (and externally-supplied `requirements`).
-    const baseLayer: Layer.Layer<unknown, unknown, unknown> = Layer.syncContext(() => requirements) as any;
-    const combinedLayer = this.#layers.reduce<Layer.Layer<unknown, unknown, unknown>>(
-      (acc, spec) => Layer.provideMerge(spec.make(this.#context) as Layer.Layer<unknown, unknown, unknown>, acc),
-      baseLayer,
+    this.#requirements = requirements;
+    this.#services = requirements;
+    this.#materializedLayers = [];
+    this.#managedRuntimes = [];
+
+    return Effect.void;
+  }
+
+  /**
+   * Materialises layer specs needed to satisfy `tags`. Specs whose factories were not
+   * run yet are merged into the slice runtime on demand so unrelated providers (e.g.
+   * conversation-scoped `AiContext.Service`) do not execute during slice init.
+   */
+  materialize(
+    tags: Context.Tag<any, any>[],
+  ): Effect.Effect<void, ServiceNotAvailableError | LayerDependencyCycleError> {
+    if (this.#sortError) {
+      return Effect.fail(this.#sortError);
+    }
+
+    const pendingTags = tags.filter((tag) => Option.isNone(Context.getOption(this.#services, tag)));
+    if (pendingTags.length === 0) {
+      return Effect.void;
+    }
+
+    const layersToAdd = this.#layersNeededFor(pendingTags);
+    if (layersToAdd.length === 0) {
+      return Effect.void;
+    }
+
+    const newLayers = layersToAdd.filter((layer) => !this.#materializedLayers.includes(layer));
+    if (newLayers.length === 0) {
+      return Effect.void;
+    }
+
+    return this.#materializeLayers(newLayers).pipe(
+      Effect.tap(() =>
+        Effect.sync(() => {
+          for (const layer of newLayers) {
+            if (!this.#materializedLayers.includes(layer)) {
+              this.#materializedLayers.push(layer);
+            }
+          }
+        }),
+      ),
     );
+  }
 
-    this.#managedRuntime = ManagedRuntime.make(combinedLayer as Layer.Layer<unknown, unknown, never>);
+  #layersNeededFor(tags: Context.Tag<any, any>[]): LayerSpec.LayerSpec[] {
+    const needed = new Set<LayerSpec.LayerSpec>();
+    const availableKeys = this.#availableServiceKeys();
 
+    const addLayer = (layer: LayerSpec.LayerSpec) => {
+      if (needed.has(layer)) {
+        return;
+      }
+      needed.add(layer);
+      for (const required of layer.requires) {
+        if (availableKeys.has(required.key)) {
+          continue;
+        }
+        const provider = this.#layers.find((candidate) =>
+          candidate.provides.some((provided) => provided.key === required.key),
+        );
+        if (provider) {
+          addLayer(provider);
+        }
+      }
+    };
+
+    for (const tag of tags) {
+      for (const layer of this.#layers) {
+        if (layer.provides.some((provided) => provided.key === tag.key)) {
+          addLayer(layer);
+        }
+      }
+    }
+
+    return this.#layers.filter((layer) => needed.has(layer));
+  }
+
+  #availableServiceKeys(): Set<string> {
+    const keys = new Set<string>();
+    for (const tag of this.#requires) {
+      if (Option.isSome(Context.getOption(this.#services, tag))) {
+        keys.add(tag.key);
+      }
+    }
+    for (const tag of this.#provides) {
+      if (Option.isSome(Context.getOption(this.#services, tag))) {
+        keys.add(tag.key);
+      }
+    }
+    return keys;
+  }
+
+  #materializeLayers(newLayers: LayerSpec.LayerSpec[]): Effect.Effect<void, ServiceNotAvailableError> {
     return Effect.gen(this, function* () {
-      const rt = yield* this.#managedRuntime!.runtimeEffect;
-      this.#services = yield* Effect.context().pipe(Effect.map(Context.pick(...this.#provides)), Effect.provide(rt));
-    }).pipe(Effect.orDie);
+      const baseLayer: Layer.Layer<unknown, unknown, unknown> = Layer.syncContext(() => this.#services) as any;
+      const combinedLayer = newLayers.reduce<Layer.Layer<unknown, unknown, unknown>>(
+        (acc, spec) => Layer.provideMerge(spec.make(this.#context) as Layer.Layer<unknown, unknown, unknown>, acc),
+        baseLayer,
+      );
+
+      const runtime = ManagedRuntime.make(combinedLayer as Layer.Layer<unknown, unknown, never>);
+
+      const exit = yield* Effect.gen(this, function* () {
+        const rt = yield* runtime.runtimeEffect;
+        const providedTags = newLayers.flatMap((layer) => layer.provides);
+        const materialized = yield* Effect.context().pipe(Effect.map(Context.pick(...providedTags)), Effect.provide(rt));
+        this.#services = Context.merge(this.#services, materialized);
+        this.#managedRuntimes.push(runtime);
+      }).pipe(Effect.exit);
+
+      if (Exit.isFailure(exit)) {
+        yield* Effect.tryPromise(() => runtime.dispose()).pipe(Effect.orDie);
+        const failure = Cause.failureOption(exit.cause);
+        if (Option.isSome(failure) && failure.value instanceof ServiceNotAvailableError) {
+          return yield* Effect.fail(failure.value);
+        }
+        const defect = Cause.dieOption(exit.cause);
+        if (Option.isSome(defect) && defect.value instanceof ServiceNotAvailableError) {
+          return yield* Effect.fail(defect.value);
+        }
+        return yield* Effect.fail(
+          new ServiceNotAvailableError('layer materialization failed', {
+            message: `Layer materialization failed: ${Cause.pretty(exit.cause)}`,
+          }),
+        );
+      }
+    });
   }
 
   async destroy() {
-    if (this.#managedRuntime) {
-      await this.#managedRuntime.dispose();
-    }
+    await Promise.all(this.#managedRuntimes.map((runtime) => runtime.dispose()));
+    this.#managedRuntimes = [];
   }
 
   #sortLayers() {
