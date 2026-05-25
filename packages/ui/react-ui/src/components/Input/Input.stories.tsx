@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useRef } from 'react';
+import React from 'react';
 
 import { type MessageValence } from '@dxos/ui-types';
 
