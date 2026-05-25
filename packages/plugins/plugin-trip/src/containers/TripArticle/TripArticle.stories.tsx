@@ -97,7 +97,7 @@ export const Default: Story = {
         daysFromNow: 4,
         departHour: 9,
         durationHours: 1,
-        operator: { name: 'Thameslink' },
+        operator: { name: 'Trainline' },
         trainNumber: 'TL 9F32',
       })
       .addTrain({

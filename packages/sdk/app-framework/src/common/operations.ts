@@ -24,6 +24,7 @@ export namespace UndoOperation {
       key: `${UNDO_NAMESPACE}.operation.show-undo`,
       name: 'Show Undo',
       description: 'Show an undo toast notification.',
+      icon: 'ph--arrow-counter-clockwise--regular',
     },
     executionMode: 'sync',
     services: [Capability.Service],

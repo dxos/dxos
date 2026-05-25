@@ -3,24 +3,30 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 
 import { type MessageValence } from '@dxos/ui-types';
 
 import { withLayoutVariants, withTheme } from '../../testing';
 import {
   type CheckboxProps,
+  type DateInputProps,
+  type DateTimeInputProps,
   Input,
   type PinInputProps,
   type SwitchProps,
   type TextAreaProps,
   type TextInputProps,
+  type TimeProps,
 } from './Input';
 
 type VariantMap = {
   text: TextInputProps;
   pin: PinInputProps;
   textarea: TextAreaProps;
+  time: TimeProps;
+  date: DateInputProps;
+  datetime: DateTimeInputProps;
   checkbox: CheckboxProps;
   switch: SwitchProps;
 };
@@ -54,6 +60,9 @@ const DefaultStory = ({
       {kind === 'text' && <Input.TextInput {...props} />}
       {kind === 'pin' && <Input.PinInput {...props} />}
       {kind === 'textarea' && <Input.TextArea {...props} />}
+      {kind === 'time' && <Input.Time {...props} />}
+      {kind === 'date' && <Input.Date {...props} />}
+      {kind === 'datetime' && <Input.DateTime {...props} />}
       {kind === 'checkbox' && <Input.Checkbox {...props} />}
       {kind === 'switch' && <Input.Switch {...props} />}
 
@@ -173,6 +182,47 @@ export const PinInput: Story = {
   },
 };
 
+export const Time: Story = {
+  args: {
+    kind: 'time',
+    label: 'Time',
+    defaultValue: '09:30',
+  },
+};
+
+export const TimeUncontrolled: Story = {
+  args: {
+    kind: 'time',
+    label: 'Time (uncontrolled)',
+    defaultValue: '14:00',
+  },
+};
+
+export const TimeDisabled: Story = {
+  args: {
+    kind: 'time',
+    label: 'Time (disabled)',
+    defaultValue: '12:00',
+    disabled: true,
+  },
+};
+
+export const Date: Story = {
+  args: {
+    kind: 'date',
+    label: 'Date',
+    defaultValue: '1990-05-12',
+  },
+};
+
+export const DateTime: Story = {
+  args: {
+    kind: 'datetime',
+    label: 'Date & time',
+    defaultValue: '2026-06-01T15:30',
+  },
+};
+
 export const Checkbox: Story = {
   args: {
     kind: 'checkbox',
@@ -221,47 +271,6 @@ export const TextInputTypes: Story = {
           <Input.TextInput type={type} placeholder={placeholder} />
         </Input.Root>
       ))}
-    </div>
-  ),
-};
-
-/**
- * Single `datetime-local` input that auto-focuses and re-invokes
- * `showPicker()` on every focus so the native picker pops open as soon
- * as the story mounts. Browsers don't expose a way to lock the picker
- * permanently open — this is the closest approximation for visual
- * inspection of the native picker UI.
- */
-const DateTimeLocalPickerOpen = () => {
-  const ref = useRef<HTMLInputElement>(null);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) {
-      return;
-    }
-    const open = () => {
-      try {
-        el.showPicker?.();
-      } catch {
-        // Some browsers reject showPicker() if not user-initiated; ignore.
-      }
-    };
-    el.addEventListener('focus', open);
-    el.focus();
-    return () => el.removeEventListener('focus', open);
-  }, []);
-  return (
-    <Input.Root>
-      <Input.Label>{'type="datetime-local"'}</Input.Label>
-      <Input.TextInput ref={ref} type='datetime-local' />
-    </Input.Root>
-  );
-};
-
-export const DateTimeLocalPicker: Story = {
-  render: () => (
-    <div className='min-w-[24rem]'>
-      <DateTimeLocalPickerOpen />
     </div>
   ),
 };

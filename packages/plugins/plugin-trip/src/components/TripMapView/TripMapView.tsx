@@ -10,16 +10,16 @@ import {
   type GlobeController,
   globeStyles,
   useDrag,
-  useFlyTo,
   useGlobeZoomHandler,
   useTour,
+  useWheel,
 } from '@dxos/react-ui-geo';
 import { loadTopology } from '@dxos/react-ui-geo/data';
 
 import { Segment } from '#types';
 
-import { type SegmentCardAction } from '../SegmentCard/SegmentCard';
-import { SegmentStack } from '../SegmentStack/SegmentStack';
+import { type SegmentCardAction } from '../SegmentCard';
+import { SegmentStack } from '../SegmentStack';
 
 const initialRotation: [number, number, number] = [0, -20, 0];
 const initialZoom = 1.2;
@@ -89,7 +89,7 @@ export type TripMapViewProps = {
  *
  * Selecting a segment in the itinerary (or via SegmentArticle) smoothly
  * animates the globe to that segment's first geo-tagged point using a
- * great-circle interpolation (`useFlyTo`). Clicking a point on the globe
+ * great-circle interpolation (`controller.flyTo`). Clicking a point on the globe
  * selects the nearest segment via the `onSelect` callback.
  *
  * Composable: the root <div> forwards refs and merges incoming
@@ -108,8 +108,8 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
     }, []);
 
     const handleZoom = useGlobeZoomHandler(controller);
+    useWheel(controller);
     useDrag(controller);
-    const flyTo = useFlyTo(controller);
 
     // Build the geo features.
     const features = useMemo(() => {
@@ -140,8 +140,8 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
     const [tourRunning, setTourRunning] = useTour(controller, tourPoints, { loop: true });
 
     // Recenter the globe on the selected segment's first geo-tagged point
-    // whenever the selection changes. The transition is animated by
-    // `useFlyTo`, which interrupts any in-flight tween.
+    // whenever the selection changes. `controller.flyTo` interrupts any
+    // in-flight tween on the same globe.
     const lastRecenterRef = useRef<string | undefined>(undefined);
     useEffect(() => {
       if (!controller || !selectedSegmentId) {
@@ -155,9 +155,10 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
       if (!point) {
         return;
       }
+
       lastRecenterRef.current = selectedSegmentId;
-      flyTo(point);
-    }, [controller, segments, selectedSegmentId, flyTo]);
+      void controller.flyTo(point).catch(() => {});
+    }, [controller, segments, selectedSegmentId]);
 
     // Bridge SegmentStack actions to the parent's selection callback.
     const handleStackAction = useCallback(
@@ -217,7 +218,7 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
     return (
       <div
         {...composableProps(props, {
-          classNames: 'grid grid-cols-[16rem_1fr] h-full w-full overflow-hidden bg-black',
+          classNames: 'grid grid-cols-[calc(var(--spacing-card-min-width)+2rem)_1fr] h-full w-full overflow-hidden',
         })}
         ref={forwardedRef}
       >
@@ -225,7 +226,6 @@ export const TripMapView = composable<HTMLDivElement, TripMapViewProps>(
           aria-label='Itinerary'
           className='flex flex-col overflow-hidden border-r border-subdued-separator bg-base-surface'
         >
-          <div className='shrink-0 px-3 py-2 text-sm font-medium border-b border-subdued-separator'>Itinerary</div>
           {segments.length === 0 ? (
             <div className='p-3 text-sm text-description'>No segments yet.</div>
           ) : (

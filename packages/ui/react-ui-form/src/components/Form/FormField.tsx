@@ -29,6 +29,7 @@ import { getRefProps } from '../../util';
 import {
   ArrayField,
   BooleanField,
+  DateField,
   GeoPointField,
   MarkdownField,
   NumberField,
@@ -294,9 +295,12 @@ const getFormField = ({ type, format }: FormFieldComponentProps): FormFieldCompo
 
   const formatField = Match.value(format).pipe(
     Match.withReturnType<FormFieldComponent | undefined>(),
+    Match.when(Format.TypeFormat.Date, () => DateField),
+    Match.when(Format.TypeFormat.DateTime, () => DateField),
     Match.when(Format.TypeFormat.GeoPoint, () => GeoPointField),
     Match.when(Format.TypeFormat.Markdown, () => MarkdownField),
     Match.when(Format.TypeFormat.Text, () => TextAreaField),
+    Match.when(Format.TypeFormat.Time, () => DateField),
     Match.orElse(() => undefined),
   );
   if (formatField) {

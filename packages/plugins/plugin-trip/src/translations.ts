@@ -34,6 +34,7 @@ export const translations = [
         'segment.accommodation.label': 'Accommodation',
         'segment.activity.label': 'Activity',
         'segment.delete.label': 'Delete segment',
+        'segment.depart.placeholder': 'Pick a departure date',
       },
     },
   },

@@ -17,7 +17,7 @@ const SHEET_OPERATION = `${meta.id}.operation`;
 const Axis = Schema.Union(Schema.Literal('row'), Schema.Literal('col'));
 
 export const InsertAxis = Operation.make({
-  meta: { key: `${SHEET_OPERATION}.axis-insert`, name: 'Insert Axis' },
+  meta: { key: `${SHEET_OPERATION}.axis-insert`, name: 'Insert Axis', icon: 'ph--plus--regular' },
   input: Schema.Struct({
     model: Schema.Any,
     axis: Axis,
@@ -38,7 +38,7 @@ export const DropAxisOutput = Schema.Struct({
 export type DropAxisOutput = Schema.Schema.Type<typeof DropAxisOutput>;
 
 export const DropAxis = Operation.make({
-  meta: { key: `${SHEET_OPERATION}.axis-drop`, name: 'Drop Axis' },
+  meta: { key: `${SHEET_OPERATION}.axis-drop`, name: 'Drop Axis', icon: 'ph--trash--regular' },
   input: Schema.Struct({
     model: Schema.Any,
     axis: Axis,
@@ -48,7 +48,7 @@ export const DropAxis = Operation.make({
 });
 
 export const ScrollToAnchor = Operation.make({
-  meta: { key: `${SHEET_OPERATION}.scroll-to-anchor`, name: 'Scroll To Anchor' },
+  meta: { key: `${SHEET_OPERATION}.scroll-to-anchor`, name: 'Scroll To Anchor', icon: 'ph--anchor-simple--regular' },
   services: [Capability.Service],
   input: Schema.Struct({
     subject: Schema.String.annotations({ description: 'Attendable ID of the sheet.' }),
@@ -62,7 +62,7 @@ export const ScrollToAnchor = Operation.make({
  * Restore a dropped axis (inverse of DropAxis).
  */
 export const RestoreAxis = Operation.make({
-  meta: { key: `${SHEET_OPERATION}.restore-axis`, name: 'Restore Axis' },
+  meta: { key: `${SHEET_OPERATION}.restore-axis`, name: 'Restore Axis', icon: 'ph--clock-counter-clockwise--regular' },
   input: Schema.Struct({
     model: Schema.Any.annotations({ description: 'The sheet model.' }),
     axis: Axis.annotations({ description: 'The axis type (row or col).' }),
