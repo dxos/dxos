@@ -31,19 +31,6 @@ export type ServiceClass = Schema.Schema.Type<typeof ServiceClass>;
 
 /**
  * Shared fields for any leg that moves between two places at scheduled times.
- *
- * -------------------
- * | JFK    | LHR    |
- * | May 23 | May 24 |
- * | 10:00  | 12:00  |
- * -------------------
- * | Delta 123       |
- * -------------------
- *
- * <section cols={2}>
- *   <field name="origin" />
- *   <field name="destination" />
- * </section>
  */
 const transportFields = {
   /** Operator of the leg: airline for flights, rail operator for trains, ferry line for boats, road operator for taxi/bus. */

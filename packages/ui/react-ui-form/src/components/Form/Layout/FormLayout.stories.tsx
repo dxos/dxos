@@ -4,12 +4,14 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Format, Type } from '@dxos/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Tooltip } from '@dxos/react-ui';
+import { Editor } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 import { trim } from '@dxos/util';
 
 import { translations } from '#translations';
@@ -17,6 +19,7 @@ import { translations } from '#translations';
 import { TestLayout } from '../../testing';
 import { Form, type FormRootProps, omitId } from '../Form';
 import { FormLayoutAnnotation } from './annotation';
+import { parseLayout } from './parser';
 
 /**
  * Sample schema: a Flight booking carries airline, flight number, route, dates,
@@ -133,4 +136,77 @@ export const SchemaAnnotation: Story = {
   args: {
     schema: omitId(AnnotatedFlight),
   },
+};
+
+/**
+ * Live playground: the layout template lives in a code editor on the right.
+ * The form on the left re-renders as you type. If the template fails to
+ * parse, the previous valid layout stays on screen and an error banner
+ * surfaces under the editor.
+ */
+const PlaygroundStory = () => {
+  const schema = useMemo(() => omitId(Flight) as unknown as Schema.Schema<any>, []);
+  const [template, setTemplate] = useState(FLIGHT_LAYOUT);
+  const [error, setError] = useState<string | undefined>();
+  const lastValid = useRef(FLIGHT_LAYOUT);
+
+  useEffect(() => {
+    try {
+      parseLayout(template);
+      lastValid.current = template;
+      setError(undefined);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  }, [template]);
+
+  const [values, setValues] = useState<Partial<FlightValues>>({
+    airline: 'United Airlines',
+    flightNumber: 'UA123',
+    origin: 'SFO',
+    destination: 'LHR',
+    departAt: '2026-06-01T15:30:00.000Z',
+    arriveAt: '2026-06-02T09:30:00.000Z',
+    cabin: 'economy',
+  });
+
+  const handleSave = useCallback<NonNullable<FormRootProps<any>['onSave']>>((next) => {
+    setValues(next as Partial<FlightValues>);
+  }, []);
+
+  const extensions = useMemo(
+    () => [createBasicExtensions({ placeholder: 'Edit layout DSL…' }), createThemeExtensions()],
+    [],
+  );
+
+  return (
+    <Tooltip.Provider>
+      <div className='grid grid-cols-2 gap-form-gap h-full p-form-padding overflow-hidden'>
+        <div className='overflow-auto'>
+          <Form.Root schema={schema} defaultValues={values} onSave={handleSave} autoSave>
+            <Form.Viewport>
+              <Form.Content>
+                <Form.Layout schema={schema} template={lastValid.current} />
+              </Form.Content>
+            </Form.Viewport>
+          </Form.Root>
+        </div>
+        <div className='flex flex-col overflow-hidden border border-separator rounded-sm'>
+          <Editor.Root>
+            <Editor.View
+              classNames='flex-1 overflow-auto font-mono text-sm'
+              extensions={extensions}
+              value={template}
+              onChange={setTemplate}
+            />
+          </Editor.Root>
+          {error && <div className='border-t border-separator p-2 text-sm text-error-text font-mono'>{error}</div>}
+        </div>
+      </div>
+    </Tooltip.Provider>
+  );
+};
+
+export const Playground: Story = {
+  render: () => <PlaygroundStory />,
 };
