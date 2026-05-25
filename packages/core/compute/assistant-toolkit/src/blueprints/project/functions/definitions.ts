@@ -8,7 +8,6 @@ import { AiService, OpaqueToolkit } from '@dxos/ai';
 import { AiContext } from '@dxos/assistant';
 import { Trace, TriggerEvent, Operation, OperationRegistry } from '@dxos/compute';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
-import { QueueService } from '@dxos/functions';
 
 import { Agent } from '../../../types';
 
@@ -28,7 +27,6 @@ export const AgentWorker = Operation.make({
   services: [
     AiService.AiService,
     Database.Service,
-    QueueService,
     Feed.FeedService,
     OperationRegistry.Service,
     Trace.TraceService,
