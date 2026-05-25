@@ -7,7 +7,23 @@ import { type DocumentId } from '@automerge/automerge-repo';
 
 import { type Context } from '@dxos/context';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
-import { type AutomergeProtocolMessage } from '@dxos/protocols';
+import { type AutomergeProtocolMessage, type SubductionProtocolMessage } from '@dxos/protocols';
+
+/**
+ * Union of every shape the read/write streams below can carry.
+ *
+ * @remarks
+ * - {@link AutomergeProtocolMessage}: the classical automerge-repo sync frames
+ *   (carried by `EchoEdgeReplicator`, mesh, in-memory `TestAdapter`).
+ * - {@link SubductionProtocolMessage}: the in-process subduction shape
+ *   (carried by `EchoEdgeSubductionReplicator` — envelopes are unwrapped to
+ *   raw `SubductionConnectionMessage` before they reach the stream).
+ *
+ * The interface uses the union so a single `EchoNetworkAdapter` instance can
+ * be wired behind either replicator without resorting to type casts at the
+ * boundary.
+ */
+export type ReplicatorConnectionMessage = AutomergeProtocolMessage | SubductionProtocolMessage;
 
 // TODO(burdon): Rename AutomergeReplicator?
 export interface AutomergeReplicator {
@@ -62,12 +78,12 @@ export interface AutomergeReplicatorConnection {
   /**
    * Stream to read messages coming from the remote peer.
    */
-  readable: ReadableStream<AutomergeProtocolMessage>;
+  readable: ReadableStream<ReplicatorConnectionMessage>;
 
   /**
    * Stream to write messages to the remote peer.
    */
-  writable: WritableStream<AutomergeProtocolMessage>;
+  writable: WritableStream<ReplicatorConnectionMessage>;
 
   /**
    * @returns true if the document should be advertised to this peer.

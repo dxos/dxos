@@ -12,7 +12,17 @@ import { type EdgeConnection, type EdgeHttpClient } from '@dxos/edge-client';
 import { invariant } from '@dxos/invariant';
 import type { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type AutomergeProtocolMessage, EdgeService, type PeerId } from '@dxos/protocols';
+import {
+  EdgeService,
+  MESSAGE_TYPE_COLLECTION_QUERY,
+  MESSAGE_TYPE_COLLECTION_STATE,
+  MESSAGE_TYPE_SUBDUCTION_CONNECTION,
+  MESSAGE_TYPE_SUBDUCTION_FRAME,
+  MESSAGE_TYPE_SUBDUCTION_RECONNECT,
+  type PeerId,
+  type SubductionProtocolMessage,
+  type SubductionProtocolMessageEnveloped,
+} from '@dxos/protocols';
 import { buf } from '@dxos/protocols/buf';
 import {
   type Message as RouterMessage,
@@ -226,10 +236,10 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
   private readonly _onRemoteDisconnected: () => Promise<void>;
   private readonly _onRestartRequested: () => void;
 
-  private _readableStreamController!: ReadableStreamDefaultController<AutomergeProtocolMessage>;
+  private _readableStreamController!: ReadableStreamDefaultController<SubductionProtocolMessage>;
 
-  public readable: ReadableStream<AutomergeProtocolMessage>;
-  public writable: WritableStream<AutomergeProtocolMessage>;
+  public readable: ReadableStream<SubductionProtocolMessage>;
+  public writable: WritableStream<SubductionProtocolMessage>;
 
   constructor({
     edgeConnection,
@@ -252,14 +262,14 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
     this._onRemoteDisconnected = onRemoteDisconnected;
     this._onRestartRequested = onRestartRequested;
 
-    this.readable = new ReadableStream<AutomergeProtocolMessage>({
+    this.readable = new ReadableStream<SubductionProtocolMessage>({
       start: (controller) => {
         this._readableStreamController = controller;
       },
     });
 
-    this.writable = new WritableStream<AutomergeProtocolMessage>({
-      write: async (message: AutomergeProtocolMessage) => {
+    this.writable = new WritableStream<SubductionProtocolMessage>({
+      write: async (message: SubductionProtocolMessage) => {
         await this._sendMessage(this._ctx, message);
       },
     });
@@ -355,34 +365,79 @@ class EdgeSubductionReplicatorConnection extends Resource implements AutomergeRe
       return;
     }
 
-    const payload = cbor.decode(message.payload!.value) as any;
+    const payload = cbor.decode(message.payload!.value) as SubductionProtocolMessageEnveloped;
 
-    // Out-of-band reconnect signal from the edge (sent after DO hibernation).
-    if (payload?.type === 'subduction-reconnect') {
-      log.info('received subduction-reconnect signal');
-      this._onRestartRequested();
-      return;
+    switch (payload.type) {
+      case MESSAGE_TYPE_SUBDUCTION_RECONNECT:
+        log.info('received subduction-reconnect signal');
+        this._onRestartRequested();
+        return;
+      case MESSAGE_TYPE_SUBDUCTION_FRAME: {
+        // The edge echoes the client-supplied connectionId. Frames carrying a
+        // different id are leftovers from a previous connection lifetime
+        // (rotated by `_onRestartRequested`) and must be dropped.
+        if (payload.connectionId !== this._connectionId) {
+          log.verbose('dropping subduction-frame for different connection', {
+            expected: this._connectionId,
+            got: payload.connectionId,
+          });
+          return;
+        }
+        log.verbose('received subduction frame', { remoteId: this._remotePeerId });
+        const inner = payload.subductionFrame;
+        // Fix the peer id so subduction routing inside the Repo accepts the frame.
+        inner.senderId = this._remotePeerId as PeerId;
+        this._readableStreamController.enqueue(inner);
+        return;
+      }
+      case MESSAGE_TYPE_COLLECTION_QUERY:
+      case MESSAGE_TYPE_COLLECTION_STATE:
+        payload.senderId = this._remotePeerId as PeerId;
+        this._readableStreamController.enqueue(payload);
+        return;
+      default: {
+        const _exhaustive: never = payload;
+        log.warn('unknown subduction protocol message', { payload: _exhaustive });
+      }
     }
-
-    log.verbose('received subduction frame', { remoteId: this._remotePeerId });
-
-    // Fix the peer id so subduction routing inside the Repo accepts the frame.
-    const msg = payload as AutomergeProtocolMessage;
-    msg.senderId = this._remotePeerId as PeerId;
-    this._readableStreamController.enqueue(msg);
   }
 
-  private async _sendMessage(ctx: Context, message: AutomergeProtocolMessage): Promise<void> {
-    // Fix the peer id for the outbound frame.
-    (message as any).targetId = this._subductionServiceId as PeerId;
+  private async _sendMessage(ctx: Context, message: SubductionProtocolMessage): Promise<void> {
+    let wire: SubductionProtocolMessageEnveloped;
+    switch (message.type) {
+      case MESSAGE_TYPE_SUBDUCTION_CONNECTION:
+        message.targetId = this._subductionServiceId as PeerId;
+        wire = {
+          type: MESSAGE_TYPE_SUBDUCTION_FRAME,
+          connectionId: this._connectionId,
+          subductionFrame: message,
+        };
+        break;
+      case MESSAGE_TYPE_COLLECTION_QUERY:
+      case MESSAGE_TYPE_COLLECTION_STATE:
+        message.targetId = this._subductionServiceId as PeerId;
+        wire = message;
+        break;
+      case MESSAGE_TYPE_SUBDUCTION_RECONNECT:
+        // Edge → client only; the client never originates a reconnect signal.
+        log.warn('dropping unexpected subduction-reconnect outbound');
+        return;
+      default: {
+        const _exhaustive: never = message;
+        log.warn('dropping unexpected message type on subduction channel', {
+          type: (_exhaustive as { type: string }).type,
+        });
+        return;
+      }
+    }
 
     log.verbose('sending...', {
-      type: message.type,
+      type: wire.type,
       serviceId: this._subductionServiceId,
       remoteId: this._remotePeerId,
     });
 
-    const encoded = cbor.encode(message);
+    const encoded = cbor.encode(wire);
 
     try {
       await this._edgeConnection.send(

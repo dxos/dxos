@@ -16,7 +16,6 @@ import { type Context, LifecycleState } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import type { AutomergeProtocolMessage } from '@dxos/protocols';
 import { isNonNullable } from '@dxos/util';
 
 import { createIdFromSpaceKey } from '../common/space-id';
@@ -24,6 +23,7 @@ import {
   type AutomergeReplicator,
   type AutomergeReplicatorConnection,
   type RemoteDocumentExistenceCheckProps,
+  type ReplicatorConnectionMessage,
   type ShouldAdvertiseProps,
   type ShouldSyncCollectionProps,
 } from './echo-replicator';
@@ -54,8 +54,8 @@ export type EchoNetworkAdapterProps = {
 type ConnectionEntry = {
   isOpen: boolean;
   connection: AutomergeReplicatorConnection;
-  reader: ReadableStreamDefaultReader<AutomergeProtocolMessage>;
-  writer: WritableStreamDefaultWriter<AutomergeProtocolMessage>;
+  reader: ReadableStreamDefaultReader<ReplicatorConnectionMessage>;
+  writer: WritableStreamDefaultWriter<ReplicatorConnectionMessage>;
   requestedDocuments: Set<DocumentId>;
 };
 
@@ -247,7 +247,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
     // TODO(dmaretskyi): Find a way to enforce backpressure on AM-repo.
     const start = Date.now();
     connectionEntry.writer
-      .write(message as AutomergeProtocolMessage)
+      .write(message as ReplicatorConnectionMessage)
       .then(() => {
         this._params.monitor?.recordMessageSent(message, Date.now() - start);
       })
@@ -298,7 +298,7 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   }
 
   private _onMessage(connectionEntry: ConnectionEntry, message: Message): void {
-    const amMessage = message as AutomergeProtocolMessage;
+    const amMessage = message as ReplicatorConnectionMessage;
     if (amMessage.type === 'request') {
       this.documentRequested.emit({
         documentId: amMessage.documentId as DocumentId,
