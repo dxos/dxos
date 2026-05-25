@@ -251,7 +251,7 @@ const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext):
       return undefined;
     }
     return {
-      icon: ICONS.operationStart.icon,
+      icon: event.data.icon ?? ICONS.operationStart.icon,
       level: ICONS.operationStart.level,
       message: event.data.name ?? event.data.key,
       idSuffix: `${event.data.key}:start`,
@@ -264,7 +264,7 @@ const presentEvent = (event: Trace.FlatEvent, toolCallContext: ToolCallContext):
     }
     const success = event.data.outcome === 'success';
     return {
-      icon: success ? ICONS.operationEndSuccess.icon : ICONS.operationEndError.icon,
+      icon: event.data.icon ?? (success ? ICONS.operationEndSuccess.icon : ICONS.operationEndError.icon),
       level: success ? ICONS.operationEndSuccess.level : ICONS.operationEndError.level,
       message: `${event.data.name ?? event.data.key} - ${success ? 'Success' : 'Error'}`,
       idSuffix: `${event.data.key}:end`,
