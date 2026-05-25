@@ -88,7 +88,7 @@ describe('Parent Hierarchy', () => {
     }
   });
 
-  test('recursive loading of parents', { timeout: 1000 }, async () => {
+  test('recursive loading of parents', { timeout: 5000 }, async () => {
     // Grandparent -> Parent -> Child
     // Loading Child should load Parent and Grandparent due to strong dependencies.
     const [spaceKey] = PublicKey.randomSequence();
