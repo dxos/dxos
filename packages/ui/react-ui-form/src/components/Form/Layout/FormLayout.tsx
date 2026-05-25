@@ -12,7 +12,7 @@ import { type SchemaProperty } from '@dxos/effect';
 import { getFormProperties } from '../../../util';
 import { FormField, type FormFieldProps } from '../FormField';
 import { FormFieldErrorBoundary } from '../FormFieldComponent';
-import { FormLayoutAnnotation } from './annotation';
+import { DEFAULT_LAYOUT_NAME, FormLayoutAnnotation } from './annotation';
 import { LayoutParseError, type LayoutNode, parseLayout } from './parser';
 
 const FORM_LAYOUT_NAME = 'Form.Layout';
@@ -20,9 +20,15 @@ const FORM_LAYOUT_NAME = 'Form.Layout';
 export type FormLayoutProps = {
   /**
    * Template string in the FormLayout DSL (`<grid cols=…><field name=…/></grid>`).
-   * If omitted, the layout is read from the schema's `FormLayoutAnnotation`.
+   * If omitted, the layout is read from the schema's `FormLayoutAnnotation` —
+   * the entry named by `name` (default: `'default'`).
    */
   template?: string;
+  /**
+   * Picks a named layout out of `FormLayoutAnnotation`'s map when no
+   * explicit `template` is supplied. Defaults to `'default'`.
+   */
+  name?: string;
 } & Pick<FormFieldSetSubset, 'schema' | 'path' | 'readonly' | 'layout' | 'projection' | 'fieldMap' | 'fieldProvider'>;
 
 type FormFieldSetSubset = Pick<
@@ -38,11 +44,24 @@ type FormFieldSetSubset = Pick<
  * `FormLayoutAnnotation`. Fields not referenced in the template are hidden —
  * the template controls exactly what renders.
  */
-export const FormLayout = ({ schema, template, path, readonly, layout, projection, ...props }: FormLayoutProps) => {
+export const FormLayout = ({
+  schema,
+  template,
+  name = DEFAULT_LAYOUT_NAME,
+  path,
+  readonly,
+  layout,
+  projection,
+  ...props
+}: FormLayoutProps) => {
   const annotated = Option.getOrUndefined(FormLayoutAnnotation.get(schema));
-  const source = template ?? annotated;
+  const source = template ?? annotated?.[name];
   if (source === undefined) {
-    throw new LayoutParseError(`no template provided and schema has no FormLayoutAnnotation`);
+    throw new LayoutParseError(
+      annotated
+        ? `no layout named "${name}" on schema (available: ${Object.keys(annotated).join(', ') || '∅'})`
+        : `no template provided and schema has no FormLayoutAnnotation`,
+    );
   }
 
   const tree = useMemo(() => parseLayout(source), [source]);

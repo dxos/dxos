@@ -5,19 +5,34 @@
 import { createAnnotationHelper } from '@dxos/echo/internal';
 
 /**
- * Annotation carrying a `FormLayout` DSL template that controls how `Form.FieldSet`
- * arranges a schema's fields. When present, the template wins over linear rendering.
+ * Annotation carrying one or more named `FormLayout` DSL templates that
+ * control how `Form.FieldSet` / `Form.Layout` arrange a schema's fields.
+ * Callers select a variant via the `name` prop; the implicit name is
+ * `DEFAULT_LAYOUT_NAME` (`'default'`).
  *
  * Templates use a minimal XML grammar — see `parser.ts`. Example:
  *
- *   FormLayoutAnnotation.set(`
- *     <grid cols="2">
- *       <field name="origin"/>
- *       <field name="destination"/>
- *       <field name="provider" span="2"/>
- *     </grid>
- *   `)
+ *   FormLayoutAnnotation.set({
+ *     default: `
+ *       <grid cols="2">
+ *         <field name="origin"/>
+ *         <field name="destination"/>
+ *         <field name="provider" span="2"/>
+ *       </grid>
+ *     `,
+ *     card: `
+ *       <grid cols="1">
+ *         <field name="provider"/>
+ *         <field name="number"/>
+ *       </grid>
+ *     `,
+ *   })
  */
 export const FormLayoutAnnotationId = Symbol.for('@dxos/react-ui-form/annotation/Layout');
 
-export const FormLayoutAnnotation = createAnnotationHelper<string>(FormLayoutAnnotationId);
+export type FormLayoutMap = Record<string, string>;
+
+export const FormLayoutAnnotation = createAnnotationHelper<FormLayoutMap>(FormLayoutAnnotationId);
+
+/** Name used when no explicit variant is requested. */
+export const DEFAULT_LAYOUT_NAME = 'default';

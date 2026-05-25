@@ -60,8 +60,23 @@ const FLIGHT_LAYOUT = trim`
   </grid>
 `;
 
-/** Same schema but annotated so `Form.FieldSet` auto-picks the grid layout. */
-const AnnotatedFlight = Flight.annotations({}).pipe(FormLayoutAnnotation.set(FLIGHT_LAYOUT));
+/** Compact variant — single column, only the headline fields. */
+const FLIGHT_LAYOUT_COMPACT = trim`
+  <grid cols="1">
+    <field name="airline"/>
+    <field name="flightNumber"/>
+    <field name="departAt"/>
+  </grid>
+`;
+
+/**
+ * Same schema annotated with two named layouts. `Form.Layout name="…"`
+ * (or `Form.FieldSet layoutName="…"`) picks the variant; without a name
+ * the `'default'` entry is used.
+ */
+const AnnotatedFlight = Flight.annotations({}).pipe(
+  FormLayoutAnnotation.set({ default: FLIGHT_LAYOUT, compact: FLIGHT_LAYOUT_COMPACT }),
+);
 
 type FlightValues = Omit<Schema.Schema.Type<typeof Flight>, 'id'>;
 
@@ -138,6 +153,60 @@ export const SchemaAnnotation: Story = {
   args: {
     schema: omitId(AnnotatedFlight),
   },
+};
+
+/**
+ * Same annotated schema, but the story switches between the two named
+ * layouts (`default` and `compact`) via a radio above the form.
+ */
+const NamedAnnotationStory = () => {
+  const schema = useMemo(() => omitId(AnnotatedFlight) as unknown as Schema.Schema<any>, []);
+  const [layoutName, setLayoutName] = useState<'default' | 'compact'>('default');
+  const [values, setValues] = useState<Partial<FlightValues>>({
+    airline: 'United Airlines',
+    flightNumber: 'UA123',
+    origin: 'SFO',
+    destination: 'LHR',
+    departAt: '2026-06-01T15:30:00.000Z',
+    arriveAt: '2026-06-02T09:30:00.000Z',
+    cabin: 'economy',
+  });
+  const handleSave = useCallback<NonNullable<FormRootProps<any>['onSave']>>((next) => {
+    setValues(next as Partial<FlightValues>);
+  }, []);
+
+  return (
+    <Tooltip.Provider>
+      <TestLayout json={{ layoutName, values }}>
+        <div className='flex flex-col gap-2'>
+          <div className='flex gap-2 text-sm'>
+            {(['default', 'compact'] as const).map((name) => (
+              <label key={name} className='flex items-center gap-1'>
+                <input
+                  type='radio'
+                  name='layout'
+                  checked={layoutName === name}
+                  onChange={() => setLayoutName(name)}
+                />
+                {name}
+              </label>
+            ))}
+          </div>
+          <Form.Root schema={schema} defaultValues={values} onSave={handleSave} autoSave>
+            <Form.Viewport>
+              <Form.Content>
+                <Form.FieldSet layoutName={layoutName} />
+              </Form.Content>
+            </Form.Viewport>
+          </Form.Root>
+        </div>
+      </TestLayout>
+    </Tooltip.Provider>
+  );
+};
+
+export const NamedAnnotation: Story = {
+  render: () => <NamedAnnotationStory />,
 };
 
 /**
