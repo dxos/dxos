@@ -119,8 +119,35 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
       // Spec selector.
       'spec.kind': (props) => <SpecSelector {...props} readonly={readonlySpec} />,
 
-      // Queue feed selector with parent labels.
-      'spec.queue': (props) => <SelectField {...props} options={getFeedQueueOptions(feeds)} />,
+      // Feed selector with parent labels.
+      'spec.feed': (props) => {
+        const getValue = useCallback(() => {
+          const formValue = props.getValue();
+          if (Ref.isRef(formValue)) {
+            return formValue.dxn.toString() as string;
+          }
+          return undefined;
+        }, [props]);
+
+        const handleOnValueChange = useCallback(
+          (_type: any, dxnString: string) => {
+            const dxn = DXN.parse(dxnString);
+            if (dxn) {
+              props.onValueChange(props.type, Ref.fromDXN(dxn));
+            }
+          },
+          [props.type, props.onValueChange],
+        );
+
+        return (
+          <SelectField
+            {...props}
+            getValue={getValue as any}
+            onValueChange={handleOnValueChange}
+            options={getFeedOptions(feeds)}
+          />
+        );
+      },
 
       // TODO(wittjosiah): Copied from ViewEditor.
       // Query input editor.
@@ -155,14 +182,10 @@ const getFunctionOptions = (scripts: Script.Script[], functions: Operation.Persi
   return functions.map((fn) => ({ label: getLabel(fn), value: `dxn:echo:@:${fn.id}` }));
 };
 
-const getFeedQueueOptions = (feeds: Feed.Feed[]) => {
-  return feeds.flatMap((feed) => {
-    const queueDXN = Feed.getQueueDxn(feed);
-    if (!queueDXN) {
-      return [];
-    }
+const getFeedOptions = (feeds: Feed.Feed[]) => {
+  return feeds.map((feed) => {
     const parent = Obj.getParent(feed);
     const label = parent ? Entity.getLabel(parent) : Entity.getLabel(feed);
-    return [{ label: label ?? feed.id, value: queueDXN.toString() }];
+    return { label: label ?? feed.id, value: Obj.getDXN(feed).toString() };
   });
 };

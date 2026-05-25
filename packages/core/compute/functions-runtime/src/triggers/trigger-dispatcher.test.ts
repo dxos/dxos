@@ -347,9 +347,9 @@ describe('TriggerDispatcher', () => {
     );
   });
 
-  describe('Queue Triggers', () => {
+  describe('Feed Triggers', () => {
     it.effect(
-      'should invoke scheduled queue triggers',
+      'should invoke scheduled feed triggers',
       Effect.fnUntraced(function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
 
@@ -368,7 +368,7 @@ describe('TriggerDispatcher', () => {
         ]);
 
         const dispatcher = yield* TriggerDispatcher;
-        const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'] });
+        const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
         expect(results.length).toBe(1);
         expect(results[0].triggerId).toBe(trigger.id);
         expect(Exit.isSuccess(results[0].result)).toBe(true);
@@ -400,21 +400,21 @@ describe('TriggerDispatcher', () => {
         const dispatcher = yield* TriggerDispatcher;
 
         {
-          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'] });
+          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
           expect(results.length).toBe(1);
           expect(results[0].triggerId).toBe(trigger.id);
           expect(Exit.isSuccess(results[0].result)).toBe(true);
         }
 
         {
-          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'] });
+          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
           expect(results.length).toBe(1);
           expect(results[0].triggerId).toBe(trigger.id);
           expect(Exit.isSuccess(results[0].result)).toBe(true);
         }
 
         {
-          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'] });
+          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
           expect(results.length).toBe(0);
         }
       }, Effect.provide(TestTriggerDispatcherLayer)),
@@ -444,7 +444,7 @@ describe('TriggerDispatcher', () => {
         yield* Feed.append(feed, [person]);
 
         const dispatcher = yield* TriggerDispatcher;
-        const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'] });
+        const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
         expect(results.length).toBe(1);
         expect(results[0].triggerId).toBe(trigger.id);
         const exit = results[0].result;
@@ -483,20 +483,20 @@ describe('TriggerDispatcher', () => {
         const dispatcher = yield* TriggerDispatcher;
 
         {
-          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'] });
+          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
           expect(results.length).toBe(2);
           expect(results.every((r) => Exit.isSuccess(r.result))).toBe(true);
         }
 
         {
-          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'] });
+          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
           expect(results.length).toBe(1);
           expect(results[0].triggerId).toBe(trigger.id);
           expect(Exit.isSuccess(results[0].result)).toBe(true);
         }
 
         {
-          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['queue'] });
+          const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
           expect(results.length).toBe(0);
         }
       }, Effect.provide(TestTriggerDispatcherLayer)),
