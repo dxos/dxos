@@ -12,7 +12,7 @@ import { TripBuilder } from '#testing';
 import { translations } from '#translations';
 
 import { type SegmentCardAction, type SegmentCardActionHandler, SegmentTile } from './SegmentCard';
-import { FlightEditableCard } from './SegmentEditCard';
+import { FlightEditableCard } from './SegmentEditableCard';
 
 const buildSegments = () =>
   new TripBuilder()
