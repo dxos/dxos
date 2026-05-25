@@ -10,6 +10,8 @@ import { type MessageValence } from '@dxos/ui-types';
 import { withLayoutVariants, withTheme } from '../../testing';
 import {
   type CheckboxProps,
+  type DateInputProps,
+  type DateTimeInputProps,
   Input,
   type PinInputProps,
   type SwitchProps,
@@ -23,6 +25,8 @@ type VariantMap = {
   pin: PinInputProps;
   textarea: TextAreaProps;
   time: TimeProps;
+  date: DateInputProps;
+  datetime: DateTimeInputProps;
   checkbox: CheckboxProps;
   switch: SwitchProps;
 };
@@ -57,6 +61,8 @@ const DefaultStory = ({
       {kind === 'pin' && <Input.PinInput {...props} />}
       {kind === 'textarea' && <Input.TextArea {...props} />}
       {kind === 'time' && <Input.Time {...props} />}
+      {kind === 'date' && <Input.Date {...props} />}
+      {kind === 'datetime' && <Input.DateTime {...props} />}
       {kind === 'checkbox' && <Input.Checkbox {...props} />}
       {kind === 'switch' && <Input.Switch {...props} />}
 
@@ -198,6 +204,22 @@ export const TimeDisabled: Story = {
     label: 'Time (disabled)',
     defaultValue: '12:00',
     disabled: true,
+  },
+};
+
+export const Date: Story = {
+  args: {
+    kind: 'date',
+    label: 'Date',
+    defaultValue: '1990-05-12',
+  },
+};
+
+export const DateTime: Story = {
+  args: {
+    kind: 'datetime',
+    label: 'Date & time',
+    defaultValue: '2026-06-01T15:30',
   },
 };
 

@@ -259,6 +259,90 @@ const Time = forwardRef<HTMLInputElement, InputScopedProps<TimeProps>>(
 Time.displayName = 'Input.Time';
 
 //
+// Date
+//
+
+type DateInputProps = InputSharedProps &
+  ThemedClassName<Omit<TextInputPrimitiveProps, 'type'>> & {
+    /** Show the native calendar-picker icon. Defaults to true. */
+    icon?: boolean;
+  };
+
+const Date_ = forwardRef<HTMLInputElement, InputScopedProps<DateInputProps>>(
+  (
+    { __inputScope, classNames, density: densityProp, elevation: elevationProp, variant, icon = true, ...props },
+    forwardedRef,
+  ) => {
+    const { tx } = useThemeContext();
+    const density = useDensityContext(densityProp);
+    const elevation = useElevationContext(elevationProp);
+    const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
+
+    return (
+      <TextInputPrimitive
+        {...props}
+        type='date'
+        className={tx(
+          'input.input',
+          {
+            variant,
+            disabled: props.disabled,
+            density,
+            elevation,
+            validationValence,
+          },
+          !icon && '[&::-webkit-calendar-picker-indicator]:hidden',
+          classNames,
+        )}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
+
+Date_.displayName = 'Input.Date';
+
+//
+// DateTime (datetime-local)
+//
+
+type DateTimeInputProps = DateInputProps;
+
+const DateTime = forwardRef<HTMLInputElement, InputScopedProps<DateTimeInputProps>>(
+  (
+    { __inputScope, classNames, density: densityProp, elevation: elevationProp, variant, icon = true, ...props },
+    forwardedRef,
+  ) => {
+    const { tx } = useThemeContext();
+    const density = useDensityContext(densityProp);
+    const elevation = useElevationContext(elevationProp);
+    const { validationValence } = useInputContext(INPUT_NAME, __inputScope);
+
+    return (
+      <TextInputPrimitive
+        {...props}
+        type='datetime-local'
+        className={tx(
+          'input.input',
+          {
+            variant,
+            disabled: props.disabled,
+            density,
+            elevation,
+            validationValence,
+          },
+          !icon && '[&::-webkit-calendar-picker-indicator]:hidden',
+          classNames,
+        )}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
+
+DateTime.displayName = 'Input.DateTime';
+
+//
 // TextArea
 //
 
@@ -415,6 +499,8 @@ export const Input = {
   TextInput,
   TextArea,
   Time,
+  Date: Date_,
+  DateTime,
   Checkbox,
   Switch,
   Label,
@@ -431,6 +517,8 @@ export type {
   TextInputProps,
   TextAreaProps,
   TimeProps,
+  DateInputProps,
+  DateTimeInputProps,
   CheckboxProps,
   SwitchProps,
   LabelProps,

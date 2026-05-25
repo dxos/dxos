@@ -33,8 +33,15 @@ const parseDateOnly = (value: string | undefined): Date | undefined => {
   if (!match) {
     return undefined;
   }
-  const [, year, month, day] = match;
-  return new Date(Number(year), Number(month) - 1, Number(day));
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(year, month - 1, day);
+  // Reject impossible calendar dates (e.g. 2026-02-31) which Date() would otherwise silently shift.
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+    return undefined;
+  }
+  return date;
 };
 
 const encodeDateOnly = (date: Date | undefined): string | undefined =>
