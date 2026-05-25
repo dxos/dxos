@@ -453,7 +453,7 @@ export interface OperationService {
    */
   schedule: <I, O>(
     op: Operation.Definition<I, O>,
-    ...args: void extends I ? [input?: I] : [input: I]
+    ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
   ) => Effect.Effect<void>;
 
   /**
@@ -517,9 +517,11 @@ export const invoke = <I, O>(
  */
 export const schedule = <I, O>(
   op: Operation.Definition<I, O>,
-  ...args: void extends I ? [input?: I] : [input: I]
+  ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
 ): Effect.Effect<void, never, Service> =>
-  Effect.flatMap(Service, (ops) => ops.schedule(op, args[0] as I)).pipe(Effect.withSpan('Operation.schedule'));
+  Effect.flatMap(Service, (ops) => ops.schedule(op, ...(args as [I, InvokeOptions?]))).pipe(
+    Effect.withSpan('Operation.schedule'),
+  );
 
 /**
  * Provides additional invocation options to all invocations.
@@ -534,7 +536,8 @@ export const withInvocationOptions = (options: InvokeOptions): Layer.Layer<Servi
           service.invoke(op, input, { ...options, ...invocationOptions })) as any,
         invokePromise: ((op: Operation.Definition.Any, input: any, invocationOptions: InvokeOptions) =>
           service.invokePromise(op, input, { ...options, ...invocationOptions })) as any,
-        schedule: service.schedule,
+        schedule: ((op: Operation.Definition.Any, input: any, invocationOptions: InvokeOptions) =>
+          service.schedule(op, input, { ...options, ...invocationOptions })) as any,
       });
     }),
   );

@@ -13,7 +13,6 @@ import { Database, Feed } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
-import { SpaceId } from '@dxos/keys';
 
 import { AiChatProcessor } from './processor';
 
@@ -31,13 +30,7 @@ describe('Chat processor', () => {
         const managedRuntime = ManagedRuntime.make(
           Effect.runSync(Effect.map(Effect.context<never>(), () => undefined as any)) as any,
         );
-        const processor = new AiChatProcessor(
-          session,
-          managedRuntime as any,
-          feed,
-          Layer.empty as any,
-          SpaceId.random(),
-        );
+        const processor = new AiChatProcessor(session, managedRuntime as any, feed, Layer.empty as any);
         expect(processor).toBeDefined();
         expect(processor.active).toBeDefined();
       },

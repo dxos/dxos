@@ -33,7 +33,6 @@ import { type Database, Feed, Obj, Ref } from '@dxos/echo';
 import { runAndForwardErrors, unwrapExit } from '@dxos/effect';
 import { type QueueService } from '@dxos/functions';
 import { AgentService } from '@dxos/functions-runtime';
-import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
@@ -149,11 +148,6 @@ export class AiChatProcessor {
      * {@link ProcessManagerRuntime} has access to space-affinity services.
      */
     private readonly _spaceLayer: Layer.Layer<SpaceServices, ServiceNotAvailableError, never>,
-    /**
-     * Space id of the chat. Threaded into {@link Operation.InvokeOptions} so
-     * spawned operation processes inherit the correct space context.
-     */
-    private readonly _spaceId: SpaceId,
     private readonly _options: AiChatProcessorOptions = defaultOptions,
   ) {
     this.#registry = this._options.observableRegistry ?? Registry.make();
@@ -304,9 +298,13 @@ export class AiChatProcessor {
    * Update the current chat's name.
    */
   async updateName(chat: Chat.Chat): Promise<void> {
+    const spaceId = Obj.getDatabase(chat)?.spaceId;
+    if (!spaceId) {
+      return;
+    }
     unwrapExit(
       await this._runtime.runPromiseExit(
-        Operation.invoke(AssistantOperation.UpdateChatName, { chat }, { spaceId: this._spaceId }).pipe(
+        Operation.invoke(AssistantOperation.UpdateChatName, { chat }, { spaceId }).pipe(
           Effect.provide(this._spaceLayer),
         ),
       ),
@@ -395,19 +393,12 @@ export class AiChatProcessor {
       return Effect.void;
     }
 
-    // `Operation.schedule` does not propagate `InvokeOptions.spaceId` (the
-    // OperationService.schedule signature has no options arg, and
-    // `withInvocationOptions` does not wrap `schedule`), so a scheduled
-    // space-affinity operation spawns a process without `space` in its
-    // environment and fails to resolve `Database.Service`. Use `invoke` with
-    // an explicit `spaceId` and fork as a daemon to retain fire-and-forget
-    // semantics. The trade-off is that the fork is not tracked by
-    // `pendingFollowups`, which is acceptable here.
+    const spaceId = Obj.getDatabase(chat)?.spaceId;
+    if (!spaceId) {
+      return Effect.void;
+    }
+
     log.info('scheduling chat name update', { hasName: !!chat.name, chance });
-    return Operation.invoke(AssistantOperation.UpdateChatName, { chat }, { spaceId: this._spaceId }).pipe(
-      Effect.ignore,
-      Effect.forkDaemon,
-      Effect.asVoid,
-    );
+    return Operation.schedule(AssistantOperation.UpdateChatName, { chat }, { spaceId });
   }
 }
