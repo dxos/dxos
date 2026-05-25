@@ -295,9 +295,15 @@ export class AiChatProcessor {
    * Update the current chat's name.
    */
   async updateName(chat: Chat.Chat): Promise<void> {
+    const spaceId = Obj.getDatabase(chat)?.spaceId;
+    if (!spaceId) {
+      return;
+    }
     unwrapExit(
       await this._runtime.runPromiseExit(
-        Operation.invoke(AssistantOperation.UpdateChatName, { chat }).pipe(Effect.provide(this._spaceLayer)),
+        Operation.invoke(AssistantOperation.UpdateChatName, { chat }, { spaceId }).pipe(
+          Effect.provide(this._spaceLayer),
+        ),
       ),
     );
   }

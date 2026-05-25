@@ -377,7 +377,10 @@ export const GenUiModule = ({ space }: ModuleProps) => {
   const [generating, setGenerating] = useState(false);
   const { invokePromise } = useOperationInvoker();
 
-  const invokerFn: InvokerFn = useCallback((op, args) => void invokePromise(op, args), [invokePromise]);
+  const invokerFn: InvokerFn = useCallback(
+    (op, args) => void invokePromise(op, args, { spaceId: space.id }),
+    [invokePromise, space.id],
+  );
 
   const handleGenerate = useSpaceCallback(
     space.id,
