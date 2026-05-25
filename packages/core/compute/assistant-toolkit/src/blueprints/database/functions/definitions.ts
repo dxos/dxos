@@ -13,6 +13,7 @@ export const Query = Operation.make({
   meta: {
     key: 'org.dxos.function.database.query',
     name: 'Query',
+    icon: 'ph--magnifying-glass--regular',
     description: trim`
       Query for objects in ECHO.
       Use this tool when searching for information in the space (both automerge and queues).
@@ -107,6 +108,7 @@ export const Load = Operation.make({
   meta: {
     key: 'org.dxos.function.database.load',
     name: 'Load object',
+    icon: 'ph--download--regular',
     description: trim`
       Loads the object or relation content.
       Can load multiple objects at at time.
@@ -127,6 +129,7 @@ export const ObjectCreate = Operation.make({
   meta: {
     key: 'org.dxos.function.database.object-create',
     name: 'Create object',
+    icon: 'ph--plus--regular',
     description: trim`
       Creates a new object and adds it to the current space.
       Get the schema from the schema-list tool and ensure that the data matches the corresponding schema.
@@ -146,6 +149,7 @@ export const ObjectUpdate = Operation.make({
   meta: {
     key: 'org.dxos.function.database.object-update',
     name: 'Update object',
+    icon: 'ph--pencil--regular',
     description: trim`
       Updates the object properties.
       References are provided in the following format: { "/": "dxn:..." }.
@@ -167,6 +171,7 @@ export const ObjectDelete = Operation.make({
     description: trim`
       Deletes the object.
     `,
+    icon: 'ph--trash--regular',
   },
   input: Schema.Struct({
     obj: Ref.Ref(Obj.Unknown),
@@ -179,6 +184,7 @@ export const SchemaAdd = Operation.make({
   meta: {
     key: 'org.dxos.function.database.schema-add',
     name: 'Add schema',
+    icon: 'ph--plus--regular',
     description: trim`
       Adds a schema to the space.
       The name will be used when displayed to the user.
@@ -199,6 +205,7 @@ export const SchemaList = Operation.make({
   meta: {
     key: 'org.dxos.function.database.schema-list',
     name: 'List schemas',
+    icon: 'ph--list--regular',
     description: trim`
       Lists schemas definitions.
     `,
@@ -214,6 +221,7 @@ export const ContextAdd = Operation.make({
   meta: {
     key: 'org.dxos.function.database.context-add',
     name: 'Add to context',
+    icon: 'ph--plus-circle--regular',
     description: trim`
       Adds the object to the chat context.
       Use this it for objects that are useful long-term for the conversation.
@@ -232,6 +240,7 @@ export const ContextRemove = Operation.make({
   meta: {
     key: 'org.dxos.function.database.context-remove',
     name: 'Remove from context',
+    icon: 'ph--minus-circle--regular',
     description: trim`
       Removes the object from the chat context.
       Use this it for objects that are no longer useful for the conversation.
@@ -250,6 +259,7 @@ export const RelationCreate = Operation.make({
   meta: {
     key: 'org.dxos.function.database.relation-create',
     name: 'Create relation',
+    icon: 'ph--arrows-merge--regular',
     description: trim`
       Creates a new relation and adds it to the current space.
       Get the schema from the schema-list tool and ensure that the data matches the corresponding schema.
@@ -274,6 +284,7 @@ export const RelationDelete = Operation.make({
     description: trim`
       Deletes the relation.
     `,
+    icon: 'ph--trash--regular',
   },
   input: Schema.Struct({
     rel: Ref.Ref(Relation.Unknown),
@@ -286,6 +297,7 @@ export const TagAdd = Operation.make({
   meta: {
     key: 'org.dxos.function.database.tag-add',
     name: 'Add tag',
+    icon: 'ph--tag--regular',
     description: trim`
       Adds a tag to an object.
       Tags are objects of type ${Tag.Tag.typename}.
@@ -304,6 +316,7 @@ export const TagRemove = Operation.make({
   meta: {
     key: 'org.dxos.function.database.tag-remove',
     name: 'Remove tag',
+    icon: 'ph--tag--regular',
     description: trim`
       Removes a tag from an object.
       Tags are objects of type ${Tag.Tag.typename}.

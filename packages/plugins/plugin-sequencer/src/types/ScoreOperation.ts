@@ -22,6 +22,7 @@ export const Read = Operation.make({
   meta: {
     key: 'org.dxos.function.sequencer.read',
     name: 'Read score',
+    icon: 'ph--music-notes--regular',
     description: trim`
       Reads a Score and returns its lead-sheet text. The lead-sheet format lists
       every track as a [index:name] section followed by events of the form
@@ -52,6 +53,7 @@ export const Write = Operation.make({
   meta: {
     key: 'org.dxos.function.sequencer.write',
     name: 'Write score',
+    icon: 'ph--music-notes--regular',
     description: trim`
       Replaces a Score's tracks and sequences from a lead-sheet text payload.
       The Score's tempo, time signature, name, and loop range are preserved.

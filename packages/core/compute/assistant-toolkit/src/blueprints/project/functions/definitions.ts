@@ -17,6 +17,7 @@ export const AgentWorker = Operation.make({
     key: 'org.dxos.function.agent.worker',
     name: 'Agent Worker',
     description: 'Agentic worker that drives the agent autonomously.',
+    icon: 'ph--brain--regular',
   },
   input: Schema.Struct({
     agent: Schema.suspend(() => Ref.Ref(Agent.Agent)),
@@ -41,6 +42,7 @@ export const Qualifier = Operation.make({
     name: 'Agent Qualifier',
     description:
       'Qualifier that determines if the event is relevant to the agent. Puts the data into the input queue of the agent.',
+    icon: 'ph--funnel--regular',
   },
   input: Schema.Struct({
     agent: Schema.suspend(() => Ref.Ref(Agent.Agent)),
@@ -55,6 +57,7 @@ export const GetContext = Operation.make({
     key: 'org.dxos.function.agent.get-context',
     name: 'Get Agent Context',
     description: 'Get the context of an agent.',
+    icon: 'ph--info--regular',
   },
   input: Schema.Struct({}),
   output: Schema.Struct({
@@ -78,6 +81,7 @@ export const AddArtifact = Operation.make({
     key: 'org.dxos.function.agent.add-artifact',
     name: 'Add artifact',
     description: 'Adds a new artifact.',
+    icon: 'ph--plus--regular',
   },
   input: Schema.Struct({
     name: Schema.String.annotations({

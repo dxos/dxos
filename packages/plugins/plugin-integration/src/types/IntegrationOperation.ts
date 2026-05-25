@@ -24,6 +24,7 @@ export const CreateIntegration = Operation.make({
     key: `${INTEGRATION_OPERATION}.create-integration`,
     name: 'Create Integration',
     description: 'Creates a new Integration bound to an existing AccessToken.',
+    icon: 'ph--plugs-connected--regular',
   },
   input: Schema.Struct({
     accessToken: Ref.Ref(AccessToken.AccessToken).annotations({
@@ -44,6 +45,7 @@ export const SetIntegrationTargets = Operation.make({
     key: `${INTEGRATION_OPERATION}.set-integration-targets`,
     name: 'Set Integration Targets',
     description: "Reconciles an Integration's targets to match the chosen selection.",
+    icon: 'ph--sliders--regular',
   },
   input: Schema.Struct({
     integration: Ref.Ref(Integration.Integration),

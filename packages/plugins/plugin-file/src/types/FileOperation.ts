@@ -18,7 +18,7 @@ import { FileAction } from './types';
 const FILE_OPERATION = `${meta.id}.operation`;
 
 export const Create = Operation.make({
-  meta: { key: `${FILE_OPERATION}.create`, name: 'Create File' },
+  meta: { key: `${FILE_OPERATION}.create`, name: 'Create File', icon: 'ph--file--regular' },
   services: [Capability.Service],
   input: Schema.extend(FileAction.CreateFileSchema, Schema.Struct({ db: Database.Database })),
   output: Schema.Struct({
