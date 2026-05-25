@@ -61,6 +61,9 @@ export const useDrag = (controller?: GlobeController | null, options: DragOption
         lockTilt: options.lockTilt,
         mode: options.mode,
         sensitivity: options.sensitivity,
+        // Zoom-driven gain: matches useWheel — degrees-per-pixel shrinks as the
+        // globe gets larger on screen so the drag feel is consistent across zoom.
+        getZoom: () => controller.zoom,
         time: 3_000,
         start: () => options.onUpdate?.({ type: 'start', controller }),
         finish: () => options.onUpdate?.({ type: 'end', controller }),

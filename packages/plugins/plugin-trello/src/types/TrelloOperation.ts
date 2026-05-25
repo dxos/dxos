@@ -26,6 +26,7 @@ export const GetTrelloBoards = Operation.make({
     key: `${TRELLO_OPERATION}.get-trello-boards`,
     name: 'Get Trello Boards',
     description: 'List Trello boards reachable from an integration without materializing local Kanbans.',
+    icon: 'ph--kanban--regular',
   },
   input: GetSyncTargetsInput,
   output: GetSyncTargetsOutput,
@@ -48,6 +49,7 @@ export const SyncTrelloBoard = Operation.make({
     key: `${TRELLO_OPERATION}.sync-trello-board`,
     name: 'Sync Trello Board',
     description: 'Reconcile cards for currently-selected Trello targets in an Integration.',
+    icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
     integration: Ref.Ref(Integration.Integration),

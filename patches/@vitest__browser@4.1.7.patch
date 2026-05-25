@@ -29,7 +29,7 @@ index e879cab476793ae4558a31d21f4b175ab5f3f5bd..773362579a28e0c06d6e993d20b7f484
        }
        const sendCall = get(target, p, handler);
 diff --git a/dist/index.js b/dist/index.js
-index eb265436ab2903c8805181f71f00a69d39f6d3a5..e0a5f3789190e56cca263b1164f2ff5a236715ed 100644
+index 761a5fcefd9d5e99ea3c5ddfa16ae82e09a4ec1a..e611da37c5992d2609bfa8142ed96909bcb8240e 100644
 --- a/dist/index.js
 +++ b/dist/index.js
 @@ -2880,7 +2880,23 @@ function createBirpc($functions, options) {

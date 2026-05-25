@@ -26,7 +26,7 @@ export default Capability.makeModule(
     return [
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Subscription.Subscription.typename,
-        inputSchema: Subscription.Subscription,
+        inputSchema: Subscription.CreateSubscriptionSchema,
         createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Subscription.makeSubscription(props);

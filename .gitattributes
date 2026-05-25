@@ -10,6 +10,10 @@ shrinkwrap.yaml              merge=binary
 npm-shrinkwrap.json          merge=binary
 yarn.lock                    merge=binary
 
+# Memoized LLM conversation caches — regenerate with
+# `ALLOW_LLM_GENERATION=1 moon run '#memoized-llm:test'` if conflicts occur.
+*.conversations.json         merge=binary
+
 # Rush's JSON config files use JavaScript-style code comments.  The rule below prevents pedantic
 # syntax highlighters such as GitHub's from highlighting these comments as errors.  Your text editor
 # may also require a special configuration to allow comments in JSON.

@@ -12,6 +12,7 @@ export const SyncIssues = Operation.make({
     key: 'org.dxos.function.linear.sync-issues',
     name: 'Linear',
     description: 'Sync issues from Linear.',
+    icon: 'ph--arrows-clockwise--regular',
   },
   input: Schema.Struct({
     team: Schema.String.annotations({

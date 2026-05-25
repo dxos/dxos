@@ -15,7 +15,7 @@ import * as Sketch from './Sketch';
 const SKETCH_OPERATION = `${meta.id}.operation`;
 
 export const Create = Operation.make({
-  meta: { key: `${SKETCH_OPERATION}.create`, name: 'Create Sketch' },
+  meta: { key: `${SKETCH_OPERATION}.create`, name: 'Create Sketch', icon: 'ph--pencil-simple--regular' },
   input: Schema.Struct({
     name: Schema.optional(Schema.String),
     schema: Schema.optional(Schema.String),

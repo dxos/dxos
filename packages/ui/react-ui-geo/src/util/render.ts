@@ -91,22 +91,24 @@ export const createLayers = (topology: Topology, features: Features, styles: Sty
   if (features) {
     const { points, lines } = features;
 
-    if (points && styles.point) {
-      layers.push({
-        styles: styles.point,
-        path: {
-          type: 'GeometryCollection',
-          geometries: points.map((point) => geoPoint(point)),
-        },
-      });
-    }
-
+    // Lines first so points (drawn after) sit on top — the route nodes should
+    // never be occluded by an arc that passes through them.
     if (lines && styles.line) {
       layers.push({
         styles: styles.line,
         path: {
           type: 'GeometryCollection',
           geometries: lines.map(({ source, target }) => geoLine(source, target)),
+        },
+      });
+    }
+
+    if (points && styles.point) {
+      layers.push({
+        styles: styles.point,
+        path: {
+          type: 'GeometryCollection',
+          geometries: points.map((point) => geoPoint(point)),
         },
       });
     }

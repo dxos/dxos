@@ -62,7 +62,7 @@ export const EditMessageArticle = ({ role, subject }: EditMessageArticleProps) =
       }
 
       await runtime.runPromise(
-        Operation.invoke(GmailFunctions.Send, { message }).pipe(
+        Operation.invoke(GmailFunctions.Send, { message }, { spaceId }).pipe(
           Effect.provide(ServiceResolver.provide({ space: spaceId }, Database.Service)),
         ),
       );

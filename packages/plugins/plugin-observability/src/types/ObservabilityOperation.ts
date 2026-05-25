@@ -18,6 +18,7 @@ export const Toggle = Operation.make({
     key: `${OBSERVABILITY_OPERATION}.toggle`,
     name: 'Toggle Observability',
     description: 'Toggle observability on or off.',
+    icon: 'ph--eye--regular',
   },
   services: [Capability.Service],
   input: Schema.Struct({
@@ -31,6 +32,7 @@ export const SendEvent = Operation.make({
     key: `${OBSERVABILITY_OPERATION}.send-event`,
     name: 'Send Event',
     description: 'Send an observability event.',
+    icon: 'ph--broadcast--regular',
   },
   services: [Capability.Service],
   input: Schema.Struct({

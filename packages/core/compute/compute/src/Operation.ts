@@ -45,6 +45,10 @@ export interface Definition<I, O, S = any> extends Pipeable.Pipeable, Definition
     readonly version?: string;
     readonly description?: string;
     /**
+     * Phosphor icon identifier in `ph--<name>--<variant>` format (e.g. `ph--file-text--regular`).
+     */
+    readonly icon?: string;
+    /**
      * Deployment ID for remote invocation.
      * Assigned by the EDGE function service when deployed.
      */
@@ -322,6 +326,11 @@ export const PersistentOperation = Schema$.Struct({
   // Local binding to a function name.
   // TODO(dmaretskyi): Add this field to Operation.Definition.
   binding: Schema$.optional(Schema$.String),
+
+  /**
+   * Phosphor icon identifier in `ph--<name>--<variant>` format (e.g. `ph--file-text--regular`).
+   */
+  icon: Schema$.optional(Schema$.String),
 }).pipe(
   // TODO(dmaretskyi): Keep typename as 'org.dxos.type.function' (not 'operation') to maintain
   //  backward compatibility with existing data and avoid requiring data migration.
@@ -359,6 +368,7 @@ export const serialize = (operation: Definition.Any): PersistentOperation => {
     },
     name: operation.meta.name ?? '',
     description: operation.meta.description,
+    icon: operation.meta.icon,
     updated: undefined,
     source: undefined,
     inputSchema: JsonSchema.toJsonSchema(operation.input),
@@ -385,6 +395,7 @@ export const deserialize = (record: PersistentOperation): Definition.Any => {
       name: record.name,
       version: meta.version ?? '0.0.0',
       description: record.description,
+      icon: record.icon,
       deployedId,
     },
   });
@@ -397,6 +408,7 @@ export const setFrom = (target: PersistentOperation, source: PersistentOperation
   Obj.update(target, (target) => {
     target.name = source.name ?? target.name;
     target.description = source.description;
+    target.icon = source.icon;
     target.updated = source.updated;
     // TODO(dmaretskyi): A workaround for an ECHO bug.
     target.inputSchema = source.inputSchema ? JSON.parse(JSON.stringify(source.inputSchema)) : undefined;
@@ -453,7 +465,7 @@ export interface OperationService {
    */
   schedule: <I, O>(
     op: Operation.Definition<I, O>,
-    ...args: void extends I ? [input?: I] : [input: I]
+    ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
   ) => Effect.Effect<void>;
 
   /**
@@ -517,9 +529,11 @@ export const invoke = <I, O>(
  */
 export const schedule = <I, O>(
   op: Operation.Definition<I, O>,
-  ...args: void extends I ? [input?: I] : [input: I]
+  ...args: void extends I ? [input?: I, options?: InvokeOptions] : [input: I, options?: InvokeOptions]
 ): Effect.Effect<void, never, Service> =>
-  Effect.flatMap(Service, (ops) => ops.schedule(op, args[0] as I)).pipe(Effect.withSpan('Operation.schedule'));
+  Effect.flatMap(Service, (ops) => ops.schedule(op, ...(args as [I, InvokeOptions?]))).pipe(
+    Effect.withSpan('Operation.schedule'),
+  );
 
 /**
  * Provides additional invocation options to all invocations.
@@ -534,7 +548,8 @@ export const withInvocationOptions = (options: InvokeOptions): Layer.Layer<Servi
           service.invoke(op, input, { ...options, ...invocationOptions })) as any,
         invokePromise: ((op: Operation.Definition.Any, input: any, invocationOptions: InvokeOptions) =>
           service.invokePromise(op, input, { ...options, ...invocationOptions })) as any,
-        schedule: service.schedule,
+        schedule: ((op: Operation.Definition.Any, input: any, invocationOptions: InvokeOptions) =>
+          service.schedule(op, input, { ...options, ...invocationOptions })) as any,
       });
     }),
   );
