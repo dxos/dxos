@@ -146,6 +146,8 @@ message RecoverIdentityRequest {
     string recovery_code = 1;
     ExternalSignature external = 2;
     string token = 3;
+    /// One-time proof minted by edge kms-service after a successful OAuth recovery flow.
+    string recovery_proof = 4;
   }
 }
 
