@@ -153,7 +153,7 @@ const ArtifactTileCard = composable<HTMLDivElement, { data: Obj.Unknown }>(({ da
         <Card.IconBlock padding>
           <Card.Icon icon={icon} />
         </Card.IconBlock>
-        <Card.Title>{Obj.getLabel(data)}</Card.Title>
+        <Card.Title>{Obj.getLabel(data, { fallback: 'typename' })}</Card.Title>
         {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
         <Card.IconBlock padding>
           <Menu.Trigger asChild disabled={!objectMenuItems?.length}>

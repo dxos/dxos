@@ -62,7 +62,7 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
       <Card.Root classNames={classNames}>
         <Card.Toolbar>
           <Card.Icon icon={icon} />
-          <Card.Title>{Entity.getLabel(subject)}</Card.Title>
+          <Card.Title>{Entity.getLabel(subject, { fallback: 'typename' })}</Card.Title>
           <Menu.Trigger asChild disabled={!menuItems?.length}>
             <Toolbar.IconButton
               iconOnly

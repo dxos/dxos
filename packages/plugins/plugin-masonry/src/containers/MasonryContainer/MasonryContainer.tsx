@@ -111,7 +111,7 @@ const Item = ({ data }: { data: any }) => {
       <Card.Root>
         <Card.Toolbar>
           <Card.Icon icon={icon} />
-          <Card.Title>{Obj.getLabel(data)}</Card.Title>
+          <Card.Title>{Obj.getLabel(data, { fallback: 'typename' })}</Card.Title>
           {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
           <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
             <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />

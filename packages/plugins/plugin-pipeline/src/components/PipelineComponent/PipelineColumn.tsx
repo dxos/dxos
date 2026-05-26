@@ -136,7 +136,7 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
             <Card.Root classNames={classNames} ref={composedRef}>
               <Card.Toolbar>
                 <Card.Icon icon={icon} />
-                <Card.Title>{Obj.getLabel(data)}</Card.Title>
+                <Card.Title>{Obj.getLabel(data, { fallback: 'typename' })}</Card.Title>
                 {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
                 <Card.IconBlock padding>
                   <Menu.Trigger asChild>
