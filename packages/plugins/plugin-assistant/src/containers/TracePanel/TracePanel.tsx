@@ -122,15 +122,20 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
           </ScrollContainer.Content>
         </ScrollContainer.Root>
 
-        {!tracePanelDebug && selectedCommit ? (
-          <Syntax.Root data={details[selectedCommit.id] ?? selectedCommit}>
-            <Syntax.Content>
-              <Syntax.Viewport>
-                <Syntax.Code className='text-xs' />
-              </Syntax.Viewport>
-            </Syntax.Content>
-          </Syntax.Root>
-        ) : null}
+        {!tracePanelDebug &&
+          selectedCommit &&
+          (() => {
+            const commit = selectedCommit;
+            return (
+              <Syntax.Root data={details[commit.id] ?? commit}>
+                <Syntax.Content>
+                  <Syntax.Viewport>
+                    <Syntax.Code className='text-xs' />
+                  </Syntax.Viewport>
+                </Syntax.Content>
+              </Syntax.Root>
+            );
+          })()}
       </div>
     );
   },
