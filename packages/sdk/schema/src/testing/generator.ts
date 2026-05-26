@@ -55,7 +55,7 @@ export const createObjectFactory =
     for (const { type, count } of specs) {
       try {
         invariant(Type.isObject(type), 'TypeSpec.type must be an object type');
-        const pipeline = createObjectPipeline(generator, type as Type.AnyObj, { db });
+        const pipeline = createObjectPipeline(generator, type, { db });
         const objects = await runAndForwardErrors(createArrayPipeline(count, pipeline));
         result.push(...objects);
         // NOTE: Flush so that available to other generators as refs.

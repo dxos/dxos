@@ -50,14 +50,14 @@ export const Main = () => {
       [Item, Document].reduce((map, type) => {
         map.set(Type.getTypename(type), type);
         return map;
-      }, new Map<string, Type.AnyObj>()),
+      }, new Map<string, typeof Item | typeof Document>()),
     [],
   );
 
   const getType = (typename: string | undefined) => typeMap.get(typename ?? Item.typename) ?? Item;
   const objectsOfType = useQuery(space?.db, Query.type(getType(type)));
   const objects = useMemo(
-    () => objectsOfType.filter((object) => match(filter, (object as any).content)),
+    () => objectsOfType.filter((object) => match(filter, object.content)),
     [objectsOfType, filter],
   );
 

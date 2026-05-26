@@ -184,7 +184,7 @@ export const makeRelationFromJsonSchema = (
   const sourceURI = internal.getTypeURIFromSpecifier(source);
   const targetURI = internal.getTypeURIFromSpecifier(target);
   const enrichedJsonSchema: internal.JsonSchemaType = {
-    ...(jsonSchema as any),
+    ...jsonSchema,
     entityKind: internal.EntityKind.Relation,
     relationSource: { $ref: sourceURI },
     relationTarget: { $ref: targetURI },
@@ -485,14 +485,16 @@ export function getMeta(entity: AnyEntity | internal.Mutable<AnyEntity> | Mutabl
   // The `Mutable` overload accepts the narrowed view passed to `Type.update`
   // callbacks; at runtime that draft IS the underlying persisted Type entity,
   // so the same `MetaId` lookup works.
-  invariant(isType(entity as unknown), 'Expected a Type entity.');
+  invariant(isType(entity), 'Expected a Type entity.');
   // Persisted Type entities carry runtime `ObjectMeta` via `MetaId`.
-  if (isMutable(entity as unknown)) {
-    return internal.getMetaChecked(entity as unknown as AnyEntity);
+  if (isMutable(entity)) {
+    return internal.getMetaChecked(entity);
   }
   // Static `EchoTypeSchema` entities (from `Type.makeObject` etc.) keep
   // typename/version as direct fields; synthesize a matching ObjectMeta.
-  const staticEntity = entity as unknown as { typename: string; version: string };
+  // `Type<A>` omits typename/version at the type level (they live in `Meta`
+  // on persisted Type entities), but the runtime value always carries them.
+  const staticEntity = entity as AnyObj | AnyRelation;
   return Object.freeze({
     keys: Object.freeze([]) as never,
     key: staticEntity.typename,
