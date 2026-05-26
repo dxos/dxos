@@ -9,12 +9,10 @@ import { Obj } from '@dxos/echo';
 import { useSchema } from '@dxos/echo-react';
 import { type JsonPath, splitJsonPath } from '@dxos/effect';
 import { Card, useTranslation } from '@dxos/react-ui';
-import { Form, type FormUpdateMeta, type Presentation, omitId } from '@dxos/react-ui-form';
+import { Form, type FormUpdateMeta, type Presentation, getFormProperties, omitId } from '@dxos/react-ui-form';
 import { type ProjectionModel } from '@dxos/schema';
 
 import { meta } from '#meta';
-
-import { isInternalKey } from './ExpandoCard';
 
 export type FormCardProps = AppSurface.ObjectCardProps & {
   projection?: ProjectionModel;
@@ -42,14 +40,28 @@ export const FormCard = ({ subject, projection, readonly = true, layout = 'compa
     return resolved && omitId(resolved);
   }, [runtimeSchema, staticSchema]);
 
-  // Treat objects whose only keys are ECHO internals (`id`, `~`-prefixed) or whose
-  // user-facing fields are all `null`/`undefined` as having no values to display.
-  // Readonly forms hide empty fields, so without this guard the form would render
-  // an empty scrollarea (see issue: e.g. fallback Table card with no rows).
-  const hasValues = useMemo(
-    () => Object.keys(subject ?? {}).some((key) => !isInternalKey(key) && (subject as any)[key] != null),
-    [subject],
-  );
+  // Predict whether the form would render anything visible. Without this guard,
+  // readonly + compact mode produces an empty scrollarea when every form-renderable
+  // field is unset (e.g., a Table object whose `view`/`sizes` are FormInput-hidden
+  // and whose `name` is undefined).
+  //
+  // - In editable mode (`!readonly`), the form renders empty fields, so we only
+  //   bail when there are no form-renderable properties at all.
+  // - In readonly mode, the form hides fields with null/undefined values, so we
+  //   bail when no form-renderable property has a non-null value.
+  const hasRenderableContent = useMemo(() => {
+    if (!schema) {
+      return false;
+    }
+    const properties = getFormProperties(schema.ast);
+    if (properties.length === 0) {
+      return false;
+    }
+    if (!readonly) {
+      return true;
+    }
+    return properties.some((prop) => (subject as any)?.[prop.name] != null);
+  }, [schema, subject, readonly]);
 
   const handleSave = useCallback(
     (values: Record<string, unknown>, { changed }: FormUpdateMeta<Record<string, unknown>>) => {
@@ -65,7 +77,7 @@ export const FormCard = ({ subject, projection, readonly = true, layout = 'compa
     [subject],
   );
 
-  if (!schema || !hasValues) {
+  if (!schema || !hasRenderableContent) {
     return (
       <Card.Content>
         <Card.Row>
