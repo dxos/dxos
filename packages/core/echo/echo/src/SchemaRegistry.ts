@@ -92,8 +92,8 @@ export interface SchemaRegistry {
    * If a different schema with the same name and version exists, the method throws an error.
    * If no schema with the same name and version exists, a new schema will be inserted based on semantic versioning rules.
    */
-  register<T extends Type.AnyEntity>(input: T[]): Promise<T[]>;
-  register(input: RegisterSchemaInput[]): Promise<Type.Type[]>;
+  register<T extends Type.AnyEntity>(input: T[]): Promise<Type.Persisted<T>[]>;
+  register(input: RegisterSchemaInput[]): Promise<Type.PersistedType[]>;
 
   query<Q extends Types.NoExcessProperties<Query, Q>>(query?: Q & Query): QueryResult.QueryResult<Type.Type>;
 }

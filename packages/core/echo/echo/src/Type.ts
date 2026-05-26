@@ -132,6 +132,22 @@ export const Type: Type<typeInternal.PersistentType> = typeInternal.PersistentTy
 const DRAFT_VERSION = '0.0.0';
 
 /**
+ * Marks a type entity as having been materialised (via the `*FromJsonSchema`
+ * factories or via `db.add(...)` / `db.schemaRegistry.register([...])`).
+ * Brands the surface `id` as required so the value satisfies
+ * {@link EntityModule.Unknown} and can be passed directly to `db.add`,
+ * `Ref.make`, etc. without casting away the optional-id from static
+ * declarations.
+ */
+export type Persisted<T extends AnyEntity> = T & { readonly id: ObjectId };
+
+/**
+ * Persisted form of the type-kind meta-schema entity — what
+ * {@link makeObjectFromJsonSchema} / {@link makeRelationFromJsonSchema} return.
+ */
+export type PersistedType = Persisted<Type<typeInternal.PersistentType>>;
+
+/**
  * Common props shared by the type-kind factories. Typename and version are
  * optional — drafts omit typename and default version to {@link DRAFT_VERSION}.
  */
@@ -151,7 +167,7 @@ type MakeTypeProps = {
  *
  * The returned entity is in-memory; persist it with `db.add(entity)`.
  */
-export const makeObjectFromJsonSchema = (props: MakeTypeProps): Type<typeInternal.PersistentType> => {
+export const makeObjectFromJsonSchema = (props: MakeTypeProps): PersistedType => {
   const { typename, version, ...data } = props;
   // `typename` / `version` are routed through `ObjectMeta` (`key` / `version`)
   // — the canonical registry-provenance pair — not data fields. Drafts default
@@ -161,7 +177,7 @@ export const makeObjectFromJsonSchema = (props: MakeTypeProps): Type<typeInterna
     keys: [],
     key: typename,
     version: version ?? DRAFT_VERSION,
-  }) as unknown as Type<typeInternal.PersistentType>;
+  }) as unknown as PersistedType;
 };
 
 /**
@@ -177,7 +193,7 @@ export const makeRelationFromJsonSchema = (
     source: AnyObj | internal.UnknownTypeSchema<any, typeof EntityModule.Kind.Object>;
     target: AnyObj | internal.UnknownTypeSchema<any, typeof EntityModule.Kind.Object>;
   },
-): Type<typeInternal.PersistentType> => {
+): PersistedType => {
   const { source, target, jsonSchema, typename, version, ...rest } = props;
   // Embed source/target DXNs + relation entity-kind into the jsonSchema so the
   // entity round-trips correctly through `toEffectSchema` / queries / refs.
@@ -195,7 +211,7 @@ export const makeRelationFromJsonSchema = (
     keys: [],
     key: typename,
     version: version ?? DRAFT_VERSION,
-  }) as unknown as Type<typeInternal.PersistentType>;
+  }) as unknown as PersistedType;
 };
 
 /**

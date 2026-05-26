@@ -50,8 +50,8 @@ export type DatabaseSchemaRegistryOptions = {
  * Registry of `PersistentType` mutable schema objects within a space.
  */
 export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.SchemaRegistry {
-  private readonly _schemaById: Map<string, Type.Type> = new Map();
-  private readonly _schemaByType: Map<string, Type.Type> = new Map();
+  private readonly _schemaById: Map<string, Type.PersistedType> = new Map();
+  private readonly _schemaByType: Map<string, Type.PersistedType> = new Map();
   private readonly _unsubscribeById: Map<string, CleanupFn> = new Map();
   private readonly _schemaSubscriptionCallbacks: SchemaSubscriptionCallback[] = [];
 
@@ -283,10 +283,10 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
   }
 
   // TODO(burdon): Tighten type signature to TypedObject?
-  async register<T extends Type.AnyEntity>(input: T[]): Promise<T[]>;
-  async register(input: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.Type[]>;
-  async register(inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.Type[]> {
-    const results: Type.Type[] = [];
+  async register<T extends Type.AnyEntity>(input: T[]): Promise<Type.Persisted<T>[]>;
+  async register(input: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.PersistedType[]>;
+  async register(inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.PersistedType[]> {
+    const results: Type.PersistedType[] = [];
 
     // TODO(dmaretskyi): Check for conflicts with the schema in the DB.
     for (const input of inputs) {
@@ -364,7 +364,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     return registered;
   }
 
-  private _register(schema: PersistentType): Type.Type {
+  private _register(schema: PersistentType): Type.PersistedType {
     const existing = this._schemaById.get(schema.id);
     if (existing != null) {
       return existing;
@@ -374,7 +374,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     // (typename === undefined) are indexed by id only. Typename lives in
     // `ObjectMeta.key` on persisted Type.Type entities — read the raw meta
     // directly so we get the user-set value (or `undefined` for drafts).
-    const typeEntity: Type.Type = schema;
+    const typeEntity: Type.PersistedType = schema as unknown as Type.PersistedType;
     const readTypename = (): string | undefined => Type.getMeta(schema).key;
     let previousTypename: string | undefined = readTypename();
     const subscription = getObjectCore(schema).updates.on(() => {
@@ -400,7 +400,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
   }
 
   // TODO(dmaretskyi): Figure out how to migrate the usages to the async `register` method.
-  private _addSchema(schema: Schema.Schema.AnyNoContext): Type.Type {
+  private _addSchema(schema: Schema.Schema.AnyNoContext): Type.PersistedType {
     if (Type.isMutable(schema)) {
       // The snapshot preserves typename/version in annotations.
       schema = Type.getSchema(schema).annotations({

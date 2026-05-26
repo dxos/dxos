@@ -50,7 +50,7 @@ describe('EchoSchema', () => {
 
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
     Obj.update(instanceWithSchemaRef, (instanceWithSchemaRef) => {
-      instanceWithSchemaRef.schema = Ref.make(schema as any);
+      instanceWithSchemaRef.schema = Ref.make(schema);
     });
     const schemaWithId = Type.getSchema(GeneratedSchema).annotations({
       [TypeAnnotationId]: {
@@ -74,7 +74,7 @@ describe('EchoSchema', () => {
       field: Schema.String,
     }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
-    const instanceWithSchemaRef = db.add(Obj.make(TestWithRefs, { schema: Ref.make(schema as any) }));
+    const instanceWithSchemaRef = db.add(Obj.make(TestWithRefs, { schema: Ref.make(schema) }));
     expect(Type.getTypename(instanceWithSchemaRef.schema!.target!)).to.eq(Type.getTypename(GeneratedSchema));
   });
 
@@ -86,7 +86,7 @@ describe('EchoSchema', () => {
     }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
     Obj.update(instanceWithSchemaRef, (instanceWithSchemaRef) => {
-      instanceWithSchemaRef.schemaArray!.push(Ref.make(schema as any));
+      instanceWithSchemaRef.schemaArray!.push(Ref.make(schema));
     });
     expect(Type.getTypename(instanceWithSchemaRef.schemaArray![0].target!)).to.eq(Type.getTypename(GeneratedSchema));
   });
@@ -94,7 +94,7 @@ describe('EchoSchema', () => {
   test('can be used to create objects', async () => {
     const { db } = await setupTest();
     const [schema] = await db.schemaRegistry.register([TestEmpty]);
-    const object = Obj.make(schema, {}) as any;
+    const object: Obj.Any = Obj.make(schema, {});
     Type.addFields(schema, { field1: Schema.String });
     Obj.update(object, (object) => {
       object.field1 = 'works';

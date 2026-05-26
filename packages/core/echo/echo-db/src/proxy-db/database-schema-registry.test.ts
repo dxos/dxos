@@ -192,8 +192,8 @@ describe('schema registry', () => {
       version: '0.1.0',
       jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ field: Schema.Number })),
     });
-    expect(registry.hasSchema(schemaToStore as any)).to.be.false;
-    const persistentSchema = db.add(schemaToStore as any);
+    expect(registry.hasSchema(schemaToStore)).to.be.false;
+    const persistentSchema = db.add(schemaToStore);
     expect(registry.hasSchema(persistentSchema)).to.be.true;
   });
 
@@ -259,14 +259,14 @@ describe('schema registry', () => {
     const { db } = await setupTest();
     const TestSchema = makeTestSchema();
     const [schema] = await db.schemaRegistry.register([TestSchema]);
-    const object: any = db.add(
+    const object: Obj.Any = db.add(
       Obj.make(schema, {
         name: 'Test',
       }),
     );
 
     Type.addFields(schema, { newField: Schema.String });
-    Obj.update(object, (object: any) => {
+    Obj.update(object, (object) => {
       object.newField = 'Test3';
     });
     expect(object.newField).toEqual('Test3');
