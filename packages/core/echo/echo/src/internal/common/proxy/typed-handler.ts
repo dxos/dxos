@@ -11,6 +11,7 @@ import { inspectCustom } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 
 import { getSchemaURI } from '../../Annotation';
+import { toEffectSchema } from '../../JsonSchema/json-schema';
 import { ObjectDeletedId, ParentId, SchemaId, StaticTypeSchemaSlot, TypeEntityId, TypeId } from '../types';
 import { executeChange, isInChangeContext, queueNotification } from './change-context';
 import { defineHiddenProperty } from './define-hidden-property';
@@ -231,8 +232,6 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
         //      `Type.addFields` / `Type.updateFields` mutate `jsonSchema` in
         //      place — a cache here would need its own invalidation hook,
         //      which isn't worth the complexity for the access frequency.
-        //      The rebuild closure is registered by
-        //      `internal/JsonSchema/json-schema.ts` (avoids a circular import).
         const existing = Reflect.get(target, prop, receiver);
         if (existing !== undefined) {
           return existing;
@@ -241,8 +240,7 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
         if (jsonSchema == null) {
           return undefined;
         }
-        invariant(_toEffectSchemaImpl, 'TypeSource schema builder not installed.');
-        return _toEffectSchemaImpl(jsonSchema);
+        return toEffectSchema(jsonSchema);
       }
     }
 
@@ -487,19 +485,6 @@ const setSchemaProperties = (obj: any, schema: Schema.Schema.AnyNoContext, typeS
       }
     }
   }
-};
-
-let _toEffectSchemaImpl: ((jsonSchema: any) => Schema.Schema.AnyNoContext) | undefined;
-
-/**
- * Lazy-installed escape hatch so the `case StaticTypeSchemaSlot:` arm of
- * `TypedReactiveHandler.get` can rebuild an Effect Schema from an in-memory
- * `PersistentType` entity's `jsonSchema` without this file taking a hard
- * dependency on the JsonSchema module (which would form a cycle).
- * Registered by `internal/JsonSchema/json-schema.ts` on module load.
- */
-export const setTypeSourceSchemaBuilder = (impl: (jsonSchema: any) => Schema.Schema.AnyNoContext): void => {
-  _toEffectSchemaImpl = impl;
 };
 
 export const prepareTypedTarget = <T>(target: T, schema: Schema.Schema<T>, typeSource?: TypeSource) => {
