@@ -80,6 +80,19 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
         db.add(rel);
       }
 
+      // Updated objects were mutated in place by the extractor; do NOT re-add,
+      // but record provenance for the contributing message.
+      for (const obj of result.updated ?? []) {
+        const rel = ExtractedFrom.make({
+          [Relation.Source]: obj,
+          [Relation.Target]: message,
+          extractorId: chosen.id,
+          extractedAt,
+          confidence: chosenConfidence,
+        });
+        db.add(rel);
+      }
+
       // Persist additional relations from the extractor.
       for (const rel of result.relations) {
         db.add(rel);
@@ -88,6 +101,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ExtractMessage> = Inb
       return {
         extractorId: chosen.id,
         created: result.created.length,
+        updated: result.updated?.length ?? 0,
         summary: result.summary,
       };
     }),

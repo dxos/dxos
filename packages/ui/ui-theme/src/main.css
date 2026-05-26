@@ -38,6 +38,7 @@
 
 /* @layer dx-components (components) */
 @import './css/components/button.css';
+@import './css/components/card.css';
 @import './css/components/checkbox.css';
 @import './css/components/dialog.css';
 @import './css/components/focus.css';
@@ -79,6 +80,16 @@
  */
 @source "../../../**/*.{ts,tsx,html}";
 @source "../../../../tools/**/*.{ts,tsx,html}";
+
+/**
+ * Exclude generated/static data files that have no Tailwind classes but are
+ * large enough to dominate scan time. The oxide scanner tokenizes every byte;
+ * a single 5MB geo-data file can pin Vite at 100% CPU for tens of seconds on
+ * a cold start.
+ */
+@source not "../../../ui/react-ui-geo/data/**";
+@source not "../../../ui/solid-ui-geo/data/**";
+@source not "../../../apps/composer-app/src/plugins/welcome/components/Welcome/hero-image.ts";
 
 /**
  * Force-emit CSS variables for the full color palette for all:

@@ -6832,6 +6832,9 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/lock-file':
+        specifier: workspace:*
+        version: link:../../common/lock-file
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
@@ -19892,6 +19895,9 @@ importers:
 
   packages/ui/react-ui-form:
     dependencies:
+      '@codemirror/lang-xml':
+        specifier: 'catalog:'
+        version: 6.1.0
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async

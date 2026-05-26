@@ -165,10 +165,9 @@ export const Spec: Story = {
     await expect(combobox).not.toBeDisabled();
     await expect(canvas.queryByLabelText('Method')).not.toBeInTheDocument();
 
-    // Feed — trigger kind switches; no Cron/Method fields should appear.
+    // Feed — should show Feed field label (distinct from kind combobox value).
     await selectKind(combobox, 'f');
     await expect(combobox).not.toBeDisabled();
-    await expect(canvas.queryByLabelText('Method')).not.toBeInTheDocument();
-    await expect(canvas.queryByLabelText('Cron')).not.toBeInTheDocument();
+    await expect(await canvas.findByText('Feed', { selector: 'label' })).toBeInTheDocument();
   },
 };
