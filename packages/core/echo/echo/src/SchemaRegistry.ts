@@ -53,17 +53,6 @@ export type Query = {
 };
 
 /**
- * Maps a {@link Query} input to the entity produced by `query(input)`.
- *
- * When the query pins an explicit `location` (`database` and/or `runtime`) the
- * result widens to `Type.AnyEntity`, since database locations can surface any
- * stored entity. Otherwise the query defaults to the runtime registry, whose
- * entries are canonical `Type.Type` records. This mirrors the narrowing that
- * existed prior to Option B (`Type.RuntimeType` is now `Type.Type`).
- */
-export type ExtractQueryResult<Q> = Q extends { location: ('database' | 'runtime')[] } ? Type.AnyEntity : Type.Type;
-
-/**
  * Input for schema registration.
  * The typename, version and schema mutability metadata is read from the schema annotations.
  *
@@ -108,7 +97,5 @@ export interface SchemaRegistry {
   register<T extends Type.AnyEntity>(input: T[]): Promise<Type.Persisted<T>[]>;
   register(input: RegisterSchemaInput[]): Promise<Type.PersistedType[]>;
 
-  query<Q extends Types.NoExcessProperties<Query, Q>>(
-    query?: Q & Query,
-  ): QueryResult.QueryResult<ExtractQueryResult<Q>>;
+  query<Q extends Types.NoExcessProperties<Query, Q>>(query?: Q & Query): QueryResult.QueryResult<Type.Type>;
 }
