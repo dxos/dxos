@@ -19,9 +19,9 @@ export const VoxelCard = ({ subject: world }: VoxelCardProps) => {
 
   return (
     <Card.Content>
-      <Card.Section>
+      <Card.Row>
         <VoxelEditor voxels={voxels} gridX={gridX} gridY={gridY} blockSize={blockSize} readOnly />
-      </Card.Section>
+      </Card.Row>
     </Card.Content>
   );
 };
