@@ -10,6 +10,8 @@ import type { ObjectId, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import type {
   DeleteFromQueueRequest,
+  GetSyncStateRequest,
+  GetSyncStateResponse,
   InsertIntoQueueRequest,
   QueryQueueRequest,
   QueueQueryResult,
@@ -64,6 +66,10 @@ export class QueueServiceImpl implements QueueService {
   async syncQueue(_: SyncQueueRequest): Promise<void> {
     // no-op
   }
+
+  async getSyncState(_: GetSyncStateRequest): Promise<GetSyncStateResponse> {
+    return { namespaces: [] };
+  }
 }
 
 /**
@@ -110,6 +116,10 @@ export class MockQueueService implements QueueService {
 
   async syncQueue(_: SyncQueueRequest): Promise<void> {
     // no-op
+  }
+
+  async getSyncState(_: GetSyncStateRequest): Promise<GetSyncStateResponse> {
+    return { namespaces: [] };
   }
 }
 

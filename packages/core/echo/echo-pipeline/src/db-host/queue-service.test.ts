@@ -163,9 +163,9 @@ describe('LocalQueueServiceImpl', () => {
 
       const state = yield* Effect.promise(() => service.getSyncState({ spaceId }));
       const dataState = state.namespaces?.find((entry) => entry.namespace === FeedProtocol.WellKnownNamespaces.data);
-      expect(dataState?.blocksToPush).toBe(1);
-      expect(dataState?.blocksToPull).toBe(0);
-      expect(dataState?.totalBlocks).toBe(1);
+      expect(dataState?.blocksToPush).toBe('1');
+      expect(dataState?.blocksToPull).toBe('0');
+      expect(dataState?.totalBlocks).toBe('1');
     }).pipe(Effect.provide(TestLayer)),
   );
 });

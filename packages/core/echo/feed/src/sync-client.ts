@@ -13,7 +13,11 @@ import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
 
+import { SyncRpcTimeoutError } from './errors';
 import type { FeedStore } from './feed-store';
+
+/** Default timeout for feed sync RPCs awaiting an edge response. */
+export const DEFAULT_SYNC_RPC_TIMEOUT_MS = 30_000;
 
 type AppendResponse = FeedProtocol.AppendResponse;
 type ProtocolMessage = FeedProtocol.ProtocolMessage;
@@ -33,6 +37,11 @@ export type SyncClientOptions = {
   feedStore: FeedStore;
   /** Send a protocol message to the server. Returns Effect. */
   sendMessage: (ctx: Context, message: RequestMessage) => Effect.Effect<void, unknown, never>;
+  /**
+   * Max time to wait for a matching protocol response after sending a request, in milliseconds.
+   * @default {@link DEFAULT_SYNC_RPC_TIMEOUT_MS}
+   */
+  rpcTimeoutMs?: number;
 };
 
 /**
@@ -46,6 +55,7 @@ export class SyncClient {
   readonly #serverPeerId: string | undefined;
   readonly #feedStore: FeedStore;
   readonly #sendMessage: SyncClientOptions['sendMessage'];
+  readonly #rpcTimeoutMs: number;
   readonly #handlers = new Map<string, Deferred.Deferred<ProtocolMessage, Error>>();
 
   constructor(options: SyncClientOptions) {
@@ -53,6 +63,7 @@ export class SyncClient {
     this.#serverPeerId = options.serverPeerId;
     this.#feedStore = options.feedStore;
     this.#sendMessage = options.sendMessage;
+    this.#rpcTimeoutMs = options.rpcTimeoutMs ?? DEFAULT_SYNC_RPC_TIMEOUT_MS;
   }
 
   #withPeerIds(payload: RequestPayload): RequestMessage {
@@ -105,6 +116,48 @@ export class SyncClient {
     return Effect.andThen(Deferred.succeed(deferred, message), () => Effect.void);
   }
 
+  #awaitRpcResponse(
+    requestId: string,
+    deferred: Deferred.Deferred<ProtocolMessage, Error>,
+    cleanupDispose: () => void,
+    meta: { spaceId: SpaceId; feedNamespace: string; rpcTag: string },
+  ): Effect.Effect<ProtocolMessage, Error | SyncRpcTimeoutError, never> {
+    const self = this;
+    const timeoutMs = self.#rpcTimeoutMs;
+    return Effect.ensuring(
+      Deferred.await(deferred).pipe(
+        Effect.timeoutFail({
+          duration: timeoutMs,
+          onTimeout: () =>
+            new SyncRpcTimeoutError({
+              requestId,
+              spaceId: meta.spaceId,
+              feedNamespace: meta.feedNamespace,
+              rpcTag: meta.rpcTag,
+              timeoutMs,
+            }),
+        }),
+        Effect.tapError((cause) =>
+          Effect.sync(() => {
+            if (cause instanceof SyncRpcTimeoutError) {
+              log('feed sync client rpc timed out', {
+                requestId,
+                spaceId: meta.spaceId,
+                feedNamespace: meta.feedNamespace,
+                rpcTag: meta.rpcTag,
+                timeoutMs,
+              });
+            }
+          }),
+        ),
+      ),
+      Effect.sync(() => {
+        cleanupDispose();
+        self.#handlers.delete(requestId);
+      }),
+    );
+  }
+
   pull(
     ctx: Context,
     opts: {
@@ -146,13 +199,11 @@ export class SyncClient {
         limit: opts.limit,
       });
       yield* self.#sendMessage(ctx, self.#withPeerIds(request));
-      const message = yield* Effect.ensuring(
-        Deferred.await(deferred),
-        Effect.sync(() => {
-          cleanupDispose();
-          self.#handlers.delete(requestId);
-        }),
-      );
+      const message = yield* self.#awaitRpcResponse(requestId, deferred, cleanupDispose, {
+        spaceId: opts.spaceId,
+        feedNamespace: opts.feedNamespace,
+        rpcTag: 'QueryRequest',
+      });
       const response = yield* self.#expectResponse<QueryResponse>(requestId, message, 'QueryResponse');
       if (response.blocks.length === 0) {
         log.trace('feed sync client pull done (empty batch)', {
@@ -229,13 +280,11 @@ export class SyncClient {
         limit: opts.limit,
       };
       yield* self.#sendMessage(ctx, self.#withPeerIds(request));
-      const message = yield* Effect.ensuring(
-        Deferred.await(deferred),
-        Effect.sync(() => {
-          cleanupDispose();
-          self.#handlers.delete(requestId);
-        }),
-      );
+      const message = yield* self.#awaitRpcResponse(requestId, deferred, cleanupDispose, {
+        spaceId: opts.spaceId,
+        feedNamespace: opts.feedNamespace,
+        rpcTag: 'QueryRequest',
+      });
       const response = yield* self.#expectResponse<QueryResponse>(requestId, message, 'QueryResponse');
       return { blocksToPull: response.blocks.length };
     });
@@ -289,13 +338,11 @@ export class SyncClient {
         blockCount: unpositioned.blocks.length,
       });
       yield* self.#sendMessage(ctx, self.#withPeerIds(request));
-      const message = yield* Effect.ensuring(
-        Deferred.await(deferred),
-        Effect.sync(() => {
-          cleanupDispose();
-          self.#handlers.delete(requestId);
-        }),
-      );
+      const message = yield* self.#awaitRpcResponse(requestId, deferred, cleanupDispose, {
+        spaceId: opts.spaceId,
+        feedNamespace: opts.feedNamespace,
+        rpcTag: 'AppendRequest',
+      });
       const response = yield* self.#expectResponse<AppendResponse>(requestId, message, 'AppendResponse');
       yield* self.#feedStore.setPosition({
         spaceId: opts.spaceId,

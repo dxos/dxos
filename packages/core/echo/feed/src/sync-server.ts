@@ -116,6 +116,7 @@ export class SyncServer {
             requestId: req.requestId,
             spaceId: req.spaceId,
             feedNamespace: req.feedNamespace,
+            blockCount: req.blocks.length,
             assignedPositions: response.positions.length,
           });
           yield* self.#sendMessage(ctx, withPeerIds({ _tag: 'AppendResponse', ...response }));
@@ -127,6 +128,7 @@ export class SyncServer {
               requestId: req.requestId,
               spaceId: req.spaceId,
               feedNamespace: req.feedNamespace,
+              blockCount: req.blocks.length,
               cause: err instanceof Error ? err.message : String(err),
             });
             return self.#sendMessage(

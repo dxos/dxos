@@ -160,9 +160,9 @@ export class LocalQueueServiceImpl implements QueueService {
               });
               return {
                 namespace: feedNamespace,
-                blocksToPull: 0,
-                blocksToPush,
-                totalBlocks,
+                blocksToPull: '0',
+                blocksToPush: String(blocksToPush),
+                totalBlocks: String(totalBlocks),
               };
             }),
           { concurrency: 'unbounded' },

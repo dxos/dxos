@@ -73,6 +73,12 @@ export type FeedSyncerOptions = {
    * @default true
    */
   backgroundSync?: boolean;
+
+  /**
+   * Max time to wait for a feed sync RPC response from edge, in milliseconds.
+   * @default 30000 (see `DEFAULT_SYNC_RPC_TIMEOUT_MS` in `@dxos/feed`).
+   */
+  syncRpcTimeoutMs?: number;
 };
 
 export class FeedSyncer extends Resource {
@@ -104,6 +110,7 @@ export class FeedSyncer extends Resource {
       peerId: options.peerId,
       feedStore: options.feedStore,
       sendMessage: this.#sendMessage.bind(this),
+      rpcTimeoutMs: options.syncRpcTimeoutMs,
     });
     this.#getSpaceIds = options.getSpaceIds;
     this.#syncNamespaces = options.syncNamespaces;
@@ -151,26 +158,40 @@ export class FeedSyncer extends Resource {
       }),
     );
 
-    this._ctx.onDispose(
-      // NOTE: This will fire immediately if the connection is already open.
-      this.#edgeClient.onReconnected(async () => {
-        log('feed sync edge reconnected', {
-          peerKey: this.#edgeClient.peerKey,
-          identityKey: this.#edgeClient.identityKey,
-        });
-      }),
-    );
-
     if (this.#backgroundSync) {
       this.#feedStore.onNewBlocks.on(this._ctx, () => {
         this.#pushTask.schedule();
       });
 
+      // Tasks must be opened before registering `onReconnected`: the edge client invokes the
+      // listener as a microtask when already connected, and `AsyncTask.schedule()` throws if
+      // the task is not yet open.
       await this.#pollTask.open();
       await this.#pushTask.open();
+    }
 
+    this._ctx.onDispose(
+      // NOTE: Fires immediately (as a microtask) if the connection is already open, and again
+      // on every subsequent reconnect.
+      this.#edgeClient.onReconnected(async () => {
+        log('feed sync edge reconnected', {
+          peerKey: this.#edgeClient.peerKey,
+          identityKey: this.#edgeClient.identityKey,
+        });
+        if (this.#backgroundSync) {
+          this.#resetSpacesToPoll();
+          this.#pollTask.schedule();
+          this.#pushTask.schedule();
+        }
+      }),
+    );
+
+    if (this.#backgroundSync) {
       this.#resetSpacesToPoll();
       this.#pollTask.schedule();
+      // Flush blocks written before the syncer opened: `onNewBlocks` only fires on append,
+      // so existing unpositioned blocks would otherwise never be pushed.
+      this.#pushTask.schedule();
     }
   }
 
@@ -241,12 +262,19 @@ export class FeedSyncer extends Resource {
                 spaceId,
                 feedNamespace,
                 limit: this.#messageBlocksLimit,
-              });
+              }).pipe(
+                Effect.catchAll((cause) =>
+                  Effect.gen(this, function* () {
+                    this.#logSyncFailure('peekPull', { spaceId, feedNamespace, cause });
+                    return { blocksToPull: 0 };
+                  }),
+                ),
+              );
               return {
                 namespace: feedNamespace,
-                blocksToPull,
-                blocksToPush,
-                totalBlocks,
+                blocksToPull: String(blocksToPull),
+                blocksToPush: String(blocksToPush),
+                totalBlocks: String(totalBlocks),
               };
             }),
           { concurrency: 'unbounded' },
@@ -361,6 +389,23 @@ export class FeedSyncer extends Resource {
     });
   }
 
+  #logSyncFailure(
+    operation: 'pull' | 'push' | 'peekPull',
+    {
+      spaceId,
+      feedNamespace,
+      cause,
+    }: { spaceId: SpaceId; feedNamespace: string; cause: unknown },
+  ): void {
+    log('feed sync operation failed', {
+      operation,
+      spaceId,
+      feedNamespace,
+      cause: cause instanceof Error ? cause.message : String(cause),
+      errorTag: cause instanceof Error ? cause.name : undefined,
+    });
+  }
+
   #getTargetServiceId(message: FeedProtocol.QueryRequest | FeedProtocol.AppendRequest): string {
     // TODO(dmaretskyi): Perhaps in the future we will want to include the queue namespace here as well.
     //                   This would require putting it at the top level of the message.
@@ -380,7 +425,14 @@ export class FeedSyncer extends Resource {
                 spaceId,
                 feedNamespace,
                 limit: this.#messageBlocksLimit,
-              });
+              }).pipe(
+                Effect.catchAll((cause) =>
+                  Effect.gen(this, function* () {
+                    this.#logSyncFailure('pull', { spaceId, feedNamespace, cause });
+                    return { done: false };
+                  }),
+                ),
+              );
               if (!done) {
                 doneForAllNamespaces = false;
               }
@@ -423,7 +475,14 @@ export class FeedSyncer extends Resource {
                 spaceId,
                 feedNamespace,
                 limit: this.#messageBlocksLimit,
-              });
+              }).pipe(
+                Effect.catchAll((cause) =>
+                  Effect.gen(this, function* () {
+                    this.#logSyncFailure('push', { spaceId, feedNamespace, cause });
+                    return { done: false };
+                  }),
+                ),
+              );
               if (!done) {
                 doneForAllNamespaces = false;
               }
