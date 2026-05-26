@@ -39,7 +39,8 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     const tracePanelDebug = settings.tracePanelDebug ?? false;
     const { branches, commits, spanTree, details } = useExecutionGraph(space);
     const monitor = useCapability(Capabilities.ProcessMonitor);
-    const processes = useAtomValue(monitor?.processTreeAtom ?? atomEmpty);
+    const allProcesses = useAtomValue(monitor?.processTreeAtom ?? atomEmpty);
+    const processes = allProcesses.filter((process) => process.space === space.id);
 
     const [selectedCommit, setSelectedCommit] = useState<Commit | undefined>();
     const handleCommitSelect = useCallback(
@@ -138,7 +139,8 @@ type UseExecutionGraphOptions = {
 
 const useExecutionGraph = (space: Space, { eventLimit }: UseExecutionGraphOptions = {}): ExecutionGraph => {
   const monitor = useCapability(Capabilities.ProcessMonitor);
-  const activeProcesses = useAtomValue(monitor?.processTreeAtom ?? atomEmpty);
+  const allProcesses = useAtomValue(monitor?.processTreeAtom ?? atomEmpty);
+  const activeProcesses = allProcesses.filter((process) => process.space === space.id);
 
   const atom = useMemo(
     () => getExecutionGraph(space, activeProcesses, { eventLimit }),

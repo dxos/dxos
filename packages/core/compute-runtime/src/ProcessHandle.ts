@@ -134,6 +134,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O> {
       parentPid: this.parentId,
       key: this.key,
       params: this.params,
+      space: this.environment.space,
       state: status.state,
       error,
       startedAt: status.startedAt.getTime(),
