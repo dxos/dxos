@@ -2,8 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { select } from 'd3';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Filter, Obj, type View } from '@dxos/echo';
