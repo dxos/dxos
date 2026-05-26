@@ -118,6 +118,7 @@
     "@dxos/conductor": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/edge-client": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-atom": "workspace:*",
     "@dxos/echo-db": "workspace:*",

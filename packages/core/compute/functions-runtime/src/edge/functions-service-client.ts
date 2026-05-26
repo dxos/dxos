@@ -6,7 +6,7 @@ import { type Client } from '@dxos/client';
 import { FunctionError, Operation } from '@dxos/compute';
 import { type Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
-import { type EdgeHttpClient } from '@dxos/edge-client';
+import { type EdgeHttpClient, type TriggersDispatcherStatus } from '@dxos/edge-client';
 import { FUNCTIONS_META_KEY } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
@@ -181,5 +181,9 @@ export class FunctionsServiceClient {
 
   async forceRunCronTrigger(ctx: Context, spaceId: SpaceId, triggerId: ObjectId): Promise<InvokeResult> {
     return (await this.#edgeClient.forceRunCronTrigger(ctx, spaceId, triggerId)) as InvokeResult;
+  }
+
+  async getTriggersDispatcherStatus(ctx: Context, spaceId: SpaceId): Promise<TriggersDispatcherStatus> {
+    return this.#edgeClient.getTriggersDispatcherStatus(ctx, spaceId);
   }
 }
