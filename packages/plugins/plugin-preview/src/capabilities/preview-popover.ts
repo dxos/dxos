@@ -64,7 +64,11 @@ export default Capability.makeModule(
         return;
       }
 
-      const title = titleProp ?? Obj.getLabel(result.object);
+      // Fall back to the short typename when the object has no label annotation
+      // (otherwise the popover renders with an empty Card.Title).
+      const typename = Obj.getTypename(result.object);
+      const fallbackTitle = typename?.split('/').pop();
+      const title = titleProp ?? Obj.getLabel(result.object) ?? fallbackTitle;
 
       await invokePromise(LayoutOperation.UpdatePopover, {
         subjectRef: dxn,

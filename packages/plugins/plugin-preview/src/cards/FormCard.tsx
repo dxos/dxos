@@ -11,7 +11,6 @@ import { type JsonPath, splitJsonPath } from '@dxos/effect';
 import { Card, useTranslation } from '@dxos/react-ui';
 import { Form, type FormUpdateMeta, type Presentation, omitId } from '@dxos/react-ui-form';
 import { type ProjectionModel } from '@dxos/schema';
-import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
@@ -56,7 +55,13 @@ export const FormCard = ({ subject, projection, readonly = true, layout = 'compa
   );
 
   if (!schema) {
-    return <p className={mx(descriptionMessage)}>{t('unable-to-create-preview.message')}</p>;
+    return (
+      <Card.Content>
+        <Card.Row>
+          <Card.Text variant='description'>{t('unable-to-create-preview.message')}</Card.Text>
+        </Card.Row>
+      </Card.Content>
+    );
   }
 
   return (
