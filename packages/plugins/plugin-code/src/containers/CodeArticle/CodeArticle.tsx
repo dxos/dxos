@@ -200,8 +200,11 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
       if (!selectedPath && resolvedFiles.length > 0) {
         setSelectedPath(resolvedFiles[0].path);
       }
-      if (selectedPath && !resolvedFiles.some((file) => file.path === selectedPath)) {
-        setSelectedPath(resolvedFiles[0]?.path);
+      // Guard with resolvedFiles.length > 0: if the list is temporarily empty
+      // (e.g. a transient ECHO update clears project.files before repopulating it)
+      // we preserve the current selection rather than resetting it to undefined.
+      if (selectedPath && resolvedFiles.length > 0 && !resolvedFiles.some((file) => file.path === selectedPath)) {
+        setSelectedPath(resolvedFiles[0].path);
       }
     }, [resolvedFiles, selectedPath]);
 
