@@ -75,12 +75,12 @@ export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardP
 
     return (
       <Card.Root fullWidth ref={forwardedRef}>
-        <Card.Toolbar>
+        <Card.Header>
           <Card.Icon icon={icon} />
           <Card.Title>{title}</Card.Title>
           <Card.ActionIconButton action='delete' onClick={handleDelete} label={t('segment.delete.label')} />
-        </Card.Toolbar>
-        <Card.Content>
+        </Card.Header>
+        <Card.Body>
           {route && (
             <Card.Row>
               <Card.Text variant='description'>{route}</Card.Text>
@@ -96,7 +96,7 @@ export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardP
               />
             </Input.Root>
           </Card.Row>
-        </Card.Content>
+        </Card.Body>
       </Card.Root>
     );
   },

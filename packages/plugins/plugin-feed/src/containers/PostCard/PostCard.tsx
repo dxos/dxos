@@ -20,7 +20,7 @@ export type PostCardProps = AppSurface.ObjectCardProps<Subscription.Post>;
 /**
  * Compact preview of a {@link Subscription.Post}. Rendered into the
  * `AppSurface.Card` slot — Card.Root is supplied by the surface host
- * (popovers, sections, related-objects), so the body emits Card.Content only.
+ * (popovers, sections, related-objects), so the body emits Card.Body only.
  */
 export const PostCard = ({ subject }: PostCardProps) => {
   const [post] = useObject(subject);
@@ -58,7 +58,7 @@ export const PostCard = ({ subject }: PostCardProps) => {
   }, [post.description]);
 
   return (
-    <Card.Content>
+    <Card.Body>
       {imageUrl && <Card.Poster alt={post.title ?? ''} image={imageUrl} fit='cover' classNames='rounded-t-xs' />}
       {post.title && (
         <Card.Row>
@@ -81,6 +81,6 @@ export const PostCard = ({ subject }: PostCardProps) => {
         </Card.Row>
       )}
       {post.link && <Card.Link label={post.link} href={post.link} />}
-    </Card.Content>
+    </Card.Body>
   );
 };

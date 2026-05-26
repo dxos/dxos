@@ -74,7 +74,7 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
               ref={composedRef}
               onClick={(event) => event.currentTarget.focus()}
             >
-              <Card.Toolbar>
+              <Card.Header>
                 <Card.DragHandle ref={setDragHandle} testId='mosaicBoard.cardDragHandle' />
                 <Card.Title data-testid='mosaicBoard.cardTitle'>{label}</Card.Title>
                 {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
@@ -87,7 +87,7 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
                   />
                 </Menu.Trigger>
                 <Menu.Content items={items} />
-              </Card.Toolbar>
+              </Card.Header>
               {/* TODO(burdon): Replace with surface. */}
               <Card.Row icon='ph--note--regular' classNames='text-description'>
                 <Card.Text>{description}</Card.Text>

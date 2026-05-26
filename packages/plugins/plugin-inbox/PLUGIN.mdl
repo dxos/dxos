@@ -1,0 +1,440 @@
+---
+id: org.dxos.plugin.inbox
+name: InboxPlugin
+version: 0.1.0
+---
+
+Unified inbox plugin for `DXOS` Composer — email, calendar, and contacts in one place, synced from Google and surfaced alongside workspace content.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+| `component` | `org.dxos.mdl.component@1.0`   |
+| `op`        | `org.dxos.mdl.op@1.0`          |
+
+## Types
+
+```mdl
+type MessageState
+  literals: none | archived | deleted | spam
+```
+
+```mdl
+type Filter
+  fields:
+    name: string
+    filter: string              # query expression
+```
+
+```mdl
+type Mailbox
+  fields:
+    name?: string
+    feed: Ref<Feed>             # append-only Message stream
+    labels?: Map<string, string>
+    filters: Filter[]
+    extractors?:
+      enabled: string[]
+      threshold: number         # 0..1 — AI confidence cutoff
+```
+
+```mdl
+type Calendar
+  fields:
+    name?: string
+    feed: Ref<Feed>             # append-only Event stream
+```
+
+```mdl
+type DraftMessage
+  fields:
+    subject?: string
+    to?: string
+    body?: string
+    replyTo?: Ref<Message>
+    mailbox: Ref<Mailbox>
+```
+
+```mdl
+type Settings
+  fields:
+    threads?: boolean           # group messages by conversation
+```
+
+## Components
+
+```mdl
+component MailboxArticle
+  desc: Inbox surface for a Mailbox — filterable message list with reading pane.
+  props:
+    subject: Mailbox
+    settings: Settings
+  state:
+    selected?: Message
+    activeFilter?: Filter
+  slots:
+    toolbar?: ReactNode         # sync / compose / filter actions
+  actions:
+    selectMessage(message: Message)
+    applyFilter(filter: Filter)
+    compose()
+    reply(message: Message)
+    archive(message: Message)
+  emits:
+    onOpenContact(actor: Actor)
+  layout: |
+    ┌──────────────┬─────────────────────────┐
+    │ [toolbar]    │                         │
+    ├──────────────┤                         │
+    │ filter chips │  reading pane           │
+    │              │                         │
+    │ message list │  (selected message      │
+    │              │   + related contacts /  │
+    │              │   events / threads)     │
+    │              │                         │
+    └──────────────┴─────────────────────────┘
+```
+
+```mdl
+component CalendarArticle
+  desc: Day/week view of events from a Calendar with selectable event detail.
+  props:
+    subject: Calendar
+  state:
+    selected?: Event
+    range: { from: Date; to: Date }
+  actions:
+    selectEvent(event: Event)
+    sync()
+```
+
+```mdl
+component EditMessage
+  desc: Compose / reply / forward editor for a DraftMessage.
+  props:
+    draft: DraftMessage
+  actions:
+    send()
+    saveDraft()
+    discard()
+  emits:
+    onSent(message: Message)
+```
+
+## Operations
+
+Effectful operations — mutate persistent state or call external services.
+
+```mdl
+op addMailbox
+  desc: Adds a Mailbox to the active space or collection.
+  input:
+    object: Mailbox
+    target: Database | Collection
+  output: string                # DXN of created Mailbox
+  effects: [echo:write]
+```
+
+```mdl
+op draftEmail
+  desc: Creates a new draft email scoped to a mailbox.
+  input:
+    subject: string
+    to: string
+    body: string
+    mailbox: Ref<Mailbox>
+    replyTo?: Ref<Message>
+  output: string                # DXN of new draft Message
+  effects: [echo:write]
+```
+
+```mdl
+op readEmail
+  desc: Reads recent messages from a mailbox as a single text payload.
+  input:
+    mailbox: Ref<Mailbox>
+    skip?: number
+    limit?: number
+  output: string                # rendered message content
+  effects: [echo:read, feed:read]
+```
+
+```mdl
+op classifyEmail
+  desc: Picks an appropriate tag for a message from the database's tag set.
+  input:
+    message: Message
+  output: string                # selected tag DXN, or void if none matched
+  effects: [echo:read]
+  requires: [AiService]
+```
+
+```mdl
+op googleMailSync
+  desc: Pulls messages from Gmail into the mailbox feed.
+  input:
+    integration: Ref<Integration>
+    mailbox?: Ref<Mailbox>      # when omitted, syncs every mailbox on the Integration
+    label?: string              # Gmail label (default: inbox)
+    after?: number | string     # unix or yyyy-MM-dd
+  output: number                # newMessages count
+  effects: [echo:write, feed:write, http]
+```
+
+```mdl
+op googleCalendarSync
+  desc: Pulls events from Google Calendar into the calendar feed.
+  input:
+    integration: Ref<Integration>
+    calendar?: Ref<Calendar>
+    syncBackDays?: number
+    syncForwardDays?: number
+  output: number                # newEvents count
+  effects: [echo:write, feed:write, http]
+```
+
+```mdl
+op googleContactsSync
+  desc: Pulls contacts from a Google contact group into Person objects.
+  input:
+    integration: Ref<Integration>
+    contactGroupResourceName?: string
+  output: number                # upserted count
+  effects: [echo:write, http]
+```
+
+```mdl
+op gmailSend
+  desc: Sends a Message via Gmail using integration credentials.
+  input:
+    message: Message
+    integration: Ref<Integration>
+  output: string                # remote Gmail thread id
+  effects: [http]
+```
+
+```mdl
+op extractMessage
+  desc: Runs configured AI extractors over a message; creates/updates structured objects.
+  input:
+    message: Message
+    extractorId?: string        # specific extractor; default runs all enabled
+  output:
+    extractorId: string
+    created: number
+    updated: number
+  effects: [echo:write]
+  requires: [AiService]
+```
+
+```mdl
+op extractContact
+  desc: Extracts a Person object from an Actor referenced in a message.
+  input:
+    actor: Actor
+  effects: [echo:write]
+```
+
+## Features
+
+```mdl
+feat F-1: Mailbox
+
+  req F-1.1: Mailbox stores messages in an append-only Feed; never mutates past entries.
+  req F-1.2: Messages render newest-first with sender, subject, snippet, and timestamp.
+  req F-1.3:
+    when: settings.threads is true
+    then: list groups messages by conversation; shows most recent per thread
+```
+
+```mdl
+feat F-2: Calendar
+
+  req F-2.1: Calendar stores events in an append-only Feed.
+  req F-2.2: Day and week views render events ordered by start time.
+```
+
+```mdl
+feat F-3: Google Sync
+
+  req F-3.1:
+    when: user adds a Google Integration with mail scope
+    then: op:googleMailSync runs and populates the mailbox feed
+
+  req F-3.2:
+    when: user adds a Google Integration with calendar scope
+    then: op:googleCalendarSync runs and populates the calendar feed
+
+  req F-3.3:
+    when: user adds a Google Integration with contacts scope
+    then: op:googleContactsSync upserts Person objects into the space
+
+  req F-3.4: Subsequent syncs use server-side delta tokens; only new/changed records are written.
+```
+
+```mdl
+feat F-4: Compose & Send
+
+  req F-4.1:
+    when: user clicks compose / reply / forward
+    then: op:draftEmail creates a DraftMessage; EditMessage opens for editing
+
+  req F-4.2:
+    when: user sends a draft
+    then: op:gmailSend dispatches via the linked Google Integration
+    errors: [SendFailed, NoIntegration]
+```
+
+```mdl
+feat F-5: Filters and Labels
+
+  req F-5.1: User can save a named filter expression on the mailbox.
+  req F-5.2:
+    when: a saved filter is selected
+    then: message list shows only matching messages
+```
+
+```mdl
+feat F-6: AI Assistance
+
+  req F-6.1: Plugin contributes an Inbox blueprint with read / draft / classify / sync / extract tools.
+  req F-6.2:
+    when: agent calls op:classifyEmail on a message
+    then: best-matching tag is applied; no tag applied below extractors.threshold
+
+  req F-6.3:
+    when: agent calls op:extractMessage on a confirmation email
+    then: structured objects (e.g. Trip segments) are created or updated
+```
+
+```mdl
+feat F-7: Related Content
+
+  req F-7.1:
+    when: a message is selected
+    then: related contacts, events, and thread messages are shown alongside the reading pane
+
+  req F-7.2:
+    when: user clicks a related contact
+    then: navigation opens the Person object
+```
+
+## Acceptance
+
+```mdl
+test T-1: Sync Gmail into mailbox
+  given: a Mailbox linked to a Google Integration with valid credentials
+  when: op:googleMailSync runs
+  then:
+    - newMessages > 0 on first run
+    - Mailbox.feed contains Message entries ordered by received-at
+```
+
+```mdl
+test T-2: Save and apply filter
+  given: Mailbox open with > 1 messages, including one from alice@example.com
+  when: user saves filter "from:alice@example.com" and selects it
+  then:
+    - message list shows only messages matching the filter
+```
+
+```mdl
+test T-3: Draft and send reply
+  given: a Message is selected in the mailbox
+  when: user clicks reply, edits the body, and sends
+  then:
+    - op:draftEmail creates a DraftMessage with replyTo set
+    - op:gmailSend dispatches via the linked Integration
+    - sent message appears in the mailbox feed on next sync
+```
+
+```mdl
+test T-4: Classify message
+  given: a Message and a tag set with confidence threshold 0.7
+  when: op:classifyEmail runs
+  then:
+    - if best tag confidence ≥ 0.7, tag applied
+    - otherwise no tag applied
+```
+
+```mdl
+test T-5: Extract confirmation
+  given: a flight booking confirmation email
+  when: op:extractMessage runs with the trip extractor enabled
+  then:
+    - Trip segment objects created or updated
+    - extractMessage output reports created/updated counts
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap
+    literals?: UnionList
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap
+    state?: FieldMap
+    slots?: FieldMap
+    actions?: ActionMap
+    emits?: EventMap
+    layout?: CodeBlock
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap
+    output?: TypeExpr
+    errors?: ErrorMap
+    effects?: EffectList
+    requires?: ServiceList
+    note?: Prose
+```

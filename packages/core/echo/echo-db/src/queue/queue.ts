@@ -7,7 +7,7 @@ import * as Predicate from 'effect/Predicate';
 import { DeferredTask } from '@dxos/async';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type Database, Entity, Filter, Obj, Query, type Ref } from '@dxos/echo';
+import { type Database, Entity, Feed, Filter, Obj, Query, type Ref } from '@dxos/echo';
 import { type ObjectJSON, ParentId, SelfDXNId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
 import { defineHiddenProperty } from '@dxos/echo/internal';
 import { failedInvariant } from '@dxos/invariant';
@@ -273,6 +273,19 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
       shouldPush,
       shouldPull,
     });
+  }
+
+  async getSyncState(): Promise<Feed.SyncState> {
+    const response = await this._service.getSyncState({
+      spaceId: this._spaceId,
+      namespaces: [this._subspaceTag],
+    });
+    const entry = response.namespaces?.find((state) => state.namespace === this._subspaceTag);
+    return {
+      blocksToPull: Number(entry?.blocksToPull ?? 0),
+      blocksToPush: Number(entry?.blocksToPush ?? 0),
+      totalBlocks: Number(entry?.totalBlocks ?? 0),
+    };
   }
 
   /**

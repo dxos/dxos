@@ -85,24 +85,29 @@ const CardRoot = composable<HTMLDivElement, CardRootProps>(
 CardRoot.displayName = CARD_ROOT_NAME;
 
 //
-// Toolbar
+// Header
 //
 
-const CARD_TOOLBAR_NAME = 'Card.Toolbar';
+const CARD_HEADER_NAME = 'Card.Header';
 
-type CardToolbarProps = ToolbarRootProps;
+type CardHeaderProps = ToolbarRootProps;
 
-const CardToolbar = composable<HTMLDivElement, CardToolbarProps>(({ children, classNames, ...props }, forwardedRef) => {
+/**
+ * Top "header" slot of a Card. Despite the name, this renders as an ARIA
+ * toolbar (`role="toolbar"`) so its action children get keyboard navigation
+ * for free — `<header>` is allowed to contain a toolbar.
+ */
+const CardHeader = composable<HTMLDivElement, CardHeaderProps>(({ children, classNames, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
 
   return (
-    <Toolbar.Root {...props} style={iconSize(5)} classNames={[tx('card.toolbar', {}), classNames]} ref={forwardedRef}>
+    <Toolbar.Root {...props} style={iconSize(5)} classNames={[tx('card.header', {}), classNames]} ref={forwardedRef}>
       {children}
     </Toolbar.Root>
   );
 });
 
-CardToolbar.displayName = CARD_TOOLBAR_NAME;
+CardHeader.displayName = CARD_HEADER_NAME;
 
 //
 // DragHandle
@@ -215,24 +220,24 @@ const CardTitle = slottable<HTMLDivElement>(({ children, asChild, ...props }, fo
 CardTitle.displayName = CARD_TITLE_NAME;
 
 //
-// Content
+// Body
 //
 
-const CARD_CONTENT_NAME = 'Card.Content';
+const CARD_BODY_NAME = 'Card.Body';
 
-const CardContent = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
+const CardBody = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps(props);
   const Comp = asChild ? Slot : Primitive.div;
   const { tx } = useThemeContext();
 
   return (
-    <Comp {...rest} className={tx('card.content', {}, className)} ref={forwardedRef}>
+    <Comp {...rest} className={tx('card.body', {}, className)} ref={forwardedRef}>
       {children}
     </Comp>
   );
 });
 
-CardContent.displayName = CARD_CONTENT_NAME;
+CardBody.displayName = CARD_BODY_NAME;
 
 //
 // Section
@@ -244,7 +249,7 @@ type CardSectionProps = { title?: ReactNode };
 
 /**
  * A labeled grouping of card content. `display: contents` keeps children aligned
- * to the Card's column grid (like `Card.Content`); when `title` is provided,
+ * to the Card's column grid (like `Card.Body`); when `title` is provided,
  * renders a subheading row at the top and exposes the group with
  * `role='group' aria-labelledby=…` for screen readers.
  */
@@ -457,10 +462,10 @@ CardLink.displayName = CARD_LINK_NAME;
 export const Card = {
   Root: CardRoot,
 
-  // Toolbar
-  Toolbar: CardToolbar,
+  // Header
+  Header: CardHeader,
 
-  // Toolbar parts
+  // Header parts
   IconBlock: CardIconBlock,
   DragHandle: CardDragHandle,
   ActionIconButton: CardActionIconButton,
@@ -468,12 +473,12 @@ export const Card = {
   Icon: CardIcon,
   Title: CardTitle,
 
-  // Content
-  Content: CardContent,
+  // Body
+  Body: CardBody,
   Section: CardSection,
   Row: CardRow,
 
-  // Content parts
+  // Body parts
   Text: CardText,
   Html: CardHtml,
   Poster: CardPoster,
@@ -483,7 +488,7 @@ export const Card = {
 
 export type {
   CardRootProps,
-  CardToolbarProps,
+  CardHeaderProps,
   CardDragHandleProps,
   CardActionIconButtonProps,
   CardMenuProps,

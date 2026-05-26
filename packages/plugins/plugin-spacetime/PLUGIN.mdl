@@ -1,0 +1,519 @@
+---
+id: org.dxos.plugin.spacetime
+name: SpacetimePlugin
+version: 0.1.0
+---
+
+A generative 3D modeling and animation plugin for DXOS Composer.
+Uses Babylon.js for real-time rendering, Manifold (WASM) for solid geometry (CSG),
+and ECHO for collaborative persistence of scenes and objects.
+
+## Extensions
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+
+## Types
+
+```mdl
+type Scene
+  desc: Top-level ECHO object (typename org.dxos.type.spacetime.scene) backing each Spacetime article.
+  echo-type: Scene.Scene
+  fields:
+    name?: string
+    objects: Ref<Model.Object>[]
+  invariants:
+    - objects maintain insertion order
+    - objects array is not exposed in generated forms (FormInputAnnotation = false)
+    - a default cube Object is created and parented to the Scene on make()
+```
+
+```mdl
+type Object
+  desc: A 3D entity within a Scene (typename org.dxos.type.spacetime.object).
+  echo-type: Model.Object
+  fields:
+    label?: string
+    primitive?: PrimitiveType   # cube | sphere | cylinder | cone | pyramid
+    mesh?: Mesh                 # serialized vertex positions + triangle indices (base64)
+    position: Vec3
+    scale: Vec3
+    rotation: Vec3
+    color?: string              # CSS color string
+  invariants:
+    - mesh takes precedence over primitive when both present
+    - geometry is generated at runtime from primitive type and scale
+    - mesh and primitive are mutually exclusive (FormInputAnnotation = false for mesh)
+```
+
+```mdl
+type PrimitiveType
+  literals: cube | sphere | cylinder | cone | pyramid
+```
+
+```mdl
+type PresetType
+  literals: firetruck | race | taxi
+  desc: Bundled preset GLB model names.
+```
+
+```mdl
+type Vec3
+  fields:
+    x: number
+    y: number
+    z: number
+```
+
+```mdl
+type Mesh
+  desc: Serialized mesh geometry stored as base64-encoded typed arrays for ECHO persistence.
+  fields:
+    vertexData: string   # base64-encoded Float32Array of vertex positions (x,y,z per vertex)
+    indexData: string    # base64-encoded Uint32Array of triangle indices
+```
+
+## Components
+
+```mdl
+component SpacetimeArticle
+  desc: Full-canvas article surface rendered for a Scene object.
+  props:
+    role: string
+    subject: Scene.Scene
+    attendableId?: string
+  state:
+    activeTool: ToolId          # select | move | extrude
+    selectionMode: object | face
+    selection?: Selection
+    gridVisible: boolean
+    debugVisible: boolean
+  slots:
+    toolbar: SpacetimeToolbar
+    canvas: SpacetimeCanvas
+```
+
+```mdl
+component SpacetimeCanvas
+  desc: Interactive 3D canvas backed by Babylon.js (ArcRotateCamera + HemisphericLight).
+  state:
+    engine: Babylon.Engine
+    scene: Babylon.Scene
+    camera: ArcRotateCamera
+  actions:
+    setTool(tool: ToolId)
+    setSelectionMode(mode: object | face)
+  emits:
+    onSelect(selection: Selection)
+    onDeselect()
+  keys:
+    m         → setTool(move)
+    e         → setTool(extrude)
+    x | Del   → deleteSelected()
+```
+
+```mdl
+component SpacetimeToolbar
+  desc: Primary action bar for scene and object operations.
+  props:
+    selection?: Selection
+  actions:
+    addObject(template: ObjectTemplate) → Object
+    deleteSelected()    # enabled: selection != null
+    setColor(color: string)  # enabled: selection != null
+    setTool(tool: ToolId)
+    setSelectionMode(mode: object | face)
+    toggleGrid()
+    toggleDebug()
+    join()              # enabled: selection.count >= 2
+    subtract()          # enabled: selection.count >= 2
+    importFile()
+    exportSTL()
+```
+
+## Operations
+
+```mdl
+op createScene
+  desc: Creates a new Scene ECHO object with a default cube and adds it to the target space.
+  input:
+    name?: string
+    target?: Space
+    targetNodeId?: string
+  output: Scene.Scene
+  effects: [echo:write]
+```
+
+```mdl
+op addObject
+  desc: Creates a new Object from a template (primitive or preset) and appends it to the scene.
+  input:
+    scene: Scene.Scene
+    template: ObjectTemplate
+  output: Model.Object
+  effects: [echo:write]
+```
+
+```mdl
+op deleteObject
+  desc: Removes selected Object(s) from the scene and disposes their ECHO objects.
+  input:
+    scene: Scene.Scene
+    objects: Model.Object[]
+  output: Scene.Scene
+  effects: [echo:write]
+```
+
+```mdl
+op booleanUnion
+  desc: Computes the CSG union of two or more selected objects via ManifoldService.
+  input:
+    scene: Scene.Scene
+    objects: Model.Object[]
+  output: Model.Object
+  effects: [echo:write]
+  note: Source objects deleted; one new mesh Object created at primary object's position.
+```
+
+```mdl
+op booleanSubtract
+  desc: Computes ordered CSG difference (primary − others) of selected objects via ManifoldService.
+  input:
+    scene: Scene.Scene
+    objects: Model.Object[]
+  output: Model.Object
+  effects: [echo:write]
+  note: Source objects deleted; one new mesh Object created at primary object's position.
+```
+
+```mdl
+op importGLB
+  desc: Loads a GLB/GLTF file and adds it as a new Object in the scene.
+  input:
+    scene: Scene.Scene
+    file: File
+  output: Model.Object
+  effects: [echo:write, fs:read]
+  note: When the imported mesh is watertight it is converted to a ManifoldService solid.
+```
+
+```mdl
+op importOBJ
+  desc: Loads an OBJ file and adds it as a new Object in the scene.
+  input:
+    scene: Scene.Scene
+    file: File
+  output: Model.Object
+  effects: [echo:write, fs:read]
+```
+
+```mdl
+op exportSTL
+  desc: Exports the selected Object as a binary STL file download.
+  input:
+    object: Model.Object
+  output: void
+  effects: [fs:write]
+```
+
+## Features
+
+```mdl
+feat FR-1: Scene Management
+
+  req FR-1.1: create
+    when: user creates a Spacetime article in Composer
+    then: new Scene ECHO object created with one default cube Object
+
+  req FR-1.2: persist
+    Scene persists an ordered collection of Object Refs via ECHO.
+
+  req FR-1.3: render
+    when: Scene article is opened in Composer
+    then: Scene renders as an interactive 3D viewport via Babylon.js
+
+  req FR-1.4: replicate
+    when: any Scene state change (add / remove / modify Objects)
+    then: change replicates to all peers via ECHO
+    tags: [collaborative]
+
+  req FR-1.5: theme
+    Scene background color is resolved from the container element's computed CSS background-color,
+    so it matches the DXOS theme (light / dark mode).
+```
+
+```mdl
+feat FR-2: Object Management
+
+  req FR-2.1: add
+    when: user triggers add action on Toolbar
+    then: new Object created from the selected template (primitive or preset GLB)
+
+  req FR-2.2: delete
+    when: user triggers delete (Toolbar or keyboard x/Del)
+    then: selected Object(s) removed from Scene and disposed
+
+  req FR-2.3: color
+    when: user picks a color from the Toolbar color picker
+    then: selected Object.color updated
+
+  req FR-2.4: persistence
+    Object properties (position, scale, rotation, color, geometry) persist in ECHO.
+```
+
+```mdl
+feat FR-3: Selection
+
+  req FR-3.1: mode-toggle
+    User can toggle between object and face selection mode via Toolbar.
+
+  req FR-3.2: object-select
+    when: user clicks an Object in object mode
+    then: Object selected; Babylon highlight-layer glow shown on mesh
+
+  req FR-3.3: face-select
+    when: user clicks a face in face mode
+    then: all coplanar triangles selected; colored overlay shown offset from surface
+
+  req FR-3.4: deselect
+    when: user clicks empty space
+    then: selection cleared
+
+  req FR-3.5: multi-select
+    when: Shift + click on Object in object mode
+    then: Object added to or removed from multi-object selection (ordered list)
+
+  req FR-3.6: multi-select ordering
+    First-clicked Object is primary; insertion order preserved.
+```
+
+```mdl
+feat FR-4.1: Select Tool
+  desc: Picks objects or faces according to current selection mode.
+```
+
+```mdl
+feat FR-4.2: Move Tool
+  desc: Translates selected Objects via pointer drag.
+
+  req FR-4.2.1: ground-plane
+    when: dragging selected Object
+    then: translate along X/Z ground plane
+
+  req FR-4.2.2: vertical
+    when: platform modifier held (Cmd/macOS, Alt/Win) during drag
+    then: translate along Y axis instead of ground plane
+
+  req FR-4.2.3: snap
+    when: Shift held during drag
+    then: position snaps to grid increments
+
+  req FR-4.2.4: commit
+    Position commits to ECHO only on pointer-up.
+
+  req FR-4.2.5: camera-lock
+    Camera orbit disabled while drag is in progress.
+
+  req FR-4.2.6: multi
+    when: multiple Objects selected
+    then: all selected Objects translate by the same delta
+```
+
+```mdl
+feat FR-4.3: Extrude Tool
+  desc: Push/pull a selected face along its normal using ManifoldService.warp().
+
+  req FR-4.3.1: requires
+    requires: FaceSelection active
+
+  req FR-4.3.2: drag
+    when: user drags
+    then: selected face extruded along its normal
+
+  req FR-4.3.3: snap
+    when: Shift held during drag
+    then: extrusion distance snaps to grid increments
+
+  req FR-4.3.4: clamp
+    Negative extrusion clamped to prevent sub-minimum collapse.
+
+  req FR-4.3.5: preview
+    Babylon mesh updates in real-time during drag.
+
+  req FR-4.3.6: commit
+    ManifoldService solid and ECHO Object updated on drag completion.
+```
+
+```mdl
+feat FR-5: Camera and View
+
+  req FR-5.1: orbit
+    Camera orbits scene center via mouse drag (ArcRotateCamera).
+
+  req FR-5.2: zoom
+    Camera supports scroll-wheel zoom and pinch zoom.
+
+  req FR-5.3: grid
+    User can toggle Y=0 ground-plane grid visibility via Toolbar.
+
+  req FR-5.4: debug
+    User can toggle a debug panel (FPS, axes viewer) via Toolbar.
+```
+
+```mdl
+feat FR-6: Import and Export
+
+  req FR-6.1: import-glb
+    User can import GLB/GLTF files as new Objects.
+
+  req FR-6.2: import-obj
+    User can import OBJ files as new Objects.
+
+  req FR-6.3: manifold-convert
+    when: imported mesh is watertight
+    then: mesh converted to ManifoldService solid
+
+  req FR-6.4: export-stl
+    User can export the selected Object as a binary STL file.
+```
+
+```mdl
+feat FR-7: Boolean Operations
+
+  req FR-7.1: join
+    when: user invokes join with ≥2 Objects selected
+    then: union of all selected Objects created as new Object
+
+  req FR-7.2: subtract
+    when: user invokes subtract with ≥2 Objects selected
+    then: ordered difference (primary − others) created as new Object
+
+  req FR-7.3: consume
+    Source Objects deleted; one new Object created.
+
+  req FR-7.4: position
+    Result Object positioned at primary (first-selected) Object's position.
+
+  req FR-7.5: result-type
+    Result Object stores serialized Mesh data (not a primitive).
+
+  req FR-7.6: availability
+    Join and subtract disabled unless selection.count >= 2.
+```
+
+## Acceptance
+
+```mdl
+test T-FR-1.1: Create scene
+  given: Composer is open
+  when: user creates a new Spacetime article
+  then:
+    - Scene ECHO object exists
+    - scene.objects.length === 1
+    - scene.objects[0].primitive === "cube"
+```
+
+```mdl
+test T-FR-3.5: Multi-select ordering
+  given: object selection mode active, no selection
+  when: user clicks A, then Shift+clicks B, then Shift+clicks C
+  then:
+    - selection.objects === [A, B, C]
+    - selection.primary === A
+```
+
+```mdl
+test T-FR-4.2.3: Snap during move
+  given: Object is selected, move tool active
+  when: user drags while holding Shift
+  then:
+    - Object.position is quantized to grid increments after drag
+    - ECHO commit fires on pointer-up only
+```
+
+```mdl
+test T-FR-7.2: Boolean subtract
+  given: Objects [A, B] selected in order, A is primary
+  when: user invokes subtract
+  then:
+    - new Object created with geometry = A - B
+    - new Object.position === A.position
+    - A and B removed from Scene
+    - new Object stores Mesh data (not primitive)
+```
+
+```mdl
+test T-FR-8: Keyboard scope
+  given: focus is in a text input (not canvas)
+  when: user presses "m" or "e" or "x"
+  then: no tool action fires
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap
+    literals?: UnionList
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap
+    state?: FieldMap
+    slots?: FieldMap
+    actions?: ActionMap
+    emits?: EventMap
+    layout?: CodeBlock
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: A named operation with typed inputs, outputs, and declared effects.
+  fields:
+    desc?: Prose
+    input?: FieldMap
+    output?: TypeExpr
+    errors?: ErrorMap
+    effects?: EffectList
+    requires?: ServiceList
+    note?: Prose
+```

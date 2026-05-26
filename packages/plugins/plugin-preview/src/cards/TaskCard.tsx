@@ -15,7 +15,7 @@ export const TaskCard = ({ subject }: AppSurface.ObjectCardProps<Task.Task>) => 
   const statusOption = getActiveStatusOption(status);
 
   return (
-    <Card.Content>
+    <Card.Body>
       <Card.Row>
         {statusOption && (
           <div>
@@ -25,7 +25,7 @@ export const TaskCard = ({ subject }: AppSurface.ObjectCardProps<Task.Task>) => 
           </div>
         )}
       </Card.Row>
-    </Card.Content>
+    </Card.Body>
   );
 };
 

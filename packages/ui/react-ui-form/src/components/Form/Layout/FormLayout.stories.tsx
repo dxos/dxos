@@ -207,7 +207,7 @@ export const NamedAnnotation: Story = {
  * surfaces under the editor.
  */
 type PlaygroundStoryProps = {
-  /** Wrap the rendered form in `Card.Root` / `Card.Content` chrome. */
+  /** Wrap the rendered form in `Card.Root` / `Card.Body` chrome. */
   card?: boolean;
 };
 
@@ -272,22 +272,22 @@ const PlaygroundStory = ({ card = false }: PlaygroundStoryProps) => {
           <>
             <div>
               <Card.Root fullWidth>
-                <Card.Toolbar>
+                <Card.Header>
                   <Card.DragHandle />
                   <Card.Title>Read-only</Card.Title>
                   <Card.ActionIconButton action='close' onClick={() => console.log('close')} />
-                </Card.Toolbar>
-                <Card.Content>{renderForm(true)}</Card.Content>
+                </Card.Header>
+                <Card.Body>{renderForm(true)}</Card.Body>
               </Card.Root>
             </div>
             <div>
               <Card.Root fullWidth>
-                <Card.Toolbar>
+                <Card.Header>
                   <Card.DragHandle />
                   <Card.Title>Editable</Card.Title>
                   <Card.ActionIconButton action='close' onClick={() => console.log('close')} />
-                </Card.Toolbar>
-                <Card.Content>{renderForm(false)}</Card.Content>
+                </Card.Header>
+                <Card.Body>{renderForm(false)}</Card.Body>
               </Card.Root>
             </div>
           </>
@@ -338,7 +338,7 @@ export const FormPlayground: Story = {
   render: () => <PlaygroundStory />,
 };
 
-/** Same playground, but the form is rendered inside a `Card.Root` / `Card.Content`. */
+/** Same playground, but the form is rendered inside a `Card.Root` / `Card.Body`. */
 export const CardPlayground: Story = {
   render: () => <PlaygroundStory card />,
 };
