@@ -519,6 +519,12 @@ export class FeedStore {
           }
 
           // 3. Insert all blocks and compute positions.
+          //
+          // Critical: when a block already exists (conflict on (feedPrivateId, sequence, actorId))
+          // we must (a) return the EXISTING position to the caller and (b) NOT advance the
+          // namespace position counter. Otherwise the response contains wasted slots that
+          // sync clients will try to UPDATE local rows to, tripping the
+          // (feedPrivateId, position) UNIQUE constraint and stalling sync indefinitely.
           const positions: number[] = [];
           for (const block of request.blocks) {
             const key = block.feedId!;
@@ -526,23 +532,57 @@ export class FeedStore {
 
             let positionToInsert: number | null = null;
             if (this.#options.assignPositions) {
-              const currentMax = maxPositions.get(request.feedNamespace)!;
-              positionToInsert = currentMax + 1;
-              maxPositions.set(request.feedNamespace, positionToInsert); // Increment for next block in same namespace.
-              positions.push(positionToInsert);
+              positionToInsert = maxPositions.get(request.feedNamespace)! + 1;
             } else if (block.position != null) {
               positionToInsert = block.position;
             }
 
-            yield* sql`
+            const inserted = yield* sql<{ position: number | null }>`
               INSERT INTO blocks (
-                feedPrivateId, position, sequence, actorId, 
+                feedPrivateId, position, sequence, actorId,
                 prevSequence, prevActorId, timestamp, data
               ) VALUES (
                 ${feedPrivateId}, ${positionToInsert}, ${block.sequence}, ${block.actorId},
                 ${block.prevSequence}, ${block.prevActorId}, ${block.timestamp}, ${block.data}
-              ) ON CONFLICT DO NOTHING
+              )
+              ON CONFLICT(feedPrivateId, sequence, actorId) DO NOTHING
+              RETURNING position
             `;
+
+            if (!this.#options.assignPositions) {
+              continue;
+            }
+
+            if (inserted.length > 0) {
+              // New row written at the freshly allocated position.
+              positions.push(positionToInsert!);
+              maxPositions.set(request.feedNamespace, positionToInsert!);
+              continue;
+            }
+
+            // Duplicate Lamport tuple: return the stored position and leave maxPositions alone.
+            const existing = yield* sql<{ position: number | null }>`
+              SELECT position FROM blocks
+              WHERE feedPrivateId = ${feedPrivateId}
+                AND actorId = ${block.actorId}
+                AND sequence = ${block.sequence}
+            `;
+            const existingPosition = existing[0]?.position;
+            if (existingPosition != null) {
+              positions.push(existingPosition);
+              continue;
+            }
+
+            // Defensive: existing row carries no position (e.g. inserted via an earlier
+            // assignPositions=false path). Back-fill it so the caller can mark it positioned.
+            yield* sql`
+              UPDATE blocks SET position = ${positionToInsert}
+              WHERE feedPrivateId = ${feedPrivateId}
+                AND actorId = ${block.actorId}
+                AND sequence = ${block.sequence}
+            `;
+            positions.push(positionToInsert!);
+            maxPositions.set(request.feedNamespace, positionToInsert!);
           }
 
           return positions;
