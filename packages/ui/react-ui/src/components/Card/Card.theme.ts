@@ -67,10 +67,13 @@ const linkLabel: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
 const row: ComponentFunction<CardStyleProps> = ({ fullWidth }, ...etc) =>
   mx('dx-card__row', fullWidth ? 'col-span-full' : 'col-span-3 grid grid-cols-subgrid', ...etc);
 
-const section: ComponentFunction<CardStyleProps> = (_props, ...etc) => mx('dx-card__section contents', ...etc);
+// NOTE: Direct children that lack an explicit `col-*` utility default to the
+// Column.Root center track (via `--dx-col`); see `ui-theme`'s `css/components/card.css`.
+const section: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
+  mx('dx-card__section col-span-full grid grid-cols-subgrid', ...etc);
 
 const sectionTitle: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
-  mx('dx-card__section-title col-span-full py-2 text-xs text-description font-medium uppercase', ...etc);
+  mx('dx-card__section-title col-start-2 col-span-full py-2 text-xs text-description font-medium uppercase', ...etc);
 
 const iconBlock: ComponentFunction<CardStyleProps> = ({ padding }, ...etc) =>
   mx(

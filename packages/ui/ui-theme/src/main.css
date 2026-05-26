@@ -38,6 +38,7 @@
 
 /* @layer dx-components (components) */
 @import './css/components/button.css';
+@import './css/components/card.css';
 @import './css/components/checkbox.css';
 @import './css/components/dialog.css';
 @import './css/components/focus.css';
