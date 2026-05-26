@@ -38,11 +38,11 @@ export const DefaultStory = <T extends Obj.Any, P extends {} = {}>({
             <span className='text-sm text-description'>{role}</span>
             <CardContainer role={role}>
               <Card.Root border={false}>
-                <Card.Toolbar>
+                <Card.Header>
                   <Card.DragHandle />
                   <Card.Title>{Obj.getLabel(object)}</Card.Title>
                   <Card.Menu />
-                </Card.Toolbar>
+                </Card.Header>
                 <Component
                   role={role ?? 'card--content'}
                   subject={image ? object : omitImage(object)}

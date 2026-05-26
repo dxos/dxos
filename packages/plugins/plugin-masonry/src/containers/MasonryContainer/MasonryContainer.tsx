@@ -109,7 +109,7 @@ const Item = ({ data }: { data: any }) => {
   return (
     <Menu.Root>
       <Card.Root>
-        <Card.Toolbar>
+        <Card.Header>
           <Card.Icon icon={icon} />
           <Card.Title>{Obj.getLabel(data, { fallback: 'typename' })}</Card.Title>
           {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
@@ -117,7 +117,7 @@ const Item = ({ data }: { data: any }) => {
             <Toolbar.IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
           </Menu.Trigger>
           <Menu.Content items={objectMenuItems} />
-        </Card.Toolbar>
+        </Card.Header>
         <Surface.Surface
           type={AppSurface.Card}
           limit={1}

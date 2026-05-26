@@ -71,7 +71,7 @@ export const _FormEditable: StoryObj<typeof DefaultStory<Person.Person>> = {
 
 /**
  * Empty-state variant: the subject has no resolvable schema so `FormCard` renders
- * `<Card.Content><Card.Row><Card.Text variant='description'>No preview</Card.Text></Card.Row></Card.Content>`.
+ * `<Card.Body><Card.Row><Card.Text variant='description'>No preview</Card.Text></Card.Row></Card.Body>`.
  * Use this story to verify the empty message lands in the card's center column.
  */
 export const _FormEmpty: StoryObj<typeof DefaultStory> = {
@@ -164,10 +164,10 @@ export const _Json = {
       <div className='flex justify-center p-16'>
         <div className='dx-card-min-width dx-card-max-width'>
           <Card.Root>
-            <Card.Toolbar>
+            <Card.Header>
               <Card.IconBlock />
               <Card.Title>JSON</Card.Title>
-            </Card.Toolbar>
+            </Card.Header>
             <JsonCard data={data} />
           </Card.Root>
         </div>

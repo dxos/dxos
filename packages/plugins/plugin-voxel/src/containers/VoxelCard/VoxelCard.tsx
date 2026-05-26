@@ -18,10 +18,10 @@ export const VoxelCard = ({ subject: world }: VoxelCardProps) => {
   const { gridX, gridY, blockSize } = Voxel.getGridDimensions(world);
 
   return (
-    <Card.Content>
+    <Card.Body>
       <Card.Row>
         <VoxelEditor voxels={voxels} gridX={gridX} gridY={gridY} blockSize={blockSize} readOnly />
       </Card.Row>
-    </Card.Content>
+    </Card.Body>
   );
 };

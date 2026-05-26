@@ -79,16 +79,16 @@ export const FormCard = ({ subject, projection, readonly = true, layout = 'compa
 
   if (!schema || !hasRenderableContent) {
     return (
-      <Card.Content>
+      <Card.Body>
         <Card.Row>
           <Card.Text variant='description'>{t('unable-to-create-preview.message')}</Card.Text>
         </Card.Row>
-      </Card.Content>
+      </Card.Body>
     );
   }
 
   return (
-    <Card.Content>
+    <Card.Body>
       <Form.Root
         schema={schema}
         projection={projection}
@@ -104,6 +104,6 @@ export const FormCard = ({ subject, projection, readonly = true, layout = 'compa
           </Form.Content>
         </Form.Viewport>
       </Form.Root>
-    </Card.Content>
+    </Card.Body>
   );
 };

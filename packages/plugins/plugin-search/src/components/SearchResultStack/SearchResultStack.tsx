@@ -93,7 +93,7 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
         >
           <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
             <Card.Root ref={forwardedRef} role='button' classNames='cursor-pointer'>
-              <Card.Toolbar>
+              <Card.Header>
                 <Card.IconBlock />
                 <Card.Title>{result.label ?? (result.object && Entity.getLabel(result.object))}</Card.Title>
                 <Menu.Trigger asChild disabled={!menuItems?.length}>
@@ -105,7 +105,7 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
                   />
                 </Menu.Trigger>
                 <Menu.Content items={menuItems} />
-              </Card.Toolbar>
+              </Card.Header>
               <Surface.Surface type={AppSurface.Card} data={{ subject: result.object }} limit={1} />
             </Card.Root>
           </Focus.Item>
