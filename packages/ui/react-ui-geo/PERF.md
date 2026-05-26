@@ -75,7 +75,7 @@ Decide `TILE_MAX_Z` from a size budget. z=4 (256 tiles) likely sufficient for an
 Options:
 
 - **Committed JSON tiles** in `data/tiles/{z}/{x}/{y}.json`. Pros: works offline, no fetch latency, browseable. Cons: many small files in git (10k–100k tiles for z=6). Prefer a flat manifest or a Vite-resolved `import.meta.glob('./tiles/**/*.json')`.
-- **Single concatenated bundle** like `data/tiles/{z}.ts` — one `Record<\`${x}_${y}\`, FeatureCollection>` per zoom level. Solves the file-count problem; loses lazy per-tile loading (whole z-level loads at once). Reasonable for z ≤ 4.
+- **Single concatenated bundle** like `data/tiles/{z}.ts` — one `Record<TileKey, FeatureCollection>` per zoom level (where `TileKey` is e.g. `"3_5"`). Solves the file-count problem; loses lazy per-tile loading (whole z-level loads at once). Reasonable for z ≤ 4.
 - **Lazy fetch from a CDN / static dir** via `fetch('/tiles/{z}/{x}/{y}.json')`. Standard tile-server pattern. Best long-term but requires a deployment story.
 
 **Recommendation**: start with per-z bundles (`data/tiles/{z}.ts`) for z ∈ [0, 4]. Code-split per z so app start only pays for z=0–2. Move to fetch-on-demand later if file size becomes a problem.
@@ -104,7 +104,7 @@ The visible-hemisphere check can be a fast pre-filter: for each tile, take 4 bbo
 
 ### 5. Cache / lifecycle
 
-- Module-level `Map<\`${z}/${x}/${y}\`, FeatureCollection>`mirrors the`topologyCache`pattern in`useTopologyForZoom`.
+- Module-level `Map<string, FeatureCollection>` keyed by `${z}/${x}/${y}`, mirrors the `topologyCache` pattern in `useTopologyForZoom`.
 - Tile loads are idempotent and cancellable (use the `disposed` flag pattern from `useTopologyForZoom`).
 - Optionally a LRU bound — at z=4 with 256 tiles × ~20 KB each ≈ 5 MB resident, fine to keep all in memory.
 

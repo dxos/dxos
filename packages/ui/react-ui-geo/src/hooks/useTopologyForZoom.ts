@@ -21,13 +21,22 @@ const DEFAULT_TIERS: LevelTier[] = [
 ];
 
 const pickTier = (zoom: number, tiers: LevelTier[]): LevelTier => {
-  let match = tiers[0];
+  if (tiers.length === 0) {
+    throw new Error('pickTier requires at least one tier');
+  }
+  // Order-agnostic: choose the applicable tier with the largest minZoom.
+  // Fall back to the tier with the smallest minZoom when zoom is below all
+  // bounds, so callers always get a sensible default.
+  let match: LevelTier | undefined;
   for (const tier of tiers) {
-    if (zoom >= tier.minZoom) {
+    if (tier.minZoom <= zoom && (!match || tier.minZoom > match.minZoom)) {
       match = tier;
     }
   }
-  return match;
+  if (match) {
+    return match;
+  }
+  return tiers.reduce((a, b) => (a.minZoom <= b.minZoom ? a : b));
 };
 
 export type UseTopologyForZoomOptions = {
@@ -59,12 +68,18 @@ export const useTopologyForZoom = (zoom: number, options: UseTopologyForZoomOpti
     }
 
     let disposed = false;
-    void loadTopology(tier.level).then((loaded) => {
-      topologyCache.set(tier.level, loaded);
-      if (!disposed) {
-        setTopology(loaded);
-      }
-    });
+    void loadTopology(tier.level)
+      .then((loaded) => {
+        topologyCache.set(tier.level, loaded);
+        if (!disposed) {
+          setTopology(loaded);
+        }
+      })
+      .catch((err) => {
+        // Keep the previous topology on screen rather than blanking the canvas.
+        // eslint-disable-next-line no-console
+        console.error('useTopologyForZoom: failed to load topology', tier.level, err);
+      });
 
     return () => {
       disposed = true;

@@ -354,8 +354,14 @@ const GlobeCanvas = forwardRef<GlobeController, GlobeCanvasProps>(
           // Provide a view-center for per-frame culling — only meaningful for
           // projections that present a single visible hemisphere (e.g.
           // orthographic). For Mercator/transverse-mercator the whole sphere
-          // is always visible, so we skip culling.
-          const isOrthographic = !projectionProp || projectionProp === 'orthographic';
+          // is always visible, so we skip culling. Detect by name for the
+          // built-in string types, and by clipAngle === 90 for arbitrary
+          // GeoProjection instances (d3's geoOrthographic sets it; mercator
+          // variants do not).
+          const isOrthographic =
+            !projectionProp ||
+            projectionProp === 'orthographic' ||
+            (typeof projectionProp === 'function' && projection.clipAngle?.() === 90);
           const [lambda, phi] = (rotation ?? [0, 0, 0]) as Vector;
           const viewCenter: [number, number] | undefined = isOrthographic ? [-lambda, -phi] : undefined;
 

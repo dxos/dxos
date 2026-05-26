@@ -28,13 +28,22 @@ const DEFAULT_TIERS: SimplifyTier[] = [
 ];
 
 const pickTier = (zoom: number, tiers: SimplifyTier[]): SimplifyTier => {
-  let match = tiers[0];
+  if (tiers.length === 0) {
+    throw new Error('pickTier requires at least one tier');
+  }
+  // Order-agnostic: choose the applicable tier with the largest minZoom.
+  // Fall back to the tier with the smallest minZoom when zoom is below all
+  // bounds, so callers always get a sensible default.
+  let match: SimplifyTier | undefined;
   for (const tier of tiers) {
-    if (zoom >= tier.minZoom) {
+    if (tier.minZoom <= zoom && (!match || tier.minZoom > match.minZoom)) {
       match = tier;
     }
   }
-  return match;
+  if (match) {
+    return match;
+  }
+  return tiers.reduce((a, b) => (a.minZoom <= b.minZoom ? a : b));
 };
 
 export type UseSimplifiedTopologyOptions = {
