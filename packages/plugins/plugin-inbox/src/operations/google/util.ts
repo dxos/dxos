@@ -47,19 +47,20 @@ const toMarkdown = (html: string): string => turndown.turndown(parseHTML(preproc
  * Strip residual HTML/XML tags that survive turndown conversion (e.g., MS Office namespaced
  * tags like <o:p>, <v:shape>, conditional comments, stray <span style=...>).
  *
- * Applied unconditionally to all message bodies (HTML and plaintext) so that Outlook-relayed
- * plaintext — which sometimes contains stray namespaced tags — gets cleaned too.
+ * Namespaced tags and MS conditional comments are stripped unconditionally — they have no
+ * meaning in genuine plaintext bodies. The generic inline-tag pass (<span>, <font>, <u>,
+ * <div>) is opt-in via `fromHtml` so we don't eat literal angle-bracketed text in plaintext
+ * messages.
  */
-const stripResidualTags = (str: string): string => {
-  return (
-    str
-      // 1. Conditional comments: <!--[if mso]>...<![endif]-->.
-      .replace(/<!--\s*\[if[^\]]*\][\s\S]*?<!\[endif\]\s*-->/gi, '')
-      // 2. Namespaced tags (<o:p>, <v:shape>, <w:WordDocument/>, <m:mathPr>, etc.).
-      .replace(/<\/?[a-zA-Z][\w-]*:[^>]*>/g, '')
-      // 3. Stray known-bad inline tags that survive turndown in edge cases.
-      .replace(/<\/?(span|font|u|div)\b[^>]*>/gi, '')
-  );
+const stripResidualTags = (str: string, { fromHtml = false }: { fromHtml?: boolean } = {}): string => {
+  const cleaned = str
+    // 1. Conditional comments: <!--[if mso]>...<![endif]-->.
+    .replace(/<!--\s*\[if[^\]]*\][\s\S]*?<!\[endif\]\s*-->/gi, '')
+    // 2. Namespaced tags (<o:p>, <v:shape>, <w:WordDocument/>, <m:mathPr>, etc.).
+    .replace(/<\/?[a-zA-Z][\w-]*:[^>]*>/g, '');
+
+  // 3. Stray known-bad inline tags that survive turndown in edge cases — HTML pipeline only.
+  return fromHtml ? cleaned.replace(/<\/?(span|font|u|div)\b[^>]*>/gi, '') : cleaned;
 };
 
 const stripWhitespace = (str: string): string => {
@@ -83,8 +84,9 @@ export const normalizeText = (text: string): string => {
   // Collapse runs of blank lines for both HTML (after markdown conversion) and
   // plain-text emails so the rendered message never shows more than one blank
   // line between paragraphs.
-  const converted = isHTML(text) ? toMarkdown(text) : text;
-  return stripWhitespace(stripResidualTags(converted));
+  const fromHtml = isHTML(text);
+  const converted = fromHtml ? toMarkdown(text) : text;
+  return stripWhitespace(stripResidualTags(converted, { fromHtml }));
 };
 
 // TODO(burdon): Customizable parser for plaintext.

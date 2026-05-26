@@ -81,6 +81,15 @@ describe('util', () => {
       expect(normalizeText('keep this </o:p> and this')).to.equal('keep this  and this');
     });
 
+    test('preserves literal angle-bracketed inline tags in plaintext', ({ expect }) => {
+      // Plaintext bodies that mention <font>/<u> literally must NOT be stripped — they're
+      // meaningful content, not residual HTML noise. The generic inline-tag pass only runs on
+      // HTML-converted text. Note: <div>/<span> trigger HTML detection upstream so they hit
+      // the HTML pipeline; this test covers tags that escape isHTML().
+      expect(normalizeText('Set <font> tags are deprecated.')).to.equal('Set <font> tags are deprecated.');
+      expect(normalizeText('Press <u>OK</u> to confirm.')).to.equal('Press <u>OK</u> to confirm.');
+    });
+
     test('handles namespaced tags inside plaintext (non-HTML) input', ({ expect }) => {
       // Some Gmail plaintext bodies contain HTML fragments inline; we still want them cleaned.
       // Input has no recognized HTML tags so isHTML() is false, but residual tags must still be stripped.

@@ -5,7 +5,7 @@
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { describe, expect, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { focus } from '../focus';
 import { image } from './image';
@@ -23,21 +23,21 @@ const createView = (doc: string, extensions: any[]) => {
 
 const countImageElements = (view: EditorView): number => view.dom.querySelectorAll('img.cm-image').length;
 
-describe('image extension', () => {
-  test('renders <img> for an http image link by default', () => {
+describe('image extension', ({ expect }) => {
+  test('renders <img> for an http image link by default', ({ expect }) => {
     const view = createView('![](http://example.com/x.png)', [image(), EditorView.editable.of(false)]);
     expect(countImageElements(view)).toBeGreaterThan(0);
     view.destroy();
   });
 
-  test('honors skip callback to suppress remote image rendering', () => {
+  test('honors skip callback to suppress remote image rendering', ({ expect }) => {
     const skip = ({ url }: { name: 'Image'; url: string }) => /^https?:\/\//.test(url);
     const view = createView('![alt](http://example.com/x.png)', [image({ skip }), EditorView.editable.of(false)]);
     expect(countImageElements(view)).toBe(0);
     view.destroy();
   });
 
-  test('skip can be selective (allow same-origin / data: while blocking http)', () => {
+  test('skip can be selective (allow same-origin / data: while blocking http)', ({ expect }) => {
     const skip = ({ url }: { name: 'Image'; url: string }) => /^https?:\/\//.test(url);
 
     const remoteView = createView('![alt](https://other.example.com/y.png)', [
