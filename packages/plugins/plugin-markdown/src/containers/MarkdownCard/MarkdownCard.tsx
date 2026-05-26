@@ -26,7 +26,7 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
   const info = getInfo(subject);
 
   return (
-    <Card.Content>
+    <Card.Body>
       {snippet && (
         <Card.Section className='relative'>
           <Card.Row fullWidth>
@@ -48,7 +48,7 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
           </Card.Text>
         </Card.Row>
       </Card.Section>
-    </Card.Content>
+    </Card.Body>
   );
 };
 

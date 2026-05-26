@@ -1,0 +1,318 @@
+---
+id: org.dxos.plugin.spotlight
+name: SpotlightPlugin
+version: 0.1.0
+---
+
+The Spotlight plugin drives the Tauri popover window that gives users instant keyboard access
+to Composer commands and navigation from anywhere on the desktop. It renders the commands dialog
+as its primary content, intercepts layout operations to forward navigation events to the main
+window, and dismisses the panel automatically when focus is lost or Escape is pressed.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+
+## Types
+
+```mdl
+type SpotlightState
+  fields:
+    dialogOpen: boolean           # whether the dialog overlay is currently open
+    dialogContent?: { component: string; props?: Record<string, any> }
+                                  # surface component to display; defaults to COMMANDS_DIALOG
+    dismissTimeout?: number       # handle for the pending debounced hide_spotlight call
+```
+
+## Components
+
+```mdl
+component SpotlightLayout
+  desc: |
+    Root layout component for the Tauri spotlight window.
+    Renders a permanently-open, non-modal Dialog.Root so that the commands dialog
+    surface (CommandsDialogContent) has the Radix context it requires.
+    CSS overrides force the dialog content to fill the popover window instead of
+    rendering as a centered fixed overlay with a max-width constraint.
+    On window focus-gained events the component resets state to the default
+    commands dialog and moves focus to the search input.
+  state:
+    state: SpotlightState         # reactive atom driving dialog visibility and content
+  slots:
+    default: ReactNode            # dialog surface resolved from state.dialogContent
+  layout: |
+    ┌────────────────────────────────┐
+    │  [data-spotlight]              │
+    │  ┌──────────────────────────┐  │
+    │  │  Dialog.Root (open)      │  │
+    │  │  Surface(AppSurface.     │  │
+    │  │    Dialog, dialogContent)│  │
+    │  └──────────────────────────┘  │
+    └────────────────────────────────┘
+```
+
+## Operations
+
+```mdl
+op UpdateDialog
+  desc: |
+    Intercepts the standard LayoutOperation.UpdateDialog.
+    When a subject component is supplied, cancels any pending dismiss timeout and
+    switches the dialog content to the new surface. When state=false is supplied,
+    schedules a debounced (100 ms) call to the Tauri `hide_spotlight` command.
+    The debounce allows an action triggered by the commands dialog to replace the
+    content before the dismiss fires.
+  input:
+    subject?: string              # surface component identifier to show
+    props?: any                   # props forwarded to the surface
+    state?: boolean               # false to schedule dismissal
+  output: void
+  effects: [tauri:invoke, layout:state]
+  requires: [SpotlightCapabilities.State]
+  note: |
+    The 100 ms DISMISS_DEBOUNCE_MS constant gives actions time to call UpdateDialog
+    with a new subject before the window hides.
+```
+
+```mdl
+op Open
+  desc: |
+    Intercepts LayoutOperation.Open. Forwards the navigation payload to the main
+    Tauri window via `emitTo('main', 'spotlight:invoke', { operation: 'open', payload })`,
+    then immediately hides the spotlight panel by invoking `hide_spotlight`.
+  input:
+    subject: string[]
+    state?: any
+    variant?: string
+    workspace?: string
+    scrollIntoView?: boolean
+  output: void
+  effects: [tauri:event, tauri:invoke]
+```
+
+```mdl
+op SwitchWorkspace
+  desc: |
+    Intercepts LayoutOperation.SwitchWorkspace. Forwards the workspace ID to the
+    main window via `emitTo('main', 'spotlight:invoke', { operation: 'switch-workspace' })`
+    without dismissing the spotlight panel.
+  input:
+    subject: string               # workspace ID to activate in the main window
+  output: void
+  effects: [tauri:event]
+```
+
+```mdl
+op Close
+  desc: |
+    Intercepts LayoutOperation.Close. Hides the spotlight panel immediately via
+    the Tauri `hide_spotlight` command. No deck state is modified.
+  input: void
+  output: void
+  effects: [tauri:invoke]
+```
+
+## Features
+
+```mdl
+feat F-1: Commands Dialog as Primary Content
+
+  req F-1.1:
+    when: the spotlight window opens
+    then: SpotlightLayout renders the commands dialog surface (CommandsDialogContent)
+          in a permanently-open non-modal Dialog.Root
+
+  req F-1.2:
+    when: the Tauri window gains focus
+    then: state is reset to { dialogOpen: true, dialogContent: COMMANDS_DIALOG }
+          and the search input inside the dialog receives focus and is selected
+```
+
+```mdl
+feat F-2: Auto-Dismiss on Focus Loss and Escape
+
+  req F-2.1:
+    when: the spotlight window loses focus
+    then: SpotlightDismiss capability calls hide_spotlight immediately
+
+  req F-2.2:
+    when: user presses Escape while the spotlight window has focus
+    then: SpotlightDismiss capability calls hide_spotlight immediately
+```
+
+```mdl
+feat F-3: Debounced Dismiss on Dialog Close
+
+  req F-3.1:
+    when: UpdateDialog({ state: false }) is received
+    then: a 100 ms debounced call to hide_spotlight is scheduled
+
+  req F-3.2:
+    when: UpdateDialog({ subject }) arrives before the debounce fires
+    then: the pending dismiss is cancelled and dialog content is switched to the new surface
+```
+
+```mdl
+feat F-4: Navigation Forwarding to Main Window
+
+  req F-4.1:
+    when: LayoutOperation.Open is dispatched in the spotlight context
+    then: the payload is forwarded to the main window via Tauri event emitTo
+          and the spotlight panel is hidden
+
+  req F-4.2:
+    when: LayoutOperation.SwitchWorkspace is dispatched
+    then: the workspace change is forwarded to the main window without hiding spotlight
+
+  req F-4.3:
+    when: LayoutOperation.SetLayoutMode, UpdateSidebar, UpdateComplementary,
+          UpdatePopover, RevertWorkspace, Set, ScrollIntoView, Expose, AddToast are dispatched
+    then: these operations are silently ignored (no-ops) in the spotlight context
+```
+
+```mdl
+feat F-5: Layout State Publication
+
+  req F-5.1:
+    when: the spotlight plugin initialises
+    then: State capability contributes an AppCapabilities.Layout atom with
+          mode='spotlight', sidebarOpen=false, complementarySidebarOpen=false,
+          active=[], inactive=[]
+```
+
+## Acceptance
+
+```mdl
+test T-1: Spotlight opens with commands dialog
+  given: Tauri spotlight window is invoked (e.g. via global hotkey)
+  when: window gains focus
+  then:
+    - SpotlightLayout is visible
+    - CommandsDialogContent is rendered
+    - search input has focus
+```
+
+```mdl
+test T-2: Escape dismisses spotlight
+  given: spotlight window is visible and has focus
+  when: user presses Escape
+  then:
+    - hide_spotlight is invoked
+    - spotlight panel disappears
+```
+
+```mdl
+test T-3: Focus loss dismisses spotlight
+  given: spotlight window is visible
+  when: user clicks outside the spotlight window
+  then:
+    - onFocusChanged fires with payload=false
+    - hide_spotlight is invoked
+```
+
+```mdl
+test T-4: Debounce prevents premature dismiss
+  given: CommandsDialogContent calls UpdateDialog({ state: false }) when an action is selected
+  when: the action calls UpdateDialog({ subject: 'some.other.dialog' }) within 100 ms
+  then:
+    - original dismiss timeout is cancelled
+    - dialog switches to the new surface
+    - hide_spotlight is NOT called
+```
+
+```mdl
+test T-5: Open forwards to main window and hides spotlight
+  given: user selects a navigation result in the commands dialog
+  when: LayoutOperation.Open is dispatched with subject=['some-item-id']
+  then:
+    - emitTo('main', 'spotlight:invoke', { operation: 'open', payload: { subject: [...] } }) is called
+    - hide_spotlight is invoked
+    - spotlight panel disappears
+```
+
+```mdl
+test T-6: SwitchWorkspace forwards without hiding
+  given: spotlight is visible
+  when: LayoutOperation.SwitchWorkspace({ subject: 'workspace-id' }) is dispatched
+  then:
+    - emitTo('main', 'spotlight:invoke', { operation: 'switch-workspace', payload: { subject: 'workspace-id' } }) is called
+    - spotlight panel remains visible
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap            # external inputs (immutable inside component)
+    state?: FieldMap            # internal reactive state
+    slots?: FieldMap            # named ReactNode injection points
+    actions?: ActionMap         # methods the component exposes or handles
+    emits?: EventMap            # events the component raises to its parent
+    layout?: CodeBlock          # ASCII sketch of visual structure (non-normative)
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap            # named input parameters
+    output?: TypeExpr           # return type
+    errors?: ErrorMap           # name: Prose  (when this error occurs)
+    effects?: EffectList        # echo:read | echo:write | http | fs | ...
+    requires?: ServiceList      # injected service dependencies
+    note?: Prose                # implementation guidance (non-normative)
+```

@@ -222,7 +222,7 @@ export const Default: Story = {
     await expect(activeCards.length).toBeGreaterThan(0);
     await expect(prospectCards.length).toBeGreaterThan(0);
 
-    // Verify cards have drag handles (Card.Toolbar includes drag handle).
+    // Verify cards have drag handles (Card.Header includes drag handle).
     const firstActiveCard = activeCards[0];
     const buttons = firstActiveCard.querySelectorAll('button');
     await expect(buttons.length).toBeGreaterThan(0);

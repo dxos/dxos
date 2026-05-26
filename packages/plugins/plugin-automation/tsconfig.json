@@ -81,6 +81,9 @@
       "path": "../../core/echo/echo-react"
     },
     {
+      "path": "../../core/mesh/edge-client"
+    },
+    {
       "path": "../../devtools/cli-util"
     },
     {

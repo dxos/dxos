@@ -3,5 +3,6 @@
 //
 
 export * from './useActorContact';
+export * from './useArticleKeyboardNavigation';
 export * from './useShadowObject';
 export * from './useSyncTrigger';

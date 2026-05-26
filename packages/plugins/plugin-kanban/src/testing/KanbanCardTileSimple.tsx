@@ -50,7 +50,7 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
         >
           <Focus.Item asChild>
             <Card.Root ref={forwardedRef} data-testid='board-item'>
-              <Card.Toolbar>
+              <Card.Header>
                 <Card.DragHandle ref={dragHandleRef} />
                 <Card.Title>{Obj.getLabel(data)}</Card.Title>
                 {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
@@ -63,14 +63,14 @@ export const KanbanCardTileSimple = forwardRef<HTMLDivElement, KanbanCardProps>(
                   />
                 </Menu.Trigger>
                 <Menu.Content items={menuItems} />
-              </Card.Toolbar>
-              <Card.Content>
+              </Card.Header>
+              <Card.Body>
                 <Card.Row fullWidth>
                   <pre className='p-2 text-xs text-description whitespace-pre-wrap'>
                     {JSON.stringify(data, null, 2)}
                   </pre>
                 </Card.Row>
-              </Card.Content>
+              </Card.Body>
             </Card.Root>
           </Focus.Item>
         </Mosaic.Tile>

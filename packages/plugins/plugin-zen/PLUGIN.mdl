@@ -1,0 +1,374 @@
+---
+id: org.dxos.plugin.zen
+name: ZenPlugin
+version: 0.1.0
+---
+
+ZenPlugin is an ambient sound and meditation plugin for DXOS Composer.
+Users create and edit `Dream` objects — named, duration-bound soundscapes composed of layered audio `Sequence` tracks.
+Each sequence is either a looped sample (fireplace, ocean, rain, stream, thunder, gong) or a procedurally generated
+binaural beat (delta, theta, alpha, beta presets) that plays through the Web Audio API with per-layer volume and mute controls.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+
+## Types
+
+```mdl
+type BrainwavePreset
+  literals: delta | theta | alpha | beta
+  desc: Brainwave frequency preset for the binaural generator.
+```
+
+```mdl
+type SampleSource
+  desc: Audio layer backed by a bundled loop sample.
+  fields:
+    type: 'sample'
+    sample: string           # one of: fireplace | ocean | rain | stream | thunder | gong-1 | gong-2
+```
+
+```mdl
+type GeneratorSource
+  desc: Audio layer backed by the procedural binaural beat generator.
+  fields:
+    type: 'generator'
+    preset: BrainwavePreset
+    baseFrequency: number    # carrier frequency (Hz)
+    beatFrequency: number    # beat frequency (Hz)
+    volume: number           # master volume 0-1
+    noiseEnabled: boolean    # enable pink noise layer
+    noiseVolume: number      # pink noise volume 0-1
+```
+
+```mdl
+type Source
+  desc: Discriminated union of audio sources.
+  literals: SampleSource | GeneratorSource
+```
+
+```mdl
+type Sequence
+  desc: A single audio layer in a Dream.
+  fields:
+    id: string
+    name?: string
+    source: Source
+    volume: number           # layer volume 0-1
+    muted: boolean
+```
+
+```mdl
+type Dream
+  desc: ECHO object (typename dxos.org.type.Dream). Root soundscape document.
+  fields:
+    name?: string
+    duration?: number        # playback duration in seconds; 0 or absent means unlimited
+    sequences?: Sequence[]
+```
+
+## Components
+
+```mdl
+component Mixer
+  desc: |
+    Multi-layer audio mixer. Renders a list of Sequence rows with drag-to-reorder support.
+    Exposes play/stop controls and an optional countdown timer when Dream.duration > 0.
+    Splits into a top layer-list panel and a bottom Sound editor panel when a layer is selected.
+  props:
+    dream: Dream
+    engine: MixerEngine
+  state:
+    playing: boolean
+    selected?: string        # id of the selected Sequence
+    remaining: number        # countdown seconds remaining (only when timed)
+  actions:
+    play()
+    stop()
+    addLayer()
+    deleteLayer(id: string)
+    updateLayer(sequence: Sequence)
+    moveLayer(fromIndex: number, toIndex: number)
+    selectLayer(id: string)
+  layout: |
+    ┌──────────────────────────────┐
+    │ [+] [────────] [▶ / ■]       │  toolbar
+    ├──────────────────────────────┤
+    │ ≡ ~ rain           🔊  [×]   │
+    │ ≡ ∿ generator      🔇  [×]   │
+    │ …                            │
+    ├──────────────────────────────┤  (when layer selected)
+    │   Sound editor               │
+    └──────────────────────────────┘
+```
+
+```mdl
+component Sound
+  desc: |
+    Per-layer configuration panel. Shows source type selector (sample / generator)
+    and source-specific controls: sample picker for SampleSource, or BinauralConfig
+    sliders for GeneratorSource. Volume slider is always present.
+  props:
+    sequence: Sequence
+  emits:
+    onUpdate(sequence: Sequence)
+  layout: |
+    ┌──────────────────────────────┐
+    │ Source: [sample ▼]           │
+    │ Sample: [rain    ▼]          │
+    │ Volume: [───●────]  0.5      │
+    └──────────────────────────────┘
+    — or, for generator source —
+    ┌──────────────────────────────┐
+    │ Source: [generator ▼]        │
+    │ Preset:  [delta ▼]           │
+    │ Base Hz: [────●───]  100     │
+    │ Beat Hz: [─●──────]    2     │
+    │ Volume:  [───●────]  0.3     │
+    │ Noise:   [✓] Volume [─●───]  │
+    └──────────────────────────────┘
+```
+
+```mdl
+component Editor
+  desc: |
+    Dream metadata form (name, duration). Uses react-ui-form Form.Root with auto-save
+    so changes are persisted to the ECHO object on every field blur.
+  props:
+    dream: Dream
+  layout: |
+    ┌──────────────────────────────┐
+    │ Name:     [              ]   │
+    │ Duration: [    300       ]   │
+    └──────────────────────────────┘
+```
+
+## Features
+
+```mdl
+feat F-1: Dream creation and editing
+
+  req F-1.1: Users MUST be able to create a new Dream object from the Composer
+    Create Object dialog.
+
+  req F-1.2: Dream.name and Dream.duration MUST be editable via the Editor
+    component with auto-save to ECHO on every field blur.
+
+  req F-1.3: Dream.duration of 0 (or absent) MUST be treated as unlimited playback.
+```
+
+```mdl
+feat F-2: Mixer layer management
+
+  req F-2.1: Users MUST be able to add a new Sequence layer to a Dream;
+    new layers default to a sample source (rain, volume 0.5, unmuted).
+
+  req F-2.2: Users MUST be able to delete a layer. Deleting a playing layer
+    MUST stop and release its audio source immediately.
+
+  req F-2.3: Users MUST be able to reorder layers by drag-and-drop.
+    The new order MUST be persisted to Dream.sequences via ECHO.
+
+  req F-2.4: Users MUST be able to mute/unmute individual layers without
+    stopping playback of other layers.
+```
+
+```mdl
+feat F-3: Playback
+
+  req F-3.1: Pressing play MUST start all non-muted layers simultaneously
+    through a shared AudioContext. All layers route through a master GainNode.
+
+  req F-3.2: Pressing stop MUST stop all layers, close the AudioContext,
+    and release all Web Audio resources.
+
+  req F-3.3: When Dream.duration > 0, a countdown timer MUST be displayed.
+    At FADE_OUT_SECONDS (10 s) before the end the master gain MUST fade
+    to zero linearly, and playback MUST stop automatically when remaining === 0.
+
+  req F-3.4: Updating a layer's source, volume, or mute state while playing
+    MUST hot-swap only that layer's audio node without restarting others.
+```
+
+```mdl
+feat F-4: Binaural beat generator
+
+  req F-4.1: GeneratorSource layers MUST synthesise binaural beats using
+    two sine oscillators routed through a ChannelMerger (left: baseFrequency,
+    right: baseFrequency + beatFrequency).
+
+  req F-4.2: Four brainwave presets MUST be provided:
+    delta (2 Hz, deep sleep), theta (6 Hz, light sleep),
+    alpha (10 Hz, relaxation), beta (20 Hz, focus).
+
+  req F-4.3: An optional pink-noise layer (Paul Kellet's refined algorithm)
+    MUST be available within a GeneratorSource via noiseEnabled / noiseVolume.
+
+  req F-4.4: Configuration changes (frequencies, volume, noise) applied while
+    playing MUST take effect in real-time via AudioParam ramp transitions.
+```
+
+```mdl
+feat F-5: Sample playback
+
+  req F-5.1: The seven bundled samples (fireplace, ocean, rain, stream,
+    thunder, gong-1, gong-2) MUST loop seamlessly.
+
+  req F-5.2: Per-layer volume MUST be controllable independently of the
+    master gain via a GainNode per SamplePlayer.
+
+  req F-5.3: Muting a sample layer MUST silence it immediately without
+    stopping the audio node.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Create Dream and add layers
+  given: no Dream objects exist in the space
+  when: user creates a new Dream via Create Object
+  then:
+    - a Dream ECHO object is created with no sequences
+    - the Mixer is shown with an empty layer list
+    - clicking Add Layer adds a Sequence with source.type === 'sample'
+```
+
+```mdl
+test T-2: Play and stop soundscape
+  given: a Dream with two Sequences (one sample, one generator)
+  when: user presses Play
+  then:
+    - both non-muted layers start playing
+    - the toolbar shows the Stop button
+  when: user presses Stop
+  then:
+    - all audio stops
+    - AudioContext is closed
+```
+
+```mdl
+test T-3: Timed playback auto-stop
+  given: a Dream with duration = 15 s, one sample layer
+  when: user presses Play
+  then:
+    - countdown shows 15:00 and counts down each second
+    - at 10 s remaining the master gain begins fading to zero
+    - at 0 s remaining playback stops automatically
+```
+
+```mdl
+test T-4: Mute layer during playback
+  given: a Dream playing with two layers
+  when: user clicks the mute button on layer A
+  then:
+    - layer A is silenced immediately
+    - layer B continues playing unchanged
+    - Sequence.muted is persisted to ECHO
+```
+
+```mdl
+test T-5: Delete layer during playback
+  given: a Dream playing with two layers
+  when: user deletes layer A
+  then:
+    - layer A's audio node is stopped and released
+    - layer B continues playing
+    - Dream.sequences no longer contains layer A
+```
+
+```mdl
+test T-6: Reorder layers persisted
+  given: a Dream with layers [A, B, C]
+  when: user drags layer C to position 0
+  then: Dream.sequences === [C, A, B] in ECHO
+```
+
+```mdl
+test T-7: Generator preset applies correct beat frequency
+  given: a GeneratorSource layer with preset = 'theta'
+  when: the layer starts
+  then:
+    - left oscillator frequency === baseFrequency
+    - right oscillator frequency === baseFrequency + 6
+```
+
+```mdl
+test T-8: Dream name auto-saved
+  given: a Dream with name 'Morning calm'
+  when: user edits the name to 'Evening wind' and blurs the field
+  then: Dream.name === 'Evening wind' in ECHO
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap
+    literals?: UnionList
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap
+    state?: FieldMap
+    slots?: FieldMap
+    actions?: ActionMap
+    emits?: EventMap
+    layout?: CodeBlock
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: A named operation with typed inputs, outputs, and declared errors.
+  fields:
+    desc?: Prose
+    input?: FieldMap
+    output?: TypeExpr
+    errors?: ErrorMap
+    effects?: EffectList
+    requires?: ServiceList
+    note?: Prose
+```

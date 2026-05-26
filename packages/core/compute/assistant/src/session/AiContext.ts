@@ -155,7 +155,7 @@ export class Binder extends Resource {
       await this._updateBindings(results);
       log('sync complete', {
         blueprints: this._registry.get(this._blueprints).length,
-        blueprintKeys: this._registry.get(this._blueprints).map((bp) => Blueprint.getKey(bp)),
+        blueprintKeys: this._registry.get(this._blueprints).map((bp) => Obj.getMeta(bp).key ?? '<missing>'),
       });
     }
   }
@@ -181,7 +181,17 @@ export class Binder extends Resource {
 
     log('_updateBindings resolved', {
       resolvedBlueprints: resolvedBlueprints.length,
-      resolvedBlueprintKeys: resolvedBlueprints.map((bp) => Blueprint.getKey(bp)),
+      resolvedBlueprintKeys: resolvedBlueprints.map((bp) => Obj.getMeta(bp).key ?? '<missing>'),
+    });
+
+    // Drop blueprints that have no registry key — they cannot be used downstream
+    // (e.g. tool/operation registration calls Blueprint.getKey which throws).
+    const keyedBlueprints = resolvedBlueprints.filter((bp) => {
+      if (Obj.getMeta(bp).key === undefined) {
+        log.warn('dropping blueprint with no meta key', { dxn: Obj.getDXN(bp).toString() });
+        return false;
+      }
+      return true;
     });
 
     // Filter current state to only items still in the reduced binding set,
@@ -194,9 +204,11 @@ export class Binder extends Resource {
       DXN.hash,
       [...bindings.objects].map((ref) => ref.dxn),
     );
-    const filteredBlueprints = currentBlueprints.filter((obj) => reducedBlueprintDxns.has(Obj.getDXN(obj)));
+    const filteredBlueprints = currentBlueprints.filter(
+      (bp) => reducedBlueprintDxns.has(Obj.getDXN(bp)) && Obj.getMeta(bp).key !== undefined,
+    );
     const filteredObjects = currentObjects.filter((obj) => reducedObjectDxns.has(Obj.getDXN(obj)));
-    const mergedBlueprints = this._mergeInto(filteredBlueprints, resolvedBlueprints);
+    const mergedBlueprints = this._mergeInto(filteredBlueprints, keyedBlueprints);
     const mergedObjects = this._mergeInto(filteredObjects, resolvedObjects);
 
     this._registry.set(this._blueprints, mergedBlueprints);

@@ -46,8 +46,8 @@ type SegmentTileProps = Pick<MosaicTileProps<SegmentTileData>, 'data' | 'locatio
 /**
  * Mosaic tile for a Segment. Follows the Card primitives:
  *   Card.Root
- *     Card.Toolbar  → kind icon + title + delete (Card.CloseIconButton)
- *     Card.Content  → optional Route and Date rows
+ *     Card.Header  → kind icon + title + delete (Card.CloseIconButton)
+ *     Card.Body  → optional Route and Date rows
  *
  * Selection / current state is wired through `Mosaic.Tile asChild` + `Focus.Item`
  * so the host `Mosaic.Container` drives the visual `dx-current` / `dx-selected`
@@ -89,13 +89,13 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
     >
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root fullWidth border={false} ref={forwardedRef}>
-          <Card.Toolbar>
+          <Card.Header>
             <Card.Icon icon={icon} />
             <Card.Title>{title}</Card.Title>
             <Card.ActionIconButton action='delete' onClick={handleDelete} label={t('segment.delete.label')} />
-          </Card.Toolbar>
+          </Card.Header>
           {flightDetails ? (
-            <Card.Content>
+            <Card.Body>
               <Form.Root
                 schema={Segment.FlightDetails}
                 defaultValues={flightDetails}
@@ -109,10 +109,10 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
                   </Form.Content>
                 </Form.Viewport>
               </Form.Root>
-            </Card.Content>
+            </Card.Body>
           ) : (
             (route || date) && (
-              <Card.Content>
+              <Card.Body>
                 {route && (
                   <Card.Row>
                     <Card.Text variant='description'>{route}</Card.Text>
@@ -123,7 +123,7 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
                     <Card.Text variant='description'>{format(date, 'PPp')}</Card.Text>
                   </Card.Row>
                 )}
-              </Card.Content>
+              </Card.Body>
             )
           )}
         </Card.Root>
