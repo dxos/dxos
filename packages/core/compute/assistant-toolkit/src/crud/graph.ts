@@ -165,7 +165,7 @@ export const makeGraphWriterHandler = (
       const data = yield* sanitizeObjects(schema, input as any, db, feed);
       yield* Feed.append(feed, data as Obj.Unknown[]);
 
-      const dxns = data.map((obj) => Obj.getURI(obj));
+      const dxns = data.map((obj) => Entity.getURI(obj));
       onAppend?.(dxns);
       return dxns;
     }),
@@ -199,7 +199,7 @@ export const sanitizeObjects = (
   data: Record<string, readonly unknown[]>,
   db: Database.Database,
   feed?: Feed.Feed,
-): Effect.Effect<Obj.Unknown[], never, Feed.FeedService> =>
+): Effect.Effect<Entity.Unknown[], never, Feed.FeedService> =>
   Effect.gen(function* () {
     const entries = types
       .map(
@@ -315,7 +315,7 @@ export const sanitizeObjects = (
         }
       }
       if (!skip) {
-        const obj = createObject(Type.getSchema(schema), data);
+        const obj = createObject(schema, data);
         enitties.set(obj.id, obj);
         return [obj];
       }

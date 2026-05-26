@@ -72,7 +72,7 @@ describe('useSchema', () => {
     let schemaAccessor: (() => any) | undefined;
 
     function TestComponent() {
-      const schema = useSchema(db, registeredSchema.typename);
+      const schema = useSchema(db, Type.getTypename(registeredSchema)!);
       schemaAccessor = schema;
       const t = createMemo(() => {
         const s = schema();
@@ -84,13 +84,13 @@ describe('useSchema', () => {
     const { getByTestId } = render(() => <TestComponent />);
 
     await waitFor(() => {
-      expect(getByTestId('typename').textContent).toBe(registeredSchema.typename);
+      expect(getByTestId('typename').textContent).toBe(Type.getTypename(registeredSchema)!);
     });
 
     // Get the actual result from the accessor
     const result = schemaAccessor?.();
     expect(result).toBeDefined();
-    expect(result?.typename).toBe(registeredSchema.typename);
+    expect(Type.getTypename(result!)).toBe(Type.getTypename(registeredSchema)!);
   });
 
   test.skip('updates when schema is added', async () => {
@@ -125,13 +125,13 @@ describe('useSchema', () => {
     // The schema registry query should pick up the new schema
     // It reads from db.graph.schemaRegistry.schemas which should include the newly registered schema
     await waitFor(() => {
-      expect(getByTestId('typename').textContent).toBe(registeredSchema.typename);
+      expect(getByTestId('typename').textContent).toBe(Type.getTypename(registeredSchema)!);
     });
 
     // Get the actual result from the accessor
     const result = schemaAccessor?.();
     expect(result).toBeDefined();
-    expect(result?.typename).toBe(registeredSchema.typename);
+    expect(Type.getTypename(result!)).toBe(Type.getTypename(registeredSchema)!);
   });
 
   test('accepts reactive database accessor', async () => {
@@ -141,7 +141,7 @@ describe('useSchema', () => {
     let dbAccessor: any = db;
 
     function TestComponent() {
-      const schema = useSchema(() => dbAccessor, registeredSchema.typename);
+      const schema = useSchema(() => dbAccessor, Type.getTypename(registeredSchema)!);
       schemaAccessor = schema;
       const t = createMemo(() => {
         const s = schema();
@@ -153,7 +153,7 @@ describe('useSchema', () => {
     const { getByTestId } = render(() => <TestComponent />);
 
     await waitFor(() => {
-      expect(getByTestId('typename').textContent).toBe(registeredSchema.typename);
+      expect(getByTestId('typename').textContent).toBe(Type.getTypename(registeredSchema)!);
     });
 
     // Get the actual result from the accessor
@@ -172,7 +172,7 @@ describe('useSchema', () => {
     const [registeredSchema] = await db.schemaRegistry.register([TestSchema.Person]);
 
     let schemaAccessor: (() => any) | undefined;
-    let typename: string | undefined = registeredSchema.typename;
+    let typename: string | undefined = Type.getTypename(registeredSchema)!;
 
     function TestComponent() {
       const schema = useSchema(db, () => typename);
@@ -187,20 +187,20 @@ describe('useSchema', () => {
     const { getByTestId } = render(() => <TestComponent />);
 
     await waitFor(() => {
-      expect(getByTestId('typename').textContent).toBe(registeredSchema.typename);
+      expect(getByTestId('typename').textContent).toBe(Type.getTypename(registeredSchema)!);
     });
 
     // Get the actual result from the accessor
     let result = schemaAccessor?.();
     expect(result).toBeDefined();
-    expect(result?.typename).toBe(registeredSchema.typename);
+    expect(Type.getTypename(result!)).toBe(Type.getTypename(registeredSchema)!);
 
     // Change typename
     typename = undefined;
 
     await waitFor(() => {
       // Should keep previous value when typename becomes undefined
-      expect(getByTestId('typename').textContent).toBe(registeredSchema.typename);
+      expect(getByTestId('typename').textContent).toBe(Type.getTypename(registeredSchema)!);
     });
     result = schemaAccessor?.();
     expect(result).toBeDefined();
