@@ -37,12 +37,7 @@ export type TriggerDispatcherSummaryProps = {
   timerTriggers: Trigger.Trigger[];
 };
 
-export const TriggerDispatcherSummary = ({
-  status,
-  error,
-  loading,
-  timerTriggers,
-}: TriggerDispatcherSummaryProps) => {
+export const TriggerDispatcherSummary = ({ status, error, loading, timerTriggers }: TriggerDispatcherSummaryProps) => {
   const { t } = useTranslation(meta.id);
 
   if (loading && !status) {
@@ -127,27 +122,20 @@ export const TriggerEdgeMetadata = ({ trigger, edgeStatus }: TriggerEdgeMetadata
   }
 
   if (registration.kind === 'na') {
-    return (
-      <div className='text-xs text-description ml-4 truncate'>{t('edge.trigger.status.cron.na.label')}</div>
-    );
+    return <div className='text-xs text-description ml-4 truncate'>{t('edge.trigger.status.cron.na.label')}</div>;
   }
 
   const enabled = trigger.enabled ?? false;
   const registered = registration.kind === 'cron' && registration.registered;
 
-  const label = registered
-    ? t('edge.trigger.status.registered.label')
-    : t('edge.trigger.status.not.registered.label');
+  const label = registered ? t('edge.trigger.status.registered.label') : t('edge.trigger.status.not.registered.label');
 
   const classNames = mx(
     'text-xs ml-4 truncate',
     registered ? 'text-success-text' : enabled ? 'text-warning-text' : 'text-description',
   );
 
-  const detail =
-    registration.kind === 'cron' && !enabled
-      ? t('edge.trigger.status.disabled.detail.label')
-      : undefined;
+  const detail = registration.kind === 'cron' && !enabled ? t('edge.trigger.status.disabled.detail.label') : undefined;
 
   return (
     <div className='flex flex-col gap-0.5 min-w-0'>

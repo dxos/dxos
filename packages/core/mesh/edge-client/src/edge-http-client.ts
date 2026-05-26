@@ -423,7 +423,11 @@ export class EdgeHttpClient {
   /**
    * Fetches TriggersDispatcher Durable Object runtime state for a space.
    */
-  public async getTriggersDispatcherStatus(ctx: Context, spaceId: SpaceId, args?: EdgeHttpCallArgs): Promise<TriggersDispatcherStatus> {
+  public async getTriggersDispatcherStatus(
+    ctx: Context,
+    spaceId: SpaceId,
+    args?: EdgeHttpCallArgs,
+  ): Promise<TriggersDispatcherStatus> {
     return this._call<TriggersDispatcherStatus>(ctx, new URL(`/triggers/${spaceId}/status`, this.baseUrl), {
       ...args,
       method: 'GET',

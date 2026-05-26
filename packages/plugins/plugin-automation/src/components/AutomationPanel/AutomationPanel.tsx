@@ -30,8 +30,8 @@ import { isNonNullable } from '@dxos/util';
 import { meta } from '#meta';
 
 import { type EdgeTriggersDispatcherStatusState, useEdgeTriggersDispatcherStatus } from '../../hooks';
-import { TriggerDispatcherSummary, TriggerEdgeMetadata } from './TriggerEdgeMetadata';
 import { TriggerEditor, type TriggerEditorProps } from '../TriggerEditor';
+import { TriggerDispatcherSummary, TriggerEdgeMetadata } from './TriggerEdgeMetadata';
 
 const grid = 'grid grid-cols-[40px_1fr_32px_32px] min-h-[2.5rem]';
 
