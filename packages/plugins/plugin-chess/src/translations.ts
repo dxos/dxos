@@ -11,7 +11,7 @@ export const translations = [
   {
     'en-US': {
       [Chess.State.typename]: {
-        'typename.label': 'Chess',
+        'typename.label': 'Chess game',
         'typename.label_zero': 'Chess games',
         'typename.label_one': 'Chess game',
         'typename.label_other': 'Chess games',
