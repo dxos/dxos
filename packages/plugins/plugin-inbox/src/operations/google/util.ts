@@ -43,6 +43,25 @@ const preprocessHtml = (html: string): string => {
 
 const toMarkdown = (html: string): string => turndown.turndown(parseHTML(preprocessHtml(html), {}).document.body);
 
+/**
+ * Strip residual HTML/XML tags that survive turndown conversion (e.g., MS Office namespaced
+ * tags like <o:p>, <v:shape>, conditional comments, stray <span style=...>).
+ *
+ * Applied unconditionally to all message bodies (HTML and plaintext) so that Outlook-relayed
+ * plaintext — which sometimes contains stray namespaced tags — gets cleaned too.
+ */
+const stripResidualTags = (str: string): string => {
+  return (
+    str
+      // 1. Conditional comments: <!--[if mso]>...<![endif]-->.
+      .replace(/<!--\s*\[if[^\]]*\][\s\S]*?<!\[endif\]\s*-->/gi, '')
+      // 2. Namespaced tags (<o:p>, <v:shape>, <w:WordDocument/>, <m:mathPr>, etc.).
+      .replace(/<\/?[a-zA-Z][\w-]*:[^>]*>/g, '')
+      // 3. Stray known-bad inline tags that survive turndown in edge cases.
+      .replace(/<\/?(span|font|u|div)\b[^>]*>/gi, '')
+  );
+};
+
 const stripWhitespace = (str: string): string => {
   const WHITESPACE = /[ \t\u00A0]*\n[ \t\u00A0]*\n[\s\u00A0]*/g;
   return (
@@ -64,7 +83,8 @@ export const normalizeText = (text: string): string => {
   // Collapse runs of blank lines for both HTML (after markdown conversion) and
   // plain-text emails so the rendered message never shows more than one blank
   // line between paragraphs.
-  return stripWhitespace(isHTML(text) ? toMarkdown(text) : text);
+  const converted = isHTML(text) ? toMarkdown(text) : text;
+  return stripWhitespace(stripResidualTags(converted));
 };
 
 // TODO(burdon): Customizable parser for plaintext.

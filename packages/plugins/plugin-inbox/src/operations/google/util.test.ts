@@ -54,4 +54,40 @@ describe('util', () => {
     // No blank line is preserved unchanged.
     expect(normalizeText('aaa\nbbb')).to.equal('aaa\nbbb');
   });
+
+  describe('residual tags', () => {
+    test('strips MS Office namespaced tags', ({ expect }) => {
+      // <o:p>...</o:p> is the most common turndown leftover from Outlook emails.
+      expect(normalizeText('<p>Hello<o:p></o:p>world</p>')).to.equal('Helloworld');
+      // Self-closing namespaced tag (VML shape).
+      expect(normalizeText('<p>before<v:shape id="x"/>after</p>')).to.equal('beforeafter');
+      // <w:...> (Word) and <m:...> (math) variants.
+      expect(normalizeText('<p>a<w:WordDocument/>b<m:mathPr/>c</p>')).to.equal('abc');
+    });
+
+    test('strips MS Office conditional comments', ({ expect }) => {
+      expect(normalizeText('<!--[if mso]><p>hidden</p><![endif]-->visible')).to.equal('visible');
+      expect(normalizeText('before<!--[if gte mso 9]>junk<![endif]-->after')).to.equal('beforeafter');
+    });
+
+    test('strips stray inline tags that survive turndown', ({ expect }) => {
+      // turndown leaves attribute-laden spans/fonts in some edge cases.
+      expect(normalizeText('<p>hello <span style="color:red">world</span></p>')).to.equal('hello world');
+      expect(normalizeText('<p><font face="Arial">text</font></p>')).to.equal('text');
+    });
+
+    test('preserves text when stripping tags', ({ expect }) => {
+      // The closing tag without a matching opener must not eat surrounding text.
+      expect(normalizeText('keep this </o:p> and this')).to.equal('keep this  and this');
+    });
+
+    test('handles namespaced tags inside plaintext (non-HTML) input', ({ expect }) => {
+      // Some Gmail plaintext bodies contain HTML fragments inline; we still want them cleaned.
+      // Input has no recognized HTML tags so isHTML() is false, but residual tags must still be stripped.
+      // Trailing whitespace from the stripped tag location is trimmed by stripWhitespace().
+      expect(normalizeText('Meeting reminder <o:p></o:p>\n\nDetails below.')).to.equal(
+        'Meeting reminder\n\nDetails below.',
+      );
+    });
+  });
 });

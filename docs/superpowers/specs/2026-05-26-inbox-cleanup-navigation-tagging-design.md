@@ -25,7 +25,7 @@ Execution order: 1 → 2 → 3, separate commits per sub-task.
 
 ### 1a — Strip residual HTML/XML tags
 
-Add `stripResidualTags(text: string): string` invoked inside `normalizeText` *after* turndown conversion, *before* `stripWhitespace`.
+Add `stripResidualTags(text: string): string` invoked inside `normalizeText` _after_ turndown conversion, _before_ `stripWhitespace`.
 
 Targets:
 
@@ -66,14 +66,17 @@ Tests:
 Add field to `InboxCapabilities.Settings` schema:
 
 ```ts
-loadRemoteImages: Schema.Boolean.pipe(Schema.optional, /* default: */ Schema.withConstructorDefault(() => false))
+loadRemoteImages: Schema.Boolean.pipe(
+  Schema.optional,
+  /* default: */ Schema.withConstructorDefault(() => false),
+);
 ```
 
 Default: `false` (off — privacy-first).
 
 In `Message.tsx`, read the setting via `useAtomCapability(InboxCapabilities.Settings)` (already imported in `MailboxArticle`), wire it into the editor extensions:
 
-- Pass `skip: (node) => node.name === 'Image' && /^https?:\/\//.test(node.url) && !loadRemoteImages` through `decorateMarkdown` *and* add equivalent skipping in the bundled `image()` extension.
+- Pass `skip: (node) => node.name === 'Image' && /^https?:\/\//.test(node.url) && !loadRemoteImages` through `decorateMarkdown` _and_ add equivalent skipping in the bundled `image()` extension.
 - Extend `decorate.ts` so the bundled `image()` honors the same `skip` callback (currently it doesn't see the option). Smallest change: forward `options.skip` into `image(options)`.
 - When skipped, the link still renders as a normal markdown link `[label](url)`.
 
@@ -166,8 +169,16 @@ Add a well-known tag `dxos.org/tag/formatting-issue` seeded by `plugin-inbox` on
 
 New operation `InboxOperation.ExportTaggedMessagesFixture`:
 
-- Inputs: `{ tagId: string; outputDir: string }`.
-- Outputs JSON files containing the raw Gmail payload + the current-pipeline-produced markdown, written to `packages/plugins/plugin-inbox/src/testing/fixtures/formatting-issues/<message-id>.json`.
+- Inputs: `{ tagId: string; subdir?: string }`.
+- The output path is derived internally and constrained to a canonical base directory: `packages/plugins/plugin-inbox/src/testing/fixtures/formatting-issues/`. `subdir`, if provided, is normalized and validated to be a strict subpath of that base (rejects `..`, absolute paths, or escapes). No arbitrary `outputDir` is accepted from callers.
+- **Mandatory redaction-by-default before file write.** The exporter MUST run a deterministic redaction pass over the Gmail payload before serializing:
+  - Replace all email addresses (in `From`, `To`, `Cc`, `Bcc`, `Reply-To`, `Message-ID`, `References`, `Return-Path`, and any address found in the body) with stable placeholders (e.g., `redacted+<sha256-prefix>@example.invalid`).
+  - Strip auth tokens, cookies, and any `Authorization` / `X-*` auth-bearing headers.
+  - Drop `Received:` headers (contain internal SMTP hostnames).
+  - Replace personal names found in `From` / display-name fields with `Redacted Person <N>` (stable per-address hash).
+  - Redact phone numbers and URLs that include query params (querystrings can contain tokens) — keep the host + path only.
+- The redaction pass is followed by a schema-validation step: a `RedactedMessagePayload` schema enumerates the allowlisted fields; serialization fails (and the file is NOT written) if any non-allowlisted field is present.
+- The produced fixture additionally carries the post-pipeline rendered markdown (the regression test target).
 
 New test file `packages/plugins/plugin-inbox/src/operations/google/gmail/mapper.fixtures.test.ts`:
 
@@ -198,4 +209,4 @@ Workflow:
 
 - The bundled `image()` extension in `ui-editor` is shared with many editors. Forwarding `skip` to it is a public API change; need to keep default behavior unchanged for non-inbox callers.
 - Graph-action wiring needs the keyboard context to update correctly when attention shifts between two articles; risk of stale context. Mitigation: explicit `setCurrentContext` on mount/attention and clean reset on unmount.
-- Fixture corpus could capture PII. Mitigation: export operation should redact headers (To/From/Cc) and the raw HTML body should be optionally redacted; only the rendered markdown is required for the regression test.
+- Fixture corpus could capture PII. **Mitigation: mandatory redaction-by-default in the export operation** (see Task 3b above) — addresses, names, auth headers, tokens, and tracking querystrings are scrubbed deterministically before write, and schema validation refuses to serialize any non-allowlisted field. The output path is constrained to the canonical fixtures directory; no caller-supplied absolute or escaping paths are accepted.
