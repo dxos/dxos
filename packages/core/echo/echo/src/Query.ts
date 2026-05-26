@@ -488,10 +488,7 @@ export const select = <F extends Filter.Any>(filter: F): Query<Filter.Type<F>> =
  * Shorthand for: `Query.select(Filter.type(schema, predicates))`.
  */
 export const type: {
-  <T extends Type$.AnyEntity>(
-    type: T,
-    predicates?: Filter.Props<Type$.InstanceType<T>>,
-  ): Query<Type$.InstanceType<T>>;
+  <T extends Type$.AnyEntity>(type: T, predicates?: Filter.Props<Type$.InstanceType<T>>): Query<Type$.InstanceType<T>>;
   // Brand-narrowed schema overload — only well-known unknown schemas pass.
   <S extends internal.UnknownTypeSchema<any, any>>(
     schema: S,

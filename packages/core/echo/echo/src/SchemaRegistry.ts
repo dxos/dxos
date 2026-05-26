@@ -53,14 +53,15 @@ export type Query = {
 };
 
 /**
- * Maps a {@link Query} input to the entity union produced by `query(input)`.
+ * Maps a {@link Query} input to the entity produced by `query(input)`.
  *
- * Today this collapses to `Type.Type` — both `database` and `runtime` locations
- * surface as the canonical persistent type entity. The generic exists so the
- * API can later narrow on additional query shapes (e.g. a `kind` filter that
- * picks `Type.AnyObj` vs `Type.AnyRelation`) without an API break.
+ * When the query pins an explicit `location` (`database` and/or `runtime`) the
+ * result widens to `Type.AnyEntity`, since database locations can surface any
+ * stored entity. Otherwise the query defaults to the runtime registry, whose
+ * entries are canonical `Type.Type` records. This mirrors the narrowing that
+ * existed prior to Option B (`Type.RuntimeType` is now `Type.Type`).
  */
-export type ExtractQueryResult<_Q> = Type.Type;
+export type ExtractQueryResult<Q> = Q extends { location: ('database' | 'runtime')[] } ? Type.AnyEntity : Type.Type;
 
 /**
  * Input for schema registration.
