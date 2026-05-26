@@ -17,9 +17,9 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
 import { EdgeService } from '@dxos/protocols';
-import type { GetSyncStateRequest, GetSyncStateResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { createBuf } from '@dxos/protocols/buf';
 import { type Message as RouterMessage } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import type { GetSyncStateRequest, GetSyncStateResponse } from '@dxos/protocols/proto/dxos/client/services';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
 import { bufferToArray } from '@dxos/util';
 
@@ -258,18 +258,20 @@ export class FeedSyncer extends Resource {
                 spaceId,
                 feedNamespace,
               });
-              const { blocksToPull } = yield* this.#syncClient.peekPull(ctx, {
-                spaceId,
-                feedNamespace,
-                limit: this.#messageBlocksLimit,
-              }).pipe(
-                Effect.catchAll((cause) =>
-                  Effect.gen(this, function* () {
-                    this.#logSyncFailure('peekPull', { spaceId, feedNamespace, cause });
-                    return { blocksToPull: 0 };
-                  }),
-                ),
-              );
+              const { blocksToPull } = yield* this.#syncClient
+                .peekPull(ctx, {
+                  spaceId,
+                  feedNamespace,
+                  limit: this.#messageBlocksLimit,
+                })
+                .pipe(
+                  Effect.catchAll((cause) =>
+                    Effect.gen(this, function* () {
+                      this.#logSyncFailure('peekPull', { spaceId, feedNamespace, cause });
+                      return { blocksToPull: 0 };
+                    }),
+                  ),
+                );
               return {
                 namespace: feedNamespace,
                 blocksToPull: String(blocksToPull),
@@ -391,11 +393,7 @@ export class FeedSyncer extends Resource {
 
   #logSyncFailure(
     operation: 'pull' | 'push' | 'peekPull',
-    {
-      spaceId,
-      feedNamespace,
-      cause,
-    }: { spaceId: SpaceId; feedNamespace: string; cause: unknown },
+    { spaceId, feedNamespace, cause }: { spaceId: SpaceId; feedNamespace: string; cause: unknown },
   ): void {
     log('feed sync operation failed', {
       operation,
@@ -421,18 +419,20 @@ export class FeedSyncer extends Resource {
           Effect.gen(this, function* () {
             let doneForAllNamespaces = true;
             for (const feedNamespace of this.#syncNamespaces) {
-              const { done } = yield* this.#syncClient.pull(this._ctx, {
-                spaceId,
-                feedNamespace,
-                limit: this.#messageBlocksLimit,
-              }).pipe(
-                Effect.catchAll((cause) =>
-                  Effect.gen(this, function* () {
-                    this.#logSyncFailure('pull', { spaceId, feedNamespace, cause });
-                    return { done: false };
-                  }),
-                ),
-              );
+              const { done } = yield* this.#syncClient
+                .pull(this._ctx, {
+                  spaceId,
+                  feedNamespace,
+                  limit: this.#messageBlocksLimit,
+                })
+                .pipe(
+                  Effect.catchAll((cause) =>
+                    Effect.gen(this, function* () {
+                      this.#logSyncFailure('pull', { spaceId, feedNamespace, cause });
+                      return { done: false };
+                    }),
+                  ),
+                );
               if (!done) {
                 doneForAllNamespaces = false;
               }
@@ -471,18 +471,20 @@ export class FeedSyncer extends Resource {
           Effect.gen(this, function* () {
             let doneForAllNamespaces = true;
             for (const feedNamespace of this.#syncNamespaces) {
-              const { done } = yield* this.#syncClient.push(this._ctx, {
-                spaceId,
-                feedNamespace,
-                limit: this.#messageBlocksLimit,
-              }).pipe(
-                Effect.catchAll((cause) =>
-                  Effect.gen(this, function* () {
-                    this.#logSyncFailure('push', { spaceId, feedNamespace, cause });
-                    return { done: false };
-                  }),
-                ),
-              );
+              const { done } = yield* this.#syncClient
+                .push(this._ctx, {
+                  spaceId,
+                  feedNamespace,
+                  limit: this.#messageBlocksLimit,
+                })
+                .pipe(
+                  Effect.catchAll((cause) =>
+                    Effect.gen(this, function* () {
+                      this.#logSyncFailure('push', { spaceId, feedNamespace, cause });
+                      return { done: false };
+                    }),
+                  ),
+                );
               if (!done) {
                 doneForAllNamespaces = false;
               }

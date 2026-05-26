@@ -37,15 +37,7 @@ export type SpaceRowProps = {
   feedState?: FeedSyncState;
 };
 
-const SyncMetric = ({
-  label,
-  pending,
-  total,
-}: {
-  label: string;
-  pending: number;
-  total: number;
-}) => {
+const SyncMetric = ({ label, pending, total }: { label: string; pending: number; total: number }) => {
   const syncing = pending > 0;
 
   return (

@@ -18,7 +18,11 @@ import { type ObjectId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { type LevelDB } from '@dxos/kv-store';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
-import type { GetSyncStateRequest, GetSyncStateResponse, SyncQueueRequest } from '@dxos/protocols/proto/dxos/client/services';
+import type {
+  GetSyncStateRequest,
+  GetSyncStateResponse,
+  SyncQueueRequest,
+} from '@dxos/protocols/proto/dxos/client/services';
 import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace } from '@dxos/tracing';
 
