@@ -114,10 +114,10 @@ op SyncDiscordChannel
   effects: [http, echo:write]
   requires: [DiscordREST]
   note: >
-    Message mapping (mapDiscordMessage) skips non-DEFAULT/non-REPLY types
-    (joins, pins, calls, …) to keep the feed clean. Discord embeds and
-    attachments are not yet mapped to ContentBlock — plain text only for now.
-    A toast is emitted on success or failure via LayoutOperation.AddToast.
+    Message mapping skips non-DEFAULT/non-REPLY types (joins, pins, calls, …)
+    to keep the feed clean. Discord embeds and attachments are not yet mapped
+    to ContentBlock — plain text only for now. A toast is emitted on success
+    or failure via LayoutOperation.AddToast.
 ```
 
 ## Features
