@@ -116,6 +116,12 @@ export class SyncClient {
     return Effect.andThen(Deferred.succeed(deferred, message), () => Effect.void);
   }
 
+  /** Removes the pending handler entry and unregisters the ctx onDispose hook. Idempotent. */
+  #disposeHandler(requestId: string, cleanupDispose: () => void): void {
+    cleanupDispose();
+    this.#handlers.delete(requestId);
+  }
+
   #awaitRpcResponse(
     requestId: string,
     deferred: Deferred.Deferred<ProtocolMessage, Error>,
@@ -151,10 +157,7 @@ export class SyncClient {
           }),
         ),
       ),
-      Effect.sync(() => {
-        cleanupDispose();
-        self.#handlers.delete(requestId);
-      }),
+      Effect.sync(() => self.#disposeHandler(requestId, cleanupDispose)),
     );
   }
 
@@ -198,7 +201,9 @@ export class SyncClient {
         afterPosition: lastPulledPosition,
         limit: opts.limit,
       });
-      yield* self.#sendMessage(ctx, self.#withPeerIds(request));
+      yield* self.#sendMessage(ctx, self.#withPeerIds(request)).pipe(
+        Effect.tapErrorCause(() => Effect.sync(() => self.#disposeHandler(requestId, cleanupDispose))),
+      );
       const message = yield* self.#awaitRpcResponse(requestId, deferred, cleanupDispose, {
         spaceId: opts.spaceId,
         feedNamespace: opts.feedNamespace,
@@ -279,7 +284,9 @@ export class SyncClient {
         position: lastPulledPosition,
         limit: opts.limit,
       };
-      yield* self.#sendMessage(ctx, self.#withPeerIds(request));
+      yield* self.#sendMessage(ctx, self.#withPeerIds(request)).pipe(
+        Effect.tapErrorCause(() => Effect.sync(() => self.#disposeHandler(requestId, cleanupDispose))),
+      );
       const message = yield* self.#awaitRpcResponse(requestId, deferred, cleanupDispose, {
         spaceId: opts.spaceId,
         feedNamespace: opts.feedNamespace,
@@ -337,7 +344,9 @@ export class SyncClient {
         feedNamespace: opts.feedNamespace,
         blockCount: unpositioned.blocks.length,
       });
-      yield* self.#sendMessage(ctx, self.#withPeerIds(request));
+      yield* self.#sendMessage(ctx, self.#withPeerIds(request)).pipe(
+        Effect.tapErrorCause(() => Effect.sync(() => self.#disposeHandler(requestId, cleanupDispose))),
+      );
       const message = yield* self.#awaitRpcResponse(requestId, deferred, cleanupDispose, {
         spaceId: opts.spaceId,
         feedNamespace: opts.feedNamespace,

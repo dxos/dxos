@@ -159,15 +159,17 @@ export class FeedSyncer extends Resource {
     );
 
     if (this.#backgroundSync) {
+      // Tasks must be opened before registering listeners that call `schedule()`:
+      //   * `onNewBlocks` can fire from any `feedStore.append` happening on a separate
+      //     microtask while `_open()` is still awaiting.
+      //   * The edge client invokes `onReconnected` as a microtask when already connected.
+      //   `AsyncTask.schedule()` throws if the task is not yet open.
+      await this.#pollTask.open();
+      await this.#pushTask.open();
+
       this.#feedStore.onNewBlocks.on(this._ctx, () => {
         this.#pushTask.schedule();
       });
-
-      // Tasks must be opened before registering `onReconnected`: the edge client invokes the
-      // listener as a microtask when already connected, and `AsyncTask.schedule()` throws if
-      // the task is not yet open.
-      await this.#pollTask.open();
-      await this.#pushTask.open();
     }
 
     this._ctx.onDispose(

@@ -179,7 +179,12 @@ export class ServiceContext extends Resource {
         });
       },
       getSyncState: async (ctx, request) => {
-        invariant(this._feedSyncer, 'Feed syncer is not available.');
+        // Mirror `syncQueue` above: in non-edge / partially-initialised modes the
+        // feed syncer is absent. Return an empty state instead of throwing so
+        // callers (e.g. devtools sync panel) keep working.
+        if (!this._feedSyncer) {
+          return { namespaces: [] };
+        }
         return this._feedSyncer.getSyncState(ctx, request);
       },
     });
