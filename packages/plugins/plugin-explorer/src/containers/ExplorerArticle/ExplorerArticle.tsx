@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import '@dxos/react-ui-graph/styles/graph.css';
+
 import { select } from 'd3';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -28,11 +30,6 @@ import {
   type SVGContext,
 } from '@dxos/react-ui-graph';
 import { type SpaceGraphEdge, type SpaceGraphNode } from '@dxos/schema';
-// Side-effect import: ExplorerArticle drives `SVG.Graph` directly (previously the CSS
-// was pulled in transitively via `ForceGraph.tsx`, which we no longer use). Without it
-// the `g.dx-edge path` rules — including `fill: none` — never reach the bundle and SVG
-// defaults (stroke: none, fill: black) make every edge invisible.
-import '@dxos/react-ui-graph/styles/graph.css';
 
 import { type TreeNode } from '#components';
 import { useGraphModel } from '#hooks';
