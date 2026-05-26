@@ -1,0 +1,346 @@
+---
+id: org.dxos.plugin.outliner
+name: OutlinerPlugin
+version: 0.1.0
+---
+
+Hierarchical note-taking and journaling plugin for `DXOS` Composer — tree-structured outlines
+and date-keyed journal entries, both backed by ECHO for real-time collaboration.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+| `component` | `org.dxos.mdl.component@1.0`   |
+| `op`        | `org.dxos.mdl.op@1.0`          |
+
+## Types
+
+```mdl
+type Outline
+  fields:
+    name?: string
+    content: Ref<Text>           # markdown outline stored as CRDT text
+```
+
+```mdl
+type Journal
+  fields:
+    id: string
+    name?: string
+    entries: Map<string, Ref<JournalEntry>>  # ISO date key → entry
+```
+
+```mdl
+type JournalEntry
+  fields:
+    id: string
+    date: string                 # sortable ISO date string (yyyy-MM-dd)
+    content: Ref<Text>           # markdown outline stored as CRDT text
+```
+
+## Components
+
+```mdl
+component OutlineArticle
+  desc: Full-panel editor for an Outline object; renders a CodeMirror outliner backed by ECHO text.
+  props:
+    subject: Outline
+    role: string                 # surface role (article | section)
+    attendableId?: string
+  layout: |
+    ┌─────────────────────────┐
+    │                         │
+    │  outliner editor        │
+    │  (CodeMirror + ECHO)    │
+    │                         │
+    └─────────────────────────┘
+```
+
+```mdl
+component OutlineCard
+  desc: Compact card view of an Outline; renders the outliner inside a Card.Root.
+  props:
+    subject: Outline
+```
+
+```mdl
+component JournalArticle
+  desc: Scrolling journal view with optional calendar sidebar; each entry is an independent outline.
+  props:
+    subject: Journal
+    role: string
+    attendableId?: string
+  state:
+    showCalendar: boolean        # toggles the calendar sidebar
+  slots:
+    toolbar?: ReactNode          # calendar toggle button
+  actions:
+    toggleCalendar()
+    scrollToDate(date: Date)
+  layout: |
+    ┌──────────────────────────────────────┐
+    │ [toolbar: calendar toggle]           │
+    ├────────────┬─────────────────────────┤
+    │            │                         │
+    │ [calendar] │  journal entries        │
+    │  (opt.)    │  (scrollable list)      │
+    │            │                         │
+    └────────────┴─────────────────────────┘
+```
+
+```mdl
+component Journal
+  desc: Scrollable list of JournalEntry items; auto-creates today's entry when absent.
+  props:
+    journal: Journal
+  state:
+    entryRefs: { dateKey: string; ref: Ref<JournalEntry> }[]
+  actions:
+    createTodayEntry()
+  emits:
+    onSelect(event: { date: Date })
+```
+
+```mdl
+component Outline
+  desc: Composable CodeMirror-based outliner with Root context and Content renderer.
+  props:
+    id: string
+    text: Text
+    scrollable?: boolean         # default true
+    showSelected?: boolean       # highlight selected line, default true
+    autoFocus?: boolean
+  actions:
+    focus()
+```
+
+```mdl
+component QuickEntryDialog
+  desc: Modal dialog for adding a bullet to today's journal entry without leaving the current view.
+  state:
+    formKey: number              # increments on "Save & Add Another" to reset form
+  actions:
+    save(text: string)
+    saveAndContinue(text: string)
+    cancel()
+```
+
+## Operations
+
+```mdl
+op createOutline
+  desc: Creates a new Outline object and adds it to the active space.
+  input:
+    name?: string
+  output: Outline
+  effects: [echo:write]
+```
+
+```mdl
+op quickJournalEntry
+  desc: |
+    Appends a checkbox bullet to today's JournalEntry in the personal space.
+    Creates a Journal and/or today's entry if they do not yet exist.
+  input:
+    text: string                 # raw markdown text for the bullet
+  output: void
+  effects: [echo:write, echo:read]
+```
+
+## Features
+
+```mdl
+feat F-1: Outline Editor
+
+  req F-1.1: Outline content is stored as a CRDT Text object referenced via Ref; concurrent edits merge automatically.
+  req F-1.2: The outliner supports nested list items with Tab / Shift-Tab for indent / outdent.
+  req F-1.3: Hashtags are highlighted and treated as tags within the outline.
+  req F-1.4:
+    when: user right-clicks or opens the editor menu on a list item
+    then: a "Delete row" action is available
+```
+
+```mdl
+feat F-2: Journal
+
+  req F-2.1: A Journal holds entries keyed by ISO date string; each entry owns an independent CRDT Text.
+  req F-2.2:
+    when: today has no entry
+    then: a "Start today" button is shown; clicking it creates and focuses today's entry
+  req F-2.3: Entries render newest-to-oldest (descending date order) in a scrollable list.
+  req F-2.4:
+    when: user focuses a journal entry
+    then: the calendar sidebar (if shown) scrolls to that entry's date
+```
+
+```mdl
+feat F-3: Calendar Sidebar
+
+  req F-3.1:
+    when: user toggles the calendar button in the toolbar
+    then: a calendar grid is shown alongside the journal entries
+  req F-3.2:
+    when: user selects a date in the calendar
+    then: the journal list scrolls to the entry for that date
+  req F-3.3: On narrow viewports the calendar stacks above the entry list instead of beside it.
+```
+
+```mdl
+feat F-4: Quick Journal Entry
+
+  req F-4.1:
+    when: op:quickJournalEntry is invoked with non-empty text
+    then: a "- [ ] <text>" bullet is appended to today's JournalEntry in the personal space
+
+  req F-4.2:
+    when: QuickEntryDialog "Save & Add Another" is triggered (Cmd+Shift+Enter or button)
+    then: entry saved, form resets, dialog stays open
+
+  req F-4.3:
+    when: QuickEntryDialog "Save" is triggered
+    then: entry saved and dialog closes
+```
+
+```mdl
+feat F-5: ECHO Persistence and Collaboration
+
+  req F-5.1: Outline and Journal objects are stored in ECHO and replicated to all peers in the space.
+  req F-5.2:
+    when: a peer edits an outline
+    then: changes appear in all other connected peers' editors without conflict
+  req F-5.3: The plugin registers Outline and Journal schemas so objects are queryable by type.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Create and edit an outline
+  given: an empty space with OutlinerPlugin active
+  when: op:createOutline runs with name "Meeting Notes"
+  then:
+    - an Outline object exists in ECHO with name "Meeting Notes"
+    - OutlineArticle renders the outline editor for that object
+```
+
+```mdl
+test T-2: Indent and outdent list items
+  given: OutlineArticle is open with at least two list items
+  when: cursor is on the second item and user presses Tab
+  then:
+    - second item is indented one level under the first
+  when: user presses Shift-Tab
+  then:
+    - item returns to the previous indent level
+```
+
+```mdl
+test T-3: Journal auto-creates today entry
+  given: a Journal with no entry for today
+  when: JournalArticle renders
+  then:
+    - "Start today" button is visible
+  when: user clicks "Start today"
+  then:
+    - a JournalEntry for today's date is created and focused
+```
+
+```mdl
+test T-4: Quick journal entry appended
+  given: a personal space with a Journal containing today's entry
+  when: op:quickJournalEntry runs with text "Buy milk"
+  then:
+    - today's JournalEntry content contains "- [ ] Buy milk"
+```
+
+```mdl
+test T-5: Quick journal entry creates journal when absent
+  given: a personal space with no Journal object
+  when: op:quickJournalEntry runs with text "Call dentist"
+  then:
+    - a Journal is created in the personal space
+    - today's JournalEntry content contains "- [ ] Call dentist"
+```
+
+```mdl
+test T-6: Calendar sidebar toggle
+  given: JournalArticle is open
+  when: user clicks the calendar toggle in the toolbar
+  then:
+    - calendar grid becomes visible alongside the entry list
+  when: user clicks the toggle again
+  then:
+    - calendar grid is hidden
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap
+    literals?: UnionList
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap
+    state?: FieldMap
+    slots?: FieldMap
+    actions?: ActionMap
+    emits?: EventMap
+    layout?: CodeBlock
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap
+    output?: TypeExpr
+    errors?: ErrorMap
+    effects?: EffectList
+    requires?: ServiceList
+    note?: Prose
+```
