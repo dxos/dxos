@@ -18,10 +18,10 @@ import { EncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EchoURI, ObjectId, type URI } from '@dxos/keys';
 
+import * as Database from '../../Database';
 import type * as Type from '../../Type';
 import { ReferenceAnnotationId, getSchemaURI, getTypeAnnotation, getTypeIdentifierAnnotation } from '../Annotation';
 import { type AnyEntity, type AnyProperties, type UnknownTypeSchema, getStaticTypeSchema } from '../common/types';
-import { DatabaseService } from '../Database';
 import { type JsonSchemaType } from '../JsonSchema';
 
 /**
@@ -319,7 +319,7 @@ export const createEchoReferenceSchema = (
       decode: () => {
         return (value) =>
           Effect.gen(function* () {
-            const dbService = yield* Effect.serviceOption(DatabaseService);
+            const dbService = yield* Effect.serviceOption(Database.Service);
 
             // TODO(dmaretskyi): This branch seems to be taken by Schema.is
             if (Ref.isRef(value)) {
