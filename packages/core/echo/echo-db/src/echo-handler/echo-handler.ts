@@ -54,8 +54,8 @@ import {
   assertObjectModel,
   createProxy,
   defineHiddenProperty,
-  effectSchemaFromJsonSchema,
   executeChange,
+  type JsonSchemaType,
   getEntityKind,
   getProxyHandler,
   getProxySlot,
@@ -69,6 +69,7 @@ import {
   queueNotification,
   setRefResolver,
   symbolIsProxy,
+  toEffectSchema,
 } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EchoURI, ObjectId, type URI } from '@dxos/keys';
@@ -438,14 +439,12 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     if (cached != null) {
       return cached;
     }
-    const jsonSchema = (receiver as { jsonSchema?: unknown }).jsonSchema;
+    const jsonSchema = (receiver as { jsonSchema?: JsonSchemaType }).jsonSchema;
     if (jsonSchema == null) {
       return undefined;
     }
-    const rebuilt = effectSchemaFromJsonSchema(jsonSchema);
-    if (rebuilt != null) {
-      target[symbolInternals].cachedStaticSlot = rebuilt;
-    }
+    const rebuilt = toEffectSchema(jsonSchema);
+    target[symbolInternals].cachedStaticSlot = rebuilt;
     return rebuilt;
   }
 

@@ -19,14 +19,11 @@ import {
   type AnyProperties,
   EntityKind,
   KindId,
-  StaticTypeSchemaSlot,
   TypeId,
   getSchema,
-  getStaticTypeSchema,
-  unwrapToSchema,
 } from '../common/types';
 import { getUri as getUriFromEntity } from '../Entity/api';
-import { type AnnotationHelper, createAnnotationHelper, effectSchemaFromJsonSchema } from './util';
+import { type AnnotationHelper, createAnnotationHelper } from './util';
 
 /**
  * @internal
@@ -67,11 +64,7 @@ export const getTypeIdentifierAnnotation = (schema: Schema.Schema.All) =>
  * type also use it (see `Filter.type` / `getTypeURIFromSpecifier`), so both sides
  * stay symmetric without per-schema branching.
  */
-export const getSchemaURI = (
-  input: Schema.Schema.All | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext },
-): URI.URI | undefined => {
-  // Accept `Type.Type` entities — unwrap to the underlying source schema.
-  const schema = unwrapToSchema(input as Schema.Schema.AnyNoContext);
+export const getSchemaURI = (schema: Schema.Schema.All): URI.URI | undefined => {
   assertArgument(Schema.isSchema(schema), 'schema', 'invalid schema');
   const id = getTypeIdentifierAnnotation(schema);
   if (id) {
@@ -190,28 +183,12 @@ export interface TypeAnnotation extends Schema.Schema.Type<typeof TypeAnnotation
  * @returns {@link TypeAnnotation} from a schema.
  * Schema must have been created with {@link TypedObject} or {@link TypedLink} or manually assigned an appropriate annotation.
  */
-export const getTypeAnnotation = (
-  schema: Schema.Schema.All | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext },
-): TypeAnnotation | undefined => {
-  assertArgument(schema != null, 'schema', 'invalid schema');
-  // Allow reading the type annotation off a `Type.Type` entity — either via the
-  // hidden `StaticTypeSchemaSlot` (static Type.Obj / Type.Relation entities) or
-  // by rebuilding the Effect Schema from the persisted `jsonSchema` (kind=Type
-  // entities returned by `db.schemaRegistry.register`).
-  const slot = getStaticTypeSchema(schema);
-  const entity = schema as { [KindId]?: unknown; jsonSchema?: unknown };
-  const rebuilt =
-    slot == null && entity[KindId] === EntityKind.Type && entity.jsonSchema != null
-      ? effectSchemaFromJsonSchema(entity.jsonSchema)
-      : undefined;
-  const ast = slot?.ast ?? rebuilt?.ast ?? (schema as Schema.Schema.All).ast;
-  if (ast == null) {
-    return undefined;
-  }
+export const getTypeAnnotation = (schema: Schema.Schema.All): TypeAnnotation | undefined => {
+  assertArgument(schema != null && schema.ast != null, 'schema', 'invalid schema');
   return Function.flow(
     SchemaAST.getAnnotation<TypeAnnotation>(TypeAnnotationId),
     Option.getOrElse(() => undefined),
-  )(ast);
+  )(schema.ast);
 };
 
 /**
@@ -223,21 +200,15 @@ export const getEntityKind = (schema: Schema.Schema.All): EntityKind | undefined
  * @internal
  * @returns Schema typename (without dxn: prefix or version number).
  */
-export const getSchemaTypename = (
-  input: Schema.Schema.All | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext },
-): string | undefined => {
-  return getTypeAnnotation(unwrapToSchema(input as Schema.Schema.AnyNoContext))?.typename;
-};
+export const getSchemaTypename = (schema: Schema.Schema.All): string | undefined =>
+  getTypeAnnotation(schema)?.typename;
 
 /**
  * @internal
  * @returns Schema version in semver format.
  */
-export const getSchemaVersion = (
-  input: Schema.Schema.All | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext },
-): string | undefined => {
-  return getTypeAnnotation(unwrapToSchema(input as Schema.Schema.AnyNoContext))?.version;
-};
+export const getSchemaVersion = (schema: Schema.Schema.All): string | undefined =>
+  getTypeAnnotation(schema)?.version;
 
 /**
  * Gets the typename of the object without the version.
@@ -423,11 +394,10 @@ export const LabelAnnotation = createAnnotationHelper<string[]>(LabelAnnotationI
  * Skips empty strings and whitespace-only strings, continuing to the next field.
  */
 // TODO(burdon): Convert to JsonPath?
-export const getLabelWithSchema = (
-  input: Schema.Schema.Any | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext },
-  object: unknown,
+export const getLabelWithSchema = <S extends Schema.Schema.Any>(
+  schema: S,
+  object: Schema.Schema.Type<S>,
 ): string | undefined => {
-  const schema = unwrapToSchema(input as Schema.Schema.AnyNoContext);
   const annotation = LabelAnnotation.get(schema).pipe(Option.getOrElse(() => ['name']));
   for (const accessor of annotation) {
     assertArgument(
@@ -569,13 +539,10 @@ export const makeUserAnnotation = <T>(props: MakeAnnoationsProps<T>): Annotation
     );
 
   return {
-    get: (schema) => {
-      const slot = getStaticTypeSchema(schema);
-      const ast = slot?.ast ?? (schema as Schema.Schema.Any).ast;
-      return getFromAst(ast);
-    },
+    get: (schema) => getFromAst(schema.ast),
     getFromAst: (ast) => getFromAst(ast),
-    set: (value) => PropertyMeta(props.id, Schema.encodeSync(props.schema)(value)) as any,
+    set: (value) =>
+      PropertyMeta(props.id, Schema.encodeSync(props.schema)(value)) as <S extends Schema.Schema.Any>(schema: S) => S,
   };
 };
 

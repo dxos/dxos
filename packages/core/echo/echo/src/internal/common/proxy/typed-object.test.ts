@@ -8,6 +8,7 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
+import * as Obj from '../../../Obj';
 import * as Type from '../../../Type';
 import { EchoObjectSchema } from '../../Entity';
 import { getSchema } from '../types';
@@ -36,13 +37,13 @@ const TEST_ORG = { name: 'Test' } satisfies Pick<Organization, 'name'>;
 
 describe('EchoObjectSchema class DSL', () => {
   test('can get object schema', async () => {
-    const obj = makeObject(Organization, TEST_ORG);
+    const obj = Obj.make(Organization, TEST_ORG);
     expect(getSchema(obj)).to.deep.eq(Type.getSchema(Organization));
   });
 
   describe('class options', () => {
     test('can assign undefined to partial fields', async () => {
-      const person = makeObject(Contact, { name: 'John' });
+      const person = Obj.make(Contact, { name: 'John' });
       change(person, (p) => {
         p.name = undefined;
         p.recordField = 'hello';
@@ -92,7 +93,7 @@ describe('EchoObjectSchema class DSL', () => {
         meta: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.Any })),
       }).pipe(EchoObjectSchema(DXN.make('org.dxos.type.functionTrigger', '0.1.0')));
 
-      const object = makeObject(Test2, {});
+      const object = Obj.make(Test2, {});
       change(object, (o) => {
         (o.meta ??= {}).test = 100;
       });

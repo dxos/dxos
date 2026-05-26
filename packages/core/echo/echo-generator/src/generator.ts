@@ -35,7 +35,7 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
   }
 
   getSchema(type: T): Type.AnyObj | undefined {
-    return this.schemas.find((schema) => Type.getTypename(schema) === type) as Type.AnyObj | undefined;
+    return this.schemas.find((schema) => Type.getTypename(schema) === type);
   }
 
   protected setSchema(type: T, schema: Type.AnyEntity): void {

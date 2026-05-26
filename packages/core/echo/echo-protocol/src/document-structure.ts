@@ -116,8 +116,13 @@ export const ObjectStructure = Object.freeze({
     return object.system?.type;
   },
 
+  /**
+   * @throws On invalid object structure.
+   */
   getEntityKind: (object: ObjectStructure): 'object' | 'relation' | 'type' => {
-    return object.system?.kind ?? 'object';
+    const kind = object.system?.kind ?? 'object';
+    invariant(kind === 'object' || kind === 'relation' || kind === 'type', 'Invalid kind');
+    return kind;
   },
 
   isDeleted: (object: ObjectStructure): boolean => {

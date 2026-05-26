@@ -133,10 +133,12 @@ type MakePropsInternal<T extends Unknown> = {
 } & Entity.Properties<T>;
 
 /**
- * Props type for relation creation with a given schema.
- * Takes a relation entity (created with Type.makeRelation) and extracts the props type.
+ * Props type for relation creation with a given schema. Accepts a `Type.AnyRelation`
+ * entity (created with `Type.makeRelation`) and derives the props shape via
+ * `Type.InstanceType`. Object-kind entities are rejected at the type level —
+ * use `Obj.MakeProps` for those.
  */
-export type MakeProps<S extends Type.AnyEntity> = MakePropsInternal<Type.InstanceType<S> & Unknown>;
+export type MakeProps<S extends Type.AnyRelation> = MakePropsInternal<Type.InstanceType<S> & Unknown>;
 
 /**
  * Creates new relation.
@@ -147,7 +149,7 @@ export type MakeProps<S extends Type.AnyEntity> = MakePropsInternal<Type.Instanc
  */
 // NOTE: Writing the definition this way (with generic over schema) makes typescript perfer to infer the type from the first param (this schema) rather than the second param (the props).
 // TODO(dmaretskyi): Move meta into props.
-export const make = <S extends Type.Relation<any, any, any, any>>(
+export const make = <S extends Type.AnyRelation>(
   type: S,
   props: NoInfer<MakeProps<S>>,
 ): Type.InstanceType<S> & Entity.OfKind<typeof Entity.Kind.Relation> => {
@@ -176,6 +178,30 @@ export const make = <S extends Type.Relation<any, any, any, any>>(
   // carries a back-reference resolvable via `Relation.getType` / `Entity.getType`.
   return internal.makeObject(schema as any, props as any, meta, type as any) as any;
 };
+
+/**
+ * Test if a value is an instance of a given relation type.
+ *
+ * Mirrors `Obj.instanceOf` but only accepts `Type.AnyRelation` — use
+ * `Obj.instanceOf` for objects and `Type.isType` for `Type.Type` entities.
+ *
+ * @example
+ * ```ts
+ * const isEmployedBy = Relation.instanceOf(EmployedBy);
+ * if (isEmployedBy(relation)) {
+ *   // relation is EmployedBy
+ * }
+ * ```
+ */
+export const instanceOf: {
+  <S extends Type.AnyRelation>(schema: S): (value: unknown) => value is Type.InstanceType<S>;
+  <S extends Type.AnyRelation>(schema: S, value: unknown): value is Type.InstanceType<S>;
+} = ((...args: [schema: Type.AnyRelation, value?: unknown]) => {
+  if (args.length === 1) {
+    return (entity: unknown) => internal.isInstanceOf(args[0], entity);
+  }
+  return internal.isInstanceOf(args[0], args[1]);
+}) as any;
 
 /**
  * Type guard for relations.
@@ -361,10 +387,15 @@ export const getURI = (entity: Unknown | Snapshot): URI.URI => internal.getUri(e
 export const getTypeURI: (obj: internal.AnyProperties) => URI.URI | undefined = internal.getTypeURI;
 
 /**
- * Get the schema of the relation.
- * Returns the branded ECHO schema used to create the relation.
+ * Get the type entity (`Type.AnyRelation`) the relation was created from.
+ *
+ * Returns `undefined` when the relation's type isn't registered in this
+ * runtime (e.g. a freshly deserialized snapshot whose type entity hasn't been
+ * wired up yet, or a relation loaded from storage before its schema is known).
+ * To get the Effect Schema from the returned entity, use `Type.getSchema(...)`.
  */
-export const getType = (rel: unknown): Type.AnyRelation => internal.getType(rel) as Type.AnyRelation;
+export const getType = (rel: unknown): Type.AnyRelation | undefined =>
+  internal.getType(rel) as Type.AnyRelation | undefined;
 
 /**
  * @returns The typename of the relation's type.

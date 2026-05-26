@@ -131,10 +131,10 @@ type MakePropsInternal<T extends Unknown> = {
 // TODO(burdon): Should we allow the caller to set the id?
 /**
  * Props type for object creation with a given type. Accepts a `Type.AnyObj`
- * entity (or one of its `Type.Type` siblings) and derives the instance shape
- * via `Type.InstanceType`.
+ * entity and derives the instance shape via `Type.InstanceType`. Relation-kind
+ * entities are rejected at the type level — use `Relation.MakeProps` for those.
  */
-export type MakeProps<S extends Type.AnyEntity> = {
+export type MakeProps<S extends Type.AnyObj> = {
   id?: ObjectId;
   [Meta]?: Partial<internal.ObjectMeta>;
   [Parent]?: Unknown;
@@ -195,7 +195,7 @@ export function make(input: Type.AnyObj, props: any): OfShape<any> {
       ...defaultMeta,
       ...meta,
     },
-    input as unknown as Type.Type,
+    input,
   );
 }
 
@@ -416,7 +416,7 @@ export const ID = ObjectId;
 export type ID = ObjectId;
 
 /**
- * Test if object or relation is an instance of a schema or `Type.Type` entity.
+ * Test if an object is an instance of a given object type.
  *
  * @example
  * ```ts
@@ -427,20 +427,27 @@ export type ID = ObjectId;
  * }
  * ```
  *
- * To test if a value is itself a `Type.Type` entity (the meta-schema for stored
- * types), use `Type.isType(value)` instead of `Obj.instanceOf(Type.Type, value)`.
+ * Only accepts `Type.AnyObj` — use `Relation.instanceOf` for relations and
+ * `Type.isType(value)` to test for `Type.Type` meta-schema entities.
  */
 export const instanceOf: {
   // Reject `Type.Type` at the type level — those are meta-schema entities, not
-  // object/relation instances. Use `Type.isType(value)` instead.
+  // object instances. Use `Type.isType(value)` instead.
   <T extends Type.Type>(
     type: T,
     _hint?: never,
     // eslint-disable-next-line @typescript-eslint/unified-signatures
     ..._error: ['ERROR: Obj.instanceOf does not accept Type.Type; use Type.isType(value) instead']
   ): never;
-  <S extends Type.AnyObj | Type.AnyRelation>(schema: S): (value: unknown) => value is Type.InstanceType<S>;
-  <S extends Type.AnyObj | Type.AnyRelation>(schema: S, value: unknown): value is Type.InstanceType<S>;
+  // Reject relation types — use `Relation.instanceOf` instead.
+  <R extends Type.AnyRelation>(
+    type: R,
+    _hint?: never,
+    // eslint-disable-next-line @typescript-eslint/unified-signatures
+    ..._error: ['ERROR: Obj.instanceOf does not accept relation types; use Relation.instanceOf instead']
+  ): never;
+  <S extends Type.AnyObj>(schema: S): (value: unknown) => value is Type.InstanceType<S>;
+  <S extends Type.AnyObj>(schema: S, value: unknown): value is Type.InstanceType<S>;
 } = ((...args: [schema: Type.AnyEntity, value?: unknown]) => {
   if (args.length === 1) {
     return (entity: unknown) => internal.isInstanceOf(args[0], entity);
@@ -505,9 +512,13 @@ export const getTypeURI = (obj: Unknown | Snapshot): URI.URI => {
 /**
  * Get the type entity (`Type.AnyObj`) the object was created from.
  *
- * To get the Effect Schema from the returned entity, use `Type.getSchema(...)`.
+ * Returns `undefined` when the object's type isn't registered in this runtime
+ * (e.g. a freshly deserialized snapshot whose type entity hasn't been wired
+ * up yet, or an object loaded from storage before its schema is known). To
+ * get the Effect Schema from the returned entity, use `Type.getSchema(...)`.
  */
-export const getType = (obj: Unknown | Snapshot): Type.AnyObj => internal.getType(obj) as Type.AnyObj;
+export const getType = (obj: Unknown | Snapshot): Type.AnyObj | undefined =>
+  internal.getType(obj) as Type.AnyObj | undefined;
 
 /**
  * @returns The typename of the object's type.

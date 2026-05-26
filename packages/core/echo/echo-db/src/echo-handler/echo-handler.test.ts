@@ -15,7 +15,6 @@ import {
   EchoObjectSchema,
   type RefSchema,
   foreignKey,
-  getSchemaURI,
 } from '@dxos/echo/internal';
 import { TestSchema, prepareAstForCompare } from '@dxos/echo/testing';
 import { EchoURI, ObjectId, PublicKey, SpaceId } from '@dxos/keys';
@@ -710,7 +709,7 @@ describe('Reactive Object with ECHO database', () => {
     test('can get type reference of unregistered schema', async () => {
       const { db } = await builder.createDatabase();
       const obj = db.add(Obj.make(TestSchema.Expando, { field: 1 }));
-      const typeURI = getSchemaURI(TestSchema.Example)!;
+      const typeURI = Type.getURI(TestSchema.Example);
       getObjectCore(obj).setType(EncodedReference.fromURI(typeURI));
       expect(Obj.getTypeURI(obj)).to.deep.eq(Type.getURI(TestSchema.Example));
     });

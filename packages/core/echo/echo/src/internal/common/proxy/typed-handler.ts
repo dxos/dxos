@@ -214,6 +214,36 @@ export class TypedReactiveHandler implements ReactiveHandler<ProxyTarget> {
         // reactive proxy (which would fail the SchemaId-in-target invariant).
         return Reflect.get(target, prop, receiver);
       }
+      case StaticTypeSchemaSlot: {
+        // Expose the source Effect Schema for `Type.Type`-shaped instances.
+        // Three populating paths converge here so callers (e.g. `Type.getSchema`,
+        // the `SchemaId` getter in `setSchemaProperties`) can read the slot
+        // uniformly regardless of how the entity was constructed:
+        //   1. Slot was set directly on the target (static `Type.Type`
+        //      entities produced by `Type.makeObject(...)` pipe).
+        //   2. Not applicable here — persisted `Type.Type` entities are
+        //      wrapped by `EchoHandler`, which exposes the slot via its own
+        //      `get` trap (rebuilding from `data.jsonSchema`).
+        //   3. In-memory pre-persist `PersistentType` entities (produced by
+        //      `Type.makeObjectFromJsonSchema`) — no slot set, but they carry
+        //      a `jsonSchema` data field; rebuild from it on each read. No
+        //      cache: this path is hit a few times per object-creation, and
+        //      `Type.addFields` / `Type.updateFields` mutate `jsonSchema` in
+        //      place — a cache here would need its own invalidation hook,
+        //      which isn't worth the complexity for the access frequency.
+        //      The rebuild closure is registered by
+        //      `internal/JsonSchema/json-schema.ts` (avoids a circular import).
+        const existing = Reflect.get(target, prop, receiver);
+        if (existing !== undefined) {
+          return existing;
+        }
+        const jsonSchema = (target as any).jsonSchema;
+        if (jsonSchema == null) {
+          return undefined;
+        }
+        invariant(_toEffectSchemaImpl, 'TypeSource schema builder not installed.');
+        return _toEffectSchemaImpl(jsonSchema);
+      }
     }
 
     // Handle getter properties.
@@ -407,13 +437,24 @@ const toJSON = (target: ProxyTarget): any => {
 };
 
 /**
+ * Pointer to a `Type.Type` entity, stamped as the back-reference (`TypeEntityId`)
+ * on instances and read by the `SchemaId` getter installed below.
+ *
+ * Structural shape (not `Type.AnyEntity`) because `internal/common/proxy/`
+ * can't import the top-level `Type` module without a cycle. Every kind of
+ * `Type.Type` entity satisfies this shape:
+ *   - Static (`Type.makeObject(dxn)` pipe) — slot set directly on the object.
+ *   - Persisted (echo-handler-wrapped) — slot exposed via that handler's
+ *     `get` trap (rebuilds from `data.jsonSchema`).
+ *   - In-memory pre-persist (`Type.makeObjectFromJsonSchema`) — slot exposed
+ *     via the `case StaticTypeSchemaSlot:` arm in this file's `get` trap.
+ */
+export type TypeSource = { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext };
+
+/**
  * Recursively set AST on all potential proxy targets.
  */
-const setSchemaProperties = (
-  obj: any,
-  schema: Schema.Schema.AnyNoContext,
-  typeSource?: { jsonSchema: any; id?: string },
-) => {
+const setSchemaProperties = (obj: any, schema: Schema.Schema.AnyNoContext, typeSource?: TypeSource) => {
   const schemaType = getSchemaURI(schema);
   if (schemaType != null) {
     defineHiddenProperty(obj, TypeId, schemaType);
@@ -424,28 +465,14 @@ const setSchemaProperties = (
     // `Relation.getType` / `Entity.getType` can return it.
     defineHiddenProperty(obj, TypeEntityId, typeSource);
 
-    // Install `SchemaId` as a getter so schema mutations performed via
-    // `Type.update` / `Type.addFields` propagate into validation of objects
-    // created with `Obj.make(typeEntity, ...)`. The getter prefers the source
-    // entity's own static schema slot when present (constant identity for
-    // static `Type.Type` entities), and falls back to rebuilding from the
-    // entity's `jsonSchema` only when no slot is available (persisted types).
-    // The rebuilt schema is memoized by the source `jsonSchema` reference so
-    // identity-based comparisons hold until the underlying schema mutates.
-    let cachedJsonSchema: any | undefined;
-    let cachedRebuilt: Schema.Schema.AnyNoContext | undefined;
+    // Install `SchemaId` as a getter that reads through the entity's static
+    // schema slot. The three entity shapes (static / persisted / in-memory
+    // pre-persist) each populate the slot via their own get-trap path, so
+    // `Type.update` / `Type.addFields` mutations propagate into validation
+    // for objects created via `Obj.make(typeEntity, ...)` without this file
+    // having to rebuild from `jsonSchema` itself.
     Object.defineProperty(obj, SchemaId, {
-      get: () => {
-        const slot = (typeSource as any)[StaticTypeSchemaSlot] as Schema.Schema.AnyNoContext | undefined;
-        if (slot != null) {
-          return slot;
-        }
-        if (cachedRebuilt === undefined || cachedJsonSchema !== typeSource.jsonSchema) {
-          cachedJsonSchema = typeSource.jsonSchema;
-          cachedRebuilt = buildTypeSourceSchema(typeSource);
-        }
-        return cachedRebuilt;
-      },
+      get: () => typeSource[StaticTypeSchemaSlot] ?? schema,
       enumerable: false,
       configurable: true,
     });
@@ -465,25 +492,17 @@ const setSchemaProperties = (
 let _toEffectSchemaImpl: ((jsonSchema: any) => Schema.Schema.AnyNoContext) | undefined;
 
 /**
- * Lazy-installed escape hatch so this file can rebuild an Effect Schema from a
- * `Type.Type` entity's `jsonSchema` without taking a hard dependency on the
- * JsonSchema module (avoiding a circular import). Registered by
- * `internal/JsonSchema/json-schema.ts` on module load.
+ * Lazy-installed escape hatch so the `case StaticTypeSchemaSlot:` arm of
+ * `TypedReactiveHandler.get` can rebuild an Effect Schema from an in-memory
+ * `PersistentType` entity's `jsonSchema` without this file taking a hard
+ * dependency on the JsonSchema module (which would form a cycle).
+ * Registered by `internal/JsonSchema/json-schema.ts` on module load.
  */
 export const setTypeSourceSchemaBuilder = (impl: (jsonSchema: any) => Schema.Schema.AnyNoContext): void => {
   _toEffectSchemaImpl = impl;
 };
 
-const buildTypeSourceSchema = (typeSource: { jsonSchema: any }): Schema.Schema.AnyNoContext => {
-  invariant(_toEffectSchemaImpl, 'TypeSource schema builder not installed.');
-  return _toEffectSchemaImpl(typeSource.jsonSchema);
-};
-
-export const prepareTypedTarget = <T>(
-  target: T,
-  schema: Schema.Schema<T>,
-  typeSource?: { jsonSchema: any; id?: string },
-) => {
+export const prepareTypedTarget = <T>(target: T, schema: Schema.Schema<T>, typeSource?: TypeSource) => {
   // log.info('prepareTypedTarget', { target, schema });
   if (!SchemaAST.isTypeLiteral(schema.ast)) {
     throw new Error('schema has to describe an object type');

@@ -12,6 +12,7 @@ import {
   PersistentType,
   StaticTypeSchemaSlot,
   getSchemaTypename,
+  getStaticTypeSchema,
   makeObject,
   subscribe,
   toJsonSchema,
@@ -34,7 +35,12 @@ export const createEchoSchema = (
   assertArgument(typename, 'typename', 'Schema does not have a typename.');
   // typename/version are routed via ObjectMeta (the canonical registry-provenance
   // pair); they're no longer data fields on `PersistentType`.
-  return makeObject(PersistentType, { jsonSchema }, { keys: [], key: typename, version }) as unknown as Type.Type;
+  return makeObject(
+    getStaticTypeSchema(PersistentType) as any,
+    { jsonSchema },
+    { keys: [], key: typename, version },
+    PersistentType,
+  ) as unknown as Type.Type;
 };
 
 /**

@@ -103,6 +103,29 @@ export const isEntity = (value: unknown): value is Unknown => {
 };
 
 /**
+ * Test if a value is an instance of a given object or relation type.
+ *
+ * Kind-agnostic counterpart to `Obj.instanceOf` / `Relation.instanceOf` —
+ * use this when the caller's input type is `Type.AnyObj | Type.AnyRelation`.
+ *
+ * @example
+ * ```ts
+ * // Caller doesn't know whether `type` is object- or relation-kind.
+ * const matches = <T extends Type.AnyObj | Type.AnyRelation>(type: T, value: unknown) =>
+ *   Entity.instanceOf(type, value);
+ * ```
+ */
+export const instanceOf: {
+  <S extends Type.AnyObj | Type.AnyRelation>(schema: S): (value: unknown) => value is Type.InstanceType<S>;
+  <S extends Type.AnyObj | Type.AnyRelation>(schema: S, value: unknown): value is Type.InstanceType<S>;
+} = ((...args: [schema: Type.AnyObj | Type.AnyRelation, value?: unknown]) => {
+  if (args.length === 1) {
+    return (entity: unknown) => internal.isInstanceOf(args[0], entity);
+  }
+  return internal.isInstanceOf(args[0], args[1]);
+}) as any;
+
+/**
  * Check if a value is an ECHO entity snapshot.
  * Returns `false` for entities.
  */
@@ -150,10 +173,15 @@ export const getURI = (entity: Unknown | Snapshot): URI.URI => internal.getUri(e
 export const getTypeURI: (obj: Unknown | Snapshot) => URI.URI | undefined = internal.getTypeURI;
 
 /**
- * Get the schema of an entity.
- * Returns the branded ECHO schema used to create the entity.
+ * Get the type entity (`Type.AnyEntity`) the instance was created from.
+ *
+ * Returns `undefined` when the entity's type isn't registered in this runtime
+ * (e.g. a freshly deserialized snapshot whose type entity hasn't been wired
+ * up yet, or an entity loaded from storage before its schema is known). To
+ * get the Effect Schema from the returned entity, use `Type.getSchema(...)`.
  */
-export const getType = (entity: Unknown | Snapshot): Type.AnyEntity => internal.getType(entity) as Type.AnyEntity;
+export const getType = (entity: Unknown | Snapshot): Type.AnyEntity | undefined =>
+  internal.getType(entity) as Type.AnyEntity | undefined;
 
 /**
  * Get the typename of an entity's type.

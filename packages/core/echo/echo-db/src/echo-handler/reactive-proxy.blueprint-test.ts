@@ -5,7 +5,6 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 import { Obj, Type } from '@dxos/echo';
-import { getSchemaURI } from '@dxos/echo/internal';
 import { getProxyHandler } from '@dxos/echo/internal';
 import { TestSchema, updateCounter } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
@@ -166,7 +165,7 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
       test('getSchemaURI', async () => {
         const obj = await createObject({ number: 42 });
         const type = Obj.getType(obj);
-        expect(Obj.getTypeURI(obj)?.toString()).to.deep.eq(type && getSchemaURI(type)?.toString());
+        expect(Obj.getTypeURI(obj)?.toString()).to.deep.eq(type && Type.getURI(type)?.toString());
       });
 
       test('can assign arrays with objects', async () => {

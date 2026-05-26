@@ -337,7 +337,7 @@ export const registerSchema = (
 // TODO(dmaretskyi): Change API to `yield* Database.querySchema(...).first` and `yield* Database.querySchema(...).schema`.
 export const schemaQuery = <Q extends Types.NoExcessProperties<SchemaRegistry.Query, Q>>(
   schemaQueryOptions?: Q & SchemaRegistry.Query,
-): Effect.Effect<QueryResult.QueryResult<Type.Type>, never, Service> =>
+): Effect.Effect<QueryResult.QueryResult<SchemaRegistry.ExtractQueryResult<Q>>, never, Service> =>
   Service.pipe(
     Effect.map(({ db }) => db.schemaRegistry.query(schemaQueryOptions)),
     Effect.withSpan('Database.schemaQuery'),
@@ -348,7 +348,7 @@ export const schemaQuery = <Q extends Types.NoExcessProperties<SchemaRegistry.Qu
  */
 export const runSchemaQuery = <Q extends Types.NoExcessProperties<SchemaRegistry.Query, Q>>(
   schemaQueryOptions?: Q & SchemaRegistry.Query,
-): Effect.Effect<Type.Type[], never, Service> =>
+): Effect.Effect<SchemaRegistry.ExtractQueryResult<Q>[], never, Service> =>
   schemaQuery(schemaQueryOptions).pipe(
     Effect.flatMap((queryResult) => promiseWithCauseCapture(() => queryResult.run())),
   );

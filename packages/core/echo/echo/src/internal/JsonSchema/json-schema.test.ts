@@ -651,7 +651,7 @@ describe('json-to-effect', () => {
       name: Schema.String,
     }).pipe(EchoObjectSchema(DXN.make('com.example.type.person', '0.1.0')));
     const input = Schema.Struct({
-      contact: Type.getSchema(Contact) as any,
+      contact: Type.getSchema(Contact),
     });
     const jsonSchema = toJsonSchema(input);
     expect(jsonSchema).toMatchInlineSnapshot(`

@@ -123,6 +123,10 @@ export function type<S extends Schema.Union<readonly Schema.Schema.AnyNoContext[
   props?: Props<Schema.Schema.Type<S>>,
 ): Filter<Schema.Schema.Type<S>>;
 export function type(schema: string, props?: Props<unknown>): Filter<any>;
+// Passthrough overload for callers that hold a `Type.AnyEntity | string` union
+// (e.g. Query.type / Query.sourceOf / Query.targetOf impls). Listed last so the
+// typed overloads above still win for monomorphic inputs.
+export function type(input: TypeNs.AnyEntity | string, props?: Props<unknown>): Filter<unknown>;
 export function type(
   input: TypeNs.AnyEntity | Schema.Schema.AnyNoContext | string,
   props?: Props<unknown>,

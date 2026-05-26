@@ -5,7 +5,7 @@
 import type * as Schema from 'effect/Schema';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { Obj, Type } from '@dxos/echo';
+import { Entity, Obj, Type } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { type ProjectionModel } from '@dxos/schema';
 
@@ -119,7 +119,7 @@ export const object: {
     ) {
       return false;
     }
-    if (!schemas.some((schema) => Obj.instanceOf(schema, subject))) {
+    if (!schemas.some((schema) => Entity.instanceOf(schema, subject))) {
       return false;
     }
     return predicate ? predicate(data) : true;
@@ -240,7 +240,7 @@ export const companion: {
     if (typeof schemaOrValue === 'string') {
       return companionTo === schemaOrValue;
     }
-    return Obj.instanceOf(schemaOrValue as Type.AnyObj | Type.AnyRelation, companionTo);
+    return Entity.instanceOf(schemaOrValue as Type.AnyObj | Type.AnyRelation, companionTo);
   };
   return { bindings: [{ role: token.role, guard }] };
 };

@@ -32,7 +32,7 @@ export interface AnnotationHelper<T> {
    * source schema BEFORE wrapping it with `Type.makeObject` / `Type.makeRelation`.
    * In a pipe, place every `Annotation.X.set(...)` before the `Type.make...` step.
    */
-  set: <T2 extends T>(value: T2) => <S extends Schema.Schema.Any>(schema: S) => S;
+  set: (value: T) => <S extends Schema.Schema.Any>(schema: S) => S;
 }
 
 /**
@@ -44,30 +44,10 @@ export const createAnnotationHelper = <T>(id: symbol): AnnotationHelper<T> => {
     get: (schema) => SchemaAST.getAnnotation(schema.ast, id),
     getFromAst: (ast) => SchemaAST.getAnnotation(ast, id),
     set:
-      <T2 extends T>(value: T2) =>
+      (value) =>
       <S extends Schema.Schema.Any>(schema: S): S =>
         schema.annotations({ [id]: value }) as S,
   };
-};
-
-let _fromJsonSchema: ((jsonSchema: any) => Schema.Schema.AnyNoContext) | undefined;
-
-/**
- * Lazy escape hatch: the JsonSchema module registers `toEffectSchema` here so
- * `getTypeAnnotation` can read annotations off persisted `Type.Type` entities
- * by rebuilding their Effect Schema from `jsonSchema`.
- */
-export const setJsonSchemaDeserializer = (impl: (jsonSchema: any) => Schema.Schema.AnyNoContext): void => {
-  _fromJsonSchema = impl;
-};
-
-/**
- * Rebuild the Effect Schema from a persisted `Type.Type` entity's `jsonSchema`
- * using the lazily-registered deserializer. Returns `undefined` if the
- * deserializer hasn't been registered (avoids the import cycle).
- */
-export const effectSchemaFromJsonSchema = (jsonSchema: any): Schema.Schema.AnyNoContext | undefined => {
-  return _fromJsonSchema?.(jsonSchema);
 };
 
 /**

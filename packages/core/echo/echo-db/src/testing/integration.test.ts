@@ -14,7 +14,7 @@ import {
   brokenAutomergeReplicatorFactory,
   testAutomergeReplicatorFactory,
 } from '@dxos/echo-pipeline/testing';
-import { Ref, getTypeAnnotation, makeObject } from '@dxos/echo/internal';
+import { Ref, getTypeAnnotation } from '@dxos/echo/internal';
 import { TestSchema } from '@dxos/echo/testing';
 import { DXN, type ObjectId, PublicKey, type URI } from '@dxos/keys';
 import { TestBuilder as TeleportTestBuilder, TestPeer as TeleportTestPeer } from '@dxos/teleport/testing';
@@ -442,12 +442,12 @@ describe('Integration tests', () => {
       let relationId!: ObjectId;
       {
         const alice = db.add(
-          makeObject(TestSchema.Person, {
+          Obj.make(TestSchema.Person, {
             name: 'Alice',
           }),
         );
         const bob = db.add(
-          makeObject(TestSchema.Person, {
+          Obj.make(TestSchema.Person, {
             name: 'Bob',
           }),
         );

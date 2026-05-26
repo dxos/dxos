@@ -84,7 +84,7 @@ export interface Query<T> {
    * @param relation - Schema of the relation.
    * @param predicates - Predicates to filter the relation objects.
    */
-  'sourceOf'<R extends TypeNs.Relation<any, any, any, any>>(
+  'sourceOf'<R extends TypeNs.AnyRelation>(
     relation?: R | string,
     predicates?: Filter.Props<TypeNs.InstanceType<R>>,
   ): Query<TypeNs.InstanceType<R>>;
@@ -95,7 +95,7 @@ export interface Query<T> {
    * @param relation - Type entity of the relation.
    * @param predicates - Predicates to filter the relation objects.
    */
-  'targetOf'<R extends TypeNs.Relation<any, any, any, any>>(
+  'targetOf'<R extends TypeNs.AnyRelation>(
     relation?: R | string,
     predicates?: Filter.Props<TypeNs.InstanceType<R>>,
   ): Query<TypeNs.InstanceType<R>>;
@@ -262,26 +262,26 @@ class QueryClass implements Any {
   }
 
   sourceOf(
-    relation?: TypeNs.Relation<any, any, any, any> | string,
+    relation?: TypeNs.AnyRelation | string,
     predicates?: Filter.Props<unknown> | undefined,
   ): Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
       direction: 'outgoing',
-      filter: relation !== undefined ? Filter.type(relation as any, predicates as any).ast : undefined,
+      filter: relation !== undefined ? Filter.type(relation, predicates).ast : undefined,
     });
   }
 
   targetOf(
-    relation?: TypeNs.Relation<any, any, any, any> | string,
+    relation?: TypeNs.AnyRelation | string,
     predicates?: Filter.Props<unknown> | undefined,
   ): Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
       direction: 'incoming',
-      filter: relation !== undefined ? Filter.type(relation as any, predicates as any).ast : undefined,
+      filter: relation !== undefined ? Filter.type(relation, predicates).ast : undefined,
     });
   }
 
@@ -508,11 +508,10 @@ export const type: {
     predicates?: Filter.Props<Schema.Schema.Type<S>>,
   ): Query<Schema.Schema.Type<S>>;
   (schema: string, predicates?: Filter.Props<unknown>): Query<any>;
-} = (schema: TypeNs.AnyEntity | Schema.Schema.AnyNoContext | string, predicates?: Filter.Props<unknown>): Any => {
+} = (type: TypeNs.AnyEntity | string, predicates?: Filter.Props<unknown>): Any => {
   return new QueryClass({
     type: 'select',
-    // `Filter.type`'s overload set doesn't narrow over the local input union.
-    filter: Filter.type(schema as any, predicates as any).ast,
+    filter: Filter.type(type, predicates).ast,
   });
 };
 

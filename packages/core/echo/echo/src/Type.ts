@@ -173,11 +173,16 @@ export const makeObjectFromJsonSchema = (props: MakeTypeProps): PersistedType =>
   // — the canonical registry-provenance pair — not data fields. Drafts default
   // to `'0.0.0'`; the version is omitted from meta entirely when the caller
   // doesn't supply one so the proxy projection can apply its own default.
-  return internal.makeObject(typeInternal.PersistentType, data as any, {
-    keys: [],
-    key: typename,
-    version: version ?? DRAFT_VERSION,
-  }) as unknown as PersistedType;
+  return internal.makeObject(
+    internal.getStaticTypeSchema(typeInternal.PersistentType) as any,
+    data as any,
+    {
+      keys: [],
+      key: typename,
+      version: version ?? DRAFT_VERSION,
+    },
+    typeInternal.PersistentType,
+  ) as unknown as PersistedType;
 };
 
 /**
@@ -207,11 +212,16 @@ export const makeRelationFromJsonSchema = (
   };
   // `typename` / `version` route through `ObjectMeta` (see
   // {@link makeObjectFromJsonSchema}); drafts default version to `'0.0.0'`.
-  return internal.makeObject(typeInternal.PersistentType, { ...rest, jsonSchema: enrichedJsonSchema } as any, {
-    keys: [],
-    key: typename,
-    version: version ?? DRAFT_VERSION,
-  }) as unknown as PersistedType;
+  return internal.makeObject(
+    internal.getStaticTypeSchema(typeInternal.PersistentType) as any,
+    { ...rest, jsonSchema: enrichedJsonSchema } as any,
+    {
+      keys: [],
+      key: typename,
+      version: version ?? DRAFT_VERSION,
+    },
+    typeInternal.PersistentType,
+  ) as unknown as PersistedType;
 };
 
 /**
@@ -364,13 +374,13 @@ export type AnyRef = Schema.Schema<internal.Ref<any>, EncodedReference>;
  * directly when working at the schema level.
  */
 export const getURI = (input: AnyEntity): URI.URI => {
-  // `getTypeURIFromSpecifier` handles persisted entities (id → EchoURI) and
-  // static entities (typename/version → DXN); `getSchemaURI` reads the
-  // underlying Effect Schema's annotations via StaticTypeSchemaSlot.
+  // For Type entities, route through `getTypeURIFromSpecifier` (id → EchoURI,
+  // typename/version → DXN). For Obj/Relation entities, unwrap to the source
+  // Effect Schema first and read its annotations.
   if (isType(input)) {
     return internal.getTypeURIFromSpecifier(input);
   }
-  return internal.getSchemaURI(input) ?? raise(new TypeError('Type entity has no URI'));
+  return internal.getSchemaURI(getSchema(input)) ?? raise(new TypeError('Type entity has no URI'));
 };
 
 /**

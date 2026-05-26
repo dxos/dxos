@@ -31,8 +31,8 @@ const Person = Schema.Struct({
   name: Schema.String,
   email: Schema.optional(Schema.String),
 }).pipe(
-  Type.makeObject({ typename: 'com.example.type.person', version: '0.1.0' }),
   Annotation.LabelAnnotation.set(['name']),
+  Type.makeObject({ typename: 'com.example.type.person', version: '0.1.0' }),
 );
 
 interface Person extends Schema.Schema.Type<typeof Person> {}

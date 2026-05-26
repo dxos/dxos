@@ -4,7 +4,7 @@
 
 import * as Option from 'effect/Option';
 
-import { Obj, type Type } from '@dxos/echo';
+import { Entity, Obj, type Type } from '@dxos/echo';
 
 import * as Node from './node';
 
@@ -113,7 +113,7 @@ export const whenNodeType =
 export const whenEchoType =
   <T extends Type.AnyObj | Type.AnyRelation>(type: T): NodeMatcher<Type.InstanceType<T>> =>
   (node: Node.Node): Option.Option<Type.InstanceType<T>> =>
-    Obj.instanceOf(type, node.data) ? Option.some(node.data as Type.InstanceType<T>) : Option.none();
+    Entity.instanceOf(type, node.data) ? Option.some(node.data as Type.InstanceType<T>) : Option.none();
 
 /**
  * Matches a node whose data is any ECHO object.
@@ -256,7 +256,7 @@ export const whenAny: {
 export const whenEchoTypeMatches =
   <T extends Type.AnyObj | Type.AnyRelation>(type: T): NodeMatcher =>
   (node: Node.Node): Option.Option<Node.Node> =>
-    Obj.instanceOf(type, node.data) ? Option.some(node) : Option.none();
+    Entity.instanceOf(type, node.data) ? Option.some(node) : Option.none();
 
 /**
  * Matches a node whose data is any ECHO object.

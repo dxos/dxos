@@ -53,6 +53,16 @@ export type Query = {
 };
 
 /**
+ * Maps a {@link Query} input to the entity union produced by `query(input)`.
+ *
+ * Today this collapses to `Type.Type` — both `database` and `runtime` locations
+ * surface as the canonical persistent type entity. The generic exists so the
+ * API can later narrow on additional query shapes (e.g. a `kind` filter that
+ * picks `Type.AnyObj` vs `Type.AnyRelation`) without an API break.
+ */
+export type ExtractQueryResult<_Q> = Type.Type;
+
+/**
  * Input for schema registration.
  * The typename, version and schema mutability metadata is read from the schema annotations.
  *
@@ -95,5 +105,7 @@ export interface SchemaRegistry {
   register<T extends Type.AnyEntity>(input: T[]): Promise<Type.Persisted<T>[]>;
   register(input: RegisterSchemaInput[]): Promise<Type.PersistedType[]>;
 
-  query<Q extends Types.NoExcessProperties<Query, Q>>(query?: Q & Query): QueryResult.QueryResult<Type.Type>;
+  query<Q extends Types.NoExcessProperties<Query, Q>>(
+    query?: Q & Query,
+  ): QueryResult.QueryResult<ExtractQueryResult<Q>>;
 }

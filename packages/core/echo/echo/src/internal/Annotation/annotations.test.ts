@@ -139,31 +139,25 @@ describe('annotations', () => {
         other: 'Other',
       } as unknown as TestEchoSchema;
 
-      expect(getLabelWithSchema(TestEchoSchema, obj)).toEqual('Primary Name');
+      expect(getLabelWithSchema(Type.getSchema(TestEchoSchema), obj)).toEqual('Primary Name');
     });
   });
 
-  // `getTypeAnnotation(schema)` must work both when given a raw Effect Schema
-  // and when given a `Type.Type` entity (which carries its AST on the hidden
-  // `StaticTypeSchemaSlot` instead of `.ast`), plus when given a persisted
-  // `Type.Type` entity (which carries only `jsonSchema` and needs lazy
-  // rehydration via the registered deserializer). Plugin-space's
-  // `userSchemas` filter calls this on every schema the registry returns, so
-  // a failure here empties the entire Database subgraph in Composer.
-  describe('getTypeAnnotation on Type entities', () => {
-    test('returns TypeAnnotation for a static Type.Obj entity (no .ast, has StaticTypeSchemaSlot)', ({ expect }) => {
-      // TestEchoSchema is a `Type.Obj` entity produced by `EchoObjectSchema(DXN)`.
-      const annotation = getTypeAnnotation(TestEchoSchema as any);
+  // `getTypeAnnotation` reads annotations from an Effect Schema. To read off a
+  // `Type.Type` entity (static or persisted), unwrap with `Type.getSchema(entity)`
+  // first — that handles both the static `StaticTypeSchemaSlot` case and the
+  // persisted `jsonSchema` rebuild case.
+  describe('getTypeAnnotation via Type.getSchema(entity)', () => {
+    test('returns TypeAnnotation for a static Type.Obj entity', ({ expect }) => {
+      const annotation = getTypeAnnotation(Type.getSchema(TestEchoSchema));
       expect(annotation).toBeDefined();
       expect(annotation?.kind).toBe(EntityKind.Object);
       expect(annotation?.typename).toBe('org.dxos.type.test');
     });
 
-    test('returns TypeAnnotation for a persisted Type.Type entity (no slot, has jsonSchema)', ({ expect }) => {
-      // createEchoSchema produces a kind=Type entity rebuilt from jsonSchema,
-      // with no StaticTypeSchemaSlot — only `jsonSchema`.
-      const persisted = createEchoSchema(TestEchoSchema as any);
-      const annotation = getTypeAnnotation(persisted as any);
+    test('returns TypeAnnotation for a persisted Type.Type entity', ({ expect }) => {
+      const persisted = createEchoSchema(Type.getSchema(TestEchoSchema));
+      const annotation = getTypeAnnotation(Type.getSchema(persisted));
       expect(annotation).toBeDefined();
       expect(annotation?.typename).toBe('org.dxos.type.test');
     });
