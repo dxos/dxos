@@ -15,11 +15,17 @@ export const ErrorFallback = ({ error }: FallbackProps) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
+    if (!navigator.clipboard?.writeText) {
+      return;
+    }
     const text = stack ?? message;
-    void navigator.clipboard.writeText(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    });
+    void navigator.clipboard
+      .writeText(text)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      })
+      .catch(() => {});
   };
 
   return (

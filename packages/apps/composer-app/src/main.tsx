@@ -213,8 +213,10 @@ const main = async () => {
   // Read the persisted opt-out state up front so we can suppress PostHog's heavy
   // instrumentation (session recorder, dead-clicks autocapture) at init time —
   // opting out after init only stops event capture, not script loading.
-  const observabilityDisabled = await Observability.isObservabilityDisabled(APP_KEY);
-  const observabilityGroup = await Observability.getObservabilityGroup(APP_KEY);
+  const [observabilityDisabled, observabilityGroup] = await Promise.all([
+    Observability.isObservabilityDisabled(APP_KEY),
+    Observability.getObservabilityGroup(APP_KEY),
+  ]);
 
   // Intentionally do not await; the buffering backend in TRACE_PROCESSOR captures
   // early spans and replays them once the real OTEL backend registers.
