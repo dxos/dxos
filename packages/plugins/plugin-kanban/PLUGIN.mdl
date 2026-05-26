@@ -1,0 +1,398 @@
+---
+id: org.dxos.plugin.kanban
+name: KanbanPlugin
+version: 0.1.0
+---
+
+Visual project management plugin for `DXOS` Composer — organise any ECHO type into drag-and-drop columns driven by a single-select field, with full local-first persistence and real-time peer replication.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+| `component` | `org.dxos.mdl.component@1.0`   |
+| `op`        | `org.dxos.mdl.op@1.0`          |
+
+## Types
+
+```mdl
+type ArrangementColumnEntry
+  fields:
+    ids: string[]              # ordered card ids within the column
+    hidden?: boolean           # when true the column is hidden from the board
+```
+
+```mdl
+type Arrangement
+  fields:
+    order: string[]            # ordered column values
+    columns: Map<string, ArrangementColumnEntry>
+```
+
+```mdl
+type KanbanViewSpec
+  fields:
+    kind: "view"               # discriminator — items sourced from a View query
+    view: Ref<View>            # the View whose query drives card membership
+```
+
+```mdl
+type KanbanItemsSpec
+  fields:
+    kind: "items"              # discriminator — kanban owns items explicitly
+    pivotField: string         # property path that drives column membership
+    items: Ref<object>[]       # items owned directly by the kanban
+```
+
+```mdl
+type KanbanSpec
+  desc: Discriminated union of item-source strategies.
+  literals: KanbanViewSpec | KanbanItemsSpec
+```
+
+```mdl
+type Kanban
+  desc: Root ECHO object for a kanban board. Stored with typename org.dxos.type.kanban v0.2.0.
+  fields:
+    name?: string
+    arrangement: Arrangement
+    spec: KanbanSpec           # discriminated by spec.kind
+```
+
+```mdl
+type KanbanSettings
+  fields:
+    hideUncategorized?: boolean  # hides items with no pivot value
+```
+
+```mdl
+type KanbanViewSettings
+  fields:
+    columnFieldId: string        # id of the View field used as pivot column
+    hideUncategorized?: boolean
+```
+
+```mdl
+type CreateKanbanInput
+  fields:
+    name?: string
+    typename?: string            # ECHO typename of card objects
+    initialPivotColumn?: string  # initial single-select field to pivot on
+```
+
+## Components
+
+```mdl
+component KanbanArticle
+  desc: Main article surface for a Kanban. Branches internally on spec.kind — view-variant runs a typename query via the linked View; items-variant dereferences spec.items directly.
+  props:
+    subject: Kanban
+    role: "article" | "section"
+  state:
+    projection: ProjectionModel  # column/field projection derived from View + schema
+    items: AtomQuery             # reactive card query (view-variant) or array (items-variant)
+  actions:
+    addCard(columnValue: string) → string   # returns new card id
+    removeCard(card: object)
+    moveCard(card: object, toColumn: string, toIndex: number)
+    deleteCardField(fieldId: string)
+  layout: |
+    ┌──────────────────────────────────────┐
+    │ [toolbar slot]                        │
+    ├──────────────────────────────────────┤
+    │ Col A       │ Col B       │ Col C    │
+    │ ┌─────────┐ │ ┌─────────┐ │  …       │
+    │ │ card    │ │ │ card    │ │          │
+    │ └─────────┘ │ └─────────┘ │          │
+    │ [+ Add card]│             │          │
+    └──────────────────────────────────────┘
+```
+
+```mdl
+component KanbanSettings
+  desc: Properties panel for a Kanban. View-variant shows a column-field picker plus common settings; items-variant shows only common settings.
+  props:
+    subject: Kanban
+  state:
+    selectFields: { value: string; label: string }[]   # single-select fields available as pivot
+  actions:
+    changeColumnField(fieldId: string)
+    toggleHideUncategorized(hidden: boolean)
+```
+
+## Operations
+
+```mdl
+op deleteCard
+  desc: Removes a card object from the ECHO database.
+  input:
+    card: object               # the card to remove
+  output: DeleteCardOutput     # { card } snapshot of the removed card
+  effects: [echo:write]
+```
+
+```mdl
+op deleteCardField
+  desc: Removes a field projection from the View's schema; returns enough data to undo.
+  input:
+    view: View
+    fieldId: string
+  output: DeleteCardFieldOutput  # { field, props, index }
+  effects: [echo:write]
+  requires: [AtomRegistry, Database]
+```
+
+```mdl
+op restoreCard
+  desc: Undo counterpart to deleteCard — re-adds a previously removed card to the database.
+  input:
+    card: object               # the card snapshot to restore
+  output: void
+  effects: [echo:write]
+```
+
+```mdl
+op restoreCardField
+  desc: Undo counterpart to deleteCardField — re-inserts a field projection at its original index.
+  input:
+    view: View
+    field: FieldSchema
+    props: object              # field properties
+    index: number              # position to restore at
+  output: void
+  effects: [echo:write]
+  requires: [AtomRegistry, Database]
+```
+
+## Features
+
+```mdl
+feat F-1: Board Layout
+
+  req F-1.1: Columns are ordered by Arrangement.order; each column contains its cards in Arrangement.columns[value].ids order.
+  req F-1.2: Cards within a column are rendered in the stored id order.
+  req F-1.3:
+    when: settings.hideUncategorized is true
+    then: the uncategorized column is not rendered
+```
+
+```mdl
+feat F-2: Drag and Drop
+
+  req F-2.1:
+    when: user drags a card to a different column
+    then: card's pivot field is updated to the target column value; Arrangement updated
+
+  req F-2.2:
+    when: user drags a card within the same column
+    then: card ids are reordered in Arrangement.columns[value].ids
+
+  req F-2.3:
+    when: user drags a column header
+    then: Arrangement.order is updated to reflect the new column order
+```
+
+```mdl
+feat F-3: Card Management
+
+  req F-3.1:
+    when: user clicks Add Card in a column
+    then: a new ECHO object of the board's card type is created with the pivot field set to that column's value
+
+  req F-3.2:
+    when: user removes a card
+    then: op:deleteCard runs; card is removed from the ECHO database and from the board
+
+  req F-3.3:
+    when: user undoes a delete-card action
+    then: op:restoreCard re-adds the card; board reflects restored state
+```
+
+```mdl
+feat F-4: Column Configuration
+
+  req F-4.1:
+    when: user opens KanbanSettings for a view-variant board
+    then: column-field picker shows all single-select fields from the card schema
+
+  req F-4.2:
+    when: user selects a different column field
+    then: View.projection.pivotFieldId is updated; board re-renders with new columns
+
+  req F-4.3:
+    when: user removes a column field
+    then: op:deleteCardField removes the projection; op:restoreCardField can reverse it
+```
+
+```mdl
+feat F-5: Item Source Variants
+
+  req F-5.1:
+    when: spec.kind === "view"
+    then: items come from running the View's typename query against the ECHO database
+
+  req F-5.2:
+    when: spec.kind === "items"
+    then: items come from spec.items (explicit ref array); used by externally-synced boards (e.g. Linear, GitHub)
+
+  req F-5.3: Both variants share the same Arrangement persistence and drag-and-drop logic.
+```
+
+```mdl
+feat F-6: ECHO Persistence and Collaboration
+
+  req F-6.1: All Kanban, Arrangement, and card mutations are written to ECHO and replicated to peers.
+  req F-6.2:
+    when: a peer updates a card or moves it
+    then: KanbanArticle re-renders reactively via AtomQuery / AtomObj subscriptions
+
+  req F-6.3: View-variant kanbans own an associated View object that is hidden from the space browser.
+```
+
+```mdl
+feat F-7: AI Blueprint
+
+  req F-7.1: Plugin contributes a Kanban blueprint that lets an AI agent create and update kanban boards.
+  req F-7.2:
+    when: an AI agent calls the blueprint
+    then: agent can create boards, place cards in columns, and update card fields
+```
+
+## Acceptance
+
+```mdl
+test T-1: Create kanban board
+  given: a space with a custom ECHO type that has a single-select field "status"
+  when: user creates a new Kanban selecting that type and "status" as the pivot column
+  then:
+    - Kanban object written to ECHO with spec.kind === "view"
+    - columns correspond to the "status" field's enum values
+    - existing objects appear as cards in their respective columns
+```
+
+```mdl
+test T-2: Drag card between columns
+  given: a Kanban with columns "todo", "in-progress", "done" and a card in "todo"
+  when: user drags the card to "in-progress"
+  then:
+    - card's "status" field updated to "in-progress"
+    - Arrangement reflects card in "in-progress" column
+    - change replicated to peers via ECHO
+```
+
+```mdl
+test T-3: Reorder cards within a column
+  given: a column with cards [A, B, C] in order
+  when: user drags card C above card A
+  then:
+    - Arrangement.columns["col"].ids === [C, A, B]
+    - board renders in new order
+```
+
+```mdl
+test T-4: Add card to column
+  given: a board with a "todo" column
+  when: user clicks Add Card in "todo"
+  then:
+    - new ECHO object created with pivot field set to "todo"
+    - card appears at the bottom of the "todo" column
+```
+
+```mdl
+test T-5: Delete and restore card
+  given: a board with card X in column "todo"
+  when: user deletes card X, then undoes
+  then:
+    - after delete: card X absent from board and ECHO database
+    - after undo: card X restored to ECHO and reappears in "todo"
+```
+
+```mdl
+test T-6: Hide uncategorized column
+  given: a board with some cards that have no pivot value (uncategorized)
+  when: user enables "Hide uncategorized column" in KanbanSettings
+  then:
+    - uncategorized column no longer rendered
+    - Arrangement.columns[UNCATEGORIZED].hidden === true
+```
+
+```mdl
+test T-7: Switch pivot column field
+  given: a view-variant board currently pivoting on "status"
+  when: user opens settings and selects "priority" as the column field
+  then:
+    - View.projection.pivotFieldId updated to "priority"
+    - board re-renders with columns derived from "priority" enum values
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap
+    literals?: UnionList
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap
+    state?: FieldMap
+    slots?: FieldMap
+    actions?: ActionMap
+    emits?: EventMap
+    layout?: CodeBlock
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap
+    output?: TypeExpr
+    errors?: ErrorMap
+    effects?: EffectList
+    requires?: ServiceList
+    note?: Prose
+```
