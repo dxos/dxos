@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useObjectMenuItems } from '@dxos/app-toolkit/ui';
-import { Annotation, Entity, Obj } from '@dxos/echo';
+import { Annotation, Entity, Obj, Type } from '@dxos/echo';
 import { Card, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { Menu } from '@dxos/react-ui-menu';
@@ -49,6 +49,7 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
   const icon = Function.pipe(
     Entity.getType(subject),
     Option.fromNullable,
+    Option.map(Type.getSchema),
     Option.flatMap(Annotation.IconAnnotation.get),
     Option.map(({ icon }) => icon),
     Option.getOrElse(() => 'ph--placeholder--regular'),

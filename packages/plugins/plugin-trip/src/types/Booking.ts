@@ -30,12 +30,12 @@ export const Booking = Schema.Struct({
   source: Schema.Literal('manual', 'email', 'agent', 'import').pipe(Schema.optional),
   rawPayload: Schema.optional(Schema.String),
 }).pipe(
-  Type.makeObject(DXN.make('org.dxos.type.trip.booking', '0.1.0')),
   LabelAnnotation.set(['confirmationCode']),
   Annotation.IconAnnotation.set({
     icon: 'ph--ticket--regular',
     hue: 'sky',
   }),
+  Type.makeObject(DXN.make('org.dxos.type.trip.booking', '0.1.0')),
 );
 
 export interface Booking extends Type.InstanceType<typeof Booking> {}

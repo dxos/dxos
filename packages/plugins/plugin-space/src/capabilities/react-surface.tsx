@@ -11,7 +11,7 @@ import React, { type ComponentProps, useCallback } from 'react';
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface, useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import { AppSurface, useActiveSpace, useTypeOptions } from '@dxos/app-toolkit/ui';
-import { Collection, Database, Entity, Obj } from '@dxos/echo';
+import { Collection, Database, Entity, Obj, Type } from '@dxos/echo';
 import { findAnnotation } from '@dxos/effect';
 import { type Space, SpaceState, getSpace, isSpace, useSpaces } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
@@ -161,14 +161,18 @@ export default Capability.makeModule(
           }
 
           const type = Obj.getType(data.companionTo);
-          const path = type ? Option.getOrElse(ViewAnnotation.get(type), () => [] as readonly string[]) : [];
+          const path = type
+            ? Option.getOrElse(ViewAnnotation.get(Type.getSchema(type)), () => [] as readonly string[])
+            : [];
           const viewTarget = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.companionTo, path) : undefined;
           return !!viewTarget;
         },
         // TODO(burdon): Replace with mosaic.
         component: ({ data, ref }) => {
           const type = Obj.getType(data.companionTo);
-          const path = type ? Option.getOrElse(ViewAnnotation.get(type), () => [] as readonly string[]) : [];
+          const path = type
+            ? Option.getOrElse(ViewAnnotation.get(Type.getSchema(type)), () => [] as readonly string[])
+            : [];
           const view = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.companionTo, path) : undefined;
           if (!view) {
             return null;
@@ -301,13 +305,17 @@ export default Capability.makeModule(
           }
 
           const type = Obj.getType(data.subject);
-          const path = type ? Option.getOrElse(ViewAnnotation.get(type), () => [] as readonly string[]) : [];
+          const path = type
+            ? Option.getOrElse(ViewAnnotation.get(Type.getSchema(type)), () => [] as readonly string[])
+            : [];
           const viewTarget = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.subject, path) : undefined;
           return !!viewTarget;
         },
         component: ({ data }) => {
           const type = Obj.getType(data.subject);
-          const path = type ? Option.getOrElse(ViewAnnotation.get(type), () => [] as readonly string[]) : [];
+          const path = type
+            ? Option.getOrElse(ViewAnnotation.get(Type.getSchema(type)), () => [] as readonly string[])
+            : [];
           const view = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.subject, path) : undefined;
 
           if (!view) {

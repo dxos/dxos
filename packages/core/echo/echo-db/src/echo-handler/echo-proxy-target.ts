@@ -7,7 +7,7 @@ import type * as Schema from 'effect/Schema';
 
 import type { CleanupFn, Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
-import type { Entity } from '@dxos/echo';
+import type { Entity, Type } from '@dxos/echo';
 import type { SchemaId } from '@dxos/echo/internal';
 // eslint-disable-next-line @typescript-eslint/consistent-type-imports
 import { EventId } from '@dxos/echo/internal';
@@ -76,10 +76,13 @@ export class ObjectInternals {
   subscriptions: CleanupFn[] = [];
 
   /**
-   * Schema of the root object.
+   * Schema (or `Type.AnyEntity`) of the root object.
+   * When a `Type.Type` entity is available (e.g. created via `Obj.make(SomeType, ...)`),
+   * the entity is stored so {@link EchoReactiveHandler.getTypeEntity} can return it
+   * directly. Otherwise this holds a raw Effect Schema.
    * Only used if this is not bound to a database.
    */
-  rootSchema?: Schema.Schema.AnyNoContext = undefined;
+  rootSchema?: Schema.Schema.AnyNoContext | Type.AnyEntity = undefined;
 
   /**
    * Memoized rebuilt Effect Schema for persisted `Type.Type` entities. Reading

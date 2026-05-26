@@ -151,7 +151,7 @@ export const buildViewIndex = (get: Atom.Context, space: Space, schemas: Type.An
     for (const viewObject of viewObjects) {
       const holderType = Obj.getType(viewObject as Obj.Unknown);
       const path = holderType
-        ? ViewAnnotation.get(holderType).pipe(Option.getOrElse(() => [] as EchoViewRefPath))
+        ? ViewAnnotation.get(Type.getSchema(holderType)).pipe(Option.getOrElse(() => [] as EchoViewRefPath))
         : ([] as EchoViewRefPath);
 
       if (path.length === 0) {

@@ -17,12 +17,7 @@ import { EchoObjectSchema } from '../../Entity';
 import { toEffectSchema } from '../../JsonSchema';
 type Type = TypeNs.Type;
 import { createEchoSchema } from '../../../testing';
-import {
-  addFieldsToSchema,
-  removeFieldsFromSchema,
-  setTypenameInSchema,
-  updateFieldsInSchema,
-} from '../../Type/manipulation';
+import { addFieldsToSchema, removeFieldsFromSchema, updateFieldsInSchema } from '../../Type/manipulation';
 
 // Helper: introspect a Type.Type entity's properties via its rebuilt Effect Schema.
 const unwrapOptionality = (property: SchemaAST.PropertySignature): SchemaAST.PropertySignature => {
@@ -63,14 +58,6 @@ const removeFields = (type: Type, fieldNames: string[]): void => {
   const removed = removeFieldsFromSchema(toEffectSchema(type.jsonSchema), fieldNames);
   ObjModule.update(type as unknown as ObjModule.Unknown, (draft: any) => {
     draft.jsonSchema = toJsonSchema(removed);
-  });
-};
-
-const updateTypename = (type: Type, typename: string): void => {
-  const updated = setTypenameInSchema(toEffectSchema(type.jsonSchema), typename);
-  ObjModule.update(type as unknown as ObjModule.Unknown, (draft: any) => {
-    draft.typename = typename;
-    draft.jsonSchema = toJsonSchema(updated);
   });
 };
 
@@ -147,47 +134,5 @@ describe('dynamic schema', () => {
       version: '0.1.0',
     });
     expect(getPropertyMetaAnnotation(getProperties(registered)[0], metaNamespace)).to.deep.eq(metaInfo);
-  });
-
-  test('updates typename', async ({ expect }) => {
-    // Create schema with some fields and annotations.
-    const registered = createEchoSchema(EmptySchemaType);
-    const originalVersion = registered.version;
-    addFields(registered, {
-      name: Schema.String.pipe(PropertyMeta('test', { maxLength: 10 })),
-      age: Schema.Number,
-    });
-
-    // First update.
-    const newTypename1 = 'com.example.type.individual';
-    updateTypename(registered, newTypename1);
-
-    // Basic typename update checks.
-    expect(registered.typename).toBe(newTypename1);
-    expect(registered.jsonSchema.$id).toBe(`dxn:${newTypename1}:${originalVersion}`);
-    expect(registered.jsonSchema.typename).toBe(newTypename1);
-
-    // Version preservation check.
-    expect(registered.version).toBe(originalVersion);
-
-    // Field preservation check.
-    const properties = getProperties(registered);
-    expect(properties).toHaveLength(2);
-    expect(properties[0].name).toBe('name');
-
-    // Annotation preservation check.
-    const nameMeta = getPropertyMetaAnnotation(properties[0], 'test');
-    expect(nameMeta).toEqual({ maxLength: 10 });
-
-    // Second update to ensure multiple updates work.
-    const newTypename2 = 'com.example.type.person';
-    updateTypename(registered, newTypename2);
-    expect(registered.typename).toBe(newTypename2);
-    expect(registered.jsonSchema.$id).toBe(`dxn:${newTypename2}:${originalVersion}`);
-    expect(registered.jsonSchema.typename).toBe(newTypename2);
-    expect(getTypeAnnotation(toEffectSchema(registered.jsonSchema))).to.deep.contain({
-      typename: 'com.example.type.person',
-      version: '0.1.0',
-    });
   });
 });

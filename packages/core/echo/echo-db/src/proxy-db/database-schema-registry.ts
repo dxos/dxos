@@ -10,6 +10,7 @@ import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
 import { Filter, JsonSchema, type QueryResult, type SchemaRegistry, Type } from '@dxos/echo';
 import {
+  MetaId,
   PersistentType,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
@@ -185,9 +186,16 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
                 }
               }
 
+              // `typename` / `version` on a persisted `Type.Type` live in
+              // `ObjectMeta.key` / `ObjectMeta.version` (the canonical
+              // registry-provenance pair). Read the raw meta directly so
+              // unnamed drafts return `undefined` here (we don't want to
+              // match draft id strings against typename queries).
+              const persistedMeta = Type.getMeta(object.schema);
+
               const typenameFilter = coerceArray(query.typename);
               if (typenameFilter.length > 0) {
-                if (object.schema.typename == null || !typenameFilter.includes(object.schema.typename)) {
+                if (persistedMeta.key == null || !typenameFilter.includes(persistedMeta.key)) {
                   return false;
                 }
               }
@@ -197,7 +205,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
                   throw new Error('Semver version ranges not supported.');
                 }
 
-                if (object.schema.version !== query.version) {
+                if (persistedMeta.version !== query.version) {
                   return false;
                 }
               }
@@ -363,15 +371,19 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     }
 
     // Track typename changes so the by-typename index stays in sync. Drafts
-    // (typename === undefined) are indexed by id only.
+    // (typename === undefined) are indexed by id only. Typename lives in
+    // `ObjectMeta.key` on persisted Type.Type entities — read the raw meta
+    // directly so we get the user-set value (or `undefined` for drafts).
     const typeEntity: Type.Type = schema;
-    let previousTypename: string | undefined = schema.typename;
+    const readTypename = (): string | undefined => Type.getMeta(schema).key;
+    let previousTypename: string | undefined = readTypename();
     const subscription = getObjectCore(schema).updates.on(() => {
-      if (schema.typename !== previousTypename) {
+      const currentTypename = readTypename();
+      if (currentTypename !== previousTypename) {
         if (previousTypename != null && this._schemaByType.get(previousTypename) === typeEntity) {
           this._schemaByType.delete(previousTypename);
         }
-        previousTypename = schema.typename;
+        previousTypename = currentTypename;
         if (previousTypename != null) {
           this._schemaByType.set(previousTypename, typeEntity);
         }
@@ -380,8 +392,8 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     });
 
     this._schemaById.set(schema.id, typeEntity);
-    if (schema.typename != null) {
-      this._schemaByType.set(schema.typename, typeEntity);
+    if (previousTypename != null) {
+      this._schemaByType.set(previousTypename, typeEntity);
     }
     this._unsubscribeById.set(schema.id, subscription);
     return typeEntity;
@@ -398,13 +410,14 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
 
     const meta = getTypeAnnotation(schema);
     invariant(meta, 'use Schema.Struct({}).pipe(Type.Obj()) or class syntax to create a valid schema');
-    // PersistentType only declares typename/version/jsonSchema/name as data fields.
-    // `meta.kind` is the entity-kind brand (set on `[KindId]` via `setSchemaPropertiesOnObjectCore`),
-    // NOT a data field — spreading it here would leak `kind: 'object'` into the data namespace,
-    // surface through `Obj.toJSON`, and end up baked into committed snapshots.
-    const { kind: _kind, ...metaWithoutKind } = meta;
+    // PersistentType only declares `name` and `jsonSchema` as data fields.
+    // `typename` / `version` are the canonical registry-provenance pair and
+    // live in `ObjectMeta.key` / `ObjectMeta.version` (queryable via
+    // `Filter.key(...)`); they're seeded here through the `[MetaId]` symbol.
+    // `meta.kind` is the entity-kind brand (set on `[KindId]` via
+    // `setSchemaPropertiesOnObjectCore`), NOT a data field.
     const schemaToStore = createObject(PersistentType, {
-      ...metaWithoutKind,
+      [MetaId]: { key: meta.typename, version: meta.version },
       jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})),
     });
     // The schema's $id is the typename DXN — universal across stored and non-stored
@@ -440,8 +453,13 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     const schema = this._schemaById.get(id);
     if (schema != null) {
       this._schemaById.delete(id);
-      if (schema.typename != null) {
-        this._schemaByType.delete(schema.typename);
+      // Typename lives in `ObjectMeta.key` (the canonical registry-provenance
+      // field); read the raw meta directly so unnamed drafts return
+      // `undefined` (rather than the `Type.getTypename` id fallback, which
+      // would never match an entry in `_schemaByType`).
+      const persistedTypename = Type.getMeta(schema).key;
+      if (persistedTypename != null) {
+        this._schemaByType.delete(persistedTypename);
       }
       if (schema.id != null) {
         this._unsubscribeById.get(schema.id)?.();

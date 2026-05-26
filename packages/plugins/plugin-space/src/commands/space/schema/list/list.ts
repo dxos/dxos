@@ -34,12 +34,11 @@ export const handler = Effect.fn(function* ({
   const schemas = [
     // Skip persisted drafts without a typename — they can't be listed by name.
     ...echoSchema
-      .filter((schema): schema is typeof schema & { typename: string } => schema.typename != null)
-      .map((schema) => ({
-        id: schema.id,
-        typename: schema.typename,
-        version: schema.version,
-      })),
+      .map((schema) => {
+        const meta = Type.getMeta(schema);
+        return meta.key != null ? { id: schema.id, typename: meta.key, version: meta.version ?? '' } : undefined;
+      })
+      .filter((entry): entry is { id: string; typename: string; version: string } => entry != null),
     ...runtimeSchema.map((type) => {
       const schema = Type.getSchema(type as Type.AnyEntity);
       const schemaAnnotation = getTypeAnnotation(schema)!;

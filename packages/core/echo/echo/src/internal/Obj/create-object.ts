@@ -15,6 +15,7 @@ import {
   InstancePhantomId,
   KindId,
   MetaId,
+  type ObjectMeta,
   SchemaKindId,
   StaticTypeSchemaSlot,
   setSchema,
@@ -35,10 +36,16 @@ import { attachTypedJsonSerializer } from './json-serializer';
 // Omits the brand slots — those get stamped on the instance by the entity
 // handler (KindId via setKind, SchemaKindId derived in the proxy `get` trap
 // from kind + jsonSchema.entityKind, StaticTypeSchemaSlot lazily via the
-// proxy), not supplied by the caller.
-export type CreateObjectProps<T> = T extends { id: string }
-  ? Omit<T, 'id' | KindId | SchemaKindId | StaticTypeSchemaSlot> & { id?: string }
-  : Omit<T, KindId | SchemaKindId | StaticTypeSchemaSlot>;
+// proxy), not supplied by the caller. Also strips `typename` / `version` — on
+// type-kind entities these are projected by the proxy from `ObjectMeta.key` /
+// `ObjectMeta.version`, seeded via `[MetaId]` rather than data. Allows
+// `[Obj.Meta]` (MetaId symbol) for seeding registry-provenance meta at
+// construction (mirrors `Obj.make`).
+export type CreateObjectProps<T> = (T extends { id: string }
+  ? Omit<T, 'id' | 'typename' | 'version' | KindId | SchemaKindId | StaticTypeSchemaSlot> & { id?: string }
+  : Omit<T, 'typename' | 'version' | KindId | SchemaKindId | StaticTypeSchemaSlot>) & {
+  readonly [MetaId]?: Partial<ObjectMeta>;
+};
 
 /**
  * Creates a new object instance from a schema and data, without signal reactivity.
@@ -87,6 +94,15 @@ export const createObject: {
     'Relation source and target must be provided together',
   );
 
+  // Pull `[Obj.Meta]` (MetaId-symbol) off props before spreading so it doesn't
+  // leak into data. Callers use this to seed registry-provenance meta fields
+  // (`key`, `version`) and foreign keys / tags at construction time, mirroring
+  // `Obj.make`'s symbol-keyed meta convention.
+  const metaOverride = props[MetaId];
+  if (metaOverride !== undefined) {
+    delete props[MetaId];
+  }
+
   // Raw object.
   const obj = { ...props, id: props.id ?? ObjectId.random() };
 
@@ -102,7 +118,7 @@ export const createObject: {
         ? EntityKind.Relation
         : EntityKind.Object;
   defineHiddenProperty(obj, KindId, kind);
-  defineHiddenProperty(obj, MetaId, { keys: [] });
+  defineHiddenProperty(obj, MetaId, { keys: [], ...metaOverride });
   setSchema(obj, schema);
   // If the caller passed a type entity (recognised via the schema slot), keep
   // a reference to it on the instance for `Obj.getType` / `Relation.getType`.

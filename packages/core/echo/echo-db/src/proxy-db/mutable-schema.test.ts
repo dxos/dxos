@@ -75,7 +75,7 @@ describe('EchoSchema', () => {
     }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
     const [schema] = await db.schemaRegistry.register([GeneratedSchema]);
     const instanceWithSchemaRef = db.add(Obj.make(TestWithRefs, { schema: Ref.make(schema as any) }));
-    expect(instanceWithSchemaRef.schema!.target!.typename).to.eq(GeneratedSchema.typename);
+    expect(Type.getTypename(instanceWithSchemaRef.schema!.target!)).to.eq(Type.getTypename(GeneratedSchema));
   });
 
   test('push EchoSchema to echo object schema array', async () => {
@@ -88,7 +88,7 @@ describe('EchoSchema', () => {
     Obj.update(instanceWithSchemaRef, (instanceWithSchemaRef) => {
       instanceWithSchemaRef.schemaArray!.push(Ref.make(schema as any));
     });
-    expect(instanceWithSchemaRef.schemaArray![0].target!.typename).to.eq(GeneratedSchema.typename);
+    expect(Type.getTypename(instanceWithSchemaRef.schemaArray![0].target!)).to.eq(Type.getTypename(GeneratedSchema));
   });
 
   test('can be used to create objects', async () => {
@@ -129,19 +129,10 @@ describe('EchoSchema', () => {
     // Stored schemas resolve to their schema-as-object EchoURI (echo:/<id>) so the
     // schema rides along with loaded objects as a strong dependency.
     expect(uri).to.match(/^echo:\//);
-    // The typename + version still live on the schema metadata.
-    expect(schema.typename).to.eq(TestEmpty.typename);
-    expect(schema.version).to.eq('0.1.0');
-  });
-
-  test('getSchemaURI tracks the schema EchoURI even after typename update', async ({ expect }) => {
-    const { db } = await setupTest();
-    const [schema] = await db.schemaRegistry.register([TestEmpty]);
-    const before = Type.getURI(schema)!;
-    Type.updateTypename(schema, 'com.example.type.updated');
-    const after = Type.getURI(schema)!;
-    expect(after).to.eq(before);
-    expect(schema.typename).to.eq('com.example.type.updated');
+    // The typename + version live in `ObjectMeta` (the canonical registry-
+    // provenance pair) and are surfaced via the `Type.get*` helpers.
+    expect(Type.getTypename(schema)).to.eq(Type.getTypename(TestEmpty));
+    expect(Type.getVersion(schema)).to.eq('0.1.0');
   });
 
   test('mutable schema refs', async () => {
@@ -163,10 +154,9 @@ describe('EchoSchema', () => {
     expect(contact.org?.target?.id).to.eq(org.id);
   });
 
-  test('schema id stays as echo URI after update', async () => {
+  test('schema id stays as echo URI for stored schemas', async () => {
     const { db } = await setupTest();
     const [schema] = await db.schemaRegistry.register([TestEmpty]);
-    Type.updateTypename(schema, 'com.example.type.updated');
     // Stored schemas use the canonical EchoURI form (echo:/<id>) for their type identifier.
     expect(getTypeIdentifierAnnotation(Type.getSchema(schema))).to.match(/^echo:\//);
   });

@@ -1272,7 +1272,9 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
 
     const target = slot.target as ProxyTarget;
     target[symbolInternals] = new ObjectInternals(core);
-    target[symbolInternals].rootSchema = schema;
+    // Prefer the Type entity (so `Obj.getType` returns a stable entity) and
+    // fall back to the raw schema when no entity is available.
+    target[symbolInternals].rootSchema = (type as Type.AnyEntity | undefined) ?? schema;
     target[symbolPath] = [];
     target[symbolNamespace] = DATA_NAMESPACE;
     slot.handler._proxyMap.set(target, obj);
@@ -1314,7 +1316,9 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
       [EventId]: new Event(),
       ...(obj as any),
     };
-    target[symbolInternals].rootSchema = schema;
+    // Prefer the Type entity (so `Obj.getType` returns a stable entity) and
+    // fall back to the raw schema when no entity is available.
+    target[symbolInternals].rootSchema = (type as Type.AnyEntity | undefined) ?? schema;
     target[symbolInternals].subscriptions.push(
       core.updates.on(() => {
         // Invalidate the lazily-rebuilt `[StaticTypeSchemaSlot]` cache so it
@@ -1334,6 +1338,15 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
     const proxy = createProxy<ProxyTarget>(target, EchoReactiveHandler.instance);
     setSchemaPropertiesOnObjectCore(target[symbolInternals], schema);
     setRelationSourceAndTarget(target, core, schema);
+
+    // Carry over `[MetaId]` from a non-reactive source (e.g. `Obj.makeStatic` /
+    // internal `createObject`) which stamps it as a non-enumerable hidden
+    // property, so `...(obj as any)` above doesn't pick it up. The reactive
+    // proxy branch above does the equivalent via `Entity.getMeta`.
+    const seededMeta = (obj as any)[MetaId] as ObjectMeta | undefined;
+    if (seededMeta && metaNotEmpty(seededMeta)) {
+      core.setMeta(seededMeta);
+    }
 
     return proxy as unknown as CreateObjectReturn<T>;
   }

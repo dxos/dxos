@@ -65,11 +65,16 @@ export const setSchema = (obj: any, schema: Schema.Schema.AnyNoContext): void =>
 
 /**
  * Returns the type entity (`Type.AnyEntity`) for the given instance.
- * Set at instance creation; every entity has a type.
+ * Set at instance creation; every entity has a type. Defensive: returns
+ * undefined for null/undefined input so callers can safely probe arbitrary
+ * values via this helper.
  *
  * @internal Re-exported via `Obj.getType` / `Relation.getType` / `Entity.getType`.
  */
 export const getType = (obj: unknown): unknown => {
+  if (obj == null) {
+    return undefined;
+  }
   return (obj as any)[TypeEntityId];
 };
 

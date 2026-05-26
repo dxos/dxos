@@ -26,6 +26,7 @@ export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) 
       ? 'ph--cube--regular'
       : Function.pipe(
           Option.fromNullable(schema),
+          Option.map(Type.getSchema),
           Option.flatMap(Annotation.IconAnnotation.get),
           Option.map(({ icon }) => icon),
           Option.getOrElse(() => 'ph--placeholder--regular'),

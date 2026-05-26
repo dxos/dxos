@@ -91,11 +91,11 @@ export const Segment = Schema.Struct({
   title: Schema.optional(Schema.String),
   venue: Schema.optional(Place),
 }).pipe(
-  Type.makeObject(DXN.make('org.dxos.type.trip.segment', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--ticket--regular',
     hue: 'sky',
   }),
+  Type.makeObject(DXN.make('org.dxos.type.trip.segment', '0.1.0')),
 );
 
 export interface Segment extends Type.InstanceType<typeof Segment> {}

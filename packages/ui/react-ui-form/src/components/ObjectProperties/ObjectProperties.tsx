@@ -61,7 +61,7 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
       (type: Type.AnyEntity, values: any): Obj.Unknown => {
         invariant(db);
         invariant(Type.isObject(type));
-        const factory = Option.getOrUndefined(FactoryAnnotation.get(type));
+        const factory = Option.getOrUndefined(FactoryAnnotation.get(Type.getSchema(type)));
         const newObject = factory ? (factory(values) as Obj.Unknown) : Obj.make(type, values);
         return db.add(newObject) as Obj.Unknown;
       },

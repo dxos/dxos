@@ -311,7 +311,7 @@ describe('effect-to-json', () => {
     const Organization = Schema.Struct({
       id: ObjectId,
       name: Schema.String,
-    }).pipe(EchoObjectSchema(DXN.make('com.example.type.organization', '0.1.0')), LabelAnnotation.set(['name']));
+    }).pipe(LabelAnnotation.set(['name']), EchoObjectSchema(DXN.make('com.example.type.organization', '0.1.0')));
 
     const jsonSchema = toJsonSchema(Organization);
     expect(jsonSchema).toEqual({

@@ -44,7 +44,7 @@ export type Task = Schema.Schema.Type<typeof Task>;
  */
 export const Plan = Schema.Struct({
   tasks: Schema.Array(Task),
-}).pipe(Type.makeObject(DXN.make('org.dxos.type.plan', '0.1.0')), Annotation.SystemTypeAnnotation.set(true));
+}).pipe(Annotation.SystemTypeAnnotation.set(true), Type.makeObject(DXN.make('org.dxos.type.plan', '0.1.0')));
 export type Plan = Type.InstanceType<typeof Plan>;
 export const generateTaskId = (plan: Plan): TaskId => {
   const existingIds = plan.tasks

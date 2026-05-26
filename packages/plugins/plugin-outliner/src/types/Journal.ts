@@ -16,7 +16,7 @@ export const JournalEntry = Schema.Struct({
   id: Schema.String,
   date: Schema.String,
   content: Ref.Ref(Text.Text),
-}).pipe(Type.makeObject(DXN.make('org.dxos.type.journalEntry', '0.1.0')), SystemTypeAnnotation.set(true));
+}).pipe(SystemTypeAnnotation.set(true), Type.makeObject(DXN.make('org.dxos.type.journalEntry', '0.1.0')));
 
 export type JournalEntry = Type.InstanceType<typeof JournalEntry>;
 

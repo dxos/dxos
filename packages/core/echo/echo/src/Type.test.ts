@@ -68,11 +68,14 @@ describe('Type', () => {
       expect(Type.isTypeKindSchema(Relation.Unknown)).toBe(false);
     });
 
-    test('Type.getMeta(Type.Type) reports kind=type', ({ expect }) => {
+    test('Type.getMeta(Type.Type) reports key/version of the meta-schema', ({ expect }) => {
+      // `Type.getMeta` returns the entity's `ObjectMeta`. For the static
+      // `Type.Type` meta-schema entity the key/version reflect its registry
+      // identity. The schema-kind brand is on `[SchemaKindId]`, not in meta.
       const meta = Type.getMeta(Type.Type);
-      expect(meta?.kind).toBe(Entity.Kind.Type);
-      expect(meta?.typename).toBe('org.dxos.type.schema');
-      expect(meta?.version).toBe('0.1.0');
+      expect(meta.key).toBe('org.dxos.type.schema');
+      expect(meta.version).toBe('0.1.0');
+      expect(Type.isTypeKindSchema(Type.Type)).toBe(true);
     });
 
     test('Type.getURI(Type.Type) returns the meta-schema DXN', ({ expect }) => {
@@ -88,8 +91,11 @@ describe('Type', () => {
         jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ field: Schema.Number })),
       });
       expect((entity as any)[Entity.KindId]).toBe(Entity.Kind.Type);
-      expect(entity.typename).toBe('com.example.type.test');
-      expect(entity.version).toBe('0.1.0');
+      // `typename` / `version` are not direct fields on a persisted `Type.Type`;
+      // they live in `ObjectMeta` (the canonical registry-provenance pair).
+      // Read them via the helpers (or `Type.getMeta`).
+      expect(Type.getTypename(entity)).toBe('com.example.type.test');
+      expect(Type.getVersion(entity)).toBe('0.1.0');
       expect(entity.jsonSchema).toBeDefined();
     });
 
@@ -97,8 +103,12 @@ describe('Type', () => {
       const draft = Type.makeObjectFromJsonSchema({
         jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({ field: Schema.String })),
       });
-      expect(draft.version).toBe('0.0.0');
-      expect(draft.typename).toBeUndefined();
+      // Drafts default version to `'0.0.0'` in `ObjectMeta.version`; the
+      // typename (`ObjectMeta.key`) is undefined until set.
+      expect(Type.getVersion(draft)).toBe('0.0.0');
+      const meta = Type.getMeta(draft);
+      expect(meta.key).toBeUndefined();
+      expect(meta.version).toBe('0.0.0');
     });
 
     test('assigns a stable id', ({ expect }) => {
@@ -148,8 +158,13 @@ describe('Type', () => {
         source: TestSchema.Person,
         target: TestSchema.Person,
       });
-      expect(draft.version).toBe('0.0.0');
-      expect(draft.typename).toBeUndefined();
+      // See `Type.makeObjectFromJsonSchema` draft test — typename/version
+      // live in meta. Drafts default `version` to `'0.0.0'` and leave the
+      // typename (`ObjectMeta.key`) undefined until assigned.
+      expect(Type.getVersion(draft)).toBe('0.0.0');
+      const meta = Type.getMeta(draft);
+      expect(meta.key).toBeUndefined();
+      expect(meta.version).toBe('0.0.0');
     });
   });
 

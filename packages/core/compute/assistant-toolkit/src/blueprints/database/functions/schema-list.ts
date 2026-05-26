@@ -21,12 +21,11 @@ export default SchemaList.pipe(
       return schema
         .filter((type) => !excludedTypenames.includes(Type.getTypename(type)))
         .map((type) => {
-          const meta = Type.getMeta(type);
           const jsonSchema = Type.isType(type) ? type.jsonSchema : JsonSchema.toJsonSchema(type);
           return {
             typename: Type.getTypename(type),
             jsonSchema,
-            kind: meta?.sourceSchema ? 'relation' : 'record',
+            kind: Type.isRelation(type) ? 'relation' : 'record',
           };
         });
     }),

@@ -8,7 +8,7 @@ import React, { useCallback, useMemo } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getCollectionObjectPath, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Annotation, type Collection, Obj } from '@dxos/echo';
+import { Annotation, type Collection, Obj, Type } from '@dxos/echo';
 import { ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card, Toolbar } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
@@ -96,7 +96,9 @@ const useCollectionItems = (collection: Collection.Collection, attendableId?: st
     () =>
       objects.map((obj) => {
         const type = Obj.getType(obj);
-        const iconAnnotation = type ? Option.getOrUndefined(Annotation.IconAnnotation.get(type)) : undefined;
+        const iconAnnotation = type
+          ? Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(type)))
+          : undefined;
         const targetPath = attendableId ? getCollectionObjectPath(attendableId, obj.id) : getObjectPathFromObject(obj);
 
         return {

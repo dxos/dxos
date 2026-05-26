@@ -23,12 +23,12 @@ export const Trip = Schema.Struct({
   end: Schema.optional(Format.DateTime),
   segments: Schema.Array(Ref.Ref(Segment.Segment)).pipe(Annotation.FormInputAnnotation.set(false)),
 }).pipe(
-  Type.makeObject(DXN.make('org.dxos.type.trip', '0.1.0')),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--airplane-takeoff--regular',
     hue: 'sky',
   }),
+  Type.makeObject(DXN.make('org.dxos.type.trip', '0.1.0')),
 );
 
 export interface Trip extends Type.InstanceType<typeof Trip> {}

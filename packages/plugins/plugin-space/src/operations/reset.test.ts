@@ -8,7 +8,7 @@ import { describe, onTestFinished, test } from 'vitest';
 import { Capability } from '@dxos/app-framework';
 import { Client } from '@dxos/client';
 import { TestBuilder } from '@dxos/client/testing';
-import { Filter, Obj, Relation } from '@dxos/echo';
+import { Filter, Obj, Relation, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 import { type Space } from '@dxos/react-client/echo';
@@ -106,7 +106,7 @@ describe('SpaceOperation.Reset', () => {
     const afterSchemas = space.db.schemaRegistry.query().runSync();
     expect(
       afterSchemas,
-      `expected no schemas after reset, got ${afterSchemas.map((s) => s.typename).join(', ')}`,
+      `expected no schemas after reset, got ${afterSchemas.map((s) => Type.getTypename(s)).join(', ')}`,
     ).toHaveLength(0);
   });
 });

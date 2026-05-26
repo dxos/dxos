@@ -55,7 +55,7 @@ export const FieldEditor = ({ readonly, projection, field, registry, view, onSav
 
   const [referenceSchema, setReferenceSchema] = useState<Type.Type>();
   useEffect(() => {
-    setReferenceSchema(schemas.find((schema) => schema.typename === props?.referenceSchema));
+    setReferenceSchema(schemas.find((schema) => Type.getTypename(schema) === props?.referenceSchema));
   }, [schemas, props?.referenceSchema]);
 
   // TODO(burdon): Need to wrap otherwise throws error:
@@ -77,9 +77,10 @@ export const FieldEditor = ({ readonly, projection, field, registry, view, onSav
         <SelectField
           {...props}
           options={schemas
-            .filter((schema): schema is typeof schema & { typename: string } => schema.typename != null)
-            .map((schema) => ({
-              value: schema.typename,
+            .map((schema) => Type.getTypename(schema))
+            .filter((typename): typename is string => typename != null)
+            .map((typename) => ({
+              value: typename,
             }))}
         />
       ),
@@ -114,8 +115,8 @@ export const FieldEditor = ({ readonly, projection, field, registry, view, onSav
       });
 
       setReferenceSchema((prev) => {
-        if (_props.referenceSchema !== prev?.typename) {
-          const newSchema = schemas.find((schema) => schema.typename === _props.referenceSchema);
+        if (_props.referenceSchema !== (prev ? Type.getTypename(prev) : undefined)) {
+          const newSchema = schemas.find((schema) => Type.getTypename(schema) === _props.referenceSchema);
           if (newSchema) {
             return newSchema;
           }

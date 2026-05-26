@@ -101,9 +101,8 @@ const DefaultComponent = () => {
     (newQuery: QueryAST.Query) => {
       invariant(schema);
       invariant(view);
-      if (Type.isMutable(schema)) {
-        Type.updateTypename(schema, getTypenameFromQuery(newQuery));
-      }
+      // NOTE: persisted Type.Type typename is immutable; only the view's
+      // query is updated here.
       Obj.update(view, (view) => {
         view.query.ast = newQuery as Mutable<QueryAST.Query>;
       });

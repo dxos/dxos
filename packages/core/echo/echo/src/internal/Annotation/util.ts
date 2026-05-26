@@ -9,26 +9,30 @@ import * as SchemaAST from 'effect/SchemaAST';
 import { assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { EntityKind, KindId, StaticTypeSchemaSlot, getStaticTypeSchema } from '../common/types';
+import { EntityKind } from '../common/types';
 
 export interface AnnotationHelper<T> {
   /**
-   * Get the annotation value from a schema or `Type.Type` entity.
+   * Get the annotation value from an Effect schema.
+   *
+   * Only accepts `Schema.Schema.Any` — to read an annotation off a `Type.Type`
+   * entity, unwrap it first with `Type.getSchema(entity)`. This keeps the
+   * annotation pipeline single-shaped and forces annotations to live on the
+   * source schema, not on the post-construction Type entity.
    */
-  get: (
-    schema: Schema.Schema.Any | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext },
-  ) => Option.Option<T>;
+  get: (schema: Schema.Schema.Any) => Option.Option<T>;
   /**
    * Get the annotation value from the AST.
    */
   getFromAst: (ast: SchemaAST.AST) => Option.Option<T>;
   /**
-   * Set the annotation on a schema or `Type.Type` entity. For an entity input
-   * the source schema is annotated and the entity's `jsonSchema` rebuilt.
+   * Set the annotation on an Effect schema.
+   *
+   * Only accepts `Schema.Schema.Any` — annotations must be applied to the
+   * source schema BEFORE wrapping it with `Type.makeObject` / `Type.makeRelation`.
+   * In a pipe, place every `Annotation.X.set(...)` before the `Type.make...` step.
    */
-  set: <T2 extends T>(
-    value: T2,
-  ) => <S extends Schema.Schema.Any | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext }>(schema: S) => S;
+  set: <T2 extends T>(value: T2) => <S extends Schema.Schema.Any>(schema: S) => S;
 }
 
 /**
@@ -37,72 +41,24 @@ export interface AnnotationHelper<T> {
 // TODO(dmaretskyi): Rename to createSystemAnnotationHelper.
 export const createAnnotationHelper = <T>(id: symbol): AnnotationHelper<T> => {
   return {
-    get: (schema) => {
-      // Allow reading annotations off a `Type.Type` entity — extract its
-      // source schema from the hidden slot first.
-      const slot = getStaticTypeSchema(schema);
-      // Persisted Type.Type entities (from db.schemaRegistry.register) carry no
-      // StaticTypeSchemaSlot but have a stored jsonSchema; rebuild the Effect
-      // Schema lazily via the registered fromJsonSchema impl so we can read
-      // its AST annotations.
-      const entity = schema as { [KindId]?: unknown; jsonSchema?: unknown };
-      const rebuilt =
-        slot == null && entity[KindId] === EntityKind.Type && entity.jsonSchema != null
-          ? _fromJsonSchema?.(entity.jsonSchema)
-          : undefined;
-      const ast = slot?.ast ?? rebuilt?.ast ?? (schema as Schema.Schema.Any).ast;
-      if (ast == null) {
-        return Option.none();
-      }
-      return SchemaAST.getAnnotation(ast, id);
-    },
+    get: (schema) => SchemaAST.getAnnotation(schema.ast, id),
     getFromAst: (ast) => SchemaAST.getAnnotation(ast, id),
     set:
       <T2 extends T>(value: T2) =>
-      <S extends Schema.Schema.Any | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext }>(
-        schema: S,
-      ): S => {
-        // `Type.Type` entity input — annotate the underlying source schema and
-        // rebuild the entity's `jsonSchema` from it. The entity is frozen so we
-        // assemble a fresh object.
-        const source = getStaticTypeSchema(schema);
-        if (source != null) {
-          const annotatedSource = source.annotations({ [id]: value });
-          const entityJsonSchema = (schema as { jsonSchema?: unknown }).jsonSchema;
-          return Object.freeze({
-            ...(schema as object),
-            [StaticTypeSchemaSlot]: annotatedSource,
-            jsonSchema: jsonSchemaFromSource(annotatedSource, entityJsonSchema),
-          }) as unknown as S;
-        }
-        return (schema as Schema.Schema.Any).annotations({ [id]: value }) as S;
-      },
+      <S extends Schema.Schema.Any>(schema: S): S =>
+        schema.annotations({ [id]: value }) as S,
   };
 };
 
-let _toJsonSchema: ((schema: Schema.Schema.AnyNoContext) => any) | undefined;
 let _fromJsonSchema: ((jsonSchema: any) => Schema.Schema.AnyNoContext) | undefined;
 
 /**
- * Lazy escape hatch: the JsonSchema module registers `toJsonSchema` here so
- * the annotation helper can rebuild `jsonSchema` after annotating the source
- * schema, without taking a hard dependency that would create a cycle.
- */
-export const setJsonSchemaSerializer = (impl: (schema: Schema.Schema.AnyNoContext) => any): void => {
-  _toJsonSchema = impl;
-};
-
-/**
  * Lazy escape hatch: the JsonSchema module registers `toEffectSchema` here so
- * `createAnnotationHelper.get` can read annotations off persisted `Type.Type`
- * entities by rebuilding their Effect Schema from `jsonSchema`.
+ * `getTypeAnnotation` can read annotations off persisted `Type.Type` entities
+ * by rebuilding their Effect Schema from `jsonSchema`.
  */
 export const setJsonSchemaDeserializer = (impl: (jsonSchema: any) => Schema.Schema.AnyNoContext): void => {
   _fromJsonSchema = impl;
-};
-
-export const jsonSchemaFromSource = (schema: Schema.Schema.AnyNoContext, fallback: any): any => {
-  return _toJsonSchema?.(schema) ?? fallback;
 };
 
 /**

@@ -17,7 +17,7 @@ import { ViewEditor } from '@dxos/react-ui-form';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { ViewModel, getSchemaFromPropertyDefinitions, getTypenameFromQuery } from '@dxos/schema';
+import { ViewModel, getSchemaFromPropertyDefinitions } from '@dxos/schema';
 import { TestSchema, createObjectFactory } from '@dxos/schema/testing';
 import { withRegistry } from '@dxos/storybook-utils';
 
@@ -79,7 +79,9 @@ const StoryViewEditor = ({
     (newQuery: QueryAST.Query) => {
       invariant(schema);
       invariant(Type.isMutable(schema));
-      Type.updateTypename(schema, getTypenameFromQuery(newQuery));
+      // NOTE: typename on a persisted Type.Type entity is immutable; the
+      // previous flow renamed the schema in place, which is no longer
+      // supported. Only the view's query is updated here.
       invariant(view);
       Obj.update(view, (view) => {
         view.query.ast = newQuery as Mutable<typeof newQuery>;

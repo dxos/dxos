@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Obj, Relation } from '@dxos/echo';
+import { Obj, Relation, Type } from '@dxos/echo';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
@@ -29,7 +29,7 @@ export default Capability.makeModule(
 
           const type = Obj.getType(node.data);
           const system = Option.fromNullable(type).pipe(
-            Option.flatMap((type) => SystemTypeAnnotation.get(type)),
+            Option.flatMap((type) => SystemTypeAnnotation.get(Type.getSchema(type))),
             Option.getOrElse(() => false),
           );
           if (system) {

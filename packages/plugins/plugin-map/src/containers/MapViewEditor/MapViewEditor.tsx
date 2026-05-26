@@ -45,7 +45,7 @@ export const MapViewEditor = ({ object }: MapViewEditorProps) => {
 
   const schemaOptions = useMemo(() => {
     const uniqueTypenames = new Set(
-      allSchemata.map((schema) => schema.typename).filter((typename): typename is string => typename != null),
+      allSchemata.map((schema) => Type.getTypename(schema)).filter((typename): typename is string => typename != null),
     );
     return Array.from(uniqueTypenames).map((typename) => ({
       value: typename,

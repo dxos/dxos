@@ -11,14 +11,7 @@ import { createEchoSchema } from '../../testing';
 import * as Type from '../../Type';
 import { EntityKind } from '../common/types';
 import { EchoObjectSchema } from '../Entity';
-import {
-  LabelAnnotation,
-  SystemTypeAnnotation,
-  TypenameSchema,
-  VersionSchema,
-  getLabelWithSchema,
-  getTypeAnnotation,
-} from './annotations';
+import { LabelAnnotation, TypenameSchema, VersionSchema, getLabelWithSchema, getTypeAnnotation } from './annotations';
 
 // TODO(dmaretskyi): Use one of the testing schemas.
 const TestObject = Schema.Struct({
@@ -173,14 +166,6 @@ describe('annotations', () => {
       const annotation = getTypeAnnotation(persisted as any);
       expect(annotation).toBeDefined();
       expect(annotation?.typename).toBe('org.dxos.type.test');
-    });
-
-    test('SystemTypeAnnotation.get works on a Type.Obj entity', ({ expect }) => {
-      // Mirrors the call at plugin-space/types.ts:90 that gated user-visible
-      // schemas. Should yield Option.none() / falsy for non-system types.
-      const value = SystemTypeAnnotation.get(TestEchoSchema as any);
-      // Option.isNone or false-by-default — either way must not throw.
-      expect(value).toBeDefined();
     });
   });
 });

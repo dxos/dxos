@@ -101,6 +101,7 @@ const Item = ({ data }: { data: any }) => {
   const icon = Function.pipe(
     Obj.getType(data),
     Option.fromNullable,
+    Option.map(Type.getSchema),
     Option.flatMap(Annotation.IconAnnotation.get),
     Option.map(({ icon }) => icon),
     Option.getOrElse(() => 'ph--placeholder--regular'),

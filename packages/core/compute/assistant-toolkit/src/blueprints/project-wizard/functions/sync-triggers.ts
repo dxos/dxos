@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { Trigger, Operation } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { FeedAnnotation } from '@dxos/schema';
 
 import { Agent } from '../../../types';
@@ -37,7 +37,7 @@ const hasFeedAnnotation = (obj: Obj.Unknown): boolean => {
   if (!type) {
     return false;
   }
-  const annotation = FeedAnnotation.get(type);
+  const annotation = FeedAnnotation.get(Type.getSchema(type));
   return Option.isSome(annotation) && annotation.value === true;
 };
 

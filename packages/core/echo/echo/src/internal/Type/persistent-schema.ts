@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { DXN } from '@dxos/keys';
 
 import { IconAnnotation } from '../Annotation';
-import { LabelAnnotation, TypenameSchema, VersionSchema } from '../Annotation';
+import { LabelAnnotation } from '../Annotation';
 import { EntityKind, KindId, SchemaKindId, StaticTypeSchemaSlot } from '../common/types';
 import { EchoTypeKindSchema } from '../Entity';
 import { JsonSchemaType } from '../JsonSchema';
@@ -16,13 +16,15 @@ import { JsonSchemaType } from '../JsonSchema';
  * Raw struct backing {@link PersistentType}. Exposed only so `PersistentType`
  * (the TS type) can derive its data fields via `Schema.Schema.Type<typeof ...>`;
  * runtime callers should use {@link PersistentType} (the piped, branded entity).
+ *
+ * `typename` and `version` are NOT data fields — they live in `ObjectMeta.key` /
+ * `ObjectMeta.version` (the canonical registry-provenance pair, queryable via
+ * `Filter.key(...)`). The same `jsonSchema` payload also embeds them so a
+ * standalone JSON-Schema export remains self-describing, but the schema-registry
+ * reads/writes them through meta.
  */
 const PersistentTypeStruct = Schema.Struct({
   name: Schema.optional(Schema.String),
-  // Drafts (unnamed dynamic types) carry no typename until they're given one.
-  typename: Schema.optional(TypenameSchema),
-  // Drafts default to '0.0.0'; persisted types may carry a base-version+heads suffix.
-  version: VersionSchema,
   jsonSchema: JsonSchemaType,
 });
 

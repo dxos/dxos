@@ -20,11 +20,12 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddSchema> = SpaceOpe
         if (input.name) {
           draft.name = input.name;
         }
+        const meta = Type.getMeta(draft);
         if (input.typename) {
-          draft.typename = input.typename;
+          meta.key = input.typename;
         }
         if (input.version) {
-          draft.version = input.version;
+          meta.version = input.version;
         }
       });
 
@@ -40,7 +41,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddSchema> = SpaceOpe
         properties: {
           spaceId: db.spaceId,
           objectId: schema.id,
-          typename: schema.typename,
+          typename: Type.getTypename(schema),
         },
       });
 

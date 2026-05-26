@@ -47,7 +47,7 @@ export const getBaseSchema = ({
     // covers anonymous drafts which this codepath doesn't produce).
     // Snapshot through toJsonSchema — type.jsonSchema is ECHO-backed and can't be mutated directly.
     return {
-      typename: type.typename!,
+      typename: Type.getTypename(type),
       jsonSchema: JsonSchema.toJsonSchema(Type.getSchema(type)) as Types.DeepMutable<JsonSchema.JsonSchema>,
     };
   } else if (schema) {

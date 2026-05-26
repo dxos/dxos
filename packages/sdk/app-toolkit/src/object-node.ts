@@ -163,7 +163,7 @@ export const createObjectNode = ({
     const refValue = (object as any)?.[iconFromRefProp];
     const target = Ref.isRef(refValue) ? refValue.target : undefined;
     const targetType = target ? Obj.getType(target as Obj.Unknown) : undefined;
-    return targetType ? Option.getOrUndefined(Annotation.IconAnnotation.get(targetType)) : undefined;
+    return targetType ? Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(targetType))) : undefined;
   })();
   const iconAnnotation = delegatedIcon ?? staticIcon;
   const graphProps = schema ? Option.getOrUndefined(GraphPropsAnnotation.get(schema)) : undefined;

@@ -32,7 +32,9 @@ export const createEchoSchema = (
   const jsonSchema = toJsonSchema(schema);
   const typename = getSchemaTypename(schema);
   assertArgument(typename, 'typename', 'Schema does not have a typename.');
-  return makeObject(PersistentType, { typename, version, jsonSchema }) as unknown as Type.Type;
+  // typename/version are routed via ObjectMeta (the canonical registry-provenance
+  // pair); they're no longer data fields on `PersistentType`.
+  return makeObject(PersistentType, { jsonSchema }, { keys: [], key: typename, version }) as unknown as Type.Type;
 };
 
 /**

@@ -27,7 +27,7 @@ const queryObjects = async (db: Database.Database, specs: TypeSpec[]) => {
     const objects = await db.query(query).run();
     expect(objects).to.have.length(count);
     log('objects', {
-      typename: type.typename,
+      typename: Type.getTypename(type),
       objects: objects.map((obj: any) => stripUndefined({ name: obj.name, employer: obj.employer?.name })),
     });
   }
@@ -114,9 +114,8 @@ describe('Generator', () => {
   test('generate message from stored schema', async ({ expect }) => {
     const { db } = await builder.createDatabase();
     const [type] = await db.schemaRegistry.register([Message.Message]);
-    const schema = Type.getSchema(type);
-    invariant(Type.isObject(schema), 'expected object schema');
-    const objectGenerator = createGenerator(generator, schema, { force: true });
+    invariant(Type.isObject(type), 'expected object type');
+    const objectGenerator = createGenerator(generator, type, { force: true });
     const object = objectGenerator.createObject();
     expect(object).to.exist;
   });

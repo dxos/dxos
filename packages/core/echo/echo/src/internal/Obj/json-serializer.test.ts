@@ -141,7 +141,9 @@ describe('Object JSON serializer', () => {
 
       expect(reconstructed[KindId]).toBe(EntityKind.Type);
       expect(Type.isType(reconstructed)).toBe(true);
-      expect(reconstructed.typename).toBe('com.example.type.regression');
+      // `typename` lives in `ObjectMeta.key` on persisted Type.Type entities
+      // — surfaced via `Type.getTypename`.
+      expect(Type.getTypename(reconstructed)).toBe('com.example.type.regression');
     });
   });
 

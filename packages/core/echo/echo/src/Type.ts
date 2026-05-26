@@ -45,14 +45,6 @@ interface BaseTypeEntity<A> {
   readonly [InstancePhantomId]?: A;
 }
 
-/**
- * Type that marks a schema as an ECHO schema.
- * The value indicates the entity kind (Object, Relation, or Type).
- */
-type EchoSchemaKind<K extends internal.EntityKind = internal.EntityKind> = {
-  readonly [internal.SchemaKindId]: K;
-};
-
 //
 // Obj — `Type.Type` value for an ECHO object schema.
 //
@@ -160,10 +152,16 @@ type MakeTypeProps = {
  * The returned entity is in-memory; persist it with `db.add(entity)`.
  */
 export const makeObjectFromJsonSchema = (props: MakeTypeProps): Type<typeInternal.PersistentType> => {
-  return internal.makeObject(typeInternal.PersistentType, {
-    version: DRAFT_VERSION,
-    ...props,
-  } as any) as unknown as Type<typeInternal.PersistentType>;
+  const { typename, version, ...data } = props;
+  // `typename` / `version` are routed through `ObjectMeta` (`key` / `version`)
+  // — the canonical registry-provenance pair — not data fields. Drafts default
+  // to `'0.0.0'`; the version is omitted from meta entirely when the caller
+  // doesn't supply one so the proxy projection can apply its own default.
+  return internal.makeObject(typeInternal.PersistentType, data as any, {
+    keys: [],
+    key: typename,
+    version: version ?? DRAFT_VERSION,
+  }) as unknown as Type<typeInternal.PersistentType>;
 };
 
 /**
@@ -180,7 +178,7 @@ export const makeRelationFromJsonSchema = (
     target: AnyObject | internal.UnknownTypeSchema<any, typeof EntityModule.Kind.Object>;
   },
 ): Type<typeInternal.PersistentType> => {
-  const { source, target, jsonSchema, ...rest } = props;
+  const { source, target, jsonSchema, typename, version, ...rest } = props;
   // Embed source/target DXNs + relation entity-kind into the jsonSchema so the
   // entity round-trips correctly through `toEffectSchema` / queries / refs.
   const sourceURI = internal.getTypeURIFromSpecifier(source);
@@ -191,11 +189,13 @@ export const makeRelationFromJsonSchema = (
     relationSource: { $ref: sourceURI },
     relationTarget: { $ref: targetURI },
   };
-  return internal.makeObject(typeInternal.PersistentType, {
-    version: DRAFT_VERSION,
-    ...rest,
-    jsonSchema: enrichedJsonSchema,
-  } as any) as unknown as Type<typeInternal.PersistentType>;
+  // `typename` / `version` route through `ObjectMeta` (see
+  // {@link makeObjectFromJsonSchema}); drafts default version to `'0.0.0'`.
+  return internal.makeObject(typeInternal.PersistentType, { ...rest, jsonSchema: enrichedJsonSchema } as any, {
+    keys: [],
+    key: typename,
+    version: version ?? DRAFT_VERSION,
+  }) as unknown as Type<typeInternal.PersistentType>;
 };
 
 /**
@@ -361,21 +361,65 @@ export const getURI = (input: AnyEntity): URI.URI => {
 
 /**
  * @returns The typename. Example: `com.example.type.person`.
+ *
+ * Persisted `Type.Type` entities carry typename in `ObjectMeta.key` (the
+ * canonical registry-provenance field); unnamed drafts fall back to the
+ * entity's object id so the helper always returns a string. Any `dxn:` or
+ * `echo:/` prefix is stripped — typename is a bare identifier, not a URI.
  */
-export const getTypename = (input: AnyEntity | Schema.Schema.AnyNoContext): string => {
-  const typename = isType(input) ? input.typename : internal.getSchemaTypename(input);
-  invariant(typeof typename === 'string' && !typename.startsWith('dxn:'), 'Invalid typename');
+export const getTypename = (input: AnyEntity): string => {
+  let typename: string;
+  if (isMutable(input)) {
+    const meta = internal.getMetaChecked(input);
+    typename = (meta.key as string | undefined) ?? input.id;
+  } else {
+    invariant(isType(input), 'Expected a Type entity.');
+    typename = (input as { typename: string }).typename;
+  }
+  // Typename is a bare identifier — strip URI prefixes if a caller seeded
+  // meta.key with one accidentally (or if a static entity carries a DXN-
+  // style typename).
+  typename = stripTypenamePrefix(typename);
+  invariant(typeof typename === 'string' && typename.length > 0, 'Invalid typename');
   return typename;
 };
 
 /**
  * Gets the version.
  * @example 0.1.0
+ *
+ * Persisted `Type.Type` entities carry version in `ObjectMeta.version`;
+ * unversioned drafts default to {@link DRAFT_VERSION} (`'0.0.0'`).
  */
-export const getVersion = (input: AnyEntity | Schema.Schema.AnyNoContext): string => {
-  const version = isType(input) ? input.version : internal.getSchemaVersion(input);
+export const getVersion = (input: AnyEntity): string => {
+  let version: string | undefined;
+  if (isMutable(input)) {
+    const meta = internal.getMetaChecked(input);
+    version = (meta.version as string | undefined) ?? DRAFT_VERSION;
+  } else {
+    invariant(isType(input), 'Expected a Type entity.');
+    version = (input as { version: string }).version;
+  }
   invariant(typeof version === 'string' && version.match(/^\d+\.\d+\.\d+$/), 'Invalid version');
   return version;
+};
+
+/**
+ * Strip URI prefixes (`dxn:`, `echo:/`, `echo://`) from a typename string.
+ * Typename is a bare identifier — callers reading from meta or from a
+ * caller-supplied seed value shouldn't propagate URI prefixes downstream.
+ */
+const stripTypenamePrefix = (value: string): string => {
+  if (value.startsWith('dxn:')) {
+    return value.slice('dxn:'.length);
+  }
+  if (value.startsWith('echo://')) {
+    return value.slice('echo://'.length);
+  }
+  if (value.startsWith('echo:/')) {
+    return value.slice('echo:/'.length);
+  }
+  return value;
 };
 
 /**
@@ -404,31 +448,59 @@ export const isMutable = (value: unknown): value is Type & { readonly id: string
   internal.isInstanceOf(internal.PersistentType, value);
 
 /**
- * ECHO type metadata.
+ * Mutable meta type returned by `Type.getMeta` inside a `Type.update` callback.
+ * Mirrors `Obj.Meta` / `Relation.Meta` — `Type.Type` is an Entity like its
+ * siblings, so its meta is the same `ObjectMeta` record:
+ * `{ keys, tags?, key?, version? }`.
+ *
+ * `key` / `version` here are the canonical registry-provenance pair
+ * (typename + semver) on persisted Type.Type entities; they are absent on
+ * unnamed drafts. Use {@link getTypename} / {@link getVersion} when you want
+ * a non-`undefined` value with id / {@link DRAFT_VERSION} fallbacks.
  */
-export type Meta = internal.TypeAnnotation;
+export type Meta = internal.Meta;
 
 /**
- * Gets the meta data of the schema.
+ * Deeply read-only version of {@link Meta}.
+ * Prevents mutation at all nesting levels (e.g., `meta.keys.push()` is a TS error).
  */
-export const getMeta = (input: AnyEntity | Schema.Schema.AnyNoContext): Meta | undefined => {
-  if (isType(input)) {
-    // Persisted Type.Type instance — read fields directly. typename may be
-    // undefined for unnamed drafts.
-    if (typeof input.typename === 'string') {
-      return {
-        typename: input.typename,
-        version: input.version,
-        kind: internal.getSchemaKind(input) ?? internal.EntityKind.Object,
-      };
-    }
-    return undefined;
+export type ReadonlyMeta = internal.ReadonlyMeta;
+
+/**
+ * Returns the entity's `ObjectMeta`. Same semantics as `Obj.getMeta` /
+ * `Relation.getMeta` — `Type.Type` is an Entity and carries the canonical
+ * `ObjectMeta` directly. Returns mutable meta when passed a mutable type
+ * (inside a `Type.update` callback), read-only meta otherwise.
+ *
+ * For persisted Type entities, `meta.key` holds the typename and
+ * `meta.version` holds the semver. Use {@link getTypename} / {@link getVersion}
+ * if you want the helpers' id / {@link DRAFT_VERSION} fallbacks for drafts.
+ *
+ * Static type entities (`Type.makeObject` / `Type.makeRelation` results) carry
+ * typename/version as direct fields rather than through `MetaId`; a synthetic
+ * `ObjectMeta` is returned for those so callers always see the same shape.
+ */
+export function getMeta(entity: internal.Mutable<AnyEntity>): Meta;
+export function getMeta(entity: Mutable): Meta;
+export function getMeta(entity: AnyEntity): ReadonlyMeta;
+export function getMeta(entity: AnyEntity | internal.Mutable<AnyEntity> | Mutable): ReadonlyMeta | Meta {
+  // The `Mutable` overload accepts the narrowed view passed to `Type.update`
+  // callbacks; at runtime that draft IS the underlying persisted Type entity,
+  // so the same `MetaId` lookup works.
+  invariant(isType(entity as unknown), 'Expected a Type entity.');
+  // Persisted Type entities carry runtime `ObjectMeta` via `MetaId`.
+  if (isMutable(entity as unknown)) {
+    return internal.getMetaChecked(entity as unknown as AnyEntity);
   }
-  // Static `Type.Obj` / `Type.Relation` / `Type.Type` entity: unwrap the
-  // hidden Effect Schema slot before reading the TypeAnnotation off its AST.
-  // Raw Schemas are passed through.
-  return internal.getTypeAnnotation(internal.unwrapToSchema(input as Schema.Schema.AnyNoContext));
-};
+  // Static `EchoTypeSchema` entities (from `Type.makeObject` etc.) keep
+  // typename/version as direct fields; synthesize a matching ObjectMeta.
+  const staticEntity = entity as unknown as { typename: string; version: string };
+  return Object.freeze({
+    keys: Object.freeze([]) as never,
+    key: staticEntity.typename,
+    version: staticEntity.version,
+  });
+}
 
 /**
  * String key used to phantom-carry the instance type produced by a `Type.Type`.
@@ -454,7 +526,7 @@ export type InstancePhantomId = internal.InstancePhantomId;
  */
 export interface Type<A = unknown> extends Omit<
   BaseTypeEntity<A & EntityModule.OfKind<typeof EntityModule.Kind.Type>>,
-  'typename'
+  'typename' | 'version'
 > {
   /** Schema-kind brand (type — the meta-schema kind). */
   readonly [internal.SchemaKindId]: internal.EntityKind.Type;
@@ -462,12 +534,12 @@ export interface Type<A = unknown> extends Omit<
   /** Source Effect Schema — used internally by `Type.getSchema(self)`. */
   readonly [internal.StaticTypeSchemaSlot]: Schema.Schema.AnyNoContext;
 
-  /**
-   * Type's typename (e.g. `'com.example.type.person'`). Optional because
-   * unnamed draft `Type.Type` entities (`Type.makeObjectFromJsonSchema({ jsonSchema })`)
-   * carry no typename until they're given one.
-   */
-  readonly typename?: string;
+  // NOTE: `typename` and `version` are intentionally NOT direct fields on a
+  // persisted `Type.Type` entity. They live in `ObjectMeta` (`key` / `version`
+  // — the canonical registry-provenance pair). Read them through
+  // `Type.getTypename(self)` / `Type.getVersion(self)` (which apply the
+  // `echo:/<id>` / `'0.0.0'` fallbacks) or `Obj.getMeta(self)` to inspect the
+  // raw values.
 }
 
 /**
@@ -547,11 +619,14 @@ export function getSchema(type: AnyEntity): Schema.Schema.AnyNoContext {
  * Outside `Type.update`, `Type.Type` fields are read-only (both at the type level
  * and at runtime — direct assignment throws). Use this to constrain mutation to
  * the change context, analogous to `Obj.update(obj, (draft) => ...)`.
+ *
+ * NOTE: `typename` and `version` are intentionally absent — they live in
+ * `ObjectMeta` (`key` / `version` — the canonical registry-provenance pair).
+ * Read them via {@link getTypename} / {@link getVersion} / {@link getMeta};
+ * `typename` is treated as immutable on persisted entities.
  */
 export interface Mutable {
   name?: string;
-  typename: string;
-  version: string;
   jsonSchema: internal.JsonSchemaType;
 }
 
@@ -573,18 +648,6 @@ export const update = (type: AnyEntity, callback: (mutable: Mutable) => void): v
 // utilities. Callers pass a persisted `Type.Type` (e.g. one returned by
 // `DatabaseSchemaRegistry.register`) and the helper drives the change context.
 //
-
-/**
- * Replace the typename on a persisted type.
- * @throws if the type is not persisted.
- */
-export const updateTypename = (type: AnyEntity, typename: string): void => {
-  const updated = typeInternal.setTypenameInSchema(getSchema(type), typename);
-  update(type, (draft) => {
-    draft.typename = typename;
-    draft.jsonSchema = internal.toJsonSchema(updated);
-  });
-};
 
 /**
  * Add fields to a persisted type's schema.

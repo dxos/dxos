@@ -90,7 +90,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
           if (SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false))) {
             return false;
           }
-          if (Type.getTypename(type) === Collection.Collection.typename) {
+          if (Type.getTypename(type) === Type.getTypename(Collection.Collection)) {
             return false;
           }
           return true;
@@ -129,11 +129,12 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
           ? get(AtomQuery.fromQuery(client.graph.schemaRegistry.query({ location: ['runtime'] })))
           : [];
 
-        // `Schema.isSchema` narrows to `Schema.Schema.Any` (Context=unknown), not
-        // `Schema.Schema.AnyNoContext` — `Type.getTypename`'s param is the latter.
-        const typename = Schema.isSchema(schema)
-          ? Type.getTypename(schema as Schema.Schema.AnyNoContext)
-          : schema.typename;
+        // `schema` is either a `Type.AnyEntity` (per `Type.isType`) or a raw
+        // Effect Schema (per `Schema.isSchema`). For the schema-only case fall
+        // back to the typename annotation; for type entities use `getTypename`.
+        const typename = Type.isType(schema)
+          ? Type.getTypename(schema)
+          : getTypeAnnotation(schema as Schema.Schema.AnyNoContext)?.typename;
 
         // {All} virtual node.
         const allNode = Node.make({
@@ -223,12 +224,15 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
           ? get(AtomQuery.fromQuery(client.graph.schemaRegistry.query({ location: ['runtime'] })))
           : [];
 
-        // `Schema.isSchema` narrows to `Schema.Schema.Any` (Context=unknown); the
-        // type helpers require `Schema.Schema.AnyNoContext`.
-        const schemaNoCtx = schema as Schema.Schema.AnyNoContext;
-        const targetTypename = Type.getTypename(schemaNoCtx);
+        // `schema` is either a `Type.AnyEntity` (per `Type.isType`) or a raw
+        // Effect Schema. Read typename via `getTypename` for type entities and
+        // fall back to the typename annotation for schema-only inputs.
+        const targetTypename = Type.isType(schema)
+          ? Type.getTypename(schema)
+          : (getTypeAnnotation(schema as Schema.Schema.AnyNoContext)?.typename ?? '');
         const viewIndex = buildViewIndex(get, space, schemas);
-        const deletable = Type.isMutable(schemaNoCtx) && viewIndex.getViewsForTypename(targetTypename).length === 0;
+        const deletable =
+          Type.isType(schema) && Type.isMutable(schema) && viewIndex.getViewsForTypename(targetTypename).length === 0;
 
         return Effect.succeed(
           createSchemaActions({
@@ -269,13 +273,13 @@ const createSchemaNode = ({
 }): Node.NodeArg<Type.AnyEntity> => {
   const typename = Type.getTypename(schema);
   const iconAnnotation = !Type.isMutable(schema)
-    ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema))
+    ? Option.getOrUndefined(Annotation.IconAnnotation.get(Type.getSchema(schema)))
     : undefined;
   const { label, nodeId } = Match.value(schema).pipe(
     Match.when(Type.isMutable, (mutableSchema) => {
       const snapshot = get(AtomObj.make(mutableSchema));
       return {
-        label: (snapshot as { name?: string }).name || ['object-name.placeholder', { ns: Type.Type.typename }],
+        label: (snapshot as { name?: string }).name || ['object-name.placeholder', { ns: Type.getTypename(Type.Type) }],
         nodeId: typename,
       };
     }),

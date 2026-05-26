@@ -16,7 +16,7 @@ export const Canvas = Schema.Struct({
   // TODO(wittjosiah): Remove once the schema is fully internalized.
   schema: Schema.String.pipe(Schema.optional),
   content: Schema.Record({ key: Schema.String, value: Schema.Any }),
-}).pipe(Type.makeObject(DXN.make('org.dxos.type.canvas', '0.1.0')), SystemTypeAnnotation.set(true));
+}).pipe(SystemTypeAnnotation.set(true), Type.makeObject(DXN.make('org.dxos.type.canvas', '0.1.0')));
 export type Canvas = Type.InstanceType<typeof Canvas>;
 
 export const Sketch = Schema.Struct({

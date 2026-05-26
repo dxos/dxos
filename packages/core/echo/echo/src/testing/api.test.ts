@@ -15,14 +15,18 @@ describe('Experimental API review', () => {
     const contact = Obj.make(TestSchema.Person, { name: 'Test' });
     const type = Obj.getType(contact) ?? raise(new Error('No type found'));
 
-    expect(Type.getTypename(type)).to.eq(TestSchema.Person.typename);
+    expect(Type.getTypename(type)).to.eq(Type.getTypename(TestSchema.Person));
     expect(Type.getTypename(type)).to.eq('com.example.type.person');
     expect(Type.getVersion(type)).to.eq('0.1.0');
+    // `Type.getMeta` returns `ObjectMeta` (`{ keys, tags?, key?, version? }`) —
+    // the same shape `Obj.getMeta` and `Relation.getMeta` return. The
+    // schema-kind brand lives on `[SchemaKindId]`, not in meta.
     expect(Type.getMeta(type)).to.deep.eq({
-      kind: Entity.Kind.Object,
-      typename: 'com.example.type.person',
+      keys: [],
+      key: 'com.example.type.person',
       version: '0.1.0',
     });
+    expect(Type.isObject(type)).to.be.true;
   });
 
   test('instance checks', ({ expect }) => {

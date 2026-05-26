@@ -255,9 +255,14 @@ describe('Serializer', () => {
       // Snapshot must NOT carry `kind` as a data field — it's the entity-kind
       // brand (lives on [KindId] / SYSTEM namespace), not a data field on
       // PersistentType. Earlier the export side was leaking it.
-      const typeRow = data.objects.find((o: any) => o.typename === typename);
+      // `typename` / `version` are not data fields either; they live in
+      // `ObjectMeta` (the canonical registry-provenance pair) and surface
+      // through `@meta.key` / `@meta.version` in the JSON snapshot.
+      const typeRow = data.objects.find((o: any) => o['@meta']?.key === typename);
       expect(typeRow).toBeDefined();
       expect(typeRow).not.toHaveProperty('kind');
+      expect(typeRow).not.toHaveProperty('typename');
+      expect(typeRow).not.toHaveProperty('version');
 
       // Survive a JSON round-trip — mirrors what `client.spaces.import` does.
       data = JSON.parse(JSON.stringify(data));

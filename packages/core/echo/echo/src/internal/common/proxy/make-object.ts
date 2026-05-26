@@ -30,8 +30,13 @@ import { TypedReactiveHandler, prepareTypedTarget, setMetaOwner } from './typed-
 // Omits the brand slots — those get stamped on the instance by the entity
 // handler (KindId via setKind, SchemaKindId derived in the proxy `get` trap
 // from kind + jsonSchema.entityKind, StaticTypeSchemaSlot lazily via the
-// proxy), not supplied by the caller.
-export type MakeObjectProps<T extends AnyProperties> = Omit<T, 'id' | KindId | SchemaKindId | StaticTypeSchemaSlot>;
+// proxy), not supplied by the caller. Also strips `typename` / `version` — on
+// type-kind entities these are projected by the proxy from `ObjectMeta.key` /
+// `ObjectMeta.version`, seeded via the `meta` parameter rather than data.
+export type MakeObjectProps<T extends AnyProperties> = Omit<
+  T,
+  'id' | 'typename' | 'version' | KindId | SchemaKindId | StaticTypeSchemaSlot
+>;
 
 /**
  * Creates a reactive object from a plain Javascript object.

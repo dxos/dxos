@@ -26,12 +26,7 @@ import {
   unwrapToSchema,
 } from '../common/types';
 import { getUri as getUriFromEntity } from '../Entity/api';
-import {
-  type AnnotationHelper,
-  createAnnotationHelper,
-  effectSchemaFromJsonSchema,
-  jsonSchemaFromSource,
-} from './util';
+import { type AnnotationHelper, createAnnotationHelper, effectSchemaFromJsonSchema } from './util';
 
 /**
  * @internal
@@ -285,13 +280,20 @@ export const setTypename = (obj: any, typename: URI.URI): void => {
 
 /**
  * @returns Object type URI — either a typename {@link DXN} or an `echo:` reference to a stored Schema object.
+ * @returns undefined if the object has no registered type URI (e.g. unresolved query result).
  * @example `dxn:com.example.type.person:1.0.0`
  * @example `echo:/01KKKG2FHWCMTR0BY00GJSVT1X` (stored schema)
  *
  * @internal (use Obj.getTypeURI)
  */
-export const getTypeURI = (obj: AnyProperties): URI.URI => {
+export const getTypeURI = (obj: AnyProperties): URI.URI | undefined => {
+  if (obj == null) {
+    return undefined;
+  }
   const type = (obj as any)[TypeId];
+  if (type == null) {
+    return undefined;
+  }
   invariant(URI.isURI(type), 'Invalid object.');
   return type;
 };
@@ -360,31 +362,16 @@ export type PropertyMetaAnnotation = {
 
 // TODO(wittjosiah): Align with other annotations.
 // TODO(wittjosiah): Why is this separate from FormatAnnotation?
+/**
+ * Apply property-level metadata to an Effect schema. Only accepts
+ * `Schema.Schema.Any` — apply BEFORE wrapping the schema with
+ * `Type.makeObject` / `Type.makeRelation`. To read property meta off a
+ * `Type.Type` entity, unwrap it first with `Type.getSchema(entity)`.
+ */
 export const PropertyMeta = (name: string, value: PropertyMetaValue) => {
-  return <S extends Schema.Schema.Any | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext }>(
-    input: S,
-  ): S => {
-    // Accept `Type.Type` entity inputs — annotate the underlying source
-    // schema and rebuild the entity's `jsonSchema` from it.
-    const source = getStaticTypeSchema(input);
-    if (source != null) {
-      const existingMeta = source.ast.annotations[PropertyMetaAnnotationId] as PropertyMetaAnnotation;
-      const annotatedSource = source.annotations({
-        [PropertyMetaAnnotationId]: {
-          ...existingMeta,
-          [name]: value,
-        },
-      });
-      const inputJsonSchema = (input as { jsonSchema?: unknown }).jsonSchema;
-      return Object.freeze({
-        ...(input as object),
-        [StaticTypeSchemaSlot]: annotatedSource,
-        jsonSchema: jsonSchemaFromSource(annotatedSource, inputJsonSchema),
-      }) as unknown as S;
-    }
-    const self = input as Schema.Schema.Any;
-    const existingMeta = self.ast.annotations[PropertyMetaAnnotationId] as PropertyMetaAnnotation;
-    return self.annotations({
+  return <S extends Schema.Schema.Any>(input: S): S => {
+    const existingMeta = input.ast.annotations[PropertyMetaAnnotationId] as PropertyMetaAnnotation;
+    return input.annotations({
       [PropertyMetaAnnotationId]: {
         ...existingMeta,
         [name]: value,

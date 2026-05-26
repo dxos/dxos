@@ -102,7 +102,9 @@ const DefaultStory = (props: DefaultStoryProps) => {
         Obj.update(view, (view) => {
           view.query.ast = newQuery as Mutable<typeof newQuery>;
         });
-        Type.updateTypename(schema, getTypenameFromQuery(newQuery));
+        // NOTE: typename is no longer mutable on persisted Type.Type entities;
+        // changing the query that targets a different typename now requires
+        // re-creating the schema rather than renaming an existing one.
       }
     },
     [view, schema],
