@@ -3,7 +3,7 @@
 //
 
 import { format } from 'date-fns';
-import React, { memo, useEffect, useMemo, useRef, useState } from 'react';
+import React, { memo, useEffect, useMemo, useState } from 'react';
 
 import { addEventListener } from '@dxos/async';
 import { LogLevel } from '@dxos/log';
@@ -297,13 +297,6 @@ export const Timeline = composable<HTMLDivElement, TimelineProps>(
         }
       });
     }, [commits, containerRef.current]);
-
-    const count = useRef(0);
-    useEffect(() => {
-      count.current++;
-    });
-
-    return <div>{count.current}</div>;
 
     return (
       <div

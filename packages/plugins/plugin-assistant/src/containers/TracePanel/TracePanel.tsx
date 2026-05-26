@@ -37,7 +37,12 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     const { invokePromise } = useOperationInvoker();
     const settings = useAtomCapability(AssistantCapabilities.Settings);
     const tracePanelDebug = settings.tracePanelDebug ?? false;
+    console.log(1);
+    // TODO(burdon): CAUSES 2s slow down on nav.
     const { branches, commits, spanTree, details } = useExecutionGraph(space);
+    console.log(2);
+    return null;
+
     const monitor = useCapability(Capabilities.ProcessMonitor);
     const processes = useAtomValue(monitor?.processTreeAtom ?? atomEmpty);
 
@@ -102,13 +107,15 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                   </Syntax.Content>
                 </Syntax.Root>
               ) : (
-                <Timeline
-                  compact
-                  commits={commits}
-                  branches={branches}
-                  currentBranch={currentBranch}
-                  onSelect={handleCommitSelect}
-                />
+                false && (
+                  <Timeline
+                    compact
+                    commits={commits}
+                    branches={branches}
+                    currentBranch={currentBranch}
+                    onSelect={handleCommitSelect}
+                  />
+                )
               )}
             </ScrollContainer.Viewport>
             <ScrollContainer.ScrollDownButton />
@@ -138,11 +145,11 @@ type UseExecutionGraphOptions = {
 
 const useExecutionGraph = (space: Space, { eventLimit }: UseExecutionGraphOptions = {}): ExecutionGraph => {
   const monitor = useCapability(Capabilities.ProcessMonitor);
-  const activeProcesses = useAtomValue(monitor?.processTreeAtom ?? atomEmpty);
+  const processesAtom = monitor?.processTreeAtom ?? atomEmpty;
 
   const atom = useMemo(
-    () => getExecutionGraph(space, activeProcesses, { eventLimit }),
-    [space, activeProcesses, eventLimit],
+    () => getExecutionGraph(space, processesAtom, { eventLimit }),
+    [space, processesAtom, eventLimit],
   );
 
   return useAtomValue(atom);
@@ -150,13 +157,13 @@ const useExecutionGraph = (space: Space, { eventLimit }: UseExecutionGraphOption
 
 const getExecutionGraph = (
   space: Space,
-  activeProcesses: readonly Process.Info[] = [],
-  { eventLimit = 300 }: UseExecutionGraphOptions = {},
+  processesAtom: Atom.Atom<readonly Process.Info[]>,
+  { eventLimit = 100 }: UseExecutionGraphOptions = {},
 ): Atom.Atom<ExecutionGraph> => {
   return pipe(
     AtomQuery.make(space.db, FeedTraceSink.query),
     Atom.map((feeds) => {
-      log('trace panel query trace feeds', { spaceId: space.id, feedCount: feeds.length });
+      log.info('trace panel query trace feeds', { spaceId: space.id, feedCount: feeds.length });
       // TODO(dmaretskyi): This should be possible in a single query with properly working limit(1) and feed > feed contents traversal.
       return AtomQuery.make(
         space.db,
@@ -170,7 +177,7 @@ const getExecutionGraph = (
       Atom.make((get) =>
         buildExecutionGraph({
           traceMessages: [...get(_)],
-          activeProcesses,
+          activeProcesses: get(processesAtom),
           eventLimit,
         }),
       ),
