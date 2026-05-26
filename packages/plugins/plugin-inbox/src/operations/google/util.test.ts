@@ -90,4 +90,27 @@ describe('util', () => {
       );
     });
   });
+
+  describe('blank line collapsing (extended)', () => {
+    test('collapses blank lines that appear after residual-tag removal', ({ expect }) => {
+      // The <o:p></o:p> sits between content, leaving an effectively-empty line after strip.
+      // Pipeline must end with exactly one blank line between the two paragraphs.
+      expect(normalizeText('aaa\n<o:p></o:p>\n\n\nbbb')).to.equal('aaa\n\nbbb');
+    });
+
+    test('HTML <br><br><br> sequence collapses to a single blank line', ({ expect }) => {
+      // Outlook-style "many <br>" between paragraphs must end up as one blank line, not several.
+      expect(normalizeText('<p>a</p><br><br><br><p>b</p>')).to.equal('a\n\nb');
+    });
+
+    test('strips leading and trailing blank lines from whole document', ({ expect }) => {
+      // Leading/trailing blank lines (with whitespace) must be removed entirely.
+      expect(normalizeText('\n\n   \naaa\nbbb\n\n   \n\n')).to.equal('aaa\nbbb');
+    });
+
+    test('a single blank line is preserved across HTML pipeline', ({ expect }) => {
+      // Two paragraphs separated by a single empty paragraph → one blank line.
+      expect(normalizeText('<p>a</p><p></p><p>b</p>')).to.equal('a\n\nb');
+    });
+  });
 });
