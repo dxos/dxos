@@ -146,7 +146,6 @@ export default Capability.makeModule(() =>
             return null;
           }
 
-          return null;
           return <TracePanel space={space} />;
         },
       }),

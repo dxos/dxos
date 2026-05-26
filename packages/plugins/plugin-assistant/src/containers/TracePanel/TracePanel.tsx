@@ -37,12 +37,12 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     const { invokePromise } = useOperationInvoker();
     const settings = useAtomCapability(AssistantCapabilities.Settings);
     const tracePanelDebug = settings.tracePanelDebug ?? false;
-    console.log(1);
-    // TODO(burdon): CAUSES 2s slow down on nav.
+    // TODO(burdon): Mounting this hook subscribes to a 4-link atom chain (FeedTraceSink query → messages
+    // query → buildExecutionGraph) that costs ~2s per nav in DEV (React 19 Activity reveal re-runs the
+    // hook's useEffects, which rebuild the inner ECHO query subscription and walk the trace messages).
+    // The atom-chain cache attempts in this branch did not eliminate the cost; needs a deeper fix that
+    // moves the data layer outside React's effect lifecycle.
     const { branches, commits, spanTree, details } = useExecutionGraph(space);
-    console.log(2);
-    return null;
-
     const monitor = useCapability(Capabilities.ProcessMonitor);
     const processes = useAtomValue(monitor?.processTreeAtom ?? atomEmpty);
 
@@ -107,35 +107,28 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                   </Syntax.Content>
                 </Syntax.Root>
               ) : (
-                false && (
-                  <Timeline
-                    compact
-                    commits={commits}
-                    branches={branches}
-                    currentBranch={currentBranch}
-                    onSelect={handleCommitSelect}
-                  />
-                )
+                <Timeline
+                  compact
+                  commits={commits}
+                  branches={branches}
+                  currentBranch={currentBranch}
+                  onSelect={handleCommitSelect}
+                />
               )}
             </ScrollContainer.Viewport>
             <ScrollContainer.ScrollDownButton />
           </ScrollContainer.Content>
         </ScrollContainer.Root>
 
-        {!tracePanelDebug &&
-          selectedCommit &&
-          (() => {
-            const commit = selectedCommit;
-            return (
-              <Syntax.Root data={details[commit.id] ?? commit}>
-                <Syntax.Content>
-                  <Syntax.Viewport>
-                    <Syntax.Code className='text-xs' />
-                  </Syntax.Viewport>
-                </Syntax.Content>
-              </Syntax.Root>
-            );
-          })()}
+        {!tracePanelDebug && selectedCommit && (
+          <Syntax.Root data={details[selectedCommit.id] ?? selectedCommit}>
+            <Syntax.Content>
+              <Syntax.Viewport>
+                <Syntax.Code className='text-xs' />
+              </Syntax.Viewport>
+            </Syntax.Content>
+          </Syntax.Root>
+        )}
       </div>
     );
   },
