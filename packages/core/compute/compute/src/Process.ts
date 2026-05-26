@@ -261,6 +261,7 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
               yield* Trace.write(Trace.OperationStart, {
                 key: op.meta.key,
                 name: op.meta.name,
+                icon: op.meta.icon,
               });
               // Emit ephemeral operation input event for live subscribers
               // (history tracker, devtools) without persisting raw input.
@@ -293,6 +294,7 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
               yield* Trace.write(Trace.OperationEnd, {
                 key: op.meta.key,
                 name: op.meta.name,
+                icon: op.meta.icon,
                 outcome: 'success',
               });
             }).pipe(
@@ -303,6 +305,7 @@ export const fromOperation = <const Op extends Operation.Definition.Any>(
                   yield* Trace.write(Trace.OperationEnd, {
                     key: op.meta.key,
                     name: op.meta.name,
+                    icon: op.meta.icon,
                     outcome: 'failure',
                     error: errorMessage,
                   });
