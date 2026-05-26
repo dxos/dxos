@@ -20,7 +20,7 @@ import type * as Order from './Order';
 import type * as Ref from './Ref';
 import type * as Relation from './Relation';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
-import type * as TypeNs from './Type';
+import type * as Type$ from './Type';
 import type * as View from './View';
 
 // TODO(dmaretskyi): Split up into interfaces for objects and relations so they can have separate verbs.
@@ -71,11 +71,11 @@ export interface Query<T> {
    */
   // TODO(dmaretskyi): any way to enforce `Ref.Target<Schema.Schema.Type<S>[key]> == T`?
   // TODO(dmaretskyi): Ability to go through arrays of references.
-  'referencedBy'<S extends TypeNs.AnyEntity>(
+  'referencedBy'<S extends Type$.AnyEntity>(
     target: S | string,
-    key: RefPropKey<TypeNs.InstanceType<S>>,
-  ): Query<TypeNs.InstanceType<S>>;
-  'referencedBy'<S extends TypeNs.AnyEntity>(target: S | string): Query<TypeNs.InstanceType<S>>;
+    key: RefPropKey<Type$.InstanceType<S>>,
+  ): Query<Type$.InstanceType<S>>;
+  'referencedBy'<S extends Type$.AnyEntity>(target: S | string): Query<Type$.InstanceType<S>>;
   'referencedBy'(): Query<any>;
 
   /**
@@ -84,10 +84,10 @@ export interface Query<T> {
    * @param relation - Schema of the relation.
    * @param predicates - Predicates to filter the relation objects.
    */
-  'sourceOf'<R extends TypeNs.AnyRelation>(
+  'sourceOf'<R extends Type$.AnyRelation>(
     relation?: R | string,
-    predicates?: Filter.Props<TypeNs.InstanceType<R>>,
-  ): Query<TypeNs.InstanceType<R>>;
+    predicates?: Filter.Props<Type$.InstanceType<R>>,
+  ): Query<Type$.InstanceType<R>>;
 
   /**
    * Find relations where this object is the target.
@@ -95,10 +95,10 @@ export interface Query<T> {
    * @param relation - Type entity of the relation.
    * @param predicates - Predicates to filter the relation objects.
    */
-  'targetOf'<R extends TypeNs.AnyRelation>(
+  'targetOf'<R extends Type$.AnyRelation>(
     relation?: R | string,
-    predicates?: Filter.Props<TypeNs.InstanceType<R>>,
-  ): Query<TypeNs.InstanceType<R>>;
+    predicates?: Filter.Props<Type$.InstanceType<R>>,
+  ): Query<Type$.InstanceType<R>>;
 
   /**
    * For a query for relations, get the source objects.
@@ -251,7 +251,7 @@ class QueryClass implements Any {
     });
   }
 
-  referencedBy(target?: TypeNs.AnyEntity | string, key?: string): Any {
+  referencedBy(target?: Type$.AnyEntity | string, key?: string): Any {
     const uri = target !== undefined ? internal.getTypeURIFromSpecifier(target) : null;
     return new QueryClass({
       type: 'incoming-references',
@@ -261,7 +261,7 @@ class QueryClass implements Any {
     });
   }
 
-  sourceOf(relation?: TypeNs.AnyRelation | string, predicates?: Filter.Props<unknown> | undefined): Any {
+  sourceOf(relation?: Type$.AnyRelation | string, predicates?: Filter.Props<unknown> | undefined): Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
@@ -270,7 +270,7 @@ class QueryClass implements Any {
     });
   }
 
-  targetOf(relation?: TypeNs.AnyRelation | string, predicates?: Filter.Props<unknown> | undefined): Any {
+  targetOf(relation?: Type$.AnyRelation | string, predicates?: Filter.Props<unknown> | undefined): Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
@@ -488,10 +488,10 @@ export const select = <F extends Filter.Any>(filter: F): Query<Filter.Type<F>> =
  * Shorthand for: `Query.select(Filter.type(schema, predicates))`.
  */
 export const type: {
-  <T extends TypeNs.AnyEntity>(
+  <T extends Type$.AnyEntity>(
     type: T,
-    predicates?: Filter.Props<TypeNs.InstanceType<T>>,
-  ): Query<TypeNs.InstanceType<T>>;
+    predicates?: Filter.Props<Type$.InstanceType<T>>,
+  ): Query<Type$.InstanceType<T>>;
   // Brand-narrowed schema overload — only well-known unknown schemas pass.
   <S extends internal.UnknownTypeSchema<any, any>>(
     schema: S,
@@ -502,7 +502,7 @@ export const type: {
     predicates?: Filter.Props<Schema.Schema.Type<S>>,
   ): Query<Schema.Schema.Type<S>>;
   (schema: string, predicates?: Filter.Props<unknown>): Query<any>;
-} = (type: TypeNs.AnyEntity | string, predicates?: Filter.Props<unknown>): Any => {
+} = (type: Type$.AnyEntity | string, predicates?: Filter.Props<unknown>): Any => {
   return new QueryClass({
     type: 'select',
     filter: Filter.type(type, predicates).ast,

@@ -17,7 +17,7 @@ import * as internal from './internal';
 import type * as Obj from './Obj';
 import * as Ref from './Ref';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
-import type * as TypeNs from './Type';
+import type * as Type$ from './Type';
 
 export interface Filter<T> {
   // TODO(dmaretskyi): See new effect-schema approach to variance.
@@ -107,10 +107,10 @@ export const id = (...ids: ObjectId[]): Any => {
  * `Type.makeRelation`), a `Schema.Union` of such entities (for filtering across a
  * union of ECHO types), or a non-qualified typename string.
  */
-export function type<T extends TypeNs.AnyEntity>(
+export function type<T extends Type$.AnyEntity>(
   type: T,
-  props?: Props<TypeNs.InstanceType<T>>,
-): Filter<TypeNs.InstanceType<T>>;
+  props?: Props<Type$.InstanceType<T>>,
+): Filter<Type$.InstanceType<T>>;
 // Schema-side overload restricted to the well-known unknown schemas and to
 // `Schema.Union(...)` of `Type.Type` entities (for filtering across a union
 // of ECHO types). Other raw schemas are rejected.
@@ -126,9 +126,9 @@ export function type(schema: string, props?: Props<unknown>): Filter<any>;
 // Passthrough overload for callers that hold a `Type.AnyEntity | string` union
 // (e.g. Query.type / Query.sourceOf / Query.targetOf impls). Listed last so the
 // typed overloads above still win for monomorphic inputs.
-export function type(input: TypeNs.AnyEntity | string, props?: Props<unknown>): Filter<unknown>;
+export function type(input: Type$.AnyEntity | string, props?: Props<unknown>): Filter<unknown>;
 export function type(
-  input: TypeNs.AnyEntity | Schema.Schema.AnyNoContext | string,
+  input: Type$.AnyEntity | Schema.Schema.AnyNoContext | string,
   props?: Props<unknown>,
 ): Filter<unknown> {
   if (Schema.isSchema(input) && SchemaAST.isUnion(input.ast)) {
@@ -250,10 +250,10 @@ export const text = (
 /**
  * Filter by foreign keys.
  */
-export const foreignKeys = <S extends TypeNs.AnyEntity | string>(
+export const foreignKeys = <S extends Type$.AnyEntity | string>(
   schema: S,
   keys: ForeignKey[],
-): Filter<S extends TypeNs.AnyEntity ? TypeNs.InstanceType<S> : unknown> => {
+): Filter<S extends Type$.AnyEntity ? Type$.InstanceType<S> : unknown> => {
   const uri = internal.getTypeURIFromSpecifier(schema);
   return new FilterClass({
     type: 'object',
