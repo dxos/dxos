@@ -21,6 +21,7 @@ import {
   createExpando,
   createOrganization,
   createPerson,
+  createPersonEmpty,
   createProject,
   createTask,
   createUnknown,
@@ -76,6 +77,18 @@ export const _FormEmpty: StoryObj<typeof DefaultStory> = {
   args: {
     Component: FormCard,
     createObject: createUnknown,
+  },
+};
+
+/**
+ * No-values variant: the subject has a valid schema (Person) but no populated
+ * fields, so `FormCard` falls through to the same empty state instead of
+ * rendering an empty scrollarea.
+ */
+export const _FormNoValues: StoryObj<typeof DefaultStory<Person.Person>> = {
+  args: {
+    Component: FormCard,
+    createObject: createPersonEmpty,
   },
 };
 

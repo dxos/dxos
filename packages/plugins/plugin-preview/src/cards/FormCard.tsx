@@ -14,6 +14,8 @@ import { type ProjectionModel } from '@dxos/schema';
 
 import { meta } from '#meta';
 
+import { isInternalKey } from './ExpandoCard';
+
 export type FormCardProps = AppSurface.ObjectCardProps & {
   projection?: ProjectionModel;
   readonly?: boolean;
@@ -40,6 +42,15 @@ export const FormCard = ({ subject, projection, readonly = true, layout = 'compa
     return resolved && omitId(resolved);
   }, [runtimeSchema, staticSchema]);
 
+  // Treat objects whose only keys are ECHO internals (`id`, `~`-prefixed) or whose
+  // user-facing fields are all `null`/`undefined` as having no values to display.
+  // Readonly forms hide empty fields, so without this guard the form would render
+  // an empty scrollarea (see issue: e.g. fallback Table card with no rows).
+  const hasValues = useMemo(
+    () => Object.keys(subject ?? {}).some((key) => !isInternalKey(key) && (subject as any)[key] != null),
+    [subject],
+  );
+
   const handleSave = useCallback(
     (values: Record<string, unknown>, { changed }: FormUpdateMeta<Record<string, unknown>>) => {
       const paths = (Object.keys(changed) as JsonPath[]).filter((path) => changed[path]);
@@ -54,7 +65,7 @@ export const FormCard = ({ subject, projection, readonly = true, layout = 'compa
     [subject],
   );
 
-  if (!schema) {
+  if (!schema || !hasValues) {
     return (
       <Card.Content>
         <Card.Row>

@@ -30,7 +30,7 @@ const schemaForValue = (value: unknown): Schema.Schema.AnyNoContext | undefined 
  * SchemaKindId, SnapshotKindId, etc. — and the `~` namespace is reserved
  * for that purpose). They show up in `Object.keys` but aren't user data.
  */
-const isInternalKey = (key: string) => key === 'id' || key.startsWith('~');
+export const isInternalKey = (key: string) => key === 'id' || key.startsWith('~');
 
 export const ExpandoCard = ({ subject, ignorePaths }: AppSurface.ObjectCardProps) => {
   const schema = useMemo(() => {

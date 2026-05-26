@@ -108,6 +108,13 @@ export const createTask = (): Task.Task => {
  */
 export const createUnknown = (): Obj.Any => ({}) as unknown as Obj.Any;
 
+/**
+ * Typed object with no user-facing values (only `id`). All Person fields are
+ * optional, so `Obj.make(Person, {})` is valid and triggers the FormCard
+ * "no values" branch.
+ */
+export const createPersonEmpty = (): Person.Person => Obj.make(Person.Person, {});
+
 export const createExpando = (): Expando.Expando => {
   return Expando.make({
     name: random.person.fullName(),
