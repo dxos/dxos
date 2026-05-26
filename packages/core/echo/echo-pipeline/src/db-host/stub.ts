@@ -4,6 +4,8 @@
 
 import type {
   DeleteFromQueueRequest,
+  GetSyncStateRequest,
+  GetSyncStateResponse,
   InsertIntoQueueRequest,
   QueryQueueRequest,
   QueueQueryResult,
@@ -28,6 +30,10 @@ export class QueueServiceStub implements QueueService {
   }
 
   syncQueue(request: SyncQueueRequest): Promise<void> {
+    throw new Error('Not available.');
+  }
+
+  getSyncState(request: GetSyncStateRequest): Promise<GetSyncStateResponse> {
     throw new Error('Not available.');
   }
 }

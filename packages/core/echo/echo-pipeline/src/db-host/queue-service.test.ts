@@ -142,4 +142,30 @@ describe('LocalQueueServiceImpl', () => {
       expect(JSON.parse(page2.objects![4])).toMatchObject(items[9]);
     }).pipe(Effect.provide(TestLayer)),
   );
+
+  it.effect('should report local push backlog in getSyncState', () =>
+    Effect.gen(function* () {
+      const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: false });
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransaction.SqlTransaction>();
+      const service = new LocalQueueServiceImpl(runtime, feedStore);
+      yield* feedStore.migrate();
+
+      const spaceId = SpaceId.random();
+      const queueId = ObjectId.random();
+      yield* Effect.promise(() =>
+        service.insertIntoQueue({
+          subspaceTag: FeedProtocol.WellKnownNamespaces.data,
+          spaceId,
+          queueId,
+          objects: [JSON.stringify({ id: 'obj1', data: 'test1' })],
+        }),
+      );
+
+      const state = yield* Effect.promise(() => service.getSyncState({ spaceId }));
+      const dataState = state.namespaces?.find((entry) => entry.namespace === FeedProtocol.WellKnownNamespaces.data);
+      expect(dataState?.blocksToPush).toBe('1');
+      expect(dataState?.blocksToPull).toBe('0');
+      expect(dataState?.totalBlocks).toBe('1');
+    }).pipe(Effect.provide(TestLayer)),
+  );
 });

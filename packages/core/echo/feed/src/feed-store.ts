@@ -359,6 +359,45 @@ export class FeedStore {
     }).pipe(Effect.withSpan('FeedStore.setSyncState'));
 
   /**
+   * Returns the number of blocks pending push (no global position yet) in a space/namespace.
+   */
+  countUnpositionedBlocks = (opts: {
+    spaceId: SpaceId;
+    feedNamespace: string;
+  }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen(this, function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const rows = yield* sql<{ count: number }>`
+        SELECT COUNT(*) AS count
+        FROM blocks
+        JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+        WHERE feeds.spaceId = ${opts.spaceId}
+          AND feeds.feedNamespace = ${opts.feedNamespace}
+          AND blocks.position IS NULL
+      `;
+      return rows[0]?.count ?? 0;
+    }).pipe(Effect.withSpan('FeedStore.countUnpositionedBlocks'));
+
+  /**
+   * Returns the total number of blocks stored locally for a space/namespace.
+   */
+  countNamespaceBlocks = (opts: {
+    spaceId: SpaceId;
+    feedNamespace: string;
+  }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen(this, function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const rows = yield* sql<{ count: number }>`
+        SELECT COUNT(*) AS count
+        FROM blocks
+        JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+        WHERE feeds.spaceId = ${opts.spaceId}
+          AND feeds.feedNamespace = ${opts.feedNamespace}
+      `;
+      return rows[0]?.count ?? 0;
+    }).pipe(Effect.withSpan('FeedStore.countNamespaceBlocks'));
+
+  /**
    * Returns the number of stored blocks for a single feed in a space/namespace.
    * Intended as a low-level primitive for callers (for example Cloudflare Worker code)
    * that need to make retention decisions under constrained storage resources.
@@ -480,6 +519,12 @@ export class FeedStore {
           }
 
           // 3. Insert all blocks and compute positions.
+          //
+          // Critical: when a block already exists (conflict on (feedPrivateId, sequence, actorId))
+          // we must (a) return the EXISTING position to the caller and (b) NOT advance the
+          // namespace position counter. Otherwise the response contains wasted slots that
+          // sync clients will try to UPDATE local rows to, tripping the
+          // (feedPrivateId, position) UNIQUE constraint and stalling sync indefinitely.
           const positions: number[] = [];
           for (const block of request.blocks) {
             const key = block.feedId!;
@@ -487,23 +532,57 @@ export class FeedStore {
 
             let positionToInsert: number | null = null;
             if (this.#options.assignPositions) {
-              const currentMax = maxPositions.get(request.feedNamespace)!;
-              positionToInsert = currentMax + 1;
-              maxPositions.set(request.feedNamespace, positionToInsert); // Increment for next block in same namespace.
-              positions.push(positionToInsert);
+              positionToInsert = maxPositions.get(request.feedNamespace)! + 1;
             } else if (block.position != null) {
               positionToInsert = block.position;
             }
 
-            yield* sql`
+            const inserted = yield* sql<{ position: number | null }>`
               INSERT INTO blocks (
-                feedPrivateId, position, sequence, actorId, 
+                feedPrivateId, position, sequence, actorId,
                 prevSequence, prevActorId, timestamp, data
               ) VALUES (
                 ${feedPrivateId}, ${positionToInsert}, ${block.sequence}, ${block.actorId},
                 ${block.prevSequence}, ${block.prevActorId}, ${block.timestamp}, ${block.data}
-              ) ON CONFLICT DO NOTHING
+              )
+              ON CONFLICT(feedPrivateId, sequence, actorId) DO NOTHING
+              RETURNING position
             `;
+
+            if (!this.#options.assignPositions) {
+              continue;
+            }
+
+            if (inserted.length > 0) {
+              // New row written at the freshly allocated position.
+              positions.push(positionToInsert!);
+              maxPositions.set(request.feedNamespace, positionToInsert!);
+              continue;
+            }
+
+            // Duplicate Lamport tuple: return the stored position and leave maxPositions alone.
+            const existing = yield* sql<{ position: number | null }>`
+              SELECT position FROM blocks
+              WHERE feedPrivateId = ${feedPrivateId}
+                AND actorId = ${block.actorId}
+                AND sequence = ${block.sequence}
+            `;
+            const existingPosition = existing[0]?.position;
+            if (existingPosition != null) {
+              positions.push(existingPosition);
+              continue;
+            }
+
+            // Defensive: existing row carries no position (e.g. inserted via an earlier
+            // assignPositions=false path). Back-fill it so the caller can mark it positioned.
+            yield* sql`
+              UPDATE blocks SET position = ${positionToInsert}
+              WHERE feedPrivateId = ${feedPrivateId}
+                AND actorId = ${block.actorId}
+                AND sequence = ${block.sequence}
+            `;
+            positions.push(positionToInsert!);
+            maxPositions.set(request.feedNamespace, positionToInsert!);
           }
 
           return positions;

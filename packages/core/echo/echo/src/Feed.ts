@@ -90,6 +90,19 @@ export interface SyncOptions {
   shouldPull?: boolean;
 }
 
+/**
+ * Queue replication backlog for a feed namespace.
+ * `0` / `0` means caught up on pull and push.
+ */
+export interface SyncState {
+  /** Blocks still to pull from remote. */
+  blocksToPull: number;
+  /** Unpositioned blocks still to push to remote. */
+  blocksToPush: number;
+  /** Total blocks stored locally for the feed namespace. */
+  totalBlocks: number;
+}
+
 //
 // Factory
 //
@@ -154,6 +167,11 @@ export class FeedService extends Context.Tag('@dxos/echo/Feed/FeedService')<
      * Syncs the feed with the server.
      */
     sync(feed: Feed, options?: SyncOptions): Promise<void>;
+
+    /**
+     * Returns queue replication backlog for the feed's namespace.
+     */
+    getSyncState(feed: Feed): Promise<SyncState>;
   }
 >() {}
 
@@ -182,6 +200,9 @@ export const notAvailable: Layer.Layer<FeedService> = Layer.succeed(FeedService,
     throw new Error('Feed.FeedService not available');
   },
   sync: () => {
+    throw new Error('Feed.FeedService not available');
+  },
+  getSyncState: () => {
     throw new Error('Feed.FeedService not available');
   },
 } as Context.Tag.Service<FeedService>);
@@ -291,6 +312,20 @@ export const sync = (feed: Feed, options?: SyncOptions): Effect.Effect<void, nev
   Effect.gen(function* () {
     const service = yield* FeedService;
     yield* Effect.promise(() => service.sync(feed, options));
+  });
+
+/**
+ * Returns queue replication backlog for the feed's namespace.
+ *
+ * @example
+ * ```ts
+ * const { blocksToPull, blocksToPush } = yield* Feed.getSyncState(feed);
+ * ```
+ */
+export const getSyncState = (feed: Feed): Effect.Effect<SyncState, never, FeedService> =>
+  Effect.gen(function* () {
+    const service = yield* FeedService;
+    return yield* Effect.promise(() => service.getSyncState(feed));
   });
 
 /**
