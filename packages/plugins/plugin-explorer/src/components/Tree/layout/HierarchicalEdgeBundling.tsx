@@ -109,6 +109,7 @@ type BundleHierarchy = HierarchyNode<TreeNode> & {
   incoming?: Array<[BundleHierarchy, BundleHierarchy, BundleEdge]>;
   pathEl?: SVGPathElement | null;
   text?: SVGTextElement | null;
+  circle?: SVGCircleElement | null;
 };
 
 /**
@@ -256,6 +257,9 @@ const renderBundling = (svgElement: SVGSVGElement, root: BundleHierarchy, option
     .attr('class', [slots.node ?? '', 'dx-leaf'].filter(Boolean).join(' '))
     .attr('r', r)
     .style('fill', (d: BundleHierarchy) => getNodeFillForObject(d.data.data as Obj.Unknown | undefined))
+    .each(function (d: BundleHierarchy) {
+      d.circle = this;
+    })
     .on('pointerenter', onEnter)
     .on('pointerleave', onLeave);
 
@@ -283,13 +287,18 @@ const hover = (linksLayer: any, leaves: BundleHierarchy[], focused: BundleHierar
     .classed('dx-bundle-dim', (d: any) => on && d[0] !== focused && d[1] !== focused);
 
   for (const leaf of leaves) {
-    if (!leaf.text) {
-      continue;
+    const isConnected = outgoing.has(leaf) || incoming.has(leaf);
+    if (leaf.text) {
+      select(leaf.text)
+        .classed('dx-bundle-focused', on && leaf === focused)
+        .classed('dx-bundle-out-text', on && outgoing.has(leaf))
+        .classed('dx-bundle-in-text', on && incoming.has(leaf));
     }
-    select(leaf.text)
-      .classed('dx-bundle-focused', on && leaf === focused)
-      .classed('dx-bundle-out-text', on && outgoing.has(leaf))
-      .classed('dx-bundle-in-text', on && incoming.has(leaf));
+    if (leaf.circle) {
+      select(leaf.circle)
+        .classed('dx-bundle-connected', on && isConnected)
+        .classed('dx-bundle-dim-node', on && !isConnected && leaf !== focused);
+    }
   }
 };
 

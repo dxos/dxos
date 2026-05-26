@@ -436,5 +436,58 @@ svg {
     circle.dx-bullet {
       @apply fill-red-500 stroke-none;
     }
+
+    /* Hierarchical edge bundling — hover highlight classes applied by hover() in HierarchicalEdgeBundling.tsx. */
+    g.dx-bundle-root {
+      path.dx-bundle-out {
+        @apply stroke-orange-500/80 stroke-[1.5px];
+        .dark & {
+          @apply stroke-orange-400/80;
+        }
+      }
+
+      path.dx-bundle-in {
+        @apply stroke-sky-500/80 stroke-[1.5px];
+        .dark & {
+          @apply stroke-sky-400/80;
+        }
+      }
+
+      path.dx-bundle-dim {
+        @apply opacity-10;
+      }
+
+      text.dx-bundle-focused {
+        @apply font-bold fill-neutral-900;
+        .dark & {
+          @apply fill-neutral-100;
+        }
+      }
+
+      text.dx-bundle-out-text {
+        @apply fill-orange-600;
+        .dark & {
+          @apply fill-orange-400;
+        }
+      }
+
+      text.dx-bundle-in-text {
+        @apply fill-sky-600;
+        .dark & {
+          @apply fill-sky-400;
+        }
+      }
+
+      circle.dx-bundle-connected {
+        @apply fill-orange-500;
+        .dark & {
+          @apply fill-orange-400;
+        }
+      }
+
+      circle.dx-bundle-dim-node {
+        @apply opacity-25;
+      }
+    }
   }
 }
