@@ -55,8 +55,28 @@ const platformProvider = (isTauri: boolean): Observability.DataProvider =>
     observability.setTags({ appPlatform: isTauri ? 'tauri' : 'web', osPlatform });
   });
 
+/**
+ * PostHog runtime overrides applied at `posthog.init` time when telemetry is disabled.
+ * `posthog.opt_out_capturing()` blocks event capture *after* init but does not prevent the
+ * recorder / dead-clicks / autocapture extension scripts from being downloaded and hooking
+ * every DOM event — those scripts only respect the boot-time config. Passing these flags up
+ * front means the heavy instrumentation never loads when the user has telemetry off.
+ */
+const POSTHOG_DISABLED_CONFIG = {
+  disable_session_recording: true,
+  capture_dead_clicks: false,
+  capture_pageview: false,
+  capture_pageleave: false,
+  autocapture: false,
+} as const;
+
 /** Initialize observability extensions and data providers for Composer. */
-export const initializeObservability = async (config: Config, isTauri: boolean, logStore?: IdbLogStore) =>
+export const initializeObservability = async (
+  config: Config,
+  isTauri: boolean,
+  logStore?: IdbLogStore,
+  observabilityDisabled = false,
+) =>
   Function.pipe(
     Observability.make(),
     Observability.addExtension(
@@ -78,6 +98,7 @@ export const initializeObservability = async (config: Config, isTauri: boolean, 
         environment: config.values.runtime?.app?.env?.DX_ENVIRONMENT ?? 'unknown',
         logStore,
         feedbackLogMaxSize: FEEDBACK_LOGS_MAX_SIZE,
+        posthog: observabilityDisabled ? POSTHOG_DISABLED_CONFIG : undefined,
       }),
     ),
     Observability.addDataProvider(ObservabilityProvider.IPData.provider(config)),

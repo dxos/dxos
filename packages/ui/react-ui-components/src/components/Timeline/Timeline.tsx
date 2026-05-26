@@ -3,7 +3,7 @@
 //
 
 import { format } from 'date-fns';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { memo, useEffect, useMemo, useRef, useState } from 'react';
 
 import { addEventListener } from '@dxos/async';
 import { LogLevel } from '@dxos/log';
@@ -78,6 +78,7 @@ export type TimelineProps = ThemedClassName<{
 /**
  * GitGraph-style timeline.
  */
+// TODO(burdon): Virtualize.
 export const Timeline = composable<HTMLDivElement, TimelineProps>(
   (
     {
@@ -255,6 +256,7 @@ export const Timeline = composable<HTMLDivElement, TimelineProps>(
                       return i;
                     }
                   }
+
                   return selected;
                 } else {
                   return selected === undefined ? commits.length - 1 : Math.max(0, selected - 1);
@@ -295,6 +297,13 @@ export const Timeline = composable<HTMLDivElement, TimelineProps>(
         }
       });
     }, [commits, containerRef.current]);
+
+    const count = useRef(0);
+    useEffect(() => {
+      count.current++;
+    });
+
+    return <div>{count.current}</div>;
 
     return (
       <div
@@ -367,7 +376,7 @@ export const Timeline = composable<HTMLDivElement, TimelineProps>(
   },
 );
 
-const CommitIcon = ({ commit }: { commit: Commit }) => {
+const CommitIcon = memo(({ commit }: { commit: Commit }) => {
   if (!commit.icon) {
     return <div />;
   }
@@ -383,7 +392,7 @@ const CommitIcon = ({ commit }: { commit: Commit }) => {
       )}
     />
   );
-};
+});
 
 type Span = {
   start: number;
@@ -423,85 +432,87 @@ type LineVectorProps = {
 /**
  * SVG for node and connector paths.
  */
-const LineVector = ({ branchLane, laneCount, spans, index, commit, highlightedBranch, options }: LineVectorProps) => {
-  const halfHeight = options.lineHeight / 2;
-  const cx = (c: number) => c * options.columnWidth + options.columnWidth / 2;
-  const getBranchIndex = (branch: string): number => branchLane.get(branch) ?? -1;
+const LineVector = memo(
+  ({ branchLane, laneCount, spans, index, commit, highlightedBranch, options }: LineVectorProps) => {
+    const halfHeight = options.lineHeight / 2;
+    const cx = (c: number) => c * options.columnWidth + options.columnWidth / 2;
+    const getBranchIndex = (branch: string): number => branchLane.get(branch) ?? -1;
 
-  // Create connector path.
-  const createPath = (index: number, commit: Commit, branch: string, span: Span): string | undefined => {
-    const parents = commit.parents ?? [];
-    const commitIndex = getBranchIndex(commit.branch);
-    const branchIndex = getBranchIndex(branch);
+    // Create connector path.
+    const createPath = (index: number, commit: Commit, branch: string, span: Span): string | undefined => {
+      const parents = commit.parents ?? [];
+      const commitIndex = getBranchIndex(commit.branch);
+      const branchIndex = getBranchIndex(branch);
 
-    // Vertical connectors.
-    if (span.start < index && index < span.end) {
-      return `M ${cx(branchIndex)} 0 l 0 ${options.lineHeight}`;
-    } else if (commit.branch === branch && parents.length > 0) {
-      return `M ${cx(branchIndex)} 0 l 0 ${halfHeight}`;
-    } else if (commit.branch === branch && index < span.end) {
-      return `M ${cx(branchIndex)} ${halfHeight} l 0 ${options.lineHeight}`;
-    }
+      // Vertical connectors.
+      if (span.start < index && index < span.end) {
+        return `M ${cx(branchIndex)} 0 l 0 ${options.lineHeight}`;
+      } else if (commit.branch === branch && parents.length > 0) {
+        return `M ${cx(branchIndex)} 0 l 0 ${halfHeight}`;
+      } else if (commit.branch === branch && index < span.end) {
+        return `M ${cx(branchIndex)} ${halfHeight} l 0 ${options.lineHeight}`;
+      }
 
-    // Branch.
-    // TODO(burdon): Assumes can only branch to the right.
-    if (commit.branch !== branch && index === span.start) {
-      return trim`
+      // Branch.
+      // TODO(burdon): Assumes can only branch to the right.
+      if (commit.branch !== branch && index === span.start) {
+        return trim`
         M ${cx(commitIndex)} ${halfHeight}
         L ${cx(branchIndex) - halfHeight} ${halfHeight}
         a ${halfHeight} ${halfHeight} 0 0 1 ${halfHeight} ${halfHeight}
       `;
-    }
+      }
 
-    // Merge.
-    if (commit.branch !== branch && index === span.end) {
-      return trim`
+      // Merge.
+      if (commit.branch !== branch && index === span.end) {
+        return trim`
         M ${cx(commitIndex)} ${halfHeight}
         L ${cx(branchIndex) - halfHeight} ${halfHeight}
         a ${halfHeight} ${halfHeight} -90 0 0 ${halfHeight} ${-halfHeight}
       `;
-    }
-  };
+      }
+    };
 
-  const col = getBranchIndex(commit.branch);
-  const color = colors[col % colors.length];
-  const opacity = (branch: string | undefined) => [
-    'duration-500 transition-opacity',
-    highlightedBranch === undefined || branch === highlightedBranch ? 'opacity-100' : 'opacity-50',
-  ];
+    const col = getBranchIndex(commit.branch);
+    const color = colors[col % colors.length];
+    const opacity = (branch: string | undefined) => [
+      'duration-500 transition-opacity',
+      highlightedBranch === undefined || branch === highlightedBranch ? 'opacity-100' : 'opacity-50',
+    ];
 
-  return (
-    <svg width={laneCount * options.columnWidth} height={options.lineHeight}>
-      {/* Connectors */}
-      {[...spans.entries()].map(([branch, span]) => {
-        const lane = getBranchIndex(branch);
-        if (lane < 0) {
-          return null;
-        }
-        const color = colors[lane % colors.length];
-        const path = createPath(index, commit, branch, span);
-        if (!path) {
-          return null;
-        }
+    return (
+      <svg width={laneCount * options.columnWidth} height={options.lineHeight}>
+        {/* Connectors */}
+        {[...spans.entries()].map(([branch, span]) => {
+          const lane = getBranchIndex(branch);
+          if (lane < 0) {
+            return null;
+          }
+          const color = colors[lane % colors.length];
+          const path = createPath(index, commit, branch, span);
+          if (!path) {
+            return null;
+          }
 
-        return (
-          <path key={branch} d={path} fill='none' className={mx(options.lineStyle, color.stroke, opacity(branch))} />
-        );
-      })}
+          return (
+            <path key={branch} d={path} fill='none' className={mx(options.lineStyle, color.stroke, opacity(branch))} />
+          );
+        })}
 
-      {/* Node */}
-      <circle
-        cx={cx(col)}
-        cy={halfHeight}
-        r={options.nodeRadius}
-        className={mx('fill-base-surface stroke-base-surface')}
-      />
-      <circle
-        cx={cx(col)}
-        cy={halfHeight}
-        r={options.nodeRadius}
-        className={mx('fill-base-surface', options.lineStyle, color.stroke, color.fill, opacity(commit.branch))}
-      />
-    </svg>
-  );
-};
+        {/* Node */}
+        <circle
+          cx={cx(col)}
+          cy={halfHeight}
+          r={options.nodeRadius}
+          className={mx('fill-base-surface stroke-base-surface')}
+        />
+        <circle
+          cx={cx(col)}
+          cy={halfHeight}
+          r={options.nodeRadius}
+          className={mx('fill-base-surface', options.lineStyle, color.stroke, color.fill, opacity(commit.branch))}
+        />
+      </svg>
+    );
+  },
+);
