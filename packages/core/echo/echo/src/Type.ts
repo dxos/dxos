@@ -639,6 +639,13 @@ export function getSchema(type: AnyEntity): Schema.Schema.AnyNoContext {
  * `ObjectMeta` (`key` / `version` — the canonical registry-provenance pair).
  * Read them via {@link getTypename} / {@link getVersion} / {@link getMeta};
  * `typename` is treated as immutable on persisted entities.
+ *
+ * Unlike `Obj.update` — whose mutable view is inferred as `Mutable<A>` over the
+ * whole instance type because every data field is editable — a `Type.Type`
+ * exposes only `name` and `jsonSchema` for mutation. The rest of its shape
+ * (`id`, the `[KindId]` / `[SchemaKindId]` brands, and `typename` / `version`
+ * in meta) is immutable, so this view is declared explicitly rather than
+ * derived from `InstanceType<Type.Type>`.
  */
 export interface Mutable {
   name?: string;

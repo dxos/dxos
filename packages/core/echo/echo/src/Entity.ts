@@ -55,11 +55,19 @@ export type Entity<Props> = OfKind<Kind> & Props;
 export interface Unknown extends OfKind<Kind> {}
 
 /**
- * Effect Schema for any reactive ECHO entity (object, relation, or type).
+ * Effect Schema for any ECHO entity (object or relation).
  *
  * Kind-agnostic counterpart to `Obj.Unknown` / `Relation.Unknown` — validates
- * the structural shape (id + properties) without constraining `[KindId]`.
- * Use this in operation input schemas that accept any entity flavour.
+ * the structural shape (id + properties) without constraining `[KindId]`. Used
+ * in operation input schemas that accept any entity flavour (e.g.
+ * `Schema.Array(Entity.Unknown)`).
+ *
+ * The cast bridges the runtime structural schema to the branded `Unknown` type:
+ * `[KindId]` is a symbol brand that can't be expressed in a runtime `Struct`,
+ * so the entity guarantee is carried at the type level only (same approach as
+ * `Obj.Unknown` / `Relation.Unknown`). Unlike those, this is kind-agnostic so it
+ * isn't an `UnknownTypeSchema<_, K>` (there's no single `K`) and carries no
+ * `TypeAnnotation`.
  */
 export const Unknown: Schema.Schema<Unknown> = Schema.Struct({
   id: Schema.String,
