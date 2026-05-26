@@ -70,10 +70,7 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
 
     // TODO(wittjosiah): Use FormRootProps type.
     const handleChange = useCallback(
-      (
-        { tags, ...values }: Schema.Schema.Type<typeof formSchema>,
-        { isValid, changed }: { isValid: boolean; changed: Record<JsonPath, boolean> },
-      ) => {
+      ({ tags, ...values }: any, { isValid, changed }: { isValid: boolean; changed: Record<JsonPath, boolean> }) => {
         if (!isValid) {
           return;
         }

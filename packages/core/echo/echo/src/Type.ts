@@ -509,14 +509,26 @@ export type InstanceType<T> =
  * - For static schemas (those produced by `Type.makeObject(dxn)` etc.) the input
  *   IS the schema, so this returns it unchanged.
  * - For `Type.Type` entities the schema is rebuilt from `type.jsonSchema`.
+ * - Raw `Schema.Schema` inputs (e.g. `Schema.Union(...)` of entity schemas) are
+ *   returned unchanged so callers can preserve composite schema signatures
+ *   like `Schema.Union<...>`.
  *
  * Always call this when you need to interact with the Effect Schema API
  * (e.g. before passing to Effect.Schema functions). For ECHO-side APIs
  * (`Obj.make`, `Filter.type`, `Ref`) you may pass the type value directly.
+ *
+ * The first two overloads keep strong typing for the static `Obj` / `Relation`
+ * cases where the instance type is known from the value. Persisted `Type.Type`
+ * entities and the wide `AnyEntity` union widen to `Schema.Schema.AnyNoContext`
+ * because the rebuilt schema's instance type isn't statically knowable.
  */
-export const getSchema = (
-  type: AnyObject | AnyRelation | Type | internal.UnknownTypeSchema<any, any>,
-): Schema.Schema.AnyNoContext => {
+export function getSchema<T extends AnyObject>(type: T): Schema.Schema<InstanceType<T>>;
+export function getSchema<T extends AnyRelation>(type: T): Schema.Schema<InstanceType<T>>;
+export function getSchema(type: Type | AnyEntity): Schema.Schema.AnyNoContext;
+export function getSchema<T extends Schema.Schema.AnyNoContext>(type: T): T;
+export function getSchema(
+  type: AnyEntity | Schema.Schema.AnyNoContext,
+): Schema.Schema.AnyNoContext {
   // Static `Type.Type` entities carry the source Effect Schema on a hidden
   // slot so we can return it without round-tripping through JsonSchema.
   const staticSchema = internal.getStaticTypeSchema(type);
