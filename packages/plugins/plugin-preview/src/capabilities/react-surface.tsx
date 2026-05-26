@@ -13,15 +13,7 @@ import { Card } from '@dxos/react-ui';
 import { Expando, type ProjectionModel } from '@dxos/schema';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
-import {
-  ExpandoCard,
-  FormCard,
-  JsonCard,
-  OrganizationCard,
-  PersonCard,
-  ProjectCard,
-  TaskCard,
-} from '../cards';
+import { ExpandoCard, FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
