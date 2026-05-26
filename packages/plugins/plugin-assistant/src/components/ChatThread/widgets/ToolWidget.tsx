@@ -5,7 +5,7 @@
 import type * as Tool from '@effect/ai/Tool';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
+import { Icon, useTranslation } from '@dxos/react-ui';
 import { NumericTabs, TextCrawl, TogglePanel, type TogglePanelRootProps } from '@dxos/react-ui-components';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type ContentBlock, type Message } from '@dxos/types';
@@ -128,7 +128,8 @@ const ToolPanel = ({ items, onChangeOpen }: ToolPanelProps) => {
 
   return (
     <TogglePanel.Root open={open} onChangeOpen={setOpen}>
-      <TogglePanel.Header classNames='text-sm text-placeholder'>
+      <TogglePanel.Header classNames='flex items-center gap-2 text-sm text-placeholder'>
+        <Icon icon='ph--wrench--regular' size={4} classNames='shrink-0 opacity-70' />
         <TextCrawl key='status-roll' lines={items.map((item) => item.title)} autoAdvance greedy />
       </TogglePanel.Header>
       <TogglePanel.Content>
