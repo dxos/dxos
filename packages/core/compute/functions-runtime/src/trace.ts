@@ -38,7 +38,7 @@ export const TraceEventException = Schema.Struct({
 
 export type TraceEventException = Schema.Schema.Type<typeof TraceEventException>;
 
-const InvocationTraceStartEventSchema = Schema.Struct({
+export const InvocationTraceStartEvent = Schema.Struct({
   /**
    * Queue message id.
    */
@@ -109,12 +109,9 @@ const InvocationTraceStartEventSchema = Schema.Struct({
   runtime: Schema.optional(FunctionRuntimeKind),
 }).pipe(Type.makeObject(DXN.make('org.dxos.type.invocationTraceStart', '0.1.0')));
 
-// Declared as an interface (not `type =`) so downstream emit references the type
-// by name rather than expanding the inferred shape — keeps consumers portable.
-export interface InvocationTraceStartEvent extends Type.InstanceType<typeof InvocationTraceStartEventSchema> {}
-export const InvocationTraceStartEvent: Type.Obj<InvocationTraceStartEvent> = InvocationTraceStartEventSchema as any;
+export interface InvocationTraceStartEvent extends Type.InstanceType<typeof InvocationTraceStartEvent> {}
 
-const InvocationTraceEndEventSchema = Schema.Struct({
+export const InvocationTraceEndEvent = Schema.Struct({
   /**
    * Trace event id.
    */
@@ -135,10 +132,7 @@ const InvocationTraceEndEventSchema = Schema.Struct({
   error: Schema.optional(SerializedError),
 }).pipe(Type.makeObject(DXN.make('org.dxos.type.invocationTraceEnd', '0.1.0')));
 
-// Declared as an interface (not `type =`) so downstream emit references the type
-// by name rather than expanding the inferred shape — keeps consumers portable.
-export interface InvocationTraceEndEvent extends Type.InstanceType<typeof InvocationTraceEndEventSchema> {}
-export const InvocationTraceEndEvent: Type.Obj<InvocationTraceEndEvent> = InvocationTraceEndEventSchema as any;
+export interface InvocationTraceEndEvent extends Type.InstanceType<typeof InvocationTraceEndEvent> {}
 
 export type InvocationTraceEvent = InvocationTraceStartEvent | InvocationTraceEndEvent;
 
