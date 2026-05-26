@@ -24,7 +24,7 @@ export const syncObjects: (
   objs,
   { foreignKeyId },
 ) {
-  return (yield* Effect.forEach(
+  return yield* Effect.forEach(
     objs,
     Effect.fnUntraced(function* (obj) {
       // Sync referenced objects.
@@ -55,18 +55,18 @@ export const syncObjects: (
       log('sync object', {
         type: Obj.getTypename(obj),
         foreignId,
-        existing: existing ? Obj.getURI(existing as Obj.Unknown) : undefined,
+        existing: existing ? Obj.getURI(existing) : undefined,
       });
       if (!existing) {
         yield* Database.add(obj);
         return obj;
       } else {
-        copyObjectData(existing as Obj.Unknown, obj);
-        return existing as Obj.Unknown;
+        copyObjectData(existing, obj);
+        return existing;
       }
     }),
     { concurrency: 1 },
-  )) as Obj.Unknown[];
+  );
 });
 
 const copyObjectData = (existing: Obj.Unknown, newObj: Obj.Unknown) => {

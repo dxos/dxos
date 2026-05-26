@@ -509,8 +509,8 @@ export const getTypeURI = (obj: Unknown | Snapshot): URI.URI => {
  *
  * To get the Effect Schema from the returned entity, use `Type.getSchema(...)`.
  */
-export const getType = (obj: Unknown | Snapshot): Type.AnyObject | Type.Type | undefined =>
-  internal.getType(obj) as Type.AnyObject | Type.Type | undefined;
+export const getType = (obj: Unknown | Snapshot): Type.AnyObject | undefined =>
+  internal.getType(obj) as Type.AnyObject | undefined;
 
 /**
  * @returns The typename of the object's type.
