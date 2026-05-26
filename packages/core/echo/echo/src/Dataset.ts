@@ -20,10 +20,12 @@ import * as View from './View';
  * `Type.getSchema`) so this can still be consumed by Schema-side APIs such
  * as `Filter.type(...)` on a union.
  */
-export const Dataset: Schema.Union<
-  readonly [Schema.Schema<Feed.Feed>, Schema.Schema<Collection.Collection>, Schema.Schema<View.View>]
-> = Schema.Union(Type.getSchema(Feed.Feed), Type.getSchema(Collection.Collection), Type.getSchema(View.View));
 export type Dataset = Feed.Feed | Collection.Collection | View.View;
+export const Dataset = Schema.Union(
+  Type.getSchema(Feed.Feed),
+  Type.getSchema(Collection.Collection),
+  Type.getSchema(View.View),
+);
 
 export const isDataset: (value: unknown) => value is Dataset = pipe(
   Obj.instanceOf(Feed.Feed),
