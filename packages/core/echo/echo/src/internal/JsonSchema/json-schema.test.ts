@@ -26,7 +26,7 @@ import { EchoObjectSchema } from '../Entity';
 import { Email, FormatAnnotation, TypeFormat } from '../Format';
 import { JsonSchemaType, getNormalizedEchoAnnotations, getSchemaProperty, setSchemaProperty } from '../JsonSchema';
 import { Ref, createSchemaReference, getReferenceAst, getSchemaReference } from '../Ref';
-import { PersistentSchema } from '../Type';
+import { PersistentType } from '../Type';
 import { toEffectSchema, toJsonSchema } from './json-schema';
 
 const EXAMPLE_NAMESPACE = '@example';
@@ -226,8 +226,8 @@ describe('effect-to-json', () => {
     expect(typename).to.eq(Organization.typename);
   });
 
-  test('serialize circular schema (PersistentSchema)', () => {
-    const jsonSchema = toJsonSchema(PersistentSchema);
+  test('serialize circular schema (PersistentType)', () => {
+    const jsonSchema = toJsonSchema(PersistentType);
     expect(Object.keys(jsonSchema.properties!).length).toBeGreaterThan(0);
 
     // TODO(dmaretskyi): Currently unable to deserialize.

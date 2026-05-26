@@ -270,7 +270,7 @@ export type ObjectSystem = {
    * `'relation'`, or `'type'` (for a meta-schema). Only meaningful when
    * `kind === 'type'`; absent or ignored on regular Obj / Relation instances.
    *
-   * Note: always stored as `'type'` in practice (PersistentSchema stamps
+   * Note: always stored as `'type'` in practice (PersistentType stamps
    * `EntityKind.Type`). The true described kind is embedded inside
    * `data.jsonSchema.entityKind` by `makeTypeJsonSchemaAnnotation` and is
    * what the `[SchemaKindId]` proxy trap reads.

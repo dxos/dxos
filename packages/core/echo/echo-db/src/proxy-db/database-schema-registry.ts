@@ -10,7 +10,7 @@ import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
 import { Filter, JsonSchema, type QueryResult, type SchemaRegistry, Type } from '@dxos/echo';
 import {
-  PersistentSchema,
+  PersistentType,
   TypeAnnotationId,
   TypeIdentifierAnnotationId,
   createObject,
@@ -46,7 +46,7 @@ export type DatabaseSchemaRegistryOptions = {
 };
 
 /**
- * Registry of `PersistentSchema` mutable schema objects within a space.
+ * Registry of `PersistentType` mutable schema objects within a space.
  */
 export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.SchemaRegistry {
   private readonly _schemaById: Map<string, Type.Type> = new Map();
@@ -343,9 +343,9 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
   /**
    * @internal
    *
-   * Registers a PersistentSchema object if necessary and returns the Type.Type entity.
+   * Registers a PersistentType object if necessary and returns the Type.Type entity.
    */
-  _registerSchema(schema: PersistentSchema): Type.Type {
+  _registerSchema(schema: PersistentType): Type.Type {
     const existing = this._schemaById.get(schema.id);
     if (existing != null) {
       return existing;
@@ -356,7 +356,7 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     return registered;
   }
 
-  private _register(schema: PersistentSchema): Type.Type {
+  private _register(schema: PersistentType): Type.Type {
     const existing = this._schemaById.get(schema.id);
     if (existing != null) {
       return existing;
@@ -398,12 +398,12 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
 
     const meta = getTypeAnnotation(schema);
     invariant(meta, 'use Schema.Struct({}).pipe(Type.Obj()) or class syntax to create a valid schema');
-    // PersistentSchema only declares typename/version/jsonSchema/name as data fields.
+    // PersistentType only declares typename/version/jsonSchema/name as data fields.
     // `meta.kind` is the entity-kind brand (set on `[KindId]` via `setSchemaPropertiesOnObjectCore`),
     // NOT a data field — spreading it here would leak `kind: 'object'` into the data namespace,
     // surface through `Obj.toJSON`, and end up baked into committed snapshots.
     const { kind: _kind, ...metaWithoutKind } = meta;
-    const schemaToStore = createObject(PersistentSchema, {
+    const schemaToStore = createObject(PersistentType, {
       ...metaWithoutKind,
       jsonSchema: JsonSchema.toJsonSchema(Schema.Struct({})),
     });

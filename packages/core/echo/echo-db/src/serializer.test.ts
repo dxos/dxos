@@ -226,7 +226,7 @@ describe('Serializer', () => {
 
     // Regression: `_addSchema` was spreading the schema's TypeAnnotation
     // (`{ kind, typename, version }`) into the data props of the new
-    // PersistentSchema instance. That leaked `kind: 'object'` into the data
+    // PersistentType instance. That leaked `kind: 'object'` into the data
     // namespace; `Obj.toJSON` then serialized it as a top-level field. On import
     // the entity's [KindId] brand came back wrong (Object, not Type), so
     // `Filter.type(Type.Type)` and `Type.isType` skipped it, the Database
@@ -254,7 +254,7 @@ describe('Serializer', () => {
 
       // Snapshot must NOT carry `kind` as a data field — it's the entity-kind
       // brand (lives on [KindId] / SYSTEM namespace), not a data field on
-      // PersistentSchema. Earlier the export side was leaking it.
+      // PersistentType. Earlier the export side was leaking it.
       const typeRow = data.objects.find((o: any) => o.typename === typename);
       expect(typeRow).toBeDefined();
       expect(typeRow).not.toHaveProperty('kind');

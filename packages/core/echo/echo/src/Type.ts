@@ -129,7 +129,7 @@ export const makeObject: {
  * Type-kind sibling of `Type.makeObject(...)` / `Type.makeRelation(...)` outputs.
  * Stored types live under this entity; filter via `Filter.type(Type.Type)`.
  */
-export const Type: Type<typeInternal.PersistentSchema> = typeInternal.PersistentSchema as any;
+export const Type: Type<typeInternal.PersistentType> = typeInternal.PersistentType as any;
 
 /**
  * Default version stamped on draft (unnamed) types created via
@@ -159,11 +159,11 @@ type MakeTypeProps = {
  *
  * The returned entity is in-memory; persist it with `db.add(entity)`.
  */
-export const makeObjectFromJsonSchema = (props: MakeTypeProps): Type<typeInternal.PersistentSchema> => {
-  return internal.makeObject(typeInternal.PersistentSchema, {
+export const makeObjectFromJsonSchema = (props: MakeTypeProps): Type<typeInternal.PersistentType> => {
+  return internal.makeObject(typeInternal.PersistentType, {
     version: DRAFT_VERSION,
     ...props,
-  } as any) as unknown as Type<typeInternal.PersistentSchema>;
+  } as any) as unknown as Type<typeInternal.PersistentType>;
 };
 
 /**
@@ -179,7 +179,7 @@ export const makeRelationFromJsonSchema = (
     source: AnyObject | internal.UnknownTypeSchema<any, typeof EntityModule.Kind.Object>;
     target: AnyObject | internal.UnknownTypeSchema<any, typeof EntityModule.Kind.Object>;
   },
-): Type<typeInternal.PersistentSchema> => {
+): Type<typeInternal.PersistentType> => {
   const { source, target, jsonSchema, ...rest } = props;
   // Embed source/target DXNs + relation entity-kind into the jsonSchema so the
   // entity round-trips correctly through `toEffectSchema` / queries / refs.
@@ -191,11 +191,11 @@ export const makeRelationFromJsonSchema = (
     relationSource: { $ref: sourceURI },
     relationTarget: { $ref: targetURI },
   };
-  return internal.makeObject(typeInternal.PersistentSchema, {
+  return internal.makeObject(typeInternal.PersistentType, {
     version: DRAFT_VERSION,
     ...rest,
     jsonSchema: enrichedJsonSchema,
-  } as any) as unknown as Type<typeInternal.PersistentSchema>;
+  } as any) as unknown as Type<typeInternal.PersistentType>;
 };
 
 /**
@@ -395,13 +395,13 @@ export const isType = (value: unknown): value is AnyEntity =>
  * Type predicate: true iff the value is a persisted `Type.Type` entity that
  * can be mutated via `Type.update`. Distinct from {@link isType}: static type
  * entities are also type-kind but are frozen at construction. Implemented by
- * matching against the `PersistentSchema` meta-schema's type URI.
+ * matching against the `PersistentType` meta-schema's type URI.
  *
  * Narrowed to `Type & { id: string }` because persisted entities always carry
  * an `id` (the optionality on the base `Type` interface covers static cases).
  */
 export const isMutable = (value: unknown): value is Type & { readonly id: string } =>
-  internal.isInstanceOf(internal.PersistentSchema, value);
+  internal.isInstanceOf(internal.PersistentType, value);
 
 /**
  * ECHO type metadata.
@@ -540,7 +540,7 @@ export function getSchema(type: AnyEntity): Schema.Schema.AnyNoContext {
     });
   }
   return rebuilt;
-};
+}
 
 /**
  * Mutable view of a `Type.Type` — the shape passed to the `Type.update` callback.

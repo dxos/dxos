@@ -16,7 +16,7 @@ import { meta } from '#meta';
 export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) => {
   const { t } = useTranslation(meta.id);
   // Obj.getType fails for database-registered (dynamic) schemas due to DXN mismatch;
-  // fall back to typename query which matches PersistentSchema.typename.
+  // fall back to typename query which matches PersistentType.typename.
   const db = Obj.getDatabase(subject);
   const typename = Obj.getTypename(subject);
   const schema =

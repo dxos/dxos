@@ -11,14 +11,7 @@ import { EchoURI } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
-import {
-  Form,
-  FormFieldLabel,
-  type FormFieldMap,
-  type FormRootProps,
-  SelectField,
-  omitId,
-} from '@dxos/react-ui-form';
+import { Form, FormFieldLabel, type FormFieldMap, type FormRootProps, SelectField, omitId } from '@dxos/react-ui-form';
 
 import { FunctionInputEditor } from './FunctionInputEditor';
 import { SpecSelector } from './SpecSelector';

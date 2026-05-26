@@ -35,7 +35,7 @@ import {
   ObjectMetaSchema,
   ObjectVersionId,
   ParentId,
-  PersistentSchema,
+  PersistentType,
   type ReactiveHandler,
   Ref,
   RefImpl,
@@ -248,7 +248,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         case SchemaKindId: {
           const storedKind = target[symbolInternals].core.getSchemaKind();
           // For persisted Type.Type entities, setSchemaPropertiesOnObjectCore writes the kind of
-          // PersistentSchema itself ('type') — not what the schema DESCRIBES. The true described
+          // PersistentType itself ('type') — not what the schema DESCRIBES. The true described
           // kind (object/relation/type) is stored in the jsonSchema's entityKind field.
           if (storedKind === EntityKind.Type) {
             const jsonSchemaEntityKind = (receiver as any).jsonSchema?.entityKind;
@@ -517,7 +517,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     // Stored schemas surface through the database schema registry so consumers
     // see the registered Type.Type entity rather than the raw persisted object.
     const database = target[symbolInternals].database;
-    if (database && isInstanceOf(PersistentSchema, object)) {
+    if (database && isInstanceOf(PersistentType, object)) {
       return database.schemaRegistry._registerSchema(object);
     }
 
