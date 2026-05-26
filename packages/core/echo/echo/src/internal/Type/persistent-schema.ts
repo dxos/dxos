@@ -29,14 +29,13 @@ const PersistentTypeStruct = Schema.Struct({
 /**
  * Persistent representation of a schema.
  */
-// TODO(burdon): Move.
 export const PersistentType = PersistentTypeStruct.pipe(
-  EchoTypeKindSchema(DXN.make('org.dxos.type.schema', '0.1.0')),
   LabelAnnotation.set(['name']),
   IconAnnotation.set({
     icon: 'ph--database--regular',
     hue: 'green',
   }),
+  EchoTypeKindSchema(DXN.make('org.dxos.type.schema', '0.1.0')),
 );
 
 /**
@@ -45,9 +44,10 @@ export const PersistentType = PersistentTypeStruct.pipe(
  * and `Filter.type(Type.Type).run()` returns.
  *
  * Structurally identical to a static `Type.Type` entity: the entity-handler's
- * `get` trap exposes `[SchemaKindId]` from `system.schemaKind` and rebuilds
- * `[StaticTypeSchemaSlot]` lazily from `jsonSchema`, so a persisted instance
- * satisfies the public `Type<A>` interface without casting.
+ * `get` trap exposes `[SchemaKindId]` (derived from `system.kind` and
+ * `data.jsonSchema.entityKind`) and rebuilds `[StaticTypeSchemaSlot]` lazily
+ * from `jsonSchema`, so a persisted instance satisfies the public `Type<A>`
+ * interface without casting.
  */
 export type PersistentType = Schema.Schema.Type<typeof PersistentTypeStruct> & {
   /** Object identifier — injected by `EchoTypeKindSchema` and stamped at construction. */

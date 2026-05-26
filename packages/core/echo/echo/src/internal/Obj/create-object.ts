@@ -33,8 +33,9 @@ import { attachedTypedObjectInspector } from './inspect';
 import { attachTypedJsonSerializer } from './json-serializer';
 
 // Omits the brand slots — those get stamped on the instance by the entity
-// handler (KindId via setKind, SchemaKindId via setSchemaKind, the
-// StaticTypeSchemaSlot lazily via the proxy), not supplied by the caller.
+// handler (KindId via setKind, SchemaKindId derived in the proxy `get` trap
+// from kind + jsonSchema.entityKind, StaticTypeSchemaSlot lazily via the
+// proxy), not supplied by the caller.
 export type CreateObjectProps<T> = T extends { id: string }
   ? Omit<T, 'id' | KindId | SchemaKindId | StaticTypeSchemaSlot> & { id?: string }
   : Omit<T, KindId | SchemaKindId | StaticTypeSchemaSlot>;

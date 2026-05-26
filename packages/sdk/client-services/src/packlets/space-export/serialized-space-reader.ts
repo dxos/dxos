@@ -79,7 +79,6 @@ export const objJsonToObjectStructure = (obj: Obj.JSON): ObjectStructure => {
   const relationTarget = (obj as any)[ATTR_RELATION_TARGET];
   if (typeof relationSource === 'string' || typeof relationTarget === 'string') {
     system.kind = 'relation';
-    system.schemaKind = 'relation';
     if (typeof relationSource === 'string') {
       system.source = { '/': URI.make(relationSource) };
     }
@@ -90,10 +89,8 @@ export const objJsonToObjectStructure = (obj: Obj.JSON): ObjectStructure => {
     // Persisted ECHO type definitions — instances of the meta-schema — must
     // brand `kind = 'type'` so the database schema registry can find them.
     system.kind = 'type';
-    system.schemaKind = 'type';
   } else {
     system.kind = 'object';
-    system.schemaKind = 'object';
   }
 
   if ((obj as any)[ATTR_DELETED]) {

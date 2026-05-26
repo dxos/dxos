@@ -246,17 +246,18 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         case ObjectDatabaseId:
           return target[symbolInternals].database;
         case SchemaKindId: {
-          const storedKind = target[symbolInternals].core.getSchemaKind();
-          // For persisted Type.Type entities, setSchemaPropertiesOnObjectCore writes the kind of
-          // PersistentType itself ('type') — not what the schema DESCRIBES. The true described
-          // kind (object/relation/type) is stored in the jsonSchema's entityKind field.
-          if (storedKind === EntityKind.Type) {
+          // For regular Obj/Relation instances the schema kind equals the entity kind.
+          // For persisted Type.Type entities the described kind (object/relation/type)
+          // is stored inside `data.jsonSchema.entityKind`; the entity itself is always
+          // branded `Type` so we look through to the jsonSchema annotation.
+          const kind = target[symbolInternals].core.getKind();
+          if (kind === EntityKind.Type) {
             const jsonSchemaEntityKind = (receiver as any).jsonSchema?.entityKind;
             if (jsonSchemaEntityKind != null) {
               return jsonSchemaEntityKind;
             }
           }
-          return storedKind;
+          return kind;
         }
         case StaticTypeSchemaSlot:
           return this._getStaticTypeSchemaSlot(target, receiver);
@@ -440,8 +441,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    * Type entities structurally satisfy the `Type<A>` interface.
    */
   private _getStaticTypeSchemaSlot(target: ProxyTarget, receiver: any): Schema.Schema.AnyNoContext | undefined {
-    // Gate on the entity-kind brand (stored as `system.kind`), not schemaKind (which now
-    // returns the described kind for persisted Type.Type entities).
+    // Only Type.Type entities carry a static-schema slot — for other kinds the
+    // proxy `get` trap returns `undefined` directly.
     if (target[symbolInternals].core.getKind() !== EntityKind.Type) {
       return undefined;
     }
@@ -1421,11 +1422,6 @@ const setSchemaPropertiesOnObjectCore = (
     const kind = getEntityKind(schema);
     invariant(kind);
     internals.core.setKind(kind);
-    // Mirror the schema's TypeAnnotation kind onto the entity as
-    // `[SchemaKindId]` so consumers can read the brand off the instance — this
-    // is what lets persisted `Type.Type` entities structurally satisfy the
-    // `Type<A>` interface (which requires `[SchemaKindId]: Type`).
-    internals.core.setSchemaKind(kind);
   }
 };
 

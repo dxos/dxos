@@ -212,7 +212,6 @@ export const ObjectStructure = Object.freeze({
     return {
       system: {
         kind: 'type',
-        schemaKind: 'type',
         type: { '/': type },
       },
       meta: {
@@ -264,18 +263,6 @@ export type ObjectSystem = {
    * instances.
    */
   kind?: 'object' | 'relation' | 'type';
-
-  /**
-   * The kind of entity this `Type.Type` entity _describes_ — `'object'`,
-   * `'relation'`, or `'type'` (for a meta-schema). Only meaningful when
-   * `kind === 'type'`; absent or ignored on regular Obj / Relation instances.
-   *
-   * Note: always stored as `'type'` in practice (PersistentType stamps
-   * `EntityKind.Type`). The true described kind is embedded inside
-   * `data.jsonSchema.entityKind` by `makeTypeJsonSchemaAnnotation` and is
-   * what the `[SchemaKindId]` proxy trap reads.
-   */
-  schemaKind?: 'object' | 'relation' | 'type';
 
   /**
    * Object reference ('protobuf' protocol) type.
