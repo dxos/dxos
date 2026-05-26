@@ -188,7 +188,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                 <Popover.Viewport>
                   {layout.popoverKind === 'card' && (
                     <Card.Root>
-                      <Card.Toolbar>
+                      <Card.Header>
                         {/* TODO(wittjosiah): Cleaner way to handle no drag handle in toolbar? */}
                         <span />
                         {layout.popoverTitle ? (
@@ -197,7 +197,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                           <span />
                         )}
                         <Card.ActionIconButton action='close' onClick={handleClose} />
-                      </Card.Toolbar>
+                      </Card.Header>
                       <Surface.Surface type={AppSurface.Card} data={layout.popoverContent} limit={1} />
                     </Card.Root>
                   )}

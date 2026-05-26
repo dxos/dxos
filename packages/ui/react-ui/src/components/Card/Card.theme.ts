@@ -24,16 +24,15 @@ const root: ComponentFunction<CardStyleProps> = ({ border, fullWidth }, ...etc) 
     ...etc,
   );
 
-const toolbar: ComponentFunction<CardStyleProps> = (_, ...etc) =>
+const header: ComponentFunction<CardStyleProps> = (_, ...etc) =>
   mx(
-    'dx-card__toolbar dx-density-md bg-transparent p-0! gap-0! col-span-3 grid! grid-cols-subgrid! [contain:none]',
+    'dx-card__header dx-density-md bg-transparent p-0! gap-0! col-span-3 grid! grid-cols-subgrid! [contain:none]',
     ...etc,
   );
 
 const title: ComponentFunction<CardStyleProps> = (_props, ...etc) => mx('dx-card__title grow truncate', ...etc);
 
-const content: ComponentFunction<CardStyleProps> = (_props, ...etc) =>
-  mx('dx-card__content contents pb-1 last:pb-0', ...etc);
+const body: ComponentFunction<CardStyleProps> = (_props, ...etc) => mx('dx-card__body contents pb-1 last:pb-0', ...etc);
 
 const text: ComponentFunction<CardStyleProps> = ({ variant = 'default', truncate: _truncate }, ...etc) =>
   mx(
@@ -84,9 +83,9 @@ const iconBlock: ComponentFunction<CardStyleProps> = ({ padding }, ...etc) =>
 
 export const cardTheme: Theme<CardStyleProps> = {
   root,
-  toolbar,
+  header,
   title,
-  content,
+  body,
   row,
   section,
   'section-title': sectionTitle,

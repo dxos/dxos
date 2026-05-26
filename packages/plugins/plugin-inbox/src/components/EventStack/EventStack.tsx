@@ -118,7 +118,7 @@ const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, 
     >
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root fullWidth border={false} ref={forwardedRef}>
-          <Card.Content>
+          <Card.Body>
             <Card.Row>
               <Card.Text>{event.title}</Card.Text>
             </Card.Row>
@@ -130,7 +130,7 @@ const EventTile = forwardRef<HTMLDivElement, EventTileProps>(({ data, location, 
                 <ActorList actors={event.attendees} />
               </Card.Row>
             )}
-          </Card.Content>
+          </Card.Body>
         </Card.Root>
       </Focus.Item>
     </Mosaic.Tile>

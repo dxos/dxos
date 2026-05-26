@@ -25,12 +25,12 @@ const DefaultStory = ({ title, description, image, fullWidth }: DefaultStoryProp
   console.log(title);
   return (
     <Card.Root fullWidth={fullWidth}>
-      <Card.Toolbar>
+      <Card.Header>
         <Card.DragHandle ref={handleRef} />
         <Card.Title>{title}</Card.Title>
         <Card.ActionIconButton action='close' onClick={() => console.log('close')} />
-      </Card.Toolbar>
-      <Card.Content>
+      </Card.Header>
+      <Card.Body>
         <Card.Poster alt='Card.Poster' image={image} />
         <Card.Row icon='ph--dot-outline--regular'>
           <Card.Text>Card.Text (default)</Card.Text>
@@ -44,7 +44,7 @@ const DefaultStory = ({ title, description, image, fullWidth }: DefaultStoryProp
         </Card.Row>
         <Card.Action label='Card.Action' onClick={() => console.log('action')} />
         <Card.Link label='Card.Link' href='https://dxos.org' />
-      </Card.Content>
+      </Card.Body>
     </Card.Root>
   );
 };
@@ -86,11 +86,11 @@ export const Simple: Story = {
     const handleRef = useRef<HTMLButtonElement>(null);
     return (
       <Card.Root>
-        <Card.Toolbar>
+        <Card.Header>
           <Card.DragHandle ref={handleRef} />
           <Card.Title>{title}</Card.Title>
           <Card.ActionIconButton action='close' onClick={() => console.log('close')} />
-        </Card.Toolbar>
+        </Card.Header>
       </Card.Root>
     );
   },
@@ -104,12 +104,12 @@ export const Section: Story = {
     const handleRef = useRef<HTMLButtonElement>(null);
     return (
       <Card.Root>
-        <Card.Toolbar>
+        <Card.Header>
           <Card.DragHandle ref={handleRef} />
           <Card.Title>{title}</Card.Title>
           <Card.ActionIconButton action='close' onClick={() => console.log('close')} />
-        </Card.Toolbar>
-        <Card.Content>
+        </Card.Header>
+        <Card.Body>
           <Card.Section title='Recent'>
             <Card.Action label='First action' icon='ph--calendar-dot--regular' onClick={() => console.log('1')} />
             <Card.Action label='Second action' icon='ph--calendar-dot--regular' onClick={() => console.log('2')} />
@@ -117,7 +117,7 @@ export const Section: Story = {
           <Card.Section title='Upcoming'>
             <Card.Action label='Third action' icon='ph--calendar-dot--regular' onClick={() => console.log('3')} />
           </Card.Section>
-        </Card.Content>
+        </Card.Body>
       </Card.Root>
     );
   },
@@ -132,16 +132,16 @@ export const Description: Story = {
     const handleRef = useRef<HTMLButtonElement>(null);
     return (
       <Card.Root>
-        <Card.Toolbar>
+        <Card.Header>
           <Card.DragHandle ref={handleRef} />
           <Card.Title>{title}</Card.Title>
           <Card.ActionIconButton action='close' onClick={() => console.log('close')} />
-        </Card.Toolbar>
-        <Card.Content>
+        </Card.Header>
+        <Card.Body>
           <Card.Row>
             <Card.Text variant='description'>{description}</Card.Text>
           </Card.Row>
-        </Card.Content>
+        </Card.Body>
       </Card.Root>
     );
   },
