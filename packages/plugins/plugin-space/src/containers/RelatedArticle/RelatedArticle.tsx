@@ -51,7 +51,7 @@ const ObjectCard = ({ data: subject, classNames }: { data: Entity.Unknown; class
     Option.fromNullable,
     Option.flatMap(Annotation.IconAnnotation.get),
     Option.map(({ icon }) => icon),
-    Option.getOrElse(() => 'ph--placeholder--regular'),
+    Option.getOrElse(() => 'ph--circle-dashed--regular'),
   );
 
   // TODO(burdon): BUG: Includes item itself.

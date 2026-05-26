@@ -103,7 +103,7 @@ const useCollectionItems = (collection: Collection.Collection, attendableId?: st
           id: Obj.getDXN(obj).toString(),
           object: obj,
           targetPath,
-          icon: iconAnnotation?.icon ?? 'ph--placeholder--regular',
+          icon: iconAnnotation?.icon ?? 'ph--circle-dashed--regular',
           iconHue: iconAnnotation?.hue,
         } satisfies ObjectItem;
       }),

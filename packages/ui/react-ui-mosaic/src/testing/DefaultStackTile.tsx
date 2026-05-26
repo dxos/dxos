@@ -18,7 +18,7 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
     () => [
       createMenuAction('toggle-details', () => setOpen((prev) => !prev), {
         label: open ? 'Hide details' : 'Show details',
-        icon: 'ph--placeholder--regular',
+        icon: 'ph--circle-dashed--regular',
       }),
     ],
     [open],
