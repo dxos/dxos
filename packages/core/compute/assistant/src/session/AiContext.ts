@@ -204,7 +204,9 @@ export class Binder extends Resource {
       DXN.hash,
       [...bindings.objects].map((ref) => ref.dxn),
     );
-    const filteredBlueprints = currentBlueprints.filter((obj) => reducedBlueprintDxns.has(Obj.getDXN(obj)));
+    const filteredBlueprints = currentBlueprints.filter(
+      (bp) => reducedBlueprintDxns.has(Obj.getDXN(bp)) && Obj.getMeta(bp).key !== undefined,
+    );
     const filteredObjects = currentObjects.filter((obj) => reducedObjectDxns.has(Obj.getDXN(obj)));
     const mergedBlueprints = this._mergeInto(filteredBlueprints, keyedBlueprints);
     const mergedObjects = this._mergeInto(filteredObjects, resolvedObjects);
