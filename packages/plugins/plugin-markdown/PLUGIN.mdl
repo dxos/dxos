@@ -99,8 +99,7 @@ op create
   input:
     name: string
     content: string
-  output:
-    id: string                  # DXN of created Document
+  output: string                # DXN of created Document
   effects: [echo:write]
 ```
 
@@ -109,8 +108,7 @@ op open
   desc: Reads the current contents of a markdown Document.
   input:
     doc: Ref<Document>
-  output:
-    content: string
+  output: string                # current Document content
   effects: [echo:read]
 ```
 
@@ -120,8 +118,7 @@ op update
   input:
     doc: Ref<Document>
     edits: Edit[]               # { oldString, newString, replaceAll? }
-  output:
-    newContent: string
+  output: string                # new Document content
   errors:
     NotFound: oldString not present in document
   effects: [echo:write]
@@ -259,7 +256,7 @@ test T-4: Reference autocomplete
 
 ```mdl
 ext type
-  uri: dxos.spec/ext/type@1.0
+  uri: org.dxos.mdl.type@1.0
   desc: A named data structure with typed fields and optional literals.
   fields:
     desc?: Prose
@@ -270,7 +267,7 @@ ext type
 
 ```mdl
 ext feat
-  uri: dxos.spec/ext/feat@1.0
+  uri: org.dxos.mdl.feat@1.0
   desc: A named feature grouping one or more requirements.
   fields:
     desc?: Prose
@@ -280,7 +277,7 @@ ext feat
 
 ```mdl
 ext test
-  uri: dxos.spec/ext/test@1.0
+  uri: org.dxos.mdl.test@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]
