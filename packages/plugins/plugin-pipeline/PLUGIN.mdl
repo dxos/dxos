@@ -1,0 +1,345 @@
+---
+id: org.dxos.plugin.pipeline
+name: PipelinePlugin
+version: 0.1.0
+---
+
+A multi-column Kanban-style pipeline plugin for DXOS Composer.
+Each Pipeline holds an ordered list of Columns; each Column is backed by a ViewModel
+whose query selects any ECHO object type from the space.
+Objects can be dragged between columns and the pipeline state persists collaboratively via ECHO.
+
+## Extensions
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+
+## Types
+
+```mdl
+type Pipeline
+  desc: Root ECHO object (typename org.dxos.type.pipeline). Holds the ordered set of columns.
+  echo-type: Pipeline.Pipeline
+  fields:
+    name?: string
+    description?: string
+    image?: URL
+    columns: Column[]
+  invariants:
+    - columns maintain insertion order
+    - columns array is not exposed in generated forms (FormInputAnnotation = false)
+```
+
+```mdl
+type Column
+  desc: One lane of the pipeline. Backed by a ViewModel whose query determines which objects appear.
+  echo-type: Pipeline.Column
+  fields:
+    name: string
+    view: Ref<View.View>   # ViewModel containing query AST + JSON schema projection
+    order: string[]        # explicit ordering of item ids within this column
+  invariants:
+    - view is a Ref to a ViewModel ECHO object stored in the same space
+    - order array tracks drag-reordering; items not in order appear after ordered items
+```
+
+```mdl
+type ViewModel
+  desc: Runtime ECHO object that holds a QueryAST and JSON schema projection for a Column.
+  fields:
+    query: { ast: QueryAST }
+    projection: ProjectionSchema
+    jsonSchema: JsonSchema
+```
+
+## Components
+
+```mdl
+component PipelineArticle
+  desc: Full-canvas article surface rendered for a Pipeline object.
+  props:
+    role: string
+    subject: Pipeline.Pipeline
+    attendableId?: string
+  state:
+    model: BoardModel<Pipeline.Column, Obj.Unknown>
+  slots:
+    toolbar: PipelineComponent.Toolbar
+    content: PipelineComponent.Columns
+  actions:
+    addColumn() → void   # opens Settings companion panel
+```
+
+```mdl
+component PipelineComponent
+  desc: Composable component set that renders the Kanban board.
+  sub-components:
+    Root      # context provider for Item renderer and onAddColumn callback
+    Content   # wraps Board.Root with the board model
+    Columns   # renders Board.Content with PipelineColumn tiles; handles drag-drop via useEventHandlerAdapter
+    Toolbar   # single "+" IconButton gated by attention; triggers onAddColumn
+```
+
+```mdl
+component PipelineProperties
+  desc: Settings companion panel for managing pipeline columns.
+  props:
+    pipeline: Pipeline.Pipeline
+  state:
+    columns: Pipeline.Column[]
+    expandedId?: string   # id of the currently expanded column editor
+  actions:
+    addColumn() → void
+    deleteColumn(column) → void
+    renameColumn(column, name) → void
+    moveColumn(from, to) → void
+    setQuery(column, query, target?) → void
+  layout: |
+    ┌──────────────────────────────────┐
+    │ "Views" heading                  │
+    ├──────────────────────────────────┤
+    │ List of Column rows              │
+    │   drag handle | name | delete |  │
+    │   [expanded: Form + ViewEditor]  │
+    ├──────────────────────────────────┤
+    │ "+" add-column button            │
+    └──────────────────────────────────┘
+```
+
+## Operations
+
+```mdl
+op createPipeline
+  desc: Creates a new Pipeline ECHO object and adds it to the target space.
+  input:
+    name?: string
+    target?: Space
+    targetNodeId?: string
+  output: Pipeline.Pipeline
+  effects: [echo:write]
+  note: Delegates to SpaceOperation.AddObject with hidden=true.
+```
+
+```mdl
+op createResearchProject
+  desc: Built-in template that scaffolds a Research pipeline with Mailbox, Contacts, Organizations, and Notes columns.
+  input:
+    db: Database.Database
+    name?: string
+  output: Pipeline.Pipeline
+  effects: [echo:write, echo:read]
+  note: |
+    Requires an existing Mailbox object in the database.
+    Returns null when no mailbox is found.
+    Creates four ViewModel columns: Mailbox messages, Person contacts,
+    Organization contacts, and Markdown documents.
+```
+
+## Features
+
+```mdl
+feat F-1: Create Pipeline
+
+  req F-1.1: A new Pipeline is created with an empty columns array.
+  req F-1.2: The Pipeline is added to the active space via SpaceOperation.AddObject (hidden=true).
+  req F-1.3: The Pipeline appears as an article in Composer.
+  req F-1.4: Graph companions "Invocations" and "Automation" are added to the pipeline node.
+```
+
+```mdl
+feat F-2: Manage Columns
+
+  req F-2.1:
+    when: user clicks "+" in the pipeline toolbar
+    then: Settings companion panel opens
+
+  req F-2.2:
+    when: user clicks "+" in PipelineProperties
+    then: a new Column is appended with an empty ViewModel and a Filter.nothing() query
+
+  req F-2.3:
+    when: user renames a column
+    then: column.name updated immediately via Obj.update
+
+  req F-2.4:
+    when: user deletes a column
+    then: Column removed from pipeline.columns; associated ViewModel ECHO object removed from db
+
+  req F-2.5:
+    when: user drags a column to a new position
+    then: pipeline.columns reordered via arrayMove
+```
+
+```mdl
+feat F-3: Column Query
+
+  req F-3.1:
+    when: user changes the query in ViewEditor
+    then: column.view.query.ast updated; column.view.projection updated to match new schema
+
+  req F-3.2:
+    when: query targets a feed (queue DXN)
+    then: Query.from({ feeds: [queue] }) applied; items ordered newest-first
+
+  req F-3.3:
+    when: query targets the space directly
+    then: items ordered by ECHO insertion order
+```
+
+```mdl
+feat F-4: Drag and Drop
+
+  req F-4.1:
+    when: user drags a Column tile
+    then: pipeline.columns reordered; change persisted via Obj.update
+
+  req F-4.2:
+    when: user drags an item between columns
+    then: column.order updated to reflect new position
+    note: The item itself is not moved to a different ECHO location; only the order array changes.
+
+  req F-4.3: Only Pipeline.Column objects are accepted as column drop targets (isColumn guard).
+```
+
+```mdl
+feat F-5: Research Template
+
+  req F-5.1:
+    when: user creates a pipeline from the "org-research" template
+    then: Research pipeline created with Mailbox, Contacts, Organizations, and Notes columns
+
+  req F-5.2: Template creation fails gracefully when no Mailbox exists in the database.
+```
+
+```mdl
+feat F-6: Invocation Companion
+
+  req F-6.1:
+    when: Pipeline article is open
+    then: "Invocations" companion tab shows InvocationTraceContainer for the pipeline's database
+
+  req F-6.2:
+    when: Pipeline article is open
+    then: "Automation" companion tab is available for wiring pipeline automation
+```
+
+## Acceptance
+
+```mdl
+test T-1: New pipeline is empty
+  given: user creates a Pipeline article
+  then:
+    - pipeline.columns is empty
+    - pipeline appears in the space object list
+```
+
+```mdl
+test T-2: Add column
+  given: an open Pipeline with no columns
+  when: user clicks "+" in PipelineProperties
+  then:
+    - pipeline.columns.length === 1
+    - new column has name === ""
+    - new column.view references a ViewModel with Filter.nothing() query
+```
+
+```mdl
+test T-3: Rename column
+  given: a pipeline with one column named "Inbox"
+  when: user types "Email" in the column name field
+  then: pipeline.columns[0].name === "Email"
+```
+
+```mdl
+test T-4: Delete column
+  given: a pipeline with one column
+  when: user deletes the column
+  then:
+    - pipeline.columns is empty
+    - associated ViewModel ECHO object no longer exists in db
+```
+
+```mdl
+test T-5: Research template
+  given: a space with an existing Mailbox
+  when: user creates pipeline from "org-research" template
+  then:
+    - pipeline.columns.length === 4
+    - column names are "Mailbox", "Contacts", "Organizations", "Notes"
+```
+
+```mdl
+test T-6: Research template missing mailbox
+  given: a space with no Mailbox
+  when: createResearchProject is called
+  then: returns null
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap
+    literals?: UnionList
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap
+    state?: FieldMap
+    slots?: FieldMap
+    actions?: ActionMap
+    emits?: EventMap
+    layout?: CodeBlock
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: A named operation with typed inputs, outputs, and declared effects.
+  fields:
+    desc?: Prose
+    input?: FieldMap
+    output?: TypeExpr
+    errors?: ErrorMap
+    effects?: EffectList
+    requires?: ServiceList
+    note?: Prose
+```

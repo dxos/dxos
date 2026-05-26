@@ -35,7 +35,7 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
   }, [invoke, organization]);
 
   return (
-    <Card.Content>
+    <Card.Body>
       <Avatar.Root>
         {image && (
           <Card.Row className='py-1'>
@@ -60,6 +60,6 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
           </Card.Row>
         ))}
       </Avatar.Root>
-    </Card.Content>
+    </Card.Body>
   );
 };

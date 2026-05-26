@@ -52,6 +52,13 @@
       "port": 9010
     },
     {
+      "name": "plugin-preview-storybook",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@dxos/plugin-preview", "exec", "storybook", "dev", "--port", "9011", "--no-open"],
+      "port": 9011,
+      "autoPort": true
+    },
+    {
       "name": "docs",
       "runtimeExecutable": "moon",
       "runtimeArgs": ["run", "docs:serve"],

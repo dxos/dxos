@@ -178,6 +178,15 @@ export class ServiceContext extends Resource {
           shouldPull: request.shouldPull,
         });
       },
+      getSyncState: async (ctx, request) => {
+        // Mirror `syncQueue` above: in non-edge / partially-initialised modes the
+        // feed syncer is absent. Return an empty state instead of throwing so
+        // callers (e.g. devtools sync panel) keep working.
+        if (!this._feedSyncer) {
+          return { namespaces: [] };
+        }
+        return this._feedSyncer.getSyncState(ctx, request);
+      },
     });
 
     this.invitations = new InvitationsHandler(

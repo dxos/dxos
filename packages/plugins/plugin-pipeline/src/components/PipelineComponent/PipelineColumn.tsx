@@ -134,9 +134,9 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
         <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
           <Focus.Item asChild>
             <Card.Root classNames={classNames} ref={composedRef}>
-              <Card.Toolbar>
+              <Card.Header>
                 <Card.Icon icon={icon} />
-                <Card.Title>{Obj.getLabel(data)}</Card.Title>
+                <Card.Title>{Obj.getLabel(data, { fallback: 'typename' })}</Card.Title>
                 {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
                 <Card.IconBlock padding>
                   <Menu.Trigger asChild>
@@ -149,10 +149,10 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
                   </Menu.Trigger>
                   <Menu.Content />
                 </Card.IconBlock>
-              </Card.Toolbar>
-              <Card.Content>
+              </Card.Header>
+              <Card.Body>
                 <Item {...itemProps} />
-              </Card.Content>
+              </Card.Body>
             </Card.Root>
           </Focus.Item>
         </Mosaic.Tile>

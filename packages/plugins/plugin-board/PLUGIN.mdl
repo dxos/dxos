@@ -1,0 +1,337 @@
+---
+id: org.dxos.plugin.board
+name: BoardPlugin
+version: 0.1.0
+---
+
+A spatial canvas plugin for `DXOS` Composer that lets users arrange any ECHO objects on an infinite two-dimensional grid.
+Items can be placed freely, moved by dragging, and removed from the canvas without deleting the underlying objects.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+
+## Types
+
+```mdl
+type Position
+  fields:
+    x: number
+    y: number
+    w?: number
+    h?: number
+```
+
+```mdl
+type BoardLayout
+  fields:
+    cells: { [id: string]: Position }
+```
+
+```mdl
+type Board
+  desc: Root ECHO object (typename org.dxos.type.board).
+  fields:
+    name?: string
+    items: Ref[]          # ordered list of references to ECHO objects on the canvas
+    layout: BoardLayout   # position of every item keyed by object id
+```
+
+## Components
+
+```mdl
+component BoardArticle
+  desc: Full-canvas surface rendered for article and section roles.
+  props:
+    role: string              # AppSurface role (article | section)
+    subject: Board            # ECHO Board object
+    attendableId?: string     # attention tracking id
+  state:
+    items: Obj.Unknown[]      # resolved ECHO objects from board.items refs
+    pickerState?: PickerState # null when picker closed; Position when open
+  slots:
+    toolbar?: ReactNode       # Board.Toolbar (disabled when not focused)
+    cell?: ReactNode          # one Surface.Surface per item (Card role)
+  actions:
+    addItem(anchor, position?) → void
+    deleteItem(id: string) → void
+    moveItem(id: string, position: Position) → void
+    selectFromPicker(id: string) → void
+  emits:
+    onAdd(anchor: HTMLButtonElement, position?: Position)
+    onDelete(id: string)
+    onMove(id: string, position: Position)
+  layout: |
+    ┌────────────────────────────────────┐
+    │ Board.Toolbar (attention-gated)    │
+    ├────────────────────────────────────┤
+    │ Board.Viewport                     │
+    │  ┌──────────────────────────────┐  │
+    │  │ Board.Backdrop  (+)          │  │
+    │  │                              │  │
+    │  │  ┌──────┐  ┌──────┐         │  │
+    │  │  │ Cell │  │ Cell │  …      │  │
+    │  │  └──────┘  └──────┘         │  │
+    │  └──────────────────────────────┘  │
+    ├────────────────────────────────────┤
+    │ ObjectPicker (popover, when open)  │
+    └────────────────────────────────────┘
+```
+
+## Operations
+
+```mdl
+op createBoard
+  desc: Creates a new Board ECHO object and adds it to the target space.
+  input:
+    name?: string
+    target?: Space
+    targetNodeId?: string
+  output: Board
+  effects: [echo:write]
+  note: Delegates to SpaceOperation.AddObject with hidden=true.
+```
+
+```mdl
+op addItem
+  desc: Adds an ECHO object reference to the board at the given grid position.
+  input:
+    board: Board
+    object: Obj.Unknown
+    position: Position
+  output: Board
+  effects: [echo:write]
+  note: |
+    When a grid "+" is clicked with a position, a new Markdown document is
+    created inline. When the toolbar "+" is clicked without a position, an
+    ObjectPicker is shown and the user selects an existing object.
+```
+
+```mdl
+op removeItem
+  desc: Removes an item reference and its layout entry from the board.
+  input:
+    board: Board
+    id: string
+  output: Board
+  effects: [echo:write]
+  note: Does not delete the underlying ECHO object; only removes it from the canvas.
+```
+
+```mdl
+op moveItem
+  desc: Updates the grid position for an existing board item.
+  input:
+    board: Board
+    id: string
+    position: Position
+  output: Board
+  effects: [echo:write]
+```
+
+## Features
+
+```mdl
+feat F-1: Create Board
+
+  req F-1.1: A new Board is created with an empty items list and an empty layout.
+  req F-1.2: The Board is added to the active space using SpaceOperation.AddObject.
+  req F-1.3: The Board appears in the space object list immediately after creation.
+```
+
+```mdl
+feat F-2: Add Item to Board
+
+  req F-2.1:
+    when: user clicks "+" on the grid backdrop at a specific position
+    then: a new Markdown document is created and placed at that position
+
+  req F-2.2:
+    when: user clicks "+" on the toolbar (no position)
+    then: ObjectPicker opens, listing all space objects that are not the board itself
+
+  req F-2.3:
+    when: user selects an object from the ObjectPicker
+    then: a Ref to that object is appended to board.items; layout entry created at default position
+
+  req F-2.4: Objects are sorted alphabetically by label in the ObjectPicker.
+```
+
+```mdl
+feat F-3: Remove Item from Board
+
+  req F-3.1:
+    when: user deletes a cell
+    then: the Ref is removed from board.items and the layout entry is deleted
+    note: the referenced ECHO object is not deleted
+
+  req F-3.2: Board is updated atomically via Obj.update.
+```
+
+```mdl
+feat F-4: Move Item on Board
+
+  req F-4.1:
+    when: user drags a card to a new position
+    then: board.layout.cells[id] is updated with the new Position
+
+  req F-4.2: Other items are not affected by a move operation.
+```
+
+```mdl
+feat F-5: Render Items
+
+  req F-5.1: Each item in board.items is rendered as a Surface.Surface with the Card role.
+  req F-5.2:
+    when: an item's Ref cannot be resolved (deleted object)
+    then: the cell is silently omitted from the rendered canvas
+
+  req F-5.3: Items are rendered in board.items order; z-ordering follows index.
+```
+
+```mdl
+feat F-6: Attention and Focus
+
+  req F-6.1:
+    when: the Board surface does not have attention
+    then: Board.Toolbar is rendered in disabled state; drag and add interactions are suppressed
+
+  req F-6.2:
+    when: the Board surface gains attention
+    then: Board.Toolbar becomes interactive
+```
+
+## Acceptance
+
+```mdl
+test T-1: New board is empty
+  given: a new Board has been created
+  then:
+    - board.items is empty
+    - board.layout.cells is empty
+```
+
+```mdl
+test T-2: Add item via grid backdrop
+  given: an empty board is displayed
+  when: user clicks the "+" hotspot at position (100, 200)
+  then:
+    - a Markdown document is created in the space
+    - board.items contains a Ref to the new document
+    - board.layout.cells[doc.id] === { x: 100, y: 200 }
+```
+
+```mdl
+test T-3: Add existing object via picker
+  given: the space contains a Document with label "Meeting notes"
+  when: user opens the ObjectPicker from the toolbar and selects "Meeting notes"
+  then:
+    - board.items contains a Ref to the Document
+    - board.layout.cells[doc.id] === { x: 0, y: 0 }
+    - picker is closed
+```
+
+```mdl
+test T-4: Remove item
+  given: board has one item
+  when: user deletes the cell
+  then:
+    - board.items is empty
+    - board.layout.cells is empty
+    - the referenced ECHO object still exists in the space
+```
+
+```mdl
+test T-5: Move item
+  given: board has one item at position { x: 0, y: 0 }
+  when: user drags it to { x: 300, y: 150 }
+  then:
+    - board.layout.cells[item.id] === { x: 300, y: 150 }
+    - board.items length is unchanged
+```
+
+```mdl
+test T-6: Toolbar gated by attention
+  given: board is rendered without focus
+  then: Board.Toolbar is disabled
+  when: board gains focus
+  then: Board.Toolbar is interactive
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap            # external inputs (immutable inside component)
+    state?: FieldMap            # internal reactive state
+    slots?: FieldMap            # named ReactNode injection points
+    actions?: ActionMap         # methods the component exposes or handles
+    emits?: EventMap            # events the component raises to its parent
+    layout?: CodeBlock          # ASCII sketch of visual structure (non-normative)
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap            # named input parameters
+    output?: TypeExpr           # return type
+    errors?: ErrorMap           # name: Prose  (when this error occurs)
+    effects?: EffectList        # echo:read | echo:write | http | fs | ...
+    requires?: ServiceList      # injected service dependencies
+    note?: Prose                # implementation guidance (non-normative)
+```

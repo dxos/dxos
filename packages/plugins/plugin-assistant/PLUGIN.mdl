@@ -1,0 +1,439 @@
+---
+id: org.dxos.plugin.assistant
+name: AssistantPlugin
+version: 0.1.0
+---
+
+An AI assistant plugin for DXOS Composer that provides conversational AI, blueprint-driven automation,
+multi-provider LLM support, and deep ECHO integration.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                           |
+|-------------|-------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`      |
+| `feat`      | `org.dxos.mdl.feat@1.0`      |
+| `test`      | `org.dxos.mdl.test@1.0`      |
+| `component` | `org.dxos.mdl.component@1.0` |
+| `op`        | `org.dxos.mdl.op@1.0`        |
+
+## Types
+
+```mdl
+type ModelProvider
+  literals: edge | ollama | lmstudio
+```
+
+```mdl
+type ChatView
+  literals: normal | summary | thinking | debug
+```
+
+```mdl
+type ModelDefaults
+  fields:
+    edge?: string
+    ollama?: string
+    lmstudio?: string
+```
+
+```mdl
+type Settings
+  fields:
+    customPrompts?: boolean
+    chatView?: ChatView
+    modelProvider?: ModelProvider
+    modelDefaults?: ModelDefaults
+    tracePanelDebug?: boolean
+```
+
+```mdl
+type Chat
+  fields:
+    id: string
+    name?: string
+    messages: Message[]
+```
+
+```mdl
+type Message
+  fields:
+    id: string
+    role: user | assistant | system
+    content: string
+    timestamp: string
+```
+
+```mdl
+type NavigationTarget
+  fields:
+    path: string
+    label: string
+    type: string
+```
+
+```mdl
+type BlueprintForm
+  fields:
+    key: string
+    name: string
+    description?: string
+```
+
+## Components
+
+```mdl
+component ChatPanel
+  desc: Main conversational interface for interacting with the AI assistant.
+  props:
+    chat: Chat
+    companionTo?: Obj
+  state:
+    messages: Message[]
+    pending: boolean
+    view: ChatView
+  slots:
+    toolbar?: ReactNode
+    empty?: ReactNode
+  actions:
+    sendMessage(content: string)
+    clearHistory()
+    switchView(view: ChatView)
+  emits:
+    onMessage(message: Message)
+  layout: |
+    ┌─────────────────────────┐
+    │ [toolbar slot]          │
+    ├─────────────────────────┤
+    │                         │
+    │  message list           │
+    │  [empty slot]           │
+    │                         │
+    ├─────────────────────────┤
+    │  input + send           │
+    └─────────────────────────┘
+```
+
+```mdl
+component TracePanel
+  desc: Displays the execution trace of an AI operation as a commit graph or raw JSON.
+  props:
+    chat: Chat
+  state:
+    debug: boolean
+  actions:
+    toggleDebug()
+  layout: |
+    ┌─────────────────────────┐
+    │ trace / span tree       │
+    └─────────────────────────┘
+```
+
+```mdl
+component AssistantSettings
+  desc: Settings panel for configuring the AI model provider, model defaults, and chat view.
+  props:
+    settings: Settings
+  emits:
+    onChange(settings: Settings)
+```
+
+## Operations
+
+```mdl
+op CreateChat
+  desc: Creates a new Chat object and optionally adds it to the active space.
+  input:
+    db: Database
+    name?: string
+    addToSpace?: boolean
+  output: Chat
+  effects: [echo:write]
+```
+
+```mdl
+op UpdateChatName
+  desc: Automatically derives and updates the name of a chat using the AI service.
+  input:
+    chat: Chat
+  output: void
+  effects: [echo:write, ai:infer]
+```
+
+```mdl
+op SetCurrentChat
+  desc: Associates a primary object with a specific companion chat in session state.
+  input:
+    companionTo: Obj
+    chat?: Chat
+  output: void
+```
+
+```mdl
+op RunPromptInNewChat
+  desc: Creates a new chat, binds context objects and blueprints, then runs a prompt.
+  input:
+    db: Database
+    objects?: Obj[]
+    blueprints?: string[]
+    prompt: string | RoutineRef
+    background?: boolean
+  output: Chat
+  effects: [echo:write, ai:infer]
+  note: |
+    When background is true, the prompt runs via the compute runtime without
+    opening the chat UI. The returned Chat can be used to track progress.
+```
+
+```mdl
+op EnsureCompanionChat
+  desc: Returns the companion chat for an object, creating one if none exists.
+  input:
+    db: Database
+    companionTo: Obj
+  output:
+    chat: Chat
+    persisted: boolean
+  effects: [echo:write]
+```
+
+```mdl
+op ResolveNavigationTargets
+  desc: Returns navigation paths for objects in the active space, optionally filtered by DXN.
+  input:
+    query?:
+      dxn?: DXN
+  output:
+    targets: NavigationTarget[]
+```
+
+```mdl
+op OnCreateSpace
+  desc: Provisions initial assistant objects when a new space is created.
+  input:
+    space: Space
+    rootCollection: Collection
+  output: void
+  effects: [echo:write]
+```
+
+```mdl
+op ToggleTracePanelDebug
+  desc: Toggles the trace panel between commit-graph and raw JSON debug view.
+  input:
+    state?: boolean
+  output: boolean
+```
+
+## Features
+
+```mdl
+feat F-1: AI Chat
+
+  req F-1.1: User can create a new Chat object in any space.
+  req F-1.2: User can type a message and receive a streamed AI response.
+  req F-1.3: Chat history is persisted to ECHO and replicated to all peers.
+  req F-1.4:
+    when: chat has enough messages
+    then: chat name is automatically derived from the conversation
+```
+
+```mdl
+feat F-2: Companion Chat
+
+  req F-2.1:
+    when: user opens an object that supports companions
+    then: a companion chat panel is shown alongside the object
+  req F-2.2:
+    when: companion chat does not yet exist
+    then: op:EnsureCompanionChat creates one and optionally persists it
+  req F-2.3:
+    when: user sends a message in the companion chat
+    then: the primary object is automatically bound as AI context
+```
+
+```mdl
+feat F-3: Blueprint System
+
+  req F-3.1: Blueprints define named AI configurations (instructions, tools, model).
+  req F-3.2: Built-in blueprints include: Assistant, Browser, Database, WebSearch, Discord, Linear, Agent, Planning, Memory, Automation, BlueprintManager, AgentWizard.
+  req F-3.3:
+    when: user selects a blueprint for a chat
+    then: chat uses that blueprint's instructions and tool set
+  req F-3.4: op:RunPromptInNewChat accepts blueprint keys to bind before sending the prompt.
+```
+
+```mdl
+feat F-4: Multi-Provider LLM
+
+  req F-4.1: Supported providers: DXOS Edge (remote), Ollama (local), LM Studio (local).
+  req F-4.2: User can configure the active provider and per-provider default model in Settings.
+  req F-4.3:
+    when: the active provider is unavailable
+    then: AiService falls back to the next registered resolver
+```
+
+```mdl
+feat F-5: Tool Execution
+
+  req F-5.1: The assistant blueprint exposes LayoutOperation.Open and ResolveNavigationTargets as tools.
+  req F-5.2: Web search tool is registered via WebSearchToolkit.
+  req F-5.3:
+    when: AI invokes a tool during a conversation
+    then: operation is dispatched via the compute runtime and result returned to the model
+```
+
+```mdl
+feat F-6: ECHO Integration
+
+  req F-6.1: Chat, CompanionTo, Blueprint, Feed, Message, Memory, Plan, Routine, Agent, McpServer, and Sequence schemas are registered with ECHO.
+  req F-6.2:
+    when: a new space is created
+    then: op:OnCreateSpace provisions default assistant objects
+  req F-6.3: AiContext.Binding schema supports binding ECHO objects as named context variables in a conversation.
+```
+
+```mdl
+feat F-7: Execution Trace
+
+  req F-7.1: Every AI operation produces a structured span tree captured in the TracePanel.
+  req F-7.2: User can toggle between commit-graph and raw JSON views via op:ToggleTracePanelDebug.
+```
+
+## Acceptance
+
+```mdl
+test T-1: Create chat and send message
+  given: a space is open and the assistant plugin is active
+  when: user creates a new Chat and sends "Hello"
+  then:
+    - Chat object appears in the space
+    - AI response is appended to Chat.messages
+    - Chat is persisted to ECHO
+```
+
+```mdl
+test T-2: Companion chat provisioning
+  given: user opens a document with no companion chat
+  when: companion panel initializes
+  then:
+    - op:EnsureCompanionChat creates a new Chat
+    - persisted === false until user sends a message
+```
+
+```mdl
+test T-3: Blueprint binding
+  given: a chat exists
+  when: user binds the "WebSearch" blueprint key
+  then:
+    - blueprint instructions are applied to the next AI request
+    - web search tool is available in the tool list
+```
+
+```mdl
+test T-4: Model provider switch
+  given: assistant settings are open
+  when: user switches provider from edge to ollama
+  then:
+    - Settings.modelProvider === ollama
+    - next AI request is routed to the Ollama resolver
+```
+
+```mdl
+test T-5: Run prompt in background
+  given: a database and a prompt string are available
+  when: op:RunPromptInNewChat is called with background: true
+  then:
+    - a new Chat is created and returned
+    - the prompt runs via compute runtime without opening the UI
+```
+
+```mdl
+test T-6: Navigation target resolution
+  given: active space contains documents and collections
+  when: op:ResolveNavigationTargets is called with no query
+  then:
+    - returned targets include paths for all top-level navigable objects
+    - each target has a non-empty label and type
+```
+
+```mdl
+test T-7: Trace panel debug toggle
+  given: trace panel is showing commit-graph view
+  when: op:ToggleTracePanelDebug is invoked with no argument
+  then:
+    - tracePanelDebug setting flips to true
+    - trace panel switches to raw JSON view
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap
+    literals?: UnionList
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap
+    state?: FieldMap
+    slots?: FieldMap
+    actions?: ActionMap
+    emits?: EventMap
+    layout?: CodeBlock
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap
+    output?: TypeExpr
+    errors?: ErrorMap
+    effects?: EffectList
+    requires?: ServiceList
+    note?: Prose
+```

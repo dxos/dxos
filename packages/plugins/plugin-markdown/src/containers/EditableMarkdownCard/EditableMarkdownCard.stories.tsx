@@ -36,11 +36,11 @@ const EditableMarkdownCardStory = ({ ...args }: Omit<EditableMarkdownCardProps, 
   return (
     <CardContainer icon='ph--text-aa--regular'>
       <Card.Root border={false}>
-        <Card.Toolbar>
+        <Card.Header>
           <Card.DragHandle />
           <Card.Title>{Obj.getLabel(doc)}</Card.Title>
           <Card.Menu />
-        </Card.Toolbar>
+        </Card.Header>
         <EditableMarkdownCard subject={doc} {...args} />
       </Card.Root>
     </CardContainer>
