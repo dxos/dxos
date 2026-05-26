@@ -246,10 +246,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         case ObjectDatabaseId:
           return target[symbolInternals].database;
         case SchemaKindId: {
-          // For regular Obj/Relation instances the schema kind equals the entity kind.
-          // For persisted Type.Type entities the described kind (object/relation/type)
-          // is stored inside `data.jsonSchema.entityKind`; the entity itself is always
-          // branded `Type` so we look through to the jsonSchema annotation.
+          // Persisted Type entities are always branded `Type`; the kind they describe lives in `jsonSchema.entityKind`.
           const kind = target[symbolInternals].core.getKind();
           if (kind === EntityKind.Type) {
             const jsonSchemaEntityKind = (receiver as any).jsonSchema?.entityKind;
@@ -353,7 +350,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
    */
   private _getTypename(target: ProxyTarget): URI.URI | undefined {
     const schema = this.getSchema(target);
-    // Stored Type.Type entities: the object id (not a typename) identifies the type.
     if (schema && typeof schema === 'object' && SchemaMetaSymbol in schema) {
       return (schema as any)[SchemaMetaSymbol].typename;
     }
@@ -431,18 +427,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   /**
-   * Lazy `[StaticTypeSchemaSlot]` for persisted `Type.Type` entities: rebuilds
-   * the Effect Schema from the entity's `jsonSchema` on first read and caches
-   * the result on the internals so repeated reads share the same instance.
-   *
-   * Returns `undefined` for non-type entities (the slot only carries meaning
-   * for things branded `[KindId] = Type`). Matches what `Type.getSchema(t)`
-   * returns for the same input, just via the proxy `get` trap so persisted
-   * Type entities structurally satisfy the `Type<A>` interface.
+   * Lazily rebuilds the Effect Schema from the entity's `jsonSchema` and caches it on internals.
+   * Lets persisted Type entities structurally satisfy `Type<A>` via the proxy `get` trap.
    */
   private _getStaticTypeSchemaSlot(target: ProxyTarget, receiver: any): Schema.Schema.AnyNoContext | undefined {
-    // Only Type.Type entities carry a static-schema slot — for other kinds the
-    // proxy `get` trap returns `undefined` directly.
     if (target[symbolInternals].core.getKind() !== EntityKind.Type) {
       return undefined;
     }
@@ -586,17 +574,15 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return value;
     }
 
-    // Type.Type entities are stored directly — no runtime wrapper to unwrap.
-    const unwrappedValue = value;
     const propertySchema = SchemaValidator.getPropertySchema(rootObjectSchema, path, (path) => {
       return target[symbolInternals].core.getDecoded([getNamespace(target), ...path]);
     });
     if (propertySchema == null) {
-      return unwrappedValue;
+      return value;
     }
 
-    const _ = Schema.asserts(propertySchema)(unwrappedValue);
-    return unwrappedValue;
+    const _ = Schema.asserts(propertySchema)(value);
+    return value;
   }
 
   private _handleLinksAssignment(target: ProxyTarget, value: any): any {
@@ -632,8 +618,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return undefined;
     }
     if (!target[symbolInternals] || !target[symbolInternals].database) {
-      // `rootSchema` is the Type entity captured at `createObject` time (when
-      // an entity was available). Already an entity — no further unwrapping.
       return target[symbolInternals]?.rootSchema;
     }
     const typeRef = target[symbolInternals].core.getType();
@@ -653,7 +637,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         .query({ typename, ...(version ? { version } : {}) })
         .runSync()[0];
     }
-    // EchoURI-typed: look up the persisted Type entity by id.
     const echoUri = EchoURI.tryParse(typeURI);
     if (echoUri) {
       const id = EchoURI.getObjectId(echoUri);
@@ -678,9 +661,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     // TODO(burdon): May not be attached to database yet.
     if (!target[symbolInternals].database) {
       // For objects created by `createObject` outside of the database.
-      // `rootSchema` is a Type entity; resolve via `Type.getSchema` so persisted
-      // Type entities rebuild from `jsonSchema` on each read (picks up
-      // mutations via `Type.addFields` / `Type.update`).
       const root = target[symbolInternals].rootSchema;
       return root != null ? Type.getSchema(root) : undefined;
     }
@@ -710,11 +690,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       const type = target[symbolInternals].database.schemaRegistry
         .query({ typename, ...(version ? { version } : {}) })
         .runSync()[0];
-      console.log('[getSchema DXN branch]', {
-        typename,
-        hasType: !!type,
-        jsonSchemaProps: type?.jsonSchema?.properties,
-      });
       return type && Type.getSchema(type);
     }
 
@@ -919,9 +894,6 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     // on the plain object (not via proxy) and do not live in `space.db`. Without this
     // short-circuit, the path below would wrap the queue object as a fresh ECHO proxy
     // and call `database.add()`, leaking the object into `space.db`.
-    // IMPORTANT: Only apply to non-ECHO-proxy objects (plain objects with explicit SelfURIId).
-    // Regular DB-connected ECHO objects also return a SelfURIId from the proxy, but we must
-    // NOT short-circuit for those — their ref should be created as a local URI.
     if (typeof otherEchoObj === 'object' && otherEchoObj !== null && !isEchoObject(otherEchoObj)) {
       const selfUri = (otherEchoObj as any)[SelfURIId];
       if (typeof selfUri === 'string' && EchoURI.isEchoURI(selfUri)) {
@@ -1261,9 +1233,6 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
 
     const target = slot.target as ProxyTarget;
     target[symbolInternals] = new ObjectInternals(core);
-    // `Obj.getType` returns the Type entity (when available) so callers see a
-    // stable entity-shaped value. `schema` is derived from `type` and is only
-    // used here to drive initial validation above.
     target[symbolInternals].rootSchema = type;
     target[symbolPath] = [];
     target[symbolNamespace] = DATA_NAMESPACE;
@@ -1306,9 +1275,6 @@ export const createObject = <T extends AnyProperties>(obj: T): CreateObjectRetur
       [EventId]: new Event(),
       ...(obj as any),
     };
-    // `Obj.getType` returns the Type entity (when available) so callers see a
-    // stable entity-shaped value. `schema` is derived from `type` and is only
-    // used here to drive initial validation above.
     target[symbolInternals].rootSchema = type;
     target[symbolInternals].subscriptions.push(
       core.updates.on(() => {
