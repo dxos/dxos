@@ -257,7 +257,9 @@ export const getTypename = (obj: AnyProperties): string | undefined => {
     // Try to extract typename from DXN.
     return getSchemaTypename(schema);
   } else {
-    const type = getTypeURI(obj);
+    // `obj` may be an arbitrary value (e.g. from `isInstanceOf`); read TypeId
+    // directly so we return undefined for non-entities instead of throwing.
+    const type = (obj as any)?.[TypeId];
     // Parse the URI string to extract typename.
     if (DXN.isDXN(type)) {
       const parsed = DXN.tryMake(type);
@@ -319,8 +321,10 @@ export const isInstanceOf = <S>(
 
   const schemaURI = getTypeURIFromSpecifier(schemaOrType);
 
-  const type = getTypeURI(object);
-  if (type && type === schemaURI) {
+  // `object` is arbitrary input — read TypeId directly (it may be missing on
+  // non-entities) rather than via `getTypeURI` which asserts the URI is set.
+  const type = (object as any)[TypeId];
+  if (URI.isURI(type) && type === schemaURI) {
     return true;
   }
 

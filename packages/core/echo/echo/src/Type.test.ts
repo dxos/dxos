@@ -22,11 +22,11 @@ describe('Type', () => {
     });
 
     test('Schema.is validates structural compatibility only', ({ expect }) => {
-      // Schema.is does structural validation (has id field). Extract the
-      // Effect Schema from the Type.Type entity via Type.getSchema.
-      expect(Schema.is(Type.getSchema(Obj.Unknown))({ id: 'plain-object' })).toBe(true);
+      // Schema.is does structural validation (has id field). `Obj.Unknown` IS
+      // a raw Effect Schema (branded with EchoSchemaKind), so pass it directly.
+      expect(Schema.is(Obj.Unknown)({ id: 'plain-object' })).toBe(true);
       const obj = Obj.make(TestSchema.Person, { name: 'Test' });
-      expect(Schema.is(Type.getSchema(Obj.Unknown))(obj)).toBe(true);
+      expect(Schema.is(Obj.Unknown)(obj)).toBe(true);
     });
   });
 
@@ -39,16 +39,16 @@ describe('Type', () => {
     });
 
     test('Schema.is validates structural compatibility only', ({ expect }) => {
-      // Schema.is does structural validation (has id field). Extract the
-      // Effect Schema from the Type.Type entity via Type.getSchema.
-      expect(Schema.is(Type.getSchema(Relation.Unknown))({ id: 'plain-object' })).toBe(true);
+      // Schema.is does structural validation (has id field). `Relation.Unknown`
+      // IS a raw Effect Schema (branded with EchoSchemaKind), so pass it directly.
+      expect(Schema.is(Relation.Unknown)({ id: 'plain-object' })).toBe(true);
       const obj1 = Obj.make(TestSchema.Person, { name: 'Alice' });
       const obj2 = Obj.make(TestSchema.Person, { name: 'Bob' });
       const rel = Relation.make(TestSchema.HasManager, {
         [Relation.Source]: obj1,
         [Relation.Target]: obj2,
       });
-      expect(Schema.is(Type.getSchema(Relation.Unknown))(rel)).toBe(true);
+      expect(Schema.is(Relation.Unknown)(rel)).toBe(true);
     });
   });
 
