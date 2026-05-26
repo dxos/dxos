@@ -160,15 +160,15 @@ export default Capability.makeModule(
             return false;
           }
 
-          const schema = Obj.getType(data.companionTo);
-          const path = schema ? Option.getOrElse(ViewAnnotation.get(schema), () => [] as readonly string[]) : [];
+          const type = Obj.getType(data.companionTo);
+          const path = type ? Option.getOrElse(ViewAnnotation.get(type), () => [] as readonly string[]) : [];
           const viewTarget = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.companionTo, path) : undefined;
           return !!viewTarget;
         },
         // TODO(burdon): Replace with mosaic.
         component: ({ data, ref }) => {
-          const schema = Obj.getType(data.companionTo);
-          const path = schema ? Option.getOrElse(ViewAnnotation.get(schema), () => [] as readonly string[]) : [];
+          const type = Obj.getType(data.companionTo);
+          const path = type ? Option.getOrElse(ViewAnnotation.get(type), () => [] as readonly string[]) : [];
           const view = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.companionTo, path) : undefined;
           if (!view) {
             return null;
@@ -300,14 +300,14 @@ export default Capability.makeModule(
             return false;
           }
 
-          const schema = Obj.getType(data.subject);
-          const path = schema ? Option.getOrElse(ViewAnnotation.get(schema), () => [] as readonly string[]) : [];
+          const type = Obj.getType(data.subject);
+          const path = type ? Option.getOrElse(ViewAnnotation.get(type), () => [] as readonly string[]) : [];
           const viewTarget = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.subject, path) : undefined;
           return !!viewTarget;
         },
         component: ({ data }) => {
-          const schema = Obj.getType(data.subject);
-          const path = schema ? Option.getOrElse(ViewAnnotation.get(schema), () => [] as readonly string[]) : [];
+          const type = Obj.getType(data.subject);
+          const path = type ? Option.getOrElse(ViewAnnotation.get(type), () => [] as readonly string[]) : [];
           const view = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(data.subject, path) : undefined;
 
           if (!view) {

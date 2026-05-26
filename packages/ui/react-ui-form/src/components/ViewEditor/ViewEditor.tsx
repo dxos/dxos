@@ -52,7 +52,7 @@ import {
 
 export type ViewEditorProps = ThemedClassName<
   {
-    schema: Schema.Schema.AnyNoContext | Type.AnyEntity;
+    schema: Type.AnyEntity;
     view: View.View;
     mode?: 'schema' | 'tag';
     registry?: SchemaRegistry.SchemaRegistry;

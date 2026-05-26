@@ -85,7 +85,7 @@ export const makeDynamicTable = ({
     view,
     baseSchema: jsonSchema,
     change: {
-      projection: (mutate) => Obj.update(view, (v) => mutate(v.projection as Mutable<View.Projection>)),
+      projection: (mutate) => Obj.update(view, (view) => mutate(view.projection as Mutable<View.Projection>)),
       schema: (mutate) => mutate(jsonSchema),
     },
   });

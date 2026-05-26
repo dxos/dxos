@@ -17,7 +17,7 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 
 import { TestLayout } from '../testing';
-import { type ExcludeId, Form, type FormRootProps, omitId } from './Form';
+import { Form, type FormRootProps, omitId } from './Form';
 
 const Organization = Schema.Struct({
   name: Schema.String.pipe(Schema.minLength(1)).annotations({ title: 'Full name' }),
@@ -154,30 +154,30 @@ const values: Partial<Person> = {
   reminderAt: '09:00:00',
 };
 
-export const Default: Story<ExcludeId<typeof Person>> = {
+export const Default: Story<any> = {
   args: {
-    schema: omitId(Person),
+    schema: omitId(Type.getSchema(Person)),
     values,
     autoSave: true,
   },
 };
 
-export const Readonly: Story<ExcludeId<typeof Person>> = {
+export const Readonly: Story<any> = {
   args: {
-    schema: omitId(Person),
+    schema: omitId(Type.getSchema(Person)),
     values,
     readonly: true,
   },
 };
 
-export const Static: Story<ExcludeId<typeof Person>> = {
+export const Static: Story<any> = {
   args: {
-    schema: omitId(Person),
+    schema: omitId(Type.getSchema(Person)),
     values,
     layout: 'static',
   },
 };
 
-export const Empty: Story<ExcludeId<typeof Person>> = {
+export const Empty: Story<any> = {
   args: {},
 };

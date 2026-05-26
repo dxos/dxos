@@ -8,8 +8,8 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
-import { Annotation as EchoAnnotation, Type } from '@dxos/echo';
-import { type AnyProperties, SchemaKindId } from '@dxos/echo/internal';
+import { Annotation as EchoAnnotation } from '@dxos/echo';
+import { type AnyProperties } from '@dxos/echo/internal';
 import { createJsonPath, getValue as getValue$ } from '@dxos/effect';
 import {
   IconButton,
@@ -41,22 +41,11 @@ import { FormTooltipsContext } from './FormTooltipsContext';
 // TODO(burdon): Move styles to form.ts (as with ui-theme).
 
 // TODO(burdon): Reconcile with @dxos/echo.
-export type ExcludeId<S> = S extends Type.AnyEntity
-  ? Omit<Type.InstanceType<S>, 'id'>
-  : S extends Schema.Schema.AnyNoContext
-    ? Omit<Schema.Schema.Type<S>, 'id'>
-    : never;
-
-export type SchemaOrType = Schema.Schema.AnyNoContext | Type.AnyEntity;
-
-export const toSchema = (schemaOrType: SchemaOrType): Schema.Schema.AnyNoContext =>
-  (schemaOrType as any)[SchemaKindId] != null
-    ? (Type.getSchema(schemaOrType as Type.AnyEntity) as Schema.Schema.AnyNoContext)
-    : (schemaOrType as Schema.Schema.AnyNoContext);
+export type ExcludeId<S extends Schema.Schema.AnyNoContext> = Omit<Schema.Schema.Type<S>, 'id'>;
 
 // TODO(burdon): Move to @dxos/schema (re-export here).
-export const omitId = <S extends SchemaOrType>(schema: S): Schema.Schema<ExcludeId<S>, ExcludeId<S>> =>
-  toSchema(schema).pipe(Schema.omit('id')) as any;
+export const omitId = <S extends Schema.Schema.AnyNoContext>(schema: S): Schema.Schema<ExcludeId<S>, ExcludeId<S>> =>
+  schema.pipe(Schema.omit('id')) as any;
 
 /**
  * Drop fields annotated with `FormInputAnnotation.set(false)` from a schema so
@@ -64,13 +53,12 @@ export const omitId = <S extends SchemaOrType>(schema: S): Schema.Schema<Exclude
  * the picker's inline create form, where a `FactoryAnnotation` typically
  * supplies the hidden values (e.g. a backing-object Ref) outside the form.
  */
-export const omitHiddenFormFields = <S extends SchemaOrType>(schema: S): Schema.Schema.AnyNoContext => {
-  const inner = toSchema(schema);
-  const properties = SchemaAST.getPropertySignatures(inner.ast);
+export const omitHiddenFormFields = <S extends Schema.Schema.AnyNoContext>(schema: S): Schema.Schema.AnyNoContext => {
+  const properties = SchemaAST.getPropertySignatures(schema.ast);
   const hidden = properties
     .filter((prop) => Option.getOrElse(EchoAnnotation.FormInputAnnotation.getFromAst(prop.type), () => true) === false)
     .map((prop) => prop.name as string);
-  return hidden.length === 0 ? inner : (inner.pipe(Schema.omit(...(hidden as [string, ...string[]]))) as any);
+  return hidden.length === 0 ? schema : (schema.pipe(Schema.omit(...(hidden as [string, ...string[]]))) as any);
 };
 
 //

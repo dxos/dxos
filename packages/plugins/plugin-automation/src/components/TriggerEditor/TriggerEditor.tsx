@@ -6,13 +6,12 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Operation, Script, Trigger } from '@dxos/compute';
 import { ComputeGraph } from '@dxos/conductor';
-import { type Database, Entity, Feed, Filter, Obj, type Query, Ref } from '@dxos/echo';
+import { type Database, Entity, Feed, Filter, Obj, type Query, Ref, Type } from '@dxos/echo';
 import { EchoURI } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import {
-  type ExcludeId,
   Form,
   FormFieldLabel,
   type FormFieldMap,
@@ -24,7 +23,7 @@ import {
 import { FunctionInputEditor } from './FunctionInputEditor';
 import { SpecSelector } from './SpecSelector';
 
-type TriggerFormSchema = ExcludeId<typeof Trigger.Trigger>;
+type TriggerFormSchema = Omit<Type.InstanceType<typeof Trigger.Trigger>, 'id'>;
 
 export type TriggerEditorProps = {
   db: Database.Database;
@@ -48,14 +47,14 @@ export const TriggerEditor = ({ db, types, tags, readonlySpec, trigger, ...formP
     [trigger],
   );
 
-  const triggerSchema = useMemo(() => omitId(Trigger.Trigger), []);
+  const triggerSchema = useMemo(() => omitId(Type.getSchema(Trigger.Trigger)), []);
   const defaultValues = useMemo(() => {
     const { id: _, ...values } = trigger;
     return values;
   }, [trigger]);
 
   return (
-    <Form.Root<TriggerFormSchema>
+    <Form.Root<any>
       {...formProps}
       db={db}
       schema={triggerSchema}

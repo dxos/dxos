@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/effect';
 import { Card, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
@@ -16,8 +16,8 @@ import { meta } from '#meta';
 
 export const FormCard = ({ subject, projection }: AppSurface.ObjectCardProps & { projection?: ProjectionModel }) => {
   const { t } = useTranslation(meta.id);
-  const echoSchema = Obj.getType(subject);
-  const schema = useMemo(() => echoSchema && omitId(echoSchema), [echoSchema]);
+  const type = Obj.getType(subject);
+  const schema = useMemo(() => type && omitId(Type.getSchema(type)), [type]);
 
   const handleSave = useCallback((values: any, { changed }: { changed: Record<string, boolean> }) => {
     const paths = Object.keys(changed).filter((path) => changed[path]);

@@ -58,8 +58,8 @@ export const StackArticle = ({ attendableId, subject: collection }: StackArticle
 
   const collectionObjects = useAtomValue(collectionObjectsFamily(collection));
   const items = collectionObjects.map((object: Obj.Unknown) => {
-    const schema = Obj.getType(object);
-    const iconAnnotation = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema)) : undefined;
+    const type = Obj.getType(object);
+    const iconAnnotation = type ? Option.getOrUndefined(Annotation.IconAnnotation.get(type)) : undefined;
     const metadata: StackSectionMetadata = { icon: iconAnnotation?.icon };
     const view = {
       // ...stack.sections[object.id],

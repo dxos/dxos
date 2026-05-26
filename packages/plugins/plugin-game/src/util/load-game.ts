@@ -21,19 +21,19 @@ export class GameVariantMismatchError extends Error {
 
 /**
  * Loads a Game from a Ref and resolves its variant state, asserting the variant matches
- * the expected schema. Returns the typed pair.
+ * the expected type. Returns the typed pair.
  *
  * Use in operation handlers that declare `input.game: GameRef<MyVariantState>`.
  */
 export const loadGame = <S extends Type.AnyObject>(
   ref: Ref.Ref<Game>,
-  variantSchema: S,
+  variantType: S,
 ): Effect.Effect<{ game: Game; variant: Type.InstanceType<S> }, Error, Database.Service> =>
   Effect.gen(function* () {
     const game = yield* Database.load(ref);
     const variant = yield* Database.load(game.variant);
-    if (!Obj.instanceOf(variantSchema, variant)) {
-      const expected = (variantSchema as any).typename ?? 'unknown';
+    if (!Obj.instanceOf(variantType, variant)) {
+      const expected = (variantType as any).typename ?? 'unknown';
       const actual = Obj.getTypename(variant as Obj.Any) ?? 'unknown';
       return yield* Effect.fail(new GameVariantMismatchError(game.id, expected, actual));
     }

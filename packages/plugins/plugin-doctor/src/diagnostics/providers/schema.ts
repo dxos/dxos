@@ -33,8 +33,8 @@ export const schemaDiagnostic: DiagnosticProvider = {
         if (signal.aborted) {
           break;
         }
-        const schema = Obj.getType(obj);
-        if (!schema) {
+        const type = Obj.getType(obj);
+        if (!type) {
           // Untyped documents and some system objects legitimately have no schema —
           // surface as 'info' rather than 'warning' to keep the signal/noise ratio reasonable.
           issues.push({
@@ -46,7 +46,7 @@ export const schemaDiagnostic: DiagnosticProvider = {
           });
           continue;
         }
-        const result = Schema.validateEither(Type.getSchema(schema))(obj);
+        const result = Schema.validateEither(Type.getSchema(type))(obj);
         if (Either.isLeft(result)) {
           issues.push({
             id: `${space.id}:${(obj as { id?: string }).id ?? 'unknown'}:schema-mismatch`,

@@ -141,8 +141,8 @@ export const createObjectNode = ({
   navigable?: boolean;
   parentCollection?: Collection.Collection;
 }) => {
-  const type = Obj.getTypename(object);
-  if (!type) {
+  const typename = Obj.getTypename(object);
+  if (!typename) {
     return null;
   }
 
@@ -150,8 +150,8 @@ export const createObjectNode = ({
   // (dynamic) schemas the echo-handler queries by id=dxn:type:typename, but the stored
   // PersistentSchema jsonSchema.$id is dxn:echo:@:<objectId> so the id-based lookup misses.
   // Fall back to a typename query which matches the PersistentSchema.typename field.
-  const rawSchema = Obj.getType(object) ?? db.schemaRegistry.query({ typename: type }).runSync()[0];
-  const schema = rawSchema && Type.getSchema(rawSchema);
+  const type = Obj.getType(object) ?? db.schemaRegistry.query({ typename }).runSync()[0];
+  const schema = type && Type.getSchema(type);
   const staticIcon = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema)) : undefined;
   const iconFromRefProp = schema ? Option.getOrUndefined(Annotation.IconFromRefAnnotation.get(schema)) : undefined;
   // If the schema delegates its icon to a referenced sub-entity, resolve that ref's target
@@ -162,8 +162,8 @@ export const createObjectNode = ({
     }
     const refValue = (object as any)?.[iconFromRefProp];
     const target = Ref.isRef(refValue) ? refValue.target : undefined;
-    const targetSchema = target ? Obj.getType(target as Obj.Unknown) : undefined;
-    return targetSchema ? Option.getOrUndefined(Annotation.IconAnnotation.get(targetSchema)) : undefined;
+    const targetType = target ? Obj.getType(target as Obj.Unknown) : undefined;
+    return targetType ? Option.getOrUndefined(Annotation.IconAnnotation.get(targetType)) : undefined;
   })();
   const iconAnnotation = delegatedIcon ?? staticIcon;
   const graphProps = schema ? Option.getOrUndefined(GraphPropsAnnotation.get(schema)) : undefined;
@@ -172,7 +172,8 @@ export const createObjectNode = ({
     ? getCollectionGraphNodePartials({ db, collection: object })
     : graphProps;
 
-  const label = Obj.getLabel(object) || getDynamicLabel('object-name.placeholder', type, { defaultValue: 'New item' });
+  const label =
+    Obj.getLabel(object) || getDynamicLabel('object-name.placeholder', typename, { defaultValue: 'New item' });
 
   const selectable =
     !Obj.instanceOf(Collection.Collection, object) || (navigable && Obj.instanceOf(Collection.Collection, object));
@@ -202,7 +203,7 @@ export const createObjectNode = ({
 
   return {
     id: object.id,
-    type,
+    type: typename,
     cacheable: CACHEABLE_PROPS,
     data: object,
     properties: {

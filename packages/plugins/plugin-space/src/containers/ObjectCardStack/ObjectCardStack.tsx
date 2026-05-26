@@ -27,15 +27,15 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
   const { t } = useTranslation(meta.id);
   const db = Obj.getDatabase(view);
   const typename = view.query ? getTypenameFromQuery(view.query.ast) : undefined;
-  const schema = useSchema(db, typename);
+  const type = useSchema(db, typename);
 
-  const queriedObjects = useQuery(db, schema ? Filter.type(schema) : Filter.nothing());
+  const queriedObjects = useQuery(db, type ? Filter.type(type) : Filter.nothing());
   const selectedRows = useSelected(objectId, 'multi');
   const selectedObjects = selectedRows.map((id) => queriedObjects.find((obj) => obj.id === id)).filter(isNonNullable);
 
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
-  if (!schema) {
+  if (!type) {
     return null;
   }
 
@@ -65,7 +65,7 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
                     Tile={({ ...props }) => (
                       <Mosaic.Tile {...props}>
                         <Card.Root>
-                          <ObjectForm object={props.data} schema={schema} />
+                          <ObjectForm object={props.data} type={type} />
                         </Card.Root>
                       </Mosaic.Tile>
                     )}

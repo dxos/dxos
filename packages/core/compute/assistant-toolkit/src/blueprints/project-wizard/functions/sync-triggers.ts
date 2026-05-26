@@ -33,11 +33,11 @@ const AGENT_TRIGGER_TARGET_EXTENSION_KEY = 'org.dxos.extension.AgentTriggerTarge
 
 /** Checks if an object's schema has the FeedAnnotation. */
 const hasFeedAnnotation = (obj: Obj.Unknown): boolean => {
-  const schema = Obj.getType(obj);
-  if (!schema) {
+  const type = Obj.getType(obj);
+  if (!type) {
     return false;
   }
-  const annotation = FeedAnnotation.get(schema);
+  const annotation = FeedAnnotation.get(type);
   return Option.isSome(annotation) && annotation.value === true;
 };
 

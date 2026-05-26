@@ -39,7 +39,7 @@ export const useWebSearch = ({ query, context }: UseWebSearchProps): UseWebSearc
       const results = await search({
         query,
         context,
-        schema: [TestSchema.Person, TestSchema.Project, TestSchema.Organization], // TODO(burdon): ???
+        types: [TestSchema.Person, TestSchema.Project, TestSchema.Organization], // TODO(burdon): ???
         exaApiKey: EXA_API_KEY,
       });
 

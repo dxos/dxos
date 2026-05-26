@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import type * as Schema from 'effect/Schema';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { extractionAnthropicFunction, processTranscriptMessage } from '@dxos/assistant/extraction';
@@ -80,17 +79,14 @@ export default Capability.makeModule(
 );
 
 type EntityExtractionEnricherFactoryOptions = {
-  contextTypes: (Schema.Schema.AnyNoContext | Type.AnyObject | Type.AnyRelation)[];
+  contextTypes: (Type.AnyObject | Type.AnyRelation)[];
   space: Space;
 };
 
 const _createEntityExtractionEnricher = ({ contextTypes, space }: EntityExtractionEnricherFactoryOptions) => {
   return async (message: Message.Message) => {
     const objects = await space.db
-      .query(
-        // `Filter.type`'s overload set doesn't narrow across the schema/type-entity union.
-        Query.select(Filter.or(...contextTypes.map((schema) => Filter.type(schema as any)))),
-      )
+      .query(Query.select(Filter.or(...contextTypes.map((type) => Filter.type(type)))))
       .run();
 
     log.info('context', { objects });

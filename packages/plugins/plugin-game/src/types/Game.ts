@@ -61,8 +61,8 @@ export type Game = Type.InstanceType<typeof Game>;
 /**
  * Variant-narrowed reference to a Game.
  *
- * Encodes — at the type level — that the variant ref points to a specific state schema.
- * Runtime narrowing is performed by `loadGame(ref, variantSchema)` which validates and
+ * Encodes — at the type level — that the variant ref points to a specific state type.
+ * Runtime narrowing is performed by `loadGame(ref, variantType)` which validates and
  * returns the resolved Game together with its typed variant state.
  *
  * @example
@@ -77,18 +77,8 @@ export type Game = Type.InstanceType<typeof Game>;
  */
 export type GameRef<_V> = Ref.Ref<Game>;
 
-export const GameRef = <S extends Schema.Schema.AnyNoContext | Type.AnyEntity>(_variantSchema: S) =>
-  Ref.Ref(Game) as Schema.Schema<
-    GameRef<
-      S extends Type.AnyEntity
-        ? Type.InstanceType<S>
-        : S extends Schema.Schema.AnyNoContext
-          ? Schema.Schema.Type<S>
-          : never
-    >,
-    any,
-    never
-  >;
+export const GameRef = <S extends Type.AnyEntity>(_variantType: S) =>
+  Ref.Ref(Game) as Schema.Schema<GameRef<Type.InstanceType<S>>, any, never>;
 
 /**
  * Build a base `Game` object referencing the given variant-state ECHO object.

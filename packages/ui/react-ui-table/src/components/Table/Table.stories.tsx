@@ -95,7 +95,7 @@ const StoryViewEditor = ({
   return (
     <ViewEditor
       registry={db?.schemaRegistry}
-      schema={Type.isType(schema) ? Type.getSchema(schema) : schema}
+      schema={schema}
       view={view}
       onQueryChanged={handleQueryChanged}
       onDelete={handleDeleteColumn}

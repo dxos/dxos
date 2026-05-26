@@ -95,8 +95,8 @@ const useCollectionItems = (collection: Collection.Collection, attendableId?: st
   const items = useMemo(
     () =>
       objects.map((obj) => {
-        const schema = Obj.getType(obj);
-        const iconAnnotation = schema ? Option.getOrUndefined(Annotation.IconAnnotation.get(schema)) : undefined;
+        const type = Obj.getType(obj);
+        const iconAnnotation = type ? Option.getOrUndefined(Annotation.IconAnnotation.get(type)) : undefined;
         const targetPath = attendableId ? getCollectionObjectPath(attendableId, obj.id) : getObjectPathFromObject(obj);
 
         return {

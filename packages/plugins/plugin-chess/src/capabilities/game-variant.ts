@@ -30,7 +30,7 @@ const variant: GameVariant = {
   id: Chess.State.typename,
   label: 'Chess',
   icon: 'ph--shield-chevron--regular',
-  variantSchema: Chess.State,
+  variantType: Chess.State,
   inputSchema: CreateChessInput,
   roles: ['white', 'black'] as const,
   createVariant: (input) =>

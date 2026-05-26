@@ -5,14 +5,13 @@
 import type * as Schema from 'effect/Schema';
 import React, { type KeyboardEvent, forwardRef, useCallback, useState } from 'react';
 
-import { type Type } from '@dxos/echo';
 import { type Palette, Popover, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Combobox } from '@dxos/react-ui-list';
 import { useSearchListResults } from '@dxos/react-ui-search';
 
 import { translationKey } from '#translations';
 
-import { Form, toSchema } from '../Form';
+import { Form } from '../Form';
 import { type FormFieldMap } from '../Form/FormFieldComponent';
 
 export type RefOption = {
@@ -26,7 +25,7 @@ export type ObjectPickerContentProps = ThemedClassName<{
   selectedIds?: string[];
   createOptionLabel?: [string, { ns: string }];
   createOptionIcon?: string;
-  createSchema?: Schema.Schema.AnyNoContext | Type.AnyEntity;
+  createSchema?: Schema.Schema.AnyNoContext;
   createInitialValuePath?: string;
   createFieldMap?: FormFieldMap;
   /**
@@ -105,7 +104,7 @@ const ObjectPickerContent = forwardRef<HTMLDivElement, ObjectPickerContentProps>
           <Popover.Viewport>
             <Form.Root
               testId='create-referenced-object-form'
-              schema={toSchema(createSchema)}
+              schema={createSchema}
               defaultValues={createInitialValuePath ? { [createInitialValuePath]: formInitialValue } : {}}
               fieldMap={createFieldMap}
               onSave={handleFormSave}

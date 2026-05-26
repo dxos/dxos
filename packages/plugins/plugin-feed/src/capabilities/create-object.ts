@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Ref } from '@dxos/echo';
+import { Ref, Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
@@ -26,7 +26,7 @@ export default Capability.makeModule(
     return [
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Subscription.Subscription.typename,
-        inputSchema: Subscription.Subscription,
+        inputSchema: Type.getSchema(Subscription.Subscription),
         createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Subscription.makeSubscription(props);

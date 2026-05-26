@@ -76,7 +76,7 @@ export default Capability.makeModule(
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Project.Project.typename,
-        inputSchema: Project.Project,
+        inputSchema: Type.getSchema(Project.Project),
         createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Project.make(props);
@@ -90,7 +90,7 @@ export default Capability.makeModule(
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
         id: Task.Task.typename,
-        inputSchema: Task.Task,
+        inputSchema: Type.getSchema(Task.Task),
         createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Task.make(props);

@@ -149,9 +149,9 @@ export const buildViewIndex = (get: Atom.Context, space: Space, schemas: Type.An
     const viewObjects = get(AtomQuery.make(space.db, filter));
 
     for (const viewObject of viewObjects) {
-      const holderSchema = Obj.getType(viewObject as Obj.Unknown);
-      const path = holderSchema
-        ? ViewAnnotation.get(holderSchema).pipe(Option.getOrElse(() => [] as EchoViewRefPath))
+      const holderType = Obj.getType(viewObject as Obj.Unknown);
+      const path = holderType
+        ? ViewAnnotation.get(holderType).pipe(Option.getOrElse(() => [] as EchoViewRefPath))
         : ([] as EchoViewRefPath);
 
       if (path.length === 0) {

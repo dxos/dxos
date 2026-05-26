@@ -42,7 +42,7 @@ const variant: GameVariant = {
   id: TicTacToe.State.typename,
   label: 'Tic-Tac-Toe',
   icon: 'ph--hash-straight--regular',
-  variantSchema: TicTacToe.State,
+  variantType: TicTacToe.State,
   inputSchema: CreateTicTacToeInput,
   roles: ['x', 'o'] as const,
   createVariant: (input) =>

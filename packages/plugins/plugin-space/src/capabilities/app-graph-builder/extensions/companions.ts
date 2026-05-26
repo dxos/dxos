@@ -64,9 +64,9 @@ export const createCompanionExtensions = Effect.fnUntraced(function* () {
           return Option.none();
         }
 
-        const schema = Obj.getType(node.data);
-        const path = schema ? ViewAnnotation.get(schema).pipe(Option.getOrElse(() => [] as EchoViewRefPath)) : [];
-        const isEchoViewBacked = schema && path.length > 0 ? ViewAnnotation.hasRefAlongPath(node.data, path) : false;
+        const type = Obj.getType(node.data);
+        const path = type ? ViewAnnotation.get(type).pipe(Option.getOrElse(() => [] as EchoViewRefPath)) : [];
+        const isEchoViewBacked = type && path.length > 0 ? ViewAnnotation.hasRefAlongPath(node.data, path) : false;
 
         if (!isEchoViewBacked) {
           return Option.none();

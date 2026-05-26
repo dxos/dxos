@@ -130,7 +130,7 @@ const DefaultComponent = () => {
       <div className='flex flex-col h-full overflow-hidden border-l border-separator'>
         <ViewEditor
           registry={space?.db.schemaRegistry}
-          schema={schema && Type.isType(schema) ? Type.getSchema(schema) : schema}
+          schema={schema}
           view={view}
           onQueryChanged={handleUpdateQuery}
           onDelete={schema && Type.isMutable(schema) ? handleDeleteField : undefined}

@@ -89,9 +89,9 @@ export default Capability.makeModule(() =>
           if (!Obj.isObject(data.subject)) {
             return false;
           }
-          const schema = Obj.getType(data.subject);
-          if (schema) {
-            return Type.isMutable(schema);
+          const type = Obj.getType(data.subject);
+          if (type) {
+            return Type.isMutable(type);
           }
           // Obj.getType fails for database-registered schemas (DXN mismatch); fall back to typename query.
           try {

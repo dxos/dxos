@@ -165,8 +165,8 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
 
       test('getSchemaURI', async () => {
         const obj = await createObject({ number: 42 });
-        const schema = Obj.getType(obj);
-        expect(Obj.getTypeURI(obj)?.toString()).to.deep.eq(schema && getSchemaURI(schema)?.toString());
+        const type = Obj.getType(obj);
+        expect(Obj.getTypeURI(obj)?.toString()).to.deep.eq(type && getSchemaURI(type)?.toString());
       });
 
       test('can assign arrays with objects', async () => {

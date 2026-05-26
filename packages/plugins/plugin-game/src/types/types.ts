@@ -21,10 +21,13 @@ export type GameVariant = {
   label: string;
   /** Optional Phosphor icon name (e.g. 'ph--shield-chevron--regular'). */
   icon?: string;
-  /** Schema of the variant state ECHO object referenced by `Game.variant`. */
-  variantSchema: Schema.Schema.AnyNoContext | Type.AnyEntity;
-  /** Optional input schema rendered as a form after the user picks the variant. */
-  inputSchema?: Schema.Schema.AnyNoContext | Type.AnyEntity;
+  /** ECHO Type entity of the variant state object referenced by `Game.variant`. */
+  variantType: Type.AnyEntity;
+  /**
+   * Optional Effect Schema rendered as a form after the user picks the variant.
+   * To use a `Type.Type` entity, extract its schema first via `Type.getSchema(...)`.
+   */
+  inputSchema?: Schema.Schema.AnyNoContext;
   /** Roles a player may take in this variant (e.g. ['white', 'black']). */
   roles: readonly string[];
   /**

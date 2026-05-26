@@ -54,11 +54,11 @@ export const Main = () => {
     [],
   );
 
-  const getSchema = (type: string | undefined) => typeMap.get(type ?? Item.typename) ?? Item;
-  const objectsOfSchema = useQuery(space?.db, Query.type(getSchema(type) as any));
+  const getType = (typename: string | undefined) => typeMap.get(typename ?? Item.typename) ?? Item;
+  const objectsOfType = useQuery(space?.db, Query.type(getType(type) as any));
   const objects = useMemo(
-    () => objectsOfSchema.filter((object) => match(filter, (object as any).content)),
-    [objectsOfSchema, filter],
+    () => objectsOfType.filter((object) => match(filter, (object as any).content)),
+    [objectsOfType, filter],
   );
 
   const identity = client.halo.identity.get();
@@ -212,7 +212,7 @@ export const Main = () => {
             onViewChange={(view) => setView(view)}
           />
 
-          {view === 'table' && <ItemTable schema={getSchema(type)} objects={objects as Obj.Any[]} />}
+          {view === 'table' && <ItemTable type={getType(type)} objects={objects as Obj.Any[]} />}
           {view === 'list' && <ItemList objects={objects as Obj.Any[]} onDelete={handleObjectDelete} />}
           {view === 'debug' && <ItemList debug objects={objects as Obj.Any[]} onDelete={handleObjectDelete} />}
         </div>
