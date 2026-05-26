@@ -121,7 +121,7 @@ const Test = Schema.Struct({
 }).pipe(Type.makeObject(DXN.make('com.example.type.test', '0.1.0')));
 
 const createTableModel = (registry: Registry.Registry, props: Partial<TableModelProps> = {}): TableModel => {
-  const schema = createEchoSchema(Test);
+  const schema = createEchoSchema(Type.getSchema(Test));
   const view = ViewModel.make({
     query: Query.select(Filter.type(schema)),
     jsonSchema: schema.jsonSchema,

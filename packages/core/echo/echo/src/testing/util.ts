@@ -8,28 +8,16 @@ import type * as SchemaAST from 'effect/SchemaAST';
 import { assertArgument } from '@dxos/invariant';
 import { deepMapValues } from '@dxos/util';
 
-import {
-  PersistentType,
-  StaticTypeSchemaSlot,
-  getSchemaTypename,
-  getStaticTypeSchema,
-  makeObject,
-  subscribe,
-  toJsonSchema,
-} from '../internal';
+import { PersistentType, getSchemaTypename, getStaticTypeSchema, makeObject, subscribe, toJsonSchema } from '../internal';
 import type * as Type from '../Type';
 
 /**
  * Create an in-memory `Type.Type` entity (a `PersistentType` object) for tests.
- * Accepts either a raw Effect Schema or a `Type.Type` entity (the entity's
- * underlying source schema is extracted via `StaticTypeSchemaSlot`).
+ * Accepts a raw Effect Schema. Pass `Type.getSchema(entity)` to convert a
+ * `Type.Type` entity to its underlying source schema first.
  */
 // TODO(dmaretskyi): Should be replaced by registration of typed object.
-export const createEchoSchema = (
-  input: Schema.Schema.AnyNoContext | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext },
-  version = '0.1.0',
-): Type.Type => {
-  const schema = ((input as any)[StaticTypeSchemaSlot] ?? input) as Schema.Schema.AnyNoContext;
+export const createEchoSchema = (schema: Schema.Schema.AnyNoContext, version = '0.1.0'): Type.Type => {
   const jsonSchema = toJsonSchema(schema);
   const typename = getSchemaTypename(schema);
   assertArgument(typename, 'typename', 'Schema does not have a typename.');

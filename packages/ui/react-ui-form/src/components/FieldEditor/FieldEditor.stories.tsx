@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo } from 'react';
 
-import { Filter, Query } from '@dxos/echo';
+import { Filter, Query, Type } from '@dxos/echo';
 import { createEchoSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -24,7 +24,7 @@ export type FieldEditorDebugObjects = {
 
 const useTestProjection = () => {
   return useMemo(() => {
-    const schema = createEchoSchema(Example);
+    const schema = createEchoSchema(Type.getSchema(Example));
     const view = ViewModel.make({
       name: 'Test',
       query: Query.select(Filter.type(Example)),

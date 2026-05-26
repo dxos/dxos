@@ -41,7 +41,7 @@ describe('dynamic schema', () => {
       field2: Schema.Boolean,
     }).pipe(EchoObjectSchema(DXN.make('com.example.type.test', '0.1.0')));
 
-    const registered = createEchoSchema(TestSchema);
+    const registered = createEchoSchema(Type.getSchema(TestSchema));
     expect(getProperties(registered).map((p) => [p.name, p.type])).to.deep.eq([
       ['field1', SchemaAST.stringKeyword],
       ['field2', SchemaAST.booleanKeyword],
@@ -53,7 +53,7 @@ describe('dynamic schema', () => {
       field1: Schema.String,
     }).pipe(EchoObjectSchema(DXN.make('com.example.type.test', '0.1.0')));
 
-    const registered = createEchoSchema(TestSchema);
+    const registered = createEchoSchema(Type.getSchema(TestSchema));
     Type.addFields(registered, { field2: Schema.Boolean });
     expect(getProperties(registered).map((p) => [p.name, p.type])).to.deep.eq([
       ['field1', SchemaAST.stringKeyword],
@@ -62,7 +62,7 @@ describe('dynamic schema', () => {
   });
 
   test('updateColumns preserves order of existing and appends new fields', async () => {
-    const registered = createEchoSchema(EmptySchemaType);
+    const registered = createEchoSchema(Type.getSchema(EmptySchemaType));
     Type.addFields(registered, { field1: Schema.String });
     Type.addFields(registered, { field2: Schema.Boolean });
     Type.addFields(registered, { field3: Schema.Number });
@@ -76,7 +76,7 @@ describe('dynamic schema', () => {
   });
 
   test('removeColumns', async () => {
-    const registered = createEchoSchema(EmptySchemaType);
+    const registered = createEchoSchema(Type.getSchema(EmptySchemaType));
     Type.addFields(registered, { field1: Schema.String });
     Type.addFields(registered, { field2: Schema.Boolean });
     Type.addFields(registered, { field3: Schema.Number });
@@ -90,7 +90,7 @@ describe('dynamic schema', () => {
   test('schema manipulations preserve annotations', async () => {
     const metaNamespace = 'dxos.test';
     const metaInfo = { maxLength: 10 };
-    const registered = createEchoSchema(EmptySchemaType);
+    const registered = createEchoSchema(Type.getSchema(EmptySchemaType));
     Type.addFields(registered, {
       field1: Schema.String.pipe(PropertyMeta(metaNamespace, metaInfo)),
       field2: Schema.String,
