@@ -23,7 +23,7 @@ const createView = (doc: string, extensions: any[]) => {
 
 const countImageElements = (view: EditorView): number => view.dom.querySelectorAll('img.cm-image').length;
 
-describe('image extension', ({ expect }) => {
+describe('image extension', () => {
   test('renders <img> for an http image link by default', ({ expect }) => {
     const view = createView('![](http://example.com/x.png)', [image(), EditorView.editable.of(false)]);
     expect(countImageElements(view)).toBeGreaterThan(0);
