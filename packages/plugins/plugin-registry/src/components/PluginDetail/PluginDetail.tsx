@@ -18,6 +18,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
+import { MarkdownView } from '@dxos/react-ui-markdown';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -180,7 +181,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
             <Section.Root>
               <Section.Heading title='Description' />
               <Section.Body>
-                <p className='text-description'>{description}</p>
+                <MarkdownView content={description} />
               </Section.Body>
             </Section.Root>
 
