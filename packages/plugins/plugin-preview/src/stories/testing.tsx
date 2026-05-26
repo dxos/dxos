@@ -101,6 +101,13 @@ export const createTask = (): Task.Task => {
   });
 };
 
+/**
+ * Plain object cast as `Obj.Any` — has no schema, typename, or database, so cards
+ * like `FormCard` fall through to their empty/unsupported state. Use to story-pin
+ * fallback rendering.
+ */
+export const createUnknown = (): Obj.Any => ({}) as unknown as Obj.Any;
+
 export const createExpando = (): Expando.Expando => {
   return Expando.make({
     name: random.person.fullName(),

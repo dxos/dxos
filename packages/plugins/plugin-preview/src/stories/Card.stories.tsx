@@ -16,7 +16,15 @@ import { type Organization, type Person, type Pipeline, type Task } from '@dxos/
 import { translations } from '#translations';
 
 import { ExpandoCard, FormCard, JsonCard, OrganizationCard, PersonCard, ProjectCard, TaskCard } from '../cards';
-import { DefaultStory, createExpando, createOrganization, createPerson, createProject, createTask } from './testing';
+import {
+  DefaultStory,
+  createExpando,
+  createOrganization,
+  createPerson,
+  createProject,
+  createTask,
+  createUnknown,
+} from './testing';
 
 random.seed(999);
 
@@ -56,6 +64,18 @@ export const _FormEditable: StoryObj<typeof DefaultStory<Person.Person>> = {
     createObject: createPerson,
     image: true,
     componentProps: { readonly: false, layout: 'full' },
+  },
+};
+
+/**
+ * Empty-state variant: the subject has no resolvable schema so `FormCard` renders
+ * `<Card.Content><Card.Row><Card.Text variant='description'>No preview</Card.Text></Card.Row></Card.Content>`.
+ * Use this story to verify the empty message lands in the card's center column.
+ */
+export const _FormEmpty: StoryObj<typeof DefaultStory> = {
+  args: {
+    Component: FormCard,
+    createObject: createUnknown,
   },
 };
 
