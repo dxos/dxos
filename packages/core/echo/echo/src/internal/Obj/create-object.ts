@@ -34,14 +34,11 @@ import { attachTypedJsonSerializer } from './json-serializer';
 // Omits the brand slots — those get stamped on the instance by the entity
 // handler (KindId via setKind, SchemaKindId derived in the proxy `get` trap
 // from kind + jsonSchema.entityKind, StaticTypeSchemaSlot lazily via the
-// proxy), not supplied by the caller. Also strips `typename` / `version` — on
-// type-kind entities these are projected by the proxy from `ObjectMeta.key` /
-// `ObjectMeta.version`, seeded via `[MetaId]` rather than data. Allows
-// `[Obj.Meta]` (MetaId symbol) for seeding registry-provenance meta at
-// construction (mirrors `Obj.make`).
+// proxy), not supplied by the caller. Allows `[Obj.Meta]` (MetaId symbol) for
+// seeding registry-provenance meta at construction (mirrors `Obj.make`).
 export type CreateObjectProps<T> = (T extends { id: string }
-  ? Omit<T, 'id' | 'typename' | 'version' | KindId | SchemaKindId | StaticTypeSchemaSlot> & { id?: string }
-  : Omit<T, 'typename' | 'version' | KindId | SchemaKindId | StaticTypeSchemaSlot>) & {
+  ? Omit<T, 'id' | KindId | SchemaKindId | StaticTypeSchemaSlot> & { id?: string }
+  : Omit<T, KindId | SchemaKindId | StaticTypeSchemaSlot>) & {
   readonly [MetaId]?: Partial<ObjectMeta>;
 };
 

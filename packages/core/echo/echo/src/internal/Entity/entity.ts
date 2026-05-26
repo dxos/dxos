@@ -14,6 +14,8 @@ import {
   type EntityKind,
   InstancePhantomId,
   KindId,
+  MetaId,
+  type ObjectMeta,
   SchemaKindId,
   StaticTypeSchemaSlot,
 } from '../common/types';
@@ -153,10 +155,19 @@ export const makeEchoTypeSchema = <
     Schema.Schema.Context<Self>
   >(ast);
   let memoizedJsonSchema: JsonSchemaType | undefined;
+  // Attach a frozen `ObjectMeta` eagerly so `Type.getMeta` reads it through the
+  // uniform `[MetaId]` path (no synthetic fallback). `key` / `version` are the
+  // canonical registry-provenance pair; `keys` is empty for static declarations.
+  const meta: ObjectMeta = Object.freeze({
+    keys: Object.freeze([]) as never,
+    key: typename,
+    version,
+  });
   const entity = {
     [KindId]: 'type' as EntityKind.Type,
     [SchemaKindId]: kind,
     [StaticTypeSchemaSlot]: schema as unknown as Schema.Schema.AnyNoContext,
+    [MetaId]: meta,
     typename,
     version,
     fields,

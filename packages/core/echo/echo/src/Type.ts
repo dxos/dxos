@@ -500,9 +500,9 @@ export type ReadonlyMeta = internal.ReadonlyMeta;
  * `meta.version` holds the semver. Use {@link getTypename} / {@link getVersion}
  * if you want the helpers' id / {@link DRAFT_VERSION} fallbacks for drafts.
  *
- * Static type entities (`Type.makeObject` / `Type.makeRelation` results) carry
- * typename/version as direct fields rather than through `MetaId`; a synthetic
- * `ObjectMeta` is returned for those so callers always see the same shape.
+ * Both persisted and static type entities (`Type.makeObject` /
+ * `Type.makeRelation` results) carry their `ObjectMeta` via `[MetaId]` — static
+ * entities attach a frozen meta at construction — so the lookup is uniform.
  */
 export function getMeta(entity: internal.Mutable<AnyEntity>): Meta;
 export function getMeta(entity: Mutable): Meta;
@@ -512,20 +512,9 @@ export function getMeta(entity: AnyEntity | internal.Mutable<AnyEntity> | Mutabl
   // callbacks; at runtime that draft IS the underlying persisted Type entity,
   // so the same `MetaId` lookup works.
   invariant(isType(entity), 'Expected a Type entity.');
-  // Persisted Type entities carry runtime `ObjectMeta` via `MetaId`.
-  if (isMutable(entity)) {
-    return internal.getMetaChecked(entity);
-  }
-  // Static `EchoTypeSchema` entities (from `Type.makeObject` etc.) keep
-  // typename/version as direct fields; synthesize a matching ObjectMeta.
-  // `Type<A>` omits typename/version at the type level (they live in `Meta`
-  // on persisted Type entities), but the runtime value always carries them.
-  const staticEntity = entity as AnyObj | AnyRelation;
-  return Object.freeze({
-    keys: Object.freeze([]) as never,
-    key: staticEntity.typename,
-    version: staticEntity.version,
-  });
+  // Both persisted and static type entities carry runtime `ObjectMeta` via
+  // `[MetaId]`; static entities are frozen, so the read-only overload applies.
+  return internal.getMetaChecked(entity);
 }
 
 /**
