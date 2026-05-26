@@ -68,6 +68,8 @@ await build({
   format: 'esm',
   platform: 'browser',
   conditions: ['workerd', 'worker', 'browser'],
+  // node:* modules are provided by workerd's Node.js compat layer at runtime.
+  external: ['node:*'],
   metafile: true,
   logLevel: 'error',
   plugins: [rawImportPlugin()],
