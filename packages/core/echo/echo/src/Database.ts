@@ -19,6 +19,7 @@ import type * as Entity from './Entity';
 import * as Err from './Err';
 import type * as Filter from './Filter';
 import type * as Hypergraph from './Hypergraph';
+import { DatabaseService } from './internal';
 import { isInstanceOf } from './internal/Annotation';
 import { type AnyProperties } from './internal/common/types';
 import type { Ref } from './internal/Ref/ref';
@@ -152,13 +153,15 @@ export const Database: Schema.Schema<Database> = Schema.Any.pipe(Schema.filter((
 
 /**
  * Effect service tag for Database dependency injection.
+ *
+ * The tag is declared in `internal` (as `DatabaseService`) so internal consumers
+ * — e.g. the `Ref` reference resolver — can require it at runtime without
+ * importing this public API module (which would introduce a runtime import
+ * cycle). Re-exported here as `Database.Service`; `Context.Tag` identity is keyed
+ * by the tag id string, so every call site resolves the same service.
  */
-export class Service extends Context.Tag('@dxos/echo/Database/Service')<
-  Service,
-  {
-    readonly db: Database;
-  }
->() {}
+export const Service = DatabaseService;
+export type Service = DatabaseService;
 
 /**
  * Layer that provides a Database service that throws when accessed.

@@ -19,8 +19,8 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EchoURI, ObjectId, type URI } from '@dxos/keys';
 
 import type * as Type from '../../Type';
-import * as Database from '../../Database';
 import { ReferenceAnnotationId, getSchemaURI, getTypeAnnotation, getTypeIdentifierAnnotation } from '../Annotation';
+import { DatabaseService } from '../Database';
 import {
   type AnyEntity,
   type AnyProperties,
@@ -324,7 +324,7 @@ export const createEchoReferenceSchema = (
       decode: () => {
         return (value) =>
           Effect.gen(function* () {
-            const dbService = yield* Effect.serviceOption(Database.Service);
+            const dbService = yield* Effect.serviceOption(DatabaseService);
 
             // TODO(dmaretskyi): This branch seems to be taken by Schema.is
             if (Ref.isRef(value)) {
