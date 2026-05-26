@@ -158,13 +158,7 @@ export type MakeProps<S extends Type.AnyObj> = {
  * Use `Relation.make` for relations.
  */
 export function make<T extends Type.AnyObj>(type: T, props: NoInfer<MakeProps<T>>): OfShape<Type.InstanceType<T>>;
-/**
- * Overload for dynamically-registered types. A persisted `Type.Type` record
- * (e.g. one returned by `db.schemaRegistry.register`) is a runtime schema whose
- * instance shape isn't known statically, so the result is `Obj.Any`.
- */
-export function make(type: Type.AnyType, props: MakePropsInternal<Any>): Any;
-export function make(input: Type.AnyObj | Type.AnyType, props: any): OfShape<any> {
+export function make(input: Type.AnyObj, props: any): OfShape<any> {
   // `Type.Type` entities aren't `Schema.Schema` themselves; derive the Effect
   // Schema via `Type.getSchema(...)`. Pass the entity through to `makeObject`
   // so subsequent schema mutations (`Type.addFields`, etc.) propagate.

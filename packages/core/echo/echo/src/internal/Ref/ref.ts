@@ -90,13 +90,26 @@ export interface RefSchema<T extends AnyEntity> extends Schema.SchemaClass<Ref<T
  * Type of the `Ref` function and extra methods attached to it.
  */
 export interface RefFn {
-  // A reference target is a `Type.Type` entity (the canonical Option B input)
-  // or one of the well-known "any object" / "any relation" branded schemas
-  // (`Obj.Unknown` / `Relation.Unknown`). Arbitrary raw schemas are rejected.
+  // A reference target is a `Type.AnyEntity` entity (the canonical Option B
+  // input) or one of the well-known "any object" / "any relation" branded
+  // schemas (`Obj.Unknown` / `Relation.Unknown`). Arbitrary raw schemas are
+  // rejected.
+  //
+  // Referencing a type-kind entity (a meta-schema, e.g. `Type.Type`) yields a
+  // reference to a stored schema record; its loaded target is any registered
+  // entity (`Type.AnyEntity`), since a stored object/relation schema is itself a
+  // `Type.Type` record. Referencing an object/relation type yields a reference
+  // to an instance of that type.
   <S extends Type.AnyEntity | UnknownTypeSchema<any, any> = Type.AnyEntity>(
     schema: S,
   ): RefSchema<
-    S extends Type.AnyEntity ? Type.InstanceType<S> : S extends UnknownTypeSchema<infer A, any> ? A : never
+    S extends Type.AnyType
+      ? Type.AnyEntity
+      : S extends Type.AnyObj | Type.AnyRelation
+        ? Type.InstanceType<S>
+        : S extends UnknownTypeSchema<infer A, any>
+          ? A
+          : never
   >;
 
   /**

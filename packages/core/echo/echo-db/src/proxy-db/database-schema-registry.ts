@@ -282,9 +282,10 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     }) as QueryResult.QueryResult<Type.Type>;
   }
 
-  // Registering any schema input (Type entity, raw schema, or JSON-schema
-  // record) yields a stored `Type.Type` record, so the return is always
-  // `PersistedType[]` — never `Persisted<T>` of the input entity type.
+  // Kind-preserving overload: an object schema comes back as `Persisted<AnyObj>`
+  // so callers can chain into `Obj.make` without casts. Each stored schema is
+  // also a `Type.Type` record (referenceable via `Ref(Type.Type)`).
+  async register<T extends Type.AnyEntity>(input: T[]): Promise<Type.Persisted<T>[]>;
   async register(input: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.PersistedType[]>;
   async register(inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.PersistedType[]> {
     const results: Type.PersistedType[] = [];
