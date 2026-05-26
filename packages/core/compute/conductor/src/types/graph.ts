@@ -6,7 +6,6 @@ import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
 import { DXN, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
-import type { JsonSchemaType } from '@dxos/echo/internal';
 import { Graph } from '@dxos/graph';
 
 export const ComputeValueType = Schema.Literal('string', 'number', 'boolean', 'object');
@@ -28,7 +27,7 @@ export const ComputeNode = Schema.extend(
     /**
      * For composition nodes.
      */
-    subgraph: Schema.optional(Schema.suspend((): Ref.RefSchema<ComputeGraph> => Ref.Ref(ComputeGraph) as any)),
+    subgraph: Schema.optional(Schema.suspend((): Ref.RefSchema<ComputeGraph> => Ref.Ref(ComputeGraph))),
 
     /**
      * For composition of function nodes.
@@ -56,22 +55,8 @@ export const ComputeNode = Schema.extend(
   }),
 ).pipe(Schema.mutable);
 
-export interface ComputeNode {
-  id: string;
-  type?: string;
-  data?: any;
-  inputSchema?: JsonSchemaType;
-  outputSchema?: JsonSchemaType;
-  subgraph?: Ref.Ref<ComputeGraph>;
-  function?: Ref.Ref<Type.InstanceType<typeof Operation.PersistentOperation>>;
-  valueType?: 'string' | 'number' | 'boolean' | 'object';
-  value?: any;
-  enabled?: boolean;
-}
-// Forward-declared so `ComputeNode.subgraph` can reference `Ref.Ref(ComputeGraph)`
-// before the const `ComputeGraph` schema is defined below. The interface merges
-// with the const declaration to yield the full instance shape.
-export interface ComputeGraph extends Type.InstanceType<typeof ComputeGraph> {}
+export interface ComputeNode extends Schema.Schema.Type<typeof ComputeNode> {}
+
 // TODO(dmaretskyi): To effect schema.
 export type ComputeNodeMeta = {
   input: Schema.Schema.AnyNoContext;
@@ -95,6 +80,7 @@ export const ComputeEdge = Schema.extend(
 );
 
 export type ComputeEdge = Schema.Schema.Type<typeof ComputeEdge>;
+
 /**
  * Persistent graph.
  */
@@ -105,5 +91,7 @@ export const ComputeGraph = Schema.Struct({
   input: Schema.optional(ComputeNode),
   output: Schema.optional(ComputeNode),
 }).pipe(Type.makeObject(DXN.make('org.dxos.type.computeGraph', '0.1.0')));
+
+export interface ComputeGraph extends Type.InstanceType<typeof ComputeGraph> {}
 
 export const isComputeGraph = Obj.instanceOf(ComputeGraph);
