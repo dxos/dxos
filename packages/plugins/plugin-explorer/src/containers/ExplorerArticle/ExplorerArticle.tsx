@@ -193,18 +193,24 @@ const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
       if (!svgEl || variant !== 'bundle') {
         return;
       }
-      select(svgEl)
-        .selectAll<SVGGElement, GraphLayoutEdge<SpaceGraphNode>>('g.dx-edge')
-        .each(function (edge) {
-          const isOut = !!node && edge.source.id === node.id;
-          const isIn = !!node && edge.target.id === node.id;
-          const isConnected = isOut || isIn;
-          const group = select(this);
-          group.style('opacity', node && !isConnected ? '0.08' : null);
-          group
-            .select('path')
-            .style('stroke', isOut ? 'var(--color-orange-500)' : isIn ? 'var(--color-sky-500)' : null)
-            .style('stroke-width', isConnected ? '1.5px' : null);
+      const edgeSel = select(svgEl).selectAll<SVGGElement, GraphLayoutEdge<SpaceGraphNode>>('g.dx-edge');
+      edgeSel.style('opacity', (edge) => {
+        if (!node) return null;
+        const isConnected = edge.source.id === node.id || edge.target.id === node.id;
+        return isConnected ? null : '0.08';
+      });
+      edgeSel
+        .select<SVGPathElement>('path')
+        .style('stroke', (edge) => {
+          if (!node) return null;
+          if (edge.source.id === node.id) return 'var(--color-orange-500)';
+          if (edge.target.id === node.id) return 'var(--color-sky-500)';
+          return null;
+        })
+        .style('stroke-width', (edge) => {
+          if (!node) return null;
+          const isConnected = edge.source.id === node.id || edge.target.id === node.id;
+          return isConnected ? '1.5px' : null;
         });
     },
     [onNodeHover, variant],
