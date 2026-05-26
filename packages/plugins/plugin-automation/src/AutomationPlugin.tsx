@@ -2,12 +2,12 @@
 // Copyright 2023 DXOS.org
 //
 
-import { ActivationEvents, Plugin } from '@dxos/app-framework';
+import { ActivationEvent, ActivationEvents, Plugin } from '@dxos/app-framework';
 import { AppPlugin } from '@dxos/app-toolkit';
 import { Operation, Trace, Trigger } from '@dxos/compute';
 import { ClientEvents } from '@dxos/plugin-client';
 
-import { AppGraphBuilder, LayerSpecs, OperationHandler, ReactSurface } from '#capabilities';
+import { AppGraphBuilder, LayerSpecs, OperationHandler, ReactSurface, TriggerRuntimeController } from '#capabilities';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
@@ -21,6 +21,10 @@ export const AutomationPlugin = Plugin.define(meta).pipe(
     activatesOn: ClientEvents.ClientReady,
     firesBeforeActivation: [ActivationEvents.SetupProcessManager],
     activate: LayerSpecs,
+  }),
+  Plugin.addModule({
+    activatesOn: ActivationEvent.allOf(ActivationEvents.ProcessManagerReady, ClientEvents.SpacesReady),
+    activate: TriggerRuntimeController,
   }),
   Plugin.make,
 );

@@ -13,6 +13,7 @@ import { Text } from '@dxos/schema';
 import { HasSubject, Message } from '@dxos/types';
 
 import {
+  AiContext as AiContextCapability,
   AiService,
   AppGraphBuilder,
   BlueprintDefinition,
@@ -59,6 +60,10 @@ export const AssistantPlugin = Plugin.define(meta).pipe(
     firesBeforeActivation: [AssistantEvents.SetupAiServiceProviders],
     activatesOn: ActivationEvents.SetupProcessManager,
     activate: AiService,
+  }),
+  Plugin.addModule({
+    activatesOn: ActivationEvents.SetupProcessManager,
+    activate: AiContextCapability,
   }),
   Plugin.make,
 );

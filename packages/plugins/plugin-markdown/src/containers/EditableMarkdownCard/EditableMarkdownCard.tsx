@@ -30,13 +30,15 @@ export const EditableMarkdownCard = ({ subject }: EditableMarkdownCardProps) => 
 
   return (
     <Card.Section classNames='overflow-hidden'>
-      <MarkdownEditorProvider id={id} object={subject} viewMode='source'>
-        {(editorRootProps) => (
-          <Editor.Root {...editorRootProps}>
-            <MarkdownEditor.Content compact initialValue={initialValue} />
-          </Editor.Root>
-        )}
-      </MarkdownEditorProvider>
+      <Card.Row fullWidth>
+        <MarkdownEditorProvider id={id} object={subject} viewMode='source'>
+          {(editorRootProps) => (
+            <Editor.Root {...editorRootProps}>
+              <MarkdownEditor.Content compact initialValue={initialValue} />
+            </Editor.Root>
+          )}
+        </MarkdownEditorProvider>
+      </Card.Row>
     </Card.Section>
   );
 };

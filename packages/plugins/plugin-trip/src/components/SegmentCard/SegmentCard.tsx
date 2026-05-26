@@ -6,10 +6,26 @@ import { format } from 'date-fns';
 import React, { type MouseEvent, forwardRef, useCallback } from 'react';
 
 import { Card, useTranslation } from '@dxos/react-ui';
+import { Form } from '@dxos/react-ui-form';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import { trim } from '@dxos/util';
 
 import { meta } from '#meta';
 import { Segment } from '#types';
+
+/**
+ * Read-only layout for a flight `Segment.FlightDetails`. Rendered inside the tile
+ * via `Form.Layout` with `layout='static' readonly`, so each cell collapses to a
+ * truncated plain-text value rather than an input.
+ */
+const FLIGHT_LAYOUT = trim`
+  <grid cols="2">
+    <field name="number"/>
+    <field name="serviceClass"/>
+    <field name="departAt"/>
+    <field name="arriveAt"/>
+  </grid>
+`;
 
 export type SegmentCardAction = { segmentId: string } & (
   | { type: 'current' }
@@ -59,8 +75,9 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
   const title = Segment.getTitle(segment);
   const route = Segment.getRoute(segment);
   const date = Segment.getPrimaryDate(segment);
-  const icon = Segment.kindIcon(segment.kind);
-  const isCancelled = segment.status === 'cancelled';
+  const kind = Segment.getKind(segment);
+  const icon = Segment.kindIcon(kind);
+  const flightDetails = segment.details._tag === 'flight' ? segment.details : undefined;
 
   return (
     <Mosaic.Tile
@@ -71,25 +88,43 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
       location={location}
     >
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <Card.Root fullWidth border={false} ref={forwardedRef} classNames={isCancelled ? 'opacity-40' : undefined}>
+        <Card.Root fullWidth border={false} ref={forwardedRef}>
           <Card.Toolbar>
             <Card.Icon icon={icon} />
-            <Card.Title classNames={isCancelled ? 'line-through' : undefined}>{title}</Card.Title>
+            <Card.Title>{title}</Card.Title>
             <Card.ActionIconButton action='delete' onClick={handleDelete} label={t('segment.delete.label')} />
           </Card.Toolbar>
-          {(route || date) && (
+          {flightDetails ? (
             <Card.Content>
-              {route && (
-                <Card.Row>
-                  <Card.Text variant='description'>{route}</Card.Text>
-                </Card.Row>
-              )}
-              {date && (
-                <Card.Row icon='ph--calendar--regular'>
-                  <Card.Text variant='description'>{format(date, 'PPp')}</Card.Text>
-                </Card.Row>
-              )}
+              <Form.Root
+                schema={Segment.FlightDetails}
+                defaultValues={flightDetails}
+                layout='static'
+                readonly
+                tooltips={false}
+              >
+                <Form.Viewport>
+                  <Form.Content>
+                    <Form.Layout template={FLIGHT_LAYOUT} />
+                  </Form.Content>
+                </Form.Viewport>
+              </Form.Root>
             </Card.Content>
+          ) : (
+            (route || date) && (
+              <Card.Content>
+                {route && (
+                  <Card.Row>
+                    <Card.Text variant='description'>{route}</Card.Text>
+                  </Card.Row>
+                )}
+                {date && (
+                  <Card.Row icon='ph--calendar--regular'>
+                    <Card.Text variant='description'>{format(date, 'PPp')}</Card.Text>
+                  </Card.Row>
+                )}
+              </Card.Content>
+            )
           )}
         </Card.Root>
       </Focus.Item>

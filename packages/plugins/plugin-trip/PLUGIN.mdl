@@ -82,7 +82,7 @@ type Provider
     label + machine identifier + optional Ref to a rich object. Plain
     Schema.Struct (not a Type.object); embedded inline by callers.
   fields:
-    name?: string                   # e.g. "United Airlines"
+    name?: string                   # e.g. "Air France"
     domain?: Hostname               # e.g. "united.com"
     ref?: Ref<Organization>         # rich link once an Organization exists
 ```
@@ -450,7 +450,7 @@ feat TravelMessageExtractor
     extracted: ExtractedFrom[]      # one per created object
     trip: Trip                      # resolved per Trip resolution rules below
   v1 parser coverage:
-    - United Airlines flight confirmations (sender ending in @united.com)
+    - Air France flight confirmations (sender ending in @united.com)
       → Booking + one Flight Segment.
     - Booking.com hotel confirmations (sender ending in @booking.com)
       → Booking + one Accommodation Segment.
