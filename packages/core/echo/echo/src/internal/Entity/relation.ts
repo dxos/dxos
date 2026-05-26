@@ -25,8 +25,13 @@ import {
   RelationSourceId,
   RelationTargetDXNId,
   RelationTargetId,
+  type UnknownTypeSchema,
   getStaticTypeSchema,
 } from '../common/types';
+
+// Type-only import (erased at runtime — no import cycle); `internal` may depend
+// on the top-level `Type` API at the type level only.
+import type * as Type from '../../Type';
 
 export {
   ATTR_RELATION_SOURCE,
@@ -59,23 +64,41 @@ export type RelationSourceTargetRefs<Source = any, Target = any> = {
 export type RelationSource<R> = R extends RelationSourceTargetRefs<infer Source, infer _Target> ? Source : never;
 export type RelationTarget<R> = R extends RelationSourceTargetRefs<infer _Source, infer Target> ? Target : never;
 
-export type EchoRelationSchemaOptions<TSource, TTarget> = {
+/**
+ * Accepted relation endpoint: an object-kind `Type.Type` entity (slot-backed)
+ * or the branded `Obj.Unknown` schema. Source/target are constrained to these
+ * — relations only connect object-kind entities.
+ */
+export type RelationEndpoint = Type.AnyObj | UnknownTypeSchema<any, EntityKind.Object>;
+
+/**
+ * Resolves a relation endpoint to the instance type it describes — the source /
+ * target instance recorded on the relation's `RelationSourceTargetRefs`.
+ */
+export type RelationEndpointInstance<S> = S extends UnknownTypeSchema<infer A, any>
+  ? A
+  : S extends Type.AnyObj
+    ? Type.InstanceType<S>
+    : unknown;
+
+export type EchoRelationSchemaOptions<TSource extends RelationEndpoint, TTarget extends RelationEndpoint> = {
   dxn: DXN.DXN;
   source: TSource;
   target: TTarget;
 };
 
 /**
- * Relation schema type with kind marker.
+ * Relation schema type with kind marker. `SourceInstance` / `TargetInstance`
+ * are the resolved endpoint instance types (see {@link RelationEndpointInstance}).
  */
 export type EchoRelationSchema<
   Self extends Schema.Schema.Any,
-  Source extends Schema.Schema.AnyNoContext,
-  Target extends Schema.Schema.AnyNoContext,
+  SourceInstance,
+  TargetInstance,
   Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
 > = EchoTypeSchema<
   Self,
-  RelationSourceTargetRefs<Schema.Schema.Type<Source>, Schema.Schema.Type<Target>>,
+  RelationSourceTargetRefs<SourceInstance, TargetInstance>,
   EntityKind.Relation,
   Fields
 >;
@@ -83,7 +106,7 @@ export type EchoRelationSchema<
 /**
  * Schema for Relation entity types.
  */
-export const EchoRelationSchema = <Source, Target>({
+export const EchoRelationSchema = <Source extends RelationEndpoint, Target extends RelationEndpoint>({
   dxn,
   source,
   target,
@@ -109,7 +132,7 @@ export const EchoRelationSchema = <Source, Target>({
 
   return <Self extends Schema.Schema.Any, Fields extends Schema.Struct.Fields = Schema.Struct.Fields>(
     self: Self & { fields?: Fields },
-  ): EchoRelationSchema<Self, Schema.Schema.AnyNoContext, Schema.Schema.AnyNoContext, Fields> => {
+  ): EchoRelationSchema<Self, RelationEndpointInstance<Source>, RelationEndpointInstance<Target>, Fields> => {
     invariant(SchemaAST.isTypeLiteral(self.ast), 'Schema must be a TypeLiteral.');
 
     // Extract fields from the schema if available (Struct schemas have .fields).
