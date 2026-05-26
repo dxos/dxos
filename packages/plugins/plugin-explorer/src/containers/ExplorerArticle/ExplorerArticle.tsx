@@ -4,6 +4,8 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { select } from 'd3';
+
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Filter, Obj, type View } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
@@ -18,6 +20,7 @@ import {
   GraphClusterProjector,
   GraphForceProjector,
   type GraphLayout,
+  type GraphLayoutEdge,
   type GraphLayoutNode,
   GraphLatticeProjector,
   type GraphProjector,
@@ -179,14 +182,33 @@ const Visualization = ({ variant, model, onNodeHover }: VisualizationProps) => {
 
   const handleInspect = useCallback(
     (node: GraphLayoutNode<SpaceGraphNode> | null, event: MouseEvent) => {
-      // null = pointerleave: forward to the shared hover handler so it can clear any preview.
+      // Popover preview — null = pointerleave.
       if (!node) {
         onNodeHover?.(null);
+      } else {
+        onNodeHover?.({ id: node.id, data: node.data?.data?.object }, event);
+      }
+
+      // Edge highlight for bundle layout: colour connected edges, dim the rest.
+      const svgEl = svgRef.current?.svg;
+      if (!svgEl || variant !== 'bundle') {
         return;
       }
-      onNodeHover?.({ id: node.id, data: node.data?.data?.object }, event);
+      select(svgEl)
+        .selectAll<SVGGElement, GraphLayoutEdge<SpaceGraphNode>>('g.dx-edge')
+        .each(function (edge) {
+          const isOut = !!node && edge.source.id === node.id;
+          const isIn = !!node && edge.target.id === node.id;
+          const isConnected = isOut || isIn;
+          const group = select(this);
+          group.style('opacity', node && !isConnected ? '0.08' : null);
+          group
+            .select('path')
+            .style('stroke', isOut ? 'var(--color-orange-500)' : isIn ? 'var(--color-sky-500)' : null)
+            .style('stroke-width', isConnected ? '1.5px' : null);
+        });
     },
-    [onNodeHover],
+    [onNodeHover, variant],
   );
 
   // Cluster-only: clicking a root / group node toggles its subtree open/closed.
