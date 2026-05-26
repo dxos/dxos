@@ -26,7 +26,6 @@ import { ExampleHandlers } from '@dxos/compute/testing';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { createFeedServiceLayer } from '@dxos/echo-db';
 import { runAndForwardErrors } from '@dxos/effect';
-import { QueueService } from '@dxos/functions';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Assistant, AssistantOperation } from '@dxos/plugin-assistant';
@@ -305,7 +304,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>({
           AgentBlueprint.make(),
         ).pipe(
           Effect.provide(
-            ServiceResolver.provide({ space: space.id }, Database.Service, Feed.FeedService, QueueService).pipe(
+            ServiceResolver.provide({ space: space.id }, Database.Service, Feed.FeedService).pipe(
               Layer.provide(Capability.asLayer(Capabilities.ServiceResolver, ServiceResolver.ServiceResolver)),
             ),
           ),

@@ -33,7 +33,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
   const spaceId = Obj.getDatabase(agent)?.spaceId;
-  // TODO(burdon): Clear input queue also.
+  // TODO(burdon): Clear input feed also.
   const resetHistory = useSpaceCallback(
     spaceId,
     [Feed.FeedService, Database.Service] as const,

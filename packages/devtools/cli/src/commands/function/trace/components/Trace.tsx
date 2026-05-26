@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Context from 'effect/Context';
 import * as Option from 'effect/Option';
 import { createEffect, createSignal, onCleanup } from 'solid-js';
 
 import { Operation } from '@dxos/compute';
-import { type Database, Filter, Obj } from '@dxos/echo';
-import { type Queue, type QueueAPI } from '@dxos/echo-db';
+import { type Database, Feed, Filter, Obj } from '@dxos/echo';
 import { getUserFunctionIdInMetadata } from '@dxos/functions';
 import {
   InvocationOutcome,
@@ -24,21 +24,26 @@ import { theme } from '../../../../theme';
 
 export type TraceProps = {
   db: Database.Database;
-  queues: QueueAPI;
-  queueDXN: Option.Option<DXN>;
+  feedService: Context.Tag.Service<Feed.FeedService>;
+  feed: Option.Option<Feed.Feed>;
   functionId: Option.Option<string>;
 };
 
 export const Trace = (props: TraceProps) => {
   const [invocations, setInvocations] = createSignal<InvocationSpan[]>([]);
   const [selectedInvocation, setSelectedInvocation] = createSignal<InvocationSpan | undefined>();
-  const [traceQueue, setTraceQueue] = createSignal<Queue<InvocationTraceEvent> | undefined>();
   const [functions, setFunctions] = createSignal<Operation.PersistentOperation[]>([]);
 
   // Set up effects.
   useFunctionQuery(props.db, setFunctions);
-  useTraceQueue(props.queueDXN, props.queues, setTraceQueue);
-  useInvocationsSubscription(traceQueue, props.functionId, setInvocations, selectedInvocation, setSelectedInvocation);
+  useInvocationsSubscription(
+    () => props.feed,
+    () => props.feedService,
+    props.functionId,
+    setInvocations,
+    selectedInvocation,
+    setSelectedInvocation,
+  );
 
   // Function name resolver (needs access to functions signal).
   const getFunctionName = (invocationTarget: DXN | undefined): string | undefined => {
@@ -181,45 +186,28 @@ const useFunctionQuery = (
   });
 };
 
-// Effect: Resolve the queue from the DXN.
-const useTraceQueue = (
-  queueDXN: Option.Option<DXN>,
-  queues: QueueAPI,
-  setTraceQueue: (queue: Queue<InvocationTraceEvent> | undefined) => void,
-) => {
-  createEffect(() => {
-    if (Option.isNone(queueDXN)) {
-      setTraceQueue(undefined);
-      return;
-    }
-
-    try {
-      const queue = queues.get<InvocationTraceEvent>(queueDXN.value);
-      setTraceQueue(queue);
-    } catch {
-      setTraceQueue(undefined);
-    }
-  });
-};
-
 // Effect: Subscribe to invocations using the query API (which handles polling automatically).
 const useInvocationsSubscription = (
-  traceQueue: () => Queue<InvocationTraceEvent> | undefined,
+  traceFeed: () => Option.Option<Feed.Feed>,
+  feedService: () => Context.Tag.Service<Feed.FeedService>,
   functionId: Option.Option<string>,
   setInvocations: (invocations: InvocationSpan[]) => void,
   selectedInvocation: () => InvocationSpan | undefined,
   setSelectedInvocation: (invocation: InvocationSpan | undefined) => void,
 ) => {
   createEffect(() => {
-    const queue = traceQueue();
-    if (!queue) {
+    const feed = traceFeed();
+    if (Option.isNone(feed)) {
       setInvocations([]);
       return;
     }
 
-    // Query both start and end events from the trace queue.
+    // Query both start and end events from the trace feed.
     // The query subscription automatically handles polling via beginPolling().
-    const query = queue.query(Filter.or(Filter.type(InvocationTraceStartEvent), Filter.type(InvocationTraceEndEvent)));
+    const query = feedService().query(
+      feed.value,
+      Filter.or(Filter.type(InvocationTraceStartEvent), Filter.type(InvocationTraceEndEvent)),
+    );
 
     const update = async () => {
       // Use run() to get all events, not just cached results.
