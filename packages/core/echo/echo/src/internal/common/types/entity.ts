@@ -54,18 +54,6 @@ export const getStaticTypeSchema = (value: unknown): Schema.Schema.AnyNoContext 
 };
 
 /**
- * Unwrap a Type-entity-like input to its underlying source Effect Schema; if
- * the input is already a raw schema (no slot), return it unchanged.
- *
- * The two callers — `createObject` and `Ref.Ref` — both want "the Effect
- * Schema the caller meant to register", whether they were handed a static
- * `Type.Type` entity or a raw `Schema.Schema`.
- */
-export const unwrapToSchema = <S extends Schema.Schema.AnyNoContext>(input: S | { [StaticTypeSchemaSlot]?: S }): S => {
-  return (getStaticTypeSchema(input) as S | undefined) ?? (input as S);
-};
-
-/**
  * Read the `[SchemaKindId]` brand off a value. Returns `undefined` for raw
  * schemas (which don't carry the brand on their static type) and non-object
  * inputs. Single point-of-cast for the brand lookup.

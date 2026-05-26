@@ -18,9 +18,15 @@ import { EncodedReference } from '@dxos/echo-protocol';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN, EchoURI, ObjectId, type URI } from '@dxos/keys';
 
+import type * as Type from '../../Type';
 import * as Database from '../../Database';
 import { ReferenceAnnotationId, getSchemaURI, getTypeAnnotation, getTypeIdentifierAnnotation } from '../Annotation';
-import { type AnyEntity, type AnyProperties, StaticTypeSchemaSlot, unwrapToSchema } from '../common/types';
+import {
+  type AnyEntity,
+  type AnyProperties,
+  type UnknownTypeSchema,
+  getStaticTypeSchema,
+} from '../common/types';
 import { type JsonSchemaType } from '../JsonSchema';
 
 /**
@@ -84,9 +90,14 @@ export interface RefSchema<T extends AnyEntity> extends Schema.SchemaClass<Ref<T
  * Type of the `Ref` function and extra methods attached to it.
  */
 export interface RefFn {
-  <S extends Schema.Schema.Any | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext }>(
+  // A reference target is a `Type.Type` entity (the canonical Option B input)
+  // or one of the well-known "any object" / "any relation" branded schemas
+  // (`Obj.Unknown` / `Relation.Unknown`). Arbitrary raw schemas are rejected.
+  <S extends Type.AnyEntity | UnknownTypeSchema<any, any> = Type.AnyEntity>(
     schema: S,
-  ): RefSchema<S extends Schema.Schema.Any ? Schema.Schema.Type<S> : any>;
+  ): RefSchema<
+    S extends Type.AnyEntity ? Type.InstanceType<S> : S extends UnknownTypeSchema<infer A, any> ? A : never
+  >;
 
   /**
    * @returns True if the object is a reference.
@@ -125,9 +136,9 @@ export interface RefFn {
  * Schema builder for references.
  */
 export const Ref: RefFn = (input: any): RefSchema<any> => {
-  // Accept `Type.Type` entities — extract the underlying source schema from
-  // the hidden slot. Static schemas still work as-is.
-  const schema = unwrapToSchema(input as Schema.Schema.AnyNoContext);
+  // `Type.Type` entities carry their source schema on the hidden slot; the
+  // branded `Obj.Unknown` / `Relation.Unknown` schemas are used directly.
+  const schema = getStaticTypeSchema(input) ?? input;
   assertArgument(Schema.isSchema(schema), 'schema', 'Must call with an instance of effect-schema');
   const annotation = getTypeAnnotation(schema);
   if (annotation == null) {
@@ -578,10 +589,9 @@ export class StaticRefResolver implements RefResolver {
     return this;
   }
 
-  addSchema(
-    input: Schema.Schema.AnyNoContext | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext },
-  ): this {
-    const schema = unwrapToSchema(input as Schema.Schema.AnyNoContext);
+  addSchema(input: Type.AnyEntity): this {
+    const schema = getStaticTypeSchema(input);
+    invariant(schema, 'Type entity is missing its source schema');
     const uri = getSchemaURI(schema);
     invariant(uri, 'Schema has no URI');
     this.schemas.set(uri, schema);

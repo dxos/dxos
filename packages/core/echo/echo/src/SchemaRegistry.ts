@@ -92,9 +92,9 @@ export interface SchemaRegistry {
   /**
    * Registers the provided schema(s).
    *
-   * @returns The persisted type entities. When passed `Type.AnyObj` /
-   * `Type.AnyRelation` inputs, the return type preserves the entity kind
-   * (so callers can chain into `Obj.make` / `Relation.make` without casts).
+   * @returns The persisted `Type.Type` records. Registering always yields stored
+   * type records regardless of the input kind, so the result is `PersistedType[]`
+   * (reference them via `Ref(Type.Type)`), not `Persisted<T>` of the input entity.
    *
    * The behavior of this method depends on the state of the database.
    * The general principle is that the schema will be upserted into the space.
@@ -102,7 +102,6 @@ export interface SchemaRegistry {
    * If a different schema with the same name and version exists, the method throws an error.
    * If no schema with the same name and version exists, a new schema will be inserted based on semantic versioning rules.
    */
-  register<T extends Type.AnyEntity>(input: T[]): Promise<Type.Persisted<T>[]>;
   register(input: RegisterSchemaInput[]): Promise<Type.PersistedType[]>;
 
   query<Q extends Types.NoExcessProperties<Query, Q>>(

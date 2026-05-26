@@ -25,7 +25,7 @@ import {
   RelationSourceId,
   RelationTargetDXNId,
   RelationTargetId,
-  unwrapToSchema,
+  getStaticTypeSchema,
 } from '../common/types';
 
 export {
@@ -88,11 +88,11 @@ export const EchoRelationSchema = <Source, Target>({
   source,
   target,
 }: EchoRelationSchemaOptions<Source, Target>) => {
-  // `source` / `target` are `Type.Type` entities — extract their underlying
-  // source schemas from the hidden slot to feed into the schema-side machinery
-  // (DXN ref + entity-kind checks).
-  const sourceSchema = source != null ? unwrapToSchema(source as unknown as Schema.Schema.AnyNoContext) : source;
-  const targetSchema = target != null ? unwrapToSchema(target as unknown as Schema.Schema.AnyNoContext) : target;
+  // `source` / `target` are `Type.Type` entities (slot-backed) or the branded
+  // `Obj.Unknown` schema (used directly); resolve each to its Effect Schema for
+  // the schema-side machinery (DXN ref + entity-kind checks).
+  const sourceSchema = source != null ? (getStaticTypeSchema(source) ?? source) : source;
+  const targetSchema = target != null ? (getStaticTypeSchema(target) ?? target) : target;
   assertArgument(Schema.isSchema(sourceSchema), 'source');
   assertArgument(Schema.isSchema(targetSchema), 'target');
   const typename = DXN.getName(dxn);

@@ -17,6 +17,7 @@ import { DXN, EchoURI, ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { clearUndefined, orderKeys, removeProperties } from '@dxos/util';
 
+import type * as Type from '../../Type';
 import {
   type TypeAnnotation,
   TypeAnnotationId,
@@ -28,7 +29,6 @@ import {
   ANY_OBJECT_VERSION,
   EntityKind,
   EntityKindSchema,
-  StaticTypeSchemaSlot,
   getStaticTypeSchema,
 } from '../common/types';
 import { type JsonSchemaReferenceInfo, createEchoReferenceSchema } from '../Ref';
@@ -88,9 +88,7 @@ export type JsonSchemaOptions = {
 //  We add additional propertyOrder (but the object properties ARE ordered); and type "string" for literals.
 // TODO(wittjosiah): This is mutable because its a pojo, perhaps should be left as readonly at type level though?
 export const toJsonSchema = (
-  schema:
-    | Schema.Schema.All
-    | { readonly [StaticTypeSchemaSlot]?: Schema.Schema.AnyNoContext; jsonSchema?: JsonSchemaType },
+  schema: Schema.Schema.All | Type.AnyEntity,
   options: JsonSchemaOptions = {},
 ): Types.DeepMutable<JsonSchemaType> => {
   // Allow passing a `Type.Type` entity — use its hidden source schema (or its

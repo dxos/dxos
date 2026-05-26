@@ -282,8 +282,9 @@ export class DatabaseSchemaRegistry extends Resource implements SchemaRegistry.S
     }) as QueryResult.QueryResult<Type.Type>;
   }
 
-  // TODO(burdon): Tighten type signature to TypedObject?
-  async register<T extends Type.AnyEntity>(input: T[]): Promise<Type.Persisted<T>[]>;
+  // Registering any schema input (Type entity, raw schema, or JSON-schema
+  // record) yields a stored `Type.Type` record, so the return is always
+  // `PersistedType[]` — never `Persisted<T>` of the input entity type.
   async register(input: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.PersistedType[]>;
   async register(inputs: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.PersistedType[]> {
     const results: Type.PersistedType[] = [];

@@ -2,25 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Schema from 'effect/Schema';
-
 import { raise } from '@dxos/debug';
 import { assertArgument, failedInvariant } from '@dxos/invariant';
 import { ObjectId } from '@dxos/keys';
 
+import type * as Type from '../../Type';
 import { getSchemaURI, getTypeAnnotation, setTypename } from '../Annotation';
 import { defineHiddenProperty } from '../common/proxy';
 import {
   EntityKind,
-  InstancePhantomId,
   KindId,
   MetaId,
   type ObjectMeta,
   SchemaKindId,
   StaticTypeSchemaSlot,
+  getStaticTypeSchema,
   setSchema,
   setType,
-  unwrapToSchema,
 } from '../common/types';
 import {
   RelationSourceDXNId,
@@ -73,14 +71,15 @@ export type CreateObjectProps<T> = (T extends { id: string }
  */
 // TODO(burdon): Make internal.
 export const createObject: {
-  <T>(
-    input: Schema.Schema<T, any, never> | { readonly [InstancePhantomId]?: T },
-    props: NoInfer<CreateObjectProps<T>>,
-  ): T;
+  <T extends Type.AnyEntity>(
+    input: T,
+    props: NoInfer<CreateObjectProps<Type.InstanceType<T>>>,
+  ): Type.InstanceType<T>;
 } = (input: any, props: any): any => {
-  // Accept `Type.Type` entities — extract the underlying source schema from
-  // the hidden slot.
-  const schema = unwrapToSchema(input as Schema.Schema.AnyNoContext);
+  // `Type.Type` entities aren't `Schema.Schema` themselves; read the source
+  // schema off the hidden slot (persisted entities synthesize it lazily via
+  // the proxy `get` trap).
+  const schema = getStaticTypeSchema(input) ?? failedInvariant('Type entity is missing its source schema');
   const annotation = getTypeAnnotation(schema);
   if (!annotation) {
     throw new Error('Schema is not an ECHO schema');

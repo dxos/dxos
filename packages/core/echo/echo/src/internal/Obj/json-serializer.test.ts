@@ -126,7 +126,6 @@ describe('Object JSON serializer', () => {
   // in-memory path. Otherwise `Filter.type(Type.Type)` / `Type.isType` skip them.
   describe('Type.Type round-trip', () => {
     test('preserves KindId=Type for a persisted Type.Type entity', async ({ expect }) => {
-      const PersistedTypeSchema = Type.getSchema(Type.Type);
       const typeEntity = Type.makeObjectFromJsonSchema({
         typename: 'com.example.type.regression',
         version: '0.1.0',
@@ -135,7 +134,7 @@ describe('Object JSON serializer', () => {
       });
 
       const typeJson = objectToJSON(typeEntity as any);
-      const refResolver = new StaticRefResolver().addSchema(PersistedTypeSchema);
+      const refResolver = new StaticRefResolver().addSchema(Type.Type);
       const reconstructed = (await objectFromJSON(typeJson, { refResolver })) as any;
 
       expect(reconstructed[KindId]).toBe(EntityKind.Type);
