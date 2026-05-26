@@ -209,6 +209,7 @@ describe('Trace timeline', () => {
                 │  ●  [wrench] AnthropicWebSearch - Success
                 │  ●  [wrench] AnthropicWebSearch - Success
                 │  ●  [wrench] AnthropicWebSearch - Success
+                │  ●  [wrench] AnthropicWebSearch - Success
                 │  ●  [wrench] completeJob - Success
                 ◆──╯  [function] Run Routine - Success
                 "
