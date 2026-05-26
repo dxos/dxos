@@ -30,12 +30,12 @@ export class TestObjectGenerator<T extends string = TestSchemaType> {
 		private readonly _provider?: TestObjectProvider<T>,
 	) {}
 
-  get schemas(): Type.AnyObject[] {
+  get schemas(): Type.AnyObj[] {
     return Object.values(this._schemas);
   }
 
-  getSchema(type: T): Type.AnyObject | undefined {
-    return this.schemas.find((schema) => Type.getTypename(schema) === type) as Type.AnyObject | undefined;
+  getSchema(type: T): Type.AnyObj | undefined {
+    return this.schemas.find((schema) => Type.getTypename(schema) === type) as Type.AnyObj | undefined;
   }
 
   protected setSchema(type: T, schema: Type.AnyEntity): void {
@@ -91,7 +91,7 @@ export class SpaceObjectGenerator<T extends string> extends TestObjectGenerator<
   async addSchemas() {
     const result: Type.AnyEntity[] = [];
     for (const [typename, schema] of Object.entries(this._schemas)) {
-      const echoSchema = await this._maybeRegisterSchema(typename, schema as Type.AnyObject);
+      const echoSchema = await this._maybeRegisterSchema(typename, schema as Type.AnyObj);
       this.setSchema(typename as T, echoSchema);
       result.push(echoSchema);
     }

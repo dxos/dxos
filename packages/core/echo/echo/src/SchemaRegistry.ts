@@ -82,7 +82,7 @@ export interface SchemaRegistry {
   /**
    * Registers the provided schema(s).
    *
-   * @returns The persisted type entities. When passed `Type.AnyObject` /
+   * @returns The persisted type entities. When passed `Type.AnyObj` /
    * `Type.AnyRelation` inputs, the return type preserves the entity kind
    * (so callers can chain into `Obj.make` / `Relation.make` without casts).
    *

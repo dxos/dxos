@@ -50,7 +50,7 @@ export const Main = () => {
       [Item, Document].reduce((map, type) => {
         map.set(Type.getTypename(type), type);
         return map;
-      }, new Map<string, Type.AnyObject>()),
+      }, new Map<string, Type.AnyObj>()),
     [],
   );
 

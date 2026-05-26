@@ -81,7 +81,7 @@ const meta = {
         Array.from({ length: 10 }).map(() => {
           return space.db.add(
             Obj.make(
-              storedSchema as unknown as Type.AnyObject,
+              storedSchema as unknown as Type.AnyObj,
               {
                 single: random.helpers.arrayElement([...selectOptionIds, undefined]),
                 multiple: random.helpers.randomSubset(selectOptionIds),

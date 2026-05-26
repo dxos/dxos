@@ -90,7 +90,7 @@ export interface Obj<T, Fields extends Schema.Struct.Fields = Schema.Struct.Fiel
  * Type that represents any ECHO object type — a `Type.Type` entity branded
  * with the object entity kind, i.e. what `Type.makeObject(dxn)` produces.
  */
-export type AnyObject = Obj<unknown>;
+export type AnyObj = Obj<unknown>;
 
 /**
  * Factory function to create an ECHO object type.
@@ -174,8 +174,8 @@ export const makeObjectFromJsonSchema = (props: MakeTypeProps): Type<typeInterna
  */
 export const makeRelationFromJsonSchema = (
   props: MakeTypeProps & {
-    source: AnyObject | internal.UnknownTypeSchema<any, typeof EntityModule.Kind.Object>;
-    target: AnyObject | internal.UnknownTypeSchema<any, typeof EntityModule.Kind.Object>;
+    source: AnyObj | internal.UnknownTypeSchema<any, typeof EntityModule.Kind.Object>;
+    target: AnyObj | internal.UnknownTypeSchema<any, typeof EntityModule.Kind.Object>;
   },
 ): Type<typeInternal.PersistentType> => {
   const { source, target, jsonSchema, typename, version, ...rest } = props;
@@ -263,11 +263,18 @@ export const makeRelation: {
 } = internal.EchoRelationSchema as any;
 
 /**
+ * Type that represents any ECHO type-kind entity — a `Type.Type` meta-schema
+ * value (static `Type.Type` or a persisted draft from `db.add(...)`).
+ * Mirrors {@link AnyObj} / {@link AnyRelation} for the third sibling kind.
+ */
+export type AnyType = Type<unknown>;
+
+/**
  * Any ECHO type-entity — one of the three sibling kinds: object-kind, relation-kind,
  * or type-kind (the meta-schema). APIs that want "any ECHO type" use this union;
  * the underlying Effect Schema is retrieved via `Type.getSchema`.
  */
-export type AnyEntity = AnyObject | AnyRelation | Type;
+export type AnyEntity = AnyObj | AnyRelation | AnyType;
 
 /**
  * Type guard: narrows a `Type.AnyEntity` to an object-kind entity. Checks
@@ -275,7 +282,7 @@ export type AnyEntity = AnyObject | AnyRelation | Type;
  * `Schema.Schema` values (including the branded `Obj.Unknown` companion)
  * are intentionally not accepted; inspect their `TypeAnnotation` directly.
  */
-export const isObject = (entity: AnyEntity): entity is AnyObject => {
+export const isObject = (entity: AnyEntity): entity is AnyObj => {
   return internal.getSchemaKind(entity) === internal.EntityKind.Object;
 };
 
@@ -297,11 +304,11 @@ export const isTypeKindSchema = (entity: AnyEntity): entity is Type => {
 
 /**
  * Narrow a `Type.AnyEntity` (e.g. one returned from `schemaRegistry.query(...)`)
- * to `AnyObject`, throwing if it describes a relation or the type-kind
+ * to `AnyObj`, throwing if it describes a relation or the type-kind
  * meta-schema. Use at call sites that need to pass the value to `Obj.make`,
  * `Filter.type`, or other object-only APIs.
  */
-export const assertObject = (entity: AnyEntity): AnyObject => {
+export const assertObject = (entity: AnyEntity): AnyObj => {
   invariant(isObject(entity), 'Expected an object-kind Type entity.');
   return entity;
 };
@@ -582,7 +589,7 @@ export type InstanceType<T extends AnyEntity> =
  * Only accepts `Type.AnyEntity` — raw `Schema.Schema` values can be used
  * directly without unwrapping.
  */
-export function getSchema<T extends AnyObject>(type: T): Schema.Schema<InstanceType<T>>;
+export function getSchema<T extends AnyObj>(type: T): Schema.Schema<InstanceType<T>>;
 export function getSchema<T extends AnyRelation>(type: T): Schema.Schema<InstanceType<T>>;
 export function getSchema(type: Type | AnyEntity): Schema.Schema.AnyNoContext;
 export function getSchema(type: AnyEntity): Schema.Schema.AnyNoContext {

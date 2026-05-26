@@ -16,7 +16,7 @@ import { useQuery } from '@dxos/react-client/echo';
 export const useShadowObject = <T extends Obj.Unknown>(
   db: Database.Database | undefined,
   subject: T,
-  type: Type.AnyObject,
+  type: Type.AnyObj,
 ): [T | undefined, () => T] => {
   const id = Obj.getURI(subject);
   const objects = useQuery(db, Filter.type(type));

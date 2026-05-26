@@ -51,7 +51,7 @@ export type Unknown = refInternal.Ref<Obj.Unknown>;
  * ```
  */
 export const Ref: {
-  <S extends TypeNs.AnyObject | TypeNs.AnyRelation>(type: S): RefSchema<TypeNs.InstanceType<S> & Obj.Unknown>;
+  <S extends TypeNs.AnyObj | TypeNs.AnyRelation>(type: S): RefSchema<TypeNs.InstanceType<S> & Obj.Unknown>;
 
   // `Type.Type` entities (the meta-schema kind) can be referenced too — e.g. a
   // trigger that points to a stored function/workflow definition.

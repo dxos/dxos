@@ -130,7 +130,7 @@ type MakePropsInternal<T extends Unknown> = {
 
 // TODO(burdon): Should we allow the caller to set the id?
 /**
- * Props type for object creation with a given type. Accepts a `Type.AnyObject`
+ * Props type for object creation with a given type. Accepts a `Type.AnyObj`
  * entity (or one of its `Type.Type` siblings) and derives the instance shape
  * via `Type.InstanceType`.
  */
@@ -157,8 +157,8 @@ export type MakeProps<S extends Type.AnyEntity> = {
  * Note: Only accepts object schemas / object-kind types, not relation schemas.
  * Use `Relation.make` for relations.
  */
-export function make<T extends Type.AnyObject>(type: T, props: NoInfer<MakeProps<T>>): OfShape<Type.InstanceType<T>>;
-export function make(input: Type.AnyObject, props: any): OfShape<any> {
+export function make<T extends Type.AnyObj>(type: T, props: NoInfer<MakeProps<T>>): OfShape<Type.InstanceType<T>>;
+export function make(input: Type.AnyObj, props: any): OfShape<any> {
   // `Type.Type` entities aren't `Schema.Schema` themselves; derive the Effect
   // Schema via `Type.getSchema(...)`. Pass the entity through to `makeObject`
   // so subsequent schema mutations (`Type.addFields`, etc.) propagate.
@@ -439,8 +439,8 @@ export const instanceOf: {
     // eslint-disable-next-line @typescript-eslint/unified-signatures
     ..._error: ['ERROR: Obj.instanceOf does not accept Type.Type; use Type.isType(value) instead']
   ): never;
-  <S extends Type.AnyObject | Type.AnyRelation>(schema: S): (value: unknown) => value is Type.InstanceType<S>;
-  <S extends Type.AnyObject | Type.AnyRelation>(schema: S, value: unknown): value is Type.InstanceType<S>;
+  <S extends Type.AnyObj | Type.AnyRelation>(schema: S): (value: unknown) => value is Type.InstanceType<S>;
+  <S extends Type.AnyObj | Type.AnyRelation>(schema: S, value: unknown): value is Type.InstanceType<S>;
 } = ((...args: [schema: Type.AnyEntity, value?: unknown]) => {
   if (args.length === 1) {
     return (entity: unknown) => internal.isInstanceOf(args[0], entity);
@@ -503,11 +503,11 @@ export const getTypeURI = (obj: Unknown | Snapshot): URI.URI => {
 };
 
 /**
- * Get the type entity (`Type.AnyObject`) the object was created from.
+ * Get the type entity (`Type.AnyObj`) the object was created from.
  *
  * To get the Effect Schema from the returned entity, use `Type.getSchema(...)`.
  */
-export const getType = (obj: Unknown | Snapshot): Type.AnyObject => internal.getType(obj) as Type.AnyObject;
+export const getType = (obj: Unknown | Snapshot): Type.AnyObj => internal.getType(obj) as Type.AnyObj;
 
 /**
  * @returns The typename of the object's type.

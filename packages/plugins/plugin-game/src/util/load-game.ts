@@ -25,7 +25,7 @@ export class GameVariantMismatchError extends Error {
  *
  * Use in operation handlers that declare `input.game: GameRef<MyVariantState>`.
  */
-export const loadGame = <S extends Type.AnyObject>(
+export const loadGame = <S extends Type.AnyObj>(
   ref: Ref.Ref<Game>,
   variantType: S,
 ): Effect.Effect<{ game: Game; variant: Type.InstanceType<S> }, Error, Database.Service> =>

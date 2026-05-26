@@ -102,7 +102,7 @@ export const object: {
   predicate?: (data: any) => boolean,
 ): Surface.Filter<any> => {
   const schemas = (Array.isArray(schemaOrSchemas) ? schemaOrSchemas : [schemaOrSchemas]) as Array<
-    Type.AnyObject | Type.AnyRelation
+    Type.AnyObj | Type.AnyRelation
   >;
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
@@ -240,7 +240,7 @@ export const companion: {
     if (typeof schemaOrValue === 'string') {
       return companionTo === schemaOrValue;
     }
-    return Obj.instanceOf(schemaOrValue as Type.AnyObject | Type.AnyRelation, companionTo);
+    return Obj.instanceOf(schemaOrValue as Type.AnyObj | Type.AnyRelation, companionTo);
   };
   return { bindings: [{ role: token.role, guard }] };
 };
