@@ -2677,10 +2677,7 @@ describe('Query', () => {
       await db.flush();
 
       const queue = queues.get(Feed.getQueueDxn(feed)!);
-      await queue.append([
-        Obj.make(TestSchema.Task, { title: 'A' }),
-        Obj.make(TestSchema.Task, { title: 'B' }),
-      ]);
+      await queue.append([Obj.make(TestSchema.Task, { title: 'A' }), Obj.make(TestSchema.Task, { title: 'B' })]);
       await db.flush();
 
       const objects = await db
