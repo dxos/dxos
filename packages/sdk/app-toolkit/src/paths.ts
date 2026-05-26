@@ -2,9 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Option from 'effect/Option';
+
 import { Node } from '@dxos/app-graph';
 import { Key, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { ViewAnnotation, getTypenameFromQuery } from '@dxos/schema';
 
 /**
  * Prefix for pinned (non-space) workspace IDs in the graph.
@@ -65,11 +68,28 @@ export const getObjectPath = (spaceId: string, typename: string, objectId: strin
 /**
  * Derive the canonical graph path for a reactive ECHO object.
  * Throws if the object has no database or typename.
+ *
+ * View-holder objects (schemas annotated with `ViewAnnotation`) are placed in the
+ * graph as siblings of the `all` virtual node — under their target type, not inside
+ * its `all` collection. When the held view is hydrated and its query targets a
+ * concrete typename, returns `getTypePath(spaceId, viewTargetTypename, objectId)`.
+ * Otherwise falls back to `getObjectPath`.
  */
 export const getObjectPathFromObject = (object: Obj.Unknown): string => {
   const db = Obj.getDatabase(object);
   const typename = Obj.getTypename(object);
   invariant(db && typename, 'Cannot derive graph path: object has no database or typename.');
+
+  const schema = Obj.getSchema(object);
+  if (schema && ViewAnnotation.has(schema)) {
+    const path = ViewAnnotation.get(schema).pipe(Option.getOrElse(() => [] as readonly string[]));
+    const view = path.length > 0 ? ViewAnnotation.tryGetTargetAlongPath(object, path) : undefined;
+    const viewTargetTypename = view ? getTypenameFromQuery(view.query.ast) : undefined;
+    if (viewTargetTypename) {
+      return getTypePath(db.spaceId, viewTargetTypename, object.id);
+    }
+  }
+
   return getObjectPath(db.spaceId, typename, object.id);
 };
 

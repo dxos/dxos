@@ -96,16 +96,58 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   );
 
   const handlePasskey = useCallback(async () => {
-    await invokePromise(ClientOperation.RedeemPasskey);
-  }, [invokePromise]);
+    if (pendingRef.current || identity) {
+      return;
+    }
+    if (error) {
+      setError(false);
+    }
+    try {
+      pendingRef.current = true;
+      await invokePromise(ClientOperation.RedeemPasskey);
+    } catch (err) {
+      log.catch(err);
+      setError(true);
+    } finally {
+      pendingRef.current = false;
+    }
+  }, [invokePromise, identity, error]);
 
   const handleJoinIdentity = useCallback(async () => {
-    await invokePromise(ClientOperation.JoinIdentity, {});
-  }, [invokePromise]);
+    if (pendingRef.current || identity) {
+      return;
+    }
+    if (error) {
+      setError(false);
+    }
+    try {
+      pendingRef.current = true;
+      await invokePromise(ClientOperation.JoinIdentity, {});
+    } catch (err) {
+      log.catch(err);
+      setError(true);
+    } finally {
+      pendingRef.current = false;
+    }
+  }, [invokePromise, identity, error]);
 
   const handleRecoverIdentity = useCallback(async () => {
-    await invokePromise(ClientOperation.RecoverIdentity);
-  }, [invokePromise]);
+    if (pendingRef.current || identity) {
+      return;
+    }
+    if (error) {
+      setError(false);
+    }
+    try {
+      pendingRef.current = true;
+      await invokePromise(ClientOperation.RecoverIdentity);
+    } catch (err) {
+      log.catch(err);
+      setError(true);
+    } finally {
+      pendingRef.current = false;
+    }
+  }, [invokePromise, identity, error]);
 
   const handleSpaceInvitation = async () => {
     let identityCreated = true;
