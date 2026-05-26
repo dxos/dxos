@@ -8,7 +8,7 @@ import { Type } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
 const parseConversation = (json: unknown): readonly Message.Message[] => {
-  return Schema.Array(Type.getSchema(Message.Message)).pipe(Schema.decodeUnknownSync)(json) as any;
+  return Schema.Array(Type.getSchema(Message.Message)).pipe(Schema.decodeUnknownSync)(json);
 };
 
 export const internetOrderConversation: () => Promise<readonly Message.Message[]> = () =>

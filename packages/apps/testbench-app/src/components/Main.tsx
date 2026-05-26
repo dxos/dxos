@@ -50,12 +50,12 @@ export const Main = () => {
       [Item, Document].reduce((map, type) => {
         map.set(Type.getTypename(type), type);
         return map;
-      }, new Map<string, Type.AnyEntity>()),
+      }, new Map<string, Type.AnyObject>()),
     [],
   );
 
   const getType = (typename: string | undefined) => typeMap.get(typename ?? Item.typename) ?? Item;
-  const objectsOfType = useQuery(space?.db, Query.type(getType(type) as any));
+  const objectsOfType = useQuery(space?.db, Query.type(getType(type)));
   const objects = useMemo(
     () => objectsOfType.filter((object) => match(filter, (object as any).content)),
     [objectsOfType, filter],
@@ -212,9 +212,9 @@ export const Main = () => {
             onViewChange={(view) => setView(view)}
           />
 
-          {view === 'table' && <ItemTable type={getType(type)} objects={objects as Obj.Any[]} />}
-          {view === 'list' && <ItemList objects={objects as Obj.Any[]} onDelete={handleObjectDelete} />}
-          {view === 'debug' && <ItemList debug objects={objects as Obj.Any[]} onDelete={handleObjectDelete} />}
+          {view === 'table' && <ItemTable type={getType(type)} objects={objects} />}
+          {view === 'list' && <ItemList objects={objects} onDelete={handleObjectDelete} />}
+          {view === 'debug' && <ItemList debug objects={objects} onDelete={handleObjectDelete} />}
         </div>
         <div className='flex h-[32px] p-2 items-center relative text-xs'>
           <div>{objects.length} objects</div>
