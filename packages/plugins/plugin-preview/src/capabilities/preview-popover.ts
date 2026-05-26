@@ -65,9 +65,10 @@ export default Capability.makeModule(
       }
 
       // Fall back to the short typename when the object has no label annotation
-      // (otherwise the popover renders with an empty Card.Title).
+      // (otherwise the popover renders with an empty Card.Title). Typenames are
+      // dot-separated (e.g. `org.dxos.type.table` → `table`).
       const typename = Obj.getTypename(result.object);
-      const fallbackTitle = typename?.split('/').pop();
+      const fallbackTitle = typename?.split('.').pop();
       const title = titleProp ?? Obj.getLabel(result.object) ?? fallbackTitle;
 
       await invokePromise(LayoutOperation.UpdatePopover, {

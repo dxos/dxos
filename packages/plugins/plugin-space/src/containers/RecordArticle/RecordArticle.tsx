@@ -42,7 +42,9 @@ export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) 
             <Card.Root classNames='dx-card-max-width'>
               <Card.Toolbar>
                 <Card.Icon icon={icon} />
-                <Card.Title>{Obj.getLabel(subject)}</Card.Title>
+                {/* Fall back to the short typename when the object has no label annotation
+                    (e.g. an empty Table whose LabelAnnotation field `name` is undefined). */}
+                <Card.Title>{Obj.getLabel(subject) ?? typename?.split('.').pop()}</Card.Title>
               </Card.Toolbar>
               <Card.Content>
                 <Surface.Surface type={AppSurface.Card} data={{ subject }} limit={1} />
