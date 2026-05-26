@@ -37,14 +37,18 @@ describe('image extension', () => {
     view.destroy();
   });
 
-  test('skip can be selective (allow same-origin / data: while blocking http)', ({ expect }) => {
+  test('skip can be selective: blocks http(s) while still rendering file: URLs', ({ expect }) => {
     const skip = ({ url }: { name: 'Image'; url: string }) => /^https?:\/\//.test(url);
 
-    const remoteView = createView('![alt](https://other.example.com/y.png)', [
+    const blockedView = createView('![alt](https://other.example.com/y.png)', [
       image({ skip }),
       EditorView.editable.of(false),
     ]);
-    expect(countImageElements(remoteView)).toBe(0);
-    remoteView.destroy();
+    expect(countImageElements(blockedView)).toBe(0);
+    blockedView.destroy();
+
+    const allowedView = createView('![alt](file:///tmp/z.png)', [image({ skip }), EditorView.editable.of(false)]);
+    expect(countImageElements(allowedView)).toBeGreaterThan(0);
+    allowedView.destroy();
   });
 });
