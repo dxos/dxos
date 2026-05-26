@@ -35,7 +35,7 @@ const UNITED_DOMAIN_REGEX = /@(?:[\w-]+\.)?united\.(?:com|co\.uk)$/i;
 const CONFIRMATION_SUBJECT_REGEX = /(?:flight|booking)\s+confirmation/i;
 const GATE_SUBJECT_REGEX = /gate\s+change|schedule\s+change|flight\s+update/i;
 
-const FLIGHT_REGEX = /Flight:\s*([A-Z]{1,3}\d{1,5})/i;
+const FLIGHT_REGEX = /Flight:\s*([A-Z]{1,3}-?\d{1,5})/i;
 const FROM_REGEX = /From:\s*([A-Z]{3})(?:\s*\(([^)]+)\))?/;
 const TO_REGEX = /To:\s*([A-Z]{3})(?:\s*\(([^)]+)\))?/;
 const DEPART_REGEX = /Depart:\s*(\d{4}-\d{2}-\d{2})[\sT]+(\d{2}:\d{2})/;

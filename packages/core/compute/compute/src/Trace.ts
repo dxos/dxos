@@ -294,6 +294,8 @@ export const OperationStart = EventType('operation.start', {
     key: Schema.String,
     /** Human-readable operation name. */
     name: Schema.optional(Schema.String),
+    /** Phosphor icon identifier in `ph--<name>--<variant>` format. */
+    icon: Schema.optional(Schema.String),
   }),
   isEphemeral: false,
 });
@@ -307,6 +309,8 @@ export const OperationEnd = EventType('operation.end', {
     key: Schema.String,
     /** Human-readable operation name. */
     name: Schema.optional(Schema.String),
+    /** Phosphor icon identifier in `ph--<name>--<variant>` format. */
+    icon: Schema.optional(Schema.String),
     /** Outcome of the operation. */
     outcome: Schema.Literal('success', 'failure'),
     /** Error message if the operation failed. */
