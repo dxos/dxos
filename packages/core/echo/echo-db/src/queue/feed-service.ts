@@ -56,6 +56,16 @@ export const makeFeedService = (queues: QueueAPI): Context.Tag.Service<Feed.Feed
     const queue = queues.get(feedDXN);
     await queue.sync(options);
   },
+
+  getSyncState: async (feed: Feed.Feed): Promise<Feed.SyncState> => {
+    const feedDXN = Feed.getQueueDxn(feed);
+    if (!feedDXN) {
+      throw new Error('Unable to get feed sync state: make sure feed is stored in the database');
+    }
+
+    const queue = queues.get(feedDXN) as QueueImpl;
+    return queue.getSyncState();
+  },
 });
 
 /**

@@ -178,6 +178,10 @@ export class ServiceContext extends Resource {
           shouldPull: request.shouldPull,
         });
       },
+      getSyncState: async (ctx, request) => {
+        invariant(this._feedSyncer, 'Feed syncer is not available.');
+        return this._feedSyncer.getSyncState(ctx, request);
+      },
     });
 
     this.invitations = new InvitationsHandler(

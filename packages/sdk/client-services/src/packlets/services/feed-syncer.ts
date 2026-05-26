@@ -17,6 +17,7 @@ import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
 import { EdgeService } from '@dxos/protocols';
+import type { GetSyncStateRequest, GetSyncStateResponse } from '@dxos/protocols/proto/dxos/client/services';
 import { createBuf } from '@dxos/protocols/buf';
 import { type Message as RouterMessage } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import type { SqlTransaction } from '@dxos/sql-sqlite';
@@ -206,6 +207,52 @@ export class FeedSyncer extends Resource {
         this.#pollTask.schedule();
       },
       delay,
+    );
+  }
+
+  /**
+   * Returns per-namespace queue sync backlog for a space.
+   * `blocksToPull` and `blocksToPush` of 0 mean caught up for that namespace.
+   */
+  async getSyncState(ctx: Context, request: GetSyncStateRequest): Promise<GetSyncStateResponse> {
+    const spaceId = request.spaceId as SpaceId;
+    invariant(SpaceId.isValid(spaceId));
+    const namespaces =
+      request.namespaces != null && request.namespaces.length > 0 ? request.namespaces : this.#syncNamespaces;
+    for (const feedNamespace of namespaces) {
+      invariant(FeedProtocol.isWellKnownNamespace(feedNamespace));
+    }
+
+    return RuntimeProvider.runPromise(this.#runtime)(
+      Effect.gen(this, function* () {
+        const namespaceStates = yield* Effect.forEach(
+          namespaces,
+          (feedNamespace) =>
+            Effect.gen(this, function* () {
+              const blocksToPush = yield* this.#feedStore.countUnpositionedBlocks({
+                spaceId,
+                feedNamespace,
+              });
+              const totalBlocks = yield* this.#feedStore.countNamespaceBlocks({
+                spaceId,
+                feedNamespace,
+              });
+              const { blocksToPull } = yield* this.#syncClient.peekPull(ctx, {
+                spaceId,
+                feedNamespace,
+                limit: this.#messageBlocksLimit,
+              });
+              return {
+                namespace: feedNamespace,
+                blocksToPull,
+                blocksToPush,
+                totalBlocks,
+              };
+            }),
+          { concurrency: 'unbounded' },
+        );
+        return { namespaces: namespaceStates };
+      }),
     );
   }
 

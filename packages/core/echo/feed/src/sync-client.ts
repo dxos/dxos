@@ -191,6 +191,56 @@ export class SyncClient {
     });
   }
 
+  /**
+   * Probes remote for blocks after the last pulled position without mutating local storage.
+   * Returns the number of blocks in the first batch (0 when caught up with remote).
+   */
+  peekPull(
+    ctx: Context,
+    opts: {
+      spaceId: SpaceId;
+      feedNamespace: string;
+      limit?: number;
+    },
+  ): Effect.Effect<{ blocksToPull: number }, unknown, SqlClient.SqlClient | SqlTransaction.SqlTransaction> {
+    const self = this;
+    return Effect.gen(function* () {
+      const lastPulledPosition = yield* self.#feedStore.getSyncState({
+        spaceId: opts.spaceId,
+        feedNamespace: opts.feedNamespace,
+      });
+      const requestId = crypto.randomUUID();
+      const deferred = yield* Deferred.make<ProtocolMessage, Error>();
+      self.#handlers.set(requestId, deferred);
+      const cleanupDispose = ctx.disposed
+        ? () => {}
+        : ctx.onDispose(() => {
+            Effect.runFork(Deferred.fail(deferred, new ContextDisposedError()));
+          });
+      if (ctx.disposed) {
+        yield* Deferred.fail(deferred, new ContextDisposedError());
+      }
+      const request: RequestPayload = {
+        _tag: 'QueryRequest',
+        requestId,
+        spaceId: opts.spaceId,
+        feedNamespace: opts.feedNamespace,
+        position: lastPulledPosition,
+        limit: opts.limit,
+      };
+      yield* self.#sendMessage(ctx, self.#withPeerIds(request));
+      const message = yield* Effect.ensuring(
+        Deferred.await(deferred),
+        Effect.sync(() => {
+          cleanupDispose();
+          self.#handlers.delete(requestId);
+        }),
+      );
+      const response = yield* self.#expectResponse<QueryResponse>(requestId, message, 'QueryResponse');
+      return { blocksToPull: response.blocks.length };
+    });
+  }
+
   push(
     ctx: Context,
     opts: {

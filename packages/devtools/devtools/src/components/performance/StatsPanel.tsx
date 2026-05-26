@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, useCallback, useEffect, useState } from 'react';
 
-import { getSyncSummary, useSyncState } from '@dxos/react-client/echo';
+import { getSyncSummary, useFeedSyncState, useSyncState } from '@dxos/react-client/echo';
 import { Icon, ScrollArea, Toggle } from '@dxos/react-ui';
 
 import { type Stats, removeEmpty } from '../../hooks';
@@ -86,6 +86,7 @@ export const StatsPanel = ({
 
   const syncState = useSyncState();
   const syncSummary = getSyncSummary(syncState);
+  const feedSyncState = useFeedSyncState();
 
   const props = (id: PanelKey) => ({
     id,
@@ -160,6 +161,7 @@ export const StatsPanel = ({
           onToggle={handleToggle}
           state={syncState}
           summary={syncSummary}
+          feedState={feedSyncState}
           debug
         />
         <TimeSeries id='ts' open={panelState.ts} onToggle={handleToggle} />

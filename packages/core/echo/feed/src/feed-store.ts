@@ -359,6 +359,45 @@ export class FeedStore {
     }).pipe(Effect.withSpan('FeedStore.setSyncState'));
 
   /**
+   * Returns the number of blocks pending push (no global position yet) in a space/namespace.
+   */
+  countUnpositionedBlocks = (opts: {
+    spaceId: SpaceId;
+    feedNamespace: string;
+  }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen(this, function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const rows = yield* sql<{ count: number }>`
+        SELECT COUNT(*) AS count
+        FROM blocks
+        JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+        WHERE feeds.spaceId = ${opts.spaceId}
+          AND feeds.feedNamespace = ${opts.feedNamespace}
+          AND blocks.position IS NULL
+      `;
+      return rows[0]?.count ?? 0;
+    }).pipe(Effect.withSpan('FeedStore.countUnpositionedBlocks'));
+
+  /**
+   * Returns the total number of blocks stored locally for a space/namespace.
+   */
+  countNamespaceBlocks = (opts: {
+    spaceId: SpaceId;
+    feedNamespace: string;
+  }): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen(this, function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const rows = yield* sql<{ count: number }>`
+        SELECT COUNT(*) AS count
+        FROM blocks
+        JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+        WHERE feeds.spaceId = ${opts.spaceId}
+          AND feeds.feedNamespace = ${opts.feedNamespace}
+      `;
+      return rows[0]?.count ?? 0;
+    }).pipe(Effect.withSpan('FeedStore.countNamespaceBlocks'));
+
+  /**
    * Returns the number of stored blocks for a single feed in a space/namespace.
    * Intended as a low-level primitive for callers (for example Cloudflare Worker code)
    * that need to make retention decisions under constrained storage resources.
