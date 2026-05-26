@@ -47,7 +47,9 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
     // anything else explicitly so callers don't silently drop bad input.
     for (const schema of input) {
       if (!Type.isType(schema)) {
-        throw new TypeError('RuntimeSchemaRegistry.register expects Type entities (use `Type.makeObject` / `Type.makeRelation`).');
+        throw new TypeError(
+          'RuntimeSchemaRegistry.register expects Type entities (use `Type.makeObject` / `Type.makeRelation`).',
+        );
       }
       this._add(schema);
     }

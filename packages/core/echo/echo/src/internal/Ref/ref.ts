@@ -20,13 +20,8 @@ import { DXN, EchoURI, ObjectId, type URI } from '@dxos/keys';
 
 import type * as Type from '../../Type';
 import { ReferenceAnnotationId, getSchemaURI, getTypeAnnotation, getTypeIdentifierAnnotation } from '../Annotation';
+import { type AnyEntity, type AnyProperties, type UnknownTypeSchema, getStaticTypeSchema } from '../common/types';
 import { DatabaseService } from '../Database';
-import {
-  type AnyEntity,
-  type AnyProperties,
-  type UnknownTypeSchema,
-  getStaticTypeSchema,
-} from '../common/types';
 import { type JsonSchemaType } from '../JsonSchema';
 
 /**

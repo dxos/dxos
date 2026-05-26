@@ -8,7 +8,14 @@ import type * as SchemaAST from 'effect/SchemaAST';
 import { assertArgument } from '@dxos/invariant';
 import { deepMapValues } from '@dxos/util';
 
-import { PersistentType, getSchemaTypename, getStaticTypeSchema, makeObject, subscribe, toJsonSchema } from '../internal';
+import {
+  PersistentType,
+  getSchemaTypename,
+  getStaticTypeSchema,
+  makeObject,
+  subscribe,
+  toJsonSchema,
+} from '../internal';
 import type * as Type from '../Type';
 
 /**

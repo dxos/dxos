@@ -118,9 +118,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
       id: 'schema-children',
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-        return space && Type.isType(node.data)
-          ? Option.some({ space, schema: node.data })
-          : Option.none();
+        return space && Type.isType(node.data) ? Option.some({ space, schema: node.data }) : Option.none();
       },
       connector: ({ space, schema }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
@@ -220,8 +218,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
 
         const targetTypename = Type.getTypename(schema);
         const viewIndex = buildViewIndex(get, space, schemas);
-        const deletable =
-          Type.isMutable(schema) && viewIndex.getViewsForTypename(targetTypename).length === 0;
+        const deletable = Type.isMutable(schema) && viewIndex.getViewsForTypename(targetTypename).length === 0;
 
         return Effect.succeed(createSchemaActions({ schema, space, deletable, capabilities }));
       },

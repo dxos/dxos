@@ -14,14 +14,7 @@ import { DXN, EchoURI, ObjectId, URI } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
 import { type Mutable } from '../common/proxy';
-import {
-  type AnyEntity,
-  type AnyProperties,
-  EntityKind,
-  KindId,
-  TypeId,
-  getSchema,
-} from '../common/types';
+import { type AnyEntity, type AnyProperties, EntityKind, KindId, TypeId, getSchema } from '../common/types';
 import { getUri as getUriFromEntity } from '../Entity/api';
 import { type AnnotationHelper, createAnnotationHelper } from './util';
 
@@ -200,15 +193,13 @@ export const getEntityKind = (schema: Schema.Schema.All): EntityKind | undefined
  * @internal
  * @returns Schema typename (without dxn: prefix or version number).
  */
-export const getSchemaTypename = (schema: Schema.Schema.All): string | undefined =>
-  getTypeAnnotation(schema)?.typename;
+export const getSchemaTypename = (schema: Schema.Schema.All): string | undefined => getTypeAnnotation(schema)?.typename;
 
 /**
  * @internal
  * @returns Schema version in semver format.
  */
-export const getSchemaVersion = (schema: Schema.Schema.All): string | undefined =>
-  getTypeAnnotation(schema)?.version;
+export const getSchemaVersion = (schema: Schema.Schema.All): string | undefined => getTypeAnnotation(schema)?.version;
 
 /**
  * Gets the typename of the object without the version.

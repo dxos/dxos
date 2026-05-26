@@ -9,6 +9,9 @@ import { raise } from '@dxos/debug';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
+// Type-only import (erased at runtime — no import cycle); `internal` may depend
+// on the top-level `Type` API at the type level only.
+import type * as Type from '../../Type';
 import {
   type TypeAnnotation,
   TypeAnnotationId,
@@ -28,10 +31,6 @@ import {
   type UnknownTypeSchema,
   getStaticTypeSchema,
 } from '../common/types';
-
-// Type-only import (erased at runtime — no import cycle); `internal` may depend
-// on the top-level `Type` API at the type level only.
-import type * as Type from '../../Type';
 
 export {
   ATTR_RELATION_SOURCE,
@@ -75,11 +74,8 @@ export type RelationEndpoint = Type.AnyObj | UnknownTypeSchema<any, EntityKind.O
  * Resolves a relation endpoint to the instance type it describes — the source /
  * target instance recorded on the relation's `RelationSourceTargetRefs`.
  */
-export type RelationEndpointInstance<S> = S extends UnknownTypeSchema<infer A, any>
-  ? A
-  : S extends Type.AnyObj
-    ? Type.InstanceType<S>
-    : unknown;
+export type RelationEndpointInstance<S> =
+  S extends UnknownTypeSchema<infer A, any> ? A : S extends Type.AnyObj ? Type.InstanceType<S> : unknown;
 
 export type EchoRelationSchemaOptions<TSource extends RelationEndpoint, TTarget extends RelationEndpoint> = {
   dxn: DXN.DXN;
@@ -96,12 +92,7 @@ export type EchoRelationSchema<
   SourceInstance,
   TargetInstance,
   Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
-> = EchoTypeSchema<
-  Self,
-  RelationSourceTargetRefs<SourceInstance, TargetInstance>,
-  EntityKind.Relation,
-  Fields
->;
+> = EchoTypeSchema<Self, RelationSourceTargetRefs<SourceInstance, TargetInstance>, EntityKind.Relation, Fields>;
 
 /**
  * Schema for Relation entity types.

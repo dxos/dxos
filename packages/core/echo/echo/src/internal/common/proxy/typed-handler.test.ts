@@ -7,9 +7,9 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN } from '@dxos/keys';
 
+import * as Obj from '../../../Obj';
 import { TestSchema } from '../../../testing';
 import { EchoObjectSchema } from '../../Entity';
-import * as Obj from '../../../Obj';
 import { setValue } from '../../Obj';
 import { Ref } from '../../Ref';
 import { foreignKey, getMeta } from '../types';

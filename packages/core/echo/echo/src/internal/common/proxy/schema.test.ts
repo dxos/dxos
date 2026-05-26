@@ -9,8 +9,8 @@ import { describe, expect, test } from 'vitest';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import * as Type from '../../../Type';
 import { createEchoSchema } from '../../../testing';
+import * as Type from '../../../Type';
 import { PropertyMeta, getPropertyMetaAnnotation, getTypeAnnotation } from '../../Annotation';
 import { EchoObjectSchema } from '../../Entity';
 

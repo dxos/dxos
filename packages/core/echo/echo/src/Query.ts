@@ -261,10 +261,7 @@ class QueryClass implements Any {
     });
   }
 
-  sourceOf(
-    relation?: TypeNs.AnyRelation | string,
-    predicates?: Filter.Props<unknown> | undefined,
-  ): Any {
+  sourceOf(relation?: TypeNs.AnyRelation | string, predicates?: Filter.Props<unknown> | undefined): Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,
@@ -273,10 +270,7 @@ class QueryClass implements Any {
     });
   }
 
-  targetOf(
-    relation?: TypeNs.AnyRelation | string,
-    predicates?: Filter.Props<unknown> | undefined,
-  ): Any {
+  targetOf(relation?: TypeNs.AnyRelation | string, predicates?: Filter.Props<unknown> | undefined): Any {
     return new QueryClass({
       type: 'relation',
       anchor: this.ast,

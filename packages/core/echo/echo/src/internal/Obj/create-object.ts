@@ -68,10 +68,7 @@ export type CreateObjectProps<T> = (T extends { id: string }
  */
 // TODO(burdon): Make internal.
 export const createObject: {
-  <T extends Type.AnyEntity>(
-    input: T,
-    props: NoInfer<CreateObjectProps<Type.InstanceType<T>>>,
-  ): Type.InstanceType<T>;
+  <T extends Type.AnyEntity>(input: T, props: NoInfer<CreateObjectProps<Type.InstanceType<T>>>): Type.InstanceType<T>;
 } = (input: any, props: any): any => {
   // `Type.Type` entities aren't `Schema.Schema` themselves; read the source
   // schema off the hidden slot (persisted entities synthesize it lazily via
