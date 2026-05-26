@@ -30,7 +30,7 @@ const DEFAULT_POLLING_INTERVAL = 5_000;
 const DEFAULT_POLL_REQUEST_THROTTLE_MS = 250;
 const MAX_BLOCKING_SYNC_ITERATIONS = 100;
 
-interface FeedSyncerOptions {
+export type FeedSyncerOptions = {
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
   feedStore: FeedStore;
   edgeClient: EdgeConnection;
@@ -65,7 +65,7 @@ interface FeedSyncerOptions {
    * @default 250 ms
    */
   pollRequestThrottleMs?: number;
-}
+};
 
 export class FeedSyncer extends Resource {
   readonly #syncNamespaces: string[];
