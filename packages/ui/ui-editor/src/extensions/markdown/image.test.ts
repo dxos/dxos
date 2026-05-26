@@ -1,0 +1,50 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
+import { EditorState } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
+import { describe, expect, test } from 'vitest';
+
+import { focus } from '../focus';
+import { image } from './image';
+
+const createView = (doc: string, extensions: any[]) => {
+  const parent = document.createElement('div');
+  return new EditorView({
+    state: EditorState.create({
+      doc,
+      extensions: [markdown({ base: markdownLanguage }), focus, ...extensions],
+    }),
+    parent,
+  });
+};
+
+const countImageElements = (view: EditorView): number => view.dom.querySelectorAll('img.cm-image').length;
+
+describe('image extension', () => {
+  test('renders <img> for an http image link by default', () => {
+    const view = createView('![](http://example.com/x.png)', [image(), EditorView.editable.of(false)]);
+    expect(countImageElements(view)).toBeGreaterThan(0);
+    view.destroy();
+  });
+
+  test('honors skip callback to suppress remote image rendering', () => {
+    const skip = ({ url }: { name: 'Image'; url: string }) => /^https?:\/\//.test(url);
+    const view = createView('![alt](http://example.com/x.png)', [image({ skip }), EditorView.editable.of(false)]);
+    expect(countImageElements(view)).toBe(0);
+    view.destroy();
+  });
+
+  test('skip can be selective (allow same-origin / data: while blocking http)', () => {
+    const skip = ({ url }: { name: 'Image'; url: string }) => /^https?:\/\//.test(url);
+
+    const remoteView = createView('![alt](https://other.example.com/y.png)', [
+      image({ skip }),
+      EditorView.editable.of(false),
+    ]);
+    expect(countImageElements(remoteView)).toBe(0);
+    remoteView.destroy();
+  });
+});

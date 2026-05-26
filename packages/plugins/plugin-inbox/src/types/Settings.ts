@@ -14,5 +14,15 @@ export const Settings = Schema.Struct({
       description: 'Group messages and responses that belong to the same conversation.',
     }),
   ),
+  /**
+   * Whether to render remote (http/https) images inline in messages.
+   * Off by default to avoid tracking pixels and to keep network requests off when reading mail.
+   */
+  loadRemoteImages: Schema.optional(
+    Schema.Boolean.annotations({
+      title: 'Load remote images',
+      description: 'Render remote images inline. When off, image links are shown as plain links.',
+    }),
+  ),
 }).pipe(Schema.mutable);
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}

@@ -5,6 +5,7 @@
 import { createContext } from '@radix-ui/react-context';
 import React, { type PropsWithChildren, useMemo, useState } from 'react';
 
+import { useAtomCapability } from '@dxos/app-framework/ui';
 import { type DXN } from '@dxos/echo';
 import { Icon, type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
@@ -21,6 +22,8 @@ import {
   preview,
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
+
+import { InboxCapabilities } from '#types';
 
 import { formatDateTime } from '../../util';
 import { UserIconButton } from '../UserIconButton';
@@ -214,6 +217,8 @@ type MessageBodyProps = ThemedClassName;
 const MessageBody = ({ classNames }: MessageBodyProps) => {
   const { message, viewMode, renderMode } = useMessageContext(MESSAGE_CONTENT_NAME);
   const { themeMode } = useThemeContext();
+  const settings = useAtomCapability(InboxCapabilities.Settings);
+  const loadRemoteImages = settings.loadRemoteImages ?? false;
 
   // If we're in plain-only mode or plain view, show the first block.
   // Otherwise show enriched content (second block).
@@ -235,7 +240,18 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
       exts.push(
         createMarkdownExtensions(),
         decorateMarkdown({
-          skip: (node) => (node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:'),
+          skip: (node) => {
+            // Skip dxn: links and images entirely (handled by preview()).
+            if ((node.name === 'Link' || node.name === 'Image') && node.url.startsWith('dxn:')) {
+              return true;
+            }
+            // When remote-image loading is disabled, suppress http(s) image rendering;
+            // the markdown source is left visible as a plain link instead.
+            if (node.name === 'Image' && /^https?:\/\//.test(node.url) && !loadRemoteImages) {
+              return true;
+            }
+            return false;
+          },
         }),
         preview(),
         EditorView.domEventHandlers({
@@ -252,7 +268,7 @@ const MessageBody = ({ classNames }: MessageBodyProps) => {
       );
     }
     return exts;
-  }, [themeMode, renderMode]);
+  }, [themeMode, renderMode, loadRemoteImages]);
 
   const { parentRef } = useTextEditor({ initialValue: content, extensions }, [content, extensions]);
 
