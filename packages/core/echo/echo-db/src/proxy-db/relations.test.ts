@@ -25,19 +25,11 @@ describe('Relations', () => {
     await testBuilder.close();
   });
 
-  test('getSource throws when source is in a different database (cross-space relation)', async () => {
-    // Second database on a separate peer (and thus a separate Hypergraph).
-    const { db: db2, graph: graph2 } = await testBuilder.createDatabase();
-    await graph2.schemaRegistry.register([TestSchema.Person, TestSchema.Organization, TestSchema.EmployedBy]);
-
-    // Source/target live in db (peer 1).
+  test('getSource throws when source object is deleted', async () => {
+    // Normal setup: all three objects in the same database.
     const person = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
     const org = db.add(Obj.make(TestSchema.Organization, { name: 'DXOS' }));
-
-    // Relation is stored in db2 (peer 2, different Hypergraph).
-    // saveRefs keeps a local DXN in the core (no space ID), so resolveSync
-    // looks up person.id inside db2 — where it doesn't exist.
-    const relation = db2.add(
+    const relation = db.add(
       Relation.make(TestSchema.EmployedBy, {
         [Relation.Source]: person,
         [Relation.Target]: org,
@@ -45,10 +37,16 @@ describe('Relations', () => {
       }),
     );
 
-    // getSourceDXN always works — reads the stored raw reference.
+    // Delete the source. The core stays in _objects (deletion just marks it),
+    // so _areDepsSatisfied passes and the relation surfaces in queries — but
+    // getObjectById excludes deleted objects by default, so resolveSync returns
+    // undefined and getSource throws.
+    db.remove(person);
+
+    // getSourceDXN always works — reads the stored raw DXN reference.
     expect(Relation.getSourceDXN(relation)).toBeDefined();
 
-    // getSource resolves via db2's Hypergraph; person is not there, so it throws.
+    // getSource resolves via getObjectById without { deleted: true } → throws.
     expect(() => Relation.getSource(relation)).toThrow('Relation source could not be resolved');
 
     // Taking a snapshot silently drops the unresolvable RelationSourceId,
