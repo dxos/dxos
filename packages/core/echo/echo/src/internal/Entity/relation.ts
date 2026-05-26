@@ -9,8 +9,9 @@ import { raise } from '@dxos/debug';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-// Type-only import (erased at runtime — no import cycle); `internal` may depend
-// on the top-level `Type` API at the type level only.
+// Type-only imports (erased at runtime — no import cycle); `internal` may depend
+// on the top-level `Obj` / `Type` API at the type level only.
+import type * as Obj from '../../Obj';
 import type * as Type from '../../Type';
 import {
   type TypeAnnotation,
@@ -89,8 +90,8 @@ export type EchoRelationSchemaOptions<TSource extends RelationEndpoint, TTarget 
  */
 export type EchoRelationSchema<
   Self extends Schema.Schema.Any,
-  SourceInstance,
-  TargetInstance,
+  SourceInstance extends Obj.Unknown,
+  TargetInstance extends Obj.Unknown,
   Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
 > = EchoTypeSchema<Self, RelationSourceTargetRefs<SourceInstance, TargetInstance>, EntityKind.Relation, Fields>;
 
