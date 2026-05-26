@@ -282,7 +282,7 @@ const useMarkdownStreamTextEditor = (
             xmlBlockDecoration({
               tag: 'prompt',
               lineClass: 'cm-prompt-line my-8',
-              contentClass: 'cm-prompt-bubble dx-panel px-2 py-1.5 rounded-sm [&_*]:text-inherit!',
+              contentClass: 'cm-prompt-bubble dx-panel px-2 py-1.5 box-decoration-clone rounded-sm [&_*]:text-inherit!',
               hideTags: true,
             }),
             xmlTags({ registry, setWidgets, bookmarks: ['prompt'] }),
