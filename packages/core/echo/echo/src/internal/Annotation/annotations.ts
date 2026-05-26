@@ -551,9 +551,9 @@ export const IconFromRefAnnotation = makeUserAnnotation<string>({
 export type GetLabelOptions = {
   /**
    * Strategy for deriving a label when the entity has no `LabelAnnotation` value.
-   * - `'typename'`: use the last dot-separated segment of the entity's typename
-   *   (e.g. `org.dxos.type.table` → `table`). Useful for Card.Title chrome
-   *   that must always display something, even for unlabeled objects.
+   * - `'typename'`: use the entity's typename (e.g. `org.dxos.type.table`).
+   *   Useful for Card.Title chrome that must always display something, even
+   *   for unlabeled objects.
    */
   fallback?: 'typename';
 };
@@ -562,8 +562,8 @@ export type GetLabelOptions = {
  * Get the label of an entity.
  * Accepts both reactive entities and snapshots.
  *
- * If `options.fallback === 'typename'` and no label is set, returns the short
- * form of the entity's typename.
+ * If `options.fallback === 'typename'` and no label is set, returns the
+ * entity's typename instead.
  */
 export const getLabel = (entity: AnyProperties, options?: GetLabelOptions): string | undefined => {
   const schema = getSchema(entity);
@@ -572,7 +572,7 @@ export const getLabel = (entity: AnyProperties, options?: GetLabelOptions): stri
     return label;
   }
   if (options?.fallback === 'typename') {
-    return getTypename(entity)?.split('.').pop();
+    return getTypename(entity);
   }
   return undefined;
 };

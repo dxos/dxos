@@ -462,8 +462,8 @@ export const isDeleted = (entity: Unknown | Snapshot): boolean => internal.isDel
  * Get the label of the relation.
  * Accepts both reactive relations and snapshots.
  *
- * @param options.fallback `'typename'` returns the short form of the relation's
- *   typename when no label is set (e.g. `org.dxos.type.table` → `table`).
+ * @param options.fallback `'typename'` returns the relation's typename when no
+ *   label is set (e.g. `org.dxos.type.table`).
  */
 export const getLabel = (entity: Unknown | Snapshot, options?: internal.GetLabelOptions): string | undefined =>
   internal.getLabel(entity, options);
