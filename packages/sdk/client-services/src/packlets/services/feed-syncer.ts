@@ -65,6 +65,13 @@ export type FeedSyncerOptions = {
    * @default 250 ms
    */
   pollRequestThrottleMs?: number;
+
+  /**
+   * When false, only wires the edge message handler; poll/push background tasks and
+   * `feedStore.onNewBlocks` auto-push are disabled. Use for tests that call `syncBlocking` explicitly.
+   * @default true
+   */
+  backgroundSync?: boolean;
 };
 
 export class FeedSyncer extends Resource {
@@ -73,6 +80,7 @@ export class FeedSyncer extends Resource {
   readonly #syncConcurrency: number;
   readonly #pollingInterval: number;
   readonly #pollRequestThrottleMs: number;
+  readonly #backgroundSync: boolean;
 
   readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
   readonly #feedStore: FeedStore;
@@ -102,6 +110,7 @@ export class FeedSyncer extends Resource {
     this.#syncConcurrency = options.syncConcurrency ?? DEFAULT_SYNC_CONCURRENCY;
     this.#pollingInterval = options.pollingInterval ?? DEFAULT_POLLING_INTERVAL;
     this.#pollRequestThrottleMs = options.pollRequestThrottleMs ?? DEFAULT_POLL_REQUEST_THROTTLE_MS;
+    this.#backgroundSync = options.backgroundSync ?? true;
   }
 
   protected override async _open(): Promise<void> {
@@ -151,26 +160,33 @@ export class FeedSyncer extends Resource {
       }),
     );
 
-    this.#feedStore.onNewBlocks.on(this._ctx, () => {
-      this.#pushTask.schedule();
-    });
+    if (this.#backgroundSync) {
+      this.#feedStore.onNewBlocks.on(this._ctx, () => {
+        this.#pushTask.schedule();
+      });
 
-    await this.#pollTask.open();
-    await this.#pushTask.open();
+      await this.#pollTask.open();
+      await this.#pushTask.open();
 
-    this.#resetSpacesToPoll();
-    this.#pollTask.schedule();
+      this.#resetSpacesToPoll();
+      this.#pollTask.schedule();
+    }
   }
 
   protected override async _close(): Promise<void> {
-    await this.#pollTask.close();
-    await this.#pushTask.close();
+    if (this.#backgroundSync) {
+      await this.#pollTask.close();
+      await this.#pushTask.close();
+    }
   }
 
   /**
    * Schedules a best-effort pull without blocking the caller.
    */
   schedulePoll(): void {
+    if (!this.#backgroundSync) {
+      return;
+    }
     this.#resetSpacesToPoll();
     if (this.#throttledPollScheduled) {
       return;
