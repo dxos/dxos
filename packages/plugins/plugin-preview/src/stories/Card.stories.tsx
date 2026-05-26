@@ -50,6 +50,15 @@ export const _Form: StoryObj<typeof DefaultStory<Person.Person>> = {
   },
 };
 
+export const _FormEditable: StoryObj<typeof DefaultStory<Person.Person>> = {
+  args: {
+    Component: FormCard,
+    createObject: createPerson,
+    image: true,
+    componentProps: { readonly: false, layout: 'full' },
+  },
+};
+
 export const _Person: StoryObj<typeof DefaultStory<Person.Person>> = {
   args: {
     Component: PersonCard,

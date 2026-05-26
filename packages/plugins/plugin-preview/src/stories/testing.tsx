@@ -12,13 +12,19 @@ import { CardContainer, type CardContainerProps } from '@dxos/react-ui-mosaic/te
 import { Expando } from '@dxos/schema';
 import { Organization, Person, Pipeline, Task } from '@dxos/types';
 
-export type DefaultStoryProps<T extends Obj.Any> = {
-  Component: FC<AppSurface.ObjectCardProps<T>>;
+export type DefaultStoryProps<T extends Obj.Any, P extends {} = {}> = {
+  Component: FC<AppSurface.ObjectCardProps<T> & P>;
   createObject: () => T;
   image?: boolean;
+  componentProps?: P;
 };
 
-export const DefaultStory = <T extends Obj.Any>({ Component, createObject, image }: DefaultStoryProps<T>) => {
+export const DefaultStory = <T extends Obj.Any, P extends {} = {}>({
+  Component,
+  createObject,
+  image,
+  componentProps,
+}: DefaultStoryProps<T, P>) => {
   const object = useMemo(() => createObject(), [createObject]);
   const roles: CardContainerProps['role'][] = ['intrinsic', 'popover'];
 
@@ -35,7 +41,11 @@ export const DefaultStory = <T extends Obj.Any>({ Component, createObject, image
                   <Card.Title>{Obj.getLabel(object)}</Card.Title>
                   <Card.Menu />
                 </Card.Toolbar>
-                <Component role={role ?? 'card--content'} subject={image ? object : omitImage(object)} />
+                <Component
+                  role={role ?? 'card--content'}
+                  subject={image ? object : omitImage(object)}
+                  {...(componentProps ?? ({} as P))}
+                />
               </Card.Root>
             </CardContainer>
           </div>

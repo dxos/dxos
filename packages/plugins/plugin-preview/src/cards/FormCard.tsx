@@ -6,29 +6,54 @@ import React, { useCallback, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
+import { useSchema } from '@dxos/echo-react';
 import { type JsonPath, splitJsonPath } from '@dxos/effect';
 import { Card, useTranslation } from '@dxos/react-ui';
-import { Form, omitId } from '@dxos/react-ui-form';
+import { Form, type FormUpdateMeta, type Presentation, omitId } from '@dxos/react-ui-form';
 import { type ProjectionModel } from '@dxos/schema';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 
-export const FormCard = ({ subject, projection }: AppSurface.ObjectCardProps & { projection?: ProjectionModel }) => {
-  const { t } = useTranslation(meta.id);
-  const echoSchema = Obj.getSchema(subject);
-  const schema = useMemo(() => echoSchema && omitId(echoSchema), [echoSchema]);
+export type FormCardProps = AppSurface.ObjectCardProps & {
+  projection?: ProjectionModel;
+  readonly?: boolean;
+  layout?: Presentation;
+};
 
-  const handleSave = useCallback((values: any, { changed }: { changed: Record<string, boolean> }) => {
-    const paths = Object.keys(changed).filter((path) => changed[path]);
-    Obj.update(subject, () => {
-      for (const path of paths) {
-        const value = values[path];
-        const parts = splitJsonPath(path as JsonPath);
-        Obj.setValue(subject, parts, value);
-      }
-    });
-  }, []);
+/**
+ * Default/fallback card for any ECHO object.
+ * Renders a `Form` against the object's schema — either the static schema
+ * from `Obj.getSchema` or, for runtime/mutable schemas, the reactive
+ * schema looked up via `useSchema`.
+ */
+export const FormCard = ({ subject, projection, readonly = true, layout = 'compact' }: FormCardProps) => {
+  const { t } = useTranslation(meta.id);
+
+  // Try the static schema first; fall back to the runtime/database schema for
+  // dynamic types whose schema isn't reachable via `Obj.getSchema` (DXN mismatch).
+  const staticSchema = Obj.getSchema(subject);
+  const db = Obj.getDatabase(subject);
+  const typename = Obj.getTypename(subject);
+  const runtimeSchema = useSchema(db, staticSchema ? undefined : typename);
+  const schema = useMemo(() => {
+    const resolved = runtimeSchema ?? staticSchema;
+    return resolved && omitId(resolved);
+  }, [runtimeSchema, staticSchema]);
+
+  const handleSave = useCallback(
+    (values: Record<string, unknown>, { changed }: FormUpdateMeta<Record<string, unknown>>) => {
+      const paths = (Object.keys(changed) as JsonPath[]).filter((path) => changed[path]);
+      Obj.update(subject, () => {
+        for (const path of paths) {
+          const parts = splitJsonPath(path);
+          const value = Obj.getValue(values as any, parts);
+          Obj.setValue(subject, parts, value);
+        }
+      });
+    },
+    [subject],
+  );
 
   if (!schema) {
     return <p className={mx(descriptionMessage)}>{t('unable-to-create-preview.message')}</p>;
@@ -36,7 +61,15 @@ export const FormCard = ({ subject, projection }: AppSurface.ObjectCardProps & {
 
   return (
     <Card.Content>
-      <Form.Root schema={schema} projection={projection} values={subject} autoSave onSave={handleSave}>
+      <Form.Root
+        schema={schema}
+        projection={projection}
+        values={subject}
+        readonly={readonly}
+        layout={layout}
+        autoSave
+        onSave={handleSave}
+      >
         <Form.Viewport>
           <Form.Content>
             <Form.FieldSet />
