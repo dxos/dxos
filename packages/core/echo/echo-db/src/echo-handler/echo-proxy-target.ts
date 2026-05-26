@@ -76,13 +76,12 @@ export class ObjectInternals {
   subscriptions: CleanupFn[] = [];
 
   /**
-   * Schema (or `Type.AnyEntity`) of the root object.
-   * When a `Type.Type` entity is available (e.g. created via `Obj.make(SomeType, ...)`),
-   * the entity is stored so {@link EchoReactiveHandler.getTypeEntity} can return it
-   * directly. Otherwise this holds a raw Effect Schema.
-   * Only used if this is not bound to a database.
+   * `Type.AnyEntity` of the root object. Populated when a Type entity is
+   * available (e.g. created via `Obj.make(SomeType, ...)`); left undefined for
+   * objects created without a typed schema. Only used if this is not bound to a
+   * database. {@link EchoReactiveHandler.getTypeEntity} returns this directly.
    */
-  rootSchema?: Schema.Schema.AnyNoContext | Type.AnyEntity = undefined;
+  rootSchema?: Type.AnyEntity = undefined;
 
   /**
    * Memoized rebuilt Effect Schema for persisted `Type.Type` entities. Reading

@@ -6,7 +6,6 @@ import { type Atom } from '@effect-atom/atom-react';
 import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
-import * as Schema from 'effect/Schema';
 
 import { Capability, type CapabilityManager } from '@dxos/app-framework';
 import { AppNode, AppNodeMatcher, LayoutOperation, Segments } from '@dxos/app-toolkit';
@@ -14,7 +13,7 @@ import { type Space, SpaceState, isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Annotation, Collection, Filter, Obj, Query, Type } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
-import { EntityKind, SystemTypeAnnotation, getTypeAnnotation } from '@dxos/echo/internal';
+import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { CreateAtom, GraphBuilder, Node } from '@dxos/plugin-graph';
 import { ViewAnnotation } from '@dxos/schema';
@@ -83,10 +82,10 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
         );
 
         const userSchemas = allSchemas.filter((type) => {
-          const schema = Type.getSchema(type);
-          if (getTypeAnnotation(schema)?.kind === EntityKind.Relation) {
+          if (Type.isRelation(type)) {
             return false;
           }
+          const schema = Type.getSchema(type);
           if (SystemTypeAnnotation.get(schema).pipe(Option.getOrElse(() => false))) {
             return false;
           }
@@ -119,7 +118,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
       id: 'schema-children',
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-        return space && (Type.isType(node.data) || Schema.isSchema(node.data))
+        return space && Type.isType(node.data)
           ? Option.some({ space, schema: node.data })
           : Option.none();
       },
@@ -129,12 +128,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
           ? get(AtomQuery.fromQuery(client.graph.schemaRegistry.query({ location: ['runtime'] })))
           : [];
 
-        // `schema` is either a `Type.AnyEntity` (per `Type.isType`) or a raw
-        // Effect Schema (per `Schema.isSchema`). For the schema-only case fall
-        // back to the typename annotation; for type entities use `getTypename`.
-        const typename = Type.isType(schema)
-          ? Type.getTypename(schema)
-          : getTypeAnnotation(schema as Schema.Schema.AnyNoContext)?.typename;
+        const typename = Type.getTypename(schema);
 
         // {All} virtual node.
         const allNode = Node.make({
@@ -216,7 +210,7 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
       id: 'schema-actions',
       match: (node) => {
         const space = isSpace(node.properties.space) ? node.properties.space : undefined;
-        return space && Schema.isSchema(node.data) ? Option.some({ space, schema: node.data }) : Option.none();
+        return space && Type.isType(node.data) ? Option.some({ space, schema: node.data }) : Option.none();
       },
       actions: ({ space, schema }, get) => {
         const client = get(capabilities.atom(ClientCapabilities.Client)).at(0);
@@ -224,24 +218,12 @@ export const createTypeExtensions = Effect.fnUntraced(function* () {
           ? get(AtomQuery.fromQuery(client.graph.schemaRegistry.query({ location: ['runtime'] })))
           : [];
 
-        // `schema` is either a `Type.AnyEntity` (per `Type.isType`) or a raw
-        // Effect Schema. Read typename via `getTypename` for type entities and
-        // fall back to the typename annotation for schema-only inputs.
-        const targetTypename = Type.isType(schema)
-          ? Type.getTypename(schema)
-          : (getTypeAnnotation(schema as Schema.Schema.AnyNoContext)?.typename ?? '');
+        const targetTypename = Type.getTypename(schema);
         const viewIndex = buildViewIndex(get, space, schemas);
         const deletable =
-          Type.isType(schema) && Type.isMutable(schema) && viewIndex.getViewsForTypename(targetTypename).length === 0;
+          Type.isMutable(schema) && viewIndex.getViewsForTypename(targetTypename).length === 0;
 
-        return Effect.succeed(
-          createSchemaActions({
-            schema: schema as unknown as Type.AnyEntity,
-            space,
-            deletable,
-            capabilities,
-          }),
-        );
+        return Effect.succeed(createSchemaActions({ schema, space, deletable, capabilities }));
       },
     }),
   ]);

@@ -2,13 +2,11 @@
 // Copyright 2022 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
 import type * as Types from 'effect/Types';
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
 import { type QueryResult, type SchemaRegistry, Type } from '@dxos/echo';
-import * as internal from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -42,17 +40,15 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
   }
 
   async register(input: SchemaRegistry.RegisterSchemaInput[]): Promise<Type.Type[]> {
-    input
-      // Accept any ECHO type entity (object/relation/type-kind) or raw Effect Schema.
-      .filter(
-        (schema): schema is Type.AnyEntity =>
-          Type.isObject(schema as any) ||
-          Type.isRelation(schema as any) ||
-          Type.isTypeKindSchema(schema as any) ||
-          Schema.isSchema(schema),
-      )
-      .forEach((schema) => this._add(schema));
-
+    // Runtime registry only stores Type entities; the JSON-schema form of
+    // `RegisterSchemaInput` is handled by the database-backed registry. Reject
+    // anything else explicitly so callers don't silently drop bad input.
+    for (const schema of input) {
+      if (!Type.isType(schema)) {
+        throw new TypeError('RuntimeSchemaRegistry.register expects Type entities (use `Type.makeObject` / `Type.makeRelation`).');
+      }
+      this._add(schema);
+    }
     this.schemaChanges.emit();
 
     // TODO(wittjosiah): This registry only support static schemas.
@@ -60,9 +56,7 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
   }
 
   private _add(schema: Type.AnyEntity): void {
-    const uri =
-      (Schema.isSchema(schema) ? internal.getSchemaURI(schema as any) : Type.getURI(schema as Type.AnyEntity)) ??
-      raise(new TypeError('Schema has no URI'));
+    const uri = Type.getURI(schema) ?? raise(new TypeError('Schema has no URI'));
     if (this._registry.has(uri)) {
       const typename = Type.getTypename(schema);
       const version = Type.getVersion(schema);

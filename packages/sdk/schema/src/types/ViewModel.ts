@@ -13,6 +13,7 @@ import type * as Types from 'effect/Types';
 
 import {
   type Database,
+  Entity,
   Filter,
   Format,
   JsonSchema,
@@ -246,11 +247,14 @@ export const makeFromDatabase = async ({
   const schema = await db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).firstOrUndefined();
   const jsonSchema = schema && schema.jsonSchema;
   invariant(jsonSchema, `Schema not found: ${typename}`);
-  // For `Type.Type` entities (stored meta-schemas), defer the object-ness check to the
-  // rebuilt Effect Schema below — `Type.isObject` returns false for them since
-  // their entity-kind brand is `Type`, not `Object`.
+  // `schema` is a `Type.Type` entity (type-kind brand). The kind it *describes*
+  // lives in the `TypeAnnotation` on the rebuilt Effect Schema — read it via
+  // `Entity.getKind` rather than the entity-level `Type.isObject` guard.
   const effectSchema = schema && Type.getSchema(schema);
-  invariant(effectSchema && Type.isObject(effectSchema), `Schema is not an object schema: ${typename}`);
+  invariant(
+    effectSchema && Entity.getKind(effectSchema) === Entity.Kind.Object,
+    `Schema is not an object schema: ${typename}`,
+  );
 
   Array.from({ length: createInitial }).forEach(() => {
     db.add(Obj.make(Type.assertObject(schema!), {}));

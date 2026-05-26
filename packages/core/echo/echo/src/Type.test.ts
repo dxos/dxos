@@ -14,13 +14,6 @@ import * as Type from './Type';
 
 describe('Type', () => {
   describe('Obj.Unknown schema', () => {
-    test('has SchemaKindId for schema type checking', ({ expect }) => {
-      // Type.isObject uses SchemaKindId to check if a schema is an object schema.
-      expect(Type.isObject(Obj.Unknown)).toBe(true);
-      expect(Type.isObject(TestSchema.Person)).toBe(true);
-      expect(Type.isObject(Relation.Unknown)).toBe(false);
-    });
-
     test('Schema.is validates structural compatibility only', ({ expect }) => {
       // Schema.is does structural validation (has id field). `Obj.Unknown` IS
       // a raw Effect Schema (branded with EchoSchemaKind), so pass it directly.
@@ -31,13 +24,6 @@ describe('Type', () => {
   });
 
   describe('Relation.Unknown schema', () => {
-    test('has SchemaKindId for schema type checking', ({ expect }) => {
-      // Type.isRelation uses SchemaKindId to check if a value is a relation type entity.
-      expect(Type.isRelation(Relation.Unknown)).toBe(true);
-      expect(Type.isRelation(TestSchema.HasManager)).toBe(true);
-      expect(Type.isRelation(Obj.Unknown)).toBe(false);
-    });
-
     test('Schema.is validates structural compatibility only', ({ expect }) => {
       // Schema.is does structural validation (has id field). `Relation.Unknown`
       // IS a raw Effect Schema (branded with EchoSchemaKind), so pass it directly.
@@ -64,8 +50,6 @@ describe('Type', () => {
     test('static object/relation types are not type-kind', ({ expect }) => {
       expect(Type.isTypeKindSchema(TestSchema.Person)).toBe(false);
       expect(Type.isTypeKindSchema(TestSchema.HasManager)).toBe(false);
-      expect(Type.isTypeKindSchema(Obj.Unknown)).toBe(false);
-      expect(Type.isTypeKindSchema(Relation.Unknown)).toBe(false);
     });
 
     test('Type.getMeta(Type.Type) reports key/version of the meta-schema', ({ expect }) => {

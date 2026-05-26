@@ -270,38 +270,29 @@ export const makeRelation: {
 export type AnyEntity = AnyObject | AnyRelation | Type;
 
 /**
- * Type guard to check if a schema is an object schema.
- * NOTE: This checks SCHEMAS, not instances. Use Obj.isObject for instances.
+ * Type guard: narrows a `Type.AnyEntity` to an object-kind entity. Checks
+ * ENTITIES, not instances — use `Obj.isObject` for instances. Raw
+ * `Schema.Schema` values (including the branded `Obj.Unknown` companion)
+ * are intentionally not accepted; inspect their `TypeAnnotation` directly.
  */
-export const isObject = (schema: AnyEntity | Schema.Schema.AnyNoContext): schema is AnyObject => {
-  if (internal.getSchemaKind(schema) === internal.EntityKind.Object) {
-    return true;
-  }
-  // Schema-side fallback for the well-known `Obj.Unknown` schema (and persisted
-  // `Type.Type` entities rebuilt from jsonSchema): inspect the TypeAnnotation kind.
-  return Schema.isSchema(schema) && internal.getTypeAnnotation(schema)?.kind === internal.EntityKind.Object;
+export const isObject = (entity: AnyEntity): entity is AnyObject => {
+  return internal.getSchemaKind(entity) === internal.EntityKind.Object;
 };
 
 /**
- * Type guard to check if a schema is a relation schema.
- * NOTE: This checks SCHEMAS, not instances. Use Relation.isRelation for instances.
+ * Type guard: narrows a `Type.AnyEntity` to a relation-kind entity. Checks
+ * ENTITIES, not instances — use `Relation.isRelation` for instances.
  */
-export const isRelation = (schema: AnyEntity | Schema.Schema.AnyNoContext): schema is AnyRelation => {
-  if (internal.getSchemaKind(schema) === internal.EntityKind.Relation) {
-    return true;
-  }
-  return Schema.isSchema(schema) && internal.getTypeAnnotation(schema)?.kind === internal.EntityKind.Relation;
+export const isRelation = (entity: AnyEntity): entity is AnyRelation => {
+  return internal.getSchemaKind(entity) === internal.EntityKind.Relation;
 };
 
 /**
- * Type guard to check if a value is a type-kind schema (a meta-schema such as
- * `Type.Type`). Mirrors {@link isObject} / {@link isRelation}.
+ * Type guard: narrows a `Type.AnyEntity` to the type-kind meta-schema
+ * (e.g. `Type.Type`). Mirrors {@link isObject} / {@link isRelation}.
  */
-export const isTypeKindSchema = (schema: AnyEntity | Schema.Schema.AnyNoContext): schema is Type => {
-  if (internal.getSchemaKind(schema) === internal.EntityKind.Type) {
-    return true;
-  }
-  return Schema.isSchema(schema) && internal.getTypeAnnotation(schema)?.kind === internal.EntityKind.Type;
+export const isTypeKindSchema = (entity: AnyEntity): entity is Type => {
+  return internal.getSchemaKind(entity) === internal.EntityKind.Type;
 };
 
 /**
@@ -310,21 +301,21 @@ export const isTypeKindSchema = (schema: AnyEntity | Schema.Schema.AnyNoContext)
  * meta-schema. Use at call sites that need to pass the value to `Obj.make`,
  * `Filter.type`, or other object-only APIs.
  */
-export const assertObject = (schema: AnyEntity | Schema.Schema.AnyNoContext): AnyObject => {
-  invariant(isObject(schema), 'Expected an object-kind Type entity.');
-  return schema;
+export const assertObject = (entity: AnyEntity): AnyObject => {
+  invariant(isObject(entity), 'Expected an object-kind Type entity.');
+  return entity;
 };
 
 /** Narrow a `Type.AnyEntity` to `AnyRelation`, throwing otherwise. */
-export const expectRelation = (schema: AnyEntity | Schema.Schema.AnyNoContext): AnyRelation => {
-  invariant(isRelation(schema), 'Expected a relation-kind Type entity.');
-  return schema;
+export const expectRelation = (entity: AnyEntity): AnyRelation => {
+  invariant(isRelation(entity), 'Expected a relation-kind Type entity.');
+  return entity;
 };
 
 /** Narrow a `Type.AnyEntity` to the `Type.Type` meta-schema, throwing otherwise. */
-export const expectTypeKind = (schema: AnyEntity | Schema.Schema.AnyNoContext): Type => {
-  invariant(isTypeKindSchema(schema), 'Expected a type-kind Type entity.');
-  return schema;
+export const expectTypeKind = (entity: AnyEntity): Type => {
+  invariant(isTypeKindSchema(entity), 'Expected a type-kind Type entity.');
+  return entity;
 };
 
 /**
