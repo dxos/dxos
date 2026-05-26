@@ -23,7 +23,7 @@ export const Cell = Schema.Struct({
   graph: Schema.optional(Ref.Ref(Graph.Graph)),
 });
 
-export type Cell = Type.InstanceType<typeof Cell>;
+export type Cell = Schema.Schema.Type<typeof Cell>;
 
 export const Notebook = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),

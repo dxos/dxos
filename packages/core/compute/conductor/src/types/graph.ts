@@ -11,7 +11,7 @@ import { Graph } from '@dxos/graph';
 
 export const ComputeValueType = Schema.Literal('string', 'number', 'boolean', 'object');
 
-export type ComputeValueType = Type.InstanceType<typeof ComputeValueType>;
+export type ComputeValueType = Schema.Schema.Type<typeof ComputeValueType>;
 
 /**
  * GraphNode.
@@ -94,7 +94,7 @@ export const ComputeEdge = Schema.extend(
   }),
 );
 
-export type ComputeEdge = Type.InstanceType<typeof ComputeEdge>;
+export type ComputeEdge = Schema.Schema.Type<typeof ComputeEdge>;
 /**
  * Persistent graph.
  */

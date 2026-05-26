@@ -23,7 +23,7 @@ const kindLiteralAnnotations = { title: 'Kind' };
 export const EmailSpec = Schema.Struct({
   kind: Schema.Literal('email').annotations(kindLiteralAnnotations),
 });
-export type EmailSpec = Type.InstanceType<typeof EmailSpec>;
+export type EmailSpec = Schema.Schema.Type<typeof EmailSpec>;
 
 /**
  * Construct an Email trigger spec.
@@ -35,7 +35,7 @@ export const FeedSpec = Schema.Struct({
   kind: Schema.Literal('feed').annotations(kindLiteralAnnotations),
   feed: Schema.optional(Ref.Ref(Feed.Feed).annotations({ title: 'Feed' })),
 });
-export type FeedSpec = Type.InstanceType<typeof FeedSpec>;
+export type FeedSpec = Schema.Schema.Type<typeof FeedSpec>;
 
 /**
  * Construct a Feed trigger spec from a Feed object.
@@ -63,7 +63,7 @@ export const SubscriptionSpec = Schema.Struct({
     }).annotations({ title: 'Options' }),
   ),
 });
-export type SubscriptionSpec = Type.InstanceType<typeof SubscriptionSpec>;
+export type SubscriptionSpec = Schema.Schema.Type<typeof SubscriptionSpec>;
 
 /**
  * Construct a Subscription trigger spec from a Query object.
@@ -94,7 +94,7 @@ export const TimerSpec = Schema.Struct({
     [SchemaAST.ExamplesAnnotationId]: ['0 0 * * *'],
   }),
 });
-export type TimerSpec = Type.InstanceType<typeof TimerSpec>;
+export type TimerSpec = Schema.Schema.Type<typeof TimerSpec>;
 
 /**
  * Construct a Timer trigger spec from a cron string.
@@ -118,7 +118,7 @@ export const WebhookSpec = Schema.Struct({
     }),
   ),
 });
-export type WebhookSpec = Type.InstanceType<typeof WebhookSpec>;
+export type WebhookSpec = Schema.Schema.Type<typeof WebhookSpec>;
 
 /**
  * Construct a Webhook trigger spec from a method and port.
@@ -135,7 +135,7 @@ export const specWebhook = (opts?: { method?: string; port?: number }): WebhookS
 export const Spec = Schema.Union(EmailSpec, FeedSpec, SubscriptionSpec, TimerSpec, WebhookSpec).annotations({
   title: 'Trigger',
 });
-export type Spec = Type.InstanceType<typeof Spec>;
+export type Spec = Schema.Schema.Type<typeof Spec>;
 
 /**
  * Function trigger.

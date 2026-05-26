@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Ref, Type } from '@dxos/echo';
+import { Ref } from '@dxos/echo';
 
 import * as Person from './Person';
 
@@ -28,4 +28,4 @@ export const Actor = Schema.Struct({
   name: Schema.optional(Schema.String),
 });
 
-export type Actor = Type.InstanceType<typeof Actor>;
+export type Actor = Schema.Schema.Type<typeof Actor>;

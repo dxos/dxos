@@ -15,12 +15,12 @@ export const Step = Schema.Struct({
   tools: Schema.optional(Schema.Array(ToolId)),
 });
 
-export type Step = Type.InstanceType<typeof Step>;
+export type Step = Schema.Schema.Type<typeof Step>;
 export const Definition = Schema.Struct({
   steps: Schema.Array(Step.pipe(Schema.omit('id'))),
 });
 
-export type Definition = Type.InstanceType<typeof Definition>;
+export type Definition = Schema.Schema.Type<typeof Definition>;
 /**
  * @deprecated
  */

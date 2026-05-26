@@ -17,7 +17,7 @@ export const TreeNodeType = Schema.Struct({
   ref: Schema.optional(Ref.Ref(TestSchema.Expando)),
 }).pipe(Schema.mutable);
 
-export type TreeNodeType = Type.InstanceType<typeof TreeNodeType>;
+export type TreeNodeType = Schema.Schema.Type<typeof TreeNodeType>;
 
 export const TreeType = Schema.Struct({
   root: Key.ObjectId,

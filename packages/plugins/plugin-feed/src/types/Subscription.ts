@@ -12,7 +12,7 @@ import { FactoryAnnotation, type FactoryFn, FeedAnnotation } from '@dxos/schema'
 
 /** Subscription protocol type. */
 export const FeedType = Schema.Literal('atproto', 'rss');
-export type FeedType = Type.InstanceType<typeof FeedType>;
+export type FeedType = Schema.Schema.Type<typeof FeedType>;
 
 /**
  * Default upper bound on the number of (non-starred) Posts retained when

@@ -23,7 +23,7 @@ export const Shape = Schema.extend(
   }),
 );
 
-export type Shape = Type.InstanceType<typeof Shape>;
+export type Shape = Schema.Schema.Type<typeof Shape>;
 
 /**
  * Connections between shapes.
@@ -36,14 +36,14 @@ export const Connection = Schema.extend(
   }),
 );
 
-export type Connection = Type.InstanceType<typeof Connection>;
+export type Connection = Schema.Schema.Type<typeof Connection>;
 
 // TODO(burdon): Rename scene?
 export const Layout = Schema.Struct({
   shapes: Schema.Array(Shape),
 });
 
-export type Layout = Type.InstanceType<typeof Layout>;
+export type Layout = Schema.Schema.Type<typeof Layout>;
 
 // TODO(wittjosiah): Rename WorkflowType?
 export const CanvasBoard = Schema.Struct({

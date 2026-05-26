@@ -12,7 +12,7 @@ import { Text } from '@dxos/schema';
 
 /** Media kind produced by a Generation. */
 export const Kind = Schema.Literal('video', 'audio');
-export type Kind = Type.InstanceType<typeof Kind>;
+export type Kind = Schema.Schema.Type<typeof Kind>;
 
 /**
  * AI media generation artefact.

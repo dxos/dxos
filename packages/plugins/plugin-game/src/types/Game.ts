@@ -29,7 +29,7 @@ export const Player = Schema.Struct({
   ),
 });
 
-export type Player = Type.InstanceType<typeof Player>;
+export type Player = Schema.Schema.Type<typeof Player>;
 
 /**
  * Base Game object. Variant-specific state lives in a separate referenced object.

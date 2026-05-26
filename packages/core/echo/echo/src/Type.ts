@@ -481,27 +481,27 @@ export type TypeKind = 'object' | 'relation';
 export type Persistence = 'static' | 'persisted';
 
 /**
- * Convenience alias for the instance type produced by a type value.
+ * Instance type produced by a Type entity.
  *
- * Works uniformly for static schemas (created via `Type.makeObject`/`Type.makeRelation`)
- * and persisted `Type.Type` entities. Prefer this over
- * `Schema.Schema.Type<typeof Foo>` so call sites stay valid regardless of
- * whether `Foo` is a schema or a `Type.Type` entity.
+ * Accepts ONLY {@link AnyEntity} inputs — `Type.Obj`, `Type.Relation`, or
+ * `Type.Type`. Raw Effect `Schema.Schema` values are rejected: for those, use
+ * `Schema.Schema.Type<typeof Foo>` directly. This separation keeps the type
+ * system honest about which values represent ECHO entities versus plain
+ * Effect schemas.
  *
- * Dispatches on the input shape:
- *  - `Type<A>` entity (via the `InstancePhantomId` brand) → `A`
- *  - Effect `Schema.Schema.All`                            → `Schema.Schema.Type<T>`
+ * Dispatches on the entity kind:
+ *  - `Relation<Props, S, T>` → `Endpoints<S,T> & Props & OfKind<Relation>`
+ *  - `Obj<A>`                → `A & OfKind<Object>`
+ *  - `Type<A>`               → `A & OfKind<Type>`
  */
-export type InstanceType<T> =
+export type InstanceType<T extends AnyEntity> =
   T extends Relation<infer Props, infer Source, infer Target, any>
     ? RelationModule.Endpoints<Source, Target> & Props & EntityModule.OfKind<typeof EntityModule.Kind.Relation>
     : T extends Obj<infer A, any>
       ? A & EntityModule.OfKind<typeof EntityModule.Kind.Object>
       : T extends Type<infer A>
         ? A & EntityModule.OfKind<typeof EntityModule.Kind.Type>
-        : T extends Schema.Schema.All
-          ? Schema.Schema.Type<T>
-          : never;
+        : never;
 
 /**
  * Returns the Effect Schema for a type entity.

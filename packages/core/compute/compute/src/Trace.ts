@@ -67,7 +67,7 @@ export const Event = Schema.Struct({
   type: Schema.String,
   data: Schema.Unknown, // Type-specific payload;
 });
-export type Event = Type.InstanceType<typeof Event>;
+export type Event = Schema.Schema.Type<typeof Event>;
 /**
  * Checks if an event is of a given type.
  */
@@ -79,7 +79,7 @@ export const isOfType = <T, E extends Event>(eventType: EventType<T>, event: E):
  * Extensible name informing which runtime executed the code that produced the event.
  */
 export const RuntimeName = Schema.String.pipe(Schema.brand('@dxos/compute/Trace/RuntimeName'));
-export type RuntimeName = Type.InstanceType<typeof RuntimeName>;
+export type RuntimeName = Schema.Schema.Type<typeof RuntimeName>;
 
 /**
  * Common runtime names.
@@ -129,7 +129,7 @@ export const Meta = Schema.Struct({
    */
   runtimeName: Schema.optional(RuntimeName),
 });
-export type Meta = Type.InstanceType<typeof Meta>;
+export type Meta = Schema.Schema.Type<typeof Meta>;
 /**
  * Checks if a runtime is an edge runtime.
  */
@@ -147,7 +147,7 @@ export const MessageData = Schema.Struct({
   isEphemeral: Schema.Boolean,
   events: Schema.Array(Event),
 });
-export type MessageData = Type.InstanceType<typeof MessageData>;
+export type MessageData = Schema.Schema.Type<typeof MessageData>;
 export const Message = MessageData.pipe(
   Annotation.IconAnnotation.set({
     icon: 'ph--note--regular',

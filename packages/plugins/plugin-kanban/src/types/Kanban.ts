@@ -35,7 +35,7 @@ export const Arrangement = Schema.Struct({
   columns: ArrangementColumns,
 }).pipe(FormInputAnnotation.set(false));
 
-export type Arrangement = Type.InstanceType<typeof Arrangement>;
+export type Arrangement = Schema.Schema.Type<typeof Arrangement>;
 
 /**
  * v1: pre-existing Kanban shape. Retained as the source for the v1→v2 migration.
@@ -75,11 +75,11 @@ export const KanbanItemsSpec = Schema.Struct({
   /** Items owned directly by the kanban. */
   items: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(FormInputAnnotation.set(false)),
 });
-export type KanbanItemsSpec = Type.InstanceType<typeof KanbanItemsSpec>;
+export type KanbanItemsSpec = Schema.Schema.Type<typeof KanbanItemsSpec>;
 
 /** Discriminated union of source specs. Distinguished by `kind`. */
 export const KanbanSpec = Schema.Union(KanbanViewSpec, KanbanItemsSpec);
-export type KanbanSpec = Type.InstanceType<typeof KanbanSpec>;
+export type KanbanSpec = Schema.Schema.Type<typeof KanbanSpec>;
 
 export const Kanban = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),

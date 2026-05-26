@@ -130,11 +130,11 @@ type MakePropsInternal<T extends Unknown> = {
 
 // TODO(burdon): Should we allow the caller to set the id?
 /**
- * Props type for object creation with a given type. Accepts either a static
- * `Type.AnyObject` (entity) or a raw Effect Schema and derives the
- * instance shape via `Type.InstanceType`.
+ * Props type for object creation with a given type. Accepts a `Type.AnyObject`
+ * entity (or one of its `Type.Type` siblings) and derives the instance shape
+ * via `Type.InstanceType`.
  */
-export type MakeProps<S> = {
+export type MakeProps<S extends Type.AnyEntity> = {
   id?: ObjectId;
   [Meta]?: Partial<internal.ObjectMeta>;
   [Parent]?: Unknown;

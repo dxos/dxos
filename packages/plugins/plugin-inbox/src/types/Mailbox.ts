@@ -24,7 +24,7 @@ export const Labels = Schema.Record({
   value: Schema.String,
 });
 
-export type Labels = Type.InstanceType<typeof Labels>;
+export type Labels = Schema.Schema.Type<typeof Labels>;
 
 /** Mailbox object schema. */
 export const Mailbox = Schema.Struct({

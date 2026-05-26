@@ -36,7 +36,7 @@ export const TraceEventException = Schema.Struct({
   stack: Schema.optional(Schema.String),
 });
 
-export type TraceEventException = Type.InstanceType<typeof TraceEventException>;
+export type TraceEventException = Schema.Schema.Type<typeof TraceEventException>;
 
 const InvocationTraceStartEventSchema = Schema.Struct({
   /**

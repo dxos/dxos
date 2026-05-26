@@ -134,9 +134,9 @@ type MakePropsInternal<T extends Unknown> = {
 
 /**
  * Props type for relation creation with a given schema.
- * Takes a schema type (created with Type.Relation) and extracts the props type.
+ * Takes a relation entity (created with Type.makeRelation) and extracts the props type.
  */
-export type MakeProps<S> = MakePropsInternal<Type.InstanceType<S> & Unknown>;
+export type MakeProps<S extends Type.AnyEntity> = MakePropsInternal<Type.InstanceType<S> & Unknown>;
 
 /**
  * Creates new relation.

@@ -33,7 +33,7 @@ const ApiAuthorizationOauth = Schema.Struct({
 });
 
 export const ApiAuthorization = Schema.Union(ApiAuthorizationKey, ApiAuthorizationOauth);
-export type ApiAuthorization = Type.InstanceType<typeof ApiAuthorization>;
+export type ApiAuthorization = Schema.Schema.Type<typeof ApiAuthorization>;
 
 const ServiceInterfaceFunction = Schema.Struct({
   kind: Schema.Literal('function'),
@@ -71,7 +71,7 @@ const ServiceInterface = Schema.Union(
   ServiceInterfaceApi,
 ) as any;
 
-export type ServiceInterface = Type.InstanceType<typeof ServiceInterface>;
+export type ServiceInterface = Schema.Schema.Type<typeof ServiceInterface>;
 
 export const ServiceType = Schema.Struct({
   serviceId: Schema.String,

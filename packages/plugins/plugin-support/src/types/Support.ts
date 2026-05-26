@@ -11,7 +11,7 @@ import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 export const BLUEPRINT_KEY = 'org.dxos.blueprint.support';
 
 export const TicketStatus = Schema.Literal('open', 'in_progress', 'resolved');
-export type TicketStatus = Type.InstanceType<typeof TicketStatus>;
+export type TicketStatus = Schema.Schema.Type<typeof TicketStatus>;
 
 /**
  * A user-reported support ticket. Chat history lives in the standard chat

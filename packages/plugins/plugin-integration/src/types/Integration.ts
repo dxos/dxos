@@ -31,7 +31,7 @@ const IntegrationTarget = Schema.Struct({
   ),
 }).pipe(FormInputAnnotation.set(false));
 
-export type IntegrationTarget = Type.InstanceType<typeof IntegrationTarget>;
+export type IntegrationTarget = Schema.Schema.Type<typeof IntegrationTarget>;
 
 /**
  * External-service integration: {@link AccessToken} plus synced local roots (`targets`).

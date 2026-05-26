@@ -32,7 +32,7 @@ export const Subgraph = Schema.Struct({
   objects: Schema.Array(Schema.Any),
 });
 
-export type Subgraph = Type.InstanceType<typeof Subgraph>;
+export type Subgraph = Schema.Schema.Type<typeof Subgraph>;
 export type RelatedSchema = {
   schema: Type.AnyEntity;
   kind: 'reference' | 'relation';

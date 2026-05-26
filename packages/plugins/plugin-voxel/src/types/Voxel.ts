@@ -13,7 +13,7 @@ export const VoxelProps = Schema.Struct({
   hue: Schema.String,
 });
 
-export type VoxelProps = Type.InstanceType<typeof VoxelProps>;
+export type VoxelProps = Schema.Schema.Type<typeof VoxelProps>;
 
 /** Single voxel position and properties (used as the in-memory representation). */
 export type VoxelData = {

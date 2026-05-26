@@ -8,10 +8,10 @@ import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
 
 export const Level = Schema.Literal('easy', 'medium', 'hard');
-export type Level = Type.InstanceType<typeof Level>;
+export type Level = Schema.Schema.Type<typeof Level>;
 
 export const GameStatus = Schema.Literal('playing', 'x-wins', 'o-wins', 'draw');
-export type GameStatus = Type.InstanceType<typeof GameStatus>;
+export type GameStatus = Schema.Schema.Type<typeof GameStatus>;
 
 /**
  * Tic-Tac-Toe variant state. Referenced by the base `Game` object via `Game.variant`.

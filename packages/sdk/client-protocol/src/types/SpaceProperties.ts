@@ -10,7 +10,7 @@ import { DXN, Annotation, Feed, Ref, Type } from '@dxos/echo';
  * Where do triggers get executed.
  */
 export const ComputeEnvironment = Schema.Literal('disabled', 'local', 'edge');
-export type ComputeEnvironment = Type.InstanceType<typeof ComputeEnvironment>;
+export type ComputeEnvironment = Schema.Schema.Type<typeof ComputeEnvironment>;
 
 export const SpacePropertiesSchema = Schema.Struct(
   {
@@ -50,7 +50,7 @@ export const SpacePropertiesSchema = Schema.Struct(
   },
 );
 
-export type SpacePropertiesSchema = Type.InstanceType<typeof SpacePropertiesSchema>;
+export type SpacePropertiesSchema = Schema.Schema.Type<typeof SpacePropertiesSchema>;
 
 // TODO(burdon): Pipe Schem.optional, or partial to entire struct to make everything optional?
 // TODO(burdon): Is separate schema def required for forms? Can it be extracted from SpaceProperties?

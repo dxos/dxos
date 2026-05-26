@@ -11,7 +11,7 @@ import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import * as Chat from './Chat';
 
 export const TaskId = Schema.String.pipe(Schema.brand('@dxos/assistant-toolkit/TaskId'));
-export type TaskId = Type.InstanceType<typeof TaskId>;
+export type TaskId = Schema.Schema.Type<typeof TaskId>;
 
 export const Task = Schema.Struct({
   /**
@@ -38,7 +38,7 @@ export const Task = Schema.Struct({
   chat: Schema.optional(Ref.Ref(Chat.Chat)),
 });
 
-export type Task = Type.InstanceType<typeof Task>;
+export type Task = Schema.Schema.Type<typeof Task>;
 /**
  * Hierarchical collection of tasks for humans and agents to track progress.
  */

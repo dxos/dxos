@@ -24,7 +24,7 @@ export const CellValue = Schema.Struct({
   value: Schema.Any,
 });
 
-export type CellValue = Type.InstanceType<typeof CellValue>;
+export type CellValue = Schema.Schema.Type<typeof CellValue>;
 
 // TODO(burdon): IMPORTANT: Reconcile with Field definition.
 export const Range = Schema.Struct({
@@ -33,7 +33,7 @@ export const Range = Schema.Struct({
   value: Schema.String,
 });
 
-export type Range = Type.InstanceType<typeof Range>;
+export type Range = Schema.Schema.Type<typeof Range>;
 
 // TODO(burdon): Visibility, locked, frozen, etc.
 export const RowColumnMeta = Schema.Struct({

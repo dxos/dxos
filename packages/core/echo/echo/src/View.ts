@@ -54,7 +54,7 @@ export const Projection = Schema.Struct({
   pivotFieldId: Schema.String.pipe(Schema.optional),
 });
 
-export type Projection = Type.InstanceType<typeof Projection>;
+export type Projection = Schema.Schema.Type<typeof Projection>;
 
 /**
  * Views are generated or user-defined projections of a schema's properties.
