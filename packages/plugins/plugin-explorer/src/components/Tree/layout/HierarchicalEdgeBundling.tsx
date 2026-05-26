@@ -285,17 +285,13 @@ const hover = (linksLayer: any, leaves: BundleHierarchy[], focused: BundleHierar
   // Inline styles set to `null` are removed, restoring the element's default appearance.
   (linksLayer.selectAll('path') as any)
     .style('stroke', (d: any) => {
-      if (!on) return null;
-      if (d[0] === focused) return 'var(--color-orange-500)';
-      if (d[1] === focused) return 'var(--color-sky-500)';
+      if (!on) {return null;}
+      if (d[0] === focused) {return 'var(--color-orange-500)';}
+      if (d[1] === focused) {return 'var(--color-sky-500)';}
       return null;
     })
-    .style('stroke-width', (d: any) =>
-      on && (d[0] === focused || d[1] === focused) ? '1.5px' : null,
-    )
-    .style('opacity', (d: any) =>
-      on && d[0] !== focused && d[1] !== focused ? '0.08' : null,
-    );
+    .style('stroke-width', (d: any) => (on && (d[0] === focused || d[1] === focused) ? '1.5px' : null))
+    .style('opacity', (d: any) => (on && d[0] !== focused && d[1] !== focused ? '0.08' : null));
 
   for (const leaf of leaves) {
     const isOut = outgoing.has(leaf);
@@ -305,10 +301,10 @@ const hover = (linksLayer: any, leaves: BundleHierarchy[], focused: BundleHierar
     if (leaf.text) {
       select(leaf.text)
         .style('fill', () => {
-          if (!on) return null;
-          if (leaf === focused) return 'var(--color-neutral-900)';
-          if (isOut) return 'var(--color-orange-500)';
-          if (isIn) return 'var(--color-sky-500)';
+          if (!on) {return null;}
+          if (leaf === focused) {return 'var(--color-neutral-900)';}
+          if (isOut) {return 'var(--color-orange-500)';}
+          if (isIn) {return 'var(--color-sky-500)';}
           return null;
         })
         .style('font-weight', on && leaf === focused ? '600' : null);
