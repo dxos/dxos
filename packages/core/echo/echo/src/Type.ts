@@ -619,7 +619,7 @@ export type InstanceType<T extends AnyEntity> =
  */
 export function getSchema<T extends AnyObj>(type: T): Schema.Schema<InstanceType<T>>;
 export function getSchema<T extends AnyRelation>(type: T): Schema.Schema<InstanceType<T>>;
-export function getSchema(type: Type | AnyEntity): Schema.Schema.AnyNoContext;
+export function getSchema(type: AnyEntity): Schema.Schema.AnyNoContext;
 export function getSchema(type: AnyEntity): Schema.Schema.AnyNoContext {
   // Static `Type.Type` entities carry the source Effect Schema on a hidden
   // slot so we can return it without round-tripping through JsonSchema.
