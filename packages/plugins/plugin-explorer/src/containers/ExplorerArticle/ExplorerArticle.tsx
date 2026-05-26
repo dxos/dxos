@@ -2,8 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-import '@dxos/react-ui-graph/styles/graph.css';
-
 import { select } from 'd3';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -30,6 +28,7 @@ import {
   type SVGContext,
 } from '@dxos/react-ui-graph';
 import { type SpaceGraphEdge, type SpaceGraphNode } from '@dxos/schema';
+import '@dxos/react-ui-graph/styles/graph.css';
 
 import { type TreeNode } from '#components';
 import { useGraphModel } from '#hooks';
