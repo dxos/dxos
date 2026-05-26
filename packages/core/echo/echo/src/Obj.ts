@@ -503,14 +503,11 @@ export const getTypeURI = (obj: Unknown | Snapshot): URI.URI => {
 };
 
 /**
- * Get the type entity (`Type.Obj` / `Type.Type`) the object was created from.
- * Returns `undefined` for instances loaded without a registered type (e.g.
- * deserialized JSON where the schema resolver returned only a raw `Schema`).
+ * Get the type entity (`Type.AnyObject`) the object was created from.
  *
  * To get the Effect Schema from the returned entity, use `Type.getSchema(...)`.
  */
-export const getType = (obj: Unknown | Snapshot): Type.AnyObject | undefined =>
-  internal.getType(obj) as Type.AnyObject | undefined;
+export const getType = (obj: Unknown | Snapshot): Type.AnyObject => internal.getType(obj) as Type.AnyObject;
 
 /**
  * @returns The typename of the object's type.

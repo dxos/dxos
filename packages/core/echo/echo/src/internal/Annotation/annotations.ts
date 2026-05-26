@@ -258,9 +258,6 @@ export const getTypename = (obj: AnyProperties): string | undefined => {
     return getSchemaTypename(schema);
   } else {
     const type = getTypeURI(obj);
-    if (!type) {
-      return undefined;
-    }
     // Parse the URI string to extract typename.
     if (DXN.isDXN(type)) {
       const parsed = DXN.tryMake(type);
@@ -286,23 +283,13 @@ export const setTypename = (obj: any, typename: URI.URI): void => {
 
 /**
  * @returns Object type URI — either a typename {@link DXN} or an `echo:` reference to a stored Schema object.
- * @returns undefined if the object doesn't have a type.
  * @example `dxn:com.example.type.person:1.0.0`
  * @example `echo:/01KKKG2FHWCMTR0BY00GJSVT1X` (stored schema)
  *
  * @internal (use Obj.getTypeURI)
  */
-// TODO(burdon): Narrow type.
-export const getTypeURI = (obj: AnyProperties): URI.URI | undefined => {
-  if (!obj) {
-    return undefined;
-  }
-
+export const getTypeURI = (obj: AnyProperties): URI.URI => {
   const type = (obj as any)[TypeId];
-  if (!type) {
-    return undefined;
-  }
-
   invariant(URI.isURI(type), 'Invalid object.');
   return type;
 };

@@ -64,16 +64,13 @@ export const setSchema = (obj: any, schema: Schema.Schema.AnyNoContext): void =>
 };
 
 /**
- * Returns the type entity (`Type.AnyEntity`) for the given instance, if known.
- * Set at instance creation; may be undefined for deserialized instances where
- * the resolver returned only an Effect Schema (no entity wrapper).
+ * Returns the type entity (`Type.AnyEntity`) for the given instance.
+ * Set at instance creation; every entity has a type.
  *
  * @internal Re-exported via `Obj.getType` / `Relation.getType` / `Entity.getType`.
  */
-export const getType = (obj: unknown | undefined): unknown | undefined => {
-  if (obj) {
-    return (obj as any)[TypeEntityId];
-  }
+export const getType = (obj: unknown): unknown => {
+  return (obj as any)[TypeEntityId];
 };
 
 /**
