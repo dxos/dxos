@@ -1,0 +1,14 @@
+@layer dx-components {
+  /**
+   * Card.Section is `col-span-full grid grid-cols-subgrid` so it owns a full row and
+   * exposes the Card.Root's 3 column tracks (gutter / content / gutter) to its children.
+   *
+   * Direct children that do not carry their own column placement default to the center
+   * (content) track via `--dx-col`, so raw content (editors, text, lists) lands in the
+   * content column instead of CSS Grid auto-placing it into a gutter. Children with
+   * an explicit `col-span-*` utility (Card.Action, Card.Row, Card.Section title) opt out.
+   */
+  .dx-card__section > *:not([class*='col-span']) {
+    grid-column: var(--dx-col, auto);
+  }
+}

@@ -28,30 +28,38 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
   return (
     <Card.Content>
       {snippet && (
-        <Card.Section className='relative px-1'>
-          <MarkdownEditorProvider id={subject.id} viewMode='readonly' extensions={extensions}>
-            {(editorRootProps) => (
-              <Editor.Root {...editorRootProps}>
-                <MarkdownEditor.Content initialValue={snippet} slots={{ content: { className: 'm-0' } }} />
-              </Editor.Root>
-            )}
-          </MarkdownEditorProvider>
-          <div
-            className={mx(
-              'z-10 absolute bottom-0 inset-x-0 h-12 w-full',
-              'bg-gradient-to-b from-transparent to-(--surface-bg) pointer-events-none',
-            )}
-          />
+        <Card.Section className='relative'>
+          <Card.Row fullWidth>
+            <MarkdownEditorProvider id={subject.id} viewMode='readonly' extensions={extensions}>
+              {(editorRootProps) => (
+                <Editor.Root {...editorRootProps}>
+                  <MarkdownEditor.Content initialValue={snippet} slots={{ content: { className: 'px-2!' } }} />
+                </Editor.Root>
+              )}
+            </MarkdownEditorProvider>
+            <Fade />
+          </Card.Row>
         </Card.Section>
       )}
       <Card.Section>
-        <Card.Text classNames='px-1.5 text-xs text-description'>
-          {info.words} {t('words.label', { count: info.words })}
-        </Card.Text>
+        <Card.Row fullWidth>
+          <Card.Text classNames='px-2 text-xs text-description'>
+            {info.words} {t('words.label', { count: info.words })}
+          </Card.Text>
+        </Card.Row>
       </Card.Section>
     </Card.Content>
   );
 };
+
+const Fade = () => (
+  <div
+    className={mx(
+      'z-10 absolute bottom-0 inset-x-0 h-12 w-full',
+      'bg-gradient-to-b from-transparent to-(--surface-bg) pointer-events-none',
+    )}
+  />
+);
 
 const getSnippet = (subject: Markdown.Document | Text.Text, fallback?: string, maxLines = 16) => {
   if (Obj.instanceOf(Markdown.Document, subject)) {

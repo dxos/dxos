@@ -3,35 +3,44 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { Keyboard } from '@dxos/keyboard';
 import { translations as themeTranslations } from '@dxos/plugin-theme/translations';
-import { Dialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { ShortcutsDialogContent } from './ShortcutsDialogContent';
+import { ShortcutsList } from './ShortcutsList';
 
-const DefaultStory = () => (
-  <Dialog.Root defaultOpen>
-    <Dialog.Overlay>
-      <ShortcutsDialogContent />
-    </Dialog.Overlay>
-  </Dialog.Root>
-);
+const DefaultStory = () => {
+  useEffect(() => {
+    Keyboard.singleton.bind({
+      shortcut: 'meta+k',
+      handler: () => {},
+      data: 'Commands',
+    });
+    Keyboard.singleton.bind({
+      shortcut: "meta+'",
+      handler: () => {},
+      data: 'Settings',
+    });
+  }, []);
+
+  return <ShortcutsList />;
+};
 
 const meta = {
-  title: 'plugins/plugin-support/containers/ShortcutsDialogContent',
-  component: ShortcutsDialogContent,
+  title: 'plugins/plugin-support/components/ShortcutsList',
+  component: ShortcutsList,
   render: DefaultStory,
   decorators: [withTheme(), withPluginManager()],
   parameters: {
-    layout: 'fullscreen',
+    layout: 'centered',
     translations: [...translations, ...themeTranslations],
   },
-} satisfies Meta<typeof ShortcutsDialogContent>;
+} satisfies Meta<typeof ShortcutsList>;
 
 export default meta;
 
