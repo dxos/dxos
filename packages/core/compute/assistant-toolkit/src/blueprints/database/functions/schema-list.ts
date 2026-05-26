@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Routine, Blueprint, Operation } from '@dxos/compute';
-import { Database, Feed, JsonSchema, Type, View } from '@dxos/echo';
+import { Database, Feed, Type, View } from '@dxos/echo';
 
 import { SchemaList } from './definitions';
 
@@ -20,14 +20,11 @@ export default SchemaList.pipe(
       const schema = yield* Effect.promise(() => db.schemaRegistry.query({ location: ['database', 'runtime'] }).run());
       return schema
         .filter((type) => !excludedTypenames.includes(Type.getTypename(type)))
-        .map((type) => {
-          const jsonSchema = Type.isType(type) ? type.jsonSchema : JsonSchema.toJsonSchema(type);
-          return {
-            typename: Type.getTypename(type),
-            jsonSchema,
-            kind: Type.isRelation(type) ? 'relation' : 'record',
-          };
-        });
+        .map((type) => ({
+          typename: Type.getTypename(type),
+          jsonSchema: type.jsonSchema,
+          kind: Type.isRelation(type) ? 'relation' : 'record',
+        }));
     }),
   ),
 );

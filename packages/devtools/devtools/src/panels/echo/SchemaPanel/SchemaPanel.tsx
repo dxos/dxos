@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { DXN, Entity, Format, JsonSchema, Type } from '@dxos/echo';
+import { DXN, Entity, Format, Type } from '@dxos/echo';
 import { type URI } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { Toolbar } from '@dxos/react-ui';
@@ -160,7 +160,7 @@ export const SchemaPanel = (props: { space?: Space }) => {
           <div className={mx('p-1 min-h-0 h-full overflow-auto')}>
             {selected ? (
               <ObjectViewer
-                object={Type.isType(selected) ? selected.jsonSchema : JsonSchema.toJsonSchema(selected)}
+                object={selected.jsonSchema}
                 id={Type.getURI(selected)?.toString()}
                 onNavigate={onNavigate}
               />
