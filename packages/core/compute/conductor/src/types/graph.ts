@@ -68,7 +68,10 @@ export interface ComputeNode {
   value?: any;
   enabled?: boolean;
 }
-export interface ComputeGraph extends Obj.OfShape<{ graph: any; input?: ComputeNode; output?: ComputeNode }> {}
+// Forward-declared so `ComputeNode.subgraph` can reference `Ref.Ref(ComputeGraph)`
+// before the const `ComputeGraph` schema is defined below. The interface merges
+// with the const declaration to yield the full instance shape.
+export interface ComputeGraph extends Type.InstanceType<typeof ComputeGraph> {}
 // TODO(dmaretskyi): To effect schema.
 export type ComputeNodeMeta = {
   input: Schema.Schema.AnyNoContext;

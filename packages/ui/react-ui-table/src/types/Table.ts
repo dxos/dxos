@@ -6,7 +6,11 @@ import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { DXN, Annotation, JsonSchema, Obj, Ref, Type, View } from '@dxos/echo';
+// QueryAST is referenced indirectly through `Type.InstanceType<typeof TableSchema>`
+// (Ref.Ref(View.View) → View.View → QueryAST.Query) in the emitted .d.ts; the
+// namespace import keeps the inferred types portable.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { DXN, Annotation, JsonSchema, Obj, QueryAST, Ref, Type, View } from '@dxos/echo';
 import { FormInputAnnotation, type JsonPath, type JsonSchemaType, LabelAnnotation } from '@dxos/echo/internal';
 import { ViewAnnotation } from '@dxos/schema';
 
@@ -30,11 +34,9 @@ const TableSchema = Schema.Struct({
   Type.makeObject(DXN.make('org.dxos.type.table', '0.1.0')),
 );
 
-export interface Table extends Obj.OfShape<{
-  readonly name?: string;
-  view: Ref.Ref<View.View>;
-  sizes: { [k: string]: number };
-}> {}
+// Declared as an interface (not `type =`) so downstream emit references `Table`
+// by name rather than expanding the inferred shape — keeps consumers portable.
+export interface Table extends Type.InstanceType<typeof TableSchema> {}
 export const Table: Type.Obj<Table> = TableSchema as any;
 
 type MakeProps = {

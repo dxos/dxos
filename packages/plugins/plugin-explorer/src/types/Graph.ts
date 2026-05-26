@@ -26,11 +26,9 @@ const GraphSchema = Schema.Struct({
   }),
   Type.makeObject(DXN.make('org.dxos.type.graph', '0.1.0')),
 );
-export interface Graph extends Obj.OfShape<{
-  readonly name?: string;
-  view: Ref.Ref<View.View>;
-  query: { readonly raw?: string; readonly ast: QueryAST.Query };
-}> {}
+// Declared as an interface (not `type =`) so downstream emit references `Graph`
+// by name rather than expanding the inferred shape — keeps consumers portable.
+export interface Graph extends Type.InstanceType<typeof GraphSchema> {}
 export const Graph: Type.Obj<Graph> = GraphSchema as any;
 
 type MakeProps = Omit<Partial<Obj.MakeProps<typeof Graph>>, 'view'> & {

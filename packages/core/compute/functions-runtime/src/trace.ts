@@ -6,7 +6,10 @@ import * as Schema from 'effect/Schema';
 
 import { Trigger } from '@dxos/compute';
 import { Process } from '@dxos/compute';
-import { DXN, Feed, Obj, Ref, Type } from '@dxos/echo';
+// QueryAST is referenced indirectly through `Type.InstanceType<typeof ...EventSchema>`
+// in the emitted .d.ts; the namespace import keeps the inferred types portable.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { DXN, Feed, Obj, QueryAST, Ref, Type } from '@dxos/echo';
 import { ObjectId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FunctionRuntimeKind, SerializedError } from '@dxos/protocols';
@@ -106,25 +109,9 @@ const InvocationTraceStartEventSchema = Schema.Struct({
   runtime: Schema.optional(FunctionRuntimeKind),
 }).pipe(Type.makeObject(DXN.make('org.dxos.type.invocationTraceStart', '0.1.0')));
 
-export interface InvocationTraceStartEvent extends Obj.OfShape<{
-  readonly type: InvocationTraceEventType.START;
-  readonly invocationId: string;
-  readonly parentInvocationId?: string;
-  readonly timestamp: number;
-  readonly input: unknown;
-  readonly invocationTraceFeed?: Ref.Ref<Feed.Feed>;
-  readonly invocationTarget?: Ref.Ref<Obj.Unknown>;
-  readonly trigger?: Ref.Ref<Trigger.Trigger>;
-  readonly chat?: Ref.Ref<Obj.Unknown>;
-  readonly process?: {
-    readonly pid: string;
-    readonly parentPid?: string;
-    readonly key: string;
-    readonly name?: string;
-    readonly target?: string;
-  };
-  readonly runtime?: FunctionRuntimeKind;
-}> {}
+// Declared as an interface (not `type =`) so downstream emit references the type
+// by name rather than expanding the inferred shape — keeps consumers portable.
+export interface InvocationTraceStartEvent extends Type.InstanceType<typeof InvocationTraceStartEventSchema> {}
 export const InvocationTraceStartEvent: Type.Obj<InvocationTraceStartEvent> = InvocationTraceStartEventSchema as any;
 
 const InvocationTraceEndEventSchema = Schema.Struct({
@@ -148,13 +135,9 @@ const InvocationTraceEndEventSchema = Schema.Struct({
   error: Schema.optional(SerializedError),
 }).pipe(Type.makeObject(DXN.make('org.dxos.type.invocationTraceEnd', '0.1.0')));
 
-export interface InvocationTraceEndEvent extends Obj.OfShape<{
-  readonly type: InvocationTraceEventType.END;
-  readonly invocationId: string;
-  readonly timestamp: number;
-  readonly outcome: InvocationOutcome;
-  readonly error?: SerializedError;
-}> {}
+// Declared as an interface (not `type =`) so downstream emit references the type
+// by name rather than expanding the inferred shape — keeps consumers portable.
+export interface InvocationTraceEndEvent extends Type.InstanceType<typeof InvocationTraceEndEventSchema> {}
 export const InvocationTraceEndEvent: Type.Obj<InvocationTraceEndEvent> = InvocationTraceEndEventSchema as any;
 
 export type InvocationTraceEvent = InvocationTraceStartEvent | InvocationTraceEndEvent;

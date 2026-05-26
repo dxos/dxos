@@ -4,7 +4,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Obj, Ref, Type, View } from '@dxos/echo';
+// QueryAST is referenced indirectly through `Type.InstanceType<typeof ...Schema>`
+// (Ref.Ref(View.View) → View.View → QueryAST.Query) in the emitted .d.ts; the
+// namespace import keeps the inferred types portable.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { DXN, Annotation, Obj, QueryAST, Ref, Type, View } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { ViewAnnotation } from '@dxos/schema';
 
@@ -35,23 +39,15 @@ export type Arrangement = Type.InstanceType<typeof Arrangement>;
 
 /**
  * v1: pre-existing Kanban shape. Retained as the source for the v1→v2 migration.
- *
- * The explicit interface + `as any` cast on the const is intentional: the
- * inferred type of `Type.makeObject(...)` over `Ref.Ref(View.View)` drags in
- * transitive symbols (`QueryFilterClause`, etc.) that aren't portable across
- * package boundaries, so TS refuses to emit the inferred declaration. The
- * hand-written interface gives a portable shape; the cast bridges to it.
  */
 const KanbanV1Schema = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false)),
   arrangement: Arrangement,
 }).pipe(Type.makeObject(DXN.make('org.dxos.type.kanban', '0.1.0')));
-export interface KanbanV1 extends Obj.OfShape<{
-  readonly name?: string;
-  view: Ref.Ref<View.View>;
-  arrangement: Arrangement;
-}> {}
+// Declared as an interface (not `type =`) so downstream emit references `KanbanV1`
+// by name rather than expanding the inferred shape — keeps consumers portable.
+export interface KanbanV1 extends Type.InstanceType<typeof KanbanV1Schema> {}
 export const KanbanV1: Type.Obj<KanbanV1> = KanbanV1Schema as any;
 
 //
@@ -64,19 +60,12 @@ export const KanbanV1: Type.Obj<KanbanV1> = KanbanV1Schema as any;
 // variants are tagged with a `kind` literal.
 //
 
-/**
- * View-variant: items come from running the View's query (the original behaviour).
- *
- * Explicit interface + cast for the same portability reason as `KanbanV1` above.
- */
-export interface KanbanViewSpec {
-  readonly kind: 'view';
-  view: Ref.Ref<View.View>;
-}
-export const KanbanViewSpec: Schema.Schema<KanbanViewSpec> = Schema.Struct({
+/** View-variant: items come from running the View's query (the original behaviour). */
+export const KanbanViewSpec = Schema.Struct({
   kind: Schema.Literal('view').pipe(FormInputAnnotation.set(false)),
   view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false)),
-}) as any;
+});
+export type KanbanViewSpec = Schema.Schema.Type<typeof KanbanViewSpec>;
 
 /** Items-variant: kanban owns its items as an explicit ref array (used by externally-synced kanbans). */
 export const KanbanItemsSpec = Schema.Struct({
@@ -107,8 +96,13 @@ export const Kanban = Schema.Struct({
   Type.makeObject(DXN.make('org.dxos.type.kanban', '0.2.0')),
 );
 
-/** Instance type; narrow on `kanban.spec.kind` (or use the guards below). */
-export type Kanban = Type.InstanceType<typeof Kanban>;
+/**
+ * Instance type; narrow on `kanban.spec.kind` (or use the guards below).
+ *
+ * Declared as an interface (not `type =`) so downstream emit references `Kanban`
+ * by name rather than expanding the inferred shape — keeps consumers portable.
+ */
+export interface Kanban extends Type.InstanceType<typeof Kanban> {}
 
 /** Narrowed view-variant kanban. */
 export type KanbanView = Kanban & { spec: KanbanViewSpec };

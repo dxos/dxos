@@ -4,7 +4,11 @@
 
 import * as Schema from 'effect/Schema';
 
-import { DXN, Annotation, Format, Obj, Ref, Type, View } from '@dxos/echo';
+// QueryAST is referenced indirectly through `Type.InstanceType<typeof MapSchema>`
+// (Ref.Ref(View.View) → View.View → QueryAST.Query) in the emitted .d.ts; the
+// namespace import keeps the inferred types portable.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { DXN, Annotation, Format, Obj, QueryAST, Ref, Type, View } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { ViewAnnotation } from '@dxos/schema';
 
@@ -26,13 +30,9 @@ const MapSchema = Schema.Struct({
   Type.makeObject(DXN.make('org.dxos.type.map', '0.1.0')),
 );
 
-export interface Map extends Obj.OfShape<{
-  readonly name?: string;
-  view?: Ref.Ref<View.View>;
-  center?: [number, number];
-  zoom?: number;
-  coordinates?: ReadonlyArray<[number, number]>;
-}> {}
+// Declared as an interface (not `type =`) so downstream emit references `Map`
+// by name rather than expanding the inferred shape — keeps consumers portable.
+export interface Map extends Type.InstanceType<typeof MapSchema> {}
 export const Map: Type.Obj<Map> = MapSchema as any;
 
 type MakeProps = Omit<Partial<Obj.MakeProps<typeof Map>>, 'view'> & {
