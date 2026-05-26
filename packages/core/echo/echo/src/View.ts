@@ -83,25 +83,12 @@ const ViewSchema = Schema.Struct({
   Type.makeObject(DXN.make('org.dxos.type.view', '0.1.0')),
 );
 
-/**
- * View instance type.
- *
- * NOTE: This interface is explicitly defined rather than derived from the schema to avoid
- *   TypeScript TS2742 portability errors. The schema contains `QueryAST.Query` which is a
- *   union alias that TS inlines structurally; any downstream `Schema.Schema<View>` (e.g.
- *   `Type.getSchema(View.View)` embedded in `Schema.Struct({ view })`) would otherwise
- *   inherit the inlined union and fail with "cannot be named without a reference to
- *   QueryFilterClause" etc. Keeping the named `QueryAST.Query` alias here is enough for
- *   downstream emit to stay portable.
- * TODO(wittjosiah): Find a better solution that doesn't require manually keeping the interface in sync.
- */
-export interface View extends Obj.Unknown {
-  readonly query: {
-    readonly raw?: string;
-    readonly ast: QueryAST.Query;
-  };
-  readonly projection: Projection;
-}
+// NOTE: Declared as a named interface and the `View` const is annotated `Type.Obj<View>` so
+//   downstream consumers see a named `View` type instead of the inlined `QueryAST.Query` union.
+//   Without the named interface, embedding `Type.getSchema(View.View)` in a downstream
+//   `Schema.Struct` triggers TS2742 portability errors (e.g. plugin-kanban, plugin-table).
+// TODO(wittjosiah): Find a better solution that doesn't require manually keeping the interface in sync.
+export interface View extends Type.InstanceType<typeof ViewSchema> {}
 
 export const View: Type.Obj<View> = ViewSchema as any;
 

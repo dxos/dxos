@@ -125,7 +125,7 @@ export type TargetOf<A> = A extends Endpoints<infer _S, infer T> ? T : never;
 /**
  * Internal props type for relation instance creation.
  */
-type MakePropsInternal<T extends Unknown> = {
+type MakePropsInternal<T extends Endpoints<any, any>> = {
   id?: ObjectId;
   [Meta]?: internal.ObjectMeta;
   [Source]: T[Source];
@@ -138,7 +138,7 @@ type MakePropsInternal<T extends Unknown> = {
  * `Type.InstanceType`. Object-kind entities are rejected at the type level —
  * use `Obj.MakeProps` for those.
  */
-export type MakeProps<S extends Type.AnyRelation> = MakePropsInternal<Type.InstanceType<S> & Unknown>;
+export type MakeProps<S extends Type.AnyRelation> = MakePropsInternal<Type.InstanceType<S>>;
 
 /**
  * Creates new relation.

@@ -110,7 +110,7 @@ interface BaseSnapshot extends internal.AnyEntity {
  * Snapshots are structurally identical to reactive objects but have a different brand,
  * making them distinguishable at the TypeScript level. Neither is assignable to the other.
  */
-export type Snapshot<T extends Unknown = Unknown> = Omit<T, Entity.KindId> & BaseSnapshot;
+export type Snapshot<T = Unknown> = Omit<T, Entity.KindId> & BaseSnapshot;
 
 /**
  * JSON-encoded properties for objects.
@@ -138,7 +138,7 @@ export type MakeProps<S extends Type.AnyObj> = {
   id?: ObjectId;
   [Meta]?: Partial<internal.ObjectMeta>;
   [Parent]?: Unknown;
-} & MakePropsInternal<Type.InstanceType<S> & Unknown>;
+} & MakePropsInternal<Type.InstanceType<S>>;
 
 /**
  * Creates a new echo object of the given schema or `Type.Type`.
@@ -470,8 +470,8 @@ export const instanceOf: {
  * ```
  */
 export const snapshotOf: {
-  <S extends Type.AnyEntity>(schema: S): (value: unknown) => value is Snapshot<Type.InstanceType<S> & Unknown>;
-  <S extends Type.AnyEntity>(schema: S, value: unknown): value is Snapshot<Type.InstanceType<S> & Unknown>;
+  <S extends Type.AnyEntity>(schema: S): (value: unknown) => value is Snapshot<Type.InstanceType<S>>;
+  <S extends Type.AnyEntity>(schema: S, value: unknown): value is Snapshot<Type.InstanceType<S>>;
 } = ((...args: [schema: Type.AnyEntity, value: unknown] | [schema: Type.AnyEntity]) => {
   const check = (entity: unknown) =>
     entity != null &&

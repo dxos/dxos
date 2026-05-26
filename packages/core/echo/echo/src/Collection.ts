@@ -28,7 +28,7 @@ export const Collection = Schema.Struct({
   Type.makeObject(DXN.make('org.dxos.type.collection', '0.1.0')),
 );
 
-export type Collection = Type.InstanceType<typeof Collection> & Obj.Unknown;
+export type Collection = Type.InstanceType<typeof Collection>;
 
 export const make = (props: Partial<Obj.MakeProps<typeof Collection>> = {}): Collection =>
   Obj.make(Collection, { objects: [], ...props });
