@@ -12,7 +12,7 @@ import { AiService } from '@dxos/ai';
 import { Credential, FunctionError, FunctionNotFoundError, Operation, OperationHandlerSet, Trace } from '@dxos/compute';
 import { Database, Feed, Filter, Query } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
-import { FunctionInvocationService, type FunctionServices, QueueService } from '@dxos/functions';
+import { FunctionInvocationService, type FunctionServices } from '@dxos/functions';
 import { log } from '@dxos/log';
 
 export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/LocalFunctionExecutionService')<
@@ -29,7 +29,6 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
       const ai = yield* AiService.AiService;
       const credentials = yield* Credential.CredentialsService;
       const database = yield* Database.Service;
-      const queues = yield* QueueService;
       const feedService = yield* Feed.FeedService;
       const functionInvocationService = yield* FunctionInvocationService;
       return {
@@ -43,7 +42,6 @@ export class LocalFunctionExecutionService extends Context.Tag('@dxos/functions/
               Effect.provideService(AiService.AiService, ai),
               Effect.provideService(Credential.CredentialsService, credentials),
               Effect.provideService(Database.Service, database),
-              Effect.provideService(QueueService, queues),
               Effect.provideService(Feed.FeedService, feedService),
               Effect.provideService(FunctionInvocationService, functionInvocationService),
               Effect.provideService(Operation.Service, {
