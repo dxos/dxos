@@ -2,13 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+import { RegistryContext } from '@effect-atom/atom-react';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { useControls } from 'leva';
-import React from 'react';
+import React, { useContext, useMemo } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Flock, type FlockColoring, type FlockStartingPosition } from './Flock';
+import { FlockModel } from './FlockModel';
 
 const StoryFlock = () => {
   const {
@@ -45,8 +47,15 @@ const StoryFlock = () => {
     avoidance: { label: 'Avoidance', value: 3, min: 0, max: 10, step: 0.1 },
   });
 
+  const registry = useContext(RegistryContext);
+  // One model per mount; remounts on `num` / `startingPosition` change so the
+  // controls visibly reset (Flock seeds itself from num/startingPosition when
+  // the model is empty).
+  const model = useMemo(() => new FlockModel(registry), [registry, num, startingPosition]);
+
   return (
     <Flock
+      model={model}
       num={num}
       numObstacles={numObstacles}
       startingPosition={startingPosition}

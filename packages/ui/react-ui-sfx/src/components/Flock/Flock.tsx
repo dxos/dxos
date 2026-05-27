@@ -3,11 +3,12 @@
 //
 
 import * as d3 from 'd3';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
+import { type FlockBoid, FlockModel } from './FlockModel';
 import { Vec2 } from '../../util';
 
 // Boids flocking.
@@ -19,14 +20,6 @@ const SEPARATION_DISTANCE = 30;
 
 export type Dimensions = { width: number; height: number };
 
-export type FlockBoid = {
-  position: Vec2;
-  velocity: Vec2;
-  acceleration?: Vec2;
-  color?: string;
-  last?: number[];
-};
-
 export type FlockObstacle = {
   position: Vec2;
   radius: number;
@@ -34,17 +27,6 @@ export type FlockObstacle = {
 
 export type FlockStartingPosition = 'Random' | 'Circle' | 'CircleRandom' | 'Sine' | 'Phyllotaxis';
 export type FlockColoring = 'Movement' | 'Grey' | 'Rainbow';
-
-export type FlockSeed = {
-  /** Absolute x position in container coordinates (origin top-left). */
-  x: number;
-  /** Absolute y position in container coordinates (origin top-left). */
-  y: number;
-  /** Optional initial velocity. Defaults to a random velocity scaled by `maxVelocity`. */
-  vx?: number;
-  vy?: number;
-  color?: string;
-};
 
 const randomVelocity = (maxVelocity: number): Vec2 =>
   new Vec2(1 - Math.random() * 2, 1 - Math.random() * 2).scale(maxVelocity);
@@ -171,7 +153,7 @@ const renderObstacles = (context: CanvasRenderingContext2D, obstacles: FlockObst
 const tick = (
   canvas: HTMLCanvasElement,
   { width, height }: Dimensions,
-  boids: FlockBoid[],
+  boids: readonly FlockBoid[],
   obstacles: FlockObstacle[],
   cursor: FlockObstacle | null,
   config: TickConfig,
@@ -274,7 +256,12 @@ const generateFlockObstacles = (dimensions: Dimensions, numObstacles: number): F
   return obstacles;
 };
 
-const generateFlockBoids = (
+/**
+ * Generate the default boid set when a caller doesn't supply a populate callback.
+ * Honors `num`, `startingPosition`, and `maxVelocity`; assigns a rainbow color
+ * and an empty history.
+ */
+const generateDefaultBoids = (
   dimensions: Dimensions,
   config: { num: number; maxVelocity: number; startingPosition: FlockStartingPosition },
 ): FlockBoid[] => {
@@ -284,28 +271,31 @@ const generateFlockBoids = (
     b.color = d3.interpolateRainbow(i / num);
     b.last = [];
   });
-
   return boids;
 };
 
-const seedsToBoids = (seeds: readonly FlockSeed[], maxVelocity: number): FlockBoid[] =>
-  seeds.map((seed, i) => ({
-    position: new Vec2(seed.x, seed.y),
-    velocity: seed.vx != null && seed.vy != null ? new Vec2(seed.vx, seed.vy) : randomVelocity(maxVelocity),
-    color: seed.color ?? d3.interpolateRainbow(seeds.length > 0 ? i / seeds.length : 0),
-    last: [],
-  }));
-
 export type FlockProps = ThemedClassName<{
   /**
-   * Resolve the initial boid seeds given the container's dimensions. Called whenever the
-   * container resizes or the callback identity changes. When omitted, boids are generated
-   * from `num` and `startingPosition`.
+   * Reactive source of truth for the boid array. Flock subscribes via `model.subscribe`
+   * and restarts the simulation whenever `setBoids` replaces the array. Per-tick
+   * position changes are mutated in place on the same boid objects — external readers
+   * (e.g. an explorer that handed in boids with ids) sample those positions any time
+   * via `model.boids` / `model.findBoid`.
+   *
+   * When the model starts empty, Flock generates a default boid set from `num` and
+   * `startingPosition` once the container is first measured, and writes it into the
+   * model. The `populate` callback overrides that default population.
    */
-  seeds?: (dimensions: Dimensions) => readonly FlockSeed[];
-  /** Used only when `seeds` is not provided. */
+  model: FlockModel;
+  /**
+   * Optional initial-population callback. Called once when the container is first
+   * measured AND the model is empty. Use this to position boids using canvas
+   * dimensions (top-left origin) — typically when seeding from an external layout.
+   */
+  populate?: (dimensions: Dimensions) => readonly FlockBoid[];
+  /** Used only when `populate` is not provided. */
   num?: number;
-  /** Used only when `seeds` is not provided. */
+  /** Used only when `populate` is not provided. */
   startingPosition?: FlockStartingPosition;
   numObstacles?: number;
   coloring?: FlockColoring;
@@ -323,13 +313,14 @@ export type FlockProps = ThemedClassName<{
 }>;
 
 /**
- * Canvas-rendered boids flocking simulation. When `seeds` is provided, each boid starts at
- * the supplied position so callers can hand off positions from another layout.
- * Without `seeds`, boids are generated from `num` and `startingPosition`.
+ * Canvas-rendered boids flocking simulation. The boid array is owned by `model`
+ * (a `FlockModel`); Flock subscribes to it and mutates per-boid `position`,
+ * `velocity`, and `acceleration` in place each tick.
  */
 export const Flock = ({
   classNames,
-  seeds,
+  model,
+  populate,
   num = 100,
   startingPosition = 'CircleRandom',
   numObstacles = 0,
@@ -350,7 +341,9 @@ export const Flock = ({
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
   const [{ width, height }, setSize] = useState<Dimensions>({ width: 0, height: 0 });
   const [obstacles, setObstacles] = useState<FlockObstacle[]>([]);
-  const [boids, setBoids] = useState<FlockBoid[]>([]);
+  // Local snapshot of `model.boids` — the simulation reads from this so that
+  // changing the model identity via `setBoids` triggers a clean restart.
+  const [boids, setBoids] = useState<readonly FlockBoid[]>(() => model.boids);
 
   useEffect(() => {
     if (!container) {
@@ -372,18 +365,55 @@ export const Flock = ({
     return () => observer.disconnect();
   }, [container]);
 
+  // Track the model's boid array via subscribe → setBoids. Per-tick position
+  // mutations don't emit on the atom (by design), so this only fires on
+  // `model.setBoids(...)` and the initial sync.
+  useEffect(() => {
+    setBoids(model.boids);
+    return model.subscribe(() => setBoids(model.boids));
+  }, [model]);
+
+  // Populate the model once the container dimensions are known and the model is
+  // empty. Subsequent resizes don't repopulate — the caller owns that decision.
+  const populatedRef = useRef(false);
+  useEffect(() => {
+    if (!width || !height || populatedRef.current) {
+      return;
+    }
+    if (model.boids.length > 0) {
+      populatedRef.current = true;
+      return;
+    }
+    const seeded = populate
+      ? populate({ width, height })
+      : generateDefaultBoids({ width, height }, { num, maxVelocity, startingPosition });
+    model.setBoids(seeded);
+    populatedRef.current = true;
+  }, [model, width, height, populate, num, maxVelocity, startingPosition]);
+
+  // Obstacles are derived from container size + count; regenerate on either change.
   useEffect(() => {
     if (!width || !height) {
       return;
     }
-
     setObstacles(generateFlockObstacles({ width, height }, numObstacles));
-    setBoids(
-      seeds
-        ? seedsToBoids(seeds({ width, height }), maxVelocity)
-        : generateFlockBoids({ width, height }, { num, startingPosition, maxVelocity }),
-    );
-  }, [width, height, num, numObstacles, startingPosition, maxVelocity, seeds]);
+  }, [width, height, numObstacles]);
+
+  // The trail/physics config bundled for tick; memoed so the interval effect
+  // below doesn't re-key on every parent render.
+  const tickConfig = useMemo<TickConfig>(
+    () => ({
+      coloring,
+      radius,
+      maxVelocity,
+      trail: (80 + trail) / 100,
+      alignment: alignment / 100,
+      cohesion: cohesion / 100,
+      separation: separation / 100,
+      avoidance: avoidance / 10,
+    }),
+    [coloring, radius, maxVelocity, trail, alignment, cohesion, separation, avoidance],
+  );
 
   useEffect(() => {
     if (!canvas.current || !width || !height) {
@@ -398,35 +428,13 @@ export const Flock = ({
     ctx.fillRect(0, 0, width, height);
 
     const interval = d3.interval(() => {
-      const cursor = cursorRepel > 0 && cursorRef.current ? { position: cursorRef.current, radius: cursorRepel } : null;
-      tick(canvas.current!, { width, height }, boids, obstacles, cursor, {
-        coloring,
-        radius,
-        maxVelocity,
-        trail: (80 + trail) / 100,
-        alignment: alignment / 100,
-        cohesion: cohesion / 100,
-        separation: separation / 100,
-        avoidance: avoidance / 10,
-      });
+      const cursor =
+        cursorRepel > 0 && cursorRef.current ? { position: cursorRef.current, radius: cursorRepel } : null;
+      tick(canvas.current!, { width, height }, boids, obstacles, cursor, tickConfig);
     });
 
     return () => interval.stop();
-  }, [
-    boids,
-    obstacles,
-    width,
-    height,
-    radius,
-    coloring,
-    trail,
-    maxVelocity,
-    alignment,
-    cohesion,
-    separation,
-    avoidance,
-    cursorRepel,
-  ]);
+  }, [boids, obstacles, width, height, tickConfig, cursorRepel]);
 
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
