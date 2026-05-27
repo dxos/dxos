@@ -20,7 +20,8 @@ export const RecordArticle = ({ role, subject }: AppSurface.ObjectArticleProps) 
   const db = Obj.getDatabase(subject);
   const typename = Obj.getTypename(subject);
   const schema =
-    Obj.getType(subject) ?? (typename && db ? db.graph.registry.types.find((t) => Type.getTypename(t) === typename) : undefined);
+    Obj.getType(subject) ??
+    (typename && db ? db.graph.registry.types.find((t) => Type.getTypename(t) === typename) : undefined);
   const icon =
     schema && Type.getDatabase(schema) != null
       ? 'ph--cube--regular'

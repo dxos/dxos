@@ -250,7 +250,9 @@ export const MutableSchema: Story = {
     withKanbanPlugins({
       onSpaceCreated: async (space) => {
         // Register schema in the database to make it mutable (stored Type.Type).
-        const [schema] = await space.db.registry.register([Organization.Organization]) as unknown as [typeof Organization.Organization];
+        const [schema] = (await space.db.registry.register([Organization.Organization])) as unknown as [
+          typeof Organization.Organization,
+        ];
 
         const { view } = await ViewModel.makeFromDatabase({
           db: space.db,

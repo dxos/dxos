@@ -7,12 +7,12 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 
+import { Capabilities } from '@dxos/app-framework';
 import { AiSession } from '@dxos/assistant';
 import { Chat } from '@dxos/assistant-toolkit';
 import { Database, Feed } from '@dxos/echo';
 import { acquireReleaseResource } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
-import { Capabilities } from '@dxos/app-framework';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 
 import { AiChatProcessor } from './processor';
