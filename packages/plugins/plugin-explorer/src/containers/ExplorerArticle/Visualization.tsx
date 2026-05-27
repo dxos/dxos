@@ -143,14 +143,48 @@ export const Visualization = ({ variant, model, onNodeHover }: VisualizationProp
 
   const renderNode = useMemo(() => createRenderNode(variant), [variant]);
 
-  // Track the hovered node so we can colour edges incident to it. Outgoing edges
-  // (source = hovered) → amber; incoming (target = hovered) → sky; everything
-  // else stays neutral. Per the d3 hierarchical-edge-bundling convention.
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  // Stamp each edge with `data-source-id` and `data-target-id` once via the
+  // attributes hook so the hover handler can find incident edges with a CSS
+  // selector without going through React. Driving the colour swap through the
+  // `attributes` prop would change its identity on every hover, force SVG.Graph
+  // to rebuild its renderer (firstRender → replaceChildren), and restart the
+  // label fade-in transition — visible as flicker.
+  //
+  // Skip the stamp entirely for variants where the hover highlight doesn't help:
+  //  - force: edges move every simulation tick and a colour delta is lost in
+  //    the motion.
+  //  - cluster: the radial-spoke topology already shows incidence.
+  const attributes = useMemo(() => {
+    if (variant === 'force' || variant === 'cluster') {
+      return undefined;
+    }
+    return {
+      edge: (edge: GraphLayoutEdge<SpaceGraphNode, SpaceGraphEdge>) => ({
+        data: { 'source-id': edge.source.id, 'target-id': edge.target.id },
+      }),
+    };
+  }, [variant]);
 
   const handleInspect = useCallback(
     (node: GraphLayoutNode<SpaceGraphNode> | null, event: MouseEvent) => {
-      setHoveredId(node?.id ?? null);
+      // Imperatively repaint edge data-color. CSS rules `g[data-color='amber'].dx-edge`
+      // / `[data-color='sky'].dx-edge` do the styling — see react-ui-graph/styles/graph.css.
+      if (variant !== 'force' && variant !== 'cluster') {
+        const svg = containerRef.current?.querySelector('svg');
+        if (svg) {
+          svg.querySelectorAll('g.dx-edge[data-color]').forEach((el) => el.removeAttribute('data-color'));
+          if (node?.id) {
+            const id = CSS.escape(node.id);
+            svg
+              .querySelectorAll(`g.dx-edge[data-source-id="${id}"]`)
+              .forEach((el) => el.setAttribute('data-color', 'amber'));
+            svg
+              .querySelectorAll(`g.dx-edge[data-target-id="${id}"]`)
+              .forEach((el) => el.setAttribute('data-color', 'sky'));
+          }
+        }
+      }
+
       // null = pointerleave: forward to the shared hover handler so it can clear any preview.
       if (!node) {
         onNodeHover?.(null);
@@ -158,37 +192,8 @@ export const Visualization = ({ variant, model, onNodeHover }: VisualizationProp
       }
       onNodeHover?.({ id: node.id, data: node.data?.data?.object }, event);
     },
-    [onNodeHover],
+    [variant, onNodeHover],
   );
-
-  // Memoed attributes object — SVG.Graph keys its internal renderer on
-  // `props.attributes` identity, so a new object reference is what triggers
-  // re-emit + repaint of edge `data-color` attributes when hover changes.
-  // Skip for variants where the highlight doesn't help:
-  //  - force: edges are constantly moving via the simulation tick and the
-  //    renderer rebuild fights it, producing jitter.
-  //  - cluster: the radial-spoke topology already makes incident edges
-  //    obvious from geometry; the colour overlay just adds noise.
-  // Bundle and lattice keep it.
-  const attributes = useMemo(() => {
-    if (variant === 'force' || variant === 'cluster') {
-      return undefined;
-    }
-    return {
-      edge: (edge: GraphLayoutEdge<SpaceGraphNode, SpaceGraphEdge>) => {
-        if (!hoveredId) {
-          return {};
-        }
-        if (edge.source.id === hoveredId) {
-          return { data: { color: 'amber' } };
-        }
-        if (edge.target.id === hoveredId) {
-          return { data: { color: 'sky' } };
-        }
-        return {};
-      },
-    };
-  }, [variant, hoveredId]);
 
   // Cluster-only: clicking a root / group node toggles its subtree open/closed.
   const handleSelect = useCallback(
