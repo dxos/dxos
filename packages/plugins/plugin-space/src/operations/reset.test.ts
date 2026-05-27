@@ -96,7 +96,7 @@ describe('SpaceOperation.Reset', () => {
     await space.db.schemaRegistry.register([TestSchema.Expando]);
     await space.db.flush();
 
-    const beforeSchemas = space.db.schemaRegistry.query().runSync();
+    const beforeSchemas = await space.db.query(Filter.type(Type.PersistentType)).run();
     expect(
       beforeSchemas.length,
       'expected the registered Expando schema to be present in the space schema registry before reset',
@@ -105,10 +105,10 @@ describe('SpaceOperation.Reset', () => {
     await invokeReset(space);
     await space.db.flush();
 
-    const afterSchemas = space.db.schemaRegistry.query().runSync();
+    const afterSchemas = await space.db.query(Filter.type(Type.PersistentType)).run();
     expect(
       afterSchemas,
-      `expected no schemas after reset, got ${afterSchemas.map((s) => Type.getTypename(s)).join(', ')}`,
+      `expected no schemas after reset, got ${afterSchemas.map((s) => Obj.getTypename(s)).join(', ')}`,
     ).toHaveLength(0);
   });
 });

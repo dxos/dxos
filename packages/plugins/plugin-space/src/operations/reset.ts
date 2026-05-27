@@ -5,7 +5,7 @@ import * as Effect from 'effect/Effect';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { type Space } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Collection, Filter, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { Collection, Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Migrations } from '@dxos/migrations';
 
