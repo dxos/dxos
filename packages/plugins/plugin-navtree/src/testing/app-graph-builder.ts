@@ -178,14 +178,14 @@ export const storybookGraphBuilders = (): BuilderExtensions => {
       }),
       // Create object actions.
       GraphBuilder.createExtension({
-        id: 'object-actions',
+        id: 'objectActions',
         match: NodeMatcher.whenNodeType('object'),
         actions: () =>
           Effect.succeed(
             Array.from({ length: 5 }, (_, i) => ({
               id: `action-${i}`,
               data: Effect.fnUntraced(function* () {
-                log.info('action', { id: 'object-actions', index: i });
+                log.info('action', { id: 'objectActions', index: i });
               }),
               properties: getProperties(`action-${i}`, {
                 label: `Action ${i}`,

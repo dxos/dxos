@@ -52,14 +52,14 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'surface.object-properties',
+        id: 'surface.objectProperties',
         position: 'first',
         filter: AppSurface.object(AppSurface.ObjectProperties, Map.Map),
         component: ({ data }) => <MapViewEditor object={data.subject} />,
       }),
       Surface.create({
         // TODO(burdon): Why this title?
-        id: 'surface.create-initial-schema-form-[property-of-interest]',
+        id: 'surface.createInitialSchemaForm',
         role: 'form-input',
         filter: (
           data,

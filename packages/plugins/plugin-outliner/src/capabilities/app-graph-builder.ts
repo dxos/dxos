@@ -67,7 +67,7 @@ export default Capability.makeModule(
         },
       }),
       GraphBuilder.createExtension({
-        id: 'quick-entry',
+        id: 'quickEntry',
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([

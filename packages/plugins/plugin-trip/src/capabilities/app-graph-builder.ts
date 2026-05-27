@@ -28,7 +28,7 @@ export default Capability.makeModule(
     );
 
     const extension = yield* GraphBuilder.createExtension({
-      id: 'trip-segment',
+      id: 'tripSegment',
       match: (node) => (Trip.instanceOf(node.data) ? Option.some({ trip: node.data, nodeId: node.id }) : Option.none()),
       connector: (matched, get) => {
         const trip = matched.trip;

@@ -26,7 +26,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: 'integration-actions',
+        id: 'integrationActions',
         match: (node) =>
           Integration.instanceOf(node.data) ? Option.some(node.data as Integration.Integration) : Option.none(),
         actions: (integration) =>
@@ -80,7 +80,7 @@ export default Capability.makeModule(
       // Per-space integrations folder; kept empty until an Integration exists.
       // Separate listing extension so graph reacts when targets are deleted.
       GraphBuilder.createExtension({
-        id: 'integrations-section',
+        id: 'integrationsSection',
         match: AppNodeMatcher.whenSpace,
         connector: (space, get) => {
           const integrations = get(AtomQuery.make(space.db, Filter.type(Integration.Integration)));
@@ -108,7 +108,7 @@ export default Capability.makeModule(
 
       // Integration objects listed under `integrations-section` (targets stay in the DB subgraph only).
       GraphBuilder.createExtension({
-        id: 'integration-listing',
+        id: 'integrationListing',
         match: (node) => {
           const space = isSpace(node.properties.space) ? node.properties.space : undefined;
           return node.type === INTEGRATIONS_SECTION_TYPE && space ? Option.some(space) : Option.none();

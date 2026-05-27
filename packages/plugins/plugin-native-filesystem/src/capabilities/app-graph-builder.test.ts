@@ -33,7 +33,7 @@ describe('native filesystem app graph builder', () => {
               path: '/workspace/archive',
               children: [
                 createMarkdownFile({
-                  id: 'nested-note',
+                  id: 'nestedNote',
                   name: 'Nested note.md',
                   path: '/workspace/archive/nested-note.md',
                   text: '# Nested note',
@@ -41,7 +41,7 @@ describe('native filesystem app graph builder', () => {
               ],
             },
             createMarkdownFile({
-              id: 'top-note',
+              id: 'topNote',
               name: 'Top note.md',
               path: '/workspace/top-note.md',
               text: '# Top note',
@@ -165,7 +165,7 @@ const setupNativeFilesystemGraphBuilder = ({
 
 const createWorkspaceRootExtensions = (stateAtom: Atom.Writable<NativeFilesystemState>) =>
   GraphBuilder.createExtension({
-    id: 'test-workspaces',
+    id: 'testWorkspaces',
     match: NodeMatcher.whenRoot,
     connector: (_node, get) =>
       Effect.succeed(

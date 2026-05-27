@@ -17,7 +17,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(Capabilities.ReactSurface, [
       Surface.create({
-        id: 'space-settings-functions',
+        id: 'spaceSettingsFunctions',
         filter: AppSurface.literal(AppSurface.Article, `${meta.id}.space-settings-functions`),
         component: () => {
           const space = useActiveSpace();
@@ -29,7 +29,7 @@ export default Capability.makeModule(() =>
         },
       }),
       Surface.create({
-        id: 'space-settings-automation',
+        id: 'spaceSettingsAutomation',
         filter: AppSurface.literal(AppSurface.Article, `${meta.id}.space-settings-automation`),
         component: () => {
           const space = useActiveSpace();

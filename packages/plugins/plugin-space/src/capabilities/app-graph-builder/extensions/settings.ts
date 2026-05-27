@@ -26,7 +26,7 @@ import { SETTINGS_SECTION_TYPE } from '#types';
  */
 export const createSettingsExtensions = Effect.fnUntraced(function* () {
   const sectionExtension = yield* GraphBuilder.createExtension({
-    id: 'settings-section',
+    id: 'settingsSection',
     match: AppNodeMatcher.whenSpace,
     connector: (space) =>
       Effect.succeed([
@@ -44,7 +44,7 @@ export const createSettingsExtensions = Effect.fnUntraced(function* () {
   });
 
   const childrenExtension = yield* GraphBuilder.createExtension({
-    id: 'settings-sections',
+    id: 'settingsSections',
     match: (node) => {
       const space = isSpace(node.properties.space) ? (node.properties.space as Space) : undefined;
       return node.type === SETTINGS_SECTION_TYPE && space ? Option.some(space) : Option.none();

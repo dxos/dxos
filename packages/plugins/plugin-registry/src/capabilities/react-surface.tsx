@@ -97,7 +97,7 @@ export default Capability.makeModule(() =>
         component: () => <PublicRegistryArticle id={registryCategoryId('registry')} />,
       }),
       Surface.create({
-        id: 'plugin-details',
+        id: 'pluginDetails',
         filter: AppSurface.subject(AppSurface.Article, Plugin.isPlugin),
         component: ({ data: { subject } }) => {
           return <PluginArticle subject={subject} />;
@@ -117,7 +117,7 @@ export default Capability.makeModule(() =>
         component: ({ data }) => <DisableDependentsAlert {...data.props} />,
       }),
       Surface.create({
-        id: 'plugin-settings',
+        id: 'pluginSettings',
         role: 'article',
         filter: (data): data is { subject: AppCapabilities.Settings } =>
           AppCapabilities.isSettings(data.subject) && data.subject.prefix === meta.id,

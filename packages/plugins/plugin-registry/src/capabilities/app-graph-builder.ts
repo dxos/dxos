@@ -42,12 +42,12 @@ export default Capability.makeModule(
 
     const extensions = yield* Effect.all([
       GraphBuilder.createExtension({
-        id: 'open-registry',
+        id: 'openRegistry',
         match: NodeMatcher.whenRoot,
         actions: () =>
           Effect.succeed([
             {
-              id: 'open-registry',
+              id: 'openRegistry',
               data: () => Operation.invoke(SettingsOperation.OpenPluginRegistry),
               properties: {
                 label: ['open-plugin-registry.label', { ns: meta.id }],
@@ -138,7 +138,7 @@ export default Capability.makeModule(
         actions: () =>
           Effect.succeed([
             {
-              id: 'load-by-url',
+              id: 'loadByUrl',
               data: Effect.fnUntraced(function* () {
                 yield* Operation.invoke(LayoutOperation.UpdateDialog, {
                   subject: LOAD_PLUGIN_DIALOG,
