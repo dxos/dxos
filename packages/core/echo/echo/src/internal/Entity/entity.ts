@@ -213,17 +213,10 @@ export const makeEchoTypeSchema = <
   const entity = makeObject(getPersistentEntitySchema() as Schema.Schema<any, any, never>, {} as any, meta);
 
   const target = getProxyTarget(entity)!;
-  // Lazy, memoised `jsonSchema` accessor. Kept as a permanent accessor (never
-  // converted to a plain data property) so reads flow through the get-trap's
-  // getter branch, which returns the raw value rather than wrapping it in a
-  // child reactive proxy. The jsonSchema object is attached post-construction
-  // (bypassing the set-trap that stamps `SchemaId` on nested values), so
-  // wrapping it would fail the `SchemaId`-in-target invariant. Mutations still
-  // route through the proxy set-trap (which invalidates the cached source
-  // schema on `Type.update` / `Type.addFields` and fires reactivity); the
-  // setter here just records the new value. Computation is deferred to first
-  // read so self-referential `Schema.suspend(...)` branches resolve past
-  // module init rather than during construction.
+  // Lazy `jsonSchema` accessor. A getter (not a data property) so reads return the
+  // raw object rather than a child reactive proxy, and so computation is deferred to
+  // first read — letting self-referential `Schema.suspend(...)` branches resolve past
+  // module init.
   let memoizedJsonSchema: JsonSchemaType | undefined;
   Object.defineProperty(target, 'jsonSchema', {
     configurable: true,
@@ -241,10 +234,8 @@ export const makeEchoTypeSchema = <
   // Schema-kind brand: what kind of instance this type describes. There is no
   // database handler to derive it for in-memory entities, so stamp it directly.
   defineHiddenProperty(target, SchemaKindId, kind);
-  // Struct fields for introspection. Exposed as a getter (not a plain data
-  // property) so the proxy get-trap returns the raw fields object instead of
-  // wrapping it in a child reactive proxy (which would fail the SchemaId
-  // invariant — the fields object is not an ECHO entity).
+  // Struct fields for introspection. A getter (not a data property) so reads return
+  // the raw fields object rather than a child reactive proxy.
   Object.defineProperty(target, 'fields', { configurable: true, enumerable: false, get: () => fields });
 
   return entity as unknown as EchoTypeSchema<Self, {}, K, Fields>;
