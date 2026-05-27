@@ -46,7 +46,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import { type ProjectionChangeCallback, ProjectionModel } from '../projection';
+import { type ProjectionChangeCallback, ProjectionModel, createEchoChangeCallback } from '../projection';
 import { createDefaultSchema, getSchema } from '../util';
 
 type MakeProps = {
@@ -54,15 +54,42 @@ type MakeProps = {
   query: Query.Any;
   queryRaw?: string;
   jsonSchema: JsonSchemaType; // Base schema.
+  /** Persisted `Type.Type` entity backing `jsonSchema`, when one exists; enables `Type.update` on schema edits. */
+  schema?: Type.AnyEntity;
   overrideSchema?: JsonSchemaType; // Override schema.
   fields?: string[];
   pivotFieldName?: string;
 };
 
 /**
+ * Build the projection change callback. Both the view and (when present) the schema are
+ * ECHO entities, so route their mutations through `Obj.update` / `Type.update`. When no
+ * schema entity is available (an ad-hoc, unpersisted `jsonSchema`), mutate it directly.
+ */
+const makeChangeCallback = (
+  view: View.View,
+  jsonSchema: JsonSchemaType,
+  schema?: Type.AnyEntity,
+): ProjectionChangeCallback =>
+  schema != null
+    ? createEchoChangeCallback(view, schema)
+    : {
+        projection: (mutate) => Obj.update(view, (view) => mutate(view.projection as Mutable<View.Projection>)),
+        schema: (mutate) => mutate(jsonSchema as Types.DeepMutable<JsonSchema.JsonSchema>),
+      };
+
+/**
  * Create view from provided schema.
  */
-export const make = ({ query, queryRaw, jsonSchema, overrideSchema, fields, pivotFieldName }: MakeProps): View.View => {
+export const make = ({
+  query,
+  queryRaw,
+  jsonSchema,
+  schema,
+  overrideSchema,
+  fields,
+  pivotFieldName,
+}: MakeProps): View.View => {
   const view = Obj.make(View.View, {
     query: { raw: queryRaw, ast: query.ast },
     projection: {
@@ -71,20 +98,14 @@ export const make = ({ query, queryRaw, jsonSchema, overrideSchema, fields, pivo
     },
   });
 
-  // Create change callback that wraps mutations in Obj.update.
-  const changeCallback: ProjectionChangeCallback = {
-    projection: (mutate) => Obj.update(view, (view) => mutate(view.projection as Mutable<View.Projection>)),
-    schema: (mutate) => mutate(jsonSchema as Types.DeepMutable<JsonSchema.JsonSchema>),
-  };
-
   const projection = new ProjectionModel({
     view,
     baseSchema: jsonSchema,
-    change: changeCallback,
+    change: makeChangeCallback(view, jsonSchema, schema),
   });
   projection.normalizeView();
-  const schema = toEffectSchema(jsonSchema);
-  const properties = getProperties(schema.ast);
+  const effectSchema = toEffectSchema(jsonSchema);
+  const properties = getProperties(effectSchema.ast);
   for (const property of properties) {
     const name = property.name.toString() as JsonProp;
     const include = fields ? fields.includes(name) : name !== 'id';
@@ -136,6 +157,7 @@ export const makeWithReferences = async ({
   query,
   queryRaw,
   jsonSchema,
+  schema,
   overrideSchema,
   fields,
   pivotFieldName,
@@ -145,24 +167,19 @@ export const makeWithReferences = async ({
     query,
     queryRaw,
     jsonSchema,
+    schema,
     overrideSchema,
     fields,
     pivotFieldName,
   });
 
-  // Create change callback that wraps mutations in Obj.update.
-  const changeCallback: ProjectionChangeCallback = {
-    projection: (mutate) => Obj.update(view, (view) => mutate(view.projection as Mutable<View.Projection>)),
-    schema: (mutate) => mutate(jsonSchema as Types.DeepMutable<JsonSchema.JsonSchema>),
-  };
-
   const projection = new ProjectionModel({
     view,
     baseSchema: jsonSchema,
-    change: changeCallback,
+    change: makeChangeCallback(view, jsonSchema, schema),
   });
-  const schema = toEffectSchema(jsonSchema);
-  const properties = getProperties(schema.ast);
+  const effectSchema = toEffectSchema(jsonSchema);
+  const properties = getProperties(effectSchema.ast);
   for (const property of properties) {
     const name = property.name.toString() as JsonProp;
     const include = fields ? fields.includes(name) : name !== 'id';
@@ -268,6 +285,7 @@ export const makeFromDatabase = async ({
       ...props,
       query: Query.select(Filter.typename(typename)),
       jsonSchema,
+      schema: schema!,
       registry: db.schemaRegistry,
     }),
   };
