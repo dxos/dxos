@@ -6,7 +6,7 @@ import { type Registry } from '@effect-atom/atom-react';
 import type * as Types from 'effect/Types';
 
 import { Filter, JsonSchema, Obj, Order, Query, type QueryAST, Ref, Type, type View } from '@dxos/echo';
-import { type Mutable } from '@dxos/echo/internal'; // Mutable needed for View.Projection cast
+import { type Mutable } from '@dxos/echo/internal';
 import {
   ProjectionModel,
   type SchemaPropertyDefinition,
@@ -40,11 +40,8 @@ export const getBaseSchema = ({
   properties?: TablePropertyDefinition[];
   jsonSchema?: Types.DeepMutable<JsonSchema.JsonSchema>;
 }): { typename: string; jsonSchema: Types.DeepMutable<JsonSchema.JsonSchema> } => {
-  // Resolve a Type entity from either property definitions or a supplied schema.
   const type = typename && properties ? getSchemaFromPropertyDefinitions(typename, properties) : schema;
   if (type) {
-    // `toJsonSchema` returns a fresh, mutable snapshot (the entity's own jsonSchema is
-    // ECHO-backed and must be mutated via `Type.update`, not directly).
     return {
       typename: Type.getTypename(type)!,
       jsonSchema: JsonSchema.toJsonSchema(Type.getSchema(type)),
@@ -72,8 +69,6 @@ export const makeDynamicTable = ({
   });
   const object = Obj.make(Table.Table, { view: Ref.make(view), sizes: {} });
 
-  // `view` is ECHO-backed so projection mutations must run inside Obj.update.
-  // `jsonSchema` is a plain JS object (not a Type entity), so schema mutations are direct.
   const projection = new ProjectionModel({
     registry,
     view,
