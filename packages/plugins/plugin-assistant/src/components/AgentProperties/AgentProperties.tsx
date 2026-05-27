@@ -37,7 +37,9 @@ export const AgentProperties = ({ agent }: AgentPropertiesProps) => {
       return Option.isSome(annotation) && annotation.value === true;
     });
 
-    return feedSchemas.length === 0 ? Filter.nothing() : Filter.or(...feedSchemas.map((schema) => Filter.type(schema)));
+    return feedSchemas.length === 0
+      ? Filter.nothing()
+      : Filter.or(...feedSchemas.map((schema: Type.AnyEntity) => Filter.type(schema)));
   }, [db]);
 
   const subscribedObjects = useQuery(db, feedFilter);

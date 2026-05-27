@@ -37,9 +37,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.AddObject> = SpaceOpe
       });
 
       const types = yield* db.graph.registry.listTypes();
-      const [runtimeSchema] = types.filter(
-        (t) => !(t instanceof Type.RuntimeType) && Type.getTypename(t) === typename,
-      );
+      const [runtimeSchema] = types.filter((t) => !(t instanceof Type.RuntimeType) && Type.getTypename(t) === typename);
       const echoViewPath =
         runtimeSchema !== undefined ? ViewAnnotation.get(runtimeSchema).pipe(Option.getOrElse(() => [])) : [];
       const view = echoViewPath.length > 0 ? yield* ViewAnnotation.tryLoadAtPath(object, echoViewPath) : undefined;

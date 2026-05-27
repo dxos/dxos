@@ -2,15 +2,26 @@
 // Copyright 2022 DXOS.org
 //
 
-import { inspect } from 'node:util';
-
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
+import { inspect } from 'node:util';
 
 import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { type Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
-import { Database, type Entity, Filter, JsonSchema, Obj, Query, QueryAST, Ref, type Registry, type SchemaRegistry, Type } from '@dxos/echo';
+import {
+  Database,
+  type Entity,
+  Filter,
+  JsonSchema,
+  Obj,
+  Query,
+  QueryAST,
+  Ref,
+  type Registry,
+  type SchemaRegistry,
+  Type,
+} from '@dxos/echo';
 import {
   type AnyProperties,
   MetaId,

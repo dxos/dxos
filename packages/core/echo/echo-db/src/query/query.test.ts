@@ -2483,9 +2483,7 @@ describe('Query', () => {
       graph.registry.add([registryObj]);
 
       // Query scoped to registry only fans in registry objects.
-      const results = await db
-        .query(Query.select(Filter.type(TestSchema.Expando)).from(REGISTRY_SCOPE))
-        .run();
+      const results = await db.query(Query.select(Filter.type(TestSchema.Expando)).from(REGISTRY_SCOPE)).run();
       expect(results).toHaveLength(1);
       expect((results[0] as any).value).toBe(42);
     });
@@ -2499,9 +2497,7 @@ describe('Query', () => {
 
       // Scoped to both the space and registry returns both.
       const spacePlusRegistryScope = [{ _tag: 'space' as const, spaceId: db.spaceId }, REGISTRY_SCOPE];
-      const results = await db
-        .query(Query.select(Filter.type(TestSchema.Expando)).from(spacePlusRegistryScope))
-        .run();
+      const results = await db.query(Query.select(Filter.type(TestSchema.Expando)).from(spacePlusRegistryScope)).run();
       expect(results).toHaveLength(2);
       const values = results.map((r) => (r as any).value).sort();
       expect(values).toEqual([1, 2]);

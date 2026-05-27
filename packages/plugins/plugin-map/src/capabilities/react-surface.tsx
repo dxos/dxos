@@ -82,7 +82,8 @@ export default Capability.makeModule(() =>
           const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
           const { typename } = useFormValues('MapForm');
 
-          const schema = typename && db ? db.graph.registry.types.find((t) => Type.getTypename(t) === typename) : undefined;
+          const schema =
+            typename && db ? db.graph.registry.types.find((t) => Type.getTypename(t) === typename) : undefined;
           const jsonSchema = schema && JsonSchema.toJsonSchema(schema);
 
           const coordinateProperties = useMemo(() => {
