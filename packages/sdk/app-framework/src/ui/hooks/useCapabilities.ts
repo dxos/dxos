@@ -25,6 +25,7 @@ export const useCapabilities = <T>(interfaceDef: Capability.InterfaceDef<T>) => 
  * @returns The capability.
  * @throws If no capability is found.
  */
+// TODO(burdon): Option not to throw?
 export const useCapability = <T>(interfaceDef: Capability.InterfaceDef<T>) => {
   const capabilities = useCapabilities(interfaceDef);
   invariant(capabilities.length > 0, `No capability found for ${interfaceDef.identifier}`);
