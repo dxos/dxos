@@ -7,8 +7,9 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { Filter, Obj, Query, Registry, Type, View } from '@dxos/echo';
+import { Filter, Obj, Query, Type, View } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { make as makeRegistry } from '@dxos/echo-registry';
 import {
   Format,
   type JsonPath,
@@ -135,7 +136,7 @@ describe('ProjectionModel', () => {
   });
 
   test('gets and updates references', async ({ expect }) => {
-    const registry = Registry.make();
+    const registry = makeRegistry();
     registry.addTypes([TestSchema.Organization]);
 
     const typename = 'com.example.type.person';

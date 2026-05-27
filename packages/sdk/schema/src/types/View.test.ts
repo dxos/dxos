@@ -5,8 +5,9 @@
 import * as Schema from 'effect/Schema';
 import { afterEach, assert, beforeEach, describe, test } from 'vitest';
 
-import { Filter, JsonSchema, Obj, Query, Ref, Registry, Type } from '@dxos/echo';
+import { Filter, JsonSchema, Obj, Query, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
+import { make as makeRegistry } from '@dxos/echo-registry';
 import { Format, TypeEnum } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { ProjectionModel, createDirectChangeCallback } from '@dxos/schema';
@@ -28,7 +29,7 @@ describe('Projection', () => {
   test('create view from schema', async ({ expect }) => {
     const schema = TestSchema.Person;
     const jsonSchema = JsonSchema.toJsonSchema(schema);
-    const registry = Registry.make();
+    const registry = makeRegistry();
     registry.addTypes([TestSchema.Person, TestSchema.Organization]);
 
     const view = await ViewModel.makeWithReferences({

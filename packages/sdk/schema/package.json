@@ -39,6 +39,7 @@
     "@dxos/echo-db": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/echo-query": "workspace:*",
+    "@dxos/echo-registry": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",

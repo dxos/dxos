@@ -6,12 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { describe, test } from 'vitest';
 
+import { Obj, Registry, Type } from '@dxos/echo';
+import { TestSchema } from '@dxos/echo/testing';
 import { runAndForwardErrors } from '@dxos/effect';
 
-import * as Obj from './Obj';
-import * as Registry from './Registry';
-import { TestSchema } from './testing';
-import * as Type from './Type';
+import { layer, layerWithUpstream, make } from './Registry';
 
 const makeObj = (props: { key?: string; version?: string; value: number }) =>
   Obj.make(TestSchema.Expando, {
@@ -21,7 +20,7 @@ const makeObj = (props: { key?: string; version?: string; value: number }) =>
 
 describe('Registry', () => {
   test('add/get/remove/list', ({ expect }) => {
-    const registry = Registry.make();
+    const registry = make();
     const a = makeObj({ key: 'org.example.type.a', version: '1.0.0', value: 1 });
     const b = makeObj({ key: 'org.example.type.b', version: '2.0.0', value: 2 });
 
@@ -39,8 +38,8 @@ describe('Registry', () => {
     const upstreamObj = makeObj({ key: 'org.example.type.foo', version: '1.0.0', value: 100 });
     const localObj = makeObj({ key: 'org.example.type.bar', version: '1.0.0', value: 200 });
 
-    const upstream = Registry.make({ initial: [upstreamObj] });
-    const local = Registry.make({ upstream, initial: [localObj] });
+    const upstream = make({ initial: [upstreamObj] });
+    const local = make({ upstream, initial: [localObj] });
 
     expect(local.get(upstreamObj.id)).toBe(upstreamObj);
     expect(local.get(localObj.id)).toBe(localObj);
@@ -60,8 +59,8 @@ describe('Registry', () => {
       value: 999,
     });
 
-    const upstream = Registry.make({ initial: [original] });
-    const local = Registry.make({ upstream, initial: [override] });
+    const upstream = make({ initial: [original] });
+    const local = make({ upstream, initial: [override] });
 
     expect((local.get(original.id) as any).value).toBe(999);
     expect(local.list()).toHaveLength(1);
@@ -75,7 +74,7 @@ describe('Registry', () => {
       return registry.list();
     });
 
-    const result = await runAndForwardErrors(program.pipe(Effect.provide(Registry.layer({ initial: [obj] }))));
+    const result = await runAndForwardErrors(program.pipe(Effect.provide(layer({ initial: [obj] }))));
     expect(result).toHaveLength(1);
     expect((result[0] as any).value).toBe(42);
   });
@@ -89,17 +88,14 @@ describe('Registry', () => {
       return registry.list().map((o) => (o as any).value);
     });
 
-    const stack = Layer.provide(
-      Registry.layerWithUpstream({ initial: [localObj] }),
-      Registry.layer({ initial: [upstreamObj] }),
-    );
+    const stack = Layer.provide(layerWithUpstream({ initial: [localObj] }), layer({ initial: [upstreamObj] }));
 
     const result = await runAndForwardErrors(program.pipe(Effect.provide(stack)));
     expect(result.sort()).toEqual([1, 2]);
   });
 
   test('addTypes and getTypeByDXN', ({ expect }) => {
-    const registry = Registry.make();
+    const registry = make();
     // PersistentType is a valid AnyEntity with typename 'dxos.org.echo.schema' and version '0.1.0'.
     const schema = Type.PersistentType;
     const typename = Type.getTypename(schema);
@@ -116,14 +112,14 @@ describe('Registry', () => {
   });
 
   test('types are not surfaced in list()', ({ expect }) => {
-    const registry = Registry.make();
+    const registry = make();
     registry.addTypes([Type.PersistentType]);
     expect(registry.list()).toHaveLength(0);
     expect(registry.types).toHaveLength(1);
   });
 
   test('changed fires on add/remove/clear/addTypes', ({ expect }) => {
-    const registry = Registry.make();
+    const registry = make();
     let count = 0;
     registry.changed.on(() => count++);
 
