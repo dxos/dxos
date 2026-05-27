@@ -10,13 +10,13 @@
       "path": "../../../common/async"
     },
     {
-      "path": "../../../common/keys"
-    },
-    {
       "path": "../../../common/context"
     },
     {
       "path": "../../../common/invariant"
+    },
+    {
+      "path": "../../../common/keys"
     },
     {
       "path": "../../../common/log"
