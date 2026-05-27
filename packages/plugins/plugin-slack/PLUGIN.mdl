@@ -1,0 +1,361 @@
+---
+id: org.dxos.plugin.slack
+name: SlackPlugin
+version: 0.1.0
+---
+
+SlackPlugin connects a Slack workspace to DXOS Composer via OAuth, discovers
+conversations (public channels, private channels), and incrementally syncs
+messages into ECHO as `Channel` and `Message` objects so they appear alongside
+everything else in a space.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`       |
+| `feat`      | `org.dxos.mdl.feat@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
+| `component` | `org.dxos.mdl.component@1.0`  |
+| `op`        | `org.dxos.mdl.op@1.0`         |
+
+## Types
+
+```mdl
+type ConversationKind
+  literals: channel | private_channel | group | direct_message | group_direct_message
+  desc: Slack conversation category returned by conversations.list.
+```
+
+```mdl
+type RemoteTarget
+  desc: |
+    Wire-shape descriptor for a single Slack conversation as returned by
+    op:GetSlackChannels.  Read-only — no local ECHO object is created until
+    the first op:SyncSlackChannel run for this target.
+  fields:
+    id: string                      # Slack conversation id (C…/G…/D…)
+    name: string                    # human-readable label (#general, DM with alice)
+    description?: string            # conversation kind as plain text
+    metadata?: Record<string, unknown>
+```
+
+```mdl
+type PullResult
+  desc: Aggregate count returned by op:SyncSlackChannel.
+  fields:
+    added: number                   # total messages written to ECHO across all targets
+```
+
+```mdl
+type SlackCredentials
+  desc: |
+    Effect Context.Tag holding the bearer token used by SlackApi calls.
+    Provided at operation boundaries via SlackCredentials.fromIntegration(ref);
+    never stored in plain ECHO fields.
+  fields:
+    token: string                   # xoxp-… or xoxb-… OAuth token
+```
+
+## Operations
+
+Discovery operations — read-only, no ECHO writes.
+
+```mdl
+op GetSlackChannels
+  key: org.dxos.plugin.slack.operation.get-slack-channels
+  desc: |
+    Lists all Slack conversations reachable from the integration's OAuth token
+    without creating any local ECHO objects.  Returns one RemoteTarget per
+    conversation for the integration UI's target-selection list.
+  input:
+    integration: Ref<Integration>
+  output: { targets: RemoteTarget[] }
+  effects: [http]
+  note: |
+    Calls conversations.list with types=public_channel,private_channel.
+    Paginates opaque cursors until exhausted.  Conversation labels are
+    derived from the name field with a '#' prefix for channels/groups,
+    or 'DM with <user>' for IMs.
+```
+
+Sync operations — pull messages from Slack and write to ECHO.
+
+```mdl
+op SyncSlackChannel
+  key: org.dxos.plugin.slack.operation.sync-slack-channel
+  desc: |
+    Reconciles messages for the currently-selected Slack targets on an
+    Integration.  For each selected target: materializes a local Channel (on
+    first sync), fetches messages newer than the stored cursor, maps them to
+    @dxos/types Message objects, and appends them to the channel's feed.
+    Updates the cursor after a successful pull so subsequent runs are
+    incremental.
+  input:
+    integration: Ref<Integration>
+    channel?: Ref<Channel>          # optional: narrow to a single target
+  output: { pulled: PullResult }
+  effects: [http, echo:write]
+  errors:
+    IntegrationDatabaseMissingError: integration ref has no resolvable ECHO database
+  note: |
+    Targets are processed in parallel up to TARGET_CONCURRENCY=3.
+    A failure on one target writes target.lastError and continues.
+    Materializes Channel on first sync; subsequent syncs are idempotent.
+    Slack ts strings are used as foreign keys (source=slack.com) so
+    re-importing the same message is a no-op.
+```
+
+## Features
+
+```mdl
+feat F-1: OAuth Connection
+
+  req F-1.1: Plugin MUST contribute an IntegrationProvider for source 'slack.com'
+    that initiates Slack OAuth with scopes:
+    channels:read, channels:history, groups:read, groups:history, users:read.
+
+  req F-1.2:
+    when: OAuth flow completes and an AccessToken is created
+    then: auth.test is called; accessToken.account is set to '<user>@<team>'
+      (or best available fallback) so the integration list shows the workspace.
+
+  req F-1.3: Bearer token MUST be passed via POST body (application/x-www-form-urlencoded)
+    because Slack's CORS policy does not include Authorization in
+    Access-Control-Allow-Headers for slack.com/api/*.
+```
+
+```mdl
+feat F-2: Channel Discovery
+
+  req F-2.1:
+    when: op:GetSlackChannels is invoked with a valid Integration ref
+    then: all pages of conversations.list are drained and one RemoteTarget
+      returned per conversation.
+
+  req F-2.2: Discovery MUST NOT create any local Channel objects; materialization
+    is deferred to the first op:SyncSlackChannel run.
+
+  req F-2.3:
+    when: a conversation has no name (IM)
+    then: label is 'DM with <user-id>' (display name resolution is lazy)
+```
+
+```mdl
+feat F-3: Incremental Sync
+
+  req F-3.1:
+    when: op:SyncSlackChannel is invoked for the first time on a target
+    then: a new Channel is created in ECHO with a foreign key
+      { source: 'slack.com', id: conversationId } and messages are fetched
+      from the full history.
+
+  req F-3.2:
+    when: op:SyncSlackChannel is invoked on a previously-synced target
+    then: only messages with ts > target.cursor are fetched.
+
+  req F-3.3: After a successful sync, target.cursor MUST be updated to the
+    newest ts seen so subsequent syncs are incremental.
+
+  req F-3.4:
+    when: a target sync fails
+    then: target.lastError is set to a human-readable string; other targets
+      continue processing; the operation still returns a result.
+
+  req F-3.5: Messages of subtype channel_join or channel_leave MUST be filtered
+    out and not written to ECHO.
+```
+
+```mdl
+feat F-4: Message Mapping
+
+  req F-4.1: Each Slack message MUST map to a @dxos/types Message with:
+    - created: ISO string derived from message.ts (millisecond precision)
+    - threadId: message.thread_ts (groups replies under parent)
+    - sender.name resolved via layered fallback:
+        user display_name → real_name → name → bot name → message.username
+        → raw user/bot id → 'unknown'
+    - sender.email if available from users.info
+    - blocks: [{ _tag: 'text', text }] from the Slack text field
+
+  req F-4.2: Slack rich-text blocks array is intentionally NOT mapped in v1;
+    only the plain text field is used.
+
+  req F-4.3: User ids referenced in messages MUST be resolved via users.info
+    in batches (concurrency=4) with per-sync caching; failures degrade
+    gracefully to the raw id.
+
+  req F-4.4: Bot ids MUST be resolved via bots.info with the same concurrency
+    and cache policy as users; bots.info is required because users.info does
+    not accept bot ids.
+```
+
+```mdl
+feat F-5: Error Handling and Retries
+
+  req F-5.1: Slack API calls MUST retry on transient failures (transport
+    errors, 429, 5xx, timeout) using exponential backoff with jitter up to
+    3 attempts.
+
+  req F-5.2: Slack application errors ({ ok: false }) MUST NOT be retried;
+    they are surfaced as SlackApiError carrying the error code string.
+
+  req F-5.3:
+    when: SyncSlackChannel fails at the operation level (not per-target)
+    then: a toast notification MUST be shown via LayoutOperation.AddToast
+      with the human-readable failure string.
+
+  req F-5.4:
+    when: SyncSlackChannel succeeds
+    then: a success toast MUST be shown via LayoutOperation.AddToast.
+```
+
+## Acceptance
+
+```mdl
+test T-1: OAuth populates account field
+  given: a fresh Integration with no accessToken.account
+  when: OAuth flow completes and onTokenCreated fires
+  then:
+    - auth.test is called exactly once
+    - accessToken.account is set to '<user>@<team>'
+```
+
+```mdl
+test T-2: Discovery returns targets without ECHO writes
+  given: a valid Integration with OAuth token
+  when: op:GetSlackChannels is invoked
+  then:
+    - result.targets has one entry per conversation page
+    - no Channel objects exist in ECHO after the call
+```
+
+```mdl
+test T-3: First sync materializes Channel
+  given: an Integration with one selected target (no prior sync)
+  when: op:SyncSlackChannel is invoked
+  then:
+    - a Channel is created in ECHO with key { source: 'slack.com', id: conversationId }
+    - Channel.name matches the conversation label
+    - messages are appended to the channel's feed
+    - target.cursor is set to the newest ts
+```
+
+```mdl
+test T-4: Second sync is incremental
+  given: a target with cursor = '1700000100.000000'
+  when: op:SyncSlackChannel is invoked
+  then:
+    - conversations.history is called with oldest = '1700000100.000000'
+    - only messages newer than the cursor are appended
+    - target.cursor advances to the newest ts returned
+```
+
+```mdl
+test T-5: Per-target failure does not abort other targets
+  given: an Integration with two targets; the second target's history call fails
+  when: op:SyncSlackChannel is invoked
+  then:
+    - the first target syncs successfully
+    - the second target has lastError set to a non-empty string
+    - the operation returns a result (not an error) with pulled.added from the first target
+```
+
+```mdl
+test T-6: System messages filtered
+  given: a conversation history containing channel_join and channel_leave subtypes
+  when: op:SyncSlackChannel processes the history
+  then:
+    - no Message objects are written for the join/leave events
+    - pulled.added counts only user-authored messages
+```
+
+```mdl
+test T-7: Thread replies grouped
+  given: a Slack message with thread_ts set to its parent's ts
+  when: the message is mapped to a @dxos/types Message
+  then:
+    - Message.threadId === parent message ts
+    - parent message also has threadId set (thread_ts === ts for parents with replies)
+```
+
+```mdl
+test T-8: Idempotent re-sync
+  given: a channel already containing a Message with key { source: 'slack.com', id: ts }
+  when: op:SyncSlackChannel fetches a history that includes the same ts
+  then:
+    - no duplicate Message is appended (foreign key deduplication)
+    - pulled.added reflects only net-new messages
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: dxos.spec/ext/type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: dxos.spec/ext/feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext test
+  uri: dxos.spec/ext/test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap            # external inputs (immutable inside component)
+    state?: FieldMap            # internal reactive state
+    slots?: FieldMap            # named ReactNode injection points
+    actions?: ActionMap         # methods the component exposes or handles
+    emits?: EventMap            # events the component raises to its parent
+    layout?: CodeBlock          # ASCII sketch of visual structure (non-normative)
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap            # named input parameters
+    output?: TypeExpr           # return type
+    errors?: ErrorMap           # name: Prose  (when this error occurs)
+    effects?: EffectList        # echo:read | echo:write | http | fs | ...
+    requires?: ServiceList      # injected service dependencies
+    note?: Prose                # implementation guidance (non-normative)
+```

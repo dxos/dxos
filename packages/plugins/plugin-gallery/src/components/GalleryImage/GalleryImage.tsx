@@ -33,7 +33,7 @@ export const GalleryImage = ({ file, classNames, onDelete }: GalleryImageProps) 
           <div role='img' aria-label={alt} className='w-full bg-input' style={{ aspectRatio: 16 / 9 }} />
         )}
       </div>
-      <Card.Toolbar>
+      <Card.Header>
         <Icon icon='ph--image--regular' size={5} />
         <Card.Title>{file?.name ?? ''}</Card.Title>
         {onDelete && (
@@ -46,7 +46,7 @@ export const GalleryImage = ({ file, classNames, onDelete }: GalleryImageProps) 
             onClick={onDelete}
           />
         )}
-      </Card.Toolbar>
+      </Card.Header>
     </Card.Root>
   );
 };

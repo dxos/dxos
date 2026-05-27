@@ -159,7 +159,7 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
             key={option.id}
             value={option.id}
             label={option.label}
-            icon={option.icon ?? 'ph--placeholder--regular'}
+            icon={option.icon ?? 'ph--circle-dashed--regular'}
             onSelect={() => onChange(option.id)}
           />
         ))}

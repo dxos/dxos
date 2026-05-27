@@ -128,7 +128,7 @@ export const StackItemSigil = forwardRef<HTMLButtonElement, StackItemSigilProps>
                           checked={menuItemType === 'toggle' ? action.properties.isChecked : undefined}
                           {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
                         >
-                          <Icon icon={action.properties.icon ?? 'ph--placeholder--regular'} size={4} />
+                          <Icon icon={action.properties.icon ?? 'ph--circle-dashed--regular'} size={4} />
                           <span className='grow truncate'>{toLocalizedString(action.properties.label ?? '', t)}</span>
                           {menuItemType === 'toggle' && (
                             <DropdownMenu.ItemIndicator asChild>

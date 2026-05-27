@@ -1,0 +1,626 @@
+---
+id: org.dxos.plugin.space
+name: SpacePlugin
+version: 0.1.0
+---
+
+Core workspace container plugin for `DXOS` Composer — creates, manages, and shares collaborative spaces with full membership control, object lifecycle management, schema registration, and navigation.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+| `component` | `org.dxos.mdl.component@1.0`   |
+| `op`        | `org.dxos.mdl.op@1.0`          |
+
+## Types
+
+```mdl
+type SpaceForm
+  fields:
+    name?: string               # display name for the space
+    icon?: string               # phosphor icon identifier
+    hue?: string                # colour token
+    edgeReplication?: boolean   # enable EDGE-based replication
+```
+
+```mdl
+type SpacePluginOptions
+  fields:
+    shareableLinkOrigin?: string  # base URL used for invitation and object copy-links
+    invitationPath?: string       # path appended to origin; default '/'
+    invitationProp?: string       # query param name for the invitation code
+    observability?: boolean       # emit observability events
+```
+
+```mdl
+type ObjectViewerProps
+  fields:
+    lastSeen: number            # unix timestamp of last observation
+    currentlyAttended: boolean  # true if the peer is currently viewing this object
+```
+
+```mdl
+type PluginState
+  fields:
+    viewersByObject: Record<ObjectId, Map<PublicKey, ObjectViewerProps>>
+    viewersByIdentity: Map<PublicKey, Set<ObjectId>>
+    awaiting: string | undefined        # DXN of an object being waited on
+    spaceNames: Record<string, string>  # cached names for closed/loading spaces
+    sdkMigrationRunning: Record<string, boolean>
+    navigableCollections: boolean
+    enabledEdgeReplication: boolean
+```
+
+## Components
+
+```mdl
+component CollectionArticle
+  desc: Main article view for a Collection — renders its child objects as an ordered list, supports drag-reorder and per-item actions.
+  props:
+    subject: Collection
+  state:
+    selected?: Obj.Unknown
+  actions:
+    addObject(object: Obj.Unknown)
+    removeObject(object: Obj.Unknown)
+    reorder(from: number, to: number)
+  layout: |
+    ┌─────────────────────────┐
+    │  [toolbar]              │
+    ├─────────────────────────┤
+    │  object row             │
+    │  object row             │
+    │  object row  …          │
+    └─────────────────────────┘
+```
+
+```mdl
+component CollectionSection
+  desc: Compact list of objects belonging to a collection, used inside sidebars and companion panels.
+  props:
+    collection: Collection
+  state:
+    expanded: boolean
+  actions:
+    toggleExpand()
+```
+
+```mdl
+component RecordArticle
+  desc: Schema-driven form/detail view for a single ECHO object rendered in an article slot.
+  props:
+    subject: Obj.Unknown
+  actions:
+    save()
+    discard()
+```
+
+```mdl
+component RelatedArticle
+  desc: Companion panel listing objects semantically related to the current subject via ECHO relations.
+  props:
+    subject: Obj.Unknown
+  state:
+    relations: Obj.Unknown[]
+```
+
+```mdl
+component CreateObjectDialog
+  desc: Modal dialog that lets the user pick a schema type and fill initial fields to create a new ECHO object.
+  props:
+    target: Database | Collection
+    views?: boolean
+    typename?: string
+    initialFormValues?: Record<string, any>
+    navigable?: boolean
+  actions:
+    confirm(data: Record<string, any>)
+    cancel()
+```
+
+```mdl
+component CreateSpaceDialog
+  desc: Modal dialog for creating a new space with name, icon, colour, and replication options.
+  actions:
+    confirm(form: SpaceForm)
+    cancel()
+```
+
+```mdl
+component ImportSpaceDialog
+  desc: Dialog that accepts a space archive file and imports it as a new space.
+  actions:
+    confirm(archive: { filename: string; contents: Uint8Array })
+    cancel()
+```
+
+```mdl
+component JoinDialog
+  desc: Dialog that accepts an invitation code and joins the corresponding space.
+  props:
+    invitationCode?: string
+  actions:
+    join(code: string)
+    cancel()
+```
+
+```mdl
+component MembersContainer
+  desc: Panel showing all members of a space with their presence status and role; allows managing invitations.
+  props:
+    space: Space
+```
+
+```mdl
+component SpaceSettingsContainer
+  desc: Settings panel for a single space — name, icon, colour, replication toggle, and member management.
+  props:
+    space: Space
+```
+
+```mdl
+component SchemaContainer
+  desc: Browsable table of all registered ECHO schemas in the current space; allows adding new schemas.
+  props:
+    db: Database
+```
+
+```mdl
+component ViewEditor
+  desc: Interactive editor for a View — reorder, add, and remove fields; configure field display settings.
+  props:
+    view: View
+```
+
+```mdl
+component SpacePresence
+  desc: Avatar cluster indicating which peers are currently attending the active object/space.
+  props:
+    space: Space
+```
+
+```mdl
+component SyncStatus
+  desc: Icon/indicator reflecting the CRDT sync health of the active space.
+  props:
+    space: Space
+```
+
+## Operations
+
+```mdl
+op SpaceOperation.Create
+  desc: Creates a new space with the given display properties.
+  input:
+    name?: string
+    icon?: string
+    hue?: string
+    edgeReplication?: boolean
+  output: { id: string; subject: string[]; space: Space }
+  effects: [echo:write]
+```
+
+```mdl
+op SpaceOperation.Join
+  desc: Joins an existing space by resolving and accepting an invitation code.
+  input:
+    invitationCode?: string
+  output: void
+  effects: [echo:write]
+```
+
+```mdl
+op SpaceOperation.Open
+  desc: Navigates the layout to the given space.
+  input:
+    space: Space
+  output: void
+  effects: [layout:navigate]
+```
+
+```mdl
+op SpaceOperation.Close
+  desc: Removes the space from the active navigation context.
+  input:
+    space: Space
+  output: void
+  effects: [layout:navigate]
+```
+
+```mdl
+op SpaceOperation.Share
+  desc: Creates an invitation observable for sharing a space; supports single-use and multi-use codes.
+  input:
+    space: Space
+    type: Invitation.Type
+    authMethod: Invitation.AuthMethod
+    multiUse: boolean
+    target?: string
+  output: CancellableInvitationObservable
+  effects: [echo:write]
+```
+
+```mdl
+op SpaceOperation.Rename
+  desc: Opens a rename popover for the given space.
+  input:
+    space: Space
+    caller?: string
+  output: void
+  effects: [layout:dialog]
+```
+
+```mdl
+op SpaceOperation.AddObject
+  desc: Adds an existing ECHO object to a database or collection and optionally navigates to it.
+  input:
+    object: Obj.Unknown
+    target: Database | Collection
+    hidden?: boolean
+    targetNodeId?: string
+  output: { id: string; subject: string[]; object: Obj.Unknown }
+  effects: [echo:write]
+```
+
+```mdl
+op SpaceOperation.RemoveObjects
+  desc: Removes one or more objects from a collection; returns undo data.
+  input:
+    objects: Obj.Unknown[]
+    target?: Collection
+  output: { objects: Obj.Unknown[]; parentCollection: Collection; indices: number[]; wasActive: string[] }
+  effects: [echo:write]
+```
+
+```mdl
+op SpaceOperation.RestoreObjects
+  desc: Restores previously removed objects to their collection (inverse of RemoveObjects).
+  input:
+    objects: Obj.Unknown[]
+    parentCollection: Collection
+    indices: number[]
+    wasActive: string[]
+  output: void
+  effects: [echo:write]
+```
+
+```mdl
+op SpaceOperation.AddSchema
+  desc: Registers a new schema type in the space database; optionally makes it visible in the type picker.
+  input:
+    db: Database
+    name?: string
+    typename?: string
+    version?: string
+    schema: Schema.AnyNoContext
+    show?: boolean
+  output: { id: string; object: Type.PersistentType; schema: Type.RuntimeType }
+  effects: [echo:write]
+```
+
+```mdl
+op SpaceOperation.AddRelation
+  desc: Creates a typed relation between two ECHO objects.
+  input:
+    db: Database
+    schema: Schema.AnyNoContext
+    source: Obj.Unknown
+    target: Obj.Unknown
+    fields?: Record<string, any>
+  output: { relation: any }
+  effects: [echo:write]
+```
+
+```mdl
+op SpaceOperation.DeleteField
+  desc: Removes a field from a View; returns undo data.
+  input:
+    view: View
+    fieldId: string
+  output: { field: View.FieldSchema; props: any; index: number }
+  effects: [echo:write]
+```
+
+```mdl
+op SpaceOperation.RestoreField
+  desc: Restores a deleted field to a View at its original index (inverse of DeleteField).
+  input:
+    view: View
+    field: View.FieldSchema
+    props: any
+    index: number
+  output: void
+  effects: [echo:write]
+```
+
+```mdl
+op SpaceOperation.ImportSpace
+  desc: Imports a binary space archive as a brand-new space.
+  input:
+    archive: { filename: string; contents: Uint8Array }
+    tags?: string[]
+  output: { space: Space }
+  effects: [echo:write]
+```
+
+```mdl
+op SpaceOperation.ExportSpace
+  desc: Serialises a space to an archive and triggers a browser download.
+  input:
+    space: Space
+    format: SpaceArchive.Format
+  output: void
+  effects: [fs:write]
+```
+
+```mdl
+op SpaceOperation.Snapshot
+  desc: Captures a point-in-time snapshot of a database or filtered query as a Blob.
+  input:
+    db: Database
+    query?: QueryAST.Query
+  output: { snapshot: Blob }
+  effects: [echo:read]
+```
+
+```mdl
+op SpaceOperation.Migrate
+  desc: Runs registered migrations against a space to bring it to the current schema version.
+  input:
+    space: Space
+    version?: string
+  output: boolean               # true if any migration ran
+  effects: [echo:write]
+```
+
+```mdl
+op SpaceOperation.Reset
+  desc: |
+    Permanently deletes all objects and truncates feeds in a space via a new epoch.
+    This operation is unrecoverable.
+  input:
+    space: Space
+  output: void
+  effects: [echo:write]
+```
+
+```mdl
+op SpaceOperation.GetShareLink
+  desc: Constructs a shareable URL for a space or specific object; optionally copies it to the clipboard.
+  input:
+    space: Space
+    target?: string
+    copyToClipboard?: boolean
+  output: string                # fully-qualified URL
+  effects: [clipboard]
+```
+
+```mdl
+op CollectionOperation.Create
+  desc: Creates a new Collection object in the active space.
+  input:
+    name?: string
+  output: { object: Collection }
+  effects: [echo:write]
+```
+
+## Features
+
+```mdl
+feat F-1: Space Lifecycle
+
+  req F-1.1: User can create a new space via op:SpaceOperation.Create; the space appears in the navigation graph.
+  req F-1.2: User can join a space via op:SpaceOperation.Join with an invitation code.
+  req F-1.3: User can close/open spaces; closed spaces remain listed with their cached name.
+  req F-1.4:
+    when: user triggers op:SpaceOperation.Reset
+    then: all objects are deleted and a new epoch is created; the operation is unrecoverable
+```
+
+```mdl
+feat F-2: Membership and Sharing
+
+  req F-2.1:
+    when: user triggers op:SpaceOperation.Share
+    then: an invitation observable is created; the invitation URL uses the configured shareableLinkOrigin
+
+  req F-2.2: MembersContainer shows all current members with their presence status.
+  req F-2.3: User can generate single-use or multi-use invitation links.
+  req F-2.4: User can get a direct shareable link to a space or object via op:SpaceOperation.GetShareLink.
+```
+
+```mdl
+feat F-3: Object Lifecycle
+
+  req F-3.1:
+    when: user opens the create-object dialog
+    then: all registered schema types are shown for selection
+
+  req F-3.2: op:SpaceOperation.AddObject adds an object to a collection and fires navigation if navigable.
+  req F-3.3: op:SpaceOperation.RemoveObjects records undo data; op:SpaceOperation.RestoreObjects reverts the removal.
+  req F-3.4: op:SpaceOperation.DuplicateObject creates a shallow copy of an object in the same target.
+```
+
+```mdl
+feat F-4: Schema Registry
+
+  req F-4.1:
+    when: a plugin registers a schema via AppPlugin.addSchemaModule
+    then: the type is available globally across all spaces
+
+  req F-4.2:
+    when: user triggers op:SpaceOperation.AddSchema
+    then: a StoredSchema entry is persisted in the space database
+
+  req F-4.3: SchemaContainer lists all schemas in the active space; user can add a new user-defined schema.
+```
+
+```mdl
+feat F-5: Collections
+
+  req F-5.1: A Collection is an ordered list of references to ECHO objects.
+  req F-5.2: CollectionArticle renders collection contents with drag-to-reorder support.
+  req F-5.3: op:CollectionOperation.Create creates an empty Collection in the active space.
+```
+
+```mdl
+feat F-6: Persistence and Migrations
+
+  req F-6.1:
+    when: client emits SetupMigration
+    then: all registered migrations run against every space
+
+  req F-6.2:
+    when: user triggers op:SpaceOperation.Migrate
+    then: the space is migrated to the specified (or latest) version; returns true if work was done
+
+  req F-6.3: op:SpaceOperation.ExportSpace serialises a space as a binary archive for backup.
+  req F-6.4: op:SpaceOperation.ImportSpace restores an archive as a new space with optional tags.
+```
+
+```mdl
+feat F-7: View and Field Editing
+
+  req F-7.1: op:SpaceOperation.DeleteField removes a field from a View and returns full undo state.
+  req F-7.2: op:SpaceOperation.RestoreField reinstates a deleted field at its original position.
+  req F-7.3: ViewEditor provides an interactive UI for reordering and configuring View fields.
+```
+
+```mdl
+feat F-8: Presence and Sync Status
+
+  req F-8.1: SpacePresence tracks which peers are viewing which objects via the attention system.
+  req F-8.2: SyncStatus reflects CRDT sync health; unsynchronised changes are indicated visually.
+  req F-8.3:
+    when: a peer starts or stops attending an object
+    then: viewersByObject and viewersByIdentity maps are updated in ephemeral plugin state
+```
+
+## Acceptance
+
+```mdl
+test T-1: Create and open a space
+  given: no spaces exist
+  when: op:SpaceOperation.Create runs with name "Acme"
+  then:
+    - new Space object is returned with the given name
+    - space appears in the navigation graph
+```
+
+```mdl
+test T-2: Join space via invitation
+  given: an invitation URL has been generated for an existing space
+  when: op:SpaceOperation.Join runs with the invitation code
+  then:
+    - space appears in the local client's space list
+    - space state transitions to SPACE_READY
+```
+
+```mdl
+test T-3: Add and remove object with undo
+  given: a Collection in an active space
+  when: op:SpaceOperation.AddObject adds object X, then op:SpaceOperation.RemoveObjects removes it
+  then:
+    - RemoveObjects output records the original index and collection
+    - op:SpaceOperation.RestoreObjects puts X back at the same index
+```
+
+```mdl
+test T-4: Export and import space
+  given: a space containing 5 objects
+  when: op:SpaceOperation.ExportSpace runs, then op:SpaceOperation.ImportSpace loads the archive
+  then:
+    - the new space contains the same 5 objects
+    - the original space is unchanged
+```
+
+```mdl
+test T-5: Schema registration
+  given: an active space with no custom schemas
+  when: op:SpaceOperation.AddSchema runs with a new schema definition
+  then:
+    - a StoredSchema entry exists in the space database
+    - the schema is available in the create-object dialog type picker
+```
+
+```mdl
+test T-6: View field delete and restore
+  given: a View with fields ["name", "email", "phone"]
+  when: op:SpaceOperation.DeleteField removes "email", then op:SpaceOperation.RestoreField restores it
+  then:
+    - after delete, View has fields ["name", "phone"]
+    - after restore, View has fields ["name", "email", "phone"] in original order
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap
+    literals?: UnionList
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap
+    state?: FieldMap
+    slots?: FieldMap
+    actions?: ActionMap
+    emits?: EventMap
+    layout?: CodeBlock
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap
+    output?: TypeExpr
+    errors?: ErrorMap
+    effects?: EffectList
+    requires?: ServiceList
+    note?: Prose
+```

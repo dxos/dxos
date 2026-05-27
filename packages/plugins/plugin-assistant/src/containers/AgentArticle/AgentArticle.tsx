@@ -33,7 +33,7 @@ export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
   const spaceId = Obj.getDatabase(agent)?.spaceId;
-  // TODO(burdon): Clear input queue also.
+  // TODO(burdon): Clear input feed also.
   const resetHistory = useSpaceCallback(
     spaceId,
     [Feed.FeedService, Database.Service] as const,
@@ -144,16 +144,16 @@ const ArtifactTileCard = composable<HTMLDivElement, { data: Obj.Unknown }>(({ da
     Option.fromNullable,
     Option.flatMap(Annotation.IconAnnotation.get),
     Option.map(({ icon }) => icon),
-    Option.getOrElse(() => 'ph--placeholder--regular'),
+    Option.getOrElse(() => 'ph--circle-dashed--regular'),
   );
 
   return (
     <Card.Root {...props} ref={forwardedRef} data-testid='board-item' fullWidth>
-      <Card.Toolbar>
+      <Card.Header>
         <Card.IconBlock padding>
           <Card.Icon icon={icon} />
         </Card.IconBlock>
-        <Card.Title>{Obj.getLabel(data)}</Card.Title>
+        <Card.Title>{Obj.getLabel(data, { fallback: 'typename' })}</Card.Title>
         {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
         <Card.IconBlock padding>
           <Menu.Trigger asChild disabled={!objectMenuItems?.length}>
@@ -161,14 +161,14 @@ const ArtifactTileCard = composable<HTMLDivElement, { data: Obj.Unknown }>(({ da
           </Menu.Trigger>
           <Menu.Content items={objectMenuItems} />
         </Card.IconBlock>
-      </Card.Toolbar>
-      <Card.Content>
+      </Card.Header>
+      <Card.Body>
         <Surface.Surface
           type={AppSurface.Card}
           limit={1}
           data={{ subject: data } satisfies AppSurface.ObjectCardData}
         />
-      </Card.Content>
+      </Card.Body>
     </Card.Root>
   );
 });

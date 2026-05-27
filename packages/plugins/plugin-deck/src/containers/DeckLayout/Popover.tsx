@@ -81,7 +81,7 @@ export const PopoverContent = () => {
         Option.fromNullable,
         Option.flatMap(Annotation.IconAnnotation.get),
         Option.map(({ icon }) => icon),
-        Option.getOrElse(() => 'ph--placeholder--regular'),
+        Option.getOrElse(() => 'ph--circle-dashed--regular'),
       )
     : undefined;
 
@@ -130,7 +130,7 @@ export const PopoverContent = () => {
           {state.popoverKind === 'card' && (
             <Menu.Root>
               <Card.Root border={false} classNames='dx-card-popover'>
-                <Card.Toolbar>
+                <Card.Header>
                   <Card.IconBlock padding>{icon && <Card.Icon icon={icon} />}</Card.IconBlock>
                   <Card.Title>{title}</Card.Title>
                   {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
@@ -145,7 +145,7 @@ export const PopoverContent = () => {
                     </Menu.Trigger>
                     <Menu.Content items={objectMenuItems} />
                   </Card.IconBlock>
-                </Card.Toolbar>
+                </Card.Header>
 
                 {state.popoverContent && 'subject' in state.popoverContent && (
                   <Surface.Surface type={AppSurface.Card} data={state.popoverContent} limit={1} />

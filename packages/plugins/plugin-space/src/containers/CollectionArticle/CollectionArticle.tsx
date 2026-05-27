@@ -68,7 +68,7 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
 
   return (
     <Card.Root fullWidth role='button' classNames='cursor-pointer' onClick={handleClick}>
-      <Card.Toolbar>
+      <Card.Header>
         <Toolbar.IconButton
           variant='ghost'
           label={label}
@@ -78,7 +78,7 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
         />
         <Card.Title>{label}</Card.Title>
         <Card.Menu />
-      </Card.Toolbar>
+      </Card.Header>
     </Card.Root>
   );
 };
@@ -103,7 +103,7 @@ const useCollectionItems = (collection: Collection.Collection, attendableId?: st
           id: Obj.getDXN(obj).toString(),
           object: obj,
           targetPath,
-          icon: iconAnnotation?.icon ?? 'ph--placeholder--regular',
+          icon: iconAnnotation?.icon ?? 'ph--circle-dashed--regular',
           iconHue: iconAnnotation?.hue,
         } satisfies ObjectItem;
       }),

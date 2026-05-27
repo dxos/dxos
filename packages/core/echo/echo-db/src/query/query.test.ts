@@ -2661,6 +2661,32 @@ describe('Query', () => {
       expect((objects2[0] as TestSchema.Task).title).toEqual('Task in feed 2');
     });
 
+    test('childOf with limit returns feed items (regression: limit must not be pushed past child-of)', async ({
+      expect,
+    }) => {
+      // Populates the space with enough unrelated objects that, if `.limit(N)` were pushed
+      // into the wildcard SelectStep before the child-of FilterStep, the candidate set sliced
+      // before filtering would not contain any of the feed items and the result would be empty.
+      const peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task] });
+      const db = await peer.createDatabase();
+      const queues = peer.client.constructQueueFactory(db.spaceId);
+      const feed = db.add(Feed.make({ name: 'limited-feed' }));
+      for (let i = 0; i < 50; i++) {
+        db.add(Obj.make(TestSchema.Expando, { name: `decoy-${i}` }));
+      }
+      await db.flush();
+
+      const queue = queues.get(Feed.getQueueDxn(feed)!);
+      await queue.append([Obj.make(TestSchema.Task, { title: 'A' }), Obj.make(TestSchema.Task, { title: 'B' })]);
+      await db.flush();
+
+      const objects = await db
+        .query(Query.select(Filter.childOf(feed)).from(db, { includeFeeds: true }).limit(10))
+        .run();
+      expect(objects).toHaveLength(2);
+      expect(objects.map((obj: any) => obj.title).sort()).toEqual(['A', 'B']);
+    });
+
     test('childOf with Ref argument', async () => {
       const { db } = await builder.createDatabase();
       const parent = db.add(Obj.make(TestSchema.Expando, { name: 'Parent' }));

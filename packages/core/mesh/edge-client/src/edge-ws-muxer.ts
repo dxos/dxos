@@ -74,6 +74,15 @@ export class WebSocketMuxer {
       return;
     }
 
+    const chunkCount = Math.ceil(binary.length / this._maxChunkLength);
+    log('muxer sending segmented message', {
+      byteLength: binary.byteLength,
+      chunkCount,
+      channelId,
+      serviceId: message.serviceId,
+      payload: protocol.getPayloadType(message),
+    });
+
     const terminatorSentTrigger = new Trigger();
     const messageChunks: MessageChunk[] = [];
     for (let i = 0; i < binary.length; i += this._maxChunkLength) {
@@ -97,7 +106,13 @@ export class WebSocketMuxer {
 
     this._sendChunkedMessages();
 
-    return terminatorSentTrigger.wait();
+    await terminatorSentTrigger.wait();
+    log.debug('muxer segmented message send enqueued', {
+      byteLength: binary.byteLength,
+      chunkCount,
+      channelId,
+      serviceId: message.serviceId,
+    });
   }
 
   public receiveData(data: Uint8Array): Message | undefined {
@@ -106,21 +121,45 @@ export class WebSocketMuxer {
     }
 
     const [flags, channelId, ...payload] = data;
+    const chunkPayload = Buffer.from(payload);
     let chunkAccumulator = this._inMessageAccumulator.get(channelId);
     if (chunkAccumulator) {
-      chunkAccumulator.push(Buffer.from(payload));
+      chunkAccumulator.push(chunkPayload);
     } else {
-      chunkAccumulator = [Buffer.from(payload)];
+      chunkAccumulator = [chunkPayload];
       this._inMessageAccumulator.set(channelId, chunkAccumulator);
+      log.debug('muxer started receiving segmented message', {
+        channelId,
+        firstChunkBytes: chunkPayload.byteLength,
+      });
     }
 
     if ((flags & FLAG_SEGMENT_SEQ_TERMINATED) === 0) {
       return undefined;
     }
 
-    const message = buf.fromBinary(MessageSchema, Buffer.concat(chunkAccumulator));
+    const reassembled = Buffer.concat(chunkAccumulator);
+    const chunkCount = chunkAccumulator.length;
     this._inMessageAccumulator.delete(channelId);
-    return message;
+    try {
+      const message = buf.fromBinary(MessageSchema, reassembled);
+      log('muxer reassembled segmented message', {
+        channelId,
+        chunkCount,
+        byteLength: reassembled.byteLength,
+        serviceId: message.serviceId,
+        payloadBytes: message.payload?.value?.byteLength,
+      });
+      return message;
+    } catch (error) {
+      log.error('muxer failed to decode reassembled message', {
+        channelId,
+        chunkCount,
+        byteLength: reassembled.byteLength,
+        cause: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   }
 
   public destroy(): void {
@@ -153,6 +192,11 @@ export class WebSocketMuxer {
       for (const [channelId, messages] of this._outMessageChunks.entries()) {
         if (this._ws.bufferedAmount != null) {
           if (this._ws.bufferedAmount + MAX_CHUNK_LENGTH > MAX_BUFFERED_AMOUNT) {
+            log.debug('muxer send paused (websocket buffer full)', {
+              channelId,
+              bufferedAmount: this._ws.bufferedAmount,
+              pendingChannels: this._outMessageChunks.size,
+            });
             timeout = BUFFER_FULL_BACKOFF_TIMEOUT;
             break;
           }

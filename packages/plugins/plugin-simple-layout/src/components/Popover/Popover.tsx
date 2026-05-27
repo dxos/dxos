@@ -106,12 +106,12 @@ export const PopoverContent = () => {
           )}
           {state.popoverKind === 'card' && (
             <Card.Root border={false} classNames='dx-card-popover'>
-              <Card.Toolbar>
+              <Card.Header>
                 {/* TODO(wittjosiah): Cleaner way to handle no drag handle in toolbar? */}
                 <span />
                 {state.popoverTitle ? <Card.Title>{toLocalizedString(state.popoverTitle, t)}</Card.Title> : <span />}
                 <Card.ActionIconButton action='close' onClick={handleClose} />
-              </Card.Toolbar>
+              </Card.Header>
               {state.popoverContent && 'subject' in state.popoverContent && (
                 <Surface.Surface type={AppSurface.Card} data={state.popoverContent} limit={1} />
               )}

@@ -1,0 +1,317 @@
+---
+id: org.dxos.plugin.table
+name: TablePlugin
+version: 0.1.0
+---
+
+Relational table plugin for `DXOS` Composer — create structured data views over any ECHO schema, with sortable columns, inline editing, row management, and AI-assisted data operations.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+| `component` | `org.dxos.mdl.component@1.0`   |
+| `op`        | `org.dxos.mdl.op@1.0`          |
+
+## Types
+
+```mdl
+type Table
+  fields:
+    name?: string
+    view: Ref<View>              # column projection and query configuration
+    jsonSchema?: object          # cached JSON Schema for the bound type
+```
+
+```mdl
+type CreateTableInput
+  fields:
+    name?: string
+    typename?: string            # ECHO type to bind; user selects from database or runtime types
+```
+
+## Components
+
+```mdl
+component TableArticle
+  desc: Full-page table editor for a Table object — editable rows, sortable columns, toolbar actions.
+  props:
+    subject: Table
+    role: AppSurface.Role
+    attendableId?: string
+  state:
+    model: TableModel            # reactive row/column/selection state
+    presentation: TablePresentation
+    schema?: AnyEntity           # resolved ECHO schema for the bound typename
+    rows: EchoObject[]           # live-queried objects filtered by global search
+  slots:
+    toolbar?: ReactNode          # custom action buttons injected via app graph
+  actions:
+    insertRow()
+    deleteRows(objects: EchoObject[])
+    deleteColumn(fieldId: string)
+    saveView()
+    openRow(object: EchoObject)
+  layout: |
+    ┌────────────────────────────────────┐
+    │ TableComponent.Toolbar             │
+    │  [Add Row] [Save] [customActions]  │
+    ├────────────────────────────────────┤
+    │ TableComponent.Content             │
+    │  col1 │ col2 │ col3 │ …           │
+    │ ──────┼──────┼──────┼───          │
+    │  row  │      │      │             │
+    │  row  │      │      │             │
+    │  …    │      │      │             │
+    └────────────────────────────────────┘
+```
+
+```mdl
+component TableCard
+  desc: Read-only compact table preview shown in card/grid surfaces.
+  props:
+    subject: Table
+    role: AppSurface.Role
+  state:
+    model: TableModel            # read-only, no editing features
+    rows: EchoObject[]
+  layout: |
+    ┌──────────────────┐
+    │ col1 │ col2 │ …  │
+    │ ─────┼──────┼──  │
+    │ row  │      │    │
+    │ row  │      │    │
+    └──────────────────┘
+```
+
+## Operations
+
+```mdl
+op create
+  desc: Creates a Table bound to an optional typename from the database.
+  input:
+    db: Database
+    name?: string
+    typename?: string            # when provided, view is initialised from the schema
+  output: Table
+  effects: [echo:write]
+```
+
+```mdl
+op addRow
+  desc: Inserts a new row into a Table's underlying collection using the view's typename.
+  input:
+    view: View
+    data: object                 # field values keyed by property name
+  output: void
+  effects: [echo:write]
+```
+
+```mdl
+op onCreateSpace
+  desc: Lifecycle hook — creates a default Task Table when a new space is initialised.
+  input:
+    space: Space
+  output: void
+  effects: [echo:write]
+```
+
+```mdl
+op onSchemaAdded
+  desc: Lifecycle hook — creates and opens a Table when a new schema type is added to a space.
+  input:
+    db: Database
+    schema: AnyEntity
+    show?: boolean
+  output: void
+  effects: [echo:write]
+```
+
+## Features
+
+```mdl
+feat F-1: Table Creation
+
+  req F-1.1: User can create a Table by selecting a typename from the space or runtime schema registry.
+  req F-1.2:
+    when: typename is provided
+    then: View is initialised with columns derived from the schema's fields
+  req F-1.3:
+    when: a new space is created
+    then: op:onCreateSpace creates a default Task Table in that space
+  req F-1.4:
+    when: a new schema type is added to a space
+    then: op:onSchemaAdded creates and opens a Table bound to that type
+```
+
+```mdl
+feat F-2: Table Editing
+
+  req F-2.1: Cells are editable inline when the schema type is mutable.
+  req F-2.2: New rows can be inserted via the toolbar Add button or by clicking the frozen last row.
+  req F-2.3: Rows can be selected and deleted via multi-selection mode.
+  req F-2.4: Columns can be deleted when schema editing is enabled for the bound type.
+  req F-2.5:
+    when: the view has unsaved column changes
+    then: the Save button becomes active; clicking it persists the view.
+```
+
+```mdl
+feat F-3: Sorting and Filtering
+
+  req F-3.1: Column headers can be clicked to sort rows by the corresponding property.
+  req F-3.2: Sort order (asc/desc) is extracted from the View's query AST and applied to the live query.
+  req F-3.3: Tag filters stored in the View query AST narrow the displayed rows.
+  req F-3.4: Global search (plugin-search) further filters the displayed rows without modifying the view.
+```
+
+```mdl
+feat F-4: Surface Integration
+
+  req F-4.1: Table renders as a full article in article, section, and slide roles.
+  req F-4.2: Table renders as a compact read-only card in card roles.
+  req F-4.3: Opening a row via row action navigates to the corresponding ECHO object's canonical path.
+```
+
+```mdl
+feat F-5: Comments
+
+  req F-5.1: Table objects support unanchored (document-level) comments via the comment config.
+```
+
+```mdl
+feat F-6: AI / Blueprint
+
+  req F-6.1: Plugin contributes a Table blueprint with instructions for creating and updating tables.
+  req F-6.2:
+    when: AI agent uses the Table blueprint
+    then: agent can create tables with sorted columns via op:create
+```
+
+## Acceptance
+
+```mdl
+test T-1: Create table from typename
+  given: a space with a Task schema registered
+  when: user creates a Table with typename = Task
+  then:
+    - Table object written to ECHO
+    - View contains columns derived from Task schema fields
+```
+
+```mdl
+test T-2: Insert and persist row
+  given: a TableArticle is open with a mutable schema
+  when: user clicks Add Row, fills in a cell, and saves
+  then:
+    - new ECHO object of the bound typename is created
+    - row appears in the table
+```
+
+```mdl
+test T-3: Sort by column
+  given: TableArticle open with > 1 rows and a sortable column
+  when: user clicks the column header
+  then:
+    - rows re-order according to column values (asc first, then desc on second click)
+    - sort order stored in View query AST
+```
+
+```mdl
+test T-4: Delete rows
+  given: TableArticle open, two rows selected
+  when: user invokes delete
+  then:
+    - both ECHO objects removed from the space
+    - rows no longer appear in the table
+```
+
+```mdl
+test T-5: Default table on space creation
+  given: a new space is created
+  when: op:onCreateSpace runs
+  then:
+    - a Task Table is present in the space
+    - Table.view is bound to the Task typename
+```
+
+```mdl
+test T-6: Table card read-only
+  given: a Table is displayed in a card surface
+  then:
+    - rows are visible
+    - cells are not editable
+    - no toolbar is shown
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap
+    literals?: UnionList
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap
+    state?: FieldMap
+    slots?: FieldMap
+    actions?: ActionMap
+    emits?: EventMap
+    layout?: CodeBlock
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap
+    output?: TypeExpr
+    errors?: ErrorMap
+    effects?: EffectList
+    requires?: ServiceList
+    note?: Prose
+```

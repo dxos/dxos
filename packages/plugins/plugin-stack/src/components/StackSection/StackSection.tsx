@@ -26,7 +26,7 @@ export const StackSection = ({
   id,
   view,
   object,
-  metadata: { icon = 'ph--placeholder--regular' },
+  metadata: { icon = 'ph--circle-dashed--regular' },
 }: StackSectionProps) => {
   const { t } = useTranslation(meta.id);
   const { attendableId: parentAttendableId, onNavigate, onAdd, onCollapse, onDelete } = useStack();

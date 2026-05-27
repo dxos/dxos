@@ -7,8 +7,8 @@ import type * as Context from 'effect/Context';
 import type { Space } from '@dxos/client/echo';
 import { type Credential, type Trace } from '@dxos/compute';
 import { Database } from '@dxos/echo';
-import { type QueueFactory } from '@dxos/echo-db';
-import { ConfiguredCredentialsService, QueueService } from '@dxos/functions';
+import { makeFeedService, type QueueFactory } from '@dxos/echo-db';
+import { ConfiguredCredentialsService } from '@dxos/functions';
 import { assertArgument } from '@dxos/invariant';
 
 import { ServiceContainer } from '../services';
@@ -62,7 +62,7 @@ export type TestServiceOptions = {
   };
 
   /**
-   * Queue service configuration.
+   * Feed service configuration. Provides the {@link Feed.FeedService} backed by a {@link QueueFactory}.
    */
   queues?: QueueFactory;
 };
@@ -80,12 +80,13 @@ export const createTestServices = ({
 }: TestServiceOptions = {}): ServiceContainer => {
   assertArgument(!(!!space && (!!db || !!queues)), 'space', 'space can be provided only if db and queues are not');
 
+  const feedQueues = space?.queues ?? queues;
   return new ServiceContainer().setServices({
     // ai: createAiService(ai),
     credentials: createCredentialsService(credentials),
     database: space || db ? Database.makeService(space?.db || db!) : undefined,
     trace: logging?.trace ?? (logging?.enabled ? consoleTraceWriter : noopTraceWriter),
-    queues: space || queues ? QueueService.make(space?.queues || queues!) : undefined,
+    feeds: feedQueues ? makeFeedService(feedQueues) : undefined,
   });
 };
 

@@ -9,7 +9,6 @@ import { JSONPath } from 'jsonpath-plus';
 import { Operation } from '@dxos/compute';
 import { Database, Feed, Filter, Obj, Ref, View } from '@dxos/echo';
 import { isInstanceOf } from '@dxos/echo/internal';
-import { QueueService } from '@dxos/functions';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { DXN, ObjectId } from '@dxos/keys';
 import { getTypenameFromQuery } from '@dxos/schema';
@@ -131,16 +130,15 @@ export const registry: Record<NodeType, Executable> = {
     exec: () => Effect.succeed(ValueBag.make({ [DEFAULT_OUTPUT]: Math.random() })),
   }),
 
-  // Creates a new queue.
+  // Creates a new feed.
   'make-queue': defineComputeNode({
     input: Schema.Struct({}),
     output: Schema.Struct({ [DEFAULT_OUTPUT]: Ref.Ref(Feed.Feed) }),
     exec: synchronizedComputeFunction(
       Effect.fnUntraced(function* () {
-        const { queues } = yield* QueueService;
-        const queue = queues.create();
+        const feed = yield* Database.add(Feed.make());
         return {
-          [DEFAULT_OUTPUT]: Ref.fromDXN(queue.dxn),
+          [DEFAULT_OUTPUT]: Ref.make(feed),
         };
       }),
     ),
@@ -205,8 +203,8 @@ export const registry: Record<NodeType, Executable> = {
     output: QueueOutput,
     exec: synchronizedComputeFunction(({ [DEFAULT_INPUT]: id }) =>
       Effect.gen(function* () {
-        const { queues } = yield* QueueService;
-        const messages = yield* Effect.promise(() => queues.get(DXN.parse(id)).queryObjects());
+        const feed = yield* Database.resolve(DXN.parse(id), Feed.Feed).pipe(Effect.orDie);
+        const messages = yield* Feed.runQuery(feed, Filter.everything());
         const decoded = Schema.decodeUnknownSync(Schema.Any)(messages);
         return {
           [DEFAULT_OUTPUT]: decoded,
@@ -228,8 +226,8 @@ export const registry: Record<NodeType, Executable> = {
               ...item,
               id: item.id ?? ObjectId.random(),
             }));
-            const { queues } = yield* QueueService;
-            yield* Effect.promise(() => queues.get(DXN.parse(id)).append(mappedItems));
+            const feed = yield* Database.resolve(dxn, Feed.Feed).pipe(Effect.orDie);
+            yield* Feed.append(feed, mappedItems);
             return {};
           }
 
