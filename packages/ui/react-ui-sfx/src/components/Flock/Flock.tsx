@@ -109,8 +109,8 @@ type TickConfig = {
   avoidance: number;
   radius: number;
   coloring: FlockColoring;
-  /** 256-entry LUT: `(v * trail) | 0`. Applied to the alpha channel each tick. */
-  alphaLut: Uint8Array;
+  /** Pre-computed `rgba(0, 0, 0, 1-trail)` string used by the destination-out fade. */
+  fadeStyle: string;
 };
 
 const updateBoid = (
@@ -160,24 +160,20 @@ const tick = (
   cursor: FlockObstacle | null,
   config: TickConfig,
 ) => {
-  const { maxVelocity, alignment, cohesion, separation, alphaLut } = config;
+  const { maxVelocity, alignment, cohesion, separation, fadeStyle } = config;
 
-  // Trail fade via a CPU pass on the alpha channel. The compositor-based path
-  // (`destination-out` + fillRect at alpha=1-trail) stalls at small integer α
-  // values because of canvas's round-half-to-even (e.g. 10 × 0.95 = 9.5 → 10),
-  // leaving a permanent ~4-10 % residue. Applying `α' = (α * trail) | 0` with a
-  // 256-entry LUT guarantees monotonic decay to 0. `willReadFrequently: true`
-  // on the context keeps a CPU-resident copy so getImageData is ~1ms on a
-  // 1.5M-pixel canvas; the loop touches only the alpha byte (¼ the work of a
-  // full RGB pass). RGB is left untouched, so boid color stays intact while
-  // alpha fades — the canvas's CSS background shows through transparent pixels.
+  // Trail fade via `destination-out`: each frame multiplies every pixel's α by
+  // `trail` on the GPU compositor — no pixel-buffer roundtrip, ~free per frame.
+  // Canvas's round-half-to-even leaves a stall floor at low α (where x * trail
+  // rounds back to x), so we use an aggressive trail factor (default 0.80) to
+  // push that floor down to α ≈ 2/255 — visually indistinguishable from the
+  // CSS background that shows through. RGB is untouched, so boid colours stay
+  // intact while the alpha channel decays toward transparent.
   const context = canvas.getContext('2d')!;
-  const img = context.getImageData(0, 0, width, height);
-  const data = img.data;
-  for (let i = 3; i < data.length; i += 4) {
-    data[i] = alphaLut[data[i]];
-  }
-  context.putImageData(img, 0, 0);
+  context.globalCompositeOperation = 'destination-out';
+  context.fillStyle = fadeStyle;
+  context.fillRect(0, 0, width, height);
+  context.globalCompositeOperation = 'source-over';
 
   // Obstacles re-paint at full alpha every frame so they don't decay with the trail.
   renderObstacles(context, obstacles);
@@ -419,14 +415,12 @@ export const Flock = ({
   }, [width, height, numObstacles]);
 
   // The trail/physics config bundled for tick; memoed so the interval effect
-  // below doesn't re-key on every parent render. The alpha LUT is pre-computed
-  // here so the inner loop is a Uint8Array index, not a float multiply per pixel.
+  // below doesn't re-key on every parent render. fadeStyle's RGB is ignored
+  // under `destination-out`; only its alpha matters.
   const tickConfig = useMemo<TickConfig>(() => {
-    const trailFactor = (80 + trail) / 100;
-    const alphaLut = new Uint8Array(256);
-    for (let v = 0; v < 256; v++) {
-      alphaLut[v] = (v * trailFactor) | 0;
-    }
+    // Map slider 0..20 → factor 0.60..0.80. Even at the max the stall sits
+    // around α=2 (≈0.8% visible) which the CSS bg masks out.
+    const trailFactor = (60 + trail) / 100;
     return {
       coloring,
       radius,
@@ -436,7 +430,7 @@ export const Flock = ({
       cohesion: cohesion / 100,
       separation: separation / 100,
       avoidance: avoidance / 10,
-      alphaLut,
+      fadeStyle: `rgba(0, 0, 0, ${1 - trailFactor})`,
     };
   }, [coloring, radius, maxVelocity, trail, alignment, cohesion, separation, avoidance]);
 
@@ -445,12 +439,10 @@ export const Flock = ({
       return;
     }
 
-    // willReadFrequently keeps a CPU-resident backing store so the per-frame
-    // getImageData/putImageData fade pass doesn't force a GPU→CPU sync each
-    // tick (~20ms → ~1ms on a 1.5M-pixel canvas).
-    const ctx = canvas.current.getContext('2d', { willReadFrequently: true })!;
     // Start transparent so the CSS background-color shows through wherever
-    // the simulation hasn't drawn (or has faded back to α=0).
+    // the simulation hasn't drawn (or has faded back to α=0). The fade is
+    // GPU-only (`destination-out`), so no need for willReadFrequently.
+    const ctx = canvas.current.getContext('2d')!;
     ctx.clearRect(0, 0, width, height);
 
     const interval = d3.interval(() => {
