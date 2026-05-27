@@ -25,12 +25,6 @@ const TriggerShapeSchema = Schema.extend(
   }),
 );
 
-// NOTE: Declared as a named interface and the `TriggerShape` const annotated `Schema.Schema<TriggerShape>`
-//   so downstream consumers see a named type instead of the inlined `QueryAST.Query` union that
-//   `Trigger.Trigger`'s spec pulls in (TS2883 portability). Mirrors the `View.View` pattern in `@dxos/echo`.
-//   The fields are written out (rather than derived via `Schema.Schema.Type<typeof TriggerShapeSchema>`)
-//   because deriving re-expands the schema and re-inlines the non-portable union; keeping `functionTrigger`
-//   as a named `Ref.Ref<Trigger.Trigger>` is what holds the union behind a portable name.
 // TODO(wittjosiah): Try to clean up this type inference.
 export interface TriggerShape extends ComputeShape {
   type: 'trigger';
