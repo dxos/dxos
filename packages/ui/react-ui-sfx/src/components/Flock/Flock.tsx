@@ -113,25 +113,6 @@ type TickConfig = {
   fadeStyle: string;
 };
 
-/**
- * Resolve any CSS color string to an `{ r, g, b }` triple by letting the browser
- * normalise it (named colors, hex, rgb(), hsl()…). Returns null on unparseable input.
- */
-const parseColorRgb = (color: string): { r: number; g: number; b: number } | null => {
-  if (typeof document === 'undefined') {
-    return null;
-  }
-  const probe = document.createElement('div');
-  probe.style.color = color;
-  document.body.appendChild(probe);
-  const computed = getComputedStyle(probe).color;
-  document.body.removeChild(probe);
-  const match = /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/.exec(computed);
-  if (!match) {
-    return null;
-  }
-  return { r: +match[1], g: +match[2], b: +match[3] };
-};
 
 const updateBoid = (
   b: FlockBoid,
@@ -182,13 +163,18 @@ const tick = (
 ) => {
   const { maxVelocity, alignment, cohesion, separation, fadeStyle } = config;
 
-  // Trail fade: paint a semi-transparent rectangle in the background color over the
-  // canvas. GPU-only path, no pixel-buffer roundtrip. Leaves a small rounding-residue
-  // near the bg color but the canvas is initialised opaque to the same color so α
-  // stays 255 and the page can't bleed through.
+  // Trail fade via `destination-out`: each frame multiplies every pixel's α by
+  // `trail` and leaves RGB untouched. Boid color decays through alpha rather than
+  // through RGB blending, which sidesteps the rounding stall that plagues color-over-
+  // color fades — bright channels (e.g. 255) would round back to 255 every frame when
+  // blended against a light bg, leaving permanent boid-colored streaks. The canvas's
+  // CSS `background-color` shows through transparent pixels, so the visual bg is
+  // whatever the parent set on the canvas element.
   const context = canvas.getContext('2d')!;
+  context.globalCompositeOperation = 'destination-out';
   context.fillStyle = fadeStyle;
   context.fillRect(0, 0, width, height);
+  context.globalCompositeOperation = 'source-over';
 
   // Obstacles re-paint at full alpha every frame so they don't decay with the trail.
   renderObstacles(context, obstacles);
@@ -430,11 +416,10 @@ export const Flock = ({
   }, [width, height, numObstacles]);
 
   // The trail/physics config bundled for tick; memoed so the interval effect
-  // below doesn't re-key on every parent render. The fade style is pre-computed
-  // from `background` and the current trail so tick doesn't reparse each frame.
+  // below doesn't re-key on every parent render. fadeStyle's RGB is ignored under
+  // `destination-out`; only its alpha matters.
   const tickConfig = useMemo<TickConfig>(() => {
     const trailFactor = (80 + trail) / 100;
-    const rgb = parseColorRgb(background) ?? { r: 0, g: 0, b: 0 };
     return {
       coloring,
       radius,
@@ -444,21 +429,20 @@ export const Flock = ({
       cohesion: cohesion / 100,
       separation: separation / 100,
       avoidance: avoidance / 10,
-      fadeStyle: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${1 - trailFactor})`,
+      fadeStyle: `rgba(0, 0, 0, ${1 - trailFactor})`,
     };
-  }, [coloring, radius, maxVelocity, trail, alignment, cohesion, separation, avoidance, background]);
+  }, [coloring, radius, maxVelocity, trail, alignment, cohesion, separation, avoidance]);
 
   useEffect(() => {
     if (!canvas.current || !width || !height) {
       return;
     }
 
-    // Initialise the canvas opaquely to the configured background so the
-    // per-frame fillRect fade keeps α=255 and the page can't bleed through
-    // asymptotic-α gaps.
+    // Start the canvas transparent so the CSS background-color on the element
+    // shows through wherever the simulation hasn't drawn (or has faded back to
+    // α=0). No opaque init needed under the destination-out fade.
     const ctx = canvas.current.getContext('2d')!;
-    ctx.fillStyle = background;
-    ctx.fillRect(0, 0, width, height);
+    ctx.clearRect(0, 0, width, height);
 
     const interval = d3.interval(() => {
       const cursor =
@@ -467,7 +451,7 @@ export const Flock = ({
     });
 
     return () => interval.stop();
-  }, [boids, obstacles, width, height, tickConfig, cursorRepel, background]);
+  }, [boids, obstacles, width, height, tickConfig, cursorRepel]);
 
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -491,7 +475,7 @@ export const Flock = ({
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
     >
-      <canvas ref={canvas} width={width} height={height} />
+      <canvas ref={canvas} width={width} height={height} style={{ backgroundColor: background }} />
     </div>
   );
 };
