@@ -208,15 +208,15 @@ export const makeEchoTypeSchema = <
   const meta: ObjectMeta = { keys: [], key: typename, version };
 
   // Materialise as a live reactive meta-schema instance. `jsonSchema` is attached
-  // lazily below (not passed here) so its computation — which may resolve
-  // self-referential `Schema.suspend(...)` branches — is deferred past module init.
+  // below as a getter (not passed here as data) for two reasons; see that accessor.
   const entity = makeObject(getPersistentEntitySchema() as Schema.Schema<any, any, never>, {} as any, meta);
 
   const target = getProxyTarget(entity)!;
-  // Lazy `jsonSchema` accessor. A getter (not a data property) so reads return the
-  // raw object rather than a child reactive proxy, and so computation is deferred to
-  // first read — letting self-referential `Schema.suspend(...)` branches resolve past
-  // module init.
+  // `jsonSchema` is always available, but computed once on first read rather than at
+  // construction: serializing the AST walks `Schema.suspend(...)` thunks, and for a
+  // self-referential type (`Schema.suspend(() => Self)`) that thunk hits `Self`'s TDZ
+  // while we're still inside its `const` initializer. A getter also lets reads return
+  // the raw object instead of a child reactive proxy.
   let memoizedJsonSchema: JsonSchemaType | undefined;
   Object.defineProperty(target, 'jsonSchema', {
     configurable: true,
