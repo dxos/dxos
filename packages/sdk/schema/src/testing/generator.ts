@@ -41,7 +41,7 @@ const randomElement = <T>(elements: T[]): T => elements[Math.floor(Math.random()
 export type TypedSchema = Type.AnyObj;
 
 export type TypeSpec = {
-  type: Type.AnyEntity;
+  type: Type.AnyEntity | (() => Type.AnyEntity);
   count: number;
 };
 
@@ -52,7 +52,8 @@ export const createObjectFactory =
   (db: Database.Database, generator: ValueGenerator) =>
   async (specs: TypeSpec[]): Promise<any[]> => {
     const result: any[] = [];
-    for (const { type, count } of specs) {
+    for (const { type: typeOrFactory, count } of specs) {
+      const type = typeof typeOrFactory === 'function' ? typeOrFactory() : typeOrFactory;
       try {
         invariant(Type.isObject(type), 'TypeSpec.type must be an object type');
         const pipeline = createObjectPipeline(generator, type, { db });

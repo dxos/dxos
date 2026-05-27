@@ -114,15 +114,18 @@ const meta = {
       createSpace: true,
       onCreateSpace: async ({ space }, { args: { spec, registerSchema } }) => {
         if (spec) {
+          const resolveType = (t: any) => (typeof t === 'function' ? t() : t);
           if (registerSchema) {
             // Replace all schema in the spec with the registered schema.
             const registeredSchema = await space.db.schemaRegistry.register([
-              ...new Set(spec.map((schema: any) => schema.type)),
+              ...new Set(spec.map((schema: any) => resolveType(schema.type))),
             ] as Type.AnyEntity[]);
 
             spec = spec.map((schema: any) => ({
               ...schema,
-              type: registeredSchema.find((s) => Type.getTypename(s) === Type.getTypename(schema.type)),
+              type: registeredSchema.find(
+                (s) => Type.getTypename(s) === Type.getTypename(resolveType(schema.type)),
+              ),
             }));
           } else {
             await space.db.graph.schemaRegistry.register(types);
@@ -148,7 +151,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     init: true,
-    spec: [{ type: TestSchema.Organization, count: 1 }],
+    spec: [{ type: () => TestSchema.Organization, count: 1 }],
   },
 };
 
@@ -166,9 +169,9 @@ export const Query: Story = {
     sidebar: 'selected',
     init: true,
     spec: [
-      { type: TestSchema.Organization, count: 4 },
-      { type: TestSchema.Project, count: 0 },
-      { type: TestSchema.Person, count: 16 },
+      { type: () => TestSchema.Organization, count: 4 },
+      { type: () => TestSchema.Project, count: 0 },
+      { type: () => TestSchema.Person, count: 16 },
     ],
   },
 };
