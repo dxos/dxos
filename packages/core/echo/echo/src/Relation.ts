@@ -228,11 +228,11 @@ export const isSnapshot = (value: unknown): value is Snapshot => {
 };
 
 /**
- * @returns Relation source DXN.
+ * @returns Relation source URI.
  * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
  */
-export const getSourceDXN = (value: Unknown | Snapshot): EchoURI.EchoURI => {
+export const getSourceURI = (value: Unknown | Snapshot): EchoURI.EchoURI => {
   assertArgument(isRelation(value), 'Expected a relation');
   assumeType<internal.InternalObjectProps>(value);
   const dxn = (value as internal.InternalObjectProps)[internal.RelationSourceDXNId];
@@ -241,11 +241,11 @@ export const getSourceDXN = (value: Unknown | Snapshot): EchoURI.EchoURI => {
 };
 
 /**
- * @returns Relation target DXN.
+ * @returns Relation target URI.
  * Accepts both reactive relations and snapshots.
  * @throws If the object is not a relation.
  */
-export const getTargetDXN = (value: Unknown | Snapshot): EchoURI.EchoURI => {
+export const getTargetURI = (value: Unknown | Snapshot): EchoURI.EchoURI => {
   assertArgument(isRelation(value), 'Expected a relation');
   assumeType<internal.InternalObjectProps>(value);
   const dxn = (value as internal.InternalObjectProps)[internal.RelationTargetDXNId];

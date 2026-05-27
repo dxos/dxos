@@ -195,7 +195,7 @@ class ObjectsTreeModel {
     return {
       id: entity.id,
       type: Relation.isSnapshot(entity)
-        ? EchoURI.getObjectId(Relation.getSourceDXN(entity)) === anchor
+        ? EchoURI.getObjectId(Relation.getSourceURI(entity)) === anchor
           ? 'outgoing-relation'
           : 'incoming-relation'
         : 'object',

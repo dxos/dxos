@@ -11,11 +11,13 @@ import { SpacesDumper } from './space-json-dump';
 import { withSnapshot } from './util';
 
 describe('Load client from storage snapshot', () => {
-  // Snapshot generated on `origin/main` (commit ce9ee36543) prior to the
-  // URI/EchoURI/DXN refactor on this branch. Exercises that the new code
-  // can load spaces written by the previous storage layout.
-  test('2026-05-25-main', { timeout: 30_000 }, async () => {
-    const snapshot = SnapshotsRegistry.getSnapshot('2026-05-25-main') ?? failUndefined();
+  // Snapshot regenerated on the Option-B refactor branch (2026-05-27). The
+  // previous `2026-05-25-main` baseline was dropped: Option B persists a new
+  // `system.kind=type` brand on stored-schema objects, and pre-Option-B
+  // snapshots lack it, so they are intentionally no longer loadable. This
+  // becomes the new backwards-compat baseline going forward.
+  test('2026-05-27-main', { timeout: 30_000 }, async () => {
+    const snapshot = SnapshotsRegistry.getSnapshot('2026-05-27-main') ?? failUndefined();
     await withSnapshot(snapshot, async (client, expectedData) => {
       expect(await SpacesDumper.checkIfSpacesMatchExpectedData(client, expectedData)).to.be.true;
     });

@@ -303,7 +303,7 @@ const useMessageTagsMap = (
         }
 
         // Try to get message ID from target DXN (echo DXN with objectId).
-        const targetDXN = Relation.getTargetDXN(relation);
+        const targetDXN = Relation.getTargetURI(relation);
         const targetEchoId = EchoURI.tryParse(targetDXN);
         let messageId: string | undefined;
 
