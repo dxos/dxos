@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -10,14 +11,14 @@ import { Profile, Sidekick } from '#types';
 export const translations = [
   {
     'en-US': {
-      [Profile.Profile.typename]: {
+      [Type.getTypename(Profile.Profile)]: {
         'typename.label': 'Profile',
         'typename.label_zero': 'Profiles',
         'typename.label_one': 'Profile',
         'typename.label_other': 'Profiles',
         'object-name.placeholder': 'New profile',
       },
-      [Sidekick.Profile.typename]: {
+      [Type.getTypename(Sidekick.Profile)]: {
         'typename.label': 'Sidekick',
         'typename.label_zero': 'Sidekicks',
         'typename.label_one': 'Sidekick',

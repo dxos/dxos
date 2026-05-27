@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, getPersonalSpace, LayoutOperation } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Filter, Obj } from '@dxos/echo';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { AtomObj, AtomQuery } from '@dxos/echo-atom';
 import { ClientCapabilities } from '@dxos/plugin-client';
 import { Graph, GraphBuilder, Node, NodeMatcher } from '@dxos/plugin-graph';
@@ -262,7 +262,7 @@ const constructEntryNode = (
     if (text) {
       return Node.make({
         id: file.id,
-        type: Text.Text.typename,
+        type: Type.getTypename(Text.Text),
         data: text,
         properties: {
           label: file.name,

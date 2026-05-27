@@ -6,7 +6,7 @@ import { Capabilities } from '@dxos/app-framework';
 import { AppCapabilities, LayoutOperation } from '@dxos/app-toolkit';
 import { getSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { Collection, Entity, Obj } from '@dxos/echo';
+import { Collection, Entity, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { isNonNullable } from '@dxos/util';
 
@@ -24,7 +24,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.RemoveObjects> = Spac
       );
 
       const parentCollection: Collection.Collection =
-        input.target ?? space.properties[Collection.Collection.typename]?.target;
+        input.target ?? space.properties[Type.getTypename(Collection.Collection)]?.target;
 
       // Type entities (persisted schemas) live outside collections — `findIndex` will
       // return -1 for them and the splice/active-tracking branches are skipped.

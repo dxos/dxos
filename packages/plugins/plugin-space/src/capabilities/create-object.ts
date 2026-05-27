@@ -18,7 +18,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Collection.Collection.typename,
+        id: Type.getTypename(Collection.Collection),
         inputSchema: Schema.Struct({ name: Schema.optional(Schema.String) }),
         createObject: (props, options) =>
           Effect.gen(function* () {
@@ -49,7 +49,7 @@ export default Capability.makeModule(
           }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Organization.Organization.typename,
+        id: Type.getTypename(Organization.Organization),
         createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Organization.make(props);
@@ -62,7 +62,7 @@ export default Capability.makeModule(
           }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Person.Person.typename,
+        id: Type.getTypename(Person.Person),
         createObject: (props, options) =>
           Effect.gen(function* () {
             const object = Person.make(props);
@@ -75,7 +75,7 @@ export default Capability.makeModule(
           }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Project.Project.typename,
+        id: Type.getTypename(Project.Project),
         inputSchema: Type.getSchema(Project.Project),
         createObject: (props, options) =>
           Effect.gen(function* () {
@@ -89,7 +89,7 @@ export default Capability.makeModule(
           }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Task.Task.typename,
+        id: Type.getTypename(Task.Task),
         inputSchema: Type.getSchema(Task.Task),
         createObject: (props, options) =>
           Effect.gen(function* () {

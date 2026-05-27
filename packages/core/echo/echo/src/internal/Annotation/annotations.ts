@@ -14,7 +14,7 @@ import { DXN, EchoURI, ObjectId, URI } from '@dxos/keys';
 import { type Primitive } from '@dxos/util';
 
 import { type Mutable } from '../common/proxy';
-import { type AnyEntity, type AnyProperties, EntityKind, KindId, TypeId, getSchema } from '../common/types';
+import { type AnyEntity, type AnyProperties, EntityKind, KindId, MetaId, TypeId, getSchema } from '../common/types';
 import { getUri as getUriFromEntity } from '../Entity/api';
 import { type AnnotationHelper, createAnnotationHelper } from './util';
 
@@ -95,12 +95,15 @@ export const getTypeURIFromSpecifier = (
     //    matches what `Obj.make(typeEntity, ...)` writes to `system.type` via
     //    `getSchemaURI(rebuilt)` reading `TypeIdentifierAnnotation`.
     //  - Static (declared via `Type.makeObject(dxn)`): URI is the typename DXN.
-    const entity = input as { id?: string; typename?: string; version?: string };
+    const entity = input as { id?: string };
     if (typeof entity.id === 'string' && ObjectId.isValid(entity.id)) {
       return EchoURI.make({ objectId: entity.id });
     }
-    if (typeof entity.typename === 'string' && typeof entity.version === 'string') {
-      return DXN.make(entity.typename, entity.version);
+    // Static entities carry typename/version in `ObjectMeta` (`[MetaId].key` /
+    // `.version`), not as own properties — read them through meta.
+    const meta = (input as { [MetaId]?: { key?: string; version?: string } })[MetaId];
+    if (typeof meta?.key === 'string' && typeof meta?.version === 'string') {
+      return DXN.make(meta.key, meta.version);
     }
     return getUriFromEntity(input as AnyEntity);
   }

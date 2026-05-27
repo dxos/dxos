@@ -10,7 +10,7 @@ import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, getSpaceIdFromPath } from '@dxos/app-toolkit';
 import { isSpace } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
-import { type Feed, Filter, Key, Obj, Query, Ref } from '@dxos/echo';
+import { type Feed, Filter, Key, Obj, Query, Ref, Type } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { EchoURI } from '@dxos/keys';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
@@ -33,7 +33,7 @@ import {
 } from '../constants';
 import { getAllMailId, getDraftsId, getMailboxesSectionId } from '../paths';
 
-const FILTER_TYPE = `${Mailbox.Mailbox.typename}-filter`;
+const FILTER_TYPE = `${Type.getTypename(Mailbox.Mailbox)}-filter`;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -83,10 +83,10 @@ export default Capability.makeModule(
             mailboxes.map((mailbox: Mailbox.Mailbox) => {
               return Node.make({
                 id: mailbox.id,
-                type: Mailbox.Mailbox.typename,
+                type: Type.getTypename(Mailbox.Mailbox),
                 data: null,
                 properties: {
-                  label: mailbox.name ?? ['object-name.placeholder', { ns: Mailbox.Mailbox.typename }],
+                  label: mailbox.name ?? ['object-name.placeholder', { ns: Type.getTypename(Mailbox.Mailbox) }],
                   icon: 'ph--tray--regular',
                   iconHue: 'rose',
                   role: 'branch',
@@ -234,7 +234,7 @@ export default Capability.makeModule(
         id: 'feed-object-node',
         match: (node) => {
           const mailbox = node.properties.mailbox as Mailbox.Mailbox | undefined;
-          return node.type === Mailbox.Mailbox.typename && mailbox
+          return node.type === Type.getTypename(Mailbox.Mailbox) && mailbox
             ? Option.some({ mailbox, nodeId: node.id })
             : Option.none();
         },
@@ -288,7 +288,7 @@ export default Capability.makeModule(
 
             return {
               id: qualifiedId,
-              type: Message.Message.typename,
+              type: Type.getTypename(Message.Message),
               data: message,
               properties: {
                 label: message.properties?.subject ?? ['message.label', { ns: meta.id }],

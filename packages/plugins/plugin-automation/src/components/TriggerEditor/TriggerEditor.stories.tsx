@@ -24,10 +24,10 @@ import { TriggerEditor, type TriggerEditorProps } from './TriggerEditor';
 
 const types = [
   // TODO(burdon): Get label from annotation.
-  { value: Organization.Organization.typename, label: 'Organization' },
-  { value: Person.Person.typename, label: 'Person' },
+  { value: Type.getTypename(Organization.Organization), label: 'Organization' },
+  { value: Type.getTypename(Person.Person), label: 'Person' },
   { value: Type.getTypename(Pipeline.Pipeline), label: 'Project' },
-  { value: Employer.Employer.typename, label: 'Employer' },
+  { value: Type.getTypename(Employer.Employer), label: 'Employer' },
 ];
 
 const DefaultStory = (props: Partial<TriggerEditorProps>) => {

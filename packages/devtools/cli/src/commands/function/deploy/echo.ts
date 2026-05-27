@@ -11,7 +11,7 @@ import path from 'node:path';
 import { CommandConfig } from '@dxos/cli-util';
 import { type Space } from '@dxos/client/echo';
 import { Script, Operation } from '@dxos/compute';
-import { Collection, Database, Filter, Obj, Ref, type Type } from '@dxos/echo';
+import { Collection, Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { getUserFunctionIdInMetadata, setUserFunctionIdInMetadata } from '@dxos/functions';
 import { incrementSemverPatch } from '@dxos/functions-runtime/edge';
 import { type UploadFunctionResponseBody } from '@dxos/protocols';
@@ -94,7 +94,9 @@ export const upsertFunctionObject: (opts: {
 });
 
 const makeObjectNavigableInComposer = Effect.fn(function* (space: Space, obj: Obj.Unknown) {
-  const collectionRef = space.properties[Collection.Collection.typename] as Ref.Ref<Collection.Collection> | undefined;
+  const collectionRef = space.properties[Type.getTypename(Collection.Collection)] as
+    | Ref.Ref<Collection.Collection>
+    | undefined;
   if (collectionRef) {
     const collection = yield* Database.load(collectionRef);
     if (collection) {

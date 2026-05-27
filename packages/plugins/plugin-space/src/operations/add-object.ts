@@ -71,7 +71,7 @@ const getSubjectPathForNewObject = (props: {
   if (typeof nodeId === 'string') {
     return `${nodeId}/${objectId}`;
   }
-  if (typename === Collection.Collection.typename) {
+  if (typename === Type.getTypename(Collection.Collection)) {
     return getCollectionsPath(spaceId, objectId);
   }
   if (viewTargetTypename) {

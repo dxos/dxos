@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiContext } from '@dxos/assistant';
 import { Operation } from '@dxos/compute';
-import { Database, Obj, Ref, Relation, Tag } from '@dxos/echo';
+import { Database, Obj, Ref, Relation, Tag, Type } from '@dxos/echo';
 import { trim } from '@dxos/util';
 
 export const Query = Operation.make({
@@ -300,7 +300,7 @@ export const TagAdd = Operation.make({
     icon: 'ph--tag--regular',
     description: trim`
       Adds a tag to an object.
-      Tags are objects of type ${Tag.Tag.typename}.
+      Tags are objects of type ${Type.getTypename(Tag.Tag)}.
       You must search database for available tags, or create a new one.
     `,
   },
@@ -319,7 +319,7 @@ export const TagRemove = Operation.make({
     icon: 'ph--tag--regular',
     description: trim`
       Removes a tag from an object.
-      Tags are objects of type ${Tag.Tag.typename}.
+      Tags are objects of type ${Type.getTypename(Tag.Tag)}.
     `,
   },
   input: Schema.Struct({

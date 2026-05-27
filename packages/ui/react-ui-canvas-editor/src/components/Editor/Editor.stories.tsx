@@ -52,7 +52,9 @@ const DefaultStory = ({ id = 'test', init, sidebar, children, ...props }: Render
     const objects = await space.db.query(Filter.everything()).run();
     const model = await doLayout(
       createGraph(
-        objects.filter((object: Obj.Unknown) => types.some((type) => type.typename === Obj.getTypename(object))),
+        objects.filter((object: Obj.Unknown) =>
+          types.some((type) => Type.getTypename(type) === Obj.getTypename(object)),
+        ),
       ),
     );
     setGraph(model);

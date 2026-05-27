@@ -3,7 +3,7 @@
 //
 
 import { Blueprint, Trigger, Operation } from '@dxos/compute';
-import { Ref } from '@dxos/echo';
+import { Ref, Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
@@ -19,7 +19,7 @@ const instructions = trim`
   Triggers are configured by the properties of the Trigger object.
   - enabled: Must be true for trigger to run.
   - spec: Events that the trigger matches.
-  - function: Ref to a ${Operation.PersistentOperation.typename} object that will be invoked. Query the functions present in the space first, and reference them in the trigger.
+  - function: Ref to a ${Type.getTypename(Operation.PersistentOperation)} object that will be invoked. Query the functions present in the space first, and reference them in the trigger.
   - input: The spec of the input data that will be passed to the function.
 
   ## Input patterns
@@ -46,7 +46,7 @@ const instructions = trim`
 
   ## Editing triggers
 
-  Triggers are represented as objects of type ${Trigger.Trigger.typename}.
+  Triggers are represented as objects of type ${Type.getTypename(Trigger.Trigger)}.
   You need access to the Database blueprint to manipulate triggers.
   Read trigger schema before manipulating triggers.
   Having a Trigger object in the database is enough to setup an automation. 

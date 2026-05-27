@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
-import { Database } from '@dxos/echo';
+import { Database, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
@@ -20,7 +20,7 @@ type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObjec
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-      id: Game.typename,
+      id: Type.getTypename(Game),
       customPanel: CreateGamePanel,
       createObject: (
         { variantId, input }: { variantId: string; input?: Record<string, any> },

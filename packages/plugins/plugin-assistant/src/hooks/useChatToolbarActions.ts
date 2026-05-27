@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Chat } from '@dxos/assistant-toolkit';
-import { Filter, Obj, Query } from '@dxos/echo';
+import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { useQuery } from '@dxos/react-client/echo';
@@ -99,7 +99,7 @@ export const useChatToolbarActions = ({ chat, companionTo }: ChatToolbarActionsP
               builder.action(
                 chat.id,
                 {
-                  label: Obj.getLabel(chat) ?? ['object-name.placeholder', { ns: Chat.Chat.typename }],
+                  label: Obj.getLabel(chat) ?? ['object-name.placeholder', { ns: Type.getTypename(Chat.Chat) }],
                 },
                 () =>
                   Effect.gen(function* () {

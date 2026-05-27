@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 
@@ -11,7 +12,7 @@ import { Markdown } from '#types';
 export const translations = [
   {
     'en-US': {
-      [Markdown.Document.typename]: {
+      [Type.getTypename(Markdown.Document)]: {
         'typename.label': 'Document',
         'typename.label_zero': 'Documents',
         'typename.label_one': 'Document',

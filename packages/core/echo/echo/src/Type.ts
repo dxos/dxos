@@ -39,8 +39,10 @@ interface BaseTypeEntity<A> {
   readonly id?: ObjectId;
 
   readonly name?: string;
-  readonly typename: string;
-  readonly version: string;
+  // NOTE: `typename` / `version` are intentionally NOT fields on any type-entity
+  // interface. Both static and persisted entities carry them in `ObjectMeta`
+  // (`key` / `version`); read them via `Type.getTypename(self)` /
+  // `Type.getVersion(self)` — never as a direct property.
   readonly jsonSchema: internal.JsonSchemaType;
   readonly [InstancePhantomId]?: A;
 }
@@ -392,14 +394,12 @@ export const getURI = (input: AnyEntity): URI.URI => {
  * `echo:/` prefix is stripped — typename is a bare identifier, not a URI.
  */
 export const getTypename = (input: AnyEntity): string => {
-  let typename: string;
-  if (isMutable(input)) {
-    const meta = internal.getMetaChecked(input);
-    typename = (meta.key as string | undefined) ?? input.id;
-  } else {
-    invariant(isType(input), 'Expected a Type entity.');
-    typename = (input as { typename: string }).typename;
-  }
+  // Both static and persisted entities carry typename in `ObjectMeta.key` — the
+  // canonical registry-provenance field. Static entities attach meta eagerly
+  // (see `makeEchoTypeSchema`), so a single meta-backed read covers both forms.
+  // Persisted unnamed drafts fall back to the entity id.
+  const meta = internal.getMetaChecked(input);
+  let typename: string = (meta.key as string | undefined) ?? (input.id as string);
   // Typename is a bare identifier — strip URI prefixes if a caller seeded
   // meta.key with one accidentally (or if a static entity carries a DXN-
   // style typename).
@@ -416,14 +416,10 @@ export const getTypename = (input: AnyEntity): string => {
  * unversioned drafts default to {@link DRAFT_VERSION} (`'0.0.0'`).
  */
 export const getVersion = (input: AnyEntity): string => {
-  let version: string | undefined;
-  if (isMutable(input)) {
-    const meta = internal.getMetaChecked(input);
-    version = (meta.version as string | undefined) ?? DRAFT_VERSION;
-  } else {
-    invariant(isType(input), 'Expected a Type entity.');
-    version = (input as { version: string }).version;
-  }
+  // Version lives in `ObjectMeta.version` for both static and persisted entities;
+  // unversioned drafts default to {@link DRAFT_VERSION} (`'0.0.0'`).
+  const meta = internal.getMetaChecked(input);
+  const version = (meta.version as string | undefined) ?? DRAFT_VERSION;
   invariant(typeof version === 'string' && version.match(/^\d+\.\d+\.\d+$/), 'Invalid version');
   return version;
 };
@@ -539,22 +535,12 @@ export type InstancePhantomId = internal.InstancePhantomId;
  * `A` is the instance-type phantom — what `Obj.make(value, ...)` would produce.
  * Merged with the `Type` const value via TypeScript declaration merging.
  */
-export interface Type<A = unknown> extends Omit<
-  BaseTypeEntity<A & EntityModule.OfKind<typeof EntityModule.Kind.Type>>,
-  'typename' | 'version'
-> {
+export interface Type<A = unknown> extends BaseTypeEntity<A & EntityModule.OfKind<typeof EntityModule.Kind.Type>> {
   /** Schema-kind brand (type — the meta-schema kind). */
   readonly [internal.SchemaKindId]: internal.EntityKind.Type;
 
   /** Source Effect Schema — used internally by `Type.getSchema(self)`. */
   readonly [internal.StaticTypeSchemaSlot]: Schema.Schema.AnyNoContext;
-
-  // NOTE: `typename` and `version` are intentionally NOT direct fields on a
-  // persisted `Type.Type` entity. They live in `ObjectMeta` (`key` / `version`
-  // — the canonical registry-provenance pair). Read them through
-  // `Type.getTypename(self)` / `Type.getVersion(self)` (which apply the
-  // `echo:/<id>` / `'0.0.0'` fallbacks) or `Obj.getMeta(self)` to inspect the
-  // raw values.
 }
 
 /**

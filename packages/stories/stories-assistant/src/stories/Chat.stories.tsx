@@ -10,7 +10,7 @@ import { EXA_API_KEY } from '@dxos/ai/testing';
 import { AgentPrompt, LinearBlueprint, PlanningBlueprint, WebSearchBlueprint } from '@dxos/assistant-toolkit';
 import { Blueprint, Operation, Routine, Script, Template, Trigger } from '@dxos/compute';
 import { Reply } from '@dxos/compute/testing';
-import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag, View } from '@dxos/echo';
+import { Feed, Filter, JsonSchema, Obj, Query, Ref, Tag, Type, View } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { AssistantBlueprint } from '@dxos/plugin-assistant';
 import { translations } from '@dxos/plugin-assistant/translations';
@@ -434,12 +434,12 @@ export const WithMap: Story = {
       const [schema] = await space.db.schemaRegistry.register([createLocationSchema()]);
       const { view: tableView, jsonSchema } = await ViewModel.makeFromDatabase({
         db: space.db,
-        typename: schema.typename,
+        typename: Type.getTypename(schema),
       });
       const table = Table.make({ name: 'Table', view: tableView, jsonSchema });
       const { view: mapView } = await ViewModel.makeFromDatabase({
         db: space.db,
-        typename: schema.typename,
+        typename: Type.getTypename(schema),
         pivotFieldName: 'location',
       });
       const map = Map.make({ name: 'Map', view: mapView });

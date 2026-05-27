@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities } from '@dxos/app-toolkit';
-import { Relation } from '@dxos/echo';
+import { Relation, Type } from '@dxos/echo';
 import { createDocAccessor, getRangeFromCursor } from '@dxos/echo-db';
 import { type AnchoredTo } from '@dxos/types';
 
@@ -15,7 +15,7 @@ import { Markdown } from '#types';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contributes(AppCapabilities.AnchorSort, {
-      key: Markdown.Document.typename,
+      key: Type.getTypename(Markdown.Document),
       sort: (anchorA: AnchoredTo.AnchoredTo, anchorB: AnchoredTo.AnchoredTo) => {
         const doc = Relation.getTarget(anchorA) as Markdown.Document;
         const accessor = doc.content.target ? createDocAccessor(doc.content.target, ['content']) : undefined;

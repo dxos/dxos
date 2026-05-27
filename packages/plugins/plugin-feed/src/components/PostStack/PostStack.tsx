@@ -4,6 +4,7 @@
 
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
+import { Type } from '@dxos/echo';
 import { Card, Icon, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
@@ -83,7 +84,7 @@ type PostTileProps = Pick<MosaicTileProps<PostTileData>, 'data' | 'location' | '
 const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, current }, forwardedRef) => {
   const post = data?.post;
   const { setCurrentId } = useMosaicContainer('PostTile');
-  const { t } = useTranslation(Subscription.Post.typename);
+  const { t } = useTranslation(Type.getTypename(Subscription.Post));
 
   const handleCurrentChange = useCallback(() => {
     if (post) {

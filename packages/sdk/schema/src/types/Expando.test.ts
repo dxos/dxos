@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Obj } from '@dxos/echo';
+import { Obj, Type } from '@dxos/echo';
 
 import * as Expando from './Expando';
 
@@ -24,7 +24,7 @@ describe('Expando', () => {
   });
 
   test('typename and version are accessible', ({ expect }) => {
-    expect(Expando.Expando.typename).to.eq('org.dxos.type.expando');
-    expect(Expando.Expando.version).to.eq('0.1.0');
+    expect(Type.getTypename(Expando.Expando)).to.eq('org.dxos.type.expando');
+    expect(Type.getVersion(Expando.Expando)).to.eq('0.1.0');
   });
 });

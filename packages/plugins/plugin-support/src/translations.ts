@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -10,7 +11,7 @@ import { Support } from '#types';
 export const translations = [
   {
     'en-US': {
-      [Support.Ticket.typename]: {
+      [Type.getTypename(Support.Ticket)]: {
         'typename.label': 'Support ticket',
         'typename.label_zero': 'Support tickets',
         'typename.label_one': 'Support ticket',

@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Capability } from '@dxos/app-framework';
+import { Type } from '@dxos/echo';
 import { GameCapabilities, type GameVariant } from '@dxos/plugin-game';
 
 import { ChessArticle, ChessCard } from '#containers';
@@ -27,7 +28,7 @@ const CreateChessInput = Schema.Struct({
 });
 
 const variant: GameVariant = {
-  id: Chess.State.typename,
+  id: Type.getTypename(Chess.State),
   label: 'Chess',
   icon: 'ph--shield-chevron--regular',
   variantType: Chess.State,

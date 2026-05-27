@@ -45,7 +45,9 @@ export const add = Command.make(
       };
 
       const [properties] = yield* Database.runQuery(Filter.type(SpaceProperties));
-      const collection = yield* Database.load<Collection.Collection>(properties[Collection.Collection.typename]);
+      const collection = yield* Database.load<Collection.Collection>(
+        properties[Type.getTypename(Collection.Collection)],
+      );
 
       const selectedTypename = yield* Option.match(typename, {
         onNone: () => selectTypename(resolve),

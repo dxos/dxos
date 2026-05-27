@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -10,7 +11,7 @@ import { Board } from '#types';
 export const translations = [
   {
     'en-US': {
-      [Board.Board.typename]: {
+      [Type.getTypename(Board.Board)]: {
         'typename.label': 'Board',
         'typename.label_zero': 'Boards',
         'typename.label_one': 'Board',

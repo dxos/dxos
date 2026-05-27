@@ -377,7 +377,7 @@ export default Capability.makeModule(
           const space = isSpace(data.subject) ? data.subject : getSpace(data.subject);
           const object = isSpace(data.subject)
             ? data.subject.state.get() === SpaceState.SPACE_READY
-              ? (space?.properties[Collection.Collection.typename]?.target as Collection.Collection)
+              ? (space?.properties[Type.getTypename(Collection.Collection)]?.target as Collection.Collection)
               : undefined
             : data.subject;
 

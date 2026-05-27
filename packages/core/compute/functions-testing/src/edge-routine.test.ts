@@ -10,7 +10,7 @@ import { Client } from '@dxos/client';
 import { Blueprint, Operation, Routine, Trigger } from '@dxos/compute';
 import { configPreset } from '@dxos/config';
 import { Context } from '@dxos/context';
-import { Feed, Obj, Ref } from '@dxos/echo';
+import { Feed, Obj, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { dbg, log } from '@dxos/log';
 import { ErrorCodec } from '@dxos/protocols';
@@ -66,7 +66,7 @@ describe('Edge routine', { tags: ['functions-e2e'] }, () => {
         name: 'edge-e2e-count-orgs-db-blueprint',
         instructions: trim`
               You have access to the Database blueprint tools.
-              Use the Query tool exactly once with typename "${TestSchema.Organization.typename}" and no other arguments.
+              Use the Query tool exactly once with typename "${Type.getTypename(TestSchema.Organization)}" and no other arguments.
               Then call completeJob with the output object { "count": <number of rows returned by Query> }.
               If you are unable to query -- fail.
               Do not list schemas first.

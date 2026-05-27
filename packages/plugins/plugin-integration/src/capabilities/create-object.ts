@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
-import { Database, Obj } from '@dxos/echo';
+import { Database, Obj, Type } from '@dxos/echo';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 
 import { CreateIntegrationForm, Integration, IntegrationCoordinator } from '#types';
@@ -13,7 +13,7 @@ import { CreateIntegrationForm, Integration, IntegrationCoordinator } from '#typ
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-      id: Integration.Integration.typename,
+      id: Type.getTypename(Integration.Integration),
       inputSchema: CreateIntegrationForm,
       createObject: (props: { providerId: string }, options) =>
         Effect.gen(function* () {

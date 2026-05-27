@@ -221,9 +221,9 @@ describe('effect-to-json', () => {
     }).pipe(Type.makeObject(DXN.make('com.example.type.person', '0.1.0')));
 
     const jsonSchema = toJsonSchema(Contact);
-    setSchemaProperty(jsonSchema, 'organization' as JsonProp, createSchemaReference(Organization.typename));
+    setSchemaProperty(jsonSchema, 'organization' as JsonProp, createSchemaReference(Type.getTypename(Organization)));
     const { typename } = getSchemaReference(getSchemaProperty(jsonSchema, 'organization' as JsonProp) ?? {}) ?? {};
-    expect(typename).to.eq(Organization.typename);
+    expect(typename).to.eq(Type.getTypename(Organization));
   });
 
   test('serialize circular schema (PersistentType)', () => {
@@ -767,8 +767,8 @@ describe('reference', () => {
     const deserializedSchema = toEffectSchema(jsonSchema);
     const refAst = getReferenceAst(deserializedSchema.ast);
     expect(refAst).toEqual({
-      typename: TestSchema.Person.typename,
-      version: TestSchema.Person.version,
+      typename: Type.getTypename(TestSchema.Person),
+      version: Type.getVersion(TestSchema.Person),
     });
   });
 });

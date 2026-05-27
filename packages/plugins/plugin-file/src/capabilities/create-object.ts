@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
+import { Type } from '@dxos/echo';
 import { SpaceCapabilities, SpaceOperation } from '@dxos/plugin-space';
 
 import { FileAction, FileOperation, File } from '#types';
@@ -13,7 +14,7 @@ import { FileAction, FileOperation, File } from '#types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-      id: File.File.typename,
+      id: Type.getTypename(File.File),
       inputSchema: FileAction.CreateFileSchema,
       createObject: (props, options) =>
         Effect.gen(function* () {

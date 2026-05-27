@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -10,7 +11,7 @@ import { Sheet } from '#types';
 export const translations = [
   {
     'en-US': {
-      [Sheet.Sheet.typename]: {
+      [Type.getTypename(Sheet.Sheet)]: {
         'typename.label': 'Sheet',
         'typename.label_zero': 'Sheets',
         'typename.label_one': 'Sheet',

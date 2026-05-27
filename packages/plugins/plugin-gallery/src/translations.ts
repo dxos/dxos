@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -10,7 +11,7 @@ import { Gallery } from '#types';
 export const translations = [
   {
     'en-US': {
-      [Gallery.Gallery.typename]: {
+      [Type.getTypename(Gallery.Gallery)]: {
         'typename.label': 'Gallery',
         'typename.label_zero': 'Galleries',
         'typename.label_one': 'Gallery',

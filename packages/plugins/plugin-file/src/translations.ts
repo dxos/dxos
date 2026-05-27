@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -10,7 +11,7 @@ import { File } from '#types';
 export const translations = [
   {
     'en-US': {
-      [File.File.typename]: {
+      [Type.getTypename(File.File)]: {
         'typename.label': 'File',
         'typename.label_zero': 'Files',
         'typename.label_one': 'File',

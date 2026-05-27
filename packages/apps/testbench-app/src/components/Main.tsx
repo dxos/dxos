@@ -54,7 +54,7 @@ export const Main = () => {
     [],
   );
 
-  const getType = (typename: string | undefined) => typeMap.get(typename ?? Item.typename) ?? Item;
+  const getType = (typename: string | undefined) => typeMap.get(typename ?? Type.getTypename(Item)) ?? Item;
   const objectsOfType = useQuery(space?.db, Query.type(getType(type)));
   const objects = useMemo(
     () => objectsOfType.filter((object) => match(filter, object.content)),
@@ -85,7 +85,7 @@ export const Main = () => {
     Array.from({ length: n }).forEach(() => {
       let object: Obj.Unknown;
       switch (type) {
-        case Document.typename: {
+        case Type.getTypename(Document): {
           object = Obj.make(Document, {
             title: randWord(),
             content: randSentence(),
@@ -93,7 +93,7 @@ export const Main = () => {
           break;
         }
 
-        case Item.typename:
+        case Type.getTypename(Item):
         default: {
           object = Obj.make(Item, {
             content: randSentence(),

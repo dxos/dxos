@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Filter, View } from '@dxos/echo';
+import { Filter, Type, View } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
@@ -52,7 +52,7 @@ const meta = {
               const { view } = yield* Effect.promise(() =>
                 ViewModel.makeFromDatabase({
                   db: space.db,
-                  typename: Organization.Organization.typename,
+                  typename: Type.getTypename(Organization.Organization),
                 }),
               );
               const masonry = Masonry.make({ view });

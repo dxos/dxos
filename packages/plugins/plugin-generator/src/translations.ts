@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -10,7 +11,7 @@ import { Generation } from '#types';
 export const translations = [
   {
     'en-US': {
-      [Generation.Generation.typename]: {
+      [Type.getTypename(Generation.Generation)]: {
         'typename.label': 'Generation',
         'typename.label_zero': 'Generations',
         'typename.label_one': 'Generation',

@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 import { CanvasBoard } from '@dxos/react-ui-canvas-editor';
 
@@ -10,7 +11,7 @@ import { meta } from '#meta';
 export const translations = [
   {
     'en-US': {
-      [CanvasBoard.CanvasBoard.typename]: {
+      [Type.getTypename(CanvasBoard.CanvasBoard)]: {
         'typename.label': 'Circuit',
         'typename.label_zero': 'Circuits',
         'typename.label_one': 'Circuit',

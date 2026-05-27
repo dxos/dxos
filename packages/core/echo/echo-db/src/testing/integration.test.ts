@@ -563,7 +563,7 @@ describe('Integration tests', () => {
       });
       const [obj] = await db.query(Query.select(Filter.typeURI(typeURI))).run();
       expect(Obj.getType(obj)).toBeDefined();
-      expect(Type.getTypename(Obj.getType(obj)!)).toEqual(TestSchema.Person.typename);
+      expect(Type.getTypename(Obj.getType(obj)!)).toEqual(Type.getTypename(TestSchema.Person));
     }
   });
 

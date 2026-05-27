@@ -8,7 +8,6 @@ import type * as Types from 'effect/Types';
 
 import { type ToMutable } from '@dxos/util';
 
-import { type TypeMeta } from '../Annotation';
 import {
   type AnyEntity,
   type EntityKind,
@@ -39,7 +38,7 @@ export interface EchoTypeSchema<
   ExtraFields = {},
   K extends EntityKind = EntityKind,
   Fields extends Schema.Struct.Fields = Schema.Struct.Fields,
-> extends TypeMeta {
+> {
   /**
    * Entity-kind brand. Type entities are their own kind (`Type`) regardless of
    * the kind of instance they describe — `[SchemaKindId]` carries the latter.
@@ -54,8 +53,9 @@ export interface EchoTypeSchema<
   /** Source Effect Schema (kept on a hidden slot for `Type.getSchema`). */
   readonly [StaticTypeSchemaSlot]: Schema.Schema.AnyNoContext;
 
-  readonly typename: string;
-  readonly version: string;
+  // NOTE: `typename` / `version` are intentionally NOT fields. They live in
+  // `ObjectMeta` (`key` / `version`); read via `Type.getTypename(self)` /
+  // `Type.getVersion(self)`.
   readonly jsonSchema: JsonSchemaType;
 
   /** Struct fields for introspection. */
@@ -168,8 +168,9 @@ export const makeEchoTypeSchema = <
     [SchemaKindId]: kind,
     [StaticTypeSchemaSlot]: schema as unknown as Schema.Schema.AnyNoContext,
     [MetaId]: meta,
-    typename,
-    version,
+    // NOTE: typename/version are intentionally NOT own properties. They live in
+    // `[MetaId]` (ObjectMeta.key/version) and are read via `Type.getTypename` /
+    // `Type.getVersion`, matching persisted `Type.Type` entities.
     fields,
   };
   Object.defineProperty(entity, 'jsonSchema', {

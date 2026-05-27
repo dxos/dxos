@@ -48,8 +48,8 @@ export const people: (Entity.Properties<Person.Person> & { id: string })[] = [
 ];
 
 const testObjects: Record<string, any[]> = {
-  [Organization.Organization.typename]: organizations,
-  [Person.Person.typename]: people,
+  [Type.getTypename(Organization.Organization)]: organizations,
+  [Type.getTypename(Person.Person)]: people,
 };
 
 const testRelationships: Record<
@@ -59,7 +59,7 @@ const testRelationships: Record<
     target: string;
   } & Record<string, any>)[]
 > = {
-  [Employer.Employer.typename]: [
+  [Type.getTypename(Employer.Employer)]: [
     // prettier-ignore
     { source: 'rich_burdon', target: 'dxos', active: true },
     { source: 'rich_burdon', target: 'google', active: false }, // TODO(burdon): Should not contribute to force.
@@ -82,7 +82,7 @@ const testRelationships: Record<
   ],
 
   // TODO(burdon): Limit graph view to selected relationship types.
-  [HasConnection.HasConnection.typename]: [
+  [Type.getTypename(HasConnection.HasConnection)]: [
     // prettier-ignore
     { kind: 'partner', source: 'dxos', target: 'ink_and_switch' },
     { kind: 'partner', source: 'dxos', target: 'effectful' },

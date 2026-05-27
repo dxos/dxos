@@ -19,7 +19,7 @@ const EXEMPLAR_SPACE_ARCHIVE_FILENAME = 'exemplar-space.dx.json';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const { Collection, Obj } = yield* Effect.tryPromise(() => import('@dxos/echo'));
+    const { Collection, Obj, Type } = yield* Effect.tryPromise(() => import('@dxos/echo'));
     const { Migrations } = yield* Effect.tryPromise(() => import('@dxos/migrations'));
     const { ClientCapabilities } = yield* Effect.tryPromise(() => import('@dxos/plugin-client'));
     const { getPersonalSpace } = yield* Effect.tryPromise(() => import('@dxos/app-toolkit'));
@@ -41,7 +41,7 @@ export default Capability.makeModule(
     // depend on a fresh space (e.g. blueprints) wire themselves up. The exemplar space
     // gets the same callbacks via the regular SpaceCreated event on import.
     yield* Plugin.activate(SpaceEvents.SpaceCreated);
-    const personalRootCollection = personalSpace.properties[Collection.Collection.typename]?.target;
+    const personalRootCollection = personalSpace.properties[Type.getTypename(Collection.Collection)]?.target;
     if (personalRootCollection) {
       const onCreateSpaceCallbacks = yield* Capability.getAll(SpaceCapabilities.OnCreateSpace);
       yield* Effect.all(

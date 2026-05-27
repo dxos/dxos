@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation } from '@dxos/app-toolkit';
 import { type AppSurface, useLayout } from '@dxos/app-toolkit/ui';
-import { Filter, Obj } from '@dxos/echo';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { useQuery } from '@dxos/react-client/echo';
@@ -77,7 +77,7 @@ export const SubscriptionsArticle = ({ role, space, attendableId }: Subscription
   const handleCreate = useCallback(() => {
     void invokePromise(SpaceOperation.OpenCreateObject, {
       target: space.db,
-      typename: Subscription.Subscription.typename,
+      typename: Type.getTypename(Subscription.Subscription),
     });
   }, [space, invokePromise]);
 

@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -10,7 +11,7 @@ import { Dream } from '#types';
 export const translations = [
   {
     'en-US': {
-      [Dream.Dream.typename]: {
+      [Type.getTypename(Dream.Dream)]: {
         'typename.label': 'Dream',
         'typename.label_zero': 'Dreams',
         'typename.label_one': 'Dream',

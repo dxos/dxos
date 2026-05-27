@@ -18,7 +18,7 @@ export const translations: Resource[] = [
   ...formTranslations,
   {
     'en-US': {
-      [Blueprint.Blueprint.typename]: {
+      [Type.getTypename(Blueprint.Blueprint)]: {
         'typename.label': 'Blueprint',
         'typename.label_zero': 'Blueprints',
         'typename.label_one': 'Blueprint',
@@ -40,7 +40,7 @@ export const translations: Resource[] = [
         'delete-object.label': 'Delete routine',
         'object-deleted.label': 'Routine deleted',
       },
-      [Sequence.Sequence.typename]: {
+      [Type.getTypename(Sequence.Sequence)]: {
         'typename.label': 'Sequence',
         'typename.label_zero': 'Sequences',
         'typename.label_one': 'Sequence',
@@ -51,7 +51,7 @@ export const translations: Resource[] = [
         'delete-object.label': 'Delete sequence',
         'object-deleted.label': 'Sequence deleted',
       },
-      [Chat.Chat.typename]: {
+      [Type.getTypename(Chat.Chat)]: {
         'typename.label': 'AI Chat',
         'object-name.placeholder': 'New AI Chat',
         'add-object.label': 'Add AI chat',
@@ -59,13 +59,13 @@ export const translations: Resource[] = [
         'delete-object.label': 'Delete AI Chat',
         'object-deleted.label': 'AI Chat deleted',
       },
-      [McpServer.McpServer.typename]: {
+      [Type.getTypename(McpServer.McpServer)]: {
         'typename.label': 'MCP Server',
         'typename.label_zero': 'MCP Servers',
         'typename.label_one': 'MCP Server',
         'typename.label_other': 'MCP Servers',
       },
-      [Agent.Agent.typename]: {
+      [Type.getTypename(Agent.Agent)]: {
         'typename.label': 'Agent',
         'typename.label_zero': 'Agents',
         'typename.label_one': 'Agent',

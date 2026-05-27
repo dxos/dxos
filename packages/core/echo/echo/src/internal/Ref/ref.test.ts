@@ -35,7 +35,7 @@ describe('Ref', () => {
     const ref = Ref(Task);
     expect(ref.ast._tag).toEqual('Declaration');
     const refAst = getReferenceAst(ref.ast);
-    expect(refAst).toEqual({ typename: Task.typename, version: Task.version });
+    expect(refAst).toEqual({ typename: Type.getTypename(Task), version: Type.getVersion(Task) });
   });
 
   // TODO(dmaretskyi): Figure out how to expose this in the API.
@@ -46,7 +46,7 @@ describe('Ref', () => {
     const json = JSON.parse(JSON.stringify(contact));
     expect(json).toEqual({
       id: contact.id,
-      '@type': `dxn:${Contact.typename}:${Contact.version}`,
+      '@type': `dxn:${Type.getTypename(Contact)}:${Type.getVersion(Contact)}`,
       '@meta': {
         keys: [],
       },
@@ -67,7 +67,7 @@ describe('Ref', () => {
     const json = JSON.parse(JSON.stringify(contact));
     expect(json).toEqual({
       id: contact.id,
-      '@type': `dxn:${Contact.typename}:${Contact.version}`,
+      '@type': `dxn:${Type.getTypename(Contact)}:${Type.getVersion(Contact)}`,
       '@meta': {
         keys: [],
       },

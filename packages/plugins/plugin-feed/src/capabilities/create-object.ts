@@ -25,7 +25,7 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return [
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Subscription.Subscription.typename,
+        id: Type.getTypename(Subscription.Subscription),
         inputSchema: Type.getSchema(Subscription.Subscription),
         createObject: (props, options) =>
           Effect.gen(function* () {
@@ -44,7 +44,7 @@ export default Capability.makeModule(
           }),
       }),
       Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-        id: Magazine.Magazine.typename,
+        id: Type.getTypename(Magazine.Magazine),
         inputSchema: Magazine.CreateMagazineSchema,
         createObject: (props, options) =>
           Effect.gen(function* () {

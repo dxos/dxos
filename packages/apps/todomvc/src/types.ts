@@ -21,7 +21,7 @@ export type TodoList = Type.InstanceType<typeof TodoList>;
 export const createTodoList = (space: Space): TodoList => {
   const list = space.db.add(Obj.make(TodoList, { todos: [] }));
   Obj.update(space.properties, (props: any) => {
-    props[TodoList.typename] = Ref.make(list);
+    props[Type.getTypename(TodoList)] = Ref.make(list);
   });
   return list;
 };

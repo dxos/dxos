@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -10,7 +11,7 @@ import { Game } from '#types';
 export const translations = [
   {
     'en-US': {
-      [Game.typename]: {
+      [Type.getTypename(Game)]: {
         'typename.label': 'Game',
         'typename.label_zero': 'Games',
         'typename.label_one': 'Game',

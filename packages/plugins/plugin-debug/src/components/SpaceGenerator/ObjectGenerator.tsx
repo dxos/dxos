@@ -4,7 +4,7 @@
 
 import { addressToA1Notation } from '@dxos/compute-hyperformula';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
-import { Filter, Key, type Type, View } from '@dxos/echo';
+import { Filter, Key, Type, View } from '@dxos/echo';
 import { EchoURI } from '@dxos/keys';
 import { OperationInvoker } from '@dxos/operation';
 import { Markdown } from '@dxos/plugin-markdown';
@@ -32,7 +32,7 @@ export const createGenerator = <S extends Type.AnyObj>(
   schema: S,
 ): ObjectGenerator<Type.InstanceType<S>> => {
   return async (space: Space, n: number): Promise<Type.InstanceType<S>[]> => {
-    const typename = schema.typename;
+    const typename = Type.getTypename(schema);
 
     // Find or create table and view.
     const views = await space.db.query(Filter.type(View.View)).run();
@@ -50,7 +50,7 @@ export const createGenerator = <S extends Type.AnyObj>(
 
 export const staticGenerators = new Map<string, ObjectGenerator<any>>([
   [
-    Markdown.Document.typename,
+    Type.getTypename(Markdown.Document),
     async (space, n, cb) => {
       const objects = range(n).map(() => {
         return space.db.add(
@@ -66,7 +66,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     },
   ],
   [
-    Sketch.Sketch.typename,
+    Type.getTypename(Sketch.Sketch),
     async (space, n, cb) => {
       const objects = range(n).map(() => {
         const obj = space.db.add(Sketch.make({ name: random.commerce.productName() }));
@@ -79,7 +79,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
   ],
   // TODO(burdon): Create unit tests.
   [
-    Sheet.Sheet.typename,
+    Type.getTypename(Sheet.Sheet),
     async (space, n, cb) => {
       const objects = range(n).map(() => {
         const cells: Record<string, Sheet.CellValue> = {};
@@ -116,7 +116,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
     },
   ],
   [
-    ComputeGraph.typename,
+    Type.getTypename(ComputeGraph),
     async (space, n, cb) => {
       const objects = range(n, () => {
         const model = ComputeGraphModel.create();

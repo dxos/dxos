@@ -23,7 +23,7 @@ describe('EchoObjectSchema DSL', () => {
   });
 
   test('static typename accessor', async () => {
-    expect(Organization.typename).to.eq('com.example.type.organization');
+    expect(Type.getTypename(Organization)).to.eq('com.example.type.organization');
   });
 
   test('expect schema', async () => {

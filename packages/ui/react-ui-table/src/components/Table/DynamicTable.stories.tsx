@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import type * as Types from 'effect/Types';
 import React, { useMemo, useState } from 'react';
 
-import { Filter, type JsonSchema, Obj } from '@dxos/echo';
+import { Filter, type JsonSchema, Obj, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 import { random } from '@dxos/random';
 import { useQuery, useSchema } from '@dxos/react-client/echo';
@@ -132,7 +132,7 @@ export const WithJsonSchema: StoryObj = {
 export const WithEchoSchema: StoryObj = {
   render: () => {
     const { space } = useClientStory();
-    const schema = useSchema(space?.db, TestSchema.Person.typename);
+    const schema = useSchema(space?.db, Type.getTypename(TestSchema.Person));
     const objects = useQuery(space?.db, schema ? Filter.type(schema) : Filter.nothing());
     if (!schema) {
       return <div>Loading schema...</div>;

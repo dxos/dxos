@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import { Capability } from '@dxos/app-framework';
 import { AppCapabilities, AppNode, AppNodeMatcher, createObjectNode, getActiveSpace } from '@dxos/app-toolkit';
 import { Operation } from '@dxos/compute';
-import { Filter } from '@dxos/echo';
+import { Filter, Type } from '@dxos/echo';
 import { AtomQuery, AtomRef } from '@dxos/echo-atom';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { ClientCapabilities } from '@dxos/plugin-client';
@@ -144,7 +144,7 @@ export default Capability.makeModule(
               id: 'delete',
               data: () => Operation.invoke(SpaceOperation.RemoveObjects, { objects: [feed] }),
               properties: {
-                label: ['delete-object.label', { ns: Subscription.Subscription.typename }],
+                label: ['delete-object.label', { ns: Type.getTypename(Subscription.Subscription) }],
                 icon: 'ph--trash--regular',
                 disposition: 'list-item',
               },

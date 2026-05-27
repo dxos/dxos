@@ -5,7 +5,7 @@
 import React, { type ChangeEvent, type KeyboardEvent, useRef, useState } from 'react';
 import { generatePath, useOutletContext, useParams } from 'react-router-dom';
 
-import { Obj, Ref } from '@dxos/echo';
+import { Obj, Ref, Type } from '@dxos/echo';
 import { type Space, useObject, useObjects, useSpaceProperties } from '@dxos/react-client/echo';
 
 import { FILTER } from '../constants';
@@ -25,7 +25,7 @@ export const Todos = () => {
   const [spaceProperties] = useSpaceProperties(space?.id);
 
   // Get the TodoList reference from space.properties.
-  const listRef = spaceProperties?.[TodoList.typename] as Ref.Ref<TodoList> | undefined;
+  const listRef = spaceProperties?.[Type.getTypename(TodoList)] as Ref.Ref<TodoList> | undefined;
 
   // Subscribe to the list ref (handles async loading and reactive updates).
   const [listSnapshot, updateList] = useObject(listRef);

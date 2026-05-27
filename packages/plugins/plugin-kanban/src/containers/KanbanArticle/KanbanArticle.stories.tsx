@@ -177,7 +177,7 @@ export const Default: Story = {
       onSpaceCreated: async (space) => {
         const { view } = await ViewModel.makeFromDatabase({
           db: space.db,
-          typename: Organization.Organization.typename,
+          typename: Type.getTypename(Organization.Organization),
           pivotFieldName: 'status',
         });
         const kanban = Kanban.make({ view });
@@ -254,7 +254,9 @@ export const MutableSchema: Story = {
 
         const { view } = await ViewModel.makeFromDatabase({
           db: space.db,
-          typename: schema.typename,
+          // `register` returns a persisted `Type.Type` entity; its typename lives in the
+          // type metadata, so read it via `Type.getTypename` rather than a `.typename` prop.
+          typename: Type.getTypename(schema),
           pivotFieldName: 'status',
         });
         const kanban = Kanban.make({ view });

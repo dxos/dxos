@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -10,7 +11,7 @@ import { Journal, Outline } from '#types';
 export const translations = [
   {
     'en-US': {
-      [Journal.Journal.typename]: {
+      [Type.getTypename(Journal.Journal)]: {
         'typename.label': 'Journal',
         'typename.label_zero': 'Journals',
         'typename.label_one': 'Journal',
@@ -21,7 +22,7 @@ export const translations = [
         'delete-object.label': 'Delete journal',
         'object-deleted.label': 'Journal deleted',
       },
-      [Outline.Outline.typename]: {
+      [Type.getTypename(Outline.Outline)]: {
         'typename.label': 'Outline',
         'typename.label_zero': 'Outlines',
         'typename.label_one': 'Outline',

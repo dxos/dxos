@@ -72,12 +72,12 @@ export const useLinkQuery = (db: Database.Database | undefined) => {
       // Add "Create new document" option at the end.
       const createItem: EditorMenuItem = {
         id: 'create-document',
-        label: ['add-object.label', { ns: Markdown.Document.typename }],
+        label: ['add-object.label', { ns: Type.getTypename(Markdown.Document) }],
         icon: 'ph--plus--regular',
         onSelect: ({ view, head }) => {
           const doc = Markdown.make({ name: name || undefined });
           db?.add(doc);
-          const label = name || t('object-name.placeholder', { ns: Markdown.Document.typename });
+          const label = name || t('object-name.placeholder', { ns: Type.getTypename(Markdown.Document) });
           const link = `[${label}](${Obj.getURI(doc)})`;
           if (query?.startsWith('@')) {
             insertAtLineStart(view, head, `!${link}\n`);

@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import { Capability } from '@dxos/app-framework';
 import { Operation } from '@dxos/compute';
+import { Type } from '@dxos/echo';
 import { SpaceOperation } from '@dxos/plugin-space';
 import { SpaceCapabilities } from '@dxos/plugin-space';
 import { Channel } from '@dxos/types';
@@ -13,7 +14,7 @@ import { Channel } from '@dxos/types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contributes(SpaceCapabilities.CreateObjectEntry, {
-      id: Channel.Channel.typename,
+      id: Type.getTypename(Channel.Channel),
       createObject: (props, options) =>
         Effect.gen(function* () {
           const object = Channel.make(props);

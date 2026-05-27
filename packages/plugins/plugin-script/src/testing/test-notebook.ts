@@ -3,7 +3,7 @@
 //
 
 import { Routine } from '@dxos/compute';
-import { Ref } from '@dxos/echo';
+import { Ref, Type } from '@dxos/echo';
 import { createObject } from '@dxos/echo-db';
 import { PublicKey } from '@dxos/keys';
 import { Markdown } from '@dxos/plugin-markdown';
@@ -54,7 +54,7 @@ export const createNotebook = (): Notebook.Notebook =>
       {
         id: PublicKey.random().toString(),
         type: 'query',
-        source: Ref.make(createObject(Text.make({ content: `docs = (type: ${Markdown.Document.typename})` }))),
+        source: Ref.make(createObject(Text.make({ content: `docs = (type: ${Type.getTypename(Markdown.Document)})` }))),
       },
       {
         id: PublicKey.random().toString(),

@@ -2,6 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
+import { Type } from '@dxos/echo';
 import { type Resource } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -10,7 +11,7 @@ import { Template } from '#types';
 export const translations = [
   {
     'en-US': {
-      [Template.Data.typename]: {
+      [Type.getTypename(Template.Data)]: {
         'typename.label': 'Template',
         'typename.label_zero': 'Templates',
         'typename.label_one': 'Template',

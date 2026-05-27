@@ -239,7 +239,9 @@ export const makeFromDatabase = async ({
 }: MakeFromDatabaseProps): Promise<{ jsonSchema: JsonSchemaType; view: View.View }> => {
   if (!typename) {
     const [schema] = await db.schemaRegistry.register([createDefaultSchema()]);
-    typename = schema.typename;
+    // `register` returns a persisted `Type.Type` entity; its typename lives in the
+    // type metadata, so read it via `Type.getTypename` rather than a `.typename` prop.
+    typename = Type.getTypename(schema);
   } else {
     createInitial = 0;
   }

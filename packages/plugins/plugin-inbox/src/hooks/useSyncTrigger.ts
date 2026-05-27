@@ -7,7 +7,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { type Client } from '@dxos/client';
 import { Trigger, Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
-import { type Database, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { type Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 import { useClient } from '@dxos/react-client';
 import { useObject, useQuery } from '@dxos/react-client/echo';
@@ -95,7 +95,7 @@ export const useSyncTrigger = ({
         return;
       }
 
-      const inputKey = Obj.getTypename(subject) === Calendar.Calendar.typename ? 'calendar' : 'mailbox';
+      const inputKey = Obj.getTypename(subject) === Type.getTypename(Calendar.Calendar) ? 'calendar' : 'mailbox';
       const trigger = Trigger.make({
         enabled: true,
         spec: Trigger.specTimer('*/5 * * * *'),

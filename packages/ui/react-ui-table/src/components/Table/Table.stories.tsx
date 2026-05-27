@@ -179,7 +179,10 @@ const meta = {
       createSpace: true,
       onCreateSpace: async ({ space }) => {
         const [schema] = await space.db.schemaRegistry.register([Example]);
-        const { view, jsonSchema } = await ViewModel.makeFromDatabase({ db: space.db, typename: schema.typename });
+        const { view, jsonSchema } = await ViewModel.makeFromDatabase({
+          db: space.db,
+          typename: Type.getTypename(schema),
+        });
         const table = Table.make({ view, jsonSchema });
         Obj.update(view, (view) => {
           view.projection.fields = [
@@ -227,7 +230,7 @@ export const StaticSchema: StoryObj = {
       onCreateSpace: async ({ space }) => {
         const { view, jsonSchema } = await ViewModel.makeFromDatabase({
           db: space.db,
-          typename: TestSchema.Person.typename,
+          typename: Type.getTypename(TestSchema.Person),
         });
         const table = Table.make({ view, jsonSchema });
         space.db.add(table);
@@ -268,7 +271,7 @@ export const ArrayOfObjects: StoryObj = {
       onCreateSpace: async ({ space }) => {
         const { view, jsonSchema } = await ViewModel.makeFromDatabase({
           db: space.db,
-          typename: ContactWithArrayOfEmails.typename,
+          typename: Type.getTypename(ContactWithArrayOfEmails),
         });
         const table = Table.make({ view, jsonSchema });
         space.db.add(table);
