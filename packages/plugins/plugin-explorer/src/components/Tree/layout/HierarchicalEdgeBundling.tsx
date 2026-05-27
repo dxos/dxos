@@ -321,13 +321,13 @@ const hover = (linksLayer: any, leaves: BundleHierarchy[], focused: BundleHierar
           }
           return null;
         })
-        .style('font-weight', on && leaf === focused ? '600' : null);
+        .style('font-weight', () => (on && leaf === focused ? '600' : null));
     }
     if (leaf.circle) {
       select(leaf.circle)
-        .style('stroke', on && isConnected ? 'var(--color-orange-400)' : null)
-        .style('stroke-width', on && isConnected ? '2.5px' : null)
-        .style('opacity', on && !isConnected && leaf !== focused ? '0.15' : null);
+        .style('stroke', () => (on && isConnected ? 'var(--color-orange-400)' : null))
+        .style('stroke-width', () => (on && isConnected ? '2.5px' : null))
+        .style('opacity', () => (on && !isConnected && leaf !== focused ? '0.15' : null));
     }
   }
 };
