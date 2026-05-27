@@ -25,6 +25,38 @@ describe('Relations', () => {
     await testBuilder.close();
   });
 
+  test('getSource throws when source object is deleted', async ({ expect }) => {
+    // Normal setup: all three objects in the same database.
+    const person = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+    const org = db.add(Obj.make(TestSchema.Organization, { name: 'DXOS' }));
+    const relation = db.add(
+      Relation.make(TestSchema.EmployedBy, {
+        [Relation.Source]: person,
+        [Relation.Target]: org,
+        role: 'CEO',
+      }),
+    );
+
+    // Delete the source. The core stays in _objects (deletion just marks it),
+    // so _areDepsSatisfied passes and the relation surfaces in queries — but
+    // getObjectById excludes deleted objects by default, so resolveSync returns
+    // undefined and getSource throws.
+    db.remove(person);
+
+    // getSourceURI always works — reads the stored raw DXN reference.
+    expect(Relation.getSourceURI(relation)).toBeDefined();
+
+    // getSource resolves via getObjectById without { deleted: true } → throws.
+    expect(() => Relation.getSource(relation)).toThrow('Relation source could not be resolved');
+
+    // Taking a snapshot silently drops the unresolvable RelationSourceId,
+    // so getSource on the snapshot also throws — this was the ObjectsTree crash.
+    const snapshot = Relation.getSnapshot(relation);
+    expect(Relation.isSnapshot(snapshot)).toBe(true);
+    expect(() => Relation.getSource(snapshot)).toThrow('Relation source could not be resolved');
+    expect(Relation.getSourceURI(snapshot)).toBeDefined();
+  });
+
   test('create relation between two objects', async () => {
     const person = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
     const org = db.add(Obj.make(TestSchema.Organization, { name: 'DXOS' }));

@@ -4,6 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
+import { DXN } from '@dxos/keys';
+
 import * as Obj from '../Obj';
 import * as Ref from '../Ref';
 import * as Type from '../Type';
@@ -18,10 +20,7 @@ export namespace TestSchema {
    * This is the test variant with example.com namespace.
    */
   export const Expando = Schema.Struct({}, { key: Schema.String, value: Schema.Any }).pipe(
-    Type.object({
-      typename: 'com.example.type.expando',
-      version: '0.1.0',
-    }),
+    Type.object(DXN.make('com.example.type.expando', '0.1.0')),
   );
 
   export interface Expando extends Schema.Schema.Type<typeof Expando> {}
@@ -63,12 +62,7 @@ export namespace TestSchema {
   export interface ExampleSchema extends Schema.Schema.Type<typeof ExampleSchema> {}
 
   /** @deprecated Use another test schema or create a specific local test schema. */
-  export const Example = ExampleSchema.pipe(
-    Type.object({
-      typename: 'com.example.type.example',
-      version: '0.1.0',
-    }),
-  );
+  export const Example = ExampleSchema.pipe(Type.object(DXN.make('com.example.type.example', '0.1.0')));
 
   /** @deprecated Use another test schema or create a specific local test schema. */
   export interface Example extends Schema.Schema.Type<typeof Example> {}
@@ -87,12 +81,7 @@ export namespace TestSchema {
     ),
   });
 
-  export const Message = MessageStruct.pipe(
-    Type.object({
-      typename: 'com.example.type.message',
-      version: '0.1.0',
-    }),
-  );
+  export const Message = MessageStruct.pipe(Type.object(DXN.make('com.example.type.message', '0.1.0')));
 
   export interface Message extends Schema.Schema.Type<typeof Message> {}
 
@@ -108,12 +97,7 @@ export namespace TestSchema {
         value: Schema.String,
       }),
     ),
-  }).pipe(
-    Type.object({
-      typename: 'com.example.type.organization',
-      version: '0.1.0',
-    }),
-  );
+  }).pipe(Type.object(DXN.make('com.example.type.organization', '0.1.0')));
 
   export interface Organization extends Schema.Schema.Type<typeof Organization> {}
 
@@ -141,13 +125,7 @@ export namespace TestSchema {
       label: Schema.String,
       value: Schema.String,
     }).pipe(Schema.Array, Schema.optional),
-  }).pipe(
-    Schema.partial,
-    Type.object({
-      typename: 'com.example.type.person',
-      version: '0.1.0',
-    }),
-  );
+  }).pipe(Schema.partial, Type.object(DXN.make('com.example.type.person', '0.1.0')));
 
   export interface Person extends Schema.Schema.Type<typeof Person> {}
 
@@ -163,13 +141,7 @@ export namespace TestSchema {
     previous: Schema.optional(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task))),
     subTasks: Schema.optional(Schema.Array(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task)))),
     description: Schema.optional(Schema.String),
-  }).pipe(
-    Schema.partial,
-    Type.object({
-      typename: 'com.example.type.task',
-      version: '0.1.0',
-    }),
-  );
+  }).pipe(Schema.partial, Type.object(DXN.make('com.example.type.task', '0.1.0')));
 
   export interface Task extends Schema.Schema.Type<typeof Task> {}
 
@@ -179,8 +151,7 @@ export namespace TestSchema {
 
   export const HasManager = Schema.Struct({}).pipe(
     Type.relation({
-      typename: 'com.example.type.has-manager',
-      version: '0.1.0',
+      dxn: DXN.make('com.example.type.hasManager', '0.1.0'),
       source: Person,
       target: Person,
     }),
@@ -197,8 +168,7 @@ export namespace TestSchema {
     since: Schema.optional(Schema.String),
   }).pipe(
     Type.relation({
-      typename: 'com.example.type.employed-by',
-      version: '0.1.0',
+      dxn: DXN.make('com.example.type.employedBy', '0.1.0'),
       source: Person,
       target: Organization,
     }),
@@ -228,13 +198,7 @@ export namespace TestSchema {
         }),
       ),
     ),
-  }).pipe(
-    Schema.partial,
-    Type.object({
-      typename: 'com.example.type.container',
-      version: '0.1.0',
-    }),
-  );
+  }).pipe(Schema.partial, Type.object(DXN.make('com.example.type.container', '0.1.0')));
 
   export interface Container extends Schema.Schema.Type<typeof Container> {}
 }

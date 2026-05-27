@@ -553,7 +553,7 @@ export type InspectSpaceResponse = {
     objectCount: number;
     deletedObjectCount: number;
     indexedDocumentCount: number;
-    objectsByType: { typeDXN: string; count: number }[];
+    objectsByType: { typeURI: string; count: number }[];
     indexerStatus: {
       indexingInProgress: boolean;
       cursors: { indexName: string; sourceName: string; resourceId: string | null; cursor: string | number }[];

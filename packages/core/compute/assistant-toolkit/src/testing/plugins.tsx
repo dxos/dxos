@@ -7,18 +7,13 @@ import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
 import { Surface } from '@dxos/app-framework/ui';
-import { Format, type Obj, Type } from '@dxos/echo';
+import { DXN, Format, type Obj, Type } from '@dxos/echo';
 import { Card } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 
 export const MapSchema = Schema.Struct({
   coordinates: Format.GeoPoint,
-}).pipe(
-  Type.object({
-    typename: 'com.example.type.map',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.object(DXN.make('com.example.type.map', '0.1.0')));
 
 export type MapSchema = Schema.Schema.Type<typeof MapSchema>;
 

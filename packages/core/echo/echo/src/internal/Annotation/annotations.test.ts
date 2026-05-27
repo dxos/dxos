@@ -5,6 +5,8 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
+import { DXN } from '@dxos/keys';
+
 import { EchoObjectSchema } from '../Entity';
 import { LabelAnnotation, TypenameSchema, VersionSchema, getLabelWithSchema } from './annotations';
 
@@ -17,12 +19,7 @@ const TestObject = Schema.Struct({
 
 type TestObject = Schema.Schema.Type<typeof TestObject>;
 
-const TestEchoSchema = TestObject.pipe(
-  EchoObjectSchema({
-    typename: 'org.dxos.type.test',
-    version: '0.1.0',
-  }),
-);
+const TestEchoSchema = TestObject.pipe(EchoObjectSchema(DXN.make('org.dxos.type.test', '0.1.0')));
 
 type TestEchoSchema = Schema.Schema.Type<typeof TestEchoSchema>;
 

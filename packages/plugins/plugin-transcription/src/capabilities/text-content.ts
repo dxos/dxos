@@ -20,7 +20,7 @@ export default Capability.makeModule(
         const space = getSpace(transcript);
         const members = space?.members.get().map((member) => member.identity) ?? [];
         const feed = await transcript.feed.load();
-        const feedDXN = Feed.getQueueDxn(feed);
+        const feedDXN = Feed.getQueueUri(feed);
         const queue = feedDXN ? space?.queues.get<Message.Message>(feedDXN) : undefined;
         await queue?.refresh();
         return queue?.objects

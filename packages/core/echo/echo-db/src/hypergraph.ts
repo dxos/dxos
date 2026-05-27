@@ -7,8 +7,7 @@ import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type Database, type Entity, Filter, type Hypergraph, Query, Ref } from '@dxos/echo';
 import { batchEvents, type AnyProperties, setRefResolver } from '@dxos/echo/internal';
-import { failedInvariant } from '@dxos/invariant';
-import { DXN, type ObjectId, type QueueSubspaceTag, type SpaceId } from '@dxos/keys';
+import { DXN, EchoURI, type ObjectId, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { entry } from '@dxos/util';
@@ -115,14 +114,14 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
    *
    * NOTE: The reference may be dangling if the object is not present in the database.
    *
-   * ## Difference from `Ref.fromDXN`
+   * ## Difference from `Ref.fromURI`
    *
-   * `Ref.fromDXN(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
+   * `Ref.fromURI(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
    * `graph.ref(dxn)` is preferable in cases with access to the database.
    *
    */
-  makeRef<T extends AnyProperties = any>(dxn: DXN): Ref.Ref<T> {
-    const ref = Ref.fromDXN(dxn);
+  makeRef<T extends AnyProperties = any>(uri: URI.URI): Ref.Ref<T> {
+    const ref = Ref.fromURI(uri);
     setRefResolver(ref, this.createRefResolver({}));
     return ref;
   }
@@ -141,31 +140,12 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
     return {
       // TODO(dmaretskyi): Respect `load` flag.
-      resolveSync: (dxn, load, onLoad) => {
-        // TODO(dmaretskyi): Add queue objects.
-        if (dxn.kind === DXN.kind.QUEUE && dxn.asQueueDXN()?.objectId === undefined) {
-          const { spaceId, subspaceTag, queueId } = dxn.asQueueDXN()!;
-          return this._resolveQueueSync(spaceId, subspaceTag as QueueSubspaceTag, queueId);
-        } else if (dxn.kind === DXN.kind.QUEUE && dxn.asQueueDXN()?.objectId !== undefined) {
-          const { spaceId, subspaceTag, queueId, objectId } = dxn.asQueueDXN()!;
-          const queue = this._resolveQueueSync(spaceId, subspaceTag as QueueSubspaceTag, queueId);
-          const object = queue?.objects.find((obj) => obj.id === objectId);
-          if (object) {
-            return middleware(object);
-          } else if (queue && load && onLoad) {
-            queue.refresh().then(
-              () => onLoad(),
-              (err) => log.catch(err),
-            );
-            return undefined;
-          }
+      resolveSync: (uri: URI.URI, load: boolean, onLoad?: () => void) => {
+        if (!EchoURI.isEchoURI(uri)) {
+          return undefined; // Unsupported URI kind.
         }
 
-        if (dxn.kind !== DXN.kind.ECHO) {
-          return undefined; // Unsupported DXN kind.
-        }
-
-        const res = this._resolveSync(dxn, context, onLoad);
+        const res = this._resolveSync(uri, context, onLoad);
 
         if (res) {
           return middleware(res);
@@ -174,8 +154,8 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         }
       },
 
-      resolve: async (dxn) => {
-        const obj = await this._resolveAsync(dxn, context);
+      resolve: async (uri) => {
+        const obj = await this._resolveAsync(uri, context);
         if (obj) {
           return middleware(obj);
         } else {
@@ -183,29 +163,25 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
         }
       },
 
-      resolveSchema: async (dxn) => {
+      resolveSchema: async (uri) => {
         const beginTime = TRACE_REF_RESOLUTION ? performance.now() : 0;
         let status: string = '';
         try {
-          switch (dxn.kind) {
-            case DXN.kind.TYPE: {
-              const schema = this.schemaRegistry.getSchemaByDXN(dxn);
-              status = schema != null ? 'resolved' : 'missing';
-              return schema;
-            }
-            case DXN.kind.ECHO: {
-              status = 'error';
-              throw new Error('Not implemented: Resolving schema stored in the database');
-            }
-            default: {
-              status = 'unknown dxn';
-              return undefined;
-            }
+          if (DXN.isDXN(uri)) {
+            const schema = this.schemaRegistry.getSchemaByDXN(uri);
+            status = schema != null ? 'resolved' : 'missing';
+            return schema;
+          } else if (EchoURI.isEchoURI(uri)) {
+            status = 'error';
+            throw new Error('Not implemented: Resolving schema stored in the database');
+          } else {
+            status = 'unknown URI';
+            return undefined;
           }
         } finally {
           if (TRACE_REF_RESOLUTION) {
             log.info('resolveSchema', {
-              dxn: dxn.toString(),
+              uri: uri.toString(),
               status,
               time: performance.now() - beginTime,
             });
@@ -221,17 +197,19 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
    * @param onResolve will be weakly referenced.
    */
   private _resolveSync(
-    dxn: DXN,
+    uri: URI.URI,
     context: Hypergraph.RefResolutionContext,
     onResolve?: (obj: Entity.Any) => void,
-  ): Entity.Any | undefined {
-    if (!dxn.asEchoDXN()) {
-      throw new Error('Unsupported DXN kind');
+  ): Entity.Any | Queue | undefined {
+    const parsedEchoUri = EchoURI.tryParse(uri);
+    if (!parsedEchoUri) {
+      throw new Error('Unsupported URI kind');
     }
 
-    const { spaceId = context.space, echoId: objectId } = dxn.asEchoDXN()!;
-    if (spaceId === undefined) {
-      throw new Error(`Unable to determine the Space to resolve the reference: ${dxn.toString()}`);
+    const spaceId = EchoURI.getSpaceId(parsedEchoUri) ?? context.space;
+    const objectId = EchoURI.getObjectId(parsedEchoUri);
+    if (spaceId === undefined || objectId === undefined) {
+      throw new Error(`Unable to determine the Space to resolve the reference: ${uri}`);
     }
 
     const db = this._databases.get(spaceId);
@@ -241,6 +219,16 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       if (obj) {
         return obj;
       }
+    }
+
+    // Fallback: try to resolve as a queue (Feed object backed by queue service).
+    // Only resolve if a queue with this id has been explicitly created — otherwise
+    // QueueFactory.get would manufacture a phantom queue for every unknown ECHO ref.
+    const queueEchoUri = EchoURI.make({ spaceId: spaceId, objectId: objectId });
+    const queueFactory = this._queueFactories.get(spaceId);
+    const queue = queueFactory?.tryGet(queueEchoUri);
+    if (queue) {
+      return queue;
     }
 
     // TODO(dmaretskyi): Consider throwing if space not found.
@@ -265,73 +253,100 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   }
 
   private async _resolveAsync(
-    dxn: DXN,
+    uri: URI.URI,
     context: Hypergraph.RefResolutionContext,
   ): Promise<Entity.Unknown | Queue | undefined> {
     const beginTime = TRACE_REF_RESOLUTION ? performance.now() : 0;
     let status: string = '';
     try {
-      switch (dxn.kind) {
-        case DXN.kind.ECHO: {
-          if (!dxn.isLocalObjectId() && dxn.asEchoDXN()?.spaceId !== context.space) {
-            status = 'error';
-            throw new Error('Cross-space references are not yet supported');
-          }
-          const { echoId } = dxn.asEchoDXN() ?? failedInvariant();
+      const parsedEchoUri = EchoURI.tryParse(uri);
+      if (parsedEchoUri) {
+        const echoUri = EchoURI.getObjectId(parsedEchoUri);
+        const echoSpaceId = EchoURI.getSpaceId(parsedEchoUri);
+        if (!echoUri) {
+          status = 'error';
+          throw new Error(`Invalid EchoURI: ${uri}`);
+        }
+        if (!EchoURI.isLocal(parsedEchoUri) && echoSpaceId !== context.space) {
+          status = 'error';
+          throw new Error('Cross-space references are not yet supported');
+        }
 
-          if (context.feed) {
-            const { subspaceTag, spaceId, queueId } = context.feed.asQueueDXN() ?? failedInvariant();
-            const obj = await this._resolveQueueObjectAsync(spaceId, subspaceTag as QueueSubspaceTag, queueId, echoId);
+        const feedEchoId = context.feed && EchoURI.isEchoURI(context.feed) ? context.feed : undefined;
+        if (feedEchoId) {
+          const feedSpaceId = EchoURI.getSpaceId(feedEchoId) ?? context.space;
+          const queueId = EchoURI.getObjectId(feedEchoId);
+          if (feedSpaceId && queueId) {
+            const queueEchoUri = EchoURI.make({ spaceId: feedSpaceId, objectId: queueId });
+            const obj = await this._resolveQueueObjectAsync(queueEchoUri, echoUri);
             if (obj) {
               status = 'resolved';
               return obj;
             }
           }
-
-          if (!context.space) {
-            status = 'error';
-            throw new Error('Resolving context-free references is not supported');
-          }
-
-          const obj = await this._resolveDatabaseObjectAsync(context.space, echoId);
-          if (obj) {
-            status = 'resolved';
-            return obj;
-          }
-
-          status = 'missing';
-          return undefined;
         }
-        case DXN.kind.QUEUE: {
-          const { subspaceTag, spaceId, queueId, objectId } = dxn.asQueueDXN() ?? failedInvariant();
-          if (!objectId) {
-            status = 'error';
-            return this._resolveQueueSync(spaceId, subspaceTag as QueueSubspaceTag, queueId);
-          }
 
-          const obj = await this._resolveQueueObjectAsync(spaceId, subspaceTag as QueueSubspaceTag, queueId, objectId);
-          if (obj) {
-            status = 'resolved';
-            return obj;
-          }
-
-          status = 'missing queue';
-          return undefined;
-        }
-        default: {
+        if (!context.space) {
           status = 'error';
-          throw new Error(`Unsupported DXN kind: ${dxn.kind}`);
+          throw new Error('Resolving context-free references is not supported');
         }
+
+        // (1) Search space automerge docs first.
+        const obj = await this._resolveDatabaseObjectAsync(context.space, echoUri);
+        if (obj) {
+          status = 'resolved';
+          return obj;
+        }
+
+        // (2) Search known feeds in this space for an item with this id.
+        const feedObj = await this._resolveObjectInKnownQueues(context.space, echoUri);
+        if (feedObj) {
+          status = 'resolved';
+          return feedObj;
+        }
+
+        // (3) Fallback: caller may be addressing a queue itself by URI.
+        const queueEchoUri = EchoURI.make({ spaceId: context.space, objectId: echoUri });
+        const queue = this._resolveQueueSync(queueEchoUri);
+        if (queue) {
+          status = 'resolved';
+          return queue;
+        }
+
+        status = 'missing';
+        return undefined;
+      } else {
+        status = 'error';
+        throw new Error(`Unsupported URI kind: ${uri}`);
       }
     } finally {
       if (TRACE_REF_RESOLUTION) {
         log.info('resolve', {
-          dxn: dxn.toString(),
+          uri,
           status,
           time: performance.now() - beginTime,
         });
       }
     }
+  }
+
+  /**
+   * Search the queues already known to this space (i.e. previously created or accessed)
+   * for an object with the given id. Does not enumerate the on-disk feed catalog — only
+   * queues that have been instantiated.
+   */
+  private async _resolveObjectInKnownQueues(spaceId: SpaceId, objectId: ObjectId): Promise<Entity.Unknown | undefined> {
+    const queueFactory = this._queueFactories.get(spaceId);
+    if (!queueFactory) {
+      return undefined;
+    }
+    for (const queue of queueFactory.knownQueues()) {
+      const [obj] = await queue.getObjectsById([objectId]);
+      if (obj) {
+        return obj;
+      }
+    }
+    return undefined;
   }
 
   private async _resolveDatabaseObjectAsync(spaceId: SpaceId, objectId: ObjectId): Promise<Entity.Unknown | undefined> {
@@ -343,25 +358,34 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     return obj;
   }
 
-  private _resolveQueueSync(spaceId: SpaceId, subspaceTag: QueueSubspaceTag, queueId: ObjectId): Queue | undefined {
+  private _resolveQueueSync(queueEchoUri: EchoURI.EchoURI): Queue | undefined {
+    const spaceId = EchoURI.getSpaceId(queueEchoUri);
+    if (!spaceId) {
+      return undefined;
+    }
     const queueFactory = this._queueFactories.get(spaceId);
     if (!queueFactory) {
       return undefined;
     }
-    return queueFactory.get(DXN.fromQueue(subspaceTag, spaceId, queueId));
+    // Use `tryGet` rather than `get` so we don't manufacture a phantom queue for a URI
+    // that just happens to share an ECHO object id — we only resolve to a queue when one
+    // has been explicitly created (e.g. by a prior Feed.append/query for that feed).
+    return queueFactory.tryGet(queueEchoUri);
   }
 
   private async _resolveQueueObjectAsync(
-    spaceId: SpaceId,
-    subspaceTag: QueueSubspaceTag,
-    queueId: ObjectId,
+    queueEchoUri: EchoURI.EchoURI,
     objectId: ObjectId,
   ): Promise<Entity.Unknown | undefined> {
+    const spaceId = EchoURI.getSpaceId(queueEchoUri);
+    if (!spaceId) {
+      return undefined;
+    }
     const queueFactory = this._queueFactories.get(spaceId);
     if (!queueFactory) {
       return undefined;
     }
-    const queue = queueFactory.get(DXN.fromQueue(subspaceTag, spaceId, queueId));
+    const queue = queueFactory.get(queueEchoUri);
     if (!queue) {
       return undefined;
     }

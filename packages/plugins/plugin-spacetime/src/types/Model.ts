@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 
 /** Supported primitive geometry types. */
@@ -58,10 +58,7 @@ export const Object = Schema.Struct({
   rotation: Vec3.pipe(FormInputAnnotation.set(false)),
   color: Schema.optional(Schema.String),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.spacetime.object',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.spacetime.object', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--cube--regular',
     hue: 'teal',

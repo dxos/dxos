@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Routine } from '@dxos/compute';
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { LabelAnnotation } from '@dxos/echo/internal';
 import { Graph } from '@dxos/plugin-explorer';
@@ -29,10 +29,7 @@ export const Notebook = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   cells: Cell.pipe(Schema.Array, FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.notebook',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.notebook', '0.1.0')),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--notebook--regular',

@@ -190,7 +190,7 @@ const deployFunction = async (space: Space, functionsServiceClient: FunctionsSer
 };
 
 const checkEmails = async (feed: Feed.Feed, space: Space) => {
-  const queueDXN = Feed.getQueueDxn(feed);
+  const queueDXN = Feed.getQueueUri(feed);
   if (!queueDXN) {
     console.log('No feed found for mailbox');
     return [];
@@ -215,8 +215,10 @@ export const observeInvocations = async (space: Space, maxCount: number | null) 
   while (true) {
     try {
       const traceFeed = space.properties.invocationTraceFeed?.target;
-      const traceQueueDXN = traceFeed ? Feed.getQueueDxn(traceFeed) : undefined;
-      const invocations = traceQueueDXN ? ((await space.queues.get(traceQueueDXN).queryObjects()) ?? []) : [];
+      const traceQueueDXN = traceFeed ? Feed.getQueueUri(traceFeed) : undefined;
+      const invocations = traceQueueDXN
+        ? ((await space.queues.get(traceQueueDXN, { subspaceTag: traceFeed!.namespace }).queryObjects()) ?? [])
+        : [];
 
       for (const invocation of invocations) {
         if (Obj.instanceOf(InvocationTraceStartEvent, invocation)) {

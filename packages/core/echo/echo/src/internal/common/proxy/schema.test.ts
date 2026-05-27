@@ -6,17 +6,14 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { describe, expect, test } from 'vitest';
 
+import { DXN } from '@dxos/keys';
+
 import { createEchoSchema } from '../../../testing';
 import { PropertyMeta, getPropertyMetaAnnotation, getTypeAnnotation } from '../../Annotation';
 import { EchoObjectSchema } from '../../Entity';
 
 // TODO(dmaretskyi): Comment.
-const EmptySchemaType = Schema.Struct({}).pipe(
-  EchoObjectSchema({
-    typename: 'com.example.type.empty',
-    version: '0.1.0',
-  }),
-);
+const EmptySchemaType = Schema.Struct({}).pipe(EchoObjectSchema(DXN.make('com.example.type.empty', '0.1.0')));
 
 interface EmptySchemaType extends Schema.Schema.Type<typeof EmptySchemaType> {}
 
@@ -25,12 +22,7 @@ describe('dynamic schema', () => {
     const TestSchema = Schema.Struct({
       field1: Schema.String,
       field2: Schema.Boolean,
-    }).pipe(
-      EchoObjectSchema({
-        typename: 'com.example.type.test',
-        version: '0.1.0',
-      }),
-    );
+    }).pipe(EchoObjectSchema(DXN.make('com.example.type.test', '0.1.0')));
 
     const registered = createEchoSchema(TestSchema);
     expect(registered.getProperties().map((p) => [p.name, p.type])).to.deep.eq([
@@ -42,12 +34,7 @@ describe('dynamic schema', () => {
   test('addColumns', async () => {
     const TestSchema = Schema.Struct({
       field1: Schema.String,
-    }).pipe(
-      EchoObjectSchema({
-        typename: 'com.example.type.test',
-        version: '0.1.0',
-      }),
-    );
+    }).pipe(EchoObjectSchema(DXN.make('com.example.type.test', '0.1.0')));
 
     const registered = createEchoSchema(TestSchema);
     registered.addFields({ field2: Schema.Boolean });
@@ -116,7 +103,7 @@ describe('dynamic schema', () => {
 
     // Basic typename update checks.
     expect(registered.typename).toBe(newTypename1);
-    expect(registered.jsonSchema.$id).toBe(`dxn:type:${newTypename1}`);
+    expect(registered.jsonSchema.$id).toBe(`dxn:${newTypename1}:${originalVersion}`);
     expect(registered.jsonSchema.typename).toBe(newTypename1);
 
     // Version preservation check.
@@ -135,7 +122,7 @@ describe('dynamic schema', () => {
     const newTypename2 = 'com.example.type.person';
     registered.updateTypename(newTypename2);
     expect(registered.typename).toBe(newTypename2);
-    expect(registered.jsonSchema.$id).toBe(`dxn:type:${newTypename2}`);
+    expect(registered.jsonSchema.$id).toBe(`dxn:${newTypename2}:${originalVersion}`);
     expect(registered.jsonSchema.typename).toBe(newTypename2);
     expect(getTypeAnnotation(registered)).to.deep.contain({
       typename: 'com.example.type.person',

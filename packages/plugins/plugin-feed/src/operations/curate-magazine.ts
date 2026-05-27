@@ -39,7 +39,7 @@ import {
  * previously-curated items the user may want to keep.
  */
 export const curateMagazine = async (space: Space, magazine: Magazine.Magazine): Promise<{ added: number }> => {
-  const seenIds = new Set(magazine.posts.map((ref) => dxnToObjectId(ref.dxn)));
+  const seenIds = new Set(magazine.posts.map((ref) => dxnToObjectId(ref.uri)));
   const added: {
     ref: Ref.Ref<Subscription.Post>;
     id: string;
@@ -56,7 +56,7 @@ export const curateMagazine = async (space: Space, magazine: Magazine.Magazine):
     if (!echoFeed) {
       continue;
     }
-    if (!Feed.getQueueDxn(echoFeed)) {
+    if (!Feed.getQueueUri(echoFeed)) {
       continue;
     }
 
@@ -99,7 +99,7 @@ export const curateMagazine = async (space: Space, magazine: Magazine.Magazine):
   if (added.length > 0) {
     Obj.update(magazine, (magazine) => {
       const mutable = magazine as Obj.Mutable<typeof magazine>;
-      const existing = new Set(mutable.posts.map((ref) => dxnToObjectId(ref.dxn)));
+      const existing = new Set(mutable.posts.map((ref) => dxnToObjectId(ref.uri)));
       const fresh = added.filter((entry) => !existing.has(entry.id));
       if (fresh.length === 0) {
         appended = 0;

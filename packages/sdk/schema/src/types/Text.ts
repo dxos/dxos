@@ -6,16 +6,13 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 
 export const Text = Schema.Struct({
   name: Schema.optional(Schema.String),
   content: Schema.String,
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.text',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.text', '0.1.0')),
   Annotation.LabelAnnotation.set(['name']),
   Annotation.SystemTypeAnnotation.set(true),
   Annotation.IconAnnotation.set({

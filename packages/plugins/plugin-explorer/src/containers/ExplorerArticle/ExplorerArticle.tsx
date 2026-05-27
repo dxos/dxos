@@ -66,7 +66,7 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
     if (!obj || !Obj.isObject(obj)) {
       return;
     }
-    const dxn = Obj.getDXN(obj)?.toString();
+    const dxn = Obj.getURI(obj);
     if (!dxn) {
       return;
     }

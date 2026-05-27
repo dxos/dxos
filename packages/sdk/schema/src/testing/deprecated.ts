@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Format, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, Format, Ref, Type } from '@dxos/echo';
 import { FieldLookupAnnotationId, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
 /**
@@ -19,12 +19,7 @@ export namespace TestSchema {
   export const DocumentType = Schema.Struct({
     name: Schema.String,
     content: Schema.String,
-  }).pipe(
-    Type.object({
-      typename: 'org.dxos.example.document',
-      version: '0.1.0',
-    }),
-  );
+  }).pipe(Type.object(DXN.make('org.dxos.example.document', '0.1.0')));
 
   export type DocumentType = typeof DocumentType.Type;
 
@@ -47,12 +42,7 @@ export namespace TestSchema {
     Annotation.IconAnnotation.set({ icon: 'ph--building--regular', hue: 'blue' }),
   );
 
-  export const Organization = OrganizationSchema.pipe(
-    Type.object({
-      typename: 'com.example.type.organization',
-      version: '0.1.0',
-    }),
-  );
+  export const Organization = OrganizationSchema.pipe(Type.object(DXN.make('com.example.type.organization', '0.1.0')));
 
   export type Organization = Schema.Schema.Type<typeof Organization>;
 
@@ -80,12 +70,7 @@ export namespace TestSchema {
     Annotation.IconAnnotation.set({ icon: 'ph--user--regular', hue: 'green' }),
   );
 
-  export const Person = PersonSchema.pipe(
-    Type.object({
-      typename: 'com.example.type.person',
-      version: '0.1.0',
-    }),
-  );
+  export const Person = PersonSchema.pipe(Type.object(DXN.make('com.example.type.person', '0.1.0')));
 
   export type Person = Schema.Schema.Type<typeof Person>;
 
@@ -103,12 +88,7 @@ export namespace TestSchema {
     Annotation.IconAnnotation.set({ icon: 'ph--kanban--regular', hue: 'purple' }),
   );
 
-  export const Project = ProjectSchema.pipe(
-    Type.object({
-      typename: 'com.example.type.project',
-      version: '0.1.0',
-    }),
-  );
+  export const Project = ProjectSchema.pipe(Type.object(DXN.make('com.example.type.project', '0.1.0')));
 
   export type Pipeline = Schema.Schema.Type<typeof Project>;
 
@@ -123,12 +103,7 @@ export namespace TestSchema {
     content: Schema.String,
   }).pipe(Schema.annotations({ title: 'Message' }), LabelAnnotation.set(['name']));
 
-  export const Message = MessageSchema.pipe(
-    Type.object({
-      typename: 'com.example.type.message',
-      version: '0.1.0',
-    }),
-  );
+  export const Message = MessageSchema.pipe(Type.object(DXN.make('com.example.type.message', '0.1.0')));
 
   export type Message = Schema.Schema.Type<typeof Message>;
 

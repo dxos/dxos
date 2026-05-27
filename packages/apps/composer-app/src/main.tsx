@@ -210,9 +210,17 @@ const main = async () => {
     document.body.setAttribute('data-platform', platform);
   }
 
+  // Read the persisted opt-out state up front so we can suppress PostHog's heavy
+  // instrumentation (session recorder, dead-clicks autocapture) at init time —
+  // opting out after init only stops event capture, not script loading.
+  const [observabilityDisabled, observabilityGroup] = await Promise.all([
+    Observability.isObservabilityDisabled(APP_KEY),
+    Observability.getObservabilityGroup(APP_KEY),
+  ]);
+
   // Intentionally do not await; the buffering backend in TRACE_PROCESSOR captures
   // early spans and replays them once the real OTEL backend registers.
-  const observability = initializeObservability(config, isTauri, logStore);
+  const observability = initializeObservability(config, isTauri, logStore, observabilityDisabled);
 
   // Capture a one-shot `composer.startup` event when the framework dispatches
   // `app-framework:startup-activated`. Includes total ms, per-phase ms, top-5
@@ -266,9 +274,6 @@ const main = async () => {
     },
     { once: true },
   );
-  const observabilityDisabled = await Observability.isObservabilityDisabled(APP_KEY);
-  const observabilityGroup = await Observability.getObservabilityGroup(APP_KEY);
-
   // Detect if this is the popover window in Tauri.
   const isPopover = await Match.value(isTauri).pipe(
     Match.when(

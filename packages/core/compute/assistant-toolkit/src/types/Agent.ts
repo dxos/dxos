@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiContext } from '@dxos/assistant';
 import { type Blueprint } from '@dxos/compute';
-import { Annotation, Database, Feed, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { DXN, Annotation, Database, Feed, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { type ObjectNotFoundError } from '@dxos/echo/Err';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { acquireReleaseResource } from '@dxos/effect';
@@ -97,10 +97,7 @@ export const Agent = Schema.Struct({
    */
   feed: Schema.optional(Ref.Ref(Feed.Feed).pipe(FormInputAnnotation.set(false))),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.agent',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.agent', '0.1.0')),
   Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--drone--regular',

@@ -95,7 +95,7 @@ export default Capability.makeModule(
         },
         actions: (matched, get) => {
           const object = matched.data;
-          const objectDXN = Obj.getDXN(object).toString();
+          const objectUri = Obj.getURI(object);
           const stateAtom = capabilities.atom(ThreadCapabilities.State);
           const selectionManager = capabilities.get(AttentionCapabilities.Selection);
           const commentConfig = getCommentConfig(Obj.getTypename(object)!)!;
@@ -104,7 +104,7 @@ export default Capability.makeModule(
             commentDisabledFamily({
               stateAtom,
               selectionManager,
-              objectId: objectDXN,
+              objectId: objectUri,
               commentsType: commentConfig.comments,
               selectionMode: commentConfig.selectionMode as SelectionMode | undefined,
             }),
@@ -115,7 +115,7 @@ export default Capability.makeModule(
               id: 'comment',
               data: Effect.fnUntraced(function* () {
                 const config = getCommentConfig(Obj.getTypename(object)!)!;
-                const selection = selectionManager.getSelection(objectDXN);
+                const selection = selectionManager.getSelection(objectUri);
                 const anchor =
                   (config.comments === 'anchored' ? getAnchor(selection) : undefined) ?? Date.now().toString();
                 const name = config.getAnchorLabel?.(object, anchor);

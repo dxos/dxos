@@ -3,7 +3,7 @@
 //
 
 import { invariant } from '@dxos/invariant';
-import type { DXN, ObjectId } from '@dxos/keys';
+import type { ObjectId, URI } from '@dxos/keys';
 import { visitValues } from '@dxos/util';
 
 import { type RawString } from './automerge';
@@ -41,7 +41,7 @@ export interface DatabaseDirectory {
    * Object id points to an automerge doc url where the object is embedded.
    */
   links?: {
-    [echoId: string]: string | RawString;
+    [echoUri: string]: string | RawString;
   };
 
   /**
@@ -166,7 +166,7 @@ export const ObjectStructure = Object.freeze({
     data,
     keys,
   }: {
-    type: DXN.String;
+    type: URI.URI;
     deleted?: boolean;
     keys?: ForeignKey[];
     data?: unknown;
@@ -191,7 +191,7 @@ export const ObjectStructure = Object.freeze({
     keys,
     data,
   }: {
-    type: DXN.String;
+    type: URI.URI;
     source: EncodedReference;
     target: EncodedReference;
     deleted?: boolean;

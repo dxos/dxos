@@ -5,9 +5,10 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { DXN, Obj, Ref, Tag, Type } from '@dxos/echo';
+import { Obj, Ref, Tag, Type } from '@dxos/echo';
 import { type JsonPath, splitJsonPath } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
+import { URI } from '@dxos/keys';
 import { HuePicker } from '@dxos/react-ui-pickers';
 import { isNonNullable } from '@dxos/util';
 
@@ -36,7 +37,7 @@ const createFieldMap: FormFieldMap = {
 export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
   const db = Obj.getDatabase(object);
   const meta = Obj.getMeta(object);
-  const tags = (meta.tags ?? []).map((tag) => db?.makeRef(DXN.parse(tag))).filter(isNonNullable);
+  const tags = (meta.tags ?? []).map((tag) => db?.makeRef(URI.make(tag))).filter(isNonNullable);
   const values = useMemo(() => ({ tags, ...object }), [object, tags]);
   const formSchema = useMemo(
     () =>
@@ -54,7 +55,7 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
     const newObject = db.add(Obj.make(schema, values));
     if (Obj.instanceOf(Tag.Tag, newObject)) {
       Obj.update(object, (object) => {
-        Obj.getMeta(object).tags = [...(Obj.getMeta(object).tags ?? []), Obj.getDXN(newObject).toString()];
+        Obj.getMeta(object).tags = [...(Obj.getMeta(object).tags ?? []), Obj.getURI(newObject)];
       });
     }
   }, []);
@@ -72,7 +73,7 @@ export const ObjectForm = ({ object, schema }: ObjectFormProps) => {
       const hasTagsChange = changedPaths.some((path) => splitJsonPath(path)[0] === 'tags');
       if (hasTagsChange) {
         Obj.update(object, (object) => {
-          Obj.getMeta(object).tags = tags?.map((tag: Ref.Ref<Tag.Tag>) => tag.dxn.toString()) ?? [];
+          Obj.getMeta(object).tags = tags?.map((tag: Ref.Ref<Tag.Tag>) => tag.uri) ?? [];
         });
       }
 

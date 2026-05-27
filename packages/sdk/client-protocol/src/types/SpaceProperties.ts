@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Feed, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, Feed, Ref, Type } from '@dxos/echo';
 
 /**
  * Where do triggers get executed.
@@ -52,24 +52,10 @@ export const SpacePropertiesSchema = Schema.Struct(
 
 export type SpacePropertiesSchema = Schema.Schema.Type<typeof SpacePropertiesSchema>;
 
-/** @deprecated Use SpaceProperties instead. */
-export const LegacySpaceProperties = SpacePropertiesSchema.pipe(
-  Type.object({
-    typename: 'org.dxos.type.space-properties',
-    version: '0.1.0',
-  }),
-  Annotation.SystemTypeAnnotation.set(true),
-);
-
-export interface LegacySpaceProperties extends Schema.Schema.Type<typeof LegacySpaceProperties> {}
-
 // TODO(burdon): Pipe Schem.optional, or partial to entire struct to make everything optional?
 // TODO(burdon): Is separate schema def required for forms? Can it be extracted from SpaceProperties?
 export const SpaceProperties = SpacePropertiesSchema.pipe(
-  Type.object({
-    typename: 'org.dxos.type.spaceProperties',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.spaceProperties', '0.1.0')),
   Annotation.SystemTypeAnnotation.set(true),
 );
 

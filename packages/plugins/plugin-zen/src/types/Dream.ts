@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
 import { Sequence } from './Sequence';
@@ -19,10 +19,7 @@ export const Dream = Schema.Struct({
   ),
   sequences: Schema.optional(Schema.Array(Sequence)),
 }).pipe(
-  Type.object({
-    typename: 'dxos.org.type.Dream',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('dxos.org.type.Dream', '0.1.0')),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--moon-stars--regular',

@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type Entity, Obj, Relation, Type } from '@dxos/echo';
+import { DXN, type Entity, Obj, Relation, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/internal';
 
 /**
@@ -28,8 +28,7 @@ export const ProfileOf = Schema.Struct({
 })
   .pipe(
     Type.relation({
-      typename: 'org.dxos.relation.plugin-crm.profile-of',
-      version: '0.1.0',
+      dxn: DXN.make('org.dxos.relation.plugin-crm.profileOf', '0.1.0'),
       source: Obj.Unknown,
       target: Obj.Unknown,
     }),

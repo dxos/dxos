@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { BlueprintsAnnotation } from '@dxos/app-toolkit';
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
 import { Sequence } from './Sequence';
@@ -32,10 +32,7 @@ export const Score = Schema.Struct({
   loopStart: Schema.optional(Schema.Number),
   loopEnd: Schema.optional(Schema.Number),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.score',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.score', '0.1.0')),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--music-notes--regular',

@@ -6,7 +6,8 @@ import React, { useCallback, useMemo } from 'react';
 
 import { Operation, Script, Trigger } from '@dxos/compute';
 import { ComputeGraph } from '@dxos/conductor';
-import { type Database, DXN, Entity, Feed, Filter, Obj, type Query, Ref } from '@dxos/echo';
+import { type Database, Entity, Feed, Filter, Obj, type Query, Ref } from '@dxos/echo';
+import { EchoURI } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 import { Input } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
@@ -90,17 +91,16 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
         const getValue = useCallback(() => {
           const formValue = props.getValue();
           if (Ref.isRef(formValue)) {
-            return formValue.dxn.toString() as string;
+            return formValue.uri;
           }
           return undefined;
         }, [props]);
 
         const handleOnValueChange = useCallback(
-          (_type: any, dxnString: string) => {
-            const dxn = DXN.parse(dxnString);
-            if (dxn) {
-              const ref = Ref.fromDXN(dxn);
-              props.onValueChange(props.type, ref);
+          (_type: any, uriString: string) => {
+            const uri = EchoURI.tryParse(uriString);
+            if (uri) {
+              props.onValueChange(props.type, Ref.fromURI(uri));
             }
           },
           [props.type, props.onValueChange],
@@ -124,16 +124,16 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
         const getValue = useCallback(() => {
           const formValue = props.getValue();
           if (Ref.isRef(formValue)) {
-            return formValue.dxn.toString() as string;
+            return formValue.uri.toString() as string;
           }
           return undefined;
         }, [props]);
 
         const handleOnValueChange = useCallback(
           (_type: any, dxnString: string) => {
-            const dxn = DXN.parse(dxnString);
-            if (dxn) {
-              props.onValueChange(props.type, Ref.fromDXN(dxn));
+            const uri = EchoURI.tryParse(dxnString);
+            if (uri) {
+              props.onValueChange(props.type, Ref.fromURI(uri));
             }
           },
           [props.type, props.onValueChange],
@@ -173,19 +173,19 @@ const useCustomInputs = ({ db, readonlySpec, types, tags }: UseCustomInputsProps
 };
 
 const getWorkflowOptions = (graphs: ComputeGraph[]) => {
-  return graphs.map((graph) => ({ label: `compute-${graph.id}`, value: `dxn:echo:@:${graph.id}` }));
+  return graphs.map((graph) => ({ label: `compute-${graph.id}`, value: Obj.getURI(graph).toString() }));
 };
 
 const getFunctionOptions = (scripts: Script.Script[], functions: Operation.PersistentOperation[]) => {
   const getLabel = (fn: Operation.PersistentOperation) =>
     scripts.find((s) => fn.source?.target?.id === s.id)?.name ?? fn.name;
-  return functions.map((fn) => ({ label: getLabel(fn), value: `dxn:echo:@:${fn.id}` }));
+  return functions.map((fn) => ({ label: getLabel(fn), value: Obj.getURI(fn).toString() }));
 };
 
 const getFeedOptions = (feeds: Feed.Feed[]) => {
   return feeds.map((feed) => {
     const parent = Obj.getParent(feed);
     const label = parent ? Entity.getLabel(parent) : Entity.getLabel(feed);
-    return { label: label ?? feed.id, value: Obj.getDXN(feed).toString() };
+    return { label: label ?? feed.id, value: Obj.getURI(feed).toString() };
   });
 };

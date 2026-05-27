@@ -131,7 +131,7 @@ export const GenerationArticle = ({ role, subject, attendableId }: GenerationArt
        * letterboxing within whatever aspect the bounded viewport ends up with.
        */}
       <Panel.Content classNames='dx-container grid grid-rows-[minmax(0,1fr)_minmax(0,50%)]'>
-        <PromptEditor id={generation.prompt.dxn.toString()} text={generation.prompt.target} />
+        <PromptEditor id={generation.prompt.uri} text={generation.prompt.target} />
         {urls.length > 0 && (
           // Carousel resets to index 0 (the latest) every time a new url is
           // prepended — `key={urls.length}` forces a fresh mount on growth so

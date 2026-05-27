@@ -68,7 +68,7 @@ export const Default = () => {
   }
 
   return (
-    <AttendableContainer id={Obj.getDXN(sheet).toString()} classNames='contents'>
+    <AttendableContainer id={Obj.getURI(sheet)} classNames='contents'>
       <SheetArticle
         role='article'
         space={space}
@@ -91,7 +91,7 @@ export const Spec = () => {
   }
 
   return (
-    <AttendableContainer id={Obj.getDXN(sheet).toString()} classNames='contents'>
+    <AttendableContainer id={Obj.getURI(sheet)} classNames='contents'>
       <div className='w-full grid grid-cols-[1fr_20rem]'>
         <SheetArticle
           role='article'

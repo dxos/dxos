@@ -11,7 +11,7 @@ import { Entity, type Hypergraph, Obj, Query, type QueryResult } from '@dxos/ech
 import { type QueryAST } from '@dxos/echo-protocol';
 import { ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { DXN, type ObjectId, type QueueSubspaceTag, SpaceId } from '@dxos/keys';
+import { EchoURI, ObjectId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 import {
@@ -180,7 +180,7 @@ export class IndexQuerySource implements QuerySource {
           if (resultsWithNoSchema.length > 0) {
             log.warn('unable to resolve schema for queried objects', {
               count: resultsWithNoSchema.length,
-              types: Array.dedupe(results.map((_) => _.result && Entity.getTypeDXN(_.result)?.toString())),
+              types: Array.dedupe(results.map((_) => _.result && Entity.getTypeURI(_.result)?.toString())),
             });
           }
 
@@ -233,31 +233,29 @@ export class IndexQuerySource implements QuerySource {
     }
 
     invariant(SpaceId.isValid(result.spaceId), 'Invalid spaceId');
+    invariant(ObjectId.isValid(result.id), 'Invalid id');
 
     // For queue items, hydrate using Obj.fromJSON with ref resolver.
     if (result.queueId && result.documentJson) {
+      invariant(ObjectId.isValid(result.queueId), 'Invalid queueId');
       const json = JSON.parse(result.documentJson);
-      const queueDXN = DXN.fromQueue(
-        (result.queueNamespace ?? 'data') as QueueSubspaceTag,
-        result.spaceId as SpaceId,
-        result.queueId as ObjectId,
-      );
+      const queueEchoUri = EchoURI.make({ spaceId: result.spaceId, objectId: result.queueId });
       const refResolver = this._params.graph.createRefResolver({
-        context: { space: result.spaceId as SpaceId, feed: queueDXN },
+        context: { space: result.spaceId, feed: queueEchoUri },
       });
-      const database = this._params.graph.getDatabase(result.spaceId as SpaceId);
+      const database = this._params.graph.getDatabase(result.spaceId);
       let object;
       try {
         object = await Obj.fromJSON(json, {
           refResolver,
-          dxn: queueDXN.extend([result.id as ObjectId]),
+          uri: EchoURI.make({ spaceId: result.spaceId, objectId: result.id }),
           database,
         });
       } catch (err) {
-        const typeDXN = typeof json[ATTR_TYPE] === 'string' ? json[ATTR_TYPE] : '<unknown>';
-        if (!emittedSchemaValidationWarnings.has(typeDXN)) {
-          emittedSchemaValidationWarnings.add(typeDXN);
-          log.warn('object failed schema validation', { type: typeDXN, error: err });
+        const typeDxn = typeof json[ATTR_TYPE] === 'string' ? json[ATTR_TYPE] : '<unknown>';
+        if (!emittedSchemaValidationWarnings.has(typeDxn)) {
+          emittedSchemaValidationWarnings.add(typeDxn);
+          log.warn('object failed schema validation', { type: typeDxn, error: err });
         }
         return null;
       }

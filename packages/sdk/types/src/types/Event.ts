@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
 import { type MakeOptional } from '@dxos/util';
@@ -48,10 +48,7 @@ export const Event = Schema.Struct({
    */
   thread: Ref.Ref(Thread.Thread).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.event',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.event', '0.1.0')),
   LabelAnnotation.set(['title']),
   DescriptionAnnotation.set('description'),
   Annotation.IconAnnotation.set({

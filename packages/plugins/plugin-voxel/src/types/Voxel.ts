@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/internal';
 
 /** Properties stored for each voxel. */
@@ -37,10 +37,7 @@ export const World = Schema.Struct({
   /** Map of voxel coordinates to voxel properties. Keys are `${x}:${y}:${z}`. */
   voxels: Schema.optional(Schema.Record({ key: Schema.String, value: VoxelProps })),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.voxel',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.voxel', '0.1.0')),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--cube--regular',

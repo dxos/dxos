@@ -31,7 +31,7 @@ export type ThreadContainerProps = ThemedClassName<
  */
 export const ThreadContainer = composable<HTMLDivElement, ThreadContainerProps>(
   ({ space, thread, context, autoFocusTextbox, current, ...props }, forwardedRef) => {
-    const id = Obj.getDXN(thread).toString();
+    const id = Obj.getURI(thread);
     const identity = useIdentity()!;
     const members = useMembers(space?.id);
     const activity = useStatus(space, id);

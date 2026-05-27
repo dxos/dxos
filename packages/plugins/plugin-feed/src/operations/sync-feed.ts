@@ -36,7 +36,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
       invariant(url, 'Feed URL is required.');
       const echoFeed = subscriptionFeed.feed?.target;
       invariant(echoFeed, 'Backing ECHO feed not found.');
-      invariant(Feed.getQueueDxn(echoFeed), 'Feed not stored in a space.');
+      invariant(Feed.getQueueUri(echoFeed), 'Feed not stored in a space.');
       const space = getSpace(subscriptionFeed);
       invariant(space, 'Space not found.');
 

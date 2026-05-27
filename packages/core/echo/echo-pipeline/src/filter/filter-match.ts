@@ -24,15 +24,13 @@ export const filterMatchObject = (filter: QueryAST.Filter, obj: MatchedObject): 
       // Check typename if specified.
       if (filter.typename !== null) {
         // TODO(dmaretskyi): `system` is missing in some cases.
-        if (!obj.doc?.system?.type?.['/']) {
+        const actualDXNStr = obj.doc?.system?.type?.['/'];
+        if (!actualDXNStr) {
           // Objects with no type are deprecated.
           return false;
-        } else {
-          const actualDXN = DXN.parse(obj.doc.system.type['/']);
-          const expectedDXN = DXN.parse(filter.typename);
-          if (!compareTypename(expectedDXN, actualDXN)) {
-            return false;
-          }
+        }
+        if (!compareTypenameStrings(filter.typename, actualDXNStr)) {
+          return false;
         }
       }
 
@@ -141,15 +139,13 @@ export const filterMatchObjectJSON = (filter: QueryAST.Filter, obj: ObjectJSON):
       // Check typename if specified
       if (filter.typename !== null) {
         // TODO(dmaretskyi): `system` is missing in some cases.
-        if (!obj['@type']) {
+        const actualDXNStr = obj['@type'];
+        if (!actualDXNStr) {
           // Objects with no type are deprecated.
           return false;
-        } else {
-          const actualDXN = DXN.parse(obj['@type']);
-          const expectedDXN = DXN.parse(filter.typename);
-          if (!compareTypename(expectedDXN, actualDXN)) {
-            return false;
-          }
+        }
+        if (!compareTypenameStrings(filter.typename, actualDXNStr)) {
+          return false;
         }
       }
 
@@ -274,7 +270,7 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
             if (!isEncodedReference(value)) {
               return false;
             }
-            return DXN.equals(EncodedReference.toDXN(value), EncodedReference.toDXN(compareValue));
+            return EncodedReference.toURI(value) === EncodedReference.toURI(compareValue);
           }
           return value === compareValue;
         case 'neq':
@@ -359,23 +355,30 @@ export const filterMatchValue = (filter: QueryAST.Filter, value: unknown): boole
  * dxn:type:com.example.type.task:0.1.0 === dxn:type:com.example.type.task
  *
  */
-const compareTypename = (expectedDXN: DXN, actualDXN: DXN): boolean => {
-  const expectedTypeDXN = expectedDXN.asTypeDXN();
-  if (expectedTypeDXN) {
-    const actualTypeDXN = actualDXN.asTypeDXN();
-    if (!actualTypeDXN) {
+/**
+ * Compare two DXN strings, allowing version-agnostic type DXN comparison:
+ * dxn:type:com.example.type.task       === dxn:type:com.example.type.task:0.1.0
+ * dxn:type:com.example.type.task:0.1.0 === dxn:type:com.example.type.task
+ */
+const compareTypenameStrings = (expectedStr: string, actualStr: string): boolean => {
+  // Normalize via DXN.tryMake to handle the legacy `dxn:type:<nsid>` form alongside `dxn:<nsid>`.
+  const expectedDxn = DXN.tryMake(expectedStr);
+  const actualDxn = DXN.tryMake(actualStr);
+  if (expectedDxn !== undefined) {
+    if (actualDxn === undefined) {
       return false;
     }
-    if (
-      actualTypeDXN.type !== expectedTypeDXN.type ||
-      (expectedTypeDXN.version !== undefined &&
-        actualTypeDXN.version !== undefined &&
-        actualTypeDXN.version !== expectedTypeDXN.version)
-    ) {
+    if (DXN.getName(actualDxn) !== DXN.getName(expectedDxn)) {
+      return false;
+    }
+    const expectedVersion = DXN.getVersion(expectedDxn);
+    const actualVersion = DXN.getVersion(actualDxn);
+    if (expectedVersion !== undefined && actualVersion !== undefined && actualVersion !== expectedVersion) {
       return false;
     }
   } else {
-    if (!DXN.equals(actualDXN, expectedDXN)) {
+    // EchoURI or other URI type — exact match.
+    if (actualStr !== expectedStr) {
       return false;
     }
   }

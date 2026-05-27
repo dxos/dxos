@@ -4,13 +4,13 @@
 
 import React, { useCallback, useRef } from 'react';
 
-import { type DXN } from '@dxos/echo';
+import { type URI } from '@dxos/keys';
 import { DxAnchorActivate, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
 export type UserIconButtonProps = ThemedClassName<{
-  value?: DXN;
+  value?: URI.URI;
   title?: string;
   onContactCreate?: () => void;
 }>;

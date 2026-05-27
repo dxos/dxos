@@ -15,7 +15,7 @@ describe('Experimental API review', () => {
     const contact = Obj.make(TestSchema.Person, { name: 'Test' });
     const schema = Obj.getSchema(contact) ?? raise(new Error('No schema found'));
 
-    expect(Type.getDXN(schema)?.typename).to.eq(TestSchema.Person.typename);
+    expect(Type.getTypename(schema)).to.eq(TestSchema.Person.typename);
     expect(Type.getTypename(schema)).to.eq('com.example.type.person');
     expect(Type.getVersion(schema)).to.eq('0.1.0');
     expect(Type.getMeta(schema)).to.deep.eq({

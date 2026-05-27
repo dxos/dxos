@@ -41,7 +41,7 @@ export const danglingRefsDiagnostic: DiagnosticProvider = {
               issues.push({
                 id: `${space.id}:${(obj as { id?: string }).id ?? 'unknown'}:${path.join('.')}:dangling`,
                 severity: 'error',
-                message: `Dangling reference at "${path.join('.')}" → ${ref.dxn.toString()}.`,
+                message: `Dangling reference at "${path.join('.')}" → ${ref.uri}.`,
                 subjectLabel: labelObject(obj),
                 spaceId: space.id,
               });

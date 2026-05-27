@@ -18,7 +18,7 @@ import {
   formatToType,
 } from '@dxos/echo/internal';
 import { createEchoSchema } from '@dxos/echo/testing';
-import { type DXN, PublicKey } from '@dxos/keys';
+import { DXN, PublicKey } from '@dxos/keys';
 
 export type SelectOptionType = typeof SelectOption.Type;
 
@@ -52,23 +52,18 @@ export const createDefaultSchema = () =>
     description: Schema.optional(Schema.String).annotations({
       title: 'Description',
     }),
-  }).pipe(
-    Type.object({
-      typename: `com.example.type.${PublicKey.random().truncate()}`,
-      version: '0.1.0',
-    }),
-  );
+  }).pipe(Type.object(DXN.make(`com.example.type.${PublicKey.random().truncate()}`, '0.1.0')));
 
 export const getSchema = async (
-  dxn: DXN,
+  dxn: DXN.DXN,
   registry?: SchemaRegistry.SchemaRegistry,
 ): Promise<Type.AnyEntity | undefined> => {
-  const typeDXN = dxn.asTypeDXN();
-  if (!typeDXN) {
+  if (!DXN.isDXN(dxn)) {
     return;
   }
 
-  const { type, version } = typeDXN;
+  const type = DXN.getName(dxn);
+  const version = DXN.getVersion(dxn);
   const schema = await registry
     ?.query({ typename: type, version, location: ['database', 'runtime'] })
     .firstOrUndefined();
@@ -95,7 +90,7 @@ export const getSchemaFromPropertyDefinitions = (
     properties.filter((prop) => prop.name !== 'id').map((prop) => [prop.name, typeToSchema[formatToType[prop.format]]]),
   );
 
-  const typeSchema = Schema.Struct(fields).pipe(EchoObjectSchema({ typename, version: '0.1.0' }));
+  const typeSchema = Schema.Struct(fields).pipe(EchoObjectSchema(DXN.make(typename, '0.1.0')));
   const schema = createEchoSchema(typeSchema as unknown as Schema.Schema.AnyNoContext);
 
   // Wrap schema modifications in Obj.update since the persistent schema is an ECHO object.

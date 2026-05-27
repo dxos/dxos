@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useState } from 'react';
 
-import { Annotation, Format, Obj, Ref, Tag, Type } from '@dxos/echo';
+import { DXN, Annotation, Format, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -21,12 +21,7 @@ import { type ExcludeId, Form, type FormRootProps, omitId } from './Form';
 
 const Organization = Schema.Struct({
   name: Schema.String.pipe(Schema.minLength(1)).annotations({ title: 'Full name' }),
-}).pipe(
-  Type.object({
-    typename: 'com.example.type.organization',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.object(DXN.make('com.example.type.organization', '0.1.0')));
 
 export interface Organization extends Schema.Schema.Type<typeof Organization> {}
 
@@ -66,12 +61,7 @@ const Person = Schema.Struct({
       title: 'Identities',
     }),
   ),
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.person', // TODO(burdon): Change all types to /schema
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.object(DXN.make('org.dxos.type.person', '0.1.0')));
 
 export interface Person extends Schema.Schema.Type<typeof Person> {}
 

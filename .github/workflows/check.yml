@@ -81,6 +81,9 @@ jobs:
       - name: Check publish config
         run: pnpm run check-publish-config
 
+      - name: Check package.json paths
+        run: pnpm run pkg-lint
+
       - name: Check formatting
         run: pnpm run format-check
 

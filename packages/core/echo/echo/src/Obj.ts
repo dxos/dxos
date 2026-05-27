@@ -14,7 +14,7 @@ import * as Utils from 'effect/Utils';
 import type { ForeignKey } from '@dxos/echo-protocol';
 import { createJsonPath } from '@dxos/effect';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { type DXN, ObjectId } from '@dxos/keys';
+import { DXN, ObjectId, type URI } from '@dxos/keys';
 import { assumeType, deepMapValues } from '@dxos/util';
 
 import type * as Database from './Database';
@@ -64,7 +64,7 @@ export interface Unknown extends BaseObj {}
  * // Reference to any object type
  * const Collection = Schema.Struct({
  *   objects: Schema.Array(Ref.Ref(Obj.Unknown)),
- * }).pipe(Type.object({ typename: 'Collection', version: '0.1.0' }));
+ * }).pipe(Type.object(DXN.make('com.example.type.collection', '0.1.0')));
  * ```
  */
 // TODO(wittjosiah): Investigate if Schema.filter can validate KindId on ECHO instances.
@@ -77,7 +77,7 @@ export const Unknown: Type.Obj<Unknown> = Schema.Struct({
   // TODO(dmaretskyi): Clean this up.
   // NOTE: The EchoObjectSchema annotation is required for Ref.Ref(Obj.Unknown) to work.
   //   The typename/version only satisfy ECHO schema machinery for reference targets.
-  internal.EchoObjectSchema({ typename: internal.ANY_OBJECT_TYPENAME, version: internal.ANY_OBJECT_VERSION }),
+  internal.EchoObjectSchema(DXN.make(internal.ANY_OBJECT_TYPENAME, internal.ANY_OBJECT_VERSION)),
   (schema) =>
     Object.assign(schema, {
       [internal.SchemaKindId]: (schema as any)[internal.SchemaKindId],
@@ -459,12 +459,14 @@ export const snapshotOf: {
 
 // TODO(dmaretskyi): Allow returning undefined.
 /**
- * Get the DXN of the object.
+ * Get the canonical URI of the object. Returns `URI.URI` (today always an EchoURI,
+ * but future entity kinds may surface other URI schemes — narrow with
+ * `EchoURI.parse(uri)` or `DXN.tryMake(uri)` at the point of use).
  * Accepts both reactive objects and snapshots.
  */
-export const getDXN = (entity: Unknown | Snapshot): DXN => {
+export const getURI = (entity: Unknown | Snapshot): URI.URI => {
   assertArgument(!Schema.isSchema(entity), 'obj', 'Object should not be a schema.');
-  return internal.getDXN(entity);
+  return internal.getUri(entity);
 };
 
 /**
@@ -472,8 +474,8 @@ export const getDXN = (entity: Unknown | Snapshot): DXN => {
  * @example dxn:com.example.type.person:1.0.0
  * @throws If the object is missing its type (corrupted object).
  */
-export const getTypeDXN = (obj: Unknown | Snapshot): DXN => {
-  const type = internal.getTypeDXN(obj);
+export const getTypeURI = (obj: Unknown | Snapshot): URI.URI => {
+  const type = internal.getTypeURI(obj);
   invariant(type != null, 'Corrupted object: missing type.');
   return type;
 };
@@ -687,7 +689,7 @@ const valuesEqual = (left: unknown, right: unknown): boolean => {
     return Utils.structuralRegion(() => Equal.equals(left, right));
   }
   if (Ref.isRef(left) && Ref.isRef(right)) {
-    return left.dxn.toString() === right.dxn.toString();
+    return left.uri === right.uri;
   }
   if (Ref.isRef(left) || Ref.isRef(right)) {
     return false;
@@ -811,12 +813,12 @@ export const toJSON = (entity: Unknown | Snapshot): JSON => objInternal.objectTo
  * The function must be async to support resolving the schema as well as the relation endpoints.
  *
  * @param options.refResolver - Resolver for references. Produces hydrated references that can be resolved.
- * @param options.dxn - Override object DXN. Changes the result of `Obj.getDXN`.
+ * @param options.uri - Override object URI. Changes the result of `Obj.getURI`.
  * @param options.database - Database to associate with the object.
  */
 export const fromJSON: (
   json: unknown,
-  options?: { refResolver?: Ref.Resolver; dxn?: DXN; database?: Database.Database; parent?: Unknown },
+  options?: { refResolver?: Ref.Resolver; uri?: URI.URI; database?: Database.Database; parent?: Unknown },
 ) => Promise<Unknown> = objInternal.objectFromJSON as any;
 
 /**

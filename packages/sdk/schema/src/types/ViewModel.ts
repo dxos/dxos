@@ -179,7 +179,7 @@ export const makeWithReferences = async ({
       const referenceDXN = yield* Function.pipe(
         findAnnotation<ReferenceAnnotationValue>(property.type, ReferenceAnnotationId),
         Option.fromNullable,
-        Option.map((ref) => DXN.fromTypenameAndVersion(ref.typename, ref.version)),
+        Option.map((ref) => DXN.make(ref.typename, ref.version)),
       );
 
       const referenceSchema = yield* Effect.tryPromise(() => getSchema(referenceDXN, registry));

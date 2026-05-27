@@ -2,7 +2,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import { LegacySpaceProperties, SpaceProperties } from '@dxos/client-protocol';
+import { SpaceProperties } from '@dxos/client-protocol';
 import { type Space } from '@dxos/client/echo';
 import { Operation } from '@dxos/compute';
 import { Collection, Filter, Obj, Ref, Relation } from '@dxos/echo';
@@ -12,12 +12,12 @@ import { Migrations } from '@dxos/migrations';
 import { SpaceOperation } from './definitions';
 
 /**
- * Typenames the reset operation must NOT remove. Without `SpaceProperties` (or
- * `LegacySpaceProperties`), `SpaceProxy._initializeDb` never wakes its `propertiesAvailable`
- * trigger on the next session start, so `space.properties` throws "Space is not initialized."
- * and every container that reads it crashes.
+ * Typenames the reset operation must NOT remove. Without `SpaceProperties`,
+ * `SpaceProxy._initializeDb` never wakes its `propertiesAvailable` trigger on the next
+ * session start, so `space.properties` throws "Space is not initialized." and every
+ * container that reads it crashes.
  */
-const SYSTEM_TYPENAMES = new Set<string>([SpaceProperties.typename, LegacySpaceProperties.typename]);
+const SYSTEM_TYPENAMES = new Set<string>([SpaceProperties.typename]);
 
 const handler: Operation.WithHandler<typeof SpaceOperation.Reset> = SpaceOperation.Reset.pipe(
   Operation.withHandler((input) =>

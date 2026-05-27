@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import { MemoizedAiService } from '@dxos/ai/testing';
 import { AiContext, AiSession } from '@dxos/assistant';
 import { Blueprint, Operation } from '@dxos/compute';
-import { Database, DXN, Obj, Ref } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AssistantTestLayer } from '@dxos/functions-runtime/testing';
 import { ObjectId } from '@dxos/keys';
@@ -36,7 +36,7 @@ const provideTestLayers = Effect.provide(AiSession.Service.layerNewFeed().pipe(L
  */
 const getConversationDXN = Effect.gen(function* () {
   const session = yield* AiSession.Service;
-  return Obj.getDXN(session.feed).toString() as DXN.String;
+  return Obj.getURI(session.feed);
 });
 
 describe('Blueprint Manager', () => {

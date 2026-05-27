@@ -13,7 +13,7 @@ import type * as Types from 'effect/Types';
 
 import { promiseWithCauseCapture } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { DXN, type SpaceId } from '@dxos/keys';
+import { type SpaceId, type URI } from '@dxos/keys';
 
 import type * as Entity from './Entity';
 import * as Err from './Err';
@@ -120,11 +120,11 @@ export interface Database extends Queryable {
    * Creates a reference to an existing object in the database.
    *
    * NOTE: The reference may be dangling if the object is not present in the database.
-   * NOTE: Difference from `Ref.fromDXN`
-   * `Ref.fromDXN(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
+   * NOTE: Difference from `Ref.fromURI`
+   * `Ref.fromURI(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
    * `db.makeRef(dxn)` is preferable in cases with access to the database.
    */
-  makeRef<T extends Entity.Unknown = Entity.Unknown>(dxn: DXN): Ref<T>;
+  makeRef<T extends Entity.Unknown = Entity.Unknown>(uri: URI.URI): Ref<T>;
 
   /**
    * Adds object to the database.
@@ -201,19 +201,19 @@ export const spaceId = Effect.gen(function* () {
  */
 export const resolve: {
   // No type check.
-  (ref: DXN | Ref<any>): Effect.Effect<Entity.Unknown, never, Service>;
+  (ref: URI.URI | Ref<any>): Effect.Effect<Entity.Unknown, never, Service>;
   // Check matches schema.
   <S extends Type.AnyEntity>(
-    ref: DXN | Ref<any>,
+    ref: URI.URI | Ref<any>,
     schema: S,
   ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service>;
 } = (<S extends Type.AnyEntity>(
-  ref: DXN | Ref<any>,
+  ref: URI.URI | Ref<any>,
   schema?: S,
 ): Effect.Effect<Schema.Schema.Type<S>, Err.ObjectNotFoundError, Service> =>
   Effect.gen(function* () {
     const { db } = yield* Service;
-    const dxn = ref instanceof DXN ? ref : ref.dxn;
+    const dxn = typeof ref === 'string' ? ref : ref.uri;
     const object = yield* promiseWithCauseCapture(() =>
       db.graph
         .createRefResolver({
@@ -238,7 +238,7 @@ export const load: <T>(ref: Ref<T>) => Effect.Effect<T, Err.ObjectNotFoundError,
   function* (ref) {
     const object = yield* promiseWithCauseCapture(() => ref.tryLoad());
     if (!object) {
-      return yield* Effect.fail(new Err.ObjectNotFoundError(ref.dxn));
+      return yield* Effect.fail(new Err.ObjectNotFoundError(ref.uri));
     }
     return object;
   },

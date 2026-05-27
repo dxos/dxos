@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Format, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import { Provider } from '@dxos/types';
 
 import * as Booking from './Booking';
@@ -122,10 +122,7 @@ export const Segment = Schema.Struct({
   notes: Schema.optional(Schema.String),
   details: Details,
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.trip.segment',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.trip.segment', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--ticket--regular',
     hue: 'sky',

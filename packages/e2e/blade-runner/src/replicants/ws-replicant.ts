@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Trigger, latch } from '@dxos/async';
-import { Type } from '@dxos/echo';
+import { DXN, Type } from '@dxos/echo';
 import {
   EdgeClient,
   SwarmRequestSchema,
@@ -23,12 +23,7 @@ import { type ReplicantEnv, ReplicantRegistry } from '../env';
 
 export const Text = Schema.Struct({
   content: Schema.String,
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.bladeRunner.text',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.object(DXN.make('org.dxos.type.bladeRunner.text', '0.1.0')));
 
 export interface Text extends Schema.Schema.Type<typeof Text> {}
 

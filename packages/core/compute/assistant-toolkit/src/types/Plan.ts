@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 
 import * as Chat from './Chat';
 
@@ -45,13 +45,7 @@ export interface Task extends Schema.Schema.Type<typeof Task> {}
  */
 export const Plan = Schema.Struct({
   tasks: Schema.Array(Task),
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.plan',
-    version: '0.1.0',
-  }),
-  Annotation.SystemTypeAnnotation.set(true),
-);
+}).pipe(Type.object(DXN.make('org.dxos.type.plan', '0.1.0')), Annotation.SystemTypeAnnotation.set(true));
 export interface Plan extends Schema.Schema.Type<typeof Plan> {}
 
 export const generateTaskId = (plan: Plan): TaskId => {

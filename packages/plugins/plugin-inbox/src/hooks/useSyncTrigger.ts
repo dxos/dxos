@@ -7,7 +7,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { type Client } from '@dxos/client';
 import { Trigger, Operation } from '@dxos/compute';
 import { Context } from '@dxos/context';
-import { type Database, DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { type Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { getDeployedFunctions } from '@dxos/functions-runtime/edge';
 import { useClient } from '@dxos/react-client';
 import { useObject, useQuery } from '@dxos/react-client/echo';
@@ -61,7 +61,7 @@ export const useSyncTrigger = ({
   const [pending, setPending] = useState(false);
   const triggers = useQuery(db, Query.select(Filter.type(Trigger.Trigger)).debugLabel('plugin-inbox.useSyncTrigger'));
 
-  const subjectDXN = Obj.getDXN(subject);
+  const subjectUri = Obj.getURI(subject);
   const syncTrigger = useMemo(
     () =>
       triggers.find((trigger) => {
@@ -71,9 +71,9 @@ export const useSyncTrigger = ({
         const mailboxRef = trigger.input?.mailbox;
         const calendarRef = trigger.input?.calendar;
         const ref = mailboxRef ?? calendarRef;
-        return ref?.dxn && DXN.equalsEchoId(ref.dxn, subjectDXN);
+        return ref?.uri && ref.uri === subjectUri;
       }),
-    [triggers, subjectDXN],
+    [triggers, subjectUri],
   );
 
   const [syncEnabled, setSyncEnabled] = useObject(syncTrigger, 'enabled');
@@ -100,7 +100,7 @@ export const useSyncTrigger = ({
         enabled: true,
         spec: Trigger.specTimer('*/5 * * * *'),
         function: Ref.make(fn),
-        input: { [inputKey]: db.makeRef(Obj.getDXN(subject)), ...extraInput },
+        input: { [inputKey]: db.makeRef(Obj.getURI(subject)), ...extraInput },
       });
 
       db.add(trigger);

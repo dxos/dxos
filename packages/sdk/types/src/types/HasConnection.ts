@@ -6,24 +6,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Relation, Type } from '@dxos/echo';
+import { DXN, Obj, Relation, Type } from '@dxos/echo';
 
 import * as Organization from './Organization';
-
-/** @deprecated Use HasConnection instead. */
-export const LegacyHasConnection = Schema.Struct({
-  id: Obj.ID,
-  kind: Schema.String,
-}).pipe(
-  Type.relation({
-    typename: 'org.dxos.relation.has-connection',
-    version: '0.1.0',
-    source: Organization.Organization,
-    target: Organization.Organization,
-  }),
-);
-
-export interface LegacyHasConnection extends Schema.Schema.Type<typeof LegacyHasConnection> {}
 
 export const HasConnection = Schema.Struct({
   id: Obj.ID,
@@ -34,8 +19,7 @@ export const HasConnection = Schema.Struct({
 })
   .pipe(
     Type.relation({
-      typename: 'org.dxos.relation.hasConnection',
-      version: '0.1.0',
+      dxn: DXN.make('org.dxos.relation.hasConnection', '0.1.0'),
       source: Organization.Organization,
       target: Organization.Organization,
     }),

@@ -5,39 +5,18 @@
 import { isAfter, isBefore, isEqual } from 'date-fns';
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { updateText } from '@dxos/echo-db';
 import { SystemTypeAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
 
 import { getDateString, parseDateString } from './util';
 
-/** @deprecated Use JournalEntry instead. */
-export const LegacyJournalEntry = Schema.Struct({
-  id: Schema.String,
-  date: Schema.String,
-  content: Ref.Ref(Text.Text),
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.journal-entry',
-    version: '0.1.0',
-  }),
-  SystemTypeAnnotation.set(true),
-);
-
-export interface LegacyJournalEntry extends Schema.Schema.Type<typeof LegacyJournalEntry> {}
-
 export const JournalEntry = Schema.Struct({
   id: Schema.String,
   date: Schema.String,
   content: Ref.Ref(Text.Text),
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.journalEntry',
-    version: '0.1.0',
-  }),
-  SystemTypeAnnotation.set(true),
-);
+}).pipe(Type.object(DXN.make('org.dxos.type.journalEntry', '0.1.0')), SystemTypeAnnotation.set(true));
 
 export interface JournalEntry extends Schema.Schema.Type<typeof JournalEntry> {}
 
@@ -47,10 +26,7 @@ export const Journal = Schema.Struct({
   // TODO(burdon): Convert map of references indexed by sortable ISO date.
   entries: Schema.Record({ key: Schema.String, value: Ref.Ref(JournalEntry) }),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.journal',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.journal', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--calendar-check--regular',
     hue: 'indigo',

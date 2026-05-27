@@ -6,6 +6,7 @@ import { type Obj } from '@dxos/echo';
 import { type SerializedSpace } from '@dxos/echo-db';
 import { type DatabaseDirectory, type ObjectStructure } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
+import { URI } from '@dxos/keys';
 import { type SpaceArchive } from '@dxos/protocols/proto/dxos/client/services';
 
 const ATTR_TYPE = '@type';
@@ -57,12 +58,12 @@ export const objJsonToObjectStructure = (obj: Obj.JSON): ObjectStructure => {
 
   const type = obj[ATTR_TYPE];
   if (type) {
-    system.type = { '/': type as string };
+    system.type = { '/': URI.make(type) };
   }
 
   const parent = (obj as any)[ATTR_PARENT];
   if (typeof parent === 'string') {
-    system.parent = { '/': parent };
+    system.parent = { '/': URI.make(parent) };
   }
 
   const relationSource = (obj as any)[ATTR_RELATION_SOURCE];
@@ -70,10 +71,10 @@ export const objJsonToObjectStructure = (obj: Obj.JSON): ObjectStructure => {
   if (typeof relationSource === 'string' || typeof relationTarget === 'string') {
     system.kind = 'relation';
     if (typeof relationSource === 'string') {
-      system.source = { '/': relationSource };
+      system.source = { '/': URI.make(relationSource) };
     }
     if (typeof relationTarget === 'string') {
-      system.target = { '/': relationTarget };
+      system.target = { '/': URI.make(relationTarget) };
     }
   } else {
     system.kind = 'object';

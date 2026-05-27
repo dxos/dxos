@@ -58,7 +58,7 @@ export const TableCard = ({ role, subject: object }: TableCardProps) => {
       <Card.Row fullWidth>
         <TableComponent.Root ref={tableRef}>
           <TableComponent.Content
-            key={Obj.getDXN(object).toString()}
+            key={Obj.getURI(object)}
             model={model}
             presentation={presentation}
             schema={schema}

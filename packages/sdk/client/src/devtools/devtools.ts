@@ -10,8 +10,7 @@ import { type Halo, type Space } from '@dxos/client-protocol';
 import { type ClientServicesHost, type DataSpace } from '@dxos/client-services';
 import { exposeModule, importModule } from '@dxos/debug';
 import { Feed, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
-import { PublicKey } from '@dxos/keys';
-import { DXN } from '@dxos/keys';
+import { DXN, PublicKey, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type RpcPeer, type RpcPort, createBundledRpcServer } from '@dxos/rpc';
 import { type DiagnosticMetadata, TRACE_PROCESSOR, type TraceProcessor } from '@dxos/tracing';
@@ -45,7 +44,7 @@ export interface DevtoolsHook {
    * Resolves the DXN.
    * @param id - The DXN or DXN ID or object ID or text query.
    */
-  get?(id: string | DXN): Promise<any>;
+  get?(id: string): Promise<any>;
 
   openClientRpcServer: () => Promise<boolean>;
 
@@ -203,10 +202,7 @@ export const mountDevtoolsHooks = ({ client, host }: MountOptions) => {
     });
 
     hook.get = async (dxn) => {
-      if (typeof dxn === 'string') {
-        dxn = DXN.parse(dxn);
-      }
-      return client.graph.createRefResolver({}).resolve(dxn);
+      return client.graph.createRefResolver({}).resolve(URI.make(dxn));
     };
 
     hook.openDevtoolsApp = async () => {

@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { DXN, Filter, JsonSchema, Obj, Query, type QueryAST, Tag, Type, type View } from '@dxos/echo';
+import { DXN, EchoURI, Filter, JsonSchema, Obj, Query, type QueryAST, Tag, Type, type View } from '@dxos/echo';
 import { type EchoSchema, Format, type Mutable } from '@dxos/echo/internal';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -51,23 +51,13 @@ const DefaultStory = (props: DefaultStoryProps) => {
         name: Schema.String,
         email: Format.Email,
         salary: Format.Currency(),
-      }).pipe(
-        Type.object({
-          typename: 'com.example.type.test',
-          version: '0.1.0',
-        }),
-      );
+      }).pipe(Type.object(DXN.make('com.example.type.test', '0.1.0')));
 
       const AlternateSchema = Schema.Struct({
         title: Schema.String,
         description: Schema.String,
         completed: Schema.Boolean,
-      }).pipe(
-        Type.object({
-          typename: 'com.example.type.alternate',
-          version: '0.1.0',
-        }),
-      );
+      }).pipe(Type.object(DXN.make('com.example.type.alternate', '0.1.0')));
 
       const [testSchema] = await space.db.schemaRegistry.register([TestSchema, AlternateSchema]);
       const view = ViewModel.make({
@@ -82,13 +72,13 @@ const DefaultStory = (props: DefaultStoryProps) => {
   }, [space]);
 
   const updateViewQuery = useCallback(
-    async (newQuery: QueryAST.Query, target?: string) => {
+    async (newQuery: QueryAST.Query, target?: EchoURI.EchoURI) => {
       if (!schema || !view || !space) {
         return;
       }
 
       if (props.mode === 'tag') {
-        const queue = target && DXN.tryParse(target) ? target : undefined;
+        const queue = target;
         const query = queue ? Query.fromAst(newQuery).from({ feeds: [queue] }) : Query.fromAst(newQuery);
         Obj.update(view, (view) => {
           view.query.ast = query.ast as Mutable<typeof query.ast>;

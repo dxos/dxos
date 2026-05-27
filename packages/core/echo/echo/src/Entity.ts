@@ -5,7 +5,7 @@
 // @import-as-namespace
 
 import type { ForeignKey } from '@dxos/echo-protocol';
-import type { DXN, ObjectId } from '@dxos/keys';
+import type { ObjectId, URI } from '@dxos/keys';
 
 import * as internal from './internal';
 import type * as Relation from './Relation';
@@ -123,14 +123,16 @@ export type Meta = typeof Meta;
 export type JSON = internal.ObjectJSON;
 
 /**
- * Get the DXN of an entity (object or relation).
+ * Get the canonical URI of an entity (object or relation). Returns `URI.URI` —
+ * today always an EchoURI, but future entity kinds may surface other URI schemes;
+ * narrow with `EchoURI.parse(uri)` or `DXN.tryMake(uri)` at the point of use.
  */
-export const getDXN = (entity: Unknown | Snapshot): DXN => internal.getDXN(entity);
+export const getURI = (entity: Unknown | Snapshot): URI.URI => internal.getUri(entity);
 
 /**
  * Get the DXN of an entity's type.
  */
-export const getTypeDXN = internal.getTypeDXN;
+export const getTypeURI: (obj: Unknown | Snapshot) => URI.URI | undefined = internal.getTypeURI;
 
 /**
  * Get the schema of an entity.

@@ -6,7 +6,7 @@ import { Chess as ChessJS } from 'chess.js';
 import * as Schema from 'effect/Schema';
 
 import { BlueprintsAnnotation } from '@dxos/app-toolkit';
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 
@@ -24,10 +24,7 @@ export const State = Schema.Struct({
     description: 'Forsyth-Edwards Notation.',
   }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.chess.state',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.chess.state', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--shield-chevron--regular',
     hue: 'amber',
