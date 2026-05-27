@@ -105,8 +105,7 @@ type RefMarkdownEditorProps = {
 const RefMarkdownEditor = ({ reference, placeholder }: RefMarkdownEditorProps) => {
   const text = useAtomValue(useMemo(() => AtomRef.make(reference), [reference]));
   const dataExtensions = useMemo(
-    () =>
-      text ? [createDataExtensions({ id: reference.dxn.toString(), text: createDocAccessor(text, ['content']) })] : [],
+    () => (text ? [createDataExtensions({ id: reference.uri, text: createDocAccessor(text, ['content']) })] : []),
     [text, reference],
   );
   const extensions = useBasicMarkdownExtensions({ placeholder, extensions: dataExtensions });

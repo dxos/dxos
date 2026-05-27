@@ -45,7 +45,7 @@ export const threads = (
   }
 
   const { registry, stateAtom } = store;
-  const objectId = Obj.getDXN(doc).toString();
+  const objectId = Obj.getURI(doc);
   const query = db.query(Query.select(Filter.id(doc.id)).targetOf(AnchoredTo.AnchoredTo));
 
   // Get current anchors by combining query results with store drafts.
@@ -97,7 +97,7 @@ export const threads = (
         getAnchors()
           .filter((anchor) => anchor.anchor)
           .map((anchor) => ({
-            id: Obj.getDXN(Relation.getSource(anchor)).toString(),
+            id: Obj.getURI(Relation.getSource(anchor)),
             cursor: anchor.anchor,
           })),
     ),
@@ -115,7 +115,7 @@ export const threads = (
       onDelete: ({ id }) => {
         const drafts = registry.get(stateAtom).drafts[objectId];
         if (drafts) {
-          const index = drafts.findIndex((draft) => Relation.getDXN(draft).toString() === id);
+          const index = drafts.findIndex((draft) => Relation.getURI(draft) === id);
           if (index !== -1) {
             const current = registry.get(stateAtom);
             registry.set(stateAtom, {
@@ -136,7 +136,7 @@ export const threads = (
         }
       },
       onUpdate: ({ id, cursor }) => {
-        const draft = registry.get(stateAtom).drafts[objectId]?.find((d) => Relation.getDXN(d).toString() === id);
+        const draft = registry.get(stateAtom).drafts[objectId]?.find((d) => Relation.getURI(d) === id);
         if (draft) {
           const thread = Relation.getSource(draft) as Thread.Thread;
           Obj.update(thread, (thread) => {

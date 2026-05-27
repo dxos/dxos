@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
-import { Annotation, Database, Filter, Migration, Obj, Type } from '@dxos/echo';
+import { DXN, Annotation, Database, Filter, Migration, Obj, Type } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 
@@ -69,10 +69,7 @@ export const Blueprint = Schema.Struct({
    */
   mcpServers: Schema.optional(Schema.Array(McpServer.McpServer)),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.blueprint',
-    version: '0.2.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.blueprint', '0.2.0')),
   Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--blueprint--regular',
@@ -269,12 +266,7 @@ export const Blueprint_v0_1_0 = Schema.Struct({
   agentCanEnable: Schema.optional(Schema.Boolean),
 
   mcpServers: Schema.optional(Schema.Array(McpServer.McpServer)),
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.blueprint',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.object(DXN.make('org.dxos.type.blueprint', '0.1.0')));
 
 export interface Blueprint_v0_1_0 extends Schema.Schema.Type<typeof Blueprint_v0_1_0> {}
 

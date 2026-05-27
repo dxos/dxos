@@ -133,12 +133,12 @@ export const getTypenameFromQuery = (query: QueryAST.Query | undefined): string 
         return;
       }
 
-      const dxn = DXN.tryParse(node.filter.typename)?.asTypeDXN();
+      const dxn = DXN.tryMake(node.filter.typename);
       if (!dxn) {
         return;
       }
 
-      typename = dxn.type;
+      typename = DXN.getName(dxn);
     });
 
   return typename;

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { Operation } from '@dxos/compute';
 import { JsonSchema } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { type DXN } from '@dxos/keys';
+import { type URI } from '@dxos/keys';
 
 import { type ComputeResolver, GraphExecutor, compileOrThrow } from '../compiler';
 import { NODE_INPUT, NODE_OUTPUT, type NodeType, inputNode, outputNode, registry } from '../nodes';
@@ -24,7 +24,7 @@ import { Workflow } from './workflow';
 
 export type WorkflowLoaderProps = {
   nodeResolver: (node: ComputeNode) => Promise<Executable>;
-  graphLoader: (graphId: DXN) => Promise<ComputeGraph>;
+  graphLoader: (graphId: URI.URI) => Promise<ComputeGraph>;
 };
 
 /**
@@ -32,21 +32,21 @@ export type WorkflowLoaderProps = {
  */
 export class WorkflowLoader {
   private readonly _nodeResolver: (node: ComputeNode) => Promise<Executable>;
-  private readonly _graphLoader: (graphId: DXN) => Promise<ComputeGraph>;
+  private readonly _graphLoader: (graphId: URI.URI) => Promise<ComputeGraph>;
 
   constructor(params: WorkflowLoaderProps) {
     this._nodeResolver = params.nodeResolver;
     this._graphLoader = params.graphLoader;
   }
 
-  public async load(graphDXN: DXN): Promise<Workflow> {
-    const graph = new ComputeGraphModel(await this._graphLoader(graphDXN));
+  public async load(graphUri: URI.URI): Promise<Workflow> {
+    const graph = new ComputeGraphModel(await this._graphLoader(graphUri));
     this._validateWorkflowInOut(graph);
 
     const { resolver, resolvedNodes } = this._createComputeResolver();
     const executor = new GraphExecutor({ computeNodeResolver: resolver });
     await executor.load(graph);
-    return new Workflow(graphDXN, graph, executor, resolvedNodes);
+    return new Workflow(graphUri, graph, executor, resolvedNodes);
   }
 
   private _createComputeResolver(cache: CompilationCache = newCompilationCache()): {
@@ -71,8 +71,8 @@ export class WorkflowLoader {
           break;
         default: {
           if (node.subgraph) {
-            const graph = new ComputeGraphModel(await this._graphLoader(node.subgraph.dxn));
-            executable = await this._compileGraph(node.type, graph, cache);
+            const graph = new ComputeGraphModel(await this._graphLoader(node.subgraph.uri));
+            executable = await this._compileGraph(node.subgraph.uri, graph, cache);
           } else if (node.type === 'function' || node.function) {
             executable = await this._loadFunction(node, cache);
           } else if (registry[node.type as NodeType]) {
@@ -92,19 +92,19 @@ export class WorkflowLoader {
   }
 
   private async _compileGraph(
-    graphDxnStr: string,
+    graphUriStr: URI.URI,
     graph: ComputeGraphModel,
     cache: CompilationCache,
   ): Promise<Executable> {
-    const compiled = cache.compiledGraphMap.get(graphDxnStr);
+    const compiled = cache.compiledGraphMap.get(graphUriStr);
     if (compiled) {
       return compiled;
     }
 
-    if (cache.compilationInProgress.has(graphDxnStr)) {
-      throw new Error(`Circular dependency found at ${graphDxnStr}.`);
+    if (cache.compilationInProgress.has(graphUriStr)) {
+      throw new Error(`Circular dependency found at ${graphUriStr}.`);
     }
-    cache.compilationInProgress.add(graphDxnStr);
+    cache.compilationInProgress.add(graphUriStr);
 
     const { inputNodeId, outputNodeId } = this._resolveSubgraphInOut(graph);
     const { resolver: computeResolver } = this._createComputeResolver(cache);
@@ -115,7 +115,7 @@ export class WorkflowLoader {
       computeResolver,
     });
 
-    cache.compiledGraphMap.set(graphDxnStr, executable);
+    cache.compiledGraphMap.set(graphUriStr, executable);
     return executable;
   }
 
@@ -125,7 +125,7 @@ export class WorkflowLoader {
       throw new Error(`Function reference missing on node ${node.id}.`);
     }
 
-    const cacheKey = functionRef.dxn.toString();
+    const cacheKey = functionRef.uri;
     const cached = cache.loadedFunctionsMap.get(cacheKey);
     if (cached) {
       return cached;

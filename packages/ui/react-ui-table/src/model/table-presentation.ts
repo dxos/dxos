@@ -208,8 +208,8 @@ export class TablePresentation<T extends TableRow = TableRow> {
     if (props.format === Format.TypeFormat.Ref && props.referenceSchema) {
       const targetObj = getValue(obj, field.path)?.target;
       if (targetObj) {
-        const dxn = Obj.getDXN(targetObj)?.toString();
-        cell.accessoryHtml = `<div role="none" class="absolute end-0 inset-y-0 p-(--dx-grid-cell-content-padding-block)"><dx-anchor dxn=${dxn} class="dx-button w-6 aspect-square min-h-0" data-dx-grid-action="accessory"><dx-icon icon="ph--link-simple--regular"/></dx-anchor></div>`;
+        const uri = Obj.getURI(targetObj);
+        cell.accessoryHtml = `<div role="none" class="absolute end-0 inset-y-0 p-(--dx-grid-cell-content-padding-block)"><dx-anchor uri=${uri} class="dx-button w-6 aspect-square min-h-0" data-dx-grid-action="accessory"><dx-icon icon="ph--link-simple--regular"/></dx-anchor></div>`;
       }
     }
 

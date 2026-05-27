@@ -8,6 +8,8 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
+import { type URI } from '@dxos/keys';
+
 import type * as Entity from './Entity';
 import * as refInternal from './internal/Ref';
 import type * as JsonSchema from './JsonSchema';
@@ -42,7 +44,7 @@ export type Unknown = refInternal.Ref<Obj.Unknown>;
  * ```ts
  * const Task = Schema.Struct({
  *   assignee: Ref.Ref(Person),  // Creates a Ref schema
- * }).pipe(Type.object({ typename: 'Task', version: '0.1.0' }));
+ * }).pipe(Type.object(DXN.make('com.example.type.task', '0.1.0')));
  * ```
  */
 export const Ref: <S extends Schema.Schema.Any>(schema: S) => RefSchema<Schema.Schema.Type<S>> = refInternal.Ref;
@@ -82,8 +84,8 @@ export const isRef: (value: unknown) => value is Unknown = refInternal.Ref.isRef
 
 export const make = refInternal.Ref.make;
 
-// TODO(dmaretskyi): Consider just allowing `make` to accept DXN.
-export const fromDXN = refInternal.Ref.fromDXN;
+// TODO(dmaretskyi): Consider just allowing `make` to accept URI.
+export const fromURI = (uri: URI.URI): refInternal.Ref<any> => refInternal.Ref.fromURI(uri);
 
 export const hasObjectId = refInternal.Ref.hasObjectId;
 

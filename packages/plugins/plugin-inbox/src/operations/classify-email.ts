@@ -11,20 +11,20 @@ import * as Option from 'effect/Option';
 import { AiService, ConsolePrinter, ToolExecutionService, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
 import { Trace, Operation, OperationRegistry } from '@dxos/compute';
-import { Database, Feed, Filter, Obj, Ref, Relation, Tag, Type } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
+import { Database, Feed, Filter, Obj, Relation, Tag, Type } from '@dxos/echo';
+import { EchoURI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { HasSubject, Message } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { InboxOperation } from '../types';
+import { InboxOperation, Mailbox } from '../types';
 import { renderMarkdown } from '../util';
 
 const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = InboxOperation.ClassifyEmail.pipe(
   Operation.withHandler(
     Effect.fnUntraced(
       function* ({ message }) {
-        if (message['@type'] !== Type.getDXN(Message.Message)!.toString()) {
+        if (message['@type'] !== Type.getURI(Message.Message)) {
           log.info('not a message object, skipping classification', { message });
           return;
         }
@@ -76,18 +76,30 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
           return yield* Effect.fail(new Error(`Tag not found: ${selectedTagLabel}`));
         }
 
-        log.info('selected tag', { tagId: Obj.getDXN(selectedTag).toString(), tagLabel: selectedTag.label });
+        log.info('selected tag', { tagId: Obj.getURI(selectedTag), tagLabel: selectedTag.label });
 
-        const messageDXN = DXN.parse(message['@dxn']);
-        const queueDXNInfo = messageDXN.asQueueDXN();
-        log.info('queueDXNInfo', queueDXNInfo);
-
-        if (!queueDXNInfo) {
-          return yield* Effect.fail(new Error('Message is not in a feed'));
+        // Find the feed by querying for mailboxes in the database.
+        // After the identifier refactor, message DXNs are ECHO-kind (dxn:echo:spaceId:itemId)
+        // and no longer embed the queue/feed ID. We locate the feed via the mailbox object.
+        // Accept new `@uri` and legacy `@dxn` field name for backward compat with old snapshots.
+        const messageEchoId = EchoURI.tryParse((message as any)['@uri'] ?? (message as any)['@dxn']);
+        if (!messageEchoId) {
+          return yield* Effect.fail(new Error('Message does not have a valid DXN'));
         }
 
-        const feedDXN = DXN.fromSpaceAndObjectId(queueDXNInfo.spaceId, queueDXNInfo.queueId);
-        const feed = yield* Database.load(Ref.fromDXN(feedDXN));
+        const mailboxes = yield* Database.runQuery(Filter.type(Mailbox.Mailbox));
+        if (mailboxes.length === 0) {
+          return yield* Effect.fail(new Error('No mailbox found in database'));
+        }
+
+        // Use the first mailbox whose feed exists.
+        const mailbox = mailboxes.find((mb) => mb.feed?.target != null);
+        if (!mailbox) {
+          return yield* Effect.fail(new Error('No mailbox with a feed found'));
+        }
+
+        const feed = mailbox.feed!.target as Feed.Feed;
+        log.info('found feed via mailbox', { mailboxId: mailbox.id, feedDxn: Feed.getQueueUri(feed)?.toString() });
 
         const relation = Relation.make(HasSubject.HasSubject, {
           [Relation.Source]: selectedTag,
@@ -102,7 +114,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.ClassifyEmail> = Inbo
         yield* Database.flush();
 
         return {
-          tagId: Obj.getDXN(selectedTag).toString(),
+          tagId: Obj.getURI(selectedTag),
           tagLabel: selectedTag.label,
         };
       },

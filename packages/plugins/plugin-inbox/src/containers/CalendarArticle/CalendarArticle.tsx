@@ -35,7 +35,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   const showItem = useShowItem();
   // TODO(wittjosiah): Should be `const feed = useObjectValue(calendar.feed)`.
   const [calendar] = useObject(subject);
-  const id = attendableId ?? Obj.getDXN(calendar).toString();
+  const id = attendableId ?? Obj.getURI(calendar);
   const currentId = useSelected(id, 'single');
   const db = Obj.getDatabase(calendar);
 

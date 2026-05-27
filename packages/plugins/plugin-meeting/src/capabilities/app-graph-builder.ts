@@ -60,7 +60,7 @@ export default Capability.makeModule(
                 invariant(space);
                 yield* Operation.invoke(SpaceOperation.GetShareLink, {
                   space,
-                  target: Obj.getDXN(channel).toString(),
+                  target: Obj.getURI(channel),
                   copyToClipboard: true,
                 });
               }),
@@ -78,10 +78,10 @@ export default Capability.makeModule(
         type: Channel.Channel,
         connector: Effect.fnUntraced(function* (channel, get) {
           const callManager = yield* Capability.get(CallsCapabilities.Manager);
-          const channelDXN = Obj.getDXN(channel).toString();
+          const channelUri = Obj.getURI(channel);
           const joined = get(callManager.joinedAtom);
           const roomId = get(callManager.roomIdAtom);
-          if (!joined || roomId !== channelDXN) {
+          if (!joined || roomId !== channelUri) {
             return [];
           }
 
@@ -130,12 +130,12 @@ export default Capability.makeModule(
                 const callManager = yield* Capability.get(CallsCapabilities.Manager);
                 const transcript = yield* Effect.promise(() => meeting.transcript.load());
                 const transcriptFeed = yield* Effect.promise(() => transcript.feed.load());
-                const transcriptFeedDXN = Feed.getQueueDxn(transcriptFeed);
-                invariant(transcriptFeedDXN, 'Transcript feed has no DXN');
+                const transcriptQueueDxn = Feed.getQueueUri(transcriptFeed);
+                invariant(transcriptQueueDxn, 'Transcript feed has no queue DXN');
                 const transcriptionEnabled = !enabled;
                 callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
-                  meetingId: Obj.getDXN(meeting).toString(),
-                  transcriptDXN: transcriptFeedDXN.toString(),
+                  meetingId: Obj.getURI(meeting),
+                  transcriptDxn: transcriptQueueDxn.toString(),
                   transcriptionEnabled,
                 });
 

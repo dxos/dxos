@@ -5,7 +5,7 @@
 import { AgentStatus } from '@dxos/ai';
 import { type Entity, Obj, type Ref } from '@dxos/echo';
 import { MESSAGE_PROPERTY_TOOL_CALL_ID } from '@dxos/functions';
-import { type ObjectId } from '@dxos/keys';
+import { EchoURI, type ObjectId } from '@dxos/keys';
 import { LogLevel } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';
@@ -511,7 +511,8 @@ const stringifyRef = (ref: Ref.Unknown) => {
     return stringifyObject(ref.target);
   }
 
-  return ref.dxn.asEchoDXN()?.echoId ?? ref.dxn.asQueueDXN()?.objectId ?? '';
+  const echoUri = EchoURI.tryParse(ref.uri);
+  return (echoUri ? EchoURI.getObjectId(echoUri) : undefined) ?? '';
 };
 
 const stringifyObject = (obj: Obj.Unknown) => {

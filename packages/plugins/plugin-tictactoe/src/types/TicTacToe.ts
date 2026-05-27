@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, SystemTypeAnnotation } from '@dxos/echo/internal';
 
 export const Level = Schema.Literal('easy', 'medium', 'hard');
@@ -35,10 +35,7 @@ export const State = Schema.Struct({
     description: 'AI difficulty level.',
   }).pipe(FormInputAnnotation.set(false), Schema.optional),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.tictactoe.state',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.tictactoe.state', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--hash-straight--regular',
     hue: 'cyan',

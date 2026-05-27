@@ -5,7 +5,6 @@
 import { Order, Query } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import type { DXN } from '@dxos/keys';
 
 import { QueryError } from './errors';
 import { QueryPlan } from './plan';
@@ -171,7 +170,7 @@ export class QueryPlanner {
               scope: context.scope,
               selector: {
                 _tag: 'TypeSelector',
-                typename: [filter.typename as DXN.String],
+                typename: [filter.typename],
                 inverted: false,
               },
             },
@@ -418,7 +417,7 @@ export class QueryPlanner {
               scope: context.scope,
               selector: {
                 _tag: 'TypeSelector',
-                typename: typenames as DXN.String[],
+                typename: typenames,
                 inverted: context.selectionInverted,
               },
             },

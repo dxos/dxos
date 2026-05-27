@@ -20,7 +20,7 @@ const handler: Operation.WithHandler<typeof ThreadOperation.Create> = ThreadOper
     Effect.fnUntraced(function* ({ name, anchor: _anchor, subject }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
       const stateAtom = yield* Capability.get(ThreadCapabilities.State);
-      const subjectId = Obj.getDXN(subject).toString();
+      const subjectId = Obj.getURI(subject);
 
       // Inherit the markdown plugin's `commentAgentMode` setting when the
       // subject is a Markdown.Document, so new comment threads on docs are
@@ -52,7 +52,7 @@ const handler: Operation.WithHandler<typeof ThreadOperation.Create> = ThreadOper
         },
       });
 
-      yield* Operation.invoke(ThreadOperation.Select, { current: Obj.getDXN(thread).toString() });
+      yield* Operation.invoke(ThreadOperation.Select, { current: Obj.getURI(thread) });
       yield* Operation.invoke(LayoutOperation.UpdateCompanion, {
         subject: linkedSegment('comments'),
       });

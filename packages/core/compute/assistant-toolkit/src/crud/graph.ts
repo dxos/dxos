@@ -15,16 +15,14 @@ import { Database, Entity, Feed, Filter, Obj, Query, Type } from '@dxos/echo';
 import { isEncodedReference } from '@dxos/echo-protocol';
 import {
   ReferenceAnnotationId,
-  RelationSourceDXNId,
   RelationSourceId,
-  RelationTargetDXNId,
   RelationTargetId,
   createObject,
   getTypeAnnotation,
   getTypeIdentifierAnnotation,
 } from '@dxos/echo/internal';
 import { mapAst } from '@dxos/effect';
-import { DXN, ObjectId } from '@dxos/keys';
+import { DXN, EchoURI, ObjectId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, isNonNullable, trim } from '@dxos/util';
 
@@ -60,8 +58,8 @@ export const findRelatedSchema = async (db: Database.Database, anchor: Type.AnyE
       }
 
       return (
-        isSchemaAddressableByDXN(anchor, DXN.parse(getTypeAnnotation(schema)!.sourceSchema!)) ||
-        isSchemaAddressableByDXN(anchor, DXN.parse(getTypeAnnotation(schema)!.targetSchema!))
+        isSchemaAddressableByDXN(anchor, getTypeAnnotation(schema)!.sourceSchema!) ||
+        isSchemaAddressableByDXN(anchor, getTypeAnnotation(schema)!.targetSchema!)
       );
     })
     .map(
@@ -76,17 +74,12 @@ export const findRelatedSchema = async (db: Database.Database, anchor: Type.AnyE
  * Non-strict DXN comparison.
  * Returns true if the DXN could be resolved to the schema.
  */
-const isSchemaAddressableByDXN = (schema: Type.AnyEntity, dxn: DXN): boolean => {
-  if (getTypeIdentifierAnnotation(schema) === dxn.toString()) {
+const isSchemaAddressableByDXN = (schema: Type.AnyEntity, dxn: DXN.DXN): boolean => {
+  if (getTypeIdentifierAnnotation(schema) === dxn) {
     return true;
   }
 
-  const t = dxn.asTypeDXN();
-  if (t) {
-    return t.type === Type.getTypename(schema);
-  }
-
-  return false;
+  return DXN.getName(dxn) === Type.getTypename(schema);
 };
 
 /**
@@ -157,7 +150,7 @@ export const makeGraphWriterHandler = (
   {
     onAppend,
   }: {
-    onAppend?: (object: DXN[]) => void;
+    onAppend?: (object: URI.URI[]) => void;
   } = {},
 ) => {
   const { schema } = Context.get(
@@ -172,7 +165,7 @@ export const makeGraphWriterHandler = (
       const data = yield* sanitizeObjects(schema, input as any, db, feed);
       yield* Feed.append(feed, data as Obj.Unknown[]);
 
-      const dxns = data.map((obj) => Obj.getDXN(obj));
+      const dxns = data.map((obj) => Obj.getURI(obj));
       onAppend?.(dxns);
       return dxns;
     }),
@@ -188,7 +181,7 @@ export const createExtractionSchema = (types: Type.AnyEntity[]) => {
       types.map(preprocessSchema).map((schema, index) => [
         `objects_${getSanitizedSchemaName(types[index])}`,
         Schema.optional(Schema.Array(schema)).annotations({
-          description: `The objects of type: ${Type.getDXN(types[index])?.asTypeDXN()!.type}. ${SchemaAST.getDescriptionAnnotation(types[index].ast).pipe(Option.getOrElse(() => ''))}`,
+          description: `The objects of type: ${DXN.getName(DXN.tryMake(Type.getURI(types[index])!)!)}. ${SchemaAST.getDescriptionAnnotation(types[index].ast).pipe(Option.getOrElse(() => ''))}`,
         }),
       ]),
     ),
@@ -196,9 +189,7 @@ export const createExtractionSchema = (types: Type.AnyEntity[]) => {
 };
 
 export const getSanitizedSchemaName = (schema: Type.AnyEntity) => {
-  return Type.getDXN(schema)!
-    .asTypeDXN()!
-    .type.replaceAll(/[^a-zA-Z0-9]+/g, '_');
+  return DXN.getName(DXN.tryMake(Type.getURI(schema)!)!).replaceAll(/[^a-zA-Z0-9]+/g, '_');
 };
 
 export const sanitizeObjects = (
@@ -222,15 +213,15 @@ export const sanitizeObjects = (
     const existingIds = new Set<ObjectId>();
     const enitties = new Map<ObjectId, Entity.Unknown>();
 
-    const resolveId = (id: string): DXN | undefined => {
+    const resolveId = (id: string): EchoURI.EchoURI | undefined => {
       if (ObjectId.isValid(id)) {
         existingIds.add(id);
-        return DXN.fromLocalObjectId(id);
+        return EchoURI.make({ objectId: id });
       }
 
       const mappedId = idMap.get(id);
-      if (mappedId) {
-        return DXN.fromLocalObjectId(mappedId);
+      if (mappedId && ObjectId.isValid(mappedId)) {
+        return EchoURI.make({ objectId: mappedId });
       }
 
       return undefined;
@@ -265,24 +256,26 @@ export const sanitizeObjects = (
           return recurse(value);
         });
 
+        let sourceUri: EchoURI.EchoURI | undefined;
+        let targetUri: EchoURI.EchoURI | undefined;
         if (Entity.getKind(entry.schema) === 'relation') {
-          const sourceDXN = resolveId(data.source);
-          if (!sourceDXN) {
+          sourceUri = resolveId(data.source);
+          if (!sourceUri) {
             log.warn('source not found', { source: data.source });
           }
-          const targetDXN = resolveId(data.target);
-          if (!targetDXN) {
+          targetUri = resolveId(data.target);
+          if (!targetUri) {
             log.warn('target not found', { target: data.target });
           }
           delete data.source;
           delete data.target;
-          data[RelationSourceDXNId] = sourceDXN;
-          data[RelationTargetDXNId] = targetDXN;
         }
 
         return {
           data,
           schema: entry.schema,
+          sourceUri,
+          targetUri,
         };
       })
       .filter((object) => !existingIds.has(object.data.id)); // TODO(dmaretskyi): This dissallows updating existing objects.
@@ -299,23 +292,21 @@ export const sanitizeObjects = (
       throw new Error(`Object IDs do not point to existing objects: ${missing.join(', ')}`);
     }
 
-    return res.flatMap(({ data, schema }) => {
+    return res.flatMap(({ data, schema, sourceUri, targetUri }) => {
       let skip = false;
-      if (RelationSourceDXNId in data) {
-        const id = (data[RelationSourceDXNId] as DXN).asEchoDXN()?.echoId;
-        const obj = objects.find((object) => object.id === id) ?? enitties.get(id!);
+      if (sourceUri) {
+        const id = EchoURI.getObjectId(sourceUri);
+        const obj = objects.find((object) => object.id === id) ?? (id ? enitties.get(id) : undefined);
         if (obj) {
-          delete data[RelationSourceDXNId];
           data[RelationSourceId] = obj;
         } else {
           skip = true;
         }
       }
-      if (RelationTargetDXNId in data) {
-        const id = (data[RelationTargetDXNId] as DXN).asEchoDXN()?.echoId;
-        const obj = objects.find((object) => object.id === id) ?? enitties.get(id!);
+      if (targetUri) {
+        const id = EchoURI.getObjectId(targetUri);
+        const obj = objects.find((object) => object.id === id) ?? (id ? enitties.get(id) : undefined);
         if (obj) {
-          delete data[RelationTargetDXNId];
           data[RelationTargetId] = obj;
         } else {
           skip = true;

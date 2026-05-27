@@ -5,7 +5,7 @@
 // @import-as-namespace
 
 import { BaseError, type BaseErrorOptions } from '@dxos/errors';
-import { type DXN } from '@dxos/keys';
+import { type URI } from '@dxos/keys';
 
 export class SchemaNotFoundError extends BaseError.extend('SchemaNotFoundError', 'Schema not found') {
   constructor(schema: string, options?: BaseErrorOptions) {
@@ -14,8 +14,8 @@ export class SchemaNotFoundError extends BaseError.extend('SchemaNotFoundError',
 }
 
 export class ObjectNotFoundError extends BaseError.extend('ObjectNotFoundError', 'Object not found') {
-  constructor(dxn: DXN, options?: BaseErrorOptions) {
-    super({ context: { dxn }, ...options });
+  constructor(uri: URI.URI, options?: BaseErrorOptions) {
+    super({ context: { uri }, ...options });
   }
 }
 

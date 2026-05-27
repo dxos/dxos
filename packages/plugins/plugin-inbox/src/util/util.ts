@@ -96,7 +96,7 @@ export const createDraftMessage = (options: CreateDraftOptions): Obj.MakeProps<t
   }
 
   if (mailbox && Obj.isObject(mailbox)) {
-    properties.mailbox = Obj.getDXN(mailbox).toString();
+    properties.mailbox = Obj.getURI(mailbox);
   }
 
   return {

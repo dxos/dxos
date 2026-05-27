@@ -224,7 +224,7 @@ export const SketchComponent = composable<HTMLDivElement, SketchProps>(
         ref={containerRef}
       >
         <Tldraw
-          key={Obj.getDXN(sketch).toString()}
+          key={Obj.getURI(sketch)}
           store={adapter.store}
           hideUi={hideUi}
           inferDarkMode

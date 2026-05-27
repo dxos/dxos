@@ -18,7 +18,7 @@ export default ObjectUpdate.pipe(
       Entity.update(object as Entity.Any, (obj) => {
         for (const [key, value] of Object.entries(properties)) {
           if (EncodedReference.isEncodedReference(value)) {
-            obj[key] = db.makeRef(EncodedReference.toDXN(value));
+            obj[key] = db.makeRef(EncodedReference.toURI(value));
           } else {
             obj[key] = value;
           }

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { DXN } from '@dxos/keys';
+import { URI } from '@dxos/keys';
 
 /**
  * Patterns for extracting DXN references from tool call params/results.
@@ -28,8 +28,8 @@ const AT_DXN_PATTERN = /@(dxn:[a-zA-Z0-9]+(?::[a-zA-Z0-9@_-]+)+)/g;
 /**
  * Extracts all DXN references from a string.
  */
-export const extractDxnFromString = (text: string): DXN[] => {
-  const dxns: DXN[] = [];
+export const extractDxnFromString = (text: string): URI.URI[] => {
+  const dxns: URI.URI[] = [];
   const seen = new Set<string>();
 
   // Match @dxn: prefixed references.
@@ -37,11 +37,8 @@ export const extractDxnFromString = (text: string): DXN[] => {
   while ((match = AT_DXN_PATTERN.exec(text)) !== null) {
     const dxnStr = match[1];
     if (!seen.has(dxnStr)) {
-      const dxn = DXN.tryParse(dxnStr);
-      if (dxn) {
-        dxns.push(dxn);
-        seen.add(dxnStr);
-      }
+      dxns.push(URI.make(dxnStr));
+      seen.add(dxnStr);
     }
   }
 
@@ -49,11 +46,8 @@ export const extractDxnFromString = (text: string): DXN[] => {
   while ((match = DXN_PATTERN.exec(text)) !== null) {
     const dxnStr = match[0];
     if (!seen.has(dxnStr)) {
-      const dxn = DXN.tryParse(dxnStr);
-      if (dxn) {
-        dxns.push(dxn);
-        seen.add(dxnStr);
-      }
+      dxns.push(URI.make(dxnStr));
+      seen.add(dxnStr);
     }
   }
 
@@ -64,17 +58,14 @@ export const extractDxnFromString = (text: string): DXN[] => {
  * Extracts DXN references from a JSON object.
  * Handles IPLD-style references `{ "/": "dxn:..." }` and `{ "@dxn": "dxn:..." }`.
  */
-export const extractDxnsFromObject = (obj: unknown): DXN[] => {
-  const dxns: DXN[] = [];
+export const extractDxnsFromObject = (obj: unknown): URI.URI[] => {
+  const dxns: URI.URI[] = [];
   const seen = new Set<string>();
 
-  const addDXN = (dxnStr: string) => {
+  const addDxn = (dxnStr: string) => {
     if (!seen.has(dxnStr)) {
-      const dxn = DXN.tryParse(dxnStr);
-      if (dxn) {
-        dxns.push(dxn);
-        seen.add(dxnStr);
-      }
+      dxns.push(URI.make(dxnStr));
+      seen.add(dxnStr);
     }
   };
 
@@ -86,14 +77,14 @@ export const extractDxnsFromObject = (obj: unknown): DXN[] => {
     if (typeof value === 'string') {
       // Check if the string itself is a DXN.
       if (value.startsWith('dxn:')) {
-        addDXN(value);
+        addDxn(value);
       } else if (value.startsWith('@dxn:')) {
-        addDXN(value.slice(1));
+        addDxn(value.slice(1));
       }
       // Also extract DXNs from within the string.
       const extracted = extractDxnFromString(value);
       for (const dxn of extracted) {
-        addDXN(dxn.toString());
+        addDxn(dxn);
       }
       return;
     }
@@ -112,23 +103,22 @@ export const extractDxnsFromObject = (obj: unknown): DXN[] => {
       if ('/' in record && typeof record['/'] === 'string') {
         const dxnStr = record['/'];
         if (typeof dxnStr === 'string' && dxnStr.startsWith('dxn:')) {
-          addDXN(dxnStr);
+          addDxn(dxnStr);
         }
       }
 
-      // Check for @dxn key: { "@dxn": "dxn:..." }
-      if ('@dxn' in record && typeof record['@dxn'] === 'string') {
-        const dxnStr = record['@dxn'];
-        if (typeof dxnStr === 'string' && dxnStr.startsWith('dxn:')) {
-          addDXN(dxnStr);
-        }
+      // Check for @uri key (new) or @dxn key (legacy): { "@uri": "echo://…" } / { "@dxn": "dxn:…" }
+      const selfUri = (record as any)['@uri'] ?? (record as any)['@dxn'];
+      if (typeof selfUri === 'string' && (selfUri.startsWith('dxn:') || selfUri.startsWith('echo:'))) {
+        addDxn(selfUri);
       }
 
-      // Check for reference blocks: { _tag: 'reference', reference: { dxn: ... } }
+      // Check for reference blocks: { _tag: 'reference', reference: { uri: ... } } (or legacy { dxn: ... })
       if (record._tag === 'reference' && record.reference && typeof record.reference === 'object') {
         const ref = record.reference as Record<string, unknown>;
-        if (ref.dxn && typeof ref.dxn === 'string') {
-          addDXN(ref.dxn);
+        const refUri = ref.uri ?? ref.dxn;
+        if (refUri && typeof refUri === 'string') {
+          addDxn(refUri);
         }
       }
 
@@ -146,7 +136,7 @@ export const extractDxnsFromObject = (obj: unknown): DXN[] => {
 /**
  * Extracts the first DXN from a tool call input string (JSON).
  */
-export const extractFirstDxnFromToolInput = (input: string): DXN | undefined => {
+export const extractFirstDxnFromToolInput = (input: string): URI.URI | undefined => {
   try {
     const parsed = JSON.parse(input);
     const dxns = extractDxnsFromObject(parsed);
@@ -161,7 +151,7 @@ export const extractFirstDxnFromToolInput = (input: string): DXN | undefined => 
 /**
  * Extracts the first DXN from a tool result string (JSON).
  */
-export const extractFirstDxnFromToolResult = (result: string | undefined): DXN | undefined => {
+export const extractFirstDxnFromToolResult = (result: string | undefined): URI.URI | undefined => {
   if (!result) {
     return undefined;
   }

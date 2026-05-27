@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Client } from '@dxos/client';
-import { Obj, Type } from '@dxos/echo';
+import { DXN, Obj, Type } from '@dxos/echo';
 import { getObjectCore } from '@dxos/echo-db';
 import { random } from '@dxos/random';
 
@@ -43,7 +43,7 @@ describe('TestObjectGenerator', () => {
 
     // Create org object.
     const organization = await generator.createObject({ types: [TestSchemaType.organization] });
-    expect(Obj.getTypeDXN(organization)).to.exist;
+    expect(Obj.getTypeURI(organization)).to.exist;
 
     // Expect at least one person object with a linked org reference.
     const objects = await generator.createObjects({ [TestSchemaType.contact]: 10 });
@@ -59,14 +59,14 @@ describe('TestObjectGenerator', () => {
       const generator = createSpaceObjectGenerator(space);
       await generator.addSchemas();
       const organization = await generator.createObject({ types: [TestSchemaType.organization] });
-      schemaId.push(Obj.getTypeDXN(organization)!.toString());
+      schemaId.push(Obj.getTypeURI(organization)!.toString());
     }
 
     {
       const generator = createSpaceObjectGenerator(space);
       await generator.addSchemas();
       const organization = await generator.createObject({ types: [TestSchemaType.organization] });
-      schemaId.push(Obj.getTypeDXN(organization)!.toString());
+      schemaId.push(Obj.getTypeURI(organization)!.toString());
     }
 
     expect(schemaId[0]).not.to.be.undefined;
@@ -79,7 +79,7 @@ describe('TestObjectGenerator', () => {
     const generator = createSpaceObjectGenerator(space);
     await generator.addSchemas();
     const document = await generator.createObject({ types: [TestSchemaType.document] });
-    expect(Obj.getTypeDXN(document)).to.exist;
+    expect(Obj.getTypeURI(document)).to.exist;
 
     const beforeChangesCount = A.getAllChanges(getObjectCore(document).docHandle!.doc()).length;
 
@@ -95,12 +95,7 @@ describe('TestObjectGenerator', () => {
   test('create object with in memory schema', async () => {
     const Task = Schema.Struct({
       name: Schema.optional(Schema.String),
-    }).pipe(
-      Type.object({
-        typename: 'com.example.type.task',
-        version: '0.1.0',
-      }),
-    );
+    }).pipe(Type.object(DXN.make('com.example.type.task', '0.1.0')));
 
     enum Types {
       task = 'com.example.type.task',
@@ -126,7 +121,7 @@ describe('TestObjectGenerator', () => {
     await generator.addSchemas();
 
     const todo = await generator.createObject({ types: [Types.task] });
-    expect(Obj.getTypeDXN(todo)).to.exist;
+    expect(Obj.getTypeURI(todo)).to.exist;
   });
 
   test('references', async () => {
@@ -146,7 +141,7 @@ describe('TestObjectGenerator', () => {
   test('create project', async () => {
     const generator = createTestObjectGenerator();
     const project = await generator.createObject({ types: [TestSchemaType.project] });
-    expect(Obj.getTypeDXN(project)).to.exist;
+    expect(Obj.getTypeURI(project)).to.exist;
   });
 
   test('create object with not type', async () => {

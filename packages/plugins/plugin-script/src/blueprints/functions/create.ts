@@ -34,7 +34,7 @@ export default Create.pipe(
       yield* CollectionModel.add({ object: fn });
 
       return {
-        function: Obj.getDXN(fn).toString(),
+        function: Obj.getURI(fn),
       };
     }),
   ),

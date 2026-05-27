@@ -5,29 +5,30 @@
 import * as Schema from 'effect/Schema';
 
 import { assertArgument, invariant } from '@dxos/invariant';
-import { DXN, ObjectId } from '@dxos/keys';
+import { EchoURI, ObjectId } from '@dxos/keys';
 import { assumeType } from '@dxos/util';
 
-import { type InternalObjectProps, SelfDXNId } from './model';
+import { type InternalObjectProps, SelfURIId } from './model';
 
 /**
- * Returns a DXN for an object or schema.
+ * Returns the EchoURI of an object.
+ * Normalizes any legacy `dxn:echo:` / `dxn:queue:` form stored in `SelfURIId`.
  *
  * @internal
  */
-export const getObjectDXN = (object: any): DXN | undefined => {
+export const getObjectEchoUri = (object: any): EchoURI.EchoURI | undefined => {
   invariant(!Schema.isSchema(object), 'schema not allowed in this function');
   assertArgument(typeof object === 'object' && object != null, 'object', 'expected object');
   assumeType<InternalObjectProps>(object);
 
-  if (object[SelfDXNId]) {
-    invariant(object[SelfDXNId] instanceof DXN, 'Invalid object model: invalid self dxn');
-    return object[SelfDXNId];
+  if (object[SelfURIId]) {
+    invariant(EchoURI.isEchoURI(object[SelfURIId]), 'Invalid object model: invalid self dxn');
+    return EchoURI.parse(object[SelfURIId]);
   }
 
   if (!ObjectId.isValid(object.id)) {
     throw new TypeError('Object id is not valid.');
   }
 
-  return DXN.fromLocalObjectId(object.id);
+  return EchoURI.make({ objectId: object.id });
 };

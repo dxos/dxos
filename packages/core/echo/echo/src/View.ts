@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { QueryAST } from '@dxos/echo-protocol';
 import { JsonPath } from '@dxos/effect';
-import { PublicKey } from '@dxos/keys';
+import { DXN, PublicKey } from '@dxos/keys';
 
 import * as Annotation from './Annotation';
 import * as Filter from './Filter';
@@ -75,10 +75,7 @@ const ViewSchema = Schema.Struct({
    */
   projection: Projection,
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.view',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.view', '0.1.0')),
   internal.SystemTypeAnnotation.set(true),
   Annotation.IconAnnotation.set({
     icon: 'ph--funnel--regular',

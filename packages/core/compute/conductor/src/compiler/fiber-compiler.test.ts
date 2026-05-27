@@ -15,7 +15,7 @@ import { Feed, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-db/testing';
 import { TestHelpers } from '@dxos/effect/testing';
 import { configuredCredentialsLayer } from '@dxos/functions';
-import { DXN } from '@dxos/keys';
+import { URI } from '@dxos/keys';
 
 import { NODE_INPUT, NODE_OUTPUT } from '../nodes';
 import { TestRuntime } from '../testing';
@@ -59,10 +59,10 @@ describe('Graph as a fiber runtime', () => {
       function* ({ expect }) {
         const runtime = new TestRuntime()
           // prettier-ignore
-          .registerNode('dxn:test:sum', sum)
-          .registerGraph('dxn:test:g1', g1());
+          .registerNode(URI.make('dxn:test:sum'), sum)
+          .registerGraph(URI.make('dxn:test:g1'), g1());
 
-        const result = yield* runtime.runGraph('dxn:test:g1', ValueBag.make({ number1: 1, number2: 2 })).pipe(
+        const result = yield* runtime.runGraph(URI.make('dxn:test:g1'), ValueBag.make({ number1: 1, number2: 2 })).pipe(
           Effect.withSpan('runGraph'),
           Effect.flatMap(ValueBag.unwrap),
           Effect.withSpan('test'), // TODO(burdon): Why span here and not in other tests?
@@ -79,12 +79,12 @@ describe('Graph as a fiber runtime', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         const runtime = new TestRuntime()
-          .registerNode('dxn:test:sum', sum)
-          .registerGraph('dxn:test:g1', g1())
-          .registerGraph('dxn:test:g2', g2a(DXN.parse('dxn:test:g1')));
+          .registerNode(URI.make('dxn:test:sum'), sum)
+          .registerGraph(URI.make('dxn:test:g1'), g1())
+          .registerGraph(URI.make('dxn:test:g2'), g2a(URI.make('dxn:test:g1')));
 
         const result = yield* runtime
-          .runGraph('dxn:test:g2', ValueBag.make({ a: 1, b: 2, c: 3 }))
+          .runGraph(URI.make('dxn:test:g2'), ValueBag.make({ a: 1, b: 2, c: 3 }))
           .pipe(Effect.flatMap(ValueBag.unwrap));
         expect(result).toEqual({ result: 6 });
       },
@@ -100,12 +100,12 @@ describe('Graph as a fiber runtime', () => {
       function* ({ expect }) {
         const runtime = new TestRuntime();
         runtime
-          .registerNode('dxn:test:sum', sum)
-          .registerGraph('dxn:test:g1', g1())
-          .registerGraph('dxn:test:g2', g2b(runtime.getGraph(DXN.parse('dxn:test:g1')).root));
+          .registerNode(URI.make('dxn:test:sum'), sum)
+          .registerGraph(URI.make('dxn:test:g1'), g1())
+          .registerGraph(URI.make('dxn:test:g2'), g2b(runtime.getGraph(URI.make('dxn:test:g1')).root));
 
         const result = yield* runtime
-          .runGraph('dxn:test:g2', ValueBag.make({ a: 1, b: 2, c: 3 }))
+          .runGraph(URI.make('dxn:test:g2'), ValueBag.make({ a: 1, b: 2, c: 3 }))
           .pipe(Effect.flatMap(ValueBag.unwrap));
         expect(result).toEqual({ result: 6 });
       },
@@ -119,11 +119,11 @@ describe('Graph as a fiber runtime', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         const runtime = new TestRuntime()
-          .registerNode('dxn:test:sum', sum)
-          .registerNode('dxn:test:viewer', view)
-          .registerGraph('dxn:test:g3', g3());
+          .registerNode(URI.make('dxn:test:sum'), sum)
+          .registerNode(URI.make('dxn:test:viewer'), view)
+          .registerGraph(URI.make('dxn:test:g3'), g3());
 
-        const { V1, V2 } = yield* runtime.runFromInput('dxn:test:g3', 'I', ValueBag.make({ a: 1, b: 2 }));
+        const { V1, V2 } = yield* runtime.runFromInput(URI.make('dxn:test:g3'), 'I', ValueBag.make({ a: 1, b: 2 }));
 
         const v1 = yield* ValueBag.unwrap(V1);
         const v2 = yield* ValueBag.unwrap(V2);
@@ -139,9 +139,9 @@ describe('Graph as a fiber runtime', () => {
     'if-else',
     Effect.fnUntraced(
       function* ({ expect }) {
-        const runtime = new TestRuntime().registerGraph('dxn:test:g4', g4());
+        const runtime = new TestRuntime().registerGraph(URI.make('dxn:test:g4'), g4());
 
-        const result = yield* runtime.runGraph('dxn:test:g4', ValueBag.make({ condition: true, value: 1 }));
+        const result = yield* runtime.runGraph(URI.make('dxn:test:g4'), ValueBag.make({ condition: true, value: 1 }));
 
         expect(yield* Effect.either(result.values.true)).toEqual(Either.right(1));
         expect(yield* Effect.either(result.values.false)).toEqual(Either.left(NotExecuted));
@@ -181,10 +181,10 @@ const view = defineComputeNode({
 //
 
 const g1 = () => {
-  const model = ComputeGraphModel.create({ id: 'dxn:test:g1' });
+  const model = ComputeGraphModel.create({ id: URI.make('dxn:test:g1') });
   model.builder
     .createNode({ id: 'I', type: NODE_INPUT })
-    .createNode({ id: 'X', type: 'dxn:test:sum' })
+    .createNode({ id: 'X', type: URI.make('dxn:test:sum') })
     .createNode({ id: 'O', type: NODE_OUTPUT })
     .createEdge({ node: 'I', property: 'number1' }, { node: 'X', property: 'a' })
     .createEdge({ node: 'I', property: 'number2' }, { node: 'X', property: 'b' })
@@ -193,12 +193,12 @@ const g1 = () => {
   return model;
 };
 
-const g2a = (g1: DXN) => {
-  const model = ComputeGraphModel.create({ id: 'dxn:test:g2' });
+const g2a = (g1: URI.URI) => {
+  const model = ComputeGraphModel.create({ id: URI.make('dxn:test:g2') });
   model.builder
     .createNode({ id: 'I', type: NODE_INPUT })
-    .createNode({ id: 'X', type: g1.toString(), subgraph: Ref.fromDXN(g1) })
-    .createNode({ id: 'Y', type: g1.toString(), subgraph: Ref.fromDXN(g1) })
+    .createNode({ id: 'X', type: g1, subgraph: Ref.fromURI(g1) })
+    .createNode({ id: 'Y', type: g1, subgraph: Ref.fromURI(g1) })
     .createNode({ id: 'O', type: NODE_OUTPUT })
     .createEdge({ node: 'I', property: 'a' }, { node: 'X', property: 'number1' })
     .createEdge({ node: 'I', property: 'b' }, { node: 'X', property: 'number2' })
@@ -210,7 +210,7 @@ const g2a = (g1: DXN) => {
 };
 
 const g2b = (g1: ComputeGraph) => {
-  const model = ComputeGraphModel.create({ id: 'dxn:test:g2' });
+  const model = ComputeGraphModel.create({ id: URI.make('dxn:test:g2') });
   model.builder
     .createNode({ id: 'I', type: NODE_INPUT })
     .createNode({ id: 'O', type: NODE_OUTPUT })
@@ -227,9 +227,9 @@ const g3 = () => {
   const model = ComputeGraphModel.create();
   model.builder
     .createNode({ id: 'I', type: NODE_INPUT })
-    .createNode({ id: 'X', type: 'dxn:test:sum' })
-    .createNode({ id: 'V1', type: 'dxn:test:viewer' })
-    .createNode({ id: 'V2', type: 'dxn:test:viewer' })
+    .createNode({ id: 'X', type: URI.make('dxn:test:sum') })
+    .createNode({ id: 'V1', type: URI.make('dxn:test:viewer') })
+    .createNode({ id: 'V2', type: URI.make('dxn:test:viewer') })
     .createNode({ id: 'O', type: NODE_OUTPUT })
     .createEdge({ node: 'I', property: 'a' }, { node: 'X', property: 'a' })
     .createEdge({ node: 'I', property: 'b' }, { node: 'X', property: 'b' })

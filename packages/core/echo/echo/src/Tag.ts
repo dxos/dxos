@@ -6,6 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
+import { DXN } from '@dxos/keys';
+
 import * as internal from './internal';
 import * as Obj from './Obj';
 import * as Type from './Type';
@@ -14,10 +16,7 @@ export const Tag = Schema.Struct({
   label: Schema.String,
   hue: Schema.optional(Schema.String), // TODO(burdon): Color name?
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.tag',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.tag', '0.1.0')),
   internal.LabelAnnotation.set(['label']),
   internal.SystemTypeAnnotation.set(true),
 );

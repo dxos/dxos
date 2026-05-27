@@ -14,7 +14,8 @@ import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
 import { Operation, Trigger } from '@dxos/compute';
-import { DXN, Database, Filter, JsonSchema, Obj, Query, Ref } from '@dxos/echo';
+import { Database, Filter, JsonSchema, Obj, Query, Ref } from '@dxos/echo';
+import { DXN, EchoURI } from '@dxos/keys';
 
 import { Deep, Delay, Enabled, Input, TriggerId, Typename } from '../options';
 import { printTrigger, promptForSchemaInput, selectFunction, selectTrigger } from '../util';
@@ -39,8 +40,8 @@ export const subscription = Command.make(
         onNone: () => selectTrigger('subscription'),
         onSome: (id) => Effect.succeed(id),
       });
-      const dxn = DXN.fromLocalObjectId(triggerId);
-      const trigger = yield* Database.resolve(dxn, Trigger.Trigger);
+      const dxn = EchoURI.make({ objectId: triggerId });
+      const trigger = yield* Database.resolve(Ref.fromURI(dxn), Trigger.Trigger);
       if (trigger.spec?.kind !== 'subscription') {
         return yield* Effect.fail(new Error(`Invalid trigger type: ${trigger.spec?.kind}`));
       }
@@ -78,8 +79,7 @@ const extractCurrentTypename = (spec: Trigger.SubscriptionSpec | undefined): Opt
         Match.withReturnType<Option.Option<string>>(),
         Match.when({ type: 'object' }, (f) =>
           Option.fromNullable(f.typename).pipe(
-            Option.flatMap((dxn) => Option.fromNullable(DXN.tryParse(dxn))),
-            Option.flatMap((dxn) => Option.fromNullable(dxn.asTypeDXN()?.type)),
+            Option.flatMap((dxn) => Option.fromNullable(DXN.isDXN(dxn) ? DXN.getName(dxn) : undefined)),
           ),
         ),
         Match.orElse(() => Option.none()),
@@ -127,7 +127,8 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
   }
 
   if (!currentFn) {
-    const functionId = trigger.function?.dxn.asEchoDXN()?.echoId ?? 'unknown';
+    const functionId =
+      (trigger.function ? EchoURI.getObjectId(EchoURI.tryParse(trigger.function.uri)!) : undefined) ?? 'unknown';
     return yield* Effect.fail(new Error(`Invalid reference for ${functionId}`));
   }
 

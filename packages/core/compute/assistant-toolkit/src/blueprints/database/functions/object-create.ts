@@ -26,7 +26,7 @@ export default ObjectCreate.pipe(
           schema,
           deepMapValues(data, (value, recurse) => {
             if (EncodedReference.isEncodedReference(value)) {
-              return db.makeRef(EncodedReference.toDXN(value));
+              return db.makeRef(EncodedReference.toURI(value));
             }
             return recurse(value);
           }),

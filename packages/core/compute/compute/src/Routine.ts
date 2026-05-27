@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
 
 import * as Blueprint from './Blueprint';
 import * as Template from './Template';
@@ -32,10 +32,7 @@ export const Routine = Schema.Struct({
   // TODO(burdon): Change to map?
   context: Schema.Array(Schema.Any).pipe(Annotation.FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.routine',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.routine', '0.1.0')),
   Annotation.LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--scroll--regular',

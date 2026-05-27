@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { type FC, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Annotation } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { Card } from '@dxos/react-ui';
@@ -131,7 +131,7 @@ const TableLike = Schema.Struct({
     Schema.mutable,
     Annotation.FormInputAnnotation.set(false),
   ),
-}).pipe(Type.object({ typename: 'org.dxos.test.table-like', version: '0.1.0' }));
+}).pipe(Type.object(DXN.make('org.dxos.test.table-like', '0.1.0')));
 type TableLike = Schema.Schema.Type<typeof TableLike>;
 
 /**

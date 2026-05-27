@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Ref, Type, View } from '@dxos/echo';
+import { DXN, Annotation, Obj, Ref, Type, View } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { ViewAnnotation } from '@dxos/schema';
 
@@ -40,12 +40,7 @@ export const KanbanV1 = Schema.Struct({
   name: Schema.String.pipe(Schema.optional),
   view: Ref.Ref(View.View).pipe(FormInputAnnotation.set(false)),
   arrangement: Arrangement,
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.kanban',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.object(DXN.make('org.dxos.type.kanban', '0.1.0')));
 
 //
 // v2 — `spec` is a discriminated union of how items are sourced.
@@ -84,10 +79,7 @@ export const Kanban = Schema.Struct({
   /** How this kanban sources its items. Discriminated by `spec.kind`. */
   spec: KanbanSpec,
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.kanban',
-    version: '0.2.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.kanban', '0.2.0')),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(['spec', 'view']),
   Annotation.IconAnnotation.set({

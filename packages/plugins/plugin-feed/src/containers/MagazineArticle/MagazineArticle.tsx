@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
-import { Filter, Obj, Ref } from '@dxos/echo';
+import { Filter, Obj, Ref, type URI } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
@@ -31,7 +31,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const [magazine] = useObject(subject);
 
   const showItem = useShowItem();
-  const id = attendableId ?? Obj.getDXN(magazine).toString();
+  const id = attendableId ?? Obj.getURI(magazine);
   const currentId = useSelected(id, 'single');
   const [sort, setSort] = useState<MagazineSort>('date');
   const [view, setView] = useState<MagazineView>('default');
@@ -61,10 +61,10 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   // feed name on each tile without each tile having to subscribe to its own ref.
   const allFeeds = useQuery(db, Filter.type(Subscription.Subscription));
 
-  // Index feeds by bare object id (last DXN segment) — `Obj.getDXN(feed)`
-  // returns the space-scoped form (`dxn:echo:<spaceId>:<id>`), but
-  // `post.feed.dxn` from a `Ref.make` carries the local-id form
-  // (`dxn:echo:@:<id>`). String-comparing the two never matches, so the
+  // Index feeds by bare object id (last DXN segment) — `Obj.getURI(feed)`
+  // returns the space-scoped form (`uri:echo:<spaceId>:<id>`), but
+  // `post.feed.uri` from a `Ref.make` carries the local-id form
+  // (`uri:echo:@:<id>`). String-comparing the two never matches, so the
   // tile's `feedName` lookup silently fails. Indexing by bare id reconciles.
   const feedNamesById = useMemo(() => {
     const map = new Map<string, string>();
@@ -102,13 +102,13 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
 
   // When the user removes a feed from the magazine via ObjectProperties, prune any
   // curated posts whose source feed is no longer present.
-  // Compare by bare object id rather than full DXN — `magazine.feeds[i].dxn` and
-  // `post.feed.dxn` may carry different prefixes (`dxn:echo:@:<id>` vs
-  // `dxn:echo:<spaceId>:<id>`) depending on how each ref was constructed, so
+  // Compare by bare object id rather than full DXN — `magazine.feeds[i].uri` and
+  // `post.feed.uri` may carry different prefixes (`uri:echo:@:<id>` vs
+  // `uri:echo:<spaceId>:<id>`) depending on how each ref was constructed, so
   // string-comparing the full DXN flags every post as an orphan and wipes the
   // magazine on mount.
   useEffect(() => {
-    const feedIds = new Set(magazine.feeds.map((ref) => dxnToObjectId(ref.dxn)));
+    const feedIds = new Set(magazine.feeds.map((ref) => dxnToObjectId(ref.uri)));
     const orphanIds = new Set<string>();
     for (const postRef of magazine.posts) {
       const post = postRef.target;
@@ -116,8 +116,8 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       if (!feedRef) {
         continue;
       }
-      if (!feedIds.has(dxnToObjectId(feedRef.dxn))) {
-        orphanIds.add(dxnToObjectId(postRef.dxn));
+      if (!feedIds.has(dxnToObjectId(feedRef.uri))) {
+        orphanIds.add(dxnToObjectId(postRef.uri));
       }
     }
     if (orphanIds.size === 0) {
@@ -125,7 +125,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
     }
 
     Obj.update(subject, (subject) => {
-      subject.posts = subject.posts.filter((ref) => !orphanIds.has(dxnToObjectId(ref.dxn)));
+      subject.posts = subject.posts.filter((ref) => !orphanIds.has(dxnToObjectId(ref.uri)));
     });
   }, [subject, magazine.feeds, magazine.posts]);
 
@@ -194,7 +194,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const feedFingerprint = useMemo(
     () =>
       magazine.feeds
-        .map((ref) => ref.dxn.toString())
+        .map((ref) => ref.uri)
         .sort()
         .join(),
     [magazine.feeds],
@@ -239,9 +239,9 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
   const tileItems = useMemo<TileData[]>(
     () =>
       posts.map((post) => {
-        // Match the post's source feed by bare object id; `post.feed.dxn` is local-id form,
+        // Match the post's source feed by bare object id; `post.feed.uri` is local-id form,
         // while `feedNamesById` is keyed by id directly.
-        const feedId = post.source ? (post.source.dxn.toString().split(':').pop() ?? '') : '';
+        const feedId = post.source ? (post.source.uri.split(':').pop() ?? '') : '';
         return {
           post,
           magazine: subject,
@@ -279,7 +279,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
               <Masonry.Viewport
                 classNames='py-2'
                 items={tileItems}
-                getId={(data) => (data?.post ? Obj.getDXN(data.post).toString() : '')}
+                getId={(data) => (data?.post ? Obj.getURI(data.post) : '')}
               />
             </Masonry.Content>
           </Masonry.Root>
@@ -321,10 +321,10 @@ const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) =>
 };
 
 const useMagazinePosts = (subject: Magazine.Magazine, sort: MagazineSort, view: MagazineView) => {
-  const postFingerprint = subject.posts.map((ref) => ref.dxn.toString()).join();
+  const postFingerprint = subject.posts.map((ref) => ref.uri).join();
 
   return useMemo<Subscription.Post[]>(() => {
-    const seenDXN = new Set<string>();
+    const seenDxn = new Set<URI.URI>();
     const seenLink = new Set<string>();
     const seenGuid = new Set<string>();
 
@@ -338,16 +338,16 @@ const useMagazinePosts = (subject: Magazine.Magazine, sort: MagazineSort, view: 
       // Dedup by DXN, then by link, then by guid. Two different feeds can publish the
       // same article (distinct Post objects, same `link` / `guid`); without secondary
       // dedup the masonry shows them as duplicate tiles.
-      const dxn = Obj.getDXN(target).toString();
+      const uri = Obj.getURI(target);
       if (
-        seenDXN.has(dxn) ||
+        seenDxn.has(uri) ||
         (target.link && seenLink.has(target.link)) ||
         (target.guid && seenGuid.has(target.guid))
       ) {
         continue;
       }
 
-      seenDXN.add(dxn);
+      seenDxn.add(uri);
       if (target.link) {
         seenLink.add(target.link);
       }

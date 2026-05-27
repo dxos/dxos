@@ -183,7 +183,7 @@ export const makeInstructions = (researchSources: ReadonlyArray<ResearchSource> 
 
     <relation>
       After creating the Profile document, create one or more
-      "org.dxos.relation.plugin-crm.profile-of" relations using the database
+      "org.dxos.relation.plugin-crm.profileOf" relations using the database
       \`relationCreate\` tool. The Source is always the Document.
 
       Choose the Target(s):

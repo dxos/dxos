@@ -37,7 +37,7 @@ export default Capability.makeModule(() =>
         component: ({ data, role, ref }) => {
           return (
             <Container
-              id={Obj.getDXN(data.subject).toString()}
+              id={Obj.getURI(data.subject)}
               attendableId={data.attendableId}
               subject={data.subject}
               role={role}
@@ -58,7 +58,7 @@ export default Capability.makeModule(() =>
         component: ({ data, role, ref }) => {
           return (
             <Container
-              id={Obj.getDXN(data.subject).toString()}
+              id={Obj.getURI(data.subject)}
               attendableId={data.attendableId}
               subject={data.subject}
               role={role}

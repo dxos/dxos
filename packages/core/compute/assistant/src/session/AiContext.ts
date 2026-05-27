@@ -16,6 +16,7 @@ import { Blueprint } from '@dxos/compute';
 import { Resource } from '@dxos/context';
 import { DXN, Feed, Obj, type QueryResult, Query, Ref, Type } from '@dxos/echo';
 import { assertArgument } from '@dxos/invariant';
+import { EchoURI, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexSet, isNonNullable } from '@dxos/util';
 
@@ -32,12 +33,7 @@ export const Binding = Schema.Struct({
     added: Schema.Array(Ref.Ref(Obj.Unknown)),
     removed: Schema.Array(Ref.Ref(Obj.Unknown)),
   }),
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.contextBinding',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.object(DXN.make('org.dxos.type.contextBinding', '0.1.0')));
 
 export interface Binding extends Schema.Schema.Type<typeof Binding> {}
 
@@ -47,15 +43,18 @@ export type BindingProps = Partial<{
 }>;
 
 export class Bindings {
-  readonly blueprints = new ComplexSet<Ref.Ref<Blueprint.Blueprint>>((ref) => ref.dxn.toString());
+  readonly blueprints = new ComplexSet<Ref.Ref<Blueprint.Blueprint>>((ref) => ref.uri);
 
   // TODO(burdon): Some DXNs have the Space prefix so only compare the object ID.
-  readonly objects = new ComplexSet<Ref.Ref<Obj.Unknown>>((ref) => ref.dxn.asEchoDXN()?.echoId);
+  readonly objects = new ComplexSet<Ref.Ref<Obj.Unknown>>((ref) => {
+    const echoUri = EchoURI.tryParse(ref.uri);
+    return echoUri ? EchoURI.getObjectId(echoUri) : undefined;
+  });
 
-  toJSON() {
+  toJSON(): { blueprints: URI.URI[]; objects: URI.URI[] } {
     return {
-      blueprints: EArray.fromIterable(this.blueprints).map((ref) => ref.dxn.toString()),
-      objects: EArray.fromIterable(this.objects).map((ref) => ref.dxn.toString()),
+      blueprints: EArray.fromIterable(this.blueprints).map((ref) => ref.uri),
+      objects: EArray.fromIterable(this.objects).map((ref) => ref.uri),
     };
   }
 }
@@ -170,7 +169,7 @@ export class Binder extends Resource {
 
     log('_updateBindings', {
       items: items.length,
-      blueprintRefs: [...bindings.blueprints].map((ref) => ({ dxn: ref.dxn.toString(), available: ref.isAvailable })),
+      blueprintRefs: [...bindings.blueprints].map((ref) => ({ uri: ref.uri, available: ref.isAvailable })),
     });
 
     // Resolve references (loading them first if needed).
@@ -188,7 +187,7 @@ export class Binder extends Resource {
     // (e.g. tool/operation registration calls Blueprint.getKey which throws).
     const keyedBlueprints = resolvedBlueprints.filter((bp) => {
       if (Obj.getMeta(bp).key === undefined) {
-        log.warn('dropping blueprint with no meta key', { dxn: Obj.getDXN(bp).toString() });
+        log.warn('dropping blueprint with no meta key', { uri: Obj.getURI(bp) });
         return false;
       }
       return true;
@@ -196,19 +195,17 @@ export class Binder extends Resource {
 
     // Filter current state to only items still in the reduced binding set,
     // then merge in newly resolved items. This ensures unbind events are respected.
-    const reducedBlueprintDxns = new ComplexSet<DXN>(
-      DXN.hash,
-      [...bindings.blueprints].map((ref) => ref.dxn),
-    );
-    const reducedObjectDxns = new ComplexSet<DXN>(
-      DXN.hash,
-      [...bindings.objects].map((ref) => ref.dxn),
-    );
-    const filteredBlueprints = currentBlueprints.filter(
-      (bp) => reducedBlueprintDxns.has(Obj.getDXN(bp)) && Obj.getMeta(bp).key !== undefined,
-    );
-    const filteredObjects = currentObjects.filter((obj) => reducedObjectDxns.has(Obj.getDXN(obj)));
-    const mergedBlueprints = this._mergeInto(filteredBlueprints, keyedBlueprints);
+    const reducedBlueprintDxns = new Set<URI.URI>([...bindings.blueprints].map((ref) => ref.uri));
+    const reducedObjectDxns = new Set<URI.URI>([...bindings.objects].map((ref) => ref.uri));
+    const filteredBlueprints = currentBlueprints.filter((obj) => {
+      const uri = Obj.getURI(obj);
+      return uri != null && reducedBlueprintDxns.has(uri);
+    });
+    const filteredObjects = currentObjects.filter((obj) => {
+      const uri = Obj.getURI(obj);
+      return uri != null && reducedObjectDxns.has(uri);
+    });
+    const mergedBlueprints = this._mergeInto(filteredBlueprints, resolvedBlueprints);
     const mergedObjects = this._mergeInto(filteredObjects, resolvedObjects);
 
     this._registry.set(this._blueprints, mergedBlueprints);
@@ -263,20 +260,20 @@ export class Binder extends Resource {
     }
 
     // Immediately update atom state so removals are reflected before the queue round-trips.
-    const removedBlueprintDxns = (blueprints ?? []).map((ref) => ref.dxn);
-    const removedObjectDxns = (objects ?? []).map((ref) => ref.dxn);
+    const removedBlueprintDxns = (blueprints ?? []).map((ref) => ref.uri);
+    const removedObjectDxns = (objects ?? []).map((ref) => ref.uri);
     if (removedBlueprintDxns.length > 0) {
       const current = this._registry.get(this._blueprints);
       this._registry.set(
         this._blueprints,
-        current.filter((obj) => !removedBlueprintDxns.some((dxn) => DXN.equalsEchoId(Obj.getDXN(obj), dxn))),
+        current.filter((obj) => !removedBlueprintDxns.some((uri) => Obj.getURI(obj) === uri)),
       );
     }
     if (removedObjectDxns.length > 0) {
       const current = this._registry.get(this._objects);
       this._registry.set(
         this._objects,
-        current.filter((obj) => !removedObjectDxns.some((dxn) => DXN.equalsEchoId(Obj.getDXN(obj), dxn))),
+        current.filter((obj) => !removedObjectDxns.some((uri) => Obj.getURI(obj) === uri)),
       );
     }
 
@@ -310,11 +307,11 @@ export class Binder extends Resource {
       return { added, next };
     }
 
-    const seen = new Set(current.map((obj) => Obj.getDXN(obj).toString()));
+    const seen = new Set<URI.URI>(current.map((obj) => Obj.getURI(obj)));
     for (const ref of refs) {
-      const dxn = ref.dxn.toString();
-      if (!seen.has(dxn)) {
-        seen.add(dxn);
+      const uri = ref.uri;
+      if (!seen.has(uri)) {
+        seen.add(uri);
         added.push(ref);
 
         // Only resolve target if available (has target or resolver).
@@ -343,7 +340,12 @@ export class Binder extends Resource {
         objects.added.forEach((ref) => context.objects.add(ref));
         objects.removed.forEach((ref) => {
           for (const obj of context.objects) {
-            if (DXN.equalsEchoId(obj.dxn, ref.dxn)) {
+            if (
+              obj.uri === ref.uri ||
+              (EchoURI.tryParse(obj.uri) &&
+                EchoURI.tryParse(ref.uri) &&
+                EchoURI.getObjectId(EchoURI.tryParse(obj.uri)!) === EchoURI.getObjectId(EchoURI.tryParse(ref.uri)!))
+            ) {
               context.objects.delete(obj);
             }
           }
@@ -358,12 +360,12 @@ export class Binder extends Resource {
    * Merge resolved items into the current set, adding only items not already present (by DXN).
    */
   private _mergeInto<T extends Obj.Unknown>(current: T[], resolved: T[]): T[] {
-    const seen = new Set(current.map((obj) => Obj.getDXN(obj).toString()));
+    const seen = new Set(current.map((obj) => Obj.getURI(obj)));
     const merged = [...current];
     for (const obj of resolved) {
-      const dxn = Obj.getDXN(obj).toString();
-      if (!seen.has(dxn)) {
-        seen.add(dxn);
+      const uri = Obj.getURI(obj);
+      if (!seen.has(uri)) {
+        seen.add(uri);
         merged.push(obj);
       }
     }
@@ -388,7 +390,7 @@ export class Binder extends Resource {
         }
 
         // Fallback to existing object.
-        return target ?? current.find((obj) => Obj.getDXN(obj as any).toString() === ref.dxn.toString());
+        return target ?? current.find((obj) => Obj.getURI(obj) === ref.uri);
       })
       .filter(isNonNullable);
   }

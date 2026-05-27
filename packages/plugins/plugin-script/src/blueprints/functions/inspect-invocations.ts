@@ -34,8 +34,8 @@ export default InspectInvocations.pipe(
         if (!span.invocationTarget || !functionId) {
           return false;
         }
-        const targetDXN = span.invocationTarget.dxn.toString();
-        const uuidPart = targetDXN.split(':').pop();
+        const targetDxn = span.invocationTarget.uri;
+        const uuidPart = targetDxn.split(':').pop();
         return uuidPart === functionId;
       });
 

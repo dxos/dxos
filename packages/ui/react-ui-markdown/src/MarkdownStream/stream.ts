@@ -8,7 +8,7 @@ import * as Stream from 'effect/Stream';
 import { Obj } from '@dxos/echo';
 
 export const renderObjectLink = (obj: Obj.Unknown, block?: boolean) =>
-  `${block ? '!' : ''}[${Obj.getLabel(obj)}](${Obj.getDXN(obj).toString()})`;
+  `${block ? '!' : ''}[${Obj.getLabel(obj)}](${Obj.getURI(obj)})`;
 
 export type StreamerOptions = {
   /**

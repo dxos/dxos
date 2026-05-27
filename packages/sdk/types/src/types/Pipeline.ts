@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Ref, Type, View } from '@dxos/echo';
+import { DXN, Annotation, Obj, Ref, Type, View } from '@dxos/echo';
 import { FormInputAnnotation, Format, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
 export const Column = Schema.Struct({
@@ -24,10 +24,7 @@ export const Pipeline = Schema.Struct({
   image: Format.URL.pipe(Schema.annotations({ title: 'Image' }), Schema.optional),
   columns: Schema.Array(Column).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.pipeline',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.pipeline', '0.1.0')),
   Schema.annotations({ title: 'Pipeline' }),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({

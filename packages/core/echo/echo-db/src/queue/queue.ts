@@ -8,10 +8,10 @@ import { DeferredTask } from '@dxos/async';
 import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type Database, Entity, Feed, Filter, Obj, Query, type Ref } from '@dxos/echo';
-import { type ObjectJSON, ParentId, SelfDXNId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
+import { type ObjectJSON, ParentId, SelfURIId, assertObjectModel, setRefResolverOnData } from '@dxos/echo/internal';
 import { defineHiddenProperty } from '@dxos/echo/internal';
-import { failedInvariant } from '@dxos/invariant';
-import { type DXN, type ObjectId, type SpaceId } from '@dxos/keys';
+import { failedInvariant, invariant } from '@dxos/invariant';
+import { EchoURI, ObjectId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 
@@ -65,10 +65,14 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
             log.verbose('queue object JSON parse failed; object ignored', { encoded, error: err });
             return undefined;
           }
+          if (!ObjectId.isValid(obj.id)) {
+            log.verbose('queue object missing valid id; ignored', { obj });
+            return undefined;
+          }
           try {
             return await Obj.fromJSON(obj, {
               refResolver: this._refResolver,
-              dxn: this._dxn.extend([(obj as any).id]),
+              uri: EchoURI.make({ spaceId: this._spaceId, objectId: obj.id }),
               database: this._database,
               parent: this._parentEntity,
             });
@@ -107,7 +111,6 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     }
   });
 
-  private readonly _subspaceTag: string;
   private readonly _spaceId: SpaceId;
   private readonly _queueId: string;
 
@@ -128,13 +131,12 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   constructor(
     private readonly _service: FeedProtocol.QueueService,
     private readonly _refResolver: Ref.Resolver,
-    private readonly _dxn: DXN,
+    private readonly _echoUri: EchoURI.EchoURI,
     private readonly _database?: Database.Database,
+    private readonly _subspaceTag: string = 'data',
   ) {
-    const { subspaceTag, spaceId, queueId } = this._dxn.asQueueDXN() ?? {};
-    this._subspaceTag = subspaceTag ?? failedInvariant();
-    this._spaceId = spaceId ?? failedInvariant();
-    this._queueId = queueId ?? failedInvariant();
+    this._spaceId = EchoURI.getSpaceId(_echoUri) ?? failedInvariant('Missing spaceId in EchoURI');
+    this._queueId = EchoURI.getObjectId(_echoUri) ?? failedInvariant('Missing queueId in EchoURI');
   }
 
   /**
@@ -147,14 +149,14 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
 
   toJSON() {
     return {
-      dxn: this._dxn.toString(),
+      uri: this._echoUri,
       objects: this._objects.length,
     };
   }
 
   // TODO(burdon): Rename to objects.
-  get dxn() {
-    return this._dxn;
+  get uri(): EchoURI.EchoURI {
+    return this._echoUri;
   }
 
   /**
@@ -197,7 +199,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
 
     for (const item of items) {
       setRefResolverOnData(item, this._refResolver);
-      defineHiddenProperty(item, SelfDXNId, this._dxn.extend([item.id]));
+      defineHiddenProperty(item, SelfURIId, EchoURI.make({ spaceId: this._spaceId, objectId: item.id }));
       if (this._parentEntity) {
         defineHiddenProperty(item, ParentId, this._parentEntity);
       }
@@ -231,7 +233,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   async delete(ids: string[]): Promise<void> {
     // Optimistic update.
     // TODO(dmaretskyi): Restrict types.
-    this._objects = this._objects.filter((item) => !ids.includes((item as any).id));
+    this._objects = this._objects.filter((item) => !ids.includes(item.id));
     for (const id of ids) {
       this._objectCache.delete(id);
     }
@@ -258,7 +260,7 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
 
   private _query(queryOrFilter: Query.Any | Filter.Any) {
     const query = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
-    const queryWithScope = query.from({ spaceIds: [this._spaceId], feeds: [this._dxn.toString()] });
+    const queryWithScope = query.from({ spaceIds: [this._spaceId], feeds: [this._echoUri] });
     return new QueryResultImpl(new QueueQueryContext(this, this._ctx), queryWithScope);
   }
 
@@ -295,11 +297,12 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
     const objects = await this.fetchObjectsJSON();
     const decodedObjects = await Promise.all(
       objects
+        .filter((obj) => ObjectId.isValid(obj.id))
         .map(async (obj) => {
           try {
             const decoded = await Obj.fromJSON(obj, {
               refResolver: this._refResolver,
-              dxn: this._dxn.extend([(obj as any).id]),
+              uri: EchoURI.make({ spaceId: this._spaceId, objectId: obj.id }),
               database: this._database,
               parent: this._parentEntity,
             });
@@ -335,9 +338,10 @@ export class QueueImpl<T extends Entity.Unknown = Entity.Unknown> implements Que
   }
 
   async hydrateObject(obj: ObjectJSON): Promise<Entity.Unknown> {
+    invariant(ObjectId.isValid(obj.id), 'object missing valid id');
     const decoded = await Obj.fromJSON(obj, {
       refResolver: this._refResolver,
-      dxn: this._dxn.extend([(obj as any).id]),
+      uri: EchoURI.make({ spaceId: this._spaceId, objectId: obj.id }),
       database: this._database,
       parent: this._parentEntity,
     });

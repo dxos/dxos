@@ -7,7 +7,6 @@ import * as Effect from 'effect/Effect';
 
 import { Trace } from '@dxos/compute';
 import { type Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import type { QueueFactory } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { type ServiceContainer } from '@dxos/functions-runtime';
 import { createTestServices } from '@dxos/functions-runtime/testing';
@@ -21,16 +20,15 @@ const ENABLE_LOGGING = true;
 
 describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
   describe('common', () => {
-    let builder: EchoTestBuilder, services: ServiceContainer, db: Database.Database, queues: QueueFactory;
+    let builder: EchoTestBuilder, services: ServiceContainer, db: Database.Database;
     beforeEach(async (ctx) => {
       builder = await new EchoTestBuilder().open();
-      ({ db, queues } = await builder.createDatabase());
+      ({ db } = await builder.createDatabase());
       services = createTestServices({
         ai: {
           provider: 'edge',
         },
         db,
-        queues,
         logging: {
           enabled: ENABLE_LOGGING,
         },

@@ -186,7 +186,7 @@ const NotebookPromptResult = ({ cell, promptResults }: NotebookCellProps) => {
     return null;
   }
 
-  const value = promptResults?.[cell.prompt.dxn.toString()];
+  const value = promptResults?.[cell.prompt.uri];
   if (value == null) {
     return null;
   }

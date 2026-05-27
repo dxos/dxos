@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { FormInputAnnotation } from '@dxos/echo/internal';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
@@ -17,10 +17,7 @@ export const Spec = Schema.Struct({
   name: Schema.optional(Schema.String),
   content: Ref.Ref(Text.Text).pipe(FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.spec',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.spec', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: meta.icon!,
     hue: meta.iconHue,

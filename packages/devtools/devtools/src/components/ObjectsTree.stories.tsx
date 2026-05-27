@@ -9,7 +9,7 @@ import React, { useState } from 'react';
 
 import { Trigger } from '@dxos/compute';
 import { Operation } from '@dxos/compute';
-import { type Entity, Obj, Relation, Type } from '@dxos/echo';
+import { DXN, type Entity, Obj, Relation, Type } from '@dxos/echo';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -31,8 +31,7 @@ const WorksAt = Schema.Struct({
   role: Schema.optional(Schema.String),
 }).pipe(
   Type.relation({
-    typename: 'com.example.story.worksAt',
-    version: '0.1.0',
+    dxn: DXN.make('com.example.story.worksAt', '0.1.0'),
     source: TestSchema.Person,
     target: TestSchema.Organization,
   }),

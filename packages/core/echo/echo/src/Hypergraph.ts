@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type DXN } from '@dxos/keys';
+import { type URI } from '@dxos/keys';
 
 import type * as Database from './Database';
 import type * as Entity from './Entity';
@@ -22,10 +22,10 @@ export interface RefResolutionContext {
   space?: Key.SpaceId;
 
   /**
-   * Feed that the resolution is happening from (as the underlying queue DXN).
+   * Feed that the resolution is happening from.
    * This feed will be searched first, and then the space it belongs to.
    */
-  feed?: DXN;
+  feed?: URI.URI;
 }
 
 export interface RefResolverOptions {
@@ -57,11 +57,11 @@ export interface Hypergraph extends Database.Queryable {
    * Creates a reference to an existing object in the database.
    *
    * NOTE: The reference may be dangling if the object is not present in the database.
-   * NOTE: Difference from `Ref.fromDXN`
-   * `Ref.fromDXN(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
+   * NOTE: Difference from `Ref.fromURI`
+   * `Ref.fromURI(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
    * `db.makeRef(dxn)` is preferable in cases with access to the database.
    */
-  makeRef<T extends Entity.Unknown = Entity.Unknown>(dxn: DXN): Ref.Ref<T>;
+  makeRef<T extends Entity.Unknown = Entity.Unknown>(uri: URI.URI): Ref.Ref<T>;
 
   /**
    * @param hostDb Host database for reference resolution.

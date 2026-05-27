@@ -11,7 +11,8 @@ import { Capability } from '@dxos/app-framework';
 import { Chat } from '@dxos/assistant-toolkit';
 import { SpaceSchema } from '@dxos/client/echo';
 import { Routine, Operation } from '@dxos/compute';
-import { Collection, Database, DXN, Feed, Obj, Ref } from '@dxos/echo';
+import { Collection, Database, Feed, Obj, Ref } from '@dxos/echo';
+import { DXN } from '@dxos/keys';
 
 import { meta } from '#meta';
 
@@ -102,7 +103,7 @@ export const ResolveNavigationTargets = Operation.make({
   input: Schema.Struct({
     query: Schema.optional(
       Schema.Struct({
-        dxn: DXN.Schema.pipe(Schema.optional),
+        dxn: Schema.optional(DXN.Schema),
       }),
     ),
   }),

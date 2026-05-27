@@ -11,7 +11,7 @@ import { describe, expect, test } from 'vitest';
 import { Filter, Order, Query, Ref } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
-import { DXN, SpaceId } from '@dxos/keys';
+import { EchoURI, SpaceId } from '@dxos/keys';
 
 import { QueryPlanner } from './query-planner';
 
@@ -36,7 +36,7 @@ describe('QueryPlanner', () => {
               "_tag": "TypeSelector",
               "inverted": false,
               "typename": [
-                "dxn:type:com.example.type.person:0.1.0",
+                "dxn:com.example.type.person:0.1.0",
               ],
             },
           },
@@ -50,7 +50,7 @@ describe('QueryPlanner', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:com.example.type.person:0.1.0",
+              "typename": "dxn:com.example.type.person:0.1.0",
             },
           },
           {
@@ -84,7 +84,7 @@ describe('QueryPlanner', () => {
               "_tag": "TypeSelector",
               "inverted": false,
               "typename": [
-                "dxn:type:com.example.type.person:0.1.0",
+                "dxn:com.example.type.person:0.1.0",
               ],
             },
           },
@@ -98,7 +98,7 @@ describe('QueryPlanner', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:com.example.type.person:0.1.0",
+              "typename": "dxn:com.example.type.person:0.1.0",
             },
           },
           {
@@ -134,7 +134,7 @@ describe('QueryPlanner', () => {
               "_tag": "TypeSelector",
               "inverted": false,
               "typename": [
-                "dxn:type:com.example.type.person:0.1.0",
+                "dxn:com.example.type.person:0.1.0",
               ],
             },
           },
@@ -154,7 +154,7 @@ describe('QueryPlanner', () => {
                 },
               },
               "type": "object",
-              "typename": "dxn:type:com.example.type.person:0.1.0",
+              "typename": "dxn:com.example.type.person:0.1.0",
             },
           },
           {
@@ -205,7 +205,7 @@ describe('QueryPlanner', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:com.example.type.person:0.1.0",
+              "typename": "dxn:com.example.type.person:0.1.0",
             },
           },
           {
@@ -231,7 +231,7 @@ describe('QueryPlanner', () => {
                 },
               },
               "type": "object",
-              "typename": "dxn:type:com.example.type.employed-by:0.1.0",
+              "typename": "dxn:com.example.type.employedBy:0.1.0",
             },
           },
           {
@@ -292,7 +292,7 @@ describe('QueryPlanner', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:com.example.type.person:0.1.0",
+              "typename": "dxn:com.example.type.person:0.1.0",
             },
           },
           {
@@ -312,7 +312,7 @@ describe('QueryPlanner', () => {
             "filter": {
               "props": {},
               "type": "object",
-              "typename": "dxn:type:com.example.type.task:0.1.0",
+              "typename": "dxn:com.example.type.task:0.1.0",
             },
           },
           {
@@ -349,7 +349,7 @@ describe('QueryPlanner', () => {
               "_tag": "TypeSelector",
               "inverted": false,
               "typename": [
-                "dxn:type:com.example.type.organization:0.1.0",
+                "dxn:com.example.type.organization:0.1.0",
               ],
             },
           },
@@ -369,7 +369,7 @@ describe('QueryPlanner', () => {
                 },
               },
               "type": "object",
-              "typename": "dxn:type:com.example.type.organization:0.1.0",
+              "typename": "dxn:com.example.type.organization:0.1.0",
             },
           },
           {
@@ -389,7 +389,7 @@ describe('QueryPlanner', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:com.example.type.employed-by:0.1.0",
+              "typename": "dxn:com.example.type.employedBy:0.1.0",
             },
           },
           {
@@ -420,7 +420,7 @@ describe('QueryPlanner', () => {
             "filter": {
               "props": {},
               "type": "object",
-              "typename": "dxn:type:com.example.type.task:0.1.0",
+              "typename": "dxn:com.example.type.task:0.1.0",
             },
           },
           {
@@ -462,7 +462,7 @@ describe('QueryPlanner', () => {
                       "_tag": "TypeSelector",
                       "inverted": false,
                       "typename": [
-                        "dxn:type:com.example.type.person:0.1.0",
+                        "dxn:com.example.type.person:0.1.0",
                       ],
                     },
                   },
@@ -476,7 +476,7 @@ describe('QueryPlanner', () => {
                       "id": undefined,
                       "props": {},
                       "type": "object",
-                      "typename": "dxn:type:com.example.type.person:0.1.0",
+                      "typename": "dxn:com.example.type.person:0.1.0",
                     },
                   },
                   {
@@ -502,7 +502,7 @@ describe('QueryPlanner', () => {
                       "_tag": "TypeSelector",
                       "inverted": false,
                       "typename": [
-                        "dxn:type:com.example.type.organization:0.1.0",
+                        "dxn:com.example.type.organization:0.1.0",
                       ],
                     },
                   },
@@ -516,7 +516,7 @@ describe('QueryPlanner', () => {
                       "id": undefined,
                       "props": {},
                       "type": "object",
-                      "typename": "dxn:type:com.example.type.organization:0.1.0",
+                      "typename": "dxn:com.example.type.organization:0.1.0",
                     },
                   },
                   {
@@ -569,7 +569,7 @@ describe('QueryPlanner', () => {
                     "_tag": "TypeSelector",
                     "inverted": false,
                     "typename": [
-                      "dxn:type:com.example.type.person:0.1.0",
+                      "dxn:com.example.type.person:0.1.0",
                     ],
                   },
                 },
@@ -583,7 +583,7 @@ describe('QueryPlanner', () => {
                     "id": undefined,
                     "props": {},
                     "type": "object",
-                    "typename": "dxn:type:com.example.type.person:0.1.0",
+                    "typename": "dxn:com.example.type.person:0.1.0",
                   },
                 },
                 {
@@ -603,7 +603,7 @@ describe('QueryPlanner', () => {
                     "id": undefined,
                     "props": {},
                     "type": "object",
-                    "typename": "dxn:type:com.example.type.employed-by:0.1.0",
+                    "typename": "dxn:com.example.type.employedBy:0.1.0",
                   },
                 },
                 {
@@ -640,7 +640,7 @@ describe('QueryPlanner', () => {
                     "_tag": "TypeSelector",
                     "inverted": false,
                     "typename": [
-                      "dxn:type:com.example.type.person:0.1.0",
+                      "dxn:com.example.type.person:0.1.0",
                     ],
                   },
                 },
@@ -654,7 +654,7 @@ describe('QueryPlanner', () => {
                     "id": undefined,
                     "props": {},
                     "type": "object",
-                    "typename": "dxn:type:com.example.type.person:0.1.0",
+                    "typename": "dxn:com.example.type.person:0.1.0",
                   },
                 },
                 {
@@ -703,7 +703,7 @@ describe('QueryPlanner', () => {
               "_tag": "TypeSelector",
               "inverted": false,
               "typename": [
-                "dxn:type:com.example.type.task:0.1.0",
+                "dxn:com.example.type.task:0.1.0",
               ],
             },
           },
@@ -723,7 +723,7 @@ describe('QueryPlanner', () => {
                 },
               },
               "type": "object",
-              "typename": "dxn:type:com.example.type.task:0.1.0",
+              "typename": "dxn:com.example.type.task:0.1.0",
             },
           },
           {
@@ -782,7 +782,7 @@ describe('QueryPlanner', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:com.example.type.person:0.1.0",
+              "typename": "dxn:com.example.type.person:0.1.0",
             },
           },
           {
@@ -854,8 +854,8 @@ describe('QueryPlanner', () => {
               "_tag": "TypeSelector",
               "inverted": false,
               "typename": [
-                "dxn:type:com.example.type.organization:0.1.0",
-                "dxn:type:com.example.type.person:0.1.0",
+                "dxn:com.example.type.organization:0.1.0",
+                "dxn:com.example.type.person:0.1.0",
               ],
             },
           },
@@ -871,13 +871,13 @@ describe('QueryPlanner', () => {
                   "id": undefined,
                   "props": {},
                   "type": "object",
-                  "typename": "dxn:type:com.example.type.organization:0.1.0",
+                  "typename": "dxn:com.example.type.organization:0.1.0",
                 },
                 {
                   "id": undefined,
                   "props": {},
                   "type": "object",
-                  "typename": "dxn:type:com.example.type.person:0.1.0",
+                  "typename": "dxn:com.example.type.person:0.1.0",
                 },
               ],
               "type": "or",
@@ -924,8 +924,8 @@ describe('QueryPlanner', () => {
               "_tag": "TypeSelector",
               "inverted": true,
               "typename": [
-                "dxn:type:com.example.type.organization:0.1.0",
-                "dxn:type:com.example.type.person:0.1.0",
+                "dxn:com.example.type.organization:0.1.0",
+                "dxn:com.example.type.person:0.1.0",
               ],
             },
           },
@@ -941,13 +941,13 @@ describe('QueryPlanner', () => {
                   "id": undefined,
                   "props": {},
                   "type": "object",
-                  "typename": "dxn:type:com.example.type.organization:0.1.0",
+                  "typename": "dxn:com.example.type.organization:0.1.0",
                 },
                 {
                   "id": undefined,
                   "props": {},
                   "type": "object",
-                  "typename": "dxn:type:com.example.type.person:0.1.0",
+                  "typename": "dxn:com.example.type.person:0.1.0",
                 },
               ],
               "type": "or",
@@ -984,7 +984,7 @@ describe('QueryPlanner', () => {
               "_tag": "TypeSelector",
               "inverted": false,
               "typename": [
-                "dxn:type:com.example.type.task:0.1.0",
+                "dxn:com.example.type.task:0.1.0",
               ],
             },
           },
@@ -998,7 +998,7 @@ describe('QueryPlanner', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:com.example.type.task:0.1.0",
+              "typename": "dxn:com.example.type.task:0.1.0",
             },
           },
           {
@@ -1025,14 +1025,14 @@ describe('QueryPlanner', () => {
             "_tag": "SelectStep",
             "scope": {
               "feeds": [
-                "dxn:queue:data:B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO:01JJRA86VK4H1TEB6QQVSWXP0E",
+                "echo://B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO/01JJRA86VK4H1TEB6QQVSWXP0E",
               ],
             },
             "selector": {
               "_tag": "TypeSelector",
               "inverted": false,
               "typename": [
-                "dxn:type:com.example.type.task:0.1.0",
+                "dxn:com.example.type.task:0.1.0",
               ],
             },
           },
@@ -1046,7 +1046,7 @@ describe('QueryPlanner', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:com.example.type.task:0.1.0",
+              "typename": "dxn:com.example.type.task:0.1.0",
             },
           },
           {
@@ -1084,7 +1084,7 @@ describe('QueryPlanner', () => {
               "_tag": "TypeSelector",
               "inverted": false,
               "typename": [
-                "dxn:type:com.example.type.task:0.1.0",
+                "dxn:com.example.type.task:0.1.0",
               ],
             },
           },
@@ -1098,7 +1098,7 @@ describe('QueryPlanner', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:com.example.type.task:0.1.0",
+              "typename": "dxn:com.example.type.task:0.1.0",
             },
           },
           {
@@ -1133,7 +1133,7 @@ describe('QueryPlanner', () => {
               "_tag": "TypeSelector",
               "inverted": false,
               "typename": [
-                "dxn:type:com.example.type.task:0.1.0",
+                "dxn:com.example.type.task:0.1.0",
               ],
             },
           },
@@ -1147,7 +1147,7 @@ describe('QueryPlanner', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:com.example.type.task:0.1.0",
+              "typename": "dxn:com.example.type.task:0.1.0",
             },
           },
           {
@@ -1183,7 +1183,7 @@ describe('QueryPlanner', () => {
               "_tag": "TypeSelector",
               "inverted": false,
               "typename": [
-                "dxn:type:com.example.type.task:0.1.0",
+                "dxn:com.example.type.task:0.1.0",
               ],
             },
           },
@@ -1197,7 +1197,7 @@ describe('QueryPlanner', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:com.example.type.task:0.1.0",
+              "typename": "dxn:com.example.type.task:0.1.0",
             },
           },
           {
@@ -1243,7 +1243,7 @@ describe('QueryPlanner', () => {
                       "_tag": "TypeSelector",
                       "inverted": false,
                       "typename": [
-                        "dxn:type:com.example.type.person:0.1.0",
+                        "dxn:com.example.type.person:0.1.0",
                       ],
                     },
                   },
@@ -1257,7 +1257,7 @@ describe('QueryPlanner', () => {
                       "id": undefined,
                       "props": {},
                       "type": "object",
-                      "typename": "dxn:type:com.example.type.person:0.1.0",
+                      "typename": "dxn:com.example.type.person:0.1.0",
                     },
                   },
                   {
@@ -1285,7 +1285,7 @@ describe('QueryPlanner', () => {
                       "_tag": "TypeSelector",
                       "inverted": false,
                       "typename": [
-                        "dxn:type:com.example.type.organization:0.1.0",
+                        "dxn:com.example.type.organization:0.1.0",
                       ],
                     },
                   },
@@ -1299,7 +1299,7 @@ describe('QueryPlanner', () => {
                       "id": undefined,
                       "props": {},
                       "type": "object",
-                      "typename": "dxn:type:com.example.type.organization:0.1.0",
+                      "typename": "dxn:com.example.type.organization:0.1.0",
                     },
                   },
                   {
@@ -1346,7 +1346,7 @@ describe('QueryPlanner', () => {
               "_tag": "TypeSelector",
               "inverted": false,
               "typename": [
-                "dxn:type:com.example.type.person:0.1.0",
+                "dxn:com.example.type.person:0.1.0",
               ],
             },
           },
@@ -1360,7 +1360,7 @@ describe('QueryPlanner', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:com.example.type.person:0.1.0",
+              "typename": "dxn:com.example.type.person:0.1.0",
             },
           },
           {
@@ -1394,7 +1394,7 @@ describe('QueryPlanner', () => {
               "_tag": "TypeSelector",
               "inverted": false,
               "typename": [
-                "dxn:type:com.example.type.person:0.1.0",
+                "dxn:com.example.type.person:0.1.0",
               ],
             },
           },
@@ -1408,7 +1408,7 @@ describe('QueryPlanner', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:com.example.type.person:0.1.0",
+              "typename": "dxn:com.example.type.person:0.1.0",
             },
           },
           {
@@ -1468,7 +1468,7 @@ describe('QueryPlanner', () => {
               "_tag": "TypeSelector",
               "inverted": false,
               "typename": [
-                "dxn:type:com.example.type.person:0.1.0",
+                "dxn:com.example.type.person:0.1.0",
               ],
             },
           },
@@ -1482,7 +1482,7 @@ describe('QueryPlanner', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:com.example.type.person:0.1.0",
+              "typename": "dxn:com.example.type.person:0.1.0",
             },
           },
           {
@@ -1534,7 +1534,7 @@ describe('QueryPlanner', () => {
               "_tag": "TypeSelector",
               "inverted": false,
               "typename": [
-                "dxn:type:com.example.type.person:0.1.0",
+                "dxn:com.example.type.person:0.1.0",
               ],
             },
           },
@@ -1548,7 +1548,7 @@ describe('QueryPlanner', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:com.example.type.person:0.1.0",
+              "typename": "dxn:com.example.type.person:0.1.0",
             },
           },
           {
@@ -1557,7 +1557,7 @@ describe('QueryPlanner', () => {
               "id": undefined,
               "props": {},
               "type": "object",
-              "typename": "dxn:type:com.example.type.task:0.1.0",
+              "typename": "dxn:com.example.type.task:0.1.0",
             },
           },
           {
@@ -1622,7 +1622,7 @@ describe('QueryPlanner', () => {
     // Regression: when a child-of FilterStep sits between SelectStep and LimitStep, pushing
     // the limit into the SelectStep slices candidates before the filter runs and starves the
     // result set (e.g. wildcard select grabs 10 random objects, then child-of leaves 0).
-    const parentRef = Ref.fromDXN(DXN.parse('dxn:echo:@:01J7XKZ6E3MZRY7H9TGFR3W6CN'));
+    const parentRef = Ref.fromURI('dxn:echo:@:01J7XKZ6E3MZRY7H9TGFR3W6CN' as any);
     const query = Query.select(Filter.everything()).select(Filter.childOf(parentRef)).limit(10);
 
     const plan = planner.createPlan(withSpaceIdOptions(query.ast));
@@ -1636,7 +1636,7 @@ describe('QueryPlanner', () => {
 });
 
 const SPACE_ID = SpaceId.make('B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO'); // Stable id for inline snapshots.
-const QUEUE_DXN = DXN.parse('dxn:queue:data:B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO:01JJRA86VK4H1TEB6QQVSWXP0E').toString(); // Stable queue DXN for inline snapshots.
+const QUEUE_DXN = EchoURI.parse('dxn:queue:data:B2NJDFNVZIW77OQSXUBNAD7BUMBD3G5PO:01JJRA86VK4H1TEB6QQVSWXP0E'); // Stable queue DXN for inline snapshots.
 
 const withSpaceIdOptions = (query: QueryAST.Query): QueryAST.Query => ({
   type: 'from',

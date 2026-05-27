@@ -12,7 +12,6 @@ import { DXN } from '@dxos/keys';
 import {
   type TypeAnnotation,
   TypeAnnotationId,
-  type TypeMeta,
   getEntityKind,
   getSchemaTypename,
   getTypeIdentifierAnnotation,
@@ -61,7 +60,8 @@ export type RelationTarget<R> = R extends RelationSourceTargetRefs<infer _Source
 export type EchoRelationSchemaOptions<
   TSource extends Schema.Schema.AnyNoContext,
   TTarget extends Schema.Schema.AnyNoContext,
-> = TypeMeta & {
+> = {
+  dxn: DXN.DXN;
   source: TSource;
   target: TTarget;
 };
@@ -88,13 +88,15 @@ export const EchoRelationSchema = <
   Source extends Schema.Schema.AnyNoContext,
   Target extends Schema.Schema.AnyNoContext,
 >({
+  dxn,
   source,
   target,
-  typename,
-  version,
 }: EchoRelationSchemaOptions<Source, Target>) => {
   assertArgument(Schema.isSchema(source), 'source');
   assertArgument(Schema.isSchema(target), 'target');
+  const typename = DXN.getName(dxn);
+  const version = DXN.getVersion(dxn);
+  invariant(version, `Type.relation requires a versioned DXN: ${dxn}`);
   const sourceDXN = getDXNForRelationSchemaRef(source);
   const targetDXN = getDXNForRelationSchemaRef(target);
   if (getEntityKind(source) !== EntityKind.Object) {
@@ -138,11 +140,11 @@ export const EchoRelationSchema = <
   };
 };
 
-const getDXNForRelationSchemaRef = (schema: Schema.Schema.Any): string => {
+const getDXNForRelationSchemaRef = (schema: Schema.Schema.Any): DXN.DXN => {
   assertArgument(Schema.isSchema(schema), 'schema');
   const identifier = getTypeIdentifierAnnotation(schema);
   if (identifier) {
-    return identifier;
+    return DXN.tryMake(identifier) ?? raise(new Error(`Invalid schema identifier: ${identifier}`));
   }
 
   const typename = getSchemaTypename(schema);
@@ -150,5 +152,5 @@ const getDXNForRelationSchemaRef = (schema: Schema.Schema.Any): string => {
     throw new Error('Schema must have a typename');
   }
 
-  return DXN.fromTypename(typename).toString();
+  return DXN.make(typename);
 };

@@ -77,7 +77,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
             type: Invitation.Type.INTERACTIVE,
             authMethod: Invitation.AuthMethod.SHARED_SECRET,
             multiUse: false,
-            target: target && Obj.getDXN(target).toString(),
+            target: target && Obj.getURI(target),
           });
           if (invitation && config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
             const subscription: ZenObservable.Subscription = (invitation as CancellableInvitationObservable).subscribe(
@@ -97,7 +97,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
             type: Invitation.Type.DELEGATED,
             authMethod: Invitation.AuthMethod.KNOWN_PUBLIC_KEY,
             multiUse: true,
-            target: target && Obj.getDXN(target).toString(),
+            target: target && Obj.getURI(target),
           });
           if (invitation && config.values.runtime?.app?.env?.DX_ENVIRONMENT !== 'production') {
             const subscription: ZenObservable.Subscription = (invitation as CancellableInvitationObservable).subscribe(

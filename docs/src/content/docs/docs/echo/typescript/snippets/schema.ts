@@ -4,14 +4,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Type } from '@dxos/echo';
+import { DXN, Type } from '@dxos/echo';
 
 export const Task = Schema.Struct({
   name: Schema.String,
   completed: Schema.optional(Schema.Boolean),
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.task',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.object(DXN.make('org.dxos.type.task', '0.1.0')));

@@ -7,6 +7,7 @@ import { useCallback, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type Operation } from '@dxos/compute';
 import { Filter, Obj, Ref } from '@dxos/echo';
+import { EchoURI } from '@dxos/keys';
 import { Integration } from '@dxos/plugin-integration';
 import { useQuery } from '@dxos/react-client/echo';
 /**
@@ -19,7 +20,9 @@ export const useTargetIntegration = <T extends Obj.Any>(
   const db = Obj.getDatabase(target);
   const integrations = useQuery(db, Filter.type(Integration.Integration));
   const integration = integrations.find((candidate) =>
-    candidate.targets.some((entry) => entry.object?.dxn.asEchoDXN()?.echoId === target.id),
+    candidate.targets.some(
+      (entry) => entry.object && EchoURI.getObjectId(EchoURI.tryParse(entry.object.uri)!) === target.id,
+    ),
   );
   return { integration };
 };

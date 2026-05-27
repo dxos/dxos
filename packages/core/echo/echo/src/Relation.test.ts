@@ -44,13 +44,13 @@ describe('Relation', () => {
       });
       const snapshot = Relation.getSnapshot(rel);
 
-      // getSourceDXN - works with both.
-      expect(Relation.getSourceDXN(rel)).toBeDefined();
-      expect(Relation.getSourceDXN(snapshot)).toBeDefined();
+      // getSourceURI - works with both.
+      expect(Relation.getSourceURI(rel)).toBeDefined();
+      expect(Relation.getSourceURI(snapshot)).toBeDefined();
 
-      // getTargetDXN - works with both.
-      expect(Relation.getTargetDXN(rel)).toBeDefined();
-      expect(Relation.getTargetDXN(snapshot)).toBeDefined();
+      // getTargetURI - works with both.
+      expect(Relation.getTargetURI(rel)).toBeDefined();
+      expect(Relation.getTargetURI(snapshot)).toBeDefined();
 
       // getSource - works with both.
       expect(Relation.getSource(rel)).toBeDefined();
@@ -61,12 +61,12 @@ describe('Relation', () => {
       expect(Relation.getTarget(snapshot)).toBeDefined();
 
       // getDXN - works with both.
-      expect(Relation.getDXN(rel)).toBeDefined();
-      expect(Relation.getDXN(snapshot)).toBeDefined();
+      expect(Relation.getURI(rel)).toBeDefined();
+      expect(Relation.getURI(snapshot)).toBeDefined();
 
       // getTypename - works with both.
-      expect(Relation.getTypename(rel)).toBe('com.example.type.has-manager');
-      expect(Relation.getTypename(snapshot)).toBe('com.example.type.has-manager');
+      expect(Relation.getTypename(rel)).toBe('com.example.type.hasManager');
+      expect(Relation.getTypename(snapshot)).toBe('com.example.type.hasManager');
 
       // getMeta - works with both.
       expect(Relation.getMeta(rel)).toBeDefined();

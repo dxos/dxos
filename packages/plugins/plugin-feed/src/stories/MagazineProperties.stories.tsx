@@ -215,7 +215,7 @@ export const CreateFeed: Story = {
     const newId = (newFeed as any).id;
     await waitFor(
       'magazine.feeds[0] references the new Feed',
-      () => magazine!.feeds[0]?.dxn.toString().split(':').pop(),
+      () => magazine!.feeds[0]?.uri.split(':').pop(),
       (id) => id === newId,
     );
 
@@ -223,7 +223,7 @@ export const CreateFeed: Story = {
     // name. This is the user-reported visual symptom — even with the data
     // correctly wired into magazine.feeds, the combobox slot still rendered
     // its empty-state placeholder because RefField.handleGetValue compared
-    // option.id (space-scoped DXN) to ref.dxn (local-id DXN), which never
+    // option.id (space-scoped DXN) to ref.uri (local-id DXN), which never
     // matched. The fix is dedup-by-bare-object-id in `handleGetValue`.
     await waitFor('array slot shows the new feed name', () =>
       (Array.from(canvasElement.querySelectorAll('input[readonly]')) as HTMLInputElement[]).find(

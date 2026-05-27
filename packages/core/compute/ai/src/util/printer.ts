@@ -151,7 +151,7 @@ export class ConsolePrinter {
             break;
           }
           case 'reference':
-            this.log(`${prefix}🔗 [Reference] ${content.reference.dxn.toString()}`);
+            this.log(`${prefix}🔗 [Reference] ${content.reference.uri}`);
             break;
           case 'summary':
             this.log(`${prefix}📝 [Summary] ${content.content}`);

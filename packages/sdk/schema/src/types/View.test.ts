@@ -39,7 +39,7 @@ describe('Projection', () => {
     });
     assert(view.query.ast.type === 'select');
     assert(view.query.ast.filter.type === 'object');
-    expect(view.query.ast.filter.typename).to.eq(Type.getDXN(schema)?.toString());
+    expect(view.query.ast.filter.typename).to.eq(Type.getURI(schema)?.toString());
     const visibleFields = view.projection.fields.filter((f) => f.visible);
     expect(visibleFields.map((f) => f.path)).to.deep.eq(['name', 'image', 'email', 'organization']);
 

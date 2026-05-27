@@ -6,6 +6,7 @@ import { type CleanupFn } from '@dxos/async';
 import { type Database, Entity, Filter, Obj, Query, Ref, Relation, Type } from '@dxos/echo';
 import { type Graph, GraphModel } from '@dxos/graph';
 import { invariant } from '@dxos/invariant';
+import { EchoURI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { visitValues } from '@dxos/util';
 
@@ -176,7 +177,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
     // Schema nodes.
     if (this._options?.showSchema) {
       this._schema?.forEach((schema) => {
-        const typename = Type.getDXN(schema)?.typename;
+        const typename = Type.getTypename(schema);
         if (typename) {
           let node = currentNodes.find((node) => node.id === typename);
           if (!node) {
@@ -210,8 +211,8 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
         const edge: SpaceGraphEdge = {
           id: object.id,
           type: 'relation',
-          source: Relation.getSourceDXN(object).asEchoDXN()!.echoId,
-          target: Relation.getTargetDXN(object).asEchoDXN()!.echoId,
+          source: EchoURI.getObjectId(Relation.getSourceURI(object))!,
+          target: EchoURI.getObjectId(Relation.getTargetURI(object))!,
           data: {
             object,
           },
@@ -266,7 +267,7 @@ export class SpaceGraphModel extends GraphModel.ReactiveGraphModel<SpaceGraphNod
             }
 
             newEdges.push({
-              id: `${object.id}-${ref.dxn.toString()}`,
+              id: `${object.id}-${ref.uri}`,
               type: 'ref',
               source: object.id,
               target: ref.target.id,

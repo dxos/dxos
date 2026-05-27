@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Operation } from '@dxos/compute';
-import { JsonSchema, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, JsonSchema, Obj, Ref, Type } from '@dxos/echo';
 import { Graph } from '@dxos/graph';
 
 export const ComputeValueType = Schema.Literal('string', 'number', 'boolean', 'object');
@@ -90,12 +90,7 @@ export const ComputeGraph = Schema.Struct({
   // Reference nodes.
   input: Schema.optional(ComputeNode),
   output: Schema.optional(ComputeNode),
-}).pipe(
-  Type.object({
-    typename: 'org.dxos.type.computeGraph',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.object(DXN.make('org.dxos.type.computeGraph', '0.1.0')));
 
 export interface ComputeGraph extends Schema.Schema.Type<typeof ComputeGraph> {}
 

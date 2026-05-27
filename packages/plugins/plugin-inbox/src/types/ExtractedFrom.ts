@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Obj, Relation, Type } from '@dxos/echo';
+import { DXN, Obj, Relation, Type } from '@dxos/echo';
 
 /**
  * Provenance relation. Source = the extracted object (Booking, Segment, …).
@@ -20,8 +20,7 @@ export const ExtractedFrom = Schema.Struct({
   confidence: Schema.optional(Schema.Number),
 }).pipe(
   Type.relation({
-    typename: 'org.dxos.relation.extractedFrom',
-    version: '0.1.0',
+    dxn: DXN.make('org.dxos.relation.extractedFrom', '0.1.0'),
     source: Obj.Unknown,
     target: Obj.Unknown,
   }),

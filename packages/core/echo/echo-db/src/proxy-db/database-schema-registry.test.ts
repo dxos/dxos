@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
-import { Filter, JsonSchema, Obj, Type } from '@dxos/echo';
+import { DXN, Filter, JsonSchema, Obj, Type } from '@dxos/echo';
 import { EchoSchema } from '@dxos/echo/internal';
 
 import { EchoTestBuilder } from '../testing';
@@ -14,21 +14,11 @@ import { EchoTestBuilder } from '../testing';
 const Organization = Schema.Struct({
   name: Schema.String,
   address: Schema.String,
-}).pipe(
-  Type.object({
-    typename: 'com.example.type.organization',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.object(DXN.make('com.example.type.organization', '0.1.0')));
 
 const Contact = Schema.Struct({
   name: Schema.String,
-}).pipe(
-  Type.object({
-    typename: 'com.example.type.person',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.object(DXN.make('com.example.type.person', '0.1.0')));
 
 describe('schema registry', () => {
   let builder: EchoTestBuilder;
@@ -50,7 +40,8 @@ describe('schema registry', () => {
     const { registry } = await setupTest();
     const [echoSchema] = await registry.register([Contact]);
     expect(registry.hasSchema(echoSchema)).to.be.true;
-    expect(echoSchema.jsonSchema.$id).toEqual(`dxn:echo:@:${echoSchema.id}`);
+    // For stored schemas `$id` is the storage URI (the schema-as-object's EchoURI).
+    expect(echoSchema.jsonSchema.$id).toEqual(`echo:/${echoSchema.id}`);
   });
 
   test('add new schema from json-schema', async () => {
@@ -70,7 +61,8 @@ describe('schema registry', () => {
       },
     ]);
     expect(registry.hasSchema(echoSchema)).to.be.true;
-    expect(echoSchema.jsonSchema.$id).toEqual(`dxn:echo:@:${echoSchema.id}`);
+    // Storage URI form for stored schemas (see `add new schema` above).
+    expect(echoSchema.jsonSchema.$id).toEqual(`echo:/${echoSchema.id}`);
     expect(echoSchema.typename).toEqual('com.example.type.person');
     expect(echoSchema.version).toEqual('0.1.0');
     expect(echoSchema.jsonSchema.properties).toEqual({
@@ -275,9 +267,4 @@ describe('schema registry', () => {
 const makeTestSchema = () =>
   Schema.Struct({
     name: Schema.String,
-  }).pipe(
-    Type.object({
-      typename: 'com.example.type.test',
-      version: '0.1.0',
-    }),
-  );
+  }).pipe(Type.object(DXN.make('com.example.type.test', '0.1.0')));

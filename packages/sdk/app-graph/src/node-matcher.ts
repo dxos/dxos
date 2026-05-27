@@ -131,7 +131,7 @@ export const whenEchoType =
  *   match: NodeMatcher.whenEchoObject,
  *   connector: (object) => {
  *     // `object` is typed as Obj.Unknown
- *     const id = Obj.getDXN(object).toString();
+ *     const id = Obj.getURI(object);
  *     return Effect.succeed([{ id: `${id}.settings`, ... }]);
  *   },
  * });

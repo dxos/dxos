@@ -37,7 +37,7 @@ export type CanvasArticleProps = AppSurface.ObjectArticleProps<CanvasBoard.Canva
 
 export const CanvasArticle = ({ role, subject, attendableId: _attendableId }: CanvasArticleProps) => {
   const [canvas] = useObject(subject);
-  const id = Obj.getDXN(canvas).toString();
+  const id = Obj.getURI(canvas);
   const graph = useMemo(
     () => CanvasGraphModel.create<ComputeShape>(canvas.layout, (fn) => Obj.update(subject, fn)),
     [subject, canvas.layout],

@@ -14,7 +14,7 @@ export default TagRemove.pipe(
     Effect.fn(function* ({ tag, obj }) {
       const object = yield* Database.load(obj);
       const tagObj = yield* Database.load(tag);
-      Entity.update(object, (object) => Entity.removeTag(object, Obj.getDXN(tagObj).toString()));
+      Entity.update(object, (object) => Entity.removeTag(object, Obj.getURI(tagObj)));
       return Entity.toJSON(object);
     }),
   ),

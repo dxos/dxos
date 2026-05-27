@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 import {
   Format,
   FormatAnnotation,
@@ -87,10 +87,7 @@ export const Organization = OrganizationSchema.pipe(
     icon: 'ph--building-office--regular',
     hue: 'neutral',
   }),
-  Type.object({
-    typename: 'org.dxos.type.organization',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.organization', '0.1.0')),
 );
 
 export interface Organization extends Schema.Schema.Type<typeof Organization> {}
@@ -106,8 +103,5 @@ export const LegacyOrganization = OrganizationSchema.pipe(
     icon: 'ph--building-office--regular',
     hue: 'neutral',
   }),
-  Type.object({
-    typename: 'org.dxos.type.organization',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.organization', '0.1.0')),
 );

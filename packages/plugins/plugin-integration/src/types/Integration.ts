@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Ref, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Ref, Type } from '@dxos/echo';
 import { Format, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 import { AccessToken } from '@dxos/types';
 
@@ -56,10 +56,7 @@ export const Integration = Schema.Struct({
     Schema.optional,
   ),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.integration',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.integration', '0.1.0')),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({
     icon: 'ph--plugs-connected--regular',

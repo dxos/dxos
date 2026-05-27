@@ -9,7 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 /**
@@ -152,10 +152,7 @@ export const MessageData = Schema.Struct({
 export interface MessageData extends Schema.Schema.Type<typeof MessageData> {}
 
 export const Message = MessageData.pipe(
-  Type.object({
-    typename: 'org.dxos.type.traceMessage',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.traceMessage', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--note--regular',
     hue: 'rose',

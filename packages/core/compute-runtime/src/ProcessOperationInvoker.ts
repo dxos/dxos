@@ -18,7 +18,6 @@ import * as Stream from 'effect/Stream';
 
 import { Process, Trace } from '@dxos/compute';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
-import { DXN } from '@dxos/echo';
 import { runAndForwardErrors } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { type OperationInvoker } from '@dxos/operation';
@@ -192,7 +191,7 @@ export const make = (opts: {
         traceMeta,
         environment: {
           ...(options?.spaceId !== undefined ? { space: options.spaceId } : {}),
-          ...(options?.conversation !== undefined ? { conversation: options.conversation as DXN.String } : {}),
+          ...(options?.conversation !== undefined ? { conversation: options.conversation } : {}),
         },
       });
       // `fiber.await` is `Effect<Exit<O>>`; `Exit` is a subtype of `Effect`,
@@ -240,7 +239,7 @@ export const make = (opts: {
         traceMeta,
         environment: {
           ...(options?.spaceId !== undefined ? { space: options.spaceId } : {}),
-          ...(options?.conversation !== undefined ? { conversation: options.conversation as DXN.String } : {}),
+          ...(options?.conversation !== undefined ? { conversation: options.conversation } : {}),
         },
       }).pipe(
         Effect.ensuring(Ref.update(pendingCount, (count) => count - 1)),

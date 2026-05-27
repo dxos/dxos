@@ -19,8 +19,7 @@ import * as Stream from 'effect/Stream';
 import { LayerSpec, Process, ServiceResolver, Trace } from '@dxos/compute';
 import { Operation, OperationHandlerSet } from '@dxos/compute';
 import * as StorageService from '@dxos/compute/StorageService';
-import { DXN } from '@dxos/echo';
-import type { SpaceId } from '@dxos/keys';
+import type { SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type ProcessIdGenerator, UUIDProcessIdGenerator } from './process-id';
@@ -109,7 +108,7 @@ export namespace Handle {
  */
 export interface Environment {
   readonly space?: SpaceId;
-  readonly conversation?: DXN.String;
+  readonly conversation?: URI.URI;
 }
 
 /**
@@ -128,7 +127,7 @@ export interface SpawnOptions {
    * Target object that this process is assigned to.
    */
   // TODO(dmaretskyi): Consider opaques metadata instead of opinionated `target` field.
-  readonly target?: DXN.String;
+  readonly target?: URI.URI;
 
   /**
    * Tracing metadata for this invocation.
@@ -157,7 +156,7 @@ export interface ListOptions {
   /**
    * Filter processes by target object ID.
    */
-  readonly target?: DXN.String;
+  readonly target?: URI.URI;
 }
 
 /**

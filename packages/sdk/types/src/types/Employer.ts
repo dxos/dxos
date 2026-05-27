@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type Entity, Obj, Relation, Type } from '@dxos/echo';
+import { DXN, type Entity, Obj, Relation, Type } from '@dxos/echo';
 
 import * as Organization from './Organization';
 import * as Person from './Person';
@@ -23,8 +23,7 @@ export const Employer = Schema.Struct({
 })
   .pipe(
     Type.relation({
-      typename: 'org.dxos.relation.employer',
-      version: '0.1.0',
+      dxn: DXN.make('org.dxos.relation.employer', '0.1.0'),
       source: Person.Person,
       target: Organization.Organization,
     }),

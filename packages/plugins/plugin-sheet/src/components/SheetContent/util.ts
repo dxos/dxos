@@ -66,7 +66,7 @@ const projectCellProps = (model: SheetModel, col: number, row: number): DxGridCe
   //     const range = thread.target?.anchor && parseThreadAnchorAsCellRange(thread.target!.anchor);
   //     return thread && range ? inRange(range, address) : false;
   //   })
-  //   .map((thread) => Obj.getDXN(thread!).toString())
+  //   .map((thread) => Obj.getURI(thread!))
   //   .join(' ');
 
   const description = model.getValueDescription(address);

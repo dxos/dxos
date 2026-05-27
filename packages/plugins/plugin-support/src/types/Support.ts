@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { BlueprintsAnnotation } from '@dxos/app-toolkit';
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
 export const BLUEPRINT_KEY = 'org.dxos.blueprint.support';
@@ -35,10 +35,7 @@ export const Ticket = Schema.Struct({
   ),
   tags: Schema.optional(Schema.Array(Schema.String).pipe(FormInputAnnotation.set(false))),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.support.ticket',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.support.ticket', '0.1.0')),
   LabelAnnotation.set(['title']),
   Annotation.IconAnnotation.set({
     icon: 'ph--lifebuoy--regular',

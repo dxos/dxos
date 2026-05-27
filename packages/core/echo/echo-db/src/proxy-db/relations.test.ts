@@ -43,8 +43,8 @@ describe('Relations', () => {
     // undefined and getSource throws.
     db.remove(person);
 
-    // getSourceDXN always works — reads the stored raw DXN reference.
-    expect(Relation.getSourceDXN(relation)).toBeDefined();
+    // getSourceURI always works — reads the stored raw DXN reference.
+    expect(Relation.getSourceURI(relation)).toBeDefined();
 
     // getSource resolves via getObjectById without { deleted: true } → throws.
     expect(() => Relation.getSource(relation)).toThrow('Relation source could not be resolved');
@@ -54,7 +54,7 @@ describe('Relations', () => {
     const snapshot = Relation.getSnapshot(relation);
     expect(Relation.isSnapshot(snapshot)).toBe(true);
     expect(() => Relation.getSource(snapshot)).toThrow('Relation source could not be resolved');
-    expect(Relation.getSourceDXN(snapshot)).toBeDefined();
+    expect(Relation.getSourceURI(snapshot)).toBeDefined();
   });
 
   test('create relation between two objects', async () => {

@@ -13,7 +13,8 @@ import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Common } from '@dxos/cli-util';
 import { Operation, Trigger } from '@dxos/compute';
-import { DXN, Database, Feed as FeedNs, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
+import { Database, Feed as FeedNs, Filter, JsonSchema, Obj, Ref } from '@dxos/echo';
+import { EchoURI, type ObjectId } from '@dxos/keys';
 
 import { Enabled, Feed, Input, TriggerId } from '../options';
 import { printTrigger, promptForSchemaInput, selectFunction, selectFeed, selectTrigger } from '../util';
@@ -35,7 +36,7 @@ export const queue = Command.make(
         onNone: () => selectTrigger('feed'),
         onSome: (id) => Effect.succeed(id),
       });
-      const dxn = DXN.fromLocalObjectId(triggerId);
+      const dxn = EchoURI.make({ objectId: triggerId as ObjectId });
       const trigger = yield* Database.resolve(dxn, Trigger.Trigger);
       if (trigger.spec?.kind !== 'feed') {
         return yield* Effect.fail(new Error(`Invalid trigger type: ${trigger.spec?.kind}`));
@@ -98,7 +99,7 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
   }
 
   if (!currentFn) {
-    const functionId = trigger.function?.dxn.asEchoDXN()?.echoId ?? 'unknown';
+    const functionId = (trigger.function ? trigger.function.uri.toString() : undefined) ?? 'unknown';
     return yield* Effect.fail(new Error(`Invalid reference for ${functionId}`));
   }
 
@@ -109,9 +110,9 @@ const updateFunction = Effect.fn(function* (trigger: Trigger.Trigger, functionId
  * Handles updating the feed reference for a feed trigger.
  * Prompts for confirmation if feed is not provided, then updates the feed if confirmed.
  */
-const updateFeed = Effect.fn(function* (trigger: Trigger.Trigger, feedOption: Option.Option<DXN>) {
+const updateFeed = Effect.fn(function* (trigger: Trigger.Trigger, feedOption: Option.Option<string>) {
   const currentFeed = trigger.spec?.kind === 'feed' ? trigger.spec.feed : undefined;
-  const currentFeedStr = currentFeed ? currentFeed.dxn.toString() : undefined;
+  const currentFeedStr = currentFeed ? currentFeed.uri.toString() : undefined;
   const shouldChangeFeed = yield* Option.match(feedOption, {
     onNone: () =>
       Prompt.confirm({
@@ -123,7 +124,7 @@ const updateFeed = Effect.fn(function* (trigger: Trigger.Trigger, feedOption: Op
   if (shouldChangeFeed) {
     const feed = yield* Option.match(feedOption, {
       onNone: () => selectFeed(),
-      onSome: (dxn) => Database.resolve(dxn, FeedNs.Feed),
+      onSome: (uri) => Database.resolve(EchoURI.parse(uri), FeedNs.Feed),
     });
     Obj.update(trigger, (trigger) => {
       if (trigger.spec?.kind === 'feed') {

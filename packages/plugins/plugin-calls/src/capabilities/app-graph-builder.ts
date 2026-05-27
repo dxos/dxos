@@ -56,7 +56,7 @@ export default Capability.makeModule(
           // Use derived atoms for efficient subscription.
           const joined = get(callManager.joinedAtom);
           const roomId = get(callManager.roomIdAtom);
-          const isActive = joined && roomId === Obj.getDXN(channel).toString();
+          const isActive = joined && roomId === Obj.getURI(channel);
           if (!isActive) {
             return Effect.succeed([]);
           }

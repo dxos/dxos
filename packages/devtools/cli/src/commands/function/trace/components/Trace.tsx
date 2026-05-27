@@ -17,7 +17,7 @@ import {
   InvocationTraceStartEvent,
   createInvocationSpans,
 } from '@dxos/functions-runtime';
-import { type DXN } from '@dxos/keys';
+import { type URI } from '@dxos/keys';
 
 import { type Column, Table } from '../../../../components';
 import { theme } from '../../../../theme';
@@ -46,12 +46,12 @@ export const Trace = (props: TraceProps) => {
   );
 
   // Function name resolver (needs access to functions signal).
-  const getFunctionName = (invocationTarget: DXN | undefined): string | undefined => {
+  const getFunctionName = (invocationTarget: URI.URI | undefined): string | undefined => {
     if (!invocationTarget) {
       return undefined;
     }
 
-    const uuidPart = getUuidFromDXN(invocationTarget);
+    const uuidPart = getUuidFromDxn(invocationTarget);
     if (!uuidPart) {
       return undefined;
     }
@@ -61,9 +61,9 @@ export const Trace = (props: TraceProps) => {
 
   // Target display name (uses getFunctionName).
   const getTargetDisplayName = (span: InvocationSpan): string => {
-    const targetDXN = span.invocationTarget?.dxn;
-    const name = getFunctionName(targetDXN);
-    return name ?? targetDXN?.toString().split(':').pop() ?? '?';
+    const targetDxn = span.invocationTarget?.uri;
+    const name = getFunctionName(targetDxn);
+    return name ?? targetDxn?.split(':').pop() ?? '?';
   };
 
   const columns: Column<InvocationSpan>[] = [
@@ -140,12 +140,11 @@ export const Trace = (props: TraceProps) => {
 };
 
 // Helper: Extracts the UUID part from a DXN.
-const getUuidFromDXN = (dxn: DXN | string | undefined): string | undefined => {
+const getUuidFromDxn = (dxn: URI.URI | undefined): string | undefined => {
   if (!dxn) {
     return undefined;
   }
-  const dxnString = dxn.toString();
-  const dxnParts = dxnString.split(':');
+  const dxnParts = dxn.split(':');
   return dxnParts.at(-1);
 };
 

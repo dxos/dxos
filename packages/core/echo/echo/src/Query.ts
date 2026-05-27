@@ -250,12 +250,12 @@ class QueryClass implements Any {
   }
 
   referencedBy(target?: Schema.Schema.All | string, key?: string): Any {
-    const dxn = target !== undefined ? internal.getTypeDXNFromSpecifier(target) : null;
+    const uri = target !== undefined ? internal.getTypeURIFromSpecifier(target) : null;
     return new QueryClass({
       type: 'incoming-references',
       anchor: this.ast,
       property: key ?? null,
-      typename: dxn?.toString() ?? null,
+      typename: uri ?? null,
     });
   }
 
@@ -411,14 +411,14 @@ class QueryClass implements Any {
     }
 
     const feedItems = items as Feed.Feed[];
-    const feedDXNs = feedItems.map((feed) => {
-      const dxn = Feed.getQueueDxn(feed);
-      if (!dxn) {
+    const feedUris = feedItems.map((feed) => {
+      const uri = Feed.getQueueUri(feed);
+      if (!uri) {
         throw new TypeError(
-          `Query.from() expects persisted Feed objects with a queue DXN; got feed without a space (id=${Obj.getDXN(feed).toString()}).`,
+          `Query.from() expects persisted Feed objects with a queue URI; got feed without a space (id=${Obj.getURI(feed)}).`,
         );
       }
-      return dxn.toString();
+      return uri;
     });
     return new QueryClass({
       type: 'from',
@@ -426,7 +426,7 @@ class QueryClass implements Any {
       from: {
         _tag: 'scope',
         scope: {
-          feeds: feedDXNs,
+          feeds: feedUris,
         },
       },
     });

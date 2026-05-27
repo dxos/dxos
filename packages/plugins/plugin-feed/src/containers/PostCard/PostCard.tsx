@@ -37,11 +37,11 @@ export const PostCard = ({ subject }: PostCardProps) => {
   const db = Obj.getDatabase(post);
   const allFeeds = useQuery(db, Filter.type(Subscription.Subscription));
   const feedName = useMemo(() => {
-    const dxn = post.source?.dxn.toString();
+    const dxn = post.source?.uri;
     if (!dxn) {
       return undefined;
     }
-    return allFeeds.find((feed) => Obj.getDXN(feed).toString() === dxn)?.name;
+    return allFeeds.find((feed) => Obj.getURI(feed) === dxn)?.name;
   }, [post.source, allFeeds]);
 
   const published = formatDate(post.published);

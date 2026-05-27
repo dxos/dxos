@@ -7,7 +7,9 @@ import type * as Schema from 'effect/Schema';
 import type { Filter as Filter$, Order as Order$, Query as Query$, Ref } from '@dxos/echo';
 import type { ForeignKey, QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
-import type { DXN, ObjectId } from '@dxos/keys';
+// `DXN`/`EchoURI` are type-only imports to keep the `query-lite` bundle free of
+// `effect/Schema` (which pulls runtime helpers QuickJS can't parse — e.g. private class fields).
+import type { DXN, EchoURI, ObjectId, URI } from '@dxos/keys';
 
 //
 // Light-weight implementation of query execution.
@@ -111,7 +113,7 @@ class FilterClass implements Filter$.Any {
     }
     return new FilterClass({
       type: 'object',
-      typename: makeTypeDXN(schema),
+      typename: makeTypeDxn(schema),
       ...propsFilterToAst(props ?? {}),
     });
   }
@@ -119,15 +121,15 @@ class FilterClass implements Filter$.Any {
   static typename(typename: string): Filter$.Any {
     return new FilterClass({
       type: 'object',
-      typename: makeTypeDXN(typename),
+      typename: makeTypeDxn(typename),
       props: {},
     });
   }
 
-  static typeDXN(dxn: DXN): Filter$.Any {
+  static typeURI(uri: URI.URI): Filter$.Any {
     return new FilterClass({
       type: 'object',
-      typename: dxn.toString(),
+      typename: uri,
       props: {},
     });
   }
@@ -173,7 +175,7 @@ class FilterClass implements Filter$.Any {
     assertArgument(!schema.startsWith('dxn:'), 'schema');
     return new FilterClass({
       type: 'object',
-      typename: `dxn:type:${schema}`,
+      typename: makeTypeDxn(schema),
       props: {},
       foreignKeys: keys,
     });
@@ -261,13 +263,13 @@ class FilterClass implements Filter$.Any {
     return FilterClass._timeRangeFilter('createdAt', range);
   }
 
-  static childOf(parents: unknown | DXN | (unknown | DXN)[], options?: { transitive?: boolean }): Filter$.Any {
+  static childOf(parents: unknown | unknown[], options?: { transitive?: boolean }): Filter$.Any {
     const items = Array.isArray(parents) ? parents : [parents];
     const dxns = items.map((item) => {
-      if (isDxnLike(item)) {
-        return item.toString();
+      if (isEchoUriLike(item)) {
+        return item.toString() as EchoURI.EchoURI;
       }
-      throw new TypeError('childOf requires DXN values in query-lite');
+      throw new TypeError('childOf requires EchoURI values in query-lite');
     });
     return new FilterClass({
       type: 'child-of',
@@ -496,12 +498,10 @@ class QueryClass implements Query$.Any {
   }
 
   referencedBy(target?: Schema.Schema.All | string, key?: string): Query$.Any {
-    const typename =
-      target !== undefined
-        ? (assertArgument(typeof target === 'string', 'target'),
-          assertArgument(!target.startsWith('dxn:'), 'target'),
-          target)
-        : null;
+    if (target !== undefined && typeof target !== 'string') {
+      throw new TypeError('referencedBy requires a typename string in query-lite');
+    }
+    const typename = target !== undefined ? makeTypeDxn(target) : null;
     return new QueryClass({
       type: 'incoming-references',
       anchor: this.ast,
@@ -608,19 +608,36 @@ const isRef = (obj: any): obj is Ref.Ref<any> => {
   return obj && typeof obj === 'object' && RefTypeId in obj;
 };
 
-const makeTypeDXN = (typename: string) => {
+const makeTypeDxn = (typename: string): DXN.DXN => {
   assertArgument(typeof typename === 'string', 'typename');
   assertArgument(!typename.startsWith('dxn:'), 'typename');
-  return `dxn:type:${typename}`;
+  // Inline template (rather than `DXN.make`) to keep the value-side `@dxos/keys` import out of this bundle.
+  return `dxn:${typename}` as DXN.DXN;
 };
 
-const isDxnLike = (value: unknown): value is DXN => {
+const isDxnLike = (value: unknown): value is DXN.DXN => {
+  if (typeof value === 'string') {
+    return value.startsWith('dxn:');
+  }
   return (
     typeof value === 'object' &&
     value !== null &&
     'toString' in value &&
     typeof value.toString === 'function' &&
     value.toString().startsWith('dxn:')
+  );
+};
+
+const isEchoUriLike = (value: unknown): value is EchoURI.EchoURI => {
+  if (typeof value === 'string') {
+    return value.startsWith('echo:') || value.startsWith('dxn:echo:') || value.startsWith('dxn:queue:');
+  }
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'toString' in value &&
+    typeof value.toString === 'function' &&
+    isEchoUriLike(value.toString())
   );
 };
 

@@ -7,7 +7,7 @@ import { describe, expect, test } from 'vitest';
 
 import { asyncTimeout, sleep } from '@dxos/async';
 import { type DatabaseDirectory, SpaceDocVersion } from '@dxos/echo-protocol';
-import { DXN, ObjectId } from '@dxos/keys';
+import { EchoURI, ObjectId } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 
 import { EchoTestBuilder } from '../testing';
@@ -50,7 +50,7 @@ describe('Query pipeline strong-dependency stalls', () => {
           data: { title: 'main' },
           system: {
             kind: 'object',
-            type: { '/': DXN.fromLocalObjectId(depObjectId).toString() },
+            type: { '/': EchoURI.make({ objectId: depObjectId }) },
           },
         },
       },
@@ -134,7 +134,7 @@ describe('Query pipeline strong-dependency stalls', () => {
           data: { title: 'main' },
           system: {
             kind: 'object',
-            type: { '/': DXN.fromLocalObjectId(depObjectId).toString() },
+            type: { '/': EchoURI.make({ objectId: depObjectId }) },
           },
         },
       },
@@ -191,7 +191,7 @@ describe('Query pipeline strong-dependency stalls', () => {
         [aId]: {
           meta: { keys: [] },
           data: { title: 'A' },
-          system: { kind: 'object', type: { '/': DXN.fromLocalObjectId(bId).toString() } },
+          system: { kind: 'object', type: { '/': EchoURI.make({ objectId: bId }) } },
         },
       },
     });
@@ -202,7 +202,7 @@ describe('Query pipeline strong-dependency stalls', () => {
         [bId]: {
           meta: { keys: [] },
           data: { title: 'B' },
-          system: { kind: 'object', type: { '/': DXN.fromLocalObjectId(cId).toString() } },
+          system: { kind: 'object', type: { '/': EchoURI.make({ objectId: cId }) } },
         },
       },
     });

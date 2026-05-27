@@ -29,8 +29,7 @@ import {
 } from '@dxos/echo-protocol';
 import { batchEvents } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { type ObjectId } from '@dxos/keys';
-import { type DXN, type PublicKey, type SpaceId } from '@dxos/keys';
+import { EchoURI, type ObjectId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError } from '@dxos/protocols';
 import type { QueryService } from '@dxos/protocols/proto/dxos/echo/query';
@@ -583,7 +582,7 @@ export class CoreDatabase {
 
     const mappedData = deepMapValues(data, (value, recurse) => {
       if (Ref.isRef(value)) {
-        return { '/': value.dxn.toString() };
+        return { '/': value.uri };
       }
       if (value instanceof Uint8Array) {
         return value;
@@ -604,7 +603,7 @@ export class CoreDatabase {
     };
 
     if (type !== undefined) {
-      newStruct.system!.type = EncodedReference.fromDXN(type);
+      newStruct.system!.type = EncodedReference.fromURI(type);
     }
 
     if (meta !== undefined) {
@@ -921,8 +920,11 @@ export class CoreDatabase {
       // network. Callers that explicitly want network-backed dep loading
       // can issue per-dep requests themselves.
       for (const dep of core.getStrongDependencies()) {
-        if (dep.isLocalObjectId()) {
-          const id = dep.parts[1];
+        if (!EchoURI.isLocal(dep)) {
+          continue;
+        }
+        const id = EchoURI.getObjectId(dep);
+        if (id) {
           this._automergeDocLoader.loadObjectDocument(id, { diskOnly: true });
         }
       }
@@ -972,12 +974,12 @@ export class CoreDatabase {
     });
 
     const deps = core.getStrongDependencies();
-    for (const dxn of deps) {
-      if (!dxn.isLocalObjectId()) {
+    for (const dep of deps) {
+      if (!EchoURI.isLocal(dep)) {
         continue;
       }
-      const depObjectId = dxn.parts[1];
-      if (this._objects.has(depObjectId)) {
+      const depObjectId = EchoURI.getObjectId(dep);
+      if (!depObjectId || this._objects.has(depObjectId)) {
         continue;
       }
 
@@ -993,10 +995,13 @@ export class CoreDatabase {
 
     seen.add(core.id);
     return deps.every((dep) => {
-      if (!dep.isLocalObjectId()) {
+      if (!EchoURI.isLocal(dep)) {
         return true;
       }
-      const depObjectId = dep.parts[1];
+      const depObjectId = EchoURI.getObjectId(dep);
+      if (!depObjectId) {
+        return true;
+      }
       const depCore = this._objects.get(depObjectId);
       if (!depCore) {
         return false;
@@ -1022,11 +1027,11 @@ export class CoreDatabase {
 
     seen.add(core.id);
     return deps.every((dep) => {
-      if (!dep.isLocalObjectId()) {
+      if (!EchoURI.isLocal(dep)) {
         return true;
       }
-      const depObjectId = dep.parts[1];
-      if (this._unavailableObjects.has(depObjectId)) {
+      const depObjectId = EchoURI.getObjectId(dep);
+      if (!depObjectId || this._unavailableObjects.has(depObjectId)) {
         return true;
       }
       const depCore = this._objects.get(depObjectId);
@@ -1196,9 +1201,10 @@ export type AtomicReplaceObjectProps = {
   data: any;
 
   /**
-   * Update object type.
+   * Update object type — either a typename DXN or a stored-schema EchoURI
+   * (see `getSchemaURI`).
    */
-  type?: DXN;
+  type?: URI.URI;
 
   /**
    * Optional partial meta patch — merged into the existing object meta.

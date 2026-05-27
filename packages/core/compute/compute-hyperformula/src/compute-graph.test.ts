@@ -38,7 +38,7 @@ describe('ComputeGraph', () => {
     expect(functions).to.toHaveLength(1);
 
     const id = graph.mapFunctionBindingToId('TEST()');
-    expect(id).to.eq(`${Obj.getDXN(functionObject).toString()}()`);
+    expect(id).to.eq(`${Obj.getURI(functionObject)}()`);
 
     const restored = graph.mapFunctionBindingFromId(id);
     expect(restored).to.eq('TEST()');
@@ -61,7 +61,7 @@ describe('ComputeGraph', () => {
     await trigger.wait();
 
     const stored = graph.mapFunctionBindingToId('=FOREX(C6,C7)');
-    expect(stored).to.include('dxn:echo:');
+    expect(stored).to.include('echo://');
     expect(stored).not.to.include('FOREX');
 
     const restored = graph.mapFunctionBindingFromId(stored);
@@ -73,7 +73,9 @@ describe('ComputeGraph', () => {
     const graph = testBuilder.registry.createGraph(space);
     await graph.open();
 
-    const result = graph.mapFunctionBindingFromId('=dxn:echo:@:01ABCDEF01ABCDEF01ABCDEF01(A1,B1)');
+    const result = graph.mapFunctionBindingFromId(
+      '=echo://BM3FSHFOMJCHCG5QW7JTVKGYABD2GAA7G/01ABCDEF01ABCDEF01ABCDEF01(A1,B1)',
+    );
     expect(result).to.be.undefined;
   });
 

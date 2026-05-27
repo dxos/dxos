@@ -428,6 +428,6 @@ export interface DocumentChanges {
   updatedObjectIds: string[];
   objectsToRebind: string[];
   linkedDocuments: {
-    [echoId: string]: AutomergeUrl;
+    [echoUri: string]: AutomergeUrl;
   };
 }

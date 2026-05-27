@@ -42,7 +42,7 @@ describe('UpdateTasks', () => {
 
         yield* Operation.invoke(UpdateTasks, {
           tasks: [{ id: Plan.TaskId.make('task-1'), title: 'Hello', status: 'todo' }],
-        }).pipe(Effect.provide(Operation.withInvocationOptions({ conversation: Obj.getDXN(chatFeed).toString() })));
+        }).pipe(Effect.provide(Operation.withInvocationOptions({ conversation: Obj.getURI(chatFeed) })));
 
         const plan = yield* Database.load(agent.plan);
         expect(plan.tasks).toHaveLength(1);

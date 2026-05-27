@@ -5,4 +5,4 @@
 // TODO(wittjosiah): Should this be a subset of Type?
 
 export { ForeignKey } from '@dxos/echo-protocol';
-export { SpaceId, ObjectId } from '@dxos/keys';
+export { EchoURI, ObjectId, SpaceId, URI } from '@dxos/keys';

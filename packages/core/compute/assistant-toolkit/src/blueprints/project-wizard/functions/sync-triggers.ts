@@ -76,7 +76,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
         feedObj = feedRef ? Option.getOrUndefined(yield* Database.loadOption(feedRef)) : undefined;
       }
 
-      if (!feedObj || !Obj.instanceOf(Feed.Feed, feedObj) || !Feed.getQueueDxn(feedObj)) {
+      if (!feedObj || !Obj.instanceOf(Feed.Feed, feedObj) || !Feed.getQueueUri(feedObj)) {
         continue;
       }
 
@@ -88,7 +88,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
           [Obj.Meta]: {
             keys: [
               { source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id },
-              { source: AGENT_TRIGGER_TARGET_EXTENSION_KEY, id: subscription.dxn.toString() },
+              { source: AGENT_TRIGGER_TARGET_EXTENSION_KEY, id: subscription.uri },
             ],
           },
           enabled: triggersEnabled,
@@ -105,7 +105,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
 
     if ((agent.filterEvents ?? true) && agent.feed) {
       const agentFeedOption = yield* Database.loadOption(agent.feed);
-      if (Option.isSome(agentFeedOption) && Feed.getQueueDxn(agentFeedOption.value)) {
+      if (Option.isSome(agentFeedOption) && Feed.getQueueUri(agentFeedOption.value)) {
         yield* Database.add(
           Trigger.make({
             [Obj.Parent]: agent,
@@ -114,7 +114,7 @@ const syncAgentTriggers = (agent: Agent.Agent): Effect.Effect<void, never, Datab
                 { source: AGENT_TRIGGER_EXTENSION_KEY, id: agent.id },
                 {
                   source: AGENT_TRIGGER_TARGET_EXTENSION_KEY,
-                  id: Obj.getDXN(agent)?.toString() ?? '',
+                  id: Obj.getURI(agent) ?? '',
                 },
               ],
             },

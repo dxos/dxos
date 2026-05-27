@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { ToolId } from '@dxos/ai';
-import { Annotation, Key, Obj, Type } from '@dxos/echo';
+import { DXN, Annotation, Key, Obj, Type } from '@dxos/echo';
 
 export const Step = Schema.Struct({
   id: Key.ObjectId,
@@ -30,10 +30,7 @@ export const Sequence = Schema.Struct({
   name: Schema.optional(Schema.String),
   steps: Schema.Array(Step),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.sequence',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.sequence', '0.1.0')),
   Annotation.IconAnnotation.set({
     icon: 'ph--circuitry--regular',
     hue: 'sky',

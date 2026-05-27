@@ -110,7 +110,7 @@ export default Capability.makeModule(() =>
                 }
 
                 return {
-                  id: Obj.getDXN(view).toString(),
+                  id: Obj.getURI(view),
                   name: view.name ?? 'Unnamed Table',
                   typename: view.query.typename,
                 };

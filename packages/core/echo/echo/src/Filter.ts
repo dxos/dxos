@@ -11,7 +11,7 @@ import type * as Types from 'effect/Types';
 
 import { type ForeignKey, type QueryAST } from '@dxos/echo-protocol';
 import { assertArgument } from '@dxos/invariant';
-import { DXN, ObjectId } from '@dxos/keys';
+import { DXN, EchoURI, ObjectId, type URI } from '@dxos/keys';
 
 import * as internal from './internal';
 import type * as Obj from './Obj';
@@ -106,21 +106,21 @@ export const type = <S extends Schema.Schema.All>(
   props?: Props<Schema.Schema.Type<S>>,
 ): Filter<Schema.Schema.Type<S>> => {
   if (Schema.isSchema(schema) && SchemaAST.isUnion(schema.ast)) {
-    const typenames = schema.ast.types.map((type) => internal.getTypeDXNFromSpecifier(Schema.make(type)));
+    const typenames = schema.ast.types.map((type) => internal.getTypeURIFromSpecifier(Schema.make(type)));
     return new FilterClass({
       type: 'or',
       filters: typenames.map((typename) => ({
         type: 'object',
-        typename: typename.toString(),
+        typename,
         props: {},
       })),
     });
   }
 
-  const dxn = internal.getTypeDXNFromSpecifier(schema);
+  const uri = internal.getTypeURIFromSpecifier(schema);
   return new FilterClass({
     type: 'object',
-    typename: dxn.toString(),
+    typename: uri,
     ...propsFilterToAst(props ?? {}),
   });
 };
@@ -132,18 +132,19 @@ export const typename = (typename: string): Any => {
   assertArgument(!typename.startsWith('dxn:'), 'typename', 'Typename must no be qualified');
   return new FilterClass({
     type: 'object',
-    typename: DXN.fromTypename(typename).toString(),
+    typename: DXN.make(typename),
     props: {},
   });
 };
 
 /**
- * Filter by fully qualified type DXN.
+ * Filter by fully qualified type URI — either a typename DXN (for static schemas) or
+ * a schema-as-object EchoURI (for stored dynamic schemas). See `getSchemaURI`.
  */
-export const typeDXN = (dxn: DXN): Any => {
+export const typeURI = (uri: URI.URI): Any => {
   return new FilterClass({
     type: 'object',
-    typename: dxn.toString(),
+    typename: uri,
     props: {},
   });
 };
@@ -227,10 +228,10 @@ export const foreignKeys = <S extends Schema.Schema.All>(
   schema: S | string,
   keys: ForeignKey[],
 ): Filter<Schema.Schema.Type<S>> => {
-  const dxn = internal.getTypeDXNFromSpecifier(schema);
+  const uri = internal.getTypeURIFromSpecifier(schema);
   return new FilterClass({
     type: 'object',
-    typename: dxn.toString(),
+    typename: uri,
     props: {},
     foreignKeys: keys,
   });
@@ -378,7 +379,7 @@ export type ChildOfOptions = {
 /**
  * Filter objects that are children of the specified parent(s).
  * Accepts ECHO objects, Refs, or arrays of either.
- * Refs are resolved to DXNs without loading; objects use {@link Obj.getDXN}.
+ * Refs are resolved to DXNs without loading; objects use {@link Obj.getURI}.
  * With transitive=true (default), also matches grandchildren and beyond.
  */
 export const childOf = (
@@ -388,9 +389,9 @@ export const childOf = (
   const items = Array.isArray(parents) ? parents : [parents];
   const dxns = items.map((item) => {
     if (Ref.isRef(item)) {
-      return item.dxn.toString();
+      return EchoURI.parse(item.uri);
     }
-    return internal.getDXN(item).toString();
+    return internal.getUri(item);
   });
   return new FilterClass({
     type: 'child-of',

@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { sleep } from '@dxos/async';
-import { Filter, Obj, Query, type QueryResult, Type } from '@dxos/echo';
+import { DXN, Filter, Obj, Query, type QueryResult, Type } from '@dxos/echo';
 import { type EchoDatabase, RuntimeSchemaRegistry } from '@dxos/echo-db';
 import { EchoTestBuilder } from '@dxos/echo-db/testing';
 import { TestSchema } from '@dxos/echo/testing';
@@ -21,12 +21,7 @@ import * as AtomQuery from './query-atom';
 const TestItem = Schema.Struct({
   name: Schema.String,
   value: Schema.Number,
-}).pipe(
-  Type.object({
-    typename: 'com.example.type.test-item',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.object(DXN.make('com.example.type.testItem', '0.1.0')));
 type TestItem = Schema.Schema.Type<typeof TestItem>;
 
 describe('AtomQuery', () => {
@@ -264,21 +259,11 @@ describe('AtomQuery with queues', () => {
 
 const SchemaA = Schema.Struct({
   name: Schema.String,
-}).pipe(
-  Type.object({
-    typename: 'com.example.type.a',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.object(DXN.make('com.example.type.a', '0.1.0')));
 
 const SchemaB = Schema.Struct({
   value: Schema.Number,
-}).pipe(
-  Type.object({
-    typename: 'com.example.type.b',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.object(DXN.make('com.example.type.b', '0.1.0')));
 
 describe('AtomQuery.fromQuery with schema registry', () => {
   let schemaRegistry: RuntimeSchemaRegistry;

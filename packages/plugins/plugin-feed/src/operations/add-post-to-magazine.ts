@@ -16,7 +16,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.AddPostToMagazine> = F
       const magazine = yield* Database.load(magazineRef);
       const post = yield* Database.load(postRef);
 
-      const postDXN = Obj.getDXN(post).toString();
+      const postUri = Obj.getURI(post);
       const postId = (post as { id: string }).id;
       const subscription = post.source?.target;
 
@@ -30,7 +30,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.AddPostToMagazine> = F
 
       Obj.update(magazine, (magazine) => {
         const mutable = magazine as Obj.Mutable<typeof magazine>;
-        const alreadyCurated = mutable.posts.some((ref) => ref.dxn.toString() === postDXN);
+        const alreadyCurated = mutable.posts.some((ref) => ref.uri === postUri);
         if (!alreadyCurated) {
           mutable.posts = [...mutable.posts, Ref.make(post)];
         }

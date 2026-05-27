@@ -20,7 +20,7 @@ const handler: Operation.WithHandler<typeof ThreadOperation.Delete> = ThreadOper
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
       const stateAtom = yield* Capability.get(ThreadCapabilities.State);
       const thread = _thread ?? (Relation.getSource(anchor) as Thread.Thread);
-      const subjectId = Obj.getDXN(subject).toString();
+      const subjectId = Obj.getURI(subject);
       const state = registry.get(stateAtom);
       const draft = state.drafts[subjectId];
       if (draft) {

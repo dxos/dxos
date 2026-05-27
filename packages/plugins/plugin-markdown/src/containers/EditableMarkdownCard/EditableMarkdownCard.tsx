@@ -23,7 +23,7 @@ export type EditableMarkdownCardProps = { subject: Markdown.Document | Text.Text
  * remains the canonical surface for full article views.
  */
 export const EditableMarkdownCard = ({ subject }: EditableMarkdownCardProps) => {
-  const id = Obj.getDXN(subject).toString();
+  const id = Obj.getURI(subject);
   const [docContent] = useObject(Obj.instanceOf(Markdown.Document, subject) ? subject.content : undefined, 'content');
   const [textContent] = useObject(Obj.instanceOf(Text.Text, subject) ? subject : undefined, 'content');
   const initialValue = docContent ?? textContent;

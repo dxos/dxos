@@ -5,7 +5,7 @@
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 import { Obj, Type } from '@dxos/echo';
-import { getSchemaDXN } from '@dxos/echo/internal';
+import { getSchemaURI } from '@dxos/echo/internal';
 import { getProxyHandler } from '@dxos/echo/internal';
 import { TestSchema, updateCounter } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
@@ -163,10 +163,10 @@ export const reactiveProxyTests = (testConfigFactory: TestConfigurationFactory):
         expect(() => Obj.update(obj, (obj) => (obj.nestedArray![1].field = 1 as any))).to.throw();
       });
 
-      test('getSchemaDXN', async () => {
+      test('getSchemaURI', async () => {
         const obj = await createObject({ number: 42 });
         const schema = Obj.getSchema(obj);
-        expect(Obj.getTypeDXN(obj)?.toString()).to.deep.eq(schema && getSchemaDXN(schema)?.toString());
+        expect(Obj.getTypeURI(obj)?.toString()).to.deep.eq(schema && getSchemaURI(schema)?.toString());
       });
 
       test('can assign arrays with objects', async () => {

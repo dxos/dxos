@@ -76,7 +76,7 @@ export const inspect = Command.make(
           `${ns.namespace}:`,
           ...ns.feeds.map((feed) => `  ${feed.feedId} (${feed.blockCount} blocks)`),
         ]),
-        ...result.echo.objectsByType.slice(0, 10).map((entry) => `  ${entry.typeDXN}: ${entry.count}`),
+        ...result.echo.objectsByType.slice(0, 10).map((entry) => `  ${entry.typeURI}: ${entry.count}`),
         ...(result.echo.objectsByType.length > 10
           ? [`  ... and ${result.echo.objectsByType.length - 10} more types`]
           : []),

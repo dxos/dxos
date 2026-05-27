@@ -3,7 +3,7 @@
 //
 
 import { DatabaseDirectory, ObjectStructure } from '@dxos/echo-protocol';
-import { DXN, ObjectId, PublicKey } from '@dxos/keys';
+import { EchoURI, ObjectId, PublicKey } from '@dxos/keys';
 
 import { Type } from '../index';
 import { TestSchema } from './test-schema';
@@ -35,7 +35,7 @@ export const PEOPLE = {
         spaceKey: getSpaceKeyHex(),
         objects: {
           [ObjectId.random()]: ObjectStructure.makeObject({
-            type: Type.getDXN(TestSchema.Person)!.toString(),
+            type: Type.getURI(TestSchema.Person)!,
             data: {
               name: 'Alice',
             },
@@ -52,7 +52,7 @@ export const PEOPLE = {
         spaceKey: getSpaceKeyHex(),
         objects: {
           [ObjectId.random()]: ObjectStructure.makeObject({
-            type: Type.getDXN(TestSchema.Person)!.toString(),
+            type: Type.getURI(TestSchema.Person)!,
             data: {
               name: 'Bob',
             },
@@ -71,7 +71,7 @@ export const ORGS = {
         spaceKey: getSpaceKeyHex(),
         objects: {
           [ObjectId.random()]: ObjectStructure.makeObject({
-            type: Type.getDXN(TestSchema.Organization)!.toString(),
+            type: Type.getURI(TestSchema.Organization)!,
             data: {
               name: 'DXOS',
               founded: '2023',
@@ -89,7 +89,7 @@ export const ORGS = {
         spaceKey: getSpaceKeyHex(),
         objects: {
           [ObjectId.random()]: ObjectStructure.makeObject({
-            type: Type.getDXN(TestSchema.Organization)!.toString(),
+            type: Type.getURI(TestSchema.Organization)!,
             data: {
               name: 'Cyberdyne Systems',
               founded: '1984',
@@ -109,9 +109,9 @@ export const WORKS_FOR = {
         spaceKey: getSpaceKeyHex(),
         objects: {
           [ObjectId.random()]: ObjectStructure.makeRelation({
-            type: Type.getDXN(TestSchema.EmployedBy)!.toString(),
-            source: { '/': DXN.fromLocalObjectId(Object.keys(PEOPLE.bob.objects!)[0]).toString() },
-            target: { '/': DXN.fromLocalObjectId(Object.keys(ORGS.cyberdyne.objects!)[0]).toString() },
+            type: Type.getURI(TestSchema.EmployedBy)!,
+            source: { '/': EchoURI.make({ objectId: Object.keys(PEOPLE.bob.objects!)[0] }) },
+            target: { '/': EchoURI.make({ objectId: Object.keys(ORGS.cyberdyne.objects!)[0] }) },
             data: {
               since: '2020',
               position: 'Engineer',
@@ -129,9 +129,9 @@ export const WORKS_FOR = {
         spaceKey: getSpaceKeyHex(),
         objects: {
           [ObjectId.random()]: ObjectStructure.makeRelation({
-            type: Type.getDXN(TestSchema.EmployedBy)!.toString(),
-            source: { '/': DXN.fromLocalObjectId(Object.keys(PEOPLE.alice.objects!)[0]).toString() },
-            target: { '/': DXN.fromLocalObjectId(Object.keys(ORGS.dxos.objects!)[0]).toString() },
+            type: Type.getURI(TestSchema.EmployedBy)!,
+            source: { '/': EchoURI.make({ objectId: Object.keys(PEOPLE.alice.objects!)[0] }) },
+            target: { '/': EchoURI.make({ objectId: Object.keys(ORGS.dxos.objects!)[0] }) },
             data: {
               since: '2018',
               position: 'Research Scientist',
@@ -151,13 +151,13 @@ export const TASKS = {
         spaceKey: getSpaceKeyHex(),
         objects: {
           [ObjectId.random()]: ObjectStructure.makeObject({
-            type: Type.getDXN(TestSchema.Task)!.toString(),
+            type: Type.getURI(TestSchema.Task)!,
             data: {
               title: 'Complete project documentation',
               description: 'Write comprehensive documentation for the new system',
               status: 'in-progress',
               dueDate: '2023-12-31',
-              assignee: { '/': DXN.fromLocalObjectId(Object.keys(PEOPLE.bob.objects!)[0]).toString() },
+              assignee: { '/': EchoURI.make({ objectId: Object.keys(PEOPLE.bob.objects!)[0] }) },
             },
           }),
         },
@@ -172,13 +172,13 @@ export const TASKS = {
         spaceKey: getSpaceKeyHex(),
         objects: {
           [ObjectId.random()]: ObjectStructure.makeObject({
-            type: Type.getDXN(TestSchema.Task)!.toString(),
+            type: Type.getURI(TestSchema.Task)!,
             data: {
               title: 'Run experiments',
               description: 'Conduct series of experiments on the portal device',
               status: 'pending',
               dueDate: '2023-11-15',
-              assignee: { '/': DXN.fromLocalObjectId(Object.keys(PEOPLE.alice.objects!)[0]).toString() },
+              assignee: { '/': EchoURI.make({ objectId: Object.keys(PEOPLE.alice.objects!)[0] }) },
             },
           }),
         },

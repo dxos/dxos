@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Obj, Type } from '@dxos/echo';
+import { DXN, Annotation, Obj, Type } from '@dxos/echo';
 import { Format, GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/internal';
 
 export const Project = Schema.Struct({
@@ -14,10 +14,7 @@ export const Project = Schema.Struct({
   description: Schema.String.pipe(Schema.optional),
   image: Format.URL.pipe(Schema.annotations({ title: 'Image' }), Schema.optional),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.project',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.project', '0.1.0')),
   Schema.annotations({ title: 'Project' }),
   LabelAnnotation.set(['name']),
   Annotation.IconAnnotation.set({

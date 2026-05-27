@@ -6,7 +6,8 @@ import type * as Schema from 'effect/Schema';
 
 import { addressToA1Notation } from '@dxos/compute-hyperformula';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
-import { DXN, Filter, Key, type Type, View } from '@dxos/echo';
+import { Filter, Key, type Type, View } from '@dxos/echo';
+import { EchoURI } from '@dxos/keys';
 import { OperationInvoker } from '@dxos/operation';
 import { Markdown } from '@dxos/plugin-markdown';
 import { Sheet } from '@dxos/plugin-sheet';
@@ -127,7 +128,7 @@ export const staticGenerators = new Map<string, ObjectGenerator<any>>([
           .createNode({
             id: 'gpt-QUEUE_ID',
             type: 'constant',
-            value: new DXN(DXN.kind.QUEUE, ['data', space.id, Key.ObjectId.random()]).toString(),
+            value: EchoURI.make({ spaceId: space.id, objectId: Key.ObjectId.random() }),
           })
           .createNode({ id: 'gpt-APPEND', type: 'append' })
           .createNode({ id: 'gpt-OUTPUT', type: NODE_OUTPUT })

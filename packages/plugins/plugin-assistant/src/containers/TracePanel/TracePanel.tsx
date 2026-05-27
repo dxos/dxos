@@ -17,7 +17,7 @@ import { Process, Trace } from '@dxos/compute';
 import { Filter, Query } from '@dxos/echo';
 import { AtomQuery } from '@dxos/echo-atom';
 import { FeedTraceSink } from '@dxos/functions-runtime';
-import { DXN } from '@dxos/keys';
+import { EchoURI } from '@dxos/keys';
 import { type Space } from '@dxos/react-client/echo';
 import { ScrollContainer } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
@@ -48,11 +48,13 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
       (commit: Commit | undefined) => {
         setSelectedCommit(commit);
         if (commit?.link) {
-          const dxn = DXN.tryParse(commit.link)?.asEchoDXN();
-          if (dxn?.spaceId && dxn.echoId) {
+          const echoUri = EchoURI.tryParse(commit.link);
+          const spaceId = echoUri ? EchoURI.getSpaceId(echoUri) : undefined;
+          const objectId = echoUri ? EchoURI.getObjectId(echoUri) : undefined;
+          if (spaceId && objectId) {
             // TODO(dmaretskyi): Navigates, but fails to open.
             void invokePromise(LayoutOperation.Open, {
-              subject: [`${dxn.spaceId}:${dxn.echoId}`],
+              subject: [`${spaceId}:${objectId}`],
             });
           }
         }

@@ -17,7 +17,7 @@ import {
 import { EntityKind, type ObjectMeta } from '@dxos/echo/internal';
 import { isProxy } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { DXN, ObjectId } from '@dxos/keys';
+import { DXN, EchoURI, ObjectId, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { defer, getDeep, setDeep, throwUnhandledError } from '@dxos/util';
 
@@ -460,10 +460,11 @@ export class ObjectCore {
       const parentRef = this.getParent();
       if (parentRef) {
         // Checks if the reference is pointing to an object in the same space.
-        const parentDXN = EncodedReference.toDXN(parentRef);
-        const echoDXN = parentDXN.asEchoDXN();
-        if (echoDXN && (echoDXN.spaceId === undefined || echoDXN.spaceId === this.database.spaceId)) {
-          const parentId = echoDXN.echoId;
+        const parentDXN = EncodedReference.toURI(parentRef);
+        const parentEchoUri = EchoURI.tryParse(parentDXN);
+        const spaceId = parentEchoUri ? EchoURI.getSpaceId(parentEchoUri) : undefined;
+        const parentId = parentEchoUri ? EchoURI.getObjectId(parentEchoUri) : undefined;
+        if (parentId && (spaceId === undefined || spaceId === this.database.spaceId)) {
           // NOTE: We can't use `loadObjectCoreById` here because it might be async and we need a sync check.
           // If the parent is not loaded, we assume it's not deleted for now, or should we assume deleted?
           // Given strong dependencies, the parent SHOULD be loaded if the child is loaded.
@@ -482,35 +483,46 @@ export class ObjectCore {
   }
 
   /**
-   * DXNs of objects that this object strongly depends on.
-   * Strong references are loaded together with the source object.
-   * Currently this is the schema reference and the source and target for relations.
+   * EchoURIs of objects that this object strongly depends on.
+   * Strong references are loaded together with the source object — only ECHO-scheme refs
+   * (object refs) qualify; type DXNs are resolved separately via the schema registry.
+   * Currently this is the schema reference (when stored as an object), source/target for
+   * relations, and the parent ref.
    */
-  getStrongDependencies(): DXN[] {
-    const res: DXN[] = [];
+  getStrongDependencies(): EchoURI.EchoURI[] {
+    const res: EchoURI.EchoURI[] = [];
 
     const typeRef = this.getType();
     if (typeRef) {
-      const typeDXN = EncodedReference.toDXN(typeRef);
-      if (typeDXN.kind === DXN.kind.ECHO) {
-        res.push(typeDXN);
+      const typeEchoUri = EchoURI.tryParse(EncodedReference.toURI(typeRef));
+      if (typeEchoUri) {
+        res.push(typeEchoUri);
       }
     }
 
     if (this.getKind() === EntityKind.Relation) {
       const sourceRef = this.getSource();
       if (sourceRef) {
-        res.push(EncodedReference.toDXN(sourceRef));
+        const id = EchoURI.tryParse(EncodedReference.toURI(sourceRef));
+        if (id) {
+          res.push(id);
+        }
       }
       const targetRef = this.getTarget();
       if (targetRef) {
-        res.push(EncodedReference.toDXN(targetRef));
+        const id = EchoURI.tryParse(EncodedReference.toURI(targetRef));
+        if (id) {
+          res.push(id);
+        }
       }
     }
 
     const parentRef = this.getParent();
     if (parentRef) {
-      res.push(EncodedReference.toDXN(parentRef));
+      const id = EchoURI.tryParse(EncodedReference.toURI(parentRef));
+      if (id) {
+        res.push(id);
+      }
     }
 
     return res;
@@ -553,13 +565,16 @@ const convertLegacyProtoReference = (value: {
   host?: string;
 }): EncodedReference => {
   const TYPE_PROTOCOL = 'protobuf';
-  let dxn: DXN;
+  let uri: URI.URI;
   if (value.protocol === TYPE_PROTOCOL) {
-    dxn = new DXN(DXN.kind.TYPE, [value.objectId]);
+    uri = DXN.make(value.objectId);
   } else if (value.host) {
-    dxn = new DXN(DXN.kind.ECHO, [value.host, value.objectId]);
+    invariant(SpaceId.isValid(value.host), 'Invalid space id');
+    invariant(ObjectId.isValid(value.objectId), 'Invalid object id');
+    uri = EchoURI.make({ spaceId: value.host, objectId: value.objectId });
   } else {
-    dxn = DXN.fromLocalObjectId(value.objectId);
+    invariant(ObjectId.isValid(value.objectId), 'Invalid object id');
+    uri = EchoURI.make({ objectId: value.objectId });
   }
-  return EncodedReference.fromDXN(dxn);
+  return EncodedReference.fromURI(uri);
 };

@@ -6,7 +6,7 @@ import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 
-import { Annotation, JsonSchema, Obj, Ref, Type, View } from '@dxos/echo';
+import { DXN, Annotation, JsonSchema, Obj, Ref, Type, View } from '@dxos/echo';
 import { FormInputAnnotation, type JsonPath, type JsonSchemaType, LabelAnnotation } from '@dxos/echo/internal';
 import { ViewAnnotation } from '@dxos/schema';
 
@@ -21,10 +21,7 @@ export const Table = Schema.Struct({
     value: Schema.Number,
   }).pipe(Schema.mutable, FormInputAnnotation.set(false)),
 }).pipe(
-  Type.object({
-    typename: 'org.dxos.type.table',
-    version: '0.1.0',
-  }),
+  Type.object(DXN.make('org.dxos.type.table', '0.1.0')),
   LabelAnnotation.set(['name']),
   ViewAnnotation.set(['view']),
   Annotation.IconAnnotation.set({

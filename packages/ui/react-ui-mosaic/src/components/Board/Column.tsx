@@ -251,7 +251,7 @@ const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
     const eventHandler = useEventHandlerAdapter<Ref.Unknown>({
       id: model.getColumnId(data),
       items: column?.items ?? [],
-      getId: (ref) => ref.target?.id ?? ref.dxn.toString(),
+      getId: (ref) => ref.target?.id ?? ref.uri,
       get: (refOrObj) => (Ref.isRef(refOrObj) ? refOrObj.target! : refOrObj),
       make: (object) => Ref.make(object),
       canDrop: ({ source }) => {

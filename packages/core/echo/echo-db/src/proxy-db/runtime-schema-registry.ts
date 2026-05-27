@@ -7,8 +7,9 @@ import type * as Types from 'effect/Types';
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { raise } from '@dxos/debug';
-import { type DXN, type QueryResult, type SchemaRegistry, Type } from '@dxos/echo';
+import { type QueryResult, type SchemaRegistry, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { coerceArray, compositeKey, defaultMap } from '@dxos/util';
 
@@ -98,13 +99,9 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
   }
 
   // TODO(wittjosiah): Not a part of SchemaRegistry interface, remove?
-  getSchemaByDXN(dxn: DXN): Type.AnyEntity | undefined {
-    const components = dxn.asTypeDXN();
-    if (!components) {
-      return undefined;
-    }
-
-    const { type, version } = components;
+  getSchemaByDXN(dxn: DXN.DXN): Type.AnyEntity | undefined {
+    const type = DXN.getName(dxn);
+    const version = DXN.getVersion(dxn);
     const allSchemas = this._registry.get(type) ?? [];
     if (version) {
       return allSchemas.find((s) => Type.getVersion(s) === version);
@@ -124,7 +121,7 @@ export class RuntimeSchemaRegistry implements SchemaRegistry.SchemaRegistry {
 }
 
 const getSortKey = (schema: Type.AnyEntity) =>
-  compositeKey(Type.getTypename(schema), Type.getVersion(schema), String(Type.getDXN(schema)));
+  compositeKey(Type.getTypename(schema), Type.getVersion(schema), String(Type.getURI(schema)));
 
 const filterOrderResults = (schemas: Type.AnyEntity[], query: SchemaRegistry.Query) => {
   const filtered = schemas

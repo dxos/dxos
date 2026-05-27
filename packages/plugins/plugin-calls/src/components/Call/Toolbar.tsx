@@ -52,7 +52,7 @@ export const Toolbar = ({
   const raisedHand = useAtomValue(call.raisedHandAtom);
 
   // Channel app graph node.
-  const node = useNode(graph, channel && Obj.getDXN(channel).toString());
+  const node = useNode(graph, channel && Obj.getURI(channel));
   const actions = useActions(graph, node?.id).filter((action) => action.properties.disposition === 'toolbar');
 
   // Screen sharing.

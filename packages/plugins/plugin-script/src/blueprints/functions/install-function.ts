@@ -47,7 +47,7 @@ export default InstallFunction.pipe(
       }
 
       return {
-        function: Obj.getDXN(installed).toString(),
+        function: Obj.getURI(installed),
         name: fn.name ?? 'Unnamed function',
         version: Obj.getMeta(fn).version ?? '0.0.0',
       };

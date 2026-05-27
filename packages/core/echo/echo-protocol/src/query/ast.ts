@@ -5,13 +5,14 @@
 import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 
-import { DXN, ObjectId } from '@dxos/keys';
+import { EchoURI, ObjectId, URI } from '@dxos/keys';
 
 import { ForeignKey } from '../foreign-key';
 
-const TypenameSpecifier = Schema.Union(DXN.Schema, Schema.Null).annotations({
-  description: 'DXN or null; null matches any type',
-});
+// Type identifier URI — either a DXN (typename) or an EchoURI (stored-schema-as-object).
+// Matches the URI written into an object's `system.type` (see `getSchemaURI`). Null
+// matches any type.
+const TypenameSpecifier = Schema.Union(URI.Schema, Schema.Null);
 
 // NOTE: This pattern with 3 definitions per schema is need to make the types opaque, and circular references in AST to not cause compiler errors.
 
@@ -184,7 +185,7 @@ export const FilterOr: Schema.Schema<FilterOr> = FilterOr_;
 const FilterChildOf_ = Schema.Struct({
   type: Schema.Literal('child-of'),
   /** Parent DXNs to match children of. */
-  parents: Schema.Array(DXN.Schema),
+  parents: Schema.Array(EchoURI.Schema),
   /** Whether to match transitively (grandchildren, etc.). Defaults to true. */
   transitive: Schema.Boolean,
 });
@@ -462,11 +463,11 @@ export const Scope = Schema.Struct({
   allFeedsFromSpaces: Schema.optional(Schema.Boolean),
 
   /**
-   * The nested select statemets will select from the given feeds (by underlying queue DXN).
+   * The nested select statemets will select from the given feeds (by EchoURI or legacy DXN).
    *
    * NOTE: Spaces and feeds are unioned together if both are specified.
    */
-  feeds: Schema.optional(Schema.Array(DXN.Schema)),
+  feeds: Schema.optional(Schema.Array(EchoURI.Schema)),
 });
 export interface Scope extends Schema.Schema.Type<typeof Scope> {}
 

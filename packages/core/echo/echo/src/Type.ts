@@ -8,7 +8,7 @@ import type * as Schema from 'effect/Schema';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
-import { type DXN } from '@dxos/keys';
+import { DXN, type URI } from '@dxos/keys';
 import { type ToMutable } from '@dxos/util';
 
 import type * as Entity from './Entity';
@@ -52,7 +52,7 @@ type EchoSchemaKind<K extends internal.EntityKind = internal.EntityKind> = {
  * ```ts
  * const PersonSchema: Type.Obj<Person> = Schema.Struct({
  *   name: Schema.String,
- * }).pipe(Type.object({ typename: 'Person', version: '0.1.0' }));
+ * }).pipe(Type.object(DXN.make('com.example.type.person', '0.1.0')));
  *
  * // Access fields for introspection:
  * Object.keys(PersonSchema.fields); // ['name']
@@ -100,11 +100,11 @@ export type AnyObj = ObjectSchemaBase;
  * ```ts
  * const Person = Schema.Struct({
  *   name: Schema.String,
- * }).pipe(Type.object({ typename: 'com.example.type.person', version: '0.1.0' }));
+ * }).pipe(Type.object(DXN.make('com.example.type.person', '0.1.0')));
  * ```
  */
 export const object: {
-  (opts: internal.TypeMeta): <Self extends Schema.Schema.Any>(self: Self) => Obj<Schema.Schema.Type<Self>>;
+  (dxn: DXN.DXN): <Self extends Schema.Schema.Any>(self: Self) => Obj<Schema.Schema.Type<Self>>;
 } = internal.EchoObjectSchema as any;
 
 //
@@ -164,8 +164,7 @@ export type AnyRelation = RelationSchemaBase;
  * const WorksFor = Schema.Struct({
  *   role: Schema.String,
  * }).pipe(Type.relation({
- *   typename: 'com.example.type.works-for',
- *   version: '0.1.0',
+ *   dxn: DXN.make('com.example.type.worksFor', '0.1.0'),
  *   source: Person,
  *   target: Company,
  * }));
@@ -212,13 +211,13 @@ export type AnyRef = Schema.Schema<internal.Ref<any>, EncodedReference>;
 //
 
 /**
- * Gets the full DXN of the schema.
- * Will include the version if it's a `type` DXN.
+ * Gets the URI identifying the schema — currently always a DXN, but typed as
+ * `URI.URI` so future stored-schema URIs (echo:/…) can be returned without
+ * breaking callers.
  * @example "dxn:com.example.type.person:0.1.0"
- * @example "dxn:echo:SSSSSSSSSS:XXXXXXXXXXXXX"
  */
-export const getDXN = (schema: AnyEntity): DXN | undefined => {
-  return internal.getSchemaDXN(schema);
+export const getURI = (schema: AnyEntity): URI.URI | undefined => {
+  return internal.getSchemaURI(schema);
 };
 
 /**

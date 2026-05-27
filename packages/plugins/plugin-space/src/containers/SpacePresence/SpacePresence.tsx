@@ -71,7 +71,7 @@ export const SpacePresence = ({ object, spaceId }: SpacePresenceProps) => {
     return null;
   }
 
-  const currentObjectViewers = ephemeral.viewersByObject[Obj.getDXN(object).toString()] ?? noViewers;
+  const currentObjectViewers = ephemeral.viewersByObject[Obj.getURI(object)] ?? noViewers;
 
   const membersForObject = spaceMembers
     .filter((member) => memberOnline(member) && memberIsNotSelf(member))

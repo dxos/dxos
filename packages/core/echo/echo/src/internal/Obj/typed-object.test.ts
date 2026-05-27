@@ -6,16 +6,13 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import { describe, expect, test } from 'vitest';
 
+import { DXN } from '@dxos/keys';
+
 import { EchoObjectSchema } from '../Entity';
 
 const Organization = Schema.Struct({
   name: Schema.String,
-}).pipe(
-  EchoObjectSchema({
-    typename: 'com.example.type.organization',
-    version: '0.1.0',
-  }),
-);
+}).pipe(EchoObjectSchema(DXN.make('com.example.type.organization', '0.1.0')));
 
 interface Organization extends Schema.Schema.Type<typeof Organization> {}
 

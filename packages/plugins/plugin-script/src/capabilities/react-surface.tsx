@@ -105,7 +105,7 @@ export default Capability.makeModule(() =>
         component: ({ data, role }) => {
           const space = getSpace(data.companionTo);
           const feed = space?.properties.invocationTraceFeed?.target;
-          const feedDXN = feed ? Feed.getQueueDxn(feed) : undefined;
+          const feedDXN = feed ? Feed.getQueueUri(feed) : undefined;
           return (
             <Panel.Root role={role}>
               <Panel.Content>

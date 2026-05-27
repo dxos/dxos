@@ -62,7 +62,7 @@ export const printTrigger = Effect.fn(function* (trigger: Trigger.Trigger, remot
         'function',
         FormBuilder.make().pipe(
           FormBuilder.set('key', Obj.getMeta(fn as Operation.PersistentOperation).key),
-          FormBuilder.set('dxn', Obj.getDXN(fn as Obj.Unknown).toString()),
+          FormBuilder.set('dxn', Obj.getURI(fn as Obj.Unknown)),
         ),
       ),
     ),
@@ -95,7 +95,7 @@ const printWebhook = (spec: Trigger.WebhookSpec) =>
   FormBuilder.make({}).pipe(FormBuilder.set('method', spec.method), FormBuilder.set('port', spec.port));
 
 const printFeed = (spec: Trigger.FeedSpec) =>
-  FormBuilder.make({}).pipe(FormBuilder.set('feed', spec.feed ? spec.feed.dxn.toString() : '(none)'));
+  FormBuilder.make({}).pipe(FormBuilder.set('feed', spec.feed ? spec.feed.uri.toString() : '(none)'));
 
 /**
  * Prompts for input values based on an Effect schema.

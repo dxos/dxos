@@ -7,7 +7,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Format, Type } from '@dxos/echo';
+import { DXN, Format, Type } from '@dxos/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Card, Tooltip, useThemeContext } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
@@ -39,12 +39,7 @@ const Flight = Schema.Struct({
   arriveAt: Schema.optional(Format.DateTime.annotations({ title: 'Arrive' })),
   cabin: Schema.optional(Schema.Literal('economy', 'premium', 'business', 'first').annotations({ title: 'Cabin' })),
   notes: Schema.optional(Format.Text.annotations({ title: 'Notes' })),
-}).pipe(
-  Type.object({
-    typename: 'com.example.type.flight',
-    version: '0.1.0',
-  }),
-);
+}).pipe(Type.object(DXN.make('com.example.type.flight', '0.1.0')));
 
 export interface Flight extends Schema.Schema.Type<typeof Flight> {}
 

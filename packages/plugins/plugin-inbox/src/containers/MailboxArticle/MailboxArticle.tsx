@@ -11,6 +11,7 @@ import { type AppSurface, useShowItem } from '@dxos/app-toolkit/ui';
 import { type Database, type Feed, Filter, Obj, Query, Relation, Tag } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
+import { EchoURI } from '@dxos/keys';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { useAtomState } from '@dxos/react-hooks';
 import { ElevationProvider, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -45,7 +46,7 @@ export const MailboxArticle = ({ subject, filter: filterProp, attendableId }: Ma
   const settings = useAtomCapability(InboxCapabilities.Settings);
   // TODO(wittjosiah): Should be `const feed = useObjectValue(mailbox.feed)`.
   const [mailbox] = useObject(subject);
-  const id = attendableId ?? Obj.getDXN(mailbox).toString();
+  const id = attendableId ?? Obj.getURI(mailbox);
   const currentId = useSelected(id, 'single');
   const db = Obj.getDatabase(mailbox);
   const showItem = useShowItem();
@@ -301,13 +302,13 @@ const useMessageTagsMap = (
           continue;
         }
 
-        // Try to get message ID from target DXN (queue DXN with objectId).
-        const targetDXN = Relation.getTargetDXN(relation);
-        const queueDXNInfo = targetDXN.asQueueDXN();
+        // Try to get message ID from target URI (echo URI with objectId).
+        const targetURI = Relation.getTargetURI(relation);
+        const targetEchoId = EchoURI.tryParse(targetURI);
         let messageId: string | undefined;
 
-        if (queueDXNInfo?.objectId) {
-          messageId = queueDXNInfo.objectId;
+        if (targetEchoId) {
+          messageId = EchoURI.getObjectId(targetEchoId);
         } else {
           // Fallback: try to resolve target object.
           try {

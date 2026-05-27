@@ -6,7 +6,7 @@ import * as Context from 'effect/Context';
 import * as Layer from 'effect/Layer';
 import * as Types from 'effect/Types';
 
-import { SpaceId, DXN } from '@dxos/keys';
+import { SpaceId, type URI } from '@dxos/keys';
 
 import type * as Process from './Process';
 
@@ -50,10 +50,10 @@ export interface LayerContext {
   readonly space?: SpaceId;
 
   /**
-   * DXN of the conversation feed the process is running in.
+   * URI of the conversation feed the process is running in.
    * Process affinity only.
    */
-  readonly conversation?: DXN.String;
+  readonly conversation?: URI.URI;
 
   /**
    * Under which process the process is running.
