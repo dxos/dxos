@@ -15,6 +15,7 @@ import {
   type SelectOption,
   TypeEnum,
   formatToType,
+  toEffectSchema,
 } from '@dxos/echo/internal';
 import { createEchoSchema } from '@dxos/echo/testing';
 import { DXN, PublicKey } from '@dxos/keys';
@@ -117,6 +118,12 @@ export const getSchemaFromPropertyDefinitions = (
 
   return schema;
 };
+
+/**
+ * Build an in-memory, mutable `Type.Type` entity from a JSON schema.
+ */
+export const getSchemaFromJsonSchema = (jsonSchema: JsonSchemaType): Type.Type =>
+  createEchoSchema(toEffectSchema(jsonSchema));
 
 /**
  * Creates or updates echo annotations for SingleSelect options in a JSON Schema property.

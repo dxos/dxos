@@ -138,7 +138,7 @@ export const WithEchoSchema: StoryObj = {
       return <div>Loading schema...</div>;
     }
 
-    return <DynamicTable schema={schema} rows={objects} />;
+    return <DynamicTable type={schema} rows={objects} />;
   },
   decorators: [
     withClientProvider({

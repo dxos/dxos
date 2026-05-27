@@ -5,12 +5,13 @@
 import { type Registry } from '@effect-atom/atom-react';
 import type * as Types from 'effect/Types';
 
-import { Filter, JsonSchema, Obj, Order, Query, type QueryAST, Ref, Type, type View } from '@dxos/echo';
-import { type Mutable } from '@dxos/echo/internal';
+import { Filter, type JsonSchema, Obj, Order, Query, type QueryAST, Ref, Type, type View } from '@dxos/echo';
 import {
   ProjectionModel,
   type SchemaPropertyDefinition,
   ViewModel,
+  createEchoChangeCallback,
+  getSchemaFromJsonSchema,
   getSchemaFromPropertyDefinitions,
 } from '@dxos/schema';
 
@@ -30,41 +31,41 @@ export type TablePropertyDefinition = SchemaPropertyDefinition & Partial<Propert
  */
 // TODO(burdon): Remove variance.
 export const getBaseSchema = ({
-  schema,
+  type,
   typename,
   properties,
   jsonSchema,
 }: {
-  schema?: Type.AnyEntity;
+  type?: Type.AnyEntity;
   typename?: string;
   properties?: TablePropertyDefinition[];
   jsonSchema?: Types.DeepMutable<JsonSchema.JsonSchema>;
-}): { typename: string; jsonSchema: Types.DeepMutable<JsonSchema.JsonSchema> } => {
-  const type = typename && properties ? getSchemaFromPropertyDefinitions(typename, properties) : schema;
-  if (type) {
-    return {
-      typename: Type.getTypename(type)!,
-      jsonSchema: JsonSchema.toJsonSchema(Type.getSchema(type)),
-    };
-  } else if (typename && jsonSchema) {
-    return { typename, jsonSchema };
-  } else {
+}): { typename: string; type: Type.AnyEntity } => {
+  const resolved =
+    typename && properties
+      ? getSchemaFromPropertyDefinitions(typename, properties)
+      : (type ?? (jsonSchema ? getSchemaFromJsonSchema(jsonSchema) : undefined));
+  if (!resolved) {
     throw new Error('invalid properties');
   }
+
+  return { typename: Type.getTypename(resolved)!, type: resolved };
 };
 
 export const makeDynamicTable = ({
   registry,
-  jsonSchema,
+  type,
   properties,
 }: {
   registry: Registry.Registry;
-  jsonSchema: Types.DeepMutable<JsonSchema.JsonSchema>;
+  type: Type.AnyEntity;
   properties?: TablePropertyDefinition[];
 }): { projection: ProjectionModel; object: Table.Table } => {
+  const jsonSchema = type.jsonSchema;
   const view = ViewModel.make({
     query: Query.select(Filter.everything()),
     jsonSchema,
+    type,
     ...(properties && { fields: properties.map((property) => property.name) }),
   });
   const object = Obj.make(Table.Table, { view: Ref.make(view), sizes: {} });
@@ -73,10 +74,7 @@ export const makeDynamicTable = ({
     registry,
     view,
     baseSchema: jsonSchema,
-    change: {
-      projection: (mutate) => Obj.update(view, (view) => mutate(view.projection as Mutable<View.Projection>)),
-      schema: (mutate) => mutate(jsonSchema),
-    },
+    change: createEchoChangeCallback(view, type),
   });
   projection.normalizeView();
   if (properties && projection.getFields()) {
