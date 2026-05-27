@@ -21,7 +21,7 @@ export const makeFeedService = (queues: QueueAPI): Context.Tag.Service<Feed.Feed
       throw new Error('Unable to append to feed: make sure feed is stored in the database');
     }
 
-    const queue = queues.get(feedDXN) as QueueImpl;
+    const queue = queues.get(feedDXN, { subspaceTag: feed.namespace }) as QueueImpl;
     queue.setParentEntity(feed as Obj.Unknown);
     await queue.append(items);
   },
@@ -32,7 +32,7 @@ export const makeFeedService = (queues: QueueAPI): Context.Tag.Service<Feed.Feed
       throw new Error('Unable to remove from feed: make sure feed is stored in the database');
     }
 
-    const queue = queues.get(feedDXN);
+    const queue = queues.get(feedDXN, { subspaceTag: feed.namespace });
     await queue.delete(ids);
   },
 
@@ -42,7 +42,7 @@ export const makeFeedService = (queues: QueueAPI): Context.Tag.Service<Feed.Feed
       throw new Error('Unable to query feed: make sure feed is stored in the database');
     }
 
-    const queue = queues.get(feedDXN) as QueueImpl;
+    const queue = queues.get(feedDXN, { subspaceTag: feed.namespace }) as QueueImpl;
     queue.setParentEntity(feed as Obj.Unknown);
     return queue.query(queryOrFilter as any);
   },
@@ -53,7 +53,7 @@ export const makeFeedService = (queues: QueueAPI): Context.Tag.Service<Feed.Feed
       throw new Error('Unable to sync feed: make sure feed is stored in the database');
     }
 
-    const queue = queues.get(feedDXN);
+    const queue = queues.get(feedDXN, { subspaceTag: feed.namespace });
     await queue.sync(options);
   },
 
@@ -63,7 +63,7 @@ export const makeFeedService = (queues: QueueAPI): Context.Tag.Service<Feed.Feed
       throw new Error('Unable to get feed sync state: make sure feed is stored in the database');
     }
 
-    const queue = queues.get(feedDXN) as QueueImpl;
+    const queue = queues.get(feedDXN, { subspaceTag: feed.namespace }) as QueueImpl;
     return queue.getSyncState();
   },
 });
