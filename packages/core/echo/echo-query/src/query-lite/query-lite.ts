@@ -275,7 +275,8 @@ class FilterClass implements Filter$.Any {
     });
     return new FilterClass({
       type: 'child-of',
-      parents: dxns,
+      // EchoURI is a branded string; at runtime these are plain strings.
+      parents: dxns as any,
       transitive: options?.transitive ?? true,
     });
   }
