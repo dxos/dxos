@@ -37,5 +37,5 @@ export const useType = <T extends Type.AnyEntity = Type.AnyEntity>(
     };
   }, [typename, db]);
 
-  return useSyncExternalStore(subscribe, getType) as T | undefined;
+  return useSyncExternalStore(subscribe, getType);
 };

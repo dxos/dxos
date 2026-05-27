@@ -63,11 +63,7 @@ export const createEchoChangeCallback = (view: View.View, schema?: Type.AnyEntit
       ? () => {
           throw new Error('Schema is not mutable');
         }
-      : (mutate) =>
-          // `Type.update`'s draft exposes `jsonSchema` as the readonly `JsonSchemaType`
-          // (its `examples` is a `readonly any[]`); cast to the deep-mutable view for the
-          // mutation callback. The change context makes it mutable at runtime.
-          Type.update(schema, (draft) => mutate(draft.jsonSchema as Types.DeepMutable<JsonSchemaType>)),
+      : (mutate) => Type.update(schema, (draft) => mutate(draft.jsonSchema)),
 });
 
 /**

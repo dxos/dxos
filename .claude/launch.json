@@ -52,22 +52,6 @@
       "port": 9010
     },
     {
-      "name": "plugin-kanban-storybook",
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": [
-        "--filter",
-        "@dxos/plugin-kanban",
-        "exec",
-        "storybook",
-        "dev",
-        "--port",
-        "9011",
-        "--no-open",
-        "--ci"
-      ],
-      "port": 9011
-    },
-    {
       "name": "plugin-preview-storybook",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "@dxos/plugin-preview", "exec", "storybook", "dev", "--port", "9011", "--no-open"],

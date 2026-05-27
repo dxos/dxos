@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as Schema from 'effect/Schema';
+import type * as Types from 'effect/Types';
 
 import { raise } from '@dxos/debug';
 import { type EncodedReference } from '@dxos/echo-protocol';
@@ -630,7 +631,10 @@ export function getSchema(type: AnyEntity): Schema.Schema.AnyNoContext {
  */
 export interface Mutable {
   name?: string;
-  jsonSchema: internal.JsonSchemaType;
+  // Deep-mutable within the change context — `Type.update`'s purpose is to allow
+  // mutation, so the draft exposes `jsonSchema` as writable (the readonly
+  // `JsonSchemaType` would force callers to cast).
+  jsonSchema: Types.DeepMutable<internal.JsonSchemaType>;
 }
 
 /**

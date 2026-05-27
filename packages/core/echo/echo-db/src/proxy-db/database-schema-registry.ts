@@ -19,7 +19,7 @@ import {
   makeTypeJsonSchemaAnnotation,
 } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
-import { DXN, EchoURI, type ObjectId } from '@dxos/keys';
+import { DXN, EchoURI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { coerceArray, compositeKey } from '@dxos/util';
 

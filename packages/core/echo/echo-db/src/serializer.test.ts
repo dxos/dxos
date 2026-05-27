@@ -224,16 +224,6 @@ describe('Serializer', () => {
       }
     });
 
-    // Regression: `_addSchema` was spreading the schema's TypeAnnotation
-    // (`{ kind, typename, version }`) into the data props of the new
-    // TypeSchema instance. That leaked `kind: 'object'` into the data
-    // namespace; `Obj.toJSON` then serialized it as a top-level field. On import
-    // the entity's [KindId] brand came back wrong (Object, not Type), so
-    // `Filter.type(Type.Type)` and `Type.isType` skipped it, the Database
-    // subgraph rendered empty, and any code that ran a schema-registry query
-    // (e.g. the markdown editor's link suggestions) threw `Invalid typename`
-    // because `Type.getTypename` couldn't read the typename through the wrong
-    // narrowing branch.
     test('Type.Type entity survives export/import round-trip with correct kind brand', async () => {
       let data: SerializedSpace;
       const typename = 'example.type.roundTrip';

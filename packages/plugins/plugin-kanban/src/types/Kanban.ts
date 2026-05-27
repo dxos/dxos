@@ -97,8 +97,6 @@ export const Kanban = Schema.Struct({
 
 /**
  * Instance type; narrow on `kanban.spec.kind` (or use the guards below).
- *
- * TODO(wittjosiah): Try to clean up this type inference.
  */
 export interface Kanban extends Type.InstanceType<typeof Kanban> {}
 

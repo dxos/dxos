@@ -77,7 +77,7 @@ export type Game = Type.InstanceType<typeof Game>;
  */
 export type GameRef<_V> = Ref.Ref<Game>;
 
-export const GameRef = <S extends Type.AnyEntity>(_variantType: S) =>
+export const GameRef = <S extends Type.AnyObj>(_variantType: S) =>
   Ref.Ref(Game) as Schema.Schema<GameRef<Type.InstanceType<S>>, any, never>;
 
 /**

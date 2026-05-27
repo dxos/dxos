@@ -51,6 +51,7 @@ type MakeProps = {
   name?: string;
   query: Query.Any;
   queryRaw?: string;
+  // TODO(wittjosiah): Revisit this and try to unify this. Maybe always expect Type.AnyEntity since it can be created from JsonSchema anyways.
   jsonSchema: JsonSchemaType; // Base schema.
   /** Persisted `Type.Type` entity backing `jsonSchema`, when one exists; enables `Type.update` on schema edits. */
   type?: Type.AnyEntity;
@@ -237,27 +238,22 @@ export const makeFromDatabase = async ({
 }: MakeFromDatabaseProps): Promise<{ jsonSchema: JsonSchemaType; view: View.View }> => {
   if (!typename) {
     const [type] = await db.schemaRegistry.register([createDefaultSchema()]);
-    // `register` returns a persisted `Type.Type` entity; its typename lives in the
-    // type metadata, so read it via `Type.getTypename` rather than a `.typename` prop.
     typename = Type.getTypename(type);
   } else {
     createInitial = 0;
   }
 
   const type = await db.schemaRegistry.query({ typename, location: ['database', 'runtime'] }).firstOrUndefined();
-  const jsonSchema = type && type.jsonSchema;
-  invariant(jsonSchema, `Schema not found: ${typename}`);
+  invariant(type, `Type not found: ${typename}`);
   // `type` is a `Type.Type` entity (type-kind brand). The kind it *describes*
   // lives in the `TypeAnnotation` on the rebuilt Effect Schema — read it via
   // `Entity.getKind` rather than the entity-level `Type.isObject` guard.
-  const effectSchema = type && Type.getSchema(type);
-  invariant(
-    effectSchema && Entity.getKind(effectSchema) === Entity.Kind.Object,
-    `Schema is not an object schema: ${typename}`,
-  );
+  const effectSchema = Type.getSchema(type);
+  invariant(Entity.getKind(effectSchema) === Entity.Kind.Object, `Schema is not an object schema: ${typename}`);
+  const jsonSchema = type.jsonSchema;
 
   Array.from({ length: createInitial }).forEach(() => {
-    db.add(Obj.make(Type.assertObject(type!), {}));
+    db.add(Obj.make(Type.assertObject(type), {}));
   });
 
   return {
@@ -266,7 +262,7 @@ export const makeFromDatabase = async ({
       ...props,
       query: Query.select(Filter.typename(typename)),
       jsonSchema,
-      type: type!,
+      type,
       registry: db.schemaRegistry,
     }),
   };

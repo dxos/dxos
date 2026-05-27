@@ -28,7 +28,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.DraftEmail> = InboxOp
           properties: {
             to,
             subject,
-            inReplyTo: (replyToMessage as any)?.properties?.messageId,
+            inReplyTo: replyToMessage?.properties?.messageId,
             mailbox: mailboxUri,
           },
         }),
