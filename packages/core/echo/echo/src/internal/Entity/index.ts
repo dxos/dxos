@@ -8,5 +8,6 @@ export * from './model'; // TODO(burdon): Rename.
 export * from './object';
 export * from './relation';
 export * from './type-kind';
+export * from './type-uri';
 export * from './util';
 export * from './version';

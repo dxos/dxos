@@ -133,28 +133,22 @@ export interface EchoTypeSchema<
 
 /**
  * Effect Schema that every `Type.Type` entity is an instance of: the meta-schema
- * struct `{ name?, jsonSchema, id }` branded as a type-kind ECHO entity. Built
- * once and memoised. This is the materialisation vehicle for `makeObject` below
- * — the canonical user-facing entity is `Type/type-schema.ts`'s
- * `TypeSchema`, which carries the same shape plus UI annotations.
+ * struct `{ name?, jsonSchema, id }` branded as a type-kind ECHO entity. This is
+ * the materialisation vehicle for `makeObject` below — the canonical user-facing
+ * entity is `Type/type-schema.ts`'s `TypeSchema`, which carries the same shape
+ * plus UI annotations.
  *
  * Kept self-contained (no import of `TypeSchema`) to avoid a bootstrap cycle:
  * `TypeSchema` is itself produced via `makeEchoTypeSchema`, so this builder
- * must not depend on it.
+ * must not depend on it. `jsonSchema` is declared optional here (only on the
+ * materialisation vehicle — the canonical `TypeSchema` keeps it required) so the
+ * construction-time `Schema.asserts` does not force the field before it is
+ * attached; it is populated immediately after via a lazy accessor (see
+ * `makeEchoTypeSchema`).
  */
-let _persistentEntitySchema: Schema.Schema.AnyNoContext | undefined;
-const getPersistentEntitySchema = (): Schema.Schema.AnyNoContext => {
-  if (_persistentEntitySchema) {
-    return _persistentEntitySchema;
-  }
+const persistentEntitySchema: Schema.Schema.AnyNoContext = (() => {
   const typename = 'org.dxos.type.schema';
   const version = '0.1.0';
-  // `jsonSchema` is declared optional here (only on the materialisation vehicle —
-  // the canonical `TypeSchema` keeps it required) so the construction-time
-  // `Schema.asserts` does not force the field before it is attached. It is
-  // populated immediately after via a lazy accessor (see `makeEchoTypeSchema`),
-  // which defers self-referential `Schema.suspend(...)` resolution until first
-  // read — by then the recursive type const is no longer in its TDZ.
   const struct = Schema.Struct({
     name: Schema.optional(Schema.String),
     jsonSchema: JsonSchemaType.pipe(Schema.optional),
@@ -164,8 +158,8 @@ const getPersistentEntitySchema = (): Schema.Schema.AnyNoContext => {
     [TypeAnnotationId]: { kind: EntityKind.Type, typename, version } satisfies TypeAnnotation,
     [SchemaAST.JSONSchemaAnnotationId]: makeTypeJsonSchemaAnnotation({ kind: EntityKind.Type, typename, version }),
   });
-  return (_persistentEntitySchema = Schema.make(ast));
-};
+  return Schema.make(ast);
+})();
 
 /**
  * @internal
@@ -209,7 +203,7 @@ export const makeEchoTypeSchema = <
 
   // Materialise as a live reactive meta-schema instance. `jsonSchema` is attached
   // below as a getter (not passed here as data) for two reasons; see that accessor.
-  const entity = makeObject(getPersistentEntitySchema() as Schema.Schema<any, any, never>, {} as any, meta);
+  const entity = makeObject(persistentEntitySchema as Schema.Schema<any, any, never>, {} as any, meta);
 
   const target = getProxyTarget(entity)!;
   // `jsonSchema` is always available, but computed once on first read rather than at
